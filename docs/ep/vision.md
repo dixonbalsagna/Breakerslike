@@ -178,3 +178,8 @@ Orb had played the Godot greybox before answering.
 - Anguish weight: Game Design's default (no extra multiplier) stands unless Orb says otherwise.
 
 **Life-size scale (Orb, 2026-09-29).** 'Right now everything looks very small compared to the fighters. I'd like to see a much larger world with buildings and civilians scaled up to be life-size compared to the fighters.' World is drafting docs/world/scale.md, to land before building-depth slice B1.
+
+**Scale answers (Orb, 2026-09-29).**
+- Planet size between small and medium ('between 1 and 2', maybe larger after it's felt). Fighters should launch each other through the landscape and into different biomes several times per fight.
+- A flat-out dash around the planet takes 10 to 20 s: anime-fast.
+- Destruction: 'as the fighters power up, the destructiveness should keep scaling. Implement novel ways to keep this interesting so the players don't just see it as map painting, but rather interfering and actively engaging with a real landscape.'
