@@ -100,11 +100,12 @@ func render_view(a: float) -> void:
 	view_cam_x = host.camera_x(a)
 	cam_rig.frame(c.y, c.z, host.jitter, vp.y)
 	_view_cues(c, vp)
-	planet.update(S, view_cam_x)
+	planet.update(S, view_cam_x, host.impact.heat, host.impact.heat_changed)
+	host.impact.heat_changed = false
 	for i in range(fighter_views.size()):
 		fighter_views[i].update(S, S.fighters[i], host.fighter_pose(i, a), SimWrap.sdx(view_cam_x, host.fighter_x(i, a)), c.z)
 	beams.update(S, view_cam_x, c.z)
-	particles.update(host.fxv, view_cam_x, c.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
+	particles.update(host.fxv, host.impact, view_cam_x, c.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
 	hud.queue_redraw()
 
 

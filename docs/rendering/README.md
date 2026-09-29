@@ -1,6 +1,6 @@
 # Rendering: the greybox
 
-Owner: Rendering and Technical Art. Code: `render/`. Status: first playable greybox (P1), 2026-09-29; civilians and planet-scale pass the same day.
+Owner: Rendering and Technical Art. Code: `render/`. Status: first playable greybox (P1), 2026-09-29; civilians and planet-scale pass, and craters, scorch and water, the same day.
 
 The main scene runs the GDScript sim (`sim/`) as a 60 Hz fixed-step loop and draws it every frame in a 2.5D side-on view of the wrapped planet. Frames are interpolated between the last two ticks. It starts as an AI-vs-AI demo; any key or click hands P1 to a human, as the prototype did. Everything on screen is a greybox made of simple meshes and flat colours. The cel-shaded look comes later with Art.
 
@@ -51,9 +51,12 @@ Main          Node3D               core/main.gd         the frame loop, input, m
 | `core/look.gd` | Every colour and dimension of the greybox look, in one place (the prototype's palette). |
 | `core/mats.gd` | Flat and glow materials over the shaders. |
 | `core/crowd_mesh.gd` | The generated civilian figure (see Civilians below). |
-| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` (heightfield from a texture); `crowd`; `particle` (shapes per instance); `sky` (gradient, space, stars, the planet's limb); `bend.gdshaderinc` (horizon curvature). |
+| `core/ground_field.gd` | The ground band's data for the GPU and its CPU mirror: round crater bowls in depth, scorch, water (see Craters, scorch and water below). |
+| `core/impact_fx.gd` | Render-side live effects for World's crater, scorch and splash events: ejecta, rim dust, shock rings, the glow of fresh grooves, embers, ripples and skim spray. |
+| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` over `ground.gdshaderinc` (the ground field); `crowd`; `particle` (shapes per instance); `sky` (gradient, space, stars, the planet's limb); `bend.gdshaderinc` (horizon curvature). |
 | `tools/seam_sweep.gd`, `tools/determinism.gd` | The seam and determinism checks (see below). |
 | `tools/shots.gd` | Posed screenshots for these docs (see below). |
+| `tools/ground_check.gd` | The ground check: the drawn ground against the sim's (see Verification). |
 
 ## How it draws
 
@@ -87,6 +90,36 @@ Orb's notes on the first live build were "civilians seem too tiny" and "make the
 
 Both pairs come from `godot --path . --script res://render/tools/shots.gd -- --out=DIR`, which poses the fighters on a fresh match without stepping the sim. That keeps the pictures stable while the sim's behaviour changes. The "before" images are the committed renderer (2ebdb53) run on the same sim. Other poses: `city`, `wide`, `high`.
 
+## Craters, scorch and water
+
+World's sim change (`docs/world/craters-scorch-water.md`) gives craters raised rims in the sim's own profile and adds three pieces of persistent state: `S.craters` (records), `S.scorch` (a permanent burn per column) and `S.water` (water depth per column). It also adds `crater` and `scorch` events. The renderer draws them as Orb asked ("craters, not canyons"; "beams should scorch and leave trails of destruction, more powerful beams... more intense").
+
+**Bowls in depth.** The ground band is now a grid of terrain columns by 24 rows in depth (`RenderLook.BAND_ROWS`), dense near the fighter plane. The row that lies exactly on the fighter plane reads `S.deform` itself, so the ground the fighters stand on is the sim's, bit for bit. Every other row is summed on the GPU (`ground.gdshaderinc`):
+- each nearby crater's `WorldCrater.profile`, taken at the round distance `sqrt(dx^2 + z^2) / r`: a bowl, a rim and an apron that fade away from the fighter plane in every direction;
+- each glancing impact's furrow, a trench from the side the fighter came from into the bowl;
+- the residual `G = deform - (the same sum at z = 0)`, spread across the band like a groove. It carries scorch grooves (which have no records), dents from records the sim dropped, and clipping.
+
+At z = 0 the sum gives `deform` back, so the rows beside the fighter plane join it without a step (checked within 0.000002 units). Normals come from the formula's own gradient, so bowls shade smoothly. The CPU keeps, per column, the up-to-6 most energetic craters that reach it, plus the residual, updated only for columns that changed. `ground_field.gd` holds the layout and the CPU twin of the shader.
+
+**Scorch.** The ground chars toward near-black by `S.scorch`, across the groove's width in depth. The sim's burn already scales with the beam power P, and so does the groove's width. Fresh grooves glow: each `scorch` event heats its columns to `0.35 + 0.28 P`, which then cools with a 1.6 s time constant. A strong beam's trail therefore starts yellow-white and stays lit for about 5.5 s, while a weak one is a dull red for about 3.6 s. Embers rise from each sample, more and brighter for strong beams. A crater's `crater` event throws ejecta sized by its energy, raises dust on its rim and sends a flat shock ring across the ground.
+
+**Water.** Water is drawn from `S.water`: the sea and crater lakes. There is a surface grid at each wet column's standing level, depth-tested against the ground, so a lake shows only inside its bowl, plus a front face down to the ground. Off the sea, water also needs the ground there to be dug, so low coastal land beside a lake stays dry, as the sim has it. A splash on a water surface leaves ripple rings lying on it. A fighter skimming low and fast over water throws spray and marks the surface every few ticks, so a skim reads as a skipping stone.
+
+**Rebuilt from state.** Bowls, char and water come only from state: `S.craters`, `S.deform`, `S.scorch` and `S.water`. When the crater list only grew, the new records are added; anything else (a new match, a replay seek, a snapshot restore, the sim dropping its oldest record) triggers a full rebuild from state. Only the transient effects need events: the glow of fresh grooves, ejecta, embers and ripples. A seek shows the marks without the glow, just as it shows no particles. Props (buildings, trees, civilians) stand on the ground as drawn at their own depth, so a bowl in depth does not leave them floating.
+
+| Before | After |
+| :---: | :---: |
+| ![craters before](img/craters-before.png) | ![craters after](img/craters-after.png) |
+| ![lake before](img/lake-before.png) | ![lake after](img/lake-after.png) |
+
+The staged damage comes from World's own functions on a posed state, in `tools/shots.gd` (`craters`, `lake`):
+- a straight-down hit;
+- a glancing hit with its furrow;
+- a P = 4.2 beam trail ending in its strike crater;
+- an E = 25 crater at the coast that the sea floods, with a splash on the new lake.
+
+"Before" is the committed renderer (0bfc605) on the same sim.
+
 ## The sim boundary
 
 Rendering reads and never writes. The views read `S`, the fx consumer (`sim/core/view/fx.gd`) and the reference camera. Only `SimHost` steps the sim, toggles AI, starts matches and drains `S.out`, which is exactly the host's job in `docs/architecture/overview.md`. How many ticks run per frame is the only thing that depends on frame timing, so the tick sequence and every gameplay hash are the same at any frame rate.
@@ -99,7 +132,15 @@ All commands run from the repo root; each exits 0 on success.
 | :--- | :--- | :--- |
 | Seam sweep | `godot --headless --path . --script res://render/tools/seam_sweep.gd -- --size=1280x720` | passed at 1280×720, 2560×720 and 720×1280 |
 | Determinism | `godot --headless --path . --script res://render/tools/determinism.gd` | passed (seeds 12345 and 4) |
+| Ground check | `godot --headless --path . --script res://render/tools/ground_check.gd` | passed (seeds 4, 12345, 7) |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
+
+**Ground check.** It runs three matches through the full scene and checks every 120 ticks:
+- the GPU's base, deform, scorch and water rows are the sim's bytes;
+- the fighter-plane row reads `S.deform` directly, and the bowl formula at z = 0 is within 0.000002 units of it;
+- a field rebuilt from state alone, as for a seek or a snapshot restore, equals the one kept up to date frame by frame, bit for bit.
+
+A crater dug on the seam (x = 0) is exactly symmetric across it at every depth. The mesh has one exact row per column. Three matches gave 49 craters, 12 of them with furrows.
 
 **Seam sweep.** The tool poses the two fighters by hand (it never steps the sim) and runs the real scene on 1,331 frames. It covers flying together through the seam at separations 0, 1, 60, 400, 1500, 3000, 4500 and 4790; meeting head-on on the seam; the smallest zoom (one fighter under the sea, one at the ceiling); and one fighter lapping the planet. Per frame it checks four things:
 1. Each fighter lands on the prototype's `w2s()` pixel (worst 0.0005 px).
@@ -120,6 +161,10 @@ All commands run from the repo root; each exits 0 on success.
 | Web (Chrome 154, WebGL 2 over D3D11), 1280×720 | 1.83 / 2.50 / 3.30 ms | 0.12 ms | 0.18 ms | about 82 |
 | Desktop 1280×720, after the scale pass | 0.97 / 1.32 / 2.05 ms | 0.057 ms | 0.11 ms | about 80 |
 | Web 1280×720, after the scale pass | 1.82 / 2.20 / 3.10 ms | 0.13 ms | 0.16 ms | about 79 |
+| Desktop 1280×720, craters, scorch and water | 1.03 / 1.42 / 1.82 ms | 0.082 ms | 0.13 ms | about 77 |
+| Web 1280×720, craters, scorch and water | 1.81 / 2.30 / 2.80 ms | n/a | 0.17 ms | about 80 |
+
+Craters, scorch and water, against the committed renderer on the same sim: desktop before was 0.95 / 1.24 / 1.62 ms, with a 0.099 ms view update and a 0.168 ms GPU frame; after, the GPU frame is 0.171 ms. The ground field adds about 0.03 ms of view update a frame and no measurable GPU time here. Both renderers end the match on the same gameplay hash, and the web build reproduces the desktop hash (seed 4, tick 2400: `01e6e465b88a1b05`).
 
 The scale pass was measured against the committed renderer on the same sim, the same day. Desktop before was 1.05 / 1.56 / 2.30 ms, with a 0.115 ms view update and a 0.178 ms GPU frame; after, the GPU frame is 0.166 ms. The rendering cost is unchanged within noise. The sim numbers moved because Encounter Systems is changing the director. The first three rows came from an earlier sim, so compare their rendering columns only.
 
@@ -138,6 +183,8 @@ For the web: export with a Web preset (single-threaded) and pass `--fixed-fps 60
 - Every visual: primitive-box fighters, box buildings, cone trees, box-figure civilians, flat colours, the sky gradient, the far land, ridges and limb. Art's palette and the cel-shaded look replace `look.gd` and the flat shaders.
 - The planet-scale cues are tuned by eye (`CURVE_*`, `FAR_HAZE`, the limb in `sky.gdshader`). The curvature is a presentation lens, not the planet's true radius: at 9,600 units around, the true curve would be far stronger.
 - Known issue: the crowd's idle hop runs on the shader's `TIME`, so civilians keep hopping while the game is paused. Accepted for the greybox; drive it from sim time when it matters.
+- Known issue: the web build's fallback font has no arrow glyph, so the feed shows a box for the director's "→".
+- Crater limits: the GPU sums at most 6 craters per column (the most energetic). Dents of any others, and of records the sim dropped, still match the sim on the fighter plane and spread across the band like a groove. The shader repeats the crater profile's polynomials; every size is a uniform fed from `WorldCrater` and `RenderLook`, so a world-scale change needs no shader edit. Buildings on a rim sit on the lowest ground under their footprint.
 - The prototype's palette and the fx event colours (CSS hex strings) are used as they are.
 - The camera is the reference camera. Camera will own framing. When the fighters' separation passes half the planet, it re-targets the other arc and pans across (up to about 80 to 180 px per frame, depending on the window size). That is reference-camera behaviour, not a render pop.
 - The HUD is a debug HUD drawn with the fallback font. UI will own the real one.

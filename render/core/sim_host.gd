@@ -14,6 +14,7 @@ signal ticked(n: int)
 var S: SimState
 var cam := SimCamera.new()      # reference camera (sim/core/view/camera.gd), stepped after every tick
 var fxv := SimFxView.new(1)     # reference fx consumer (sim/core/view/fx.gd)
+var impact := ImpactFx.new()    # render-side crater, scorch and water effects (render/core/impact_fx.gd)
 var cam_rng: SimRng             # the 'camera' cosmetic stream: shake jitter
 var seed: int = 1
 var acc: float = 0.0
@@ -39,6 +40,7 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	SimCore.newMatch(S, seed, ai)
 	cam.reset()
 	fxv.reset(seed)
+	impact.reset(seed)
 	cam_rng = SimRng.new(SimRng.deriveSeed(seed, "camera"))
 	acc = 0.0
 	ticks = 0
@@ -85,6 +87,7 @@ func tick(vw: float, vh: float) -> void:
 		feed.pop_front()
 	S.out.feed.clear()
 	fxv.consume(S, S.out.fx)
+	impact.consume(S, S.out.fx)
 	S.out.fx.clear()
 	if fxv.shake > 0.5:
 		jitter = Vector2((cam_rng.next() - 0.5) * fxv.shake, (cam_rng.next() - 0.5) * fxv.shake)

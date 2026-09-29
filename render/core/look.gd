@@ -11,6 +11,9 @@ const FOV_DEG: float = 30.0
 const Z_TERRAIN_FRONT: float = 140.0     # front face of the ground band
 const Z_TERRAIN_BACK: float = -520.0     # back edge of the ground band
 const TERRAIN_FLOOR: float = -5000.0     # bottom of the ground band's front face
+## Rows of the ground band's top grid, front to back. Dense near the fighter plane, where bowls are narrow; the row at
+## exactly 0 reads the sim's profile (render/core/ground_field.gd).
+const BAND_ROWS: Array = [140.0, 110.0, 84.0, 62.0, 44.0, 30.0, 18.0, 8.0, 0.0, -8.0, -18.0, -30.0, -44.0, -62.0, -84.0, -110.0, -140.0, -176.0, -218.0, -266.0, -320.0, -380.0, -448.0, -520.0]
 const Z_BUILDING_FRONT: float = -44.0    # buildings stand behind the fighter plane
 const Z_TREE_MIN: float = -120.0
 const Z_TREE_MAX: float = -30.0
@@ -46,6 +49,15 @@ const BIOME: Dictionary = {
 const SEA_FLOOR := "#5a5346"
 const CRATER := "#4a4237"
 const CRATER_DESERT := "#a98544"
+const EJECTA := "#9a8a70"                # rims and aprons, dusty
+const CHAR := "#1d1715"                  # scorched ground at full burn
+const HEAT_LO := "#c2381c"               # a cooling groove
+const HEAT_HI := "#ffd27a"               # a fresh groove from a strong beam
+## Ground field widths across the band's depth (render/core/ground_field.gd). Bowls and grooves take their sizes from
+## the sim (each crater record's r, depth and rim; the scorch constants in WorldCrater); only these are the renderer's.
+const FURROW_W_R: float = 0.3            # a furrow's half width across the band, per unit of its crater's r ...
+const FURROW_W_MIN: float = 20.0         # ... and at least this
+const GROUND_SPREAD: float = 60.0        # half width across the band of dents with no record (dropped craters, clips)
 const WATER := Color(30.0 / 255.0, 110.0 / 255.0, 175.0 / 255.0)
 const WATER_SURFACE := Color(0.42, 0.68, 0.9, 0.55)
 const SKY: Array = ["#111a3e", "#4b4483", "#d9776b", "#f4b87a"]   # top to horizon

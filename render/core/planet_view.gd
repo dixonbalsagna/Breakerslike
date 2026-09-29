@@ -5,8 +5,9 @@ extends Node3D
 ## the world is built once per match in world x [0, W) and drawn as three copies one planet apart, placed at
 ## k * W - cam.x. The copies are identical, so the seam at x = 0 / W can never pop, at any zoom or separation, and a
 ## view wider than the planet (tiny zoom on an ultra-wide or phone screen) still shows every object at every place it
-## appears. Per-frame cost is three node moves plus whatever changed in the sim since the last frame: the heightfield
-## texture when craters dig, and the instances of damaged buildings, fallen trees and lost civilians.
+## appears. Per-frame cost is three node moves plus whatever changed in the sim since the last frame: the ground field
+## (render/core/ground_field.gd: round crater bowls in depth, scorch, water) when craters dig, beams scorch or water
+## flows, and the instances of damaged buildings, fallen trees and lost civilians, and of props on changed ground.
 ## Reads the sim only; never writes it.
 
 const COPIES: Array = [-1, 0, 1]
@@ -14,9 +15,7 @@ const TERRAIN_SHADER: Shader = preload("res://render/shaders/terrain.gdshader")
 const WATER_SHADER: Shader = preload("res://render/shaders/water.gdshader")
 const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
 
-var _img: Image
-var _tex: ImageTexture
-var _deform_seen := PackedFloat32Array()
+var ground := GroundField.new()
 var _terrain_mesh: ArrayMesh
 var _water_mesh: ArrayMesh
 var _ridges: Array = []            # [ArrayMesh, ShaderMaterial]: far ridges, the far land, the atmosphere
@@ -42,9 +41,10 @@ func build(S: SimState) -> void:
 		remove_child(c)
 		c.free()
 	_copies.clear()
-	_make_height_texture(S)
 	if _terrain_mesh == null:
+		_make_materials()
 		_terrain_mesh = _make_terrain_mesh()
+		_water_mesh = _make_water_mesh()
 		for r in RenderLook.RIDGES:
 			_ridges.append([_make_ridge_mesh(r[0], r[1], r[2], _ridges.size()), RenderMats.flat(RenderLook.col(r[3]), 0.0)])
 		_ridges.append([_make_far_land(S), RenderMats.flat(Color.WHITE, 0.0)])
@@ -55,7 +55,7 @@ func build(S: SimState) -> void:
 		_crowd_mat.set_shader_parameter("skin_a", RenderLook.col(RenderLook.CROWD_SKIN[0]))
 		_crowd_mat.set_shader_parameter("skin_b", RenderLook.col(RenderLook.CROWD_SKIN[1]))
 		_crowd_mat.set_shader_parameter("legs", RenderLook.col(RenderLook.CROWD_LEGS))
-	_water_mesh = _make_water_mesh(S)
+	ground.rebuild(S)
 	_make_props(S)
 	for k in COPIES:
 		var n := Node3D.new()
@@ -70,14 +70,15 @@ func build(S: SimState) -> void:
 		_mm_child(n, "Trees", _tree)
 		_mm_child(n, "Crowd", _crowd, _crowd_mat)
 		_copies.append(n)
-	_deform_seen = PackedFloat32Array()
 	refresh(S, true)
 
 
-## Per frame: place the copies around the camera's wrapped x and apply whatever changed in the world.
-func update(S: SimState, cam_x: float) -> void:
+## Per frame: place the copies around the camera's wrapped x and apply whatever changed in the world. heat is the
+## render-side glow of fresh grooves (ImpactFx).
+func update(S: SimState, cam_x: float, heat: PackedFloat32Array = PackedFloat32Array(), heat_changed: bool = false) -> void:
 	for i in range(_copies.size()):
 		_copies[i].position.x = float(COPIES[i]) * SimConst.W - cam_x
+	ground.update(S, heat, heat_changed)
 	refresh(S, false)
 
 
@@ -96,35 +97,42 @@ func terrain_mesh() -> ArrayMesh:
 	return _terrain_mesh
 
 
+## Props: buildings, roofs, trees and civilians whose state changed, or whose ground did (they stand on the ground as
+## drawn at their own depth, so a bowl in depth does not leave them floating).
 func refresh(S: SimState, force: bool) -> void:
-	var dchg: bool = force or S.deform != _deform_seen
-	if dchg:
-		_deform_seen = S.deform.duplicate()
-		_img.set_data(SimConst.NC, 2, false, Image.FORMAT_RF, S.base.to_byte_array() + S.deform.to_byte_array())
-		_tex.update(_img)
+	var dirty: PackedByteArray = ground.dirty
+	var dchg: bool = force or ground.any_dirty
 	for bi in range(S.buildings.size()):
 		var b = S.buildings[bi]
 		var h: float = WorldStructures.curH(b)
 		var seen: Array = _bld_seen[bi]
-		if dchg or h != seen[0] or b.alive != seen[1] or b.popAlive != seen[2]:
-			_set_building(S, bi, b, h, dchg or b.popAlive != seen[2])
+		var moved: bool = dchg and (force or dirty[_col(b.x)] == 1)
+		if moved or h != seen[0] or b.alive != seen[1] or b.popAlive != seen[2]:
+			_set_building(S, bi, b, h, moved or b.popAlive != seen[2])
 			_bld_seen[bi] = [h, b.alive, b.popAlive]
 	for ti in range(S.trees.size()):
 		var t = S.trees[ti]
-		if dchg or t.alive != _tree_seen[ti]:
+		if (dchg and (force or dirty[_col(t.x)] == 1)) or t.alive != _tree_seen[ti]:
 			_tree_seen[ti] = t.alive
 			if t.alive:
-				var g: float = WorldTerrain.groundY(S, t.x)
+				var g: float = ground.ground_at(S, t.x, _tree_z[ti])
 				_tree.set_instance_transform(ti, Transform3D(Basis.from_scale(Vector3(26.0, t.h, 26.0)), Vector3(t.x, g + t.h * 0.5, _tree_z[ti])))
 			else:
 				_tree.set_instance_transform(ti, _hidden(t.x))
+	if dchg:
+		ground.dirty.fill(0)
+		ground.any_dirty = false
+
+
+static func _col(x: float) -> int:
+	return int(floor(SimWrap.wrap(x) / SimConst.COL))
 
 
 func _set_building(S: SimState, bi: int, b, h: float, crowd: bool) -> void:
-	var g: float = WorldTerrain.groundY(S, b.x)
 	var tower: bool = b.kind == "tower"
 	var d: float = b.w * (0.8 if tower else 0.9)
 	var zc: float = RenderLook.Z_BUILDING_FRONT - d * 0.5
+	var g: float = minf(ground.ground_at(S, b.x, zc + d * 0.5), ground.ground_at(S, b.x, zc - d * 0.5))
 	_bld.set_instance_transform(bi, Transform3D(Basis.from_scale(Vector3(b.w, h, d)), Vector3(b.x, g + h * 0.5, zc)))
 	var c: String
 	if tower:
@@ -144,7 +152,7 @@ func _set_building(S: SimState, bi: int, b, h: float, crowd: bool) -> void:
 			var ci: int = first + j
 			var x: float = _crowd_x[ci]
 			if j < alive:
-				_crowd.set_instance_transform(ci, Transform3D(Basis.IDENTITY, Vector3(x, WorldTerrain.groundY(S, x), _crowd_z[ci])))
+				_crowd.set_instance_transform(ci, Transform3D(Basis.IDENTITY, Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
 			else:
 				_crowd.set_instance_transform(ci, _hidden(x))
 
@@ -171,38 +179,54 @@ func _mm_child(parent: Node3D, n: String, mm: MultiMesh, mat: Material = null) -
 	parent.add_child(mi)
 
 
-func _make_height_texture(S: SimState) -> void:
-	_img = Image.create_from_data(SimConst.NC, 2, false, Image.FORMAT_RF, S.base.to_byte_array() + S.deform.to_byte_array())
-	if _tex == null:
-		_tex = ImageTexture.create_from_image(_img)
-		_terrain_mat = ShaderMaterial.new()
-		_terrain_mat.shader = TERRAIN_SHADER
-		_terrain_mat.set_shader_parameter("heights", _tex)
-		_terrain_mat.set_shader_parameter("nc", SimConst.NC)
-		_terrain_mat.set_shader_parameter("sea_floor", RenderLook.col(RenderLook.SEA_FLOOR))
-		_terrain_mat.set_shader_parameter("crater", RenderLook.col(RenderLook.CRATER))
-		_terrain_mat.set_shader_parameter("crater_desert", RenderLook.col(RenderLook.CRATER_DESERT))
-		_water_mat = ShaderMaterial.new()
-		_water_mat.shader = WATER_SHADER
-		_water_mat.set_shader_parameter("heights", _tex)
-		_water_mat.set_shader_parameter("nc", SimConst.NC)
-		_water_mat.set_shader_parameter("water", RenderLook.WATER)
-		_water_mat.set_shader_parameter("surface", RenderLook.WATER_SURFACE)
-		RenderMats.track(_terrain_mat)
-		RenderMats.track(_water_mat)
-	else:
-		_tex.update(_img)
+func _make_materials() -> void:
+	_terrain_mat = ShaderMaterial.new()
+	_terrain_mat.shader = TERRAIN_SHADER
+	_water_mat = ShaderMaterial.new()
+	_water_mat.shader = WATER_SHADER
+	for m in [_terrain_mat, _water_mat]:
+		m.set_shader_parameter("heights", ground.tex)
+		m.set_shader_parameter("craters", ground.ctex)
+		m.set_shader_parameter("nc", SimConst.NC)
+		m.set_shader_parameter("col_w", SimConst.COL)
+		m.set_shader_parameter("world_w", SimConst.W)
+		m.set_shader_parameter("rim_in", WorldCrater.RIM_IN)
+		m.set_shader_parameter("rim_out", WorldCrater.RIM_OUT)
+		m.set_shader_parameter("groove_w0", WorldCrater.SCORCH_HW0)
+		m.set_shader_parameter("groove_wp", WorldCrater.SCORCH_HW_P)
+		m.set_shader_parameter("groove_i0", WorldCrater.SCORCH_INT0)
+		m.set_shader_parameter("groove_ip", WorldCrater.SCORCH_INT_P)
+		m.set_shader_parameter("groove_pmin", GroundField.P_MIN)
+		m.set_shader_parameter("groove_pmax", GroundField.P_MAX)
+		m.set_shader_parameter("spread_w", RenderLook.GROUND_SPREAD)
+		m.set_shader_parameter("furrow_wr", RenderLook.FURROW_W_R)
+		m.set_shader_parameter("furrow_wmin", RenderLook.FURROW_W_MIN)
+		RenderMats.track(m)
+	_terrain_mat.set_shader_parameter("sea_floor", RenderLook.col(RenderLook.SEA_FLOOR))
+	_terrain_mat.set_shader_parameter("crater", RenderLook.col(RenderLook.CRATER))
+	_terrain_mat.set_shader_parameter("crater_desert", RenderLook.col(RenderLook.CRATER_DESERT))
+	_terrain_mat.set_shader_parameter("ejecta", RenderLook.col(RenderLook.EJECTA))
+	_terrain_mat.set_shader_parameter("char_col", RenderLook.col(RenderLook.CHAR))
+	_terrain_mat.set_shader_parameter("heat_lo", RenderLook.col(RenderLook.HEAT_LO))
+	_terrain_mat.set_shader_parameter("heat_hi", RenderLook.col(RenderLook.HEAT_HI))
+	_terrain_mat.set_shader_parameter("z_front", RenderLook.Z_TERRAIN_FRONT)
+	_terrain_mat.set_shader_parameter("z_back", RenderLook.Z_TERRAIN_BACK)
+	_water_mat.set_shader_parameter("water", RenderLook.WATER)
+	_water_mat.set_shader_parameter("surface", RenderLook.WATER_SURFACE)
+	_water_mat.set_shader_parameter("z_front", RenderLook.Z_TERRAIN_FRONT + 1.0)
 
 
 static func _planet_aabb(y0: float, y1: float, z0: float, z1: float) -> AABB:
 	return AABB(Vector3(-64.0, y0, z0), Vector3(SimConst.W + 128.0, y1 - y0, z1 - z0))
 
 
-## Ground band: per column vertex (NC + 1, the last one reading column 0 again so copies meet exactly), a front face
-## from the surface to the floor and a top face from the front edge to the back edge.
+## Ground band: per column vertex (NC + 1, the last one reading column 0 again so copies meet exactly), a top grid of
+## RenderLook.BAND_ROWS rows in depth (one exactly on the fighter plane, flagged to read the sim's deform directly)
+## and a front face from the front row down to the floor.
 func _make_terrain_mesh() -> ArrayMesh:
-	var zf: float = RenderLook.Z_TERRAIN_FRONT
-	var zb: float = RenderLook.Z_TERRAIN_BACK
+	var zs: Array = RenderLook.BAND_ROWS
+	var nz: int = zs.size()
+	var per: int = nz + 2
 	var v := PackedVector3Array()
 	var uv := PackedVector2Array()
 	var uv2 := PackedVector2Array()
@@ -213,43 +237,56 @@ func _make_terrain_mesh() -> ArrayMesh:
 		var biome: String = WorldBiomes.biomeAt(x)
 		var c: Color = RenderLook.col(RenderLook.BIOME[biome])
 		c.a = 1.0 if biome == "desert" else 0.0
-		for e in [[0.0, 1.0, 0.0, 0.0, zf], [RenderLook.TERRAIN_FLOOR, 0.0, 0.0, 0.0, zf], [0.0, 1.0, 1.0, 0.0, zf], [0.0, 1.0, 1.0, 1.0, zb]]:
-			v.append(Vector3(x, e[0], e[4]))
+		for z in zs:
+			v.append(Vector3(x, 0.0, z))
+			uv.append(Vector2(float(i), 1.0))
+			uv2.append(Vector2(1.0, 1.0 if z == 0.0 else 0.0))
+			cols.append(c)
+		for e in [[0.0, 1.0], [RenderLook.TERRAIN_FLOOR, 0.0]]:
+			v.append(Vector3(x, e[0], zs[0]))
 			uv.append(Vector2(float(i), e[1]))
-			uv2.append(Vector2(e[2], e[3]))
+			uv2.append(Vector2(0.0, 0.0))
 			cols.append(c)
 	for i in range(SimConst.NC):
-		var a: int = i * 4
-		var b: int = a + 4
-		idx.append_array([a, b, a + 1, a + 1, b, b + 1, a + 2, a + 3, b + 2, b + 2, a + 3, b + 3])
+		var a: int = i * per
+		var b: int = a + per
+		for r in range(nz - 1):
+			idx.append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
+		idx.append_array([a + nz, b + nz, a + nz + 1, a + nz + 1, b + nz, b + nz + 1])
 	var m := _mesh(v, uv, uv2, cols, idx)
 	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 2000.0, RenderLook.Z_TERRAIN_BACK, RenderLook.Z_TERRAIN_FRONT)
 	return m
 
 
-## Water: the same layout as the ground, only over columns where the base terrain is below sea level.
-func _make_water_mesh(S: SimState) -> ArrayMesh:
+## Water: a surface grid over every column (the same rows in depth; the shader drops dry columns and undug ground)
+## and a front face just in front of the ground's front face.
+func _make_water_mesh() -> ArrayMesh:
+	var zs: Array = RenderLook.BAND_ROWS
+	var nz: int = zs.size()
+	var per: int = nz + 2
 	var zf: float = RenderLook.Z_TERRAIN_FRONT + 1.0
-	var zb: float = RenderLook.Z_TERRAIN_BACK
 	var v := PackedVector3Array()
 	var uv := PackedVector2Array()
 	var uv2 := PackedVector2Array()
 	var idx := PackedInt32Array()
-	var nc: int = SimConst.NC
-	for i in range(nc):
-		if S.base[i] >= -30.0 and S.base[(i + 1) % nc] >= -30.0:
-			continue
-		var a: int = v.size()
-		for k in [i, i + 1]:
-			var x: float = float(k) * SimConst.COL
-			for e in [[1.0, 0.0, 0.0, zf], [0.0, 0.0, 0.0, zf], [0.0, 1.0, 0.0, zf], [0.0, 1.0, 1.0, zb]]:
-				v.append(Vector3(x, 0.0, e[3]))
-				uv.append(Vector2(float(k), e[0]))
-				uv2.append(Vector2(e[1], e[2]))
-		var b: int = a + 4
-		idx.append_array([a, b, a + 1, a + 1, b, b + 1, a + 2, a + 3, b + 2, b + 2, a + 3, b + 3])
+	for i in range(SimConst.NC + 1):
+		var x: float = float(i) * SimConst.COL
+		for r in range(nz):
+			v.append(Vector3(x, 0.0, zf if r == 0 else zs[r]))
+			uv.append(Vector2(float(i), 0.0))
+			uv2.append(Vector2(1.0, 1.0 if zs[r] == 0.0 else 0.0))
+		for e in [0.0, 1.0]:
+			v.append(Vector3(x, 0.0, zf + 0.5))
+			uv.append(Vector2(float(i), e))
+			uv2.append(Vector2(0.0, 0.0))
+	for i in range(SimConst.NC):
+		var a: int = i * per
+		var b: int = a + per
+		for r in range(nz - 1):
+			idx.append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
+		idx.append_array([a + nz, b + nz, a + nz + 1, a + nz + 1, b + nz, b + nz + 1])
 	var m := _mesh(v, uv, uv2, PackedColorArray(), idx)
-	m.custom_aabb = _planet_aabb(-700.0, 10.0, RenderLook.Z_TERRAIN_BACK, RenderLook.Z_TERRAIN_FRONT + 2.0)
+	m.custom_aabb = _planet_aabb(-700.0, 60.0, RenderLook.Z_TERRAIN_BACK, RenderLook.Z_TERRAIN_FRONT + 2.0)
 	return m
 
 
