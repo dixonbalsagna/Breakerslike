@@ -1,0 +1,15 @@
+{
+  "name": "meridian-sim",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic, engine-agnostic reference simulation: the headless port of prototype/index.html and the parity oracle for the engine port",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node core/tools/run-all.js",
+    "parity": "node core/tools/parity.js",
+    "soak": "node core/tools/soak.js 1000",
+    "unit": "node --test"
+  }
+}

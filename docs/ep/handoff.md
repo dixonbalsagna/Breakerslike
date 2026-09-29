@@ -28,7 +28,53 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
   - Rendering & Technical Art: open at the engine decision.
   - Modding & Extensibility: open later.
 
+## The sim port has landed (2026-09-29)
+- The port is committed, with parity against 7233c96 proven. `npm test --prefix sim` passes (unit, parity and soak; about 2 minutes).
+- Ownership has passed, to be announced when each director resumes:
+  - sim/world/ to World
+  - sim/director/ to Encounter Systems
+  - sim/input/ to Controls
+- Next for Simulation:
+  - the QA-002 split and the QA-004 event log, after Netcode's requests;
+  - an N-fighter state model, when the roster work starts. sim/README.md lists every place that assumes two fighters.
+- Needs a ruling from Game Design and Controls: a human can switch stance while locked in an exchange and take 0.38x damage (sim/README.md, bug 3).
+- For ADR 0001: docs/architecture/determinism.md recommends deterministic binary64 floats with our own trig functions. It advises against C# for the sim while Godot C# can't export to the browser.
+
+## Queued for idle directors (send when they resume)
+- **QA:**
+  - Raise the match cap to 900 s for game-scale batches.
+  - Split casualties by tier.
+  - Run the fixed-stance probe (docs/design/stance-matrix.md §6).
+  - Its known-bugs register is mid-way.
+- **Combat:**
+  - Second outcomes per stance cell (Game Design R3), finisher templates and CUT-IN beats.
+  - LANE SWEEP: Game Design supports it for P4 if it plays differently, e.g. a long shallow trench, and Legal screens the name.
+  - Use CANOPY BURN and TIDE CLEAVE in place of FIRESTORM and HORIZON CLEAVE.
+- **Controls:** the missed-parry cost (5 ki and a 0.5 s lock) and visible windows.
+- **Encounter Systems:**
+  - The AI attacks from ESCAPE and uses ambushes.
+  - Fix where fights happen (69% of beams fire over the ocean) and launch variety.
+- **World:** collateral mechanisms that meet the bands in docs/design/balance-targets.md, including a civilian floor for the Cyborg.
+- **Narrative:**
+  - Names for the ego meters (Respect, Pride, Wrath, Hunger) and for the replacement mechanics.
+  - The fighter bible, after Orb picks the replacements.
+- **Legal:**
+  - Register rows LR-020 to LR-023, once Tools reports.
+  - The place-name screen.
+  - A final check of the licence files at the repo root.
+- **Tools:**
+  - Rerun the generator after any charter edit.
+  - Add the licence fields, .github/CONTRIBUTING.md and the PR template from docs/legal/contributor-rules.md.
+
 ## Open decisions for Orb
+- Game Design's G1 to G15 and 29 per-system questions (docs/design/open-questions.md, systems-sketch.md). The most urgent:
+  - How a 7-minute match ends.
+  - Whether the last segment needs a finisher.
+  - Whether a fighter can be hit while transforming.
+  - What a human playing the Tyrant controls.
+  - Tandem versus Unison.
+- Legal's replacement picks (docs/legal/fighter-concepts-review.md); the tyrant's tail; whether fusion becomes a mod or is dropped.
+- The README pitch line (docs/legal/public-readiness-edits.md §5).
 - The title.
 - The copyright holder's name.
 - Lemming Ball Z provenance.
