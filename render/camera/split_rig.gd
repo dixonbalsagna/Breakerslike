@@ -67,6 +67,7 @@ var _land_t: float = 0.0
 var _launch_anchor_x: float = 0.5
 var _prev_state: Array = ["free", "free"]
 var _push: Array = [-1.0, -1.0]
+var _launch_evt: Array = [false, false]   # a `launch` event arrived for this fighter this tick
 var fold_active: bool = false
 var _fold: Vector3 = Vector3.ZERO
 
@@ -460,6 +461,12 @@ func _read_events(S: SimState, events: Array) -> void:
 					var a: int = int(_ef(ev, "actor", -1))
 					if a >= 0 and a < 2:
 						_push[a] = 0.0
+			"launch":
+				# Encounter's S2 event (actor = the launched fighter): the follow starts on it. The state poll below stays
+				# as the fallback for callers that pass no events.
+				var la: int = int(_ef(ev, "actor", -1))
+				if la >= 0 and la < 2:
+					_launch_evt[la] = true
 			"cinematic_start":
 				var kd: String = String(_ef(ev, "kind", ""))
 				if kd == "transformation" or kd == "revision":
@@ -545,7 +552,7 @@ func _update_solo(S: SimState) -> void:
 	# Polling the sim for launches until Encounter's launch event exists (S2).
 	for i in range(2):
 		var f = S.fighters[i]
-		if f.state == "launched" and _prev_state[i] != "launched":
+		if f.state == "launched" and (_prev_state[i] != "launched" or _launch_evt[i]):
 			var sp: float = sqrt(f.vx * f.vx + f.vy * f.vy)
 			if sp >= CamParams.LAUNCH_MIN_SPEED and not fold_active:
 				if solo_kind == "launch" and solo_slot == i:
@@ -553,6 +560,7 @@ func _update_solo(S: SimState) -> void:
 					solo_t = 0.0
 				elif solo_kind == "":
 					_begin_solo("launch", i, 2, 0.0)
+	_launch_evt = [false, false]
 	if S.game.ko != null and solo_kind != "ko" and not fold_active:
 		var loser: int = 0 if S.fighters[0] == S.game.ko else 1
 		_begin_solo("ko", loser, 4, 0.0)
