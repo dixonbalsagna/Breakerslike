@@ -369,7 +369,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 12. UI and UX Director
 
-`docs/directors/ui-ux.md`  |  session: `Meridian - UI & UX`  |  model: `sonnet`  |  owns: `ui/, docs/ux/`  |  reports to: Executive Producer
+`docs/directors/ui-ux.md`  |  session: `Meridian - UI & UX`  |  model: `sonnet`  |  owns: `ui/, docs/ui/`  |  reports to: Executive Producer
 
 **Mission.** Own everything the player reads: HUD, menus, stance display, feedback and the developer-facing debug overlays.
 
@@ -382,7 +382,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 **Decides:** HUD layout; Menu flow
 
-**Deliverables:** ui/*; docs/ux/hud-spec.md; Debug overlay
+**Deliverables:** ui/*; docs/ui/hud-spec.md; Debug overlay
 
 **Works with (via the EP):** Controls/Feel, Camera, Accessibility, Game Design.
 

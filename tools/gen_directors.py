@@ -177,7 +177,7 @@ d(slug="narrative-identity", title="Narrative and Fighter Identity Director", mo
   done=["A player can guess a fighter's personality from one match", "No borrowed names, catchphrases or lore", "Personality weights implemented and visible in the debug feed"],
   anti=["Fan-fiction of existing characters"])
 
-d(slug="ui-ux", title="UI and UX Director", model="sonnet", tools=None, phases="··○○○●", paths="ui/, docs/ux/",
+d(slug="ui-ux", title="UI and UX Director", model="sonnet", tools=None, phases="··○○○●", paths="ui/, docs/ui/",
   mission="Own everything the player reads: HUD, menus, stance display, feedback and the developer-facing debug overlays.",
   duties=[
    "Design the HUD: HP, ki, power tier, menace or anguish, civilians lost, stance, planet minimap strip.",
@@ -186,7 +186,7 @@ d(slug="ui-ux", title="UI and UX Director", model="sonnet", tools=None, phases="
    "Solve information hiding for hidden fighters with Camera (split-screen or fog).",
    "Own controller and keyboard prompts with Controls/Feel."],
   decides=["HUD layout", "Menu flow"],
-  deliver=["ui/*", "docs/ux/hud-spec.md", "Debug overlay"],
+  deliver=["ui/*", "docs/ui/hud-spec.md", "Debug overlay"],
   ifaces="Controls/Feel, Camera, Accessibility, Game Design.",
   done=["A new player finds stances and parry timing without a tutorial screen", "HUD readable at 1080p and on a small laptop", "Debug overlay shows every director decision"],
   anti=["HUD clutter over the fighters"])
