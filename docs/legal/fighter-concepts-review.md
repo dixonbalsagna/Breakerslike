@@ -2,6 +2,8 @@
 
 Owner: Legal and IP Compliance. 2026-09-29. Reviews the four fighter archetypes in `docs/ep/vision.md` against Orb's line, "staples yes, signatures no". Franchise elements are named only as far as needed to make each call. Not legal advice. Have a lawyer look at the final designs before a store page or trailer.
 
+**Update 2026-09-29 (questionnaire 3):** Orb wants orbs, a true merge fusion, a redesigned tail and more transformations. The screen is in `q3-screen.md`. Its orb constraints replace the earlier line that the protagonist's items must not be orbs.
+
 ## How the sorting works
 
 - **Staple (keep):** an idea, mechanic or convention shared by many games and shows, such as flight, energy blasts, tiered power-ups, rivalry, henchmen, a weak-point core. Anyone may use it.

@@ -44,8 +44,13 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-022 | Sky Arsonists | title candidate, round 2 | Low | GO to the next stage | Open until Orb picks |
 | RL-023 | Redline Sky | title candidate, round 2 | Low (watch) | GO to the next stage | Open until Orb picks |
 | RL-024 | Orb Combat EX | title (Orb's pick) | Medium | CONDITIONAL: resolve the OrbCombat name clash | Open |
+| RL-025 | Held fragments (orbs) | Q3 design | Medium | CONDITIONAL: orb constraints in `q3-screen.md` | Open |
+| RL-026 | Overcommit, Rail chip, Stylus tail | Q3 design | Low | GO | Closed |
+| RL-027 | Pass-Through | Q3 design | Medium | CONDITIONAL | Open |
+| RL-028 | Transformation ladders (Protagonist, Tyrant) | Q3 design | Medium | CONDITIONAL (final-form looks) | Open |
+| RL-029 | Full Circle fusion | Q3 design | Medium | CONDITIONAL (look) | Open |
 
-Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-024.
+Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-029.
 
 ## Detail
 
