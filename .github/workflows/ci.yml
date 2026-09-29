@@ -50,19 +50,15 @@ jobs:
       - name: npm test --prefix sim
         run: npm test --prefix sim
 
-  # DISABLED until Simulation lands the GDScript parity command.
-  # TODO(Simulation): when the Godot port exists, set the `run` line below to its
-  # real command and delete `if: false`. It is expected to look like
-  #   ./godot --headless --path <godot project dir> -s res://tests/run_tests.gd
-  # (the form research/engine-spike/godot/README.md used for its sim tests) and must
-  # exit non-zero on any parity or golden-hash mismatch.
-  # Not yet run in CI: the download URL and checksum were checked against the
-  # release page, but nothing has executed on a runner. Expect a first-run fix.
+  # The GDScript port against the JS reference sim's golden vectors. Godot is pinned
+  # to 4.7.2 and its SHA-512 is verified before anything runs. The sim job above does
+  # not set GODOT, so `npm test --prefix sim` skips its godot stage there and this job
+  # is the only place the parity check runs. The .godot/ import cache is created on
+  # the runner only (it is gitignored and never committed).
   godot-parity:
     name: GDScript parity (Godot 4.7.2 headless, Linux)
-    if: false
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     env:
       GODOT_VERSION: 4.7.2-stable
       # SHA-512 of Godot_v4.7.2-stable_linux.x86_64.zip, from the release's SHA512-SUMS.txt.
@@ -71,10 +67,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '24.19.0'
       - name: Install Godot ${{ env.GODOT_VERSION }} (official release, checksum verified)
+        working-directory: ${{ runner.temp }}
         run: |
           curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
           echo "${GODOT_ZIP_SHA512}  godot.zip" | sha512sum -c -
@@ -82,7 +76,8 @@ jobs:
           mv "Godot_v${GODOT_VERSION}_linux.x86_64" godot
           chmod +x godot
           ./godot --version
-      - name: GDScript parity (TODO command)
-        run: |
-          echo "TODO(Simulation): replace with the GDScript parity command" >&2
-          exit 1
+      # A fresh clone has no class cache: the import pass registers the class_name scripts.
+      - name: Import project
+        run: '"${RUNNER_TEMP}/godot" --headless --path . --import'
+      - name: GDScript parity
+        run: '"${RUNNER_TEMP}/godot" --headless --path . --script res://sim/core/tools/parity.gd'

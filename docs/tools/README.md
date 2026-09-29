@@ -28,7 +28,7 @@ Exit 0 means ready, warnings allowed. Exit 1 means a required tool is missing or
 | :--- | :--- | :--- |
 | `qa` | `node qa/run-all.js` | about 35 s |
 | `sim` | `npm test --prefix sim` | about 1.5 min |
-| `godot-parity` | **disabled** (`if: false`), Godot 4.7.2 headless on Linux | n/a |
+| `godot-parity` | Godot 4.7.2 headless on Linux: import, then `sim/core/tools/parity.gd` | about 1 min with the download |
 
 The two live jobs run in parallel. There are no install steps because both suites use Node built-ins only. CI therefore runs without `@napi-rs/canvas`; the golden hashes match with and without it (the runner never calls `render()`). Add `npm ci` (with a lockfile) the day either grows a dependency.
 
@@ -43,14 +43,19 @@ Settings: `permissions: contents: read`, no secrets, `persist-credentials: false
 
 Both are first-party GitHub actions. To bump one, look up the tag's commit (`gh api repos/actions/checkout/git/ref/tags/<tag>`; if the type is `tag` rather than `commit`, follow it once more), replace the SHA and the version comment together, and update this table.
 
-### Enabling the Godot job
+### The Godot job
 
-The `godot-parity` job downloads the official Godot 4.7.2 Linux build from the GitHub release and verifies its SHA-512 (taken from the release's `SHA512-SUMS.txt`) before running anything. It stays off until Simulation lands the GDScript parity command. To enable it:
+`godot-parity` runs the GDScript port against the JS reference sim's golden vectors (ADR 0001). Steps, from the repo root (`project.godot` is there):
 
-1. Replace the last step's `run:` with the real command. Expected shape: `./godot --headless --path <godot project dir> -s res://tests/run_tests.gd` (the form the engine spike used). It must exit non-zero on any parity or golden-hash mismatch.
-2. Delete `if: false`.
+1. Download the official Godot 4.7.2 Linux build (`Godot_v4.7.2-stable_linux.x86_64.zip`, standard build, not .NET) from the GitHub release and verify its SHA-512 (from the release's `SHA512-SUMS.txt`, pinned in the workflow) before running anything.
+2. `godot --headless --path . --import` registers the `class_name` scripts, because a fresh clone has no class cache.
+3. `godot --headless --path . --script res://sim/core/tools/parity.gd` exits 0 on pass and 1 on fail (about 16 s locally).
 
-The job has never run on a runner, so expect one fix on its first run.
+The `.godot/` import cache is created on the runner only; it is in `.gitignore` and never committed.
+
+The `sim` job does not set `GODOT`, so `npm test --prefix sim` skips its own godot stage there ("Godot not found" note) and the parity check runs once, in this job. To bump Godot, change `GODOT_VERSION` and `GODOT_ZIP_SHA512` together, and update `tools/setup.*` and this page.
+
+Locally, both commands passed with the Windows 4.7.2 console build, and the Linux zip's checksum matched. The job itself has not run on a runner yet, so its first run is the proof.
 
 ### What is and isn't proven
 
