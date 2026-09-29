@@ -135,7 +135,7 @@ It keeps its own licence and is listed in `licence-register.md`.
 - Outside the US the rules differ and some are under review. This note does not cover them.
 
 ### 8.2 Terms of the tools
-- **Anthropic (Claude).** The Consumer Terms (effective 8 October 2025) assign Anthropic's rights in Outputs, "if any", to the user and offer no IP indemnity to consumer users. The Commercial Terms (effective 17 June 2025) say the customer owns the Outputs and include an IP indemnity for authorised use, with exclusions. Which set applies depends on how Claude is accessed (a consumer plan, or an API or business account). **Orb to confirm.** Re-check both sets of terms before the repo goes public.
+- **Anthropic (Claude).** The Consumer Terms (effective 8 October 2025) assign Anthropic's rights in Outputs, "if any", to the user and offer no IP indemnity to consumer users. The Commercial Terms (effective 17 June 2025) say the customer owns the Outputs and include an IP indemnity for authorised use, with exclusions. Which set applies depends on how Claude is accessed (a consumer plan, or an API or business account). Orb uses the Pro plan (confirmed via the EP, 2026-09-29), a consumer plan, so the Consumer Terms apply and there is no vendor IP indemnity. Re-check both sets of terms before the repo goes public.
 - **Any other AI tool** (images, music, voice, video): read its terms for commercial use and output ownership before using it, and record it in the register. Free tiers often bar commercial use.
 
 ### 8.3 Infringement risk

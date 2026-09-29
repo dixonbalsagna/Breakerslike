@@ -14,25 +14,25 @@ Owner: Legal and IP Compliance. Every third-party component in the repo or plann
 
 ### A1. Would ship to players (only once the engine is confirmed)
 
-| ID | Component | Version | Licence | What we must do | Status |
-|---|---|---|---|---|---|
-| LR-001 | Godot Engine (runtime and export templates) | 4.7.2 | MIT | Give players Godot's licence text and copyright notice, plus the third-party licences the engine lists, in a credits or licences screen, or in a file that ships with the game. Godot has calls that produce these (`Engine.get_license_text()`, `Engine.get_license_info()`, `Engine.get_copyright_info()`). Our own game's licence is independent of Godot's. Copyright: Godot Engine contributors (2014 onwards), Juan Linietsky and Ariel Manzur (2007 to 2014). | Candidate. ADR 0001 waits for Orb. 4.7.2 is installed on the dev machine, checksum-verified (EP playbook). |
-| LR-002 | Third-party libraries built into Godot | as bundled with 4.7.2 | Various, mostly permissive (MIT, BSD, Apache-2.0, zlib and others) | Covered by the same licences screen as LR-001. Nothing to add by hand. Check that the screen really appears in each build. | Candidate |
-| LR-003 | Godot .NET build (only if C# is chosen) | .NET 10 | MIT | Adds Microsoft's .NET runtime, and any NuGet packages, to the shipped build. Register each package when added. | Not chosen. The .NET 10 SDK is installed on the dev machine. |
-| LR-004 | Fonts | none bundled | n/a | The prototype's CSS names Barlow, Barlow Condensed, Segoe UI, Arial Narrow and Impact but bundles none of them, so players see system fonts. If a font is bundled later, register it first. Barlow is published under the SIL Open Font Licence (verify when registering). | No obligation today |
-| LR-005 | Art, audio, music | none | n/a | The prototype draws everything in code and has no audio. | Nothing to register yet |
+| ID | Component | Version | Licence | What we must do | Status | Source and checked on |
+|---|---|---|---|---|---|---|
+| LR-001 | Godot Engine (runtime and export templates) | 4.7.2 | MIT | Give players Godot's licence text and copyright notice, plus the third-party licences the engine lists, in a credits or licences screen, or in a file that ships with the game. Godot has calls that produce these (`Engine.get_license_text()`, `Engine.get_license_info()`, `Engine.get_copyright_info()`). Our own game's licence is independent of Godot's. Copyright: Godot Engine contributors (2014 onwards), Juan Linietsky and Ariel Manzur (2007 to 2014). | Candidate. ADR 0001 waits for Orb. 4.7.2 is installed on the dev machine, checksum-verified (EP playbook). | [Godot licence](https://godotengine.org/license/), [complying with licences](https://docs.godotengine.org/en/stable/about/complying_with_licenses.html); checked 2026-09-28 |
+| LR-002 | Third-party libraries built into Godot | as bundled with 4.7.2 | Various, mostly permissive (MIT, BSD, Apache-2.0, zlib and others) | Covered by the same licences screen as LR-001. Nothing to add by hand. Check that the screen really appears in each build. | Candidate | same pages as LR-001; checked 2026-09-28; the full list is read from the engine build |
+| LR-003 | Godot .NET build (only if C# is chosen) | .NET 10 | MIT | Adds Microsoft's .NET runtime, and any NuGet packages, to the shipped build. Register each package when added. | Not chosen. The .NET 10 SDK is installed on the dev machine. | not checked; verify when C# is chosen |
+| LR-004 | Fonts | none bundled | n/a | The prototype's CSS names Barlow, Barlow Condensed, Segoe UI, Arial Narrow and Impact but bundles none of them, so players see system fonts. If a font is bundled later, register it first. Barlow is published under the SIL Open Font Licence (verify when registering). | No obligation today | not checked; verify if a font is bundled |
+| LR-005 | Art, audio, music | none | n/a | The prototype draws everything in code and has no audio. | Nothing to register yet | n/a |
 
 ### A2. Development tools that never ship
 
-| ID | Component | Version | Licence | What we must do | Status |
-|---|---|---|---|---|---|
-| LR-010 | Node.js | 24 (installed) | MIT. Bundled parts include V8 (BSD-3-Clause), OpenSSL (Apache-2.0), ICU (Unicode-3.0) and others. | Runs the headless sim and QA tools on dev machines. Nothing to do while we do not redistribute Node. If a CI image or installer bundles it, keep Node's LICENSE file with it. | Accepted, dev only |
-| LR-011 | npm | bundled with Node | Artistic-2.0 | Dev use only. Nothing to do. | Accepted, dev only |
-| LR-012 | @napi-rs/canvas (optional dependency in `prototype/package.json`) | `*` in package.json (unpinned). 1.0.9 was the latest on the npm registry on 2026-09-28. | MIT | Optional. Used only by `prototype/tools/headless.js` and `screenshot.js` to draw PNG snapshots. Not shipped. If we ever redistribute it, keep its MIT notice and the Skia notice (LR-013). Pin an exact version and commit a lockfile (Tools). | Accepted, dev only |
-| LR-013 | Skia graphics library, built into the @napi-rs/canvas binaries | as bundled | BSD-3-Clause (Google) | Same as LR-012. No action while dev only. | Accepted, dev only |
-| LR-014 | @napi-rs/canvas platform binary packages (for example `@napi-rs/canvas-win32-x64-msvc`) | same as LR-012 | Expected to match the main package (MIT). Not checked package by package. | Same as LR-012. | Accepted, dev only |
-| LR-015 | Python 3 | installed | PSF-2.0 | Runs `tools/gen_directors.py`, which uses only the standard library (`os`, `textwrap`). Dev use only. | Accepted, dev only |
-| LR-016 | Git, GitHub CLI, Claude Code | installed | Git: GPL-2.0-only. GitHub CLI: MIT. Claude Code: Anthropic's own terms. | Development tools. Not shipped. For the terms on AI output see `licence-recommendation.md`, section 8. | Accepted, dev only |
+| ID | Component | Version | Licence | What we must do | Status | Source and checked on |
+|---|---|---|---|---|---|---|
+| LR-010 | Node.js | 24 (installed) | MIT. Bundled parts include V8 (BSD-3-Clause), OpenSSL (Apache-2.0), ICU (Unicode-3.0) and others. | Runs the headless sim and QA tools on dev machines. Nothing to do while we do not redistribute Node. If a CI image or installer bundles it, keep Node's LICENSE file with it. | Accepted, dev only | [Node.js LICENSE](https://raw.githubusercontent.com/nodejs/node/main/LICENSE); checked 2026-09-28 |
+| LR-011 | npm | bundled with Node | Artistic-2.0 | Dev use only. Nothing to do. | Accepted, dev only | [npm registry](https://registry.npmjs.org/npm/latest); checked 2026-09-28 |
+| LR-012 | @napi-rs/canvas (optional dependency in `prototype/package.json`) | `*` in package.json (unpinned). 1.0.9 was the latest on the npm registry on 2026-09-28. | MIT | Optional. Used only by `prototype/tools/headless.js` and `screenshot.js` to draw PNG snapshots. Not shipped. If we ever redistribute it, keep its MIT notice and the Skia notice (LR-013). Pin an exact version and commit a lockfile (Tools). | Accepted, dev only | [npm registry](https://registry.npmjs.org/@napi-rs%2fcanvas/latest); checked 2026-09-28 |
+| LR-013 | Skia graphics library, built into the @napi-rs/canvas binaries | as bundled | BSD-3-Clause (Google) | Same as LR-012. No action while dev only. | Accepted, dev only | not fetched; BSD-3-Clause per Skia project, verify |
+| LR-014 | @napi-rs/canvas platform binary packages (for example `@napi-rs/canvas-win32-x64-msvc`) | same as LR-012 | Expected to match the main package (MIT). Not checked package by package. | Same as LR-012. | Accepted, dev only | not checked |
+| LR-015 | Python 3 | installed | PSF-2.0 | Runs `tools/gen_directors.py`, which uses only the standard library (`os`, `textwrap`). Dev use only. | Accepted, dev only | not fetched; verify |
+| LR-016 | Git, GitHub CLI, Claude Code | installed | Git: GPL-2.0-only. GitHub CLI: MIT. Claude Code: Anthropic's own terms. | Development tools. Not shipped. For the terms on AI output see `licence-recommendation.md`, section 8. | Accepted, dev only | not fetched; verify |
 
 ### A3. Planned for P0, not chosen yet
 
@@ -40,6 +40,15 @@ Each needs a row before it is used.
 - CI (Tools): GitHub Actions and every action it calls (checking out code, setting up Node, installing Godot). Each action, and any Godot CI image, is a third-party component.
 - A data-schema validator (Tools), such as a JSON Schema library, when chosen.
 - Anything else Tools or Simulation add.
+- **Pending rows (facts needed from Tools):**
+
+| ID | Component | Licence | Status |
+|---|---|---|---|
+| LR-020 | actions/checkout (GitHub Actions) | MIT expected | pending: Tools to give the pinned version or commit |
+| LR-021 | actions/setup-node (GitHub Actions) | MIT expected | pending: same |
+| LR-022 | JSON Schema validator | unknown | pending: only if Tools uses one; name and version needed |
+| LR-023 | @napi-rs/canvas pinned version | MIT (see LR-012) | pending: the exact version Tools pinned, and whether a lockfile is committed |
+
 - Later, if Steam becomes a target: the Steamworks SDK and any wrapper for it. The SDK is not open source and has its own terms, so keep its files out of the public repo until Legal has read them.
 
 ## Part B: asset origins
@@ -71,7 +80,8 @@ This assumes the code licence recommended in `licence-recommendation.md` (MIT). 
 
 ## Part D: open items
 
-1. There is no LICENSE file anywhere in the repo. That is fine while it is private, but with no licence the default is "all rights reserved". Orb decides the licence (see `licence-recommendation.md`). Then the EP or Tools adds the LICENSE files and a `license` field to `prototype/package.json`.
-2. `@napi-rs/canvas` is unpinned and there is no lockfile. Tools to pin it.
+1. There is still no LICENSE file in the repo. Orb accepted MIT + CC BY 4.0 + DCO. The drafts are in `drafts/`. They wait for Orb to name the copyright holder. Then the EP places them and Tools adds the `license` fields.
+2. `@napi-rs/canvas` was unpinned (`*`) with no lockfile. Tools is pinning it. Rows LR-020 to LR-023 wait for Tools' facts.
 3. The prototype code and the docs were written with AI assistance. The provenance policy is in `licence-recommendation.md`, section 8.
 4. Godot's licences screen has to be planned into the UI (P5).
+5. Each row's Source column shows what was actually read. "Not fetched" means the licence is from general knowledge and must be verified before it is relied on.

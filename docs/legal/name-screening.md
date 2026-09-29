@@ -85,9 +85,11 @@ For the final one or two names, a trademark lawyer runs a formal search in the c
 ## Ratings and what gets recorded
 
 Same scale as `review-log.md`.
-- **Low:** no franchise echo and no conflict found. Moves on to the next stage, or to counsel.
-- **Medium:** a collision or association to fix (a second word, another spelling), then re-screen. Conditional.
-- **High:** identical or confusingly similar mark or game, a franchise echo, or too crowded. No-go.
+- **Low:** no franchise echo and no conflict found. Decision GO: moves on to the next stage, or to counsel.
+- **Medium:** a collision or association to fix (a second word, another spelling), then re-screen. Decision CONDITIONAL.
+- **High:** identical or confusingly similar mark or game, a franchise echo, or too crowded. Decision NO-GO.
+
+**Labels are screened more lightly.** The drop rules in stages 0 and 1 (single common word, crowded, a well-known brand word) apply to game titles, fighter names and anything that will be marketed. A move or mechanic label that players read inside the game may use an ordinary word, or a word that is also someone else's brand, if it passes the franchise-echo check, is never used in a title, logo, store text, tag or fighter name, and Legal records the exception in `review-log.md`. FIRESTORM (a DC hero's name) and HORIZON CLEAVE (a Sony brand word) are logged this way (RL-006, RL-008). Labels get stage 0 and a web and Steam look, not stages 2 to 5.
 
 Each screened candidate gets a review-log entry: name, stage reached, date, what was searched, hits, rating and recommendation. Names that fall at stage 0 or 1 are listed in one batch entry with the reason.
 

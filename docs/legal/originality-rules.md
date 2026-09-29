@@ -36,7 +36,7 @@ Not exactly, not lightly altered, not translated, not recoloured.
 
 ## The fan games
 
-"Spiritual successor" means we may share ideas, such as destructible terrain. It does not mean we may share files. Public listings (IndieDB, DBZGames.org) describe Lemming Ball Z as a Dragon Ball Z-based game with characters from other franchises. So we treat everything in Lemming Ball Z and Lemming Ball Z 3d (names, characters, art, sound, code, text, levels) as off limits. Something can come across only if Orb can show they made it, it contains nothing borrowed, and Legal has reviewed it.
+"Spiritual successor" means we may share ideas, such as destructible terrain. It does not mean we may share files. Search-result summaries of its public listings (IndieDB, DBZGames.org) describe Lemming Ball Z as a Dragon Ball Z-based game with characters from other franchises. We could not open those pages, so who made it, what it contains and on what terms are unverified. So we treat everything in Lemming Ball Z and Lemming Ball Z 3d (names, characters, art, sound, code, text, levels) as off limits. Something can come across only if Orb can show they made it, it contains nothing borrowed, and Legal has reviewed it.
 
 **Orb decides:** who made the fan games, what rights or permissions exist, and whether anything is meant to carry over.
 

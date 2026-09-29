@@ -11,7 +11,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 - **Medium**: an association, or a collision, that needs a decision or a fix before it goes public. Fine as a private working name.
 - **High**: echoes a protected franchise term, or the name is too crowded or conflicted to use publicly. Do not use it publicly.
 
-**Decision:** GO, GO (working name only), RENAME BEFORE PUBLIC, or NO-GO.
+**Decision:** GO, CONDITIONAL or NO-GO, the same words as `originality-rules.md` and `name-screening.md`. A condition is written after it, for example "CONDITIONAL: working name only". A rating applies to public use unless the entry says otherwise.
 **Status:** Open (a flag that blocks a phase gate) or Closed.
 
 **Method.** Web searches (a US-only search tool), plus direct checks on 2026-09-28 of the Steam store search, the App Store search API, GitHub, a domain registry record, and the USPTO trademark search run in a browser. A web search is not a trademark clearance. It cannot see other countries' registers or unregistered use, and it can miss things. See "Limits" at the end.
@@ -20,28 +20,28 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 
 | ID | Item | What it is | Rating | Decision | Status |
 |---|---|---|---|---|---|
-| RL-001 | Meridian | game title (placeholder) | High as a public title | GO (working name only) | Open |
+| RL-001 | Meridian | game title (placeholder) | High as a public title | CONDITIONAL: working name only | Open |
 | RL-002 | KAI | hero name (placeholder) | High | NO-GO as a shipped name | Open |
-| RL-003 | VORR | villain name (placeholder) | Low | GO (working name only), re-screen at name lock | Closed |
+| RL-003 | VORR | villain name (placeholder) | Low | CONDITIONAL: working name only, re-screen at name lock | Closed |
 | RL-004 | Calamity Wave | VORR's signature | Low | GO | Closed |
 | RL-005 | Meridian Lance | KAI's signature | Low | GO | Closed |
 | RL-006 | HORIZON CLEAVE | ocean beam | Low | GO | Closed |
 | RL-007 | BOULEVARD RAZE | city and village beam | Low | GO | Closed |
-| RL-008 | FIRESTORM | forest beam | Low (watch) | GO as a label only | Closed |
+| RL-008 | FIRESTORM | forest beam | Low (watch) | GO, as a label only | Closed |
 | RL-009 | RIDGE BORE | mountain beam | Low | GO | Closed |
 | RL-010 | GLASS TRENCH | desert beam | Low | GO | Closed |
 | RL-011 | MERIDIAN SCAR | plains beam | Low | GO | Closed |
-| RL-012 | Breakers-Like / Breakerslike | repo and folder name | Medium (Low while private) | RENAME BEFORE PUBLIC | Open |
+| RL-012 | Breakers-Like / Breakerslike | repo and folder name | Medium if public (Low while private) | CONDITIONAL: rename before public | Open |
 | RL-013 | Meridian Warden, Calamity Sovereign | hero and villain titles | Low | GO | Closed |
 | RL-014 | KAI's golden hair | prototype colour, design flag | Medium | Do not carry into art | Open |
-| RL-015 | "ki" | resource word in code and UI | Low (grey zone) | Narrative picked "Charge"; screen pending | Open |
+| RL-015 | "ki" | resource word in code and UI | Low (grey zone) | GO: "Charge" (glossary screen above) | Closed |
 | RL-016 | Skyburden | title candidate (Narrative top 3) | Low (watch Skybound) | GO to counsel stage | Open until Orb picks |
 | RL-017 | Splendid Wreckage | title candidate | Low (crowded word) | GO to counsel stage | Open until Orb picks |
 | RL-018 | Glorious Ruin | title candidate | Medium | CONDITIONAL | Open until Orb picks |
 | RL-019 | Orb's four fighter concepts | design review | Medium | CONDITIONAL: replace the listed signatures | Open |
 | RL-020 | Public-readiness scan | repo text | Medium | Must-fix list before public | Open |
 
-Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-015, RL-016 to RL-020.
+Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-020.
 
 ## Detail
 
@@ -114,8 +114,8 @@ Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-015, RL-016 to RL
 ### RL-012 Repo and folder name: Breakers-Like / Breakerslike
 - **Searched:** Dragon Ball: The Breakers (publisher pages and Steam); "Breakerslike" and "Breakers-like"; Steam store search for "breakers"; GitHub repository search.
 - **Found:** Dragon Ball: The Breakers is a live Bandai Namco game (developed by Dimps, released 14 October 2022 on PC through Steam, PlayStation 4, Xbox One, Xbox Series X|S and Nintendo Switch), in the franchise this project is a homage to. "-like" is how genres are named after a game ("roguelike"), so "Breakers-like" reads as "a game like The Breakers". Breakers is also a common word: Steam shows 501 results, including a game titled Breakers, and there is a 1996 Neo Geo fighting game called Breakers. No public GitHub repository named breakerslike turned up (private repos cannot be seen).
-- **Rating:** Medium. Low while the repo is private.
-- **Recommendation:** Fine while private. Before the repo goes public, rename it (GitHub redirects the old address) to the final game name or a neutral slug, and keep "Breakers" out of the public name, description, topics and README. The local folder name is not public, so leave it. When renaming, update `docs/setup/git-and-github.md`.
+- **Rating:** Medium as a public name. Low while the repo is private (the rating scale applies to public use).
+- **Decision:** CONDITIONAL. **Recommendation:** Fine while private. Before the repo goes public, rename it (GitHub redirects the old address) to the final game name or a neutral slug, and keep "Breakers" out of the public name, description, topics and README. The local folder name is not public, so leave it. When renaming, update `docs/setup/git-and-github.md`.
 
 ### RL-013 Meridian Warden, Calamity Sovereign (hero and villain titles in the prototype)
 - **Searched:** both phrases together with "game" and "character".
@@ -136,6 +136,45 @@ Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-015, RL-016 to RL
 - **Recommendation:** Keep it internally. Narrative proposes a game-specific name for players. Orb decides.
 
 **Update 2026-09-29 (RL-014):** QA changed the prototype hero's hair to teal `#22c7a9` and added a test that fails if any fighter's hair reads as gold. That is acceptable as a placeholder. RL-014 stays open only for its art-bible part: Art owns the final palette and must not choose gold hair or a hair-colour change as a power cue.
+
+### Stage-1 addendum for the move names (2026-09-29)
+Run on RL-004 to RL-011: Steam games search for all eight, App Store search for FIRESTORM, Calamity Wave and Horizon Cleave, GitHub repository search for the same three. Not run: itch.io (search page unreliable), and App Store and GitHub for the other five.
+
+| Name | Steam | App Store | GitHub | Effect on rating |
+|---|---|---|---|---|
+| Calamity Wave | 30 results for the words, no title of that name | no such app | 1 small idle tower-defence repo, `Calamity-Waves` | none, Low |
+| Meridian Lance | 2 results, none matching (Meridian Strike is near) | not run | not run | none, Low |
+| HORIZON CLEAVE | 1 result, unrelated | one companion app for a Sony game | 0 | none, Low as a label |
+| BOULEVARD RAZE | 0 | not run | not run | none, Low |
+| FIRESTORM | 63 results, including a game titled Firestorm (2026) and several others | 9 apps with Firestorm in the name | 771 repos | Crowded. Low only as a label, and never as a title or fighter name (see the label exception in `name-screening.md`) |
+| RIDGE BORE | 1 result, unrelated | not run | not run | none, Low |
+| GLASS TRENCH | 4 results, none matching | not run | not run | none, Low |
+| MERIDIAN SCAR | 1 result, unrelated | not run | not run | none, Low |
+
+FIRESTORM and HORIZON CLEAVE would fail the title rules (a common word tied to a DC hero, and a Sony brand word). They pass as labels under the exception. Narrative's replacements (CANOPY BURN, TIDE CLEAVE) remove the question.
+
+### RL-015 and the glossary picks (screened 2026-09-29)
+Stage 0 (franchise words and habits) plus a Steam games search for each proper-name-like pick. Narrative's own web search found no exact match for six of them.
+
+| Pick | Result | Decision |
+|---|---|---|
+| Charge (replaces "ki") | Ordinary word, not franchise vocabulary | GO. Closes RL-015 once the UI uses it. |
+| Momentum, Health, Menace, Anguish | Ordinary words | GO |
+| Tremor, Upheaval | Ordinary words | GO |
+| Quake | An ordinary word, and also a famous game brand | CONDITIONAL: label only. Consider Rumble or Shudder to avoid a brand-word rank. |
+| Cataclysm | An ordinary word, and also a game and an expansion title | GO as a label. Never in a title, tag or logo. |
+| RISES — (tier), PRESS, GUARD, DODGE, ESCAPE, CHAIN ×N, TRAIL LOST, "Trail gone cold", NEED 45 CHARGE | Generic fighting-game vocabulary. "Burst", "Raging", "Sparking" and the sensing words are avoided. | GO |
+| the Warden | A 2016 game is titled The Warden. Ordinary word. | GO as a descriptor, never a brand |
+| the Last Witness | A game titled The Last Witness is coming soon. Ordinary phrase. | GO as a descriptor, never a brand |
+| Keeper's Lance | Steam: no such title | GO |
+| Last Look | Steam: no exact title (one long title starts with it) | GO |
+| TIDE CLEAVE | Steam: none | GO |
+| CANOPY BURN | Steam: none | GO |
+| FURROW SCAR | Steam: none | GO |
+| LANE SWEEP | Steam: none | GO |
+| HURL ACROSS, THROUGH THE WALL, INTO THE MOUNTAIN, DODGE — SEEN THROUGH | Plain phrases | GO |
+
+Limits: US-only search, Steam only, no other stores or registers. RL-015 is closed for the picks. It still needs the UI change that replaces "ki".
 
 ### RL-016 to RL-018 Title candidates (stages 1 to 3, 2026-09-29)
 Searched for each: exact-phrase web search; Steam games search; App Store search API; GitHub repository search; USPTO trademark search (browser); the .com registry record. The USPTO search matches each word separately, not the exact phrase, so it shows the words' crowding and only the top-ranked records were read.
