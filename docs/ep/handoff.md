@@ -80,7 +80,14 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
   - Game Design: writes the Wounds spec after Orb picks the readout, Rally and downtime.
   - Combat: stage 0/1 after the spec. The composer's code lives in sim/director (Encounter owns it); Combat owns the vocabulary as data.
   - Simulation.
-- **Next sim editor after Encounter:** World (craters and water), then Rendering's crater and scorch visuals.
+- **Next sim editor after Encounter:** World, one brief covering:
+  - rims are gameplay (EP ruling), so the 1D profile gets raised rims and wider, shallower bowls sized by energy;
+  - fx events 'crater' (x, ground y, r, depth, energy, cause) and 'scorch' (x, ground y, width, power, variant, owner) with defined energy and power scalars;
+  - a persistent crater list in state, for replay seek and snapshots;
+  - sim quirk 7 (a crater every 36 units along low beams) replaced by scorch trails that scale with beam power;
+  - simple water flow;
+  - launched fighters skim water (a sim/core/fighter.gd edit, routed via Simulation if needed).
+  Then Rendering draws the crater bowls in depth (the z=0 slice equals the sim) and the scorch trails.
 - **Tools, small:** fix the godot-parity comment (it now checks the GD goldens); add a batch.gd 5-match smoke step. QA: move baselines to batch.gd.
 
 ## Queued for idle directors (send when they resume)
