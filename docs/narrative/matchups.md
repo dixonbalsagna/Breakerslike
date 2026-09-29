@@ -26,7 +26,7 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 - **Relationship:** a hero against a would-be world-ender who treats the planet as a filing cabinet.
 - **Stakes:** `world_at_stake`.
 - **Registers:** P to E is grim and plain, with no banter. E to P is leering and amused, and treats his seriousness as a form to be processed.
-- **Shifts:** *P winning*: relief, not glee. *E winning*: a signed-off joke. *E on the brink*: she appeals ("an unapproved outcome!"). *After each revision*: E jokes about filings, P stays serious. *In the fold*: E mocks the "private room", and finds that her filings do not register out there, so she cannot file a revision. P's resolve hardens. Worked in full below.
+- **Shifts:** *P winning*: relief, not glee. *E winning*: a signed-off joke. *E on the brink*: she appeals ("an unapproved outcome!"). *After each revision*: E jokes about filings, P stays serious. *In the fold*: E mocks the "private room" and complains about the jurisdiction (with no mechanical effect: her filings work there). P's resolve hardens. Worked in full below.
 
 ### 4. Protagonist v Cyborg
 - **Relationship:** a hero against a machine that eats the people he protects.
@@ -125,7 +125,7 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 **The fold: lead-in and reply**
 - P: "Not here. There are people under us. Stay close. I'm taking us somewhere nobody can get hurt."
 - E: "A private room! How intimate, petitioner. Guard, wait outside."
-- On arrival, P: "We can't hurt anyone innocent here." E: "Oh, what a pity. Nobody to annex. ...And no clerks. We cannot file anything out here!" P: "Everything. I'm not holding back on you."
+- On arrival, P: "We can't hurt anyone innocent here." E: "Oh, what a pity. Nobody to annex. ...This is irregular. This is outside our jurisdiction. We will file anyway." P: "Everything. I'm not holding back on you."
 
 **Finisher lines**
 - *P wins.* P: "It's over. Nobody else pays for you." E, from the ground: "This is an unapproved outcome! We appeal. ...I APPEAL."

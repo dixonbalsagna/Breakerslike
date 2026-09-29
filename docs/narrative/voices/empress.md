@@ -34,7 +34,7 @@ Long, silky sentences that end on a sneer, then a sudden short scream when angry
 | **Collateral** | Delighted. "Annexing." A city is a province. |
 | **Being mocked** | Cackles, then the "we" turns into "I": "You struck ME." |
 | **Transforming** | A joke revision is a stamp and a hat. A real revision is a quiet, cold, notarised moment. |
-| **Filing interrupted** | Outrage: "That is a criminal offence in eleven jurisdictions!" |
+| **Her fill is stopped** | A plain, furious stamp: "Rejected." She starts again. (No penalty and no interruption comedy, per Orb.) |
 
 ## Grunt and laugh palette
 `cackle` (a wheeze that builds), `snort`, `laugh.cruel`, `shriek` (escalating), `sigh` (theatrical), `growl` (short, sharp), a leering `hm`, and a **stamp** (a rubber-stamp thud she makes with her whole body, a comic gesture). Nothing sincere.
@@ -79,9 +79,9 @@ Her three goons are her **guard of honour** (Orb's pick): the Shield (bruiser), 
 4. "Revision Nine: Field Revision. Now with armour, and a covering letter."
 5. "Revision Twelve. All approved. Nobody leave until it is stamped."
 
-**A filing interrupted**
-1. "You interrupted a filing! That is a criminal offence in eleven jurisdictions!"
-2. "Rejected: incomplete! We now look nothing like our photograph!"
-3. "Guard! Which of us are you saluting? Salute the one on file!"
-4. "We are now legally somewhere else. Please wait."
-5. "This is not what we submitted!"
+**While her filing processes (the fill phase)**
+1. "Please take a number. We are amending our likeness."
+2. "Stamp it, guard. And again. In triplicate."
+3. "Do not look. It is not notarised."
+4. "Rejected? We were in the middle of a sentence!"
+5. "This is irregular. This is outside our jurisdiction. ...We will file anyway."

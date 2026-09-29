@@ -252,3 +252,7 @@ Orb: lines should change with who faces whom. A line can now key on the pairing,
 ```
 
 **A lint rule.** Every fighter has a general fallback for each register, and every matchup has at least one line per shift, so no matchup goes silent.
+
+## 11. Waiting while an opponent transforms (added 2026-09-29)
+
+Trigger `opponent_transform_wait`: fires when an opponent's transformation reaches its cinematic phase (uninterruptible, per Orb). The waiter picks a `register` of `impatient`, `polite` or `mocking` from the matchup default and the current mood, and a line by ordered pair. The lines are in `waiting-lines.md`. The fill phase before the cinematic uses the normal exchange lines.

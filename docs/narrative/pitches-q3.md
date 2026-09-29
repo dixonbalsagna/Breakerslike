@@ -446,7 +446,7 @@ Each carries a comic form number ("FORM 9-B: CHANGE OF APPEARANCE (MINOR)"). Two
 - **Minor amendments (the joke revisions, 1 to 8):** auto-approved, over in a moment, and safe from interruption. The joke is the hat.
 - **Full filings (the real revisions, 9 to 12):** long, and interruptible.
 
-## 3. What goes wrong if a filing is interrupted
+## 3. What goes wrong if a filing is interrupted (WITHDRAWN by Orb's ruling; see section 10)
 
 | Option | What happens | The comedy |
 |---|---|---|
@@ -456,7 +456,7 @@ Each carries a comic form number ("FORM 9-B: CHANGE OF APPEARANCE (MINOR)"). Two
 
 **Favourite: B for an interruption, with C as the escalation.**
 
-## 4. The tangle
+## 4. The tangle (WITHDRAWN: the Audit is out; see section 10)
 
 A visible card, like an ego meter: `FILINGS OUTSTANDING: 2`. Each real revision adds one, and each interruption adds one. The forms cross-reference each other with deliberate nonsense ("Revision Six supersedes Revision Four, except where it does not"). At three outstanding filings, the Audit (C) starts. Clearing them needs a proper, uninterrupted revision.
 
@@ -471,7 +471,7 @@ A visible card, like an ego meter: `FILINGS OUTSTANDING: 2`. Each real revision 
 7. *Backdating.* "We filed it yesterday."
 8. *The cheque.* Her "Approved" stamp arrives a beat late, and the transformation happens in the wrong order.
 
-## 6. Emergency revision and her Rally
+## 6. Emergency revision and her Rally (under review; see section 10)
 
 Game Design's Rally for the Tyrant is the **Emergency revision** (instant and safe, it mends her most-worn region, skips a rung, and leaves a visible flaw). In the paperwork it is an **unfiled form: a backdated filing**. The record is amended so that the injury "never happened", the region mends, and the flaw is an **ink stamp reading `PENDING`** on the mended region. It adds one outstanding filing. The stamp stays until she completes a proper revision, which rewards her for climbing the ladder afterwards. At three outstanding filings the Audit takes her, so she cannot use the Emergency revision as a free reset.
 
@@ -479,7 +479,7 @@ Game Design's Rally for the Tyrant is the **Emergency revision** (instant and sa
 
 **The Shield** (bruiser), **the Herald-Archer** (marksman) and **the Runner** (speedster). Each salutes formally before tagging in: a fixed one-second beat that the player can read, and the incoming guard member cannot be hit until it ends. She dismisses each fallen guard member "with honour". Her lines: "Guard, present arms."
 
-## 8. The fold
+## 8. The fold (REVISED: her filings work in the fold; see section 10)
 
 Her filings **do not register in the fold**: there are no clerks, and it is outside her jurisdiction. So she cannot file a real revision there ("We cannot file anything out here!"). That is a comic beat and a balance question for Game Design: it makes the fold hard for her, so a rule is needed (for example, she may use only the Emergency revision inside it).
 
@@ -489,3 +489,28 @@ Her filings **do not register in the fold**: there are no clerks, and it is outs
 - The stamp is an ink stamp, not a coloured aura.
 - Risk: too many rules make her hard to read. The cards and the stamps carry the state.
 - Risk: the Audit might feel like a stall. It is capped at 3 seconds and only after three outstanding filings.
+
+## 10. After Orb's rulings on the paperwork
+
+Orb's rulings: transformations are cinematic and uninterruptible; only the gauge or fill phase before them can be stopped. The Mismatch, the Audit and the interruption comedy are out. Her filings work in the fold.
+
+**Her paperwork is her fill phase.** The forms are processed in stamps, and the opponent can stop the fill before approval. Once approved, her revision cinematic plays in full and cannot be stopped.
+
+- **The fill.** A real revision (9 to 12) shows as a stack of forms hovering around her. The stamps land in turn: `SUBMITTED`, `LIKENESS AMENDED`, `NOTARISED`, and then `REGISTERED`, which is the approval. A joke revision (1 to 8) is a one-stamp minor amendment.
+- **Stopping the fill.** The opponent can hit her, or the guard member stamping, or the forms themselves, before `REGISTERED`. The result is a plain `REJECTED` stamp and the fill starts again. No penalty, no limbo form, no Audit, and no interruption jokes.
+- **The cinematic.** Once `REGISTERED` lands, her revision plays in full, and the opponent waits with arms folded (see `waiting-lines.md`). The bureaucratic comedy lives here: the notary, the camera flash, "take a number", a stamp landing a beat late, a form flying to the wrong department, the hat appearing on the wrong revision.
+- **The cards.** The wound-card style stays: `FORM 9-B: CHANGE OF APPEARANCE: NOTARISED`.
+
+**The Emergency revision and her Rally: 3 flavour ideas** (Orb is unsure about the backdated filing; Game Design has alternatives):
+
+| Idea | What it is | The flavour |
+|---|---|---|
+| **The Appeal** ★ | She lodges an appeal against the last exchange. After a short, ceremonial hearing, with her guard as the judges, the exchange is "overturned" and the region mends. It is a fill phase, so the opponent can stop it. | It is her losing line made into a move: "We appeal. ...I APPEAL." |
+| **Dismissed with honour** | She transfers the wound to a guard member, who falls. The comeback costs her a member of the court. | Dark and funny: "The Shield is dismissed with honour." It makes her Rally a real cost. |
+| **The Decree** | She decrees the injury unlawful, effective immediately. It mends at once and leaves an ink `PENDING` stamp on the region, without any backdating. | The plain version of the original idea. |
+
+**Favourite: The Appeal.** It uses the fill phase and it uses her voice.
+
+**The fold.** Her filings work there. The joke can stay as a line she complains about with no mechanical effect: "This is irregular. This is outside our jurisdiction. ...We will file anyway."
+
+**The decree line.** Yes: "decree line" is her ranged beam, the surveyor line (a ruler-straight thin beam that draws a cut across the land and declares it a border). It is the same weapon under a placeholder name.
