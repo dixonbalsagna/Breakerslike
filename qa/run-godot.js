@@ -6,7 +6,7 @@
 //   options: --matches=N  --jobs=N  --arms=default,swap,...  --scale=testbed|game  --cap=18000  --seed=1
 //            --fail (exit 1 on any FAIL, bands included)  --md=docs/qa/baseline-g0.md  --json=file  --only=bands|tests|s0
 // Exit code: 0 unless the run itself broke (no Godot, NaN, a fighter outside the world, a non-deterministic seed) or a
-// hard test failed. Band FAILs are the point of a baseline, so they exit 1 only with --fail.
+// hard test failed (soft tuning tests such as W3 and W5 only report). Band FAILs are the point of a baseline, so they exit 1 only with --fail.
 // Needs Godot 4.7 ($GODOT, PATH, or the Windows install folder). The Node prototype suite is separate: node qa/run-all.js.
 const fs = require('fs');
 const path = require('path');
@@ -21,8 +21,8 @@ const flag = n => args.includes('--' + n);
 const quick = flag('quick');
 const N = parseInt(val('matches', quick ? '100' : '400'), 10);
 const JOBS = parseInt(val('jobs', String(Math.max(1, Math.min(8, require('os').cpus().length - 1)))), 10);
-const SCALE = val('scale', 'testbed');
-const CAP = parseInt(val('cap', '18000'), 10);
+let SCALE = val('scale', 'auto');                          // auto: game scale once the sim has finishers (S2), testbed before
+const CAP = parseInt(val('cap', '43200'), 10);            // 12 minutes, the cap S2 uses
 const BASE = parseInt(val('seed', '1'), 10);
 const ARMS = (val('arms', quick ? 'default,swap' : 'default,swap,mirror-villain,mirror-hero,default-flip,swap-flip,mirror-villain-flip,mirror-hero-flip')).split(',');
 const ONLY = val('only', null);
@@ -37,6 +37,7 @@ async function main() {
 
   const A = {}, t0 = Date.now();
   for (const arm of ARMS) A[arm] = await runRecords({ arm, base: BASE, count: N, jobs: JOBS, cap: CAP });
+  if (SCALE === 'auto') SCALE = require('./godot/bands').hasEvent(A, 'finisher_start') ? 'game' : 'testbed';
   const bad = Object.values(A).flat().filter(r => r.bad);
   if (bad.length) { for (const r of bad.slice(0, 5)) console.log(`FAIL  seed ${r.seed} (${r.arm}): ${r.bad}`); process.exit(1); }
   const digests = Object.fromEntries(ARMS.map(a => [a, digest(A[a])]));
@@ -53,7 +54,7 @@ async function main() {
   if (!ONLY || ONLY === 'tests') {
     const tests = await runTests(ctx);
     result.tests = tests; printTests(tests);
-    if (tests.some(t => t.status === 'FAIL')) hardFail = true;
+    if (tests.some(t => t.status === 'FAIL' && !t.soft)) hardFail = true;
   }
   if (!ONLY || ONLY === 's0') {
     const s0 = s0Retest(A); result.s0 = s0; printS0(s0);

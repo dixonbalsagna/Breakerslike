@@ -56,10 +56,12 @@ function mirrorEffects(A, arm) {
   return { slot: (pa + pb) / 2 - 0.5, spawn: (pa - pb) / 2, se };
 }
 
+// Event types that share a prefix with a future hazard family but are not it: hazard_telegraph is a warning the director sends today.
+const IGNORED = new Set(['hazard_telegraph']);
 // hasEvent: does any record carry an fx event of this type? A trailing * matches a prefix.
 function hasEvent(A, pattern) {
   const pre = pattern.endsWith('*') ? pattern.slice(0, -1) : null;
-  for (const recs of Object.values(A)) for (const r of recs) for (const t of Object.keys(r.fxCounts || {})) if (pre !== null ? t.startsWith(pre) : t === pattern) return true;
+  for (const recs of Object.values(A)) for (const r of recs) for (const t of Object.keys(r.fxCounts || {})) if (pre !== null ? t.startsWith(pre) && !IGNORED.has(t) : t === pattern) return true;
   return false;
 }
 
@@ -178,7 +180,11 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
     R.point('5b.perMatch', '§5b', 'Brunts per match, P2 testbed (default arm)', { v: perMatch(D), lo: 0.5, hi: 2 });
     if (have('mirror-villain')) R.add({ id: '5b.villain>default', ref: '§5b', what: 'Villain mirror has more brunts per match than the default arm', status: perMatch(A['mirror-villain']) > perMatch(D) ? 'PASS' : 'FAIL', value: `${perMatch(A['mirror-villain']).toFixed(2)} vs ${perMatch(D).toFixed(2)}`, band: 'greater', note: '' });
     if (have('mirror-hero')) R.point('5b.hero', '§5b', 'Hero mirror: brunts per match at most 0.6', { v: perMatch(A['mirror-hero']), hi: 0.6 });
-    R.pending('5b.reach', '§5b', 'Launches that pick a building, out of those with a candidate in reach (35 to 60%)', 'needs the planner\'s candidate list in the feed or an event (ask Encounter for a launch_plan record with the candidates)');
+    if (hasEvent(A, 'launch_plan')) {
+      const plans = D.flatMap(r => (r.events || []).filter(e => e.type === 'launch_plan' && /BUILDING|BRUNT/.test(e.text || '')));
+      const picked = plans.filter(e => /BUILDING|BRUNT/.test(e.chosen || '')).length;
+      R.rate('5b.reach', '§5b', 'Launches that pick a building, out of those with a building candidate in reach (35 to 60% pooled)', { v: picked / plans.length, ci: wl(picked, plans.length), lo: 0.35, hi: 0.60, note: `${plans.length} plans with a candidate; from launch_plan events` });
+    } else R.pending('5b.reach', '§5b', 'Launches that pick a building, out of those with a candidate in reach (35 to 60%)', 'needs launch_plan events');
     R.pending('5b.chains', '§5b', 'Chains among brunts, chain lengths, the per-tier casualty budget for one chain (hard test), the launcher tier cap (hard test)', 'needs brunt-chain events (World, buildings-in-depth §4b); skeleton in qa/godot/pending-tests.js');
   }
 
@@ -225,11 +231,29 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
 
   // ---- 8. story beats
   if (D) {
-    const hides = D.map(r => sum(r.hides)), withHide = hides.filter(h => h > 0).length / D.length;
-    R.point('8.hides', '§8', 'Hides per match (game band 1.5, re-baselined to 2 to 5 once living destruction lands)', { v: mean(hides), lo: 1.5, unit: 'num' });
-    R.rate('8.hidesAny', '§8', 'Matches with at least one hide', { v: withHide, ci: wl(hides.filter(h => h > 0).length, D.length), lo: 0.60 });
-    R.point('8.ambush', '§8', 'Ambush attacks per match', { v: mean(D.map(r => r.ambush)), lo: 0.5 });
+    R.info('8.hides', '§8', 'Hides and ambushes', 'retired', 'hiding is removed from the base game and kept for a future stealth fighter (balance-targets §8); the rows return with that fighter (canHide)');
     R.point('8.clash', '§8', 'Beam clashes and struggles per match (CLASH outcomes)', { v: mean(D.map(r => r.beams.filter(b => b.out === 'CLASH').length)), lo: 2, hi: 8 });
+    // lock breaks through line of sight (spec-wounds 1c): an episode for fighter X runs from the first `searching` aimed at X after X was last found, to X's next `found`
+    if (hasEvent(A, 'found')) {
+      const eps = [], gapsBetween = [], perMatch = [];
+      for (const r of D) {
+        let n = 0; const lastFound = {}, start = {};
+        for (const e of (r.events || [])) {
+          if (e.type === 'searching' && start[e.target] === undefined) start[e.target] = e.t;
+          if (e.type === 'found' && start[e.actor] !== undefined) { eps.push(e.t - start[e.actor]); if (lastFound[e.actor] !== undefined) gapsBetween.push(start[e.actor] - lastFound[e.actor]); lastFound[e.actor] = e.t; delete start[e.actor]; n++; }
+        }
+        perMatch.push(n);
+      }
+      R.point('8.lock.perMatch', '§1c', 'Lock breaks per match (1 to 4)', { v: mean(perMatch), lo: 1, hi: 4, unit: 'num' });
+      if (eps.length) {
+        R.point('8.lock.median', '§1c', 'Median lock-break length (2 to 3 s)', { v: median(eps), lo: 2, hi: 3, unit: 's' });
+        R.add({ id: '8.lock.max', ref: '§1c', what: 'No lock break longer than 4 s (hard test)', status: Math.max(...eps) <= 4.05 ? 'PASS' : 'FAIL', value: `longest ${Math.max(...eps).toFixed(2)} s over ${eps.length} breaks`, band: 'at most 4 s', note: 'episodes are read from searching and found events; a hunt sweep with no lock loss can lengthen one' });
+        R.add({ id: '8.lock.gap', ref: '§1c', what: 'Never within 6 s of the same fighters last one (hard test)', status: gapsBetween.length && Math.min(...gapsBetween) < 5.95 ? 'FAIL' : 'PASS', value: gapsBetween.length ? `shortest gap ${Math.min(...gapsBetween).toFixed(2)} s over ${gapsBetween.length}` : 'no repeat breaks', band: 'at least 6 s', note: '' });
+      } else R.pending('8.lock.length', '§1c', 'Lock-break length and spacing', 'no complete lock break (searching then found) in these matches');
+      const ll = mean(D.map(r => (r.events || []).filter(e => e.type === 'lock_lost').length));
+      R.info('8.lock.attempts', '§1c', 'Attacks refused for lost lock (lock_lost) per match', ll.toFixed(2));
+    } else R.pending('8.lock', '§1c', 'Lock breaks through line of sight: 1 to 4 a match, median 2 to 3 s, at most 4 s, never within 6 s of the last', 'needs the found and searching events (S2)');
+    R.pending('8.breath', '§8', 'Second breath: battered wear recovered through it is at most 25% of all battered wear taken', 'needs an event or a total for wear recovered by second breath');
     R.pending('8.comebacks', '§8', 'Comebacks 15 to 35% of matches; lead changes median at least 2', 'needs the brink and region stages (Wounds S1, S2)');
     R.add(hasEvent(A, 'region_broken') ? { id: '8.breaks', ref: '§8', what: 'Region breaks per match, median (game: 4 to 6)', status: 'INFO', value: String(median(D.map(r => r.events.filter(e => e.type === 'region_broken').length))), band: '4 to 6 at game scale', note: 'see the pending-tests skeleton W3' } : { id: '8.breaks', ref: '§8', what: 'Region breaks before the finisher (4 to 6), finishers preceded by a brink call-out (100%)', status: 'PENDING', value: '', band: '', note: 'needs Wounds S1 and S2 events' });
   }

@@ -62,6 +62,17 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const r2 = byId(await runTests(ctx({ default: [withEvents(ok, [{ type: 'evacuate', t: 5 }])] }), ['C1', 'C2']));
     assert.strictEqual(r2.C1.status, 'PASS'); assert.strictEqual(r2.C2.status, 'PASS');
   });
+  await t('lock-break rows: one 2.5 s break passes, a 5 s break and a repeat inside 6 s fail; hazard_telegraph alone does not switch on the hazard tests', async () => {
+    const mk = evs => evaluate({ default: [withEvents(rec(), evs)] });
+    const ok = mk([{ type: 'searching', t: 10, actor: 0, target: 1 }, { type: 'found', t: 12.5, actor: 1 }]);
+    assert.strictEqual(ok.find(r => r.id === '8.lock.median').status, 'PASS'); assert.strictEqual(ok.find(r => r.id === '8.lock.max').status, 'PASS');
+    const long = mk([{ type: 'searching', t: 10, actor: 0, target: 1 }, { type: 'found', t: 15, actor: 1 }]);
+    assert.strictEqual(long.find(r => r.id === '8.lock.max').status, 'FAIL');
+    const rep = mk([{ type: 'searching', t: 10, actor: 0, target: 1 }, { type: 'found', t: 12, actor: 1 }, { type: 'searching', t: 16, actor: 0, target: 1 }, { type: 'found', t: 18, actor: 1 }]);
+    assert.strictEqual(rep.find(r => r.id === '8.lock.gap').status, 'FAIL');
+    const tele = byId(await runTests(ctx({ default: [withEvents(rec(), [{ type: 'hazard_telegraph', t: 5 }])] }), ['H2', 'H3']));
+    assert.strictEqual(tele.H2.status, 'PENDING'); assert.strictEqual(tele.H3.status, 'PENDING');
+  });
   await t('a test with events present but no body stays PENDING, never PASS', async () => {
     const r = byId(await runTests(ctx({ default: [withEvents(rec(), [{ type: 'brunt_chain', t: 5 }])] }), ['H5'])).H5;
     assert.strictEqual(r.status, 'PENDING');

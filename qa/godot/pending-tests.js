@@ -1,5 +1,6 @@
 // Acceptance-test skeletons for slices that have not landed: the Wounds acceptance tests (docs/design/spec-wounds.md §5),
 // the living-destruction hard tests (balance-targets.md §11, living-destruction-numbers.md) and the §5b chain hard tests.
+// A `soft` test measures a tuning target (length, spread, balance): its FAIL is reported but does not fail the run, like a band. Hard tests (determinism, no KO without a finisher, no loops, hazards, ramp) do.
 // A test whose `needs` (fx event types the sim must emit; a trailing * matches a prefix) are absent from the records is
 // reported PENDING with the slice that unblocks it; it never fails. The moment the events appear, the body runs for real.
 // A test with no body is a checklist item: it stays PENDING until someone writes the body against the event fields that
@@ -36,7 +37,7 @@ const tests = [
       }));
       return `${ko.length} KOs`;
     } },
-  { id: 'W3', spec: 'spec-wounds §5.3', title: 'Length and chapters: 4 to 6 region breaks (median); first brink median 4:30 to 7:00; length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00', slice: 'S2 (run with --cap=43200)', needs: ['region_broken', 'brink_enter', 'finisher_start'],
+  { id: 'W3', spec: 'spec-wounds §5.3', title: 'Length and chapters: 4 to 6 region breaks (median); first brink median 4:30 to 7:00; length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00', soft: true, slice: 'S2 (run with --cap=43200)', needs: ['region_broken', 'brink_enter', 'finisher_start'],
     run({ A }) {
       const D = A.default; assert.ok(!D.some(r => r.timeout), 'matches hit the cap: run with --cap=43200 (12 min)');
       const breaks = median(D.map(r => evs(r, 'region_broken').length)), brink = median(D.map(r => Math.min(...evs(r, 'brink_enter').map(e => e.t)) ).filter(Number.isFinite)), lens = D.map(r => r.koAt);
@@ -55,7 +56,7 @@ const tests = [
       })));
       return `${per.toFixed(2)} rallies per match`;
     } },
-  { id: 'W5', spec: 'spec-wounds §5.5', title: 'Spread: no region above 45% of all wear; each of head, arms and legs is the first region broken in at least 10% of matches (measured and reported from S1, banded once S2 lands)', slice: 'S1 (measured), banded from S2', needs: ['region_broken'],
+  { id: 'W5', spec: 'spec-wounds §5.5', title: 'Spread: no region above 45% of all wear; each of head, arms and legs is the first region broken in at least 10% of matches (measured and reported from S1, banded once S2 lands)', soft: true, slice: 'S1 (measured), banded from S2', needs: ['region_broken'],
     run({ A }) {
       const D = A.default, first = {};
       for (const r of D) { const b = evs(r, 'region_broken')[0]; if (b) first[b.region] = (first[b.region] || 0) + 1; }
@@ -70,7 +71,7 @@ const tests = [
       return detail;
     } },
   { id: 'W6', spec: 'spec-wounds §5.6', title: 'Profiles: Cyborg chip takes 0 while the hatch is closed; Anti-hero penalties follow Pride and facade; refit mends shrink; no finisher while Boiling; core wear never decreases', slice: 'F1 (roster fighters)', needs: ['hatch_open', 'facade_crack', 'boil_over'], run: null },
-  { id: 'W7', spec: 'spec-wounds §5.7', title: 'Balance: every pairing 45 to 55%; pacing bands still pass; heat-track bands (Boiling reached in 40 to 80%, at most 5% of time, boil-overs at most 0.5 a match, boil-over matches won 35 to 55%, internal wear 10 to 35% of brinks)', slice: 'S2 for pairings, F1 for heat', needs: ['region_broken', 'heat_stage'], run: null },
+  { id: 'W7', spec: 'spec-wounds §5.7', title: 'Balance: every pairing 45 to 55%; pacing bands still pass; heat-track bands (Boiling reached in 40 to 80%, at most 5% of time, boil-overs at most 0.5 a match, boil-over matches won 35 to 55%, internal wear 10 to 35% of brinks)', soft: true, slice: 'S2 for pairings, F1 for heat', needs: ['region_broken', 'heat_stage'], run: null },
   // ---------------------------------------------------------------- living destruction hard tests (balance-targets §11)
   { id: 'H1', spec: '§11 hard test', title: 'Hazards never break a region: hazard wear stops at 89', slice: 'LD1 with Wounds S1', needs: ['hazard*', 'region_broken'],
     run({ A }) {
@@ -121,7 +122,7 @@ async function runTests(ctx, only = null) {
   for (const t of tests) {
     if (only && !only.includes(t.id)) continue;
     const missing = t.needs.filter(n => !hasEvent(ctx.A, n));
-    const base = { id: t.id, spec: t.spec, title: t.title, slice: t.slice };
+    const base = { id: t.id, spec: t.spec, title: t.title, slice: t.slice, soft: !!t.soft };
     if (missing.length) { out.push({ ...base, status: 'PENDING', detail: `waiting for ${t.slice}: no ${missing.join(', ')} event in the sim` }); continue; }
     if (!t.run) { out.push({ ...base, status: 'PENDING', detail: `events present, but the check has no body yet: write it against ${t.slice}'s fields` }); continue; }
     try { const got = await t.run(ctx); out.push(got && got.status ? { ...base, status: got.status, detail: got.detail } : { ...base, status: 'PASS', detail: got || '' }); } catch (e) { out.push({ ...base, status: 'FAIL', detail: String(e.message || e).split('\n')[0] }); }
