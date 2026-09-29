@@ -1,0 +1,11 @@
+{
+  "name": "meridian-prototype",
+  "private": true,
+  "description": "Browser prototype and headless QA tools",
+  "scripts": {
+    "sim": "node tools/sim-stats.js 60"
+  },
+  "optionalDependencies": {
+    "@napi-rs/canvas": "*"
+  }
+}
