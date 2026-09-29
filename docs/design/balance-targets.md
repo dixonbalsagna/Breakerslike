@@ -148,8 +148,9 @@ Orb wants the director to "often" choose one building to take the brunt of a lau
 | :--- | :--- | :--- |
 | Launches that pick a building, out of those with a candidate in reach | 35 to 60% pooled | By personality: fighters who feed on collateral 40 to 60%; the protector 20 to 35%. Today that is the villain and the hero |
 | Share of all planner launches that are brunts | 8 to 20% | This moves with fight time spent in settlements (Encounter's location work) |
-| Brunts per match, P2 testbed (default arm) | 0.5 to 2 | Villain mirror above the default arm; hero mirror at most 0.6; 0 in matches that never come near a settlement |
+| Brunts per minute (all arms) | Default arm 0.1 to 0.35 per minute. Villain mirror above the default; **hero mirror at most 0.15 per minute** (S3b: 0.81 in 7:06, about 0.11 per minute, which passes). 0 in matches that never come near a settlement |
 | Brunts per minute, game scale | 0.3 to 1.0 | About 2 to 7 in a 7-minute match. A region-break launch may end in a brunt, at the same personality rates |
+| **S3b ruling** | The default share of 7.9% sits at the 8% floor and is within noise. **Do not raise `CARE_W`**: it would add collateral at a time when civilians lost are already 56%. Re-check the share after World's ramp and cap and Encounter's location work |
 | Launch cap | Unchanged | No launch type above 40% (§5). Brunts help the "four types at 5% or more" floor |
 
 **How brunts feed the ego meters.** There is no special rule; the standing casualty rule applies:
@@ -198,8 +199,8 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Measure | Band |
 | :--- | :--- |
 | Ground contacts that slide rather than slam | 60 to 85%. Slams stay at 15% or more, so craters still read (pillar 4) |
-| Slides per match, P2 testbed (default arm) | 6 to 12 (today's ground impacts run about 9 per match) |
-| Slides per minute, game scale | 2 to 4 |
+| Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
+| Slides per minute, game scale | 1.5 to 4, which is §10's 4 to 6 launches a minute times the share that lands on ground times the 60 to 85% slide share. Also measured per launch: 35 to 70% of all launches end in a slide |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -281,6 +282,12 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 - The lever is weak: +30% reaches only 43.9%.
 - The EP ruled to keep +10%, because the roster meters replace the placeholders. The testbed runs at about 41% for KAI until then.
 - The lesson for the roster: collateral-fed buffs outweigh small calm-state bonuses, so each fighter's meter needs comparable expected value from the start (see below).
+
+**Anguish with more than one protector** (the rule for QA-003 and GD-B09; World implements it in its window).
+- Every fighter whose profile has a pressured-by-collateral meter (anguish today) gains it from **every** casualty. This is set by the fighter's data, not by the role name "hero".
+- The gain is +0.5 per casualty caused by anyone else, or +0.9 per casualty the fighter caused itself, both normalised by `425 / pop0`.
+- In a hero mirror, each hero takes +0.9 for its own collateral and +0.5 for its rival's.
+- The same data-driven rule covers the comeback term and the lure (GD-B09).
 
 **What carries to the roster** (`economy.md` §4):
 - every ego meter decays or is spent;
