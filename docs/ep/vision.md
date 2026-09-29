@@ -131,3 +131,9 @@ Orb had played the Godot greybox before answering.
 - Fusion: may be replaced by a unique Anti-hero power-up; keep 'sacrifice pride for power'.
 - Wear readout: a combination of the aura crown with wound cards and the silhouette, per fighter (Game Design pitches).
 - Rally: Game Design's four per-fighter Rallies approved, with looser limits.
+
+**Round 3 answers (Orb, 2026-09-29).**
+- Power stage: 'something like his blood goes from heated to simmering to boiling, causing internal damage that adds up but gives big temporary boosts.'
+- Anti-hero power-up: keep working. Orb wants it 'recognizable but non-infringing' and asks whether fair-use and parody rules can protect a good-faith tribute (Legal to explain).
+- Voices: 'good start, let's work on this further.'
+- The orb-payoff question was unclear; the EP is re-asking it plainly.

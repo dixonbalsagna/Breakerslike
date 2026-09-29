@@ -13,11 +13,12 @@ Six systems that Orb's four fighters and the new match length need (`docs/ep/vis
   - Forms are permanent except drain states.
   - Orb wants a replacement pitched for the multiplier stage, and wants transformations explored beyond the beast stage.
 - **The Tyrant:**
-  - a tail, kept but redesigned (not a cable whip);
+  - the **bladed mantle**, a cape with blade hems used like a tail (Orb's later pick);
   - the "revision" joke;
   - three goons: bruiser, marksman, speedster;
   - while the goons fight, a human Tyrant snipes support shots and taunts.
-- **Fusion** is a true merge with an original trigger and look. Legal screens it. Tandem stays only as a fallback.
+- **Fusion** may be replaced by an Anti-hero power-up that keeps "sacrifice pride for power". **Swallow It** is the default. Full Circle is the optional merge, which Legal screens (`spec-wounds.md` §3).
+- **The Protagonist's power stage is Overcommit**, a region loan (`spec-wounds.md` §3).
 - **Relocation uses fragments**, not keystones, within Legal's conditions (`docs/legal/q3-screen.md` §a):
   - the planet sheds them when damaged, and they are contested;
   - a heavy hit scatters one;
@@ -26,8 +27,8 @@ Six systems that Orb's four fighters and the new match length need (`docs/ep/vis
   The design is in `pitches.md` §4. It replaces section 4's keystones.
 - **The Cyborg:**
   - a backup drive he catches and docks;
-  - the weak point is pitched as the chest hatch (`damage-model.md` §4);
-  - the food mechanic is pitched as Takeout.
+  - the weak point is the **Rail chip** (Orb's pick);
+  - the food mechanic is **Press** (Orb's pick), with the rules in `spec-wounds.md` §3.
 - **Planets:** earth-like and alien biomes, day, night and weather, and bigger for 2v2.
 - **Damage** is location-based with no health bar (`damage-model.md`). Wherever this page says "HP", read "wear".
 

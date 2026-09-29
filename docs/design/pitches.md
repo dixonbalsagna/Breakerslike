@@ -38,7 +38,14 @@ Every option shows the same state: four regions, each fresh, bruised, battered o
 | Tyrant | **Emergency revision** | While on the brink, press to force an unscheduled revision. It is instant and safe, like his other revisions (Orb) | Mends his most-worn region, but **skips a rung**: he loses the next scheduled refit, and the new revision shows a visible flaw (a crack or a patch) | Vain and quick to anger. He would rather "upgrade" than admit he is losing, and each patch job makes him worse |
 | Cyborg | **Reboot** | While on the brink, he docks his backup drive, if it is still loose, or finishes a consume beat within reach of civilians. Consuming stays interruptible, like charging | Mends one chip break (`damage-model.md` §4), and his regrowth doubles for 5 s | He runs on spare parts and people. Protect the civilians, or catch the drive first, to deny him |
 
-**Limits, so finales don't loop:**
+**Orb approved these Rallies with looser limits.** The binding limits are in `spec-wounds.md` §2:
+- each region can be rallied once;
+- a 15 s cooldown;
+- the finisher-contest tilt replaces the final-act lock.
+
+The original pitch follows for the record.
+
+**Limits, so finales don't loop (original pitch):**
 1. **Once per fighter per match.** The Tyrant may use Emergency revision twice, but never in his full-power form, and each use costs a refit.
 2. **Cooldown.** No Rally within 30 s of leaving the brink.
 3. **Rallies wear off.** The mended region comes back battered, not bruised. A second brink after a Rally puts the finisher's roll in the opponent's favour.

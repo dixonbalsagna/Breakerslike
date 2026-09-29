@@ -92,7 +92,7 @@ Each profile is a small set of data values over the shared regions, so a re-skin
 | Tyrant | **Refit** | Each revision repairs one stage of his most-worn region. The repair shrinks with each revision, and the full-power form repairs nothing. His redesigned tail is a fifth region: breaking it removes the tail attacks and slows his next revision. His three goons are simple bodies with one region each, and one break takes a goon out | Break the tail early. Save big damage for his late revisions, when refits are small |
 | Cyborg | **Regrowth and the hatch** | His regions regrow fast (working value 8 wear per second out of exchanges), and consuming speeds it up. His flesh never counts toward the brink. His brink comes only from **core-chip damage**. A heavy, a GUARD BREAK or a signature hit pops his chest hatch open for 1.5 s, and only strikes that land in that window hurt the chip. Chip damage never regrows. Three chip breaks put him on the brink | Commit: open the hatch with a heavy, then chain into it. Fighting from the edges does nothing. His finisher counterpart must land on the open hatch |
 
-**Orb asked for a Cyborg weak point to be pitched.** The pitch is the hatch: a microchip behind a chest plate that flips open when he is hit hard (Legal's option 1). It is readable, a skill test, and not a sphere.
+**Superseded by Orb's picks.** The Tyrant's fifth region is the **bladed mantle**, not a tail. The Cyborg's weak point is the **Rail chip**, which moves between hatches, not one fixed chest hatch. The binding rules are in `spec-wounds.md` §3.
 
 ## 5. How chapters, finishers and comebacks emerge
 
