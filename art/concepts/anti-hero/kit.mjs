@@ -56,9 +56,13 @@ export function solve(pose, build = {}, view = {}) {
   const bs = bd.lw;
   // Three-quarter view: yaw turns torso, hips and head toward the camera (degrees from profile). Near parts slide left,
   // far parts slide right, forward extents are foreshortened. At yaw 0 every number below is the plain profile.
+  // For turnarounds: yaw 90 is front-on, `back` swaps near and far (the figure is seen from behind), and armSpread and
+  // legSpread open the limbs sideways so they clear the body. All default to zero, so earlier sheets are unchanged.
   const psi = (view.yaw ?? 0) * Math.PI / 180, c = Math.cos(psi), sn = Math.sin(psi);
+  const sg = view.back ? -1 : 1, aSp = view.armSpread ?? 0, lSp = view.legSpread ?? 0;
+  const kx = (view.yaw ?? 0) >= 60 ? c + 0.6 * sn : c;
   const fd = (a, L) => { const d = dirDown(a); return V(d.x * L * c, d.y * L); };
-  const bootAt = (A, foot) => BOOT.map(([x, y]) => add(A, rotCW(V(x * bs * c, y * bs), foot)));
+  const bootAt = (A, foot) => BOOT.map(([x, y]) => add(A, rotCW(V(x * bs * kx, y * bs), foot)));
   const legPts = (t1, t2, foot = 0) => {
     const K = fd(t1, DIM.thigh * bd.leg), A = add(K, fd(t2, DIM.shin * bd.leg));
     return { K, A, foot, boot: bootAt(A, foot) };
@@ -67,9 +71,9 @@ export function solve(pose, build = {}, view = {}) {
   const minY = Math.min(...nl0.boot.map(p => p.y), ...fl0.boot.map(p => p.y));
   const P = V(0, -minY);
   const Hh = 4.2 * bd.tw, Wsh = 6.2 * bd.tw, Wt = 6.5 * bd.tw;
-  const legAt = (t1, t2, foot = 0, dx = 0) => {
+  const legAt = (t1, t2, foot = 0, dx = 0, sp = 0) => {
     const H0 = add(P, V(dx, 0));
-    const K = add(H0, fd(t1, DIM.thigh * bd.leg)), A = add(K, fd(t2, DIM.shin * bd.leg));
+    const K = add(add(H0, fd(t1, DIM.thigh * bd.leg)), V(sp * 0.5, 0)), A = add(add(K, fd(t2, DIM.shin * bd.leg)), V(sp * 0.5, 0));
     return { H0, K, A, foot, boot: bootAt(A, foot) };
   };
   const cl = v => Math.max(-1, Math.min(1, v));
@@ -80,12 +84,12 @@ export function solve(pose, build = {}, view = {}) {
   const HB = add(N, mul(V(Math.sin(rad(headAng)), Math.cos(rad(headAng))), DIM.neck));
   const Rh = 5.4 * bd.hs;
   const Hd = (x, y) => { const xl = x * bd.hs; return add(HB, rotCW(V(c * xl + sn * Rh * cl(xl / (3 * bd.hs)), y * bd.hs), headAng)); };
-  const arm = (a1, a2, dx) => {
+  const arm = (a1, a2, dx, sp = 0) => {
     const S0 = add(S, V(dx, 0));
-    const E = add(S0, fd(a1, DIM.upperArm * bd.arm)), W = add(E, fd(a2, DIM.foreArm * bd.arm));
-    return { S0, E, W, F: add(W, fd(a2, DIM.hand * bs)), a2 };
+    const E = add(add(S0, fd(a1, DIM.upperArm * bd.arm)), V(sp * 0.5, 0)), W = add(add(E, fd(a2, DIM.foreArm * bd.arm)), V(sp * 0.5, 0));
+    return { S0, E, W, F: add(add(W, fd(a2, DIM.hand * bs)), V(sp * 0.1, 0)), a2 };
   };
-  return { pose, b: bd, yaw: { c, s: sn, deg: view.yaw ?? 0 }, P, lean, T, TF, S, N, HB, Hd, headAng, nearArm: arm(...pose.nearArm, -Wsh * sn), farArm: arm(...pose.farArm, Wsh * sn), nearLeg: legAt(...pose.nearLeg, -Hh * sn), farLeg: legAt(...pose.farLeg, Hh * sn) };
+  return { pose, b: bd, yaw: { c, s: sn, deg: view.yaw ?? 0, kx, back: !!view.back }, P, lean, T, TF, S, N, HB, Hd, headAng, nearArm: arm(...pose.nearArm, -Wsh * sn * sg, -aSp * sg), farArm: arm(...pose.farArm, Wsh * sn * sg, aSp * sg), nearLeg: legAt(...pose.nearLeg, -Hh * sn * sg, -lSp * sg), farLeg: legAt(...pose.farLeg, Hh * sn * sg, lSp * sg) };
 }
 
 // Drawing context. In flat mode everything is solid black with no lines, shade bands or decals (the silhouette test).
@@ -203,7 +207,7 @@ export function drawHand(ctx, sk, arm, kind, far) {
   return out;
 }
 export function drawBoot(ctx, sk, leg, colour, shadow, trim) {
-  const bs = sk.b.lw, cx = sk.yaw?.c ?? 1;
+  const bs = sk.b.lw, cx = sk.yaw?.kx ?? sk.yaw?.c ?? 1;
   const bp = BOOT.map(([x, y]) => add(leg.A, rotCW(V(x * bs * cx, y * bs), leg.foot)));
   const cuff = [[-3.4, 4.6], [3.1, 4.6], [3.2, 1.4], [-3.5, 1.4]].map(([x, y]) => add(leg.A, rotCW(V(x * bs * cx, y * bs), leg.foot)));
   let s = ctx.poly(bp, colour) + ctx.shade([bp[0], bp[6], bp[5], add(bp[5], V(3.4, 0)), add(bp[6], V(2.2, 1.2)), add(bp[0], V(1.6, 0))], shadow);

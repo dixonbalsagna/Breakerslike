@@ -1,12 +1,14 @@
-# Marked plus Aura
+# Marked plus flashes
 
 Concept art for Orb to choose from. Working labels, pending Legal review. Read `docs/art/marked-aura.md` first.
 
 | File | What it is |
 |---|---|
 | `ma-1-style.svg` | The style: four fighters, mask tones, 40 px and 12 px reads, expression strips with head close-ups |
-| `ma-2-aura-rules.svg` | The aura in seven states and four shape families, the aura against the HUD crown, and the rules |
+| `ma-2-flashes.svg` | The twelve head flashes in the four shape families, with the table of moments, timing, priority and sound pairing |
 | `ma-3-staging.svg` | Four staged moments in the greybox scene (face-off, clash, transformation, hurt or brink) with the blocking rules |
+| `ma-4-flash-rules.svg` | A flash in time, priority and arbitration, the flash against the HUD crown, and the round-tipped Legal fallback |
+| `flashes.json` | Draft data (timing, priority, layouts, glyphs) for Rendering, UI and Audio |
 | `gen.mjs` | Writes the three sheets, using the figure kit and the four fighters |
 
 Regenerate from the repo root (Node 18 or later, no packages): `node art/concepts/marked-aura/gen.mjs`. Deterministic: no random numbers, no clock, no external fonts. The staging sheet embeds the repo's own renders in `docs/rendering/img` by relative path, so open the SVGs from this folder in a browser. Figures are three-quarter (32 degrees).
@@ -19,7 +21,9 @@ Prompt record: `art/prompts/ART-0005-marked-aura.md`.
 |---|---|---|---|---|---|---|---|
 | ART-0005-GEN | `art/concepts/marked-aura/gen.mjs` (uses `art/concepts/anti-hero/kit.mjs` and `art/concepts/directions/fighters.mjs`) | procedural generator (code) | AI-assisted, procedural | Claude (Art Director session), human direction from Orb via the EP | Claude Code, claude-sonnet-5-5, 2026-09-29, `art/prompts/ART-0005-marked-aura.md` | Orb decides | proposed |
 | ART-0005-S1 | `art/concepts/marked-aura/ma-1-style.svg` | concept sheet | procedural (output of ART-0005-GEN) | as above | as above | Orb decides | proposed |
-| ART-0005-S2 | `art/concepts/marked-aura/ma-2-aura-rules.svg` | concept sheet | procedural | as above | as above | Orb decides | proposed |
+| ART-0005-S2 | `art/concepts/marked-aura/ma-2-flashes.svg` | concept sheet | procedural | as above | as above | Orb decides | proposed |
+| ART-0005-S4 | `art/concepts/marked-aura/ma-4-flash-rules.svg` | concept sheet | procedural | as above | as above | Orb decides | proposed |
+| ART-0005-DATA | `art/concepts/marked-aura/flashes.json` | data (draft) | procedural (output of ART-0005-GEN) | as above | as above | Orb decides | proposed |
 | ART-0005-S3 | `art/concepts/marked-aura/ma-3-staging.svg` | concept sheet | procedural | as above | as above | Orb decides | proposed |
 
 The staging sheet references `docs/rendering/img/civilians-after.png`, `craters-after.png` and `world-high-after.png`, renders of the project's own greybox already in the repo.
