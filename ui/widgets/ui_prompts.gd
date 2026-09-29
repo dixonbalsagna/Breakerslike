@@ -49,8 +49,9 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Di
 			var cx: float = x if left else x - cw
 			var current: bool = i == m.stance
 			UiIcons.rrect(ci, Rect2(cx, y - h * 0.5 - 2.0, cw, h + 4.0), h * 0.25, Color(UiLook.col(UiLook.SCRIM), (0.75 if current else 0.5) * fade), Color(UiLook.stance_col(i), (0.95 if current else 0.35) * fade), 2.0 if current else 1.2)
-			UiIcons.stance(ci, i, Vector2(cx + h * 0.55, y), h * 0.6, Color(UiLook.stance_col(i), fade))
-			UiGlyphs.draw(ci, STANCE_ACTIONS[i], m.device, m.slot, Vector2(cx + h + gap * 0.3, y), h * 0.8, fade, current, style)
+			UiIcons.stance(ci, i, Vector2(cx + h * 0.55, y), h * 0.72, Color(UiLook.stance_col(i), fade))
+			# Every chip shows its own bound position solid; the current chip is told apart by its border and fill.
+			UiGlyphs.draw(ci, STANCE_ACTIONS[i], m.device, m.slot, Vector2(cx + h + gap * 0.3, y), h * 0.8, fade, true, style)
 			x += (cw + gap) if left else -(cw + gap)
 	# The hold prompts, only while the action can be used.
 	if prompts_on:

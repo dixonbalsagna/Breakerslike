@@ -95,16 +95,16 @@ static func draw(ci: CanvasItem, action: String, family: String, slot: int, at: 
 			UiText.draw(ci, sp["label"], Vector2(at.x + w * 0.5, cy + float(fs) * 0.35), fs, ink, 0)
 		"dpad":
 			var c2 := Vector2(at.x + h * 0.5, cy)
-			var arm: float = h * 0.32
+			# A plus: the bound arm solid near-white, the other three arms and the centre at about 35%, so the four stance
+			# chips read as four different positions (Art, RL-037: no new glyph art).
+			var cell: float = h * 0.32
 			var dirs := {"up": Vector2(0, -1), "right": Vector2(1, 0), "down": Vector2(0, 1), "left": Vector2(-1, 0)}
+			var dim := Color(UiLook.col(UiLook.INK), 0.35 * alpha)
+			ci.draw_rect(Rect2(c2 - Vector2(cell, cell) * 0.5, Vector2(cell, cell)), dim)
 			for k in dirs:
 				var d: Vector2 = dirs[k]
-				var p2: Vector2 = c2 + d * arm * 0.9
-				var box := Rect2(p2 - Vector2(h * 0.17, h * 0.17), Vector2(h * 0.34, h * 0.34))
-				if k == sp["dir"] and on:
-					ci.draw_rect(box, ink)
-				else:
-					ci.draw_rect(box, edge, false, 1.5)
+				var p2: Vector2 = c2 + d * cell
+				ci.draw_rect(Rect2(p2 - Vector2(cell, cell) * 0.5, Vector2(cell, cell)), ink if (k == sp["dir"] and on) else dim)
 		"stick":
 			var c3 := Vector2(at.x + h * 0.5, cy)
 			ci.draw_arc(c3, h * 0.42, 0.0, TAU, 20, edge, 1.5, true)
