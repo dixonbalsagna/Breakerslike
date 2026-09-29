@@ -15,7 +15,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | Rule | Spec |
 | :--- | :--- |
 | **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |
-| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). Starting k = 0.08 at S1; 0.20 from S2 (§1b) |
+| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). k = **0.06** as of S2 (`docs/director/wounds-s2.md`), set by the length target. QA tunes it within 0.05 to 0.07 (§1b) |
 | **Stages** | Fresh below 30; bruised 30 to 59; battered 60 to 89; broken at 90 or more |
 | **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time needed to break lock through line of sight (1.8 s) |
 | **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second (0.25 from S2, §1b). A battered region fades 1 per second, down to 59, after 4 s without an exchange ("second breath", §1c). Broken regions never fade (only a Rally mends them). Hidden recovery is removed with hiding |
@@ -33,20 +33,31 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 - *The fix.* Longer matches alone won't help. The numbers must change.
 
 **Starting values for S2** (they replace the §1 values above):
-- k = **0.20**;
+- k = **0.20** as proposed; S2 measured **0.06** instead (see "S2 result" below);
 - bruised fade **0.25** per second (battered regions recover only through second breath, §1c);
 - the director's focus weight is **(1 + wear/30)**, so damage concentrates and regions break.
 
 The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That gives a first break at around 1:30 to 2:30, and a brink at around 4:30 to 7:00 once Rallies and the finisher contest are added.
 
 **Order of levers**, one at a time. Re-measure after each:
-1. **k.** Sets the time to the first break. Target the first break at a median of 1:30 to 2:30, and the first brink at 4:30 to 7:00 (§5, test 3).
+1. **k.** Set by match length: a median of 6:00 to 8:00, and the first brink at 4:30 to 7:00. The first-break band follows from it (§5, test 3) (§5, test 3).
 2. **Recovery rates.** If regions stall at bruised, lower the fade before raising k again.
 3. **The focus weight.** If breaks are rare but wear is high, sharpen it. The §5 spread test (no region above 45% of all wear) is the limit.
 4. **Stage penalties.** They make a losing fighter lose faster. Tune them last, for feel, because they shorten the tail.
 5. **The finisher contest** (30% base survival). It sets the tail after the brink: p90 at most 10:00, p99 at most 12:00.
 
 **Sequencing.** The world rescale lands first, and it changes travel time and so the exchange rate. Re-baseline the damage rate after the rescale, before touching k. Measure time to first break and time to brink, not only match length.
+
+**S2 result and rulings** (commit `69c4a2f`, `docs/director/wounds-s2.md`).
+- *The result:* median 6:01, p90 8:15, first brink 5:51, no timeouts, finisher-contest survival 28%.
+- *My estimate was wrong.* The §1b arithmetic assumed a slower exchange rate. At 0.20, matches lasted 90 s.
+- *Ruling 1: k = 0.06 is confirmed as the value tuned to length.* The targets QA tunes toward are a median of 6:00 to 8:00 and a first brink at 4:30 to 7:00. After Rally lands (S4), which adds time, re-tune within 0.05 to 0.07 to keep the median near 6:30 to 7:00.
+- *Ruling 2: the comeback term is accepted.* The damage bonus reads **closeness to the brink**, `vitality`: 1 minus the higher of core wear or the second-most-worn limb, over the broken threshold. The bonus is `×(1 + 0.5·(1 − vitality)²)`. It peaks at ×1.5 on the brink, which is the "desperation" of `damage-model.md` §5. The AI's reads of wounds use the same value.
+- *Ruling 3: the chapter bands move.* Breaks aren't the only chapters. Transformations, break launches, set pieces and the landscape carry chapters too.
+  - First break: a median of 2:30 to 4:00 (today 3:45).
+  - Breaks per 1v1: 2 to 4 before Rally, and 3 to 5 once Rally lands (today 2).
+  - *If the chapters feel thin* after S4, the experiment is a stricter brink: core, or **three** limbs broken, with k × 1.4. That gives an earlier first break and more breaks at the same length. QA runs it; Game Design decides.
+- *Collateral.* Six-minute matches raise collateral: 51% overall, and the villain mirror about 92%, which is over the worst-pairing and 90%-loss bands. World's ramp and cap land with B1 (`balance-targets.md` §4b) and are expected to bring both back into band.
 
 ### 1c. Lock-on and line of sight (hiding is removed)
 
@@ -261,7 +272,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 **QA harness** (seeded batches, 1,000 or more matches per arm, measured from events):
 1. **Determinism.** The same seed and inputs give an identical event hash across runs and ports (JS and GDScript).
 2. **No KO without a finisher.** 100% of KOs follow the loser's `brink_enter` and a `finisher_start`. There are no KOs from stray damage.
-3. **Length and chapters.** 4 to 6 region breaks per 1v1 (median). Median time to first brink 4:30 to 7:00. Match length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00 (`balance-targets.md` §2).
+3. **Length and chapters.** Region breaks per 1v1 (median): 2 to 4 before Rally (S2), 3 to 5 once Rally lands (S4). First break (median) 2:30 to 4:00. Median time to first brink 4:30 to 7:00. Match length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00 (`balance-targets.md` §2).
 4. **No loops.**
    - Rallies per match average 0.5 to 2.0.
    - No fighter rallies the same region twice.

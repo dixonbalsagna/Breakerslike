@@ -240,7 +240,7 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 | Lock breaks through line of sight (`spec-wounds.md` §1c) | 1 to 4 per match; median length 2 to 3 s; never more than 4 s (a hard test); never within 6 s of the same fighter's last one (a hard test) | Not measured |
 | Second breath | Battered wear recovered through second breath is at most 25% of all battered wear taken | Not measured |
 | Comebacks: the winner was on the brink at some point, or rallied (`damage-model.md` §5) | 15 to 35% of matches | Not measurable yet. The prototype has no brink |
-| Region breaks before the finisher (1v1) | 4 to 6 per match | none |
+| Region breaks before the finisher (1v1) | 2 to 4 per match before Rally (S2); 3 to 5 once Rally lands (S4); first break at a median of 2:30 to 4:00 | S2: 2 breaks; first break 3:45 (`docs/director/wounds-s2.md`) |
 | Finishers preceded by a brink call-out | 100% | none |
 | Lead changes: which fighter has more region stages lost flips | Median at least 2 | Not measured |
 | Beam clashes and struggles | 2 to 8 per match | Beams 3.65 per match, 40% of them clashes (QA §6) |
