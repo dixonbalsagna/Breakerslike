@@ -1,0 +1,117 @@
+# D1: the roster as data (plan)
+
+Status: plan only (Simulation, 2026-09-29). D1 runs after World's B1 and Controls' Stage A. F1 (the Anti-hero) builds on it. The model is in `wounds-plan.md` §2. This page fixes the schema, the loader and the proof, so Tools, Narrative, Game Design and Combat can review before any code lands.
+
+## 1. Goal and proof
+
+Every per-fighter number and rule choice moves out of code into `data/fighters/<id>/`, with no change in behaviour.
+
+**The proof: the goldens do not change.** That covers the tick-0 states, the 8 matches, the replays, the wounds and Rally vectors, and the constants vector. The only golden edit is one new entry, the roster data hash.
+
+## 2. Scope: two steps
+
+| Step | Moves to data | Code touched | Owner of the code |
+| :--- | :--- | :--- | :--- |
+| **D1a** | Identity, base stats, the Rally rule, finisher keys, the wound numbers and the profile type (`plain`) | `core/roster.gd`, `core/wounds.gd`, `core/sim.gd` (setup), a new `core/fighter_data.gd`; `director/data.gd` (the finisher key) | Simulation (Encounter reviews the `data.gd` line) |
+| **D1b** | The power ladder (tiers today), and menace and anguish as meters | `core/fighter.gd`, `core/damage.gd`, `director/launch.gd`, `world/structures.gd` (casualty pressure) | Simulation, with the tree handed for director and world |
+
+D1a is small and self-contained. D1b touches other owners' files, so it waits for the EP to hand over the tree. Forms (transformations), per-fighter meters such as Pride, and the other profile types are F1 and later. They use the same files and schemas.
+
+## 3. Files
+
+```
+data/fighters/<id>/          id: the stable roster id (Fighter.id, "KAI" today; D1 keeps the upper-case ids so the
+                             finisher data and QA records still match)
+  fighter.json               identity, base stats, slot defaults, rally, finishers        (D1a)
+  wounds.json                regions, thresholds, rates, k, family weights, penalties, profile   (D1a)
+  ladder.json                power tiers: fill rate, thresholds, per-tier deltas           (D1b)
+  meters.json                menace, anguish (placeholders), later Pride, heat and others  (D1b)
+  forms.json                 transformations (F1 onward; spec-wounds §8)
+data/fighters/roster.json    the order of the select screen and the default pairing: ["KAI", "VORR"]
+```
+
+`fighter.json` for KAI holds today's values exactly (VORR's file has the same shape):
+
+```json
+{
+  "schema": "fighter/1",
+  "id": "KAI",
+  "identity": { "name": "KAI", "title": "Meridian Warden", "role": "hero", "sigName": "Meridian Lance",
+                "col": "#3d8fdc", "aura": "#8fd6ff", "hair": "#22c7a9" },
+  "stats": { "care": 1.0, "dmgMul": 1.0, "spd": 1.0, "maxhp": 1600.0 },
+  "kit": { "canHide": false },
+  "rally": { "rule": "second_wind" },
+  "finishers": { "base": "kai" }
+}
+```
+
+- **`identity`** is Narrative's text, plus Art's colours until Art has real readout ids.
+- **`rally.rule`** is one of `second_wind`, `spite`, `reboot`, `encore` or `none`. Parameters come with each fighter. For Spite that is the mend order; for Reboot the dock and Press ranges; for Encore the input window, 180 ticks. Every rule's code stays in `wounds.gd`, so the data only chooses a rule and its numbers.
+- **`finishers`** maps a form tier to a finisher template id in `data/combat/finishers.json`. D1a reads `base`. F1 adds form tiers. Combat's `select.byFighter` becomes a fallback during D1 and is removed in F1 (Combat's call).
+
+`wounds.json` holds today's `SimWounds` constants, under the same names:
+- `regions`: head, core, arms and legs. Each has `brink` (true, or false for the Empress's mantle later).
+- `stageAt`: `[180000, 360000, 540000]`, in units.
+- `wearPerDamage`: 390, which is k 0.065 × 6000.
+- `fade`: `out` 25, `breath` 100, `breathAfterTicks` 240, `hidden` 300 and `hiddenFloor` 354000.
+- `focusWear`: 30.
+- `family`: the four weight rows.
+- `penalties`: one key per region and stage, with the S3a and S3b numbers.
+- `profile`: `{ "type": "plain" }`.
+- `rally`: `rallyWear` 534000 and `coolTicks` 900.
+
+`breathAfterTicks` is an integer. The code keeps comparing it with `S.T - f.exT` in seconds (4.0 is exactly 240 / 60) until S.T itself becomes ticks.
+
+## 4. Loader
+
+- **`FighterData` (`core/fighter_data.gd`).** It is loaded once per process, like `DirData`. It parses `roster.json` and each `<id>/*.json` into one immutable def per id. `createFighter` copies the scalar fields into `Fighter`, as today, so the hot path never reads a Dictionary. The wound numbers go into one `WoundsDef` object per id, and `f.wd` points to it. Every `SimWounds` constant becomes `f.wd.<name>`. Today's numbers are identical for both fighters, so behaviour cannot move.
+- **Numbers.**
+  - Godot's JSON parser returns every number as a float.
+  - Integer fields (units, ticks, bit counts) are checked for integral values and converted with `int()`.
+  - Floats follow the literal rule: at most 15 significant digits, enforced by Tools' validator and by the loader in debug builds.
+  - The constants vector in the goldens compares every loaded number with the old constant bit for bit. That is the exactness check for the JSON path.
+- **Hash.**
+  - `FighterData.dataHash()` hashes the parsed content canonically: sorted keys, and keys starting with `_` skipped. Comments and whitespace are free to change; any number or rule change shows up.
+  - The replay header's `data` becomes the hash of the combat data plus the roster data. That is one field, so replay format v2 stays.
+  - The goldens gain `rosterHash`, and parity names it when it differs, so a data edit fails with a clear message rather than a first-difference tick.
+  - `DirData` can move to the same canonical hash; that is Combat's and Encounter's call.
+- **Setup (the planned replay `setup` block).**
+  - `newMatch(S, seed, ai, setup)` takes `setup = {"slots": ["KAI", "VORR"], "names": [...], "spawn": [...]}`. The default is today's pairing and positions.
+  - QA's arms become setups: swap is `["VORR", "KAI"]`; mirror-hero is `["KAI", "KAI"]` with names KAI-A and KAI-B; `-flip` swaps the spawns.
+  - The replay header records `setup`, so a replay replays its arm.
+  - `golden_recipes.gd applyArm` stays for the D1a goldens (unchanged by construction). QA's runner moves to setups when it next re-baselines.
+
+## 5. D1b in brief: ladder and meters
+
+- **`ladder.json`**: `fillPerSec` 0.45, `thresholds` [25, 50, 75], and per-tier deltas: speed +0.10, damage +0.09, launch force +0.16. It also holds the power-up crater and area-damage coefficients. Forms (F1) extend it with a fill rule per form and cinematic ticks, capped per spec §8.
+- **`meters.json`**: each meter has
+  - `range`, `start` and `visible`;
+  - `sources` (event, amount, cap and whose: self or the opponent);
+  - `decay` (rate, and delay in ticks);
+  - `effects`, from a closed list of effect keys that code implements: `regen_bonus`, `regen_penalty`, `damage_mul`, `composure`.
+- **Menace and anguish** become two meters with today's numbers:
+  - menace: `MENACE_DECAY` 0.4, quiet 240 ticks, cap 100, regen +0.03 per point, the damage cap 0.15;
+  - anguish: decay 0.6 per second, regen −0.025 per point, composure below 10.
+  - The `role == "hero"` and `role == "villain"` branches become "has this meter". The QA-003 bug (casualties pressure only the first hero) is fixed there, with World and Game Design, as the EP routed it.
+
+## 6. Owners and hand-offs
+
+- **Tools:** the JSON schemas (`fighter/1`, `wounds/1`, `ladder/1`, `meters/1`) and a validator in `tools/`, wired into `npm test` with the 15-digit lint.
+- **Narrative:** the identity text. **Art:** readout ids when they exist.
+- **Game Design:** the numbers. D1 only moves them. Retunes happen after, as data edits.
+- **Combat:** the finisher key move (§3).
+- **QA:** arms as setups; re-baseline once the roster hash enters the goldens.
+
+## 7. Acceptance
+
+1. The goldens are unchanged, apart from the new `rosterHash`. The constants vector holds bit for bit.
+2. Editing a number in `data/fighters/KAI/wounds.json` fails parity, naming the roster hash. Editing a `_note` does not.
+3. A third def, copied from KAI with a new id and name, loads and plays a match (the stage-5 modding test in miniature) with no code change.
+4. A replay recorded with a mirror setup plays back from its header alone.
+5. The loader rejects: a non-integral tick; a float with more than 15 significant digits; an unknown Rally rule, profile type or effect key; a duplicate id.
+
+## 8. Risks
+
+- **JSON number parsing is a second path to the same doubles.** Criterion 1 catches any difference. The fallback is to store the few awkward values as the hex bits `SimMathx.f64` already reads.
+- **`f.wd.<name>` lookups** cost a field read per use instead of a constant. The bench in parity shows whether that matters. The mean tick is 86 µs today.
+- **Data files are match inputs.** A modded file changes outcomes. That is why the hash goes in the replay header and the goldens.
