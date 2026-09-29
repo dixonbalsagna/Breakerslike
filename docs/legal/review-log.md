@@ -43,8 +43,9 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-021 | Sunburners | title candidate, round 2 | Medium | CONDITIONAL | Open until Orb picks |
 | RL-022 | Sky Arsonists | title candidate, round 2 | Low | GO to the next stage | Open until Orb picks |
 | RL-023 | Redline Sky | title candidate, round 2 | Low (watch) | GO to the next stage | Open until Orb picks |
+| RL-024 | Orb Combat EX | title (Orb's pick) | Medium | CONDITIONAL: resolve the OrbCombat name clash | Open |
 
-Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-023.
+Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-024.
 
 ## Detail
 
@@ -204,6 +205,9 @@ Results are in `name-screening.md`, "Title screen, round 2".
 - **RL-022 Sky Arsonists:** Low, GO to the next stage.
 - **RL-023 Redline Sky:** Low (watch), GO to the next stage. Run USPTO and EUIPO first because "Redline" is crowded.
 Recommended order: Sky Arsonists, Redline Sky, Sunburners. All open until Orb picks.
+
+### RL-024 Orb Combat EX (2026-09-29)
+Results and conditions are in `name-screening.md`, "Title screen: Orb Combat EX". Rating Medium, CONDITIONAL. Main issue: an existing open-source mobile game named OrbCombat (Godot, GPL-3.0). Also: crowded word "Orb", a deliberate nod to Madness Combat (low risk), and an orb echo of the franchise's wish-ball device. Domains free. EUIPO, UK, Japan and Google Play not run.
 
 ### RL-019 Orb's four fighter concepts
 See `fighter-concepts-review.md`. All four are CONDITIONAL: staples kept, signatures replaced with original mechanisms. Open until Orb picks the replacements and Art's designs pass the checklist.

@@ -143,3 +143,34 @@ Candidates from Narrative's "Round 2": Sunburners, Sky Arsonists, Redline Sky. S
 **Recommended order:** 1. Sky Arsonists, 2. Redline Sky, 3. Sunburners.
 
 Not run for any of the three: EUIPO, UK and Japan registers, Google Play, other domains and handles, a language check, and counsel (stages 4 and 5).
+
+
+## Title screen: "Orb Combat EX" (2026-09-29)
+
+Orb's pick. Stages 1 to 3, plus stage 4 and 5 prep. A screen, not a clearance.
+
+**Verdict: CONDITIONAL (Medium).** Usable as a working public title, but an existing open-source mobile game called OrbCombat is a direct name clash to resolve before any store page.
+
+| Check | Result |
+|---|---|
+| Steam (games) | No title named Orb Combat or OrbCombat. 360 results for the two words, including Orb Breaker (2026), OrbWars (2023), Orb Devils (2025). "Combat EX": 251 results, no title ending that way. |
+| App Store | No app of that name. Results are other orb and combat games. |
+| Google Play, itch.io | Not run reliably. A web search found no itch.io game called Orb Combat, but several orb-themed games (Orb Battlegrounds, Orbo, Battle Orb on other stores). |
+| GitHub | **Cascachu/OrbCombat**: a mobile game about fights between orbs, in GDScript (Godot), GPL-3.0, with a web page repo. Same name, same engine, and mobile is on our platform list. |
+| USPTO | 1,943 records for the two words, dominated by the single word ORB (many dead, some live, none in games seen). No combined ORB COMBAT mark among the top hits. The search does not match the exact phrase. |
+| EUIPO, UK, Japan | Not run. |
+| Domains and handles | orbcombat.com free, orbcombatex.com free (registry lookup). GitHub name "orbcombat" free. itch.io and Steam page names not checkable. |
+| The Orb (band) | An English ambient-house act since 1988. Different field. A risk only if a soundtrack is released under the name "Orb". |
+| Madness Combat | Krinkels' flash series. We found no published fan-game or trademark policy. Fan games freely use "Madness" names. "Combat" is an ordinary word, and the first words differ. Complaint risk is low, but the nod is deliberate. |
+| Dragon Ball orbs | "Orb" alone is generic. Together with orb-shaped artefacts it echoes the franchise's seven-ball device (already a signature, see `fighter-concepts-review.md`). |
+
+**Conditions.**
+1. **Resolve OrbCombat.** It is a small unregistered project, but it is the same name in the same engine and on a platform we target. Options: contact the author, or add a distinguishing word. Decide before a store page or a domain purchase. Orb decides.
+2. **Formal search.** Have a person (or counsel) run EUIPO, UK, Japan and the exact-phrase USPTO search, and Google Play, for ORB COMBAT and COMBAT EX in classes 9, 28 and 41.
+3. **Keep the artefacts un-orb-like.** The protagonist's gathered items must not be orbs. Keep to the Keystones replacement.
+4. **Keep distance from Madness Combat.** No borrowed art style elements, character designs, catchphrases or the word "Madness". Mention it, if at all, as a factual influence in a devlog, not in the pitch line.
+5. **Say who "Orb" is.** Orb is also the creator's pseudonym. Counsel should advise how the title and the pseudonym relate to the copyright holder line.
+
+**Stage 4 (meaning and language), partly done.** "Orb" and "EX" are common loanwords in Japanese and English, and no negative meaning is known. Not run: a native check in other languages. "EX" reads as the fighting-game "extended" convention and implies a base title. Localization can confirm.
+
+**Stage 5 (counsel) brief, for the final title.** Ask counsel to: (a) run a formal search in the US, EU, UK and Japan for the title in classes 9, 28 and 41, (b) assess the OrbCombat clash, (c) advise on the "-Combat" nod to Madness Combat, (d) advise on filing and on the pseudonym, and (e) read the licence files and README before the repo goes public.

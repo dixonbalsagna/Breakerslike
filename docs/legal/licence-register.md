@@ -44,10 +44,12 @@ Each needs a row before it is used.
 
 | ID | Component | Licence | Status |
 |---|---|---|---|
-| LR-020 | actions/checkout (GitHub Actions) | MIT expected | pending: Tools to give the pinned version or commit |
-| LR-021 | actions/setup-node (GitHub Actions) | MIT expected | pending: same |
-| LR-022 | JSON Schema validator | unknown | pending: only if Tools uses one; name and version needed |
-| LR-023 | @napi-rs/canvas pinned version | MIT (see LR-012) | pending: the exact version Tools pinned, and whether a lockfile is committed |
+| LR-020 | actions/checkout v7.0.1 @ 3d3c42e5aac5ba805825da76410c181273ba90b1 (CI only) | MIT | accepted, dev only. Licence read from the GitHub licence API 2026-09-29 (version and commit as reported by the EP) |
+| LR-021 | actions/setup-node v7.0.0 @ 820762786026740c76f36085b0efc47a31fe5020 (CI only) | MIT | accepted, dev only. Same source and date |
+| LR-022 | JSON Schema validator | unknown | pending: only if Tools uses one |
+| LR-024 | Godot 4.7.2 export templates (Research), Godot 4.7.2 .NET editor and templates (scratch use), Godot 4.7.2 Linux zip in the CI parity job | MIT | accepted, dev and CI only; not in the repo. Licence per LR-001. Checksums as reported by Research |
+| LR-025 | TypeScript 7.0.2 via npx (optional type-check) | Apache-2.0 | accepted, dev only. Registry read 2026-09-29 |
+| LR-023 | @napi-rs/canvas 1.0.9 (pinned, commit 2faf2b1) | MIT (see LR-012) | accepted, dev only. Lockfile status still to confirm |
 
 - Later, if Steam becomes a target: the Steamworks SDK and any wrapper for it. The SDK is not open source and has its own terms, so keep its files out of the public repo until Legal has read them.
 
@@ -80,8 +82,8 @@ This assumes the code licence recommended in `licence-recommendation.md` (MIT). 
 
 ## Part D: open items
 
-1. There is still no LICENSE file in the repo. Orb accepted MIT + CC BY 4.0 + DCO. The drafts are in `drafts/`. They wait for Orb to name the copyright holder. Then the EP places them and Tools adds the `license` fields.
-2. `@napi-rs/canvas` was unpinned (`*`) with no lockfile. Tools is pinning it. Rows LR-020 to LR-023 wait for Tools' facts.
+1. There is no LICENSE file in the repo. The EP placed MIT and CC BY 4.0 files and then removed them (commit 3166470, 2026-09-29) while Orb decides the licence, so the repo is all rights reserved by default. The drafts in `drafts/` are unchanged and still match pairing 1. If Orb picks another licence, Legal redrafts. Do not make the repo public without a licence file.
+2. `@napi-rs/canvas` is now pinned to 1.0.9 (LR-023). Still to confirm: that a lockfile is committed, and whether a JSON Schema validator (LR-022) is used.
 3. The prototype code and the docs were written with AI assistance. The provenance policy is in `licence-recommendation.md`, section 8.
 4. Godot's licences screen has to be planned into the UI (P5).
 5. Each row's Source column shows what was actually read. "Not fetched" means the licence is from general knowledge and must be verified before it is relied on.
