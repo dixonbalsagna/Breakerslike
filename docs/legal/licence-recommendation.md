@@ -8,7 +8,9 @@ Owner: Legal and IP Compliance. 2026-09-28. For Orb, who decides, and the EP. No
 - **Art, audio, data files and docs:** CC BY 4.0.
 - **Name, logos and fighter names:** not licensed. Kept as trademarks, with a short policy in the README.
 - **Outside contributors:** sign each commit with the DCO. No CLA.
-- **AI:** allowed and disclosed. Logged per asset. Never prompted with franchise material. Real human authorship on everything that defines the game.
+- **AI:** Orb's answer (2026-09-28): AI-generated assets are allowed, and assets will be procedural. So: disclosed, logged per asset, never prompted with franchise material, and real human authorship on everything that defines the game.
+
+**Status, 2026-09-29:** Orb accepted pairing 1 (relayed by the EP). Ready-to-place files are in `drafts/`. Option B (GPL) is dropped and kept below only for the record. The repo's own code and docs were written with AI assistance, so the README and NOTICE say so.
 - The alternative, if Orb's answers below point the other way: GPL-3.0-or-later with CC BY-SA 4.0, and a written Steam plan settled before any outside contribution is merged (section 5).
 
 Until Orb approves a licence and a name, the repo stays private. With no licence file, the default is "all rights reserved".
@@ -17,7 +19,7 @@ Until Orb approves a licence and a name, the repo stays private. With no licence
 
 1. **If someone forks the game, may they close their fork and sell it?** Yes points to MIT (recommended). No points to GPL.
 2. **May others reuse our characters and art in their own games, including for money, if they credit us?** Yes points to CC BY (recommended). Only if they share what they make from it points to CC BY-SA. No means the art is not open, and "free and open source" would describe the code only.
-3. **Is Steam a real target? Consoles or mobile?** Steam works with MIT. GPL needs a written permission plan (section 3B). Console and mobile terms have not been checked.
+3. **Is Steam a real target? Consoles or mobile?** Orb's answer: itch.io, Steam (free) and GitHub, on platforms that include mobile. Steam works with MIT. GPL would need a written permission plan (section 3B). Mobile and console store terms have not been checked, and permissive licences are the safer fit for them.
 4. **Who is named as copyright holder in the LICENSE files?** Orb's legal name, "Orb", or a project name such as "<Game name> contributors". Counsel should advise. Steam will also want a verified publisher identity (section 7).
 
 ## 3. Code licence options
@@ -78,7 +80,7 @@ Tools can mark this with SPDX headers or a REUSE-style file, so each file's lice
 - **Costs:** no credit. It cannot protect the look, only the name.
 
 ### Not recommended: CC BY-NC, CC BY-ND, or art kept all rights reserved
-NC and ND limit the freedoms that open licences are about (Creative Commons' own FAQ says so), and NC would stop others redistributing on stores. If Orb wants the characters to stay exclusive, that is a different project shape: open code, closed content. It is Orb's call, but then "free and open source" would describe the code only.
+NC and ND limit the freedoms that open licences are about (Creative Commons made this point in its 2008 post on free cultural works), and NC would stop others redistributing on stores. If Orb wants the characters to stay exclusive, that is a different project shape: open code, closed content. It is Orb's call, but then "free and open source" would describe the code only.
 
 ### Names and logos
 MIT and CC BY do not license names and logos. Add a short trademark note to the README: the game's name, logo and fighter names are not licensed, and forks must rename. That is how many open projects stop a fork passing itself off as the original. The name must first be screened and cleared (`name-screening.md`), and Orb decides whether to register it.
@@ -122,7 +124,7 @@ It keeps its own licence and is listed in `licence-register.md`.
 - Rights: we warrant that we have the rights to everything and that nothing infringes. Valve gives rights holders DMCA and trademark complaint forms and judges AI content like any other. A lookalike can be pulled.
 - Open source: Valve's page names MIT, BSD (3-clause and 4-clause), Apache-2.0 and WTFPL as fine. It calls copyleft problematic and says a GPL game needs the copyright holders' permission. Valve does not review licence compatibility for us. The warranty is ours.
 - Keep the Steamworks SDK out of a public repo unless its terms allow it. Register it first.
-- AI disclosure (rules rewritten 16 January 2026): disclose AI used to make content that ships in the game or appears on the store page, such as art, music, dialogue and localisation, with a description of the tools. There is a separate box for content generated while the game runs, with a description of the guardrails. AI tools that only speed up development, such as code assistants, are exempt. We plan no live generation. Valve shows the statement on the store page, as we understand it.
+- AI disclosure (Steam has asked for it since January 2024, and rewrote the rules on 16 January 2026): disclose AI used to make content that ships in the game or appears on the store page, such as art, music, dialogue and localisation, with a description of the tools. There is a separate box for content generated while the game runs, with a description of the guardrails. AI tools that only speed up development, such as code assistants, are exempt. We plan no live generation. Valve shows the statement on the store page, as we understand it.
 
 ## 8. AI-generated code and assets
 
@@ -133,12 +135,12 @@ It keeps its own licence and is listed in `licence-register.md`.
 - Outside the US the rules differ and some are under review. This note does not cover them.
 
 ### 8.2 Terms of the tools
-- **Anthropic (Claude).** The Consumer Terms (effective 8 October 2025) assign Anthropic's rights in Outputs, "if any", to the user and offer no IP indemnity to consumer users. The Commercial Terms (effective 17 June 2025) say the customer owns the Outputs and include an IP indemnity for authorised use, with exclusions. Which set applies depends on how Claude is accessed (a consumer plan, or an API or business account). **Orb to confirm.**
+- **Anthropic (Claude).** The Consumer Terms (effective 8 October 2025) assign Anthropic's rights in Outputs, "if any", to the user and offer no IP indemnity to consumer users. The Commercial Terms (effective 17 June 2025) say the customer owns the Outputs and include an IP indemnity for authorised use, with exclusions. Which set applies depends on how Claude is accessed (a consumer plan, or an API or business account). **Orb to confirm.** Re-check both sets of terms before the repo goes public.
 - **Any other AI tool** (images, music, voice, video): read its terms for commercial use and output ownership before using it, and record it in the register. Free tiers often bar commercial use.
 
 ### 8.3 Infringement risk
 - Models can produce output that resembles existing works, above all when a prompt names a franchise or a character. Under a consumer plan that risk sits with us, not the vendor.
-- For code, models can reproduce open-source code. On 16 September 2026 the Ninth Circuit affirmed the dismissal of the DMCA section 1202(b) claims in Doe v. GitHub. The open-source licence contract claims continue in the district court, so whether reproducing licensed code breaks its licence is not settled.
+- For code, models can reproduce open-source code. On 16 September 2026 the Ninth Circuit affirmed the dismissal of the DMCA section 1202(b) claims in Doe v. GitHub. The open-source licence contract claims continue in the district court, so whether reproducing licensed code breaks its licence is not settled. Re-check at each phase gate.
 
 ### 8.4 Store disclosure
 See section 7. Steam: content that ships or appears on the store page. itch.io: the generative-AI field. Other stores were not reviewed. Check at submission.

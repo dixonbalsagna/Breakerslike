@@ -34,9 +34,14 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-012 | Breakers-Like / Breakerslike | repo and folder name | Medium (Low while private) | RENAME BEFORE PUBLIC | Open |
 | RL-013 | Meridian Warden, Calamity Sovereign | hero and villain titles | Low | GO | Closed |
 | RL-014 | KAI's golden hair | prototype colour, design flag | Medium | Do not carry into art | Open |
-| RL-015 | "ki" | resource word in code and UI | Low (grey zone) | Orb decides | Open |
+| RL-015 | "ki" | resource word in code and UI | Low (grey zone) | Narrative picked "Charge"; screen pending | Open |
+| RL-016 | Skyburden | title candidate (Narrative top 3) | Low (watch Skybound) | GO to counsel stage | Open until Orb picks |
+| RL-017 | Splendid Wreckage | title candidate | Low (crowded word) | GO to counsel stage | Open until Orb picks |
+| RL-018 | Glorious Ruin | title candidate | Medium | CONDITIONAL | Open until Orb picks |
+| RL-019 | Orb's four fighter concepts | design review | Medium | CONDITIONAL: replace the listed signatures | Open |
+| RL-020 | Public-readiness scan | repo text | Medium | Must-fix list before public | Open |
 
-Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-015.
+Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-015, RL-016 to RL-020.
 
 ## Detail
 
@@ -129,6 +134,33 @@ Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-015.
 - **Found:** An everyday martial-arts word used across many games, and not ownable. It is also the genre's signature word for energy. On its own it is fine, but next to other franchise-coded words (aura, power up, scanner) it adds to an impression of copying.
 - **Rating:** Low, listed because it is a grey zone.
 - **Recommendation:** Keep it internally. Narrative proposes a game-specific name for players. Orb decides.
+
+**Update 2026-09-29 (RL-014):** QA changed the prototype hero's hair to teal `#22c7a9` and added a test that fails if any fighter's hair reads as gold. That is acceptable as a placeholder. RL-014 stays open only for its art-bible part: Art owns the final palette and must not choose gold hair or a hair-colour change as a power cue.
+
+### RL-016 to RL-018 Title candidates (stages 1 to 3, 2026-09-29)
+Searched for each: exact-phrase web search; Steam games search; App Store search API; GitHub repository search; USPTO trademark search (browser); the .com registry record. The USPTO search matches each word separately, not the exact phrase, so it shows the words' crowding and only the top-ranked records were read.
+
+| | Skyburden | Splendid Wreckage | Glorious Ruin |
+|---|---|---|---|
+| Web exact phrase | No match. Near names only: Skybound Entertainment (a large games and comics company), Skyfire, Skyforger. | No match. Near: the novel A Splendid Ruin. | No exact game. Glorious Ruins is a 2013 Hillsong Worship album. Near: the novel A Splendid Ruin. |
+| Steam | 0 results | 0 results | 56 results for the words, none titled Glorious Ruin |
+| App Store | none relevant | none relevant | none relevant |
+| GitHub repos | 0 | not run | not run |
+| USPTO | No results | 467 results for the two words. Hits are single-word WRECKAGE marks (Hasbro, dead; a live supplement mark; a live knives mark). No combined mark seen. | 465 results for the two words. Hits are single-word RUIN and GLORIOUS marks, including dead RUIN filings in video-game classes and live GLORIOUS marks for PC accessories. No combined mark seen. |
+| .com | not registered | not registered | registered (GoDaddy, since 2014, expires 2026-10-12) |
+| Rating | Low | Low | Medium |
+| Decision | GO to counsel stage | GO to counsel stage | CONDITIONAL |
+
+- **Skyburden** is a coined compound, so it is the easiest to own and to find. Watch the sound and look of Skybound (shared "Sky" start, different word). Not run: other domains and handles, itch.io, other countries' registers, language check.
+- **Splendid Wreckage:** "Wreckage" is a crowded word, as Narrative says, but the pair is free on every check run. Same not-run list.
+- **Glorious Ruin:** the pair is free on Steam, but the near-identical album title, the taken .com and the crowded word "Ruin" make it the weakest. Change the second word or add a distinctive word to move it to Low.
+- Order on these checks: Skyburden, then Splendid Wreckage, then Glorious Ruin. This is a screen, not a clearance. Whichever title Orb picks goes through stages 4 and 5 (`name-screening.md`).
+
+### RL-019 Orb's four fighter concepts
+See `fighter-concepts-review.md`. All four are CONDITIONAL: staples kept, signatures replaced with original mechanisms. Open until Orb picks the replacements and Art's designs pass the checklist.
+
+### RL-020 Public-readiness scan
+See `public-readiness-edits.md`. Open until the Must edits are made and the repo is renamed.
 
 ### Not screened one by one
 Generic gameplay labels in the prototype (UPPERCUT, SLAM DOWN, SMASH ACROSS, BUILDING SMASH, MOUNTAINSIDE, TRADE BLOWS, PRESSURE, GUARD BREAK, PURSUIT, HEAVY CLASH, CHARGE INTERRUPT, PARRY, K.O.) are ordinary fighting-game vocabulary. Read, not searched. No action.

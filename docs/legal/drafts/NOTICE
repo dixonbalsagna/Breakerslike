@@ -1,0 +1,24 @@
+NOTICE
+
+[GAME NAME: placeholder until Orb picks a name]
+Copyright (c) 2026 [COPYRIGHT HOLDER: Orb decides]
+
+Code: MIT (see LICENSE). Content: CC BY 4.0 (see LICENSE-ASSETS).
+
+Third-party components
+----------------------
+[CONDITIONAL ON ADR 0001: keep this entry only if Godot is confirmed as the engine, and keep it in every build.]
+Godot Engine (version in use: 4.7.2)
+Copyright (c) 2014-present Godot Engine contributors.
+Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.
+Licensed under the MIT licence. Full text and the licences of the libraries built into the engine are shown in the game's credits or licences screen (Godot provides Engine.get_license_text(), Engine.get_license_info() and Engine.get_copyright_info()) and at https://godotengine.org/license/
+
+Other third-party items are listed in docs/legal/licence-register.md. Add each item that ships to players here as well.
+
+How this project was made
+-------------------------
+Parts of the code and documentation were written with AI assistance (Claude, by Anthropic). Any AI-assisted asset is recorded in docs/legal/asset-origins.md.
+
+Trademarks
+----------
+The game's name, logo and fighters' names are not licensed. All other names are the property of their owners.

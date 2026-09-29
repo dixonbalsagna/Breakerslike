@@ -44,7 +44,7 @@ Each needs a row before it is used.
 
 ## Part B: asset origins
 
-Every shipped asset needs a recorded origin (the P5 gate). There are none yet. Add one row per asset, or per pack when all files share one origin.
+The origin log for every shipped asset is now `asset-origins.md` (rules, template, status vocabulary). This part is only a pointer.
 
 | Asset ID | Path | Type | Origin (human-made, AI-assisted, third-party, public domain) | Author or source | If AI: tool, model, date, prompt location | Licence (SPDX) | Legal review (date, RL id) | Notes |
 |---|---|---|---|---|---|---|---|---|
