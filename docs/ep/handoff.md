@@ -65,6 +65,24 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
 - **Pinned for Game Design later:** planet destruction and stage transitions (the mantle and lava, zero-g space).
 - **Audio, when active:** per-character grunts, growls and laughs that carry unvoiced text lines.
 
+## After questionnaire 3 (2026-09-29, later)
+- ADR 0006 is committed: GDScript first, JS frozen at 9ac1ea9, goldens from golden.gd, batch.gd for AI batches. **Only one director changes sim behaviour at a time**, so golden.json doesn't collide in the shared folder.
+- **Orb's picks:**
+  - Damage: Wounds.
+  - Cyborg food: Press.
+  - Overcommit liked, but to be made recognisable and non-infringing (Narrative round 2).
+  - Orbs and fusion: re-pitch (Narrative round 2). Keep the pride-for-power mechanic.
+- **Active:**
+  - Encounter Systems: tempo, launch planner, ocean. The only sim editor right now.
+  - Rendering: civilian scale, planet-scale feel.
+  - Narrative: round 2 pitches.
+- **Standing by:**
+  - Game Design: writes the Wounds spec after Orb picks the readout, Rally and downtime.
+  - Combat: stage 0/1 after the spec. The composer's code lives in sim/director (Encounter owns it); Combat owns the vocabulary as data.
+  - Simulation.
+- **Next sim editor after Encounter:** World (craters and water), then Rendering's crater and scorch visuals.
+- **Tools, small:** fix the godot-parity comment (it now checks the GD goldens); add a batch.gd 5-match smoke step. QA: move baselines to batch.gd.
+
 ## Queued for idle directors (send when they resume)
 - **Camera:** when separation passes half the planet, the reference camera re-targets the other arc and pans 80 to 180 px per frame. That's a framing choice to fix.
 - **Performance:** a min-spec run (old laptop, integrated GPU, mobile), draw-call budgets, and the float-texture vertex fetch on mobile GLES3 (the fallback is packed 8-bit heights).
