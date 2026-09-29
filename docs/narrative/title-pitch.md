@@ -58,3 +58,41 @@ Pairing note: any of the top three could take "Sorry About Your Planet" as a sub
 3. **Redline Sky.** If Orb wants speed to lead.
 
 Legal should screen the top three, and check Sunburners against Sunburnt and Sunburn for confusion.
+
+## Round 3: names a person would say
+
+**Why round 2 sounded machine-made.** Orb is right, and the diagnosis is mine to own:
+
+- **One recipe.** Every name was two stock energy words glued together (Sun, Sky, Cinder plus Burn, Torch, Sear), or an adjective-noun slogan. Same word list, same rhythm, same shape.
+- **Vibes, not things.** None of them named anything in the game. "Sunburners" could be a shampoo. No object, no place, no sound.
+- **Too clean.** No name was a joke, an accident, a shout or a little bit wrong. The taglines used the same twin-imperative beat ("Light it up. Watch it fall.").
+- **Nobody would say them out loud.** People name things from something they said, saw or laughed at. I named them from a mood board.
+
+So this round starts from things a person would actually blurt out, or from things that exist in the game. No Sky, Sun, Fire, Burn, Blaze, Storm, Star, Nova, Fury or Clash compounds, and no adjective-noun epics.
+
+**Self-screen (2026-09-29).** Stage 0 passed for all. Steam and App Store searches for an exact title, plus one quoted US web search each. Quick, US-only, not a clearance.
+
+| # | Title | Source | Why a person says it out loud | Self-screen | Rating |
+|---|---|---|---|---|---|
+| 1 | **Take It Outside** ★ | A shout | It is what someone says to two men squaring up in a bar, and here "outside" is the atmosphere. Deadpan, short, and the joke is the scale. | Steam and iOS: none. Web: no game with the title. | Low |
+| 2 | **Not the Hospital** ★ | A shout | The thing you yell when the beam is coming the wrong way. Dark, very funny, and it tells you about the collateral pillar before you play. | None on Steam or iOS. Web: nothing exact. | Low |
+| 3 | **Two Dudes, One Planet** ★ | Flash-era dumb-good, and a joke | It is what you would say if a friend asked what the game is. The four-fighter roster would rename it, but the ring of it is right. | None on Steam or iOS. Web: nothing exact (nearest: Two For One, a Steam puzzler). | Low |
+| 4 | **Wraparound** | In-world: the codename | Honest sell: it is the working name because it describes the mechanic, and devs really do keep such names. As a title it is generic, hard to search for, and hard to own. | Steam and iOS: none. Web: no game with the title, but it is the standard term for the screen-wrap mechanic, and there are small jam games (itch.io, Roblox). | Medium |
+| 5 | **Behind You, Again** | In-world: fly either way | The planet loops, so you keep ending up behind the other guy. It is a shout and a groan at once. | None on Steam or iOS. Web: nothing exact ("Behind You" alone is a crowded horror title). | Low |
+| 6 | **Hoagie Portal** | In-world: the sandwich portal | Nobody would name a serious game this. That is why a person would. | None on Steam or iOS. Web: nothing exact. | Low |
+| 7 | **Doodad Hunt** | In-world: the artefacts | The artefact fetch quest, called what a player would call it. | None on Steam or iOS. Web: a Warcraft III map called Doodad Hunt. | Medium |
+| 8 | **Fwoom** | Onomatopoeia | It is the sound of a big thing lighting up. One syllable, easy to shout, easy to own as a brand. | None on Steam or iOS. Web: a hobby WebGL game called fwoom on GitHub. | Low to Medium |
+| 9 | **Beatdown Planet** | Flash-era dumb-good | The kind of name a 2007 Newgrounds upload gets. | None on Steam or iOS. Web: nothing exact. | Low |
+| 10 | **Widdershins** | A strange real word | It means going anticlockwise, the wrong way round, and it is a joy to say. It is the right idea for a looping planet. | None on Steam or iOS. Web: crowded. Several tabletop RPGs, a card game and small itch.io games use it. | Medium to High |
+| 11 | **Kerfuffle** | A strange real word, a joke | Calling planet-scale violence "a kerfuffle" is the humour of the whole game. | None on Steam. iOS: a party-games app called Kerfuffle. Web: a card game and a dice game. | Medium |
+| 12 | **Big Lap** | In-world: one loop of the planet | What you would call flying all the way round. | None on Steam. Web: "The Big Lap" is an Australian road-trip term and a campervan company's game. | Medium |
+
+### Top three, and my honest read
+
+1. **Take It Outside.** The one I would bet on. Understated, a joke on the scale, and a human being would say it.
+2. **Not the Hospital.** The funniest, and the most specific to this game.
+3. **Two Dudes, One Planet.** The most Orb-sounding. It is a working name in spirit; with four fighters it will need a small twist.
+
+**Still sound generated or assembled:** **Beatdown Planet** (a placeholder that reads like one), **Big Lap** (a bit mild), and **Doodad Hunt** (fine, but a mechanic label, not a title). **Widdershins** is a great word that is already taken several times. **Wraparound** is honest but is a codename, not a brand.
+
+Legal should screen the top three and Wraparound.
