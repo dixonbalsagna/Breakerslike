@@ -1,0 +1,12 @@
+// Flat-coloured greybox surface: albedo uniform times the vertex or instance colour, lit by the fixed fake light.
+#include "res://render/shaders/color.gdshaderinc"
+
+uniform vec4 albedo : source_color = vec4(1.0);
+uniform float shade : hint_range(0.0, 1.0) = 0.35;
+
+void fragment() {
+	ALBEDO = flat_shade(albedo.rgb * COLOR.rgb, NORMAL, shade);
+#ifdef FLAT_ALPHA
+	ALPHA = albedo.a * COLOR.a;
+#endif
+}

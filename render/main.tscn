@@ -1,0 +1,39 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://render/core/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://render/core/camera_rig.gd" id="2_cam"]
+[ext_resource type="Script" path="res://render/core/planet_view.gd" id="3_planet"]
+[ext_resource type="Script" path="res://render/core/beam_view.gd" id="4_beams"]
+[ext_resource type="Script" path="res://render/core/particle_view.gd" id="5_parts"]
+[ext_resource type="Script" path="res://render/core/hud.gd" id="6_hud"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="Camera" type="Camera3D" parent="."]
+script = ExtResource("2_cam")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+
+[node name="Planet" type="Node3D" parent="."]
+script = ExtResource("3_planet")
+
+[node name="Fighters" type="Node3D" parent="."]
+
+[node name="Beams" type="Node3D" parent="."]
+script = ExtResource("4_beams")
+
+[node name="Particles" type="MultiMeshInstance3D" parent="."]
+script = ExtResource("5_parts")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Overlay" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_hud")
