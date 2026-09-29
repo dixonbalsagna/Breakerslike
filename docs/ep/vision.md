@@ -205,3 +205,5 @@ Orb had played the Godot greybox before answering.
 2. A hybrid projection: the background keeps perspective, and the fighters get an orthographic-style correction so they don't warp at the screen edges.
 3. Mirroring when fighters switch sides, so the front always faces the camera and the back is never shown.
 Orb also referenced 'downstage' stage power: being nearer the camera reads as commanding.
+
+**Character style: Marked plus Aura (Orb, 2026-09-29).** Combine Marked (a mask with a bold sigil per fighter that bends with emotion and grows with form) and Aura: 'make sure the aura is there to exaggerate or convey appropriately.' Mask tone is per fighter (pale or dark). Orb wants mock-ups in the new style that follow the blocking rules (cheat out to camera).
