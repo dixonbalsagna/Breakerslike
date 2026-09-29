@@ -394,7 +394,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 13. Controls and Game Feel Director
 
-`docs/directors/controls-feel.md`  |  session: `Meridian - Controls & Game Feel`  |  model: `sonnet`  |  owns: `sim/input/, docs/feel/`  |  reports to: Executive Producer
+`docs/directors/controls-feel.md`  |  session: `Meridian - Controls & Game Feel`  |  model: `sonnet`  |  owns: `sim/input/, docs/controls/`  |  reports to: Executive Producer
 
 **Mission.** Own how it feels in the hands: input mapping, buffering, hit-stop, windows and responsiveness.
 
@@ -407,7 +407,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 **Decides:** Input schemes; Window widths; Hit-stop table
 
-**Deliverables:** sim/input/*; docs/feel/tuning-table.md; Feel test reports
+**Deliverables:** sim/input/*; docs/controls/tuning-table.md; Feel test reports
 
 **Works with (via the EP):** Combat (windows), Game Design, UI/UX, Camera, VFX.
 

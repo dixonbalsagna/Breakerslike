@@ -102,6 +102,9 @@ Orb upgraded the subscription ('more tokens to play with, keep going'). More dir
 ## Collateral ramp and cap (Game Design §4b)
 World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, over budget), a cumulative ceiling (10, 30, 60 and 90%), and per-casualty weights times 425/pop0. Narrative and World make evacuation read as fleeing. QA adds the rolling-window test, the ceiling test and the per-tier split.
 
+## Sim queue, current order (2026-09-29, late)
+S3b Encounter (active), then S4 Simulation (Rally, plus the second-breath metric), then World (collateral ramp and cap, B1 in bh, pop per slide, structures index), then Controls Stage A (integer hit-stop, press ticks, SimIntent special, transform and stanceStep; goldens bit-identical), then Controls Stage B (the hit-stop table; goldens change).
+
 ## QA follow-ups (Game Design)
 - Re-baseline the collateral bands after B1.
 - If chapters feel thin after S4, run the stricter-brink experiment (core or three limbs broken, k ×1.4).

@@ -191,7 +191,7 @@ d(slug="ui-ux", title="UI and UX Director", model="sonnet", tools=None, phases="
   done=["A new player finds stances and parry timing without a tutorial screen", "HUD readable at 1080p and on a small laptop", "Debug overlay shows every director decision"],
   anti=["HUD clutter over the fighters"])
 
-d(slug="controls-feel", title="Controls and Game Feel Director", model="sonnet", tools=None, phases="·○●○○●", paths="sim/input/, docs/feel/",
+d(slug="controls-feel", title="Controls and Game Feel Director", model="sonnet", tools=None, phases="·○●○○●", paths="sim/input/, docs/controls/",
   mission="Own how it feels in the hands: input mapping, buffering, hit-stop, windows and responsiveness.",
   duties=[
    "Design input for keyboard and gamepad, including one-button stance access and a readable parry and chain rhythm.",
@@ -200,7 +200,7 @@ d(slug="controls-feel", title="Controls and Game Feel Director", model="sonnet",
    "Own the stance-switch feel: cost, cooldown, feedback.",
    "Run feel test sessions and record findings."],
   decides=["Input schemes", "Window widths", "Hit-stop table"],
-  deliver=["sim/input/*", "docs/feel/tuning-table.md", "Feel test reports"],
+  deliver=["sim/input/*", "docs/controls/tuning-table.md", "Feel test reports"],
   ifaces="Combat (windows), Game Design, UI/UX, Camera, VFX.",
   done=["Parry window feels fair to a new player and skillful to an expert", "Input latency budget met", "Gamepad and keyboard parity"],
   anti=["Windows so tight the director looks unfair"])
