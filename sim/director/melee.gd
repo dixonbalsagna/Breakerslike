@@ -218,11 +218,16 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 static func launchBeat(S: SimState, ex, att, tgt, force: float) -> void:
 	if ex.cancel or S.game.ko != null or tgt.hp <= 0.0:
 		return
-	var r: Dictionary = DirLaunch.chooseLaunch(S, att, tgt)
-	DirLaunch.doLaunch(S, att, tgt, r.best, force)
-	S.dirS.lastLaunch2 = S.dirS.lastLaunch
-	S.dirS.lastLaunch = r.best.name
+	var r: Dictionary = DirLaunch.chooseLaunch(S, att, tgt, force)
 	var parts: PackedStringArray = []
 	for k in r.top:
 		parts.append(k.name + " " + SimMathx.jstr(SimMathx.jround(k.s)))
+	if r.best.name == "NONE":
+		# Nothing scored above holding back: the strike shoves the target instead of launching it.
+		DirLaunch.knockBack(S, att, tgt)
+		SimEvents.feed(S, "NO LAUNCH", "  |  ".join(parts))
+		return
+	DirLaunch.doLaunch(S, att, tgt, r.best, force)
+	S.dirS.lastLaunch2 = S.dirS.lastLaunch
+	S.dirS.lastLaunch = r.best.name
 	SimEvents.feed(S, "LAUNCH: " + r.best.name, "  |  ".join(parts))

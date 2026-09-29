@@ -164,7 +164,18 @@ static func endEx(S: SimState, ex) -> void:
 	if ex.combo > 1.0:
 		SimEvents.feed(S, "CHAIN x" + SimMathx.jstr(ex.combo) + " ended", ex.A.name + " landed " + SimMathx.jstr(ex.combo) + " linked exchanges")
 	S.dirS.ex = null
-	S.dirS.cool = 0.22
+	S.dirS.cool = cooldownAfter(ex)
+
+
+## Breathing room after an exchange (balance-targets.md section 10): 0.8 s after a quick exchange, rising with its
+## length (ex.t, request to release) to at most 1.5 s. Was a flat 0.22 s.
+const COOL_MIN: float = 0.8
+const COOL_PER_SEC: float = 0.3
+const COOL_MAX: float = 1.5
+
+
+static func cooldownAfter(ex) -> float:
+	return SimMathx.jclamp(COOL_MIN + COOL_PER_SEC * ex.t, COOL_MIN, COOL_MAX)
 
 
 static func dirUpdate(S: SimState, dt: float) -> void:
