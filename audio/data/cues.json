@@ -96,17 +96,19 @@
     "rank": {
       "surge": 1,
       "danger": 2,
-      "found": 3,
-      "searching": 4,
-      "brink": 5,
-      "fear": 6,
-      "rage": 7,
-      "hurt": 8,
-      "resolve": 9,
-      "triumph": 10,
-      "pride": 11,
-      "taunt": 12
+      "hazard": 3,
+      "found": 4,
+      "searching": 5,
+      "primed": 6,
+      "fear": 7,
+      "rage": 8,
+      "hurt": 9,
+      "resolve": 10,
+      "respect": 11,
+      "triumph": 12,
+      "pride": 13,
+      "taunt": 14
     },
-    "note": "Head-flash cues (docs/art/flash-prototype-spec.md). Priority follows Art's rank: the surge outranks everything. Rendering calls AudioCues.flash(S, actor, id) when a flash starts, or emits a cosmetic flash event {actor, id}."
+    "note": "Head-flash cues (docs/art/flash-prototype-spec.md). Priority follows Art's rank: the surge outranks everything. Rendering calls AudioCues.flash(S, actor, id) when a flash starts, or emits a cosmetic flash event {actor, id}. The ranks are provisional until Art's flashes.json gives the priorities for Hazard, Primed and Respect."
   }
 }

@@ -236,7 +236,7 @@ A beam's scorch trail sizzles by beam power. A beam clash is two tones that beat
 
 ### 5.6 Head-flash cues
 
-Art's twelve head flashes (`docs/art/marked-aura.md`, `art/concepts/marked-aura/flashes.json`) each have one short cue, cut to the flash's own time (`max_s`), so a sound is never longer than its flash. The recipe is the same for every fighter; the fighter's shape family sets only the timbre, so the Protagonist's flashes sound round, the Anti-hero's thin and metallic, the Empress's nasal and theatrical and the Cyborg's stepped. Recipes: `audio/data/flash_cues.json`; synth: `audio/synth/flash_synth.gd`.
+Art's fourteen head flashes (`docs/art/marked-aura.md`, `art/concepts/marked-aura/flashes.json`) each have one short cue, cut to the flash's own time (`max_s`), so a sound is never longer than its flash. The recipe is the same for every fighter; the fighter's shape family sets only the timbre, so the Protagonist's flashes sound round, the Anti-hero's thin and metallic, the Empress's nasal and theatrical and the Cyborg's stepped. Brink was cut from the set and Hazard, Primed and Respect added (EP and Orb, 2026-09-29); their times and priority ranks are provisional until Art's `data/art/flashes.json` lands. Recipes: `audio/data/flash_cues.json`; synth: `audio/synth/flash_synth.gd`.
 
 | Family (fighter) | Timbre |
 | :--- | :--- |
@@ -248,20 +248,22 @@ Art's twelve head flashes (`docs/art/marked-aura.md`, `art/concepts/marked-aura/
 | Flash | Cue (as the Protagonist hears it) | Length |
 | :--- | :--- | :--- |
 | Danger sense | A low dry tick and a quiet upward noise sweep. No pitched chirp | 0.32 s |
+| Hazard | Two low dry ticks a beat apart over a low rumble swell, no upward sweep: the world is about to hit you | 0.45 s |
 | Found | One soft-attack note rising a whole step, mid register | 0.60 s |
 | Searching | A wavering low two-note phrase, falling | 0.90 s |
-| Brink | A slow heartbeat pair and a low tail | 0.98 s |
+| Primed | A short breath in, then one low held note that lifts a semitone: sprung and live | 0.60 s |
 | Fear | A shiver: breath noise with a 13 Hz tremolo | 0.80 s |
 | Rage | A low creaking growl that swells and is cut off | 0.59 s |
 | Hurt | A short falling blip and a knock, layered under the pain grunt | 0.31 s |
-| Resolve | A breath in, then a low held note | 0.80 s |
+| Resolve | A breath in, then a low held note. It fires just after the crown's Rally pop fades | 0.80 s |
+| Respect | Two notes that meet from either side and settle into a soft chime | 0.90 s |
 | Triumph | A two-note bell chime a fifth apart (the fighter's laugh joins when the laugh gesture exists) | 1.00 s |
 | Pride | A slow exhale and a soft held fifth | 0.90 s |
 | Taunt | A nasal sneer and a dry "tch" | 0.41 s |
 | Surge | A three-second rising swell that resolves on a chord that differs per family (major, minor, suspended, open fifth) | 4.45 s |
 
 **Veto check against known alert cues** (Art asked me to veto anything that sounds like a stealth-game alert or a spider-sense cue). The rules I applied, and how the set does:
-1. No fast repeated staccato notes or "stab" (the classic alert): no cue has three or more repeated notes; the fastest attack on a pitched note is 15 ms and the danger cue has no pitched note at all.
+1. No fast repeated staccato notes or "stab" (the classic alert): no cue has three or more repeated notes (Hazard has two low ticks); the fastest attack on a pitched note is 15 ms and the danger cue has no pitched note at all.
 2. Nothing high and shrill (a spider-sense chirp sits in the 2 to 4 kHz range): the highest fundamental in any cue is 587 Hz, with one quiet partial at 1.2 kHz in the wedges' found cue.
 3. No tremolo or vibrato on a high pure tone: the fear shiver is on breath noise, and its only pitched part is a quiet tone at about 150 Hz.
 4. Info cues are softer and lower than an alert would be: found is a 0.6 s note and danger is a tick and a noise sweep.

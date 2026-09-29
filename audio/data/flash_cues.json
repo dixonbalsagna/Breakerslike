@@ -2,7 +2,7 @@
  "schema": 1,
  "bank_seed": 20260929,
  "rate": 16000,
- "note": "One short cue per head flash (art/concepts/marked-aura/flashes.json), each in the sound family of the fighter's shape family. Times in seconds, pitches in semitones from the family's root. A flash recipe is the same for all four fighters; the family changes only the timbre (audio/synth/flash_synth.gd). Veto rules for alert-like sounds are in docs/audio/direction.md, section 5.6. max_s is the flash's total time (attack + hold + fade): a cue is cut there with a short fade, so the sound is never longer than the flash.",
+ "note": "One short cue per head flash (art/concepts/marked-aura/flashes.json), each in the sound family of the fighter's shape family. Times in seconds, pitches in semitones from the family's root. A flash recipe is the same for all four fighters; the family changes only the timbre (audio/synth/flash_synth.gd). Veto rules for alert-like sounds are in docs/audio/direction.md, section 5.6. max_s is the flash's total time (attack + hold + fade): a cue is cut there with a short fade, so the sound is never longer than the flash. Hazard, Primed and Respect were added and Brink cut (EP and Orb, 2026-09-29); their times (max_s) are provisional until Art's data/art/flashes.json lands.",
  "families": {
   "circles": {
    "voice": "protagonist",
@@ -164,39 +164,6 @@
     }
    ],
    "max_s": 0.9
-  },
-  "brink": {
-   "peak_db": -8.0,
-   "layers": [
-    {
-     "type": "thump",
-     "at": 0.0,
-     "f": 80,
-     "f_to": 45,
-     "t60": 0.16,
-     "level": 1.0
-    },
-    {
-     "type": "thump",
-     "at": 0.22,
-     "f": 68,
-     "f_to": 40,
-     "t60": 0.14,
-     "level": 0.7
-    },
-    {
-     "type": "note",
-     "at": 0.0,
-     "dur": 0.5,
-     "semi": -24,
-     "glide": 0,
-     "a": 0.05,
-     "hold": 0.1,
-     "t60": 0.5,
-     "level": 0.3
-    }
-   ],
-   "max_s": 0.98
   },
   "fear": {
    "peak_db": -10.0,
@@ -521,6 +488,118 @@
     }
    ],
    "max_s": 4.45
+  },
+  "hazard": {
+   "max_s": 0.45,
+   "peak_db": -6.0,
+   "layers": [
+    {
+     "type": "tick",
+     "at": 0.0,
+     "f": 140,
+     "t60": 0.06,
+     "click": 0.6,
+     "level": 1.0
+    },
+    {
+     "type": "tick",
+     "at": 0.13,
+     "f": 115,
+     "t60": 0.07,
+     "click": 0.7,
+     "level": 1.2
+    },
+    {
+     "type": "thump",
+     "at": 0.13,
+     "f": 70,
+     "f_to": 42,
+     "t60": 0.2,
+     "level": 0.8
+    },
+    {
+     "type": "breath",
+     "at": 0.0,
+     "dur": 0.42,
+     "filter": "lp",
+     "f": 150,
+     "f_to": 420,
+     "q": 0.8,
+     "a": 0.2,
+     "hold": 0.1,
+     "t60": 0.1,
+     "level": 0.6
+    }
+   ]
+  },
+  "primed": {
+   "max_s": 0.6,
+   "peak_db": -8.0,
+   "layers": [
+    {
+     "type": "breath",
+     "at": 0.0,
+     "dur": 0.14,
+     "filter": "bp",
+     "f": 500,
+     "f_to": 1400,
+     "q": 1.0,
+     "a": 0.06,
+     "hold": 0.03,
+     "t60": 0.05,
+     "level": 0.5
+    },
+    {
+     "type": "note",
+     "at": 0.12,
+     "dur": 0.42,
+     "semi": -5,
+     "glide": 1,
+     "a": 0.05,
+     "hold": 0.28,
+     "t60": 0.2,
+     "level": 1.0
+    }
+   ]
+  },
+  "respect": {
+   "max_s": 0.9,
+   "peak_db": -10.0,
+   "layers": [
+    {
+     "type": "note",
+     "at": 0.0,
+     "dur": 0.5,
+     "semi": -3,
+     "glide": 3,
+     "a": 0.08,
+     "hold": 0.3,
+     "t60": 0.3,
+     "level": 0.8
+    },
+    {
+     "type": "note",
+     "at": 0.0,
+     "dur": 0.5,
+     "semi": 3,
+     "glide": -3,
+     "a": 0.08,
+     "hold": 0.3,
+     "t60": 0.3,
+     "level": 0.8
+    },
+    {
+     "type": "note",
+     "at": 0.45,
+     "dur": 0.4,
+     "semi": 0,
+     "glide": 0,
+     "a": 0.02,
+     "hold": 0.05,
+     "t60": 0.4,
+     "level": 0.7
+    }
+   ]
   }
  }
 }
