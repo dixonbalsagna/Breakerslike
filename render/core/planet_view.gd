@@ -8,6 +8,7 @@ extends Node3D
 ## appears. Per-frame cost is three node moves plus whatever changed in the sim since the last frame: the ground field
 ## (render/core/ground_field.gd: round crater bowls in depth, scorch, water) when craters dig, beams scorch or water
 ## flows, and the instances of damaged buildings, fallen trees and lost civilians, and of props on changed ground.
+## Civilians who flee (World's evacuate events) run off as figures (render/core/crowd_flight.gd) instead of vanishing.
 ## Reads the sim only; never writes it.
 
 const TERRAIN_SHADER: Shader = preload("res://render/shaders/terrain.gdshader")
@@ -31,6 +32,11 @@ var _tree_z := PackedFloat64Array()
 var _crowd_first := PackedInt32Array()
 var _crowd_x := PackedFloat64Array()   # world x per person
 var _crowd_z := PackedFloat64Array()
+var _shown := PackedInt32Array()       # per building: figures standing at home, -1 before the first placement
+var flight := CrowdFlight.new()
+## Per building, people the evacuation mock has taken out of a building on its own (render/tools/evac_mock.gd, main's
+## --mock-evac): the crowd shows popAlive minus these. Empty in the game; goes when World's evacuation lands.
+var crowd_extra: Array = []
 
 
 ## Build the planet for the match in S (after SimCore.newMatch).
@@ -48,6 +54,11 @@ func build(S: SimState) -> void:
 		_crowd_mat.set_shader_parameter("skin_a", RenderLook.col(RenderLook.CROWD_SKIN[0]))
 		_crowd_mat.set_shader_parameter("skin_b", RenderLook.col(RenderLook.CROWD_SKIN[1]))
 		_crowd_mat.set_shader_parameter("legs", RenderLook.col(RenderLook.CROWD_LEGS))
+		_crowd_mat.set_shader_parameter("run_hz", RenderLook.RUN_STRIDE_HZ)
+		_crowd_mat.set_shader_parameter("leg_swing", RenderLook.RUN_LEG_SWING)
+		_crowd_mat.set_shader_parameter("arm_swing", RenderLook.RUN_ARM_SWING)
+		_crowd_mat.set_shader_parameter("run_lean", RenderLook.RUN_LEAN)
+		_crowd_mat.set_shader_parameter("run_bob", RenderLook.RUN_BOB)
 	ground.rebuild(S)
 	_make_props(S)
 	for k in range(-RenderLook.PLANET_COPIES, RenderLook.PLANET_COPIES + 1):
@@ -74,6 +85,12 @@ func update(S: SimState, cam_x: float, heat: PackedFloat32Array = PackedFloat32A
 		c.position.x = float(c.get_meta("k")) * SimConst.W - cam_x
 	ground.update(S, heat, heat_changed)
 	refresh(S, false)
+	flight.step(S, _crowd)
+
+
+## One tick's fx events, as the host drains them: the evacuate events start the flight.
+func consume(events: Array) -> void:
+	flight.consume(events)
 
 
 ## Crowd legibility for this frame: boost scales each figure about its feet; outline is the shell width in units.
@@ -108,9 +125,10 @@ func refresh(S: SimState, force: bool) -> void:
 		var h: float = WorldStructures.curH(b)
 		var seen: Array = _bld_seen[bi]
 		var moved: bool = dchg and (force or dirty[_col(b.x)] == 1)
-		if moved or h != seen[0] or b.alive != seen[1] or b.popAlive != seen[2]:
-			_set_building(S, bi, b, h, moved or b.popAlive != seen[2])
-			_bld_seen[bi] = [h, b.alive, b.popAlive]
+		var pa: float = b.popAlive - (float(crowd_extra[bi]) if bi < crowd_extra.size() else 0.0)
+		if moved or h != seen[0] or b.alive != seen[1] or pa != seen[2]:
+			_set_building(S, bi, b, h, pa, moved or pa != seen[2])
+			_bld_seen[bi] = [h, b.alive, pa]
 	for ti in range(S.trees.size()):
 		var t = S.trees[ti]
 		if (dchg and (force or dirty[_col(t.x)] == 1)) or t.alive != _tree_seen[ti]:
@@ -129,7 +147,8 @@ static func _col(x: float) -> int:
 	return int(floor(SimWrap.wrap(x) / SimConst.COL))
 
 
-func _set_building(S: SimState, bi: int, b, h: float, crowd: bool) -> void:
+## pa: the people the building's crowd shows (popAlive, less the mock's own evacuations).
+func _set_building(S: SimState, bi: int, b, h: float, pa: float, crowd: bool) -> void:
 	var tower: bool = b.kind == "tower"
 	var d: float = b.w * (0.8 if tower else 0.9)
 	var zc: float = RenderLook.Z_BUILDING_FRONT - d * 0.5
@@ -148,13 +167,20 @@ func _set_building(S: SimState, bi: int, b, h: float, crowd: bool) -> void:
 	if crowd:
 		var first: int = _crowd_first[bi]
 		var n: int = _crowd_first[bi + 1] - first
-		var alive: int = int(b.popAlive)
+		var alive: int = clampi(int(pa), 0, n)
+		# Figures that just vanished: the fled share runs (the flight), the rest were casualties and go now.
+		var gone_now := {}
+		if _shown[bi] > alive:
+			var slots: Array = range(first + alive, first + _shown[bi])
+			for ci in flight.vanish(S, bi, b.x, slots, _crowd_x, _crowd_z, b.pop - pa, n - alive, ground):
+				gone_now[ci] = true
+		_shown[bi] = alive
 		for j in range(n):
 			var ci: int = first + j
 			var x: float = _crowd_x[ci]
 			if j < alive:
 				_crowd.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ONE * RenderLook.CROWD_SCALE), Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
-			else:
+			elif gone_now.has(ci) or not flight.running(ci):
 				_crowd.set_instance_transform(ci, _hidden(x))
 
 
@@ -391,10 +417,11 @@ static func _mesh(v: PackedVector3Array, uv: PackedVector2Array, uv2: PackedVect
 	return m
 
 
-static func _multimesh(mesh: Mesh, count: int, y1: float, custom: bool = false) -> MultiMesh:
+## custom: per-instance custom data, with instance colours too only if colors (else colours alone).
+static func _multimesh(mesh: Mesh, count: int, y1: float, custom: bool = false, colors: bool = false) -> MultiMesh:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = not custom
+	mm.use_colors = colors or not custom
 	mm.use_custom_data = custom
 	mm.mesh = mesh
 	mm.instance_count = count
@@ -442,6 +469,10 @@ func _make_props(S: SimState) -> void:
 			var shirt: Color = RenderLook.col(RenderLook.CROWD[int(cr.next() * RenderLook.CROWD.size())]).srgb_to_linear()
 			looks.append(Color(shirt.r, shirt.g, shirt.b, cr.next()))
 	_crowd_first[nb] = _crowd_x.size()
-	_crowd = _multimesh(CrowdMesh.build(), _crowd_x.size(), 80.0, true)
+	_crowd = _multimesh(CrowdMesh.build(), _crowd_x.size(), 80.0, true, true)
 	for ci in range(looks.size()):
 		_crowd.set_instance_custom_data(ci, looks[ci])
+		_crowd.set_instance_color(ci, Color.WHITE)
+	_shown.resize(nb)
+	_shown.fill(-1)
+	flight.reset(nb)

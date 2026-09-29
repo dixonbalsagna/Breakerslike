@@ -82,6 +82,26 @@ Orb's notes on the first live build were "civilians seem too tiny" and "make the
 | :---: | :---: |
 | ![civilians before](img/civilians-before.png) | ![civilians after](img/civilians-after.png) |
 
+**Evacuation: people fleeing, not immortal civilians.** Built against World's planned `evacuate {b, x, z, n, cx, reason, owner}` (`docs/world/collateral-caps.md` §5), which comes in the same tick as the building's `popAlive` falls. `crowd_flight.gd` decides and draws it:
+- **The crowd thins.** A building's figures standing at home are always the people it has, `int(popAlive)`. No one a blow took is ever left standing, and an emptied district stays empty.
+- **Who runs.** When figures vanish from a building a blow hit this frame (its `debris` event; the sim's damage always throws one), as many run as its events have reported fled, farthest from the blow first. The rest, nearest the blow, were casualties and go at once. From a building no blow hit, everyone who vanished left on foot (people die only by damage), so they all run, even before the lot that reports them. World reports flights in lots of half a person.
+- **How they run.** Runners use their own crowd instances, on sim time (pause and hit-stop hold them). They run away from the event's `cx`, up to 60% faster the closer they were (`RUN_*` in `look.gd`), and drift back behind the building row. About one in seven looks back once, and each fades out by dither at the end of its 2.4 to 4 s run. The crowd shader plays the run cycle in the figure's own plane, as a runner seen side-on: legs and arms scissor, the body bobs and leans into the run. The figure stays nearly face-on (back-on running left; it looks the same from behind), so it never thins to a plank.
+
+A blow on the city's edge with the mock on, every second (left to right): ![flight](img/flight-strip.png) Two runners close up: ![run](img/flight-run.png)
+
+**Until the sim sends it**, `render/tools/evac_mock.gd` makes World's events from what the sim does, and never writes the sim. `main --mock-evac` turns it on in the game.
+- A 60% share of each building's losses is reported as fled, in the same tick.
+- For 5 s after a blow that cost lives, standing buildings within World's `EVAC_R` empty at its 30% a second, on the render side only: the crowd shows `popAlive` less the mock's own `extra`.
+- The flag, the mock and `PlanetView.crowd_extra` go when World's evacuation lands.
+
+`render/tools/flight_check.gd` runs AI matches with the mock (seeds 4, 12345 and 7; 15,346 frames) and checks:
+- every frame, every building's standing figures equal its people;
+- no runner outlives its run;
+- per building, runners equal the events' n within 2. Result: 491 runners for 462.3 people; the worst building is off by 1.4, since figures are whole people and lots are half a person;
+- the sim's hash is the same with the mock on and off.
+
+Cost on desktop (seed 4, 4,800 frames, about 70 runners at most): frame time p50 1.19 → 1.24 ms, p95 2.00 → 2.15 ms, p99 2.60 → 2.91 ms. The flight step itself is under 0.08 ms at p99.
+
 **Planet scale.** I picked the three cheapest cues that read at the zoom real fights use. In AI matches the zoom stays around 0.3 to 0.7 and the camera below about 850 units, so cues that only showed at extreme zoom would rarely be seen. All three are static meshes or shader uniforms, with no per-frame CPU work beyond a few uniforms.
 
 1. **Horizon curvature** (`bend.gdshaderinc`). World geometry sags by `bend * x^2` across the screen, weighted by depth: nothing moves within 60 units of the fighter plane, and the weight is full from 1,260 units behind. So the fight, the ground under the fighters, the HUD mapping and the seam proof are exactly as before, while the world behind curves away like a horizon. The weight also divides out perspective, so every layer from 1,260 units back to the horizon sags by the same number of pixels at the screen edge: 3.5 % of screen height at close zoom and 10 % at wide zoom, plus up to 10 % more as the camera climbs (`CURVE_*`). It is a function of the camera-relative x, so it is identical in every planet copy and invisible at the seam.
@@ -194,6 +214,7 @@ All commands run from the repo root; each exits 0 on success.
 | Seam sweep | `godot --headless --path . --script res://render/tools/seam_sweep.gd -- --size=1280x720` | passed at 1280×720, 2560×720 and 720×1280 |
 | Determinism | `godot --headless --path . --script res://render/tools/determinism.gd` | passed (seeds 12345 and 4) |
 | Ground check | `godot --headless --path . --script res://render/tools/ground_check.gd` | passed (seeds 4, 12345, 7) |
+| Flight check | `godot --headless --path . --script res://render/tools/flight_check.gd` | passed (seeds 4, 12345, 7; with the evacuation mock) |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
 
 **Ground check.** It runs three matches through the full scene and checks every 120 ticks:

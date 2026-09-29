@@ -123,6 +123,24 @@ const CROWD_SPREAD: float = 50.0 * WS    # how far past a building's width its p
 const CROWD_MIN_PX: float = 12.0
 const CROWD_BOOST_MAX: float = 2.0
 const CROWD_OUTLINE_PX: float = 1.1
+## Evacuation (render/core/crowd_flight.gd, World's `evacuate` event): people who flee a blow run away from it, faster
+## the closer they were, drifting back behind the building row; a share look back once; each fades out at the end of
+## its run. The run cycle plays in the figure's plane, as a runner seen side-on. Speeds and the stride are a person's
+## (fighter scale); the blow's reach is the world's.
+const RUN_SPEED: float = 420.0          # units a second: a sprint for a life-size person
+const RUN_NEAR: float = 0.6             # up to this much faster for people right at the blow ...
+const RUN_NEAR_R: float = 200.0 * WS    # ... falling to none this far from it
+const RUN_TIME: float = 3.2             # seconds of running before a runner is gone (each 75% to 125% of this)
+const RUN_FADE: float = 0.45            # the last seconds of a run, fading out
+const RUN_Z_END: float = Z_BUILDING_FRONT - 60.0   # the depth they drift back to, behind the building row's front
+const RUN_YAW: float = 20.0             # degrees they turn from face-on (back-on, running left) toward where they run
+const RUN_LOOK_SHARE: float = 0.15      # the share that look back once ...
+const RUN_LOOK_S: float = 0.35          # ... for this long, slowing
+const RUN_STRIDE_HZ: float = 2.8        # the run cycle (render/shaders/crowd.gdshader): strides a second,
+const RUN_LEG_SWING: float = 0.75       # leg and arm swing (radians), forward lean and bob (figure units)
+const RUN_ARM_SWING: float = 0.9
+const RUN_LEAN: float = 0.2
+const RUN_BOB: float = 1.1
 
 const SKIN := "#efc7a2"
 const ARM := "#e6b995"

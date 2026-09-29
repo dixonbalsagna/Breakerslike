@@ -20,6 +20,7 @@ var fxv := SimFxView.new(1)     # reference fx consumer (sim/core/view/fx.gd)
 var impact := ImpactFx.new()    # render-side crater, scorch and water effects (render/core/impact_fx.gd)
 var audio_cues := AudioCues.new()   # Audio's event reader (audio/audio_cues.gd); its own stream, seeded per match
 var pending_cues: Array = []    # cues made this frame's ticks, for the scene to play
+var evac_mock: EvacMock = null  # main's --mock-evac: World's planned evacuate events, until the sim sends them
 var cam_rng: SimRng             # the 'camera' cosmetic stream: shake jitter
 var seed: int = 1
 var acc: float = 0.0
@@ -47,6 +48,8 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	fxv.reset(seed)
 	impact.reset(seed)
 	audio_cues.reset(seed)
+	if evac_mock != null:
+		evac_mock.reset(S)
 	pending_cues.clear()
 	cam_rng = SimRng.new(SimRng.deriveSeed(seed, "camera"))
 	acc = 0.0
@@ -97,7 +100,10 @@ func tick(vw: float, vh: float) -> void:
 	fxv.consume(S, S.out.fx)
 	impact.consume(S, S.out.fx)
 	pending_cues.append_array(audio_cues.consume(S, S.out.fx))
-	drained.emit(S.out.fx, lines)
+	var fx: Array = S.out.fx
+	if evac_mock != null:
+		fx = fx + evac_mock.step(S, fx)
+	drained.emit(fx, lines)
 	S.out.fx.clear()
 	if fxv.shake > 0.5:
 		jitter = Vector2((cam_rng.next() - 0.5) * fxv.shake, (cam_rng.next() - 0.5) * fxv.shake)

@@ -1,8 +1,9 @@
 class_name CrowdMesh
 ## The civilian figure, generated: legs, torso, arms and head as boxes (front view, so the silhouette reads as a
 ## person at a few pixels), plus a dark outline shell. Feet at y = 0, about 17 units tall. UV.x tags each part for
-## render/shaders/crowd.gdshader: 0 outline, 0.5 shirt, 0.8 skin, 1 trousers. (Not COLOR: in 4.7.2 Compatibility a
-## MultiMesh without instance colours multiplies COLOR by zero.)
+## render/shaders/crowd.gdshader: 0 outline, 0.5 shirt, 0.8 skin, 1 trousers. (Not COLOR, which carries the instance
+## colour: the flight's run and fade, render/core/crowd_flight.gd.) The shader finds the legs and arms by place, so
+## keep them where they are: legs below y 7.2 within x 2, arms beyond x 2.5.
 
 ## [centre, half extents, tag]
 const PARTS: Array = [

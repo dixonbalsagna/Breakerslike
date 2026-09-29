@@ -11,7 +11,8 @@ extends Node3D
 ## steps the sim. render/tools/determinism.gd checks that the gameplay hashes are unchanged by rendering.
 ##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
-## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit), --novsync.
+## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit), --novsync, --mock-evac
+## (World's planned evacuate events from a render-side mock, render/tools/evac_mock.gd, until the sim sends them).
 ## Benchmark: godot --path . --fixed-fps 60 --resolution 1280x720 -- --seed=4 --frames=4800 --bench
 ## (--fixed-fps 60 gives exactly one sim tick per frame; with vsync off each frame runs as fast as it can, so the
 ## wall-clock frame time is the true cost of one tick plus one rendered frame.)
@@ -55,6 +56,9 @@ func _ready() -> void:
 	ui_hud.anchor_fn = _hud_anchor
 	ui_hud.strip_fn = _hud_strip
 	host.drained.connect(_on_drained)
+	if args.has("mock-evac"):
+		host.evac_mock = EvacMock.new()
+		planet.crowd_extra = host.evac_mock.extra
 	audio = AudioVoices.new(host.audio_cues.bank)
 	add_child(audio)
 	if DisplayServer.get_name() != "headless":
@@ -137,8 +141,9 @@ func render_view(a: float) -> void:
 	hud.queue_redraw()
 
 
-## UI's HUD: each tick's events and feed lines, as SimHost drains them.
+## Each tick's events and feed lines, as SimHost drains them: the planet's flight, and UI's HUD.
 func _on_drained(events: Array, lines: Array) -> void:
+	planet.consume(events)
 	ui_hud.consume_all(events)
 	UiSimBridge.feed(ui_hud, lines)
 
