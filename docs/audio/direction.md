@@ -67,7 +67,7 @@ Reference moods are described, not named. Each direction has the same job: follo
 
 ### Recommendation
 
-**A, built on C's percussion, with B as the fallback.** A gives the game an identity that fits its two big ideas (the world answers; collateral has a cost) and is the most original. C makes A's percussion cheap and personal. B is what I can make with no other person and no third-party file, so it is the safe floor. Before Orb picks, I can make a 30-second sketch of each so the choice is made by ear: A from CC0 sampled instruments, B synthesised, C recorded. That needs Orb's go.
+**A, built on C's percussion, with B as the fallback.** A gives the game an identity that fits its two big ideas (the world answers; collateral has a cost) and is the most original. C makes A's percussion cheap and personal. B is what I can make with no other person and no third-party file, so it is the safe floor. Orb asked for sketches, so they exist: `audio/preview/sketch-a-town-band.wav`, `sketch-b-furnace.wav` and `sketch-c-kitchen-drums.wav` (30 s each, one shared arc and tune, see `audio/README.md`). All three are synthesised stand-ins, so judge the mood, the arrangement and the escalation, not the instrument realism: A's brass wants sampled brass and C wants real recordings.
 
 ## 4. The adaptive score
 

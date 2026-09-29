@@ -30,7 +30,14 @@ Keys: `1` light hit, `2` heavy hit, `3` crater, `4` Protagonist effort, `5` Anti
 | `data/cues.json`, `mix.json` | Event to sound rules and thresholds; buses, voice cap, distance. |
 | `demo/` | The listening scene. |
 | `tools/render_wavs.gd`, `host_check.gd`, `analyse_wav.py` | Write the bank to WAV; the hook-up check; the number and spectrogram check. |
-| `preview/` | The rendered WAVs (17 files, 0.6 MB). A `.gdignore` keeps Godot from importing them or packing them into a build. |
+| `synth/music_sketch.gd`, `data/sketch_*.json`, `tools/render_sketches.gd` | The three 30-second music sketches: one shared 12-bar arc and tune, three instrument kits. |
+| `preview/` | The rendered WAVs (17 sound files, 0.6 MB, and the three `sketch-*.wav` music sketches, 2.3 MB). A `.gdignore` keeps Godot from importing them or packing them into a build. |
+
+## The music sketches
+
+Three 30-second sketches so Orb can choose a direction by ear (`docs/audio/direction.md` section 3): `preview/sketch-a-town-band.wav`, `sketch-b-furnace.wav`, `sketch-c-kitchen-drums.wav`. Same 12 bars at 96 BPM and the same tune (rising fourths that end open), so only the sound differs. The arc: a quiet overture, the tune enters, a region breaks and the dark edge layer joins, a one-bar drop-out with a snare roll (bar 7), the peak, the KO hit and its tail. Made by `tools/render_sketches.gd` (about 2 s each). Mono 16-bit at 13 kHz to stay small, so the top end is dull; the real music would be full range.
+
+They are all synthesised, so they are stand-ins: A's brass wants sampled brass (CC0 VSCO 2 CE would do) and C wants real recordings of a kitchen. B is closest to how a finished score would sound. Not listened to by a person; per-bar levels confirm the arc (about -26 dB in the overture, -20 in the tune, -16 with the edge layer, -26 in the drop-out, -13 at the peak).
 
 ## Hooking it up (for Rendering or UI)
 

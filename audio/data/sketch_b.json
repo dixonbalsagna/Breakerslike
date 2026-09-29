@@ -1,0 +1,70 @@
+{
+ "schema": 1,
+ "id": "b",
+ "title": "B. Furnace",
+ "mood": "A night-shift foundry: analogue-style synth bass, pulse arpeggios, gated drums and anvil hits. The most finished-sounding of the three, because it is native to synthesis.",
+ "rate": 13000,
+ "transpose": 0,
+ "drive": 1.3,
+ "kit": {
+  "lead": "pulselead",
+  "bass": "synbass",
+  "bed": "pad",
+  "chord": "pad",
+  "arp": "pulse",
+  "bell": "fmbell",
+  "kick": "kick",
+  "snare": "clap",
+  "tick": "tick",
+  "edge": "synbass",
+  "accent": "anvil",
+  "peak_extra": "pad"
+ },
+ "gain": {
+  "drone": 0.5,
+  "bass": 0.8,
+  "chord": 0.5,
+  "bed": 0.35,
+  "bell": 0.25,
+  "kick": 0.9,
+  "snare": 0.6,
+  "arp": 0.35,
+  "tick": 0.25,
+  "edge": 0.5,
+  "accent": 0.6,
+  "lead": 0.55,
+  "peak_extra": 0.3
+ },
+ "patterns": {
+  "bed": true,
+  "bass_beats": [
+   0,
+   0.5,
+   1,
+   1.5,
+   2,
+   2.5,
+   3,
+   3.5
+  ],
+  "bass_len": 0.4,
+  "bass_style": "eighths",
+  "kick_beats": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "kick_beats_half": [
+   0,
+   2
+  ],
+  "snare_beats": [
+   1,
+   3
+  ],
+  "chord_stabs": false,
+  "tick_peak": 16,
+  "peak_extra": "pad"
+ }
+}

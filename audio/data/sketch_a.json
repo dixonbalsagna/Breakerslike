@@ -1,0 +1,61 @@
+{
+ "schema": 1,
+ "id": "a",
+ "title": "A. The Town Band",
+ "mood": "A small-town brass band at dusk that the fight slowly takes apart. Synthesised stand-ins for brass, woodwind and marching drums; the real thing wants sampled brass.",
+ "rate": 13000,
+ "transpose": 0,
+ "drive": 1.1,
+ "kit": {
+  "lead": "brass",
+  "bass": "tuba",
+  "bed": "clar",
+  "chord": "trombone",
+  "arp": "clar",
+  "bell": "glock",
+  "kick": "kick",
+  "snare": "snare",
+  "tick": "tick",
+  "edge": "tuba",
+  "accent": "cymbal",
+  "peak_extra": "brass"
+ },
+ "gain": {
+  "drone": 0.5,
+  "bass": 0.7,
+  "chord": 0.35,
+  "bed": 0.3,
+  "bell": 0.3,
+  "kick": 0.9,
+  "snare": 0.6,
+  "arp": 0.3,
+  "tick": 0.2,
+  "edge": 0.45,
+  "accent": 0.5,
+  "lead": 0.8,
+  "peak_extra": 0.3
+ },
+ "patterns": {
+  "bed": true,
+  "bass_beats": [
+   0,
+   2
+  ],
+  "bass_len": 0.45,
+  "bass_style": "oompah",
+  "kick_beats": [
+   0,
+   2
+  ],
+  "kick_beats_half": [
+   0
+  ],
+  "snare_beats": [
+   1,
+   3
+  ],
+  "chord_stabs": true,
+  "tick_peak": 8,
+  "peak_extra": "brass"
+ }
+}
