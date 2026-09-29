@@ -1,0 +1,47 @@
+# EP handoff
+
+This file is for a fresh Executive Producer session. Read it first, then docs/ep/playbook.md, ADR 0005 and docs/ep/vision.md. Memory has the essentials too.
+
+## State on 2026-09-29
+- P0 is in progress. Line references into the prototype are pinned to commit 7233c96.
+- Committed and accepted:
+  - QA: seeded sim, baseline, regression suite and baseline-diff (811629e, 18e6e4d; ADR 0004).
+  - Legal wave 1 (29786e3), accepted with fixes.
+  - Narrative: names, glossary and places (f253011, 541f97e, 5311aa6).
+  - Wave-1 briefs for 15 directors (docs/ep/briefs/wave1/, 40bb119).
+  - The routing checklist (docs/ep/wave1-sequencing.md).
+- Orb answered questionnaire 1 (docs/ep/vision.md). The verbatim fighter notes are in .private/, local only. Questionnaire 2 was posted in chat on 2026-09-29.
+
+## Directors (lean team, ADR 0005)
+- **Active:**
+  - Simulation: finish the port and its parity checks.
+  - Research: finish the engine spike.
+  - Game Design: design docs reflecting Orb's answers.
+  - Legal: review the fighter concepts for IP risk; prepare going public.
+  - Narrative: pitch titles.
+- **Paused mid-work.** Resume these later with "continue your brief":
+  - Combat (move grammar)
+  - Encounter Systems (director docs)
+  - QA (known-bugs register)
+- **Briefed but not started.** Hold these until their phase, and update their briefs with vision.md before resuming them: Tools, Production, Art, Camera, World, Netcode, Controls, Performance, UI & UX, Accessibility, VFX, Audio, Animation, Community. Their briefs are in docs/ep/briefs/wave1/.
+- **Charters written, sessions not yet opened:**
+  - Rendering & Technical Art: open at the engine decision.
+  - Modding & Extensibility: open later.
+
+## Open decisions for Orb
+- The title.
+- The copyright holder's name.
+- Lemming Ball Z provenance.
+- Renaming the repo before it goes public.
+- The outcome of Legal's fighter-concept review.
+- Answers to questionnaire 2.
+
+## Critical path to something playable
+1. **ADR 0001 (engine choice).** Inputs: Research's RESULT.md, Simulation's determinism.md, and later Netcode.
+2. **A greybox 1v1 on a wrapped planet.** Port the sim core into the chosen engine, with a greybox 2.5D renderer (Simulation, Rendering & Technical Art) and keyboard and gamepad input (Controls).
+3. **Then the content:** polish the stance director (Combat, Encounter Systems, Game Design), then build the four fighters and their transformations.
+
+## Practical notes
+- **Messaging.** Send messages with SendMessage to exact session titles ("Meridian - <role>"). Directors reply the same way. Don't subscribe to idle notices.
+- **Git.** Only the EP commits. The QA suite is `node qa/run-all.js` on Node 24.19.0.
+- **Godot.** 4.7.2 is at C:\Users\itsha\AppData\Local\Programs\Godot\4.7.2\, with export templates installed.

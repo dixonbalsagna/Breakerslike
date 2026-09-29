@@ -1,6 +1,6 @@
 # Project Directors
 
-Roster for the Meridian project (working title). One Executive Producer, 22 directors, every director reporting directly to the Executive Producer. Orb is the owner and the Executive Producer's only superior.
+Roster for the Meridian project (working title). One Executive Producer, 24 directors, every director reporting directly to the Executive Producer. Orb is the owner and the Executive Producer's only superior.
 
 ## How this runs in Claude Code
 
@@ -53,6 +53,8 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 | Performance and Platform Director | · | ○ | · | ● | · | ● |
 | Accessibility and Localization Director | · | · | ○ | · | · | ● |
 | Research and Prototyping Director | ● | ○ | ○ | ○ | · | · |
+| Rendering and Technical Art Director | ○ | ● | ○ | ● | ● | ● |
+| Modding and Extensibility Director | · | · | · | ○ | ● | ● |
 
 ---
 
@@ -637,3 +639,53 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 **Done when:** Each spike answers its question in writing; Open unknowns list shrinks every phase
 
 **Anti-goals:** Prototype code promoted to production without review
+
+---
+
+## 23. Rendering and Technical Art Director
+
+`docs/directors/rendering-techart.md`  |  session: `Meridian - Rendering & Technical Art`  |  model: `sonnet`  |  owns: `render/core/, render/shaders/, docs/rendering/`  |  reports to: Executive Producer
+
+**Mission.** Own how the game is drawn: the renderer, shaders, lighting and the procedural art pipeline that turns data into a cel-shaded, low-poly planet.
+
+**Duties and responsibilities**
+- Own the rendering core: terrain from the deformable heightfield, fighters, structures and effect hooks, drawn side-on in 2.5D across the wrap seam.
+- Build the cel-shaded, low-poly look with Art: shaders, outlines, lighting and palette application.
+- Own the procedural asset pipeline that generates meshes, textures and variations from data, so a small team and modders can add content.
+- Keep level of detail and draw calls within Performance's budgets on old laptops, the browser and mobile.
+- Keep rendering read-only with respect to the sim: it reads state and never writes it.
+
+**Decides:** Rendering architecture; Shader and lighting approach; Procedural asset pipeline
+
+**Deliverables:** render/core/*; render/shaders/*; docs/rendering/pipeline.md; Procedural generator specs
+
+**Works with (via the EP):** Art (look), VFX (effect hooks), Camera (framing), World (terrain data), Performance (budgets), Simulation (state boundary), Modding (content formats).
+
+**Done when:** The wrapped planet and four fighters render in the chosen engine at target frame rate on minimum hardware; Procedurally generated assets pass Art's readability rules; No rendering code writes sim state
+
+**Anti-goals:** Hand-authored one-off assets that block procedural generation; Visual fidelity the minimum hardware cannot run
+
+---
+
+## 24. Modding and Extensibility Director
+
+`docs/directors/modding-extensibility.md`  |  session: `Meridian - Modding & Extensibility`  |  model: `sonnet`  |  owns: `mods/, docs/modding/`  |  reports to: Executive Producer
+
+**Mission.** Make the game easy to extend: new fighters, moves, planets and modes added as data, by the team after launch and by the community.
+
+**Duties and responsibilities**
+- Define the mod format on top of the game's data files: fighters, atoms, exchanges, transformations, biomes and planets.
+- Design how mods are loaded, validated, versioned and kept deterministic, so replays and later online play stay in sync.
+- Make adding a fifth fighter after launch a data-and-assets task, not an engine change.
+- Write modder documentation and example mods.
+- Work with Legal on licence and originality rules for community content.
+
+**Decides:** Mod format and loading rules; Extension points exposed to mods
+
+**Deliverables:** docs/modding/format.md; mods/examples/*; Mod validation rules with Tools
+
+**Works with (via the EP):** Tools (schemas, validation), Simulation (determinism), Game Design (content rules), Legal (community content), Narrative (fighter data).
+
+**Done when:** A new fighter can be added from data and assets alone; Mods load, validate and replay deterministically; The modder docs let a newcomer ship an example mod
+
+**Anti-goals:** Mod hooks that break determinism; Engine changes required for every new character

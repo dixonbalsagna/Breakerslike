@@ -15,12 +15,8 @@ def short(x): return x["title"].replace(" Director", "").replace(" and ", " & ")
 def session(x): return PREFIX + short(x)
 def first_phase(x): return next(i for i, c in enumerate(x["phases"]) if c != "·")
 
-# Session settings chosen by the EP (ADR 0003). Ultracode sessions orchestrate workflows for substantive work.
-EFFORT = {"game-design": "max", "simulation-engine": "max", "encounter-systems": "max", "combat-choreography": "max", "research-prototyping": "max",
-          "netcode-online": "xhigh", "world-environment": "xhigh", "tools-pipeline": "xhigh", "qa-balance": "xhigh", "controls-feel": "xhigh",
-          "camera": "xhigh", "performance-platform": "xhigh", "ui-ux": "xhigh", "vfx": "xhigh", "art": "xhigh", "narrative-identity": "xhigh"}
-ULTRACODE = {"game-design", "simulation-engine", "encounter-systems", "combat-choreography", "research-prototyping"}
-def effort(x): return EFFORT.get(x["slug"], "high") + (" + ultracode" if x["slug"] in ULTRACODE else "")
+# Session settings (ADR 0003, revised by ADR 0005): Opus at xhigh, Sonnet at high, no standing ultracode.
+def effort(x): return "xhigh" if x["model"] == "opus" else "high"
 
 d(slug="game-design", title="Game Design Director", model="opus", tools=None, phases="●○●●●○", paths="docs/design/",
   mission="Own what the game is and why it is fun: the stance system, the fight economy, progression and modes.",
@@ -335,6 +331,34 @@ d(slug="research-prototyping", title="Research and Prototyping Director", model=
   done=["Each spike answers its question in writing", "Open unknowns list shrinks every phase"],
   anti=["Prototype code promoted to production without review"])
 
+d(slug="rendering-techart", title="Rendering and Technical Art Director", model="sonnet", tools=None, phases="○●○●●●", paths="render/core/, render/shaders/, docs/rendering/",
+  mission="Own how the game is drawn: the renderer, shaders, lighting and the procedural art pipeline that turns data into a cel-shaded, low-poly planet.",
+  duties=[
+   "Own the rendering core: terrain from the deformable heightfield, fighters, structures and effect hooks, drawn side-on in 2.5D across the wrap seam.",
+   "Build the cel-shaded, low-poly look with Art: shaders, outlines, lighting and palette application.",
+   "Own the procedural asset pipeline that generates meshes, textures and variations from data, so a small team and modders can add content.",
+   "Keep level of detail and draw calls within Performance's budgets on old laptops, the browser and mobile.",
+   "Keep rendering read-only with respect to the sim: it reads state and never writes it."],
+  decides=["Rendering architecture", "Shader and lighting approach", "Procedural asset pipeline"],
+  deliver=["render/core/*", "render/shaders/*", "docs/rendering/pipeline.md", "Procedural generator specs"],
+  ifaces="Art (look), VFX (effect hooks), Camera (framing), World (terrain data), Performance (budgets), Simulation (state boundary), Modding (content formats).",
+  done=["The wrapped planet and four fighters render in the chosen engine at target frame rate on minimum hardware", "Procedurally generated assets pass Art's readability rules", "No rendering code writes sim state"],
+  anti=["Hand-authored one-off assets that block procedural generation", "Visual fidelity the minimum hardware cannot run"])
+
+d(slug="modding-extensibility", title="Modding and Extensibility Director", model="sonnet", tools=None, phases="···○●●", paths="mods/, docs/modding/",
+  mission="Make the game easy to extend: new fighters, moves, planets and modes added as data, by the team after launch and by the community.",
+  duties=[
+   "Define the mod format on top of the game's data files: fighters, atoms, exchanges, transformations, biomes and planets.",
+   "Design how mods are loaded, validated, versioned and kept deterministic, so replays and later online play stay in sync.",
+   "Make adding a fifth fighter after launch a data-and-assets task, not an engine change.",
+   "Write modder documentation and example mods.",
+   "Work with Legal on licence and originality rules for community content."],
+  decides=["Mod format and loading rules", "Extension points exposed to mods"],
+  deliver=["docs/modding/format.md", "mods/examples/*", "Mod validation rules with Tools"],
+  ifaces="Tools (schemas, validation), Simulation (determinism), Game Design (content rules), Legal (community content), Narrative (fighter data).",
+  done=["A new fighter can be added from data and assets alone", "Mods load, validate and replay deterministically", "The modder docs let a newcomer ship an example mod"],
+  anti=["Mod hooks that break determinism", "Engine changes required for every new character"])
+
 EP = dict(
  title="Executive Producer",
  mission="Own the vision, the plan and the integration. The Executive Producer is its own Claude Code session (" + EP_SESSION + "); every director reports here and nowhere else.",
@@ -461,7 +485,7 @@ def roster_md():
          "## Opening a director session\n",
          "1. Start a new session in the project folder.",
          "2. Set the permission mode to **Auto**, the same as the Executive Producer, so briefs are not held for approval.",
-         "3. Pick the model and effort listed below. Ultracode sessions orchestrate workflows for substantive work.",
+         "3. Pick the model and effort listed below. No session runs ultracode by default (ADR 0005).",
          "4. Send the kickoff command as the first message. The session reads its charter, renames itself and waits for a brief.\n",
          "Directors are listed in the order they are first needed, from the activation schedule in DIRECTORS.md.\n",
          "| # | Director | Kickoff | Model | Effort | Session title | First needed |",

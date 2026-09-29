@@ -6,32 +6,34 @@ Every director is its own Claude Code session in this project folder, answering 
 
 1. Start a new session in the project folder.
 2. Set the permission mode to **Auto**, the same as the Executive Producer, so briefs are not held for approval.
-3. Pick the model and effort listed below. Ultracode sessions orchestrate workflows for substantive work.
+3. Pick the model and effort listed below. No session runs ultracode by default (ADR 0005).
 4. Send the kickoff command as the first message. The session reads its charter, renames itself and waits for a brief.
 
 Directors are listed in the order they are first needed, from the activation schedule in DIRECTORS.md.
 
 | # | Director | Kickoff | Model | Effort | Session title | First needed |
 |---|---|---|---|---|---|---|
-| 1 | Game Design Director | `/director game-design` | opus | max + ultracode | Meridian - Game Design | P0 lead |
-| 2 | Simulation and Engine Director | `/director simulation-engine` | opus | max + ultracode | Meridian - Simulation & Engine | P0 lead |
-| 3 | World and Environment Director | `/director world-environment` | sonnet | xhigh | Meridian - World & Environment | P0 support |
-| 4 | Art Director | `/director art` | sonnet | xhigh | Meridian - Art | P0 lead |
-| 5 | Camera and Cinematography Director | `/director camera` | sonnet | xhigh | Meridian - Camera & Cinematography | P0 lead |
-| 6 | Narrative and Fighter Identity Director | `/director narrative-identity` | sonnet | xhigh | Meridian - Narrative & Fighter Identity | P0 support |
+| 1 | Game Design Director | `/director game-design` | opus | xhigh | Meridian - Game Design | P0 lead |
+| 2 | Simulation and Engine Director | `/director simulation-engine` | opus | xhigh | Meridian - Simulation & Engine | P0 lead |
+| 3 | World and Environment Director | `/director world-environment` | sonnet | high | Meridian - World & Environment | P0 support |
+| 4 | Art Director | `/director art` | sonnet | high | Meridian - Art | P0 lead |
+| 5 | Camera and Cinematography Director | `/director camera` | sonnet | high | Meridian - Camera & Cinematography | P0 lead |
+| 6 | Narrative and Fighter Identity Director | `/director narrative-identity` | sonnet | high | Meridian - Narrative & Fighter Identity | P0 support |
 | 7 | Netcode and Online Director | `/director netcode-online` | opus | xhigh | Meridian - Netcode & Online | P0 support |
-| 8 | QA and Balance Director | `/director qa-balance` | sonnet | xhigh | Meridian - QA & Balance | P0 support |
-| 9 | Tools and Pipeline Director | `/director tools-pipeline` | sonnet | xhigh | Meridian - Tools & Pipeline | P0 lead |
+| 8 | QA and Balance Director | `/director qa-balance` | sonnet | high | Meridian - QA & Balance | P0 support |
+| 9 | Tools and Pipeline Director | `/director tools-pipeline` | sonnet | high | Meridian - Tools & Pipeline | P0 lead |
 | 10 | Production Operations Director | `/director production-ops` | sonnet | high | Meridian - Production Operations | P0 support |
 | 11 | Legal and IP Compliance Director | `/director legal-ip` | sonnet | high | Meridian - Legal & IP Compliance | P0 lead |
-| 12 | Research and Prototyping Director | `/director research-prototyping` | opus | max + ultracode | Meridian - Research & Prototyping | P0 lead |
-| 13 | Controls and Game Feel Director | `/director controls-feel` | sonnet | xhigh | Meridian - Controls & Game Feel | P1 support |
-| 14 | Performance and Platform Director | `/director performance-platform` | sonnet | xhigh | Meridian - Performance & Platform | P1 support |
-| 15 | Combat and Choreography Director | `/director combat-choreography` | opus | max + ultracode | Meridian - Combat & Choreography | P2 lead |
-| 16 | Encounter Systems Director | `/director encounter-systems` | opus | max + ultracode | Meridian - Encounter Systems | P2 lead |
-| 17 | Animation Director | `/director animation` | sonnet | high | Meridian - Animation | P2 support |
-| 18 | UI and UX Director | `/director ui-ux` | sonnet | xhigh | Meridian - UI & UX | P2 support |
-| 19 | Accessibility and Localization Director | `/director accessibility-localization` | sonnet | high | Meridian - Accessibility & Localization | P2 support |
-| 20 | VFX Director | `/director vfx` | sonnet | xhigh | Meridian - VFX | P3 lead |
-| 21 | Audio and Music Director | `/director audio-music` | sonnet | high | Meridian - Audio & Music | P3 support |
-| 22 | Community and Marketing Director | `/director community-marketing` | sonnet | high | Meridian - Community & Marketing | P3 support |
+| 12 | Research and Prototyping Director | `/director research-prototyping` | opus | xhigh | Meridian - Research & Prototyping | P0 lead |
+| 13 | Rendering and Technical Art Director | `/director rendering-techart` | sonnet | high | Meridian - Rendering & Technical Art | P0 support |
+| 14 | Controls and Game Feel Director | `/director controls-feel` | sonnet | high | Meridian - Controls & Game Feel | P1 support |
+| 15 | Performance and Platform Director | `/director performance-platform` | sonnet | high | Meridian - Performance & Platform | P1 support |
+| 16 | Combat and Choreography Director | `/director combat-choreography` | opus | xhigh | Meridian - Combat & Choreography | P2 lead |
+| 17 | Encounter Systems Director | `/director encounter-systems` | opus | xhigh | Meridian - Encounter Systems | P2 lead |
+| 18 | Animation Director | `/director animation` | sonnet | high | Meridian - Animation | P2 support |
+| 19 | UI and UX Director | `/director ui-ux` | sonnet | high | Meridian - UI & UX | P2 support |
+| 20 | Accessibility and Localization Director | `/director accessibility-localization` | sonnet | high | Meridian - Accessibility & Localization | P2 support |
+| 21 | VFX Director | `/director vfx` | sonnet | high | Meridian - VFX | P3 lead |
+| 22 | Audio and Music Director | `/director audio-music` | sonnet | high | Meridian - Audio & Music | P3 support |
+| 23 | Community and Marketing Director | `/director community-marketing` | sonnet | high | Meridian - Community & Marketing | P3 support |
+| 24 | Modding and Extensibility Director | `/director modding-extensibility` | sonnet | high | Meridian - Modding & Extensibility | P3 support |

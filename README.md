@@ -4,7 +4,7 @@ An original fighting game: a homage to Dragon Ball and a spiritual successor to 
 
 ## What's here
 - `CLAUDE.md` project brief, loaded by every Claude Code session in this folder
-- `DIRECTORS.md` roster: Executive Producer plus 22 directors, with duties, deliverables and activation schedule
+- `DIRECTORS.md` roster: Executive Producer plus 24 directors, with duties, deliverables and activation schedule
 - `docs/directors/` one charter per director, and the list of director sessions (`docs/directors/README.md`)
 - `docs/ep/playbook.md` how the Executive Producer session runs the project
 - `.claude/commands/` `/director` (start a director session), `/standup` and `/gate`

@@ -6,7 +6,7 @@ The names Meridian, KAI and VORR are placeholders, and Orb wants a completely di
 
 ## How this project runs
 
-Orb (owner) → Executive Producer → 22 directors. Every director answers directly to the Executive Producer, and every role runs as its own Claude Code session in this folder (ADR 0002). DIRECTORS.md has the full roster.
+Orb (owner) → Executive Producer → 24 directors. Every director answers directly to the Executive Producer, and every role runs as its own Claude Code session in this folder (ADR 0002). DIRECTORS.md has the full roster.
 
 - **Your role comes from how your session started.** Directors start with `/director <slug>` and follow their charter in `docs/directors/<slug>.md`. The Executive Producer is the session titled "Meridian - Executive Producer" and follows `docs/ep/playbook.md`. A session with no role asks Orb before doing anything.
 - **Chain of command.** Directors take briefs only from the EP and report only to the EP. They never message or delegate to each other; anything cross-director goes under NEEDS FROM EP, and the EP routes it.
@@ -14,6 +14,8 @@ Orb (owner) → Executive Producer → 22 directors. Every director answers dire
 - **Files and git.** All sessions share this folder. Directors edit only their owned paths and never change git state. The EP reviews each deliverable, commits it and records significant decisions as ADRs in `docs/decisions/`.
 - **Pacing.** The activation schedule in DIRECTORS.md decides who is briefed in each phase. A session with no brief stays idle.
 - **Escalation.** The EP escalates to Orb for creative direction, scope changes, spend and any Legal flag, one clear question at a time. Orb may also talk to any director directly.
+- **Token discipline (ADR 0005).** The project runs on a Pro plan with zero budget. Don't use workflows or ultracode unless the EP says Orb approved it for the task. Read only the files your task needs, and keep reports short.
+- **Orb's vision.** docs/ep/vision.md records Orb's answers on tone, fighters, modes, platforms and more. Read it before any work it touches. Never commit franchise character names as design references.
 
 ### Delegation brief template
 ```
@@ -104,13 +106,21 @@ World and terrain: `wrap`, `sdx`, `biomeAt`, `genWorld`, `groundY`, `seaAt`. Des
 - Suggested layout (adjust with the engine ADR): `sim/`, `data/`, `render/`, `ui/`, `audio/`, `net/`, `tools/`, `art/`, `qa/`, `research/`, `docs/`.
 - Commits are small and named for the outcome. Reference the ADR number when a decision drove the change.
 
-## Open questions for Orb
+## Orb's answers and open questions
 
-1. Engine: confirm Godot 4, or keep the web stack?
-2. Presentation: 2D sprites, 2.5D or full 3D?
-3. Online: is rollback online a launch requirement or a later goal?
-4. Roster: the four fighters and their personalities.
-5. Platforms and target hardware.
-6. Team size and budget, which sets how many directors run at once.
-7. Name: a completely different name for the game (Narrative proposes, Legal screens, Orb picks).
-8. Licence for the free, open-source release (Legal recommends, Orb decides).
+Orb answered the first scope-and-vision questionnaire on 2026-09-28 (docs/ep/vision.md). In short:
+- 2.5D side-on presentation.
+- Four fighters with transformations.
+- Matches of five minutes or more.
+- Procedural planets.
+- Online play after launch.
+- Platforms: Windows, Linux, macOS, browser, Steam Deck and mobile, down to old laptops.
+- Licence as Legal recommends.
+- Zero budget (ADR 0005).
+
+Still open:
+- The engine (ADR 0001, pending Research's spike).
+- The title.
+- The copyright holder's name.
+- Lemming Ball Z provenance.
+- Legal's review of the fighter concepts.
