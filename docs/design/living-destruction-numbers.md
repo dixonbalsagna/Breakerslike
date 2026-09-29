@@ -66,7 +66,7 @@ Every value is a named constant in data or in `sim/world/`, and a starting value
   - *The difference:* the hunter's find radius inside a cloud is **120** instead of 240, so clouds are strong cover but short.
 - **Cover made:**
   - *Bowls* from tier 2: crater relief of at least 1.5 bh, where bh is World's building-height unit.
-  - *Rubble heaps* from tier 3: a heap at least one fighter high.
+  - *Rubble heaps:* a heap at least 1 bh high (bh is one fighter's height) counts as cover for a fighter low beside it, at any tier. With World's implosion heaps (`docs/world/buildings-in-depth.md` §4c), house heaps (0.5 to 0.6 bh) never qualify, and tower heaps (about 2.7 bh, up to 6 bh) do. The height rule does the gating, so there is no separate tier gate.
   - *Slide debris* where a slide piles up (§4).
   - `nearestCover` reads the live state.
 - **Cover taken:**
