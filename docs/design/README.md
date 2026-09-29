@@ -14,6 +14,7 @@ Owner: Game Design. These pages define what the game is and why it is fun, and e
 | [spec-wounds.md](spec-wounds.md) | **The binding Wounds spec**: rules, Rally, the per-fighter damage profile and readout, sim data, and acceptance tests. Input for Combat and Encounter Systems |
 | [pitches.md](pitches.md) | Pitches for Orb: the wear readout, a Rally per fighter, downtime ideas, and fragments under Legal's conditions |
 | [systems-sketch.md](systems-sketch.md) | Transformations, minions, fusion (deferred; Tandem), keystone relocation, civilian consumption, procedural planets |
+| [future-stealth-fighter.md](future-stealth-fighter.md) | The hiding kit as it was (recovery, ambush, found and searching, the hunter's view), kept for a future stealth fighter |
 | [open-questions.md](open-questions.md) | The questions for Orb, with options and recommendations, and the decisions Game Design made |
 | [prototype-bugs.md](prototype-bugs.md) | Prototype defects that matter to design, with the intent each one breaks. They are not fixed until the port proves parity |
 

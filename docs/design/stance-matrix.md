@@ -18,7 +18,7 @@ This page says what each stance is for, what beats it and what it costs. For eve
 | **AGGRESSIVE** | Press and trade. Meet force with force. | Being read by an EVASIVE defender. A parry timed in the wind-up. | Takes ×1.12 damage (`L326`). A signature against it becomes a beam clash that costs the defender 40 ki (`L586`, `L603`). | The AI's favourite while healthy. Weight 2.4 above 35% HP (`L815`). |
 | **DEFENSIVE** | Absorb and punish. | Heavy: GUARD BREAK drains 25 ki and lands a strike that ignores the guard, then a launch (`L481-488`). | Moves at ×0.8 (`L771`). Every hit taken drains ki worth 8% of the damage (`L329`). | Takes ×0.38 damage (`L326`). The AI stands still and charges (`L832-833`). |
 | **EVASIVE** | Read and slip: dodge behind the attacker, then counter. | Being read: a light from an AGGRESSIVE attacker, a tier advantage, or an ambush (`L458`). | When read, it eats the full hit. Takes ×1.0 damage. | Moves at ×1.25 (`L771`). Counters 54 to 60% of melee (QA §7). |
-| **ESCAPE** | Disengage, hide, recover and ambush. | Being caught: a pursuit that is not slipped, or a signature at close range (`L441`, `L589`). | Takes ×1.25 damage (`L326`). A caught pursuit hits at base ×1.2 with a launch (`L452-453`). | Moves at ×1.35 (`L771`). The only stance that can hide (`L683`). The AI never attacks from it (`L841`). |
+| **ESCAPE** | Disengage, break lock through line of sight, and reposition (hiding is removed; `spec-wounds.md` §1c). | Being caught: a pursuit that is not slipped, or a signature at close range (`L441`, `L589`). | Takes ×1.25 damage (`L326`). A caught pursuit hits at base ×1.2 with a launch (`L452-453`). | Moves at ×1.35 (`L771`). The only stance that can break lock through line of sight (`spec-wounds.md` §1c). The AI never attacks from it (`L841`). |
 | CHARGING (a state, not a stance) | Build ki (+30/s) and power (+9/s) in the open (`L783`). | Any attack: CHARGE INTERRUPT ignores stance and launches (`L435-438`). | Total exposure, and the charge ends. | Rarely attacked: 73 of 19,670 exchanges (QA finding 6). |
 
 ## 2. Defender state × attack kind: intent, counter, cost
@@ -81,13 +81,13 @@ The director implements these rules through Encounter Systems. Combat authors th
   | AGGRESSIVE | ×1.15 | +0.15 read chance against EVASIVE (today +0.08). Wins tied trades | Presses, and pins evaders |
   | DEFENSIVE | ×0.85 | ×1.3 on a punish: an attack started within 0.6 s of your guard absorbing an exchange | Absorbs, then punishes |
   | EVASIVE | ×1.0 | The target's slip chance is 0.15 lower when pursuing ESCAPE | Runs down the fleeing |
-  | ESCAPE | ×0.9 | Hit and run: the exchange ends after the first strike, with no counter and no chain. From cover, the ambush applies (`economy.md`) | Strikes and vanishes |
+  | ESCAPE | ×0.9 | Hit and run: the exchange ends after the first strike, with no counter and no chain | Strikes and vanishes |
 
   The result is a readable loop:
   - An AGGRESSIVE attacker pins EVASIVE.
   - An EVASIVE attacker runs down ESCAPE.
   - DEFENSIVE punishes AGGRESSIVE pressure.
-  - An ESCAPE ambush punishes a hunter who overcommits.
+  - ESCAPE breaks lock through line of sight to buy room (never healing, never an ambush).
   - On defence: DEFENSIVE absorbs lights, EVASIVE punishes heavies, AGGRESSIVE meets force, and ESCAPE leaves.
 - **R3. Every cell gets a second outcome, decided by a state the player can see** rather than by a hidden roll where possible:
   - *DEFENSIVE against a heavy:* at 50 ki or more, the defender BRACES. The guard holds, it costs 30 ki, and there is no launch. Below 50 ki, GUARD BREAK.

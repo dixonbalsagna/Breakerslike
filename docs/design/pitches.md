@@ -65,7 +65,7 @@ Orb's pick: the player fills the 1.5 to 4 s gaps between exchanges (`balance-tar
 | D5 | **Stance feint** | Your stance shows on your aura. Flick stances in mid-range to bait the opponent into throwing the attack your real stance beats | The mind game "stances, not combos" promises. The template reads the stance at the moment the attack starts (`stance-matrix.md` R8), so feints are real |
 | D6 | **Tumble recovery** | After a long launch, input a timed recovery mid-tumble to right yourself early and pick your landing. The chaser picks an intercept line | The launched fighter can turn a chase into an ambush angle. The chaser must choose between cutting off and hanging back |
 | D7 | **Power-up gambit** | Start a long transformation in the open during downtime | The opponent must commit to interrupting it (a decisive exchange, `damage-model.md` §5) or answer with their own power-up. It is a bluff war, and the Tyrant's instant revisions change the maths |
-| D8 | **Hunt beat** | When one fighter hides, the hunter flies low to scout. The found radius is 240 units (`index.html:L687`), and the planet strip shows the last-seen spot | Hide and ambush becomes a two-player game: the hider chooses when to break cover, and the hunter chooses where to search |
+| D8 | **Lock break** (replaces the hunt beat now that hiding is removed) | In ESCAPE, dive through smoke, dust or behind a ridge to break the opponent's lock for up to 4 s, and earn a second breath | The chaser picks a line to regain sight, or waits out the 4 s. Room to breathe, but no concealment and no ambush (`spec-wounds.md` §1c) |
 
 **Guard rails.**
 - No idea may pause control for more than the set-piece allowance. Banter never freezes play: lines appear over live action.

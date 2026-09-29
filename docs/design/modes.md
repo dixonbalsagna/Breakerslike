@@ -36,7 +36,7 @@ The modes, their stable ids, what each one is, and the 1.0 scope. Orb set the 1.
 ## Mode rules
 
 ### `versus-local` and `versus-ai`
-- **Players and screen.** Two fighters, keyboard and gamepad on equal terms (Orb). One shared 2.5D side-on screen. Hiding denies lock-on but does not conceal (`economy.md` §5).
+- **Players and screen.** Two fighters, keyboard and gamepad on equal terms (Orb). One shared 2.5D side-on screen. Hiding is removed; ESCAPE can break lock through line of sight (`spec-wounds.md` §1c).
 - **AI difficulty.** Three levels, stored as AI data (Encounter Systems). Difficulty changes decisions (stance choice, cadence, parry odds, reaction time), never stats. The AI plays by the same rules as a human, which keeps AI-against-AI balance data meaningful.
 - **Accept:**
   - Every pairing passes `balance-targets.md` bands 1, 2 and 7.
@@ -59,7 +59,7 @@ The modes, their stable ids, what each one is, and the 1.0 scope. Orb set the 1.
   - infinite HP or ki, and a set tier or form;
   - set ego meters (respect, pride, wrath, hunger);
   - spawn keystones or civilians;
-  - the dummy's behaviour: stand, hold a stance, standard AI, or hide;
+  - the dummy's behaviour: stand, hold a stance, standard AI, or break lock (ESCAPE through line of sight);
   - start biome and altitude, planet seed, slow motion.
 - **Display:**
   - parry and chain windows as they open (Combat CC-011: nothing shows them today);

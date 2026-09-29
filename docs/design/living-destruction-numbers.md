@@ -24,7 +24,7 @@ Every value is a named constant in data or in `sim/world/`, and a starting value
    - At tier 2, fire burns trees only; roofs catch from tier 3. A tier-2 slide has a budget of 2% of the population. Both fit inside the 4%-per-minute low-tier cap.
 5. **The readability cap.** Effects never bury the fight:
    - At most **3 active hazard fronts** (fires, slide fronts, lava flows) inside the camera's framing at once. Further ones wait, or merge into the nearest front.
-   - **Fighters and their auras always draw above clouds, smoke and dust,** with an outline. Clouds hide a fighter from lock-on, never from the players' eyes.
+   - **Fighters and their auras always draw above clouds, smoke and dust,** with an outline. Clouds block line of sight for lock-on, never from the players' eyes.
    - No new hazard starts during a finisher or a respected cinematic; it waits until the cinematic ends.
    - Camera shake from quakes stays within Camera's cap. Effects stay within VFX's budgets.
    - Hazards cause at most **15% of all wear** in a match. The fighters decide the fight.
@@ -50,7 +50,9 @@ Every value is a named constant in data or in `sim/world/`, and a starting value
 | Simultaneous burning trees | At most 24 on screen (readability) | Further ignitions queue |
 | Hazard wear | 2 per second to the legs and 1 to the core while in fire at low altitude. A launch through fire adds 6 to the region hit | Stops at once on leaving |
 
-## 3. Smoke and dust cover, and cover made and taken (LD1)
+## 3. Smoke and dust, and line-of-sight blockers made and taken (LD1)
+
+Hiding is removed (Orb). Every "cover" in this section now means a **line-of-sight blocker** for lock-on (`spec-wounds.md` §1c): bowls, rubble, canopy, clouds and terrain. Burnt canopy and slid ridges stop blocking sight.
 
 | Tier | Cloud radius | Life | Cover? |
 | :--- | :--- | :--- | :--- |
@@ -59,14 +61,16 @@ Every value is a named constant in data or in `sim/world/`, and a starting value
 | 3 | 180 | 8 s | Yes |
 | 4 | 320 | 12 s | Yes, a bank you can lose a fight in |
 
-- **Spawns:** craters (radius scales with the crater), building collapses, and fire (one smoke cloud per burning cluster, renewed while it burns). There are at most 16 clouds, of which at most 6 are big enough to give cover.
+- **Spawns:** craters (radius scales with the crater), building collapses, and fire (one smoke cloud per burning cluster, renewed while it burns). There are at most 16 clouds, of which at most 6 are big enough to block line of sight.
 - **Life:** each cloud drifts downwind at 30 units per second, and shrinks over the last 40% of its life.
-- **Cover strength:**
-  - *Rules:* a fighter at least 30 units inside a cover-capable cloud counts as covered (dust or smoke). The normal hide rules apply: ESCAPE stance, 0.9 s to hide, recovery and the ambush window.
-  - *The difference:* the hunter's find radius inside a cloud is **120** instead of 240, so clouds are strong cover but short.
+- **Line of sight** (hiding is removed; `spec-wounds.md` §1c):
+  - *Blocking:* a fighter at least 30 units inside a blocking cloud blocks the opponent's line of sight.
+  - *Breaking lock:* an ESCAPE fighter breaks lock after 0.9 s without line of sight, for up to 4 s.
+  - *Inside a cloud:* the hunter regains lock within 120 units instead of 240.
+  - *No recovery bonus and no ambush.*
 - **Cover made:**
   - *Bowls* from tier 2: crater relief of at least 1.5 bh, where bh is World's building-height unit.
-  - *Rubble heaps:* a heap at least 1 bh high (bh is one fighter's height) counts as cover for a fighter low beside it, at any tier. With World's implosion heaps (`docs/world/buildings-in-depth.md` §4c), house heaps (0.5 to 0.6 bh) never qualify, and tower heaps (about 2.7 bh, up to 6 bh) do. The height rule does the gating, so there is no separate tier gate.
+  - *Rubble heaps:* a heap at least 1 bh high (bh is one fighter's height) blocks line of sight for a fighter low beside it, at any tier. With World's implosion heaps (`docs/world/buildings-in-depth.md` §4c), house heaps (0.5 to 0.6 bh) never qualify, and tower heaps (about 2.7 bh, up to 6 bh) do. The height rule does the gating, so there is no separate tier gate.
   - *Slide debris* where a slide piles up (§4).
   - `nearestCover` reads the live state.
 - **Cover taken:**
@@ -129,7 +133,7 @@ These are game-scale bands per 1v1 match, and QA checks them in `balance-targets
 | :--- | :--- |
 | Spreading fires (tier 2 and up) | 0.5 to 3 per match, in matches with at least 5% of fight time in forest or villages |
 | Forest burnt by the end, among matches that reach tier 3 | 15 to 60% of the forest's trees |
-| Cover-capable clouds | 3 to 10 per match |
+| Clouds that block sight | 3 to 10 per match |
 | Real slides (tier 2 and up) | 0.5 to 2 per match, in matches with at least 10% of fight time in mountains. At most 1 peak collapse |
 | Quakes | In 30 to 70% of the matches that reach tier 4; at most 2 per match. Rifts at most 1 |
 | Lava events | 1 to 3 in the matches that reach tier 4 |

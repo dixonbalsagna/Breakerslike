@@ -47,7 +47,7 @@ Variant B hides a bar behind the same cues. Variant C makes wear discrete and co
   - The player steers where damage lands through attack kind and stance, not through an aiming input. Heavies go to the body, lights to the head, and guard hits to the arms.
 - **Recovery.**
   - Bruised wear fades while a fighter is out of exchanges (working value 2 per second).
-  - Battered wear fades only while hidden (`L762` is today's hidden heal).
+  - Battered wear fades through "second breath" after 4 s without an exchange. Hiding is removed (`spec-wounds.md` §1c).
   - Broken regions stay broken, except through a Rally (section 5).
 
 **Brink and the end.**
@@ -104,7 +104,7 @@ Each profile is a small set of data values over the shared regions, so a re-skin
   - the Cyborg's opponent must land the finisher on the open hatch.
 - **Comebacks come from three sources:**
   - *Rally.* A fighter on the brink mends one broken region by one stage and leaves the brink. The per-fighter Rally rules and their limits are pitched in `pitches.md` §2, pending Orb's pick.
-  - *Hiding.* Hidden recovery mends battered wear but not breaks (`economy.md` §5).
+  - *Second breath.* After 4 s without an exchange, battered wear fades, but breaks never do (`spec-wounds.md` §1c; hiding is removed).
   - *Desperation.* On the brink, a fighter's damage rises, which is today's comeback bonus (`L322`) made visible through the unstable aura. Narrative's "Resolve" cue is exactly this.
 - **Transformations are respected.** An opponent stops the *fill* before a transformation. The cinematic itself is never interrupted (`spec-wounds.md` §8, which supersedes the earlier interrupt rule here).
 

@@ -152,6 +152,8 @@ Orb decides the exact triggers (`open-questions.md`). The rules above hold whate
 
 ## 5. Hiding, recovery and ambush
 
+> **Removed from the base game (Orb).** It is kept for a future stealth fighter in `future-stealth-fighter.md`. The base game has line-of-sight lock breaks and "second breath" recovery (`spec-wounds.md` §1c). The rest of this section is history.
+
 | Constant | Value | Where |
 | :--- | :--- | :--- |
 | To start hiding | ESCAPE stance, free, in cover, more than 170 units from the opponent, not charging or dashing, speed under 260 | `L683` |

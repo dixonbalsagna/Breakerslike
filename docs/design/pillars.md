@@ -33,7 +33,7 @@ The prototype's two fighters are placeholders for that roster.
 | 3 | Never out of range | **Holds.** Every attack closes the gap; escape is a gamble | Rush time `clamp(dist/2600, 0.18, 0.65)` (`index.html:L420`); pursuits slip away 50% of the time (QA §7) |
 | 4 | Power has weight | **Holds, unmeasured by tier.** Damage grows with tier; per-tier collateral has not been measured yet | `economy.md`, collateral scaling |
 | 5 | Characters are personalities | **Broken on balance.** The identity reads, but it decides the winner | VORR wins 58.2% (QA §2); villain mirror loses 64% of civilians, hero mirror 32% (QA §4) |
-| 6 | Fights tell stories | **At risk.** Chains and clashes are common; ambush almost never happens | 0.061 ambush attacks per match (QA §8) |
+| 6 | Fights tell stories | **At risk.** Chains and clashes are common; the landscape and set pieces are still being built. Hiding and ambush are removed (Orb) | Chains 3.8 per match (QA §8); `living-destruction-numbers.md` |
 | 7 | Signatures adapt | **At risk.** Variants exist but one dominates | HORIZON CLEAVE is 69% of beams; FIRESTORM and GLASS TRENCH are 1% each (QA §6) |
 
 ---
@@ -46,7 +46,7 @@ The world wraps. There are no walls, no corners and no side of the screen to be 
 - The planet is a ring 9,600 units around, stored as 1,200 columns of 8 units (`index.html:L115`), with eleven biome segments from ocean to mountains (`index.html:L118`). Flying either way loops it. The seam at 0/9,600 has no meaning in play. In the game, every match generates its own wrapped planet from a seed (`systems-sketch.md` §6), and every one keeps the ring.
 - Space is never a trap. Nobody gets pinned against an edge, so position is about *where* you fight, not how close you are to a wall.
 - Where you fight is a strategic choice, because each biome changes what happens:
-  - The ocean, forest and mountains give cover for hiding.
+  - Smoke, rubble, canopy and ridges block line of sight, so ESCAPE can break lock there for a moment.
   - Each biome picks its own signature variant.
   - Population density feeds menace and anguish.
   - Buildings and mountainsides open launch options.
@@ -86,7 +86,7 @@ The player chooses intent: aggressive, defensive, evasive or escape. A procedura
   - AGGRESSIVE presses and trades.
   - DEFENSIVE absorbs and punishes.
   - EVASIVE reads and slips.
-  - ESCAPE disengages, hides, recovers and ambushes.
+  - ESCAPE disengages and breaks lock through line of sight.
 
 **How we test it**
 - *Comprehension:* after two matches, a new player can explain what each stance is for (charter done-when). QA or the playtest lead runs a scripted interview.
@@ -110,14 +110,14 @@ Distance never blocks drama. Attacks always close the gap, and the escape stance
 
 **In play**
 - **Any attack from any distance starts an exchange.** The director flies the attacker in over 0.18 to 0.65 s, scaled by distance (`index.html:L420`). Nothing whiffs because of distance.
-- **Only a hidden target is out of reach.** Attacking one costs 2 ki and loses the lock-on (`index.html:L397-401`). Hiding needs the ESCAPE stance, cover and distance, so it is a state the player chose and can lose, not a range check.
+- **Only a target that has broken lock is briefly out of reach**, for at most 4 s (`spec-wounds.md` §1c). Attacking one costs 2 ki and a 0.5 s cooldown. It needs the ESCAPE stance and a line-of-sight blocker, so it is a state the player chose and can lose, not a range check.
 - **Distance tilts a gamble but never settles it:**
   - Fleeing a melee attack from ESCAPE works about half the time. Being more than 800 units away adds 12 points (`index.html:L441`).
   - A signature fired from inside 500 units adds 30 points to its hit chance against ESCAPE (`index.html:L589`).
 - **Movement is for position, not spacing:** which biome, which cover, how far from people.
 
 **How we test it**
-- *No whiffs:* every attack on a target that is not hidden produces an exchange with contact or an authored evasion. A harness check counts exchanges with no strike, no evasion and no clash; the count must be zero.
+- *No whiffs:* every attack on a target that has not broken lock produces an exchange with contact or an authored evasion. A harness check counts exchanges with no strike, no evasion and no clash; the count must be zero.
 - *Escape is a gamble:* the rate at which pursuits slip away and beams are escaped stays inside the band in `balance-targets.md`, "Stance balance". Today 50% of pursuits slip away (1,063 of 2,122) and 28% of beams against ESCAPE are escaped (QA §7).
 - *Playtest:* "Did an attack ever miss because you were too far away?" The answer should be no.
 
@@ -125,7 +125,7 @@ Distance never blocks drama. Attacks always close the gap, and the escape stance
 - Projectiles that miss by distance. Footsies and spacing as the core skill.
 - Escape that is a pure range check ("far enough is safe").
 - A zoning character who wins by never letting the opponent close.
-- Hiding that makes someone untouchable indefinitely, with no way for the hunter to find them.
+- A lock break that makes someone untouchable for long. It is capped at 4 s.
 
 **Prototype today.** The pillar holds. One defect bends it: the signature's hit chance against ESCAPE falls as the attacker's tier rises, the opposite of every other tier term (`prototype-bugs.md`, GD-B01).
 
@@ -196,7 +196,7 @@ The prototype's menace and anguish, below, are the first working example.
 
 ## 6. Fights tell stories
 
-Hiding to recover, ambushing from cover, comebacks, chains and clashes emerge from systems, not scripts.
+Comebacks, chains, clashes, set pieces and a landscape that answers back emerge from systems, not scripts. (Hiding and ambush are held for a future stealth fighter; `future-stealth-fighter.md`.)
 
 **In play**
 - **A fight has an arc: a season finale in four acts** across 5 to 7 minutes (`economy.md` §7):
@@ -204,9 +204,7 @@ Hiding to recover, ambushing from cover, comebacks, chains and clashes emerge fr
   - escalation through transformations and collateral;
   - the turn: top forms, relocation, comebacks;
   - the finale: final forms, finishers and the biggest clashes.
-- **Losing has a way back.** You can go to ground:
-  - Being hidden in cover restores 40 HP and 25 extra ki per second (`index.html:L758`, `L762`).
-  - Striking after 1.8 s or more in cover gives an ambush worth ×1.5 damage (`index.html:L324`, `L402-403`, `L687`).
+- **Losing has a way back:** Rally per fighter, desperation on the brink, and "second breath" recovery after a break in the action. Hiding and ambush are removed from the base game and kept for a future stealth fighter (`future-stealth-fighter.md`). ESCAPE can still break lock through line of sight for a moment (`spec-wounds.md` §1c).
 - **Momentum can swing:**
   - chains of up to five linked hits (`index.html:L548-557`);
   - parries timed in the wind-up (`index.html:L525-532`);
@@ -214,17 +212,17 @@ Hiding to recover, ambushing from cover, comebacks, chains and clashes emerge fr
 - **The feed tells the story.** Every beat can be explained in the director feed, so a match can be retold.
 
 **How we test it**
-- *Beats happen:* the rate per match of hides, ambushes, comebacks, lead changes, clashes, parries and chains stays inside `balance-targets.md`, "Story beats". A comeback is a win by a fighter who was at or below 25% HP.
+- *Beats happen:* the rate per match of comebacks (a win after being on the brink), lead changes, clashes, parries, chains and lock breaks stays inside `balance-targets.md` §8.
 - *Nothing is scripted:* no cutscene or quick-time event decides an outcome.
-- *Playtest:* "Tell the story of your last match in three sentences." Stories should name a turn, such as a hide, a clash or a comeback, not only damage traded.
+- *Playtest:* "Tell the story of your last match in three sentences." Stories should name a turn, such as a clash, a collapse or a comeback, not only damage traded.
 
 **Anti-examples**
 - Scripted sequences that play the same every time.
-- Mechanics that exist but never fire. The prototype's ambush fires 0.061 times a match, after about one hide in ten (QA §8).
+- Mechanics that exist but never fire. The prototype's ambush fired 0.061 times a match (QA §8), which is one reason it was removed.
 - Invisible rubber-banding: a bonus for whoever is behind, with no cue on screen. The hero's comeback bonus (up to +50% damage at low HP, `index.html:L322`) needs a visible cue.
-- Dead air: long stretches where nothing can happen. One example is a hunt for a hidden fighter with no way to find them.
+- Dead air: long stretches where nothing can happen (`balance-targets.md` §8: no gap over 10 s).
 
-**Prototype today.** Chains and clashes are frequent: 3.8 chains a match, and 40% of signatures meet a clash (QA §6, §8). Hiding is occasional: 0.63 hides a match. Ambush barely exists: 0.061 a match. `economy.md` covers the hiding and ambush levers.
+**Prototype today.** Chains and clashes are frequent: 3.8 chains a match, and 40% of signatures meet a clash (QA §6, §8). Hiding (0.63 a match) and ambush (0.061 a match) are removed from the base game and parked in `future-stealth-fighter.md`. The landscape's set pieces (`living-destruction-numbers.md`) and Rally now carry the turns.
 
 ---
 

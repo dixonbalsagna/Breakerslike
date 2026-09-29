@@ -163,7 +163,7 @@ Six systems that Orb's four fighters and the new match length need (`docs/ep/vis
   - The joke is bureaucratic, not a transformation beam.
   - Enough sandwiches trigger the next molt.
 - **The backup drive (step 3)** *(default, pending Orb's pick)*.
-  - His companion is a small backup drive that runs and hides around the planet. It reuses the hiding rules in reverse (`economy.md` §5).
+  - His companion is a small backup drive that runs around the planet and ducks out of sight. It reuses the hiding rules in reverse (`economy.md` §5).
   - Catching it is a chase. He **docks** it; he does not eat it. That gives the final form: the fastest fighter, blitzing through portals that spew monstrous sandwiches, with our own portal design and sound.
 - **His weak point** *(default, pending Orb's pick)*.
   - A microchip behind a hatch that flips open.

@@ -33,7 +33,7 @@ The measurable bands the game must meet. Each is written so QA's harness (`qa/`,
 | 5 | Launch variety | No launch type above 40% | SLAM DOWN 46.4% (QA §5) | Fails | Encounter Systems |
 | 6 | Location and signature variety | No biome above 40% of fight time; no variant above 40% of beams | Ocean 64.6% of fight time; HORIZON CLEAVE 69% (QA §6) | Fails | Encounter Systems, World |
 | 7 | Stance balance | No forced stance above 55% | Not yet measured; DEFENSIVE at risk (`stance-matrix.md` §4) | Unknown | QA (probe), Game Design |
-| 8 | Story beats | See section 8 | Ambush 0.061 per match (QA §8) | Fails | Encounter Systems, Game Design |
+| 8 | Story beats | See section 8 | Hide and ambush bands retired (hiding removed) | Not yet measured | Encounter Systems, Game Design |
 | 9 | Pacing (tempo) | 8 to 12 exchanges per minute; exchanges of 2.5 to 4 s; 1.5 to 4 s of breathing room | About 21 exchanges per minute, each about 1 s | Fails ("too fast", Orb) | Combat, Encounter Systems |
 
 ---
@@ -236,8 +236,9 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 
 | Beat | Band | Prototype today (per 55 s match, QA §8) |
 | :--- | :--- | :--- |
-| Hides | At least 1.5 per match; at least one hide in at least 60% of matches. **Re-baselined once LD1 lands** (§11): 2 to 5 per match; at least one hide in 70% of matches; 25 to 50% of hides in cover the fight made; hidden time at most 10% of match time per fighter | 0.63; 38% of matches |
-| Ambush attacks | At least 0.5 per match | 0.061 |
+| Hides and ambushes | **Retired.** Hiding is removed from the base game and kept for a future stealth fighter (`future-stealth-fighter.md`) | Retired |
+| Lock breaks through line of sight (`spec-wounds.md` §1c) | 1 to 4 per match; median length 2 to 3 s; never more than 4 s (a hard test); never within 6 s of the same fighter's last one (a hard test) | Not measured |
+| Second breath | Battered wear recovered through second breath is at most 25% of all battered wear taken | Not measured |
 | Comebacks: the winner was on the brink at some point, or rallied (`damage-model.md` §5) | 15 to 35% of matches | Not measurable yet. The prototype has no brink |
 | Region breaks before the finisher (1v1) | 4 to 6 per match | none |
 | Finishers preceded by a brink call-out | 100% | none |
@@ -344,7 +345,7 @@ Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questio
 - **Location:**
   - the hero's lure goes to empty land and rotates among desert, plains and mountains, not the nearest ocean;
   - ESCAPE's cover-seeking weighs forest and ridge as well as water;
-  - underwater is a hiding state, not a place to fight.
+  - underwater is a place to pass through, not a place to fight (hiding is removed).
 
 **For World and Simulation, through the EP.** A launched fighter who hits water should skim and splash rather than stop dead (`L726`). Orb also asked for simple fluid behaviour. **Ground impacts** (Orb, after playing the craters build): these should mostly become a knockback slide, a braking skid that cuts one deep trench and throws up dust, rather than bounces. Water skipping stays. World is building it with the rescale. **For Camera:** a planet-scale read and the launch follow (Orb's greybox notes).
 
@@ -361,7 +362,7 @@ The full set of numbers is in `living-destruction-numbers.md`: the tier ladders,
 | :--- | :--- |
 | Spreading fires (tier 2 and up) | 0.5 to 3, in matches with at least 5% of fight time in forest or villages |
 | Forest burnt by the end, among matches that reach tier 3 | 15 to 60% of the trees |
-| Cover-capable clouds | 3 to 10 |
+| Clouds that block sight | 3 to 10 |
 | Real slides | 0.5 to 2, in matches with at least 10% of fight time in mountains; at most 1 peak collapse |
 | Quakes | In 30 to 70% of matches that reach tier 4; at most 2. Rifts at most 1 |
 | Lava events | 1 to 3, in matches that reach tier 4 |
@@ -370,7 +371,7 @@ The full set of numbers is in `living-destruction-numbers.md`: the tier ladders,
 | Casualties at tier 1 from these effects | 0 (a hard test) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with every living-destruction source included |
 | Readability | At most 3 active hazard fronts in the camera's framing (a hard test); fighters always drawn above clouds; no hazard starts during a finisher or a respected cinematic |
-| Hides | The re-baselined rows in §8, once LD1 lands |
+| Lock breaks | The line-of-sight rows in §8. Clouds, rubble, canopy and terrain block sight (`living-destruction-numbers.md` §3) |
 
 **Attribution and collateral.**
 - Every effect is credited to the fighter whose event started it, and knock-on effects keep that cause.

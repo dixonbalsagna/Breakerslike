@@ -17,8 +17,8 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |
 | **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). Starting k = 0.08 at S1; 0.20 from S2 (§1b) |
 | **Stages** | Fresh below 30; bruised 30 to 59; battered 60 to 89; broken at 90 or more |
-| **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time to hide (1.8 s) |
-| **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second (0.25 from S2, §1b). Hidden, a battered region fades 3 per second, down to 59. Broken regions never fade (only a Rally mends them) |
+| **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time needed to break lock through line of sight (1.8 s) |
+| **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second (0.25 from S2, §1b). A battered region fades 1 per second, down to 59, after 4 s without an exchange ("second breath", §1c). Broken regions never fade (only a Rally mends them). Hidden recovery is removed with hiding |
 | **Region choice** | Each atom lists the regions it may hit, with weights. The director multiplies each weight by (1 + wear/50), or (1 + wear/30) from S2 (§1b), which is "go for the wound", then draws with the seeded sim RNG. Attack kind sets the family: lights go to the head and arms, heavies to the core and legs, guard hits to the arms, and beams and impacts spread |
 | **Brink** | The core breaks, or any two of head, arms and legs break. The Cyborg is the exception (§3) |
 | **Decisive exchange** | One that ends with the loser launched, a heavy or beam clash won, or a GUARD BREAK. A launch counts however it lands: slam, knockback slide, water skip, brunt or chain (`docs/world/knockback-slide.md`). A **NONE** outcome (a shove with no launch after a winning template) is **not** decisive, unless the exchange also meets one of the other clauses. An attack that stops a fill (charging, stoking, Press) is a CHARGE INTERRUPT and launches, so it counts. Transformation cinematics themselves are never interrupted (§8) |
@@ -34,7 +34,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 
 **Starting values for S2** (they replace the §1 values above):
 - k = **0.20**;
-- bruised fade **0.25** per second (hidden battered fade stays at 3 per second);
+- bruised fade **0.25** per second (battered regions recover only through second breath, §1c);
 - the director's focus weight is **(1 + wear/30)**, so damage concentrates and regions break.
 
 The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That gives a first break at around 1:30 to 2:30, and a brink at around 4:30 to 7:00 once Rallies and the finisher contest are added.
@@ -47,6 +47,26 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
 5. **The finisher contest** (30% base survival). It sets the tail after the brink: p90 at most 10:00, p99 at most 12:00.
 
 **Sequencing.** The world rescale lands first, and it changes travel time and so the exchange rate. Re-baseline the damage rate after the rescale, before touching k. Measure time to first break and time to brink, not only match length.
+
+### 1c. Lock-on and line of sight (hiding is removed)
+
+Orb removed hiding from the base game and kept it for a future stealth-specialist fighter (`docs/ep/vision.md`; `future-stealth-fighter.md` holds the kit as it was). What remains is **line of sight**: smoke, dust, rubble and terrain can break lock-on for a moment. There is no recovery bonus, no ambush and no concealment on screen.
+
+| Rule | Spec |
+| :--- | :--- |
+| **Breaking lock** | A fighter in the **ESCAPE** stance breaks the opponent's lock after 0.9 s without line of sight between them. Line of sight is blocked by: a cloud that can block (the target at least 30 units inside it); a rubble heap at least 1 bh high with the target low behind it; unburnt forest canopy with the target low beneath it; or terrain (a heightfield line test, such as a ridge between them). Other stances never break lock, because they are engaging. |
+| **While lock is lost** | The opponent cannot start an exchange on that fighter. An attempt costs 2 ki and a 0.5 s cooldown, as today. The fighter's side shows the Searching flash. |
+| **Regaining lock** | Lock comes back, with the Found flash, when **any** of these happens: line of sight returns; the hunter comes within 240 units (120 inside a cloud); the target attacks; or **4 s** pass. Lock loss never lasts more than 4 s. |
+| **No chaining** | After lock is regained, the same fighter cannot break it again for **6 s**. |
+| **What it is for** | Breathing room and repositioning, never healing. ESCAPE stays a gamble (pillar 3): the pursuit and beam-escape odds are unchanged, it still takes ×1.25 damage, and a chaser who closes the distance, or waits out the 4 s, gets the lock back. |
+| **Flashes** | Found and Searching stay. Primed, the ambush window, is held for the future fighter. Art: please drop Primed from the base set. |
+
+**Recovery without hiding.** This replaces the old hidden fade (battered fading 3 per second while hidden). Without a replacement, battered regions would stay battered for the rest of a 6-to-8-minute fight, and comebacks would come only from Rally.
+- **Second breath.** After **4 s** with no exchange involving that fighter, a battered region fades 1 wear per second, down to 59, where it becomes bruised.
+- It shows through the posture channel (a visible breath) and needs no UI.
+- The opponent denies it simply by attacking, since every attack closes the gap. Breaking lock through ESCAPE, or a long break launch, is how a fighter earns it.
+- Broken regions still mend only through Rally.
+- *Tuning.* Second breath is weaker than the old hidden fade. If S2 matches run short, lower k first (§1b).
 
 ## 2. Rally (approved per fighter, with looser limits)
 
@@ -89,7 +109,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   **Heat.** A hidden value from 0 to 100, read through the readout below.
   - *Stoking.* He raises heat by holding a stoke input while free: +25 per second. Controls assigns the input; the default proposal is a variant of the charge input. Stoking gives no ki. It is exposed exactly like charging, so an attack on him is a CHARGE INTERRUPT (`index.html:L435-438`).
   - *Respect sparks.* When his rival commits fully (the Respect trigger in `economy.md` §4.2), he gains +10 heat, even without stoking.
-  - *Cooling.* −4 per second while he is not stoking, and −10 per second while hidden.
+  - *Cooling.* −4 per second while he is not stoking.
 
   **Stages, with temporary boosts.** Each boost lasts only while he is in the stage. A stage exits 5 below its floor, to prevent flicker.
 
@@ -100,7 +120,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   | Boiling | 85 | +45% | +25% | +0.10, and launch force +20% | 6 per second |
 
   **Internal damage.** Heat adds wear to the core as its own *internal* part.
-  - Internal wear never fades, not even when hidden, and it does not spread through Rolls with it.
+  - Internal wear never fades (not even through second breath), and it does not spread through Rolls with it.
   - It does not feed Respect.
   - It counts fully toward the core's stages. An internally broken core puts him on the brink like any other broken core.
   - Heat therefore spends his future. A full climb and 6 s boil that ends in a boil-over costs about 55 internal wear, so two of them break his core with no help from his rival.
@@ -309,7 +329,7 @@ This section is binding and replaces the relocation rules in `systems-sketch.md`
 - the Cyborg keeps his Hunger;
 - he may **Press a loose fragment** lying on the ground. That gives him half the Hunger of a civilian, and destroys the fragment, which feeds the unfold.
 
-His best play is to break the fold, and that is the matchup's story. The backup drive stays on the planet. There is no hiding, because there is no cover. Ego meters, forms, wear and heat carry over unchanged. The Protagonist's **final form unlocks** here, and only here |
+His best play is to break the fold, and that is the matchup's story. The backup drive stays on the planet. There are no line-of-sight blockers except craters and rubble the fight makes. Ego meters, forms, wear and heat carry over unchanged. The Protagonist's **final form unlocks** here, and only here |
 | **Fragility** | While folded, the fragments still orbit him. A heavy, a GUARD BREAK, a signature hit or a region break on him knocks one loose, with a seeded pick weighted to the largest. It lands on the barren ground, and anyone can grab it: the rival gets a surge and denies the mass. Each loss makes the horizon **flicker**: a `FOLD FLICKERS` card, and the planet's edge ghosts back in |
 | **Unfolding** | If his held mass stays below 12 for **3 s**, the planet returns. In those 3 s he can grab back mass and hold the fold, a scramble set piece. On the unfold, everyone returns to where they left. His final form ends and he drops to his previous form, keeping his promise. He cannot fold again for **60 s** |
 | **Finishers** | These work normally in the proving ground, which is the natural stage for the finale. A finisher that starts during the unfold countdown completes before the planet returns |
