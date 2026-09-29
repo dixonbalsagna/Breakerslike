@@ -44,6 +44,27 @@ func _init() -> void:
 		print("            " + ", ".join(parts))
 		if bad != "":
 			print("            FAIL: " + bad)
+	# every flash has a cue for every fighter, renders, and stays within its flash time
+	var fs := SimCore.createSim()
+	SimCore.newMatch(fs, 4)
+	var cue_maker := AudioCues.new(bank)
+	var flash_ok: bool = true
+	var n_flash: int = 0
+	for actor in range(fs.fighters.size()):
+		for fl in cue_maker.cfg.flash.rank:
+			var c = cue_maker.flash(fs, actor, fl)
+			if c == null or not bank.has_sound(c.sound):
+				flash_ok = false
+				print("no flash cue for actor %d, flash %s" % [actor, fl])
+				continue
+			var len_s: float = bank.duration(c.sound, 0)
+			if len_s > float(bank.flashes.flashes[fl].max_s) + 0.02:
+				flash_ok = false
+				print("flash cue %s is %.2f s, longer than its flash (%.2f s)" % [c.sound, len_s, float(bank.flashes.flashes[fl].max_s)])
+			n_flash += 1
+	SimCore.dispose(fs)
+	print("\nflash cues: %d checked (2 fighters x 12 flashes), %s" % [n_flash, "all present and within their flash time" if flash_ok else "FAILED"])
+	ok = ok and flash_ok
 	print("\naudio host check passed" if ok else "\naudio host check FAILED")
 	quit(0 if ok else 1)
 

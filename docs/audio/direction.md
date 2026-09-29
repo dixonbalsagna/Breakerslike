@@ -234,6 +234,41 @@ A beam's scorch trail sizzles by beam power. A beam clash is two tones that beat
 | Finisher, KO | A fighter-specific finisher sound; KO is a heavy hit at half speed, then silence |
 | Wound cards, UI | A soft card tick; no per-letter text blips |
 
+### 5.6 Head-flash cues
+
+Art's twelve head flashes (`docs/art/marked-aura.md`, `art/concepts/marked-aura/flashes.json`) each have one short cue, cut to the flash's own time (`max_s`), so a sound is never longer than its flash. The recipe is the same for every fighter; the fighter's shape family sets only the timbre, so the Protagonist's flashes sound round, the Anti-hero's thin and metallic, the Empress's nasal and theatrical and the Cyborg's stepped. Recipes: `audio/data/flash_cues.json`; synth: `audio/synth/flash_synth.gd`.
+
+| Family (fighter) | Timbre |
+| :--- | :--- |
+| Circles (Protagonist) | Near-sine, soft attack, warm |
+| Blades (Anti-hero) | A thin FM edge, quick attack |
+| Wedges (Empress) | A narrow pulse, filtered, with a light vibrato |
+| Steps (Cyborg) | A square wave whose pitch moves in semitone steps every 35 ms, with 5-bit level steps |
+
+| Flash | Cue (as the Protagonist hears it) | Length |
+| :--- | :--- | :--- |
+| Danger sense | A low dry tick and a quiet upward noise sweep. No pitched chirp | 0.32 s |
+| Found | One soft-attack note rising a whole step, mid register | 0.60 s |
+| Searching | A wavering low two-note phrase, falling | 0.90 s |
+| Brink | A slow heartbeat pair and a low tail | 0.98 s |
+| Fear | A shiver: breath noise with a 13 Hz tremolo | 0.80 s |
+| Rage | A low creaking growl that swells and is cut off | 0.59 s |
+| Hurt | A short falling blip and a knock, layered under the pain grunt | 0.31 s |
+| Resolve | A breath in, then a low held note | 0.80 s |
+| Triumph | A two-note bell chime a fifth apart (the fighter's laugh joins when the laugh gesture exists) | 1.00 s |
+| Pride | A slow exhale and a soft held fifth | 0.90 s |
+| Taunt | A nasal sneer and a dry "tch" | 0.41 s |
+| Surge | A three-second rising swell that resolves on a chord that differs per family (major, minor, suspended, open fifth) | 4.45 s |
+
+**Veto check against known alert cues** (Art asked me to veto anything that sounds like a stealth-game alert or a spider-sense cue). The rules I applied, and how the set does:
+1. No fast repeated staccato notes or "stab" (the classic alert): no cue has three or more repeated notes; the fastest attack on a pitched note is 15 ms and the danger cue has no pitched note at all.
+2. Nothing high and shrill (a spider-sense chirp sits in the 2 to 4 kHz range): the highest fundamental in any cue is 587 Hz, with one quiet partial at 1.2 kHz in the wedges' found cue.
+3. No tremolo or vibrato on a high pure tone: the fear shiver is on breath noise, and its only pitched part is a quiet tone at about 150 Hz.
+4. Info cues are softer and lower than an alert would be: found is a 0.6 s note and danger is a tick and a noise sweep.
+Result: nothing vetoed. This is a design check on the numbers, not a listening check, and Legal's screen still applies. The flash cues are also `audio` cues, so any that Orb finds close to a known sound can be retuned in data.
+
+**Hook.** The flash prototype does not exist yet, so audio has two ways in. Rendering can call `AudioCues.flash(S, actor, id)` when a flash starts and append the returned cue to the host's pending cues, or emit the cosmetic `flash` event `{actor, id}` (the spec's audio hook) and `AudioCues.consume` will pick it up. Priority follows Art's rank, so the surge outranks everything, and the cue is in the fighter's own group, so a new flash cue replaces that fighter's earlier one.
+
 ## 6. The mix
 
 ### 6.1 The priority ladder

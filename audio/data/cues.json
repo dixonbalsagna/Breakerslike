@@ -87,5 +87,26 @@
   "variation": {
     "pitch": 0.03,
     "gain_db": 1.0
+  },
+  "flash": {
+    "gain_db": -4.0,
+    "bus": "Sfx",
+    "priority_base": 100,
+    "priority_step": 3,
+    "rank": {
+      "surge": 1,
+      "danger": 2,
+      "found": 3,
+      "searching": 4,
+      "brink": 5,
+      "fear": 6,
+      "rage": 7,
+      "hurt": 8,
+      "resolve": 9,
+      "triumph": 10,
+      "pride": 11,
+      "taunt": 12
+    },
+    "note": "Head-flash cues (docs/art/flash-prototype-spec.md). Priority follows Art's rank: the surge outranks everything. Rendering calls AudioCues.flash(S, actor, id) when a flash starts, or emits a cosmetic flash event {actor, id}."
   }
 }

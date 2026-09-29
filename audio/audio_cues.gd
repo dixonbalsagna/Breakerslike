@@ -58,7 +58,38 @@ func consume(S: SimState, events: Array) -> Array:
 				_damage(S, e, out)
 			"crater":
 				_crater(S, e, out)
+			"flash":
+				# a cosmetic event from the flash prototype: {actor, id}; ignored until the event carries both
+				if e.get("actor") != null and e.get("id") != null:
+					var c: Cue = flash(S, int(e.get("actor")), String(e.get("id")))
+					if c != null:
+						out.append(c)
 	return out
+
+
+## The cue for a head flash starting on a fighter (docs/art/flash-prototype-spec.md), in that fighter's sound family.
+## Null if the fighter, the flash or the family is unknown. Rendering may call this directly when its flash starts.
+func flash(S: SimState, actor: int, flash_id: String) -> Cue:
+	if actor < 0 or actor >= S.fighters.size():
+		return null
+	var f = S.fighters[actor]
+	var fam: String = bank.family_of_voice(String(cfg.fighters.get(f.name, "")))
+	var id: String = "flash.%s.%s" % [flash_id, fam]
+	var meta: Dictionary = cfg.flash
+	if fam == "" or not bank.has_sound(id) or not meta.rank.has(flash_id):
+		return null
+	var cue := Cue.new()
+	cue.sound = id
+	cue.variant = 0
+	cue.x = f.x
+	cue.y = f.y + 30.0
+	cue.gain_db = float(meta.gain_db)
+	_vary(cue)
+	cue.priority = int(meta.priority_base) - int(meta.priority_step) * int(meta.rank[flash_id])
+	cue.bus = String(meta.bus)
+	cue.group = "flash.%d" % actor
+	cue.caption = ""
+	return cue
 
 
 func _damage(S: SimState, e, out: Array) -> void:

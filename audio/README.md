@@ -31,7 +31,8 @@ Keys: `1` light hit, `2` heavy hit, `3` crater, `4` Protagonist effort, `5` Anti
 | `demo/` | The listening scene. |
 | `tools/render_wavs.gd`, `host_check.gd`, `analyse_wav.py` | Write the bank to WAV; the hook-up check; the number and spectrogram check. |
 | `synth/music_sketch.gd`, `data/sketch_*.json`, `tools/render_sketches.gd` | The three 30-second music sketches: one shared 12-bar arc and tune, three instrument kits. |
-| `preview/` | The rendered WAVs (two variants of each of 14 sounds, 0.5 MB, and the three `sketch-*.wav` music sketches, 2.3 MB). A `.gdignore` keeps Godot from importing them or packing them into a build. |
+| `synth/flash_synth.gd`, `data/flash_cues.json`, `tools/render_flashes.gd` | The twelve head-flash cues (`docs/audio/direction.md` section 5.6): one recipe each, four sound families. `AudioCues.flash(S, actor, id)` returns the cue. |
+| `preview/` | The rendered WAVs (two variants of each of 14 sounds, 0.5 MB; the three `sketch-*.wav` music sketches, 2.3 MB; the twelve `flash-circles-*.wav` head-flash cues, 0.4 MB. Render other families with `tools/render_flashes.gd`). A `.gdignore` keeps Godot from importing them or packing them into a build. |
 
 ## The music sketches
 

@@ -9,9 +9,11 @@ extends RefCounted
 
 const IMPACTS_PATH := "res://audio/data/impacts.json"
 const GRUNTS_PATH := "res://audio/data/grunts.json"
+const FLASH_PATH := "res://audio/data/flash_cues.json"
 
 var impacts: Dictionary = {}
 var grunts: Dictionary = {}
+var flashes: Dictionary = {}      # flash_cues.json: the 12 head-flash cues and the four sound families
 var _cache: Dictionary = {}       # "id#variant" -> AudioStreamWAV
 var render_ms: Dictionary = {}    # "id#variant" -> milliseconds it took to render
 var _queue: Array = []            # [id, variant] pairs still to render for warm_step()
@@ -20,6 +22,7 @@ var _queue: Array = []            # [id, variant] pairs still to render for warm
 func _init() -> void:
 	impacts = load_json(IMPACTS_PATH)
 	grunts = load_json(GRUNTS_PATH)
+	flashes = load_json(FLASH_PATH)
 
 
 static func load_json(path: String) -> Dictionary:
@@ -29,6 +32,26 @@ static func load_json(path: String) -> Dictionary:
 		push_error("AudioBank: cannot read %s" % path)
 		return {}
 	return parsed
+
+
+## The sound family (circles, blades, wedges, steps) of a fighter's voice id, or "".
+func family_of_voice(voice: String) -> String:
+	for k in flashes.get("families", {}):
+		if flashes.families[k].voice == voice:
+			return k
+	return ""
+
+
+## "flash.<flash>.<family>" for every flash and family (or just the families of the given voices). Not part of ids()
+## or warm(): the surge is 4.4 s long, so render these only for the fighters in the match.
+func flash_ids(voices: Array = []) -> Array:
+	var out: Array = []
+	for fam in flashes.get("families", {}):
+		if not voices.is_empty() and not (flashes.families[fam].voice in voices):
+			continue
+		for fl in flashes.get("flashes", {}):
+			out.append("flash.%s.%s" % [fl, fam])
+	return out
 
 
 ## Every sound id the bank can render.
@@ -56,12 +79,17 @@ func buffer(id: String, variant: int) -> PackedFloat32Array:
 	if r.is_empty():
 		return PackedFloat32Array()
 	var v: int = posmod(variant, variants(id))
+	if id.begins_with("flash."):
+		var p: PackedStringArray = id.split(".")
+		return FlashSynth.render(r, flashes.families[p[2]], p[2], int(flashes.rate), int(flashes.bank_seed), p[1])
 	if id.begins_with("voice."):
 		return GruntSynth.render(r, int(grunts.get("bank_seed", 0)), id, v)
 	return ImpactSynth.render(r, int(impacts.get("bank_seed", 0)), id, v)
 
 
 func rate_of(id: String) -> int:
+	if id.begins_with("flash."):
+		return int(flashes.get("rate", 16000))
 	return int(_recipe(id).get("rate", 32000))
 
 
@@ -93,8 +121,11 @@ func warm() -> float:
 
 ## The same work in slices, for a loading screen or the first frames of a match: call warm_begin() once, then
 ## warm_step() each frame until it returns false. One call renders one variant (2 to 60 ms on a desktop).
-func warm_begin(only_voices: Array = []) -> void:
+func warm_begin(only_voices: Array = [], with_flash: bool = false) -> void:
 	_queue.clear()
+	if with_flash:
+		for id in flash_ids(only_voices):
+			_queue.append([id, 0])
 	for id in ids():
 		if id.begins_with("voice.") and not only_voices.is_empty() and not (id.split(".")[1] in only_voices):
 			continue
@@ -113,6 +144,11 @@ func warm_step() -> bool:
 
 ## The recipe for an id, or an empty dictionary.
 func _recipe(id: String) -> Dictionary:
+	if id.begins_with("flash."):
+		var p: PackedStringArray = id.split(".")
+		if p.size() != 3 or not flashes.get("families", {}).has(p[2]):
+			return {}
+		return flashes.get("flashes", {}).get(p[1], {})
 	if id.begins_with("voice."):
 		var parts: PackedStringArray = id.split(".")
 		if parts.size() < 3:
