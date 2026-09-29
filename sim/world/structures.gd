@@ -75,7 +75,7 @@ static func explode(S: SimState, x: float, y: float, r: float, cause) -> void:
 	SimFx.debris(S, x, y, 10, "#6d6a66", 700.0)
 	damageArea(S, x, y, r * 1.8, 130.0 + cause.tier * 110.0, cause)
 	if y < WorldTerrain.groundY(S, x) + r:
-		WorldTerrain.crater(S, x, r * 0.9, 18.0 + cause.tier * 8.0, cause)
+		WorldCrater.dig(S, x, WorldCrater.explodeEnergy(cause.tier), cause, "beam")
 	SimFx.shake(S, 16.0)
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.08)
 

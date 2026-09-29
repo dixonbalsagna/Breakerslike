@@ -1,6 +1,7 @@
 class_name WorldTerrain
-## Terrain heightfield: the twin of terrain.js (genWorld, groundY, seaAt, crater). The heights are float32 storage
-## (PackedFloat32Array), exactly as the JS Float32Arrays: every store rounds to float32.
+## Terrain heightfield: the twin of terrain.js (genWorld, groundY, seaAt); craters live in crater.gd and water in
+## water.gd. The heights are float32 storage (PackedFloat32Array), exactly as the JS Float32Arrays: every store rounds
+## to float32.
 
 
 ## Terrain, buildings and trees. The layout draws from its own stream seeded 4242, never from S.rng.
@@ -59,6 +60,11 @@ static func genWorld(S: SimState) -> void:
 		x2 += r.range_(16.0, 40.0)
 	S.world = SimState.World.new()
 	S.world.pop0 = pop
+	S.scorch = PackedFloat32Array()
+	S.scorch.resize(NC)
+	S.scorch.fill(0.0)
+	S.craters.clear()
+	WorldWater.init(S)
 
 
 ## One row of buildings from x0 to x1 (terrain.js row()); returns the population it added. The draws happen in the
@@ -103,22 +109,7 @@ static func groundY(S: SimState, x: float) -> float:
 	return a + (b - a) * f
 
 
-## Water only where the original (base) terrain is below sea level.
+## The sea basin: water only where the original (base) terrain is below sea level (the prototype's rule). Craters that
+## fill with water are WorldWater's business (S.water); this rule is what the AI, launch planner and fighter speed use.
 static func seaAt(S: SimState, x: float) -> bool:
 	return S.base[int(floor(SimWrap.wrap(x) / SimConst.COL))] < -30.0
-
-
-## Dig a crater of radius r and depth depth at x (cosine falloff, floor at -260); trees inside 1.05 r fall.
-static func crater(S: SimState, x: float, r: float, depth: float, cause) -> void:
-	var NC: int = SimConst.NC
-	var c0: int = int(floor(SimWrap.wrap(x) / SimConst.COL))
-	var n: int = int(ceil(r / SimConst.COL))
-	for k in range(-n, n + 1):
-		var i: int = (c0 + k + NC) % NC
-		var f: float = SimDetMath.cos(SimMathx.jclamp(absf(float(k) * SimConst.COL) / r, 0.0, 1.0) * PI / 2.0)
-		S.deform[i] = SimMathx.jmax(S.deform[i] - depth * f * f, -260.0)
-	for t in S.trees:
-		if t.alive and absf(SimWrap.sdx(x, t.x)) < r * 1.05:
-			t.alive = false
-			SimFx.debris(S, t.x, groundY(S, t.x) + 10.0, 3, "#2f4a25", 300.0)
-	S.world.craters += 1.0

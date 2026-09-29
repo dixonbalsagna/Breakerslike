@@ -81,6 +81,19 @@ static func chargeFx(S: SimState, f, ground: float) -> void:
 	e.x = f.x; e.y = f.y; e.col = f.aura; e.ground = ground
 
 
+## A crater was dug (world/crater.gd): the persistent record's fields, as the render side needs them.
+static func crater(S: SimState, c) -> void:
+	var e := _ev(S, "crater")
+	e.x = c.x; e.y = c.y; e.r = c.r; e.depth = c.depth; e.energy = c.energy; e.cause = c.cause
+	e.rim = c.rim; e.skid = c.skid; e.owner = c.owner
+
+
+## A beam sample scorched the ground: x, ground height, groove width, the beam-power scalar, the variant and the owner.
+static func scorchEvent(S: SimState, x: float, y: float, w: float, power: float, variant: String, owner: float) -> void:
+	var e := _ev(S, "scorch")
+	e.x = x; e.y = y; e.w = w; e.power = power; e.variant = variant; e.owner = owner
+
+
 ## A beam sample low over water (the consumer rolls the splash).
 static func beamSplash(S: SimState, x: float) -> void:
 	var e := _ev(S, "beamSplash")

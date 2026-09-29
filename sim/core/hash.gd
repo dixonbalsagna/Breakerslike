@@ -8,7 +8,8 @@ const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", 
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive"]
 const TREE: Array = ["x", "h", "alive", "burn"]
-const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col"]
+const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col", "pw", "struck"]
+const CRATER: Array = ["x", "y", "r", "depth", "rim", "energy", "cause", "owner", "t", "skid", "sdepth"]
 const PART: Array = ["type", "x", "y", "vx", "vy", "life", "age", "grav", "drag", "size", "col", "r", "gr", "face"]
 const FLOAT: Array = ["x", "y", "txt", "t", "col"]
 
@@ -135,6 +136,29 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		_obj(out, b, BEAM)
 	for i in range(S.deform.size()):
 		out.append(S.deform[i])
+	# Water and scorch: only the non-zero columns, as (index, value) pairs, so the vectors stay small.
+	var nz: Array = []
+	for i in range(S.water.size()):
+		if S.water[i] != 0.0:
+			nz.append(i)
+	out.append(float(nz.size()))
+	for i in nz:
+		out.append(float(i)); out.append(S.water[i])
+	nz = []
+	for i in range(S.scorch.size()):
+		if S.scorch[i] != 0.0:
+			nz.append(i)
+	out.append(float(nz.size()))
+	for i in nz:
+		out.append(float(i)); out.append(S.scorch[i])
+	out.append(S.waterTick)
+	out.append(float(S.craters.size()))
+	for c in S.craters:
+		_obj(out, c, CRATER)
+	out.append(float(S.waterWin.size()))
+	for w in S.waterWin:
+		for v in w:
+			out.append(float(v))
 	return out
 
 
@@ -173,6 +197,7 @@ const FX_FIELDS: Dictionary = {
 	"spark": ["x", "y", "n", "col", "spd"], "ring": ["x", "y", "gr", "col", "life", "r0"], "debris": ["x", "y", "n", "col", "spd"],
 	"dust": ["x", "y", "n", "col"], "splash": ["x", "y", "n"], "fire": ["x", "y", "n"], "after": ["x", "y", "life", "col", "face"],
 	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col"], "banner": ["text", "col", "dur"],
+	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
 	"shake": ["k"], "tick": ["dt", "frozen"],
 }
 

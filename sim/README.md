@@ -63,7 +63,7 @@ GDScript traps that break determinism or the goldens (each one was hit while por
 | 4 | `core/damage.js` `hurt` | HP keeps falling after the KO: impacts after the KO call `hurt` again (matches end at about -10 to -90 HP). | Cosmetic today (the bar clamps); wrong for stats that read final HP. |
 | 5 | prototype `newMatch` | `cam.shake` carries from one match into the next. | Cosmetic. The port resets it and the parity harness zeroes it (module-spec section 7). |
 | 6 | `core/fx.js` `P` | The particle cap check is `> 2400`, so 2401 particles fit. | Trivial. |
-| 7 | `world/terrain.js` `crater` | `world.craters` counts every beam-sample crater (one per 36 units of a low beam). | The "craters" statistic is inflated. |
+| 7 | `world/terrain.js` `crater` | `world.craters` counts every beam-sample crater (one per 36 units of a low beam). | **Fixed in the GDScript sim.** Beams carve a scorch groove instead and dig one strike crater where a steep beam meets the ground; `world.craters` counts real craters. The frozen JS core keeps the quirk. `docs/world/craters-scorch-water.md`. |
 | 8 | `director/beam.js` `beamStep` | Beam samples restart at each tick's start position instead of continuing the 36-unit grid. | Uneven damage density along a beam. |
 | 9 | `core/fighter.js` `stepLaunched` | Leaving the launched state through water keeps `launchBy` and `bounces`. | Harmless (the next launch resets them). |
 | 10 | `director/ai.js` `aiInput` | AI timers count down by the real `DT` even in the slow motion after a KO. | Minor. |

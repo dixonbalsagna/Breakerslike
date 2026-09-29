@@ -225,6 +225,8 @@ func consume(S: SimState, events: Array) -> void:
 				banner = b
 			"shake":
 				shake = SimMathx.jmax(shake, e.k)
+			"crater", "scorch":
+				pass   # persistent geometry and decals: the renderer reads S.craters, S.scorch and these events itself
 			"tick":
 				dt = e.dt
 				frozen = e.frozen

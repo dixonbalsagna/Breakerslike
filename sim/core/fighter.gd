@@ -9,7 +9,7 @@ static func tierUp(S: SimState, f) -> void:
 	SimFx.spark(S, f.x, f.y + 34.0, 20, f.aura, 700.0)
 	SimFx.shake(S, 14.0)
 	if f.y < g + 140.0:
-		WorldTerrain.crater(S, f.x, 60.0 + f.tier * 28.0, 12.0 + f.tier * 7.0, f)
+		WorldCrater.dig(S, f.x, WorldCrater.powerupEnergy(f.tier), f, "powerup")
 		WorldStructures.damageArea(S, f.x, f.y, 130.0 + f.tier * 60.0, 90.0 + f.tier * 100.0, f)
 		SimFx.debris(S, f.x, g + 10.0, 10, "#6d6a66", 600.0)
 		SimFx.dust(S, f.x, g, 5)
@@ -21,8 +21,7 @@ static func impact(S: SimState, f, g: float, sp: float) -> void:
 	var tier: float = by.tier
 	if sp > 350.0:
 		var r: float = 28.0 + sp * 0.05 + tier * 12.0
-		var dep: float = SimMathx.jmin(90.0, sp * 0.02 + tier * 3.5)
-		WorldTerrain.crater(S, f.x, r, dep, by)
+		WorldCrater.dig(S, f.x, WorldCrater.impactEnergy(sp, tier), by, "impact", f.vx / sp, absf(f.vy) / sp)
 		if WorldTerrain.seaAt(S, f.x):
 			SimFx.splash(S, f.x, g + 10.0, 14)
 		else:
@@ -55,12 +54,23 @@ static func stepLaunched(S: SimState, f, dt: float) -> void:
 	f.x = SimWrap.wrap(f.x + f.vx * dt)
 	f.y += f.vy * dt
 	f.rot += f.spin * dt
-	var inW: bool = f.y < 0.0 and WorldTerrain.seaAt(S, f.x)
+	var wsurf: float = WorldWater.surfaceAt(S, f.x)
+	var inW: bool = f.y < wsurf
 	if inW and not f.wet:
 		f.wet = true
-		SimFx.splash(S, f.x, 0.0, 12)
-		SimFx.ring(S, f.x, 0.0, 500.0, "#bfe6ff", 0.5, 10.0)
-	if not inW and f.wet and f.y > 0.0:
+		SimFx.splash(S, f.x, wsurf, 12)
+		SimFx.ring(S, f.x, wsurf, 500.0, "#bfe6ff", 0.5, 10.0)
+		var wsp: float = SimDetMath.hypot(f.vx, f.vy)
+		# A fast, shallow entry skips off the surface like a stone; a steep or slow one goes in and is slowed as before.
+		if f.vy < 0.0 and wsp > WorldWater.SKIM_MIN_SPEED and -f.vy < absf(f.vx) * WorldWater.SKIM_MAX_TAN and f.bounces < WorldWater.SKIM_MAX:
+			f.bounces += 1.0
+			f.y = wsurf
+			f.vy = -f.vy * WorldWater.SKIM_LIFT
+			f.vx *= WorldWater.SKIM_KEEP
+			f.wet = false
+			inW = false
+			SimFx.splash(S, f.x, wsurf, 8)
+	if not inW and f.wet and f.y > wsurf:
 		f.wet = false
 	if inW:
 		f.vx *= SimDetMath.pow(0.05, dt)

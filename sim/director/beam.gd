@@ -162,22 +162,27 @@ static func fireBeam(S: SimState, A, ox: float, oy: float, ux: float, uy: float,
 	var b := SimState.Beam.new()
 	b.A = A; b.ox = ox; b.oy = oy; b.ux = ux; b.uy = uy; b.len = len
 	b.p = 0.0; b.t = 0.0; b.life = 0.95; b.w = 24.0 + A.tier * 9.0; b.variant = variant; b.col = A.aura
+	b.pw = WorldCrater.beamPower(A)
 	S.beams.append(b)
 	SimFx.shake(S, 14.0)
 
 
 static func sampleBeam(S: SimState, b, s: float) -> void:
 	var A = b.A
-	var tier: float = A.tier
+	var P: float = b.pw   # the beam-power scalar (world/crater.gd): tier and charge; it equals the tier mid-band
 	var x: float = SimWrap.wrap(b.ox + b.ux * s)
 	var y: float = b.oy + b.uy * s
 	var g: float = WorldTerrain.groundY(S, x)
-	if y < g + 40.0 + tier * 12.0:
-		WorldTerrain.crater(S, x, 20.0 + tier * 7.0, (9.0 if b.variant == "RIDGE BORE" else 5.0) + tier * 2.2, A)
+	if y < g + WorldCrater.beamReach(P):
+		# Scorch: a groove carved to a target depth along the ground, not a crater per sample (sim quirk 7 is gone).
+		WorldCrater.scorch(S, x, P, b.variant, A)
+		if not b.struck and b.uy <= -WorldCrater.BEAM_STRIKE_SLOPE:
+			b.struck = true   # a steep beam digs one strike crater where it first meets the ground
+			WorldCrater.dig(S, x, WorldCrater.beamStrikeEnergy(P), A, "beam")
 		SimFx.dust(S, x, g + 8.0, 1, "#e6c47a" if b.variant == "GLASS TRENCH" else "#9b8f7e")
 		if b.variant == "GLASS TRENCH":
 			SimFx.spark(S, x, g + 6.0, 2, "#ffd98a", 300.0)
-	WorldStructures.damageArea(S, x, y, 26.0 + tier * 8.0, 110.0 + tier * 75.0, A)
+	WorldStructures.damageArea(S, x, y, 26.0 + P * 8.0, 110.0 + P * 75.0, A)
 	if y < 30.0 and WorldTerrain.seaAt(S, x):
 		SimFx.beamSplash(S, x)   # the consumer rolls the prototype's 60% splash
 	if b.variant == "FIRESTORM" and y < g + 140.0:

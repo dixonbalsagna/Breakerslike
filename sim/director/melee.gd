@@ -186,7 +186,7 @@ static func clashWave(S: SimState, ex) -> void:
 	SimDamage.hit(S, ex, D, A, 18.0, {"ignoreStance": true, "stop": 0.02})
 	var tier: float = SimMathx.jmax(A.tier, D.tier)
 	if my < WorldTerrain.groundY(S, mx) + 200.0:
-		WorldTerrain.crater(S, mx, 60.0 + tier * 16.0, 10.0 + tier * 4.0, A)
+		WorldCrater.dig(S, mx, WorldCrater.clashEnergy(tier), A, "impact")
 	WorldStructures.damageArea(S, mx, my, 160.0 + tier * 40.0, 110.0 + tier * 80.0, A)
 	SimFx.banner(S, "CLASH", "#ffffff", 0.7)
 	SimFx.shake(S, 18.0)

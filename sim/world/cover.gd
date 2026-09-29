@@ -9,11 +9,13 @@ static func nearTree(S: SimState, x: float) -> bool:
 	return false
 
 
-## Deep water, low among standing forest trees, or low on a mountain; null when the fighter is in the open.
+## Deep water (the sea or a lake a crater filled), low among standing forest trees, or low on a mountain; null when the
+## fighter is in the open.
 static func coverAt(S: SimState, f):
 	var g: float = WorldTerrain.groundY(S, f.x)
 	var b: String = WorldBiomes.biomeAt(f.x)
-	if b == "ocean" and f.y < -60.0 and g < -100.0:
+	var ws: float = WorldWater.surfaceAt(S, f.x)
+	if f.y < ws - WorldWater.HIDE_BELOW_SURFACE and ws - g >= WorldWater.HIDE_MIN_DEPTH:
 		return "submerged"
 	if b == "forest" and f.y < g + 70.0 and nearTree(S, f.x):
 		return "canopy"

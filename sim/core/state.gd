@@ -15,6 +15,11 @@ var fighters: Array = []
 var world: World = null
 var base := PackedFloat32Array()
 var deform := PackedFloat32Array()
+var water := PackedFloat32Array()     # water depth per terrain column (world/water.gd); the surface is ground + depth
+var scorch := PackedFloat32Array()    # scorch intensity per terrain column, 0 to 1, permanent (world/crater.gd)
+var craters: Array = []               # Crater records, oldest first, capped at WorldCrater.LIST_MAX (fx-events.md)
+var waterWin: Array = []              # active water-flow windows [centre column, half width, quiet steps, age steps]
+var waterTick: float = 0.0            # unfrozen ticks since the match started; paces the water step
 var buildings: Array = []
 var trees: Array = []
 var beams: Array = []
@@ -52,6 +57,22 @@ class World:
 	var craters: float = 0.0
 
 
+## One dug crater, kept for replay seek and snapshots (docs/architecture/fx-events.md). The renderer rebuilds a bowl
+## in depth from these; the heightfield alone only holds the z = 0 slice.
+class Crater:
+	var x: float = 0.0        # centre, world x
+	var y: float = 0.0        # ground height at the centre before the dig
+	var r: float = 0.0        # bowl radius (the rim crest is at r)
+	var depth: float = 0.0    # applied bowl depth below y (already limited by the local relief cap)
+	var rim: float = 0.0      # rim height above the surrounding ground
+	var energy: float = 0.0   # the impact-energy scalar the size came from
+	var cause: String = ""    # "impact", "beam" or "powerup"
+	var owner: float = -1.0   # slot of the fighter that caused it, or -1
+	var t: float = 0.0        # match time
+	var skid: float = 0.0     # signed offset of the furrow's tail from x (0: no furrow); the furrow runs into the bowl
+	var sdepth: float = 0.0   # furrow depth at the bowl end
+
+
 class Building:
 	var x: float = 0.0
 	var w: float = 0.0
@@ -85,6 +106,8 @@ class Beam:
 	var w: float = 0.0
 	var variant: String = ""
 	var col: String = ""
+	var pw: float = 1.0          # beam-power scalar, fixed at fire time (WorldCrater.beamPower)
+	var struck: bool = false     # has this beam already dug its ground-strike crater?
 
 
 class FeedLine:
@@ -117,6 +140,16 @@ class FxEvent:
 	var k: float = 0.0
 	var dt: float = 0.0
 	var frozen: bool = false
+	var r: float = 0.0           # crater: bowl radius
+	var depth: float = 0.0       # crater: bowl depth
+	var rim: float = 0.0         # crater: rim height
+	var energy: float = 0.0      # crater: impact-energy scalar
+	var skid: float = 0.0        # crater: signed furrow tail offset, 0 for none
+	var cause: String = ""       # crater: "impact", "beam" or "powerup"
+	var w: float = 0.0           # scorch: full width of the groove
+	var power: float = 0.0       # scorch: beam-power scalar
+	var variant: String = ""     # scorch: the beam's biome variant
+	var owner: float = -1.0      # crater and scorch: firing fighter's slot, or -1
 
 
 class Fighter:
