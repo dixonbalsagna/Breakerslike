@@ -6,7 +6,8 @@
 // The instance colour carries the flight (render/core/crowd_flight.gd): g is 1 - run, a the fade. A runner's instance
 // is turned so its local +x is where it runs (the figure is the same from behind); its legs and arms scissor about the
 // hip and shoulder in its own plane, as a runner seen side-on, it bobs and leans into the run, and it fades out by
-// dither, with no sorting. Idle figures (white) keep the idle hop.
+// dither, with no sorting. Idle figures (white) keep the idle hop. r is 1 - startled: a survivor near a blow throws
+// its arms over its head, crouches a little and trembles, with no hop.
 shader_type spatial;
 render_mode unshaded, cull_back;
 
@@ -23,6 +24,9 @@ uniform float leg_swing = 0.75;
 uniform float arm_swing = 0.9;
 uniform float run_lean = 0.28;
 uniform float run_bob = 1.1;
+uniform float startle_arms = 2.4;   // RenderLook.STARTLE_ARMS, STARTLE_CROUCH, STARTLE_TREMBLE
+uniform float startle_crouch = 0.1;
+uniform float startle_tremble = 0.3;
 
 varying vec4 v_custom;
 varying float v_kind;
@@ -61,11 +65,21 @@ void vertex() {
 		v = swing(v, vec2(0.0), -run_lean * run);
 		nrm = swing(nrm, vec2(0.0), -run_lean * run);
 	}
+	float st = (1.0 - COLOR.r) * (1.0 - run);
+	if (st > 0.0) {
+		if (abs(v.x) > 2.5) {
+			float side = v.x < 0.0 ? 1.0 : -1.0;
+			v = swing(v, vec2(-side * 3.25, 12.6), side * startle_arms * st);
+			nrm = swing(nrm, vec2(0.0), side * startle_arms * st);
+		}
+		v.y *= 1.0 - startle_crouch * st;
+		v.x += sin(TIME * 37.0 + ph * 50.0) * startle_tremble * st;
+	}
 	if (UV.x < 0.25) {
 		v += nrm * outline / boost;
 	}
 	// A small idle hop on about half of them, out of step.
-	v.y += max(0.0, sin(TIME * 4.0 + ph * 40.0)) * 0.9 * step(0.5, ph) * (1.0 - run);
+	v.y += max(0.0, sin(TIME * 4.0 + ph * 40.0)) * 0.9 * step(0.5, ph) * (1.0 - run) * (1.0 - st);
 	VERTEX = v * boost;
 	NORMAL = nrm;
 }

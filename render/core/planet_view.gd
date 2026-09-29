@@ -37,6 +37,9 @@ var flight := CrowdFlight.new()
 ## Per building, people the evacuation mock has taken out of a building on its own (render/tools/evac_mock.gd, main's
 ## --mock-evac): the crowd shows popAlive minus these. Empty in the game; goes when World's evacuation lands.
 var crowd_extra: Array = []
+var _blows: Array = []                 # this frame's blows (x): craters, scorch, building damage
+var _startled: Dictionary = {}         # crowd instance -> sim time it calms down (RenderLook.STARTLE_*)
+var _calm_at: float = INF              # the earliest of those
 
 
 ## Build the planet for the match in S (after SimCore.newMatch).
@@ -59,6 +62,9 @@ func build(S: SimState) -> void:
 		_crowd_mat.set_shader_parameter("arm_swing", RenderLook.RUN_ARM_SWING)
 		_crowd_mat.set_shader_parameter("run_lean", RenderLook.RUN_LEAN)
 		_crowd_mat.set_shader_parameter("run_bob", RenderLook.RUN_BOB)
+		_crowd_mat.set_shader_parameter("startle_arms", RenderLook.STARTLE_ARMS)
+		_crowd_mat.set_shader_parameter("startle_crouch", RenderLook.STARTLE_CROUCH)
+		_crowd_mat.set_shader_parameter("startle_tremble", RenderLook.STARTLE_TREMBLE)
 	ground.rebuild(S)
 	_make_props(S)
 	for k in range(-RenderLook.PLANET_COPIES, RenderLook.PLANET_COPIES + 1):
@@ -86,11 +92,52 @@ func update(S: SimState, cam_x: float, heat: PackedFloat32Array = PackedFloat32A
 	ground.update(S, heat, heat_changed)
 	refresh(S, false)
 	flight.step(S, _crowd)
+	_startle(S)
 
 
-## One tick's fx events, as the host drains them: the evacuate events start the flight.
+## One tick's fx events, as the host drains them: the evacuate events start the flight, and blows startle the crowd.
 func consume(events: Array) -> void:
 	flight.consume(events)
+	for e in events:
+		if e.type == "crater" or e.type == "scorch" or e.type == "debris":
+			_blows.append(e.x)
+
+
+## Survivors standing near this frame's blows are startled for STARTLE_S; the calm ones go back to idle. A startled
+## figure that starts running takes the flight's colours, and gets idle white again only if it is still home.
+func _startle(S: SimState) -> void:
+	var R: float = RenderLook.STARTLE_R
+	var seen: Dictionary = {}
+	for bx in _blows:
+		var key: int = int(floor(SimWrap.wrap(bx) / (R * 0.5)))   # a beam's scorch comes in runs of nearby blows
+		if seen.has(key):
+			continue
+		seen[key] = true
+		for bi in range(S.buildings.size()):
+			var b = S.buildings[bi]
+			if absf(SimWrap.sdx(bx, b.x)) > R + b.w + RenderLook.CROWD_SPREAD or _shown[bi] <= 0:
+				continue
+			for j in range(_shown[bi]):
+				var ci: int = _crowd_first[bi] + j
+				if absf(SimWrap.sdx(bx, _crowd_x[ci])) < R and not flight.running(ci):
+					if not _startled.has(ci):
+						_crowd.set_instance_color(ci, Color(0.0, 1.0, 1.0, 1.0))
+					_startled[ci] = S.T + RenderLook.STARTLE_S
+					_calm_at = minf(_calm_at, S.T + RenderLook.STARTLE_S)
+	_blows.clear()
+	if S.T < _calm_at:
+		return
+	var calm: Array = []
+	_calm_at = INF
+	for ci in _startled:
+		if S.T >= _startled[ci]:
+			calm.append(ci)
+		else:
+			_calm_at = minf(_calm_at, _startled[ci])
+	for ci in calm:
+		_startled.erase(ci)
+		if not flight.running(ci):
+			_crowd.set_instance_color(ci, Color.WHITE)
 
 
 ## Crowd legibility for this frame: boost scales each figure about its feet; outline is the shell width in units.
@@ -476,3 +523,6 @@ func _make_props(S: SimState) -> void:
 	_shown.resize(nb)
 	_shown.fill(-1)
 	flight.reset(nb)
+	_blows.clear()
+	_startled.clear()
+	_calm_at = INF

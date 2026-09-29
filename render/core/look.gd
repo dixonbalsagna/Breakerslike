@@ -141,6 +141,13 @@ const RUN_LEG_SWING: float = 0.75       # leg and arm swing (radians), forward l
 const RUN_ARM_SWING: float = 0.9
 const RUN_LEAN: float = 0.2
 const RUN_BOB: float = 1.1
+## Survivors near a blow (a crater, a beam's scorch or a building hit) are startled for STARTLE_S: no idle hop, arms
+## over the head, a small crouch and a tremble (figure units), until the flight takes them or they calm down.
+const STARTLE_R: float = 150.0 * WS
+const STARTLE_S: float = 4.0
+const STARTLE_ARMS: float = 2.4          # radians the arms swing up, over the head
+const STARTLE_CROUCH: float = 0.1        # share of the height they drop
+const STARTLE_TREMBLE: float = 0.3
 ## Head flashes (render/core/flash_view.gd; Art's spec docs/art/flash-prototype-spec.md, data data/art/flashes.json).
 ## The layouts, timings, priorities, colours of the info flashes and Legal's rules are Art's data; these are the
 ## drawing's own numbers from the spec. Sizes are in layout units: a twelfth of the fighter's head size, the data's
