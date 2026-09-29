@@ -144,6 +144,17 @@ static func option_defaults() -> Dictionary:
 	return out
 
 
+const GLYPHS_PATH := "res://ui/data/glyphs.json"
+static var _glyphs: Dictionary = {}
+
+
+## The prompt glyph tables (ui/data/glyphs.json).
+static func glyphs() -> Dictionary:
+	if _glyphs.is_empty():
+		_glyphs = _read(GLYPHS_PATH)
+	return _glyphs
+
+
 const FEATURES_PATH := "res://ui/data/features.json"
 static var _features: Dictionary = {}
 static var _feature_override: Dictionary = {}

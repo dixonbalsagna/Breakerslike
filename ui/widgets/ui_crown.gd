@@ -44,7 +44,8 @@ static func draw(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: flo
 	if pop_a > 0.02:
 		_body(ci, m, c, R, t, s, o, pop_a)
 		draw_marker(ci, m, c, R, s, t, pop_a)
-	_windows(ci, m, c, R, t, th, reduced)
+	_windows(ci, m, c, R, t, th, reduced, s, o)
+	draw_ack(ci, m, c, R, s)
 
 
 ## The brink's faint cue: one thin ring, slow and low. It is the only thing left over a fighter at rest, and only on the
@@ -207,18 +208,39 @@ static func _mantle_teeth(ci: CanvasItem, m: UiFighterModel, c: Vector2, r: floa
 		UiIcons.fill_poly(ci, PackedVector2Array([tip, b0, b1]), Color(stroke_color(int(m.stage["mantle"])), 0.85 * alpha))
 
 
-static func _windows(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: float, th: float, reduced: bool) -> void:
+static func _windows(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: float, th: float, reduced: bool, s: float, o: Dictionary) -> void:
+	var prompts: bool = bool(o.get("prompts", false))
+	var style: String = str(o.get("glyph_style", "neutral"))
 	if m.parry_t >= 0.0:
 		var dur: float = maxf(m.parry_dur, UiLook.WINDOW_MIN_SHOWN)
 		var k: float = clampf(m.parry_t / dur, 0.0, 1.0)
 		var rr: float = R * 1.32 if reduced else R * (1.75 - 0.5 * k)
-		var wcol: Color = UiLook.alpha(UiLook.INK, 0.95)
-		ci.draw_arc(c, rr, 0.0, TAU, 48, UiLook.alpha(UiLook.INK_DARK, 0.6), maxf(3.0, th * 0.8) + 3.0, true)
-		ci.draw_arc(c, rr, 0.0, TAU, 48, wcol, maxf(3.0, th * 0.8), true)
+		var tr: float = R * 1.25   # where the ring lands: the strike
+		# The clean-parry tail (Controls: the last ticks of the window) is the stretch of travel just outside the landing
+		# ring; it shows as a bright band, and the ring goes thick and full white once it is inside it.
+		var clean: float = m.parry_clean
+		var in_clean: bool = clean > 0.0 and k >= 1.0 - clean
+		if clean > 0.0:
+			var band: float = R * 0.5 * clean
+			ci.draw_arc(c, tr + band * 0.5, 0.0, TAU, 48, UiLook.alpha(UiLook.INK, 0.28), band, true)
+		ci.draw_arc(c, tr, 0.0, TAU, 48, UiLook.alpha(UiLook.INK, 0.4), maxf(2.0, th * 0.4), true)
+		var wcol: Color = UiLook.alpha(UiLook.INK, 1.0 if in_clean else 0.8)
+		var ww: float = maxf(3.0, th * (1.1 if in_clean else 0.8))
+		ci.draw_arc(c, rr, 0.0, TAU, 48, UiLook.alpha(UiLook.INK_DARK, 0.6), ww + 3.0, true)
+		ci.draw_arc(c, rr, 0.0, TAU, 48, wcol, ww, true)
 		for i in range(4):
 			var a: float = PI * 0.5 * float(i)
 			var d := Vector2(cos(a), sin(a))
 			UiIcons.line(ci, c + d * (rr - th * 1.6), c + d * (rr + th * 1.6), maxf(3.0, th * 0.9), wcol, true)
+		if prompts:
+			# Light large, heavy small: either press parries.
+			var gh: float = maxf(26.0 * s, 22.0)
+			var w1: float = UiGlyphs.width("light", m.device, m.slot, gh, style)
+			var w2: float = UiGlyphs.width("heavy", m.device, m.slot, gh * 0.7, style)
+			var gx: float = c.x - (w1 + gh * 0.3 + w2) * 0.5
+			var gy: float = c.y - R * 1.75 - gh * 0.9
+			UiGlyphs.draw(ci, "light", m.device, m.slot, Vector2(gx, gy), gh, 1.0, true, style)
+			UiGlyphs.draw(ci, "heavy", m.device, m.slot, Vector2(gx + w1 + gh * 0.3, gy), gh * 0.7, 0.8, true, style)
 	if m.chain_t >= 0.0:
 		var dur2: float = maxf(m.chain_dur, UiLook.WINDOW_MIN_SHOWN)
 		var k2: float = clampf(m.chain_t / dur2, 0.0, 1.0)
@@ -233,6 +255,19 @@ static func _windows(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t:
 		var x0: float = c.x - cw * 0.5 * float(n - 1)
 		for i in range(n):
 			UiIcons.chevron(ci, Vector2(x0 + cw * float(i), c.y - R * 1.38 - th * 2.6), cw * 0.8, 1.0, maxf(2.5, th * 0.6), ccol)
+		if prompts:
+			var gh2: float = maxf(24.0 * s, 20.0)
+			var w3: float = UiGlyphs.width("light", m.device, m.slot, gh2, style)
+			UiGlyphs.draw(ci, "light", m.device, m.slot, Vector2(c.x - w3 * 0.5, c.y - R * 1.38 - th * 2.6 - gh2 * 1.1), gh2, 1.0, true, style)
+
+
+## The press-acknowledged mark: a small shape beside the stance marker, for a human fighter's press, for a moment.
+static func draw_ack(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, s: float) -> void:
+	if m.ack_result == "" or m.ack_t >= 0.45 or m.ai:
+		return
+	var size: float = maxf(26.0 * s, 22.0)
+	var a: float = clampf(1.0 - m.ack_t / 0.45, 0.0, 1.0)
+	UiGlyphs.draw_ack(ci, m.ack_result, c + Vector2(size * 2.3, -R * 1.3 - size * 0.9), size, a)
 
 
 ## The small mark that rides above a fighter while its crown is up: the stance icon, or the hidden mark. It appears

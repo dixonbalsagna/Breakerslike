@@ -36,6 +36,10 @@ var opts: Dictionary = {
 	"crown_always": false,     # accessibility: keep the crown up instead of popping it (low vision)
 	"brink_cue": true,         # the faint persistent ring on the brink; the one thing left over a fighter at rest
 	"info_flashes": true,      # Art's danger-sense, found and searching head flashes; Rendering's FlashView reads this (see ui/data/options.json)
+	"show_prompts": false,     # control prompts (glyphs on the parry ring, the struggle rings and the prompt row); the host turns it on in training and the first matches
+	"glyph_style": "neutral",  # the neutral position-diamond set; "family" (each device family's own letters) stays off until Legal answers
+	"hitstop_scale": 1.0,      # Controls' accessibility option, 0.5 to 1.0; the HUD only carries it (see ui/data/options.json)
+	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
 	"force_redraw": false,     # bench only: redraw every layer every frame, to measure what the caching saves
 }
 var insets := Vector4.ZERO     # left, top, right, bottom safe-area insets from the host (phone notches)
@@ -53,6 +57,8 @@ var _last_swapped := false
 var _swap_fade := 1.0          # the plates' opacity while the columns swap sides
 var _anchors: Array = [{}, {}]
 var _chips: Array = []
+var _chip_text: Array = ["", ""]
+var _chip_text_t: Array = [-1.0, -1.0]
 # The cached layers, back to front (see UiLayer): each redraws only when its signature changes.
 var _l_letter: UiLayer
 var _l_strip_base: UiLayer
@@ -61,9 +67,14 @@ var _l_plate: Array = []
 var _l_sil: Array = []
 var _l_toll: UiLayer
 var _l_strip_marks: UiLayer
-var _l_divider: UiLayer
+var _div_dark: ColorRect       # the divider's two bars: transforms only, no draw commands
+var _div_light: ColorRect
+var _div_key: Array = []
+var _l_ring_base: UiLayer
+var _l_chips: Array = []       # one small node per pane: an edge pointer chip, moved by position
 var _l_ring: UiLayer
-var _l_pointers: UiLayer
+var _l_struggle: UiLayer
+var _l_prompts: Array = []
 var _l_events: UiLayer
 var _l_feed: UiLayer
 var _l_debug: UiLayer
@@ -77,15 +88,21 @@ func _ready() -> void:
 	opts.merge(UiData.option_defaults(), true)   # the options' defaults live in ui/data/options.json
 	_l_letter = _layer(_paint_letterbox)
 	_l_strip_base = _layer(_paint_strip_base)
-	_l_divider = _layer(_paint_divider)
+	_div_dark = _bar()
+	_div_light = _bar()
 	_l_crown = _layer(_paint_crown)
-	_l_pointers = _layer(_paint_pointers)
+	for i in range(2):
+		_l_chips.append(_chip_layer(i))
+	_l_struggle = _layer(_paint_struggle)
+	for i in range(2):
+		_l_prompts.append(_layer(_paint_prompts.bind(i)))
 	for i in range(2):
 		_l_plate.append(_layer(_paint_plate.bind(i)))
 	for i in range(2):
 		_l_sil.append(_layer(_paint_sil.bind(i)))
 	_l_toll = _layer(_paint_toll)
 	_l_strip_marks = _layer(_paint_strip_marks)
+	_l_ring_base = _layer(_paint_ring_base)
 	_l_ring = _layer(_paint_ring)
 	_l_events = _layer(_paint_events)
 	_l_feed = _layer(_paint_feed)
@@ -100,8 +117,25 @@ func _layer(painter: Callable) -> UiLayer:
 	return l
 
 
+func _bar() -> ColorRect:
+	var b := ColorRect.new()
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.visible = false
+	add_child(b)
+	return b
+
+
+## An edge pointer chip: a small layer (not full-rect) that the HUD moves with `position`. Moving it redraws nothing.
+func _chip_layer(slot: int) -> UiLayer:
+	var l: UiLayer = _layer(_paint_chip.bind(slot))
+	l.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	l.size = UiSplit.pointer_size(1.0)
+	l.visible = false
+	return l
+
+
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_divider, _l_crown, _l_pointers, _l_toll, _l_strip_marks, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -187,6 +221,7 @@ func _relayout() -> void:
 	_last_insets = insets
 	_last_swapped = _swapped
 	layout.compute(sz, sil, insets, _swapped)
+	_div_key = [-1]
 	# Each model knows which side its column is on (the plate, the cards and the bark lane mirror by it).
 	for m in hub.models:
 		if m.slot < 2:
@@ -213,6 +248,8 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"crown_always": bool(opts["crown_always"]),
 		"brink_cue": bool(opts["brink_cue"]),
 		"crown_locked": hub.crown_locked(),
+		"prompts": bool(opts["show_prompts"]),
+		"glyph_style": str(opts["glyph_style"]),
 	}
 
 
@@ -231,7 +268,8 @@ func _update_layers() -> void:
 	if bool(opts["show_crown"]) and anchor_fn.is_valid():
 		for m in hub.models:
 			var pop_on: bool = (m.crown_a > 0.01 or bool(opts["crown_always"])) and not hub.crown_locked()
-			if pop_on or m.parry_t >= 0.0 or m.chain_t >= 0.0 or (m.brink and bool(opts["brink_cue"])):
+			var ack_on: bool = m.ack_result != "" and m.ack_t < 0.45 and not m.ai
+			if pop_on or ack_on or m.parry_t >= 0.0 or m.chain_t >= 0.0 or (m.brink and bool(opts["brink_cue"])):
 				crown_on = true
 	_l_crown.update_sig(_frame if crown_on else null)
 
@@ -258,15 +296,44 @@ func _update_layers() -> void:
 		_l_strip_marks.update_sig(null)
 
 	# Camera's split screen: the divider (only while the panes are open), the ring map (with the strip) and the edge pointers.
-	_l_divider.update_sig(UiSplit.divider_sig(_split) if (UiSplit.divider_active(_split) and _lb < 0.5) else null)
-	_l_ring.update_sig(UiSplit.ring_sig(_split) if (UiSplit.ring_active(_split) and layout.ring.size.y > 0.0 and _lb < 0.5) else null)
+	# Cheap by construction: the divider is two bars moved by transform, each chip is a small node moved by position (its
+	# picture redraws only when its arrow or number changes), and the ring's disc and track are drawn once.
+	_update_divider()
+	var ring_on: bool = UiSplit.ring_active(_split) and layout.ring.size.y > 0.0 and _lb < 0.5
+	_l_ring_base.update_sig(1 if ring_on else null)
+	_l_ring.update_sig(UiSplit.ring_sig(_split) if ring_on else null)
 	var chips: Array = []
 	if not _split.is_empty() and anchor_fn.is_valid() and _lb < 0.5:
 		for i in range(mini(2, hub.models.size())):
 			_anchors[i] = anchor_fn.call(i)
 		chips = UiSplit.pointers(layout, _split, _anchors, layout.s)
-	_l_pointers.update_sig(UiSplit.pointers_sig(chips) if not chips.is_empty() else null)
 	_chips = chips
+	var psz: Vector2 = UiSplit.pointer_size(layout.s)
+	for i in range(2):
+		var chip: UiLayer = _l_chips[i]
+		var found: Dictionary = {}
+		for ch in chips:
+			if int(ch["slot"]) == i:
+				found = ch
+		if found.is_empty():
+			chip.visible = false
+			chip.update_sig(null)
+			continue
+		chip.visible = true
+		chip.size = psz
+		chip.position = (found["pos"] as Vector2) - psz * 0.5
+		# The number holds for at least a quarter second, so a fast-changing distance redraws the chip at most four times a second.
+		if str(found["text"]) != _chip_text[i] and (_t - float(_chip_text_t[i]) >= 0.25 or _chip_text[i] == ""):
+			_chip_text[i] = str(found["text"])
+			_chip_text_t[i] = _t
+		chip.update_sig(UiSplit.chip_sig(i, found["dir"], _chip_text[i], 1.0))
+
+	# The finisher struggle (beat rings on the brink fighter) and each column's prompt row.
+	_l_struggle.update_sig(UiStruggle.sig(hub, _frame) if (anchor_fn.is_valid() and not layout.portrait) else null)
+	var prompts_on: bool = bool(opts["show_prompts"])
+	for m in hub.models:
+		if m.slot < _l_prompts.size():
+			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on) if (UiPrompts.has_content(m, prompts_on) and layout.prompts[m.slot].size.y > 0.0) else null)
 
 	var events_on: bool = not hub.cards.is_empty() or not hub.barks.is_empty() or not hub.banner.is_empty() or hub.world_card != null
 	_l_events.update_sig(_frame if events_on else null)
@@ -373,16 +440,68 @@ func info_flashes() -> bool:
 	return bool(opts["info_flashes"])
 
 
-func _paint_divider(ci: CanvasItem) -> void:
-	UiSplit.draw_divider(ci, layout, _split, layout.s)
+func _paint_struggle(ci: CanvasItem) -> void:
+	var slot: int = int(hub.struggle.get("actor", -1))
+	if slot < 0 or not anchor_fn.is_valid():
+		return
+	UiStruggle.draw(ci, hub, layout, anchor_fn.call(slot), layout.s, _o())
+
+
+func _paint_prompts(ci: CanvasItem, slot: int) -> void:
+	if slot >= hub.models.size():
+		return
+	UiPrompts.draw(ci, hub.models[slot], layout.prompts[slot], layout.s, _o())
+
+
+## The device family that last sent input for a slot (kbd, xbox, ps, switch, deck, generic): prompts use its glyphs.
+func set_device(slot: int, family: String) -> void:
+	var m: UiFighterModel = hub.model(slot)
+	if m != null and m.device != family:
+		m.device = family
+
+
+func _paint_ring_base(ci: CanvasItem) -> void:
+	UiSplit.draw_ring_base(ci, layout, layout.s, _o())
 
 
 func _paint_ring(ci: CanvasItem) -> void:
-	UiSplit.draw_ring(ci, layout, hub, _split, layout.s, _o())
+	UiSplit.draw_ring_marks(ci, layout, hub, _split, layout.s, _o())
 
 
-func _paint_pointers(ci: CanvasItem) -> void:
-	UiSplit.draw_pointers(ci, layout, hub, _chips, layout.s, _o())
+func _paint_chip(ci: CanvasItem, slot: int) -> void:
+	for ch in _chips:
+		if int(ch["slot"]) == slot:
+			UiSplit.draw_chip(ci as Control, hub, slot, ch["dir"], _chip_text[slot], layout.s, _o())
+
+
+## The divider's two bars (a dark edge under a light line): transform only, no draw commands. Updated when its rounded
+## geometry changes.
+func _update_divider() -> void:
+	var geo: Dictionary = {}
+	if UiSplit.divider_active(_split) and _lb < 0.5:
+		geo = UiSplit.divider_geometry(layout, _split, layout.s)
+	var key: Array = UiSplit.divider_key(geo)
+	if key == _div_key:
+		return
+	_div_key = key
+	var on: bool = not geo.is_empty()
+	_div_dark.visible = on
+	_div_light.visible = on
+	if not on:
+		return
+	var len: float = float(geo["len"])
+	var w: float = float(geo["w"])
+	var a: float = float(geo["a"])
+	var slam: float = float(geo["slam"])
+	for pair in [[_div_dark, w + 3.0], [_div_light, w]]:
+		var bar: ColorRect = pair[0]
+		var bw: float = pair[1]
+		bar.size = Vector2(len, bw)
+		bar.pivot_offset = bar.size * 0.5
+		bar.position = (geo["mid"] as Vector2) - bar.size * 0.5
+		bar.rotation = float(geo["angle"])
+	_div_dark.color = Color(UiLook.col(UiLook.INK_DARK), 0.5 * a)
+	_div_light.color = Color(UiLook.col(UiLook.INK), lerpf(0.55, 1.0, slam) * a)
 
 
 ## The clear zone of a fighter's pane while the panes are open (a polygon; empty when there is no divider). The fighter's

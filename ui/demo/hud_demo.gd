@@ -3,8 +3,8 @@ extends Control
 ## cards, silhouette, meters, barks, feed and layouts can be reviewed without the sim. Nothing here is part of the game.
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
-## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip
+## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress|controls   --shot=file.png (save a frame)
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts
 ## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
@@ -66,6 +66,8 @@ func _ready() -> void:
 		hud.set_option("reduced_motion", true)
 	if args.has("nofeed"):
 		hud.set_option("show_feed", false)
+	if args.has("prompts"):
+		hud.set_option("show_prompts", true)
 
 
 func _parse_args() -> Dictionary:

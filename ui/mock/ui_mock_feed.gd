@@ -6,10 +6,11 @@ extends RefCounted
 ##
 ## Scenarios: "hero_vs_proud" (the Protagonist against the Anti-hero: heat track, Pride mask, shame, facade crack, Rally),
 ##            "empress_vs_cyborg" (mantle, revision reprint, chip rail, hatch, regrowth),
-##            "placeholders" (the greybox fighters KAI and VORR), "stress" (a seeded flood).
+##            "placeholders" (the greybox fighters KAI and VORR), "stress" (a seeded flood),
+##            "controls" (Controls' rulings: parry clean tail, press acks, the finisher struggle rings, availability, prompts).
 ## Uses its own seeded generator: nothing here touches the sim's random streams.
 
-const SCENARIOS: Array = ["hero_vs_proud", "empress_vs_cyborg", "placeholders", "stress"]
+const SCENARIOS: Array = ["hero_vs_proud", "empress_vs_cyborg", "placeholders", "stress", "controls"]
 
 var scenario: String = "hero_vs_proud"
 var t: float = 0.0
@@ -25,7 +26,7 @@ static func fighters(scn: String) -> Array:
 			return [["empress", "cyborg"], ["THE EMPRESS", "THE CYBORG"]]
 		"placeholders":
 			return [["kai", "vorr"], ["KAI", "VORR"]]
-		"stress":
+		"stress", "controls":
 			return [["protagonist", "anti_hero"], ["PROTAGONIST", "ANTI-HERO"]]
 	return [["protagonist", "anti_hero"], ["PROTAGONIST", "ANTI-HERO"]]
 
@@ -95,6 +96,8 @@ func _build() -> void:
 			_build_placeholders()
 		"stress":
 			_build_stress()
+		"controls":
+			_build_controls()
 		_:
 			_build_hero_proud()
 	_events.sort_custom(func(a, b): return float(a[0]) < float(b[0]))
@@ -269,3 +272,44 @@ func _build_stress() -> void:
 		if _rng.randf() < 0.1:
 			_e(time, {"type": "cinematic_start", "actor": _rng.randi_range(0, 1), "kind": "transformation", "dur": _rng.randf_range(1.0, 3.0)})
 		time += _rng.randf_range(0.05, 0.6)
+
+
+## Controls' rulings, one loop: prompts and availability, a parry with a clean tail and its acks, a chain, then the finisher
+## struggle (docs/controls/rulings.md section 8): count-in at -18 and 0 ticks, beats at 18, 36, 54 after contestOpen, +-4 ticks.
+## P1 (slot 0) is the human, on the brink; the struggle shows to it.
+func _build_controls() -> void:
+	length = 24.0
+	var tk := 1.0 / 60.0
+	_e(0.0, {"type": "match_start"})
+	_st(0.0, 0, {"stance": 0, "tier": 1, "charge": 30.0, "momentum": 30.0, "ego": 20.0, "aura": "#8fd6ff", "ai": false, "device": "xbox"})
+	_st(0.0, 1, {"stance": 1, "tier": 1, "charge": 60.0, "momentum": 45.0, "ego": 50.0, "aura": "#c9a8ff", "ai": true})
+	_world(0.0, 0, 0, 0)
+	# Availability and holds: Special becomes available, then Transform starts to charge under a hold.
+	_e(1.0, {"type": "availability", "actor": 0, "action": "special", "available": true})
+	_st(5.0, 0, {"hold_special": 0.6})
+	_st(6.0, 0, {"hold_special": 0.0})
+	_e(6.0, {"type": "availability", "actor": 0, "action": "transform", "available": true})
+	_st(7.0, 0, {"hold_transform": 0.35})
+	_st(7.8, 0, {"hold_transform": 0.0})
+	# A stance change re-shows the stance prompt.
+	_st(3.0, 0, {"stance": 2})
+	# A parry on P1 with a clean tail: it opens 24 ticks, the last 8 are the clean tail. The press reads early, then clean.
+	_e(9.0, {"type": "window_open", "actor": 0, "kind": "parry", "dur_ticks": 24, "clean_ticks": 8})
+	_e(9.12, {"type": "press_ack", "actor": 0, "kind": "parry", "result": "early"})
+	_e(9.30, {"type": "press_ack", "actor": 0, "kind": "parry", "result": "hit"})
+	# A chain window on P1, a locked press, then a late one.
+	_e(10.5, {"type": "chain", "actor": 0, "n": 2, "dur": 0.7})
+	_e(10.7, {"type": "press_ack", "actor": 0, "kind": "chain", "result": "locked"})
+	_e(11.4, {"type": "press_ack", "actor": 0, "kind": "chain", "result": "late"})
+	# The finisher. P1 is on the brink; the struggle opens 18 ticks before contestOpen, then the beats.
+	_e(13.0, {"type": "brink_enter", "actor": 0})
+	_e(14.0, {"type": "finisher_start", "actor": 1, "target": 0})
+	_e(14.0, {"type": "struggle_open", "actor": 0, "half_width": 4, "lead": 18})
+	var open := 14.0 + 18.0 * tk   # contestOpen
+	_e(open + 18.0 * tk + 1.0 * tk, {"type": "press_ack", "actor": 0, "kind": "light", "result": "hit"})
+	_e(open + 36.0 * tk - 7.0 * tk, {"type": "press_ack", "actor": 0, "kind": "heavy", "result": "early"})
+	_e(open + 54.0 * tk + 9.0 * tk, {"type": "press_ack", "actor": 0, "kind": "light", "result": "late"})
+	_e(open + 66.0 * tk, {"type": "finisher_contest", "actor": 0})
+	_e(open + 66.0 * tk + 0.2, {"type": "banner", "text": "HOLD", "col": "#ffffff", "dur": 1.0})
+	_e(17.0, {"type": "brink_exit", "actor": 0})
+	_e(18.0, {"type": "rally", "actor": 0})

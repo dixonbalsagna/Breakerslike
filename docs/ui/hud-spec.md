@@ -318,7 +318,13 @@ And the anchor record gains the pane: `anchor_fn(slot)` may return `{pos, h, vis
 
 **Per-pane clear zones and anchors.** `UiLayout.pane_zone(pane_b, c, n)` (and `UiHud.pane_clear_zone(slot)`) gives each pane's zone as a convex polygon: the pane's half of the screen, inset by the safe area on the outer edge and by 2% of the width on the divider side, within the vertical band 17.9% to 80.1% of the height (Camera's numbers). `hud_check` proves, at four sizes, both orientations and every tilt from -30 to +30 degrees, that each fighter's anchor (Camera's formula, section 3) is inside its own pane's zone and that the two zones never overlap. Cards and flashes anchor to their fighter's side (the columns above); the crown and the pointer ride with the fighter's screen position from `anchor_fn`.
 
-**Cost.** The divider, ring and pointer layers are cached like the rest: idle, they draw nothing. In a split they redraw when the divider or a fighter moves half a pixel, a few primitives each.
+**Cost.** Rendering's web bench put the three split pieces at about 0.5 ms a frame and about 30 canvas draws. They are now built so that a moving split costs almost no draw commands:
+- **The divider is two `ColorRect` bars** (a dark edge under a light line) that the HUD moves by setting position, rotation and size. It draws no commands at all, and the node update is skipped unless the bar moved half a pixel, turned a fifth of a degree or changed fade or slam.
+- **The ring map is two layers.** The disc and the track never change, so they are drawn once (and on resize). The marks (fighters, held arc, pane bands) redraw when a fighter or a band moves one degree.
+- **Each pointer chip is its own small node** (about nine draw commands) that the HUD moves by position, so following a fighter costs no redraw. The chip redraws only when its arrow turns about 5 degrees, its rounded text changes, or its opacity steps. The distance is rounded (nearest 5 under 100 fighter heights, 25 under 1,000, then "1.2k") and a new text is held for at least 0.25 s, so a chip never flickers on a fast fly-by.
+- `hud_check` covers it: over 300 frames of a fast-moving split the layers redraw about 150 times in all, of which the two chips 50 (at most about five a second each); the divider and the ring base add none.
+
+Measured with `hud_bench` (desktop, 1280 by 720, live build): split frames went from 2.26 to 1.99 ms wall and from 0.535 to 0.497 ms render CPU, and layer redraws over the run fell from 2,501 to 1,612. Split frames still cost more than merged ones (+0.34 ms wall, +0.09 ms render CPU), but that comparison includes Camera's second pane; the HUD's own share is not separable in this bench. **Web is not measured here** (there is no web build in this tree): the target of under 0.15 ms is a projection from the desktop numbers. **Rendering should re-bench the deployed build** (`render --bench`, `window.__benchResult`), split shown against hidden, and tell us the figure.
 
 **Open for Camera through the EP.** (1) Section 3's anchor formula, `P_i = c + ... - s_i (...)` with `s_A = -1`, puts A on B's side as written; the check uses A on the -n side (A's own pane). (2) What `arc_A` and `arc_B` mean when merged (the HUD draws one arc at the midpoint). (3) Whether plates follow `sigma` (here) or the divider swing.
 
@@ -346,21 +352,25 @@ The hub (`ui/core/ui_event_hub.gd`) takes Dictionaries or objects with the same 
 | `hatch_open`, `hatch_close`, `chip_stage` | actor, station, stage | rail, cards |
 | `fold_flicker`, `fold_start`, `unfold` | | world card; `fold_start` is a cinematic |
 | `finisher_start`, `ko` | actor, winner, loser, dur | cinematic mode |
-| `window_open` | actor, kind (parry or chain), dur, n | crown windows |
+| `window_open` | actor, kind (parry or chain), `dur_ticks` (or `dur` seconds), `clean_ticks`, n | crown windows; the last `clean_ticks` are drawn as a thick clean band (section 15) |
+| `struggle_open` | actor, `beats` (default -18, 0, 18, 36, 54), `half_width` (ticks, default 4), `lead` (18) | the finisher's beat rings on the fighter on the brink (section 15) |
+| `finisher_contest` | actor | ends the struggle rings |
+| `press_ack` | actor, kind, result: hit, early, late, locked, miss, stray | a small mark by the fighter's stance marker; during a struggle a hit also marks its beat |
+| `availability` | actor, action (special, transform), available | the prompt chip for that action shows only while it is available |
 | `chain`, `lock_lost` | actor, n, dur | chain chip, `TRAIL LOST` chip |
 | `cinematic_start`, `cinematic_end` | actor, kind, dur | cinematic mode; a `transformation` or `revision` holds the crown down |
 | `bark` | speaker, text, cues, priority, dur, setpiece | bark lane or letterbox band |
 | `banner`, `shake` | text, col, dur; k | banner (renamed); hazard mode |
-| `state` | actor and a patch of stance, tier, momentum, charge, ego, hidden, charging, aura, name, wear | plate |
+| `state` | actor and a patch of stance, tier, momentum, charge, ego, hidden, charging, aura, name, wear, `device`, `hold_special`, `hold_transform`, `avail_*` | plate; prompt row |
 | `world` | civilians, pop0, structures, craters | toll chip (brightens on change) |
 
-**Ignored on purpose:** `revision_fill_reset`, `encore_start`, `encore_end`, `guard_fall` (paperwork and the Encore gauge are diegetic only, Orb), `finisher_contest` (no chance shown), and all particle events.
+**Ignored on purpose:** `revision_fill_reset`, `encore_start`, `encore_end`, `guard_fall` (paperwork and the Encore gauge are diegetic only, Orb), and all particle events (`finisher_contest` shows no chance, it only ends the struggle rings).
 
 **Wish-list** (nothing here changes the sim's rules):
 - **Simulation and Encounter:** `window_open {actor, kind, dur}` when a parry or chain window really opens, and only then; `cinematic_start` and `cinematic_end` with the kind and length; a `hatch_close`; an `internal` flag on core wear from heat.
 - **Narrative:** confirm the card words (`CORE: SCALDED`, `MANTLE`, `STRAINED`, `BOILED`, the chip stages) and whether `HUMBLED` is a card.
 - **Camera:** frame both fighters inside `clear_zone`; say whether edge indicators are wanted.
-- **Controls and Game Feel:** per-device prompt glyphs for stances, parry, chain and signature; the portrait touch reserve (22%).
+- **Controls and Game Feel:** the portrait touch reserve (22%). (The per-device prompt glyphs are done: section 15.)
 
 ## 12. Terms and data
 
@@ -388,7 +398,7 @@ Every word the HUD draws is data in `ui/data/terms.json`, from Narrative's gloss
 
 ## 14. Implementation, hosting and what is missing
 
-**Files** (under `ui/`): `hud/ui_hud.tscn` and `ui_hud.gd`; `core/` (layout, look, data, model, event hub, bark timing, text, icons, body, sim bridge); `widgets/` (crown, silhouette, plate, cards, barks, centre, strip, feed); `data/` (terms, readout profiles); `mock/ui_mock_feed.gd`; `demo/hud_demo.tscn`; `tools/hud_check.gd`. `ui/README.md` has the how-to.
+**Files** (under `ui/`): `hud/ui_hud.tscn` and `ui_hud.gd`; `core/` (layout, look, data, model, event hub, bark timing, text, icons, body, sim bridge); `widgets/` (crown, silhouette, plate, cards, barks, centre, strip, feed, split, glyphs, prompts, struggle); `data/` (terms, readout profiles, options, features, glyphs); `mock/ui_mock_feed.gd`; `demo/hud_demo.tscn`; `tools/hud_check.gd`. `ui/README.md` has the how-to.
 
 **Hosting.** Rendering already hosts `ui/hud/ui_hud.tscn` (setup, `anchor_fn`, `strip_fn`, `UiSimBridge.patch`, `consume_all` from `SimHost.drained`, `advance`). **Revision 2 does not change the hosting interface.** The differences a host may notice: the silhouette option now defaults to off (call `set_option("silhouette", true)` in training and for the accessibility default); two new options, `crown_always` and `brink_cue`; the HUD reads the fighter's `wear` through the bridge.
 
@@ -409,7 +419,7 @@ The wall-time cost of redrawing everything each frame is about +1.1 ms; caching 
 
 **Automated playtest (S2, 12 matches, `ui/tools/hud_playtest.gd`).** Real players are not available here, so this feeds the HUD model with whole live matches (seeds 1 to 12, no renderer). Median match 402 s (min 281, max 597), 2.5 breaks and 21 stage changes a match. The crown is up in **3.9%** of frames (any fighter), a fighter is on the brink 1.2% of the time, cinematic 1.3%, hazard 15%. No card or bark cap is ever exceeded. **Test 9 proxy:** all 30 breaks got their card, the same tick (0.02 s), none missed. **Test 8 proxy:** the fighter the HUD shows as more worn at the midpoint (stages plus brink) is the one who loses in 8 of 10 decided cases (80%; the target is 80% of new players). Tests 10 and 11 need eyes. The run found and fixed a real bug: the sim's event objects carry `dur` 0.0 and an empty `kind`, so a finisher and a transformation cinematic had read as zero seconds; unset now reads as absent (`hud_check` covers it). Findings for others: breaks are 2.5 a match against spec-wounds.md's 4 to 6 (Simulation and QA's k), a chain window arrives without its `n` (so the `CHAIN ×N` chip never fills; Encounter could add `n` to `window_open`), and hazard mode is 15% of the time, which is fine because it only thins the HUD.
 
-**Not built.** The menu flow, character select, pause, settings and results; the full debug overlay and scrub; training's hint line and toggles; the caption levels and speed; a text-size option; screen-reader lines; controller and touch prompts; a bundled font.
+**Not built.** The menu flow, character select, pause, settings and results; the full debug overlay and scrub; training's hint line and toggles; the caption levels and speed; a text-size option; screen-reader lines; touch prompts; a bundled font.
 
 **Risks.**
 - **The crown is now rare.** It pops only for wear, so in the live sim it may almost never show until S2 retunes the wear rate; the plate, the cards and Art's flashes carry the fight until then. The spec's test 9 ("name the region most recently broken") relies on the crown and cards, so recheck it once wear is real.
@@ -418,3 +428,27 @@ The wall-time cost of redrawing everything each frame is about +1.1 ms; caching 
 - **Phone portrait's fight window** is 25 to 31% of the height; landscape should be the phone default.
 - **The event shapes for wish-list items are assumed;** if the sim's differ, only `ui_event_hub.gd` changes.
 - **Region mapping** (head top, legs bottom, arms sides, core inner ring) is a proposal for Orb.
+
+## 15. Controls' rulings: the struggle rings, press marks and prompts
+
+Built against `docs/controls/rulings.md` section 8 and `docs/controls/prompt-glyphs.md`, on a mock (the `controls` scenario) until the sim emits the events. Screenshots: `img/controls-*.png`.
+
+**The finisher struggle.** When `struggle_open {actor, beats, half_width, lead}` arrives, the fighter on the brink sees a target ring and, for each beat, a ring that closes on it. Beats sit at 18, 36 and 54 ticks after `contestOpen`, with a count-in at -18 and 0 (dimmed, shown but not scored). The window is plus or minus `half_width` ticks (4; 8 with the assist), drawn as the width of the target band. Three pips below the ring keep the tally: a star for a hit, an empty circle for a beat not yet scored, a cross for a miss. A press mark (`press_ack`) lands on the beat it hit and stays for 22 ticks. With prompts on, the light glyph shows large and the heavy glyph small beside the ring. Reduced motion steps the closing ring in thirds instead of a smooth close. `finisher_contest` ends the rings. An AI fighter on the brink gets no prompt.
+
+![The finisher struggle rings](img/controls-struggle-b.png)
+
+**Press marks.** `press_ack {actor, kind, result}` draws a small mark by the fighter's stance marker for a moment, for human fighters only: hit is a four-point star, early a ring with a lead dash, locked a square with a bar, late, miss and stray a cross. Every mark has a shape; none is colour-only.
+
+**The parry window.** `window_open` now takes `dur_ticks` and `clean_ticks`. The ring closes over the window on a target ring; the last `clean_ticks` (the clean-parry tail, Controls' reward) are drawn as a thicker white band inside it, with tick marks. Pressing early or late reads on the ack mark. With prompts on, the parry and chain windows show their prompt glyph.
+
+![The parry window with its clean tail](img/controls-parry-clean.png)
+
+**Availability and prompts.** A human fighter gets a row under their cards (landscape only) with four stance chips (the current one lit) and, when `availability` says so and prompts are on, hold chips for Special and Transform with a progress ring (`hold_special`, `hold_transform`, 0 to 1). The stance chips show for 3 s after a stance change or the start of a match and always with prompts on; the hold chips show only while prompts are on and the action is available. No prompt is drawn for an AI fighter. The host calls `UiHud.set_device(slot, family)` with kbd, xbox, ps, switch, deck or generic; the `device` key of a `state` patch does the same.
+
+![The prompt row on an Xbox-family pad](img/controls-prompts.png)
+
+**The glyph set.** Neutral, per Legal's ruling (RL-037): a position diamond with the letters S, E, W, N in place of any console maker's face-button symbols, keycaps for the keyboard, shapes for the D-pad, LT and RT style labels for triggers. The tables are data in `ui/data/glyphs.json`. A second style that uses each family's own letters exists in the data, but the option `glyph_style` offers only `neutral` until Legal clears the letters (the EP to route that).
+
+**New options** (`ui/data/options.json`): `show_prompts` (off; the host turns it on in training and the first three matches), `glyph_style` (neutral), `hitstop_scale` (0.5 to 1.0, step 0.05, default 1.0, accessibility; the HUD stores it and Rendering or Simulation applies it, it changes nothing the HUD draws) and `hotseat_alt_layout` (off; the HUD stores it and Controls' input map reads it).
+
+**Checks.** `hud_check` (894 checks) covers the ring timing at every beat, the count-in, the assist width, the tally, the ack marks and their duration, the clean band, availability, the prompt row rules (human only, options, 3 s fade), the neutral glyph tables for every family, and both the `dur` and `dur_ticks` forms.

@@ -27,30 +27,27 @@ static func divider_active(sp: Dictionary) -> bool:
 	return sp.has("c") and sp.has("n") and float(sp.get("sep", 0.0)) > 0.01 and float(sp.get("fade", 1.0)) > 0.01
 
 
-static func divider_sig(sp: Dictionary) -> Array:
-	var c: Vector2 = sp["c"]
-	var n: Vector2 = sp["n"]
-	return [int(c.x * 2.0), int(c.y * 2.0), int(n.x * 500.0), int(n.y * 500.0), int(float(sp.get("fade", 1.0)) * 50.0), int(float(sp.get("slam", 0.0)) * 20.0)]
-
-
-static func draw_divider(ci: CanvasItem, lay: UiLayout, sp: Dictionary, s: float) -> void:
+## The divider as a rotated bar: {mid, len, angle, w, a, slam}, or {} when the line misses the band. The HUD draws it with
+## two ColorRect nodes (a dark edge under a light line) whose transform it sets, so a moving divider costs no redraw and no
+## draw command at all. Thin, neutral, never a fighter's accent; it stops under the toll chip and above the ring map and
+## the strip, and where it swings through the horizontal it spans the width inside that band.
+static func divider_geometry(lay: UiLayout, sp: Dictionary, s: float) -> Dictionary:
 	var seg: Array = lay.divider_segment(sp["c"], sp["n"])
 	if seg.is_empty():
-		return
-	var a: float = clampf(float(sp.get("fade", 1.0)), 0.0, 1.0)
-	var slam: float = clampf(float(sp.get("slam", 0.0)), 0.0, 1.0)
-	var w: float = maxf(2.0, 2.0 * s) * (1.0 + 1.5 * slam)
+		return {}
 	var p0: Vector2 = seg[0]
 	var p1: Vector2 = seg[1]
-	# A dark edge under a light line: readable over sky, ground and explosions, and neutral (no fighter accent).
-	ci.draw_line(p0, p1, Color(UiLook.col(UiLook.INK_DARK), 0.5 * a), w + 3.0, true)
-	ci.draw_line(p0, p1, Color(UiLook.col(UiLook.INK), lerpf(0.55, 1.0, slam) * a), w, true)
-	# End ticks, perpendicular to the line, so the ends read as ends and not as a cut.
-	var d: Vector2 = (p1 - p0).normalized()
-	var nn := Vector2(-d.y, d.x)
-	var tk: float = 7.0 * s
-	for p in [p0, p1]:
-		ci.draw_line(p - nn * tk, p + nn * tk, Color(UiLook.col(UiLook.INK), 0.5 * a), w, true)
+	var slam: float = clampf(float(sp.get("slam", 0.0)), 0.0, 1.0)
+	return {"mid": (p0 + p1) * 0.5, "len": p0.distance_to(p1), "angle": (p1 - p0).angle(), "w": maxf(2.0, 2.0 * s) * (1.0 + 1.5 * slam),
+		"a": clampf(float(sp.get("fade", 1.0)), 0.0, 1.0), "slam": slam}
+
+
+## Changes only when the bar moves half a pixel or turns a fifth of a degree: the HUD skips the node updates otherwise.
+static func divider_key(geo: Dictionary) -> Array:
+	if geo.is_empty():
+		return []
+	var mid: Vector2 = geo["mid"]
+	return [int(mid.x * 2.0), int(mid.y * 2.0), int(float(geo["len"]) * 2.0), int(float(geo["angle"]) * 300.0), int(float(geo["a"]) * 50.0), int(float(geo["slam"]) * 20.0)]
 
 
 # --- The ring map ---------------------------------------------------------------------------------------------------
@@ -59,10 +56,24 @@ static func ring_active(sp: Dictionary) -> bool:
 	return sp.get("ring") is Dictionary and not (sp["ring"] as Dictionary).is_empty()
 
 
+## The moving marks redraw when a fighter or an arc has moved a whole degree (the ring is about 90 px across, so a degree is
+## under a pixel).
 static func ring_sig(sp: Dictionary) -> Array:
 	var r: Dictionary = sp["ring"]
-	var k: float = 57.3 * 2.0   # half degrees
-	return [int(float(r.get("angle_A", 0.0)) * k), int(float(r.get("angle_B", 0.0)) * k), int(r.get("sigma", 1)), int(float(r.get("arc_A", 0.0)) * k / 2.0), int(float(r.get("arc_B", 0.0)) * k / 2.0), int(float(r.get("sep", 0.0)) * 20.0)]
+	var k: float = 57.3   # degrees
+	return [int(float(r.get("angle_A", 0.0)) * k), int(float(r.get("angle_B", 0.0)) * k), int(r.get("sigma", 1)), int(float(r.get("arc_A", 0.0)) * k / 2.0), int(float(r.get("arc_B", 0.0)) * k / 2.0), int(float(r.get("sep", 0.0)) * 10.0)]
+
+
+## The ring's static base, drawn once: the dark disc and the track. Nothing marks the seam (pillar 1).
+static func draw_ring_base(ci: CanvasItem, lay: UiLayout, s: float, o: Dictionary) -> void:
+	var rect: Rect2 = lay.ring
+	if rect.size.y <= 0.0:
+		return
+	var a: float = float(o.get("plate_alpha", 1.0))
+	var c: Vector2 = rect.get_center()
+	var r: float = rect.size.x * 0.5 - 6.0 * s
+	ci.draw_circle(c, r + 5.0 * s, Color(UiLook.col(UiLook.SCRIM), 0.4 * a))
+	ci.draw_arc(c, r, 0.0, TAU, 48, Color(UiLook.col(UiLook.INK), 0.45 * a), maxf(2.0, 2.0 * s), true)
 
 
 ## The shortest signed angular separation from A to B, in radians (-PI to PI).
@@ -70,7 +81,7 @@ static func shortest(angle_a: float, angle_b: float) -> float:
 	return fposmod(angle_b - angle_a + PI, TAU) - PI
 
 
-static func draw_ring(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, sp: Dictionary, s: float, o: Dictionary) -> void:
+static func draw_ring_marks(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, sp: Dictionary, s: float, o: Dictionary) -> void:
 	var rect: Rect2 = lay.ring
 	if rect.size.y <= 0.0:
 		return
@@ -83,8 +94,6 @@ static func draw_ring(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, sp: Dictio
 	var sigma: int = 1 if int(rg.get("sigma", 1)) >= 0 else -1
 	var sep: float = float(rg.get("sep", 0.0))
 	var top: float = -PI * 0.5   # planet angle 0 is drawn at the top; the seam is not marked (pillar 1)
-	ci.draw_circle(c, r + 5.0 * s, Color(UiLook.col(UiLook.SCRIM), 0.4 * a))
-	ci.draw_arc(c, r, 0.0, TAU, 48, Color(UiLook.col(UiLook.INK), 0.45 * a), maxf(2.0, 2.0 * s), true)
 	var bw: float = maxf(4.0, 4.5 * s)
 	# The viewed arcs: one per open pane (centred on its fighter), or the single camera's arc at the midpoint.
 	var ink_dim := Color(UiLook.col(UiLook.INK_DIM), 0.5 * a)
@@ -178,63 +187,58 @@ static func _clamp_to(p: Vector2, lay: UiLayout) -> Vector2:
 	return Vector2(clampf(p.x, lay.safe.position.x + h.x, lay.safe.end.x - h.x), clampf(p.y, lay.safe.position.y + h.y, lay.safe.end.y - h.y))
 
 
+## The distance as text, ROUNDED so the chip redraws a few times a second and not every frame while the fighters move: to
+## the nearest 5 under 100, the nearest 25 under 1,000, then tenths of a thousand ("1.2k").
 static func _dist_text(bh: float) -> String:
 	if bh >= 1000.0:
 		return "%.1fk" % (bh / 1000.0)
-	return str(int(round(bh)))
+	if bh >= 100.0:
+		return str(int(round(bh / 25.0)) * 25)
+	return str(int(round(bh / 5.0)) * 5)
 
 
-static func pointers_sig(chips: Array) -> Array:
-	var out: Array = []
-	for c in chips:
-		out.append([int(c["slot"]), int(c["pos"].x * 2.0), int(c["pos"].y * 2.0), int(c["dir"].x * 100.0), int(c["dir"].y * 100.0), c["text"]])
-	return out
+## What a chip's picture depends on (its position does not: the chip is a node the HUD moves, so following a fighter costs no
+## redraw). The arrow's direction changes slowly and is rounded to about 5 degrees; the distance text is rounded (see _dist_text).
+static func chip_sig(slot: int, dir: Vector2, text: String, alpha: float) -> Array:
+	return [slot, int(dir.x * 12.0), int(dir.y * 12.0), text, int(alpha * 20.0)]
 
 
-## One chip: the arrow along `dir`, the rival's strip shape (circle for A, diamond for B), and the distance with a small
-## height mark ("in fighter heights"). Neutral colours; the marker takes the rival's accent, as on the strip.
-static func draw_pointers(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, chips: Array, s: float, o: Dictionary) -> void:
+## One chip, drawn at the centre of `ci` (a node of pointer_size): the arrow along `dir`, the rival's strip shape (circle for A,
+## diamond for B), and the distance with a small height mark ("in fighter heights"). Neutral colours; the marker takes the
+## rival's accent, as on the strip. About nine draw commands, drawn only when the arrow or the number changes.
+static func draw_chip(ci: Control, hub: UiEventHub, slot: int, dir: Vector2, text: String, s: float, o: Dictionary) -> void:
 	var a: float = float(o.get("plate_alpha", 1.0))
-	var sz: Vector2 = pointer_size(s)
+	var sz: Vector2 = ci.size
+	var p: Vector2 = sz * 0.5
 	var fs: int = UiText.px(20.0, s)
+	var rival: UiFighterModel = hub.model(1 - slot)
 	UiText.no_outline = true
-	UiText.defer = true
-	for ch in chips:
-		var slot: int = int(ch["slot"])
-		var rival: UiFighterModel = hub.model(1 - slot)
-		var p: Vector2 = ch["pos"]
-		var dir: Vector2 = ch["dir"]
-		var box := Rect2(p - sz * 0.5, sz)
-		UiIcons.rrect(ci, box, sz.y * 0.4, Color(UiLook.col(UiLook.SCRIM), 0.6 * a), Color(UiLook.col(UiLook.EDGE), 0.35 * a), 1.2)
-		# The arrow, along dir, at the chip's rival-facing end.
-		var ax: Vector2 = p + dir * (sz.x * 0.5 - sz.y * 0.55)
-		var perp := Vector2(-dir.y, dir.x)
-		var hl: float = sz.y * 0.32
-		var tail: Vector2 = ax - dir * hl * 1.6
-		ci.draw_line(tail, ax, Color(UiLook.col(UiLook.INK), 0.9 * a), maxf(2.0, sz.y * 0.09), true)
-		UiIcons.fill_poly(ci, PackedVector2Array([ax + dir * hl * 0.9, ax - dir * hl * 0.3 + perp * hl * 0.8, ax - dir * hl * 0.3 - perp * hl * 0.8]), Color(UiLook.col(UiLook.INK), 0.95 * a))
-		# The rival's marker on the far end and the distance in the middle.
-		var mc: Vector2 = p - dir * (sz.x * 0.5 - sz.y * 0.55)
-		var col: Color = rival.aura if rival != null else Color.WHITE
-		var msz: float = sz.y * 0.2
-		if (1 - slot) == 0:
-			ci.draw_circle(mc, msz, Color(col, a))
-			ci.draw_arc(mc, msz, 0.0, TAU, 12, Color(0, 0, 0, a), 1.2, true)
-		else:
-			var d := PackedVector2Array([mc + Vector2(0, -msz * 1.25), mc + Vector2(msz * 1.25, 0), mc + Vector2(0, msz * 1.25), mc + Vector2(-msz * 1.25, 0)])
-			UiIcons.fill_poly(ci, d, Color(col, a))
-			var cl: PackedVector2Array = d.duplicate()
-			cl.append(d[0])
-			ci.draw_polyline(cl, Color(0, 0, 0, a), 1.2, true)
-		var tw: float = UiText.width(ch["text"], fs)
-		var tx: float = p.x - tw * 0.5 - sz.y * 0.1
-		UiText.draw(ci, ch["text"], Vector2(tx, p.y + float(fs) * 0.35), fs, Color(UiLook.col(UiLook.INK), a), -1)
-		# A small height mark after the number: a vertical double-ended stroke (the unit is a fighter's height).
-		var hx: float = tx + tw + sz.y * 0.28
-		var hh: float = sz.y * 0.28
-		var ink := Color(UiLook.col(UiLook.INK_DIM), a)
-		ci.draw_line(Vector2(hx, p.y - hh), Vector2(hx, p.y + hh), ink, 1.6, true)
-		ci.draw_line(Vector2(hx - 3.0 * s, p.y - hh), Vector2(hx + 3.0 * s, p.y - hh), ink, 1.6, true)
-		ci.draw_line(Vector2(hx - 3.0 * s, p.y + hh), Vector2(hx + 3.0 * s, p.y + hh), ink, 1.6, true)
-	UiText.flush(ci)
+	UiIcons.rrect(ci, Rect2(Vector2.ZERO, sz), sz.y * 0.4, Color(UiLook.col(UiLook.SCRIM), 0.6 * a), Color(UiLook.col(UiLook.EDGE), 0.35 * a), 1.2)
+	# The arrow, along dir, at the chip's rival-facing end.
+	var ax: Vector2 = p + dir * (sz.x * 0.5 - sz.y * 0.55)
+	var perp := Vector2(-dir.y, dir.x)
+	var hl: float = sz.y * 0.32
+	var ink := Color(UiLook.col(UiLook.INK), 0.95 * a)
+	ci.draw_line(ax - dir * hl * 1.6, ax, ink, maxf(2.0, sz.y * 0.09), true)
+	UiIcons.fill_poly(ci, PackedVector2Array([ax + dir * hl * 0.9, ax - dir * hl * 0.3 + perp * hl * 0.8, ax - dir * hl * 0.3 - perp * hl * 0.8]), ink)
+	# The rival's marker on the far end.
+	var mc: Vector2 = p - dir * (sz.x * 0.5 - sz.y * 0.55)
+	var col: Color = rival.aura if rival != null else Color.WHITE
+	var msz: float = sz.y * 0.2
+	if (1 - slot) == 0:
+		ci.draw_circle(mc, msz, Color(col, a))
+		ci.draw_arc(mc, msz, 0.0, TAU, 12, Color(0, 0, 0, a), 1.2, true)
+	else:
+		var d := PackedVector2Array([mc + Vector2(0, -msz * 1.25), mc + Vector2(msz * 1.25, 0), mc + Vector2(0, msz * 1.25), mc + Vector2(-msz * 1.25, 0)])
+		UiIcons.fill_poly(ci, d, Color(col, a))
+		var cl: PackedVector2Array = d.duplicate()
+		cl.append(d[0])
+		ci.draw_polyline(cl, Color(0, 0, 0, a), 1.2, true)
+	# The distance in the middle, then a small height mark after it (the unit is a fighter's height): one multi-line.
+	var tw: float = UiText.width(text, fs)
+	var tx: float = p.x - tw * 0.5 - sz.y * 0.1
+	UiText.draw(ci, text, Vector2(tx, p.y + float(fs) * 0.35), fs, Color(UiLook.col(UiLook.INK), a), -1)
+	var hx: float = tx + tw + sz.y * 0.28
+	var hh: float = sz.y * 0.28
+	ci.draw_multiline(PackedVector2Array([Vector2(hx, p.y - hh), Vector2(hx, p.y + hh), Vector2(hx - 3.0 * s, p.y - hh), Vector2(hx + 3.0 * s, p.y - hh), Vector2(hx - 3.0 * s, p.y + hh), Vector2(hx + 3.0 * s, p.y + hh)]), Color(UiLook.col(UiLook.INK_DIM), a), 1.6)
 	UiText.no_outline = false

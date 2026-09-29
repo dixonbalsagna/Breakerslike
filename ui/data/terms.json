@@ -61,6 +61,7 @@
     "gasp": "gasp", "roar": "roar", "munch": "munching", "chirp": "chirp", "static": "static",
     "cackle": "cackle", "snort": "snort", "shriek": "shriek"
   },
+  "prompt": { "special": "SPECIAL", "transform": "TRANSFORM" },
   "planet": "EVERHOLD",
   "places": [
     { "x0": 0,    "x1": 1200, "name": "LONGWATER" },

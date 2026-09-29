@@ -28,10 +28,12 @@ func _run() -> void:
 	_hub_rules()
 	_crown_rules()
 	_fx_defaults()
+	_controls_rules()
 	_scenarios()
 	await _draw_smoke()
 	await _layer_rules()
 	await _split_rules()
+	await _split_cost()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -547,7 +549,7 @@ func _layer_rules() -> void:
 	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
 	hud.anchor_fn = func(slot): return {"pos": Vector2(400.0 + 400.0 * float(slot), 400.0), "h": 120.0, "visible": true}
 	hud.strip_fn = func(): return {"W": 9600.0, "segs": [[0.0, 4800.0, "ocean"], [4800.0, 9600.0, "city"]], "cam_x": 100.0, "cam_w": 2000.0, "dead": [], "fighters": [{"x": 50.0, "slot": 0, "hidden": false, "aura": Color.WHITE, "seen_x": 50.0}, {"x": 900.0, "slot": 1, "hidden": false, "aura": Color.WHITE, "seen_x": 900.0}]}
-	for i in range(40):
+	for i in range(260):
 		hud.advance(1.0 / 60.0)
 		await process_frame
 	var base: int = hud.redraw_count()
@@ -674,7 +676,7 @@ func _split_rules() -> void:
 		hud.advance(1.0 / 60.0)
 		await process_frame
 	_ok(not hud.layout.swapped and hud.hub.model(0).left_side and not hud.hub.model(1).left_side, "hud split: sigma +1 keeps slot 0 on the left")
-	_ok(hud._l_divider.sig != null and hud._l_ring.sig != null and hud._l_pointers.sig != null, "hud split: the divider, the ring map and the pointers draw while the panes are open")
+	_ok(hud._div_light.visible and hud._div_dark.visible and hud._l_ring.sig != null and hud._l_ring_base.sig != null and hud._l_chips[0].visible and hud._l_chips[1].visible and hud._l_chips[0].sig != null, "hud split: the divider bars, the ring map and both pointer chips show while the panes are open")
 	_ok(hud._chips.size() == 2, "hud split: one pointer chip per pane")
 	var bad_chip := 0
 	var lay2: UiLayout = hud.layout
@@ -688,7 +690,7 @@ func _split_rules() -> void:
 		if (ch["pos"] - Vector2(640.0, 360.0)).dot(n0) * (-1.0 if slot == 0 else 1.0) <= 0.0 or not lay2.safe.grow(1.0).has_point(ch["pos"]):
 			bad_chip += 1
 	_ok(bad_chip == 0, "hud split: each pointer points the rival's way and sits in its own pane inside the safe area")
-	_ok(hud._chips[0]["text"] == str(int(round(40000.0 / 75.0))), "hud split: the distance is in fighter heights (from the ring's angles and the planet's size)")
+	_ok(hud._chips[0]["text"] == str(int(round(40000.0 / 75.0 / 25.0)) * 25), "hud split: the distance is in fighter heights (from the ring's angles and the planet's size)")
 	_ok(hud.pane_clear_zone(0).size() >= 3 and hud.pane_clear_zone(1).size() >= 3, "hud split: pane_clear_zone gives each fighter's zone")
 	st["sigma"] = -1.0
 	for i in range(30):
@@ -699,7 +701,7 @@ func _split_rules() -> void:
 	for i in range(6):
 		hud.advance(1.0 / 60.0)
 		await process_frame
-	_ok(hud._l_divider.sig == null and hud._l_pointers.sig == null and hud._l_ring.sig != null, "hud split: merged, the divider and the pointers clear and the ring map stays")
+	_ok(not hud._div_light.visible and not hud._l_chips[0].visible and not hud._l_chips[1].visible and hud._l_ring.sig != null, "hud split: merged, the divider and the chips clear and the ring map stays")
 	# One camera, no split: pointers only when the rival is off screen.
 	hud.split_fn = func(): return {"sep": 0.0, "sigma": 1.0, "pointer": "always", "ring": {"angle_A": 0.0, "angle_B": 1.0, "sigma": 1, "arc_A": 0.3, "arc_B": 0.3, "swing": 0.0, "sep": 0.0}}
 	hud.anchor_fn = func(slot): return {"pos": Vector2(300.0 + 500.0 * float(slot), 300.0), "h": 90.0, "visible": true}
@@ -745,3 +747,126 @@ func _fx_defaults() -> void:
 	hub = _hub()
 	hub.consume(wo)
 	_ok(hub.model(1).parry_t == 0.0 and is_equal_approx(hub.model(1).parry_dur, 0.33), "fx defaults: the sim's window_open (actor, kind, dur) opens the parry ring")
+
+
+# --- Controls' rulings: the struggle rings, press acks, window ticks, availability, glyphs -------------------------------
+
+func _controls_rules() -> void:
+	# Glyph tables: every action has an entry for every device family, in the neutral style, and the neutral style prints
+	# only position letters and plain text marks (no console maker's letters).
+	var g: Dictionary = UiData.glyphs()
+	var fams: Array = g.get("families", [])
+	var missing := 0
+	for act in (g.get("actions", {}) as Dictionary):
+		for fam in fams:
+			for slot in range(2):
+				if UiGlyphs.spec(act, fam, slot).is_empty() or str(UiGlyphs.spec(act, fam, slot).get("kind", "")) == "":
+					missing += 1
+	_ok(missing == 0 and fams.size() == 6, "glyphs: every action has an entry for every device family (%d missing)" % missing)
+	_ok(UiGlyphs.spec("light", "xbox", 0)["label"] == "W" and UiGlyphs.spec("signature", "switch", 0)["label"] == "E" and UiGlyphs.spec("dash", "ps", 0)["label"] == "S", "glyphs: the neutral style prints position letters (W, E, S), not a maker's letters")
+	_ok(UiGlyphs.spec("light", "xbox", 0, "family")["label"] == "X" and UiGlyphs.spec("signature", "switch", 0, "family")["label"] == "A", "glyphs: the family style exists in the data (X on xbox, A on switch) but is not the default")
+	_ok(UiGlyphs.spec("light", "kbd", 0)["label"] == "F" and UiGlyphs.spec("light", "kbd", 1)["label"] == "," and UiGlyphs.spec("charge", "kbd", 1)["label"] == ";", "glyphs: keyboard slots show their own keys")
+	_ok(UiGlyphs.spec("stance_press", "xbox", 0)["kind"] == "dpad" and UiGlyphs.spec("stance_press", "xbox", 0)["dir"] == "up", "glyphs: stances are D-pad shapes, never arrow characters")
+	# Options: hitstop_scale and the hot-seat layout are in the data.
+	var od: Dictionary = UiData.option_defaults()
+	_ok(is_equal_approx(float(od.get("hitstop_scale", -1.0)), 1.0) and od.get("hotseat_alt_layout") == false and od.get("show_prompts") == false, "options: hitstop_scale defaults to 1.0, the hot-seat layout to off, prompts to off")
+	var o: Dictionary = UiData.options()
+	_ok(float(o["hitstop_scale"].get("min", 0.0)) == 0.5 and float(o["hitstop_scale"].get("max", 0.0)) == 1.0 and o["hitstop_scale"].get("accessibility", false), "options: hitstop_scale runs 0.5 to 1.0 and is an accessibility option")
+	# The struggle: beats at -18, 0 (count-in), 18, 36, 54; a hit marks its beat, an untouched beat becomes a miss; no numbers.
+	var hub := _hub()
+	hub.consume({"type": "struggle_open", "actor": 1})
+	_ok(not hub.struggle.is_empty() and hub.struggle["beats"] == [-18, 0, 18, 36, 54] and int(hub.struggle["half"]) == 4 and int(hub.struggle["resolve"]) == 66, "struggle: opens with Controls' defaults (beats -18, 0, 18, 36, 54; +-4 ticks; resolve 66)")
+	_ok(is_equal_approx(float(hub.struggle["t"]), -18.0 / 60.0), "struggle: the count-in starts 18 ticks before contestOpen")
+	_step(hub, 18.0 / 60.0 + 18.0 / 60.0)   # to tick 18 after contestOpen
+	hub.consume({"type": "press_ack", "actor": 1, "kind": "struggle", "result": "hit"})
+	_ok(hub.struggle["res"][18] == "hit" and hub.model(1).ack_result == "hit", "struggle: a hit press marks the beat it is on")
+	_step(hub, 46.0 / 60.0)   # past beat 36 and 54 with no press
+	_ok(hub.struggle["res"][36] == "miss" and hub.struggle["res"][54] == "miss", "struggle: beats nobody pressed become misses")
+	hub.consume({"type": "finisher_contest", "target": 1, "chance": 0.3, "survived": true})
+	_step(hub, 0.7)
+	_ok(hub.struggle.is_empty(), "struggle: it ends shortly after the contest resolves, and the chance is never shown")
+	# The assist doubles the band: +-8 ticks is twice as wide a ring as +-4.
+	var span := 100.0
+	_ok(is_equal_approx(UiStruggle.ring_radius(50.0, span, 18.0, false), 150.0) and is_equal_approx(UiStruggle.ring_radius(50.0, span, 0.0, false), 50.0) and is_equal_approx(UiStruggle.ring_radius(50.0, span, 9.0, false), 100.0), "struggle: a ring closes linearly and lands on the target exactly on the beat")
+	_ok(is_equal_approx(UiStruggle.ring_radius(50.0, span, 9.0, true), 50.0 + 100.0 * 0.667) or absf(UiStruggle.ring_radius(50.0, span, 9.0, true) - 116.67) < 0.1, "struggle: reduced motion steps the ring in thirds instead of easing")
+	# press_ack: distinct shapes per result; only the human's press draws (checked at draw), and a result is required.
+	hub = _hub()
+	hub.consume({"type": "press_ack", "actor": 0, "kind": "attack", "result": "locked"})
+	_ok(hub.model(0).ack_result == "locked" and hub.model(0).ack_t == 0.0, "press_ack: a locked press is recorded")
+	hub.consume({"type": "press_ack", "actor": 0, "kind": "attack", "result": ""})
+	_ok(hub.model(0).ack_result == "locked", "press_ack: an empty result is ignored")
+	_ok(UiGlyphs.ACK_RESULTS.has("hit") and UiGlyphs.ACK_RESULTS.has("early") and UiGlyphs.ACK_RESULTS.has("locked"), "press_ack: hit, early and locked each have a shape")
+	# window_open with ticks and the clean-parry tail.
+	hub = _hub()
+	hub.consume({"type": "window_open", "actor": 1, "kind": "parry", "dur_ticks": 20, "clean_ticks": 6})
+	_ok(is_equal_approx(hub.model(1).parry_dur, 20.0 / 60.0) and is_equal_approx(hub.model(1).parry_clean, 0.3), "window: dur_ticks sets the length and clean_ticks the clean tail's share (6 of 20)")
+	hub.consume({"type": "window_open", "actor": 0, "kind": "parry", "dur": 0.33})
+	_ok(hub.model(0).parry_clean == 0.0, "window: no clean_ticks means no clean band")
+	var wo := SimState.FxEvent.new()
+	wo.type = "window_open"
+	wo.actor = 0.0
+	wo.kind = "chain"
+	wo.dur = 0.6
+	hub.consume(wo)
+	_ok(hub.model(0).chain_t == 0.0 and hub.model(0).chain_n == 0, "window: a chain window object from the sim opens without an n")
+	# Availability: Special and Transform prompts appear only while the action can be used.
+	hub = _hub()
+	_ok(not hub.model(0).avail["transform"] and not hub.model(0).avail["special"], "availability: nothing is available at first")
+	hub.consume({"type": "availability", "actor": 0, "action": "transform"})
+	hub.consume({"type": "availability", "actor": 0, "action": "special", "available": true})
+	_ok(hub.model(0).avail["transform"] and hub.model(0).avail["special"], "availability: an availability event turns the action on")
+	hub.consume({"type": "availability", "actor": 0, "action": "special", "available": false})
+	_ok(not hub.model(0).avail["special"] and hub.model(0).avail["transform"], "availability: and off")
+	hub.patch(0, {"hold_transform": 0.5})
+	_ok(is_equal_approx(float(hub.model(0).hold["transform"]), 0.5), "availability: the hold ring's progress is a state patch")
+	# The prompt row: nothing for an AI fighter, the stance prompt for 3 s after a change, hold prompts only with prompts on.
+	var m: UiFighterModel = hub.model(0)
+	m.ai = false
+	m.stance_prompt_t = 99.0
+	_ok(not UiPrompts.has_content(m, false) or false, "prompts: with prompts off the stance prompt is gone after 3 s and availability alone does not show")
+	hub.patch(0, {"stance": 2})
+	_ok(UiPrompts.has_content(m, false) and UiPrompts.stance_visible(m, false), "prompts: a stance change shows the stance prompt for a moment")
+	_step(hub, 3.2)
+	_ok(not UiPrompts.stance_visible(m, false), "prompts: and it is gone after 3 s")
+	_ok(UiPrompts.has_content(m, true), "prompts: with prompts on the row shows availability and the stance prompt")
+	m.ai = true
+	_ok(not UiPrompts.has_content(m, true), "prompts: an AI fighter has no device and gets no prompts")
+	# The layout keeps the prompt rows in the outer columns, clear of the fight.
+	var lay := UiLayout.new()
+	lay.compute(Vector2(1920, 1080), false)
+	_ok(lay.prompts[0].size.y > 0.0 and not lay.prompts[0].intersects(lay.clear_zone) and not lay.prompts[1].intersects(lay.clear_zone) and not lay.prompts[0].intersects(lay.cards[0]), "prompts: the rows sit under the cards, outside the clear zone")
+
+
+func _split_cost() -> void:
+	# The split layers are cheap by construction: a divider that turns and moves costs no redraw, a chip that follows a fighter
+	# costs none, and the distance text is rounded so the chip redraws a few times a second.
+	_ok(UiSplit._dist_text(47.0) == "45" and UiSplit._dist_text(48.0) == "50" and UiSplit._dist_text(237.0) == "225" and UiSplit._dist_text(1234.0) == "1.2k", "split cost: the distance rounds to 5, then 25, then tenths of a thousand")
+	root.size = Vector2i(1280, 720)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	var st := {"t": 0.0}
+	hud.split_fn = func():
+		var phi: float = 0.3 * sin(st["t"] * 0.7)
+		return {"sep": 1.0, "c": Vector2(640.0, 360.0), "n": Vector2(cos(phi), -sin(phi)), "gap": 3.0, "fade": 1.0, "sigma": 1.0, "pointer": "split", "dist_bh": 60.0 + 40.0 * sin(st["t"]),
+			"ring": {"angle_A": 1.0 + 0.5 * sin(st["t"]), "angle_B": 2.0, "sigma": 1, "arc_A": 0.3, "arc_B": 0.3, "swing": 0.0, "sep": 1.0}}
+	hud.anchor_fn = func(slot): return {"pos": Vector2(300.0 + 700.0 * float(slot) + 40.0 * sin(st["t"] * 2.0), 400.0), "h": 90.0, "visible": true}
+	hud.strip_fn = func(): return {"W": 9600.0, "segs": [[0.0, 9600.0, "ocean"]], "cam_x": 0.0, "cam_w": 2000.0, "dead": [], "fighters": []}
+	for i in range(300):
+		st["t"] += 1.0 / 60.0
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	var r0: int = hud.redraw_count()
+	var chip0: int = hud._l_chips[0].redraws + hud._l_chips[1].redraws
+	var frames := 300
+	for i in range(frames):
+		st["t"] += 1.0 / 60.0
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	var chip_redraws: int = hud._l_chips[0].redraws + hud._l_chips[1].redraws - chip0
+	var all_redraws: int = hud.redraw_count() - r0
+	print("  split cost: over %d frames of a moving split, %d layer redraws (%d of them chips)" % [frames, all_redraws, chip_redraws])
+	_ok(chip_redraws <= frames * 10 / 60 + 4, "split cost: two chips redraw at most about five times a second each (%d in %d)" % [chip_redraws, frames])
+	_ok(all_redraws <= frames, "split cost: the whole moving split redraws at most one layer a frame on average (%d in %d)" % [all_redraws, frames])
+	hud.queue_free()
+	await process_frame

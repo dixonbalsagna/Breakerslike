@@ -64,6 +64,7 @@ var barks: Array = []            # visible Bark
 var bark_wait: Array = []        # queued Bark
 var feed: Array = []             # {t, tag, sub}
 var banner: Dictionary = {}      # {text, col, dur, age} or empty
+var struggle: Dictionary = {}    # the finisher struggle on the brink fighter: {actor, beats, half, resolve, t, res, end_t}
 var toll: Dictionary = {"civilians": 0, "pop0": 0, "structures": 0, "craters": 0}
 var mode: int = Mode.NORMAL
 var cinematic_left: float = 0.0
@@ -89,6 +90,7 @@ func reset() -> void:
 	bark_wait.clear()
 	feed.clear()
 	banner = {}
+	struggle = {}
 	toll = {"civilians": 0, "pop0": 0, "structures": 0, "craters": 0}
 	toll_age = 99.0
 	mode = Mode.NORMAL
@@ -122,7 +124,7 @@ func model(slot: int) -> UiFighterModel:
 # --- Event intake -------------------------------------------------------------------------------------------------
 
 const _FIELDS: Array = ["type", "actor", "target", "region", "stage", "internal", "n", "text", "dur", "k", "col", "kind",
-	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived", "attacker", "victim", "tier", "cover"]
+	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived", "attacker", "victim", "tier", "cover", "beats", "half_width", "resolve", "lead", "result", "action", "available", "dur_ticks", "clean_ticks"]
 
 
 ## Any event (a Dictionary, or an object with these properties such as the sim's FxEvent) as a Dictionary.
@@ -288,6 +290,18 @@ func consume(e) -> void:
 			if m != null and UiData.feature("hiding"):
 				m.lost_trail = true
 				_lost_trail_left[m.slot] = float(d.get("dur", 2.0))
+		"struggle_open":
+			_on_struggle_open(d)
+		"finisher_contest":
+			if not struggle.is_empty():
+				struggle["end_t"] = float(struggle["t"])
+		"press_ack":
+			_on_press_ack(m, d)
+		"availability":
+			if m != null:
+				var act: String = str(d.get("action", ""))
+				if m.avail.has(act):
+					m.avail[act] = bool(d.get("available", true)) if d.get("available") != null else true
 		"bark":
 			_on_bark(d)
 		"banner":
@@ -305,7 +319,7 @@ func consume(e) -> void:
 				toll_age = 0.0
 		# Events the HUD deliberately does not draw (docs/ui/hud-spec.md section 9): the Empress's paperwork is diegetic
 		# only (Orb), the Encore's mend gauge reads through her posture, damage numbers would be a health bar in disguise.
-		"revision_fill_reset", "encore_start", "encore_end", "guard_fall", "finisher_contest", "spark", "ring", \
+		"revision_fill_reset", "encore_start", "encore_end", "guard_fall", "spark", "ring", \
 		"debris", "dust", "splash", "fire", "after", "charge", "crater", "scorch", "beamSplash", "tick":
 			pass
 		_:
@@ -319,7 +333,8 @@ func patch(actor: int, d: Dictionary) -> void:
 	var m: UiFighterModel = model(actor)
 	if m == null:
 		return
-	for k in ["stance", "tier", "charge", "momentum", "ego", "hidden", "charging", "sig_cost", "name", "title", "ai", "chip_station"]:
+	var old_stance: int = m.stance
+	for k in ["stance", "tier", "charge", "momentum", "ego", "hidden", "charging", "sig_cost", "name", "title", "ai", "chip_station", "device"]:
 		if d.has(k):
 			# Hiding is removed from the base game (a future fighter); with the flag off the hidden state is ignored.
 			m.set(k, (bool(d[k]) and UiData.feature("hiding")) if k == "hidden" else d[k])
@@ -329,6 +344,13 @@ func patch(actor: int, d: Dictionary) -> void:
 		m.aura = UiLook.col(d["aura"])
 	if d.has("stance"):
 		m.stance = clampi(int(d["stance"]), 0, 3)
+		if m.stance != old_stance:
+			m.stance_prompt_t = 0.0   # the stance prompt shows for a moment whenever the stance changes
+	for act in ["transform", "special"]:
+		if d.has("hold_" + act):
+			m.hold[act] = clampf(float(d["hold_" + act]), 0.0, 1.0)
+		if d.has("avail_" + act):
+			m.avail[act] = bool(d["avail_" + act])
 	if d.has("tier"):
 		m.tier = clampi(int(d["tier"]), 1, 4)
 	if d.has("wear") and d["wear"] is Dictionary:
@@ -446,17 +468,76 @@ func _on_facade(m: UiFighterModel) -> void:
 
 # --- Windows, cinematics, barks -----------------------------------------------------------------------------------
 
+const TICK := 1.0 / 60.0
+const STRUGGLE_BEATS: Array = [-18, 0, 18, 36, 54]   # docs/controls/rulings.md section 8: count-in at -18 and 0, scored 18, 36, 54
+
+
+## The finisher struggle opens for the fighter on the brink (Controls, rulings section 8). Beats are ticks relative to
+## contestOpen; those at or below 0 are the count-in (shown, not scored). half_width is +-4 ticks, +-8 with the assist.
+## The event arrives `lead` ticks (18) before contestOpen, so the count-in rings can close.
+func _on_struggle_open(d: Dictionary) -> void:
+	var beats: Array = d.get("beats") if d.get("beats") is Array and not (d.get("beats") as Array).is_empty() else STRUGGLE_BEATS.duplicate()
+	var half: int = int(d.get("half_width", 0))
+	var lead: int = int(d.get("lead", 0))
+	var res: Dictionary = {}
+	for b in beats:
+		res[int(b)] = "" if int(b) > 0 else "count"
+	struggle = {"actor": int(d.get("actor", -1)), "beats": beats, "half": half if half > 0 else 4, "resolve": int(d.get("resolve", 0)) if int(d.get("resolve", 0)) > 0 else 66,
+		"t": -float(lead if lead > 0 else 18) * TICK, "res": res, "end_t": -1.0}
+
+
+## A press was acknowledged (Controls): a small mark at the fighter for a moment. During the struggle a hit also marks its beat.
+func _on_press_ack(m: UiFighterModel, d: Dictionary) -> void:
+	if m == null:
+		return
+	var result: String = str(d.get("result", ""))
+	if result == "":
+		return
+	m.ack_result = result
+	m.ack_t = 0.0
+	if not struggle.is_empty() and int(struggle["actor"]) == m.slot and result == "hit":
+		var now: float = float(struggle["t"]) / TICK
+		var best: int = 99999
+		var best_d: float = 1e9
+		for b in struggle["res"]:
+			if int(b) > 0 and struggle["res"][b] == "" and absf(now - float(b)) < best_d:
+				best = int(b)
+				best_d = absf(now - float(b))
+		if best != 99999 and best_d <= float(struggle["half"]) + 3.0:
+			struggle["res"][best] = "hit"
+
+
+func _step_struggle(dt: float) -> void:
+	if struggle.is_empty():
+		return
+	struggle["t"] = float(struggle["t"]) + dt
+	var now: float = float(struggle["t"]) / TICK
+	for b in struggle["res"]:
+		if int(b) > 0 and struggle["res"][b] == "" and now > float(b) + float(struggle["half"]) + 1.0:
+			struggle["res"][b] = "miss"
+	var end_t: float = float(struggle["end_t"])
+	if (end_t >= 0.0 and float(struggle["t"]) - end_t > 0.5) or now > float(struggle["resolve"]) + 30.0:
+		struggle = {}
+
+
 func _on_window(m: UiFighterModel, d: Dictionary) -> void:
 	if m == null:
 		return
-	var kind: String = str(d.get("kind", "parry"))
+	var kind: String = _kind(d, "parry")
+	var ticks: int = int(d.get("dur_ticks", 0))
+	var dur: float = float(ticks) / 60.0 if ticks > 0 else _dur(d, 0.33 if kind == "parry" else 0.6)
 	if kind == "parry":
 		m.parry_t = 0.0
-		m.parry_dur = float(d.get("dur", 0.33))
+		m.parry_dur = dur
+		# The clean-parry tail (Controls: the last 6 or 8 ticks): its share of the window, drawn as a brighter band.
+		var clean: int = int(d.get("clean_ticks", 0))
+		m.parry_clean = clampf(float(clean) / float(ticks), 0.0, 1.0) if (ticks > 0 and clean > 0) else 0.0
 	else:
 		m.chain_t = 0.0
-		m.chain_dur = float(d.get("dur", 0.6))
-		m.chain_n = int(d.get("n", m.chain_n))
+		m.chain_dur = dur
+		var n: int = int(d.get("n", 0))
+		if n > 0:
+			m.chain_n = n
 
 
 ## The kinds of respected cinematic in which the surge owns the fighter and the crown stays down (Art, marked-aura.md).
@@ -651,6 +732,7 @@ func card_alpha(c: Card) -> float:
 func advance(dt: float) -> void:
 	t_now += dt
 	toll_age += dt
+	_step_struggle(dt)
 	for m in models:
 		m.advance(dt)
 		if _lost_trail_left.has(m.slot):

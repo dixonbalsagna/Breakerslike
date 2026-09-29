@@ -58,6 +58,13 @@ var cue: float = 99.0              # seconds since the last grunt cue (drives th
 var cue_intensity: int = 1
 var cinematic: String = ""         # "" or the kind of respected cinematic this fighter is in
 var ko: bool = false
+var device: String = "kbd"          # the family of the device that last sent input for this slot: kbd, xbox, ps, switch, deck, generic
+var ack_result: String = ""         # the last press-acknowledged result (a small mark for a moment)
+var ack_t: float = 99.0
+var parry_clean: float = 0.0        # the clean-parry tail as a fraction of the parry window (0 = none)
+var avail: Dictionary = {"transform": false, "special": false}   # actions that can be used now (so their prompt shows only then)
+var hold: Dictionary = {"transform": 0.0, "special": 0.0}        # hold progress 0..1 (the hold ring)
+var stance_prompt_t: float = 99.0   # seconds since the stance changed or the match began (the stance prompt shows for 3 s)
 
 
 func setup(p_slot: int, p_id: String, p_name: String = "") -> void:
@@ -97,6 +104,11 @@ func reset_wounds() -> void:
 	chip_stage = 0
 	hatch_open = false
 	ko = false
+	stance_prompt_t = 0.0
+	ack_t = 99.0
+	parry_clean = 0.0
+	avail = {"transform": false, "special": false}
+	hold = {"transform": 0.0, "special": 0.0}
 
 
 func has_region(r: String) -> bool:
@@ -144,6 +156,8 @@ func advance(dt: float) -> void:
 		region_age[r] = float(region_age[r]) + dt
 	brink_age += dt
 	facade_age += dt
+	ack_t += dt
+	stance_prompt_t += dt
 	boil_flash = maxf(0.0, boil_flash - dt)
 	cue += dt
 	if parry_t >= 0.0:

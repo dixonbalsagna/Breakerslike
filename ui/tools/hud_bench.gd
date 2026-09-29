@@ -66,7 +66,7 @@ func _process(_delta: float) -> bool:
 					rest = false
 			if not hud.hub.cards.is_empty() or not hud.hub.barks.is_empty() or not hud.hub.banner.is_empty() or hud.hub.world_card != null:
 				rest = false
-			rows.append({"shown": shown, "rest": rest, "wall": wall,
+			rows.append({"shown": shown, "rest": rest, "split": float(hud._split.get("sep", 0.0)) > 0.5, "wall": wall,
 				"cpu": RenderingServer.viewport_get_measured_render_time_cpu(rid) + RenderingServer.get_frame_setup_time_cpu(),
 				"gpu": RenderingServer.viewport_get_measured_render_time_gpu(rid),
 				"draws": float(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME))})
@@ -90,11 +90,14 @@ func _report() -> void:
 	var on: Array = rows.filter(func(r): return r.shown)
 	var off: Array = rows.filter(func(r): return not r.shown)
 	var on_rest: Array = on.filter(func(r): return r.rest)
+	var on_split: Array = on.filter(func(r): return r.split)
+	var on_merged: Array = on.filter(func(r): return not r.split)
 	print("HUDBENCH %s | %s | frames shown %d hidden %d, of the shown %d are rest (%.0f%%)" % [("legacy HUD" if legacy else "UI HUD"), RenderingServer.get_video_adapter_name(), on.size(), off.size(), on_rest.size(), 100.0 * float(on_rest.size()) / maxf(1.0, float(on.size()))])
 	print("HUDBENCH            wall ms   render cpu ms   render gpu ms   draw calls")
 	print("HUDBENCH hidden     %7.3f   %13.3f   %13.3f   %10.1f" % [_mean(off, "wall"), _mean(off, "cpu"), _mean(off, "gpu"), _mean(off, "draws")])
 	print("HUDBENCH shown      %7.3f   %13.3f   %13.3f   %10.1f" % [_mean(on, "wall"), _mean(on, "cpu"), _mean(on, "gpu"), _mean(on, "draws")])
 	print("HUDBENCH shown rest %7.3f   %13.3f   %13.3f   %10.1f" % [_mean(on_rest, "wall"), _mean(on_rest, "cpu"), _mean(on_rest, "gpu"), _mean(on_rest, "draws")])
+	print("HUDBENCH shown split (%d frames) %7.3f   %8.3f   %8.3f   %6.1f    merged (%d) %7.3f   %8.3f   %8.3f   %6.1f" % [on_split.size(), _mean(on_split, "wall"), _mean(on_split, "cpu"), _mean(on_split, "gpu"), _mean(on_split, "draws"), on_merged.size(), _mean(on_merged, "wall"), _mean(on_merged, "cpu"), _mean(on_merged, "gpu"), _mean(on_merged, "draws")])
 	print("HUDBENCH cost (all)  %+7.3f   %+13.3f   %+13.3f   %+10.1f" % [_mean(on, "wall") - _mean(off, "wall"), _mean(on, "cpu") - _mean(off, "cpu"), _mean(on, "gpu") - _mean(off, "gpu"), _mean(on, "draws") - _mean(off, "draws")])
 	print("HUDBENCH cost (rest) %+7.3f   %+13.3f   %+13.3f   %+10.1f" % [_mean(on_rest, "wall") - _mean(off, "wall"), _mean(on_rest, "cpu") - _mean(off, "cpu"), _mean(on_rest, "gpu") - _mean(off, "gpu"), _mean(on_rest, "draws") - _mean(off, "draws")])
 	if not legacy:

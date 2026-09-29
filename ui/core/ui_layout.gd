@@ -32,6 +32,7 @@ var clear_zone := Rect2()                    # nothing draws here: the fighters'
 var frame_rect := Rect2()                    # where the camera may keep fighters: full width, below the columns
 var touch_reserve := Rect2()                 # portrait: kept free for Controls' touch controls
 var ring := Rect2()                          # the planet ring map (landscape), centred above the strip
+var prompts: Array = [Rect2(), Rect2()]      # each column's prompt row (stance and hold prompts), under the cards; landscape only
 var swapped := false                         # slot 0 is on the right: the fighter on the left of the screen is slot 1
 var pm: Dictionary = {}                      # plate metrics for this scale
 
@@ -99,6 +100,7 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 	pm = plate_metrics(s, portrait)
 	card_h = maxf(60.0 * s, float(UiText.px(22.0, s)) * 2.0 + 12.0)
 	ring = Rect2()
+	prompts = [Rect2(), Rect2()]
 	if portrait:
 		_portrait()
 	else:
@@ -109,7 +111,7 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 		ring = Rect2(vp.x * 0.5 - d * 0.5, strip.position.y - gap - d, d, d)
 	if swapped:
 		# Slot 0 is on the right of the screen (the shortest way puts the rival to its left): mirror every per-slot column.
-		for arr in [plate, silhouette, cards, bark]:
+		for arr in [plate, silhouette, cards, bark, prompts]:
 			var tmp = arr[0]
 			arr[0] = arr[1]
 			arr[1] = tmp
@@ -135,6 +137,7 @@ func _landscape() -> void:
 			cx0 = p.position.x
 			cx1 = p.end.x
 		cards[i] = Rect2(cx0, col_top, cx1 - cx0, 2.0 * (card_h + gap))
+		prompts[i] = Rect2(p.position.x, maxf(cards[i].end.y, silhouette[i].end.y) + gap, col_w, maxf(40.0 * s, 30.0))
 	var toll_w: float = 380.0 * s
 	toll = Rect2(vp.x * 0.5 - toll_w * 0.5, safe.position.y, toll_w, 2.0 * float(UiText.px(20.0, s)) + 18.0)
 	banner_c = Vector2(vp.x * 0.5, toll.end.y + gap + 28.0 * s)
@@ -158,7 +161,7 @@ func _landscape() -> void:
 	var zone_top: float = banner_c.y + 34.0 * s + gap
 	var zone_bottom: float = bark[0].position.y - gap
 	clear_zone = Rect2(mid_l, zone_top, mid_r - mid_l, zone_bottom - zone_top)
-	var col_bottom: float = maxf(cards[0].end.y, cards[1].end.y)
+	var col_bottom: float = maxf(maxf(cards[0].end.y, cards[1].end.y), maxf(prompts[0].end.y, prompts[1].end.y))
 	frame_rect = Rect2(safe.position.x, col_bottom + gap, safe.size.x, zone_bottom - (col_bottom + gap))
 
 
@@ -208,6 +211,8 @@ func hud_rects() -> Array:
 		if silhouette[i].size.y > 0.0:
 			out.append(silhouette[i])
 		out.append(cards[i])
+		if prompts[i].size.y > 0.0:
+			out.append(prompts[i])
 		out.append(bark[i])
 	return out
 
