@@ -77,4 +77,4 @@ More characters must be addable after launch (see the Modding and Extensibility 
 | Engine | Godot 4.7 with GDScript (ADR 0001, confirmed 2026-09-29) |
 | README line | "A free, open-source fighting game about wrecking a planet. No combo lists: pick a stance and the game choreographs the exchange. Inspired by the classic anime energy-brawlers." (Orb's blend; final wording waits on the licence) |
 | Repo visibility | Stays public so Orb can share the prototype with friends |
-| Licence | Undecided: Orb may want to keep commercial rights. Options in the EP's 2026-09-29 chat: open code with protected art; everything non-commercial; or MIT plus CC BY as now |
+| Licence | Undecided: Orb may want to keep commercial rights. LICENSE and LICENSE-ASSETS were removed from the repo root on 2026-09-29 (all rights reserved by default until Orb decides; the drafts stay in docs/legal/drafts/). Options in the EP's 2026-09-29 chat: open code with protected art; everything non-commercial; or MIT plus CC BY as now |

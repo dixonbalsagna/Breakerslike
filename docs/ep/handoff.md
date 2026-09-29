@@ -66,6 +66,8 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
     - Godot 4.7.2 export templates (MIT, SHA-512 checked)
     - the Godot 4.7.2 .NET editor and its .NET export templates (MIT; scratch use only)
     - TypeScript 7.0.2 via npx (Apache-2.0; an optional type-check, dev only)
+  - Register the CI actions (CI only, shipped nowhere; confirm the licences): actions/checkout v7.0.1 @ 3d3c42e5aac5ba805825da76410c181273ba90b1 and actions/setup-node v7.0.0 @ 820762786026740c76f36085b0efc47a31fe5020. Also the Godot 4.7.2 Linux zip used by the CI parity job.
+  - Stages 4 and 5 on the title, once Orb picks.
 - **Tools:**
   - Rerun the generator after any charter edit.
   - Add the licence fields, .github/CONTRIBUTING.md and the PR template from docs/legal/contributor-rules.md.
