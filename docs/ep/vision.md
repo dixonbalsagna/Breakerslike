@@ -164,3 +164,5 @@ Orb had played the Godot greybox before answering.
 **Empress comeback, round 2 (Orb, 2026-09-29).** None of Off the record, Close ranks or Recess approved: 'pitch more ideas. I like a straightforward brawl that must defeat the guards before getting to the empress, damage transference isn't exactly how I imagined the character.' The retinue rule is rejected: fallen guards leave, and the gestures come from her remaining guard or from her.
 
 **Empress comeback: Encore (Orb, 2026-09-29).** On the brink, all three guard return for a short, harder second goon phase while she withdraws, snipes and taunts. If they hold, one region mends; if they fall first, she is on the brink and in reach. Once per match.
+
+**First real fighter: the Anti-hero (Orb, 2026-09-29).** Built after the Wounds slices and roster-as-data (docs/architecture/wounds-plan.md).

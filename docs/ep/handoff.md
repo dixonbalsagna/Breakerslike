@@ -90,7 +90,10 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
   Then Rendering draws the crater bowls in depth (the z=0 slice equals the sim) and the scorch trails.
 - **Tools, small:** fix the godot-parity comment (it now checks the GD goldens); add a batch.gd 5-match smoke step. QA: move baselines to batch.gd.
 
-## Sim editor queue (one at a time)
+## Sim editor queue (one at a time; the plan is docs/architecture/wounds-plan.md)
+World (active), then S0 menace fixes, S1 wear core (with the ko() hook behind a flag), S2 the end (Encounter), S3a and S3b, S4 Rally, D1 roster as data, then F1: the **Anti-hero** (Orb's pick). W1 (variable circumference) comes before the fold; N1 (N bodies) comes before the Empress.
+
+## Old sim queue notes
 1. World: craters, scorch, water (active).
 2. Simulation: Game Design's menace placeholder fixes (balance-targets.md §9: decay 0.4/s after 4 s without a villain-caused casualty; menace damage cap from +25% to +15%). Also add tempo.gd to the sim/README layout table.
 3. Wounds implementation (spec-wounds.md): Encounter Systems and Combat (stage 0/1). QA re-baselines on batch.gd, then tests KAI at 42% or better, with at least 400 matches per arm.
