@@ -226,3 +226,5 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - A small ring map of the planet shows both fighters.
 - Launches: follow the launched fighter in a short cinematic, then split if they land far away.
 - Orb questions whether hiding earns its place ('maybe it could be something for a character we introduce down the line'). The EP pitches it; see the next entry.
+
+**Hiding saved for a future fighter (Orb, 2026-09-29).** Hiding is removed from the base game and becomes the signature of a later stealth-specialist character. Cover stays as line-of-sight only (smoke, rubble and terrain can break lock-on). The ambush bonus, the Primed flash and hide-based recovery go with it and are held for that fighter.

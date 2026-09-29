@@ -34,7 +34,7 @@ Return: the standard report format (SUMMARY, CHANGES, DECISIONS, NEEDS FROM EP, 
 3. **Never out of range.** Distance never blocks drama. Attacks always close the gap, and the escape stance is a real gamble rather than a range check.
 4. **Power has weight.** Terrain, buildings and civilians are damaged by fights, and damage escalates with power tier.
 5. **Characters are personalities.** The hero and the villain do different things to the world. The hero is pressured by collateral damage (anguish). The villain feeds on it (menace).
-6. **Fights tell stories.** Hiding to recover, ambushing from cover, comebacks, chains and clashes emerge from systems, not scripts.
+6. **Fights tell stories.** Comebacks, chains, clashes, set pieces and a landscape that answers back emerge from systems, not scripts. (Hiding and ambush are held for a future stealth fighter.)
 7. **Signatures adapt.** One signature move plays out differently by biome, altitude and the defender's stance.
 
 ## Architecture (three layers, keep them separate)
