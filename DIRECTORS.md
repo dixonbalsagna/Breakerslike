@@ -219,7 +219,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 6. Art Director
 
-`docs/directors/art.md`  |  session: `Meridian - Art`  |  model: `sonnet`  |  owns: `art/, docs/art-bible/`  |  reports to: Executive Producer
+`docs/directors/art.md`  |  session: `Meridian - Art`  |  model: `sonnet`  |  owns: `art/, docs/art/`  |  reports to: Executive Producer
 
 **Mission.** Own the visual identity: original characters, environments and a look that honours the genre without borrowing it.
 
@@ -232,7 +232,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 **Decides:** Style and palette; Character and environment designs; Asset acceptance
 
-**Deliverables:** docs/art-bible/*; Character sheets; Biome kits; Asset specs
+**Deliverables:** docs/art/*; Character sheets; Biome kits; Asset specs
 
 **Works with (via the EP):** Animation, VFX, World, Narrative (identity), Legal (originality), Performance (budgets).
 

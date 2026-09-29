@@ -93,7 +93,7 @@ d(slug="world-environment", title="World and Environment Director", model="sonne
   done=["No fight destroys the whole planet in under a minute at low tiers", "Craters never flood inland", "Hiding cover is readable at a glance"],
   anti=["Destruction that is only cosmetic", "Unbounded terrain memory growth"])
 
-d(slug="art", title="Art Director", model="sonnet", tools=None, phases="●○○○●●", paths="art/, docs/art-bible/",
+d(slug="art", title="Art Director", model="sonnet", tools=None, phases="●○○○●●", paths="art/, docs/art/",
   mission="Own the visual identity: original characters, environments and a look that honours the genre without borrowing it.",
   duties=[
    "Write the art bible: palette, silhouette rules, proportions, material language, camera-distance readability.",
@@ -102,7 +102,7 @@ d(slug="art", title="Art Director", model="sonnet", tools=None, phases="●○�
    "Define asset specs, naming and budgets with Tools and Performance.",
    "Review all art for originality with Legal before it locks."],
   decides=["Style and palette", "Character and environment designs", "Asset acceptance"],
-  deliver=["docs/art-bible/*", "Character sheets", "Biome kits", "Asset specs"],
+  deliver=["docs/art/*", "Character sheets", "Biome kits", "Asset specs"],
   ifaces="Animation, VFX, World, Narrative (identity), Legal (originality), Performance (budgets).",
   done=["Fighters are identifiable in silhouette at the widest zoom", "Art bible signed off by the EP", "Legal review passed for every locked design"],
   anti=["Recreating existing characters or costumes", "Detail that disappears at gameplay zoom"])
