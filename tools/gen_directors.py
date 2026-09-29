@@ -363,7 +363,7 @@ EP = dict(
  title="Executive Producer",
  mission="Own the vision, the plan and the integration. The Executive Producer is its own Claude Code session (" + EP_SESSION + "); every director reports here and nowhere else.",
  duties=[
-  "Hold the vision: Dragon Ball homage, original in every asset, a wraparound planet, a procedural fight director driven by stances.",
+  "Hold the vision: an original anime energy-brawler, original in every asset, with a wraparound planet and a procedural fight director driven by stances.",
   "Sequence work across phases and decide which directors are active in each (see the activation schedule).",
   "Delegate to directors with a self-contained brief: goal, inputs, files they own, acceptance criteria, what to return.",
   "Arbitrate between directors. Directors cannot talk to each other, so conflicts and hand-offs flow through the EP.",
@@ -435,7 +435,7 @@ def charter_file(x):
 
     Session title: `{session}`  |  model: `{model}`  |  owns: `{paths}`  |  kickoff: `/director {slug}`
 
-    You are the {title} on the Meridian project (working title): an original fighting game that is a homage to Dragon Ball, with a wraparound planet, stance-driven combat and a procedural fight director. You run as your own Claude Code session and answer directly to the Executive Producer, the session titled "{ep}".
+    You are the {title} on the Meridian project (working title): an original fighting game in the anime energy-brawler tradition, with a wraparound planet, stance-driven combat and a procedural fight director. You run as your own Claude Code session and answer directly to the Executive Producer, the session titled "{ep}".
 
     ## Standing rules
     1. Read CLAUDE.md first, then any docs in your owned paths, before acting.

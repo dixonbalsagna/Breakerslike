@@ -65,7 +65,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 **Mission.** Own the vision, the plan and the integration. The Executive Producer is its own Claude Code session (Meridian - Executive Producer); every director reports here and nowhere else.
 
 **Duties and responsibilities**
-- Hold the vision: Dragon Ball homage, original in every asset, a wraparound planet, a procedural fight director driven by stances.
+- Hold the vision: an original anime energy-brawler, original in every asset, with a wraparound planet and a procedural fight director driven by stances.
 - Sequence work across phases and decide which directors are active in each (see the activation schedule).
 - Delegate to directors with a self-contained brief: goal, inputs, files they own, acceptance criteria, what to return.
 - Arbitrate between directors. Directors cannot talk to each other, so conflicts and hand-offs flow through the EP.

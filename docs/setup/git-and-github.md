@@ -4,7 +4,7 @@ Kept here because it is easy to forget. Every command also works in PowerShell.
 
 ## Link this folder to GitHub (first time)
 
-1. Open Git Bash in the project folder: right-click the folder in File Explorer, then *Show more options*, then *Open Git Bash here*. Or run `cd "/c/Users/itsha/Documents/Claude Proj/Breakers-Like"` (quotes are needed because of the space).
+1. Open Git Bash in the project folder: right-click the folder in File Explorer, then *Show more options*, then *Open Git Bash here*. Or `cd` into your project folder (put the path in quotes if it contains a space).
 2. Sign in to GitHub once per computer:
    `gh auth login --hostname github.com --git-protocol https --web`
    Answer **Y** if asked to authenticate Git with your GitHub credentials. Copy the one-time code, press Enter, paste the code in the browser page that opens, and click Authorize. Check it worked with `gh auth status`.

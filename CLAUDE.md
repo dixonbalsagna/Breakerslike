@@ -1,6 +1,6 @@
 # Meridian (working title)
 
-An original fighting game that is a homage to Dragon Ball and a spiritual successor to the fan games "Lemming Ball Z" and "Lemming Ball Z 3d". Free and open source. Owner and creative lead: Orb.
+An original fighting game in the anime energy-brawler tradition: free flight, beam struggles, transformations and planet-scale destruction, with every character, name and asset our own. Free and open source. Owner and creative lead: Orb.
 
 The names Meridian, KAI and VORR are placeholders, and Orb wants a completely different name for the game. Everything in this project must be original: no characters, names, designs, catchphrases, music or code from existing franchises. The genre is the inspiration, not the content.
 
@@ -122,5 +122,5 @@ Still open:
 - The engine (ADR 0001, pending Research's spike).
 - The title.
 - The copyright holder's name.
-- Lemming Ball Z provenance.
+- Provenance of any material inherited from earlier projects.
 - Legal's review of the fighter concepts.
