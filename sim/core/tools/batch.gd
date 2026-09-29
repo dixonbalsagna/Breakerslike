@@ -112,13 +112,28 @@ func run_match(seed: int, arm: String) -> Dictionary:
 	for i in range(2):
 		slot[fs[i].name] = i
 	var rec := {"seed": seed, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0, "launches": {}, "melee": {},
-		"beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0, "bad": "", "koAt": -1.0, "winner": -1}
+		"beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0, "bad": "", "koAt": -1.0, "winner": -1,
+		"breaks": 0, "firstBrink": -1.0, "firstBroken": "", "wearIn": [0.0, 0.0, 0.0, 0.0]}
+	var prevWear: Array = [fs[0].wear.duplicate(), fs[1].wear.duplicate()]
 	var prev: Array = [fs[0].x, fs[1].x]
 	var steps: int = 0
 	while steps < MAX_STEPS and not (S.game.ko != null and S.game.koT > KO_TAIL):
 		SimCore.step(S)
 		steps += 1
+		for e in S.out.fx:
+			if e.type == "region_broken":
+				rec.breaks += 1
+				if rec.firstBroken == "":
+					rec.firstBroken = e.region
+			elif e.type == "brink_enter" and rec.firstBrink < 0.0:
+				rec.firstBrink = S.T
 		S.out.fx.clear()
+		for i in range(2):
+			for ri in range(4):
+				var dw: int = fs[i].wear[ri] - prevWear[i][ri]
+				if dw > 0:
+					rec.wearIn[ri] += float(dw) / SimWounds.WEAR_SCALE
+				prevWear[i][ri] = fs[i].wear[ri]
 		if S.game.ko != null and rec.koAt < 0.0:
 			rec.koAt = S.T
 			rec.winner = 1 - fs.find(S.game.ko)
@@ -229,7 +244,18 @@ func aggregate(recs: Array) -> Dictionary:
 	var seam_matches: int = 0
 	var max_move: float = 0.0
 	var ticks: int = 0
+	var breaks: Array = []
+	var brinks: Array = []
+	var firstBroken := {}
+	var wearIn: Array = [0.0, 0.0, 0.0, 0.0]
 	for r in recs:
+		breaks.append(float(r.breaks))
+		if r.firstBrink >= 0.0:
+			brinks.append(r.firstBrink)
+		if r.firstBroken != "":
+			firstBroken[r.firstBroken] = firstBroken.get(r.firstBroken, 0) + 1
+		for ri in range(4):
+			wearIn[ri] += r.wearIn[ri]
 		if r.timeout:
 			a.timeouts += 1
 		else:
@@ -272,6 +298,9 @@ func aggregate(recs: Array) -> Dictionary:
 	a.matchesWithHide = float(with_hide) / n
 	a.seam = {"matchesWithCrossing": seam_matches, "maxMovePerTick": max_move}
 	a.ticks = ticks
+	var wt: float = wearIn[0] + wearIn[1] + wearIn[2] + wearIn[3]
+	a.wounds = {"breaksPerMatch": _dist(breaks), "matchesWithBrink": brinks.size(), "firstBrink": _dist(brinks) if brinks.size() else {}, "firstBroken": firstBroken,
+		"wearShare": {"head": wearIn[0] / wt if wt > 0.0 else 0.0, "core": wearIn[1] / wt if wt > 0.0 else 0.0, "arms": wearIn[2] / wt if wt > 0.0 else 0.0, "legs": wearIn[3] / wt if wt > 0.0 else 0.0}}
 	return a
 
 
@@ -301,4 +330,8 @@ func report(a: Dictionary, n: int, base: int, arm: String) -> void:
 	print("parry %.2f/match   chains %.2f/match   hides %.2f/match (%.0f%% of matches)   ambush attacks %.2f/match" % [a.perMatch.parries, a.perMatch.chains, a.perMatch.hides, a.matchesWithHide * 100.0, a.perMatch.ambushAttacks])
 	print("seam: %d of %d matches crossed the seam   max per-tick move %.1f units" % [a.seam.matchesWithCrossing, n, a.seam.maxMovePerTick])
 	print("melee exchanges:  %s" % _shares(a.melee))
+	var w: Dictionary = a.wounds
+	var ws: Dictionary = w.wearShare
+	print("wounds: breaks %.2f/match (max %d)   matches reaching the brink %d of %d%s   first broken %s   wear share head %.0f%% core %.0f%% arms %.0f%% legs %.0f%%" % [w.breaksPerMatch.mean, int(w.breaksPerMatch.max), w.matchesWithBrink, n,
+		("   first brink median %.0fs" % w.firstBrink.p50) if w.matchesWithBrink > 0 else "", _shares(w.firstBroken), ws.head * 100.0, ws.core * 100.0, ws.arms * 100.0, ws.legs * 100.0])
 	print("speed: %d matches in %.1f s = %.0f matches per minute (%.0f ticks/s)" % [n, a.seconds, a.matchesPerMinute, a.ticks / a.seconds])

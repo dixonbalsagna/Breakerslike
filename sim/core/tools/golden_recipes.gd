@@ -33,6 +33,7 @@ static func build() -> Dictionary:
 	for s in TICK0_SEEDS:
 		g.tick0[str(s)] = tick0Hash(s)
 	g.tick0Values = tick0Values(1)
+	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY
 	g.matches = []
 	for m in MATCHES:
@@ -100,6 +101,30 @@ static func powHash() -> String:
 		h.num(SimDetMath.log(0.0001 + float(i) * 0.37))
 	for i in range(2000):
 		h.num(SimDetMath.hypot(float(i) * 1.7 - 1500.0, 900.0 - float(i) * 0.9))
+	return h.hex()
+
+
+## Wounds (wounds.gd) driven directly: a fixed sequence of wearing hits of every family, with recovery phases in and
+## out of hiding, so every stage, the brink and the recovery rules are pinned even while matches still end on HP (S1).
+static func woundsHash() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 7)
+	var f = S.fighters[1]
+	var h := SimHash.Hasher.new()
+	var fams: Array = ["light", "heavy", "guard", "spread"]
+	for i in range(260):
+		SimWounds.applyHit(S, f, 12.0 + float(i % 9) * 7.0, fams[i % 4])
+		if i % 11 == 10:
+			f.hidden = i % 22 == 21
+			for t in range(90):
+				SimWounds.step(S, f)
+		for r in range(4):
+			h.num(float(f.wear[r]))
+			h.num(float(f.stage[r]))
+		h.u(1 if f.brink else 0)
+	h.num(float(S.rng.state_i32()))
+	SimHash.hashFx(h, S.out.fx)
+	SimCore.dispose(S)
 	return h.hex()
 
 

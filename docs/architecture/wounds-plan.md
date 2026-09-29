@@ -213,3 +213,27 @@ The practical pairing: Simulation and Encounter alternate sim slices (S0 → S1 
 **Scope.**
 - HP removal (S2) reaches the AI (stance weights), camera framing, and every `hp <= 0` guard in the director: about 30 sites.
 - Keep the `hp` field alive but unused until S2 lands, then delete it in S2's commit. Every change of ending semantics then happens in one slice.
+
+## 6. Event routing (Audio's docs/audio/direction.md §9, QA's docs/qa/README.md)
+
+Every event rides the fx stream with the envelope in `fx-events.md` (`type`, `tick`, fields). Delivered in S1:
+- `damage` with attacker, victim, region and kind;
+- `region_stage`, `region_broken`, `brink_enter`, `brink_exit`;
+- the structured twins of the core's feed lines: `tier_up`, `hide_start`, `found`, `ko`;
+- `S.tick`;
+- `f.wear` and `f.stage` per region.
+
+| Event | Slice | Owner |
+| :--- | :--- | :--- |
+| `finisher_start`, `finisher_contest`; `ko` moves to the finisher path | S2 | Encounter |
+| `damage` kind `guard_break`; `attack` {actor, target, kind, defStance, template, ambush}; `parry`; `chain_end`; `ambush`; `lock_lost` (QA-004's director feed lines) | S2 | Encounter |
+| `launch_plan` {actor, target, candidates [{name, score}], chosen} | S2 | Encounter (it lives in the planner) |
+| `beam_charge`, `beam_fire` {variant, power, owner}, `beam_end` {outcome}, `beam_clash` {start, end, winner} | S2 or S3b, whichever touches `beam.gd` first | Encounter |
+| `rally` | S4 | Encounter and Simulation |
+| `window_open` {kind, duration}, only when a parry or chain window really opens (UI) | S2 | Encounter |
+| `cinematic_start`, `cinematic_end` {kind, length} (spec §8 respected transformations; UI and Camera) | F1 | Simulation and Encounter |
+| `region_stage` gains `internal` (true when internal core wear caused the change: the Protagonist's heat, UI's scald) | F1, the Protagonist | Simulation |
+| `transform_fill`, `transform_start`, `transform_end`, `heat_stage`, `boil_over`, `facade_crack`, `drop_act`, `shame_stack`, and the other per-fighter events | F1, per fighter | Simulation, Encounter, Combat |
+| fold events | W1 plus the Protagonist | Simulation, World |
+| `building_hit`, `building_fall`, `chain_link`, `launch_depth`, hazard events | World's slices (B1 and on) | World |
+| `S.frontsInFrame` | LD1 | World and Camera |

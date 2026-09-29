@@ -16,12 +16,14 @@ static func updateHidden(S: SimState, f, dt: float) -> void:
 			ls.x = f.x
 			ls.y = f.y
 			f.lastSeen = ls
+			SimFx.hideStart(S, f, c)
 			SimEvents.feed(S, f.name + " goes to ground", "Power signature suppressed (" + c + "). Recovering; opponent has no lock-on.")
 	else:
 		f.hideT = 0.0
 		if f.hidden:
 			f.hidden = false
 			if dist <= 240.0:
+				SimFx.found(S, f)
 				SimEvents.feed(S, f.name + " found", "Opponent closed within scouting range.")
 			elif f.hiddenFor > 1.8:
 				f.ambushUntil = S.T + 2.5

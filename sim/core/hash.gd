@@ -84,6 +84,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 			_obj(out, p, PART)
 		return out
 	out.append(S.T)
+	out.append(float(S.tick))
 	out.append(float(S.rng.state_i32()))
 	var g := S.game
 	out.append(_idx(fs, g.ko))
@@ -124,6 +125,11 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		_obj(out, f.ai, ["t", "atk", "sT", "sOff"])
 		_obj(out, f.lastSeen, ["x", "y"])
 		_obj(out, f.input, INTENT)
+		for ri in range(4):
+			out.append(float(f.wear[ri]))
+		for ri in range(4):
+			out.append(float(f.stage[ri]))
+		out.append(f.brink)
 	_obj(out, S.world, ["pop0", "casualties", "structuresLost", "craters"])
 	out.append(float(S.buildings.size()))
 	for b in S.buildings:
@@ -197,9 +203,11 @@ static func viewHash(S: SimState, V: SimFxView) -> String:
 const FX_FIELDS: Dictionary = {
 	"spark": ["x", "y", "n", "col", "spd"], "ring": ["x", "y", "gr", "col", "life", "r0"], "debris": ["x", "y", "n", "col", "spd"],
 	"dust": ["x", "y", "n", "col"], "splash": ["x", "y", "n"], "fire": ["x", "y", "n"], "after": ["x", "y", "life", "col", "face"],
-	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col"], "banner": ["text", "col", "dur"],
+	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col", "attacker", "victim", "region", "kind", "number"], "banner": ["text", "col", "dur"],
 	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
 	"shake": ["k"], "tick": ["dt", "frozen"],
+	"region_stage": ["actor", "region", "stage"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
+	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 }
 
 

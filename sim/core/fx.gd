@@ -8,6 +8,7 @@ class_name SimFx
 static func _ev(S: SimState, type: String) -> SimState.FxEvent:
 	var e := SimState.FxEvent.new()
 	e.type = type
+	e.tick = S.tick
 	S.out.fx.append(e)
 	return e
 
@@ -64,9 +65,13 @@ static func banner(S: SimState, text: String, col: String, dur: float) -> void:
 
 
 ## A damage number; the consumer prints String(Math.round(amount)).
-static func damageNumber(S: SimState, x: float, y: float, amount: float, col: String) -> void:
+## A damage event: who hit whom, where on the body and how. x, y is where a damage number shows; number is false
+## for landings and collisions, which never showed one.
+static func damage(S: SimState, f, attacker, amount: float, region: String, kind: String, col: String, number: bool) -> void:
 	var e := _ev(S, "damage")
-	e.x = x; e.y = y; e.amount = amount; e.col = col
+	e.x = f.x; e.y = f.y + 90.0; e.amount = amount; e.col = col
+	e.victim = float(S.fighters.find(f)); e.attacker = -1.0 if attacker == null else float(S.fighters.find(attacker))
+	e.region = region; e.kind = kind; e.number = number
 
 
 ## Camera shake request: the consumer keeps shake = max(shake, k) and decays it at the end of the tick.
@@ -98,6 +103,53 @@ static func scorchEvent(S: SimState, x: float, y: float, w: float, power: float,
 static func beamSplash(S: SimState, x: float) -> void:
 	var e := _ev(S, "beamSplash")
 	e.x = x
+
+
+## Wounds (wounds.gd): a region changed stage.
+static func regionStage(S: SimState, f, region: String, stage: int) -> void:
+	var e := _ev(S, "region_stage")
+	e.actor = float(S.fighters.find(f)); e.region = region; e.stage = stage
+
+
+## Wounds: a region reached broken (also reported as a region_stage).
+static func regionBroken(S: SimState, f, region: String) -> void:
+	var e := _ev(S, "region_broken")
+	e.actor = float(S.fighters.find(f)); e.region = region
+
+
+## Wounds: the fighter is on the brink (the core broken, or two of head, arms and legs broken).
+static func brinkEnter(S: SimState, f) -> void:
+	var e := _ev(S, "brink_enter")
+	e.actor = float(S.fighters.find(f))
+
+
+static func brinkExit(S: SimState, f) -> void:
+	var e := _ev(S, "brink_exit")
+	e.actor = float(S.fighters.find(f))
+
+
+## Structured event log (QA-004) for the core's feed lines: a fighter reached a new tier.
+static func tierUp(S: SimState, f, onGround: bool) -> void:
+	var e := _ev(S, "tier_up")
+	e.actor = float(S.fighters.find(f)); e.tier = f.tier; e.onGround = onGround
+
+
+## The fighter went to ground (hidden); cover is submerged, canopy or ridge.
+static func hideStart(S: SimState, f, cover: String) -> void:
+	var e := _ev(S, "hide_start")
+	e.actor = float(S.fighters.find(f)); e.cover = cover
+
+
+## A hidden fighter was found by the opponent closing in.
+static func found(S: SimState, f) -> void:
+	var e := _ev(S, "found")
+	e.actor = float(S.fighters.find(f))
+
+
+## The match's KO.
+static func ko(S: SimState, winner, loser) -> void:
+	var e := _ev(S, "ko")
+	e.winner = float(S.fighters.find(winner)); e.loser = float(S.fighters.find(loser))
 
 
 ## End of the sim's part of a tick: where the prototype stepped its particles (dt, or dt*0.1 during hit-stop).

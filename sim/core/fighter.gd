@@ -18,6 +18,7 @@ static func tierUp(S: SimState, f) -> void:
 		WorldStructures.damageArea(S, f.x, f.y, 130.0 + f.tier * 60.0, 90.0 + f.tier * 100.0, f)
 		SimFx.debris(S, f.x, g + 10.0, 10, "#6d6a66", 600.0)
 		SimFx.dust(S, f.x, g, 5)
+	SimFx.tierUp(S, f, f.y < g + 140.0)
 	SimEvents.feed(S, f.name + " reaches tier " + SimMathx.jstr(f.tier), "Ground-level power-up scarred the terrain." if f.y < g + 140.0 else "Airborne power-up, no ground damage.")
 
 
@@ -156,6 +157,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 		f.ki = SimMathx.jmin(100.0, f.ki + regen * dt)
 	if f.hidden:
 		f.hp = SimMathx.jmin(f.maxhp, f.hp + 40.0 * dt)
+	SimWounds.step(S, f)   # wound recovery (wounds.gd)
 	if f.state != "launched":
 		f.rot *= SimDetMath.pow(0.001, dt)
 

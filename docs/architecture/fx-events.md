@@ -12,6 +12,10 @@ Since the QA-002 split, the sim holds no cosmetic state and makes no cosmetic ra
 - Coordinates are world units, taken when the event was emitted: x in [0, 9600) on the wrapped planet, y upward with sea level at 0. Durations are in seconds.
 - Measured over 20 AI matches (85,863 ticks): about 1.35 events per tick on average, 7 at p99 and 46 at most, in a beam-and-explosion tick.
 
+## The envelope
+
+Every event carries `type` and `tick` (`S.tick`: steps since the match began, hit-stop ticks included), plus the fields of its type. Fighter references are slots in `S.fighters` (0 and 1 today; -1 means none). The feed text (`S.out.feed`) stays for people. **Tools and tests read events, not feed text (QA-004).** The core's feed lines already have structured twins (`tier_up`, `hide_start`, `found`, `ko`). The director's (attacks, launches with their `launch_plan` candidates, parries, chains, ambush, lock lost) arrive with Encounter's slices; `wounds-plan.md` lists who delivers each one. Planned shapes that UI, Audio and QA have asked for are fixed there too (§6): for example `window_open` {kind, duration}, `cinematic_start` and `cinematic_end` {kind, length}, and an `internal` flag on core `region_stage` events.
+
 ## Event types
 
 Fields are listed in their canonical order, the order the golden hash reads them.
@@ -29,10 +33,18 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `crater` | x, y, r, depth, energy, cause, rim, skid, owner | a crater was dug (GDScript sim only): ground impacts, ground-level power-ups, beam ground strikes, clash blasts | nothing yet: the reference consumer ignores it. Rendering builds a bowl from it; VFX adds the burst |
 | `scorch` | x, y, w, power, variant, owner | every beam sample within reach of the ground (GDScript sim only) | nothing yet (ignored). Rendering and VFX draw the burn trail and the beam's ground contact |
 | `beamSplash` | x | a beam sample below y = 30 over the sea | the consumer rolls 60% for a splash of 3 at (x, 0) |
-| `damage` | x, y, amount, col | every hit | a damage number: text `String(Math.round(amount))` rising 60 units/s for 0.9 s; gold when stance was ignored, white otherwise |
+| `damage` | x, y, amount, col, attacker, victim, region, kind, number | every hit, and every landing or collision that hurts | a damage number when `number` is true (hits): text `String(Math.round(amount))` rising 60 units/s for 0.9 s, gold when stance was ignored, white otherwise. `attacker` and `victim` are fighter slots (-1 for none); `region` is head, core, arms or legs; `kind` is light, heavy, guard, beam or impact (Audio's hit sounds; `guard_break` comes with Encounter's slice) |
 | `banner` | text, col, dur | power-ups, parries, KO, chains, clashes, ambushes; for human players also NEED 45 KI and LOCK LOST | the centre-screen banner (the latest one replaces any earlier one) for dur seconds of unfrozen time |
 | `shake` | k | anything heavy | camera shake: `shake = max(shake, k)` |
 | `tick` | dt, frozen | once per tick | steps the particles and damage numbers by dt (dt × 0.1 when frozen) |
+| `region_stage` | actor, region, stage | a body region's wound stage changes, up or down (Wounds, `sim/core/wounds.gd`) | nothing; for the crown and wound cards (Rendering, UI). `actor` is the fighter's slot; `region` is head, core, arms or legs; `stage` 0 fresh, 1 bruised, 2 battered, 3 broken |
+| `region_broken` | actor, region | a region reaches broken (also sent as a `region_stage`) | nothing; the break's wound card and set piece |
+| `brink_enter` | actor | the fighter is on the brink: the core broken, or two of head, arms and legs broken | nothing; the brink state (a finisher can now end the match, from S2) |
+| `brink_exit` | actor | the fighter leaves the brink (by a Rally, from S4) | nothing |
+| `tier_up` | actor, tier, onGround | a fighter reaches a new power tier (the structured twin of the feed line) | nothing; `onGround` is true when the power-up cratered the ground |
+| `hide_start` | actor, cover | a fighter goes to ground (hidden); cover is submerged, canopy or ridge | nothing |
+| `found` | actor | a hidden fighter is found by the opponent closing in | nothing |
+| `ko` | winner, loser | the match's KO (fighter slots) | nothing; the KO banner arrives as a `banner` event |
 
 ### The `crater` and `scorch` events
 

@@ -59,6 +59,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}) -> void:
 	S.dirS.lastLaunch2 = ""
 	S.out.feed.clear()
 	S.out.fx.clear()
+	S.tick = 0
 	S.dt = 0.0
 
 
@@ -68,6 +69,7 @@ static func step(S: SimState, inputs = null) -> bool:
 	var dtReal: float = SimConst.DT
 	var dt: float = dtReal * S.game.ts
 	S.dt = dt
+	S.tick += 1
 	if S.dirS.stop > 0.0:
 		S.dirS.stop -= dtReal
 		SimFx.tickMark(S, dt, true)

@@ -7,6 +7,7 @@ extends RefCounted
 
 var opts: Dictionary = {"fxRng": "shared", "math": "det"}
 var T: float = 0.0
+var tick: int = 0               # steps since newMatch, hit-stop ticks included (stamps every fx event)
 var dt: float = 0.0
 var rng: SimRng = SimRng.new(7)
 var game := Game.new()
@@ -149,6 +150,19 @@ class FxEvent:
 	var w: float = 0.0           # scorch: full width of the groove
 	var power: float = 0.0       # scorch: beam-power scalar
 	var variant: String = ""     # scorch: the beam's biome variant
+	var tick: int = 0             # every event: S.tick when it was emitted
+	var actor: float = -1.0      # wounds, tier_up, hide_start, found: the fighter's slot
+	var attacker: float = -1.0   # damage: the hitter's slot, or -1
+	var victim: float = -1.0     # damage: the hit fighter's slot
+	var kind: String = ""        # damage: light, heavy, guard, beam or impact
+	var number: bool = false     # damage: whether a damage number shows (hits do; landings and collisions do not)
+	var tier: float = 0.0        # tier_up
+	var onGround: bool = false   # tier_up: a ground-level power-up (it cratered the terrain)
+	var cover: String = ""       # hide_start: submerged, canopy or ridge
+	var winner: float = -1.0     # ko
+	var loser: float = -1.0      # ko
+	var region: String = ""       # wounds: head, core, arms or legs
+	var stage: int = 0            # wounds: 0 fresh, 1 bruised, 2 battered, 3 broken
 	var owner: float = -1.0      # crater and scorch: firing fighter's slot, or -1
 
 
@@ -184,6 +198,9 @@ class Fighter:
 	var menaceSeen: float = 0.0     # menace after the last stepFighter (S0: menace decays when not fed)
 	var menaceQuiet: int = 0         # ticks since menace was last fed
 	var casSeen: float = 0.0        # S.world.casualties after the last stepFighter
+	var wear: Array = [0, 0, 0, 0]   # Wounds (wounds.gd): head, core, arms, legs, in WEAR_SCALE units
+	var stage: Array = [0, 0, 0, 0]  # per region: 0 fresh, 1 bruised, 2 battered, 3 broken
+	var brink: bool = false
 	var ambush: bool = false
 	var rush = null          # Rush or null
 	var rot: float = 0.0

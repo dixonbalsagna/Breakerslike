@@ -36,6 +36,7 @@ func _init() -> void:
 	check("sin/cos", "" if SimGolden.sincosHash() == g.sincos else "differs")
 	check("pow/exp/log/hypot", "" if SimGolden.powHash() == g.powexplog else "differs")
 	check("tick-0 state", _tick0(g))
+	check("wounds (forced hits)", "" if SimGolden.woundsHash() == g.get("wounds", "") else "differs")
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
 	check("human-input replays", _replays(g))

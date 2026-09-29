@@ -216,9 +216,10 @@ func consume(S: SimState, events: Array) -> void:
 				if rng["vfx.water"].next() < 0.6:
 					_splash(e.x, 0.0, 3, rng["vfx.splash"])
 			"damage":
-				var fl := DmgFloat.new()
-				fl.x = e.x; fl.y = e.y; fl.txt = SimMathx.jstr(SimMathx.jround(e.amount)); fl.t = 0.0; fl.col = e.col
-				floats.append(fl)
+				if e.number:   # landings and collisions carry no damage number
+					var fl := DmgFloat.new()
+					fl.x = e.x; fl.y = e.y; fl.txt = SimMathx.jstr(SimMathx.jround(e.amount)); fl.t = 0.0; fl.col = e.col
+					floats.append(fl)
 			"banner":
 				var b := Banner.new()
 				b.text = e.text; b.col = e.col; b.t = 0.0; b.dur = e.dur
@@ -231,6 +232,8 @@ func consume(S: SimState, events: Array) -> void:
 				dt = e.dt
 				frozen = e.frozen
 				_stepParts(S, dt * 0.1 if frozen else dt)
+			"region_stage", "region_broken", "brink_enter", "brink_exit", "tier_up", "hide_start", "found", "ko":
+				pass   # wound readouts are the renderer's and UI's (crown, cards); nothing to spawn here
 			_:
 				push_error("consume: unknown event " + e.type)
 	if not frozen and banner != null:

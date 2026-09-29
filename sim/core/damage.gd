@@ -15,10 +15,18 @@ static func jor(v: float, d: float) -> float:
 	return v if (v != 0.0 and v == v) else d
 
 
-static func hurt(S: SimState, f, amt: float, by) -> void:
+## fam: the wounds hit family (wounds.gd family()); kind, col and number describe the damage event. The defaults are a
+## landing or collision: spread over the body, kind "impact", no damage number.
+static func hurt(S: SimState, f, amt: float, by, fam: String = "spread", kind: String = "impact", col: String = "", number: bool = false) -> void:
 	f.hp -= amt
 	f.hurtT = S.T
-	if f.hp <= 0.0 and S.game.ko == null:
+	var region: int = SimWounds.pickRegion(S, f, fam) if amt > 0.0 else -1
+	SimFx.damage(S, f, by, amt, SimWounds.REGIONS[region] if region >= 0 else "", kind, col, number)
+	if region >= 0:
+		SimWounds.addWear(S, f, region, amt)
+	# The Wounds hook (wounds-plan.md S1/S2): the HP bar ends the match until Encounter's S2 flips HP_ENDS_MATCH; then
+	# only a finisher can KO (spec-wounds.md §1, "The end").
+	if SimWounds.HP_ENDS_MATCH and f.hp <= 0.0 and S.game.ko == null:
 		ko(S, f, by if by != null else SimRoster.opp(S, f))
 
 
@@ -50,10 +58,11 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	D.power = SimMathx.jmin(100.0, D.power + dd * 0.010)
 	A.power = SimMathx.jmin(100.0, A.power + dd * 0.006)
 	SimFx.spark(S, D.x, D.y + 34.0, 18 if o.get("big", false) else 9, "#fff3c0", 600.0)
-	SimFx.damageNumber(S, D.x, D.y + 90.0, dd, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff")
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, jor(o.get("stop", 0.0), 0.05))
 	SimFx.shake(S, jor(o.get("shake", 0.0), 6.0))
-	hurt(S, D, dd, A)
+	var fam: String = SimWounds.family(ex, D, o)
+	var kind: String = "guard" if fam == "guard" else ("beam" if ex != null and ex.kind == "sig" else ("heavy" if ex != null and ex.kind == "heavy" else "light"))
+	hurt(S, D, dd, A, fam, kind, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff", true)
 	return dd
 
 
@@ -65,6 +74,7 @@ static func ko(S: SimState, D, A) -> void:
 	S.game.ts = 0.35
 	D.hp = 0.0
 	SimFx.banner(S, "K.O.  " + A.name + " WINS", "#ffd45a", 4.0)
+	SimFx.ko(S, A, D)
 	SimEvents.feed(S, "K.O. — " + A.name + " wins", "Casualties " + SimMathx.jstr(SimMathx.jround(S.world.casualties)) + ", structures lost " + SimMathx.jstr(S.world.structuresLost))
 	if S.dirS.ex != null:
 		DirExchange.endEx(S, S.dirS.ex)
