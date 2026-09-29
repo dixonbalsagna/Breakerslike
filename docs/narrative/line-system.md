@@ -208,3 +208,47 @@ Each line shows its trigger and its first cue. Some are jewels; some are templat
 - **Tools:** the JSON schema and the lint step.
 - **Legal:** the boldest jewels are searched before they ship.
 - **Accessibility:** captions, speed, and the volume of the bark budget.
+
+## 10. Matchup and stakes tags (added 2026-09-29)
+
+Orb: lines should change with who faces whom. A line can now key on the pairing, the stakes, and the register between the two.
+
+**New tags on every event.**
+
+| Tag | Values | Meaning |
+|---|---|---|
+| `matchup` | an ordered pair such as `protagonist>anti_hero`, or a wildcard such as `protagonist>*` and `*>tyrant` | Speaker, then opponent. Mirrors are `protagonist>protagonist`. |
+| `stakes` | `sparring`, `rivalry`, `grudge`, `world_at_stake`, `appetite` | What is on the line. Comes from the matchup table in `matchups.md`, and can change mid-fight (for example when a planet is threatened). |
+| `register` | `playful`, `respectful`, `contemptuous`, `grim`, `leering`, `polite_menace`, `disgusted`, `competitive` | How the speaker is talking to this opponent right now. Starts from the matchup default and shifts with the fight. |
+| `shift` | `winning`, `losing`, `brink`, `transformed`, `in_fold` | Where the fight is, which moves the register. |
+
+**How they are used.**
+- **Selection.** `matchup` and `stakes` count as conditions. A line that fits the exact pair beats one that fits `*`. A line with a matching `register` gets a mood bonus. The fallback chain is: exact matchup, then wildcard matchup, then stakes, then the fighter's general line.
+- **Register data.** Each fighter has `data/fighters/<id>/registers.json`: for each opponent, a default register and the shift rules.
+- **Fold.** The `in_fold` shift only exists for matchups that include the Protagonist.
+
+```json
+{
+  "id": "prot.fold.vs_tyrant.001",
+  "trigger": "fold_arrival",
+  "priority": 3,
+  "when": { "matchup": "protagonist>tyrant", "stakes": "world_at_stake", "shift": "in_fold" },
+  "text": "We can't hurt anyone innocent here.",
+  "register": "grim",
+  "cues": [{ "at": 0, "gesture": "sigh", "intensity": 2 }]
+}
+```
+
+```json
+{
+  "fighter": "protagonist",
+  "registers": {
+    "anti_hero": { "default": "respectful", "shifts": { "winning": "playful", "losing": "respectful", "brink": "grim" } },
+    "tyrant":    { "default": "grim",       "shifts": { "winning": "grim",    "losing": "grim",       "brink": "grim" } },
+    "cyborg":    { "default": "grim",       "shifts": { "winning": "grim",    "in_fold": "grim" } },
+    "protagonist": { "default": "playful",  "shifts": { "brink": "grim" } }
+  }
+}
+```
+
+**A lint rule.** Every fighter has a general fallback for each register, and every matchup has at least one line per shift, so no matchup goes silent.

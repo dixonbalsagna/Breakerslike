@@ -1,6 +1,6 @@
 # Spec: Wounds (damage model, Variant A)
 
-Owner: Game Design. Status: spec for P2 and P3, the input for Combat and Encounter Systems. Date: 2026-09-29.
+Owner: Game Design. Status: spec for P2 and P3, the input for Combat and Encounter Systems. **Scope: 1v1.** 2v2 rules are deferred (Orb). Date: 2026-09-29.
 
 **Sources.**
 - `damage-model.md`: the rationale behind this spec.
@@ -217,7 +217,7 @@ This section is binding and replaces the relocation rules in `systems-sketch.md`
 | **Threshold** | A total held mass of **12** (starting value). Any mix of sizes works, and there is never a count to complete. As his mass nears 12, the orbit tightens and hums. At 12 the ring closes: the tell |
 | **Time floor** | **Kept at 4:00.** No fold before it. It protects act 1 and 2 pacing, and gives the Cyborg his populated planet for at least the first half of the match |
 | **Folding** | With the ring closed and the floor passed, he holds an input for 1.5 s: the lead-in, with his line and the rival's reply. He is exposed like charging during the hold. An interrupt counts as a decisive exchange won by the rival, and knocks one fragment loose. Once the hold completes, the fold is a set piece of up to 6 s (Orb allows cinematics longer than 3 s) |
-| **Who comes** | In 1v1, both fighters, always, so the rival is never out of range (pillar 3). In 2v2, every fighter is inside the closing ring (default; see open questions) |
+| **Who comes** | In 1v1, both fighters, always, so the rival is never out of range (pillar 3). 2v2 rules are **deferred** (Orb: focus on 1v1 for now) |
 | **The proving ground** | A small wrapped planetoid, about a third of the planet's circumference, of barren craterable stone. No civilians, no structures and no cover |
 | **What the proving ground changes** | No casualties, so no collateral-fed gain: the prototype's menace and anguish stop, and the Cyborg cannot Press but keeps his Hunger. There is no hiding, because there is no cover. Ego meters, forms, wear and heat carry over unchanged. The Protagonist's **final form unlocks** here, and only here |
 | **Fragility** | While folded, the fragments still orbit him. A heavy, a GUARD BREAK, a signature hit or a region break on him knocks one loose, with a seeded pick weighted to the largest. It lands on the barren ground, and anyone can grab it: the rival gets a surge and denies the mass. Each loss makes the horizon **flicker**: a `FOLD FLICKERS` card, and the planet's edge ghosts back in |
@@ -234,6 +234,6 @@ This section is binding and replaces the relocation rules in `systems-sketch.md`
 - no casualties are recorded while folded (0 cases);
 - the Protagonist still wins 45 to 55% of each pairing.
 
-**Open questions for Orb:**
-- In 2v2, does the ring take everyone, or only the fighters inside it? That would split the match across two arenas, which is costly for the camera. Recommendation: everyone.
-- Should the rival's reply line vary with who is winning? Narrative can write both.
+**Settled or deferred:**
+- The rival's reply varies by matchup and stakes (Narrative's matchup matrix).
+- Who the fold takes in 2v2 is **deferred** with all 2v2 rules. The recommendation on record is everyone.
