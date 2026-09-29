@@ -213,3 +213,5 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 **Head flashes (Orb, 2026-09-29).** The transient aura should work like a brief flash around the head, in the spirit of a superhero's danger-sense flash, or a stealth game's '!' and '?' marks over an enemy's head. These are short, iconic state and emotion pops (comics call them emanata). Staples yes, signatures no: nothing that copies a specific franchise's squiggle design or alert sound.
 
 **Head flashes, answers (Orb, 2026-09-29).** The flash set: pitch changes (Orb wants options before settling on twelve). Info flashes (danger sense, found, searching) are a setting, on by default.
+
+**Flash set (Orb, 2026-09-29).** Add Hazard (info), Primed (info) and Respect (emotion). Cuts were left to the EP ('keep it dynamic and engaging'). EP ruling: cut Brink (the crown's brink ring covers it); keep Resolve as the Rally's emotional beat, firing after the crown's wear pop fades; keep Pride separate from Triumph. That makes 14 flashes, 5 of them info. Winded, Smug and Bored are held until the prototype proves the core set.
