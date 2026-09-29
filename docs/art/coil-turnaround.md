@@ -15,7 +15,7 @@ Owner: Art Director. 2026-09-29. A first turnaround of the Anti-hero as the Coil
 
 | View | What reads |
 |---|---|
-| Front | A dark wedge mask with the lit slash sigil down the middle; a chest harness of two crossing straps and a round buckle carrying the slash mark; a belt plate; forearm guards (from form 4) on the near arm; closed fists; short legs and boots with a light cuff |
+| Front | A dark wedge mask with the lit slash sigil down the middle; a chest harness of one diagonal sash and a round buckle with a small diamond stud (never two crossing straps, and no slash on the chest, so nothing lines up into an X with the face slash); a belt plate; forearm guards (from form 4) on the near arm; closed fists; short legs and boots with a light cuff |
 | Three-quarter | The mask turned so the sigil sits on the face plane; the harness across the chest; the spine plates standing off the back as rounded slabs; the short tied tail flicking behind |
 | Back | The head all hair (dark, never changing) with the tail hanging down the spine; six spine plates stacked down the middle as wide rounded slabs; the belt across the back |
 | Crouch | Low and coiled, weight forward, fists at the chin; the plates read as a serrated back |
@@ -46,7 +46,7 @@ About 24 bones: root, pelvis, two spine, neck, head, three tail (spring), two sh
 
 ## What I added to the design
 
-The Coil in round 2 had no front design. To make the three-quarter and front views work, the turnaround adds a chest harness (two straps and a buckle with the slash mark), a belt plate that shows front and back, and a back view with the plates centred. These are proposals for Orb and Legal. They keep every condition: no shoulder pads with white gloves and boots, no flame or upswept hair, no hair-colour change, no gold or red glow, no cape.
+The Coil in round 2 had no front design. To make the three-quarter and front views work, the turnaround adds a chest harness (one diagonal sash and a buckle with a diamond stud, changed from two crossing straps on Legal's condition), a belt plate that shows front and back, and a back view with the plates centred. These are proposals for Orb and Legal. They keep every condition: no shoulder pads with white gloves and boots, no flame or upswept hair, no hair-colour change, no gold or red glow, no cape.
 
 ## Limits and risks
 

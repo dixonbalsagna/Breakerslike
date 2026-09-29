@@ -1,6 +1,6 @@
 # Marked plus flashes: the character style
 
-Owner: Art Director. 2026-09-29. Round 4, revised twice on Orb's notes. Concept art for Orb to choose from. Working labels and placeholder looks. Results are **pending Legal review**.
+Owner: Art Director. 2026-09-29. Round 4, revised twice on Orb's notes, then again for Legal's conditions. Concept art for Orb to choose from. Working labels and placeholder looks. Legal's conditions are applied below; results are **pending Legal's confirmation**.
 
 Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distracting ("could be useful to convey emotions briefly, but then disappear") and pointed to the way a spider-sense flash or a stealth game's exclamation mark appears above a head. So the aura became **head flashes**: brief, iconic pops at the head that say what a fighter senses or feels. At rest there is nothing. Only a transformation surge lasts longer.
 
@@ -9,9 +9,10 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 - `ma-2-flashes.svg`: all twelve flashes in the four shape families, and a table of what each is for, its timing, priority and sound pairing.
 - `ma-3-staging.svg`: four staged moments in the greybox scene (face-off, clash, transformation, hurt or brink) with the blocking rules.
 - `ma-4-flash-rules.svg`: a flash in time, priority and arbitration, the flash against the HUD crown, and the Legal fallback.
-- `data/art/flashes.json`: the canonical data for Rendering, UI and Audio.
+- `ma-5-legal-checks.svg`: the checks Legal asked Art to run, because Legal cannot view SVGs (masks in three flat colours and silhouette, each sigil beside the generic patterns to avoid, the flashes beside the two patterns to avoid, the dome, and the Coil's chest).
+- `data/art/flashes.json`: the canonical data for Rendering, UI and Audio, now with the Legal rules (`legal_rules`).
 
-`node art/concepts/marked-aura/gen.mjs` regenerates all of them. The in-engine prototype is specified in `docs/art/flash-prototype-spec.md`.
+`node art/concepts/marked-aura/gen.mjs` regenerates all of them. The sigils, the dome mask and the palettes are in `art/concepts/shared/marks.mjs`, shared with the turnarounds. The in-engine prototype is specified in `docs/art/flash-prototype-spec.md`.
 
 ## The idea in one line
 
@@ -25,6 +26,19 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 | Anti-hero | Dark | Guarded and formal: a closed front. The lit sigil is the face |
 | Empress | Pale (warm bone) | Image-focused and theatrical. No horns |
 | Cyborg | Dark | A machine wearing politeness: a display face with a lit sigil grid |
+
+## The sigils (Legal's conditions applied)
+
+| Fighter | Sigil | Where | Rules kept |
+|---|---|---|---|
+| Protagonist | A single ring, teal on the pale mask | The forehead, above the brow ridge, under the raised hairline | No inner ring, no centre dot, never with the slash. Hurt and brink open a gap in the ring (a "C"), never a line across it |
+| Anti-hero | A leaning slash and a small dot, lit orchid on the dark mask | Mid-face, a mark with no pair | Never with a ring, never crossed into an X. Hurt and brink split the slash with a gap. The chest has one diagonal sash, so nothing lines up into an X |
+| Empress | Three chevrons of different sizes, offset, in moss | The brow, under the gear band | An odd count, not a tidy double chevron, moss and bone (never a car or oil brand's colours). Hurt drops the middle one |
+| Cyborg | A stair of four lit squares of growing size | Mid-face on the display | Not a line grid, no cross bars, no plus. Hurt drops one step |
+
+No sigil sits as an eye or a mouth: none is one of a pair, and none has a line beneath it. `ma-5-legal-checks.svg` shows each next to the generic patterns to avoid (a slashed ring, a target, four linked rings, a double chevron, a line grid, a cross), and each mask in three flat colours and as a silhouette.
+
+**The Protagonist's dome** is a designed shape and not an egg: a faceted crown, a raised brow ridge, a jaw plane and a crown seam, with no eye or mouth slots or dots. The hair is a swept-back teal cap, never upswept, never gold, and its fringe sits high so the forehead ring shows.
 
 ## The flash vocabulary
 
@@ -62,9 +76,15 @@ Each flash is drawn in the fighter's shape family. That is what makes it ours, a
 - **Info flashes** (danger sense, found, searching) are solid, at full opacity, with a dark keyline in the lane colour. Gameplay information: crisp and legible on any backdrop.
 - **Emotion flashes** (all the rest) are translucent, with a rim and a lighter core, at 34 to 55% opacity. Feeling and state.
 
+**Legal's conditions on shape:**
+- **Danger sense is a pointer train.** Three shapes of growing size along one ray, up and behind the head (a default of 132 degrees). Rendering turns the ray to the threat's bearing and keeps it above or behind (60 to 200 degrees). It is never a ring of short lines around the head and never wavy.
+- **The Anti-hero's upward flashes are round-tipped** (pride, triumph, surge, danger sense). His rage stays pointed, because it sweeps forward, not up.
+- **The Empress's upward flashes are a wide, low crest** behind the head (pride, triumph, surge, resolve): the angles are flattened and turned back, and the shapes are shorter. The Anti-hero's surge takes the same wide, low crest, so no transformation is a tall upswept shape.
+- **Info flashes** are a pale core inside a thin keyline in the lane's dark step. No yellow, no red-orange, no thick black outline. The Cyborg's are neutral steel.
+
 ### Colour
 
-The fighter's accent, two steps (a rim and a lighter core), never anything else. No red, red-orange or gold for the Protagonist or the Anti-hero. Protagonist teal, Anti-hero orchid violet, Empress moss, Cyborg brick coral (the Cyborg's red lane may use coral).
+Emotion flashes use the fighter's accent, two steps (a rim and a lighter core). Info flashes use a pale core inside a thin keyline in the lane's dark step (the Cyborg's are steel), never yellow or red-orange. No red, red-orange or gold for the Protagonist or the Anti-hero. Protagonist teal, Anti-hero orchid violet, Empress moss, Cyborg brick coral (the Cyborg's red lane may use coral).
 
 ### Sound pairing (with Audio; all original)
 
@@ -96,13 +116,29 @@ Each flash pairs with one short sound, described in words on the sheet: a low dr
 5. The pop for tier-up and transformation can go, because the surge carries it.
 6. Camera: leave about one body height above the head for a surge.
 
-## Legal
+## Legal conditions applied (2026-09-29, `docs/legal/q3-screen.md`)
 
-- **Staples yes, signatures no.** Exclamation marks, question marks, sweat drops and anger marks are general comics staples and are fine in our own style. They are drawn here in each fighter's own shapes with a keyline, not as a font glyph. Danger sense is short, straight bursts in the fighter's family, not a wavy squiggle.
-- **No copying of a specific franchise's look or sound:** no spider-sense squiggle, no copy of a stealth game's "!" graphic or alert sound. Legal screens the set.
+| Legal's condition | What was done | Where to see it |
+|---|---|---|
+| Ring: single, no concentric rings, no centre dot | The Protagonist's sigil is one ring, no inner ring, no dot. Hurt is a gap in the ring | `ma-5` section 2 |
+| Slash: never with the ring, never an X | The Anti-hero's slash leans and stands alone. Hurt splits it with a gap. The Coil's chest has one sash, not two crossing straps, and the buckle has a diamond and no slash | `ma-5` sections 2 and 5, `coil-turnaround.svg` |
+| Chevrons: an odd count, different sizes or offset, not a car or oil colour | Three chevrons of three sizes, offset, in moss on bone | `ma-5` section 2 |
+| Grid: not a glowing line grid | A stair of four lit squares. No lines, no cross bars | `ma-5` section 2 |
+| Dome: a designed shape, no eye or mouth slots or dots, sigil not as eyes or mouth | A faceted dome with brow ridge, jaw plane and crown seam. The ring is a lone forehead mark | `ma-5` sections 1 and 4 |
+| Anti-hero pride: the round-tipped fallback | Round tips are now the default for his pride, triumph, surge and danger sense | `ma-5` section 4, `ma-4` |
+| Empress fan: wide and low | A wide, low crest behind the head for pride, triumph, surge and resolve. Shorter than before. The Anti-hero's surge uses it too | `ma-5` section 4, `ma-4` |
+| Danger sense: directional, never radiating, never wavy | A pointer train of three growing shapes along one ray, above and behind the head | `ma-5` section 3 |
+| No yellow or red-orange "!" with a thick black outline | Info flashes are a pale core with a thin keyline in the lane colour. The Cyborg's are steel | `ma-5` section 3 |
+| Silhouette and three-flat-colour test on the four masks | Run. All four masks read in three flat colours and as silhouettes | `ma-5` section 1 |
+| Sigil thumbnails beside the named symbols | Run, using generic drawings of each avoided pattern | `ma-5` section 2 |
+| Flashes beside the two reference graphics | Run, using generic drawings of the two avoided patterns | `ma-5` section 3 |
+
+**Kept from before**
+- **Staples yes, signatures no.** Exclamation marks, question marks, sweat drops and anger marks are general comics staples and are drawn in each fighter's own shapes with a keyline, not as a font glyph.
+- **Sound:** original only (see the sound pairing). No four-note alert sting, no chirp. Audio can veto a pairing that sounds close to a known cue.
 - **Glow rules:** no red, red-orange or gold flash for the Protagonist or the Anti-hero; no full-body glow as a power-stage signature for anyone (the surge is head and shoulder anchored and settles after the cinematic); the Protagonist's heat stays steam and veins.
-- **Round-tipped fallback, ready.** The Anti-hero's pride flash is tall blades above the head, and the Empress's is a wedge fan, which could recall an upswept spiky aura. `ma-4-flash-rules.svg` shows the round-tipped version (pointed then round) for both. Blades and wedges switch to round tips and the shapes stay in their families.
-- **Still to screen:** the sigils (ring, slash, chevrons, grid) against real symbols, and the Protagonist's dome mask.
+- **Flagged for Legal, not changed:** the rage and triumph states of each sigil draw a small burst of short rays at the sigil (not around the head). If Legal prefers, they go, and the rage and triumph flashes carry the beat alone.
+- **Legacy view:** the earlier pointed and tall shapes stay visible on `ma-4` and `ma-5` (marked "before") so Legal can compare.
 
 ## Staging (blocking rules)
 
@@ -126,4 +162,4 @@ Applied on `ma-3-staging.svg`, with each flash at its peak:
 
 ## Files
 
-`art/concepts/marked-aura/`: `ma-1-style.svg`, `ma-2-flashes.svg`, `ma-3-staging.svg`, `ma-4-flash-rules.svg`, `gen.mjs`, `README.md`. The data is `data/art/flashes.json`. The in-engine prototype spec is `docs/art/flash-prototype-spec.md`. The prompt record is `art/prompts/ART-0005-marked-aura.md`.
+`art/concepts/marked-aura/`: `ma-1-style.svg`, `ma-2-flashes.svg`, `ma-3-staging.svg`, `ma-4-flash-rules.svg`, `ma-5-legal-checks.svg`, `gen.mjs`, `README.md`. Shared code: `art/concepts/shared/marks.mjs`. The data is `data/art/flashes.json`. The in-engine prototype spec is `docs/art/flash-prototype-spec.md`. The prompt records are `art/prompts/ART-0005-marked-aura.md` and `art/prompts/ART-0007-legal-conditions.md`.

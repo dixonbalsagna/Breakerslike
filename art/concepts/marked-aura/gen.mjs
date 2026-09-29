@@ -7,7 +7,8 @@ import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeCtx, figure, CIVILIAN, CIV_POSES, POSES, V } from '../anti-hero/kit.mjs';
-import { FIGHTERS, ORDER, PALETTES as BASE_PALETTES, LANE } from '../directions/fighters.mjs';
+import { FIGHTERS, ORDER, LANE } from '../directions/fighters.mjs';
+import { PAL, MASK, NAMES, NEUTRAL, curve, band, rot, scl, circ, FACE, yawMap, sigilMarks, maskHead, SIGPOS } from '../shared/marks.mjs';
 
 const OUT = dirname(fileURLToPath(import.meta.url));
 const F = n => n.toFixed(2);
@@ -20,75 +21,8 @@ const wrap = (t, n) => { const w = t.split(' '), out = []; let line = ''; for (c
 const paras = (x, y, t, n, size = 13, gap = 17, o = {}) => wrap(t, n).map((l, i) => text(x, y + i * gap, l, { size, ...o })).join('');
 
 export const YAW = 32;
-const NAMES = { P: 'Protagonist', A: 'Anti-hero', E: 'Empress', C: 'Cyborg' };
+export { PAL, MASK, NAMES };
 
-// ---------------------------------------------------------------------------------------------------------- palettes and mask tones
-const CALM = {
-  P: { hair: { light: '#8fd6c8', mid: '#3fae9c', shadow: '#22705f' }, accent: { light: '#8fd6c8', mid: '#4fb9a8', shadow: '#2a7568' } },
-  A: { accent: { light: '#c2adf0', mid: '#9a80d8', shadow: '#5b479a' } },
-  E: { base: { light: '#3a4029', mid: '#2a2f1e', shadow: '#191d11' }, accent: { light: '#dfe8a8', mid: '#b8c96a', shadow: '#6d7d30' } },
-  C: { accent: { light: '#f0b4a8', mid: '#d8705f', shadow: '#8a3a30' } },
-};
-export const PAL = Object.fromEntries(ORDER.map(k => [k, { ...BASE_PALETTES[k], ...CALM[k] }]));
-// Mask tone per fighter, by personality and by readability. Dark masks carry an emissive sigil; pale masks a painted one.
-export const MASK = {
-  P: { tone: 'pale', fill: '#e8f1ee', shadow: '#b9cfc9', why: 'Earnest, open, approachable. A pale mask is a small beacon over the dark tunic at 40 px.' },
-  A: { tone: 'dark', fill: '#2b2444', shadow: '#1a1530', why: 'Guarded and formal: the face is a closed front. The emissive sigil cracks with the facade. Dark reads well against sky.' },
-  E: { tone: 'pale', fill: '#e6e0c4', shadow: '#bdb692', why: 'Image-focused and theatrical: a polished bone mask, warm not white. No horns, and the rest of her is dark olive.' },
-  C: { tone: 'dark', fill: '#34313d', shadow: '#221f29', why: 'A machine wearing politeness: a dark display face with a lit sigil grid. It is the polite menace, and a lit screen is its expression.' },
-};
-const NEUTRAL = {
-  line: '#101014', skin: { light: '#e7c9ad', mid: '#c99a78', shadow: '#8f6448' }, hair: { light: '#5a4a3a', mid: '#3b3128', shadow: '#221b15' },
-  base: { light: '#8a93a3', mid: '#6c7079', shadow: '#4a4f57' }, gear: { light: '#c7ccd6', mid: '#9aa1ad', shadow: '#6c7079' }, accent: { light: '#c7ccd6', mid: '#9aa1ad', shadow: '#6c7079' },
-};
-
-// ---------------------------------------------------------------------------------------------------------- geometry helpers
-const curve = (p0, p1, p2, n = 8) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n; return [(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]]; });
-function band(pts, w) {
-  const n = pts.length, L = [], R = [];
-  for (let i = 0; i < n; i++) {
-    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
-    let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
-    const ww = (typeof w === 'function' ? w(i / (n - 1)) : w) / 2;
-    L.push([pts[i][0] - dy * ww, pts[i][1] + dx * ww]); R.push([pts[i][0] + dy * ww, pts[i][1] - dx * ww]);
-  }
-  return [...L, ...R.reverse()];
-}
-const rot = (pts, deg, c) => { const a = deg * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a); return pts.map(([x, y]) => [c[0] + (x - c[0]) * ca - (y - c[1]) * sa, c[1] + (x - c[0]) * sa + (y - c[1]) * ca]); };
-const scl = (pts, k, c) => pts.map(([x, y]) => [c[0] + (x - c[0]) * k, c[1] + (y - c[1]) * k]);
-const circ = (c, r, n = 14) => Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2; return [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]; });
-const FACE = { P: { x0: 1.2, x1: 6.2, ey: 10, my: 5.2 }, A: { x0: 1.4, x1: 6.4, ey: 9.8, my: 5 }, E: { x0: 0.8, x1: 4.4, ey: 12.6, my: 7 }, C: { x0: 1.6, x1: 6.2, ey: 10.2, my: 4.8 } };
-
-// ---------------------------------------------------------------------------------------------------------- the sigil (identity and small expression)
-const SIGIL = {
-  P: () => [{ pts: circ([0, 0], 3.4, 16), fill: 'acc' }, { pts: circ([0, 0], 2.0, 14), fill: 'mask' }, { pts: circ([0, 0], 0.9, 10), fill: 'acc' }],
-  A: () => [{ pts: [[-0.55, -5], [0.55, -5], [0.3, 5], [-0.3, 5]], fill: 'acc' }, { pts: circ([1.6, 3.8], 0.7, 8), fill: 'acc' }],
-  E: () => [{ pts: [[-2.6, 1.4], [0, 4], [2.6, 1.4], [2.6, 0.2], [0, 2.8], [-2.6, 0.2]], fill: 'acc' }, { pts: [[-2.6, -1.2], [0, 1.4], [2.6, -1.2], [2.6, -2.4], [0, 0.2], [-2.6, -2.4]], fill: 'acc' }],
-  C: () => [{ pts: [[-3, -3], [3, -3], [3, 3], [-3, 3]], fill: 'acc' }, { pts: [[-2.2, -2.2], [2.2, -2.2], [2.2, 2.2], [-2.2, 2.2]], fill: 'mask' }, { pts: [[-0.4, -2.2], [0.4, -2.2], [0.4, 2.2], [-0.4, 2.2]], fill: 'acc' }, { pts: [[-2.2, -0.4], [2.2, -0.4], [2.2, 0.4], [-2.2, 0.4]], fill: 'acc' }],
-};
-const yawMap = (fk, yaw) => { const f = FACE[fk], xm = (f.x0 + f.x1) / 2, a = yaw * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), m = s; return ([u, y]) => [(1 - m) * u + m * (c * 5.4 + s * 1.5 * (u - xm)), y]; };
-
-function sigilMarks(fk, pal, e, mask) {
-  const f = FACE[fk], c = [(f.x0 + f.x1) / 2 + 0.2, f.ey - 0.6], dark = mask.tone === 'dark', out = [];
-  let k = 1, r = 0, dy = 0, col = dark ? pal.accent.light : pal.accent.mid, glow = 0;
-  if (e === 'pride') { k = 1.08; }
-  if (e === 'taunt') { r = 18; dy = 0.9; }
-  if (e === 'hurt') { k = 0.85; col = dark ? pal.accent.mid : pal.accent.shadow; }
-  if (e === 'brink') { k = 0.78; col = pal.accent.shadow; }
-  if (e === 'rage') { k = 1.3; col = pal.accent.light; glow = 1; }
-  if (e === 'triumph') { k = 1.12; col = pal.accent.light; glow = 1; }
-  if (e === 'transform') { k = 1.4; col = pal.accent.light; glow = 1; }
-  const cc = [c[0], c[1] + dy];
-  const place = pts => scl(rot(pts.map(([x, y]) => [c[0] + x, c[1] + y + dy]), r, cc), k, cc);
-  const parts = SIGIL[fk](pal);
-  if (dark || glow) for (const part of parts) if (part.fill === 'acc') out.push({ poly: scl(place(part.pts), 1.5, cc), fill: pal.accent.light, op: dark ? 0.26 : 0.34, line: false });
-  for (const part of parts) out.push({ poly: place(part.pts), fill: part.fill === 'mask' ? mask.fill : col, line: false });
-  if (e === 'hurt') out.push({ poly: band([[cc[0] - 1.6, cc[1] + 3.4], [cc[0] - 0.2, cc[1] + 0.4], [cc[0] + 0.6, cc[1] - 3.6]], 0.42), fill: '#1c1626', line: false });
-  if (e === 'brink') { out.push({ poly: band([[cc[0] - 2.2, cc[1] + 3.8], [cc[0] - 0.4, cc[1] + 0.6], [cc[0] + 0.8, cc[1] - 4]], 0.7), fill: '#1c1626', line: false }); out.push({ poly: band([[cc[0] + 1.6, cc[1] + 3], [cc[0] + 0.2, cc[1] - 0.6]], 0.5), fill: '#1c1626', line: false }); }
-  if (e === 'rage' || e === 'transform') for (let i = 0; i < 6; i++) out.push({ poly: rot([[cc[0] + 4.2, cc[1] - 0.5], [cc[0] + 6.6, cc[1]], [cc[0] + 4.2, cc[1] + 0.5]], -70 + i * 28, cc), fill: col, line: false });
-  if (e === 'triumph') for (let i = 0; i < 7; i++) out.push({ poly: band([[cc[0] + 4.6, cc[1]], [cc[0] + 6.4, cc[1]]].map(p => rot([p], -80 + i * 26, cc)[0]), 0.5), fill: pal.accent.light, line: false });
-  return out;
-}
 
 // ---------------------------------------------------------------------------------------------------------- the flashes (emanata at the head)
 // A brief, iconic pop at the head that says what a fighter senses or feels. At rest there is nothing. Each flash is drawn in the
@@ -104,7 +38,9 @@ const LAY = {
   pride: [{ a: 90, d: 10, s: 60, op: 0.46 }, { a: 78, d: 9, s: 44, op: 0.42 }, { a: 102, d: 9, s: 44, op: 0.42 }, { a: 66, d: 8, s: 28, op: 0.38 }, { a: 114, d: 8, s: 28, op: 0.38 }],
   fear: [{ a: 40, d: 30, s: 14, op: 0.42, inward: true }, { a: 90, d: 32, s: 16, op: 0.42, inward: true }, { a: 140, d: 30, s: 14, op: 0.42, inward: true }, { a: 15, d: 24, s: 10, op: 0.36, inward: true }, { a: 165, d: 24, s: 10, op: 0.36, inward: true }],
   resolve: [{ a: 20, d: 22, s: 13, op: 0.44, inward: true }, { a: 90, d: 26, s: 15, op: 0.44, inward: true }, { a: 160, d: 22, s: 13, op: 0.44, inward: true }, { a: 90, d: 6, s: 22, op: 0.5 }],
-  danger: [{ a: -26, d: 14, s: 24, op: 0.95 }, { a: 0, d: 14, s: 34, op: 0.95 }, { a: 26, d: 14, s: 24, op: 0.95 }],
+  // Danger sense is a pointer train: three aligned shapes, growing along one ray above and behind the head. The ray (a) is the default
+  // and is rotated to the threat's bearing at run time (clamped to 60 to 200 degrees, so it is always above or behind, never around the head).
+  danger: [{ a: 132, d: 12, s: 17, op: 0.95 }, { a: 132, d: 32, s: 24, op: 0.95 }, { a: 132, d: 57, s: 34, op: 0.95 }],
   surge: [...[60, 75, 90, 105, 120].map(a => ({ a, d: 10, s: 96, op: 0.55 })), ...[0, 30, 150, 180].map(a => ({ a, d: 12, s: 56, op: 0.5 })), ...[186, 196, 344, 354].map(a => ({ a, d: 50, s: 30, op: 0.42, ground: true }))],
 };
 // timing t = [attack, hold, fade] in seconds; pri 1 is the highest priority; cool is the per-fighter cooldown for the same flash.
@@ -136,14 +72,27 @@ function tri(base, ux, uy, s, w, round) {
   pts.push([c[0] - nx * r, c[1] - ny * r], [base[0] - nx * w, base[1] - ny * w]);
   return pts;
 }
+for (const [id, f] of Object.entries(FLASHES)) f.id = id;
+// Legal conditions on the tall upward flashes. The Anti-hero's upward flashes are round-tipped (his rage may stay pointed, it sweeps forward).
+// The Empress's upward flashes are a wide, low crest behind the head: the angles are flattened, turned back and shortened.
+let LEGACY = false;   // draws the shapes as they were before Legal's conditions, for the comparison frames only
+const A_ROUND = new Set(['pride', 'triumph', 'surge', 'danger']);
+const E_CREST = new Set(['pride', 'triumph', 'surge', 'resolve']);
+function crest(it) {
+  const a = it.a * Math.PI / 180, x = Math.cos(a), y = Math.sin(a) * 0.4, sq = Math.atan2(y, x) * 180 / Math.PI;
+  return { ...it, a: sq + 42, s: it.s * 0.7, d: it.d + 4 };
+}
 function layoutPolys(fk, f, hc, u, k, round, ground) {
   const out = [], info = f.cls === 'info';
-  for (const it of f.layout) {
+  if (fk === 'A' && A_ROUND.has(f.id) && !LEGACY) round = true;
+  for (let it of f.layout) {
+    if ((fk === 'E' && E_CREST.has(f.id) || fk === 'A' && f.id === 'surge') && !it.ground && !LEGACY) it = crest(it);
     const a = it.a * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), dir = it.inward ? -1 : 1;
     const base = it.ground ? [hc[0] + ux * it.d * u, ground] : [hc[0] + ux * it.d * u, hc[1] + 2 + uy * it.d * u];
     const size = (0.55 + 0.45 * k);
-    for (const [kk, layer] of [[1, 'rim'], [0.58, 'core']]) {
-      const s = it.s * u * kk * size, w = (fk === 'A' ? 3.8 : fk === 'E' ? 8.5 : 4) * u * (kk === 1 ? 1 : 0.6);
+    // Info flashes are solid with a thin keyline (the core fills 84% of the rim). Emotion flashes are a rim and a smaller, lighter core.
+    for (const [kk, layer] of [[1, 'rim'], [info ? 0.84 : 0.58, 'core']]) {
+      const s = it.s * u * kk * size, w = (fk === 'A' ? 3.8 : fk === 'E' ? 8.5 : 4) * u * (kk === 1 ? 1 : info ? 0.84 : 0.6);
       let pts;
       if (fk === 'P') pts = circ([base[0] + ux * dir * s * 0.5, base[1] + uy * dir * s * 0.5], Math.max(2.5, s * 0.3), 14);
       else if (fk === 'C') { const q = Math.max(3, s * 0.3); pts = [[base[0] - q, base[1] - q], [base[0] + q, base[1] - q], [base[0] + q, base[1] + q], [base[0] - q, base[1] + q]].map(([x, y]) => [Math.round(x / 3) * 3 + ux * dir * s * 0.5, Math.round(y / 3) * 3 + uy * dir * s * 0.5]); }
@@ -159,7 +108,7 @@ function glyphPolys(fk, kind, cx, cy, u, k, round) {
   const sc = (0.7 + 0.3 * k) * u * 1.7;
   const dotAt = (x, y, r) => (fk === 'P' ? circ([x, y], r * 1.05, 10) : fk === 'C' ? [[x - r, y - r], [x + r, y - r], [x + r, y + r], [x - r, y + r]] : fk === 'A' ? [[x, y - r * 1.2], [x + r * 0.9, y], [x, y + r * 1.2], [x - r * 0.9, y]] : [[x - r * 1.2, y - r * 0.8], [x + r * 1.2, y - r * 0.8], [x, y + r * 1.2]]);
   if (kind === 'bang') {
-    for (const [pad, layer] of [[1.5, 'rim'], [0, 'core']]) {
+    for (const [pad, layer] of [[1.1, 'rim'], [0, 'core']]) {
       const g = pad * sc * 0.6;
       let stem;
       if (fk === 'P') stem = band([[cx, cy + 5.4 * sc], [cx, cy + 12.6 * sc]], 3.4 * sc + g * 2).concat([]);
@@ -172,7 +121,7 @@ function glyphPolys(fk, kind, cx, cy, u, k, round) {
     }
   } else {
     const path = fk === 'E' ? [[-3.6, 10.6], [-2.4, 14.8], [2.6, 14.8], [3.6, 10.8], [0, 7.4], [0, 5]] : [[-3.6, 10.6], [-3.4, 13.6], [-0.8, 15.4], [2.4, 14.2], [3.2, 11.6], [1.6, 9.2], [0, 7.2], [0, 5]];
-    for (const [pad, layer] of [[1.5, 'rim'], [0, 'core']]) {
+    for (const [pad, layer] of [[1.1, 'rim'], [0, 'core']]) {
       const g = pad * sc * 0.6, pts = path.map(([x, y]) => [cx + x * sc, cy + y * sc]);
       if (fk === 'P') for (const p of pts) P(circ(p, 1.8 * sc + g, 10), layer);
       else if (fk === 'C') for (const p of pts) { const q = 1.7 * sc + g, gx = Math.round(p[0] / 3) * 3, gy = Math.round(p[1] / 3) * 3; P([[gx - q, gy - q], [gx + q, gy - q], [gx + q, gy + q], [gx - q, gy + q]], layer); }
@@ -194,18 +143,21 @@ const civC = {
   cfg: pal => ({ ...CIVILIAN.cfg(pal), torso: '#8a93a3', sleeve: '#8a93a3', torsoShade: '#00000030' }),
   blankHead: pal => ({ poly: [[-4.6, 1], [-5.4, 8], [-4.4, 14], [0, 16.4], [4.6, 14], [5.6, 8], [4, 1.5]], fill: pal.skin.mid, shadow: pal.skin.shadow, shade: [[-4.6, 1], [-5.4, 8], [-4.4, 14], [0, 16.4], [1, 16], [-2.4, 12], [-2.4, 6], [-1, 0.6]] }),
 };
+// Info flashes: a pale core inside a thin keyline in the lane's dark step. No yellow or red-orange, and no thick black outline. The Cyborg's are neutral steel.
+const INFO = { P: { core: '#e6f7f3', line: '#2a7568' }, A: { core: '#eee6fc', line: '#5b479a' }, E: { core: '#eaf3d4', line: '#5d6c2a' }, C: { core: '#e3e7ee', line: '#4a4f57' } };
 // which sigil pose goes with each state
 const SIGIL_STATE = { pride: 'pride', danger: 'pride', found: 'triumph', searching: 'taunt', fear: 'hurt', resolve: 'pride', surge: 'transform', clash: 'rage', neutral: 'neutral', taunt: 'taunt', hurt: 'hurt', brink: 'brink', rage: 'rage', triumph: 'triumph' };
 function styled(fk) {
   const base = FIGHTERS[fk], mask = MASK[fk];
   const c = { ...base };
   c.blankHead = (p, st) => {
-    const bh = base.blankHead(p);
-    let marks = bh.marks ?? [];
-    if (fk === 'C') marks = marks.slice(1);
-    let extra = sigilMarks(fk, p, SIGIL_STATE[st.state ?? 'neutral'] ?? 'neutral', mask);
-    if ((st.yaw ?? 0) > 0) { const m = yawMap(fk, st.yaw); marks = marks.map(q => ({ ...q, poly: q.poly.map(m) })); extra = extra.map(q => ({ ...q, poly: q.poly.map(m) })); }
-    return { ...bh, fill: mask.fill, shadow: mask.shadow, neck: mask.shadow, marks: [...marks, ...extra] };
+    const yaw = st.yaw ?? 0, mh = maskHead(fk, base.blankHead(p), p, mask, yaw);
+    return { ...mh, marks: [...mh.marks, ...sigilMarks(fk, p, SIGIL_STATE[st.state ?? 'neutral'] ?? 'neutral', mask, yaw)] };
+  };
+  // The Protagonist's hair sits back off the forehead so the dome and its ring show (the fringe line moves up about 2 units).
+  if (fk === 'P') c.hair = (ctx, sk) => {
+    const H = a => a.map(([x, y]) => sk.Hd(x, y));
+    return ctx.poly(H([[5.8, 16.2], [4.4, 18.3], [0.6, 19.8], [-4.4, 18.4], [-8.4, 14.8], [-12.4, 11.6], [-14, 8.4], [-12, 6.4], [-8.4, 8.2], [-5.8, 6.8], [-5.8, 11.4], [-3.4, 15], [1, 16.4]]), ctx.pal.hair.mid);
   };
   const prevBack = base.back;
   c.back = (ctx, sk, st, cfg) => {
@@ -215,7 +167,8 @@ function styled(fk) {
       const hc = sk.Hd(3, 9), u = sk.b.hs * 0.95, pal = ctx.pal;
       for (const a of flashPolys(fk, id, [hc.x, hc.y], u, { k: st.k ?? 1, round: st.round, ground: 0 })) {
         const info = a.info;
-        const col = info ? (a.layer === 'rim' ? pal.accent.shadow : pal.accent.light) : (a.layer === 'rim' ? pal.accent.mid : pal.accent.light);
+        const ic = INFO[fk];
+        const col = info ? (a.layer === 'rim' ? ic.line : ic.core) : (a.layer === 'rim' ? pal.accent.mid : pal.accent.light);
         const op = info ? a.op : a.op * (a.layer === 'rim' ? 0.85 : 1);
         const pts = a.pts.map(p => (Array.isArray(p) ? `${p[0].toFixed(2)},${p[1].toFixed(2)}` : `${p.x.toFixed(2)},${p.y.toFixed(2)}`)).join(' ');
         o += `<polygon points="${pts}" fill="${col}" opacity="${op.toFixed(2)}"/>`;
@@ -262,13 +215,15 @@ function poseFor(fk, s) {
 const stateOf = (state, yaw, k, round, extra = {}) => ({ yaw, state, k, round, expression: 'neutral', open: state === 'rage' || state === 'clash' ? 1 : state === 'hurt' || state === 'brink' ? 0.4 : 0, forms: 6, hairLoose: ['rage', 'hurt', 'brink', 'clash', 'fear'].includes(state), ...extra });
 
 // state: a flash id, or neutral (at rest: no flash). k: 0 to 1 envelope of the flash (1 is the peak).
-function fig(fk, px, x, ground, { flat = false, state = 'neutral', civ = false, flip = false, yaw = YAW, noFlash = false, wear = 0, k = 1, round = false } = {}) {
+function fig(fk, px, x, ground, { flat = false, state = 'neutral', civ = false, flip = false, yaw = YAW, noFlash = false, wear = 0, k = 1, round = false, legacy = false } = {}) {
+  LEGACY = legacy;
   const s = px / 100, pal = civ ? NEUTRAL : PAL[fk];
   const concept = civ ? civC : styled(fk);
   const ctx = makeCtx({ flat, pal, swMul: px < 9 ? 0 : px < 28 ? 0.6 : px < 80 ? 1 : 1.3, faceless: true });
   const p = civ ? CIV_POSES[0] : poseFor(fk, state);
   const st = civ ? { expression: 'neutral', yaw } : { ...stateOf(state, yaw, k, round), sway: FIGHTERS[fk].sway ?? 6, wear, noFlash };
   const { svg } = figure(ctx, concept, p, st, { yaw });
+  LEGACY = false;
   const fl = flip ? ` transform="translate(${F(x)} 0) scale(-1 1) translate(${F(-x)} 0)"` : '';
   return `<g${fl}><g transform="translate(${F(x)} ${F(ground)}) scale(${F(s)} ${F(-s)})">${svg}</g></g>`;
 }
@@ -446,14 +401,14 @@ function rulesSheet() {
   b += text(24, yc + 290, 'The crown is drawn as UI\'s spec describes it (docs/ui/hud-spec.md): thin arcs and an inner ring, a faint dashed brink ring. A flash never draws a ring or an outline arc, and the crown never draws a filled shape.', { size: 12, op: 0.85 });
   // Legal fallback
   const yl = yc + 320;
-  b += text(24, yl, 'Legal fallback, ready: round-tipped shapes (pointed, then round-tipped)', { size: 18, weight: 700 });
-  [['A', 'pride'], ['A', 'rage'], ['E', 'pride'], ['E', 'rage']].forEach(([fk, id], i) => {
+  b += text(24, yl, "Legal conditions applied: the Anti-hero's upward flashes are round-tipped, and the Empress's are a wide, low crest (before, then now)", { size: 18, weight: 700 });
+  [['A', 'pride'], ['A', 'triumph'], ['E', 'pride'], ['E', 'triumph']].forEach(([fk, id], i) => {
     const x0 = 24 + i * 444;
     b += rect(x0, yl + 14, 432, 200, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.15"');
-    b += fig(fk, 96, x0 + 90, yl + 208, { state: id }) + fig(fk, 96, x0 + 300, yl + 208, { state: id, round: true });
-    b += text(x0 + 8, yl + 32, `${NAMES[fk]} ${id}: pointed, round-tipped`, { size: 11.5, op: 0.8 });
+    b += fig(fk, 96, x0 + 90, yl + 208, { state: id, legacy: true }) + fig(fk, 96, x0 + 300, yl + 208, { state: id });
+    b += text(x0 + 8, yl + 32, `${NAMES[fk]} ${id}: before (tall), now`, { size: 11.5, op: 0.8 });
   });
-  b += paras(24, yl + 240, 'If Legal finds a tall pointed flash too close to an upswept spiky aura, the blades and wedges switch to round tips, and the shapes stay in their families. Circles and steps are unchanged.', 230, 12.5, 17);
+  b += paras(24, yl + 240, "Legal found a tall pointed flash too close to an upswept spiky aura. So the Anti-hero's pride, triumph, surge and danger sense are round-tipped, and the Empress's pride, triumph, surge and resolve are flattened into a wide, low crest behind the head, shorter than before. The shapes stay in their families. Circles and steps are unchanged. The Anti-hero's rage stays pointed, because it sweeps forward, not up.", 230, 12.5, 17);
   b += text(24, yl + 285, 'Legal notes on the set', { size: 16, weight: 700 });
   b += paras(24, yl + 306, 'Exclamation and question marks are general comics staples and are drawn here in each fighter\'s own shapes with a keyline, not as a font glyph. Danger sense is short straight bursts in the fighter\'s family, not a wavy squiggle. The sounds are described in words and must be original: no stealth-game alert sting, no spider-sense chirp. No red, red-orange or gold flash for the Protagonist or the Anti-hero. The Protagonist\'s heat stays steam and veins on the body.', 230, 12.5, 17);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}${b}</svg>`;
@@ -471,7 +426,7 @@ function stagingSheet() {
       draw: () => f('A', 78, 250, 372, { state: 'pride' }) + f('E', 82, 640, 350, { state: 'taunt', flip: true }) + f('P', 122, 150, 520, { state: 'found' }) + f('C', 124, 770, 530, { state: 'neutral', flip: true }) },
     { title: '2. Mid-exchange clash', note: 'The Protagonist and the Anti-hero meet in the centre, both in rage, the flares sweeping forward and overlapping at the contact. The Empress watches from upstage with a danger-sense flash (something is coming), and the Cyborg searches. Nobody shows their back.', scene: 'craters', x: 916, y: 124, w: 860, h: 560,
       draw: () => f('P', 128, 360, 510, { state: 'clash' }) + f('A', 122, 540, 512, { state: 'clash', flip: true }) + f('E', 74, 130, 380, { state: 'danger' }) + f('C', 74, 770, 384, { state: 'searching', flip: true }) },
-    { title: '3. Transformation (a respected cinematic)', note: 'The Anti-hero surges alone, centred and downstage: the one flash that lasts, held for the cinematic and then faded. Tall shapes and ground shards rise from the head and shoulders and the sigil is fully lit. The Protagonist watches with fear, the others stand at rest.', scene: 'high', x: 24, y: 780, w: 880, h: 560,
+    { title: '3. Transformation (a respected cinematic)', note: 'The Anti-hero surges alone, centred and downstage: the one flash that lasts, held for the cinematic and then faded. A wide crest of round-tipped blades and ground shards spread from the head and shoulders and the sigil is fully lit. The Protagonist watches with fear, the others stand at rest.', scene: 'high', x: 24, y: 780, w: 880, h: 560,
       draw: () => f('A', 178, 450, 540, { state: 'surge' }) + f('P', 84, 130, 470, { state: 'fear' }) + f('E', 84, 760, 470, { state: 'neutral', flip: true }) + f('C', 84, 250, 420, { state: 'neutral' }) },
     { title: '4. Hurt and brink', note: 'The Protagonist has just entered the brink: folded, sigil dim and cracked, a few guttering fragments. UI\'s thin dashed brink ring is drawn as UI specifies, so the two are visibly different (in play the crown would own this moment and the flash would wait). The Anti-hero stands over him in pride, the Empress triumphs, the Cyborg is at rest.', scene: 'village', x: 916, y: 780, w: 860, h: 560,
       draw: () => f('P', 130, 340, 530, { state: 'brink' }) + `<g><circle cx="342" cy="466" r="62" fill="none" stroke="#5b5866" stroke-width="1.4" stroke-dasharray="6 5" opacity="0.7"/></g>` + f('A', 118, 560, 524, { state: 'pride', flip: true }) + f('E', 76, 720, 410, { state: 'triumph', flip: true }) + f('C', 76, 120, 400, { state: 'neutral' }) },
@@ -494,12 +449,152 @@ function stagingSheet() {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}${b}</svg>`;
 }
 
+// ---------------------------------------------------------------------------------------------------------- sheet 5: the checks Legal asked Art to run
+// Legal cannot view SVGs (docs/legal/q3-screen.md, "Marked plus Aura"), so these are run here: the masks in full colour, in three flat
+// colours and as silhouettes; each sigil beside the generic patterns to avoid; the flashes beside the two patterns to avoid.
+// The "avoid" drawings are generic geometry only (a slashed ring, a target, a double chevron, a line grid, an X, radiating short lines,
+// a thick-outlined bang). They are not copies of any logo or graphic.
+const GREY = '#6f6b7c';
+function closeup2(fk, x, y, size, { yaw = YAW, mode = 'full', px = 620, state = 'neutral' } = {}) {
+  const s = px / 100, pal = PAL[fk], concept = styled(fk);
+  const ctx = makeCtx({ flat: mode === 'sil', pal, swMul: mode === 'flat3' ? 0 : 1, faceless: true });
+  const st = { ...stateOf(state, yaw, 1, false), sway: FIGHTERS[fk].sway ?? 6, wear: 0, noFlash: true };
+  const { svg, sk } = figure(ctx, concept, poseFor(fk, state), st, { yaw });
+  const h = sk.Hd(3.2, 9.4);
+  let body = svg;
+  if (mode === 'flat3') {
+    const acc = new Set([...Object.values(pal.accent), ...(fk === 'P' ? Object.values(pal.hair) : [])].map(c => c.toLowerCase()));
+    const dark = '#221c33', light = '#efece4', sig = pal.accent.mid;
+    body = body.replace(/<[a-z]+ [^>]*?opacity="0\.[0-4][0-9]*"[^>]*?\/>/g, '')
+      .replace(/ stroke="[^"]*"/g, '').replace(/ stroke-[a-z]+="[^"]*"/g, '').replace(/ vector-effect="[^"]*"/g, '').replace(/ opacity="[^"]*"/g, '')
+      .replace(/fill="(#[0-9a-fA-F]{6})"/g, (m, c) => {
+        if (acc.has(c.toLowerCase())) return `fill="${sig}"`;
+        const r = parseInt(c.slice(1, 3), 16), g = parseInt(c.slice(3, 5), 16), b = parseInt(c.slice(5, 7), 16);
+        return `fill="${0.299 * r + 0.587 * g + 0.114 * b > 140 ? light : dark}"`;
+      });
+  }
+  const bg = mode === 'full' ? '#f3f0f8' : mode === 'flat3' ? '#a9a6b3' : '#f3f0f8';
+  return `<svg x="${F(x)}" y="${F(y)}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" overflow="hidden">${rect(0, 0, size, size, bg)}<g transform="translate(${F(size / 2 - h.x * s)} ${F(size / 2 + h.y * s)}) scale(${F(s)} ${F(-s)})">${body}</g></svg>` + rect(x, y, size, size, 'none', 'stroke="#1b1428" stroke-opacity="0.35"');
+}
+// a sigil on a swatch of its own mask, alone, at a scale
+function sigilTile(fk, x, y, size, state, sc) {
+  const c = SIGPOS[fk], mask = MASK[fk], polys = sigilMarks(fk, PAL[fk], state, mask, 0);
+  const pts = p => p.map(([a, b]) => `${a.toFixed(2)},${b.toFixed(2)}`).join(' ');
+  const inner = polys.map(q => `<polygon points="${pts(q.poly)}" fill="${q.fill}" opacity="${q.op ?? 1}"/>`).join('');
+  return rect(x, y, size, size, mask.fill, 'stroke="#1b1428" stroke-opacity="0.35"') + `<g transform="translate(${F(x + size / 2)} ${F(y + size / 2)}) scale(${F(sc)} ${F(-sc)}) translate(${F(-c[0])} ${F(-c[1])})">${inner}</g>`;
+}
+// generic patterns to avoid, drawn in grey on a light tile (cx, cy is the centre, r the radius)
+function avoid(kind, cx, cy, r) {
+  const st = `fill="none" stroke="${GREY}" stroke-width="${F(r * 0.14)}" stroke-linecap="round" stroke-linejoin="round"`;
+  const ring = (rr) => `<circle cx="${F(cx)}" cy="${F(cy)}" r="${F(rr)}" ${st}/>`;
+  if (kind === 'prohibit') return ring(r * 0.8) + `<line x1="${F(cx - r * 0.56)}" y1="${F(cy - r * 0.56)}" x2="${F(cx + r * 0.56)}" y2="${F(cy + r * 0.56)}" ${st}/>`;
+  if (kind === 'target') return ring(r * 0.85) + ring(r * 0.55) + `<circle cx="${F(cx)}" cy="${F(cy)}" r="${F(r * 0.18)}" fill="${GREY}"/>`;
+  if (kind === 'linked') return [-0.9, -0.3, 0.3, 0.9].map((k, i) => `<circle cx="${F(cx + k * r * 0.62)}" cy="${F(cy + (i % 2 ? 0.16 : -0.16) * r)}" r="${F(r * 0.38)}" ${st}/>`).join('');
+  if (kind === 'double') { const ch = dy => `<polyline points="${F(cx - r * 0.7)},${F(cy + dy + r * 0.3)} ${F(cx)},${F(cy + dy - r * 0.3)} ${F(cx + r * 0.7)},${F(cy + dy + r * 0.3)}" ${st}/>`; return ch(-r * 0.32) + ch(r * 0.32); }
+  if (kind === 'x') return `<line x1="${F(cx - r * 0.6)}" y1="${F(cy - r * 0.6)}" x2="${F(cx + r * 0.6)}" y2="${F(cy + r * 0.6)}" ${st}/><line x1="${F(cx + r * 0.6)}" y1="${F(cy - r * 0.6)}" x2="${F(cx - r * 0.6)}" y2="${F(cy + r * 0.6)}" ${st}/>`;
+  if (kind === 'linegrid') { let o = ''; for (let i = -2; i <= 2; i++) o += `<line x1="${F(cx + i * r * 0.32)}" y1="${F(cy - r * 0.64)}" x2="${F(cx + i * r * 0.32)}" y2="${F(cy + r * 0.64)}" ${st.replace(F(r * 0.14), F(r * 0.06))}/><line x1="${F(cx - r * 0.64)}" y1="${F(cy + i * r * 0.32)}" x2="${F(cx + r * 0.64)}" y2="${F(cy + i * r * 0.32)}" ${st.replace(F(r * 0.14), F(r * 0.06))}/>`; return o; }
+  if (kind === 'plus') return `<line x1="${F(cx - r * 0.6)}" y1="${F(cy)}" x2="${F(cx + r * 0.6)}" y2="${F(cy)}" ${st}/><line x1="${F(cx)}" y1="${F(cy - r * 0.6)}" x2="${F(cx)}" y2="${F(cy + r * 0.6)}" ${st}/>`;
+  if (kind === 'egg') return `<ellipse cx="${F(cx)}" cy="${F(cy)}" rx="${F(r * 0.55)}" ry="${F(r * 0.72)}" fill="#e9e6ef" stroke="${GREY}" stroke-width="${F(r * 0.06)}"/><circle cx="${F(cx + r * 0.1)}" cy="${F(cy - r * 0.12)}" r="${F(r * 0.09)}" fill="${GREY}"/><circle cx="${F(cx - r * 0.2)}" cy="${F(cy - r * 0.12)}" r="${F(r * 0.09)}" fill="${GREY}"/>`;
+  if (kind === 'radiate') {
+    let o = `<circle cx="${F(cx)}" cy="${F(cy)}" r="${F(r * 0.34)}" fill="#dcd9e4" stroke="${GREY}" stroke-width="${F(r * 0.05)}"/>`;
+    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; o += `<line x1="${F(cx + Math.cos(a) * r * 0.5)}" y1="${F(cy + Math.sin(a) * r * 0.5)}" x2="${F(cx + Math.cos(a) * r * 0.86)}" y2="${F(cy + Math.sin(a) * r * 0.86)}" ${st}/>`; }
+    return o;
+  }
+  if (kind === 'wavy') { let d = ''; for (let i = 0; i <= 12; i++) d += `${i ? 'L' : 'M'}${F(cx - r * 0.9 + i * r * 0.15)},${F(cy + Math.sin(i * 1.4) * r * 0.12)} `; return `<path d="${d}" ${st}/>` + `<path d="${d.replace(/,(-?[0-9.]+) /g, (m, y) => `,${(+y + r * 0.28).toFixed(2)} `)}" ${st}/>`; }
+  if (kind === 'bang') { const w = r * 0.24; return `<g stroke="#111" stroke-width="${F(r * 0.2)}" stroke-linejoin="round" fill="#f2c230"><polygon points="${F(cx - w)},${F(cy - r * 0.8)} ${F(cx + w)},${F(cy - r * 0.8)} ${F(cx + w * 0.55)},${F(cy + r * 0.2)} ${F(cx - w * 0.55)},${F(cy + r * 0.2)}"/><circle cx="${F(cx)}" cy="${F(cy + r * 0.62)}" r="${F(w * 0.85)}"/></g>`; }
+  return '';
+}
+const AVOID_NAME = { prohibit: 'ring with a slash (a prohibition sign)', target: 'concentric rings and a centre dot (a target)', linked: 'four linked rings', double: 'a tidy double chevron (car and oil logos)', x: 'two strokes crossed into an X', linegrid: 'a glowing line grid', plus: 'a cross or plus', egg: 'a plain egg with dot eyes', radiate: 'a ring of short lines around the head', wavy: 'wavy lines', bang: 'a yellow bang with a thick black outline' };
+
+function legalSheet() {
+  const W = 1800, H = 2330;
+  let b = rect(0, 0, W, H, '#dcd8e6') + rect(0, 0, W, 104, '#1b1428');
+  b += text(30, 48, 'Legal checks on the Marked plus flashes set', { size: 34, weight: 700, fill: '#f4f0fa' });
+  b += text(30, 80, 'The checks Legal asked Art to run (docs/legal/q3-screen.md), because Legal cannot view SVGs. Generic patterns to avoid are drawn in grey, and are not copies of any logo or graphic.', { size: 15, fill: '#cfc6e6' });
+  b += text(W - 30, 80, 'Status: run by Art, for Legal to confirm.', { size: 12, fill: '#cfc6e6', anchor: 'end' });
+
+  // 1. masks: full colour, three flat colours, silhouette, at large and small size
+  let y = 136;
+  b += text(24, y, '1. The four masks: full colour, three flat colours (dark, light, sigil), and silhouette, at three-quarter and closer to the face', { size: 18, weight: 700 });
+  const col1 = [['full colour, three-quarter (32)', { yaw: 32, mode: 'full' }], ['full colour, face-on (60)', { yaw: 60, mode: 'full' }], ['three flat colours (32)', { yaw: 32, mode: 'flat3' }], ['three flat colours (60)', { yaw: 60, mode: 'flat3' }], ['silhouette (32)', { yaw: 32, mode: 'sil' }], ['silhouette (60)', { yaw: 60, mode: 'sil' }]];
+  col1.forEach(([cap, o], j) => { b += text(24 + j * 245 + 2, y + 20, cap, { size: 11.5, weight: 600, op: 0.85 }); });
+  ORDER.forEach((fk, r) => {
+    col1.forEach(([cap, o], j) => { b += closeup2(fk, 24 + j * 245, y + 28 + r * 236, 232, o); });
+    b += text(24 + 6 * 245 + 6, y + 48 + r * 236, NAMES[fk], { size: 14, weight: 700 });
+  });
+  const xr = 24 + 6 * 245 + 6;
+  b += paras(xr, y + 48 + 22, 'Protagonist: the pale dome with a brow ridge, a jaw plane and a crown seam is a designed shape. At three flat colours the ring still reads as a single ring on the forehead; the silhouette is a faceted dome with a fringe of hair, not an egg.', 44, 11.5, 15);
+  b += paras(xr, y + 48 + 22 + 236, 'Anti-hero: the lit slash leans, so it reads as a slash in three colours. Silhouette: a wedge head with the tail.', 44, 11.5, 15);
+  b += paras(xr, y + 48 + 22 + 472, 'Empress: three offset chevrons on the brow, in moss on bone. In three flat colours the pale mask and moss chevrons hold. Silhouette: the topknot and the taller head.', 44, 11.5, 15);
+  b += paras(xr, y + 48 + 22 + 708, 'Cyborg: a stair of lit squares on a dark display face, no line grid. Silhouette: a box head.', 44, 11.5, 15);
+  // small-size silhouettes
+  y = y + 28 + 4 * 236 + 20;
+  b += text(24, y, 'Silhouette at play sizes (whole body, 80, 40, 24 and 12 px), against the light sky: each fighter stays a distinct shape', { size: 14, weight: 700 });
+  ORDER.forEach((fk, i) => {
+    const x0 = 24 + i * 444;
+    b += rect(x0, y + 10, 432, 130, '#cfe6f0', 'stroke="#1b1428" stroke-opacity="0.25"');
+    [[80, 60], [40, 150], [24, 220], [12, 280]].forEach(([px, dx]) => { b += fig(fk, px, x0 + dx, y + 132, { flat: true, state: 'neutral' }); });
+    b += fig(fk, 40, x0 + 350, y + 132, { state: 'neutral' }) + fig(fk, 24, x0 + 400, y + 132, { state: 'neutral' });
+    b += text(x0 + 8, y + 28, NAMES[fk], { size: 11.5, weight: 600, op: 0.8 });
+  });
+
+  // 2. sigils beside the symbols to avoid
+  y += 176;
+  b += text(24, y, '2. Each sigil beside the generic symbols Legal named (large, hurt, and thumbnail at 24 px, then the pattern to avoid)', { size: 18, weight: 700 });
+  const avoids = { P: ['prohibit', 'target', 'linked'], A: ['prohibit', 'x', 'plus'], E: ['double', 'plus', 'x'], C: ['linegrid', 'plus', 'x'] };
+  const sx = ['ours (at rest)', 'ours (hurt: a break, never a crossing line)', 'ours at 24 px', 'avoid', 'avoid', 'avoid'];
+  sx.forEach((t, j) => { b += text(24 + j * 218 + 2, y + 20, t, { size: 11.5, weight: 600, op: 0.85 }); });
+  ORDER.forEach((fk, r) => {
+    const y0 = y + 28 + r * 196, sc = fk === 'P' ? 15 : fk === 'E' ? 14 : fk === 'C' ? 12 : 11;
+    b += sigilTile(fk, 24, y0, 160, 'neutral', sc) + sigilTile(fk, 242, y0, 160, 'hurt', sc) + sigilTile(fk, 508, y0 + 48, 64, 'neutral', sc * 0.4);
+    avoids[fk].forEach((k, j) => { b += rect(24 + (3 + j) * 218, y0, 160, 160, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.25"') + avoid(k, 24 + (3 + j) * 218 + 80, y0 + 80, 64) + text(24 + (3 + j) * 218 + 4, y0 + 174, AVOID_NAME[k], { size: 10.5, op: 0.75 }); });
+    b += text(24 + 2, y0 + 174, NAMES[fk] + ': ' + { P: 'a single ring, no dot, no inner ring', A: 'a leaning slash and a dot', E: 'three chevrons, three sizes, offset', C: 'a stair of lit squares' }[fk], { size: 10.5, weight: 600, op: 0.85 });
+  });
+  y += 28 + 4 * 196 + 10;
+  b += paras(24, y, 'Rules checked: the ring is single, has no dot and no inner ring, and never sits with the slash on any fighter; the slash never crosses another stroke, and in hurt it splits with a gap instead of a crack drawn across it; the chevrons are three, of different sizes and offset, in moss (never a car or oil brand\'s colours); the grid is a stair of lit squares, with no lines and no cross bars. No sigil is placed as an eye or a mouth: the ring sits on the forehead, the chevrons on the brow, and the slash and the steps are mid-face marks with no pair and no line beneath them. The Coil\'s chest carries one diagonal sash, not two crossing straps, so nothing on the chest lines up into an X with the face slash.', 230, 12, 16);
+
+  // 3. flashes beside the two reference patterns
+  y += 96;
+  b += text(24, y, '3. The flashes beside the two patterns to avoid: a ring of short lines around the head (with wavy lines), and a yellow bang with a thick black outline', { size: 18, weight: 700 });
+  y += 14;
+  b += rect(24, y, 872, 330, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.2"') + rect(904, y, 872, 330, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.2"');
+  b += text(34, y + 20, 'Danger sense: ours, in the four families (a pointer train above and behind the head)', { size: 12, weight: 700 });
+  ORDER.forEach((fk, i) => { b += fig(fk, 150, 100 + i * 200, y + 322, { state: 'danger' }); });
+  b += `<g>${rect(736, y + 40, 150, 150, '#f6f4fa', 'stroke="#1b1428" stroke-opacity="0.2"')}${avoid('radiate', 811, y + 115, 64)}${avoid('wavy', 811, y + 215, 36)}${text(740, y + 206, 'avoid: ' + AVOID_NAME.radiate, { size: 10, op: 0.75 })}${text(740, y + 220, 'and ' + AVOID_NAME.wavy, { size: 10, op: 0.75 })}</g>`;
+  b += text(914, y + 20, 'Found "!": ours (solid, thin keyline in the lane colour, no yellow, no thick black outline)', { size: 12, weight: 700 });
+  ORDER.forEach((fk, i) => { b += fig(fk, 150, 990 + i * 200, y + 322, { state: 'found' }); });
+  b += `<g>${rect(1626, y + 40, 140, 150, '#f6f4fa', 'stroke="#1b1428" stroke-opacity="0.2"')}${avoid('bang', 1696, y + 115, 60)}${text(1630, y + 206, 'avoid: ' + AVOID_NAME.bang, { size: 10, op: 0.75 })}</g>`;
+  y += 346;
+  b += paras(24, y, 'Danger sense is three shapes of growing size along one ray, up and behind the head, and its ray is turned to the threat\'s bearing at run time (kept above or behind, never around the head). It is not a ring of short lines and not wavy. Info flashes ("!", "?", danger) are a pale core inside a thin keyline in the lane\'s dark step; the Cyborg\'s are neutral steel, so no yellow and no red-orange, and no thick black outline appears anywhere in the set. The sigil states rage and triumph keep a small burst of short rays at the sigil only (not around the head); Legal can ask for them to go.', 230, 12, 16);
+
+  // 4. dome, fan and round tips
+  y += 84;
+  b += text(24, y, '4. The dome mask against a plain egg, the round-tipped Anti-hero pride, and the Empress fan wide and low', { size: 18, weight: 700 });
+  y += 14;
+  b += closeup2('P', 24, y, 240, { yaw: 32, mode: 'full', px: 700 }) + closeup2('P', 276, y, 240, { yaw: 60, mode: 'full', px: 700 });
+  b += rect(528, y, 240, 240, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.25"') + avoid('egg', 648, y + 120, 100) + text(534, y + 232, 'avoid: ' + AVOID_NAME.egg, { size: 10.5, op: 0.75 });
+  b += rect(780, y, 300, 300, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.15"') + fig('A', 150, 900, y + 292, { state: 'pride', legacy: true }) + fig('A', 150, 1010, y + 292, { state: 'pride' });
+  b += rect(1092, y, 340, 300, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.15"') + fig('E', 150, 1200, y + 292, { state: 'pride', legacy: true }) + fig('E', 150, 1340, y + 292, { state: 'pride' });
+  b += rect(1444, y, 332, 300, '#e3eef5', 'stroke="#1b1428" stroke-opacity="0.15"') + fig('A', 150, 1520, y + 292, { state: 'surge' }) + fig('E', 150, 1660, y + 292, { state: 'surge' });
+  b += paras(30, y + 262, 'The dome: brow ridge, jaw plane, crown seam, faceted crown, raised hairline. No eye or mouth slots or dots. Hair is a swept-back cap, teal, never upswept or gold. The plain egg on the right is the shape to avoid.', 88, 11.5, 15, { op: 0.85 });
+  b += text(790, y + 318, 'Anti-hero pride: before (pointed), now (round-tipped).', { size: 11, op: 0.85 });
+  b += text(1100, y + 318, 'Empress pride: before (a tall fan), now (a wide, low crest).', { size: 11, op: 0.85 });
+  b += text(1452, y + 318, 'Surge (Anti-hero, Empress): held for a cinematic.', { size: 11, op: 0.85 });
+  y += 350;
+  // the Coil harness against the face slash
+  b += text(24, y, '5. The Coil\'s chest against the face slash: one diagonal sash, no X', { size: 18, weight: 700 });
+  b += `<svg x="24" y="${y + 12}" width="230" height="290" viewBox="138 225 230 290"><image href="../turnaround/coil-turnaround.svg" x="0" y="0" width="1800" height="2010"/></svg>` + rect(24, y + 12, 230, 290, 'none', 'stroke="#1b1428" stroke-opacity="0.3"');
+  b += paras(276, y + 40, 'The face slash leans one way, the sash on the chest leans the other, and they are a whole head apart, with the neck between them. The chest has one sash and a round buckle with a small diamond stud, and no slash on the chest. Nothing on the figure crosses another stroke into an X. See docs/art/coil-turnaround.md for the part list.', 96, 12.5, 17);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.max(H, y + 320)}" viewBox="0 0 ${W} ${Math.max(H, y + 320)}">${DEFS}${b.replace(`<rect x="0.00" y="0.00" width="${W}.00" height="${H}.00"`, `<rect x="0.00" y="0.00" width="${W}.00" height="${Math.max(H, y + 320)}.00"`)}</svg>`;
+}
+
 const ORIGIN = '<!-- Origin: procedural concept sheet written by art/concepts/marked-aura/gen.mjs (deterministic, no external images or fonts; the staging sheet embeds the repo\'s own renders in docs/rendering/img by reference), Art Director session (Claude, claude-sonnet-5-5), 2026-09-29; prompt record art/prompts/ART-0005-marked-aura.md -->' + String.fromCharCode(10);
 writeFileSync(join(OUT, 'ma-1-style.svg'), ORIGIN + styleSheet());
 writeFileSync(join(OUT, 'ma-2-flashes.svg'), ORIGIN + vocabSheet());
 writeFileSync(join(OUT, 'ma-3-staging.svg'), ORIGIN + stagingSheet());
 writeFileSync(join(OUT, 'ma-4-flash-rules.svg'), ORIGIN + rulesSheet());
+writeFileSync(join(OUT, 'ma-5-legal-checks.svg'), ORIGIN + legalSheet());
 // The flash data, for Rendering, UI and Audio: ids, class, timing, priority, cooldown, shape family and the layouts.
-const json = { version: 1, note: 'Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.', families: { P: 'circles', A: 'blades', E: 'wedges', C: 'steps' }, flashes: Object.fromEntries(FLASH_ORDER.map(id => { const f = FLASHES[id]; return [id, { name: f.name, class: f.cls, attack: f.t[0], hold: f.t[1], fade: f.t[2], priority: f.pri, cooldown: f.cool, kind: f.kind, glyph: f.glyph ?? null, layout: f.layout ?? null, moment: f.moment, event: f.event, sound: f.sound, rare: !!f.rare }]; })) };
+const json = { version: 1, note: 'Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.', families: { P: 'circles', A: 'blades', E: 'wedges', C: 'steps' }, legal_rules: { round_tip: { A: [...A_ROUND] }, low_crest: { E: [...E_CREST], A: ['surge'], note: 'Wide and low behind the head: angle a becomes atan2(sin(a) * 0.4, cos(a)) + 42 degrees, size x 0.7, distance + 4. Ground shards are unchanged.' }, danger_ray: { default_angle: 132, clamp: [60, 200], note: 'Rotate the whole pointer train to the threat bearing at run time (facing frame, 0 forward, 90 up). Always above or behind the head, never around it.' }, info_colours: INFO, info_keyline: 'The core fills 84 percent of the rim. Emotion flashes keep a rim and a 58 percent core.' }, flashes: Object.fromEntries(FLASH_ORDER.map(id => { const f = FLASHES[id]; return [id, { name: f.name, class: f.cls, attack: f.t[0], hold: f.t[1], fade: f.t[2], priority: f.pri, cooldown: f.cool, kind: f.kind, glyph: f.glyph ?? null, layout: f.layout ?? null, moment: f.moment, event: f.event, sound: f.sound, rare: !!f.rare }]; })) };
 writeFileSync(join(OUT, '..', '..', '..', 'data', 'art', 'flashes.json'), JSON.stringify(json, null, 2) + String.fromCharCode(10));
-console.log('wrote ma-1-style.svg, ma-2-flashes.svg, ma-3-staging.svg, ma-4-flash-rules.svg, data/art/flashes.json');
+console.log('wrote ma-1 to ma-5 sheets and data/art/flashes.json');

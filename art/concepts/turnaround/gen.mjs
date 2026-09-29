@@ -7,7 +7,8 @@ import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeCtx, figure, limb, V, add, rotCW } from '../anti-hero/kit.mjs';
-import { FIGHTERS, PALETTES as BASE_PALETTES } from '../directions/fighters.mjs';
+import { FIGHTERS } from '../directions/fighters.mjs';
+import { PAL as SPAL, MASK as SMASK, curve, band, rot, scl, circ, sigilMarks, maskHead } from '../shared/marks.mjs';
 
 const OUT = dirname(fileURLToPath(import.meta.url));
 const F = n => n.toFixed(2);
@@ -20,45 +21,13 @@ const wrap = (t, n) => { const w = t.split(' '), out = []; let line = ''; for (c
 const paras = (x, y, t, n, size = 13, gap = 17, o = {}) => wrap(t, n).map((l, i) => text(x, y + i * gap, l, { size, ...o })).join('');
 
 // ---------------------------------------------------------------------------------------------------------- the Coil
-const PAL = { ...BASE_PALETTES.A, accent: { light: '#c2adf0', mid: '#9a80d8', shadow: '#5b479a' } };
-const MASK = { fill: '#2b2444', shadow: '#1a1530' };
+const PAL = SPAL.A;
+const MASK = SMASK.A;
 const BASE = FIGHTERS.A;
 const NEUTRAL_UP = { lean: 0, head: 0, nearArm: [10, 8], farArm: [-10, -8], nearLeg: [3, 1], farLeg: [-3, -1], handNear: 'fist', handFar: 'fist' };
 const CROUCH = BASE.poses.base;
 
-const curve = (p0, p1, p2, n = 8) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n; return [(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]]; });
-function band(pts, w) {
-  const n = pts.length, L = [], R = [];
-  for (let i = 0; i < n; i++) {
-    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
-    let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
-    const ww = (typeof w === 'function' ? w(i / (n - 1)) : w) / 2;
-    L.push([pts[i][0] - dy * ww, pts[i][1] + dx * ww]); R.push([pts[i][0] + dy * ww, pts[i][1] - dx * ww]);
-  }
-  return [...L, ...R.reverse()];
-}
-const rot = (pts, deg, c) => { const a = deg * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a); return pts.map(([x, y]) => [c[0] + (x - c[0]) * ca - (y - c[1]) * sa, c[1] + (x - c[0]) * sa + (y - c[1]) * ca]); };
-const scl = (pts, k, c) => pts.map(([x, y]) => [c[0] + (x - c[0]) * k, c[1] + (y - c[1]) * k]);
 const V2 = arr => arr.map(([x, y]) => V(x, y));
-const circ = (c, r, n = 14) => Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2; return [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]; });
-
-// the Anti-hero's sigil: a slash and a dot, lit (the mask is dark), bending with emotion
-const FACEA = { x0: 1.4, x1: 6.4, ey: 9.8 };
-const yawMap = yaw => { const xm = (FACEA.x0 + FACEA.x1) / 2, a = yaw * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), m = s; return ([u, y]) => [(1 - m) * u + m * (c * 5.4 + s * 1.5 * (u - xm)), y]; };
-function sigilMarks(state, pal) {
-  const c = [(FACEA.x0 + FACEA.x1) / 2 + 0.2, FACEA.ey - 0.6], out = [];
-  let k = 1, r = 0, dy = 0, col = pal.accent.light;
-  if (state === 'taunt') { r = 18; dy = 0.9; } if (state === 'hurt') { k = 0.85; col = pal.accent.mid; } if (state === 'rage') k = 1.3; if (state === 'triumph') k = 1.12;
-  const cc = [c[0], c[1] + dy];
-  const parts = [[[-0.55, -5], [0.55, -5], [0.3, 5], [-0.3, 5]], circ([1.6, 3.8], 0.7, 8)];
-  const place = pts => scl(rot(pts.map(([x, y]) => [c[0] + x, c[1] + y + dy]), r, cc), k, cc);
-  for (const p of parts) out.push({ poly: scl(place(p), 1.5, cc), fill: pal.accent.light, op: 0.26, line: false });
-  for (const p of parts) out.push({ poly: place(p), fill: col, line: false });
-  if (state === 'hurt') out.push({ poly: band([[cc[0] - 1.6, cc[1] + 3.4], [cc[0] - 0.2, cc[1] + 0.4], [cc[0] + 0.6, cc[1] - 3.6]], 0.42), fill: '#1c1626', line: false });
-  if (state === 'rage') for (let i = 0; i < 6; i++) out.push({ poly: rot([[cc[0] + 4.2, cc[1] - 0.5], [cc[0] + 6.6, cc[1]], [cc[0] + 4.2, cc[1] + 0.5]], -70 + i * 28, cc), fill: col, line: false });
-  if (state === 'triumph') for (let i = 0; i < 7; i++) out.push({ poly: band([[cc[0] + 4.6, cc[1]], [cc[0] + 6.4, cc[1]]].map(p => rot([p], -80 + i * 26, cc)[0]), 0.5), fill: pal.accent.light, line: false });
-  return out;
-}
 
 // lateral points on the front surface (a = 5.4) and the back surface (a = -5.8): b is sideways, y is height
 const LAT = (sk, b, y, a) => add(sk.P, rotCW(V((sk.yaw.c * a - b * sk.yaw.s) * sk.b.tw, y * sk.b.tl), sk.lean));
@@ -68,10 +37,8 @@ const LB = (sk, b, y) => LAT(sk, b, y, -5.8);
 const COIL_T = {
   ...BASE, id: 'A-T', name: 'Anti-hero (the Coil)',
   blankHead(p, st) {
-    const bh = BASE.blankHead(p);
-    let marks = [];
-    if (st.face !== 'back') { const m = yawMap(st.yaw ?? 0); marks = sigilMarks(st.state ?? 'neutral', p).map(q => ({ ...q, poly: q.poly.map(m) })); }
-    return { ...bh, fill: MASK.fill, shadow: MASK.shadow, neck: MASK.shadow, marks };
+    const yaw = st.yaw ?? 0, mh = maskHead('A', BASE.blankHead(p), p, MASK, yaw);
+    return { ...mh, marks: st.face === 'back' ? [] : [...mh.marks, ...sigilMarks('A', p, st.state ?? 'neutral', MASK, yaw)] };
   },
   over(ctx, sk, st, cfg) {
     const { pal } = ctx, n = st.forms ?? 6, deg = sk.yaw.deg; let o = '';
@@ -90,12 +57,12 @@ const COIL_T = {
       o += BASE.over(ctx, sk, st, cfg);
     }
     if (deg > 15) {
-      const strap = (b0, y0, b1, y1) => ctx.poly(limb(LF(sk, b0, y0), LF(sk, b1, y1), 2.6, 2.6, 1.0), pal.gear.mid, { sw: 1.1 });
-      o += strap(4.8, 27.6, -4.4, 12.4) + strap(-4.8, 27.6, 4.4, 12.4);
-      const c0 = LF(sk, 0, 19.6);
-      o += ctx.poly(V2(circ([c0.x, c0.y], 2.6, 10)), pal.gear.mid, { sw: 1.1 });
-      const sl = [[-0.35, -1.7], [0.35, -1.7], [0.22, 1.7], [-0.22, 1.7]].map(([x, y]) => [c0.x + x, c0.y + y]);
-      o += ctx.poly(V2(sl), pal.accent.mid, { sw: 0.6, line: false });
+      // one sash from the far shoulder to the near hip (never two crossing straps, so nothing on the chest makes an X with the face slash)
+      o += ctx.poly(limb(LF(sk, 4.8, 27.6), LF(sk, -4.4, 12.4), 3.0, 3.0, 1.0), pal.gear.mid, { sw: 1.1 });
+      const c0 = LF(sk, 0.2, 20);
+      o += ctx.poly(V2(circ([c0.x, c0.y], 2.7, 10)), pal.gear.mid, { sw: 1.1 });
+      const dm = [[0, 1.5], [1.1, 0], [0, -1.5], [-1.1, 0]].map(([x, y]) => [c0.x + x, c0.y + y]);
+      o += ctx.poly(V2(dm), pal.accent.mid, { sw: 0.6, line: false });
     }
     return o;
   },
@@ -141,7 +108,7 @@ const PARTS = [
   ['Mask (head)', 'Blank wedge mask, dark obsidian. A sigil decal slot (an emissive slash and dot). No face rig.', 190],
   ['Hair', 'A cap over the skull and a short tied tail on a 3-bone spring chain. Never changes colour or shape with form.', 70],
   ['Neck and torso', 'A dark bodysuit. Compact: torso 0.87 of the standard height.', 330],
-  ['Chest harness', 'Two crossing straps and a round buckle carrying the slash mark. Front only.', 70],
+  ['Chest harness', 'One diagonal sash and a round buckle with a small diamond stud. Never two crossing straps, and no slash on the chest, so nothing makes an X with the face slash. Front only.', 70],
   ['Spine plates, six', 'Six rounded slabs down the spine, one per form (F1 nape to F6 hip). Rigid, parented to the spine bones. Each toggles by form and swaps to a cracked variant with core wear.', 150],
   ['Belt plate', 'A wide plate at the hip. Front and back.', 30],
   ['Arms, two', 'Upper arm and forearm each. From form 4 the near forearm takes two guards, from form 6 three.', 240],

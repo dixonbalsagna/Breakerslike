@@ -10,7 +10,7 @@ Brief, iconic pops at a fighter's head that say what it senses or feels, then no
 
 - **Placeholder fighters only.** The greybox capsules and boxes. No sigil or mask work is needed; the flash draws over the greybox head.
 - **Render-side only.** Reads the fx events and the fighter state. Never writes the sim. Jitter and any randomness come from a cosmetic render stream (name it `vfx.flash`), never the sim stream. The gameplay hash must be unchanged with the prototype on or off (run `render/tools/determinism.gd`, including its negative control).
-- **A switch to compare.** `F7` toggles the prototype. When it is on, the placeholder tier aura sphere and the streaks (`aura`, `orb_*` in `fighter_view.gd`) are hidden, so the flash is judged on its own. `F8` toggles the round-tipped fallback (section 9).
+- **A switch to compare.** `F7` toggles the prototype. When it is on, the placeholder tier aura sphere and the streaks (`aura`, `orb_*` in `fighter_view.gd`) are hidden, so the flash is judged on its own. `F8` toggles the legacy shapes (section 9).
 
 ## 3. How it draws
 
@@ -21,7 +21,7 @@ Brief, iconic pops at a fighter's head that say what it senses or feels, then no
   - blades: a triangle from the base point out along the angle, half-width `3.8` units, with a rounded-tip option;
   - wedges: the same with half-width `8.5` units;
   - steps: a square of side `size * 0.6`, snapped to a 3-unit grid in world space.
-- **Each instance has custom data** `(angle, distance, size, opacity)` from the layout table, plus a per-layer tint. Two layers per shape: a rim at full size in the accent's mid step, and a core at 0.58 size in the accent's light step. Info flashes use a dark keyline (the accent's shadow step) for the rim and the light step for the core, at full opacity.
+- **Each instance has custom data** `(angle, distance, size, opacity)` from the layout table, plus a per-layer tint. Two layers per shape: a rim at full size in the accent's mid step, and a core at 0.58 size in the accent's light step. Info flashes use a thin keyline for the rim (`info_colours[family].line` in `flashes.json`) and a pale core (`info_colours[family].core`), at full opacity. The core fills 84% of the rim, so the keyline is thin. Never yellow, red-orange or a thick black outline.
 - **Glyphs** ("found" is a bang, "searching" is a question) are drawn in a second quad by the same shader with `glyph` set to 1 or 2. The bang is a stem and a dot; the question is a hook and a dot. Each is built from the family's primitive: capsule and dot, blade and diamond, wedge and triangle, snapped squares. `ma-2-flashes.svg` shows all four, and `gen.mjs` (`glyphPolys`) has the exact geometry.
 - **Unit and place.** All sizes are in hundredths of a body height (`FighterView.HEIGHT`, 90 units), so `size 60` is 54 world units. Anchor: the head centre, plus 2 units up. The glyph sits 7 units of head size above it. The flash is behind the head (about 6 units behind the fighter plane), and the glyph is above the head, so neither hides the mask, the sigil or the chest. The layout is written in the fighter's facing frame (0 degrees is forward, 90 is up) and mirrors with the body.
 - **Ground shards** (the surge only) are instances with `ground = true`: their y is the ground height under the fighter, read from the terrain the way the fighter's shadow is.
@@ -69,9 +69,13 @@ Priority, highest first: surge, danger sense, found, searching, brink, fear, rag
 - **Emotion flashes** are translucent (34 to 55% opacity). **Info flashes** are solid and keylined. That is the rule that tells a player at a glance whether a flash is a feeling or a fact.
 - **Motion:** a flash changes shape and never blinks. Hurt fragments jitter, at most 6% of a body height, irregularly (noise on the cosmetic stream, seeded from the tick). Rage swells over its attack and sweeps forward. Nothing flashes on and off as a whole. `reduced_motion`: no jitter, no overshoot, a plain fade.
 
-## 9. The Legal fallback
+## 9. Legal's conditions (in the data as `legal_rules`)
 
-`F8` switches blades and wedges to round tips: the same triangle with a rounded end (radius `0.95 * half-width`). Circles and steps are unchanged. It is a uniform (`round_tip`), so nothing else changes. Legal may prefer it if a tall pointed flash reads as an upswept spiky aura.
+Legal screened the set (`docs/legal/q3-screen.md`) and Art applied the conditions in the data, so Rendering reads them and does not hard-code them:
+- **Round tips** for the Anti-hero's `pride`, `triumph`, `surge` and `danger` (`legal_rules.round_tip.A`): the same triangle with a rounded end (radius `0.95 * half-width`). His rage stays pointed.
+- **Wide, low crest** for the Empress's `pride`, `triumph`, `surge` and `resolve`, and the Anti-hero's `surge` (`legal_rules.low_crest`): the angle `a` becomes `atan2(sin(a) * 0.4, cos(a))` plus 42 degrees, the size times 0.7, the distance plus 4. Ground shards are unchanged.
+- **Danger sense is a pointer train**: three shapes along one ray, default angle 132 degrees. Rotate the whole train to the threat's bearing (the facing frame), clamped to 60 to 200 degrees, so it is always above or behind the head. Never radiate it around the head.
+- **`F8` shows the legacy shapes** (tall pointed blades and wedges, the radiating danger fan is gone for good) so Orb can compare before and after. It is a uniform (`legacy`), off by default.
 
 ## 10. Performance
 

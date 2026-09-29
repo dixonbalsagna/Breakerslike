@@ -7,6 +7,55 @@
     "E": "wedges",
     "C": "steps"
   },
+  "legal_rules": {
+    "round_tip": {
+      "A": [
+        "pride",
+        "triumph",
+        "surge",
+        "danger"
+      ]
+    },
+    "low_crest": {
+      "E": [
+        "pride",
+        "triumph",
+        "surge",
+        "resolve"
+      ],
+      "A": [
+        "surge"
+      ],
+      "note": "Wide and low behind the head: angle a becomes atan2(sin(a) * 0.4, cos(a)) + 42 degrees, size x 0.7, distance + 4. Ground shards are unchanged."
+    },
+    "danger_ray": {
+      "default_angle": 132,
+      "clamp": [
+        60,
+        200
+      ],
+      "note": "Rotate the whole pointer train to the threat bearing at run time (facing frame, 0 forward, 90 up). Always above or behind the head, never around it."
+    },
+    "info_colours": {
+      "P": {
+        "core": "#e6f7f3",
+        "line": "#2a7568"
+      },
+      "A": {
+        "core": "#eee6fc",
+        "line": "#5b479a"
+      },
+      "E": {
+        "core": "#eaf3d4",
+        "line": "#5d6c2a"
+      },
+      "C": {
+        "core": "#e3e7ee",
+        "line": "#4a4f57"
+      }
+    },
+    "info_keyline": "The core fills 84 percent of the rim. Emotion flashes keep a rim and a 58 percent core."
+  },
   "flashes": {
     "danger": {
       "name": "Danger sense",
@@ -20,21 +69,21 @@
       "glyph": null,
       "layout": [
         {
-          "a": -26,
-          "d": 14,
+          "a": 132,
+          "d": 12,
+          "s": 17,
+          "op": 0.95
+        },
+        {
+          "a": 132,
+          "d": 32,
           "s": 24,
           "op": 0.95
         },
         {
-          "a": 0,
-          "d": 14,
+          "a": 132,
+          "d": 57,
           "s": 34,
-          "op": 0.95
-        },
-        {
-          "a": 26,
-          "d": 14,
-          "s": 24,
           "op": 0.95
         }
       ],
