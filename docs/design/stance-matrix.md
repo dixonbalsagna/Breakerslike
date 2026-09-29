@@ -101,6 +101,7 @@ The director implements these rules through Encounter Systems. Combat authors th
 - **R6. Chains follow the exchange's result.** No chain window opens after a parry (CC-001) or after GUARD HOLDS (CC-002).
 - **R7. A tier advantage always helps its owner.** Every roll moves in the direction of whoever is ahead on tier (fixes GD-B01).
 - **R8. Switching stance stays free and instant.** The template is fixed when the attack starts (`L410-421`), so a defender must predict, not react. Revisit if P2 playtests find stance-flicking tells.
+  - *Stance snapshot* (co-signed with Controls and Combat): both fighters' stance multipliers are frozen when the attack starts (at `requestAttack`), and `hit()` reads the snapshot for the whole exchange. A late switch to DEFENSIVE mid-exchange no longer gives ×0.38. Under R1 the attacker's snapshot is ×1.0.
 
 These rules are starting values. QA re-tests them in the probe below before they are locked.
 
