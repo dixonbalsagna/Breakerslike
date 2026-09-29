@@ -15,7 +15,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | Rule | Spec |
 | :--- | :--- |
 | **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |
-| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). k = **0.06** as of S2 (`docs/director/wounds-s2.md`), set by the length target. QA tunes it within 0.05 to 0.07 (§1b) |
+| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). k = **0.06** at S2 (`docs/director/wounds-s2.md`), retuned to 0.065 at S3b, and back to 0.06 by the S4 ruling (§2). It is set by the length target. QA tunes it within 0.05 to 0.07 (§1b) |
 | **Stages** | Fresh below 30; bruised 30 to 59; battered 60 to 89; broken at 90 or more |
 | **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time needed to break lock through line of sight (1.8 s) |
 | **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second (0.25 from S2, §1b). A battered region fades 1 per second, down to 59, after 4 s without an exchange ("second breath", §1c). Broken regions never fade (only a Rally mends them). Hidden recovery is removed with hiding |
@@ -112,7 +112,7 @@ The one exception is the Empress's **Encore**, which is a choice to spend. The p
    - Struggle scoring is unchanged (base 15%, up to +30 from the struggle; average survival 20 to 35%).
    - The comeback band in `balance-targets.md` §8 (15 to 35% of matches) stays as the real test of "last-ditch".
 3. **Timeouts (2%) and the short tail (p10 at 4:34).** Two levers, applied together:
-   - lower k from 0.06 to **0.055**, which raises p10 and the median;
+   - lower k one step, from the live **0.065** (S3b, `WEAR_PER_DAMAGE` 390) to **0.06**, which raises p10 and the median;
    - add an **overtime ramp**: after 9:00, k rises by 25% per minute, and the contest tilt (−10 points per minute past 8:00) continues. The fight intensifies until it ends.
    - Targets: timeouts at most 1% at the 15:00 cap, p10 at least 5:00, median 6:00 to 8:00. QA verifies them.
 
