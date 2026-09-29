@@ -103,13 +103,33 @@ Orb wants the director to "often" choose one building to take the brunt of a lau
 **How brunts feed the ego meters.** There is no special rule; the standing casualty rule applies:
 - A brunt's casualties are credited to the fighter who launched, as today (`launchBy`). They feed the villain's menace and the hero's anguish per casualty (+0.5 if the villain caused them, +0.9 if the hero did).
 - One occupied tower collapsing (about 13 people) is already a visible spike: +6.5 anguish, or +11.7 if the hero caused it. The feed and a bark make it legible.
-- Game Design recommends **no extra anguish multiplier** for brunts. Menace is placeholder-only and now decays with a lower cap (§9), and the roster's meters replace both. Orb decides this (World's question (b)).
+- **No extra anguish multiplier** for brunts (Orb decided). Menace is placeholder-only and now decays with a lower cap (§9), and the roster's meters replace both.
 
 **The collateral ramp covers brunts.** Brunt casualties and structure losses count toward every band in §4, including the low-tier bleed cap. They fall under World's tier-scaled caps and casualty ramp like any other source, and brunts are never exempt.
 
-**Game Design's view on World's other open questions** (Orb decides):
-- *Rooftop cover:* no. It pulls hiding into populated ground, against the hero's lure and the collateral bands.
-- *The villain's row-depth bonus* (he prefers the dramatic far tower): yes, as a personality tell, kept inside the band above.
+**Orb's calls on World's open questions:**
+- *Rooftop cover:* none.
+- *Targeting:* personality plus drama, weighted toward personality. The villain's row-depth bonus (he prefers the dramatic far tower) stays as his tell, inside the band above.
+- *Chains:* an impact can carry a fighter through several buildings in one launch. The design is World's (`docs/world/buildings-in-depth.md` §4b); the band follows.
+
+**Chains** (Game Design's call, within the collateral bands):
+
+| Measure | Band |
+| :--- | :--- |
+| Chains among brunts | 15 to 35% pooled. Villain side 25 to 45%, hero side 0 to 10% |
+| Length among chains | 2 in 55 to 75%; 3 in 20 to 35%; 4 or more in at most 10%. Never above the launcher's tier cap: 2 at tiers 1 and 2, 3 at tier 3, 4 at tier 4, and 5 only for a scripted finisher (a hard test) |
+| Chains per match, P2 testbed | Default arm 0.1 to 0.6; villain mirror above the default; hero mirror at most 0.1 |
+| Casualty budget for one chain, as a share of the starting population | **4% at tier 2 or below** (World proposed 8%), 12% at tier 3, 20% at tier 4. The planner drops any chain over budget (a hard test) |
+| The fighter's own damage from one chain | Its wear can never by itself take a region past battered. This replaces World's 12% of max HP, because Wounds has no HP. Encounter and Simulation set the exact wear cap |
+
+**Checked against the collateral bands:**
+- *At tier 2 or below,* one chain must fit inside the game-scale low-tier bleed cap of 4% of the population per minute (§4). World's 8% would break that cap with a single event, so the budget is set to 4%.
+- *At tiers 3 and 4* the low-tier cap does not apply. Chains there are bounded by:
+  - the mean-at-KO band (45 to 75%);
+  - the band for matches losing 90% or more (at most 10% of matches);
+  - the Cyborg floor: at least 25% of civilians alive at 4:00 in at least 80% of matches.
+  If QA sees the floor fail, the first lever is the tier-3 budget.
+- *Always:* chains count toward every collateral band and fall under World's ramp and caps.
 
 ## 6. Location and signature variety
 
