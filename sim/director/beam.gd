@@ -4,28 +4,9 @@ class_name DirBeam
 const VARIANT: Dictionary = {"ocean": "HORIZON CLEAVE", "city": "BOULEVARD RAZE", "village": "BOULEVARD RAZE", "forest": "FIRESTORM", "mountains": "RIDGE BORE", "desert": "GLASS TRENCH", "plains": "MERIDIAN SCAR"}
 
 
+## Plans a signature from Combat's data (DirData).
 static func planBeam(S: SimState, ex) -> void:
-	var A = ex.A
-	var D = ex.D
-	var dist: float = absf(SimWrap.sdx(A.x, D.x))
-	var ds: float = 4.0 if (D.dPrev != null and D.dPrev == "charging") else D.stance
-	var bio: String = WorldBiomes.biomeAt(D.x)
-	var variant: String = VARIANT[bio]
-	var out: String
-	if ds == 0.0 and D.ki >= 40.0 and not A.ambush:
-		out = "CLASH"
-	elif ds == 1.0:
-		out = "GUARD"
-	elif ds == 2.0:
-		out = "DODGE" if (S.rng.next() < SimMathx.jclamp(0.55 - 0.06 * (A.tier - D.tier), 0.2, 0.8) and not A.ambush) else "HIT"
-	elif ds == 3.0:
-		out = "HIT" if (S.rng.next() < SimMathx.jclamp(0.5 - 0.05 * (A.tier - D.tier) + (0.3 if dist < 500.0 else 0.0), 0.15, 0.9)) else "ESCAPE"
-	else:
-		out = "HIT"
-	ex.tag = A.sigName + " over " + bio + " (" + variant + ") → " + out
-	var rise: float = SimMathx.jclamp(dist * 0.22, 90.0, 300.0)
-	DirExchange.schedule(ex, 0.0, "beamCharge", {"rise": rise})
-	DirExchange.schedule(ex, 0.8, "beamFire", {"out": out, "variant": variant, "dist": dist})
+	DirData.planBeam(S, ex)
 
 
 ## Beat "beamCharge": the attacker rises above the defender and charges.

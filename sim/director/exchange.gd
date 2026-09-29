@@ -76,10 +76,15 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	D.state = "locked"
 	D.dPrev = dState
 	S.dirS.ex = ex
+	var chk = null
+	if planCheck.is_valid():
+		chk = _planByCode(S, ex, "sig" if kind == "sig" else "melee")
 	if kind == "sig":
 		DirBeam.planBeam(S, ex)
 	else:
 		DirMelee.planMelee(S, ex)
+	if chk != null:
+		planCheck.call(chk, ex, S.rng.a, "sig" if kind == "sig" else "melee")
 	var stanceLabel: String = "CHARGING" if dState == "charging" else STN[int(D.stance)]
 	SimEvents.feed(S, A.name + " " + kind.to_upper() + " vs " + stanceLabel, ex.tag + ("  (ambush)" if A.ambush else ""))
 	SimFx.attack(S, A, D, kind, stanceLabel, ex.tag, A.ambush)
@@ -178,10 +183,12 @@ static func chain(S: SimState, ex) -> void:
 	A.ki -= 6.0
 	var t: float = ex.t
 	SimFx.banner(S, SimMathx.jstr(ex.combo) + " HIT CHAIN", "#ffd45a", 0.7)
-	schedule(ex, t, "rush", {"off": 60.0, "dur": 0.24})
-	schedule(ex, t + 0.26, "chainStrike")
-	schedule(ex, t + 0.3, "launch", {"force": 1500.0, "rev": false})
-	schedule(ex, t + 0.55, "window")
+	var chk = null
+	if planCheck.is_valid():
+		chk = _planByCode(S, ex, "chain")
+	DirData.planChain(ex)
+	if chk != null:
+		planCheck.call(chk, ex, S.rng.a, "chain")
 
 
 static func endEx(S: SimState, ex) -> void:
@@ -285,17 +292,46 @@ static func startFinisher(S: SimState, ex, W, L) -> void:
 		if not b.done:
 			b.done = true
 	ex.ext = null
-	var w: String = "A" if W == ex.A else "D"
-	var ld: String = "D" if w == "A" else "A"
-	var t: float = ex.t
-	schedule(ex, t, "finisher", {"w": w})
-	schedule(ex, t, "finRush", {"w": w, "off": 60.0, "dur": FIN_RUSH})
-	var o := {"noParry": true, "ignoreStance": true, "big": true}
-	schedule(ex, t + FIN_HIT1[0], "strike", {"a": w, "d": ld, "dmg": FIN_HIT1[1], "o": o})
-	schedule(ex, t + FIN_HIT2[0], "strike", {"a": w, "d": ld, "dmg": FIN_HIT2[1], "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.12, "shake": 14.0}})
-	schedule(ex, t + FIN_LAUNCH[0], "breakLaunch", {"w": w, "force": FIN_LAUNCH[1]})
-	schedule(ex, t + FIN_CONTEST, "contest", {"w": w})
-	schedule(ex, t + FIN_END, "nop")
+	var chk = null
+	if planCheck.is_valid():
+		chk = _planByCode(S, ex, "finisher", W)
+	DirData.planFinisher(ex, W)
+	if chk != null:
+		planCheck.call(chk, ex, S.rng.a, "finisher")
+
+
+# ---------------------------------------------------------------- loader check (tools only)
+## Set by sim/director/tools/loader_check.gd, never by the game: called after every plan with the plan the frozen copy
+## of the parity data makes for the same exchange from the same RNG state (s3b-loader-note.md: the step 1 test kept as a
+## regression). checkData is that frozen copy, [templates, finishers]. Invalid (the default) costs nothing.
+static var planCheck: Callable = Callable()
+static var checkData: Array = []
+
+
+## Plans the exchange with the frozen parity data into a scratch copy, from the current RNG state, then restores the
+## live data and that state. Returns {"ex", "rng"}: the frozen plan's beats and tag, and the RNG state after its draws.
+static func _planByCode(S: SimState, ex, what: String, W = null) -> Dictionary:
+	var r0: int = S.rng.a
+	var c := newEx(ex.A, ex.D, ex.kind)
+	c.t = ex.t
+	c.combo = ex.combo
+	c.tag = ex.tag
+	for b in ex.beats:
+		c.beats.append(b)
+	var live: Array = DirData.swap(checkData[0], checkData[1])
+	match what:
+		"melee":
+			DirData.planMelee(S, c)
+		"sig":
+			DirData.planBeam(S, c)
+		"chain":
+			DirData.planChain(c)
+		"finisher":
+			DirData.planFinisher(c, W)
+	DirData.swap(live[0], live[1])
+	var r1: int = S.rng.a
+	S.rng.a = r0
+	return {"ex": c, "rng": r1, "n0": ex.beats.size()}
 
 
 static func _opFinisher(S: SimState, ex, a) -> void:
