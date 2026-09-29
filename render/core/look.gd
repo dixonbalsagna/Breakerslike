@@ -141,6 +141,30 @@ const RUN_LEG_SWING: float = 0.75       # leg and arm swing (radians), forward l
 const RUN_ARM_SWING: float = 0.9
 const RUN_LEAN: float = 0.2
 const RUN_BOB: float = 1.1
+## Head flashes (render/core/flash_view.gd; Art's spec docs/art/flash-prototype-spec.md, data data/art/flashes.json).
+## The layouts, timings, priorities, colours of the info flashes and Legal's rules are Art's data; these are the
+## drawing's own numbers from the spec. Sizes are in layout units: a twelfth of the fighter's head size, the data's
+## own unit. For Art's figures that is also the spec's hundredth of a body height; the placeholder's head is larger
+## (a 20-unit head on a 90-unit body), so the head rule keeps every flash as Art drew it around the head.
+const FLASH_UP: float = 2.0             # the flash's origin above the head centre
+## The spec puts the flash just behind the head. The placeholder's hair crest is deep and would swallow it, so the
+## flash draws in front (FLASH_Z) with the head's own disc cut out (never over the face). Glyphs rise by any excess
+## of the head's radius over Art's (FLASH_ART_HEAD_R; none with the head unit).
+const FLASH_Z: float = 24.0             # world units in front of the fighter plane, past the head and hair
+const FLASH_ART_HEAD_R: float = 6.0     # Art's head radius in layout units (head size 12)
+const FLASH_GLYPH_AT: Array = [[2.0, 5.0]]                 # a glyph's place from the origin; hazard's two bangs:
+const FLASH_GLYPH2_AT: Array = [[-5.5, 5.0], [9.0, 5.0]]
+const FLASH_OUT: float = 0.1            # seconds a preempted flash takes to fade (spec section 7)
+const FLASH_JITTER: Dictionary = {"hurt": 0.06}     # irregular jitter per shape, as a share of the body height
+const FLASH_JITTER_HZ: float = 18.0     # how often the jitter moves
+const FLASH_SWEEP: Dictionary = {"rage": 20.0}      # degrees the layout sweeps forward over its attack
+## The four fighters' accent in two steps [mid, light] (Art's calm palette, art/concepts/shared/marks.mjs), for the
+## emotion flashes' rim and core until the real palettes land. P1 draws in the Protagonist's family, P2 in the
+## Anti-hero's; Alt+F (Alt+Shift+F for P2) cycles a fighter through all four.
+const FLASH_ACCENT: Dictionary = {
+	"P": ["#4fb9a8", "#8fd6c8"], "A": ["#9a80d8", "#c2adf0"], "E": ["#b8c96a", "#dfe8a8"], "C": ["#d8705f", "#f0b4a8"],
+}
+const FLASH_FAMILY: Array = ["P", "A"]
 
 const SKIN := "#efc7a2"
 const ARM := "#e6b995"

@@ -195,6 +195,49 @@ The placeholder rig was drawn as a side sprite with its limbs spread across the 
 
 **Knockback slides and skims.** A sliding fighter stays upright, leaning back against the slide (`SLIDE_LEAN`) and crouched (`SLIDE_CROUCH`), a placeholder pose. The trench carved behind the fighter is drawn from the sim's own profile, and across the band's depth at the width its `S.slides` record gives. Paved ground cracks from `S.crack`, with a slab-and-crack pattern. Each `slide_dust` sample throws dust and rubble chips, grey on pavement and earth elsewhere, more at speed, and the slide's end throws a burst off the berm. Each `skim` leaves ripple rings that grow with the speed and a spray burst, so a skim reads as a skipping stone. Pose `slide` in `tools/shots.gd` stages one mid-slide across a plaza: ![slide](img/slide.png)
 
+## Head flashes (prototype)
+
+Orb (`docs/ep/vision.md`, "Head flashes"): the transient aura becomes brief, iconic pops at a fighter's head that say what it senses or feels, then nothing. This is Art's spec, `docs/art/flash-prototype-spec.md`, built on the placeholder fighters so Orb can judge it in motion. It is data-driven from Art's `data/art/flashes.json`: 13 active flashes (4 of them info) today. A flash added, held or renumbered there shows up with no code change.
+
+**How it draws** (`flash_view.gd`, `flash.gdshader`, `flash_set.gd`).
+- One `FlashView` per fighter, placed each frame at the head. It faces the camera, mirrors with the body's facing and uses the fighter's hybrid projection.
+- A flash is one MultiMesh of quads, one draw call, glyphs included. Each shape is placed by the vertex stage from its instance data and filled by a signed distance: discs, blades, wedges or snapped squares, by the fighter's family. Each shape is a rim and a core (58% for emotions; 84% for info flashes, with their pale core and thin keyline).
+- Glyphs are drawn in the family's own primitives: the bang, the question and Hazard's double bang. A glyph's place mirrors with the facing but its shape never does.
+- Legal's rules come from the data when a flash starts: the Anti-hero's round tips, the low crest, and Danger's pointer train turned to the opponent's bearing, clamped to 60–200°. F8 shows the legacy shapes.
+- Hurt jitters (6% of a body height, seeded from the tick on the cosmetic `vfx.flash` stream) and Rage sweeps forward over its attack. Reduced motion (UI's option) gives a plain fade.
+- Idle, the view is hidden and costs nothing. Its first frame draws one transparent quad, so the shader compiles then rather than mid-fight (about 210 ms on the web).
+
+**The state machine** runs on sim time, so hit-stop and pause hold it (spec §5 and §7):
+- One flash at a time. A higher priority preempts (the lower fades in 0.1 s). The same flash again extends its hold. A lower one waits up to the data's 0.25 s, then is dropped.
+- Never together with UI's wear crown (`crown_up`). A flash due while it is up waits; the crown coming up fades a flash. The surge is the exception.
+- Resolve (the data's `sequence`) starts 0.1 s after the crown goes down, holds back anything lower meanwhile, and gives up after 2 s.
+- Cooldowns hold. Info flashes follow UI's `info_flashes()`, and a hidden fighter shows none.
+- UI's `set_flash_up` dims an always-on crown, and each start plays Audio's cue (`AudioCues.flash`).
+
+**Triggers today:**
+- `found`; heavy `damage` and `region_broken` (Hurt); `ko` (Triumph for the winner).
+- Stand-ins: `tier_up` for the surge, until the cinematic events; `brink_exit` for Resolve, until `rally`; clash banners for Rage.
+- The rest wait for Encounter's events. Every flash also has a debug key: Alt plus 1–9, 0, -, =, [ in the data's order (Shift: P2), and Alt+F cycles a fighter's family.
+- F7 switches the prototype off, back to the placeholder aura, streaks and charge orb, which are hidden while it is on. The demo prompt lists the keys.
+
+**Where it departs from the spec, and why** (each is one constant in `look.gd`):
+1. **The layout unit is a twelfth of the fighter's head size**, as the data's own note says. That equals the spec's hundredth of a body height at Art's proportions. The placeholder's head is far larger (20 units on a 90-unit body), and at the body unit the smaller flashes vanished into it.
+2. **The flash draws in front of the head and hair, with the head's disc cut out**, rather than behind the head. The placeholder's deep hair crest swallowed it. The face is never covered, as the spec wants.
+3. **Steps snap in the flash's own frame, not world space**, so they don't crawl as a fighter moves.
+4. **The stance badge hides while a glyph shows**, since they share the space above the head.
+
+The contact sheet, every flash at its peak (`tools/flash_sheet.gd`). Columns follow the data's order. Rows: circles, blades, wedges and steps; blades and wedges as they were before Legal's conditions (F8); blades on P2, facing left. ![flashes](img/flash-sheet.png)
+
+**Checks.** `tools/flash_check.gd` (91 checks, passed):
+- nothing is drawn at rest;
+- each flash shows from the frame after it fires and is gone by its total time, within a frame;
+- arbitration: a heavy hit cancels a taunt in 0.1 s, a crown pop drops a waiting flash, the surge preempts and ignores the crown, Resolve's sequence, holds extend, cooldowns, the info setting, hidden fighters;
+- the gameplay hash is identical with flashes on and off (seeds 12345 and 4). Determinism and its negative control pass as before.
+
+In two AI matches, Hurt fired 37 times, Rage 4 and the surge 4. Frame time with flashes cycling on both fighters (`--flash-soak`, a new flash every 40 frames):
+- Desktop: p50 1.23 → 1.25 ms, p95 1.96 → 1.99, p99 2.50 → 2.57; render CPU and GPU unchanged; about 1.6 more draw calls.
+- Web, two runs each: p50 2.3 both, p95 3.6–3.8 → 3.9–4.1, p99 4.8–5.0 → 5.9–6.5. The p99 rise comes with the starts, which also double Audio's cues (74 played against 38).
+
 ## Hosting UI's HUD and Audio
 
 Both are other directors' work, hosted here as their docs ask (`docs/ui/hud-spec.md` section 14, `audio/README.md` "Hooking it up"). Both only read.
@@ -215,6 +258,7 @@ All commands run from the repo root; each exits 0 on success.
 | Determinism | `godot --headless --path . --script res://render/tools/determinism.gd` | passed (seeds 12345 and 4) |
 | Ground check | `godot --headless --path . --script res://render/tools/ground_check.gd` | passed (seeds 4, 12345, 7) |
 | Flight check | `godot --headless --path . --script res://render/tools/flight_check.gd` | passed (seeds 4, 12345, 7; with the evacuation mock) |
+| Flash check | `godot --headless --path . --script res://render/tools/flash_check.gd` | passed (91 checks; hash on and off at 12345 and 4) |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
 
 **Ground check.** It runs three matches through the full scene and checks every 120 ticks:

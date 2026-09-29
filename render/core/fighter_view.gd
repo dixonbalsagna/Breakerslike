@@ -7,7 +7,9 @@ extends Node3D
 ##   in front in defensive; the HUD labels it too;
 ## - hit: the body flashes white for RenderLook.HIT_FLASH_S after f.hurtT;
 ## - tier: the aura grows with tier, and at tier 3+ (or while charging) aura streaks rise from the feet;
-## - hidden: the whole figure fades to RenderLook.HIDDEN_ALPHA inside a sonar ripple.
+## - hidden: the whole figure fades to RenderLook.HIDDEN_ALPHA inside a sonar ripple;
+## - head flashes (flash_view.gd, the aura's replacement): brief pops at the head for what the fighter senses or
+##   feels. While they are on (F7), the aura, its streaks and the charge orb are hidden.
 ##
 ## Staging (Orb: fighters "cheat out" like stage actors). The body is turned toward the camera by a pose angle
 ## (RenderLook.TURN per state, TURN_STANCE per stance, measured from a pure profile) and the head leads by TURN_HEAD.
@@ -41,6 +43,8 @@ var guard: MeshInstance3D
 var ripple: MeshInstance3D
 var streaks: Array = []
 var glows: Array = []          # every glow material, for the projection anchor
+var flash_view: FlashView      # head flashes (render/core/flash_view.gd)
+var flashes_on: bool = true    # F7: the head flashes instead of the placeholder aura, streaks and charge orb
 var _badge_mat: ShaderMaterial
 var _faded: bool = false
 var _flash: bool = false
@@ -103,6 +107,9 @@ func build(f) -> void:
 	guard.position = Vector3(30.0, 0.0, 0.0)
 	guard.scale = Vector3(12.0, 84.0, 60.0)
 	body.add_child(guard)
+	flash_view = FlashView.new()
+	add_child(flash_view)
+	flash_view.set_head(hs.radius)
 	var ring := TorusMesh.new()
 	ring.inner_radius = 0.93
 	ring.outer_radius = 1.0
@@ -162,8 +169,9 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	var bc: bool = f.beamCharge != null
 	var rad: float = (46.0 + tier * 20.0 + (34.0 if ch else 0.0) + (20.0 if bc else 0.0)) * (1.0 + sin(T * 22.0 + f.x) * 0.04)
 	aura.scale = Vector3.ONE * 2.0 * rad
+	aura.visible = not flashes_on
 	RenderMats.set_glow(aura.material_override, _aura_col, 0.5 * fade)
-	var streak_on: bool = ch or tier >= 3.0
+	var streak_on: bool = (ch or tier >= 3.0) and not flashes_on
 	for k in range(streaks.size()):
 		var s: MeshInstance3D = streaks[k]
 		s.visible = streak_on
@@ -175,8 +183,8 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 			s.rotation.z = -atan2(lean_x, h)
 			s.scale = Vector3(1.0, h, 1.0)
 			RenderMats.set_glow(s.material_override, _aura_col, 0.6 * fade)
-	orb_outer.visible = bc
-	orb_core.visible = bc
+	orb_outer.visible = bc and not flashes_on
+	orb_core.visible = bc and not flashes_on
 	if bc:
 		var p: float = clampf((T - f.beamCharge) / 0.8, 0.0, 1.0)
 		var r: float = (10.0 + p * 40.0) + 4.0 / z
@@ -185,7 +193,7 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		orb_outer.scale = Vector3.ONE * 2.0 * r
 		orb_core.position = at
 		orb_core.scale = Vector3.ONE * r * 0.8
-	badge.visible = not f.hidden
+	badge.visible = not f.hidden and not (flashes_on and flash_view.glyph_up())
 	badge.position = Vector3(0.0, 84.0 + tier * 3.0 + 8.0, 0.0)
 	badge.rotation.y = T * 2.0
 	if stance != _stance:
@@ -206,6 +214,10 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	for g in glows:
 		g.set_shader_parameter("anchor", anchor)
 	_badge_mat.set_shader_parameter("anchor", anchor)
+	if flashes_on:
+		flash_view.step(T, f.hidden, to_local(head.global_position), m, anchor, WorldTerrain.groundY(S, f.x) - position.y)
+	else:
+		flash_view.visible = false
 
 
 func _part(mesh: Mesh, at: Vector3, c: Color, flashes: bool, parent: Node3D = null) -> MeshInstance3D:

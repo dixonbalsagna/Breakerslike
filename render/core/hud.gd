@@ -57,9 +57,23 @@ func _prompt(host: SimHost, vw: float, vh: float) -> void:
 	if not main.started:
 		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, vh - 96.0 if not legacy else 104.0), 16, Color(1, 1, 1, 0.9), 0)
 		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F2 old HUD, F3 perf, F4 feed", Vector2(vw * 0.5, vh - 78.0 if not legacy else 124.0), 11, Color(1, 1, 1, 0.7), 0)
+		_text(_flash_keys(), Vector2(vw * 0.5, vh - 62.0 if not legacy else 140.0), 11, Color(1, 1, 1, 0.6), 0)
 	_text("seed %d   tick %d%s" % [host.seed, host.ticks, "   PAUSED" if host.paused else ""], Vector2(vw - 10, vh - 30), 10, Color(1, 1, 1, 0.5), 1)
 	if show_perf:
 		_perf(vw)
+
+
+## The head flashes' debug keys, in the data's order (main.gd FLASH_KEYS).
+static func _flash_keys() -> String:
+	var ids: Array = FlashSet.ids()
+	var parts: PackedStringArray = []
+	for i in range(mini(ids.size(), main_keys().size())):
+		parts.append("%s %s" % [main_keys()[i], ids[i]])
+	return "Head flashes, Alt+: " + "  ".join(parts) + "  (Shift: P2).  Alt+F family, F7 flashes on/off, F8 legacy shapes"
+
+
+static func main_keys() -> Array:
+	return ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "[", "]"]
 
 
 func _panel(f, right: bool, bw: float, vw: float) -> void:

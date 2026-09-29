@@ -13,6 +13,10 @@ extends Node3D
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit), --novsync, --mock-evac
 ## (World's planned evacuate events from a render-side mock, render/tools/evac_mock.gd, until the sim sends them).
+## Head flashes (render/core/flash_view.gd): F7 on and off (on by default, in place of the placeholder aura), F8 the
+## legacy shapes, Alt plus 1 to 9, 0, -, =, [ and ] fires each flash in the data's order on P1 (Shift: P2), Alt+F
+## cycles a fighter's shape family (Shift: P2). The Alt keys never take P1 over. --flash-soak (for the bench) keeps
+## flashes cycling on both fighters, one after another in the data's order.
 ## Benchmark: godot --path . --fixed-fps 60 --resolution 1280x720 -- --seed=4 --frames=4800 --bench
 ## (--fixed-fps 60 gives exactly one sim tick per frame; with vsync off each frame runs as fast as it can, so the
 ## wall-clock frame time is the true cost of one tick plus one rendered frame.)
@@ -43,6 +47,11 @@ var _sky_mat: ShaderMaterial
 var ui_hud: UiHud                 # UI's HUD
 var audio: AudioVoices            # Audio's voice pool
 var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
+var flashes_on: bool = true       # F7: head flashes instead of the placeholder aura
+var flash_legacy: bool = false    # F8: the flashes' shapes before Legal's conditions
+var flash_family: Array = RenderLook.FLASH_FAMILY.duplicate()   # each fighter's shape family (Alt+F cycles)
+## The flash debug keys, in the data's order (FlashSet.ids()).
+const FLASH_KEYS: Array = [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUAL, KEY_BRACKETLEFT, KEY_BRACKETRIGHT]
 
 
 func _ready() -> void:
@@ -92,7 +101,65 @@ func start_match(seed: int, ai: Dictionary = {}) -> void:
 		fighters_root.add_child(v)
 		v.build(f)
 		fighter_views.append(v)
+		_setup_flash(v, fighter_views.size() - 1)
 	render_view(host.alpha())
+
+
+## A fighter's head flashes: its family, the switches, and the hooks to UI (the crown, the info setting, the dimming
+## of an always-on crown) and to Audio (the cue when a flash starts).
+func _setup_flash(v: FighterView, i: int) -> void:
+	v.flashes_on = flashes_on
+	var fl: FlashView = v.flash_view
+	fl.actor = i
+	fl.family = String(flash_family[i % flash_family.size()])
+	fl.legacy = flash_legacy
+	fl.reduced_motion = bool(ui_hud.opts.get("reduced_motion", false))
+	fl.crown_fn = ui_hud.crown_up
+	fl.info_fn = ui_hud.info_flashes
+	fl.up_fn = ui_hud.set_flash_up
+	fl.started_fn = _flash_started
+
+
+func _flash_started(actor: int, id: String) -> void:
+	var c = host.audio_cues.flash(host.S, actor, id)
+	if c != null:
+		host.pending_cues.append(c)
+
+
+## Ask for a head flash on a fighter. Danger sense points at the opponent (its bearing in the fighter's facing frame).
+func fire_flash(actor: int, id: String) -> void:
+	if not flashes_on or actor < 0 or actor >= fighter_views.size():
+		return
+	var S: SimState = host.S
+	var f = S.fighters[actor]
+	var o = S.fighters[1 - actor]
+	var b: float = rad_to_deg(atan2(o.y - f.y, SimWrap.sdx(f.x, o.x) * f.face))
+	if b < -90.0:
+		b += 360.0
+	fighter_views[actor].flash_view.fire(id, S.T, f.hidden, b)
+
+
+## The flashes today's events can drive (spec section 6); the rest wait for Encounter's events and have debug keys.
+func _flash_events(events: Array) -> void:
+	for e in events:
+		match e.type:
+			"found":
+				fire_flash(int(e.actor), "found")
+			"damage":
+				if e.kind == "heavy" and e.victim >= 0.0:
+					fire_flash(int(e.victim), "hurt")
+			"region_broken":
+				fire_flash(int(e.actor), "hurt")
+			"ko":
+				fire_flash(int(e.winner), "triumph")
+			"tier_up":
+				fire_flash(int(e.actor), "surge")          # a stand-in until cinematic_start and cinematic_end
+			"brink_exit":
+				fire_flash(int(e.actor), "resolve")        # a stand-in until rally
+			"banner":
+				if "CLASH" in String(e.text):              # a stand-in for the prototype only
+					fire_flash(0, "rage")
+					fire_flash(1, "rage")
 
 
 func _process(delta: float) -> void:
@@ -105,6 +172,10 @@ func frame(delta: float) -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var t0: int = Time.get_ticks_usec()
 	var n: int = host.advance(delta, vp.x, vp.y)
+	if args.has("flash-soak") and frames % 40 == 0 and not FlashSet.ids().is_empty():
+		var ids: Array = FlashSet.ids()
+		fire_flash(0, ids[(frames / 40) % ids.size()])
+		fire_flash(1, ids[(frames / 40 + 7) % ids.size()])
 	var t1: int = Time.get_ticks_usec()
 	render_view(host.alpha())
 	ui_hud.advance(0.0 if host.paused else delta)
@@ -144,6 +215,7 @@ func render_view(a: float) -> void:
 ## Each tick's events and feed lines, as SimHost drains them: the planet's flight, and UI's HUD.
 func _on_drained(events: Array, lines: Array) -> void:
 	planet.consume(events)
+	_flash_events(events)
 	ui_hud.consume_all(events)
 	UiSimBridge.feed(ui_hud, lines)
 
@@ -199,6 +271,21 @@ func take_over() -> void:
 		host.toggle_ai(0)
 
 
+## Alt plus a flash key fires that flash (Shift: on P2); Alt+F cycles the fighter's shape family.
+func _flash_key(e: InputEventKey) -> void:
+	var k: int = e.physical_keycode if e.physical_keycode != KEY_NONE else e.keycode
+	var who: int = 1 if e.shift_pressed else 0
+	var i: int = FLASH_KEYS.find(k)
+	var ids: Array = FlashSet.ids()
+	if i >= 0 and i < ids.size():
+		fire_flash(who, ids[i])
+	elif k == KEY_F:
+		var fams: Array = ["P", "A", "E", "C"]
+		flash_family[who] = fams[(fams.find(flash_family[who]) + 1) % fams.size()]
+		if who < fighter_views.size():
+			fighter_views[who].flash_view.family = String(flash_family[who])
+
+
 func _unhandled_input(e: InputEvent) -> void:
 	if e is InputEventKey:
 		var code: String = RenderKeys.code(e)
@@ -216,6 +303,19 @@ func _unhandled_input(e: InputEvent) -> void:
 				return
 			if code == "F4":
 				ui_hud.set_option("show_feed", not bool(ui_hud.opts["show_feed"]))
+				return
+			if code == "F7":
+				flashes_on = not flashes_on
+				for v in fighter_views:
+					v.flashes_on = flashes_on
+				return
+			if code == "F8":
+				flash_legacy = not flash_legacy
+				for v in fighter_views:
+					v.flash_view.legacy = flash_legacy
+				return
+			if e.alt_pressed or code == "Alt":
+				_flash_key(e)
 				return
 			if code == "Escape" and not OS.has_feature("web"):
 				get_tree().quit()
