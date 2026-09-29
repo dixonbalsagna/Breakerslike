@@ -9,6 +9,7 @@
 | 5 | Deformable wrapped terrain and effects blow the frame budget | Medium | High | Performance | Budgets at P1, worst-case scene profiling each phase |
 | 6 | Destruction escalates too fast or too slow | High | Medium | World and Game Design | Tune with the sim harness, tier-scaled damage |
 | 7 | Balance skew from asymmetric hero and villain mechanics | High | Medium | QA and Balance | Win-rate dashboard per phase, mirror tests |
-| 8 | Too many directors active at once burns context and money | Medium | Medium | Executive Producer | Use the activation schedule, parallelise only independent work |
+| 8 | Too many directors active at once burns context and money | Medium | Medium | Executive Producer | Use the activation schedule, parallelise only independent work, pace briefs to the account's usage limits (idle sessions cost nothing) |
 | 9 | Scope grows beyond four fighters and one planet | Medium | High | Executive Producer | Gate scope changes through Orb |
 | 10 | Art pipeline cannot support authored atoms for four fighters | Medium | High | Art and Animation | Shared rig and retargeting, atom contract owned by Combat |
+| 11 | Director sessions sharing one folder overwrite each other's work | Medium | Medium | Executive Producer | Owned paths per director, only the EP changes git state, shared files owned by the EP (ADR 0002) |

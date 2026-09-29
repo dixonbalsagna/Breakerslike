@@ -1,19 +1,19 @@
 # Meridian (working title)
 
-An original fighting game that is a homage to Dragon Ball and a spiritual successor to the fan games "Lemming Ball Z" and "Lemming Ball Z 3d". Owner and creative lead: Orb.
+An original fighting game that is a homage to Dragon Ball and a spiritual successor to the fan games "Lemming Ball Z" and "Lemming Ball Z 3d". Free and open source. Owner and creative lead: Orb.
 
-The names Meridian, KAI and VORR are placeholders. Everything in this project must be original: no characters, names, designs, catchphrases, music or code from existing franchises. The genre is the inspiration, not the content.
+The names Meridian, KAI and VORR are placeholders, and Orb wants a completely different name for the game. Everything in this project must be original: no characters, names, designs, catchphrases, music or code from existing franchises. The genre is the inspiration, not the content.
 
-## You are the Executive Producer
+## How this project runs
 
-The main Claude Code session acts as the Executive Producer (EP). Read DIRECTORS.md now. The rules of engagement:
+Orb (owner) → Executive Producer → 22 directors. Every director answers directly to the Executive Producer, and every role runs as its own Claude Code session in this folder (ADR 0002). DIRECTORS.md has the full roster.
 
-1. You plan, delegate, review and integrate. You do not do large implementation work in the main thread.
-2. Directors are subagents in `.claude/agents/`. Invoke them with a self-contained brief (template below). They report only to you and cannot talk to each other, so hand-offs and conflicts go through you.
-3. Only activate the directors the current phase needs (activation table in DIRECTORS.md).
-4. Record every significant decision as a short ADR in `docs/decisions/`.
-5. A phase does not close until its exit criteria are met and QA, Production and Legal have signed off.
-6. Escalate to Orb for creative direction, scope changes, spend and any Legal flag. Ask one clear question at a time.
+- **Your role comes from how your session started.** Directors start with `/director <slug>` and follow their charter in `docs/directors/<slug>.md`. The Executive Producer is the session titled "Meridian - Executive Producer" and follows `docs/ep/playbook.md`. A session with no role asks Orb before doing anything.
+- **Chain of command.** Directors take briefs only from the EP and report only to the EP. They never message or delegate to each other; anything cross-director goes under NEEDS FROM EP, and the EP routes it.
+- **Messages.** Briefs and reports travel with SendMessage between session titles. Text written in your own session is not seen by any other session. Every session runs in Auto permission mode so messages are not held for approval.
+- **Files and git.** All sessions share this folder. Directors edit only their owned paths and never change git state. The EP reviews each deliverable, commits it and records significant decisions as ADRs in `docs/decisions/`.
+- **Pacing.** The activation schedule in DIRECTORS.md decides who is briefed in each phase. A session with no brief stays idle.
+- **Escalation.** The EP escalates to Orb for creative direction, scope changes, spend and any Legal flag, one clear question at a time. Orb may also talk to any director directly.
 
 ### Delegation brief template
 ```
@@ -104,19 +104,6 @@ World and terrain: `wrap`, `sdx`, `biomeAt`, `genWorld`, `groundY`, `seaAt`. Des
 - Suggested layout (adjust with the engine ADR): `sim/`, `data/`, `render/`, `ui/`, `audio/`, `net/`, `tools/`, `art/`, `qa/`, `research/`, `docs/`.
 - Commits are small and named for the outcome. Reference the ADR number when a decision drove the change.
 
-## First tasks for the Executive Producer
-
-1. Read this file and DIRECTORS.md. Open the prototype, play a match, then run `node prototype/tools/sim-stats.js 60`.
-2. Brief the Simulation and Engine Director and the Research and Prototyping Director to spike the engine decision. Record ADR 0001. Ask Orb to confirm.
-3. Brief Legal and IP Compliance to write the originality rules and check the placeholder names.
-4. Brief Game Design to write the pillars, stance matrix and economy docs from the prototype.
-5. Brief Tools and Pipeline to draft data schemas for atoms, exchanges, fighters and biomes, and set up CI.
-6. Brief Simulation to extract the prototype logic into an engine-agnostic core with parity tests against `sim-stats`.
-7. Brief Research to spike information hiding (split-screen versus fog) for the hiding mechanic.
-8. Brief QA to produce a baseline balance report and a regression suite.
-9. Brief Production Operations to turn the roadmap and `docs/production/risk-register.md` into live documents.
-10. Report to Orb: engine recommendation, the open questions below, and the P0 plan.
-
 ## Open questions for Orb
 
 1. Engine: confirm Godot 4, or keep the web stack?
@@ -125,3 +112,5 @@ World and terrain: `wrap`, `sdx`, `biomeAt`, `genWorld`, `groundY`, `seaAt`. Des
 4. Roster: the four fighters and their personalities.
 5. Platforms and target hardware.
 6. Team size and budget, which sets how many directors run at once.
+7. Name: a completely different name for the game (Narrative proposes, Legal screens, Orb picks).
+8. Licence for the free, open-source release (Legal recommends, Orb decides).

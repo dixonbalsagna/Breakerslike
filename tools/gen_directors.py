@@ -1,9 +1,19 @@
-# Single source of truth for the director roster. Generates DIRECTORS.md and .claude/agents/*.md
+# Single source of truth for the director roster.
+# Generates DIRECTORS.md, docs/directors/<slug>.md (one charter per director session) and docs/directors/README.md.
+# Run from the repo root: python tools/gen_directors.py
 import os, textwrap
 PH = ["P0 Foundations","P1 Wrapped world + camera","P2 Stance director","P3 Terrain, collateral, menace","P4 Signatures + 4 fighters","P5 Art, audio, online, polish"]
 
 D = []
 def d(**k): D.append(k)
+
+# Every director runs as its own Claude Code session. Titles carry the project prefix so they
+# never collide with sessions from other projects on the same machine (messages go by title).
+PREFIX = "Meridian - "
+EP_SESSION = PREFIX + "Executive Producer"
+def short(x): return x["title"].replace(" Director", "").replace(" and ", " & ")
+def session(x): return PREFIX + short(x)
+def first_phase(x): return next(i for i, c in enumerate(x["phases"]) if c != "·")
 
 d(slug="game-design", title="Game Design Director", model="opus", tools=None, phases="●○●●●○", paths="docs/design/",
   mission="Own what the game is and why it is fun: the stance system, the fight economy, progression and modes.",
@@ -16,7 +26,7 @@ d(slug="game-design", title="Game Design Director", model="opus", tools=None, ph
    "Write one-page design specs before any system is built, and acceptance tests after."],
   decides=["Rules, numbers and win conditions", "What ships in each phase's design scope", "Mode list (versus, survival, story sandbox)"],
   deliver=["docs/design/pillars.md", "docs/design/stance-matrix.md", "docs/design/economy.md", "Per-feature design specs with acceptance criteria"],
-  ifaces="Combat/Choreography (moves), Fight Director AI (planner weights), QA/Balance (numbers), Narrative (fighter rules).",
+  ifaces="Combat/Choreography (moves), Encounter Systems (planner weights), QA/Balance (numbers), Narrative (fighter rules).",
   done=["A new player can explain what each stance is for after two matches", "No stance is dominant in the QA sim across the roster", "Every system has a written spec and a passing acceptance test"],
   anti=["Feature creep beyond the phase scope", "Mechanics that only work if the player reads the wiki"])
 
@@ -31,11 +41,11 @@ d(slug="combat-choreography", title="Combat and Choreography Director", model="o
    "Provide Animation with a shot list per atom, and VFX with impact events."],
   decides=["Atom timings and semantics", "Which template fires for which matchup", "Signature variant table"],
   deliver=["data/atoms/*.json", "data/exchanges/*.json", "docs/combat/move-grammar.md", "Signature variant matrix"],
-  ifaces="Fight Director AI (selection), Animation (clips), Controls/Feel (windows), VFX (impact events), Game Design (numbers).",
+  ifaces="Encounter Systems (selection), Animation (clips), Controls/Feel (windows), VFX (impact events), Game Design (numbers).",
   done=["Every stance pairing has at least two distinct authored outcomes", "A signature never plays the same way in two different contexts", "Exchange timing reviewed in slow-mo with no dead air"],
   anti=["Free-form generated animation with no authored anchor", "Templates that hide player agency"])
 
-d(slug="fight-director-ai", title="Encounter Systems Director", model="opus", tools=None, phases="··●●●○", paths="sim/director/",
+d(slug="encounter-systems", title="Encounter Systems Director", model="opus", tools=None, phases="··●●●○", paths="sim/director/",
   mission="Own the procedural fight director: the system that decides what happens in an exchange and where the fight goes.",
   duties=[
    "Own the exchange planner: template selection, beat scheduling, extension and chain windows.",
@@ -61,7 +71,7 @@ d(slug="simulation-engine", title="Simulation and Engine Director", model="opus"
    "Port and refactor the JS prototype logic without changing behaviour until tests prove parity."],
   decides=["Engine and language", "Sim/render boundary", "Serialization and replay format"],
   deliver=["docs/architecture/overview.md", "ADR for engine choice", "sim/core/*", "Parity tests against the prototype"],
-  ifaces="Everyone. Netcode (determinism), Tools (build), Performance (budgets), Fight Director AI (tick contract).",
+  ifaces="Everyone. Netcode (determinism), Tools (build), Performance (budgets), Encounter Systems (tick contract).",
   done=["Headless sim runs 1000 matches without error", "Replays reproduce bit-identical results", "Seam-crossing bugs covered by tests"],
   anti=["Premature engine features nobody asked for", "Rendering logic leaking into sim"])
 
@@ -76,7 +86,7 @@ d(slug="world-environment", title="World and Environment Director", model="sonne
    "Provide terrain queries to the director: nearest building, mountainside, population density."],
   decides=["Biome layout and size", "Destruction rules and hit points", "Casualty model"],
   deliver=["sim/world/*", "data/biomes/*", "docs/world/destruction-rules.md", "Planet layout map"],
-  ifaces="Fight Director AI (queries), Art (biome look), VFX (destruction effects), Performance (deformation cost).",
+  ifaces="Encounter Systems (queries), Art (biome look), VFX (destruction effects), Performance (deformation cost).",
   done=["No fight destroys the whole planet in under a minute at low tiers", "Craters never flood inland", "Hiding cover is readable at a glance"],
   anti=["Destruction that is only cosmetic", "Unbounded terrain memory growth"])
 
@@ -160,7 +170,7 @@ d(slug="narrative-identity", title="Narrative and Fighter Identity Director", mo
    "Keep the homage respectful and original: themes, not characters."],
   decides=["Fighter personalities", "Voice and tone"],
   deliver=["data/fighters/*.json (personality weights)", "docs/narrative/bible.md", "Bark sheets"],
-  ifaces="Game Design, Fight Director AI (personality weights), Art, Audio, Legal.",
+  ifaces="Game Design, Encounter Systems (personality weights), Art, Audio, Legal.",
   done=["A player can guess a fighter's personality from one match", "No borrowed names, catchphrases or lore", "Personality weights implemented and visible in the debug feed"],
   anti=["Fan-fiction of existing characters"])
 
@@ -202,11 +212,11 @@ d(slug="netcode-online", title="Netcode and Online Director", model="opus", tool
    "Plan anti-cheat proportional to the game's scale."],
   decides=["Network architecture", "Sync protocol"],
   deliver=["net/*", "docs/net/determinism-contract.md", "Latency test results"],
-  ifaces="Simulation, Fight Director AI, Controls/Feel, QA.",
+  ifaces="Simulation, Encounter Systems, Controls/Feel, QA.",
   done=["Two clients stay in sync across a full match under simulated latency and loss", "Replay files verify across machines"],
   anti=["Online features before the offline game is fun"])
 
-d(slug="qa-balance", title="QA and Balance Director", model="sonnet", tools=None, phases="··○●●●", paths="qa/, prototype/tools/",
+d(slug="qa-balance", title="QA and Balance Director", model="sonnet", tools=None, phases="○·○●●●", paths="qa/, prototype/tools/",
   mission="Own quality and numbers: automated sims, balance dashboards, regression tests and playtest triage.",
   duties=[
    "Maintain the headless simulation harness and run AI-vs-AI batches on every change to numbers.",
@@ -216,7 +226,7 @@ d(slug="qa-balance", title="QA and Balance Director", model="sonnet", tools=None
    "Publish a balance report each phase gate."],
   decides=["Release quality bar", "Balance findings and recommendations"],
   deliver=["qa/*", "Balance reports", "Regression suite"],
-  ifaces="Game Design (numbers), Fight Director AI, Simulation, Tools (CI).",
+  ifaces="Game Design (numbers), Encounter Systems, Simulation, Tools (CI).",
   done=["Win rates within 45 to 55 percent for every pairing at equal skill", "Average match length within target range", "CI runs the suite on every change"],
   anti=["Balancing only by feel"])
 
@@ -320,7 +330,7 @@ d(slug="research-prototyping", title="Research and Prototyping Director", model=
 
 EP = dict(
  title="Executive Producer",
- mission="Own the vision, the plan and the integration. The main Claude Code session is the Executive Producer; every director reports here and nowhere else.",
+ mission="Own the vision, the plan and the integration. The Executive Producer is its own Claude Code session (" + EP_SESSION + "); every director reports here and nowhere else.",
  duties=[
   "Hold the vision: Dragon Ball homage, original in every asset, a wraparound planet, a procedural fight director driven by stances.",
   "Sequence work across phases and decide which directors are active in each (see the activation schedule).",
@@ -329,13 +339,13 @@ EP = dict(
   "Review every deliverable against its acceptance criteria before merging it; reject or return it with specifics.",
   "Keep the decision log (docs/decisions) and the risk register current.",
   "Run phase gates: check exit criteria with QA, Production and Legal before opening the next phase.",
-  "Protect context: use focused subagent briefs, parallelise independent work, keep the main thread for decisions and integration.",
+  "Protect context and budget: send focused briefs, run independent directors in parallel within the account's usage limits, keep the EP session for decisions and integration.",
   "Escalate to Orb (the owner) for creative direction, scope changes, budget and any Legal flag."],
  decides=["Scope and sequencing", "Which director is active", "Merge or reject", "Phase gate results"],
  deliver=["Phase plans", "Decision records", "Gate reports", "Weekly status to Orb"],
  ifaces="Reports to Orb. Directors report to the EP. Production Operations supports with paperwork.",
  done=["Every phase exits on its written criteria", "No unowned decision or file", "Orb can read one page and know the state"],
- anti=["Doing a director's work in the main thread", "Letting directors expand scope silently"])
+ anti=["Doing a director's work in the EP session", "Letting directors expand scope silently"])
 
 def phase_table():
     rows = ["| Director | " + " | ".join(p.split(" ")[0] for p in PH) + " |", "|---|" + "---|"*len(PH)]
@@ -352,13 +362,13 @@ def md():
     o.append("Roster for the Meridian project (working title). One Executive Producer, " + str(len(D)) + " directors, every director reporting directly to the Executive Producer. Orb is the owner and the Executive Producer's only superior.\n")
     o.append("## How this runs in Claude Code\n")
     o.append(textwrap.dedent("""\
-    - **The Executive Producer is the main session.** CLAUDE.md tells the main session to act as the EP. It plans, delegates, reviews and integrates.
-    - **Directors are subagents.** Each director is a file in `.claude/agents/<slug>.md` with its own charter. The EP invokes them by name or lets Claude route by the description.
-    - **Directors report only to the EP.** Subagents run in isolated contexts and hand back one report. They do not talk to each other and should not be assumed to spawn other subagents, so any cross-director need goes into the report as a request for the EP.
-    - **Activate few at a time.** The table below shows who leads or supports each phase. A director not active in a phase should not be invoked.
-    - **Models.** `opus` is set on the directors whose work is architecturally critical (game design, combat, director AI, simulation, netcode, research). The rest use `sonnet`. Change the `model:` line in any agent file to re-balance cost and quality. Confirm current model aliases and frontmatter fields in the Claude Code docs before relying on them.
-    - **Lateral collaboration.** If you later want directors to message each other, look at Claude Code agent teams instead of plain subagents. That is a different setup and is not assumed here.
-    """))
+    - **Every director is its own Claude Code session.** Orb opens one session per director in the project folder, in Auto permission mode, with the model listed for it, and sends `/director <slug>` as the first message. The session reads its charter in `docs/directors/<slug>.md`, renames itself to its session title and waits for a brief. The list is in `docs/directors/README.md`.
+    - **The Executive Producer is the session titled "{ep}".** It plans, briefs, reviews and integrates, and it is the only session that changes git state.
+    - **Directors report only to the EP.** Briefs and reports travel as cross-session messages (SendMessage) addressed by session title. Directors never message or delegate to each other; any cross-director need goes into the report as a request for the EP.
+    - **One folder, owned paths.** All sessions share the project folder. Each director edits only its owned paths. Shared files (CLAUDE.md, DIRECTORS.md, README.md, docs/decisions/, docs/ep/) belong to the EP.
+    - **Brief few at a time.** Every session can stay open, but the EP briefs only the directors the current phase needs (table below) and paces work to the account's usage limits. A session with no brief sits idle.
+    - **Models.** `opus` for the directors whose work is architecturally critical (game design, combat, encounter systems, simulation, netcode, research); `sonnet` for the rest. Change the `model=` value in tools/gen_directors.py to re-balance cost and quality; the EP can also switch a running session's model.
+    """).format(ep=EP_SESSION))
     o.append("### Standard report format (every director returns this)\n")
     o.append("```\nSUMMARY: two or three sentences\nCHANGES: files created or edited\nDECISIONS: what was decided and why\nNEEDS FROM EP: requests for other directors or for a ruling\nRISKS: anything that could bite later\nNEXT: recommended next step\n```\n")
     o.append("### Activation schedule\n")
@@ -366,7 +376,8 @@ def md():
     o.append("Phases: " + "; ".join(PH) + ".\n")
     o.append(phase_table() + "\n")
     o.append("---\n")
-    o.append("## 0. Executive Producer (main session)\n")
+    o.append("## 0. Executive Producer\n")
+    o.append("session: `%s`  |  model: `opus`  |  owns: `docs/decisions/, docs/ep/`, shared files  |  reports to: Orb\n" % EP_SESSION)
     o.append("**Mission.** " + EP["mission"] + "\n")
     o.append("**Duties and responsibilities**\n" + bullets(EP["duties"]) + "\n")
     o.append("**Decides:** " + "; ".join(EP["decides"]) + "\n")
@@ -377,7 +388,7 @@ def md():
     for n, x in enumerate(D, 1):
         o.append("---\n")
         o.append("## %d. %s\n" % (n, x["title"]))
-        o.append("`.claude/agents/%s.md`  |  model: `%s`  |  owns: `%s`  |  reports to: Executive Producer\n" % (x["slug"], x["model"], x["paths"]))
+        o.append("`docs/directors/%s.md`  |  session: `%s`  |  model: `%s`  |  owns: `%s`  |  reports to: Executive Producer\n" % (x["slug"], session(x), x["model"], x["paths"]))
         o.append("**Mission.** " + x["mission"] + "\n")
         o.append("**Duties and responsibilities**\n" + bullets(x["duties"]) + "\n")
         o.append("**Decides:** " + "; ".join(x["decides"]) + "\n")
@@ -387,22 +398,23 @@ def md():
         o.append("**Anti-goals:** " + "; ".join(x["anti"]) + "\n")
     return "\n".join(o)
 
-def agent_file(x):
-    desc = ("%s. Use when the task involves: %s. Reports to the Executive Producer." % (x["mission"].rstrip("."), ", ".join(x["decides"]))).replace('"', "'")
-    fm = ["---", "name: " + x["slug"], 'description: "' + desc + '"']
-    if x["tools"]: fm.append("tools: " + x["tools"])
-    fm.append("model: " + x["model"])
-    fm.append("---")
+def charter_file(x):
     body = textwrap.dedent("""\
-    You are the {title} on the Meridian project (working title): an original fighting game that is a homage to Dragon Ball, with a wraparound planet, stance-driven combat and a procedural fight director.
+    # {title}
+
+    Session title: `{session}`  |  model: `{model}`  |  owns: `{paths}`  |  kickoff: `/director {slug}`
+
+    You are the {title} on the Meridian project (working title): an original fighting game that is a homage to Dragon Ball, with a wraparound planet, stance-driven combat and a procedural fight director. You run as your own Claude Code session and answer directly to the Executive Producer, the session titled "{ep}".
 
     ## Standing rules
     1. Read CLAUDE.md first, then any docs in your owned paths, before acting.
-    2. You report only to the Executive Producer (the main session). You cannot delegate to other directors. If you need something from another director or a ruling, put it under NEEDS FROM EP.
+    2. Work only on briefs from the Executive Producer. Send every reply to the EP with SendMessage, using the brief's `from` as `to`; text you write in your own session is not seen by the EP. Never message or delegate to other directors. If you need something from another director or a ruling, put it under NEEDS FROM EP.
     3. Stay inside your owned paths ({paths}). If a change must touch someone else's files, describe it and ask the EP instead of making it.
-    4. Everything must stay original. Never copy names, characters, designs, music or code from existing franchises. When unsure, flag it for the Legal and IP Compliance Director via the EP.
-    5. Keep simulation and rendering separate and the simulation deterministic (seeded RNG, fixed timestep).
-    6. Prefer small, verifiable changes. Run the headless simulation checks in prototype/tools when your work affects numbers or behaviour.
+    4. Other sessions share this folder. Never run git commands that change files, the index or history (add, commit, checkout, restore, reset, stash, merge, pull, push); read-only git such as status, diff and log is fine. The EP reviews and commits your work.
+    5. Everything must stay original. Never copy names, characters, designs, music or code from existing franchises. When unsure, flag it for the Legal and IP Compliance Director via the EP.
+    6. Keep simulation and rendering separate and the simulation deterministic (seeded RNG, fixed timestep).
+    7. Prefer small, verifiable changes. Run the headless simulation checks in prototype/tools when your work affects numbers or behaviour.
+    8. Orb, the owner, may talk to you directly. Follow Orb, and mention it in your next report to the EP.
 
     ## Your mission
     {mission}
@@ -425,19 +437,41 @@ def agent_file(x):
     ## Anti-goals
     {anti}
 
-    ## Return format
-    Finish with exactly this report and nothing after it:
+    ## Report format
+    End every reply to the EP with exactly this report, sent with SendMessage:
     SUMMARY: two or three sentences
     CHANGES: files created or edited
     DECISIONS: what you decided and why
     NEEDS FROM EP: requests for other directors or rulings
     RISKS: anything that could bite later
     NEXT: recommended next step
-    """).format(title=x["title"], paths=x["paths"], mission=x["mission"], duties=bullets(x["duties"]), decides="; ".join(x["decides"]), deliver="; ".join(x["deliver"]), ifaces=x["ifaces"], done=bullets(x["done"]), anti=bullets(x["anti"]))
-    return "\n".join(fm) + "\n\n" + body
+    """).format(title=x["title"], session=session(x), model=x["model"], slug=x["slug"], ep=EP_SESSION, paths=x["paths"], mission=x["mission"], duties=bullets(x["duties"]), decides="; ".join(x["decides"]), deliver="; ".join(x["deliver"]), ifaces=x["ifaces"], done=bullets(x["done"]), anti=bullets(x["anti"]))
+    return body
 
-os.makedirs(".claude/agents", exist_ok=True)
-open("DIRECTORS.md", "w").write(md())
+def roster_md():
+    o = ["# Director sessions\n",
+         "Every director is its own Claude Code session in this project folder, answering directly to the Executive Producer (session `%s`). Generated by `tools/gen_directors.py`; change the roster there, then rerun it.\n" % EP_SESSION,
+         "## Opening a director session\n",
+         "1. Start a new session in the project folder.",
+         "2. Set the permission mode to **Auto**, the same as the Executive Producer, so briefs are not held for approval.",
+         "3. Pick the model listed below.",
+         "4. Send the kickoff command as the first message. The session reads its charter, renames itself and waits for a brief.\n",
+         "Directors are listed in the order they are first needed, from the activation schedule in DIRECTORS.md.\n",
+         "| # | Director | Kickoff | Model | Session title | First needed |",
+         "|---|---|---|---|---|---|"]
+    for n, x in enumerate(sorted(D, key=first_phase), 1):
+        p = first_phase(x)
+        role = "lead" if x["phases"][p] == "●" else "support"
+        o.append("| %d | %s | `/director %s` | %s | %s | %s %s |" % (n, x["title"], x["slug"], x["model"], session(x), PH[p].split(" ")[0], role))
+    return "\n".join(o) + "\n"
+
+def write(path, text):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+
+write("DIRECTORS.md", md())
 for x in D:
-    open(".claude/agents/%s.md" % x["slug"], "w").write(agent_file(x))
+    write("docs/directors/%s.md" % x["slug"], charter_file(x))
+write("docs/directors/README.md", roster_md())
 print(len(D), "directors + EP")

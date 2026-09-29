@@ -1,24 +1,22 @@
-# Meridian handoff package
+# Meridian (working title)
 
-Contents:
-- `CLAUDE.md` project brief and instructions for the Executive Producer (main session)
+An original fighting game: a homage to Dragon Ball and a spiritual successor to the fan games "Lemming Ball Z" and "Lemming Ball Z 3d". Free and open source. Meridian is a placeholder name.
+
+## What's here
+- `CLAUDE.md` project brief, loaded by every Claude Code session in this folder
 - `DIRECTORS.md` roster: Executive Producer plus 22 directors, with duties, deliverables and activation schedule
-- `.claude/agents/` one subagent file per director
-- `.claude/commands/` two helper commands: `/standup` and `/gate`
+- `docs/directors/` one charter per director, and the list of director sessions (`docs/directors/README.md`)
+- `docs/ep/playbook.md` how the Executive Producer session runs the project
+- `.claude/commands/` `/director` (start a director session), `/standup` and `/gate`
 - `prototype/index.html` playable browser prototype (open it directly)
 - `prototype/tools/` headless simulation harness and stats runner
-- `tools/gen_directors.py` regenerates DIRECTORS.md and the agent files from one roster (run from the repo root: `python3 tools/gen_directors.py`)
-- `docs/decisions/` decision records (ADR 0001 engine choice is open)
-- `docs/production/risk-register.md` starting risk register
+- `tools/gen_directors.py` regenerates DIRECTORS.md and the charters from one roster (`python tools/gen_directors.py` from the repo root)
+- `docs/decisions/` decision records
+- `docs/production/risk-register.md` risk register
+- `docs/setup/git-and-github.md` linking the folder to GitHub, and setting up a new computer
 
-## Start in Claude Code
-1. Unzip into an empty folder and `git init`.
-2. Open a terminal in that folder and run `claude`.
-3. Choose Opus for the main session (for example with the `/model` command).
-4. Paste: "Read CLAUDE.md and DIRECTORS.md. You are the Executive Producer. Run the first tasks in order, delegating to directors as described, and report back with the engine recommendation and open questions."
-
-Check the Claude Code documentation for current subagent settings and model aliases. Files here follow the documented format: markdown with `name`, `description`, optional `tools` and `model` in the frontmatter.
+## How the team runs
+Each director is its own Claude Code session answering to the Executive Producer session (ADR 0002). To open one, follow `docs/directors/README.md`.
 
 ## Sanity checks
 - `node prototype/tools/sim-stats.js 20` runs 20 AI-vs-AI matches with no dependencies.
-- `/agents` or `claude agents` lists the directors once the folder is loaded (the exact command depends on your Claude Code version).

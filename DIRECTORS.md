@@ -4,12 +4,12 @@ Roster for the Meridian project (working title). One Executive Producer, 22 dire
 
 ## How this runs in Claude Code
 
-- **The Executive Producer is the main session.** CLAUDE.md tells the main session to act as the EP. It plans, delegates, reviews and integrates.
-- **Directors are subagents.** Each director is a file in `.claude/agents/<slug>.md` with its own charter. The EP invokes them by name or lets Claude route by the description.
-- **Directors report only to the EP.** Subagents run in isolated contexts and hand back one report. They do not talk to each other and should not be assumed to spawn other subagents, so any cross-director need goes into the report as a request for the EP.
-- **Activate few at a time.** The table below shows who leads or supports each phase. A director not active in a phase should not be invoked.
-- **Models.** `opus` is set on the directors whose work is architecturally critical (game design, combat, director AI, simulation, netcode, research). The rest use `sonnet`. Change the `model:` line in any agent file to re-balance cost and quality. Confirm current model aliases and frontmatter fields in the Claude Code docs before relying on them.
-- **Lateral collaboration.** If you later want directors to message each other, look at Claude Code agent teams instead of plain subagents. That is a different setup and is not assumed here.
+- **Every director is its own Claude Code session.** Orb opens one session per director in the project folder, in Auto permission mode, with the model listed for it, and sends `/director <slug>` as the first message. The session reads its charter in `docs/directors/<slug>.md`, renames itself to its session title and waits for a brief. The list is in `docs/directors/README.md`.
+- **The Executive Producer is the session titled "Meridian - Executive Producer".** It plans, briefs, reviews and integrates, and it is the only session that changes git state.
+- **Directors report only to the EP.** Briefs and reports travel as cross-session messages (SendMessage) addressed by session title. Directors never message or delegate to each other; any cross-director need goes into the report as a request for the EP.
+- **One folder, owned paths.** All sessions share the project folder. Each director edits only its owned paths. Shared files (CLAUDE.md, DIRECTORS.md, README.md, docs/decisions/, docs/ep/) belong to the EP.
+- **Brief few at a time.** Every session can stay open, but the EP briefs only the directors the current phase needs (table below) and paces work to the account's usage limits. A session with no brief sits idle.
+- **Models.** `opus` for the directors whose work is architecturally critical (game design, combat, encounter systems, simulation, netcode, research); `sonnet` for the rest. Change the `model=` value in tools/gen_directors.py to re-balance cost and quality; the EP can also switch a running session's model.
 
 ### Standard report format (every director returns this)
 
@@ -45,7 +45,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 | UI and UX Director | · | · | ○ | ○ | ○ | ● |
 | Controls and Game Feel Director | · | ○ | ● | ○ | ○ | ● |
 | Netcode and Online Director | ○ | · | · | · | · | ● |
-| QA and Balance Director | · | · | ○ | ● | ● | ● |
+| QA and Balance Director | ○ | · | ○ | ● | ● | ● |
 | Tools and Pipeline Director | ● | ○ | ○ | ○ | ○ | ○ |
 | Production Operations Director | ○ | ○ | ○ | ○ | ○ | ○ |
 | Legal and IP Compliance Director | ● | · | · | · | ● | ● |
@@ -56,9 +56,11 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ---
 
-## 0. Executive Producer (main session)
+## 0. Executive Producer
 
-**Mission.** Own the vision, the plan and the integration. The main Claude Code session is the Executive Producer; every director reports here and nowhere else.
+session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decisions/, docs/ep/`, shared files  |  reports to: Orb
+
+**Mission.** Own the vision, the plan and the integration. The Executive Producer is its own Claude Code session (Meridian - Executive Producer); every director reports here and nowhere else.
 
 **Duties and responsibilities**
 - Hold the vision: Dragon Ball homage, original in every asset, a wraparound planet, a procedural fight director driven by stances.
@@ -68,7 +70,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 - Review every deliverable against its acceptance criteria before merging it; reject or return it with specifics.
 - Keep the decision log (docs/decisions) and the risk register current.
 - Run phase gates: check exit criteria with QA, Production and Legal before opening the next phase.
-- Protect context: use focused subagent briefs, parallelise independent work, keep the main thread for decisions and integration.
+- Protect context and budget: send focused briefs, run independent directors in parallel within the account's usage limits, keep the EP session for decisions and integration.
 - Escalate to Orb (the owner) for creative direction, scope changes, budget and any Legal flag.
 
 **Decides:** Scope and sequencing; Which director is active; Merge or reject; Phase gate results
@@ -79,13 +81,13 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Done when:** Every phase exits on its written criteria; No unowned decision or file; Orb can read one page and know the state
 
-**Anti-goals:** Doing a director's work in the main thread; Letting directors expand scope silently
+**Anti-goals:** Doing a director's work in the EP session; Letting directors expand scope silently
 
 ---
 
 ## 1. Game Design Director
 
-`.claude/agents/game-design.md`  |  model: `opus`  |  owns: `docs/design/`  |  reports to: Executive Producer
+`docs/directors/game-design.md`  |  session: `Meridian - Game Design`  |  model: `opus`  |  owns: `docs/design/`  |  reports to: Executive Producer
 
 **Mission.** Own what the game is and why it is fun: the stance system, the fight economy, progression and modes.
 
@@ -101,7 +103,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Deliverables:** docs/design/pillars.md; docs/design/stance-matrix.md; docs/design/economy.md; Per-feature design specs with acceptance criteria
 
-**Works with (via the EP):** Combat/Choreography (moves), Fight Director AI (planner weights), QA/Balance (numbers), Narrative (fighter rules).
+**Works with (via the EP):** Combat/Choreography (moves), Encounter Systems (planner weights), QA/Balance (numbers), Narrative (fighter rules).
 
 **Done when:** A new player can explain what each stance is for after two matches; No stance is dominant in the QA sim across the roster; Every system has a written spec and a passing acceptance test
 
@@ -111,7 +113,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 2. Combat and Choreography Director
 
-`.claude/agents/combat-choreography.md`  |  model: `opus`  |  owns: `data/atoms/, data/exchanges/, docs/combat/`  |  reports to: Executive Producer
+`docs/directors/combat-choreography.md`  |  session: `Meridian - Combat & Choreography`  |  model: `opus`  |  owns: `data/atoms/, data/exchanges/, docs/combat/`  |  reports to: Executive Producer
 
 **Mission.** Own how fights look and read moment to moment: the atom library and the exchange templates the director composes from.
 
@@ -127,7 +129,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Deliverables:** data/atoms/*.json; data/exchanges/*.json; docs/combat/move-grammar.md; Signature variant matrix
 
-**Works with (via the EP):** Fight Director AI (selection), Animation (clips), Controls/Feel (windows), VFX (impact events), Game Design (numbers).
+**Works with (via the EP):** Encounter Systems (selection), Animation (clips), Controls/Feel (windows), VFX (impact events), Game Design (numbers).
 
 **Done when:** Every stance pairing has at least two distinct authored outcomes; A signature never plays the same way in two different contexts; Exchange timing reviewed in slow-mo with no dead air
 
@@ -137,7 +139,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 3. Encounter Systems Director
 
-`.claude/agents/fight-director-ai.md`  |  model: `opus`  |  owns: `sim/director/`  |  reports to: Executive Producer
+`docs/directors/encounter-systems.md`  |  session: `Meridian - Encounter Systems`  |  model: `opus`  |  owns: `sim/director/`  |  reports to: Executive Producer
 
 **Mission.** Own the procedural fight director: the system that decides what happens in an exchange and where the fight goes.
 
@@ -163,7 +165,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 4. Simulation and Engine Director
 
-`.claude/agents/simulation-engine.md`  |  model: `opus`  |  owns: `sim/core/, docs/architecture/`  |  reports to: Executive Producer
+`docs/directors/simulation-engine.md`  |  session: `Meridian - Simulation & Engine`  |  model: `opus`  |  owns: `sim/core/, docs/architecture/`  |  reports to: Executive Producer
 
 **Mission.** Own the technical spine: engine choice, the deterministic simulation core, and the wrapped-world math.
 
@@ -179,7 +181,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Deliverables:** docs/architecture/overview.md; ADR for engine choice; sim/core/*; Parity tests against the prototype
 
-**Works with (via the EP):** Everyone. Netcode (determinism), Tools (build), Performance (budgets), Fight Director AI (tick contract).
+**Works with (via the EP):** Everyone. Netcode (determinism), Tools (build), Performance (budgets), Encounter Systems (tick contract).
 
 **Done when:** Headless sim runs 1000 matches without error; Replays reproduce bit-identical results; Seam-crossing bugs covered by tests
 
@@ -189,7 +191,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 5. World and Environment Director
 
-`.claude/agents/world-environment.md`  |  model: `sonnet`  |  owns: `sim/world/, data/biomes/`  |  reports to: Executive Producer
+`docs/directors/world-environment.md`  |  session: `Meridian - World & Environment`  |  model: `sonnet`  |  owns: `sim/world/, data/biomes/`  |  reports to: Executive Producer
 
 **Mission.** Own the planet: terrain, biomes, structures, civilians, destruction and how the world reacts to power.
 
@@ -205,7 +207,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Deliverables:** sim/world/*; data/biomes/*; docs/world/destruction-rules.md; Planet layout map
 
-**Works with (via the EP):** Fight Director AI (queries), Art (biome look), VFX (destruction effects), Performance (deformation cost).
+**Works with (via the EP):** Encounter Systems (queries), Art (biome look), VFX (destruction effects), Performance (deformation cost).
 
 **Done when:** No fight destroys the whole planet in under a minute at low tiers; Craters never flood inland; Hiding cover is readable at a glance
 
@@ -215,7 +217,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 6. Art Director
 
-`.claude/agents/art.md`  |  model: `sonnet`  |  owns: `art/, docs/art-bible/`  |  reports to: Executive Producer
+`docs/directors/art.md`  |  session: `Meridian - Art`  |  model: `sonnet`  |  owns: `art/, docs/art-bible/`  |  reports to: Executive Producer
 
 **Mission.** Own the visual identity: original characters, environments and a look that honours the genre without borrowing it.
 
@@ -240,7 +242,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 7. Animation Director
 
-`.claude/agents/animation.md`  |  model: `sonnet`  |  owns: `art/animation/`  |  reports to: Executive Producer
+`docs/directors/animation.md`  |  session: `Meridian - Animation`  |  model: `sonnet`  |  owns: `art/animation/`  |  reports to: Executive Producer
 
 **Mission.** Own character motion: the clips that atoms play, and the warping rules that let one clip serve many contexts.
 
@@ -265,7 +267,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 8. VFX Director
 
-`.claude/agents/vfx.md`  |  model: `sonnet`  |  owns: `render/vfx/, art/vfx/`  |  reports to: Executive Producer
+`docs/directors/vfx.md`  |  session: `Meridian - VFX`  |  model: `sonnet`  |  owns: `render/vfx/, art/vfx/`  |  reports to: Executive Producer
 
 **Mission.** Own energy, impact and destruction visuals: auras, beams, shockwaves, debris, dust and water.
 
@@ -290,7 +292,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 9. Camera and Cinematography Director
 
-`.claude/agents/camera.md`  |  model: `sonnet`  |  owns: `render/camera/`  |  reports to: Executive Producer
+`docs/directors/camera.md`  |  session: `Meridian - Camera & Cinematography`  |  model: `sonnet`  |  owns: `render/camera/`  |  reports to: Executive Producer
 
 **Mission.** Own how the wrapped planet is framed: the camera that keeps two distant fighters readable and makes impacts land.
 
@@ -315,7 +317,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 10. Audio and Music Director
 
-`.claude/agents/audio-music.md`  |  model: `sonnet`  |  owns: `audio/`  |  reports to: Executive Producer
+`docs/directors/audio-music.md`  |  session: `Meridian - Audio & Music`  |  model: `sonnet`  |  owns: `audio/`  |  reports to: Executive Producer
 
 **Mission.** Own sound and score: impact weight, scale, and a soundtrack that escalates with the fight.
 
@@ -340,7 +342,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 11. Narrative and Fighter Identity Director
 
-`.claude/agents/narrative-identity.md`  |  model: `sonnet`  |  owns: `docs/narrative/, data/fighters/`  |  reports to: Executive Producer
+`docs/directors/narrative-identity.md`  |  session: `Meridian - Narrative & Fighter Identity`  |  model: `sonnet`  |  owns: `docs/narrative/, data/fighters/`  |  reports to: Executive Producer
 
 **Mission.** Own who the fighters are: personality that shows up in play, in the director's choices, and in the words.
 
@@ -355,7 +357,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Deliverables:** data/fighters/*.json (personality weights); docs/narrative/bible.md; Bark sheets
 
-**Works with (via the EP):** Game Design, Fight Director AI (personality weights), Art, Audio, Legal.
+**Works with (via the EP):** Game Design, Encounter Systems (personality weights), Art, Audio, Legal.
 
 **Done when:** A player can guess a fighter's personality from one match; No borrowed names, catchphrases or lore; Personality weights implemented and visible in the debug feed
 
@@ -365,7 +367,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 12. UI and UX Director
 
-`.claude/agents/ui-ux.md`  |  model: `sonnet`  |  owns: `ui/`  |  reports to: Executive Producer
+`docs/directors/ui-ux.md`  |  session: `Meridian - UI & UX`  |  model: `sonnet`  |  owns: `ui/`  |  reports to: Executive Producer
 
 **Mission.** Own everything the player reads: HUD, menus, stance display, feedback and the developer-facing debug overlays.
 
@@ -390,7 +392,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 13. Controls and Game Feel Director
 
-`.claude/agents/controls-feel.md`  |  model: `sonnet`  |  owns: `sim/input/, docs/feel/`  |  reports to: Executive Producer
+`docs/directors/controls-feel.md`  |  session: `Meridian - Controls & Game Feel`  |  model: `sonnet`  |  owns: `sim/input/, docs/feel/`  |  reports to: Executive Producer
 
 **Mission.** Own how it feels in the hands: input mapping, buffering, hit-stop, windows and responsiveness.
 
@@ -415,7 +417,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 14. Netcode and Online Director
 
-`.claude/agents/netcode-online.md`  |  model: `opus`  |  owns: `net/`  |  reports to: Executive Producer
+`docs/directors/netcode-online.md`  |  session: `Meridian - Netcode & Online`  |  model: `opus`  |  owns: `net/`  |  reports to: Executive Producer
 
 **Mission.** Own online play: deterministic rollback, matchmaking, and keeping a procedural director in sync.
 
@@ -430,7 +432,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Deliverables:** net/*; docs/net/determinism-contract.md; Latency test results
 
-**Works with (via the EP):** Simulation, Fight Director AI, Controls/Feel, QA.
+**Works with (via the EP):** Simulation, Encounter Systems, Controls/Feel, QA.
 
 **Done when:** Two clients stay in sync across a full match under simulated latency and loss; Replay files verify across machines
 
@@ -440,7 +442,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 15. QA and Balance Director
 
-`.claude/agents/qa-balance.md`  |  model: `sonnet`  |  owns: `qa/, prototype/tools/`  |  reports to: Executive Producer
+`docs/directors/qa-balance.md`  |  session: `Meridian - QA & Balance`  |  model: `sonnet`  |  owns: `qa/, prototype/tools/`  |  reports to: Executive Producer
 
 **Mission.** Own quality and numbers: automated sims, balance dashboards, regression tests and playtest triage.
 
@@ -455,7 +457,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 **Deliverables:** qa/*; Balance reports; Regression suite
 
-**Works with (via the EP):** Game Design (numbers), Fight Director AI, Simulation, Tools (CI).
+**Works with (via the EP):** Game Design (numbers), Encounter Systems, Simulation, Tools (CI).
 
 **Done when:** Win rates within 45 to 55 percent for every pairing at equal skill; Average match length within target range; CI runs the suite on every change
 
@@ -465,7 +467,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 16. Tools and Pipeline Director
 
-`.claude/agents/tools-pipeline.md`  |  model: `sonnet`  |  owns: `tools/, build/, .github/`  |  reports to: Executive Producer
+`docs/directors/tools-pipeline.md`  |  session: `Meridian - Tools & Pipeline`  |  model: `sonnet`  |  owns: `tools/, build/, .github/`  |  reports to: Executive Producer
 
 **Mission.** Own the workshop: build, CI, asset import, data formats and the dev tools that make the team fast.
 
@@ -490,7 +492,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 17. Production Operations Director
 
-`.claude/agents/production-ops.md`  |  model: `sonnet`  |  owns: `docs/production/`  |  reports to: Executive Producer
+`docs/directors/production-ops.md`  |  session: `Meridian - Production Operations`  |  model: `sonnet`  |  owns: `docs/production/`  |  reports to: Executive Producer
 
 **Mission.** Own the plan's paperwork so the Executive Producer can steer: schedule, risks, dependencies and status.
 
@@ -515,7 +517,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 18. Legal and IP Compliance Director
 
-`.claude/agents/legal-ip.md`  |  model: `sonnet`  |  owns: `docs/legal/`  |  reports to: Executive Producer
+`docs/directors/legal-ip.md`  |  session: `Meridian - Legal & IP Compliance`  |  model: `sonnet`  |  owns: `docs/legal/`  |  reports to: Executive Producer
 
 **Mission.** Keep the homage safely original: no borrowed characters, names, assets or audio, and clean licences. Not a lawyer; flags risks and recommends counsel.
 
@@ -540,7 +542,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 19. Community and Marketing Director
 
-`.claude/agents/community-marketing.md`  |  model: `sonnet`  |  owns: `docs/marketing/`  |  reports to: Executive Producer
+`docs/directors/community-marketing.md`  |  session: `Meridian - Community & Marketing`  |  model: `sonnet`  |  owns: `docs/marketing/`  |  reports to: Executive Producer
 
 **Mission.** Own the audience: the community that grows around the project, playtests, and the launch story.
 
@@ -565,7 +567,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 20. Performance and Platform Director
 
-`.claude/agents/performance-platform.md`  |  model: `sonnet`  |  owns: `docs/perf/`  |  reports to: Executive Producer
+`docs/directors/performance-platform.md`  |  session: `Meridian - Performance & Platform`  |  model: `sonnet`  |  owns: `docs/perf/`  |  reports to: Executive Producer
 
 **Mission.** Own frame time and platform reach: budgets for a huge deformable world with many effects.
 
@@ -590,7 +592,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 21. Accessibility and Localization Director
 
-`.claude/agents/accessibility-localization.md`  |  model: `sonnet`  |  owns: `docs/accessibility/, localization/`  |  reports to: Executive Producer
+`docs/directors/accessibility-localization.md`  |  session: `Meridian - Accessibility & Localization`  |  model: `sonnet`  |  owns: `docs/accessibility/, localization/`  |  reports to: Executive Producer
 
 **Mission.** Make the game playable and readable for as many people as possible, in as many languages as make sense.
 
@@ -615,7 +617,7 @@ Phases: P0 Foundations; P1 Wrapped world + camera; P2 Stance director; P3 Terrai
 
 ## 22. Research and Prototyping Director
 
-`.claude/agents/research-prototyping.md`  |  model: `opus`  |  owns: `research/`  |  reports to: Executive Producer
+`docs/directors/research-prototyping.md`  |  session: `Meridian - Research & Prototyping`  |  model: `opus`  |  owns: `research/`  |  reports to: Executive Producer
 
 **Mission.** Own the risky questions: fast, throwaway spikes that de-risk the design before it is built properly.
 
