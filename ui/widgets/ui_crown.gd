@@ -15,6 +15,12 @@ const LEGS_SPAN := 1.47
 const CORE_SPAN := 5.2     # the core ring is nearly full
 const MANTLE_SPAN := 1.9
 
+## A crown stroke's colour for a stage: neutral role colours only (fresh is a pale neutral; bruised, battered and broken are
+## the wound roles). Never a fighter's accent: Art's head flashes own the accent and the emotion, the crown owns wear.
+static func stroke_color(stage: int) -> Color:
+	return UiLook.stage_col(stage, UiLook.col(UiLook.CROWN_FRESH))
+
+
 ## Crown radius for a fighter `h` pixels tall on screen, at UI scale s. Floored so it stays readable at the widest zoom.
 static func radius(h: float, s: float) -> float:
 	return clampf(h * UiLook.CROWN_R_PER_HEIGHT, UiLook.CROWN_MIN_R * s, UiLook.CROWN_MAX_R * s)
@@ -32,7 +38,7 @@ static func draw(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: flo
 	var reduced: bool = bool(o.get("reduced_motion", false))
 	_still = reduced
 	var th: float = maxf(R * UiLook.CROWN_THICK, 3.0) * float(o.get("thickness", 1.0))
-	var pop_a: float = 1.0 if bool(o.get("crown_always", false)) else m.crown_a
+	var pop_a: float = 0.0 if bool(o.get("crown_locked", false)) else (1.0 if bool(o.get("crown_always", false)) else m.crown_a)
 	if m.brink and bool(o.get("brink_cue", true)) and pop_a < 0.98:
 		_brink_ring(ci, m, c, R, t, th, reduced, 1.0 - pop_a)
 	if pop_a > 0.02:
@@ -126,7 +132,7 @@ static func _region_arc(ci: CanvasItem, m: UiFighterModel, region: String, c: Ve
 	if not m.has_region(region):
 		return
 	var st: int = int(m.stage[region])
-	var col: Color = col_override if col_override.a > 0.0 else UiLook.stage_col(st, m.aura)
+	var col: Color = col_override if col_override.a > 0.0 else stroke_color(st)
 	var age: float = float(m.region_age[region])
 	var dir: int = int(m.region_dir[region])
 	var seed: int = 0 if not second else 1
@@ -198,7 +204,7 @@ static func _mantle_teeth(ci: CanvasItem, m: UiFighterModel, c: Vector2, r: floa
 		var tip: Vector2 = c + d * (r + th * 1.9)
 		var b0: Vector2 = c + Vector2(cos(a - 0.03), sin(a - 0.03)) * (r + th * 0.4)
 		var b1: Vector2 = c + Vector2(cos(a + 0.03), sin(a + 0.03)) * (r + th * 0.4)
-		UiIcons.fill_poly(ci, PackedVector2Array([tip, b0, b1]), Color(UiLook.stage_col(int(m.stage["mantle"]), m.aura), 0.85 * alpha))
+		UiIcons.fill_poly(ci, PackedVector2Array([tip, b0, b1]), Color(stroke_color(int(m.stage["mantle"])), 0.85 * alpha))
 
 
 static func _windows(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: float, th: float, reduced: bool) -> void:

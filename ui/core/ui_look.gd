@@ -25,7 +25,8 @@ const INK_DARK := "#10121a"
 const SCRIM := "#0b0d14"
 const SCRIM_ALPHA := 0.62
 const EDGE := "#e8e4d8"
-const STAGE_FRESH := "#8fd6ff"        # fallback: a fighter's own aura colour replaces it
+const STAGE_FRESH := "#8fd6ff"        # the silhouette and cards' fresh colour when a fighter has none of its own
+const CROWN_FRESH := "#dfe6f0"        # the crown's fresh stroke: a neutral role colour, never a fighter's accent (Art: the flashes own the accent)
 const STAGE_BRUISED := "#f2e6a0"
 const STAGE_BATTERED := "#ffb454"
 const STAGE_BROKEN := "#ff5c8a"
@@ -124,10 +125,10 @@ static func ego_col(name: String) -> Color:
 ## Envelope: rise CROWN_ATTACK, hold, then fall over CROWN_RELEASE. The whole pop is about 1 to 1.5 s.
 const CROWN_ATTACK := 0.10
 const CROWN_RELEASE := 0.50
-const CROWN_HOLD_HIT := 0.35          # a hit to a region
 const CROWN_HOLD_STAGE := 0.60        # a region got worse
-const CROWN_HOLD_MAJOR := 0.90        # a break, the brink, a Rally, a transformation, a boil-over, the facade crack
-const CROWN_HIT_GAP := 1.0            # a plain hit re-pops the crown at most this often (a chain of blows is not a strobe)
+const CROWN_HOLD_MAJOR := 0.90        # a break, the brink, a Rally, a boil-over, the facade crack
+## The crown owns WEAR only (Art's flashes own emotion and sense): it pops for a stage change, the brink, a Rally, the facade
+## crack and a boil-over; never for a plain hit, and it stays down during a transformation cinematic.
 ## Brink is the one persistent cue: a thin, faint, slow ring (alpha range and rate).
 const BRINK_RING_A_MIN := 0.16
 const BRINK_RING_A_MAX := 0.38

@@ -192,29 +192,27 @@ func consume(e) -> void:
 			if m != null and not m.brink:
 				m.brink = true
 				m.brink_age = 0.0
-				m.pop(UiLook.CROWN_HOLD_MAJOR)
+				_pop(m, UiLook.CROWN_HOLD_MAJOR)
 				_card(m.slot, "brink", UiData.t("card.brink"), "", "", -1, "state", PRIO_BREAK)
 		"brink_exit":
 			if m != null:
 				m.brink = false
-				m.pop(UiLook.CROWN_HOLD_MAJOR)
+				_pop(m, UiLook.CROWN_HOLD_MAJOR)
 		"damage":
-			# A hit to a region pops the victim's crown (never a number: the event's `number` is ignored).
+			# A hit does NOT pop the crown (Art's flashes own emotion; the crown owns wear, and wear is a stage change).
+			# It only marks the region, for the silhouette's flash. The event's `number` is ignored: no numbers.
 			var vf = d.get("victim", -1)
 			if (vf is int or vf is float) and float(vf) >= 0.0:
 				var vm: UiFighterModel = model(int(vf))
 				if vm != null:
-					vm.pop_hit(_region(d.get("region")))
-		"tier_up":
-			if m != null:
-				m.pop(UiLook.CROWN_HOLD_MAJOR)
+					vm.mark_hit(_region(d.get("region")))
 		"rally":
 			_on_rally(m, d)
 		"heat_stage":
 			_on_heat(m, int(d.get("stage", 0)))
 		"boil_over":
 			if m != null:
-				m.pop(UiLook.CROWN_HOLD_MAJOR)
+				_pop(m, UiLook.CROWN_HOLD_MAJOR)
 			if m != null:
 				m.heat_stage = 0
 				m.boil_flash = 0.8
@@ -228,8 +226,6 @@ func consume(e) -> void:
 				if m.shame > was:
 					_card(m.slot, "shame", UiData.t("card.shame"), "", "", -1, "state", PRIO_TOAST)
 		"drop_act":
-			if m != null:
-				m.pop(UiLook.CROWN_HOLD_MAJOR)
 			if m != null:
 				m.unrestrained = true
 				_card(m.slot, "drop_act", UiData.t("card.drop_act"), "", "", -1, "state", PRIO_BREAK)
@@ -364,7 +360,7 @@ func _set_region(m: UiFighterModel, r: String, st: int, internal: bool) -> void:
 		var was_i: int = m.internal_stage
 		m.internal_stage = st
 		if st > was_i and st > 0:
-			m.pop(UiLook.CROWN_HOLD_STAGE)
+			_pop(m, UiLook.CROWN_HOLD_STAGE)
 			var word: String = UiData.t("internal_stage." + UiLook.STAGE_NAMES[st])
 			_card(m.slot, "internal", UiData.fmt("card.internal", {"region": UiData.t("region.core"), "stage": word}), "", "core", st, "internal", PRIO_BREAK if st == 3 else PRIO_STAGE)
 		return
@@ -381,7 +377,7 @@ func _set_region(m: UiFighterModel, r: String, st: int, internal: bool) -> void:
 	if drawn < st:
 		stats["cards_withheld"] += 1   # the Proud front holds: a battered or bruised card is withheld (spec section 3)
 		return
-	m.pop(UiLook.CROWN_HOLD_MAJOR if st == 3 else UiLook.CROWN_HOLD_STAGE)
+	_pop(m, UiLook.CROWN_HOLD_MAJOR if st == 3 else UiLook.CROWN_HOLD_STAGE)
 	_stage_card(m, r, st)
 
 
@@ -409,7 +405,7 @@ func _on_rally(m: UiFighterModel, d: Dictionary) -> void:
 		m.region_age[r] = 0.0
 		m.region_dir[r] = -1
 	m.brink = false
-	m.pop(UiLook.CROWN_HOLD_MAJOR)
+	_pop(m, UiLook.CROWN_HOLD_MAJOR)
 	var key: String = "card.rally." + m.id
 	var title: String = UiData.t(key)
 	if title == key:
@@ -423,7 +419,6 @@ func _on_heat(m: UiFighterModel, st: int) -> void:
 	var up: bool = st > m.heat_stage
 	m.heat_stage = clampi(st, 0, 3)
 	if up and st > 0:
-		m.pop(UiLook.CROWN_HOLD_STAGE)
 		_card(m.slot, "heat", UiData.t("card.heat." + str(st)), "", "core", -1, "internal", PRIO_STAGE)
 
 
@@ -432,7 +427,7 @@ func _on_facade(m: UiFighterModel) -> void:
 		return
 	m.pride_holds = false
 	m.facade_age = 0.0
-	m.pop(UiLook.CROWN_HOLD_MAJOR)
+	_pop(m, UiLook.CROWN_HOLD_MAJOR)
 	var listed: Array = []
 	for r in m.regions:
 		var tr: int = int(m.true_stage[r])
@@ -463,13 +458,38 @@ func _on_window(m: UiFighterModel, d: Dictionary) -> void:
 		m.chain_n = int(d.get("n", m.chain_n))
 
 
+## The kinds of respected cinematic in which the surge owns the fighter and the crown stays down (Art, marked-aura.md).
+const TRANSFORM_KINDS: Array = ["transformation", "revision"]
+
+
+## True while a transformation cinematic runs: no crown pops, and any crown showing fades out in 0.1 s.
+func crown_locked() -> bool:
+	return cinematic_left > 0.0 and TRANSFORM_KINDS.has(cinematic_kind)
+
+
+## Pop a fighter's crown, unless a transformation cinematic holds it down.
+func _pop(m: UiFighterModel, hold: float) -> void:
+	if m != null and not crown_locked():
+		m.pop(hold)
+
+
+## For Rendering's flash arbitration (Art: never a flash and a crown up together): is this fighter's crown up, that is
+## popped or fading out? `crown_always` (an accessibility option) keeps it up, so no flash then.
+func crown_up(actor: int) -> bool:
+	var m: UiFighterModel = model(actor)
+	if m == null:
+		return false
+	if crown_locked():
+		return false
+	return m.crown_hold > 0.0 or m.crown_a > 0.02
+
+
 func _cinematic(slot: int, kind: String, dur: float) -> void:
 	cinematic_left = maxf(cinematic_left, dur)
 	cinematic_kind = kind
 	var m: UiFighterModel = model(slot)
 	if m != null:
 		m.cinematic = kind
-		m.pop(UiLook.CROWN_HOLD_MAJOR)
 
 
 func _on_bark(d: Dictionary) -> void:
@@ -628,6 +648,10 @@ func advance(dt: float) -> void:
 				m.lost_trail = false
 	cinematic_left = maxf(0.0, cinematic_left - dt)
 	hazard_left = maxf(0.0, hazard_left - dt)
+	if crown_locked():
+		for lm in models:
+			lm.crown_hold = 0.0
+			lm.crown_a = move_toward(lm.crown_a, 0.0, dt / 0.1)
 	if cinematic_left <= 0.0 and cinematic_kind != "":
 		cinematic_kind = ""
 		for m in models:

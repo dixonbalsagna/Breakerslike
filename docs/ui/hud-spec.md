@@ -10,7 +10,7 @@ Orb: "if the rings pop up momentarily then fade back it looks good as far as I c
 
 | Layer | Before (revision 1) | After (revision 2) |
 | :--- | :--- | :--- |
-| Aura crown | Always drawn around both fighters | **Transient.** Pops on a hit to a region, a stage change, brink enter or exit, a Rally, a tier-up or transformation, a boil-over or the facade crack, then fades in about 1 to 1.5 s. At rest: nothing |
+| Aura crown | Always drawn around both fighters | **Transient, and it owns wear only.** Pops for a stage change, brink enter or exit, a Rally, the facade crack and a boil-over, then fades in about 1 to 1.5 s. Not for a plain hit (Art's head flashes own emotion and sense). Down during a transformation cinematic. At rest: nothing |
 | Brink | Part of the crown | The one persistent cue: a **thin, faint, slow ring** (alpha 0.16 to 0.38, about 1.2 Hz), only while a fighter is on the brink. Plus a small icon on the plate |
 | Stance and hidden marker over the fighter | Always | Only while the crown is up |
 | Nameplate | 440 by 166 (15% of the height), five rows, tier names | **380 by 114 (11%)**, four rows: the stance chip shares the name's row, the state chips share the pips' row. Lighter scrim, no tier-name text |
@@ -29,11 +29,11 @@ Before and after, the same moment of the mock fight:
 | ![before: facade cracks](img/before-facade.png) | ![after: facade cracks](img/hud-facade.png) |
 | ![before: the Empress and the Cyborg](img/before-empress-cyborg.png) | ![after: the Empress and the Cyborg](img/hud-empress-cyborg.png) |
 
-At rest, and a moment after a hit (the crown is fading back):
+At rest, and a moment after a stage change (the crown has popped and is fading back):
 
-| At rest | A hit, fading |
+| At rest | A stage change (arms battered), the crown popped |
 | :---: | :---: |
-| ![at rest](img/hud-rest.png) | ![a hit](img/hud-hit.png) |
+| ![at rest](img/hud-rest.png) | ![a stage change, fading](img/hud-pop.png) |
 
 ## 0. The idea in one screen
 
@@ -111,17 +111,22 @@ Recommendation: **landscape is the phone default**; portrait is a fallback. The 
 
 The crown is Orb's readout, made momentary. It is drawn on the HUD layer around each fighter's screen position (a host callback gives position and height), so Rendering does not build it in 3D.
 
-**When it pops** (each sets the fighter's `crown_hold`; a second pop extends the hold, never shortens it):
+**When it pops.** The crown owns **wear** and nothing else. Art's head flashes (`docs/art/marked-aura.md`) own emotion and sense, and a flash and a crown are never up together on one fighter. Each pop sets the fighter's `crown_hold`; a second pop extends the hold, never shortens it.
 
 | Event | Hold (plus 0.1 s rise and 0.5 s fall) | Total |
 | :--- | :--- | :--- |
-| A hit to a region (`damage`, on the victim) | 0.35 s, and **at most one pop per second** so a chain of blows is not a strobe | about 1.0 s |
-| A region got worse (`region_stage`, a bruise or more) | 0.60 s | about 1.2 s |
-| A break, brink enter or exit, a Rally, a tier-up or a transformation, a boil-over, the facade crack, Drop the Act | 0.90 s | about 1.5 s |
+| A region got worse (`region_stage`, a bruise or more; also internal core wear) | 0.60 s | about 1.2 s |
+| A break, brink enter or exit, a Rally, a boil-over, the facade crack | 0.90 s | about 1.5 s |
+| **A plain hit** (`damage`), a tier-up, a heat stage, Drop the Act on its own | **none** | |
 | A recovery (a region improving) | none: quiet | |
 | A stage change hidden by the Anti-hero's Pride mask | none (the front holds) | |
+| **During a transformation cinematic** (`transformation`, `revision`) | **none, and a crown showing fades out in 0.1 s**: the surge owns the fighter | |
 
-The region that was hit flashes at double thickness for 0.3 s. A hit that changes no stage still shows the whole crown for a moment, so the player sees where the fighter is worn.
+A hit still marks its region (the silhouette flashes it if it is on); it just does not pop the crown. The region that got worse flashes at double thickness for 0.3 s.
+
+**Flash arbitration: `crown_up(actor) -> bool`.** `UiHud.crown_up(actor)` (and `UiEventHub.crown_up`) is true while that fighter's crown is popped or still fading, and false during a transformation cinematic. Rendering's FlashView calls it: a flash due while the crown is up waits up to 0.25 s and is then dropped; a wear event arriving while a flash is up fades the flash in 0.1 s (the crown pops on the same event). With the `crown_always` accessibility option the crown is always up, so no flash shows for that player; Accessibility and Art should decide whether that is acceptable. The faint brink ring does not count as up (Art draws its brink flash next to it).
+
+**Colours.** Crown strokes use **neutral role colours only** and never a fighter's accent: fresh is a pale neutral (`#dfe6f0`), then the wound roles (bruised, battered, broken). Art's flashes carry the accent. The silhouette and the cards' body glyph still take the fighter's colour for fresh regions; if Art wants them neutral too it is one constant.
 
 **At rest.** Nothing. The one exception is **brink**: a thin ring at 1.1 R, alpha 0.16 to 0.38, breathing at about 1.2 Hz. Justification: brink is the only state that must be findable at a glance at any moment (spec §5 test 8, "who was closer to losing"; the finisher follows it), it is a state and not an event, and a slow, low, thin ring costs almost nothing over the choreography. It sits with the plate's brink icon, the `ON THE BRINK` card and the silhouette panel, which are all at the edge. It is an option (`brink_cue`, on by default); under reduced motion it is a static dashed ring. When the crown pops on a brink fighter the ring gives way to the full crown's own gutter.
 
@@ -139,7 +144,7 @@ The region that was hit flashes at double thickness for 0.3 s. A hit that change
 
 | Stage | Shape | Motion | Colour role |
 | :--- | :--- | :--- | :--- |
-| Fresh | solid arc | none | the fighter's own colour |
+| Fresh | solid arc | none | a neutral (pale) |
 | Bruised | solid, thinner, a tick at each end | none | pale |
 | Battered | dashed, thinner | flickers about 4 Hz | amber |
 | Broken | two short stubs and a spark tick: **a gap** | none | rose |
@@ -296,21 +301,21 @@ The hub (`ui/core/ui_event_hub.gd`) takes Dictionaries or objects with the same 
 
 | Event | Fields | HUD effect |
 | :--- | :--- | :--- |
-| `damage` | attacker, victim, region, kind | pops the victim's crown (throttled); the region flashes. No number |
+| `damage` | attacker, victim, region, kind | marks the region (the silhouette flashes it); no crown pop, no number |
 | `region_stage` | actor, region, stage (0 to 3 or a name); optional `internal` | model, silhouette; card and pop if worse; quiet if better |
 | `region_broken` | actor, region | merges with the stage card |
 | `brink_enter`, `brink_exit` | actor | icon, faint ring, card, pop |
-| `tier_up` | actor, tier | pop |
+| `tier_up` | actor, tier | no crown pop (the banner names it)|
 | `rally` | actor, region | mend sweep, the fighter's own card, pop |
-| `heat_stage`, `boil_over` | actor, stage | heat cards, core ring, flash |
-| `facade_crack`, `shame_stack`, `drop_act` | actor, n | unmask, notches, cards, pop |
+| `heat_stage`, `boil_over` | actor, stage | heat cards, core ring; a boil-over pops the crown, a heat stage does not |
+| `facade_crack`, `shame_stack`, `drop_act` | actor, n | unmask, notches, cards; the facade crack pops the crown |
 | `revision_reprint` | actor, revision, region | silhouette patch; no card |
 | `hatch_open`, `hatch_close`, `chip_stage` | actor, station, stage | rail, cards |
 | `fold_flicker`, `fold_start`, `unfold` | | world card; `fold_start` is a cinematic |
 | `finisher_start`, `ko` | actor, winner, loser, dur | cinematic mode |
 | `window_open` | actor, kind (parry or chain), dur, n | crown windows |
 | `chain`, `lock_lost` | actor, n, dur | chain chip, `TRAIL LOST` chip |
-| `cinematic_start`, `cinematic_end` | actor, kind, dur | cinematic mode, pop |
+| `cinematic_start`, `cinematic_end` | actor, kind, dur | cinematic mode; a `transformation` or `revision` holds the crown down |
 | `bark` | speaker, text, cues, priority, dur, setpiece | bark lane or letterbox band |
 | `banner`, `shake` | text, col, dur; k | banner (renamed); hazard mode |
 | `state` | actor and a patch of stance, tier, momentum, charge, ego, hidden, charging, aura, name, wear | plate |
@@ -346,7 +351,7 @@ Every word the HUD draws is data in `ui/data/terms.json`, from Narrative's gloss
 | Screen readers | Not built | A spoken line per card and chip; card text is one string |
 | Cinematic thinning | Automatic | Confirm, or add "keep the HUD" |
 
-**Colour roles** (provisional hex, all in `ui/core/ui_look.gd`): `stage.fresh` the fighter's colour; `stage.bruised` `#f2e6a0`; `stage.battered` `#ffb454`; `stage.broken` `#ff5c8a`; `internal` `#bfeeff` (never red); `charge` `#5fb4ff`; `charge.ready` `#c8e6ff`; ego roles `respect` `#6fd1a8`, `pride` `#c9a8ff`, `wrath` `#ff9a5c`, `hunger` `#e0c14a`, `menace` `#b05cff`, `anguish` `#3fd6c5`; stance roles `#ff6a5a`, `#5aaaff`, `#62d986`, `#b892ff`; `tier.pip` `#ffe9a8`; `hidden` `#bedcff`; `warn` `#ffd45a`.
+**Colour roles** (provisional hex, all in `ui/core/ui_look.gd`): `crown.fresh` `#dfe6f0` (neutral, never a fighter accent); `stage.fresh` (silhouette and cards) the fighter's colour; `stage.bruised` `#f2e6a0`; `stage.battered` `#ffb454`; `stage.broken` `#ff5c8a`; `internal` `#bfeeff` (never red); `charge` `#5fb4ff`; `charge.ready` `#c8e6ff`; ego roles `respect` `#6fd1a8`, `pride` `#c9a8ff`, `wrath` `#ff9a5c`, `hunger` `#e0c14a`, `menace` `#b05cff`, `anguish` `#3fd6c5`; stance roles `#ff6a5a`, `#5aaaff`, `#62d986`, `#b892ff`; `tier.pip` `#ffe9a8`; `hidden` `#bedcff`; `warn` `#ffd45a`.
 
 ## 14. Implementation, hosting and what is missing
 
@@ -354,7 +359,7 @@ Every word the HUD draws is data in `ui/data/terms.json`, from Narrative's gloss
 
 **Hosting.** Rendering already hosts `ui/hud/ui_hud.tscn` (setup, `anchor_fn`, `strip_fn`, `UiSimBridge.patch`, `consume_all` from `SimHost.drained`, `advance`). **Revision 2 does not change the hosting interface.** The differences a host may notice: the silhouette option now defaults to off (call `set_option("silhouette", true)` in training and for the accessibility default); two new options, `crown_always` and `brink_cue`; the HUD reads the fighter's `wear` through the bridge.
 
-**Verification.** `godot --headless --path . --script res://ui/tools/hud_check.gd`: 713 checks pass. New in revision 2: the crown is down at rest; a hit pops the victim only; a chain of four blows in 0.8 s is one short pop; a stage change, the brink, a Rally and a tier-up pop it and a recovery does not; a masked stage change does not pop it and a break does; the longest pop is 1.5 s; the sim's own `FxEvent` objects are read as they are; a real hit and a real S1 stage change from the live sim reach the model and pop the crown; the dense scripted fight has a crown up in 46% of the time (the live sim, with far fewer hits, will be much lower).
+**Verification.** `godot --headless --path . --script res://ui/tools/hud_check.gd`: 726 checks pass. For the crown: it is down at rest; a plain hit, a tier-up, a heat stage and Drop the Act on their own do not pop it; a stage change, the brink, a Rally, a boil-over and the facade crack do; a recovery and a Pride-masked stage change do not, a break does; `crown_up` is true while popped or fading and false otherwise; a transformation cinematic fades it out in 0.1 s and keeps it down until it ends (a finisher does not lock it); the stroke colours are neutral roles and never a fighter accent; the parry window's ring draws with no pop showing; the sim's own `FxEvent` objects are read as they are; a real S1 stage change reaches the model and pops the crown; the dense scripted fight has a crown up in 27% of the time (the live sim, with far fewer stage changes, will be much lower).
 
 **Performance (2026-09-29).** The HUD is a stack of cached layers (`ui/hud/ui_layer.gd`): each keeps its draw commands until a small signature changes (a few numbers computed every frame, 0.03 ms in all), so at rest the HUD redraws nothing and the crown, card, bark and banner layers draw nothing at all. The plates redraw when a bar moves a whole percent or a chip changes; the strip's moving marks when a fighter or the camera moves half a pixel; the crown, cards and barks every frame while they show. Also: bar stripes are one tiled texture instead of a line per stripe, the strip's segments and ticks are one multi-line each, and plate text drawn last so shapes and text do not interleave. Measured with `ui/tools/hud_bench.gd` (the live build, seed 4, HUD shown against hidden in alternating blocks of 300 frames, vsync off, RTX 5070 Ti, Compatibility renderer):
 
@@ -372,7 +377,7 @@ The wall-time cost of redrawing everything each frame is about +1.1 ms; caching 
 **Not built.** The menu flow, character select, pause, settings and results; the full debug overlay and scrub; training's hint line and toggles; the caption levels and speed; a text-size option; screen-reader lines; controller and touch prompts; a bundled font.
 
 **Risks.**
-- **A pop may still be a lot in a long chain of exchanges.** A hit re-pops at most once a second, so a fighter under sustained attack has the crown up about a third of the time. If that is too much, lengthen `CROWN_HIT_GAP` or pop only on heavy hits (the `damage` event carries `kind`). Needs a playtest with real hit rates once S2 lands.
+- **The crown is now rare.** It pops only for wear, so in the live sim it may almost never show until S2 retunes the wear rate; the plate, the cards and Art's flashes carry the fight until then. The spec's test 9 ("name the region most recently broken") relies on the crown and cards, so recheck it once wear is real.
 - **The crown at the widest zoom** (spec §5, test 10) is floored at 46 px, but two fighters in melee overlap their pops.
 - **The brink ring** is faint by design; on a bright background it may need a stronger role. Art and Accessibility.
 - **Phone portrait's fight window** is 25 to 31% of the height; landscape should be the phone default.

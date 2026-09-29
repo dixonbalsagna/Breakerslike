@@ -374,7 +374,6 @@ func _bridge() -> void:
 	var sd: Dictionary = UiSimBridge.strip_data(host.S, host.cam.x, 2000.0)
 	_ok((sd["segs"] as Array).size() == 11 and (sd["fighters"] as Array).size() == 2, "bridge: builds the planet strip's data")
 	_ok(bool(seen["damage"]), "bridge: the live sim emits damage events (S1): " + str(seen))
-	_ok(saw_pop, "bridge: a real hit or stage change popped a crown")
 	_ok(float(m0.wear["core"]) >= 0.0, "bridge: reads wear from the sim state")
 	# The greybox balance rarely wears a region past bruised in a minute, so push one through the real S1 code: the stage
 	# events it emits must reach the HUD as they are.
@@ -389,7 +388,7 @@ func _bridge() -> void:
 	host.S = null
 
 
-# --- The transient crown (Orb: at rest the fighters are clean) ------------------------------------------------------
+# --- The transient crown: it owns wear only (Orb: at rest the fighters are clean; Art: the flashes own the rest) ---------
 
 func _crown_rules() -> void:
 	var longest: float = UiLook.CROWN_ATTACK + UiLook.CROWN_HOLD_MAJOR + UiLook.CROWN_RELEASE
@@ -397,41 +396,49 @@ func _crown_rules() -> void:
 	var hub := _hub()
 	_step(hub, 2.0)
 	_ok(hub.model(0).crown_a == 0.0 and hub.model(1).crown_a == 0.0, "crown: at rest it is not drawn")
-	# A hit pops the victim's crown and fades back; the attacker's stays down.
-	hub.consume({"type": "damage", "attacker": 0, "victim": 1, "region": "arms", "kind": "light", "number": true})
-	_step(hub, 0.2)
-	_ok(hub.model(1).crown_a > 0.9 and hub.model(0).crown_a == 0.0, "crown: a hit pops the victim's crown only")
-	_step(hub, 1.2)
-	_ok(hub.model(1).crown_a == 0.0, "crown: it has faded back within 1.4 s")
-	_ok(hub.cards_of(1).is_empty() and hub.barks.is_empty(), "crown: a plain hit makes no card and no bark, and no number")
-	# A chain of blows does not strobe it: hits within a second of a pop do not re-pop.
-	hub = _hub()
-	for i in range(4):
-		hub.consume({"type": "damage", "attacker": 0, "victim": 1, "region": "head", "kind": "light", "number": true})
-		_step(hub, 0.2)
-	_step(hub, 0.6)
-	_ok(hub.model(1).crown_a == 0.0, "crown: a chain of four blows in 0.8 s is one short pop, not a strobe")
-	# A stage change, the brink, a Rally and a tier-up pop it; a recovery does not.
+	_ok(not hub.crown_up(0) and not hub.crown_up(1), "crown_up: false at rest")
+	# A plain hit does NOT pop it (Art: emotion belongs to the flashes), makes no card, no bark and no number.
+	hub.consume({"type": "damage", "attacker": 0, "victim": 1, "region": "arms", "kind": "heavy", "number": true})
+	_step(hub, 0.3)
+	_ok(hub.model(1).crown_a == 0.0 and not hub.crown_up(1), "crown: a hit, even a heavy one, does not pop it")
+	_ok(hub.cards_of(1).is_empty() and hub.barks.is_empty(), "crown: a plain hit makes no card and no bark")
+	# The five things that do: a stage change, the brink, a Rally, the facade crack, a boil-over.
 	hub = _hub()
 	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": 2})
 	_step(hub, 0.3)
-	_ok(hub.model(0).crown_a > 0.9, "crown: a region getting worse pops it")
-	_step(hub, 1.4)
-	_ok(hub.model(0).crown_a == 0.0, "crown: and it is gone by 1.7 s")
+	_ok(hub.model(0).crown_a > 0.9 and hub.crown_up(0) and not hub.crown_up(1), "crown: a region getting worse pops it, and crown_up says so for that fighter only")
+	_step(hub, 0.5)
+	_ok(hub.crown_up(0), "crown_up: still true while it fades (a flash must not start under a fading crown)")
+	_step(hub, 0.6)
+	_ok(hub.model(0).crown_a == 0.0 and not hub.crown_up(0), "crown: gone by 1.4 s, and crown_up is false again")
 	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": 1})
 	_step(hub, 0.3)
 	_ok(hub.model(0).crown_a == 0.0, "crown: a recovery does not pop it")
 	hub.consume({"type": "brink_enter", "actor": 0})
+	_step(hub, 0.3)
+	_ok(hub.model(0).crown_a > 0.9, "crown: the brink pops it")
 	_step(hub, 1.7)
-	_ok(hub.model(0).crown_a == 0.0 and hub.model(0).brink, "crown: the brink pops it, then only the faint ring stays (the model keeps brink)")
+	_ok(hub.model(0).crown_a == 0.0 and hub.model(0).brink and not hub.crown_up(0), "crown: then only the faint ring stays (the model keeps brink; crown_up is false)")
 	hub.consume({"type": "rally", "actor": 0, "region": "arms"})
 	_step(hub, 0.3)
 	_ok(hub.model(0).crown_a > 0.9, "crown: a Rally pops it")
 	hub = _hub()
-	hub.consume({"type": "tier_up", "actor": 1, "tier": 2})
+	hub.consume({"type": "boil_over", "actor": 0})
 	_step(hub, 0.3)
-	_ok(hub.model(1).crown_a > 0.9, "crown: a tier-up pops it")
-	# The Anti-hero's masked stage changes do not pop the crown (the front holds); a break does.
+	_ok(hub.model(0).crown_a > 0.9, "crown: a boil-over pops it")
+	hub = _hub(["protagonist", "anti_hero"])
+	hub.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": 2})
+	hub.consume({"type": "facade_crack", "actor": 1})
+	_step(hub, 0.3)
+	_ok(hub.model(1).crown_a > 0.9, "crown: the facade crack pops it")
+	# Not for: a tier-up, a heat stage, Drop the Act on its own, a cinematic's subject.
+	hub = _hub()
+	hub.consume({"type": "tier_up", "actor": 1, "tier": 2})
+	hub.consume({"type": "heat_stage", "actor": 0, "stage": 2})
+	hub.consume({"type": "drop_act", "actor": 1})
+	_step(hub, 0.3)
+	_ok(hub.model(0).crown_a == 0.0 and hub.model(1).crown_a == 0.0, "crown: a tier-up, a heat stage and Drop the Act do not pop it by themselves")
+	# The Anti-hero's masked stage changes do not pop it (the front holds); a break does.
 	hub = _hub()
 	hub.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": 2})
 	_step(hub, 0.3)
@@ -439,16 +446,39 @@ func _crown_rules() -> void:
 	hub.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": 3})
 	_step(hub, 0.3)
 	_ok(hub.model(1).crown_a > 0.9, "crown: a break pops it through the mask")
+	# A transformation cinematic holds the crown down (Art: the surge owns the fighter); it fades in 0.1 s and stays down.
+	hub = _hub()
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": 2})
+	_step(hub, 0.3)
+	_ok(hub.crown_up(0), "cinematic: the crown is up before the transformation")
+	hub.consume({"type": "cinematic_start", "actor": 1, "kind": "transformation", "dur": 2.0})
+	_step(hub, 0.2)
+	_ok(hub.model(0).crown_a == 0.0 and not hub.crown_up(0) and hub.crown_locked(), "cinematic: it fades out within 0.2 s and crown_up is false")
+	hub.consume({"type": "region_stage", "actor": 0, "region": "legs", "stage": 3})
+	_step(hub, 0.5)
+	_ok(hub.model(0).crown_a == 0.0 and not hub.crown_up(0), "cinematic: a wear event during it does not pop the crown")
+	_step(hub, 1.6)
+	_ok(not hub.crown_locked(), "cinematic: the lock ends with the cinematic")
+	hub.consume({"type": "region_stage", "actor": 0, "region": "head", "stage": 2})
+	_step(hub, 0.3)
+	_ok(hub.model(0).crown_a > 0.9, "cinematic: and the crown works again afterwards")
+	hub = _hub()
+	hub.consume({"type": "cinematic_start", "actor": 0, "kind": "finisher", "dur": 1.0})
+	hub.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": 3})
+	_step(hub, 0.3)
+	_ok(hub.model(1).crown_a > 0.9, "cinematic: only a transformation locks the crown; a finisher does not")
+	# Neutral role colours only: the crown never takes a fighter's accent.
+	var accents: Array = [Color("#ff9ad0"), Color("#8fd6ff"), Color("#e0c14a"), Color("#ff5a3c")]
+	var neutral := true
+	for st in range(4):
+		var c: Color = UiCrown.stroke_color(st)
+		for ac in accents:
+			if c.is_equal_approx(ac):
+				neutral = false
+	_ok(neutral, "crown: stroke colours are neutral roles, never a fighter accent")
+	_ok(UiCrown.stroke_color(0).is_equal_approx(UiLook.col(UiLook.CROWN_FRESH)) and UiCrown.stroke_color(3).is_equal_approx(UiLook.col(UiLook.STAGE_BROKEN)), "crown: fresh is the neutral role, broken the wound role")
 	# The sim's own event objects (S1): floats for slots, strings for regions.
 	hub = _hub()
-	var dm := SimState.FxEvent.new()
-	dm.type = "damage"
-	dm.attacker = 1.0
-	dm.victim = 0.0
-	dm.region = "core"
-	dm.kind = "heavy"
-	dm.number = true
-	hub.consume(dm)
 	var rs := SimState.FxEvent.new()
 	rs.type = "region_stage"
 	rs.actor = 0.0
@@ -456,7 +486,17 @@ func _crown_rules() -> void:
 	rs.stage = 2
 	hub.consume(rs)
 	_step(hub, 0.2)
-	_ok(hub.model(0).crown_a > 0.9 and hub.model(0).stage["core"] == 2, "crown: the sim's damage and region_stage objects are read as they are")
+	_ok(hub.model(0).crown_a > 0.9 and hub.model(0).stage["core"] == 2, "crown: the sim's region_stage object is read as it is")
+	var dm := SimState.FxEvent.new()
+	dm.type = "damage"
+	dm.attacker = 1.0
+	dm.victim = 0.0
+	dm.region = "head"
+	dm.kind = "light"
+	dm.number = true
+	var before_a: float = hub.model(0).crown_a
+	hub.consume(dm)
+	_ok(hub.model(0).crown_a == before_a, "crown: the sim's damage object changes nothing on the crown")
 	var bi := SimState.FxEvent.new()
 	bi.type = "brink_enter"
 	bi.actor = 0.0
@@ -469,7 +509,7 @@ func _crown_rules() -> void:
 	_ok(hub.toll_age == 0.0, "toll: a change resets the chip's brightness")
 	_step(hub, UiLook.TOLL_SHOW + 0.1)
 	_ok(hub.toll_age > UiLook.TOLL_SHOW, "toll: and it dims again")
-	# The mock hero scenario: how much of the time is any crown showing? A busy scripted fight, still mostly clean.
+	# The mock hero scenario: how much of the time is any crown showing? Now only for wear.
 	var f: Array = UiMockFeed.fighters("hero_vs_proud")
 	hub = UiEventHub.new()
 	hub.setup_fighters(f[0], f[1])
@@ -480,11 +520,11 @@ func _crown_rules() -> void:
 		for e in feed.step(1.0 / 60.0):
 			hub.consume(e)
 		hub.advance(1.0 / 60.0)
-		if hub.model(0).crown_a > 0.05 or hub.model(1).crown_a > 0.05:
+		if hub.crown_up(0) or hub.crown_up(1):
 			up += 1
 	var share: float = float(up) / float(total)
 	print("  crown up in %.0f%% of the scripted fight (any fighter)" % (share * 100.0))
-	_ok(share < 0.65, "crown: a crown is up in under 65%% of even a dense scripted fight (%.0f%%)" % (share * 100.0))
+	_ok(share < 0.5, "crown: a crown is up in under half of even a dense scripted fight (%.0f%%)" % (share * 100.0))
 
 
 # --- Cached layers: at rest the HUD redraws nothing ---------------------------------------------------------------
@@ -504,11 +544,11 @@ func _layer_rules() -> void:
 		hud.advance(1.0 / 60.0)
 		await process_frame
 	_ok(hud.redraw_count() - base <= 2, "layers: at rest 180 frames cause %d redraws (a still HUD redraws nothing)" % (hud.redraw_count() - base))
-	hud.consume({"type": "damage", "attacker": 0, "victim": 1, "region": "arms", "kind": "light", "number": true})
+	hud.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": 2})
 	for i in range(20):
 		hud.advance(1.0 / 60.0)
 		await process_frame
-	_ok(hud.redraw_count() - base > 10, "layers: a hit redraws the crown layer while it shows")
+	_ok(hud.redraw_count() - base > 10, "layers: a stage change redraws the crown layer while it shows")
 	for i in range(150):
 		hud.advance(1.0 / 60.0)
 		await process_frame
@@ -517,6 +557,14 @@ func _layer_rules() -> void:
 		hud.advance(1.0 / 60.0)
 		await process_frame
 	_ok(hud.redraw_count() - base2 <= 2, "layers: back at rest, it stops redrawing again (%d)" % (hud.redraw_count() - base2))
+	# The parry window keeps the crown's ring (Art: a flash would double it): the crown layer draws for a window even with no pop.
+	hud.consume({"type": "window_open", "actor": 0, "kind": "parry", "dur": 0.33})
+	hud.advance(0.05)
+	_ok(hud.hub.model(0).crown_a == 0.0 and hud._l_crown.sig != null, "parry window: the crown layer draws its ring with no pop showing")
+	for i in range(40):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_crown.sig == null, "parry window: and it clears when the window closes")
 	hud.set_option("force_redraw", true)
 	var base3: int = hud.redraw_count()
 	for i in range(30):

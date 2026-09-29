@@ -167,6 +167,7 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"plate_alpha": plate_alpha,
 		"crown_always": bool(opts["crown_always"]),
 		"brink_cue": bool(opts["brink_cue"]),
+		"crown_locked": hub.crown_locked(),
 	}
 
 
@@ -184,7 +185,8 @@ func _update_layers() -> void:
 	var crown_on: bool = false
 	if bool(opts["show_crown"]) and anchor_fn.is_valid():
 		for m in hub.models:
-			if m.crown_a > 0.01 or bool(opts["crown_always"]) or m.parry_t >= 0.0 or m.chain_t >= 0.0 or (m.brink and bool(opts["brink_cue"])):
+			var pop_on: bool = (m.crown_a > 0.01 or bool(opts["crown_always"])) and not hub.crown_locked()
+			if pop_on or m.parry_t >= 0.0 or m.chain_t >= 0.0 or (m.brink and bool(opts["brink_cue"])):
 				crown_on = true
 	_l_crown.update_sig(_frame if crown_on else null)
 
@@ -290,3 +292,9 @@ func _paint_debug(ci: CanvasItem) -> void:
 	ci.draw_rect(layout.frame_rect, Color(1.0, 0.8, 0.2, 0.6), false, 1.5)
 	if layout.touch_reserve.size.y > 0.0:
 		ci.draw_rect(layout.touch_reserve, Color(0.4, 0.6, 1.0, 0.12))
+
+
+## For Rendering's head-flash arbitration (Art: a flash and the crown are never up together): is this fighter's crown up,
+## popped or still fading? False while a transformation cinematic holds the crown down.
+func crown_up(actor: int) -> bool:
+	return hub.crown_up(actor) or (bool(opts["crown_always"]) and not hub.crown_locked())
