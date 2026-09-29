@@ -26,6 +26,8 @@ Owner: Legal and IP Compliance. The single origin log for every shipped asset (a
 | ART-0003 (GEN, CMP, D1 to D4) | `art/concepts/directions/` | as above | as above | `ART-0003-character-directions.md` | logged, concept only |
 | ART-0004 (GEN, CMP, V1 to V5) | `art/concepts/blank/` | as above | as above | `ART-0004-blank-variations.md` | logged, concept only |
 | ART-0005 (GEN, S1 to S4, DATA) | `art/concepts/marked-aura/` | as above | as above | `ART-0005-marked-aura.md` | logged, concept only. Style screen in `q3-screen.md` |
+| ART-0007-SHARED | `art/concepts/shared/marks.mjs` | shared module (code): sigils, dome mask, palettes | AI-assisted, procedural | `art/prompts/ART-0007-legal-conditions.md` | logged, concept only |
+| ART-0007-S5 | `art/concepts/marked-aura/ma-5-legal-checks.svg` | checks sheet (output of ART-0005-GEN) | AI-assisted, procedural | `art/prompts/ART-0007-legal-conditions.md` | logged, concept only. Uses generic drawings of the patterns to avoid |
 | ART-0006 (GEN, COIL) | `art/concepts/turnaround/` | turnaround sheet | as above | `ART-0006-coil-turnaround.md` | logged, concept only |
 | AUD-GEN-001 | `audio/synth/impact_synth.gd`, `dsp.gd`, `data/impacts.json` | audio generator (code and recipes) | procedural, code written with AI assistance | none (no audio model, no audio input) | logged |
 | AUD-GEN-002 | `audio/synth/grunt_synth.gd`, `data/grunts.json` | audio generator | procedural. Vowel formants are published averages (Peterson and Barney, 1952): facts, not a recording | none | logged |

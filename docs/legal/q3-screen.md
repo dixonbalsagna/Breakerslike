@@ -215,3 +215,19 @@ Screens `docs/art/marked-aura.md` and `art/concepts/marked-aura/`. **Limit:** I 
 **Madness Combat.** Nothing found in the descriptions. Keep the exclusions: no grey faceless heads, no goggles, no X or cross marks, no black-and-red palette, no dot eyes.
 
 **Art checks to run.** A silhouette and three-flat-colour test on the four masks; a side-by-side thumbnail of each sigil next to the logos and symbols named above; a look at the flashes beside the two reference graphics.
+
+### Marked plus Aura: confirm of Art's applied conditions (2026-09-29)
+
+From Art's written descriptions only (I cannot view SVGs). All conditions above are applied as described. Verdicts on the two flags and the new sigils:
+
+| Item | Verdict |
+|---|---|
+| Ring reads as a lone eye at three-quarter view | **CONDITIONAL**: move it off the mid-forehead |
+| Short rays at the sigil in rage and triumph | **Cut them** |
+| Single ring; leaning slash plus dot; three offset moss-on-bone chevrons; four-square stair | **GO** |
+| The Coil's diagonal sash with a diamond-stud buckle | **GO** |
+
+- **Ring.** A lone centred ring on the forehead can read as a cyclops eye or a third eye, and a forehead mark recalls a known three-eyed fighter in the franchise. Move it up onto the crown seam or off-centre toward a temple, above the brow ridge, so it never sits where an eye would. Keep it a single ring with no dot.
+- **Rays.** Cut them. Rage and triumph read from the flash alone, and a burst of short rays is the comic "shock lines" look Legal asked to avoid. If Art insists on keeping them: at most three, all pointing one way, never a full circle.
+- **New sigils.** The leaning slash plus a dot is fine, and stays clear of the ring (no "prohibited" sign) and of an X. The chevrons (three, offset, moss on bone) are clear of the car and oil logos. The four-square stair is fine as a diagonal stair. Never arrange four squares as a 2 by 2 block (a famous software logo).
+- **The Coil.** One diagonal sash and a diamond stud have no X and no slash. Keep it that way.
