@@ -176,3 +176,5 @@ Orb had played the Godot greybox before answering.
 - Targeting is a mix of personality and drama, weighted toward personality: the villain seeks tall, occupied towers and the hero avoids occupied ones.
 - One impact can go through several buildings: 'a classic villain trope is to send the hero careening through multiple skyscrapers in one attack.'
 - Anguish weight: Game Design's default (no extra multiplier) stands unless Orb says otherwise.
+
+**Life-size scale (Orb, 2026-09-29).** 'Right now everything looks very small compared to the fighters. I'd like to see a much larger world with buildings and civilians scaled up to be life-size compared to the fighters.' World is drafting docs/world/scale.md, to land before building-depth slice B1.
