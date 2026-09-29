@@ -142,3 +142,8 @@ Orb had played the Godot greybox before answering.
 - Hot Blood: the mechanic, cards, look and sound are liked. Names are **pinned**: Orb will think up names later, and they must not sound LLM-generated. Treat all current names as placeholders.
 - Anti-hero: Orb likes Drop the Act (1v1) and Humbled. Keep pitching ideas in that theme.
 - The orb payoff (the fold to the proving ground): **space folds inward** toward the Protagonist and the planet vanishes around them. It needs an in-world reason, with the hero saying something like 'we can't hurt anyone innocent here'.
+
+**Focus and matchups (Orb, 2026-09-29).**
+- **1v1 first.** 2v2 questions (the fold in 2v2, team rules) are deferred.
+- Lines change with the matchup: who is facing whom, and what is at stake. The Protagonist is lighter against a sparring rival and more serious against someone threatening to end the world.
+- Work the matchups out case by case with Orb.
