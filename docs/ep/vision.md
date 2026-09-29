@@ -166,3 +166,7 @@ Orb had played the Godot greybox before answering.
 **Empress comeback: Encore (Orb, 2026-09-29).** On the brink, all three guard return for a short, harder second goon phase while she withdraws, snipes and taunts. If they hold, one region mends; if they fall first, she is on the brink and in reach. Once per match.
 
 **First real fighter: the Anti-hero (Orb, 2026-09-29).** Built after the Wounds slices and roster-as-data (docs/architecture/wounds-plan.md).
+
+**Rims and buildings (Orb, 2026-09-29).**
+- Crater rim height depends on how hard the impact is: harder hits throw up taller rims.
+- Buildings exist in both the foreground and the background (depth layers). Normal movement never collides with them, and neither do most launches. The director chooses when a launched fighter crashes destructively into a building, and it should often pick an individual building to take the brunt of an impact. This is part of stage design.
