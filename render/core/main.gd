@@ -10,13 +10,17 @@ extends Node3D
 ## Rendering never writes sim state: the views read S, the fx consumer and the reference camera, and only SimHost
 ## steps the sim. render/tools/determinism.gd checks that the gameplay hashes are unchanged by rendering.
 ##
-## The world is drawn by panes (render/core/pane_world.gd): one in this scene's own world, from the reference
-## camera. For Camera's split screen, main owns and steps a SplitRig (render/camera/split_rig.gd), and Camera's
-## compositor plugs in through make_pane, move_pane0 and `compositor`: the panes then follow the rig's cameras and
-## UI's HUD gets the rig's record (split_fn). The contract is in docs/rendering/README.md, "Panes and the split screen".
+## The world is drawn by panes (render/core/pane_world.gd). The game runs Camera's dynamic split screen by default
+## (docs/camera/split-screen.md): main owns and steps its SplitRig (render/camera/split_rig.gd), and Camera's
+## compositor (SplitView) attaches through make_pane, move_pane0 and `compositor`, so the panes follow the rig's
+## cameras and UI's HUD gets the rig's record (split_fn). F9 toggles it, --nosplit starts with one view from the
+## reference camera, and the tools (manual) get one view unless they attach a compositor themselves. The contract is
+## in docs/rendering/README.md, "Panes and the split screen". SplitView follows UI's options each frame: split_solo,
+## reduced_motion and shake_scale (F10 and F11 flip the first two).
 ##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
-## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit), --novsync, --mock-evac
+## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
+## full panes were drawn), --novsync, --nosplit, --mock-evac
 ## (World's planned evacuate events from a render-side mock, render/tools/evac_mock.gd, until the sim sends them).
 ## Head flashes (render/core/flash_view.gd): F7 on and off (on by default, in place of the placeholder aura), F8 the
 ## legacy shapes, Alt plus 1 to 9, 0, -, =, [ and ] fires each flash in the data's order on P1 (Shift: P2), Alt+F
@@ -35,6 +39,7 @@ var split_frame: SplitFrame = null  # this frame's, while a compositor is attach
 ## Camera's compositor (SplitView), or null for one view from the reference camera. main calls its present(frame)
 ## once per displayed frame after drawing the panes, and its pane_jitter(i) (if it has one) for a pane's shake.
 ## Attaching one resets the rig to the current state; without one the rig costs nothing (about 0.05 ms a tick).
+var split_view: SplitView = null   # Camera's compositor in the game (null in the tools)
 var compositor: Object = null:
 	set(v):
 		compositor = v
@@ -62,6 +67,8 @@ var _render_gpu := PackedFloat64Array()
 var _draws := PackedInt32Array()
 var _quitting: bool = false
 var _last_usec: int = 0
+var _bench_two := PackedFloat64Array()     # wall-clock frame ms while two full panes are drawn
+var _bench_other := PackedFloat64Array()   # ... and otherwise
 var ui_hud: UiHud                 # UI's HUD
 var audio: AudioVoices            # Audio's voice pool
 var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
@@ -105,6 +112,12 @@ func _ready() -> void:
 		take_over()
 	if args.has("legacy-hud"):
 		set_legacy_hud(true)
+	if not manual:
+		split_view = SplitView.new()
+		add_child(split_view)
+		_sync_split_options()
+		if not args.has("nosplit"):
+			split_view.attach(self)
 	if args.has("bench") or args.has("novsync"):
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
@@ -228,6 +241,7 @@ func _process(delta: float) -> void:
 func frame(delta: float) -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var t0: int = Time.get_ticks_usec()
+	_sync_split_options()
 	var n: int = host.advance(delta, vp.x, vp.y)
 	if args.has("flash-soak") and frames % 40 == 0 and not FlashSet.ids().is_empty():
 		var ids: Array = FlashSet.ids()
@@ -263,7 +277,8 @@ func render_view(a: float) -> void:
 		compositor.present(split_frame)
 	else:
 		split_frame = null
-		pane.render(host, a, host.camera_x(a), host.camera(a), host.jitter)
+		var vh: float = maxf(get_viewport().get_visible_rect().size.y, 1.0)
+		pane.render(host, a, host.camera_x(a), host.camera(a), PaneShake.capped(host.jitter, vh, _shake()))
 	view_cam_x = pane.view_cam_x
 	host.impact.heat_changed = false
 	UiSimBridge.patch(ui_hud, S)
@@ -296,6 +311,22 @@ func _hud_anchor(slot: int) -> Dictionary:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var vis: bool = Rect2(Vector2(-200.0, -200.0), vp + Vector2(400.0, 400.0)).has_point(p)
 	return {"pos": p, "h": FighterView.HEIGHT * cam_rig.zoom, "visible": vis}
+
+
+## UI's options for the split screen, applied each frame (UI has no change signal): solo against the AI, reduced
+## motion (the rig's swing, the shake), the shake scale.
+func _sync_split_options() -> void:
+	var o: Dictionary = ui_hud.opts
+	split_rig.solo_split = bool(o.get("split_solo", true))
+	split_rig.reduced_motion = bool(o.get("reduced_motion", false))
+	if split_view != null:
+		split_view.shake_scale = float(o.get("shake_scale", 1.0))
+		split_view.reduced_motion = split_rig.reduced_motion
+
+
+## The player's shake scale, quartered in reduced motion (as SplitView's).
+func _shake() -> float:
+	return float(ui_hud.opts.get("shake_scale", 1.0)) * (0.25 if bool(ui_hud.opts.get("reduced_motion", false)) else 1.0)
 
 
 ## UI's split record (UiHud.split_fn): the rig's, while a compositor draws the panes; empty for one view.
@@ -355,6 +386,18 @@ func _unhandled_input(e: InputEvent) -> void:
 				return
 			if code == "F4":
 				ui_hud.set_option("show_feed", not bool(ui_hud.opts["show_feed"]))
+				return
+			if code == "F9" and split_view != null:
+				if split_view.is_attached():
+					split_view.detach()
+				else:
+					split_view.attach(self)
+				return
+			if code == "F10":
+				ui_hud.set_option("split_solo", not bool(ui_hud.opts.get("split_solo", true)))
+				return
+			if code == "F11":
+				ui_hud.set_option("reduced_motion", not bool(ui_hud.opts.get("reduced_motion", false)))
 				return
 			if code == "F7":
 				flashes_on = not flashes_on
@@ -424,6 +467,10 @@ func _record(frame_ms: float, n: int, tick_ms: float, view_ms: float) -> void:
 		if args.has("bench") and frames >= 60:
 			_bench[i].append(row[i])
 	if args.has("bench") and frames >= 60:
+		if split_frame != null and split_frame.sep > 0.99 and split_frame.e < 0.01:
+			_bench_two.append(frame_ms)
+		else:
+			_bench_other.append(frame_ms)
 		var rid: RID = get_viewport().get_viewport_rid()
 		_render_cpu.append(RenderingServer.viewport_get_measured_render_time_cpu(rid) + RenderingServer.get_frame_setup_time_cpu())
 		_render_gpu.append(RenderingServer.viewport_get_measured_render_time_gpu(rid))
@@ -448,7 +495,8 @@ func _finish() -> void:
 		for x in _draws:
 			d.append(float(x))
 		var rows: Array = [
-			["frame ms (vsync off)", _bench[0]], ["view update ms / frame", _bench[3]],
+			["frame ms (vsync off)", _bench[0]], ["frame ms, two full panes", _bench_two], ["frame ms, other", _bench_other],
+			["view update ms / frame", _bench[3]],
 			["sim tick ms (per tick)", Array(_bench[1]).filter(func(v): return v > 0.0)],
 			["fx+camera ms (per tick)", Array(_bench[2]).filter(func(v): return v > 0.0)],
 			["render cpu ms", _render_cpu], ["render gpu ms", _render_gpu], ["draw calls", d],
@@ -456,6 +504,8 @@ func _finish() -> void:
 		var head: String = "%s | %s | %s | %dx%d | %d frames after 60 warm-up | sim ticks %d, final T %.1f s" % [RenderingServer.get_current_rendering_method(), RenderingServer.get_video_adapter_name(), OS.get_name(), int(vp.x), int(vp.y), _bench[0].size(), host.ticks, host.S.T]
 		print("BENCH " + head)
 		var res: Dictionary = {"head": head, "hash": gh, "ticks": host.ticks, "audio": "%d played, %d dropped" % [audio.played, audio.dropped]}
+		res["split"] = "%s; two full panes in %.0f%% of frames" % ["on" if compositor != null else "off", 100.0 * _bench_two.size() / maxf(1.0, float(_bench_two.size() + _bench_other.size()))]
+		print("BENCH split %s" % res["split"])
 		print("BENCH audio %s" % res["audio"])
 		for r in rows:
 			print("BENCH %-24s %s" % [r[0], _dist(r[1])])

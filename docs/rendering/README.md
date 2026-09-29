@@ -27,6 +27,10 @@ godot --path .
 | F2 | swap UI's HUD for the greybox HUD (until UI's playtest) |
 | F3 | performance overlay |
 | F4 | the director feed in UI's HUD |
+| F7 / F8 | head flashes on and off / their legacy shapes |
+| F9 | Camera's split screen on and off (on by default) |
+| F10 / F11 | the split against the AI (UI's `split_solo`) / reduced motion (UI's `reduced_motion`) |
+| Alt+1 to Alt+[ (Shift: P2), Alt+F | fire each head flash in the data's order; cycle a fighter's shape family |
 | Esc | quit (desktop) |
 
 The key mapping is Controls' `sim/input/keyboard.gd`. `render/core/key_codes.gd` only turns Godot's physical keys into its code names.
@@ -244,7 +248,14 @@ In two AI matches, Hurt fired 37 times, Rage 4 and the surge 4. Frame time with 
 
 ## Panes and the split screen
 
-Camera's dynamic split screen (`docs/camera/split-screen.md` §11) needs the world drawn twice, from two cameras. The view stack is now one `PaneWorld`: the camera rig, the planet, the fighters, the beams, the particles, the sky, and the per-camera material state (`RenderMats`, now an instance per pane). The main scene holds one in its own world, drawn from the reference camera, so the game is unchanged: the same pictures (the checks and the shots match) and the same frame time.
+Camera's dynamic split screen (`docs/camera/split-screen.md` §11) needs the world drawn twice, from two cameras. The view stack is now one `PaneWorld`: the camera rig, the planet, the fighters, the beams, the particles, the sky, and the per-camera material state (`RenderMats`, now an instance per pane).
+
+**In the game the split is on by default.** `main.gd` makes Camera's `SplitView`, which sits under UI's HUD, and attaches it. F9 toggles it, and `--nosplit` starts with one view from the reference camera. The tools (`manual`) keep one view unless they attach a compositor themselves, so their pictures and checks are unchanged. Each frame main applies UI's options, since UI has no change signal:
+- `split_solo`: split against the AI, or follow your own fighter;
+- `reduced_motion`: the rig's quick swap, and a quarter of the shake;
+- `shake_scale`: applied to both panes, and to the single view too, capped like Camera's at 3% of the screen height.
+
+F10 and F11 flip the first two through UI's `set_option`. Camera's `render/camera/split_main` scene is retired: its lines live in `main.gd`, and `--bench` now also splits frame time by whether two full panes were drawn.
 
 **Two panes, one world.** A second pane is a follower (`source`).
 - It shares the first pane's ground field and its texture, the ground meshes, and the props' MultiMeshes (buildings, roofs, trees, the crowd with its runners and startled survivors).
@@ -334,8 +345,19 @@ A crater dug on the seam (x = 0) is exactly symmetric across it at every depth. 
 | Desktop, the same with the greybox HUD (F2) | 1.33 / 1.87 / 2.49 ms | n/a | 0.30 ms | about 82 |
 | Web, scaled world, staging and slides, UI's HUD | 2.47 / 3.40 / 4.20 ms | n/a | 0.38 ms | about 153 |
 | Web, the same with the greybox HUD (F2) | 2.31 / 2.80 / 3.90 ms | n/a | 0.38 ms | about 77 |
+| Desktop, S2 sim, split screen on (the default; two full panes in 12% of frames) | 1.95 / 2.94 / 3.69 ms | n/a | n/a | about 186 |
+| Desktop, the same with `--nosplit` | 1.42 / 1.97 / 2.56 ms | n/a | n/a | about 154 |
+| Web, S2 sim, split screen on (two full panes in 21% of frames) | 3.97–4.09 / 5.2–5.3 / 6.7–6.8 ms | n/a | n/a | about 186 |
+| Web, the same with `--nosplit` | 3.43–3.51 / 4.5–4.7 / 5.9–6.0 ms | n/a | n/a | about 153 |
+| Web, the committed build before this (one view) | 3.23–3.32 / 4.1–4.2 / 5.6–5.9 ms | n/a | n/a | about 153 |
+| Web, split on with UI's split elements off (a test build) | 3.35–3.64 / 4.6–4.9 / 6.2 ms | n/a | n/a | about 156 |
 
 After UI's caching (c5a339c), its HUD costs about +0.09 ms on desktop and +0.16 ms on the web (UI projected about +0.5 ms). The web still has a first-use shader compile hitch of about 215 ms.
+
+**The split's cost on the web.** Measured on the committed build plus only these changes, two runs each (the ranges). Camera measured 3.39 ms mean and 6.72 p99 with the split on. The p99 holds, at 6.7–6.8. The mean is 0.6 above, for three reasons:
+- the whole build is slower today: the committed one view is 3.23–3.32 against Camera's 2.82 (the gameplay hash is the same);
+- seed 4 now spends 21% of frames in two panes, against 10%;
+- UI's split elements cost about 0.5 ms a frame. With them off, the split costs about what one view does, so the compositor and the second pane are nearly free here.
 
 The four rows before these are on the committed sim after S1 (b2e30a5 and later), same seed, and each pair ends on the same gameplay hash. UI's HUD drawing costs about 1.8 ms a frame on desktop (GPU 0.18 to 0.67 ms) and about 3 ms on the web, plus about 230 canvas draw calls: it redraws every frame in GDScript (`_draw`). Audio's share is small (86 cues over the desktop run, none dropped). Optimising the HUD is UI's, for example by caching the plates and redrawing only what changed.
 

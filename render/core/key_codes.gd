@@ -7,6 +7,7 @@ const NAMED: Dictionary = {
 	KEY_LEFT: "ArrowLeft", KEY_RIGHT: "ArrowRight", KEY_UP: "ArrowUp", KEY_DOWN: "ArrowDown",
 	KEY_COMMA: "Comma", KEY_PERIOD: "Period", KEY_SLASH: "Slash", KEY_SEMICOLON: "Semicolon",
 	KEY_SHIFT: "Shift", KEY_CTRL: "Control", KEY_ALT: "Alt", KEY_META: "Meta", KEY_TAB: "Tab",
+	KEY_APOSTROPHE: "Quote", KEY_QUOTELEFT: "Backquote", KEY_MINUS: "Minus", KEY_BRACKETLEFT: "BracketLeft",
 }
 
 
