@@ -1,0 +1,3824 @@
+{
+ "generatedWith": {
+  "node": "v24.19.0",
+  "matches": 1000,
+  "unseeded": 1000
+ },
+ "arms": {
+  "default": {
+   "n": 1000,
+   "seeds": {
+    "first": 100001,
+    "last": 101000
+   },
+   "arm": "default",
+   "names": [
+    "KAI",
+    "VORR"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    423,
+    577
+   ],
+   "slotRate": [
+    {
+     "k": 423,
+     "rate": 0.423,
+     "ci": [
+      0.39273126503297306,
+      0.45385807734933115
+     ]
+    },
+    {
+     "k": 577,
+     "rate": 0.577,
+     "ci": [
+      0.5461419226506689,
+      0.6072687349670269
+     ]
+    }
+   ],
+   "len": {
+    "mean": 55.354333333331674,
+    "sd": 19.937259562799415,
+    "min": 22.799999999999986,
+    "p10": 37.11999999999918,
+    "p25": 43.39999999999882,
+    "p50": 50.99999999999839,
+    "p75": 61.15416666666447,
+    "p90": 76.62999999999694,
+    "max": 193.8666666667131
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 0
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 21
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 134
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 314
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 257
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 132
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 55
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 27
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 22
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 13
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 5
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 7
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 6
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 7
+    }
+   ],
+   "lenWithTail": 58.35933333333172,
+   "civPct": {
+    "mean": 38.70802767127304,
+    "sd": 27.06346676873871,
+    "min": 0,
+    "p10": 6.352941176470588,
+    "p25": 13.882352941176471,
+    "p50": 34.9706254105746,
+    "p75": 58.8684963272055,
+    "p90": 79.32592765410813,
+    "max": 99.99999999999996
+   },
+   "civ90": 0.048,
+   "structs": {
+    "mean": 14.121,
+    "sd": 7.639025704480487,
+    "min": 0,
+    "p10": 5,
+    "p25": 9,
+    "p50": 12,
+    "p75": 17,
+    "p90": 24.100000000000023,
+    "max": 44
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 218.074,
+    "sd": 119.91177322247117,
+    "min": 14,
+    "p10": 82.9,
+    "p25": 127.5,
+    "p50": 205,
+    "p75": 287,
+    "p90": 363.1,
+    "max": 720
+   },
+   "launches": {
+    "total": 14419,
+    "counts": {
+     "UPPERCUT": 4798,
+     "MOUNTAINSIDE": 331,
+     "SLAM DOWN": 6689,
+     "BUILDING SMASH": 1927,
+     "SMASH ACROSS": 674
+    },
+    "share": {
+     "UPPERCUT": 0.33275539219085926,
+     "MOUNTAINSIDE": 0.022955822179069284,
+     "SLAM DOWN": 0.4639017962410708,
+     "BUILDING SMASH": 0.13364310978569943,
+     "SMASH ACROSS": 0.0467438796033012
+    }
+   },
+   "beams": {
+    "total": 3648,
+    "perMatch": 3.648,
+    "bio": {
+     "plains": 321,
+     "ocean": 2533,
+     "village": 464,
+     "desert": 29,
+     "city": 141,
+     "mountains": 120,
+     "forest": 40
+    },
+    "variant": {
+     "MERIDIAN SCAR": 321,
+     "HORIZON CLEAVE": 2533,
+     "BOULEVARD RAZE": 605,
+     "GLASS TRENCH": 29,
+     "RIDGE BORE": 120,
+     "FIRESTORM": 40
+    },
+    "outcome": {
+     "CLASH": 1472,
+     "GUARD": 730,
+     "DODGE": 457,
+     "HIT": 850,
+     "ESCAPE": 139
+    },
+    "bioOut": {
+     "plains CLASH": 179,
+     "ocean GUARD": 487,
+     "ocean CLASH": 999,
+     "ocean DODGE": 324,
+     "village CLASH": 171,
+     "ocean HIT": 621,
+     "ocean ESCAPE": 102,
+     "village DODGE": 69,
+     "village HIT": 103,
+     "desert CLASH": 10,
+     "city GUARD": 53,
+     "plains HIT": 44,
+     "village GUARD": 100,
+     "city HIT": 25,
+     "city DODGE": 9,
+     "plains GUARD": 53,
+     "mountains DODGE": 11,
+     "mountains GUARD": 24,
+     "mountains CLASH": 45,
+     "village ESCAPE": 21,
+     "desert HIT": 7,
+     "forest HIT": 15,
+     "plains DODGE": 37,
+     "mountains ESCAPE": 5,
+     "desert GUARD": 6,
+     "city ESCAPE": 1,
+     "forest CLASH": 15,
+     "city CLASH": 53,
+     "desert DODGE": 4,
+     "mountains HIT": 35,
+     "desert ESCAPE": 2,
+     "forest GUARD": 7,
+     "plains ESCAPE": 8,
+     "forest DODGE": 3
+    },
+    "bySlot": [
+     1717,
+     1931
+    ],
+    "share": {
+     "plains": 0.08799342105263158,
+     "ocean": 0.6943530701754386,
+     "village": 0.12719298245614036,
+     "desert": 0.007949561403508772,
+     "city": 0.038651315789473686,
+     "mountains": 0.03289473684210526,
+     "forest": 0.010964912280701754
+    }
+   },
+   "melee": {
+    "total": 16022,
+    "counts": {
+     "GUARD BREAK": 1297,
+     "PRESSURE — GUARD HOLDS": 2041,
+     "CHARGE INTERRUPT": 62,
+     "DODGE & COUNTER": 2160,
+     "PURSUIT — TARGET SLIPS AWAY": 1063,
+     "TRADE BLOWS": 4142,
+     "DODGE & READ": 1667,
+     "HEAVY CLASH — WON": 926,
+     "CLASH SHOCKWAVE": 612,
+     "HEAVY CLASH — COUNTERED": 993,
+     "PURSUIT — CAUGHT": 1059
+    }
+   },
+   "attacks": {
+    "total": 19670,
+    "light": 9819,
+    "heavy": 6203,
+    "sig": 3648,
+    "ambush": 61,
+    "ambushPerMatch": 0.061,
+    "ambushShare": 0.0031011692933401117,
+    "meleeExchanges": 16022
+   },
+   "parry": {
+    "total": 1460,
+    "perMatch": 1.46,
+    "perMelee": 0.09112470353264261,
+    "bySlot": [
+     730,
+     730
+    ]
+   },
+   "chain": {
+    "total": 3817,
+    "perMatch": 3.817,
+    "perMelee": 0.23823492697540882,
+    "meanLen": 2.409745873722819,
+    "lenHist": {
+     "2": 2516,
+     "3": 1051,
+     "4": 237,
+     "5": 13
+    },
+    "counters": 790
+   },
+   "hide": {
+    "total": 626,
+    "perMatch": 0.626,
+    "matchesWithHide": 0.376,
+    "found": 488,
+    "hiddenSecPerMatch": [
+     2.1964833333332723,
+     2.4502549999999124
+    ],
+    "ambushPerHide": 0.09744408945686901
+   },
+   "tiers": [
+    2.271,
+    2.495
+   ],
+   "stanceShare": {
+    "winners": [
+     0.5530556951758646,
+     0.16681550508916002,
+     0.21084705102868406,
+     0.06928174870629056
+    ],
+    "losers": [
+     0.4333336569985966,
+     0.23534324700990225,
+     0.19998994733775735,
+     0.13133314865374232
+    ]
+   },
+   "matrix": {
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 282,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 713,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 455,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 6,
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 274,
+    "EVASIVE>DEFENSIVE sig GUARD": 165,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 150,
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 2388,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 854,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 654,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 305,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 543,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 489,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 374,
+    "EVASIVE>AGGRESSIVE sig CLASH": 336,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 675,
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 403,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 206,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 923,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1156,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 415,
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 831,
+    "DEFENSIVE>EVASIVE sig DODGE": 79,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 182,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 236,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 389,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 150,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 269,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 127,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 106,
+    "EVASIVE>EVASIVE light DODGE & READ": 213,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 430,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 279,
+    "DEFENSIVE>EVASIVE sig HIT": 80,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 203,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 296,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 136,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 61,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 371,
+    "AGGRESSIVE>ESCAPE sig HIT": 219,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 584,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 110,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 201,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 80,
+    "DEFENSIVE>ESCAPE sig HIT": 76,
+    "AGGRESSIVE>EVASIVE sig DODGE": 260,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 203,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 24,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 132,
+    "EVASIVE>EVASIVE sig DODGE": 118,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 128,
+    "AGGRESSIVE>EVASIVE sig HIT": 224,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 94,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 180,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 111,
+    "EVASIVE>EVASIVE sig HIT": 85,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 44,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 12,
+    "EVASIVE>ESCAPE sig HIT": 70,
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 223,
+    "EVASIVE>ESCAPE sig ESCAPE": 35,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 18,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 90,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 67,
+    "EVASIVE>AGGRESSIVE sig HIT": 19,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 9,
+    "EVASIVE>CHARGING sig HIT": 2,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 11,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 22,
+    "DEFENSIVE>CHARGING sig HIT": 5,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 6,
+    "AGGRESSIVE>CHARGING sig HIT": 4
+   },
+   "biomeTime": {
+    "plains": 0.08645285958259047,
+    "city": 0.054046660631264565,
+    "village": 0.14987473440410143,
+    "ocean": 0.6461632315310722,
+    "mountains": 0.04042451792915292,
+    "forest": 0.012108338854682349,
+    "desert": 0.01092965706713644
+   },
+   "seam": {
+    "matchesWithCrossing": 756,
+    "crossings": 4037,
+    "maxDisp": 185.60571007125145
+   },
+   "nan": 0,
+   "digest": "70142afa31be898c",
+   "base": 100001,
+   "label": "KAI in P1, VORR in P2 (as shipped)"
+  },
+  "swap": {
+   "n": 1000,
+   "seeds": {
+    "first": 200001,
+    "last": 201000
+   },
+   "arm": "swap",
+   "names": [
+    "VORR",
+    "KAI"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    587,
+    413
+   ],
+   "slotRate": [
+    {
+     "k": 587,
+     "rate": 0.587,
+     "ci": [
+      0.5562061061222425,
+      0.6171280135237255
+     ]
+    },
+    {
+     "k": 413,
+     "rate": 0.413,
+     "ci": [
+      0.3828719864762746,
+      0.4437938938777574
+     ]
+    }
+   ],
+   "len": {
+    "mean": 55.93034999999833,
+    "sd": 19.832096560551708,
+    "min": 19.71666666666683,
+    "p10": 36.91333333333252,
+    "p25": 43.629166666665476,
+    "p50": 52.00833333333166,
+    "p75": 62.28749999999774,
+    "p90": 77.60166666666355,
+    "max": 206.0666666667228
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 1
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 10
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 151
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 276
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 271
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 140
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 64
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 29
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 14
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 13
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 17
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 2
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 5
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 7
+    }
+   ],
+   "lenWithTail": 58.935349999998294,
+   "civPct": {
+    "mean": 43.05014794281489,
+    "sd": 28.213728381551956,
+    "min": 0,
+    "p10": 8.941176470588236,
+    "p25": 17.00422065411608,
+    "p50": 40.41971172044636,
+    "p75": 65.60850818796915,
+    "p90": 85.35942526047042,
+    "max": 100.00000000000003
+   },
+   "civ90": 0.068,
+   "structs": {
+    "mean": 15.606,
+    "sd": 8.419361593948178,
+    "min": 0,
+    "p10": 7,
+    "p25": 10,
+    "p50": 13,
+    "p75": 20,
+    "p90": 27,
+    "max": 47
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 221.6,
+    "sd": 120.58449577213763,
+    "min": 9,
+    "p10": 87.9,
+    "p25": 137,
+    "p50": 206,
+    "p75": 286.25,
+    "p90": 379,
+    "max": 802
+   },
+   "launches": {
+    "total": 14428,
+    "counts": {
+     "UPPERCUT": 4961,
+     "SLAM DOWN": 6274,
+     "BUILDING SMASH": 2315,
+     "MOUNTAINSIDE": 215,
+     "SMASH ACROSS": 663
+    },
+    "share": {
+     "UPPERCUT": 0.3438453008039922,
+     "SLAM DOWN": 0.434848904907125,
+     "BUILDING SMASH": 0.1604518990851123,
+     "MOUNTAINSIDE": 0.014901580260604381,
+     "SMASH ACROSS": 0.04595231494316607
+    }
+   },
+   "beams": {
+    "total": 3680,
+    "perMatch": 3.68,
+    "bio": {
+     "village": 636,
+     "ocean": 2231,
+     "plains": 441,
+     "city": 222,
+     "forest": 49,
+     "mountains": 83,
+     "desert": 18
+    },
+    "variant": {
+     "BOULEVARD RAZE": 858,
+     "HORIZON CLEAVE": 2231,
+     "MERIDIAN SCAR": 441,
+     "FIRESTORM": 49,
+     "RIDGE BORE": 83,
+     "GLASS TRENCH": 18
+    },
+    "outcome": {
+     "CLASH": 1392,
+     "DODGE": 491,
+     "HIT": 900,
+     "GUARD": 741,
+     "ESCAPE": 156
+    },
+    "bioOut": {
+     "village CLASH": 242,
+     "ocean DODGE": 297,
+     "ocean HIT": 595,
+     "village HIT": 152,
+     "plains CLASH": 237,
+     "ocean CLASH": 796,
+     "ocean GUARD": 429,
+     "village GUARD": 121,
+     "plains GUARD": 86,
+     "city CLASH": 69,
+     "plains DODGE": 47,
+     "city GUARD": 71,
+     "village DODGE": 103,
+     "ocean ESCAPE": 114,
+     "plains HIT": 69,
+     "city DODGE": 32,
+     "forest CLASH": 12,
+     "mountains HIT": 21,
+     "desert CLASH": 5,
+     "city HIT": 46,
+     "village ESCAPE": 18,
+     "mountains GUARD": 16,
+     "mountains CLASH": 31,
+     "forest ESCAPE": 9,
+     "mountains DODGE": 6,
+     "desert GUARD": 8,
+     "mountains ESCAPE": 9,
+     "forest HIT": 13,
+     "forest GUARD": 10,
+     "desert HIT": 4,
+     "forest DODGE": 5,
+     "city ESCAPE": 4,
+     "plains ESCAPE": 2,
+     "desert DODGE": 1
+    },
+    "bySlot": [
+     1980,
+     1700
+    ],
+    "share": {
+     "village": 0.17282608695652174,
+     "ocean": 0.60625,
+     "plains": 0.11983695652173913,
+     "city": 0.06032608695652174,
+     "forest": 0.013315217391304347,
+     "mountains": 0.022554347826086958,
+     "desert": 0.004891304347826087
+    }
+   },
+   "melee": {
+    "total": 16181,
+    "counts": {
+     "HEAVY CLASH — COUNTERED": 959,
+     "GUARD BREAK": 1273,
+     "PRESSURE — GUARD HOLDS": 2120,
+     "TRADE BLOWS": 3969,
+     "DODGE & READ": 1738,
+     "PURSUIT — TARGET SLIPS AWAY": 1178,
+     "PURSUIT — CAUGHT": 1112,
+     "CLASH SHOCKWAVE": 615,
+     "DODGE & COUNTER": 2204,
+     "HEAVY CLASH — WON": 950,
+     "CHARGE INTERRUPT": 63
+    }
+   },
+   "attacks": {
+    "total": 19861,
+    "light": 9961,
+    "heavy": 6220,
+    "sig": 3680,
+    "ambush": 57,
+    "ambushPerMatch": 0.057,
+    "ambushShare": 0.0028699461255727306,
+    "meleeExchanges": 16181
+   },
+   "parry": {
+    "total": 1447,
+    "perMatch": 1.447,
+    "perMelee": 0.08942586984735183,
+    "bySlot": [
+     715,
+     732
+    ]
+   },
+   "chain": {
+    "total": 3906,
+    "perMatch": 3.906,
+    "perMelee": 0.24139422779803474,
+    "meanLen": 2.3863287250384024,
+    "lenHist": {
+     "2": 2661,
+     "3": 992,
+     "4": 242,
+     "5": 11
+    },
+    "counters": 825
+   },
+   "hide": {
+    "total": 660,
+    "perMatch": 0.66,
+    "matchesWithHide": 0.389,
+    "found": 520,
+    "hiddenSecPerMatch": [
+     2.324533333333245,
+     2.3279499999999085
+    ],
+    "ambushPerHide": 0.08636363636363636
+   },
+   "tiers": [
+    2.556,
+    2.285
+   ],
+   "stanceShare": {
+    "winners": [
+     0.54586658657891,
+     0.1713970477820175,
+     0.2098466370353285,
+     0.07288972860374336
+    ],
+    "losers": [
+     0.42681927456668034,
+     0.22490149516942382,
+     0.21198259335582714,
+     0.13629663690806865
+    ]
+   },
+   "matrix": {
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 544,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 802,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 719,
+    "DEFENSIVE>EVASIVE sig DODGE": 88,
+    "DEFENSIVE>EVASIVE sig HIT": 88,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 455,
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 2283,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 914,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 701,
+    "AGGRESSIVE>EVASIVE sig HIT": 227,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 421,
+    "AGGRESSIVE>ESCAPE sig HIT": 253,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 259,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 342,
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 412,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1232,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 745,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 405,
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 772,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 216,
+    "AGGRESSIVE>EVASIVE sig DODGE": 283,
+    "EVASIVE>AGGRESSIVE sig CLASH": 320,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 502,
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 270,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 569,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 433,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 273,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 96,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 426,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 208,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 199,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 185,
+    "EVASIVE>DEFENSIVE sig GUARD": 170,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 281,
+    "EVASIVE>EVASIVE light DODGE & READ": 227,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 160,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 166,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 289,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 116,
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 277,
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 231,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 95,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 119,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 101,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 252,
+    "DEFENSIVE>ESCAPE sig HIT": 68,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 135,
+    "EVASIVE>ESCAPE sig HIT": 81,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 154,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 168,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 173,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 159,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 80,
+    "EVASIVE>EVASIVE sig DODGE": 120,
+    "EVASIVE>AGGRESSIVE sig HIT": 11,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 33,
+    "EVASIVE>EVASIVE sig HIT": 104,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 98,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 14,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 98,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 97,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 10,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 35,
+    "EVASIVE>ESCAPE sig ESCAPE": 25,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 12,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 18,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 10,
+    "DEFENSIVE>CHARGING sig HIT": 6,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 5,
+    "AGGRESSIVE>CHARGING sig HIT": 6,
+    "EVASIVE>CHARGING sig HIT": 3,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 12
+   },
+   "biomeTime": {
+    "plains": 0.11477398539247322,
+    "city": 0.07742881960204763,
+    "village": 0.17019228838606573,
+    "ocean": 0.5888213525498502,
+    "forest": 0.015162476057804939,
+    "mountains": 0.02667045330179637,
+    "desert": 0.006950624709957944
+   },
+   "seam": {
+    "matchesWithCrossing": 719,
+    "crossings": 3718,
+    "maxDisp": 166.69891901643314
+   },
+   "nan": 0,
+   "digest": "86738d600130e80e",
+   "base": 200001,
+   "label": "VORR in P1, KAI in P2"
+  },
+  "mirror-villain": {
+   "n": 1000,
+   "seeds": {
+    "first": 300001,
+    "last": 301000
+   },
+   "arm": "mirror-villain",
+   "names": [
+    "VORR-A",
+    "VORR-B"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    555,
+    445
+   ],
+   "slotRate": [
+    {
+     "k": 555,
+     "rate": 0.555,
+     "ci": [
+      0.524045536126136,
+      0.5855335050293611
+     ]
+    },
+    {
+     "k": 445,
+     "rate": 0.445,
+     "ci": [
+      0.4144664949706391,
+      0.47595446387386403
+     ]
+    }
+   ],
+   "len": {
+    "mean": 46.23024999999872,
+    "sd": 16.93387558915053,
+    "min": 18.016666666666925,
+    "p10": 29.538333333332936,
+    "p25": 35.46666666666594,
+    "p50": 43.17499999999883,
+    "p75": 52.949999999998276,
+    "p90": 63.671666666664336,
+    "max": 136.08333333333377
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 3
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 114
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 267
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 305
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 177
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 72
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 21
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 8
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 13
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 5
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 7
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 4
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 4
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 0
+    }
+   ],
+   "lenWithTail": 49.23524999999876,
+   "civPct": {
+    "mean": 64.16140702978505,
+    "sd": 26.443056690968497,
+    "min": 4.470588235294119,
+    "p10": 23.344229178454064,
+    "p25": 43.19211652082916,
+    "p50": 70.73414584363098,
+    "p75": 87.82847098921087,
+    "p90": 94.12140770198592,
+    "max": 100.00000000000004
+   },
+   "civ90": 0.195,
+   "structs": {
+    "mean": 23.087,
+    "sd": 10.096800303877274,
+    "min": 0,
+    "p10": 11,
+    "p25": 15,
+    "p50": 22,
+    "p75": 31,
+    "p90": 37.10000000000002,
+    "max": 47
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 197.282,
+    "sd": 114.42803087639953,
+    "min": 11,
+    "p10": 80,
+    "p25": 109,
+    "p50": 184,
+    "p75": 263.25,
+    "p90": 344.1,
+    "max": 799
+   },
+   "launches": {
+    "total": 11550,
+    "counts": {
+     "BUILDING SMASH": 3606,
+     "UPPERCUT": 3391,
+     "SLAM DOWN": 4155,
+     "SMASH ACROSS": 319,
+     "MOUNTAINSIDE": 79
+    },
+    "share": {
+     "BUILDING SMASH": 0.3122077922077922,
+     "UPPERCUT": 0.2935930735930736,
+     "SLAM DOWN": 0.35974025974025975,
+     "SMASH ACROSS": 0.02761904761904762,
+     "MOUNTAINSIDE": 0.00683982683982684
+    }
+   },
+   "beams": {
+    "total": 3160,
+    "perMatch": 3.16,
+    "bio": {
+     "city": 1359,
+     "ocean": 740,
+     "plains": 482,
+     "forest": 112,
+     "village": 422,
+     "mountains": 33,
+     "desert": 12
+    },
+    "variant": {
+     "BOULEVARD RAZE": 1781,
+     "HORIZON CLEAVE": 740,
+     "MERIDIAN SCAR": 482,
+     "FIRESTORM": 112,
+     "RIDGE BORE": 33,
+     "GLASS TRENCH": 12
+    },
+    "outcome": {
+     "CLASH": 1264,
+     "HIT": 686,
+     "GUARD": 669,
+     "DODGE": 438,
+     "ESCAPE": 103
+    },
+    "bioOut": {
+     "city CLASH": 647,
+     "ocean CLASH": 244,
+     "ocean HIT": 214,
+     "ocean GUARD": 156,
+     "plains HIT": 104,
+     "plains GUARD": 83,
+     "plains CLASH": 191,
+     "forest HIT": 46,
+     "city GUARD": 319,
+     "village DODGE": 66,
+     "village HIT": 101,
+     "village ESCAPE": 29,
+     "forest CLASH": 28,
+     "village CLASH": 148,
+     "plains DODGE": 90,
+     "city DODGE": 181,
+     "village GUARD": 78,
+     "ocean DODGE": 88,
+     "city HIT": 205,
+     "mountains GUARD": 11,
+     "plains ESCAPE": 14,
+     "city ESCAPE": 7,
+     "forest GUARD": 16,
+     "ocean ESCAPE": 38,
+     "forest DODGE": 10,
+     "desert GUARD": 6,
+     "mountains HIT": 13,
+     "mountains CLASH": 5,
+     "forest ESCAPE": 12,
+     "mountains ESCAPE": 2,
+     "desert ESCAPE": 1,
+     "desert DODGE": 1,
+     "desert CLASH": 1,
+     "mountains DODGE": 2,
+     "desert HIT": 3
+    },
+    "bySlot": [
+     1612,
+     1548
+    ],
+    "share": {
+     "city": 0.4300632911392405,
+     "ocean": 0.23417721518987342,
+     "plains": 0.15253164556962026,
+     "forest": 0.035443037974683546,
+     "village": 0.13354430379746834,
+     "mountains": 0.010443037974683544,
+     "desert": 0.0037974683544303796
+    }
+   },
+   "melee": {
+    "total": 13206,
+    "counts": {
+     "DODGE & READ": 1423,
+     "DODGE & COUNTER": 1643,
+     "GUARD BREAK": 1031,
+     "PRESSURE — GUARD HOLDS": 1796,
+     "TRADE BLOWS": 3453,
+     "HEAVY CLASH — WON": 708,
+     "PURSUIT — TARGET SLIPS AWAY": 892,
+     "HEAVY CLASH — COUNTERED": 855,
+     "PURSUIT — CAUGHT": 838,
+     "CLASH SHOCKWAVE": 543,
+     "CHARGE INTERRUPT": 24
+    }
+   },
+   "attacks": {
+    "total": 16366,
+    "light": 8262,
+    "heavy": 4944,
+    "sig": 3160,
+    "ambush": 17,
+    "ambushPerMatch": 0.017,
+    "ambushShare": 0.0010387388488329464,
+    "meleeExchanges": 13206
+   },
+   "parry": {
+    "total": 1217,
+    "perMatch": 1.217,
+    "perMelee": 0.09215508102377708,
+    "bySlot": [
+     601,
+     616
+    ]
+   },
+   "chain": {
+    "total": 3139,
+    "perMatch": 3.139,
+    "perMelee": 0.23769498712706347,
+    "meanLen": 2.3889773813316344,
+    "lenHist": {
+     "2": 2115,
+     "3": 838,
+     "4": 175,
+     "5": 11
+    },
+    "counters": 700
+   },
+   "hide": {
+    "total": 312,
+    "perMatch": 0.312,
+    "matchesWithHide": 0.182,
+    "found": 253,
+    "hiddenSecPerMatch": [
+     1.2118549999999302,
+     1.189454999999933
+    ],
+    "ambushPerHide": 0.05448717948717949
+   },
+   "tiers": [
+    2.583,
+    2.447
+   ],
+   "stanceShare": {
+    "winners": [
+     0.5611470778896589,
+     0.1678516577722928,
+     0.21627594051010196,
+     0.05472532382794746
+    ],
+    "losers": [
+     0.44369609849311903,
+     0.23957293470294752,
+     0.20230224618879114,
+     0.1144287206151406
+    ]
+   },
+   "matrix": {
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 314,
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 169,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 541,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 364,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 735,
+    "AGGRESSIVE>CHARGING sig HIT": 2,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 373,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 583,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1024,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 15,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 742,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 425,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 129,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 222,
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 195,
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 1983,
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 728,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 165,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 233,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 226,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 110,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 181,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 185,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 398,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 71,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 132,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 117,
+    "AGGRESSIVE>ESCAPE sig HIT": 176,
+    "EVASIVE>AGGRESSIVE sig CLASH": 276,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 120,
+    "AGGRESSIVE>EVASIVE sig DODGE": 257,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 178,
+    "DEFENSIVE>EVASIVE sig HIT": 66,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 141,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 568,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 374,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 306,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 492,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 144,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 335,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 54,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 109,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 196,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 310,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 93,
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 253,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 8,
+    "DEFENSIVE>EVASIVE sig DODGE": 91,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 154,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 40,
+    "AGGRESSIVE>EVASIVE sig HIT": 235,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 113,
+    "EVASIVE>EVASIVE sig HIT": 65,
+    "EVASIVE>AGGRESSIVE sig HIT": 9,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 101,
+    "EVASIVE>DEFENSIVE sig GUARD": 152,
+    "EVASIVE>EVASIVE sig DODGE": 90,
+    "DEFENSIVE>ESCAPE sig HIT": 58,
+    "EVASIVE>EVASIVE light DODGE & READ": 182,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 63,
+    "EVASIVE>ESCAPE sig ESCAPE": 35,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 70,
+    "EVASIVE>ESCAPE sig HIT": 52,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 1,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 7,
+    "DEFENSIVE>CHARGING sig HIT": 3,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 14,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 1,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 5,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 2,
+    "EVASIVE>CHARGING sig HIT": 3,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 2
+   },
+   "biomeTime": {
+    "plains": 0.15394939770456217,
+    "city": 0.4144142492760092,
+    "village": 0.1291792296508454,
+    "ocean": 0.24075717262190927,
+    "mountains": 0.015080303238025852,
+    "forest": 0.03705583567329049,
+    "desert": 0.009563811835355464
+   },
+   "seam": {
+    "matchesWithCrossing": 379,
+    "crossings": 1348,
+    "maxDisp": 153.13635601166243
+   },
+   "nan": 0,
+   "digest": "daa96ee4f9845c4b",
+   "base": 300001,
+   "label": "VORR-A in P1, VORR-B in P2"
+  },
+  "mirror-hero": {
+   "n": 1000,
+   "seeds": {
+    "first": 400001,
+    "last": 401000
+   },
+   "arm": "mirror-hero",
+   "names": [
+    "KAI-A",
+    "KAI-B"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    480,
+    520
+   ],
+   "slotRate": [
+    {
+     "k": 480,
+     "rate": 0.48,
+     "ci": [
+      0.4491702320581414,
+      0.5109828438853143
+     ]
+    },
+    {
+     "k": 520,
+     "rate": 0.52,
+     "ci": [
+      0.48901715611468577,
+      0.5508297679418587
+     ]
+    }
+   ],
+   "len": {
+    "mean": 59.08424999999842,
+    "sd": 22.753325958387112,
+    "min": 22.999999999999975,
+    "p10": 39.83166666666569,
+    "p25": 45.87916666666534,
+    "p50": 53.183333333331596,
+    "p75": 63.720833333331,
+    "p90": 84.71666666666317,
+    "max": 218.50000000006602
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 0
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 8
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 96
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 285
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 291
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 140
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 59
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 35
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 26
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 15
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 16
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 12
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 6
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 11
+    }
+   ],
+   "lenWithTail": 62.08924999999828,
+   "civPct": {
+    "mean": 32.22856177058269,
+    "sd": 25.61010682396255,
+    "min": 0,
+    "p10": 4.941176470588235,
+    "p25": 10.823529411764705,
+    "p50": 24.582913396894593,
+    "p75": 49.14888471027941,
+    "p90": 72.79039492067908,
+    "max": 100.00000000000003
+   },
+   "civ90": 0.033,
+   "structs": {
+    "mean": 12.06,
+    "sd": 6.331388985561257,
+    "min": 0,
+    "p10": 5,
+    "p25": 8,
+    "p50": 12,
+    "p75": 14,
+    "p90": 20,
+    "max": 47
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 241.058,
+    "sd": 126.91488495847923,
+    "min": 10,
+    "p10": 94.9,
+    "p25": 152,
+    "p50": 226.5,
+    "p75": 317.5,
+    "p90": 411.1,
+    "max": 877
+   },
+   "launches": {
+    "total": 15228,
+    "counts": {
+     "SLAM DOWN": 7925,
+     "UPPERCUT": 5526,
+     "BUILDING SMASH": 693,
+     "SMASH ACROSS": 761,
+     "MOUNTAINSIDE": 323
+    },
+    "share": {
+     "SLAM DOWN": 0.5204229051746783,
+     "UPPERCUT": 0.3628841607565012,
+     "BUILDING SMASH": 0.04550827423167849,
+     "SMASH ACROSS": 0.04997373259784607,
+     "MOUNTAINSIDE": 0.021210927239296035
+    }
+   },
+   "beams": {
+    "total": 3933,
+    "perMatch": 3.933,
+    "bio": {
+     "ocean": 3051,
+     "mountains": 127,
+     "village": 432,
+     "plains": 199,
+     "forest": 40,
+     "desert": 35,
+     "city": 49
+    },
+    "variant": {
+     "HORIZON CLEAVE": 3051,
+     "RIDGE BORE": 127,
+     "BOULEVARD RAZE": 481,
+     "MERIDIAN SCAR": 199,
+     "FIRESTORM": 40,
+     "GLASS TRENCH": 35
+    },
+    "outcome": {
+     "GUARD": 772,
+     "CLASH": 1541,
+     "DODGE": 535,
+     "HIT": 940,
+     "ESCAPE": 145
+    },
+    "bioOut": {
+     "ocean GUARD": 579,
+     "ocean CLASH": 1181,
+     "mountains DODGE": 11,
+     "village GUARD": 89,
+     "village DODGE": 78,
+     "ocean DODGE": 419,
+     "ocean HIT": 755,
+     "ocean ESCAPE": 117,
+     "plains CLASH": 114,
+     "village CLASH": 162,
+     "plains GUARD": 47,
+     "forest ESCAPE": 4,
+     "forest HIT": 14,
+     "village HIT": 88,
+     "forest CLASH": 11,
+     "desert HIT": 7,
+     "mountains CLASH": 40,
+     "mountains HIT": 41,
+     "desert CLASH": 11,
+     "mountains GUARD": 28,
+     "city HIT": 11,
+     "city CLASH": 22,
+     "city GUARD": 11,
+     "city DODGE": 5,
+     "village ESCAPE": 15,
+     "plains ESCAPE": 2,
+     "desert GUARD": 9,
+     "mountains ESCAPE": 7,
+     "plains HIT": 24,
+     "plains DODGE": 12,
+     "desert DODGE": 8,
+     "forest DODGE": 2,
+     "forest GUARD": 9
+    },
+    "bySlot": [
+     1937,
+     1996
+    ],
+    "share": {
+     "ocean": 0.7757437070938215,
+     "mountains": 0.03229087210780575,
+     "village": 0.10983981693363844,
+     "plains": 0.05059750826341215,
+     "forest": 0.010170353419781338,
+     "desert": 0.00889905924230867,
+     "city": 0.012458682939232139
+    }
+   },
+   "melee": {
+    "total": 17039,
+    "counts": {
+     "TRADE BLOWS": 4181,
+     "PRESSURE — GUARD HOLDS": 2143,
+     "GUARD BREAK": 1322,
+     "CHARGE INTERRUPT": 61,
+     "DODGE & READ": 1850,
+     "DODGE & COUNTER": 2361,
+     "HEAVY CLASH — WON": 993,
+     "PURSUIT — TARGET SLIPS AWAY": 1216,
+     "CLASH SHOCKWAVE": 643,
+     "HEAVY CLASH — COUNTERED": 1069,
+     "PURSUIT — CAUGHT": 1200
+    }
+   },
+   "attacks": {
+    "total": 20972,
+    "light": 10467,
+    "heavy": 6572,
+    "sig": 3933,
+    "ambush": 79,
+    "ambushPerMatch": 0.079,
+    "ambushShare": 0.0037669273316803357,
+    "meleeExchanges": 17039
+   },
+   "parry": {
+    "total": 1509,
+    "perMatch": 1.509,
+    "perMelee": 0.08856153530136746,
+    "bySlot": [
+     736,
+     773
+    ]
+   },
+   "chain": {
+    "total": 4091,
+    "perMatch": 4.091,
+    "perMelee": 0.24009624977991667,
+    "meanLen": 2.3786360303104375,
+    "lenHist": {
+     "2": 2792,
+     "3": 1063,
+     "4": 222,
+     "5": 14
+    },
+    "counters": 820
+   },
+   "hide": {
+    "total": 799,
+    "perMatch": 0.799,
+    "matchesWithHide": 0.433,
+    "found": 613,
+    "hiddenSecPerMatch": [
+     3.2258166666666055,
+     3.1475833333332717
+    ],
+    "ambushPerHide": 0.09887359198998748
+   },
+   "tiers": [
+    2.359,
+    2.342
+   ],
+   "stanceShare": {
+    "winners": [
+     0.539005195478016,
+     0.16929795952331952,
+     0.2045195692759485,
+     0.08717727572271695
+    ],
+    "losers": [
+     0.4247158458724092,
+     0.21783427351218865,
+     0.21198575706207917,
+     0.14546412355332475
+    ]
+   },
+   "matrix": {
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 807,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 407,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 267,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 167,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 17,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 991,
+    "EVASIVE>AGGRESSIVE sig CLASH": 364,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 726,
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 2383,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 355,
+    "EVASIVE>DEFENSIVE sig GUARD": 188,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 211,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 874,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 803,
+    "DEFENSIVE>EVASIVE sig DODGE": 97,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 468,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 760,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 376,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 417,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 602,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 573,
+    "AGGRESSIVE>EVASIVE sig DODGE": 313,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 515,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 275,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 165,
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 284,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 84,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 204,
+    "AGGRESSIVE>EVASIVE sig HIT": 234,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 463,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 487,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1249,
+    "AGGRESSIVE>ESCAPE sig HIT": 276,
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 303,
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 406,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 148,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 252,
+    "DEFENSIVE>CHARGING sig HIT": 9,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 6,
+    "DEFENSIVE>EVASIVE sig HIT": 81,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 260,
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 243,
+    "EVASIVE>EVASIVE sig HIT": 99,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 7,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 105,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 87,
+    "EVASIVE>ESCAPE sig ESCAPE": 34,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 196,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 140,
+    "EVASIVE>EVASIVE light DODGE & READ": 277,
+    "EVASIVE>EVASIVE sig DODGE": 125,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 209,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 153,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 263,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 138,
+    "EVASIVE>ESCAPE sig HIT": 80,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 207,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 105,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 119,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 13,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 48,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 125,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 90,
+    "DEFENSIVE>ESCAPE sig HIT": 79,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 81,
+    "EVASIVE>AGGRESSIVE sig HIT": 13,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 9,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 12,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 10,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 30,
+    "EVASIVE>CHARGING sig HIT": 5,
+    "AGGRESSIVE>CHARGING sig HIT": 3
+   },
+   "biomeTime": {
+    "plains": 0.05398859303342017,
+    "city": 0.020793306946588392,
+    "village": 0.1302162679798401,
+    "ocean": 0.7373576343730865,
+    "mountains": 0.037266676598608196,
+    "desert": 0.009216618282016777,
+    "forest": 0.01116090278644677
+   },
+   "seam": {
+    "matchesWithCrossing": 857,
+    "crossings": 5603,
+    "maxDisp": 155.12371064917352
+   },
+   "nan": 0,
+   "digest": "ec30f985e2b9d9bd",
+   "base": 400001,
+   "label": "KAI-A in P1, KAI-B in P2"
+  },
+  "default-flip": {
+   "n": 1000,
+   "seeds": {
+    "first": 500001,
+    "last": 501000
+   },
+   "arm": "default-flip",
+   "names": [
+    "KAI",
+    "VORR"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    421,
+    579
+   ],
+   "slotRate": [
+    {
+     "k": 421,
+     "rate": 0.421,
+     "ci": [
+      0.39075838331540824,
+      0.45184626666124156
+     ]
+    },
+    {
+     "k": 579,
+     "rate": 0.579,
+     "ci": [
+      0.5481537333387585,
+      0.6092416166845918
+     ]
+    }
+   ],
+   "len": {
+    "mean": 56.728349999998436,
+    "sd": 22.087854502838066,
+    "min": 20.516666666666783,
+    "p10": 37.763333333332476,
+    "p25": 43.85416666666546,
+    "p50": 52.00833333333166,
+    "p75": 62.5166666666644,
+    "p90": 78.32666666666351,
+    "max": 273.7500000000797
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 0
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 20
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 125
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 295
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 265
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 140
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 64
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 23
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 12
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 18
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 16
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 10
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 5
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 7
+    }
+   ],
+   "lenWithTail": 59.73334999999837,
+   "civPct": {
+    "mean": 42.87997166126231,
+    "sd": 28.01616720663345,
+    "min": 0,
+    "p10": 8.235294117647058,
+    "p25": 17.331503534317736,
+    "p50": 40.47376065750059,
+    "p75": 63.95711481321426,
+    "p90": 85.77627579548283,
+    "max": 100.00000000000003
+   },
+   "civ90": 0.073,
+   "structs": {
+    "mean": 15.515,
+    "sd": 8.4441149967346,
+    "min": 0,
+    "p10": 7,
+    "p25": 10,
+    "p50": 13,
+    "p75": 19,
+    "p90": 27,
+    "max": 45
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 213.308,
+    "sd": 128.1451454964811,
+    "min": 12,
+    "p10": 75.9,
+    "p25": 113,
+    "p50": 191,
+    "p75": 285,
+    "p90": 370.1,
+    "max": 1001
+   },
+   "launches": {
+    "total": 14638,
+    "counts": {
+     "BUILDING SMASH": 2284,
+     "UPPERCUT": 4915,
+     "SLAM DOWN": 6505,
+     "SMASH ACROSS": 721,
+     "MOUNTAINSIDE": 213
+    },
+    "share": {
+     "BUILDING SMASH": 0.15603224484219155,
+     "UPPERCUT": 0.33576991392266703,
+     "SLAM DOWN": 0.44439131028829076,
+     "SMASH ACROSS": 0.04925536275447465,
+     "MOUNTAINSIDE": 0.014551168192376007
+    }
+   },
+   "beams": {
+    "total": 3615,
+    "perMatch": 3.615,
+    "bio": {
+     "plains": 452,
+     "ocean": 2199,
+     "city": 225,
+     "village": 590,
+     "mountains": 89,
+     "desert": 24,
+     "forest": 36
+    },
+    "variant": {
+     "MERIDIAN SCAR": 452,
+     "HORIZON CLEAVE": 2199,
+     "BOULEVARD RAZE": 815,
+     "RIDGE BORE": 89,
+     "GLASS TRENCH": 24,
+     "FIRESTORM": 36
+    },
+    "outcome": {
+     "GUARD": 758,
+     "HIT": 787,
+     "CLASH": 1483,
+     "ESCAPE": 138,
+     "DODGE": 449
+    },
+    "bioOut": {
+     "plains GUARD": 71,
+     "plains HIT": 67,
+     "plains CLASH": 261,
+     "ocean GUARD": 463,
+     "ocean CLASH": 839,
+     "city CLASH": 95,
+     "village CLASH": 241,
+     "mountains CLASH": 33,
+     "ocean HIT": 528,
+     "city GUARD": 69,
+     "village GUARD": 125,
+     "village HIT": 113,
+     "ocean ESCAPE": 97,
+     "plains ESCAPE": 4,
+     "village DODGE": 85,
+     "mountains HIT": 26,
+     "ocean DODGE": 272,
+     "desert GUARD": 8,
+     "mountains GUARD": 17,
+     "city DODGE": 29,
+     "desert CLASH": 5,
+     "plains DODGE": 49,
+     "desert HIT": 6,
+     "forest GUARD": 5,
+     "forest CLASH": 9,
+     "forest ESCAPE": 3,
+     "forest DODGE": 4,
+     "forest HIT": 15,
+     "city HIT": 32,
+     "desert DODGE": 5,
+     "village ESCAPE": 26,
+     "mountains DODGE": 5,
+     "mountains ESCAPE": 8
+    },
+    "bySlot": [
+     1767,
+     1848
+    ],
+    "share": {
+     "plains": 0.12503457814661134,
+     "ocean": 0.6082987551867219,
+     "city": 0.06224066390041494,
+     "village": 0.1632088520055325,
+     "mountains": 0.02461964038727524,
+     "desert": 0.006639004149377593,
+     "forest": 0.00995850622406639
+    }
+   },
+   "melee": {
+    "total": 16237,
+    "counts": {
+     "DODGE & COUNTER": 2125,
+     "TRADE BLOWS": 4142,
+     "PRESSURE — GUARD HOLDS": 2046,
+     "CLASH SHOCKWAVE": 626,
+     "HEAVY CLASH — WON": 945,
+     "HEAVY CLASH — COUNTERED": 1003,
+     "DODGE & READ": 1777,
+     "GUARD BREAK": 1275,
+     "PURSUIT — TARGET SLIPS AWAY": 1120,
+     "PURSUIT — CAUGHT": 1115,
+     "CHARGE INTERRUPT": 63
+    }
+   },
+   "attacks": {
+    "total": 19852,
+    "light": 9946,
+    "heavy": 6291,
+    "sig": 3615,
+    "ambush": 66,
+    "ambushPerMatch": 0.066,
+    "ambushShare": 0.0033246020552085433,
+    "meleeExchanges": 16237
+   },
+   "parry": {
+    "total": 1456,
+    "perMatch": 1.456,
+    "perMelee": 0.08967173738991192,
+    "bySlot": [
+     701,
+     755
+    ]
+   },
+   "chain": {
+    "total": 3973,
+    "perMatch": 3.973,
+    "perMelee": 0.24468805813881875,
+    "meanLen": 2.39441228290964,
+    "lenHist": {
+     "2": 2645,
+     "3": 1099,
+     "4": 219,
+     "5": 10
+    },
+    "counters": 819
+   },
+   "hide": {
+    "total": 709,
+    "perMatch": 0.709,
+    "matchesWithHide": 0.403,
+    "found": 555,
+    "hiddenSecPerMatch": [
+     2.6421999999999572,
+     2.8004333333332707
+    ],
+    "ambushPerHide": 0.0930888575458392
+   },
+   "tiers": [
+    2.297,
+    2.541
+   ],
+   "stanceShare": {
+    "winners": [
+     0.544104675194008,
+     0.17531320443269857,
+     0.20672103607114029,
+     0.07386108430215306
+    ],
+    "losers": [
+     0.44262961980200427,
+     0.21876896797740722,
+     0.1986976287116002,
+     0.13990378350898808
+    ]
+   },
+   "matrix": {
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 248,
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 860,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1183,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 678,
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 2366,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 382,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 430,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 461,
+    "EVASIVE>ESCAPE sig HIT": 71,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 202,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 589,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 880,
+    "EVASIVE>EVASIVE light DODGE & READ": 240,
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 394,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 916,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 755,
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 211,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 512,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 690,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 187,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 402,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 513,
+    "EVASIVE>AGGRESSIVE sig CLASH": 307,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 139,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 416,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 262,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 430,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 256,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 227,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 129,
+    "DEFENSIVE>ESCAPE sig HIT": 54,
+    "EVASIVE>AGGRESSIVE sig HIT": 18,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 79,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 285,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 258,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 137,
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 296,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 194,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 89,
+    "AGGRESSIVE>EVASIVE sig HIT": 234,
+    "EVASIVE>DEFENSIVE sig GUARD": 186,
+    "AGGRESSIVE>ESCAPE sig HIT": 218,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 88,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 81,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 282,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 22,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 202,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 41,
+    "DEFENSIVE>EVASIVE sig DODGE": 81,
+    "EVASIVE>EVASIVE sig DODGE": 103,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 121,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 127,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 133,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 7,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 230,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 107,
+    "AGGRESSIVE>EVASIVE sig DODGE": 265,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 142,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 130,
+    "DEFENSIVE>EVASIVE sig HIT": 55,
+    "EVASIVE>EVASIVE sig HIT": 71,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 15,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 17,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 71,
+    "EVASIVE>ESCAPE sig ESCAPE": 28,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 8,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 12,
+    "DEFENSIVE>CHARGING sig HIT": 6,
+    "EVASIVE>CHARGING sig HIT": 1,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 14,
+    "AGGRESSIVE>CHARGING sig HIT": 4,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 4
+   },
+   "biomeTime": {
+    "city": 0.076321902532955,
+    "plains": 0.1137297115709567,
+    "village": 0.16648769768759167,
+    "ocean": 0.5946498550083917,
+    "mountains": 0.02803671790270269,
+    "forest": 0.012732369494317157,
+    "desert": 0.008041745803084737
+   },
+   "seam": {
+    "matchesWithCrossing": 747,
+    "crossings": 3780,
+    "maxDisp": 171.24278336486896
+   },
+   "nan": 0,
+   "digest": "5e260644d1e8bb29",
+   "base": 500001,
+   "label": "KAI in P1 starting east, VORR in P2 starting west"
+  },
+  "swap-flip": {
+   "n": 1000,
+   "seeds": {
+    "first": 600001,
+    "last": 601000
+   },
+   "arm": "swap-flip",
+   "names": [
+    "VORR",
+    "KAI"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    598,
+    402
+   ],
+   "slotRate": [
+    {
+     "k": 598,
+     "rate": 0.598,
+     "ci": [
+      0.5672916198330556,
+      0.6279583080440118
+     ]
+    },
+    {
+     "k": 402,
+     "rate": 0.402,
+     "ci": [
+      0.37204169195598835,
+      0.43270838016694435
+     ]
+    }
+   ],
+   "len": {
+    "mean": 55.92434999999858,
+    "sd": 22.56997787452629,
+    "min": 22.08333333333336,
+    "p10": 37.431666666665826,
+    "p25": 42.73333333333219,
+    "p50": 50.699999999998404,
+    "p75": 61.312499999997804,
+    "p90": 76.76833333333026,
+    "max": 212.1333333333943
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 0
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 22
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 149
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 311
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 244
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 123
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 61
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 22
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 14
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 17
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 16
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 7
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 3
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 11
+    }
+   ],
+   "lenWithTail": 58.92934999999856,
+   "civPct": {
+    "mean": 39.12519902120196,
+    "sd": 27.491150060569925,
+    "min": 0,
+    "p10": 6.26535970140886,
+    "p25": 13.500382707455142,
+    "p50": 35.22812759324758,
+    "p75": 59.06972265910443,
+    "p90": 82.25380970968945,
+    "max": 99.99999999999996
+   },
+   "civ90": 0.063,
+   "structs": {
+    "mean": 14.572,
+    "sd": 8.305648668213701,
+    "min": 0,
+    "p10": 6,
+    "p25": 9,
+    "p50": 12,
+    "p75": 18,
+    "p90": 26,
+    "max": 47
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 224.005,
+    "sd": 123.9676932267594,
+    "min": 14,
+    "p10": 85,
+    "p25": 136,
+    "p50": 210.5,
+    "p75": 292.25,
+    "p90": 387.1,
+    "max": 857
+   },
+   "launches": {
+    "total": 14462,
+    "counts": {
+     "BUILDING SMASH": 1851,
+     "UPPERCUT": 4818,
+     "SLAM DOWN": 6782,
+     "MOUNTAINSIDE": 306,
+     "SMASH ACROSS": 705
+    },
+    "share": {
+     "BUILDING SMASH": 0.1279905960448071,
+     "UPPERCUT": 0.3331489420550408,
+     "SLAM DOWN": 0.4689531185174941,
+     "MOUNTAINSIDE": 0.021158899184068592,
+     "SMASH ACROSS": 0.048748444198589404
+    }
+   },
+   "beams": {
+    "total": 3683,
+    "perMatch": 3.683,
+    "bio": {
+     "ocean": 2578,
+     "city": 167,
+     "village": 436,
+     "plains": 322,
+     "desert": 27,
+     "mountains": 94,
+     "forest": 59
+    },
+    "variant": {
+     "HORIZON CLEAVE": 2578,
+     "BOULEVARD RAZE": 603,
+     "MERIDIAN SCAR": 322,
+     "GLASS TRENCH": 27,
+     "RIDGE BORE": 94,
+     "FIRESTORM": 59
+    },
+    "outcome": {
+     "DODGE": 461,
+     "CLASH": 1416,
+     "HIT": 925,
+     "GUARD": 737,
+     "ESCAPE": 144
+    },
+    "bioOut": {
+     "ocean DODGE": 316,
+     "ocean CLASH": 983,
+     "ocean HIT": 689,
+     "city CLASH": 53,
+     "village CLASH": 171,
+     "plains CLASH": 160,
+     "ocean GUARD": 485,
+     "city GUARD": 65,
+     "desert GUARD": 7,
+     "mountains CLASH": 27,
+     "desert CLASH": 12,
+     "village DODGE": 63,
+     "ocean ESCAPE": 105,
+     "plains DODGE": 48,
+     "mountains DODGE": 5,
+     "plains GUARD": 54,
+     "village GUARD": 90,
+     "village ESCAPE": 16,
+     "plains HIT": 56,
+     "village HIT": 96,
+     "city HIT": 26,
+     "forest DODGE": 7,
+     "forest ESCAPE": 6,
+     "city ESCAPE": 4,
+     "mountains HIT": 33,
+     "forest HIT": 21,
+     "city DODGE": 19,
+     "mountains GUARD": 21,
+     "forest GUARD": 15,
+     "forest CLASH": 10,
+     "desert DODGE": 3,
+     "mountains ESCAPE": 8,
+     "plains ESCAPE": 4,
+     "desert ESCAPE": 1,
+     "desert HIT": 4
+    },
+    "bySlot": [
+     1937,
+     1746
+    ],
+    "share": {
+     "ocean": 0.6999728482215585,
+     "city": 0.04534346999728482,
+     "village": 0.11838175400488732,
+     "plains": 0.08742872658159109,
+     "desert": 0.007330980179201738,
+     "mountains": 0.025522671734998642,
+     "forest": 0.01601954928047787
+    }
+   },
+   "melee": {
+    "total": 16247,
+    "counts": {
+     "DODGE & COUNTER": 2129,
+     "TRADE BLOWS": 4067,
+     "DODGE & READ": 1773,
+     "PURSUIT — TARGET SLIPS AWAY": 1183,
+     "PRESSURE — GUARD HOLDS": 2052,
+     "HEAVY CLASH — WON": 873,
+     "GUARD BREAK": 1322,
+     "PURSUIT — CAUGHT": 1149,
+     "HEAVY CLASH — COUNTERED": 1000,
+     "CLASH SHOCKWAVE": 626,
+     "CHARGE INTERRUPT": 73
+    }
+   },
+   "attacks": {
+    "total": 19930,
+    "light": 9925,
+    "heavy": 6322,
+    "sig": 3683,
+    "ambush": 55,
+    "ambushPerMatch": 0.055,
+    "ambushShare": 0.0027596588058203713,
+    "meleeExchanges": 16247
+   },
+   "parry": {
+    "total": 1397,
+    "perMatch": 1.397,
+    "perMelee": 0.08598510494245092,
+    "bySlot": [
+     682,
+     715
+    ]
+   },
+   "chain": {
+    "total": 3889,
+    "perMatch": 3.889,
+    "perMelee": 0.23936726780328677,
+    "meanLen": 2.387760349704294,
+    "lenHist": {
+     "2": 2631,
+     "3": 1021,
+     "4": 224,
+     "5": 13
+    },
+    "counters": 779
+   },
+   "hide": {
+    "total": 690,
+    "perMatch": 0.69,
+    "matchesWithHide": 0.369,
+    "found": 549,
+    "hiddenSecPerMatch": [
+     2.6937999999999875,
+     2.754104999999964
+    ],
+    "ambushPerHide": 0.07971014492753623
+   },
+   "tiers": [
+    2.497,
+    2.294
+   ],
+   "stanceShare": {
+    "winners": [
+     0.5411114325883458,
+     0.1655924990405165,
+     0.21374433962023928,
+     0.07955172875089757
+    ],
+    "losers": [
+     0.4197823891377299,
+     0.23444619135739062,
+     0.2047341435125285,
+     0.14103727599235355
+    ]
+   },
+   "matrix": {
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 201,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 1013,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 122,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 713,
+    "AGGRESSIVE>EVASIVE sig DODGE": 271,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 291,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 95,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1165,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 180,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 809,
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 2256,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 466,
+    "EVASIVE>ESCAPE sig HIT": 67,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 303,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 272,
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 798,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 435,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 202,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 152,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 134,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 128,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 236,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 80,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 489,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 469,
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 246,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 101,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 276,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 687,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 213,
+    "EVASIVE>EVASIVE light DODGE & READ": 214,
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 272,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 429,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 747,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 135,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 152,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 424,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 563,
+    "EVASIVE>DEFENSIVE sig GUARD": 178,
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 421,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 421,
+    "EVASIVE>EVASIVE sig DODGE": 103,
+    "AGGRESSIVE>EVASIVE sig HIT": 256,
+    "EVASIVE>AGGRESSIVE sig CLASH": 335,
+    "DEFENSIVE>EVASIVE sig HIT": 87,
+    "DEFENSIVE>EVASIVE sig DODGE": 87,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 135,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 338,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 8,
+    "DEFENSIVE>ESCAPE sig HIT": 69,
+    "AGGRESSIVE>ESCAPE sig HIT": 245,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 224,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 78,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 290,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 72,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 99,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 136,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 20,
+    "EVASIVE>EVASIVE sig HIT": 103,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 37,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 204,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 20,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 13,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 41,
+    "EVASIVE>ESCAPE sig ESCAPE": 35,
+    "EVASIVE>AGGRESSIVE sig HIT": 23,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 15,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 10,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 7,
+    "AGGRESSIVE>CHARGING sig HIT": 5,
+    "DEFENSIVE>CHARGING sig HIT": 4,
+    "EVASIVE>CHARGING sig HIT": 5
+   },
+   "biomeTime": {
+    "city": 0.05824596176042805,
+    "plains": 0.08169623173060014,
+    "village": 0.14948059979168007,
+    "ocean": 0.6536174249333971,
+    "mountains": 0.0335028654368899,
+    "desert": 0.008104358580798296,
+    "forest": 0.015352557766207142
+   },
+   "seam": {
+    "matchesWithCrossing": 749,
+    "crossings": 4157,
+    "maxDisp": 166.88342027213548
+   },
+   "nan": 0,
+   "digest": "383eb99df5a5226d",
+   "base": 600001,
+   "label": "VORR in P1 starting east, KAI in P2 starting west"
+  },
+  "mirror-villain-flip": {
+   "n": 1000,
+   "seeds": {
+    "first": 700001,
+    "last": 701000
+   },
+   "arm": "mirror-villain-flip",
+   "names": [
+    "VORR-A",
+    "VORR-B"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    473,
+    527
+   ],
+   "slotRate": [
+    {
+     "k": 473,
+     "rate": 0.473,
+     "ci": [
+      0.4422173178786741,
+      0.5039893346449911
+     ]
+    },
+    {
+     "k": 527,
+     "rate": 0.527,
+     "ci": [
+      0.49601066535500904,
+      0.557782682121326
+     ]
+    }
+   ],
+   "len": {
+    "mean": 45.577033333332,
+    "sd": 15.693970318171795,
+    "min": 18.93333333333354,
+    "p10": 29.896666666666253,
+    "p25": 35.82083333333259,
+    "p50": 43.48333333333215,
+    "p75": 52.20416666666499,
+    "p90": 62.25833333333109,
+    "max": 143.31666666667286
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 3
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 99
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 297
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 304
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 184
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 60
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 24
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 9
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 3
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 5
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 3
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 6
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 2
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 1
+    }
+   ],
+   "lenWithTail": 48.582033333332305,
+   "civPct": {
+    "mean": 62.500215764192504,
+    "sd": 27.301302230104074,
+    "min": 3.294117647058824,
+    "p10": 20.263046982097247,
+    "p25": 40.39501909425397,
+    "p50": 67.67639473777578,
+    "p75": 88.18298398947871,
+    "p90": 94.3652913745241,
+    "max": 100.00000000000009
+   },
+   "civ90": 0.196,
+   "structs": {
+    "mean": 22.505,
+    "sd": 10.204612148881953,
+    "min": 3,
+    "p10": 10,
+    "p25": 14,
+    "p50": 22,
+    "p75": 30,
+    "p90": 38,
+    "max": 47
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 194.304,
+    "sd": 113.15222052177762,
+    "min": 11,
+    "p10": 77,
+    "p25": 104,
+    "p50": 184,
+    "p75": 262,
+    "p90": 353,
+    "max": 709
+   },
+   "launches": {
+    "total": 11710,
+    "counts": {
+     "BUILDING SMASH": 3669,
+     "UPPERCUT": 3455,
+     "SLAM DOWN": 4153,
+     "SMASH ACROSS": 334,
+     "MOUNTAINSIDE": 99
+    },
+    "share": {
+     "BUILDING SMASH": 0.3133219470538002,
+     "UPPERCUT": 0.2950469684030743,
+     "SLAM DOWN": 0.3546541417591802,
+     "SMASH ACROSS": 0.028522630230572162,
+     "MOUNTAINSIDE": 0.008454312553373186
+    }
+   },
+   "beams": {
+    "total": 3139,
+    "perMatch": 3.139,
+    "bio": {
+     "plains": 502,
+     "city": 1261,
+     "ocean": 744,
+     "village": 433,
+     "mountains": 44,
+     "forest": 132,
+     "desert": 23
+    },
+    "variant": {
+     "MERIDIAN SCAR": 502,
+     "BOULEVARD RAZE": 1694,
+     "HORIZON CLEAVE": 744,
+     "RIDGE BORE": 44,
+     "FIRESTORM": 132,
+     "GLASS TRENCH": 23
+    },
+    "outcome": {
+     "GUARD": 676,
+     "CLASH": 1259,
+     "DODGE": 420,
+     "HIT": 675,
+     "ESCAPE": 109
+    },
+    "bioOut": {
+     "plains GUARD": 96,
+     "city CLASH": 624,
+     "city GUARD": 288,
+     "ocean DODGE": 89,
+     "city DODGE": 173,
+     "city HIT": 167,
+     "ocean CLASH": 234,
+     "village CLASH": 156,
+     "plains ESCAPE": 17,
+     "ocean GUARD": 164,
+     "plains CLASH": 200,
+     "ocean HIT": 219,
+     "mountains CLASH": 12,
+     "village HIT": 102,
+     "forest GUARD": 20,
+     "desert DODGE": 6,
+     "forest CLASH": 27,
+     "plains HIT": 111,
+     "forest DODGE": 8,
+     "village GUARD": 90,
+     "mountains ESCAPE": 4,
+     "village DODGE": 62,
+     "ocean ESCAPE": 38,
+     "forest HIT": 61,
+     "plains DODGE": 78,
+     "desert HIT": 4,
+     "mountains HIT": 11,
+     "mountains DODGE": 4,
+     "mountains GUARD": 13,
+     "forest ESCAPE": 16,
+     "village ESCAPE": 23,
+     "city ESCAPE": 9,
+     "desert ESCAPE": 2,
+     "desert CLASH": 6,
+     "desert GUARD": 5
+    },
+    "bySlot": [
+     1585,
+     1554
+    ],
+    "share": {
+     "plains": 0.15992354252946797,
+     "city": 0.4017202930869704,
+     "ocean": 0.23701815864925135,
+     "village": 0.1379420197515132,
+     "mountains": 0.014017202930869704,
+     "forest": 0.042051608792609114,
+     "desert": 0.007327174259318254
+    }
+   },
+   "melee": {
+    "total": 12988,
+    "counts": {
+     "TRADE BLOWS": 3281,
+     "HEAVY CLASH — WON": 784,
+     "HEAVY CLASH — COUNTERED": 791,
+     "DODGE & READ": 1439,
+     "DODGE & COUNTER": 1779,
+     "GUARD BREAK": 1059,
+     "PRESSURE — GUARD HOLDS": 1659,
+     "PURSUIT — CAUGHT": 834,
+     "CLASH SHOCKWAVE": 499,
+     "PURSUIT — TARGET SLIPS AWAY": 840,
+     "CHARGE INTERRUPT": 23
+    }
+   },
+   "attacks": {
+    "total": 16127,
+    "light": 7955,
+    "heavy": 5033,
+    "sig": 3139,
+    "ambush": 19,
+    "ambushPerMatch": 0.019,
+    "ambushShare": 0.0011781484467042848,
+    "meleeExchanges": 12988
+   },
+   "parry": {
+    "total": 1192,
+    "perMatch": 1.192,
+    "perMelee": 0.0917770249461041,
+    "bySlot": [
+     569,
+     623
+    ]
+   },
+   "chain": {
+    "total": 3170,
+    "perMatch": 3.17,
+    "perMelee": 0.2440714505697567,
+    "meanLen": 2.3933753943217666,
+    "lenHist": {
+     "2": 2135,
+     "3": 839,
+     "4": 180,
+     "5": 16
+    },
+    "counters": 669
+   },
+   "hide": {
+    "total": 301,
+    "perMatch": 0.301,
+    "matchesWithHide": 0.19,
+    "found": 236,
+    "hiddenSecPerMatch": [
+     0.9521166666666138,
+     1.0503666666666105
+    ],
+    "ambushPerHide": 0.06312292358803986
+   },
+   "tiers": [
+    2.439,
+    2.533
+   ],
+   "stanceShare": {
+    "winners": [
+     0.5653288835859105,
+     0.1629135530899278,
+     0.22193756814076046,
+     0.04981999518340392
+    ],
+    "losers": [
+     0.4292819842177616,
+     0.24271863878347305,
+     0.21186769320071092,
+     0.116131683798057
+    ]
+   },
+   "matrix": {
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 1853,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 456,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 198,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 110,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 278,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 531,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 381,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 166,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 737,
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 679,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 126,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 224,
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 254,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 599,
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 333,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 346,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 963,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 158,
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 231,
+    "DEFENSIVE>EVASIVE sig DODGE": 99,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 158,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 349,
+    "AGGRESSIVE>EVASIVE sig DODGE": 242,
+    "DEFENSIVE>EVASIVE sig HIT": 80,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 162,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 112,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 293,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 347,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 280,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 435,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 196,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 164,
+    "EVASIVE>AGGRESSIVE sig CLASH": 291,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 28,
+    "EVASIVE>DEFENSIVE sig GUARD": 169,
+    "EVASIVE>EVASIVE light DODGE & READ": 188,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 749,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 559,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 68,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 303,
+    "EVASIVE>EVASIVE sig HIT": 67,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 62,
+    "EVASIVE>EVASIVE sig DODGE": 79,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 107,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 108,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 195,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 118,
+    "AGGRESSIVE>EVASIVE sig HIT": 200,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 91,
+    "AGGRESSIVE>ESCAPE sig HIT": 180,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 109,
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 206,
+    "EVASIVE>ESCAPE sig HIT": 60,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 236,
+    "DEFENSIVE>ESCAPE sig HIT": 59,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 53,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 64,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 101,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 13,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 4,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 57,
+    "EVASIVE>ESCAPE sig ESCAPE": 28,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 1,
+    "EVASIVE>AGGRESSIVE sig HIT": 4,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 4,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 4,
+    "DEFENSIVE>CHARGING sig HIT": 5,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 5,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 6,
+    "AGGRESSIVE>CHARGING sig HIT": 1,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 3,
+    "EVASIVE>CHARGING sig HIT": 2
+   },
+   "biomeTime": {
+    "city": 0.4093910145794626,
+    "plains": 0.1617858042170642,
+    "village": 0.12596655244977614,
+    "ocean": 0.23020466756914373,
+    "mountains": 0.0165817987582518,
+    "desert": 0.01482908462044661,
+    "forest": 0.04124107780585606
+   },
+   "seam": {
+    "matchesWithCrossing": 393,
+    "crossings": 1351,
+    "maxDisp": 183.91586018906673
+   },
+   "nan": 0,
+   "digest": "df6936eec44a113e",
+   "base": 700001,
+   "label": "VORR-A in P1 starting east, VORR-B in P2 starting west"
+  },
+  "mirror-hero-flip": {
+   "n": 1000,
+   "seeds": {
+    "first": 800001,
+    "last": 801000
+   },
+   "arm": "mirror-hero-flip",
+   "names": [
+    "KAI-A",
+    "KAI-B"
+   ],
+   "decided": 1000,
+   "timeouts": 0,
+   "slotWins": [
+    492,
+    508
+   ],
+   "slotRate": [
+    {
+     "k": 492,
+     "rate": 0.492,
+     "ci": [
+      0.4611035936318409,
+      0.5229576367455415
+     ]
+    },
+    {
+     "k": 508,
+     "rate": 0.508,
+     "ci": [
+      0.47704236325445865,
+      0.5388964063681592
+     ]
+    }
+   ],
+   "len": {
+    "mean": 57.162099999998254,
+    "sd": 21.198936455166027,
+    "min": 22.66666666666666,
+    "p10": 38.463333333332436,
+    "p25": 44.62916666666542,
+    "p50": 52.016666666664996,
+    "p75": 62.97916666666437,
+    "p90": 81.94999999999663,
+    "max": 208.28333333339123
+   },
+   "lenHist": [
+    {
+     "lo": 0,
+     "hi": 10,
+     "n": 0
+    },
+    {
+     "lo": 10,
+     "hi": 20,
+     "n": 0
+    },
+    {
+     "lo": 20,
+     "hi": 30,
+     "n": 17
+    },
+    {
+     "lo": 30,
+     "hi": 40,
+     "n": 113
+    },
+    {
+     "lo": 40,
+     "hi": 50,
+     "n": 310
+    },
+    {
+     "lo": 50,
+     "hi": 60,
+     "n": 251
+    },
+    {
+     "lo": 60,
+     "hi": 70,
+     "n": 153
+    },
+    {
+     "lo": 70,
+     "hi": 80,
+     "n": 53
+    },
+    {
+     "lo": 80,
+     "hi": 90,
+     "n": 27
+    },
+    {
+     "lo": 90,
+     "hi": 100,
+     "n": 19
+    },
+    {
+     "lo": 100,
+     "hi": 110,
+     "n": 15
+    },
+    {
+     "lo": 110,
+     "hi": 120,
+     "n": 21
+    },
+    {
+     "lo": 120,
+     "hi": 130,
+     "n": 9
+    },
+    {
+     "lo": 130,
+     "hi": 140,
+     "n": 4
+    },
+    {
+     "lo": 140,
+     "hi": 150,
+     "n": 8
+    }
+   ],
+   "lenWithTail": 60.16709999999821,
+   "civPct": {
+    "mean": 31.110459342078236,
+    "sd": 24.692278130386047,
+    "min": 0,
+    "p10": 4.941176470588235,
+    "p25": 10.823529411764705,
+    "p50": 23.75346429892713,
+    "p75": 47.677885964320105,
+    "p90": 68.99203168287487,
+    "max": 98.82041548336497
+   },
+   "civ90": 0.024,
+   "structs": {
+    "mean": 11.891,
+    "sd": 6.2916376011101915,
+    "min": 0,
+    "p10": 5,
+    "p25": 7,
+    "p50": 12,
+    "p75": 14,
+    "p90": 20,
+    "max": 44
+   },
+   "nStructs": 47,
+   "pop0": 425,
+   "craters": {
+    "mean": 230.564,
+    "sd": 129.91546456035144,
+    "min": 13,
+    "p10": 84,
+    "p25": 146,
+    "p50": 217,
+    "p75": 301.25,
+    "p90": 400,
+    "max": 920
+   },
+   "launches": {
+    "total": 15182,
+    "counts": {
+     "SLAM DOWN": 7892,
+     "UPPERCUT": 5514,
+     "MOUNTAINSIDE": 273,
+     "BUILDING SMASH": 746,
+     "SMASH ACROSS": 757
+    },
+    "share": {
+     "SLAM DOWN": 0.5198261098669477,
+     "UPPERCUT": 0.36319325517059675,
+     "MOUNTAINSIDE": 0.01798182057699908,
+     "BUILDING SMASH": 0.04913713608220261,
+     "SMASH ACROSS": 0.04986167830325385
+    }
+   },
+   "beams": {
+    "total": 3752,
+    "perMatch": 3.752,
+    "bio": {
+     "ocean": 3009,
+     "plains": 215,
+     "village": 337,
+     "desert": 24,
+     "mountains": 88,
+     "city": 48,
+     "forest": 31
+    },
+    "variant": {
+     "HORIZON CLEAVE": 3009,
+     "MERIDIAN SCAR": 215,
+     "BOULEVARD RAZE": 385,
+     "GLASS TRENCH": 24,
+     "RIDGE BORE": 88,
+     "FIRESTORM": 31
+    },
+    "outcome": {
+     "GUARD": 766,
+     "CLASH": 1429,
+     "HIT": 896,
+     "DODGE": 522,
+     "ESCAPE": 139
+    },
+    "bioOut": {
+     "ocean GUARD": 606,
+     "ocean CLASH": 1120,
+     "ocean HIT": 735,
+     "ocean DODGE": 427,
+     "plains CLASH": 116,
+     "village HIT": 77,
+     "ocean ESCAPE": 121,
+     "desert HIT": 7,
+     "mountains HIT": 27,
+     "mountains DODGE": 5,
+     "mountains GUARD": 26,
+     "mountains CLASH": 26,
+     "village GUARD": 69,
+     "village ESCAPE": 6,
+     "desert CLASH": 8,
+     "village CLASH": 128,
+     "village DODGE": 57,
+     "plains DODGE": 24,
+     "plains HIT": 25,
+     "plains GUARD": 47,
+     "city CLASH": 23,
+     "forest ESCAPE": 3,
+     "plains ESCAPE": 3,
+     "forest CLASH": 8,
+     "forest HIT": 11,
+     "city GUARD": 6,
+     "city HIT": 14,
+     "desert GUARD": 4,
+     "desert DODGE": 4,
+     "city ESCAPE": 1,
+     "forest GUARD": 8,
+     "city DODGE": 4,
+     "mountains ESCAPE": 4,
+     "forest DODGE": 1,
+     "desert ESCAPE": 1
+    },
+    "bySlot": [
+     1853,
+     1899
+    ],
+    "share": {
+     "ocean": 0.8019722814498934,
+     "plains": 0.05730277185501066,
+     "village": 0.08981876332622601,
+     "desert": 0.006396588486140725,
+     "mountains": 0.023454157782515993,
+     "city": 0.01279317697228145,
+     "forest": 0.00826226012793177
+    }
+   },
+   "melee": {
+    "total": 16673,
+    "counts": {
+     "DODGE & READ": 1757,
+     "PRESSURE — GUARD HOLDS": 2071,
+     "DODGE & COUNTER": 2175,
+     "HEAVY CLASH — WON": 998,
+     "TRADE BLOWS": 4085,
+     "HEAVY CLASH — COUNTERED": 1117,
+     "PURSUIT — CAUGHT": 1253,
+     "GUARD BREAK": 1385,
+     "CLASH SHOCKWAVE": 581,
+     "PURSUIT — TARGET SLIPS AWAY": 1209,
+     "CHARGE INTERRUPT": 42
+    }
+   },
+   "attacks": {
+    "total": 20425,
+    "light": 10132,
+    "heavy": 6541,
+    "sig": 3752,
+    "ambush": 77,
+    "ambushPerMatch": 0.077,
+    "ambushShare": 0.003769889840881273,
+    "meleeExchanges": 16673
+   },
+   "parry": {
+    "total": 1466,
+    "perMatch": 1.466,
+    "perMelee": 0.0879265878965993,
+    "bySlot": [
+     741,
+     725
+    ]
+   },
+   "chain": {
+    "total": 4086,
+    "perMatch": 4.086,
+    "perMelee": 0.2450668745876567,
+    "meanLen": 2.3954968184043075,
+    "lenHist": {
+     "2": 2735,
+     "3": 1104,
+     "4": 229,
+     "5": 18
+    },
+    "counters": 812
+   },
+   "hide": {
+    "total": 803,
+    "perMatch": 0.803,
+    "matchesWithHide": 0.445,
+    "found": 626,
+    "hiddenSecPerMatch": [
+     2.852054999999888,
+     2.7801166666665957
+    ],
+    "ambushPerHide": 0.0958904109589041
+   },
+   "tiers": [
+    2.313,
+    2.291
+   ],
+   "stanceShare": {
+    "winners": [
+     0.5445034744902139,
+     0.16621151759017794,
+     0.20916023873512335,
+     0.0801247691844884
+    ],
+    "losers": [
+     0.4242589942565539,
+     0.22863860260286137,
+     0.1992009475832035,
+     0.147901455557383
+    ]
+   },
+   "matrix": {
+    "EVASIVE>EVASIVE light DODGE & READ": 241,
+    "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 464,
+    "EVASIVE>EVASIVE light DODGE & COUNTER": 332,
+    "EVASIVE>EVASIVE heavy DODGE & READ": 138,
+    "AGGRESSIVE>EVASIVE light DODGE & READ": 659,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 572,
+    "EVASIVE>AGGRESSIVE light TRADE BLOWS": 916,
+    "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 710,
+    "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 2354,
+    "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 448,
+    "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 815,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 205,
+    "AGGRESSIVE>DEFENSIVE sig GUARD": 431,
+    "AGGRESSIVE>AGGRESSIVE sig CLASH": 822,
+    "AGGRESSIVE>ESCAPE sig HIT": 254,
+    "EVASIVE>AGGRESSIVE sig CLASH": 324,
+    "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 199,
+    "AGGRESSIVE>EVASIVE sig DODGE": 295,
+    "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 503,
+    "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 188,
+    "DEFENSIVE>AGGRESSIVE sig CLASH": 283,
+    "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1175,
+    "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 432,
+    "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 792,
+    "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 646,
+    "DEFENSIVE>ESCAPE sig HIT": 95,
+    "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 127,
+    "DEFENSIVE>DEFENSIVE sig GUARD": 156,
+    "EVASIVE>EVASIVE sig HIT": 102,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 297,
+    "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 292,
+    "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 325,
+    "AGGRESSIVE>EVASIVE sig HIT": 238,
+    "DEFENSIVE>ESCAPE sig ESCAPE": 27,
+    "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 124,
+    "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 478,
+    "DEFENSIVE>EVASIVE light DODGE & COUNTER": 274,
+    "AGGRESSIVE>ESCAPE sig ESCAPE": 83,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 227,
+    "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 129,
+    "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 156,
+    "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 266,
+    "DEFENSIVE>EVASIVE light DODGE & READ": 218,
+    "EVASIVE>ESCAPE sig HIT": 79,
+    "DEFENSIVE>AGGRESSIVE sig HIT": 15,
+    "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 105,
+    "AGGRESSIVE>EVASIVE heavy DODGE & READ": 392,
+    "DEFENSIVE>EVASIVE sig HIT": 58,
+    "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 131,
+    "EVASIVE>DEFENSIVE sig GUARD": 179,
+    "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 306,
+    "EVASIVE>DEFENSIVE heavy GUARD BREAK": 287,
+    "DEFENSIVE>EVASIVE heavy DODGE & READ": 109,
+    "EVASIVE>EVASIVE sig DODGE": 123,
+    "AGGRESSIVE>AGGRESSIVE sig HIT": 30,
+    "DEFENSIVE>EVASIVE sig DODGE": 104,
+    "EVASIVE>EVASIVE heavy DODGE & COUNTER": 223,
+    "EVASIVE>CHARGING light CHARGE INTERRUPT": 8,
+    "EVASIVE>AGGRESSIVE sig HIT": 16,
+    "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 8,
+    "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 129,
+    "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 91,
+    "EVASIVE>ESCAPE sig ESCAPE": 29,
+    "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 7,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 88,
+    "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 6,
+    "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 5,
+    "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 68,
+    "DEFENSIVE>CHARGING sig HIT": 6,
+    "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 8,
+    "AGGRESSIVE>CHARGING sig HIT": 3
+   },
+   "biomeTime": {
+    "city": 0.02197775722391143,
+    "plains": 0.054720353814630335,
+    "village": 0.12242379971779481,
+    "ocean": 0.7571605024451223,
+    "mountains": 0.027277026536652378,
+    "forest": 0.008747076890859436,
+    "desert": 0.007693483371034335
+   },
+   "seam": {
+    "matchesWithCrossing": 837,
+    "crossings": 5585,
+    "maxDisp": 184.89353516428855
+   },
+   "nan": 0,
+   "digest": "350c4e0a9c52c60b",
+   "base": 800001,
+   "label": "KAI-A in P1 starting east, KAI-B in P2 starting west"
+  }
+ },
+ "unseeded": {
+  "n": 1000,
+  "seeds": {
+   "first": 242429,
+   "last": 251267
+  },
+  "arm": "default",
+  "names": [
+   "KAI",
+   "VORR"
+  ],
+  "decided": 1000,
+  "timeouts": 0,
+  "slotWins": [
+   425,
+   575
+  ],
+  "slotRate": [
+   {
+    "k": 425,
+    "rate": 0.425,
+    "ci": [
+     0.3947046577558868,
+     0.45586937703207187
+    ]
+   },
+   {
+    "k": 575,
+    "rate": 0.575,
+    "ci": [
+     0.5441306229679282,
+     0.6052953422441132
+    ]
+   }
+  ],
+  "len": {
+   "mean": 56.076633333331706,
+   "sd": 21.99707128560654,
+   "min": 23.466666666666615,
+   "p10": 36.289999999999225,
+   "p25": 42.99583333333217,
+   "p50": 50.94999999999839,
+   "p75": 61.545833333331124,
+   "p90": 77.82999999999686,
+   "max": 196.56666666671524
+  },
+  "lenHist": [
+   {
+    "lo": 0,
+    "hi": 10,
+    "n": 0
+   },
+   {
+    "lo": 10,
+    "hi": 20,
+    "n": 0
+   },
+   {
+    "lo": 20,
+    "hi": 30,
+    "n": 19
+   },
+   {
+    "lo": 30,
+    "hi": 40,
+    "n": 151
+   },
+   {
+    "lo": 40,
+    "hi": 50,
+    "n": 295
+   },
+   {
+    "lo": 50,
+    "hi": 60,
+    "n": 254
+   },
+   {
+    "lo": 60,
+    "hi": 70,
+    "n": 131
+   },
+   {
+    "lo": 70,
+    "hi": 80,
+    "n": 58
+   },
+   {
+    "lo": 80,
+    "hi": 90,
+    "n": 26
+   },
+   {
+    "lo": 90,
+    "hi": 100,
+    "n": 6
+   },
+   {
+    "lo": 100,
+    "hi": 110,
+    "n": 19
+   },
+   {
+    "lo": 110,
+    "hi": 120,
+    "n": 13
+   },
+   {
+    "lo": 120,
+    "hi": 130,
+    "n": 9
+   },
+   {
+    "lo": 130,
+    "hi": 140,
+    "n": 9
+   },
+   {
+    "lo": 140,
+    "hi": 150,
+    "n": 10
+   }
+  ],
+  "lenWithTail": 59.08163333333185,
+  "civPct": {
+   "mean": 40.31626618628016,
+   "sd": 27.770297893269543,
+   "min": 0,
+   "p10": 7.139114268395071,
+   "p25": 14.176066593542224,
+   "p50": 36.578821966442916,
+   "p75": 62.926301900322265,
+   "p90": 82.24912324443385,
+   "max": 100.00000000000004
+  },
+  "civ90": 0.049,
+  "structs": {
+   "mean": 14.713,
+   "sd": 8.096059361021094,
+   "min": 0,
+   "p10": 6,
+   "p25": 9,
+   "p50": 13,
+   "p75": 18,
+   "p90": 26,
+   "max": 47
+  },
+  "nStructs": 47,
+  "pop0": 425,
+  "craters": {
+   "mean": 227.267,
+   "sd": 126.08048222861059,
+   "min": 12,
+   "p10": 88.9,
+   "p25": 138.75,
+   "p50": 209,
+   "p75": 301,
+   "p90": 393.20000000000005,
+   "max": 858
+  },
+  "launches": {
+   "total": 14458,
+   "counts": {
+    "UPPERCUT": 4833,
+    "SLAM DOWN": 6596,
+    "SMASH ACROSS": 728,
+    "BUILDING SMASH": 2050,
+    "MOUNTAINSIDE": 251
+   },
+   "share": {
+    "UPPERCUT": 0.33427860008299903,
+    "SLAM DOWN": 0.4562180107898741,
+    "SMASH ACROSS": 0.050352745884631345,
+    "BUILDING SMASH": 0.14179001244985476,
+    "MOUNTAINSIDE": 0.017360630792640754
+   }
+  },
+  "beams": {
+   "total": 3714,
+   "perMatch": 3.714,
+   "bio": {
+    "plains": 294,
+    "ocean": 2570,
+    "city": 194,
+    "village": 493,
+    "forest": 40,
+    "mountains": 93,
+    "desert": 30
+   },
+   "variant": {
+    "MERIDIAN SCAR": 294,
+    "HORIZON CLEAVE": 2570,
+    "BOULEVARD RAZE": 687,
+    "FIRESTORM": 40,
+    "RIDGE BORE": 93,
+    "GLASS TRENCH": 30
+   },
+   "outcome": {
+    "CLASH": 1428,
+    "ESCAPE": 155,
+    "DODGE": 469,
+    "HIT": 913,
+    "GUARD": 749
+   },
+   "bioOut": {
+    "plains CLASH": 148,
+    "ocean ESCAPE": 124,
+    "ocean CLASH": 962,
+    "city CLASH": 75,
+    "ocean DODGE": 323,
+    "ocean HIT": 652,
+    "village DODGE": 68,
+    "village HIT": 123,
+    "village CLASH": 188,
+    "ocean GUARD": 509,
+    "village GUARD": 103,
+    "village ESCAPE": 11,
+    "city DODGE": 18,
+    "forest HIT": 15,
+    "city GUARD": 72,
+    "plains HIT": 56,
+    "city HIT": 28,
+    "plains DODGE": 45,
+    "plains GUARD": 39,
+    "mountains CLASH": 33,
+    "desert GUARD": 5,
+    "desert HIT": 11,
+    "mountains HIT": 28,
+    "mountains ESCAPE": 9,
+    "forest ESCAPE": 3,
+    "desert DODGE": 2,
+    "mountains GUARD": 13,
+    "mountains DODGE": 10,
+    "desert ESCAPE": 1,
+    "desert CLASH": 11,
+    "plains ESCAPE": 6,
+    "forest GUARD": 8,
+    "forest CLASH": 11,
+    "city ESCAPE": 1,
+    "forest DODGE": 3
+   },
+   "bySlot": [
+    1738,
+    1976
+   ],
+   "share": {
+    "plains": 0.0791599353796446,
+    "ocean": 0.6919763058696823,
+    "city": 0.052234787291330104,
+    "village": 0.13274098007539042,
+    "forest": 0.010770059235325794,
+    "mountains": 0.025040387722132473,
+    "desert": 0.008077544426494346
+   }
+  },
+  "melee": {
+   "total": 16101,
+   "counts": {
+    "TRADE BLOWS": 3977,
+    "CLASH SHOCKWAVE": 608,
+    "HEAVY CLASH — COUNTERED": 1095,
+    "PURSUIT — TARGET SLIPS AWAY": 1118,
+    "PRESSURE — GUARD HOLDS": 2052,
+    "PURSUIT — CAUGHT": 1094,
+    "DODGE & COUNTER": 2126,
+    "GUARD BREAK": 1320,
+    "DODGE & READ": 1749,
+    "HEAVY CLASH — WON": 894,
+    "CHARGE INTERRUPT": 68
+   }
+  },
+  "attacks": {
+   "total": 19815,
+   "light": 9804,
+   "heavy": 6297,
+   "sig": 3714,
+   "ambush": 61,
+   "ambushPerMatch": 0.061,
+   "ambushShare": 0.003078475902094373,
+   "meleeExchanges": 16101
+  },
+  "parry": {
+   "total": 1478,
+   "perMatch": 1.478,
+   "perMelee": 0.0917955406496491,
+   "bySlot": [
+    772,
+    706
+   ]
+  },
+  "chain": {
+   "total": 3967,
+   "perMatch": 3.967,
+   "perMelee": 0.24638221228495125,
+   "meanLen": 2.406352407360726,
+   "lenHist": {
+    "2": 2616,
+    "3": 1101,
+    "4": 239,
+    "5": 11
+   },
+   "counters": 814
+  },
+  "hide": {
+   "total": 679,
+   "perMatch": 0.679,
+   "matchesWithHide": 0.388,
+   "found": 523,
+   "hiddenSecPerMatch": [
+    2.724421666666601,
+    2.6387499999999258
+   ],
+   "ambushPerHide": 0.0898379970544919
+  },
+  "tiers": [
+   2.291,
+   2.522
+  ],
+  "stanceShare": {
+   "winners": [
+    0.5498205308022989,
+    0.16923905850041354,
+    0.2104854074785794,
+    0.07045500321871064
+   ],
+   "losers": [
+    0.4248503059890607,
+    0.22566646487430517,
+    0.20395946512424334,
+    0.1455237640123905
+   ]
+  },
+  "matrix": {
+   "AGGRESSIVE>AGGRESSIVE light TRADE BLOWS": 2284,
+   "AGGRESSIVE>AGGRESSIVE sig CLASH": 822,
+   "AGGRESSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 336,
+   "AGGRESSIVE>ESCAPE sig ESCAPE": 86,
+   "EVASIVE>AGGRESSIVE light TRADE BLOWS": 906,
+   "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 642,
+   "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 245,
+   "AGGRESSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 417,
+   "AGGRESSIVE>EVASIVE sig DODGE": 259,
+   "AGGRESSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 1152,
+   "DEFENSIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 406,
+   "AGGRESSIVE>ESCAPE sig HIT": 265,
+   "AGGRESSIVE>ESCAPE heavy PURSUIT — CAUGHT": 268,
+   "DEFENSIVE>EVASIVE heavy DODGE & COUNTER": 177,
+   "DEFENSIVE>AGGRESSIVE light TRADE BLOWS": 787,
+   "AGGRESSIVE>DEFENSIVE heavy GUARD BREAK": 737,
+   "AGGRESSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 283,
+   "AGGRESSIVE>EVASIVE light DODGE & COUNTER": 658,
+   "AGGRESSIVE>EVASIVE light DODGE & READ": 731,
+   "EVASIVE>EVASIVE light DODGE & READ": 223,
+   "AGGRESSIVE>EVASIVE heavy DODGE & READ": 379,
+   "AGGRESSIVE>EVASIVE heavy DODGE & COUNTER": 499,
+   "EVASIVE>EVASIVE sig DODGE": 115,
+   "DEFENSIVE>ESCAPE heavy PURSUIT — CAUGHT": 74,
+   "AGGRESSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 523,
+   "DEFENSIVE>ESCAPE light PURSUIT — CAUGHT": 113,
+   "EVASIVE>ESCAPE light PURSUIT — CAUGHT": 139,
+   "EVASIVE>DEFENSIVE heavy GUARD BREAK": 302,
+   "DEFENSIVE>DEFENSIVE heavy GUARD BREAK": 281,
+   "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 183,
+   "AGGRESSIVE>ESCAPE light PURSUIT — CAUGHT": 421,
+   "DEFENSIVE>AGGRESSIVE heavy HEAVY CLASH — COUNTERED": 208,
+   "DEFENSIVE>AGGRESSIVE sig CLASH": 266,
+   "AGGRESSIVE>CHARGING light CHARGE INTERRUPT": 13,
+   "EVASIVE>DEFENSIVE sig GUARD": 156,
+   "DEFENSIVE>EVASIVE light DODGE & COUNTER": 275,
+   "DEFENSIVE>EVASIVE sig DODGE": 95,
+   "EVASIVE>EVASIVE light DODGE & COUNTER": 290,
+   "EVASIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 137,
+   "EVASIVE>DEFENSIVE light PRESSURE — GUARD HOLDS": 494,
+   "EVASIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 145,
+   "EVASIVE>AGGRESSIVE heavy HEAVY CLASH — WON": 188,
+   "DEFENSIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 63,
+   "DEFENSIVE>ESCAPE light PURSUIT — TARGET SLIPS AWAY": 126,
+   "EVASIVE>AGGRESSIVE sig CLASH": 340,
+   "DEFENSIVE>DEFENSIVE sig GUARD": 147,
+   "DEFENSIVE>AGGRESSIVE heavy CLASH SHOCKWAVE": 135,
+   "EVASIVE>EVASIVE heavy DODGE & COUNTER": 227,
+   "DEFENSIVE>EVASIVE light DODGE & READ": 200,
+   "DEFENSIVE>AGGRESSIVE sig HIT": 21,
+   "AGGRESSIVE>EVASIVE sig HIT": 240,
+   "EVASIVE>ESCAPE sig HIT": 53,
+   "EVASIVE>ESCAPE heavy PURSUIT — CAUGHT": 79,
+   "AGGRESSIVE>DEFENSIVE sig GUARD": 446,
+   "EVASIVE>EVASIVE sig HIT": 105,
+   "EVASIVE>EVASIVE heavy DODGE & READ": 127,
+   "DEFENSIVE>EVASIVE sig HIT": 94,
+   "DEFENSIVE>ESCAPE sig ESCAPE": 27,
+   "EVASIVE>ESCAPE heavy PURSUIT — TARGET SLIPS AWAY": 84,
+   "DEFENSIVE>ESCAPE sig HIT": 74,
+   "DEFENSIVE>EVASIVE heavy DODGE & READ": 89,
+   "EVASIVE>CHARGING sig HIT": 3,
+   "DEFENSIVE>CHARGING heavy CHARGE INTERRUPT": 7,
+   "AGGRESSIVE>CHARGING heavy CHARGE INTERRUPT": 17,
+   "AGGRESSIVE>AGGRESSIVE sig HIT": 35,
+   "EVASIVE>CHARGING heavy CHARGE INTERRUPT": 7,
+   "EVASIVE>ESCAPE sig ESCAPE": 42,
+   "AGGRESSIVE>CHARGING sig HIT": 7,
+   "DEFENSIVE>CHARGING sig HIT": 3,
+   "EVASIVE>AGGRESSIVE sig HIT": 13,
+   "DEFENSIVE>CHARGING light CHARGE INTERRUPT": 11,
+   "EVASIVE>CHARGING light CHARGE INTERRUPT": 13
+  },
+  "biomeTime": {
+   "plains": 0.08792865126162151,
+   "city": 0.05821617434408897,
+   "village": 0.15089130914345947,
+   "ocean": 0.6522487953108748,
+   "mountains": 0.029604970298159883,
+   "forest": 0.013097619451956507,
+   "desert": 0.008012480189839492
+  },
+  "seam": {
+   "matchesWithCrossing": 764,
+   "crossings": 4171,
+   "maxDisp": 172.51905917990007
+  },
+  "nan": 0
+ }
+}

@@ -6,7 +6,8 @@ const path = require('path');
 
 function load(opts = {}) {
   const width = opts.width || 1200, height = opts.height || 700;
-  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  // opts.html or the QA_HTML environment variable point at a different prototype file (the qa self-test uses this to run mutated copies).
+  const html = fs.readFileSync(opts.html || process.env.QA_HTML || path.join(__dirname, '..', 'index.html'), 'utf8');
   const code = /<script>([\s\S]*)<\/script>/.exec(html)[1];
 
   let canvas;
@@ -33,11 +34,17 @@ function load(opts = {}) {
     set onclick(f) {}
   });
   const g = global;
-  g.document = { getElementById: id => (id === 'cv' ? canvas : (els[id] = els[id] || mk(id))), createElement: () => mk('x') };
-  g.window = g; g.devicePixelRatio = 1;
-  g.addEventListener = (t, f) => { (listeners[t] = listeners[t] || []).push(f); };
-  g.requestAnimationFrame = () => {};
+  const doc = { getElementById: id => (id === 'cv' ? canvas : (els[id] = els[id] || mk(id))), createElement: () => mk('x') };
+  // The prototype reaches document/window through globals at call time, so with more than one instance loaded in a
+  // process the newest would receive every instance's feed. bind() points the globals back at this instance.
+  const bind = () => {
+    g.document = doc;
+    g.window = g; g.devicePixelRatio = 1;
+    g.addEventListener = (t, f) => { (listeners[t] = listeners[t] || []).push(f); };
+    g.requestAnimationFrame = () => {};
+  };
+  bind();
   new Function(code)();
-  return { wf: g.__wf, canvas, feedLog, listeners };
+  return { wf: g.__wf, canvas, feedLog, listeners, bind };
 }
 module.exports = { load };

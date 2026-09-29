@@ -202,8 +202,9 @@ function mkF(def, x, keys, ai){
     rush:null,rot:0,spin:0,bounces:0,launchBy:null,lastAtkT:-99,hurtT:-99,keys,ai:ai?{t:0.5,atk:1.2,sT:0,sOff:0}:null,beamCharge:null,wet:false,lastSeen:null,ambushUntil:0,
     in:{mx:0,my:0,dash:false,charge:false,light:false,heavy:false,sig:false,stance:-1}};
 }
-function newMatch(){
-  game.seed = (Date.now() & 0xffffff) | 1;
+function newMatch(seed){
+  // Optional integer seed makes the match reproducible (QA harness, replays). No seed keeps the time-based behaviour.
+  game.seed = Number.isInteger(seed) ? seed >>> 0 : (Date.now() & 0xffffff) | 1;
   rng = mulberry32(game.seed);
   genWorld();
   const p1ai = fighters.length ? !!fighters[0].ai : true, p2ai = fighters.length ? !!fighters[1].ai : true;

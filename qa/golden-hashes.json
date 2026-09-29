@@ -1,0 +1,17 @@
+{
+  "node": "v24.19.0",
+  "note": "Result hashes of fixed seeds. Regenerate with: node qa/run-all.js --update-golden",
+  "entries": {
+    "default:1": "7d69f4a96c785ee3",
+    "default:2": "4af98da2c9838662",
+    "default:3": "81ed901dd97a1def",
+    "default:4": "31785900f9cd7979",
+    "default:5": "6094e21199757c0b",
+    "default:6": "32d5b881833f531f",
+    "default:7": "0051c50af8123bb3",
+    "default:8": "a78243885b4a630d",
+    "swap:1": "65e9377623a45e69",
+    "mirror-villain:1": "4a976fa8c1af1eae",
+    "mirror-hero:1": "f3ec80361934b7b0"
+  }
+}
