@@ -73,4 +73,8 @@ More characters must be addable after launch (see the Modding and Extensibility 
 | Token plan | Approved (ADR 0005) |
 | Lemming Ball Z provenance | Unknown; nothing carries over |
 | Feel reference | A well-known series of flash action animations (named in .private/) for its choreography and brutality |
-| Title | Orb dislikes "Skyburden" and likes the direction of "Skyburners"; Narrative pitches more |
+| Title | Orb dislikes "Skyburden" and liked the direction of "Skyburners" (screened out: a Destiny faction). Round 2 sounded machine-made to Orb; round 3 aims for names a person would pick |
+| Engine | Godot 4.7 with GDScript (ADR 0001, confirmed 2026-09-29) |
+| README line | "A free, open-source fighting game about wrecking a planet. No combo lists: pick a stance and the game choreographs the exchange. Inspired by the classic anime energy-brawlers." (Orb's blend; final wording waits on the licence) |
+| Repo visibility | Stays public so Orb can share the prototype with friends |
+| Licence | Undecided: Orb may want to keep commercial rights. Options in the EP's 2026-09-29 chat: open code with protected art; everything non-commercial; or MIT plus CC BY as now |
