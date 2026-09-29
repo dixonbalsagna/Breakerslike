@@ -8,7 +8,7 @@ extends SceneTree
 ## mirror-hero, and each with -flip. Statistics come from the feed lines, as in QA's match runner.
 ## Exit code 1 on a NaN or a fighter outside [0, W).
 
-const MAX_STEPS: int = 18000   # 300 sim-seconds, the prototype tools' cap
+const MAX_STEPS: int = 43200   # 12 sim-minutes (wounds-plan S2: spec-wounds §5 test 3, p99)
 const KO_TAIL: float = 3.0
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 

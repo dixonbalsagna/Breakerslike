@@ -234,6 +234,8 @@ func consume(S: SimState, events: Array) -> void:
 				_stepParts(S, dt * 0.1 if frozen else dt)
 			"region_stage", "region_broken", "brink_enter", "brink_exit", "tier_up", "hide_start", "found", "ko":
 				pass   # wound readouts are the renderer's and UI's (crown, cards); nothing to spawn here
+			"decisive", "finisher_start", "finisher_contest", "attack", "parry", "chain_end", "ambush", "lock_lost", "launch_plan", "window_open", "clash_draw", "hazard_telegraph", "searching", "danger", "launch", "rush":
+				pass   # wound readouts are the renderer's and UI's (crown, cards); nothing to spawn here
 			_:
 				push_error("consume: unknown event " + e.type)
 	if not frozen and banner != null:

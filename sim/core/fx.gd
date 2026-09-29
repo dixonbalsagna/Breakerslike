@@ -171,6 +171,107 @@ static func ko(S: SimState, winner, loser) -> void:
 	e.winner = float(S.fighters.find(winner)); e.loser = float(S.fighters.find(loser))
 
 
+# ---------------------------------------------------------------- director events (Encounter, S2)
+# Structured events for the Wounds ending, QA-004's director feed lines, Art's head flashes and UI. Slots are fighter indices.
+
+## A decisive exchange was won (spec-wounds.md §1). kind: launch, clash, guard_break, interrupt, beam or beam_clash.
+static func decisive(S: SimState, winner, loser, why: String) -> void:
+	var e := _ev(S, "decisive")
+	e.winner = float(S.fighters.find(winner)); e.loser = float(S.fighters.find(loser)); e.kind = why
+
+
+static func finisherStart(S: SimState, f, target) -> void:
+	var e := _ev(S, "finisher_start")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target))
+
+
+## The fighter on the brink rolled against the finisher: the chance to survive, and whether he did.
+static func finisherContest(S: SimState, target, chance: float, survived: bool) -> void:
+	var e := _ev(S, "finisher_contest")
+	e.target = float(S.fighters.find(target)); e.chance = chance; e.survived = survived
+
+
+## An attack request the director accepted: the kind (light, heavy, sig), the defender's stance, the template tag.
+static func attack(S: SimState, f, target, kind: String, defStance: String, template: String, ambush: bool) -> void:
+	var e := _ev(S, "attack")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.kind = kind
+	e.defStance = defStance; e.template = template; e.ambush = ambush
+
+
+## actor parried target's strike.
+static func parry(S: SimState, f, target) -> void:
+	var e := _ev(S, "parry")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target))
+
+
+## A chain of n linked exchanges ended.
+static func chainEnd(S: SimState, f, n: int) -> void:
+	var e := _ev(S, "chain_end")
+	e.actor = float(S.fighters.find(f)); e.n = n
+
+
+## An ambush attack from cover began.
+static func ambush(S: SimState, f, target) -> void:
+	var e := _ev(S, "ambush")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target))
+
+
+## actor tried to attack target, who is hidden: no lock-on.
+static func lockLost(S: SimState, f, target) -> void:
+	var e := _ev(S, "lock_lost")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target))
+
+
+## A launch decision: every candidate as "NAME score", joined with "|", and the chosen one (NONE for a shove).
+static func launchPlan(S: SimState, f, target, candidates: String, chosen: String) -> void:
+	var e := _ev(S, "launch_plan")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.text = candidates; e.chosen = chosen
+
+
+## A parry or chain window really opened for actor (the fighter who can press), lasting dur seconds.
+static func windowOpen(S: SimState, f, kind: String, dur: float) -> void:
+	var e := _ev(S, "window_open")
+	e.actor = float(S.fighters.find(f)); e.kind = kind; e.dur = dur
+
+
+## A clash ended in a draw (the heavy-clash shockwave; later a blocked finisher).
+static func clashDraw(S: SimState, a, b) -> void:
+	var e := _ev(S, "clash_draw")
+	e.actor = float(S.fighters.find(a)); e.target = float(S.fighters.find(b))
+
+
+## The world is about to hit actor. source: brunt (a launch into a building) from the director; World adds collapse,
+## landslide and lava. eta in seconds (0 when unknown); x where it will hit.
+static func hazardTelegraph(S: SimState, f, source: String, eta: float, x: float) -> void:
+	var e := _ev(S, "hazard_telegraph")
+	e.actor = float(S.fighters.find(f)); e.source = source; e.eta = eta; e.x = x
+
+
+## actor is searching for a hidden target around x (lock lost, or a hunt sweep).
+static func searching(S: SimState, f, target, x: float) -> void:
+	var e := _ev(S, "searching")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.x = x
+
+
+## Camera: actor was launched by target at speed amount, horizontally toward face (+1 or -1).
+static func launch(S: SimState, f, by, speed: float, dir: float) -> void:
+	var e := _ev(S, "launch")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(by)) if by != null else -1.0
+	e.amount = speed; e.face = dir
+
+
+## Camera: actor rushes to target, arriving at tick n.
+static func rush(S: SimState, f, target, endTick: int) -> void:
+	var e := _ev(S, "rush")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)) if target != null else -1.0; e.n = endTick
+
+
+## Danger sense: actor is about to be hit. source windup: a parryable strike is winding up; ambush: an ambush is on him.
+static func danger(S: SimState, f, source: String, eta: float) -> void:
+	var e := _ev(S, "danger")
+	e.actor = float(S.fighters.find(f)); e.source = source; e.eta = eta
+
+
 ## End of the sim's part of a tick: where the prototype stepped its particles (dt, or dt*0.1 during hit-stop).
 static func tickMark(S: SimState, dt: float, frozen: bool) -> void:
 	var e := _ev(S, "tick")

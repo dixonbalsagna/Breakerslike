@@ -175,7 +175,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 	if nt > f.tier:
 		f.tier = nt
 		tierUp(S, f)
-	var regen: float = 5.0 + (25.0 if f.hidden else 0.0)
+	var regen: float = 5.0 + (25.0 if f.hidden and f.canHide else 0.0)
 	if f.role == "villain":
 		regen += f.menace * 0.03
 	else:
@@ -193,7 +193,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 	f.casSeen = S.world.casualties
 	if f.state == "free" or f.state == "locked" or f.state == "down":
 		f.ki = SimMathx.jmin(100.0, f.ki + regen * dt)
-	if f.hidden:
+	if f.hidden and f.canHide:
 		f.hp = SimMathx.jmin(f.maxhp, f.hp + 40.0 * dt)
 	SimWounds.step(S, f)   # wound recovery (wounds.gd)
 	if f.state != "launched":

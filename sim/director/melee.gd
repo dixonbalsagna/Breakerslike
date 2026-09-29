@@ -83,7 +83,7 @@ static func planMelee(S: SimState, ex) -> void:
 			_strike(ex, t, "A", "D", 45.0, {"kb": 150.0})
 			_strike(ex, t + 0.2, "A", "D", 45.0, {"kb": 150.0, "noParry": true})
 			DirExchange.schedule(ex, t + 0.4, "guardBreak")
-			_strike(ex, t + 0.42, "A", "D", base * 1.15, {"noParry": true, "ignoreStance": true, "stop": 0.12, "shake": 12.0, "big": true})
+			_strike(ex, t + 0.42, "A", "D", base * 1.15, {"noParry": true, "ignoreStance": true, "stop": 0.12, "shake": 12.0, "big": true, "kind": "guard_break"})
 			_launch(ex, t + 0.46, 1700.0)
 			DirExchange.schedule(ex, t + 0.72, "window")
 		return
@@ -127,13 +127,19 @@ static func planMelee(S: SimState, ex) -> void:
 
 ## melee.js sc(f, o) for TRADE BLOWS: one draw per call.
 static func _trade(S: SimState, f, o) -> float:
-	return f.tier + f.ki / 70.0 + S.rng.range_(0.0, 1.6) + (0.3 if f.hp > o.hp else 0.0)
+	return f.tier + f.ki / 70.0 + S.rng.range_(0.0, 1.6) + (0.3 if SimWounds.vitality(f) > SimWounds.vitality(o) else 0.0)
 
 
 ## Beat "wind": the parry window opens; an AI defender may time a parry press.
 static func opWind(S: SimState, ex, _args) -> void:
 	var D = ex.D
 	ex.windowStart = S.T
+	# The window is real only if a parryable strike by the attacker follows; its length is the time until that strike.
+	for b in ex.beats:
+		if not b.done and b.op == "strike" and b.args.a == "A" and (b.args.o == null or not b.args.o.get("noParry", false)):
+			SimFx.windowOpen(S, D, "parry", b.t - ex.t)
+			SimFx.danger(S, D, "windup", b.t - ex.t)
+			break
 	if D.ai != null and S.rng.next() < (0.5 if D.stance == 1.0 else (0.3 if D.stance == 0.0 else 0.12)):
 		DirExchange.schedule(ex, ex.t + S.rng.range_(0.05, 0.16), "press", {"who": "D"})
 
@@ -175,6 +181,7 @@ static func opGuardBreak(S: SimState, ex, _args) -> void:
 static func clashWave(S: SimState, ex) -> void:
 	var A = ex.A
 	var D = ex.D
+	SimFx.clashDraw(S, A, D)
 	var mx: float = SimWrap.wrap(A.x + SimWrap.sdx(A.x, D.x) / 2.0)
 	var my: float = (A.y + D.y) / 2.0 + 34.0
 	SimFx.ring(S, mx, my, 1400.0, "#ffffff", 0.6, 20.0)
@@ -192,10 +199,14 @@ static func clashWave(S: SimState, ex) -> void:
 	SimFx.shake(S, 18.0)
 
 
+const BREAK_LAUNCH_AT: float = 0.1   # the break launch follows the breaking strike after this
+const BREAK_FORCE: float = 2400.0    # ... with this template force (the planner scales long hauls)
+
+
 static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 	if o == null:
 		o = {}
-	if ex.cancel or S.game.ko != null or d.hp <= 0.0 or a.hp <= 0.0:
+	if ex.cancel or S.game.ko != null:
 		return
 	a.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(a.x, d.x)), a.face)
 	if a == ex.A and not o.get("noParry", false) and ex.windowStart >= 0.0 and d.lastAtkT >= ex.windowStart:
@@ -206,28 +217,63 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 		a.vx = -a.face * 520.0
 		d.ki = SimMathx.jmin(100.0, d.ki + 8.0)
 		SimEvents.feed(S, d.name + " PARRIES", "Timed the wind-up. Rest of the exchange cancelled.")
+		SimFx.parry(S, d, a)
 		return
 	if d.state == "launched" or d.state == "down":
 		d.state = "locked"
 		d.vx *= 0.1
 		d.vy *= 0.1
+	var brokenBefore: int = _broken(d)
 	SimDamage.hit(S, ex, a, d, dmg, o)
 	d.vx += a.face * SimDamage.jor(o.get("kb", 0.0), 220.0)
+	if _broken(d) > brokenBefore and not DirExchange.finisherPlanned(ex):
+		_breakChapter(S, ex, a, d)
 
 
-static func launchBeat(S: SimState, ex, att, tgt, force: float) -> void:
-	if ex.cancel or S.game.ko != null or tgt.hp <= 0.0:
+## Regions of f at the broken stage.
+static func _broken(f) -> int:
+	var n: int = 0
+	for st in f.stage:
+		if st == 3:
+			n += 1
+	return n
+
+
+## Breaks are chapters (spec-wounds.md §1): the strike that breaks a region ends the exchange with a break launch, long
+## by rule (the planner's long-haul candidates only). The exchange's own pending launches and chain window are dropped.
+static func _breakChapter(S: SimState, ex, a, d) -> void:
+	for b in ex.beats:
+		if not b.done and (b.op == "launch" or b.op == "window"):
+			b.done = true
+	ex.ext = null
+	DirExchange.schedule(ex, ex.t + BREAK_LAUNCH_AT, "breakLaunch", {"w": "A" if a == ex.A else "D", "force": BREAK_FORCE})
+
+
+## longOnly: a break or finisher launch, chosen among the long-haul candidates only (no "no launch").
+static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool = false) -> void:
+	if ex.cancel or S.game.ko != null:
 		return
-	var r: Dictionary = DirLaunch.chooseLaunch(S, att, tgt, force)
+	var r: Dictionary = DirLaunch.chooseLaunch(S, att, tgt, force, longOnly)
 	var parts: PackedStringArray = []
 	for k in r.top:
 		parts.append(k.name + " " + SimMathx.jstr(SimMathx.jround(k.s)))
+	var all: PackedStringArray = []
+	for k in r.all:
+		all.append(k.name + " " + SimMathx.jstr(SimMathx.jround(k.s)))
+	SimFx.launchPlan(S, att, tgt, "|".join(all), r.best.name)
 	if r.best.name == "NONE":
 		# Nothing scored above holding back: the strike shoves the target instead of launching it.
 		DirLaunch.knockBack(S, att, tgt)
 		SimEvents.feed(S, "NO LAUNCH", "  |  ".join(parts))
+		# A shove is decisive only when the exchange meets another clause: a heavy clash won, a GUARD BREAK, or a
+		# CHARGE INTERRUPT (it stops a fill).
+		if ex.tag.begins_with("HEAVY CLASH") or ex.tag == "GUARD BREAK" or ex.tag == "CHARGE INTERRUPT":
+			DirExchange.decisive(S, ex, att, tgt, "clash" if ex.tag.begins_with("HEAVY CLASH") else ("guard_break" if ex.tag == "GUARD BREAK" else "interrupt"))
 		return
 	DirLaunch.doLaunch(S, att, tgt, r.best, force)
+	if r.best.has("p") and r.best.p.get("building", false):
+		SimFx.hazardTelegraph(S, tgt, "brunt", r.best.p.t, r.best.p.x)
 	S.dirS.lastLaunch2 = S.dirS.lastLaunch
 	S.dirS.lastLaunch = r.best.name
 	SimEvents.feed(S, "LAUNCH: " + r.best.name, "  |  ".join(parts))
+	DirExchange.decisive(S, ex, att, tgt, "launch")

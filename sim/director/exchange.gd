@@ -33,7 +33,7 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	var D = SimRoster.opp(S, A)
 	if A.state != "free" and A.state != "charging":
 		return
-	if D.state == "launched" or D.state == "locked" or D.hp <= 0.0:
+	if D.state == "launched" or D.state == "locked":
 		return
 	if kind == "sig" and A.ki < 45.0:
 		if A.ai == null:
@@ -46,11 +46,16 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 		S.dirS.cool = 0.5
 		if A.ai == null:
 			SimFx.banner(S, "LOCK LOST — TARGET HIDDEN", "#9fb4ff", 0.9)
+		SimFx.lockLost(S, A, D)
+		SimFx.searching(S, A, D, D.lastSeen.x if D.lastSeen != null else D.x)
 		return
 	if A.hidden:
-		A.hidden = false
-		if A.hiddenFor > 1.8:
-			A.ambushUntil = S.T + 1.0
+		if A.canHide:
+			A.hidden = false
+			if A.hiddenFor > 1.8:
+				A.ambushUntil = S.T + 1.0
+		else:
+			SimHiding.regainLock(S, A)   # the target attacking brings the lock back (spec-wounds.md §1c)
 	if S.T < A.ambushUntil:
 		A.ambush = true
 		A.ambushUntil = 0.0
@@ -62,6 +67,8 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	if kind == "sig":
 		A.ki -= 45.0
 	var ex := newEx(A, D, kind)
+	A.exT = S.T
+	D.exT = S.T
 	A.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(A.x, D.x)), A.face)
 	D.face = -A.face
 	var dState: String = D.state
@@ -75,6 +82,10 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 		DirMelee.planMelee(S, ex)
 	var stanceLabel: String = "CHARGING" if dState == "charging" else STN[int(D.stance)]
 	SimEvents.feed(S, A.name + " " + kind.to_upper() + " vs " + stanceLabel, ex.tag + ("  (ambush)" if A.ambush else ""))
+	SimFx.attack(S, A, D, kind, stanceLabel, ex.tag, A.ambush)
+	if A.ambush:
+		SimFx.ambush(S, A, D)
+		SimFx.danger(S, D, "ambush", 0.0)
 
 
 ## Runs one beat (module-spec section 4). Fighters are read from ex when the beat runs.
@@ -89,6 +100,7 @@ static func runBeat(S: SimState, ex, b) -> void:
 			r.off = -A.face * a.off
 			r.end = S.T + a.dur
 			A.rush = r
+			SimFx.rush(S, A, D, S.tick + int(a.dur / SimConst.DT))
 		"wind":
 			DirMelee.opWind(S, ex, a)
 		"press":
@@ -124,6 +136,20 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirBeam.opBeamEscape(S, ex, a)
 		"clashResolve":
 			DirBeam.opClashResolve(S, ex, a)
+		"finisher":
+			_opFinisher(S, ex, a)
+		"finRush":
+			var fw = A if a.w == "A" else D
+			var fr := SimState.Rush.new()
+			fr.tgt = D if a.w == "A" else A
+			fr.off = -fw.face * a.off
+			fr.end = S.T + a.dur
+			fw.rush = fr
+			SimFx.rush(S, fw, fr.tgt, S.tick + int(a.dur / SimConst.DT))
+		"breakLaunch":
+			DirMelee.launchBeat(S, ex, A if a.w == "A" else D, D if a.w == "A" else A, a.force, true)
+		"contest":
+			_opContest(S, ex, a)
 		_:
 			push_error("runBeat: unknown op " + b.op)
 
@@ -140,6 +166,7 @@ static func openWindow(S: SimState, ex) -> void:
 	e.start = S.T
 	e.until = S.T + 0.6
 	ex.ext = e
+	SimFx.windowOpen(S, ex.A, "chain", 0.6)
 	if ex.A.ai != null and S.rng.next() < SimMathx.jclamp(0.62 - 0.14 * ex.combo, 0.05, 0.6):
 		schedule(ex, ex.t + S.rng.range_(0.12, 0.35), "press", {"who": "A"})
 
@@ -170,6 +197,9 @@ static func endEx(S: SimState, ex) -> void:
 	S.game.clash = null
 	if ex.combo > 1.0:
 		SimEvents.feed(S, "CHAIN x" + SimMathx.jstr(ex.combo) + " ended", ex.A.name + " landed " + SimMathx.jstr(ex.combo) + " linked exchanges")
+		SimFx.chainEnd(S, ex.A, int(ex.combo))
+	ex.A.exT = S.T
+	ex.D.exT = S.T
 	S.dirS.ex = null
 	S.dirS.cool = cooldownAfter(ex)
 
@@ -204,7 +234,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	if ex.ext != null and S.T < ex.ext.until:
 		var A = ex.A
 		var inReach: bool = not (ex.D.state == "launched" and absf(SimWrap.sdx(A.x, ex.D.x)) > CHAIN_REACH)
-		if A.lastAtkT >= ex.ext.start and ex.combo < 5.0 and A.ki >= 6.0 and A.hp > 0.0 and ex.D.hp > 0.0 and inReach:
+		if A.lastAtkT >= ex.ext.start and ex.combo < 5.0 and A.ki >= 6.0 and inReach:
 			chain(S, ex)
 	var pending: bool = false
 	for b in ex.beats:
@@ -213,3 +243,80 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 			break
 	if not pending and not (ex.ext != null and S.T < ex.ext.until):
 		endEx(S, ex)
+
+
+# ---------------------------------------------------------------- decisive exchanges and finishers (S2)
+# spec-wounds.md §1: a decisive exchange ends with the loser launched (however the launch lands), a heavy or beam clash
+# won, or a GUARD BREAK. A "no launch" shove is not decisive unless the exchange also meets another clause. When the
+# opponent of a fighter on the brink wins a decisive exchange, the winner's finisher replaces the normal ending, and the
+# fighter on the brink survives it on a contest roll. A KO happens only there.
+# The finisher below is a placeholder set piece until Combat's finisher templates arrive as data.
+
+const FIN_RUSH: float = 0.35         # the winner closes in
+const FIN_HIT1: Array = [0.4, 40.0]  # [time, damage] of the first finishing strike
+const FIN_HIT2: Array = [0.75, 55.0] # ... and the second
+const FIN_LAUNCH: Array = [0.8, 2600.0]   # [time, force] of the break launch (long, planner's long-haul candidates)
+const FIN_CONTEST: float = 1.6       # the contest resolves while the loser flies
+const FIN_END: float = 2.1
+const CONTEST_BASE: float = 0.30     # survival chance
+const CONTEST_TILT_AT: float = 480.0 # ... minus CONTEST_TILT per minute past 8:00 of match time, floor 0
+const CONTEST_TILT: float = 0.10
+
+
+## W won a decisive exchange against L (why: launch, clash, guard_break, beam, beam_clash).
+static func decisive(S: SimState, ex, W, L, why: String) -> void:
+	if S.game.ko != null or ex == null:
+		return
+	SimFx.decisive(S, W, L, why)
+	if L.brink and not finisherPlanned(ex):
+		startFinisher(S, ex, W, L)
+
+
+static func finisherPlanned(ex) -> bool:
+	for b in ex.beats:
+		if b.op == "finisher":
+			return true
+	return false
+
+
+## The finisher replaces the rest of the exchange: pending beats are dropped and the chain window closes.
+static func startFinisher(S: SimState, ex, W, L) -> void:
+	for b in ex.beats:
+		if not b.done:
+			b.done = true
+	ex.ext = null
+	var w: String = "A" if W == ex.A else "D"
+	var ld: String = "D" if w == "A" else "A"
+	var t: float = ex.t
+	schedule(ex, t, "finisher", {"w": w})
+	schedule(ex, t, "finRush", {"w": w, "off": 60.0, "dur": FIN_RUSH})
+	var o := {"noParry": true, "ignoreStance": true, "big": true}
+	schedule(ex, t + FIN_HIT1[0], "strike", {"a": w, "d": ld, "dmg": FIN_HIT1[1], "o": o})
+	schedule(ex, t + FIN_HIT2[0], "strike", {"a": w, "d": ld, "dmg": FIN_HIT2[1], "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.12, "shake": 14.0}})
+	schedule(ex, t + FIN_LAUNCH[0], "breakLaunch", {"w": w, "force": FIN_LAUNCH[1]})
+	schedule(ex, t + FIN_CONTEST, "contest", {"w": w})
+	schedule(ex, t + FIN_END, "nop")
+
+
+static func _opFinisher(S: SimState, ex, a) -> void:
+	var W = ex.A if a.w == "A" else ex.D
+	var L = ex.D if a.w == "A" else ex.A
+	W.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(W.x, L.x)), W.face)
+	SimFx.banner(S, "FINISHER", W.aura, 1.2)
+	SimFx.finisherStart(S, W, L)
+	SimEvents.feed(S, W.name + " FINISHER", L.name + " is on the brink")
+
+
+## The contest roll (one S.rng draw): survive with CONTEST_BASE, less CONTEST_TILT per minute past CONTEST_TILT_AT.
+static func _opContest(S: SimState, ex, a) -> void:
+	var W = ex.A if a.w == "A" else ex.D
+	var L = ex.D if a.w == "A" else ex.A
+	var late: float = SimMathx.jmax(0.0, (S.T - CONTEST_TILT_AT) / 60.0)
+	var chance: float = SimMathx.jmax(0.0, CONTEST_BASE - CONTEST_TILT * late)
+	var survived: bool = S.rng.next() < chance
+	SimFx.finisherContest(S, L, chance, survived)
+	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")
+	if survived:
+		SimFx.banner(S, L.name + " HOLDS ON", L.aura, 1.2)
+	else:
+		SimDamage.ko(S, L, W)

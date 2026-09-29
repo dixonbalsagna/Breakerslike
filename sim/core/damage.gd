@@ -18,7 +18,8 @@ static func jor(v: float, d: float) -> float:
 ## fam: the wounds hit family (wounds.gd family()); kind, col and number describe the damage event. The defaults are a
 ## landing or collision: spread over the body, kind "impact", no damage number.
 static func hurt(S: SimState, f, amt: float, by, fam: String = "spread", kind: String = "impact", col: String = "", number: bool = false) -> void:
-	f.hp -= amt
+	# Since S2 hp is a readout only (the HUD bar): it floors at 0, and wounds and finishers decide the match.
+	f.hp = f.hp - amt if SimWounds.HP_ENDS_MATCH else SimMathx.jmax(0.0, f.hp - amt)
 	f.hurtT = S.T
 	var region: int = SimWounds.pickRegion(S, f, fam) if amt > 0.0 else -1
 	SimFx.damage(S, f, by, amt, SimWounds.REGIONS[region] if region >= 0 else "", kind, col, number)
@@ -37,7 +38,8 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	if A.role == "villain":
 		m *= 1.0 + MENACE_DMG_CAP * (A.menace / 100.0)
 	else:
-		m *= 1.0 + 0.5 * SimDetMath.pow(1.0 - A.hp / A.maxhp, 2.0)
+		# Comeback: stronger the closer the hero is to the brink (S2: wounds replace hp / maxhp).
+		m *= 1.0 + 0.5 * SimDetMath.pow(1.0 - SimWounds.vitality(A), 2.0)
 	# Composure (balance-targets.md section 9, S0 fallback): the hero hits harder while collateral has not rattled him.
 	if A.role == "hero" and A.anguish < COMPOSURE_ANGUISH:
 		m *= 1.0 + COMPOSURE_BONUS
@@ -61,7 +63,7 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, jor(o.get("stop", 0.0), 0.05))
 	SimFx.shake(S, jor(o.get("shake", 0.0), 6.0))
 	var fam: String = SimWounds.family(ex, D, o)
-	var kind: String = "guard" if fam == "guard" else ("beam" if ex != null and ex.kind == "sig" else ("heavy" if ex != null and ex.kind == "heavy" else "light"))
+	var kind: String = o.get("kind", "") if o.get("kind", "") != "" else ("guard" if fam == "guard" else ("beam" if ex != null and ex.kind == "sig" else ("heavy" if ex != null and ex.kind == "heavy" else "light")))
 	hurt(S, D, dd, A, fam, kind, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff", true)
 	return dd
 

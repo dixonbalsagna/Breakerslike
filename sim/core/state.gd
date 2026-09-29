@@ -179,6 +179,16 @@ class FxEvent:
 	var stage: int = 0            # wounds: 0 fresh, 1 bruised, 2 battered, 3 broken
 	var owner: float = -1.0      # crater and scorch: firing fighter's slot, or -1
 	var x1: float = 0.0          # slide: where it ended
+	# Director events (Encounter, S2; docs/architecture/fx-events.md):
+	var target: float = -1.0     # the other fighter's slot (finisher, attack, parry, ambush, lock_lost, launch_plan, clash_draw, searching)
+	var chance: float = 0.0      # finisher_contest: the survival chance
+	var survived: bool = false   # finisher_contest
+	var defStance: String = ""   # attack: the defender's stance, or CHARGING
+	var template: String = ""    # attack: the exchange's template tag
+	var ambush: bool = false     # attack: an ambush attack
+	var chosen: String = ""      # launch_plan: the chosen launch, NONE for a shove
+	var source: String = ""      # hazard_telegraph, danger: what is coming (brunt, windup, ambush; World adds collapse, landslide, lava)
+	var eta: float = 0.0         # hazard_telegraph, danger: seconds until it lands, 0 when unknown
 
 
 class Fighter:
@@ -239,6 +249,9 @@ class Fighter:
 	var ambushUntil: float = 0.0
 	var input := SimIntent.new()   # JS f.in (in is a GDScript keyword)
 	var dPrev = null         # String or null
+	var canHide: bool = false    # S2: the old hiding kit (recovery, ambush) is for a future stealth fighter only
+	var lockBackT: float = -99.0 # S2 lock-break: when the opponent last regained lock on this fighter
+	var exT: float = 0.0         # S2: when this fighter was last in an exchange (second breath counts from here)
 
 
 ## A rush toward a fighter ({tgt, off, end}) or toward a point ({px, py, end}).

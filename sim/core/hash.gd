@@ -5,7 +5,8 @@ class_name SimHash
 const MASK: int = 0xFFFFFFFF
 const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName", "hp", "x", "y", "vx", "vy", "face", "ki", "power", "tier", "stance", "state", "stateT",
 	"hidden", "hideT", "hiddenFor", "menace", "anguish", "ambush", "rot", "spin", "bounces", "lastAtkT", "hurtT", "keys", "beamCharge", "wet", "ambushUntil", "dPrev",
-	"menaceSeen", "menaceQuiet", "casSeen", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc"]
+	"menaceSeen", "menaceQuiet", "casSeen", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc",
+	"canHide", "lockBackT", "exT"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive"]
 const TREE: Array = ["x", "h", "alive", "burn"]
@@ -220,6 +221,12 @@ const FX_FIELDS: Dictionary = {
 	"shake": ["k"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
+	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target"], "finisher_contest": ["target", "chance", "survived"],
+	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],
+	"ambush": ["actor", "target"], "lock_lost": ["actor", "target"], "launch_plan": ["actor", "target", "text", "chosen"],
+	"window_open": ["actor", "kind", "dur"], "clash_draw": ["actor", "target"], "hazard_telegraph": ["actor", "source", "eta", "x"],
+	"searching": ["actor", "target", "x"], "danger": ["actor", "source", "eta"],
+	"launch": ["actor", "target", "amount", "face"], "rush": ["actor", "target", "n"],
 }
 
 

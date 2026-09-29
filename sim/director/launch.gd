@@ -34,7 +34,7 @@ const MOUNTAIN_REACH: float = 1560.0 * SimConst.WS # ... and the farthest slope 
 const OPEN_POP: float = 0.2         # popNear(landing, CARE_R) at or below this is open ground
 const NEW_BIOME_W: float = 10.0     # predicted landing in a different biome that is not ocean
 const WATER_W: float = 45.0         # predicted landing in the sea
-const NONE_BASE: float = 23.0       # "no launch"
+const NONE_BASE: float = 25.0       # "no launch"
 const ACROSS_UY: float = 0.32       # SMASH ACROSS arc
 const ACROSS_FORCE: float = 2.0     # SMASH ACROSS force multiplier
 const KNOCKBACK: float = 700.0      # push when no launch is chosen
@@ -43,15 +43,19 @@ const PREDICT_STEPS: int = 240      # flight predictor horizon: 4 s at the fixed
 
 
 ## force is the template's launch force; the prediction uses it with the tier scaling doLaunch applies.
-static func chooseLaunch(S: SimState, A, D, force: float) -> Dictionary:
+## longOnly (break and finisher launches, spec-wounds.md §1): only the long-haul candidates (SMASH ACROSS, BUILDING SMASH,
+## MOUNTAINSIDE), SMASH ACROSS always offered, and no "no launch".
+static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false) -> Dictionary:
 	var g: float = WorldTerrain.groundY(S, D.x)
 	var alt: float = D.y - g
 	var bio: String = WorldBiomes.biomeAt(D.x)
 	var f: float = A.face
 	var c: Array = []
-	c.append({"name": "UPPERCUT", "ux": 0.25 * f, "uy": 1.0, "s": 10.0 + (12.0 if alt < 120.0 else 0.0)})
-	c.append({"name": "SLAM DOWN", "ux": 0.2 * f, "uy": -1.25, "s": (18.0 if alt > 140.0 else 0.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})
-	c.append({"name": "SMASH ACROSS", "ux": f, "uy": ACROSS_UY, "fm": ACROSS_FORCE, "s": 18.0})
+	if not longOnly:
+		c.append({"name": "UPPERCUT", "ux": 0.25 * f, "uy": 1.0, "s": 10.0 + (12.0 if alt < 120.0 else 0.0)})
+	if not longOnly:
+		c.append({"name": "SLAM DOWN", "ux": 0.2 * f, "uy": -1.25, "s": (18.0 if alt > 140.0 else 0.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})
+	c.append({"name": "SMASH ACROSS", "ux": f, "uy": ACROSS_UY, "fm": ACROSS_FORCE, "s": 8.0})
 	for sign in [-1.0, 1.0]:
 		var nb = WorldStructures.nearestBuilding(S, D.x, sign, 1100.0 * SimConst.WS, D.y)
 		if nb != null:
@@ -63,7 +67,8 @@ static func chooseLaunch(S: SimState, A, D, force: float) -> Dictionary:
 				c.append({"name": "MOUNTAINSIDE", "ux": sign, "uy": 0.05, "s": 24.0, "land": D.x + sign * md})
 				break
 			md += MOUNTAIN_STEP
-	c.append({"name": "NONE", "ux": 0.0, "uy": 0.0, "s": NONE_BASE})
+	if not longOnly:
+		c.append({"name": "NONE", "ux": 0.0, "uy": 0.0, "s": NONE_BASE})
 	var tierF: float = 1.0 + 0.16 * (A.tier - 1.0)
 	for k in c:
 		k.s += S.rng.range_(0.0, NOISE)
@@ -78,9 +83,10 @@ static func chooseLaunch(S: SimState, A, D, force: float) -> Dictionary:
 			fm = SimMathx.jmin(HAUL_FM_MAX, fm * sqrt(HAUL_TARGET / SimMathx.jmax(p.travel, 1.0)))
 			k.fm = fm
 			p = predictFlight(S, D.x, D.y, WorldSlide.launchVX(k.ux, k.uy, force * fm * tierF), k.uy * force * fm * tierF, WorldSlide.launchTravel(k.ux, k.uy))
-		if k.name == "SMASH ACROSS" and p.travel < HAUL_MIN:
+		if k.name == "SMASH ACROSS" and p.travel < HAUL_MIN and not longOnly:
 			# SMASH ACROSS is the long haul or nothing: when it cannot carry the target HAUL_MIN, it is not offered.
 			k.s -= HAUL_SHORT
+		k.p = p
 		var lx: float = k.land if k.has("land") else p.x
 		k.travel = absf(SimWrap.sdx(D.x, lx)) if k.has("land") else p.travel
 		var popL: float = WorldStructures.popNear(S, lx, CARE_R)
@@ -105,7 +111,7 @@ static func chooseLaunch(S: SimState, A, D, force: float) -> Dictionary:
 			c[j + 1] = c[j]
 			j -= 1
 		c[j + 1] = key
-	return {"best": c[0], "top": c.slice(0, 3)}
+	return {"best": c[0], "top": c.slice(0, 3), "all": c}
 
 
 ## Where a launched fighter would come to rest: the free-flight part of SimFighter.stepLaunched (gravity, air drag,
@@ -149,7 +155,7 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 			vx *= kWx
 			vy *= kWy
 			if SimDetMath.hypot(vx, vy) < 200.0 and t > 0.3:
-				return {"x": x, "travel": absf(travel), "water": true}
+				return {"x": x, "travel": absf(travel), "water": true, "t": t}
 		var along: float = travel * dir0
 		while bp < blds.size() and blds[bp][0] + blds[bp][1] <= along:
 			bp += 1
@@ -157,7 +163,7 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 		while q < blds.size() and blds[q][0] - blds[q][1] < along:
 			var bb: Array = blds[q]
 			if y < bb[3] and y > bb[2] - 10.0:
-				return {"x": x, "travel": absf(travel), "water": false, "building": true}
+				return {"x": x, "travel": absf(travel), "water": false, "building": true, "t": t}
 			q += 1
 		var g: float = WorldTerrain.groundY(S, x)
 		if y <= g:
@@ -167,7 +173,7 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 			var spN: float = SimDetMath.hypot(vx / trav, vy)
 			var sea: bool = WorldTerrain.seaAt(S, x)
 			if sea or spN <= WorldSlide.MIN_IMPACT or WorldSlide.isSlam(vx, vy):
-				return {"x": x, "travel": absf(travel), "water": sea}
+				return {"x": x, "travel": absf(travel), "water": sea, "t": t}
 			var dir: float = 1.0 if vx >= 0.0 else -1.0
 			var d: float = minf(WorldSlide.slideDistance(spN, WorldSlide.slope(S, x, dir), trav), SimConst.W * 0.25)
 			# A slide stops at the first standing building on its path (the slide keeps the flight's direction).
@@ -177,8 +183,8 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 				if ahead >= 0.0 and ahead < d:
 					d = ahead
 					break
-			return {"x": SimWrap.wrap(x + dir * d), "travel": absf(travel) + d, "water": false}
-	return {"x": x, "travel": absf(travel), "water": y < 0.0 and WorldTerrain.seaAt(S, x)}
+			return {"x": SimWrap.wrap(x + dir * d), "travel": absf(travel) + d, "water": false, "t": t}
+	return {"x": x, "travel": absf(travel), "water": y < 0.0 and WorldTerrain.seaAt(S, x), "t": t}
 
 
 static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float) -> void:
@@ -196,6 +202,7 @@ static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float) -> v
 	tgt.vx = plan.ux * f * tgt.launchT
 	tgt.vy = plan.uy * f
 	tgt.spin = (1.0 if plan.ux >= 0.0 else -1.0) * S.rng.range_(8.0, 16.0)
+	SimFx.launch(S, tgt, att, SimDetMath.hypot(tgt.vx, tgt.vy), 1.0 if tgt.vx >= 0.0 else -1.0)
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 600.0, "#ffffff", 0.3, 20.0)
 	SimFx.shake(S, 10.0)
 

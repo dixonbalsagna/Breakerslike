@@ -9,8 +9,10 @@ extends SceneTree
 ##   landing, when the fighter is next down or free: a chain that catches and relaunches it mid-air continues the flight);
 ##   new-biome share (the biome where it lands differs from the one it was launched from);
 ##   share of fight time underwater (y < 0 over sea, both fighters) and over the ocean biome; beams by biome.
+## Wounds (spec-wounds.md §5, read from the fx events): time to the first region break and the first brink, breaks per
+## match, finishers, contests survived, KOs that came through a finisher, and each region's share of the damage.
 
-const MAX_STEPS: int = 18000
+const MAX_STEPS: int = 43200
 const LONG_HAUL: float = 1500.0 * SimConst.TRAV_LAUNCH   # units of horizontal travel; a launch reaches TRAV_LAUNCH times as far since the world scale (SC)
 
 var re_atk := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) (LIGHT|HEAVY|SIG) vs (\\w+)$")
@@ -33,7 +35,7 @@ func _init() -> void:
 	var base: int = int(pos[1]) if pos.size() > 1 else 1
 	var agg := {"n": n, "fightSec": 0.0, "exchanges": 0, "exLen": [], "gaps": [], "atkGaps": [], "launches": 0, "launchTypes": {},
 		"flights": 0, "long": 0, "newBiome": 0, "plannerFlights": 0, "plannerLong": 0, "plannerNewBiome": 0, "travel": [],
-		"underwaterSec": 0.0, "oceanSec": 0.0, "biomeSec": {}, "groundLandings": 0, "slideLandings": 0, "menace": [], "anguish": [], "beams": {}, "lens": [], "p1Wins": 0, "timeouts": 0, "civ": []}
+		"underwaterSec": 0.0, "oceanSec": 0.0, "biomeSec": {}, "firstBreak": [], "firstBrink": [], "breaks": [], "finishers": 0, "survived": 0, "kos": 0, "koByFinisher": 0, "regionDmg": {}, "matchesGap10": 0, "groundLandings": 0, "slideLandings": 0, "menace": [], "anguish": [], "beams": {}, "lens": [], "p1Wins": 0, "timeouts": 0, "civ": []}
 	for i in range(n):
 		run_match(base + i, arm, agg)
 	var out: Dictionary = summarize(agg)
@@ -59,10 +61,37 @@ func run_match(seed: int, arm: String, agg: Dictionary) -> void:
 	var prevX: Array = [fs[0].x, fs[1].x]
 	var fl: Array = [[], []]            # open flights per fighter: {biome at launch, travel, planner}; a chain can stack two
 	var steps: int = 0
+	var firstBreak: float = -1.0
+	var firstBrink: float = -1.0
+	var breaks: int = 0
+	var lastContestLost: bool = false
+	var gap10: bool = false
 	while steps < MAX_STEPS and S.game.ko == null:
 		var T0: float = S.T
 		SimCore.step(S)
 		steps += 1
+		for e in S.out.fx:
+			match e.type:
+				"region_broken":
+					breaks += 1
+					if firstBreak < 0.0:
+						firstBreak = S.T
+				"brink_enter":
+					if firstBrink < 0.0:
+						firstBrink = S.T
+				"finisher_start":
+					agg.finishers += 1
+				"finisher_contest":
+					if e.survived:
+						agg.survived += 1
+					lastContestLost = not e.survived
+				"ko":
+					agg.kos += 1
+					if lastContestLost:
+						agg.koByFinisher += 1
+				"damage":
+					if e.region != "":
+						agg.regionDmg[e.region] = agg.regionDmg.get(e.region, 0.0) + e.amount
 		S.out.fx.clear()
 		var dt: float = S.T - T0
 		agg.fightSec += dt
@@ -93,6 +122,8 @@ func run_match(seed: int, arm: String, agg: Dictionary) -> void:
 				agg.exchanges += 1
 				if lastEnd >= 0.0:
 					agg.gaps.append(S.T - lastEnd)
+					if S.T - lastEnd > 10.0:
+						gap10 = true
 				exStart = S.T
 			prevEx = S.dirS.ex
 		for k in range(2):
@@ -121,6 +152,11 @@ func run_match(seed: int, arm: String, agg: Dictionary) -> void:
 			prevState[k] = f.state
 			prevX[k] = f.x
 	agg.lens.append(S.T)
+	if gap10:
+		agg.matchesGap10 += 1
+	agg.firstBreak.append(firstBreak if firstBreak >= 0.0 else S.T)
+	agg.firstBrink.append(firstBrink if firstBrink >= 0.0 else S.T)
+	agg.breaks.append(float(breaks))
 	if S.game.ko == null:
 		agg.timeouts += 1
 	elif S.game.ko == fs[1]:
@@ -160,6 +196,14 @@ static func _median(a: Array) -> float:
 	return s[m] if s.size() % 2 == 1 else (s[m - 1] + s[m]) / 2.0
 
 
+static func _pct(a: Array, q: float) -> float:
+	if a.is_empty():
+		return NAN
+	var s := a.duplicate()
+	s.sort()
+	return s[mini(s.size() - 1, int(floor(q * (s.size() - 1) + 0.5)))]
+
+
 static func _mean(a: Array) -> float:
 	if a.is_empty():
 		return NAN
@@ -188,8 +232,24 @@ func summarize(a: Dictionary) -> Dictionary:
 	var typeShare := {}
 	for k in a.launchTypes:
 		typeShare[k] = _r(100.0 * a.launchTypes[k] / a.launches, 1)
+	var dmgTot: float = 0.0
+	for k in a.regionDmg:
+		dmgTot += a.regionDmg[k]
+	var dmgShare := {}
+	for k in a.regionDmg:
+		dmgShare[k] = _r(100.0 * a.regionDmg[k] / dmgTot, 1)
 	return {
 		"matchLengthMean_s": _r(_mean(a.lens), 1),
+		"matchLengthMedian_s": _r(_median(a.lens), 1),
+		"matchLengthP90_s": _r(_pct(a.lens, 0.9), 1),
+		"matchLengthP99_s": _r(_pct(a.lens, 0.99), 1),
+		"firstBreakMedian_s": _r(_median(a.firstBreak), 1),
+		"firstBrinkMedian_s": _r(_median(a.firstBrink), 1),
+		"breaksPerMatchMedian": _r(_median(a.breaks), 1),
+		"finishersPerMatch": _r(float(a.finishers) / a.n, 2),
+		"contestSurvived_pct": _r(100.0 * a.survived / maxf(1.0, a.finishers), 1),
+		"koThroughFinisher_pct": _r(100.0 * a.koByFinisher / maxf(1.0, a.kos), 1),
+		"damageByRegion_pct": dmgShare,
 		"p1WinRate": _r(float(a.p1Wins) / (a.n - a.timeouts), 3),
 		"timeouts": a.timeouts,
 		"civiliansLostMean_pct": _r(_mean(a.civ), 1),
@@ -197,6 +257,7 @@ func summarize(a: Dictionary) -> Dictionary:
 		"exchangeLenMedian_s": _r(_median(a.exLen)),
 		"breathingRoomMedian_s": _r(_median(a.gaps)),
 		"breathingRoomOver10s": a.gaps.filter(func(g): return g > 10.0).size(),
+		"matchesWithNoGapOver10s_pct": _r(100.0 - 100.0 * a.matchesGap10 / a.n, 1),
 		"attackIntervalMedian_s": _r(_median(a.atkGaps)),
 		"launchesPerMin": _r(a.launches / mins),
 		"launchTypes_pct": typeShare,

@@ -50,7 +50,7 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	var variant: String = args.variant
 	var dist: float = args.dist
 	A.beamCharge = null
-	if D.hp <= 0.0 or A.hp <= 0.0:
+	if S.game.ko != null:
 		return
 	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, dist + (2000.0 + A.tier * 400.0) * SimConst.WS)
 	var ox: float = A.x
@@ -81,15 +81,16 @@ static func opBeamImpact(S: SimState, ex, args) -> void:
 	var A = ex.A
 	var D = ex.D
 	var out: String = args.out
-	if D.hp <= 0.0:
+	if S.game.ko != null:
 		return
 	if D.state == "locked":
 		D.state = "free"
 	SimDamage.hit(S, ex, A, D, 200.0 if out == "GUARD" else 230.0, {"ignoreStance": out != "GUARD", "stop": 0.14, "shake": 16.0, "big": true})
 	WorldStructures.explode(S, D.x, D.y + 30.0, 60.0 + A.tier * 30.0, A)
-	if D.hp > 0.0:
+	if S.game.ko == null:
 		D.state = "locked"
 		DirLaunch.doLaunch(S, A, D, {"ux": args.ux, "uy": args.uy * 0.6 + 0.12}, 1300.0 if out == "GUARD" else 2600.0)
+		DirExchange.decisive(S, ex, A, D, "beam")
 
 
 ## Beat "beamDodge".
@@ -142,7 +143,7 @@ static func opClashResolve(S: SimState, ex, args) -> void:
 	var Wn = A if args.aw else D
 	var Ls = D if args.aw else A
 	S.game.clash = null
-	if Ls.hp <= 0.0 or Wn.hp <= 0.0:
+	if S.game.ko != null:
 		return
 	var dxs: float = SimWrap.sdx(Wn.x, Ls.x)
 	var dyy: float = (Ls.y + 36.0) - (Wn.y + 38.0)
@@ -154,8 +155,9 @@ static func opClashResolve(S: SimState, ex, args) -> void:
 	Ls.state = "locked"
 	SimDamage.hit(S, ex, Wn, Ls, 260.0, {"ignoreStance": true, "stop": 0.16, "shake": 18.0, "big": true})
 	WorldStructures.explode(S, Ls.x, Ls.y + 30.0, (70.0 + Wn.tier * 32.0) * SimConst.WS, Wn)
-	if Ls.hp > 0.0:
+	if S.game.ko == null:
 		DirLaunch.doLaunch(S, Wn, Ls, {"ux": ux, "uy": uy * 0.6 + 0.12}, 2600.0)
+		DirExchange.decisive(S, ex, Wn, Ls, "beam_clash")
 
 
 static func fireBeam(S: SimState, A, ox: float, oy: float, ux: float, uy: float, len: float, variant: String) -> void:

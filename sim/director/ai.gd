@@ -24,12 +24,16 @@ static func aiInput(S: SimState, f) -> void:
 	var a = f.ai
 	var d: float = SimWrap.sdx(f.x, o.x)
 	var dist: float = absf(d)
-	var hpF: float = f.hp / f.maxhp
+	# Since S2 the AI reads its wounds, not an HP bar: 1 fresh, 0 on the brink (SimWounds.vitality).
+	var hpF: float = SimWounds.vitality(f)
 	a.t -= SimConst.DT
 	# The attack timer runs only between exchanges and is held at the stance minimum during one, so the cadence is
 	# breathing room after a release.
 	if S.dirS.ex == null:
 		a.atk -= SimConst.DT
+		# No lull over about 10 s: after GAP_URGE seconds with no attack press from either fighter, attack within GAP_SOON.
+		if S.T - SimMathx.jmax(f.lastAtkT, o.lastAtkT) > GAP_URGE and a.atk > GAP_SOON:
+			a.atk = GAP_SOON
 	else:
 		a.atk = SimMathx.jmax(a.atk, CAD_MIN[int(f.stance)])
 	if a.t <= 0.0:
@@ -37,7 +41,8 @@ static func aiInput(S: SimState, f) -> void:
 		var w: Array = [2.4 if hpF > 0.35 else 1.0, 1.6 if hpF < 0.55 else 0.7, 1.2, 3.2 if hpF < 0.3 else (1.2 if f.ki < 25.0 else 0.25)]
 		if o.hidden:
 			w = [3.0, 0.3, 0.3, 0.1]
-		if f.hidden and (hpF < 0.85 or f.ki < 85.0):
+		# Stay in cover only while cover still heals: ki, or a battered region still fading (broken ones never do).
+		if f.hidden and f.canHide and (f.ki < 85.0 or _healing(f)):
 			w = [0.0, 0.0, 0.0, 1.0]
 		if f.state == "free":
 			f.stance = float(pickW(S, w))
@@ -60,6 +65,7 @@ static func aiInput(S: SimState, f) -> void:
 		if a.sT <= 0.0:
 			a.sT = S.rng.range_(1.2, 2.4)
 			a.sOff = S.rng.range_(-1700.0, 1700.0)
+			SimFx.searching(S, f, o, o.lastSeen.x + a.sOff)
 		var tx: float = o.lastSeen.x + a.sOff
 		var sd: float = SimWrap.sdx(f.x, tx)
 		i.mx = SimMathx.jsign(sd) if absf(sd) > 60.0 else 0.0
@@ -122,9 +128,18 @@ static func aiInput(S: SimState, f) -> void:
 		a.atk = 0.3
 
 
+## True while hiding still mends a wound: a battered region above the hidden fade floor (spec-wounds.md §1 Recovery).
+static func _healing(f) -> bool:
+	for w in f.wear:
+		if w > SimWounds.FADE_HIDDEN_FLOOR and w < SimWounds.STAGE_AT[2]:
+			return true
+	return false
+
+
 # Tempo (balance-targets.md section 10).
-const P_ATTACK: Array = [0.62, 0.5, 0.56, 0.5]   # chance an attack beat attacks, per stance (ESCAPE never attacks)
+const P_ATTACK: Array = [0.52, 0.43, 0.48, 0.5]   # chance an attack beat attacks, per stance (ESCAPE never attacks)
 const GAP_URGE: float = 6.0                      # seconds without an attack press from either fighter
+const GAP_SOON: float = 0.5                      # ... after which the next attack beat comes within this
 const CAD_MIN: Array = [1.2, 2.0, 1.6, 1.6]      # attack-timer floor per stance while an exchange runs
 
 # Fight location (balance-targets.md section 10). Underwater is a hiding state, not a place to fight.
@@ -136,6 +151,8 @@ const LURE_POP_W: float = 2.0          # route cost: distance + this x the popul
 const LURE_KEEP: float = 800.0 * SimConst.PS         # route cost discount for the way the hero is already moving (no dithering)
 const COVER_OCEAN: float = 1500.0 * SimConst.PS      # cover cost: water counts as this much farther than forest or ridge
 const COVER_PAST_OPP: float = 1200.0 * SimConst.PS   # cover cost: running toward and past the opponent
+## Where ESCAPE heads: forest canopy and mountain ridges break line of sight (spec-wounds.md §1c). The sea does not.
+const COVER_KINDS: Array = ["forest", "mountains"]
 const COVER_REACH: float = 4000.0 * SimConst.PS   # cover farther than this is not considered
 const COVER_EDGE: float = 100.0                  # stepping just inside a biome entered from its far end
 const LURE_BUCKETS: int = 48           # SimConst.W / LURE_STEP
@@ -204,7 +221,7 @@ static func chooseCover(x: float, d: float):
 	var xw: float = SimWrap.wrap(x)
 	var here: String = WorldBiomes.biomeAt(xw)
 	for s in [1.0, -1.0]:
-		for b in ["ocean", "forest", "mountains"]:
+		for b in COVER_KINDS:
 			var off: float = 1e9
 			if here == b:
 				off = 0.0

@@ -36,7 +36,7 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `slide_dust` | x, y, spd, w, variant, n | a sample along a slide, every 40 x WS units, at most 60 per slide: `spd` is the normalised speed (the launch's traversal factor divided out), `w` the trench width, `variant` the surface, `n` the sample index | nothing yet (ignored). Rendering and VFX throw dust and rubble chips at each |
 | `skim` | x, y, spd, n | a launched fighter skipped off water: the surface height, the speed, and the skip number | nothing yet (ignored). VFX draws the wake |
 | `beamSplash` | x | a beam sample below y = 30 over the sea | the consumer rolls 60% for a splash of 3 at (x, 0) |
-| `damage` | x, y, amount, col, attacker, victim, region, kind, number | every hit, and every landing or collision that hurts | a damage number when `number` is true (hits): text `String(Math.round(amount))` rising 60 units/s for 0.9 s, gold when stance was ignored, white otherwise. `attacker` and `victim` are fighter slots (-1 for none); `region` is head, core, arms or legs; `kind` is light, heavy, guard, beam or impact (Audio's hit sounds; `guard_break` comes with Encounter's slice) |
+| `damage` | x, y, amount, col, attacker, victim, region, kind, number | every hit, and every landing or collision that hurts | a damage number when `number` is true (hits): text `String(Math.round(amount))` rising 60 units/s for 0.9 s, gold when stance was ignored, white otherwise. `attacker` and `victim` are fighter slots (-1 for none); `region` is head, core, arms or legs; `kind` is light, heavy, guard, guard_break (the GUARD BREAK's finishing strike, from S2), beam or impact (Audio's hit sounds) |
 | `banner` | text, col, dur | power-ups, parries, KO, chains, clashes, ambushes; for human players also NEED 45 KI and LOCK LOST | the centre-screen banner (the latest one replaces any earlier one) for dur seconds of unfrozen time |
 | `shake` | k | anything heavy | camera shake: `shake = max(shake, k)` |
 | `tick` | dt, frozen | once per tick | steps the particles and damage numbers by dt (dt × 0.1 when frozen) |
@@ -45,9 +45,25 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `brink_enter` | actor | the fighter is on the brink: the core broken, or two of head, arms and legs broken | nothing; the brink state (a finisher can now end the match, from S2) |
 | `brink_exit` | actor | the fighter leaves the brink (by a Rally, from S4) | nothing |
 | `tier_up` | actor, tier, onGround | a fighter reaches a new power tier (the structured twin of the feed line) | nothing; `onGround` is true when the power-up cratered the ground |
-| `hide_start` | actor, cover | a fighter goes to ground (hidden); cover is submerged, canopy or ridge | nothing |
-| `found` | actor | a hidden fighter is found by the opponent closing in | nothing |
-| `ko` | winner, loser | the match's KO (fighter slots) | nothing; the KO banner arrives as a `banner` event |
+| `hide_start` | actor, cover | a fighter goes to ground (hidden); cover is submerged, canopy or ridge. Since S2 only a fighter with `canHide` (the future stealth fighter) hides; nobody in the base roster emits it | nothing |
+| `found` | actor | the opponent regains lock on `actor` (spec-wounds.md §1c): line of sight returns, the hunter comes within 240, `actor` attacks, or 4 s pass. For a `canHide` fighter it still means found in hiding | nothing; the Found flash |
+| `ko` | winner, loser | the match's KO (fighter slots). Since S2 only a lost finisher contest KOs | nothing; the KO banner arrives as a `banner` event |
+| `decisive` | winner, loser, kind | a decisive exchange was won (spec-wounds.md §1): `kind` launch (any launch, however it lands), clash (a heavy clash won), guard_break, interrupt (a CHARGE INTERRUPT that ended in a shove), beam (a signature hit or guard) or beam_clash | nothing; Art's Pride flash |
+| `finisher_start` | actor, target | `actor` won a decisive exchange against `target` on the brink: the finisher replaces the rest of the exchange | nothing; the finisher set piece (Camera, UI) |
+| `finisher_contest` | target, chance, survived | the fighter on the brink rolled against the finisher: `chance` is the survival chance (0.30, less 0.10 per minute past 8:00, floor 0); a loss is followed by `ko` | nothing |
+| `attack` | actor, target, kind, defStance, template, ambush | the director accepted an attack: `kind` light, heavy or sig; `defStance` the defender's stance or CHARGING; `template` the exchange's tag; `ambush` true only for a `canHide` fighter | nothing; the structured twin of the feed's attack line (QA-004) |
+| `parry` | actor, target | `actor` parried `target`'s strike; the rest of the exchange is cancelled | nothing |
+| `chain_end` | actor, n | a chain of `n` linked exchanges by `actor` ended | nothing |
+| `ambush` | actor, target | an ambush attack from cover began (`canHide` fighters only) | nothing |
+| `lock_lost` | actor, target | `actor` tried to attack `target` while lock was broken: the attempt costs 2 ki and a 0.5 s cooldown | nothing |
+| `launch_plan` | actor, target, text, chosen | every launch decision: `text` lists every candidate as `NAME score` joined with `|`; `chosen` is the launch, or NONE for a shove | nothing; the planner's reasons (debug overlay, QA §5b) |
+| `window_open` | actor, kind, dur | a parry window (`actor` the defender, `dur` until the first parryable strike) or a chain window (`actor` the attacker, 0.6 s) really opened | nothing; UI's window cue |
+| `clash_draw` | actor, target | a clash ended in a draw (the heavy-clash shockwave) | nothing; Art's flash |
+| `hazard_telegraph` | actor, source, eta, x | the world is about to hit `actor` at `x` in `eta` seconds (0 when unknown). `source` brunt (a launch predicted to hit a building) from the director; World adds collapse, landslide and lava | nothing; Art's Hazard flash |
+| `searching` | actor, target, x | `actor` searches for `target` around `x`: lock was broken, or a hunt sweep | nothing; the Searching flash |
+| `danger` | actor, source, eta | `actor` is about to be hit: `source` windup (a parryable strike winds up, `eta` until it lands) or ambush | nothing; Art's danger-sense flash |
+| `launch` | actor, target, amount, face | `actor` was launched by `target` at speed `amount`, horizontally toward `face` (+1 or -1) | nothing; Camera's launch follow |
+| `rush` | actor, target, n | `actor` rushes to `target`, arriving at tick `n` | nothing; Camera |
 
 ### The `crater` and `scorch` events
 
