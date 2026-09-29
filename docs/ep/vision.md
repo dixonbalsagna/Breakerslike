@@ -199,3 +199,9 @@ Orb had played the Godot greybox before answering.
 **Character art direction (Orb, 2026-09-29).** F, the Coil, is 'a good start' for the Anti-hero. Orb isn't happy with the character designs yet and wants them **striking and recognizable**, with more style passes. Faceless or blank heads could be a style choice if the style is distinct enough. Art proposes several overall character art directions. Legal's note stands: nothing borrowed from Madness Combat's look.
 
 **Character art direction, round 2 (Orb, 2026-09-29).** Blank is the closest and a good starting point. Pitch more styles and mock-ups building from it. Faces: pitch it, Orb wants a unique style. Poster: disliked ('the color scheme is too jarring'), and its use for key art is undecided.
+
+**Staging the fighters: cheat out (Orb, 2026-09-29).** No strict side profile. Fighters turn slightly toward the camera, three-quarter, as stage actors 'cheat out', so stances, chest designs, limbs and demeanour read. Three techniques, as in modern 2.5D fighters:
+1. Rotate the torso, hips and head toward the camera.
+2. A hybrid projection: the background keeps perspective, and the fighters get an orthographic-style correction so they don't warp at the screen edges.
+3. Mirroring when fighters switch sides, so the front always faces the camera and the back is never shown.
+Orb also referenced 'downstage' stage power: being nearer the camera reads as commanding.
