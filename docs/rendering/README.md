@@ -137,6 +137,7 @@ For the web: export with a Web preset (single-threaded) and pass `--fixed-fps 60
 
 - Every visual: primitive-box fighters, box buildings, cone trees, box-figure civilians, flat colours, the sky gradient, the far land, ridges and limb. Art's palette and the cel-shaded look replace `look.gd` and the flat shaders.
 - The planet-scale cues are tuned by eye (`CURVE_*`, `FAR_HAZE`, the limb in `sky.gdshader`). The curvature is a presentation lens, not the planet's true radius: at 9,600 units around, the true curve would be far stronger.
+- Known issue: the crowd's idle hop runs on the shader's `TIME`, so civilians keep hopping while the game is paused. Accepted for the greybox; drive it from sim time when it matters.
 - The prototype's palette and the fx event colours (CSS hex strings) are used as they are.
 - The camera is the reference camera. Camera will own framing. When the fighters' separation passes half the planet, it re-targets the other arc and pans across (up to about 80 to 180 px per frame, depending on the window size). That is reference-camera behaviour, not a render pop.
 - The HUD is a debug HUD drawn with the fallback font. UI will own the real one.
