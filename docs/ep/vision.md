@@ -156,3 +156,5 @@ Orb had played the Godot greybox before answering.
 - Who she is: 'very image focused, hates to have to change appearances, so has settled on their base form to keep paperwork tidy. Since the fight pushes them to transform, they need to update their paperwork to keep their legal status current. Bureaucratic and confusing on purpose. Let's work on this theme.'
 - Goons: Guard of honour.
 - Voice: approved (revision numbers, a royal 'we' that slips to 'I' when hurt, opponents are 'petitioner').
+
+**Transformations are respected (Orb, 2026-09-29; this overrides questionnaire 3's 'long ones interruptible').** 'With few exceptions, I think the transformations should be cinematic and uninterruptible. The gauge or some mechanic must fill or otherwise complete, which can be stopped, but once the transformation happens it should be respected the way anime characters seem to traditionally allow their opponent to transform.' Also: the Empress's backdated-filing comeback, Orb is unsure ('I don't know about this'), so pitch alternatives. The rule that her filings don't register in the fold is dropped: her filings work everywhere.

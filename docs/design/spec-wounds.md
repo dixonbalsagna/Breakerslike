@@ -14,7 +14,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 
 | Rule | Spec |
 | :--- | :--- |
-| **Regions** | Head, core, arms and legs, for every fighter. The Tyrant adds a fifth, the **bladed mantle**, which never counts toward the brink |
+| **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |
 | **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). Starting k = 0.08 |
 | **Stages** | Fresh below 30; bruised 30 to 59; battered 60 to 89; broken at 90 or more |
 | **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and long transformations cannot start. *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time to hide (1.8 s) |
@@ -34,11 +34,11 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | :--- | :--- | :--- |
 | Protagonist | **Second Wind** | Survive the rival's finisher contest roll. His next track step is then free |
 | Anti-hero | **Spite** | Win a decisive exchange by hand (melee, no signature) with help refused. His arms mend first, and his next finisher must be by hand |
-| Tyrant | **Emergency revision** | Instant and safe. He mends his most-worn region, loses his next scheduled refit, and gains a visible flaw. Not available in his full-power form |
+| Empress | **Emergency revision** (a backdated filing) | Instant and safe. She mends her most-worn region, loses her next refit, and adds one outstanding filing; the region carries a `PENDING` stamp until her next completed full filing. Not available in her full-power form, or while dissolved (§3) |
 | Cyborg | **Reboot** | Dock the loose backup drive, or finish a Press within reach of civilians. It mends one chip stage, and regrowth doubles for 5 s |
 
 **Limits after Orb's "looser" ruling:**
-- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Tyrant's are further bounded by the refits he has left.
+- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's are further bounded by the refits she has left and by her outstanding filings: a third filing triggers an Audit.
 - **Softened:** the cooldown goes from 30 s to **15 s** after leaving the brink.
 - **Kept:** the mended region returns battered.
 
@@ -58,7 +58,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 | :--- | :--- | :--- |
 | **Protagonist**: Rolls with it | 25% of each incoming hit's wear spreads evenly over his other regions. His power stage is the **heat track** (below): big temporary boosts paid for in internal core wear | *Crown:* all arcs thin together as wear spreads, rather than one gapping early, and the core arc shimmers with heat. *Cards:* heat stage changes, internal core stages, the boil-over, and `SECOND WIND`. The stage names are Narrative's. *Silhouette:* an even wash, with the core filling from inside as internal wear builds |
 | **Anti-hero**: Proud front | While Pride is at half or above, battered penalties do not apply. When Pride falls below half, every withheld penalty lands at once. **Humbled** and **Drop the Act** turn Pride into power (below). Each shame stack also darkens a notch on his crown, and Drop the Act fires its own card together with `FACADE CRACKS` | *Crown and cards:* while Pride holds, his crown stays whole and battered cards are **withheld**. Only broken cards show, and body decals still show the damage. When Pride breaks, every withheld card fires at once as `FACADE CRACKS`, and the crown drops to its true state. *Silhouette:* shows only the hairline "front" until the crack. Opponents read his visible Pride meter to predict it |
-| **Tyrant**: Refit | Each revision mends one stage of his most-worn region. The mend shrinks each time, and his full-power form mends nothing. The **bladed mantle** is region 5: breaking it removes the mantle attacks and slows his next revision. His goons are single-region bodies, taken out by one break | *Silhouette:* each revision **reprints** it with the new revision number and a patch stamp on the mended region. An Emergency revision prints a flaw stamp. *Crown:* a fifth arc runs along the mantle's hem. *Cards:* styled as revision notes, for example `REV 7: LEFT ARM PATCHED` or `MANTLE: TORN` |
+| **Empress** (formerly the Tyrant): Refit, with the paperwork below | Only her real revisions (9 to 11) mend, one stage of her most-worn region each, shrinking each time. Her full-power form (12) mends nothing. Her joke revisions (1 to 8) mend nothing. The **bladed mantle** is region 5: breaking it removes her mantle attacks and slows her next filing. Her guard of honour are single-region bodies, taken out by one break | *Silhouette:* each registered revision **reprints** it with the new revision number and a patch stamp on the mended region. At most one status stamp shows at a time, in this order: `DISSOLVED`, then `NOT AS PHOTOGRAPHED`, then `PENDING`. *Crown:* a fifth arc runs along the mantle's hem. *Cards:* filing stamps, for example `SUBMITTED`, `NOTARISED`, `REGISTERED: REVISION NINE`, `MANTLE: TORN`. *Her name tag:* a small stack of 0 to 3 papers, her outstanding filings |
 | **Cyborg**: Regrowth and the Rail chip | Flesh regions regrow at 8 wear per second out of exchanges and never count toward the brink. The **Rail chip** moves on a seeded schedule, about every 4 s, between four stations: head, chest, back and hip. A heavy, a GUARD BREAK, a signature hit or an interrupted **Press** opens the hatch at the chip's station for 1.5 s. While it is open, the director weights that station's region by ×3, and a hit there damages the chip. Chip stages are scratched, cracked and split, and a split chip means the brink. Chip damage never regrows | *Crown:* flesh arcs visibly crawl back after damage, so the transient state reads. *Silhouette:* shows the rail, the chip's current station and its stage marks, which are the only persistent state. *Cards:* chip events only, such as `HATCH OPEN: HIP` and `CHIP: CRACKED` |
 
 **Fighter mechanics that touch wear:**
@@ -134,6 +134,43 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
     - matches where he drops the act are won 45 to 60% of the time;
     - Humbled bursts fire 1 to 3 times per match;
     - the facade cracks in 60 to 90% of matches.
+- **The Empress's paperwork** (Orb's direction; Narrative's pitch in `docs/narrative/pitches-q3.md`, "The Empress: the paperwork"). This is the binding version, **pending Orb's pick**. Names are placeholders. The confusion is comedy on the cards; the rules stay few.
+  - **Joke revisions, 1 to 8 (minor amendments).** Wrath triggers them automatically. Each is auto-approved, lasts under 1 s, cannot be interrupted, and changes one small data value and one tell. They mend nothing and never touch the tally. Tiers: 1 for revisions 1 to 3, 2 for revisions 4 to 8.
+  - **Real revisions, 9 to 12 (full filings).** When Wrath reaches a real revision's threshold, she *may* file. She chooses the moment, so "when is it safe to file" is her decision. Filing is a 2.5 s hold through four stamps (submitted, amended, notarised, registered), exposed like a long transformation. Tiers: 3 for revisions 9 and 10, 4 for revisions 11 and 12.
+    - A **completed** filing registers the revision, applies its refit, and **clears every outstanding filing** and status stamp. She gets a clean desk.
+  - **Interrupted filing: Mismatch** (Narrative's favourite; Orb picks).
+    - The interrupt is a decisive exchange won by the attacker, and it lands on her core (§1, §5).
+    - She keeps the new body and its power, but the record shows the old one: `NOT AS PHOTOGRAPHED`.
+    - Until she completes a filing, her **decree line** (her ranged cutting beam) is void, and the tally gains one.
+    - She can re-file the same revision, but not within 10 s of the interrupt, which stops spam-filing.
+    - Alternatives kept as notes: *Rejected* (no new body, and the tally still gains one). Audit as the only punishment.
+  - **The tally and the Audit.**
+    - Only two things raise the outstanding tally: an interrupted filing and an Emergency revision. Transforming normally never does, so the tangle is caused by the opponent or by her own shortcuts. That keeps it readable.
+    - At three outstanding filings an **Audit** begins: a 3 s set piece in which her own guard act as auditors.
+    - After the Audit, the next exchange decides it. If she wins, `APPROVED`: the tally clears. If she loses, she is **administratively dissolved**: no mantle attacks and no decree line, and no Emergency revision, until her next completed filing.
+    - At most one Audit per 60 s. It never starts while her opponent's finisher is running.
+  - **Guard of honour.**
+    - Each tag-in is a fixed 1 s salute, during which the incoming guard can't be hit. It counts as downtime, so it doesn't cost tempo.
+    - At most one tag-in per 5 s, so the salute can't be chained to shed pressure.
+    - During a Mismatch the guard salute the wrong way. This is cosmetic.
+  - **In the fold.**
+    - Her filings don't register there ("outside our jurisdiction"): no revisions of any kind while folded, and no Audit, because there are no auditors. Her tally waits until the unfold.
+    - She keeps her current revision.
+    - Emergency revision still works ("filed yesterday"), and its filing falls due on return.
+    - Like the Cyborg, her counterplay is to break the fold. The 4:00 floor means she usually reaches revision 9 or higher first.
+  - **Loops, stalls and readability checked.**
+    - *Interrupt and re-file* cannot loop, because each interrupt is a decisive exchange that wears her core toward the brink.
+    - *The Audit* is bounded to 3 s, once per 60 s.
+    - *The salute* is capped at one per 5 s.
+    - *Readable state:* four stamps at most, one shown at a time, plus a stack of paper.
+  - **QA bands**, per Empress match:
+    - she wins 45 to 55% of each pairing, and 40 to 55% of matches with a fold;
+    - she reaches revision 12 in 30 to 60% of matches;
+    - 20 to 50% of her full filings are interrupted;
+    - Audits average 0.2 to 0.8 per match and take at most 2% of match time;
+    - she spends at most 15% of her match time dissolved;
+    - she averages at most 1 Emergency revision per match;
+    - no fight gap exceeds 10 s (`balance-targets.md` §8).
 - **Press (the Cyborg's food).** His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
 
 ## 4. What the sim needs (Simulation, Tools)
