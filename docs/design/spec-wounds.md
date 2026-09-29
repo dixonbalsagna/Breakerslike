@@ -57,7 +57,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 | Fighter | How damage is handled | How the readout shows it |
 | :--- | :--- | :--- |
 | **Protagonist**: Rolls with it | 25% of each incoming hit's wear spreads evenly over his other regions. His power stage is the **heat track** (below): big temporary boosts paid for in internal core wear | *Crown:* all arcs thin together as wear spreads, rather than one gapping early, and the core arc shimmers with heat. *Cards:* heat stage changes, internal core stages, the boil-over, and `SECOND WIND`. The stage names are Narrative's. *Silhouette:* an even wash, with the core filling from inside as internal wear builds |
-| **Anti-hero**: Proud front | While Pride is at half or above, battered penalties do not apply. When Pride falls below half, every withheld penalty lands at once. **Swallow It** turns Pride into power (below) | *Crown and cards:* while Pride holds, his crown stays whole and battered cards are **withheld**. Only broken cards show, and body decals still show the damage. When Pride breaks, every withheld card fires at once as `FACADE CRACKS`, and the crown drops to its true state. *Silhouette:* shows only the hairline "front" until the crack. Opponents read his visible Pride meter to predict it |
+| **Anti-hero**: Proud front | While Pride is at half or above, battered penalties do not apply. When Pride falls below half, every withheld penalty lands at once. **Humbled** and **Drop the Act** turn Pride into power (below). Each shame stack also darkens a notch on his crown, and Drop the Act fires its own card together with `FACADE CRACKS` | *Crown and cards:* while Pride holds, his crown stays whole and battered cards are **withheld**. Only broken cards show, and body decals still show the damage. When Pride breaks, every withheld card fires at once as `FACADE CRACKS`, and the crown drops to its true state. *Silhouette:* shows only the hairline "front" until the crack. Opponents read his visible Pride meter to predict it |
 | **Tyrant**: Refit | Each revision mends one stage of his most-worn region. The mend shrinks each time, and his full-power form mends nothing. The **bladed mantle** is region 5: breaking it removes the mantle attacks and slows his next revision. His goons are single-region bodies, taken out by one break | *Silhouette:* each revision **reprints** it with the new revision number and a patch stamp on the mended region. An Emergency revision prints a flaw stamp. *Crown:* a fifth arc runs along the mantle's hem. *Cards:* styled as revision notes, for example `REV 7: LEFT ARM PATCHED` or `MANTLE: TORN` |
 | **Cyborg**: Regrowth and the Rail chip | Flesh regions regrow at 8 wear per second out of exchanges and never count toward the brink. The **Rail chip** moves on a seeded schedule, about every 4 s, between four stations: head, chest, back and hip. A heavy, a GUARD BREAK, a signature hit or an interrupted **Press** opens the hatch at the chip's station for 1.5 s. While it is open, the director weights that station's region by ×3, and a hit there damages the chip. Chip stages are scratched, cracked and split, and a split chip means the brink. Chip damage never regrows | *Crown:* flesh arcs visibly crawl back after damage, so the transient state reads. *Silhouette:* shows the rail, the chip's current station and its stage marks, which are the only persistent state. *Cards:* chip events only, such as `HATCH OPEN: HIP` and `CHIP: CRACKED` |
 
@@ -107,10 +107,33 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   - *Rungs:* Committed was +15% at 4 self-wear per second; Overcommitted +30% on two regions at 6 per second; Overdrawn +50% on three regions for at most 4 s at 8 per second, then each spent region dropped a stage and a 45 s lockout followed.
   - *Rules:* no finisher could start while Overdrawn. Self-wear did not spread and did not feed Respect.
   - *QA bands:* Overdrawn users won 40 to 60%, with at most 1.5 uses per match.
-- **Narrative's round-2 options for the Anti-hero: confirmed.**
-  - *Swallow It* and *Take a Knee* keep Spite, because neither involves help. A cracked facade makes Spite harder to earn.
-  - *Hat in Hand* and *Full Circle* forfeit Spite for the match, because they accept help.
-  - *Swallow It* is the default Anti-hero power-up (Orb: "sacrifice pride for power"). Holding it drains Pride into a proportional surge. It can be interrupted, and interrupting it counts as a decisive exchange.
+- **The Anti-hero's pride-for-power kit** (Orb, round 4: he leans toward Drop the Act in 1v1, and Humbled). All names are placeholders.
+  - **Humbled (forced, always on).**
+    - *Stacks.* Each humbling he suffers gives a stack of shame, up to 3. A humbling is being parried, taking a GUARD BREAK, or having a region broken.
+    - *While stacks are held:* each stack gives +8% damage and +0.03 on outcome rolls.
+    - *Release.* The next decisive exchange he wins spends all his stacks in a burst: +15% damage per stack on that exchange, then the stacks clear.
+    - *Cost.* Each humbling also costs 15 Pride, so humblings push him toward the facade crack.
+    - Humbled suits the AI and new players, because there is nothing to decide.
+  - **Drop the Act (by choice, 1v1, once per match).**
+    - *When.* Available after 2:00 while his Pride is 50 or more, so he still has a front to drop.
+    - *How.* He holds an input for 1 s. It is exposed like charging, so an interrupt is a decisive exchange won by the rival, and he keeps his front.
+    - *Effect.* His Pride goes to 0 and the facade cracks at once: every withheld penalty lands, and the crown and cards show his true state. For the rest of the match he is **unrestrained**:
+      - +30% damage and +15% speed;
+      - +0.08 on outcome rolls;
+      - a chain limit of 6 instead of 5.
+    - *Cost.* Pride can never rebuild above 49 this match, so the Proud front is gone for good and his real wear shows and counts.
+  - **Interactions.**
+    - Both keep Spite, because neither involves help. Humbled stacks make Spite easier to earn on the brink, because rage feeds the comeback.
+    - After Drop the Act, Humbled still stacks. Its Pride cost no longer matters, and its burst still does.
+    - *Swallow It* (hold to drain Pride into a proportional surge, interruptible) is kept as the fallback if Orb drops either.
+  - **Earlier rulings stand:** *Take a Knee* keeps Spite. *Hat in Hand* and *Full Circle* forfeit Spite for the match, because they accept help.
+  - **Narrative's round-4 options B1 to B4** stay as notes until Orb picks: Shed Regalia, Credit Where Due, The Code, Loss of Face (`docs/narrative/pitches-q3.md`, Round 4 §2). Each would plug into the same Pride and Proud-front rules.
+  - **QA bands**, per Anti-hero match:
+    - he wins 45 to 55% of each pairing;
+    - in 1v1, the AI drops the act in 40 to 80% of matches, at a median of 3:00 to 6:00;
+    - matches where he drops the act are won 45 to 60% of the time;
+    - Humbled bursts fire 1 to 3 times per match;
+    - the facade cracks in 60 to 90% of matches.
 - **Press (the Cyborg's food).** His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
 
 ## 4. What the sim needs (Simulation, Tools)
@@ -124,7 +147,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   - finisher template ids per form tier.
 - **Per-atom data:** region weights, wear multiplier, impact class, and whether it opens the hatch.
 - **Per-fighter state:** wear per region, stage, brink flag, Rallied regions, hatch timer, chip station and stage, commit rung, Pride mask.
-- **Events** into the fx stream (commit `9ac1ea9`): `region_stage`, `region_broken`, `brink_enter`, `brink_exit`, `rally`, `hatch_open`, `chip_stage`, `heat_stage`, `boil_over`, `facade_crack`, `revision_reprint`, `finisher_start`, `finisher_contest`, `ko`.
+- **Events** into the fx stream (commit `9ac1ea9`): `region_stage`, `region_broken`, `brink_enter`, `brink_exit`, `rally`, `hatch_open`, `chip_stage`, `heat_stage`, `boil_over`, `facade_crack`, `shame_stack`, `drop_act`, `revision_reprint`, `finisher_start`, `finisher_contest`, `ko`, plus the fold events in §7.
 - **Rendering and randomness.** Render reads state and events and never writes them. Region draws use the sim RNG only.
 
 ## 5. Acceptance tests
@@ -175,3 +198,42 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 - **Animation, VFX, Audio, Camera:** the channels in `damage-model.md` §3.
 - **Narrative:** card text and barks.
 - **QA:** tests 1 to 7.
+
+## 7. The fold: fragments and the proving ground (the Protagonist)
+
+Orb (round 4): **space folds inward** toward the Protagonist and the planet vanishes around them, for an in-world reason. Narrative's fiction and storyboard are in `docs/narrative/pitches-q3.md`, Round 4 §3.
+- **The fiction.** The fragments are the planet's bare bone. Held close, they let him draw that lifeless ground over the fight.
+- **Legal's rules apply** (`docs/legal/q3-screen.md` §a):
+  - no fixed count;
+  - no search, no sensor and no wish;
+  - only the fighters speak or appear;
+  - no column of light and no darkening sky.
+
+This section is binding and replaces the relocation rules in `systems-sketch.md` §4 and `pitches.md` §4. Names are placeholders.
+
+| Rule | Spec |
+| :--- | :--- |
+| **Fragments** | Shed by planet damage (region-break launches, beam hits, ground tier-ups, clash shockwaves) as irregular pieces whose mass runs from 1 to 5, drawn with a seed. Anyone can grab one for a charge surge. Only the Protagonist can **hold** them, and they orbit his body |
+| **Threshold** | A total held mass of **12** (starting value). Any mix of sizes works, and there is never a count to complete. As his mass nears 12, the orbit tightens and hums. At 12 the ring closes: the tell |
+| **Time floor** | **Kept at 4:00.** No fold before it. It protects act 1 and 2 pacing, and gives the Cyborg his populated planet for at least the first half of the match |
+| **Folding** | With the ring closed and the floor passed, he holds an input for 1.5 s: the lead-in, with his line and the rival's reply. He is exposed like charging during the hold. An interrupt counts as a decisive exchange won by the rival, and knocks one fragment loose. Once the hold completes, the fold is a set piece of up to 6 s (Orb allows cinematics longer than 3 s) |
+| **Who comes** | In 1v1, both fighters, always, so the rival is never out of range (pillar 3). In 2v2, every fighter is inside the closing ring (default; see open questions) |
+| **The proving ground** | A small wrapped planetoid, about a third of the planet's circumference, of barren craterable stone. No civilians, no structures and no cover |
+| **What the proving ground changes** | No casualties, so no collateral-fed gain: the prototype's menace and anguish stop, and the Cyborg cannot Press but keeps his Hunger. There is no hiding, because there is no cover. Ego meters, forms, wear and heat carry over unchanged. The Protagonist's **final form unlocks** here, and only here |
+| **Fragility** | While folded, the fragments still orbit him. A heavy, a GUARD BREAK, a signature hit or a region break on him knocks one loose, with a seeded pick weighted to the largest. It lands on the barren ground, and anyone can grab it: the rival gets a surge and denies the mass. Each loss makes the horizon **flicker**: a `FOLD FLICKERS` card, and the planet's edge ghosts back in |
+| **Unfolding** | If his held mass stays below 12 for **3 s**, the planet returns. In those 3 s he can grab back mass and hold the fold, a scramble set piece. On the unfold, everyone returns to where they left. His final form ends and he drops to his previous form, keeping his promise. He cannot fold again for **60 s** |
+| **Finishers** | These work normally in the proving ground, which is the natural stage for the finale. A finisher that starts during the unfold countdown completes before the planet returns |
+| **Events** | `fragment_shed`, `fragment_grab`, `fragment_lost`, `ring_closed`, `fold_start`, `fold_flicker`, `unfold` |
+
+**QA bands**, per Protagonist match:
+- a fold happens in 30 to 60% of matches;
+- no fold before 4:00 (0 cases);
+- median fold time 4:30 to 6:30;
+- 20 to 50% of folds collapse back to the planet, so fragility matters without dominating;
+- 50 to 80% of matches with a fold end in the proving ground;
+- no casualties are recorded while folded (0 cases);
+- the Protagonist still wins 45 to 55% of each pairing.
+
+**Open questions for Orb:**
+- In 2v2, does the ring take everyone, or only the fighters inside it? That would split the match across two arenas, which is costly for the camera. Recommendation: everyone.
+- Should the rival's reply line vary with who is winning? Narrative can write both.

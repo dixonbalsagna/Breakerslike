@@ -24,7 +24,7 @@ Six systems that Orb's four fighters and the new match length need (`docs/ep/vis
   - a heavy hit scatters one;
   - the fold unlocks on the total mass held, never on a set count;
   - no search, no radar and no wish.
-  The design is in `pitches.md` §4. It replaces section 4's keystones.
+  The **binding fold rules** are in `spec-wounds.md` §7 (space folds inward; fragile fold; 4:00 floor). They replace section 4's keystones and `pitches.md` §4.
 - **The Cyborg:**
   - a backup drive he catches and docks;
   - the weak point is the **Rail chip** (Orb's pick);
