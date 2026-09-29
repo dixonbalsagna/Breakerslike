@@ -1,6 +1,6 @@
 # Buildings in depth, and the director's building impact
 
-Owner: World and Environment. Status: design, docs only (2026-09-29). Nothing here is in the sim yet. Simulation holds the sim for the Wounds slices, so this note also says where the work slots in (section 8). It answers Orb's direction in `docs/ep/vision.md`, "Rims and buildings".
+Owner: World and Environment. Status: design, docs only (2026-09-29). Updated the same day for Orb's rulings: no rooftop cover, personality-weighted targeting, and brunt chains (section 4b). Nothing here is in the sim yet. Simulation holds the sim for the Wounds slices, so this note also says where the work slots in (section 8). It answers Orb's direction in `docs/ep/vision.md`, "Rims and buildings".
 
 Read first: `sim/world/structures.gd`, `sim/director/launch.gd`, `sim/core/fighter.gd` (`stepLaunched`), `render/core/look.gd` and `planet_view.gd` (`Z_BUILDING_FRONT`, `_set_building`), `docs/world/craters-scorch-water.md`.
 
@@ -75,10 +75,10 @@ Per building: `z` (front face), `d` (depth), `row`, plus the existing `x, w, h, 
 
 1. **Normal movement never collides.** Already true in free flight; it stays true.
 2. **A launch does not collide incidentally.** The block in `stepLaunched` that checks every standing building on the x axis is removed. A launched fighter flies past the buildings on the plane; visually they are behind it (rows 1 to 3) or in front of it (row 0).
-3. **A launch collides destructively only with the building the director chose** (section 4). The fighter carries `aimB` (the building id or -1); only that building is tested, and only when the fighter's depth has reached the building.
+3. **A launch collides destructively only with the building the director chose, and with the buildings its burst-through carries on into** (sections 4 and 4b). The fighter carries `aimB` (the building id or -1); only that building is tested, and only when the fighter's depth has reached the building. When a hit is passed through, `aimB` moves to the next building on the line.
 4. **Non-launch damage is unchanged.** Beams, craters, explosions and blasts still call `damageArea` by x distance and height, and they do not care about z, except that a blast's reach now also tests `|z_front - d/2|` so a blast on the plane does not reach a building 400 units behind (Encounter or World decides a reach of about 260 in z; see risks).
 5. **Cover and hiding do not use buildings.** `coverAt` stays ocean, forest, mountains. Buildings give no cover, do not block lock-on, and hidden fighters stay on the plane. This keeps hiding readable and keeps the hero's flight from populated ground (pillar 5) a choice.
-   - Option, not proposed now: **rooftop cover** in the city. A fighter in ESCAPE stance below a row-1 building's top, more than 170 from the opponent, counts as hiding. Trade-off: it is a good story (the villain hides among the people he feeds on), but it sends hiding fights into populated ground and works against the hero's lure-away behaviour and the collateral bands. Orb and Game Design decide.
+   - **Decided (Orb): no rooftop cover.** Buildings never count as hiding.
 6. **Civilians.** They stand at their building's row: Rendering places `popAlive` figures around each building at its z. They neither block nor are blocked by anyone. Casualties come from damage exactly as now (`casualty()`, menace and anguish unchanged).
 
 ## 4. The director-chosen building impact ("the brunt")
@@ -97,7 +97,8 @@ At a launch beat, for the target D and the launcher A (the same moment `chooseLa
 `score = BRUNT_BASE (14) + h / 32 + 3 * tier + fresh (+4 if hp = maxhp) - care * CARE_W * clamp(b.popAlive / POP_REF, 0, 1) - REPEAT_B (12 if it is the last building hit) + noise`
 
 - `care` is +1 for the hero and -0.8 for the villain, and `CARE_W` is 34 (the existing constants). So a building with 60 or more people costs the hero 34 and pays the villain about 27: **the hero avoids occupied buildings and the villain seeks them.** An empty or nearly empty building (a shop, a wrecked house) is neutral, so the hero can still choose one, and a hero with only occupied buildings around chooses NONE or another launch, which is the story.
-- Row depth adds `+2 per row` for the villain (further is more dramatic and takes more time in flight, so more in the wreckage) and nothing for the hero.
+- Row depth adds `+2 per row` for the villain (further is more dramatic and takes more time in flight, so more in the wreckage) and nothing for the hero. Game Design agrees, as a personality tell kept inside the rate band.
+- **Personality first, drama on top (Orb).** The personality term is the occupancy term above (range about -34 for the hero to +27 for the villain) plus a tallness term for the villain, `+ (-care) * TALL_W * clamp(h / 400, 0, 1)` with `TALL_W = 12` (positive for the villain only: he seeks tall, occupied towers; the hero gets nothing from height). The drama terms are the row bonus, the height term `h / 32`, freshness and the chain terms (4b). Cap the drama terms together at `DRAMA_CAP = 14`, against a personality swing of about 60 between the two fighters, so personality decides which building and drama decides among near equals.
 - **Pity rate.** To make it "often", a counter `sinceBrunt` in the director state grows by one on every planner launch that had a candidate in reach and picked something else, and adds `BRUNT_RAMP (5)` per count to every building candidate. It resets on a building hit. It only counts when a candidate is in reach, so open ground is untouched. This gives a tunable rate without a hard rule, and it is deterministic.
 
 ### The "often" rate (proposal for Game Design's numbers)
@@ -122,21 +123,74 @@ Depth costs nothing physically: gravity, drag and the water rules are unchanged.
 Arrival speed `sp` at the face, launcher tier `T`.
 - **Damage:** `sp * (0.55 + 0.25 T) * BRUNT_MUL`, with `BRUNT_MUL = 1.8` (today's incidental formula times 1.8, so the chosen building takes the brunt).
 - **Outcome by damage over the building's `maxhp`, `r`:**
-  - `r >= 1`: **collapse.** The building falls (`structuresLost`), its remaining people are casualties (existing rule: everyone left when it falls), big debris and dust, camera shake 10 for tall ones (existing). The fighter bursts through with 45 percent of its speed and lands at the building's foot.
-  - `0.4 <= r < 1`: **partial wreck.** `curH` shrinks (existing: standing height is 30 to 100 percent of full), casualties `pop * frac * 1.3` (existing). The fighter rebounds (existing 25 percent reversal).
+  - `r >= 1`: **collapse.** The building falls (`structuresLost`), its remaining people are casualties (existing rule: everyone left when it falls), big debris and dust, camera shake 10 for tall ones (existing). The fighter bursts through with the speed kept by the rule in 4b (about 0.35 to 0.8 of it, by building size) and carries on: into the next building on its line if there is one (4b), otherwise it lands at the building's foot.
+  - `0.6 <= r < 1`: **heavy wreck.** As a partial wreck below, but the fighter is going fast enough to punch through the ruined wall: it carries on as in 4b at a further 0.7 of the kept speed.
+  - `0.4 <= r < 0.6`: **partial wreck.** `curH` shrinks (existing: standing height is 30 to 100 percent of full), casualties `pop * frac * 1.3` (existing). The fighter rebounds (existing 25 percent reversal). The chain ends.
   - `r < 0.4`: **cracked.** Dust, a few casualties, the fighter drops at the base.
 - **Splash:** buildings within `0.9 w` in x and 120 in z take 25 percent of the damage (spray of rubble), so a brunt on a house in a row hurts its neighbours a little.
 - **The fighter** takes `sp * 0.012` damage (today 0.006), routed as an impact under the Wounds model (`damage-model.md`: launch impacts and building collisions are wear sources), and the hit-stop 0.06 s the ground impacts use.
 - **Size on the bands.** A tower in Bellgate holds about 13 people, 3.1 percent of the civilians; a collapse costs that. At 0.5 to 2 brunts a match the extra loss is at most a few percent of the population per match, and it grows with tier through `T` (which is what the tier-scaled cap should shape). **A casualty ramp or cap will apply to brunts too** (the collateral work is on hold behind the Wounds slices). Orb decides whether a brunt on an occupied building should also add to the hero's anguish beyond the existing rule (`n * 0.5`, or `0.9` if the hero himself caused it): a single event that costs 13 lives is a natural anguish spike.
+
+## 4b. Brunt chains: through several buildings in one attack
+
+Orb: "a classic villain trope is to send the hero careening through multiple skyscrapers in one attack." A chain is one launch that bursts through a building and carries on into the next building on its line, up to a cap. It is not a separate launch type: it is what a BUILDING SMASH does when there is enough momentum and a building in the way. The planner looks ahead so it can choose it deliberately.
+
+### The line and the carry-on rule
+
+- **The line** is the flight's own 2D path (x and y, exactly today's physics). The next building is the nearest one ahead whose footprint the path will enter, whose top is above the path there, whose gap from the last building's far edge is at most `CHAIN_GAP = 260` units of x, and whose row depth differs from the last building's by at most `CHAIN_DZ = 180` (so the fighter can weave, but not leap from the foreground row to the back street). It may be in any row.
+- **Depth through the chain.** The fighter's `z` runs piecewise: from each building's depth to the next building's, by the same smoothstep over the x distance between them (section 4, "how the vector bends"). A chain through a front row, a mid row and a back row is a weave into the distance: the "careening".
+- **Carry-on.** After a hit with `r >= 1` (collapse), or `0.6 <= r < 1` (heavy wreck, at a further 0.7), the fighter continues with speed `sp' = sp * keep`, where `keep = clamp(0.8 - 0.45 * maxhp / 3000, 0.35, 0.8)`. A house (maxhp 100 to 220) keeps about 0.77; a 1,200-hp tower 0.62; a 3,000-hp skyscraper 0.35. It continues while `sp' >= CHAIN_MIN_SP (500)` and the chain is under its cap; below that, or with no next building, it drops at the foot of the last building. A partial wreck or a crack ends the chain.
+- **Speed and damage fall together:** each next building sees a lower `sp`, so its damage (`sp * (0.55 + 0.25 T) * 1.8`) is lower. A tier-2 launch at 2,600 units per second through three 1,200-hp towers arrives at 2,600, 1,610 and 1,000, with damages of about 4,900, 3,000 and 1,900: all three collapse. Through five houses it barely slows. It takes a tall tower to stop it, which is the physics Orb's trope needs.
+- **Cap on chain length:** by the launcher's tier, `CHAIN_MAX = 2` at tiers 1 and 2, 3 at tier 3, 4 at tier 4, and an absolute limit of 5 that only a scripted finisher may use. A stronger fighter can wreck a longer street, and at low tier the chain is short so the "no fight destroys the planet at low tiers" rule and the low-tier bleed band hold.
+
+### Damage and casualties per building
+
+- Each building in the chain takes the brunt damage for its own arrival speed and follows the outcome table in section 4. Casualties are per building by the existing rule (`pop * frac * 1.3`, and everyone left when it falls), credited to the launcher (`launchBy`), feeding menace and anguish per casualty as today. Game Design's default stands: no extra anguish multiplier.
+- Splash (25 percent within `0.9 w` in x and 120 in z) applies once per building per launch, at the highest value it would get, and never to a building that is itself in the chain, so a chain does not double-hit its own neighbours.
+- **The fighter's damage.** Each building costs the fighter `sp * 0.012` and one wear hit as an impact source (the Wounds model routes it; region spread as for launch impacts). A chain cannot end the match: the sum of a launch's building damage is capped at `CHAIN_SELF_CAP = 12` percent of max HP, and its wear cannot by itself take a region past battered (Encounter and Simulation set the exact wear cap in B2 against `spec-wounds.md`); the end still comes through finishers.
+- **Casualty budget.** A chain is the biggest single collateral event in the game: four Bellgate towers are about 50 people, 12 percent of all civilians. The planner declines a chain whose expected casualties exceed `CHAIN_POP_CAP` of the starting population: 8 percent at tier 2 or below, 12 at tier 3 and 20 at tier 4. This is a placeholder for World's tier-scaled collateral cap; **Orb decides** the values, **to align with Game Design's targets.** The cap applies to the villain and the hero alike; the hero would in practice never approach it (below).
+
+### How the planner scores a chain
+
+- Each surviving first-building candidate is run through a **lookahead**: the extended predictor with the carry-on rule, stopping at the cap. It returns the chain `[b1 .. bn]`, arrival speeds, and expected casualties (from each building's `popAlive` and the damage fractions). The predictor cost per link is one more run; only the best first-building candidate per side gets a second run with a force multiplier of 1.4 (`CHAIN_FORCE`), so the planner can choose "more force to get through", like SMASH ACROSS.
+- **Score.** The single-building score of section 4, plus for each further building `i` in the chain (`i = 2 .. n`):
+  - personality: `- care * CARE_W * clamp(b_i.popAlive / POP_REF, 0, 1)` and, for the villain, the tallness term. The villain gains up to about 27 per occupied tower he sends the hero through; **the hero loses up to 34 per occupied building**, so a hero chain only appears through empty or evacuated buildings (a building with `popAlive <= 4`), which are rare in a settlement. **Chains are the villain's signature and rare for the hero** because of this term, not because of a rule;
+  - drama: `+ CHAIN_DRAMA = 5` per extra building, inside the `DRAMA_CAP` of 14 for all drama terms together;
+  - a chain that would exceed `CHAIN_POP_CAP` is dropped, not just penalised.
+- **Variety.** The repeat penalty applies to the launch type (BUILDING SMASH) as today; a chain does not add a new type. A chain right after a chain gets `REPEAT_CHAIN = 12`, so the villain cannot only do them.
+- The `sinceBrunt` pity counter (section 4) counts a chain as one brunt.
+
+### Events and camera per hit
+
+- `launch_depth` carries `n` (the planned chain length from the lookahead) and the first building; it is emitted at the launch beat as before.
+- `building_hit` gains `link` (1 for the first building), `n`, `sp` (arrival speed) and `keep`. One event per building, in order, each on the tick the fighter reaches it.
+- New `chain_link` `{from, to, x0, y0, z0, x1, y1, z1, dur, link}` on each burst-through: the segment the fighter is about to fly to the next building. Camera uses it to look ahead; Rendering to bend the fighter's trail; Audio to build the crescendo.
+- `building_fall` fires as each one falls, so each collapse animates and the dust chain reads.
+- **Camera (proposal for the Camera director):** a hold of 0.35 s on the first hit and 0.12 s on each further one (the hit-stop uses the existing `dirS.stop`, so a four-building chain adds at most about 0.7 s of freeze in total, capped at 0.8 s), lead the framing along the fighter's velocity so the next building is in shot, zoom out one notch when `n >= 3`, and add shake per link (`10 + 4 * (link - 1)`, at most 26). The last collapse is held in frame for a beat as the dust settles.
+- **Rendering:** the chain shows as a dust-and-debris tunnel through the buildings: the collapse animation of each building begins on its `building_hit`, staggered by the flight time between them.
+
+### The QA band for chains
+
+Game Design's base bands are in `balance-targets.md` §5b (brunts). Proposed additions, **to align with Game Design's targets**, pooled over a default-arm run plus both mirrors:
+
+| Measure | Band |
+| :--- | :--- |
+| Chains (two or more buildings in one launch) out of all brunts | 15 to 35% pooled. Villain-side fighters 25 to 45%. Hero side 0 to 10% |
+| Chain length among chains | length 2: 55 to 75%; 3: 20 to 35%; 4 or more: at most 10%. Never above the tier's `CHAIN_MAX` (a hard test) |
+| Chains per match, P2 testbed | default arm 0.1 to 0.6; villain mirror above the default; hero mirror at most 0.1 |
+| Casualties in one chain | mean at most 12% of the starting population; no chain above its tier's `CHAIN_POP_CAP` (hard test); no chain at tier 2 or below above 8% |
+| The fighter's building damage in one launch | at most 12% of max HP (hard test) |
+| Hero chains through an occupied building (`popAlive > 4`) | none (hard test) |
+| Collateral bands (§4) | Chains and brunts count toward all of them, including the low-tier bleed, and are never exempt |
 
 ## 5. Data and events
 
 ### Sim state
 
 - `Building`: `z`, `d`, `row` (new); `pop` and `popAlive` per building (exist).
-- `Fighter`: `aimB` (building index or -1), `aimX0`, and `z`. `f.z` is 0 unless aimed.
+- `Fighter`: `aimB` (building index or -1), `aimX0`, `aimZ0` (the depth at the last building, for the piecewise `z`), `chainN` (buildings hit so far this launch) and `z`. `f.z` is 0 unless aimed.
 - Director state: `sinceBrunt`.
-- New constants (World and Encounter, named, in `sim/world/` and `sim/director/`): the row table, `BRUNT_MUL`, `BRUNT_BASE`, `BRUNT_RAMP`, `POP_REF` (60), `REPEAT_B`, `SPLASH_R`, `SPLASH_Z`, `SPLASH_FRAC`.
+- New constants (World and Encounter, named, in `sim/world/` and `sim/director/`): the row table, `BRUNT_MUL`, `BRUNT_BASE`, `BRUNT_RAMP`, `POP_REF` (60), `REPEAT_B`, `SPLASH_R`, `SPLASH_Z`, `SPLASH_FRAC`, `TALL_W`, `DRAMA_CAP`, and for chains `CHAIN_GAP`, `CHAIN_DZ`, `CHAIN_MIN_SP`, `CHAIN_MAX` by tier, `CHAIN_FORCE`, `CHAIN_DRAMA`, `REPEAT_CHAIN`, `CHAIN_SELF_CAP`, `CHAIN_POP_CAP` by tier, and the `keep` formula's constants.
 
 ### Events for Rendering, Camera and Audio
 
@@ -145,8 +199,9 @@ New fields on existing fx events: `debris`, `dust` and `ring` gain `z` (default 
 | Event | Fields | When | Used by |
 | :--- | :--- | :--- | :--- |
 | `launch_depth` | x0, y0, x1, y1, z, b, dur, owner | a launch is aimed at a building (at the launch beat) | Camera (frame the flight and the building), Rendering (the fighter leaves the plane), Audio |
-| `building_hit` | b, x, y, z, damage, ratio, outcome (`crack`, `wreck`, `collapse`), owner | the chosen building is hit | Rendering (the collapse animation, damage state), VFX, Camera (a 0.3 to 0.4 s hold), Audio |
+| `building_hit` | b, x, y, z, damage, ratio, outcome (`crack`, `wreck`, `collapse`), owner, link, n, sp, keep | the chosen building is hit | Rendering (the collapse animation, damage state), VFX, Camera (a 0.3 to 0.4 s hold), Audio |
 | `building_fall` | b, x, z, w, h | a building's hp reaches 0 by any source | Rendering (any collapse), Audio |
+| `chain_link` | from, to, x0, y0, z0, x1, y1, z1, dur, link | the fighter bursts through a building and is heading for the next (4b) | Camera (look ahead), Rendering (trail), Audio |
 
 `building_fall` exists so a collapse from a beam or a blast animates the same way as a brunt.
 
@@ -156,12 +211,12 @@ The persistent state for a seek or a snapshot is `S.buildings` (hp, alive, popAl
 
 | Owner | Work |
 | :--- | :--- |
-| **World** | The row table and archetype data in `data/biomes/`; the settlement generator (`terrain.gd` `genWorld` and `_row`); `z`, `d`, `row` on buildings; pop distribution; footing; the brunt damage function and splash in `structures.gd`; the `building_fall` event; rim scaling |
-| **Encounter** | The planner: extended predictor and the aiming search, the candidate scoring, `sinceBrunt`, the `launch_depth` event; the `stepLaunched` change (collision only with `aimB`); removing the old plane-only BUILDING SMASH candidate and its nearest-building call |
+| **World** | The row table and archetype data in `data/biomes/`; the settlement generator (`terrain.gd` `genWorld` and `_row`); `z`, `d`, `row` on buildings; pop distribution; footing; the brunt damage function, the carry-on `keep` rule and the splash in `structures.gd`; the `building_fall` event; rim scaling |
+| **Encounter** | The planner: extended predictor and the aiming search, the candidate scoring, the chain lookahead and its scoring, `sinceBrunt`, the `launch_depth` and `chain_link` events; the `stepLaunched` change (collision only with `aimB`, and the carry-on); removing the old plane-only BUILDING SMASH candidate and its nearest-building call |
 | **Simulation** | The fighter fields (`aimB`, `aimX0`, `z`), the hash, the golden regeneration, the fx event records |
 | **Rendering** | Buildings from the sim's `z` and `d` in place of `Z_BUILDING_FRONT`; the foreground row and its fade; the fighter mesh at `f.z`; collapse and damage animations from `building_hit` and `building_fall`; civilians at their row; row 4 backdrop; the footing |
-| **Camera** | The flight into depth: frame the fighter, the building and the target, hold on the hit; nothing more (depth barely changes the projected size: at zoom 0.5 and 720 px a fighter 170 units back is only about 6 percent smaller) |
-| **QA** | The brunt-rate and personality tests (section 4); a test that no launch hits a building it was not aimed at; the collateral bands |
+| **Camera** | The flight into depth: frame the fighter, the building and the target, hold on each hit, look ahead along a chain; nothing more (depth barely changes the projected size: at zoom 0.5 and 720 px a fighter 170 units back is only about 6 percent smaller) |
+| **QA** | The brunt-rate and personality tests (section 4) and the chain bands (4b); a test that no launch hits a building it was not aimed at or chained into; the collateral bands |
 | **VFX, Audio** | Bursts and sounds from the three events; the `z` on debris and dust |
 
 ## 7. Readability rules for Rendering
@@ -193,5 +248,7 @@ B1 is safe to do early because it changes data and not choices. B2 must come aft
 - **Row 0 versus readability.** The fade is a fix, not a guarantee. If it still reads badly, drop row 0 to a sparse decorative row (no sim building), which costs the "in front of the fight" building and nothing else.
 - **Population per building.** Splitting people over about twice the buildings lowers each building's population, so a brunt on a single building costs fewer lives than the current towers. That is part of why the casualty ramp is needed and why the 13-person tower is the number to watch.
 - **Structure count.** 47 becomes about 110, and the structure-share band in `balance-targets.md` §4 needs Game Design's confirmation that it is a share.
-- **Orb decides:** (a) whether rooftop cover exists; (b) how much a brunt on an occupied building weighs in the hero's anguish; (c) whether the villain's row-depth bonus is right (it makes him prefer the dramatic far tower); (d) the "often" band above.
+- **Decided by Orb:** no rooftop cover; targeting weighted toward personality with drama on top; chains allowed; no extra anguish multiplier (Game Design's default). **Still with Orb:** the "often" band (Game Design's §5b), the chain casualty budget (`CHAIN_POP_CAP`) and the length caps by tier.
+- **A chain is the biggest collateral event in the game.** Four towers in one attack is about 12 percent of the civilians. The tier caps and the casualty budget exist so that it stays a set piece at high tier and cannot happen at low tier; the collateral ramp must be designed with chains in mind.
+- **Chain determinism and cost.** The runtime finds the next building with the same rule as the planner's lookahead (one predictor run per link, at most 3 links), so the plan and the outcome agree. Encounter measures the cost in B2.
 - **Not in this note:** interiors, building types beyond tower and house, enterable buildings, and any destruction shape beyond height shrinking and collapse (Art and VFX own the look of a wreck).
