@@ -346,3 +346,27 @@ Same format as the first two, self-contained and short. The priority is **breadt
 **Finisher lines**
 - *Winner.* "Your order is complete. Please rate your experience." Alternate: "That was a pleasure. It was also lunch."
 - *Loser.* "I want to speak to a manager." Alternate: "I am the manager. ...I would like a different manager."
+
+## 6. The Encore: how each opponent reacts
+
+The Empress's comeback (Orb's pick): on the brink, all three guard members return for a second, harder goon phase while she withdraws out of reach, snipes and taunts. Her lines and taunts are in `voices/empress.md`. Here are the opponent's reactions, in the matchup register, with alternates. Names are placeholders.
+
+### The Protagonist (grim, plain)
+- *The recall.* a. "Not again. They were down. Stay down." b. "Wait, they're all back? ...Okay. Okay. Round two."
+- *The guard holds.* a. "She's mending. Break them faster." b. "I keep finding out how much I hate this."
+- *The guard falls.* a. "That's all of them. Now it's you." b. "Nobody left to hide behind. I'll take it from here."
+
+### The Anti-hero (contemptuous)
+- *The recall.* a. "You recall the dead. Vulgar." b. "Filth. You cannot even let them rest."
+- *The guard holds.* a. "You hid behind them. Fifth. Behind the goons." b. "You were never on the field. You watched from above."
+- *The guard falls.* a. "There. Nothing left between us." b. "You were loud. Now you are alone."
+
+### The Cyborg (polite menace)
+- *The recall.* a. "Encore? I did not order a second serving." b. "Is this an extra course?"
+- *The guard holds.* a. "The staff is very good. I withdraw my complaint." b. "Please tell the kitchen it was underdone."
+- *The guard falls.* a. "The kitchen is closed, madam. Please come out." b. "That was delicious. Where is the next course?"
+
+### The Empress (mirror)
+- *The recall.* a. "You cannot use OUR encore!" b. "Ours is the original. Guard, ignore hers."
+- *The guard holds.* a. "You have our guard? Copy!" b. "How dare you mend. We mend."
+- *The guard falls.* a. "Now we are both alone. How intimate." b. "Two empresses, no guard, one hat. Lovely."

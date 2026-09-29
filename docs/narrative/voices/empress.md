@@ -106,5 +106,42 @@ The Shield (bruiser), the Herald-Archer (marksman) and the Runner (speedster), p
 4. "Everything we do out here will need a form. We will do it anyway."
 5. "Nobody to annex. And nobody to complain to. How dull."
 
-**Comeback (the Rally)**
-Orb rejected the earlier comebacks. On the brink, the opponent must brawl through her guard to reach her. Her lines for it are pending Game Design's pick.
+## The Encore (her comeback; Orb's pick)
+
+On the brink, all three guard members return for a short, harder second goon phase while she withdraws out of reach, snipes and taunts. If they hold, one region mends and she steps back in. If they fall first, she is on the brink and within reach. Once per match. No visible paperwork; the bureaucratic voice stays. Game Design owns the numbers (`docs/design/spec-wounds.md` section 3). Lines are original and unsearched.
+
+**The recall call** (5 alternates; she climbs to a balcony of air and calls)
+1. "Guard! ENCORE! Present arms, and try to look expensive."
+2. "The empire calls an encore! All of you, back on parade!"
+3. "Nobody dismissed you. We merely took an early lunch. ENCORE!"
+4. "Guard, return. We have re-read your dismissal. It was a clerical error."
+5. "Curtain up, guard! Once more, with feeling!"
+
+**The guard's return and salute** (the guard shout in unison; the aide is pained)
+- Chorus (pick one): "Present arms!" / "Back on parade, ma'am!" / "Again, ma'am!" / "Reporting again, ma'am!"
+- The Runner: "Sorry I'm late, ma'am!"
+- The Shield: "For the empire, ma'am!"
+- The aide, pained: "Ma'am, the paperwork for a recall alone..." She: "We will deal with it later."
+
+**Her taunts from out of reach** (3 per opponent, in the matchup register)
+
+| Against | Taunt 1 | Taunt 2 | Taunt 3 |
+|---|---|---|---|
+| **The Protagonist** (grim) | "Go on, petitioner. Break through them. We shall be over here, being unreachable." | "Every second you spend on them is a second the empire enjoys." | "We could do this all day. In fact, that is the plan." |
+| **The Anti-hero** (contemptuous) | "Do hurry, petitioner. Ours is a very long parade." | "Sulk at my guard. They are used to it." | "You wanted a hierarchy. Here it is. You are at the bottom." |
+| **The Cyborg** (polite menace) | "Have a snack, petitioner. My guard is on the menu, we hear." | "Your manager will be along shortly. We sent for him." | "Please take a number. We are busy. We are at a distance." |
+| **The Empress** (mirror) | "Guard, ignore her. Attend to the ORIGINAL." | "You cannot reach us. You are the copy." | "Two encores? Ours is the real one." |
+
+**When the guard holds** (one region mends, and she steps back in; 5 alternates)
+1. "Well done, guard. Dismissed... no. Stay. We are stepping in."
+2. "Thank you, guard. You may keep your lives. Provisionally."
+3. "There. Mended. Nobody saw. Everybody saw. It was wonderful."
+4. "The empire is restored. Everybody applaud."
+5. "We are back, petitioner. Did you miss us? Do not answer."
+
+**When the guard falls** (she is on the brink and within reach; 5 alternates)
+1. "You... you defeated my guard. Nobody defeats my guard! ...We will do it ourselves."
+2. "Dismissed. All of you. Again. With honour. This time properly."
+3. "You have made us leave the balcony. Do you know how long it takes to come back down?"
+4. "Very well. Now we come to the part with us in it."
+5. "Guard, you failed. Please leave through the... yes, thank you."
