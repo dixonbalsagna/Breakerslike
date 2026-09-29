@@ -1,23 +1,28 @@
-# CI for Meridian (working title). Free GitHub-hosted runners only, no secrets.
-# Docs: docs/tools/README.md.
+# CI for Orb Combat EX. Free GitHub-hosted runners only, no secrets beyond the built-in
+# Pages token permissions. Docs: docs/tools/README.md
 #
 # Node is pinned to 24.19.0 because the golden hashes in qa/golden-hashes.json
 # were recorded on it (ADR 0004); on any other Node major they are skipped.
 # Every action is pinned to a full commit SHA with its version in a comment.
 # To bump one: look up the tag's commit, replace the SHA and the comment.
+# Godot 4.7.2 and its web templates are pinned and SHA-512 verified in
+# .github/actions/setup-godot/action.yml (used by the two Godot jobs).
 
 name: CI
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# A newer push cancels an older run of the same branch, except on main, where every
+# run finishes so a deploy is never cut off half way.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   qa:
@@ -50,34 +55,69 @@ jobs:
       - name: npm test --prefix sim
         run: npm test --prefix sim
 
-  # The GDScript port against the JS reference sim's golden vectors. Godot is pinned
-  # to 4.7.2 and its SHA-512 is verified before anything runs. The sim job above does
-  # not set GODOT, so `npm test --prefix sim` skips its godot stage there and this job
-  # is the only place the parity check runs. The .godot/ import cache is created on
-  # the runner only (it is gitignored and never committed).
+  # The GDScript port against the JS reference sim's golden vectors, plus the render
+  # checks. The sim job above does not set GODOT, so `npm test --prefix sim` skips its
+  # godot stage there and the parity check runs once, here. The .godot/ import cache is
+  # created on the runner only (it is gitignored and never committed).
   godot-parity:
-    name: GDScript parity (Godot 4.7.2 headless, Linux)
+    name: Godot headless checks (parity, determinism, seam)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      GODOT_VERSION: 4.7.2-stable
-      # SHA-512 of Godot_v4.7.2-stable_linux.x86_64.zip, from the release's SHA512-SUMS.txt.
-      GODOT_ZIP_SHA512: 9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Godot ${{ env.GODOT_VERSION }} (official release, checksum verified)
-        working-directory: ${{ runner.temp }}
-        run: |
-          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
-          echo "${GODOT_ZIP_SHA512}  godot.zip" | sha512sum -c -
-          unzip -q godot.zip
-          mv "Godot_v${GODOT_VERSION}_linux.x86_64" godot
-          chmod +x godot
-          ./godot --version
+      - uses: ./.github/actions/setup-godot
       # A fresh clone has no class cache: the import pass registers the class_name scripts.
       - name: Import project
-        run: '"${RUNNER_TEMP}/godot" --headless --path . --import'
+        run: '"$GODOT" --headless --path . --import'
       - name: GDScript parity
-        run: '"${RUNNER_TEMP}/godot" --headless --path . --script res://sim/core/tools/parity.gd'
+        run: '"$GODOT" --headless --path . --script res://sim/core/tools/parity.gd'
+      - name: Render determinism (gameplay hashes match with the scene running)
+        run: '"$GODOT" --headless --path . --script res://render/tools/determinism.gd'
+      - name: Render seam sweep
+        run: '"$GODOT" --headless --path . --script res://render/tools/seam_sweep.gd -- --size=1280x720'
+
+  # Builds the Pages site on every run, so a broken export shows up on pull requests
+  # and branches too. Only pushes to main (and manual runs on main) upload it.
+  site:
+    name: Build site (prototype + Godot web export)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-godot
+        with:
+          web-templates: 'true'
+      - name: Import project
+        run: '"$GODOT" --headless --path . --import'
+      - name: Export Web (Compatibility, single-threaded)
+        run: |
+          mkdir -p "${RUNNER_TEMP}/web"
+          "$GODOT" --headless --path . --export-release "Web" "${RUNNER_TEMP}/web/index.html"
+      - name: Assemble the site (/, /prototype/, /play/)
+        run: node tools/build-site.mjs --web "${RUNNER_TEMP}/web" --out "${RUNNER_TEMP}/site"
+      - name: Upload the Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [qa, sim, godot-parity, site]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
