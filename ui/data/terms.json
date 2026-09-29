@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "note": "Every player-facing word the HUD draws, as data, so a tone change or a translation is a data swap (Narrative's glossary, docs/narrative/glossary.md). Picks are Narrative's proposals: not yet screened by Legal, and tone (Orb) is still open. Keys are stable; the text is what changes. The HUD never builds a sentence from parts of these strings.",
+  "stance_ids": ["press", "guard", "dodge", "escape"],
+  "stance": { "press": "PRESS", "guard": "GUARD", "dodge": "DODGE", "escape": "ESCAPE" },
+  "tier": ["TREMOR", "QUAKE", "UPHEAVAL", "CATACLYSM"],
+  "meter": {
+    "respect": "RESPECT", "pride": "PRIDE", "wrath": "WRATH", "hunger": "HUNGER",
+    "menace": "MENACE", "anguish": "ANGUISH",
+    "charge": "CHARGE", "momentum": "MOMENTUM"
+  },
+  "region": { "head": "HEAD", "core": "CORE", "arms": "ARMS", "legs": "LEGS", "mantle": "MANTLE" },
+  "stage": { "bruised": "BRUISED", "battered": "BATTERED", "broken": "BROKEN" },
+  "internal_stage": { "bruised": "STRAINED", "battered": "SCALDED", "broken": "BOILED" },
+  "card": {
+    "region_stage": "{region}: {stage}",
+    "internal": "{region}: {stage}",
+    "brink": "ON THE BRINK",
+    "rally": "RALLY",
+    "rally.protagonist": "SECOND WIND",
+    "rally.anti_hero": "SPITE",
+    "rally.empress": "ENCORE",
+    "rally.cyborg": "REBOOT",
+    "heat.1": "BLOOD: HEATED",
+    "heat.2": "BLOOD: SIMMERING",
+    "heat.3": "BLOOD: BOILING",
+    "boil_over": "CORE: BOILED OVER",
+    "facade_crack": "FACADE CRACKS",
+    "drop_act": "DROP THE ACT",
+    "shame": "HUMBLED",
+    "hatch_open": "HATCH OPEN: {station}",
+    "chip_stage": "CHIP: {stage}",
+    "revision": "REVISION",
+    "fold_flicker": "FOLD FLICKERS",
+    "fold_start": "THE FOLD",
+    "unfold": "THE PLANET RETURNS"
+  },
+  "chip_stage": { "1": "SCRATCHED", "2": "CRACKED", "3": "SPLIT" },
+  "station": { "head": "HEAD", "chest": "CHEST", "back": "BACK", "hip": "HIP" },
+  "state": {
+    "hidden": "HIDDEN",
+    "lost_trail": "TRAIL LOST",
+    "brink": "BRINK",
+    "charging": "CHARGING",
+    "signature": "SIGNATURE",
+    "signature_need": "NEED {n} CHARGE",
+    "parry": "PARRY",
+    "chain": "CHAIN ×{n}",
+    "ai": "AI"
+  },
+  "toll": { "civilians": "CIVILIANS LOST", "structures": "STRUCTURES LOST", "craters": "CRATERS" },
+  "banner_rename": {
+    "NEED 45 KI": "NEED 45 CHARGE",
+    "LOCK LOST — TARGET HIDDEN": "TRAIL LOST",
+    "LOCK LOST": "TRAIL LOST"
+  },
+  "caption": {
+    "effort.light": "grunt", "effort.heavy": "hard grunt", "pain.head": "yelp", "pain.limb": "wince",
+    "wince": "wince", "laugh.short": "short laugh", "laugh.long": "long laugh", "laugh.cruel": "cruel laugh",
+    "growl": "growl", "scoff": "scoff", "sneer": "sneer", "sigh": "sigh", "sigh.heavy": "heavy sigh",
+    "gasp": "gasp", "roar": "roar", "munch": "munching", "chirp": "chirp", "static": "static",
+    "cackle": "cackle", "snort": "snort", "shriek": "shriek"
+  },
+  "planet": "EVERHOLD",
+  "places": [
+    { "x0": 0,    "x1": 1200, "name": "LONGWATER" },
+    { "x0": 1200, "x1": 1800, "name": "NETMEND" },
+    { "x0": 1800, "x1": 2350, "name": "FURROWLEA" },
+    { "x0": 2350, "x1": 3850, "name": "BELLGATE" },
+    { "x0": 3850, "x1": 4500, "name": "KILNSTEAD" },
+    { "x0": 4500, "x1": 5500, "name": "DEEPHOLT" },
+    { "x0": 5500, "x1": 6500, "name": "SUNWASTE" },
+    { "x0": 6500, "x1": 7600, "name": "ANVILFELL" },
+    { "x0": 7600, "x1": 8000, "name": "FARWATCH" },
+    { "x0": 8000, "x1": 8300, "name": "WINDLEA" },
+    { "x0": 8300, "x1": 9600, "name": "LONGWATER" }
+  ]
+}

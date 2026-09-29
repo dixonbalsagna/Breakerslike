@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "note": "How each fighter's damage is read (docs/design/spec-wounds.md section 3). Content, not code: a new fighter that reuses these types is data only. The sim's placeholder fighters (KAI, VORR) use the default profile with their prototype ego meters.",
+  "default": {
+    "regions": ["head", "core", "arms", "legs"],
+    "crown": "plain",
+    "silhouette": "plain",
+    "ego": "respect",
+    "ego_notch": 0,
+    "sig_cost": 45,
+    "shame_max": 0
+  },
+  "protagonist": {
+    "crown": "spread",
+    "silhouette": "spread",
+    "ego": "respect",
+    "internal": true,
+    "heat": true
+  },
+  "anti_hero": {
+    "crown": "pride_mask",
+    "silhouette": "pride_mask",
+    "ego": "pride",
+    "ego_notch": 50,
+    "shame_max": 3,
+    "withhold_until_pride_breaks": true
+  },
+  "empress": {
+    "regions": ["head", "core", "arms", "legs", "mantle"],
+    "crown": "plain",
+    "silhouette": "refit",
+    "ego": "wrath",
+    "numeral": true
+  },
+  "cyborg": {
+    "crown": "regrowth",
+    "silhouette": "chip",
+    "ego": "hunger",
+    "rail": ["head", "chest", "back", "hip"]
+  },
+  "aliases": {
+    "kai": { "base": "default", "ego": "anguish" },
+    "vorr": { "base": "default", "ego": "menace" }
+  }
+}

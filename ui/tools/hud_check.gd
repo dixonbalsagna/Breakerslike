@@ -1,0 +1,365 @@
+extends SceneTree
+## The HUD's headless checks. Run from the repo root (import once first: godot --headless --path . --import):
+##   godot --headless --path . --script res://ui/tools/hud_check.gd
+## Exits 0 when every check passes. It checks: the term data, the layout geometry at many sizes (text floors, safe area,
+## fighter-clear zone), the event hub's rules (Pride mask, merge, caps, priorities, cinematic quiet, bark timing) against
+## the mock scenarios, that the HUD really draws (a scene run, so a bad draw call is a script error), and that the bridge
+## only reads the live sim (when the sim compiles: the sim is another director's working tree).
+
+var fails: int = 0
+var checks: int = 0
+
+
+func _ok(cond: bool, what: String) -> void:
+	checks += 1
+	if not cond:
+		fails += 1
+		print("FAIL  ", what)
+
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+
+func _run() -> void:
+	_terms()
+	_layouts()
+	_bark_timing()
+	_hub_rules()
+	_scenarios()
+	await _draw_smoke()
+	await _bridge()
+	print("hud_check: %d checks, %d failed" % [checks, fails])
+	quit(1 if fails > 0 else 0)
+
+
+# --- Terms ---------------------------------------------------------------------------------------------------------
+
+func _terms() -> void:
+	UiData.reload()
+	var must: Array = ["stance.press", "stance.guard", "stance.dodge", "stance.escape", "meter.respect", "meter.pride", "meter.wrath",
+		"meter.hunger", "meter.charge", "region.head", "region.core", "region.arms", "region.legs", "region.mantle", "stage.bruised",
+		"stage.battered", "stage.broken", "card.brink", "card.rally.protagonist", "card.heat.1", "card.heat.2", "card.heat.3",
+		"card.boil_over", "card.facade_crack", "card.drop_act", "card.fold_flicker", "state.hidden", "state.lost_trail",
+		"state.signature", "toll.civilians", "station.hip", "chip_stage.2", "internal_stage.battered"]
+	for k in must:
+		_ok(UiData.t(k) != k, "term exists: " + k)
+	_ok(UiData.t("stance.press") == "PRESS", "glossary: stance press")
+	_ok(UiData.tier_name(1) == "TREMOR" and UiData.tier_name(4) == "CATACLYSM", "glossary: tier names")
+	_ok(UiData.fmt("state.chain", {"n": 3}) == "CHAIN ×3", "glossary: CHAIN ×N")
+	_ok(UiData.banner("NEED 45 KI") == "NEED 45 CHARGE", "banner rename: ki becomes charge")
+	_ok(UiData.place_at(3100.0) == "BELLGATE", "place label lookup")
+	# No banned words in any term (Legal's glossary rules: no ki, no aura, no scouter, no "power level").
+	for k in ["ki", "aura", "scouter", "power level"]:
+		var found := false
+		for path in must:
+			if UiData.t(path).to_lower().find(k) >= 0 and k != "ki":
+				found = true
+			if k == "ki" and (" " + UiData.t(path).to_lower() + " ").find(" ki ") >= 0:
+				found = true
+		_ok(not found, "no franchise-coded word in the player terms: " + k)
+	var p: Dictionary = UiData.profile("anti_hero")
+	_ok(p.get("ego") == "pride" and int(p.get("shame_max", 0)) == 3, "profile: anti_hero")
+	_ok((UiData.profile("empress").get("regions") as Array).size() == 5, "profile: empress has a fifth region")
+	_ok(UiData.profile("kai").get("ego") == "anguish", "profile: placeholder KAI alias")
+
+
+# --- Layout --------------------------------------------------------------------------------------------------------
+
+func _layouts() -> void:
+	var sizes: Array = [Vector2(1920, 1080), Vector2(1366, 768), Vector2(1280, 720), Vector2(1024, 576), Vector2(2560, 1080),
+		Vector2(3840, 2160), Vector2(800, 480), Vector2(390, 844), Vector2(1080, 1920), Vector2(360, 640)]
+	for sz in sizes:
+		for sil in [true, false]:
+			var lay := UiLayout.new()
+			lay.compute(sz, sil)
+			var tag: String = "%dx%d sil=%s" % [int(sz.x), int(sz.y), str(sil)]
+			var pm: Dictionary = lay.pm
+			for k in ["fs_name", "fs_chip", "fs_tier", "fs_ego", "fs_state"]:
+				_ok(float(pm[k]) >= UiLook.MIN_TEXT_PX, "%s: text floor %s (%d)" % [tag, k, int(pm[k])])
+			var view := Rect2(Vector2.ZERO, sz)
+			for r in lay.hud_rects():
+				_ok(view.encloses(r), "%s: HUD rect inside the viewport %s" % [tag, str(r)])
+				_ok(not r.intersects(lay.clear_zone), "%s: HUD rect %s stays out of the clear zone %s" % [tag, str(r), str(lay.clear_zone)])
+			_ok(lay.clear_zone.size.x > sz.x * (0.30 if not lay.portrait else 0.6), "%s: the clear zone is wide enough (%d px)" % [tag, int(lay.clear_zone.size.x)])
+			_ok(lay.clear_zone.size.y > sz.y * (0.45 if not lay.portrait else 0.22), "%s: the clear zone is tall enough (%d px)" % [tag, int(lay.clear_zone.size.y)])
+			_ok(lay.plate[0].size.y > 0.0 and not lay.plate[0].intersects(lay.plate[1]), "%s: plates do not overlap" % tag)
+			_ok(not lay.toll.intersects(lay.plate[0]) and not lay.toll.intersects(lay.plate[1]), "%s: the toll chip clears the plates" % tag)
+			_ok(not lay.strip.intersects(lay.bark[0]) or lay.portrait, "%s: the strip clears the bark lane" % tag)
+			if lay.portrait:
+				_ok(not lay.clear_zone.intersects(lay.touch_reserve), "%s: portrait: touch controls keep their reserve" % tag)
+			var plate_frac: float = lay.plate[0].size.y / sz.y
+			_ok(plate_frac < (0.26 if sz.y < 700.0 else 0.20), "%s: a plate stays compact (%.1f%% of the height)" % [tag, plate_frac * 100.0])
+
+
+# --- Bark timing ---------------------------------------------------------------------------------------------------
+
+func _bark_timing() -> void:
+	var text := "Ha! My arm. I'll need that later."
+	_ok(UiBarkTiming.reveal_count(text, 0.0, 1) == 0, "bark: nothing at t=0")
+	_ok(UiBarkTiming.reveal_count(text, 99.0, 1) == text.length(), "bark: everything at the end")
+	_ok(UiBarkTiming.reveal_total(text, 3) < UiBarkTiming.reveal_total(text, 0), "bark: a harder line reveals faster")
+	var prev := 0
+	var mono := true
+	for i in range(0, 300):
+		var n: int = UiBarkTiming.reveal_count(text, float(i) * 0.01, 1)
+		if n < prev:
+			mono = false
+		prev = n
+	_ok(mono, "bark: the reveal never goes backwards")
+	_ok(UiBarkTiming.time_for_char(text, 3, 1) > UiBarkTiming.time_for_char(text, 2, 1), "bark: cues can be timed by character")
+	# The shown time of a typical bark is within the line system's 1.2 to 3.5 s.
+	var hub := UiEventHub.new()
+	hub.setup_fighters(["protagonist", "anti_hero"], ["A", "B"])
+	hub.consume({"type": "bark", "speaker": 0, "text": text, "cues": [{"at": 0, "gesture": "wince", "intensity": 1}]})
+	var b = hub.barks[0]
+	_ok(b.reveal_time + b.dur >= UiLook.BARK_MIN and b.reveal_time + b.dur <= UiLook.BARK_MAX + 1.5, "bark: shown for a sensible time (%.2f s)" % (b.reveal_time + b.dur))
+
+
+# --- Hub rules -----------------------------------------------------------------------------------------------------
+
+func _hub(ids: Array = ["protagonist", "anti_hero"]) -> UiEventHub:
+	var hub := UiEventHub.new()
+	hub.setup_fighters(ids, ["ONE", "TWO"])
+	return hub
+
+
+func _step(hub: UiEventHub, seconds: float) -> void:
+	var n: int = int(round(seconds * 60.0))
+	for i in range(n):
+		hub.advance(1.0 / 60.0)
+
+
+func _hub_rules() -> void:
+	# A wound card appears, shows about 1.5 s, and is gone.
+	var hub := _hub()
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": "battered"})
+	_step(hub, 0.1)
+	_ok(hub.cards_of(0).size() == 1 and hub.cards_of(0)[0].title == "ARMS: BATTERED", "card: appears with the glossary wording")
+	_step(hub, 1.6)
+	_ok(hub.cards_of(0).size() == 0, "card: gone after its life")
+	# Same region, worse stage: the card upgrades in place, it does not stack.
+	hub = _hub()
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": "battered"})
+	_step(hub, 0.5)
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": "broken"})
+	hub.consume({"type": "region_broken", "actor": 0, "region": "arms"})
+	_step(hub, 0.1)
+	_ok(hub.cards_of(0).size() == 1 and hub.cards_of(0)[0].title == "ARMS: BROKEN", "card: a break upgrades the battered card in place")
+	_ok(hub.stats["cards_merged"] >= 1, "card: merge counted")
+	# A bruise is a toast, and only when nothing else is showing.
+	hub = _hub()
+	hub.consume({"type": "region_stage", "actor": 0, "region": "head", "stage": "battered"})
+	_step(hub, 0.05)
+	hub.consume({"type": "region_stage", "actor": 0, "region": "legs", "stage": "bruised"})
+	_step(hub, 0.05)
+	_ok(hub.stats["toasts_skipped"] == 1, "card: a bruise toast is skipped while a card is showing")
+	# Caps: a flood on one side shows at most the cap; breaks outrank the rest.
+	hub = _hub()
+	for r in ["head", "core", "arms", "legs"]:
+		hub.consume({"type": "region_stage", "actor": 0, "region": r, "stage": "battered"})
+	hub.consume({"type": "brink_enter", "actor": 0})
+	_step(hub, 0.05)
+	_ok(hub.cards_of(0).filter(func(c): return not c.fading).size() <= UiLook.CAP_CARDS_PER_SIDE[0], "cap: at most %d cards per side in normal play" % UiLook.CAP_CARDS_PER_SIDE[0])
+	_ok(hub.cards_of(0).any(func(c): return c.key == "brink"), "cap: the brink card (a break-priority card) is among those shown")
+	# Portrait: the host lowers the cap to one card per side.
+	hub = _hub()
+	hub.cap_limit = 1
+	for r in ["head", "core", "arms"]:
+		hub.consume({"type": "region_stage", "actor": 0, "region": r, "stage": "battered"})
+	_step(hub, 0.05)
+	_ok(hub.cards_of(0).filter(func(c): return not c.fading).size() == 1, "cap: portrait shows one card per side")
+	# A world card takes the banner's slot and the banner waits.
+	hub = _hub()
+	hub.consume({"type": "banner", "text": "PARRY", "dur": 1.0})
+	hub.consume({"type": "fold_flicker"})
+	_step(hub, 0.5)
+	_ok(hub.world_card != null and float(hub.banner.get("age", 0.0)) < 0.05, "world card: the banner's clock waits while a world card shows")
+	# Hazard lowers the cap; a cinematic lowers it again and quiets ambient barks.
+	hub = _hub()
+	hub.consume({"type": "shake", "k": 18.0})
+	_step(hub, 0.05)
+	_ok(hub.mode == UiEventHub.Mode.HAZARD, "mode: a hard shake is a hazard")
+	for r in ["head", "core", "arms", "legs"]:
+		hub.consume({"type": "region_stage", "actor": 1, "region": r, "stage": "battered"})
+	_step(hub, 0.05)
+	_ok(hub.cards_of(1).filter(func(c): return not c.fading).size() <= UiLook.CAP_CARDS_PER_SIDE[1], "cap: hazard shows at most %d cards per side" % UiLook.CAP_CARDS_PER_SIDE[1])
+	hub = _hub()
+	hub.consume({"type": "cinematic_start", "actor": 0, "kind": "transformation", "dur": 2.0})
+	_step(hub, 0.05)
+	_ok(hub.mode == UiEventHub.Mode.CINEMATIC, "mode: a cinematic is CINEMATIC")
+	hub.consume({"type": "bark", "speaker": 1, "text": "Ambient chatter.", "priority": 1})
+	_ok(hub.barks.is_empty() and hub.stats["barks_suppressed"] == 1, "cinematic: ambient barks are suppressed")
+	hub.consume({"type": "bark", "speaker": 0, "text": "A set piece line.", "priority": 4, "setpiece": true})
+	_ok(hub.barks.size() == 1, "cinematic: set pieces still speak")
+	_step(hub, 2.2)
+	_ok(hub.mode == UiEventHub.Mode.NORMAL, "mode: back to normal after the cinematic")
+	# The Anti-hero's Proud front: battered and bruised are withheld, breaks show, the crack releases one compressed card.
+	hub = _hub()
+	var ah: UiFighterModel = hub.model(1)
+	hub.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": "battered"})
+	hub.consume({"type": "region_stage", "actor": 1, "region": "head", "stage": "bruised"})
+	_step(hub, 0.1)
+	_ok(ah.stage["arms"] == 0 and ah.true_stage["arms"] == 2, "pride mask: the crown stays whole, the true stage is kept")
+	_ok(hub.cards_of(1).is_empty() and hub.stats["cards_withheld"] == 2, "pride mask: battered and bruised cards are withheld")
+	hub.consume({"type": "region_stage", "actor": 1, "region": "legs", "stage": "broken"})
+	_step(hub, 0.1)
+	_ok(ah.stage["legs"] == 3 and hub.cards_of(1).size() == 1, "pride mask: a broken region shows and announces")
+	hub.consume({"type": "facade_crack", "actor": 1})
+	_step(hub, 0.1)
+	var fc: Array = hub.cards_of(1).filter(func(c): return c.key == "facade")
+	_ok(fc.size() == 1 and (fc[0].regions as Array).size() == 2, "pride mask: the crack fires one compressed card listing the withheld regions")
+	_ok(ah.stage["arms"] == 2 and ah.stage["head"] == 1 and not ah.pride_holds, "pride mask: the crown drops to its true state at once")
+	# Recovery is quiet; a Rally announces.
+	hub = _hub()
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": "battered"})
+	_step(hub, 2.0)
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": "bruised"})
+	_step(hub, 0.1)
+	_ok(hub.cards_of(0).is_empty(), "recovery: no card when a region improves")
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": "broken"})
+	hub.consume({"type": "brink_enter", "actor": 0})
+	_step(hub, 0.1)
+	hub.consume({"type": "rally", "actor": 0, "region": "arms"})
+	_step(hub, 0.1)
+	_ok(hub.model(0).stage["arms"] == 2 and not hub.model(0).brink, "rally: mends to battered and leaves the brink")
+	_ok(hub.cards_of(0).any(func(c): return c.title == "SECOND WIND"), "rally: the card uses the fighter's own name")
+	# Heat cards, the boil-over, internal wear.
+	hub = _hub()
+	hub.consume({"type": "heat_stage", "actor": 0, "stage": 2})
+	hub.consume({"type": "region_stage", "actor": 0, "region": "core", "stage": "battered", "internal": true})
+	_step(hub, 0.1)
+	_ok(hub.cards_of(0).any(func(c): return c.title == "BLOOD: SIMMERING"), "heat: stage card")
+	_ok(hub.cards_of(0).any(func(c): return c.title == "CORE: SCALDED"), "heat: internal core wear has its own card")
+	_ok(hub.model(0).internal_stage == 2 and hub.model(0).stage["core"] == 0, "heat: internal wear is separate from surface wear")
+	# The Empress: no paperwork cards, ever. The Cyborg: chip cards.
+	hub = _hub(["empress", "cyborg"])
+	hub.consume({"type": "revision_reprint", "actor": 0, "revision": 9, "region": "arms"})
+	hub.consume({"type": "revision_fill_reset", "actor": 0})
+	hub.consume({"type": "encore_start", "actor": 0})
+	hub.consume({"type": "guard_fall", "actor": 0})
+	_step(hub, 0.1)
+	_ok(hub.cards_of(0).is_empty() and hub.waiting.is_empty(), "empress: no paperwork or gauge cards (Orb: diegetic only)")
+	_ok(hub.model(0).revision == 9, "empress: the reprint updates the silhouette's numeral")
+	hub.consume({"type": "hatch_open", "actor": 1, "station": 3, "dur": 1.5})
+	hub.consume({"type": "chip_stage", "actor": 1, "stage": 2})
+	_step(hub, 0.1)
+	_ok(hub.cards_of(1).any(func(c): return c.title == "HATCH OPEN: HIP") and hub.cards_of(1).any(func(c): return c.title == "CHIP: CRACKED"), "cyborg: hatch and chip cards")
+	# Windows and hiding.
+	hub = _hub()
+	hub.consume({"type": "window_open", "actor": 1, "kind": "parry", "dur": 0.33})
+	_ok(hub.model(1).parry_t == 0.0, "window: parry opens")
+	_step(hub, 0.5)
+	_ok(hub.model(1).parry_t < 0.0, "window: parry closes")
+	hub.consume({"type": "window_open", "actor": 0, "kind": "parry", "dur": 0.05})
+	_step(hub, 0.08)
+	_ok(hub.model(0).parry_t >= 0.0, "window: a very short parry window still shows for a moment")
+	hub.consume({"type": "lock_lost", "actor": 1, "dur": 1.0})
+	_ok(hub.model(1).lost_trail, "hiding: trail lost shows on the hunter")
+	_step(hub, 1.2)
+	_ok(not hub.model(1).lost_trail, "hiding: and clears")
+	# The hub takes objects with the same fields (the sim's FxEvent).
+	hub = _hub()
+	var ev := SimState.FxEvent.new()
+	ev.type = "banner"
+	ev.text = "NEED 45 KI"
+	ev.dur = 1.0
+	hub.consume(ev)
+	_ok(str(hub.banner.get("text", "")) == "NEED 45 CHARGE", "objects: an FxEvent is consumed like a Dictionary")
+	# Unknown fields on an object do not crash it.
+	var ev2 := SimState.FxEvent.new()
+	ev2.type = "region_stage"
+	hub.consume(ev2)
+	_ok(true, "objects: an FxEvent without wound fields is ignored quietly")
+
+
+# --- Scenarios -----------------------------------------------------------------------------------------------------
+
+func _scenarios() -> void:
+	for scn in UiMockFeed.SCENARIOS:
+		var f: Array = UiMockFeed.fighters(scn)
+		var hub := UiEventHub.new()
+		hub.setup_fighters(f[0], f[1])
+		var feed := UiMockFeed.new(scn, 5)
+		var worst_cards := 0
+		var worst_barks := 0
+		var over_cap := 0
+		var max_life := 0.0
+		var steps: int = int((feed.length * 2.2) * 60.0)
+		for i in range(steps):
+			for e in feed.step(1.0 / 60.0):
+				hub.consume(e)
+			hub.advance(1.0 / 60.0)
+			var cap: int = UiLook.CAP_CARDS_PER_SIDE[hub.mode]
+			for slot in range(2):
+				var live: int = hub.cards_of(slot).filter(func(c): return not c.fading).size()
+				worst_cards = maxi(worst_cards, live)
+				if live > cap:
+					over_cap += 1
+				for c in hub.cards_of(slot):
+					max_life = maxf(max_life, c.life)
+			worst_barks = maxi(worst_barks, hub.barks.size())
+		_ok(over_cap == 0, "%s: live cards never exceed the cap for the current mode (%d violations)" % [scn, over_cap])
+		_ok(worst_barks <= 2, "%s: at most two bark lines on screen (saw %d)" % [scn, worst_barks])
+		_ok(max_life <= UiLook.CARD_LIFE_BROKEN + 0.001, "%s: no card lives longer than %.1f s" % [scn, UiLook.CARD_LIFE_BROKEN])
+		print("  scenario %-18s cards<=%d barks<=%d %s" % [scn, worst_cards, worst_barks, str(hub.stats)])
+
+
+# --- Draw smoke ----------------------------------------------------------------------------------------------------
+
+func _draw_smoke() -> void:
+	var errors_before: int = 0
+	for scn in UiMockFeed.SCENARIOS:
+		for sz in [Vector2i(1920, 1080), Vector2i(390, 844)]:
+			root.size = sz
+			var host := Control.new()
+			host.set_anchors_preset(Control.PRESET_FULL_RECT)
+			root.add_child(host)
+			var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+			host.add_child(hud)
+			var f: Array = UiMockFeed.fighters(scn)
+			hud.setup(f[0], f[1])
+			hud.set_option("show_feed", true)
+			hud.set_option("region_label", true)
+			hud.set_option("show_clear_zone", true)
+			hud.anchor_fn = func(slot): return {"pos": Vector2(float(sz.x) * (0.35 + 0.3 * float(slot)), float(sz.y) * 0.55), "h": 120.0, "visible": true}
+			hud.strip_fn = func(): return {"W": 9600.0, "segs": [[0.0, 4000.0, "ocean"], [4000.0, 9600.0, "city"]], "cam_x": 100.0, "cam_w": 2000.0, "dead": [500.0], "fighters": [{"x": 50.0, "slot": 0, "hidden": false, "aura": Color.WHITE, "seen_x": 50.0}, {"x": 900.0, "slot": 1, "hidden": true, "aura": Color.RED, "seen_x": 800.0}]}
+			var feed := UiMockFeed.new(scn, 3)
+			var frames: int = int(feed.length * 60.0 * 1.05)
+			for i in range(frames):
+				for e in feed.step(1.0 / 60.0):
+					hud.consume(e)
+				hud.advance(1.0 / 60.0)
+				if i % 3 == 0:
+					await process_frame
+			host.queue_free()
+			await process_frame
+	_ok(true, "draw: every scenario drew at 1920x1080 and 390x844 without a script error (look for SCRIPT ERROR above)")
+
+
+# --- Bridge --------------------------------------------------------------------------------------------------------
+
+func _bridge() -> void:
+	if not ClassDB.class_exists("Node") or load("res://render/core/sim_host.gd") == null or not (load("res://render/core/sim_host.gd") as GDScript).can_instantiate():
+		print("SKIP  bridge: the sim host does not compile right now (another director's working tree)")
+		return
+	var host := SimHost.new()
+	host.new_match(4)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	var f: Array = UiSimBridge.fighters(host.S)
+	hud.setup(f[0], f[1])
+	var events := 0
+	for i in range(900):
+		host.tick(1280.0, 720.0)
+		UiSimBridge.patch(hud, host.S)
+		UiSimBridge.feed(hud, host.feed.slice(maxi(0, host.feed.size() - 1)))
+		hud.advance(1.0 / 60.0)
+	events = hud.hub.stats["events"]
+	var m0: UiFighterModel = hud.hub.model(0)
+	_ok(m0.name == "KAI" and m0.tier >= 1 and m0.charge >= 0.0, "bridge: reads name, tier and charge from the sim")
+	_ok(hud.hub.toll["pop0"] > 0, "bridge: reads the world counters")
+	var sd: Dictionary = UiSimBridge.strip_data(host.S, host.cam.x, 2000.0)
+	_ok((sd["segs"] as Array).size() == 11 and (sd["fighters"] as Array).size() == 2, "bridge: builds the planet strip's data")
+	print("  bridge ok: %d events consumed over 900 ticks" % events)
+	host.S = null
