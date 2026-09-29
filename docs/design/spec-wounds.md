@@ -34,11 +34,11 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | :--- | :--- | :--- |
 | Protagonist | **Second Wind** | Survive the rival's finisher contest roll. His next track step is then free |
 | Anti-hero | **Spite** | Win a decisive exchange by hand (melee, no signature) with help refused. His arms mend first, and his next finisher must be by hand |
-| Empress | **The Appeal** (recommended; alternatives in §3, pending Orb) | Appeal the last exchange through her processing gauge: two stamps, 4 s. The opponent can have it rejected by winning a decisive exchange. Once approved, a respected cinematic, OVERTURNED, mends the region that exchange broke to battered. It costs her Wrath back to the previous threshold |
+| Empress | **Off the record** (recommended; alternatives in §3, pending Orb) | While on the brink and at least 800 units from her opponent, a 1.5 s fill (her retinue turns its backs) that a decisive exchange against her stops. Once complete, she mends at once. The flaw is a mismatched piece of regalia, and her refit never touches that region again |
 | Cyborg | **Reboot** | Dock the loose backup drive, or finish a Press within reach of civilians. It mends one chip stage, and regrowth doubles for 5 s |
 
 **Limits after Orb's "looser" ruling:**
-- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's Appeal can also be stopped while it processes.
+- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's Off the record can also be stopped during its fill.
 - **Softened:** the cooldown goes from 30 s to **15 s** after leaving the brink.
 - **Kept:** the mended region returns battered.
 
@@ -58,7 +58,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 | :--- | :--- | :--- |
 | **Protagonist**: Rolls with it | 25% of each incoming hit's wear spreads evenly over his other regions. His power stage is the **heat track** (below): big temporary boosts paid for in internal core wear | *Crown:* all arcs thin together as wear spreads, rather than one gapping early, and the core arc shimmers with heat. *Cards:* heat stage changes, internal core stages, the boil-over, and `SECOND WIND`. The stage names are Narrative's. *Silhouette:* an even wash, with the core filling from inside as internal wear builds |
 | **Anti-hero**: Proud front | While Pride is at half or above, battered penalties do not apply. When Pride falls below half, every withheld penalty lands at once. **Humbled** and **Drop the Act** turn Pride into power (below). Each shame stack also darkens a notch on his crown, and Drop the Act fires its own card together with `FACADE CRACKS` | *Crown and cards:* while Pride holds, his crown stays whole and battered cards are **withheld**. Only broken cards show, and body decals still show the damage. When Pride breaks, every withheld card fires at once as `FACADE CRACKS`, and the crown drops to its true state. *Silhouette:* shows only the hairline "front" until the crack. Opponents read his visible Pride meter to predict it |
-| **Empress** (formerly the Tyrant): Refit, with the paperwork below | Only her real revisions (9 to 11) mend, one stage of her most-worn region each, shrinking each time. Her full-power form (12) mends nothing. Her joke revisions (1 to 8) mend nothing. The **bladed mantle** is region 5: breaking it removes her mantle attacks and slows her next filing. Her guard of honour are single-region bodies, taken out by one break | *Silhouette:* each registered revision **reprints** it with the new revision number and a patch stamp on the mended region. *Crown:* a fifth arc runs along the mantle's hem. *Cards:* filing stamps as the processing gauge advances, for example `SUBMITTED`, `NOTARISED`, `REGISTERED: REVISION NINE`, `REJECTED`, `MANTLE: TORN`. Her only extra state is the processing gauge |
+| **Empress** (formerly the Tyrant): Refit, with the paperwork below | Only her real revisions (9 to 11) mend, one stage of her most-worn region each, shrinking each time. Her full-power form (12) mends nothing. Her joke revisions (1 to 8) mend nothing. The **bladed mantle** is region 5: breaking it removes her mantle attacks and slows her next revision. Her guard of honour are single-region bodies, taken out by one break | *Silhouette:* each registered revision **reprints** it with the new revision number and a patch mark on the mended region. *Crown:* a fifth arc runs along the mantle's hem. *Cards:* ordinary wound cards only, such as `MANTLE: TORN`. There is no paperwork UI (Orb). *Aura:* her processing gauge shows as a build-up, the same way as every fighter's. The paperwork shows in her lines and in in-world clues (Narrative) |
 | **Cyborg**: Regrowth and the Rail chip | Flesh regions regrow at 8 wear per second out of exchanges and never count toward the brink. The **Rail chip** moves on a seeded schedule, about every 4 s, between four stations: head, chest, back and hip. A heavy, a GUARD BREAK, a signature hit or an interrupted **Press** opens the hatch at the chip's station for 1.5 s. While it is open, the director weights that station's region by ×3, and a hit there damages the chip. Chip stages are scratched, cracked and split, and a split chip means the brink. Chip damage never regrows | *Crown:* flesh arcs visibly crawl back after damage, so the transient state reads. *Silhouette:* shows the rail, the chip's current station and its stage marks, which are the only persistent state. *Cards:* chip events only, such as `HATCH OPEN: HIP` and `CHIP: CRACKED` |
 
 **Fighter mechanics that touch wear:**
@@ -134,28 +134,42 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
     - matches where he drops the act are won 45 to 60% of the time;
     - Humbled bursts fire 1 to 3 times per match;
     - the facade cracks in 60 to 90% of matches.
-- **The Empress's paperwork** (Orb's direction; Narrative's pitch in `docs/narrative/pitches-q3.md`, "The Empress: the paperwork"). Revised for Orb's rule that transformations are respected (§8). This is the binding version, **pending Orb's pick**. Names are placeholders. The confusion is comedy on the cards; the rules are few.
-  - **Joke revisions, 1 to 8.** Wrath fills. Each is a one-stamp minor amendment that fires automatically as a respected cinematic of under 1 s, and mends nothing. Tiers: 1 for revisions 1 to 3, 2 for revisions 4 to 8.
-  - **Real revisions, 9 to 12: the paperwork is the fill.**
-    - *Processing.* When Wrath reaches a real revision's threshold, her form is submitted and processed while she keeps fighting. There are four stamps (`SUBMITTED`, `LIKENESS AMENDED`, `NOTARISED`, then `REGISTERED` as the approval), 2 s each.
-    - *Stopping it.* If the opponent wins a decisive exchange against her while the form is processing, it is `REJECTED` and processing restarts from `SUBMITTED`, with no other penalty. The director stages the stop as a hit on her, the stamping guard member or the forms (Narrative); mechanically it is the decisive exchange. That is the only interaction.
-    - *Registered.* The revision's cinematic (2 to 3 s) plays and is respected: the opponent waits. The refit applies on revisions 9 to 11. Tiers: 3 for revisions 9 and 10, 4 for revisions 11 and 12.
-    - *State.* One processing gauge (the stamp she is on) and nothing else. No tally, no Mismatch, no Audit, no dissolved state.
-  - **Guard of honour.** Each tag-in is a fixed 1 s salute, during which the incoming guard can't be hit. It counts as downtime, and there is at most one tag-in per 5 s. Guard members appear as the notaries on her cards, as comedy only.
-  - **The fold.** Her paperwork works everywhere, the fold included (Orb).
-  - **Her Rally.** Orb is unsure about the backdated filing, so it is withdrawn. These options combine Narrative's flavour (`docs/narrative/pitches-q3.md` §10) with Game Design's mechanics. They are pending Orb's pick.
-    - **A. The Appeal** (recommended; Narrative's favourite too).
-      - *The fill.* On the brink, she appeals the last exchange: a short hearing with her guard as judges, run on her processing gauge (two stamps, 4 s). The opponent stops it by winning a decisive exchange, and the appeal is `REJECTED`.
-      - *Approved.* A respected cinematic, `OVERTURNED`, mends the region the last exchange broke to battered, and takes her off the brink.
-      - *Cost.* Wrath drops back to the previous threshold, which delays her next revision.
-      - *Why it wins.* It uses her one mechanic and follows the fill-then-respect rule. It adds no state beyond the gauge she already has.
-    - **B. Dismissed with honour.** Instant. The wound moves to a guard member, who falls. She leaves the brink with the region at battered. It needs a guard member still in reserve, which makes it self-limiting, but late in a match the reserve is usually empty.
-    - **C. The Decree.** Instant. She declares the injury unlawful, and the region mends at once with a `PENDING` stamp. It is the closest to the backdated filing that Orb doubted, and it is the only option that adds a status stamp.
+- **The Empress's paperwork** (Orb's direction). It is revised for the respected-transformation rule (§8) and for Orb's ruling: **no visible paperwork**. There are no stamp cards, no forms on screen, and no `REJECTED` or `REGISTERED` text. The paperwork lives only in her lines and in in-world clues (Narrative). The rules are plain gauges. Names are placeholders.
+  - **Joke revisions, 1 to 8.** Wrath fills, and each fires automatically as a respected cinematic of under 1 s. They mend nothing. Tiers: 1 for revisions 1 to 3, 2 for revisions 4 to 8.
+  - **Real revisions, 9 to 12.**
+    - *The fill.* When Wrath reaches a real revision's threshold, a **processing gauge** fills over 8 s while she keeps fighting. It is read in-world, with no text:
+      - her sigh of dread when it starts;
+      - **one protocol gesture from her guard at each third**, where the third gesture means approved;
+      - the pained aide's posture worsening with each revision (Narrative, `docs/narrative/pitches-q3.md` §11).
+      The usual aura build-up that every fighter has stays as the backup cue.
+    - *Stopping it.* If the opponent wins a decisive exchange against her while it fills, the gauge resets to empty and starts again. There is no other penalty.
+    - *When it completes,* the revision's cinematic (2 to 3 s) plays and is respected. The refit applies on revisions 9 to 11. Tiers: 3 for revisions 9 and 10, 4 for revisions 11 and 12.
+    - *State.* The processing gauge only.
+  - **Guard of honour.** Each tag-in is a fixed 1 s salute, during which the incoming guard can't be hit. It counts as downtime, and there is at most one tag-in per 5 s.
+    - **The retinue.** A guard member who falls in the goon phase leaves the fight but stays as part of her ceremonial retinue: non-combat, untargetable, standing near her. The retinue performs the protocol gestures and the Rally beats. Being dismissed with honour removes a member for good.
+  - **The fold.** Her gauges work everywhere, the fold included.
+  - **Her Rally.** No visible paperwork (Orb). Each option below restores the shared result: one broken region mended to battered, and off the brink (§2). They are pending Orb's pick.
+    - **A. Off the record** (recommended; Narrative's favourite).
+      - *Trigger.* While on the brink and at least 800 units from her opponent (after a break launch, say), she ducks away. A 1.5 s fill follows: her retinue turns its backs, so nobody sees it. A decisive exchange won against her during the fill stops it.
+      - *Result.* An instant, unceremonious mend.
+      - *Flaw.* A mismatched piece of regalia, grabbed in a hurry, stays visible for the match, and her refit never mends that region again.
+      - *Why it wins.* It has the clearest counterplay: stay close and keep pressing. It adds no state beyond a flaw you can see, and the image is funny and needs no text.
+    - **B. Close ranks** (folds in Dismissed with honour).
+      - *Trigger.* While on the brink, she calls it instantly.
+      - *Effect.* Her retinue forms a drill wall around her for 2 s, during which she can't be attacked, and she mends.
+      - *Cost.* One retinue member is dismissed with honour, for good. With no retinue left, she can't use it.
+      - *The trade.* It is more dramatic and has a visible cost, but it offers no counterplay beyond thinning her retinue earlier.
+    - **C. Recess.**
+      - *Trigger.* While on the brink, she declares a recess: a 3 s ceremonial pause, respected like a cinematic. The parasol goes up and she takes a sip.
+      - *Effect.* She mends.
+      - *Cost, for fairness.* The refreshments are for everyone: her opponent's ki refills to 100 during the recess. Her Wrath also falls back to the previous threshold.
+      - *Not recommended.* The opponent has no way to stop it; they can only be paid off.
+    - **Dismissed with honour on its own** is instant and costs one retinue member. It is kept only as part of B, because without the wall it is B minus the drama.
   - **QA bands**, per Empress match:
     - she wins 45 to 55% of each pairing;
     - she reaches revision 12 in 30 to 60% of matches;
-    - 20 to 50% of real filings are rejected at least once;
-    - median processing time is 8 to 16 s per real revision;
+    - 20 to 50% of real-revision gauges are reset at least once;
+    - median fill time is 8 to 16 s per real revision;
     - no fight gap exceeds 10 s (`balance-targets.md` §8).
 - **Press (the Cyborg's food).** His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
 
@@ -281,7 +295,7 @@ Orb: "with few exceptions, transformations should be cinematic and uninterruptib
 | Protagonist, heat track | Stoking (+25 heat per second) | CHARGE INTERRUPT on the stoke | None. Heat stages are power states, not transformations |
 | Anti-hero, forms | Pride thresholds | Humble him (parry, GUARD BREAK, break a region), which drains Pride | Each form, 2 to 3 s |
 | Anti-hero, Drop the Act | The conditions (after 2:00, Pride at 50 or more) | Drain his Pride below 50 first | 1.5 s |
-| Empress, revisions | Wrath, then the paperwork for real revisions | A decisive exchange during processing gets the form `REJECTED` (§3) | Under 1 s for joke revisions, 2 to 3 s for real ones |
+| Empress, revisions | Wrath, then an 8 s processing gauge for real revisions, read through her sigh and her retinue's three protocol gestures (no text) | A decisive exchange won against her while it fills resets the gauge | Under 1 s for joke revisions, 2 to 3 s for real ones |
 | Cyborg, molts | Hunger, from Press and sandwiches | Interrupt Press; keep him from people | Each molt, 2 to 3 s |
 | Cyborg, final form | Catching the backup drive | Chase him off it, and cut off the drive | Docking, 2 to 3 s |
 
@@ -290,8 +304,8 @@ Orb: "with few exceptions, transformations should be cinematic and uninterruptib
 - stoking;
 - Press;
 - Swallow It;
-- the Empress's processing;
-- her Appeal.
+- the Empress's processing gauge;
+- her Off the record fill.
 
 Heat stages, Humbled bursts and boil-overs are power states with no cinematic. The fold is a relocation, and it now follows the same rule (§7).
 
