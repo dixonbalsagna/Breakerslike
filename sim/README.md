@@ -1,42 +1,50 @@
-# sim: the reference simulation core
+# sim: the simulation core
 
-A headless, deterministic port of `prototype/index.html` (pinned at commit 7233c96): plain JavaScript ES modules, no DOM, Node built-ins only, no install step. It reproduces the prototype tick for tick and is the parity oracle for the engine port. Architecture: `docs/architecture/overview.md`. Interfaces: `docs/architecture/module-spec.md`. Determinism: `docs/architecture/determinism.md`.
+**Source of truth: the GDScript sim (ADR 0006).** Gameplay changes land in the `.gd` files only. The JavaScript core (`*.js` in `core/`, `world/`, `director/`, `input/`) is **frozen** at commit 9ac1ea9 as the prototype-parity record: a tick-exact port of `prototype/index.html` (pinned at 7233c96), and the core the GDScript sim was proven bit-identical to. Do not edit the frozen JS: its checks fail if its behaviour changes. Architecture: `docs/architecture/overview.md`. Interfaces: `docs/architecture/module-spec.md`. Determinism and the GDScript rules: `docs/architecture/determinism.md`. Cosmetic events: `docs/architecture/fx-events.md`.
 
 ## Run
 
-| Command (from the repo root) | What it does | Time |
-| :--- | :--- | :--- |
-| `npm test --prefix sim` | everything below; exits 0 only if all pass (the CI entry point) | about 2 min |
-| `node sim/core/tools/run-all.js --quick` | the same with the quick parity plan and a 100-match soak | about 25 s |
-| `node sim/core/tools/parity.js` | parity with the prototype (probe, per-tick lockstep, keyboard lockstep, QA records, golden hashes) | about 80 s |
-| `node sim/core/tools/soak.js 1000 [--compare]` | 1000 AI-vs-AI matches with QA's rule checks, timed | about 12 s |
-| `npm run unit --prefix sim` | node:test unit and integration tests only | about 10 s |
-| `godot --headless --path . --import` then `godot --headless --path . --script res://sim/core/tools/parity.gd` | GDScript parity: the GDScript core reproduces every golden vector of the JS core (math, RNG, world, 17 AI matches, 2 human-input replays), and prints its tick cost. The import pass registers the `class_name` scripts on a fresh clone. | about 20 s |
-| `node sim/core/tools/golden.js` | rewrites `core/test/golden-gd.json` from the JS core after an intended change (`--check` only verifies it) | about 5 s |
+From the repo root. On a fresh clone, run `godot --headless --path . --import` once first: it registers the `class_name` scripts.
 
-Use Node 24. The golden hashes were recorded on Node 24.19.0 and are skipped on other majors (QA-005).
+| Command | What it does | Time |
+| :--- | :--- | :--- |
+| `godot --headless --path . --script res://sim/core/tools/parity.gd` | **The gate (CI).** The GDScript sim reproduces every golden vector in `core/test/golden.json`: math, RNG, cosmetic stream seeds, world generation, 17 AI matches (per-tick digests, full-state checkpoints), 2 human-input replays. Also lints long float literals and prints the tick cost. `-- --no-bench` skips the timing; `-- --golden=<res:// path>` checks another file. | about 20 s |
+| `godot --headless --path . --script res://sim/core/tools/golden.gd` | Regenerates `core/test/golden.json` from the GDScript sim. Only for an intended behaviour change (below). | about 15 s |
+| `godot --headless --path . --script res://sim/core/tools/batch.gd -- [matches=60] [baseSeed=1] [--arm=NAME] [--json]` | AI-vs-AI batch statistics on the GDScript sim (the successor of `prototype/tools/sim-stats.js`): wins with a confidence interval, match length, collateral, launches, beams, parries, chains, hides, seam crossings, melee exchanges, speed, and a digest of every match. Deterministic per seed range. | about 350 matches per minute |
+| `npm test --prefix sim` | The frozen JS core's checks: unit tests, parity with the prototype, the 1000-match soak, and "the frozen core still reproduces `core/test/frozen/golden-js.json`". It also runs the GDScript gate when Godot is found. | about 2 min |
+| `node sim/core/tools/parity.js`, `node sim/core/tools/soak.js` | Frozen-core tools: the prototype lockstep and the soak | about 80 s, 12 s |
+
+## Golden hashes: when they may change
+
+`core/test/golden.json` pins the sim's behaviour bit for bit, and CI fails any push that changes it by accident. Regenerate it only when a change is **meant** to alter behaviour: a new move, a new number, a new world rule.
+1. Make the change in the `.gd` files and check it with the batch runner.
+2. Run `golden.gd`, then `parity.gd`.
+3. Commit the new `golden.json` **in the same commit** as the change, and say why in the message.
+Never regenerate to make an unexplained failure go away: find the cause first. A change that should not alter behaviour, such as a refactor or a comment, must pass `parity.gd` with the existing file.
+
+`core/test/frozen/golden-js.json` is the one-time equivalence record: the frozen JS core wrote it, and the GDScript sim matched it when the JS core was frozen. After the first gameplay change it will stop matching the GDScript sim (`parity.gd -- --golden=res://sim/core/test/frozen/golden-js.json`). That is expected, and it is not a gate. `npm test` still checks that the frozen JS core reproduces it.
+
 
 ## Layout and owners
 
 | Path | Contents | Owner |
 | :--- | :--- | :--- |
-| `core/` | state, tick, fighters, damage, hiding, RNG, wrap math, fx event emitters, hash, replay, view side (camera, reference cosmetic consumer); `tools/` parity and soak; `test/` | Simulation and Engine |
-| `world/` | `biomes.js`, `terrain.js`, `structures.js`, `cover.js` | World and Environment |
-| `director/` | `exchange.js`, `melee.js`, `beam.js`, `launch.js`, `ai.js` | Encounter Systems |
-| `input/` | `intent.js`, `keyboard.js`, `control.js` | Controls and Game Feel |
+| `core/` | state, tick, fighters, damage, hiding, RNG, wrap math, fx event emitters, hash, replay, view side (camera, reference cosmetic consumer); `tools/` the golden gate and generator, the batch runner, and the frozen JS tools; `test/` goldens and the frozen JS tests | Simulation and Engine |
+| `world/` | `biomes`, `terrain`, `structures`, `cover` (`.gd` live, `.js` frozen) | World and Environment |
+| `director/` | `exchange`, `melee`, `beam`, `launch`, `ai` (`.gd` live, `.js` frozen) | Encounter Systems |
+| `input/` | `intent`, `keyboard`, `control` (`.gd` live, `.js` frozen) | Controls and Game Feel |
 
 Rules for everyone changing `sim/`: behaviour changes are deliberate (parity then breaks by design; say so and regenerate the goldens); arithmetic and random-draw order are behaviour; the tick never calls view code; gameplay never reads `S.fx`; no `Math.random`, no clock.
 
-## Two cores: JavaScript and GDScript
+## The GDScript sim and the frozen JS core
 
-Every `.gd` file sits beside its JavaScript twin and keeps the same function and field names (ADR 0001: Godot 4.7 with GDScript). The JS core has two math modes, set with `createSim({math})`:
-- `'native'` (the default) uses `Math.sin` and friends and matches the prototype;
-- `'det'` uses `core/detmath.js` and matches the GDScript core bit for bit.
-In det mode, matches play out the same as in native mode over 1000 seeds (same lengths and outcomes); only the last bits of floats differ.
+The GDScript files carry the JS twins' function and field names, so the frozen JS still reads as documentation of the port. The GDScript sim has one mode: deterministic math (`detmath.gd`) and split cosmetics (fx events, fx-events.md). The frozen JS core also has the modes it was proven with:
+- `createSim()` is the game's rules, det + split, bit-identical to the GDScript sim at the freeze.
+- `createSim({math: 'native', fxRng: 'shared'})` reproduces the prototype tick for tick.
 
-The cosmetic mode, `fxRng`, is the other switch. `'split'` is the default and the game's rule: no cosmetic draw touches the gameplay stream. `'shared'` is for prototype parity only: each fx emitter burns the prototype's draws. So `createSim()` gives the game's rules (det + split), and `createSim({math: 'native', fxRng: 'shared'})` reproduces the prototype. The port harness and parity.js use the latter. The GDScript core has only det + split. A host drains `S.out.fx` after every tick and passes it to a consumer; `core/view/fx.js` (`fx.gd`) is the reference. Change both twins together, regenerate the goldens with `node sim/core/tools/golden.js`, and run both parity checks.
+A host drains `S.out.fx` after every tick and passes it to a consumer; `core/view/fx.gd` is the reference.
 
-GDScript traps that break bit-identity (each one was hit while porting):
+GDScript traps that break determinism or the goldens (each one was hit while porting; they still apply to every change):
 - **Long float literals.** GDScript's parser is not correctly rounded for them: `0.017453292519943295` parses 2 ulp off, and the smallest normal double parses as 0. Build long constants from bit patterns (`SimMathx.f64`). The parity check compiles every float literal in the `.gd` files and compares its bits.
 - **JS-exact helpers.** `sign(-0.0)`, `max`/`min` with signed zeros, and `round()` on halves all differ from JS. Use `SimMathx.jsign`, `jmax`, `jmin`, `jround` and `jclamp`, `SimDamage.jor` for JS `x || y`, and `SimMathx.jstr` for numbers in text.
 - **Unqualified built-in names.** Inside a class, a bare `exp()`, `log()` or `sin()` calls Godot's built-in, not the class's own function. Always write `SimDetMath.sin(...)`.

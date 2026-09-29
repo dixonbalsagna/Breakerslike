@@ -2,7 +2,7 @@
 
 Owner: Simulation and Engine. Code: `sim/`. Interface detail: [module-spec.md](module-spec.md). Determinism analysis for ADR 0001: [determinism.md](determinism.md).
 
-`sim/` is a headless, deterministic port of `prototype/index.html` (pinned at commit 7233c96). It reproduces the prototype exactly, tick by tick, and it is the parity oracle for whichever engine ADR 0001 picks: any engine port must reproduce its per-tick state hashes. Plain JavaScript ES modules, no DOM, Node built-ins only. `npm test --prefix sim` runs everything (unit tests, full parity, the 1000-match soak) and exits 0 or 1.
+**Since ADR 0006 the GDScript sim (`sim/**/*.gd`) is the source of truth, and the JS core described here is frozen at 9ac1ea9 as the prototype-parity record. The architecture below applies to both.** `sim/` began as a headless, deterministic port of `prototype/index.html` (pinned at commit 7233c96). It reproduces the prototype exactly, tick by tick, and it is the parity oracle for whichever engine ADR 0001 picks: any engine port must reproduce its per-tick state hashes. Plain JavaScript ES modules, no DOM, Node built-ins only. `npm test --prefix sim` runs everything (unit tests, full parity, the 1000-match soak) and exits 0 or 1.
 
 ## 1. Layers and the sim/render boundary
 

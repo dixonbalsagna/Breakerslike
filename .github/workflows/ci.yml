@@ -40,8 +40,10 @@ jobs:
       - name: node qa/run-all.js
         run: node qa/run-all.js
 
+  # The frozen JS core (ADR 0006): the prototype-parity record. It checks that the frozen core still matches the
+  # prototype tick for tick and still reproduces its frozen golden record; the live gate is the GDScript check below.
   sim:
-    name: Reference sim tests (Node 24.19.0)
+    name: Frozen JS core, prototype-parity record (Node 24.19.0)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

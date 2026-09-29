@@ -2,6 +2,15 @@
 
 Owner: Simulation and Engine. Inputs: the reference core in `sim/` (a tick-exact port of the prototype at 7233c96), QA's harness, Research's engine spike plan (`research/engine-spike/PLAN.md`) and Orb's answers in `docs/ep/vision.md`. Every claim marked **(verify)** is from memory rather than a source checked tonight. Research's cross-language golden tests are the arbiter for those.
 
+## 0. Source of truth (ADR 0006)
+
+The GDScript sim is the source of truth. Gameplay changes land in GDScript only. The JS core is frozen at 9ac1ea9 as the prototype-parity record: it is tick-exact with the prototype, and the GDScript sim was proven bit-identical to it (`sim/core/test/frozen/golden-js.json`).
+
+What gates determinism now:
+- **The golden file.** `sim/core/test/golden.json` is written by the GDScript sim (`tools/golden.gd`) and checked on every push (`tools/parity.gd`, CI job "Godot headless checks", Linux). Regenerate it only for an intended behaviour change, in the same commit (sim/README.md).
+- **Cross-platform agreement.** Local runs on Windows and CI on Linux check the same file with different engine builds, so any platform-dependent float behaviour shows up as a failure on one of them. Add the web build and a macOS or ARM runner when those platforms matter; they are the remaining unproven targets.
+- **The rules below, for every GDScript change:** float64 scalars only; only + - * / sqrt floor fmod in sim arithmetic; `SimDetMath` for sin, cos, pow and hypot; `SimRng` for randomness; no engine vector types in sim state; the JS-exact helpers (`jmax`, `jmin`, `jsign`, `jround`, `jclamp`, `jor`, `jstr`); no float literal with more than 15 significant digits (use `SimMathx.f64`; `parity.gd` lints it); qualified calls (`SimDetMath.sin`, never a bare `sin`); explicit stable ordering where JS relied on a stable sort. The traps list is in sim/README.md.
+
 ## 1. What we need
 
 Bit-identical simulation state, tick by tick, for:
@@ -105,7 +114,7 @@ Node v24.19.0, on the machine in Research's plan (Ryzen 7 9800X3D). The 1000-mat
 
 At 60 ticks per second one tick takes under 0.02% of a frame, so the JS sim is far inside any budget, rollback included. Particles are the one unbounded cost (up to 2400) and belong to the cosmetic lane.
 
-**GDScript core (Godot 4.7.2 editor binary, headless; 10 AI matches, about 47,800 ticks).** It matches the det-mode JS core bit for bit (`sim/core/tools/parity.gd`). The sim tick is `step()` alone; the reference cosmetic consumer and the camera follow are render-side work and are timed apart.
+**GDScript core (Godot 4.7.2 editor binary, headless; 10 AI matches, about 47,800 ticks).** The batch runner (`tools/batch.gd`) plays about 350 full AI-vs-AI matches per minute on this machine, against about 5,000 for the JS core. It matches the det-mode JS core bit for bit (`sim/core/tools/parity.gd`). The sim tick is `step()` alone; the reference cosmetic consumer and the camera follow are render-side work and are timed apart.
 
 | | mean | p50 | p99 | worst tick |
 | :--- | :--- | :--- | :--- | :--- |

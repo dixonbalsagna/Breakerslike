@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// The port's whole test suite as one command. From the repo root:   npm test --prefix sim
+// The sim's test suite as one command. From the repo root:   npm test --prefix sim
 // (or from sim/:  npm test,  or directly:  node sim/core/tools/run-all.js)
 //   1. unit and integration tests (node:test): rng, wrap math, seam crossing, replays, quick parity
 //   2. full parity against the prototype: every tick of every match in the default plan, QA records, golden hashes
 //   3. the 1000-match soak (P0 exit criterion), timed
-//   4. golden: sim/core/test/golden-gd.json (the GDScript port's targets) is current with the JS core
-//   5. godot: the GDScript parity check, headless, if Godot is found (GODOT env var or the default install path);
-//      skipped with a notice otherwise
+//   4. golden: the frozen JS core still reproduces its golden record, sim/core/test/frozen/golden-js.json (ADR 0006)
+//   5. godot: the live gate, the GDScript sim against its own goldens (sim/core/test/golden.json), headless, if Godot is
+//      found (GODOT env var or the default install path); skipped with a notice otherwise. CI runs it in its own job.
+// Since ADR 0006 the JS core is frozen: stages 1-4 guard the prototype-parity record, not the game.
 // Options: --quick (parity --quick and a 100-match soak), --only=unit,parity,soak,golden,godot
 // Node built-ins only. Exit code 0 only if every stage passes; each stage runs in its own process.
 import { spawnSync } from 'node:child_process';
