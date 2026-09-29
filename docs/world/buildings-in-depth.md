@@ -1,6 +1,6 @@
 # Buildings in depth, and the director's building impact
 
-Owner: World and Environment. Status: design, docs only (2026-09-29). Updated the same day for Orb's rulings: no rooftop cover, personality-weighted targeting, and brunt chains (section 4b). Nothing here is in the sim yet. Simulation holds the sim for the Wounds slices, so this note also says where the work slots in (section 8). It answers Orb's direction in `docs/ep/vision.md`, "Rims and buildings".
+Owner: World and Environment. Status: design, docs only (2026-09-29). Updated the same day for Orb's rulings: no rooftop cover, personality-weighted targeting, brunt chains (section 4b), and blast-levelled buildings that implode into their footprint (section 4c). Nothing here is in the sim yet. Simulation holds the sim for the Wounds slices, so this note also says where the work slots in (section 8). It answers Orb's direction in `docs/ep/vision.md`, "Rims and buildings".
 
 Read first: `sim/world/structures.gd`, `sim/director/launch.gd`, `sim/core/fighter.gd` (`stepLaunched`), `render/core/look.gd` and `planet_view.gd` (`Z_BUILDING_FRONT`, `_set_building`), `docs/world/craters-scorch-water.md`.
 
@@ -183,6 +183,50 @@ Game Design's base bands are in `balance-targets.md` §5b (brunts). Proposed add
 | Hero chains through an occupied building (`popAlive > 4`) | none (hard test) |
 | Collateral bands (§4) | Chains and brunts count toward all of them, including the low-tier bleed, and are never exempt |
 
+## 4c. Blast-levelled buildings: the controlled demolition
+
+Orb: where a fighter hits the ground with a blast that makes a crater in a city, "the levelled buildings could topple in a footprint visually like a controlled demolition, leaving rubble behind." This is the other way a building falls: not chosen by the director as the brunt of a launch, but caught in a crater, an impact blast, a power-up or a beam.
+
+### Three ways a building falls (the `mode`)
+
+| Mode | Cause | What it looks like | Direction |
+| :--- | :--- | :--- | :--- |
+| `implode` | Any area damage: crater, impact blast, power-up, clash blast, beam (`damageArea`) | Straight down into its own footprint, staggered by distance from the blast, so the block goes in a ripple outward from the centre | None |
+| `burst` | A director brunt or the next building in a chain (sections 4 and 4b) | The fighter punches through; the building breaks around the flight path | Along the flight |
+| `topple` | Later (`living-destruction.md`, idea 4): a very tall building | Leans and falls across its neighbours | Away from the blow |
+
+The rule in the sim: `damageBuilding` takes the cause of the hit. A fall that comes from `damageArea` is `implode`; one that comes from a brunt is `burst`. If a building is finished by an area blast while a brunt is in flight, the brunt's cause wins.
+
+### The implode
+
+- **Footprint.** The building stands until it is levelled and then its height goes to zero inside its own x range `[b.x - w/2, b.x + w/2]` and row depth `[z_front - d, z_front]`. It never leans or slides, whatever the ground under it does.
+- **The ripple.** All buildings levelled by one blast fall in the same tick in the sim (state changes at once: `alive`, casualties, rubble; nothing waits on an animation), and the event carries `delay = clamp(dist / IMPLODE_SPEED, 0, IMPLODE_MAX_DELAY)`, where `dist` is the distance from the blast centre, `IMPLODE_SPEED` is about 1,000 units per second at scale 1 (multiplied by `WORLD_SCALE`, so the ripple crosses a block in the same time), and `IMPLODE_MAX_DELAY` is 1.0 s. Rendering starts each building's fall at `delay`, and buildings fall in order of distance, front row first at equal distance. The delay is cosmetic: it is not in the hash and changes nothing in play, so the camera and the animation can use it freely.
+- **Rubble.** Each fallen building leaves a heap.
+  - Height: `clamp(RUBBLE_H_FRAC * h, RUBBLE_MIN, RUBBLE_MAX)` with `RUBBLE_H_FRAC = 0.10` of the building's standing height `h`, `RUBBLE_MIN = 0.5 bh`, `RUBBLE_MAX = 6 bh`. A house (300 to 450 tall at target scale, section on scale) leaves a heap of 0.5 to 0.6 bh; a 2,000-unit tower one of 2.7 bh; a skyscraper 6 bh at the cap.
+  - Shape: a smooth mound over the footprint, `1.2 w` wide at the base (the heap may spill 0.1 w past each edge), peaked at the centre, using the same smoothstep as the crater apron so the two blend.
+  - Where it lives: added to `S.deform` (the heap is ground, so fighters, launches and `groundY` all treat it as ground and nothing else in the sim changes), and recorded in a new per-column array `S.rubble` (the height of heap sitting in that column). The array is what Rendering tints, what cover reads, and what a later crater subtracts from: a crater that digs a column reduces its `rubble` by the amount dug, down to zero, so a second blast digs the heap away rather than stacking without end.
+  - The old 9-unit rubble a dead building leaves (`curH` when not alive) goes: the heap replaces it.
+- **Cover.** Game Design's rule, "rubble heaps from tier 3: a heap at least one fighter high" (`living-destruction-numbers.md` §3), reads `S.rubble` and the fighter's height against the heap's crest. It lands in LD1 (`coverAt` and `nearestCover`); B1 provides the state. A heap is ground, not a building, so it does not break the "no rooftop cover" ruling.
+- **Casualties.** Unchanged: everyone left in the building when it falls is a casualty by the existing rule, credited to whoever caused the blast. The heap does not add casualties.
+
+### Rims and craters
+
+- **A building on a rim implodes into its footprint.** It does not slide down the slope or fall into the bowl. Its footing is the highest ground under it (section 2, "footing"); the heap builds on that ground, so a rim building leaves a heap sitting on the rim, and the rim keeps its height.
+- **A building inside the bowl** is levelled with the crater. It leaves a heap on the bowl floor, capped at 0.3 of the local bowl depth so rubble never quietly rebuilds the crater the blast just dug.
+- **Order.** In one blast the crater digs first, then the buildings within the blast's reach are levelled (in order of distance and then index), then their heaps are added. A heap therefore never disappears under its own crater, and the blast's deform limits (the floor and ceiling, scaled) apply to the sum.
+- **Depth rows.** The rule is the same in every row. A row-3 building levelled by a big blast implodes in place; the ripple crosses rows by the distance to the centre.
+
+### Events
+
+`building_fall` gains fields: `mode` (`implode`, `burst`, `topple`), `delay` (the ripple delay, seconds, 0 for the others), `cx` (the blast centre's x, for the implode), `rubble` (the heap height left) and `n` (see the cap below). Rendering plays the fall from `mode`: an implode is the building sinking straight down in about 0.5 s with a dust skirt at its base and the heap rising; a burst keeps the existing collapse; a topple is later. Camera treats a run of implode events as one ripple: it can hold on the blast centre and let the ripple play out (`0.3 s` hold, no extra shake per building beyond the blast's own).
+
+### Caps and determinism
+
+- A blast can level many buildings (a tier-4 blast in Bellgate could level 20 or more). Events are capped at `IMPLODE_EVENT_CAP = 24` per blast; the rest are reported in one summary event with `n` set to the number folded in (Rendering draws them as one district fall). State is exact for every building whatever the event count.
+- Dust: one smoke or dust cloud per blast (`living-destruction-numbers.md` §3 cloud rules), not one per building, so the 16-cloud cap holds.
+- Heaps: at most one per building; `S.rubble` and `S.deform` are bounded per column by `RUBBLE_MAX` and the deform ceiling.
+- Determinism: distance order with the building index as the tie-break; no draws; the delay is derived from the same distance and is not part of the state. `S.rubble` goes into the gameplay hash (sparse, like `S.water`). No system in this section reads or moves `S.rng`.
+
 ## 5. Data and events
 
 ### Sim state
@@ -190,6 +234,7 @@ Game Design's base bands are in `balance-targets.md` §5b (brunts). Proposed add
 - `Building`: `z`, `d`, `row` (new); `pop` and `popAlive` per building (exist).
 - `Fighter`: `aimB` (building index or -1), `aimX0`, `aimZ0` (the depth at the last building, for the piecewise `z`), `chainN` (buildings hit so far this launch) and `z`. `f.z` is 0 unless aimed.
 - Director state: `sinceBrunt`.
+- World state: `S.rubble` (per column; 4c).
 - New constants (World and Encounter, named, in `sim/world/` and `sim/director/`): the row table, `BRUNT_MUL`, `BRUNT_BASE`, `BRUNT_RAMP`, `POP_REF` (60), `REPEAT_B`, `SPLASH_R`, `SPLASH_Z`, `SPLASH_FRAC`, `TALL_W`, `DRAMA_CAP`, and for chains `CHAIN_GAP`, `CHAIN_DZ`, `CHAIN_MIN_SP`, `CHAIN_MAX` by tier, `CHAIN_FORCE`, `CHAIN_DRAMA`, `REPEAT_CHAIN`, `CHAIN_SELF_CAP`, `CHAIN_POP_CAP` by tier, and the `keep` formula's constants.
 
 ### Events for Rendering, Camera and Audio
@@ -200,10 +245,10 @@ New fields on existing fx events: `debris`, `dust` and `ring` gain `z` (default 
 | :--- | :--- | :--- | :--- |
 | `launch_depth` | x0, y0, x1, y1, z, b, dur, owner | a launch is aimed at a building (at the launch beat) | Camera (frame the flight and the building), Rendering (the fighter leaves the plane), Audio |
 | `building_hit` | b, x, y, z, damage, ratio, outcome (`crack`, `wreck`, `collapse`), owner, link, n, sp, keep | the chosen building is hit | Rendering (the collapse animation, damage state), VFX, Camera (a 0.3 to 0.4 s hold), Audio |
-| `building_fall` | b, x, z, w, h | a building's hp reaches 0 by any source | Rendering (any collapse), Audio |
+| `building_fall` | b, x, z, w, h, mode, delay, cx, rubble, n | a building's hp reaches 0 by any source; `mode` is `implode` (area damage), `burst` (a brunt) or `topple` (later) | Rendering (the collapse animation by mode), Camera (the ripple), Audio |
 | `chain_link` | from, to, x0, y0, z0, x1, y1, z1, dur, link | the fighter bursts through a building and is heading for the next (4b) | Camera (look ahead), Rendering (trail), Audio |
 
-`building_fall` exists so a collapse from a beam or a blast animates the same way as a brunt.
+`building_fall` exists so a collapse from a beam or a blast animates, and the `mode` tells Rendering which animation (4c).
 
 The persistent state for a seek or a snapshot is `S.buildings` (hp, alive, popAlive), which Rendering already reads.
 
@@ -211,11 +256,11 @@ The persistent state for a seek or a snapshot is `S.buildings` (hp, alive, popAl
 
 | Owner | Work |
 | :--- | :--- |
-| **World** | The row table and archetype data in `data/biomes/`; the settlement generator (`terrain.gd` `genWorld` and `_row`); `z`, `d`, `row` on buildings; pop distribution; footing; the brunt damage function, the carry-on `keep` rule and the splash in `structures.gd`; the `building_fall` event; rim scaling |
+| **World** | The row table and archetype data in `data/biomes/`; the settlement generator (`terrain.gd` `genWorld` and `_row`); `z`, `d`, `row` on buildings; pop distribution; footing; the brunt damage function, the carry-on `keep` rule and the splash in `structures.gd`; the `building_fall` event with its mode; the implode and the rubble heap (`S.rubble`, the heap shape, the crater-first order); rim scaling |
 | **Encounter** | The planner: extended predictor and the aiming search, the candidate scoring, the chain lookahead and its scoring, `sinceBrunt`, the `launch_depth` and `chain_link` events; the `stepLaunched` change (collision only with `aimB`, and the carry-on); removing the old plane-only BUILDING SMASH candidate and its nearest-building call |
 | **Simulation** | The fighter fields (`aimB`, `aimX0`, `z`), the hash, the golden regeneration, the fx event records |
-| **Rendering** | Buildings from the sim's `z` and `d` in place of `Z_BUILDING_FRONT`; the foreground row and its fade; the fighter mesh at `f.z`; collapse and damage animations from `building_hit` and `building_fall`; civilians at their row; row 4 backdrop; the footing |
-| **Camera** | The flight into depth: frame the fighter, the building and the target, hold on each hit, look ahead along a chain; nothing more (depth barely changes the projected size: at zoom 0.5 and 720 px a fighter 170 units back is only about 6 percent smaller) |
+| **Rendering** | The implode animation and the heap (from `S.rubble`), the ripple by `delay`; buildings from the sim's `z` and `d` in place of `Z_BUILDING_FRONT`; the foreground row and its fade; the fighter mesh at `f.z`; collapse and damage animations from `building_hit` and `building_fall`; civilians at their row; row 4 backdrop; the footing |
+| **Camera** | The flight into depth: frame the fighter, the building and the target, hold on each hit, look ahead along a chain, and hold on a blast centre while an implode ripple plays; nothing more (depth barely changes the projected size: at zoom 0.5 and 720 px a fighter 170 units back is only about 6 percent smaller) |
 | **QA** | The brunt-rate and personality tests (section 4) and the chain bands (4b); a test that no launch hits a building it was not aimed at or chained into; the collateral bands |
 | **VFX, Audio** | Bursts and sounds from the three events; the `z` on debris and dust |
 
@@ -233,9 +278,9 @@ The persistent state for a seek or a snapshot is `S.buildings` (hp, alive, popAl
 | Slice | Owner | What | Goes |
 | :--- | :--- | :--- | :--- |
 | **W-R** rim scaling | World (with Simulation holding the tree) | Section 1: XS, constants and one function | Any window, best right after S0 or S1 so it shares a golden regeneration |
-| **B1** depth data | World (Simulation reviews) | `z`, `d`, `row`; the settlement generator with the row table; population split; no behaviour change to fights except that `damageArea` gains the z reach test. Goldens change because the state and world change | After S1 (Simulation is in `state.gd` and `hash.gd` there), before S2 |
+| **B1** depth data | World (Simulation reviews) | `z`, `d`, `row`; the settlement generator with the row table; population split; the implode mode of `building_fall`, `S.rubble` and the heap (4c: it is all World-side, in `structures.gd` and the crater order, and needs no Encounter work, so it shares B1's golden regeneration); no behaviour change to fights except that `damageArea` gains the z reach test and a dead building leaves a heap instead of 9 units. Goldens change because the state and world change | After S1 (Simulation is in `state.gd` and `hash.gd` there), before S2 |
 | **B2** the brunt | Encounter (planner) with World (damage) and Simulation (fighter fields) | Sections 3 and 4: the collision rule change, aiming, scoring, `sinceBrunt`, events. Rates tuned by `batch.gd` | After S4 (Encounter is free; S2 and S3b sit in `sim/director/` and `launch.gd` will move for the region-break launches) |
-| **B3** presentation | Rendering, Camera | Sections 5 to 7. Can start against B1's data before B2 lands, since the depth data is enough for the rows | In parallel with B2 |
+| **B3** presentation | Rendering, Camera (implode and heap included) | Sections 5 to 7. Can start against B1's data before B2 lands, since the depth data is enough for the rows | In parallel with B2 |
 
 B1 is safe to do early because it changes data and not choices. B2 must come after S2 and S3b because both edit the launch decision, and the region-break launches ("break launch and chase", `balance-targets.md` §10) must be designed together with the building choice: a break launch should be able to be a brunt.
 
@@ -250,5 +295,7 @@ B1 is safe to do early because it changes data and not choices. B2 must come aft
 - **Structure count.** 47 becomes about 110, and the structure-share band in `balance-targets.md` §4 needs Game Design's confirmation that it is a share.
 - **Decided by Orb:** no rooftop cover; targeting weighted toward personality with drama on top; chains allowed; no extra anguish multiplier (Game Design's default). **Still with Orb:** the "often" band (Game Design's §5b), the chain casualty budget (`CHAIN_POP_CAP`) and the length caps by tier.
 - **A chain is the biggest collateral event in the game.** Four towers in one attack is about 12 percent of the civilians. The tier caps and the casualty budget exist so that it stays a set piece at high tier and cannot happen at low tier; the collateral ramp must be designed with chains in mind.
+- **Rubble as a new ground source.** Heaps raise `S.deform` in cities, which lifts the ground under standing neighbours by up to `RUBBLE_MAX` (6 bh at the cap). Buildings follow `groundY`, so a heap beside a building raises only its own footprint columns; footings take the highest ground under the footprint (section 2), and Rendering should not let a heap poke through a neighbour's wall (it is drawn beside it). A block of heaps also makes the city floor uneven, which fighters skimming the streets will feel as ground height; that is the intended cost of a demolition.
+- **Event volume of a big blast.** Capped at 24 building events plus a summary per blast; a tier-4 blast in a full city is the worst case and should be tested for event count and tick cost.
 - **Chain determinism and cost.** The runtime finds the next building with the same rule as the planner's lookahead (one predictor run per link, at most 3 links), so the plan and the outcome agree. Encounter measures the cost in B2.
 - **Not in this note:** interiors, building types beyond tower and house, enterable buildings, and any destruction shape beyond height shrinking and collapse (Art and VFX own the look of a wreck).
