@@ -37,6 +37,8 @@ func _init() -> void:
 	check("pow/exp/log/hypot", "" if SimGolden.powHash() == g.powexplog else "differs")
 	check("tick-0 state", _tick0(g))
 	check("wounds (forced hits)", "" if SimGolden.woundsHash() == g.get("wounds", "") else "differs")
+	check("rally (forced)", "" if SimGolden.rallyHash() == g.get("rally", "") else "differs")
+	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
 	check("human-input replays", _replays(g))
@@ -151,6 +153,44 @@ func _replays(g: Dictionary) -> String:
 		var e := SimGolden.compareRun(got, r.run, "replay seed %d" % int(r.replay.seed))
 		if e != "":
 			return e
+	return ""
+
+
+## SimReplay (S4): record a scripted two-human run, play it back and play its JSON round trip; a changed input and a
+## replay from other combat data must both fail.
+func _replayModule() -> String:
+	var src: Dictionary = SimGolden.scriptedReplay(13, 1200, true, [600])
+	var S := SimCore.createSim()
+	var rec := SimReplay.recorder(S, 13, src.ai)
+	var cur: Array = [null, null]
+	var ii: int = 0
+	var ti: int = 0
+	for t in range(int(src.ticks)):
+		while ti < src.toggles.size() and int(src.toggles[ti][0]) == t:
+			rec.toggle(int(src.toggles[ti][1]))
+			ti += 1
+		while ii < src.inputs.size() and int(src.inputs[ii][0]) == t:
+			cur[int(src.inputs[ii][1])] = SimGolden._intent(src.inputs[ii][2])
+			ii += 1
+		rec.step(cur)
+	var rp: Dictionary = rec.finish()
+	SimCore.dispose(S)
+	var r: Dictionary = SimReplay.play(rp)
+	if not r.ok:
+		return "playback: %s at tick %d" % [r.reason, r.firstBadTick]
+	r = SimReplay.play(JSON.parse_string(JSON.stringify(rp)))
+	if not r.ok:
+		return "JSON round trip: %s at tick %d" % [r.reason, r.firstBadTick]
+	var bad: Dictionary = rp.duplicate(true)
+	bad.data = "0"
+	if SimReplay.play(bad).reason != "data":
+		return "a replay from other combat data was not refused"
+	bad = rp.duplicate(true)
+	var mid: Dictionary = bad.inputs[int(floor(bad.inputs.size() / 2.0))][2]
+	mid.mx = -1.0 if mid.mx > 0.0 else 1.0
+	mid.light = not mid.light
+	if SimReplay.play(bad).ok:
+		return "a changed input was not caught"
 	return ""
 
 

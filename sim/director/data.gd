@@ -439,7 +439,7 @@ static func planFinisher(ex, W) -> Dictionary:
 static func _finisherFor(W) -> Dictionary:
 	var want: String = "generic.placeholder"
 	if finProfile() != "parity":
-		want = _fin.select.byFighter.get(W.name, _fin.select.fallback)
+		want = _fin.select.byFighter.get(W.id, _fin.select.fallback)   # S4: the stable roster id (the mirror arms rename)
 	for f in _fin.finishers:
 		if f.id == want:
 			return f

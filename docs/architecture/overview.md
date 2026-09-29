@@ -61,6 +61,8 @@ Current state: implemented in both cores (QA-002, done). The reference consumer 
 
 `play(replay)` re-runs from the seed and reports the first checkpoint that disagrees. Replays store intents, not keys, so they don't depend on the key mapping. Planned additions: a `sim` version field (the package version or git revision) and a `setup` block (roster and spawns) once there are more than two fighters.
 
+**GDScript replays (`core/replay.gd`, S4), format v2.** The same shape as v1, with `data` (`DirData.dataHash()`, the combat data it ran on) in place of `sim` (the GDScript sim has one mode). `SimReplay.recorder(S, seed, ai)` records; `SimReplay.play(rp)` returns `{ok, firstBadTick, reason, final}` and refuses a replay recorded on other combat data (`reason` `data`) without running it. The parity gate records, plays back, round-trips through JSON and checks both negative controls.
+
 **Snapshot (proposed v1, not implemented).** A plain object built from `S`:
 - Fighter references become indices: `rush.tgt`, `launchBy`, `game.ko`, `game.clash.A` and `.D`, `beam.A`, `ex.A` and `ex.D`. Beats are already data.
 - Static world data (base heights, building sizes, tree positions) is regenerated from the world seed. Only what changes is stored: `deform` as raw little-endian float32 bytes (1200 columns, 4.8 KB, base64 in JSON), building `hp`, `alive` and `popAlive`, and a tree `alive` bit mask.

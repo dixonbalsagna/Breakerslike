@@ -300,6 +300,7 @@ static func decisive(S: SimState, ex, W, L, why: String) -> void:
 	if S.game.ko != null or ex == null:
 		return
 	SimFx.decisive(S, W, L, why)
+	SimWounds.onDecisive(S, W, why)   # S4: Spite
 	ex.loser = S.fighters.find(L)
 	if L.brink and not finisherPlanned(ex):
 		startFinisher(S, ex, W, L)
@@ -380,6 +381,7 @@ static func _opContest(S: SimState, ex, a) -> void:
 	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")
 	if survived:
 		SimFx.banner(S, L.name + " HOLDS ON", L.aura, 1.2)
+		SimWounds.onContestSurvived(S, L)   # S4: Second Wind
 	else:
 		SimDamage.ko(S, L, W)
 
@@ -483,6 +485,7 @@ static func _opContestBranch(S: SimState, ex, a) -> void:
 	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")
 	if survived:
 		SimFx.banner(S, L.name + " HOLDS ON", L.aura, 1.2)
+		SimWounds.onContestSurvived(S, L)   # S4: Second Wind
 	DirData.scheduleOutcome(ex, W, not survived)
 
 

@@ -13,7 +13,7 @@ const STREAM_IDS: Array = ["vfx.spark", "vfx.debris", "vfx.dust", "vfx.splash", 
 ## 17-match set made the golden check slow; the batch tools cover the seeds this dropped).
 const MATCHES: Array = [["default", 1], ["swap", 1], ["mirror-villain", 1], ["mirror-hero", 1],
 	["default-flip", 2], ["swap-flip", 2], ["mirror-villain-flip", 2], ["mirror-hero-flip", 2]]
-const CHAR_KEYS: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName"]
+const CHAR_KEYS: Array = ["id", "name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 
 
@@ -34,6 +34,7 @@ static func build() -> Dictionary:
 	for s in TICK0_SEEDS:
 		g.tick0[str(s)] = tick0Hash(s)
 	g.tick0Values = tick0Values(1)
+	g.rally = rallyHash()
 	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY
 	g.matches = []
@@ -129,6 +130,48 @@ static func woundsHash() -> String:
 	return h.hex()
 
 
+## S4 Rally, forced (like woundsHash): Second Wind mends the core; the cooldown holds; the next Rally mends the head; a
+## brink too deep for one mend gets none; Spite ignores a signature win and mends the arms first on a win by hand; second
+## breath's recovered wear accumulates.
+static func rallyHash() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 7)
+	var f = S.fighters[0]
+	var g = S.fighters[1]
+	g.rally = "spite"
+	var h := SimHash.Hasher.new()
+	var snap := func(x) -> void:
+		for r in range(4):
+			h.num(float(x.wear[r])); h.num(float(x.stage[r]))
+		h.u(1 if x.brink else 0)
+		h.num(float(x.rallied)); h.num(float(x.rallies)); h.num(float(x.rallyCool)); h.num(float(x.breathWear))
+	var put := func(x, w: Array) -> void:
+		for r in range(4):
+			x.wear[r] = w[r]
+		SimWounds.updateStages(S, x)
+	var wait := func(x, n: int) -> void:
+		for t in range(n):
+			SimWounds.step(S, x)
+	put.call(f, [300000, 560000, 200000, 100000])       # core broken: on the brink
+	SimWounds.onContestSurvived(S, f); snap.call(f)     # Second Wind mends the core
+	put.call(f, [560000, 534000, 560000, 100000])       # head and arms broken
+	SimWounds.onContestSurvived(S, f); snap.call(f)     # the cooldown holds
+	wait.call(f, SimWounds.RALLY_COOL_TICKS); snap.call(f)
+	SimWounds.onContestSurvived(S, f); snap.call(f)     # the head (core already rallied)
+	put.call(f, [534000, 560000, 560000, 560000])       # core and two limbs: too deep for one mend
+	wait.call(f, SimWounds.RALLY_COOL_TICKS)
+	SimWounds.onContestSurvived(S, f); snap.call(f)
+	put.call(g, [200000, 300000, 560000, 560000])       # arms and legs broken
+	SimWounds.onDecisive(S, g, "beam"); snap.call(g)    # a signature win is not by hand
+	SimWounds.onDecisive(S, g, "clash"); snap.call(g)   # Spite: arms first
+	put.call(g, [200000, 300000, 400000, 100000])       # a battered region, 10 s after the last exchange
+	S.T = 10.0
+	wait.call(g, 60); snap.call(g)                      # second breath: 60 ticks x 100 units
+	SimHash.hashFx(h, S.out.fx)
+	SimCore.dispose(S)
+	return h.hex()
+
+
 static func tick0Hash(seed: int) -> String:
 	var S := SimCore.createSim()
 	SimCore.newMatch(S, seed)
@@ -176,8 +219,8 @@ static func applyArm(arm: String, fs: Array) -> void:
 		_put(fs[0], va)
 		_put(fs[1], vb)
 	if arm.ends_with("-flip"):
-		fs[0].x = 2900.0
-		fs[1].x = 2150.0
+		fs[0].x = SimConst.START_X + SimConst.START_GAP   # S4: was 2900 and 2150, the pre-scale spawns
+		fs[1].x = SimConst.START_X
 		fs[0].face = -1.0
 		fs[1].face = 1.0
 

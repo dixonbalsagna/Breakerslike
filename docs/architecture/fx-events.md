@@ -46,6 +46,7 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `region_broken` | actor, region | a region reaches broken (also sent as a `region_stage`) | nothing; the break's wound card and set piece |
 | `brink_enter` | actor | the fighter is on the brink: the core broken, or two of head, arms and legs broken | nothing; the brink state (a finisher can now end the match, from S2) |
 | `brink_exit` | actor | the fighter leaves the brink (by a Rally, from S4) | nothing |
+| `rally` | actor, region, kind | S4: `actor` rallied, mending `region` to battered at 89 (a `region_stage` and `brink_exit` follow in the same tick). `kind` is the fighter's rule: `second_wind` (survived a finisher contest) or `spite` (won a decisive exchange by hand); `reboot` and `encore` arrive with their fighters | nothing; the HUD's Rally card, Camera, Audio |
 | `tier_up` | actor, tier, onGround | a fighter reaches a new power tier (the structured twin of the feed line) | nothing; `onGround` is true when the power-up cratered the ground |
 | `hide_start` | actor, cover | a fighter goes to ground (hidden); cover is submerged, canopy or ridge. Since S2 only a fighter with `canHide` (the future stealth fighter) hides; nobody in the base roster emits it | nothing |
 | `found` | actor | the opponent regains lock on `actor` (spec-wounds.md §1c): line of sight returns, the hunter comes within 240, `actor` attacks, or 4 s pass. For a `canHide` fighter it still means found in hiding | nothing; the Found flash |

@@ -227,6 +227,12 @@ class Fighter:
 	var stage: Array = [0, 0, 0, 0]  # per region: 0 fresh, 1 bruised, 2 battered, 3 broken
 	var brink: bool = false
 	var stunTicks: int = 0           # S3a: stagger or daze ticks left; input is gated while above 0 (wounds.gd)
+	var rally: String = ""           # S4: the fighter's Rally rule (wounds.gd): second_wind, spite, reboot, encore or ""
+	var rallied: int = 0             # S4: bit mask of the regions already rallied (each region once)
+	var rallies: int = 0             # S4: Rallies so far
+	var rallyCool: int = 0           # S4: ticks until the next Rally is allowed
+	var breathWear: int = 0          # S4 (QA): wear units recovered by second breath so far
+	var id: String = ""              # S4: stable roster id (the roster entry's key); arms may rename, never re-id
 	var ambush: bool = false
 	var rush = null          # Rush or null
 	var rot: float = 0.0

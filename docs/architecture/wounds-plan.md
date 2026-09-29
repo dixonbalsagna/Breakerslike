@@ -116,9 +116,17 @@ Sizes, as a rough guide to GDScript lines and review effort:
 
 ### S4: Rally, shared rule (spec §2). Placeholder trigger for the prototype fighters: survive a finisher contest (Second Wind's shape).
 - **Owners:** Simulation (state: rallied-region mask, a 15 s cooldown as ticks, a mended region returning battered at 89; events), then Encounter (the AI's use, and the contest tilt of −10 per Rally).
-- **Events:** `rally` {actor, region}.
+- **Events:** `rally` {actor, region, kind}.
 - **Acceptance:** spec §5 test 4 (0.5 to 2.0 Rallies per match; never the same region twice; survival reaches 0 after the third Rally or through the past-8:00 tilt).
 - **Size:** S.
+- **S4 as built** (`sim/core/wounds.gd`, the Rally section).
+  - Per-fighter state: `rally` (the rule), `rallied` (a region bit mask), `rallies`, `rallyCool` (ticks). All are hashed.
+  - The rule comes from the roster entry. KAI and VORR use `second_wind`, the plan's placeholder.
+  - Triggers are automatic. The director calls `SimWounds.onContestSurvived` when a finisher contest is survived (Second Wind), and `SimWounds.onDecisive` on every decisive result (Spite, by hand only: launch, clash, guard_break or interrupt). Reboot and Encore (an input) come with their fighters.
+  - Limits: each region is rallied at most once, and a 900-tick cooldown follows every Rally.
+  - The mend: the first broken, never-rallied region, in rule order (core, head, arms, legs; Spite puts arms first), whose mend to 89 takes the fighter off the brink. A brink too deep for one mend (the core and two limbs, or three limbs) gets no Rally.
+  - Encounter's part: the contest tilt of −10 per Rally (`L.rallies`), and the AI's use.
+  - QA's metrics: `Fighter.breathWear` holds the wear units that second breath has recovered. `batch.gd` prints Rallies per match and regions rallied twice, plus second breath's share of the wear taken inside the battered band.
 
 ### D1: The roster as data. It slots in after S2 (or S4), and before any real fighter.
 - **Owner:** Simulation (loader), with Tools (schema and validator in `tools/`) and Narrative (identity text).

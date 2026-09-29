@@ -4,11 +4,12 @@ class_name SimWounds
 ## rates are whole numbers per 60 Hz tick (1 wear per second is exactly 100 units per tick) and nothing drifts.
 ##
 ## S2 (Encounter): the HP bar no longer ends the match (HP_ENDS_MATCH false); only a finisher can KO (the director,
-## sim/director/exchange.gd). Tuning: k 0.06 (Encounter's sweep, docs/director/wounds-s2.md; spec §1b's 0.20 gave
-## 90 s matches), bruised fade 0.25 per second, focus weight (1 + wear/30). Still provisional: the region picker (family
+## sim/director/exchange.gd). Tuning: k 0.065 (S3b; Encounter's sweeps, docs/director/wounds-s2.md; spec §1b's 0.20
+## gave 90 s matches), bruised fade 0.25 per second, focus weight (1 + wear/30). Still provisional: the region picker (family
 ## weights by attack kind), until per-atom weights arrive.
 ## S3a (Simulation): the core-side stage penalties (constants below; spec §1 "Stage penalties"). S3b (Encounter) adds the
-## director-side ones. Rally (S4) and per-fighter profiles (F1) come later.
+## director-side ones. S4 (Simulation): Rally, the shared rule (spec §2; the Rally section below). Per-fighter profiles
+## (F1) come later.
 
 const REGIONS: Array = ["head", "core", "arms", "legs"]
 const HEAD: int = 0
@@ -122,6 +123,8 @@ static func addWear(S: SimState, f, region: int, damage: float) -> void:
 static func step(S: SimState, f) -> void:
 	if f.stunTicks > 0:
 		f.stunTicks -= 1
+	if f.rallyCool > 0:
+		f.rallyCool -= 1
 	var ex = S.dirS.ex
 	if ex != null and (ex.A == f or ex.D == f):
 		return
@@ -138,6 +141,7 @@ static func step(S: SimState, f) -> void:
 			changed = f.wear[r] != w or changed
 		elif w < STAGE_AT[2] and w > FADE_HIDDEN_FLOOR and S.T - f.exT >= BREATH_AFTER:
 			f.wear[r] = maxi(FADE_HIDDEN_FLOOR, w - FADE_BREATH)
+			f.breathWear += w - f.wear[r]
 			changed = true
 	if changed:
 		updateStages(S, f)
@@ -215,3 +219,69 @@ static func gateIntent(f, i: SimIntent) -> void:
 		i.sig = false
 	if broken(f, LEGS):
 		i.dash = false
+
+
+# ---------------------------------------------------------------- Rally (S4; spec-wounds.md §2)
+
+## A Rally takes a fighter off the brink and mends one broken region to battered, at 89 wear. There is no Rally button:
+## each fighter's rule fires on its own condition (Encore, the Empress's, is the one input; it waits for her). The looser
+## limits (Orb): each region can be rallied once (at most 4 Rallies), and a 15 s cooldown after a Rally. The contest tilt
+## of 10 points per Rally is the director's (Encounter).
+## Rules (Fighter.rally): "second_wind" survives the finisher contest; "spite" wins a decisive exchange by hand (no
+## signature), mending the arms first; "reboot" (the dock or a Press) and "encore" (an input) come with their fighters;
+## "" has no Rally.
+const RALLY_WEAR: int = 534000       # 89 wear: the mended region is battered, one good hit from breaking again
+const RALLY_COOL_TICKS: int = 900    # 15 s (Orb's looser limit; was 30 s)
+const BY_HAND: Array = ["launch", "clash", "guard_break", "interrupt"]   # decisive kinds won without a signature
+const RALLY_ORDER: Array = [CORE, HEAD, ARMS, LEGS]
+const SPITE_ORDER: Array = [ARMS, CORE, HEAD, LEGS]
+
+
+## Whether f would be on the brink with region r's wear set to wr.
+static func _brinkWith(f, r: int, wr: int) -> bool:
+	var st: Array = []
+	for q in range(4):
+		st.append(stageOf(wr if q == r else f.wear[q]))
+	var limbs: int = 0
+	for q in [HEAD, ARMS, LEGS]:
+		if st[q] == 3:
+			limbs += 1
+	return st[CORE] == 3 or limbs >= 2
+
+
+## The region a Rally mends: the first broken, never-rallied region in the rule's order whose mend takes the fighter
+## off the brink. -1 if there is none (every broken region already rallied, or the brink is too deep for one mend: the
+## core and two limbs, or three limbs, broken).
+static func rallyRegion(f, order: Array) -> int:
+	for r in order:
+		if f.stage[r] == 3 and (f.rallied & (1 << r)) == 0 and not _brinkWith(f, r, RALLY_WEAR):
+			return r
+	return -1
+
+
+## Rally f by rule kind if it is on the brink, off cooldown and has a region to mend. Returns true if it rallied.
+static func rally(S: SimState, f, kind: String) -> bool:
+	if not f.brink or f.rallyCool > 0 or S.game.ko != null:
+		return false
+	var r: int = rallyRegion(f, SPITE_ORDER if kind == "spite" else RALLY_ORDER)
+	if r < 0:
+		return false
+	f.wear[r] = RALLY_WEAR
+	f.rallied |= 1 << r
+	f.rallies += 1
+	f.rallyCool = RALLY_COOL_TICKS
+	SimFx.rally(S, f, REGIONS[r], kind)
+	updateStages(S, f)
+	return true
+
+
+## The director's hooks. f survived a finisher contest (Second Wind).
+static func onContestSurvived(S: SimState, f) -> void:
+	if f.rally == "second_wind":
+		rally(S, f, "second_wind")
+
+
+## W won a decisive exchange (why: decisive()'s kind). Spite needs it won by hand.
+static func onDecisive(S: SimState, W, why: String) -> void:
+	if W.rally == "spite" and BY_HAND.has(why):
+		rally(S, W, "spite")

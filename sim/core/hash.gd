@@ -133,6 +133,8 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 			out.append(float(f.stage[ri]))
 		out.append(f.brink)
 		out.append(float(f.stunTicks))
+		out.append(f.rally); out.append(float(f.rallied)); out.append(float(f.rallies)); out.append(float(f.rallyCool))
+		out.append(float(f.breathWear)); out.append(f.id)
 	_obj(out, S.world, ["pop0", "casualties", "structuresLost", "craters"])
 	out.append(float(S.buildings.size()))
 	for b in S.buildings:
@@ -220,7 +222,7 @@ const FX_FIELDS: Dictionary = {
 	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
 	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"],
 	"shake": ["k", "x"], "tick": ["dt", "frozen"],
-	"region_stage": ["actor", "region", "stage"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
+	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target", "dur"], "finisher_contest": ["target", "chance", "survived"],
 	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],

@@ -182,6 +182,12 @@ static func decisive(S: SimState, winner, loser, why: String) -> void:
 	e.winner = float(S.fighters.find(winner)); e.loser = float(S.fighters.find(loser)); e.kind = why
 
 
+## S4: f rallied by rule kind (second_wind, spite, ...), mending region (now battered at 89).
+static func rally(S: SimState, f, region: String, kind: String) -> void:
+	var e := _ev(S, "rally")
+	e.actor = float(S.fighters.find(f)); e.region = region; e.kind = kind
+
+
 ## dur: the finisher's length in seconds (Combat's template), so the HUD and Camera need not guess.
 static func finisherStart(S: SimState, f, target, dur: float = 0.0) -> void:
 	var e := _ev(S, "finisher_start")
