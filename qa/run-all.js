@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // One-command regression suite. From the repo root:   node qa/run-all.js
 //   --quick            soak with 100 matches instead of 1000 (about 3 seconds of soak)
-//   --only=a,b         run only the named tests (tables, determinism, seam, soak, selftest)
+//   --only=a,b         run only the named tests (tables, determinism, seam, soak, diff, selftest)
 //   --update-golden    rewrite qa/golden-hashes.json after an intended simulation change (runs determinism only)
 // Each test file runs in its own process (the prototype installs globals). Exit code is 0 only if every test passes.
 const { spawnSync } = require('child_process');
@@ -14,7 +14,7 @@ const val = n => { const a = args.find(x => x.startsWith('--' + n + '=')); retur
 
 const dir = path.join(__dirname, 'tests');
 let names = fs.readdirSync(dir).filter(f => f.endsWith('.test.js')).map(f => f.replace('.test.js', '')).sort();
-const order = ['tables', 'determinism', 'seam', 'soak', 'selftest'];
+const order = ['tables', 'determinism', 'seam', 'soak', 'diff', 'selftest'];
 const rank = n => (order.includes(n) ? order.indexOf(n) : order.length);
 names.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 if (val('only')) names = val('only').split(',');

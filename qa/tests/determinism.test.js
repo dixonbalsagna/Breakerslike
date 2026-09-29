@@ -18,7 +18,7 @@ t.test('same seed twice in one process gives identical records', () => {
   return SEEDS.length + ' seeds';
 });
 
-t.test('a fresh prototype instance and a warmed-up one agree', () => {
+t.test('a match does not depend on the ones played before it (newMatch resets all carry-over state)', () => {
   for (const s of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
     const fresh = runMatch(createHarness(), s).hash;
     const warm = createHarness();
@@ -70,18 +70,6 @@ t.test('every arm is deterministic', () => {
   }
   assert.notStrictEqual(runMatch(h, 17, { arm: 'default' }).hash, runMatch(h, 17, { arm: 'swap' }).hash, 'swap arm changed nothing');
 });
-
-// Informational: newMatch() itself leaves dirS.lastLaunch / lastLaunch2 alone, so a browser match started with N
-// depends on the previous one. The harness clears them; this line tells you whether the sim has been fixed yet.
-{
-  const h = createHarness(); let leaks = 0;
-  for (let s = 1; s <= 10; s++) {
-    const fresh = runMatch(createHarness(), s, { keepCarryover: true }).hash;
-    runMatch(h, 9000 + s, { keepCarryover: true });
-    if (runMatch(h, s, { keepCarryover: true }).hash !== fresh) leaks++;
-  }
-  t.info(`QA-001 newMatch() carry-over leak (dirS.lastLaunch): ${leaks ? 'PRESENT in ' + leaks + ' of 10 seeds (harness works around it)' : 'fixed in the sim'}`);
-}
 
 // Golden hashes: a tripwire for any change to simulation behaviour. Regenerate on purpose with
 //   node qa/run-all.js --update-golden     (then re-run the balance report)

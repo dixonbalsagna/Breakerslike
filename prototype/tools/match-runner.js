@@ -54,10 +54,7 @@ function runMatch(h, seed, opt = {}) {
   if (h.bind) h.bind();                              // several harnesses can coexist; make this one the live one
   const arm = opt.arm || 'default';
   if (!ARMS[arm]) throw new Error('unknown arm ' + arm);
-  // State the prototype's newMatch() does not reset. Without this a match depends on the one played before it.
-  // (opt.keepCarryover exists only so the qa suite can demonstrate that dependence.)
-  if (!opt.keepCarryover) { wf.dirS.lastLaunch = ''; delete wf.dirS.lastLaunch2; }
-  wf.game.paused = false;
+  wf.game.paused = false;                            // newMatch() leaves the pause flag alone; steps ignore it anyway
   feedLog.length = 0;
   if (seed === undefined) wf.newMatch(); else wf.newMatch(seed);
   const fs = wf.fighters();

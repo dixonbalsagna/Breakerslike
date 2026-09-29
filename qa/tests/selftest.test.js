@@ -17,6 +17,7 @@ const MUTANTS = [
   { name: 'position wrap lets negative x through', from: 'const wrap = x => ((x % W) + W) % W;', to: 'const wrap = x => x % W;', test: 'seam' },
   { name: 'RNG seeded from the clock even when a seed is given', from: 'rng = mulberry32(game.seed);', to: 'rng = mulberry32((Date.now() ^ (Math.random()*1e9)) | 0);', test: 'determinism' },
   { name: 'Math.random in the sim', from: 'const R = (a,b) => a + (b-a) * rng();', to: 'const R = (a,b) => a + (b-a) * Math.random();', test: 'determinism' },
+  { name: 'newMatch forgets to reset the launch history', from: "dirS.lastLaunch = ''; dirS.lastLaunch2 = '';", to: '', test: 'determinism' },
   { name: 'NaN in fighter power', from: 'f.power = Math.min(100, f.power + 0.45*dt);', to: 'f.power = Math.min(100, f.power + 0.45*dt*(T > 20 ? NaN : 1));', test: 'soak', env: { QA_SOAK_MATCHES: '10' } },
   { name: 'casualties can exceed the population', from: 'world.casualties += n;', to: 'world.casualties += n*2;', test: 'soak', env: { QA_SOAK_MATCHES: '10' } },
   { name: 'buildings heal when hit hard', from: 'const before = b.hp; b.hp -= d;', to: 'const before = b.hp; b.hp -= d; if (d > 50) b.hp += 3*d;', test: 'soak', env: { QA_SOAK_MATCHES: '10' } },

@@ -4,7 +4,7 @@ Owner: QA and Balance. Subject: `prototype/index.html` as of the seeded `newMatc
 
 Sample: 8,000 seeded AI-vs-AI matches (eight arms of 1,000, seeds in section 1) plus 1,000 clock-seeded matches for the equivalence check in section 11. There is one AI at one skill level, so "equal skill" holds by construction. These numbers describe how the AI plays the prototype, not how people will.
 
-Everything between the `GENERATED` markers is written by `node qa/balance-report.js --matches=1000 --unseeded=1000` (about a minute) and can be regenerated. Everything outside them is hand-written and is kept when the report is regenerated. Section numbers below refer to the generated tables.
+Everything between the `GENERATED` markers is written by `node qa/balance-report.js --matches=1000 --unseeded=1000` (about 90 seconds) and can be regenerated. Everything outside them is hand-written and is kept when the report is regenerated. Section numbers below refer to the generated tables.
 
 ## Where the charter's "done when" stands
 
@@ -12,7 +12,7 @@ Everything between the `GENERATED` markers is written by `node qa/balance-report
 | :--- | :--- | :--- |
 | Win rate 45 to 55% for every pairing at equal skill | KAI 41.8% (95% CI 39.7 to 44.0), VORR 58.2% | **Fails** |
 | Average match length within target range | 55.4 s mean to KO (CI ±1.2), p10 37 s, p90 77 s. No target exists yet. | Passes the provisional band below |
-| CI runs the suite on every change | The suite is one command, `node qa/run-all.js`, about 20 s. | Waiting on Tools and Pipeline |
+| CI runs the suite on every change | The suite is one command, `node qa/run-all.js`, about 35 s. | Waiting on Tools and Pipeline |
 
 Provisional length band (my call as owner of the release quality bar, until Game Design sets one): mean 40 to 70 s to KO, p90 at most 100 s, no match reaching the 300 s cap. Game Design can replace it through the EP.
 
@@ -32,7 +32,7 @@ Provisional length band (my call as owner of the release quality bar, until Game
 
 | ID | Finding | Owner to fix | Severity |
 | :--- | :--- | :--- | :--- |
-| QA-001 | `newMatch()` does not reset `dirS.lastLaunch` and `dirS.lastLaunch2`, so a match depends on the one played before it. In a test of 40 seeds, 38 played out differently when another match had run first. The harness clears them, so the baseline is unaffected, but a browser match started with N cannot be replayed from its seed, and replay is a P2 exit criterion. A two-line fix inside `newMatch()`. | Simulation | Medium |
+| QA-001 | **Fixed.** `newMatch()` did not reset `dirS.lastLaunch` and `dirS.lastLaunch2`, so a match depended on the one played before it (38 of 40 tested seeds played out differently when another match had run first). `newMatch()` now resets both. The harness had been clearing them, so every number here was already computed as if the fix were in and none of them moved. | Fixed | was Medium |
 | QA-002 | Cosmetic effects draw from the simulation RNG (`spark`, `debris`, `dust`, `splash`, `fire`, and the charge sparks all call `R()` or `rng()`). Demonstration: making `spark()` draw one extra random number changed the trajectory of 100 of 100 seeded matches and the winner of 56 of them. Any VFX change therefore rewrites gameplay, and rollback netcode and replays would desync. Cosmetic effects need their own RNG. | Simulation, VFX | High for P5 netcode, low today |
 | QA-003 | `casualty()` gives anguish to the first `hero` in the fighter list only. In a hero mirror only P1 accrues anguish. Not significant in the data (slot -1.4 points, CI -3.6 to +0.8) and irrelevant while there is one hero. | Simulation | Low |
 | QA-004 | Event statistics are parsed from the text of the director feed, because the sim exposes no structured event log. A reworded feed line silently zeroes a statistic. `qa/tests/tables.test.js` fails loudly if a core event stops parsing, and lists any unclassified new lines. A structured log (event type, actor, target, outcome) would remove the dependency. | Simulation, Tools | Medium |
@@ -247,27 +247,27 @@ Chain length histogram, default arm: x2: 2516, x3: 1051, x4: 237, x5: 13.
 | mirror-hero | 86% | 5.6 | 155.1 |
 
 ### 11. Unseeded batch against the seeded baseline (clock-seeded, 1000 matches, not reproducible)
-Run as the old tool ran: one long-lived instance, no seed, no carry-over reset. The comparison is against the seeded default arm. |z| below 3 counts as matching (eight tests, so about a 2% chance of a false alarm).
+Run as the old tool ran: one long-lived instance, no seed. The comparison is against the seeded default arm. |z| below 3 counts as matching (eight tests, so about a 2% chance of a false alarm).
 
 | Measure | Unseeded | Seeded default | z | Matches? |
 | :--- | ---: | ---: | ---: | ---: |
-| P1 (KAI) win rate | 42.5% | 42.3% | 0.09 | yes |
-| Length to KO, mean (s) | 56.1 | 55.4 | 0.77 | yes |
-| Civilians lost, mean (%) | 40.3 | 38.7 | 1.31 | yes |
-| Structures lost, mean | 14.7 | 14.1 | 1.68 | yes |
-| SLAM DOWN share of launches | 45.6% | 46.4% | -1.31 | yes |
-| Ocean share of beams | 69.2% | 69.4% | -0.22 | yes |
-| Parries per match | 1.48 | 1.46 | 0.31 | yes |
-| Hides per match | 0.68 | 0.63 | 1.10 | yes |
+| P1 (KAI) win rate | 43.1% | 42.3% | 0.36 | yes |
+| Length to KO, mean (s) | 56.0 | 55.4 | 0.66 | yes |
+| Civilians lost, mean (%) | 39.4 | 38.7 | 0.59 | yes |
+| Structures lost, mean | 14.2 | 14.1 | 0.32 | yes |
+| SLAM DOWN share of launches | 46.0% | 46.4% | -0.60 | yes |
+| Ocean share of beams | 67.5% | 69.4% | -1.73 | yes |
+| Parries per match | 1.46 | 1.46 | -0.02 | yes |
+| Hides per match | 0.69 | 0.63 | 1.23 | yes |
 
-Unseeded launches: SLAM DOWN 46%, UPPERCUT 33%, BUILDING SMASH 14%, SMASH ACROSS 5%, MOUNTAINSIDE 2%.
+Unseeded launches: SLAM DOWN 46%, UPPERCUT 34%, BUILDING SMASH 13%, SMASH ACROSS 5%, MOUNTAINSIDE 2%.
 Bit-for-bit check (run once, not part of the suite because it needs the old file from git): the original `prototype/index.html` from commit 111b1a1 with the clock forced to S, against the edited file called as `newMatch(S)`, gave the same result hash for 200 of 200 odd seeds S.
 <!-- END GENERATED -->
 
 ## Method notes
 
 - **Seeds and slots.** Match i of an arm uses seed base+i (bases in section 1). Arms differ only in who occupies which slot and where each spawns: `swap` exchanges the two characters, `mirror-villain` and `mirror-hero` give both slots the same character (named -A and -B so the feed stays readable), and the `-flip` arms exchange the spawn points. Arms edit the two fighter objects after `newMatch(seed)` and consume no random numbers, so an arm is a pure function of its seed.
-- **Between matches.** The harness clears `dirS.lastLaunch` and `dirS.lastLaunch2` before each match (QA-001). The unseeded check in section 11 deliberately does not, to reproduce how the old tool ran.
+- **Between matches.** Nothing carries over: `newMatch()` resets the launch history (QA-001), and the determinism test fails if a match ever depends on the one before it.
 - **Events.** Attacks, launches, beams, parries, chains, hides, finds and tier-ups are read from the director feed as it is written (QA-004). Attacker stance is read from the fighter at that moment. A beam's biome is the biome under the defender, which is what the feed reports. Fight-time-by-biome samples both fighters every step.
 - **Length.** Sim-seconds from the start to the first KO. The older tools ran until 3.0 s after the KO and printed that, so their figures are 3.0 s higher.
 - **Intervals.** Win rates use Wilson 95% intervals on decided matches. Shares of launches and beams use match-clustered standard errors, because events within a match are not independent. Means use the normal approximation. The equivalence tests in section 11 use pooled two-proportion and Welch z statistics; the pooled version ignores clustering, which makes the test stricter, not looser.
@@ -281,4 +281,5 @@ node qa/balance-report.js --matches=1000 --unseeded=1000      # this file and qa
 node prototype/tools/sim-stats.js 1000 100001                  # the default arm, prints digest 70142afa31be898c
 node prototype/tools/sim-stats.js 1000 100001 --arm=swap       # any arm; seed bases are in section 1
 node qa/run-all.js                                             # the regression suite
+node qa/baseline-diff.js                                       # after a change: which metrics moved beyond their confidence interval
 ```

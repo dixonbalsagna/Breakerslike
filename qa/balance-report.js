@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// Balance report generator.   node qa/balance-report.js [--matches=1000] [--unseeded=1000] [--out=qa/baseline-p0.md] [--json=qa/baseline-p0.json] [--print]
+// Balance report generator.   node qa/balance-report.js [--matches=1000] [--unseeded=1000] [--out=qa/baseline-p0.md] [--json=qa/baseline-p0.json] [--print]   (--print writes no files)
 // Runs the four slot arms with fixed seed blocks, renders the tables and rewrites the text between the
 // <!-- BEGIN GENERATED --> and <!-- END GENERATED --> markers of --out (text outside the markers is hand-written and kept).
 // Everything in the generated block is reproducible from the seeds. The unseeded check (--unseeded=N) is the only
 // clock-seeded part and is labelled as such.
 const fs = require('fs');
 const path = require('path');
-const { createHarness, runMatch, Hasher } = require('../prototype/tools/match-runner');
+const { PLAN, runArm, createHarness } = require('./lib/arms');
+const { runMatch } = require('../prototype/tools/match-runner');
 const S = require('../prototype/tools/stats');
 
 const args = process.argv.slice(2);
@@ -21,30 +22,13 @@ const T = { winLo: 0.45, winHi: 0.55, launchCap: 0.40, slotWarn: 0.025 };
 // Share of the planet's circumference per biome, from SEG in prototype/index.html (9600 units around).
 const WORLD_SHARE = { ocean: 2500 / 9600, village: 1650 / 9600, plains: 850 / 9600, city: 1500 / 9600, forest: 1000 / 9600, desert: 1000 / 9600, mountains: 1100 / 9600 };
 
-const ARMS = [
-  { arm: 'default', base: 100001, label: 'KAI in P1, VORR in P2 (as shipped)' },
-  { arm: 'swap', base: 200001, label: 'VORR in P1, KAI in P2' },
-  { arm: 'mirror-villain', base: 300001, label: 'VORR-A in P1, VORR-B in P2' },
-  { arm: 'mirror-hero', base: 400001, label: 'KAI-A in P1, KAI-B in P2' },
-];
-
-// Same four with the spawn sides exchanged, to separate the slot (P1 or P2) from the side of the map a fighter starts on.
-const FLIPS = [
-  { arm: 'default-flip', base: 500001, label: 'KAI in P1 starting east, VORR in P2 starting west' },
-  { arm: 'swap-flip', base: 600001, label: 'VORR in P1 starting east, KAI in P2 starting west' },
-  { arm: 'mirror-villain-flip', base: 700001, label: 'VORR-A in P1 starting east, VORR-B in P2 starting west' },
-  { arm: 'mirror-hero-flip', base: 800001, label: 'KAI-A in P1 starting east, KAI-B in P2 starting west' },
-];
-const ALL = [...ARMS, ...FLIPS];
+const ALL = PLAN;
+const ARMS = PLAN.filter(a => a.core);                              // the four arms most tables use
+const FLIPS = PLAN.filter(a => !a.core);                            // the spawn-flipped four, used for factor separation
 
 const h = createHarness();
 const runs = {};
-for (const a of ALL) {
-  const recs = [], dg = new Hasher();
-  for (let i = 0; i < N; i++) { const r = runMatch(h, a.base + i, { arm: a.arm }); if (r.nan) { console.error('NaN', r.nan, 'seed', r.seed); process.exit(1); } recs.push(r); dg.str(r.hash); }
-  const agg = S.aggregate(recs); agg.digest = dg.hex(); agg.base = a.base; agg.label = a.label;
-  runs[a.arm] = { recs, agg };
-}
+for (const a of ALL) runs[a.arm] = runArm(h, a, N);
 const D = runs['default'].agg;
 
 // ---- formatting helpers
@@ -233,7 +217,7 @@ w(table(['Arm', 'Matches where a fighter crossed the seam', 'Crossings per match
 let unseeded = null;
 if (NU > 0) {
   const hu = createHarness(), recs = [];
-  for (let i = 0; i < NU; i++) recs.push(runMatch(hu, undefined, { keepCarryover: true }));   // as the old sim-stats ran: clock seeds, one long-lived instance
+  for (let i = 0; i < NU; i++) recs.push(runMatch(hu, undefined));   // as the old sim-stats ran: clock seeds, one long-lived instance
   const g = S.aggregate(recs); unseeded = g;
   const R = runs['default'].recs, len = r => r.koAt;
   const z = [
@@ -248,7 +232,7 @@ if (NU > 0) {
   ];
   w('');
   w(`### 11. Unseeded batch against the seeded baseline (clock-seeded, ${NU} matches, not reproducible)`);
-  w(`Run as the old tool ran: one long-lived instance, no seed, no carry-over reset. The comparison is against the seeded default arm. |z| below 3 counts as matching (eight tests, so about a 2% chance of a false alarm).`);
+  w(`Run as the old tool ran: one long-lived instance, no seed. The comparison is against the seeded default arm. |z| below 3 counts as matching (eight tests, so about a 2% chance of a false alarm).`);
   w('');
   w(table(['Measure', 'Unseeded', 'Seeded default', 'z', 'Matches?'], z.map(r => [r[0], r[1], r[2], r[3].toFixed(2), Math.abs(r[3]) < 3 ? 'yes' : '**NO**'])));
   w('');
@@ -268,6 +252,8 @@ else {
   console.log('wrote ' + path.relative(process.cwd(), OUT));
 }
 const slim = a => { const g = { ...runs[a].agg }; return g; };
-const json = { generatedWith: { node: process.version, matches: N, unseeded: NU }, arms: Object.fromEntries(ALL.map(a => [a.arm, slim(a.arm)])), unseeded: unseeded || undefined };
-fs.writeFileSync(JSON_OUT, JSON.stringify(json, null, 1) + '\n');
-console.log('wrote ' + path.relative(process.cwd(), JSON_OUT));
+const json = { schema: 2, generatedWith: { node: process.version, matches: N, unseeded: NU }, arms: Object.fromEntries(ALL.map(a => [a.arm, slim(a.arm)])), unseeded: unseeded || undefined };
+if (!args.includes('--print')) {
+  fs.writeFileSync(JSON_OUT, JSON.stringify(json, null, 1) + '\n');
+  console.log('wrote ' + path.relative(process.cwd(), JSON_OUT));
+}

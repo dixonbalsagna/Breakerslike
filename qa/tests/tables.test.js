@@ -30,6 +30,17 @@ t.test('the roster is KAI (hero, P1) and VORR (villain, P2) at 1600 hp', () => {
   assert.deepStrictEqual([a.x, b.x], SPAWN, 'spawn positions changed: update SPAWN in prototype/tools/match-runner.js (the -flip arms depend on it)');
 });
 
+t.test('no fighter has gold or yellow hair (Legal RL-014)', () => {
+  const h = createHarness(); h.wf.newMatch(1);
+  for (const f of h.wf.fighters()) {
+    const [r, g, b] = [1, 3, 5].map(i => parseInt(f.hair.slice(i, i + 2), 16) / 255);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    const hue = d === 0 ? 0 : 60 * (mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4);
+    const gold = d / (mx || 1) > 0.3 && mx > 0.55 && hue >= 30 && hue <= 70;
+    assert.ok(!gold, `${f.name} hair ${f.hair} reads as gold/yellow (hue ${hue.toFixed(0)}): Legal ruling RL-014 asked for a clearly non-gold colour`);
+  }
+});
+
 t.test('the feed parser recognises every director event it is meant to', () => {
   const h = createHarness(), seen = { attacks: 0, launches: 0, beams: 0, biomes: 0, parries: 0, chains: 0, hides: 0, tiers: 0, ko: 0 }, unknown = {};
   for (let s = 1; s <= 40; s++) {

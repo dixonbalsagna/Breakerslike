@@ -96,6 +96,7 @@ function aggregate(recs) {
   out.biomeTime = Object.fromEntries(Object.entries(bs).map(([k, v]) => [k, v / bt]));
   out.seam = { matchesWithCrossing: recs.filter(r => r.seamCrossings > 0).length, crossings: sum(recs.map(r => r.seamCrossings)), maxDisp: Math.max(...recs.map(r => r.maxDisp)) };
   out.nan = recs.filter(r => r.nan).length;
+  out.metrics = metrics(recs);
   return out;
 }
 
@@ -108,5 +109,56 @@ function clusterShare(recs, kFn, nFn) {
   const se = Math.sqrt(m / (m - 1) * ss) / Nn;
   return { p, se, ci: [p - 1.96 * se, p + 1.96 * se] };
 }
+// Flat list of named metrics, each { v, se }: the value and its standard error. This is what qa/baseline-diff.js compares.
+// Means use sd/sqrt(n); per-match proportions use the binomial; shares of events (launches, beams, outcomes) and
+// per-event ratios are pooled over matches with a match-clustered standard error, because events inside a match are correlated.
+function metrics(recs) {
+  const n = recs.length, M = {};
+  const put = (k, v, se) => { if (Number.isFinite(v)) M[k] = { v, se: Number.isFinite(se) ? se : 0 }; };
+  const meanOf = (k, fn) => { const a = recs.map(fn); put(k, mean(a), sd(a) / Math.sqrt(n)); };
+  const propOf = (k, cnt, tot) => { if (tot) { const p = cnt / tot; put(k, p, Math.sqrt(p * (1 - p) / tot)); } };
+  const ratioOf = (k, kFn, nFn) => { const c = clusterShare(recs, kFn, nFn); put(k, c.p, c.se); };
+  const total = o => sum(Object.values(o));
+  const decided = recs.filter(r => !r.timeout);
+
+  propOf('win.p1', decided.filter(r => r.winner === 0).length, decided.length);
+  propOf('timeouts', n - decided.length, n);
+  meanOf('len.mean', r => r.koAt);
+  propOf('len.over90', recs.filter(r => r.koAt > 90).length, n);
+  meanOf('civ.mean', r => r.civPct * 100);
+  propOf('civ.over90', recs.filter(r => r.civPct >= 0.9).length, n);
+  meanOf('structs.mean', r => r.structs);
+  meanOf('craters.mean', r => r.craters);
+  meanOf('seam.crossings', r => r.seamCrossings);
+
+  meanOf('launches.perMatch', r => total(r.launches));
+  const lnames = [...new Set(recs.flatMap(r => Object.keys(r.launches)))];
+  for (const l of lnames) ratioOf('launch.' + l, r => r.launches[l] || 0, r => total(r.launches));
+
+  meanOf('beams.perMatch', r => r.beams.length);
+  for (const b of [...new Set(recs.flatMap(r => r.beams.map(x => x.bio)))]) ratioOf('beam.biome.' + b, r => r.beams.filter(x => x.bio === b).length, r => r.beams.length);
+  for (const o of [...new Set(recs.flatMap(r => r.beams.map(x => x.out)))]) ratioOf('beam.outcome.' + o, r => r.beams.filter(x => x.out === o).length, r => r.beams.length);
+
+  meanOf('melee.perMatch', r => total(r.melee));
+  for (const t of [...new Set(recs.flatMap(r => Object.keys(r.melee)))]) ratioOf('melee.' + t, r => r.melee[t] || 0, r => total(r.melee));
+
+  meanOf('parry.perMatch', r => sum(r.parries));
+  ratioOf('parry.perMelee', r => sum(r.parries), r => total(r.melee));
+  meanOf('chain.perMatch', r => r.chains.length);
+  ratioOf('chain.perMelee', r => r.chains.length, r => total(r.melee));
+  ratioOf('chain.meanLength', r => sum(r.chains), r => r.chains.length);
+  meanOf('hide.perMatch', r => sum(r.hides));
+  propOf('hide.matchesWith', recs.filter(r => sum(r.hides) > 0).length, n);
+  meanOf('hide.seconds', r => sum(r.hiddenSec));
+  meanOf('hide.found', r => r.found);
+  meanOf('ambush.perMatch', r => r.ambush);
+  ratioOf('ambush.perHide', r => r.ambush, r => sum(r.hides));
+  meanOf('tier.p1', r => r.tierUps[0]);
+  meanOf('tier.p2', r => r.tierUps[1]);
+
+  for (const b of [...new Set(recs.flatMap(r => Object.keys(r.biomeSec)))]) ratioOf('time.biome.' + b, r => r.biomeSec[b] || 0, r => sum(Object.values(r.biomeSec)));
+  return M;
+}
+
 const pct = (v, d = 1) => (v * 100).toFixed(d) + '%';
-module.exports = { sum, mean, sd, quantile, wilson, twoPropZ, welchZ, clusterShare, hist, dist, aggregate, pct, tally };
+module.exports = { sum, mean, sd, quantile, wilson, twoPropZ, welchZ, clusterShare, hist, dist, metrics, aggregate, pct, tally };
