@@ -99,6 +99,9 @@ Orb upgraded the subscription ('more tokens to play with, keep going'). More dir
 - Grunt names: Narrative's gesture, intensity and mood names map to Audio's recipes. Narrative owns caption strings; UI displays them.
 - Legal: origin rows AUD-GEN-001, AUD-GEN-002 and AUD-PREV-001; screen the beam and Press sound rules (direction.md §5.2 to 5.3).
 
+## Collateral ramp and cap (Game Design §4b)
+World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, over budget), a cumulative ceiling (10, 30, 60 and 90%), and per-casualty weights times 425/pop0. Narrative and World make evacuation read as fleeing. QA adds the rolling-window test, the ceiling test and the per-tier split.
+
 ## Sim editor queue (one at a time; the plan is docs/architecture/wounds-plan.md)
 S0 menace fixes (Simulation, active), S1 wear core, then SC world scale plus W-R rim scaling (World first, then Simulation, then Encounter's tempo pass; one golden regen; docs/world/scale.md; about 2,000 bh planet; 10-20 s lap), B1 building depth data (World), LD1 fire and smoke cover (World and Encounter), then (with the ko() hook behind a flag), S2 the end (Encounter), S3a and S3b, S4 Rally, B2 the building brunt (Encounter, World, Simulation; docs/world/buildings-in-depth.md), with B3 building presentation (Rendering, Camera) in parallel after B1, LD2 landslides, then LD3 lava, quakes and rifts (Orb's picks; docs/world/living-destruction.md), then D1 roster as data, then F1: the **Anti-hero** (Orb's pick). W1 (variable circumference) comes before the fold; N1 (N bodies) comes before the Empress.
 
