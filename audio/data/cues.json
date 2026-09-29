@@ -99,16 +99,18 @@
       "hazard": 3,
       "found": 4,
       "searching": 5,
-      "primed": 6,
-      "fear": 7,
-      "rage": 8,
-      "hurt": 9,
-      "resolve": 10,
-      "respect": 11,
-      "triumph": 12,
-      "pride": 13,
-      "taunt": 14
+      "fear": 6,
+      "rage": 7,
+      "hurt": 8,
+      "resolve": 9,
+      "triumph": 10,
+      "pride": 11,
+      "respect": 12,
+      "taunt": 13
     },
-    "note": "Head-flash cues (docs/art/flash-prototype-spec.md). Priority follows Art's rank: the surge outranks everything. Rendering calls AudioCues.flash(S, actor, id) when a flash starts, or emits a cosmetic flash event {actor, id}. The ranks are provisional until Art's flashes.json gives the priorities for Hazard, Primed and Respect."
+    "note": "Head-flash cues (docs/art/flash-prototype-spec.md). Priority follows Art's rank: the surge outranks everything. Rendering calls AudioCues.flash(S, actor, id) when a flash starts, or emits a cosmetic flash event {actor, id}. The ranks are copied from Art's data/art/flashes.json (v2, updated to 13 active flashes). Held flashes (Primed: hiding was removed from the base game) keep their recipe but are not ranked, rendered or played.",
+    "held": [
+      "primed"
+    ]
   }
 }

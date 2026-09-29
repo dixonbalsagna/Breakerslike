@@ -50,7 +50,8 @@ func flash_ids(voices: Array = []) -> Array:
 		if not voices.is_empty() and not (flashes.families[fam].voice in voices):
 			continue
 		for fl in flashes.get("flashes", {}):
-			out.append("flash.%s.%s" % [fl, fam])
+			if not bool(flashes.flashes[fl].get("held", false)):
+				out.append("flash.%s.%s" % [fl, fam])
 	return out
 
 

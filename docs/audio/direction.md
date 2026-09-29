@@ -236,7 +236,7 @@ A beam's scorch trail sizzles by beam power. A beam clash is two tones that beat
 
 ### 5.6 Head-flash cues
 
-Art's fourteen head flashes (`docs/art/marked-aura.md`, `art/concepts/marked-aura/flashes.json`) each have one short cue, cut to the flash's own time (`max_s`), so a sound is never longer than its flash. The recipe is the same for every fighter; the fighter's shape family sets only the timbre, so the Protagonist's flashes sound round, the Anti-hero's thin and metallic, the Empress's nasal and theatrical and the Cyborg's stepped. Brink was cut from the set and Hazard, Primed and Respect added (EP and Orb, 2026-09-29); their times and priority ranks are provisional until Art's `data/art/flashes.json` lands. Recipes: `audio/data/flash_cues.json`; synth: `audio/synth/flash_synth.gd`.
+Art's thirteen active head flashes (plus the held Primed) (`docs/art/marked-aura.md`, `art/concepts/marked-aura/flashes.json`) each have one short cue, cut to the flash's own time (`max_s`), so a sound is never longer than its flash. The recipe is the same for every fighter; the fighter's shape family sets only the timbre, so the Protagonist's flashes sound round, the Anti-hero's thin and metallic, the Empress's nasal and theatrical and the Cyborg's stepped. Brink was cut from the set and Hazard, Primed and Respect added (EP and Orb, 2026-09-29); their times and priority ranks are provisional until Art's `data/art/flashes.json` lands. Recipes: `audio/data/flash_cues.json`; synth: `audio/synth/flash_synth.gd`.
 
 | Family (fighter) | Timbre |
 | :--- | :--- |
@@ -251,7 +251,7 @@ Art's fourteen head flashes (`docs/art/marked-aura.md`, `art/concepts/marked-aur
 | Hazard | Two low dry ticks a beat apart over a low rumble swell, no upward sweep: the world is about to hit you | 0.45 s |
 | Found | One soft-attack note rising a whole step, mid register | 0.60 s |
 | Searching | A wavering low two-note phrase, falling | 0.90 s |
-| Primed | A short breath in, then one low held note that lifts a semitone: sprung and live | 0.60 s |
+| Primed (held, not loaded: hiding was removed from the base game) | A short breath in, then one low held note that lifts a semitone: sprung and live | 0.60 s |
 | Fear | A shiver: breath noise with a 13 Hz tremolo | 0.80 s |
 | Rage | A low creaking growl that swells and is cut off | 0.59 s |
 | Hurt | A short falling blip and a knock, layered under the pain grunt | 0.31 s |

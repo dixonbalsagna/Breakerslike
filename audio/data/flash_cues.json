@@ -560,7 +560,8 @@
      "t60": 0.2,
      "level": 1.0
     }
-   ]
+   ],
+   "held": true
   },
   "respect": {
    "max_s": 0.9,
