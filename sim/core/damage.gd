@@ -46,15 +46,25 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	m *= 1.0 + 0.12 * ((ex.combo if ex != null else 1.0) - 1.0)
 	if A.ambush:
 		m *= 1.5
+	# S3b stage penalty (spec-wounds.md §1): the exchange attacker with broken arms deals x0.8 with heavies and signatures.
+	if ex != null and A == ex.A and (ex.kind == "heavy" or ex.kind == "sig") and SimWounds.broken(A, SimWounds.ARMS):
+		m *= SimWounds.ARMS_BROKEN_MUL
+	# S3b (R8): inside an exchange the stances are the ones frozen at requestAttack; outside, the live stance.
+	var dStance: float = D.stance
+	if ex != null and (D == ex.D or D == ex.A):
+		dStance = ex.sD if D == ex.D else ex.sA
 	var sm: float = 1.0
 	if not o.get("ignoreStance", false):
-		sm = STANCE_MUL[int(D.stance)]
+		sm = STANCE_MUL[int(dStance)]
+		# S3b stage penalty: battered arms weaken the guard (DEFENSIVE 0.38 becomes 0.55).
+		if dStance == 1.0 and SimWounds.battered(D, SimWounds.ARMS):
+			sm = SimWounds.ARMS_GUARD_MUL
 		if D.state == "charging":
 			sm = 1.35
 	var dd: float = dmg * m * sm
 	if D.state == "charging":
 		D.state = "free"
-	if D.stance == 1.0 and not o.get("ignoreStance", false):
+	if dStance == 1.0 and not o.get("ignoreStance", false):
 		D.ki = SimMathx.jmax(0.0, D.ki - dd * 0.08)
 	A.ki = SimMathx.jmin(100.0, A.ki + dd * 0.04)
 	D.power = SimMathx.jmin(100.0, D.power + dd * 0.010)
@@ -62,7 +72,7 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	SimFx.spark(S, D.x, D.y + 34.0, 18 if o.get("big", false) else 9, "#fff3c0", 600.0)
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, jor(o.get("stop", 0.0), 0.05))
 	SimFx.shake(S, jor(o.get("shake", 0.0), 6.0), D.x)
-	var fam: String = SimWounds.family(ex, D, o)
+	var fam: String = SimWounds.family(ex, D, o, dStance)
 	var kind: String = o.get("kind", "") if o.get("kind", "") != "" else ("guard" if fam == "guard" else ("beam" if ex != null and ex.kind == "sig" else ("heavy" if ex != null and ex.kind == "heavy" else "light")))
 	hurt(S, D, dd, A, fam, kind, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff", true)
 	if kind == "heavy" and dd > 0.0:

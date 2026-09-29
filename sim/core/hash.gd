@@ -104,7 +104,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	if ex != null:
 		out.append(_idx(fs, ex.A))
 		out.append(_idx(fs, ex.D))
-		_obj(out, ex, ["kind", "t", "combo", "tag", "windowStart", "cancel"])
+		_obj(out, ex, ["kind", "t", "combo", "tag", "windowStart", "cancel", "sA", "sD", "loser"])
 		_obj(out, ex.ext, ["start", "until"])
 		out.append(float(ex.beats.size()))
 		for b in ex.beats:
@@ -222,12 +222,13 @@ const FX_FIELDS: Dictionary = {
 	"shake": ["k", "x"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
-	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target"], "finisher_contest": ["target", "chance", "survived"],
+	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target", "dur"], "finisher_contest": ["target", "chance", "survived"],
 	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],
 	"ambush": ["actor", "target"], "lock_lost": ["actor", "target"], "launch_plan": ["actor", "target", "text", "chosen"],
-	"window_open": ["actor", "kind", "dur"], "clash_draw": ["actor", "target"], "hazard_telegraph": ["actor", "source", "eta", "x"],
-	"searching": ["actor", "target", "x"], "danger": ["actor", "source", "eta"],
+	"window_open": ["actor", "kind", "dur", "n"], "clash_draw": ["actor", "target"], "hazard_telegraph": ["actor", "source", "eta", "x"],
+	"searching": ["actor", "target", "x", "kind"], "danger": ["actor", "source", "eta"],
 	"launch": ["actor", "target", "amount", "face"], "rush": ["actor", "target", "n"],
+	"cue": ["actor", "kind", "text", "source"], "struggle_press": ["actor", "kind", "n"],
 }
 
 

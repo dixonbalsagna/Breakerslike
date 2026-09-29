@@ -20,6 +20,8 @@ Every event carries `type` and `tick` (`S.tick`: steps since the match began, hi
 
 Fields are listed in their canonical order, the order the golden hash reads them.
 
+**Each type sets exactly the fields in its row, and no others** (checked at S3b: every emitter in `sim/core/fx.gd` sets exactly its `FX_FIELDS` list in `hash.gd`, and nothing else builds events). A GDScript `FxEvent` carries every field of every type; the ones not in the row keep their defaults (0, empty string, false, -1 for a slot) and are not part of the event, so treat them as absent. A listed field is always set, even when its value happens to equal a default: `n` 0 on a parry window, `actor` -1 on a cue for both fighters and an empty `text` on a cue with no camera hint are meaningful values, described in the row.
+
 | type | fields | when | what the reference consumer does |
 | :--- | :--- | :--- | :--- |
 | `spark` | x, y, n, col, spd | hits, explosions, power-ups, beam clashes, glass-trench beams | n spark streaks: direction and speed random (spd sets the scale), life 0.15 to 0.4 s |
@@ -49,21 +51,23 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `found` | actor | the opponent regains lock on `actor` (spec-wounds.md §1c): line of sight returns, the hunter comes within 240, `actor` attacks, or 4 s pass. For a `canHide` fighter it still means found in hiding | nothing; the Found flash |
 | `ko` | winner, loser | the match's KO (fighter slots). Since S2 only a lost finisher contest KOs | nothing; the KO banner arrives as a `banner` event |
 | `decisive` | winner, loser, kind | a decisive exchange was won (spec-wounds.md §1): `kind` launch (any launch, however it lands), clash (a heavy clash won), guard_break, interrupt (a CHARGE INTERRUPT that ended in a shove), beam (a signature hit or guard) or beam_clash | nothing; Art's Pride flash |
-| `finisher_start` | actor, target | `actor` won a decisive exchange against `target` on the brink: the finisher replaces the rest of the exchange | nothing; the finisher set piece (Camera, UI) |
-| `finisher_contest` | target, chance, survived | the fighter on the brink rolled against the finisher: `chance` is the survival chance (0.30, less 0.10 per minute past 8:00, floor 0); a loss is followed by `ko` | nothing |
+| `finisher_start` | actor, target, dur | `actor` won a decisive exchange against `target` on the brink: the finisher replaces the rest of the exchange. `dur` (S3b) is the finisher's length in seconds from this event to its last beat, taking the longer of its two outcomes (Combat's finisher in `data/combat/finishers.json`) | nothing; the finisher set piece (Camera, UI) |
+| `finisher_contest` | target, chance, survived | the fighter on the brink rolled against the finisher: `chance` is the survival chance, less 0.10 per minute past 8:00, floor 0. With the struggle (the authored finishers, S3b) it starts from 0.15, +0.10 per beat hit, -0.05 per beat missed and per stray press; without it (parity) from 0.30. One draw either way; a loss is followed by `ko` | nothing |
 | `attack` | actor, target, kind, defStance, template, ambush | the director accepted an attack: `kind` light, heavy or sig; `defStance` the defender's stance or CHARGING; `template` the exchange's tag; `ambush` true only for a `canHide` fighter | nothing; the structured twin of the feed's attack line (QA-004) |
 | `parry` | actor, target | `actor` parried `target`'s strike; the rest of the exchange is cancelled | nothing |
 | `chain_end` | actor, n | a chain of `n` linked exchanges by `actor` ended | nothing |
 | `ambush` | actor, target | an ambush attack from cover began (`canHide` fighters only) | nothing |
 | `lock_lost` | actor, target | `actor` tried to attack `target` while lock was broken: the attempt costs 2 ki and a 0.5 s cooldown | nothing |
 | `launch_plan` | actor, target, text, chosen | every launch decision: `text` lists every candidate as `NAME score` joined with `|`; `chosen` is the launch, or NONE for a shove | nothing; the planner's reasons (debug overlay, QA §5b) |
-| `window_open` | actor, kind, dur | a parry window (`actor` the defender, `dur` until the first parryable strike) or a chain window (`actor` the attacker, 0.6 s) really opened | nothing; UI's window cue |
+| `window_open` | actor, kind, dur, n | a window really opened (no window opens without this event): `kind` parry (`actor` the defender, `dur` until the first parryable strike), chain (`actor` the attacker, `dur` 0.6 s, `n` the exchange's chain count so far, 1 on the first, for the CHAIN xN chip; a press links number n + 1) or contest (S3b: the finisher struggle, `actor` the fighter on the brink, `dur` until the contest resolves). `n` is 0 on parry and contest windows | nothing; UI's window cue |
 | `clash_draw` | actor, target | a clash ended in a draw (the heavy-clash shockwave) | nothing; Art's flash |
 | `hazard_telegraph` | actor, source, eta, x | the world is about to hit `actor` at `x` in `eta` seconds (0 when unknown). `source` brunt (a launch predicted to hit a building) from the director; World adds collapse, landslide and lava | nothing; Art's Hazard flash |
-| `searching` | actor, target, x | `actor` searches for `target` around `x`: lock was broken, or a hunt sweep | nothing; the Searching flash |
+| `searching` | actor, target, x, kind | `actor` searches for `target` around `x`. `kind` (S3b) is lock (`target` just broke lock, or `actor` tried to attack while it was broken: the Searching flash) or sweep (an AI hunt sweep to a new point near the last known position, for debug and QA) | nothing; the Searching flash on lock |
 | `danger` | actor, source, eta | `actor` is about to be hit: `source` windup (a parryable strike winds up, `eta` until it lands) or ambush | nothing; Art's danger-sense flash |
 | `launch` | actor, target, amount, face | `actor` was launched by `target` at speed `amount`, horizontally toward `face` (+1 or -1). `amount` is the drawn speed, `hypot(vx, vy)` of the fighter as it leaves: the horizontal part already carries the launch's traversal factor (`launchT`, up to TRAV_LAUNCH). Divide `vx` by `launchT` for the unboosted speed that impact damage and energy use | nothing; Camera's launch follow |
 | `rush` | actor, target, n | `actor` rushes to `target`, arriving at tick `n` | nothing; Camera |
+| `cue` | actor, kind, text, source | a render-only cue from Combat's templates and finishers (the `cue` op, S3b; no state change, no draw): `kind` the cue name (the `cues` vocabulary in `data/combat/finishers.json` says what each looks like), `actor` the fighter the cue names (-1 for both), `text` a camera hint (push_in, tight, freeze_zoom and so on; empty for none), `source` a bark trigger id (finisher_landed, finisher_survived), `"true"` for a bark pause with no trigger yet, empty for none | nothing; VFX, Camera, Audio and UI |
+| `struggle_press` | actor, kind, n | the finisher struggle scored a press by `actor`, the fighter on the brink (S3b): `kind` hit (on beat `n`, 1 to 3) or stray (off every beat, `n` 0). A press inside the debounce is not scored and sends nothing | nothing; UI's press marks |
 
 ### The `crater` and `scorch` events
 

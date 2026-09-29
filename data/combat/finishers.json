@@ -1,7 +1,7 @@
 {
   "schema": "combat.finishers/1",
   "_about": "Finisher templates as data (Combat). A finisher replaces the rest of a decisive exchange when the loser is on the brink (spec-wounds.md section 1; exchange.gd startFinisher). Roles are W (the winner, who performs it) and L (the loser on the brink); the loader maps them to 'A'/'D' exactly as startFinisher does. Beat times are relative to the finisher's start (t0 = ex.t when startFinisher runs). 'generic.placeholder' reproduces today's placeholder set piece bit for bit (profile 'parity'); the authored finishers use integer ticks (60 per second). Contract and verification: docs/combat/data-fields.md section 10 and docs/combat/s3b-loader-note.md.",
-  "profile": "parity",
+  "profile": "authored",
   "select": {
     "_rule": "parity profile: always 'generic.placeholder'. authored profile: the winner's own finisher by fighter name (e.g. 'KAI'), else 'generic'. Later: by fighter and form tier (damage-model.md section 5).",
     "byFighter": { "KAI": "kai", "VORR": "vorr" },

@@ -6,7 +6,11 @@ const VARIANT: Dictionary = {"ocean": "HORIZON CLEAVE", "city": "BOULEVARD RAZE"
 
 ## Plans a signature from Combat's data (DirData).
 static func planBeam(S: SimState, ex) -> void:
-	DirData.planBeam(S, ex)
+	var out: String = DirData.planBeam(S, ex)
+	if out == "HIT" or out == "GUARD":
+		ex.loser = S.fighters.find(ex.D)
+	elif out == "DODGE" or out == "ESCAPE":
+		ex.loser = S.fighters.find(ex.A)
 
 
 ## Beat "beamCharge": the attacker rises above the defender and charges.

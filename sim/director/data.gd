@@ -93,6 +93,8 @@ static func planMelee(S: SimState, ex) -> String:
 		var ap: Dictionary = _prof().approach
 		ctx.rt = SimMathx.jclamp(dist / float(ap.divisor), float(ap.min), float(ap.max))
 	var tp: Dictionary = _template(ex.kind, defState)
+	_penalties(ctx, D)
+	ctx.tpl = tp
 	var bid: String = _select(S, tp.selector, ctx)
 	var br: Dictionary = _branch(tp, bid)
 	ex.tag = br.tag
@@ -144,13 +146,14 @@ static func _select(S: SimState, sel: Dictionary, ctx: Dictionary) -> String:
 				p = float(sel.override.p)
 			else:
 				p = _linear(sel.p, ctx)
+			p = _adjust(p, ctx, _favours(ctx, sel.ifBelow))
 			return sel.ifBelow if r < p else sel["else"]
 		"gated_threshold":
-			if _cond(sel.gate, ctx) and S.rng.next() < _num(sel.p, ctx):
+			if _cond(sel.gate, ctx) and S.rng.next() < _adjust(_num(sel.p, ctx), ctx, "defender"):
 				return sel.ifBelow
 			return sel["else"]
 		"bands":
-			var p2: float = _linear(sel.p, ctx)
+			var p2: float = _adjust(_linear(sel.p, ctx), ctx, "attacker")
 			var r2: float = S.rng.next()
 			if r2 < p2 + float(sel.below.offset):
 				return sel.below.branch
@@ -163,6 +166,41 @@ static func _select(S: SimState, sel: Dictionary, ctx: Dictionary) -> String:
 			return sel.ifGreater if sa > sd else sel["else"]
 	push_error("DirData: unknown selector " + String(sel.kind))
 	return ""
+
+
+## S3b stage penalties on the defender's rolls (spec-wounds.md §1): a broken head costs HEAD_DEFENCE on every roll, and
+## battered legs cost LEGS_SLIP on the escape rolls (pursuit and beam escape).
+static func _penalties(ctx: Dictionary, D) -> void:
+	ctx.defPen = SimWounds.HEAD_DEFENCE if SimWounds.broken(D, SimWounds.HEAD) else 0.0
+	ctx.slipPen = SimWounds.LEGS_SLIP if SimWounds.battered(D, SimWounds.LEGS) else 0.0
+
+
+## The favours of a branch of the plan's template; the pursuit's slip is the defender's escape.
+static func _favours(ctx: Dictionary, bid: String) -> String:
+	var tp: Dictionary = ctx.get("tpl", {})
+	if tp.get("id", "") == "pursuit" and bid == "slips":
+		return "escape"
+	for br in tp.get("branches", []):
+		if br.id == bid:
+			return String(br.favours)
+	return "neutral"
+
+
+## Shifts a probability by the defender's penalties toward the side that gains: down for the defender's own chances
+## (escape: also the legs), up for the attacker's (attacker_escape: the beam's HIT against an escape). Unchanged, bit for
+## bit, when the defender has no penalty.
+static func _adjust(p: float, ctx: Dictionary, fav: String) -> float:
+	var pen: float = float(ctx.get("defPen", 0.0))
+	if fav == "escape" or fav == "attacker_escape":
+		pen = pen + float(ctx.get("slipPen", 0.0))
+	if pen == 0.0:
+		return p
+	match fav:
+		"defender", "escape":
+			return SimMathx.jclamp(p - pen, 0.0, 1.0)
+		"attacker", "attacker_escape":
+			return SimMathx.jclamp(p + pen, 0.0, 1.0)
+	return p
 
 
 ## The linear probability form: acc = start, then each term left to right, then clamp.
@@ -351,7 +389,7 @@ static func planChain(ex) -> void:
 
 
 ## Plans a signature: outcome by the beam rules (their draws), the tag, and the beams' plan beats.
-static func planBeam(S: SimState, ex) -> void:
+static func planBeam(S: SimState, ex) -> String:
 	_ensure()
 	var bm: Dictionary = _tpl.beam
 	var A = ex.A
@@ -361,6 +399,7 @@ static func planBeam(S: SimState, ex) -> void:
 	var bio: String = WorldBiomes.biomeAt(D.x)
 	var variant: String = bm.variants[bio]
 	var ctx := {"S": S, "A": A, "D": D, "heavy": false, "dist": dist}
+	_penalties(ctx, D)
 	var out: String = "HIT"
 	for rule in bm.outcome.rules:
 		if rule.defender != defState:
@@ -373,6 +412,8 @@ static func planBeam(S: SimState, ex) -> void:
 		else:
 			var r: float = S.rng.next()
 			var p: float = _linear(rule.p, ctx)
+			# The defender's penalties: a DODGE is the defender's; the ESCAPE rule's p is the attacker's HIT.
+			p = _adjust(p, ctx, "defender" if rule.has("ifBelowAndNot") else "attacker_escape")
 			if rule.has("ifBelowAndNot"):
 				out = rule.out if (r < p and not _cond(rule.ifBelowAndNot, ctx)) else rule["else"]
 			else:
@@ -382,6 +423,7 @@ static func planBeam(S: SimState, ex) -> void:
 	ctx.out = out
 	ctx.variant = variant
 	_scheduleList(ex, bm.parity, ctx, 0.0, "")
+	return out
 
 
 ## The finisher for winner W (who is ex.A or ex.D): the placeholder in parity, the winner's own (or the generic) in
@@ -426,6 +468,20 @@ static func finisherDur(W) -> float:
 				tail = maxf(tail, float(b.tick) / TICKS_PER_SEC)
 		last += tail
 	return last
+
+
+## The finisher struggle block (contest.struggle), in the authored profile when the contest takes input; {} otherwise.
+static func struggle() -> Dictionary:
+	_ensure()
+	if finProfile() == "parity" or _fin.contest.get("input") != "struggle":
+		return {}
+	return _fin.contest.struggle
+
+
+## The spaced profile's parry block (Controls' widths, Combat's rewards); {} in parity (the code's reward).
+static func parryBlock() -> Dictionary:
+	_ensure()
+	return _prof().get("parry", {})
 
 
 ## The contest settings (Combat's data; Game Design's numbers).

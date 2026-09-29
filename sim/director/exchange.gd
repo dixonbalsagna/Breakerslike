@@ -69,6 +69,8 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	var ex := newEx(A, D, kind)
 	A.exT = S.T
 	D.exT = S.T
+	ex.sA = A.stance   # R8: the stances hit() uses for the whole exchange
+	ex.sD = D.stance
 	A.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(A.x, D.x)), A.face)
 	D.face = -A.face
 	var dState: String = D.state
@@ -82,7 +84,8 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	if kind == "sig":
 		DirBeam.planBeam(S, ex)
 	else:
-		DirMelee.planMelee(S, ex)
+		var fav: String = DirMelee.planMelee(S, ex)
+		ex.loser = S.fighters.find(D) if fav == "attacker" else (S.fighters.find(A) if fav == "defender" else -1)
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "sig" if kind == "sig" else "melee")
 	var stanceLabel: String = "CHARGING" if dState == "charging" else STN[int(D.stance)]
@@ -143,6 +146,21 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirBeam.opClashResolve(S, ex, a)
 		"finisher":
 			_opFinisher(S, ex, a)
+		"cue":
+			_opCue(S, ex, a)
+		"contestOpen":
+			_opContestOpen(S, ex, a)
+		"finalBlow":
+			_opFinalBlow(S, ex, a)
+		"fixedLaunch":
+			var fw2 = A if a.w == "A" else D
+			var fl2 = D if a.w == "A" else A
+			DirLaunch.doLaunch(S, fw2, fl2, {"ux": a.ux * (fw2.face if a.get("faceRelative", false) else 1.0), "uy": a.uy}, a.force)
+		"separate":
+			var sw = A if a.w == "A" else D
+			var sl = D if a.w == "A" else A
+			sw.vx = -sw.face * a.speed
+			sl.vx = sw.face * a.speed
 		"finRush":
 			var fw = A if a.w == "A" else D
 			var fr := SimState.Rush.new()
@@ -154,7 +172,10 @@ static func runBeat(S: SimState, ex, b) -> void:
 		"breakLaunch":
 			DirMelee.launchBeat(S, ex, A if a.w == "A" else D, D if a.w == "A" else A, a.force, true)
 		"contest":
-			_opContest(S, ex, a)
+			if a.get("mode", "ko_now") == "branch":
+				_opContestBranch(S, ex, a)
+			else:
+				_opContest(S, ex, a)
 		_:
 			push_error("runBeat: unknown op " + b.op)
 
@@ -171,7 +192,7 @@ static func openWindow(S: SimState, ex) -> void:
 	e.start = S.T
 	e.until = S.T + 0.6
 	ex.ext = e
-	SimFx.windowOpen(S, ex.A, "chain", 0.6)
+	SimFx.windowOpen(S, ex.A, "chain", 0.6, int(ex.combo))
 	if ex.A.ai != null and S.rng.next() < SimMathx.jclamp(0.62 - 0.14 * ex.combo, 0.05, 0.6):
 		schedule(ex, ex.t + S.rng.range_(0.12, 0.35), "press", {"who": "A"})
 
@@ -207,6 +228,9 @@ static func endEx(S: SimState, ex) -> void:
 		SimFx.chainEnd(S, ex.A, int(ex.combo))
 	ex.A.exT = S.T
 	ex.D.exT = S.T
+	# S3b: a broken head dazes the fighter who lost the exchange (SimWounds.daze checks the head).
+	if ex.loser >= 0 and S.game.ko == null:
+		SimWounds.daze(S, S.fighters[ex.loser])
 	S.dirS.ex = null
 	S.dirS.cool = cooldownAfter(ex)
 
@@ -238,6 +262,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 			if S.dirS.ex != ex:
 				return
 		i += 1
+	_struggleTick(S, ex)
 	if ex.ext != null and S.T < ex.ext.until:
 		var A = ex.A
 		var inReach: bool = not (ex.D.state == "launched" and absf(SimWrap.sdx(A.x, ex.D.x)) > CHAIN_REACH)
@@ -275,6 +300,7 @@ static func decisive(S: SimState, ex, W, L, why: String) -> void:
 	if S.game.ko != null or ex == null:
 		return
 	SimFx.decisive(S, W, L, why)
+	ex.loser = S.fighters.find(L)
 	if L.brink and not finisherPlanned(ex):
 		startFinisher(S, ex, W, L)
 
@@ -339,7 +365,7 @@ static func _opFinisher(S: SimState, ex, a) -> void:
 	var L = ex.D if a.w == "A" else ex.A
 	W.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(W.x, L.x)), W.face)
 	SimFx.banner(S, "FINISHER", W.aura, 1.2)
-	SimFx.finisherStart(S, W, L)
+	SimFx.finisherStart(S, W, L, DirData.finisherDur(W))
 	SimEvents.feed(S, W.name + " FINISHER", L.name + " is on the brink")
 
 
@@ -356,3 +382,121 @@ static func _opContest(S: SimState, ex, a) -> void:
 		SimFx.banner(S, L.name + " HOLDS ON", L.aura, 1.2)
 	else:
 		SimDamage.ko(S, L, W)
+
+
+# ---------------------------------------------------------------- authored finishers (Combat's data, S3b)
+
+## A render-only cue: the named fighter (W, L, A, D, or both), the camera hint and the bark trigger. No state, no RNG.
+static func _opCue(S: SimState, ex, a) -> void:
+	var who: String = String(a.get("who", "both"))
+	var f = null
+	if who == "A":
+		f = ex.A
+	elif who == "D":
+		f = ex.D
+	var bark = a.get("bark", "")
+	SimFx.cue(S, f, String(a.cue), String(a.get("cam", "")), "" if bark == null else str(bark))
+
+
+## The contest window opens (the struggle): a window_open of kind "contest" for the fighter on the brink, lasting until
+## the contest beat, the struggle cue, and the struggle's record in the contest beat's args. An AI on the brink presses
+## each beat with its hit chance (one draw per beat, here); a human's presses are scored as they come (_struggleTick).
+static func _opContestOpen(S: SimState, ex, a) -> void:
+	var L = ex.D if a.w == "A" else ex.A
+	var cb = _contestBeat(ex)
+	if cb == null:
+		return
+	SimFx.windowOpen(S, L, "contest", cb.t - ex.t)
+	SimFx.cue(S, L, String(a.get("cue", "struggle")), "", "")
+	var st: Dictionary = DirData.struggle()
+	if st.is_empty():
+		return
+	cb.args["sOpen"] = S.T
+	cb.args["sHits"] = 0.0
+	cb.args["sStrays"] = 0.0
+	cb.args["sLast"] = -99.0
+	for i in range(3):
+		cb.args["sBeat" + str(i)] = false
+	if L.ai != null:
+		var p: float = float(st.aiHitChance)
+		for i in range(st.beatTicks.size()):
+			if S.rng.next() < p:
+				schedule(ex, ex.t + float(st.beatTicks[i]) / DirData.TICKS_PER_SEC, "press", {"who": "D" if L == ex.D else "A"})
+
+
+static func _contestBeat(ex):
+	for b in ex.beats:
+		if not b.done and b.op == "contest":
+			return b
+	return null
+
+
+## Scores the fighter on the brink's struggle presses (Controls' rulings section 8): a press matches the nearest unclaimed
+## beat within the half-width (a hit), otherwise it is a stray; a press within the debounce of a scored press is ignored.
+static func _struggleTick(S: SimState, ex) -> void:
+	var cb = _contestBeat(ex)
+	if cb == null or not cb.args.has("sOpen"):
+		return
+	var L = ex.D if cb.args.w == "A" else ex.A
+	if L.lastAtkT != S.T:
+		return
+	var st: Dictionary = DirData.struggle()
+	var rel: float = (S.T - float(cb.args.sOpen)) * DirData.TICKS_PER_SEC
+	if rel - float(cb.args.sLast) < float(st.debounceTicks):
+		return
+	var best: int = -1
+	var bestD: float = 1e9
+	for i in range(st.beatTicks.size()):
+		var dd: float = absf(rel - float(st.beatTicks[i]))
+		if not cb.args["sBeat" + str(i)] and dd <= float(st.halfWidthTicks) and dd < bestD:
+			best = i
+			bestD = dd
+	cb.args.sLast = rel
+	if best >= 0:
+		cb.args["sBeat" + str(best)] = true
+		cb.args.sHits = float(cb.args.sHits) + 1.0
+		SimFx.strugglePress(S, L, "hit", best + 1)
+	else:
+		cb.args.sStrays = float(cb.args.sStrays) + 1.0
+		SimFx.strugglePress(S, L, "stray", 0)
+
+
+## The contest in "branch" mode: one S.rng draw, as today; the chance comes from the struggle when the finisher opened one
+## (base 15, +10 per hit, -5 per missed beat or stray), otherwise from the contest's base; then the tilt past 8:00. The
+## outcome's beats (landed or survived) are scheduled from here; the KO happens at finalBlow.
+static func _opContestBranch(S: SimState, ex, a) -> void:
+	var W = ex.A if a.w == "A" else ex.D
+	var L = ex.D if a.w == "A" else ex.A
+	var cs: Dictionary = DirData.contest()
+	var late: float = SimMathx.jmax(0.0, (S.T - float(cs.tiltAfter)) / 60.0)
+	var chance: float
+	if a.has("sOpen"):
+		var sc: Dictionary = DirData.struggle().scoring
+		var beats: float = float(DirData.struggle().beatTicks.size())
+		var misses: float = beats - float(a.sHits)
+		chance = float(sc.base) + float(sc.perHit) * float(a.sHits) + float(sc.perMiss) * misses + float(sc.perStray) * float(a.sStrays) - float(cs.tiltPerMinute) * late
+	else:
+		chance = float(cs.base) - float(cs.tiltPerMinute) * late
+	chance = SimMathx.jmax(float(cs.floor), chance)
+	var survived: bool = S.rng.next() < chance
+	SimFx.finisherContest(S, L, chance, survived)
+	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")
+	if survived:
+		SimFx.banner(S, L.name + " HOLDS ON", L.aura, 1.2)
+	DirData.scheduleOutcome(ex, W, not survived)
+
+
+## The final blow: a strike W to L, then the launch (fixed, or the planner's long-haul candidates), then the KO. The launch
+## comes first so ko() keeps it.
+static func _opFinalBlow(S: SimState, ex, a) -> void:
+	var W = ex.A if a.w == "A" else ex.D
+	var L = ex.D if a.w == "A" else ex.A
+	if S.game.ko != null:
+		return
+	DirMelee.strike(S, ex, W, L, float(a.dmg), a.o)
+	var ln: Dictionary = a.launch
+	if ln.get("mode", "") == "fixed":
+		DirLaunch.doLaunch(S, W, L, {"ux": float(ln.ux) * (W.face if ln.get("faceRelative", false) else 1.0), "uy": float(ln.uy)}, float(ln.force))
+	else:
+		DirMelee.launchBeat(S, ex, W, L, float(ln.force), true)
+	SimDamage.ko(S, L, W)

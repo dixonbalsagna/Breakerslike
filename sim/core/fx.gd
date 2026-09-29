@@ -182,9 +182,10 @@ static func decisive(S: SimState, winner, loser, why: String) -> void:
 	e.winner = float(S.fighters.find(winner)); e.loser = float(S.fighters.find(loser)); e.kind = why
 
 
-static func finisherStart(S: SimState, f, target) -> void:
+## dur: the finisher's length in seconds (Combat's template), so the HUD and Camera need not guess.
+static func finisherStart(S: SimState, f, target, dur: float = 0.0) -> void:
 	var e := _ev(S, "finisher_start")
-	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target))
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.dur = dur
 
 
 ## The fighter on the brink rolled against the finisher: the chance to survive, and whether he did.
@@ -230,10 +231,11 @@ static func launchPlan(S: SimState, f, target, candidates: String, chosen: Strin
 	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.text = candidates; e.chosen = chosen
 
 
-## A parry or chain window really opened for actor (the fighter who can press), lasting dur seconds.
-static func windowOpen(S: SimState, f, kind: String, dur: float) -> void:
+## A parry, chain or contest window really opened for actor (the fighter who can press), lasting dur seconds. n is the
+## chain count for a chain window (the CHAIN xN chip), 0 otherwise.
+static func windowOpen(S: SimState, f, kind: String, dur: float, n: int = 0) -> void:
 	var e := _ev(S, "window_open")
-	e.actor = float(S.fighters.find(f)); e.kind = kind; e.dur = dur
+	e.actor = float(S.fighters.find(f)); e.kind = kind; e.dur = dur; e.n = n
 
 
 ## A clash ended in a draw (the heavy-clash shockwave; later a blocked finisher).
@@ -249,10 +251,23 @@ static func hazardTelegraph(S: SimState, f, source: String, eta: float, x: float
 	e.actor = float(S.fighters.find(f)); e.source = source; e.eta = eta; e.x = x
 
 
-## actor is searching for a hidden target around x (lock lost, or a hunt sweep).
-static func searching(S: SimState, f, target, x: float) -> void:
+## actor is searching for target around x. kind: lock (the target broke lock) or sweep (an AI hunt sweep).
+static func searching(S: SimState, f, target, x: float, kind: String = "lock") -> void:
 	var e := _ev(S, "searching")
-	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.x = x
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.x = x; e.kind = kind
+
+
+## A render-only cue from Combat's templates (the cue op): cue name in kind, actor the named fighter (-1 for both), text
+## the camera hint, source the bark trigger ("true" for a bark pause with no trigger yet).
+static func cue(S: SimState, f, name: String, cam: String, bark: String) -> void:
+	var e := _ev(S, "cue")
+	e.actor = float(S.fighters.find(f)) if f != null else -1.0; e.kind = name; e.text = cam; e.source = bark
+
+
+## The finisher struggle scored a press by actor: kind hit (beat n, 1 to 3) or stray (n 0).
+static func strugglePress(S: SimState, f, kind: String, n: int) -> void:
+	var e := _ev(S, "struggle_press")
+	e.actor = float(S.fighters.find(f)); e.kind = kind; e.n = n
 
 
 ## Camera: actor was launched by target at speed amount, horizontally toward face (+1 or -1).

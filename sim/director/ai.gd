@@ -31,8 +31,10 @@ static func aiInput(S: SimState, f) -> void:
 	# breathing room after a release.
 	if S.dirS.ex == null:
 		a.atk -= SimConst.DT
-		# No lull over about 10 s: after GAP_URGE seconds with no attack press from either fighter, attack within GAP_SOON.
-		if S.T - SimMathx.jmax(f.lastAtkT, o.lastAtkT) > GAP_URGE and a.atk > GAP_SOON:
+		# No lull over about 10 s: GAP_URGE seconds after the last exchange, attack within GAP_SOON. The clock is the
+		# exchange's (exT), not the last press: a press at a launched target is refused but still stamps lastAtkT, which
+		# held the urge off through long flights (S3b: 18 of the 25 gaps over 10 s in 200 matches).
+		if S.T - SimMathx.jmax(f.exT, o.exT) > GAP_URGE and a.atk > GAP_SOON:
 			a.atk = GAP_SOON
 	else:
 		a.atk = SimMathx.jmax(a.atk, CAD_MIN[int(f.stance)])
@@ -65,7 +67,7 @@ static func aiInput(S: SimState, f) -> void:
 		if a.sT <= 0.0:
 			a.sT = S.rng.range_(1.2, 2.4)
 			a.sOff = S.rng.range_(-1700.0, 1700.0)
-			SimFx.searching(S, f, o, o.lastSeen.x + a.sOff)
+			SimFx.searching(S, f, o, o.lastSeen.x + a.sOff, "sweep")
 		var tx: float = o.lastSeen.x + a.sOff
 		var sd: float = SimWrap.sdx(f.x, tx)
 		i.mx = SimMathx.jsign(sd) if absf(sd) > 60.0 else 0.0
@@ -106,12 +108,14 @@ static func aiInput(S: SimState, f) -> void:
 	# Underwater and not hiding there: dash for the surface (underwater is a hiding state, not a place to fight).
 	if sea and f.y < 0.0 and i.my > 0.0:
 		i.dash = true
-	if a.atk <= 0.0 and not o.hidden and st != 3.0 and S.dirS.ex == null:
+	# A hunter sometimes swings blind at the last-seen spot (it pays the lock-lost cost: 2 ki and a 0.5 s cooldown).
+	var blind: bool = a.atk <= 0.0 and o.hidden and st == 0.0 and S.dirS.ex == null and S.rng.next() < BLIND_SWING
+	if a.atk <= 0.0 and (not o.hidden or blind) and st != 3.0 and S.dirS.ex == null:
 		# Each attack beat either attacks or holds (repositions, charges): holding fills the downtime between exchanges.
 		var r: float = S.rng.next()
 		var pa: float = P_ATTACK[int(st)]
-		# No lull over about 10 s: once neither fighter has attacked for GAP_URGE seconds, attack beats stop holding.
-		if S.T - SimMathx.jmax(f.lastAtkT, o.lastAtkT) > GAP_URGE:
+		# No lull over about 10 s: GAP_URGE seconds after the last exchange, attack beats stop holding.
+		if S.T - SimMathx.jmax(f.exT, o.exT) > GAP_URGE:
 			pa = 1.0
 		if r < pa:
 			var q: float = r / pa
@@ -138,7 +142,8 @@ static func _healing(f) -> bool:
 
 # Tempo (balance-targets.md section 10).
 const P_ATTACK: Array = [0.52, 0.43, 0.48, 0.5]   # chance an attack beat attacks, per stance (ESCAPE never attacks)
-const GAP_URGE: float = 6.0                      # seconds without an attack press from either fighter
+const BLIND_SWING: float = 0.25                  # chance a hunting AGGRESSIVE attack beat swings at a target out of lock
+const GAP_URGE: float = 6.0                      # seconds since the last exchange (either fighter's exT)
 const GAP_SOON: float = 0.5                      # ... after which the next attack beat comes within this
 const CAD_MIN: Array = [1.2, 2.0, 1.6, 1.6]      # attack-timer floor per stance while an exchange runs
 

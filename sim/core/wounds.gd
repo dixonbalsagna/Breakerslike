@@ -18,7 +18,7 @@ const LEGS: int = 3
 
 const WEAR_SCALE: int = 6000                 # units per wear point
 const WEAR_MAX: int = 600000                 # 100 wear
-const WEAR_PER_DAMAGE: float = 360.0         # k = 0.06 wear per damage point, in units (0.06 x 6000); S1 had 0.08
+const WEAR_PER_DAMAGE: float = 390.0         # k = 0.065 wear per damage point, in units (0.065 x 6000); S3b retune after the spaced timing (S2: 0.06, S1: 0.08)
 ## Stage floors in units: bruised 30, battered 60, broken 90. Stages: 0 fresh, 1 bruised, 2 battered, 3 broken.
 const STAGE_AT: Array = [180000, 360000, 540000]
 const FADE_OUT: int = 25                     # 0.25 wear per second, regions below 60, out of exchanges (S1: 1)
@@ -46,13 +46,20 @@ const CORE_KI_REGEN: float = 0.7    # core battered: ki regen -30% (fighter.gd)
 const LEGS_SPEED: float = 0.85      # legs battered: free-flight speed x0.85 (fighter.gd)
 const LEGS_LOCK_BREAK: float = 2.0  # legs broken: the ESCAPE lock-break takes twice as long, 1.8 s (hiding.gd); no dash
 const STAGGER_TICKS: int = 12       # head battered: 0.2 s stagger after taking a heavy (damage.gd)
+## S3b, the director-side penalties (spec-wounds.md §1; wounds-plan.md S3b):
+const HEAD_PARRY_NARROW: float = 0.2  # head battered: the parry window is 20% narrower (its early part stops counting)
+const HEAD_DEFENCE: float = 0.08      # head broken: -0.08 on the defender's rolls
+const ARMS_GUARD_MUL: float = 0.55    # arms battered: the DEFENSIVE multiplier rises from 0.38 to 0.55
+const ARMS_BROKEN_MUL: float = 0.8    # arms broken: heavies and signatures deal x0.8 (no BRACE: BRACE is not in the game yet)
+const LEGS_SLIP: float = 0.10         # legs battered: -0.10 on the ESCAPE slip chance (pursuit and beam escape)
 const DAZE_TICKS: int = 24          # head broken: 0.4 s daze after a lost exchange (daze(), called by the director, S3b)
 
 
 ## The hit family for a hit() call: guard hits on a DEFENSIVE fighter who took the stance multiplier go to the arms,
 ## signature beams spread, heavies and lights by the exchange's kind.
-static func family(ex, D, o: Dictionary) -> String:
-	if D.stance == 1.0 and not o.get("ignoreStance", false):
+## stance: the defender's stance for this hit (the exchange's frozen one, S3b), or -1 for the live stance.
+static func family(ex, D, o: Dictionary, stance: float = -1.0) -> String:
+	if (D.stance if stance < 0.0 else stance) == 1.0 and not o.get("ignoreStance", false):
 		return "guard"
 	if ex == null:
 		return "spread"

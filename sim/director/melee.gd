@@ -12,20 +12,32 @@ static func _launch(ex, t: float, force: float, who: String = "") -> void:
 
 
 ## Plans a melee exchange from Combat's data (DirData, data/combat/templates.json).
-static func planMelee(S: SimState, ex) -> void:
-	DirData.planMelee(S, ex)
+static func planMelee(S: SimState, ex) -> String:
+	return DirData.planMelee(S, ex)
 
 
 ## Beat "wind": the parry window opens; an AI defender may time a parry press.
 static func opWind(S: SimState, ex, _args) -> void:
 	var D = ex.D
-	ex.windowStart = S.T
 	# The window is real only if a parryable strike by the attacker follows; its length is the time until that strike.
+	var width: float = -1.0
 	for b in ex.beats:
 		if not b.done and b.op == "strike" and b.args.a == "A" and (b.args.o == null or not b.args.o.get("noParry", false)):
-			SimFx.windowOpen(S, D, "parry", b.t - ex.t)
-			SimFx.danger(S, D, "windup", b.t - ex.t)
+			width = b.t - ex.t
 			break
+	if DirData.spaced():
+		# Controls' rule: no window without a cue. windowStart and the AI's press draw exist only with a window_open.
+		if width < 0.0:
+			return
+		ex.windowStart = S.T
+		# S3b stage penalty: a battered head narrows the parry window by 20% (its early part stops counting).
+		if SimWounds.battered(D, SimWounds.HEAD):
+			ex.windowStart = S.T + SimWounds.HEAD_PARRY_NARROW * width
+	else:
+		ex.windowStart = S.T
+	if width >= 0.0:
+		SimFx.windowOpen(S, D, "parry", width)
+		SimFx.danger(S, D, "windup", width)
 	if D.ai != null and S.rng.next() < (0.5 if D.stance == 1.0 else (0.3 if D.stance == 0.0 else 0.12)):
 		var pd: Array = DirData.aiParryDelay()
 		DirExchange.schedule(ex, ex.t + S.rng.range_(float(pd[0]), float(pd[1])), "press", {"who": "D"})
@@ -96,13 +108,26 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 	if ex.cancel or S.game.ko != null:
 		return
 	a.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(a.x, d.x)), a.face)
-	if a == ex.A and not o.get("noParry", false) and ex.windowStart >= 0.0 and d.lastAtkT >= ex.windowStart:
+	var pb: Dictionary = DirData.parryBlock()
+	var early: float = float(pb.bufferTicks) / DirData.TICKS_PER_SEC if not pb.is_empty() else 0.0
+	if a == ex.A and not o.get("noParry", false) and ex.windowStart >= 0.0 and d.lastAtkT >= ex.windowStart - early:
 		ex.cancel = true
-		SimDamage.hit(S, ex, d, a, 18.0, {"ignoreStance": true, "stop": 0.12, "shake": 9.0})
+		ex.loser = S.fighters.find(a)
+		if pb.is_empty():
+			# parity: the code's reward
+			SimDamage.hit(S, ex, d, a, 18.0, {"ignoreStance": true, "stop": 0.12, "shake": 9.0})
+			a.vx = -a.face * 520.0
+			d.ki = SimMathx.jmin(100.0, d.ki + 8.0)
+		else:
+			# spaced: Controls' widths and Combat's rewards; a press in the last clean ticks before the strike is a clean parry
+			var cleanT: float = float(pb.cleanTicks["heavy" if ex.kind == "heavy" else "light"]) / DirData.TICKS_PER_SEC
+			var rw: Dictionary = pb.cleanReward if d.lastAtkT >= S.T - cleanT else pb.reward
+			SimDamage.hit(S, ex, d, a, float(rw.damage), {"ignoreStance": true, "stop": float(rw.stopTicks) / DirData.TICKS_PER_SEC, "shake": 9.0})
+			a.vx = -a.face * float(rw.pushback)
+			d.ki = SimMathx.jmin(100.0, d.ki + float(rw.ki))
+			SimFx.cue(S, d, String(rw.cue), "", "")
 		SimFx.ring(S, a.x + a.face * 30.0, a.y + 34.0, 700.0, "#9fe0ff", 0.4, 10.0)
 		SimFx.banner(S, "PARRY", "#9fe0ff", 0.8)
-		a.vx = -a.face * 520.0
-		d.ki = SimMathx.jmin(100.0, d.ki + 8.0)
 		SimEvents.feed(S, d.name + " PARRIES", "Timed the wind-up. Rest of the exchange cancelled.")
 		SimFx.parry(S, d, a)
 		return

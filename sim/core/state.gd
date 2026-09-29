@@ -287,6 +287,9 @@ class Exchange:
 	var ext = null           # Ext or null
 	var windowStart: float = -1.0
 	var cancel: bool = false
+	var sA: float = 0.0          # S3b (R8): the attacker's stance, frozen at requestAttack; hit() reads it in the exchange
+	var sD: float = 0.0          # ... and the defender's
+	var loser: int = -1          # S3b: the slot that lost the exchange (branch favours, a decisive result, a parry), -1 none
 
 
 class Ext:
