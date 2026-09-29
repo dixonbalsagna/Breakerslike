@@ -139,3 +139,16 @@ The three rungs (Committed, Overcommitted, Overdrawn), the wound-card callouts, 
 ### Orb decides
 
 Whether the O2 conditions (no skyward column, no darkening sky, an inward fold) fit the payoff Orb has in mind. If not, the fallback in section a still applies.
+
+## Blood-heat power stage (2026-09-29)
+
+Orb's direction: "his blood goes from heated to simmering to boiling, internal damage that adds up, big temporary boosts." **Verdict: GO.** It is an internal, cumulative cost with an original metaphor. It is not a fixed multiplier, a named stage or a coloured aura. It fits Overcommit and the wound model.
+
+**What the heat can look like, given the no-red rule** (no red or red-orange, no gold, no full-body aura):
+- **Heat shimmer:** distortion in the air along the arms and back, like a road in summer.
+- **Steam:** venting from joints, collar and breath, thicker with each rung. Sweat beads that hiss off.
+- **Veins in the fighter's own colour:** a map of veins lit under the skin, and cracks of light along limbs. Real heat also reads blue-white, so the ramp can run from the fighter's own colour toward a cool white.
+- **Sound:** a kettle building to a boil, bubbling in the chest, a steam whistle at the top rung, and laboured breathing.
+- **Callouts:** wound-card words only, for example `BLOOD: HEATED`, `SIMMERING`, `BOILING`. No "x" numbers and no shouted stage name.
+
+**Conditions:** keep the effect on limbs, veins and steam, not a body-wide glow; never red or gold; the top rung is not a hair or eye change. Content ratings for graphic "boiling blood" imagery on mobile stores are unchecked.
