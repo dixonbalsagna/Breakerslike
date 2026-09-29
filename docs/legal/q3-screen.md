@@ -231,3 +231,19 @@ From Art's written descriptions only (I cannot view SVGs). All conditions above 
 - **Rays.** Cut them. Rage and triumph read from the flash alone, and a burst of short rays is the comic "shock lines" look Legal asked to avoid. If Art insists on keeping them: at most three, all pointing one way, never a full circle.
 - **New sigils.** The leaning slash plus a dot is fine, and stays clear of the ring (no "prohibited" sign) and of an X. The chevrons (three, offset, moss on bone) are clear of the car and oil logos. The four-square stair is fine as a diagonal stair. Never arrange four squares as a 2 by 2 block (a famous software logo).
 - **The Coil.** One diagonal sash and a diamond stud have no X and no slash. Keep it that way.
+
+### Turnarounds and new flashes (2026-09-29)
+
+From Art's written descriptions of `docs/art/{protagonist,empress,cyborg}-turnaround.md` only (I cannot view SVGs).
+
+| Item | Verdict |
+|---|---|
+| Protagonist: temple ring, collar trim, belt and buckle, sash apron, back knot disc | **GO** for play views. **CONDITIONAL** for the face-on front view (see below) |
+| Empress: nine-blade mantle, collar crescent, tabard, guard of honour with plumes | **GO**, with one silhouette check |
+| Cyborg: four-hatch rail, four-vent backpack, cables, mail apron | **GO** |
+| New flashes: Hazard, Primed, Respect | **GO**, with the standing flash rules |
+
+- **Protagonist ring.** In play the fighter is three-quarter, where the ring sits at the temple and reads as a mark. Face-on it can read as one eye. The front view is for modelling only, so: do not use the face-on view in key art, icons or store images unless the ring is changed to an open arc (a "C" with a gap) or moved onto the crown seam. The rest is generic martial-arts gear in a dark teal and light palette. Keep it away from an orange and blue outfit, and keep the wrapped bracers wraps, not contrasting wristbands.
+- **Empress.** Check the collar crescent in the 12 px silhouette: it must not read as horns or antennae (the pale horned emperor rule). The nine-blade hem, tabard and plumed guard are fine. Keep it not pale overall, with no purple.
+- **Cyborg.** The rail, hatches, vents, cables and mail apron are original. Dark red plating with a cool grey mask avoids the black-and-red look. No horns or antennae on the boxy head.
+- **New flashes.** Hazard (a double "!") is two stacked or paired shapes in the fighter's family, not a font glyph. Primed (a forward pointer train) is fine, and must stay clearly forward and single-direction, not a burst. Respect is fine as long as it is drawn in the fighter's shapes, with no sparkle star or hand-fold pose. The standing rules apply: no rays or wavy lines, original sounds, no yellow or red-orange "!".
