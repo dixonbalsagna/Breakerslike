@@ -303,8 +303,8 @@ Each kind makes a fixed number of `S.rng` draws, in a fixed order. The loader mu
 | Op | Args | Effect |
 | :--- | :--- | :--- |
 | `cue` | `cue`, `who` (`A`, `D`, `W`, `L` or `both`), optional `cam`, `bark` | Emits a render-only fx event. No state change, no RNG. It exists so every beat has something on screen (no dead air) |
-| `contestOpen` | `w`, `cue` | Emits the struggle cue and a `windowOpen` event of kind `contest`, lasting until the `contest` beat |
-| `contest` | `w`, `mode` | `ko_now` is today's `_opContest`: one draw, KO or HOLDS ON. `branch` makes the same draw, emits the same events, then schedules the finisher's `outcomes.landed` or `outcomes.survived` beats relative to the contest's time. The KO happens at `finalBlow` |
+| `contestOpen` | `w`, `cue`, `struggle` | Emits the struggle cue and a `windowOpen` event of kind `contest`. In the authored profile it starts the struggle defined in `finishers.json` `contest.struggle`: 66 ticks, beats at 18, 36 and 54 ±4 (Controls' rulings, section 8). Presses are stamped in ticks from this beat |
+| `contest` | `w`, `mode` | `ko_now` is today's `_opContest`: one draw, KO or HOLDS ON. `branch` computes the survival chance, from the struggle score when `contest.struggle` is in use and otherwise from the base, then makes the same single draw and emits the same events. It then schedules the finisher's `outcomes.landed` or `outcomes.survived` beats relative to the contest's time. The KO happens at `finalBlow` |
 | `finalBlow` | `w`, `dmg`, `o`, `launch` | A strike W→L with `o`; then a launch (`mode: "fixed"` uses `doLaunch` with `{ux·face, uy}`, `mode: "planner_long"` uses the long-only planner); then `SimDamage.ko(L, W)`. The launch comes first, so `ko()` keeps it |
 | `fixedLaunch` | `w`, `ux`, `uy`, `force`, `faceRelative` | `DirLaunch.doLaunch(W, L, {ux (× W.face if faceRelative), uy}, force)`, with no planner and no decisive re-check |
 | `separate` | `w`, `speed` | Pushes W and L apart: `W.vx = −W.face·speed`, `L.vx = W.face·speed`. No damage |
@@ -314,5 +314,6 @@ Each kind makes a fixed number of `S.rng` draws, in a fixed order. The loader mu
 ### 10.6 Profile settings the ops read in `spaced`
 - `approach`: the pursuit flight beyond 2,500 units.
 - `aiParryPressDelay`: read by `wind` (parity [0.05, 0.16]).
+- `parry`: window, buffer and clean-parry widths in ticks, and the parry and clean-parry rewards (damage, ki, freeze ticks, pushback, cue). Read by `strike`'s parry check in the new profiles; parity keeps the code's values.
 - `hitstopFloors`: applied only once Controls adopts them.
 - The beam's `laterSpaced` constants: only once Encounter exposes them; until then the beam stays identical.

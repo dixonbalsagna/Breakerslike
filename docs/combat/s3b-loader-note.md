@@ -46,10 +46,10 @@ Then delete the code-path templates (the data is the source) and keep the step 1
 | guard_break | changes | 8 | 2.45 s |
 | trade_blows, won | changes | 10 | 3.15 s |
 | trade_blows, lost | changes | 10 | 2.90 s |
-| heavy_clash, won / countered / shockwave | changes | 7 / 7 / 7 | 2.45 / 2.20 / 2.50 s |
+| heavy_clash, won / countered / shockwave | changes; the wind beat is in WON only (Controls: no silent dead windows) | 7 / 6 / 6 | 2.45 / 2.20 / 2.50 s |
 | chain link | changes (0.35 s rhythm) | 4 | +1.10 s per link |
 | signature (all outcomes) | **identical** in this pass: its follow-on timing lives inside the beam ops. Proposed values are in `beam.laterSpaced` | 2 plan beats | 1.7 s, clash 3.4 s |
-| finishers | new (`authored`); `generic.placeholder` stays for parity | 9 to 11, plus the outcome beats | 3.1 to 4.1 s to the final blow |
+| finishers | new (`authored`); `generic.placeholder` stays for parity. The contest window is 66 ticks, with the struggle beats at 18, 36 and 54 | 9 to 11, plus the outcome beats | 3.4 to 4.35 s to the final blow |
 
 **Unchanged in every profile:**
 - outcomes, damages, forces and tags;
@@ -57,3 +57,10 @@ Then delete the code-path templates (the data is the source) and keep the step 1
 - the order of RNG draws within the selectors.
 
 The one exception is DODGE's dropped wind-up, which removes the AI defender's press draws there. Game Design's rule changes (R1 to R8, such as no chain after GUARD HOLDS) are not in this slice.
+
+## Rules that belong in code, not in the data
+- **The stance multiplier is frozen at exchange start** (Controls' ask, with Game Design; defect CC-016). When `requestAttack` fixes the template, snapshot both fighters' stances into the exchange record. `hit()` then reads that snapshot for every hit inside the exchange; hits outside an exchange (impacts, collisions) keep reading the live stance.
+  - It is **not a template field**. It is a property of every exchange, and a per-template toggle would only create an exploitable exception and another thing for QA to cover.
+  - The selectors already use the stance at plan time, so the data needs no change.
+  - Once Game Design's R1 lands (counters hit the attacker at ×1.0), only the defender's snapshot matters.
+- **No window without a visible cue.** `windowStart` and the AI's parry-press draw exist only when a `window_open` event is emitted (Controls' rulings, section 2). The data no longer schedules a wind beat without a parryable strike in any new profile.

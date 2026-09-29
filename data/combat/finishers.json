@@ -12,8 +12,15 @@
     "base": 0.30, "tiltAfter": 480, "tiltPerMinute": 0.10, "floor": 0.0,
     "rallyPenalty": 0.10,
     "_note": "survival chance = max(floor, base - tiltPerMinute * max(0, (T - tiltAfter) / 60)) - rallyPenalty per Rally used (Rally is S4; the parity profile ignores rallyPenalty). One S.rng.next() when the contest resolves: survived if draw < chance. Numbers are Game Design's (spec-wounds.md section 1); constants match exchange.gd lines 261-263.",
-    "input": null,
-    "_inputNote": "reserved: whether the fighter on the brink gets an input during the contest window (a Rally, a last read) is Game Design's rule; the window and the event exist so UI can show the struggle either way"
+    "input": "struggle",
+    "struggle": {
+      "resolveTick": 66, "beatTicks": [18, 36, 54], "countInTicks": [-18, 0],
+      "halfWidthTicks": 4, "assistHalfWidthTicks": 8, "debounceTicks": 4, "inputs": ["light", "heavy"],
+      "scoring": { "base": 0.15, "perHit": 0.10, "perMiss": -0.05, "perStray": -0.05, "floor": 0.0,
+                   "tilts": "the contest's rallyPenalty per Rally used and tiltPerMinute past tiltAfter, as above" },
+      "aiHitChance": 0.60,
+      "_note": "Used by the authored profile. Ticks are counted from contestOpen, which sits 66 ticks before contest in every authored finisher; the cue just before contestOpen (final_windup, ascend_charge, lift_and_display) is the count-in. Widths and rhythm: Controls (rulings section 8). Scoring: Game Design (spec-wounds.md section 1). aiHitChance: Encounter maps difficulty to it (0.44 to 0.78 fits QA's 20 to 35% survival band). The contest still draws once, so the RNG sequence does not depend on the number of presses. Parity ignores this block (base 0.30, no input)."
+    }
   },
 
   "cues": {
@@ -71,8 +78,8 @@
         { "tick": 45, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 35, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
         { "tick": 66, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 45, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 12 } } },
         { "tick": 87, "op": "cue", "args": { "cue": "final_windup", "who": "W", "cam": "low_hero" } },
-        { "tick": 108, "op": "contestOpen", "args": { "w": "W", "cue": "struggle" } },
-        { "tick": 156, "op": "contest", "args": { "w": "W", "mode": "branch" } }
+        { "tick": 108, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
+        { "tick": 174, "op": "contest", "args": { "w": "W", "mode": "branch" } }
       ],
       "outcomes": {
         "landed": [
@@ -106,8 +113,8 @@
         { "tick": 69, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 30, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
         { "tick": 90, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 40, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 12 } } },
         { "tick": 111, "op": "cue", "args": { "cue": "ascend_charge", "who": "W", "cam": "wide_up" } },
-        { "tick": 141, "op": "contestOpen", "args": { "w": "W", "cue": "struggle" } },
-        { "tick": 189, "op": "contest", "args": { "w": "W", "mode": "branch" } }
+        { "tick": 141, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
+        { "tick": 207, "op": "contest", "args": { "w": "W", "mode": "branch" } }
       ],
       "outcomes": {
         "landed": [
@@ -146,8 +153,8 @@
         { "tick": 96, "op": "finRush", "args": { "w": "W", "off": 30, "dur": 0.30 } },
         { "tick": 117, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 40, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 16 } } },
         { "tick": 138, "op": "cue", "args": { "cue": "lift_and_display", "who": "W", "cam": "wide_settlement", "bark": true } },
-        { "tick": 159, "op": "contestOpen", "args": { "w": "W", "cue": "struggle" } },
-        { "tick": 207, "op": "contest", "args": { "w": "W", "mode": "branch" } }
+        { "tick": 159, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
+        { "tick": 225, "op": "contest", "args": { "w": "W", "mode": "branch" } }
       ],
       "outcomes": {
         "landed": [

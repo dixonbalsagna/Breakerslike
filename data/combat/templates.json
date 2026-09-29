@@ -20,6 +20,12 @@
                     "_note": "c (the contact anchor) = clamp(dist / divisor, min, max) seconds for dist up to 'beyond'; past it a visible pursuit flight of clamp(base + (dist - beyond) / per, base, max) s (section 10: 0.8 to 2.0 s). Encounter applies SimConst.WS as it does today" },
       "aiParryPressDelay": [0.05, 0.54],
       "_aiNote": "The AI defender's press delay after the wind beat. With the wider 0.25 s window, [0.05, 0.54] keeps the AI's parry success per attempt near today's 41%. Encounter owns the AI policy and may retune.",
+      "parry": {
+        "windowTicks": { "light": 15, "heavy": 20 }, "bufferTicks": 4, "cleanTicks": { "light": 6, "heavy": 8 },
+        "reward": { "damage": 18, "ki": 8, "stopTicks": 9, "pushback": 520, "cue": "parry" },
+        "cleanReward": { "damage": 18, "ki": 12, "stopTicks": 12, "pushback": 520, "cue": "clean_parry" },
+        "_note": "Widths, buffer and hit-stop ticks are Controls' (docs/controls/rulings.md sections 3 and 5). Combat accepts the clean-parry reward: +4 ki (12 in all), a 12-tick freeze and a distinct cue, with no extra damage, so the parry stays a tempo and resource reward rather than a damage source. Parity keeps the code's values (18 damage, 8 ki, stop 0.12 s, pushback 520)."
+      },
       "hitstopFloors": { "light": 0.07, "heavy": 0.12, "finisher": 0.30, "adopted": false,
                          "_note": "section 10 floors, a proposal for Controls (hit-stop table owner). The loader applies max(stop, floor) only once Controls adopts them" }
     }
@@ -331,10 +337,10 @@
         "spaced": [
           { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
           { "tick": { "at": "c" }, "op": "cue", "args": { "cue": "glance", "who": "both" } },
-          { "tick": { "at": "c", "step": 1 }, "op": "cue", "args": { "cue": "brace", "who": "both" } },
-          { "tick": { "at": "c", "step": 3, "sub": ["heavyWindup"] }, "op": "wind" }
+          { "tick": { "at": "c", "step": 1 }, "op": "cue", "args": { "cue": "brace", "who": "both" } }
         ]
       },
+      "_spacedNote": "In spaced the wind beat belongs to WON only: COUNTERED and SHOCKWAVE have no parryable strike, so a wind there would be a silent dead window that also costs an AI draw (Controls' rulings, section 2). Parity keeps the shared wind, as the code does.",
       "branches": [
         {
           "id": "won", "tag": "HEAVY CLASH — WON", "favours": "attacker", "spacedTiming": "changes",
@@ -344,6 +350,7 @@
             { "t": { "ref": "rt", "plus": 0.58 }, "op": "window" }
           ],
           "spaced": [
+            { "tick": { "at": "c", "step": 3, "sub": ["heavyWindup"] }, "op": "wind" },
             { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "plus": 8 }, "o": { "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true } } },
             { "tick": { "at": "c", "step": 3, "add": ["follow"] }, "op": "launch", "args": { "force": 1800, "rev": false } },
             { "tick": { "at": "c", "step": 4, "add": ["follow"] }, "op": "window" }
