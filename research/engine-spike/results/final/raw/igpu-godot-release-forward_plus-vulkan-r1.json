@@ -1,0 +1,102 @@
+{
+  "stack": "godot",
+  "engineVersion": "4.7.2-stable (official)",
+  "renderer": "forward_plus",
+  "renderingDriver": "vulkan",
+  "build": "release",
+  "browser": null,
+  "gpu": "AMD Radeon(TM) Graphics",
+  "driver": "vulkan; Advanced Micro Devices, Inc. 32.0.21030.2001",
+  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+  "os": "Windows 10.0.26200",
+  "width": 1920,
+  "height": 1080,
+  "vsync": false,
+  "scene": "worst",
+  "look": "baseline",
+  "warmupTicks": 180,
+  "measureTicks": 1800,
+  "frames": 10667,
+  "elapsedMs": 29997.323,
+  "frameMs": {
+    "avg": 2.8122,
+    "p50": 2.748,
+    "p95": 3.825,
+    "p99": 3.979,
+    "max": 4.777
+  },
+  "fps": 355.5984,
+  "subMs": {
+    "sim": {
+      "avg": 0.0036,
+      "p95": 0.019
+    },
+    "upload": {
+      "avg": 0.0045,
+      "p95": 0.025
+    },
+    "particles": {
+      "avg": 0.0032,
+      "p95": 0.012
+    },
+    "gpu": {
+      "avg": 2.1511,
+      "p95": 3.146
+    }
+  },
+  "subMsStepFrames": {
+    "frames": 1800,
+    "sim": {
+      "avg": 0.0213,
+      "p95": 0.037
+    },
+    "upload": {
+      "avg": 0.0265,
+      "p95": 0.045
+    },
+    "particles": {
+      "avg": 0.013,
+      "p95": 0.022
+    }
+  },
+  "particles": {
+    "liveAvg": 23948,
+    "liveMax": 25440
+  },
+  "droppedTicksMeasured": 0,
+  "simTickFinal": 1980,
+  "simHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "goldenHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "hashMatch": true,
+  "notes": "fixed-step 60 Hz accumulator in _process (max 8 steps/frame); camera stepped once per tick after the sim; particles: one MultiMesh of 29800 quads + stateless ballistic vertex shader, burst ring buffers in a 451x1 RGBA32F texture; live counts analytic from spawn ticks; overwrites 0; terrain: 1100-column static grid, 1200x1 RF height texture (texelFetch), uploads 1975; subMs averages every measured frame (most run no sim step); subMsStepFrames covers only frames that ran >= 1 step; gpu ms: RenderingServer.viewport_get_measured_render_time_gpu (reported with a few frames of latency); step cap hit in 1 frames: 46 ticks dropped during warm-up, 0 inside the measure window",
+  "loadBefore": {
+    "cpuPercent": 5.2,
+    "processes": [
+      "claude=40",
+      "node=4"
+    ]
+  },
+  "cpuLoadBefore": 5.2,
+  "label": "quiet window (EP, 2026-09-29: most sessions idle); load recorded per run",
+  "runArgs": [
+    "--resolution",
+    "1920x1080",
+    "--disable-vsync",
+    "--max-fps",
+    "0",
+    "--rendering-method",
+    "forward_plus",
+    "--rendering-driver",
+    "vulkan",
+    "--gpu-index",
+    "1",
+    "--",
+    "--bench",
+    "--scene",
+    "worst",
+    "--out",
+    "<out>"
+  ],
+  "gpuCheck": true,
+  "frameTimesCsv": "igpu-godot-release-forward_plus-vulkan-r1.csv"
+}

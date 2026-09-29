@@ -1,0 +1,130 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Script" path="res://main.gd" id="1_main"]
+[ext_resource type="Script" path="res://render/world_view.gd" id="2_view"]
+[ext_resource type="Script" path="res://render/particles.gd" id="3_parts"]
+[ext_resource type="Script" path="res://render/hud.gd" id="4_hud"]
+[ext_resource type="Shader" path="res://render/sky.gdshader" id="5_sky"]
+[ext_resource type="Shader" path="res://render/terrain.gdshader" id="6_terrain"]
+[ext_resource type="Shader" path="res://render/water.gdshader" id="7_water"]
+[ext_resource type="Shader" path="res://render/beam.gdshader" id="8_beam"]
+[ext_resource type="Shader" path="res://render/particles.gdshader" id="9_parts"]
+
+[sub_resource type="ShaderMaterial" id="mat_sky"]
+shader = ExtResource("5_sky")
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("mat_sky")
+radiance_size = 0
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.68, 0.78, 1)
+ambient_light_energy = 0.6
+reflected_light_source = 1
+tonemap_mode = 0
+
+[sub_resource type="ShaderMaterial" id="mat_terrain"]
+shader = ExtResource("6_terrain")
+
+[sub_resource type="ShaderMaterial" id="mat_water"]
+render_priority = -1
+shader = ExtResource("7_water")
+
+[sub_resource type="ShaderMaterial" id="mat_beam"]
+render_priority = 1
+shader = ExtResource("8_beam")
+
+[sub_resource type="ShaderMaterial" id="mat_parts"]
+render_priority = 2
+shader = ExtResource("9_parts")
+
+[sub_resource type="StandardMaterial3D" id="mat_box_a"]
+albedo_color = Color(0.239, 0.561, 0.863, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="mat_box_b"]
+albedo_color = Color(0.647, 0.165, 0.165, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="box_a"]
+material = SubResource("mat_box_a")
+size = Vector3(40, 60, 40)
+
+[sub_resource type="BoxMesh" id="box_b"]
+material = SubResource("mat_box_b")
+size = Vector3(40, 60, 40)
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+light_energy = 1.1
+shadow_enabled = false
+
+[node name="Camera" type="Camera3D" parent="."]
+fov = 40.0
+near = 20.0
+far = 12000.0
+current = true
+
+[node name="View" type="Node3D" parent="."]
+script = ExtResource("2_view")
+
+[node name="Terrain" type="MeshInstance3D" parent="View"]
+material_override = SubResource("mat_terrain")
+cast_shadow = 0
+
+[node name="Water" type="MeshInstance3D" parent="View"]
+material_override = SubResource("mat_water")
+cast_shadow = 0
+
+[node name="Beams" type="MultiMeshInstance3D" parent="View"]
+material_override = SubResource("mat_beam")
+cast_shadow = 0
+
+[node name="BoxA" type="MeshInstance3D" parent="View"]
+mesh = SubResource("box_a")
+
+[node name="BoxB" type="MeshInstance3D" parent="View"]
+mesh = SubResource("box_b")
+
+[node name="Particles" type="MultiMeshInstance3D" parent="."]
+material_override = SubResource("mat_parts")
+cast_shadow = 0
+script = ExtResource("3_parts")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("4_hud")
+
+[node name="Label" type="Label" parent="HUD"]
+offset_left = 10.0
+offset_top = 8.0
+offset_right = 900.0
+offset_bottom = 200.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+text = "..."
+
+[node name="SeamTick" type="ColorRect" parent="HUD"]
+offset_right = 3.0
+offset_bottom = 22.0
+color = Color(1, 1, 0.3, 0.9)
+mouse_filter = 2
+
+[node name="SeamLabel" type="Label" parent="HUD"]
+offset_top = 22.0
+offset_right = 80.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(1, 1, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "seam x=0"

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Engine spike: C# port of research/engine-spike/shared/sim-ref.mjs + camera-ref.mjs + test-ref.mjs.
+       Throwaway spike code (research/ only). No NuGet packages: only the .NET 10 shared framework. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SimPort</RootNamespace>
+    <AssemblyName>SimPort</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- The RNG relies on 32-bit wraparound; keep overflow checking off (it is also marked unchecked in code). -->
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+</Project>

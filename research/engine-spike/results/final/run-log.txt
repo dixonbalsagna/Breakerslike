@@ -1,0 +1,124 @@
+{"cpu":"AMD Ryzen 7 9800X3D 8-Core Processor","gpus":["AMD Radeon(TM) Graphics | driver 32.0.21030.2001","NVIDIA GeForce RTX 5070 Ti | driver 32.0.16.1664"],"powerPlan":"Power Scheme GUID: 1bc04eb5-1097-4e00-abe9-249d9d4e13aa  (Ultimate Performance)","os":"Microsoft Windows 11 Pro 10.0.26200","node":"v24.19.0","vsync":"off: Godot --disable-vsync --max-fps 0 (project vsync_mode=0); browsers --disable-gpu-vsync --disable-frame-rate-limit"}
+[godot-release-forward_plus-d3d12 r1] load before: 9.9% cpu; claude=40 node=3
+  avg 0.297 ms  p95 0.402  p99 0.527  fps 3369  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-forward_plus-d3d12 r2] load before: 8.4% cpu; claude=40 node=3
+  avg 0.297 ms  p95 0.399  p99 0.520  fps 3371  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-forward_plus-d3d12 r3] load before: 7.7% cpu; claude=40 node=3
+  avg 0.294 ms  p95 0.396  p99 0.518  fps 3402  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-forward_plus-vulkan r1] load before: 5.2% cpu; claude=40 node=3
+  avg 0.189 ms  p95 0.279  p99 0.397  fps 5291  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-forward_plus-vulkan r2] load before: 6.4% cpu; claude=40 node=3
+  avg 0.191 ms  p95 0.282  p99 0.424  fps 5224  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-forward_plus-vulkan r3] load before: 5.8% cpu; claude=40 node=3
+  avg 0.189 ms  p95 0.279  p99 0.395  fps 5296  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-compat-opengl3 r1] load before: 6.4% cpu; claude=40 node=3
+  avg 0.252 ms  p95 0.353  p99 0.539  fps 3969  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-compat-opengl3 r2] load before: 6.9% cpu; claude=40 node=3
+  avg 0.251 ms  p95 0.352  p99 0.526  fps 3980  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-compat-opengl3 r3] load before: 5.1% cpu; claude=40 node=3
+  avg 0.252 ms  p95 0.355  p99 0.539  fps 3963  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-mobile-vulkan r1] load before: 6.6% cpu; claude=40 node=3
+  avg 0.160 ms  p95 0.248  p99 0.371  fps 6253  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-mobile-vulkan r2] load before: 4.9% cpu; claude=40 node=3
+  avg 0.161 ms  p95 0.248  p99 0.377  fps 6196  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-release-mobile-vulkan r3] load before: 6.3% cpu; claude=40 node=3
+  avg 0.161 ms  p95 0.248  p99 0.377  fps 6211  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-editor-forward_plus-d3d12 r1] load before: 7.9% cpu; claude=40 node=3
+  avg 0.305 ms  p95 0.409  p99 0.532  fps 3279  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-editor-forward_plus-d3d12 r2] load before: 6.8% cpu; claude=40 node=3
+  avg 0.304 ms  p95 0.409  p99 0.528  fps 3294  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-editor-forward_plus-d3d12 r3] load before: 7.5% cpu; claude=40 node=3
+  avg 0.304 ms  p95 0.409  p99 0.529  fps 3285  hash true  gpu NVIDIA GeForce RTX 5070 Ti
+[godot-web-chrome r1] load before: 5.1% cpu; claude=40 node=3
+  avg 0.793 ms  p95 0.930  p99 1.070  fps 1261  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[godot-web-chrome r2] load before: 6.2% cpu; claude=40 node=4
+  avg 0.792 ms  p95 0.955  p99 1.115  fps 1263  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[godot-web-chrome r3] load before: 4.9% cpu; claude=40 node=4
+  avg 0.788 ms  p95 0.925  p99 1.070  fps 1268  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[web-chrome r1] load before: 6% cpu; claude=40 node=4
+  avg 0.383 ms  p95 1.200  p99 1.345  fps 2610  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[web-chrome r2] load before: 4.9% cpu; claude=40 node=4
+  avg 0.386 ms  p95 1.200  p99 1.345  fps 2593  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[web-chrome r3] load before: 11% cpu; claude=40 node=4
+  avg 0.381 ms  p95 1.195  p99 1.340  fps 2627  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[web-edge r1] load before: 8.4% cpu; claude=40 node=4
+  avg 0.344 ms  p95 1.135  p99 1.280  fps 2911  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[web-edge r2] load before: 4.7% cpu; claude=40 node=4
+  avg 0.382 ms  p95 1.180  p99 1.330  fps 2618  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[web-edge r3] load before: 4.3% cpu; claude=40 node=4
+  avg 0.385 ms  p95 1.190  p99 1.330  fps 2601  hash true  gpu ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[igpu-godot-release-forward_plus-d3d12 r1] load before: 6.2% cpu; claude=40 node=4
+  avg 3.137 ms  p95 4.226  p99 4.378  fps 319  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-forward_plus-d3d12 r2] load before: 6.5% cpu; claude=40 node=4
+  avg 3.135 ms  p95 4.208  p99 4.345  fps 319  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-forward_plus-d3d12 r3] load before: 5.5% cpu; claude=40 node=4
+  avg 3.139 ms  p95 4.210  p99 4.357  fps 319  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-forward_plus-vulkan r1] load before: 5.2% cpu; claude=40 node=4
+  avg 2.812 ms  p95 3.825  p99 3.979  fps 356  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-forward_plus-vulkan r2] load before: 6% cpu; claude=40 node=4
+  avg 2.805 ms  p95 3.787  p99 3.922  fps 357  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-forward_plus-vulkan r3] load before: 6% cpu; claude=40 node=4
+  avg 2.814 ms  p95 3.796  p99 3.926  fps 355  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-mobile-vulkan r1] load before: 7.9% cpu; claude=40 node=4
+  avg 2.110 ms  p95 2.559  p99 2.737  fps 474  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-mobile-vulkan r2] load before: 5.9% cpu; claude=40 node=4
+  avg 2.114 ms  p95 2.572  p99 2.752  fps 473  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-release-mobile-vulkan r3] load before: 5.2% cpu; claude=40 node=4
+  avg 2.113 ms  p95 2.585  p99 2.760  fps 473  hash true  gpu AMD Radeon(TM) Graphics
+[igpu-godot-web-chrome r1] load before: 6.5% cpu; claude=40 node=4
+  avg 3.092 ms  p95 3.455  p99 3.670  fps 323  hash true  gpu ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[igpu-godot-web-chrome r2] load before: 4.1% cpu; claude=40 node=4
+  avg 3.085 ms  p95 3.455  p99 3.760  fps 324  hash true  gpu ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[igpu-godot-web-chrome r3] load before: 6.8% cpu; claude=40 node=4
+  avg 3.087 ms  p95 3.460  p99 3.710  fps 324  hash true  gpu ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[igpu-web-chrome r1] load before: 6.9% cpu; claude=40 node=4
+  avg 1.051 ms  p95 1.970  p99 2.495  fps 951  hash true  gpu ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[igpu-web-chrome r2] load before: 6.9% cpu; claude=40 node=4
+  avg 1.063 ms  p95 2.005  p99 2.615  fps 941  hash true  gpu ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[igpu-web-chrome r3] load before: 8% cpu; claude=40 node=4
+  avg 1.068 ms  p95 2.005  p99 2.550  fps 936  hash true  gpu ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[simbench-node r1] {"stack":"node v24.19.0","reps":5,"ticks":3600,"terrainGenMs":0.176,"worstTickUs":0.372,"loadBefore":{"cpuPercent":8.7,"processes":["claude=40","node=4"]}}
+[simbench-node r2] {"stack":"node v24.19.0","reps":5,"ticks":3600,"terrainGenMs":0.172,"worstTickUs":0.362,"loadBefore":{"cpuPercent":6.5,"processes":["claude=40","node=4"]}}
+[simbench-node r3] {"stack":"node v24.19.0","reps":5,"ticks":3600,"terrainGenMs":0.176,"worstTickUs":0.385,"loadBefore":{"cpuPercent":5.8,"processes":["claude=40","node=4"]}}
+[simbench-gdscript-editor r1] {"stack":"godot 4.7.2-stable (official) gdscript editor debug","reps":5,"ticks":3600,"terrainGenMs":4.137,"worstTickUs":9.071,"loadBefore":{"cpuPercent":5.7,"processes":["claude=40","node=4"]}}
+[simbench-gdscript-editor r2] {"stack":"godot 4.7.2-stable (official) gdscript editor debug","reps":5,"ticks":3600,"terrainGenMs":4.142,"worstTickUs":9.175,"loadBefore":{"cpuPercent":6.2,"processes":["claude=40","node=4"]}}
+[simbench-gdscript-editor r3] {"stack":"godot 4.7.2-stable (official) gdscript editor debug","reps":5,"ticks":3600,"terrainGenMs":4.224,"worstTickUs":9.007,"loadBefore":{"cpuPercent":6.8,"processes":["claude=40","node=4"]}}
+[simbench-gdscript-release r1] {"build":"release","engineVersion":"4.7.2-stable (official)","reps":5,"stack":"godot 4.7.2-stable (official) gdscript template release","terrainGenMs":3.119,"ticks":3600,"worstTickUs":6.526,"loadBefore":{"cpuPercent":5.6,"processes":["claude=40","node=4"]}}
+[simbench-gdscript-release r2] {"build":"release","engineVersion":"4.7.2-stable (official)","reps":5,"stack":"godot 4.7.2-stable (official) gdscript template release","terrainGenMs":3.118,"ticks":3600,"worstTickUs":6.6,"loadBefore":{"cpuPercent":6,"processes":["claude=40","node=4"]}}
+[simbench-gdscript-release r3] {"build":"release","engineVersion":"4.7.2-stable (official)","reps":5,"stack":"godot 4.7.2-stable (official) gdscript template release","terrainGenMs":3.163,"ticks":3600,"worstTickUs":6.644,"loadBefore":{"cpuPercent":7.3,"processes":["claude=40","node=4"]}}
+[simbench-dotnet r1] {"stack":"dotnet 10.0.12 x64","reps":5,"ticks":3600,"terrainGenMs":0.194,"worstTickUs":0.613,"terrainGenMsRuns":[0.194,0.191,0.198,0.187,0.2],"worstTickUsRuns":[0.617,0.613,2.414,0.589,0.589],"runtime":".NET 10.0.12","optimized":true,"jitEnv":{},"loadBefore":{"cpuPercent":8.6,"processes":["claude=40","node=4"]}}
+[simbench-dotnet r2] {"stack":"dotnet 10.0.12 x64","reps":5,"ticks":3600,"terrainGenMs":0.194,"worstTickUs":0.614,"terrainGenMsRuns":[0.194,0.194,0.194,0.189,0.189],"worstTickUsRuns":[0.625,0.614,2.38,0.606,0.591],"runtime":".NET 10.0.12","optimized":true,"jitEnv":{},"loadBefore":{"cpuPercent":8.2,"processes":["claude=40","node=4"]}}
+[simbench-dotnet r3] {"stack":"dotnet 10.0.12 x64","reps":5,"ticks":3600,"terrainGenMs":0.193,"worstTickUs":0.625,"terrainGenMsRuns":[0.194,0.198,0.193,0.189,0.189],"worstTickUsRuns":[0.625,0.637,2.322,0.595,0.594],"runtime":".NET 10.0.12","optimized":true,"jitEnv":{},"loadBefore":{"cpuPercent":6.4,"processes":["claude=40","node=4"]}}
+# Final timed runs (worst-case scene, 1920x1080, vsync off)
+
+Conditions: quiet window (EP, 2026-09-29: most sessions idle); load recorded per run.
+
+System: AMD Ryzen 7 9800X3D 8-Core Processor; AMD Radeon(TM) Graphics | driver 32.0.21030.2001; NVIDIA GeForce RTX 5070 Ti | driver 32.0.16.1664; Microsoft Windows 11 Pro 10.0.26200; Power Scheme GUID: 1bc04eb5-1097-4e00-abe9-249d9d4e13aa  (Ultimate Performance); vsync off: Godot --disable-vsync --max-fps 0 (project vsync_mode=0); browsers --disable-gpu-vsync --disable-frame-rate-limit.
+
+Median of 3 runs per configuration. Each run: 3 s warm-up, then every frame while sim ticks 181 to 1980 (30 s of sim time). Frame time = interval between frame starts. Generated by tools/run-final.mjs, 2026-09-29T09:05:31.979Z. Rerun one row: `node research/engine-spike/tools/run-final.mjs --only <configuration>`. Raw per-frame times: results/final/raw/<configuration>-r<run>.csv.
+
+| Configuration | GPU used (check) | avg ms | p95 ms | p99 ms | max ms | fps | GPU ms | hash ok | CPU % before runs |
+|---|---|---|---|---|---|---|---|---|---|
+| godot-release-forward_plus-d3d12 | NVIDIA GeForce RTX 5070 Ti (ok) | 0.30 | 0.40 | 0.52 | 1.08 | 3371 | 0.08 | yes | 9.9, 8.4, 7.7 |
+| godot-release-forward_plus-vulkan | NVIDIA GeForce RTX 5070 Ti (ok) | 0.19 | 0.28 | 0.40 | 1.05 | 5291 | 0.11 | yes | 5.2, 6.4, 5.8 |
+| godot-release-compat-opengl3 | NVIDIA GeForce RTX 5070 Ti (ok) | 0.25 | 0.35 | 0.54 | 1.38 | 3969 | 0.10 | yes | 6.4, 6.9, 5.1 |
+| godot-release-mobile-vulkan | NVIDIA GeForce RTX 5070 Ti (ok) | 0.16 | 0.25 | 0.38 | 1.26 | 6211 | 0.05 | yes | 6.6, 4.9, 6.3 |
+| godot-editor-forward_plus-d3d12 | NVIDIA GeForce RTX 5070 Ti (ok) | 0.30 | 0.41 | 0.53 | 1.26 | 3285 | 0.08 | yes | 7.9, 6.8, 7.5 |
+| godot-web-chrome | ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11) (ok) | 0.79 | 0.93 | 1.07 | 5.84 | 1263 | n/a | yes | 5.1, 6.2, 4.9 |
+| web-chrome | ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11) (ok) | 0.38 | 1.20 | 1.34 | 8.96 | 2610 | 0.20 | yes | 6, 4.9, 11 |
+| web-edge | ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11) (ok) | 0.38 | 1.18 | 1.33 | 8.81 | 2618 | 0.19 | yes | 8.4, 4.7, 4.3 |
+| igpu-godot-release-forward_plus-d3d12 | AMD Radeon(TM) Graphics (ok) | 3.14 | 4.21 | 4.36 | 4.76 | 319 | 2.59 | yes | 6.2, 6.5, 5.5 |
+| igpu-godot-release-forward_plus-vulkan | AMD Radeon(TM) Graphics (ok) | 2.81 | 3.80 | 3.93 | 4.29 | 356 | 2.15 | yes | 5.2, 6, 6 |
+| igpu-godot-release-mobile-vulkan | AMD Radeon(TM) Graphics (ok) | 2.11 | 2.57 | 2.75 | 3.26 | 473 | 1.46 | yes | 7.9, 5.9, 5.2 |
+| igpu-godot-web-chrome | ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11) (ok) | 3.09 | 3.46 | 3.71 | 6.79 | 324 | n/a | yes | 6.5, 4.1, 6.8 |
+| igpu-web-chrome | ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11) (ok) | 1.06 | 2.00 | 2.55 | 9.83 | 941 | 0.74 | yes | 6.9, 6.9, 8 |
+
+## Sim throughput (worst scene, no rendering)
+
+| Runtime | µs per tick | terrain generation ms |
+|---|---|---|
+| simbench-node (node v24.19.0) | 0.37 | 0.18 |
+| simbench-gdscript-editor (godot 4.7.2-stable (official) gdscript editor debug) | 9.07 | 4.14 |
+| simbench-dotnet (dotnet 10.0.12 x64) | 0.61 | 0.19 |
+| simbench-gdscript-release (godot 4.7.2-stable (official) gdscript template release) | 6.60 | 3.12 |
+

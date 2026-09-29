@@ -1,0 +1,584 @@
+{
+  "when": "2026-09-29T09:05:31.979Z",
+  "runs": 3,
+  "label": "quiet window (EP, 2026-09-29: most sessions idle); load recorded per run",
+  "system": {
+    "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "gpus": [
+      "AMD Radeon(TM) Graphics | driver 32.0.21030.2001",
+      "NVIDIA GeForce RTX 5070 Ti | driver 32.0.16.1664"
+    ],
+    "powerPlan": "Power Scheme GUID: 1bc04eb5-1097-4e00-abe9-249d9d4e13aa  (Ultimate Performance)",
+    "os": "Microsoft Windows 11 Pro 10.0.26200",
+    "node": "v24.19.0",
+    "vsync": "off: Godot --disable-vsync --max-fps 0 (project vsync_mode=0); browsers --disable-gpu-vsync --disable-frame-rate-limit"
+  },
+  "configs": {
+    "godot-release-forward_plus-d3d12": {
+      "runs": 3,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti",
+      "driver": "d3d12; NVIDIA 32.0.16.1664",
+      "renderer": "forward_plus",
+      "build": "release",
+      "browser": null,
+      "avgMs": 0.2966,
+      "p50Ms": 0.275,
+      "p95Ms": 0.399,
+      "p99Ms": 0.52,
+      "maxMs": 1.081,
+      "fps": 3371.1855,
+      "gpuMs": 0.0795,
+      "simMs": 0.0003,
+      "uploadMs": 0.0004,
+      "particlesLiveAvg": 23944,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        9.9,
+        8.4,
+        7.7
+      ],
+      "processesBefore": [
+        "claude=40 node=3",
+        "claude=40 node=3",
+        "claude=40 node=3"
+      ],
+      "runAvgMs": [
+        0.297,
+        0.297,
+        0.294
+      ],
+      "runP95Ms": [
+        0.402,
+        0.399,
+        0.396
+      ]
+    },
+    "godot-release-forward_plus-vulkan": {
+      "runs": 3,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti",
+      "driver": "vulkan; NVIDIA 32.0.16.1664",
+      "renderer": "forward_plus",
+      "build": "release",
+      "browser": null,
+      "avgMs": 0.189,
+      "p50Ms": 0.172,
+      "p95Ms": 0.279,
+      "p99Ms": 0.397,
+      "maxMs": 1.051,
+      "fps": 5290.5365,
+      "gpuMs": 0.1097,
+      "simMs": 0.0002,
+      "uploadMs": 0.0003,
+      "particlesLiveAvg": 23952,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        5.2,
+        6.4,
+        5.8
+      ],
+      "processesBefore": [
+        "claude=40 node=3",
+        "claude=40 node=3",
+        "claude=40 node=3"
+      ],
+      "runAvgMs": [
+        0.189,
+        0.191,
+        0.189
+      ],
+      "runP95Ms": [
+        0.279,
+        0.282,
+        0.279
+      ]
+    },
+    "godot-release-compat-opengl3": {
+      "runs": 3,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti",
+      "driver": "opengl3; NVIDIA 32.0.16.1664",
+      "renderer": "gl_compatibility",
+      "build": "release",
+      "browser": null,
+      "avgMs": 0.2519,
+      "p50Ms": 0.236,
+      "p95Ms": 0.353,
+      "p99Ms": 0.539,
+      "maxMs": 1.381,
+      "fps": 3969.3687,
+      "gpuMs": 0.0969,
+      "simMs": 0.0003,
+      "uploadMs": 0.0005,
+      "particlesLiveAvg": 23938,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        6.4,
+        6.9,
+        5.1
+      ],
+      "processesBefore": [
+        "claude=40 node=3",
+        "claude=40 node=3",
+        "claude=40 node=3"
+      ],
+      "runAvgMs": [
+        0.252,
+        0.251,
+        0.252
+      ],
+      "runP95Ms": [
+        0.353,
+        0.352,
+        0.355
+      ]
+    },
+    "godot-release-mobile-vulkan": {
+      "runs": 3,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti",
+      "driver": "vulkan; NVIDIA 32.0.16.1664",
+      "renderer": "mobile",
+      "build": "release",
+      "browser": null,
+      "avgMs": 0.161,
+      "p50Ms": 0.145,
+      "p95Ms": 0.248,
+      "p99Ms": 0.377,
+      "maxMs": 1.265,
+      "fps": 6211.4364,
+      "gpuMs": 0.0502,
+      "simMs": 0.0002,
+      "uploadMs": 0.0002,
+      "particlesLiveAvg": 23949,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        6.6,
+        4.9,
+        6.3
+      ],
+      "processesBefore": [
+        "claude=40 node=3",
+        "claude=40 node=3",
+        "claude=40 node=3"
+      ],
+      "runAvgMs": [
+        0.16,
+        0.161,
+        0.161
+      ],
+      "runP95Ms": [
+        0.248,
+        0.248,
+        0.248
+      ]
+    },
+    "godot-editor-forward_plus-d3d12": {
+      "runs": 3,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti",
+      "driver": "d3d12; NVIDIA 32.0.16.1664",
+      "renderer": "forward_plus",
+      "build": "editor",
+      "browser": null,
+      "avgMs": 0.3044,
+      "p50Ms": 0.283,
+      "p95Ms": 0.409,
+      "p99Ms": 0.529,
+      "maxMs": 1.256,
+      "fps": 3285.3933,
+      "gpuMs": 0.0796,
+      "simMs": 0.0004,
+      "uploadMs": 0.0005,
+      "particlesLiveAvg": 23926,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        7.9,
+        6.8,
+        7.5
+      ],
+      "processesBefore": [
+        "claude=40 node=3",
+        "claude=40 node=3",
+        "claude=40 node=3"
+      ],
+      "runAvgMs": [
+        0.305,
+        0.304,
+        0.304
+      ],
+      "runP95Ms": [
+        0.409,
+        0.409,
+        0.409
+      ]
+    },
+    "godot-web-chrome": {
+      "runs": 3,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "driver": "D3D11",
+      "renderer": "gl_compatibility",
+      "build": "web",
+      "browser": "Chrome/154.0.8037.58",
+      "avgMs": 0.7916,
+      "p50Ms": 0.77,
+      "p95Ms": 0.93,
+      "p99Ms": 1.07,
+      "maxMs": 5.845,
+      "fps": 1263.2371,
+      "gpuMs": null,
+      "simMs": 0.0017,
+      "uploadMs": 0.0023,
+      "particlesLiveAvg": 23938,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        5.1,
+        6.2,
+        4.9
+      ],
+      "processesBefore": [
+        "claude=40 node=3",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        0.793,
+        0.792,
+        0.788
+      ],
+      "runP95Ms": [
+        0.93,
+        0.955,
+        0.925
+      ]
+    },
+    "web-chrome": {
+      "runs": 3,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "driver": "D3D11",
+      "renderer": "webgl2",
+      "build": "web",
+      "browser": "Chrome/154.0.8037.58",
+      "avgMs": 0.3831,
+      "p50Ms": 0.18,
+      "p95Ms": 1.2,
+      "p99Ms": 1.345,
+      "maxMs": 8.965,
+      "fps": 2610.2552,
+      "gpuMs": 0.1961,
+      "simMs": 0.0057,
+      "uploadMs": 0.0109,
+      "particlesLiveAvg": 23914,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        6,
+        4.9,
+        11
+      ],
+      "processesBefore": [
+        "claude=40 node=4",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        0.383,
+        0.386,
+        0.381
+      ],
+      "runP95Ms": [
+        1.2,
+        1.2,
+        1.195
+      ]
+    },
+    "web-edge": {
+      "runs": 3,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "driver": "D3D11",
+      "renderer": "webgl2",
+      "build": "web",
+      "browser": "Edg/154.0.4258.37",
+      "avgMs": 0.3819,
+      "p50Ms": 0.175,
+      "p95Ms": 1.18,
+      "p99Ms": 1.33,
+      "maxMs": 8.815,
+      "fps": 2618.172,
+      "gpuMs": 0.1914,
+      "simMs": 0.0051,
+      "uploadMs": 0.0093,
+      "particlesLiveAvg": 23928,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        8.4,
+        4.7,
+        4.3
+      ],
+      "processesBefore": [
+        "claude=40 node=4",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        0.344,
+        0.382,
+        0.385
+      ],
+      "runP95Ms": [
+        1.135,
+        1.18,
+        1.19
+      ]
+    },
+    "igpu-godot-release-forward_plus-d3d12": {
+      "runs": 3,
+      "gpu": "AMD Radeon(TM) Graphics",
+      "driver": "d3d12; Advanced Micro Devices, Inc. 32.0.21030.2001",
+      "renderer": "forward_plus",
+      "build": "release",
+      "browser": null,
+      "avgMs": 3.1374,
+      "p50Ms": 3.068,
+      "p95Ms": 4.21,
+      "p99Ms": 4.357,
+      "maxMs": 4.761,
+      "fps": 318.7394,
+      "gpuMs": 2.5853,
+      "simMs": 0.0039,
+      "uploadMs": 0.005,
+      "particlesLiveAvg": 23948,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        6.2,
+        6.5,
+        5.5
+      ],
+      "processesBefore": [
+        "claude=40 node=4",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        3.137,
+        3.135,
+        3.139
+      ],
+      "runP95Ms": [
+        4.226,
+        4.208,
+        4.21
+      ]
+    },
+    "igpu-godot-release-forward_plus-vulkan": {
+      "runs": 3,
+      "gpu": "AMD Radeon(TM) Graphics",
+      "driver": "vulkan; Advanced Micro Devices, Inc. 32.0.21030.2001",
+      "renderer": "forward_plus",
+      "build": "release",
+      "browser": null,
+      "avgMs": 2.8122,
+      "p50Ms": 2.751,
+      "p95Ms": 3.796,
+      "p99Ms": 3.926,
+      "maxMs": 4.295,
+      "fps": 355.5984,
+      "gpuMs": 2.1511,
+      "simMs": 0.0034,
+      "uploadMs": 0.0043,
+      "particlesLiveAvg": 23947,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        5.2,
+        6,
+        6
+      ],
+      "processesBefore": [
+        "claude=40 node=4",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        2.812,
+        2.805,
+        2.814
+      ],
+      "runP95Ms": [
+        3.825,
+        3.787,
+        3.796
+      ]
+    },
+    "igpu-godot-release-mobile-vulkan": {
+      "runs": 3,
+      "gpu": "AMD Radeon(TM) Graphics",
+      "driver": "vulkan; Advanced Micro Devices, Inc. 32.0.21030.2001",
+      "renderer": "mobile",
+      "build": "release",
+      "browser": null,
+      "avgMs": 2.1133,
+      "p50Ms": 2.124,
+      "p95Ms": 2.572,
+      "p99Ms": 2.752,
+      "maxMs": 3.264,
+      "fps": 473.2008,
+      "gpuMs": 1.4608,
+      "simMs": 0.0025,
+      "uploadMs": 0.0032,
+      "particlesLiveAvg": 23945,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        7.9,
+        5.9,
+        5.2
+      ],
+      "processesBefore": [
+        "claude=40 node=4",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        2.11,
+        2.114,
+        2.113
+      ],
+      "runP95Ms": [
+        2.559,
+        2.572,
+        2.585
+      ]
+    },
+    "igpu-godot-web-chrome": {
+      "runs": 3,
+      "gpu": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "driver": "D3D11",
+      "renderer": "gl_compatibility",
+      "build": "web",
+      "browser": "Chrome/154.0.8037.58",
+      "avgMs": 3.0869,
+      "p50Ms": 3.08,
+      "p95Ms": 3.455,
+      "p99Ms": 3.71,
+      "maxMs": 6.795,
+      "fps": 323.9536,
+      "gpuMs": null,
+      "simMs": 0.007,
+      "uploadMs": 0.0091,
+      "particlesLiveAvg": 23942,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        6.5,
+        4.1,
+        6.8
+      ],
+      "processesBefore": [
+        "claude=40 node=4",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        3.092,
+        3.085,
+        3.087
+      ],
+      "runP95Ms": [
+        3.455,
+        3.455,
+        3.46
+      ]
+    },
+    "igpu-web-chrome": {
+      "runs": 3,
+      "gpu": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "driver": "D3D11",
+      "renderer": "webgl2",
+      "build": "web",
+      "browser": "Chrome/154.0.8037.58",
+      "avgMs": 1.0625,
+      "p50Ms": 1.015,
+      "p95Ms": 2.005,
+      "p99Ms": 2.55,
+      "maxMs": 9.83,
+      "fps": 941.1773,
+      "gpuMs": 0.7448,
+      "simMs": 0.0055,
+      "uploadMs": 0.0241,
+      "particlesLiveAvg": 23951,
+      "hashMatchAll": true,
+      "gpuCheckAll": true,
+      "cpuLoadBefore": [
+        6.9,
+        6.9,
+        8
+      ],
+      "processesBefore": [
+        "claude=40 node=4",
+        "claude=40 node=4",
+        "claude=40 node=4"
+      ],
+      "runAvgMs": [
+        1.051,
+        1.063,
+        1.068
+      ],
+      "runP95Ms": [
+        1.97,
+        2.005,
+        2.005
+      ]
+    }
+  },
+  "simbench": {
+    "simbench-node": {
+      "runs": 3,
+      "stack": "node v24.19.0",
+      "worstTickUs": 0.372,
+      "terrainGenMs": 0.176,
+      "cpuLoadBefore": [
+        8.7,
+        6.5,
+        5.8
+      ]
+    },
+    "simbench-gdscript-editor": {
+      "runs": 3,
+      "stack": "godot 4.7.2-stable (official) gdscript editor debug",
+      "worstTickUs": 9.071,
+      "terrainGenMs": 4.142,
+      "cpuLoadBefore": [
+        5.7,
+        6.2,
+        6.8
+      ]
+    },
+    "simbench-dotnet": {
+      "runs": 3,
+      "stack": "dotnet 10.0.12 x64",
+      "worstTickUs": 0.614,
+      "terrainGenMs": 0.194,
+      "cpuLoadBefore": [
+        8.6,
+        8.2,
+        6.4
+      ]
+    },
+    "simbench-gdscript-release": {
+      "runs": 3,
+      "stack": "godot 4.7.2-stable (official) gdscript template release",
+      "worstTickUs": 6.6,
+      "terrainGenMs": 3.119,
+      "cpuLoadBefore": [
+        5.6,
+        6,
+        7.3
+      ]
+    }
+  }
+}

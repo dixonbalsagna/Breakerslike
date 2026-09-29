@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engine Spike Web</title>
+<!-- Only for ?test=1: lets the unchanged shared/test-ref.mjs load in the browser (see src/node-shim.ts). -->
+<script type="importmap">
+{ "imports": {
+  "node:crypto": "./dist/node-shim.js",
+  "node:fs": "./dist/node-shim.js",
+  "node:url": "./dist/node-shim.js",
+  "node:path": "./dist/node-shim.js"
+} }
+</script>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  body[data-mode="bench"], body[data-mode="shot"], body[data-mode="test"] { display: block; }
+  canvas { display: block; }
+  #hud { position: fixed; left: 8px; top: 6px; margin: 0; font: 12px/1.35 ui-monospace, Consolas, monospace;
+         color: #f2f2f2; text-shadow: 0 1px 2px #000, 0 0 3px #000; white-space: pre; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<pre id="hud">loading...</pre>
+<script type="module" src="./dist/main.js"></script>
+</body>
+</html>

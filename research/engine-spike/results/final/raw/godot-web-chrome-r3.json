@@ -1,0 +1,150 @@
+{
+  "browser": "Chrome/154.0.8037.58",
+  "build": "web",
+  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor           ",
+  "driver": "D3D11",
+  "droppedTicksMeasured": 0,
+  "elapsedMs": 30000.165,
+  "engineVersion": "4.7.2-stable (official)",
+  "fps": 1268.193,
+  "frameMs": {
+    "avg": 0.7885,
+    "max": 5.845,
+    "p50": 0.77,
+    "p95": 0.925,
+    "p99": 1.07
+  },
+  "frames": 38046,
+  "goldenHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "hashMatch": true,
+  "height": 1080,
+  "look": "baseline",
+  "measureTicks": 1800,
+  "notes": "fixed-step 60 Hz accumulator in _process (max 8 steps/frame); camera stepped once per tick after the sim; particles: one MultiMesh of 29800 quads + stateless ballistic vertex shader, burst ring buffers in a 451x1 RGBA32F texture; live counts analytic from spawn ticks; overwrites 0; terrain: 1100-column static grid, 1200x1 RF height texture (texelFetch), uploads 1973; subMs averages every measured frame (most run no sim step); subMsStepFrames covers only frames that ran >= 1 step; gpu ms: RenderingServer.viewport_get_measured_render_time_gpu (reported with a few frames of latency); gpu ms unavailable on this renderer (the query returned 0); step cap hit in 1 frames: 185 ticks dropped during warm-up, 0 inside the measure window",
+  "os": "Web ",
+  "particles": {
+    "liveAvg": 23935,
+    "liveMax": 25440
+  },
+  "renderer": "gl_compatibility",
+  "renderingDriver": "opengl3",
+  "scene": "worst",
+  "simHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "simTickFinal": 1980,
+  "stack": "godot",
+  "subMs": {
+    "gpu": null,
+    "particles": {
+      "avg": 0.003,
+      "p95": 0.01
+    },
+    "sim": {
+      "avg": 0.0017,
+      "p95": 0
+    },
+    "upload": {
+      "avg": 0.0023,
+      "p95": 0
+    }
+  },
+  "subMsStepFrames": {
+    "frames": 1800,
+    "particles": {
+      "avg": 0.0252,
+      "p95": 0.035
+    },
+    "sim": {
+      "avg": 0.0362,
+      "p95": 0.045
+    },
+    "upload": {
+      "avg": 0.0496,
+      "p95": 0.06
+    }
+  },
+  "vsync": null,
+  "warmupTicks": 180,
+  "width": 1920,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "gpuRendererUnmasked": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "gpuVendorUnmasked": "Google Inc. (NVIDIA)",
+  "browserGpuDevices": [
+    {
+      "vendorString": "",
+      "deviceString": "NVIDIA GeForce RTX 5070 Ti",
+      "vendorId": 4318,
+      "deviceId": 11269,
+      "driverVendor": "NVIDIA",
+      "driverVersion": "32.0.16.1664"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "AMD Radeon(TM) Graphics",
+      "vendorId": 4098,
+      "deviceId": 5056,
+      "driverVendor": "",
+      "driverVersion": "32.0.21030.2001"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "Microsoft Basic Render Driver",
+      "vendorId": 5140,
+      "deviceId": 140,
+      "driverVendor": "",
+      "driverVersion": "10.0.26100.9278"
+    }
+  ],
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "cssWidth": 1919,
+    "cssHeight": 1079,
+    "devicePixelRatio": 1.0000000149011612,
+    "crossOriginIsolated": true
+  },
+  "benchDriver": {
+    "tool": "research/engine-spike/tools/bench-browser.mjs",
+    "browserName": "chrome",
+    "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "flags": [
+      "--remote-debugging-port=0",
+      "--disable-gpu-vsync",
+      "--disable-frame-rate-limit",
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-extensions",
+      "--disable-sync",
+      "--disable-component-update",
+      "--window-size=1940,1200",
+      "--window-position=0,0",
+      "--force_high_performance_gpu"
+    ],
+    "url": "http://127.0.0.1:8631/godot/build/web/index.html?bench=1&scene=worst",
+    "viewport": {
+      "width": 1920,
+      "height": 1080,
+      "deviceScaleFactor": 1
+    },
+    "waitFor": "__benchResult",
+    "wallMs": 39062,
+    "pageWarnings": []
+  },
+  "loadBefore": {
+    "cpuPercent": 4.9,
+    "processes": [
+      "claude=40",
+      "node=4"
+    ]
+  },
+  "cpuLoadBefore": 4.9,
+  "label": "quiet window (EP, 2026-09-29: most sessions idle); load recorded per run",
+  "runArgs": [
+    "--force_high_performance_gpu"
+  ],
+  "gpuCheck": true,
+  "frameTimesCsv": "godot-web-chrome-r3.csv"
+}

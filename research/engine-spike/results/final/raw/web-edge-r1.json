@@ -1,0 +1,208 @@
+{
+  "stack": "web",
+  "engineVersion": "none (TypeScript + raw WebGL2, no libraries)",
+  "renderer": "webgl2",
+  "build": "web",
+  "browser": "Edg/154.0.4258.37",
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "driver": "D3D11",
+  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor           ",
+  "os": "Windows 11 Pro 10.0.26200",
+  "width": 1920,
+  "height": 1080,
+  "vsync": false,
+  "scene": "worst",
+  "warmupTicks": 180,
+  "measureTicks": 1800,
+  "frames": 87275,
+  "elapsedMs": 29983.995,
+  "frameMs": {
+    "avg": 0.3436,
+    "p50": 0.155,
+    "p95": 1.135,
+    "p99": 1.28,
+    "max": 8.665
+  },
+  "fps": 2910.7195,
+  "subMs": {
+    "sim": {
+      "avg": 0.0048,
+      "p95": 0.01
+    },
+    "upload": {
+      "avg": 0.0086,
+      "p95": 0.01
+    },
+    "particles": {
+      "avg": 0.0083,
+      "p95": 0.015
+    },
+    "gpu": {
+      "avg": 0.1897,
+      "p95": 0.9089
+    }
+  },
+  "particles": {
+    "liveAvg": 23929,
+    "liveMax": 25440
+  },
+  "simTickFinal": 1980,
+  "simHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "goldenHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "hashMatch": true,
+  "notes": "subMs.gpu is sampled: 87275 of 87275 measured frames GPU-timed",
+  "measureEndTick": 1980,
+  "subMsDefinition": "sim, upload and particles: CPU ms per measured frame that ran at least one sim tick (stepFrames of them; at uncapped rates most frames run no tick). sim = scene.step + camera.step; upload = height texture fill + texSubImage2D; particles = spawning + ring bufferSubData. gpu: EXT_disjoint_timer_query_webgl2 TIME_ELAPSED over the whole draw, SAMPLED: only frames that began while fewer than gpuTimerMaxInflight queries were waiting are timed (gpuTimerSamples of frames; gpuTimerCoverage). cpuMs: CPU ms of the whole rAF callback, of r.draw (GL command submission) and of hud.frame, over every measured frame. longFrames: frames over 3x the median against the rest. performance.now() is coarsened to 5 us (with jitter) in a cross-origin-isolated page, so single values under ~0.01 ms are noise.",
+  "stepFrames": 1800,
+  "subMsAllFramesAvg": {
+    "sim": 0.0001,
+    "upload": 0.0002,
+    "particles": 0.0003
+  },
+  "simPerTickUs": 4.7694,
+  "ticksMeasured": 1800,
+  "uploadPerUpload": {
+    "avg": 0.0086,
+    "p95": 0.01,
+    "count": 1800
+  },
+  "particlesDrawnAvg": 28716,
+  "particlesSpawned": {
+    "crater": 297000,
+    "big": 51000,
+    "spark": 59400
+  },
+  "particleRingOverflow": 0,
+  "maxStepsPerFrame": 1,
+  "droppedBacklogMs": 0,
+  "gpuTimerAvailable": true,
+  "gpuTimerSamples": 87275,
+  "gpuTimerCoverage": 1,
+  "gpuTimerMaxInflight": 1024,
+  "gpuTimerSkippedAllFrames": 0,
+  "cpuMs": {
+    "callback": {
+      "avg": 0.2288,
+      "p95": 1.05
+    },
+    "draw": {
+      "avg": 0.2235,
+      "p95": 1.045
+    },
+    "hud": {
+      "avg": 0.0002,
+      "p95": 0
+    },
+    "callbackP99": 1.185,
+    "callbackMax": 3.325
+  },
+  "longFrames": {
+    "thresholdMs": 0.465,
+    "long": {
+      "frames": 20198,
+      "frameMsAvg": 1.0274,
+      "callbackCpuMsAvg": 0.8891,
+      "drawCpuMsAvg": 0.8794,
+      "hudCpuMsAvg": 0.0003,
+      "outsideCallbackMsAvg": 0.1383,
+      "gpuTimedFrames": 20198,
+      "gpuMsAvg": 0.1872
+    },
+    "other": {
+      "frames": 67077,
+      "frameMsAvg": 0.1376,
+      "callbackCpuMsAvg": 0.0299,
+      "drawCpuMsAvg": 0.026,
+      "hudCpuMsAvg": 0.0002,
+      "outsideCallbackMsAvg": 0.1077,
+      "gpuTimedFrames": 67077,
+      "gpuMsAvg": 0.1904
+    }
+  },
+  "gpuTimerDisjoints": 0,
+  "crossOriginIsolated": true,
+  "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "glVendor": "Google Inc. (NVIDIA)",
+  "devicePixelRatio": 1.0000000149011612,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
+  "gpuRendererUnmasked": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "gpuVendorUnmasked": "Google Inc. (NVIDIA)",
+  "browserGpuDevices": [
+    {
+      "vendorString": "",
+      "deviceString": "NVIDIA GeForce RTX 5070 Ti",
+      "vendorId": 4318,
+      "deviceId": 11269,
+      "driverVendor": "NVIDIA",
+      "driverVersion": "32.0.16.1664"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "AMD Radeon(TM) Graphics",
+      "vendorId": 4098,
+      "deviceId": 5056,
+      "driverVendor": "",
+      "driverVersion": "32.0.21030.2001"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "Microsoft Basic Render Driver",
+      "vendorId": 5140,
+      "deviceId": 140,
+      "driverVendor": "",
+      "driverVersion": "10.0.26100.9278"
+    }
+  ],
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "cssWidth": 1920,
+    "cssHeight": 1080,
+    "devicePixelRatio": 1.0000000149011612,
+    "crossOriginIsolated": true
+  },
+  "benchDriver": {
+    "tool": "research/engine-spike/tools/bench-browser.mjs",
+    "browserName": "edge",
+    "browserPath": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "flags": [
+      "--remote-debugging-port=0",
+      "--disable-gpu-vsync",
+      "--disable-frame-rate-limit",
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-extensions",
+      "--disable-sync",
+      "--disable-component-update",
+      "--window-size=1940,1200",
+      "--window-position=0,0",
+      "--force_high_performance_gpu"
+    ],
+    "url": "http://127.0.0.1:8631/web/index.html?bench=1&scene=worst",
+    "viewport": {
+      "width": 1920,
+      "height": 1080,
+      "deviceScaleFactor": 1
+    },
+    "waitFor": "__benchResult",
+    "wallMs": 34271,
+    "pageWarnings": []
+  },
+  "loadBefore": {
+    "cpuPercent": 8.4,
+    "processes": [
+      "claude=40",
+      "node=4"
+    ]
+  },
+  "cpuLoadBefore": 8.4,
+  "label": "quiet window (EP, 2026-09-29: most sessions idle); load recorded per run",
+  "runArgs": [
+    "--force_high_performance_gpu"
+  ],
+  "gpuCheck": true,
+  "frameTimesCsv": "web-edge-r1.csv"
+}

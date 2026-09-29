@@ -1,0 +1,14 @@
+{
+  "stack": "node v24.19.0",
+  "reps": 5,
+  "ticks": 3600,
+  "terrainGenMs": 0.176,
+  "worstTickUs": 0.372,
+  "loadBefore": {
+    "cpuPercent": 8.7,
+    "processes": [
+      "claude=40",
+      "node=4"
+    ]
+  }
+}

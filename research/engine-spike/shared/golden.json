@@ -1,0 +1,51 @@
+{
+  "note": "SHA-256 of little-endian float64 vectors; see sim-ref.mjs stateVector/baseVector and camera-ref.mjs cameraVector.",
+  "terrainBase": "c3a0b9144b0e7f2550710ff8d12e3330efb37ce63c9b5394067031198ee83f9a",
+  "worst": {
+    "600": "89f74584951f0f370648e03ed01635d70aa568a40df5cb32f0fbb814f16858a5",
+    "1980": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+    "3600": "463ca3deba0baad96dd9202f270a9bb6b7d43ec32d909c79182f8ebcf1ca19dc"
+  },
+  "flight": {
+    "600": "43c587a678a1ab9bb32fca86da714ae793fd0564805298fc602f36b6a3dea622",
+    "1800": "8745c90ad6ca5d2c5e7503cde6a46b1e4782d60c5a3e45d36a93ccaa1f58f4e4",
+    "3600": "1e38eeae2ed0717cb48a2fa18c09122994c26a5ed69f229845248043bf3b562a"
+  },
+  "flight-input": {
+    "600": "41f72fd0f924edcefbf79db7a09553662f788eee58e1b64ea1ac79622d7a89c4",
+    "1800": "134e02d195abd79b62ecb862d19949978fdcd96383f1908afb897ca0544a90da",
+    "3600": "907584896d3f2eac783941c5336dc482cf1b66505ef28bda27b8229a6e8e36ae"
+  },
+  "camera": {
+    "sweep": {
+      "ticks": 3600,
+      "hash": "fd570acbd7b083d8184db0ff9a751104b72ceceb68e782799b7e2d7c427c6b3e",
+      "flips": 19
+    },
+    "chase": {
+      "ticks": 3600,
+      "hash": "a451a2c8321a98fb4e5f19f141e16ee4d71f09bc74c4cd4c868845c4a06febcd",
+      "flips": 1
+    },
+    "orbit": {
+      "ticks": 3600,
+      "hash": "1b8858a28145b69f4a3f907b81c70da52b75f74609c206cce6c6751f3e28a3db",
+      "flips": 0
+    },
+    "climb": {
+      "ticks": 3600,
+      "hash": "54954fb7ac2a26fc53206bff35bfd75f58963a861eed61e10fe6c8a4884bc1b7",
+      "flips": 0
+    },
+    "flight": {
+      "ticks": 3600,
+      "hash": "b85e9e49b06eb292358c458ed0fdaa0c9e41ebc8ce540d557b19e3d79b1313e7",
+      "flips": 3
+    },
+    "worst": {
+      "ticks": 3600,
+      "hash": "54e464968c8c103ba118ec539496d1908b65b10e7f815609bd5933b2151eaab2",
+      "flips": 0
+    }
+  }
+}

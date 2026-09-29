@@ -1,0 +1,104 @@
+{
+  "stack": "godot",
+  "engineVersion": "4.7.2-stable (official)",
+  "renderer": "forward_plus",
+  "renderingDriver": "d3d12",
+  "build": "editor",
+  "browser": null,
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "driver": "d3d12; NVIDIA 32.0.16.1664",
+  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+  "os": "Windows 10.0.26200",
+  "width": 1920,
+  "height": 1080,
+  "vsync": false,
+  "scene": "worst",
+  "look": "baseline",
+  "warmupTicks": 180,
+  "measureTicks": 1800,
+  "frames": 98813,
+  "elapsedMs": 29999.931,
+  "frameMs": {
+    "avg": 0.3036,
+    "p50": 0.282,
+    "p95": 0.409,
+    "p99": 0.528,
+    "max": 1.269
+  },
+  "fps": 3293.7742,
+  "subMs": {
+    "sim": {
+      "avg": 0.0004,
+      "p95": 0
+    },
+    "upload": {
+      "avg": 0.0005,
+      "p95": 0
+    },
+    "particles": {
+      "avg": 0.0012,
+      "p95": 0.002
+    },
+    "gpu": {
+      "avg": 0.0796,
+      "p95": 0.1
+    }
+  },
+  "subMsStepFrames": {
+    "frames": 1800,
+    "sim": {
+      "avg": 0.0214,
+      "p95": 0.028
+    },
+    "upload": {
+      "avg": 0.0289,
+      "p95": 0.036
+    },
+    "particles": {
+      "avg": 0.0127,
+      "p95": 0.017
+    }
+  },
+  "particles": {
+    "liveAvg": 23928,
+    "liveMax": 25440
+  },
+  "droppedTicksMeasured": 0,
+  "simTickFinal": 1980,
+  "simHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "goldenHash": "19a92e5cae133e412bfe48d09aef31bcd3453057c5d4542353aa97f2dd9f1dac",
+  "hashMatch": true,
+  "notes": "fixed-step 60 Hz accumulator in _process (max 8 steps/frame); camera stepped once per tick after the sim; particles: one MultiMesh of 29800 quads + stateless ballistic vertex shader, burst ring buffers in a 451x1 RGBA32F texture; live counts analytic from spawn ticks; overwrites 0; terrain: 1100-column static grid, 1200x1 RF height texture (texelFetch), uploads 1982; subMs averages every measured frame (most run no sim step); subMsStepFrames covers only frames that ran >= 1 step; gpu ms: RenderingServer.viewport_get_measured_render_time_gpu (reported with a few frames of latency)",
+  "loadBefore": {
+    "cpuPercent": 6.8,
+    "processes": [
+      "claude=40",
+      "node=3"
+    ]
+  },
+  "cpuLoadBefore": 6.8,
+  "label": "quiet window (EP, 2026-09-29: most sessions idle); load recorded per run",
+  "runArgs": [
+    "--path",
+    "C:\\Users\\itsha\\Documents\\Claude Proj\\Breakers-Like\\research\\engine-spike\\godot",
+    "--resolution",
+    "1920x1080",
+    "--disable-vsync",
+    "--max-fps",
+    "0",
+    "--rendering-method",
+    "forward_plus",
+    "--rendering-driver",
+    "d3d12",
+    "--gpu-index",
+    "0",
+    "--",
+    "--bench",
+    "--scene",
+    "worst",
+    "--out",
+    "<out>"
+  ],
+  "gpuCheck": true,
+  "frameTimesCsv": "godot-editor-forward_plus-d3d12-r2.csv"
+}

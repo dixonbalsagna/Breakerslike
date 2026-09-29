@@ -1,0 +1,7 @@
+# Build outputs and scratch for the engine spike (sources and results/final stay tracked)
+godot/build/
+godot/.godot/
+web/dist/
+csharp/**/bin/
+csharp/**/obj/
+results/smoke/

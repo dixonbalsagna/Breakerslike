@@ -1,0 +1,16 @@
+{
+  "build": "release",
+  "engineVersion": "4.7.2-stable (official)",
+  "reps": 5,
+  "stack": "godot 4.7.2-stable (official) gdscript template release",
+  "terrainGenMs": 3.119,
+  "ticks": 3600,
+  "worstTickUs": 6.526,
+  "loadBefore": {
+    "cpuPercent": 5.6,
+    "processes": [
+      "claude=40",
+      "node=4"
+    ]
+  }
+}

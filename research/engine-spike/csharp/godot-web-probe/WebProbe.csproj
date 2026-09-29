@@ -1,0 +1,10 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <!-- Engine spike probe. Godot.NET.Sdk, GodotSharp and Godot.SourceGenerators come from the Godot 4.7.2 .NET editor's
+       own GodotSharp/Tools/nupkgs folder (see nuget.config); nothing is fetched from nuget.org.
+       net10.0 because the machine has only the .NET 10 targeting pack (Godot 4.7 itself targets net8.0 and runs on 8+). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+</Project>

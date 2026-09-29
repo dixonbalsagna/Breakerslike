@@ -1,0 +1,87 @@
+{
+  "scene": "sweep",
+  "tick": 96,
+  "camX": 9000,
+  "camY": 440,
+  "viewW": 5133.343609959223,
+  "seamRenderX": 600,
+  "seamInView": true,
+  "aRenderX": 2400,
+  "bRenderX": -2400,
+  "liveParticles": 0,
+  "beams": 0,
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "width": 1920,
+  "height": 1080,
+  "browser": "Chrome/154.0.8037.58",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "driver": "D3D11",
+  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor           ",
+  "os": "Windows 11 Pro 10.0.26200",
+  "gpuRendererUnmasked": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "gpuVendorUnmasked": "Google Inc. (NVIDIA)",
+  "browserGpuDevices": [
+    {
+      "vendorString": "",
+      "deviceString": "NVIDIA GeForce RTX 5070 Ti",
+      "vendorId": 4318,
+      "deviceId": 11269,
+      "driverVendor": "NVIDIA",
+      "driverVersion": "32.0.16.1664"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "AMD Radeon(TM) Graphics",
+      "vendorId": 4098,
+      "deviceId": 5056,
+      "driverVendor": "",
+      "driverVersion": "32.0.21030.2001"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "Microsoft Basic Render Driver",
+      "vendorId": 5140,
+      "deviceId": 140,
+      "driverVendor": "",
+      "driverVersion": "10.0.26100.9278"
+    }
+  ],
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "cssWidth": 1920,
+    "cssHeight": 1080,
+    "devicePixelRatio": 1.0000000149011612,
+    "crossOriginIsolated": true
+  },
+  "benchDriver": {
+    "tool": "research/engine-spike/tools/bench-browser.mjs",
+    "browserName": "chrome",
+    "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "flags": [
+      "--remote-debugging-port=0",
+      "--disable-gpu-vsync",
+      "--disable-frame-rate-limit",
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-extensions",
+      "--disable-sync",
+      "--disable-component-update",
+      "--window-size=1940,1200",
+      "--window-position=0,0",
+      "--force_high_performance_gpu"
+    ],
+    "url": "http://127.0.0.1:8631/web/index.html?shot=1&scene=sweep",
+    "viewport": {
+      "width": 1920,
+      "height": 1080,
+      "deviceScaleFactor": 1
+    },
+    "waitFor": "__shotResult",
+    "wallMs": 963,
+    "pageWarnings": []
+  }
+}

@@ -62,6 +62,10 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
   - Register rows LR-020 to LR-023, once Tools reports.
   - The place-name screen.
   - A final check of the licence files at the repo root.
+  - Register Research's dev tools. None of them is in the repo:
+    - Godot 4.7.2 export templates (MIT, SHA-512 checked)
+    - the Godot 4.7.2 .NET editor and its .NET export templates (MIT; scratch use only)
+    - TypeScript 7.0.2 via npx (Apache-2.0; an optional type-check, dev only)
 - **Tools:**
   - Rerun the generator after any charter edit.
   - Add the licence fields, .github/CONTRIBUTING.md and the PR template from docs/legal/contributor-rules.md.

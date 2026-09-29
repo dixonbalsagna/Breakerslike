@@ -1,0 +1,14 @@
+{
+  "stack": "godot 4.7.2-stable (official) gdscript editor debug",
+  "reps": 5,
+  "ticks": 3600,
+  "terrainGenMs": 4.142,
+  "worstTickUs": 9.175,
+  "loadBefore": {
+    "cpuPercent": 6.2,
+    "processes": [
+      "claude=40",
+      "node=4"
+    ]
+  }
+}

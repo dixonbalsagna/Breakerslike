@@ -1,0 +1,31 @@
+{
+  "stack": "dotnet 10.0.12 x64",
+  "reps": 5,
+  "ticks": 3600,
+  "terrainGenMs": 0.194,
+  "worstTickUs": 0.613,
+  "terrainGenMsRuns": [
+    0.194,
+    0.191,
+    0.198,
+    0.187,
+    0.2
+  ],
+  "worstTickUsRuns": [
+    0.617,
+    0.613,
+    2.414,
+    0.589,
+    0.589
+  ],
+  "runtime": ".NET 10.0.12",
+  "optimized": true,
+  "jitEnv": {},
+  "loadBefore": {
+    "cpuPercent": 8.6,
+    "processes": [
+      "claude=40",
+      "node=4"
+    ]
+  }
+}
