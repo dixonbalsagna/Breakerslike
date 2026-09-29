@@ -155,7 +155,7 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 
 | Beat | Band | Prototype today (per 55 s match, QA §8) |
 | :--- | :--- | :--- |
-| Hides | At least 1.5 per match; at least one hide in at least 60% of matches | 0.63; 38% of matches |
+| Hides | At least 1.5 per match; at least one hide in at least 60% of matches. **Re-baselined once LD1 lands** (§11): 2 to 5 per match; at least one hide in 70% of matches; 25 to 50% of hides in cover the fight made; hidden time at most 10% of match time per fighter | 0.63; 38% of matches |
 | Ambush attacks | At least 0.5 per match | 0.061 |
 | Comebacks: the winner was on the brink at some point, or rallied (`damage-model.md` §5) | 15 to 35% of matches | Not measurable yet. The prototype has no brink |
 | Region breaks before the finisher (1v1) | 4 to 6 per match | none |
@@ -259,3 +259,32 @@ Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questio
   - underwater is a hiding state, not a place to fight.
 
 **For World and Simulation, through the EP.** A launched fighter who hits water should skim and splash rather than stop dead (`L726`). Orb also asked for simple fluid behaviour. **For Camera:** a planet-scale read and the launch follow (Orb's greybox notes).
+
+## 11. Living destruction
+
+Orb's picks from World's pitch (`docs/world/living-destruction.md`):
+- fire, plus smoke and dust cover, with cover made and taken (LD1);
+- landslides (LD2);
+- lava, quakes and rifts, at tier 4 (LD3).
+
+The full set of numbers is in `living-destruction-numbers.md`: the tier ladders, ignition and spread, cloud life and cover strength, slide triggers and damage, quake stress, lava onset, and hazard wear by region. The bands QA checks, at game scale per 1v1 match:
+
+| Band | Value |
+| :--- | :--- |
+| Spreading fires (tier 2 and up) | 0.5 to 3, in matches with at least 5% of fight time in forest or villages |
+| Forest burnt by the end, among matches that reach tier 3 | 15 to 60% of the trees |
+| Cover-capable clouds | 3 to 10 |
+| Real slides | 0.5 to 2, in matches with at least 10% of fight time in mountains; at most 1 peak collapse |
+| Quakes | In 30 to 70% of matches that reach tier 4; at most 2. Rifts at most 1 |
+| Lava events | 1 to 3, in matches that reach tier 4 |
+| Hazard share of all wear | At most 15% |
+| Hazard alone breaking a region | Never (a hard test: hazard wear stops at 89) |
+| Casualties at tier 1 from these effects | 0 (a hard test) |
+| Low-tier bleed (§4) | Still at most 4% of the population per minute, with every living-destruction source included |
+| Readability | At most 3 active hazard fronts in the camera's framing (a hard test); fighters always drawn above clouds; no hazard starts during a finisher or a respected cinematic |
+| Hides | The re-baselined rows in §8, once LD1 lands |
+
+**Attribution and collateral.**
+- Every effect is credited to the fighter whose event started it, and knock-on effects keep that cause.
+- Casualties feed menace and anguish through the standing per-casualty rule, and the roster's meters later.
+- All living-destruction casualties and structure losses count toward every §4 band and fall under World's caps and ramp. They are never exempt.
