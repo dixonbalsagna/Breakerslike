@@ -58,7 +58,7 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
   - Narrative: the signature pitches (orbs, multiplier, Cyborg food and core, transformations, fusion, tail) and the line system.
   - Simulation: GDScript becomes the source of truth; the JS core is frozen (ADR 0006 draft).
 - **Next, once Simulation's switch lands (goldens are then GD-only):**
-  - World: craters, not canyons; simple water flow; a planet that reads full-scale.
+  - World (with Rendering): craters, not canyons. The ground gets depth. Impacts make round bowls with rims and ejecta, sized by energy; a diagonal slam skids into a bowl. The z=0 slice must equal the sim's groundY. Beams scorch and leave trails of destruction that scale with power (vision.md). Also simple water flow, and a planet that reads full-scale.
   - Encounter Systems: fights stuck in the ocean; more launches across the map; the tempo changes from Game Design.
   - Rendering: civilians too small; planet-scale feel.
   - Legal: screen Narrative's favourites, the true-merge fusion and the redesigned tail.
