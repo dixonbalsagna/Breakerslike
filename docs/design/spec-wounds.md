@@ -56,20 +56,57 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 
 | Fighter | How damage is handled | How the readout shows it |
 | :--- | :--- | :--- |
-| **Protagonist**: Rolls with it | 25% of each incoming hit's wear spreads evenly over his other regions. **Overcommit** is a region loan (below) | *Crown:* all arcs thin together as wear spreads, rather than one gapping early. A committed region burns thick with fine cracks. *Cards:* `ARM: COMMITTED`, `OVERCOMMITTED`, `OVERDRAWN`, and `SECOND WIND`. *Silhouette:* an even wash, with committed regions hatched |
+| **Protagonist**: Rolls with it | 25% of each incoming hit's wear spreads evenly over his other regions. His power stage is the **heat track** (below): big temporary boosts paid for in internal core wear | *Crown:* all arcs thin together as wear spreads, rather than one gapping early, and the core arc shimmers with heat. *Cards:* heat stage changes, internal core stages, the boil-over, and `SECOND WIND`. The stage names are Narrative's. *Silhouette:* an even wash, with the core filling from inside as internal wear builds |
 | **Anti-hero**: Proud front | While Pride is at half or above, battered penalties do not apply. When Pride falls below half, every withheld penalty lands at once. **Swallow It** turns Pride into power (below) | *Crown and cards:* while Pride holds, his crown stays whole and battered cards are **withheld**. Only broken cards show, and body decals still show the damage. When Pride breaks, every withheld card fires at once as `FACADE CRACKS`, and the crown drops to its true state. *Silhouette:* shows only the hairline "front" until the crack. Opponents read his visible Pride meter to predict it |
 | **Tyrant**: Refit | Each revision mends one stage of his most-worn region. The mend shrinks each time, and his full-power form mends nothing. The **bladed mantle** is region 5: breaking it removes the mantle attacks and slows his next revision. His goons are single-region bodies, taken out by one break | *Silhouette:* each revision **reprints** it with the new revision number and a patch stamp on the mended region. An Emergency revision prints a flaw stamp. *Crown:* a fifth arc runs along the mantle's hem. *Cards:* styled as revision notes, for example `REV 7: LEFT ARM PATCHED` or `MANTLE: TORN` |
 | **Cyborg**: Regrowth and the Rail chip | Flesh regions regrow at 8 wear per second out of exchanges and never count toward the brink. The **Rail chip** moves on a seeded schedule, about every 4 s, between four stations: head, chest, back and hip. A heavy, a GUARD BREAK, a signature hit or an interrupted **Press** opens the hatch at the chip's station for 1.5 s. While it is open, the director weights that station's region by ×3, and a hit there damages the chip. Chip stages are scratched, cracked and split, and a split chip means the brink. Chip damage never regrows | *Crown:* flesh arcs visibly crawl back after damage, so the transient state reads. *Silhouette:* shows the rail, the chip's current station and its stage marks, which are the only persistent state. *Cards:* chip events only, such as `HATCH OPEN: HIP` and `CHIP: CRACKED` |
 
 **Fighter mechanics that touch wear:**
-- **Overcommit (the Protagonist's power stage).** A region loan. The direction held at activation picks the region: forward means arms and damage; back or down means legs and speed; neutral means core and toughness.
-  - *Committed:* +15% to the chosen stat, and that region takes 4 self-wear per second.
-  - *Overcommitted:* +30%. A second region joins, and both take 6 per second.
-  - *Overdrawn:* +50% on three regions for 4 s at most, at 8 per second. Afterwards, the spent regions each drop one stage, and Overcommit locks out for 45 s.
-  - A break while committed ends it with a 0.6 s stagger.
-  - Self-wear does not spread through Rolls with it, and it does not feed Respect.
-- **Overdrawn tuning risk.** A 4-second boost could put a rival on the brink and finish them before the bill arrives. The rule: **a finisher cannot start while he is Overdrawn**. The bill lands first, and then he must win another decisive exchange.
-  - QA band: Overdrawn users win 40 to 60% of those matches in AI-against-AI play, with at most 1.5 uses per match.
+- **The heat track (the Protagonist's power stage).** Orb: "his blood goes from heated to simmering to boiling, causing internal damage that adds up but gives big temporary boosts." Narrative names it and Legal screens the look (no red for the Protagonist); this section defines the mechanics only.
+
+  **Heat.** A hidden value from 0 to 100, read through the readout below.
+  - *Stoking.* He raises heat by holding a stoke input while free: +25 per second. Controls assigns the input; the default proposal is a variant of the charge input. Stoking gives no ki. It is exposed exactly like charging, so an attack on him is a CHARGE INTERRUPT (`index.html:L435-438`).
+  - *Respect sparks.* When his rival commits fully (the Respect trigger in `economy.md` §4.2), he gains +10 heat, even without stoking.
+  - *Cooling.* −4 per second while he is not stoking, and −10 per second while hidden.
+
+  **Stages, with temporary boosts.** Each boost lasts only while he is in the stage. A stage exits 5 below its floor, to prevent flicker.
+
+  | Stage | Enters at | Damage | Speed | Outcome rolls | Internal wear to the core |
+  | :--- | :--- | :--- | :--- | :--- | :--- |
+  | Heated | 25 | +10% | +5% | none | 1 per second |
+  | Simmering | 55 | +25% | +15% | +0.05 | 3 per second |
+  | Boiling | 85 | +45% | +25% | +0.10, and launch force +20% | 6 per second |
+
+  **Internal damage.** Heat adds wear to the core as its own *internal* part.
+  - Internal wear never fades, not even when hidden, and it does not spread through Rolls with it.
+  - It does not feed Respect.
+  - It counts fully toward the core's stages. An internally broken core puts him on the brink like any other broken core.
+  - Heat therefore spends his future. A full climb and 6 s boil that ends in a boil-over costs about 55 internal wear, so two of them break his core with no help from his rival.
+
+  **Limits and boiling over.**
+  - Boiling lasts at most 6 s. If heat reaches 100, or Boiling reaches 6 s, he **boils over**:
+    - a burst like a clash shockwave knocks the rival back, and causes collateral scaled by tier;
+    - then he vents: heat drops to 0, the core takes 15 internal wear in one lump, he staggers for 1.0 s, and he cannot climb above Heated for 45 s.
+  - A boil-over is not a decisive exchange, so it can never start a finisher.
+  - A Respect spark while he is boiling can push him over. A rival who transforms at the right moment forces the boil-over, and that is counterplay.
+  - Stopping stoking before 100 is the safe exit. Cooling out of Boiling from 90 down to 80 takes 2.5 s, and the Boiling wear rate applies until he is out.
+
+  **Rally and finishers.**
+  - **No finisher can start while he is Boiling.** The bill lands first, which is the same rule the region-loan version used.
+  - Heated and Simmering finishers are allowed.
+  - On the brink he may stoke. Boiling adds +10 points to his finisher-contest survival roll, and that stacks with the tilts in §2. It is a defiant gamble.
+  - **Second Wind** mends the core to battered if internal wear broke it, but leaves the internal wear at 89. It also sets heat to Heated with no internal wear for 5 s. His next track step is still free.
+
+  **Readout** (the Protagonist's row above):
+  - the core arc shimmers and thickens by stage;
+  - the silhouette fills the core from the inside with a distinct "internal" pattern, separate from surface wear;
+  - wound cards announce each stage change, each internal core stage, and the boil-over;
+  - audio adds a heartbeat and a rising boil. The colour is Narrative's and Art's call, and not red.
+- **The region loan (the previous Overcommit), kept in case Orb reverts.**
+  - *Mechanics:* the direction held at activation picked one region to spend: arms for damage, legs for speed, core for toughness.
+  - *Rungs:* Committed was +15% at 4 self-wear per second; Overcommitted +30% on two regions at 6 per second; Overdrawn +50% on three regions for at most 4 s at 8 per second, then each spent region dropped a stage and a 45 s lockout followed.
+  - *Rules:* no finisher could start while Overdrawn. Self-wear did not spread and did not feed Respect.
+  - *QA bands:* Overdrawn users won 40 to 60%, with at most 1.5 uses per match.
 - **Narrative's round-2 options for the Anti-hero: confirmed.**
   - *Swallow It* and *Take a Knee* keep Spite, because neither involves help. A cracked facade makes Spite harder to earn.
   - *Hat in Hand* and *Full Circle* forfeit Spite for the match, because they accept help.
@@ -87,7 +124,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   - finisher template ids per form tier.
 - **Per-atom data:** region weights, wear multiplier, impact class, and whether it opens the hatch.
 - **Per-fighter state:** wear per region, stage, brink flag, Rallied regions, hatch timer, chip station and stage, commit rung, Pride mask.
-- **Events** into the fx stream (commit `9ac1ea9`): `region_stage`, `region_broken`, `brink_enter`, `brink_exit`, `rally`, `hatch_open`, `chip_stage`, `commit_rung`, `facade_crack`, `revision_reprint`, `finisher_start`, `finisher_contest`, `ko`.
+- **Events** into the fx stream (commit `9ac1ea9`): `region_stage`, `region_broken`, `brink_enter`, `brink_exit`, `rally`, `hatch_open`, `chip_stage`, `heat_stage`, `boil_over`, `facade_crack`, `revision_reprint`, `finisher_start`, `finisher_contest`, `ko`.
 - **Rendering and randomness.** Render reads state and events and never writes them. Region draws use the sim RNG only.
 
 ## 5. Acceptance tests
@@ -105,8 +142,14 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
    - The Cyborg's chip takes 0 damage while the hatch is closed.
    - The Anti-hero's battered penalties are inactive while Pride is at half or above, and all apply within one tick of the facade crack.
    - Refit mends shrink with each revision.
-   - No finisher starts during Overdrawn.
-7. **Balance.** Every pairing wins 45 to 55%. Overdrawn users win 40 to 60%. The pacing bands in `balance-targets.md` §10 still pass.
+   - No finisher starts while the Protagonist is Boiling, and no boil-over is ever counted as a decisive exchange.
+   - The Protagonist's internal core wear never decreases, except through Second Wind.
+7. **Balance.** Every pairing wins 45 to 55%. The pacing bands in `balance-targets.md` §10 still pass. **Heat-track bands**, per Protagonist match:
+   - he reaches Boiling in 40 to 80% of matches;
+   - Boiling fills at most 5% of match time;
+   - boil-overs average at most 0.5 per match;
+   - matches with a boil-over are won 35 to 55% of the time, so the gamble is real;
+   - internal wear causes 10 to 35% of his brinks, so it matters without dominating.
 
 **Playtest and review:**
 
@@ -121,12 +164,12 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   - region weights per atom;
   - break-launch and chase set pieces;
   - finisher templates per fighter and form tier;
-  - Overcommit and Swallow It beats;
+  - the heat-track stoking and boil-over beats, and the Swallow It beats;
   - the Press interrupt.
 - **Encounter Systems:**
   - region choice (go for the wound) and the decisive-exchange rule;
   - the finisher contest;
-  - the AI's use of Rally, Overcommit, Swallow It and Press.
+  - the AI's use of Rally, the heat track, Swallow It and Press.
 - **Simulation:** state, data and events in §4, with fixed-point wear.
 - **UI and UX:** the crown, the cards and the silhouette, per fighter.
 - **Animation, VFX, Audio, Camera:** the channels in `damage-model.md` §3.
