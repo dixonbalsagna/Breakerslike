@@ -152,3 +152,33 @@ Orb's direction: "his blood goes from heated to simmering to boiling, internal d
 - **Callouts:** wound-card words only, for example `BLOOD: HEATED`, `SIMMERING`, `BOILING`. No "x" numbers and no shouted stage name.
 
 **Conditions:** keep the effect on limbs, veins and steam, not a body-wide glow; never red or gold; the top rung is not a hair or eye change. Content ratings for graphic "boiling blood" imagery on mobile stores are unchecked.
+
+## Round 4 (2026-09-29)
+
+Screens `docs/narrative/pitches-q3.md`, "Round 4". Names there are placeholders and are not screened as names.
+
+| Item | Verdict |
+|---|---|
+| Drop the Act, Humbled (Orb's round 3 picks) | **GO** |
+| B1 Shed Regalia, B2 Credit Where Due, B3 The Code, B4 Loss of Face | **GO** |
+| The fold beat: in-world reason, lines, 5-beat storyboard | **GO**, all O2 conditions met |
+
+### Anti-hero options
+
+All six are original pride-for-power trades with no item, pose, beam or named stage. Conditions:
+- **Drop the Act, Humbled:** power from rage after a humiliation is a genre staple. Keep the humiliating hit as a game event, and show the state with posture and expression, not a hair change or coloured aura.
+- **B1 Shed Regalia:** armour that breaks to reveal more power is common. The regalia must be a fresh design (not shoulder-pad armour with white gloves and boots), and no gold or red glow when it breaks.
+- **B2, B3, B4:** original, no conditions beyond the standing rules. B3's rules are the fighter's own, and should not quote lines from the franchise.
+
+### The fold beat: all O2 conditions met
+
+- **No pillar of light:** the world slides toward "a bright point inside the ring". Keep it a point or a ring and never let it stretch into a beam or column.
+- **No dark sky, thunder or storm:** the sky pales and never darkens. Met.
+- **Nothing emerges, speaks or answers:** only the fighters speak. Met.
+- **Fragments stay orbiting him and never touch the ground:** met.
+- **The only result is the relocation:** met.
+- **In-world reason:** the fragments are the planet's own bare bone, and enough mass pulls lifeless ground over the fight. Nothing is summoned or granted, so it is clear of the wish device.
+- **Lines:** "We can't hurt anyone innocent here" and the rivals' replies are original, and none is a franchise line or a summons.
+- **One art note:** the arrival ground ("a barren plain of pale stone under a plain sky") should not be a flat wasteland with tall rock spires. Give it its own look.
+
+Re-check at final art and the final cinematic.
