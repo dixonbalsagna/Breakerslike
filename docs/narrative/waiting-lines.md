@@ -21,16 +21,16 @@ Owner: Narrative and Fighter Identity. Version 1, 2026-09-29. Draft for the EP. 
 |---|---|---|---|
 | **Protagonist** | "Finish. I did not wait for this." | "Take your moment. You will need it." | "Glowing. It is a start." |
 | **Anti-hero** (mirror) | "Regalia. Faster. I am bored of you." | "Take your time. I will remember which of us was first." | "You dress second. You always did." |
-| **Empress** | "Stamp it and be done. Filth." | "Continue. I will wait for the paperwork. As a courtesy to the dead." | "A new hat. Fifth. Behind the goons." |
+| **Empress** | "Change and be done. Filth." | "Continue. I will wait for the paperwork. As a courtesy to the dead." | "A new hat. Fifth. Behind the goons." |
 | **Cyborg** | "Molt, if you must. Hurry." | "Take your time, machine. Digest." | "Restructuring. Even your body wants to leave you." |
 
 ## The Empress waits
 
 | Watching | Impatient | Polite | Mocking |
 |---|---|---|---|
-| **Protagonist** | "Guard, is he done? We have a schedule." | "Do take your time, petitioner. Sit. The form is on the table." | "Ohoho. A glow. How brave. We shall note it in the file." |
+| **Protagonist** | "Guard, is he done? We have a schedule." | "Do take your time, petitioner. Sit. It is not as if we have anywhere to be. ...We have forms." | "Ohoho. A glow. How brave. We shall note it in the file." |
 | **Anti-hero** | "Sulking in regalia. Are we finished?" | "Take your time, petitioner. Ours is longer." | "Regalia? Is that the cape? Cute. We have a train." |
-| **Empress** (mirror) | "Hurry up. We are watching. Do not copy our hat." | "After you, petitioner. We will wait for the paperwork." | "You are amending OUR likeness. We will sue." |
+| **Empress** (mirror) | "Hurry up. We are watching. Do not copy our hat." | "After you, petitioner. We will wait. We know how long the forms take." | "You are amending OUR likeness. We will sue." |
 | **Cyborg** | "Molt already. We do not have all day. We have an empire." | "Take your time. We will see you at the counter." | "Molting? How very clerical." |
 
 ## The Cyborg waits

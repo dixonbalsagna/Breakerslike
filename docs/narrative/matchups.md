@@ -26,7 +26,7 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 - **Relationship:** a hero against a would-be world-ender who treats the planet as a filing cabinet.
 - **Stakes:** `world_at_stake`.
 - **Registers:** P to E is grim and plain, with no banter. E to P is leering and amused, and treats his seriousness as a form to be processed.
-- **Shifts:** *P winning*: relief, not glee. *E winning*: a signed-off joke. *E on the brink*: she appeals ("an unapproved outcome!"). *After each revision*: E jokes about filings, P stays serious. *In the fold*: E mocks the "private room" and complains about the jurisdiction (with no mechanical effect: her filings work there). P's resolve hardens. Worked in full below.
+- **Shifts:** *P winning*: relief, not glee. *E winning*: a signed-off joke. *E on the brink*: she appeals ("an unapproved outcome!"). *After each revision*: E grumbles about the paperwork she will face later, P stays serious. Her guard's protocol gestures and the pained aide carry the bureaucracy, with no visible forms. *In the fold*: E mocks the "private room" and complains about the jurisdiction (with no mechanical effect: her filings work there). P's resolve hardens. Worked in full below.
 
 ### 4. Protagonist v Cyborg
 - **Relationship:** a hero against a machine that eats the people he protects.
@@ -104,7 +104,7 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 
 ## 3. Worked case: Protagonist v Empress (the contrast)
 
-**The frame.** Stakes: `world_at_stake`. P is grim and plain, and does not banter. The Empress is leering and amused, and treats every revision as a filing. The same Protagonist sounds different, and she makes the seriousness worse by treating it as paperwork. Her guard of honour salutes formally before each one tags in.
+**The frame.** Stakes: `world_at_stake`. P is grim and plain, and does not banter. The Empress is leering and amused, and dreads every revision because of the paperwork it will cost her later. The same Protagonist sounds different, and she makes the seriousness worse by treating it as paperwork. Her guard of honour salutes formally before each one tags in.
 
 **Pre-fight**
 - E (to her guard): "Guard, present arms. Warm him up. We will attend presently, Revision One and half asleep."
@@ -119,7 +119,7 @@ Each entry gives the relationship, the stakes, each side's register toward the o
    - E: "Annexing. The empire thanks you for your patronage."
    - P: (quietly) "That was a home. I'll help fix it once I'm done with you."
 3. *A joke revision.*
-   - E: "Revision Four, filed and stamped. We have added a hat."
+   - E: "Revision Four. We have added a hat. Do not ask about the paperwork."
    - P: "...I'm not laughing. I want you to know I'm not."
 
 **The fold: lead-in and reply**
@@ -186,7 +186,7 @@ Same format as the first two, self-contained and short. The priority is **breadt
 
 **Mid-fight**
 1. *A joke revision.*
-   - a. E: "Revision Four, filed and stamped. We have added a hat." A: "Filth."
+   - a. E: "Revision Four. We have added a hat. Do not ask about the paperwork." A: "Filth."
    - b. E: "Revision Two. Louder. That is the entire update." A: "You were funny in a way that ends today."
 2. *A guard member falls.*
    - a. E: "The Herald-Archer is dismissed with honour." A: "Fifth. Behind the goons. And the goons are behind you."
@@ -234,7 +234,7 @@ Same format as the first two, self-contained and short. The priority is **breadt
 
 **Mid-fight**
 1. *A joke revision.*
-   - a. E: "Revision Four, filed and stamped. We have added a hat." C: "I will need to log a complaint about the hat."
+   - a. E: "Revision Four. We have added a hat. Do not ask about the paperwork." C: "I will need to log a complaint about the hat."
    - b. E: "Revision Two. Louder." C: "Please lower your voice, madam. You are disturbing the other guests."
 2. *The Cyborg eats a guard member.*
    - a. E: "Those were my guard!" C: "I do apologise. I thought they were on the menu."
@@ -311,7 +311,7 @@ Same format as the first two, self-contained and short. The priority is **breadt
 
 **Mid-fight**
 1. *A joke revision, in sync.*
-   - a. E1: "Revision Four, filed and stamped. We have added a hat." E2: "We added a hat FIRST."
+   - a. E1: "Revision Four. We have added a hat. Do not ask about the paperwork." E2: "We added a hat FIRST."
    - b. E1: "Revision Two. Louder." E2: "We were already louder. We were the loud one."
 2. *A hit lands.*
    - a. E1: "You struck us! Do you know what revision this is? ...You struck ME." E2: "We do. We are one too. Ours is better."

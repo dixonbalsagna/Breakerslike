@@ -132,7 +132,7 @@ The Warden and VORR were prototype placeholders. I carry the tense device forwar
 |---|---|---|
 | **The Protagonist** | Earnest, delighted by the fight, plain words, promises, oblivious about collateral until it is late. | Hearty efforts, a delighted laugh, a wince. |
 | **The Anti-hero** | Brooding, clipped, ranks people, talks about the opponent as already finished. | Low growls, a sneer's exhale, rare and cold laughs. |
-| **The Empress** | Confident, leering, boastful, quick to anger; revision numbers as filings; a royal "we" that slips to "I"; addresses opponents as "petitioner". | A wheezing cackle, a snort, an escalating shriek, a rubber-stamp thud. |
+| **The Empress** | Confident, leering, boastful, quick to anger; revision numbers as filings; a royal "we" that slips to "I"; addresses opponents as "petitioner". | A wheezing cackle, a snort, an escalating shriek, a weary heavy sigh, and muttered form numbers. |
 | **The Cyborg** | Polite, corporate, hungry; sandwich and order language; glitches when hit on the chip. | Static-tinged growls, munching, a digital chirp. |
 
 ## 8. Sample lines (10 per fighter, original)
@@ -178,7 +178,7 @@ Each line shows its trigger and its first cue. Some are jewels; some are templat
 | 3 | sniping support | "Hold still. It is a precision matter." | cackle |
 | 4 | took a hit | "You struck us! Do you know what revision this is? ...You struck ME." | shriek |
 | 5 | Wrath high | "That is the last time you do that in this revision!" | shriek |
-| 6 | joke revision | "Revision Four, filed and stamped. We have added a hat." | stamp |
+| 6 | joke revision | "Revision Four. We have added a hat. Do not ask about the paperwork." | sigh.heavy |
 | 7 | opponent hurt | "Ohoho. Cute. Cute! ...Filed under Cute." | cackle |
 | 8 | decree line | "One straight line. That is now the border. Do try to be on the correct side." | snort |
 | 9 | structure destroyed | "Annexing. The empire thanks you for your patronage." | cackle |

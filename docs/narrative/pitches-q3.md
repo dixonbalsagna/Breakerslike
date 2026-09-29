@@ -435,7 +435,7 @@ Orb's picks: she is very image-focused, hates changing her appearance, and settl
 
 Her base form is **Revision One, the form on file**. Every transformation is a **filing**: an amended record, a re-registered identity, a notarised likeness. The more she transforms, the more tangled her legal status gets. She does not simply power up: she has to get it approved.
 
-## 2. The revision cards
+## 2. The revision cards (SUPERSEDED: no visible cards or stamps; see section 11)
 
 Cards follow the wound-card style (no numbers, a stamp). One filing runs through four stamps:
 
@@ -490,7 +490,7 @@ Her filings **do not register in the fold**: there are no clerks, and it is outs
 - Risk: too many rules make her hard to read. The cards and the stamps carry the state.
 - Risk: the Audit might feel like a stall. It is capped at 3 seconds and only after three outstanding filings.
 
-## 10. After Orb's rulings on the paperwork
+## 10. After Orb's rulings on the paperwork (its visible cards and stamps are superseded by section 11)
 
 Orb's rulings: transformations are cinematic and uninterruptible; only the gauge or fill phase before them can be stopped. The Mismatch, the Audit and the interruption comedy are out. Her filings work in the fold.
 
@@ -514,3 +514,32 @@ Orb's rulings: transformations are cinematic and uninterruptible; only the gauge
 **The fold.** Her filings work there. The joke can stay as a line she complains about with no mechanical effect: "This is irregular. This is outside our jurisdiction. ...We will file anyway."
 
 **The decree line.** Yes: "decree line" is her ranged beam, the surveyor line (a ruler-straight thin beam that draws a cut across the land and declares it a border). It is the same weapon under a placeholder name.
+
+## 11. The paperwork is diegetic only
+
+Orb: "I don't like the idea of visible paperwork or stamps. She could have voice lines about how frustrating it will be to go through the mountain of paperwork later, or some other diegetic clues as to what's going on."
+
+**Withdrawn:** the stamp cards, the visible forms, the REJECTED and REGISTERED text, and the `PENDING` ink stamp. **Kept:** the fill phase and the uninterruptible cinematic (Orb's earlier ruling), read through her body, her guard and her voice.
+
+### Six diegetic clues (instead of forms)
+
+| # | Clue | What the player sees or hears | What it tells them |
+|---|---|---|---|
+| 1 | **The guard's protocol gestures** ★ | Each new stage of the filing makes the guard snap a stiff, formal gesture in sequence. Three gestures and it is approved. | The fill gauge, read in bodies. |
+| 2 | **She smooths her regalia** | A fastidious ritual before a revision: straightening the train, adjusting a cuff. | A revision is coming. |
+| 3 | **The pained aide** ★ | One guard member winces, checks a wristwatch and sighs. His posture worsens with each revision. | The tangle of her paperwork, shown in one face. |
+| 4 | **The muttering** | Form numbers under her breath, growing louder through the fight. | The fill is running. |
+| 5 | **The sigh of dread** ★ | A long exhale, rolled shoulders, like lifting a heavy box. Relief afterwards. | She is about to do something she hates. |
+| 6 | **The guard updates the salute** | After a revision the guard changes its salute, and one member salutes the old way and gets a glare. | The revision changed something. |
+
+**Favourites: 1, 3 and 5 together.** The gestures give the fill a shape, the aide gives the tangle a face, and the sigh gives her a body. All six are in `voices/empress.md`, which also has her rewritten fill-phase, cinematic, fold and comeback lines. Her waiting lines are in `waiting-lines.md` and the fold complaint is in `matchups.md`.
+
+### Comebacks with no visible paperwork (The Appeal is not approved)
+
+| Idea | What it is | Her voice |
+|---|---|---|
+| **Off the record** ★ | She mends in a quick, unceremonious moment. Her guard turns its backs, so nobody saw it. The flaw is a mismatched piece of regalia she grabbed in a hurry. | "Off the record. Guard, you did not see that." |
+| **Close ranks** | The guard of honour forms a drill wall around her for a beat while she recovers. It costs her one guard member, dismissed with honour. | "Guard, close ranks. We are not receiving visitors." |
+| **Recess** | She declares a recess. A short, ceremonial pause: the guard raises a parasol, she takes a sip, the region mends. It is a set piece, so the opponent waits. | "This session is adjourned. Refreshments, guard." |
+
+**Favourite: Off the record.** It is the funniest, it needs no paperwork on screen, and the guard turning its backs is a clear, diegetic image. **Dismissed with honour** from section 10 also qualifies (it involves no paperwork) and could be folded into Close ranks. Game Design will set the mechanics.
