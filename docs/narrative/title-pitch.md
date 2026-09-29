@@ -96,3 +96,21 @@ So this round starts from things a person would actually blurt out, or from thin
 **Still sound generated or assembled:** **Beatdown Planet** (a placeholder that reads like one), **Big Lap** (a bit mild), and **Doodad Hunt** (fine, but a mechanic label, not a title). **Widdershins** is a great word that is already taken several times. **Wraparound** is honest but is a codename, not a brand.
 
 Legal should screen the top three and Wraparound.
+
+## Round 4: Orb's pick
+
+**Orb picked "Orb Combat EX"** (2026-09-29). Legal is screening it. Nothing is renamed elsewhere until Legal clears it.
+
+Orb's reasoning, as relayed by the EP:
+
+- **"Orb"** works on several levels: the planet, the artefacts, the energy blasts, the Cyborg's core, and Orb's own name.
+- **"[Word] Combat"** nods to the Madness Combat series.
+- **"EX"** follows the fighting-game "extended edition" convention.
+
+**The EP's other pitches from the chat, for the record:**
+
+- Orb Combat 2, Orb Combat 7, Orb Combat 64, Orb Combat Turbo, Orb Combat Deluxe, Orb Combat X.
+- Orb Combat: Take It Outside, Orb Combat: Not the Hospital, Orb Combat: Planetfall, Orb Combat: Hoagie Portal.
+- Collateral Combat, Crater Combat, Kerfuffle Combat.
+
+**Narrative's note for Legal (not a decision):** at the start of this project I listed "orb", "sphere" and "globe" as stage-0 risks, because they are synonyms of "ball", a franchise word (see `name-longlist.md`). The name also carries "ki blasts" among its meanings, and "ki" is a grey-zone term (glossary, RL-015). Legal should judge both. "Take It Outside" and "Not the Hospital" from round 3 are available as subtitles, as the EP's list already shows.
