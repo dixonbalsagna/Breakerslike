@@ -51,6 +51,17 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const s2 = withEvents(s1, [{ type: 'finisher_start', t: 30, actor: 0, target: 1 }]);
     assert.strictEqual(byId(await runTests(ctx({ default: [s2] }), ['W5'])).W5.status, 'FAIL');   // only head ever breaks first: arms and legs below 10%
   });
+  await t('C1 and C2 stay PENDING until an evacuation event exists, then fail on an over-budget window and an over-ceiling match', async () => {
+    const tl = []; for (let i = 0; i <= 100; i++) tl.push([i, Math.min(0.5, i * 0.01), 1]);          // 1% a second at tier 1: far over 2% per minute and past the 10% ceiling
+    const base = rec({ casTimeline: tl });
+    const r0 = byId(await runTests(ctx({ default: [base] }), ['C1', 'C2']));
+    assert.strictEqual(r0.C1.status, 'PENDING'); assert.strictEqual(r0.C2.status, 'PENDING');
+    const r1 = byId(await runTests(ctx({ default: [withEvents(base, [{ type: 'evacuate', t: 5 }])] }), ['C1', 'C2']));
+    assert.strictEqual(r1.C1.status, 'FAIL'); assert.strictEqual(r1.C2.status, 'FAIL');
+    const ok = rec({ casTimeline: [[0, 0, 1], [30, 0.01, 1], [60, 0.015, 1], [90, 0.02, 2]] });
+    const r2 = byId(await runTests(ctx({ default: [withEvents(ok, [{ type: 'evacuate', t: 5 }])] }), ['C1', 'C2']));
+    assert.strictEqual(r2.C1.status, 'PASS'); assert.strictEqual(r2.C2.status, 'PASS');
+  });
   await t('a test with events present but no body stays PENDING, never PASS', async () => {
     const r = byId(await runTests(ctx({ default: [withEvents(rec(), [{ type: 'brunt_chain', t: 5 }])] }), ['H5'])).H5;
     assert.strictEqual(r.status, 'PENDING');

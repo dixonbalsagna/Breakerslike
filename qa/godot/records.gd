@@ -8,7 +8,7 @@ extends SceneTree
 
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 ## fx event types that carry game meaning rather than decoration: kept in order with their fields (wounds-plan.md, living destruction).
-const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "slide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found"]
+const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "landslide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found"]
 ## fighter indices are meaningful at 0
 const INDEX_FIELDS: Array = ["actor", "target", "winner", "loser", "owner"]
 const KEEP_FIELDS: Array = ["tick", "tier", "cover", "actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]
@@ -60,12 +60,13 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "casTimeline": [], "slides": [], "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var launch_x: Array = [0.0, 0.0]
 	var prev_t: float = 0.0
 	var prev_cas: float = 0.0
+	var last_sec: int = 0
 	var prev_ex = null
 	var ex_start: float = 0.0
 	var last_release: float = -1.0
@@ -113,6 +114,10 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 		prev_cas = S.world.casualties
 		if dcas != 0.0 or top <= 2:
 			rec.casByTier[clampi(top, 1, 4)] += dcas
+		# casualty timeline for the rolling-budget and ceiling tests (balance-targets 4b): [second, share of the starting population lost, higher tier]
+		if int(S.T) > last_sec:
+			last_sec = int(S.T)
+			rec.casTimeline.append([last_sec, snappedf(S.world.casualties / S.world.pop0, 0.0001), top])
 		if top <= 2 and S.game.ko == null:
 			rec.lowSec += dT
 			rec.lowCas += dcas
@@ -135,6 +140,13 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 				rec.found += 1
 			elif e.type == "tier_up":
 				rec.maxTier[int(e.actor)] = maxi(rec.maxTier[int(e.actor)], int(e.tier))
+			# knockback slides and slams (docs/world/knockback-slide.md): a slide ends in one `slide` event, a slam digs an impact crater
+			if e.type == "slide":
+				rec.slides.append({"len": snappedf(absf(e.get("x1") - e.x), 1.0), "w": snappedf(e.w, 0.1), "depth": snappedf(e.depth, 0.1), "energy": snappedf(e.energy, 0.1), "variant": e.variant, "owner": e.owner, "t": snappedf(S.T, 0.001)})
+			elif e.type == "crater" and e.cause == "impact":
+				rec.impactCraters += 1
+			elif e.type == "skim":
+				rec.skims += 1
 			if e.type == "damage" and e.region != "":
 				rec.dmgByRegion[e.region] = rec.dmgByRegion.get(e.region, 0.0) + e.amount
 			if _keep(e.type):

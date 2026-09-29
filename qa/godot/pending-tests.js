@@ -92,6 +92,27 @@ const tests = [
     } },
   { id: 'H4', spec: '§11', title: 'Effects are credited to the fighter whose event started them; knock-on effects keep the cause; no hazard starts during a finisher or a cinematic', slice: 'LD1 and Wounds S2', needs: ['hazard*', 'finisher_start'], run: null },
   { id: 'H5', spec: '§5b hard tests', title: 'A chain never exceeds the launcher\'s tier cap (2 at tiers 1 and 2, 3 at tier 3, 4 at tier 4; 5 only for a scripted finisher) and the planner drops any chain over its casualty budget (4% at tier 2 or below, 12% at 3, 20% at 4)', slice: 'World buildings-in-depth §4b', needs: ['brunt_chain'], run: null },
+  // ---------------------------------------------------------------- casualty ramp and ceiling (balance-targets §4b), World's wave 1
+  { id: 'C1', spec: '§4b rolling budget', title: 'Rolling 60 s casualty budget by the higher tier: 2%, 4%, 8%, 15% of the starting population. No borrowing at tier 1 or 2; at tier 3 and above a set piece may borrow its own per-event budget', slice: 'World collateral ramp (after S2)', needs: ['evacuat*'],
+    run({ A }) {
+      const BUDGET = [0, 0.02, 0.04, 0.08, 0.15], bad = [], borrow = [];
+      for (const recs of Object.values(A)) for (const r of recs) {
+        const tl = r.casTimeline;
+        for (let i = 0; i < tl.length; i++) {
+          const j = tl.findIndex(x => x[0] >= tl[i][0] - 60), back = j >= 0 && tl[i][0] >= 60 ? tl[j][1] : 0, over = tl[i][1] - back - BUDGET[tl[i][2]];
+          if (over > 1e-9) (tl[i][2] <= 2 ? bad : borrow).push(r.seed);
+        }
+      }
+      noBad('a rolling 60 s window over budget at tier 1 or 2 (no borrowing allowed)', [...new Set(bad)]);
+      return `tier 3+ windows over budget (set-piece borrowing, to be bounded by per-event budgets): ${borrow.length}`;
+    } },
+  { id: 'C2', spec: '§4b ceiling', title: 'Cumulative ceiling by the highest tier reached so far: 10%, 30%, 60%, 90% of the starting population', slice: 'World collateral cap (after S2)', needs: ['evacuat*'],
+    run({ A }) {
+      const CEIL = [0, 0.10, 0.30, 0.60, 0.90], bad = [];
+      for (const recs of Object.values(A)) for (const r of recs) { let mt = 1; for (const [, cas, top] of r.casTimeline) { mt = Math.max(mt, top); if (cas > CEIL[mt] + 1e-9) { bad.push(r.seed); break; } } }
+      noBad('cumulative casualties above the ceiling for the highest tier so far', bad); return 'no match over its ceiling';
+    } },
+  { id: 'C3', spec: '§4b split', title: 'Per-tier casualty split: casualties by the higher tier at the time, checked against the ramp (tier 1 and 2 together at most about a third of the losses of a match once the ramp exists)', slice: 'World collateral ramp (after S2)', needs: ['evacuat*'], run: null },
 ];
 
 // Run every test: returns [{ id, spec, title, slice, status: PASS|FAIL|PENDING, detail }].

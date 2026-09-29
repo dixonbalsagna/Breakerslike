@@ -132,6 +132,31 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
     R.pending('4.cyborg', '§4', 'Civilians left at 4:00: at least 25% alive in at least 80% of matches', 'game scale: needs 7-minute matches (Wounds S2)');
   }
 
+  // ---- 4b. casualty ramp and ceiling (measured today as the share of matches that would break them; tested once World builds them)
+  if (D && D[0].casTimeline) {
+    const BUDGET = [0, 0.02, 0.04, 0.08, 0.15], CEIL = [0, 0.10, 0.30, 0.60, 0.90];
+    const viol = recs => {
+      let roll = 0, ceil = 0;
+      for (const r of recs) {
+        const tl = r.casTimeline; let rv = false, cv = false, maxTier = 1;
+        for (let i = 0; i < tl.length; i++) {
+          maxTier = Math.max(maxTier, tl[i][2]);
+          const j = tl.findIndex(x => x[0] >= tl[i][0] - 60), back = j >= 0 && tl[i][0] >= 60 ? tl[j][1] : 0;
+          if (tl[i][1] - back > BUDGET[tl[i][2]] + 1e-9) rv = true;
+          if (tl[i][1] > CEIL[maxTier] + 1e-9) cv = true;
+        }
+        if (rv) roll++; if (cv) ceil++;
+      }
+      return { roll: roll / recs.length, ceil: ceil / recs.length };
+    };
+    const v = viol(D);
+    R.info('4b.rolling', '§4b', 'Matches with a 60 s window over the tier budget (2%, 4%, 8%, 15%): what the ramp will have to change (default arm)', fmt.pct(v.roll), 'the rolling-window test is pending the ramp World is building (skeleton C1)');
+    R.info('4b.ceiling', '§4b', 'Matches over the cumulative ceiling (10%, 30%, 60%, 90% by highest tier so far) (default arm)', fmt.pct(v.ceil), 'the ceiling test is pending the cap World is building (skeleton C2)');
+    const cb = [1, 2, 3, 4].map(t => sum(D.map(r => r.casByTier[t] / r.pop0)));
+    const ct = sum(cb);
+    R.info('4b.split', '§4b', 'Per-tier split of casualties by the higher tier when they happened (default arm)', [1, 2, 3, 4].map((t, i) => `tier ${t} ${(cb[i] / ct * 100).toFixed(0)}%`).join(', '), 'skeleton C3 bands it once the ramp exists');
+  }
+
   // ---- 5. launch variety and 5b brunts
   for (const a of arms.filter(x => !x.endsWith('-flip'))) {
     const recs = A[a], names = [...new Set(recs.flatMap(r => Object.keys(r.launches)))];
@@ -156,6 +181,15 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
     R.pending('5b.reach', '§5b', 'Launches that pick a building, out of those with a candidate in reach (35 to 60%)', 'needs the planner\'s candidate list in the feed or an event (ask Encounter for a launch_plan record with the candidates)');
     R.pending('5b.chains', '§5b', 'Chains among brunts, chain lengths, the per-tier casualty budget for one chain (hard test), the launcher tier cap (hard test)', 'needs brunt-chain events (World, buildings-in-depth §4b); skeleton in qa/godot/pending-tests.js');
   }
+
+  // ---- 5c. knockback slides (ground impacts): a slide ends in a `slide` event, a slam digs an impact crater
+  if (D && hasEvent(A, 'slide')) {
+    const sl = S.clusterShare(D, r => r.slides.length, r => r.slides.length + r.impactCraters);
+    R.rate('5c.share', '§5c', 'Ground contacts that slide rather than slam (slams stay at 15% or more)', { v: sl.p, ci: sl.ci, lo: 0.60, hi: 0.85 });
+    R.point('5c.perMatch', '§5c', 'Slides per match, P2 testbed (default arm)', { v: mean(D.map(r => r.slides.length)), lo: 6, hi: 12 });
+    R.info('5c.detail', '§5c', 'Slides: mean length and trench width; slams (impact craters) per match; water skims per match', `${mean(D.flatMap(r => r.slides.map(x => x.len))).toFixed(0)} units, ${mean(D.flatMap(r => r.slides.map(x => x.w))).toFixed(1)} wide; ${mean(D.map(r => r.impactCraters)).toFixed(1)} slams; ${mean(D.map(r => r.skims)).toFixed(1)} skims`, 'paved starts: ' + (D.flatMap(r => r.slides).filter(x => x.variant === 'paved').length / Math.max(1, D.flatMap(r => r.slides).length) * 100).toFixed(0) + '%');
+    R.pending('5c.budget', '§5c', 'Casualties from one slide at most 2% (tier 2 or below), 5% (tier 3), 10% (tier 4); 0 in open country; the planner declines launches over budget (hard tests)', 'needs casualties attributed per slide (a slide event with the population lost, or the predicted slide of the planner) and the predicted-vs-actual landing test from Encounter');
+  } else if (D) R.pending('5c.slides', '§5c', 'Knockback slide bands', 'no slide events in this sim (World SC slide)');
 
   // ---- 6. location and signature variety
   for (const a of arms.filter(x => !x.endsWith('-flip'))) {
@@ -212,7 +246,8 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
     R.rate('10.gap10', '§10', 'Matches with no gap over 10 s', { v: noLong / D.length, ci: wl(noLong, D.length), lo: 0.95 });
     R.point('10.launchPerMin', '§10', 'Launches per minute', { v: sum(D.map(r => total(r.launches))) / mins, lo: 4, hi: 6 });
     const fl = D.flatMap(r => r.flights);
-    R.point('10.longHaul', '§10', 'Launches with at least 1,500 units of horizontal travel', { v: fl.filter(f => f.travel >= 1500).length / fl.length, lo: 0.30, unit: 'pct' });
+    const haul = D[0].longHaul || 1500;                                 // 1,500 x TRAV_LAUNCH since the world scale (SC): 9,000 units = 120 fighter heights
+    R.point('10.longHaul', '§10', `Launches with at least ${haul.toLocaleString('en-US')} units of horizontal travel (1,500 x the launch traversal factor)`, { v: fl.filter(f => f.travel >= haul).length / fl.length, lo: 0.30, unit: 'pct' });
     R.point('10.newBiome', '§10', 'Launches that land in a different biome', { v: fl.filter(f => f.newBiome).length / fl.length, lo: 0.25, unit: 'pct' });
     R.point('10.underwater', '§10', 'Fight time underwater (both fighters)', { v: sum(D.map(r => r.underSec)) / sum(D.map(r => total(r.fightSec))), hi: 0.10, unit: 'pct' });
     R.pending('10.rest', '§10', 'Strike spacing, wind-up width, hit-stop floors, gap-close flight', 'read from data and atoms, not from a batch: Combat and Controls own them (needs the event log of the composer)');
