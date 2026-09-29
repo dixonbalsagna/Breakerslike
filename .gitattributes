@@ -1,0 +1,4 @@
+# Normalise line endings so every session and worktree sees the same bytes.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
