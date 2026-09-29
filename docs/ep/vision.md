@@ -149,3 +149,5 @@ Orb had played the Godot greybox before answering.
 - Work the matchups out case by case with Orb.
 
 **Matchup feedback (Orb, 2026-09-29).** 'These are a great start. I want as many possibilities.' Likes: the Tyrant's revision numbers, and the Cyborg asking for a manager. Tone fix for the Protagonist: the fight comes first and the repairs after. Not 'That was a home. I'll fix it. Then I'll deal with you.', but more like 'I'll help fix it once I'm done with you.' Orb read the Anti-hero's 'Fifth.' as a typo for 'Filth'.
+
+**The Tyrant becomes an Empress (Orb, 2026-09-29).** The Galactic Tyrant is now a galactic empress (she/her). Everything else carries over (the revision joke, three goons, the bladed mantle, the surveyor line), and Narrative pitches how she's rewritten. Legal's revision 9 to 12 silhouette and palette rule still applies.
