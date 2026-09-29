@@ -131,6 +131,28 @@ Orb wants the director to "often" choose one building to take the brunt of a lau
   If QA sees the floor fail, the first lever is the tier-3 budget.
 - *Always:* chains count toward every collateral band and fall under World's ramp and caps.
 
+### 5c. Knockback slides (ground impacts)
+
+This is Orb's trope: a fighter who hits the ground skids to a stop in one trench, rather than bouncing. The design is World's (`docs/world/knockback-slide.md`). Game Design confirms the physics as World wrote it:
+- a slam (a crater) when at least 85% of the velocity is vertical, otherwise a slide;
+- braking of `v' = v - (1200 + 1.2 v) dt`, about 2.5 bh from 900 units per second and about 15 bh from 2,500;
+- a trench half-width of `14 + 6√E`, and a depth of at most 0.5 bh;
+- damage split as 30% at touch-down and 70% over the speed lost, with the total unchanged;
+- a 0.35 s recovery;
+- water skipping as before.
+
+Under Wounds, the fighter's slide damage is wear from an impact source (legs and core) and counts normally, because the rival caused the launch.
+
+| Measure | Band |
+| :--- | :--- |
+| Ground contacts that slide rather than slam | 60 to 85%. Slams stay at 15% or more, so craters still read (pillar 4) |
+| Slides per match, P2 testbed (default arm) | 6 to 12 (today's ground impacts run about 9 per match) |
+| Slides per minute, game scale | 2 to 4 |
+| Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
+| Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
+
+Slides are a collateral source, counted toward every §4 band and under World's ramp and caps, never exempt. Casualties are credited to the launcher by the standing rule.
+
 ## 6. Location and signature variety
 
 - **Fight time.** No biome holds more than **40%** of fight time in any 1v1 arm. Every biome holds at least half of its share of the planet or 3% of fight time, whichever is lower.
@@ -192,6 +214,13 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
   2. **Lower the menace damage cap** from +25% to +15% (`index.html:L322` equivalent in `sim/core/damage`).
 - **Testbed target:** KAI back to at least 42%, its level before the tempo pass. The 45 to 55% band applies to the real roster. The neutral-mirror stance probe is unaffected either way.
 - **If QA's re-test falls short**, add the hero's composure bonus: +10% damage while anguish is under 10. It rewards the hero for keeping the fight on empty land, which the new AI now does.
+
+**Result (S0, commit `a46cd90`).**
+- The two menace rules alone moved KAI only from 35.5% to 35.7%.
+- Adding the composure fallback (+10% damage while anguish is under 10) brought KAI to **40.8%** [37.4, 44.2] over 800 matches.
+- The lever is weak: +30% reaches only 43.9%.
+- The EP ruled to keep +10%, because the roster meters replace the placeholders. The testbed runs at about 41% for KAI until then.
+- The lesson for the roster: collateral-fed buffs outweigh small calm-state bonuses, so each fighter's meter needs comparable expected value from the start (see below).
 
 **What carries to the roster** (`economy.md` §4):
 - every ego meter decays or is spent;
@@ -258,7 +287,7 @@ Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questio
   - ESCAPE's cover-seeking weighs forest and ridge as well as water;
   - underwater is a hiding state, not a place to fight.
 
-**For World and Simulation, through the EP.** A launched fighter who hits water should skim and splash rather than stop dead (`L726`). Orb also asked for simple fluid behaviour. **For Camera:** a planet-scale read and the launch follow (Orb's greybox notes).
+**For World and Simulation, through the EP.** A launched fighter who hits water should skim and splash rather than stop dead (`L726`). Orb also asked for simple fluid behaviour. **Ground impacts** (Orb, after playing the craters build): these should mostly become a knockback slide, a braking skid that cuts one deep trench and throws up dust, rather than bounces. Water skipping stays. World is building it with the rescale. **For Camera:** a planet-scale read and the launch follow (Orb's greybox notes).
 
 ## 11. Living destruction
 
