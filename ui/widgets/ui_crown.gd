@@ -38,7 +38,7 @@ static func draw(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: flo
 	var reduced: bool = bool(o.get("reduced_motion", false))
 	_still = reduced
 	var th: float = maxf(R * UiLook.CROWN_THICK, 3.0) * float(o.get("thickness", 1.0))
-	var pop_a: float = 0.0 if bool(o.get("crown_locked", false)) else (1.0 if bool(o.get("crown_always", false)) else m.crown_a)
+	var pop_a: float = pop_alpha(m, o)
 	if m.brink and bool(o.get("brink_cue", true)) and pop_a < 0.98:
 		_brink_ring(ci, m, c, R, t, th, reduced, 1.0 - pop_a)
 	if pop_a > 0.02:
@@ -248,3 +248,15 @@ static func draw_marker(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float,
 	else:
 		var sc: Color = UiLook.stance_col(m.stance)
 		UiIcons.stance(ci, m.stance, p, size * 0.85, Color(sc, a))
+
+
+## How opaque this fighter's crown body is right now (0 to 1). Normally the transient pop's envelope. With the accessibility
+## option `crown_always` the crown is kept up at full opacity, and dims to CROWN_DIM_UNDER_FLASH while a head flash is up
+## on that fighter (Rendering reports it through UiHud.set_flash_up), so a flash is never lost and never fights the crown.
+## A transformation cinematic holds it at zero either way.
+static func pop_alpha(m: UiFighterModel, o: Dictionary) -> float:
+	if bool(o.get("crown_locked", false)):
+		return 0.0
+	if bool(o.get("crown_always", false)):
+		return UiLook.CROWN_DIM_UNDER_FLASH if m.flash_up else 1.0
+	return m.crown_a

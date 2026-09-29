@@ -565,6 +565,26 @@ func _layer_rules() -> void:
 		hud.advance(1.0 / 60.0)
 		await process_frame
 	_ok(hud._l_crown.sig == null, "parry window: and it clears when the window closes")
+	# The always-on crown (accessibility) must not remove the flash channel: crown_up stays false, and the crown dims under a flash.
+	hud.set_option("crown_always", true)
+	hud.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": 2})
+	hud.advance(0.05)
+	var ao: Dictionary = {"crown_always": true}
+	var mm0: UiFighterModel = hud.hub.model(0)
+	_ok(not hud.crown_up(0) and not hud.crown_up(1), "crown_always: crown_up is false for arbitration, even with a wear pop showing")
+	_ok(is_equal_approx(UiCrown.pop_alpha(mm0, ao), 1.0), "crown_always: the crown is at full opacity with no flash")
+	hud.set_flash_up(0, true)
+	_ok(is_equal_approx(UiCrown.pop_alpha(mm0, ao), UiLook.CROWN_DIM_UNDER_FLASH) and is_equal_approx(UiCrown.pop_alpha(hud.hub.model(1), ao), 1.0), "crown_always: it dims under a flash on that fighter only")
+	hud.set_flash_up(0, false)
+	_ok(is_equal_approx(UiCrown.pop_alpha(mm0, ao), 1.0), "crown_always: and comes back when the flash ends")
+	_ok(is_equal_approx(UiCrown.pop_alpha(mm0, {"crown_always": true, "crown_locked": true}), 0.0), "crown_always: a transformation cinematic still holds it down")
+	hud.set_option("crown_always", false)
+	# The info-flashes option, from the options data, on by default.
+	_ok(UiData.option_defaults().get("info_flashes") == true and hud.opts["info_flashes"] == true and hud.info_flashes(), "options: info_flashes is in the options data, on by default")
+	hud.set_option("info_flashes", false)
+	_ok(not hud.info_flashes(), "options: and can be turned off")
+	hud.set_option("info_flashes", true)
+	_ok(UiData.options().has("crown_always") and UiData.options().has("silhouette") and UiData.options()["crown_always"].get("accessibility", false), "options: the accessibility options are marked in the data")
 	hud.set_option("force_redraw", true)
 	var base3: int = hud.redraw_count()
 	for i in range(30):

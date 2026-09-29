@@ -122,3 +122,23 @@ static func profile(id: String) -> Dictionary:
 		out.merge(_profiles[key], true)
 	out["id"] = id
 	return out
+
+
+const OPTIONS_PATH := "res://ui/data/options.json"
+static var _options: Dictionary = {}
+
+
+## The option definitions (ui/data/options.json): key -> {default, group, label, help, accessibility, choices}.
+static func options() -> Dictionary:
+	if _options.is_empty():
+		_options = _read(OPTIONS_PATH).get("options", {})
+	return _options
+
+
+## The defaults of every option, key -> value.
+static func option_defaults() -> Dictionary:
+	var out := {}
+	var o: Dictionary = options()
+	for k in o:
+		out[k] = o[k].get("default")
+	return out

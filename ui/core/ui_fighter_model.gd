@@ -53,6 +53,7 @@ var chain_dur: float = 0.0
 var chain_n: int = 0
 var crown_a: float = 0.0           # the transient crown's opacity, 0..1: it pops on an event and fades back
 var crown_hold: float = 0.0        # seconds of full opacity still to go
+var flash_up: bool = false         # Rendering says a head flash is up on this fighter (the always-on crown dims under it)
 var cue: float = 99.0              # seconds since the last grunt cue (drives the voice-burst mark)
 var cue_intensity: int = 1
 var cinematic: String = ""         # "" or the kind of respected cinematic this fighter is in
@@ -89,6 +90,7 @@ func reset_wounds() -> void:
 	boil_flash = 0.0
 	crown_a = 0.0
 	crown_hold = 0.0
+	flash_up = false
 	revision = 0
 	patch_region = ""
 	chip_station = 0

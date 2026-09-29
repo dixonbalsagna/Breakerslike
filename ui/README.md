@@ -36,7 +36,7 @@ Exits 0 when the terms, the layout at ten sizes, the hub's rules, the mock scena
 | `core/ui_text.gd`, `ui_icons.gd`, `ui_body.gd`, `ui_bark_timing.gd` | Text with the arrow fix; vector icons; the body figure; bark reveal timing |
 | `core/ui_sim_bridge.gd` | Reads the live greybox sim into the HUD (read only) |
 | `widgets/` | Crown, silhouette, plate, cards, barks, centre (toll, banner), strip, feed: static draw functions |
-| `data/` | Player-facing terms (Narrative's glossary) and per-fighter readout profiles |
+| `data/` | Player-facing terms (Narrative's glossary), per-fighter readout profiles, and the player options with their defaults (`options.json`: `info_flashes`, `crown_always`, `silhouette`, ...) |
 | `mock/`, `demo/`, `tools/` | The mock feed, the demo scene, the checks |
 
 ## What a host does

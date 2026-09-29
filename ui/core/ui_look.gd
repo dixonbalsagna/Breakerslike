@@ -126,6 +126,7 @@ static func ego_col(name: String) -> Color:
 const CROWN_ATTACK := 0.10
 const CROWN_RELEASE := 0.50
 const CROWN_HOLD_STAGE := 0.60        # a region got worse
+const CROWN_DIM_UNDER_FLASH := 0.3    # crown_always: the crown's opacity while a head flash is up on that fighter
 const CROWN_HOLD_MAJOR := 0.90        # a break, the brink, a Rally, a boil-over, the facade crack
 ## The crown owns WEAR only (Art's flashes own emotion and sense): it pops for a stage change, the brink, a Rally, the facade
 ## crack and a boil-over; never for a plain hit, and it stays down during a transformation cinematic.

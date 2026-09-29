@@ -34,6 +34,7 @@ var opts: Dictionary = {
 	"show_crown": true,
 	"crown_always": false,     # accessibility: keep the crown up instead of popping it (low vision)
 	"brink_cue": true,         # the faint persistent ring on the brink; the one thing left over a fighter at rest
+	"info_flashes": true,      # Art's danger-sense, found and searching head flashes; Rendering's FlashView reads this (see ui/data/options.json)
 	"force_redraw": false,     # bench only: redraw every layer every frame, to measure what the caching saves
 }
 var insets := Vector4.ZERO     # left, top, right, bottom safe-area insets from the host (phone notches)
@@ -63,6 +64,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	resized.connect(func(): _relayout())
 	UiData.ensure()
+	opts.merge(UiData.option_defaults(), true)   # the options' defaults live in ui/data/options.json
 	_l_letter = _layer(_paint_letterbox)
 	_l_strip_base = _layer(_paint_strip_base)
 	_l_crown = _layer(_paint_crown)
@@ -294,7 +296,24 @@ func _paint_debug(ci: CanvasItem) -> void:
 		ci.draw_rect(layout.touch_reserve, Color(0.4, 0.6, 1.0, 0.12))
 
 
-## For Rendering's head-flash arbitration (Art: a flash and the crown are never up together): is this fighter's crown up,
-## popped or still fading? False while a transformation cinematic holds the crown down.
+## For Rendering's head-flash arbitration (Art: a flash and the crown are never up together): is this fighter's crown up
+## for arbitration, that is popped for wear or still fading? False at rest, false during a transformation cinematic, and
+## ALWAYS false with the `crown_always` accessibility option: that option must never remove the flash channel. Instead the
+## always-on crown dims under a flash: tell the HUD with set_flash_up.
 func crown_up(actor: int) -> bool:
-	return hub.crown_up(actor) or (bool(opts["crown_always"]) and not hub.crown_locked())
+	if bool(opts["crown_always"]):
+		return false
+	return hub.crown_up(actor)
+
+
+## Rendering reports whether a head flash is up on a fighter. It only matters with `crown_always` (the crown then dims to
+## 30% under the flash); in normal play the arbitration keeps a flash and a pop apart.
+func set_flash_up(actor: int, up: bool) -> void:
+	var m: UiFighterModel = hub.model(actor)
+	if m != null:
+		m.flash_up = up
+
+
+## Whether the player wants the info flashes (danger sense, found, searching). On by default; Rendering's FlashView reads it.
+func info_flashes() -> bool:
+	return bool(opts["info_flashes"])

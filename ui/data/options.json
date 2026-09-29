@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "note": "The player-facing HUD and display options with their defaults, as data, for the settings menu and for Rendering (its FlashView reads info_flashes). UiHud loads these defaults over its own. Keys match UiHud.opts. Accessibility options are marked; none of them removes an information channel.",
+  "options": {
+    "info_flashes": { "default": true, "group": "display", "label": "Info flashes", "help": "Short flashes on a fighter's head that tell you what it senses: danger, found, searching. Off hides only these; emotion flashes and the wear crown are separate." },
+    "silhouette": { "default": false, "group": "display", "label": "Body figure", "help": "A small body figure beside each nameplate that shows wear, always on. On in training and by the accessibility default.", "accessibility": true },
+    "crown_always": { "default": false, "group": "accessibility", "label": "Keep the wear crown up", "help": "The wear crown stays around both fighters instead of popping. Head flashes still show; the crown dims under one.", "accessibility": true },
+    "brink_cue": { "default": true, "group": "display", "label": "Brink ring", "help": "A thin faint ring around a fighter on the brink." },
+    "captions": { "default": true, "group": "accessibility", "label": "Captions", "help": "Bracketed sound tags such as [wince] on spoken lines.", "accessibility": true },
+    "reduced_motion": { "default": false, "group": "accessibility", "label": "Reduced motion", "help": "No flicker, shimmer or shrinking rings. Every cue keeps a shape.", "accessibility": true },
+    "thickness": { "default": 1.0, "group": "accessibility", "label": "Crown thickness", "help": "Arc thickness of the wear crown: 0.75, 1, 1.5.", "accessibility": true, "choices": [0.75, 1.0, 1.5] },
+    "region_label": { "default": false, "group": "display", "label": "Place names", "help": "The place under the camera on the planet strip." }
+  }
+}
