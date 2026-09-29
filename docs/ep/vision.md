@@ -207,3 +207,5 @@ Orb had played the Godot greybox before answering.
 Orb also referenced 'downstage' stage power: being nearer the camera reads as commanding.
 
 **Character style: Marked plus Aura (Orb, 2026-09-29).** Combine Marked (a mask with a bold sigil per fighter that bends with emotion and grows with form) and Aura: 'make sure the aura is there to exaggerate or convey appropriately.' Mask tone is per fighter (pale or dark). Orb wants mock-ups in the new style that follow the blocking rules (cheat out to camera).
+
+**Mask tones and transient aura (Orb, 2026-09-29).** Mask tones approved: Protagonist and Empress pale, Anti-hero and Cyborg dark. The aura, like the HUD graphics around the fighters, seems distracting as a constant presence. It should convey emotion briefly and then disappear. Orb is unsure about blades or column from screenshots alone and wants to judge it in motion.
