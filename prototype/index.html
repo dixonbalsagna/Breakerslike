@@ -182,7 +182,7 @@ const curH = b => b.alive ? b.h*(0.3 + 0.7*b.hp/b.maxhp) : 9;
 // ============================================================ state
 const STN = ['AGGRESSIVE','DEFENSIVE','EVASIVE','ESCAPE'], STS = ['ATK','DEF','EVA','ESC'];
 const ROSTER = [
-  {name:'KAI',  title:'Meridian Warden',    role:'hero',    col:'#3d8fdc', aura:'#8fd6ff', hair:'#ffd54a', care:1.0,  dmgMul:1.00, spd:1.00, maxhp:1600, sigName:'Meridian Lance'},
+  {name:'KAI',  title:'Meridian Warden',    role:'hero',    col:'#3d8fdc', aura:'#8fd6ff', hair:'#22c7a9', care:1.0,  dmgMul:1.00, spd:1.00, maxhp:1600, sigName:'Meridian Lance'},
   {name:'VORR', title:'Calamity Sovereign', role:'villain', col:'#a52a2a', aura:'#ff5a3c', hair:'#181818', care:-0.8, dmgMul:1.0, spd:0.95, maxhp:1600, sigName:'Calamity Wave'}
 ];
 const KEYS = {
@@ -214,6 +214,7 @@ function newMatch(seed){
   parts.length = 0; beams.length = 0; floats.length = 0; T = 0;
   game.ko = null; game.koT = 0; game.ts = 1; game.banner = null; game.clash = null;
   dirS.ex = null; dirS.cool = 0.6; dirS.stop = 0;
+  dirS.lastLaunch = ''; dirS.lastLaunch2 = '';   // launch-variety history must not carry over from the previous match
   cam.x = 2500; cam.y = 100; cam.z = 0.45;
   const fe = $('feed'); if (fe) fe.innerHTML = '';
   syncButtons();
