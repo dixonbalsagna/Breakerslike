@@ -20,6 +20,12 @@ Rules: `docs/art/ai-prompt-policy.md`. Record for `art/concepts/shared/marks.mjs
 
 > Apply Legal's conditions (docs/legal/q3-screen.md, "Marked plus Aura"): the Anti-hero's pride flash uses the round-tipped fallback; the Empress fan stays wide and low like a crest; single ring (no concentric rings, no centre dot); the slash never with the ring and never an X (the Coil's harness must not line up into an X with the slash); three chevrons of different sizes, offset, not in a car or oil brand's colours; the grid is not a glowing light-cycle-style line grid; the dome mask is a designed dome with no eye or mouth slots or dots and the sigil is never placed as eyes or a mouth; danger sense is directional (above or behind the head), never short lines radiating around the whole head, never wavy; no yellow or red-orange "!" with a thick black outline. Run the silhouette and three-flat-colour test on the four masks, side-by-side thumbnails of each sigil next to the logos and symbols Legal named, and a look at the flashes beside the two reference graphics, since Legal cannot view SVGs. Short reports per item.
 
+## Follow-up briefs (2026-09-29)
+
+> Legal has confirmed your applied conditions. Move the Protagonist's ring off the mid-forehead, up onto the crown seam or off-centre toward a temple, above the brow ridge, so it never sits where an eye would. Keep it a single ring with no dot. Cut the rays at the sigil in the rage and triumph states (at most three, all one way, never a full circle). Never arrange the Cyborg's four squares as a 2 by 2 block.
+>
+> Orb on the flash set: "pitch". Before settling on twelve, pitch 4 to 6 candidate additions and 2 or 3 candidate cuts or merges, each with its game moment and whether it is info or emotion. Orb picks. (Sheet `ma-6-flash-pitch.svg`.)
+
 ## Negative prompt
 
 No franchise names, no franchise images. The feel-reference series is not named in any committed file.

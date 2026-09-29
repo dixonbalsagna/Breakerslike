@@ -31,14 +31,14 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 
 | Fighter | Sigil | Where | Rules kept |
 |---|---|---|---|
-| Protagonist | A single ring, teal on the pale mask | The forehead, above the brow ridge, under the raised hairline | No inner ring, no centre dot, never with the slash. Hurt and brink open a gap in the ring (a "C"), never a line across it |
+| Protagonist | A single ring, teal on the pale mask | Off-centre at the temple, above the brow ridge, under the raised hairline. Never centred on the forehead | No inner ring, no centre dot, never with the slash. Hurt and brink open a gap in the ring (a "C"), never a line across it |
 | Anti-hero | A leaning slash and a small dot, lit orchid on the dark mask | Mid-face, a mark with no pair | Never with a ring, never crossed into an X. Hurt and brink split the slash with a gap. The chest has one diagonal sash, so nothing lines up into an X |
 | Empress | Three chevrons of different sizes, offset, in moss | The brow, under the gear band | An odd count, not a tidy double chevron, moss and bone (never a car or oil brand's colours). Hurt drops the middle one |
 | Cyborg | A stair of four lit squares of growing size | Mid-face on the display | Not a line grid, no cross bars, no plus. Hurt drops one step |
 
 No sigil sits as an eye or a mouth: none is one of a pair, and none has a line beneath it. `ma-5-legal-checks.svg` shows each next to the generic patterns to avoid (a slashed ring, a target, four linked rings, a double chevron, a line grid, a cross), and each mask in three flat colours and as a silhouette.
 
-**The Protagonist's dome** is a designed shape and not an egg: a faceted crown, a raised brow ridge, a jaw plane and a crown seam, with no eye or mouth slots or dots. The hair is a swept-back teal cap, never upswept, never gold, and its fringe sits high so the forehead ring shows.
+**The Protagonist's dome** is a designed shape and not an egg: a faceted crown, a raised brow ridge, a jaw plane and a crown seam, with no eye or mouth slots or dots. The hair is a swept-back teal cap, never upswept, never gold, and its fringe sits high so the temple ring shows.
 
 ## The flash vocabulary
 
@@ -120,11 +120,11 @@ Each flash pairs with one short sound, described in words on the sheet: a low dr
 
 | Legal's condition | What was done | Where to see it |
 |---|---|---|
-| Ring: single, no concentric rings, no centre dot | The Protagonist's sigil is one ring, no inner ring, no dot. Hurt is a gap in the ring | `ma-5` section 2 |
+| Ring: single, no concentric rings, no centre dot | The Protagonist's sigil is one ring, no inner ring, no dot, off-centre at the temple. Hurt is a gap in the ring | `ma-5` section 2 |
 | Slash: never with the ring, never an X | The Anti-hero's slash leans and stands alone. Hurt splits it with a gap. The Coil's chest has one sash, not two crossing straps, and the buckle has a diamond and no slash | `ma-5` sections 2 and 5, `coil-turnaround.svg` |
 | Chevrons: an odd count, different sizes or offset, not a car or oil colour | Three chevrons of three sizes, offset, in moss on bone | `ma-5` section 2 |
 | Grid: not a glowing line grid | A stair of four lit squares. No lines, no cross bars | `ma-5` section 2 |
-| Dome: a designed shape, no eye or mouth slots or dots, sigil not as eyes or mouth | A faceted dome with brow ridge, jaw plane and crown seam. The ring is a lone forehead mark | `ma-5` sections 1 and 4 |
+| Dome: a designed shape, no eye or mouth slots or dots, sigil not as eyes or mouth | A faceted dome with brow ridge, jaw plane and crown seam. The ring is a lone temple mark | `ma-5` sections 1 and 4 |
 | Anti-hero pride: the round-tipped fallback | Round tips are now the default for his pride, triumph, surge and danger sense | `ma-5` section 4, `ma-4` |
 | Empress fan: wide and low | A wide, low crest behind the head for pride, triumph, surge and resolve. Shorter than before. The Anti-hero's surge uses it too | `ma-5` section 4, `ma-4` |
 | Danger sense: directional, never radiating, never wavy | A pointer train of three growing shapes along one ray, above and behind the head | `ma-5` section 3 |
@@ -137,7 +137,7 @@ Each flash pairs with one short sound, described in words on the sheet: a low dr
 - **Staples yes, signatures no.** Exclamation marks, question marks, sweat drops and anger marks are general comics staples and are drawn in each fighter's own shapes with a keyline, not as a font glyph.
 - **Sound:** original only (see the sound pairing). No four-note alert sting, no chirp. Audio can veto a pairing that sounds close to a known cue.
 - **Glow rules:** no red, red-orange or gold flash for the Protagonist or the Anti-hero; no full-body glow as a power-stage signature for anyone (the surge is head and shoulder anchored and settles after the cinematic); the Protagonist's heat stays steam and veins.
-- **Flagged for Legal, not changed:** the rage and triumph states of each sigil draw a small burst of short rays at the sigil (not around the head). If Legal prefers, they go, and the rage and triumph flashes carry the beat alone.
+- **Legal's second pass (confirmed the above):** the Protagonist's ring moved off the mid-forehead to an off-centre temple mark above the brow ridge (a centred forehead ring recalls a known three-eyed fighter), and the short rays at the sigil in rage and triumph are cut. The sigil has no rays in any state. The Cyborg's four squares are a diagonal stair, never a 2 by 2 block.
 - **Legacy view:** the earlier pointed and tall shapes stay visible on `ma-4` and `ma-5` (marked "before") so Legal can compare.
 
 ## Staging (blocking rules)
@@ -155,6 +155,10 @@ Applied on `ma-3-staging.svg`, with each flash at its peak:
 3. **The glyphs need scale.** The first pass at the size of the aura was too small to read; the "!" and "?" are drawn at about 1.7 times the emotion flashes' size.
 4. **The crown and the flash can share a fighter only in turns.** The arbitration rule makes that explicit.
 
+## The flash-set pitch
+
+Orb asked for a pitch before the set settles on twelve: `ma-6-flash-pitch.svg`. Six candidate additions (Winded, Smug, Respect, Bored, Hazard, Primed), three cuts or merges (Brink, Resolve, Pride into Triumph), each with its game moment, whether it is info or emotion, and the event it needs. My recommendation: twelve, plus Hazard, Primed and Respect, minus Brink and Resolve (the HUD crown already owns both), so thirteen flashes with five info flashes (Danger sense, Hazard, Primed, Found, Searching). Lock-on acquired is a merge into Found. Info flashes are a setting, on by default. The candidates are drawn in the four shape families but are not in `data/art/flashes.json` until Orb picks.
+
 ## Questions for Orb (through the EP, two at most)
 
 1. **Is twelve the right set?** Is any flash missing that you would want, or any you would cut?
@@ -162,4 +166,4 @@ Applied on `ma-3-staging.svg`, with each flash at its peak:
 
 ## Files
 
-`art/concepts/marked-aura/`: `ma-1-style.svg`, `ma-2-flashes.svg`, `ma-3-staging.svg`, `ma-4-flash-rules.svg`, `ma-5-legal-checks.svg`, `gen.mjs`, `README.md`. Shared code: `art/concepts/shared/marks.mjs`. The data is `data/art/flashes.json`. The in-engine prototype spec is `docs/art/flash-prototype-spec.md`. The prompt records are `art/prompts/ART-0005-marked-aura.md` and `art/prompts/ART-0007-legal-conditions.md`.
+`art/concepts/marked-aura/`: `ma-1-style.svg`, `ma-2-flashes.svg`, `ma-3-staging.svg`, `ma-4-flash-rules.svg`, `ma-5-legal-checks.svg`, `ma-6-flash-pitch.svg`, `gen.mjs`, `README.md`. Shared code: `art/concepts/shared/marks.mjs`. The data is `data/art/flashes.json`. The in-engine prototype spec is `docs/art/flash-prototype-spec.md`. The prompt records are `art/prompts/ART-0005-marked-aura.md` and `art/prompts/ART-0007-legal-conditions.md`.

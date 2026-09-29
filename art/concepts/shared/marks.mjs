@@ -1,7 +1,9 @@
 // Origin: shared geometry, palettes, mask tones and sigils for the Marked plus flashes style (deterministic, no randomness).
 // Written by the Art Director session (Claude, claude-sonnet-5-5), 2026-09-29. Human direction: Orb, via the EP.
 // Legal's conditions (docs/legal/q3-screen.md, "Marked plus Aura") are applied here:
-//   ring: a single ring, no concentric rings, no centre dot, never with the slash;
+//   ring: a single ring, no concentric rings, no centre dot, never with the slash, never centred on the forehead (it sits off-centre at the temple, above the brow ridge);
+//   no rays around any sigil in any state (Legal, second pass);
+//   the Cyborg's four squares are a diagonal stair, never a 2 by 2 block;
 //   slash: never crossed into an X, and never with the ring (hurt shows a break, not a crossing line);
 //   chevrons: three, of different sizes and offset, in moss green (not a car or oil brand's colours);
 //   grid: not a line grid: lit stepped squares, no plus or cross;
@@ -50,14 +52,14 @@ export const circ = (c, r, n = 14) => Array.from({ length: n }, (_, i) => { cons
 export const FACE = { P: { x0: 1.2, x1: 6.2, ey: 10, my: 5.2 }, A: { x0: 1.4, x1: 6.4, ey: 9.8, my: 5 }, E: { x0: 0.8, x1: 4.4, ey: 12.6, my: 7 }, C: { x0: 1.6, x1: 6.2, ey: 10.2, my: 4.8 } };
 // where each sigil sits on the mask, in head-local units: the forehead for the dome and the Empress, the middle of the face for the wedge and the display
 const EXP = { P: 1.1, A: 1.6, E: 1.15, C: 1.0 };   // horizontal stretch of a sigil at three-quarter, so it stays on the mask and stays legible
-export const SIGPOS = { P: [3.9, 13.5], A: [4.1, 9.2], E: [2.6, 10.2], C: [2.4, 9.8] };
+export const SIGPOS = { P: [-2.1, 12.2], A: [4.1, 9.2], E: [2.6, 10.2], C: [2.4, 9.8] };
 export const yawMap = (fk, yaw) => { const f = FACE[fk], xm = (f.x0 + f.x1) / 2, a = yaw * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), m = s; return ([u, y]) => [(1 - m) * u + m * (c * 5.4 + s * 1.5 * (u - xm)), y]; };
 
 // ---------------------------------------------------------------------------------------------------------- the sigils
 // gap is true in hurt and brink: the sigil shows a break (a gap in the ring, a split slash, a missing chevron or step), never a line across it.
 function sigilParts(fk, gap) {
   if (fk === 'P') {
-    if (!gap) return [{ pts: circ([0, 0], 2.3, 20), fill: 'acc' }, { pts: circ([0, 0], 1.45, 18), fill: 'mask' }];
+    if (!gap) return [{ pts: circ([0, 0], 1.9, 20), fill: 'acc' }, { pts: circ([0, 0], 1.15, 18), fill: 'mask' }];
     const arc = []; for (let a = 40; a <= 325; a += 15) arc.push([Math.cos(a * Math.PI / 180) * 2.6, Math.sin(a * Math.PI / 180) * 2.6]);
     return [{ pts: band(arc, 1.2), fill: 'acc' }];
   }
@@ -92,8 +94,6 @@ export function sigilMarks(fk, pal, state, mask, yaw = 0) {
   const parts = sigilParts(fk, state === 'hurt' || state === 'brink');
   if (dark || glow) for (const part of parts) if (part.fill === 'acc') out.push({ poly: scl(place(part.pts), 1.5, cc), fill: pal.accent.light, op: dark ? 0.26 : 0.34, line: false });
   for (const part of parts) out.push({ poly: place(part.pts), fill: part.fill === 'mask' ? mask.fill : col, line: false });
-  if (state === 'rage' || state === 'transform') for (let i = 0; i < 6; i++) out.push({ poly: rot([[cc[0] + 4.6, cc[1] - 0.5], [cc[0] + 7, cc[1]], [cc[0] + 4.6, cc[1] + 0.5]], -70 + i * 28, cc), fill: col, line: false });
-  if (state === 'triumph') for (let i = 0; i < 7; i++) out.push({ poly: band([[cc[0] + 4.8, cc[1]], [cc[0] + 6.6, cc[1]]].map(p => rot([p], -80 + i * 26, cc)[0]), 0.5), fill: pal.accent.light, line: false });
   if (yaw > 0) { const m = yawMap(fk, yaw), ex = ([x, y]) => [cc[0] + (x - cc[0]) * (yaw >= 60 ? 0.7 : EXP[fk]), y]; return out.map(q => ({ ...q, poly: q.poly.map(ex).map(m) })); }
   return out;
 }

@@ -59,6 +59,18 @@ export const FLASHES = {
   surge: { name: 'Surge', cls: 'emotion', kind: 'layout', t: [0.25, 3.0, 1.2], pri: 1, cool: 0, layout: LAY.surge, moment: 'A transformation: held for the respected cinematic (up to 3 s), then it fades in 1.2 s. The one flash that lasts.', sound: 'A rising swell that resolves on the new form\'s chord.', event: 'cinematic_start and cinematic_end', rare: true },
 };
 export const FLASH_ORDER = ['danger', 'found', 'searching', 'brink', 'fear', 'rage', 'hurt', 'resolve', 'triumph', 'pride', 'taunt', 'surge'];
+
+// PITCH candidates (not in the canonical set or in flashes.json until Orb picks). Drawn with the same shape families and rules.
+const CAND_ORDER = ['winded', 'smug', 'respect', 'bored', 'hazard', 'primed'];
+const CAND = {
+  winded: { name: 'Winded', cls: 'emotion', kind: 'layout', t: [0.15, 0.5, 0.4], cool: 6, layout: [{ a: 238, d: 14, s: 10, op: 0.42 }, { a: 258, d: 22, s: 8, op: 0.38 }, { a: 214, d: 22, s: 7, op: 0.34 }] },
+  smug: { name: 'Smug', cls: 'emotion', kind: 'layout', t: [0.15, 0.4, 0.3], cool: 5, layout: [{ a: 16, d: 12, s: 36, op: 0.45 }, { a: 38, d: 12, s: 20, op: 0.4 }] },
+  respect: { name: 'Respect', cls: 'emotion', kind: 'layout', t: [0.2, 0.45, 0.35], cool: 6, layout: [{ a: 166, d: 12, s: 30, op: 0.45 }, { a: 14, d: 12, s: 30, op: 0.45 }, { a: 90, d: 10, s: 12, op: 0.4 }] },
+  bored: { name: 'Bored', cls: 'emotion', kind: 'layout', t: [0.3, 0.4, 0.3], cool: 8, layout: [{ a: 90, d: 16, s: 18, op: 0.3 }, { a: 100, d: 30, s: 12, op: 0.26 }] },
+  hazard: { name: 'Hazard', cls: 'info', kind: 'glyph', glyph: 'bang2', t: [0.05, 0.35, 0.2], cool: 1.0 },
+  primed: { name: 'Primed', cls: 'info', kind: 'layout', t: [0.06, 0.3, 0.2], cool: 3, layout: [{ a: 36, d: 12, s: 14, op: 0.95 }, { a: 36, d: 30, s: 20, op: 0.95 }, { a: 36, d: 52, s: 28, op: 0.95 }] },
+};
+Object.assign(FLASHES, CAND);
 const totalT = f => f.t[0] + f.t[1] + f.t[2];
 // The envelope: an eased attack, a hold, and an eased fade. 0 at rest, 1 at the peak.
 const env = (f, t) => { const [a, h, d] = f.t; if (t <= 0) return 0; if (t < a) return 1 - (1 - t / a) ** 2; if (t < a + h) return 1; if (t < a + h + d) return 1 - ((t - a - h) / d) ** 2; return 0; };
@@ -133,6 +145,7 @@ function glyphPolys(fk, kind, cx, cy, u, k, round) {
 }
 function flashPolys(fk, id, hc, u, { k = 1, round = false, ground = 0 } = {}) {
   const f = FLASHES[id]; if (!f || k <= 0) return [];
+  if (f.kind === 'glyph' && f.glyph === 'bang2') return [...glyphPolys(fk, 'bang', hc[0] - 5.5 * u, hc[1] + 7 * u, u, k, round), ...glyphPolys(fk, 'bang', hc[0] + 9 * u, hc[1] + 7 * u, u, k, round)];
   if (f.kind === 'glyph') return glyphPolys(fk, f.glyph, hc[0] + 2 * u, hc[1] + 7 * u, u, k, round);
   return layoutPolys(fk, f, hc, u, k, round, ground);
 }
@@ -157,7 +170,7 @@ function styled(fk) {
   // The Protagonist's hair sits back off the forehead so the dome and its ring show (the fringe line moves up about 2 units).
   if (fk === 'P') c.hair = (ctx, sk) => {
     const H = a => a.map(([x, y]) => sk.Hd(x, y));
-    return ctx.poly(H([[5.8, 16.2], [4.4, 18.3], [0.6, 19.8], [-4.4, 18.4], [-8.4, 14.8], [-12.4, 11.6], [-14, 8.4], [-12, 6.4], [-8.4, 8.2], [-5.8, 6.8], [-5.8, 11.4], [-3.4, 15], [1, 16.4]]), ctx.pal.hair.mid);
+    return ctx.poly(H([[5.8, 16.2], [4.4, 18.3], [0.6, 19.8], [-4.4, 18.4], [-8.4, 14.8], [-12.4, 11.6], [-14, 8.4], [-12, 6.4], [-8.4, 8.2], [-5.8, 6.8], [-5.8, 12.6], [-3.4, 15.6], [1, 16.4]]), ctx.pal.hair.mid);
   };
   const prevBack = base.back;
   c.back = (ctx, sk, st, cfg) => {
@@ -205,6 +218,12 @@ function poseFor(fk, s) {
   if (s === 'rage') return { ...POSES.dropped };
   if (s === 'clash') return { lean: 22, head: 6, nearArm: [84, 90], farArm: [-40, -90], nearLeg: [42, 14], farLeg: [-36, -12], handNear: 'fist', handFar: 'fist' };
   if (s === 'surge') return { lean: -6, head: -20, nearArm: [98, 122], farArm: [-98, -122], nearLeg: [20, 6], farLeg: [-20, -6], handNear: 'open', handFar: 'open' };
+  if (s === 'winded') return { ...b, lean: b.lean + 16, head: b.head + 10, nearArm: [30, 50], farArm: [-20, -40], handNear: 'open' };
+  if (s === 'smug') return { ...b, lean: b.lean - 6, head: b.head - 10, nearArm: [20, 130], farArm: [-10, -60], handNear: 'fist' };
+  if (s === 'respect') return { ...b, lean: b.lean + 14, head: b.head + 8, nearArm: [10, 20], farArm: [-6, -12], handNear: 'fist' };
+  if (s === 'bored') return { ...b, lean: b.lean - 2, head: b.head + 4, nearArm: [16, 30], farArm: [-6, -8], handNear: 'open' };
+  if (s === 'hazard') return { ...b, lean: b.lean + 2, head: b.head - 8, nearArm: [50, 118], farArm: [-6, -70], handNear: 'open', handFar: 'fist' };
+  if (s === 'primed') return { ...b, lean: b.lean + 10, head: b.head - 6, nearArm: [60, 110], farArm: [-24, -60], handNear: 'fist' };
   if (s === 'danger') return { ...b, lean: b.lean + 4, head: b.head - 6, nearArm: [50, 118], farArm: [-6, -70], handNear: 'open', handFar: 'fist' };
   if (s === 'found') return { ...b, lean: b.lean - 4, head: b.head - 12, nearArm: [84, 88], handNear: 'open' };
   if (s === 'searching') return { ...b, lean: b.lean - 2, head: b.head + 6, nearArm: [40, 142], farArm: [-8, -30], handNear: 'open' };
@@ -523,7 +542,7 @@ function legalSheet() {
     b += text(24 + 6 * 245 + 6, y + 48 + r * 236, NAMES[fk], { size: 14, weight: 700 });
   });
   const xr = 24 + 6 * 245 + 6;
-  b += paras(xr, y + 48 + 22, 'Protagonist: the pale dome with a brow ridge, a jaw plane and a crown seam is a designed shape. At three flat colours the ring still reads as a single ring on the forehead; the silhouette is a faceted dome with a fringe of hair, not an egg.', 44, 11.5, 15);
+  b += paras(xr, y + 48 + 22, 'Protagonist: the pale dome with a brow ridge, a jaw plane and a crown seam is a designed shape. At three flat colours the ring still reads as a single ring at the temple, off-centre; the silhouette is a faceted dome with a fringe of hair, not an egg.', 44, 11.5, 15);
   b += paras(xr, y + 48 + 22 + 236, 'Anti-hero: the lit slash leans, so it reads as a slash in three colours. Silhouette: a wedge head with the tail.', 44, 11.5, 15);
   b += paras(xr, y + 48 + 22 + 472, 'Empress: three offset chevrons on the brow, in moss on bone. In three flat colours the pale mask and moss chevrons hold. Silhouette: the topknot and the taller head.', 44, 11.5, 15);
   b += paras(xr, y + 48 + 22 + 708, 'Cyborg: a stair of lit squares on a dark display face, no line grid. Silhouette: a box head.', 44, 11.5, 15);
@@ -551,7 +570,7 @@ function legalSheet() {
     b += text(24 + 2, y0 + 174, NAMES[fk] + ': ' + { P: 'a single ring, no dot, no inner ring', A: 'a leaning slash and a dot', E: 'three chevrons, three sizes, offset', C: 'a stair of lit squares' }[fk], { size: 10.5, weight: 600, op: 0.85 });
   });
   y += 28 + 4 * 196 + 10;
-  b += paras(24, y, 'Rules checked: the ring is single, has no dot and no inner ring, and never sits with the slash on any fighter; the slash never crosses another stroke, and in hurt it splits with a gap instead of a crack drawn across it; the chevrons are three, of different sizes and offset, in moss (never a car or oil brand\'s colours); the grid is a stair of lit squares, with no lines and no cross bars. No sigil is placed as an eye or a mouth: the ring sits on the forehead, the chevrons on the brow, and the slash and the steps are mid-face marks with no pair and no line beneath them. The Coil\'s chest carries one diagonal sash, not two crossing straps, so nothing on the chest lines up into an X with the face slash.', 230, 12, 16);
+  b += paras(24, y, 'Rules checked: the ring is single, has no dot and no inner ring, and never sits with the slash on any fighter; the slash never crosses another stroke, and in hurt it splits with a gap instead of a crack drawn across it; the chevrons are three, of different sizes and offset, in moss (never a car or oil brand\'s colours); the grid is a stair of lit squares, with no lines and no cross bars. No sigil is placed as an eye or a mouth: the ring sits off-centre at the temple above the brow ridge, the chevrons on the brow, and the slash and the steps are mid-face marks with no pair and no line beneath them. The Coil\'s chest carries one diagonal sash, not two crossing straps, so nothing on the chest lines up into an X with the face slash.', 230, 12, 16);
 
   // 3. flashes beside the two reference patterns
   y += 96;
@@ -565,7 +584,7 @@ function legalSheet() {
   ORDER.forEach((fk, i) => { b += fig(fk, 150, 990 + i * 200, y + 322, { state: 'found' }); });
   b += `<g>${rect(1626, y + 40, 140, 150, '#f6f4fa', 'stroke="#1b1428" stroke-opacity="0.2"')}${avoid('bang', 1696, y + 115, 60)}${text(1630, y + 206, 'avoid: ' + AVOID_NAME.bang, { size: 10, op: 0.75 })}</g>`;
   y += 346;
-  b += paras(24, y, 'Danger sense is three shapes of growing size along one ray, up and behind the head, and its ray is turned to the threat\'s bearing at run time (kept above or behind, never around the head). It is not a ring of short lines and not wavy. Info flashes ("!", "?", danger) are a pale core inside a thin keyline in the lane\'s dark step; the Cyborg\'s are neutral steel, so no yellow and no red-orange, and no thick black outline appears anywhere in the set. The sigil states rage and triumph keep a small burst of short rays at the sigil only (not around the head); Legal can ask for them to go.', 230, 12, 16);
+  b += paras(24, y, 'Danger sense is three shapes of growing size along one ray, up and behind the head, and its ray is turned to the threat\'s bearing at run time (kept above or behind, never around the head). It is not a ring of short lines and not wavy. Info flashes ("!", "?", danger) are a pale core inside a thin keyline in the lane\'s dark step; the Cyborg\'s are neutral steel, so no yellow and no red-orange, and no thick black outline appears anywhere in the set. The sigil has no rays in any state.', 230, 12, 16);
 
   // 4. dome, fan and round tips
   y += 84;
@@ -588,13 +607,81 @@ function legalSheet() {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Math.max(H, y + 320)}" viewBox="0 0 ${W} ${Math.max(H, y + 320)}">${DEFS}${b.replace(`<rect x="0.00" y="0.00" width="${W}.00" height="${H}.00"`, `<rect x="0.00" y="0.00" width="${W}.00" height="${Math.max(H, y + 320)}.00"`)}</svg>`;
 }
 
+// ---------------------------------------------------------------------------------------------------------- sheet 6: the pitch (Orb picks)
+const PITCH = {
+  winded: { moment: 'Ki is nearly gone, or a long chase or a heavy guard has drained the fighter. Hands on the knees.', event: 'ki below 15 percent (exists today)', why: 'Cheap. It is the "I am spent" beat that makes a comeback or a hide-and-recover read. The ki bar already says it, so this is colour more than fact.', sound: 'A ragged breath.' },
+  smug: { moment: 'A clean parry, a dodge-and-counter or a slipped pursuit: the fighter knows it just outplayed the other.', event: 'exchange outcome (exists today)', why: 'Sits between Pride (a decisive win) and Taunt (deliberate). It is the involuntary beat, so a quick read of who is winning the mind game.', sound: 'A short exhale through the nose.' },
+  respect: { moment: 'A clash ends in a draw, a finisher is blocked, or a rival takes a hit and gets back up: the fighter acknowledges the other.', event: 'clash draw, finisher blocked, rally of the rival (partly exists)', why: 'The only kind flash. It gives the rivalry a second colour next to rage and pride, and suits the Protagonist and the Empress. Costs one slot.', sound: 'A low, short two-note nod.' },
+  bored: { moment: 'A long lull: a stalled hide-and-seek, or waiting on a rival who is charging or hiding.', event: 'idle for more than 6 s (new, Encounter)', why: 'Comedy and character in dead time. At most once every 8 s, under a second. The weakest for gameplay, so a nice-to-have.', sound: 'A dry, flat sigh.' },
+  hazard: { moment: 'The world is about to hit the fighter: a falling building, a collapsing crater rim, a beam path, water rising. Not a fighter attack (that is danger sense).', event: 'hazard telegraph (new, World and Encounter)', why: 'Power has weight and the planet is the arena, so the environment attacking you needs its own word. A double "!" says "the ground, not the rival". Info, solid.', sound: 'Two quick low ticks.' },
+  primed: { moment: 'Leaving cover with the ambush window open (x1.5 damage for 2.5 s): the fighter knows it can strike hard now.', event: 'ambush_ready (new, exists in the prototype rules)', why: 'The hide-and-ambush pillar has a game rule with no signal. A pointer train pointing forward (danger sense points back) tells the player "hit now". It also tells the rival to expect it. Info, solid.', sound: 'A soft rising click.' },
+};
+function pitchSheet() {
+  const W = 1800;
+  let b = rect(0, 0, W, 4000, '#dcd8e6') + rect(0, 0, W, 104, '#1b1428');
+  b += text(30, 48, 'The flash set: a pitch for Orb', { size: 34, weight: 700, fill: '#f4f0fa' });
+  b += text(30, 80, 'Before we settle on twelve. Six candidate additions and three cuts or merges, each with its game moment and whether it is information or emotion. Orb picks. Info flashes are a setting, on by default.', { size: 15, fill: '#cfc6e6' });
+  let y = 136;
+  b += text(24, y, 'A. Six candidate additions, in the four shape families (each at its peak)', { size: 18, weight: 700 });
+  const cw = 290;
+  CAND_ORDER.forEach((id, j) => {
+    const f = FLASHES[id], x0 = 24 + j * cw;
+    b += text(x0 + 4, y + 26, f.name, { size: 15, weight: 700 }) + text(x0 + 4, y + 42, `${f.cls === 'info' ? 'info: solid, keylined' : 'emotion: soft'}  ${fmtT(f)}`, { size: 10.5, op: 0.75 });
+    ORDER.forEach((fk, r) => {
+      const y0 = y + 50 + r * 196;
+      b += rect(x0, y0, cw - 6, 190, f.cls === 'info' ? '#e3eef5' : '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.15"');
+      b += fig(fk, 110, x0 + (fk === 'E' ? 170 : 140), y0 + 184, { state: id });
+      if (j === 0) b += text(x0 + 6, y0 + 16, NAMES[fk], { size: 10.5, weight: 700, op: 0.7 });
+    });
+  });
+  y += 50 + 4 * 196 + 24;
+  b += text(24, y, 'What each is for', { size: 16, weight: 700 });
+  y += 22;
+  CAND_ORDER.forEach(id => {
+    const f = FLASHES[id], p = PITCH[id], lines = wrap(`${p.moment}  Event: ${p.event}.  ${p.why}  Sound: ${p.sound}`, 205), n = lines.length;
+    b += `<line x1="24" y1="${y}" x2="1776" y2="${y}" stroke="#1b1428" stroke-opacity="0.15"/>`;
+    b += text(24, y + 16, f.name, { size: 13, weight: 700 }) + text(24, y + 32, f.cls === 'info' ? 'info' : 'emotion', { size: 11, op: 0.75 });
+    lines.forEach((l, i) => { b += text(150, y + 16 + i * 15, l, { size: 12 }); });
+    y += Math.max(44, 14 + n * 15) + 4;
+  });
+  // cuts and merges
+  y += 24;
+  b += text(24, y, 'B. Three candidate cuts or merges', { size: 18, weight: 700 });
+  y += 14;
+  const cuts = [
+    { title: 'Cut Brink (the crown already owns it)', body: 'UI\'s HUD crown draws a dashed brink ring and owns wear events. A brink flash doubles it, and the arbitration rule would drop it whenever the crown is up. What we lose: a small dip in the fighter\'s own face. The Hurt flash and the dim, gapped sigil still carry the beat. Info or emotion: emotion. Frees a slot.', draws: [['P', 'brink'], ['P', 'hurt']], crown: true },
+    { title: 'Cut Resolve (the crown owns the Rally)', body: 'A Rally or Second Wind already pops the crown, and the flash would wait for it and then be dropped. What we lose: the fighter\'s own beat of gathering itself, which Pride and the sigil lighting up can carry. Info or emotion: emotion. Frees a slot.', draws: [['P', 'resolve'], ['P', 'pride']], crown: false },
+    { title: 'Merge Pride into Triumph (one "I won" beat)', body: 'Pride (a decisive exchange won) and Triumph (a finisher lands or a KO) are both winning beats that differ only in size. Merging keeps Triumph and adds a small version for the exchange. What we lose: the Anti-hero\'s standing-tall look and the Empress\'s crest before a KO. Info or emotion: emotion. Frees a slot but loses a character beat, so this is the one I would keep if a slot is not needed.', draws: [['A', 'pride'], ['A', 'triumph']], crown: false },
+  ];
+  cuts.forEach((c, j) => {
+    const x0 = 24 + j * 592;
+    b += rect(x0, y, 580, 290, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.15"');
+    c.draws.forEach(([fk, id], i) => { b += fig(fk, 100, x0 + 100 + i * 200, y + 172, { state: id }); });
+    if (c.crown) b += hudCrown(x0 + 100, y + 172 - 56, 56, true);
+    b += text(x0 + 6, y + 18, c.title, { size: 12.5, weight: 700 });
+    b += paras(x0 + 6, y + 196, c.body, 118, 10.5, 13.5, { op: 0.85 });
+  });
+  y += 316;
+  // recommendation
+  b += text(24, y, 'C. What I recommend', { size: 18, weight: 700 });
+  y += 24;
+  b += paras(24, y, 'Twelve, plus Hazard, Primed and Respect, minus Brink and Resolve: thirteen flashes, five of them info. The two cuts are the two the HUD crown already owns, so no moment loses its signal. Hazard and Primed give the planet-as-arena and the hide-and-ambush pillars a word each, and both are information a player can use. Respect gives the rivalry a second colour. Winded, Smug and Bored are cheap and can join later without touching the rest, so I would hold them until the twelve are proven in the prototype.', 230, 13, 18);
+  y += 90;
+  b += paras(24, y, 'Lock-on acquired is not a separate flash: Found already covers a lock regained. The info set is Danger sense, Hazard, Primed, Found and Searching, and they are one setting ("info flashes"), on by default, so a player can turn all of them off together. Each new flash gets a row in data/art/flashes.json, a sound word for Audio and an event name for Encounter and Game Design; none of them changes the arbitration rules.', 230, 13, 18);
+  y += 90;
+  b += text(24, y, 'The question for Orb: which of these do you want? A yes or no per flash is enough.', { size: 14, weight: 700 });
+  const H = y + 40;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}${b.replace('<rect x="0.00" y="0.00" width="1800.00" height="4000.00"', `<rect x="0.00" y="0.00" width="1800.00" height="${H}.00"`)}</svg>`;
+}
+
 const ORIGIN = '<!-- Origin: procedural concept sheet written by art/concepts/marked-aura/gen.mjs (deterministic, no external images or fonts; the staging sheet embeds the repo\'s own renders in docs/rendering/img by reference), Art Director session (Claude, claude-sonnet-5-5), 2026-09-29; prompt record art/prompts/ART-0005-marked-aura.md -->' + String.fromCharCode(10);
 writeFileSync(join(OUT, 'ma-1-style.svg'), ORIGIN + styleSheet());
 writeFileSync(join(OUT, 'ma-2-flashes.svg'), ORIGIN + vocabSheet());
 writeFileSync(join(OUT, 'ma-3-staging.svg'), ORIGIN + stagingSheet());
 writeFileSync(join(OUT, 'ma-4-flash-rules.svg'), ORIGIN + rulesSheet());
 writeFileSync(join(OUT, 'ma-5-legal-checks.svg'), ORIGIN + legalSheet());
+writeFileSync(join(OUT, 'ma-6-flash-pitch.svg'), ORIGIN + pitchSheet());
 // The flash data, for Rendering, UI and Audio: ids, class, timing, priority, cooldown, shape family and the layouts.
 const json = { version: 1, note: 'Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.', families: { P: 'circles', A: 'blades', E: 'wedges', C: 'steps' }, legal_rules: { round_tip: { A: [...A_ROUND] }, low_crest: { E: [...E_CREST], A: ['surge'], note: 'Wide and low behind the head: angle a becomes atan2(sin(a) * 0.4, cos(a)) + 42 degrees, size x 0.7, distance + 4. Ground shards are unchanged.' }, danger_ray: { default_angle: 132, clamp: [60, 200], note: 'Rotate the whole pointer train to the threat bearing at run time (facing frame, 0 forward, 90 up). Always above or behind the head, never around it.' }, info_colours: INFO, info_keyline: 'The core fills 84 percent of the rim. Emotion flashes keep a rim and a 58 percent core.' }, flashes: Object.fromEntries(FLASH_ORDER.map(id => { const f = FLASHES[id]; return [id, { name: f.name, class: f.cls, attack: f.t[0], hold: f.t[1], fade: f.t[2], priority: f.pri, cooldown: f.cool, kind: f.kind, glyph: f.glyph ?? null, layout: f.layout ?? null, moment: f.moment, event: f.event, sound: f.sound, rare: !!f.rare }]; })) };
 writeFileSync(join(OUT, '..', '..', '..', 'data', 'art', 'flashes.json'), JSON.stringify(json, null, 2) + String.fromCharCode(10));
-console.log('wrote ma-1 to ma-5 sheets and data/art/flashes.json');
+console.log('wrote ma-1 to ma-6 sheets and data/art/flashes.json');
