@@ -117,6 +117,13 @@ At the ceiling, the rest are sheltered and survive. This is the P3 exit criterio
 
 **Testbed bands.** Short testbed matches (about 108 s today) will fall below the testbed mean band (25 to 50%) once the ramp lands. At that point the testbed's mean-at-KO band retires, and the per-minute ramp and ceiling tests replace it. The share of matches losing 90% or more, and the worst-pairing band, stay.
 
+**The Cyborg and evacuation** (World's `docs/world/collateral-caps.md`: evacuees never return).
+- *Press is exempt from the rolling budget* and never triggers district evacuation. It is his own mechanic, and its rate is already limited by a slow, interruptible beat.
+- *Press still counts* toward the cumulative ceiling and every §4 band, as casualties.
+- *Only people still present can be Pressed:* those in buildings and streets. Evacuees in flight are safe.
+- *The floor is redefined:* at least 25% of the starting population still **present** (alive and not evacuated) at 4:00, in at least 80% of matches with the Cyborg.
+- *His thresholds are population shares that fit under the ceilings* (spec-wounds §3).
+
 **3. Per-casualty weights are normalised by population.**
 - *Why.* Procedural planets have different populations (379 on seed 1 now, 425 before), so meters must read the *share* lost, not the headcount.
 - *The rule.* Each per-casualty gain is multiplied by `425 / pop0`:

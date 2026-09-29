@@ -212,6 +212,15 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
       - she wins 45 to 60% of matches in which the Encore completed, so the comeback is not a lock;
       - the act 1 goon phase still fills 1:00 to 2:00.
 - **Press (the Cyborg's food).** His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
+  - *Collateral rules* (`balance-targets.md` §4b):
+    - Press is exempt from the rolling casualty budget and never triggers evacuation.
+    - It counts toward the ceiling and every collateral band.
+    - Only people still present can be Pressed; evacuees are safe.
+  - *Hunger thresholds, as shares of the starting population* (normalised, so every planet is equivalent):
+    - first molt after 4% consumed;
+    - second molt after a further 4% (sandwiches from Press).
+    Both fit under the tier-1 and tier-2 ceilings (10% and 30%).
+  - *Check against his matchups.* The present-population floor at 4:00 (at least 25%) is his guarantee. If QA sees it fail against collateral-heavy opponents, the first lever is a shorter evacuation radius (World's `EVAC_R`). The thresholds are the second.
 
 ## 4. What the sim needs (Simulation, Tools)
 
