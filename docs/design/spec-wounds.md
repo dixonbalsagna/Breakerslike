@@ -92,6 +92,13 @@ Orb removed hiding from the base game and kept it for a future stealth-specialis
 | Empress | **Encore** (Orb's pick) | Her three fallen guard return once, fresh, for a short, harder brawl (§3). She withdraws out of reach while a 15 s mend gauge fills, which it does only while a guard member stands. If the opponent beats all three first, there is no mend. The Encore lasts at most 16.5 s, once per match |
 | Cyborg | **Reboot** | Dock the loose backup drive, or finish a Press within reach of civilians. It mends one chip stage, and regrowth doubles for 5 s |
 
+**How a Rally triggers.** There is no Rally button. Each Rally fires automatically when its condition completes:
+- Second Wind: on surviving the finisher contest.
+- Spite: on a decisive exchange won by hand.
+- Reboot: when the dock or the Press completes.
+
+The one exception is the Empress's **Encore**, which is a choice to spend. The player calls it with an input inside 3 s of entering the brink (Controls maps it as a contextual prompt), and the AI decides for itself.
+
 **Limits after Orb's "looser" ruling:**
 - **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's Encore is stopped by beating all three guard members before the mend gauge fills (§3).
 - **Softened:** the cooldown goes from 30 s to **15 s** after leaving the brink.
@@ -244,7 +251,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
       - Encores last a median of 8 to 13 s and never more than 16.5 s;
       - she wins 45 to 60% of matches in which the Encore completed, so the comeback is not a lock;
       - the act 1 goon phase still fills 1:00 to 2:00.
-- **Press (the Cyborg's food).** His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
+- **Press (the Cyborg's food).** A **hold** input: the charge input held near people (Controls). His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
   - *Collateral rules* (`balance-targets.md` §4b):
     - Press is exempt from the rolling casualty budget and never triggers evacuation.
     - It counts toward the ceiling and every collateral band.

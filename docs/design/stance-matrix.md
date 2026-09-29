@@ -97,6 +97,7 @@ The director implements these rules through Encounter Systems. Combat authors th
   - *AGGRESSIVE against a light:* the feed names the winner.
 - **R4. The defender earns the counter against a light.** PRESSURE's counter fires when the defender presses attack during the pressure string, not on a 40% roll. Controls owns the window width.
 - **R5. The parry is a read.** A parry press with no parryable strike inside its window costs 5 ki and locks the parry out for 0.5 s. Controls owns the window widths. The windows must be visible (Combat CC-011, UI).
+  - *Amended with Controls* (`docs/controls/rulings.md`): the first stray press is free and starts a 12-tick (0.2 s) lockout. Each press inside a lockout costs 5 ki. One early press is forgiven; mashing costs ki.
 - **R6. Chains follow the exchange's result.** No chain window opens after a parry (CC-001) or after GUARD HOLDS (CC-002).
 - **R7. A tier advantage always helps its owner.** Every roll moves in the direction of whoever is ahead on tier (fixes GD-B01).
 - **R8. Switching stance stays free and instant.** The template is fixed when the attack starts (`L410-421`), so a defender must predict, not react. Revisit if P2 playtests find stance-flicking tells.
