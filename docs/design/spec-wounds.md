@@ -15,16 +15,38 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | Rule | Spec |
 | :--- | :--- |
 | **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |
-| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). Starting k = 0.08 |
+| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). Starting k = 0.08 at S1; 0.20 from S2 (§1b) |
 | **Stages** | Fresh below 30; bruised 30 to 59; battered 60 to 89; broken at 90 or more |
 | **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time to hide (1.8 s) |
-| **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second. Hidden, a battered region fades 3 per second, down to 59. Broken regions never fade (only a Rally mends them) |
-| **Region choice** | Each atom lists the regions it may hit, with weights. The director multiplies each weight by (1 + wear/50), which is "go for the wound", then draws with the seeded sim RNG. Attack kind sets the family: lights go to the head and arms, heavies to the core and legs, guard hits to the arms, and beams and impacts spread |
+| **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second (0.25 from S2, §1b). Hidden, a battered region fades 3 per second, down to 59. Broken regions never fade (only a Rally mends them) |
+| **Region choice** | Each atom lists the regions it may hit, with weights. The director multiplies each weight by (1 + wear/50), or (1 + wear/30) from S2 (§1b), which is "go for the wound", then draws with the seeded sim RNG. Attack kind sets the family: lights go to the head and arms, heavies to the core and legs, guard hits to the arms, and beams and impacts spread |
 | **Brink** | The core breaks, or any two of head, arms and legs break. The Cyborg is the exception (§3) |
 | **Decisive exchange** | One that ends with the loser launched, a heavy or beam clash won, or a GUARD BREAK. An attack that stops a fill (charging, stoking, Press) is a CHARGE INTERRUPT and launches, so it counts. Transformation cinematics themselves are never interrupted (§8) |
 | **Finisher** | When the opponent of a fighter on the brink wins a decisive exchange, their **fighter-specific finisher** replaces the normal ending. The fighter on the brink survives it on a contest roll: 30% base, −10 points for each Rally that fighter has used, and −10 points per minute past 8:00, with a floor of 0 |
 | **The end** | A KO happens only through a finisher. Stray damage never ends a match |
 | **Breaks are chapters** | A break is a 1 to 2 s set piece: a camera break shot, a bark, then a **break launch**. The break launch is long (at least 1,500 units horizontally) and chosen by the planner's distance and new-biome terms (`balance-targets.md` §10) |
+
+### 1b. Tuning note for Encounter (KO by finisher, S2)
+
+**What QA's S1 baseline shows** (`docs/qa/baseline-g0.md`). With k = 0.08, HP still ends matches at about 108 s and no region ever breaks. The probe found 61 fresh, 76 bruised and 1 battered, and damage spread evenly: arms 31%, head 26%, legs 22%, core 21%.
+- *The cause.* Wear comes in at about 0.3 per second per region: 1,600 damage in about 108 s, times 0.08, over four regions. Bruised wear fades at up to 0.5 per second: 1 per second, out of exchanges about half the time. So regions plateau below battered.
+- *The fix.* Longer matches alone won't help. The numbers must change.
+
+**Starting values for S2** (they replace the §1 values above):
+- k = **0.20**;
+- bruised fade **0.25** per second (hidden battered fade stays at 3 per second);
+- the director's focus weight is **(1 + wear/30)**, so damage concentrates and regions break.
+
+The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That gives a first break at around 1:30 to 2:30, and a brink at around 4:30 to 7:00 once Rallies and the finisher contest are added.
+
+**Order of levers**, one at a time. Re-measure after each:
+1. **k.** Sets the time to the first break. Target the first break at a median of 1:30 to 2:30, and the first brink at 4:30 to 7:00 (§5, test 3).
+2. **Recovery rates.** If regions stall at bruised, lower the fade before raising k again.
+3. **The focus weight.** If breaks are rare but wear is high, sharpen it. The §5 spread test (no region above 45% of all wear) is the limit.
+4. **Stage penalties.** They make a losing fighter lose faster. Tune them last, for feel, because they shorten the tail.
+5. **The finisher contest** (30% base survival). It sets the tail after the brink: p90 at most 10:00, p99 at most 12:00.
+
+**Sequencing.** The world rescale lands first, and it changes travel time and so the exchange rate. Re-baseline the damage rate after the rescale, before touching k. Measure time to first break and time to brink, not only match length.
 
 ## 2. Rally (approved per fighter, with looser limits)
 
