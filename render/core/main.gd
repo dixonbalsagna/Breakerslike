@@ -114,9 +114,14 @@ func _view_cues(c: Vector3, vp: Vector2) -> void:
 	var wide: float = smoothstep(RenderLook.ZOOM_CLOSE, RenderLook.ZOOM_WIDE, c.z)
 	var high: float = smoothstep(RenderLook.HIGH_FROM, RenderLook.HIGH_TO, c.y)
 	var d: float = lerpf(RenderLook.CURVE_NEAR, RenderLook.CURVE_WIDE, wide) + RenderLook.CURVE_HIGH * high
-	# A layer at full depth weight sags d * vh pixels at the fighter plane's screen edge, x = vw / 2z.
-	RenderMats.set_bend(4.0 * d * vp.y * c.z / (vp.x * vp.x))
-	_sky_mat.set_shader_parameter("space", high)
+	# Every layer from full depth weight back sags d * vh pixels at its screen edge (bend.gdshaderinc).
+	var dist: float = cam_rig.position.z
+	RenderMats.set_bend(4.0 * d * vp.y * c.z / (vp.x * vp.x), dist)
+	# The horizon is the far edge of the ground: its elevation from the camera anchors the sky and the fog.
+	var hz: float = (0.0 - cam_rig.position.y) / (dist + RenderLook.FOG_FAR)
+	for k in [["space", high], ["horizon", hz]]:
+		_sky_mat.set_shader_parameter(k[0], k[1])
+		RenderMats.set_sky(k[0], k[1])
 	var boost: float = clampf(RenderLook.CROWD_MIN_PX / (CrowdMesh.HEIGHT * c.z), 1.0, RenderLook.CROWD_BOOST_MAX)
 	# The shell's push directions are unit corner diagonals, so each axis moves 1/sqrt(3) of the width.
 	planet.set_crowd_view(boost, 1.732 * RenderLook.CROWD_OUTLINE_PX / c.z)
@@ -191,9 +196,16 @@ func _setup_environment() -> void:
 	var sky_mat := ShaderMaterial.new()
 	_sky_mat = sky_mat
 	sky_mat.shader = preload("res://render/shaders/sky.gdshader")
-	for i in range(4):
-		sky_mat.set_shader_parameter(["top", "upper", "lower", "horizon"][i], RenderLook.col(RenderLook.SKY[i]))
-	sky_mat.set_shader_parameter("span", sin(deg_to_rad(RenderLook.FOV_DEG) * 0.5))
+	var skyp: Dictionary = {
+		"sky_top": RenderLook.col(RenderLook.SKY[0]), "sky_upper": RenderLook.col(RenderLook.SKY[1]),
+		"sky_lower": RenderLook.col(RenderLook.SKY[2]), "sky_horizon": RenderLook.col(RenderLook.SKY[3]),
+		"sky_tan": tan(deg_to_rad(RenderLook.FOV_DEG) * 0.5), "sky_lower_at": RenderLook.SKY_LOWER_AT,
+		"sky_upper_at": RenderLook.SKY_UPPER_AT, "sky_top_at": RenderLook.SKY_TOP_AT, "sky_thin": RenderLook.SKY_THIN,
+		"fog_band": RenderLook.FOG_BAND,
+	}
+	for k in skyp:
+		sky_mat.set_shader_parameter(k, skyp[k])
+		RenderMats.set_sky(k, skyp[k])
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	sky.radiance_size = Sky.RADIANCE_SIZE_32

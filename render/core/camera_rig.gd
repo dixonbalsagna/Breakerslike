@@ -23,7 +23,7 @@ func frame(cam_y: float, cam_z: float, jitter: Vector2, vh: float) -> void:
 	var dist: float = distance_for(cam_z, vh)
 	position = Vector3(-jitter.x / cam_z, cam_y + 0.2 * vh / cam_z + jitter.y / cam_z, dist)
 	near = 20.0
-	far = dist + 9000.0
+	far = dist + RenderLook.FOG_FAR + 3000.0
 
 
 ## Camera distance from the fighter plane that gives zoom z pixels per world unit there.

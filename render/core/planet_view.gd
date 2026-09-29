@@ -1,16 +1,15 @@
 class_name PlanetView
 extends Node3D
-## The wrapped planet: the ground band, sea water, buildings, trees and the crowd, and behind them the planet-scale
-## backdrop (far land built from the real biome layout, far ridges and the atmosphere glow). Everything anchored to
-## the world is built once per match in world x [0, W) and drawn as three copies one planet apart, placed at
-## k * W - cam.x. The copies are identical, so the seam at x = 0 / W can never pop, at any zoom or separation, and a
+## The wrapped planet: the ground and water, one surface from the fighter plane to the horizon (the far part is the
+## same planet's terrain, fading into the sky), and the buildings, trees and crowd. Everything anchored to the world is
+## built once per match in world x [0, W) and drawn as copies one planet apart, placed at k * W - cam.x: the ground
+## and water in 2 * PLANET_COPIES + 1 copies (the horizon is wide), the props in three. The copies are identical, so the seam at x = 0 / W can never pop, at any zoom or separation, and a
 ## view wider than the planet (tiny zoom on an ultra-wide or phone screen) still shows every object at every place it
 ## appears. Per-frame cost is three node moves plus whatever changed in the sim since the last frame: the ground field
 ## (render/core/ground_field.gd: round crater bowls in depth, scorch, water) when craters dig, beams scorch or water
 ## flows, and the instances of damaged buildings, fallen trees and lost civilians, and of props on changed ground.
 ## Reads the sim only; never writes it.
 
-const COPIES: Array = [-1, 0, 1]
 const TERRAIN_SHADER: Shader = preload("res://render/shaders/terrain.gdshader")
 const WATER_SHADER: Shader = preload("res://render/shaders/water.gdshader")
 const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
@@ -18,7 +17,6 @@ const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
 var ground := GroundField.new()
 var _terrain_mesh: ArrayMesh
 var _water_mesh: ArrayMesh
-var _ridges: Array = []            # [ArrayMesh, ShaderMaterial]: far ridges, the far land, the atmosphere
 var _crowd_mat: ShaderMaterial
 var _terrain_mat: ShaderMaterial
 var _water_mat: ShaderMaterial
@@ -45,10 +43,6 @@ func build(S: SimState) -> void:
 		_make_materials()
 		_terrain_mesh = _make_terrain_mesh()
 		_water_mesh = _make_water_mesh()
-		for r in RenderLook.RIDGES:
-			_ridges.append([_make_ridge_mesh(r[0], r[1], r[2], _ridges.size()), RenderMats.flat(RenderLook.col(r[3]), 0.0)])
-		_ridges.append([_make_far_land(S), RenderMats.flat(Color.WHITE, 0.0)])
-		_ridges.append([_make_atmosphere(), RenderMats.flat_alpha(Color.WHITE, 1.0, 0.0)])
 		_crowd_mat = ShaderMaterial.new()
 		_crowd_mat.shader = CROWD_SHADER
 		_crowd_mat.set_shader_parameter("outline_col", RenderLook.col(RenderLook.CROWD_OUTLINE))
@@ -57,18 +51,18 @@ func build(S: SimState) -> void:
 		_crowd_mat.set_shader_parameter("legs", RenderLook.col(RenderLook.CROWD_LEGS))
 	ground.rebuild(S)
 	_make_props(S)
-	for k in COPIES:
+	for k in range(-RenderLook.PLANET_COPIES, RenderLook.PLANET_COPIES + 1):
 		var n := Node3D.new()
-		n.name = "Copy%d" % (k + 1)
+		n.name = "Copy%d" % (k + RenderLook.PLANET_COPIES)
+		n.set_meta("k", k)
 		add_child(n)
 		_mesh_child(n, "Terrain", _terrain_mesh, _terrain_mat)
 		_mesh_child(n, "Water", _water_mesh, _water_mat)
-		for i in range(_ridges.size()):
-			_mesh_child(n, "Ridge%d" % i, _ridges[i][0], _ridges[i][1])
-		_mm_child(n, "Buildings", _bld)
-		_mm_child(n, "Roofs", _roof)
-		_mm_child(n, "Trees", _tree)
-		_mm_child(n, "Crowd", _crowd, _crowd_mat)
+		if absi(k) <= 1:
+			_mm_child(n, "Buildings", _bld)
+			_mm_child(n, "Roofs", _roof)
+			_mm_child(n, "Trees", _tree)
+			_mm_child(n, "Crowd", _crowd, _crowd_mat)
 		_copies.append(n)
 	refresh(S, true)
 
@@ -76,8 +70,8 @@ func build(S: SimState) -> void:
 ## Per frame: place the copies around the camera's wrapped x and apply whatever changed in the world. heat is the
 ## render-side glow of fresh grooves (ImpactFx).
 func update(S: SimState, cam_x: float, heat: PackedFloat32Array = PackedFloat32Array(), heat_changed: bool = false) -> void:
-	for i in range(_copies.size()):
-		_copies[i].position.x = float(COPIES[i]) * SimConst.W - cam_x
+	for c in _copies:
+		c.position.x = float(c.get_meta("k")) * SimConst.W - cam_x
 	ground.update(S, heat, heat_changed)
 	refresh(S, false)
 
@@ -88,7 +82,7 @@ func set_crowd_view(boost: float, outline: float) -> void:
 	_crowd_mat.set_shader_parameter("outline", outline)
 
 
-## The three copy nodes, left to right (for tools and tests).
+## The copy nodes, left to right (for tools and tests).
 func copies() -> Array:
 	return _copies
 
@@ -201,6 +195,12 @@ func _make_materials() -> void:
 		m.set_shader_parameter("spread_w", RenderLook.GROUND_SPREAD)
 		m.set_shader_parameter("furrow_wr", RenderLook.FURROW_W_R)
 		m.set_shader_parameter("furrow_wmin", RenderLook.FURROW_W_MIN)
+		m.set_shader_parameter("z_band_back", RenderLook.Z_TERRAIN_BACK)
+		m.set_shader_parameter("far_blend", RenderLook.FAR_BLEND)
+		m.set_shader_parameter("meander_amp", RenderLook.MEANDER)
+		m.set_shader_parameter("biome_colors", GroundField.BIOME_ORDER.map(func(b): return RenderLook.col(RenderLook.BIOME[b])))
+		m.set_shader_parameter("fog_near", RenderLook.FOG_NEAR)
+		m.set_shader_parameter("fog_far", RenderLook.FOG_FAR)
 		RenderMats.track(m)
 	_terrain_mat.set_shader_parameter("sea_floor", RenderLook.col(RenderLook.SEA_FLOOR))
 	_terrain_mat.set_shader_parameter("crater", RenderLook.col(RenderLook.CRATER))
@@ -210,7 +210,9 @@ func _make_materials() -> void:
 	_terrain_mat.set_shader_parameter("heat_lo", RenderLook.col(RenderLook.HEAT_LO))
 	_terrain_mat.set_shader_parameter("heat_hi", RenderLook.col(RenderLook.HEAT_HI))
 	_terrain_mat.set_shader_parameter("z_front", RenderLook.Z_TERRAIN_FRONT)
-	_terrain_mat.set_shader_parameter("z_back", RenderLook.Z_TERRAIN_BACK)
+	_terrain_mat.set_shader_parameter("snow", RenderLook.col(RenderLook.SNOW))
+	_terrain_mat.set_shader_parameter("snow_from", RenderLook.SNOW_FROM)
+	_terrain_mat.set_shader_parameter("snow_full", RenderLook.SNOW_FULL)
 	_water_mat.set_shader_parameter("water", RenderLook.WATER)
 	_water_mat.set_shader_parameter("surface", RenderLook.WATER_SURFACE)
 	_water_mat.set_shader_parameter("z_front", RenderLook.Z_TERRAIN_FRONT + 1.0)
@@ -224,7 +226,7 @@ static func _planet_aabb(y0: float, y1: float, z0: float, z1: float) -> AABB:
 ## RenderLook.BAND_ROWS rows in depth (one exactly on the fighter plane, flagged to read the sim's deform directly)
 ## and a front face from the front row down to the floor.
 func _make_terrain_mesh() -> ArrayMesh:
-	var zs: Array = RenderLook.BAND_ROWS
+	var zs: Array = RenderLook.BAND_ROWS + RenderLook.FAR_ROWS
 	var nz: int = zs.size()
 	var per: int = nz + 2
 	var v := PackedVector3Array()
@@ -254,14 +256,14 @@ func _make_terrain_mesh() -> ArrayMesh:
 			idx.append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
 		idx.append_array([a + nz, b + nz, a + nz + 1, a + nz + 1, b + nz, b + nz + 1])
 	var m := _mesh(v, uv, uv2, cols, idx)
-	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 2000.0, RenderLook.Z_TERRAIN_BACK, RenderLook.Z_TERRAIN_FRONT)
+	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 2000.0, RenderLook.FAR_ROWS[-1], RenderLook.Z_TERRAIN_FRONT)
 	return m
 
 
 ## Water: a surface grid over every column (the same rows in depth; the shader drops dry columns and undug ground)
 ## and a front face just in front of the ground's front face.
 func _make_water_mesh() -> ArrayMesh:
-	var zs: Array = RenderLook.BAND_ROWS
+	var zs: Array = RenderLook.BAND_ROWS + RenderLook.FAR_ROWS
 	var nz: int = zs.size()
 	var per: int = nz + 2
 	var zf: float = RenderLook.Z_TERRAIN_FRONT + 1.0
@@ -286,109 +288,7 @@ func _make_water_mesh() -> ArrayMesh:
 			idx.append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
 		idx.append_array([a + nz, b + nz, a + nz + 1, a + nz + 1, b + nz, b + nz + 1])
 	var m := _mesh(v, uv, uv2, PackedColorArray(), idx)
-	m.custom_aabb = _planet_aabb(-700.0, 60.0, RenderLook.Z_TERRAIN_BACK, RenderLook.Z_TERRAIN_FRONT + 2.0)
-	return m
-
-
-## A far ridge silhouette: whole-number harmonics of the circumference, so it wraps seamlessly.
-func _make_ridge_mesh(z: float, base: float, amp: float, layer: int) -> ArrayMesh:
-	var v := PackedVector3Array()
-	var idx := PackedInt32Array()
-	var n: int = 300
-	var tau: float = TAU / SimConst.W
-	for i in range(n + 1):
-		var x: float = SimConst.W * float(i) / float(n)
-		var h: float = base + amp * (0.5 * sin(x * tau * 7.0 + layer) + 0.3 * sin(x * tau * 23.0 + 2.0 * layer) + 0.2 * sin(x * tau * 61.0 + 3.0 * layer))
-		v.append(Vector3(x, h, z))
-		v.append(Vector3(x, RenderLook.TERRAIN_FLOOR, z))
-	for i in range(n):
-		var a: int = i * 2
-		idx.append_array([a, a + 2, a + 1, a + 1, a + 2, a + 3])
-	var m := _mesh(v, PackedVector2Array(), PackedVector2Array(), PackedColorArray(), idx)
-	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, base + amp + 10.0, z - 1.0, z + 1.0)
-	return m
-
-
-## The far land: the planet's own biome layout rebuilt as a distant silhouette (city skyline, mountain range, forest
-## canopy, dunes, rooftops, flat sea), hazed toward the sky. It sits far behind the fighter plane, so perspective
-## shows a wider stretch of it than of the ground band: the biomes ahead around the planet come into view first.
-## One flat-topped slab per 12-unit column (so skylines step), coloured per column.
-func _make_far_land(S: SimState) -> ArrayMesh:
-	var z: float = RenderLook.Z_FAR_LAND
-	var step: float = 12.0
-	var n: int = int(SimConst.W / step)
-	var haze: Color = RenderLook.col(RenderLook.HAZE)
-	var v := PackedVector3Array()
-	var cols := PackedColorArray()
-	var idx := PackedInt32Array()
-	for i in range(n):
-		var x0: float = float(i) * step
-		var xm: float = x0 + step * 0.5
-		var biome: String = WorldBiomes.biomeAt(xm)
-		var h: float = _far_height(S, biome, xm)
-		var c: Color = RenderLook.col(RenderLook.BIOME[biome]).lerp(haze, RenderLook.FAR_HAZE)
-		var a: int = v.size()
-		for p in [Vector3(x0, h, z), Vector3(x0 + step, h, z), Vector3(x0, RenderLook.TERRAIN_FLOOR, z), Vector3(x0 + step, RenderLook.TERRAIN_FLOOR, z)]:
-			v.append(p)
-			cols.append(c)
-		idx.append_array([a, a + 1, a + 2, a + 2, a + 1, a + 3])
-	var m := _mesh(v, PackedVector2Array(), PackedVector2Array(), cols, idx)
-	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 1600.0, z - 1.0, z + 1.0)
-	return m
-
-
-## Far-land height at x for its biome. Blocks come from a fixed hash of the block index, so the skyline is the same
-## every match and on every platform.
-static func _far_height(S: SimState, biome: String, x: float) -> float:
-	match biome:
-		"ocean":
-			return 0.0
-		"village":
-			return 20.0 + 26.0 * _h01(floor(x / 44.0))
-		"plains":
-			return 22.0 + 14.0 * sin(x * 0.004) + 8.0 * sin(x * 0.013)
-		"city":
-			var blk: float = floor(x / 36.0)
-			var mid: float = maxf(0.0, 1.0 - absf((x - 3100.0) / 820.0))
-			return 90.0 + 240.0 * _h01(blk) + mid * 560.0 * _h01(blk + 91.0)
-		"forest":
-			return 64.0 + 34.0 * absf(sin(x * 0.07)) + 16.0 * sin(x * 0.011)
-		"desert":
-			return 16.0 + 30.0 * (0.5 + 0.5 * sin(x * 0.0062))
-		"mountains":
-			var k: float = clampf((x - 6500.0) / 1100.0, 0.0, 1.0)
-			return 1.3 * S.base[int(x / SimConst.COL) % SimConst.NC] + 160.0 * sin(PI * k)
-	return 20.0
-
-
-static func _h01(i: float) -> float:
-	var s: float = sin(i * 12.9898) * 43758.5453
-	return s - floor(s)
-
-
-## The atmosphere: a glow band far behind everything, strongest just above the ridge line and fading upward. Seen
-## against the sky it is the planet's limb, and the curvature bends it with the horizon.
-func _make_atmosphere() -> ArrayMesh:
-	var z: float = RenderLook.Z_ATMOSPHERE
-	var c: Color = RenderLook.col(RenderLook.ATMOSPHERE)
-	var rows: Array = [[1700.0, 0.0], [700.0, 0.35], [380.0, 0.85], [RenderLook.TERRAIN_FLOOR, 0.85]]
-	var v := PackedVector3Array()
-	var cols := PackedColorArray()
-	var idx := PackedInt32Array()
-	var n: int = 150
-	for i in range(n + 1):
-		var x: float = SimConst.W * float(i) / float(n)
-		for r in rows:
-			v.append(Vector3(x, r[0], z))
-			cols.append(Color(c, r[1]))
-	var nr: int = rows.size()
-	for i in range(n):
-		for j in range(nr - 1):
-			var a: int = i * nr + j
-			var b: int = a + nr
-			idx.append_array([a, b, a + 1, a + 1, b, b + 1])
-	var m := _mesh(v, PackedVector2Array(), PackedVector2Array(), cols, idx)
-	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 1800.0, z - 1.0, z + 1.0)
+	m.custom_aabb = _planet_aabb(-700.0, 60.0, RenderLook.FAR_ROWS[-1], RenderLook.Z_TERRAIN_FRONT + 2.0)
 	return m
 
 

@@ -9,7 +9,7 @@ const FOV_DEG: float = 30.0
 
 ## Depth layout, in world units along +z (toward the camera). Fighters, beams and particles live on z = 0.
 const Z_TERRAIN_FRONT: float = 140.0     # front face of the ground band
-const Z_TERRAIN_BACK: float = -520.0     # back edge of the ground band
+const Z_TERRAIN_BACK: float = -520.0     # back edge of the band's crater rows (craters reach no further)
 const TERRAIN_FLOOR: float = -5000.0     # bottom of the ground band's front face
 ## Rows of the ground band's top grid, front to back. Dense near the fighter plane, where bowls are narrow; the row at
 ## exactly 0 reads the sim's profile (render/core/ground_field.gd).
@@ -21,26 +21,36 @@ const Z_CROWD_MIN: float = -40.0
 const Z_CROWD_MAX: float = -8.0
 const Z_PARTICLES: float = 10.0
 const Z_BEAMS: float = 6.0
-const RIDGES: Array = [  # far parallax ridges: [depth z, base height, amplitude, colour]
-	[-3400.0, 330.0, 260.0, "#2b2850"],
-	[-2500.0, 190.0, 170.0, "#3a3560"],
-]
-const Z_FAR_LAND: float = -1500.0        # the planet's biomes rebuilt as a distant silhouette
-const Z_ATMOSPHERE: float = -4200.0      # the glowing limb behind everything
+## The ground continues behind the crater rows to the horizon as one surface (no separate backdrop): these rows,
+## widening with distance, carry the far terrain, which blends in from the band's own heights over FAR_BLEND and is
+## the same planet (each column's base height and biome, with relief). It fades into the sky between FOG_NEAR and
+## FOG_FAR, so its far edge never shows.
+const FAR_ROWS: Array = [-570.0, -625.0, -685.0, -750.0, -820.0, -895.0, -975.0, -1060.0, -1150.0, -1250.0, -1360.0, -1480.0, -1610.0, -1750.0, -1900.0, -2070.0, -2260.0, -2470.0, -2700.0, -2960.0, -3250.0, -3580.0, -3950.0, -4370.0, -4850.0, -5400.0, -6050.0, -6800.0, -7700.0, -8750.0, -10000.0, -12000.0]
+const FAR_BLEND: float = 900.0
+const MEANDER: float = 600.0             # how far (in x) the far land's biomes wander with depth
+const FOG_NEAR: float = 700.0
+const FOG_FAR: float = 12000.0
+## Far relief per biome: [height multiplier on the base terrain, relief amplitude], smoothed across biome borders.
+const FAR_RELIEF: Dictionary = {
+	"ocean": [1.0, 40.0], "plains": [1.0, 45.0], "city": [1.0, 12.0], "village": [1.0, 30.0],
+	"forest": [1.0, 70.0], "desert": [1.0, 55.0], "mountains": [1.25, 300.0],
+}
+const FAR_SMOOTH_COLS: int = 24          # half width of the smoothing, in columns
+const SNOW_FROM: float = 560.0           # far peaks whiten above this height ...
+const SNOW_FULL: float = 900.0           # ... fully by this
+const SNOW := "#dfe3ec"
+const PLANET_COPIES: int = 2             # ground and water copies each side of the camera (props use 1)
 
 ## Planet-scale cues. Horizon curvature: how far the world behind the fighter plane sags at the screen edge, as a
 ## fraction of screen height (for the depth-weighted bend in render/shaders/bend.gdshaderinc). It grows from
 ## CURVE_NEAR at close zoom to CURVE_WIDE at wide zoom, plus CURVE_HIGH as the camera climbs.
 const CURVE_NEAR: float = 0.035
 const CURVE_WIDE: float = 0.10
-const CURVE_HIGH: float = 0.06
+const CURVE_HIGH: float = 0.10
 const ZOOM_CLOSE: float = 0.6
 const ZOOM_WIDE: float = 0.2
 const HIGH_FROM: float = 600.0           # camera y where the sky starts turning to space
 const HIGH_TO: float = 2200.0
-const HAZE := "#5a4d85"                  # aerial haze the far land fades toward
-const FAR_HAZE: float = 0.55
-const ATMOSPHERE := "#ffc48a"
 
 const BIOME: Dictionary = {
 	"ocean": "#2a6b98", "plains": "#5f9140", "city": "#6c7079", "village": "#7c8e4b",
@@ -61,6 +71,14 @@ const GROUND_SPREAD: float = 60.0        # half width across the band of dents w
 const WATER := Color(30.0 / 255.0, 110.0 / 255.0, 175.0 / 255.0)
 const WATER_SURFACE := Color(0.42, 0.68, 0.9, 0.55)
 const SKY: Array = ["#111a3e", "#4b4483", "#d9776b", "#f4b87a"]   # top to horizon
+## The sky's gradient is anchored to the horizon (the far edge of the ground), in half-screen heights above it: the
+## horizon colour at the line, the lower colour SKY_LOWER_AT above it, the upper at SKY_UPPER_AT, the top by
+## SKY_TOP_AT. As the camera climbs the band thins by up to SKY_THIN times (a thin atmosphere rim seen from high up).
+const SKY_LOWER_AT: float = 0.12
+const SKY_UPPER_AT: float = 0.55
+const SKY_TOP_AT: float = 1.45
+const SKY_THIN: float = 5.0
+const FOG_BAND: float = 0.25             # ground haze depth below the horizon line, half-screen heights
 
 const TOWER := "#565e70"
 const TOWER_DEAD := "#3f424a"

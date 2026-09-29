@@ -1,6 +1,6 @@
 # Rendering: the greybox
 
-Owner: Rendering and Technical Art. Code: `render/`. Status: first playable greybox (P1), 2026-09-29; civilians and planet-scale pass, and craters, scorch and water, the same day.
+Owner: Rendering and Technical Art. Code: `render/`. Status: first playable greybox (P1), 2026-09-29; civilians and planet-scale pass, craters, scorch and water, and one world to the horizon, the same day.
 
 The main scene runs the GDScript sim (`sim/`) as a 60 Hz fixed-step loop and draws it every frame in a 2.5D side-on view of the wrapped planet. Frames are interpolated between the last two ticks. It starts as an AI-vs-AI demo; any key or click hands P1 to a human, as the prototype did. Everything on screen is a greybox made of simple meshes and flat colours. The cel-shaded look comes later with Art.
 
@@ -37,7 +37,7 @@ Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `-
 Main          Node3D               core/main.gd         the frame loop, input, match start, bench and shots
 ├ Camera      Camera3D             core/camera_rig.gd   the reference camera as a 3D camera
 ├ Environment WorldEnvironment                          sky gradient (shaders/sky.gdshader), built in main.gd
-├ Planet      Node3D               core/planet_view.gd  terrain, water, ridges, buildings, trees, crowd (3 copies)
+├ Planet      Node3D               core/planet_view.gd  ground and water to the horizon (5 copies), buildings, trees, crowd (3)
 ├ Fighters    Node3D                                    one core/fighter_view.gd per fighter, built per match
 ├ Beams       Node3D               core/beam_view.gd    signature beams and beam clashes
 ├ Particles   MultiMeshInstance3D  core/particle_view.gd  the fx consumer's particles, one draw call
@@ -53,15 +53,15 @@ Main          Node3D               core/main.gd         the frame loop, input, m
 | `core/crowd_mesh.gd` | The generated civilian figure (see Civilians below). |
 | `core/ground_field.gd` | The ground band's data for the GPU and its CPU mirror: round crater bowls in depth, scorch, water (see Craters, scorch and water below). |
 | `core/impact_fx.gd` | Render-side live effects for World's crater, scorch and splash events: ejecta, rim dust, shock rings, the glow of fresh grooves, embers, ripples and skim spray. |
-| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` over `ground.gdshaderinc` (the ground field); `crowd`; `particle` (shapes per instance); `sky` (gradient, space, stars, the planet's limb); `bend.gdshaderinc` (horizon curvature). |
+| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` over `ground.gdshaderinc` (the ground field); `crowd`; `particle` (shapes per instance); `sky` over `skycol.gdshaderinc` (the horizon-anchored gradient the ground also fogs into, space, stars); `bend.gdshaderinc` (horizon curvature). |
 | `tools/seam_sweep.gd`, `tools/determinism.gd` | The seam and determinism checks (see below). |
 | `tools/shots.gd` | Posed screenshots for these docs (see below). |
 | `tools/ground_check.gd` | The ground check: the drawn ground against the sim's (see Verification). |
 
 ## How it draws
 
-- **Camera.** A perspective camera with a 30° vertical FOV looks straight down -z. For the reference camera's x, y and zoom z (pixels per world unit, `sim/core/view/camera.gd`), the rig places the camera at distance `vh / (2 z tan(fov/2))`. On the fighter plane (z = 0) a point therefore lands on the prototype's `w2s()` pixel exactly. Things in front of or behind that plane get perspective parallax: the ground band, buildings, trees and far ridges. Screen shake is the fx consumer's `shake`, with jitter drawn once per tick from the `camera` stream.
-- **Floating origin and the seam.** Everything is placed relative to the camera's wrapped x, so the camera sits at x = 0 and no coordinate grows large. World-anchored content (terrain, water, ridges, buildings, trees, crowd) is built once per match over x in [0, 9600). It is drawn as three identical copies at `k * W - cam.x` for k = -1, 0, 1, sharing meshes and MultiMeshes. The seam is therefore invisible by construction, and a view wider than the planet (tiny zoom on an ultra-wide or phone screen) shows everything wherever it appears. Fighters, beams and particles are placed by the shortest arc `sdx(cam.x, x)`. A beam is laid out from its tail along its direction, so one crossing the seam stays in one piece.
+- **Camera.** A perspective camera with a 30° vertical FOV looks straight down -z. For the reference camera's x, y and zoom z (pixels per world unit, `sim/core/view/camera.gd`), the rig places the camera at distance `vh / (2 z tan(fov/2))`. On the fighter plane (z = 0) a point therefore lands on the prototype's `w2s()` pixel exactly. Things in front of or behind that plane get perspective parallax: the ground, buildings and trees. Screen shake is the fx consumer's `shake`, with jitter drawn once per tick from the `camera` stream.
+- **Floating origin and the seam.** Everything is placed relative to the camera's wrapped x, so the camera sits at x = 0 and no coordinate grows large. World-anchored content (ground, water, buildings, trees, crowd) is built once per match over x in [0, 9600). It is drawn as identical copies at `k * W - cam.x`, sharing meshes and MultiMeshes: the ground and water for k = -2 to 2 (`PLANET_COPIES`, because the horizon is wide), the props for k = -1 to 1. The seam is therefore invisible by construction, and a view wider than the planet (tiny zoom on an ultra-wide or phone screen) shows everything wherever it appears. Fighters, beams and particles are placed by the shortest arc `sdx(cam.x, x)`. A beam is laid out from its tail along its direction, so one crossing the seam stays in one piece.
 - **Terrain.** The ground band is one static mesh: per column, a front face from the surface down to a floor and a top face running back in depth. The vertex shader reads heights from a 1200 × 2 float texture (row 0 base, row 1 crater deform). The planet view re-uploads the texture only when `S.deform` changes, so craters never rebuild geometry. Crater, sea-floor and biome colours come from the same data, and water is drawn only where the base terrain is below sea level (the sim's `seaAt` rule).
 - **Props.** Buildings, roofs, trees and civilians are MultiMeshes, one draw call per kind per copy. Only instances whose building, tree or ground changed are updated. The sim has civilians only as counts per building, so the greybox stands `popAlive` figures around each building. Where each one stands, the tree depths, and each civilian's shirt and skin tone come from render-side streams seeded from the fixed world seed, never from the sim stream.
 - **Fighters.** Each fighter is generated from its roster colours and role: boxes, a low-poly head, and hair and cape extruded from 2D outlines. Stance shows as a badge colour, a lean and a guard glow in defensive, and the HUD labels it too. A hit makes the body flash white for 0.12 s after `hurtT`. The aura grows with tier, and aura streaks appear at tier 3 or above and while charging. A hidden fighter fades to 22 % inside a sonar ripple. The beam charge orb grows at the hand. The placeholder hero's hair is a teal, swept-back crest.
@@ -80,15 +80,33 @@ Orb's notes on the first live build were "civilians seem too tiny" and "make the
 
 **Planet scale.** I picked the three cheapest cues that read at the zoom real fights use. In AI matches the zoom stays around 0.3 to 0.7 and the camera below about 850 units, so cues that only showed at extreme zoom would rarely be seen. All three are static meshes or shader uniforms, with no per-frame CPU work beyond a few uniforms.
 
-1. **Horizon curvature** (`bend.gdshaderinc`). World geometry sags by `bend * x^2` across the screen, weighted by depth: nothing moves within 60 units of the fighter plane, and the weight is full from 1,260 units behind. So the fight, the ground under the fighters, the HUD mapping and the seam proof are exactly as before, while the world behind curves away like a horizon. The sag at the screen edge is 3.5 % of screen height at close zoom and 10 % at wide zoom, plus up to 6 % more as the camera climbs (`CURVE_*`). It is a function of the camera-relative x, so it is identical in every planet copy and invisible at the seam.
-2. **Far land along the wrap.** 1,500 units behind the fighter plane, the planet's own biome layout is rebuilt as a hazed silhouette: city skyline, mountain range, forest canopy, dunes, rooftops and a flat sea. Depth shows a wider stretch of it than of the ground band, so the biomes ahead around the planet come into view before the fighters reach them. The world reads as a continuous planet rather than a strip.
-3. **Atmosphere and the view from altitude.** A glow band behind the ridges gives the curved horizon a lit atmosphere. As the camera climbs, the sky darkens to space and stars come up. The planet's limb then rises into view: a large curved horizon with a bright rim, drawn in the sky shader only where no geometry covers the sky.
+1. **Horizon curvature** (`bend.gdshaderinc`). World geometry sags by `bend * x^2` across the screen, weighted by depth: nothing moves within 60 units of the fighter plane, and the weight is full from 1,260 units behind. So the fight, the ground under the fighters, the HUD mapping and the seam proof are exactly as before, while the world behind curves away like a horizon. The weight also divides out perspective, so every layer from 1,260 units back to the horizon sags by the same number of pixels at the screen edge: 3.5 % of screen height at close zoom and 10 % at wide zoom, plus up to 10 % more as the camera climbs (`CURVE_*`). It is a function of the camera-relative x, so it is identical in every planet copy and invisible at the seam.
+2. **The rest of the planet, behind the fight.** The ground continues to the horizon as the same planet's terrain (see One world to the horizon, below). Depth shows a wider stretch of it than of the fighter plane, so the biomes ahead around the planet come into view before the fighters reach them.
+3. **Atmosphere and the view from altitude.** The sky's gradient is anchored to the horizon, and the far ground hazes into it. As the camera climbs, the sky darkens to space, stars come up and the glow thins to a narrow rim along the horizon. The planet below is the real ground, curving away.
+
+(The first version of cues 2 and 3 used a separate far-land silhouette, ridge cut-outs, a glow band and a limb painted in the sky. Orb found them disconnected from the playfield, and the next section replaces them.)
 
 | Before | After |
 | :---: | :---: |
 | ![planet before](img/planet-before.png) | ![planet after](img/planet-after.png) |
 
 Both pairs come from `godot --path . --script res://render/tools/shots.gd -- --out=DIR`, which poses the fighters on a fresh match without stepping the sim. That keeps the pictures stable while the sim's behaviour changes. The "before" images are the committed renderer (2ebdb53) run on the same sim. Other poses: `city`, `wide`, `high`.
+
+## One world to the horizon
+
+Orb's notes on the live build: a mountain the fighters clip against was "replicated in the distance by a silhouette with a gap in between", there were "multiple shorelines", and at high altitude "a glowing circle" appeared. The cause was one design flaw: the backdrop was separate vertical cut-outs (far land, ridges, a glow band) behind a ground band that ended 520 units back, and the planet seen from above was a disc painted in the sky. All of that is gone. There is now one world:
+
+- **One ground surface.** The ground grid keeps its crater rows (to `Z_TERRAIN_BACK`) and continues behind them in widening rows (`FAR_ROWS`) to 12,000 units. Behind the crater rows the height blends, over `FAR_BLEND`, into the far terrain. That is the same columns' own base height (`S.base`), scaled per biome, with smooth relief (`FAR_RELIEF`, smoothed across biome borders, in whole harmonics of the planet so it wraps). The mountain beside the fighters is the start of a massif that runs into the distance, and high peaks whiten (`SNOW_*`). So the far land doesn't run back in straight stripes, the column each far point reads wanders with depth (`MEANDER`), interpolated between columns. Heights and biome colours both follow it, so coastlines, ranges and forests meander. The crater rows and the fighter plane are untouched: the ground check still passes bit for bit.
+- **One sea.** The water grid covers the same rows. In the crater rows it comes from `S.water`. Behind them it lies at sea level wherever the far ground is below it, in the sea's own columns (the sim's base-below-minus-30 rule). The sea therefore runs on to the horizon with one shoreline, and islands rise where the far sea floor does.
+- **No edge.** Distant ground takes the sky's own colour in its own screen direction (`skycol.gdshaderinc`). The haze is thickest along grazing views near the horizon line and clears below it, there is a light haze with distance, and the last eighth before the far edge fades out completely. The ground's end never shows, even where the curvature drops it below the horizon line at the screen sides. The sky's gradient is anchored to that horizon, the elevation of the ground's far edge from the camera, so sky and ground meet with no seam at any zoom or height.
+- **From altitude.** Nothing switches at a threshold. As the camera climbs, the horizon sinks toward the bottom of the screen and the curvature grows. The haze band and the sky's glow thin together to a narrow rim (`SKY_THIN`), and the sky above turns to space with stars. You see the actual planet below, with its biome colours and terrain, curving away.
+
+| Before | After |
+| :---: | :---: |
+| ![coast before](img/world-coast-before.png) | ![coast after](img/world-coast-after.png) |
+| ![max altitude before](img/world-high-before.png) | ![max altitude after](img/world-high-after.png) |
+
+Poses `coast` and `max` in `tools/shots.gd`. Both columns use the committed sim (51cdbec). "Before" is the committed renderer.
 
 ## Craters, scorch and water
 
@@ -163,6 +181,10 @@ A crater dug on the seam (x = 0) is exactly symmetric across it at every depth. 
 | Web 1280×720, after the scale pass | 1.82 / 2.20 / 3.10 ms | 0.13 ms | 0.16 ms | about 79 |
 | Desktop 1280×720, craters, scorch and water | 1.03 / 1.42 / 1.82 ms | 0.082 ms | 0.13 ms | about 77 |
 | Web 1280×720, craters, scorch and water | 1.81 / 2.30 / 2.80 ms | n/a | 0.17 ms | about 80 |
+| Desktop 1280×720, one world to the horizon | 1.03 / 1.42 / 1.80 ms | n/a | 0.14 ms | about 75 |
+| Web 1280×720, one world to the horizon | 1.93 / 2.30 / 2.80 ms | n/a | 0.19 ms | about 76 |
+
+One world to the horizon, against the committed renderer on the same sim: desktop before was 1.07 / 1.47 / 1.74 ms with a 0.177 ms GPU frame; after, the GPU frame is 0.183 ms. The first run after a fresh import had one 169 ms shader-cache hitch, which did not repeat. Draw calls fell slightly: the backdrop meshes are gone, and the extra ground and water copies are frustum-culled except in very wide views.
 
 Craters, scorch and water, against the committed renderer on the same sim: desktop before was 0.95 / 1.24 / 1.62 ms, with a 0.099 ms view update and a 0.168 ms GPU frame; after, the GPU frame is 0.171 ms. The ground field adds about 0.03 ms of view update a frame and no measurable GPU time here. Both renderers end the match on the same gameplay hash, and the web build reproduces the desktop hash (seed 4, tick 2400: `01e6e465b88a1b05`).
 
@@ -180,8 +202,9 @@ For the web: export with a Web preset (single-threaded) and pass `--fixed-fps 60
 
 ## What is placeholder
 
-- Every visual: primitive-box fighters, box buildings, cone trees, box-figure civilians, flat colours, the sky gradient, the far land, ridges and limb. Art's palette and the cel-shaded look replace `look.gd` and the flat shaders.
-- The planet-scale cues are tuned by eye (`CURVE_*`, `FAR_HAZE`, the limb in `sky.gdshader`). The curvature is a presentation lens, not the planet's true radius: at 9,600 units around, the true curve would be far stronger.
+- Every visual: primitive-box fighters, box buildings, cone trees, box-figure civilians, flat colours, the sky gradient, and the far terrain's relief and meander. Art's palette and the cel-shaded look replace `look.gd` and the flat shaders.
+- The planet-scale cues are tuned by eye (`CURVE_*`, `FAR_*`, `MEANDER`, `FOG_*`, `SKY_*`). The curvature is a presentation lens, not the planet's true radius: at 9,600 units around, the true curve would be far stronger. All of them are `look.gd` numbers, for the coming rescale (`docs/world/scale.md`).
+- The far terrain is decoration beyond the crater rows. Nothing there is in the sim, so craters, scorch and the crowd live only in the rows near the fighter plane. Where the meander carries a biome border diagonally across the sparser far rows, its colour edge is slightly saw-toothed. There are no far towers yet: the city's distant stretch is flat ground.
 - Known issue: the crowd's idle hop runs on the shader's `TIME`, so civilians keep hopping while the game is paused. Accepted for the greybox; drive it from sim time when it matters.
 - Known issue: the web build's fallback font has no arrow glyph, so the feed shows a box for the director's "→".
 - Crater limits: the GPU sums at most 6 craters per column (the most energetic). Dents of any others, and of records the sim dropped, still match the sim on the fighter plane and spread across the band like a groove. The shader repeats the crater profile's polynomials; every size is a uniform fed from `WorldCrater` and `RenderLook`, so a world-scale change needs no shader edit. Buildings on a rim sit on the lowest ground under their footprint.

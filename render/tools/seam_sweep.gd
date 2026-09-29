@@ -8,7 +8,8 @@ extends SceneTree
 ## 3. ground: the planet copy under each fighter shows the sim's ground at the fighter's own x (the copies are placed
 ##    so that view x - copy offset wraps to f.x);
 ## 4. seam join and coverage: neighbouring copies meet exactly one planet apart, the last terrain column reads column
-##    0 again, and the copies cover the whole visible width even when the view is wider than the planet.
+##    0 again, and the copies cover the whole visible width out to the horizon row, even when the view is wider than
+##    the planet.
 ## The sweep poses a match state by hand (fighter x and y) and never steps the sim; the renderer only reads it.
 ##
 ## Usage (from the repo root):
@@ -180,7 +181,7 @@ func _check_copies(label: String, s: int, vw: float) -> void:
 		worst_join = maxf(worst_join, j)
 		if j > 0.01:
 			fails.append("%s frame %d: copies %d and %d are %.4f off one planet apart" % [label, s, k, k + 1, j])
-	var hw: float = main.cam_rig.half_width(vw, RenderLook.Z_TERRAIN_BACK)
+	var hw: float = main.cam_rig.half_width(vw, RenderLook.FAR_ROWS[-1])
 	widest_view = maxf(widest_view, 2.0 * main.cam_rig.half_width(vw))
 	var margin: float = minf(-hw - cs[0].position.x, cs[cs.size() - 1].position.x + SimConst.W - hw)
 	min_cover_margin = minf(min_cover_margin, margin)

@@ -10,7 +10,9 @@ extends RefCounted
 ## exactly on the fighter plane reads S.deform itself, so the slice the fighters stand on is the sim's, bit for bit.
 ##
 ## Data (one RF texture, a column per terrain column): row 0 base, 1 deform, 2 G, 3 scorch, 4 water, 5 heat (the
-## render-side glow of fresh grooves), 6 to 11 up to K crater indices overlapping the column (-1 for none). Crater
+## render-side glow of fresh grooves), 6 to 11 up to K crater indices overlapping the column (-1 for none), 12 and 13
+## the far terrain's relief amplitude and base multiplier (static, per biome, smoothed across borders), 14 the
+## column's biome (an index into BIOME_ORDER). Crater
 ## records go to an RGBAF texture, a column per S.craters entry: (x, r, depth, rim) and (skid, sdepth, energy, t).
 ## Everything is rebuilt from state (S.craters, S.deform, S.scorch, S.water), incrementally when the crater list
 ## only grew, fully otherwise (a new match, a replay seek, a snapshot restore); events are never needed.
@@ -24,7 +26,12 @@ const ROW_WATER := 4
 const ROW_HEAT := 5
 const ROW_LIST := 6
 const K := 6                         # craters per column the GPU sums (the most energetic win)
-const ROWS := ROW_LIST + K
+const ROW_FAR_AMP := ROW_LIST + K
+const ROW_FAR_MUL := ROW_FAR_AMP + 1
+const ROW_BIOME := ROW_FAR_MUL + 1
+const ROWS := ROW_BIOME + 1
+## Biome index order for the biome row and the shaders' biome_colors array.
+const BIOME_ORDER: Array = ["ocean", "plains", "city", "village", "forest", "desert", "mountains"]
 const LIST_W := 400                  # WorldCrater.LIST_MAX
 
 var img: Image
@@ -38,6 +45,7 @@ var dirty := PackedByteArray()       # columns whose ground changed since the pr
 var any_dirty: bool = false
 var full_rebuilds: int = 0           # for tests
 var _heat := PackedFloat32Array()
+var _far := PackedFloat32Array()     # rows 12 to 14
 var _deform_seen := PackedFloat32Array()
 var _scorch_seen := PackedFloat32Array()
 var _water_seen := PackedFloat32Array()
@@ -53,6 +61,7 @@ func _init() -> void:
 	dirty.resize(nc)
 	_heat.resize(nc)
 	cdata.resize(LIST_W * 2 * 4)
+	_far = far_rows()
 	img = Image.create_empty(nc, ROWS, false, Image.FORMAT_RF)
 	tex = ImageTexture.create_from_image(img)
 	cimg = Image.create_empty(LIST_W, 2, false, Image.FORMAT_RGBAF)
@@ -226,12 +235,39 @@ func _g_col(S: SimState, i: int) -> void:
 
 
 func _upload(S: SimState, craters_changed: bool) -> void:
-	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array()
+	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array() + _far.to_byte_array()
 	img.set_data(SimConst.NC, ROWS, false, Image.FORMAT_RF, bytes)
 	tex.update(img)
 	if craters_changed:
 		cimg.set_data(LIST_W, 2, false, Image.FORMAT_RGBAF, cdata.to_byte_array())
 		ctex.update(cimg)
+
+
+## The far terrain's per-column relief amplitude and base multiplier (RenderLook.FAR_RELIEF by biome), box-smoothed
+## over RenderLook.FAR_SMOOTH_COLS each side so biome borders don't step, then each column's biome index. Three rows
+## of NC: amplitude, multiplier, biome.
+static func far_rows() -> PackedFloat32Array:
+	var nc: int = SimConst.NC
+	var raw := PackedFloat32Array()
+	raw.resize(nc * 2)
+	var biome := PackedFloat32Array()
+	biome.resize(nc)
+	for i in range(nc):
+		var b: String = WorldBiomes.biomeAt(float(i) * SimConst.COL + SimConst.COL * 0.5)
+		var r: Array = RenderLook.FAR_RELIEF[b]
+		raw[i] = r[1]
+		raw[nc + i] = r[0]
+		biome[i] = float(BIOME_ORDER.find(b))
+	var out := PackedFloat32Array()
+	out.resize(nc * 2)
+	var m: int = RenderLook.FAR_SMOOTH_COLS
+	for row in range(2):
+		for i in range(nc):
+			var s: float = 0.0
+			for k in range(-m, m + 1):
+				s += raw[row * nc + (i + k + nc) % nc]
+			out[row * nc + i] = s / float(2 * m + 1)
+	return out + biome
 
 
 ## The bytes the GPU holds for one row (for tests).

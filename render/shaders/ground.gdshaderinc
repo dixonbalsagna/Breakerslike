@@ -18,6 +18,10 @@ uniform float groove_pmax = 4.5;
 uniform float spread_w = 60.0;       // RenderLook.GROUND_SPREAD
 uniform float furrow_wr = 0.3;       // RenderLook.FURROW_W_R and FURROW_W_MIN
 uniform float furrow_wmin = 20.0;
+uniform float z_band_back = -520.0;  // RenderLook: rows behind this are the far terrain ...
+uniform float far_blend = 900.0;     // ... which blends in from the band's heights over this depth
+uniform float meander_amp = 600.0;   // RenderLook.MEANDER: how far (in x) the far land's biomes wander with depth
+uniform vec4 biome_colors[7] : source_color;   // RenderLook.BIOME in ground_field.gd's BIOME_ORDER
 
 float gf(int i, int row) {
 	return texelFetch(heights, ivec2(i, row), 0).r;
@@ -95,4 +99,66 @@ vec3 ground_offset3(int i, float xw, float z) {
 
 float ground_offset(int i, float xw, float z) {
 	return ground_offset3(i, xw, z).x;
+}
+
+// Far relief noise (n, dn/dx, dn/dz), n in about [-1, 1]: whole harmonics of the planet's circumference along x, so it
+// wraps with the planet, and free along the depth.
+vec3 far_noise3(float x, float z) {
+	float t = 6.2831853 / world_w;
+	vec3 n = vec3(0.0);
+	vec4 k[3] = vec4[3](vec4(5.0, 0.00061, 0.3, 0.45), vec4(17.0, -0.0013, 1.7, 0.3), vec4(43.0, 0.0029, 4.1, 0.25));
+	for (int j = 0; j < 3; j++) {
+		float fx = k[j].x * t;
+		float p = fx * x + k[j].y * z + k[j].z;
+		float c = cos(p) * k[j].w;
+		n += vec3(sin(p) * k[j].w, c * fx, c * k[j].y);
+	}
+	return n;
+}
+
+// Behind the crater rows, a far point at world x reads the terrain column of a shifted x, the shift wandering smoothly
+// with depth (and with x, in whole harmonics of the planet so it wraps), weighted by the far blend: coastlines,
+// ranges and forests meander into the distance instead of running straight back, and the fighter plane is untouched.
+float far_x(float xw, float z, float s) {
+	float t = 6.2831853 / world_w;
+	float m = 0.6 * sin(3.0 * t * xw + 0.00047 * z + 0.4) + 0.4 * sin(8.0 * t * xw - 0.00083 * z + 2.2);
+	float xs = xw + meander_amp * m * s * s;
+	return xs - world_w * floor(xs / world_w);
+}
+
+// A far row's value at the shifted x, linear between columns so the meander never steps a coast into a cliff.
+float gfx(float xs, int row) {
+	float c = xs / col_w;
+	int i = int(c) % nc;
+	return mix(gf(i, row), gf((i + 1) % nc, row), fract(c));
+}
+
+// The biome at the shifted x (nearest column).
+float far_biome(float xs) {
+	return gf(int(xs / col_w + 0.5) % nc, 14);
+}
+
+vec3 biome_rgb(float xs) {
+	return biome_colors[int(far_biome(xs) + 0.5)].rgb;
+}
+
+// Base-terrain slope at column i.
+float base_slope(int i) {
+	return (gf((i + 1) % nc, 0) - gf((i + nc - 1) % nc, 0)) / (2.0 * col_w);
+}
+
+// The far terrain (h, dh/dx, dh/dz) read at the shifted x (far_x): that place's own base height (scaled per biome)
+// with its biome's relief (rows 12 and 13, smoothed across biome borders), so the land far away is the same land as
+// near. The slope ignores the meander's own variation, which is gentle.
+vec3 far_height3(float xs, float xw, float z) {
+	float amp = gfx(xs, 12);
+	float mul = gfx(xs, 13);
+	vec3 n = far_noise3(xw, z);
+	return vec3(gfx(xs, 0) * mul + amp * n.x, base_slope(int(xs / col_w) % nc) * mul + amp * n.y, amp * n.z);
+}
+
+// 0 in the crater rows, rising smoothly to 1 at far_blend behind them.
+float far_weight(float z) {
+	float s = clamp((z_band_back - z) / far_blend, 0.0, 1.0);
+	return s * s * (3.0 - 2.0 * s);
 }
