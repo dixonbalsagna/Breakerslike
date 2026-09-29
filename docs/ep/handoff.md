@@ -51,6 +51,20 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
 - Rendering's greybox is committed (2ebdb53): F5 plays the GDScript sim AI vs AI in 2.5D, and any key takes P1. Seam sweep and render determinism tools pass. Desktop frame 0.98 ms, web 1.83 ms (high-end machine only).
 - Tools is working on a web export preset, the render tools in CI, and a Pages deploy at /play/. Flipping Pages to deploy through Actions needs Orb's OK.
 
+## Questionnaire 3 wave (2026-09-29)
+- **Active now:**
+  - Game Design: the meter-less damage model and pacing (damage-model.md).
+  - Combat: procedural movesets (procedural-moves.md).
+  - Narrative: the signature pitches (orbs, multiplier, Cyborg food and core, transformations, fusion, tail) and the line system.
+  - Simulation: GDScript becomes the source of truth; the JS core is frozen (ADR 0006 draft).
+- **Next, once Simulation's switch lands (goldens are then GD-only):**
+  - World: craters, not canyons; simple water flow; a planet that reads full-scale.
+  - Encounter Systems: fights stuck in the ocean; more launches across the map; the tempo changes from Game Design.
+  - Rendering: civilians too small; planet-scale feel.
+  - Legal: screen Narrative's favourites, the true-merge fusion and the redesigned tail.
+- **Pinned for Game Design later:** planet destruction and stage transitions (the mantle and lava, zero-g space).
+- **Audio, when active:** per-character grunts, growls and laughs that carry unvoiced text lines.
+
 ## Queued for idle directors (send when they resume)
 - **Camera:** when separation passes half the planet, the reference camera re-targets the other arc and pans 80 to 180 px per frame. That's a framing choice to fix.
 - **Performance:** a min-spec run (old laptop, integrated GPU, mobile), draw-call budgets, and the float-texture vertex fetch on mobile GLES3 (the fallback is packed 8-bit heights).
