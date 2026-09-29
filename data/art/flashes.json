@@ -1,11 +1,116 @@
 {
   "version": 2,
-  "decision": "Orb added Hazard, Primed and Respect; the EP cut Brink (the crown's brink ring covers it), kept Resolve (sequenced after the crown's wear pop) and kept Pride apart from Triumph. Fourteen flashes, five of them info. Winded, Smug and Bored are held.",
-  "held": [
-    "winded",
-    "smug",
-    "bored"
-  ],
+  "decision": "Orb added Hazard, Primed and Respect; the EP cut Brink (the crown's brink ring covers it), kept Resolve (sequenced after the crown's wear pop) and kept Pride apart from Triumph. Then Orb removed hiding from the base game (held for a future stealth fighter), so Primed (the ambush window) moves to held with Winded, Smug and Bored. Thirteen active flashes, four of them info (danger, hazard, found, searching). Found and Searching stay, for lock-on regained and lost through line of sight.",
+  "held": {
+    "winded": {
+      "name": "Winded",
+      "class": "emotion",
+      "attack": 0.15,
+      "hold": 0.5,
+      "fade": 0.4,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 238,
+          "d": 14,
+          "s": 10,
+          "op": 0.42
+        },
+        {
+          "a": 258,
+          "d": 22,
+          "s": 8,
+          "op": 0.38
+        },
+        {
+          "a": 214,
+          "d": 22,
+          "s": 7,
+          "op": 0.34
+        }
+      ],
+      "note": "Held from the pitch."
+    },
+    "smug": {
+      "name": "Smug",
+      "class": "emotion",
+      "attack": 0.15,
+      "hold": 0.4,
+      "fade": 0.3,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 16,
+          "d": 12,
+          "s": 36,
+          "op": 0.45
+        },
+        {
+          "a": 38,
+          "d": 12,
+          "s": 20,
+          "op": 0.4
+        }
+      ],
+      "note": "Held from the pitch."
+    },
+    "bored": {
+      "name": "Bored",
+      "class": "emotion",
+      "attack": 0.3,
+      "hold": 0.4,
+      "fade": 0.3,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 90,
+          "d": 16,
+          "s": 18,
+          "op": 0.3
+        },
+        {
+          "a": 100,
+          "d": 30,
+          "s": 12,
+          "op": 0.26
+        }
+      ],
+      "note": "Held from the pitch."
+    },
+    "primed": {
+      "name": "Primed",
+      "class": "info",
+      "attack": 0.06,
+      "hold": 0.34,
+      "fade": 0.2,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 36,
+          "d": 12,
+          "s": 14,
+          "op": 0.95
+        },
+        {
+          "a": 36,
+          "d": 30,
+          "s": 20,
+          "op": 0.95
+        },
+        {
+          "a": 36,
+          "d": 52,
+          "s": 28,
+          "op": 0.95
+        }
+      ],
+      "note": "Held: the ambush window needs hiding, which the base game no longer has. Points forward and up, a single direction."
+    }
+  },
   "arbitration": {
     "default_wait_max": 0.25,
     "note": "A flash due while the crown is up waits up to default_wait_max and is then dropped, except a flash with a sequence block: Resolve starts delay_after_crown_down seconds after the crown goes down (crown_up() false), waits up to wait_max, and is never dropped by arbitration (only the surge can preempt it)."
@@ -97,7 +202,7 @@
           "op": 0.95
         }
       ],
-      "moment": "An ambush from hiding, a telegraphed heavy or beam, or an attack from off screen. A parry window keeps the crown's ring, because a flash would double it.",
+      "moment": "A telegraphed heavy or beam, or an attack from off screen or behind. A parry window keeps the crown's ring, because a flash would double it.",
       "event": "ambush, attack telegraph (Encounter)",
       "sound": "A low dry tick with a short upward sweep. No chirp, no stinger.",
       "rare": false,
@@ -120,42 +225,6 @@
       "rare": false,
       "sequence": null
     },
-    "primed": {
-      "name": "Primed",
-      "class": "info",
-      "attack": 0.06,
-      "hold": 0.34,
-      "fade": 0.2,
-      "priority": 5,
-      "cooldown": 3,
-      "kind": "layout",
-      "glyph": null,
-      "layout": [
-        {
-          "a": 36,
-          "d": 12,
-          "s": 14,
-          "op": 0.95
-        },
-        {
-          "a": 36,
-          "d": 30,
-          "s": 20,
-          "op": 0.95
-        },
-        {
-          "a": 36,
-          "d": 52,
-          "s": 28,
-          "op": 0.95
-        }
-      ],
-      "moment": "Leaving cover with the ambush window open (x1.5 damage for 2.5 s): the fighter can strike hard now. It points forward, where danger sense points back.",
-      "event": "ambush_ready (Encounter; the rule exists in the prototype)",
-      "sound": "A soft rising click.",
-      "rare": false,
-      "sequence": null
-    },
     "found": {
       "name": "Found",
       "class": "info",
@@ -167,7 +236,7 @@
       "kind": "glyph",
       "glyph": "bang",
       "layout": null,
-      "moment": "A hidden rival is found, or a lost lock-on is regained.",
+      "moment": "A lost lock-on is regained: the rival is back in line of sight.",
       "event": "found, lock regained",
       "sound": "One bright rising note, in the fighter's own pitch.",
       "rare": false,
@@ -179,12 +248,12 @@
       "attack": 0.1,
       "hold": 0.5,
       "fade": 0.3,
-      "priority": 6,
+      "priority": 5,
       "cooldown": 3,
       "kind": "glyph",
       "glyph": "question",
       "layout": null,
-      "moment": "Lock-on lost, hunting a hidden rival. It re-pops at most every 3 s while the search lasts.",
+      "moment": "Lock-on lost: the rival has dropped out of line of sight and the fighter looks for it. It re-pops at most every 3 s while the search lasts.",
       "event": "lock lost, hunting (Encounter)",
       "sound": "A wavering low two-note phrase.",
       "rare": false,
@@ -196,7 +265,7 @@
       "attack": 0.08,
       "hold": 0.35,
       "fade": 0.37,
-      "priority": 7,
+      "priority": 6,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
@@ -249,7 +318,7 @@
       "attack": 0.12,
       "hold": 0.45,
       "fade": 0.35,
-      "priority": 8,
+      "priority": 7,
       "cooldown": 1.5,
       "kind": "layout",
       "glyph": null,
@@ -309,7 +378,7 @@
       "attack": 0.04,
       "hold": 0.16,
       "fade": 0.3,
-      "priority": 9,
+      "priority": 8,
       "cooldown": 0.4,
       "kind": "layout",
       "glyph": null,
@@ -351,7 +420,7 @@
       "attack": 0.1,
       "hold": 0.35,
       "fade": 0.35,
-      "priority": 10,
+      "priority": 9,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
@@ -401,7 +470,7 @@
       "attack": 0.14,
       "hold": 0.5,
       "fade": 0.36,
-      "priority": 11,
+      "priority": 10,
       "cooldown": 3,
       "kind": "layout",
       "glyph": null,
@@ -467,7 +536,7 @@
       "attack": 0.2,
       "hold": 0.5,
       "fade": 0.2,
-      "priority": 12,
+      "priority": 11,
       "cooldown": 4,
       "kind": "layout",
       "glyph": null,
@@ -515,7 +584,7 @@
       "attack": 0.2,
       "hold": 0.4,
       "fade": 0.3,
-      "priority": 13,
+      "priority": 12,
       "cooldown": 6,
       "kind": "layout",
       "glyph": null,
@@ -551,7 +620,7 @@
       "attack": 0.1,
       "hold": 0.35,
       "fade": 0.3,
-      "priority": 14,
+      "priority": 13,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
