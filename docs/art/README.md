@@ -8,9 +8,10 @@ Owner: Art Director. 2026-09-29. Art owns `art/` and `docs/art/`.
 | `anti-hero-concepts.md` | Round 1: three Anti-hero silhouettes (A, B, C), the silhouette test, a recommendation. Orb picked none | v0, pending Legal review |
 | `anti-hero-round2.md` | Round 2: five silhouettes (D, E, F, G and C revised), forms without a pole, the test, a recommendation, three questions for Orb | v0, pending Legal review, Orb decides |
 | `directions.md` | Four character art directions (Blank, Ink, Toy, Poster), each drawing all four fighters, with a comparison and a recommendation | v0, pending Legal review, Orb decides |
+| `blank-variations.md` | Round 3: five variations of Blank (Seam, Porcelain, Marked, Inked, Aura) in three-quarter view, with expression answers and a greybox mock-up | v0, pending Legal review, Orb decides |
 | `ai-prompt-policy.md` | How AI-assisted art is made, recorded and reviewed | v0 draft, for Legal and Orb to review |
 | `../../art/concepts/anti-hero/` | The SVG sheets and the deterministic generator that writes them | v0 |
-| `../../art/prompts/` | Prompt records (`TEMPLATE.md`, `ART-0001` to `ART-0003`) | v0 |
+| `../../art/prompts/` | Prompt records (`TEMPLATE.md`, `ART-0001` to `ART-0004`) | v0 |
 
 **Superseded.** The wave-1 art brief (three whole-game directions, `docs/art-bible/`) is replaced by Orb's answers: 2.5D side-on, cel-shaded plus low-poly. Nothing under `docs/art-bible/` was written. The parts that still fit are in the style guide: biome look notes and destruction states (section 8), the silhouette test (3.1) and the palette rules (3).
 

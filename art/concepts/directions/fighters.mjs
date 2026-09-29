@@ -6,6 +6,7 @@ import { V, add, sub, mul, lerp, norm, dirDown, limb, limbShade, along } from '.
 import { COIL, PALETTES2 } from '../anti-hero/concepts2.mjs';
 
 const T2 = (sk, arr) => arr.map(([x, y]) => sk.T(x, y));
+const F2 = (sk, arr) => arr.map(([x, y]) => (sk.TF ?? sk.T)(x, y)); // front-surface features: at yaw 0 the same as T2
 const perp = d => V(-d.y, d.x);
 function ring(c, r, n) { const o = []; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + Math.PI / n; o.push(V(c.x + Math.cos(a) * r, c.y + Math.sin(a) * r)); } return o; }
 const zig = (p0, p1, n, amp, up) => {
@@ -36,7 +37,7 @@ export const PROTAGONIST = {
     const wb = sk.T(-5.8, 9.4), wf = sk.T(5.4, 9.4);
     const hb = add(wb, mul(dirDown(-(12 + sway)), 13)), hf = add(wf, mul(dirDown(8), 12));
     s += ctx.poly([wb, hb, hf, wf], pal.base.light);
-    s += ctx.line(T2(sk, [[3.4, 28.4], [0.8, 20.4]]), pal.gear.shadow, 1.5);
+    s += ctx.line(F2(sk, [[3.4, 28.4], [0.8, 20.4]]), pal.gear.shadow, 1.5);
     s += ctx.poly(T2(sk, [[-6.6, 4.6], [6.0, 4.6], [5.8, 9.8], [-6.8, 9.8]]), pal.gear.mid, { sw: 1.2 });
     const k = sk.T(-8.6, 8);
     s += ctx.poly([add(k, V(-0.6, -2)), add(k, V(-2.6 - sway * 0.05, -13)), add(k, V(1.6, -13.6)), add(k, V(2.4, -1.4))], pal.gear.shadow, { sw: 1 });
@@ -179,10 +180,10 @@ export const CYBORG = {
     s += ctx.poly([wb, ...zig(hb, hf, 6, 2.4, norm(sub(wb, hb))), wf], pal.gear.shadow);
     if (!ctx.flat) s += ctx.poly([wb, hb, hf, wf], 'url(#mail)', { line: false, op: 0.7 });
     // the rail and its four hatches: chest is open and the chip shows there
-    s += ctx.poly(T2(sk, [[4.0, 28.4], [6.2, 28.4], [6.6, 8], [4.4, 8]]), pal.gear.mid, { sw: 1 });
-    s += ctx.poly(T2(sk, [[3.4, 25], [7.4, 25], [7.4, 19.6], [3.4, 19.6]]), pal.base.shadow, { sw: 1.3 });
-    s += ctx.poly(T2(sk, [[4.4, 23.6], [6.6, 23.6], [6.6, 21], [4.4, 21]]), pal.accent.light, { sw: 0.9 });
-    s += ctx.poly(T2(sk, [[3.6, 13], [7.2, 13], [7.2, 9.6], [3.6, 9.6]]), pal.base.shadow, { sw: 1.2 });
+    s += ctx.poly(F2(sk, [[4.0, 28.4], [6.2, 28.4], [6.6, 8], [4.4, 8]]), pal.gear.mid, { sw: 1 });
+    s += ctx.poly(F2(sk, [[3.4, 25], [7.4, 25], [7.4, 19.6], [3.4, 19.6]]), pal.base.shadow, { sw: 1.3 });
+    s += ctx.poly(F2(sk, [[4.4, 23.6], [6.6, 23.6], [6.6, 21], [4.4, 21]]), pal.accent.light, { sw: 0.9 });
+    s += ctx.poly(F2(sk, [[3.6, 13], [7.2, 13], [7.2, 9.6], [3.6, 9.6]]), pal.base.shadow, { sw: 1.2 });
     s += ctx.poly(T2(sk, [[-6.8, 20.4], [-4, 20.4], [-4, 16.6], [-6.8, 16.6]]), pal.base.shadow, { sw: 1.2 });
     // cables looping from the backpack over the shoulder and down to the hip
     if (!ctx.flat) {

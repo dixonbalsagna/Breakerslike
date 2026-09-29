@@ -50,32 +50,42 @@ export const pts = a => a.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('
 
 // Skeleton: forward kinematics, with the lowest boot point put on the ground line (y = 0).
 export const BUILD0 = { tw: 1, tl: 1, lw: 1, hs: 1, leg: 1, arm: 1 };
-export function solve(pose, build = {}) {
+export function solve(pose, build = {}, view = {}) {
   const bd = { ...BUILD0, ...build };
   const lean = pose.lean ?? 0;
   const bs = bd.lw;
-  const bootAt = (A, foot) => BOOT.map(([x, y]) => add(A, rotCW(V(x * bs, y * bs), foot)));
+  // Three-quarter view: yaw turns torso, hips and head toward the camera (degrees from profile). Near parts slide left,
+  // far parts slide right, forward extents are foreshortened. At yaw 0 every number below is the plain profile.
+  const psi = (view.yaw ?? 0) * Math.PI / 180, c = Math.cos(psi), sn = Math.sin(psi);
+  const fd = (a, L) => { const d = dirDown(a); return V(d.x * L * c, d.y * L); };
+  const bootAt = (A, foot) => BOOT.map(([x, y]) => add(A, rotCW(V(x * bs * c, y * bs), foot)));
   const legPts = (t1, t2, foot = 0) => {
-    const K = mul(dirDown(t1), DIM.thigh * bd.leg), A = add(K, mul(dirDown(t2), DIM.shin * bd.leg));
+    const K = fd(t1, DIM.thigh * bd.leg), A = add(K, fd(t2, DIM.shin * bd.leg));
     return { K, A, foot, boot: bootAt(A, foot) };
   };
   const nl0 = legPts(...pose.nearLeg), fl0 = legPts(...pose.farLeg);
   const minY = Math.min(...nl0.boot.map(p => p.y), ...fl0.boot.map(p => p.y));
   const P = V(0, -minY);
-  const legAt = (t1, t2, foot = 0) => {
-    const K = add(P, mul(dirDown(t1), DIM.thigh * bd.leg)), A = add(K, mul(dirDown(t2), DIM.shin * bd.leg));
-    return { K, A, foot, boot: bootAt(A, foot) };
+  const Hh = 4.2 * bd.tw, Wsh = 6.2 * bd.tw, Wt = 6.5 * bd.tw;
+  const legAt = (t1, t2, foot = 0, dx = 0) => {
+    const H0 = add(P, V(dx, 0));
+    const K = add(H0, fd(t1, DIM.thigh * bd.leg)), A = add(K, fd(t2, DIM.shin * bd.leg));
+    return { H0, K, A, foot, boot: bootAt(A, foot) };
   };
-  const T = (x, y) => add(P, rotCW(V(x * bd.tw, y * bd.tl), lean));
+  const cl = v => Math.max(-1, Math.min(1, v));
+  const T = (x, y) => { const xl = x * bd.tw; return add(P, rotCW(V(c * xl + sn * Wt * cl(xl / (4 * bd.tw)), y * bd.tl), lean)); };
+  const TF = (x, y) => { const xl = x * bd.tw; return add(P, rotCW(V(c * xl + sn * Wt * 0.28 * cl(xl / (4 * bd.tw)), y * bd.tl), lean)); };
   const S = T(0, 27), N = T(0, 30);
   const headAng = lean + (pose.head ?? 0);
   const HB = add(N, mul(V(Math.sin(rad(headAng)), Math.cos(rad(headAng))), DIM.neck));
-  const Hd = (x, y) => add(HB, rotCW(V(x * bd.hs, y * bd.hs), headAng));
-  const arm = (a1, a2) => {
-    const E = add(S, mul(dirDown(a1), DIM.upperArm * bd.arm)), W = add(E, mul(dirDown(a2), DIM.foreArm * bd.arm));
-    return { E, W, F: add(W, mul(dirDown(a2), DIM.hand * bs)), a2 };
+  const Rh = 5.4 * bd.hs;
+  const Hd = (x, y) => { const xl = x * bd.hs; return add(HB, rotCW(V(c * xl + sn * Rh * cl(xl / (3 * bd.hs)), y * bd.hs), headAng)); };
+  const arm = (a1, a2, dx) => {
+    const S0 = add(S, V(dx, 0));
+    const E = add(S0, fd(a1, DIM.upperArm * bd.arm)), W = add(E, fd(a2, DIM.foreArm * bd.arm));
+    return { S0, E, W, F: add(W, fd(a2, DIM.hand * bs)), a2 };
   };
-  return { pose, b: bd, P, lean, T, S, N, HB, Hd, headAng, nearArm: arm(...pose.nearArm), farArm: arm(...pose.farArm), nearLeg: legAt(...pose.nearLeg), farLeg: legAt(...pose.farLeg) };
+  return { pose, b: bd, yaw: { c, s: sn, deg: view.yaw ?? 0 }, P, lean, T, TF, S, N, HB, Hd, headAng, nearArm: arm(...pose.nearArm, -Wsh * sn), farArm: arm(...pose.farArm, Wsh * sn), nearLeg: legAt(...pose.nearLeg, -Hh * sn), farLeg: legAt(...pose.farLeg, Hh * sn) };
 }
 
 // Drawing context. In flat mode everything is solid black with no lines, shade bands or decals (the silhouette test).
@@ -125,11 +135,11 @@ export function drawHead(ctx, sk, st, hair, concept = null) {
   const H = (arr, g = 0) => arr.map(([x, y]) => sk.Hd(x, y));
   if ((ctx.faceless || concept?.machineHead) && concept?.blankHead) {
     // a blank head: a designed shape with no face. Direction and emotion come from the shape and the tilt of the head.
-    const bh = concept.blankHead(pal);
+    const bh = concept.blankHead(pal, st);
     out.push(ctx.poly(limb(sk.N, sk.HB, 5.2 * sk.b.lw, 4.6 * sk.b.lw), bh.neck ?? bh.fill));
     out.push(ctx.poly(H(bh.poly), bh.fill));
     if (bh.shade) out.push(ctx.shade(H(bh.shade), bh.shadow));
-    for (const m of bh.marks ?? []) out.push(ctx.poly(H(m.poly), m.fill, { sw: 0.8 }));
+    for (const m of bh.marks ?? []) out.push(ctx.poly(H(m.poly), m.fill, { sw: 0.8, op: m.op, line: m.line }));
     out.push(hair(ctx, sk, st));
     return out.join('');
   }
@@ -172,8 +182,8 @@ export function drawArm(ctx, sk, arm, side, cfg) {
   const far = side === 'far';
   const cs = far ? cfg.sleeveFar : cfg.sleeve, csh = cfg.sleeveShade;
   const w = [5.6, 4.7, 4.1].map(v => v * sk.b.lw);
-  out.push(ctx.poly(limb(sk.S, arm.E, w[0], w[1]), cs));
-  out.push(ctx.shade(limbShade(sk.S, arm.E, w[0], w[1]), csh));
+  out.push(ctx.poly(limb(arm.S0 ?? sk.S, arm.E, w[0], w[1]), cs));
+  out.push(ctx.shade(limbShade(arm.S0 ?? sk.S, arm.E, w[0], w[1]), csh));
   const foreCol = cfg.foreSkin ? pal.skin.mid : cs;
   out.push(ctx.poly(limb(arm.E, arm.W, w[1], w[2]), far && !cfg.foreSkin ? cfg.sleeveFar : foreCol));
   out.push(ctx.shade(limbShade(arm.E, arm.W, w[1], w[2]), cfg.foreSkin ? pal.skin.shadow : csh));
@@ -193,9 +203,9 @@ export function drawHand(ctx, sk, arm, kind, far) {
   return out;
 }
 export function drawBoot(ctx, sk, leg, colour, shadow, trim) {
-  const bs = sk.b.lw;
-  const bp = BOOT.map(([x, y]) => add(leg.A, rotCW(V(x * bs, y * bs), leg.foot)));
-  const cuff = [[-3.4, 4.6], [3.1, 4.6], [3.2, 1.4], [-3.5, 1.4]].map(([x, y]) => add(leg.A, rotCW(V(x * bs, y * bs), leg.foot)));
+  const bs = sk.b.lw, cx = sk.yaw?.c ?? 1;
+  const bp = BOOT.map(([x, y]) => add(leg.A, rotCW(V(x * bs * cx, y * bs), leg.foot)));
+  const cuff = [[-3.4, 4.6], [3.1, 4.6], [3.2, 1.4], [-3.5, 1.4]].map(([x, y]) => add(leg.A, rotCW(V(x * bs * cx, y * bs), leg.foot)));
   let s = ctx.poly(bp, colour) + ctx.shade([bp[0], bp[6], bp[5], add(bp[5], V(3.4, 0)), add(bp[6], V(2.2, 1.2)), add(bp[0], V(1.6, 0))], shadow);
   if (trim) s += ctx.poly(cuff, trim, { sw: 1.1 });
   return s;
@@ -203,7 +213,8 @@ export function drawBoot(ctx, sk, leg, colour, shadow, trim) {
 export function drawLeg(ctx, sk, leg, cfg, far) {
   const cs = far ? cfg.trouserFar : cfg.trouser;
   const w = [8.6, 6.6, 5.4].map(v => v * sk.b.lw);
-  let s = ctx.poly(limb(sk.P, leg.K, w[0], w[1]), cs) + ctx.shade(limbShade(sk.P, leg.K, w[0], w[1]), cfg.trouserShade);
+  const h0 = leg.H0 ?? sk.P;
+  let s = ctx.poly(limb(h0, leg.K, w[0], w[1]), cs) + ctx.shade(limbShade(h0, leg.K, w[0], w[1]), cfg.trouserShade);
   s += ctx.poly(limb(leg.K, leg.A, w[1], w[2]), cs) + ctx.shade(limbShade(leg.K, leg.A, w[1], w[2]), cfg.trouserShade);
   s += drawBoot(ctx, sk, leg, far ? cfg.bootFar : cfg.boot, cfg.bootShade, cfg.bootTrim);
   return s;
@@ -254,8 +265,8 @@ export function drawWear(ctx, sk, st, cfg) {
 }
 
 // The whole figure. `concept` supplies `cfg`, `back`, `over`, `front` and `armGear` layers.
-export function figure(ctx, concept, pose, st) {
-  const sk = solve(pose, concept.build), cfg = concept.cfg(ctx.pal, st), o = [];
+export function figure(ctx, concept, pose, st, view = {}) {
+  const sk = solve(pose, concept.build, view), cfg = concept.cfg(ctx.pal, st), o = [];
   o.push(...drawArm(ctx, sk, sk.farArm, 'far', cfg));
   o.push(drawHand(ctx, sk, sk.farArm, pose.handFar ?? 'fist', true));
   o.push(drawLeg(ctx, sk, sk.farLeg, cfg, true));
