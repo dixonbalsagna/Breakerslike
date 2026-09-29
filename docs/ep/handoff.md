@@ -90,6 +90,9 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
   Then Rendering draws the crater bowls in depth (the z=0 slice equals the sim) and the scorch trails.
 - **Tools, small:** fix the godot-parity comment (it now checks the GD goldens); add a batch.gd 5-match smoke step. QA: move baselines to batch.gd.
 
+## Plan upgrade (2026-09-29)
+Orb upgraded the subscription ('more tokens to play with, keep going'). More directors may work in parallel on non-sim tracks. Workflows and ultracode still need Orb's per-task OK (ADR 0005). Newly active: Art (look v0 and the Anti-hero concept), UI & UX (the no-health-bar HUD in ui/), QA (move to batch.gd, Wounds test skeletons), Audio (direction and grunt palettes). Ping Orb whenever a new playable build is live.
+
 ## Sim editor queue (one at a time; the plan is docs/architecture/wounds-plan.md)
 S0 menace fixes (Simulation, active), S1 wear core, then SC world scale plus W-R rim scaling (World first, then Simulation, then Encounter's tempo pass; one golden regen; docs/world/scale.md; about 2,000 bh planet; 10-20 s lap), B1 building depth data (World), LD1 fire and smoke cover (World and Encounter), then (with the ko() hook behind a flag), S2 the end (Encounter), S3a and S3b, S4 Rally, B2 the building brunt (Encounter, World, Simulation; docs/world/buildings-in-depth.md), with B3 building presentation (Rendering, Camera) in parallel after B1, LD2 landslides, then LD3 lava, quakes and rifts (Orb's picks; docs/world/living-destruction.md), then D1 roster as data, then F1: the **Anti-hero** (Orb's pick). W1 (variable circumference) comes before the fold; N1 (N bodies) comes before the Empress.
 
