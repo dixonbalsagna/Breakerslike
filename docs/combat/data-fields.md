@@ -221,3 +221,98 @@ Render-only fields must never change simulation state; the validation in section
 | `anim.hitVolumes` | reserved, sim-read if adopted | the prototype has no hit volumes (every strike connects on its beat); reserved in case a later build uses them |
 
 The procedural move system's part files (`procedural-moves.md`, sections 2.2 and 11) follow the same split: a `sim` block and a `render` block.
+
+---
+
+## 10. Loader schema for `data/combat/` (S3b)
+
+This is the schema of `data/combat/templates.json` and `data/combat/finishers.json`, written for Encounter Systems' loader in S3b; Tools can turn it into a validator later. The contract and the verification steps are in `s3b-loader-note.md`.
+
+### 10.1 Files and profiles
+- **`templates.json`** holds the melee templates (`templates`), the chain link (`chainLink`) and the signature (`beam`).
+- **`finishers.json`** holds the finishers, the contest settings, the cue vocabulary, and the shapes for the four real fighters.
+- **`profile`** at the top of each file chooses the timing:
+  - **`parity`** must reproduce the code at 69c4a2f bit for bit.
+  - **`spaced`** (templates) and **`authored`** (finishers) are the new timings.
+- Every branch carries both timings (`parity` and `spaced` beat lists), so switching is one field.
+
+### 10.2 A template
+| Field | Meaning |
+| :--- | :--- |
+| `id` | stable template id |
+| `trigger.kinds`, `trigger.defender` | attack kinds and defender state (`AGGRESSIVE`, `DEFENSIVE`, `EVASIVE`, `ESCAPE`, `CHARGING`; the latter when `D.dPrev == "charging"`) |
+| `selector` | how the branch is picked (10.4) |
+| `shared.parity`, `shared.spaced` | beats scheduled before the branch's own beats, in this order |
+| `branches[]` | `id`, `tag` (the exact feed tag), `tagProposed` (Narrative's or Game Design's proposal, **not** used by parity), `favours`, `spacedTiming` (`changes` or `identical`), and the `parity` and `spaced` beat lists |
+
+**Scheduling order is part of the data.** Beats are scheduled in array order: `shared` first, then the branch. `DirExchange.schedule` keeps equal times in scheduling order, so the array order must equal the code's call order; it does in `parity`.
+
+### 10.3 Value forms
+All arithmetic is IEEE double, done exactly as written, one operation per step. These forms reproduce the code's float results bit for bit.
+
+| Form | Value | Used for |
+| :--- | :--- | :--- |
+| number | itself | any |
+| `{"ref": "rt"}` | rt | parity times and durations |
+| `{"ref": "rt", "plus": x}` | rt + x (a negative x is exact: a + (−b) equals a − b) | parity times |
+| `{"ref": "rt", "times": x}` | rt × x | parity times and durations |
+| `{"ref": "base"}`, `{"ref": "base", "times": x}`, `{"ref": "base", "plus": x}` | base, base × x, base + x | damage |
+| `{"light": x, "heavy": y}` | x for a light, y for a heavy | launch force |
+| `{"clamp": [v, lo, hi]}` | `SimMathx.jclamp(v, lo, hi)` | beam rise |
+| `"$out"`, `"$variant"`, `"$dist"` | the plan-time value of that name | beam args |
+| `{"tick": {"at": "start" \| "c", "times": k, "step": n, "add": [names], "sub": [names]}}` | anchor (0, or c × k, with k defaulting to 1) + n × tempo.step + Σ add − Σ sub, in **ticks** | spaced times |
+| `{"ref": "c"}`, `{"ref": "c", "times": k}`, `{"ticks": "step"}` | durations in spaced, converted to seconds as ticks / 60 | spaced rush durations |
+| `{"tick": N}` (finishers) | t0 + N / 60 | authored finisher times |
+
+In `spaced`, `c` is the approach time in whole ticks: the `approach` rule in the profile, rounded half up. A beat's time on the exchange clock is `tick / 60` seconds.
+
+**Linear probability form** (`selector.p`): `{"start": s, "terms": [...], "clamp": [lo, hi]}`. It is evaluated as `acc = s`, then each term in order:
+- `{"coef": k, "diff": ["X", "Y"]}` gives `acc = acc + k × (X − Y)`;
+- `{"if": cond, "then": a, "else": b}` gives `acc = acc + (cond ? a : b)`;
+- finally `jclamp(acc, lo, hi)`.
+
+This is the code's left-to-right sum. A term that the code subtracts is stored as a negative `then`, `else` or `coef`, and that is exact.
+
+**Conditions:**
+- `{"var": name}`, a truthy test;
+- `{"var": name, "op": ">" | "<" | ">=" | "==", "value": v}`;
+- `{"gt": [x, y]}`;
+- `{"all": [...]}`, `{"not": cond}`.
+
+Names are `A.tier`, `D.tier`, `A.ki`, `D.ki`, `A.stance`, `A.ambush`, `dist`, `heavy`, and `vitality(f)` (`SimWounds.vitality`).
+
+### 10.4 Selector kinds
+Each kind makes a fixed number of `S.rng` draws, in a fixed order. The loader must not draw in any other place.
+
+| Kind | Draws | Rule | Templates |
+| :--- | :--- | :--- | :--- |
+| `fixed` | none | always `branch` | charge_interrupt, guard_break |
+| `threshold` | one `next()`, always (even when `override` applies) | `p` from the linear form, or `override.p` when its condition holds; branch `ifBelow` if draw < p, else `else` | pursuit, dodge |
+| `gated_threshold` | one `next()` **only if** `gate` holds | `ifBelow` if the gate holds and draw < p | pressure |
+| `bands` | one `next()` | `below.branch` if r < p + below.offset; `above.branch` if r > p + above.offset; else `else` | heavy_clash |
+| `score_compare` | one `range_(lo, hi)` per score, A's first | `ifGreater` if score(A, D) > score(D, A); the score is summed left to right | trade_blows |
+| beam `outcome.rules` | per rule: `none` or one `next()` | the first rule whose defender matches decides; EVASIVE draws before testing `not A.ambush` | signature |
+
+### 10.5 Beat ops
+**Existing ops, unchanged** (`DirExchange.runBeat`): `rush`, `wind`, `press`, `strike`, `launch`, `window`, `nop`, `slip`, `dodge`, `guardBreak`, `clashWave`, `chainStrike`, `beamCharge`, `beamFire` (with the follow-ons it schedules itself: `beamImpact`, `beamDodge`, `beamEscape`, `clashResolve`), `finisher`, `finRush`, `breakLaunch`, `contest`. Args are exactly the code's Dictionaries:
+- a `strike` with no `o` passes `null`;
+- `launch` args are `{"force", "rev"}`.
+
+**New ops for S3b.** None draws from `S.rng` itself except `contest`. The launches that `finalBlow` and `fixedLaunch` trigger draw as `launch` and `breakLaunch` do today (planner noise, launch spin).
+
+| Op | Args | Effect |
+| :--- | :--- | :--- |
+| `cue` | `cue`, `who` (`A`, `D`, `W`, `L` or `both`), optional `cam`, `bark` | Emits a render-only fx event. No state change, no RNG. It exists so every beat has something on screen (no dead air) |
+| `contestOpen` | `w`, `cue` | Emits the struggle cue and a `windowOpen` event of kind `contest`, lasting until the `contest` beat |
+| `contest` | `w`, `mode` | `ko_now` is today's `_opContest`: one draw, KO or HOLDS ON. `branch` makes the same draw, emits the same events, then schedules the finisher's `outcomes.landed` or `outcomes.survived` beats relative to the contest's time. The KO happens at `finalBlow` |
+| `finalBlow` | `w`, `dmg`, `o`, `launch` | A strike W→L with `o`; then a launch (`mode: "fixed"` uses `doLaunch` with `{ux·face, uy}`, `mode: "planner_long"` uses the long-only planner); then `SimDamage.ko(L, W)`. The launch comes first, so `ko()` keeps it |
+| `fixedLaunch` | `w`, `ux`, `uy`, `force`, `faceRelative` | `DirLaunch.doLaunch(W, L, {ux (× W.face if faceRelative), uy}, force)`, with no planner and no decisive re-check |
+| `separate` | `w`, `speed` | Pushes W and L apart: `W.vx = −W.face·speed`, `L.vx = W.face·speed`. No damage |
+
+**Roles in finishers:** `W` and `L` map to `A` and `D` as `startFinisher` does (`w = "A" if W == ex.A`).
+
+### 10.6 Profile settings the ops read in `spaced`
+- `approach`: the pursuit flight beyond 2,500 units.
+- `aiParryPressDelay`: read by `wind` (parity [0.05, 0.16]).
+- `hitstopFloors`: applied only once Controls adopts them.
+- The beam's `laterSpaced` constants: only once Encounter exposes them; until then the beam stays identical.

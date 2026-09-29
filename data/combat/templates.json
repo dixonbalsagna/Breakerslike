@@ -1,0 +1,427 @@
+{
+  "schema": "combat.templates/1",
+  "_about": "Exchange templates as data (Combat). Two timing profiles per branch. 'parity' reproduces sim/director/melee.gd, beam.gd and exchange.gd chain() at commit 69c4a2f exactly: same beats, same scheduling order, same RNG draws in the same order. 'spaced' keeps every outcome, damage, force, tag and draw of parity but re-times the beats to balance-targets.md section 10 (0.25 to 0.40 s between contacts, 6 to 10 beats) and adds render-only 'cue' beats. Contract, value forms and verification: docs/combat/data-fields.md section 10 and docs/combat/s3b-loader-note.md.",
+  "profile": "parity",
+
+  "profiles": {
+    "parity": {
+      "timeUnit": "s",
+      "approach": { "divisor": 2600, "min": 0.18, "max": 0.65, "_note": "rt = clamp(dist / divisor, min, max), melee.gd line 19" },
+      "aiParryPressDelay": [0.05, 0.16]
+    },
+    "spaced": {
+      "timeUnit": "tick",
+      "ticksPerSecond": 60,
+      "tempo": { "step": 21, "windup": 15, "heavyWindup": 20, "follow": 3, "tell": 18,
+                 "_note": "ticks. step 0.35 s between contacts; windup 0.25 s before a parryable strike (proposal for Controls, section 10 asks 0.20 to 0.30); heavyWindup 0.333 s (Controls' 20-tick proposal); follow 0.05 s from a strike to its launch; tell 0.30 s. QA tunes 'step' first: each +3 ticks moves the median exchange by about +0.2 s" },
+      "approach": { "divisor": 2600, "min": 0.40, "max": 0.65,
+                    "pursuit": { "beyond": 2500, "base": 0.8, "per": 3000, "max": 2.0 },
+                    "rounding": "round half up to whole ticks",
+                    "_note": "c (the contact anchor) = clamp(dist / divisor, min, max) seconds for dist up to 'beyond'; past it a visible pursuit flight of clamp(base + (dist - beyond) / per, base, max) s (section 10: 0.8 to 2.0 s). Encounter applies SimConst.WS as it does today" },
+      "aiParryPressDelay": [0.05, 0.54],
+      "_aiNote": "The AI defender's press delay after the wind beat. With the wider 0.25 s window, [0.05, 0.54] keeps the AI's parry success per attempt near today's 41%. Encounter owns the AI policy and may retune.",
+      "hitstopFloors": { "light": 0.07, "heavy": 0.12, "finisher": 0.30, "adopted": false,
+                         "_note": "section 10 floors, a proposal for Controls (hit-stop table owner). The loader applies max(stop, floor) only once Controls adopts them" }
+    }
+  },
+
+  "locals": {
+    "rt": "approach(dist) in the active profile: 'rt' in parity (seconds), 'c' in spaced (ticks)",
+    "base": { "light": 26, "heavy": 66 },
+    "dist": "abs(sdx(A.x, D.x)) at plan time"
+  },
+
+  "templates": [
+    {
+      "id": "charge_interrupt",
+      "trigger": { "kinds": ["light", "heavy"], "defender": "CHARGING" },
+      "selector": { "kind": "fixed", "branch": "interrupt" },
+      "branches": [
+        {
+          "id": "interrupt", "tag": "CHARGE INTERRUPT", "favours": "attacker", "spacedTiming": "changes",
+          "parity": [
+            { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+            { "t": { "ref": "rt" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "times": 1.4 }, "o": { "noParry": true, "ignoreStance": true, "big": true } } },
+            { "t": { "ref": "rt", "plus": 0.05 }, "op": "launch", "args": { "force": { "light": 900, "heavy": 1500 }, "rev": false } },
+            { "t": { "ref": "rt", "plus": 0.32 }, "op": "window" }
+          ],
+          "spaced": [
+            { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+            { "tick": { "at": "c", "sub": ["tell"] }, "op": "cue", "args": { "cue": "tell", "who": "D" } },
+            { "tick": { "at": "c" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "times": 1.4 }, "o": { "noParry": true, "ignoreStance": true, "big": true } } },
+            { "tick": { "at": "c", "add": ["follow"] }, "op": "launch", "args": { "force": { "light": 900, "heavy": 1500 }, "rev": false } },
+            { "tick": { "at": "c", "step": 1, "add": ["follow"] }, "op": "cue", "args": { "cue": "pursue", "who": "A" } },
+            { "tick": { "at": "c", "step": 2, "add": ["follow"] }, "op": "window" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "pursuit",
+      "trigger": { "kinds": ["light", "heavy"], "defender": "ESCAPE" },
+      "selector": {
+        "kind": "threshold", "draw": "next", "ifBelow": "slips", "else": "caught",
+        "p": { "start": 0.5,
+               "terms": [ { "coef": 0.07, "diff": ["D.tier", "A.tier"] },
+                          { "if": { "var": "dist", "op": ">", "value": 800 }, "then": 0.12, "else": 0.0 },
+                          { "if": { "var": "A.ambush" }, "then": -1.0, "else": 0.0 } ],
+               "clamp": [0.05, 0.88] },
+        "_formula": "pEsc = clamp(0.5 + 0.07*(D.tier - A.tier) + (dist > 800 ? 0.12 : 0) - (A.ambush ? 1 : 0), 0.05, 0.88); one S.rng.next(), drawn before any beat is scheduled (melee.gd lines 33-34)"
+      },
+      "branches": [
+        {
+          "id": "slips", "tag": "PURSUIT — TARGET SLIPS AWAY", "tagProposed": "PURSUIT — SLIPPED AWAY", "favours": "neutral", "spacedTiming": "changes",
+          "_spacedNote": "An escape is short by design (5 beats): holding the attacker longer would be dead air.",
+          "parity": [
+            { "t": 0, "op": "rush", "args": { "off": 260, "dur": { "ref": "rt", "times": 0.8 } } },
+            { "t": { "ref": "rt", "times": 0.55 }, "op": "slip" },
+            { "t": { "ref": "rt", "plus": 0.5 }, "op": "nop" }
+          ],
+          "spaced": [
+            { "tick": { "at": "start" }, "op": "rush", "args": { "off": 260, "dur": { "ref": "c", "times": 0.8 } } },
+            { "tick": { "at": "c", "times": 0.55 }, "op": "slip" },
+            { "tick": { "at": "c", "times": 0.55, "step": 1 }, "op": "cue", "args": { "cue": "pull_up", "who": "A" } },
+            { "tick": { "at": "c", "times": 0.55, "step": 2 }, "op": "cue", "args": { "cue": "scan", "who": "A" } },
+            { "tick": { "at": "c", "times": 0.55, "step": 3 }, "op": "nop" }
+          ]
+        },
+        {
+          "id": "caught", "tag": "PURSUIT — CAUGHT", "favours": "attacker", "spacedTiming": "changes",
+          "parity": [
+            { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+            { "t": { "ref": "rt" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "times": 1.2 }, "o": { "noParry": true } } },
+            { "t": { "ref": "rt", "plus": 0.05 }, "op": "launch", "args": { "force": { "light": 800, "heavy": 1500 }, "rev": false } },
+            { "t": { "ref": "rt", "plus": 0.3 }, "op": "window" }
+          ],
+          "spaced": [
+            { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+            { "tick": { "at": "c", "sub": ["tell"] }, "op": "cue", "args": { "cue": "glance_back", "who": "D" } },
+            { "tick": { "at": "c" }, "op": "cue", "args": { "cue": "catch", "who": "A" } },
+            { "tick": { "at": "c", "step": 1 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "times": 1.2 }, "o": { "noParry": true } } },
+            { "tick": { "at": "c", "step": 1, "add": ["follow"] }, "op": "launch", "args": { "force": { "light": 800, "heavy": 1500 }, "rev": false } },
+            { "tick": { "at": "c", "step": 2, "add": ["follow"] }, "op": "window" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "dodge",
+      "trigger": { "kinds": ["light", "heavy"], "defender": "EVASIVE" },
+      "selector": {
+        "kind": "threshold", "draw": "next", "ifBelow": "read", "else": "counter",
+        "override": { "if": { "var": "A.ambush" }, "p": 1.0 },
+        "p": { "start": 0.42,
+               "terms": [ { "coef": 0.08, "diff": ["A.tier", "D.tier"] },
+                          { "if": { "var": "A.stance", "op": "==", "value": 0 }, "then": 0.08, "else": 0.0 },
+                          { "if": { "var": "A.ki", "op": "<", "value": 12 }, "then": -0.12, "else": 0.0 },
+                          { "if": { "var": "heavy" }, "then": -0.05, "else": 0.0 } ],
+               "clamp": [0.15, 0.8] },
+        "_formula": "pRead = A.ambush ? 1.0 : clamp(0.42 + 0.08*(A.tier - D.tier) + (A.stance == 0 ? 0.08 : 0) - (A.ki < 12 ? 0.12 : 0) - (heavy ? 0.05 : 0), 0.15, 0.8); one S.rng.next(), always drawn, even under an ambush (melee.gd lines 51-52)"
+      },
+      "branches": [
+        {
+          "id": "read", "tag": "DODGE & READ", "tagProposed": "DODGE — SEEN THROUGH", "favours": "attacker", "spacedTiming": "changes",
+          "_spacedNote": "The parity wind beat (a parry window that can never parry, CC-009) is dropped in spaced; that removes the AI defender's press draws here.",
+          "parity": [
+            { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+            { "t": { "ref": "rt", "plus": -0.12 }, "op": "wind" },
+            { "t": { "ref": "rt" }, "op": "dodge" },
+            { "t": { "ref": "rt", "plus": 0.22 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base" }, "o": { "noParry": true } } },
+            { "t": { "ref": "rt", "plus": 0.27 }, "op": "launch", "when": "heavy", "args": { "force": 1400, "rev": false } },
+            { "t": { "ref": "rt", "plus": 0.5 }, "op": "window" }
+          ],
+          "spaced": [
+            { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+            { "tick": { "at": "c", "sub": ["tell"] }, "op": "cue", "args": { "cue": "tell", "who": "D" } },
+            { "tick": { "at": "c" }, "op": "dodge" },
+            { "tick": { "at": "c", "step": 1 }, "op": "cue", "args": { "cue": "whiff_recover", "who": "A" } },
+            { "tick": { "at": "c", "step": 2 }, "op": "cue", "args": { "cue": "turn_read", "who": "A" } },
+            { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base" }, "o": { "noParry": true } } },
+            { "tick": { "at": "c", "step": 3, "add": ["follow"] }, "op": "launch", "when": "heavy", "args": { "force": 1400, "rev": false } },
+            { "tick": { "at": "c", "step": 4, "add": ["follow"] }, "op": "window" }
+          ]
+        },
+        {
+          "id": "counter", "tag": "DODGE & COUNTER", "tagProposed": "DODGE — COUNTER", "favours": "defender", "spacedTiming": "changes",
+          "parity": [
+            { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+            { "t": { "ref": "rt", "plus": -0.12 }, "op": "wind" },
+            { "t": { "ref": "rt" }, "op": "dodge" },
+            { "t": { "ref": "rt", "plus": 0.24 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": { "ref": "base", "times": 0.9 }, "o": { "noParry": true } } },
+            { "t": { "ref": "rt", "plus": 0.3 }, "op": "launch", "args": { "force": 900, "rev": true } },
+            { "t": { "ref": "rt", "plus": 0.6 }, "op": "nop" }
+          ],
+          "spaced": [
+            { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+            { "tick": { "at": "c", "sub": ["tell"] }, "op": "cue", "args": { "cue": "tell", "who": "D" } },
+            { "tick": { "at": "c" }, "op": "dodge" },
+            { "tick": { "at": "c", "step": 1 }, "op": "cue", "args": { "cue": "exposed", "who": "A" } },
+            { "tick": { "at": "c", "step": 2 }, "op": "cue", "args": { "cue": "overextend", "who": "A" } },
+            { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": { "ref": "base", "times": 0.9 }, "o": { "noParry": true } } },
+            { "tick": { "at": "c", "step": 3, "add": ["follow"] }, "op": "launch", "args": { "force": 900, "rev": true } },
+            { "tick": { "at": "c", "step": 4, "add": ["follow"] }, "op": "cue", "args": { "cue": "recover", "who": "D" } },
+            { "tick": { "at": "c", "step": 5, "add": ["follow"] }, "op": "nop" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "pressure",
+      "trigger": { "kinds": ["light"], "defender": "DEFENSIVE" },
+      "selector": {
+        "kind": "gated_threshold", "gate": { "var": "D.ki", "op": ">", "value": 25 }, "draw": "next", "p": 0.4,
+        "ifBelow": "counter", "else": "holds",
+        "_formula": "counter if D.ki > 25 and S.rng.next() < 0.4. The draw happens only when the gate passes (short-circuit), after the three strikes are scheduled (melee.gd line 74)"
+      },
+      "shared": {
+        "parity": [
+          { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+          { "t": { "ref": "rt", "plus": -0.1 }, "op": "wind" },
+          { "t": { "ref": "rt" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 26, "o": { "kb": 120 } } },
+          { "t": { "ref": "rt", "plus": 0.16 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 26, "o": { "kb": 120, "noParry": true } } },
+          { "t": { "ref": "rt", "plus": 0.32 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 26, "o": { "kb": 120, "noParry": true } } }
+        ],
+        "spaced": [
+          { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+          { "tick": { "at": "c", "sub": ["windup"] }, "op": "wind" },
+          { "tick": { "at": "c" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 26, "o": { "kb": 120 } } },
+          { "tick": { "at": "c", "step": 1 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 26, "o": { "kb": 120, "noParry": true } } },
+          { "tick": { "at": "c", "step": 2 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 26, "o": { "kb": 120, "noParry": true } } }
+        ]
+      },
+      "branches": [
+        {
+          "id": "holds", "tag": "PRESSURE — GUARD HOLDS", "favours": "attacker", "spacedTiming": "changes",
+          "_ruleNote": "Game Design's R6 (no chain window after GUARD HOLDS) is a rule change for a later slice; both profiles keep today's window.",
+          "parity": [
+            { "t": { "ref": "rt", "plus": 0.42 }, "op": "window" }
+          ],
+          "spaced": [
+            { "tick": { "at": "c", "step": 3 }, "op": "cue", "args": { "cue": "guard_set", "who": "D" } },
+            { "tick": { "at": "c", "step": 4 }, "op": "window" }
+          ]
+        },
+        {
+          "id": "counter", "tag": "PRESSURE — GUARD HOLDS → COUNTER", "favours": "neutral", "spacedTiming": "changes",
+          "parity": [
+            { "t": { "ref": "rt", "plus": 0.55 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 24, "o": { "noParry": true, "ignoreStance": true } } },
+            { "t": { "ref": "rt", "plus": 0.8 }, "op": "nop" }
+          ],
+          "spaced": [
+            { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 24, "o": { "noParry": true, "ignoreStance": true } } },
+            { "tick": { "at": "c", "step": 4 }, "op": "cue", "args": { "cue": "reset", "who": "both" } },
+            { "tick": { "at": "c", "step": 5 }, "op": "nop" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "guard_break",
+      "trigger": { "kinds": ["heavy"], "defender": "DEFENSIVE" },
+      "selector": { "kind": "fixed", "branch": "break" },
+      "branches": [
+        {
+          "id": "break", "tag": "GUARD BREAK", "favours": "attacker", "spacedTiming": "changes",
+          "parity": [
+            { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+            { "t": { "ref": "rt", "plus": -0.1 }, "op": "wind" },
+            { "t": { "ref": "rt" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 45, "o": { "kb": 150 } } },
+            { "t": { "ref": "rt", "plus": 0.2 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 45, "o": { "kb": 150, "noParry": true } } },
+            { "t": { "ref": "rt", "plus": 0.4 }, "op": "guardBreak" },
+            { "t": { "ref": "rt", "plus": 0.42 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "times": 1.15 }, "o": { "noParry": true, "ignoreStance": true, "stop": 0.12, "shake": 12, "big": true, "kind": "guard_break" } } },
+            { "t": { "ref": "rt", "plus": 0.46 }, "op": "launch", "args": { "force": 1700, "rev": false } },
+            { "t": { "ref": "rt", "plus": 0.72 }, "op": "window" }
+          ],
+          "spaced": [
+            { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+            { "tick": { "at": "c", "sub": ["windup"] }, "op": "wind" },
+            { "tick": { "at": "c" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 45, "o": { "kb": 150 } } },
+            { "tick": { "at": "c", "step": 1 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 45, "o": { "kb": 150, "noParry": true } } },
+            { "tick": { "at": "c", "step": 2 }, "op": "guardBreak" },
+            { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "times": 1.15 }, "o": { "noParry": true, "ignoreStance": true, "stop": 0.12, "shake": 12, "big": true, "kind": "guard_break" } } },
+            { "tick": { "at": "c", "step": 3, "add": ["follow"] }, "op": "launch", "args": { "force": 1700, "rev": false } },
+            { "tick": { "at": "c", "step": 4, "add": ["follow"] }, "op": "window" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "trade_blows",
+      "trigger": { "kinds": ["light"], "defender": "AGGRESSIVE" },
+      "selector": {
+        "kind": "score_compare", "order": ["A", "D"], "ifGreater": "won", "else": "lost",
+        "score": { "sum": [ { "var": "f.tier" }, { "div": ["f.ki", 70] }, { "draw": [0.0, 1.6] },
+                            { "if": { "gt": ["vitality(f)", "vitality(o)"] }, "then": 0.3, "else": 0.0 } ] },
+        "_formula": "won if score(A, D) > score(D, A), score(f, o) = f.tier + f.ki / 70 + S.rng.range_(0, 1.6) + (vitality(f) > vitality(o) ? 0.3 : 0), summed left to right; A's score (and its draw) first (melee.gd lines 94 and 129-130)"
+      },
+      "shared": {
+        "parity": [
+          { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+          { "t": { "ref": "rt", "plus": -0.1 }, "op": "wind" },
+          { "t": { "ref": "rt" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 24 } },
+          { "t": { "ref": "rt", "plus": 0.17 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 20, "o": { "noParry": true } } },
+          { "t": { "ref": "rt", "plus": 0.34 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 24, "o": { "noParry": true } } },
+          { "t": { "ref": "rt", "plus": 0.51 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 20, "o": { "noParry": true } } }
+        ],
+        "spaced": [
+          { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+          { "tick": { "at": "c", "sub": ["windup"] }, "op": "wind" },
+          { "tick": { "at": "c" }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 24 } },
+          { "tick": { "at": "c", "step": 1 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 20, "o": { "noParry": true } } },
+          { "tick": { "at": "c", "step": 2 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 24, "o": { "noParry": true } } },
+          { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 20, "o": { "noParry": true } } },
+          { "tick": { "at": "c", "step": 4 }, "op": "cue", "args": { "cue": "bind", "who": "both" } }
+        ]
+      },
+      "branches": [
+        {
+          "id": "won", "tag": "TRADE BLOWS", "tagProposed": "TRADE BLOWS — WON", "favours": "attacker", "spacedTiming": "changes",
+          "parity": [
+            { "t": { "ref": "rt", "plus": 0.72 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 34, "o": { "noParry": true, "stop": 0.1 } } },
+            { "t": { "ref": "rt", "plus": 0.76 }, "op": "launch", "args": { "force": 1000, "rev": false } },
+            { "t": { "ref": "rt", "plus": 0.98 }, "op": "window" }
+          ],
+          "spaced": [
+            { "tick": { "at": "c", "step": 5 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": 34, "o": { "noParry": true, "stop": 0.1 } } },
+            { "tick": { "at": "c", "step": 5, "add": ["follow"] }, "op": "launch", "args": { "force": 1000, "rev": false } },
+            { "tick": { "at": "c", "step": 6, "add": ["follow"] }, "op": "window" }
+          ]
+        },
+        {
+          "id": "lost", "tag": "TRADE BLOWS", "tagProposed": "TRADE BLOWS — LOST", "favours": "defender", "spacedTiming": "changes",
+          "parity": [
+            { "t": { "ref": "rt", "plus": 0.72 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 32, "o": { "noParry": true, "stop": 0.1 } } },
+            { "t": { "ref": "rt", "plus": 0.76 }, "op": "launch", "args": { "force": 1000, "rev": true } },
+            { "t": { "ref": "rt", "plus": 1.0 }, "op": "nop" }
+          ],
+          "spaced": [
+            { "tick": { "at": "c", "step": 5 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": 32, "o": { "noParry": true, "stop": 0.1 } } },
+            { "tick": { "at": "c", "step": 5, "add": ["follow"] }, "op": "launch", "args": { "force": 1000, "rev": true } },
+            { "tick": { "at": "c", "step": 6, "add": ["follow"] }, "op": "cue", "args": { "cue": "recover", "who": "D" } },
+            { "tick": { "at": "c", "step": 7, "add": ["follow"] }, "op": "nop" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "heavy_clash",
+      "trigger": { "kinds": ["heavy"], "defender": "AGGRESSIVE" },
+      "selector": {
+        "kind": "bands", "draw": "next",
+        "p": { "start": 0.5,
+               "terms": [ { "coef": 0.09, "diff": ["A.tier", "D.tier"] },
+                          { "if": { "gt": ["A.ki", "D.ki"] }, "then": 0.05, "else": -0.05 } ],
+               "clamp": [0.2, 0.8] },
+        "below": { "offset": -0.12, "branch": "won" },
+        "above": { "offset": 0.12, "branch": "countered" },
+        "else": "shockwave",
+        "_formula": "p = clamp(0.5 + 0.09*(A.tier - D.tier) + (A.ki > D.ki ? 0.05 : -0.05), 0.2, 0.8); r = S.rng.next(); won if r < p - 0.12, countered if r > p + 0.12, else shockwave (melee.gd lines 109-125)"
+      },
+      "shared": {
+        "parity": [
+          { "t": 0, "op": "rush", "args": { "off": 58, "dur": { "ref": "rt" } } },
+          { "t": { "ref": "rt", "plus": -0.05 }, "op": "wind" }
+        ],
+        "spaced": [
+          { "tick": { "at": "start" }, "op": "rush", "args": { "off": 58, "dur": { "ref": "c" } } },
+          { "tick": { "at": "c" }, "op": "cue", "args": { "cue": "glance", "who": "both" } },
+          { "tick": { "at": "c", "step": 1 }, "op": "cue", "args": { "cue": "brace", "who": "both" } },
+          { "tick": { "at": "c", "step": 3, "sub": ["heavyWindup"] }, "op": "wind" }
+        ]
+      },
+      "branches": [
+        {
+          "id": "won", "tag": "HEAVY CLASH — WON", "favours": "attacker", "spacedTiming": "changes",
+          "parity": [
+            { "t": { "ref": "rt", "plus": 0.28 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "plus": 8 }, "o": { "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true } } },
+            { "t": { "ref": "rt", "plus": 0.32 }, "op": "launch", "args": { "force": 1800, "rev": false } },
+            { "t": { "ref": "rt", "plus": 0.58 }, "op": "window" }
+          ],
+          "spaced": [
+            { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "A", "d": "D", "dmg": { "ref": "base", "plus": 8 }, "o": { "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true } } },
+            { "tick": { "at": "c", "step": 3, "add": ["follow"] }, "op": "launch", "args": { "force": 1800, "rev": false } },
+            { "tick": { "at": "c", "step": 4, "add": ["follow"] }, "op": "window" }
+          ]
+        },
+        {
+          "id": "countered", "tag": "HEAVY CLASH — COUNTERED", "favours": "defender", "spacedTiming": "changes",
+          "parity": [
+            { "t": { "ref": "rt", "plus": 0.28 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": { "ref": "base" }, "o": { "noParry": true, "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true } } },
+            { "t": { "ref": "rt", "plus": 0.32 }, "op": "launch", "args": { "force": 1600, "rev": true } },
+            { "t": { "ref": "rt", "plus": 0.6 }, "op": "nop" }
+          ],
+          "spaced": [
+            { "tick": { "at": "c", "step": 3 }, "op": "strike", "args": { "a": "D", "d": "A", "dmg": { "ref": "base" }, "o": { "noParry": true, "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true } } },
+            { "tick": { "at": "c", "step": 3, "add": ["follow"] }, "op": "launch", "args": { "force": 1600, "rev": true } },
+            { "tick": { "at": "c", "step": 4, "add": ["follow"] }, "op": "cue", "args": { "cue": "recover", "who": "D" } },
+            { "tick": { "at": "c", "step": 5, "add": ["follow"] }, "op": "nop" }
+          ]
+        },
+        {
+          "id": "shockwave", "tag": "CLASH SHOCKWAVE", "favours": "neutral", "spacedTiming": "changes",
+          "parity": [
+            { "t": { "ref": "rt", "plus": 0.28 }, "op": "clashWave" },
+            { "t": { "ref": "rt", "plus": 0.7 }, "op": "nop" }
+          ],
+          "spaced": [
+            { "tick": { "at": "c", "step": 3 }, "op": "clashWave" },
+            { "tick": { "at": "c", "step": 4 }, "op": "cue", "args": { "cue": "recoil", "who": "both" } },
+            { "tick": { "at": "c", "step": 5 }, "op": "cue", "args": { "cue": "reset", "who": "both" } },
+            { "tick": { "at": "c", "step": 6 }, "op": "nop" }
+          ]
+        }
+      ]
+    }
+  ],
+
+  "chainLink": {
+    "_about": "Scheduled by exchange.gd chain() when the attacker presses in an open chain window. Times are relative to the press (t = ex.t). combo++, ext = null, ki -6 and the banner stay in code. chainStrike's damage (52 + 7*combo) stays in the op for S3b.",
+    "spacedTiming": "changes",
+    "parity": [
+      { "t": 0, "op": "rush", "args": { "off": 60, "dur": 0.24 } },
+      { "t": 0.26, "op": "chainStrike" },
+      { "t": 0.3, "op": "launch", "args": { "force": 1500, "rev": false } },
+      { "t": 0.55, "op": "window" }
+    ],
+    "spaced": [
+      { "tick": { "at": "start" }, "op": "rush", "args": { "off": 60, "dur": { "ticks": "step" } } },
+      { "tick": { "at": "start", "step": 1 }, "op": "cue", "args": { "cue": "catch", "who": "A" } },
+      { "tick": { "at": "start", "step": 2 }, "op": "chainStrike" },
+      { "tick": { "at": "start", "step": 2, "add": ["follow"] }, "op": "launch", "args": { "force": 1500, "rev": false } },
+      { "tick": { "at": "start", "step": 3, "add": ["follow"] }, "op": "window" }
+    ]
+  },
+
+  "beam": {
+    "id": "signature",
+    "trigger": { "kinds": ["sig"], "defender": "any" },
+    "spacedTiming": "identical",
+    "_spacedNote": "Identical in the first spaced pass: the beam's follow-on timing (rise 0.55 s, dodge and escape at +0.02, hold +0.9, clash 1.6 s and +2.6 s) lives inside the ops in beam.gd. 'laterSpaced' lists proposed values for when Encounter exposes those constants.",
+    "variants": { "ocean": "HORIZON CLEAVE", "city": "BOULEVARD RAZE", "village": "BOULEVARD RAZE", "forest": "FIRESTORM", "mountains": "RIDGE BORE", "desert": "GLASS TRENCH", "plains": "MERIDIAN SCAR" },
+    "tagFormat": "{A.sigName} over {biome} ({variant}) → {out}",
+    "outcome": {
+      "_formula": "beam.gd lines 15-23, evaluated in this order",
+      "rules": [
+        { "defender": "AGGRESSIVE", "if": { "all": [ { "var": "D.ki", "op": ">=", "value": 40 }, { "not": { "var": "A.ambush" } } ] }, "out": "CLASH", "else": "HIT", "draw": "none" },
+        { "defender": "DEFENSIVE", "out": "GUARD", "draw": "none" },
+        { "defender": "EVASIVE", "draw": "next", "p": { "start": 0.55, "terms": [ { "coef": -0.06, "diff": ["A.tier", "D.tier"] } ], "clamp": [0.2, 0.8] }, "ifBelowAndNot": { "var": "A.ambush" }, "out": "DODGE", "else": "HIT",
+          "_note": "the draw is always taken first, then 'and not A.ambush' is tested. A negative coef is exact: a + (-b)*c equals a - b*c bit for bit" },
+        { "defender": "ESCAPE", "draw": "next", "p": { "start": 0.5, "terms": [ { "coef": -0.05, "diff": ["A.tier", "D.tier"] }, { "if": { "var": "dist", "op": "<", "value": 500 }, "then": 0.3, "else": 0.0 } ], "clamp": [0.15, 0.9] }, "ifBelow": "HIT", "else": "ESCAPE",
+          "_note": "kept with today's sign for parity (CC-004; Game Design's R7 fixes it in a later slice)" },
+        { "defender": "CHARGING", "out": "HIT", "draw": "none" }
+      ]
+    },
+    "parity": [
+      { "t": 0, "op": "beamCharge", "args": { "rise": { "clamp": [ { "ref": "dist", "times": 0.22 }, 90, 300 ] } } },
+      { "t": 0.8, "op": "beamFire", "args": { "out": "$out", "variant": "$variant", "dist": "$dist" } }
+    ],
+    "laterSpaced": { "riseDur": 0.8, "fireAt": 1.2, "holdAfterFire": 1.2, "clashDur": 2.0, "clashHold": 3.0,
+                     "_note": "proposed: non-clash beams 2.4 s, clashes 4.2 s (section 10 set pieces: 3 to 8 s), with a 'focus' cue at 0.65 s" }
+  }
+}
