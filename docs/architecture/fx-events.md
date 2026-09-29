@@ -26,11 +26,21 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `fire` | x, y, n | explosions, burning trees, firestorm beams | n flames, orange or yellow |
 | `after` | x, y, life, col, face | dodges and escapes (life 0.45), every tick of a rush (0.16) | a fading silhouette of the fighter facing `face` (+1 right, -1 left) |
 | `charge` | x, y, col, ground | every tick a fighter is charging | the consumer rolls 40% for an aura spark and 6% for a dust puff, the latter only within 30 units of `ground` |
+| `crater` | x, y, r, depth, energy, cause, rim, skid, owner | a crater was dug (GDScript sim only): ground impacts, ground-level power-ups, beam ground strikes, clash blasts | nothing yet: the reference consumer ignores it. Rendering builds a bowl from it; VFX adds the burst |
+| `scorch` | x, y, w, power, variant, owner | every beam sample within reach of the ground (GDScript sim only) | nothing yet (ignored). Rendering and VFX draw the burn trail and the beam's ground contact |
 | `beamSplash` | x | a beam sample below y = 30 over the sea | the consumer rolls 60% for a splash of 3 at (x, 0) |
 | `damage` | x, y, amount, col | every hit | a damage number: text `String(Math.round(amount))` rising 60 units/s for 0.9 s; gold when stance was ignored, white otherwise |
 | `banner` | text, col, dur | power-ups, parries, KO, chains, clashes, ambushes; for human players also NEED 45 KI and LOCK LOST | the centre-screen banner (the latest one replaces any earlier one) for dur seconds of unfrozen time |
 | `shake` | k | anything heavy | camera shake: `shake = max(shake, k)` |
 | `tick` | dt, frozen | once per tick | steps the particles and damage numbers by dt (dt × 0.1 when frozen) |
+
+### The `crater` and `scorch` events
+
+Owner: World and Environment (`sim/world/crater.gd`; numbers and reasoning in `docs/world/craters-scorch-water.md`). Both carry gameplay facts, not just looks, and both are backed by persistent state ("What the renderer reads from the sim directly", below), so a renderer that joins late or seeks in a replay rebuilds everything from state and never depends on having seen the event.
+
+`crater`: `x` is the centre (world x), `y` the ground height there before the dig, `r` the bowl radius (the rim crest is at `r`), `depth` the bowl depth actually applied (already limited by the local relief cap, so it can be less than a fresh hit would give), `rim` the rim height above the surrounding ground, `energy` the impact-energy scalar the size came from, `cause` one of `"impact"` (a launched fighter hits the ground, or a heavy-clash wave), `"beam"` (a beam's ground strike or a clash blast) or `"powerup"`, `skid` a signed offset from `x` to the tail of a furrow that runs into the bowl (0 for none), and `owner` the slot of the fighter that caused it (-1 for none). The z = 0 slice of the bowl is exactly `WorldCrater.profile(|dx| / r, depth, rim)` added to the ground, plus the furrow. Rendering draws the bowl in depth, round, with that slice as its profile.
+
+`scorch`: one per beam sample that is within reach of the ground. `x` is the sample's world x, `y` the ground height before the groove was carved, `w` the groove's full width, `power` the beam-power scalar P (0.5 to 4.5: tier and charge, `WorldCrater.beamPower`), `variant` the beam's biome variant (`HORIZON CLEAVE`, `BOULEVARD RAZE`, `FIRESTORM`, `RIDGE BORE`, `GLASS TRENCH`, `MERIDIAN SCAR`) and `owner` the firing fighter's slot. Samples are at most 36 units apart along the beam, so a trail is a chain of these; the burn mark itself is `S.scorch` (permanent, per column).
 
 Colours are CSS hex strings, as in the prototype. Replacing them with a palette is for Art and VFX.
 
@@ -66,6 +76,10 @@ Events carry only transient effects. Persistent visuals come from sim state, rea
 - `S.game.ko`
 - `S.dirS.ex.combo`: the chain counter
 - terrain height: `groundY` and `seaAt`, or `S.base` and `S.deform`
+- the world's persistent damage (GDScript sim), all rebuilt from state after a seek or a snapshot:
+  - `S.craters`: an array of records, oldest first, capped at 400 (`WorldCrater.LIST_MAX`; the oldest is dropped, its dent stays in `S.deform`). Each has `x, y, r, depth, rim, energy, cause, owner, t, skid, sdepth`, the `crater` event's fields plus the match time `t` and the furrow's depth at the bowl `sdepth`. `S.deform` is the truth for the ground: it also holds the scorch grooves, which have no records, and the deform limits (-260 to +60) clip it, so do not rebuild it from the records; use them for the round bowls in depth.
+  - `S.scorch`: burn intensity per terrain column, 0 to 1, permanent (a `PackedFloat32Array` of 1,200, like `S.deform`).
+  - `S.water`: water depth per terrain column (`PackedFloat32Array` of 1,200). The surface of standing water is ground + depth, and it is sea level (0) once settled. A column is wet at 0.5 or more (`WorldWater.MIN_DEPTH`). `WorldWater.surfaceAt(S, x)` and `depthAt(S, x)` read it. The prototype's rule that water is drawn only where the base terrain is below -30 (`seaAt`) still holds for the sea; crater lakes that fill from the sea are the difference, and they exist only where the ground was dug below -30 and connects to the sea.
 - buildings: `curH`, `alive`
 - trees
 - the `S.world` counters
