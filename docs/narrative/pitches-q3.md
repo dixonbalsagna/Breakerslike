@@ -142,3 +142,78 @@ Orb: "Powerups and transformations strike me as a genre staple so I want this fu
 | G4. **Attendant arm** | A floating mechanical arm that holds a clipboard and takes notes. A comedy of bureaucracy. | "A drone arm." Passes. |
 
 **Favourite: G3.**
+
+---
+
+# Round 2 (after Orb's picks)
+
+Decided by Orb: the Cyborg's food mechanic is **Press** (his plates clamp shut and reopen on sandwiches). Round 2 builds on Game Design's `docs/design/pitches.md` (fragments, Rally) and `docs/design/damage-model.md` (Wounds), and stays inside Legal's hard rules for orbs (`docs/legal/q3-screen.md` section a: no fixed count and never seven; irregular molten or crystalline fragments; shed by the planet and contested; the only unlock is the relocation; they orbit the body; no "wish", "summon" or "balls"; no sensor). Working names, not screened.
+
+## 1. Orbs that fans feel at once
+
+**What "recognisable" means here.** The homage lives in a few genre staples: glowing power objects, fought over, carried, with a big payoff. It must not live in the franchise's device (a fixed set, star marks, a search, a wish). Each take below says what makes it read as homage, and what keeps it clear.
+
+| Take | What it is | Reads as homage because | Stays clear because |
+|---|---|---|---|
+| **O1. The Scatter** | A heavy hit on a fragment carrier knocks one fragment loose, and it tumbles a long way, right round the wrapped planet if the hit was hard enough. It lands in plain sight with a burst of light. | Glowing objects flung across the whole world, and a race to reach them. | It is one irregular fragment, from a seeded draw. There is no set, no marking, no sensor, and the light burst shows only at impact. |
+| **O2. The Bloom** | When the mass he holds passes the threshold, the fragments orbiting the Protagonist all ignite together and a column of light opens the fold into the proving ground. A cinematic longer than 3 seconds. | The payoff: glowing objects gathered by the hero and a spectacular result. | The result is only the relocation. There is no summoned being and no wish. It depends on mass, not a count, so any mix of sizes works. |
+| **O3. Ring Closes** | Carried fragments orbit his body faster and closer as the mass nears the threshold. A rising hum. At the threshold the orbit closes into a ring. | The feeling of power gathering, felt in sound and motion, not in a pose. | They orbit the body. There is no raised-arms pose and no count on screen. The state is read from the orbit and the audio. |
+| **O4. Everyone's Hunger** | Every fighter grabs fragments for the charge surge, and each surge looks different: the Protagonist drinks it in, the Anti-hero crushes it, the Tyrant socket-fits it into his armour, the Cyborg embeds it in his wiring. | The whole cast fighting over the glowing thing, each in character. | Only the Protagonist can hold them for the fold. For everyone else it is a surge and nothing more. |
+
+**Favourite: O1 and O2 as a pair, with O3 as the feeling between them.** O1 is the fight. O2 is the payoff. O3 is what the player feels in the middle. O4 is a flavour layer that costs animation only. Legal's marketing rule still applies: no key art of a hero holding an orb aloft, and no row of matching orbs.
+
+## 2. Overcommit, made recognisable
+
+The genre beat is "the hero pushes beyond his limits": the strain, the crack, and the surge. Overcommit keeps all of that and drops the times-N callout and the red aura.
+
+**How it works under Wounds.** It is a **loan against one body region**. He picks the region he spends: arms for damage, legs for speed, core for toughness. The boost is paid for in wear on that region. If the region breaks while he is committed, the boost drops out at once with a snap, and he staggers.
+
+| Rung | Label | What it does | What it costs |
+|---|---|---|---|
+| 1 | **Committed** | A moderate boost on the chosen region. | The region wears faster while it lasts. |
+| 2 | **Overcommitted** | A big boost, and a second region joins in. | Both regions wear fast. A break on either ends it with a stagger. |
+| 3 | **Overdrawn** | The biggest boost, on three regions. Spending wear he does not have. | It ends by itself in seconds. Then a drain state: the spent regions come back a full stage worse, and he cannot commit again for a while. |
+
+**Look.** Seams of light open along the committed limb, in the fighter's own aura colour and brightening with each rung. No full-body aura, and no red. His posture leans into it.
+
+**Sound.** A low creak like a rope or ice under load, building to a crack when he commits, with a heartbeat under it. His grunts go through gritted teeth. When it ends there is a pop and a long exhale. It is the sound of a body being asked for too much.
+
+**Escalation.** Each rung adds seams, sound and camera: a small push-in at rung 1, a slow-motion beat at rung 2, a shake at rung 3.
+
+**The callout is a wound card, not a number.** Game Design's wound cards (R4) show `RIGHT ARM: COMMITTED`, then `OVERCOMMITTED`, then `OVERDRAWN`. If it snaps, the same card reads `RIGHT ARM: BROKEN`. No "x2" or "x10", and no shouted multiplier name. A bark says the rest.
+
+**On the body, with the aura crown (R3).** The committed region's arc burns thick and steady with fine cracks, where a battered arc flickers and a broken one gaps. Shape carries the meaning, so it also works without colour. The silhouette readout (R1) tints the region with a distinct "committed" hatch.
+
+**Clear because** there is no fixed multiplier, no named stage, no red or coloured full-body aura, and no shout. It trades body for power, which suits the location-damage model. Legal already rated Overcommit GO, so keep to those terms.
+
+**Lines (samples).** Committing: "Everything. Right now." Overdrawn: "I'll pay for this. Later." It snaps: "That was my arm. It was a good arm." After: "The bill's here. Worth it."
+
+## 3. The Anti-hero: swallow your pride, gain power
+
+The merge is optional. The mechanic Orb wants to keep is **the pride trade**. It fits the Wounds model: the Anti-hero's *Proud front* hides his wear while his Pride is above half, and when his Pride falls below half the facade cracks and every hidden penalty lands at once. Every option below therefore has a built-in cost: **swallowing pride lowers Pride, and the facade may crack**. That makes the trade honest, and it shows.
+
+**Compatibility with Spite (Game Design).** Spite needs him to have refused help. Options that accept help (P1, P4) forfeit Spite for the match, as Game Design wrote. Options that do not involve help (P2, P3) keep Spite available, though a cracked facade makes it harder to earn. Game Design to confirm.
+
+| Option | What it is | Involves the Protagonist? | Strip test |
+|---|---|---|---|
+| **P1. Hat in Hand** | He asks the Protagonist for help, once, in words. The Protagonist (a player or the AI) can accept or refuse. If he accepts, they fight side by side for a short window and share a finisher. | Yes | "A rival asks for help and they team up." No item, no fusion, no pose. Passes. |
+| **P2. Take a Knee** | He drops to one knee, a deliberate humiliation, for a beat. A surge follows. It is a bluff: if the opponent strikes him while he kneels, the surge is cancelled and his Pride crashes anyway. | No | "Kneel to gain a surge." Original. Passes. |
+| **P3. Swallow It** ★ | He holds a button and visibly swallows his pride (a grit, a gulp, a look away). His Pride drains into a power surge, in proportion to what he spends. It can be interrupted. | No | "Convert one meter into power." A plain resource trade. Passes. |
+| **P4. Full Circle** | The lap-around merge from round 1, kept as the optional merge. He must make the first move, and that is the sacrifice. | Yes | Legal's conditions on the look still apply (no pose, a fresh silhouette, rings not a halo, no accessory). |
+
+**Favourite: P3, Swallow It.** It works in a solo match against the AI, it needs no partner, and it shows in the game exactly as the Wounds model promises: a surge of power, then the facade cracking. P1 is the version for two players, and P4 remains as the optional merge.
+
+## 4. Voice devices, confirmed and adjusted
+
+Orb has not ruled, so these are proposals.
+
+| Fighter | Device | Change |
+|---|---|---|
+| Protagonist | Future tense: promises. | **Confirmed.** New lines for Overcommit (above). |
+| Anti-hero | Talks about his opponent in the past tense. | **Adjusted.** When his facade cracks, his lines slip into first-person present tense, plain: "Help me." It is a tell the player can hear. |
+| Tyrant | Revision numbers as a tic. | **Confirmed.** The Emergency revision (Game Design) gets a flaw line: "Revision Five and a Half. It's fine. It's fine." |
+| Cyborg | Customer-service politeness over hunger. | **Confirmed.** Press gets lines: "Please stand clear of the plates." |
+
+**Samples for the new beats.**
+- Anti-hero, Swallow It: "Fine. Fine. I'll take it." Facade cracks: "I can't feel my arms. Help me." Spite: "I didn't need you. I never did."
+- Cyborg, Press: "Two slices, one filling. It's you."

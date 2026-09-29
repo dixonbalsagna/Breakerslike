@@ -121,3 +121,13 @@ Orb had played the Godot greybox before answering.
 **Craters and beams (Orb, confirmed 2026-09-29).** Ground impacts make round bowls with raised rims and ejecta, sized by impact energy. They're localised in depth, not slots through the whole ground strip. Beams scorch and leave trails of destruction, and the results scale up with the beam's power: stronger beams are more intense and more destructive.
 
 **Damage model (Orb, 2026-09-29).** Variant A, Wounds (docs/design/damage-model.md). Game Design pitches: the optional wear readout; Rally rules per fighter (Orb: 'I'm thinking per-fighter'); and the downtime between exchanges. For downtime, the player flies freely, with dynamic set pieces and quick verbal exchanges. Pitch ideas that keep it engaging.
+
+**Signature picks (Orb, 2026-09-29).**
+- Cyborg food: Press.
+- Cyborg weak point: Rail chip.
+- Tyrant's tail: Bladed mantle, a cape with blade hems used like a tail.
+- Protagonist power stage: Overcommit, made recognisable but non-infringing (Narrative round 2).
+- Orbs: recognisable but non-infringing (Narrative round 2, within Legal's q3-screen §a).
+- Fusion: may be replaced by a unique Anti-hero power-up; keep 'sacrifice pride for power'.
+- Wear readout: a combination of the aura crown with wound cards and the silhouette, per fighter (Game Design pitches).
+- Rally: Game Design's four per-fighter Rallies approved, with looser limits.
