@@ -76,7 +76,8 @@ Numbers a QA test can check. "Civilians" is the share of the starting population
 | Matches losing 90% or more of civilians | at most 7% | at most 10% | 5% |
 | Low-tier bleed: while both fighters are at tier 2 or below, civilians lost per minute | at most 40% of the population per minute (a guard against P2 work making it worse) | at most 4% of the population per minute | About 42% per minute over the whole match. Per-tier rates are not yet split out |
 | Civilians left at 4:00 (so the Cyborg's track can finish) | none | At least 25% alive in at least 80% of matches | none |
-| Structures lost at the KO, mean | 20 to 40% (10 to 19 of 47) | 40 to 75% | 30% (14.1 of 47) |
+| Structures lost at the KO, mean: a **share of row-1 (front-row) structures**. Row 1 is today's 47 buildings, unchanged by buildings in depth (`docs/world/buildings-in-depth.md`) | 20 to 40% of row 1 | 40 to 75% of row 1 | 30% (14.1 of 47) |
+| Structures lost at the KO, all rows (about 110): a watch metric, not a gate | 10 to 35% | 25 to 60% | Not yet measured |
 
 **Mechanisms.** World is proposing tier-scaled caps and a casualty ramp to meet the game bands. Game Design sets only the bands. The low-tier bleed band is the measurable form of the P3 exit criterion "no fight destroys the planet at low tiers". QA needs a per-tier split of casualties to check it. That is requested through the EP.
 
@@ -86,6 +87,29 @@ Numbers a QA test can check. "Civilians" is the share of the starting population
 - **Floor.** At least **4** launch types are each at or above **5%** in the default arm.
 - **Today.** SLAM DOWN is 46.4% (95% CI 45.6 to 47.2), and only three types are above 5% (QA §5).
 - **Owner.** Encounter Systems owns the fix. QA re-tests any proposal.
+
+### 5b. Building brunts (the director picks one building to take a launch)
+
+Orb wants the director to "often" choose one building to take the brunt of a launch, with no incidental collisions. The mechanism is World's and Encounter's (`docs/world/buildings-in-depth.md` §4). These are the bands:
+
+| Measure | Band | Notes |
+| :--- | :--- | :--- |
+| Launches that pick a building, out of those with a candidate in reach | 35 to 60% pooled | By personality: fighters who feed on collateral 40 to 60%; the protector 20 to 35%. Today that is the villain and the hero |
+| Share of all planner launches that are brunts | 8 to 20% | This moves with fight time spent in settlements (Encounter's location work) |
+| Brunts per match, P2 testbed (default arm) | 0.5 to 2 | Villain mirror above the default arm; hero mirror at most 0.6; 0 in matches that never come near a settlement |
+| Brunts per minute, game scale | 0.3 to 1.0 | About 2 to 7 in a 7-minute match. A region-break launch may end in a brunt, at the same personality rates |
+| Launch cap | Unchanged | No launch type above 40% (§5). Brunts help the "four types at 5% or more" floor |
+
+**How brunts feed the ego meters.** There is no special rule; the standing casualty rule applies:
+- A brunt's casualties are credited to the fighter who launched, as today (`launchBy`). They feed the villain's menace and the hero's anguish per casualty (+0.5 if the villain caused them, +0.9 if the hero did).
+- One occupied tower collapsing (about 13 people) is already a visible spike: +6.5 anguish, or +11.7 if the hero caused it. The feed and a bark make it legible.
+- Game Design recommends **no extra anguish multiplier** for brunts. Menace is placeholder-only and now decays with a lower cap (§9), and the roster's meters replace both. Orb decides this (World's question (b)).
+
+**The collateral ramp covers brunts.** Brunt casualties and structure losses count toward every band in §4, including the low-tier bleed cap. They fall under World's tier-scaled caps and casualty ramp like any other source, and brunts are never exempt.
+
+**Game Design's view on World's other open questions** (Orb decides):
+- *Rooftop cover:* no. It pulls hiding into populated ground, against the hero's lure and the collateral bands.
+- *The villain's row-depth bonus* (he prefers the dramatic far tower): yes, as a personality tell, kept inside the band above.
 
 ## 6. Location and signature variety
 

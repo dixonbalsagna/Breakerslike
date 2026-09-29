@@ -170,3 +170,9 @@ Orb had played the Godot greybox before answering.
 **Rims and buildings (Orb, 2026-09-29).**
 - Crater rim height depends on how hard the impact is: harder hits throw up taller rims.
 - Buildings exist in both the foreground and the background (depth layers). Normal movement never collides with them, and neither do most launches. The director chooses when a launched fighter crashes destructively into a building, and it should often pick an individual building to take the brunt of an impact. This is part of stage design.
+
+**Building impacts (Orb, 2026-09-29).**
+- No rooftop cover.
+- Targeting is a mix of personality and drama, weighted toward personality: the villain seeks tall, occupied towers and the hero avoids occupied ones.
+- One impact can go through several buildings: 'a classic villain trope is to send the hero careening through multiple skyscrapers in one attack.'
+- Anguish weight: Game Design's default (no extra multiplier) stands unless Orb says otherwise.
