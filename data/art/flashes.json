@@ -122,6 +122,40 @@
     "E": "wedges",
     "C": "steps"
   },
+  "accents": {
+    "P": {
+      "light": "#8fd6c8",
+      "mid": "#4fb9a8",
+      "shadow": "#2a7568"
+    },
+    "A": {
+      "light": "#c2adf0",
+      "mid": "#9a80d8",
+      "shadow": "#5b479a"
+    },
+    "E": {
+      "light": "#dfe8a8",
+      "mid": "#b8c96a",
+      "shadow": "#6d7d30"
+    },
+    "C": {
+      "light": "#f0b4a8",
+      "mid": "#d8705f",
+      "shadow": "#8a3a30"
+    }
+  },
+  "emotion_colours": {
+    "rule": "Emotion flashes: rim is the accent mid step and core the accent light step, except where the accent sits on the fighter's own hair. The Protagonist's teal flashes overlap his teal hair, so his rim is the accent light step and his core is near-white. The rim must be lighter than the hair mid step by at least 15 L*.",
+    "overrides": {
+      "P": {
+        "rim": "#8fd6c8",
+        "core": "#e6f7f3"
+      }
+    },
+    "hair_mid": {
+      "P": "#3fae9c"
+    }
+  },
   "legal_rules": {
     "round_tip": {
       "A": [
@@ -379,7 +413,7 @@
       "hold": 0.16,
       "fade": 0.3,
       "priority": 8,
-      "cooldown": 0.4,
+      "cooldown": 6,
       "kind": "layout",
       "glyph": null,
       "layout": [
@@ -408,7 +442,7 @@
           "op": 0.32
         }
       ],
-      "moment": "A heavy hit or a break launch, when the crown is not up.",
+      "moment": "A heavy hit or a break launch, when the crown is not up. A flurry gives one flash: a six-second cooldown per fighter keeps it from being busy (AI play fired it about 9 times a minute).",
       "event": "damage kind heavy, region_broken",
       "sound": "The fighter's pain grunt.",
       "rare": false,

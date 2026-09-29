@@ -66,7 +66,9 @@ Priority, highest first: surge, danger sense, hazard, found, searching, fear, ra
 
 ## 8. Colour and motion
 
-- **Colour** is the fighter's accent, two steps, from the palette in `art/concepts/marked-aura/gen.mjs` (`CALM`): Protagonist teal `#4fb9a8`, Anti-hero orchid `#9a80d8`, Empress moss `#b8c96a`, Cyborg coral `#d8705f`. No red, red-orange or gold for the Protagonist or the Anti-hero. The placeholder fighters have their own greybox colours (`RenderLook`); use the accent from `flashes.json`'s companion palette until the real palettes land.
+- **Colour** is the fighter's accent, two steps (`flashes.json` `accents`, the canonical steps; do not copy them into code by hand), from the palette in `art/concepts/marked-aura/gen.mjs` (`CALM`): Protagonist teal `#4fb9a8`, Anti-hero orchid `#9a80d8`, Empress moss `#b8c96a`, Cyborg coral `#d8705f`. No red, red-orange or gold for the Protagonist or the Anti-hero. The placeholder fighters have their own greybox colours (`RenderLook`); use the accent from `flashes.json`'s companion palette until the real palettes land.
+- **Contrast on the hair.** The Protagonist's teal flashes overlap his teal hair (the placeholder's hair is teal too). Use `emotion_colours.overrides.P`: the rim is the accent light step and the core is near-white, so the flash stays lighter than the hair. Info flashes are unaffected (a pale core with a dark keyline).
+- **Hurt is capped.** Its cooldown is 6 s per fighter, so a flurry of heavy hits gives one flash. If it is still busy for Orb, raise it, or fire it only for `region_broken`.
 - **Emotion flashes** are translucent (34 to 55% opacity). **Info flashes** are solid and keylined. That is the rule that tells a player at a glance whether a flash is a feeling or a fact.
 - **Motion:** a flash changes shape and never blinks. Hurt fragments jitter, at most 6% of a body height, irregularly (noise on the cosmetic stream, seeded from the tick). Rage swells over its attack and sweeps forward. Nothing flashes on and off as a whole. `reduced_motion`: no jitter, no overshoot, a plain fade.
 
