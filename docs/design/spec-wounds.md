@@ -104,6 +104,18 @@ The one exception is the Empress's **Encore**, which is a choice to spend. The p
 - **Softened:** the cooldown goes from 30 s to **15 s** after leaving the brink.
 - **Kept:** the mended region returns battered.
 
+**S4 rulings** (commit `c153c34`). Rally fires 0.24 times per match. The ceiling is contest survival (31 in 100 matches); the misses were 4 brinks too deep for one mend, 2 with every broken region already rallied, and 1 on cooldown.
+1. **The deep-brink rule stays.** No Rally unless one mend takes the fighter off the brink. A fighter that far gone has earned the finisher, and it affected only 4 in 100 matches.
+2. **The band moves; contest survival does not.** The 0.5 to 2.0 band predates the finisher-gated trigger. Raising survival to 40 to 50% would make finishers indecisive and lengthen a tail that already times out.
+   - Contest-gated Rallies (Second Wind, and the placeholders): 0.2 to 0.5 per match.
+   - The roster's other Rallies (Spite, Encore, Reboot) are not gated by the contest and add to that when they land. The combined roster band is 0.3 to 1.0 per match.
+   - Struggle scoring is unchanged (base 15%, up to +30 from the struggle; average survival 20 to 35%).
+   - The comeback band in `balance-targets.md` §8 (15 to 35% of matches) stays as the real test of "last-ditch".
+3. **Timeouts (2%) and the short tail (p10 at 4:34).** Two levers, applied together:
+   - lower k from 0.06 to **0.055**, which raises p10 and the median;
+   - add an **overtime ramp**: after 9:00, k rises by 25% per minute, and the contest tilt (−10 points per minute past 8:00) continues. The fight intensifies until it ends.
+   - Targets: timeouts at most 1% at the 15:00 cap, p10 at least 5:00, median 6:00 to 8:00. QA verifies them.
+
 **Why a finale still can't loop:**
 1. Each Rally spends something finite: a region's one Rally, a refit, the drive or nearby civilians, the rival's finisher attempt, or refused help.
 2. The mended region sits one hit from breaking again.
@@ -283,7 +295,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 2. **No KO without a finisher.** 100% of KOs follow the loser's `brink_enter` and a `finisher_start`. There are no KOs from stray damage.
 3. **Length and chapters.** Region breaks per 1v1 (median): 2 to 4 before Rally (S2), 3 to 5 once Rally lands (S4). First break (median) 2:30 to 4:00. Median time to first brink 4:30 to 7:00. Match length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00 (`balance-targets.md` §2).
 4. **No loops.**
-   - Rallies per match average 0.5 to 2.0.
+   - Rallies per match average 0.2 to 0.5 for contest-gated Rallies, or 0.3 to 1.0 with the roster's other Rallies (S4 ruling, §2).
    - No fighter rallies the same region twice.
    - The finisher survival chance reaches 0 after a fighter's third Rally, or once the tilt past 8:00 has taken it to 0.
 5. **Spread.** No region takes more than 45% of all wear across a batch. Each of head, arms and legs is the first region broken in at least 10% of matches.
