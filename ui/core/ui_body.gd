@@ -92,20 +92,20 @@ static func draw_region(ci: CanvasItem, region: String, origin: Vector2, scale: 
 		var sp: float = maxf(3.0, scale * 0.045)
 		match stage:
 			0:
-				ci.draw_colored_polygon(poly, Color(fill.r, fill.g, fill.b, 0.82 * alpha))
+				UiIcons.fill_poly(ci, poly, Color(fill.r, fill.g, fill.b, 0.82 * alpha))
 				ci.draw_polyline(closed, Color(1, 1, 1, 0.35 * alpha), maxf(1.0, scale * 0.008), true)
 			1:
-				ci.draw_colored_polygon(poly, Color(fill.r, fill.g, fill.b, 0.7 * alpha))
+				UiIcons.fill_poly(ci, poly, Color(fill.r, fill.g, fill.b, 0.7 * alpha))
 				UiIcons.hatch(ci, poly, -PI * 0.25, sp, Color(line.r, line.g, line.b, 0.7 * alpha), maxf(1.0, scale * 0.01))
 				ci.draw_polyline(closed, edge, maxf(1.2, scale * 0.011), true)
 			2:
-				ci.draw_colored_polygon(poly, Color(fill.r, fill.g, fill.b, 0.55 * alpha))
+				UiIcons.fill_poly(ci, poly, Color(fill.r, fill.g, fill.b, 0.55 * alpha))
 				UiIcons.hatch(ci, poly, -PI * 0.25, sp * 0.65, Color(line.r, line.g, line.b, 0.5 * alpha), maxf(1.0, scale * 0.009))
 				UiIcons.crack(ci, poly, variant + idx, line, maxf(1.5, scale * 0.014))
 				ci.draw_polyline(closed, edge, maxf(1.4, scale * 0.013), true)
 			_:
 				for shard in _shards(poly):
-					ci.draw_colored_polygon(shard, Color(fill.r, fill.g, fill.b, 0.34 * alpha))
+					UiIcons.fill_poly(ci, shard, Color(fill.r, fill.g, fill.b, 0.34 * alpha), true)
 					var sc2: PackedVector2Array = shard.duplicate()
 					sc2.append(shard[0])
 					ci.draw_polyline(sc2, edge, maxf(1.2, scale * 0.012), true)

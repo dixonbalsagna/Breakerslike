@@ -6,7 +6,8 @@ class_name UiStrip
 ##
 ## data: {W, segs: [[x0, x1, biome]], cam_x, cam_w, dead: [x], fighters: [{x, slot, hidden, aura, seen_x}]}
 
-static func draw(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, data: Dictionary, s: float, t: float, o: Dictionary) -> void:
+## The static parts: the bar, the biome segments and the ticks for fallen buildings. Redrawn only when a building falls.
+static func draw_base(ci: CanvasItem, lay: UiLayout, data: Dictionary, o: Dictionary) -> void:
 	var r: Rect2 = lay.strip
 	if r.size.x <= 0.0:
 		return
@@ -14,11 +15,54 @@ static func draw(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, data: Dictionar
 	var a: float = float(o.get("plate_alpha", 1.0))
 	var bar := Rect2(r.position.x, r.position.y + r.size.y * 0.3, r.size.x, r.size.y * 0.5)
 	ci.draw_rect(Rect2(bar.position - Vector2(2, 2), bar.size + Vector2(4, 4)), Color(UiLook.col(UiLook.SCRIM), 0.75 * a))
+	# The biome segments as one multi-line (each a thick horizontal line: butt caps make them exact rects), and the ticks
+	# for fallen buildings as another: two draw commands instead of a dozen.
+	var pts := PackedVector2Array()
+	var cols := PackedColorArray()
+	var cy: float = bar.position.y + bar.size.y * 0.5
 	for seg in data.get("segs", []):
-		ci.draw_rect(Rect2(bar.position.x + float(seg[0]) / W * bar.size.x, bar.position.y, (float(seg[1]) - float(seg[0])) / W * bar.size.x + 1.0, bar.size.y), Color(UiLook.col(UiLook.BIOME.get(seg[2], "#666666")), a))
+		var x0: float = bar.position.x + float(seg[0]) / W * bar.size.x
+		var x1: float = bar.position.x + float(seg[1]) / W * bar.size.x + 1.0
+		pts.append(Vector2(x0, cy))
+		pts.append(Vector2(x1, cy))
+		cols.append(Color(UiLook.col(UiLook.BIOME.get(seg[2], "#666666")), a))
+	if not pts.is_empty():
+		ci.draw_multiline_colors(pts, cols, bar.size.y)
+	var ticks := PackedVector2Array()
 	for x in data.get("dead", []):
 		var dx: float = bar.position.x + fposmod(float(x), W) / W * bar.size.x
-		ci.draw_line(Vector2(dx, bar.position.y + 1), Vector2(dx, bar.end.y - 1), Color(0, 0, 0, 0.7 * a), 1.0)
+		ticks.append(Vector2(dx, bar.position.y + 1))
+		ticks.append(Vector2(dx, bar.end.y - 1))
+	if not ticks.is_empty():
+		ci.draw_multiline(ticks, Color(0, 0, 0, 0.7 * a), 1.0)
+
+
+## Redraw key for the moving parts: the camera box and the fighters at half-pixel steps, plus a slow phase while a fighter is
+## hidden (its marker pings). The layer redraws only when this changes.
+static func marks_sig(lay: UiLayout, data: Dictionary, t: float, o: Dictionary) -> Array:
+	var r: Rect2 = lay.strip
+	var W: float = float(data.get("W", 9600.0))
+	var k: float = r.size.x / W * 2.0
+	var out: Array = [int(float(data.get("cam_x", 0.0)) * k), int(float(data.get("cam_w", 0.0)) * k), bool(o.get("region_label", false))]
+	var ping: bool = false
+	for f in data.get("fighters", []):
+		out.append(int(float(f.get("x", 0.0)) * k))
+		if bool(f.get("hidden", false)):
+			ping = true
+			out.append(int(float(f.get("seen_x", 0.0)) * k))
+	if ping and not bool(o.get("reduced_motion", false)):
+		out.append(int(t * 12.0))
+	return out
+
+
+## The moving parts: the camera's box (it wraps), both fighters, the region label.
+static func draw_marks(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, data: Dictionary, s: float, t: float, o: Dictionary) -> void:
+	var r: Rect2 = lay.strip
+	if r.size.x <= 0.0:
+		return
+	var W: float = float(data.get("W", 9600.0))
+	var a: float = float(o.get("plate_alpha", 1.0))
+	var bar := Rect2(r.position.x, r.position.y + r.size.y * 0.3, r.size.x, r.size.y * 0.5)
 	# The camera's box (it wraps).
 	var cw: float = minf(float(data.get("cam_w", 1600.0)) / W * bar.size.x, bar.size.x)
 	var cx0: float = bar.position.x + fposmod(float(data.get("cam_x", 0.0)) - float(data.get("cam_w", 1600.0)) * 0.5, W) / W * bar.size.x
@@ -57,7 +101,7 @@ static func _marker(ci: CanvasItem, slot: int, c: Vector2, size: float, fill: Co
 	else:
 		var d := PackedVector2Array([c + Vector2(0, -size * 1.2), c + Vector2(size * 1.2, 0), c + Vector2(0, size * 1.2), c + Vector2(-size * 1.2, 0)])
 		if fill.a > 0.0:
-			ci.draw_colored_polygon(d, fill)
+			UiIcons.fill_poly(ci, d, fill)
 		var closed: PackedVector2Array = d.duplicate()
 		closed.append(d[0])
 		ci.draw_polyline(closed, edge, 1.6, true)

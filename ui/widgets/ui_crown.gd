@@ -198,7 +198,7 @@ static func _mantle_teeth(ci: CanvasItem, m: UiFighterModel, c: Vector2, r: floa
 		var tip: Vector2 = c + d * (r + th * 1.9)
 		var b0: Vector2 = c + Vector2(cos(a - 0.03), sin(a - 0.03)) * (r + th * 0.4)
 		var b1: Vector2 = c + Vector2(cos(a + 0.03), sin(a + 0.03)) * (r + th * 0.4)
-		ci.draw_colored_polygon(PackedVector2Array([tip, b0, b1]), Color(UiLook.stage_col(int(m.stage["mantle"]), m.aura), 0.85 * alpha))
+		UiIcons.fill_poly(ci, PackedVector2Array([tip, b0, b1]), Color(UiLook.stage_col(int(m.stage["mantle"]), m.aura), 0.85 * alpha))
 
 
 static func _windows(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: float, th: float, reduced: bool) -> void:

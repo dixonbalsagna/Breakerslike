@@ -24,7 +24,7 @@ static func rrect_pts(r: Rect2, rad: float, seg: int = 4) -> PackedVector2Array:
 static func rrect(ci: CanvasItem, r: Rect2, rad: float, fill: Color, edge: Color = Color(0, 0, 0, 0), edge_w: float = 0.0) -> void:
 	var pts: PackedVector2Array = rrect_pts(r, rad)
 	if fill.a > 0.0:
-		ci.draw_colored_polygon(pts, fill)
+		fill_poly(ci, pts, fill)
 	if edge.a > 0.0 and edge_w > 0.0:
 		var closed: PackedVector2Array = pts.duplicate()
 		closed.append(pts[0])
@@ -36,7 +36,7 @@ static func arrow(ci: CanvasItem, from: Vector2, length: float, width: float, co
 	var h: float = width * 2.4
 	var tip: Vector2 = from + Vector2(length, 0.0)
 	UiIcons.line(ci, from, tip - Vector2(h * 0.7, 0.0), width, col, true)
-	ci.draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-h, -h * 0.75), tip + Vector2(-h, h * 0.75)]), col)
+	fill_poly(ci, PackedVector2Array([tip, tip + Vector2(-h, -h * 0.75), tip + Vector2(-h, h * 0.75)]), col)
 
 
 static func chevron(ci: CanvasItem, c: Vector2, size: float, dir: float, width: float, col: Color) -> void:
@@ -77,7 +77,7 @@ static func stance(ci: CanvasItem, idx: int, c: Vector2, size: float, col: Color
 			var r: float = size * 0.36
 			ci.draw_arc(c + Vector2(-size * 0.05, size * 0.05), r, deg_to_rad(200.0), deg_to_rad(380.0), 12, col, w, true)
 			var tip: Vector2 = c + Vector2(-size * 0.05 + r, size * 0.05)
-			ci.draw_colored_polygon(PackedVector2Array([tip + Vector2(0, size * 0.22), tip + Vector2(-size * 0.17, -size * 0.06), tip + Vector2(size * 0.17, -size * 0.06)]), col)
+			fill_poly(ci, PackedVector2Array([tip + Vector2(0, size * 0.22), tip + Vector2(-size * 0.17, -size * 0.06), tip + Vector2(size * 0.17, -size * 0.06)]), col)
 			UiIcons.line(ci, c + Vector2(-size * 0.5, size * 0.36), c + Vector2(-size * 0.22, size * 0.36), maxf(1.0, w * 0.7), col, true)
 		_:
 			var x0: float = c.x - size * 0.5
@@ -151,18 +151,18 @@ static func caret_up(ci: CanvasItem, c: Vector2, size: float, col: Color) -> voi
 static func star4(ci: CanvasItem, c: Vector2, size: float, col: Color) -> void:
 	var s: float = size * 0.5
 	var k: float = s * 0.28
-	ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -s), c + Vector2(k, -k), c + Vector2(s, 0), c + Vector2(k, k), c + Vector2(0, s), c + Vector2(-k, k), c + Vector2(-s, 0), c + Vector2(-k, -k)]), col)
+	fill_poly(ci, PackedVector2Array([c + Vector2(0, -s), c + Vector2(k, -k), c + Vector2(s, 0), c + Vector2(k, k), c + Vector2(0, s), c + Vector2(-k, k), c + Vector2(-s, 0), c + Vector2(-k, -k)]), col)
 
 
 ## A diamond pip filled from the left to `fill` (0..1). The diamond outline is always drawn, so an empty pip still reads.
 static func pip(ci: CanvasItem, c: Vector2, size: float, fill: float, col: Color, edge: Color) -> void:
 	var s: float = size * 0.5
 	var poly := PackedVector2Array([c + Vector2(0, -s), c + Vector2(s, 0), c + Vector2(0, s), c + Vector2(-s, 0)])
-	ci.draw_colored_polygon(poly, Color(0, 0, 0, 0.45))
+	fill_poly(ci, poly, Color(0, 0, 0, 0.45))
 	if fill > 0.0:
 		var clipped: PackedVector2Array = clip_x(poly, c.x - s + 2.0 * s * clampf(fill, 0.0, 1.0))
 		if clipped.size() >= 3:
-			ci.draw_colored_polygon(clipped, col)
+			fill_poly(ci, clipped, col, true)
 	var closed: PackedVector2Array = poly.duplicate()
 	closed.append(poly[0])
 	ci.draw_polyline(closed, edge, maxf(1.5, size * 0.09), true)
@@ -272,3 +272,48 @@ static func crack(ci: CanvasItem, poly: PackedVector2Array, variant: int, col: C
 ## draw_line with the width before the colour (CanvasItem.draw_line takes the colour first); antialiased by default.
 static func line(ci: CanvasItem, a: Vector2, b: Vector2, width: float, col: Color, aa: bool = true) -> void:
 	ci.draw_line(a, b, col, width, aa)
+
+
+## A filled polygon that can never make the engine print "Invalid polygon data, triangulation failed": consecutive
+## duplicate points and NaNs are dropped, and a shape with fewer than three points or a near-zero area (a sliver from a
+## clip at the edge of its range, a zero-size rect) is skipped instead of drawn.
+static var unguarded: bool = false   # bench and probes only: draw polygons raw, to see what the guard catches
+
+
+static func fill_poly(ci: CanvasItem, pts: PackedVector2Array, col: Color, check: bool = true) -> void:
+	if unguarded:
+		ci.draw_colored_polygon(pts, col)
+		return
+	if col.a <= 0.0 or pts.size() < 3:
+		return
+	var clean := PackedVector2Array()
+	for p in pts:
+		if is_nan(p.x) or is_nan(p.y) or is_inf(p.x) or is_inf(p.y):
+			return
+		if clean.is_empty() or clean[clean.size() - 1].distance_squared_to(p) > 1e-6:
+			clean.append(p)
+	if clean.size() > 1 and clean[0].distance_squared_to(clean[clean.size() - 1]) <= 1e-6:
+		clean.remove_at(clean.size() - 1)
+	if clean.size() < 3 or absf(poly_area(clean)) < 0.05:
+		return
+	# A self-intersecting outline (which the triangulator rejects) is not something these shapes should produce, but
+	# a clipped or shrunk shape can graze itself; skip it rather than print an error.
+	if check and Geometry2D.triangulate_polygon(clean).is_empty():
+		return
+	ci.draw_colored_polygon(clean, col)
+
+
+static var _stripes: ImageTexture = null
+
+
+## An 8 by 8 diagonal-stripe texture (dark stripes at 28% over transparent), tiled by draw_texture_rect on a layer whose
+## texture_repeat is enabled. One draw command replaces a hatch of one line per stripe.
+static func stripes() -> ImageTexture:
+	if _stripes == null:
+		var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+		for y in range(8):
+			for x in range(8):
+				var on: bool = posmod(x - y, 8) < 2
+				img.set_pixel(x, y, Color(0, 0, 0, 0.28 if on else 0.0))
+		_stripes = ImageTexture.create_from_image(img)
+	return _stripes

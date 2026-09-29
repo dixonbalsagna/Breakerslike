@@ -19,6 +19,8 @@ static func _base(y0: float, h: float, fs: int) -> float:
 
 static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary, s: float, t: float, o: Dictionary) -> void:
 	_A = float(o.get("plate_alpha", 1.0))
+	UiText.no_outline = true
+	UiText.defer = true
 	var left: bool = m.left_side
 	var pad: float = float(pm["pad"])
 	var reduced: bool = bool(o.get("reduced_motion", false))
@@ -160,7 +162,7 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		var nx: float = (x0 + pips_w + 12.0 * s) if left else (x1 - pips_w - 12.0 * s)
 		UiText.draw(ci, tname, Vector2(nx, _base(ry, rh, tfs)), tfs, dim, -1 if left else 1)
 	if sig_ready:
-		var pl: float = 1.0 if reduced else (0.75 + 0.25 * sin(t * 5.0))
+		var pl: float = 1.0   # steady: a ready signature does not pulse (nothing animates at rest)
 		var chh: float = rh
 		# On a narrow plate (a phone) the chip shrinks to its star, so it never covers the pips.
 		var avail: float = inner_w - pips_w - 8.0 * s
@@ -205,6 +207,8 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	by = ry + (rh - bar_h) * 0.5
 	var ccol: Color = UiLook.col(UiLook.CHARGE_READY) if sig_ready else UiLook.col(UiLook.CHARGE)
 	_bar(ci, Rect2(bx if left else bx - shame_w, by, bw2 + shame_w, bar_h), m.charge / 100.0, _c(ccol), left, m.sig_cost / 100.0, s, sig_ready)
+	UiText.flush(ci)
+	UiText.no_outline = false
 
 
 static func _chip(ci: CanvasItem, rect: Rect2, left: bool, pad: float, cur: float, w: float, y: float, h: float, fill: Color, edge: Color, edge_w: float) -> void:
@@ -216,7 +220,7 @@ static func _pip_right(ci: CanvasItem, c: Vector2, size: float, fill: float, col
 	# A pip that fills from its right side: draw the full pip mirrored by filling (1 - fill) from the left of an inverted clip.
 	var s: float = size * 0.5
 	var poly := PackedVector2Array([c + Vector2(0, -s), c + Vector2(s, 0), c + Vector2(0, s), c + Vector2(-s, 0)])
-	ci.draw_colored_polygon(poly, Color(0, 0, 0, 0.45 * _A))
+	UiIcons.fill_poly(ci, poly, Color(0, 0, 0, 0.45 * _A))
 	if fill > 0.0:
 		var flipped := PackedVector2Array()
 		for p in poly:
@@ -226,7 +230,7 @@ static func _pip_right(ci: CanvasItem, c: Vector2, size: float, fill: float, col
 		for p in clipped:
 			back.append(Vector2(2.0 * c.x - p.x, p.y))
 		if back.size() >= 3:
-			ci.draw_colored_polygon(back, col)
+			UiIcons.fill_poly(ci, back, col, true)
 	var closed: PackedVector2Array = poly.duplicate()
 	closed.append(poly[0])
 	ci.draw_polyline(closed, edge, maxf(1.5, size * 0.09), true)
@@ -240,11 +244,15 @@ static func _bar(ci: CanvasItem, r: Rect2, frac: float, col: Color, left: bool, 
 	if fw > 0.5:
 		var fr: Rect2 = Rect2(r.position.x if left else r.end.x - fw, r.position.y, fw, r.size.y)
 		ci.draw_rect(fr, col)
-		var poly := PackedVector2Array([fr.position, Vector2(fr.end.x, fr.position.y), fr.end, Vector2(fr.position.x, fr.end.y)])
-		UiIcons.hatch(ci, poly, -PI * 0.25, maxf(5.0, 7.0 * s), _c(Color(0, 0, 0, 0.28)), maxf(1.0, 1.4 * s))
+		# The stripes that carry the fill without colour: one tiled texture rect, not a line per stripe.
+		ci.draw_texture_rect(UiIcons.stripes(), fr, true, Color(1, 1, 1, _A))
+	# The three quarter ticks in one draw command.
+	var ticks := PackedVector2Array()
 	for q in [0.25, 0.5, 0.75]:
 		var qx: float = r.position.x + r.size.x * (q if left else 1.0 - q)
-		ci.draw_line(Vector2(qx, r.position.y), Vector2(qx, r.end.y), _c(Color(0, 0, 0, 0.5)), 1.0)
+		ticks.append(Vector2(qx, r.position.y))
+		ticks.append(Vector2(qx, r.end.y))
+	ci.draw_multiline(ticks, _c(Color(0, 0, 0, 0.5)), 1.0)
 	if mark > 0.0:
 		var mx: float = r.position.x + r.size.x * (mark if left else 1.0 - mark)
 		var ext: float = maxf(3.0, 3.5 * s)

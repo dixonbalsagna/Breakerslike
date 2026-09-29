@@ -78,7 +78,7 @@ static func _internal(ci: CanvasItem, m: UiFighterModel, origin: Vector2, sc: fl
 	var glow: float = 0.15 * float(m.heat_stage)
 	if m.heat_stage > 0 and not reduced:
 		glow *= 0.7 + 0.3 * sin(t * UiLook.HZ_HEAT * TAU)
-	ci.draw_colored_polygon(inner, Color(col.r, col.g, col.b, glow + 0.12 * float(m.internal_stage)))
+	UiIcons.fill_poly(ci, inner, Color(col.r, col.g, col.b, glow + 0.12 * float(m.internal_stage)))
 	var sp: float = maxf(3.0, sc * 0.04) * (1.4 - 0.3 * float(m.internal_stage))
 	# The internal pattern is a cross-hatch, unlike the surface wear's single diagonal: separate by shape.
 	UiIcons.hatch(ci, inner, PI * 0.25, sp, Color(col.r, col.g, col.b, 0.9), maxf(1.0, sc * 0.008))
@@ -124,7 +124,7 @@ static func _rail(ci: CanvasItem, m: UiFighterModel, origin: Vector2, sc: float,
 			# The chip: a small square that shows its stage by pattern: whole, scratched, cracked, split.
 			var half: float = size
 			var sq := PackedVector2Array([c + Vector2(-half, -half), c + Vector2(half, -half), c + Vector2(half, half), c + Vector2(-half, half)])
-			ci.draw_colored_polygon(sq, Color(UiLook.col(UiLook.INTERNAL), 0.85))
+			UiIcons.fill_poly(ci, sq, Color(UiLook.col(UiLook.INTERNAL), 0.85))
 			var ink := UiLook.col(UiLook.INK_DARK)
 			if m.chip_stage == 1:
 				UiIcons.line(ci, c + Vector2(-half, half * 0.4), c + Vector2(half, -half * 0.4), maxf(1.2, sc * 0.008), ink, true)

@@ -50,3 +50,13 @@ See `docs/ui/hud-spec.md` section 14. In short: instance `ui/hud/ui_hud.tscn`, c
 - No cue is colour-only. Every colour role is paired with a shape, pattern, icon or motion.
 - Every player-facing word is data in `data/terms.json`.
 - The Empress's paperwork is never shown (Orb): no stamp cards, no forms, no REJECTED or REGISTERED text.
+
+## Performance
+
+The HUD is a stack of cached layers (`hud/ui_layer.gd`): a layer redraws only when its small signature changes, so at rest nothing is redrawn. To measure it in the live build (a window opens; alternates the UI HUD shown and hidden and prints the cost in wall time, render CPU and GPU, and draw calls):
+
+```
+godot --path . --fixed-fps 60 --resolution 1280x720 --script res://ui/tools/hud_bench.gd -- --seed=4 --blocks=6 --block=300
+```
+
+Add `--force` to redraw every layer every frame (the cost without caching), or `--rawpolys` to draw polygons unguarded. Results are in `docs/ui/hud-spec.md` section 14.

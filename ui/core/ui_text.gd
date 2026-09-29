@@ -10,6 +10,20 @@ const ARROW := "→"
 const _ASCII: Dictionary = {"×": "x", "—": "-", "·": "-", "…": "...", "’": "'", "“": "\"", "”": "\"", "•": "*"}
 
 static var font: Font = null   # a bundled font may replace the fallback later (needs Legal's licence row first)
+## Text on a scrim (the plates, the toll chip) skips the outline: half the draw commands, and it needs none there.
+static var no_outline: bool = false
+## Batching: with `defer` on, draw() queues the text, and flush() draws it all after the shapes. Text uses the font atlas
+## texture and shapes use none, so interleaving them breaks the renderer's batches; a plate drawn shapes-first costs
+## a fraction of the draw calls.
+static var defer: bool = false
+static var _queue: Array = []
+
+
+static func flush(ci: CanvasItem) -> void:
+	defer = false
+	for q in _queue:
+		draw(ci, q[0], q[1], q[2], q[3], q[4], q[5])
+	_queue.clear()
 
 
 static func f() -> Font:
@@ -66,6 +80,9 @@ static func height(fs: int) -> float:
 ## Draw a line of text with its baseline at pos.y. align: -1 left, 0 centre, 1 right of pos.x. outline > 0 draws a dark
 ## outline that many pixels wide so the text survives bright explosions. Returns the drawn width.
 static func draw(ci: CanvasItem, text: String, pos: Vector2, fs: int, color: Color, align: int = -1, outline: float = 0.0) -> float:
+	if defer:
+		_queue.append([text, pos, fs, color, align, outline])
+		return width(text, fs)
 	var segs: PackedStringArray = _segments(text)
 	var fnt: Font = f()
 	var w: float = width(text, fs)
@@ -74,6 +91,8 @@ static func draw(ci: CanvasItem, text: String, pos: Vector2, fs: int, color: Col
 		x -= w * 0.5
 	elif align == 1:
 		x -= w
+	if no_outline:
+		outline = 0.0
 	var ol := Color(0.03, 0.04, 0.07, minf(1.0, color.a * 0.9))
 	for i in range(segs.size()):
 		var seg: String = segs[i]

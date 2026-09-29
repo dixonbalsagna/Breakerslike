@@ -29,6 +29,7 @@ func _run() -> void:
 	_crown_rules()
 	_scenarios()
 	await _draw_smoke()
+	await _layer_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -484,3 +485,43 @@ func _crown_rules() -> void:
 	var share: float = float(up) / float(total)
 	print("  crown up in %.0f%% of the scripted fight (any fighter)" % (share * 100.0))
 	_ok(share < 0.65, "crown: a crown is up in under 65%% of even a dense scripted fight (%.0f%%)" % (share * 100.0))
+
+
+# --- Cached layers: at rest the HUD redraws nothing ---------------------------------------------------------------
+
+func _layer_rules() -> void:
+	root.size = Vector2i(1280, 720)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	hud.anchor_fn = func(slot): return {"pos": Vector2(400.0 + 400.0 * float(slot), 400.0), "h": 120.0, "visible": true}
+	hud.strip_fn = func(): return {"W": 9600.0, "segs": [[0.0, 4800.0, "ocean"], [4800.0, 9600.0, "city"]], "cam_x": 100.0, "cam_w": 2000.0, "dead": [], "fighters": [{"x": 50.0, "slot": 0, "hidden": false, "aura": Color.WHITE, "seen_x": 50.0}, {"x": 900.0, "slot": 1, "hidden": false, "aura": Color.WHITE, "seen_x": 900.0}]}
+	for i in range(40):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	var base: int = hud.redraw_count()
+	for i in range(180):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud.redraw_count() - base <= 2, "layers: at rest 180 frames cause %d redraws (a still HUD redraws nothing)" % (hud.redraw_count() - base))
+	hud.consume({"type": "damage", "attacker": 0, "victim": 1, "region": "arms", "kind": "light", "number": true})
+	for i in range(20):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud.redraw_count() - base > 10, "layers: a hit redraws the crown layer while it shows")
+	for i in range(150):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	var base2: int = hud.redraw_count()
+	for i in range(120):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud.redraw_count() - base2 <= 2, "layers: back at rest, it stops redrawing again (%d)" % (hud.redraw_count() - base2))
+	hud.set_option("force_redraw", true)
+	var base3: int = hud.redraw_count()
+	for i in range(30):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud.redraw_count() - base3 > 100, "layers: the bench switch redraws every layer every frame (%d)" % (hud.redraw_count() - base3))
+	hud.queue_free()
+	await process_frame
