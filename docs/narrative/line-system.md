@@ -17,7 +17,7 @@ Each event is emitted by the sim and read by the line system. The line system ne
 | **Beams** | signature fired, hit, dodged, escaped, beam clash, beam struggle won or lost |
 | **World** | structure destroyed, civilians lost (by threshold), crater, first fire, entering a place, day to night, weather change, altitude (space), mantle eruption, planet destroyed |
 | **State** | an ego meter crossing a line (Respect, Pride, Wrath, Hunger), transformation start, interrupted, completed, reverted, a drain state |
-| **Fighter-specific** | orb picked up, held, scattered (Protagonist); a fusion beat (Anti-hero); a goon falls, a revision (Tyrant); a civilian consumed, a portal used, the backup drive chased or docked (Cyborg) |
+| **Fighter-specific** | orb picked up, held, scattered (Protagonist); a fusion beat (Anti-hero); a guard member falls, a filing (Empress); a civilian consumed, a portal used, the backup drive chased or docked (Cyborg) |
 | **Set pieces** | finisher, KO, revive, relocation, final form reveal. These pause the fight and may run 3 seconds or more |
 
 ## 2. Variables
@@ -126,13 +126,13 @@ Conditions are simple predicates on the tag bundle: equality, membership, numeri
 
 ## 7. The four voices
 
-The Warden and VORR were prototype placeholders. I carry the tense device forward like this (an assumption for the EP to confirm): the Protagonist keeps the **future tense** (promises), the Anti-hero speaks about his opponent in the **past tense** (a dismissive obituary), the Tyrant refers to himself by **revision number**, and the Cyborg speaks in **customer-service politeness** over an appetite. All he/him. No catchphrases from any source.
+The Warden and VORR were prototype placeholders. I carry the tense device forward like this (an assumption for the EP to confirm): the Protagonist keeps the **future tense** (promises), the Anti-hero speaks about his opponent in the **past tense** (a dismissive obituary), the Empress files each revision and says "we", slipping to "I" when hurt, and the Cyborg speaks in **customer-service politeness** over an appetite. Three are he/him and the Empress is she/her. No catchphrases from any source.
 
 | Fighter | Voice | Grunts |
 |---|---|---|
 | **The Protagonist** | Earnest, delighted by the fight, plain words, promises, oblivious about collateral until it is late. | Hearty efforts, a delighted laugh, a wince. |
 | **The Anti-hero** | Brooding, clipped, ranks people, talks about the opponent as already finished. | Low growls, a sneer's exhale, rare and cold laughs. |
-| **The Tyrant** | Confident, leering, boastful, quick to anger; revision numbers as a tic; sneering at his goons. | A wheezing cackle, a snort, an escalating shriek. |
+| **The Empress** | Confident, leering, boastful, quick to anger; revision numbers as filings; a royal "we" that slips to "I"; addresses opponents as "petitioner". | A wheezing cackle, a snort, an escalating shriek, a rubber-stamp thud. |
 | **The Cyborg** | Polite, corporate, hungry; sandwich and order language; glitches when hit on the chip. | Static-tinged growls, munching, a digital chirp. |
 
 ## 8. Sample lines (10 per fighter, original)
@@ -169,20 +169,20 @@ Each line shows its trigger and its first cue. Some are jewels; some are templat
 | 9 | transformation starts | "Regalia. Now you'll know who was watching." | roar |
 | 10 | finisher | "You were adequate. That is the highest thing I say." | sigh |
 
-### The Tyrant
+### The Empress
 
 | # | Trigger | Line | Cue |
 |---|---|---|---|
-| 1 | match start (goons) | "Go on, boys. Warm him up. I'll be along, Revision One and half asleep." | cackle |
-| 2 | goon falls | "Fine. I'll do it myself. Revision Two, if you please." | snort |
-| 3 | sniping support | "Hold still. It's a precision matter." | cackle |
-| 4 | took a hit | "You hit me! Do you know what revision this is?" | shriek |
-| 5 | Wrath high | "That's the last time you'll do that in this revision!" | shriek |
-| 6 | joke revision | "Revision Four. It's the same, but I've added a hat." | cackle |
-| 7 | opponent hurt | "Ohoho. Cute. Cute!" | cackle |
-| 8 | cutting beam | "One straight line. Try not to be on it." | snort |
-| 9 | structure destroyed | "Redecorating. You're welcome." | cackle |
-| 10 | finisher | "Final Approved Revision. Sign here." | cackle |
+| 1 | match start (guard) | "Guard, present arms. Warm him up. We will attend presently, Revision One and half asleep." | cackle |
+| 2 | guard member falls | "The Herald-Archer is dismissed with honour. Runner, present arms." | snort |
+| 3 | sniping support | "Hold still. It is a precision matter." | cackle |
+| 4 | took a hit | "You struck us! Do you know what revision this is? ...You struck ME." | shriek |
+| 5 | Wrath high | "That is the last time you do that in this revision!" | shriek |
+| 6 | joke revision | "Revision Four, filed and stamped. We have added a hat." | stamp |
+| 7 | opponent hurt | "Ohoho. Cute. Cute! ...Filed under Cute." | cackle |
+| 8 | decree line | "One straight line. That is now the border. Do try to be on the correct side." | snort |
+| 9 | structure destroyed | "Annexing. The empire thanks you for your patronage." | cackle |
+| 10 | finisher | "Revision Twelve, Approved. Sign here. We do not accept cheques." | cackle |
 
 ### The Cyborg
 
@@ -217,7 +217,7 @@ Orb: lines should change with who faces whom. A line can now key on the pairing,
 
 | Tag | Values | Meaning |
 |---|---|---|
-| `matchup` | an ordered pair such as `protagonist>anti_hero`, or a wildcard such as `protagonist>*` and `*>tyrant` | Speaker, then opponent. Mirrors are `protagonist>protagonist`. |
+| `matchup` | an ordered pair such as `protagonist>anti_hero`, or a wildcard such as `protagonist>*` and `*>empress` | Speaker, then opponent. Mirrors are `protagonist>protagonist`. |
 | `stakes` | `sparring`, `rivalry`, `grudge`, `world_at_stake`, `appetite` | What is on the line. Comes from the matchup table in `matchups.md`, and can change mid-fight (for example when a planet is threatened). |
 | `register` | `playful`, `respectful`, `contemptuous`, `grim`, `leering`, `polite_menace`, `disgusted`, `competitive` | How the speaker is talking to this opponent right now. Starts from the matchup default and shifts with the fight. |
 | `shift` | `winning`, `losing`, `brink`, `transformed`, `in_fold` | Where the fight is, which moves the register. |
@@ -229,10 +229,10 @@ Orb: lines should change with who faces whom. A line can now key on the pairing,
 
 ```json
 {
-  "id": "prot.fold.vs_tyrant.001",
+  "id": "prot.fold.vs_empress.001",
   "trigger": "fold_arrival",
   "priority": 3,
-  "when": { "matchup": "protagonist>tyrant", "stakes": "world_at_stake", "shift": "in_fold" },
+  "when": { "matchup": "protagonist>empress", "stakes": "world_at_stake", "shift": "in_fold" },
   "text": "We can't hurt anyone innocent here.",
   "register": "grim",
   "cues": [{ "at": 0, "gesture": "sigh", "intensity": 2 }]
@@ -244,7 +244,7 @@ Orb: lines should change with who faces whom. A line can now key on the pairing,
   "fighter": "protagonist",
   "registers": {
     "anti_hero": { "default": "respectful", "shifts": { "winning": "playful", "losing": "respectful", "brink": "grim" } },
-    "tyrant":    { "default": "grim",       "shifts": { "winning": "grim",    "losing": "grim",       "brink": "grim" } },
+    "empress":   { "default": "grim",       "shifts": { "winning": "grim",    "losing": "grim",       "brink": "grim" } },
     "cyborg":    { "default": "grim",       "shifts": { "winning": "grim",    "in_fold": "grim" } },
     "protagonist": { "default": "playful",  "shifts": { "brink": "grim" } }
   }

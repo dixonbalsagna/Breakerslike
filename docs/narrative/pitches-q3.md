@@ -14,7 +14,7 @@ Owner: Narrative and Fighter Identity. Version 1, 2026-09-29. Draft for the EP a
 | d. Cyborg weak point | **Rail chip** |
 | e. Transformations | The map and ladders below; no single pick |
 | f. Anti-hero fusion | **Full Circle** (a lap-around merge) |
-| g. Tyrant's tail | **Stylus tail** |
+| g. The Empress's tail | **Stylus tail** (superseded by Orb's pick: the bladed mantle, now her train) |
 
 ## a. Orbs that earn the title
 
@@ -102,7 +102,7 @@ Orb: "Powerups and transformations strike me as a genre staple so I want this fu
 | 6 Apex | Late in the fight | Permanent, with a drain state | Full power |
 | Fusion | Full Circle (item f) | A pride crash afterwards | A merged body |
 
-**The Tyrant (numbered revisions, jokes first).** Quick revisions are safe from interruption.
+**The Empress (numbered revisions, jokes first; formerly the Tyrant).** Quick revisions are safe from interruption. Each revision is now a filing (see "The Empress: the paperwork").
 
 | Revisions | Type | Change |
 |---|---|---|
@@ -132,7 +132,7 @@ Orb: "Powerups and transformations strike me as a genre staple so I want this fu
 
 **Favourite: F3.** It is the only one that could not exist in a game without a wrapping world.
 
-## g. The Tyrant's tail
+## g. The Empress's tail (formerly the Tyrant's)
 
 | Option | The pitch | Strip test |
 |---|---|---|
@@ -158,7 +158,7 @@ Decided by Orb: the Cyborg's food mechanic is **Press** (his plates clamp shut a
 | **O1. The Scatter** | A heavy hit on a fragment carrier knocks one fragment loose, and it tumbles a long way, right round the wrapped planet if the hit was hard enough. It lands in plain sight with a burst of light. | Glowing objects flung across the whole world, and a race to reach them. | It is one irregular fragment, from a seeded draw. There is no set, no marking, no sensor, and the light burst shows only at impact. |
 | **O2. The Bloom** | When the mass he holds passes the threshold, the fragments orbiting the Protagonist all ignite together and a column of light opens the fold into the proving ground. A cinematic longer than 3 seconds. | The payoff: glowing objects gathered by the hero and a spectacular result. | The result is only the relocation. There is no summoned being and no wish. It depends on mass, not a count, so any mix of sizes works. |
 | **O3. Ring Closes** | Carried fragments orbit his body faster and closer as the mass nears the threshold. A rising hum. At the threshold the orbit closes into a ring. | The feeling of power gathering, felt in sound and motion, not in a pose. | They orbit the body. There is no raised-arms pose and no count on screen. The state is read from the orbit and the audio. |
-| **O4. Everyone's Hunger** | Every fighter grabs fragments for the charge surge, and each surge looks different: the Protagonist drinks it in, the Anti-hero crushes it, the Tyrant socket-fits it into his armour, the Cyborg embeds it in his wiring. | The whole cast fighting over the glowing thing, each in character. | Only the Protagonist can hold them for the fold. For everyone else it is a surge and nothing more. |
+| **O4. Everyone's Hunger** | Every fighter grabs fragments for the charge surge, and each surge looks different: the Protagonist drinks it in, the Anti-hero crushes it, the Empress files it into her regalia, the Cyborg embeds it in his wiring. | The whole cast fighting over the glowing thing, each in character. | Only the Protagonist can hold them for the fold. For everyone else it is a surge and nothing more. |
 
 **Favourite: O1 and O2 as a pair, with O3 as the feeling between them.** O1 is the fight. O2 is the payoff. O3 is what the player feels in the middle. O4 is a flavour layer that costs animation only. Legal's marketing rule still applies: no key art of a hero holding an orb aloft, and no row of matching orbs.
 
@@ -211,7 +211,7 @@ Orb has not ruled, so these are proposals.
 |---|---|---|
 | Protagonist | Future tense: promises. | **Confirmed.** New lines for Overcommit (above). |
 | Anti-hero | Talks about his opponent in the past tense. | **Adjusted.** When his facade cracks, his lines slip into first-person present tense, plain: "Help me." It is a tell the player can hear. |
-| Tyrant | Revision numbers as a tic. | **Confirmed.** The Emergency revision (Game Design) gets a flaw line: "Revision Five and a Half. It's fine. It's fine." |
+| Empress (was the Tyrant) | Revision numbers, now filings. | **Confirmed.** The Emergency revision (Game Design) gets a flaw line: "Revision Five and a Half. It's pending. It's fine." |
 | Cyborg | Customer-service politeness over hunger. | **Confirmed.** Press gets lines: "Please stand clear of the plates." |
 
 **Samples for the new beats.**
@@ -273,7 +273,7 @@ Orb wants the homage to land. Legal's recognisability ladder (`docs/legal/tribut
 
 ## 3. Voice bibles
 
-The four voice bibles are in `docs/narrative/voices/`: `protagonist.md`, `anti-hero.md`, `tyrant.md` and `cyborg.md`. Each has the speech rhythm, vocabulary, what he never says, his reactions (winning, losing, collateral, being mocked, transforming), a grunt and laugh palette, and 5 lines per situation. The Tyrant's tail is now the bladed mantle (Orb's pick), so his lines refer to the cape.
+The four voice bibles are in `docs/narrative/voices/`: `protagonist.md`, `anti-hero.md`, `empress.md` (formerly `tyrant.md`) and `cyborg.md`. Each has the speech rhythm, vocabulary, what the fighter never says, the reactions (winning, losing, collateral, being mocked, transforming), a grunt and laugh palette, and 5 lines per situation. The Empress's tail is now the bladed mantle (Orb's pick), so her lines refer to the train.
 
 ---
 
@@ -321,7 +321,7 @@ Orb: space folds inward toward the Protagonist and the planet vanishes around th
 | Rival | Reply |
 |---|---|
 | **The Anti-hero** | "Running from your own mess. How like you." (then, quietly) "...Fine. Nobody is watching. Better." |
-| **The Tyrant** | "A private room! How intimate, pet. Boys, wait outside." |
+| **The Empress** | "A private room! How intimate, petitioner. Guard, wait outside." |
 | **The Cyborg** | "A private dining room? Excellent. Please reserve me the good table." |
 | **A mirror Protagonist** | "Ha! You too? Go on, then." |
 
@@ -341,7 +341,7 @@ Orb: space folds inward toward the Protagonist and the planet vanishes around th
 
 # The Empress
 
-Orb: the Galactic Tyrant becomes a galactic Empress (she/her). This is a pitch round for Orb to react to. Everything stays inside Orb's original traits (confident, leering, boastful, quick to anger, watching from behind her goons). All names are placeholders. Legal's rule for revisions 9 to 12 still applies: no sleek, pale, slender horned figure with a purple accent. Until Orb reacts, the earlier sections and files still say "the Tyrant"; the list of files to update is in section 6.
+Orb: the Galactic Tyrant becomes a galactic Empress (she/her). This is a pitch round for Orb to react to. Everything stays inside Orb's original traits (confident, leering, boastful, quick to anger, watching from behind her goons). All names are placeholders. Legal's rule for revisions 9 to 12 still applies: no sleek, pale, slender horned figure with a purple accent. Orb has since picked the paperwork take (see "The Empress: the paperwork" below), and Narrative's files now say the Empress.
 
 ## 1. Who she is: three takes
 
@@ -421,6 +421,71 @@ They stay AI-only and take turns (bruiser, marksman, speedster).
 
 ## 6. Files that assume the Tyrant is "he" or "the Tyrant"
 
-**In Narrative's own folder (I will update after Orb reacts):** `docs/narrative/voices/tyrant.md` (whole file, he/him), `docs/narrative/matchups.md` (the matrix, the Protagonist v Tyrant case, and the mirror), `docs/narrative/pitches-q3.md` (the ladder, the tail, the Round 3 voice notes, and "the Tyrant" throughout), `docs/narrative/line-system.md` (the voice table, the sample lines, and "all he/him").
+**In Narrative's own folder (now updated to the Empress):** `docs/narrative/voices/tyrant.md` (whole file, he/him), `docs/narrative/matchups.md` (the matrix, the Protagonist v Tyrant case, and the mirror), `docs/narrative/pitches-q3.md` (the ladder, the tail, the Round 3 voice notes, and "the Tyrant" throughout), `docs/narrative/line-system.md` (the voice table, the sample lines, and "all he/him").
 
 **Others' files that name the Tyrant (owners to decide):** `docs/ep/vision.md`, `docs/ep/handoff.md`, `docs/combat/procedural-moves.md`, `docs/design/systems-sketch.md`, `docs/design/spec-wounds.md`, `docs/design/pitches.md`, `docs/design/pillars.md`, `docs/design/open-questions.md`, `docs/design/modes.md`, `docs/design/damage-model.md`, `docs/design/economy.md`, `docs/legal/fighter-concepts-review.md`, `docs/legal/q3-screen.md`, `docs/legal/review-log.md`, `docs/legal/tribute-vs-parody.md`. Some may not use a pronoun at all; each owner should check.
+
+---
+
+# The Empress: the paperwork (after Orb's picks)
+
+Orb's picks: she is very image-focused, hates changing her appearance, and settled on one base form to keep her paperwork tidy. The fight pushes her to transform, so she must update her paperwork to keep her legal status current: "bureaucratic and confusing on purpose." Her goons are a **guard of honour**. Her voice is approved: revision numbers, a royal "we" that slips to "I" when hurt, opponents are "petitioner". This replaces the Succession take in the earlier "The Empress" section. All names are placeholders.
+
+## 1. The idea
+
+Her base form is **Revision One, the form on file**. Every transformation is a **filing**: an amended record, a re-registered identity, a notarised likeness. The more she transforms, the more tangled her legal status gets. She does not simply power up: she has to get it approved.
+
+## 2. The revision cards
+
+Cards follow the wound-card style (no numbers, a stamp). One filing runs through four stamps:
+
+`FILING: REVISION FOUR: SUBMITTED` then `LIKENESS AMENDED` then `NOTARISED` then `REGISTERED: REVISION FOUR`.
+
+Each carries a comic form number ("FORM 9-B: CHANGE OF APPEARANCE (MINOR)"). Two tracks, consistent with Orb's earlier rule that quick revisions are safe:
+
+- **Minor amendments (the joke revisions, 1 to 8):** auto-approved, over in a moment, and safe from interruption. The joke is the hat.
+- **Full filings (the real revisions, 9 to 12):** long, and interruptible.
+
+## 3. What goes wrong if a filing is interrupted
+
+| Option | What happens | The comedy |
+|---|---|---|
+| **A. Rejected** | The filing is lost. She stays in her base form and gets one more outstanding filing. | "Rejected: incomplete!" |
+| **B. Mismatch** ★ | She takes the new body, but the record still shows the old one: `NOT AS PHOTOGRAPHED`. Her guard salutes the wrong direction, and her decree line is void until she re-files. | "Which of us are you saluting?" |
+| **C. Audit** | After enough outstanding filings, the fight pauses for a 3-second set piece. Her own guard, as auditors, demand documents. She is helpless until she wins an exchange. If she loses it, she is "administratively dissolved": no train and no decree line until it clears. | "We are now legally somewhere else." |
+
+**Favourite: B for an interruption, with C as the escalation.**
+
+## 4. The tangle
+
+A visible card, like an ego meter: `FILINGS OUTSTANDING: 2`. Each real revision adds one, and each interruption adds one. The forms cross-reference each other with deliberate nonsense ("Revision Six supersedes Revision Four, except where it does not"). At three outstanding filings, the Audit (C) starts. Clearing them needs a proper, uninterrupted revision.
+
+## 5. Comedy beats
+
+1. *Take a number.* She makes the opponent wait while she files. (The opponent waits politely, arms folded.)
+2. *The notary.* A guard member stamps her mid-transformation, and the rest salute the stamp.
+3. *The photograph.* The likeness camera flashes mid-change, and she blinks.
+4. *Duplicate registration.* In a mirror match: "Application rejected: applicant already exists."
+5. *Wrong department.* A beam is misfiled: "This should have gone to Outcomes."
+6. *A change of address.* "Petitioner, you addressed the previous revision. Please resubmit."
+7. *Backdating.* "We filed it yesterday."
+8. *The cheque.* Her "Approved" stamp arrives a beat late, and the transformation happens in the wrong order.
+
+## 6. Emergency revision and her Rally
+
+Game Design's Rally for the Tyrant is the **Emergency revision** (instant and safe, it mends her most-worn region, skips a rung, and leaves a visible flaw). In the paperwork it is an **unfiled form: a backdated filing**. The record is amended so that the injury "never happened", the region mends, and the flaw is an **ink stamp reading `PENDING`** on the mended region. It adds one outstanding filing. The stamp stays until she completes a proper revision, which rewards her for climbing the ladder afterwards. At three outstanding filings the Audit takes her, so she cannot use the Emergency revision as a free reset.
+
+## 7. The guard of honour
+
+**The Shield** (bruiser), **the Herald-Archer** (marksman) and **the Runner** (speedster). Each salutes formally before tagging in: a fixed one-second beat that the player can read, and the incoming guard member cannot be hit until it ends. She dismisses each fallen guard member "with honour". Her lines: "Guard, present arms."
+
+## 8. The fold
+
+Her filings **do not register in the fold**: there are no clerks, and it is outside her jurisdiction. So she cannot file a real revision there ("We cannot file anything out here!"). That is a comic beat and a balance question for Game Design: it makes the fold hard for her, so a rule is needed (for example, she may use only the Emergency revision inside it).
+
+## 9. Legal and risks
+
+- Revisions 9 to 12 keep Legal's rule: no sleek, pale, slender horned figure with a purple accent.
+- The stamp is an ink stamp, not a coloured aura.
+- Risk: too many rules make her hard to read. The cards and the stamps carry the state.
+- Risk: the Audit might feel like a stall. It is capped at 3 seconds and only after three outstanding filings.

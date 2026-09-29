@@ -1,6 +1,6 @@
 # Matchups: who is facing whom
 
-Owner: Narrative and Fighter Identity. Version 1, 2026-09-29. Draft for the EP. All four fighters are he/him. Names are placeholders. Orb's steer: 1v1 first, and lines change with who faces whom ("more serious against someone he's sparring with versus someone who is threatening to end the world"). Orb reviews one matchup at a time, so each case is self-contained. Lines are original and unsearched.
+Owner: Narrative and Fighter Identity. Version 1, 2026-09-29. Draft for the EP. The Protagonist, the Anti-hero and the Cyborg are he/him. The Tyrant is now the Empress (she/her), and her guard of honour is her court. Names are placeholders. Orb's steer: 1v1 first, and lines change with who faces whom ("more serious against someone he's sparring with versus someone who is threatening to end the world"). Orb reviews one matchup at a time, so each case is self-contained. Lines are original and unsearched.
 
 **Terms.** *Stakes* is one of: `sparring` (nothing but pride), `rivalry` (a grudge with an edge), `world_at_stake` (a planet or its people are in danger), `appetite` (someone is being hunted for food). *Register* is how a fighter speaks to the other: playful, respectful, contemptuous, grim, leering, polite_menace, disgusted, competitive.
 
@@ -22,11 +22,11 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 - **Registers:** P to A is warm and respectful. A to P is contemptuous, with a hidden envy.
 - **Shifts:** *P winning*: gracious. *A winning*: a past-tense obituary. *A on the brink*: silence, then present tense and contractions. *After P transforms*: A ranks the new form, P is delighted. *In the fold*: A grumbles, then approves. Worked in full below.
 
-### 3. Protagonist v Tyrant
-- **Relationship:** a hero against a would-be world-ender who treats the planet as property.
+### 3. Protagonist v Empress
+- **Relationship:** a hero against a would-be world-ender who treats the planet as a filing cabinet.
 - **Stakes:** `world_at_stake`.
-- **Registers:** P to T is grim and plain, with no banter. T to P is leering and amused.
-- **Shifts:** *P winning*: relief, not glee. *T winning*: a signed-off joke. *T on the brink*: a tantrum about an "unapproved outcome". *After each revision*: T jokes, P stays serious. *In the fold*: T mocks the "private room", P's resolve hardens. Worked in full below.
+- **Registers:** P to E is grim and plain, with no banter. E to P is leering and amused, and treats his seriousness as a form to be processed.
+- **Shifts:** *P winning*: relief, not glee. *E winning*: a signed-off joke. *E on the brink*: she appeals ("an unapproved outcome!"). *After each revision*: E jokes about filings, P stays serious. *In the fold*: E mocks the "private room", and finds that her filings do not register out there, so she cannot file a revision. P's resolve hardens. Worked in full below.
 
 ### 4. Protagonist v Cyborg
 - **Relationship:** a hero against a machine that eats the people he protects.
@@ -40,11 +40,11 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 - **Registers:** both contemptuous, each ranking the other.
 - **Shifts:** *winning*: "Second. Behind me." *Losing*: "This does not count." *Brink*: both facades crack in the same beat (present tense, plain), which is comic. *Transformed*: "Regalia? You were always vulgar." *No fold.*
 
-### 6. Anti-hero v Tyrant
-- **Relationship:** a proud rival against a vulgar showman he despises.
-- **Stakes:** `rivalry`. The Tyrant may end the world, but the Anti-hero's concern is rank.
-- **Registers:** A to T is disgusted ("Fifth. Behind the goons. A clown."). T to A is leering ("sulky pet").
-- **Shifts:** *A winning*: he never wants to be seen enjoying it. *T's joke revisions*: unbearable to A, who hates to be laughed at. *T on the brink*: a tantrum. *After each revision*: A ranks it. *No fold.*
+### 6. Anti-hero v Empress
+- **Relationship:** a proud rival against a loud, flamboyant empress he despises.
+- **Stakes:** `rivalry`. The Empress may end the world, but the Anti-hero's concern is rank.
+- **Registers:** A to E is disgusted ("Fifth. Behind the goons. A clown."). E to A is leering ("sulking petitioner").
+- **Shifts:** *A winning*: he never wants to be seen enjoying it. *E's joke revisions*: unbearable to A, who hates to be laughed at. *E on the brink*: an appeal. *After each revision*: A ranks it. *No fold.*
 
 ### 7. Anti-hero v Cyborg
 - **Relationship:** a proud rival against a polite predator.
@@ -52,17 +52,17 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 - **Registers:** A to C is disgusted. C to A is polite menace ("sir", offering him the menu).
 - **Shifts:** *A hates being on the menu*. *C molting*: "Not another stage." *A's facade cracking*: C offers a refund. *No fold.*
 
-### 8. Tyrant v Tyrant (mirror)
-- **Relationship:** two revision-obsessed narcissists, and neither is the original.
-- **Stakes:** `rivalry`, played as comedy: who is the real revision.
+### 8. Empress v Empress (mirror)
+- **Relationship:** two filing-obsessed empresses, and each is sure she is the one on record.
+- **Stakes:** `rivalry`, played as comedy: who is the registered revision. ("Application rejected: applicant already exists.")
 - **Registers:** both leering, then both furious.
-- **Shifts:** *winning*: "Revision Twelve, Approved." *Losing*: "You are an unapproved copy." *The goons* cannot tell them apart. *No fold.*
+- **Shifts:** *winning*: "Revision Twelve, Approved." *Losing*: "You are an unregistered copy." *The guard* cannot tell them apart. *No fold.*
 
-### 9. Tyrant v Cyborg
-- **Relationship:** a boss and a customer-service machine, each convinced the other reports to him.
+### 9. Empress v Cyborg
+- **Relationship:** a bureaucrat and a customer-service machine, each convinced the other belongs to her or his department.
 - **Stakes:** `world_at_stake` and `appetite`: two threats fight over the same planet.
-- **Registers:** T to C is condescending ("my boys will handle you"). C to T is polite and insistent ("I would like to speak to your manager").
-- **Shifts:** *T's tantrum against C's politeness*. *C's molts*: T files a complaint. *No fold.*
+- **Registers:** E to C is condescending ("our guard will handle you"). C to E is polite and insistent ("I would like to speak to your manager").
+- **Shifts:** *E's forms against C's complaints*. *C's molts*: E files an objection. *No fold.*
 
 ### 10. Cyborg v Cyborg (mirror)
 - **Relationship:** two of the same machine, queueing for the same stock.
@@ -102,34 +102,34 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 - *P wins.* P: "That's it. That's the one. Thank you." Then, as A falls: "Rest. I'll carry you home." A, from the ground: "...This does not count." Then, quietly: "Next time."
 - *A wins.* A: "You were the only one worth the trouble." Then: "Fourth. Behind the furniture." P, on the ground, laughing: "Ha. Good one. I'll get you next time."
 
-## 3. Worked case: Protagonist v Tyrant (the contrast)
+## 3. Worked case: Protagonist v Empress (the contrast)
 
-**The frame.** Stakes: `world_at_stake`. P is grim and plain, and does not banter. The Tyrant is leering and amused. The same Protagonist sounds different, and the Tyrant makes the seriousness worse by treating everything as a joke.
+**The frame.** Stakes: `world_at_stake`. P is grim and plain, and does not banter. The Empress is leering and amused, and treats every revision as a filing. The same Protagonist sounds different, and she makes the seriousness worse by treating it as paperwork. Her guard of honour salutes formally before each one tags in.
 
 **Pre-fight**
-- T (to his goons): "Boys. Warm him up. I'll be along, Revision One and half asleep."
+- E (to her guard): "Guard, present arms. Warm him up. We will attend presently, Revision One and half asleep."
 - P: "Leave them out of it. Leave everyone out of it. It's you and me."
-- T: "Oh, he's serious! Boys, he's serious!"
+- E: "Oh, he's serious! Guard, he's serious!"
 
 **Three mid-fight exchanges**
-1. *A goon falls.*
-   - T: "Fine. I'll do it myself. Revision Two, if you please."
+1. *A guard member falls.*
+   - E: "The Herald-Archer is dismissed with honour. Very well, we will attend to it. Revision Two, if you please."
    - P: "Stop. Where you're standing there are people. Stop."
-2. *The Tyrant destroys a structure.*
-   - T: "Redecorating. You're welcome."
+2. *The Empress destroys a structure.*
+   - E: "Annexing. The empire thanks you for your patronage."
    - P: (quietly) "That was a home. I'll help fix it once I'm done with you."
 3. *A joke revision.*
-   - T: "Revision Four. It's the same, but I've added a hat."
+   - E: "Revision Four, filed and stamped. We have added a hat."
    - P: "...I'm not laughing. I want you to know I'm not."
 
 **The fold: lead-in and reply**
 - P: "Not here. There are people under us. Stay close. I'm taking us somewhere nobody can get hurt."
-- T: "A private room! How intimate, pet. Boys, wait outside."
-- On arrival, P: "We can't hurt anyone innocent here." T: "Oh, that's a shame. Nobody to redecorate." P: "Everything. I'm not holding back on you."
+- E: "A private room! How intimate, petitioner. Guard, wait outside."
+- On arrival, P: "We can't hurt anyone innocent here." E: "Oh, what a pity. Nobody to annex. ...And no clerks. We cannot file anything out here!" P: "Everything. I'm not holding back on you."
 
 **Finisher lines**
-- *P wins.* P: "It's over. Nobody else pays for you." T, from the ground: "This is an unapproved outcome! I'll file for another revision."
-- *T wins.* T: "Revision Twelve, Approved. Sign here." P, quietly: "I'll... stop you. I'll stop you."
+- *P wins.* P: "It's over. Nobody else pays for you." E, from the ground: "This is an unapproved outcome! We appeal. ...I APPEAL."
+- *E wins.* E: "Revision Twelve, Approved. Sign here." P, quietly: "I'll... stop you. I'll stop you."
 
 ## 4. What changes when the matchup changes
 
@@ -137,14 +137,14 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 |---|---|---|
 | **Protagonist** | Playful, warm, thanks him, promises a rematch. | Grim and plain. No banter, no thanks. He does not laugh at the jokes. |
 | **Anti-hero** | Contemptuous, with envy. | Disgusted, and concerned only with rank. |
-| **Tyrant** | Amused and leering. | The same, and worse: the fight is a chore that he turns into a show. |
+| **Empress** | Amused and leering. | The same, and worse: the fight is a chore that she turns into a filing. |
 | **Cyborg** | Polite and hungry. | Polite, hungry and puzzled that nobody else finds it funny. |
 
 ---
 
 ## 5. The other eight matchups, written out
 
-Same format as the first two, self-contained and short. The priority is **breadth**: more alternates per slot ("a", "b", "c"), not longer scenes. The line system picks one alternate per slot. Two fixes apply everywhere: the Protagonist puts the fight first and repairs after ("I'll help fix it once I'm done with you"), and the Anti-hero's ranks are always compared to something absurd ("Fifth. Behind the goons."), with "Filth." for pure contempt. Names are placeholders. Proofreading comes later. **The Tyrant is now the Empress (she/her), pending Orb's reaction to "The Empress" in `pitches-q3.md`.** Cases 5.2, 5.4 and 5.7 use her. The earlier sections (the matrix and the Protagonist v Tyrant case) still say Tyrant and will be updated after Orb reacts.
+Same format as the first two, self-contained and short. The priority is **breadth**: more alternates per slot ("a", "b", "c"), not longer scenes. The line system picks one alternate per slot. Two fixes apply everywhere: the Protagonist puts the fight first and repairs after ("I'll help fix it once I'm done with you"), and the Anti-hero's ranks are always compared to something absurd ("Fifth. Behind the goons."), with "Filth." for pure contempt. Names are placeholders. Proofreading comes later. **The Tyrant is now the Empress (she/her), a filing-obsessed empress with a guard of honour (Orb's picks).** Cases 5.2, 5.4 and 5.7 use her.
 
 ### 5.1 Protagonist v Cyborg
 
@@ -180,23 +180,23 @@ Same format as the first two, self-contained and short. The priority is **breadt
 **Frame.** Stakes: `rivalry`. The Anti-hero is disgusted and cares only about rank. The Empress is leering and delighted to have found a sulker. No fold.
 
 **Pre-fight**
-- a. E: "Heirs, look! A sulker! Warm him up." A: "You were a spectacle before you were a threat. Begin."
-- b. E: "The brooding petitioner! Do take that cape off. Ours is longer." A: "You were vulgar. You are still vulgar. Filth."
+- a. E: "Guard, look! A sulker! Warm him up." A: "You were a spectacle before you were a threat. Begin."
+- b. E: "The sulking petitioner! Do take that cape off. Ours is longer." A: "You were vulgar. You are still vulgar. Filth."
 - c. E: "Revision One, at your service. Well, at your interest." A: "You were never in my service."
 
 **Mid-fight**
 1. *A joke revision.*
-   - a. E: "Revision Four takes the throne. We have added a hat." A: "Filth."
+   - a. E: "Revision Four, filed and stamped. We have added a hat." A: "Filth."
    - b. E: "Revision Two. Louder. That is the entire update." A: "You were funny in a way that ends today."
-2. *An heir falls.*
-   - a. E: "Heir Two has failed the audition." A: "Fifth. Behind the goons. And the goons are behind you."
-   - b. E: "My heirs! ...Fine. We will do it ourselves." A: "You hid behind furniture. Rank yourself: behind the furniture."
+2. *A guard member falls.*
+   - a. E: "The Herald-Archer is dismissed with honour." A: "Fifth. Behind the goons. And the goons are behind you."
+   - b. E: "My guard! ...Fine. We will do it ourselves." A: "You hid behind furniture. Rank yourself: behind the furniture."
 3. *The Empress is hit.*
    - a. E: "You struck us! Do you know what revision this is? ...You struck ME." A: "The number does not matter. You were always behind the goons."
    - b. E: "That is the last time you do that in this revision!" A: "You have said that four times. It was never the last."
 
 **Finisher lines**
-- *A wins.* A: "You were loud. That was all you were." E, from the ground: "This is an unapproved outcome! We abdicate. ...I ABDICATE." A: "Filth." Alternate: A: "You were adequate. As comic relief."
+- *A wins.* A: "You were loud. That was all you were." E, from the ground: "This is an unapproved outcome! We appeal. ...I APPEAL." A: "Filth." Alternate: A: "You were adequate. As comic relief."
 - *E wins.* E: "Revision Twelve, Approved. Sign here." A, facade cracking: "I can't... don't. I'm still here." Alternate: E: "Paperwork, petitioner." A: (silence, then) "This does not count."
 
 ### 5.3 Anti-hero v Cyborg
@@ -225,20 +225,20 @@ Same format as the first two, self-contained and short. The priority is **breadt
 
 ### 5.4 Empress v Cyborg
 
-**Frame.** Stakes: `world_at_stake` and `appetite`. Two threats over one planet, each convinced the other reports to her or him. E is condescending ("my heirs will handle you"). C is polite and insistent ("your manager"). No fold. This is the "manager" matchup.
+**Frame.** Stakes: `world_at_stake` and `appetite`. Two threats over one planet, each convinced the other belongs to her or his department. E is condescending ("our guard will handle you"). C is polite and insistent ("your manager"). No fold. This is the "manager" matchup.
 
 **Pre-fight**
 - a. C: "Good afternoon. I would like to speak to your manager." E: "Petitioner, we are the manager. We are also the owner. Revision One, at your complaint."
-- b. E: "Heirs, a customer! Show him the door." C: "I will show myself the exit. After lunch."
+- b. E: "Guard, a customer! Show him the door." C: "I will show myself the exit. After lunch."
 - c. C: "May I take your order?" E: "We do not take orders. We revise them."
 
 **Mid-fight**
 1. *A joke revision.*
-   - a. E: "Revision Four takes the throne. We have added a hat." C: "I will need to log a complaint about the hat."
+   - a. E: "Revision Four, filed and stamped. We have added a hat." C: "I will need to log a complaint about the hat."
    - b. E: "Revision Two. Louder." C: "Please lower your voice, madam. You are disturbing the other guests."
-2. *The Cyborg eats an heir.*
-   - a. E: "Those were heirs!" C: "I do apologise. I thought they were on the menu."
-   - b. E: "My heirs! ...Fine. We will attend to it ourselves." C: "Your staff was delicious. Five stars."
+2. *The Cyborg eats a guard member.*
+   - a. E: "Those were my guard!" C: "I do apologise. I thought they were on the menu."
+   - b. E: "My guard! ...Fine. We will attend to it ourselves." C: "Your staff was delicious. Five stars."
 3. *The chip is hit.*
    - a. E: "What is that? A tiny chip? How precious." C: "Not the chip! Please do not shout the chip!"
    - b. E: "Ohoho. Cute. Cute!" C: "That's private property, madam. That's my whole... that's..."
@@ -302,27 +302,27 @@ Same format as the first two, self-contained and short. The priority is **breadt
 
 ### 5.7 Empress v Empress (mirror)
 
-**Frame.** Stakes: `rivalry`, played as comedy: who is the real revision. Both leering, then both furious. The heirs cannot tell them apart. No fold.
+**Frame.** Stakes: `rivalry`, played as comedy: who is the real revision. Both leering, then both furious. The guard cannot tell them apart. No fold.
 
 **Pre-fight**
-- a. E1: "Revision One, at your service." E2: "Revision One, at YOURS. There is room on the throne for one Revision One."
-- b. E1: "Heirs, which of us is your empress?" (the heirs look at both) E2: "Heirs! Ignore her!"
+- a. E1: "Revision One, at your service." E2: "Revision One, at YOURS. There is room on the register for one Revision One."
+- b. E1: "Guard, which of us is your empress?" (the guard look at both) E2: "Guard! Ignore her!"
 - c. E1: "Oh, look at the train. Cute." E2: "It is our train. You copied it." E1: "We had it first."
 
 **Mid-fight**
 1. *A joke revision, in sync.*
-   - a. E1: "Revision Four takes the throne. We have added a hat." E2: "We added a hat FIRST."
+   - a. E1: "Revision Four, filed and stamped. We have added a hat." E2: "We added a hat FIRST."
    - b. E1: "Revision Two. Louder." E2: "We were already louder. We were the loud one."
 2. *A hit lands.*
    - a. E1: "You struck us! Do you know what revision this is? ...You struck ME." E2: "We do. We are one too. Ours is better."
    - b. E1: "That is the last time you do that in this revision!" E2: "Yes, that is what we said."
-3. *An heir is confused.*
-   - a. E1: "Heirs! Get her!" (the heirs attack E1) E1: "Not us! The OTHER one!"
-   - b. E2: "Good, heirs. Keep going." (the heirs attack E2)
+3. *A guard member is confused.*
+   - a. E1: "Guard! Get her!" (the guard attack E1) E1: "Not us! The OTHER one!"
+   - b. E2: "Good, guard. Keep going." (the guard attack E2)
 
 **Finisher lines**
-- *Winner.* "Revision Twelve, Approved. Sign here." Alternate: "The train looks better on the original."
-- *Loser.* "You are an unapproved copy!" Alternate: "This is an unapproved outcome! We abdicate in favour of ourselves, and we are furious about it."
+- *Winner.* "Revision Twelve, Approved. Sign here." Alternate: "The train looks better on the registered original."
+- *Loser.* "You are an unregistered copy!" Alternate: "This is an unapproved outcome! We appeal against ourselves, and we are furious about it."
 ### 5.8 Cyborg v Cyborg (mirror)
 
 **Frame.** Stakes: `appetite`. Both polite, both hungry, queueing for the same stock. No fold, since there are no civilians in the fold and neither would go.
