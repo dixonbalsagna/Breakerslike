@@ -60,3 +60,7 @@ godot --path . --fixed-fps 60 --resolution 1280x720 --script res://ui/tools/hud_
 ```
 
 Add `--force` to redraw every layer every frame (the cost without caching), or `--rawpolys` to draw polygons unguarded. Results are in `docs/ui/hud-spec.md` section 14.
+
+## Automated playtest
+
+`godot --headless --path . --script res://ui/tools/hud_playtest.gd -- --matches=12 --seed=1` runs whole live AI matches, feeds the HUD model the real events, and reports crown time, brink time, card latency for every break, cap violations and a midpoint "who is closer to losing" proxy for spec tests 8 and 9. Tests 10 and 11 need human eyes.

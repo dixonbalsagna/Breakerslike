@@ -260,18 +260,18 @@ func consume(e) -> void:
 			_world("fold", UiData.t("card.fold_flicker"))
 		"fold_start":
 			_world("fold", UiData.t("card.fold_start"))
-			_cinematic(-1, "fold", float(d.get("dur", 4.0)))
+			_cinematic(-1, "fold", _dur(d, 4.0))
 		"unfold":
 			_world("fold", UiData.t("card.unfold"))
 		"finisher_start":
-			_cinematic(actor, "finisher", float(d.get("dur", 3.0)))
+			_cinematic(actor, "finisher", _dur(d, 3.0))
 		"ko":
 			var lo: UiFighterModel = model(int(d.get("loser", -1)))
 			if lo != null:
 				lo.ko = true
-			_cinematic(int(d.get("winner", -1)), "ko", float(d.get("dur", 3.0)))
+			_cinematic(int(d.get("winner", -1)), "ko", _dur(d, 3.0))
 		"cinematic_start":
-			_cinematic(actor, str(d.get("kind", "transformation")), float(d.get("dur", 2.5)))
+			_cinematic(actor, _kind(d, "transformation"), _dur(d, 2.5))
 		"cinematic_end":
 			cinematic_left = 0.0
 			cinematic_kind = ""
@@ -483,6 +483,17 @@ func crown_up(actor: int) -> bool:
 	if crown_locked():
 		return false
 	return m.crown_hold > 0.0 or m.crown_a > 0.02
+
+
+## The sim's FxEvent objects carry every field with a default (dur 0.0, kind ""), so an unset value must read as absent.
+static func _dur(d: Dictionary, default: float) -> float:
+	var v: float = float(d.get("dur", 0.0))
+	return v if v > 0.0 else default
+
+
+static func _kind(d: Dictionary, default: String) -> String:
+	var k: String = str(d.get("kind", ""))
+	return k if k != "" else default
 
 
 func _cinematic(slot: int, kind: String, dur: float) -> void:

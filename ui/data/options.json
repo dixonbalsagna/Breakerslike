@@ -7,7 +7,9 @@
     "crown_always": { "default": false, "group": "accessibility", "label": "Keep the wear crown up", "help": "The wear crown stays around both fighters instead of popping. Head flashes still show; the crown dims under one.", "accessibility": true },
     "brink_cue": { "default": true, "group": "display", "label": "Brink ring", "help": "A thin faint ring around a fighter on the brink." },
     "captions": { "default": true, "group": "accessibility", "label": "Captions", "help": "Bracketed sound tags such as [wince] on spoken lines.", "accessibility": true },
-    "reduced_motion": { "default": false, "group": "accessibility", "label": "Reduced motion", "help": "No flicker, shimmer or shrinking rings. Every cue keeps a shape.", "accessibility": true },
+    "reduced_motion": { "default": false, "group": "accessibility", "label": "Reduced motion", "help": "No flicker, shimmer or shrinking rings, and the split screen swaps sides with a quick fade instead of a swing. Shared by the HUD and the camera (which caps shake at a quarter). Every cue keeps a shape.", "accessibility": true },
+    "split_solo": { "default": true, "group": "display", "label": "Split screen against the AI", "help": "Use the split screen when you play alone against the AI. Off keeps one camera on your fighter and shows the rival by an edge pointer and the ring map when it is far." },
+    "shake_scale": { "default": 1.0, "group": "accessibility", "label": "Screen shake", "help": "How much the camera shakes, from 0 (none) to 1 (full). Reduced motion caps it at a quarter.", "accessibility": true, "min": 0.0, "max": 1.0, "step": 0.05 },
     "thickness": { "default": 1.0, "group": "accessibility", "label": "Crown thickness", "help": "Arc thickness of the wear crown: 0.75, 1, 1.5.", "accessibility": true, "choices": [0.75, 1.0, 1.5] },
     "region_label": { "default": false, "group": "display", "label": "Place names", "help": "The place under the camera on the planet strip." }
   }

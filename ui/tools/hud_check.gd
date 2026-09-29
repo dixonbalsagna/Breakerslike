@@ -27,6 +27,7 @@ func _run() -> void:
 	_bark_timing()
 	_hub_rules()
 	_crown_rules()
+	_fx_defaults()
 	_scenarios()
 	await _draw_smoke()
 	await _layer_rules()
@@ -595,6 +596,9 @@ func _layer_rules() -> void:
 	_ok(not hud.info_flashes(), "options: and can be turned off")
 	hud.set_option("info_flashes", true)
 	_ok(UiData.options().has("crown_always") and UiData.options().has("silhouette") and UiData.options()["crown_always"].get("accessibility", false), "options: the accessibility options are marked in the data")
+	var od: Dictionary = UiData.option_defaults()
+	_ok(od.get("split_solo") == true and is_equal_approx(float(od.get("shake_scale", -1.0)), 1.0) and hud.opts["split_solo"] == true and is_equal_approx(float(hud.opts["shake_scale"]), 1.0), "options: split_solo defaults on and shake_scale to 1 (Camera reads them through the options)")
+	_ok(UiData.options()["shake_scale"].get("accessibility", false) and UiData.options()["reduced_motion"].get("accessibility", false) and not UiData.options()["split_solo"].get("accessibility", false), "options: shake_scale and reduced_motion are accessibility options, split_solo is a display option")
 	hud.set_option("force_redraw", true)
 	var base3: int = hud.redraw_count()
 	for i in range(30):
@@ -706,3 +710,38 @@ func _split_rules() -> void:
 	_ok(hud._chips.size() >= 1, "pointers: a single camera with the rival off screen shows a chip toward it")
 	hud.queue_free()
 	await process_frame
+
+
+func _fx_defaults() -> void:
+	# The sim's FxEvent carries every field with a default: finisher_start has dur 0.0, so it must still run its 3 s.
+	var hub := _hub()
+	var fs := SimState.FxEvent.new()
+	fs.type = "finisher_start"
+	fs.actor = 0.0
+	fs.target = 1.0
+	hub.consume(fs)
+	_step(hub, 0.2)
+	_ok(hub.mode == UiEventHub.Mode.CINEMATIC and hub.cinematic_left > 2.5, "fx defaults: a finisher_start object (dur 0.0) runs the 3 s default cinematic")
+	var ko := SimState.FxEvent.new()
+	ko.type = "ko"
+	ko.winner = 0.0
+	ko.loser = 1.0
+	hub = _hub()
+	hub.consume(ko)
+	_step(hub, 0.2)
+	_ok(hub.mode == UiEventHub.Mode.CINEMATIC and hub.model(1).ko, "fx defaults: a ko object runs its cinematic and marks the loser")
+	var cs := SimState.FxEvent.new()
+	cs.type = "cinematic_start"
+	cs.actor = 0.0
+	hub = _hub()
+	hub.consume(cs)
+	_step(hub, 0.2)
+	_ok(hub.cinematic_kind == "transformation" and hub.crown_locked(), "fx defaults: a cinematic_start object with no kind is a transformation and locks the crown")
+	var wo := SimState.FxEvent.new()
+	wo.type = "window_open"
+	wo.actor = 1.0
+	wo.kind = "parry"
+	wo.dur = 0.33
+	hub = _hub()
+	hub.consume(wo)
+	_ok(hub.model(1).parry_t == 0.0 and is_equal_approx(hub.model(1).parry_dur, 0.33), "fx defaults: the sim's window_open (actor, kind, dur) opens the parry ring")
