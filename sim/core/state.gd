@@ -181,6 +181,9 @@ class Fighter:
 	var hiddenFor: float = 0.0
 	var menace: float = 0.0
 	var anguish: float = 0.0
+	var menaceSeen: float = 0.0     # menace after the last stepFighter (S0: menace decays when not fed)
+	var menaceQuiet: int = 0         # ticks since menace was last fed
+	var casSeen: float = 0.0        # S.world.casualties after the last stepFighter
 	var ambush: bool = false
 	var rush = null          # Rush or null
 	var rot: float = 0.0

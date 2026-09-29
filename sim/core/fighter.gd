@@ -1,6 +1,11 @@
 class_name SimFighter
 ## Fighter simulation: the twin of fighter.js (tierUp, impact, stepLaunched, stepRush, stepFighter).
 
+## Placeholder balance (balance-targets.md section 9, slice S0): menace decays at MENACE_DECAY per second once it has
+## gone MENACE_QUIET_TICKS (4 s) without being fed.
+const MENACE_DECAY: float = 0.4
+const MENACE_QUIET_TICKS: int = 240
+
 
 static func tierUp(S: SimState, f) -> void:
 	SimFx.banner(S, f.name + " POWERS UP  TIER " + SimMathx.jstr(f.tier), f.aura, 1.4)
@@ -138,6 +143,15 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 		regen = SimMathx.jmax(1.0, regen - f.anguish * 0.025)
 	if f.role == "hero":
 		f.anguish = SimMathx.jmax(0.0, f.anguish - 0.6 * dt)
+	# Menace decays when it is not fed (balance-targets.md section 9, S0): after MENACE_QUIET_TICKS without a rise it
+	# falls by MENACE_DECAY per second. At the cap a casualty cannot raise it, so there a rise in world casualties also
+	# counts as fed. (sim/world stays untouched: menace only ever rises through a casualty.)
+	var fed: bool = f.menace > f.menaceSeen or (f.menace >= 100.0 and S.world.casualties > f.casSeen)
+	f.menaceQuiet = 0 if fed else f.menaceQuiet + 1
+	if f.menaceQuiet > MENACE_QUIET_TICKS:
+		f.menace = SimMathx.jmax(0.0, f.menace - MENACE_DECAY * dt)
+	f.menaceSeen = f.menace
+	f.casSeen = S.world.casualties
 	if f.state == "free" or f.state == "locked" or f.state == "down":
 		f.ki = SimMathx.jmin(100.0, f.ki + regen * dt)
 	if f.hidden:

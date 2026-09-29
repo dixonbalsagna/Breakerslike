@@ -1,6 +1,8 @@
 extends SceneTree
 ## AI-vs-AI batch runner on the GDScript sim: the successor of prototype/tools/sim-stats.js. From the repo root:
-##   godot --headless --path . --script res://sim/core/tools/batch.gd -- [matches=60] [baseSeed=1] [--arm=NAME] [--json]
+##   godot --headless --path . --script res://sim/core/tools/batch.gd -- [matches=60] [baseSeed=1] [--arm=NAME] [--json] [--jobs=N]
+## --jobs=N splits the seed range over N child Godot processes (contiguous blocks) and aggregates their records in seed
+## order, so the output and digest are the same as a single-process run. (--records=PATH is the children's mode.)
 ## Match i uses seed baseSeed+i, so the output is identical on every run (no clock in it); the digest hashes every
 ## match's final state, so comparing two runs is a one-line diff. Arms (who sits where): default, swap, mirror-villain,
 ## mirror-hero, and each with -flip. Statistics come from the feed lines, as in QA's match runner.
@@ -23,11 +25,17 @@ func _init() -> void:
 	var pos: Array = []
 	var arm: String = "default"
 	var as_json: bool = false
+	var jobs: int = 1
+	var records_out: String = ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--arm="):
 			arm = a.substr(6)
 		elif a == "--json":
 			as_json = true
+		elif a.begins_with("--jobs="):
+			jobs = maxi(1, int(a.substr(7)))
+		elif a.begins_with("--records="):
+			records_out = a.substr(10)
 		else:
 			pos.append(a)
 	var n: int = int(pos[0]) if pos.size() > 0 else 60
@@ -38,14 +46,24 @@ func _init() -> void:
 		return
 	var t0: int = Time.get_ticks_usec()
 	var recs: Array = []
-	var digest := SimHash.Hasher.new()
-	for i in range(n):
-		var r: Dictionary = run_match(base + i, arm)
+	if jobs > 1 and n > 1:
+		recs = run_jobs(n, base, arm, mini(jobs, n))
+	else:
+		for i in range(n):
+			recs.append(run_match(base + i, arm))
+	for r in recs:
 		if r.bad != "":
-			print("FAIL  seed %d: %s" % [base + i, r.bad])
+			print("FAIL  seed %d: %s" % [int(r.seed), r.bad])
 			quit(1)
 			return
-		recs.append(r)
+	if records_out != "":
+		var f := FileAccess.open(records_out, FileAccess.WRITE)
+		f.store_string(JSON.stringify(recs))
+		f.close()
+		quit(0)
+		return
+	var digest := SimHash.Hasher.new()
+	for r in recs:
 		digest.text(r.hash)
 	var secs: float = (Time.get_ticks_usec() - t0) / 1e6
 	var agg: Dictionary = aggregate(recs)
@@ -57,6 +75,32 @@ func _init() -> void:
 	else:
 		report(agg, n, base, arm)
 	quit(0)
+
+
+## Runs contiguous seed blocks in child processes and returns their records in seed order.
+func run_jobs(n: int, base: int, arm: String, jobs: int) -> Array:
+	var exe: String = OS.get_executable_path()
+	var root: String = ProjectSettings.globalize_path("res://")
+	var pids: Array = []
+	var files: Array = []
+	var start: int = base
+	for j in range(jobs):
+		var count: int = n / jobs + (1 if j < n % jobs else 0)
+		var out: String = OS.get_user_data_dir().path_join("batch_%d_%d.json" % [OS.get_process_id(), j])
+		files.append(out)
+		pids.append(OS.create_process(exe, ["--headless", "--path", root, "--script", "res://sim/core/tools/batch.gd", "--", str(count), str(start), "--arm=" + arm, "--records=" + out]))
+		start += count
+	while pids.any(func(pid): return OS.is_process_running(pid)):
+		OS.delay_msec(100)
+	var recs: Array = []
+	for out in files:
+		var got = JSON.parse_string(FileAccess.get_file_as_string(out))
+		if not (got is Array):
+			recs.append({"seed": -1, "bad": "a child process wrote no records (" + out + ")"})
+			continue
+		recs.append_array(got)
+		DirAccess.remove_absolute(out)
+	return recs
 
 
 func run_match(seed: int, arm: String) -> Dictionary:
@@ -189,7 +233,7 @@ func aggregate(recs: Array) -> Dictionary:
 		if r.timeout:
 			a.timeouts += 1
 		else:
-			a.slotWins[r.winner] += 1
+			a.slotWins[int(r.winner)] += 1
 		lens.append(r.koAt)
 		civ.append(r.civPct)
 		structs.append(r.structs)

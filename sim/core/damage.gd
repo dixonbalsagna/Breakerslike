@@ -3,6 +3,11 @@ class_name SimDamage
 ## (ignoreStance, big, stop, shake, kb, noParry); a missing key reads as JS undefined.
 
 const STANCE_MUL: Array = [1.12, 0.38, 1.0, 1.25]
+## Menace's damage bonus at full menace (balance-targets.md section 9, slice S0): was 0.25.
+const MENACE_DMG_CAP: float = 0.15
+## The hero's composure bonus while anguish is under COMPOSURE_ANGUISH (section 9's fallback, S0).
+const COMPOSURE_BONUS: float = 0.10
+const COMPOSURE_ANGUISH: float = 10.0
 
 
 ## JS `v || d` for a number: d when v is 0, -0 or NaN.
@@ -22,9 +27,12 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 		o = {}
 	var m: float = A.dmgMul * (1.0 + 0.09 * (A.tier - 1.0))
 	if A.role == "villain":
-		m *= 1.0 + 0.25 * (A.menace / 100.0)
+		m *= 1.0 + MENACE_DMG_CAP * (A.menace / 100.0)
 	else:
 		m *= 1.0 + 0.5 * SimDetMath.pow(1.0 - A.hp / A.maxhp, 2.0)
+	# Composure (balance-targets.md section 9, S0 fallback): the hero hits harder while collateral has not rattled him.
+	if A.role == "hero" and A.anguish < COMPOSURE_ANGUISH:
+		m *= 1.0 + COMPOSURE_BONUS
 	m *= 1.0 + 0.12 * ((ex.combo if ex != null else 1.0) - 1.0)
 	if A.ambush:
 		m *= 1.5
