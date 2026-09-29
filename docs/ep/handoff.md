@@ -102,7 +102,10 @@ Orb upgraded the subscription ('more tokens to play with, keep going'). More dir
 ## Collateral ramp and cap (Game Design §4b)
 World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, over budget), a cumulative ceiling (10, 30, 60 and 90%), and per-casualty weights times 425/pop0. Narrative and World make evacuation read as fleeing. QA adds the rolling-window test, the ceiling test and the per-tier split.
 
-## Sim queue, current order (2026-09-29, late)
+## Sim queue, revised (2026-09-29, night)
+World (collateral, B1, anguish, slide pop, structures index; active), then D1a (Simulation), then Controls Stage A, then D1b, then Encounter's overtime ramp and k 0.06, then Controls Stage B, then F1 (the Anti-hero). Tools is doing schemas and the validator in parallel (no sim edits).
+
+## Sim queue, previous order (2026-09-29, late)
 S3b Encounter (active), then S4 Simulation (Rally, plus the second-breath metric), then World (collateral ramp and cap, B1 in bh, pop per slide, structures index), then Controls Stage A (integer hit-stop, press ticks, SimIntent special, transform and stanceStep; goldens bit-identical), then Controls Stage B (the hit-stop table; goldens change).
 
 ## Encounter, next small slice (after World)
