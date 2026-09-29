@@ -1,20 +1,25 @@
 class_name RenderMats
+extends RefCounted
 ## Greybox materials: flat (opaque and translucent) and additive glow, all from the shaders in render/shaders/.
-## Flat materials are shared through a cache; glow materials are per user, because their alpha animates.
+## An instance is one camera's material state (docs/camera/split-screen.md section 11): each PaneWorld owns one, so
+## two panes never share a material that carries per-camera values (the curvature, the sky and fog). Its flat
+## materials are shared through its cache, and it pushes this pane's bend and sky uniforms to them and to the
+## materials it tracks (the terrain and water). A fighter's materials and the glows are per object, so they are
+## plain static constructors.
 
 const FLAT: Shader = preload("res://render/shaders/flat.gdshader")
 const FLAT_ALPHA: Shader = preload("res://render/shaders/flat_alpha.gdshader")
 const GLOW: Shader = preload("res://render/shaders/glow.gdshader")
 
-static var _cache: Dictionary = {}
-static var _tracked: Array = []      # other materials whose shader includes bend.gdshaderinc
-static var _bend: float = 0.0
-static var _dist: float = 3000.0
-static var _sky: Dictionary = {}     # per-frame sky uniforms the tracked (fogging) materials share
+var _cache: Dictionary = {}
+var _tracked: Array = []      # other materials whose shader includes bend.gdshaderinc
+var _bend: float = 0.0
+var _dist: float = 3000.0
+var _sky: Dictionary = {}     # sky uniforms the tracked (fogging) materials share
 
 
-## Shared opaque flat material. shade 0 is fully flat (no fake light).
-static func flat(c: Color, shade: float = 0.35) -> ShaderMaterial:
+## This pane's opaque flat material. shade 0 is fully flat (no fake light).
+func flat(c: Color, shade: float = 0.35) -> ShaderMaterial:
 	var key := "f|%s|%s" % [c.to_html(), shade]
 	var m = _cache.get(key)
 	if m == null:
@@ -28,8 +33,8 @@ static func flat(c: Color, shade: float = 0.35) -> ShaderMaterial:
 	return m
 
 
-## Shared translucent flat material (for hidden fighters).
-static func flat_alpha(c: Color, alpha: float, shade: float = 0.35) -> ShaderMaterial:
+## This pane's translucent flat material.
+func flat_alpha(c: Color, alpha: float, shade: float = 0.35) -> ShaderMaterial:
 	var key := "a|%s|%s|%s" % [c.to_html(), alpha, shade]
 	var m = _cache.get(key)
 	if m == null:
@@ -63,13 +68,13 @@ static func glow(c: Color, alpha: float = 1.0, soft: float = 1.5) -> ShaderMater
 	return m
 
 
-static func clear_cache() -> void:
+func clear() -> void:
 	_cache.clear()
 	_tracked.clear()
 
 
 ## Register a material (built elsewhere) whose shader bends with the planet curvature and fogs into the sky.
-static func track(m: ShaderMaterial) -> void:
+func track(m: ShaderMaterial) -> void:
 	_tracked.append(m)
 	m.set_shader_parameter("bend", _bend)
 	m.set_shader_parameter("cam_dist", _dist)
@@ -77,9 +82,9 @@ static func track(m: ShaderMaterial) -> void:
 		m.set_shader_parameter(k, _sky[k])
 
 
-## The planet curvature for this frame (render/shaders/bend.gdshaderinc): bend and the camera's distance to the
+## This pane's planet curvature for the frame (render/shaders/bend.gdshaderinc): bend and the camera's distance to the
 ## fighter plane, pushed to every bending material when they change.
-static func set_bend(b: float, dist: float) -> void:
+func set_bend(b: float, dist: float) -> void:
 	if absf(b - _bend) <= 1e-4 * absf(_bend) + 1e-12 and absf(dist - _dist) <= 1e-4 * _dist:
 		return
 	_bend = b
@@ -92,9 +97,9 @@ static func set_bend(b: float, dist: float) -> void:
 		m.set_shader_parameter("cam_dist", dist)
 
 
-## A sky uniform (render/shaders/skycol.gdshaderinc) for the fogging materials: set once for constants, per frame
-## for space and horizon.
-static func set_sky(name: String, v) -> void:
+## A sky uniform (render/shaders/skycol.gdshaderinc) for this pane's fogging materials: set once for constants, per
+## frame for space and horizon.
+func set_sky(name: String, v) -> void:
 	if _sky.get(name) == v:
 		return
 	_sky[name] = v

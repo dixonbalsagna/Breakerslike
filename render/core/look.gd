@@ -165,12 +165,8 @@ const FLASH_OUT: float = 0.1            # seconds a preempted flash takes to fad
 const FLASH_JITTER: Dictionary = {"hurt": 0.06}     # irregular jitter per shape, as a share of the body height
 const FLASH_JITTER_HZ: float = 18.0     # how often the jitter moves
 const FLASH_SWEEP: Dictionary = {"rage": 20.0}      # degrees the layout sweeps forward over its attack
-## The four fighters' accent in two steps [mid, light] (Art's calm palette, art/concepts/shared/marks.mjs), for the
-## emotion flashes' rim and core until the real palettes land. P1 draws in the Protagonist's family, P2 in the
-## Anti-hero's; Alt+F (Alt+Shift+F for P2) cycles a fighter through all four.
-const FLASH_ACCENT: Dictionary = {
-	"P": ["#4fb9a8", "#8fd6c8"], "A": ["#9a80d8", "#c2adf0"], "E": ["#b8c96a", "#dfe8a8"], "C": ["#d8705f", "#f0b4a8"],
-}
+## The placeholders' shape families: P1 draws as the Protagonist, P2 as the Anti-hero; Alt+F (Alt+Shift+F for P2)
+## cycles a fighter through all four. The colours are Art's (flashes.json `accents`, `emotion_colours`).
 const FLASH_FAMILY: Array = ["P", "A"]
 
 const SKIN := "#efc7a2"

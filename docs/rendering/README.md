@@ -36,24 +36,26 @@ Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `-
 ## Scene structure (`render/main.tscn`)
 
 ```
-Main          Node3D               core/main.gd         the frame loop, input, match start, bench and shots
-├ Camera      Camera3D             core/camera_rig.gd   the reference camera as a 3D camera
-├ Environment WorldEnvironment                          sky gradient (shaders/sky.gdshader), built in main.gd
-├ Planet      Node3D               core/planet_view.gd  ground and water to the horizon (5 copies), buildings, trees, crowd (3)
-├ Fighters    Node3D                                    one core/fighter_view.gd per fighter, built per match
-├ Beams       Node3D               core/beam_view.gd    signature beams and beam clashes
-├ Particles   MultiMeshInstance3D  core/particle_view.gd  the fx consumer's particles, one draw call
-├ HUD         CanvasLayer
-│ ├ UiHud     Control              ui/hud/ui_hud.gd     UI's HUD (added in main.gd; docs/ui/hud-spec.md)
-│ └ Overlay   Control              core/hud.gd          take-over prompt, seed and tick, F3 perf; the whole greybox HUD on F2
-└ AudioVoices Node                 audio/audio_voices.gd  Audio's voice pool (added in main.gd)
+Main            Node3D               core/main.gd         the frame loop, input, match start, bench and shots
+├ Pane          Node3D               core/pane_world.gd   one camera's view of the world (built in main.gd)
+│ ├ Camera      Camera3D             camera/camera_rig.gd the reference camera as a 3D camera
+│ ├ Environment WorldEnvironment                          sky gradient (shaders/sky.gdshader)
+│ ├ Planet      Node3D               core/planet_view.gd  ground and water to the horizon (5 copies), buildings, trees, crowd (3)
+│ ├ Fighters    Node3D                                    one core/fighter_view.gd per fighter, built per match
+│ ├ Beams       Node3D               core/beam_view.gd    signature beams and beam clashes
+│ └ Particles   MultiMeshInstance3D  core/particle_view.gd  the fx consumer's particles, one draw call
+├ HUD           CanvasLayer
+│ ├ UiHud       Control              ui/hud/ui_hud.gd     UI's HUD (added in main.gd; docs/ui/hud-spec.md)
+│ └ Overlay     Control              core/hud.gd          take-over prompt, seed and tick, F3 perf; the whole greybox HUD on F2
+└ AudioVoices   Node                 audio/audio_voices.gd  Audio's voice pool (added in main.gd)
 ```
 
 | File | Role |
 | :--- | :--- |
 | `core/sim_host.gd` | The host: the fixed-step accumulator (overview.md section 2), keyboard intents, draining `S.out.feed` and `S.out.fx` after each tick, the reference camera and fx consumer, the camera-shake stream, and the two snapshots that frames interpolate between. It is the only render-side code that calls into the sim. |
 | `core/look.gd` | Every colour and dimension of the greybox look, in one place (the prototype's palette). |
-| `core/mats.gd` | Flat and glow materials over the shaders. |
+| `core/mats.gd` | Flat and glow materials over the shaders; an instance per pane holds that camera's material state. |
+| `core/pane_world.gd` | One camera's view of the world (see Panes and the split screen). |
 | `core/crowd_mesh.gd` | The generated civilian figure (see Civilians below). |
 | `core/ground_field.gd` | The ground band's data for the GPU and its CPU mirror: round crater bowls in depth, scorch, water (see Craters, scorch and water below). |
 | `core/impact_fx.gd` | Render-side live effects for World's crater, scorch and splash events: ejecta, rim dust, shock rings, the glow of fresh grooves, embers, ripples and skim spray. |
@@ -240,6 +242,35 @@ In two AI matches, Hurt fired 37 times, Rage 4 and the surge 4. Frame time with 
 - Desktop: p50 1.23 → 1.25 ms, p95 1.96 → 1.99, p99 2.50 → 2.57; render CPU and GPU unchanged; about 1.6 more draw calls.
 - Web, two runs each: p50 2.3 both, p95 3.6–3.8 → 3.9–4.1, p99 4.8–5.0 → 5.9–6.5. The p99 rise comes with the starts, which also double Audio's cues (74 played against 38).
 
+## Panes and the split screen
+
+Camera's dynamic split screen (`docs/camera/split-screen.md` §11) needs the world drawn twice, from two cameras. The view stack is now one `PaneWorld`: the camera rig, the planet, the fighters, the beams, the particles, the sky, and the per-camera material state (`RenderMats`, now an instance per pane). The main scene holds one in its own world, drawn from the reference camera, so the game is unchanged: the same pictures (the checks and the shots match) and the same frame time.
+
+**Two panes, one world.** A second pane is a follower (`source`).
+- It shares the first pane's ground field and its texture, the ground meshes, and the props' MultiMeshes (buildings, roofs, trees, the crowd with its runners and startled survivors).
+- Its fighters' head flashes follow the first pane's: the same MultiMesh, and no state machine of their own.
+- Its own nodes and materials carry its camera: the floating origin, the curvature, the sky, the fore rule, the crowd boost and the fighters' anchors.
+- So the world's logic, the ground uploads, and the flashes' sounds and UI hooks all happen once, in the first pane, which is always drawn.
+
+**The plug-in contract for Camera's `SplitView`.** Main owns Camera's `SplitRig`. While a compositor is attached, main steps it after every tick with that tick's events (`step(S, vw, vh, events)`), and it resets it when the compositor attaches and on each match. Without one the rig costs nothing (it is about 0.045 ms a tick on desktop) and nothing changes. To composite, `SplitView`:
+1. calls `main.move_pane0(size) -> SubViewport`, the first pane moved into a SubViewport with its own World3D (it keeps its nodes and state), and `main.make_pane(size) -> SubViewport`, a follower pane in another, built into the current match. It adds both to the tree and samples their textures.
+2. sets `main.compositor` to itself. Main then calls, once per displayed frame, after the ticks:
+   - `split_frame = split_rig.frame(alpha)`;
+   - each pane `i` rendered from `split_frame.cam_x[i]`, `cam_y[i]` and `cam_z[i]`: pane 0 always, pane 1 while `split_frame.shows(1)`. The shake comes from `compositor.pane_jitter(i) -> Vector2` if it has one (else the host's for pane 0, none for pane 1);
+   - `compositor.present(split_frame)`, to set its mask from the divider.
+3. gets the HUD wired for free. `UiHud.split_fn` returns `split_frame.split_record()`, and `anchor_fn` gives `split_frame.hud_anchor(slot, …)` in the fighter's own pane. Both return the one-camera values while no compositor is attached (`split_fn` gives `{}`).
+
+`main.panes` lists them (pane `i` is fighter slot `i`'s in a split), and `main.split_frame` is this frame's. Setting `main.compositor = null` goes back to one view from the reference camera. The first pane stays in its SubViewport, so the compositor shows it unmasked.
+
+`tools/pane_check.gd` plugs in a stand-in compositor with the fighters posed far apart. It checks (16 checks, passed):
+- the sharing: same ground, meshes and props; its own materials and material state;
+- each pane's camera puts a fighter's chest exactly where the rig's frame says (within 0.5 px), and its fore rule carries its own camera;
+- a flash fired on the first pane shows in the second, with one Audio cue;
+- `split_fn` gives the rig's record with a compositor and `{}` without;
+- a match played with the compositor attached ends on the same gameplay hash as one without.
+
+The first pane and the second, drawn from the rig's two cameras: ![panes](img/panes.png)
+
 ## Hosting UI's HUD and Audio
 
 Both are other directors' work, hosted here as their docs ask (`docs/ui/hud-spec.md` section 14, `audio/README.md` "Hooking it up"). Both only read.
@@ -261,6 +292,7 @@ All commands run from the repo root; each exits 0 on success.
 | Ground check | `godot --headless --path . --script res://render/tools/ground_check.gd` | passed (seeds 4, 12345, 7) |
 | Flight check | `godot --headless --path . --script res://render/tools/flight_check.gd` | passed (seeds 4, 12345, 7; with the evacuation mock) |
 | Flash check | `godot --headless --path . --script res://render/tools/flash_check.gd` | passed (91 checks; hash on and off at 12345 and 4) |
+| Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (16 checks; hash with and without a compositor) |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
 
 **Ground check.** It runs three matches through the full scene and checks every 120 ticks:

@@ -10,12 +10,19 @@ extends Node3D
 ## flows, and the instances of damaged buildings, fallen trees and lost civilians, and of props on changed ground.
 ## Civilians who flee (World's evacuate events) run off as figures (render/core/crowd_flight.gd) instead of vanishing.
 ## Reads the sim only; never writes it.
+##
+## One per pane (render/core/pane_world.gd). The first pane's planet owns the world: the ground field, the meshes,
+## the props and their logic. A second pane's planet has that one as its `source`: it shares all of that and draws it
+## with its own copies and materials (from its pane's RenderMats), which carry its camera, so every change is made
+## and uploaded once.
 
 const TERRAIN_SHADER: Shader = preload("res://render/shaders/terrain.gdshader")
 const WATER_SHADER: Shader = preload("res://render/shaders/water.gdshader")
 const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
 
 var ground := GroundField.new()
+var mats: RenderMats = RenderMats.new()   # this pane's material state (PaneWorld sets it)
+var source: PlanetView = null         # a second pane's planet: the planet it draws (built first each match)
 var _terrain_meshes: Array = []   # [ArrayMesh]: every chunk of the near and middle tiers, then the far tier
 var _water_meshes: Array = []
 var _crowd_mat: ShaderMaterial
@@ -48,9 +55,14 @@ func build(S: SimState) -> void:
 		remove_child(c)
 		c.free()
 	_copies.clear()
-	if _terrain_meshes.is_empty():
+	if source != null:
+		ground = source.ground
+		_terrain_meshes = source._terrain_meshes
+		_water_meshes = source._water_meshes
+	if _terrain_mat == null:
 		_make_materials()
-		_make_ground_meshes()
+		if source == null:
+			_make_ground_meshes()
 		_crowd_mat = ShaderMaterial.new()
 		_crowd_mat.shader = CROWD_SHADER
 		_crowd_mat.set_shader_parameter("outline_col", RenderLook.col(RenderLook.CROWD_OUTLINE))
@@ -65,8 +77,14 @@ func build(S: SimState) -> void:
 		_crowd_mat.set_shader_parameter("startle_arms", RenderLook.STARTLE_ARMS)
 		_crowd_mat.set_shader_parameter("startle_crouch", RenderLook.STARTLE_CROUCH)
 		_crowd_mat.set_shader_parameter("startle_tremble", RenderLook.STARTLE_TREMBLE)
-	ground.rebuild(S)
-	_make_props(S)
+	if source == null:
+		ground.rebuild(S)
+		_make_props(S)
+	else:
+		_bld = source._bld
+		_roof = source._roof
+		_tree = source._tree
+		_crowd = source._crowd
 	for k in range(-RenderLook.PLANET_COPIES, RenderLook.PLANET_COPIES + 1):
 		var n := Node3D.new()
 		n.name = "Copy%d" % (k + RenderLook.PLANET_COPIES)
@@ -81,14 +99,18 @@ func build(S: SimState) -> void:
 			_mm_child(n, "Trees", _tree)
 			_mm_child(n, "Crowd", _crowd, _crowd_mat)
 		_copies.append(n)
-	refresh(S, true)
+	if source == null:
+		refresh(S, true)
 
 
-## Per frame: place the copies around the camera's wrapped x and apply whatever changed in the world. heat is the
-## render-side glow of fresh grooves (ImpactFx).
+## Per frame: place the copies around the camera's wrapped x and apply whatever changed in the world (the first
+## pane's planet only; a second pane's draws what that one made). heat is the render-side glow of fresh grooves
+## (ImpactFx).
 func update(S: SimState, cam_x: float, heat: PackedFloat32Array = PackedFloat32Array(), heat_changed: bool = false) -> void:
 	for c in _copies:
 		c.position.x = float(c.get_meta("k")) * SimConst.W - cam_x
+	if source != null:
+		return
 	ground.update(S, heat, heat_changed)
 	refresh(S, false)
 	flight.step(S, _crowd)
@@ -248,7 +270,7 @@ func _mm_child(parent: Node3D, n: String, mm: MultiMesh, mat: Material = null) -
 	var mi := MultiMeshInstance3D.new()
 	mi.name = n
 	mi.multimesh = mm
-	mi.material_override = mat if mat != null else RenderMats.flat(Color.WHITE)
+	mi.material_override = mat if mat != null else mats.flat(Color.WHITE)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mi)
 
@@ -288,7 +310,7 @@ func _make_materials() -> void:
 		m.set_shader_parameter("fog_near", RenderLook.FOG_NEAR)
 		m.set_shader_parameter("fog_far", RenderLook.FOG_FAR)
 		m.set_shader_parameter("fore_drop", RenderLook.FORE_DROP)
-		RenderMats.track(m)
+		mats.track(m)
 	_terrain_mat.set_shader_parameter("sea_floor", RenderLook.col(RenderLook.SEA_FLOOR))
 	_terrain_mat.set_shader_parameter("crater", RenderLook.col(RenderLook.CRATER))
 	_terrain_mat.set_shader_parameter("crater_desert", RenderLook.col(RenderLook.CRATER_DESERT))

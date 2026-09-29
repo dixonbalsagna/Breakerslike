@@ -57,6 +57,14 @@ static func danger_ray() -> Dictionary:
 	return data().get("legal_rules", {}).get("danger_ray", {"default_angle": 132.0, "clamp": [60.0, 200.0]})
 
 
+## [rim, core] of the family's emotion flashes: the accent's mid and light steps (`accents`), unless
+## `emotion_colours.overrides` lightens them against the fighter's own hair.
+static func emotion_colours(fk: String) -> Array:
+	var o: Dictionary = data().get("emotion_colours", {}).get("overrides", {}).get(fk, {})
+	var a: Dictionary = data().get("accents", {}).get(fk, {})
+	return [Color(String(o.get("rim", a.get("mid", "#ffffff")))), Color(String(o.get("core", a.get("light", "#ffffff"))))]
+
+
 ## [core, line] of the family's info flashes.
 static func info_colours(fk: String) -> Array:
 	var c: Dictionary = data().get("legal_rules", {}).get("info_colours", {}).get(fk, {})

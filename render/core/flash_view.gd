@@ -22,6 +22,10 @@ extends Node3D
 ## Legal's rules (round tips, the low crest, the danger ray) are applied from the data when a flash starts, unless
 ## `legacy` (F8) asks for the shapes as they were. Render-side only: it never writes the sim. The hurt jitter's seed
 ## comes from the cosmetic 'vfx.flash' stream, seeded from the tick.
+##
+## In a second pane (render/core/pane_world.gd) a fighter's flash view follows the first pane's (`leader`): it draws
+## the same flash from the same MultiMesh with its own material (its camera's anchor), and runs no state machine, so
+## the flash, its sound and UI's hooks happen once.
 
 var actor: int = 0
 var family: String = "P"
@@ -33,6 +37,7 @@ var crown_fn: Callable
 var info_fn: Callable
 var started_fn: Callable
 var up_fn: Callable
+var leader: FlashView = null   # a second pane's copy: the first pane's view it follows
 
 var cur: String = ""           # the flash showing, or ""
 var _t0: float = 0.0           # sim time it started
@@ -113,6 +118,52 @@ func fire(id: String, T: float, hidden: bool, bearing: float = NAN) -> void:
 ## view's space); m: the body's mirror (+1 or -1); anchor: the projection anchor; ground: the ground's height below
 ## the fighter, in the same space as pos.
 func step(T: float, hidden: bool, pos: Vector3, m: float, anchor: Vector3, ground: float) -> void:
+	if leader != null:
+		_follow()
+	else:
+		_run(T, hidden)
+	visible = cur != ""
+	if not _warm and leader == null:
+		_warm = true
+		if not visible:
+			_mm.visible_instance_count = 1
+			_mat.set_shader_parameter("k", 0.0)
+			_mat.set_shader_parameter("fade", 0.0)
+			visible = true
+			return
+	if not visible:
+		return
+	position = pos + Vector3(0.0, RenderLook.FLASH_UP * _unit, RenderLook.FLASH_Z - pos.z)
+	basis = Basis.from_scale(Vector3(m, 1.0, 1.0))
+	_mat.set_shader_parameter("mirror", m)
+	_mat.set_shader_parameter("k", _env(T))
+	_mat.set_shader_parameter("fade", maxf(0.0, 1.0 - (T - _out) / RenderLook.FLASH_OUT) if _out >= 0.0 else 1.0)
+	_mat.set_shader_parameter("anchor", anchor)
+	_mat.set_shader_parameter("ground_y", (ground - position.y) / _unit)
+	var f: Dictionary = FlashSet.flash(cur)
+	_mat.set_shader_parameter("sweep_k", clampf((T - _t0) / maxf(float(f.attack), 1.0e-3), 0.0, 1.0))
+	_mat.set_shader_parameter("jitter_step", floorf((T - _t0) * RenderLook.FLASH_JITTER_HZ))
+
+
+## Follow the first pane's view: draw from its MultiMesh, with the uniforms it set when its flash started.
+func set_leader(l: FlashView) -> void:
+	leader = l
+	_mi.multimesh = l._mm
+	_warm = true
+
+
+func _follow() -> void:
+	if leader.cur != cur or leader._t0 != _t0:
+		cur = leader.cur
+		_t0 = leader._t0
+		for key in ["family", "grow", "sweep", "jitter", "seed"]:
+			_mat.set_shader_parameter(key, leader._mat.get_shader_parameter(key))
+	_hold_end = leader._hold_end
+	_out = leader._out
+
+
+## The queue, the arbitration and the flash showing (the first pane's view only).
+func _run(T: float, hidden: bool) -> void:
 	var crown: bool = crown_fn.is_valid() and bool(crown_fn.call(actor))
 	var wait: float = FlashSet.default_wait()
 	# The waiting flashes: sequenced ones count from the crown going down; the rest are dropped after the wait.
@@ -143,27 +194,6 @@ func step(T: float, hidden: bool, pos: Vector3, m: float, anchor: Vector3, groun
 				break
 			if not crown and not FlashSet.sequence(q[0]).is_empty():
 				break   # a sequenced flash in its delay after the crown: nothing lower goes first
-	visible = cur != ""
-	if not _warm:
-		_warm = true
-		if not visible:
-			_mm.visible_instance_count = 1
-			_mat.set_shader_parameter("k", 0.0)
-			_mat.set_shader_parameter("fade", 0.0)
-			visible = true
-			return
-	if not visible:
-		return
-	position = pos + Vector3(0.0, RenderLook.FLASH_UP * _unit, RenderLook.FLASH_Z - pos.z)
-	basis = Basis.from_scale(Vector3(m, 1.0, 1.0))
-	_mat.set_shader_parameter("mirror", m)
-	_mat.set_shader_parameter("k", _env(T))
-	_mat.set_shader_parameter("fade", maxf(0.0, 1.0 - (T - _out) / RenderLook.FLASH_OUT) if _out >= 0.0 else 1.0)
-	_mat.set_shader_parameter("anchor", anchor)
-	_mat.set_shader_parameter("ground_y", (ground - position.y) / _unit)
-	var f: Dictionary = FlashSet.flash(cur)
-	_mat.set_shader_parameter("sweep_k", clampf((T - _t0) / maxf(float(f.attack), 1.0e-3), 0.0, 1.0))
-	_mat.set_shader_parameter("jitter_step", floorf((T - _t0) * RenderLook.FLASH_JITTER_HZ))
 
 
 ## Whether a waiting flash may start now: the crown down (the surge excepted), a sequenced one its delay after that.
@@ -246,9 +276,9 @@ func _end() -> void:
 func _write(id: String, f: Dictionary, bearing: float) -> void:
 	var info: bool = String(f.get("class", "")) == "info"
 	var ic: Array = FlashSet.info_colours(family)
-	var acc: Array = RenderLook.FLASH_ACCENT.get(family, ["#ffffff", "#ffffff"])
-	var rim: Color = ic[1] if info else Color(String(acc[0]))
-	var core: Color = ic[0] if info else Color(String(acc[1]))
+	var ec: Array = FlashSet.emotion_colours(family)
+	var rim: Color = ic[1] if info else ec[0]
+	var core: Color = ic[0] if info else ec[1]
 	var n: int = 0
 	if String(f.get("kind", "")) == "glyph":
 		var places: Array = RenderLook.FLASH_GLYPH2_AT if String(f.get("glyph", "")) == "bang2" else RenderLook.FLASH_GLYPH_AT

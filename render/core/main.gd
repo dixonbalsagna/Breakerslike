@@ -10,6 +10,11 @@ extends Node3D
 ## Rendering never writes sim state: the views read S, the fx consumer and the reference camera, and only SimHost
 ## steps the sim. render/tools/determinism.gd checks that the gameplay hashes are unchanged by rendering.
 ##
+## The world is drawn by panes (render/core/pane_world.gd): one in this scene's own world, from the reference
+## camera. For Camera's split screen, main owns and steps a SplitRig (render/camera/split_rig.gd), and Camera's
+## compositor plugs in through make_pane, move_pane0 and `compositor`: the panes then follow the rig's cameras and
+## UI's HUD gets the rig's record (split_fn). The contract is in docs/rendering/README.md, "Panes and the split screen".
+##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit), --novsync, --mock-evac
 ## (World's planned evacuate events from a render-side mock, render/tools/evac_mock.gd, until the sim sends them).
@@ -21,13 +26,27 @@ extends Node3D
 ## (--fixed-fps 60 gives exactly one sim tick per frame; with vsync off each frame runs as fast as it can, so the
 ## wall-clock frame time is the true cost of one tick plus one rendered frame.)
 
-@onready var cam_rig: CameraRig = $Camera
-@onready var planet: PlanetView = $Planet
-@onready var fighters_root: Node3D = $Fighters
-@onready var beams: BeamView = $Beams
-@onready var particles: ParticleView = $Particles
 @onready var hud: HudView = $HUD/Overlay
-@onready var env: WorldEnvironment = $Environment
+
+var pane: PaneWorld                 # the first pane: the world, drawn in this scene's own world until a compositor moves it
+var panes: Array = []               # [PaneWorld]: pane i follows fighter slot i in a split (SplitFrame)
+var split_rig := SplitRig.new()     # Camera's split-screen rig, stepped after every tick while a compositor is attached
+var split_frame: SplitFrame = null  # this frame's, while a compositor is attached
+## Camera's compositor (SplitView), or null for one view from the reference camera. main calls its present(frame)
+## once per displayed frame after drawing the panes, and its pane_jitter(i) (if it has one) for a pane's shake.
+## Attaching one resets the rig to the current state; without one the rig costs nothing (about 0.05 ms a tick).
+var compositor: Object = null:
+	set(v):
+		compositor = v
+		if v != null and host != null:
+			var vp: Vector2 = get_viewport().get_visible_rect().size
+			split_rig.reset(host.S, vp.x, vp.y)
+# Pane 0's parts, for the tools and the HUD hooks.
+var cam_rig: CameraRig
+var planet: PlanetView
+var fighters_root: Node3D
+var beams: BeamView
+var particles: ParticleView
 
 var host: SimHost
 var started: bool = false
@@ -43,7 +62,6 @@ var _render_gpu := PackedFloat64Array()
 var _draws := PackedInt32Array()
 var _quitting: bool = false
 var _last_usec: int = 0
-var _sky_mat: ShaderMaterial
 var ui_hud: UiHud                 # UI's HUD
 var audio: AudioVoices            # Audio's voice pool
 var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
@@ -56,7 +74,16 @@ const FLASH_KEYS: Array = [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_
 
 func _ready() -> void:
 	args = parse_args()
-	_setup_environment()
+	pane = PaneWorld.new()
+	add_child(pane)
+	move_child(pane, 0)
+	panes = [pane]
+	cam_rig = pane.cam_rig
+	planet = pane.planet
+	fighters_root = pane.fighters_root
+	beams = pane.beams
+	particles = pane.particles
+	fighter_views = pane.fighter_views
 	host = SimHost.new()
 	hud.main = self
 	ui_hud = preload("res://ui/hud/ui_hud.tscn").instantiate()
@@ -64,6 +91,7 @@ func _ready() -> void:
 	$HUD.move_child(ui_hud, 0)    # under the greybox overlay, which keeps the take-over prompt and the perf readout
 	ui_hud.anchor_fn = _hud_anchor
 	ui_hud.strip_fn = _hud_strip
+	ui_hud.split_fn = _split_record
 	host.drained.connect(_on_drained)
 	if args.has("mock-evac"):
 		host.evac_mock = EvacMock.new()
@@ -84,25 +112,54 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	SimCore.dispose(host.S)
-	RenderMats.clear_cache()
+	for p in panes:
+		p.mats.clear()
 
 
 func start_match(seed: int, ai: Dictionary = {}) -> void:
 	host.new_match(seed, ai)
 	var fl: Array = UiSimBridge.fighters(host.S)
 	ui_hud.setup(fl[0], fl[1])
-	planet.build(host.S)
-	for v in fighter_views:
-		fighters_root.remove_child(v)
-		v.free()
-	fighter_views.clear()
-	for f in host.S.fighters:
-		var v := FighterView.new()
-		fighters_root.add_child(v)
-		v.build(f)
-		fighter_views.append(v)
-		_setup_flash(v, fighter_views.size() - 1)
+	for p in panes:
+		p.build(host.S)
+		for v in p.fighter_views:
+			v.flashes_on = flashes_on
+	for i in range(fighter_views.size()):
+		_setup_flash(fighter_views[i], i)
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	split_rig.reset(host.S, vp.x, vp.y)
 	render_view(host.alpha())
+
+
+## For Camera's compositor: a new pane, a follower of the first, in a SubViewport of its own (its own World3D),
+## built into the current match. It is panes[1], the second fighter's pane in a split.
+func make_pane(size: Vector2i) -> SubViewport:
+	var sv := _pane_viewport(size)
+	var p := PaneWorld.new()
+	p.source = pane
+	sv.add_child(p)
+	panes.append(p)
+	p.build(host.S)
+	for v in p.fighter_views:
+		v.flashes_on = flashes_on
+	return sv
+
+
+## For Camera's compositor: the first pane moved out of this scene's world into a SubViewport of its own, so it can
+## be composited like the second. It keeps its nodes and state.
+func move_pane0(size: Vector2i) -> SubViewport:
+	var sv := _pane_viewport(size)
+	remove_child(pane)
+	sv.add_child(pane)
+	return sv
+
+
+static func _pane_viewport(size: Vector2i) -> SubViewport:
+	var sv := SubViewport.new()
+	sv.size = size
+	sv.own_world_3d = true
+	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	return sv
 
 
 ## A fighter's head flashes: its family, the switches, and the hooks to UI (the crown, the info setting, the dimming
@@ -193,20 +250,22 @@ func frame(delta: float) -> void:
 		_finish()
 
 
+## Draw the frame at interpolation a: one pane from the reference camera, or, with a compositor attached, each pane
+## from the split rig's camera for it (the first always, since it applies the world's changes), then the composite.
 func render_view(a: float) -> void:
-	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var S: SimState = host.S
-	var c: Vector3 = host.camera(a)
-	view_cam_x = host.camera_x(a)
-	cam_rig.frame(c.y, c.z, host.jitter, vp.y)
-	planet.set_camera(cam_rig.position)
-	_view_cues(c, vp)
-	planet.update(S, view_cam_x, host.impact.heat, host.impact.heat_changed)
+	if compositor != null:
+		split_frame = split_rig.frame(a)
+		for i in range(panes.size()):
+			if i == 0 or split_frame.shows(i):
+				var j: Vector2 = compositor.pane_jitter(i) if compositor.has_method("pane_jitter") else (host.jitter if i == 0 else Vector2.ZERO)
+				panes[i].render(host, a, split_frame.cam_x[i], Vector3(0.0, split_frame.cam_y[i], split_frame.cam_z[i]), j)
+		compositor.present(split_frame)
+	else:
+		split_frame = null
+		pane.render(host, a, host.camera_x(a), host.camera(a), host.jitter)
+	view_cam_x = pane.view_cam_x
 	host.impact.heat_changed = false
-	for i in range(fighter_views.size()):
-		fighter_views[i].update(S, S.fighters[i], host.fighter_pose(i, a), SimWrap.sdx(view_cam_x, host.fighter_x(i, a)), c.z)
-	beams.update(S, view_cam_x, c.z)
-	particles.update(host.fxv, host.impact, view_cam_x, c.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
 	UiSimBridge.patch(ui_hud, S)
 	ui_hud.queue_redraw()
 	hud.queue_redraw()
@@ -214,16 +273,22 @@ func render_view(a: float) -> void:
 
 ## Each tick's events and feed lines, as SimHost drains them: the planet's flight, and UI's HUD.
 func _on_drained(events: Array, lines: Array) -> void:
+	if compositor != null:
+		var vp: Vector2 = get_viewport().get_visible_rect().size
+		split_rig.step(host.S, vp.x, vp.y, events)
 	planet.consume(events)
 	_flash_events(events)
 	ui_hud.consume_all(events)
 	UiSimBridge.feed(ui_hud, lines)
 
 
-## UI's HUD anchor: a fighter's torso on screen and its height in pixels.
+## UI's HUD anchor: a fighter's torso on screen and its height in pixels (in a split, in its own pane: the rig's).
 func _hud_anchor(slot: int) -> Dictionary:
 	if slot < 0 or slot >= fighter_views.size():
 		return {"pos": Vector2.ZERO, "h": 0.0, "visible": false}
+	if split_frame != null:
+		var a: float = host.alpha()
+		return split_frame.hud_anchor(slot, host.fighter_x(slot, a), host.fighter_pose(slot, a).y)
 	var torso: Vector3 = fighter_views[slot].global_position + Vector3(0.0, FighterView.PIVOT_Y, 0.0)
 	if cam_rig.is_position_behind(torso):
 		return {"pos": Vector2.ZERO, "h": 0.0, "visible": false}
@@ -233,27 +298,14 @@ func _hud_anchor(slot: int) -> Dictionary:
 	return {"pos": p, "h": FighterView.HEIGHT * cam_rig.zoom, "visible": vis}
 
 
+## UI's split record (UiHud.split_fn): the rig's, while a compositor draws the panes; empty for one view.
+func _split_record() -> Dictionary:
+	return split_frame.split_record() if compositor != null and split_frame != null else {}
+
+
 ## UI's planet strip: the bridge's data for the camera's centre and view width.
 func _hud_strip() -> Dictionary:
 	return UiSimBridge.strip_data(host.S, view_cam_x, 2.0 * cam_rig.half_width(get_viewport().get_visible_rect().size.x))
-
-
-## Planet-scale cues and crowd legibility for this frame, from the zoom and the camera height (presentation only).
-func _view_cues(c: Vector3, vp: Vector2) -> void:
-	var wide: float = smoothstep(log(RenderLook.ZOOM_CLOSE), log(RenderLook.ZOOM_WIDE), log(maxf(c.z, 1e-6)))
-	var high: float = smoothstep(RenderLook.HIGH_FROM, RenderLook.HIGH_TO, c.y)
-	var d: float = lerpf(RenderLook.CURVE_NEAR, RenderLook.CURVE_WIDE, wide) + RenderLook.CURVE_HIGH * high
-	# Every layer from full depth weight back sags d * vh pixels at its screen edge (bend.gdshaderinc).
-	var dist: float = cam_rig.position.z
-	RenderMats.set_bend(4.0 * d * vp.y * c.z / (vp.x * vp.x), dist)
-	# The horizon is the far edge of the ground: its elevation from the camera anchors the sky and the fog.
-	var hz: float = (0.0 - cam_rig.position.y) / (dist + RenderLook.FOG_FAR)
-	for k in [["space", high], ["horizon", hz]]:
-		_sky_mat.set_shader_parameter(k[0], k[1])
-		RenderMats.set_sky(k[0], k[1])
-	var boost: float = clampf(RenderLook.CROWD_MIN_PX / (CrowdMesh.HEIGHT * RenderLook.CROWD_SCALE * c.z), 1.0, RenderLook.CROWD_BOOST_MAX)
-	# The shell's push directions are unit corner diagonals, so each axis moves 1/sqrt(3) of the width.
-	planet.set_crowd_view(boost, 1.732 * RenderLook.CROWD_OUTLINE_PX / (c.z * RenderLook.CROWD_SCALE))
 
 
 ## The greybox HUD instead of UI's (F2, or --legacy-hud at start). UI's HUD keeps reading events while hidden.
@@ -306,8 +358,9 @@ func _unhandled_input(e: InputEvent) -> void:
 				return
 			if code == "F7":
 				flashes_on = not flashes_on
-				for v in fighter_views:
-					v.flashes_on = flashes_on
+				for pw in panes:
+					for v in pw.fighter_views:
+						v.flashes_on = flashes_on
 				return
 			if code == "F8":
 				flash_legacy = not flash_legacy
@@ -360,33 +413,6 @@ static func parse_args() -> Dictionary:
 			var kv: PackedStringArray = a.substr(2).split("=", true, 1)
 			out[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	return out
-
-
-func _setup_environment() -> void:
-	var sky_mat := ShaderMaterial.new()
-	_sky_mat = sky_mat
-	sky_mat.shader = preload("res://render/shaders/sky.gdshader")
-	var skyp: Dictionary = {
-		"sky_top": RenderLook.col(RenderLook.SKY[0]), "sky_upper": RenderLook.col(RenderLook.SKY[1]),
-		"sky_lower": RenderLook.col(RenderLook.SKY[2]), "sky_horizon": RenderLook.col(RenderLook.SKY[3]),
-		"sky_tan": tan(deg_to_rad(RenderLook.FOV_DEG) * 0.5), "sky_lower_at": RenderLook.SKY_LOWER_AT,
-		"sky_upper_at": RenderLook.SKY_UPPER_AT, "sky_top_at": RenderLook.SKY_TOP_AT, "sky_thin": RenderLook.SKY_THIN,
-		"fog_band": RenderLook.FOG_BAND,
-	}
-	for k in skyp:
-		sky_mat.set_shader_parameter(k, skyp[k])
-		RenderMats.set_sky(k, skyp[k])
-	var sky := Sky.new()
-	sky.sky_material = sky_mat
-	sky.radiance_size = Sky.RADIANCE_SIZE_32
-	sky.process_mode = Sky.PROCESS_MODE_REALTIME
-	var e := Environment.new()
-	e.background_mode = Environment.BG_SKY
-	e.sky = sky
-	e.ambient_light_source = Environment.AMBIENT_SOURCE_DISABLED
-	e.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
-	e.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	env.environment = e
 
 
 func _record(frame_ms: float, n: int, tick_ms: float, view_ms: float) -> void:

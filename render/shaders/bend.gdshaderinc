@@ -2,7 +2,7 @@
 // sits at x = 0), weighted by depth so the fighter plane (z = 0) and everything near it stays exactly flat and only
 // the world behind curves away. The weight also divides out perspective (cam_dist / (cam_dist + depth)), so every
 // layer from 1,260 units back to the horizon sags the same number of pixels at the screen edge: one clean curve.
-// bend and cam_dist are set every frame from the zoom and the camera height (main.gd).
+// bend and cam_dist are set every frame from the zoom and the camera height, per pane (pane_world.gd).
 uniform float bend = 0.0;
 uniform float cam_dist = 3000.0;
 
