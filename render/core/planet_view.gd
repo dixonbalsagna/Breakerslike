@@ -93,7 +93,7 @@ func terrain_meshes() -> Array:
 	return _terrain_meshes
 
 
-## How many of terrain_meshes() are near-tier chunks.
+## How many of terrain_meshes() are finest-run chunks (the ones holding the fighter-plane row).
 func near_chunks() -> int:
 	return SimConst.NC / RenderLook.CHUNK_COLS
 
@@ -214,6 +214,7 @@ func _make_materials() -> void:
 		m.set_shader_parameter("biome_colors", GroundField.BIOME_ORDER.map(func(b): return RenderLook.col(RenderLook.BIOME[b])))
 		m.set_shader_parameter("fog_near", RenderLook.FOG_NEAR)
 		m.set_shader_parameter("fog_far", RenderLook.FOG_FAR)
+		m.set_shader_parameter("fore_drop", RenderLook.FORE_DROP)
 		RenderMats.track(m)
 	_terrain_mat.set_shader_parameter("sea_floor", RenderLook.col(RenderLook.SEA_FLOOR))
 	_terrain_mat.set_shader_parameter("crater", RenderLook.col(RenderLook.CRATER))
@@ -229,78 +230,100 @@ func _make_materials() -> void:
 	_terrain_mat.set_shader_parameter("cracked", RenderLook.col(RenderLook.CRACKED))
 	_water_mat.set_shader_parameter("water", RenderLook.WATER)
 	_water_mat.set_shader_parameter("surface", RenderLook.WATER_SURFACE)
-	_water_mat.set_shader_parameter("z_front", RenderLook.Z_TERRAIN_FRONT + 1.0)
+	_water_mat.set_shader_parameter("fall_body", RenderLook.WATER_FALL_BODY)
+
+
+## The camera's world position this frame, for the foreground rule in the ground and water shaders.
+func set_camera(p: Vector3) -> void:
+	if _terrain_mat == null:
+		return
+	_terrain_mat.set_shader_parameter("fore_cam", p)
+	_water_mat.set_shader_parameter("fore_cam", p)
 
 
 static func _planet_aabb(y0: float, y1: float, z0: float, z1: float) -> AABB:
 	return AABB(Vector3(-64.0, y0, z0), Vector3(SimConst.W + 128.0, y1 - y0, z1 - z0))
 
 
-## Row depths from the front face to the horizon, front to back: spacing ROW_STEP0 at the fighter plane, growing by
-## ROW_GROWTH of the distance, with 0 and every tier boundary included.
+## Row depths from Z_FORE in front to the horizon behind, front to back: spacing ROW_STEP0 at the fighter plane,
+## growing by ROW_GROWTH of the distance, with 0 and every stride boundary (either side) included.
 static func ground_rows() -> Array:
-	var rows: Array = [0.0]
-	var z: float = 0.0
-	while z < RenderLook.Z_TERRAIN_FRONT:
-		z = minf(z + maxf(RenderLook.ROW_STEP0, z * RenderLook.ROW_GROWTH), RenderLook.Z_TERRAIN_FRONT)
-		rows.push_front(z)
 	var stops: Array = []
-	for t in RenderLook.TIERS:
-		if t[0] > -RenderLook.FOG_FAR:
+	for t in RenderLook.STRIDES:
+		if t[0] < RenderLook.FOG_FAR:
 			stops.append(t[0])
-	z = 0.0
-	while z > -RenderLook.FOG_FAR:
-		var nz: float = maxf(z - maxf(RenderLook.ROW_STEP0, -z * RenderLook.ROW_GROWTH), -RenderLook.FOG_FAR)
-		for st in stops:
-			if st < z and st > nz:
-				nz = st
-		z = nz
-		rows.append(z)
+	var rows: Array = [0.0]
+	for side in [1.0, -1.0]:
+		var end: float = RenderLook.Z_FORE if side > 0.0 else RenderLook.FOG_FAR
+		var d: float = 0.0
+		while d < end:
+			var nd: float = minf(d + maxf(RenderLook.ROW_STEP0, d * RenderLook.ROW_GROWTH), end)
+			for st in stops:
+				if st > d and st < nd:
+					nd = st
+			d = nd
+			if side > 0.0:
+				rows.push_front(d)
+			else:
+				rows.append(-d)
 	return rows
 
 
-## The ground and water meshes. Rows split into the depth tiers of RenderLook.TIERS, each with its column stride; a
-## boundary row belongs to both tiers and, on the finer side, snaps to the coarser stride (UV2.y = that stride) so
-## they meet exactly. The near tier (with the front face) and the middle tiers are cut into chunks of CHUNK_COLS
-## columns, culled by the frustum; the far tier is one light mesh for the whole planet.
+static func stride_at(z: float) -> int:
+	for t in RenderLook.STRIDES:
+		if absf(z) <= t[0] + 0.001:
+			return int(t[1])
+	return int(RenderLook.STRIDES[-1][1])
+
+
+## The ground and water meshes. The rows split into runs of one column stride (finer near the fighter plane, coarser
+## away from it on both sides); a boundary row belongs to both runs and, on the finer side, snaps to the coarser
+## stride (UV2.y = that stride) so they meet exactly. The finest run and the middle runs are cut into chunks of
+## CHUNK_COLS columns, culled by the frustum; the coarsest runs (far in front and far behind) are one light mesh.
 func _make_ground_meshes() -> void:
 	var rows: Array = ground_rows()
-	var tiers: Array = []     # [rows, stride]
-	var lo: int = 0
-	for t in RenderLook.TIERS:
-		var hi: int = lo
-		while hi + 1 < rows.size() and rows[hi + 1] >= t[0]:
-			hi += 1
-		tiers.append([rows.slice(lo, hi + 1), int(t[1])])
-		lo = hi
-		if hi >= rows.size() - 1:
-			break
-	var nt: int = tiers.size()
-	var cc: int = RenderLook.CHUNK_COLS
-	for group in [[0, 1], [1, nt - 1]]:
-		if group[0] >= group[1]:
+	var runs: Array = []      # [rows, stride]; neighbouring runs share their boundary row (the row at the limit)
+	var start: int = 0
+	for i in range(1, rows.size()):
+		var a: int = stride_at(rows[i - 1])
+		var b: int = stride_at(rows[i])
+		if a == b:
 			continue
+		var bnd: int = i if b < a else i - 1
+		runs.append([rows.slice(start, bnd + 1), a])
+		start = bnd
+	runs.append([rows.slice(start), stride_at(rows[-1])])
+	var smallest: int = int(RenderLook.STRIDES[0][1])
+	var largest: int = int(RenderLook.STRIDES[-1][1])
+	var cc: int = RenderLook.CHUNK_COLS
+	for group in ["near", "mid"]:
 		for c0 in range(0, SimConst.NC, cc):
 			var tv: Array = [[], []]
-			for k in range(group[0], group[1]):
-				var snap: int = tiers[k + 1][1] if k + 1 < nt else 0
-				_grid(tv[0], c0, c0 + cc, tiers[k][0], tiers[k][1], snap, false)
-				_grid(tv[1], c0, c0 + cc, tiers[k][0], tiers[k][1], 0, true)
-			if group[0] == 0:
-				_front(tv[0], c0, c0 + cc, false)
-				_front(tv[1], c0, c0 + cc, true)
-			_terrain_meshes.append(_finish(tv[0], c0 * SimConst.COL, (c0 + cc) * SimConst.COL, tiers[group[1] - 1][0][-1], false))
-			_water_meshes.append(_finish(tv[1], c0 * SimConst.COL, (c0 + cc) * SimConst.COL, tiers[group[1] - 1][0][-1], true))
+			for k in range(runs.size()):
+				var st: int = runs[k][1]
+				if (group == "near") != (st == smallest) or st == largest:
+					continue
+				var sf: int = runs[k - 1][1] if k > 0 and runs[k - 1][1] > st else 0
+				var sl: int = runs[k + 1][1] if k + 1 < runs.size() and runs[k + 1][1] > st else 0
+				_grid(tv[0], c0, c0 + cc, runs[k][0], st, sf, sl, false)
+				_grid(tv[1], c0, c0 + cc, runs[k][0], st, 0, 0, true)
+			if tv[0].is_empty():
+				continue
+			_terrain_meshes.append(_finish(tv[0], c0 * SimConst.COL, (c0 + cc) * SimConst.COL, false))
+			_water_meshes.append(_finish(tv[1], c0 * SimConst.COL, (c0 + cc) * SimConst.COL, true))
 	var far: Array = [[], []]
-	_grid(far[0], 0, SimConst.NC, tiers[nt - 1][0], tiers[nt - 1][1], 0, false)
-	_grid(far[1], 0, SimConst.NC, tiers[nt - 1][0], tiers[nt - 1][1], 0, true)
-	_terrain_meshes.append(_finish(far[0], 0.0, SimConst.W, tiers[nt - 1][0][-1], false))
-	_water_meshes.append(_finish(far[1], 0.0, SimConst.W, tiers[nt - 1][0][-1], true))
+	for k in range(runs.size()):
+		if runs[k][1] == largest:
+			_grid(far[0], 0, SimConst.NC, runs[k][0], largest, 0, 0, false)
+			_grid(far[1], 0, SimConst.NC, runs[k][0], largest, 0, 0, true)
+	_terrain_meshes.append(_finish(far[0], 0.0, SimConst.W, false))
+	_water_meshes.append(_finish(far[1], 0.0, SimConst.W, true))
 
 
 ## A top grid (ground) or surface grid (water) over columns c0..c1 at the given stride and rows, appended to the
-## vertex lists in tv = [verts, uv, uv2, colours, indices]. snap: the stride the last row snaps to (0: none).
-static func _grid(tv: Array, c0: int, c1: int, rows: Array, stride: int, snap: int, water: bool) -> void:
+## vertex lists in tv = [verts, uv, uv2, colours, indices]. snap_first, snap_last: the stride the first or last row
+## snaps to (0: none).
+static func _grid(tv: Array, c0: int, c1: int, rows: Array, stride: int, snap_first: int, snap_last: int, water: bool) -> void:
 	if tv.is_empty():
 		tv.append_array([PackedVector3Array(), PackedVector2Array(), PackedVector2Array(), PackedColorArray(), PackedInt32Array()])
 	var base: int = tv[0].size()
@@ -310,8 +333,14 @@ static func _grid(tv: Array, c0: int, c1: int, rows: Array, stride: int, snap: i
 		var col: Color = _biome_col(c)
 		for r in range(nr):
 			var z: float = rows[r]
-			var flag: float = 1.0 if z == 0.0 else (float(snap) if (r == nr - 1 and snap > 1 and not water) else 0.0)
-			tv[0].append(Vector3(float(c) * SimConst.COL, 0.0, (z if not (water and r == 0 and z == RenderLook.Z_TERRAIN_FRONT) else z + 1.0)))
+			var flag: float = 0.0
+			if z == 0.0:
+				flag = 1.0
+			elif not water and r == nr - 1 and snap_last > 1:
+				flag = float(snap_last)
+			elif not water and r == 0 and snap_first > 1:
+				flag = float(snap_first)
+			tv[0].append(Vector3(float(c) * SimConst.COL, 0.0, z))
 			tv[1].append(Vector2(float(c), 0.0 if water else 1.0))
 			tv[2].append(Vector2(1.0, flag))
 			tv[3].append(col)
@@ -323,26 +352,6 @@ static func _grid(tv: Array, c0: int, c1: int, rows: Array, stride: int, snap: i
 			tv[4].append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
 
 
-## The front face along the near tier: ground from its surface down to the floor; water from its surface down to the
-## ground at the front edge.
-static func _front(tv: Array, c0: int, c1: int, water: bool) -> void:
-	var base: int = tv[0].size()
-	var zf: float = RenderLook.Z_TERRAIN_FRONT + (1.5 if water else 0.0)
-	var n: int = 0
-	for c in range(c0, c1 + 1):
-		var col: Color = _biome_col(c)
-		for e in [0.0, 1.0]:
-			var down: bool = e > 0.5
-			tv[0].append(Vector3(float(c) * SimConst.COL, RenderLook.TERRAIN_FLOOR if (down and not water) else 0.0, zf))
-			tv[1].append(Vector2(float(c), (1.0 if down else 0.0) if water else (0.0 if down else 1.0)))
-			tv[2].append(Vector2(0.0, 0.0))
-			tv[3].append(col)
-		n += 1
-	for ci in range(n - 1):
-		var a: int = base + ci * 2
-		tv[4].append_array([a, a + 2, a + 1, a + 1, a + 2, a + 3])
-
-
 static func _biome_col(c: int) -> Color:
 	var biome: String = WorldBiomes.biomeAt(float(posmod(c, SimConst.NC)) * SimConst.COL)
 	var col: Color = RenderLook.col(RenderLook.BIOME[biome])
@@ -350,10 +359,15 @@ static func _biome_col(c: int) -> Color:
 	return col
 
 
-static func _finish(tv: Array, x0: float, x1: float, zb: float, water: bool) -> ArrayMesh:
+static func _finish(tv: Array, x0: float, x1: float, water: bool) -> ArrayMesh:
 	var m := _mesh(tv[0], tv[1], tv[2], PackedColorArray() if water else tv[3], tv[4])
-	var y0: float = -2000.0 * RenderLook.WS if water else RenderLook.TERRAIN_FLOOR
-	m.custom_aabb = AABB(Vector3(x0 - 64.0, y0, zb - 1.0), Vector3(x1 - x0 + 128.0, 14000.0 - y0, RenderLook.Z_TERRAIN_FRONT + 3.0 - zb))
+	var z0: float = INF
+	var z1: float = -INF
+	for v in tv[0]:
+		z0 = minf(z0, v.z)
+		z1 = maxf(z1, v.z)
+	var y0: float = -4000.0 * RenderLook.WS
+	m.custom_aabb = AABB(Vector3(x0 - 64.0, y0, z0 - 1.0), Vector3(x1 - x0 + 128.0, 14000.0 - y0, z1 - z0 + 2.0))
 	return m
 
 

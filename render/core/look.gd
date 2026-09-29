@@ -16,16 +16,24 @@ const MS: float = SimConst.MS
 const PS: float = SimConst.PS
 
 ## Depth layout, in world units along +z (toward the camera). Fighters, beams and particles live on z = 0.
-const Z_TERRAIN_FRONT: float = 600.0     # front face of the ground (kept inside the closest camera distance, about 1,100)
+const Z_TERRAIN_FRONT: float = 600.0     # the ground's shading reference in front (its top face brightens toward here)
+## The ground runs toward the camera and past it, so there is no front face to see at any zoom: Z_FORE is past the
+## camera at its widest pull-out (SimCamera.ZOOM_MIN) on viewports up to about 3,500 px tall. In front of the fighter
+## plane the foreground rule (ground.gdshaderinc, fore_fall) keeps land and water below the sight line from the camera
+## to the fighter plane, less FORE_DROP of their depth: nothing in front hides the fight, the camera is never inside
+## the ground or under water, and a ridge or sea the camera is below shows as a soft face under its own profile.
+const Z_FORE: float = 1.0e6
+const FORE_DROP: float = 0.03
+const WATER_FALL_BODY: float = 4.0   # water that fell this far under the foreground rule shows its body, not its surface
 const Z_TERRAIN_BACK: float = -1125.0 * WS   # back of the crater rows: tier-4 rims reach about 2 x 4,300
-const TERRAIN_FLOOR: float = -5000.0 * WS    # bottom of the ground's front face
 ## Ground rows are generated, not listed: spacing ROW_STEP0 at the fighter plane (fighter scale), growing by
-## ROW_GROWTH of the distance, from the front face to the horizon (FOG_FAR). The row at exactly 0 reads the sim's
-## profile (render/core/ground_field.gd). Columns coarsen with depth in tiers, [until this depth, column stride]; the
-## first tier is split into chunks along the planet (CHUNK_COLS columns) so the frustum culls them.
+## ROW_GROWTH of the distance, from Z_FORE in front to the horizon (FOG_FAR) behind. The row at exactly 0 reads the
+## sim's profile (render/core/ground_field.gd). Columns coarsen with distance from the fighter plane, either side:
+## STRIDES is [up to this |z|, column stride]. The finest run and the middle runs are split into chunks along the
+## planet (CHUNK_COLS columns) so the frustum culls them; the coarsest is one mesh per copy.
 const ROW_STEP0: float = 16.0
 const ROW_GROWTH: float = 0.15
-const TIERS: Array = [[-400.0, 1], [-2000.0, 2], [Z_TERRAIN_BACK, 4], [-1.0e12, 8]]
+const STRIDES: Array = [[400.0, 1], [2000.0, 2], [-Z_TERRAIN_BACK, 4], [1.0e12, 8]]
 const CHUNK_COLS: int = 320              # a multiple of the largest stride
 const Z_BUILDING_FRONT: float = -140.0   # buildings stand behind the fighter plane, the crowd between
 const Z_TREE_MIN: float = -120.0 * WS

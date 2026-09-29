@@ -124,6 +124,7 @@ func render_view(a: float) -> void:
 	var c: Vector3 = host.camera(a)
 	view_cam_x = host.camera_x(a)
 	cam_rig.frame(c.y, c.z, host.jitter, vp.y)
+	planet.set_camera(cam_rig.position)
 	_view_cues(c, vp)
 	planet.update(S, view_cam_x, host.impact.heat, host.impact.heat_changed)
 	host.impact.heat_changed = false

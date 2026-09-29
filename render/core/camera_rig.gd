@@ -22,9 +22,12 @@ func frame(cam_y: float, cam_z: float, jitter: Vector2, vh: float) -> void:
 	view_h = vh
 	var dist: float = distance_for(cam_z, vh)
 	position = Vector3(-jitter.x / cam_z, cam_y + 0.2 * vh / cam_z + jitter.y / cam_z, dist)
-	# Near as far out as the ground's front face allows (depth precision across a planet-sized view), far past the
-	# horizon row.
-	near = clampf((dist - RenderLook.Z_TERRAIN_FRONT) * 0.5, 20.0, 1.0e6)
+	# The ground runs past the camera. The foreground rule keeps it at least FORE_DROP of its depth under the sight lines
+	# to the fighter plane, so the lowest view ray can't meet it closer than FORE_DROP * dist / (tan + FORE_DROP + 2)
+	# (allowing the fighter plane's profile up to 2 x dist above the camera); near sits at half that, as far out as the
+	# rule allows for depth precision.
+	var tn: float = tan(deg_to_rad(RenderLook.FOV_DEG) * 0.5)
+	near = clampf(0.5 * RenderLook.FORE_DROP * dist / (tn + RenderLook.FORE_DROP + 2.0), 5.0, dist * 0.9)
 	far = dist + RenderLook.FOG_FAR * 1.1
 
 

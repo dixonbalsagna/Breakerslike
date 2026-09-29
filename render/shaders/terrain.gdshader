@@ -1,10 +1,11 @@
-// The ground: one surface from the band's front face to the horizon. A grid of terrain columns by rows in depth,
+// The ground: one surface from well in front of the camera to the horizon. A grid of terrain columns by rows in depth,
 // heights from the ground field (ground.gdshaderinc). The crater rows carry the round bowls, furrows, grooves and
-// slide trenches; the row on the fighter plane reads the sim's deform directly (exact). Behind them the far terrain
-// blends in: the same columns' base heights and biomes with relief, fading into the sky's own colour toward the far
-// edge. Columns coarsen with depth in tiers (planet_view.gd); a tier's boundary row snaps to the coarser stride.
-// UV.x: terrain column (NC wraps to 0). UV.y: 1 if the vertex follows the ground height (0 on the floor).
-// UV2.x: 1 on the top grid, 0 on the front face. UV2.y: 1 on the fighter-plane row, 2 or more a snapping boundary.
+// slide trenches; the row on the fighter plane reads the sim's deform directly (exact). Beyond them, behind and in
+// front, the far terrain blends in: the same columns' base heights and biomes with relief, fading into the sky's own
+// colour toward the far edge. In front of the fighter plane the foreground rule (fore_fall) keeps the land below the
+// sight line to the fighter plane. Columns coarsen away from the fighter plane in runs (planet_view.gd); a run's
+// boundary row snaps to the coarser stride.
+// UV.x: terrain column (NC wraps to 0). UV2.y: 1 on the fighter-plane row, 2 or more a snapping boundary.
 // COLOR: biome colour, alpha 1 in desert. Scorch chars the ground, heat glows, cracked pavement darkens (S.crack).
 shader_type spatial;
 render_mode unshaded, cull_disabled;
@@ -25,7 +26,7 @@ uniform vec4 snow : source_color;
 uniform vec4 cracked : source_color;
 uniform float snow_from = 560.0;
 uniform float snow_full = 900.0;
-uniform float z_front = 140.0;
+uniform float z_front = 140.0;   // RenderLook.Z_TERRAIN_FRONT: the top brightens from the back of the band to here
 uniform float fog_near = 700.0;
 uniform float fog_far = 12000.0;
 
@@ -34,7 +35,6 @@ varying vec3 v_col;
 varying float v_desert;
 varying float v_dent;
 varying float v_h;
-varying float v_below;
 varying float v_scorch;
 varying float v_heat;
 varying float v_back;
@@ -48,7 +48,7 @@ void vertex() {
 	float xw = UV.x * col_w;
 	float z = VERTEX.z;
 	float b = gf(i, 0);
-	vec4 g = ground_vertex(UV.x, UV2.x > 0.5 ? UV2.y : 0.0, z);
+	vec4 g = ground_vertex(UV.x, UV2.y, z, MODEL_MATRIX[3].x);
 	float h = g.x;
 	float s = far_weight(z);
 	v_col = COLOR.rgb;
@@ -60,15 +60,10 @@ void vertex() {
 		v_desert = abs(far_biome(xs) - 5.0) < 0.5 ? 1.0 : 0.0;
 		v_base = mix(b, gfx(xs, 0), s);
 	}
-	if (UV.y > 0.5) {
-		VERTEX.y = h;
-	}
-	if (UV2.x > 0.5) {
-		NORMAL = normalize(vec3(-g.y, 1.0, -g.z));
-	}
+	VERTEX.y = h;
+	NORMAL = normalize(vec3(-g.y, 1.0, -g.z));
 	v_dent = g.w;
 	v_h = h;
-	v_below = h - VERTEX.y;
 	float w = groove_half_at(i);
 	float t = clamp(1.0 - z * z / (w * w), 0.0, 1.0);
 	v_scorch = gf(i, 3) * t;
@@ -104,11 +99,7 @@ void fragment() {
 		c = mix(c, cracked.rgb, clamp(v_crack, 0.0, 1.0) * (0.3 + 0.7 * line));
 	}
 	c = mix(c, char_col.rgb, clamp(v_scorch * 1.1, 0.0, 0.92));
-	if (UV2.x > 0.5) {
-		c = flat_shade(c, NORMAL, 0.55) * mix(1.2, 0.95, v_back);
-	} else {
-		c *= mix(1.0, 0.45, clamp(v_below / 900.0, 0.0, 1.0));
-	}
+	c = flat_shade(c, NORMAL, 0.55) * mix(1.2, 0.95, v_back);
 	float hh = clamp(v_heat, 0.0, 1.6);
 	vec3 glow = mix(heat_lo.rgb, heat_hi.rgb, clamp(hh - 0.6, 0.0, 1.0));
 	c = mix(c, glow, clamp(hh, 0.0, 1.0) * 0.85) + glow * max(0.0, hh - 1.0) * 0.6;

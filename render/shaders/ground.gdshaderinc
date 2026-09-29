@@ -28,6 +28,8 @@ uniform float z_band_back = -520.0;  // RenderLook: rows behind this are the far
 uniform float far_blend = 900.0;     // ... which blends in from the band's heights over this depth
 uniform float meander_amp = 600.0;   // RenderLook.MEANDER: how far (in x) the far land's biomes wander with depth
 uniform vec4 biome_colors[7] : source_color;   // RenderLook.BIOME in ground_field.gd's BIOME_ORDER
+uniform vec3 fore_cam = vec3(0.0, 0.0, 3000.0);  // the camera's world position, every frame (planet_view.gd)
+uniform float fore_drop = 0.03;                  // RenderLook.FORE_DROP
 
 float gf(int i, int row) {
 	return texelFetch(heights, ivec2(i % tw, row * rpl + i / tw), 0).r;
@@ -170,39 +172,107 @@ vec3 far_height3(float xs, float xw, float z) {
 	return vec3(gfx(xs, 0) * mul + amp * n.x, base_slope(int(xs / col_w) % nc) * mul + amp * n.y, amp * n.z);
 }
 
-// 0 in the crater rows, rising smoothly to 1 at far_blend behind them.
+// 0 in the crater rows, rising smoothly to 1 at far_blend beyond them, behind the fighter plane or in front of it.
 float far_weight(float z) {
-	float s = clamp((z_band_back - z) / far_blend, 0.0, 1.0);
+	float s = clamp((abs(z) + z_band_back) / far_blend, 0.0, 1.0);
 	return s * s * (3.0 - 2.0 * s);
 }
 
+// The fighter-plane row at column i: its ground, and its top (the standing water over the ground, if any).
+float fp_ground(int i) {
+	return gf(i, 0) + gf(i, 1);
+}
+
+float fp_top(int i) {
+	float wd = gf(i, 4);
+	return fp_ground(i) + (wd >= wet_min ? wd : 0.0);
+}
+
+// The foreground rule. In front of the fighter plane (z > 0) nothing rises above the sight line from the camera to the
+// fighter-plane row behind it, less fore_drop of its depth. So nothing in front hides the fighter plane, and the camera
+// is never inside the ground or under a water sheet. Where land or water would rise into view it falls away instead,
+// and from the camera it lies just under the fighter plane's own profile, as the old front face did. xr: world x (the
+// camera sits near 0); ox: the planet copy's offset (planet-local x = world x - ox); top: the sight line to the row's
+// top (its water) rather than its ground. Returns (cap, d cap/dx, d cap/dz).
+vec3 fore_cap3(float xr, float z, float ox, bool top) {
+	float t = z / fore_cam.z;
+	if (t >= 1.0) {
+		return vec3(fore_cam.y - fore_drop * z, 0.0, -fore_drop);
+	}
+	float xs = fore_cam.x + (xr - fore_cam.x) / (1.0 - min(t, 0.9));   // where the sight line meets the fighter plane
+	float c = (xs - ox) / col_w;
+	float c0 = floor(c);
+	int i0 = int(mod(c0, float(nc)));
+	int i1 = (i0 + 1) % nc;
+	float y0 = top ? fp_top(i0) : fp_ground(i0);
+	float y1 = top ? fp_top(i1) : fp_ground(i1);
+	float yp = mix(y0, y1, c - c0);
+	float dy = (y1 - y0) / col_w;
+	return vec3(mix(yp, fore_cam.y, t) - fore_drop * z, dy, (dy * (xs - fore_cam.x) + fore_cam.y - yp) / fore_cam.z - fore_drop);
+}
+
+// Applies the foreground rule at world x xr, depth z to a ground h (with its gradient) and the top over it (its water
+// surface, or h where dry): both fall by what the top must, then the ground alone if it still rises above the sight
+// line to the fighter plane's own ground. The water keeps at least its depth.
+void fore_fall(inout float h, inout vec2 grad, inout float top, float xr, float z, float ox) {
+	if (z <= 0.0) {
+		return;
+	}
+	bool dry = top <= h;
+	vec3 ct = fore_cap3(xr, z, ox, true);
+	float cut = top - ct.x;
+	if (cut > 0.0) {
+		h -= cut;
+		top = ct.x;
+		grad = dry ? ct.yz : grad + ct.yz;
+	}
+	vec3 cg = fore_cap3(xr, z, ox, false);
+	if (h > cg.x) {
+		h = cg.x;
+		grad = cg.yz;
+		if (dry) {
+			top = h;
+		}
+	}
+}
+
 // The ground at column i, world x xw, depth z: (height, d/dx, d/dz, dent), dent being the crater-and-groove offset
-// that the terrain colours by. exact: the fighter-plane row, which reads the sim's deform directly.
-vec4 ground4(int i, float xw, float z, bool exact) {
+// that the terrain colours by. exact: the fighter-plane row, which reads the sim's deform directly. ox: the planet
+// copy's world offset, for the foreground rule (fore_fall), which sees the water the water shader draws there.
+vec4 ground4(int i, float xw, float z, bool exact, float ox) {
 	float b = gf(i, 0);
-	vec3 o = z >= z_band_back - 0.5 ? ground_offset3(i, xw, z) : vec3(0.0);
+	vec3 o = abs(z) <= -z_band_back + 0.5 ? ground_offset3(i, xw, z) : vec3(0.0);
 	float off = exact ? gf(i, 1) : o.x;
 	float h = b + off;
 	vec2 grad = vec2(base_slope(i) + o.y, o.z);
 	float s = far_weight(z);
+	float top = h;
 	if (s > 0.0) {
-		vec3 f = far_height3(far_x(xw, z, s), xw, z);
+		float xs = far_x(xw, z, s);
+		vec3 f = far_height3(xs, xw, z);
 		h = mix(h, f.x, s);
 		grad = mix(grad, f.yz, s);
+		top = (h < 0.0 && mix(b, gfx(xs, 0), s) < sea_base) ? 0.0 : h;
+	} else {
+		float wd = gf(i, 4);
+		float surf = b + gf(i, 1) + wd;
+		top = (wd >= wet_min && (b < sea_base || off < -wet_min) && surf > h) ? surf : h;
 	}
+	fore_fall(h, grad, top, xw + ox, z, ox);
 	return vec4(h, grad, off * (1.0 - s));
 }
 
-// A vertex's ground: UV.x its column, flag 1 the exact row, a flag of 2 or more a tier boundary row that snaps to that
-// coarser column stride (linear between the coarse columns), so the finer and the coarser tier meet without a crack.
-vec4 ground_vertex(float col, float flag, float z) {
+// A vertex's ground: UV.x its column, flag 1 the exact row, a flag of 2 or more a run's boundary row that snaps to that
+// coarser column stride (linear between the coarse columns), so the finer and the coarser run meet without a crack.
+// ox: the planet copy's world offset (MODEL_MATRIX's translation).
+vec4 ground_vertex(float col, float flag, float z, float ox) {
 	if (flag > 1.5) {
 		float st = floor(flag + 0.5);
 		float c0 = floor(col / st + 0.0001) * st;
 		float fr = (col - c0) / st;
-		vec4 g0 = ground4(int(c0) % nc, c0 * col_w, z, false);
-		vec4 g1 = ground4(int(c0 + st) % nc, (c0 + st) * col_w, z, false);
+		vec4 g0 = ground4(int(c0) % nc, c0 * col_w, z, false, ox);
+		vec4 g1 = ground4(int(c0 + st) % nc, (c0 + st) * col_w, z, false, ox);
 		return mix(g0, g1, fr);
 	}
-	return ground4(int(col + 0.5) % nc, col * col_w, z, flag > 0.5);
+	return ground4(int(col + 0.5) % nc, col * col_w, z, flag > 0.5, ox);
 }

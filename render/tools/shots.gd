@@ -20,6 +20,9 @@ const POSES: Dictionary = {
 	"coast": [1130.0, 60.0, 1420.0, 170.0],
 	"max": [2700.0, 2600.0, 3150.0, 2600.0],
 	"slide": [2935.0, 0.0, 2965.0, 60.0],
+	"far": [2000.0, 60.0, 42000.0, 60.0],
+	"sea": [150.0, -150.0, 330.0, -150.0],
+	"ridge": [-68.0, 0.0, 13932.0, 0.0],
 	"stage_close": [5900.0, 60.0, 6100.0, 60.0],
 	"stage_edge": [5100.0, 60.0, 6900.0, 60.0],
 	"stage_wide": [3000.0, 60.0, 9000.0, 60.0],
@@ -91,6 +94,12 @@ static func _place(p: Array) -> Array:
 	var c: float = X((p[0] + p[2]) * 0.5)
 	var h: float = (p[2] - p[0]) * 0.5
 	return [c - h, Y(p[1]), c + h, Y(p[3])]
+
+
+## Both fighters just above the ground either side of the highest ridge: the camera sits below the peak.
+func _stage_ridge(S: SimState) -> void:
+	for f in S.fighters:
+		f.y = WorldTerrain.groundY(S, f.x) + 10.0
 
 
 ## A straight-down hit, a glancing hit with its furrow, and a strong beam's trail ending in its strike crater.
