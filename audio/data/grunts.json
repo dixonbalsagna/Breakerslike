@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "bank_seed": 20260929,
-  "note": "Grunt recipes for the source-filter voice (audio/synth/grunt_synth.gd). One row per fighter voice and gesture, matched to the voice bibles in docs/narrative/voices/. Vowel formants are the published average male values (Peterson and Barney, 1952). Two effort grunts exist so far: the same gesture with two different voices. The rest of each palette is in docs/audio/grunts.md.",
+  "note": "Grunt recipes for the source-filter voice (audio/synth/grunt_synth.gd). One row per fighter voice and gesture, matched to the voice bibles in docs/narrative/voices/. Vowel formants are the published average male values (Peterson and Barney, 1952). Working gestures: effort.heavy, pain.head and pain.limb for the Protagonist and the Anti-hero (the same gesture with two different voices). The pain grunts are the generic wear-scaled ones from line-system.md; the runtime raises their pitch with the size of the hit. The rest of each palette is in docs/audio/grunts.md.",
   "voices": {
     "protagonist": {
       "label": "The Protagonist (the greybox hero, KAI, is the stand-in). Hearty, open, warm.",
@@ -10,25 +10,181 @@
           "rate": 24000,
           "variants": 3,
           "peak_db": -7.0,
-          "jitter": { "f0": 0.05, "formant": 0.03, "dur": 0.06 },
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
           "dur": 0.36,
-          "f0": [178, 118],
+          "f0": [
+            178,
+            118
+          ],
           "f0_tau": 0.11,
           "f0_jitter": 0.012,
           "shimmer": 0.06,
           "open": 0.62,
           "fry": 0.0,
-          "vowel_a": { "f": [730, 1090, 2440], "bw": [90, 110, 160] },
-          "vowel_b": { "f": [590, 880, 2410], "bw": [80, 100, 150] },
-          "glide": [0.05, 0.30],
-          "breath": 0.30,
+          "vowel_a": {
+            "f": [
+              730,
+              1090,
+              2440
+            ],
+            "bw": [
+              90,
+              110,
+              160
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              590,
+              880,
+              2410
+            ],
+            "bw": [
+              80,
+              100,
+              150
+            ]
+          },
+          "glide": [
+            0.05,
+            0.3
+          ],
+          "breath": 0.3,
           "h_onset": 0.05,
           "attack": 0.006,
           "hold": 0.07,
           "t60": 0.24,
-          "chest": { "f": 190, "bw": 130, "gain": 0.5 },
+          "chest": {
+            "f": 190,
+            "bw": 130,
+            "gain": 0.5
+          },
           "drive": 1.8,
           "caption": "[effort]"
+        },
+        "pain.head": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -7.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.26,
+          "f0": [
+            230,
+            160
+          ],
+          "f0_tau": 0.06,
+          "f0_jitter": 0.02,
+          "shimmer": 0.08,
+          "open": 0.55,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              530,
+              1840,
+              2480
+            ],
+            "bw": [
+              80,
+              110,
+              160
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              660,
+              1100,
+              2500
+            ],
+            "bw": [
+              90,
+              110,
+              160
+            ]
+          },
+          "glide": [
+            0.02,
+            0.18
+          ],
+          "breath": 0.25,
+          "h_onset": 0.02,
+          "attack": 0.004,
+          "hold": 0.05,
+          "t60": 0.16,
+          "chest": {
+            "f": 190,
+            "bw": 130,
+            "gain": 0.4
+          },
+          "drive": 1.5,
+          "caption": "[pain]"
+        },
+        "pain.limb": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -8.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.3,
+          "f0": [
+            150,
+            105
+          ],
+          "f0_tau": 0.08,
+          "f0_jitter": 0.015,
+          "shimmer": 0.06,
+          "open": 0.58,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              570,
+              840,
+              2410
+            ],
+            "bw": [
+              80,
+              100,
+              150
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              500,
+              900,
+              2400
+            ],
+            "bw": [
+              80,
+              100,
+              150
+            ]
+          },
+          "glide": [
+            0.03,
+            0.22
+          ],
+          "breath": 0.45,
+          "h_onset": 0.06,
+          "attack": 0.006,
+          "hold": 0.09,
+          "t60": 0.2,
+          "chest": {
+            "f": 190,
+            "bw": 130,
+            "gain": 0.5
+          },
+          "drive": 1.4,
+          "caption": "[pain]"
         }
       }
     },
@@ -39,25 +195,181 @@
           "rate": 24000,
           "variants": 3,
           "peak_db": -7.0,
-          "jitter": { "f0": 0.04, "formant": 0.03, "dur": 0.06 },
+          "jitter": {
+            "f0": 0.04,
+            "formant": 0.03,
+            "dur": 0.06
+          },
           "dur": 0.42,
-          "f0": [104, 72],
+          "f0": [
+            104,
+            72
+          ],
           "f0_tau": 0.12,
-          "f0_jitter": 0.020,
-          "shimmer": 0.10,
-          "open": 0.50,
+          "f0_jitter": 0.02,
+          "shimmer": 0.1,
+          "open": 0.5,
           "fry": 0.35,
-          "vowel_a": { "f": [570, 840, 2410], "bw": [70, 90, 140] },
-          "vowel_b": { "f": [450, 800, 2400], "bw": [70, 90, 140] },
-          "glide": [0.08, 0.36],
+          "vowel_a": {
+            "f": [
+              570,
+              840,
+              2410
+            ],
+            "bw": [
+              70,
+              90,
+              140
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              450,
+              800,
+              2400
+            ],
+            "bw": [
+              70,
+              90,
+              140
+            ]
+          },
+          "glide": [
+            0.08,
+            0.36
+          ],
           "breath": 0.16,
           "h_onset": 0.04,
           "attack": 0.012,
-          "hold": 0.10,
-          "t60": 0.30,
-          "chest": { "f": 140, "bw": 110, "gain": 0.9 },
+          "hold": 0.1,
+          "t60": 0.3,
+          "chest": {
+            "f": 140,
+            "bw": 110,
+            "gain": 0.9
+          },
           "drive": 2.2,
           "caption": "[effort]"
+        },
+        "pain.head": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -9.0,
+          "jitter": {
+            "f0": 0.04,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.28,
+          "f0": [
+            130,
+            90
+          ],
+          "f0_tau": 0.07,
+          "f0_jitter": 0.03,
+          "shimmer": 0.1,
+          "open": 0.45,
+          "fry": 0.3,
+          "vowel_a": {
+            "f": [
+              570,
+              840,
+              2410
+            ],
+            "bw": [
+              80,
+              100,
+              150
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              450,
+              800,
+              2400
+            ],
+            "bw": [
+              70,
+              90,
+              140
+            ]
+          },
+          "glide": [
+            0.03,
+            0.2
+          ],
+          "breath": 0.3,
+          "h_onset": 0.03,
+          "attack": 0.008,
+          "hold": 0.06,
+          "t60": 0.2,
+          "chest": {
+            "f": 140,
+            "bw": 110,
+            "gain": 0.8
+          },
+          "drive": 2.0,
+          "caption": "[grunt]"
+        },
+        "pain.limb": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -9.0,
+          "jitter": {
+            "f0": 0.04,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.3,
+          "f0": [
+            110,
+            80
+          ],
+          "f0_tau": 0.09,
+          "f0_jitter": 0.03,
+          "shimmer": 0.1,
+          "open": 0.45,
+          "fry": 0.3,
+          "vowel_a": {
+            "f": [
+              570,
+              840,
+              2410
+            ],
+            "bw": [
+              80,
+              100,
+              150
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              450,
+              800,
+              2400
+            ],
+            "bw": [
+              70,
+              90,
+              140
+            ]
+          },
+          "glide": [
+            0.04,
+            0.24
+          ],
+          "breath": 0.35,
+          "h_onset": 0.05,
+          "attack": 0.01,
+          "hold": 0.08,
+          "t60": 0.22,
+          "chest": {
+            "f": 140,
+            "bw": 110,
+            "gain": 0.9
+          },
+          "drive": 2.0,
+          "caption": "[grunt]"
         }
       }
     }

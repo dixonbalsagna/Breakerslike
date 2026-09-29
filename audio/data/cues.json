@@ -1,32 +1,91 @@
 {
   "schema": 1,
   "note": "How the sim's fx events become sound cues (audio/audio_cues.gd). Sounds, thresholds, scaling and grunt rules live here, not in code. Damage amounts are the sim's own: over three seeded 90 s matches the median hit was 29.5, the 75th percentile 74 and the 90th percentile 101, with beam hits up to about 300. Crater energy ran from 0.24 to 15.3 with a median of 2.6.",
-  "fighters": { "KAI": "protagonist", "VORR": "anti_hero" },
+  "fighters": {
+    "KAI": "protagonist",
+    "VORR": "anti_hero"
+  },
   "sounds": {
-    "impact.light":  { "bus": "Sfx", "priority": 40, "caption": "[hit]" },
-    "impact.heavy":  { "bus": "Sfx", "priority": 60, "caption": "[heavy hit]" },
-    "impact.crater": { "bus": "Sfx", "priority": 55, "caption": "[crash]" }
+    "impact.light": {
+      "bus": "Sfx",
+      "priority": 40,
+      "caption": "[hit]"
+    },
+    "impact.heavy": {
+      "bus": "Sfx",
+      "priority": 60,
+      "caption": "[heavy hit]"
+    },
+    "impact.crater": {
+      "bus": "Sfx",
+      "priority": 55,
+      "caption": "[crash]"
+    }
   },
   "damage": {
     "classes": [
-      { "below": 26.0, "sound": "impact.light" },
-      { "below": 1000000.0, "sound": "impact.heavy" }
+      {
+        "below": 26.0,
+        "sound": "impact.light"
+      },
+      {
+        "below": 1000000.0,
+        "sound": "impact.heavy"
+      }
     ],
     "ref": 40.0,
-    "pitch_exp": -0.22, "pitch_min": 0.75, "pitch_max": 1.25,
-    "gain_exp": 0.50, "gain_db_min": -6.0, "gain_db_max": 3.0
+    "pitch_exp": -0.22,
+    "pitch_min": 0.75,
+    "pitch_max": 1.25,
+    "gain_exp": 0.5,
+    "gain_db_min": -6.0,
+    "gain_db_max": 3.0
   },
   "crater": {
     "sound": "impact.crater",
     "min_energy": 0.45,
     "ref": 2.6,
-    "pitch_exp": -0.25, "pitch_min": 0.70, "pitch_max": 1.30,
-    "gain_exp": 0.55, "gain_db_min": -8.0, "gain_db_max": 3.0
+    "pitch_exp": -0.25,
+    "pitch_min": 0.7,
+    "pitch_max": 1.3,
+    "gain_exp": 0.55,
+    "gain_db_min": -8.0,
+    "gain_db_max": 3.0
   },
   "grunts": [
-    { "on": "damage", "who": "attacker", "gesture": "effort.heavy", "min_amount": 26.0,
-      "chance": 0.75, "cooldown_s": 1.1, "priority": 70, "gain_db": -2.0 }
+    {
+      "on": "damage",
+      "who": "attacker",
+      "gesture": "effort.heavy",
+      "min_amount": 26.0,
+      "chance": 0.75,
+      "cooldown_s": 1.1,
+      "priority": 70,
+      "gain_db": -2.0
+    },
+    {
+      "on": "damage",
+      "who": "victim",
+      "pool": {
+        "pain.limb": 0.7,
+        "pain.head": 0.3
+      },
+      "min_amount": 8.0,
+      "chance": 0.55,
+      "cooldown_s": 0.7,
+      "priority": 65,
+      "gain_db": -3.0,
+      "pitch_per_ln": 0.07,
+      "ref": 40.0,
+      "note": "Until damage events carry the region hit, the gesture is drawn from the pool; then it follows the region (head: pain.head, limbs and core: pain.limb)."
+    }
   ],
-  "muffle": { "below_y": 0.0, "over_sea_only": true },
-  "variation": { "pitch": 0.03, "gain_db": 1.0 }
+  "muffle": {
+    "below_y": 0.0,
+    "over_sea_only": true
+  },
+  "variation": {
+    "pitch": 0.03,
+    "gain_db": 1.0
+  }
 }

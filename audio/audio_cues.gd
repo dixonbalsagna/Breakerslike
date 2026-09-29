@@ -114,13 +114,15 @@ func _grunt(S: SimState, rule: Dictionary, e, out: Array) -> void:
 		return
 	var f = S.fighters[idx]
 	var voice: String = String(cfg.fighters.get(f.name, ""))
-	var id: String = "voice.%s.%s" % [voice, rule.gesture]
-	if voice == "" or not bank.has_sound(id):
-		return
-	var key: String = "%d.%s" % [idx, rule.gesture]
-	if S.T - float(_last_grunt.get(key, -99.0)) < float(rule.cooldown_s):
+	# One shared cooldown per fighter and rule, so the pool does not stack grunts.
+	var key: String = "%d.%s" % [idx, String(rule.get("gesture", "pool"))]
+	if voice == "" or S.T - float(_last_grunt.get(key, -99.0)) < float(rule.cooldown_s):
 		return
 	if _rng.next() >= float(rule.chance):
+		return
+	var gesture: String = String(rule.gesture) if rule.has("gesture") else _from_pool(rule.pool)
+	var id: String = "voice.%s.%s" % [voice, gesture]
+	if not bank.has_sound(id):
 		return
 	_last_grunt[key] = S.T
 	var cue := Cue.new()
@@ -130,11 +132,14 @@ func _grunt(S: SimState, rule: Dictionary, e, out: Array) -> void:
 	cue.x = f.x
 	cue.y = f.y
 	cue.gain_db = float(rule.gain_db)
+	if rule.has("pitch_per_ln"):
+		# the bigger the hit, the higher the cry
+		cue.pitch = clampf(1.0 + float(rule.pitch_per_ln) * log(maxf(e.amount, 1.0) / float(rule.ref)), 0.85, 1.25)
 	_vary(cue)
 	cue.priority = int(rule.priority)
 	cue.bus = "Voice"
 	cue.group = "voice.%d" % idx
-	cue.caption = String(_grunt_caption(voice, rule.gesture))
+	cue.caption = String(_grunt_caption(voice, gesture))
 	cue.muffled = _muffled(S, f.x, f.y)
 	out.append(cue)
 
@@ -150,6 +155,19 @@ func _victim(S: SimState, x: float, y: float) -> int:
 			bd = d
 			best = i
 	return best
+
+
+## A weighted draw from {gesture: weight} with the audio stream.
+func _from_pool(pool: Dictionary) -> String:
+	var total: float = 0.0
+	for k in pool:
+		total += float(pool[k])
+	var r: float = _rng.next() * total
+	for k in pool:
+		r -= float(pool[k])
+		if r <= 0.0:
+			return String(k)
+	return String(pool.keys()[0])
 
 
 func _grunt_caption(voice: String, gesture: String) -> String:

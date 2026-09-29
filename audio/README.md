@@ -2,7 +2,7 @@
 
 Owner: Audio and Music. 2026-09-29. Status: first prototype. The plan and the reasons are in `docs/audio/direction.md` and `docs/audio/grunts.md`.
 
-Three impact sounds and two effort grunts, generated at runtime from recipes in `data/`. No recorded sample and no third-party file is used, so there is nothing to attribute. Nothing here is loaded by the game yet: it is ready to be hooked up (below).
+Three impact sounds and six grunts (effort and pain, for two fighters), generated at runtime from recipes in `data/`. No recorded sample and no third-party file is used, so there is nothing to attribute. Nothing here is loaded by the game yet: it is ready to be hooked up (below).
 
 **It has not been listened to by a person.** I checked it with numbers (level, length, clipping, pitch, spectrum; see "Checks") and by reading spectrograms. That says the sounds have the right size, shape and colour. It cannot say they sound good. Please listen to `preview/` or run the demo, and tell me what is wrong.
 
@@ -16,7 +16,7 @@ In Godot 4.7:
 godot --path . res://audio/demo/audio_demo.tscn
 ```
 
-Keys: `1` light hit, `2` heavy hit, `3` crater, `4` Protagonist effort, `5` Anti-hero effort, `P` move the source left, centre or right (tests panning), `M` a live seeded match on the real sim (no graphics) whose events make the sounds. `-- --auto` starts the match at once, `-- --seed=N` picks the seed.
+Keys: `1` light hit, `2` heavy hit, `3` crater, `4` Protagonist effort, `5` Anti-hero effort (a live match also plays their pain grunts), `P` move the source left, centre or right (tests panning), `M` a live seeded match on the real sim (no graphics) whose events make the sounds. `-- --auto` starts the match at once, `-- --seed=N` picks the seed.
 
 ## What is here
 
@@ -31,7 +31,7 @@ Keys: `1` light hit, `2` heavy hit, `3` crater, `4` Protagonist effort, `5` Anti
 | `demo/` | The listening scene. |
 | `tools/render_wavs.gd`, `host_check.gd`, `analyse_wav.py` | Write the bank to WAV; the hook-up check; the number and spectrogram check. |
 | `synth/music_sketch.gd`, `data/sketch_*.json`, `tools/render_sketches.gd` | The three 30-second music sketches: one shared 12-bar arc and tune, three instrument kits. |
-| `preview/` | The rendered WAVs (17 sound files, 0.6 MB, and the three `sketch-*.wav` music sketches, 2.3 MB). A `.gdignore` keeps Godot from importing them or packing them into a build. |
+| `preview/` | The rendered WAVs (two variants of each of 14 sounds, 0.5 MB, and the three `sketch-*.wav` music sketches, 2.3 MB). A `.gdignore` keeps Godot from importing them or packing them into a build. |
 
 ## The music sketches
 
@@ -82,7 +82,7 @@ Against a scratch copy of the last commit, because the working tree's `sim/core/
 
 - `godot --headless --path . --script res://audio/tools/host_check.gd` passed for seeds 4, 12345 and 777 (5,400 ticks each): the sim's gameplay hash every 60 ticks is identical with and without audio, the cue log is identical on a second run, and every cue is a sound the bank has, with finite numbers inside the data's limits. A 90 s match makes about 40 to 53 cues a minute today (hits, craters and grunts; everything else is still silent).
 - `godot --headless --path . res://audio/demo/audio_demo.tscn -- --auto --frames=2400`: runs clean on the dummy audio driver.
-- `tools/render_wavs.gd`: the whole bank renders in 320 to 420 ms on a desktop CPU, 17 clips (0.12 to 1.7 s). Not measured on web, low-end laptops or mobile; expect two to four times slower on web.
+- `tools/render_wavs.gd`: the whole bank renders in 220 to 420 ms on a desktop CPU, 29 clips (0.12 to 1.7 s). Not measured on web, low-end laptops or mobile; expect two to four times slower on web.
 - `python audio/tools/analyse_wav.py FILE.wav [--voice] [--png OUT.png]`: peak, RMS, DC, clipping, end clicks, decay, spectrum (also A-weighted), and for voices the pitch track. Standard library only. Results: no clipping, no DC offset, silent first and last samples; light hit about 0.12 s, heavy 0.8 s, crater 1.7 s; the Protagonist grunt's pitch falls 156 to 126 Hz and the Anti-hero's 87 to 71 Hz, as the recipes say.
 
 ## Origin and licence (proposed rows for `docs/legal/asset-origins.md`; Legal writes the log)

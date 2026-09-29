@@ -8,6 +8,8 @@ The grunt palettes and how to make them for free are in `grunts.md`.
 
 ## 1. What Orb decides
 
+Orb answered on 2026-09-29 (through the EP): music is chosen by ear from the three sketches (`audio/preview/`); grunts are synthesis first, with Orb possibly recording laughs and the munch later; AI-generated audio is allowed once Legal clears the specific tool's terms; the wear and heat audio is on by default with a slider; the 2D-panning default stands. Row 1 is therefore still open, and the rest are settled. The table keeps the original defaults for reference.
+
 | # | Question | My default if Orb says nothing |
 | :--- | :--- | :--- |
 | 1 | Which music direction (section 3): A The Town Band, B Furnace, C Kitchen Drums | A, with C's found-sound percussion, and B as the fallback that code alone can make |
@@ -282,7 +284,7 @@ Orb: lines are unvoiced text, and each character's distinct grunts, growls and l
 - **Wear changes the voice.** Breathing becomes audible from battered (`damage-model.md` section 3). Grunts get breathier and higher at brink. The Anti-hero's facade crack changes his palette to the ragged set. The Empress's palette has no sincere gestures.
 - **The text follows the sound.** The bank tells UI how long a gesture lasts (`AudioBank.duration`), so the text speed can follow it (line-system section 4). A laugh before a line changes how the words read.
 - **Captions.** Every gesture has a caption string (`[effort]`, `[short laugh]`). The cue carries it, so UI can show it when sound is off or the player is deaf (Accessibility).
-- **Made at runtime.** A source-filter voice (`audio/synth/grunt_synth.gd`): a glottal pulse train with a falling pitch and breath noise through three moving formant resonators, then a chest resonance and saturation. Every number is in `audio/data/grunts.json`. A gesture renders in about 10 ms on a desktop. Two effort grunts exist now. Palettes and the plan for the rest are in `grunts.md`.
+- **Made at runtime.** A source-filter voice (`audio/synth/grunt_synth.gd`): a glottal pulse train with a falling pitch and breath noise through three moving formant resonators, then a chest resonance and saturation. Every number is in `audio/data/grunts.json`. A gesture renders in about 10 ms on a desktop. Six grunts exist now (`effort.heavy`, `pain.head`, `pain.limb` for two fighters). Palettes and the plan for the rest are in `grunts.md`.
 - **Budget.** Nine to ten gestures, three variants each, per fighter: about 115 clips for four fighters, about 2 MB in memory and about 1.2 s to render on a desktop (estimated from the 9 to 12 ms each of the two working grunts). Only the two fighters in the match are rendered, in slices behind the loading beat (`AudioBank.warm_begin`, `warm_step`). Web timing is not measured yet.
 - **Language.** Grunts are language-neutral, which helps Localization: the captions are the only text.
 

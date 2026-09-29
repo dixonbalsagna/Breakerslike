@@ -1,8 +1,8 @@
 # Grunt palettes and how to make them for free
 
-Owner: Audio and Music. Version 1, 2026-09-29. Companion to `direction.md` (section 7 is the system design). The gestures come from Narrative's voice bibles (`docs/narrative/voices/`) and the line system (`docs/narrative/line-system.md`). Two grunts exist as working sounds (the effort grunt for the Protagonist and for the Anti-hero); everything else in the tables is a plan.
+Owner: Audio and Music. Version 1, 2026-09-29. Companion to `direction.md` (section 7 is the system design). The gestures come from Narrative's voice bibles (`docs/narrative/voices/`) and the line system (`docs/narrative/line-system.md`). Six grunts exist as working sounds (`effort.heavy`, `pain.head` and `pain.limb`, each for the Protagonist and the Anti-hero); everything else in the tables is a plan. `pain.head` and `pain.limb` are the generic wear-scaled pain grunts from `line-system.md`.
 
-**Not yet listened to by a person.** The two grunts were checked with numbers and spectrograms (pitch track, level, spectrum), not by ear. Synthesised laughs in particular are the hardest thing here, and I expect to need Orb's ears, and possibly Orb's voice, to get them right (route B, below).
+**Not yet listened to by a person.** The working grunts were checked with numbers and spectrograms (pitch track, level, spectrum), not by ear. Synthesised laughs in particular are the hardest thing here, and I expect to need Orb's ears, and possibly Orb's voice, to get them right (route B, below).
 
 ## 1. How the synthesiser is controlled
 
@@ -35,6 +35,8 @@ Register: a warm baritone to tenor, pitch 110 to 180 Hz, open "ah" vowels, smili
 | `effort.light` | A short "hup" or "hn", 0.12 s, pitch falling | easy | S |
 | `effort.heavy` | A hearty "hah": breath, then an open vowel, pitch 178 to 118 Hz, 0.36 s **(working, `voice.protagonist.effort.heavy`)** | easy | S |
 | `wince` | A hiss through the teeth, then a small "ss-ah" | medium | S |
+| `pain.head` | A sharp, high "eh-ow": pitch 230 to 160 Hz, a sudden start, strained **(working)** | easy | S |
+| `pain.limb` | A strained "aw" through the teeth: pitch 150 to 105 Hz, more breath, a longer fall **(working)** | easy | S |
 | `laugh.short` | A delighted "hah": one bright pulse, pitch up then down | medium | H |
 | `laugh.long` | A full, warm laugh: 4 to 6 pulses that decay, a little pitch wobble, a breath in | hard | H or R |
 | `sigh` | A happy exhale after a good hit: long breathy "haa", falling | easy | S |
@@ -42,7 +44,7 @@ Register: a warm baritone to tenor, pitch 110 to 180 Hz, open "ah" vowels, smili
 | `roar` | Only at the top of a transformation: "aah" from 200 to 300 Hz, saturated, slow vibrato | medium | S |
 | `steam` | A long breath at Hot Blood, with a whistle-like partial high in the noise (ties to the heat track's kettle) | medium | S |
 
-About 9 gestures, 3 variants each: 27 clips.
+About 11 gestures, 3 variants each: 33 clips.
 
 ### 2.2 The Anti-hero
 
@@ -52,6 +54,8 @@ Register: low, pitch 70 to 110 Hz, pressed (a low open quotient), a creak in the
 | :--- | :--- | :--- | :--- |
 | `effort.light` | A clipped low "hn" | easy | S |
 | `effort.heavy` | A low pressed exhale, pitch 104 to 72 Hz, creak, 0.42 s **(working, `voice.anti_hero.effort.heavy`)** | easy | S |
+| `pain.head` | Pressed and suppressed: pitch 130 to 90 Hz, creak, quieter than the Protagonist's. He hides pain **(working)** | easy | S |
+| `pain.limb` | The same, lower and longer, pitch 110 to 80 Hz **(working)** | easy | S |
 | `growl` | From the chest: strong creak, noise, a slow swell and fall | easy | S |
 | `sneer` | A short exhale through the nose: a nasal noise band with a quick fall | medium | S |
 | `scoff` | One dry puff, "tch" or "ha", barely voiced | medium | S |
@@ -61,7 +65,7 @@ Register: low, pitch 70 to 110 Hz, pressed (a low open quotient), a creak in the
 | `ragged` | After the facade cracks: breath and voice, unsteady, the pitch 20% higher, high jitter, breaks | hard | H |
 | `swallow` | "A grit and a swallow": a throat click and gulp | hard | R |
 
-About 10 gestures: 30 clips. This is the fighter synthesis suits best: the voice is low, held back and mostly breath.
+About 12 gestures: 36 clips. This is the fighter synthesis suits best: the voice is low, held back and mostly breath.
 
 ### 2.3 The Empress
 
@@ -75,12 +79,13 @@ Register: theatrical, pitch 190 to 300 Hz with the resonances up about 17%. Ever
 | `shriek` | Escalating: pitch 350 to 700 Hz, saturated, fast vibrato | hard | H |
 | `sigh` | Theatrical: a long exhale sweeping down with vibrato | easy | S |
 | `sigh.heavy` | The weary sigh of someone facing a mountain of paperwork: lower, longer, more breath, a glottal shake | medium | S |
+| `pain.head`, `pain.limb` | Indignation first: a short outraged shriek that slips to plain "I" (higher, thinner) as wear grows | medium | S |
 | `growl` | Short and sharp | easy | S |
 | `hm` | A leering hum: nasal, gliding up and down | easy | S |
 | `mutter` | Form numbers, indistinct: a low murmur of pseudo-syllables at about 5 a second, the resonances moving | medium | S |
 | Guard unison | "Hup!" from three men at once, slightly detuned and offset (the recall call and the salute) | medium | S: three effort grunts summed |
 
-About 10 gestures: 30 clips, plus the guard chorus. The cackle and the laugh are the two sounds I would most want a person to perform.
+About 12 gestures: 36 clips, plus the guard chorus. The cackle and the laugh are the two sounds I would most want a person to perform.
 
 ### 2.4 The Cyborg
 
@@ -93,12 +98,12 @@ Not a voice box: a polite machine with an appetite. Most gestures are not vocal,
 | `chirp` | A cheerful digital ping: a two-tone FM blip, 1.2 then 1.8 kHz, 80 ms, with a tiny reverb | easy | S |
 | `servo` | A whirr when he moves: a sawtooth glide 300 to 900 Hz with resonance sweeps and gear noise | easy | S |
 | `laugh.glitch` | A stuttering laugh looping on one syllable: a short laugh repeated 3 to 6 times with a pitch step and bit reduction | medium | S over a recorded or synthesised "ha" |
-| `growl`, `effort.light`, `effort.heavy` | The voice engine with high resonances and a light bit-crush | easy | S |
+| `growl`, `effort.light`, `effort.heavy`, `pain.head`, `pain.limb` | The voice engine with high resonances and a light bit-crush; pain adds a stutter | easy | S |
 | `sigh` | A fan spinning down: noise and a falling whirr | easy | S |
 
-About 9 gestures: 27 clips. Legal's Press condition applies: mechanical, no ray and no sparkle.
+About 11 gestures: 33 clips. Legal's Press condition applies: mechanical, no ray and no sparkle.
 
-Total: about 38 gestures and about 115 clips for the four fighters (some gestures, such as `effort.heavy`, exist for several fighters with different numbers), about 2 MB in memory, and about 1.2 s to render on a desktop for all four (about 0.6 s for the two in a match). Estimated from the 9 to 12 ms each of the working grunts.
+Total: about 46 gestures and about 138 clips for the four fighters (some gestures, such as `effort.heavy`, exist for several fighters with different numbers), about 2.5 MB in memory, and about 1.0 s to render on a desktop for all four (about 0.5 s for the two in a match). Estimated from the 6 to 12 ms each of the working grunts.
 
 ## 3. Making them for free
 
@@ -154,8 +159,10 @@ When Orb (or anyone) plays `audio/preview/` or the demo:
 ## 5. Open questions
 
 For Orb:
-1. Synthesis first and recordings later (my default), or would you rather record from the start?
-2. Are you comfortable with your own voice in the game, heavily processed?
-3. Is the Anti-hero's held-back effort (a pressed exhale) the right feel, or should he grunt louder?
+Settled (Orb, via the EP, 2026-09-29): synthesis first, and Orb may record laughs and the munch later; AI-generated audio is allowed once Legal clears the specific tool's terms; Narrative writes the caption strings.
+
+Still for Orb:
+1. Are you comfortable with your own voice in the game, heavily processed?
+2. Is the Anti-hero's held-back effort (a pressed exhale) the right feel, or should he grunt louder?
 
 For the EP: the file shape and the caption ownership are open (`direction.md`, section 10).
