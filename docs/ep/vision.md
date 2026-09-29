@@ -185,3 +185,5 @@ Orb had played the Godot greybox before answering.
 - Destruction: 'as the fighters power up, the destructiveness should keep scaling. Implement novel ways to keep this interesting so the players don't just see it as map painting, but rather interfering and actively engaging with a real landscape.'
 
 **Living destruction picks (Orb, 2026-09-29).** From docs/world/living-destruction.md: fire and smoke cover (with cover made and taken), landslides, and the top-tier set: lava, quakes and rifts. Build order: LD1 fire and smoke, then LD2 landslides, then the tier-4 lava, quakes and rifts, leading toward the pinned planet-destruction finale.
+
+**Blast-levelled buildings (Orb, 2026-09-29).** When an impact or ground blast craters a city, the buildings it levels collapse into their own footprint like a controlled demolition, and leave rubble behind.
