@@ -67,6 +67,8 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
     - the Godot 4.7.2 .NET editor and its .NET export templates (MIT; scratch use only)
     - TypeScript 7.0.2 via npx (Apache-2.0; an optional type-check, dev only)
   - Register the CI actions (CI only, shipped nowhere; confirm the licences): actions/checkout v7.0.1 @ 3d3c42e5aac5ba805825da76410c181273ba90b1 and actions/setup-node v7.0.0 @ 820762786026740c76f36085b0efc47a31fe5020. Also the Godot 4.7.2 Linux zip used by the CI parity job.
+  - Register @napi-rs/canvas 1.0.9 (MIT, dev-only, optional; github.com/Brooooooklyn/canvas) and its per-platform prebuilt packages (same scope and version; confirm each licence). Pinned in prototype/package-lock.json.
+  - The licence files were removed on 2026-09-29 while Orb decides; update the licence register to match.
   - Stages 4 and 5 on the title, once Orb picks.
 - **Tools:**
   - Rerun the generator after any charter edit.

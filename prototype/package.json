@@ -6,6 +6,6 @@
     "sim": "node tools/sim-stats.js 60"
   },
   "optionalDependencies": {
-    "@napi-rs/canvas": "*"
+    "@napi-rs/canvas": "1.0.9"
   }
 }

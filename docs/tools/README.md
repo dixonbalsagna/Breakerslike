@@ -16,7 +16,7 @@ It checks, in order:
 1. **Node** (required). Missing or older than 18: it stops with exit 1. Any major other than 24 gives a warning, because the golden hashes were recorded on Node 24.19.0 and are skipped on other majors (ADR 0004), so a pass proves less.
 2. **npm** (required, ships with Node).
 3. **Godot** (optional today). Looks for `$GODOT`, then `godot` and `godot4` on the path (Windows also tries the `Godot_v4.7.2-stable_win64*.exe` names). Warns if it is missing, is not 4.7.x, or is the .NET build (ADR 0001: standard build, GDScript).
-4. **npm dependencies**: `npm ci` in the root, `prototype/`, `sim/` and `qa/`, only where a `package-lock.json` exists. Today none does (the suites use Node built-ins only and the prototype's canvas is optional), so it reports "nothing to install". It will pick up lockfiles as they appear.
+4. **npm dependencies**: `npm ci` in the root, `prototype/`, `sim/` and `qa/`, only where a `package-lock.json` exists. Today only `prototype/` has one: it installs `@napi-rs/canvas` 1.0.9 (optional, MIT), which `prototype/tools/screenshot.js` needs to write a real PNG. The suites do not need it.
 
 Exit 0 means ready, warnings allowed. Exit 1 means a required tool is missing or an install failed. Then run `node qa/run-all.js --quick` (about 40 s) or `npm test --prefix sim`.
 
@@ -30,7 +30,7 @@ Exit 0 means ready, warnings allowed. Exit 1 means a required tool is missing or
 | `sim` | `npm test --prefix sim` | about 1.5 min |
 | `godot-parity` | **disabled** (`if: false`), Godot 4.7.2 headless on Linux | n/a |
 
-The two live jobs run in parallel. There are no install steps because both suites use Node built-ins only. Add `npm ci` (with a lockfile) the day either grows a dependency.
+The two live jobs run in parallel. There are no install steps because both suites use Node built-ins only. CI therefore runs without `@napi-rs/canvas`; the golden hashes match with and without it (the runner never calls `render()`). Add `npm ci` (with a lockfile) the day either grows a dependency.
 
 Settings: `permissions: contents: read`, no secrets, `persist-credentials: false` on checkout, a run cancels the older run on the same ref, each job has a timeout.
 
