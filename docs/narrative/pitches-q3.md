@@ -217,3 +217,60 @@ Orb has not ruled, so these are proposals.
 **Samples for the new beats.**
 - Anti-hero, Swallow It: "Fine. Fine. I'll take it." Facade cracks: "I can't feel my arms. Help me." Spite: "I didn't need you. I never did."
 - Cyborg, Press: "Two slices, one filling. It's you."
+
+---
+
+# Round 3 (after Orb's steer)
+
+Legal's round 2 conditions now apply (`docs/legal/q3-screen.md`, "Round 2"). The ones that bite here: no red or red-orange glow or aura for the Protagonist, even at the top rung; no "x" number; no named shout; the Anti-hero's shared finisher must not be a mirrored pose. Working names, not screened. Game Design is working out the mechanics of the power stage in parallel, so this section covers name, callouts, look and sound.
+
+## 1. The Protagonist's power stage: Hot Blood
+
+Orb: "his blood goes from heated to simmering to boiling, causing internal damage that adds up but gives big temporary boosts."
+
+**Name options.** **Hot Blood** (sincere, plain). **Fever** (darker). **Boil-Over** (funnier, and it names the failure). **Favourite: Hot Blood**, with the rungs named for the boil.
+
+**Rungs and callouts.** The callout is a wound card in Game Design's style, never a number and never a shouted name. The region is the core, because the damage is internal.
+
+| Rung | Callout (wound card) | Boost | What builds up inside |
+|---|---|---|---|
+| 1 | `BLOOD: HEATED` | Moderate: quicker, harder to knock back | A little scald wear on the core |
+| 2 | `BLOOD: SIMMERING` | Big | Scald wear climbs fast; the arms and legs share some |
+| 3 | `BLOOD: BOILING` | The biggest, for a short time | Heavy scald wear; one more push breaks the core |
+| Fail | `CORE: BOILED OVER` | None: the boost drops out, he staggers | The core breaks, and he is on the brink |
+| After | `CORE: SCALDED` | None | The scald wear stays and does not fade in the fight |
+
+The internal damage **adds up**: each use leaves scald wear on the core that only fades slowly, so the second and third boils cost more than the first. Game Design owns the numbers.
+
+**Look.** The heat has to read without red or orange, so it reads through the body and the world:
+- **Heat shimmer.** The air bends around him. The ground beneath ripples.
+- **Steam off the skin.** A thin mist at rung 1, thick plumes at rung 3, with steam venting from his wounds.
+- **Veins and seams** glowing in his own aura colour (Art picks it; it must not be red or red-orange at any rung), and brightening with each rung.
+- **The world reacts.** Puddles steam, grass wilts and curls under his feet, snow slumps, and water near him boils off. The player sees the heat in the environment.
+- **His body.** Sweat that steams, fogged breath, the glow ramping toward cool white at the top rung, a slight tremor. No change of hair or eye colour at any rung.
+- **Under Wounds.** The aura crown's core arc burns thick with fine cracks while committed and steams when scalded. The silhouette readout shows the core with a "scald" hatch.
+
+**Sound.** A heartbeat that quickens. At rung 1 a warm, low hum. At rung 2 the sound of a kettle beginning to bubble, with a rising hiss. At rung 3 a rolling boil and a rising whistle, with steam vents. When it ends, a long, slow release of steam, and a shuddering breath. When it boils over, a sharp crack like a splitting pot, then silence.
+
+**Clear because** there is no fixed times-N, no named shout, and no red or red-orange glow or aura. The heat is carried by shimmer, steam, the environment and the cracks of light in his own colour. Legal has since cleared the boiling-blood concept on these terms and it replaces Overcommit.
+
+**Lines (samples).** Rung 1: "Okay. Warm." Rung 2: "That's a lot. That's... a lot." Rung 3: "Hold on. Hold on. I'll be fine in a minute." Boiled over: "Ow. Fair." After: "I'll feel that tomorrow."
+
+## 2. The Anti-hero: recognisable, non-infringing options
+
+Orb wants the homage to land. Legal's recognisability ladder (`docs/legal/tribute-vs-parody.md`) puts rung 4 at the top of the recognisable zone, so no option scores above 4. Each option below names **the genre moment fans will recognise**, scores **how strongly the homage reads (1 to 5)**, and gives **Legal's likely risk** (my estimate, not Legal's verdict). Every option keeps "swallow pride for power" at the core, so each costs Pride and may crack the facade. **Swallow It stays as the fallback.**
+
+| # | Option | The genre moment fans recognise | Homage (1 to 5) | Legal ladder rung and likely risk | How the pride is swallowed |
+|---|---|---|---|---|---|
+| **A1** | **Common Enemy** | A rival and the hero forced to fight side by side against a bigger threat. It works in 2v2 or free-for-all when a third fighter is present, or against the goons. The shared finisher is not a mirrored pose. | 4 | Rung 2. Low to Medium (Legal's pose condition on shared moves) | He has to say yes, out loud, to fighting beside his rival. |
+| **A2** | **Drop the Act** | The rival who has been holding back finally stops. There is no dramatic costume drop. He deliberately lets his Proud front collapse and releases the restraint he kept. | 3 | Rung 2. Low | He gives up the pose of effortless superiority on purpose. |
+| **A3** | **Humbled** | The rival who is beaten and humiliated, and comes back stronger out of rage and shame. A humbling hit (a parry, a guard break) converts into a stronger state. | 3 | Rung 2. Low | The humiliation is the fuel, and he cannot hide it. |
+| **A4** | **The Loan** | The rival who accepts a lifeline from the hero, and hates it. The Protagonist lends energy one to one (no item, no shared healing object, no gathering from the crowd). It restores a region and gives a surge. | 4 | Rung 4, the ceiling. Medium (the "hero shares an item" and "lend me your energy" beats are signatures if done with an object or a crowd) | He takes charity from the one person he wanted to beat alone. |
+
+**Favourite: A2, Drop the Act for 1v1, and A1, Common Enemy for 2v2.** A2 is the safest strong homage, needs no partner, and uses the Proud front already in the damage model. A1 is the strongest homage in a team match. A4 is the most recognisable but the riskiest, so it should wait for Legal's eye. Any of them keeps Spite compatible: A1 and A4 count as accepting help and forfeit Spite for the match (as Game Design wrote); A2 and A3 do not.
+
+**On fair use and parody.** Orb asked Legal whether these protect a good-faith tribute. I am not the person to answer that. My design rule is the strip test (`fighter-concepts-review.md`): each option above survives it because it is an idea and not a staging.
+
+## 3. Voice bibles
+
+The four voice bibles are in `docs/narrative/voices/`: `protagonist.md`, `anti-hero.md`, `tyrant.md` and `cyborg.md`. Each has the speech rhythm, vocabulary, what he never says, his reactions (winning, losing, collateral, being mocked, transforming), a grunt and laugh palette, and 5 lines per situation. The Tyrant's tail is now the bladed mantle (Orb's pick), so his lines refer to the cape.
