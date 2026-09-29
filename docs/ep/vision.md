@@ -215,3 +215,14 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 **Head flashes, answers (Orb, 2026-09-29).** The flash set: pitch changes (Orb wants options before settling on twelve). Info flashes (danger sense, found, searching) are a setting, on by default.
 
 **Flash set (Orb, 2026-09-29).** Add Hazard (info), Primed (info) and Respect (emotion). Cuts were left to the EP ('keep it dynamic and engaging'). EP ruling: cut Brink (the crown's brink ring covers it); keep Resolve as the Rally's emotional beat, firing after the crown's wear pop fades; keep Pride separate from Triumph. That makes 14 flashes, 5 of them info. Winded, Smug and Bored are held until the prototype proves the core set.
+
+**Dynamic split screen (Orb, 2026-09-29).**
+- Split only when zooming out further would make the fighters too small to read.
+- A dynamic angled divider that tilts toward the other fighter.
+- Panes always point toward each other along the shortest way round, and swap with a smooth slide when the shortest way flips, with hysteresis so it never flickers.
+- Merge: a dissolve when flying back together; the divider slams shut when charging in to attack.
+- Solo against the AI: the player chooses in settings.
+- Hiding: the hunter's pane shows only a search view, and the hider's pane is normal.
+- A small ring map of the planet shows both fighters.
+- Launches: follow the launched fighter in a short cinematic, then split if they land far away.
+- Orb questions whether hiding earns its place ('maybe it could be something for a character we introduce down the line'). The EP pitches it; see the next entry.
