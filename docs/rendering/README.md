@@ -24,7 +24,9 @@ godot --path .
 | WASD, Space, F, G, R, Q, 1-4 | P1: move, dash, light, heavy, signature, charge, stances |
 | arrows, Enter, comma, period, slash, semicolon, 7-0 | P2 (the same, as in the prototype) |
 | N / T / Y / P | new match / toggle P2 AI / toggle P1 AI / pause |
+| F2 | swap UI's HUD for the greybox HUD (until UI's playtest) |
 | F3 | performance overlay |
+| F4 | the director feed in UI's HUD |
 | Esc | quit (desktop) |
 
 The key mapping is Controls' `sim/input/keyboard.gd`. `render/core/key_codes.gd` only turns Godot's physical keys into its code names.
@@ -41,8 +43,10 @@ Main          Node3D               core/main.gd         the frame loop, input, m
 ├ Fighters    Node3D                                    one core/fighter_view.gd per fighter, built per match
 ├ Beams       Node3D               core/beam_view.gd    signature beams and beam clashes
 ├ Particles   MultiMeshInstance3D  core/particle_view.gd  the fx consumer's particles, one draw call
-└ HUD         CanvasLayer
-  └ Overlay   Control              core/hud.gd          panels, counters, banner, labels, damage numbers, feed, planet strip
+├ HUD         CanvasLayer
+│ ├ UiHud     Control              ui/hud/ui_hud.gd     UI's HUD (added in main.gd; docs/ui/hud-spec.md)
+│ └ Overlay   Control              core/hud.gd          take-over prompt, seed and tick, F3 perf; the whole greybox HUD on F2
+└ AudioVoices Node                 audio/audio_voices.gd  Audio's voice pool (added in main.gd)
 ```
 
 | File | Role |
@@ -138,6 +142,12 @@ The staged damage comes from World's own functions on a posed state, in `tools/s
 
 "Before" is the committed renderer (0bfc605) on the same sim.
 
+## Hosting UI's HUD and Audio
+
+Both are other directors' work, hosted here as their docs ask (`docs/ui/hud-spec.md` section 14, `audio/README.md` "Hooking it up"). Both only read.
+- **UI's HUD.** `main.gd` adds `ui/hud/ui_hud.tscn` under the `HUD` layer and calls `setup(ids, names)` at match start (`UiSimBridge.fighters`). `anchor_fn(slot)` returns the fighter's torso on screen, through the 3D camera, and its height in pixels (`FighterView.HEIGHT` times the zoom). `strip_fn()` returns `UiSimBridge.strip_data(S, cam_x, view width)`. Each tick, `SimHost.drained(events, lines)` fires just before `S.out.fx` is cleared, and the HUD takes the events (`consume_all`) and feed lines. Each frame it gets `UiSimBridge.patch`, and `advance(delta)` (0 while paused). The greybox HUD stays behind F2.
+- **Audio.** `SimHost` owns an `AudioCues`, reseeded per match, that reads each tick's events before they are cleared into `pending_cues`. `main.gd` adds an `AudioVoices` pool and plays the frame's cues relative to the camera's x and zoom. The bank renders every sound once at startup (about 0.3 s on desktop), so none renders mid-fight; headless tools skip that and render lazily. On the web, the page's AudioContext starts suspended and Godot resumes it on the first key or click, which is also the greybox's take-over key. This was checked in Chrome with a DevTools key press: "suspended" before, "running" after, and 23 sounds played.
+
 ## The sim boundary
 
 Rendering reads and never writes. The views read `S`, the fx consumer (`sim/core/view/fx.gd`) and the reference camera. Only `SimHost` steps the sim, toggles AI, starts matches and drains `S.out`, which is exactly the host's job in `docs/architecture/overview.md`. How many ticks run per frame is the only thing that depends on frame timing, so the tick sequence and every gameplay hash are the same at any frame rate.
@@ -183,6 +193,12 @@ A crater dug on the seam (x = 0) is exactly symmetric across it at every depth. 
 | Web 1280×720, craters, scorch and water | 1.81 / 2.30 / 2.80 ms | n/a | 0.17 ms | about 80 |
 | Desktop 1280×720, one world to the horizon | 1.03 / 1.42 / 1.80 ms | n/a | 0.14 ms | about 75 |
 | Web 1280×720, one world to the horizon | 1.93 / 2.30 / 2.80 ms | n/a | 0.19 ms | about 76 |
+| Desktop 1280×720, with UI's HUD and Audio | 2.88 / 3.66 / 4.14 ms | n/a | 0.18 ms | about 303 |
+| Desktop 1280×720, Audio, greybox HUD (`--legacy-hud`) | 1.08 / 1.52 / 2.03 ms | n/a | 0.17 ms | about 73 |
+| Web 1280×720, with UI's HUD and Audio | 5.09 / 6.30 / 7.70 ms | n/a | n/a | about 300 |
+| Web 1280×720, Audio, greybox HUD (`--legacy-hud`) | 2.00 / 2.80 / 3.70 ms | n/a | n/a | about 72 |
+
+These four rows are on the committed sim after S1 (b2e30a5 and later), same seed, and each pair ends on the same gameplay hash. UI's HUD drawing costs about 1.8 ms a frame on desktop (GPU 0.18 to 0.67 ms) and about 3 ms on the web, plus about 230 canvas draw calls: it redraws every frame in GDScript (`_draw`). Audio's share is small (86 cues over the desktop run, none dropped). Optimising the HUD is UI's, for example by caching the plates and redrawing only what changed.
 
 One world to the horizon, against the committed renderer on the same sim: desktop before was 1.07 / 1.47 / 1.74 ms with a 0.177 ms GPU frame; after, the GPU frame is 0.183 ms. The first run after a fresh import had one 169 ms shader-cache hitch, which did not repeat. Draw calls fell slightly: the backdrop meshes are gone, and the extra ground and water copies are frustum-culled except in very wide views.
 

@@ -10,11 +10,16 @@ const FEED_KEEP := 40
 
 ## After every tick, with the tick count (render/tools/determinism.gd hashes on it).
 signal ticked(n: int)
+## Every tick, with that tick's fx events and new feed lines, just before S.out is cleared: the hook for other
+## render-side readers (UI's HUD). Listeners only read.
+signal drained(events: Array, lines: Array)
 
 var S: SimState
 var cam := SimCamera.new()      # reference camera (sim/core/view/camera.gd), stepped after every tick
 var fxv := SimFxView.new(1)     # reference fx consumer (sim/core/view/fx.gd)
 var impact := ImpactFx.new()    # render-side crater, scorch and water effects (render/core/impact_fx.gd)
+var audio_cues := AudioCues.new()   # Audio's event reader (audio/audio_cues.gd); its own stream, seeded per match
+var pending_cues: Array = []    # cues made this frame's ticks, for the scene to play
 var cam_rng: SimRng             # the 'camera' cosmetic stream: shake jitter
 var seed: int = 1
 var acc: float = 0.0
@@ -41,6 +46,8 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	cam.reset()
 	fxv.reset(seed)
 	impact.reset(seed)
+	audio_cues.reset(seed)
+	pending_cues.clear()
 	cam_rng = SimRng.new(SimRng.deriveSeed(seed, "camera"))
 	acc = 0.0
 	ticks = 0
@@ -81,13 +88,16 @@ func tick(vw: float, vh: float) -> void:
 		edges.clear()
 	var t1: int = Time.get_ticks_usec()
 	cam.camStep(S, S.dt, vw, vh)
-	for l in S.out.feed:
+	var lines: Array = S.out.feed.duplicate()
+	for l in lines:
 		feed.append(l)
 	while feed.size() > FEED_KEEP:
 		feed.pop_front()
 	S.out.feed.clear()
 	fxv.consume(S, S.out.fx)
 	impact.consume(S, S.out.fx)
+	pending_cues.append_array(audio_cues.consume(S, S.out.fx))
+	drained.emit(S.out.fx, lines)
 	S.out.fx.clear()
 	if fxv.shake > 0.5:
 		jitter = Vector2((cam_rng.next() - 0.5) * fxv.shake, (cam_rng.next() - 0.5) * fxv.shake)

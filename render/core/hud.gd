@@ -1,14 +1,16 @@
 class_name HudView
 extends Control
-## The 2D overlay (prototype drawHUD and the text parts of drawFighter and drawParts): fighter panels (HP, ki, power,
-## tier, stance, menace or anguish), world counters, the chain counter, the banner, fighter labels, damage numbers,
-## the director's feed, the planet strip, the take-over prompt and the F3 performance readout.
+## The greybox 2D overlay (prototype drawHUD and the text parts of drawFighter and drawParts): fighter panels (HP,
+## ki, power, tier, stance, menace or anguish), world counters, the chain counter, the banner, fighter labels, damage
+## numbers, the director's feed and the planet strip, shown only when `legacy` is on (F2) now that UI's HUD is hosted;
+## and always the take-over prompt, the seed and tick, and the F3 performance readout.
 ## Reads the sim and the fx consumer only; world positions go to the screen through the 3D camera.
 
 const FEED_LINES := 8
 
 var main: Node       # the Main node (render/core/main.gd)
 var show_perf: bool = false
+var legacy: bool = false   # the full greybox HUD (F2), instead of UI's
 var font: Font
 
 
@@ -25,6 +27,9 @@ func _draw() -> void:
 	var S: SimState = host.S
 	var vw: float = size.x
 	var vh: float = size.y
+	if not legacy:
+		_prompt(host, vw, vh)
+		return
 	_labels(S, host)
 	_floats(host)
 	var bw: float = clampf(vw * 0.32, 150.0, 380.0)
@@ -45,9 +50,13 @@ func _draw() -> void:
 		_text(b.text, Vector2(vw * 0.5, vh * 0.28 + (1.0 - k) * 8.0), fs, Color(c, k), 0)
 	_feed(host, vh)
 	_strip(S, host, vw, vh)
+	_prompt(host, vw, vh)
+
+
+func _prompt(host: SimHost, vw: float, vh: float) -> void:
 	if not main.started:
-		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, 104), 16, Color(1, 1, 1, 0.9), 0)
-		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F3 perf", Vector2(vw * 0.5, 124), 11, Color(1, 1, 1, 0.7), 0)
+		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, vh - 96.0 if not legacy else 104.0), 16, Color(1, 1, 1, 0.9), 0)
+		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F2 old HUD, F3 perf, F4 feed", Vector2(vw * 0.5, vh - 78.0 if not legacy else 124.0), 11, Color(1, 1, 1, 0.7), 0)
 	_text("seed %d   tick %d%s" % [host.seed, host.ticks, "   PAUSED" if host.paused else ""], Vector2(vw - 10, vh - 30), 10, Color(1, 1, 1, 0.5), 1)
 	if show_perf:
 		_perf(vw)

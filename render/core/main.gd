@@ -3,10 +3,14 @@ extends Node3D
 ## interpolated between the last two ticks, in a 2.5D side-on view of the wrapped planet. It starts as an AI-vs-AI
 ## demo; any key or click hands P1 to a human (as the prototype did).
 ##
+## It hosts UI's HUD (ui/hud/ui_hud.tscn, docs/ui/hud-spec.md section 14) and Audio's voices (audio/, "Hooking it
+## up"). Both read the sim and the events SimHost drains; neither writes it. F2 swaps in the greybox HUD
+## (render/core/hud.gd) until UI's playtest, F3 shows the performance readout, F4 the director feed.
+##
 ## Rendering never writes sim state: the views read S, the fx consumer and the reference camera, and only SimHost
 ## steps the sim. render/tools/determinism.gd checks that the gameplay hashes are unchanged by rendering.
 ##
-## Command-line options (after "--"): --seed=N, --human (take P1 at start), --frames=N (quit after N frames),
+## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit), --novsync.
 ## Benchmark: godot --path . --fixed-fps 60 --resolution 1280x720 -- --seed=4 --frames=4800 --bench
 ## (--fixed-fps 60 gives exactly one sim tick per frame; with vsync off each frame runs as fast as it can, so the
@@ -35,6 +39,9 @@ var _draws := PackedInt32Array()
 var _quitting: bool = false
 var _last_usec: int = 0
 var _sky_mat: ShaderMaterial
+var ui_hud: UiHud                 # UI's HUD
+var audio: AudioVoices            # Audio's voice pool
+var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
 
 
 func _ready() -> void:
@@ -42,9 +49,21 @@ func _ready() -> void:
 	_setup_environment()
 	host = SimHost.new()
 	hud.main = self
+	ui_hud = preload("res://ui/hud/ui_hud.tscn").instantiate()
+	$HUD.add_child(ui_hud)
+	$HUD.move_child(ui_hud, 0)    # under the greybox overlay, which keeps the take-over prompt and the perf readout
+	ui_hud.anchor_fn = _hud_anchor
+	ui_hud.strip_fn = _hud_strip
+	host.drained.connect(_on_drained)
+	audio = AudioVoices.new(host.audio_cues.bank)
+	add_child(audio)
+	if DisplayServer.get_name() != "headless":
+		host.audio_cues.bank.warm()   # render every sound now, so none renders in the middle of a fight
 	start_match(int(args["seed"]) if args.has("seed") else fresh_seed())
 	if args.has("human"):
 		take_over()
+	if args.has("legacy-hud"):
+		set_legacy_hud(true)
 	if args.has("bench") or args.has("novsync"):
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
@@ -57,6 +76,8 @@ func _exit_tree() -> void:
 
 func start_match(seed: int, ai: Dictionary = {}) -> void:
 	host.new_match(seed, ai)
+	var fl: Array = UiSimBridge.fighters(host.S)
+	ui_hud.setup(fl[0], fl[1])
 	planet.build(host.S)
 	for v in fighter_views:
 		fighters_root.remove_child(v)
@@ -82,6 +103,10 @@ func frame(delta: float) -> void:
 	var n: int = host.advance(delta, vp.x, vp.y)
 	var t1: int = Time.get_ticks_usec()
 	render_view(host.alpha())
+	ui_hud.advance(0.0 if host.paused else delta)
+	for c in host.pending_cues:
+		audio.play(c, view_cam_x, cam_rig.zoom)
+	host.pending_cues.clear()
 	var t2: int = Time.get_ticks_usec()
 	# Wall-clock time since the last frame started (with --fixed-fps, delta is fixed and says nothing about cost).
 	var wall: float = (t0 - _last_usec) / 1000.0 if _last_usec > 0 else delta * 1000.0
@@ -106,7 +131,33 @@ func render_view(a: float) -> void:
 		fighter_views[i].update(S, S.fighters[i], host.fighter_pose(i, a), SimWrap.sdx(view_cam_x, host.fighter_x(i, a)), c.z)
 	beams.update(S, view_cam_x, c.z)
 	particles.update(host.fxv, host.impact, view_cam_x, c.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
+	UiSimBridge.patch(ui_hud, S)
+	ui_hud.queue_redraw()
 	hud.queue_redraw()
+
+
+## UI's HUD: each tick's events and feed lines, as SimHost drains them.
+func _on_drained(events: Array, lines: Array) -> void:
+	ui_hud.consume_all(events)
+	UiSimBridge.feed(ui_hud, lines)
+
+
+## UI's HUD anchor: a fighter's torso on screen and its height in pixels.
+func _hud_anchor(slot: int) -> Dictionary:
+	if slot < 0 or slot >= fighter_views.size():
+		return {"pos": Vector2.ZERO, "h": 0.0, "visible": false}
+	var torso: Vector3 = fighter_views[slot].global_position + Vector3(0.0, FighterView.PIVOT_Y, 0.0)
+	if cam_rig.is_position_behind(torso):
+		return {"pos": Vector2.ZERO, "h": 0.0, "visible": false}
+	var p: Vector2 = cam_rig.unproject_position(torso)
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var vis: bool = Rect2(Vector2(-200.0, -200.0), vp + Vector2(400.0, 400.0)).has_point(p)
+	return {"pos": p, "h": FighterView.HEIGHT * cam_rig.zoom, "visible": vis}
+
+
+## UI's planet strip: the bridge's data for the camera's centre and view width.
+func _hud_strip() -> Dictionary:
+	return UiSimBridge.strip_data(host.S, view_cam_x, 2.0 * cam_rig.half_width(get_viewport().get_visible_rect().size.x))
 
 
 ## Planet-scale cues and crowd legibility for this frame, from the zoom and the camera height (presentation only).
@@ -125,6 +176,13 @@ func _view_cues(c: Vector3, vp: Vector2) -> void:
 	var boost: float = clampf(RenderLook.CROWD_MIN_PX / (CrowdMesh.HEIGHT * c.z), 1.0, RenderLook.CROWD_BOOST_MAX)
 	# The shell's push directions are unit corner diagonals, so each axis moves 1/sqrt(3) of the width.
 	planet.set_crowd_view(boost, 1.732 * RenderLook.CROWD_OUTLINE_PX / c.z)
+
+
+## The greybox HUD instead of UI's (F2, or --legacy-hud at start). UI's HUD keeps reading events while hidden.
+func set_legacy_hud(on: bool) -> void:
+	legacy_hud = on
+	hud.legacy = on
+	ui_hud.visible = not on
 
 
 func take_over() -> void:
@@ -146,6 +204,12 @@ func _unhandled_input(e: InputEvent) -> void:
 		if not e.echo:
 			if code == "F3":
 				hud.show_perf = not hud.show_perf
+				return
+			if code == "F2":
+				set_legacy_hud(not legacy_hud)
+				return
+			if code == "F4":
+				ui_hud.set_option("show_feed", not bool(ui_hud.opts["show_feed"]))
 				return
 			if code == "Escape" and not OS.has_feature("web"):
 				get_tree().quit()
@@ -259,7 +323,8 @@ func _finish() -> void:
 		]
 		var head: String = "%s | %s | %s | %dx%d | %d frames after 60 warm-up | sim ticks %d, final T %.1f s" % [RenderingServer.get_current_rendering_method(), RenderingServer.get_video_adapter_name(), OS.get_name(), int(vp.x), int(vp.y), _bench[0].size(), host.ticks, host.S.T]
 		print("BENCH " + head)
-		var res: Dictionary = {"head": head, "hash": gh, "ticks": host.ticks}
+		var res: Dictionary = {"head": head, "hash": gh, "ticks": host.ticks, "audio": "%d played, %d dropped" % [audio.played, audio.dropped]}
+		print("BENCH audio %s" % res["audio"])
 		for r in rows:
 			print("BENCH %-24s %s" % [r[0], _dist(r[1])])
 			res[r[0]] = _dist(r[1])

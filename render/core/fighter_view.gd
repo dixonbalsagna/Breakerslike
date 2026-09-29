@@ -11,6 +11,7 @@ extends Node3D
 ## Reads the fighter only; never writes it.
 
 const PIVOT_Y := 34.0
+const HEIGHT := 90.0           # feet to the top of the hair, in world units (for UI's anchors)
 ## Hair outlines in the prototype's canvas units (x forward, y down), extruded to low-poly prisms. The hero's crest is
 ## swept back rather than spiked upward, to keep the placeholder away from genre-classic silhouettes.
 const HAIR_HERO: Array = [[-10, -30], [-24, -39], [-12, -41], [-19, -49], [-2, -45], [9, -46], [12, -37], [10, -30]]
