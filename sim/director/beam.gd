@@ -163,7 +163,7 @@ static func fireBeam(S: SimState, A, ox: float, oy: float, ux: float, uy: float,
 	b.A = A; b.ox = ox; b.oy = oy; b.ux = ux; b.uy = uy; b.len = len
 	b.p = 0.0; b.t = 0.0; b.life = 0.95; b.w = 24.0 + A.tier * 9.0; b.variant = variant; b.col = A.aura
 	S.beams.append(b)
-	S.fx.shake = SimMathx.jmax(S.fx.shake, 14.0)
+	SimFx.shake(S, 14.0)
 
 
 static func sampleBeam(S: SimState, b, s: float) -> void:
@@ -178,8 +178,8 @@ static func sampleBeam(S: SimState, b, s: float) -> void:
 		if b.variant == "GLASS TRENCH":
 			SimFx.spark(S, x, g + 6.0, 2, "#ffd98a", 300.0)
 	WorldStructures.damageArea(S, x, y, 26.0 + tier * 8.0, 110.0 + tier * 75.0, A)
-	if y < 30.0 and WorldTerrain.seaAt(S, x) and S.rngFx.next() < 0.6:   # cosmetic draw (module-spec section 6)
-		SimFx.splash(S, x, 0.0, 3)
+	if y < 30.0 and WorldTerrain.seaAt(S, x):
+		SimFx.beamSplash(S, x)   # the consumer rolls the prototype's 60% splash
 	if b.variant == "FIRESTORM" and y < g + 140.0:
 		SimFx.fire(S, x, g, 1)
 

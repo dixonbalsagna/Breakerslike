@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Golden vectors for the GDScript port: the JS core (math 'det') computes them, sim/core/tools/parity.gd must
+// Golden vectors for the GDScript port: the JS core in the game's modes (math 'det', fxRng 'split') computes them, sim/core/tools/parity.gd must
 // reproduce every one bit for bit. Regenerate after an intended change to the core or to a .gd file's literals:
 //   node sim/core/tools/golden.js            writes sim/core/test/golden-gd.json
 //   node sim/core/tools/golden.js --check    exits 1 if the file is stale (run by npm test)
@@ -8,13 +8,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Hasher, collect, hashValues, portSrc, stateHash } from '../hash.js';
-import { createRng, next } from '../rng.js';
+import { Hasher, collect, hashValues, portSrc, stateHash, viewHash, hashFx } from '../hash.js';
+import { createRng, next, deriveSeed } from '../rng.js';
 import { wrap, sdx } from '../wrap.js';
 import { DT } from '../constants.js';
 import * as D from '../detmath.js';
 import { createSim, newMatch, step, toggleAI } from '../sim.js';
 import { createCamera, camStep } from '../view/camera.js';
+import { createFxView, consumeFx } from '../view/fx.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SIM = path.resolve(here, '..', '..');
@@ -60,17 +61,19 @@ export const MATCHES = [...Array.from({ length: 10 }, (_, i) => ['default', i + 
 export const CHECK_EVERY = 120;
 
 const camHash = cam => { const h = new Hasher(); h.num(cam.x); h.num(cam.y); h.num(cam.z); return h.hex(); };
-const full = (S, cam) => { const s = stateHash(S); return s.gameplay + ':' + s.presentation + ':' + camHash(cam); };
+const full = (S, V, cam) => stateHash(S).gameplay + ':' + viewHash(S, V) + ':' + camHash(cam);
 const INTENT = ['mx', 'my', 'dash', 'charge', 'light', 'heavy', 'sig', 'stance'];
 
-// One golden run. Every tick folds a light digest (time, rng, fighters' core numbers and state, the feed lines); every
-// CHECK_EVERY ticks and at the end the full state (both lanes and the camera) is recorded. With a replay, the run
+// One golden run. Every tick folds a light digest (time, rng, fighters' core numbers and state, the feed lines, the fx
+// events); every CHECK_EVERY ticks and at the end the full state is recorded: the sim, the reference cosmetic view
+// (view/fx.js, fed the fx events) and the camera. With a replay, the run
 // applies its AI toggles and intents and lasts exactly replay.ticks; without, it runs to KO + 3 s or 18000 ticks.
 export function goldenRun(arm, seed, replay = null) {
-  const S = createSim({ math: 'det' }), cam = createCamera();
+  const S = createSim(), cam = createCamera();
   newMatch(S, seed, replay ? replay.ai : undefined);
+  const V = createFxView(S.game.seed);
   ARMS[arm](S.fighters);
-  const h = new Hasher(), checkpoints = [full(S, cam)], cur = [null, null];
+  const h = new Hasher(), checkpoints = [full(S, V, cam)], cur = [null, null];
   let steps = 0, ii = 0, ti = 0;
   const more = () => (replay ? steps < replay.ticks : steps < 18000 && !(S.game.ko && S.game.koT > 3));
   while (more()) {
@@ -83,9 +86,11 @@ export function goldenRun(arm, seed, replay = null) {
     for (const f of S.fighters) { for (const k of ['x', 'y', 'vx', 'vy', 'hp', 'ki', 'power', 'tier', 'stance']) h.num(f[k]); h.str(f.state); }
     for (const l of S.out.feed) { h.num(l.t); h.str(l.tag); h.str(l.sub); }
     S.out.feed.length = 0;
-    if (steps % CHECK_EVERY === 0) checkpoints.push(full(S, cam));
+    hashFx(h, S.out.fx);
+    consumeFx(V, S, S.out.fx); S.out.fx.length = 0;
+    if (steps % CHECK_EVERY === 0) checkpoints.push(full(S, V, cam));
   }
-  return { arm, seed, ticks: steps, light: h.hex(), checkpoints, final: full(S, cam) };
+  return { arm, seed, ticks: steps, light: h.hex(), checkpoints, final: full(S, V, cam) };
 }
 
 // A scripted human (P1, and P2 when both) as a replay: moves, dashes, charges, switches stance and presses attacks.
@@ -119,6 +124,9 @@ export function build() {
     g.rng[seed] = h.hex();
   }
 
+  g.streamSeeds = {};
+  for (const seed of [0, 1, 42, 4294967295]) g.streamSeeds[seed] = ['vfx.spark', 'vfx.debris', 'vfx.dust', 'vfx.splash', 'vfx.fire', 'vfx.charge', 'vfx.water', 'camera', 'audio'].map(id => deriveSeed(seed, id));
+
   let h = new Hasher();
   for (let i = 0; i < 8001; i++) h.num(wrap(-40000 + i * 10.0037));
   for (let i = 0; i < 2000; i++) { const a = i * 4.8 + 0.3, b = 9599.7 - i * 3.3; h.num(sdx(a, b)); h.num(sdx(b, a)); }
@@ -138,10 +146,10 @@ export function build() {
 
   g.tick0 = {};
   for (const seed of [1, 2, 3, 42, 1000, 4294967295]) {
-    const S = createSim({ math: 'det' }); newMatch(S, seed);
-    g.tick0[seed] = stateHash(S);
+    const S = createSim(); newMatch(S, seed);
+    g.tick0[seed] = stateHash(S).gameplay;
   }
-  const S = createSim({ math: 'det' }); newMatch(S, 1);
+  const S = createSim(); newMatch(S, 1);
   g.tick0Values = collect(portSrc(S), 'gameplay').map(tag);
 
   g.literals = gdLiterals();

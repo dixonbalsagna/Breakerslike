@@ -1,6 +1,6 @@
 // Launch planner: scores launch candidates with noise, a variety penalty and a personality term, then launches (prototype chooseLaunch, doLaunch).
 import { range } from '../core/rng.js';
-import { ring } from '../core/fx.js';
+import { ring, shake } from '../core/fx.js';
 import { groundY, seaAt } from '../world/terrain.js';
 import { biomeAt } from '../world/biomes.js';
 import { popNear, nearestBuilding } from '../world/structures.js';
@@ -29,5 +29,5 @@ export function doLaunch(S, att, tgt, plan, force){
   tgt.hidden = false; tgt.wet = (tgt.y < 0 && seaAt(S, tgt.x));
   tgt.vx = plan.ux*f; tgt.vy = plan.uy*f; tgt.spin = (plan.ux >= 0 ? 1 : -1)*range(S.rng, 8, 16);
   ring(S, tgt.x, tgt.y+34, 600, '#ffffff', 0.3, 20);
-  S.fx.shake = Math.max(S.fx.shake, 10);
+  shake(S, 10);
 }

@@ -1,48 +1,46 @@
-// Cosmetic lane (S.fx): the prototype's banner, P, spark, ring, debris, dust, splash, fire, afterimage and stepParts.
-// Every random draw here is cosmetic and uses S.rngFx (module-spec section 6); in the parity build it is S.rng itself.
-// Gameplay code never reads S.fx.
-import { wrap } from './wrap.js';
-import { next, range } from './rng.js';
-import { groundY } from '../world/terrain.js';
+// Cosmetic effects leave the sim as events (QA-002; docs/architecture/fx-events.md). Each function below appends one
+// event to S.out.fx and changes no sim state. The render side (core/view/fx.js is the reference consumer) turns the
+// events into particles, damage numbers, the banner and camera shake, with its own cosmetic random streams.
+//
+// Prototype parity: with createSim({fxRng: 'shared'}) each emitter also makes exactly the random draws the prototype's
+// effect made on the gameplay stream, at the same point, so the gameplay stream advances as it did in the prototype
+// and the port stays tick-identical to it. With 'split' (the default) no emitter draws anything.
+import { next } from './rng.js';
 
-export function banner(S, text, col, dur){ S.fx.banner = {text, col: col || '#ffffff', t: 0, dur: dur || 1.3}; }
+const emit = (S, ev) => { S.out.fx.push(ev); };
+// Burn k draws of the gameplay stream (parity mode only).
+const burn = (S, k) => { if (S.opts.fxRng === 'shared') for (let i = 0; i < k; i++) next(S.rng); };
 
-// Particle spawn. Callers build the object (and make its draws) before P runs, so draws happen even at the cap.
-export function P(S, o){
-  if (S.fx.parts.length > 2400) return;
-  S.fx.parts.push(Object.assign({life:1,age:0,grav:0,drag:0,size:3,col:'#fff',type:'dot',vx:0,vy:0,r:0,gr:0}, o));
-}
-export function spark(S, x,y,n,col,spd){
-  for (let i = 0; i < n; i++){ const a = range(S.rngFx, 0,6.283), s = range(S.rngFx, 0.3,1)*(spd||500);
-    P(S, {type:'spark',x,y,vx:S.m.cos(a)*s,vy:S.m.sin(a)*s,life:range(S.rngFx, 0.15,0.4),col:col||'#fff3c0',size:range(S.rngFx, 1.5,3)}); }
-}
-export function ring(S, x,y,gr,col,life,r0){ P(S, {type:'ring',x,y,r:r0||10,gr,life:life||0.5,col:col||'#ffffff'}); }
-export function debris(S, x,y,n,col,spd){
-  for (let i = 0; i < n; i++){ const a = range(S.rngFx, 0.2,2.9); const s = range(S.rngFx, 0.2,1)*(spd||500);
-    P(S, {type:'deb',x:x+range(S.rngFx, -20,20),y,vx:S.m.cos(a)*s*(next(S.rngFx)<0.5?-1:1),vy:S.m.sin(a)*s,grav:900,life:range(S.rngFx, 0.8,1.8),col:col||'#6d6a66',size:range(S.rngFx, 3,9)}); }
-}
-export function dust(S, x,y,n,col){
-  for (let i = 0; i < n; i++) P(S, {type:'dust',x:x+range(S.rngFx, -40,40),y:y+range(S.rngFx, 0,20),vx:range(S.rngFx, -90,90),vy:range(S.rngFx, 20,140),life:range(S.rngFx, 0.8,1.8),col:col||'#9b8f7e',size:range(S.rngFx, 14,34),drag:0.02});
-}
-export function splash(S, x,y,n){
-  for (let i = 0; i < n; i++) P(S, {type:'splash',x:x+range(S.rngFx, -30,30),y,vx:range(S.rngFx, -160,160),vy:range(S.rngFx, 250,900),grav:1200,life:range(S.rngFx, 0.7,1.5),col:'#bfe6ff',size:range(S.rngFx, 2,5)});
-}
-export function fire(S, x,y,n){
-  for (let i = 0; i < n; i++) P(S, {type:'flame',x:x+range(S.rngFx, -25,25),y:y+range(S.rngFx, 0,30),vx:range(S.rngFx, -30,30),vy:range(S.rngFx, 60,200),life:range(S.rngFx, 0.5,1.3),col:next(S.rngFx)<0.5?'#ff9a2e':'#ffd45a',size:range(S.rngFx, 6,16)});
-}
-export function afterimage(S, f){ P(S, {type:'after',x:f.x,y:f.y,life:0.45,col:f.aura,face:f.face}); }
+// Draws per particle in the prototype's effect functions.
+const DRAWS = { spark: 4, debris: 6, dust: 6, splash: 5, fire: 7 };
 
-// Particles (swap-remove when expired), then the damage numbers.
-export function stepParts(S, dt){
-  const parts = S.fx.parts, floats = S.fx.floats;
-  for (let i = parts.length - 1; i >= 0; i--){
-    const p = parts[i]; p.age += dt;
-    if (p.age >= p.life){ parts[i] = parts[parts.length-1]; parts.pop(); continue; }
-    p.vy -= p.grav*dt;
-    if (p.drag){ const d = S.m.pow(1 - p.drag, dt*60); p.vx *= d; p.vy *= d; }
-    p.x = wrap(p.x + p.vx*dt); p.y += p.vy*dt;
-    if (p.type === 'ring') p.r += p.gr*dt;
-    if (p.type === 'deb'){ const g = groundY(S, p.x); if (p.y < g){ p.y = g; p.vy *= -0.3; p.vx *= 0.6; } }
+export function spark(S, x, y, n, col, spd){ emit(S, {type:'spark', x, y, n, col: col || '#fff3c0', spd: spd || 500}); burn(S, n*DRAWS.spark); }
+export function ring(S, x, y, gr, col, life, r0){ emit(S, {type:'ring', x, y, gr, col: col || '#ffffff', life: life || 0.5, r0: r0 || 10}); }
+export function debris(S, x, y, n, col, spd){ emit(S, {type:'debris', x, y, n, col: col || '#6d6a66', spd: spd || 500}); burn(S, n*DRAWS.debris); }
+export function dust(S, x, y, n, col){ emit(S, {type:'dust', x, y, n, col: col || '#9b8f7e'}); burn(S, n*DRAWS.dust); }
+export function splash(S, x, y, n){ emit(S, {type:'splash', x, y, n}); burn(S, n*DRAWS.splash); }
+export function fire(S, x, y, n){ emit(S, {type:'fire', x, y, n}); burn(S, n*DRAWS.fire); }
+// An afterimage of f: 0.45 s for a dodge or escape, 0.16 s for each tick of a rush trail.
+export function afterimage(S, f, life = 0.45){ emit(S, {type:'after', x: f.x, y: f.y, life, col: f.aura, face: f.face}); }
+export function banner(S, text, col, dur){ emit(S, {type:'banner', text, col: col || '#ffffff', dur: dur || 1.3}); }
+// A damage number; the consumer prints String(Math.round(amount)).
+export function damageNumber(S, x, y, amount, col){ emit(S, {type:'damage', x, y, amount, col}); }
+// Camera shake request: the consumer keeps shake = max(shake, k) and decays it at the end of the tick.
+export function shake(S, k){ emit(S, {type:'shake', k}); }
+
+// A charging fighter's aura, once per charging tick. The prototype rolled 40% for a spark and 6% for a dust puff when
+// the fighter was within 30 of the ground; the consumer rolls those now.
+export function chargeFx(S, f, ground){
+  emit(S, {type:'charge', x: f.x, y: f.y, col: f.aura, ground});
+  if (S.opts.fxRng === 'shared'){
+    if (next(S.rng) < 0.4) burn(S, 4);
+    if (next(S.rng) < 0.06 && f.y < ground + 30) burn(S, DRAWS.dust);
   }
-  for (let i = floats.length - 1; i >= 0; i--){ const f = floats[i]; f.t += dt; f.y += 60*dt; if (f.t > 0.9) floats.splice(i, 1); }
 }
+// A beam sample low over water. The prototype rolled 60% for a splash of 3; the consumer rolls it now.
+export function beamSplash(S, x){
+  emit(S, {type:'beamSplash', x});
+  if (S.opts.fxRng === 'shared' && next(S.rng) < 0.6) burn(S, 3*DRAWS.splash);
+}
+// End of the sim's part of a tick: where the prototype stepped its particles (dt, or dt*0.1 during hit-stop).
+export function tickMark(S, dt, frozen){ emit(S, {type:'tick', dt, frozen}); }

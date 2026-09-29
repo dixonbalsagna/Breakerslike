@@ -1,8 +1,9 @@
 // Replays: a seed, the AI flags and the intents the host passed to step() reproduce a match bit for bit. A replay is plain
-// JSON: {format, v, seed, ai, ticks, inputs, toggles, checkpoints, final}.
+// JSON: {format, v, sim, seed, ai, ticks, inputs, toggles, checkpoints, final}.
+//   sim          the sim's modes ({math, fxRng}): they change trajectories, so a replay plays back in the same ones
 //   inputs       [tick, slot, intent|null], only where a slot's intent changed from its previous one
 //   toggles      [tick, slot]: toggleAI before that tick
-//   checkpoints  [tick, gameplay hash] every CHECK_EVERY ticks; final: both lane hashes at the end
+//   checkpoints  [tick, gameplay hash] every CHECK_EVERY ticks; final: the sim state hash at the end
 // Intents, not raw keys, are recorded, so a replay does not depend on the key mapping.
 import { createSim, newMatch, step, toggleAI } from './sim.js';
 import { stateHash } from './hash.js';
@@ -15,7 +16,7 @@ const same = (a, b) => (!a || !b ? a === b : INTENT.every(k => a[k] === b[k]));
 // Start recording a match on a fresh newMatch(S, seed, ai). Use rec.step and rec.toggle instead of step and toggleAI.
 export function recorder(S, seed, ai = {}) {
   newMatch(S, seed, ai);
-  const rp = { format: 'meridian-replay', v: 1, seed, ai: { p1: !!S.fighters[0].ai, p2: !!S.fighters[1].ai }, ticks: 0, inputs: [], toggles: [], checkpoints: [], final: null };
+  const rp = { format: 'meridian-replay', v: 1, sim: { math: S.opts.math, fxRng: S.opts.fxRng }, seed, ai: { p1: !!S.fighters[0].ai, p2: !!S.fighters[1].ai }, ticks: 0, inputs: [], toggles: [], checkpoints: [], final: null };
   const last = [null, null];
   return {
     replay: rp,
@@ -30,10 +31,10 @@ export function recorder(S, seed, ai = {}) {
   };
 }
 
-// Re-run a replay and verify it. Returns {ok, firstBadTick (null if ok), final} where final is the replayed end state's hashes.
+// Re-run a replay and verify it. Returns {ok, firstBadTick (null if ok), final} where final is the replayed end state's hash.
 export function play(rp, opts = {}) {
   if (rp.format !== 'meridian-replay' || rp.v !== 1) throw new Error('not a meridian-replay v1');
-  const S = createSim(opts);
+  const S = createSim({ ...rp.sim, ...opts });
   newMatch(S, rp.seed, rp.ai);
   const cur = [null, null], checks = new Map(rp.checkpoints);
   let ii = 0, ti = 0;
@@ -45,6 +46,6 @@ export function play(rp, opts = {}) {
     if (want !== undefined && want !== stateHash(S).gameplay) return { ok: false, firstBadTick: t + 1, final: stateHash(S) };
   }
   const final = stateHash(S);
-  const ok = !rp.final || (final.gameplay === rp.final.gameplay && final.presentation === rp.final.presentation);
+  const ok = !rp.final || final.gameplay === rp.final.gameplay;
   return { ok, firstBadTick: ok ? null : rp.ticks, final };
 }

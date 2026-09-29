@@ -40,6 +40,13 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
 - Needs a ruling from Game Design and Controls: a human can switch stance while locked in an exchange and take 0.38x damage (sim/README.md, bug 3).
 - For ADR 0001: docs/architecture/determinism.md recommends deterministic binary64 floats with our own trig functions. It advises against C# for the sim while Godot C# can't export to the browser.
 
+## GDScript port and fx split (2026-09-29)
+- The GDScript sim is bit-identical to the det-mode JS core (26479d5), and CI runs the Godot parity job on Linux.
+- The QA-002 split has landed: the sim holds only gameplay state, and cosmetic effects arrive as fx events (docs/architecture/fx-events.md). Tick mean 35 µs; projected worst case on an old laptop 1.4 to 2.4 ms.
+- Ownership of sim/world, sim/director and sim/input (both twins) now passes to World, Encounter Systems and Controls. Announce it in each one's next brief. The JS core stays the oracle; any sim change touches both twins and the goldens.
+- Give docs/architecture/fx-events.md to Rendering (first brief), VFX, Camera and Audio. The 'camera' and 'audio' stream ids are reserved for them.
+- Simulation's next items (held): integer tick timers (determinism.md hazard 1), before Netcode's rollback work.
+
 ## Queued for idle directors (send when they resume)
 - **QA:**
   - Raise the match cap to 900 s for game-scale batches.

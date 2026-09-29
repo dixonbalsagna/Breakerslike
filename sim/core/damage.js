@@ -1,6 +1,6 @@
 // Damage model: the prototype's hurt, hit and ko.
 import { opp } from './roster.js';
-import { spark, banner } from './fx.js';
+import { spark, banner, damageNumber, shake } from './fx.js';
 import { feed } from './events.js';
 import { endEx } from '../director/exchange.js';
 import { doLaunch } from '../director/launch.js';
@@ -20,9 +20,9 @@ export function hit(S, ex, A, D, dmg, o){
   A.ki = Math.min(100, A.ki + dd*0.04);
   D.power = Math.min(100, D.power + dd*0.010); A.power = Math.min(100, A.power + dd*0.006);
   spark(S, D.x, D.y+34, o.big ? 18 : 9, '#fff3c0', 600);
-  S.fx.floats.push({x:D.x, y:D.y+90, txt:String(Math.round(dd)), t:0, col:o.ignoreStance ? '#ffd45a' : '#ffffff'});
+  damageNumber(S, D.x, D.y+90, dd, o.ignoreStance ? '#ffd45a' : '#ffffff');
   S.dirS.stop = Math.max(S.dirS.stop, o.stop || 0.05);
-  S.fx.shake = Math.max(S.fx.shake, o.shake || 6);
+  shake(S, o.shake || 6);
   hurt(S, D, dd, A);
   return dd;
 }

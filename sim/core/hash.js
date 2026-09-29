@@ -1,6 +1,8 @@
 // Canonical state view and hash. The same walk runs over the port's S and over the prototype's internals, so the parity
 // tools can compare the two field by field, and replays can checkpoint the port with one short hash.
-// Two lanes: gameplay (everything the rules read or write) and presentation (particles, damage numbers, banner, shake).
+// Two lanes: gameplay (the sim state: everything the rules read or write) and presentation (the cosmetic view that the
+// render side builds from fx events: particles, damage numbers, banner, shake). Since the QA-002 split the sim holds
+// only the gameplay lane; the presentation lane comes from core/view/fx.js (or, for parity, from the prototype).
 
 // Two 32-bit lanes over the raw IEEE-754 bits of every value (exact, order sensitive). Same algorithm as QA's Hasher.
 const f64 = new Float64Array(1), u32 = new Uint32Array(f64.buffer);
@@ -43,16 +45,15 @@ function args(w, v) {
   for (const k of keys) { w.leaf(k); args(w, v[k]); }
 }
 
-// src: {T, rngState, rngFxState, game:{ko,koT,ts,seed,clash}, banner, shake, dirS, fighters, world, buildings, trees, deform,
+// src: {T, rngState, game:{ko,koT,ts,seed,clash}, banner, shake, dirS, fighters, world, buildings, trees, deform,
 //       beams, parts, floats, beatDetail}
 export function collect(src, lane, out = [], paths = null) {
   const w = walker(out, paths), fs = src.fighters, idx = f => (f == null ? -1 : fs.indexOf(f));
   if (lane === 'presentation') {
-    w.at('rngFx'); w.leaf(src.rngFxState); w.up();
     w.at('shake'); w.leaf(src.shake); w.up();
     w.obj(src.banner, ['text', 'col', 't', 'dur'], 'banner');
     w.at('floats'); w.leaf(src.floats.length); src.floats.forEach((f, i) => w.obj(f, FLOAT, i)); w.up();
-    w.at('parts'); w.leaf(src.parts.length); src.parts.forEach((p, i) => w.obj(p, PART, i)); w.up();
+    if (src.parts) { w.at('parts'); w.leaf(src.parts.length); src.parts.forEach((p, i) => w.obj(p, PART, i)); w.up(); }   // null: skipped
     return out;
   }
   w.at('T'); w.leaf(src.T); w.up();
@@ -114,14 +115,30 @@ export function firstDiff(a, b) {
 // Path of the i-th value of a lane, for error messages.
 export function pathAt(src, lane, i) { const paths = []; collect(src, lane, [], paths); return paths[i] || '(past end)'; }
 
-export function portSrc(S, beatDetail = true) {
-  return { T: S.T, rngState: S.rng.a | 0, rngFxState: S.rngFx === S.rng ? null : S.rngFx.a | 0, game: S.game, banner: S.fx.banner, shake: S.fx.shake,
-    dirS: S.dirS, fighters: S.fighters, world: S.world, buildings: S.buildings, trees: S.trees, deform: S.deform, beams: S.beams,
-    parts: S.fx.parts, floats: S.fx.floats, beatDetail };
+// The walk's source for the port: the sim S (gameplay) and, optionally, a cosmetic view V from core/view/fx.js.
+export function portSrc(S, beatDetail = true, V = null) {
+  return { T: S.T, rngState: S.rng.a | 0, game: S.game, dirS: S.dirS, fighters: S.fighters, world: S.world, buildings: S.buildings,
+    trees: S.trees, deform: S.deform, beams: S.beams, beatDetail,
+    banner: V ? V.banner : null, shake: V ? V.shake : 0, floats: V ? V.floats : [], parts: V ? V.parts : [] };
 }
 
-// Hash of the whole port state, one hex string per lane (replay checkpoints use the gameplay lane).
+// Hash of the sim state (replay checkpoints use it).
 export function stateHash(S) {
-  const src = portSrc(S);
-  return { gameplay: hashValues(collect(src, 'gameplay')), presentation: hashValues(collect(src, 'presentation')) };
+  return { gameplay: hashValues(collect(portSrc(S), 'gameplay')) };
+}
+// Hash of a cosmetic view (core/view/fx.js).
+export function viewHash(S, V) { return hashValues(collect(portSrc(S, true, V), 'presentation')); }
+
+// Canonical field order of each fx event type (docs/architecture/fx-events.md); hashFx folds events into a Hasher.
+export const FX_FIELDS = {
+  spark: ['x', 'y', 'n', 'col', 'spd'], ring: ['x', 'y', 'gr', 'col', 'life', 'r0'], debris: ['x', 'y', 'n', 'col', 'spd'],
+  dust: ['x', 'y', 'n', 'col'], splash: ['x', 'y', 'n'], fire: ['x', 'y', 'n'], after: ['x', 'y', 'life', 'col', 'face'],
+  charge: ['x', 'y', 'col', 'ground'], beamSplash: ['x'], damage: ['x', 'y', 'amount', 'col'], banner: ['text', 'col', 'dur'],
+  shake: ['k'], tick: ['dt', 'frozen'],
+};
+export function hashFx(h, events) {
+  for (const e of events) {
+    h.str(e.type);
+    for (const k of FX_FIELDS[e.type]) { const v = e[k]; if (typeof v === 'number') h.num(v); else if (typeof v === 'string') h.str(v); else h.u(v ? 4 : 3); }
+  }
 }

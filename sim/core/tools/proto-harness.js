@@ -42,7 +42,7 @@ export function createPlainHarness() { return QA.createHarness({ html: PROTO_HTM
 // The prototype's state in the shape hash.js's collect() walks.
 export function protoSrc(h) {
   const wf = h.wf, it = wf.__int();
-  return { T: wf.T(), rngState: it.rngState, rngFxState: null, game: wf.game, banner: wf.game.banner, shake: wf.cam.shake, dirS: wf.dirS,
+  return { T: wf.T(), rngState: it.rngState, game: wf.game, banner: wf.game.banner, shake: wf.cam.shake, dirS: wf.dirS,
     fighters: wf.fighters(), world: wf.world(), buildings: wf.buildings(), trees: it.trees, deform: it.deform, beams: it.beams,
     parts: it.parts, floats: it.floats, beatDetail: false };
 }

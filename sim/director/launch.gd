@@ -48,4 +48,4 @@ static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float) -> v
 	tgt.vy = plan.uy * f
 	tgt.spin = (1.0 if plan.ux >= 0.0 else -1.0) * S.rng.range_(8.0, 16.0)
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 600.0, "#ffffff", 0.3, 20.0)
-	S.fx.shake = SimMathx.jmax(S.fx.shake, 10.0)
+	SimFx.shake(S, 10.0)

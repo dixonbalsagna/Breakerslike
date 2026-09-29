@@ -2,7 +2,7 @@
 import { sdx } from '../core/wrap.js';
 import { clamp } from '../core/mathx.js';
 import { groundY, crater } from './terrain.js';
-import { spark, ring, debris, dust, fire } from '../core/fx.js';
+import { spark, ring, debris, dust, fire, shake } from '../core/fx.js';
 
 // Standing height shrinks with damage to 30 percent of full; a destroyed building leaves 9 units of rubble.
 export function curH(b){ return b.alive ? b.h*(0.3 + 0.7*b.hp/b.maxhp) : 9; }
@@ -28,7 +28,7 @@ export function damageBuilding(S, b, d, cause){
     casualty(S, b.popAlive, cause); b.popAlive = 0;
     debris(S, b.x, gy + b.h*0.5, 14, b.kind === 'tower' ? '#77808f' : '#8a6a4a', 620);
     dust(S, b.x, gy, 5, '#a89f92');
-    if (b.h > 200) S.fx.shake = Math.max(S.fx.shake, 10);
+    if (b.h > 200) shake(S, 10);
   } else {
     debris(S, b.x, gy + curH(b), 4, '#77808f', 300);
   }
@@ -53,7 +53,7 @@ export function explode(S, x, y, r, cause){
   fire(S, x,y,10); debris(S, x,y,10,'#6d6a66',700);
   damageArea(S, x,y,r*1.8,130 + cause.tier*110,cause);
   if (y < groundY(S, x) + r) crater(S, x, r*0.9, 18 + cause.tier*8, cause);
-  S.fx.shake = Math.max(S.fx.shake, 16); S.dirS.stop = Math.max(S.dirS.stop, 0.08);
+  shake(S, 16); S.dirS.stop = Math.max(S.dirS.stop, 0.08);
 }
 
 // Living civilians in standing buildings centred within r of x, scaled so 70 or more reads 1.

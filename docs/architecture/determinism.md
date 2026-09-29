@@ -38,7 +38,7 @@ The whole deterministic-risk surface is therefore four library functions (sin, c
 2. **`wrap()` rounds values that are already in range.** `((x % W) + W) % W` adds W before the second `%`, so a non-integer x in [0, W) can come back with different last bits (6797.300000000001 becomes 6797.300000000003). Every position update goes through it. A port that writes the obvious conditional wrap (`x < 0 ? x + W : x`) will diverge. Ports must copy the formula exactly (see the test in `sim/core/test/wrap.test.js`).
 3. **Evaluation order is behaviour.** Object-literal property order, short-circuit conditions and argument order decide the random-draw order (module-spec section 1). A port that reorders a literal changes the match.
 4. **Slot order.** Slot 0 always simulates before slot 1 within a tick. This is deterministic, but it creates a small first-mover asymmetry (QA's mirror-match slot deficit) that any port must preserve until Game Design decides otherwise.
-5. **Cosmetics on the sim stream (QA-002).** Until the split lands, any VFX change rewrites gameplay.
+5. **Cosmetics on the sim stream (QA-002).** Resolved: effects are events now, and cosmetic randomness lives in per-consumer streams (fx-events.md).
 6. **`-0` and NaN.** The sim can produce -0. Snapshot and transport formats must preserve it (overview.md section 4).
 
 ## 4. Per language
@@ -105,18 +105,17 @@ Node v24.19.0, on the machine in Research's plan (Ryzen 7 9800X3D). The 1000-mat
 
 At 60 ticks per second one tick takes under 0.02% of a frame, so the JS sim is far inside any budget, rollback included. Particles are the one unbounded cost (up to 2400) and belong to the cosmetic lane.
 
-**GDScript core (Godot 4.7.2 editor binary, headless; 10 AI matches, 42,632 ticks, camera follow included).** It matches the det-mode JS core bit for bit (`sim/core/tools/parity.gd`).
+**GDScript core (Godot 4.7.2 editor binary, headless; 10 AI matches, about 47,800 ticks).** It matches the det-mode JS core bit for bit (`sim/core/tools/parity.gd`). The sim tick is `step()` alone; the reference cosmetic consumer and the camera follow are render-side work and are timed apart.
 
 | | mean | p50 | p99 | worst tick |
 | :--- | :--- | :--- | :--- | :--- |
-| GDScript tick, this machine | 83-87 µs | 45 µs | 0.81 ms | 2.1 ms |
-| same, particles dropped every tick | 37 µs | 31 µs | 0.23 ms | 1.7 ms |
+| GDScript sim tick before the QA-002 split (particles inside the sim) | 85 µs | 45 µs | 0.81 ms | 2.1 ms |
+| **GDScript sim tick after the split** | **35 µs** | 33 µs | **0.15 ms** | **0.55-0.62 ms** |
+| Reference cosmetic consumer and camera (render side, CPU particles) | 45 µs | 15 µs | 0.61 ms | 1.7 ms |
 | JS det tick, this machine | 2.8 µs | 1.1 µs | 24 µs | 0.65 ms |
-| **Projected old laptop** (2.6 to 3.9 times slower single-threaded, Research's PassMark ratios) | 0.22-0.34 ms | | 2.1-3.2 ms | 5.5-8.4 ms |
+| **Projected old laptop, sim tick after the split** (2.6 to 3.9 times slower single-threaded, Research's PassMark ratios) | 0.09-0.14 ms | | 0.39-0.60 ms | 1.4-2.4 ms |
 
-GDScript runs about 30 times slower than V8 on this sim (Research measured 18 times on its simpler reference sim). One tick per 16.7 ms frame fits on the projected old laptop on average (about 2% of a frame). The tail comes from beam and explosion ticks: about 3 ms at p99 and up to about 8 ms at worst. That leaves too little room for rendering on the same CPU in the worst frames.
-
-The cosmetic particles are over half the mean cost and most of the p99. Moving them out of the sim (the QA-002 split, then drawing them on the render side) is the first optimisation. The second is the per-sample building loop in beam sweeps.
+After the split, the sim tick fits comfortably on the projected old laptop: 0.1 ms is under 1% of a 16.7 ms frame, and even the worst tick uses about 15%. The cosmetic cost moved to the render side, where the real renderer will likely use GPU particles rather than this CPU reference consumer. Rollback (after launch) would multiply the sim tick by the number of resimulated frames. At 8 frames that is about 0.7-1.1 ms on average on the projected old laptop, inside the 1 to 3 ms that ADR 0001 names as its revisit trigger.
 
 These are projections from a desktop, not measurements on old hardware, and the editor binary is somewhat slower than a release export. Rollback (after launch) multiplies the tick by the number of resimulated frames, which is the trigger ADR 0001 names for revisiting the language.
 

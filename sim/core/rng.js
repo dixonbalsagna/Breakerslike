@@ -14,3 +14,15 @@ export function next(r) {
 
 // Uniform in [a, b): the prototype's R(a, b), with the same arithmetic.
 export function range(r, a, b) { return a + (b - a) * next(r); }
+
+// Seed of a cosmetic stream (the canonical RNG rule, overview.md section 3): fmix32(matchSeed ^ fnv1a32(id)), with
+// FNV-1a over the id's UTF-16 code units and fmix32 the MurmurHash3 finaliser. Integer ops only, so every language
+// derives the same seed. Ids: 'vfx.spark', 'vfx.debris', 'vfx.dust', 'vfx.splash', 'vfx.fire', 'vfx.charge',
+// 'vfx.water', 'camera', 'audio'.
+export function deriveSeed(seed, id) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  let x = (seed ^ h) >>> 0;
+  x ^= x >>> 16; x = Math.imul(x, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); x ^= x >>> 16;
+  return x >>> 0;
+}

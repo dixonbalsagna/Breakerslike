@@ -65,19 +65,20 @@ static func _args(out: Array, v) -> void:
 		_args(out, v[k])
 
 
-## hash.js collect() for the GDScript state. lane is "gameplay" or "presentation".
-static func collect(S: SimState, lane: String, beatDetail: bool = true) -> Array:
+## hash.js collect() for the GDScript state. lane is "gameplay" (the sim S) or "presentation" (the cosmetic view V).
+static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFxView = null) -> Array:
 	var out: Array = []
 	var fs: Array = S.fighters
 	if lane == "presentation":
-		out.append(null if S.rngFx == S.rng else float(S.rngFx.state_i32()))
-		out.append(S.fx.shake)
-		_obj(out, S.fx.banner, ["text", "col", "t", "dur"])
-		out.append(float(S.fx.floats.size()))
-		for f in S.fx.floats:
+		out.append(V.shake if V != null else 0.0)
+		_obj(out, V.banner if V != null else null, ["text", "col", "t", "dur"])
+		var floats: Array = V.floats if V != null else []
+		var parts: Array = V.parts if V != null else []
+		out.append(float(floats.size()))
+		for f in floats:
 			_obj(out, f, FLOAT)
-		out.append(float(S.fx.parts.size()))
-		for p in S.fx.parts:
+		out.append(float(parts.size()))
+		for p in parts:
 			_obj(out, p, PART)
 		return out
 	out.append(S.T)
@@ -157,6 +158,36 @@ static func hashValues(vals: Array) -> String:
 	return h.hex()
 
 
-## hash.js stateHash(S).
+## hash.js stateHash(S): the sim state.
 static func stateHash(S: SimState) -> Dictionary:
-	return {"gameplay": hashValues(collect(S, "gameplay")), "presentation": hashValues(collect(S, "presentation"))}
+	return {"gameplay": hashValues(collect(S, "gameplay"))}
+
+
+## hash.js viewHash(S, V): a cosmetic view.
+static func viewHash(S: SimState, V: SimFxView) -> String:
+	return hashValues(collect(S, "presentation", true, V))
+
+
+## hash.js FX_FIELDS and hashFx: fold fx events into a Hasher, fields in the canonical order of their type.
+const FX_FIELDS: Dictionary = {
+	"spark": ["x", "y", "n", "col", "spd"], "ring": ["x", "y", "gr", "col", "life", "r0"], "debris": ["x", "y", "n", "col", "spd"],
+	"dust": ["x", "y", "n", "col"], "splash": ["x", "y", "n"], "fire": ["x", "y", "n"], "after": ["x", "y", "life", "col", "face"],
+	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col"], "banner": ["text", "col", "dur"],
+	"shake": ["k"], "tick": ["dt", "frozen"],
+}
+
+
+static func hashFx(h: Hasher, events: Array) -> void:
+	for e in events:
+		h.text(e.type)
+		for k in FX_FIELDS[e.type]:
+			var v = e.get(k)
+			match typeof(v):
+				TYPE_FLOAT:
+					h.num(v)
+				TYPE_INT:
+					h.num(float(v))
+				TYPE_STRING:
+					h.text(v)
+				TYPE_BOOL:
+					h.u(4 if v else 3)

@@ -42,15 +42,9 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	D.power = SimMathx.jmin(100.0, D.power + dd * 0.010)
 	A.power = SimMathx.jmin(100.0, A.power + dd * 0.006)
 	SimFx.spark(S, D.x, D.y + 34.0, 18 if o.get("big", false) else 9, "#fff3c0", 600.0)
-	var fl := SimState.DmgFloat.new()
-	fl.x = D.x
-	fl.y = D.y + 90.0
-	fl.txt = SimMathx.jstr(SimMathx.jround(dd))
-	fl.t = 0.0
-	fl.col = "#ffd45a" if o.get("ignoreStance", false) else "#ffffff"
-	S.fx.floats.append(fl)
+	SimFx.damageNumber(S, D.x, D.y + 90.0, dd, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff")
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, jor(o.get("stop", 0.0), 0.05))
-	S.fx.shake = SimMathx.jmax(S.fx.shake, jor(o.get("shake", 0.0), 6.0))
+	SimFx.shake(S, jor(o.get("shake", 0.0), 6.0))
 	hurt(S, D, dd, A)
 	return dd
 

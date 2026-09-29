@@ -4,7 +4,7 @@ import { clamp } from '../core/mathx.js';
 import { next, range } from '../core/rng.js';
 import { hit } from '../core/damage.js';
 import { feed } from '../core/events.js';
-import { banner, spark, ring, afterimage } from '../core/fx.js';
+import { banner, spark, ring, afterimage, shake } from '../core/fx.js';
 import { groundY, crater } from '../world/terrain.js';
 import { damageArea } from '../world/structures.js';
 import { schedule } from './exchange.js';
@@ -117,7 +117,7 @@ export function opDodge(S, ex, args){
 // Beat 'guardBreak': the defensive guard shatters.
 export function opGuardBreak(S, ex, args){
   const D = ex.D;
-  if (ex.cancel) return; D.ki = Math.max(0, D.ki - 25); banner(S, 'GUARD BREAK', '#ffd45a', 0.8); S.fx.shake = Math.max(S.fx.shake, 12);
+  if (ex.cancel) return; D.ki = Math.max(0, D.ki - 25); banner(S, 'GUARD BREAK', '#ffd45a', 0.8); shake(S, 12);
 }
 
 export function clashWave(S, ex){
@@ -128,7 +128,7 @@ export function clashWave(S, ex){
   const tier = Math.max(A.tier, D.tier);
   if (my < groundY(S, mx) + 200) crater(S, mx, 60 + tier*16, 10 + tier*4, A);
   damageArea(S, mx, my, 160 + tier*40, 110 + tier*80, A);
-  banner(S, 'CLASH', '#ffffff', 0.7); S.fx.shake = Math.max(S.fx.shake, 18);
+  banner(S, 'CLASH', '#ffffff', 0.7); shake(S, 18);
 }
 
 export function strike(S, ex, a, d, dmg, o){

@@ -1,150 +1,93 @@
 class_name SimFx
-## Cosmetic lane (S.fx): the twin of fx.js (banner, P, spark, ring, debris, dust, splash, fire, afterimage, stepParts).
-## Every draw here uses S.rngFx. Each particle is built in the JS object literal's order, so the draws happen in the
-## same order (and happen even when P then drops the particle at the cap).
+## Cosmetic effects leave the sim as events: the twin of fx.js (docs/architecture/fx-events.md). Each function appends
+## one FxEvent to S.out.fx and changes no sim state; the render side (view/fx.gd is the reference consumer) turns them
+## into particles, damage numbers, the banner and camera shake with its own cosmetic streams. The GDScript core has
+## only the canonical 'split' mode, so no emitter draws anything (fx.js's 'shared' mode exists for prototype parity).
 
 
-static func banner(S: SimState, text: String, col: String, dur: float) -> void:
-	var b := SimState.Banner.new()
-	b.text = text
-	b.col = col if col != "" else "#ffffff"
-	b.t = 0.0
-	b.dur = dur if dur != 0.0 else 1.3
-	S.fx.banner = b
-
-
-## Particle spawn: the caller has already made its draws.
-static func P(S: SimState, p: SimState.Part) -> void:
-	if S.fx.parts.size() > 2400:
-		return
-	S.fx.parts.append(p)
+static func _ev(S: SimState, type: String) -> SimState.FxEvent:
+	var e := SimState.FxEvent.new()
+	e.type = type
+	S.out.fx.append(e)
+	return e
 
 
 static func spark(S: SimState, x: float, y: float, n: int, col: String, spd: float) -> void:
-	var r: SimRng = S.rngFx
-	for i in range(n):
-		var a: float = r.range_(0.0, 6.283)
-		var s: float = r.range_(0.3, 1.0) * (spd if spd != 0.0 else 500.0)
-		var p := SimState.Part.new()
-		p.type = "spark"; p.x = x; p.y = y
-		p.vx = SimDetMath.cos(a) * s
-		p.vy = SimDetMath.sin(a) * s
-		p.life = r.range_(0.15, 0.4)
-		p.col = col if col != "" else "#fff3c0"
-		p.size = r.range_(1.5, 3.0)
-		P(S, p)
+	var e := _ev(S, "spark")
+	e.x = x; e.y = y; e.n = n
+	e.col = col if col != "" else "#fff3c0"
+	e.spd = spd if spd != 0.0 else 500.0
 
 
 static func ring(S: SimState, x: float, y: float, gr: float, col: String, life: float, r0: float) -> void:
-	var p := SimState.Part.new()
-	p.type = "ring"; p.x = x; p.y = y
-	p.r = r0 if r0 != 0.0 else 10.0
-	p.gr = gr
-	p.life = life if life != 0.0 else 0.5
-	p.col = col if col != "" else "#ffffff"
-	P(S, p)
+	var e := _ev(S, "ring")
+	e.x = x; e.y = y; e.gr = gr
+	e.col = col if col != "" else "#ffffff"
+	e.life = life if life != 0.0 else 0.5
+	e.r0 = r0 if r0 != 0.0 else 10.0
 
 
 static func debris(S: SimState, x: float, y: float, n: int, col: String, spd: float) -> void:
-	var r: SimRng = S.rngFx
-	for i in range(n):
-		var a: float = r.range_(0.2, 2.9)
-		var s: float = r.range_(0.2, 1.0) * (spd if spd != 0.0 else 500.0)
-		var p := SimState.Part.new()
-		p.type = "deb"
-		p.x = x + r.range_(-20.0, 20.0)
-		p.y = y
-		p.vx = SimDetMath.cos(a) * s * (-1.0 if r.next() < 0.5 else 1.0)
-		p.vy = SimDetMath.sin(a) * s
-		p.grav = 900.0
-		p.life = r.range_(0.8, 1.8)
-		p.col = col if col != "" else "#6d6a66"
-		p.size = r.range_(3.0, 9.0)
-		P(S, p)
+	var e := _ev(S, "debris")
+	e.x = x; e.y = y; e.n = n
+	e.col = col if col != "" else "#6d6a66"
+	e.spd = spd if spd != 0.0 else 500.0
 
 
 static func dust(S: SimState, x: float, y: float, n: int, col: String = "") -> void:
-	var r: SimRng = S.rngFx
-	for i in range(n):
-		var p := SimState.Part.new()
-		p.type = "dust"
-		p.x = x + r.range_(-40.0, 40.0)
-		p.y = y + r.range_(0.0, 20.0)
-		p.vx = r.range_(-90.0, 90.0)
-		p.vy = r.range_(20.0, 140.0)
-		p.life = r.range_(0.8, 1.8)
-		p.col = col if col != "" else "#9b8f7e"
-		p.size = r.range_(14.0, 34.0)
-		p.drag = 0.02
-		P(S, p)
+	var e := _ev(S, "dust")
+	e.x = x; e.y = y; e.n = n
+	e.col = col if col != "" else "#9b8f7e"
 
 
 static func splash(S: SimState, x: float, y: float, n: int) -> void:
-	var r: SimRng = S.rngFx
-	for i in range(n):
-		var p := SimState.Part.new()
-		p.type = "splash"
-		p.x = x + r.range_(-30.0, 30.0)
-		p.y = y
-		p.vx = r.range_(-160.0, 160.0)
-		p.vy = r.range_(250.0, 900.0)
-		p.grav = 1200.0
-		p.life = r.range_(0.7, 1.5)
-		p.col = "#bfe6ff"
-		p.size = r.range_(2.0, 5.0)
-		P(S, p)
+	var e := _ev(S, "splash")
+	e.x = x; e.y = y; e.n = n
 
 
 static func fire(S: SimState, x: float, y: float, n: int) -> void:
-	var r: SimRng = S.rngFx
-	for i in range(n):
-		var p := SimState.Part.new()
-		p.type = "flame"
-		p.x = x + r.range_(-25.0, 25.0)
-		p.y = y + r.range_(0.0, 30.0)
-		p.vx = r.range_(-30.0, 30.0)
-		p.vy = r.range_(60.0, 200.0)
-		p.life = r.range_(0.5, 1.3)
-		p.col = "#ff9a2e" if r.next() < 0.5 else "#ffd45a"
-		p.size = r.range_(6.0, 16.0)
-		P(S, p)
+	var e := _ev(S, "fire")
+	e.x = x; e.y = y; e.n = n
 
 
-static func afterimage(S: SimState, f) -> void:
-	var p := SimState.Part.new()
-	p.type = "after"; p.x = f.x; p.y = f.y; p.life = 0.45; p.col = f.aura; p.face = f.face
-	P(S, p)
+## An afterimage of f: 0.45 s for a dodge or escape, 0.16 s for each tick of a rush trail.
+static func afterimage(S: SimState, f, life: float = 0.45) -> void:
+	var e := _ev(S, "after")
+	e.x = f.x; e.y = f.y; e.life = life; e.col = f.aura; e.face = f.face
 
 
-## Particles (swap-remove when expired), then the damage numbers.
-static func stepParts(S: SimState, dt: float) -> void:
-	var parts: Array = S.fx.parts
-	var floats: Array = S.fx.floats
-	for i in range(parts.size() - 1, -1, -1):
-		var p = parts[i]
-		p.age += dt
-		if p.age >= p.life:
-			parts[i] = parts[parts.size() - 1]
-			parts.pop_back()
-			continue
-		p.vy -= p.grav * dt
-		if p.drag != 0.0:
-			var d: float = SimDetMath.pow(1.0 - p.drag, dt * 60.0)
-			p.vx *= d
-			p.vy *= d
-		p.x = SimWrap.wrap(p.x + p.vx * dt)
-		p.y += p.vy * dt
-		if p.type == "ring":
-			p.r += p.gr * dt
-		if p.type == "deb":
-			var g: float = WorldTerrain.groundY(S, p.x)
-			if p.y < g:
-				p.y = g
-				p.vy *= -0.3
-				p.vx *= 0.6
-	for i in range(floats.size() - 1, -1, -1):
-		var f = floats[i]
-		f.t += dt
-		f.y += 60.0 * dt
-		if f.t > 0.9:
-			floats.remove_at(i)
+static func banner(S: SimState, text: String, col: String, dur: float) -> void:
+	var e := _ev(S, "banner")
+	e.text = text
+	e.col = col if col != "" else "#ffffff"
+	e.dur = dur if dur != 0.0 else 1.3
+
+
+## A damage number; the consumer prints String(Math.round(amount)).
+static func damageNumber(S: SimState, x: float, y: float, amount: float, col: String) -> void:
+	var e := _ev(S, "damage")
+	e.x = x; e.y = y; e.amount = amount; e.col = col
+
+
+## Camera shake request: the consumer keeps shake = max(shake, k) and decays it at the end of the tick.
+static func shake(S: SimState, k: float) -> void:
+	var e := _ev(S, "shake")
+	e.k = k
+
+
+## A charging fighter's aura, once per charging tick (the consumer rolls its sparks and dust).
+static func chargeFx(S: SimState, f, ground: float) -> void:
+	var e := _ev(S, "charge")
+	e.x = f.x; e.y = f.y; e.col = f.aura; e.ground = ground
+
+
+## A beam sample low over water (the consumer rolls the splash).
+static func beamSplash(S: SimState, x: float) -> void:
+	var e := _ev(S, "beamSplash")
+	e.x = x
+
+
+## End of the sim's part of a tick: where the prototype stepped its particles (dt, or dt*0.1 during hit-stop).
+static func tickMark(S: SimState, dt: float, frozen: bool) -> void:
+	var e := _ev(S, "tick")
+	e.dt = dt; e.frozen = frozen

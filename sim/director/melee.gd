@@ -169,7 +169,7 @@ static func opGuardBreak(S: SimState, ex, _args) -> void:
 		return
 	D.ki = SimMathx.jmax(0.0, D.ki - 25.0)
 	SimFx.banner(S, "GUARD BREAK", "#ffd45a", 0.8)
-	S.fx.shake = SimMathx.jmax(S.fx.shake, 12.0)
+	SimFx.shake(S, 12.0)
 
 
 static func clashWave(S: SimState, ex) -> void:
@@ -189,7 +189,7 @@ static func clashWave(S: SimState, ex) -> void:
 		WorldTerrain.crater(S, mx, 60.0 + tier * 16.0, 10.0 + tier * 4.0, A)
 	WorldStructures.damageArea(S, mx, my, 160.0 + tier * 40.0, 110.0 + tier * 80.0, A)
 	SimFx.banner(S, "CLASH", "#ffffff", 0.7)
-	S.fx.shake = SimMathx.jmax(S.fx.shake, 18.0)
+	SimFx.shake(S, 18.0)
 
 
 static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:

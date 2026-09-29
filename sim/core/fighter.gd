@@ -7,7 +7,7 @@ static func tierUp(S: SimState, f) -> void:
 	var g: float = WorldTerrain.groundY(S, f.x)
 	SimFx.ring(S, f.x, f.y + 34.0, 1300.0, f.aura, 0.8, 20.0)
 	SimFx.spark(S, f.x, f.y + 34.0, 20, f.aura, 700.0)
-	S.fx.shake = SimMathx.jmax(S.fx.shake, 14.0)
+	SimFx.shake(S, 14.0)
 	if f.y < g + 140.0:
 		WorldTerrain.crater(S, f.x, 60.0 + f.tier * 28.0, 12.0 + f.tier * 7.0, f)
 		WorldStructures.damageArea(S, f.x, f.y, 130.0 + f.tier * 60.0, 90.0 + f.tier * 100.0, f)
@@ -30,7 +30,7 @@ static func impact(S: SimState, f, g: float, sp: float) -> void:
 			SimFx.dust(S, f.x, g, 4)
 		SimFx.ring(S, f.x, g + 10.0, 700.0 + sp * 0.2, "#ffffff", 0.45, 10.0)
 		WorldStructures.damageArea(S, f.x, g + 5.0, r * 1.7, sp * (0.22 + 0.12 * tier), by)
-		S.fx.shake = SimMathx.jmax(S.fx.shake, SimMathx.jmin(30.0, sp * 0.01))
+		SimFx.shake(S, SimMathx.jmin(30.0, sp * 0.01))
 		S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.06)
 		SimDamage.hurt(S, f, sp * 0.018, by)
 	f.y = WorldTerrain.groundY(S, f.x)
@@ -108,9 +108,7 @@ static func stepRush(S: SimState, f, dt: float) -> void:
 		f.vy = 0.0
 		return
 	var k: float = dt / rem
-	var p := SimState.Part.new()
-	p.type = "after"; p.x = f.x; p.y = f.y; p.life = 0.16; p.col = f.aura; p.face = f.face
-	SimFx.P(S, p)
+	SimFx.afterimage(S, f, 0.16)
 	f.x = SimWrap.wrap(f.x + SimWrap.sdx(f.x, tx) * k)
 	f.y += (ty - f.y) * k
 
@@ -179,21 +177,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 			f.vy *= 0.85
 			f.ki = SimMathx.jmin(100.0, f.ki + 30.0 * dt)
 			f.power = SimMathx.jmin(100.0, f.power + 9.0 * dt)
-			# Cosmetic draws (module-spec section 6): the spark chance and its four ranges, then the dust chance.
-			var r: SimRng = S.rngFx
-			if r.next() < 0.4:
-				var p := SimState.Part.new()
-				p.type = "spark"
-				p.x = f.x + r.range_(-40.0, 40.0)
-				p.y = f.y + r.range_(0.0, 70.0)
-				p.vx = r.range_(-40.0, 40.0)
-				p.vy = r.range_(200.0, 500.0)
-				p.life = 0.4
-				p.col = f.aura
-				p.size = 2.0
-				SimFx.P(S, p)
-			if r.next() < 0.06 and f.y < WorldTerrain.groundY(S, f.x) + 30.0:
-				SimFx.dust(S, f.x, WorldTerrain.groundY(S, f.x), 1)
+			SimFx.chargeFx(S, f, WorldTerrain.groundY(S, f.x))   # the aura's sparks and dust are cosmetic: the consumer rolls them
 	elif f.state == "down":
 		f.stateT += dt
 		f.y = WorldTerrain.groundY(S, f.x)

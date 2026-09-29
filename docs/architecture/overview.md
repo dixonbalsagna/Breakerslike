@@ -12,14 +12,14 @@ Owner: Simulation and Engine. Code: `sim/`. Interface detail: [module-spec.md](m
 | Opponent AI | `sim/director/ai.js` | stance choice, hunting, hiding, attack timing; produces intents like a player | Encounter Systems |
 | Director | `sim/director/` | exchange planner and beat ops, melee templates, parry and chain windows, beams and clashes, launch planner | Encounter Systems |
 | World | `sim/world/` | biomes, wrapped heightfield and craters, structures, civilians and casualties, cover | World and Environment |
-| Core | `sim/core/` | the state object, the tick, fighter physics, damage and KO, the hiding mechanic, RNG, wrap math, hashing, replays, the cosmetic lane | Simulation and Engine |
+| Core | `sim/core/` | the state object, the tick, fighter physics, damage and KO, the hiding mechanic, RNG, wrap math, hashing, replays, the fx event emitters, and the view-side reference consumers (camera, cosmetic effects) | Simulation and Engine |
 
 Temporary homes: `ROSTER` stays in `core/roster.js` until `data/fighters/` exists (Narrative, Tools). `core/view/camera.js` goes to Camera once an engine is chosen.
 
 Boundary rules:
 1. **One state object.** Everything the simulation knows lives in one plain object `S` (module-spec section 2). No module keeps state and no code reads globals, so several sims run side by side in one process. The parity lockstep does this now, and rollback will do it later.
 2. **Rendering reads, never writes.** Renderers, the view camera, audio and UI read `S` after a tick. Nothing inside `step()` calls view code; the host runs `camStep(cam, S, S.dt, ...)` after each tick.
-3. **A cosmetic lane.** Particles, damage numbers, the banner and the shake cue live in `S.fx`. Gameplay code never reads `S.fx`. The canonical hash has two lanes, gameplay and presentation (`core/hash.js`), so the boundary is testable: a cosmetic change may move the presentation hash, never the gameplay one. (That test arrives with the QA-002 split, section 3.)
+3. **Cosmetics are events, not state.** Since the QA-002 split the sim holds no cosmetic state and makes no cosmetic draws. Particles, damage numbers, the banner and camera shake leave the sim as events in `S.out.fx` ([fx-events.md](fx-events.md)), and the render side turns them into visuals with its own random streams. The hash has two lanes: gameplay (the sim state) and presentation (the view the reference consumer builds). The boundary is tested: dropping every fx event, or running any consumer with any seed, leaves every gameplay hash unchanged (`sim/core/test/fx.test.js`).
 4. **Exchange beats are data.** The prototype scheduled closures. The port schedules `{t, op, args, done}` records and runs them through one dispatcher (`director/exchange.js runBeat`). An exchange in flight is therefore plain data, which a snapshot, a rollback or a replay inspector can store and restore. Beats run in the prototype's order (stable sort by time, insertion order on ties). The op catalogue is module-spec section 4.
 
 ## 2. Tick contract
@@ -45,7 +45,7 @@ The rule:
 2. **Cosmetic streams per consumer**, seeded from the match seed by a fixed derivation: one per VFX effect class (`vfx.spark`, `vfx.debris`, `vfx.dust`, `vfx.splash`, `vfx.fire`), plus `camera` and `audio`. Proposed derivation, integer-only so every language reproduces it: `seed(id) = fmix32(matchSeed ^ fnv1a32(id))`, where fnv1a32 runs over the id's UTF-16 code units and fmix32 is the MurmurHash3 finaliser.
 3. **No cosmetic draw ever advances the sim stream.**
 
-Current state. The parity build deliberately breaks rule 3, because the prototype does (QA-002): the draw sites in module-spec section 6 use `S.rngFx`, which is `S.rng` itself (`opts.fxRng: 'shared'`). The QA-002 change, held for now, replaces `S.rngFx` with the per-class streams. It keeps `'shared'` only as a test mode, so the port can still be checked against the prototype, and it adds the test that switching cosmetics off leaves every gameplay hash unchanged. World generation uses its own fixed seed (4242), consumed entirely inside `genWorld`; it is part of generating world data, not a runtime stream, and will follow World's procedural-planet seed. Adding, removing or reordering a sim-stream draw is a behaviour change: parity breaks and the golden hashes must be regenerated on purpose.
+Current state: implemented in both cores (QA-002, done). The reference consumer (`sim/core/view/fx.js`, `fx.gd`) draws from the `vfx.*` streams. `deriveSeed` is in `rng.js` and `rng.gd`, and the golden vectors check it. The JS core keeps a test-only prototype-parity mode, `{fxRng: 'shared'}`, in which each emitter burns the prototype's draws on the gameplay stream, so the port stays tick-identical to the prototype. The game rules and the GDScript core are det + split.
 
 ## 4. Serialisation and replay
 
@@ -56,7 +56,7 @@ Current state. The parity build deliberately breaks rule 3, because the prototyp
  inputs: [[tick, slot, intent|null], ...],        // only where a slot's intent changed
  toggles: [[tick, slot], ...],                     // AI toggled before that tick
  checkpoints: [[tick, gameplayHash], ...],         // every 60 ticks
- final: {gameplay, presentation}}
+ final: {gameplay}}                              // the sim state hash (there is no cosmetic state to hash)
 ```
 
 `play(replay)` re-runs from the seed and reports the first checkpoint that disagrees. Replays store intents, not keys, so they don't depend on the key mapping. Planned additions: a `sim` version field (the package version or git revision) and a `setup` block (roster and spawns) once there are more than two fighters.
@@ -66,14 +66,14 @@ Current state. The parity build deliberately breaks rule 3, because the prototyp
 - Static world data (base heights, building sizes, tree positions) is regenerated from the world seed. Only what changes is stored: `deform` as raw little-endian float32 bytes (1200 columns, 4.8 KB, base64 in JSON), building `hp`, `alive` and `popAlive`, and a tree `alive` bit mask.
 - Numbers must round-trip exactly, including -0 and NaN. Plain JSON turns -0 into 0, and signed zeros can arise in the sim (`Math.sign(-0)`, `-0 * x`), so the binary form uses raw float64 and the JSON form tags -0.
 - The rng states are two integers.
-- The cosmetic lane is optional: a rollback snapshot drops it (about 10 KB without particles), and a save state keeps it (particles can reach 2400 x 14 fields).
+- There is no cosmetic state left in the sim to store; a save state that wants identical particles stores the consumer's view and its stream states too.
 - Acceptance when implemented: a snapshot taken at any tick and restored into a fresh `S` continues with the same per-tick hashes as the original.
 
 ## 5. Parity and tests
 
 `node sim/core/tools/parity.js`, also part of `npm test --prefix sim`, has five stages:
 1. **Probe.** The prototype, loaded through QA's harness with two read-only probes, matches the plain prototype.
-2. **Lockstep.** 170 matches in every arm; after every tick it compares the gameplay lane, the presentation lane, the camera and the feed text.
+2. **Lockstep.** 170 matches in every arm, with the port in prototype-parity mode. After every tick it compares the gameplay lane, the deterministic presentation (banner, damage numbers, shake), the camera and the feed text. Particles are left out, because they come from their own streams now.
 3. **Keys.** Scripted key events drive both sides: P1 human, both human, AI toggled mid-match, and a directed lock-lost case.
 4. **Records.** QA's own `runMatch` gives identical records on both.
 5. **Golden.** `qa/golden-hashes.json` is reproduced.
@@ -93,7 +93,8 @@ Under the full plan every line of the port executes except one unreachable retur
 | core/fighter.js | `tierUp`, `impact`, `stepLaunched`, `stepRush`, `stepFighter` |
 | core/hiding.js | `updateHidden` |
 | core/damage.js | `hurt`, `hit`, `ko` |
-| core/fx.js | `banner`, `P`, `spark`, `ring`, `debris`, `dust`, `splash`, `fire`, `afterimage`, `stepParts` |
+| core/fx.js | the effect calls (`banner`, `spark`, `ring`, `debris`, `dust`, `splash`, `fire`, `afterimage`, damage numbers, shake), now event emitters |
+| core/view/fx.js | `P`, the particle spawns and `stepParts`: the render-side reference consumer of fx events |
 | core/events.js | `feed` |
 | core/view/camera.js | `camStep` (camera follow; the shake decay stays in the tick) |
 | core/hash.js, core/replay.js | new: canonical hash, replays |

@@ -3,7 +3,7 @@ import { wrap, sdx } from '../core/wrap.js';
 import { clamp } from '../core/mathx.js';
 import { next, range } from '../core/rng.js';
 import { hit } from '../core/damage.js';
-import { banner, spark, ring, afterimage, dust, splash, fire } from '../core/fx.js';
+import { banner, spark, ring, afterimage, dust, fire, shake, beamSplash } from '../core/fx.js';
 import { groundY, seaAt, crater } from '../world/terrain.js';
 import { biomeAt } from '../world/biomes.js';
 import { damageArea, explode } from '../world/structures.js';
@@ -97,7 +97,7 @@ export function opClashResolve(S, ex, args){
 }
 export function fireBeam(S, A, ox, oy, ux, uy, len, variant){
   S.beams.push({A, ox, oy, ux, uy, len, p:0, t:0, life:0.95, w:24 + A.tier*9, variant, col:A.aura});
-  S.fx.shake = Math.max(S.fx.shake, 14);
+  shake(S, 14);
 }
 export function sampleBeam(S, b, s){
   const A = b.A, tier = A.tier, x = wrap(b.ox + b.ux*s), y = b.oy + b.uy*s, g = groundY(S, x);
@@ -107,7 +107,7 @@ export function sampleBeam(S, b, s){
     if (b.variant === 'GLASS TRENCH') spark(S, x, g + 6, 2, '#ffd98a', 300);
   }
   damageArea(S, x, y, 26 + tier*8, 110 + tier*75, A);
-  if (y < 30 && seaAt(S, x) && next(S.rngFx) < 0.6) splash(S, x, 0, 3);   // cosmetic draw (module-spec section 6)
+  if (y < 30 && seaAt(S, x)) beamSplash(S, x);   // the consumer rolls the prototype's 60% splash
   if (b.variant === 'FIRESTORM' && y < g + 140) fire(S, x, g, 1);
 }
 export function beamStep(S, dt){

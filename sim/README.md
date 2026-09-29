@@ -20,7 +20,7 @@ Use Node 24. The golden hashes were recorded on Node 24.19.0 and are skipped on 
 
 | Path | Contents | Owner |
 | :--- | :--- | :--- |
-| `core/` | state, tick, fighters, damage, hiding, RNG, wrap math, cosmetic lane, hash, replay, view camera; `tools/` parity and soak; `test/` | Simulation and Engine |
+| `core/` | state, tick, fighters, damage, hiding, RNG, wrap math, fx event emitters, hash, replay, view side (camera, reference cosmetic consumer); `tools/` parity and soak; `test/` | Simulation and Engine |
 | `world/` | `biomes.js`, `terrain.js`, `structures.js`, `cover.js` | World and Environment |
 | `director/` | `exchange.js`, `melee.js`, `beam.js`, `launch.js`, `ai.js` | Encounter Systems |
 | `input/` | `intent.js`, `keyboard.js`, `control.js` | Controls and Game Feel |
@@ -32,7 +32,9 @@ Rules for everyone changing `sim/`: behaviour changes are deliberate (parity the
 Every `.gd` file sits beside its JavaScript twin and keeps the same function and field names (ADR 0001: Godot 4.7 with GDScript). The JS core has two math modes, set with `createSim({math})`:
 - `'native'` (the default) uses `Math.sin` and friends and matches the prototype;
 - `'det'` uses `core/detmath.js` and matches the GDScript core bit for bit.
-In det mode, matches play out the same as in native mode over 1000 seeds (same lengths and outcomes); only the last bits of floats differ. Change both twins together, regenerate the goldens with `node sim/core/tools/golden.js`, and run both parity checks.
+In det mode, matches play out the same as in native mode over 1000 seeds (same lengths and outcomes); only the last bits of floats differ.
+
+The cosmetic mode, `fxRng`, is the other switch. `'split'` is the default and the game's rule: no cosmetic draw touches the gameplay stream. `'shared'` is for prototype parity only: each fx emitter burns the prototype's draws. So `createSim()` gives the game's rules (det + split), and `createSim({math: 'native', fxRng: 'shared'})` reproduces the prototype. The port harness and parity.js use the latter. The GDScript core has only det + split. A host drains `S.out.fx` after every tick and passes it to a consumer; `core/view/fx.js` (`fx.gd`) is the reference. Change both twins together, regenerate the goldens with `node sim/core/tools/golden.js`, and run both parity checks.
 
 GDScript traps that break bit-identity (each one was hit while porting):
 - **Long float literals.** GDScript's parser is not correctly rounded for them: `0.017453292519943295` parses 2 ulp off, and the smallest normal double parses as 0. Build long constants from bit patterns (`SimMathx.f64`). The parity check compiles every float literal in the `.gd` files and compares its bits.
@@ -48,7 +50,7 @@ GDScript traps that break bit-identity (each one was hit while porting):
 | # | Where | What | Impact |
 | :--- | :--- | :--- | :--- |
 | 1 | `world/structures.js` `casualty` | QA-003: anguish goes only to the first hero in the fighter list. | None with one hero; wrong in a hero mirror and with more fighters. |
-| 2 | `core/sim.js` `step` | QA-002: cosmetic effects draw from the gameplay stream. | Any VFX change rewrites gameplay. Fix held (the per-consumer streams in overview.md section 3). |
+| 2 | `core/sim.js` `step` | QA-002: cosmetic effects drew from the gameplay stream. | **Fixed.** Effects are events (`docs/architecture/fx-events.md`) consumed on the render side with per-consumer streams. The prototype's behaviour survives only in the JS parity mode `fxRng: 'shared'`. |
 | 3 | `core/fighter.js`, `input/control.js` | A human can switch stance at any time, including while locked in an exchange that was planned against the old stance, and `hit()` applies the stance at hit time (0.38x in defensive). The AI only switches when free. | A human can plan-dodge damage mid-exchange. Game Design and Controls should rule. |
 | 4 | `core/damage.js` `hurt` | HP keeps falling after the KO: impacts after the KO call `hurt` again (matches end at about -10 to -90 HP). | Cosmetic today (the bar clamps); wrong for stats that read final HP. |
 | 5 | prototype `newMatch` | `cam.shake` carries from one match into the next. | Cosmetic. The port resets it and the parity harness zeroes it (module-spec section 7). |

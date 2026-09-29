@@ -33,3 +33,17 @@ func range_(lo: float, hi: float) -> float:
 ## The state as rng.js reports it (r.a | 0): signed 32-bit.
 func state_i32() -> int:
 	return a - 0x100000000 if a >= 0x80000000 else a
+
+
+## rng.js deriveSeed: the seed of a cosmetic stream, fmix32(matchSeed ^ fnv1a32(id)) (canonical RNG rule).
+static func deriveSeed(seed: int, id: String) -> int:
+	var h: int = 0x811c9dc5
+	for i in range(id.length()):
+		h = imul((h ^ id.unicode_at(i)) & MASK, 0x01000193)
+	var x: int = (seed ^ h) & MASK
+	x ^= x >> 16
+	x = imul(x, 0x85ebca6b)
+	x ^= x >> 13
+	x = imul(x, 0xc2b2ae35)
+	x ^= x >> 16
+	return x & MASK

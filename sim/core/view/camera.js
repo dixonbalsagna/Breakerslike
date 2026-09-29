@@ -1,4 +1,4 @@
-// View-layer camera follow: the prototype's camStep without its shake decay (that stays in the tick, S.fx.shake).
+// View-layer camera follow: the prototype's camStep without its shake (the cosmetic consumer, view/fx.js, keeps shake).
 // The host calls camStep after each tick with S.dt. It reads S and never writes it.
 import { wrap, sdx } from '../wrap.js';
 import { clamp } from '../mathx.js';

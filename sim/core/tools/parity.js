@@ -4,8 +4,9 @@
 // Stages
 //   probe     the instrumented prototype (proto-harness.js) gives the same QA hashes as the plain one: the probes are inert
 //   lockstep  prototype and port step side by side; after every tick the whole state is compared field by field: the
-//             gameplay lane, the presentation lane (particles, damage numbers, banner, shake), the camera, and the feed
-//             lines of that tick. Stops at the first difference and prints where it is.
+//             gameplay lane, the presentation lane (damage numbers, banner, shake: particles use their own cosmetic
+//             streams since the QA-002 split), the camera, and the feed lines of that tick. The port runs in
+//             prototype-parity mode ({math: 'native', fxRng: 'shared'}). Stops at the first difference and prints where it is.
 //   keys      scripted key presses on both (P1 human, both human, AI toggled mid-match): the input layer and the
 //             human-only paths of the director, which AI-vs-AI matches never reach
 //   records   QA's own runMatch (invariants on) gives JSON-identical records on both, so every QA statistic agrees
@@ -43,8 +44,11 @@ function setup(h, arm, seed) {
 }
 
 const LANES = ['gameplay', 'presentation'];
+// Particles are left out: since the QA-002 split the port's come from their own cosmetic streams. Banner, damage numbers
+// and shake are deterministic and still compared.
 function compareTick(P, Q, arm, seed, tick, feedFrom) {
-  const ps = protoSrc(P), qs = portSrc(Q.S, false);
+  const ps = protoSrc(P), qs = portSrc(Q.S, false, Q.V);
+  ps.parts = null; qs.parts = null;
   for (const lane of LANES) {
     const a = collect(ps, lane), b = collect(qs, lane), i = firstDiff(a, b);
     if (i >= 0) return { lane, path: pathAt(ps, lane, i), proto: a[i], port: b[i], a };
@@ -158,7 +162,7 @@ export function run(opts = {}, log = console.log) {
       ticks += r.ticks; run.str(r.digest);
       if (opts.verbose) log(`      ${arm.padEnd(20)} seed ${String(s).padStart(4)}  ticks ${String(r.ticks).padStart(6)}  ${r.digest}`);
     }
-    log(`ok    lockstep: ${matches.length} matches, ${ticks} ticks, every tick identical (gameplay, presentation, camera, feed); digest ${run.hex()}`);
+    log(`ok    lockstep: ${matches.length} matches, ${ticks} ticks, every tick identical (gameplay, banner, damage numbers, shake, camera, feed); digest ${run.hex()}`);
   });
 
   stage('keys', () => {

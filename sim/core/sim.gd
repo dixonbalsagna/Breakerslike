@@ -14,42 +14,51 @@ static func createSim(opts: Dictionary = {}) -> SimState:
 	var S := SimState.new()
 	S.opts = {"fxRng": fxRng, "math": math}
 	S.rng = SimRng.new(7)          # the prototype's stream before its first newMatch
-	S.rngFx = S.rng
 	S.base.resize(SimConst.NC)
 	S.deform.resize(SimConst.NC)
 	return S
+
+
+## Break the references between a match's objects so GDScript's reference counting can free them. Fighters can point at
+## each other (launchBy, rush.tgt), which is a cycle that JS's garbage collector frees and RefCounted never does.
+## newMatch calls this on the outgoing match; a host that drops a sim calls it too.
+static func dispose(S: SimState) -> void:
+	for f in S.fighters:
+		f.launchBy = null
+		f.rush = null
+	S.game.ko = null
+	S.game.clash = null
+	S.dirS.ex = null
+	S.beams.clear()
 
 
 ## ai is {"p1": bool, "p2": bool}; a missing entry keeps the previous fighter's setting, or true with no fighters yet.
 static func newMatch(S: SimState, seed: int, ai: Dictionary = {}) -> void:
 	S.game.seed = float(seed & 0xFFFFFFFF)
 	S.rng = SimRng.new(seed & 0xFFFFFFFF)
-	S.rngFx = S.rng
 	WorldTerrain.genWorld(S)
 	var p1ai: bool = bool(ai["p1"]) if ai.has("p1") and ai["p1"] != null else (S.fighters[0].ai != null if S.fighters.size() > 0 else true)
 	var p2ai: bool = bool(ai["p2"]) if ai.has("p2") and ai["p2"] != null else (S.fighters[1].ai != null if S.fighters.size() > 1 else true)
+	dispose(S)
 	S.fighters = [SimRoster.createFighter(SimRoster.ROSTER[0], 2150.0, "p1", p1ai), SimRoster.createFighter(SimRoster.ROSTER[1], 2900.0, "p2", p2ai)]
 	S.fighters[0].y = 60.0
 	S.fighters[1].y = 60.0
 	S.fighters[1].face = -1.0
 	S.fighters[0].stance = 0.0
 	S.fighters[1].stance = 0.0
-	S.fx.parts.clear()
 	S.beams.clear()
-	S.fx.floats.clear()
 	S.T = 0.0
 	S.game.ko = null
 	S.game.koT = 0.0
 	S.game.ts = 1.0
-	S.fx.banner = null
 	S.game.clash = null
 	S.dirS.ex = null
 	S.dirS.cool = 0.6
 	S.dirS.stop = 0.0
 	S.dirS.lastLaunch = ""
 	S.dirS.lastLaunch2 = ""
-	S.fx.shake = 0.0
 	S.out.feed.clear()
+	S.out.fx.clear()
 	S.dt = 0.0
 
 
@@ -61,8 +70,7 @@ static func step(S: SimState, inputs = null) -> bool:
 	S.dt = dt
 	if S.dirS.stop > 0.0:
 		S.dirS.stop -= dtReal
-		SimFx.stepParts(S, dt * 0.1)
-		S.fx.shake *= SimDetMath.pow(0.02, dt)
+		SimFx.tickMark(S, dt, true)
 		return false
 	S.T += dt
 	if S.game.ko != null:
@@ -76,7 +84,7 @@ static func step(S: SimState, inputs = null) -> bool:
 		SimFighter.stepFighter(S, f, dt)
 	DirExchange.dirUpdate(S, dt)
 	DirBeam.beamStep(S, dt)
-	SimFx.stepParts(S, dt)
+	SimFx.tickMark(S, dt, false)
 	if S.game.clash != null:
 		var c = S.game.clash
 		var p: float = SimMathx.jclamp((S.T - c.t0) / c.dur, 0.0, 1.0)
@@ -84,12 +92,7 @@ static func step(S: SimState, inputs = null) -> bool:
 		var ax: float = c.A.x
 		var dx: float = SimWrap.sdx(ax, c.D.x)
 		SimFx.spark(S, SimWrap.wrap(ax + dx * mid), (c.A.y + (c.D.y - c.A.y) * mid) + 38.0, 3, "#ffffff", 700.0)
-		S.fx.shake = SimMathx.jmax(S.fx.shake, 7.0)
-	if S.fx.banner != null:
-		S.fx.banner.t += dt
-		if S.fx.banner.t > S.fx.banner.dur:
-			S.fx.banner = null
-	S.fx.shake *= SimDetMath.pow(0.02, dt)   # the shake decay from the prototype's camStep; the camera follow is the host's
+		SimFx.shake(S, 7.0)
 	return true
 
 

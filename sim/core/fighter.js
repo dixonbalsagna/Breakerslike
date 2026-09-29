@@ -2,7 +2,7 @@
 import { wrap, sdx } from './wrap.js';
 import { next, range } from './rng.js';
 import { opp } from './roster.js';
-import { P, banner, spark, ring, debris, dust, splash } from './fx.js';
+import { banner, spark, ring, debris, dust, splash, afterimage, shake, chargeFx } from './fx.js';
 import { feed } from './events.js';
 import { hurt } from './damage.js';
 import { updateHidden } from './hiding.js';
@@ -13,7 +13,7 @@ export function tierUp(S, f){
   banner(S, f.name + ' POWERS UP  TIER ' + f.tier, f.aura, 1.4);
   const g = groundY(S, f.x);
   ring(S, f.x, f.y + 34, 1300, f.aura, 0.8, 20); spark(S, f.x, f.y + 34, 20, f.aura, 700);
-  S.fx.shake = Math.max(S.fx.shake, 14);
+  shake(S, 14);
   if (f.y < g + 140){
     crater(S, f.x, 60 + f.tier*28, 12 + f.tier*7, f);
     damageArea(S, f.x, f.y, 130 + f.tier*60, 90 + f.tier*100, f);
@@ -29,7 +29,7 @@ export function impact(S, f, g, sp){
     if (seaAt(S, f.x)) splash(S, f.x, g + 10, 14); else { debris(S, f.x, g + 8, 12, '#6d6a66', 500); dust(S, f.x, g, 4); }
     ring(S, f.x, g + 10, 700 + sp*0.2, '#ffffff', 0.45, 10);
     damageArea(S, f.x, g + 5, r*1.7, sp*(0.22 + 0.12*tier), by);
-    S.fx.shake = Math.max(S.fx.shake, Math.min(30, sp*0.01)); S.dirS.stop = Math.max(S.dirS.stop, 0.06);
+    shake(S, Math.min(30, sp*0.01)); S.dirS.stop = Math.max(S.dirS.stop, 0.06);
     hurt(S, f, sp*0.018, by);
   }
   f.y = groundY(S, f.x);
@@ -67,7 +67,7 @@ export function stepRush(S, f, dt){
   const tx = r.tgt ? r.tgt.x + r.off : r.px, ty = r.tgt ? r.tgt.y : r.py, rem = r.end - S.T;
   if (rem <= dt){ f.x = wrap(tx); f.y = Math.max(ty, groundY(S, tx)); f.rush = null; f.vx = 0; f.vy = 0; return; }
   const k = dt/rem;
-  P(S, {type:'after', x:f.x, y:f.y, life:0.16, col:f.aura, face:f.face});
+  afterimage(S, f, 0.16);
   f.x = wrap(f.x + sdx(f.x, tx)*k); f.y += (ty - f.y)*k;
 }
 export function stepFighter(S, f, dt){
@@ -101,9 +101,7 @@ export function stepFighter(S, f, dt){
     if (!i.charge) f.state = 'free';
     else {
       f.vx *= 0.85; f.vy *= 0.85; f.ki = Math.min(100, f.ki + 30*dt); f.power = Math.min(100, f.power + 9*dt);
-      // Cosmetic draws (module-spec section 6): the spark chance and its four ranges, then the dust chance.
-      if (next(S.rngFx) < 0.4) P(S, {type:'spark', x:f.x + range(S.rngFx, -40, 40), y:f.y + range(S.rngFx, 0, 70), vx:range(S.rngFx, -40, 40), vy:range(S.rngFx, 200, 500), life:0.4, col:f.aura, size:2});
-      if (next(S.rngFx) < 0.06 && f.y < groundY(S, f.x) + 30) dust(S, f.x, groundY(S, f.x), 1);
+      chargeFx(S, f, groundY(S, f.x));   // the aura's sparks and dust are cosmetic: the consumer rolls them
     }
   } else if (f.state === 'down'){
     f.stateT += dt; f.y = groundY(S, f.x); if (f.stateT > 0.75){ f.state = 'free'; f.rot = 0; }

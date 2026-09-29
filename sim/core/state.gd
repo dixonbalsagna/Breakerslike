@@ -9,7 +9,6 @@ var opts: Dictionary = {"fxRng": "shared", "math": "det"}
 var T: float = 0.0
 var dt: float = 0.0
 var rng: SimRng = SimRng.new(7)
-var rngFx: SimRng = null
 var game := Game.new()
 var dirS := DirS.new()
 var fighters: Array = []
@@ -19,7 +18,6 @@ var deform := PackedFloat32Array()
 var buildings: Array = []
 var trees: Array = []
 var beams: Array = []
-var fx := Fx.new()
 var out := Out.new()
 
 
@@ -89,46 +87,6 @@ class Beam:
 	var col: String = ""
 
 
-## A particle. The defaults are fx.js P()'s; face exists only on afterimages (null elsewhere, like JS undefined).
-class Part:
-	var life: float = 1.0
-	var age: float = 0.0
-	var grav: float = 0.0
-	var drag: float = 0.0
-	var size: float = 3.0
-	var col: String = "#fff"
-	var type: String = "dot"
-	var vx: float = 0.0
-	var vy: float = 0.0
-	var r: float = 0.0
-	var gr: float = 0.0
-	var x: float = 0.0
-	var y: float = 0.0
-	var face = null
-
-
-class DmgFloat:
-	var x: float = 0.0
-	var y: float = 0.0
-	var txt: String = ""
-	var t: float = 0.0
-	var col: String = ""
-
-
-class Banner:
-	var text: String = ""
-	var col: String = ""
-	var t: float = 0.0
-	var dur: float = 0.0
-
-
-class Fx:
-	var parts: Array = []
-	var floats: Array = []
-	var banner = null        # Banner or null
-	var shake: float = 0.0
-
-
 class FeedLine:
 	var t: float = 0.0
 	var tag: String = ""
@@ -137,6 +95,28 @@ class FeedLine:
 
 class Out:
 	var feed: Array = []     # FeedLine
+	var fx: Array = []       # FxEvent: this tick's cosmetic events; the host drains them
+
+
+## A cosmetic event (fx.gd, docs/architecture/fx-events.md). Only the fields of its type are meaningful.
+class FxEvent:
+	var type: String = ""
+	var x: float = 0.0
+	var y: float = 0.0
+	var n: int = 0
+	var col: String = ""
+	var spd: float = 0.0
+	var gr: float = 0.0
+	var life: float = 0.0
+	var r0: float = 0.0
+	var face: float = 0.0
+	var ground: float = 0.0
+	var amount: float = 0.0
+	var text: String = ""
+	var dur: float = 0.0
+	var k: float = 0.0
+	var dt: float = 0.0
+	var frozen: bool = false
 
 
 class Fighter:

@@ -10,7 +10,7 @@ Owner: Simulation and Engine. Status: the contract for the port of `prototype/in
 4. **One state object.** All simulation state lives in one object `S` (section 2). Every function that reads or writes state takes `S` as its first parameter. No module-level mutable state, no globals, no `Math.random`, no `Date`, no DOM, no Node APIs in runtime modules (tools and tests may use `node:*`).
 5. **References stay references.** Live state keeps references to fighter objects exactly where the prototype does: `f.rush.tgt`, `f.launchBy`, `S.game.ko`, `S.game.clash.A` and `.D`, `beam.A`, `ex.A` and `ex.D`, and every `cause`, `by`, `att`, `tgt` parameter. Serialisation maps them to fighter indices (overview.md).
 6. **Names and shapes.** Keep the prototype's field names and object shapes for fighters, buildings, trees, the world counters, game, dirS, exchanges, beams, particles and damage numbers. Section 7 lists every deliberate difference.
-7. **Cosmetics are a separate lane.** Particles, damage numbers, the banner and camera shake live in `S.fx`. Gameplay code never reads `S.fx`. Cosmetic random draws use `S.rngFx`. In the parity build `S.rngFx === S.rng` (the same object), so the draw order is the prototype's. Section 6 lists the cosmetic draw sites.
+7. **Cosmetics are events.** (Updated for the QA-002 split.) The sim holds no cosmetic state. Effects are emitted as events to `S.out.fx` (fx-events.md) and consumed on the render side, with cosmetic streams per consumer. In the JS-only prototype-parity mode (`fxRng: 'shared'`), each emitter burns the prototype's draws on `S.rng`.
 8. **Imports and cycles.** Modules import each other by relative path with the `.js` extension. Import cycles exist (damage to director and back) and are safe only because no module calls an imported function or reads an imported binding at module-evaluation time. Keep it that way: no top-level code that uses imports, no `const OPS = {...importedFns}` tables at top level.
 9. **Name clashes with the prototype.** The prototype's `planMelee` has a local helper called `S` (schedule a strike) and a local `base` (damage base). In the port `S` is the state object, so rename the helper (for example `STRIKE`). `R` becomes `range(S.rng, a, b)`; `R0` (schedule the opening rush) can keep its name.
 
@@ -20,11 +20,11 @@ Created by `createSim()`, reset by `newMatch()`.
 
 ```js
 S = {
-  opts:    { fxRng: 'shared' },       // 'shared': cosmetics draw from S.rng (prototype parity). 'split' comes later (QA-002).
+  opts:    { math: 'det', fxRng: 'split' },   // the game's rules; {math:'native', fxRng:'shared'} is prototype parity (JS only)
+  m:       DET | NATIVE,                     // sin, cos, pow, hypot
   T:       0,                         // sim time in seconds (prototype T)
   dt:      0,                         // effective dt of the latest tick (DT x game.ts), for the view layer
   rng:     { a },                     // gameplay stream (prototype rng)
-  rngFx:   S.rng,                     // cosmetic stream; the same object as S.rng in the parity build
   game:    { ko: null, koT: 0, ts: 1, clash: null, seed: 1 },            // prototype game, minus banner, paused, started
   dirS:    { ex: null, cool: 0, stop: 0, lastLaunch: '', lastLaunch2: '' },
   fighters: [F0, F1],                 // createFighter objects
@@ -34,8 +34,7 @@ S = {
   buildings: [ {x, w, h, maxhp, hp, alive, kind, pop, seed, popAlive} ],
   trees:   [ {x, h, alive, burn} ],
   beams:   [ {A, ox, oy, ux, uy, len, p, t, life, w, variant, col} ],
-  fx:      { parts: [], floats: [], banner: null, shake: 0 },         // presentation lane
-  out:     { feed: [] },              // output: feed lines {t, tag, sub}; the host drains it
+  out:     { feed: [], fx: [] },      // output: feed lines {t, tag, sub} and fx events; the host drains both
 }
 ```
 
@@ -44,16 +43,16 @@ S = {
 | Prototype | Port |
 | :--- | :--- |
 | `T` | `S.T` |
-| `rng()`, `R(a, b)` | `next(S.rng)`, `range(S.rng, a, b)`; cosmetic sites use `S.rngFx` |
+| `rng()`, `R(a, b)` | `next(S.rng)`, `range(S.rng, a, b)`; cosmetic draws left the sim (fx-events.md) |
 | `game.ko`, `game.koT`, `game.ts`, `game.clash`, `game.seed` | `S.game.*` |
-| `game.banner` | `S.fx.banner` |
+| `game.banner` | a `banner` event; the consumer holds the banner |
 | `game.paused`, `game.started` | not sim state (host UI) |
 | `dirS.*` | `S.dirS.*` |
 | `fighters` | `S.fighters` |
 | `world`, `base`, `deform`, `buildings`, `trees` | `S.world`, `S.base`, `S.deform`, `S.buildings`, `S.trees` |
 | `beams` | `S.beams` |
-| `parts`, `floats` | `S.fx.parts`, `S.fx.floats` |
-| `cam.shake = Math.max(cam.shake, k)` | `S.fx.shake = Math.max(S.fx.shake, k)` |
+| `parts`, `floats` | particle and `damage` events; the consumer (core/view/fx.js) holds them |
+| `cam.shake = Math.max(cam.shake, k)` | `shake(S, k)`: a `shake` event; the consumer keeps and decays the shake |
 | `cam.x`, `cam.y`, `cam.z` | view layer only (`core/view/camera.js`), not in `S` |
 | `held`, `edges` | input layer, host side (`input/keyboard.js`) |
 | `vw`, `vh` | view layer only |
@@ -144,6 +143,8 @@ The sort is the prototype's (stable, by `t`), run after every push, so beats wit
 
 ## 5. The tick
 
+(Section written for the first port. Since the QA-002 split, `stepParts`, the banner timer and the shake decay live in the consumer; the tick emits a `tick` fx event where `stepParts` ran. `sim/core/sim.js` is authoritative.)
+
 ```js
 export function step(S, inputs) {                     // inputs: [intent|null, intent|null] or undefined
   const dtReal = DT;
@@ -176,7 +177,7 @@ The prototype's `camStep` did two unrelated things: it moved the camera (view) a
 
 `toggleAI(S, idx)`: `f.ai = f.ai ? null : {t:0.5, atk:1.2, sT:0, sOff:0}`.
 
-## 6. Cosmetic random-draw sites (use S.rngFx)
+## 6. Cosmetic random-draw sites (history: these became events in the QA-002 split; in 'shared' mode their draws are burned on S.rng)
 
 - `spark`, `debris` (including the `rng() < 0.5` sign), `dust`, `splash`, `fire` (including the `rng() < 0.5` colour): every draw.
 - `stepFighter`, charging: both `rng() < 0.4` (spawn a spark) and its four `R()` calls, and `rng() < 0.06` (dust).

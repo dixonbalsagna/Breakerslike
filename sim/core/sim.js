@@ -4,7 +4,7 @@ import { createRng, next } from './rng.js';
 import { wrap, sdx } from './wrap.js';
 import { clamp } from './mathx.js';
 import { ROSTER, createFighter } from './roster.js';
-import { spark, stepParts } from './fx.js';
+import { spark, shake, tickMark } from './fx.js';
 import { stepFighter } from './fighter.js';
 import { genWorld } from '../world/terrain.js';
 import { DET, NATIVE } from './detmath.js';
@@ -12,18 +12,20 @@ import { control } from '../input/control.js';
 import { dirUpdate } from '../director/exchange.js';
 import { beamStep } from '../director/beam.js';
 
-// Only 'shared' exists: cosmetics draw from S.rng, as in the prototype. 'split' (its own stream) comes later (QA-002).
+// fxRng: 'split' (the canonical rule: cosmetics never touch the gameplay stream; the render side has its own streams)
+// or 'shared' (prototype parity: the effect emitters make the prototype's draws on S.rng; see core/fx.js).
 function checkFxRng(mode){
-  if (mode !== 'shared') throw new Error("fxRng must be 'shared' (the only mode so far), got " + String(mode));
+  if (mode !== 'split' && mode !== 'shared') throw new Error("fxRng must be 'split' or 'shared', got " + String(mode));
 }
 
 // An empty state shaped as module-spec section 2. Call newMatch before the first step.
-// opts.math: 'native' (Math.sin and friends, as the prototype: parity with it) or 'det' (core/detmath.js: the same
-// bits in every language; parity with the GDScript port). See docs/architecture/determinism.md.
+// opts.math: 'det' (core/detmath.js: the same bits in every language; parity with the GDScript port) or 'native'
+// (Math.sin and friends, as the prototype). The defaults, det and split, are the game's rules; prototype parity needs
+// {math: 'native', fxRng: 'shared'}. See docs/architecture/determinism.md.
 export function createSim(opts = {}){
-  const fxRng = opts.fxRng === undefined ? 'shared' : opts.fxRng;
+  const fxRng = opts.fxRng === undefined ? 'split' : opts.fxRng;
   checkFxRng(fxRng);
-  const math = opts.math === undefined ? 'native' : opts.math;
+  const math = opts.math === undefined ? 'det' : opts.math;
   if (math !== 'native' && math !== 'det') throw new Error("math must be 'native' or 'det', got " + String(math));
   const rng = createRng(7);   // the prototype's stream before its first newMatch
   return {
@@ -32,7 +34,6 @@ export function createSim(opts = {}){
     T: 0,
     dt: 0,
     rng,
-    rngFx: rng,
     game: { ko: null, koT: 0, ts: 1, clash: null, seed: 1 },
     dirS: { ex: null, cool: 0, stop: 0, lastLaunch: '', lastLaunch2: '' },
     fighters: [],
@@ -42,9 +43,15 @@ export function createSim(opts = {}){
     buildings: [],
     trees: [],
     beams: [],
-    fx: { parts: [], floats: [], banner: null, shake: 0 },
-    out: { feed: [] },
+    out: { feed: [], fx: [] },   // this tick's feed lines and cosmetic events; the host drains both
   };
+}
+
+// Break the references between a match's objects (fighters point at each other through launchBy and rush.tgt).
+// JavaScript's garbage collector frees such cycles anyway; the GDScript twin needs this, and newMatch calls it in both.
+export function dispose(S){
+  for (const f of S.fighters){ f.launchBy = null; f.rush = null; }
+  S.game.ko = null; S.game.clash = null; S.dirS.ex = null; S.beams.length = 0;
 }
 
 // The seed must be an integer: picking one from the clock is the host's job. ai is {p1, p2}; a missing entry keeps the
@@ -54,19 +61,18 @@ export function newMatch(S, seed, ai){
   checkFxRng(S.opts.fxRng);
   S.game.seed = seed >>> 0;
   S.rng = createRng(S.game.seed);
-  S.rngFx = S.rng;
   genWorld(S);
   const p1ai = ai && ai.p1 != null ? !!ai.p1 : S.fighters.length ? !!S.fighters[0].ai : true;
   const p2ai = ai && ai.p2 != null ? !!ai.p2 : S.fighters.length ? !!S.fighters[1].ai : true;
+  dispose(S);
   S.fighters = [createFighter(ROSTER[0], 2150, 'p1', p1ai), createFighter(ROSTER[1], 2900, 'p2', p2ai)];
   S.fighters[0].y = 60; S.fighters[1].y = 60; S.fighters[1].face = -1;
   S.fighters[0].stance = 0; S.fighters[1].stance = 0;
-  S.fx.parts.length = 0; S.beams.length = 0; S.fx.floats.length = 0; S.T = 0;
-  S.game.ko = null; S.game.koT = 0; S.game.ts = 1; S.fx.banner = null; S.game.clash = null;
+  S.beams.length = 0; S.T = 0;
+  S.game.ko = null; S.game.koT = 0; S.game.ts = 1; S.game.clash = null;
   S.dirS.ex = null; S.dirS.cool = 0.6; S.dirS.stop = 0;
   S.dirS.lastLaunch = ''; S.dirS.lastLaunch2 = '';   // launch-variety history must not carry over from the previous match
-  S.fx.shake = 0;   // the prototype carries cam.shake into the next match; a seed alone must reproduce the state
-  S.out.feed.length = 0;
+  S.out.feed.length = 0; S.out.fx.length = 0;
   S.dt = 0;
 }
 
@@ -76,22 +82,20 @@ export function step(S, inputs){
   const dtReal = DT;
   const dt = dtReal*S.game.ts;
   S.dt = dt;
-  if (S.dirS.stop > 0){ S.dirS.stop -= dtReal; stepParts(S, dt*0.1); S.fx.shake *= S.m.pow(0.02, dt); return false; }
+  if (S.dirS.stop > 0){ S.dirS.stop -= dtReal; tickMark(S, dt, true); return false; }
   S.T += dt;
   if (S.game.ko){ S.game.koT += dt; if (S.game.koT > 2.2) S.game.ts = 1; }
   const ord = next(S.rng) < 0.5 ? [0, 1] : [1, 0];
   for (const k of ord) control(S, S.fighters[k], inputs ? inputs[k] : null);
   for (const f of S.fighters) stepFighter(S, f, dt);
   dirUpdate(S, dt);
-  beamStep(S, dt); stepParts(S, dt);
+  beamStep(S, dt); tickMark(S, dt, false);
   if (S.game.clash){
     const c = S.game.clash, p = clamp((S.T - c.t0)/c.dur, 0, 1);
     const mid = 0.5 + (c.aw ? 1 : -1)*0.35*p, ax = c.A.x, dx = sdx(ax, c.D.x);
     spark(S, wrap(ax + dx*mid), (c.A.y + (c.D.y - c.A.y)*mid) + 38, 3, '#ffffff', 700);
-    S.fx.shake = Math.max(S.fx.shake, 7);
+    shake(S, 7);
   }
-  if (S.fx.banner){ S.fx.banner.t += dt; if (S.fx.banner.t > S.fx.banner.dur) S.fx.banner = null; }
-  S.fx.shake *= S.m.pow(0.02, dt);   // the shake decay from the prototype's camStep; the camera follow is the host's
   return true;
 }
 

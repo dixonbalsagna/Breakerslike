@@ -16,6 +16,7 @@ func _init() -> void:
 	print("Meridian GDScript parity   Godot %s" % Engine.get_version_info().string)
 	check("literals", _literals(g))
 	check("constants", _constants(g))
+	check("cosmetic stream seeds", _stream_seeds(g))
 	check("rng", _rng(g))
 	check("wrap", _wrap(g))
 	check("sin/cos", _sincos(g))
@@ -90,6 +91,16 @@ func _constants(g: Dictionary) -> String:
 	return ""
 
 
+func _stream_seeds(g: Dictionary) -> String:
+	var ids: Array = ["vfx.spark", "vfx.debris", "vfx.dust", "vfx.splash", "vfx.fire", "vfx.charge", "vfx.water", "camera", "audio"]
+	for seed_s in g.streamSeeds:
+		for i in range(ids.size()):
+			var got: int = SimRng.deriveSeed(int(seed_s), ids[i])
+			if got != int(g.streamSeeds[seed_s][i]):
+				return "seed %s %s: %d, want %d" % [seed_s, ids[i], got, int(g.streamSeeds[seed_s][i])]
+	return ""
+
+
 func _rng(g: Dictionary) -> String:
 	for seed_s in g.rng:
 		var r := SimRng.new(int(seed_s))
@@ -144,10 +155,11 @@ func _tick0(g: Dictionary) -> String:
 	for seed_s in g.tick0:
 		var S := SimCore.createSim()
 		SimCore.newMatch(S, int(seed_s))
-		var got: Dictionary = SimHash.stateHash(S)
-		var want: Dictionary = g.tick0[seed_s]
-		if got.gameplay != want.gameplay or got.presentation != want.presentation:
-			var why := "seed %s: gameplay %s (want %s), presentation %s (want %s)" % [seed_s, got.gameplay, want.gameplay, got.presentation, want.presentation]
+		var got: String = SimHash.stateHash(S).gameplay
+		SimCore.dispose(S)
+		var want: String = g.tick0[seed_s]
+		if got != want:
+			var why := "seed %s: %s (want %s)" % [seed_s, got, want]
 			if seed_s == "1":
 				why += "; " + _first_diff(SimHash.collect(S, "gameplay"), g.tick0Values)
 			return why
@@ -202,11 +214,10 @@ static func _intent(d):
 	return i
 
 
-static func _full(S: SimState, cam: SimCamera) -> String:
-	var s: Dictionary = SimHash.stateHash(S)
+static func _full(S: SimState, V: SimFxView, cam: SimCamera) -> String:
 	var h := SimHash.Hasher.new()
 	h.num(cam.x); h.num(cam.y); h.num(cam.z)
-	return s.gameplay + ":" + s.presentation + ":" + h.hex()
+	return SimHash.stateHash(S).gameplay + ":" + SimHash.viewHash(S, V) + ":" + h.hex()
 
 
 ## golden.js goldenRun(): the same run, the same digests.
@@ -214,9 +225,10 @@ func _golden_run(arm: String, seed: int, replay, check_every: int) -> Dictionary
 	var S := SimCore.createSim()
 	var cam := SimCamera.new()
 	SimCore.newMatch(S, seed, replay.ai if replay != null else {})
+	var V := SimFxView.new(seed)
 	_apply_arm(arm, S.fighters)
 	var h := SimHash.Hasher.new()
-	var checkpoints: Array = [_full(S, cam)]
+	var checkpoints: Array = [_full(S, V, cam)]
 	var cur: Array = [null, null]
 	var steps: int = 0
 	var ii: int = 0
@@ -243,9 +255,14 @@ func _golden_run(arm: String, seed: int, replay, check_every: int) -> Dictionary
 			h.text(l.tag)
 			h.text(l.sub)
 		S.out.feed.clear()
+		SimHash.hashFx(h, S.out.fx)
+		V.consume(S, S.out.fx)
+		S.out.fx.clear()
 		if steps % check_every == 0:
-			checkpoints.append(_full(S, cam))
-	return {"ticks": steps, "light": h.hex(), "checkpoints": checkpoints, "final": _full(S, cam)}
+			checkpoints.append(_full(S, V, cam))
+	var result := {"ticks": steps, "light": h.hex(), "checkpoints": checkpoints, "final": _full(S, V, cam)}
+	SimCore.dispose(S)
+	return result
 
 
 static func _compare_run(got: Dictionary, want: Dictionary, label: String, check_every: int) -> String:
@@ -287,39 +304,43 @@ func _replays(g: Dictionary) -> String:
 	return ""
 
 
-## Tick cost: AI-vs-AI matches with no hashing, the host's camera follow included. Reports the mean and the tail;
-## the first tick of each match (warm-up) is reported apart.
+## Tick cost: AI-vs-AI matches with no hashing. The sim tick (step) and the render side's reference cosmetic consumer
+## (view/fx.gd plus the camera follow) are timed apart; the first tick of each match (warm-up) is left out.
 func _bench() -> void:
-	var times := PackedInt64Array()
-	var first: int = 0
-	var parts_at_worst: int = 0
-	var worst: int = 0
+	var sim_t := PackedInt64Array()
+	var view_t := PackedInt64Array()
 	for seed in range(1, 11):
 		var S := SimCore.createSim()
 		var cam := SimCamera.new()
+		var V := SimFxView.new(seed)
 		SimCore.newMatch(S, seed)
 		var steps: int = 0
 		while steps < 18000 and not (S.game.ko != null and S.game.koT > 3.0):
 			var t0: int = Time.get_ticks_usec()
 			SimCore.step(S)
+			var t1: int = Time.get_ticks_usec()
+			V.consume(S, S.out.fx)
 			cam.camStep(S, S.dt, 1200.0, 700.0)
-			var dt: int = Time.get_ticks_usec() - t0
+			var t2: int = Time.get_ticks_usec()
+			S.out.fx.clear()
 			S.out.feed.clear()
-			if steps == 0:
-				first = maxi(first, dt)
-			else:
-				times.append(dt)
-				if dt > worst:
-					worst = dt
-					parts_at_worst = S.fx.parts.size()
+			if steps > 0:
+				sim_t.append(t1 - t0)
+				view_t.append(t2 - t1)
 			steps += 1
-	var sorted := times.duplicate()
-	sorted.sort()
-	var n: int = sorted.size()
-	var total: int = 0
-	for v in sorted:
-		total += v
-	print("time  tick cost over %d ticks of 10 matches: mean %.1f us, p50 %d, p99 %d, p99.9 %d, max %d us (%d particles live then); first tick of a match up to %d us" % [n, float(total) / n, sorted[n / 2], sorted[int(n * 0.99)], sorted[int(n * 0.999)], worst, parts_at_worst, first])
+		SimCore.dispose(S)
+	print("time  sim tick:  " + _dist(sim_t))
+	print("time  cosmetic consumer and camera (render side): " + _dist(view_t))
+
+
+static func _dist(v: PackedInt64Array) -> String:
+	var s := v.duplicate()
+	s.sort()
+	var n: int = s.size()
+	var tot: int = 0
+	for x in s:
+		tot += x
+	return "mean %.1f us, p50 %d, p99 %d, p99.9 %d, max %d us over %d ticks of 10 matches" % [float(tot) / n, s[n / 2], s[int(n * 0.99)], s[int(n * 0.999)], s[n - 1], n]
 
 
 ## The first value that differs from a JS value list (tagged strings from golden.js).
