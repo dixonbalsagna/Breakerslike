@@ -24,6 +24,7 @@
     "ascend_charge": "the winner rises above the loser, charging; wide upward framing",
     "lift_and_display": "the winner hoists the loser and turns toward the nearest settlement; a bark",
     "final_windup": "the final blow's anticipation pose",
+    "_bark": "a cue's bark arg is a line-system trigger id (finisher_landed, finisher_survived), or true for a bark pause with no trigger assigned yet",
     "struggle": "the contest window: the loser's last-ditch struggle, with the survival chance on the HUD",
     "last_look": "camera push-in and a bark pause before the final blow",
     "breaks_hold": "the loser bursts free: aura flare, afterimage",
@@ -58,6 +59,8 @@
       "id": "generic",
       "fighter": "*",
       "profile": "authored",
+      "name": { "text": "Finishing Blow", "placeholder": true, "source": "docs/narrative/finishers.md" },
+      "barks": { "bark_landed": "finisher_landed", "bark_survived": "finisher_survived", "_note": "line-system trigger ids (docs/narrative/line-system.md section 13): bark_landed fires at the last_look cue, bark_survived at the holds_on cue" },
       "timeUnit": "tick",
       "_about": "For any fighter without its own finisher (and later the minions). About 3.1 s to the final blow: catch, two blows, a wind-up, the contest, then the final blow or the escape.",
       "beats": [
@@ -73,13 +76,13 @@
       ],
       "outcomes": {
         "landed": [
-          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": true } },
+          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
           { "tick": 30, "op": "finalBlow", "args": { "w": "W", "dmg": 55, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.30, "shake": 20 }, "launch": { "mode": "planner_long", "force": 2600 } } }
         ],
         "survived": [
           { "tick": 0, "op": "cue", "args": { "cue": "breaks_hold", "who": "L" } },
           { "tick": 3, "op": "separate", "args": { "w": "W", "speed": 900 } },
-          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L" } },
+          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L", "bark": "finisher_survived" } },
           { "tick": 45, "op": "nop" }
         ]
       },
@@ -90,6 +93,8 @@
       "id": "kai",
       "fighter": "KAI",
       "profile": "authored",
+      "name": { "text": "Skyward Lance", "placeholder": true, "source": "docs/narrative/finishers.md" },
+      "barks": { "bark_landed": "finisher_landed", "bark_survived": "finisher_survived", "_note": "line-system trigger ids (docs/narrative/line-system.md section 13): bark_landed fires at the last_look cue, bark_survived at the holds_on cue" },
       "timeUnit": "tick",
       "character": "Hero (care 1.0). Clean and athletic: catches the foe in flight, a three-blow flurry, then rises and drives a point-blank lance skyward. The last blow goes up, away from the ground and the people on it.",
       "beats": [
@@ -106,13 +111,13 @@
       ],
       "outcomes": {
         "landed": [
-          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": true } },
+          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
           { "tick": 36, "op": "finalBlow", "args": { "w": "W", "dmg": 60, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 20 }, "launch": { "mode": "fixed", "ux": 0.15, "uy": 1.0, "force": 2800, "faceRelative": true } } }
         ],
         "survived": [
           { "tick": 0, "op": "cue", "args": { "cue": "breaks_hold", "who": "L" } },
           { "tick": 3, "op": "separate", "args": { "w": "W", "speed": 900 } },
-          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L" } },
+          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L", "bark": "finisher_survived" } },
           { "tick": 45, "op": "nop" }
         ]
       },
@@ -127,6 +132,8 @@
       "id": "vorr",
       "fighter": "VORR",
       "profile": "authored",
+      "name": { "text": "The Display", "placeholder": true, "source": "docs/narrative/finishers.md" },
+      "barks": { "bark_landed": "finisher_landed", "bark_survived": "finisher_survived", "_note": "line-system trigger ids (docs/narrative/line-system.md section 13): bark_landed fires at the last_look cue, bark_survived at the holds_on cue" },
       "timeUnit": "tick",
       "character": "Villain (care -0.8, feeds on collateral). Brutal: seizes by the throat, headbutts, slams the foe into the ground, stomps, then hoists them toward the nearest settlement. The last blow hurls them along the planner's long-haul candidates, where the villain's personality term seeks population.",
       "beats": [
@@ -144,13 +151,13 @@
       ],
       "outcomes": {
         "landed": [
-          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": true } },
+          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
           { "tick": 36, "op": "finalBlow", "args": { "w": "W", "dmg": 60, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 22 }, "launch": { "mode": "planner_long", "force": 3000 } } }
         ],
         "survived": [
           { "tick": 0, "op": "cue", "args": { "cue": "breaks_hold", "who": "L" } },
           { "tick": 3, "op": "separate", "args": { "w": "W", "speed": 900 } },
-          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L" } },
+          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L", "bark": "finisher_survived" } },
           { "tick": 45, "op": "nop" }
         ]
       },
@@ -165,24 +172,28 @@
   "shapes": {
     "_about": "Shapes for the four real fighters' finishers, to be authored when their parts and forms exist. Each is a skeleton with fixed slots (what makes it that fighter's finisher) and generative slots (filled by the procedural composer, procedural-moves.md sections 4.2 and 7). Every one keeps the same contest and the same two outcomes. Budget: 3 to 8 s to the final blow (section 10 set pieces). Variants by form tier are expected (damage-model.md section 5). Names are Narrative's, screened by Legal.",
     "protagonist": {
+      "placeholderName": "Everything",
       "kind": "energy finisher",
       "fixed": ["catch", "ripple-step flurry: 3 to 5 teleport strikes, each with the air-ripple tell", "rise and gather", "contest", "landed: a point-blank all-out energy blast"],
       "generative": ["teleport angles from terrain and the loser's position", "strike shapes from his vocabulary", "blast path from the signature layers (skyward by default; into the proving ground after the fold, spec-wounds.md section 7)"],
       "formVariants": "one per transformation stage (6 or more); later stages add flurry steps and blast scale"
     },
     "antihero": {
+      "placeholderName": "The Verdict",
       "kind": "finish by hand",
       "fixed": ["energy barrage until the loser submits (volley count scales with Pride)", "closes in", "contest", "landed: a brutal hand finisher, no beam"],
       "generative": ["barrage pattern and angles", "the hand finisher's strike shapes", "the fusion form's variant (Tandem, if accepted)"],
       "formVariants": "per form; Pride drives the taunt pause before the last blow"
     },
     "empress": {
+      "placeholderName": "Clean Cut",
       "kind": "precise cutting finisher",
       "fixed": ["cutting beams pin the loser", "mantle and tail strikes (the bladed mantle is her fifth region)", "contest", "landed: one exact cutting beam"],
       "generative": ["cut paths from terrain", "which appendage strikes", "revision-stage flourishes"],
       "formVariants": "per 'revision': joke revisions get comedic flourishes, real forms get the full cut"
     },
     "cyborg": {
+      "placeholderName": "Last Orders",
       "kind": "portal blitz and devour",
       "fixed": ["blitz from several portals", "seize", "contest", "landed: the devour finisher (graphic, Mature rating; Game Design's food mechanic)"],
       "generative": ["portal positions from terrain", "blitz order", "what the portals spew (the sandwich parody, per Orb)"],
