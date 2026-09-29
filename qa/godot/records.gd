@@ -18,8 +18,6 @@ var re_beam := RegEx.create_from_string("^(.+) over (\\w+) \\((.+)\\) → (\\w+)
 var re_launch := RegEx.create_from_string("^LAUNCH: (.+)$")
 var re_parry := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) PARRIES$")
 var re_chain := RegEx.create_from_string("^CHAIN x(\\d+) ended$")
-var re_hide := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) goes to ground$")
-var re_found := RegEx.create_from_string("^[A-Z][A-Z0-9-]* found$")
 
 
 func _init() -> void:
@@ -130,6 +128,13 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 			prev_ex = S.dirS.ex
 		for e in S.out.fx:
 			rec.fxCounts[e.type] = rec.fxCounts.get(e.type, 0) + 1
+			# structured twins of feed lines (QA-004): hides, finds and tier-ups come from events, not text
+			if e.type == "hide_start":
+				rec.hides[int(e.actor)] += 1
+			elif e.type == "found":
+				rec.found += 1
+			elif e.type == "tier_up":
+				rec.maxTier[int(e.actor)] = maxi(rec.maxTier[int(e.actor)], int(e.tier))
 			if e.type == "damage" and e.region != "":
 				rec.dmgByRegion[e.region] = rec.dmgByRegion.get(e.region, 0.0) + e.amount
 			if _keep(e.type):
@@ -210,9 +215,3 @@ func parse(rec: Dictionary, tag: String, sub: String, slot: Dictionary) -> void:
 	if m:
 		rec.chains.append(int(m.get_string(1)))
 		return
-	m = re_hide.search(tag)
-	if m:
-		rec.hides[slot.get(m.get_string(1), 0)] += 1
-		return
-	if re_found.search(tag):
-		rec.found += 1
