@@ -53,3 +53,42 @@ Beams by biome after the change: mountains 38%, forest 21%, desert 15%, ocean 12
 ## How to measure
 
 `sim/director/tools/tempo.gd` only observes. It steps matches as `batch.gd` does and reads state and feed lines, so it cannot change behaviour. Arguments: `[matches=100] [baseSeed=1] [--arm=NAME] [--json]`.
+
+## Re-pass at the life-size scale (after World's SC, de1bb05)
+
+The world grew 8 times against the fighters (`WS` 8, planet `PS` 16, `docs/world/scale.md`). Fights drifted back to the sea, BUILDING SMASH took over the planner, and the tick cost rose. What changed in `sim/director`:
+
+| Change | Why |
+| :--- | :--- |
+| BUILDING SMASH scores height as `h / (32 x WS)`, and its base drops from 12 to 7 | Buildings are 8 times taller, so the old `h / 32` made it win about half of all launches |
+| The flight predictor stops at the first standing building, for the flight and for the slide | A throw into a town is scored as the short crash it will be |
+| SMASH ACROSS is "long haul or nothing": its force rises (up to 3 x) so the predicted flight reaches 13,200 units, and it drops out below 9,600 | The long haul should actually be long |
+| MOUNTAINSIDE aims at the nearest slope ahead, out to 12,480 units (it used to probe one point) | A second throw that can cross real distance |
+| Water-landing term -45 (was -10); "no launch" 23 (was 34); UPPERCUT 10 + 12 near the ground (was 14 + 14); SLAM DOWN 18 or 0 plus tier (was 24 or 6); repeat penalties 20 and 10 (were 14 and 5) | Fewer vertical slams and fewer throws into the sea, with launches kept at 4 to 6 a minute |
+| No chain window when the launched target is more than 2,500 units away | A chain rush is a 0.24 s blink; catching a long haul in mid-air cut it short |
+| AI attack chance per beat 0.62 / 0.5 / 0.56 (was 0.55 / 0.45 / 0.5); after 6 s with no attack from either fighter, beats stop holding | Fewer lulls over 10 s |
+| Fighters hold 150 units above the sea (was 30) and dash back up when underwater and not hiding | Less time underwater |
+| The hero's lure reads one population histogram per tick, with no helper calls in its loops; escape cover is computed from the biome table | Recovers the tick cost |
+
+Results over 400 matches per arm (seeds 1 to 400), from `tempo.gd`, before (de1bb05) → after:
+
+| Measure | Target | Default | Swap | Villain mirror (after) |
+| :--- | :--- | :--- | :--- | ---: |
+| Exchanges per minute | 8 to 12 | 10.7 → 12.0 | 10.8 → 12.2 | 13.6 |
+| Launches per minute | 4 to 6 | 4.6 → 4.1 | 4.9 → 4.3 | 4.4 |
+| Largest launch type | at most 40% | BUILDING SMASH 49.3% → SMASH ACROSS 32.0% | 52.5% → 32.9% | BUILDING SMASH 38.6% |
+| BUILDING SMASH share | 8 to 20% (§5b) | 49.3% → 19.6% | 52.5% → 19.0% | 38.6% |
+| Long hauls (9,000 units, 120 bh) | at least 30% | 27.0% → 27.3% | 24.7% → 27.9% | 18.8% |
+| New-biome landings | at least 25% | 42.6% → 41.5% | 42.7% → 43.5% | 41.2% |
+| Slides among ground landings | 60 to 85% | 52.7% → 57.6% | 53.5% → 58.4% | 51.2% |
+| Fight time underwater | at most 10% | 13.9% → 9.7% | 11.6% → 9.9% | 7.3% |
+| Gaps over 10 s (count per 400 matches) | | 492 → 296 | 483 → 272 | 129 |
+| Timeouts at 300 s | at most 1% | 11 → 2 | 13 → 3 | 2 |
+| Match length, mean | | 127 s → 109 s | 122 s → 108 s | 94 s |
+| KAI win rate | | 43.4% → 38.9% | 38.5% → 39.3% | |
+
+KAI over both slots: 41.0% before and 39.1% after, a change within noise at this sample size. Sim tick (`parity.gd` bench, run alone): 81 µs mean after SC (EP's figure) → 61.2 µs, p99.9 766 µs, max 1.4 ms.
+
+Two bands stay just short:
+- **Long hauls** are 27 to 28% against 30%. SMASH ACROSS is about a third of launches and about 80% of them now go long. More would push it toward the 40% cap. S2's break launches are long by rule and will add to the share.
+- **Slides** are 57 to 58% against 60%. SLAM DOWN and UPPERCUT are vertical by design and still about a third of launches.

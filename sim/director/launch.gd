@@ -7,7 +7,11 @@ class_name DirLaunch
 ##    when the landing is open ground (empty land, not a town); a water term steers away from launches that end in the
 ##    sea (a fighter who hits water stops dead and the fight sinks);
 ##  - SLAM DOWN no longer gets a bonus over the ocean or the city;
-##  - SMASH ACROSS is the long haul: a rising arc with extra force;
+##  - SMASH ACROSS is the long haul or nothing: a rising arc whose force is raised (up to HAUL_FM_MAX) so the predicted
+##    flight reaches HAUL_TARGET, and it drops out when it still cannot carry the target HAUL_MIN;
+##  - the predictor stops a flight or a slide at the first standing building, so a throw into a town is scored as the
+##    short crash it will be; MOUNTAINSIDE aims at the nearest slope ahead out to MOUNTAIN_REACH;
+##  - BUILDING SMASH scores building height in fighter-scale terms (h / (32 x WS)) since the world scale;
 ##  - "NONE" competes too: when no launch beats it, the strike knocks the target back instead of launching it, which
 ##    keeps launches to a few a minute and makes each one count. Holding back is scored with the personality term at
 ##    the target's position, so the hero throws the villain out of a town rather than leaving the fight there.
@@ -16,18 +20,25 @@ class_name DirLaunch
 const NOISE: float = 8.0            # uniform noise added to every candidate
 const CARE_W: float = 34.0          # personality: -care x this x population near the landing point
 const CARE_R: float = 700.0 * SimConst.WS
-const REPEAT_1: float = 14.0        # variety: the previous launch
-const REPEAT_2: float = 5.0         # variety: the one before
+const REPEAT_1: float = 20.0        # variety: the previous launch
+const REPEAT_2: float = 10.0        # variety: the one before
 const DIST_W: float = 12.0          # per 1000 units of predicted horizontal travel
 const DIST_UNIT: float = 1000.0 * SimConst.TRAV_LAUNCH   # a launch's horizontal reach is TRAV_LAUNCH times longer (world/slide.gd)
 const DIST_CAP: float = 3.0 * DIST_UNIT
+const HAUL_TARGET: float = 2.2 * DIST_UNIT   # SMASH ACROSS aims to carry the target this far (13,200 units, 176 bh)
+const HAUL_FM_MAX: float = 3.0             # ... with at most this force multiplier
+const HAUL_MIN: float = 1.6 * DIST_UNIT     # below this predicted travel SMASH ACROSS drops out (9,600 units, 128 bh)
+const HAUL_SHORT: float = 100.0            # the score it loses then
+const MOUNTAIN_STEP: float = 520.0 * SimConst.WS   # the mountainside probe: first step (the old single probe) ...
+const MOUNTAIN_REACH: float = 1560.0 * SimConst.WS # ... and the farthest slope it looks for (12,480 units)
 const OPEN_POP: float = 0.2         # popNear(landing, CARE_R) at or below this is open ground
 const NEW_BIOME_W: float = 10.0     # predicted landing in a different biome that is not ocean
-const WATER_W: float = 10.0         # predicted landing in the sea
-const NONE_BASE: float = 34.0       # "no launch"
+const WATER_W: float = 45.0         # predicted landing in the sea
+const NONE_BASE: float = 23.0       # "no launch"
 const ACROSS_UY: float = 0.32       # SMASH ACROSS arc
 const ACROSS_FORCE: float = 2.0     # SMASH ACROSS force multiplier
 const KNOCKBACK: float = 700.0      # push when no launch is chosen
+const PREDICT_REACH: float = 40000.0  # buildings farther than this from the launch point are not checked
 const PREDICT_STEPS: int = 240      # flight predictor horizon: 4 s at the fixed step
 
 
@@ -38,15 +49,20 @@ static func chooseLaunch(S: SimState, A, D, force: float) -> Dictionary:
 	var bio: String = WorldBiomes.biomeAt(D.x)
 	var f: float = A.face
 	var c: Array = []
-	c.append({"name": "UPPERCUT", "ux": 0.25 * f, "uy": 1.0, "s": 14.0 + (14.0 if alt < 120.0 else 0.0)})
-	c.append({"name": "SLAM DOWN", "ux": 0.2 * f, "uy": -1.25, "s": (24.0 if alt > 140.0 else 6.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})
-	c.append({"name": "SMASH ACROSS", "ux": f, "uy": ACROSS_UY, "fm": ACROSS_FORCE, "s": 16.0})
+	c.append({"name": "UPPERCUT", "ux": 0.25 * f, "uy": 1.0, "s": 10.0 + (12.0 if alt < 120.0 else 0.0)})
+	c.append({"name": "SLAM DOWN", "ux": 0.2 * f, "uy": -1.25, "s": (18.0 if alt > 140.0 else 0.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})
+	c.append({"name": "SMASH ACROSS", "ux": f, "uy": ACROSS_UY, "fm": ACROSS_FORCE, "s": 18.0})
 	for sign in [-1.0, 1.0]:
 		var nb = WorldStructures.nearestBuilding(S, D.x, sign, 1100.0 * SimConst.WS, D.y)
 		if nb != null:
-			c.append({"name": "BUILDING SMASH", "ux": sign, "uy": 0.12, "s": 12.0 + nb.b.h / 32.0 + A.tier * 3.0 + (6.0 if sign == f else -4.0), "land": D.x + sign * nb.d})
-		if WorldBiomes.biomeAt(D.x + sign * 520.0 * SimConst.WS) == "mountains":
-			c.append({"name": "MOUNTAINSIDE", "ux": sign, "uy": 0.05, "s": 24.0, "land": D.x + sign * 520.0 * SimConst.WS})
+			c.append({"name": "BUILDING SMASH", "ux": sign, "uy": 0.12, "s": 7.0 + nb.b.h / (32.0 * SimConst.WS) + A.tier * 3.0 + (6.0 if sign == f else -4.0), "land": D.x + sign * nb.d})
+		# The nearest mountainside ahead, out to MOUNTAIN_REACH: near slopes give a short throw, far ones a long haul.
+		var md: float = MOUNTAIN_STEP
+		while md <= MOUNTAIN_REACH:
+			if WorldBiomes.biomeAt(D.x + sign * md) == "mountains":
+				c.append({"name": "MOUNTAINSIDE", "ux": sign, "uy": 0.05, "s": 24.0, "land": D.x + sign * md})
+				break
+			md += MOUNTAIN_STEP
 	c.append({"name": "NONE", "ux": 0.0, "uy": 0.0, "s": NONE_BASE})
 	var tierF: float = 1.0 + 0.16 * (A.tier - 1.0)
 	for k in c:
@@ -57,6 +73,14 @@ static func chooseLaunch(S: SimState, A, D, force: float) -> Dictionary:
 			continue
 		var fm: float = k.fm if k.has("fm") else 1.0
 		var p: Dictionary = predictFlight(S, D.x, D.y, WorldSlide.launchVX(k.ux, k.uy, force * fm * tierF), k.uy * force * fm * tierF, WorldSlide.launchTravel(k.ux, k.uy))
+		if k.name == "SMASH ACROSS" and p.travel < HAUL_TARGET:
+			# The long haul: raise the force (once, square-root rule, capped) so the predicted flight reaches HAUL_TARGET.
+			fm = SimMathx.jmin(HAUL_FM_MAX, fm * sqrt(HAUL_TARGET / SimMathx.jmax(p.travel, 1.0)))
+			k.fm = fm
+			p = predictFlight(S, D.x, D.y, WorldSlide.launchVX(k.ux, k.uy, force * fm * tierF), k.uy * force * fm * tierF, WorldSlide.launchTravel(k.ux, k.uy))
+		if k.name == "SMASH ACROSS" and p.travel < HAUL_MIN:
+			# SMASH ACROSS is the long haul or nothing: when it cannot carry the target HAUL_MIN, it is not offered.
+			k.s -= HAUL_SHORT
 		var lx: float = k.land if k.has("land") else p.x
 		k.travel = absf(SimWrap.sdx(D.x, lx)) if k.has("land") else p.travel
 		var popL: float = WorldStructures.popNear(S, lx, CARE_R)
@@ -98,6 +122,22 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 	var vy: float = vy0
 	var travel: float = 0.0
 	var t: float = 0.0
+	# Standing buildings ahead within reach, as [offset along the flight, half width + 16, ground, top, index], sorted by
+	# offset: the flight stops at the first one it meets (the same box as SimFighter._buildingHits; smashing through is
+	# not predicted). The flight never reverses (drag and water only slow it), so one pointer walks the list.
+	var dir0: float = -1.0 if vx0 < 0.0 else 1.0
+	var blds: Array = []
+	var bi: int = 0
+	for b in S.buildings:
+		if b.alive:
+			var off: float = SimWrap.sdx(x0, b.x) * dir0
+			var half: float = b.w / 2.0 + 16.0
+			if off + half > 0.0 and off < PREDICT_REACH:
+				var gy: float = WorldTerrain.groundY(S, b.x)
+				blds.append([off, half, gy, gy + WorldStructures.curH(b), bi])
+		bi += 1
+	blds.sort_custom(func(p, q): return p[0] < q[0] or (p[0] == q[0] and p[4] < q[4]))
+	var bp: int = 0
 	for n in range(PREDICT_STEPS):
 		t += dt
 		vy -= 1000.0 * dt
@@ -110,6 +150,15 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 			vy *= kWy
 			if SimDetMath.hypot(vx, vy) < 200.0 and t > 0.3:
 				return {"x": x, "travel": absf(travel), "water": true}
+		var along: float = travel * dir0
+		while bp < blds.size() and blds[bp][0] + blds[bp][1] <= along:
+			bp += 1
+		var q: int = bp
+		while q < blds.size() and blds[q][0] - blds[q][1] < along:
+			var bb: Array = blds[q]
+			if y < bb[3] and y > bb[2] - 10.0:
+				return {"x": x, "travel": absf(travel), "water": false, "building": true}
+			q += 1
 		var g: float = WorldTerrain.groundY(S, x)
 		if y <= g:
 			# The same rule as SimFighter.impact: a slam (or the sea, or too slow) lands here; anything shallower is a
@@ -121,6 +170,13 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 				return {"x": x, "travel": absf(travel), "water": sea}
 			var dir: float = 1.0 if vx >= 0.0 else -1.0
 			var d: float = minf(WorldSlide.slideDistance(spN, WorldSlide.slope(S, x, dir), trav), SimConst.W * 0.25)
+			# A slide stops at the first standing building on its path (the slide keeps the flight's direction).
+			var along2: float = travel * dir0
+			for q2 in range(bp, blds.size()):
+				var ahead: float = blds[q2][0] - blds[q2][1] - along2
+				if ahead >= 0.0 and ahead < d:
+					d = ahead
+					break
 			return {"x": SimWrap.wrap(x + dir * d), "travel": absf(travel) + d, "water": false}
 	return {"x": x, "travel": absf(travel), "water": y < 0.0 and WorldTerrain.seaAt(S, x)}
 

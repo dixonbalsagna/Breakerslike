@@ -33,7 +33,7 @@ func _init() -> void:
 	var base: int = int(pos[1]) if pos.size() > 1 else 1
 	var agg := {"n": n, "fightSec": 0.0, "exchanges": 0, "exLen": [], "gaps": [], "atkGaps": [], "launches": 0, "launchTypes": {},
 		"flights": 0, "long": 0, "newBiome": 0, "plannerFlights": 0, "plannerLong": 0, "plannerNewBiome": 0, "travel": [],
-		"underwaterSec": 0.0, "oceanSec": 0.0, "biomeSec": {}, "menace": [], "anguish": [], "beams": {}, "lens": [], "p1Wins": 0, "timeouts": 0, "civ": []}
+		"underwaterSec": 0.0, "oceanSec": 0.0, "biomeSec": {}, "groundLandings": 0, "slideLandings": 0, "menace": [], "anguish": [], "beams": {}, "lens": [], "p1Wins": 0, "timeouts": 0, "civ": []}
 	for i in range(n):
 		run_match(base + i, arm, agg)
 	var out: Dictionary = summarize(agg)
@@ -105,10 +105,16 @@ func run_match(seed: int, arm: String, agg: Dictionary) -> void:
 				agg.oceanSec += dt
 			for r in fl[k]:
 				r.travel += SimWrap.sdx(prevX[k], f.x)
+				if f.slide > 0.0:
+					r.slid = true
 			if f.state == "launched" and prevState[k] != "launched":
-				fl[k].append({"bio": WorldBiomes.biomeAt(f.x), "travel": 0.0, "planner": plannerLaunch})
+				fl[k].append({"bio": WorldBiomes.biomeAt(f.x), "travel": 0.0, "planner": plannerLaunch, "slid": false})
 			# A flight ends when the fighter lands (down or free); a chain catch (locked) and relaunch continue it.
 			if (f.state == "down" or f.state == "free") and not fl[k].is_empty():
+				if f.state == "down":
+					agg.groundLandings += 1
+					if fl[k][0].slid:
+						agg.slideLandings += 1
 				for r in fl[k]:
 					_close(agg, r, WorldBiomes.biomeAt(f.x))
 				fl[k] = []
@@ -199,6 +205,7 @@ func summarize(a: Dictionary) -> Dictionary:
 		"allFlightsLongHaul_pct": _r(100.0 * a.long / maxf(1.0, a.flights), 1),
 		"allFlightsNewBiome_pct": _r(100.0 * a.newBiome / maxf(1.0, a.flights), 1),
 		"flightTravelMedian_units": _r(_median(a.travel), 0),
+		"slideShareOfGroundLandings_pct": _r(100.0 * a.slideLandings / maxf(1.0, a.groundLandings), 1),
 		"underwaterTime_pct": _r(100.0 * a.underwaterSec / (2.0 * a.fightSec), 1),
 		"overOceanTime_pct": _r(100.0 * a.oceanSec / (2.0 * a.fightSec), 1),
 		"beamsByBiome_pct": beamShare,

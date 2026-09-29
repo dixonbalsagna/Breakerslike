@@ -128,7 +128,14 @@ static func runBeat(S: SimState, ex, b) -> void:
 			push_error("runBeat: unknown op " + b.op)
 
 
+## No chain window when the launched target is already out of reach: a chain rush is a 0.24 s blink, and catching a
+## long haul in mid-air would cut it short (balance-targets.md section 10: long gap closes are pursuit flights).
+const CHAIN_REACH: float = 2500.0
+
+
 static func openWindow(S: SimState, ex) -> void:
+	if ex.D.state == "launched" and absf(SimWrap.sdx(ex.A.x, ex.D.x)) > CHAIN_REACH:
+		return
 	var e := SimState.Ext.new()
 	e.start = S.T
 	e.until = S.T + 0.6
@@ -196,7 +203,8 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 		i += 1
 	if ex.ext != null and S.T < ex.ext.until:
 		var A = ex.A
-		if A.lastAtkT >= ex.ext.start and ex.combo < 5.0 and A.ki >= 6.0 and A.hp > 0.0 and ex.D.hp > 0.0:
+		var inReach: bool = not (ex.D.state == "launched" and absf(SimWrap.sdx(A.x, ex.D.x)) > CHAIN_REACH)
+		if A.lastAtkT >= ex.ext.start and ex.combo < 5.0 and A.ki >= 6.0 and A.hp > 0.0 and ex.D.hp > 0.0 and inReach:
 			chain(S, ex)
 	var pending: bool = false
 	for b in ex.beats:
