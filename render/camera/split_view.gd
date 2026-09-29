@@ -22,7 +22,8 @@ var main = null            # Rendering's main scene, or a stand-in with the same
 var viewports: Array = [null, null]
 var shake_scale: float = 1.0          # the player's shake scale, 0 to 1 (default 1)
 var reduced_motion: bool = false      # the player's reduced-motion setting: shake at a quarter of the scale
-var shake_b := PaneShake.new()        # pane 1's cosmetic shake stream; pane 0 uses the host's jitter
+var shake_a := PaneShake.new()        # pane 0's cosmetic shake stream ("camera", the host's name for it)
+var shake_b := PaneShake.new()        # pane 1's ("camera_b")
 var last_frame: SplitFrame = null
 var _rect: ColorRect                  # the mask rect: two panes blended by the divider
 var _solo: TextureRect                # one pane, no shader: what the screen is when only one pane shows
@@ -114,19 +115,21 @@ func set_reduced_motion(on: bool) -> void:
 func _on_ticked(n: int) -> void:
 	var h = main.host
 	if n < _host_ticks or int(h.seed) != _host_seed:
+		shake_a.reset(int(h.seed), "camera")
 		shake_b.reset(int(h.seed))
 		_host_seed = int(h.seed)
 	_host_ticks = n
+	var vh: float = maxf(get_viewport().get_visible_rect().size.y, 1.0)
+	var amounts: PackedFloat64Array = main.split_rig.current().shake
+	shake_a.scale = _shake()
 	shake_b.scale = _shake()
-	shake_b.tick(h.fxv.shake, maxf(get_viewport().get_visible_rect().size.y, 1.0))
+	shake_a.tick(amounts[0], vh)
+	shake_b.tick(amounts[1], vh)
 
 
 ## Called by main for each pane's shake. Pane 0 is the host's jitter; pane 1 has this view's own stream.
 func pane_jitter(i: int) -> Vector2:
-	var vh: float = maxf(get_viewport().get_visible_rect().size.y, 1.0)
-	if i == 0:
-		return PaneShake.capped(main.host.jitter if main != null else Vector2.ZERO, vh, _shake())
-	return shake_b.jitter
+	return shake_a.jitter if i == 0 else shake_b.jitter
 
 
 func _shake() -> float:

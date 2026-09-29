@@ -67,6 +67,7 @@ var _land_t: float = 0.0
 var _launch_anchor_x: float = 0.5
 var _prev_state: Array = ["free", "free"]
 var _push: Array = [-1.0, -1.0]
+var _shk: PackedFloat64Array = PackedFloat64Array([0.0, 0.0])   # per-pane shake from the shake events {k, x}
 var _launch_evt: Array = [false, false]   # a `launch` event arrived for this fighter this tick
 var fold_active: bool = false
 var _fold: Vector3 = Vector3.ZERO
@@ -121,6 +122,7 @@ func reset(S: SimState, p_vw: float, p_vh: float) -> void:
 	_slam_slot = -1
 	_flash = 0.0
 	_push = [-1.0, -1.0]
+	_shk = PackedFloat64Array([0.0, 0.0])
 	fold_active = false
 	_below_t = 0.0
 	_above_t = 0.0
@@ -154,6 +156,7 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 		if String(_ef(ev, "type", "")) == "relocate":
 			cut = true
 	_read_events(S, events)
+	_update_shake(events)
 	_flash = maxf(0.0, _flash - DT)
 	_update_orientation(S)
 	r_now = _metric(S)
@@ -205,7 +208,10 @@ func cut(S: SimState) -> void:
 static func zoom_u(vw_: float, vh_: float, ad: float, dy: float, tier: float) -> float:
 	var span_x: float = ad + CamParams.REF_MARGIN_X
 	var span_y: float = dy + CamParams.REF_MARGIN_Y
-	var z: float = minf(minf(vw_ / span_x, vh_ * 0.8 / span_y), CamParams.ZOOM_MAX)
+	# The reference framing puts fighters up to 44% of the width from the centre, outside UI's clear zone (where its edge
+	# pointer chip then sits on top of them). The zone term keeps both inside it, and the split line follows.
+	var z: float = minf(minf(vw_ / span_x, vh_ * 0.8 / span_y), CamParams.ZONE_W * vw_ / maxf(ad, 1.0))
+	z = minf(z, CamParams.ZOOM_MAX)
 	z *= 1.0 - CamParams.REF_TIER * (tier - 1.0)
 	return clampf(z, CamParams.ZOOM_MIN, CamParams.ZOOM_MAX)
 
@@ -489,6 +495,35 @@ static func _ef(ev, k: String, d):
 		return ev.get(k, d)
 	var v = ev.get(k)
 	return d if v == null else v
+
+
+## Each pane's shake from the tick's shake events {k, x} (Controls' shake pass, docs/controls/shake-pass.md): an event
+## reaches a pane scaled by clamp(1 - d / 4000, 0.35, 1), d being the wrapped distance from the pane's view centre; with
+## two panes the one farther from the event gets 35% of that. The amount decays as the fx consumer's does, 0.02 per
+## second, and holds through a hit-stop freeze (the tick event's `frozen`).
+func _update_shake(events: Array) -> void:
+	var dt: float = DT
+	var frozen: bool = false
+	for ev in events:
+		match String(_ef(ev, "type", "")):
+			"shake":
+				var k: float = float(_ef(ev, "k", 0.0))
+				var x: float = float(_ef(ev, "x", _cur.cam_x[0]))
+				var f: Array = [0.0, 0.0]
+				for i in range(2):
+					f[i] = clampf(1.0 - absf(SimWrap.sdx(_cur.cam_x[i], x)) / CamParams.SHAKE_FALLOFF, CamParams.SHAKE_FAR, 1.0)
+				if sep > 0.5:
+					var near: int = 0 if absf(SimWrap.sdx(_cur.cam_x[0], x)) <= absf(SimWrap.sdx(_cur.cam_x[1], x)) else 1
+					f[1 - near] *= CamParams.SHAKE_FAR
+				for i in range(2):
+					_shk[i] = maxf(_shk[i], k * f[i])
+			"tick":
+				dt = float(_ef(ev, "dt", DT))
+				frozen = bool(_ef(ev, "frozen", false))
+	if not frozen:
+		var d: float = pow(CamParams.SHAKE_DECAY, dt)
+		_shk[0] *= d
+		_shk[1] *= d
 
 
 func _begin_solo_clear() -> void:
@@ -915,6 +950,7 @@ func _make_frame(S: SimState) -> SplitFrame:
 	f.held_u = u
 	f.flash = _flash
 	f.slam = _slam_done
+	f.shake = _shk.duplicate()
 	_slam_done = false
 	# Which panes must be rendered.
 	var show0: bool = true

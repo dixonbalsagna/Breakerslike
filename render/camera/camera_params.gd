@@ -20,6 +20,7 @@ const BODY_H: float = 75.0             # a fighter's height in world units (Figh
 const REF_MARGIN_X: float = 700.0      # the reference camera's constants
 const REF_MARGIN_Y: float = 500.0
 const REF_TIER: float = 0.06
+const ZONE_W: float = 0.51             # UI's fighter-clear zone is 51% of the width (docs/ui/hud-spec.md 2.1): both fighters fit inside it
 const ZOOM_MIN: float = 0.006
 const ZOOM_MAX: float = 1.15
 
@@ -102,4 +103,7 @@ const ANCHOR_STEP_TRANS: float = 0.05
 const DIVIDER_STEP: float = 0.06       # divider centre motion per tick, times vw, outside the slam
 const SHAKE_CAP: float = 0.03          # times vh
 const SHAKE_HIT_STEP: float = 1.0
+const SHAKE_FALLOFF: float = 4000.0   # a shake event at this distance from a pane's centre is scaled down to SHAKE_FAR (Controls' shake pass)
+const SHAKE_FAR: float = 0.35         # ... and the pane farther from the event gets this share of it
+const SHAKE_DECAY: float = 0.02       # per second, the fx consumer's decay
 const MODE_CHANGE_GAP: float = 0.8

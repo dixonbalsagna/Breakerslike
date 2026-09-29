@@ -147,6 +147,7 @@ func _run() -> void:
 	await _scenario("fold", func(): return _fold(), {})
 	await _scenario("solo follow", func(): return _solo_follow(), {})
 	await _scenario("hard cut", func(): return _hard_cut(), {})
+	await _scenario("shake per pane", func(): return _shake_panes(), {})
 	_static_equals_reference()
 	# 8. Real AI matches, then the determinism of the sim.
 	for seed in seeds:
@@ -784,6 +785,38 @@ func _solo_follow() -> Dictionary:
 	for _i in range(120):
 		_tick_rig()
 	_check(_rig.sep <= 0.001, "%s: no merge on the way back" % _label)
+	return {}
+
+
+func _shake_panes() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 9000.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var ev := SimState.FxEvent.new()
+	ev.type = "shake"
+	ev.k = 20.0
+	ev.x = _S.fighters[0].x
+	var tk := SimState.FxEvent.new()
+	tk.type = "tick"
+	tk.dt = SplitRig.DT
+	tk.frozen = false
+	_tick_rig([ev, tk])
+	var f0: float = _rig.current().shake[0]
+	var f1: float = _rig.current().shake[1]
+	var decay: float = pow(CamParams.SHAKE_DECAY, SplitRig.DT)
+	_check(f0 > 20.0 * decay * 0.8 and f0 <= 20.0 * decay + 1e-9, "%s: near pane shake %.3f, want 80 to 100%% of %.3f (the fighter sits a little off the pane centre)" % [_label, f0, 20.0 * decay])
+	_check(f1 < f0 * 0.15 and f1 > 0.0, "%s: far pane shake %.3f is not about 12%% of the near pane's %.3f" % [_label, f1, f0])
+	var frozen := SimState.FxEvent.new()
+	frozen.type = "tick"
+	frozen.dt = SplitRig.DT
+	frozen.frozen = true
+	_tick_rig([frozen])
+	_check(absf(_rig.current().shake[0] - f0) < 1e-9, "%s: shake decayed during a hit-stop freeze" % _label)
+	for _i in range(120):
+		_tick_rig()
+	_check(_rig.current().shake[0] < 0.01, "%s: shake did not die away" % _label)
 	return {}
 
 

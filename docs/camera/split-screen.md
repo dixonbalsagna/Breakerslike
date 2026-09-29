@@ -46,16 +46,16 @@ Consequences that shape the design:
 ## 2. The trigger: how big is the fighter on screen
 
 ```
-z_u  = min(vw / (|d| + 700), 0.8 vh / (|dy| + 500), 1.15) * (1 - 0.06 (max_tier - 1))    the reference formula, unclamped below
+z_u  = min(vw / (|d| + 700), 0.8 vh / (|dy| + 500), 0.51 vw / |d|, 1.15) * (1 - 0.06 (max_tier - 1))    the reference formula plus a clear-zone term (below)
 r    = 75 * z_u / vh                                                                        fighter height as a fraction of the screen height
 ```
 
-`d` is the held signed separation of section 5. The rest is the reference camera's own constants, so the merged shot is the shot you had before (the test checks it against `SimCamera` to 0.0000 px at rest). Two differences from the reference: the camera's y floor is -3,200, not -180 (the reference's predates the scaled world, whose sea floor is at -2,810, and it lost fighters swimming below it), and the zoom rate is capped (section 12).
+`d` is the held signed separation of section 5. The first three terms are the reference camera's own, so at fighter distances the merged shot is the shot you had before (the test checks it against `SimCamera` to 0.0000 px at rest). The fourth is new, from the playtest of the 4.5% line on the live build: the reference framing puts the fighters up to 44% of the width from the centre, outside UI's fighter-clear zone (51% of the width), and UI's edge pointer chip then sat on top of the fighter. The zone term keeps both fighters inside it, so the split line moves from 30 bh to 20 bh (and the merge line from 20 to 15): a fighter is at least 32 px tall and inside the zone, or the screen splits. Two differences from the reference: the camera's y floor is -3,200, not -180 (the reference's predates the scaled world, whose sea floor is at -2,810, and it lost fighters swimming below it), and the zoom rate is capped (section 12).
 
 | Rule | Default | Why |
 | :--- | :--- | :--- |
 | Split when `r` stays below | 0.045 for 0.25 s | 32 px at 720p, 49 at 1080p. A head is 27% of the body, so 9 px at 720p: the least at which the Marked masks' sigils and the head flashes still read |
-| Merge when `r` stays above | 0.060 for 0.40 s | 43 px at 720p. The 1.33 ratio is the hysteresis; in separation (16:9, tier 1, level) it is split at 30.2 bh, merge at 20.3 bh |
+| Merge when `r` stays above | 0.060 for 0.40 s | 43 px at 720p. The 1.33 ratio is the hysteresis; in separation (16:9, tier 1, level, with the zone term) it is split at 20.1 bh, merge at 15.1 bh |
 | Minimum time in a split before a dissolve-merge | 1.2 s | The measured median run under the line is 2.4 s; anything shorter is not worth two transitions |
 | Minimum time merged before splitting again | 0.8 s | |
 | Closing guard | do not open if `r` predicted 0.4 s ahead (from the closing speed) is at or above the split line | A rush from 30 bh is over before the panes finish opening |
@@ -63,7 +63,7 @@ r    = 75 * z_u / vh                                                            
 | A fighter already lost | if the one-view camera has a fighter farther than 0.46 of the width from its centre (or off the top or bottom), split at once: no dwell, and 0.25 s of merged age instead of 0.8 | Found by the real-match run: the reference framing loses the lower fighter once the height difference passes about 1,500 units |
 | Zoom-out lookahead | the one-view camera zooms for the separation it will have 0.3 s from now if it is growing | Fighters dashing apart no longer leave the frame before the split opens |
 
-Because `r` uses the reference formula, it responds to what the reference camera responds to: separation, height difference and tier. At tier 4 the split line is at 23 bh, not 30 (the aura is bigger). A 21:9 screen splits later (42 bh) and a 4:3 screen sooner. Every number is in `camera_params.gd` as a constant, so tuning does not touch code. **Orb decides** the two thresholds; the table of what they mean in pixels:
+Because `r` uses the reference formula, it responds to what the reference camera responds to: separation, height difference and tier. At tier 4 the split line is earlier still (the aura is bigger). A wider screen splits later and a 4:3 screen sooner. Every number is in `camera_params.gd` as a constant, so tuning does not touch code. **Orb decides** the two thresholds; the table of what they mean in pixels:
 
 | Screen height | 720 | 1080 | 1440 | 2160 |
 | :--- | ---: | ---: | ---: | ---: |
@@ -214,9 +214,9 @@ A pane is one full render of the world from its camera; the scene is built aroun
 
 - **`SplitView.attach(main)`** moves pane 0 into a SubViewport (`main.move_pane0`), makes pane 1 (`main.make_pane`), sets `main.compositor`, and sizes both to the screen. `detach()` goes back to one view.
 - **`present(frame)`** switches pane 1's viewport off while nobody sees it, and pane 0's GPU frame off while pane 1 has the whole screen (its CPU update still runs: it applies the world's changes). With one pane showing, that pane's texture is drawn as it is (a `TextureRect`, no mask pass). With two, one `ColorRect` runs `split_mask.gdshader`: `mix(tex0, tex1, w1)` with `w1` from the signed distance to the divider, a soft blend across the feather for a dissolve, and a thin dark gap under UI's line.
-- **Shake.** `pane_jitter(0)` is the host's jitter (the `camera` stream); pane 1 has its own cosmetic stream, `camera_b` (`SimRng.deriveSeed(seed, "camera_b")`, `PaneShake`), advanced once a tick from the host's `ticked` signal and reseeded per match, so replays show the same shake. Both are capped at 3% of the screen height and scaled by the player's shake scale (quartered in reduced motion). Neither touches the sim's stream.
+- **Shake.** Each pane has its own amount and its own cosmetic stream. The rig reads the tick's `shake` events {k, x} (Controls' shake pass, `docs/controls/shake-pass.md`): an event reaches a pane scaled by `clamp(1 - d / 4000, 0.35, 1)`, d being the wrapped distance from the pane's view centre, and with two panes up the one farther from the event gets 35% of that. The amount decays at the fx consumer's 0.02 per second and holds through hit-stop freezes (the tick event's `frozen`). `SplitView` draws each pane's jitter from `PaneShake` streams `camera` (pane 0) and `camera_b` (pane 1), derived from the match seed and advanced once a tick from the host's `ticked` signal, so replays show the same shake. Both are capped at 3% of the screen height and scaled by the player's shake scale (quartered in reduced motion). Neither touches the sim's stream.
 - **Pixels.** Panes are full-screen render targets in this build (so a two-pane frame fills the screen twice). The alternative, targets sized to their region (about 0.63 of the width each at the 30 degree limit, 1.26x), needs a resize whenever a pane takes the whole screen, which happens all the time (launch follow is a third of the frames in an AI match); it is not built. The knobs if a low-end GPU needs them: `scaling_3d_scale` on the pane viewports, and the far-ground stride while split.
-- **Entry.** `render/camera/split_main.tscn` instances the main scene and attaches a `SplitView` (the lines are in `split_main.gd`), with F9 toggling the split, F10 solo against the AI, F11 reduced motion, and `--nosplit` starting with one view. Until Rendering adopts those lines in `main.gd` or makes it the main scene, `main.tscn` alone stays one view, unchanged.
+- **Entry.** The split is on by default in the one main scene (commit 88e01a7): `main.gd` creates the `SplitView` and attaches it, F9 toggles it, `--nosplit` starts with one view, F10 flips solo against the AI and F11 reduced motion, and UI's options feed the same settings. `split_main` was retired. The tools get one view unless they attach a compositor themselves.
 
 `sim/core/view/camera.gd` stays in `SimHost` untouched, as the reference for the goldens; with a compositor attached the reference camera is simply not used.
 
@@ -278,15 +278,14 @@ Two bugs the test found in my own first versions are worth recording: a lead of 
 | `render/camera/split_frame.gd` | `SplitFrame`: one presentation frame, its interpolation, `hud_anchor`, `split_record` |
 | `render/camera/split_view.gd`, `split_mask.gdshader` | The compositor and its mask |
 | `render/camera/pane_shake.gd` | Pane 1's cosmetic shake stream and the shake cap |
-| `render/camera/split_main.gd`, `split_main.tscn` | The main scene with the split attached; the benchmark split by pane count |
 | `render/camera/tests/split_sweep.gd`, `split_test_pane.gd`, `split_test_main.gd` | The scripted test and its stand-in panes |
 | `docs/camera/img/` | The captures below |
 
-`camera_rig.gd` in the same folder is Rendering's move. Settings live on the rig and the view: `SplitRig.solo_split` and `reduced_motion` (through `SplitView.set_solo_split` and `set_reduced_motion`) and `SplitView.shake_scale`.
+`camera_rig.gd` in the same folder is Rendering's move. The entry point is Rendering's `main.gd` (split on by default; the benchmark there reports frame times split by pane count). Settings live on the rig and the view: `SplitRig.solo_split` and `reduced_motion` (through `SplitView.set_solo_split` and `set_reduced_motion`) and `SplitView.shake_scale`.
 
 ## 17. Before and after, and what it costs
 
-Captures from the real game (Compatibility renderer, 1280 by 720, seed 4, `--fixed-fps 60`). Left: one view from the reference camera. Right: the split.
+Captures from the real game (Compatibility renderer, 1280 by 720, seed 4, `--fixed-fps 60`; taken with the first entry scene, which is now the default main scene: `--nosplit` gives the left column). Left: one view from the reference camera. Right: the split.
 
 | Tick | Before | After |
 | :--- | :---: | :---: |
@@ -299,12 +298,22 @@ Frame time, wall clock per frame with vsync off (seed 4 unless noted; Ryzen 7 98
 
 | Build | One view | Split on, all frames | Two full panes only |
 | :--- | :--- | :--- | :--- |
-| Desktop 1280 by 720, mean / p50 / p95 / p99 (ms) | 1.39 / 1.21 / 1.94 / 2.59 | 1.72 / 1.52 / 2.40 / 2.93 | 2.06 / 1.94 / 2.85 / 4.04 (12% of frames) |
+| Desktop 1280 by 720, mean / p50 / p95 / p99 (ms), rerun with the clear-zone term on a clean copy of HEAD | 1.41 / 1.25 / 1.95 / 2.48 | 1.70 / 1.52 / 2.42 / 3.01 | 1.98 / 1.83 / 2.79 / 3.58 (14% of frames) |
 | Desktop 1920 by 1080 | 1.40 / 1.22 / 1.96 / 2.51 | 1.74 / 1.55 / 2.45 / 3.06 | 2.09 / 1.93 / 3.09 / 3.68 |
 | Desktop 1280 by 720, seeds 12345 and 7 | | 1.83 and 1.74 | 2.00 and 1.91 (12% and 15%) |
 | Web 1280 by 720 (Chrome 154, ANGLE D3D11, single thread) | 2.82 / 2.14 / 3.53 / 4.61 | 3.39 / 2.63 / 4.80 / 6.72 | 3.96 / 3.90 / 5.20 / 6.30 (10% of frames) |
 
-Draw calls: 154 with one view, 191 on average with the split, 232 at the 95th percentile. The gameplay hash after 4,800 ticks (desktop) and 2,400 (web) is the same with and without the split (`2251e5c11e4c12c3`, `51bca31f196043ee`). Not measured: minimum-spec hardware (an old laptop, an integrated GPU, a phone). The split adds about 0.3 ms even with one pane showing (the world now draws to a SubViewport and is copied to the screen, and the rig steps each tick at about 0.05 ms), and about 0.65 ms while two panes are up; a slower CPU multiplies those, and an integrated GPU pays the doubled fill. The web frame time holds on this machine (3.4 ms mean, 6.7 ms p99 against a 16.7 ms budget). The web run's max of 634 ms is the first-use shader compile Rendering already documents.
+With the zone term two full panes are up in 16%, 20% and 24% of the frames of seeds 4, 12345 and 7 (they were 12%, 12% and 15% before it), so the two-pane rows above weigh a little more in a match. Draw calls: 154 with one view, 191 on average with the split, 232 at the 95th percentile. The gameplay hash after 4,800 ticks (desktop) and 2,400 (web) is the same with and without the split (`2251e5c11e4c12c3`, `51bca31f196043ee`). Not measured: minimum-spec hardware (an old laptop, an integrated GPU, a phone). The split adds about 0.3 ms even with one pane showing (the world now draws to a SubViewport and is copied to the screen, and the rig steps each tick at about 0.05 ms), and about 0.65 ms while two panes are up; a slower CPU multiplies those, and an integrated GPU pays the doubled fill. The web frame time holds on this machine (3.4 ms mean, 6.7 ms p99 against a 16.7 ms budget). The web run's max of 634 ms is the first-use shader compile Rendering already documents.
+
+### The 4.5% line on the live build
+
+Frames from the live game (seed 4, 1280 by 720), one view just before the line and the split just after: tick 95, 20 bh apart, both fighters about 40 px tall and inside the zone (left); tick 120, 25 bh apart, split, about 45 px tall (right).
+
+| Before the line | After |
+| :---: | :---: |
+| ![tick 95](img/line_t95.png) | ![tick 120](img/line_t120.png) |
+
+Findings: at 32 px (4.5%) a fighter's stance, head and cape still read at 720p, so the line holds; the problem was position, not size, and the zone term fixed it. What a playtest with a person on a pad would still add: whether 20 bh feels early for a player who is used to seeing both fighters, and whether the swap and the slam read in play. Those are for Orb.
 
 ## 18. Open
 

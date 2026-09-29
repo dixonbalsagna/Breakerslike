@@ -10,8 +10,8 @@ var _rng: SimRng
 var jitter := Vector2.ZERO
 
 
-func reset(match_seed: int) -> void:
-	_rng = SimRng.new(SimRng.deriveSeed(match_seed, "camera_b"))
+func reset(match_seed: int, stream: String = "camera_b") -> void:
+	_rng = SimRng.new(SimRng.deriveSeed(match_seed, stream))
 	jitter = Vector2.ZERO
 
 
