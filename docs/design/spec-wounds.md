@@ -34,11 +34,11 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | :--- | :--- | :--- |
 | Protagonist | **Second Wind** | Survive the rival's finisher contest roll. His next track step is then free |
 | Anti-hero | **Spite** | Win a decisive exchange by hand (melee, no signature) with help refused. His arms mend first, and his next finisher must be by hand |
-| Empress | **The reserve** (recommended; alternatives in §3, pending Orb) | A guard member she kept back in the goon phase makes a last stand. She withdraws out of reach while a 10 s mend gauge fills, which it does only while the guard stands. The opponent wins through by beating the guard first. Once per match |
+| Empress | **Encore** (Orb's pick) | Her three fallen guard return once, fresh, for a short, harder brawl (§3). She withdraws out of reach while a 15 s mend gauge fills, which it does only while a guard member stands. If the opponent beats all three first, there is no mend. The Encore lasts at most 16.5 s, once per match |
 | Cyborg | **Reboot** | Dock the loose backup drive, or finish a Press within reach of civilians. It mends one chip stage, and regrowth doubles for 5 s |
 
 **Limits after Orb's "looser" ruling:**
-- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's comeback is stopped by beating her guard before the mend gauge fills (§3).
+- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's Encore is stopped by beating all three guard members before the mend gauge fills (§3).
 - **Softened:** the cooldown goes from 30 s to **15 s** after leaving the brink.
 - **Kept:** the mended region returns battered.
 
@@ -147,23 +147,35 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
     - *State.* The processing gauge only.
   - **Guard of honour.** Each tag-in is a fixed 1 s salute, during which the incoming guard can't be hit. It counts as downtime, and there is at most one tag-in per 5 s.
   - **The fold.** Her gauges work everywhere, the fold included.
-  - **Her comeback: a brawl through her guard** (Orb: "a straightforward brawl that must defeat the guards before getting to the empress"). There is no damage transfer and no visible paperwork.
-    - **Shared rule (the guard's hold).** Each option below starts the same way:
-      - *Trigger.* She calls it within 3 s of entering the brink. It never starts during her opponent's finisher.
-      - *While the guard stands,* she withdraws out of reach: lock-on goes to the guard, who are always in reach (pillar 3). She snipes support shots and taunts, as in the goon phase (Orb).
-      - *The mend.* A mend gauge fills only while at least one guard member of the comeback is standing. It reads through her body straightening, with no text.
-      - *If the gauge completes,* she mends one broken region to battered, leaves the brink, and steps back in. Any guard still standing salute and withdraw.
-      - *If the guard fall first,* there is no mend. She stays on the brink and is in reach at once.
-      - *Limits.* Once per match. It counts as a Rally for the finisher tilt (§2).
-      - *The guard* use the normal stance grammar and single-region bodies (§3 row).
-    - **A. The reserve** (recommended).
-      - *The setup.* In the goon phase she may keep one guard member back at her side instead of tagging them in. The AI decides this with its goon policy (Encounter).
-      - *The last stand.* On the brink, the reserve makes a last stand: a full-strength guard member, with a 10 s mend gauge.
-      - *The cost.* Keeping a reserve makes her opening weaker: two guard fight the goon phase instead of three. If all three fall in the goon phase, she has no comeback.
-      - *Why it wins.* It is the plainest brawl: beat the guard, then reach her. It adds a real decision in act 1 (all-in or insurance) and summons nothing. It also answers Orb's gesture rule, because the reserve stands beside her all match and performs her protocol gestures.
-    - **B. Reinforcements.** On the brink, a fresh recruit arrives with a salute: weaker than the original guard (a region that breaks at 60 wear), with an 8 s mend gauge. It is simple and always available once, but it summons from nowhere, which is less of her story.
-    - **C. Encore.** On the brink, the whole guard returns for a short, harder second goon phase: three members in turns, each breaking at 50 wear but hitting 20% harder, with a 15 s mend gauge. It is the biggest spectacle but the longest, at 15 to 25 s, and it contradicts "fallen guards leave" unless they come fresh from the barracks.
-    - **D. The captain.** On the brink, one guard captain arrives: a mini-boss with two regions to break, and a 12 s mend gauge. One tough duel rather than a crowd, and it adds a character Narrative would have to create.
+  - **Her comeback: Encore** (Orb's pick; binding). A straightforward brawl through her guard, with no damage transfer and no paperwork UI.
+    - *Fallen guards leave.* A guard member who falls in the goon phase leaves the field. The Encore brings all three back **once**, fresh from the barracks.
+    - *Trigger.* She calls it within 3 s of entering the brink. It never starts during her opponent's finisher, and it is available once per match, in any arena, the fold included.
+    - *Entrance.* A 1.5 s respected set piece: all three arrive together and salute in formation.
+    - *While they stand.* She withdraws out of reach: lock-on goes to the guard, who are always in reach (pillar 3). She snipes support shots and taunts, as in the goon phase.
+    - *The mend gauge.* It fills over **15 s**, and only while at least one guard member stands. It reads through her body straightening, with no text.
+    - *If the gauge completes,* one broken region mends to battered and she leaves the brink. Any guard still standing salute and withdraw, and she steps back in.
+    - *If all three fall first,* there is no mend. She is still on the brink and in reach at once.
+    - *Hard cap.* The Encore ends when the gauge completes or the last guard falls, whichever comes first. The whole Encore lasts at most **16.5 s**.
+    - *Rally rules.* It counts as her Rally for the finisher tilt (§2).
+    - **Not the same fight twice.**
+
+      | | Act 1 goon phase | Encore |
+      | :--- | :--- | :--- |
+      | Pace | One at a time, each tag-in a 1 s salute | All three at once in formation, rotating after every exchange with no salute |
+      | Formation | One fights while the others taunt | One engages while the other two support: the marksman fires covering volleys (a ranged poke about every 3 s that adds wear but starts no exchange), and the speedster flanks to cut off escape routes |
+      | Strength | Full durability | Faster (+15% speed) and harder hitting (+20% damage), but each falls to **one decisive exchange** won against them |
+      | Length | Most of act 1 (1:00 to 2:00) | At most 16.5 s |
+      | Look and sound | Parade order | A distinct encore formation and call (Narrative and Art) |
+
+    - **Tuning note.** At the current tempo (2.5 to 4 s exchanges, 0.8 to 1.5 s cooldowns) and a 60% chance of winning each exchange against a guard, beating all three takes about 20 s at the median. So a 15 s gauge will likely complete more often than the band allows. The first levers, in order:
+      1. A shorter gauge (12 s).
+      2. Covering volleys only while two or more guard stand.
+      3. A minimum cooldown (0.8 s) after every Encore exchange.
+      Starting values: a 15 s gauge and one-exchange guards. QA tunes against the bands below.
+    - **Options not picked (notes):**
+      - The reserve (one guard member held back in the goon phase makes a last stand).
+      - Reinforcements (a single fresh recruit).
+      - The captain (a two-region mini-boss).
   - **Gestures.** Her protocol gestures come from a remaining guard member, or from her own body when none are left (Orb). Fallen guards leave the match.
   - **QA bands**, per Empress match:
     - she wins 45 to 55% of each pairing;
@@ -171,7 +183,12 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
     - 20 to 50% of real-revision gauges are reset at least once;
     - median fill time is 8 to 16 s per real revision;
     - no fight gap exceeds 10 s (`balance-targets.md` §8);
-    - for The reserve: she keeps a reserve in 30 to 70% of matches; the last stand's mend completes in 40 to 60% of attempts; a last stand lasts at most 12 s (median 6 to 10 s); and the goon phase still fills act 1 (1:00 to 2:00).
+    - **Encore:**
+      - she calls it in 60 to 90% of the matches where she reaches the brink with it available (AI);
+      - the mend completes in 40 to 60% of Encores;
+      - Encores last a median of 8 to 13 s and never more than 16.5 s;
+      - she wins 45 to 60% of matches in which the Encore completed, so the comeback is not a lock;
+      - the act 1 goon phase still fills 1:00 to 2:00.
 - **Press (the Cyborg's food).** His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
 
 ## 4. What the sim needs (Simulation, Tools)
@@ -185,7 +202,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   - finisher template ids per form tier.
 - **Per-atom data:** region weights, wear multiplier, impact class, and whether it opens the hatch.
 - **Per-fighter state:** wear per region, stage, brink flag, Rallied regions, hatch timer, chip station and stage, commit rung, Pride mask.
-- **Events** into the fx stream (commit `9ac1ea9`): `region_stage`, `region_broken`, `brink_enter`, `brink_exit`, `rally`, `hatch_open`, `chip_stage`, `heat_stage`, `boil_over`, `facade_crack`, `shame_stack`, `drop_act`, `revision_reprint`, `finisher_start`, `finisher_contest`, `ko`, plus the fold events in §7.
+- **Events** into the fx stream (commit `9ac1ea9`): `region_stage`, `region_broken`, `brink_enter`, `brink_exit`, `rally`, `hatch_open`, `chip_stage`, `heat_stage`, `boil_over`, `facade_crack`, `shame_stack`, `drop_act`, `revision_reprint`, `revision_fill_reset`, `encore_start`, `guard_fall`, `encore_end`, `finisher_start`, `finisher_contest`, `ko`, plus the fold events in §7.
 - **Rendering and randomness.** Render reads state and events and never writes them. Region draws use the sim RNG only.
 
 ## 5. Acceptance tests
@@ -306,7 +323,7 @@ Orb: "with few exceptions, transformations should be cinematic and uninterruptib
 - Press;
 - Swallow It;
 - the Empress's processing gauge;
-- the mend gauge during her guard's hold.
+- the Encore's mend gauge (stopped by beating her guard).
 
 Heat stages, Humbled bursts and boil-overs are power states with no cinematic. The fold is a relocation, and it now follows the same rule (§7).
 
