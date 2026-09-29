@@ -47,7 +47,14 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
 - Give docs/architecture/fx-events.md to Rendering (first brief), VFX, Camera and Audio. The 'camera' and 'audio' stream ids are reserved for them.
 - Simulation's next items (held): integer tick timers (determinism.md hazard 1), before Netcode's rollback work.
 
+## Greybox (2026-09-29)
+- Rendering's greybox is committed (2ebdb53): F5 plays the GDScript sim AI vs AI in 2.5D, and any key takes P1. Seam sweep and render determinism tools pass. Desktop frame 0.98 ms, web 1.83 ms (high-end machine only).
+- Tools is working on a web export preset, the render tools in CI, and a Pages deploy at /play/. Flipping Pages to deploy through Actions needs Orb's OK.
+
 ## Queued for idle directors (send when they resume)
+- **Camera:** when separation passes half the planet, the reference camera re-targets the other arc and pans 80 to 180 px per frame. That's a framing choice to fix.
+- **Performance:** a min-spec run (old laptop, integrated GPU, mobile), draw-call budgets, and the float-texture vertex fetch on mobile GLES3 (the fallback is packed 8-bit heights).
+- **Simulation:** in sim.gd, createSim labels its fx mode 'shared' and rejects 'split', though the docs say det plus split (label only).
 - **QA:**
   - Raise the match cap to 900 s for game-scale batches.
   - Split casualties by tier.
