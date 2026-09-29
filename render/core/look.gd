@@ -27,13 +27,13 @@ const ROW_STEP0: float = 16.0
 const ROW_GROWTH: float = 0.15
 const TIERS: Array = [[-400.0, 1], [-2000.0, 2], [Z_TERRAIN_BACK, 4], [-1.0e12, 8]]
 const CHUNK_COLS: int = 320              # a multiple of the largest stride
-const Z_BUILDING_FRONT: float = -44.0    # buildings stand behind the fighter plane
+const Z_BUILDING_FRONT: float = -140.0   # buildings stand behind the fighter plane, the crowd between
 const Z_TREE_MIN: float = -120.0 * WS
 const Z_TREE_MAX: float = -30.0 * WS
 const TREE_W: float = 26.0 * WS
 const ROOF_H: float = 16.0 * WS
-const Z_CROWD_MIN: float = -40.0
-const Z_CROWD_MAX: float = -8.0
+const Z_CROWD_MIN: float = -125.0       # life-size people stand behind the fighters' depth (about +-30 turned)
+const Z_CROWD_MAX: float = -45.0
 const Z_PARTICLES: float = 10.0
 const Z_BEAMS: float = 6.0
 ## The ground continues behind the crater rows to the horizon as one surface (no separate backdrop): the far terrain
@@ -126,6 +126,19 @@ const STANCE_COL: Array = ["#ff5a4a", "#4aa8ff", "#5ed17a", "#b58cff"]
 const STANCE_SHORT: Array = ["ATK", "DEF", "EVA", "ESC"]
 const STANCE_LONG: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 
+## Staging (Orb: fighters "cheat out" like stage actors, docs/ep/vision.md). A fighter is turned toward the camera by
+## a pose angle in degrees from a pure profile: TURN by state ("sliding" while a knockback slide runs), plus
+## TURN_STANCE by stance when free or locked; the head leads by TURN_HEAD. A facing flip turns through facing the
+## camera in TURN_TIME seconds; pose changes ease at TURN_RATE_DEG per second. Art tunes these (and a fighter's
+## turn_scale) for its turnarounds.
+const TURN: Dictionary = {"free": 30.0, "locked": 24.0, "charging": 36.0, "launched": 34.0, "down": 38.0, "sliding": 28.0}
+const TURN_DEFAULT: float = 30.0
+const TURN_STANCE: Array = [-5.0, 6.0, 0.0, 4.0]   # aggressive squares to the opponent; defensive opens to the camera
+const TURN_HEAD: float = 12.0
+const TURN_TIME: float = 0.16
+const TURN_RATE_DEG: float = 240.0
+const SLIDE_LEAN: float = 0.35           # radians: a sliding fighter stays upright, leaning back against the slide
+const SLIDE_CROUCH: float = 6.0          # and crouches this much
 const HIDDEN_ALPHA: float = 0.22
 const HIT_FLASH_S: float = 0.12
 

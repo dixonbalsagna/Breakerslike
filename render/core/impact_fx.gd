@@ -2,13 +2,16 @@ class_name ImpactFx
 extends RefCounted
 ## Render-side live effects for World's events (docs/architecture/fx-events.md). A crater throws ejecta, raises dust
 ## on its rim and sends a shock ring across the ground. A scorch sample heats its groove, drawn as a glow by the
-## terrain shader from `heat`: hotter and longer-lasting for stronger beams. It also sheds embers. A splash on a water
-## surface leaves ripple rings, and a fighter skimming low over water throws spray, so a skim reads as a skipping
-## stone. Cosmetic only: its random numbers come from its own streams seeded from the match seed. Nothing here is
+## terrain shader from `heat`: hotter and longer-lasting for stronger beams. It also sheds embers. A knockback slide
+## throws dust and rubble chips along its trench (grey on pavement, earth elsewhere) and a burst where it stops. A skim
+## (each skip off the water) leaves ripple rings, a spray burst and a spreading wake; a splash on a water surface leaves
+## ripples, and a fighter flying fast just over water throws spray. World sizes scale with the sim's WS. Cosmetic only: its random numbers come from its own streams seeded from the match seed. Nothing here is
 ## needed to rebuild the world: the persistent marks (bowls, char, water) come from state (ground_field.gd).
 ## Reads the sim only; never writes it.
 
 const CAP := 1200
+const WS: float = SimConst.WS
+const SWS: float = sqrt(SimConst.WS)   # speeds and chunk sizes of things thrown by world-scale events
 const HEAT_TAU := 1.6          # seconds for a groove's glow to fall to 1/e
 
 var parts: Array = []          # SimFxView.Part, the same records the reference consumer uses
@@ -49,6 +52,12 @@ func consume(S: SimState, events: Array) -> void:
 				_scorch(e)
 			"splash":
 				_splash(S, e)
+			"slide_dust":
+				_slide_dust(e)
+			"slide":
+				_slide_end(S, e)
+			"skim":
+				_skim(e)
 			"tick":
 				dt = e.dt
 				frozen = e.frozen
@@ -61,7 +70,7 @@ func consume(S: SimState, events: Array) -> void:
 func _crater(e) -> void:
 	var E: float = e.energy
 	var col: String = RenderLook.CRATER_DESERT if WorldBiomes.biomeAt(e.x) == "desert" else "#6e5c46"
-	var sp: float = 260.0 + 90.0 * sqrt(E)
+	var sp: float = (260.0 + 90.0 * sqrt(E)) * SWS
 	for k in range(clampi(int(3.0 + E * 2.0), 3, 30)):
 		var off: float = _re.range_(-0.6, 0.6) * e.r
 		var p := _part("deb", e.x + off, e.y, col)
@@ -69,14 +78,14 @@ func _crater(e) -> void:
 		p.vy = _re.range_(0.6, 1.4) * sp
 		p.grav = 900.0
 		p.life = _re.range_(0.9, 1.8)
-		p.size = _re.range_(3.0, 7.0 + sqrt(E))
+		p.size = _re.range_(3.0, 7.0 + sqrt(E)) * SWS
 	for k in range(clampi(int(4.0 + e.r / 20.0), 4, 18)):
 		var side: float = 1.0 if k % 2 == 0 else -1.0
 		var p := _part("dust", e.x + side * e.r * _re.range_(0.8, 1.25), e.y + e.rim, "#9b8f7e")
-		p.vx = side * _re.range_(20.0, 90.0)
-		p.vy = _re.range_(20.0, 100.0)
+		p.vx = side * _re.range_(20.0, 90.0) * SWS
+		p.vy = _re.range_(20.0, 100.0) * SWS
 		p.life = _re.range_(1.0, 2.2)
-		p.size = _re.range_(18.0, 36.0)
+		p.size = _re.range_(18.0, 36.0) * SWS
 		p.drag = 0.02
 	var s := _part("shock", e.x, e.y + 2.0, "#f2e6c9")
 	s.r = 0.3 * e.r
@@ -98,6 +107,55 @@ func _scorch(e) -> void:
 		p.grav = 120.0
 		p.life = _rm.range_(0.4, 0.9)
 		p.size = _rm.range_(2.0, 3.0)
+
+
+## Along a knockback slide: dust from the trench and rubble chips thrown back, more at speed; grey on pavement.
+func _slide_dust(e) -> void:
+	var paved: bool = e.variant == "paved"
+	var hw: float = e.w * 0.5
+	for k in range(clampi(int(2.0 + e.spd / 400.0), 2, 8)):
+		var p := _part("dust", e.x + _re.range_(-1.0, 1.0) * hw, e.y, "#8f8a84" if paved else "#9b8f7e")
+		p.vx = _re.range_(-60.0, 60.0) * SWS
+		p.vy = _re.range_(40.0, 160.0) * SWS
+		p.life = _re.range_(0.8, 1.8)
+		p.size = _re.range_(14.0, 30.0) * SWS
+		p.drag = 0.02
+	for k in range(clampi(int(e.spd / 300.0), 1, 6)):
+		var c := _part("deb", e.x + _re.range_(-0.6, 0.6) * hw, e.y + 4.0, "#6d6a66" if paved else "#6e5c46")
+		c.vx = _re.range_(-1.0, 1.0) * (120.0 + 0.2 * e.spd)
+		c.vy = _re.range_(150.0, 400.0 + 0.2 * e.spd)
+		c.grav = 900.0
+		c.life = _re.range_(0.6, 1.3)
+		c.size = _re.range_(2.0, 5.0) * SWS
+
+
+## Where a slide stops: a heavier burst of dust off the end berm.
+func _slide_end(S: SimState, e) -> void:
+	var y: float = WorldTerrain.groundY(S, e.x1)
+	for k in range(clampi(int(4.0 + e.energy), 4, 14)):
+		var p := _part("dust", e.x1 + _re.range_(-0.5, 0.5) * e.w, y, "#8f8a84" if e.variant == "paved" else "#9b8f7e")
+		p.vx = _re.range_(-90.0, 90.0) * SWS
+		p.vy = _re.range_(30.0, 140.0) * SWS
+		p.life = _re.range_(1.0, 2.2)
+		p.size = _re.range_(18.0, 36.0) * SWS
+		p.drag = 0.02
+
+
+## A skip off the water: ripples that grow with the speed, a spray burst and a flat wake ring stretched along the path.
+func _skim(e) -> void:
+	var sp: float = clampf(e.spd / 1500.0, 0.3, 2.0)
+	for k in range(2):
+		var p := _part("ripple", e.x, e.y + 1.0, "#e8f6ff")
+		p.r = 6.0
+		p.gr = (110.0 + 60.0 * sp) * (1.0 if k == 0 else 0.55)
+		p.life = 1.1 + 0.3 * k
+	for k in range(clampi(int(6.0 + 6.0 * sp), 6, 18)):
+		var d := _part("splash", e.x + _rw.range_(-20.0, 20.0), e.y, "#e8f6ff")
+		d.vx = _rw.range_(-240.0, 240.0)
+		d.vy = _rw.range_(250.0, 700.0) * sp
+		d.grav = 1200.0
+		d.life = _rw.range_(0.5, 1.0)
+		d.size = _rw.range_(2.0, 5.0)
 
 
 ## A splash that lands on a water surface leaves two ripple rings on it.

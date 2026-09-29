@@ -43,6 +43,17 @@ static func flat_alpha(c: Color, alpha: float, shade: float = 0.35) -> ShaderMat
 	return m
 
 
+## A fighter's own flat material (not shared): drawn with the hybrid projection (render/shaders/ortho.gdshaderinc),
+## the owner setting its "anchor" every frame. alpha below 1 gives the translucent variant (hidden fighters).
+static func fighter_flat(c: Color, alpha: float = 1.0, shade: float = 0.35) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = FLAT if alpha >= 1.0 else FLAT_ALPHA
+	m.set_shader_parameter("albedo", Color(c, alpha))
+	m.set_shader_parameter("shade", shade)
+	m.set_shader_parameter("ortho", 1.0)
+	return m
+
+
 ## A new additive glow material; the owner animates it with set_glow().
 static func glow(c: Color, alpha: float = 1.0, soft: float = 1.5) -> ShaderMaterial:
 	var m := ShaderMaterial.new()

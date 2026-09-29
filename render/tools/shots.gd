@@ -19,6 +19,10 @@ const POSES: Dictionary = {
 	"lake": [1185.0, 10.0, 1255.0, 70.0],
 	"coast": [1130.0, 60.0, 1420.0, 170.0],
 	"max": [2700.0, 2600.0, 3150.0, 2600.0],
+	"slide": [2935.0, 0.0, 2965.0, 60.0],
+	"stage_close": [5900.0, 60.0, 6100.0, 60.0],
+	"stage_edge": [5100.0, 60.0, 6900.0, 60.0],
+	"stage_wide": [3000.0, 60.0, 9000.0, 60.0],
 }
 
 var main: Node
@@ -112,6 +116,21 @@ func _stage_lake(S: SimState) -> void:
 	S.out.fx.clear()
 	SimFx.splash(S, c - 300.0, WorldWater.surfaceAt(S, c - 300.0), 14)
 	_feed(S, 20)
+
+
+## A knockback slide across pavement, caught mid-slide: the trench carved behind the fighter, cracks, dust and chips.
+func _stage_slide(S: SimState) -> void:
+	var f = S.fighters[0]
+	f.state = "launched"
+	f.y = WorldTerrain.groundY(S, f.x)
+	f.vx = 1400.0
+	f.vy = 0.0
+	WorldSlide.begin(S, f, S.fighters[1], 1400.0, 3.0)
+	for k in range(30):
+		if f.slide <= 0.0:
+			break
+		WorldSlide.step(S, f, SimConst.DT)
+		_feed(S, 1)
 
 
 ## Pass the staged events to the render-side consumers, then let their effects run for n ticks.

@@ -150,6 +150,23 @@ The ground mesh no longer covers every column at every depth. Rows are generated
 
 The seam sweep's position tolerance is float32 rounding at the largest copy offset (0.0625 units at this W, about 0.07 px at the closest zoom). The worst measured join is 0.0156 units (0.018 px). Its separations are fractions of half the planet, up to 0.998.
 
+## Staging: fighters cheat out
+
+Orb (`docs/ep/vision.md`, "Staging the fighters"): no strict side profile. Fighters turn toward the camera like stage actors "cheating out", so stances and demeanour read. The fighter rig (`fighter_view.gd`) does three things.
+1. **Three-quarter turn.** The body is turned toward the camera by a pose angle measured from a pure profile. The angle comes from `RenderLook.TURN` by state (free, locked, charging, launched, down, and sliding while a knockback slide runs), plus `TURN_STANCE` by stance: aggressive squares to the opponent, defensive opens to the camera. The head leads by `TURN_HEAD`. Pose changes ease at `TURN_RATE_DEG`. Each fighter's `turn_scale` and the table are Art's to set for its turnarounds.
+2. **Mirroring, never the back.** When the facing flips, the figure turns through facing the camera in `TURN_TIME` (0.16 s) and mirrors at that front-on moment, so the same side always faces the camera. The turn runs on sim time, so it holds in hit-stop and pause. This includes passing each other and crossing the seam, since facing comes from the sim's `face`, which the seam doesn't affect. Checked through a flip: the body's forward keeps z ≥ 0.42 toward the camera, and its near side z ≥ 0.05, so the back never shows.
+3. **Hybrid projection** (`shaders/ortho.gdshaderinc`). The world keeps its perspective. Each fighter's pivot is projected with that perspective, so the fighter lands exactly where it did (the `w2s` mapping, the seam proof, UI's `anchor_fn` and Camera framing are unchanged). Every vertex of the fighter is then placed around the pivot orthographically at the pivot's own scale, keeping its true depth for sorting. A fighter therefore looks the same at the screen centre and the edges, at any zoom. Each fighter has its own materials for this, with the pivot as a per-frame uniform, and its glows fade at their orthographic silhouette.
+
+| Centre, close zoom: before, after | Edge, mid zoom: before, after |
+| :---: | :---: |
+| ![centre](img/stage-centre-pair.png) | ![edge](img/stage-edge-pair.png) |
+
+A flip, frame by frame (left to right, 1/60 s apart): ![flip](img/stage-flip.png)
+
+The placeholder rig was drawn as a side sprite with its limbs spread across the screen, so the turn is subtle on it. Art's turnarounds will carry it. Poses `stage_close`, `stage_edge` and `stage_wide` are in `tools/shots.gd`. "Before" is the same build with the profile rig.
+
+**Knockback slides and skims.** A sliding fighter stays upright, leaning back against the slide (`SLIDE_LEAN`) and crouched (`SLIDE_CROUCH`), a placeholder pose. The trench carved behind the fighter is drawn from the sim's own profile, and across the band's depth at the width its `S.slides` record gives. Paved ground cracks from `S.crack`, with a slab-and-crack pattern. Each `slide_dust` sample throws dust and rubble chips, grey on pavement and earth elsewhere, more at speed, and the slide's end throws a burst off the berm. Each `skim` leaves ripple rings that grow with the speed and a spray burst, so a skim reads as a skipping stone. Pose `slide` in `tools/shots.gd` stages one mid-slide across a plaza: ![slide](img/slide.png)
+
 ## Hosting UI's HUD and Audio
 
 Both are other directors' work, hosted here as their docs ask (`docs/ui/hud-spec.md` section 14, `audio/README.md` "Hooking it up"). Both only read.
@@ -206,7 +223,14 @@ A crater dug on the seam (x = 0) is exactly symmetric across it at every depth. 
 | Web 1280×720, with UI's HUD and Audio | 5.09 / 6.30 / 7.70 ms | n/a | n/a | about 300 |
 | Web 1280×720, Audio, greybox HUD (`--legacy-hud`) | 2.00 / 2.80 / 3.70 ms | n/a | n/a | about 72 |
 
-These four rows are on the committed sim after S1 (b2e30a5 and later), same seed, and each pair ends on the same gameplay hash. UI's HUD drawing costs about 1.8 ms a frame on desktop (GPU 0.18 to 0.67 ms) and about 3 ms on the web, plus about 230 canvas draw calls: it redraws every frame in GDScript (`_draw`). Audio's share is small (86 cues over the desktop run, none dropped). Optimising the HUD is UI's, for example by caching the plates and redrawing only what changed.
+| Desktop 1280×720, scaled world, staging and slides, UI's HUD | 1.42 / 2.12 / 2.71 ms | n/a | 0.30 ms | about 165 |
+| Desktop, the same with the greybox HUD (F2) | 1.33 / 1.87 / 2.49 ms | n/a | 0.30 ms | about 82 |
+| Web, scaled world, staging and slides, UI's HUD | 2.47 / 3.40 / 4.20 ms | n/a | 0.38 ms | about 153 |
+| Web, the same with the greybox HUD (F2) | 2.31 / 2.80 / 3.90 ms | n/a | 0.38 ms | about 77 |
+
+After UI's caching (c5a339c), its HUD costs about +0.09 ms on desktop and +0.16 ms on the web (UI projected about +0.5 ms). The web still has a first-use shader compile hitch of about 215 ms.
+
+The four rows before these are on the committed sim after S1 (b2e30a5 and later), same seed, and each pair ends on the same gameplay hash. UI's HUD drawing costs about 1.8 ms a frame on desktop (GPU 0.18 to 0.67 ms) and about 3 ms on the web, plus about 230 canvas draw calls: it redraws every frame in GDScript (`_draw`). Audio's share is small (86 cues over the desktop run, none dropped). Optimising the HUD is UI's, for example by caching the plates and redrawing only what changed.
 
 One world to the horizon, against the committed renderer on the same sim: desktop before was 1.07 / 1.47 / 1.74 ms with a 0.177 ms GPU frame; after, the GPU frame is 0.183 ms. The first run after a fresh import had one 169 ms shader-cache hitch, which did not repeat. Draw calls fell slightly: the backdrop meshes are gone, and the extra ground and water copies are frustum-culled except in very wide views.
 

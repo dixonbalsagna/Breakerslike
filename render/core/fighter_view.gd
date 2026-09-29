@@ -2,25 +2,36 @@ class_name FighterView
 extends Node3D
 ## One fighter as a greybox figure of flat-coloured primitives, generated from its roster colours and role (no
 ## hand-made assets). The layout follows the prototype's drawFighter, in its units: the body pivot sits 34 units above
-## f.y and rotates by f.rot (launch spin); the body mirrors by f.face. Readability cues:
+## f.y and rotates by f.rot (launch spin) and the stance lean. Readability cues:
 ## - stance: a badge above the head in the stance colour, a lean (aggressive forward, evasive back) and a guard glow
 ##   in front in defensive; the HUD labels it too;
 ## - hit: the body flashes white for RenderLook.HIT_FLASH_S after f.hurtT;
 ## - tier: the aura grows with tier, and at tier 3+ (or while charging) aura streaks rise from the feet;
 ## - hidden: the whole figure fades to RenderLook.HIDDEN_ALPHA inside a sonar ripple.
+##
+## Staging (Orb: fighters "cheat out" like stage actors). The body is turned toward the camera by a pose angle
+## (RenderLook.TURN per state, TURN_STANCE per stance, measured from a pure profile) and the head leads by TURN_HEAD.
+## When the facing flips the figure turns through facing the camera over TURN_TIME and mirrors at that front-on
+## moment, so the same side always faces the camera and the back never shows; the turn runs on sim time (it holds in
+## hit-stop and pause). Every part draws with the hybrid projection (render/shaders/ortho.gdshaderinc): the pivot is
+## placed by the perspective, the figure around it orthographically, so it looks the same at the screen centre and
+## edges. Art sets the angles in look.gd (or turn_scale per fighter) when its turnarounds arrive.
 ## Reads the fighter only; never writes it.
 
 const PIVOT_Y := 34.0
 const HEIGHT := 90.0           # feet to the top of the hair, in world units (for UI's anchors)
+const HEAD_Y := 30.0
 ## Hair outlines in the prototype's canvas units (x forward, y down), extruded to low-poly prisms. The hero's crest is
 ## swept back rather than spiked upward, to keep the placeholder away from genre-classic silhouettes.
 const HAIR_HERO: Array = [[-10, -30], [-24, -39], [-12, -41], [-19, -49], [-2, -45], [9, -46], [12, -37], [10, -30]]
 const HAIR_VILLAIN: Array = [[-11, -30], [-10, -42], [0, -44], [10, -42], [13, -20], [8, -32]]
 const CAPE: Array = [[-10, -18], [-30, 22], [-4, 14]]
 
+var turn_scale: float = 1.0    # per-fighter multiplier on the pose angles (for Art)
 var pivot := Node3D.new()      # body centre; rotates by f.rot and the stance lean
-var body := Node3D.new()       # mirrored by facing
-var solid: Array = []          # [MeshInstance3D, base Color, flashes on hit]
+var body := Node3D.new()       # turned toward the camera and mirrored by facing
+var head := Node3D.new()       # leads the body's turn by TURN_HEAD
+var solid: Array = []          # [MeshInstance3D, base Color, flashes on hit, opaque material, faded material]
 var arm_front: MeshInstance3D
 var aura: MeshInstance3D
 var orb_outer: MeshInstance3D
@@ -29,10 +40,15 @@ var badge: MeshInstance3D
 var guard: MeshInstance3D
 var ripple: MeshInstance3D
 var streaks: Array = []
+var glows: Array = []          # every glow material, for the projection anchor
+var _badge_mat: ShaderMaterial
 var _faded: bool = false
 var _flash: bool = false
 var _stance: int = -1
 var _aura_col := Color.WHITE
+var _turn: float = 1.0         # visual facing, -1 to 1: follows f.face through 0 (facing the camera)
+var _pose: float = 30.0        # the pose angle in degrees, eased toward the current pose's
+var _last_t: float = -1.0
 
 
 func build(f) -> void:
@@ -40,6 +56,10 @@ func build(f) -> void:
 	add_child(pivot)
 	pivot.position.y = PIVOT_Y
 	pivot.add_child(body)
+	body.add_child(head)
+	head.position.y = HEAD_Y
+	_turn = f.face
+	_pose = _pose_angle(f)
 	_aura_col = RenderLook.col(f.aura)
 	var legs := RenderLook.col(RenderLook.LEGS)
 	_part(_box(Vector3(8, 26, 8)), Vector3(-6, -23, -5), legs, true)
@@ -51,14 +71,14 @@ func build(f) -> void:
 	var back_arm := _part(_box(Vector3(6, 1, 6)), Vector3.ZERO, arm, true)
 	_limb(back_arm, Vector2(-12, 14), Vector2(-20, -4), -10.0)
 	arm_front = _part(_box(Vector3(6, 1, 6)), Vector3.ZERO, arm, true)
-	var head := SphereMesh.new()
-	head.radius = 10.0
-	head.height = 20.0
-	head.radial_segments = 8
-	head.rings = 4
-	_part(head, Vector3(0, 30, 0), RenderLook.col(RenderLook.SKIN), true)
-	_part(_extrude(HAIR_HERO if f.role == "hero" else HAIR_VILLAIN, 23.0), Vector3.ZERO, RenderLook.col(f.hair), false)
-	_part(_box(Vector3(4, 2, 2)), Vector3(5, 31, 10.5), RenderLook.col(RenderLook.EYE), false)
+	var hs := SphereMesh.new()
+	hs.radius = 10.0
+	hs.height = 20.0
+	hs.radial_segments = 8
+	hs.rings = 4
+	_part(hs, Vector3.ZERO, RenderLook.col(RenderLook.SKIN), true, head)
+	_part(_extrude(HAIR_HERO if f.role == "hero" else HAIR_VILLAIN, 23.0), Vector3(0, -HEAD_Y, 0), RenderLook.col(f.hair), false, head)
+	_part(_box(Vector3(4, 2, 2)), Vector3(5, 31 - HEAD_Y, 10.5), RenderLook.col(RenderLook.EYE), false, head)
 	aura = _glow(_sphere(), _aura_col, 0.55, 1.6)
 	pivot.add_child(aura)
 	orb_outer = _glow(_sphere(), _aura_col, 0.9, 1.2)
@@ -76,9 +96,13 @@ func build(f) -> void:
 	dia.rings = 1
 	badge = MeshInstance3D.new()
 	badge.mesh = dia
+	_badge_mat = RenderMats.fighter_flat(Color.WHITE, 1.0, 0.2)
+	badge.material_override = _badge_mat
 	add_child(badge)
 	guard = _glow(_sphere(), RenderLook.col(RenderLook.STANCE_COL[1]), 0.4, 0.6)
-	add_child(guard)
+	guard.position = Vector3(30.0, 0.0, 0.0)
+	guard.scale = Vector3(12.0, 84.0, 60.0)
+	body.add_child(guard)
 	var ring := TorusMesh.new()
 	ring.inner_radius = 0.93
 	ring.outer_radius = 1.0
@@ -89,16 +113,38 @@ func build(f) -> void:
 	add_child(ripple)
 
 
+## The pose angle for the fighter's state and stance, in degrees from a pure profile toward the camera.
+func _pose_angle(f) -> float:
+	var a: float = RenderLook.TURN.get("sliding" if f.slide > 0.0 else f.state, RenderLook.TURN_DEFAULT)
+	if f.state == "free" or f.state == "locked":
+		a += RenderLook.TURN_STANCE[int(f.stance)]
+	return clampf(a * turn_scale, 0.0, 89.0)
+
+
 ## pose: interpolated [x, y, rot]; vx: the fighter's x relative to the camera; T: sim time; z: camera zoom.
 func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	var T: float = S.T
+	var dt: float = clampf(T - _last_t, 0.0, 0.1) if _last_t >= 0.0 else 0.0
+	_last_t = T
 	position = Vector3(vx, pose.y, 0.0)
 	var stance: int = int(f.stance)
-	var lean: float = 0.0
-	if f.state == "free" or f.state == "locked":
-		lean = [-0.12, 0.0, 0.16, 0.05][stance]
-	pivot.rotation.z = -pose.z + lean * f.face
-	body.scale.x = f.face
+	var sliding: bool = f.slide > 0.0
+	# Staging: ease the pose angle, turn through the camera when the facing flips, mirror at the front-on moment.
+	_turn = move_toward(_turn, f.face, dt * 2.0 / RenderLook.TURN_TIME)
+	_pose = move_toward(_pose, _pose_angle(f), dt * RenderLook.TURN_RATE_DEG)
+	var m: float = 1.0 if _turn >= 0.0 else -1.0
+	var th: float = deg_to_rad(lerpf(90.0, _pose, absf(_turn)))
+	body.basis = Basis(Vector3.UP, -m * th) * Basis.from_scale(Vector3(m, 1.0, 1.0))
+	head.rotation.y = -deg_to_rad(RenderLook.TURN_HEAD)
+	if sliding:
+		pivot.rotation.z = RenderLook.SLIDE_LEAN * signf(f.vx)
+		pivot.position.y = PIVOT_Y - RenderLook.SLIDE_CROUCH
+	else:
+		var lean: float = 0.0
+		if f.state == "free" or f.state == "locked":
+			lean = [-0.12, 0.0, 0.16, 0.05][stance]
+		pivot.rotation.z = -pose.z + lean * _turn
+		pivot.position.y = PIVOT_Y
 	var punch: bool = f.state == "locked" or f.beamCharge != null
 	_limb(arm_front, Vector2(12, 14), Vector2(30, 12) if punch else Vector2(22, 0), 10.0)
 	var flash: bool = T - f.hurtT < RenderLook.HIT_FLASH_S and T >= f.hurtT
@@ -107,7 +153,9 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		_flash = flash
 		for p in solid:
 			var c: Color = Color.WHITE if (flash and p[2]) else p[1]
-			p[0].material_override = RenderMats.flat_alpha(c, RenderLook.HIDDEN_ALPHA) if _faded else RenderMats.flat(c)
+			p[3].set_shader_parameter("albedo", c)
+			p[4].set_shader_parameter("albedo", Color(c, RenderLook.HIDDEN_ALPHA))
+			p[0].material_override = p[4] if _faded else p[3]
 	var fade: float = RenderLook.HIDDEN_ALPHA if f.hidden else 1.0
 	var tier: float = f.tier
 	var ch: bool = f.state == "charging"
@@ -132,7 +180,7 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	if bc:
 		var p: float = clampf((T - f.beamCharge) / 0.8, 0.0, 1.0)
 		var r: float = (10.0 + p * 40.0) + 4.0 / z
-		var at := Vector3(f.face * 30.0, 44.0, 8.0)
+		var at: Vector3 = to_local(arm_front.global_transform * Vector3(0.0, 0.5, 0.0))
 		orb_outer.position = at
 		orb_outer.scale = Vector3.ONE * 2.0 * r
 		orb_core.position = at
@@ -142,27 +190,34 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	badge.rotation.y = T * 2.0
 	if stance != _stance:
 		_stance = stance
-		badge.material_override = RenderMats.flat(RenderLook.col(RenderLook.STANCE_COL[stance]), 0.2)
+		_badge_mat.set_shader_parameter("albedo", RenderLook.col(RenderLook.STANCE_COL[stance]))
 	guard.visible = stance == 1 and not f.hidden and (f.state == "free" or f.state == "locked")
-	if guard.visible:
-		guard.position = Vector3(f.face * 30.0, PIVOT_Y, 0.0)
-		guard.scale = Vector3(12.0, 84.0, 60.0)
 	ripple.visible = f.hidden
 	if f.hidden:
 		var rp: float = fmod(T * 1.2, 1.0)
 		ripple.position = Vector3(0.0, 30.0, 0.0)
 		ripple.scale = Vector3.ONE * ((20.0 + rp * 60.0) + 6.0 / z)
 		RenderMats.set_glow(ripple.material_override, Color(190.0 / 255.0, 220.0 / 255.0, 1.0), 0.55 * (1.0 - rp * 0.6))
+	# The hybrid projection's anchor: the pivot, where the perspective places the fighter.
+	var anchor: Vector3 = pivot.global_position
+	for p in solid:
+		p[3].set_shader_parameter("anchor", anchor)
+		p[4].set_shader_parameter("anchor", anchor)
+	for g in glows:
+		g.set_shader_parameter("anchor", anchor)
+	_badge_mat.set_shader_parameter("anchor", anchor)
 
 
-func _part(mesh: Mesh, at: Vector3, c: Color, flashes: bool) -> MeshInstance3D:
+func _part(mesh: Mesh, at: Vector3, c: Color, flashes: bool, parent: Node3D = null) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.position = at
-	mi.material_override = RenderMats.flat(c)
+	var mo := RenderMats.fighter_flat(c)
+	var mf := RenderMats.fighter_flat(c, RenderLook.HIDDEN_ALPHA)
+	mi.material_override = mo
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	body.add_child(mi)
-	solid.append([mi, c, flashes])
+	(parent if parent != null else body).add_child(mi)
+	solid.append([mi, c, flashes, mo, mf])
 	return mi
 
 
@@ -174,11 +229,14 @@ static func _limb(mi: MeshInstance3D, a: Vector2, b: Vector2, z: float) -> void:
 	mi.transform = Transform3D(Basis(Vector3(u.y, -u.x, 0.0), Vector3(u.x, u.y, 0.0) * l, Vector3(0.0, 0.0, 1.0)), Vector3((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, z))
 
 
-static func _glow(mesh: Mesh, c: Color, alpha: float, soft: float) -> MeshInstance3D:
+func _glow(mesh: Mesh, c: Color, alpha: float, soft: float) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
-	mi.material_override = RenderMats.glow(c, alpha, soft)
+	var m: ShaderMaterial = RenderMats.glow(c, alpha, soft)
+	m.set_shader_parameter("ortho", 1.0)
+	mi.material_override = m
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	glows.append(m)
 	return mi
 
 
