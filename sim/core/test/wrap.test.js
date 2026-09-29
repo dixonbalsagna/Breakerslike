@@ -9,6 +9,7 @@ import { createSim, newMatch } from '../sim.js';
 import { groundY, crater } from '../../world/terrain.js';
 import { biomeAt } from '../../world/biomes.js';
 import { createCamera, camStep } from '../view/camera.js';
+import { NATIVE } from '../detmath.js';
 
 // The prototype's generator and R(), verbatim.
 function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -109,7 +110,7 @@ test('terrain is continuous across the seam, and a crater on the seam is symmetr
 
 test('camera follows the short way across the seam and never jumps', () => {
   for (const [ax, bx] of [[W - 200, 150], [150, W - 200], [W - 10, 10], [4700, 4900]]) {
-    const S = { fighters: [{ x: ax, y: 60, tier: 1 }, { x: bx, y: 80, tier: 1 }] };
+    const S = { m: NATIVE, fighters: [{ x: ax, y: 60, tier: 1 }, { x: bx, y: 80, tier: 1 }] };
     const cam = createCamera(); cam.x = wrap(ax + 900);
     let px = cam.x;
     for (let i = 0; i < 600; i++) {

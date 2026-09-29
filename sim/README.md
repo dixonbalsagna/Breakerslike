@@ -11,6 +11,8 @@ A headless, deterministic port of `prototype/index.html` (pinned at commit 7233c
 | `node sim/core/tools/parity.js` | parity with the prototype (probe, per-tick lockstep, keyboard lockstep, QA records, golden hashes) | about 80 s |
 | `node sim/core/tools/soak.js 1000 [--compare]` | 1000 AI-vs-AI matches with QA's rule checks, timed | about 12 s |
 | `npm run unit --prefix sim` | node:test unit and integration tests only | about 10 s |
+| `godot --headless --path . --import` then `godot --headless --path . --script res://sim/core/tools/parity.gd` | GDScript parity: the GDScript core reproduces every golden vector of the JS core (math, RNG, world, 17 AI matches, 2 human-input replays), and prints its tick cost. The import pass registers the `class_name` scripts on a fresh clone. | about 20 s |
+| `node sim/core/tools/golden.js` | rewrites `core/test/golden-gd.json` from the JS core after an intended change (`--check` only verifies it) | about 5 s |
 
 Use Node 24. The golden hashes were recorded on Node 24.19.0 and are skipped on other majors (QA-005).
 
@@ -24,6 +26,22 @@ Use Node 24. The golden hashes were recorded on Node 24.19.0 and are skipped on 
 | `input/` | `intent.js`, `keyboard.js`, `control.js` | Controls and Game Feel |
 
 Rules for everyone changing `sim/`: behaviour changes are deliberate (parity then breaks by design; say so and regenerate the goldens); arithmetic and random-draw order are behaviour; the tick never calls view code; gameplay never reads `S.fx`; no `Math.random`, no clock.
+
+## Two cores: JavaScript and GDScript
+
+Every `.gd` file sits beside its JavaScript twin and keeps the same function and field names (ADR 0001: Godot 4.7 with GDScript). The JS core has two math modes, set with `createSim({math})`:
+- `'native'` (the default) uses `Math.sin` and friends and matches the prototype;
+- `'det'` uses `core/detmath.js` and matches the GDScript core bit for bit.
+In det mode, matches play out the same as in native mode over 1000 seeds (same lengths and outcomes); only the last bits of floats differ. Change both twins together, regenerate the goldens with `node sim/core/tools/golden.js`, and run both parity checks.
+
+GDScript traps that break bit-identity (each one was hit while porting):
+- **Long float literals.** GDScript's parser is not correctly rounded for them: `0.017453292519943295` parses 2 ulp off, and the smallest normal double parses as 0. Build long constants from bit patterns (`SimMathx.f64`). The parity check compiles every float literal in the `.gd` files and compares its bits.
+- **JS-exact helpers.** `sign(-0.0)`, `max`/`min` with signed zeros, and `round()` on halves all differ from JS. Use `SimMathx.jsign`, `jmax`, `jmin`, `jround` and `jclamp`, `SimDamage.jor` for JS `x || y`, and `SimMathx.jstr` for numbers in text.
+- **Unqualified built-in names.** Inside a class, a bare `exp()`, `log()` or `sin()` calls Godot's built-in, not the class's own function. Always write `SimDetMath.sin(...)`.
+- **Integer division.** `7/2` is 3. Every sim number is a float: write `2.0`, `60.0`.
+- **The literal `-0.0`** folds to +0.
+- **Unstable sort.** `sort_custom` is not stable. Beats and launch candidates use explicit stable insertion, as the JS stable sort does.
+- **Native class names.** An inner class may not reuse one (`Tree` is taken, hence `TreeState`), and `in` is a keyword, so the fighter's intent is `f.input`.
 
 ## Prototype bugs and quirks, replicated rather than fixed
 

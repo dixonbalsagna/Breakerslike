@@ -35,6 +35,14 @@ function walker(out, paths) {
   return { at, up, leaf, obj };
 }
 
+// Beat arguments, walked structurally (keys in sorted order, then values) so every language hashes them alike.
+function args(w, v) {
+  if (v === null || v === undefined || typeof v !== 'object') { w.leaf(v); return; }
+  const keys = Object.keys(v).sort();
+  w.leaf(keys.length);
+  for (const k of keys) { w.leaf(k); args(w, v[k]); }
+}
+
 // src: {T, rngState, rngFxState, game:{ko,koT,ts,seed,clash}, banner, shake, dirS, fighters, world, buildings, trees, deform,
 //       beams, parts, floats, beatDetail}
 export function collect(src, lane, out = [], paths = null) {
@@ -63,7 +71,7 @@ export function collect(src, lane, out = [], paths = null) {
     w.obj(ex, ['kind', 't', 'combo', 'tag', 'windowStart', 'cancel'], 'v');
     w.obj(ex.ext, ['start', 'until'], 'ext');
     w.at('beats'); w.leaf(ex.beats.length);
-    ex.beats.forEach((b, i) => { w.obj(b, ['t', 'done'], i); if (src.beatDetail) { w.at(i); w.leaf(b.op); w.leaf(JSON.stringify(b.args)); w.up(); } });
+    ex.beats.forEach((b, i) => { w.obj(b, ['t', 'done'], i); if (src.beatDetail) { w.at(i); w.leaf(b.op); args(w, b.args); w.up(); } });
     w.up();
   } else w.leaf(null);
   w.up(); w.up();

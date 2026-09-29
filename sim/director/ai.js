@@ -39,7 +39,7 @@ export function aiInput(S, f){
   } else if (st === 1){
     i.mx = 0; if (f.ki < 55 && dist > 350) i.charge = true;
   } else if (st === 2){
-    i.mx = dist < 500 ? -Math.sign(d) : Math.sign(d)*0.5; i.my = Math.sin(S.T*1.7 + f.x*0.01);
+    i.mx = dist < 500 ? -Math.sign(d) : Math.sign(d)*0.5; i.my = S.m.sin(S.T*1.7 + f.x*0.01);
   } else {
     // Escape: head for the nearest cover biome, then sink into it.
     const c = nearestCover(f.x);

@@ -105,6 +105,21 @@ Node v24.19.0, on the machine in Research's plan (Ryzen 7 9800X3D). The 1000-mat
 
 At 60 ticks per second one tick takes under 0.02% of a frame, so the JS sim is far inside any budget, rollback included. Particles are the one unbounded cost (up to 2400) and belong to the cosmetic lane.
 
+**GDScript core (Godot 4.7.2 editor binary, headless; 10 AI matches, 42,632 ticks, camera follow included).** It matches the det-mode JS core bit for bit (`sim/core/tools/parity.gd`).
+
+| | mean | p50 | p99 | worst tick |
+| :--- | :--- | :--- | :--- | :--- |
+| GDScript tick, this machine | 83-87 µs | 45 µs | 0.81 ms | 2.1 ms |
+| same, particles dropped every tick | 37 µs | 31 µs | 0.23 ms | 1.7 ms |
+| JS det tick, this machine | 2.8 µs | 1.1 µs | 24 µs | 0.65 ms |
+| **Projected old laptop** (2.6 to 3.9 times slower single-threaded, Research's PassMark ratios) | 0.22-0.34 ms | | 2.1-3.2 ms | 5.5-8.4 ms |
+
+GDScript runs about 30 times slower than V8 on this sim (Research measured 18 times on its simpler reference sim). One tick per 16.7 ms frame fits on the projected old laptop on average (about 2% of a frame). The tail comes from beam and explosion ticks: about 3 ms at p99 and up to about 8 ms at worst. That leaves too little room for rendering on the same CPU in the worst frames.
+
+The cosmetic particles are over half the mean cost and most of the p99. Moving them out of the sim (the QA-002 split, then drawing them on the render side) is the first optimisation. The second is the per-sample building loop in beam sweeps.
+
+These are projections from a desktop, not measurements on old hardware, and the editor binary is somewhat slower than a release export. Rollback (after launch) multiplies the tick by the number of resimulated frames, which is the trigger ADR 0001 names for revisiting the language.
+
 ## 9. Netcode requests
 
 Pending. The EP will forward Netcode's `simulation-port-requests.md`. Declined requests will be recorded here with the reason.

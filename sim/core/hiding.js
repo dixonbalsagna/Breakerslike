@@ -6,7 +6,7 @@ import { coverAt } from '../world/cover.js';
 
 export function updateHidden(S, f, dt){
   const o = opp(S, f), dist = Math.abs(sdx(f.x, o.x)), c = coverAt(S, f);
-  const want = f.stance === 3 && f.state === 'free' && c && dist > 170 && !f.in.charge && !f.in.dash && Math.hypot(f.vx, f.vy) < 260;
+  const want = f.stance === 3 && f.state === 'free' && c && dist > 170 && !f.in.charge && !f.in.dash && S.m.hypot(f.vx, f.vy) < 260;
   if (want){
     f.hideT += dt;
     if (f.hideT > 0.9 && !f.hidden){ f.hidden = true; f.hiddenFor = 0; f.lastSeen = {x:f.x, y:f.y}; feed(S, f.name + ' goes to ground', 'Power signature suppressed (' + c + '). Recovering; opponent has no lock-on.'); }

@@ -7,6 +7,7 @@ import { ROSTER, createFighter } from './roster.js';
 import { spark, stepParts } from './fx.js';
 import { stepFighter } from './fighter.js';
 import { genWorld } from '../world/terrain.js';
+import { DET, NATIVE } from './detmath.js';
 import { control } from '../input/control.js';
 import { dirUpdate } from '../director/exchange.js';
 import { beamStep } from '../director/beam.js';
@@ -17,12 +18,17 @@ function checkFxRng(mode){
 }
 
 // An empty state shaped as module-spec section 2. Call newMatch before the first step.
+// opts.math: 'native' (Math.sin and friends, as the prototype: parity with it) or 'det' (core/detmath.js: the same
+// bits in every language; parity with the GDScript port). See docs/architecture/determinism.md.
 export function createSim(opts = {}){
   const fxRng = opts.fxRng === undefined ? 'shared' : opts.fxRng;
   checkFxRng(fxRng);
+  const math = opts.math === undefined ? 'native' : opts.math;
+  if (math !== 'native' && math !== 'det') throw new Error("math must be 'native' or 'det', got " + String(math));
   const rng = createRng(7);   // the prototype's stream before its first newMatch
   return {
-    opts: { fxRng },
+    opts: { fxRng, math },
+    m: math === 'det' ? DET : NATIVE,   // sin, cos, pow, hypot
     T: 0,
     dt: 0,
     rng,
@@ -70,7 +76,7 @@ export function step(S, inputs){
   const dtReal = DT;
   const dt = dtReal*S.game.ts;
   S.dt = dt;
-  if (S.dirS.stop > 0){ S.dirS.stop -= dtReal; stepParts(S, dt*0.1); S.fx.shake *= Math.pow(0.02, dt); return false; }
+  if (S.dirS.stop > 0){ S.dirS.stop -= dtReal; stepParts(S, dt*0.1); S.fx.shake *= S.m.pow(0.02, dt); return false; }
   S.T += dt;
   if (S.game.ko){ S.game.koT += dt; if (S.game.koT > 2.2) S.game.ts = 1; }
   const ord = next(S.rng) < 0.5 ? [0, 1] : [1, 0];
@@ -85,7 +91,7 @@ export function step(S, inputs){
     S.fx.shake = Math.max(S.fx.shake, 7);
   }
   if (S.fx.banner){ S.fx.banner.t += dt; if (S.fx.banner.t > S.fx.banner.dur) S.fx.banner = null; }
-  S.fx.shake *= Math.pow(0.02, dt);   // the shake decay from the prototype's camStep; the camera follow is the host's
+  S.fx.shake *= S.m.pow(0.02, dt);   // the shake decay from the prototype's camStep; the camera follow is the host's
   return true;
 }
 

@@ -41,7 +41,7 @@ export function opBeamFire(S, ex, args){
   const len = Math.min(4200, dist + 2000 + A.tier*400);
   const ox = A.x, oy = A.y + 38, aimY = D.y + 36;
   if (out === 'CLASH'){ D.ki -= 40; startClash(S, ex, variant); return; }
-  const dxs = sdx(ox, D.x), dyy = aimY - oy, L = Math.hypot(dxs, dyy) || 1, ux = dxs/L, uy = dyy/L;
+  const dxs = sdx(ox, D.x), dyy = aimY - oy, L = S.m.hypot(dxs, dyy) || 1, ux = dxs/L, uy = dyy/L;
   fireBeam(S, A, ox, oy, ux, uy, len, variant);
   const reach = Math.min(0.2, dist/len*0.22);
   if (out === 'HIT' || out === 'GUARD'){
@@ -87,7 +87,7 @@ export function opClashResolve(S, ex, args){
   const A = ex.A, D = ex.D, variant = args.variant, Wn = args.aw ? A : D, Ls = args.aw ? D : A;
   S.game.clash = null;
   if (Ls.hp <= 0 || Wn.hp <= 0) return;
-  const dxs = sdx(Wn.x, Ls.x), dyy = (Ls.y + 36) - (Wn.y + 38), L = Math.hypot(dxs, dyy) || 1;
+  const dxs = sdx(Wn.x, Ls.x), dyy = (Ls.y + 36) - (Wn.y + 38), L = S.m.hypot(dxs, dyy) || 1;
   const ux = dxs/L, uy = dyy/L, len = Math.min(4200, L + 2000 + Wn.tier*400);
   fireBeam(S, Wn, Wn.x, Wn.y + 38, ux, uy, len, variant);
   Ls.state = 'locked';

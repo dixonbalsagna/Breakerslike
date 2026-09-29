@@ -13,7 +13,7 @@ export function camStep(cam, S, dt, vw, vh){
   let z = Math.min(vw/spanX, (vh*0.8)/spanY, 1.15);
   z *= 1 - 0.06*(Math.max(a.tier, b.tier) - 1);
   z = clamp(z, 0.06, 1.15);
-  const k = 1 - Math.pow(0.02, dt);
+  const k = 1 - S.m.pow(0.02, dt);
   cam.z += (z - cam.z)*k; cam.x = wrap(cam.x + sdx(cam.x, mx)*k);
   cam.y += (clamp(my + 40, -180, 2400) - cam.y)*k;
 }

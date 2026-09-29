@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Soak: many seeded AI-vs-AI matches on the port with QA's per-tick rule checks (P0 exit criterion: 1000 matches, no NaN,
-// no crash), timed.   node sim/core/tools/soak.js [N=1000] [--base=1] [--arm=default] [--compare]
+// no crash), timed.   node sim/core/tools/soak.js [N=1000] [--base=1] [--arm=default] [--math=native|det] [--compare]
 // A failure prints the seed; replay it with --base=<seed> 1. --compare also times the prototype on the same seeds.
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,8 +32,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const n = parseInt(args.find(a => !a.startsWith('--')) || '1000', 10), base = parseInt(val('base') || '1', 10), arm = val('arm') || 'default';
   if (!Number.isInteger(n) || n < 1 || !QA.ARMS[arm]) { console.error('usage: node sim/core/tools/soak.js [N=1000] [--base=1] [--arm=NAME] [--compare]'); process.exit(2); }
   try {
-    const port = soak(createPortHarness(), n, base, arm);
-    console.log('ok    soak, ' + line('port', port));
+    const math = val('math') || 'native';
+    const port = soak(createPortHarness({ math }), n, base, arm);
+    console.log(`ok    soak (${math} math), ` + line('port', port));
     if (args.includes('--compare')) { const proto = soak(createPlainHarness(), n, base, arm); console.log('      ' + line('prototype', proto) + `; port/prototype time ${(port.s / proto.s).toFixed(2)}`); }
   } catch (e) { console.log('FAIL  soak: ' + e.message + `\n      replay: node sim/core/tools/soak.js 1 --base=<seed> --arm=${arm}`); process.exit(1); }
 }

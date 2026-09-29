@@ -9,7 +9,7 @@ export function hurt(S, f, amt, by){ f.hp -= amt; f.hurtT = S.T; if (f.hp <= 0 &
 export function hit(S, ex, A, D, dmg, o){
   o = o || {};
   let m = A.dmgMul * (1 + 0.09*(A.tier-1));
-  if (A.role === 'villain') m *= 1 + 0.25*(A.menace/100); else m *= 1 + 0.5*Math.pow(1 - A.hp/A.maxhp, 2);
+  if (A.role === 'villain') m *= 1 + 0.25*(A.menace/100); else m *= 1 + 0.5*S.m.pow(1 - A.hp/A.maxhp, 2);
   m *= 1 + 0.12*((ex ? ex.combo : 1) - 1);
   if (A.ambush) m *= 1.5;
   let sm = 1;

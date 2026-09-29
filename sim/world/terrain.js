@@ -14,11 +14,11 @@ export function genWorld(S){
   const t = new Float32Array(NC);
   for (let i = 0; i < NC; i++){
     const x = i*COL, b = biomeAt(x);
-    const n = Math.sin(x*0.0021)*0.5 + Math.sin(x*0.0057+1.3)*0.3 + Math.sin(x*0.013+2.1)*0.2;
+    const n = S.m.sin(x*0.0021)*0.5 + S.m.sin(x*0.0057+1.3)*0.3 + S.m.sin(x*0.013+2.1)*0.2;
     if (b === 'ocean') t[i] = -340 + n*35;
     else if (b === 'mountains'){
-      const k = clamp((x-6500)/1100, 0, 1), env = Math.sin(Math.PI*k);
-      t[i] = env * (330 + 560*Math.abs(Math.sin(x*0.0042+0.7))*(0.55+0.45*Math.sin(x*0.013)));
+      const k = clamp((x-6500)/1100, 0, 1), env = S.m.sin(Math.PI*k);
+      t[i] = env * (330 + 560*Math.abs(S.m.sin(x*0.0042+0.7))*(0.55+0.45*S.m.sin(x*0.013)));
     }
     else if (b === 'desert') t[i] = n*28;
     else if (b === 'plains') t[i] = n*16;
@@ -72,7 +72,7 @@ export function seaAt(S, x){ return S.base[Math.floor(wrap(x)/COL)] < -30; }
 export function crater(S, x, r, depth, cause){
   const c0 = Math.floor(wrap(x)/COL), n = Math.ceil(r/COL);
   for (let k = -n; k <= n; k++){
-    const i = (c0 + k + NC) % NC, f = Math.cos(clamp(Math.abs(k*COL)/r, 0, 1) * Math.PI/2);
+    const i = (c0 + k + NC) % NC, f = S.m.cos(clamp(Math.abs(k*COL)/r, 0, 1) * Math.PI/2);
     S.deform[i] = Math.max(S.deform[i] - depth*f*f, -260);
   }
   for (const t of S.trees) if (t.alive && Math.abs(sdx(x,t.x)) < r*1.05){ t.alive = false; debris(S, t.x, groundY(S, t.x)+10, 3, '#2f4a25', 300); }

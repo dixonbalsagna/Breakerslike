@@ -1,0 +1,14 @@
+; Meridian (working title). The repo root is res://, so the charter paths (sim/, render/, ui/, ...) map straight onto it.
+; Simulation & Engine holds this file until Tools & Pipeline takes over the project settings.
+
+config_version=5
+
+[application]
+
+config/name="Meridian (working title)"
+config/features=PackedStringArray("4.7")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

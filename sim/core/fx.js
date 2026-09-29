@@ -14,12 +14,12 @@ export function P(S, o){
 }
 export function spark(S, x,y,n,col,spd){
   for (let i = 0; i < n; i++){ const a = range(S.rngFx, 0,6.283), s = range(S.rngFx, 0.3,1)*(spd||500);
-    P(S, {type:'spark',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:range(S.rngFx, 0.15,0.4),col:col||'#fff3c0',size:range(S.rngFx, 1.5,3)}); }
+    P(S, {type:'spark',x,y,vx:S.m.cos(a)*s,vy:S.m.sin(a)*s,life:range(S.rngFx, 0.15,0.4),col:col||'#fff3c0',size:range(S.rngFx, 1.5,3)}); }
 }
 export function ring(S, x,y,gr,col,life,r0){ P(S, {type:'ring',x,y,r:r0||10,gr,life:life||0.5,col:col||'#ffffff'}); }
 export function debris(S, x,y,n,col,spd){
   for (let i = 0; i < n; i++){ const a = range(S.rngFx, 0.2,2.9); const s = range(S.rngFx, 0.2,1)*(spd||500);
-    P(S, {type:'deb',x:x+range(S.rngFx, -20,20),y,vx:Math.cos(a)*s*(next(S.rngFx)<0.5?-1:1),vy:Math.sin(a)*s,grav:900,life:range(S.rngFx, 0.8,1.8),col:col||'#6d6a66',size:range(S.rngFx, 3,9)}); }
+    P(S, {type:'deb',x:x+range(S.rngFx, -20,20),y,vx:S.m.cos(a)*s*(next(S.rngFx)<0.5?-1:1),vy:S.m.sin(a)*s,grav:900,life:range(S.rngFx, 0.8,1.8),col:col||'#6d6a66',size:range(S.rngFx, 3,9)}); }
 }
 export function dust(S, x,y,n,col){
   for (let i = 0; i < n; i++) P(S, {type:'dust',x:x+range(S.rngFx, -40,40),y:y+range(S.rngFx, 0,20),vx:range(S.rngFx, -90,90),vy:range(S.rngFx, 20,140),life:range(S.rngFx, 0.8,1.8),col:col||'#9b8f7e',size:range(S.rngFx, 14,34),drag:0.02});
@@ -39,7 +39,7 @@ export function stepParts(S, dt){
     const p = parts[i]; p.age += dt;
     if (p.age >= p.life){ parts[i] = parts[parts.length-1]; parts.pop(); continue; }
     p.vy -= p.grav*dt;
-    if (p.drag){ const d = Math.pow(1 - p.drag, dt*60); p.vx *= d; p.vy *= d; }
+    if (p.drag){ const d = S.m.pow(1 - p.drag, dt*60); p.vx *= d; p.vy *= d; }
     p.x = wrap(p.x + p.vx*dt); p.y += p.vy*dt;
     if (p.type === 'ring') p.r += p.gr*dt;
     if (p.type === 'deb'){ const g = groundY(S, p.x); if (p.y < g){ p.y = g; p.vy *= -0.3; p.vx *= 0.6; } }
