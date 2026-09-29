@@ -147,3 +147,5 @@ Orb had played the Godot greybox before answering.
 - **1v1 first.** 2v2 questions (the fold in 2v2, team rules) are deferred.
 - Lines change with the matchup: who is facing whom, and what is at stake. The Protagonist is lighter against a sparring rival and more serious against someone threatening to end the world.
 - Work the matchups out case by case with Orb.
+
+**Matchup feedback (Orb, 2026-09-29).** 'These are a great start. I want as many possibilities.' Likes: the Tyrant's revision numbers, and the Cyborg asking for a manager. Tone fix for the Protagonist: the fight comes first and the repairs after. Not 'That was a home. I'll fix it. Then I'll deal with you.', but more like 'I'll help fix it once I'm done with you.' Orb read the Anti-hero's 'Fifth.' as a typo for 'Filth'.
