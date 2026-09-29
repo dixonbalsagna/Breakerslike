@@ -10,6 +10,9 @@ extends SceneTree
 ## 4. seam join and coverage: neighbouring copies meet exactly one planet apart, the last terrain column reads column
 ##    0 again, and the copies cover the whole visible width out to the horizon row, even when the view is wider than
 ##    the planet.
+## Node positions are float32, so "exactly" in checks 3 and 4 means within float32 rounding at the largest copy
+## offset (POS_TOL, two units in the last place there: 0.0625 units at W = 153,600). That is far below a pixel at the
+## closest zoom (1.15 pixels per unit), and the sweep prints the worst error in pixels too.
 ## The sweep poses a match state by hand (fighter x and y) and never steps the sim; the renderer only reads it.
 ##
 ## Usage (from the repo root):
@@ -17,7 +20,9 @@ extends SceneTree
 ##   godot --path . --script res://render/tools/seam_sweep.gd -- --shots=DIR                    also saves PNGs
 ## Try a very wide view (--size=2560x720) to see one wider than the planet.
 
-const SEPS: Array = [0.0, 1.0, 60.0, 400.0, 1500.0, 3000.0, 4500.0, 4790.0]
+## Separations: a few fighter-scale ones, then fractions of half the planet up to nearly antipodal.
+const SEPS: Array = [0.0, 1.0, 60.0, 400.0, 1500.0]
+const SEP_FRACS: Array = [0.0625, 0.3, 0.625, 0.9375, 0.998]
 const SPEED := 25.0          # world units per frame (1500 units/s at 60 Hz)
 const SPAN := 3000.0         # each pass covers [W - SPAN/2, W + SPAN/2] around the seam
 const PREROLL := 240         # frames for the camera to settle before a pass
@@ -32,6 +37,7 @@ var worst_map: float = 0.0
 var worst_motion: float = 0.0
 var worst_ground: float = 0.0
 var worst_join: float = 0.0
+var pos_tol: float = 0.0          # float32 rounding at the largest copy offset (see the header)
 var min_cover_margin: float = INF
 var widest_view: float = 0.0
 var orbit_max_step: float = 0.0
@@ -58,13 +64,14 @@ func _initialize() -> void:
 
 func _run() -> void:
 	await process_frame
+	pos_tol = 2.0 * _ulp32(float(RenderLook.PLANET_COPIES + 1) * SimConst.W)
 	main.start_match(1)
 	var S: SimState = main.host.S
 	var vp: Vector2 = main.get_viewport().get_visible_rect().size
 	print("Seam sweep  %dx%d  %s" % [int(vp.x), int(vp.y), "shots to " + shots if shots != "" else "numeric only"])
 	_check_static()
 	var W: float = SimConst.W
-	for d in SEPS:
+	for d in SEPS + SEP_FRACS.map(func(q): return roundf(q * SimConst.HALF)):
 		# Together: both fly right through the seam, d apart, at different heights.
 		await _pass("together d=%d" % int(d), func(t): return [W - SPAN * 0.5 - d * 0.5 + t, 40.0, W - SPAN * 0.5 + d * 0.5 + t, 200.0], d)
 	# Head-on: they meet on the seam (separation passes through 0 there).
@@ -77,8 +84,8 @@ func _run() -> void:
 	print("frames checked       %d" % frames_checked)
 	print("mapping error        max %.4f px (limit %.1f)" % [worst_map, TOL_PX])
 	print("motion vs reference  max %.4f px per frame (limit %.1f)" % [worst_motion, TOL_PX])
-	print("ground under fighter max %.6f world units" % worst_ground)
-	print("copy join error      max %.6f world units" % worst_join)
+	print("ground under fighter max %.6f world units (%.4f px at the closest zoom; limit %.4f units)" % [worst_ground, worst_ground * 1.15, pos_tol])
+	print("copy join error      max %.6f world units (%.4f px at the closest zoom; limit %.4f units)" % [worst_join, worst_join * 1.15, pos_tol])
 	print("widest view          %.0f world units (planet %.0f); min coverage margin %.0f" % [widest_view, W, min_cover_margin])
 	print("orbit pass           largest screen step %.1f px per frame (the camera's pan when the separation passes HALF)" % orbit_max_step)
 	if fails.is_empty():
@@ -168,7 +175,7 @@ func _check_ground(label: String, s: int, i: int, vx: float, fx: float) -> void:
 		if wx >= 0.0 and wx < SimConst.W:
 			var d: float = absf(SimWrap.sdx(wx, fx))
 			worst_ground = maxf(worst_ground, d)
-			if d > 0.01:
+			if d > pos_tol:
 				fails.append("%s frame %d fighter %d: ground drawn for x %.3f, fighter at %.3f" % [label, s, i, wx, fx])
 			return
 	fails.append("%s frame %d fighter %d: no planet copy under view x %.1f" % [label, s, i, vx])
@@ -179,7 +186,7 @@ func _check_copies(label: String, s: int, vw: float) -> void:
 	for k in range(cs.size() - 1):
 		var j: float = absf(cs[k].position.x + SimConst.W - cs[k + 1].position.x)
 		worst_join = maxf(worst_join, j)
-		if j > 0.01:
+		if j > pos_tol:
 			fails.append("%s frame %d: copies %d and %d are %.4f off one planet apart" % [label, s, k, k + 1, j])
 	var hw: float = main.cam_rig.half_width(vw, RenderLook.FAR_ROWS[-1])
 	widest_view = maxf(widest_view, 2.0 * main.cam_rig.half_width(vw))
@@ -187,3 +194,8 @@ func _check_copies(label: String, s: int, vw: float) -> void:
 	min_cover_margin = minf(min_cover_margin, margin)
 	if margin < 0.0:
 		fails.append("%s frame %d: the planet copies leave %.0f units of the view uncovered" % [label, s, -margin])
+
+
+## The spacing of float32 values around v (one unit in the last place).
+static func _ulp32(v: float) -> float:
+	return pow(2.0, floor(log(absf(v)) / log(2.0)) - 23.0)

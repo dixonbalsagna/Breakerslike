@@ -126,7 +126,7 @@ func _check_seam() -> void:
 	for z in RenderLook.BAND_ROWS:
 		if z == 0.0:
 			continue
-		for d in [8.0, 40.0, 120.0, 200.0, 320.0]:
+		for d in [1.0, 5.0, 15.0, 25.0, 40.0].map(func(n): return n * SimConst.COL):   # whole columns, so base cancels
 			var a: float = gfld.ground_at(S, SimConst.W - d, z) - S.base[int((SimConst.W - d) / SimConst.COL)]
 			var b: float = gfld.ground_at(S, d, z) - S.base[int(d / SimConst.COL)]
 			worst = maxf(worst, absf(a - b))
