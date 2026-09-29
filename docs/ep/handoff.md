@@ -91,7 +91,7 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
 - **Tools, small:** fix the godot-parity comment (it now checks the GD goldens); add a batch.gd 5-match smoke step. QA: move baselines to batch.gd.
 
 ## Sim editor queue (one at a time; the plan is docs/architecture/wounds-plan.md)
-World (active), then S0 menace fixes, S1 wear core (with the ko() hook behind a flag), S2 the end (Encounter), S3a and S3b, S4 Rally, D1 roster as data, then F1: the **Anti-hero** (Orb's pick). W1 (variable circumference) comes before the fold; N1 (N bodies) comes before the Empress.
+S0 menace fixes (Simulation, active), S1 wear core, then W-R rim scaling (World, sharing a golden regen), B1 building depth data (World), then (with the ko() hook behind a flag), S2 the end (Encounter), S3a and S3b, S4 Rally, B2 the building brunt (Encounter, World, Simulation; docs/world/buildings-in-depth.md), with B3 building presentation (Rendering, Camera) in parallel after B1, then D1 roster as data, then F1: the **Anti-hero** (Orb's pick). W1 (variable circumference) comes before the fold; N1 (N bodies) comes before the Empress.
 
 ## Old sim queue notes
 1. World: craters, scorch, water (active).
