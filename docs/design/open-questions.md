@@ -4,43 +4,13 @@ Owner: Game Design. Status: updated after questionnaire 3. Date: 2026-09-29.
 
 Design decisions that are Orb's to make. Each has options, Game Design's recommendation, and the default the team follows until Orb answers. The EP takes them to Orb. Orb's answers so far are in `docs/ep/vision.md`. Decisions inside Game Design's own remit are summarised at the end so Orb can overrule any of them.
 
-## New questions (up to five, for the next questionnaire)
+## The N questions: where they stand
 
-**N1. Which damage model?** `damage-model.md` §7 compares three:
-- A. Wounds: wear on four body regions, where breaks are chapters and the brink leads to a finisher.
-- B. A hidden vitality pool behind the same cues.
-- C. Break points: three countable points per region.
-
-Recommendation: **A.** It is the richest per fighter and legible through six channels. C is the fallback if playtests can't read it. *Default: A.*
-
-**N2. May players switch on an optional wear readout?** A small body silhouette tinted by region stage, with no numbers and no bars. Off by default, and on in `training`.
-
-Recommendation: **yes, as an accessibility option.** *Default: yes.*
-
-**N3. How often can a fighter on the brink Rally?** Winning a decisive exchange on the brink mends one broken region by one stage.
-- A. Once per fighter per match; the Protagonist also gets a free Rally chance at his first brink.
-- B. Unlimited.
-- C. Never.
-
-Recommendation: **A.** It allows real comebacks without endless finales. *Default: A.*
-
-**N4. Who fills the breathing room between exchanges?** At the new tempo (`balance-targets.md` §10) there are 1.5 to 4 s between exchanges.
-- A. The player: free flight, taunts, charging, positioning. The director adds barks.
-- B. The director stages beats, such as stare-downs and circling.
-- C. A: the player, plus staged face-offs only at region breaks and transformations.
-
-Recommendation: **C.** *Default: C.*
-
-**N5. The orbs.** Orb wants orbs, and a heavy hit scatters one. The pitch, which Legal must screen:
-- five orbs, each a different element tied to a biome;
-- once gathered they orbit him visibly;
-- a heavy hit knocks one loose to land in another biome;
-- with all five he folds the fight into the sealed arena;
-- there is no set of seven, no wish and no summoned being.
-
-Opponents can knock orbs loose but never hold them. Is five right, and should a rival be able to *use* them?
-
-Recommendation: **five; knock loose, never hold.** *Default: that.*
+- **N1. Damage model.** Answered: Variant A, Wounds (`damage-model.md`).
+- **N2. The wear readout.** Orb asked for pitches. Five readouts are in `pitches.md` §1. The recommendation is the in-world aura crown plus wound cards by default, glyphs as a toggle, and the silhouette in `training` and for accessibility. **Orb picks.**
+- **N3. Rally.** Orb asked for one rule per fighter. The pitches are in `pitches.md` §2: Second Wind, Spite, Emergency revision and Reboot, with five limits so finales don't loop. **Orb picks.**
+- **N4. Downtime.** Answered: the player fills it, with set pieces and quick verbal exchanges. Eight ideas are in `pitches.md` §3, and the first four are recommended for the first playable. **Orb picks.**
+- **N5. Orbs.** Replaced by Legal's screen. There is no fixed count: fragments are shed by planet damage and contested, and the fold unlocks on the total mass held (`pitches.md` §4). Two small questions for Orb remain there: a time floor for the fold, and what a rival's grab gives.
 
 ## Still open from earlier
 

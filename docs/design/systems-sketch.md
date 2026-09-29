@@ -18,7 +18,12 @@ Six systems that Orb's four fighters and the new match length need (`docs/ep/vis
   - three goons: bruiser, marksman, speedster;
   - while the goons fight, a human Tyrant snipes support shots and taunts.
 - **Fusion** is a true merge with an original trigger and look. Legal screens it. Tandem stays only as a fallback.
-- **Relocation uses orbs** (not keystones). A heavy hit scatters one. The pitch is in `open-questions.md` N5.
+- **Relocation uses fragments**, not keystones, within Legal's conditions (`docs/legal/q3-screen.md` §a):
+  - the planet sheds them when damaged, and they are contested;
+  - a heavy hit scatters one;
+  - the fold unlocks on the total mass held, never on a set count;
+  - no search, no radar and no wish.
+  The design is in `pitches.md` §4. It replaces section 4's keystones.
 - **The Cyborg:**
   - a backup drive he catches and docks;
   - the weak point is pitched as the chest hatch (`damage-model.md` §4);

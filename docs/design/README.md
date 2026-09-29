@@ -10,6 +10,7 @@ Owner: Game Design. These pages define what the game is and why it is fun, and e
 | [balance-targets.md](balance-targets.md) | The bands QA checks: win rate, length, escalation, collateral, variety, stance balance, story beats. Also the prototype's balance-gap diagnosis |
 | [modes.md](modes.md) | Modes with stable ids, the 1.0 scope, and the rules for each mode |
 | [damage-model.md](damage-model.md) | No health bars: body-region wear, brink and finisher, how each fighter takes damage, and how the player reads it |
+| [pitches.md](pitches.md) | Pitches for Orb: the wear readout, a Rally per fighter, downtime ideas, and fragments under Legal's conditions |
 | [systems-sketch.md](systems-sketch.md) | Transformations, minions, fusion (deferred; Tandem), keystone relocation, civilian consumption, procedural planets |
 | [open-questions.md](open-questions.md) | The questions for Orb, with options and recommendations, and the decisions Game Design made |
 | [prototype-bugs.md](prototype-bugs.md) | Prototype defects that matter to design, with the intent each one breaks. They are not fixed until the port proves parity |

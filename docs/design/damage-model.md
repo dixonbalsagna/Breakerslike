@@ -79,7 +79,7 @@ No bars. Six channels carry the same information, so no one channel has to be re
    - Every stage change is a feed line: `LEFT ARM BROKEN`, `ON THE BRINK`, `RALLY`.
    - Every stage change can also trigger a line, such as a taunt at a broken arm (Narrative; Orb wants a large, situational line set).
 
-**Accessibility fallback.** An optional **wear readout**, off by default: a small body silhouette whose regions are tinted by stage. It shows the four regions and their stages, never a number and never a bar. It is on by default in `training` (Accessibility, UI).
+**Readout options** are pitched in `pitches.md` §1, pending Orb's pick. The baseline accessibility fallback is an optional **wear readout**, off by default: a small body silhouette whose regions are tinted by stage. It shows the four regions and their stages, never a number and never a bar. It is on by default in `training` (Accessibility, UI).
 
 ## 4. How each fighter handles damage
 
@@ -103,7 +103,7 @@ Each profile is a small set of data values over the shared regions, so a re-skin
   - the Tyrant's final-revision technique;
   - the Cyborg's opponent must land the finisher on the open hatch.
 - **Comebacks come from three sources:**
-  - *Rally.* A fighter on the brink who wins a decisive exchange of their own mends one broken region by one stage and leaves the brink. Once per fighter per match, and twice for the Protagonist on his first brink.
+  - *Rally.* A fighter on the brink mends one broken region by one stage and leaves the brink. The per-fighter Rally rules and their limits are pitched in `pitches.md` §2, pending Orb's pick.
   - *Hiding.* Hidden recovery mends battered wear but not breaks (`economy.md` §5).
   - *Desperation.* On the brink, a fighter's damage rises, which is today's comeback bonus (`L322`) made visible through the unstable aura. Narrative's "Resolve" cue is exactly this.
 - **Interrupting a transformation.** A long transformation hit mid-beat is cancelled. The hit counts as a decisive exchange won by the attacker, and it lands on the core. The Tyrant's revisions are too short to interrupt (Orb).

@@ -1,0 +1,96 @@
+# Pitches for Orb: wear readout, Rally, downtime, fragments
+
+Owner: Game Design. Status: pitches for Orb to react to. Date: 2026-09-29.
+
+Orb picked Variant A, "Wounds" (`damage-model.md`). Orb asked for pitches on three follow-ups:
+- the readout (N2);
+- a Rally per fighter (N3);
+- the downtime between exchanges, which the player fills (N4).
+
+The last section brings the orbs (N5) in line with Legal's screen (`docs/legal/q3-screen.md` §a). Everything here is a mechanic that survives a re-skin, and names are working names.
+
+---
+
+## 1. Showing wear without numbers or bars (N2)
+
+Every option shows the same state: four regions, each fresh, bruised, battered or broken, plus the brink (`damage-model.md` §2). They differ in where the eye finds it.
+
+| # | Readout | What it looks like | Sell | Accessibility note |
+| :--- | :--- | :--- | :--- | :--- |
+| R1 | **Silhouette** | A small body figure by the fighter's name. Each region is shaded by stage. On the brink the outline pulses | Exact and glanceable. Best for learning, and it already backs the `training` mode | Stages differ by fill pattern (clean, hatched, cracked, shattered) as well as colour. Size is scalable. It is the easiest option for colour-blind and low-vision players |
+| R2 | **Wound glyphs** | Four small region icons on the nameplate (head, core, arms, legs). Each one cracks as its region wears: hairline, split, shattered | Reads like scars, not stats. Compact enough for a four-player `team-2v2` HUD | Shape-coded, so it needs no colour. A high-contrast mode and larger icons are options. A screen reader can speak glyph changes |
+| R3 | **Aura crown** | No HUD at all. The fighter's aura carries four arcs around the body, one per region. An arc flickers when battered and gaps when broken. On the brink the whole aura gutters | Keeps the player's eyes on the fight and is fully in-world. It fits "no meters" best | The weakest at long zoom and for low vision. It needs an arc-thickness option and pairs with R5 audio. It should never be the only channel |
+| R4 | **Wound cards** | No persistent readout. When a stage changes, a picture-in-picture card of about 1.5 s shows the damaged region with a stamp, for example "ARMS: BROKEN". The pause menu shows the full body chart | Cinematic, uncluttered, and every change is announced | Cards are transient, so pair them with a persistent option. Captions on. With reduced motion, the card is a still. It adds a readable event for deaf players |
+| R5 | **Audio and haptics** (accessibility add-on) | A heartbeat and breathing layer per stage. A distinct rumble pattern for each break and for the brink | Tension without anything on screen | For low-vision and blind-leaning players. Volume and rumble strength are adjustable. Never the only channel |
+
+**Recommendation.**
+- **Default:** R3, the aura crown, plus R4, wound cards. The fight shows its state in-world, and every change is announced.
+- **Options:** R2 (wound glyphs) as a single HUD toggle. R1 (silhouette) on by default in `training` and as the accessibility default. R5 layers on top of any choice.
+
+## 2. Rally per fighter (N3)
+
+**Shared rule.** A Rally takes a fighter out of the brink and mends one broken region by one stage, so it comes back battered, one good hit from breaking again. Each fighter reaches it differently.
+
+| Fighter | Rally (working name) | Trigger | What it does | Why it is him |
+| :--- | :--- | :--- | :--- | :--- |
+| Protagonist | **Second Wind** | While on the brink, he survives the opponent's finisher attempt by winning its contested clash or escape roll (`damage-model.md` §5) | Mends a region and gives a short Respect surge: his next track step is free | He gets stronger when his rival gives everything. Surviving their best shot is his fuel |
+| Anti-hero | **Spite** | While on the brink, he wins a decisive exchange with his own hands (melee, no signature) and has refused help (no fusion this match) | Mends his arms first, and his next finisher must be by hand | Pride before everything. He comes back only on his own strength. Accepting fusion gives up Spite for the match, which is the cost of taking help |
+| Tyrant | **Emergency revision** | While on the brink, press to force an unscheduled revision. It is instant and safe, like his other revisions (Orb) | Mends his most-worn region, but **skips a rung**: he loses the next scheduled refit, and the new revision shows a visible flaw (a crack or a patch) | Vain and quick to anger. He would rather "upgrade" than admit he is losing, and each patch job makes him worse |
+| Cyborg | **Reboot** | While on the brink, he docks his backup drive, if it is still loose, or finishes a consume beat within reach of civilians. Consuming stays interruptible, like charging | Mends one chip break (`damage-model.md` §4), and his regrowth doubles for 5 s | He runs on spare parts and people. Protect the civilians, or catch the drive first, to deny him |
+
+**Limits, so finales don't loop:**
+1. **Once per fighter per match.** The Tyrant may use Emergency revision twice, but never in his full-power form, and each use costs a refit.
+2. **Cooldown.** No Rally within 30 s of leaving the brink.
+3. **Rallies wear off.** The mended region comes back battered, not bruised. A second brink after a Rally puts the finisher's roll in the opponent's favour.
+4. **Final-act lock.** Once both fighters have been on the brink, or after 8:00 of match time, Rallies are off and the next decisive exchange ends the match.
+5. **Visible.** Every Rally is a feed line, a bark and a camera beat, so the comeback always reads as earned.
+
+## 3. Downtime the player fills (N4)
+
+Orb's pick: the player fills the 1.5 to 4 s gaps between exchanges (`balance-targets.md` §10) with free flight, taunts, charging and positioning, helped by dynamic set pieces and quick verbal exchanges. Each idea below says what the player actively does, and why it is a decision rather than something to watch.
+
+| # | Idea | What the player does | The decision it creates |
+| :--- | :--- | :--- | :--- |
+| D1 | **Banter volley** | Tap taunt; the stick direction picks the tone (boast, jab or threat). The opponent has 1.5 s to tap a retort. On-screen lines are chosen by context (wear, biome, collateral, ego meters), voiced as grunts and laughs | An unanswered taunt gives the taunter a bigger ego-meter bump; answering splits it. But taunting spends your breathing room while the opponent could be charging |
+| D2 | **Charge standoff** | If both fighters hold charge within sight of each other, their auras meet in a visible push. Release early to take the first strike of the next exchange; hold longer to build more power | Chicken. The one who holds longer gains more, but gives the other a free interrupt window. You read the opponent's aura to decide when to break |
+| D3 | **Fragment scramble** | After a big impact, the planet sheds molten fragments at the site (section 4). Fly in and grab them | A fragment is a charge surge for anyone, and mass toward the fold for the Protagonist. Grab it, or stay out of the other fighter's reach; a heavy hit knocks held fragments loose |
+| D4 | **Falling-set-piece play** | A tower tips, a crater vents magma, a dam or ice shelf gives way. Steer the opponent into its path, ride a magma plume up for an aerial start, or save the civilians under it | Use the world as a weapon, or protect it. It feeds each fighter's ego meter differently: catching civilians builds the Protagonist's Respect, the Cyborg can scoop them, and it costs the Tyrant nothing |
+| D5 | **Stance feint** | Your stance shows on your aura. Flick stances in mid-range to bait the opponent into throwing the attack your real stance beats | The mind game "stances, not combos" promises. The template reads the stance at the moment the attack starts (`stance-matrix.md` R8), so feints are real |
+| D6 | **Tumble recovery** | After a long launch, input a timed recovery mid-tumble to right yourself early and pick your landing. The chaser picks an intercept line | The launched fighter can turn a chase into an ambush angle. The chaser must choose between cutting off and hanging back |
+| D7 | **Power-up gambit** | Start a long transformation in the open during downtime | The opponent must commit to interrupting it (a decisive exchange, `damage-model.md` §5) or answer with their own power-up. It is a bluff war, and the Tyrant's instant revisions change the maths |
+| D8 | **Hunt beat** | When one fighter hides, the hunter flies low to scout. The found radius is 240 units (`index.html:L687`), and the planet strip shows the last-seen spot | Hide and ambush becomes a two-player game: the hider chooses when to break cover, and the hunter chooses where to search |
+
+**Guard rails.**
+- No idea may pause control for more than the set-piece allowance. Banter never freezes play: lines appear over live action.
+- The AI uses every idea too (Encounter Systems), so solo play has the same texture.
+- QA's "no gap over 10 s" band still applies (`balance-targets.md` §8), and none of these may stall a fight.
+
+**Recommendation for a first playable:**
+- D1 banter;
+- D2 standoff;
+- D3 scramble;
+- D5 feints.
+All four need little new content and use systems already on the path.
+
+## 4. Fragments, brought in line with Legal's screen (replaces N5)
+
+Legal rated **Held fragments** CONDITIONAL. The conditions are binding (`docs/legal/q3-screen.md` §a). The design:
+
+- **Source.** The planet itself. Big impacts (region-break launches, beam hits, ground tier-ups, clash shockwaves) shed **irregular molten or crystalline fragments** of different sizes where they land. How many exist depends on the damage and the planet seed. It is never a set, and never seven.
+- **Anyone can grab one.** A fragment gives an instant charge surge (Legal's A1, GO). There is no hiding, searching, radar or sensor. They are in plain sight where the fight happened.
+- **The Protagonist can hold them.** They orbit his body (Legal's A2 look and pose rule, with no raised-arms pose). The fold into the barren proving ground unlocks when the **total mass he holds** passes a threshold. Any mix of sizes works. There is no count to complete, no required order, no wish and no summoned being.
+- **Contested.** A heavy hit knocks one held fragment loose, chosen by a seeded draw weighted toward the largest. The opponent can grab it for its surge, which also denies the mass.
+- **Element variety.** Five element looks (molten, crystal, storm, tide, stone) follow the biome that shed them. They are a colour-and-effect variety, not a collection.
+- **Pacing.** The threshold is tuned so that the fold typically becomes possible in act 3, and never before the 4:00 floor (`systems-sketch.md` §4).
+- **Tripwires we will never cross:**
+  - exactly seven of anything;
+  - stars or numerals on fragments;
+  - a sensor;
+  - "wish" or "summon" language;
+  - a required order;
+  - identical smooth spheres.
+- **Fallback.** If Art or Marketing cannot keep clear of the tripwires, drop holding and the fold. Keep shedding and surges (A1) and orbit charge (A2).
+
+**Questions left for Orb:**
+- Should the fold also need a time floor? Recommended: yes, 4:00.
+- Should a rival's grab be only a denial, or also a small boost to their own meter? Recommended: a surge plus a denial, with no meter bonus.
