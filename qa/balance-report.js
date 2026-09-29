@@ -41,6 +41,11 @@ const verdictWin = (rate, ci) => (rate < T.winLo || rate > T.winHi ? '**FAIL**' 
 
 const out = [];
 const w = s => out.push(s);
+// Notes where a confirmed prototype bug (qa/known-bugs.md) distorts a metric. Sizes come from qa/known-bugs-effects.json
+// (node qa/known-bugs-scan.js); without that file the notes appear without numbers.
+const KBFILE = path.join(__dirname, 'known-bugs-effects.json');
+const KB = fs.existsSync(KBFILE) ? JSON.parse(fs.readFileSync(KBFILE, 'utf8')) : null;
+const kbNote = (id, text) => w('\n> **Known bug ' + id + '.** ' + text + ' See `qa/known-bugs.md`.');
 
 // ---- 1. runs
 w('### 1. Runs');
@@ -154,6 +159,10 @@ w('');
 const outs = ['HIT', 'GUARD', 'DODGE', 'ESCAPE', 'CLASH'];
 w(table(['Beam outcome (default arm)', ...outs], [['count', ...outs.map(o => String(D.beams.outcome[o] || 0))], ['share', ...outs.map(o => p((D.beams.outcome[o] || 0) / D.beams.total))]]));
 w('');
+if (KB) {
+  kbNote('KB-005', `The DODGE share above (${p(D.beams.outcome.DODGE / D.beams.total)}) is correct, but each dodge leaves the defender frozen 300 units up for 0.87 s: ${KB.kb5.frozenSecondsPerMatch.toFixed(2)} s a match of dead time (${p(KB.kb5.shareOfMatchTime, 1)} of the match).`);
+  kbNote('KB-001', `The HIT and ESCAPE split against an ESCAPE defender uses a mis-signed tier term. It cancels in these matches (mean tier gap ${KB.kb1.meanTierGap.toFixed(2)}, hit probability ${p(KB.kb1.meanPActual)} as coded against ${p(KB.kb1.meanPCorrect)} corrected), so the shares are unaffected today.`);
+} else kbNote('KB-005 and KB-001', 'A dodged signature freezes the defender for 0.87 s, and the HIT/ESCAPE split against ESCAPE uses a mis-signed tier term.');
 w('Beam variants, default arm: ' + Object.entries(D.beams.variant).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${p(v / D.beams.total, 0)}`).join(', ') + '.');
 
 // ---- 7. director coverage
@@ -176,6 +185,7 @@ const cellText = (d, k) => { const o = byDef[d + ' ' + k]; if (!o) return '(none
 w(table(['Defender state', 'Light attack', 'Heavy attack', 'Signature'], DS.map(d => [d, cellText(d, 'light'), cellText(d, 'heavy'), cellText(d, 'sig')])));
 w('');
 w('The bracketed number is how many distinct outcomes were seen. Light attacks that end in a defender counter are counted under their base outcome.');
+if (KB) kbNote('KB-002', `Damage against CHARGING defenders lacks the coded 1.35x, so that row understates what the design intends (${KB.kb2.hitsOnChargingDefender} hits in ${N} matches, ${p(KB.kb2.shareOfAllDamage, 1)} of damage: no metric moves).`);
 w('');
 w(table(['Melee outcome (default arm)', 'Count', 'Share'], Object.entries(D.melee.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, String(v), p(v / D.melee.total)])));
 
@@ -201,11 +211,15 @@ w(table(['Rate', ...ARMS.map(a => a.arm)], [
 ]));
 w('');
 const cl = D.chain.lenHist; w('Chain length histogram, default arm: ' + Object.keys(cl).sort((a, b) => a - b).map(k => `x${k}: ${cl[k]}`).join(', ') + '.');
+if (KB) kbNote('KB-003', `The chain rows above count phantom chains: ${KB.kb3.phantomEvents} of ${KB.kb3.chainEvents} chain events (${p(KB.kb3.phantomEventShare)}) follow a parry and deal no damage, and their links waste ${KB.kb3.kiWastedPerMatch.toFixed(1)} ki a match. Real chains are ${KB.kb3.chainEventsPerMatchReal.toFixed(2)} a match, not ${KB.kb3.chainEventsPerMatchReported.toFixed(2)}, and ${(KB.kb3.chainPerMeleeReal * 100).toFixed(1)} per 100 melee exchanges, not ${(KB.kb3.chainPerMeleeReported * 100).toFixed(1)}. Mean chain length is unaffected (${KB.kb3.meanLengthReal.toFixed(2)} real, ${KB.kb3.meanLengthPhantom.toFixed(2)} phantom). Parries per match is correct.`);
+else kbNote('KB-003', 'The chain rows count phantom chains that follow a parry and deal no damage (about 13% of them).');
 
 // ---- 9. stance share
 w('');
 w('### 9. Where winners and losers spend their time, default arm (share of match time by stance)');
 w(table(['', ...AS], [['Winners', ...D.stanceShare.winners.map(v => p(v))], ['Losers', ...D.stanceShare.losers.map(v => p(v))]]));
+if (KB) kbNote('KB-004', `Every chain strike ignores the defender's stance, so a DEFENSIVE guard is bypassed by one more press of attack: ${KB.kb4.byStance[1].n} chain strikes on DEFENSIVE defenders in ${N} matches put ${KB.kb4.guardedExtraDamagePerMatch.toFixed(1)} HP a match through the guard, and chain strikes are ${p(KB.kb4.shareOfAllDamage)} of all attack damage. Part of the advantage of AGGRESSIVE play in this table may come from that; patching it in a scratch copy moved KAI's win rate from 42.3% to 40.4% and length from 55.4 s to 57.1 s, within noise (qa/known-bugs-whatif.js).`);
+else kbNote('KB-004', 'Chain strikes ignore the defenders stance, so a DEFENSIVE guard is bypassed by one more attack press; this may inflate the advantage of AGGRESSIVE play.');
 
 // ---- 10. seam
 w('');

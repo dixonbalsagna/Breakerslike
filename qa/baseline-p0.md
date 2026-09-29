@@ -38,6 +38,14 @@ Provisional length band (my call as owner of the release quality bar, until Game
 | QA-004 | Event statistics are parsed from the text of the director feed, because the sim exposes no structured event log. A reworded feed line silently zeroes a statistic. `qa/tests/tables.test.js` fails loudly if a core event stops parsing, and lists any unclassified new lines. A structured log (event type, actor, target, outcome) would remove the dependency. | Simulation, Tools | Medium |
 | QA-005 | Golden hashes and any float-exact comparison depend on the JavaScript engine's `Math.sin`, `Math.pow` and friends. They were recorded on Node v24.19.0 and the golden test is skipped, with a notice, on a different Node major version. CI should pin the Node version. | Tools and Pipeline | Low |
 
+## Known bugs that touch these numbers
+
+Six prototype bugs reported by Combat and Game Design are confirmed and pinned in `qa/known-bugs.md`. Where one distorts a metric below, the table carries a note. The ones that matter for reading this baseline:
+
+- **Chain rate (KB-003).** 13% of reported chains are phantom chains after a parry. Real chains are 3.32 a match, not 3.82, and 20.7 per 100 melee exchanges, not 23.8.
+- **Stance advantage (KB-004).** Every chain strike ignores the defender's stance, so the DEFENSIVE guard is bypassed by one more press of attack (76.5 HP a match through a guard). It may account for some of "aggression wins" in section 9, though patching it in a scratch copy moves win rate and length only within noise.
+- **No effect** on win rate, match length or collateral was found for any of the six beyond sampling noise (`qa/known-bugs.md`, "What fixing them would do").
+
 ## What was checked for "no behaviour change beyond seeding"
 
 The seed argument is the only change to `prototype/index.html`. With no argument `newMatch()` runs the same clock-based line as before. Two checks: the original file from commit 111b1a1 with the clock forced to a value S produced the same result hash as the edited file called as `newMatch(S)` for 200 of 200 odd S (bit-identical trajectories, feed and world state). And 1,000 clock-seeded matches match the seeded baseline on every statistic tested, all |z| < 3 (section 11). Differences under about 2 points in civilians lost between two independent 1,000-match blocks are sampling noise at this size.
@@ -174,6 +182,10 @@ Where the fighters actually are (share of fight time, both fighters, until KO or
 | count | 850 | 730 | 457 | 139 | 1472 |
 | share | 23.3% | 20.0% | 12.5% | 3.8% | 40.4% |
 
+
+> **Known bug KB-005.** The DODGE share above (12.5%) is correct, but each dodge leaves the defender frozen 300 units up for 0.87 s: 0.40 s a match of dead time (0.7% of the match). See `qa/known-bugs.md`.
+
+> **Known bug KB-001.** The HIT and ESCAPE split against an ESCAPE defender uses a mis-signed tier term. It cancels in these matches (mean tier gap 0.01, hit probability 74.1% as coded against 74.1% corrected), so the shares are unaffected today. See `qa/known-bugs.md`.
 Beam variants, default arm: HORIZON CLEAVE 69%, BOULEVARD RAZE 17%, MERIDIAN SCAR 9%, RIDGE BORE 3%, FIRESTORM 1%, GLASS TRENCH 1%.
 
 ### 7. Director coverage, default arm
@@ -197,6 +209,8 @@ Outcomes the director produced for each defender state and attack kind (share of
 | CHARGING | CHARGE INTERRUPT 100% [1] | CHARGE INTERRUPT 100% [1] | HIT 100% [1] |
 
 The bracketed number is how many distinct outcomes were seen. Light attacks that end in a defender counter are counted under their base outcome.
+
+> **Known bug KB-002.** Damage against CHARGING defenders lacks the coded 1.35x, so that row understates what the design intends (118 hits in 1000 matches, 0.5% of damage: no metric moves). See `qa/known-bugs.md`.
 
 | Melee outcome (default arm) | Count | Share |
 | :--- | ---: | ---: |
@@ -232,11 +246,15 @@ The bracketed number is how many distinct outcomes were seen. Light attacks that
 
 Chain length histogram, default arm: x2: 2516, x3: 1051, x4: 237, x5: 13.
 
+> **Known bug KB-003.** The chain rows above count phantom chains: 499 of 3817 chain events (13.1%) follow a parry and deal no damage, and their links waste 4.3 ki a match. Real chains are 3.32 a match, not 3.82, and 20.7 per 100 melee exchanges, not 23.8. Mean chain length is unaffected (2.40 real, 2.44 phantom). Parries per match is correct. See `qa/known-bugs.md`.
+
 ### 9. Where winners and losers spend their time, default arm (share of match time by stance)
 |  | AGGRESSIVE | DEFENSIVE | EVASIVE | ESCAPE |
 | :--- | ---: | ---: | ---: | ---: |
 | Winners | 55.3% | 16.7% | 21.1% | 6.9% |
 | Losers | 43.3% | 23.5% | 20.0% | 13.1% |
+
+> **Known bug KB-004.** Every chain strike ignores the defender's stance, so a DEFENSIVE guard is bypassed by one more press of attack: 1367 chain strikes on DEFENSIVE defenders in 1000 matches put 76.5 HP a match through the guard, and chain strikes are 18.5% of all attack damage. Part of the advantage of AGGRESSIVE play in this table may come from that; patching it in a scratch copy moved KAI's win rate from 42.3% to 40.4% and length from 55.4 s to 57.1 s, within noise (qa/known-bugs-whatif.js). See `qa/known-bugs.md`.
 
 ### 10. Seam exposure
 | Arm | Matches where a fighter crossed the seam | Crossings per match | Largest single-step move (units) |
@@ -251,16 +269,16 @@ Run as the old tool ran: one long-lived instance, no seed. The comparison is aga
 
 | Measure | Unseeded | Seeded default | z | Matches? |
 | :--- | ---: | ---: | ---: | ---: |
-| P1 (KAI) win rate | 43.1% | 42.3% | 0.36 | yes |
-| Length to KO, mean (s) | 56.0 | 55.4 | 0.66 | yes |
-| Civilians lost, mean (%) | 39.4 | 38.7 | 0.59 | yes |
-| Structures lost, mean | 14.2 | 14.1 | 0.32 | yes |
-| SLAM DOWN share of launches | 46.0% | 46.4% | -0.60 | yes |
-| Ocean share of beams | 67.5% | 69.4% | -1.73 | yes |
-| Parries per match | 1.46 | 1.46 | -0.02 | yes |
-| Hides per match | 0.69 | 0.63 | 1.23 | yes |
+| P1 (KAI) win rate | 40.1% | 42.3% | -1.00 | yes |
+| Length to KO, mean (s) | 55.9 | 55.4 | 0.60 | yes |
+| Civilians lost, mean (%) | 38.9 | 38.7 | 0.19 | yes |
+| Structures lost, mean | 14.2 | 14.1 | 0.35 | yes |
+| SLAM DOWN share of launches | 45.4% | 46.4% | -1.69 | yes |
+| Ocean share of beams | 68.7% | 69.4% | -0.73 | yes |
+| Parries per match | 1.44 | 1.46 | -0.28 | yes |
+| Hides per match | 0.68 | 0.63 | 1.08 | yes |
 
-Unseeded launches: SLAM DOWN 46%, UPPERCUT 34%, BUILDING SMASH 13%, SMASH ACROSS 5%, MOUNTAINSIDE 2%.
+Unseeded launches: SLAM DOWN 45%, UPPERCUT 34%, BUILDING SMASH 13%, SMASH ACROSS 5%, MOUNTAINSIDE 2%.
 Bit-for-bit check (run once, not part of the suite because it needs the old file from git): the original `prototype/index.html` from commit 111b1a1 with the clock forced to S, against the edited file called as `newMatch(S)`, gave the same result hash for 200 of 200 odd seeds S.
 <!-- END GENERATED -->
 

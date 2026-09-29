@@ -1,5 +1,7 @@
 # QA and balance
 
+**Two suites.** The GDScript sim (the source of truth, ADR 0006) is measured by `node qa/run-godot.js`: see `docs/qa/README.md`. **This page describes the legacy prototype suite, `node qa/run-all.js`**, which keeps guarding the pinned prototype (`7233c96`) and the frozen JS core, and holds the known-bugs register. It is kept, not retired: it is cheap (about 90 s), needs no Godot, and its register documents the bugs the port has to prove it fixed or replicated.
+
 Owner: QA and Balance director. Everything here runs on Node built-ins only, with no install step. Written and recorded on Node v24.19.0; use Node 18 or newer.
 
 ## Run the regression suite
@@ -10,12 +12,12 @@ From the repo root:
 node qa/run-all.js
 ```
 
-It takes about 35 seconds (about 20 with `--quick`), prints one line per check, and exits 0 only if everything passes (1 on any failure, 2 on a usage error). That exit code is what CI should use.
+It takes about 60 seconds (about 40 with `--quick`), prints one line per check, and exits 0 only if everything passes (1 on any failure, 2 on a usage error). That exit code is what CI should use.
 
 | Option | Effect |
 | :--- | :--- |
-| `--quick` | Soak with 100 matches instead of 1000 (about 20 seconds in total) |
-| `--only=seam,soak` | Run only the named test files (`tables`, `determinism`, `seam`, `soak`, `diff`, `selftest`) |
+| `--quick` | Soak with 100 matches instead of 1000 (about 40 seconds in total) |
+| `--only=seam,soak` | Run only the named test files (`tables`, `determinism`, `seam`, `soak`, `diff`, `known-bugs`, `selftest`) |
 | `--update-golden` | Rewrite `qa/golden-hashes.json` after an intended simulation change (see below) |
 
 ## What it checks
@@ -27,7 +29,8 @@ It takes about 35 seconds (about 20 with `--quick`), prints one line per check, 
 | `tests/seam.test.js` | Fighters flying and dashing across the seam east and west, launched fighters crossing it, the terrain height and a crater straddling it, and AI matches started astride it. Per step: no NaN, x stays in [0, 9600), the shortest-arc move equals velocity times dt, the camera never jumps and follows the short way round. |
 | `tests/soak.test.js` | 1000 seeded AI-vs-AI matches (plus 100 in each of the other three arms) with per-step rule checks: no NaN, no crash, no fighter outside the world, ki and power within 0 to 100, HP never above max, casualties never fall or exceed the population, structures lost never fall or exceed the total, building HP never rises, destroyed buildings never return, at most 1% of matches hit the 300 s cap. P0 exit criterion. |
 | `tests/diff.test.js` | The baseline-diff script: its comparison maths, that a run bit-identical to the baseline compares nothing, that an unchanged simulation raises no strict flag, that a real balance change (VORR damage x1.5) is flagged on the win rate and exits 1 with `--fail`, and that a change which only reshuffles random numbers is not flagged. |
-| `tests/selftest.test.js` | Proves the checks above can fail: eight deliberately broken copies of the prototype (no wrap, negative x, clock-seeded RNG, `Math.random` in the sim, `newMatch()` forgetting to reset the launch history, NaN, casualties above population, self-healing buildings) must each be caught by the right test, and the real prototype must pass. If a mutation target is rewritten in `index.html` this test fails; update the pattern in the file. |
+| `tests/known-bugs.test.js` | One check per confirmed prototype bug in `known-bugs.md` (KB-001 to KB-006), each asserting the bug is still present. They pass today; when the behaviour changes the check fails with "KB-00x appears fixed". A last check keeps the register and the test file listing the same bugs. |
+| `tests/selftest.test.js` | Proves the checks above can fail: six copies with a known bug fixed (each must trip its own known-bugs check with "appears fixed") and eight deliberately broken copies of the prototype (no wrap, negative x, clock-seeded RNG, `Math.random` in the sim, `newMatch()` forgetting to reset the launch history, NaN, casualties above population, self-healing buildings) must each be caught by the right test, and the real prototype must pass. If a mutation target is rewritten in `index.html` this test fails; update the pattern in the file. |
 
 A failing soak or seam test prints the seed. Replay it with `node prototype/tools/sim-stats.js 1 <seed> --arm=<arm>`.
 
@@ -70,6 +73,21 @@ If the simulation is untouched, the same seeds reproduce the baseline exactly, e
 
 Accepting an intended change: run `node qa/balance-report.js --matches=1000` (rewrites the baseline and report), run `node qa/run-all.js --update-golden`, and commit both with the change. The old baseline stays in git history.
 
+## Known bugs
+
+`known-bugs.md` is the register of prototype bugs reported by other directors: an ID (KB-001 onward), who reported it, a verdict (confirmed, partly, refuted, fixed), a repro, expected against actual behaviour, and the effect on the baseline. It is pinned to the prototype at commit `7233c96`; nothing is fixed there.
+
+| Command | What it does |
+| :--- | :--- |
+| `node qa/tests/known-bugs.test.js` | The pass/fail checks (also run by `run-all.js`) |
+| `node qa/known-bugs-repro.js [KB-003 ...]` | Prints what each scenario observes today |
+| `node qa/known-bugs-scan.js` | Effect sizes on the baseline (default arm, 1,000 matches, about 15 s); writes `known-bugs-effects.json`, which `balance-report.js` reads for its per-metric notes |
+| `node qa/known-bugs-whatif.js` | The baseline with each bug patched in a scratch copy, compared with `baseline-p0.json` (about 1 minute); writes `known-bugs-whatif.json` |
+
+The scenarios (`lib/probes.js`) press real keys through the prototype's input handlers on a seeded match; the steps are written out in the register, so the port can recreate them. The scan and the KB-006 check use a scratch copy of `index.html` with no-op hooks and a `groundY` export (`lib/instrument.js`); it is built in the temp folder, never written to `prototype/`, and a check proves it plays out bit-for-bit like the real file.
+
+When a bug is fixed: the check for it fails with "KB-00x appears fixed". Set that entry's verdict to `fixed` in `known-bugs.md` (with the commit), change the check to assert the corrected behaviour or delete it, and update the `checked` list at the bottom of `tests/known-bugs.test.js`. To add a bug: write the entry, add a scenario to `lib/probes.js` and a check to the test file; the register-agreement check fails until both exist.
+
 ## Batch runner
 
 ```
@@ -87,10 +105,16 @@ qa/
   run-all.js               one-command suite
   balance-report.js        report generator
   baseline-diff.js         flags metrics that moved beyond their confidence interval against the baseline
+  known-bugs.md            register of confirmed prototype bugs, with repro and baseline effect
+  known-bugs-repro.js      prints each bug scenario's observation
+  known-bugs-scan.js       effect sizes on the baseline (writes known-bugs-effects.json)
+  known-bugs-whatif.js     baseline with each bug patched in a scratch copy (writes known-bugs-whatif.json)
   baseline-p0.md / .json   the P0 baseline (report and data)
   golden-hashes.json       tripwire hashes
   lib/check.js             tiny test helper
   lib/arms.js              the fixed arm and seed-block plan, and the batch runner both scripts share
+  lib/probes.js            scripted bug scenarios (real key events on a seeded match)
+  lib/instrument.js        scratch copy of index.html with no-op hooks and groundY
   tests/*.test.js          the checks above
 prototype/tools/
   headless.js              loads prototype/index.html against a mock DOM (QA_HTML env var swaps the file)

@@ -1,0 +1,110 @@
+{
+ "matches": 1000,
+ "arm": "default",
+ "seeds": "100001..101000",
+ "digest": "70142afa31be898c",
+ "digestMatchesBaseline": true,
+ "kb1": {
+  "beams": 3648,
+  "vsEscape": 504,
+  "perMatch": 0.504,
+  "shareOfBeams": 0.13815789473684212,
+  "meanTierGap": 0.007936507936507936,
+  "hitRate": 0.7242063492063492,
+  "meanPActual": 0.740674603174608,
+  "meanPCorrect": 0.741468253968259,
+  "hitsPerMatchShift": 0.0004000000000001105,
+  "meanAbsShift": 0.013492063492063482,
+  "beamsWithTierGap": 0.13095238095238096
+ },
+ "kb2": {
+  "hits": 43573,
+  "hitsOnChargingDefender": 118,
+  "perMatch": 0.118,
+  "hitsWhereStateWasCharging": 0,
+  "hitsThatBypassStance": 118,
+  "damage": 11197.631224770834,
+  "shareOfAllDamage": 0.004967266842539257,
+  "missingDamagePerMatch": 3.9191709286697916
+ },
+ "kb3": {
+  "chainLinks": 5381,
+  "phantomLinks": 720,
+  "phantomLinkShare": 0.13380412562720684,
+  "chainEvents": 3817,
+  "phantomEvents": 499,
+  "phantomEventShare": 0.13073094052921141,
+  "phantomEventsPerMatch": 0.499,
+  "chainEventsPerMatchReported": 3.817,
+  "chainEventsPerMatchReal": 3.318,
+  "kiWastedPerMatch": 4.32,
+  "parriesPerMatch": 1.46,
+  "meanLengthReal": 2.4047619047619047,
+  "meanLengthPhantom": 2.4428857715430863,
+  "chainPerMeleeReported": 0.23823492697540885,
+  "chainPerMeleeReal": 0.20709025090500563
+ },
+ "kb4": {
+  "chainStrikes": 4659,
+  "perMatch": 4.659,
+  "shareOfAllDamage": 0.1854861768827397,
+  "byStance": [
+   {
+    "stance": 0,
+    "n": 1592,
+    "meanDmg": 88.29847092784136,
+    "factorBypassed": 1.12,
+    "dmgDifferencePerMatch": 16.86853988605484
+   },
+   {
+    "stance": 1,
+    "n": 1367,
+    "meanDmg": 90.305445983216,
+    "factorBypassed": 0.38,
+    "dmgDifferencePerMatch": -76.53747768861486
+   },
+   {
+    "stance": 2,
+    "n": 1174,
+    "meanDmg": 88.3719826615645,
+    "factorBypassed": 1,
+    "dmgDifferencePerMatch": 0
+   },
+   {
+    "stance": 3,
+    "n": 526,
+    "meanDmg": 95.76262785362245,
+    "factorBypassed": 1.25,
+    "dmgDifferencePerMatch": 12.592785562751352
+   }
+  ],
+  "guardedExtraDamagePerMatch": 76.53747768861486,
+  "totalDamagePerMatch": 2254.284212975083
+ },
+ "kb5": {
+  "dodgedBeams": 457,
+  "perMatch": 0.457,
+  "shareOfBeams": 0.12527412280701755,
+  "frozenSecondsPerMatch": 0.39608190000000004,
+  "shareOfMatchTime": 0.007155391026297464
+ },
+ "kb6": {
+  "rushes": 25051,
+  "rushesPerMatch": 25.051,
+  "rushSteps": 393717,
+  "stepsInsideTerrain": 23819,
+  "shareOfRushStepsInsideTerrain": 0.060497768701884856,
+  "rushesInsideTerrain": 3700,
+  "shareOfRushes": 0.1476986946628877,
+  "deepest": 638.5950535744673,
+  "rushesDeeperThan20": 1528,
+  "rushesDeeperThan100": 191,
+  "rushesDeeperThan300": 23,
+  "stepsInsideBuildings": 5717,
+  "shareOfRushStepsInsideBuildings": 0.014520582042431493,
+  "rushesInsideBuildings": 1682,
+  "shareOfRushesThroughBuildings": 0.06714302822242625,
+  "secondsInsideTerrainPerMatch": 0.39698333333333335,
+  "secondsInsideBuildingsPerMatch": 0.09528333333333333
+ }
+}

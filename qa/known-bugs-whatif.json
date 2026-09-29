@@ -1,0 +1,289 @@
+{
+ "matches": 1000,
+ "seeds": "100001..101000",
+ "patches": {
+  "KB-001": {
+   "what": "signature vs ESCAPE: HIT chance rises with the attacker's tier lead",
+   "digest": "6e81ba4a6bc979b0",
+   "identicalToBaseline": false,
+   "headline": {
+    "win.p1": {
+     "baseline": 0.423,
+     "patched": 0.421,
+     "z": -0.09055151970976161
+    },
+    "len.mean": {
+     "baseline": 55.354333333331674,
+     "patched": 55.360066666665006,
+     "z": 0.006433407865556954
+    },
+    "civ.mean": {
+     "baseline": 38.70802767127304,
+     "patched": 38.70246012365389,
+     "z": -0.004600762516375986
+    },
+    "structs.mean": {
+     "baseline": 14.121,
+     "patched": 14.132,
+     "z": 0.03218166369544432
+    },
+    "chain.perMatch": {
+     "baseline": 3.817,
+     "patched": 3.813,
+     "z": -0.04959082783771504
+    },
+    "parry.perMatch": {
+     "baseline": 1.46,
+     "patched": 1.459,
+     "z": -0.01694135964676013
+    },
+    "launch.SLAM DOWN": {
+     "baseline": 0.4639017962410708,
+     "patched": 0.4635517911691197,
+     "z": -0.06036853537009034
+    },
+    "beam.biome.ocean": {
+     "baseline": 0.6943530701754386,
+     "patched": 0.6940564228978362,
+     "z": -0.020168501615562193
+    },
+    "hide.perMatch": {
+     "baseline": 0.626,
+     "patched": 0.63,
+     "z": 0.08668343711355851
+    }
+   },
+   "moved": [],
+   "compared": 60
+  },
+  "KB-002": {
+   "what": "1.35x applies to a charging defender (stance bypass removed from CHARGE INTERRUPT, state read from dPrev)",
+   "digest": "129ad09335626726",
+   "identicalToBaseline": false,
+   "headline": {
+    "win.p1": {
+     "baseline": 0.423,
+     "patched": 0.422,
+     "z": -0.045268475986533
+    },
+    "len.mean": {
+     "baseline": 55.354333333331674,
+     "patched": 55.32178333333169,
+     "z": -0.036545821220595735
+    },
+    "civ.mean": {
+     "baseline": 38.70802767127304,
+     "patched": 38.69434841830776,
+     "z": -0.01132983170821537
+    },
+    "structs.mean": {
+     "baseline": 14.121,
+     "patched": 14.079,
+     "z": -0.12317224561601182
+    },
+    "chain.perMatch": {
+     "baseline": 3.817,
+     "patched": 3.814,
+     "z": -0.03709232251640338
+    },
+    "parry.perMatch": {
+     "baseline": 1.46,
+     "patched": 1.458,
+     "z": -0.03392212953348892
+    },
+    "launch.SLAM DOWN": {
+     "baseline": 0.4639017962410708,
+     "patched": 0.46357707784098795,
+     "z": -0.05609376696097761
+    },
+    "beam.biome.ocean": {
+     "baseline": 0.6943530701754386,
+     "patched": 0.6943375481033535,
+     "z": -0.0010574946282988636
+    },
+    "hide.perMatch": {
+     "baseline": 0.626,
+     "patched": 0.621,
+     "z": -0.108912287288996
+    }
+   },
+   "moved": [],
+   "compared": 60
+  },
+  "KB-003": {
+   "what": "a parried exchange opens no chain window",
+   "digest": "d0c6d6099d68eeec",
+   "identicalToBaseline": false,
+   "headline": {
+    "win.p1": {
+     "baseline": 0.423,
+     "patched": 0.433,
+     "z": 0.4519467617101121
+    },
+    "len.mean": {
+     "baseline": 55.354333333331674,
+     "patched": 55.25881666666497,
+     "z": -0.10755396699592702
+    },
+    "civ.mean": {
+     "baseline": 38.70802767127304,
+     "patched": 39.84807382121514,
+     "z": 0.9385393514614415
+    },
+    "structs.mean": {
+     "baseline": 14.121,
+     "patched": 14.288,
+     "z": 0.48206050338216466
+    },
+    "chain.perMatch": {
+     "baseline": 3.817,
+     "patched": 3.436,
+     "z": -4.893682213148148
+    },
+    "parry.perMatch": {
+     "baseline": 1.46,
+     "patched": 1.499,
+     "z": 0.646415239132612
+    },
+    "launch.SLAM DOWN": {
+     "baseline": 0.4639017962410708,
+     "patched": 0.46605403922644356,
+     "z": 0.37577268907725553
+    },
+    "beam.biome.ocean": {
+     "baseline": 0.6943530701754386,
+     "patched": 0.6918526485614412,
+     "z": -0.16938254510289796
+    },
+    "hide.perMatch": {
+     "baseline": 0.626,
+     "patched": 0.697,
+     "z": 1.5070490770376044
+    }
+   },
+   "moved": [
+    {
+     "name": "chain.perMelee",
+     "baseline": 0.23823492697540882,
+     "patched": 0.20956330812393267,
+     "z": -6.1
+    },
+    {
+     "name": "chain.perMatch",
+     "baseline": 3.817,
+     "patched": 3.436,
+     "z": -4.9
+    }
+   ],
+   "compared": 60
+  },
+  "KB-004": {
+   "what": "the chain strike respects the defender's stance",
+   "digest": "63dc6b56eb6cecc6",
+   "identicalToBaseline": false,
+   "headline": {
+    "win.p1": {
+     "baseline": 0.423,
+     "patched": 0.404,
+     "z": -0.8628745534988528
+    },
+    "len.mean": {
+     "baseline": 55.354333333331674,
+     "patched": 57.06118333333146,
+     "z": 1.9082847807648529
+    },
+    "civ.mean": {
+     "baseline": 38.70802767127304,
+     "patched": 38.88125387392759,
+     "z": 0.14431408263194115
+    },
+    "structs.mean": {
+     "baseline": 14.121,
+     "patched": 14.204,
+     "z": 0.242209929781129
+    },
+    "chain.perMatch": {
+     "baseline": 3.817,
+     "patched": 3.966,
+     "z": 1.8144981490128587
+    },
+    "parry.perMatch": {
+     "baseline": 1.46,
+     "patched": 1.482,
+     "z": 0.37125381760005877
+    },
+    "launch.SLAM DOWN": {
+     "baseline": 0.4639017962410708,
+     "patched": 0.4681382476036182,
+     "z": 0.7339411018390213
+    },
+    "beam.biome.ocean": {
+     "baseline": 0.6943530701754386,
+     "patched": 0.6958164642375169,
+     "z": 0.10008322260079959
+    },
+    "hide.perMatch": {
+     "baseline": 0.626,
+     "patched": 0.704,
+     "z": 1.6664921703166293
+    }
+   },
+   "moved": [],
+   "compared": 60
+  },
+  "KB-006": {
+   "what": "the rush never dips below the ground (buildings still ignored)",
+   "digest": "319810851658894a",
+   "identicalToBaseline": false,
+   "headline": {
+    "win.p1": {
+     "baseline": 0.423,
+     "patched": 0.422,
+     "z": -0.045268475986533
+    },
+    "len.mean": {
+     "baseline": 55.354333333331674,
+     "patched": 55.39069999999833,
+     "z": 0.04080572392842414
+    },
+    "civ.mean": {
+     "baseline": 38.70802767127304,
+     "patched": 38.68521426768187,
+     "z": -0.0188540653376316
+    },
+    "structs.mean": {
+     "baseline": 14.121,
+     "patched": 14.135,
+     "z": 0.04103833827116613
+    },
+    "chain.perMatch": {
+     "baseline": 3.817,
+     "patched": 3.826,
+     "z": 0.1117023717841053
+    },
+    "parry.perMatch": {
+     "baseline": 1.46,
+     "patched": 1.449,
+     "z": -0.18675564726804167
+    },
+    "launch.SLAM DOWN": {
+     "baseline": 0.4639017962410708,
+     "patched": 0.4640903109633631,
+     "z": 0.03252690105736862
+    },
+    "beam.biome.ocean": {
+     "baseline": 0.6943530701754386,
+     "patched": 0.6951856946354883,
+     "z": 0.0566034315794182
+    },
+    "hide.perMatch": {
+     "baseline": 0.626,
+     "patched": 0.628,
+     "z": 0.04337725507918733
+    }
+   },
+   "moved": [],
+   "compared": 60
+  }
+ }
+}
