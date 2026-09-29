@@ -1,0 +1,63 @@
+# Tools: CI and setup
+
+Owner: Tools and Pipeline. Free GitHub-hosted runners only, no secrets, no paid services.
+
+## One-command setup
+
+From a fresh clone:
+
+| System | Command |
+| :--- | :--- |
+| Windows | `tools\setup.cmd` (wraps `tools/setup.ps1` and bypasses the execution policy for that one run) |
+| Linux, macOS | `sh tools/setup.sh` |
+
+It checks, in order:
+
+1. **Node** (required). Missing or older than 18: it stops with exit 1. Any major other than 24 gives a warning, because the golden hashes were recorded on Node 24.19.0 and are skipped on other majors (ADR 0004), so a pass proves less.
+2. **npm** (required, ships with Node).
+3. **Godot** (optional today). Looks for `$GODOT`, then `godot` and `godot4` on the path (Windows also tries the `Godot_v4.7.2-stable_win64*.exe` names). Warns if it is missing, is not 4.7.x, or is the .NET build (ADR 0001: standard build, GDScript).
+4. **npm dependencies**: `npm ci` in the root, `prototype/`, `sim/` and `qa/`, only where a `package-lock.json` exists. Today none does (the suites use Node built-ins only and the prototype's canvas is optional), so it reports "nothing to install". It will pick up lockfiles as they appear.
+
+Exit 0 means ready, warnings allowed. Exit 1 means a required tool is missing or an install failed. Then run `node qa/run-all.js --quick` (about 40 s) or `npm test --prefix sim`.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push and pull request on `ubuntu-latest`, with Node pinned to **24.19.0**:
+
+| Job | Runs | Time |
+| :--- | :--- | :--- |
+| `qa` | `node qa/run-all.js` | about 35 s |
+| `sim` | `npm test --prefix sim` | about 1.5 min |
+| `godot-parity` | **disabled** (`if: false`), Godot 4.7.2 headless on Linux | n/a |
+
+The two live jobs run in parallel. There are no install steps because both suites use Node built-ins only. Add `npm ci` (with a lockfile) the day either grows a dependency.
+
+Settings: `permissions: contents: read`, no secrets, `persist-credentials: false` on checkout, a run cancels the older run on the same ref, each job has a timeout.
+
+### Pinned actions
+
+| Action | Version | Commit SHA |
+| :--- | :--- | :--- |
+| `actions/checkout` | v7.0.1 | `3d3c42e5aac5ba805825da76410c181273ba90b1` |
+| `actions/setup-node` | v7.0.0 | `820762786026740c76f36085b0efc47a31fe5020` |
+
+Both are first-party GitHub actions. To bump one, look up the tag's commit (`gh api repos/actions/checkout/git/ref/tags/<tag>`; if the type is `tag` rather than `commit`, follow it once more), replace the SHA and the version comment together, and update this table.
+
+### Enabling the Godot job
+
+The `godot-parity` job downloads the official Godot 4.7.2 Linux build from the GitHub release and verifies its SHA-512 (taken from the release's `SHA512-SUMS.txt`) before running anything. It stays off until Simulation lands the GDScript parity command. To enable it:
+
+1. Replace the last step's `run:` with the real command. Expected shape: `./godot --headless --path <godot project dir> -s res://tests/run_tests.gd` (the form the engine spike used). It must exit non-zero on any parity or golden-hash mismatch.
+2. Delete `if: false`.
+
+The job has never run on a runner, so expect one fix on its first run.
+
+### What is and isn't proven
+
+- **The first Actions run after the EP pushes is the real proof.** The workflow was checked by reading it and by running its two commands locally, not by GitHub.
+- **The goldens were recorded on Windows.** A Linux runner is the first cross-OS check. If the golden check fails there while the rest passes, the fallback is `runs-on: windows-latest` for the `qa` and `sim` jobs, which matches where they were recorded. Do not update the goldens to make a Linux run pass without a decision from QA.
+- **Branch protection is not assumed.** On a private repository on a free plan GitHub does not offer required status checks, so a red CI run informs but does not block a merge.
+
+## Held for now
+
+CONTRIBUTING.md, the pull request template and any licence field or licence check are on hold while Orb reconsiders the licence.

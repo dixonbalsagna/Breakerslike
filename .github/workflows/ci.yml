@@ -1,0 +1,88 @@
+# CI for Meridian (working title). Free GitHub-hosted runners only, no secrets.
+# Docs: docs/tools/README.md.
+#
+# Node is pinned to 24.19.0 because the golden hashes in qa/golden-hashes.json
+# were recorded on it (ADR 0004); on any other Node major they are skipped.
+# Every action is pinned to a full commit SHA with its version in a comment.
+# To bump one: look up the tag's commit, replace the SHA and the comment.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    name: QA regression suite (Node 24.19.0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.19.0'
+      # No install step: qa/ and prototype/tools/ use Node built-ins only.
+      - name: node qa/run-all.js
+        run: node qa/run-all.js
+
+  sim:
+    name: Reference sim tests (Node 24.19.0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.19.0'
+      # No install step: sim/ uses Node built-ins only.
+      - name: npm test --prefix sim
+        run: npm test --prefix sim
+
+  # DISABLED until Simulation lands the GDScript parity command.
+  # TODO(Simulation): when the Godot port exists, set the `run` line below to its
+  # real command and delete `if: false`. It is expected to look like
+  #   ./godot --headless --path <godot project dir> -s res://tests/run_tests.gd
+  # (the form research/engine-spike/godot/README.md used for its sim tests) and must
+  # exit non-zero on any parity or golden-hash mismatch.
+  # Not yet run in CI: the download URL and checksum were checked against the
+  # release page, but nothing has executed on a runner. Expect a first-run fix.
+  godot-parity:
+    name: GDScript parity (Godot 4.7.2 headless, Linux)
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GODOT_VERSION: 4.7.2-stable
+      # SHA-512 of Godot_v4.7.2-stable_linux.x86_64.zip, from the release's SHA512-SUMS.txt.
+      GODOT_ZIP_SHA512: 9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.19.0'
+      - name: Install Godot ${{ env.GODOT_VERSION }} (official release, checksum verified)
+        run: |
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          echo "${GODOT_ZIP_SHA512}  godot.zip" | sha512sum -c -
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}_linux.x86_64" godot
+          chmod +x godot
+          ./godot --version
+      - name: GDScript parity (TODO command)
+        run: |
+          echo "TODO(Simulation): replace with the GDScript parity command" >&2
+          exit 1
