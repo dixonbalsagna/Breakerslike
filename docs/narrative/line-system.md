@@ -261,3 +261,7 @@ Trigger `opponent_transform_wait`: fires when an opponent's transformation reach
 ## 12. Evacuation (added 2026-09-29)
 
 World's `docs/world/collateral-caps.md` adds an `evacuate` event: once a tier's casualty budget is spent, people flee instead of dying. The line system reads its `reason`. **`budget`** is a moment (barks limited to once per district per minute). **`ceiling`** is a state (fires when first reached, then only as an occasional reminder). The hero is relieved and the villains are frustrated, each in their own voice. The 40 barks (5 per fighter per reason) and the narrator captions are in `evacuation-barks.md`.
+
+## 13. Finisher barks (added 2026-09-29)
+
+Two triggers tied to Combat's finisher data (`data/combat/finishers.json`): `finisher_landed` (the `last_look` cue, the winner's bark) and `finisher_survived` (the `holds_on` cue: the winner's reaction and the survivor's own line). Both select by fighter, matchup register and outcome. The placeholder finisher names and the lines are in `finishers.md`.
