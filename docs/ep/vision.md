@@ -137,3 +137,8 @@ Orb had played the Godot greybox before answering.
 - Anti-hero power-up: keep working. Orb wants it 'recognizable but non-infringing' and asks whether fair-use and parody rules can protect a good-faith tribute (Legal to explain).
 - Voices: 'good start, let's work on this further.'
 - The orb-payoff question was unclear; the EP is re-asking it plainly.
+
+**Round 4 answers (Orb, 2026-09-29).**
+- Hot Blood: the mechanic, cards, look and sound are liked. Names are **pinned**: Orb will think up names later, and they must not sound LLM-generated. Treat all current names as placeholders.
+- Anti-hero: Orb likes Drop the Act (1v1) and Humbled. Keep pitching ideas in that theme.
+- The orb payoff (the fold to the proving ground): **space folds inward** toward the Protagonist and the planet vanishes around them. It needs an in-world reason, with the hero saying something like 'we can't hurt anyone innocent here'.
