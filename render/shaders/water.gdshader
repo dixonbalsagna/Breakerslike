@@ -37,19 +37,19 @@ void vertex() {
 	float surf;
 	float ground;
 	if (s <= 0.0) {
-		v_wet = wd >= 0.5 ? 1.0 : 0.0;
+		v_wet = wd >= wet_min ? 1.0 : 0.0;
 		surf = b + d0 + wd;
 		float off = d0;
 		if (v_wet > 0.5 && UV2.y < 0.5) {
 			off = ground_offset(i, xw, zq);
 		}
 		ground = b + off;
-		v_ok = (b < -30.0 || off < -0.5) ? 1.0 : 0.0;
+		v_ok = (b < sea_base || off < -wet_min) ? 1.0 : 0.0;
 	} else {
 		float xs = far_x(xw, zq, s);
 		ground = mix(b, far_height3(xs, xw, zq).x, s);
 		surf = 0.0;
-		v_wet = (ground < 0.0 && mix(b, gfx(xs, 0), s) < -30.0) ? 1.0 : 0.0;
+		v_wet = (ground < 0.0 && mix(b, gfx(xs, 0), s) < sea_base) ? 1.0 : 0.0;
 		v_ok = 1.0;
 	}
 	if (UV2.x > 0.5) {

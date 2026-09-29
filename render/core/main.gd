@@ -162,7 +162,7 @@ func _hud_strip() -> Dictionary:
 
 ## Planet-scale cues and crowd legibility for this frame, from the zoom and the camera height (presentation only).
 func _view_cues(c: Vector3, vp: Vector2) -> void:
-	var wide: float = smoothstep(RenderLook.ZOOM_CLOSE, RenderLook.ZOOM_WIDE, c.z)
+	var wide: float = smoothstep(log(RenderLook.ZOOM_CLOSE), log(RenderLook.ZOOM_WIDE), log(maxf(c.z, 1e-6)))
 	var high: float = smoothstep(RenderLook.HIGH_FROM, RenderLook.HIGH_TO, c.y)
 	var d: float = lerpf(RenderLook.CURVE_NEAR, RenderLook.CURVE_WIDE, wide) + RenderLook.CURVE_HIGH * high
 	# Every layer from full depth weight back sags d * vh pixels at its screen edge (bend.gdshaderinc).
@@ -173,9 +173,9 @@ func _view_cues(c: Vector3, vp: Vector2) -> void:
 	for k in [["space", high], ["horizon", hz]]:
 		_sky_mat.set_shader_parameter(k[0], k[1])
 		RenderMats.set_sky(k[0], k[1])
-	var boost: float = clampf(RenderLook.CROWD_MIN_PX / (CrowdMesh.HEIGHT * c.z), 1.0, RenderLook.CROWD_BOOST_MAX)
+	var boost: float = clampf(RenderLook.CROWD_MIN_PX / (CrowdMesh.HEIGHT * RenderLook.CROWD_SCALE * c.z), 1.0, RenderLook.CROWD_BOOST_MAX)
 	# The shell's push directions are unit corner diagonals, so each axis moves 1/sqrt(3) of the width.
-	planet.set_crowd_view(boost, 1.732 * RenderLook.CROWD_OUTLINE_PX / c.z)
+	planet.set_crowd_view(boost, 1.732 * RenderLook.CROWD_OUTLINE_PX / (c.z * RenderLook.CROWD_SCALE))
 
 
 ## The greybox HUD instead of UI's (F2, or --legacy-hud at start). UI's HUD keeps reading events while hidden.

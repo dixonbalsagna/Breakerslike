@@ -15,8 +15,8 @@ const WATER_SHADER: Shader = preload("res://render/shaders/water.gdshader")
 const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
 
 var ground := GroundField.new()
-var _terrain_mesh: ArrayMesh
-var _water_mesh: ArrayMesh
+var _terrain_meshes: Array = []   # [ArrayMesh]: every chunk of the near and middle tiers, then the far tier
+var _water_meshes: Array = []
 var _crowd_mat: ShaderMaterial
 var _terrain_mat: ShaderMaterial
 var _water_mat: ShaderMaterial
@@ -39,10 +39,9 @@ func build(S: SimState) -> void:
 		remove_child(c)
 		c.free()
 	_copies.clear()
-	if _terrain_mesh == null:
+	if _terrain_meshes.is_empty():
 		_make_materials()
-		_terrain_mesh = _make_terrain_mesh()
-		_water_mesh = _make_water_mesh()
+		_make_ground_meshes()
 		_crowd_mat = ShaderMaterial.new()
 		_crowd_mat.shader = CROWD_SHADER
 		_crowd_mat.set_shader_parameter("outline_col", RenderLook.col(RenderLook.CROWD_OUTLINE))
@@ -56,8 +55,9 @@ func build(S: SimState) -> void:
 		n.name = "Copy%d" % (k + RenderLook.PLANET_COPIES)
 		n.set_meta("k", k)
 		add_child(n)
-		_mesh_child(n, "Terrain", _terrain_mesh, _terrain_mat)
-		_mesh_child(n, "Water", _water_mesh, _water_mat)
+		for m in range(_terrain_meshes.size()):
+			_mesh_child(n, "Terrain%d" % m, _terrain_meshes[m], _terrain_mat)
+			_mesh_child(n, "Water%d" % m, _water_meshes[m], _water_mat)
 		if absi(k) <= 1:
 			_mm_child(n, "Buildings", _bld)
 			_mm_child(n, "Roofs", _roof)
@@ -87,8 +87,15 @@ func copies() -> Array:
 	return _copies
 
 
-func terrain_mesh() -> ArrayMesh:
-	return _terrain_mesh
+## The ground meshes: the near tier's chunks first (they hold the fighter-plane row), then the middle chunks and the
+## far tier.
+func terrain_meshes() -> Array:
+	return _terrain_meshes
+
+
+## How many of terrain_meshes() are near-tier chunks.
+func near_chunks() -> int:
+	return SimConst.NC / RenderLook.CHUNK_COLS
 
 
 ## Props: buildings, roofs, trees and civilians whose state changed, or whose ground did (they stand on the ground as
@@ -110,7 +117,7 @@ func refresh(S: SimState, force: bool) -> void:
 			_tree_seen[ti] = t.alive
 			if t.alive:
 				var g: float = ground.ground_at(S, t.x, _tree_z[ti])
-				_tree.set_instance_transform(ti, Transform3D(Basis.from_scale(Vector3(26.0, t.h, 26.0)), Vector3(t.x, g + t.h * 0.5, _tree_z[ti])))
+				_tree.set_instance_transform(ti, Transform3D(Basis.from_scale(Vector3(RenderLook.TREE_W, t.h, RenderLook.TREE_W)), Vector3(t.x, g + t.h * 0.5, _tree_z[ti])))
 			else:
 				_tree.set_instance_transform(ti, _hidden(t.x))
 	if dchg:
@@ -135,7 +142,7 @@ func _set_building(S: SimState, bi: int, b, h: float, crowd: bool) -> void:
 		c = RenderLook.HOUSE if b.alive else RenderLook.HOUSE_DEAD
 	_bld.set_instance_color(bi, RenderLook.col(c))
 	if not tower and b.alive:
-		_roof.set_instance_transform(bi, Transform3D(Basis.from_scale(Vector3(b.w * 1.2, 16.0, d * 1.1)), Vector3(b.x, g + h + 8.0, zc)))
+		_roof.set_instance_transform(bi, Transform3D(Basis.from_scale(Vector3(b.w * 1.2, RenderLook.ROOF_H, d * 1.1)), Vector3(b.x, g + h + RenderLook.ROOF_H * 0.5, zc)))
 	else:
 		_roof.set_instance_transform(bi, _hidden(b.x))
 	if crowd:
@@ -146,7 +153,7 @@ func _set_building(S: SimState, bi: int, b, h: float, crowd: bool) -> void:
 			var ci: int = first + j
 			var x: float = _crowd_x[ci]
 			if j < alive:
-				_crowd.set_instance_transform(ci, Transform3D(Basis.IDENTITY, Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
+				_crowd.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ONE * RenderLook.CROWD_SCALE), Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
 			else:
 				_crowd.set_instance_transform(ci, _hidden(x))
 
@@ -182,6 +189,12 @@ func _make_materials() -> void:
 		m.set_shader_parameter("heights", ground.tex)
 		m.set_shader_parameter("craters", ground.ctex)
 		m.set_shader_parameter("nc", SimConst.NC)
+		m.set_shader_parameter("tw", ground.tw)
+		m.set_shader_parameter("rpl", ground.rpl)
+		m.set_shader_parameter("far_scale", RenderLook.WS)
+		m.set_shader_parameter("sea_base", WorldWater.RESERVOIR_BASE)
+		m.set_shader_parameter("wet_min", WorldWater.MIN_DEPTH)
+		m.set_shader_parameter("dent_min", 6.0 * RenderLook.WS)
 		m.set_shader_parameter("col_w", SimConst.COL)
 		m.set_shader_parameter("world_w", SimConst.W)
 		m.set_shader_parameter("rim_in", WorldCrater.RIM_IN)
@@ -213,6 +226,7 @@ func _make_materials() -> void:
 	_terrain_mat.set_shader_parameter("snow", RenderLook.col(RenderLook.SNOW))
 	_terrain_mat.set_shader_parameter("snow_from", RenderLook.SNOW_FROM)
 	_terrain_mat.set_shader_parameter("snow_full", RenderLook.SNOW_FULL)
+	_terrain_mat.set_shader_parameter("cracked", RenderLook.col(RenderLook.CRACKED))
 	_water_mat.set_shader_parameter("water", RenderLook.WATER)
 	_water_mat.set_shader_parameter("surface", RenderLook.WATER_SURFACE)
 	_water_mat.set_shader_parameter("z_front", RenderLook.Z_TERRAIN_FRONT + 1.0)
@@ -222,73 +236,124 @@ static func _planet_aabb(y0: float, y1: float, z0: float, z1: float) -> AABB:
 	return AABB(Vector3(-64.0, y0, z0), Vector3(SimConst.W + 128.0, y1 - y0, z1 - z0))
 
 
-## Ground band: per column vertex (NC + 1, the last one reading column 0 again so copies meet exactly), a top grid of
-## RenderLook.BAND_ROWS rows in depth (one exactly on the fighter plane, flagged to read the sim's deform directly)
-## and a front face from the front row down to the floor.
-func _make_terrain_mesh() -> ArrayMesh:
-	var zs: Array = RenderLook.BAND_ROWS + RenderLook.FAR_ROWS
-	var nz: int = zs.size()
-	var per: int = nz + 2
-	var v := PackedVector3Array()
-	var uv := PackedVector2Array()
-	var uv2 := PackedVector2Array()
-	var cols := PackedColorArray()
-	var idx := PackedInt32Array()
-	for i in range(SimConst.NC + 1):
-		var x: float = float(i) * SimConst.COL
-		var biome: String = WorldBiomes.biomeAt(x)
-		var c: Color = RenderLook.col(RenderLook.BIOME[biome])
-		c.a = 1.0 if biome == "desert" else 0.0
-		for z in zs:
-			v.append(Vector3(x, 0.0, z))
-			uv.append(Vector2(float(i), 1.0))
-			uv2.append(Vector2(1.0, 1.0 if z == 0.0 else 0.0))
-			cols.append(c)
-		for e in [[0.0, 1.0], [RenderLook.TERRAIN_FLOOR, 0.0]]:
-			v.append(Vector3(x, e[0], zs[0]))
-			uv.append(Vector2(float(i), e[1]))
-			uv2.append(Vector2(0.0, 0.0))
-			cols.append(c)
-	for i in range(SimConst.NC):
-		var a: int = i * per
-		var b: int = a + per
-		for r in range(nz - 1):
-			idx.append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
-		idx.append_array([a + nz, b + nz, a + nz + 1, a + nz + 1, b + nz, b + nz + 1])
-	var m := _mesh(v, uv, uv2, cols, idx)
-	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 2000.0, RenderLook.FAR_ROWS[-1], RenderLook.Z_TERRAIN_FRONT)
-	return m
+## Row depths from the front face to the horizon, front to back: spacing ROW_STEP0 at the fighter plane, growing by
+## ROW_GROWTH of the distance, with 0 and every tier boundary included.
+static func ground_rows() -> Array:
+	var rows: Array = [0.0]
+	var z: float = 0.0
+	while z < RenderLook.Z_TERRAIN_FRONT:
+		z = minf(z + maxf(RenderLook.ROW_STEP0, z * RenderLook.ROW_GROWTH), RenderLook.Z_TERRAIN_FRONT)
+		rows.push_front(z)
+	var stops: Array = []
+	for t in RenderLook.TIERS:
+		if t[0] > -RenderLook.FOG_FAR:
+			stops.append(t[0])
+	z = 0.0
+	while z > -RenderLook.FOG_FAR:
+		var nz: float = maxf(z - maxf(RenderLook.ROW_STEP0, -z * RenderLook.ROW_GROWTH), -RenderLook.FOG_FAR)
+		for st in stops:
+			if st < z and st > nz:
+				nz = st
+		z = nz
+		rows.append(z)
+	return rows
 
 
-## Water: a surface grid over every column (the same rows in depth; the shader drops dry columns and undug ground)
-## and a front face just in front of the ground's front face.
-func _make_water_mesh() -> ArrayMesh:
-	var zs: Array = RenderLook.BAND_ROWS + RenderLook.FAR_ROWS
-	var nz: int = zs.size()
-	var per: int = nz + 2
-	var zf: float = RenderLook.Z_TERRAIN_FRONT + 1.0
-	var v := PackedVector3Array()
-	var uv := PackedVector2Array()
-	var uv2 := PackedVector2Array()
-	var idx := PackedInt32Array()
-	for i in range(SimConst.NC + 1):
-		var x: float = float(i) * SimConst.COL
-		for r in range(nz):
-			v.append(Vector3(x, 0.0, zf if r == 0 else zs[r]))
-			uv.append(Vector2(float(i), 0.0))
-			uv2.append(Vector2(1.0, 1.0 if zs[r] == 0.0 else 0.0))
+## The ground and water meshes. Rows split into the depth tiers of RenderLook.TIERS, each with its column stride; a
+## boundary row belongs to both tiers and, on the finer side, snaps to the coarser stride (UV2.y = that stride) so
+## they meet exactly. The near tier (with the front face) and the middle tiers are cut into chunks of CHUNK_COLS
+## columns, culled by the frustum; the far tier is one light mesh for the whole planet.
+func _make_ground_meshes() -> void:
+	var rows: Array = ground_rows()
+	var tiers: Array = []     # [rows, stride]
+	var lo: int = 0
+	for t in RenderLook.TIERS:
+		var hi: int = lo
+		while hi + 1 < rows.size() and rows[hi + 1] >= t[0]:
+			hi += 1
+		tiers.append([rows.slice(lo, hi + 1), int(t[1])])
+		lo = hi
+		if hi >= rows.size() - 1:
+			break
+	var nt: int = tiers.size()
+	var cc: int = RenderLook.CHUNK_COLS
+	for group in [[0, 1], [1, nt - 1]]:
+		if group[0] >= group[1]:
+			continue
+		for c0 in range(0, SimConst.NC, cc):
+			var tv: Array = [[], []]
+			for k in range(group[0], group[1]):
+				var snap: int = tiers[k + 1][1] if k + 1 < nt else 0
+				_grid(tv[0], c0, c0 + cc, tiers[k][0], tiers[k][1], snap, false)
+				_grid(tv[1], c0, c0 + cc, tiers[k][0], tiers[k][1], 0, true)
+			if group[0] == 0:
+				_front(tv[0], c0, c0 + cc, false)
+				_front(tv[1], c0, c0 + cc, true)
+			_terrain_meshes.append(_finish(tv[0], c0 * SimConst.COL, (c0 + cc) * SimConst.COL, tiers[group[1] - 1][0][-1], false))
+			_water_meshes.append(_finish(tv[1], c0 * SimConst.COL, (c0 + cc) * SimConst.COL, tiers[group[1] - 1][0][-1], true))
+	var far: Array = [[], []]
+	_grid(far[0], 0, SimConst.NC, tiers[nt - 1][0], tiers[nt - 1][1], 0, false)
+	_grid(far[1], 0, SimConst.NC, tiers[nt - 1][0], tiers[nt - 1][1], 0, true)
+	_terrain_meshes.append(_finish(far[0], 0.0, SimConst.W, tiers[nt - 1][0][-1], false))
+	_water_meshes.append(_finish(far[1], 0.0, SimConst.W, tiers[nt - 1][0][-1], true))
+
+
+## A top grid (ground) or surface grid (water) over columns c0..c1 at the given stride and rows, appended to the
+## vertex lists in tv = [verts, uv, uv2, colours, indices]. snap: the stride the last row snaps to (0: none).
+static func _grid(tv: Array, c0: int, c1: int, rows: Array, stride: int, snap: int, water: bool) -> void:
+	if tv.is_empty():
+		tv.append_array([PackedVector3Array(), PackedVector2Array(), PackedVector2Array(), PackedColorArray(), PackedInt32Array()])
+	var base: int = tv[0].size()
+	var nr: int = rows.size()
+	var ncols: int = 0
+	for c in range(c0, c1 + 1, stride):
+		var col: Color = _biome_col(c)
+		for r in range(nr):
+			var z: float = rows[r]
+			var flag: float = 1.0 if z == 0.0 else (float(snap) if (r == nr - 1 and snap > 1 and not water) else 0.0)
+			tv[0].append(Vector3(float(c) * SimConst.COL, 0.0, (z if not (water and r == 0 and z == RenderLook.Z_TERRAIN_FRONT) else z + 1.0)))
+			tv[1].append(Vector2(float(c), 0.0 if water else 1.0))
+			tv[2].append(Vector2(1.0, flag))
+			tv[3].append(col)
+		ncols += 1
+	for ci in range(ncols - 1):
+		var a: int = base + ci * nr
+		var b: int = a + nr
+		for r in range(nr - 1):
+			tv[4].append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
+
+
+## The front face along the near tier: ground from its surface down to the floor; water from its surface down to the
+## ground at the front edge.
+static func _front(tv: Array, c0: int, c1: int, water: bool) -> void:
+	var base: int = tv[0].size()
+	var zf: float = RenderLook.Z_TERRAIN_FRONT + (1.5 if water else 0.0)
+	var n: int = 0
+	for c in range(c0, c1 + 1):
+		var col: Color = _biome_col(c)
 		for e in [0.0, 1.0]:
-			v.append(Vector3(x, 0.0, zf + 0.5))
-			uv.append(Vector2(float(i), e))
-			uv2.append(Vector2(0.0, 0.0))
-	for i in range(SimConst.NC):
-		var a: int = i * per
-		var b: int = a + per
-		for r in range(nz - 1):
-			idx.append_array([a + r, a + r + 1, b + r, b + r, a + r + 1, b + r + 1])
-		idx.append_array([a + nz, b + nz, a + nz + 1, a + nz + 1, b + nz, b + nz + 1])
-	var m := _mesh(v, uv, uv2, PackedColorArray(), idx)
-	m.custom_aabb = _planet_aabb(-700.0, 60.0, RenderLook.FAR_ROWS[-1], RenderLook.Z_TERRAIN_FRONT + 2.0)
+			var down: bool = e > 0.5
+			tv[0].append(Vector3(float(c) * SimConst.COL, RenderLook.TERRAIN_FLOOR if (down and not water) else 0.0, zf))
+			tv[1].append(Vector2(float(c), (1.0 if down else 0.0) if water else (0.0 if down else 1.0)))
+			tv[2].append(Vector2(0.0, 0.0))
+			tv[3].append(col)
+		n += 1
+	for ci in range(n - 1):
+		var a: int = base + ci * 2
+		tv[4].append_array([a, a + 2, a + 1, a + 1, a + 2, a + 3])
+
+
+static func _biome_col(c: int) -> Color:
+	var biome: String = WorldBiomes.biomeAt(float(posmod(c, SimConst.NC)) * SimConst.COL)
+	var col: Color = RenderLook.col(RenderLook.BIOME[biome])
+	col.a = 1.0 if biome == "desert" else 0.0
+	return col
+
+
+static func _finish(tv: Array, x0: float, x1: float, zb: float, water: bool) -> ArrayMesh:
+	var m := _mesh(tv[0], tv[1], tv[2], PackedColorArray() if water else tv[3], tv[4])
+	var y0: float = -2000.0 * RenderLook.WS if water else RenderLook.TERRAIN_FLOOR
+	m.custom_aabb = AABB(Vector3(x0 - 64.0, y0, zb - 1.0), Vector3(x1 - x0 + 128.0, 14000.0 - y0, RenderLook.Z_TERRAIN_FRONT + 3.0 - zb))
 	return m
 
 
@@ -319,7 +384,7 @@ static func _multimesh(mesh: Mesh, count: int, y1: float, custom: bool = false) 
 	mm.use_custom_data = custom
 	mm.mesh = mesh
 	mm.instance_count = count
-	mm.custom_aabb = _planet_aabb(-700.0, y1, -300.0, 10.0)
+	mm.custom_aabb = _planet_aabb(-1000.0 * RenderLook.WS, y1 * RenderLook.WS, RenderLook.Z_TREE_MIN * 1.5, 100.0)
 	return mm
 
 

@@ -70,20 +70,29 @@ func _run() -> void:
 	quit(0 if fails.is_empty() else 1)
 
 
+## Every column of the planet has exactly one exact-row (fighter-plane) vertex in each near-tier chunk that covers it,
+## and every column is covered.
 func _check_mesh() -> void:
-	var arr: Array = main.planet.terrain_mesh().surface_get_arrays(0)
-	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
-	var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
-	var uv2: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV2]
-	var per_col: Dictionary = {}
-	for k in range(v.size()):
-		if uv2[k].x > 0.5 and uv2[k].y > 0.5:
-			if v[k].z != 0.0 or uv[k].y < 0.5:
-				fails.append("mesh: an exact-row vertex at z %.1f (follows height %s)" % [v[k].z, uv[k].y > 0.5])
-			per_col[int(uv[k].x)] = per_col.get(int(uv[k].x), 0) + 1
+	var covered: Dictionary = {}
+	var meshes: Array = main.planet.terrain_meshes()
+	for mi in range(main.planet.near_chunks()):
+		var arr: Array = meshes[mi].surface_get_arrays(0)
+		var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
+		var uv2: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV2]
+		var per_col: Dictionary = {}
+		for k in range(v.size()):
+			if uv2[k].x > 0.5 and uv2[k].y > 0.5 and uv2[k].y < 1.5:
+				if v[k].z != 0.0 or uv[k].y < 0.5:
+					fails.append("mesh: an exact-row vertex at z %.1f (follows height %s)" % [v[k].z, uv[k].y > 0.5])
+				per_col[int(uv[k].x)] = per_col.get(int(uv[k].x), 0) + 1
+		for c in per_col:
+			covered[c] = true
+			if per_col[c] != 1:
+				fails.append("mesh: chunk %d column %d has %d exact-row vertices" % [mi, c, per_col[c]])
 	for i in range(SimConst.NC + 1):
-		if per_col.get(i, 0) != 1:
-			fails.append("mesh: column %d has %d exact-row vertices" % [i, per_col.get(i, 0)])
+		if not covered.has(i):
+			fails.append("mesh: column %d has no exact-row vertex" % i)
 			break
 
 
@@ -123,7 +132,7 @@ func _check_seam() -> void:
 	var gfld := GroundField.new()
 	gfld.rebuild(S)
 	var worst: float = 0.0
-	for z in RenderLook.BAND_ROWS:
+	for z in PlanetView.ground_rows().filter(func(q): return q >= RenderLook.Z_TERRAIN_BACK):
 		if z == 0.0:
 			continue
 		for d in [1.0, 5.0, 15.0, 25.0, 40.0].map(func(n): return n * SimConst.COL):   # whole columns, so base cancels

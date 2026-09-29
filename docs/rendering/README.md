@@ -142,6 +142,14 @@ The staged damage comes from World's own functions on a posed state, in `tools/s
 
 "Before" is the committed renderer (0bfc605) on the same sim.
 
+## World scale (SC)
+
+World's life-size scale (`docs/world/scale.md`: WS 8, PS 16, MS 12; a planet of 153,600 units, 4,800 columns of 32) is followed through `look.gd`. World sizes there are written at the original scale and multiplied by the sim's own knobs: buildings, trees, roofs, crater and groove widths and the ground's depth by WS; mountain snow by MS; the far land's meander by PS; fighter-scale sizes are not scaled. Civilians are life-size, as tall as a fighter (`CROWD_SCALE`), with the zoom boost keeping them legible when far out. The curvature's zoom range is on a log scale (`ZOOM_CLOSE` 0.3 to `ZOOM_WIDE` 0.015), the space and limb cue on fractions of the flight ceiling, and the horizon row is 120,000 units out, so the planet fills the lower screen even from the ceiling. The sim's sea, wet-depth and dent thresholds reach the shaders as uniforms from `WorldWater` and `WorldCrater`, not literals.
+
+The ground mesh no longer covers every column at every depth. Rows are generated with spacing that grows with depth (`ROW_STEP0`, `ROW_GROWTH`), and columns coarsen in tiers (`TIERS`: every column to 400 units back, every 2nd to 2,000, every 4th to the back of the crater rows, every 8th beyond). The finer tier's boundary row snaps to the coarser stride, so tiers meet without a crack. The near and middle tiers are cut into 15 chunks of 320 columns that the frustum culls; the far tier is one light mesh per copy. The ground data texture keeps its byte layout but is laid out at most 2,048 texels wide (WebGL2's guaranteed minimum), `rpl` texture rows per data row.
+
+The seam sweep's position tolerance is float32 rounding at the largest copy offset (0.0625 units at this W, about 0.07 px at the closest zoom). The worst measured join is 0.0156 units (0.018 px). Its separations are fractions of half the planet, up to 0.998.
+
 ## Hosting UI's HUD and Audio
 
 Both are other directors' work, hosted here as their docs ask (`docs/ui/hud-spec.md` section 14, `audio/README.md` "Hooking it up"). Both only read.

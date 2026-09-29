@@ -98,14 +98,22 @@ func _run() -> void:
 
 
 func _check_static() -> void:
-	var arr: Array = main.planet.terrain_mesh().surface_get_arrays(0)
-	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
-	var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
-	var last: int = v.size() - 1
-	if v[0].x != 0.0 or v[last].x != SimConst.W:
-		fails.append("terrain strip spans %f..%f, want 0..W" % [v[0].x, v[last].x])
-	if int(uv[last].x + 0.5) % SimConst.NC != 0:
-		fails.append("last terrain column reads column %d, want 0" % (int(uv[last].x + 0.5) % SimConst.NC))
+	var lo: float = INF
+	var hi: float = -INF
+	var hi_col: float = 0.0
+	for m in main.planet.terrain_meshes():
+		var arr: Array = m.surface_get_arrays(0)
+		var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
+		for k in range(v.size()):
+			lo = minf(lo, v[k].x)
+			if v[k].x > hi:
+				hi = v[k].x
+				hi_col = uv[k].x
+	if lo != 0.0 or hi != SimConst.W:
+		fails.append("terrain spans %f..%f, want 0..W" % [lo, hi])
+	if int(hi_col + 0.5) % SimConst.NC != 0:
+		fails.append("last terrain column reads column %d, want 0" % (int(hi_col + 0.5) % SimConst.NC))
 
 
 ## One pass: pose(t) returns [ax, ay, bx, by] for travel t. sep >= 0 checks the frame-to-frame motion strictly.
@@ -188,7 +196,7 @@ func _check_copies(label: String, s: int, vw: float) -> void:
 		worst_join = maxf(worst_join, j)
 		if j > pos_tol:
 			fails.append("%s frame %d: copies %d and %d are %.4f off one planet apart" % [label, s, k, k + 1, j])
-	var hw: float = main.cam_rig.half_width(vw, RenderLook.FAR_ROWS[-1])
+	var hw: float = main.cam_rig.half_width(vw, -RenderLook.FOG_FAR)
 	widest_view = maxf(widest_view, 2.0 * main.cam_rig.half_width(vw))
 	var margin: float = minf(-hw - cs[0].position.x, cs[cs.size() - 1].position.x + SimConst.W - hw)
 	min_cover_margin = minf(min_cover_margin, margin)

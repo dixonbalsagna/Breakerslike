@@ -7,50 +7,65 @@ class_name RenderLook
 ## exactly on the fighter plane (depth 0); anything in front of or behind it gets perspective parallax.
 const FOV_DEG: float = 30.0
 
+## World scale. Sizes that belong to the world (buildings, trees, craters, the ground's depth) are written at the
+## original scale and multiplied by the sim's feature scale WS; mountain heights by MS; lengths along the planet by PS
+## (sim/core/constants.gd, docs/world/scale.md). Fighter-scale sizes (the fighter plane's fine rows, particles, the
+## fighters themselves) are not scaled.
+const WS: float = SimConst.WS
+const MS: float = SimConst.MS
+const PS: float = SimConst.PS
+
 ## Depth layout, in world units along +z (toward the camera). Fighters, beams and particles live on z = 0.
-const Z_TERRAIN_FRONT: float = 140.0     # front face of the ground band
-const Z_TERRAIN_BACK: float = -520.0     # back edge of the band's crater rows (craters reach no further)
-const TERRAIN_FLOOR: float = -5000.0     # bottom of the ground band's front face
-## Rows of the ground band's top grid, front to back. Dense near the fighter plane, where bowls are narrow; the row at
-## exactly 0 reads the sim's profile (render/core/ground_field.gd).
-const BAND_ROWS: Array = [140.0, 110.0, 84.0, 62.0, 44.0, 30.0, 18.0, 8.0, 0.0, -8.0, -18.0, -30.0, -44.0, -62.0, -84.0, -110.0, -140.0, -176.0, -218.0, -266.0, -320.0, -380.0, -448.0, -520.0]
+const Z_TERRAIN_FRONT: float = 600.0     # front face of the ground (kept inside the closest camera distance, about 1,100)
+const Z_TERRAIN_BACK: float = -1125.0 * WS   # back of the crater rows: tier-4 rims reach about 2 x 4,300
+const TERRAIN_FLOOR: float = -5000.0 * WS    # bottom of the ground's front face
+## Ground rows are generated, not listed: spacing ROW_STEP0 at the fighter plane (fighter scale), growing by
+## ROW_GROWTH of the distance, from the front face to the horizon (FOG_FAR). The row at exactly 0 reads the sim's
+## profile (render/core/ground_field.gd). Columns coarsen with depth in tiers, [until this depth, column stride]; the
+## first tier is split into chunks along the planet (CHUNK_COLS columns) so the frustum culls them.
+const ROW_STEP0: float = 16.0
+const ROW_GROWTH: float = 0.15
+const TIERS: Array = [[-400.0, 1], [-2000.0, 2], [Z_TERRAIN_BACK, 4], [-1.0e12, 8]]
+const CHUNK_COLS: int = 320              # a multiple of the largest stride
 const Z_BUILDING_FRONT: float = -44.0    # buildings stand behind the fighter plane
-const Z_TREE_MIN: float = -120.0
-const Z_TREE_MAX: float = -30.0
+const Z_TREE_MIN: float = -120.0 * WS
+const Z_TREE_MAX: float = -30.0 * WS
+const TREE_W: float = 26.0 * WS
+const ROOF_H: float = 16.0 * WS
 const Z_CROWD_MIN: float = -40.0
 const Z_CROWD_MAX: float = -8.0
 const Z_PARTICLES: float = 10.0
 const Z_BEAMS: float = 6.0
-## The ground continues behind the crater rows to the horizon as one surface (no separate backdrop): these rows,
-## widening with distance, carry the far terrain, which blends in from the band's own heights over FAR_BLEND and is
-## the same planet (each column's base height and biome, with relief). It fades into the sky between FOG_NEAR and
-## FOG_FAR, so its far edge never shows.
-const FAR_ROWS: Array = [-570.0, -625.0, -685.0, -750.0, -820.0, -895.0, -975.0, -1060.0, -1150.0, -1250.0, -1360.0, -1480.0, -1610.0, -1750.0, -1900.0, -2070.0, -2260.0, -2470.0, -2700.0, -2960.0, -3250.0, -3580.0, -3950.0, -4370.0, -4850.0, -5400.0, -6050.0, -6800.0, -7700.0, -8750.0, -10000.0, -12000.0]
-const FAR_BLEND: float = 900.0
-const MEANDER: float = 600.0             # how far (in x) the far land's biomes wander with depth
-const FOG_NEAR: float = 700.0
-const FOG_FAR: float = 12000.0
-## Far relief per biome: [height multiplier on the base terrain, relief amplitude], smoothed across biome borders.
+## The ground continues behind the crater rows to the horizon as one surface (no separate backdrop): the far terrain
+## blends in from the band's own heights over FAR_BLEND and is the same planet (each column's base height and biome,
+## with relief). It fades into the sky between FOG_NEAR and FOG_FAR, so its far edge never shows.
+const FAR_BLEND: float = 900.0 * WS
+const MEANDER: float = 600.0 * PS        # how far (in x) the far land's biomes wander with depth
+const FOG_NEAR: float = 700.0 * WS
+const FOG_FAR: float = 15000.0 * WS       # far enough that the planet fills the lower screen from the ceiling
+## Far relief per biome: [height multiplier on the base terrain, relief amplitude at the original scale]; the relief is
+## multiplied by WS (MS for mountains) and smoothed across biome borders.
 const FAR_RELIEF: Dictionary = {
 	"ocean": [1.0, 40.0], "plains": [1.0, 45.0], "city": [1.0, 12.0], "village": [1.0, 30.0],
 	"forest": [1.0, 70.0], "desert": [1.0, 55.0], "mountains": [1.25, 300.0],
 }
-const FAR_SMOOTH_COLS: int = 24          # half width of the smoothing, in columns
-const SNOW_FROM: float = 560.0           # far peaks whiten above this height ...
-const SNOW_FULL: float = 900.0           # ... fully by this
+const FAR_SMOOTH_COLS: int = 24 * 4      # half width of the smoothing, in columns
+const SNOW_FROM: float = 560.0 * MS      # far peaks whiten above this height ...
+const SNOW_FULL: float = 900.0 * MS      # ... fully by this
 const SNOW := "#dfe3ec"
 const PLANET_COPIES: int = 2             # ground and water copies each side of the camera (props use 1)
 
 ## Planet-scale cues. Horizon curvature: how far the world behind the fighter plane sags at the screen edge, as a
 ## fraction of screen height (for the depth-weighted bend in render/shaders/bend.gdshaderinc). It grows from
-## CURVE_NEAR at close zoom to CURVE_WIDE at wide zoom, plus CURVE_HIGH as the camera climbs.
+## CURVE_NEAR at close zoom to CURVE_WIDE at wide zoom (log scale between ZOOM_CLOSE and ZOOM_WIDE), plus CURVE_HIGH as
+## the camera climbs from HIGH_FROM to HIGH_TO (fractions of the flight ceiling).
 const CURVE_NEAR: float = 0.035
 const CURVE_WIDE: float = 0.10
 const CURVE_HIGH: float = 0.10
-const ZOOM_CLOSE: float = 0.6
-const ZOOM_WIDE: float = 0.2
-const HIGH_FROM: float = 600.0           # camera y where the sky starts turning to space
-const HIGH_TO: float = 2200.0
+const ZOOM_CLOSE: float = 0.3
+const ZOOM_WIDE: float = 0.015
+const HIGH_FROM: float = 0.2 * SimConst.CEILING   # camera y where the sky starts turning to space
+const HIGH_TO: float = 0.85 * SimConst.CEILING
 
 const BIOME: Dictionary = {
 	"ocean": "#2a6b98", "plains": "#5f9140", "city": "#6c7079", "village": "#7c8e4b",
@@ -60,14 +75,15 @@ const SEA_FLOOR := "#5a5346"
 const CRATER := "#4a4237"
 const CRATER_DESERT := "#a98544"
 const EJECTA := "#9a8a70"                # rims and aprons, dusty
+const CRACKED := "#2b2a2c"               # cracked pavement (S.crack), its crack lines
 const CHAR := "#1d1715"                  # scorched ground at full burn
 const HEAT_LO := "#c2381c"               # a cooling groove
 const HEAT_HI := "#ffd27a"               # a fresh groove from a strong beam
 ## Ground field widths across the band's depth (render/core/ground_field.gd). Bowls and grooves take their sizes from
 ## the sim (each crater record's r, depth and rim; the scorch constants in WorldCrater); only these are the renderer's.
 const FURROW_W_R: float = 0.3            # a furrow's half width across the band, per unit of its crater's r ...
-const FURROW_W_MIN: float = 20.0         # ... and at least this
-const GROUND_SPREAD: float = 60.0        # half width across the band of dents with no record (dropped craters, clips)
+const FURROW_W_MIN: float = 20.0 * WS    # ... and at least this
+const GROUND_SPREAD: float = 60.0 * WS   # half width across the band of dents with no record (dropped craters, clips)
 const WATER := Color(30.0 / 255.0, 110.0 / 255.0, 175.0 / 255.0)
 const WATER_SURFACE := Color(0.42, 0.68, 0.9, 0.55)
 const SKY: Array = ["#111a3e", "#4b4483", "#d9776b", "#f4b87a"]   # top to horizon
@@ -87,14 +103,15 @@ const HOUSE_DEAD := "#5d4a37"
 const ROOF := "#7a3b2e"
 const TREE := "#1f4a26"
 const TREE_TOP := "#2f6b35"
-## Civilians: bright shirts over dark trousers with a dark outline, so they read on any ground. They are drawn about
-## twice real scale (a person is about 7 units against 120 to 660-unit towers) and grow further as the camera zooms
-## out, up to CROWD_BOOST_MAX, so they stay about CROWD_MIN_PX tall on screen.
+## Civilians: bright shirts over dark trousers with a dark outline, so they read on any ground. Life-size against the
+## fighters (Orb: people as tall as a fighter, towers tens of times taller): CROWD_SCALE times the 17-unit figure. They
+## grow further as the camera zooms out, up to CROWD_BOOST_MAX, so they stay about CROWD_MIN_PX tall on screen.
 const CROWD: Array = ["#f8f9fa", "#ffd43b", "#ff6b6b", "#4dabf7", "#69db7c", "#ff922b", "#da77f2", "#3bc9db"]
 const CROWD_SKIN: Array = ["#f1c9a5", "#8d5a3b"]
 const CROWD_LEGS := "#2b2f3f"
 const CROWD_OUTLINE := "#0d0e14"
-const CROWD_SPREAD: float = 50.0         # how far past a building's width its people stand
+const CROWD_SCALE: float = 5.0          # about a fighter's height (90)
+const CROWD_SPREAD: float = 50.0 * WS    # how far past a building's width its people stand
 const CROWD_MIN_PX: float = 12.0
 const CROWD_BOOST_MAX: float = 2.0
 const CROWD_OUTLINE_PX: float = 1.1

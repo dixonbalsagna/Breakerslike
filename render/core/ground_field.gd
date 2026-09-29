@@ -12,7 +12,9 @@ extends RefCounted
 ## Data (one RF texture, a column per terrain column): row 0 base, 1 deform, 2 G, 3 scorch, 4 water, 5 heat (the
 ## render-side glow of fresh grooves), 6 to 11 up to K crater indices overlapping the column (-1 for none), 12 and 13
 ## the far terrain's relief amplitude and base multiplier (static, per biome, smoothed across borders), 14 the
-## column's biome (an index into BIOME_ORDER). Crater
+## column's biome (an index into BIOME_ORDER), 15 pavement cracks (S.crack), 16 the half width across the band of any
+## knockback-slide trench through the column (from S.slides). Each data row of NC values is laid out as RPL texture
+## rows of TW texels (TW at most 2,048, WebGL2's guaranteed minimum), so the bytes are the same either way. Crater
 ## records go to an RGBAF texture, a column per S.craters entry: (x, r, depth, rim) and (skid, sdepth, energy, t).
 ## Everything is rebuilt from state (S.craters, S.deform, S.scorch, S.water), incrementally when the crater list
 ## only grew, fully otherwise (a new match, a replay seek, a snapshot restore); events are never needed.
@@ -29,7 +31,10 @@ const K := 6                         # craters per column the GPU sums (the most
 const ROW_FAR_AMP := ROW_LIST + K
 const ROW_FAR_MUL := ROW_FAR_AMP + 1
 const ROW_BIOME := ROW_FAR_MUL + 1
-const ROWS := ROW_BIOME + 1
+const ROW_CRACK := ROW_BIOME + 1
+const ROW_TRENCH := ROW_CRACK + 1
+const ROWS := ROW_TRENCH + 1
+const TW_MAX := 2048
 ## Biome index order for the biome row and the shaders' biome_colors array.
 const BIOME_ORDER: Array = ["ocean", "plains", "city", "village", "forest", "desert", "mountains"]
 const LIST_W := 400                  # WorldCrater.LIST_MAX
@@ -46,6 +51,13 @@ var any_dirty: bool = false
 var full_rebuilds: int = 0           # for tests
 var _heat := PackedFloat32Array()
 var _far := PackedFloat32Array()     # rows 12 to 14
+var trench := PackedFloat32Array()   # row 16
+var rpl: int = 1                     # texture rows per data row
+var tw: int = 1                      # texture width
+var _nsl: int = 0
+var _sl_first = null
+var _sl_last = null
+var _crack_seen := PackedFloat32Array()
 var _deform_seen := PackedFloat32Array()
 var _scorch_seen := PackedFloat32Array()
 var _water_seen := PackedFloat32Array()
@@ -56,13 +68,18 @@ var _last = null
 
 func _init() -> void:
 	var nc: int = SimConst.NC
+	rpl = 1
+	while nc / rpl > TW_MAX or nc % rpl != 0:
+		rpl += 1
+	tw = nc / rpl
+	trench.resize(nc)
 	g.resize(nc)
 	lists.resize(nc * K)
 	dirty.resize(nc)
 	_heat.resize(nc)
 	cdata.resize(LIST_W * 2 * 4)
 	_far = far_rows()
-	img = Image.create_empty(nc, ROWS, false, Image.FORMAT_RF)
+	img = Image.create_empty(tw, ROWS * rpl, false, Image.FORMAT_RF)
 	tex = ImageTexture.create_from_image(img)
 	cimg = Image.create_empty(LIST_W, 2, false, Image.FORMAT_RGBAF)
 	ctex = ImageTexture.create_from_image(cimg)
@@ -82,9 +99,16 @@ func rebuild(S: SimState) -> void:
 	_ncr = S.craters.size()
 	_first = S.craters[0] if _ncr > 0 else null
 	_last = S.craters[_ncr - 1] if _ncr > 0 else null
+	trench.fill(0.0)
+	for sl in S.slides:
+		_add_slide(sl)
+	_nsl = S.slides.size()
+	_sl_first = S.slides[0] if _nsl > 0 else null
+	_sl_last = S.slides[_nsl - 1] if _nsl > 0 else null
 	_deform_seen = S.deform.duplicate()
 	_scorch_seen = S.scorch.duplicate()
 	_water_seen = S.water.duplicate()
+	_crack_seen = S.crack.duplicate()
 	_upload(S, true)
 
 
@@ -106,6 +130,19 @@ func update(S: SimState, heat: PackedFloat32Array, heat_changed: bool) -> bool:
 			_heat = heat
 			rebuild(S)
 			return true
+	var ns: int = S.slides.size()
+	if ns != _nsl or (ns > 0 and (S.slides[0] != _sl_first or S.slides[ns - 1] != _sl_last)):
+		if ns > _nsl and (_nsl == 0 or S.slides[0] == _sl_first):
+			for k in range(_nsl, ns):
+				_add_slide(S.slides[k])
+			_nsl = ns
+			_sl_first = S.slides[0]
+			_sl_last = S.slides[ns - 1]
+			cchg = true
+		else:
+			_heat = heat
+			rebuild(S)
+			return true
 	if cchg or S.deform != _deform_seen:
 		var nc: int = SimConst.NC
 		for i in range(nc):
@@ -115,10 +152,11 @@ func update(S: SimState, heat: PackedFloat32Array, heat_changed: bool) -> bool:
 		_deform_seen = S.deform.duplicate()
 		shape = true
 		any_dirty = true
-	var other: bool = S.scorch != _scorch_seen or S.water != _water_seen
+	var other: bool = S.scorch != _scorch_seen or S.water != _water_seen or S.crack != _crack_seen
 	if other:
 		_scorch_seen = S.scorch.duplicate()
 		_water_seen = S.water.duplicate()
+		_crack_seen = S.crack.duplicate()
 	if heat_changed:
 		_heat = heat
 	if shape or other or heat_changed:
@@ -138,7 +176,7 @@ func offset_at(S: SimState, i: int, xw: float, z: float) -> float:
 		var dx: float = xw - c.x
 		dx -= SimConst.W * roundf(dx / SimConst.W)
 		s += WorldCrater.profile(sqrt(dx * dx + z * z) / c.r, c.depth, c.rim) + furrow(dx, z, c.r, c.skid, c.sdepth)
-	var w: float = groove_half(S.scorch[i])
+	var w: float = groove_half(S.scorch[i], trench[i])
 	var t: float = clampf(1.0 - z * z / (w * w), 0.0, 1.0)
 	return s + g[i] * t * t
 
@@ -170,14 +208,31 @@ static func furrow(dx: float, z: float, r: float, skid: float, sd: float) -> flo
 	return -sd * q * q * t * t
 
 
-## Half width across the band of the residual at a column: a beam groove is as wide across as the sim made it along
-## (its half width grows with the beam power P, which the burn intensity encodes: WorldCrater.scorch); anything else
-## spreads RenderLook.GROUND_SPREAD.
-static func groove_half(scorch: float) -> float:
-	if scorch <= 0.01:
-		return RenderLook.GROUND_SPREAD
-	var P: float = clampf((scorch - WorldCrater.SCORCH_INT0) / WorldCrater.SCORCH_INT_P, P_MIN, P_MAX)
-	return WorldCrater.SCORCH_HW0 + WorldCrater.SCORCH_HW_P * P
+## Half width across the band of the residual at a column: a slide trench is as wide across as its record says; a
+## beam groove as wide across as the sim made it along (its half width grows with the beam power P, which the burn
+## intensity encodes: WorldCrater.scorch); anything else spreads RenderLook.GROUND_SPREAD.
+static func groove_half(scorch: float, trench_hw: float = 0.0) -> float:
+	var w: float = 0.0
+	if scorch > 0.01:
+		var P: float = clampf((scorch - WorldCrater.SCORCH_INT0) / WorldCrater.SCORCH_INT_P, P_MIN, P_MAX)
+		w = WorldCrater.SCORCH_HW0 + WorldCrater.SCORCH_HW_P * P
+	if trench_hw > 0.0:
+		return maxf(w, trench_hw)
+	return w if w > 0.0 else RenderLook.GROUND_SPREAD
+
+
+## A slide's trench width over the columns it crossed (and a trench's width beyond each end).
+func _add_slide(sl) -> void:
+	var nc: int = SimConst.NC
+	var a: float = minf(sl.x0, sl.x0 + SimWrap.sdx(sl.x0, sl.x1)) - sl.hw
+	var b: float = maxf(sl.x0, sl.x0 + SimWrap.sdx(sl.x0, sl.x1)) + sl.hw
+	var c0: int = int(floor(a / SimConst.COL))
+	var c1: int = int(ceil(b / SimConst.COL))
+	for c in range(c0, c1 + 1):
+		var i: int = posmod(c, nc)
+		if sl.hw > trench[i]:
+			trench[i] = sl.hw
+		dirty[i] = 1
 
 
 const P_MIN: float = WorldCrater.BEAM_P_BASE
@@ -235,8 +290,8 @@ func _g_col(S: SimState, i: int) -> void:
 
 
 func _upload(S: SimState, craters_changed: bool) -> void:
-	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array() + _far.to_byte_array()
-	img.set_data(SimConst.NC, ROWS, false, Image.FORMAT_RF, bytes)
+	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array() + _far.to_byte_array() + S.crack.to_byte_array() + trench.to_byte_array()
+	img.set_data(tw, ROWS * rpl, false, Image.FORMAT_RF, bytes)
 	tex.update(img)
 	if craters_changed:
 		cimg.set_data(LIST_W, 2, false, Image.FORMAT_RGBAF, cdata.to_byte_array())
@@ -255,7 +310,7 @@ static func far_rows() -> PackedFloat32Array:
 	for i in range(nc):
 		var b: String = WorldBiomes.biomeAt(float(i) * SimConst.COL + SimConst.COL * 0.5)
 		var r: Array = RenderLook.FAR_RELIEF[b]
-		raw[i] = r[1]
+		raw[i] = r[1] * (RenderLook.MS if b == "mountains" else RenderLook.WS)
 		raw[nc + i] = r[0]
 		biome[i] = float(BIOME_ORDER.find(b))
 	var out := PackedFloat32Array()
@@ -270,7 +325,7 @@ static func far_rows() -> PackedFloat32Array:
 	return out + biome
 
 
-## The bytes the GPU holds for one row (for tests).
+## The bytes the GPU holds for one data row (for tests).
 func row_bytes(row: int) -> PackedByteArray:
 	var d: PackedByteArray = img.get_data()
 	var w: int = SimConst.NC * 4
