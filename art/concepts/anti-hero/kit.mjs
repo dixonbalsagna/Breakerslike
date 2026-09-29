@@ -79,16 +79,27 @@ export function solve(pose, build = {}) {
 }
 
 // Drawing context. In flat mode everything is solid black with no lines, shade bands or decals (the silhouette test).
-export function makeCtx({ flat = false, pal, swMul = 1 }) {
+export function makeCtx({ flat = false, pal, swMul = 1, toy = false, faceless = false, lineOf = null, shadeFill = null }) {
   const C = c => (flat ? '#000' : c);
   const ctx = {
-    flat, pal,
+    flat, pal, toy, faceless,
     poly(points, colour, o = {}) {
       if (flat && o.decal) return '';
-      const stroke = !flat && swMul > 0 && o.line !== false ? ` stroke="${pal.line}" stroke-width="${(o.sw ?? 1.5) * swMul}" stroke-linejoin="round" vector-effect="non-scaling-stroke"` : '';
+      if (toy) {
+        // sculpted look: an outline layer and a fill layer, both with rounded joins, so corners read as soft solids
+        const lc = lineOf ? lineOf(colour) : pal.line;
+        if (flat) return `<polygon points="${pts(points)}" fill="#000" stroke="#000" stroke-width="4.4" stroke-linejoin="round"/>`;
+        if (o.line === false) return `<polygon points="${pts(points)}" fill="${colour}" stroke="${colour}" stroke-width="0.8" stroke-linejoin="round"${o.op ? ` opacity="${o.op}"` : ''}/>`;
+        return `<polygon points="${pts(points)}" fill="${lc}" stroke="${lc}" stroke-width="${4.4 * (swMul || 0.5)}" stroke-linejoin="round"/><polygon points="${pts(points)}" fill="${colour}" stroke="${colour}" stroke-width="2.2" stroke-linejoin="round"${o.op ? ` opacity="${o.op}"` : ''}/>`;
+      }
+      const stroke = !flat && swMul > 0 && o.line !== false ? ` stroke="${lineOf ? lineOf(colour) : pal.line}" stroke-width="${(o.sw ?? 1.5) * swMul}" stroke-linejoin="round" vector-effect="non-scaling-stroke"` : '';
       return `<polygon points="${pts(points)}" fill="${C(colour)}"${o.op ? ` opacity="${o.op}"` : ''}${stroke}/>`;
     },
-    shade(points, colour) { return flat ? '' : `<polygon points="${pts(points)}" fill="${colour}" opacity="0.9"/>`; },
+    shade(points, colour) {
+      if (flat) return '';
+      if (shadeFill) return `<polygon points="${pts(points)}" fill="${colour}" opacity="0.55"/><polygon points="${pts(points)}" fill="${shadeFill}"/>`;
+      return `<polygon points="${pts(points)}" fill="${colour}" opacity="0.9"/>`;
+    },
     line(points, colour, sw = 1.2, o = {}) {
       if (flat || swMul === 0) return '';
       return `<polyline points="${pts(points)}" fill="none" stroke="${colour}" stroke-width="${sw * swMul}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"${o.op ? ` opacity="${o.op}"` : ''}/>`;
@@ -109,9 +120,19 @@ const EXPR = {
   neutral: { brow: [0, 0.4], lid: 0.35, mouth: 'flat', pupil: [0.4, 0], sweat: false },
 };
 
-export function drawHead(ctx, sk, st, hair) {
+export function drawHead(ctx, sk, st, hair, concept = null) {
   const { pal } = ctx, out = [];
   const H = (arr, g = 0) => arr.map(([x, y]) => sk.Hd(x, y));
+  if ((ctx.faceless || concept?.machineHead) && concept?.blankHead) {
+    // a blank head: a designed shape with no face. Direction and emotion come from the shape and the tilt of the head.
+    const bh = concept.blankHead(pal);
+    out.push(ctx.poly(limb(sk.N, sk.HB, 5.2 * sk.b.lw, 4.6 * sk.b.lw), bh.neck ?? bh.fill));
+    out.push(ctx.poly(H(bh.poly), bh.fill));
+    if (bh.shade) out.push(ctx.shade(H(bh.shade), bh.shadow));
+    for (const m of bh.marks ?? []) out.push(ctx.poly(H(m.poly), m.fill, { sw: 0.8 }));
+    out.push(hair(ctx, sk, st));
+    return out.join('');
+  }
   out.push(ctx.poly(limb(sk.N, sk.HB, 5.2 * sk.b.lw, 4.6 * sk.b.lw), pal.skin.mid));
   out.push(ctx.shade(limbShade(sk.N, sk.HB, 5.2 * sk.b.lw, 4.6 * sk.b.lw), pal.skin.shadow));
   out.push(ctx.poly(H(HEAD), pal.skin.mid));
@@ -119,7 +140,7 @@ export function drawHead(ctx, sk, st, hair) {
   // ear
   out.push(ctx.poly([sk.Hd(-1.2, 9.2), sk.Hd(-0.2, 9.8), sk.Hd(0.2, 7.6), sk.Hd(-1.0, 6.4), sk.Hd(-2.1, 7.8)], pal.skin.shadow, { sw: 1 }));
   out.push(hair(ctx, sk, st));
-  if (!ctx.flat) {
+  if (!ctx.flat && !ctx.faceless) {
     const e = EXPR[st.expression ?? 'neutral'];
     const browIn = sk.Hd(2.3, 11.1 + e.brow[0] * 0.5), browOut = sk.Hd(6.0, 11.4 + e.brow[1] * 0.4);
     // eye: white almond, pupil, lid
@@ -242,7 +263,7 @@ export function figure(ctx, concept, pose, st) {
   o.push(drawTorso(ctx, sk, cfg));
   o.push(drawLeg(ctx, sk, sk.nearLeg, cfg, false));
   o.push(concept.over(ctx, sk, st, cfg));
-  o.push(drawHead(ctx, sk, st, concept.hair));
+  o.push(drawHead(ctx, sk, st, concept.hair, concept));
   o.push(concept.front(ctx, sk, st, cfg));
   o.push(...drawArm(ctx, sk, sk.nearArm, 'near', cfg));
   o.push(concept.armGear(ctx, sk, st, cfg));
