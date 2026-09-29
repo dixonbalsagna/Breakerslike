@@ -1,8 +1,8 @@
-# Meridian (working title)
+# Orb Combat EX (working title)
 
 An original fighting game in the anime energy-brawler tradition: free flight, beam struggles, transformations and planet-scale destruction, with every character, name and asset our own. Free and open source. Owner and creative lead: Orb.
 
-The names Meridian, KAI and VORR are placeholders, and Orb wants a completely different name for the game. Everything in this project must be original: no characters, names, designs, catchphrases, music or code from existing franchises. The genre is the inspiration, not the content.
+The game's working title is **Orb Combat EX** (Orb's pick, 2026-09-29; Legal: conditional, see docs/legal/name-screening.md). "Meridian" stays as the team's internal codename and session prefix. KAI and VORR are placeholders. The Protagonist's collectible artefacts must not be orbs (Legal). Everything in this project must be original: no characters, names, designs, catchphrases, music or code from existing franchises. The genre is the inspiration, not the content.
 
 ## How this project runs
 
@@ -119,6 +119,6 @@ Orb answered the first scope-and-vision questionnaire on 2026-09-28 (docs/ep/vis
 - Zero budget (ADR 0005).
 
 Still open:
-- The title (Narrative's round 2 pitch, with Legal screening).
+- The title's clash with the small OrbCombat project on GitHub, to resolve before any store page.
 - The licence: Orb is reconsidering MIT and CC BY 4.0 to keep more commercial control.
 - Legal's review of the fighter concepts.

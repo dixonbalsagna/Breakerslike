@@ -69,11 +69,12 @@ More characters must be addable after launch (see the Modding and Extensibility 
 | Procedural planets | Vary in size, biomes and settlements; seeds are shareable. The planet can be destroyed at top tiers |
 | Mobile controls | Both virtual stick and simplified tap, player's choice |
 | Copyright holder | Curtis A |
-| Repo | Renamed to the neutral codename wraparound-fighter |
+| Repo | Renamed to wraparound-fighter, then to orb-combat-ex when the title was picked |
 | Token plan | Approved (ADR 0005) |
 | Lemming Ball Z provenance | Unknown; nothing carries over |
 | Feel reference | A well-known series of flash action animations (named in .private/) for its choreography and brutality |
-| Title | Orb dislikes "Skyburden" and liked the direction of "Skyburners" (screened out: a Destiny faction). Round 2 sounded machine-made to Orb; round 3 aims for names a person would pick |
+| Title (final) | **Orb Combat EX**, picked 2026-09-29. Legal: conditional; resolve the OrbCombat GitHub project before any store page |
+| Title history | Orb dislikes "Skyburden" and liked the direction of "Skyburners" (screened out: a Destiny faction). Round 2 sounded machine-made to Orb; round 3 aims for names a person would pick |
 | Engine | Godot 4.7 with GDScript (ADR 0001, confirmed 2026-09-29) |
 | README line | "A free, open-source fighting game about wrecking a planet. No combo lists: pick a stance and the game choreographs the exchange. Inspired by the classic anime energy-brawlers." (Orb's blend; final wording waits on the licence) |
 | Repo visibility | Stays public so Orb can share the prototype with friends |

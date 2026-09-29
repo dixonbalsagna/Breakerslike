@@ -1,6 +1,8 @@
-# Meridian (working title)
+# Orb Combat EX (working title)
 
-An original fighting game: a homage to Dragon Ball and a spiritual successor to the fan games "Lemming Ball Z" and "Lemming Ball Z 3d". Free and open source. Meridian is a placeholder name.
+A free fighting game about wrecking a planet. No combo lists: pick a stance and the game choreographs the exchange. Inspired by the classic anime energy-brawlers.
+
+Every fighter, move and planet here is original. **Licence:** not chosen yet, so all rights are reserved for now. "Meridian" is the team's internal codename.
 
 ## What's here
 - `CLAUDE.md` project brief, loaded by every Claude Code session in this folder
