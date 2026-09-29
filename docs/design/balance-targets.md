@@ -140,6 +140,15 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 - **Composure for the hero:** a damage bonus while the hero's anguish is low, which collateral takes away. The hero is rewarded for protecting, and never for letting people die.
 - **Not recommended: "fury"** (anguish adds damage). A single check before the lean-team directive, on QA's default and swap seeds (2,000 matches), put KAI at 50.5% [48.4, 52.7] with fury at +50% per 100 anguish. That closes the gap, but it rewards the hero for letting collateral happen. It fails pillar 5.
 
+**Update after Encounter's tempo pass** (`docs/director/tempo-and-location.md`, commit `71e7d32`). Fights moved from sea to land, and KAI fell from 42.2% to 34.9%, because the villain now earns menace on land. Encounter's ablations put about −4 points on the AI location changes, about −3 on the planner, and about +1 on tempo.
+- **Wounds does not fix this.** Menace still multiplies damage, which is now wear, and adds to the clash roll that decides decisive exchanges.
+- **The roster will.** Menace and anguish are placeholders; the four fighters' meters replace them (`economy.md` §4.2).
+- **But the P2 testbed should not run skewed.** A 35/65 placeholder matchup distorts AI and director tuning. So for the placeholders, apply two rule changes, which QA re-tests. Both follow the roster principle "every meter decays or is spent" (GD-B10):
+  1. **Menace decays** at 0.4 per second after 4 s without a new villain-caused casualty.
+  2. **Lower the menace damage cap** from +25% to +15% (`index.html:L322` equivalent in `sim/core/damage`).
+- **Testbed target:** KAI back to at least 42%, its level before the tempo pass. The 45 to 55% band applies to the real roster. The neutral-mirror stance probe is unaffected either way.
+- **If QA's re-test falls short**, add the hero's composure bonus: +10% damage while anguish is under 10. It rewards the hero for keeping the fight on empty land, which the new AI now does.
+
 **What carries to the roster** (`economy.md` §4):
 - every ego meter decays or is spent;
 - every ego meter is visible;

@@ -219,7 +219,11 @@ This section is binding and replaces the relocation rules in `systems-sketch.md`
 | **Folding** | With the ring closed and the floor passed, he holds an input for 1.5 s: the lead-in, with his line and the rival's reply. He is exposed like charging during the hold. An interrupt counts as a decisive exchange won by the rival, and knocks one fragment loose. Once the hold completes, the fold is a set piece of up to 6 s (Orb allows cinematics longer than 3 s) |
 | **Who comes** | In 1v1, both fighters, always, so the rival is never out of range (pillar 3). 2v2 rules are **deferred** (Orb: focus on 1v1 for now) |
 | **The proving ground** | A small wrapped planetoid, about a third of the planet's circumference, of barren craterable stone. No civilians, no structures and no cover |
-| **What the proving ground changes** | No casualties, so no collateral-fed gain: the prototype's menace and anguish stop, and the Cyborg cannot Press but keeps his Hunger. There is no hiding, because there is no cover. Ego meters, forms, wear and heat carry over unchanged. The Protagonist's **final form unlocks** here, and only here |
+| **What the proving ground changes** | No casualties, so no collateral-fed gain: the prototype's menace and anguish stop. **The denial is the Protagonist's intended counter to the Cyborg**, softened by one relief valve:
+- the Cyborg keeps his Hunger;
+- he may **Press a loose fragment** lying on the ground. That gives him half the Hunger of a civilian, and destroys the fragment, which feeds the unfold.
+
+His best play is to break the fold, and that is the matchup's story. The backup drive stays on the planet. There is no hiding, because there is no cover. Ego meters, forms, wear and heat carry over unchanged. The Protagonist's **final form unlocks** here, and only here |
 | **Fragility** | While folded, the fragments still orbit him. A heavy, a GUARD BREAK, a signature hit or a region break on him knocks one loose, with a seeded pick weighted to the largest. It lands on the barren ground, and anyone can grab it: the rival gets a surge and denies the mass. Each loss makes the horizon **flicker**: a `FOLD FLICKERS` card, and the planet's edge ghosts back in |
 | **Unfolding** | If his held mass stays below 12 for **3 s**, the planet returns. In those 3 s he can grab back mass and hold the fold, a scramble set piece. On the unfold, everyone returns to where they left. His final form ends and he drops to his previous form, keeping his promise. He cannot fold again for **60 s** |
 | **Finishers** | These work normally in the proving ground, which is the natural stage for the finale. A finisher that starts during the unfold countdown completes before the planet returns |
@@ -232,7 +236,8 @@ This section is binding and replaces the relocation rules in `systems-sketch.md`
 - 20 to 50% of folds collapse back to the planet, so fragility matters without dominating;
 - 50 to 80% of matches with a fold end in the proving ground;
 - no casualties are recorded while folded (0 cases);
-- the Protagonist still wins 45 to 55% of each pairing.
+- the Protagonist still wins 45 to 55% of each pairing;
+- against the Cyborg specifically: the Cyborg wins 40 to 55% of the matches that include a fold, and 30 to 60% of folds collapse.
 
 **Settled or deferred:**
 - The rival's reply varies by matchup and stakes (Narrative's matchup matrix).
