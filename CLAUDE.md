@@ -15,6 +15,7 @@ Orb (owner) → Executive Producer → 24 directors. Every director answers dire
 - **Pacing.** The activation schedule in DIRECTORS.md decides who is briefed in each phase. A session with no brief stays idle.
 - **Escalation.** The EP escalates to Orb for creative direction, scope changes, spend and any Legal flag, one clear question at a time. Orb may also talk to any director directly.
 - **Token discipline (ADR 0005).** The project runs on a Pro plan with zero budget. Don't use workflows or ultracode unless the EP says Orb approved it for the task. Read only the files your task needs, and keep reports short.
+- **Machine discipline.** Every session shares Orb's PC. Run at most 6 Godot processes at once per session, don't launch the same batch twice, stop only your own processes by PID (never by image name), and make sure test runs exit.
 - **Orb's vision.** docs/ep/vision.md records Orb's answers on tone, fighters, modes, platforms and more. Read it before any work it touches. Never commit franchise character names as design references.
 
 ### Delegation brief template
