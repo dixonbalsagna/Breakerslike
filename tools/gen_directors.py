@@ -15,6 +15,13 @@ def short(x): return x["title"].replace(" Director", "").replace(" and ", " & ")
 def session(x): return PREFIX + short(x)
 def first_phase(x): return next(i for i, c in enumerate(x["phases"]) if c != "·")
 
+# Session settings chosen by the EP (ADR 0003). Ultracode sessions orchestrate workflows for substantive work.
+EFFORT = {"game-design": "max", "simulation-engine": "max", "encounter-systems": "max", "combat-choreography": "max", "research-prototyping": "max",
+          "netcode-online": "xhigh", "world-environment": "xhigh", "tools-pipeline": "xhigh", "qa-balance": "xhigh", "controls-feel": "xhigh",
+          "camera": "xhigh", "performance-platform": "xhigh", "ui-ux": "xhigh", "vfx": "xhigh", "art": "xhigh", "narrative-identity": "xhigh"}
+ULTRACODE = {"game-design", "simulation-engine", "encounter-systems", "combat-choreography", "research-prototyping"}
+def effort(x): return EFFORT.get(x["slug"], "high") + (" + ultracode" if x["slug"] in ULTRACODE else "")
+
 d(slug="game-design", title="Game Design Director", model="opus", tools=None, phases="●○●●●○", paths="docs/design/",
   mission="Own what the game is and why it is fun: the stance system, the fight economy, progression and modes.",
   duties=[
@@ -45,7 +52,7 @@ d(slug="combat-choreography", title="Combat and Choreography Director", model="o
   done=["Every stance pairing has at least two distinct authored outcomes", "A signature never plays the same way in two different contexts", "Exchange timing reviewed in slow-mo with no dead air"],
   anti=["Free-form generated animation with no authored anchor", "Templates that hide player agency"])
 
-d(slug="encounter-systems", title="Encounter Systems Director", model="opus", tools=None, phases="··●●●○", paths="sim/director/",
+d(slug="encounter-systems", title="Encounter Systems Director", model="opus", tools=None, phases="··●●●○", paths="sim/director/, data/director/, docs/director/",
   mission="Own the procedural fight director: the system that decides what happens in an exchange and where the fight goes.",
   duties=[
    "Own the exchange planner: template selection, beat scheduling, extension and chain windows.",
@@ -75,7 +82,7 @@ d(slug="simulation-engine", title="Simulation and Engine Director", model="opus"
   done=["Headless sim runs 1000 matches without error", "Replays reproduce bit-identical results", "Seam-crossing bugs covered by tests"],
   anti=["Premature engine features nobody asked for", "Rendering logic leaking into sim"])
 
-d(slug="world-environment", title="World and Environment Director", model="sonnet", tools=None, phases="○●○●○●", paths="sim/world/, data/biomes/",
+d(slug="world-environment", title="World and Environment Director", model="sonnet", tools=None, phases="○●○●○●", paths="sim/world/, data/biomes/, docs/world/",
   mission="Own the planet: terrain, biomes, structures, civilians, destruction and how the world reacts to power.",
   duties=[
    "Own terrain representation: wrapped heightfield, deformation, craters, water rules (sea only where the base terrain is below sea level).",
@@ -104,7 +111,7 @@ d(slug="art", title="Art Director", model="sonnet", tools=None, phases="●○�
   done=["Fighters are identifiable in silhouette at the widest zoom", "Art bible signed off by the EP", "Legal review passed for every locked design"],
   anti=["Recreating existing characters or costumes", "Detail that disappears at gameplay zoom"])
 
-d(slug="animation", title="Animation Director", model="sonnet", tools=None, phases="··○○●●", paths="art/animation/",
+d(slug="animation", title="Animation Director", model="sonnet", tools=None, phases="··○○●●", paths="art/animation/, docs/animation/",
   mission="Own character motion: the clips that atoms play, and the warping rules that let one clip serve many contexts.",
   duties=[
    "Deliver a clip per atom with clear anticipation, contact and recovery frames.",
@@ -118,7 +125,7 @@ d(slug="animation", title="Animation Director", model="sonnet", tools=None, phas
   done=["Every atom has a clip for every fighter", "Warped clips hold up at the min and max gap-close distances", "No foot sliding on wrapped terrain slopes"],
   anti=["Clips that change gameplay timing without Combat's approval"])
 
-d(slug="vfx", title="VFX Director", model="sonnet", tools=None, phases="···●●●", paths="render/vfx/, art/vfx/",
+d(slug="vfx", title="VFX Director", model="sonnet", tools=None, phases="···●●●", paths="render/vfx/, art/vfx/, docs/vfx/",
   mission="Own energy, impact and destruction visuals: auras, beams, shockwaves, debris, dust and water.",
   duties=[
    "Design tiered auras and power-up effects that scale readably from tier 1 to tier 4.",
@@ -132,7 +139,7 @@ d(slug="vfx", title="VFX Director", model="sonnet", tools=None, phases="···�
   done=["Each signature variant is recognisable with the sound off", "Worst-case effect scene holds the frame budget", "Tier readable at a glance"],
   anti=["Effects that obscure hit windows", "Unbounded particle counts"])
 
-d(slug="camera", title="Camera and Cinematography Director", model="sonnet", tools=None, phases="●●○○○○", paths="render/camera/",
+d(slug="camera", title="Camera and Cinematography Director", model="sonnet", tools=None, phases="●●○○○○", paths="render/camera/, docs/camera/",
   mission="Own how the wrapped planet is framed: the camera that keeps two distant fighters readable and makes impacts land.",
   duties=[
    "Own framing across the world seam with shortest-arc midpoints and zoom by separation and altitude.",
@@ -146,7 +153,7 @@ d(slug="camera", title="Camera and Cinematography Director", model="sonnet", too
   done=["Both fighters always readable at any separation up to half the planet", "No pop at the wrap seam", "Shake capped and user-adjustable"],
   anti=["Cinematics that remove control without cause"])
 
-d(slug="audio-music", title="Audio and Music Director", model="sonnet", tools=None, phases="···○○●", paths="audio/",
+d(slug="audio-music", title="Audio and Music Director", model="sonnet", tools=None, phases="···○○●", paths="audio/, docs/audio/",
   mission="Own sound and score: impact weight, scale, and a soundtrack that escalates with the fight.",
   duties=[
    "Design an adaptive score driven by tier, menace and collateral state.",
@@ -174,7 +181,7 @@ d(slug="narrative-identity", title="Narrative and Fighter Identity Director", mo
   done=["A player can guess a fighter's personality from one match", "No borrowed names, catchphrases or lore", "Personality weights implemented and visible in the debug feed"],
   anti=["Fan-fiction of existing characters"])
 
-d(slug="ui-ux", title="UI and UX Director", model="sonnet", tools=None, phases="··○○○●", paths="ui/",
+d(slug="ui-ux", title="UI and UX Director", model="sonnet", tools=None, phases="··○○○●", paths="ui/, docs/ux/",
   mission="Own everything the player reads: HUD, menus, stance display, feedback and the developer-facing debug overlays.",
   duties=[
    "Design the HUD: HP, ki, power tier, menace or anguish, civilians lost, stance, planet minimap strip.",
@@ -202,7 +209,7 @@ d(slug="controls-feel", title="Controls and Game Feel Director", model="sonnet",
   done=["Parry window feels fair to a new player and skillful to an expert", "Input latency budget met", "Gamepad and keyboard parity"],
   anti=["Windows so tight the director looks unfair"])
 
-d(slug="netcode-online", title="Netcode and Online Director", model="opus", tools=None, phases="○····●", paths="net/",
+d(slug="netcode-online", title="Netcode and Online Director", model="opus", tools=None, phases="○····●", paths="net/, docs/net/",
   mission="Own online play: deterministic rollback, matchmaking, and keeping a procedural director in sync.",
   duties=[
    "Choose the online model (rollback on a deterministic sim is the assumed default) and prove it on the director.",
@@ -454,15 +461,15 @@ def roster_md():
          "## Opening a director session\n",
          "1. Start a new session in the project folder.",
          "2. Set the permission mode to **Auto**, the same as the Executive Producer, so briefs are not held for approval.",
-         "3. Pick the model listed below.",
+         "3. Pick the model and effort listed below. Ultracode sessions orchestrate workflows for substantive work.",
          "4. Send the kickoff command as the first message. The session reads its charter, renames itself and waits for a brief.\n",
          "Directors are listed in the order they are first needed, from the activation schedule in DIRECTORS.md.\n",
-         "| # | Director | Kickoff | Model | Session title | First needed |",
-         "|---|---|---|---|---|---|"]
+         "| # | Director | Kickoff | Model | Effort | Session title | First needed |",
+         "|---|---|---|---|---|---|---|"]
     for n, x in enumerate(sorted(D, key=first_phase), 1):
         p = first_phase(x)
         role = "lead" if x["phases"][p] == "●" else "support"
-        o.append("| %d | %s | `/director %s` | %s | %s | %s %s |" % (n, x["title"], x["slug"], x["model"], session(x), PH[p].split(" ")[0], role))
+        o.append("| %d | %s | `/director %s` | %s | %s | %s | %s %s |" % (n, x["title"], x["slug"], x["model"], effort(x), session(x), PH[p].split(" ")[0], role))
     return "\n".join(o) + "\n"
 
 def write(path, text):

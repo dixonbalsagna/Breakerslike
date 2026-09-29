@@ -139,7 +139,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 3. Encounter Systems Director
 
-`docs/directors/encounter-systems.md`  |  session: `Meridian - Encounter Systems`  |  model: `opus`  |  owns: `sim/director/`  |  reports to: Executive Producer
+`docs/directors/encounter-systems.md`  |  session: `Meridian - Encounter Systems`  |  model: `opus`  |  owns: `sim/director/, data/director/, docs/director/`  |  reports to: Executive Producer
 
 **Mission.** Own the procedural fight director: the system that decides what happens in an exchange and where the fight goes.
 
@@ -191,7 +191,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 5. World and Environment Director
 
-`docs/directors/world-environment.md`  |  session: `Meridian - World & Environment`  |  model: `sonnet`  |  owns: `sim/world/, data/biomes/`  |  reports to: Executive Producer
+`docs/directors/world-environment.md`  |  session: `Meridian - World & Environment`  |  model: `sonnet`  |  owns: `sim/world/, data/biomes/, docs/world/`  |  reports to: Executive Producer
 
 **Mission.** Own the planet: terrain, biomes, structures, civilians, destruction and how the world reacts to power.
 
@@ -242,7 +242,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 7. Animation Director
 
-`docs/directors/animation.md`  |  session: `Meridian - Animation`  |  model: `sonnet`  |  owns: `art/animation/`  |  reports to: Executive Producer
+`docs/directors/animation.md`  |  session: `Meridian - Animation`  |  model: `sonnet`  |  owns: `art/animation/, docs/animation/`  |  reports to: Executive Producer
 
 **Mission.** Own character motion: the clips that atoms play, and the warping rules that let one clip serve many contexts.
 
@@ -267,7 +267,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 8. VFX Director
 
-`docs/directors/vfx.md`  |  session: `Meridian - VFX`  |  model: `sonnet`  |  owns: `render/vfx/, art/vfx/`  |  reports to: Executive Producer
+`docs/directors/vfx.md`  |  session: `Meridian - VFX`  |  model: `sonnet`  |  owns: `render/vfx/, art/vfx/, docs/vfx/`  |  reports to: Executive Producer
 
 **Mission.** Own energy, impact and destruction visuals: auras, beams, shockwaves, debris, dust and water.
 
@@ -292,7 +292,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 9. Camera and Cinematography Director
 
-`docs/directors/camera.md`  |  session: `Meridian - Camera & Cinematography`  |  model: `sonnet`  |  owns: `render/camera/`  |  reports to: Executive Producer
+`docs/directors/camera.md`  |  session: `Meridian - Camera & Cinematography`  |  model: `sonnet`  |  owns: `render/camera/, docs/camera/`  |  reports to: Executive Producer
 
 **Mission.** Own how the wrapped planet is framed: the camera that keeps two distant fighters readable and makes impacts land.
 
@@ -317,7 +317,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 10. Audio and Music Director
 
-`docs/directors/audio-music.md`  |  session: `Meridian - Audio & Music`  |  model: `sonnet`  |  owns: `audio/`  |  reports to: Executive Producer
+`docs/directors/audio-music.md`  |  session: `Meridian - Audio & Music`  |  model: `sonnet`  |  owns: `audio/, docs/audio/`  |  reports to: Executive Producer
 
 **Mission.** Own sound and score: impact weight, scale, and a soundtrack that escalates with the fight.
 
@@ -367,7 +367,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 12. UI and UX Director
 
-`docs/directors/ui-ux.md`  |  session: `Meridian - UI & UX`  |  model: `sonnet`  |  owns: `ui/`  |  reports to: Executive Producer
+`docs/directors/ui-ux.md`  |  session: `Meridian - UI & UX`  |  model: `sonnet`  |  owns: `ui/, docs/ux/`  |  reports to: Executive Producer
 
 **Mission.** Own everything the player reads: HUD, menus, stance display, feedback and the developer-facing debug overlays.
 
@@ -417,7 +417,7 @@ session: `Meridian - Executive Producer`  |  model: `opus`  |  owns: `docs/decis
 
 ## 14. Netcode and Online Director
 
-`docs/directors/netcode-online.md`  |  session: `Meridian - Netcode & Online`  |  model: `opus`  |  owns: `net/`  |  reports to: Executive Producer
+`docs/directors/netcode-online.md`  |  session: `Meridian - Netcode & Online`  |  model: `opus`  |  owns: `net/, docs/net/`  |  reports to: Executive Producer
 
 **Mission.** Own online play: deterministic rollback, matchmaking, and keeping a procedural director in sync.
 
