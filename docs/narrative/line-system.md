@@ -17,6 +17,7 @@ Each event is emitted by the sim and read by the line system. The line system ne
 | **Beams** | signature fired, hit, dodged, escaped, beam clash, beam struggle won or lost |
 | **World** | structure destroyed, civilians lost (by threshold), crater, first fire, entering a place, day to night, weather change, altitude (space), mantle eruption, planet destroyed |
 | **State** | an ego meter crossing a line (Respect, Pride, Wrath, Hunger), transformation start, interrupted, completed, reverted, a drain state |
+| **Evacuation** | `evacuate` with `reason`: `budget` (a moment: the streets are emptying; at most once per district per minute) or `ceiling` (a state: no one is left to lose; once when first reached, then an occasional reminder). Tags: `reason`, `n` (people), `place`. Also a narrator caption for the first evacuation of a match |
 | **Fighter-specific** | orb picked up, held, scattered (Protagonist); a fusion beat (Anti-hero); a guard member falls, a filing (Empress); a civilian consumed, a portal used, the backup drive chased or docked (Cyborg) |
 | **Set pieces** | finisher, KO, revive, relocation, final form reveal. These pause the fight and may run 3 seconds or more |
 
@@ -256,3 +257,7 @@ Orb: lines should change with who faces whom. A line can now key on the pairing,
 ## 11. Waiting while an opponent transforms (added 2026-09-29)
 
 Trigger `opponent_transform_wait`: fires when an opponent's transformation reaches its cinematic phase (uninterruptible, per Orb). The waiter picks a `register` of `impatient`, `polite` or `mocking` from the matchup default and the current mood, and a line by ordered pair. The lines are in `waiting-lines.md`. The fill phase before the cinematic uses the normal exchange lines.
+
+## 12. Evacuation (added 2026-09-29)
+
+World's `docs/world/collateral-caps.md` adds an `evacuate` event: once a tier's casualty budget is spent, people flee instead of dying. The line system reads its `reason`. **`budget`** is a moment (barks limited to once per district per minute). **`ceiling`** is a state (fires when first reached, then only as an occasional reminder). The hero is relieved and the villains are frustrated, each in their own voice. The 40 barks (5 per fighter per reason) and the narrator captions are in `evacuation-barks.md`.
