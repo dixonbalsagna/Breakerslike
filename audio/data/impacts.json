@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "bank_seed": 20260929,
+  "note": "Recipes for the procedural impact bank (audio/synth/impact_synth.gd). Times in seconds, frequencies in Hz. Every layer is normalised to a peak of 1 and scaled by gain. bank_seed fixes the noise, so the same recipe renders the same sound on every machine; the seed of a match never enters here.",
+  "sounds": {
+    "impact.light": {
+      "rate": 32000,
+      "variants": 4,
+      "drive": 1.3,
+      "peak_db": -9.0,
+      "jitter": { "f": 0.08, "t60": 0.12, "gain": 0.12 },
+      "layers": [
+        { "type": "noise", "filter": "hp", "f": 2400, "q": 0.7, "attack": 0.0002, "t60": 0.012, "gain": 0.50 },
+        { "type": "noise", "filter": "bp", "f": 3600, "q": 1.2, "attack": 0.0003, "t60": 0.028, "gain": 0.40 },
+        { "type": "noise", "filter": "bp", "f": 1100, "q": 1.3, "attack": 0.0006, "t60": 0.070, "gain": 0.70 },
+        { "type": "tone", "f": 230, "f_to": 85, "tau": 0.03, "attack": 0.0008, "t60": 0.13, "gain": 0.70, "drive": 1.6, "h2": 0.25, "h3": 0.08 }
+      ]
+    },
+    "impact.heavy": {
+      "rate": 32000,
+      "variants": 4,
+      "drive": 1.6,
+      "peak_db": -3.0,
+      "jitter": { "f": 0.06, "t60": 0.10, "gain": 0.10 },
+      "layers": [
+        { "type": "noise", "filter": "hp", "f": 1800, "q": 0.7, "attack": 0.0002, "t60": 0.016, "gain": 0.50 },
+        { "type": "noise", "filter": "bp", "f": 2200, "f_to": 700, "tau": 0.05, "q": 0.9, "attack": 0.0004, "t60": 0.10, "gain": 0.60 },
+        { "type": "tone", "f": 125, "f_to": 40, "tau": 0.09, "attack": 0.0015, "t60": 0.50, "gain": 1.00, "drive": 2.2, "h2": 0.35, "h3": 0.15 },
+        { "type": "noise", "filter": "lp", "f": 5000, "f_to": 250, "tau": 0.18, "q": 0.7, "attack": 0.004, "t60": 0.55, "gain": 0.35, "at": 0.010 },
+        { "type": "rumble", "lp": 140, "attack": 0.010, "t60": 0.75, "gain": 0.50 },
+        { "type": "grains", "rate0": 200, "tau": 0.22, "len": 0.65, "f": [900, 5000], "t60": 0.006, "gain": 0.22, "at": 0.060 }
+      ]
+    },
+    "impact.crater": {
+      "rate": 22050,
+      "variants": 3,
+      "drive": 1.8,
+      "peak_db": -2.0,
+      "jitter": { "f": 0.06, "t60": 0.10, "gain": 0.10 },
+      "layers": [
+        { "type": "noise", "filter": "bp", "f": 1300, "f_to": 600, "tau": 0.07, "q": 0.7, "attack": 0.0005, "t60": 0.14, "gain": 0.50 },
+        { "type": "tone", "f": 72, "f_to": 28, "tau": 0.16, "attack": 0.003, "t60": 0.95, "gain": 1.00, "drive": 2.5, "h2": 0.40, "h3": 0.10 },
+        { "type": "rumble", "lp": 115, "attack": 0.020, "t60": 1.50, "gain": 0.90, "wobble": 0.25, "wobble_hz": 7 },
+        { "type": "grains", "rate0": 24, "tau": 0.50, "len": 1.5, "f": [140, 650], "t60": 0.035, "gain": 0.40, "at": 0.10 },
+        { "type": "grains", "rate0": 170, "tau": 0.55, "len": 1.6, "f": [500, 3600], "t60": 0.009, "gain": 0.28, "at": 0.08 },
+        { "type": "noise", "filter": "lp", "f": 1800, "f_to": 300, "tau": 0.60, "q": 0.7, "attack": 0.080, "t60": 1.30, "gain": 0.18, "at": 0.05 }
+      ]
+    }
+  }
+}
