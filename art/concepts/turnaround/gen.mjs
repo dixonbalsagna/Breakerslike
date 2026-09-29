@@ -101,7 +101,7 @@ function head(state, x, y, size, opts = {}) {
   const st = { yaw, face, state, forms: 6, wear: 0, sway: 12, expression: 'neutral', open: state === 'rage' ? 1 : 0, hairLoose: state === 'rage' || state === 'hurt' };
   const { svg, sk } = figure(ctx, COIL_T, pose, st, { yaw, back: !!opts.back, armSpread: opts.back || face === 'front' ? 7 : 0, legSpread: 0 });
   const h = sk.Hd(3.2, 9.4);
-  return `<svg x="${F(x)}" y="${F(y)}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" overflow="hidden">${rect(0, 0, size, size, '#f3f0f8')}<g transform="translate(${F(size / 2 - h.x * s)} ${F(size / 2 + h.y * s)}) scale(${F(s)} ${F(-s)})">${svg}</g></svg>` + rect(x, y, size, size, 'none', 'stroke="#1b1428" stroke-opacity="0.35"');
+  return `<svg x="${F(x)}" y="${F(y)}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" overflow="hidden">${rect(0, 0, size, size, '#f3f0f8')}<g transform="translate(${F(size / 2 - h.x * s)} ${F(size / 2 + h.y * s - 36)}) scale(${F(s)} ${F(-s)})">${svg}</g></svg>` + rect(x, y, size, size, 'none', 'stroke="#1b1428" stroke-opacity="0.35"');
 }
 
 const PARTS = [

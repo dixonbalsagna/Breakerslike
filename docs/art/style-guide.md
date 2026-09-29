@@ -1,6 +1,6 @@
-# Style guide v0: faceted cel
+# Style guide v1: faceted cel, Marked plus flashes
 
-Owner: Art Director. Version 0, 2026-09-29. Draft for the EP and Orb. Nothing here is implemented, and nothing is locked. Every hex value is a proposal that Rendering, VFX, UI and Accessibility can push back on through the EP.
+Owner: Art Director. Version 1, 2026-09-29 (v0 the same day; v1 adds the character style Orb picked, Marked plus flashes: masks, sigils and head flashes in place of a standing aura, with Legal's conditions applied). Draft for the EP and Orb. Nothing here is implemented, and nothing is locked. Every hex value is a proposal that Rendering, VFX, UI and Accessibility can push back on through the EP.
 
 **Sources.** `docs/ep/vision.md` (Orb's answers), `docs/world/scale.md` (life-size scale), `docs/design/spec-wounds.md` (regions, stages, the Proud front), `docs/legal/originality-rules.md`, `fighter-concepts-review.md` and `q3-screen.md` (design conditions), `docs/rendering/README.md` (what the greybox draws today), `docs/narrative/glossary.md` (tier and stance names).
 
@@ -13,11 +13,11 @@ Owner: Art Director. Version 0, 2026-09-29. Draft for the EP and Orb. Nothing he
 |---|---|---|
 | 1 | The look in one page | draft |
 | 2 | Scale and readability at gameplay zoom | draft, measured on the Anti-hero concepts |
-| 3 | Silhouette, value and palette rules | draft |
+| 3 | Silhouette, value and palette rules (3.6 masks, sigils and expression is new in v1) | draft |
 | 4 | Line and outline | draft |
 | 5 | Cel shading: what Rendering needs | draft, open to Rendering |
 | 6 | Bodies: wear and damage | draft, follows `spec-wounds.md` |
-| 7 | Aura, tiers and effect colours | open, VFX owns the effects |
+| 7 | Head flashes, tiers and effect colours (was Aura, tiers and effect colours) | v1 draft, VFX owns the effects, Rendering owns the flash prototype |
 | 8 | The world: biome palettes and damage states | draft |
 | 9 | Budgets | open, Performance owns the numbers |
 | 10 | How to verify | draft |
@@ -37,6 +37,8 @@ Owner: Art Director. Version 0, 2026-09-29. Draft for the EP and Orb. Nothing he
 - Impact frame: one frame of flat, inverted contrast on a decisive exchange.
 - Held hit: a short freeze on the frame of contact (the sim's hit-stop time stays in the sim; the render only holds the pose).
 - Line weight swells on impact (section 4).
+
+**The character style: Marked plus flashes** (Orb's pick, round 4; `docs/art/marked-aura.md`). Fighters have designed masks and no drawn faces. Each has a **sigil** on the mask that says who they are and shows a small flick of how they feel, and a **head flash**: a brief, iconic pop at the head (a "!", a "?", a spike of anger) that says what they sense or feel for under a second and then is gone. At rest there is nothing around a fighter, no standing aura. Only a transformation surge lasts, for the length of its cinematic. Colour is calm and harmonious, and shape lanes and hue lanes keep the four fighters apart.
 
 **What we do not do:** photoreal materials, textures beyond one shared ramp and one noise map, soft shadows, real-time global illumination, dependence on bloom or HDR, soft additive particles as the main effect look. Effects are hard-edged cut-out shapes with two or three value steps.
 
@@ -59,7 +61,7 @@ A fighter is one body height (1 bh, 75 units in the sim). The reference camera's
 | Band | Height | The fighter must show | Everything else |
 |---|---|---|---|
 | Far | up to 12 px | A mass and a colour. Silhouette shape only if it is at least 20% of body height in its smaller dimension. A rim halo (section 4) so it never vanishes on a mid-value backdrop | Hidden |
-| Play | 13 to 60 px | The shape feature, three colour masses, the outline, posture, the form (regalia count), the aura crown | Detail smaller than 4% of body height is a shader decal, not geometry |
+| Play | 13 to 60 px | The shape feature, three colour masses, the outline, posture, the form (regalia count), the sigil and the head flash | Detail smaller than 4% of body height is a shader decal, not geometry |
 | Close | over 60 px | Face and expression, regalia detail, wear decals, hair strands | Full detail. Budgets still apply |
 
 **Rules that follow**
@@ -99,14 +101,14 @@ Each fighter has three masses and three shared extras.
 
 ### 3.3 Lanes: shape, hue and value
 
-So the four fighters are readable at any zoom, each gets a lane. These are proposals for Orb. The Protagonist and Empress designs are not started.
+So the four fighters are readable at any zoom, each gets a lane. These are proposals for Orb; the four turnarounds (`docs/art/*-turnaround.md`) draw them.
 
 | Fighter | Shape language | Hue lane | Value | Reserved by |
 |---|---|---|---|---|
-| Protagonist | Round, open, forward-leaning (circles) | Teal to cyan (the teal hair is QA's placeholder) | Dark body, light gear | Heat seams: never red, never gold (`q3-screen.md`) |
-| Anti-hero | Vertical, rigid (a line, a rectangle) | Violet, with a rose accent | Dark body, light gear | Regalia break: no gold, no red glow |
-| Empress | Wide, sweeping, asymmetric (a triangle) | Chartreuse to olive | Dark body, light gear | No pale-and-purple, no horns (revision 9 to 12 rule) |
-| Cyborg | Heavy, blocky, hatches and rails (squares) | Dark red, with chain-mail texture | Dark body, light gear | No horn-and-antenna silhouette |
+| Protagonist | Round, open, forward-leaning (circles) | Teal `#4fb9a8` (the teal hair is QA's placeholder) | Dark body, light gear, pale mask | Heat seams: never red, never gold (`q3-screen.md`) |
+| Anti-hero | Vertical, rigid (blades, a slash) | Violet, with an orchid accent `#9a80d8` | Dark body, light gear, dark mask | Regalia break: no gold, no red glow |
+| Empress | Wide, sweeping, asymmetric (wedges, chevrons) | Olive with a moss accent `#b8c96a` | Dark body, light gear, pale bone mask | No pale-and-purple, no horns (revision 9 to 12 rule) |
+| Cyborg | Heavy, blocky, hatches and rails (squares, steps) | Dark red, with a coral accent `#d8705f` and chain-mail texture | Dark body, light gear, dark mask | No horn-and-antenna silhouette; not black-and-red |
 
 **Fire owns orange and yellow.** Fire, explosions, embers and hot ground use them (`HEAT_LO`, `HEAT_HI` in `render/core/look.gd`). No fighter uses orange, yellow or gold as a mass, an aura or a seam. That keeps destruction readable against a fighter's colours, and it keeps us clear of the genre's best-known hair and aura colours by construction.
 **Blood owns red.** Wounds use one flat red (section 6). The Cyborg's dark red body is a different value (dark, desaturated) from blood (bright, saturated).
@@ -116,10 +118,12 @@ So the four fighters are readable at any zoom, each gets a lane. These are propo
 
 Every item is in `originality-rules.md`, `fighter-concepts-review.md` or `q3-screen.md`. Art applies them at concept time.
 
-- Hair: no gold, no spiky upswept shape, no flame-shaped hair, no colour change on power-up. Tiers show through aura, silhouette, markings and eyes.
+- Hair: no gold, no spiky upswept shape, no flame-shaped hair, no colour change on power-up. Tiers show through silhouette, markings, regalia and the light of the sigil, never a body aura or the hair.
 - Uniform: no shoulder-pad armour with white gloves and boots. No orange-and-blue martial-arts outfit.
 - Appendages and heads: no reptilian or furred tail, no pale horned emperor, no pale slender humanoid with a purple accent and horns.
-- Glow: no red or gold aura, no red or red-orange seam on the Protagonist, no coloured multiplier aura, no glow that reads as an "x" number.
+- Glow: no red or gold aura, no red or red-orange seam on the Protagonist, no coloured multiplier aura, no glow that reads as an "x" number, no red, red-orange or gold head flash for the Protagonist or the Anti-hero.
+- Masks and sigils (`q3-screen.md`, Marked plus Aura): a mask is a designed shape, never a plain egg or a grey faceless head, with no eye or mouth slots or dots and no goggles; the sigil is never an eye or a mouth. The ring is single (no concentric rings, no centre dot, never four linked, never with the slash, never centred on the forehead); the slash never crosses another stroke into an X, on the face or on the chest; chevrons are an odd count, of different sizes or offset, never a tidy double chevron and never in a car or oil brand's colours; the grid is lit steps, never a line grid, a cross or a 2 by 2 block; no rays around a sigil.
+- Flashes: danger sense is directional (above or behind the head), never a ring of short lines around the head and never wavy; no yellow or red-orange "!" with a thick black outline; no tall pointed upswept shape (the Anti-hero's upward flashes are round-tipped, the Empress's are a wide, low crest); no alert sting and no chirp in the sound pairing.
 - Poses: no cupped hands at the hip then thrust forward, no two fingers to the forehead, no arms raised for a giant orb. Fusion (if built): no synchronised or mirrored poses, no halo above the head, no accessory in the trigger.
 - Orbs and fragments: irregular molten or crystalline pieces, never uniform smooth spheres, no stars or numerals, never laid out in a row, never a fixed set.
 - UI: no scanner overlay, no numeric "power level".
@@ -131,13 +135,29 @@ Colour is never the only carrier of meaning. Shape, pattern and position come fi
 | Role | Where it comes from | Rule |
 |---|---|---|
 | Fighter identity | The lane table above | Body, gear and accent per fighter |
-| Aura and effect ramp | The fighter's own ramp, moving toward near-white | Cel steps, two or three per effect |
+| Head flashes | Emotion: the fighter's accent, a rim and a lighter core, translucent. Info: a pale core inside a thin keyline in the lane's dark step (the Cyborg's are steel), solid | Never yellow or red-orange. Info against emotion is solid against soft |
 | Barrage and beam | The fighter's accent, with a near-white core | The beam core is the brightest thing on screen |
 | Danger and collateral | World: dust in the biome's ground colour, smoke grey `#5c5760`, fire `HEAT_LO` to `HEAT_HI` | Never a fighter colour |
 | Wound stages | Pattern first: steady, flicker, gap. Tint second | Stage tints are neutral, not fighter colours |
 | Blood | One flat red `#b3202f`, with a `#7d1420` shadow step | A decal, never a mesh. Off or neutral under the graphic dial (section 6) |
 | Ego meters (proposal) | Each meter uses its owner's accent: Respect (Protagonist teal), Pride (Anti-hero violet), Wrath (Empress chartreuse), Hunger (Cyborg red) | So a meter says whose it is |
 | UI accent | UI and UX decide. Keep it out of every fighter lane | |
+
+### 3.6 Masks, sigils and expression (new in v1)
+
+Sources: `docs/art/marked-aura.md`, `art/concepts/shared/marks.mjs`, `art/concepts/marked-aura/ma-1-style.svg` and `ma-5-legal-checks.svg`. Orb approved the tones.
+
+| Fighter | Mask | Sigil | Where |
+|---|---|---|---|
+| Protagonist | Pale `#e8f1ee`, a designed faceted dome: brow ridge, jaw plane, crown seam, high hairline | One ring, teal, painted | Off-centre at the temple, above the brow ridge |
+| Anti-hero | Dark `#2b2444`, a wedge | A leaning slash and a dot, orchid, emissive | Mid-face |
+| Empress | Pale bone `#e6e0c4`, polished | Three chevrons of three sizes, offset, moss, painted | The brow, under the headband |
+| Cyborg | Dark `#34313d`, a boxy display face | A diagonal stair of four lit squares, coral, emissive | Mid-face, plus a head hatch bar |
+
+- **Expression comes from three places, not a drawn face.** The head tilt and posture (Animation), the sigil's small flick (rest, pride, taunt, hurt, brink, rage, triumph: a lean, a scale, a brightness, and in hurt and brink a gap in the sigil), and the head flash (section 7). Nothing is drawn as an eye, a brow or a mouth.
+- **Dark masks carry an emissive sigil, pale masks a painted one.** The sigil is the alpha-emissive channel of the palette mask (section 5). It is the only part of a fighter that glows at rest, and only a little.
+- **Readable at play sizes.** The mask tone is a value feature: at 40 px the pale masks are a small beacon over dark bodies, and the dark masks sit inside a dark silhouette and are told by the sigil. At 12 px only the mask tone and the shape survive. The checks sheet (`ma-5-legal-checks.svg`) runs each mask in three flat colours and as a silhouette.
+- **At three-quarter the sigil sits on a narrow sliver of the mask** in the 2D concept sheets. On the real model it lies on the face plane and is foreshortened by the turn, so its width should be judged on the model.
 
 ## 4. Line and outline
 
@@ -154,7 +174,7 @@ Colour is never the only carrier of meaning. Shape, pattern and position come fi
 
 **Two-tone edge.** A fighter reads on both bright and dark backdrops because its edge has two tones: the dark outline outside, and a light rim on the lit side inside. The light rim colour is the gear light step.
 **Rim rule.** Where the backdrop is darker than L* 35 (deep sea, night, inside a cave), the outline colour flips to the rim colour. The concept sheets show it. Rim colour for the Anti-hero: `#b9a9e6`.
-**Far beacon.** Below 14 px, the outline is replaced by a 1 px halo in the fighter's aura light colour at 60% opacity, so a mid-value backdrop never swallows the figure. Tested: without it, a dark violet figure at 5 to 12 px vanishes on the sea.
+**Far beacon.** Below 14 px, the outline is replaced by a 1 px halo in the fighter's accent light colour at 60% opacity, so a mid-value backdrop never swallows the figure. Tested: without it, a dark violet figure at 5 to 12 px vanishes on the sea.
 
 ## 5. Cel shading: what Rendering needs
 
@@ -182,7 +202,7 @@ Target renderer: Godot 4.7 Compatibility, as in the greybox. Nothing here needs 
 
 ## 6. Bodies: wear and damage
 
-Regions come from `spec-wounds.md`: head, core, arms and legs, plus the aura crown. The Empress adds the mantle. Wear is 0 to 100 per region. Stages: fresh below 30, bruised 30 to 59, battered 60 to 89, broken 90 and above.
+Regions come from `spec-wounds.md`: head, core, arms and legs, plus UI's HUD wear crown. The Empress adds the mantle. Wear is 0 to 100 per region. Stages: fresh below 30, bruised 30 to 59, battered 60 to 89, broken 90 and above.
 
 **Four layers, added stage by stage.** Each stage adds one layer and keeps the ones below.
 
@@ -209,13 +229,18 @@ Regions come from `spec-wounds.md`: head, core, arms and legs, plus the aura cro
 
 **Style of wounds.** Flat, cel and graphic in shape (a clean gash, a hard-edged blood run), not photoreal. Wounds are decals and small geometry swaps. Never gore meshes.
 
-## 7. Aura, tiers and effect colours
+## 7. Head flashes, tiers and effect colours
 
-VFX owns the effects. Art sets the palette and shape language.
+VFX and Rendering own the effects. Art sets the palette, the shape language and the timing. The full design is `docs/art/marked-aura.md`, the data is `data/art/flashes.json`, and the in-engine prototype is specified in `docs/art/flash-prototype-spec.md`.
 
-- **Tiers never change hair.** A tier adds one silhouette-level feature (for the Anti-hero, one regalia piece), one marking-level feature (a seam or line pattern) and moves the aura up the fighter's own ramp toward near-white. Tiers are named and shown as pips (`glossary.md`), never as numbers.
-- **The aura crown** is a ring of four arcs, one per region, in the body's plane at chest height, about 0.75 body heights across. It never sits above the head as a halo. Arcs differ by length and dash pattern as well as colour, so the crown works in greyscale (`spec-wounds.md`, acceptance test 10).
-- **Aura colour** is the fighter's ramp, never gold, red or orange. Aura shape follows the fighter's shape language: hard-edged, vertical tapered slabs for the Anti-hero, rounded lobes for the Protagonist.
+- **No standing aura.** At rest there is nothing around a fighter. A power stage never draws a full-body aura: the Protagonist's heat is steam and veins on the body, the Anti-hero's is regalia and the sigil's light. The one exception is the transformation **surge**, held for the length of its cinematic (up to 3 s) and then faded in 1.2 s.
+- **A head flash** is a brief, iconic pop at and above the head, behind it, never over the mask, the sigil or the chest. Twelve flashes today (danger sense, found, searching, brink, fear, rage, hurt, resolve, triumph, pride, taunt, surge); a pitch for the final set is in `ma-6-flash-pitch.svg`. Each lasts 0.3 to 1 s (attack, hold, fade), has a priority, and a per-fighter cooldown.
+- **Shape families.** Circles for the Protagonist, blades for the Anti-hero, wedges for the Empress, steps for the Cyborg, so a flash is recognisably ours and the four stay apart. The "!" and "?" are drawn in the family's own shapes, not a font.
+- **Two classes.** **Info flashes** (danger sense, found, searching) are solid, with a pale core and a thin keyline in the lane colour, so they read on any backdrop. **Emotion flashes** are translucent, a rim and a lighter core, at 34 to 55% opacity. Info flashes are a setting, on by default.
+- **Colour** is the fighter's accent for emotion and the pale core with a keyline for info (steel for the Cyborg). Never gold, yellow, red or orange for the Protagonist or the Anti-hero, and no thick black outline.
+- **Shape conditions from Legal.** Danger sense is a pointer train of three growing shapes on one ray above and behind the head, turned to the threat's bearing. The Anti-hero's upward flashes are round-tipped. The Empress's upward flashes, and the Anti-hero's surge, are a wide, low crest behind the head. Nothing tall and pointed stands above a head.
+- **One channel per fighter.** A flash and UI's HUD crown are never up together. The crown owns wear (a stage change, brink, Rally, facade crack, boil-over), thin arcs in neutral role colours on the HUD layer. A flash owns emotion and sense. Arbitration and priority are in `marked-aura.md` and in the prototype spec.
+- **Tiers never change hair.** A tier adds one silhouette-level feature (for the Anti-hero, one regalia piece), one marking-level feature (a seam or line pattern) and a brighter sigil. Tiers are named and shown as pips (`glossary.md`), never as numbers.
 - **Beams** are the fighter's accent with a near-white core. Scorch, glow and trail colours on the ground come from the world's heat ramp, not the fighter.
 
 ## 8. The world: biome palettes and damage states
@@ -302,13 +327,25 @@ node art/concepts/anti-hero/gen.mjs contrast  # prints palette-versus-backdrop c
 
 To see the flat-black test at true size, open `art/concepts/anti-hero/silhouette-test.svg` in a browser at 100% zoom. The sheets also embed the three-colour, greyscale and colour-vision tests.
 
+The Marked plus flashes checks and the turnarounds:
+
+```bash
+node art/concepts/marked-aura/gen.mjs         # writes ma-1 to ma-6, and data/art/flashes.json
+node art/concepts/turnaround/gen.mjs          # the Coil turnaround
+node art/concepts/turnaround/gen-fighters.mjs # the Protagonist, Empress and Cyborg turnarounds
+```
+
+Open `art/concepts/marked-aura/ma-5-legal-checks.svg` for the mask silhouette and three-flat-colour tests, each sigil beside the generic patterns to avoid, and the flashes beside the two patterns to avoid.
+
 ## Needs from others (through the EP)
 
 - **Rendering and Technical Art:** the feature list in section 5, in priority order, and a view on the outline method and the far beacon. First check whether Compatibility's glow works on the web export.
 - **Camera:** the zoom floor. The far band is only meaningful if 0.06 stays.
 - **Performance:** the budgets in section 9.
-- **VFX:** the aura and beam colour rules (section 7), and the smear and impact-frame levers.
-- **UI and UX and Accessibility:** the ego-meter colour proposal, the crown's arc shapes, and the colour-vision test.
+- **VFX:** the beam colour rules and the surge (section 7), and the smear and impact-frame levers.
+- **Rendering:** the head-flash prototype (`flash-prototype-spec.md`), which reads `data/art/flashes.json`.
+- **Audio:** a cue for each flash, described in words in `flashes.json`: original only, no alert sting, no chirp.
+- **UI and UX and Accessibility:** the ego-meter colour proposal, the crown staying down for the surge, the info-flash setting, and the colour-vision test.
 - **Animation:** the Proud front as a held posture, the facade crack as one beat, and the regalia and pole as a spring chain (`anti-hero-concepts.md`).
 - **World:** the strata stack, the levelled-building look, and the proving ground's look.
 - **Legal:** the do-not-draw list in 3.4, and the origin rows for the generator (`art/concepts/anti-hero/README.md`).

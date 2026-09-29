@@ -52,14 +52,17 @@ export const circ = (c, r, n = 14) => Array.from({ length: n }, (_, i) => { cons
 export const FACE = { P: { x0: 1.2, x1: 6.2, ey: 10, my: 5.2 }, A: { x0: 1.4, x1: 6.4, ey: 9.8, my: 5 }, E: { x0: 0.8, x1: 4.4, ey: 12.6, my: 7 }, C: { x0: 1.6, x1: 6.2, ey: 10.2, my: 4.8 } };
 // where each sigil sits on the mask, in head-local units: the forehead for the dome and the Empress, the middle of the face for the wedge and the display
 const EXP = { P: 1.1, A: 1.6, E: 1.15, C: 1.0 };   // horizontal stretch of a sigil at three-quarter, so it stays on the mask and stays legible
-export const SIGPOS = { P: [-2.1, 12.2], A: [4.1, 9.2], E: [2.6, 10.2], C: [2.4, 9.8] };
+export const SIGPOS = { P: [-2.1, 13.7], A: [4.1, 9.2], E: [2.6, 10.2], C: [2.4, 9.8] };
+// Face-on (yaw 90): the kit collapses head x into two edges, so sigils and mask marks are placed in its input units (about +-3.2 across the face).
+// Sigil centre (cx) and scale (k) per fighter; the Protagonist's ring stays off-centre at the temple.
+const FRONT = { P: { cx: -1.5, k: 0.7 }, A: { cx: 0.25, k: 0.85 }, E: { cx: 0, k: 0.8 }, C: { cx: 0, k: 0.62 } };
 export const yawMap = (fk, yaw) => { const f = FACE[fk], xm = (f.x0 + f.x1) / 2, a = yaw * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), m = s; return ([u, y]) => [(1 - m) * u + m * (c * 5.4 + s * 1.5 * (u - xm)), y]; };
 
 // ---------------------------------------------------------------------------------------------------------- the sigils
 // gap is true in hurt and brink: the sigil shows a break (a gap in the ring, a split slash, a missing chevron or step), never a line across it.
 function sigilParts(fk, gap) {
   if (fk === 'P') {
-    if (!gap) return [{ pts: circ([0, 0], 1.9, 20), fill: 'acc' }, { pts: circ([0, 0], 1.15, 18), fill: 'mask' }];
+    if (!gap) return [{ pts: circ([0, 0], 1.65, 20), fill: 'acc' }, { pts: circ([0, 0], 1.0, 18), fill: 'mask' }];
     const arc = []; for (let a = 40; a <= 325; a += 15) arc.push([Math.cos(a * Math.PI / 180) * 2.6, Math.sin(a * Math.PI / 180) * 2.6]);
     return [{ pts: band(arc, 1.2), fill: 'acc' }];
   }
@@ -94,6 +97,7 @@ export function sigilMarks(fk, pal, state, mask, yaw = 0) {
   const parts = sigilParts(fk, state === 'hurt' || state === 'brink');
   if (dark || glow) for (const part of parts) if (part.fill === 'acc') out.push({ poly: scl(place(part.pts), 1.5, cc), fill: pal.accent.light, op: dark ? 0.26 : 0.34, line: false });
   for (const part of parts) out.push({ poly: place(part.pts), fill: part.fill === 'mask' ? mask.fill : col, line: false });
+  if (yaw >= 85) { const f = FRONT[fk]; return out.map(q => ({ ...q, poly: q.poly.map(([x, y]) => [f.cx + (x - cc[0]) * f.k, y]) })); }
   if (yaw > 0) { const m = yawMap(fk, yaw), ex = ([x, y]) => [cc[0] + (x - cc[0]) * (yaw >= 60 ? 0.7 : EXP[fk]), y]; return out.map(q => ({ ...q, poly: q.poly.map(ex).map(m) })); }
   return out;
 }
@@ -114,6 +118,7 @@ export function maskHead(fk, bh, pal, mask, yaw = 0) {
       { poly: [[-1.4, 17.7], [-0.4, 17.9], [0.5, 12.6], [-0.3, 12.6]], fill: mask.shadow, op: 0.6, line: false },   // crown seam
     ];
   }
-  if (yaw > 0) { const m = yawMap(fk, yaw); marks = marks.map(q => ({ ...q, poly: q.poly.map(m) })); }
+  if (yaw >= 85) marks = marks.map(q => ({ ...q, poly: q.poly.map(([x, y]) => [(x - 0.4) * 0.42, y]) }));
+  else if (yaw > 0) { const m = yawMap(fk, yaw); marks = marks.map(q => ({ ...q, poly: q.poly.map(m) })); }
   return { ...bh, poly, shade, marks, fill: mask.fill, shadow: mask.shadow, neck: mask.shadow };
 }
