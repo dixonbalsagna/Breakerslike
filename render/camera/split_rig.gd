@@ -254,8 +254,10 @@ func _update_trigger(S: SimState) -> void:
 	if not split_wanted:
 		_below_t = _below_t + DT if r_now < rs else 0.0
 		var out_of_frame: bool = _outside_one_view(S) and r_now < rs
-		if (_below_t >= CamParams.SPLIT_DWELL or out_of_frame) and _layout_age >= CamParams.MIN_MERGED_AGE and (guard_ok or out_of_frame):
-			_set_split(true)
+		# A fighter already lost off the edge of the one view does not wait out the dwell or the full merged age.
+		var age_ok: bool = _layout_age >= CamParams.MIN_MERGED_AGE or (out_of_frame and _layout_age >= CamParams.MIN_OUT_OF_FRAME_AGE)
+		if (_below_t >= CamParams.SPLIT_DWELL or out_of_frame) and age_ok and (guard_ok or out_of_frame):
+			_set_split(true, "out of frame" if _below_t < CamParams.SPLIT_DWELL or _layout_age < CamParams.MIN_MERGED_AGE else "trigger")
 	else:
 		_above_t = _above_t + DT if r_now > rm else 0.0
 		if _above_t >= CamParams.MERGE_DWELL and _layout_age >= CamParams.MIN_SPLIT_AGE:
@@ -331,8 +333,8 @@ func _slam_step(S: SimState) -> bool:
 
 func _slam_run(S: SimState) -> void:
 	var f = S.fighters[_slam_slot]
-	var window: float = CamParams.SLAM_WINDOW * (0.5 if reduced_motion else 1.0)
-	var slam_time: float = CamParams.SLAM_TIME
+	var window: float = CamParams.SLAM_WINDOW
+	var slam_time: float = CamParams.SLAM_TIME_REDUCED if reduced_motion else CamParams.SLAM_TIME   # reduced motion: a near-cut
 	var rem: float = _slam_last_rem
 	var alive: bool = f.rush != null and f.rush.tgt != null
 	if alive:
@@ -425,7 +427,9 @@ func _update_orientation(S: SimState) -> void:
 		cand = -1
 	elif sigma_u < 0 and u > CamParams.HYST_M0:
 		cand = 1
-	if cand != 0 and _flip_age >= CamParams.FLIP_DWELL:
+	# A pair that is close enough to merge again does not swing: the flip waits and is unseen once they are one view.
+	var merging: bool = split_wanted and r_now > _r_merge() and swing_t < 0.0
+	if cand != 0 and _flip_age >= CamParams.FLIP_DWELL and not merging:
 		var hidden: bool = (e >= CamParams.INSTANT_SWAP_E and sliver <= 0.0) or solo_w >= CamParams.INSTANT_SWAP_E
 		var full: bool = sep >= 0.999 and _slam_slot < 0
 		if sep <= 0.02 or hidden:
@@ -438,7 +442,7 @@ func _update_orientation(S: SimState) -> void:
 			_flip_age = 0.0
 			_swing_th0 = _theta_of(sigma_shown, phi)
 			_swing_th1 = _theta_of(cand, phi)
-			_swing_dur = 0.15 if reduced_motion else CamParams.T_SWING
+			_swing_dur = CamParams.T_SWING_REDUCED if reduced_motion else CamParams.T_SWING
 			swing_t = 0.0
 		else:
 			theta = _theta_of(sigma_shown, phi)

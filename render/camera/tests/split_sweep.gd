@@ -65,8 +65,7 @@ var dump_from: int = 0
 var dump_to: int = 0
 var shots_dir: String = ""
 var view: SplitView
-var pane_a: SplitTestPane
-var pane_b: SplitTestPane
+var stand_in: SplitTestMain
 var _queue: Array = []
 var _record: bool = false
 var render_spikes: Dictionary = {}
@@ -108,15 +107,11 @@ func _run() -> void:
 		DisplayServer.window_set_size(Vector2i(int(vw), int(vh)))
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 		root.size = Vector2i(int(vw), int(vh))
-		pane_a = SplitTestPane.new()
-		pane_b = SplitTestPane.new()
+		stand_in = SplitTestMain.new()
 		view = SplitView.new()
-		view.size = Vector2(vw, vh)
 		root.add_child(view)
 		view.size = Vector2(vw, vh)
-		view.attach(pane_a, pane_b)
-		root.add_child(pane_a.viewport)
-		root.add_child(pane_b.viewport)
+		view.attach(stand_in)
 		await process_frame
 	var W: float = SimConst.W
 	var H: float = SimConst.HALF
@@ -129,6 +124,7 @@ func _run() -> void:
 		await _scenario("out and back dy=%d" % int(dy), func(): return _out_and_back(dy), {"merges": 0, "swings": 0})
 	# 2. The antipode, both ways: B passes it going right, then going left (a swap each time), and a jitter that must not flip.
 	await _scenario("antipode right", func(): return _antipode(1.0, 0.0), {"swings": 1, "sigma_changes": 1})
+	await _scenario("antipode right reduced motion", func(): return _antipode(1.0, 0.0, true), {"swings": 1, "sigma_changes": 1})
 	await _scenario("antipode left", func(): return _antipode(-1.0, 0.0), {"swings": 1, "sigma_changes": 1})
 	await _scenario("antipode there and back", func(): return _antipode_round_trip(), {"swings": 2, "sigma_changes": 2})
 	await _scenario("antipode jitter 0.5 m", func(): return _antipode_jitter(0.5 * m), {"swings": 0, "sigma_changes": 0})
@@ -518,7 +514,8 @@ func _out_and_back(dy: float) -> Dictionary:
 
 
 ## B moves through the antipode. dir +1: B keeps going right (u increases through HALF); -1: the other way.
-func _antipode(dir: float, wobble: float) -> Dictionary:
+func _antipode(dir: float, wobble: float, reduced: bool = false) -> Dictionary:
+	_rig.reduced_motion = reduced
 	var H: float = SimConst.HALF
 	var ax: float = 30000.0
 	var span: float = 12000.0
@@ -888,8 +885,8 @@ func _real_match(seed: int) -> void:
 		while ncm < mct.size():
 			var tt: float = float(mct[ncm])
 			var why: String = String(_rig.mode_change_reasons()[ncm])
-			# Trigger-driven changes keep the dwell; a shot's ending and a slam are events of the fight and do not.
-			if tt - last_change_t < CamParams.MODE_CHANGE_GAP - 1e-6 and not _rig.launch_decision_at(tt) and not why.contains("slam"):
+			# Trigger-driven changes keep the dwell; a shot's ending, a slam and a fighter lost off the edge do not.
+			if tt - last_change_t < CamParams.MODE_CHANGE_GAP - 1e-6 and not _rig.launch_decision_at(tt) and not why.contains("slam") and not why.contains("out of frame"):
 				gaps_bad += 1
 				print("  gap %.2f s at t=%.2f: %s (previous: %s)" % [tt - last_change_t, tt, _rig.mode_change_reasons()[ncm], _rig.mode_change_reasons()[ncm - 1] if ncm > 0 else "-"])
 			last_change_t = tt
@@ -947,9 +944,7 @@ func _replay(label: String) -> void:
 		var fr: SplitFrame = e[0]
 		if dump_label == label and k >= dump_from and k <= dump_to:
 			print("  DUMP k=%d mode %s cam1 %.3f/%.3f/%.5f f1 %s cam0 %.3f" % [k, fr.mode, fr.cam_x[1], fr.cam_y[1], fr.cam_z[1], e[2], fr.cam_x[0]])
-		pane_a.fighters = [e[1], e[2]]
-		pane_b.fighters = [e[1], e[2]]
-		view.present(fr)
+		stand_in.render_frame(fr, [e[1], e[2]])
 		await RenderingServer.frame_post_draw
 		var img: Image = root.get_texture().get_image()
 		if shots_dir != "" and dump_label == label and k >= dump_from and k <= dump_to:

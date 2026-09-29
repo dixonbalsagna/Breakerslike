@@ -1,16 +1,16 @@
 # Orb Combat EX: the dynamic split screen
 
-Owner: Camera and Cinematography. Code: `render/camera/`. Status: design, 2026-09-29. It replaces the wave-1 camera brief; what still fits from that brief is folded in (section 13). Orb's answers are in `docs/ep/vision.md`, "Dynamic split screen".
+Owner: Camera and Cinematography. Code: `render/camera/`. Status: built and measured, 2026-09-29 (sections 16 and 17 say what was built, what changed from the first design and what it costs). It replaces the wave-1 camera brief; what still fits from that brief is folded in (section 13). Orb's answers are in `docs/ep/vision.md`, "Dynamic split screen". The EP accepted the defaults below (4.5% and 6.0%, solo split on, a 14% sliver, the swing, landscape only) and removed hiding from the base game.
 
 **Summary**
 1. One camera while the fighters are big enough to read; two panes when zooming out further would make either one too small. The test is the fighter's on-screen height as a fraction of the screen height: split under 4.5%, merge above 6.0% (32 and 43 px at 720p).
 2. The divider is a straight line through the screen centre. Its normal points from one pane's fighter toward the other's, tilted up to 30° by their height difference. Each fighter sits on its own outer side, so each pane looks toward the opponent.
 3. The panes follow the shortest way round the planet. When it flips (near the antipode, or when they pass each other), a hysteresis band and a 1 s dwell keep it from flickering, and the divider swings 0.6 s through the horizontal so the panes trade sides.
 4. Merges: a 0.55 s convergence that ends in a dissolve when they fly back together; a 0.14 s slam, timed to land on contact, when one rushes in. Launches are followed by one full-screen camera locked to the launched fighter, then a merge or a split at the landing.
-5. A pure, tick-stepped rig (`SplitRig`) decides everything from `S` and never writes it. Compositing needs two world renders, so Rendering must make its view stack instantiable twice (section 11); that is the one cross-owner change.
+5. A pure, tick-stepped rig (`SplitRig`) decides everything from `S` and never writes it. Rendering's `PaneWorld` draws the world once per pane; `SplitView` blends the two textures (section 11). On the desktop a match costs +0.3 ms a frame on average with the split on, and a two-pane frame +0.65 ms over one view (section 17).
 
 **Open questions for Orb** (defaults are mine; each is marked "Orb decides" where it appears)
-1. Is 4.5% of the screen height (a 32 px fighter at 720p, about 41% of an AI match) the right "too small to read"? A higher number splits more often.
+1. Is 4.5% of the screen height (a 32 px fighter at 720p) the right "too small to read"? Measured on the unsplit framing it is under that line 41% of the time; with launches and shots taking the screen, two full panes are actually up 10 to 15% of the frames. A higher number splits more often.
 2. Solo against the AI: split or single camera with an edge pointer? Recommended default: split.
 3. Respected transformation: the transformer takes the screen and the other fighter keeps a 14% sliver (recommended), or takes all of it?
 4. Swap style: divider swing (built, gap-free) or the panes passing over each other like cards (needs wider render targets)?
@@ -50,7 +50,7 @@ z_u  = min(vw / (|d| + 700), 0.8 vh / (|dy| + 500), 1.15) * (1 - 0.06 (max_tier 
 r    = 75 * z_u / vh                                                                        fighter height as a fraction of the screen height
 ```
 
-`d` is the held signed separation of section 5. The rest is the reference camera's own constants, so the merged shot is the shot you had before.
+`d` is the held signed separation of section 5. The rest is the reference camera's own constants, so the merged shot is the shot you had before (the test checks it against `SimCamera` to 0.0000 px at rest). Two differences from the reference: the camera's y floor is -3,200, not -180 (the reference's predates the scaled world, whose sea floor is at -2,810, and it lost fighters swimming below it), and the zoom rate is capped (section 12).
 
 | Rule | Default | Why |
 | :--- | :--- | :--- |
@@ -60,6 +60,8 @@ r    = 75 * z_u / vh                                                            
 | Minimum time merged before splitting again | 0.8 s | |
 | Closing guard | do not open if `r` predicted 0.4 s ahead (from the closing speed) is at or above the split line | A rush from 30 bh is over before the panes finish opening |
 | Beam struggle | merged is allowed down to `r` = 0.030 | The struggle is the picture; section 9 |
+| A fighter already lost | if the one-view camera has a fighter farther than 0.46 of the width from its centre (or off the top or bottom), split at once: no dwell, and 0.25 s of merged age instead of 0.8 | Found by the real-match run: the reference framing loses the lower fighter once the height difference passes about 1,500 units |
+| Zoom-out lookahead | the one-view camera zooms for the separation it will have 0.3 s from now if it is growing | Fighters dashing apart no longer leave the frame before the split opens |
 
 Because `r` uses the reference formula, it responds to what the reference camera responds to: separation, height difference and tier. At tier 4 the split line is at 23 bh, not 30 (the aura is bigger). A 21:9 screen splits later (42 bh) and a 4:3 screen sooner. Every number is in `camera_params.gd` as a constant, so tuning does not touch code. **Orb decides** the two thresholds; the table of what they mean in pixels:
 
@@ -70,7 +72,7 @@ Because `r` uses the reference formula, it responds to what the reference camera
 
 Below 600 px of screen height the floor `r >= 28 px / vh` applies, so a small window splits earlier instead of showing 20 px fighters.
 
-**Solo against the AI** is a player setting, `camera.solo_split` (default on, **Orb decides**). Off means the camera keeps the player's fighter at `r_pane` (section 4) at all times, never splits, and the opponent is shown by an edge pointer (section 10) and the ring map. In two-player, split is always available.
+**Solo against the AI** is a player setting, `camera.solo_split` (default on, **Orb decides**). Off means that where the split would open, the human fighter's pane takes the whole screen instead (the other pane stays unrendered), and the opponent is shown by the edge pointer (section 10) and the ring map; it merges by the same rules. It applies only with exactly one human. Set with `SplitView.set_solo_split(bool)` (the rig's `solo_split`). In two-player, split is always on.
 
 ## 3. Divider geometry and the tilt law
 
@@ -96,9 +98,9 @@ Pane B occupies `(p - c) . n > 0`; pane A the rest. The divider line is perpendi
 ```
 
 **Anchors.** Each fighter's chest is placed at
-`P_i = c + (0, 0.12 vh) - s_i (n.x * 0.28 vw, n.y * 0.24 vh)`, with `s_A = -1`, `s_B = +1`. At rest and level that is 22% of the screen width from its outer edge and 62% of the way down, leaving 28% of the width of world in front of it toward the opponent (the look-ahead that makes a pane "point toward" the other fighter) and more than one body height of headroom above the head (the flash surges). With the tilt, the higher fighter sits slightly higher.
+`P_i = c + (0, 0.12 vh) + s_i (n.x * 0.28 vw, n.y * 0.24 vh)`, with `s_A = -1`, `s_B = +1` (so each fighter sits on its own side of the divider; the first version of this line had the sign the wrong way round). At rest and level that is 22% of the screen width from its outer edge and 62% of the way down, leaving 28% of the width of world in front of it toward the opponent (the look-ahead that makes a pane "point toward" the other fighter) and more than one body height of headroom above the head (the flash surges). With the tilt, the higher fighter sits slightly higher.
 
-**Divider drawing** is UI's to style; the rig gives a line (`c`, `n`), a gap width (0.5% of the width, at least 3 px), a feather width for dissolves, and the two ends. The divider stops at the top of the planet strip and the bottom of the toll chip (section 10).
+**Divider drawing** is UI's to style (`ui/widgets/ui_split.gd`); the frame gives a line (`c`, `n`), a gap width (0.5% of the width, at least 3 px), a feather width for dissolves, and the line's opacity. The mask shader leaves a thin dark gap under UI's line. The divider stops at the top of the planet strip and the bottom of the toll chip (section 10).
 
 ## 4. Pane cameras
 
@@ -107,14 +109,16 @@ Each pane has a camera `(x, y, z)` in the reference camera's terms (pixels per u
 ```
 cam.z target   = r_pane * vh / 75 * tier_factor * alt_factor       r_pane = 0.065 (47 px at 720p), tier_factor = 1 - 0.06 (tier - 1)
 alt_factor     = max(0.69, 1 / (1 + max(0, h - 3 bh) / (40 bh)))   h = fighter y minus the ground height under it; 0.69 keeps r_pane no lower than 0.045
-cam.x target   = f.x + f.vx * tau_x - (P_i.x - 0.5 vw) / cam.z     (velocity feed-forward cancels the lag of a first-order filter)
-cam.y target   = clamp(f.y + f.vy * tau_y + 38 - (0.7 vh - P_i.y) / cam.z, -180, CEILING - 200)
-filters        tau_x 0.10 s, tau_y 0.14 s, tau_z 0.35 s; k = 1 - exp(-dt / tau), stepped once per sim tick with the fixed DT
+focus point    = the fighter's chest, filtered: tau_x 0.10 s, tau_y 0.14 s, tau_z 0.35 s; k = 1 - exp(-DT / tau), once per sim tick on the fixed DT
+lead           = measured velocity * DT (1 - k) / k   the lead that makes the discrete filter track a constant speed with no lag (about tau - DT / 2);
+                 measured from the fighter's position change per tick, not the sim's vx, because a rush moves the fighter without setting vx
+cam.x          = focus.x - (P_i.x - 0.5 vw) / cam.z
+cam.y          = clamp(focus.y - (0.7 vh - P_i.y) / cam.z, -3200, CEILING - 200)
 ```
 
-A pane keeps its fighter inside +-6% of the screen width of its anchor in ordinary movement (the lag is the feed-forward's error only), and the ground band of the merged shot is preserved: the fighter plane sits at `0.7 vh` when the anchor's y is `0.7 vh`.
+In ordinary movement the fighter stays at its anchor to within the feed-forward's error (the test measures the camera's own steps against a barely-moving fighter at 0.002 of the width a tick at most), and the ground band of the merged shot is preserved: the fighter plane sits at `0.7 vh` when the anchor's y is `0.7 vh`. The drawn zoom passes through one last slew limiter (2.4 e-folds a second; the slam is exempt), so whatever the blends do it never changes faster than the comfort limit.
 
-**Continuity by construction.** At the moment of a split both panes are given the merged camera (`x` the midpoint, `z` = `z_u`) and the divider is vertical in the centre, so pane A is exactly the left half of the picture that was on screen. They then move toward their own targets by blending the targets, `target_i = lerp(merged, own_i, ease(sep))`, with `sep` running 0 to 1 over 0.45 s. There is no pop at the cut. Merging is the same run backwards, ending with two identical cameras; at that instant only pane A is rendered and the divider is gone, which is pixel-identical.
+**Continuity by construction.** At the moment of a split both panes are given the merged camera (`x` the midpoint, `z` = `z_u`) and the divider is vertical in the centre, so pane A is exactly the left half of the picture that was on screen. They then move toward their own cameras by blending, `out_i = blend(own_i, merged, 1 - smootherstep(sep))`, with `sep` running 0 to 1 over 0.45 s. The merged camera is a shadow that is stepped every tick and snapped to its target while two full panes are up, so it is ready when a merge starts. There is no pop at the cut. Merging is the same run backwards, ending with two identical cameras; at that instant only pane A is rendered and the divider is gone, which is pixel-identical.
 
 ## 5. Orientation, the antipode and the swap
 
@@ -131,7 +135,7 @@ m  = 0.02 W = 3,072 units (41 bh)         the antipode hysteresis: the flip happ
 m0 = 3 bh = 225 units                      the pass-through dead band, for fighters that pass at large height difference
 ```
 
-Flips are also limited to one per 1.0 s and are never started while the layout is opening or closing (`0 < sep < 1`); a flip while merged, or while one pane is expanded past 90%, is instant and unseen. The hysteresis band in arc length is 2 m (6,144 units, 82 bh): a fighter has to cross the antipode by 41 bh and come back 82 bh to flip twice. At the measured 10.8 k units/s median launch speed that is 0.28 s per crossing, and a flat-out dash (about 10 k units/s) takes the same 0.3 s, so the one-second dwell is what stops a second flip, not the margin.
+Flips are also limited to one per 1.0 s and are never started while the layout is opening or closing (`0 < sep < 1`); a flip while merged, or while one pane is expanded past 90%, is instant and unseen. A pair that is close enough to merge again (`r` above the merge line) does not swing: the flip waits and is instant once they are one view. The case that showed this was two fighters 4 bh apart swinging for no reason just before their merge. The hysteresis band in arc length is 2 m (6,144 units, 82 bh): a fighter has to cross the antipode by 41 bh and come back 82 bh to flip twice. At the measured 10.8 k units/s median launch speed that is 0.28 s per crossing, and a flat-out dash (about 10 k units/s) takes the same 0.3 s, so the one-second dwell is what stops a second flip, not the margin.
 
 **The swap** is a swing of the divider, 0.60 s (36 ticks), ease-in-out (`smootherstep`). The normal's angle moves from the old rest angle to the new one through the vertical on the higher fighter's side, so the higher fighter's pane passes over the top and the panes are briefly stacked:
 
@@ -145,20 +149,20 @@ Both fighters' anchors follow `n` for the whole swing (the formula in section 3)
 
 ## 6. Opening
 
-When the trigger fires, `sep` runs 0 to 1 over 0.45 s (27 ticks) with `easeOutCubic`; the divider fades in over the first 0.2 s and its feather closes from 48 px to 0. The zoom ramps from `z_u` to `r_pane` at no more than 1.2 e-folds a second (the slowest of the tick filter and this cap wins), so a 0.43 to 0.62 change (0.37 e-folds) takes the opening time. The panes do not shake while opening.
+When the trigger fires, `sep` runs 0 to 1 over 0.45 s (27 ticks) with a smootherstep; the divider fades in over the first 45% and its feather closes from 64 px to 0. The zoom ramps from `z_u` to `r_pane` (1.2 e-folds a second ordinarily, 2.4 in a transition), so a 0.43 to 0.62 change (0.37 e-folds) fits the opening time.
 
 ## 7. Merging: a dissolve, or a slam
 
 **Dissolve (fly back together).** Trigger: `r` above 0.060 for 0.40 s, after 1.2 s of split. `sep` runs 1 to 0 over 0.55 s (33 ticks) with `easeInOutCubic`. The divider's feather grows from 0 to 64 px and its line fades over the last 0.25 s, so at the hand-off the seam is a soft 64 px blend between two nearly identical pictures; the hand-off itself (render pane A only) is pixel-identical because the two cameras are equal.
 
 **Slam (one charges in).** Trigger: a fighter's `rush` is set toward the other while split, and its remaining time `rush.end - S.T` is at most 0.8 s (they all are; the longest measured is 0.78 s). The slam is timed to finish on contact, not to start with the rush:
-- Until 0.14 s before `rush.end`, the layout stays split, but the pane targets lean in: `sep` is held at `1 - 0.5 * progress` so the fighters' panes drift toward the merged shot.
+- Until 0.14 s before `rush.end` the panes hold (`SLAM_LEAN` is 0). A first version leaned the panes toward the merged shot during the rush; in the real-match run that pulled the defender's pane off its fighter, because a far rush has a merged shot of dots.
 - Over the last 0.14 s (8 ticks) the divider sweeps sideways toward the defender's side, accelerating (`easeInCubic`), the attacker's pane expanding and covering the defender's, while both pane cameras are pulled to the merged camera with their filters stiffened to a 0.03 s time constant. It reads as a door closing.
-- On the closing frame the divider flashes for 0.08 s (UI/VFX style hook `divider_slam`) and the camera takes a shake of `k` = 12 (within the cap of section 13, to align with Controls). Hit-stop is sim-owned; the hit lands in the merged shot.
+- On the closing frame the frame's `slam` flag is set and the divider flashes for 0.08 s (the record's `slam` key, drawn by UI); the shake for the hit is the fx consumer's, within the cap of section 12 and to align with Controls. Hit-stop is sim-owned; the hit lands in the merged shot. Reduced motion shortens the door to 0.04 s (a near-cut).
 - After the slam the merged camera holds for at least 0.8 s (the minimum merged time) before it may split again, unless the exchange is over and the fighters flew apart at once.
 - Slam is the only place a per-tick screen motion above the ordinary limit is allowed (section 12).
 
-A rush that ends before the slam window (a feint or a dodge that cancels it, `rush` cleared early) cancels the slam: the layout returns to `sep` = 1 over 0.25 s.
+A rush that is cleared early (a feint or a dodge that cancels it: `rush` gone with more than two ticks to run) cancels the slam: the layout returns to two panes. The slam is an event of the fight and skips the merged/split dwell; the test holds only trigger-driven changes to 0.8 s.
 
 ## 8. Launch follow
 
@@ -166,12 +170,12 @@ Trigger: a fighter's state becomes `launched` with speed at least 4,000 units pe
 
 | Phase | Duration | Camera |
 | :--- | :--- | :--- |
-| Engage | 0.20 s | If split: the launched fighter's pane expands over the whole screen (`e` 0 to 1, `easeOutCubic`); if merged: the merged camera's target becomes the launch camera. Player control is untouched |
-| Follow | until the state leaves `launched`, at most 6 s | Rigid: `cam.x = f.x + f.vx * 0.05`, `cam.y` filtered at 0.10 s, zoom `r_launch` = 0.06 (43 px at 720p), fighter anchored 35% from the trailing edge in the direction of travel so the path ahead shows. At the measured speeds the world streams past; the fighter stays fixed on screen |
+| Engage | 0.32 s | If split: the launched fighter's pane expands over the whole screen (`e` 0 to 1, `easeOutCubic`); if merged: the merged camera's target becomes the launch camera. Player control is untouched |
+| Follow | until the state leaves `launched`, at most 6 s | Rigid: the focus filter's time constant is 0.02 s with the measured-velocity lead of section 4, `cam.y` filtered at 0.10 s, zoom `r_launch` = 0.06 (43 px at 720p), fighter anchored 35% from the trailing edge in the direction of travel so the path ahead shows. At the measured speeds the world streams past; the fighter stays fixed on screen |
 | Land | 0.35 s | Hold the landing site. The push-in on impact is 8% of zoom over 0.15 s and back; hit-stop is sim-owned. A knockback slide keeps following while `slide > 0` |
 | Settle | 0.60 s | Decide by the trigger at the landing: if `r` is above 0.060, merge (the follow camera eases to the merged camera, no divider ever appears); otherwise split with the launched fighter's pane already expanded, reopening by moving the divider back in over 0.35 s (`e` 1 to 0) so the far fighter's pane wipes in from its side |
 
-Cancel or skip: a KO or a `finisher_start` ends the follow at once (the finisher's own shot takes over); a tier-up or transformation cinematic for either fighter takes precedence (section 9); `camera.launch_follow = "cut"` in reduced motion replaces the Follow with a static shot of the launch position for 0.4 s and a cut to the landing.
+Cancel or skip: a KO or a `finisher_start` ends the follow at once (the finisher's own shot takes over); a tier-up or transformation cinematic for either fighter takes precedence (section 9); reduced motion replaces the Follow with a held shot of the launch position and a cut to the landing.
 
 A follow longer than 6 s (the longest measured is 11.5 s) leaves rigid follow and becomes an ordinary split, with the launched fighter's pane at its own target, so a long haul across half the planet never becomes a 10 s single shot.
 
@@ -192,29 +196,29 @@ The camera reads these; it never changes sim time. Slow motion and hit-stop are 
 
 ## 10. HUD and UI anchors per pane
 
-The HUD is a single `Control` over the composite. The rig gives it, per fighter slot, the same record `anchor_fn` returns today, plus the pane: `{pos, h, visible, pane}`, where `pos` is the chest on screen and `h` is `75 z`. Everything else follows from `docs/ui/hud-spec.md` section 10.
+The HUD is a single `Control` over the composite. `SplitFrame.hud_anchor(slot, x, y)` gives, per fighter slot, the record `anchor_fn` returns, plus the pane: `{pos, h, visible, pane}`, where `pos` is the chest in that fighter's own pane and `h` is `75 z` (main calls it while a compositor is attached). Everything else follows from `docs/ui/hud-spec.md` section 10.
 
 | Piece | In a split |
 | :--- | :--- |
-| Nameplates | Each fighter's plate at the outer top corner of its own pane (left pane: top left). They swap sides with the swing |
+| Nameplates | Each fighter's plate at the outer top corner of its own pane (left pane: top left). They follow `sigma`, so they swap once at the flip, not at each opening (UI's ruling, agreed) |
 | Fighter-clear zone | Per pane: the pane polygon inset by the safe area on the outer edge and by 2% of the width on the divider side, and the vertical band 17.9% to 80.1% of the height. The anchors of section 3 sit inside it at every tilt and zoom |
 | Planet strip and toll chip | The divider stops under the toll chip and above the strip (both edge-anchored). The strip is shared. Bark lanes stay at the outer bottom corners |
 | Headroom | At least one body height (`75 z`) between the top of the head and the top of the pane, plus the plate's height where the plate is above it |
 | Edge pointer | In each pane, on the divider side, a chip using the strip's circle and diamond shapes, pointing to the opponent (`n`) and showing the distance in fighter heights (UI decides whether to show a number; no "power level" text). It sits in the 24 px reserve band UI keeps around the clear zone. Always on in a split, on in solo without split |
-| Ring map | A small ring of the planet with both fighters, each pane's viewed arc, and the held shortest arc highlighted. The rig gives `{angle_A, angle_B, sigma, arc_A, arc_B, swing, sep}` with angles as `x / W * TAU`. UI owns the widget and the size; I recommend it sits at the top of the divider under the toll chip (a 6% of screen height ring), hides during a cinematic, and marks a hidden fighter by its last known angle only |
-| Reduced motion | The swing becomes a 0.15 s cross-dissolve, the slam a hard cut with no sweep, the launch follow a cut (section 8) |
+| Ring map | A small ring of the planet with both fighters, each pane's viewed arc, and the held shortest arc highlighted. The frame's `split_record()` gives UI what `UiSplit` reads: `sep`, `c`, `n`, `gap`, `fade`, `slam`, `sigma`, `dist_bh`, `pointer` ("split" when two panes are up, "always" otherwise) and `ring {angle_A, angle_B, sigma, arc_A, arc_B, swing, sep, W}`, angles as `x / W * TAU`, arcs as the full width in radians of planet angle that each pane shows (`arc_A` = `arc_B` in one view, and UI draws a single arc at the midpoint). UI owns the widget and the size |
+| Reduced motion | The swing takes 0.15 s, the slam is a 0.04 s near-cut, the launch follow a held shot and a cut, the tier-up push off, and shake a quarter of the player's scale (section 13) |
 
 ## 11. Rendering: how two panes are drawn
 
-A pane is one full render of the world from its camera. The scene is built around one camera at a floating origin: world content is placed at `k W - cam.x` for the camera's x, the fighters, beams and particles are placed by `sdx(cam.x, x)`, and the bend, sky and fog uniforms come from one set of static values in `RenderMats`. Two cameras at different x, zoom and height therefore cannot share one set of nodes and materials. The design is:
+A pane is one full render of the world from its camera; the scene is built around one camera at a floating origin, and the bend, sky and fog uniforms are per camera, so two cameras cannot share nodes and materials. Rendering built that (commit e8173b7, `docs/rendering/README.md`, "Panes and the split screen"): a `PaneWorld` per camera in its own `SubViewport` and `World3D`, sharing the ground data, meshes and props, with `RenderMats` an instance per pane; main owns and steps the `SplitRig` while a compositor is attached, draws pane 0 always and pane 1 while `frame.shows(1)`, and calls the compositor's `pane_jitter(i)` and `present(frame)`. `SplitView` is that compositor.
 
-- **`PaneWorld`**: everything `main.gd`'s `render_view` drives for one camera (a `CameraRig`, `PlanetView`, the fighter views, `BeamView`, `ParticleView`, a `WorldEnvironment`) inside its own `SubViewport` with its own `World3D`. Meshes, MultiMeshes and the ground data are shared resources, so the cost of a second pane is nodes and draw submission, not memory.
-- **Per-pane materials.** The materials that carry per-camera values (`bend`, `cam_dist`, the sky, `fore_cam`, the crowd boost, the fighters' pivot) must not be shared between panes. The clean change, and Rendering's to make, is to turn the static state in `render/core/mats.gd` into an instance owned by each `PaneWorld`. Until then the rig can drive two panes by swapping the static context (`_cache`, `_tracked`, `_bend`, `_dist`, `_sky`) around each pane's update; that stopgap lives in `render/camera/` and touches nothing in Rendering's files.
-- **`SplitView`** (mine): a `Control` that owns the two panes and one `ColorRect` with the mask shader. The shader gets both pane textures, the divider (`c`, `n`, `gap`, `feather`), and the expansion, and blends by the signed distance to the divider. When `sep` = 0 only pane A is rendered and drawn unmasked.
-- **Cost.** The two panes together have the same fill as one full-screen view if they are sized to their regions (each about 0.63 of the width at the 30° limit, so 1.26x). The first build renders each pane full-screen (2x fill, 2x draw submission) and resizes nothing at run time; the sized version is the optimisation, measured before it is done. Draw calls go from about 80 to about 160 plus the HUD's 230 canvas draws. A split runs about two fifths of a match, so I will measure the desktop and web frame times (section 14) and report before choosing the pane target size. The knobs if it is too heavy on an old laptop: `Viewport.scaling_3d_scale` on the panes (0.75), pane targets sized to their regions, a lower far-ground stride while split.
-- **Shake.** `host.jitter` is drawn once a tick from the `camera` cosmetic stream. Each pane takes the jitter scaled by the user's shake scale; the second pane draws from a second derived stream (`camera_b`, `SimRng.deriveSeed(seed, "camera_b")`), so replays show the same shake. Neither stream touches the sim's.
+- **`SplitView.attach(main)`** moves pane 0 into a SubViewport (`main.move_pane0`), makes pane 1 (`main.make_pane`), sets `main.compositor`, and sizes both to the screen. `detach()` goes back to one view.
+- **`present(frame)`** switches pane 1's viewport off while nobody sees it, and pane 0's GPU frame off while pane 1 has the whole screen (its CPU update still runs: it applies the world's changes). With one pane showing, that pane's texture is drawn as it is (a `TextureRect`, no mask pass). With two, one `ColorRect` runs `split_mask.gdshader`: `mix(tex0, tex1, w1)` with `w1` from the signed distance to the divider, a soft blend across the feather for a dissolve, and a thin dark gap under UI's line.
+- **Shake.** `pane_jitter(0)` is the host's jitter (the `camera` stream); pane 1 has its own cosmetic stream, `camera_b` (`SimRng.deriveSeed(seed, "camera_b")`, `PaneShake`), advanced once a tick from the host's `ticked` signal and reseeded per match, so replays show the same shake. Both are capped at 3% of the screen height and scaled by the player's shake scale (quartered in reduced motion). Neither touches the sim's stream.
+- **Pixels.** Panes are full-screen render targets in this build (so a two-pane frame fills the screen twice). The alternative, targets sized to their region (about 0.63 of the width each at the 30 degree limit, 1.26x), needs a resize whenever a pane takes the whole screen, which happens all the time (launch follow is a third of the frames in an AI match); it is not built. The knobs if a low-end GPU needs them: `scaling_3d_scale` on the pane viewports, and the far-ground stride while split.
+- **Entry.** `render/camera/split_main.tscn` instances the main scene and attaches a `SplitView` (the lines are in `split_main.gd`), with F9 toggling the split, F10 solo against the AI, F11 reduced motion, and `--nosplit` starting with one view. Until Rendering adopts those lines in `main.gd` or makes it the main scene, `main.tscn` alone stays one view, unchanged.
 
-Only `render/camera/` changes for the rig, the composite, the mask shader and the tests. **What Rendering must change** (through the EP): move `render/core/camera_rig.gd` to `render/camera/camera_rig.gd` (keep `class_name CameraRig`, move its `.uid`, and update `main.tscn`'s `ext_resource`); factor a `PaneWorld` out of `main.gd`'s `render_view` and the `_view_cues`; and let `main.gd` ask the rig (`SplitRig.frame(alpha)`) for the pane cameras instead of `host.camera(a)`. `sim/core/view/camera.gd` stays in `SimHost` untouched, as the reference for the goldens.
+`sim/core/view/camera.gd` stays in `SimHost` untouched, as the reference for the goldens; with a compositor attached the reference camera is simply not used.
 
 ## 12. Comfort and the no-pop rules
 
@@ -222,17 +226,17 @@ These are the limits the tests enforce (`camera_params.gd`). "Ordinary" means an
 
 | Quantity | Limit |
 | :--- | :--- |
-| Zoom rate | 1.2 e-folds a second ordinary; 2.0 in a transition; the slam is exempt |
+| Zoom rate | 1.2 e-folds a second in two panes at rest; 2.4 in a transition and in one view; the slam is exempt. A last slew limiter enforces 2.4 on the drawn zoom |
 | A fighter's screen motion per tick relative to its pane anchor | 0.02 of the screen width ordinary; 0.05 in a transition |
-| Divider angle rate | 120 degrees a second; the swing is exempt (its own curve, about 560 degrees a second at its peak) |
+| Divider angle rate | 120 degrees a second (the test allows 1.5x for the interpolation); the swing is exempt (its own curve, about 560 degrees a second at its peak; 0.6 s, or 0.15 s in reduced motion) |
 | Divider position | continuous; at most 0.06 of the screen width a tick outside the slam |
 | Shake amplitude | capped at 3.0% of the screen height (21 px at 720p; the prototype's largest was 30 px), scaled by the user setting; decay `0.02^dt` as before |
-| Mode changes | at most one split-or-merge per 0.8 s and one orientation flip per 1.0 s, whatever the input |
+| Mode changes | trigger-driven split or merge at most once per 0.8 s (a shot's ending, a slam and a fighter lost off the edge are events and skip the dwell), and one orientation flip per 1.0 s, whatever the input |
 
 ## 13. Carried over from the wave-1 brief
 
 The wave-1 files (`framing-rules.md`, `comfort-limits.md`, `cinematic-moments.md`, `hiding-camera-options.md`) were not written; this document supersedes them. What still fits:
-- **User shake scale**: 0 to 100%, default 100%, stored as `camera.shake_scale`; 0 turns shake off. **Reduced motion** (UI's `reduced_motion` option): shake scale 25%, swing and dissolve replaced by 0.15 s cross-dissolves, slam by a cut, launch follow by a cut, tier-up push off.
+- **User shake scale**: 0 to 100%, default 100%, stored as `camera.shake_scale`; 0 turns shake off. **Reduced motion** (UI's `reduced_motion` option, `SplitView.set_reduced_motion`): shake at 25% of the player's scale, the swing 0.15 s, the slam a 0.04 s near-cut, the launch follow a held shot and a cut, the tier-up push off, opens and merges 1.5x faster.
 - **Timing policy**: hit-stop and KO slow motion are sim-owned durations in whole 60 Hz ticks. The camera reads them; presentation transitions run on the fixed `DT` (not the sim's scaled `S.dt`), so a swing or a dissolve is not stretched by the KO slow motion. The rig never changes sim time and never delays input sampling.
 - **Shake is cosmetic**: never the sim RNG stream; the `camera` and `camera_b` derived streams above.
 - **Shake table**: the ten shake writes in the prototype are `Fx.shake` events with only a `k`. In the port the camera reads the sim event that caused each one (building collapse `k` 10, explosion 16, hit 6, launch 10, guard break 12, clash wave 18, beam fire 14, tier-up 14, impact `min(30, speed * 0.01)`, clash held 7) and applies its own table. The values are to align with Controls, who set the per-impact numbers within this document's cap.
@@ -240,7 +244,7 @@ The wave-1 files (`framing-rules.md`, `comfort-limits.md`, `cinematic-moments.md
 
 ## 14. Hiding: the hook, not the feature
 
-On hold while Orb decides whether hiding stays. The rig has one seam for it and nothing else:
+Orb has removed hiding from the base game (parked for a future fighter), so there is no hiding pane mode. The rig keeps one unused seam for it and nothing else:
 
 ```
 pane_request(slot) -> {kind: "normal" | "search", search_x, search_y, search_radius}
@@ -250,15 +254,61 @@ By default every pane is `normal`. If the game asks for `search`, that pane's ca
 
 ## 15. Determinism and the test
 
-The rig reads `S` after each tick and never writes it; it draws no sim random numbers; the layout is a pure function of the ticks so far. Rendering-side jitter uses derived cosmetic streams. `render/camera/tests/split_sweep.gd` (headless; numeric; exit 0 or 1) poses fighters by hand like `seam_sweep.gd` and steps the rig 60 times a second, interpolating at 144 Hz to catch per-frame pops. It covers:
-- Separations from 0 to 0.998 of the antipode, together and head-on, through the seam, in both directions, at level, at +2,000 and at -2,000 units of height difference.
-- Both swap directions at the antipode and the pass-through, with the separation jittering around the flip point by +-0.5 m (it must flip at most once) and around the split and merge lines by +-10% (it must not chatter).
-- A dissolve merge and a slam merge (a scripted rush ending in contact), a split from a landing, and a launch at the p10, p50, p90 and maximum measured speeds.
-- Checks: every pixel of a 64 by 36 sample grid belongs to one pane (or two whose weights sum to one); every limit of section 12; each fighter's anchor stays inside its pane's clear zone; the unsplit merged frame equals the frame the reference camera gives (within 0.5 px) whenever `sep` = 0; the same run twice gives the same digest; the sim's gameplay hash is the same with the rig on and off.
-- An optional `--render` mode renders the composite and reports the mean absolute frame-to-frame pixel difference across every mode change, and saves the before-and-after captures for the deliverable.
+The rig reads `S` after each tick and never writes it; it draws no sim random numbers; the layout is a pure function of the ticks so far. Rendering-side jitter uses derived cosmetic streams. `render/camera/tests/split_sweep.gd` poses fighters by hand like `seam_sweep.gd`, steps the rig 60 times a second and reads the frame at 144 Hz (the rate that shows a pop):
 
-## 16. Build order
+```
+godot --headless --path . --script res://render/camera/tests/split_sweep.gd [-- --seeds=3,10,17 --ticks=6000 --size=1280x720]
+godot --path . --script res://render/camera/tests/split_sweep.gd -- --render [--shots=DIR]      (a window: also draws the composite)
+```
 
-1. `camera_params.gd`, `split_rig.gd` (the trigger, orientation, layout, pane cameras, launch, cinematics), `split_view.gd` and the mask shader, the test. Report with the exact file list.
-2. The demo scene `render/camera/split_demo.tscn` (the sim host, two panes, UI's HUD anchors) so the result can be seen without touching `main.tscn`, with before-and-after captures and frame times on desktop and web.
-3. The integration into `main.gd` is Rendering's, on the EP's word.
+- **Posed scenarios (24, each run twice; the two digests must match):** separation from 0 to 0.998 of the antipode and back across the seam, level and at +-2,000 units of height difference; the antipode passed going right, going left, and there and back (one swing each way), a jitter of 0.5 m around it (no flip) and of 3 m (at most one flip a second); the pass-through at 4,000 units of height difference and inside its dead band; jitter of +-10% around the split line; a slam and a feint; launches at the measured p10, p50, p90 and maximum speeds, far and straight up and down; a respected transformation; a tier-up push; the fold; solo against the AI; a hard cut; and the reduced-motion swing. A separate check that the one-view frame equals `SimCamera`'s at rest.
+- **Real matches:** AI against AI, seeds 3, 10, 17, 24, 31, 38, 45, 52 and 4, up to 6,000 ticks each, on live sim data.
+- **Checks on every frame:** every sample point of a 32 by 18 grid belongs to a rendered pane; a fighter whose pane has a real share of the screen is on screen inside it (never out for 0.3 s); at rest the anchors sit inside their pane and UI's clear zone with a body height of headroom; the zoom, anchor, divider and tilt limits of section 12; and, for a fighter that barely moved, the camera's own step against its anchor. Layout changes keep their spacing, and a fighter under 60% of the split line is not shown in a one-view frame for more than 2% of the merged ticks.
+- **Determinism:** the sim's gameplay hash after a match is identical with the rig running and not.
+- **`--render`:** the real `SplitView` composites two stand-in panes (`SplitTestPane`, flat worlds drawn with the reference camera's mapping) for nine transition scenarios; the picture is read back at 144 Hz and a frame-to-frame change more than 4 times its neighbours' would be a pop or a flicker. Worst measured: 1.9.
+
+Two bugs the test found in my own first versions are worth recording: a lead of `tau` instead of `DT (1 - k) / k` left a camera one tick ahead of a rushing fighter (a 700 px error at rush speed), and a camera floor of -180 lost fighters in the sea.
+
+## 16. What was built
+
+| File | Role |
+| :--- | :--- |
+| `render/camera/camera_params.gd` | Every number of this document (class `CamParams`) |
+| `render/camera/split_rig.gd` | `SplitRig`: the trigger, orientation, swing, opening and merging, slam, launch follow, cinematics, pane cameras. Pure, tick-stepped |
+| `render/camera/split_frame.gd` | `SplitFrame`: one presentation frame, its interpolation, `hud_anchor`, `split_record` |
+| `render/camera/split_view.gd`, `split_mask.gdshader` | The compositor and its mask |
+| `render/camera/pane_shake.gd` | Pane 1's cosmetic shake stream and the shake cap |
+| `render/camera/split_main.gd`, `split_main.tscn` | The main scene with the split attached; the benchmark split by pane count |
+| `render/camera/tests/split_sweep.gd`, `split_test_pane.gd`, `split_test_main.gd` | The scripted test and its stand-in panes |
+| `docs/camera/img/` | The captures below |
+
+`camera_rig.gd` in the same folder is Rendering's move. Settings live on the rig and the view: `SplitRig.solo_split` and `reduced_motion` (through `SplitView.set_solo_split` and `set_reduced_motion`) and `SplitView.shake_scale`.
+
+## 17. Before and after, and what it costs
+
+Captures from the real game (Compatibility renderer, 1280 by 720, seed 4, `--fixed-fps 60`). Left: one view from the reference camera. Right: the split.
+
+| Tick | Before | After |
+| :--- | :---: | :---: |
+| 250 (4.2 s): fighters 137 bh apart | ![before 250](img/before_t250.png) | ![after 250](img/after_t250.png) |
+| 352 (5.9 s): a rush is about to close | ![before 352](img/before_t352.png) | ![after 352](img/after_t352.png) |
+| 630 (10.5 s): a launch | ![before 630](img/before_t630.png) | ![after 630](img/after_t630.png) |
+| 2994 (49.9 s): a swing | ![before 2994](img/before_t2994.png) | ![after 2994](img/after_t2994.png) |
+
+Frame time, wall clock per frame with vsync off (seed 4 unless noted; Ryzen 7 9800X3D, RTX 5070 Ti; a high-end machine, so treat these as a floor):
+
+| Build | One view | Split on, all frames | Two full panes only |
+| :--- | :--- | :--- | :--- |
+| Desktop 1280 by 720, mean / p50 / p95 / p99 (ms) | 1.39 / 1.21 / 1.94 / 2.59 | 1.72 / 1.52 / 2.40 / 2.93 | 2.06 / 1.94 / 2.85 / 4.04 (12% of frames) |
+| Desktop 1920 by 1080 | 1.40 / 1.22 / 1.96 / 2.51 | 1.74 / 1.55 / 2.45 / 3.06 | 2.09 / 1.93 / 3.09 / 3.68 |
+| Desktop 1280 by 720, seeds 12345 and 7 | | 1.83 and 1.74 | 2.00 and 1.91 (12% and 15%) |
+| Web 1280 by 720 (Chrome 154, ANGLE D3D11, single thread) | 2.82 / 2.14 / 3.53 / 4.61 | 3.39 / 2.63 / 4.80 / 6.72 | 3.96 / 3.90 / 5.20 / 6.30 (10% of frames) |
+
+Draw calls: 154 with one view, 191 on average with the split, 232 at the 95th percentile. The gameplay hash after 4,800 ticks (desktop) and 2,400 (web) is the same with and without the split (`2251e5c11e4c12c3`, `51bca31f196043ee`). Not measured: minimum-spec hardware (an old laptop, an integrated GPU, a phone). The split adds about 0.3 ms even with one pane showing (the world now draws to a SubViewport and is copied to the screen, and the rig steps each tick at about 0.05 ms), and about 0.65 ms while two panes are up; a slower CPU multiplies those, and an integrated GPU pays the doubled fill. The web frame time holds on this machine (3.4 ms mean, 6.7 ms p99 against a 16.7 ms budget). The web run's max of 634 ms is the first-use shader compile Rendering already documents.
+
+## 18. Open
+
+- Pane targets sized to their region (1.26x fill instead of 2x): built only if a low-end machine needs it, since panes take the whole screen too often for a resize to be cheap.
+- Hidden information: the hook is `SplitRig.pane_request_fn` and nothing else; hiding is out of the base game.
+- Portrait: landscape only.
+- The fold and the cinematic events are read from `fold_start`, `unfold`, `cinematic_start`, `cinematic_end` and `relocate`; Encounter and World add them (S2, W1). Until then the launch follow polls the fighters' state, and a transformation is not yet a shot.

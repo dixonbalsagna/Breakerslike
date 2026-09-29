@@ -12,6 +12,7 @@ const SPLIT_DWELL: float = 0.25
 const MERGE_DWELL: float = 0.40
 const MIN_SPLIT_AGE: float = 1.2       # before a dissolve merge
 const MIN_MERGED_AGE: float = 0.8      # before splitting again
+const MIN_OUT_OF_FRAME_AGE: float = 0.25   # ... or this, when a fighter is already out of the one view
 const CLOSING_LOOKAHEAD: float = 0.4   # do not open if the fighters will be back over the split line by then
 const ZOOM_OUT_LOOKAHEAD: float = 0.3  # the one-view camera zooms for the separation it will have this soon, if growing
 const FRAME_MARGIN: float = 0.46       # a fighter farther than this fraction of vw from the one-view centre opens the split at once
@@ -55,6 +56,7 @@ const T_OPEN: float = 0.45
 const T_CLOSE: float = 0.55
 const SLAM_WINDOW: float = 0.8         # a rush this close to its end starts the lean
 const SLAM_TIME: float = 0.14
+const SLAM_TIME_REDUCED: float = 0.04   # reduced motion: the slam is a near-cut
 const SLAM_LEAN: float = 0.0           # how far the panes lean together before the slam (0: they hold until 0.14 s from contact)
 const SLAM_TAU: float = 0.03           # stiff pane filters during the slam
 const SLAM_FLASH: float = 0.08
@@ -65,6 +67,7 @@ const HYST_M: float = 0.02             # antipode margin, fraction of W
 const HYST_M0: float = 225.0           # pass-through dead band (3 body heights)
 const FLIP_DWELL: float = 1.0
 const T_SWING: float = 0.60
+const T_SWING_REDUCED: float = 0.15
 const INSTANT_SWAP_E: float = 0.9      # a pane expanded this far hides the swap: flip at once
 
 # --- launch follow (section 8) ---
