@@ -40,6 +40,7 @@ Long, silky sentences that end on a sneer, then a sudden short scream when angry
 | **Her fill is stopped** | Furious, plain: "Again? From the top." No text, no penalty. |
 
 ## Diegetic clues (what the player sees and hears instead of forms)
+Fallen guards leave (no retinue). The guard-based clues come only from surviving guard members, and once they are gone the clues move onto her own body: she does the gestures, she becomes the pained aide, she makes the change of salute herself.
 - **The guard's protocol gestures.** Each new stage of a filing makes the guard snap a stiff, formal gesture in sequence. Three gestures means the revision is approved. It is the fill gauge, read in bodies.
 - **She smooths her regalia** before a revision, a fastidious ritual that telegraphs it.
 - **The pained aide.** One guard member, the aide, winces, checks a wristwatch and sighs. His posture worsens with each revision, and the tangle shows in his face.
@@ -51,7 +52,7 @@ Long, silky sentences that end on a sneer, then a sudden short scream when angry
 `cackle` (a wheeze that builds), `snort`, `laugh.cruel`, `shriek` (escalating), `sigh` (theatrical), `sigh.heavy` (the weary sigh of someone facing a mountain of paperwork), `growl` (short, sharp), a leering `hm`, and `mutter` (form numbers, indistinct). Nothing sincere.
 
 ## Her guard of honour
-The Shield (bruiser), the Herald-Archer (marksman) and the Runner (speedster), plus an aide. They salute formally before each one tags in. She dismisses them "with honour" when they fall, and never mentions that they have died.
+The Shield (bruiser), the Herald-Archer (marksman) and the Runner (speedster), plus an aide. They salute formally before each one tags in. She dismisses them "with honour" when they fall. Fallen guards leave: there is no retinue afterwards.
 
 ## Lines (5 per situation)
 
@@ -105,9 +106,5 @@ The Shield (bruiser), the Herald-Archer (marksman) and the Runner (speedster), p
 4. "Everything we do out here will need a form. We will do it anyway."
 5. "Nobody to annex. And nobody to complain to. How dull."
 
-**Comeback (the Rally, voice only)**
-1. "We will deal with the forms later."
-2. "Off the record. Guard, you did not see that."
-3. "Guard, close ranks. We are not receiving visitors."
-4. "This session is adjourned. Refreshments, guard."
-5. "We are not hurt. We are pending."
+**Comeback (the Rally)**
+Orb rejected the earlier comebacks. On the brink, the opponent must brawl through her guard to reach her. Her lines for it are pending Game Design's pick.

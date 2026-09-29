@@ -534,7 +534,7 @@ Orb: "I don't like the idea of visible paperwork or stamps. She could have voice
 
 **Favourites: 1, 3 and 5 together.** The gestures give the fill a shape, the aide gives the tangle a face, and the sigh gives her a body. All six are in `voices/empress.md`, which also has her rewritten fill-phase, cinematic, fold and comeback lines. Her waiting lines are in `waiting-lines.md` and the fold complaint is in `matchups.md`.
 
-### Comebacks with no visible paperwork (The Appeal is not approved)
+### Comebacks with no visible paperwork (ALL REJECTED by Orb: Off the record, Close ranks and Recess; see the clue pass below)
 
 | Idea | What it is | Her voice |
 |---|---|---|
@@ -543,3 +543,18 @@ Orb: "I don't like the idea of visible paperwork or stamps. She could have voice
 | **Recess** | She declares a recess. A short, ceremonial pause: the guard raises a parasol, she takes a sip, the region mends. It is a set piece, so the opponent waits. | "This session is adjourned. Refreshments, guard." |
 
 **Favourite: Off the record.** It is the funniest, it needs no paperwork on screen, and the guard turning its backs is a clear, diegetic image. **Dismissed with honour** from section 10 also qualifies (it involves no paperwork) and could be folded into Close ranks. Game Design will set the mechanics.
+
+### Clue pass after Orb's ruling on the guard (fallen guards leave)
+
+Orb rejected the three comebacks: he wants a straightforward brawl in which the opponent must defeat the guard before reaching her, and fallen guards leave (no retinue). Game Design is pitching the mechanic. The clues are adjusted so that the guard-based ones come only from **surviving guard members**, and **move onto her own body** once they are gone. The empire shrinks to her.
+
+| # | Clue | While a guard survives | When the guard is gone |
+|---|---|---|---|
+| 1 | Protocol gestures | The survivors snap a stiff gesture for each stage of the filing. | She does the gestures herself, in miniature: a heel-click, a tap of a cuff for each stage. |
+| 2 | Smoothing her regalia | Her body, unchanged. | Unchanged, and more fastidious now that she has no one to do it for her. |
+| 3 | The pained aide | One surviving guard member winces, checks a wristwatch and sighs. | The aide has left, so she becomes the aide: she winces, checks her own wristwatch and sighs. |
+| 4 | The muttering | Her voice, unchanged. | Unchanged, louder in the silence. |
+| 5 | The sigh of dread | Her body, unchanged. | Deeper, because she has to carry the whole box. |
+| 6 | The guard updates the salute | Survivors change their salute after a revision, and one salutes the old way. | She makes the small change herself, and glares at nobody. |
+
+**Favourites (unchanged, and they travel):** 1, 3 and 5. The clues start in the guard and end in her.
