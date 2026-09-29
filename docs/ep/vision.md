@@ -211,3 +211,5 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 **Mask tones and transient aura (Orb, 2026-09-29).** Mask tones approved: Protagonist and Empress pale, Anti-hero and Cyborg dark. The aura, like the HUD graphics around the fighters, seems distracting as a constant presence. It should convey emotion briefly and then disappear. Orb is unsure about blades or column from screenshots alone and wants to judge it in motion.
 
 **Head flashes (Orb, 2026-09-29).** The transient aura should work like a brief flash around the head, in the spirit of a superhero's danger-sense flash, or a stealth game's '!' and '?' marks over an enemy's head. These are short, iconic state and emotion pops (comics call them emanata). Staples yes, signatures no: nothing that copies a specific franchise's squiggle design or alert sound.
+
+**Head flashes, answers (Orb, 2026-09-29).** The flash set: pitch changes (Orb wants options before settling on twelve). Info flashes (danger sense, found, searching) are a setting, on by default.
