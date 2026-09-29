@@ -45,7 +45,7 @@ Return: the standard report format (SUMMARY, CHANGES, DECISIONS, NEEDS FROM EP, 
 - **Rules.** Simulation is fixed-timestep and seeded-RNG only. Rendering reads sim state and never writes it. All distances use shortest-arc wrap math.
 - **Content is data.** Atoms, exchange templates, fighters and biomes are data files, not code.
 
-Engine recommendation from design consultation: Godot 4 for the real build (2.5D presentation), after a spike to confirm. Not yet decided; see `docs/decisions/0001-engine-choice.md`.
+Engine: **Godot 4.7 with GDScript** (ADR 0001, confirmed by Orb on 2026-09-29). No C# in the shipped game, because C# can't export to the browser. The Compatibility renderer is the baseline. The sim stays engine-agnostic (float64, our own trig and RNG), and the JS core in sim/ is the parity oracle for the GDScript port.
 
 ## The prototype (prototype/index.html)
 
@@ -119,8 +119,6 @@ Orb answered the first scope-and-vision questionnaire on 2026-09-28 (docs/ep/vis
 - Zero budget (ADR 0005).
 
 Still open:
-- The engine (ADR 0001, pending Research's spike).
-- The title.
-- The copyright holder's name.
-- Provenance of any material inherited from earlier projects.
+- The title (Narrative's round 2 pitch, with Legal screening).
+- The licence: Orb is reconsidering MIT and CC BY 4.0 to keep more commercial control.
 - Legal's review of the fighter concepts.

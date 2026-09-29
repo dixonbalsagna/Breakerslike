@@ -87,7 +87,7 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
 - Answers to questionnaire 2.
 
 ## Critical path to something playable
-1. **ADR 0001 (engine choice).** Inputs: Research's RESULT.md, Simulation's determinism.md, and later Netcode.
+1. **ADR 0001 (engine choice): done.** Godot 4.7 with GDScript, confirmed by Orb on 2026-09-29.
 2. **A greybox 1v1 on a wrapped planet.** Port the sim core into the chosen engine, with a greybox 2.5D renderer (Simulation, Rendering & Technical Art) and keyboard and gamepad input (Controls).
 3. **Then the content:** polish the stance director (Combat, Encounter Systems, Game Design), then build the four fighters and their transformations.
 

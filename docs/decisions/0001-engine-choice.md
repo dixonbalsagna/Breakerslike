@@ -1,6 +1,6 @@
 # ADR 0001: Engine choice
 
-Status: recommended by the EP, awaiting Orb's confirmation (2026-09-29)
+Status: accepted. Recommended by the EP; confirmed by Orb on 2026-09-29.
 
 ## Context
 The prototype is a single-file JavaScript canvas game. The real game needs:
@@ -24,7 +24,7 @@ The evidence comes from research/engine-spike/RESULT.md, docs/architecture/deter
 - **GDScript is slower, but within budget.** It runs about 18 times slower than V8. The projected real-sim tick on an old-laptop CPU is about 0.13 to 0.20 ms, which fits comfortably at 60 Hz without rollback. This is a projection; it hasn't been measured on a real old laptop yet.
 - **The web stack is the lightest option in a browser,** but it loses on Orb's platform list (mobile, desktop, Steam Deck) and on built-in tooling.
 
-## Decision (pending Orb's confirmation)
+## Decision
 We build in **Godot 4.7 with GDScript**. The shipped game uses no C#, because the browser is a required platform.
 - **Rendering.** The Compatibility renderer is the baseline, so one render path covers the browser and old laptops. Desktop may add Forward+ or Mobile as optional quality tiers.
 - **Simulation rules.** The sim stays engine-agnostic: float64 scalars only; only + − * / sqrt floor fmod; our own trig and RNG; no engine vector types in sim state.
