@@ -1,6 +1,6 @@
 # Head-flash prototype: spec for Rendering
 
-Owner: Art Director, for Rendering and Technical Art (routed by the EP). 2026-09-29. Draft. Build it after the cheat-out. Orb wants to judge the flashes in motion, not from stills, so this is a small in-engine prototype on the placeholder fighters. Design: `docs/art/marked-aura.md`. Data: `art/concepts/marked-aura/flashes.json`. Nothing here writes to the sim.
+Owner: Art Director, for Rendering and Technical Art (routed by the EP). 2026-09-29. Draft. Build it after the cheat-out. Orb wants to judge the flashes in motion, not from stills, so this is a small in-engine prototype on the placeholder fighters. Design: `docs/art/marked-aura.md`. Data: `data/art/flashes.json` (canonical, owned by Art). Nothing here writes to the sim.
 
 ## 1. What the prototype must show
 
@@ -28,7 +28,7 @@ Brief, iconic pops at a fighter's head that say what it senses or feels, then no
 
 ## 4. The data
 
-`flashes.json` has, per flash: `class` (info or emotion), `attack`, `hold`, `fade` (seconds), `priority` (1 is highest), `cooldown` (seconds, per fighter), `kind` (layout or glyph), `glyph`, `layout` (the instances), `moment`, `event`, `sound`. `art/concepts/` has a `.gdignore`, so Godot does not see the file: copy it to a data folder that Tools names (for the prototype, `render/data/flashes.json`). Numbers live in data, not code.
+`flashes.json` has, per flash: `class` (info or emotion), `attack`, `hold`, `fade` (seconds), `priority` (1 is highest), `cooldown` (seconds, per fighter), `kind` (layout or glyph), `glyph`, `layout` (the instances), `moment`, `event`, `sound`. The file lives at `data/art/flashes.json`, and Rendering reads it from there (`res://data/art/flashes.json`). Art edits it through `art/concepts/marked-aura/gen.mjs`, which is where the layouts and timings are authored. Numbers live in data, not code.
 
 ## 5. The state machine (per fighter)
 

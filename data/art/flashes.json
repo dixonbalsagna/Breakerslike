@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Draft data from art/concepts/marked-aura/gen.mjs. Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.",
+  "note": "Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.",
   "families": {
     "P": "circles",
     "A": "blades",

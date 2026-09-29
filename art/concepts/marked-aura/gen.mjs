@@ -1,6 +1,6 @@
 // Origin: procedural generator for the Marked plus Aura sheets (deterministic, no randomness, no external images or fonts).
 // Written by the Art Director session (Claude, claude-sonnet-5-5), 2026-09-29. Human direction: Orb, via the EP.
-// Run from the repo root:  node art/concepts/marked-aura/gen.mjs   (writes ma-1-style.svg, ma-2-flashes.svg, ma-3-staging.svg, ma-4-flash-rules.svg, flashes.json)
+// Run from the repo root:  node art/concepts/marked-aura/gen.mjs   (writes ma-1-style.svg, ma-2-flashes.svg, ma-3-staging.svg, ma-4-flash-rules.svg, and data/art/flashes.json)
 // The staging mock-ups embed the repo's own greybox renders in docs/rendering/img by relative path (not copies).
 
 import { writeFileSync } from 'node:fs';
@@ -500,6 +500,6 @@ writeFileSync(join(OUT, 'ma-2-flashes.svg'), ORIGIN + vocabSheet());
 writeFileSync(join(OUT, 'ma-3-staging.svg'), ORIGIN + stagingSheet());
 writeFileSync(join(OUT, 'ma-4-flash-rules.svg'), ORIGIN + rulesSheet());
 // The flash data, for Rendering, UI and Audio: ids, class, timing, priority, cooldown, shape family and the layouts.
-const json = { version: 1, note: 'Draft data from art/concepts/marked-aura/gen.mjs. Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.', families: { P: 'circles', A: 'blades', E: 'wedges', C: 'steps' }, flashes: Object.fromEntries(FLASH_ORDER.map(id => { const f = FLASHES[id]; return [id, { name: f.name, class: f.cls, attack: f.t[0], hold: f.t[1], fade: f.t[2], priority: f.pri, cooldown: f.cool, kind: f.kind, glyph: f.glyph ?? null, layout: f.layout ?? null, moment: f.moment, event: f.event, sound: f.sound, rare: !!f.rare }]; })) };
-writeFileSync(join(OUT, 'flashes.json'), JSON.stringify(json, null, 2) + String.fromCharCode(10));
-console.log('wrote ma-1-style.svg, ma-2-flashes.svg, ma-3-staging.svg, ma-4-flash-rules.svg, flashes.json');
+const json = { version: 1, note: 'Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.', families: { P: 'circles', A: 'blades', E: 'wedges', C: 'steps' }, flashes: Object.fromEntries(FLASH_ORDER.map(id => { const f = FLASHES[id]; return [id, { name: f.name, class: f.cls, attack: f.t[0], hold: f.t[1], fade: f.t[2], priority: f.pri, cooldown: f.cool, kind: f.kind, glyph: f.glyph ?? null, layout: f.layout ?? null, moment: f.moment, event: f.event, sound: f.sound, rare: !!f.rare }]; })) };
+writeFileSync(join(OUT, '..', '..', '..', 'data', 'art', 'flashes.json'), JSON.stringify(json, null, 2) + String.fromCharCode(10));
+console.log('wrote ma-1-style.svg, ma-2-flashes.svg, ma-3-staging.svg, ma-4-flash-rules.svg, data/art/flashes.json');

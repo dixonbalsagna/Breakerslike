@@ -11,9 +11,10 @@ Owner: Art Director. 2026-09-29. Art owns `art/` and `docs/art/`.
 | `blank-variations.md` | Round 3: five variations of Blank (Seam, Porcelain, Marked, Inked, Aura) in three-quarter view, with expression answers and a greybox mock-up | v0, pending Legal review, Orb decides |
 | `marked-aura.md` | Round 4: Marked plus head flashes: mask tone per fighter, twelve flashes with timing, priority and rules against the HUD crown, four staged moments in the greybox scene | v0, pending Legal review, Orb decides |
 | `flash-prototype-spec.md` | The spec for a small in-engine head-flash prototype on the placeholder fighters (for Rendering) | v0 draft |
+| `coil-turnaround.md` | The Anti-hero (the Coil) turnaround: front, three-quarter left and right, back, the crouch, forms, wear, a part list | v0, pending Legal review |
 | `ai-prompt-policy.md` | How AI-assisted art is made, recorded and reviewed | v0 draft, for Legal and Orb to review |
 | `../../art/concepts/anti-hero/` | The SVG sheets and the deterministic generator that writes them | v0 |
-| `../../art/prompts/` | Prompt records (`TEMPLATE.md`, `ART-0001` to `ART-0005`) | v0 |
+| `../../art/prompts/` | Prompt records (`TEMPLATE.md`, `ART-0001` to `ART-0006`) | v0 |
 
 **Superseded.** The wave-1 art brief (three whole-game directions, `docs/art-bible/`) is replaced by Orb's answers: 2.5D side-on, cel-shaded plus low-poly. Nothing under `docs/art-bible/` was written. The parts that still fit are in the style guide: biome look notes and destruction states (section 8), the silhouette test (3.1) and the palette rules (3).
 

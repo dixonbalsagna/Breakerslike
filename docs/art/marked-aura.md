@@ -9,7 +9,7 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 - `ma-2-flashes.svg`: all twelve flashes in the four shape families, and a table of what each is for, its timing, priority and sound pairing.
 - `ma-3-staging.svg`: four staged moments in the greybox scene (face-off, clash, transformation, hurt or brink) with the blocking rules.
 - `ma-4-flash-rules.svg`: a flash in time, priority and arbitration, the flash against the HUD crown, and the Legal fallback.
-- `flashes.json`: the draft data for Rendering, UI and Audio.
+- `data/art/flashes.json`: the canonical data for Rendering, UI and Audio.
 
 `node art/concepts/marked-aura/gen.mjs` regenerates all of them. The in-engine prototype is specified in `docs/art/flash-prototype-spec.md`.
 
@@ -28,7 +28,7 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 
 ## The flash vocabulary
 
-Twelve flashes, each tied to a real game moment. Timings are attack + hold + fade in seconds, and every flash except the surge is under a second. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `flashes.json`.
+Twelve flashes, each tied to a real game moment. Timings are attack + hold + fade in seconds, and every flash except the surge is under a second. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `data/art/flashes.json`.
 
 | Flash | Class | Moment (sim event) | Time (s) | Priority |
 |---|---|---|---|---|
@@ -126,4 +126,4 @@ Applied on `ma-3-staging.svg`, with each flash at its peak:
 
 ## Files
 
-`art/concepts/marked-aura/`: `ma-1-style.svg`, `ma-2-flashes.svg`, `ma-3-staging.svg`, `ma-4-flash-rules.svg`, `flashes.json`, `gen.mjs`, `README.md`. The in-engine prototype spec is `docs/art/flash-prototype-spec.md`. The prompt record is `art/prompts/ART-0005-marked-aura.md`.
+`art/concepts/marked-aura/`: `ma-1-style.svg`, `ma-2-flashes.svg`, `ma-3-staging.svg`, `ma-4-flash-rules.svg`, `gen.mjs`, `README.md`. The data is `data/art/flashes.json`. The in-engine prototype spec is `docs/art/flash-prototype-spec.md`. The prompt record is `art/prompts/ART-0005-marked-aura.md`.
