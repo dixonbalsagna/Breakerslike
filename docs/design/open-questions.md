@@ -1,172 +1,99 @@
 # Open design questions for Orb
 
-Owner: Game Design. Status: P0, draft for EP review. Date: 2026-09-29.
+Owner: Game Design. Status: updated after questionnaire 3. Date: 2026-09-29.
 
-Design decisions that are Orb's to make. Each has options, Game Design's recommendation, and the default the team follows until Orb answers. The EP takes them to Orb one at a time. Orb asked for plenty of questions, so they are grouped by topic and numbered for quick answers.
+Design decisions that are Orb's to make. Each has options, Game Design's recommendation, and the default the team follows until Orb answers. The EP takes them to Orb. Orb's answers so far are in `docs/ep/vision.md`. Decisions inside Game Design's own remit are summarised at the end so Orb can overrule any of them.
 
-**Sources.**
-- Orb's answers to questionnaire 1 are in `docs/ep/vision.md`.
-- Questions about each new system are in `systems-sketch.md`, and are counted at the end.
-- Decisions inside Game Design's remit (rules, numbers, win conditions, the mode list) are not listed as questions. They are summarised at the end so Orb can overrule any of them.
+## New questions (up to five, for the next questionnaire)
 
-## Already answered (questionnaire 1)
+**N1. Which damage model?** `damage-model.md` §7 compares three:
+- A. Wounds: wear on four body regions, where breaks are chapters and the brink leads to a finisher.
+- B. A hidden vitality pool behind the same cues.
+- C. Break points: three countable points per region.
 
-These are recorded here and closed:
-- **Tone:** all four tones at once.
-- **Casualties:** kept.
-- **Stances and the director:** kept.
-- **Modes at 1.0:** local 1v1, versus AI, arcade or survival, a training sandbox, and 2v2 or free-for-all. Online comes after launch.
-- **Match length:** 5 minutes or more, felt as about 7.
-- **Roster at 1.0:** four fighters.
-- **Planets:** procedural.
-- **Presentation:** 2.5D side-on.
-- **Progression:** not asked yet (G9).
+Recommendation: **A.** It is the richest per fighter and legible through six channels. C is the fallback if playtests can't read it. *Default: A.*
 
----
+**N2. May players switch on an optional wear readout?** A small body silhouette tinted by region stage, with no numbers and no bars. Off by default, and on in `training`.
 
-## A. The match
+Recommendation: **yes, as an accessibility option.** *Default: yes.*
 
-**G1. How does a 7-minute match end?**
-- A. The first KO, with HP in segments. Each break starts a new chapter (`economy.md` §1).
-- B. Rounds, best of three, on a persistent planet.
-- C. A single HP bar, with longer exchanges only.
+**N3. How often can a fighter on the brink Rally?** Winning a decisive exchange on the brink mends one broken region by one stage.
+- A. Once per fighter per match; the Protagonist also gets a free Rally chance at his first brink.
+- B. Unlimited.
+- C. Never.
 
-Recommendation: **A.** It gives chapters without resets, and the season-finale arc runs unbroken. *Default: A.*
+Recommendation: **A.** It allows real comebacks without endless finales. *Default: A.*
 
-**G2. Must the last segment end with a finisher?**
-- A. Yes. When the last segment is low, the next decisive exchange becomes a finisher exchange: the Protagonist's energy finisher, the Anti-hero's hand-to-hand finish, and so on. It still carries clash and escape odds.
-- B. No. Any hit can KO.
+**N4. Who fills the breathing room between exchanges?** At the new tempo (`balance-targets.md` §10) there are 1.5 to 4 s between exchanges.
+- A. The player: free flight, taunts, charging, positioning. The director adds barks.
+- B. The director stages beats, such as stare-downs and circling.
+- C. A: the player, plus staged face-offs only at region breaks and transformations.
 
-Recommendation: **A.** Every match ends on a climax, and Orb's fighter notes already describe finishers. *Default: B* until Combat has finisher templates.
+Recommendation: **C.** *Default: C.*
 
-**G3. Where do the one-liners come from?**
-- A. Barks triggered by events during play, with no pause (Narrative).
-- B. Short pauses for a line at chapter breaks and transformations.
-- C. Both.
+**N5. The orbs.** Orb wants orbs, and a heavy hit scatters one. The pitch, which Legal must screen:
+- five orbs, each a different element tied to a biome;
+- once gathered they orbit him visibly;
+- a heavy hit knocks one loose to land in another biome;
+- with all five he folds the fight into the sealed arena;
+- there is no set of seven, no wish and no summoned being.
 
-Recommendation: **C.** Short pauses only at set pieces, never mid-exchange. *Default: A.*
+Opponents can knock orbs loose but never hold them. Is five right, and should a rival be able to *use* them?
 
-**G4. Should the camera ever take control for a cinematic?** For example at a transformation, a relocation or a finisher.
-- A. Yes, for at most 3 s, never during an open window.
-- B. Never.
+Recommendation: **five; knock loose, never hold.** *Default: that.*
 
-Recommendation: **A** (Camera's anti-goal: no cinematic without cause). *Default: A.*
+## Still open from earlier
 
-## B. Fighters and identity
+- **G10.** Arcade or survival first. Recommendation: `arcade`, with `survival` as its rule set.
+- **G13.** Local players at once. Recommendation: up to four with gamepads, two on one keyboard.
+- **G14.** How graphic the violence is. Recommendation: impact, craters and collapse; no gore; casualties counted, not shown.
+- **G15 and the Cyborg's food.** Orb asked for a pitch. Takeout, in `systems-sketch.md` §5, is the pitch. How graphic consuming is follows G14.
+- **Multiplier stage.** Orb asked for a replacement pitch: see `systems-sketch.md` §1. Push, a state that trades health for speed, is the working pitch. Under `damage-model.md` it spends wear rather than HP.
+- **Fusion.** Orb wants a true merge with an original trigger and look. Legal screens it; design follows Legal's review.
+- **Per-system questions** in `systems-sketch.md` that questionnaire 3 did not answer:
+  - Relocation Q2: a win condition, or only the path to the final form?
+  - Consumption Q2 to Q4.
+  - Planets Q3: can players share seeds?
 
-**G5. Pillar 5 for four fighters.** The prototype's hero is pressured by collateral and its villain feeds on it. Should every fighter have a distinct relationship to the world? The sketch in `economy.md` §4.2:
-- the Protagonist wrecks by fixation and relocates to protect;
-- the Anti-hero is indifferent;
-- the Tyrant is cruel for show;
-- the Cyborg feeds on people.
+## Answered and closed (questionnaires 1 and 3)
 
-Recommendation: **yes**, with a visible ego meter for each (Respect, Pride, Wrath, Hunger). *Default: yes.*
-
-**G6. How often do transformations happen?** For example, the first form around 1:00 to 2:30 and the top form in the last third, so the four acts read the same for every fighter.
-
-Recommendation: **yes, with a time floor on every track** (`balance-targets.md` §3). *Default: yes.*
-
-**G7. Is it all right for the roster to be asymmetric?** Each fighter would be strong in different phases:
-- the Tyrant early, through his minions;
-- the Protagonist late, after relocation;
-- the Cyborg near people.
-
-The overall win rate would still be held at 45 to 55%.
-
-Recommendation: **yes.** This is how the rivalry reads. *Default: yes.*
-
-**G8. The same fighter twice.** Can both sides pick the same fighter in 1v1, or on one team in `team-2v2`? This matters most for the Tyrant's minions and for Tandem.
-
-Recommendation: **yes in 1v1** (the mirror rival in arcade); **no duplicates within a team**. *Default: the same.*
-
-**G9. Progression and unlocks.**
-- A. Everything unlocked from the start.
-- B. Cosmetic unlocks.
-- C. Gameplay unlocks.
-
-Recommendation: **A** for a free, open-source, versus-first game. *Default: A.*
-
-## C. Modes (ids in `modes.md`)
-
-**G10. Arcade or survival first?**
-
-Recommendation: **`arcade` first, with `survival` as its rule set.** It uses the rivalry and one-liners, and survival costs only rules. *Default: that.*
-
-**G11. 2v2 or free-for-all first?**
-
-Recommendation: **`team-2v2`.** Tandem and the Unison line work best with a teammate, and the camera frames two groups more easily than four. *Default: that.*
-
-**G12. In `team-2v2`, can a KO'd teammate be revived?**
-- A. No. The fighter is out.
-- B. Yes, with a risky beat close to the fallen teammate.
-
-Recommendation: **A** at 1.0. *Default: A.*
-
-**G13. How many local players at once?** Four people on one screen and one keyboard is hard; gamepads help.
-
-Recommendation: **up to four with gamepads, two on one keyboard.** *Default: that.*
-
-## D. Tone boundaries
-
-**G14. How graphic is the violence?** Orb asked for mature violence with a humorous voice. Where is the line?
-- A. Impact, craters and collapse; no blood or gore. Casualties are counted, not shown.
-- B. Stylised injuries on fighters only.
-- C. Explicit.
-
-Recommendation: **A.** It keeps "mature" in scale and stakes, suits the old-laptop art style, and keeps store ratings simple. *Default: A.*
-
-**G15. How is the Cyborg's feeding shown?** (`systems-sketch.md` §5, question 1)
-
-Recommendation: **a comic cut or a stylised on-screen gag**, never lingering. *Default: that.*
-
-## E. Per-system questions
-
-**G16 onward.** `systems-sketch.md` lists 24 questions, four per system:
-- transformations;
-- minions;
-- fusion (deferred; Tandem in its place);
-- relocation (keystones);
-- civilian consumption;
-- procedural planets.
-
-Each has a recommendation there. The most urgent, because they shape P2 and P3:
-- **Transformations Q1:** can a fighter be hit while transforming?
-- **Minions Q1:** what does a human playing the Tyrant control?
-- **Fusion Q1:** Tandem, the Unison line, or both?
-- **Legal's replacement picks** for every signature (`docs/legal/fighter-concepts-review.md`, "Orb decides"). The docs use Legal's first option as the working default.
-- **Relocation Q2:** is relocation a win condition or only the way to the Protagonist's final form?
-
----
+| Question | Orb's answer | Where it now lives |
+| :--- | :--- | :--- |
+| G1. How a match ends | No health meters. Location-based damage, handled differently per fighter | `damage-model.md` |
+| G2. Must it end on a finisher? | Always, fighter-specific | `damage-model.md` §5 |
+| G3. One-liners | Barks during play and short pauses at set pieces | Narrative |
+| G4. Cinematics | Yes; longer than 3 s is fine | Camera |
+| G5. Ego meters | Yes, visible: Respect, Pride, Wrath, Hunger | `economy.md` §4.2 |
+| G6. Transform timing | Per fighter | `systems-sketch.md` §1 |
+| G7. Asymmetric roster | Yes, with win rates still 45 to 55% | `balance-targets.md` §1 |
+| G8. Mirror matches | Yes in 1v1; not on the same team | `modes.md` |
+| G9. Unlocks | Everything unlocked from the start | `modes.md` |
+| G11. 2v2 or free-for-all | 2v2: revive and bigger planets were answered for it | `modes.md`, `team-2v2` |
+| G12. 2v2 revive | Yes, with a risky beat next to the fallen teammate | `modes.md` |
+| Hit while transforming | Long transformations can be interrupted; the Tyrant's quick revisions are safe | `damage-model.md` §5 |
+| Form duration | Permanent, except drain states | `systems-sketch.md` §1 |
+| Teleport tell | A ripple in the air | `systems-sketch.md` §1 |
+| Tyrant's appendage | Keep a tail, redesigned | `systems-sketch.md` §2 |
+| Tyrant's forms | The numbered "revision" joke | `systems-sketch.md` §1 |
+| Human Tyrant during the goon phase | Snipes support shots and taunts | `systems-sketch.md` §2 |
+| Goons | Three: bruiser, marksman, speedster | `systems-sketch.md` §2 |
+| Cyborg's companion | A backup drive he catches and docks | `systems-sketch.md` §5 |
+| Planets | Earth-like and alien biomes; day, night and weather; bigger for 2v2 | `systems-sketch.md` §6 |
+| Greybox pace | Too fast | `balance-targets.md` §10 |
+| Earlier: tone, casualties, stances, modes, online, length, roster, planets, presentation | Questionnaire 1 | `docs/ep/vision.md` |
 
 ## Decisions Game Design made (Orb may overrule any of them)
 
-- **Balance bands** (`balance-targets.md`):
-  - win rate 45 to 55% in every pairing and team composition;
-  - game length: a median of 6 to 8 minutes;
-  - escalation checkpoints;
-  - numeric collateral bands, including a low-tier bleed cap and a floor of civilians left alive;
-  - launch cap 40%;
-  - variety caps of 40%;
-  - stance and story-beat bands.
-- **Stance rules for P2** (`stance-matrix.md` §5):
-  - attacking drops your guard;
-  - every stance has an attacking profile;
-  - every cell gets a second outcome decided by a state the player can see;
-  - the defender earns the counter against a light;
-  - a missed parry costs ki;
-  - chains follow the exchange's result;
-  - a tier advantage always helps its owner.
-- **Economy** (`economy.md`):
-  - HP segments;
-  - transformations drive the tier;
-  - every ego meter decays or is spent and is visible;
-  - rulings on Narrative's Interpose (accepted, as a DEFENSIVE outcome), Resolve (accepted, as presentation), Savour (folded into the Cyborg's feeding), Foretell (accepted, as a bark in the existing charge beat) and hesitation near population (rejected).
-- **Modes** (`modes.md`): stable ids, 1.0 scope, `arcade` and `team-2v2` first, and the CUT-IN rule for multi-fighter exchanges.
-- **Originality: Legal's replacements are the working defaults, pending Orb's pick:**
-  - keystones, not a set of seven and no wish;
-  - Tandem in place of fusion;
-  - Runaway and Push stages;
-  - the "revised" tyrant;
-  - a surveyor line and a cable whip;
-  - Takeout, the backup drive and the hatch chip;
-  - no hair-colour change as a power cue.
+- **Damage model** (`damage-model.md`):
+  - four regions with wear stages;
+  - "the director goes for the wound";
+  - brink after the core breaks or any two regions break, and a KO only by finisher;
+  - one damage profile per fighter: Rolls with it, Proud front, Refit, and Regrowth and the hatch;
+  - region breaks as chapter launches.
+- **Pacing targets** (`balance-targets.md` §10):
+  - 8 to 12 exchanges a minute, each 2.5 to 4 s;
+  - 1.5 to 4 s of breathing room;
+  - 4 to 6 launches a minute, at least 30% of them long;
+  - at most 10% of fight time underwater.
+- **Balance bands, stance rules for P2, economy rules and modes** as recorded in `balance-targets.md`, `stance-matrix.md`, `economy.md` and `modes.md`.
+- **Originality.** Where Orb has not picked yet, Legal's replacements are the working defaults (`docs/legal/fighter-concepts-review.md`).

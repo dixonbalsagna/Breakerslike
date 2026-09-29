@@ -6,6 +6,26 @@ Six systems that Orb's four fighters and the new match length need (`docs/ep/vis
 
 **Originality.** Orb's line is "staples yes, signatures no". Legal rated all four fighters CONDITIONAL (`docs/legal/fighter-concepts-review.md`): the staples stay, and each signature needs an original replacement. This sketch uses Legal's first recommended replacement as the working default, marked *(default, pending Orb's pick)*. Every mechanic is described so it survives a re-skin: rules first, then names from Narrative screened by Legal, then looks from Art.
 
+**Orb's answers in questionnaire 3 override the defaults below** (`docs/ep/vision.md`):
+- **Transformations.**
+  - Long transformations can be interrupted; the Tyrant's revisions are safe.
+  - Timing is per fighter.
+  - Forms are permanent except drain states.
+  - Orb wants a replacement pitched for the multiplier stage, and wants transformations explored beyond the beast stage.
+- **The Tyrant:**
+  - a tail, kept but redesigned (not a cable whip);
+  - the "revision" joke;
+  - three goons: bruiser, marksman, speedster;
+  - while the goons fight, a human Tyrant snipes support shots and taunts.
+- **Fusion** is a true merge with an original trigger and look. Legal screens it. Tandem stays only as a fallback.
+- **Relocation uses orbs** (not keystones). A heavy hit scatters one. The pitch is in `open-questions.md` N5.
+- **The Cyborg:**
+  - a backup drive he catches and docks;
+  - the weak point is pitched as the chest hatch (`damage-model.md` §4);
+  - the food mechanic is pitched as Takeout.
+- **Planets:** earth-like and alien biomes, day, night and weather, and bigger for 2v2.
+- **Damage** is location-based with no health bar (`damage-model.md`). Wherever this page says "HP", read "wear".
+
 **Shared grammar.** Nothing here replaces stances or the director (Orb: keep both). Each system feeds the existing grammar:
 - the ego meters in `economy.md` §4;
 - the tiers that scale damage and collateral (`economy.md` §3);
@@ -91,7 +111,7 @@ Six systems that Orb's four fighters and the new match length need (`docs/ep/vis
 **Status.** Legal rates the thrown fusion item a signature beat. It recommends that a true merge be a post-launch mod, or be dropped. So fusion is **deferred**. What ships in its place keeps the part Legal calls the best: the Anti-hero's choice between pride and help.
 
 **Working default: Tandem** *(default, pending Orb's pick)*.
-- **The offer.** At a trigger, such as the Anti-hero's second HP segment breaking, the Protagonist offers help:
+- **The offer.** At a trigger, such as the Anti-hero's second region breaking, the Protagonist offers help:
   - as his teammate in `team-2v2`;
   - as an AI cameo in 1v1, unless he is the opponent.
 - **Refuse.** A **Pride** surge, and the win counts as "by his own strength" (a distinct result and bark set).

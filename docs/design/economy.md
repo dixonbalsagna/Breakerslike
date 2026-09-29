@@ -31,12 +31,11 @@ The resources a fight runs on: HP, ki, power and tiers, the fighters' ego meters
 
 **Levers and metrics.** Max HP sets the match length (QA §3). Hidden healing sets the value of hiding (hides per match and hidden seconds, QA §8).
 
-**For the real game.** HP is split into **segments**, three per fighter as a starting value. Emptying a segment triggers a **break**:
-- the broken fighter is launched far, which relocates the fight;
-- there is a 2 to 3 s beat with barks, and the camera reframes;
-- hidden recovery refills only the current segment.
-
-Segments turn a 7-minute fight into readable chapters, and they stop a lucky burst from ending the finale in its first minute. The comeback bonus stays and is shown on screen. Narrative's "Resolve" is that cue: a visible state, with no extra rule.
+**For the real game: no HP bar.** Orb ruled out health meters (questionnaire 3).
+- **The replacement** is `damage-model.md`: wear on body regions, region breaks as chapters, and a brink state. A match ends only through a fighter-specific finisher.
+- **HP segments are superseded.** They were proposed earlier on this page; region breaks now do their job. A break launches the broken fighter far, and each break is a chapter.
+- **Hiding** mends battered wear, but not a broken region.
+- **The comeback bonus** survives as the desperation of a fighter on the brink, shown through the aura. Narrative's "Resolve" is that cue.
 
 ## 2. Ki
 
@@ -130,7 +129,7 @@ Every ego meter in the roster follows three rules:
 | Fighter | Ego meter (working name) | Fills when | Drains or costs | What it does | Relation to collateral |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Protagonist | **Respect** (Legal's suggested framing) | The opponent commits fully: transforms, fires a finisher, clashes at full ki, or keeps fighting below 25% HP | It is spent to unlock the next step on a transformation track | Advances his parallel tracks | He causes a lot of collateral through his fixation on the fight. His answer is to move the fight somewhere empty (keystone relocation) |
-| Anti-hero | **Pride** | He dominates: wins clashes, lands long barrages, finishes by hand | It drains when he is humbled (parried, guard-broken, broken to a new HP segment). Accepting Tandem help spends all of it | Damage and form triggers; forms raise it further | Indifferent. He wrecks things to make a point |
+| Anti-hero | **Pride** | He dominates: wins clashes, lands long barrages, finishes by hand | It drains when he is humbled (parried, guard-broken, or a region broken). Accepting Tandem help spends all of it | Damage and form triggers; forms raise it further | Indifferent. He wrecks things to make a point |
 | Tyrant | **Wrath** | His minions fall and he takes damage | Each stage change spends a share of it | Triggers his many-stage transformation chain | Indifferent, and cruel for show |
 | Cyborg | **Hunger** | He consumes civilians and collects sandwiches | Consuming is a vulnerable beat, like charging | Each civilian adds a small multiplicative bonus; thresholds trigger molts | He feeds on the population directly. This is menace made literal |
 
@@ -177,7 +176,7 @@ Orb decides the exact triggers (`open-questions.md`). The rules above hold whate
   - the 1.8 s arming time;
   - the 2.5 s window;
   - the ×1.5 multiplier;
-  - hidden recovery, limited to the current HP segment.
+  - hidden recovery, which mends battered wear but not a broken region (`damage-model.md`).
 - Most of the rarity of ambushes is AI behaviour: the AI never attacks from ESCAPE (`L841`). That is Encounter Systems' to change.
 - The P2 hit-and-run perk for ESCAPE attackers gives hiding a direct payoff (`stance-matrix.md`, R2).
 
@@ -218,13 +217,13 @@ Orb wants a match to feel like the finale of a season-long rivalry: 5 minutes or
 | Act | Time (7-min target) | What happens | Collateral |
 | :--- | :--- | :--- | :--- |
 | 1. The meeting | 0:00 to 1:30 | Base forms, tier 1. Openers, barks, feeling out. The Tyrant's minions fight while he watches. The Protagonist starts gathering keystones | Light and local |
-| 2. The escalation | 1:30 to 4:00 | First transformations, tier 2. The first HP segment breaks and throws the fight across the planet. The Cyborg feeds and molts. Beam clashes begin | Rising; settlements hit |
+| 2. The escalation | 1:30 to 4:00 | First transformations, tier 2. The first region breaks and throws the fight across the planet. The Cyborg feeds and molts. Beam clashes begin | Rising; settlements hit |
 | 3. The turn | 4:00 to 6:00 | Top forms, tier 3. Tandem help offered to the Anti-hero. Relocation, if the Protagonist holds every keystone. Comebacks from hiding | Heavy, the planet visibly scarred |
 | 4. The finale | 6:00 on | Final forms, tier 4. Finishers and the biggest clashes. The KO | The world breaks, or the fight has left it |
 
 **How the length is built.** Starting values for the P3 sim; QA tunes them against `balance-targets.md`:
 - **Longer, choreographed exchanges.** Two to three times more beats per exchange (Combat). That fits Orb's "choreographed, seamless" and halves the damage per second on its own.
-- **HP segments.** Three per fighter.
+- **Region breaks.** Four to six per 1v1 before the brink and the finisher (`damage-model.md`), at the tempo in `balance-targets.md` §10.
 - **Set pieces.** Transformations, beam struggles, relocation, minions and the backup-drive chase carry the story with little HP change. Target about 25 to 35% of match time.
 - **Tier gating by track.** Tier 3 and 4 forms need their track triggers, not only time.
 

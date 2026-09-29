@@ -34,6 +34,7 @@ The measurable bands the game must meet. Each is written so QA's harness (`qa/`,
 | 6 | Location and signature variety | No biome above 40% of fight time; no variant above 40% of beams | Ocean 64.6% of fight time; HORIZON CLEAVE 69% (QA §6) | Fails | Encounter Systems, World |
 | 7 | Stance balance | No forced stance above 55% | Not yet measured; DEFENSIVE at risk (`stance-matrix.md` §4) | Unknown | QA (probe), Game Design |
 | 8 | Story beats | See section 8 | Ambush 0.061 per match (QA §8) | Fails | Encounter Systems, Game Design |
+| 9 | Pacing (tempo) | 8 to 12 exchanges per minute; exchanges of 2.5 to 4 s; 1.5 to 4 s of breathing room | About 21 exchanges per minute, each about 1 s | Fails ("too fast", Orb) | Combat, Encounter Systems |
 
 ---
 
@@ -52,7 +53,7 @@ The measurable bands the game must meet. Each is written so QA's harness (`qa/`,
 | Game (P3 on), 1v1 | Median 6:00 to 8:00 to the KO; p10 at least 5:00; p90 at most 10:00; timeouts at most 1% at 15:00 |
 | Game, 2v2 and free-for-all | Median 6:00 to 9:00 |
 
-**Why.** Orb set 5 minutes or more, felt as a season finale of about 7 minutes (`docs/ep/vision.md`). QA's 40 to 70 s band is superseded for the game. It stays only as a guard on the prototype testbed, so that P2 stance work is not distorted by a change of length. How the length is built is in `economy.md` §7: longer choreographed exchanges, HP segments, set pieces and gated transformations. HP sponges are not the answer.
+**Why.** Orb set 5 minutes or more, felt as a season finale of about 7 minutes (`docs/ep/vision.md`). QA's 40 to 70 s band is superseded for the game. It stays only as a guard on the prototype testbed, so that P2 stance work is not distorted by a change of length. How the length is built is in `economy.md` §7: longer choreographed exchanges, region breaks as chapters (`damage-model.md`), set pieces and gated transformations, at the tempo in §10. HP sponges are not the answer.
 
 ## 3. Escalation checkpoints
 
@@ -112,8 +113,10 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 | :--- | :--- | :--- |
 | Hides | At least 1.5 per match; at least one hide in at least 60% of matches | 0.63; 38% of matches |
 | Ambush attacks | At least 0.5 per match | 0.061 |
-| Comebacks: the winner was at or below 25% of total HP at some point | 15 to 35% of matches | Not measured |
-| HP-lead changes (with a 5% hysteresis) | Median at least 2 | Not measured |
+| Comebacks: the winner was on the brink at some point, or rallied (`damage-model.md` §5) | 15 to 35% of matches | Not measurable yet. The prototype has no brink |
+| Region breaks before the finisher (1v1) | 4 to 6 per match | none |
+| Finishers preceded by a brink call-out | 100% | none |
+| Lead changes: which fighter has more region stages lost flips | Median at least 2 | Not measured |
 | Beam clashes and struggles | 2 to 8 per match | Beams 3.65 per match, 40% of them clashes (QA §6) |
 | Chains | 15 to 35 per 100 melee exchanges | 23.8 |
 
@@ -142,3 +145,64 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 - every ego meter is visible;
 - no fighter gets permanent, stacking buffs from one source;
 - each fighter's meter has about the same expected value across a match, checked by band 1.
+
+## 10. Pacing: why the greybox reads too fast, and the target tempo
+
+Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questionnaire 3). The greybox runs the prototype's sim, bit-identical (commit `26479d5`), so the cause is in the sim's numbers, not in the renderer.
+
+**Why it reads too fast** (default arm, QA §3, §5, §8; code at `7233c96`):
+- **Exchanges are short and back to back.**
+  - About 21 exchanges start per minute: 16.0 melee and 3.65 beams per 55.4 s match.
+  - A melee exchange lasts the rush (0.18 to 0.65 s, `L420`) plus 0.3 to 1.0 s of beats (`L438-506`).
+  - Strikes land 0.16 to 0.20 s apart (`L478`, `L498`), and the default hit-stop is 0.05 s (`L334`).
+  - The director waits only 0.22 s before the next exchange (`L565`).
+  - An AGGRESSIVE AI attacks every 0.35 to 1.0 s (`L844`).
+  - There is no breathing room: no taunts, no repositioning, no read.
+- **The planet feels small.** Any gap closes in at most 0.65 s, so half the planet (4,800 units) is crossed at about 7,400 units per second (`L420`). A dash loops the whole planet in about 9 s (`L770-772`).
+- **Launches are frequent and mostly vertical.**
+  - About 15.6 launches a minute.
+  - 80% are SLAM DOWN or UPPERCUT (QA §5), so fighters bounce in place.
+  - Only 4.7% are SMASH ACROSS, the one launch that crosses the map.
+- **Fights sink into the ocean.** The ocean holds 64.6% of fight time on 26% of the planet (QA §6). Four causes stack:
+  - The hero AI flees population toward the western ocean (`L823-824`).
+  - ESCAPE's cover-seeking dives below −110 in the ocean (`L837-839`).
+  - SLAM DOWN scores +12 over water (`L362`).
+  - A launched fighter who hits water stops dead within about a second (`L726`).
+
+**Target tempo** (game scale; QA measures it from the event stream):
+
+| Measure | Target | Greybox today |
+| :--- | :--- | :--- |
+| Exchanges started per minute | 8 to 12 | About 21 |
+| Exchange length, request to release, median | 2.5 to 4.0 s. Set pieces (beam struggles, break launches, transformations, finishers) 3 to 8 s | About 0.5 to 1.9 s |
+| Spacing of strikes inside a melee exchange | 0.25 to 0.40 s | 0.16 to 0.20 s |
+| Readable wind-up before a parryable strike | 0.20 to 0.30 s (Controls owns the width) | 0.10 s (0.33 s on HEAVY CLASH — WON) |
+| Hit-stop floor by impact class | Light at least 0.07 s; heavy at least 0.12 s; region break or finisher at least 0.30 s | 0.05 s default; 0.08 to 0.16 s on big hits |
+| Breathing room, release to the next request, median | 1.5 to 4.0 s; no gap over 10 s | Under about 1.8 s; director cooldown 0.22 s |
+| Launches per minute | 4 to 6 | About 15.6 |
+| Long launches: at least 1,500 units of horizontal travel before landing | At least 30% of launches; every region-break launch is long | About 5% (SMASH ACROSS) |
+| Launches that land in a different biome from their start | At least 25% | Not measured |
+| Gap close over 2,500 units | A visible pursuit flight of 0.8 to 2.0 s. Blink-strikes stay a Protagonist trait, with the ripple tell | 0.65 s at most |
+| Fight time underwater | At most 10% (the ocean-share cap in §6 also applies) | Not measured; 64.6% of time over the ocean |
+
+**What Combat should change:**
+- Exchanges of 6 to 10 beats at the spacing above, with readable wind-ups. This is the "choreographed, seamless" look, and it halves the damage rate by itself.
+- A pursuit-flight atom for long gap closes.
+- A break-launch-and-chase set piece: the attacker follows the launched fighter across the map, with a camera follow.
+- Finisher templates per fighter and form tier (`damage-model.md` §5).
+
+**What Encounter Systems should change:**
+- **Director cooldown:** 0.8 to 1.5 s, scaled by the size of the last exchange (today 0.22 s).
+- **AI cadence:**
+  - AGGRESSIVE: about 1.2 to 2.5 s, with the other stances scaled to match (today 0.35 to 1.0 s).
+  - Fill the downtime with taunts, barks, repositioning and charging.
+- **Launch planner:**
+  - add a distance term and a new-biome term;
+  - make every break launch long;
+  - cut SLAM DOWN's ocean and city bonuses (`L362`), and cap vertical launches.
+- **Location:**
+  - the hero's lure goes to empty land and rotates among desert, plains and mountains, not the nearest ocean;
+  - ESCAPE's cover-seeking weighs forest and ridge as well as water;
+  - underwater is a hiding state, not a place to fight.
+
+**For World and Simulation, through the EP.** A launched fighter who hits water should skim and splash rather than stop dead (`L726`). Orb also asked for simple fluid behaviour. **For Camera:** a planet-scale read and the launch follow (Orb's greybox notes).

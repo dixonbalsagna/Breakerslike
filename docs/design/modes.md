@@ -29,7 +29,7 @@ The modes, their stable ids, what each one is, and the 1.0 scope. Orb set the 1.
 - **The arena.** One procedural wrapped planet per match, seeded (`systems-sketch.md`, "Procedural planets"). It keeps pillar 1: no walls, fly either way and loop the planet.
 - **The rules.** Every rule in `stance-matrix.md` and `economy.md` applies. Transformations and each fighter's unique system run in every mode.
 - **Length and escalation.** 5 minutes or more, with about 7 as the target. Four acts, bands in `balance-targets.md` §2 and §3.
-- **The end.** The first KO ends a 1v1 match. HP comes in segments, and each break starts a new chapter (`economy.md` §1).
+- **The end.** There are no health bars. Region breaks are the chapters. A fighter on the brink can be ended only by the opponent's finisher, and that KO ends a 1v1 (`damage-model.md`).
 - **Seeded and deterministic.** Every match can be replayed from its seed and inputs (ADR 0004).
 - **Fair spawns.** Spawns come from pairs chosen by seed that QA has measured as fair. The prototype's fixed pair shows a +4.1-point west-spawn effect in the villain mirror (QA §2b).
 
@@ -47,7 +47,7 @@ The modes, their stable ids, what each one is, and the 1.0 scope. Orb set the 1.
 - **Arcade.** Four to six fights against the roster, including a mirror rival. Each fight has its pre-fight exchange of lines and its KO lines (Narrative). There are no cutscenes that decide outcomes.
 - **Survival rules.**
   - *What carries over:* the planet's damage, and each opponent starts on it.
-  - *Between fights:* HP comes back to one segment above its current level, ki to 60, and each opponent starts at the player's tier.
+  - *Between fights:* the player keeps broken regions, battered wear heals to bruised, ki returns to 60, and each opponent starts at the player's tier.
   - *Score:* fights won, then the time taken.
 - **Accept:**
   - A median arcade run lasts 25 to 45 minutes. Each fight is a full-length match.
