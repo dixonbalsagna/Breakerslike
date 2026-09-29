@@ -38,12 +38,12 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 - **Relationship:** two men who each think they are first.
 - **Stakes:** `rivalry`.
 - **Registers:** both contemptuous, each ranking the other.
-- **Shifts:** *winning*: "Second." *Losing*: "This does not count." *Brink*: both facades crack in the same beat (present tense, plain), which is comic. *Transformed*: "Regalia? You were always vulgar." *No fold.*
+- **Shifts:** *winning*: "Second. Behind me." *Losing*: "This does not count." *Brink*: both facades crack in the same beat (present tense, plain), which is comic. *Transformed*: "Regalia? You were always vulgar." *No fold.*
 
 ### 6. Anti-hero v Tyrant
 - **Relationship:** a proud rival against a vulgar showman he despises.
 - **Stakes:** `rivalry`. The Tyrant may end the world, but the Anti-hero's concern is rank.
-- **Registers:** A to T is disgusted ("Fifth. A clown."). T to A is leering ("sulky pet").
+- **Registers:** A to T is disgusted ("Fifth. Behind the goons. A clown."). T to A is leering ("sulky pet").
 - **Shifts:** *A winning*: he never wants to be seen enjoying it. *T's joke revisions*: unbearable to A, who hates to be laughed at. *T on the brink*: a tantrum. *After each revision*: A ranks it. *No fold.*
 
 ### 7. Anti-hero v Cyborg
@@ -84,14 +84,14 @@ Each entry gives the relationship, the stakes, each side's register toward the o
    - P: "There it is! I'll remember that one."
    - A: "You were quicker than I recall. You will not be again."
 2. *A structure falls.*
-   - P: "Sorry about the bridge! I'll fix it after."
+   - P: "Sorry about the bridge! I'll help fix it once we're done."
    - A: "Nobody will remember that bridge. Or you."
    - P: "I will. I'll remember all of it."
 3. *P teases him.*
    - P: "You're doing the face again. The 'I'm bored' face."
    - A: "I do not make faces."
    - P: "Ha! You just did."
-   - A: (silence) "Fifth. You are fifth."
+   - A: (silence) "Fifth. Behind the goons."
 
 **The fold: lead-in and reply**
 - P: "Not here. There are people under us. Stay close. I'm taking us somewhere nobody can get hurt."
@@ -100,7 +100,7 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 
 **Finisher lines**
 - *P wins.* P: "That's it. That's the one. Thank you." Then, as A falls: "Rest. I'll carry you home." A, from the ground: "...This does not count." Then, quietly: "Next time."
-- *A wins.* A: "You were the only one worth the trouble." Then: "Fourth." P, on the ground, laughing: "Ha. Good one. I'll get you next time."
+- *A wins.* A: "You were the only one worth the trouble." Then: "Fourth. Behind the furniture." P, on the ground, laughing: "Ha. Good one. I'll get you next time."
 
 ## 3. Worked case: Protagonist v Tyrant (the contrast)
 
@@ -117,7 +117,7 @@ Each entry gives the relationship, the stakes, each side's register toward the o
    - P: "Stop. Where you're standing there are people. Stop."
 2. *The Tyrant destroys a structure.*
    - T: "Redecorating. You're welcome."
-   - P: (quietly) "That was a home. I'll fix it. Then I'll deal with you."
+   - P: (quietly) "That was a home. I'll help fix it once I'm done with you."
 3. *A joke revision.*
    - T: "Revision Four. It's the same, but I've added a hat."
    - P: "...I'm not laughing. I want you to know I'm not."
@@ -139,3 +139,210 @@ Each entry gives the relationship, the stakes, each side's register toward the o
 | **Anti-hero** | Contemptuous, with envy. | Disgusted, and concerned only with rank. |
 | **Tyrant** | Amused and leering. | The same, and worse: the fight is a chore that he turns into a show. |
 | **Cyborg** | Polite and hungry. | Polite, hungry and puzzled that nobody else finds it funny. |
+
+---
+
+## 5. The other eight matchups, written out
+
+Same format as the first two, self-contained and short. The priority is **breadth**: more alternates per slot ("a", "b", "c"), not longer scenes. The line system picks one alternate per slot. Two fixes apply everywhere: the Protagonist puts the fight first and repairs after ("I'll help fix it once I'm done with you"), and the Anti-hero's ranks are always compared to something absurd ("Fifth. Behind the goons."), with "Filth." for pure contempt. Names are placeholders. Proofreading comes later. **The Tyrant is now the Empress (she/her), pending Orb's reaction to "The Empress" in `pitches-q3.md`.** Cases 5.2, 5.4 and 5.7 use her. The earlier sections (the matrix and the Protagonist v Tyrant case) still say Tyrant and will be updated after Orb reacts.
+
+### 5.1 Protagonist v Cyborg
+
+**Frame.** Stakes: `appetite` and `world_at_stake`. P is angry and protective, in plain words, and does not banter. C is polite and cheerful and treats him as a customer. Balance note: the fold denies the Cyborg his food, which is a comic beat and a question for Game Design.
+
+**Pre-fight**
+- a. C: "Welcome. Your order is you." P: "Nobody's ordering anybody. Stay away from them."
+- b. C: "Table for one? Table for one and a half. I'm still hungry." P: "You're not touching anyone while I'm standing."
+- c. C: "I see you've brought an appetite." P: "I brought a fight. Let's have it."
+
+**Mid-fight**
+1. *A civilian is consumed.*
+   - a. C: "Mm. Crunchy. Five stars." P: (cold) "That's the last one. I'll help what's left once I'm done with you."
+   - b. C: "Supplies. Wonderful." P: "Stop. Stop eating. Stop."
+2. *The Cyborg molts.*
+   - a. C: "One moment. Under new management." P: "Not again."
+   - b. C: "System update in progress. Please stand clear." P: "I'm not standing clear."
+3. *The chip is hit.*
+   - a. C: "Not the chip! Anything but the chip!" P: "Then stop."
+   - b. C: "N-n-not the chip." P: "Thank you. That's what I needed to know."
+
+**The fold**
+- P: "Not here. There are people under us. Stay close. I'm taking us somewhere nobody can get hurt."
+- C, going in: "A private dining room? Excellent. Please reserve me the good table."
+- On arrival, P: "We can't hurt anyone innocent here." C, after a pause: "Where is everybody? Where is the pantry? Where is the staff?" P: "Now. Everything." C: "I would like to speak to a manager." (Alternate: "This is false advertising.")
+
+**Finisher lines**
+- *P wins.* P: "It's over. Nobody else gets eaten." C: "I want a refund! I want to speak to a..." (glitches out). Alternate: P: "I'll help clean up once I'm done. Thanks for nothing."
+- *C wins.* C: "Your order is complete. Please rate your experience." P, on the ground: "Stay away from them." Alternate: C: "It was a pleasure. It was also lunch." P: "...Not them. Not them."
+
+### 5.2 Anti-hero v Empress
+
+**Frame.** Stakes: `rivalry`. The Anti-hero is disgusted and cares only about rank. The Empress is leering and delighted to have found a sulker. No fold.
+
+**Pre-fight**
+- a. E: "Heirs, look! A sulker! Warm him up." A: "You were a spectacle before you were a threat. Begin."
+- b. E: "The brooding petitioner! Do take that cape off. Ours is longer." A: "You were vulgar. You are still vulgar. Filth."
+- c. E: "Revision One, at your service. Well, at your interest." A: "You were never in my service."
+
+**Mid-fight**
+1. *A joke revision.*
+   - a. E: "Revision Four takes the throne. We have added a hat." A: "Filth."
+   - b. E: "Revision Two. Louder. That is the entire update." A: "You were funny in a way that ends today."
+2. *An heir falls.*
+   - a. E: "Heir Two has failed the audition." A: "Fifth. Behind the goons. And the goons are behind you."
+   - b. E: "My heirs! ...Fine. We will do it ourselves." A: "You hid behind furniture. Rank yourself: behind the furniture."
+3. *The Empress is hit.*
+   - a. E: "You struck us! Do you know what revision this is? ...You struck ME." A: "The number does not matter. You were always behind the goons."
+   - b. E: "That is the last time you do that in this revision!" A: "You have said that four times. It was never the last."
+
+**Finisher lines**
+- *A wins.* A: "You were loud. That was all you were." E, from the ground: "This is an unapproved outcome! We abdicate. ...I ABDICATE." A: "Filth." Alternate: A: "You were adequate. As comic relief."
+- *E wins.* E: "Revision Twelve, Approved. Sign here." A, facade cracking: "I can't... don't. I'm still here." Alternate: E: "Paperwork, petitioner." A: (silence, then) "This does not count."
+
+### 5.3 Anti-hero v Cyborg
+
+**Frame.** Stakes: `rivalry` and `appetite`. The Anti-hero is disgusted and hates being on the menu. The Cyborg is polite menace ("sir"). No fold.
+
+**Pre-fight**
+- a. C: "Welcome, sir. May I offer you the menu?" A: "You were a machine that ate. You will be a machine that stopped."
+- b. C: "You look nutritious." A: "Say that once more and you will not finish the sentence."
+- c. C: "Table for one?" A: "You were never seated. You are never seated."
+
+**Mid-fight**
+1. *A civilian is consumed.*
+   - a. C: "Mm. Crunchy. Five stars." A: "The crowd was decoration. Decoration falls. You are worse."
+   - b. C: "Supplies!" A: "Filth."
+2. *The Cyborg molts.*
+   - a. C: "Please hold while I molt." A: "Fourth. Behind the furniture. And now the furniture is molting."
+   - b. C: "One moment. Under new management." A: "You were vulgar as an animal. As a machine you are worse."
+3. *The Anti-hero's facade cracks.*
+   - a. C: "Our sincere apologies for your distress, sir. Would you like a refund?" A: "I can't... I don't want a refund. I want you gone."
+   - b. C: "We value your feedback." A: "Don't. Don't say it."
+
+**Finisher lines**
+- *A wins.* A: "You were on the menu. The menu was mine." C: "I would like to speak to a manager." A: "There is none. There was never one."
+- *C wins.* C: "Your order is complete. Please rate your experience." A, cracked: "I can't rank you. I don't know how." Alternate: C: "It was a pleasure, sir." A: "Don't. Thank me. ...Don't."
+
+### 5.4 Empress v Cyborg
+
+**Frame.** Stakes: `world_at_stake` and `appetite`. Two threats over one planet, each convinced the other reports to her or him. E is condescending ("my heirs will handle you"). C is polite and insistent ("your manager"). No fold. This is the "manager" matchup.
+
+**Pre-fight**
+- a. C: "Good afternoon. I would like to speak to your manager." E: "Petitioner, we are the manager. We are also the owner. Revision One, at your complaint."
+- b. E: "Heirs, a customer! Show him the door." C: "I will show myself the exit. After lunch."
+- c. C: "May I take your order?" E: "We do not take orders. We revise them."
+
+**Mid-fight**
+1. *A joke revision.*
+   - a. E: "Revision Four takes the throne. We have added a hat." C: "I will need to log a complaint about the hat."
+   - b. E: "Revision Two. Louder." C: "Please lower your voice, madam. You are disturbing the other guests."
+2. *The Cyborg eats an heir.*
+   - a. E: "Those were heirs!" C: "I do apologise. I thought they were on the menu."
+   - b. E: "My heirs! ...Fine. We will attend to it ourselves." C: "Your staff was delicious. Five stars."
+3. *The chip is hit.*
+   - a. E: "What is that? A tiny chip? How precious." C: "Not the chip! Please do not shout the chip!"
+   - b. E: "Ohoho. Cute. Cute!" C: "That's private property, madam. That's my whole... that's..."
+
+**Finisher lines**
+- *E wins.* E: "Revision Twelve, Approved. Sign here." C: "I would like a manager." E: "We are the manager!" C: "The other manager."
+- *C wins.* C: "Your order is complete. Please rate your experience." E, from the ground: "One star! One star! We will review you into oblivion!"
+
+### 5.5 Protagonist v Protagonist (mirror)
+
+**Frame.** Stakes: `sparring`. Both playful and delighted. Two of the same man, so every joke lands twice. No fold unless one of them reaches the fragment threshold, and then the other replies as below.
+
+**Pre-fight**
+- a. P1: "Oh, this is going to be fun." P2: "You took the words out of my mouth. I'll take yours next."
+- b. P1: "Two of us? Somebody's going to have to fix the planet." P2: "I'll help fix it once I'm done with you."
+- c. P1: "Same haircut. Same everything." P2: "Same everything. That's the problem. Let's find out who's better at it."
+
+**Mid-fight**
+1. *A hit lands.*
+   - a. P1: "Nice! I'll remember that one." P2: "Hey, that's mine. I'll steal it back."
+   - b. P1: "That's my move!" P2: "It's my move too. We share."
+2. *Both reach Hot Blood.*
+   - a. P1: "Okay. Warm." P2: "Simmering? Already? Me too."
+   - b. P1: "I can hear my own heart." P2: "So can I. It's loud."
+3. *A structure falls.*
+   - a. P1: "Sorry about the bridge! I'll help fix it once we're done." P2: "Which of us did that?" P1: "Both. It was both."
+   - b. P1: "That was somebody's roof." P2: "I'll help rebuild it once I'm done with you."
+
+**The fold (whoever holds the fragments)**
+- P1: "Not here. There are people under us. Stay close. I'm taking us somewhere nobody can get hurt."
+- P2: "Ha! You too? Go on, then."
+- On arrival, P1: "We can't hurt anyone innocent here. Now. Everything." P2: "Everything. Thank you."
+
+**Finisher lines**
+- *Winner.* "Best fight of my year. Rest. I'll carry you home." Alternate: "That's the one. Thank you. Thank you, me."
+- *Loser.* "Ha. You're better at being me than I am." Alternate: "Again? Tomorrow. Tomorrow, I promise."
+
+### 5.6 Anti-hero v Anti-hero (mirror)
+
+**Frame.** Stakes: `rivalry`. Both contemptuous, each certain he is first and the other is the copy. No fold. The comedy is that both facades crack in the same beat.
+
+**Pre-fight**
+- a. A1: "You were the second-best man I knew." A2: "I am the only one. You were the copy."
+- b. A1: "You wear my regalia." A2: "You wore it second."
+- c. A1: "Filth." A2: "Filth."
+
+**Mid-fight**
+1. *A hit lands.*
+   - a. A1: "Fourth. Behind the goons." A2: "You struck first. You were fourth before you struck."
+   - b. A1: "You were quicker than I recall." A2: "You will not remember it. That is the point."
+2. *One of them is mocked.*
+   - a. A1: "You were funny once." A2: "You were never funny. You were merely present."
+   - b. A1: (silence) A2: (silence) A1: "Third. Behind the civilians."
+3. *Both facades crack.*
+   - a. A1: "I can't feel my arms. Help me." A2: "I can't... neither can I. Help me."
+   - b. A1: "Don't look at me like that." A2: "You're looking at me the same way."
+
+**Finisher lines**
+- *Winner.* "You were adequate. That is the highest thing I say." Alternate, cracked: "I won. I won. I think I won."
+- *Loser.* "This does not count." Both say it, which makes the jokes: "That does not count either."
+
+### 5.7 Empress v Empress (mirror)
+
+**Frame.** Stakes: `rivalry`, played as comedy: who is the real revision. Both leering, then both furious. The heirs cannot tell them apart. No fold.
+
+**Pre-fight**
+- a. E1: "Revision One, at your service." E2: "Revision One, at YOURS. There is room on the throne for one Revision One."
+- b. E1: "Heirs, which of us is your empress?" (the heirs look at both) E2: "Heirs! Ignore her!"
+- c. E1: "Oh, look at the train. Cute." E2: "It is our train. You copied it." E1: "We had it first."
+
+**Mid-fight**
+1. *A joke revision, in sync.*
+   - a. E1: "Revision Four takes the throne. We have added a hat." E2: "We added a hat FIRST."
+   - b. E1: "Revision Two. Louder." E2: "We were already louder. We were the loud one."
+2. *A hit lands.*
+   - a. E1: "You struck us! Do you know what revision this is? ...You struck ME." E2: "We do. We are one too. Ours is better."
+   - b. E1: "That is the last time you do that in this revision!" E2: "Yes, that is what we said."
+3. *An heir is confused.*
+   - a. E1: "Heirs! Get her!" (the heirs attack E1) E1: "Not us! The OTHER one!"
+   - b. E2: "Good, heirs. Keep going." (the heirs attack E2)
+
+**Finisher lines**
+- *Winner.* "Revision Twelve, Approved. Sign here." Alternate: "The train looks better on the original."
+- *Loser.* "You are an unapproved copy!" Alternate: "This is an unapproved outcome! We abdicate in favour of ourselves, and we are furious about it."
+### 5.8 Cyborg v Cyborg (mirror)
+
+**Frame.** Stakes: `appetite`. Both polite, both hungry, queueing for the same stock. No fold, since there are no civilians in the fold and neither would go.
+
+**Pre-fight**
+- a. C1: "After you." C2: "No, after you." (a long pause) C1: "We'll fight, then."
+- b. C1: "Welcome. Your order is you." C2: "Welcome. Your order is you." (both) "...Hello."
+- c. C1: "May I speak to your manager?" C2: "I am the manager." C1: "The other manager."
+
+**Mid-fight**
+1. *A civilian is consumed.*
+   - a. C1: "That was MY civilian." C2: "It was on my side of the counter."
+   - b. C1: "Mm. Crunchy. Five stars." C2: "Five? I'd give it four. You ate the bit I wanted."
+2. *One molts.*
+   - a. C1: "Please hold while I molt." C2: "Please hold, I am also molting."
+   - b. C1: "Under new management." C2: "Under the same management. We share a manager."
+3. *The chip is hit.*
+   - a. C1: "Not the chip!" C2: "Not MY chip!"
+   - b. C1: "N-n-not the..." C2: "Ha! Yours, then. Mine's fine."
+
+**Finisher lines**
+- *Winner.* "Your order is complete. Please rate your experience." Alternate: "That was a pleasure. It was also lunch."
+- *Loser.* "I want to speak to a manager." Alternate: "I am the manager. ...I would like a different manager."

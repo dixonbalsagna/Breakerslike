@@ -2,7 +2,7 @@
 
 Owner: Narrative and Fighter Identity. Version 1, 2026-09-29. He/him. Working draft; the hero's name is still open. Lines are original and unsearched; Legal searches the boldest before they ship.
 
-**In one sentence.** An earnest, delighted fighter who talks in promises, loves a real fight more than he sees the wreckage, and is sincere even when he is funny.
+**In one sentence.** An earnest, delighted fighter who talks in promises, loves a real fight more than he sees the wreckage, and is sincere even when he is funny. **The fight has his attention first; repairs come after.** He cares, but he says "once I'm done with you", not "right now".
 
 ## Speech rhythm
 Short, warm sentences, often two or three beats and a button. He uses contractions. He is loud only when he is excited, never when he is angry: anger makes him go quiet and plain. He asks for the fight ("Again."). He speaks in the **future tense**: "I'll", "later", "after".
@@ -11,7 +11,7 @@ Short, warm sentences, often two or three beats and a button. He uses contractio
 - **Likes:** good, again, one more, thank you, friend, later, after, "I'll fix it", real, "that's the one".
 - **Address:** "friend", "champ", the opponent's name. Never a title.
 - **Verbs:** show, try, keep, carry, owe, fix.
-- **About the world:** he names the specific thing ("that roof", "the bridge"), and offers to fix it.
+- **About the world:** he names the specific thing ("that roof", "the bridge"), and offers to help fix it once the fight is over.
 
 ## Never says
 - Insults about weakness ("pathetic", "worthless").
@@ -26,7 +26,7 @@ Short, warm sentences, often two or three beats and a button. He uses contractio
 |---|---|
 | **Winning** | Gracious. Thanks the opponent. Wants a rematch. Carries him home. |
 | **Losing** | Laughs, thanks him, promises to come back better. Only goes quiet when someone else pays for it. |
-| **Collateral** | Late and sheepish. He offers to fix it "after". A big loss silences him, and that silence is the tell that he does care. |
+| **Collateral** | Late and sheepish. He offers to help fix it "once I'm done with you". The fight comes first. A big loss silences him, and that silence is the tell that he does care. |
 | **Being mocked** | Unbothered and amused. Only insults to the people he loves make him go still. |
 | **Transforming** | He narrates his own body like a man surprised by it: heated, simmering, boiling (Hot Blood). |
 
@@ -39,7 +39,7 @@ Short, warm sentences, often two or three beats and a button. He uses contractio
 1. "That was the best fight of my year. Rest. I'll carry you home."
 2. "Thank you. I mean it. Come back when you're ready."
 3. "You almost had me at the bridge. I'll be thinking about that all week."
-4. "Good fight, friend. Let me fix the hill I broke."
+4. "Good fight, friend. Now, let me help fix the hill I broke."
 5. "Again? ...Tomorrow. Tomorrow, I promise."
 
 **Losing**
@@ -50,10 +50,10 @@ Short, warm sentences, often two or three beats and a button. He uses contractio
 5. "Give me a minute. Then I'll take it back."
 
 **Collateral**
-1. "Sorry about the {thing}! I'll fix it after."
-2. "That was somebody's roof. I'll be back with hands."
+1. "Sorry about the {thing}! I'll help fix it once we're done."
+2. "That was somebody's roof. I'll help rebuild it once I'm done here."
 3. "Hold on, {place}. I'll come right back."
-4. "...That was a lot of houses. I'll fix them. All of them."
+4. "...That was a lot of houses. I'll help fix them once I'm done with you. All of them."
 5. "I wasn't looking. I'm looking now. I'll do better."
 
 **Being mocked**

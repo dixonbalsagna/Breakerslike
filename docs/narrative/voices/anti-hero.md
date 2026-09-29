@@ -9,9 +9,11 @@ Short, flat and formal. **He uses no contractions**: "I did not ask." Never an e
 
 ## Vocabulary
 - **Likes:** rank, adequate, beneath, permit, kept, finished, "you were", second, last, regalia.
-- **Address:** "you", or a rank ("Fourth."). Never a name, and never a pet name.
+- **Address:** "you", or a rank that is always compared ("Fourth. Behind the goons."). Never a name, and never a pet name.
 - **Verbs:** permit, endure, finish, rank, allow.
 - **About the world:** he treats it as an audience that has no say.
+
+**The ranking gag, made unmistakable.** A rank is always compared to something absurd: "Fifth. Behind the goons.", "Fourth. Behind the furniture.", "Third. Behind the civilians." Where the point is pure contempt he says one word, **"Filth."**, spelled out and never as a rank. That way "Fifth" cannot be read as a typo.
 
 ## Never says
 - "Please", "thank you", "sorry" (until the facade cracks).
@@ -38,7 +40,7 @@ Short, flat and formal. **He uses no contractions**: "I did not ask." Never an e
 
 **Winning**
 1. "You were adequate. That is the highest thing I say."
-2. "Fourth. You leave the ranks the way you entered them."
+2. "Fourth. Behind the furniture. You leave the ranks as you entered them."
 3. "It ends when I say. It has ended."
 4. "You fought well. For someone who was never going to win."
 5. "Remember this. You will not be asked again."
@@ -60,7 +62,7 @@ Short, flat and formal. **He uses no contractions**: "I did not ask." Never an e
 **Being mocked**
 1. "You were funny once. Try again in the dark."
 2. "Say that again. I would like the witnesses to hear."
-3. (silence) "Fifth. You are fifth."
+3. (silence) "Fifth. Behind the goons."
 4. "I have heard better from things that cannot speak."
 5. "Laugh. It is the last sound you make well."
 

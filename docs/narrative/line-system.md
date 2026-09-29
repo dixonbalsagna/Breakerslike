@@ -146,7 +146,7 @@ Each line shows its trigger and its first cue. Some are jewels; some are templat
 | 1 | match start | "Good. You came. Now show me everything." | effort.light |
 | 2 | heavy hit landed | "There it is! I'll remember that one." | laugh.short |
 | 3 | took a hit (arm) | "Ha! My arm. I'll need that later." | wince |
-| 4 | structure destroyed | "Sorry about the {thing}! I'll fix it after." | laugh.short |
+| 4 | structure destroyed | "Sorry about the {thing}! I'll help fix it once we're done." | laugh.short |
 | 5 | opponent's Respect rises | "Now you're really fighting me. Thank you." | sigh |
 | 6 | orb picked up | "Got one. Hold that thought, we're moving." | effort.light |
 | 7 | late and losing | "I've been holding back on your behalf. Not anymore." | growl |
@@ -159,7 +159,7 @@ Each line shows its trigger and its first cue. Some are jewels; some are templat
 | # | Trigger | Line | Cue |
 |---|---|---|---|
 | 1 | match start | "You were something once. Let me see what's left." | scoff |
-| 2 | hit landed | "Fourth. You rank lower with every breath." | sneer |
+| 2 | hit landed | "Fourth. Behind the civilians. Lower with every breath." | sneer |
 | 3 | took a hit (head) | "You touched my face. You were alive a moment ago." | growl |
 | 4 | long fight | "This could have ended ages ago. It ends when I say." | sigh |
 | 5 | Pride high | "Bow. It's the only thing you'll do right today." | scoff |

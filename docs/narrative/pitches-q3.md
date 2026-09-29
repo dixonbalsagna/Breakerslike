@@ -336,3 +336,91 @@ Orb: space folds inward toward the Protagonist and the planet vanishes around th
 5. **The beat.** He exhales and says the line. The rival answers with his first strike. The music changes, and the ego meters carry over. Whatever follows is his reveal.
 
 **Tripwire check.** Nothing emerges or speaks except the fighters. No vertical column of light. No sky darkening, thunder or storm. The fragments never touch the ground. The only result is the relocation. The line "we can't hurt anyone innocent here" is spoken by the hero and is not a summons.
+
+---
+
+# The Empress
+
+Orb: the Galactic Tyrant becomes a galactic Empress (she/her). This is a pitch round for Orb to react to. Everything stays inside Orb's original traits (confident, leering, boastful, quick to anger, watching from behind her goons). All names are placeholders. Legal's rule for revisions 9 to 12 still applies: no sleek, pale, slender horned figure with a purple accent. Until Orb reacts, the earlier sections and files still say "the Tyrant"; the list of files to update is in section 6.
+
+## 1. Who she is: three takes
+
+What being an empress adds is a **court, an image, a succession and a vanity**. The risk is to lean on gender clichés (a mirror, a catfight, a wicked-queen beauty contest). None of these takes does. Her vanity is about **image and standing**, never her looks.
+
+| Take *(placeholder)* | Who she is | What the empire adds | What it does for play |
+|---|---|---|---|
+| **E1. The Brand** | An empire that is a publicity machine. Everything is image management: a public face, a press office, a message. Her anger comes when the image slips, such as an unflattering exchange. | Court: a press corps and ministers. Image: the portrait. | Each revision is a **re-release of her public image**. |
+| **E2. The Succession** ★ | She is old, and she is obsessed with who comes next. She has rehearsed a dozen successors, and every one is her. She kills each, and hands the throne to the next revision. She is quick to anger when someone else is called the heir. | Court: heirs and audition. Succession: she abdicates to herself. | Each revision is a **new heir taking the throne**. The goons are heirs on trial. |
+| **E3. The Sovereign of Paperwork** | She rules by edict: seals, stamps, decrees. Everything is signed. Her vanity is her signature. | Court: clerks. Image: the seal. | Each revision is an **edict** that revises the last. |
+
+**Favourite: E2, the Succession.** It is the richest for the story, it explains why a many-form empress exists at all, it gives the goons a job, and it needs no cliché. E3 is a good flavour to layer on (her "sign here" finishers survive).
+
+## 2. How the revision joke adapts
+
+Orb loves "Revision #", so the number stays. The question is what a revision **is**.
+
+| Option | What a revision is | The joke |
+|---|---|---|
+| **Portrait** | A new official portrait. | The portrait changes by one detail (a hat), and everyone must pretend it is a new person. |
+| **Edict** | A decree that revises the last decree. | "Edict Four: we have added a hat." |
+| **Abdication** ★ | She abdicates in favour of the next revision. The old one is retired, the new one is crowned. | "Revision Four takes the throne. She is the same, but she has a hat. All hail Revision Four." |
+
+**Favourite: Abdication.** It fits the Succession, keeps the wording "Revision #", and gives the goons and the crowd something to do (they have to acclaim each one). Revisions 1 to 8 stay the joke revisions; 9 to 12 are the real ones and follow Legal's rule.
+
+## 3. Her three goons, as a court
+
+They stay AI-only and take turns (bruiser, marksman, speedster).
+
+| Option | The court | Notes |
+|---|---|---|
+| **G1. Ministers** | The Treasurer (the bruiser: he collects), the Auditor (the marksman: precise), the Courier (the speedster). | Cheerfully bureaucratic. Fits E3. |
+| **G2. Heirs** ★ | Heir One (the bruiser), Heir Two (the marksman), Heir Three (the speedster), on trial. She judges every exchange: "Heir Two has failed the audition." | Fits E2. It gives her a line every time a goon falls. |
+| **G3. Guard of honour** | The Shield, the Herald-Archer, the Runner. | Plain and safe. No comedy. |
+
+**Favourite: G2.** It makes each goon's fall a beat, and it feeds the revision joke: as each heir fails, she abdicates to herself.
+
+## 4. The mantle and the surveyor line
+
+- **The bladed mantle** (Orb's pick) becomes **regalia: a train**. A very long cape with blade hems that trails behind her and moves like a cape, not a swishing tail (Legal). The train can be planted, whipped, or wrapped. It is the thing she is proudest of, and the thing an opponent aims at.
+- **The surveyor line** becomes **a decree line**: a ruler-straight thin beam that draws a cut across the land, and she declares it the new border: "This is now the border." Whatever is on the far side is "outside the empire". It fits Legal's land-effect naming, and the comedy is the bureaucracy of a massacre. No disc and no finger-point pose.
+
+## 5. Her voice, and a revised voice bible
+
+**The device.** She keeps the revision numbers, and adds a **royal "we"**: she says "we" (all her revisions at once) when confident, and slips to "I" when she is hit or furious. It is an audible tell, like the Anti-hero's facade crack. She calls opponents **"petitioner"**. Her vanity is her image, her train and her standing. It is never her looks.
+
+**Speech rhythm.** Long, silky sentences with a sneer at the end, then a sudden short scream when angry. She rides her own jokes and laughs first. She talks to her heirs even in the middle of a fight.
+
+**Vocabulary.** Likes: revision, heir, throne, edict, border, audition, petitioner, "the empire", train, "we are amused". Verbs: decree, abdicate, crown, approve, annex.
+
+**Never says.** A sincere apology. The phrase "final form" (except as a joke). Anything about fear. Stock supervillain insults. Any commentary about her looks or anyone's looks. Any catchphrase from any source.
+
+**Reactions.**
+
+| Situation | How she reacts |
+|---|---|
+| **Winning** | Purrs. Signs off with a revision joke. Treats the finish as paperwork. |
+| **Losing** | Denial, then a tantrum about "an unapproved outcome". She announces she is abdicating. |
+| **Collateral** | Delighted. "Annexing." A city is a province. |
+| **Being mocked** | Cackles, then "we" turns into "I": "You hit ME." |
+| **Transforming** | A joke revision is a coronation. A real revision is a quiet, cold moment. |
+
+**Grunt and laugh palette.** `cackle` (a wheeze that builds), `snort`, `laugh.cruel`, `shriek`, `sigh` (theatrical), `growl` (short, sharp), a leering `hm`. Nothing sincere.
+
+### Ten sample lines
+
+1. *Start (with heirs).* "Heirs, warm him up. We will attend presently, Revision One and barely awake."
+2. *A goon falls.* "Heir Two has failed the audition. Heir Three, you may approach."
+3. *Hit taken.* "You struck us! Do you know what revision this is? ...You struck ME."
+4. *Anger.* "That is the last time you do that in this revision!"
+5. *A joke revision.* "Revision Four takes the throne. We are the same, but we have added a hat. All hail Revision Four."
+6. *The decree line.* "One straight line. That is now the border. Do try to be on the correct side."
+7. *Destroying a city.* "Annexing. The empire thanks you for your patronage."
+8. *Against the Protagonist (world at stake).* P: "Leave everyone out of it." Empress: "Everyone is already in it, petitioner. It is our empire. We simply have not filed the paperwork."
+9. *Against the Anti-hero (he despises vulgar showmen).* A: "You were vulgar before you were a threat." Empress: "And you were sulking before you were interesting, petitioner. Do take that cape off. Ours is longer."
+10. *Finisher.* "Revision Twelve, Approved. Sign here. We do not accept cheques."
+
+## 6. Files that assume the Tyrant is "he" or "the Tyrant"
+
+**In Narrative's own folder (I will update after Orb reacts):** `docs/narrative/voices/tyrant.md` (whole file, he/him), `docs/narrative/matchups.md` (the matrix, the Protagonist v Tyrant case, and the mirror), `docs/narrative/pitches-q3.md` (the ladder, the tail, the Round 3 voice notes, and "the Tyrant" throughout), `docs/narrative/line-system.md` (the voice table, the sample lines, and "all he/him").
+
+**Others' files that name the Tyrant (owners to decide):** `docs/ep/vision.md`, `docs/ep/handoff.md`, `docs/combat/procedural-moves.md`, `docs/design/systems-sketch.md`, `docs/design/spec-wounds.md`, `docs/design/pitches.md`, `docs/design/pillars.md`, `docs/design/open-questions.md`, `docs/design/modes.md`, `docs/design/damage-model.md`, `docs/design/economy.md`, `docs/legal/fighter-concepts-review.md`, `docs/legal/q3-screen.md`, `docs/legal/review-log.md`, `docs/legal/tribute-vs-parody.md`. Some may not use a pronoun at all; each owner should check.

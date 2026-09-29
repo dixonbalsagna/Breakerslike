@@ -78,7 +78,7 @@ These are the beam variants and glossary terms (`glossary.md`) that reference ea
 | **Netmend** | BOULEVARD RAZE, then LANE SWEEP (villages) | STRUCTURES LOST and CIVILIANS LOST counters. THROUGH THE WALL. | "Not over Netmend." |
 | **Furrowlea** and **Windlea** | MERIDIAN SCAR, then FURROW SCAR | The beam is named for the plough furrow, and Furrowlea is where it is most at home. | Farmland, then a coastal meadow. |
 | **Bellgate** | BOULEVARD RAZE (kept) | 83% of civilians. THROUGH THE WALL for the towers. Menace gain. The lure origin. | "Bellgate was lovely." |
-| **Kilnstead** | BOULEVARD RAZE, then LANE SWEEP | Counters. THROUGH THE WALL. | The Hero's "I'll be back with hands." |
+| **Kilnstead** | BOULEVARD RAZE, then LANE SWEEP | Counters. THROUGH THE WALL. | The Hero's "I'll help rebuild once I'm done here." |
 | **Deepholt** | FIRESTORM, then CANOPY BURN | Cover type "canopy". Trees are only destroyed, not burned, in the prototype today. | Hiding and ambush. |
 | **Sunwaste** | GLASS TRENCH | None else. | Open ground, no one to save. |
 | **Anvilfell** | RIDGE BORE | Cover type "ridge". Launch INTO THE MOUNTAIN. | The range takes the blows. |
@@ -89,7 +89,7 @@ These are the beam variants and glossary terms (`glossary.md`) that reference ea
 Barks fire on events (a launch near a town, a collapse), and `{place}` comes from the biome under the fight. When no name is needed, the plain words "harbour" and "city" still work.
 
 - The Hero, luring: "Not over Netmend. Follow me out onto Longwater."
-- The Hero, after a collapse: "Hold on, Kilnstead. I'll be back with hands."
+- The Hero, after a collapse: "Sorry, Kilnstead. I'll help rebuild once I'm done here."
 - VORR, aiming at a town: "Bellgate was lovely. Someone should have said so while the bells still rang."
 - VORR, dragged out to sea: "Out over Longwater? There is nothing here worth the trouble."
 
