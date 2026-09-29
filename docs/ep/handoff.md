@@ -90,6 +90,11 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
   Then Rendering draws the crater bowls in depth (the z=0 slice equals the sim) and the scorch trails.
 - **Tools, small:** fix the godot-parity comment (it now checks the GD goldens); add a batch.gd 5-match smoke step. QA: move baselines to batch.gd.
 
+## Sim editor queue (one at a time)
+1. World: craters, scorch, water (active).
+2. Simulation: Game Design's menace placeholder fixes (balance-targets.md §9: decay 0.4/s after 4 s without a villain-caused casualty; menace damage cap from +25% to +15%). Also add tempo.gd to the sim/README layout table.
+3. Wounds implementation (spec-wounds.md): Encounter Systems and Combat (stage 0/1). QA re-baselines on batch.gd, then tests KAI at 42% or better, with at least 400 matches per arm.
+
 ## Queued for idle directors (send when they resume)
 - **Camera:** when separation passes half the planet, the reference camera re-targets the other arc and pans 80 to 180 px per frame. That's a framing choice to fix.
 - **Performance:** a min-spec run (old laptop, integrated GPU, mobile), draw-call budgets, and the float-texture vertex fetch on mobile GLES3 (the fallback is packed 8-bit heights).
