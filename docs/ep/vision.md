@@ -48,3 +48,29 @@ More characters must be addable after launch (see the Modding and Extensibility 
 | Director effort | Opus at xhigh, Sonnet at high |
 | Extra directors | Rendering and Technical Art; Modding and Extensibility |
 | Name | An evocative title, pitched by Narrative |
+
+## Questionnaire 2 (2026-09-29)
+
+| Topic | Answer |
+|---|---|
+| Transformation triggers | Character dependent |
+| Protagonist and anti-hero stages | 6 or more |
+| Tyrant's forms | Jokes first, then a few real forms |
+| Minions | AI only |
+| Fusion | A unique final-form mechanic; could be reworked as another ability |
+| Relocation | A barren proving ground; artefacts scattered on the planet, found mid-fight |
+| Cyborg's companion hunt | A quick detour, under a minute |
+| Violence | Graphic, including the Cyborg's consumption. Rating target: Mature |
+| Signature replacements | Discuss each with Orb before choosing |
+| 2v2 | All four fighters on the field at once |
+| Arcade | Both a rival ladder and endless survival |
+| Match shape | One continuous fight |
+| Endings | KO, or the planet is destroyed |
+| Procedural planets | Vary in size, biomes and settlements; seeds are shareable. The planet can be destroyed at top tiers |
+| Mobile controls | Both virtual stick and simplified tap, player's choice |
+| Copyright holder | Curtis A |
+| Repo | Renamed to the neutral codename wraparound-fighter |
+| Token plan | Approved (ADR 0005) |
+| Lemming Ball Z provenance | Unknown; nothing carries over |
+| Feel reference | A well-known series of flash action animations (named in .private/) for its choreography and brutality |
+| Title | Orb dislikes "Skyburden" and likes the direction of "Skyburners"; Narrative pitches more |

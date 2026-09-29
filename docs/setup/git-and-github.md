@@ -8,11 +8,11 @@ Kept here because it is easy to forget. Every command also works in PowerShell.
 2. Sign in to GitHub once per computer:
    `gh auth login --hostname github.com --git-protocol https --web`
    Answer **Y** if asked to authenticate Git with your GitHub credentials. Copy the one-time code, press Enter, paste the code in the browser page that opens, and click Authorize. Check it worked with `gh auth status`.
-3. See whether the repo already exists: `gh repo view dixonbalsagna/Breakerslike`
+3. See whether the repo already exists: `gh repo view dixonbalsagna/wraparound-fighter`
 4. If it does **not** exist, create it and push in one go:
-   `gh repo create dixonbalsagna/Breakerslike --private --source=. --remote=origin --push`
+   `gh repo create dixonbalsagna/wraparound-fighter --private --source=. --remote=origin --push`
 5. If it **does** exist:
-   `git remote add origin https://github.com/dixonbalsagna/Breakerslike.git`
+   `git remote add origin https://github.com/dixonbalsagna/wraparound-fighter.git`
    `git push -u origin main`
    If the push is rejected because GitHub already has files (for example a README made on the website), run `git pull origin main --allow-unrelated-histories` and push again.
 6. Check: `git status` should say *up to date with 'origin/main'*.
@@ -25,7 +25,7 @@ Why HTTPS rather than the `git@github.com:` SSH address: HTTPS through `gh` need
 2. `git config --global user.name "dixonbalsagna"`
 3. `git config --global user.email "<your GitHub noreply address>"`
 4. `gh auth login --hostname github.com --git-protocol https --web`
-5. `gh repo clone dixonbalsagna/Breakerslike`
+5. `gh repo clone dixonbalsagna/wraparound-fighter`
 
 ## Renaming the repo later
 
