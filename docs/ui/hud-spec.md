@@ -55,7 +55,7 @@ What `prototype/index.html` `drawHUD()` and Rendering's `render/core/hud.gd` dra
 | Menace or anguish bar | **Change** | The fighter's **ego meter** (Respect, Pride, Wrath, Hunger; the greybox fighters keep Menace and Anguish). Labelled, striped, ticked |
 | Stance as text only (ATK, DEF, EVA, ESC) | **Change** | A **stance chip** with an icon and the glossary word (PRESS, GUARD, DODGE, ESCAPE) |
 | Floating label over each fighter | **Cut** | Nothing over the fighters at rest. The stance icon rides with the crown pop |
-| "HIDDEN" ripple and the "?" strip marker | **Keep, make shape-coded** | `HIDDEN` chip with an eye-slash icon on the plate; a hollow strip marker with a ping at the last seen spot |
+| "HIDDEN" ripple and the "?" strip marker | **Keep, make shape-coded** | Behind the `hiding` flag (off: hiding is out of the base game). When on: a `HIDDEN` chip with an eye-slash icon on the plate; a hollow strip marker with a ping at the last seen spot |
 | CIVILIANS LOST, STRUCTURES LOST, CRATERS | **Keep, dim at rest** | A top-centre chip. Bright for 2.5 s after a change. Portrait keeps only the civilians line |
 | Chain counter (22 px, centre) | **Change** | `CHAIN ×N` chip on the plate plus chevrons on the crown while the window is open |
 | Centre banner at 28% of the height | **Move** | To the top, under the toll chip. Wording renamed by the glossary |
@@ -86,6 +86,7 @@ Everything scales by `s = min(width / 1920, height / 1080)` (landscape) or `min(
 | Banner slot | centre x, y 147 | y 109 | One line. A world card (the fold) takes the same slot |
 | Bark lanes | 601 by 120 at each bottom corner | 427 by 86 | Panels grow upward from the lane's bottom edge |
 | Planet strip | 813 by 20, bottom centre | 578 by 14 | |
+| Planet ring map (split-screen support) | 92 px across, centred above the strip (8.5% of the height, 52 to 120 px) | 65 px | Between the bark lanes, below the clear zone |
 | Letterbox | top and bottom bars, 9% of the height each | | Only during a cinematic |
 | Director feed (debug) | 520 by 324 at the left, under the cards | | Off by default |
 | **Clear zone** | **x 469 to 1451, y 193 to 865: 51% by 62% of the screen** | x 333 to 1032, y 142 to 615 | Between the plate columns, under the banner, above the bark lanes |
@@ -279,21 +280,51 @@ Three modes, chosen from what the sim reports, each with hard limits.
 
 ![The director feed](img/hud-feed.png)
 
-## 10. The planet strip, and what the hiding options do to the HUD
+## 10. The planet strip, the split screen, and hiding
 
-The strip is kept (it is edge-anchored and thin): circle marker for the left fighter, diamond for the right, a hollow marker with "?" and a ping at a hidden fighter's last seen spot, a camera box, ticks for fallen buildings, an optional place label. It hides during a cinematic.
+The strip is kept (it is edge-anchored and thin): circle marker for the left fighter, diamond for the right, a camera box, ticks for fallen buildings, and an optional place label. It hides during a cinematic.
 
-Hidden information is Research's and Camera's decision. **No option is chosen here.**
+**Hiding is out of the base game** (Orb: held for a future stealth-specialist fighter). The hidden-state code stays, behind a data flag that is **off**: `ui/data/features.json`, `"hiding": false` (`UiData.feature("hiding")`). With it off the HUD ignores the hidden state and the lost-trail cue everywhere: the plate's `HIDDEN` and `TRAIL LOST` chips, the eye-slash marker over the fighter, the strip's hollow marker with its "?" and ping, and the silhouette's fading. `hud_check` proves both states. The rest of this spec mentions hiding only where the code exists.
 
-| | Split-screen | Picture-in-picture | Fog |
-| :--- | :--- | :--- | :--- |
-| Layout change | Two viewports; each keeps its own plate and cards at its own top corner; the toll chip and strip move to the seam | One main view and a small inset with a compact plate | No layout change. The hidden fighter's pop, marker and chips are withheld from the other player |
-| Planet strip | Shared, on the seam | Shared | Last seen spot only, for the hunter |
-| Clear zone | Each view needs its own, at half width | The inset sits in a corner outside the zone | Unchanged |
-| Risk | Halves the fight window in portrait | The inset competes with the plate column | The HUD must not leak: a card or pop for the hidden fighter would give the position away |
-| Space to reserve | a 1% seam | 22% by 25% inset, bottom right, clear of the bark lane | none |
+### 10.1 Camera's dynamic split screen (`docs/camera/split-screen.md`)
 
-**Edge indicators for distant fighters.** If Camera adds them, the HUD reserves a 24 px band inside the safe area around the clear zone, outside the plate columns and bark lanes, using the strip's circle and diamond shapes.
+One camera while the fighters read; two panes and an angled divider when zooming out would make them too small. The HUD is one `Control` over the composite. Camera hands it a single record each frame; everything below draws from it, and only while it has something to say.
+
+![Split screen, level enough to read](img/hud-split.png)
+
+**The interface** (`UiHud.split_fn`, a `Callable` returning a Dictionary; empty or unset means one camera). Fighter A is slot 0, fighter B slot 1. Every key is optional.
+
+| Key | Meaning |
+| :--- | :--- |
+| `sep` | 0 to 1, how far the panes are open. 0 means one camera and no divider |
+| `c`, `n` | The divider's centre (px) and its unit normal, pointing from A's pane toward B's (Camera's section 3) |
+| `gap`, `fade`, `slam` | The compositor's gap in px; the divider's opacity 0 to 1; the slam flash 0 to 1 (`divider_slam`) |
+| `sigma` | +1 when B is to A's right on screen, so A is the left pane; -1 swaps the columns |
+| `dist_bh` | The held separation in fighter heights (optional; else computed from the ring's angles and `W`) |
+| `pointer` | `"split"` (default), `"always"` (one camera: point when the rival is off screen), `"off"` |
+| `ring` | `{angle_A, angle_B, sigma, arc_A, arc_B, swing, sep, W}`: angles are `x / W * TAU`, arcs are the viewed width in radians of planet angle, `W` is the circumference in world units (default `SimConst.W`) |
+
+And the anchor record gains the pane: `anchor_fn(slot)` may return `{pos, h, visible, pane}` as before; the HUD does not need `pane` (it derives the side from `c` and `n`) but accepts it.
+
+**The divider.** A thin neutral line (2 px at 1080p, a dark edge under a light stroke, ticks at the ends), never a fighter's accent. It **stops under the toll chip and above the ring map and the planet strip** (`UiLayout.divider_band()`), and where the line swings through the horizontal it spans the width inside that band. It draws only while `sep` is above 0.01, at the record's `fade`; a slam thickens and whitens it for the frames `slam` is set. It redraws only when `c`, `n`, `fade` or `slam` change.
+
+**The ring map.** A small ring of the planet, centred above the planet strip (8.5% of the height, 52 to 120 px), clear of the fight and between the bark lanes. It shows: the fighters (a circle for A, a diamond for B, as on the strip), the held shortest arc from A to B highlighted, and each open pane's viewed arc as a faint band (or the single camera's arc at the midpoint when merged). Nothing marks the seam (pillar 1): angle 0 is only where the drawing starts. It stays with one camera too, dims and hides with the strip during a cinematic and the fold, and is landscape only for now (portrait has no room; Camera's open question 5). It replaces nothing: the strip keeps the biomes and fallen buildings, the ring keeps the wrap. `swing` is reserved.
+
+**Edge pointer chips.** One per pane, only in a split (or, with `pointer: "always"`, when the rival is off screen in a single view). Each chip sits on its own side of the divider, at its fighter's height, just inside the 24 px reserve band next to the divider, with an arrow along `n` pointing at the rival, the rival's strip marker, and the distance in **fighter heights** with a small height mark as the unit ("19 ⌶"). It is a number because a pointer that says only "far" is not a pointer; it is not a power reading. It is clamped inside the safe area.
+
+**Columns follow the fighters.** The fighter on the left of the screen keeps the left column: with `sigma` -1 slot 0's plate, wound cards and bark lane move to the right, and slot 1's to the left (each mirrors). The swap fades the plates out and in over 0.2 s (instant under reduced motion) when `sigma` flips, which Camera limits to one per second. Camera's section 10 says the plates swap with the divider swing; here they follow `sigma` so they swap once, at the flip, and never at every opening. (A different reading, plates fixed per player, would keep a player's plate in the same corner but put a fighter's cards in the other pane. Camera and the EP to confirm.)
+
+![Flipped: slot 0 on the right](img/hud-split-flip.png)
+
+**Per-pane clear zones and anchors.** `UiLayout.pane_zone(pane_b, c, n)` (and `UiHud.pane_clear_zone(slot)`) gives each pane's zone as a convex polygon: the pane's half of the screen, inset by the safe area on the outer edge and by 2% of the width on the divider side, within the vertical band 17.9% to 80.1% of the height (Camera's numbers). `hud_check` proves, at four sizes, both orientations and every tilt from -30 to +30 degrees, that each fighter's anchor (Camera's formula, section 3) is inside its own pane's zone and that the two zones never overlap. Cards and flashes anchor to their fighter's side (the columns above); the crown and the pointer ride with the fighter's screen position from `anchor_fn`.
+
+**Cost.** The divider, ring and pointer layers are cached like the rest: idle, they draw nothing. In a split they redraw when the divider or a fighter moves half a pixel, a few primitives each.
+
+**Open for Camera through the EP.** (1) Section 3's anchor formula, `P_i = c + ... - s_i (...)` with `s_A = -1`, puts A on B's side as written; the check uses A on the -n side (A's own pane). (2) What `arc_A` and `arc_B` mean when merged (the HUD draws one arc at the midpoint). (3) Whether plates follow `sigma` (here) or the divider swing.
+
+### 10.2 Hiding options (kept for the record; hiding is off)
+
+Split-screen is now the base game's answer to "the fighters are too small", not a hiding technique. If hiding returns with a stealth fighter, the leaks Camera lists apply: the divider tilt, ring map and pointers must use the last known position, not the truth, and a fog or shroud must not let the HUD give the hider away. The HUD's hidden code (the chips, the marker, the strip's ping) already treats the hidden fighter's position as last seen.
 
 ## 11. The event contract
 
@@ -361,7 +392,7 @@ Every word the HUD draws is data in `ui/data/terms.json`, from Narrative's gloss
 
 **Hosting.** Rendering already hosts `ui/hud/ui_hud.tscn` (setup, `anchor_fn`, `strip_fn`, `UiSimBridge.patch`, `consume_all` from `SimHost.drained`, `advance`). **Revision 2 does not change the hosting interface.** The differences a host may notice: the silhouette option now defaults to off (call `set_option("silhouette", true)` in training and for the accessibility default); two new options, `crown_always` and `brink_cue`; the HUD reads the fighter's `wear` through the bridge.
 
-**Verification.** `godot --headless --path . --script res://ui/tools/hud_check.gd`: 734 checks pass. For the options: `info_flashes` is in the data, on by default and switchable; the accessibility options are marked; with `crown_always`, `crown_up` is false, the crown is at full opacity with no flash, dims to 30% under a flash on that fighter only, comes back after, and a transformation cinematic still holds it down. For the crown: it is down at rest; a plain hit, a tier-up, a heat stage and Drop the Act on their own do not pop it; a stage change, the brink, a Rally, a boil-over and the facade crack do; a recovery and a Pride-masked stage change do not, a break does; `crown_up` is true while popped or fading and false otherwise; a transformation cinematic fades it out in 0.1 s and keeps it down until it ends (a finisher does not lock it); the stroke colours are neutral roles and never a fighter accent; the parry window's ring draws with no pop showing; the sim's own `FxEvent` objects are read as they are; a real S1 stage change reaches the model and pops the crown; the dense scripted fight has a crown up in 27% of the time (the live sim, with far fewer stage changes, will be much lower).
+**Verification.** `godot --headless --path . --script res://ui/tools/hud_check.gd`: 799 checks pass. For the split screen and hiding: the divider band is under the toll chip and above the ring map and strip; the ring map is clear of the fight, the bark lanes and the strip; a level divider runs the band and one swinging through the horizontal spans the width; at four sizes, both orientations and every tilt from -30 to +30 degrees each anchor is inside its own pane zone and the two zones never overlap; slot 0 moves to the right with sigma -1 and the HUD swaps its columns after the fade; the divider, ring and pointers draw while open and clear when merged; each pointer points the rival's way, sits in its own pane inside the safe area and shows the distance in fighter heights; a single camera points only when the rival is off screen; with the hiding flag off the hidden state and lost trail are ignored, and on they work. For the options: `info_flashes` is in the data, on by default and switchable; the accessibility options are marked; with `crown_always`, `crown_up` is false, the crown is at full opacity with no flash, dims to 30% under a flash on that fighter only, comes back after, and a transformation cinematic still holds it down. For the crown: it is down at rest; a plain hit, a tier-up, a heat stage and Drop the Act on their own do not pop it; a stage change, the brink, a Rally, a boil-over and the facade crack do; a recovery and a Pride-masked stage change do not, a break does; `crown_up` is true while popped or fading and false otherwise; a transformation cinematic fades it out in 0.1 s and keeps it down until it ends (a finisher does not lock it); the stroke colours are neutral roles and never a fighter accent; the parry window's ring draws with no pop showing; the sim's own `FxEvent` objects are read as they are; a real S1 stage change reaches the model and pops the crown; the dense scripted fight has a crown up in 27% of the time (the live sim, with far fewer stage changes, will be much lower).
 
 **Performance (2026-09-29).** The HUD is a stack of cached layers (`ui/hud/ui_layer.gd`): each keeps its draw commands until a small signature changes (a few numbers computed every frame, 0.03 ms in all), so at rest the HUD redraws nothing and the crown, card, bark and banner layers draw nothing at all. The plates redraw when a bar moves a whole percent or a chip changes; the strip's moving marks when a fighter or the camera moves half a pixel; the crown, cards and barks every frame while they show. Also: bar stripes are one tiled texture instead of a line per stripe, the strip's segments and ticks are one multi-line each, and plate text drawn last so shapes and text do not interleave. Measured with `ui/tools/hud_bench.gd` (the live build, seed 4, HUD shown against hidden in alternating blocks of 300 frames, vsync off, RTX 5070 Ti, Compatibility renderer):
 

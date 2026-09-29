@@ -285,7 +285,7 @@ func consume(e) -> void:
 				m.chain_t = 0.0
 				m.chain_dur = float(d.get("dur", 0.6))
 		"lock_lost":
-			if m != null:
+			if m != null and UiData.feature("hiding"):
 				m.lost_trail = true
 				_lost_trail_left[m.slot] = float(d.get("dur", 2.0))
 		"bark":
@@ -321,7 +321,8 @@ func patch(actor: int, d: Dictionary) -> void:
 		return
 	for k in ["stance", "tier", "charge", "momentum", "ego", "hidden", "charging", "sig_cost", "name", "title", "ai", "chip_station"]:
 		if d.has(k):
-			m.set(k, d[k])
+			# Hiding is removed from the base game (a future fighter); with the flag off the hidden state is ignored.
+			m.set(k, (bool(d[k]) and UiData.feature("hiding")) if k == "hidden" else d[k])
 	if d.has("aura") and d["aura"] is Color:
 		m.aura = d["aura"]
 	elif d.has("aura") and d["aura"] is String:

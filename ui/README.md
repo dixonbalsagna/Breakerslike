@@ -11,7 +11,7 @@ godot --headless --path . --import
 godot --path . res://ui/demo/hud_demo.tscn
 ```
 
-The demo draws the real HUD over a greybox backdrop, driven by `ui/mock/ui_mock_feed.gd`, a scripted feed shaped like spec-wounds.md §4's events. Keys: Tab scenario, Space pause, R restart, S silhouette (off by default), F4 feed, C captions, M reduced motion, K keep the crown up, B brink ring, T arc thickness, Z clear zones, L region label, V viewport size, +/- fighter size, H legend. The crown is transient: it pops on a hit, a stage change, the brink, a Rally or a tier-up and fades back; at rest the fighters are clean.
+The demo draws the real HUD over a greybox backdrop, driven by `ui/mock/ui_mock_feed.gd`, a scripted feed shaped like spec-wounds.md §4's events. Keys: Tab scenario, Space pause, R restart, S silhouette (off by default), F4 feed, C captions, M reduced motion, K keep the crown up, B brink ring, D simulated split screen, X flip sides, T arc thickness, Z clear zones, L region label, V viewport size, +/- fighter size, H legend. The crown is transient: it pops on a hit, a stage change, the brink, a Rally or a tier-up and fades back; at rest the fighters are clean.
 
 Options after `--`: `--scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress`, `--at=SECONDS` (fast-forward the feed), `--frames=N --shot=file.png` (save a frame), `--portrait`, `--clear`, `--nofeed`, `--sil`, `--crown`, `--reduced`, `--nolegend`. Add Godot's `--fixed-fps 60 --resolution 1920x1080` for a known frame.
 
@@ -35,8 +35,8 @@ Exits 0 when the terms, the layout at ten sizes, the hub's rules, the mock scena
 | `core/ui_data.gd` | Loads `data/terms.json` and `data/readout_profiles.json` |
 | `core/ui_text.gd`, `ui_icons.gd`, `ui_body.gd`, `ui_bark_timing.gd` | Text with the arrow fix; vector icons; the body figure; bark reveal timing |
 | `core/ui_sim_bridge.gd` | Reads the live greybox sim into the HUD (read only) |
-| `widgets/` | Crown, silhouette, plate, cards, barks, centre (toll, banner), strip, feed: static draw functions |
-| `data/` | Player-facing terms (Narrative's glossary), per-fighter readout profiles, and the player options with their defaults (`options.json`: `info_flashes`, `crown_always`, `silhouette`, ...) |
+| `widgets/` | Crown, silhouette, plate, cards, barks, centre (toll, banner), strip, feed, and `ui_split.gd` (the split-screen divider, ring map and edge pointers): static draw functions |
+| `data/` | Player-facing terms (Narrative's glossary), per-fighter readout profiles, and the player options with their defaults (`options.json`: `info_flashes`, `crown_always`, `silhouette`, ...), and feature flags (`features.json`: `hiding`, off) |
 | `mock/`, `demo/`, `tools/` | The mock feed, the demo scene, the checks |
 
 ## What a host does

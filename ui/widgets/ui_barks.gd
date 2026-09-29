@@ -28,7 +28,7 @@ static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: fl
 		if lay.portrait:
 			slot_off = float(idx) * (lane.size.y + 6.0 * s) * -1.0
 			idx += 1
-		_bark(ci, hub, b, Rect2(lane.position.x, lane.position.y + slot_off, lane.size.x, lane.size.y), s, b.slot == 0)
+		_bark(ci, hub, b, Rect2(lane.position.x, lane.position.y + slot_off, lane.size.x, lane.size.y), s, hub.model(b.slot).left_side)
 
 
 static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool) -> void:

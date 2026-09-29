@@ -4,7 +4,7 @@ extends Control
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
 ## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip
 ## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
@@ -22,6 +22,10 @@ var legend := true
 var args: Dictionary = {}
 var frames := 0
 var thick_i := 0
+var split_on := false          # D: a simulated split screen (the divider, the ring map, the pointers, per-pane anchors)
+var split_sep := 0.0
+var split_sigma := 1           # X flips it (slot 0 on the left, or on the right)
+var ring_always := true        # the ring map shows even with one camera
 
 
 func _ready() -> void:
@@ -37,6 +41,7 @@ func _ready() -> void:
 	_start_scenario()
 	hud.anchor_fn = _anchor
 	hud.strip_fn = _strip
+	hud.split_fn = _split_fn
 	hud.set_option("show_feed", true)
 	if args.has("at"):
 		var target: float = float(args["at"])
@@ -44,6 +49,11 @@ func _ready() -> void:
 			_step(1.0 / 60.0)
 	if args.has("nolegend"):
 		legend = false
+	if args.has("split"):
+		split_on = true
+		split_sep = 1.0
+	if args.has("flip"):
+		split_sigma = -1
 	if args.has("clear"):
 		hud.set_option("show_clear_zone", true)
 	if args.has("sil"):
@@ -81,7 +91,12 @@ func _step(dt: float) -> void:
 	hud.advance(dt)
 
 
+func _split_fn() -> Dictionary:
+	return _split_record() if (split_sep > 0.001 or ring_always) else {}
+
+
 func _process(delta: float) -> void:
+	split_sep = move_toward(split_sep, 1.0 if split_on else 0.0, delta / 0.45)
 	if not paused:
 		_step(minf(delta, 0.1))
 	queue_redraw()
@@ -102,11 +117,45 @@ func _fh() -> float:
 
 ## Fighters are placed inside the layout's clear zone, as the camera should frame them.
 func _fighter_pos(slot: int) -> Vector2:
+	var merged: Vector2 = _merged_pos(slot)
+	if split_sep <= 0.001:
+		return merged
+	return merged.lerp(_split_pos(slot), split_sep)
+
+
+func _merged_pos(slot: int) -> Vector2:
 	var cz: Rect2 = hud.layout.clear_zone
 	var sep: float = (0.24 if not hud.layout.portrait else 0.22) + 0.04 * sin(t * 0.35)
 	var cx: float = cz.get_center().x + (-1.0 if slot == 0 else 1.0) * cz.size.x * sep
 	var bob: float = sin(t * 1.3 + float(slot) * 2.0) * 10.0
 	return Vector2(cx, cz.get_center().y + bob)
+
+
+## The divider's tilt in the demo: swings between about -25 and +25 degrees.
+func _phi() -> float:
+	return deg_to_rad(25.0) * sin(t * 0.4)
+
+
+func _split_n() -> Vector2:
+	var phi: float = _phi()
+	return Vector2(float(split_sigma) * cos(phi), -sin(phi))
+
+
+## Camera's anchors (split-screen.md section 3): each chest on its outer side of the divider.
+func _split_pos(slot: int) -> Vector2:
+	var vp: Vector2 = size
+	var n: Vector2 = _split_n()
+	var sgn: float = -1.0 if slot == 0 else 1.0
+	return vp * 0.5 + Vector2(0.0, 0.12 * vp.y) + Vector2(n.x * 0.28 * vp.x * sgn, n.y * 0.24 * vp.y * sgn)
+
+
+## The record Camera would send (see UiSplit): the divider, sigma, the ring map's angles.
+func _split_record() -> Dictionary:
+	var vp: Vector2 = size
+	var W := 9600.0
+	var xs: Array = [2150.0 + 250.0 * sin(t * 0.2), 2900.0 + 300.0 * sin(t * 0.17 + 1.0)]
+	var ring := {"angle_A": xs[0] / W * TAU, "angle_B": xs[1] / W * TAU, "sigma": split_sigma, "arc_A": 0.5, "arc_B": 0.5, "swing": 0.0, "sep": split_sep, "W": 153600.0}
+	return {"sep": split_sep, "c": vp * 0.5, "n": _split_n(), "gap": maxf(3.0, 0.005 * vp.x), "fade": clampf(split_sep * 5.0, 0.0, 1.0), "slam": 0.0, "sigma": split_sigma, "dist_bh": 48.0 + 30.0 * sin(t * 0.3), "pointer": "split", "ring": ring}
 
 
 func _anchor(slot: int) -> Dictionary:
@@ -156,6 +205,10 @@ func _unhandled_key_input(e: InputEvent) -> void:
 			hud.set_option("show_clear_zone", not bool(hud.opts["show_clear_zone"]))
 		KEY_L:
 			hud.set_option("region_label", not bool(hud.opts["region_label"]))
+		KEY_D:
+			split_on = not split_on
+		KEY_X:
+			split_sigma = -split_sigma
 		KEY_H:
 			legend = not legend
 		KEY_V:
@@ -187,7 +240,7 @@ func _draw() -> void:
 		draw_circle(p + Vector2(0, -fh * 0.42), fh * 0.11, Color(0.93, 0.78, 0.63, a))
 	if legend:
 		var fs: int = UiText.px(16.0, hud.layout.s, 12.0)
-		var text: String = "DEMO  scenario %s   %dx%d   Tab scenario  Space pause  R restart  S silhouette  F4 feed  C captions  M motion  K crown always  B brink ring  T thickness  Z zones  L label  V size  +/- fighter  H legend" % [UiMockFeed.SCENARIOS[scenario_i], int(vp.x), int(vp.y), ]
+		var text: String = "DEMO  scenario %s   %dx%d   Tab scenario  Space pause  R restart  S silhouette  F4 feed  C captions  M motion  K crown always  B brink ring  D split  X flip  T thickness  Z zones  L label  V size  +/- fighter  H legend" % [UiMockFeed.SCENARIOS[scenario_i], int(vp.x), int(vp.y), ]
 		var lines: PackedStringArray = UiText.wrap(text, fs, vp.x - 20.0)
 		var y: float = vp.y - float(fs) * float(lines.size()) - 2.0
 		if hud.layout.portrait:

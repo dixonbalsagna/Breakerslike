@@ -31,6 +31,8 @@ var feed := Rect2()                          # the director feed (debug)
 var clear_zone := Rect2()                    # nothing draws here: the fighters' space
 var frame_rect := Rect2()                    # where the camera may keep fighters: full width, below the columns
 var touch_reserve := Rect2()                 # portrait: kept free for Controls' touch controls
+var ring := Rect2()                          # the planet ring map (landscape), centred above the strip
+var swapped := false                         # slot 0 is on the right: the fighter on the left of the screen is slot 1
 var pm: Dictionary = {}                      # plate metrics for this scale
 
 
@@ -81,9 +83,10 @@ static func bark_height(scale: float) -> float:
 	return maxf(120.0 * scale, 20.0 * scale + float(tfs) + 4.0 + 2.0 * (float(fs) + 4.0) + 6.0)
 
 
-func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4.ZERO) -> void:
+func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4.ZERO, p_swapped: bool = false) -> void:
 	vp = p_vp
 	silhouette_on = p_silhouette
+	swapped = p_swapped
 	portrait = vp.y > vp.x * 1.05
 	# On a small portrait phone (under 700 px tall) the silhouette would leave the fight under a fifth of the screen:
 	# it is dropped there, and the crown, the cards and the plate carry the state (docs/ui/hud-spec.md section 7).
@@ -95,10 +98,21 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 	safe = Rect2(mx + insets.x, my + insets.y, vp.x - 2.0 * mx - insets.x - insets.z, vp.y - 2.0 * my - insets.y - insets.w)
 	pm = plate_metrics(s, portrait)
 	card_h = maxf(60.0 * s, float(UiText.px(22.0, s)) * 2.0 + 12.0)
+	ring = Rect2()
 	if portrait:
 		_portrait()
 	else:
 		_landscape()
+		# The planet ring map: centred above the strip, below the clear zone and between the two bark lanes.
+		var d: float = clampf(vp.y * 0.085, 52.0, 120.0)
+		var gap: float = 12.0 * s
+		ring = Rect2(vp.x * 0.5 - d * 0.5, strip.position.y - gap - d, d, d)
+	if swapped:
+		# Slot 0 is on the right of the screen (the shortest way puts the rival to its left): mirror every per-slot column.
+		for arr in [plate, silhouette, cards, bark]:
+			var tmp = arr[0]
+			arr[0] = arr[1]
+			arr[1] = tmp
 
 
 func _landscape() -> void:
@@ -188,9 +202,63 @@ func _portrait() -> void:
 ## Every persistent HUD rectangle (for the fighter-clear check). Transient ones (cards, barks) sit inside their columns and lanes.
 func hud_rects() -> Array:
 	var out: Array = [plate[0], plate[1], toll, strip]
+	if ring.size.y > 0.0:
+		out.append(ring)
 	for i in range(2):
 		if silhouette[i].size.y > 0.0:
 			out.append(silhouette[i])
 		out.append(cards[i])
 		out.append(bark[i])
 	return out
+
+
+# --- Split screen (docs/camera/split-screen.md section 10) --------------------------------------------------------------
+
+## The vertical range the divider may span: it stops under the toll chip and above the ring map and the planet strip.
+func divider_band() -> Vector2:
+	var top: float = toll.end.y + 6.0 * s
+	var bottom: float = (ring.position.y if ring.size.y > 0.0 else strip.position.y) - 6.0 * s
+	return Vector2(top, bottom)
+
+
+## The divider's two ends: the line through c perpendicular to n, clipped to the full width and the divider band.
+## Returns [] when the line misses the band. During a swing (n turning through the vertical) the line runs horizontal.
+func divider_segment(c: Vector2, n: Vector2) -> Array:
+	var band: Vector2 = divider_band()
+	var d := Vector2(-n.y, n.x)
+	if d.length() < 0.001:
+		return []
+	# Liang-Barsky against the rectangle [0, vp.x] x [band.x, band.y], along p(t) = c + d t.
+	var t0 := -1e9
+	var t1 := 1e9
+	for pq in [[-d.x, c.x - 0.0], [d.x, vp.x - c.x], [-d.y, c.y - band.x], [d.y, band.y - c.y]]:
+		var p: float = pq[0]
+		var q: float = pq[1]
+		if absf(p) < 1e-9:
+			if q < 0.0:
+				return []
+		else:
+			var r: float = q / p
+			if p < 0.0:
+				t0 = maxf(t0, r)
+			else:
+				t1 = minf(t1, r)
+	if t0 >= t1:
+		return []
+	return [c + d * t0, c + d * t1]
+
+
+## The clear zone of one pane: the pane's half of the screen, inset by the safe area on the outer edge and by 2% of the
+## width on the divider side, within the vertical band 17.9% to 80.1% of the height (Camera's numbers). `pane_b` picks the
+## pane on the +n side. A convex polygon (an empty array if the pane has no room).
+func pane_zone(pane_b: bool, c: Vector2, n: Vector2) -> PackedVector2Array:
+	var y0: float = vp.y * 0.179
+	var y1: float = vp.y * 0.801
+	var poly := PackedVector2Array([Vector2(safe.position.x, y0), Vector2(safe.end.x, y0), Vector2(safe.end.x, y1), Vector2(safe.position.x, y1)])
+	var nn: Vector2 = n if pane_b else -n
+	return UiIcons.clip_half_plane(poly, c + nn * (vp.x * 0.02), nn)
+
+
+## Which pane a screen point is in: false = pane A (the -n side), true = pane B.
+static func pane_of(p: Vector2, c: Vector2, n: Vector2) -> bool:
+	return (p - c).dot(n) > 0.0

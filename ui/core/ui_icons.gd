@@ -317,3 +317,19 @@ static func stripes() -> ImageTexture:
 				img.set_pixel(x, y, Color(0, 0, 0, 0.28 if on else 0.0))
 		_stripes = ImageTexture.create_from_image(img)
 	return _stripes
+
+
+## Sutherland-Hodgman clip of a polygon to the half-plane (p - point) . normal >= 0.
+static func clip_half_plane(poly: PackedVector2Array, point: Vector2, normal: Vector2) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var n: int = poly.size()
+	for i in range(n):
+		var a: Vector2 = poly[i]
+		var b: Vector2 = poly[(i + 1) % n]
+		var da: float = (a - point).dot(normal)
+		var db: float = (b - point).dot(normal)
+		if da >= 0.0:
+			out.append(a)
+		if (da >= 0.0) != (db >= 0.0):
+			out.append(a + (b - a) * (da / (da - db)))
+	return out

@@ -16,7 +16,7 @@ static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: fl
 		mine.reverse()
 		var y2: float = col.position.y
 		for c in mine:
-			_card(ci, hub, c, Rect2(col.position.x, y2, col.size.x, card_h), s, t, reduced, slot == 0, false)
+			_card(ci, hub, c, Rect2(col.position.x, y2, col.size.x, card_h), s, t, reduced, hub.model(slot).left_side, false)
 			y2 += card_h + gap
 	if hub.world_card != null:
 		_world(ci, hub.world_card, lay.world_card, s, reduced)

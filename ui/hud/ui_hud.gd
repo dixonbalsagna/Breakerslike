@@ -23,6 +23,7 @@ var hub := UiEventHub.new()
 var layout := UiLayout.new()
 var anchor_fn: Callable = Callable()   # (slot: int) -> {pos: Vector2, h: float, visible: bool}
 var strip_fn: Callable = Callable()    # () -> Dictionary for UiStrip
+var split_fn: Callable = Callable()    # () -> Dictionary: Camera's split record (see UiSplit); empty or invalid = one camera
 var opts: Dictionary = {
 	"silhouette": false,       # the body figure beside each plate: off by default; the host turns it on in training and as the accessibility default
 	"reduced_motion": false,   # no flicker, shimmer, shrinking rings or slide-ins; every cue still has a shape
@@ -46,6 +47,12 @@ var _last_sil := false
 var _last_insets := Vector4.ZERO
 var _frame: int = 0
 var _strip_data: Dictionary = {}
+var _split: Dictionary = {}
+var _swapped := false          # slot 0 is on the right (sigma < 0); applied after a 0.1 s fade
+var _last_swapped := false
+var _swap_fade := 1.0          # the plates' opacity while the columns swap sides
+var _anchors: Array = [{}, {}]
+var _chips: Array = []
 # The cached layers, back to front (see UiLayer): each redraws only when its signature changes.
 var _l_letter: UiLayer
 var _l_strip_base: UiLayer
@@ -54,6 +61,9 @@ var _l_plate: Array = []
 var _l_sil: Array = []
 var _l_toll: UiLayer
 var _l_strip_marks: UiLayer
+var _l_divider: UiLayer
+var _l_ring: UiLayer
+var _l_pointers: UiLayer
 var _l_events: UiLayer
 var _l_feed: UiLayer
 var _l_debug: UiLayer
@@ -67,13 +77,16 @@ func _ready() -> void:
 	opts.merge(UiData.option_defaults(), true)   # the options' defaults live in ui/data/options.json
 	_l_letter = _layer(_paint_letterbox)
 	_l_strip_base = _layer(_paint_strip_base)
+	_l_divider = _layer(_paint_divider)
 	_l_crown = _layer(_paint_crown)
+	_l_pointers = _layer(_paint_pointers)
 	for i in range(2):
 		_l_plate.append(_layer(_paint_plate.bind(i)))
 	for i in range(2):
 		_l_sil.append(_layer(_paint_sil.bind(i)))
 	_l_toll = _layer(_paint_toll)
 	_l_strip_marks = _layer(_paint_strip_marks)
+	_l_ring = _layer(_paint_ring)
 	_l_events = _layer(_paint_events)
 	_l_feed = _layer(_paint_feed)
 	_l_debug = _layer(_paint_debug)
@@ -88,7 +101,7 @@ func _layer(painter: Callable) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_toll, _l_strip_marks, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil
+	return [_l_letter, _l_strip_base, _l_divider, _l_crown, _l_pointers, _l_toll, _l_strip_marks, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -120,10 +133,34 @@ func advance(dt: float) -> void:
 	_frame += 1
 	hub.captions_on = bool(opts["captions"])
 	hub.reduced_motion = bool(opts["reduced_motion"])
+	_split = split_fn.call() if split_fn.is_valid() else {}
+	_step_swap(dt)
 	hub.advance(dt)
 	var target: float = 1.0 if hub.mode == UiEventHub.Mode.CINEMATIC else 0.0
 	_lb = move_toward(_lb, target, dt * (100.0 if bool(opts["reduced_motion"]) else 4.0))
 	_update_layers()
+
+
+## Which fighter is on the left of the screen: slot 0 unless Camera's sigma says the rival lies to slot 0's left. The plate,
+## card and bark columns follow the fighter's side; a swap fades the plates out and in over 0.2 s (instant under reduced motion).
+func _want_swapped() -> bool:
+	if _split.is_empty():
+		return false
+	var sg = _split.get("sigma")
+	if sg == null and _split.get("ring") is Dictionary:
+		sg = (_split["ring"] as Dictionary).get("sigma")
+	return sg != null and float(sg) < 0.0
+
+
+func _step_swap(dt: float) -> void:
+	var rate: float = 1000.0 if bool(opts["reduced_motion"]) else 10.0
+	if _want_swapped() != _swapped:
+		_swap_fade = maxf(0.0, _swap_fade - dt * rate)
+		if _swap_fade <= 0.0:
+			_swapped = not _swapped
+			_relayout()
+	else:
+		_swap_fade = minf(1.0, _swap_fade + dt * rate)
 
 
 func set_option(key: String, value) -> void:
@@ -143,12 +180,17 @@ func set_option(key: String, value) -> void:
 func _relayout() -> void:
 	var sz: Vector2 = size if size.x > 1.0 else get_viewport_rect().size
 	var sil: bool = bool(opts["silhouette"])
-	if sz == _last_size and sil == _last_sil and insets == _last_insets:
+	if sz == _last_size and sil == _last_sil and insets == _last_insets and _swapped == _last_swapped:
 		return
 	_last_size = sz
 	_last_sil = sil
 	_last_insets = insets
-	layout.compute(sz, sil, insets)
+	_last_swapped = _swapped
+	layout.compute(sz, sil, insets, _swapped)
+	# Each model knows which side its column is on (the plate, the cards and the bark lane mirror by it).
+	for m in hub.models:
+		if m.slot < 2:
+			m.left_side = layout.plate[m.slot].position.x < sz.x * 0.5
 	hub.cap_limit = 1 if layout.portrait else 99
 	for l in _all_layers():
 		if l != null:
@@ -158,7 +200,8 @@ func _relayout() -> void:
 
 func _plate_alpha(m: UiFighterModel) -> float:
 	# In a respected cinematic the plates recede, so the set piece owns the screen (docs/ui/hud-spec.md section 8).
-	return 0.45 if (hub.mode == UiEventHub.Mode.CINEMATIC and m.cinematic == "") else 1.0
+	var a: float = 0.45 if (hub.mode == UiEventHub.Mode.CINEMATIC and m.cinematic == "") else 1.0
+	return a * _swap_fade
 
 
 func _o(plate_alpha: float = 1.0) -> Dictionary:
@@ -213,6 +256,17 @@ func _update_layers() -> void:
 	else:
 		_l_strip_base.update_sig(null)
 		_l_strip_marks.update_sig(null)
+
+	# Camera's split screen: the divider (only while the panes are open), the ring map (with the strip) and the edge pointers.
+	_l_divider.update_sig(UiSplit.divider_sig(_split) if (UiSplit.divider_active(_split) and _lb < 0.5) else null)
+	_l_ring.update_sig(UiSplit.ring_sig(_split) if (UiSplit.ring_active(_split) and layout.ring.size.y > 0.0 and _lb < 0.5) else null)
+	var chips: Array = []
+	if not _split.is_empty() and anchor_fn.is_valid() and _lb < 0.5:
+		for i in range(mini(2, hub.models.size())):
+			_anchors[i] = anchor_fn.call(i)
+		chips = UiSplit.pointers(layout, _split, _anchors, layout.s)
+	_l_pointers.update_sig(UiSplit.pointers_sig(chips) if not chips.is_empty() else null)
+	_chips = chips
 
 	var events_on: bool = not hub.cards.is_empty() or not hub.barks.is_empty() or not hub.banner.is_empty() or hub.world_card != null
 	_l_events.update_sig(_frame if events_on else null)
@@ -317,3 +371,23 @@ func set_flash_up(actor: int, up: bool) -> void:
 ## Whether the player wants the info flashes (danger sense, found, searching). On by default; Rendering's FlashView reads it.
 func info_flashes() -> bool:
 	return bool(opts["info_flashes"])
+
+
+func _paint_divider(ci: CanvasItem) -> void:
+	UiSplit.draw_divider(ci, layout, _split, layout.s)
+
+
+func _paint_ring(ci: CanvasItem) -> void:
+	UiSplit.draw_ring(ci, layout, hub, _split, layout.s, _o())
+
+
+func _paint_pointers(ci: CanvasItem) -> void:
+	UiSplit.draw_pointers(ci, layout, hub, _chips, layout.s, _o())
+
+
+## The clear zone of a fighter's pane while the panes are open (a polygon; empty when there is no divider). The fighter's
+## anchor should stay inside it (Camera's test uses this).
+func pane_clear_zone(slot: int) -> PackedVector2Array:
+	if not UiSplit.divider_active(_split):
+		return PackedVector2Array()
+	return layout.pane_zone(slot == 1, _split["c"], _split["n"])

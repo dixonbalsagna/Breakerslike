@@ -30,6 +30,7 @@ func _run() -> void:
 	_scenarios()
 	await _draw_smoke()
 	await _layer_rules()
+	await _split_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -256,10 +257,19 @@ func _hub_rules() -> void:
 	hub.consume({"type": "window_open", "actor": 0, "kind": "parry", "dur": 0.05})
 	_step(hub, 0.08)
 	_ok(hub.model(0).parry_t >= 0.0, "window: a very short parry window still shows for a moment")
+	# Hiding is removed from the base game (a flag, off): the hidden state and the lost trail are ignored...
 	hub.consume({"type": "lock_lost", "actor": 1, "dur": 1.0})
-	_ok(hub.model(1).lost_trail, "hiding: trail lost shows on the hunter")
+	hub.patch(0, {"hidden": true})
+	_ok(not hub.model(1).lost_trail and not hub.model(0).hidden, "hiding flag off: lock_lost and a hidden patch are ignored")
+	# ...and the code is intact behind the flag for the future stealth fighter.
+	UiData.set_feature("hiding", true)
+	hub.consume({"type": "lock_lost", "actor": 1, "dur": 1.0})
+	hub.patch(0, {"hidden": true})
+	_ok(hub.model(1).lost_trail and hub.model(0).hidden, "hiding flag on: trail lost and hidden show")
 	_step(hub, 1.2)
-	_ok(not hub.model(1).lost_trail, "hiding: and clears")
+	_ok(not hub.model(1).lost_trail, "hiding flag on: and the trail clears")
+	UiData.set_feature("hiding", null)
+	_ok(not UiData.feature("hiding"), "hiding: the data flag is off by default")
 	# The hub takes objects with the same fields (the sim's FxEvent).
 	hub = _hub()
 	var ev := SimState.FxEvent.new()
@@ -591,5 +601,108 @@ func _layer_rules() -> void:
 		hud.advance(1.0 / 60.0)
 		await process_frame
 	_ok(hud.redraw_count() - base3 > 100, "layers: the bench switch redraws every layer every frame (%d)" % (hud.redraw_count() - base3))
+	hud.queue_free()
+	await process_frame
+
+
+# --- Camera's split screen: divider, ring map, pointers, per-pane zones ---------------------------------------------------
+
+## Camera's anchors (docs/camera/split-screen.md section 3): each fighter's chest on its OUTER side of the divider.
+func _anchor_for(lay: UiLayout, c: Vector2, n: Vector2, slot: int) -> Vector2:
+	var sgn: float = -1.0 if slot == 0 else 1.0
+	return c + Vector2(0.0, 0.12 * lay.vp.y) + Vector2(n.x * 0.28 * lay.vp.x * sgn, n.y * 0.24 * lay.vp.y * sgn)
+
+
+func _split_rules() -> void:
+	# Geometry: the divider stops under the toll chip and above the ring map; the ring map sits between the bark lanes.
+	for sz in [Vector2(1920, 1080), Vector2(1366, 768), Vector2(1280, 720), Vector2(2560, 1080)]:
+		var lay := UiLayout.new()
+		lay.compute(sz, false)
+		var tag: String = "%dx%d" % [int(sz.x), int(sz.y)]
+		var band: Vector2 = lay.divider_band()
+		_ok(band.x >= lay.toll.end.y and band.y <= lay.ring.position.y and band.y < lay.strip.position.y, "%s split: the divider band is under the toll chip and above the ring map and the strip" % tag)
+		_ok(lay.ring.size.y > 0.0 and not lay.ring.intersects(lay.clear_zone) and not lay.ring.intersects(lay.bark[0]) and not lay.ring.intersects(lay.bark[1]) and not lay.ring.intersects(lay.strip), "%s split: the ring map is clear of the fight, the bark lanes and the strip" % tag)
+		var c: Vector2 = sz * 0.5
+		var seg: Array = lay.divider_segment(c, Vector2(1.0, 0.0))
+		_ok(seg.size() == 2 and is_equal_approx(seg[0].x, c.x) and is_equal_approx(minf(seg[0].y, seg[1].y), band.x) and is_equal_approx(maxf(seg[0].y, seg[1].y), band.y), "%s split: a level divider runs the whole band" % tag)
+		seg = lay.divider_segment(c, Vector2(0.0, -1.0))
+		_ok(seg.size() == 2 and absf(minf(seg[0].x, seg[1].x)) < 0.01 and is_equal_approx(maxf(seg[0].x, seg[1].x), sz.x), "%s split: a divider swinging through the horizontal spans the width" % tag)
+		# Each anchor stays inside its own pane's clear zone at every tilt, on both orientations.
+		var bad := 0
+		var overlap := 0
+		for sigma in [1.0, -1.0]:
+			for deg in range(-30, 31, 5):
+				var phi: float = deg_to_rad(float(deg))
+				var n := Vector2(sigma * cos(phi), -sin(phi))
+				var za: PackedVector2Array = lay.pane_zone(false, c, n)
+				var zb: PackedVector2Array = lay.pane_zone(true, c, n)
+				for slot in range(2):
+					var p: Vector2 = _anchor_for(lay, c, n, slot)
+					var zone: PackedVector2Array = za if slot == 0 else zb
+					if zone.size() < 3 or not Geometry2D.is_point_in_polygon(p, zone):
+						bad += 1
+				for gx in range(0, 21):
+					for gy in range(0, 11):
+						var q := Vector2(float(gx) / 20.0 * sz.x, float(gy) / 10.0 * sz.y)
+						if za.size() >= 3 and zb.size() >= 3 and Geometry2D.is_point_in_polygon(q, za) and Geometry2D.is_point_in_polygon(q, zb):
+							overlap += 1
+		_ok(bad == 0, "%s split: every anchor is inside its pane's clear zone at every tilt (%d outside)" % [tag, bad])
+		_ok(overlap == 0, "%s split: the two panes' clear zones never overlap" % tag)
+	# Swapped columns: slot 0 on the right.
+	var l2 := UiLayout.new()
+	l2.compute(Vector2(1920, 1080), true, Vector4.ZERO, true)
+	_ok(l2.plate[0].position.x > 960.0 and l2.plate[1].position.x < 960.0 and l2.cards[0].position.x > 960.0 and l2.bark[0].position.x > 960.0, "swap: slot 0's plate, cards and bark lane move to the right")
+	# The HUD: the sigma flip swaps the columns after a short fade; the divider, ring and pointers follow the record.
+	root.size = Vector2i(1280, 720)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	var st := {"sigma": 1.0, "sep": 1.0, "phi": 0.3, "dist": 40000.0}
+	hud.split_fn = func():
+		var n := Vector2(st["sigma"] * cos(st["phi"]), -sin(st["phi"]))
+		return {"sep": st["sep"], "c": Vector2(640.0, 360.0), "n": n, "gap": 3.0, "fade": 1.0, "sigma": st["sigma"], "pointer": "split",
+			"ring": {"angle_A": 1.0, "angle_B": 1.0 + st["dist"] / SimConst.W * TAU, "sigma": st["sigma"], "arc_A": 0.3, "arc_B": 0.3, "swing": 0.0, "sep": st["sep"]}}
+	hud.anchor_fn = func(slot):
+		var n := Vector2(st["sigma"] * cos(st["phi"]), -sin(st["phi"]))
+		return {"pos": _anchor_for(hud.layout, Vector2(640.0, 360.0), n, slot), "h": 90.0, "visible": true}
+	hud.strip_fn = func(): return {"W": 9600.0, "segs": [[0.0, 9600.0, "ocean"]], "cam_x": 0.0, "cam_w": 2000.0, "dead": [], "fighters": []}
+	for i in range(10):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(not hud.layout.swapped and hud.hub.model(0).left_side and not hud.hub.model(1).left_side, "hud split: sigma +1 keeps slot 0 on the left")
+	_ok(hud._l_divider.sig != null and hud._l_ring.sig != null and hud._l_pointers.sig != null, "hud split: the divider, the ring map and the pointers draw while the panes are open")
+	_ok(hud._chips.size() == 2, "hud split: one pointer chip per pane")
+	var bad_chip := 0
+	var lay2: UiLayout = hud.layout
+	var n0 := Vector2(cos(0.3), -sin(0.3))
+	for ch in hud._chips:
+		var slot: int = int(ch["slot"])
+		var dirn: Vector2 = n0 if slot == 0 else -n0
+		if (ch["dir"] as Vector2).dot(dirn) < 0.99:
+			bad_chip += 1
+		# On its own side of the divider and inside the safe area.
+		if (ch["pos"] - Vector2(640.0, 360.0)).dot(n0) * (-1.0 if slot == 0 else 1.0) <= 0.0 or not lay2.safe.grow(1.0).has_point(ch["pos"]):
+			bad_chip += 1
+	_ok(bad_chip == 0, "hud split: each pointer points the rival's way and sits in its own pane inside the safe area")
+	_ok(hud._chips[0]["text"] == str(int(round(40000.0 / 75.0))), "hud split: the distance is in fighter heights (from the ring's angles and the planet's size)")
+	_ok(hud.pane_clear_zone(0).size() >= 3 and hud.pane_clear_zone(1).size() >= 3, "hud split: pane_clear_zone gives each fighter's zone")
+	st["sigma"] = -1.0
+	for i in range(30):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud.layout.swapped and not hud.hub.model(0).left_side and hud.hub.model(1).left_side, "hud split: sigma -1 swaps the plate, card and bark columns")
+	st["sep"] = 0.0
+	for i in range(6):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_divider.sig == null and hud._l_pointers.sig == null and hud._l_ring.sig != null, "hud split: merged, the divider and the pointers clear and the ring map stays")
+	# One camera, no split: pointers only when the rival is off screen.
+	hud.split_fn = func(): return {"sep": 0.0, "sigma": 1.0, "pointer": "always", "ring": {"angle_A": 0.0, "angle_B": 1.0, "sigma": 1, "arc_A": 0.3, "arc_B": 0.3, "swing": 0.0, "sep": 0.0}}
+	hud.anchor_fn = func(slot): return {"pos": Vector2(300.0 + 500.0 * float(slot), 300.0), "h": 90.0, "visible": true}
+	hud.advance(1.0 / 60.0)
+	_ok(hud._chips.is_empty(), "pointers: a single camera with the rival in view shows none")
+	hud.anchor_fn = func(slot): return {"pos": Vector2(300.0, 300.0), "h": 90.0, "visible": slot == 0}
+	hud.advance(1.0 / 60.0)
+	_ok(hud._chips.size() >= 1, "pointers: a single camera with the rival off screen shows a chip toward it")
 	hud.queue_free()
 	await process_frame

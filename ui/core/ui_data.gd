@@ -142,3 +142,25 @@ static func option_defaults() -> Dictionary:
 	for k in o:
 		out[k] = o[k].get("default")
 	return out
+
+
+const FEATURES_PATH := "res://ui/data/features.json"
+static var _features: Dictionary = {}
+static var _feature_override: Dictionary = {}
+
+
+## A feature flag from ui/data/features.json (off when missing). Tests may override with set_feature.
+static func feature(key: String) -> bool:
+	if _feature_override.has(key):
+		return bool(_feature_override[key])
+	if _features.is_empty():
+		_features = _read(FEATURES_PATH).get("features", {})
+	return bool(_features.get(key, false))
+
+
+## Override a flag for this run (tests and demos); pass null to clear the override.
+static func set_feature(key: String, value) -> void:
+	if value == null:
+		_feature_override.erase(key)
+	else:
+		_feature_override[key] = bool(value)

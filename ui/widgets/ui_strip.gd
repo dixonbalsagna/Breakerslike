@@ -47,7 +47,7 @@ static func marks_sig(lay: UiLayout, data: Dictionary, t: float, o: Dictionary) 
 	var ping: bool = false
 	for f in data.get("fighters", []):
 		out.append(int(float(f.get("x", 0.0)) * k))
-		if bool(f.get("hidden", false)):
+		if bool(f.get("hidden", false)) and UiData.feature("hiding"):
 			ping = true
 			out.append(int(float(f.get("seen_x", 0.0)) * k))
 	if ping and not bool(o.get("reduced_motion", false)):
@@ -75,7 +75,7 @@ static func draw_marks(ci: CanvasItem, lay: UiLayout, hub: UiEventHub, data: Dic
 	for f in data.get("fighters", []):
 		var slot: int = int(f.get("slot", 0))
 		var col: Color = f.get("aura", Color.WHITE)
-		var hidden: bool = bool(f.get("hidden", false))
+		var hidden: bool = bool(f.get("hidden", false)) and UiData.feature("hiding")
 		var fx: float = bar.position.x + fposmod(float(f.get("x", 0.0)), W) / W * bar.size.x
 		var cy: float = bar.position.y + bar.size.y * 0.5
 		if hidden:
