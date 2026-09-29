@@ -34,11 +34,11 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | :--- | :--- | :--- |
 | Protagonist | **Second Wind** | Survive the rival's finisher contest roll. His next track step is then free |
 | Anti-hero | **Spite** | Win a decisive exchange by hand (melee, no signature) with help refused. His arms mend first, and his next finisher must be by hand |
-| Empress | **Off the record** (recommended; alternatives in §3, pending Orb) | While on the brink and at least 800 units from her opponent, a 1.5 s fill (her retinue turns its backs) that a decisive exchange against her stops. Once complete, she mends at once. The flaw is a mismatched piece of regalia, and her refit never touches that region again |
+| Empress | **The reserve** (recommended; alternatives in §3, pending Orb) | A guard member she kept back in the goon phase makes a last stand. She withdraws out of reach while a 10 s mend gauge fills, which it does only while the guard stands. The opponent wins through by beating the guard first. Once per match |
 | Cyborg | **Reboot** | Dock the loose backup drive, or finish a Press within reach of civilians. It mends one chip stage, and regrowth doubles for 5 s |
 
 **Limits after Orb's "looser" ruling:**
-- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's Off the record can also be stopped during its fill.
+- **Dropped:** the once-per-match cap and the final-act lock. Instead, each region can be rallied **once**, so a fighter has at most 4 Rallies. The Empress's comeback is stopped by beating her guard before the mend gauge fills (§3).
 - **Softened:** the cooldown goes from 30 s to **15 s** after leaving the brink.
 - **Kept:** the mended region returns battered.
 
@@ -139,38 +139,39 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   - **Real revisions, 9 to 12.**
     - *The fill.* When Wrath reaches a real revision's threshold, a **processing gauge** fills over 8 s while she keeps fighting. It is read in-world, with no text:
       - her sigh of dread when it starts;
-      - **one protocol gesture from her guard at each third**, where the third gesture means approved;
+      - **one protocol gesture at each third**, from a remaining guard member or from her own body when none are left; the third gesture means approved;
       - the pained aide's posture worsening with each revision (Narrative, `docs/narrative/pitches-q3.md` §11).
       The usual aura build-up that every fighter has stays as the backup cue.
     - *Stopping it.* If the opponent wins a decisive exchange against her while it fills, the gauge resets to empty and starts again. There is no other penalty.
     - *When it completes,* the revision's cinematic (2 to 3 s) plays and is respected. The refit applies on revisions 9 to 11. Tiers: 3 for revisions 9 and 10, 4 for revisions 11 and 12.
     - *State.* The processing gauge only.
   - **Guard of honour.** Each tag-in is a fixed 1 s salute, during which the incoming guard can't be hit. It counts as downtime, and there is at most one tag-in per 5 s.
-    - **The retinue.** A guard member who falls in the goon phase leaves the fight but stays as part of her ceremonial retinue: non-combat, untargetable, standing near her. The retinue performs the protocol gestures and the Rally beats. Being dismissed with honour removes a member for good.
   - **The fold.** Her gauges work everywhere, the fold included.
-  - **Her Rally.** No visible paperwork (Orb). Each option below restores the shared result: one broken region mended to battered, and off the brink (§2). They are pending Orb's pick.
-    - **A. Off the record** (recommended; Narrative's favourite).
-      - *Trigger.* While on the brink and at least 800 units from her opponent (after a break launch, say), she ducks away. A 1.5 s fill follows: her retinue turns its backs, so nobody sees it. A decisive exchange won against her during the fill stops it.
-      - *Result.* An instant, unceremonious mend.
-      - *Flaw.* A mismatched piece of regalia, grabbed in a hurry, stays visible for the match, and her refit never mends that region again.
-      - *Why it wins.* It has the clearest counterplay: stay close and keep pressing. It adds no state beyond a flaw you can see, and the image is funny and needs no text.
-    - **B. Close ranks** (folds in Dismissed with honour).
-      - *Trigger.* While on the brink, she calls it instantly.
-      - *Effect.* Her retinue forms a drill wall around her for 2 s, during which she can't be attacked, and she mends.
-      - *Cost.* One retinue member is dismissed with honour, for good. With no retinue left, she can't use it.
-      - *The trade.* It is more dramatic and has a visible cost, but it offers no counterplay beyond thinning her retinue earlier.
-    - **C. Recess.**
-      - *Trigger.* While on the brink, she declares a recess: a 3 s ceremonial pause, respected like a cinematic. The parasol goes up and she takes a sip.
-      - *Effect.* She mends.
-      - *Cost, for fairness.* The refreshments are for everyone: her opponent's ki refills to 100 during the recess. Her Wrath also falls back to the previous threshold.
-      - *Not recommended.* The opponent has no way to stop it; they can only be paid off.
-    - **Dismissed with honour on its own** is instant and costs one retinue member. It is kept only as part of B, because without the wall it is B minus the drama.
+  - **Her comeback: a brawl through her guard** (Orb: "a straightforward brawl that must defeat the guards before getting to the empress"). There is no damage transfer and no visible paperwork.
+    - **Shared rule (the guard's hold).** Each option below starts the same way:
+      - *Trigger.* She calls it within 3 s of entering the brink. It never starts during her opponent's finisher.
+      - *While the guard stands,* she withdraws out of reach: lock-on goes to the guard, who are always in reach (pillar 3). She snipes support shots and taunts, as in the goon phase (Orb).
+      - *The mend.* A mend gauge fills only while at least one guard member of the comeback is standing. It reads through her body straightening, with no text.
+      - *If the gauge completes,* she mends one broken region to battered, leaves the brink, and steps back in. Any guard still standing salute and withdraw.
+      - *If the guard fall first,* there is no mend. She stays on the brink and is in reach at once.
+      - *Limits.* Once per match. It counts as a Rally for the finisher tilt (§2).
+      - *The guard* use the normal stance grammar and single-region bodies (§3 row).
+    - **A. The reserve** (recommended).
+      - *The setup.* In the goon phase she may keep one guard member back at her side instead of tagging them in. The AI decides this with its goon policy (Encounter).
+      - *The last stand.* On the brink, the reserve makes a last stand: a full-strength guard member, with a 10 s mend gauge.
+      - *The cost.* Keeping a reserve makes her opening weaker: two guard fight the goon phase instead of three. If all three fall in the goon phase, she has no comeback.
+      - *Why it wins.* It is the plainest brawl: beat the guard, then reach her. It adds a real decision in act 1 (all-in or insurance) and summons nothing. It also answers Orb's gesture rule, because the reserve stands beside her all match and performs her protocol gestures.
+    - **B. Reinforcements.** On the brink, a fresh recruit arrives with a salute: weaker than the original guard (a region that breaks at 60 wear), with an 8 s mend gauge. It is simple and always available once, but it summons from nowhere, which is less of her story.
+    - **C. Encore.** On the brink, the whole guard returns for a short, harder second goon phase: three members in turns, each breaking at 50 wear but hitting 20% harder, with a 15 s mend gauge. It is the biggest spectacle but the longest, at 15 to 25 s, and it contradicts "fallen guards leave" unless they come fresh from the barracks.
+    - **D. The captain.** On the brink, one guard captain arrives: a mini-boss with two regions to break, and a 12 s mend gauge. One tough duel rather than a crowd, and it adds a character Narrative would have to create.
+  - **Gestures.** Her protocol gestures come from a remaining guard member, or from her own body when none are left (Orb). Fallen guards leave the match.
   - **QA bands**, per Empress match:
     - she wins 45 to 55% of each pairing;
     - she reaches revision 12 in 30 to 60% of matches;
     - 20 to 50% of real-revision gauges are reset at least once;
     - median fill time is 8 to 16 s per real revision;
-    - no fight gap exceeds 10 s (`balance-targets.md` §8).
+    - no fight gap exceeds 10 s (`balance-targets.md` §8);
+    - for The reserve: she keeps a reserve in 30 to 70% of matches; the last stand's mend completes in 40 to 60% of attempts; a last stand lasts at most 12 s (median 6 to 10 s); and the goon phase still fills act 1 (1:00 to 2:00).
 - **Press (the Cyborg's food).** His plates clamp shut around nearby civilians; this is slow and interruptible, like a charge. An interrupt pops the hatch at the chip's current station, which rewards the punish.
 
 ## 4. What the sim needs (Simulation, Tools)
@@ -295,7 +296,7 @@ Orb: "with few exceptions, transformations should be cinematic and uninterruptib
 | Protagonist, heat track | Stoking (+25 heat per second) | CHARGE INTERRUPT on the stoke | None. Heat stages are power states, not transformations |
 | Anti-hero, forms | Pride thresholds | Humble him (parry, GUARD BREAK, break a region), which drains Pride | Each form, 2 to 3 s |
 | Anti-hero, Drop the Act | The conditions (after 2:00, Pride at 50 or more) | Drain his Pride below 50 first | 1.5 s |
-| Empress, revisions | Wrath, then an 8 s processing gauge for real revisions, read through her sigh and her retinue's three protocol gestures (no text) | A decisive exchange won against her while it fills resets the gauge | Under 1 s for joke revisions, 2 to 3 s for real ones |
+| Empress, revisions | Wrath, then an 8 s processing gauge for real revisions, read through her sigh and three protocol gestures, from her remaining guard or her own body (no text) | A decisive exchange won against her while it fills resets the gauge | Under 1 s for joke revisions, 2 to 3 s for real ones |
 | Cyborg, molts | Hunger, from Press and sandwiches | Interrupt Press; keep him from people | Each molt, 2 to 3 s |
 | Cyborg, final form | Catching the backup drive | Chase him off it, and cut off the drive | Docking, 2 to 3 s |
 
@@ -305,7 +306,7 @@ Orb: "with few exceptions, transformations should be cinematic and uninterruptib
 - Press;
 - Swallow It;
 - the Empress's processing gauge;
-- her Off the record fill.
+- the mend gauge during her guard's hold.
 
 Heat stages, Humbled bursts and boil-overs are power states with no cinematic. The fold is a relocation, and it now follows the same rule (§7).
 
