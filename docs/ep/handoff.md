@@ -93,6 +93,12 @@ This file is for a fresh Executive Producer session. Read it first, then docs/ep
 ## Plan upgrade (2026-09-29)
 Orb upgraded the subscription ('more tokens to play with, keep going'). More directors may work in parallel on non-sim tracks. Workflows and ultracode still need Orb's per-task OK (ADR 0005). Newly active: Art (look v0 and the Anti-hero concept), UI & UX (the no-health-bar HUD in ui/), QA (move to batch.gd, Wounds test skeletons), Audio (direction and grunt palettes). Ping Orb whenever a new playable build is live.
 
+## Audio follow-ups (2026-09-29)
+- The event list in docs/audio/direction.md §9 goes to Simulation (S1 events) and Encounter (S2). Needed: damage with attacker, victim, region and kind; beam_fire, beam_end and beam_clash; transform, tier_up, heat_stage, boil_over, fold and encore; hide, found, ambush and lock_lost; building and world events.
+- Rendering applies audio's 4-line hook in sim_host.gd and main.gd (audio/README.md) after its visual fix.
+- Grunt names: Narrative's gesture, intensity and mood names map to Audio's recipes. Narrative owns caption strings; UI displays them.
+- Legal: origin rows AUD-GEN-001, AUD-GEN-002 and AUD-PREV-001; screen the beam and Press sound rules (direction.md §5.2 to 5.3).
+
 ## Sim editor queue (one at a time; the plan is docs/architecture/wounds-plan.md)
 S0 menace fixes (Simulation, active), S1 wear core, then SC world scale plus W-R rim scaling (World first, then Simulation, then Encounter's tempo pass; one golden regen; docs/world/scale.md; about 2,000 bh planet; 10-20 s lap), B1 building depth data (World), LD1 fire and smoke cover (World and Encounter), then (with the ko() hook behind a flag), S2 the end (Encounter), S3a and S3b, S4 Rally, B2 the building brunt (Encounter, World, Simulation; docs/world/buildings-in-depth.md), with B3 building presentation (Rendering, Camera) in parallel after B1, LD2 landslides, then LD3 lava, quakes and rifts (Orb's picks; docs/world/living-destruction.md), then D1 roster as data, then F1: the **Anti-hero** (Orb's pick). W1 (variable circumference) comes before the fold; N1 (N bodies) comes before the Empress.
 
