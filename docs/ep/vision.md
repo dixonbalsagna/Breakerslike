@@ -193,3 +193,5 @@ Orb had played the Godot greybox before answering.
 **Audio picks (Orb, 2026-09-29).** Grunts are synthesised first, and Orb may record laughs and the munch later. AI-generated audio is allowed once Legal clears the specific tool's terms. Wear and heat audio is on by default, with a slider. The music direction will be picked by ear from Audio's three 30-second sketches.
 
 **Anti-hero look, round 1 (Orb, 2026-09-29).** None of Art's three silhouettes (Column, Bell, Standard) picked yet: pitch more. No cape. Shed Regalia: pitch it later. The music pick is pending until Orb listens.
+
+**HUD clutter (Orb, 2026-09-29).** The aura crown rings should pop up for a moment when something happens (a hit, a stage change), then fade back. No persistent clutter in the way of the fight choreography. 'Let's revise this because it looks like a good start.'
