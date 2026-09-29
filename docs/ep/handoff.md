@@ -106,7 +106,7 @@ World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, 
 S3b Encounter (active), then S4 Simulation (Rally, plus the second-breath metric), then World (collateral ramp and cap, B1 in bh, pop per slide, structures index), then Controls Stage A (integer hit-stop, press ticks, SimIntent special, transform and stanceStep; goldens bit-identical), then Controls Stage B (the hit-stop table; goldens change).
 
 ## Encounter, next small slice (after World)
-The overtime ramp: after 9:00, k rises 25% per minute (spec-wounds §2). Lower k one step (the live value is 0.065, although Game Design's note says 0.06 to 0.055; confirm against the targets). Targets: timeouts at most 1% at the cap, p10 at least 5:00, median 6:00 to 8:00. Also the contest tilt of -10 per Rally, and the AI's use of Rally.
+The overtime ramp: after 9:00, k rises 25% per minute (spec-wounds §2). Lower k from 0.065 to 0.06 (Game Design confirmed). Targets: timeouts at most 1% at the cap, p10 at least 5:00, median 6:00 to 8:00. Also the contest tilt of -10 per Rally, and the AI's use of Rally.
 
 ## QA follow-ups (Game Design)
 - Re-baseline the collateral bands after B1.
