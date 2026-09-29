@@ -4,7 +4,7 @@ Owner: Art Director, for Rendering and Technical Art (routed by the EP). 2026-09
 
 ## 1. What the prototype must show
 
-Brief, iconic pops at a fighter's head that say what it senses or feels, then nothing. Twelve flashes in the fighter's own shape family, driven by a state, with real timing (0.3 to 1 s), a real priority rule, and no clutter at rest. Orb should be able to play a match, see the flashes fire from real events, and fire each one by hand to compare.
+Brief, iconic pops at a fighter's head that say what it senses or feels, then nothing. Fourteen flashes in the fighter's own shape family, driven by a state, with real timing (0.3 to 1 s), a real priority rule, and no clutter at rest. Orb should be able to play a match, see the flashes fire from real events, and fire each one by hand to compare.
 
 ## 2. Scope
 
@@ -22,7 +22,7 @@ Brief, iconic pops at a fighter's head that say what it senses or feels, then no
   - wedges: the same with half-width `8.5` units;
   - steps: a square of side `size * 0.6`, snapped to a 3-unit grid in world space.
 - **Each instance has custom data** `(angle, distance, size, opacity)` from the layout table, plus a per-layer tint. Two layers per shape: a rim at full size in the accent's mid step, and a core at 0.58 size in the accent's light step. Info flashes use a thin keyline for the rim (`info_colours[family].line` in `flashes.json`) and a pale core (`info_colours[family].core`), at full opacity. The core fills 84% of the rim, so the keyline is thin. Never yellow, red-orange or a thick black outline.
-- **Glyphs** ("found" is a bang, "searching" is a question) are drawn in a second quad by the same shader with `glyph` set to 1 or 2. The bang is a stem and a dot; the question is a hook and a dot. Each is built from the family's primitive: capsule and dot, blade and diamond, wedge and triangle, snapped squares. `ma-2-flashes.svg` shows all four, and `gen.mjs` (`glyphPolys`) has the exact geometry.
+- **Glyphs** ("found" is a bang, "searching" is a question, "hazard" is two bangs side by side, both in the family's shapes and never a font) are drawn in a second quad by the same shader with `glyph` set to 1 or 2. The bang is a stem and a dot; the question is a hook and a dot. Each is built from the family's primitive: capsule and dot, blade and diamond, wedge and triangle, snapped squares. `ma-2-flashes.svg` shows all four, and `gen.mjs` (`glyphPolys`) has the exact geometry.
 - **Unit and place.** All sizes are in hundredths of a body height (`FighterView.HEIGHT`, 90 units), so `size 60` is 54 world units. Anchor: the head centre, plus 2 units up. The glyph sits 7 units of head size above it. The flash is behind the head (about 6 units behind the fighter plane), and the glyph is above the head, so neither hides the mask, the sigil or the chest. The layout is written in the fighter's facing frame (0 degrees is forward, 90 is up) and mirrors with the body.
 - **Ground shards** (the surge only) are instances with `ground = true`: their y is the ground height under the fighter, read from the terrain the way the fighter's shadow is.
 
@@ -44,24 +44,25 @@ Wire the events that exist today, and add debug triggers for the rest.
 | Flash | From an existing event (`docs/architecture/fx-events.md`) | Until then |
 |---|---|---|
 | Found | `found` (actor is the finder) | debug key |
-| Brink | `brink_enter` | |
 | Hurt | `damage` with `kind` heavy, or `region_broken`, when the crown is not up | |
 | Triumph | `ko` (winner) | |
 | Surge | `tier_up` as a stand-in, until `cinematic_start` and `cinematic_end` exist (hold for the cinematic length) | |
-| Resolve | `brink_exit` as a stand-in, until `rally` exists | |
+| Resolve | `brink_exit` as a stand-in, until `rally` exists. Sequenced (section 7): it starts 0.1 s after the crown's wear pop fades | |
 | Rage | `banner` events for a clash, as a stand-in only for the prototype | debug key |
-| Danger sense, searching, fear, pride, taunt | none yet (Encounter's slices, Game Design, Narrative barks) | debug key |
+| Danger sense, hazard, primed, searching, fear, pride, respect, taunt | none yet (Encounter's slices: `hazard_telegraph`, `ambush_ready`; Game Design; Narrative barks; respect from `clash_draw`, `finisher_blocked` and the rival's `rally`) | debug key |
 
-**Debug triggers** (Rendering's debug overlay, not Controls' bindings): hold Alt and press 1 to 9 for danger sense, found, searching, brink, fear, rage, hurt, resolve, triumph; 0 for pride; minus for taunt; equals for the surge. It fires on P1; add Shift for P2.
+**Debug triggers** (Rendering's debug overlay, not Controls' bindings): hold Alt and press the keys in the order of `flashes.json`: 1 to 9 for danger sense, hazard, primed, found, searching, fear, rage, hurt, resolve; 0 for triumph; minus for pride; equals for respect; the left bracket for taunt; the right bracket for the surge. It fires on P1; add Shift for P2.
 **Audio:** emit a cosmetic `flash` event `{actor, id}` when a flash starts, so Audio can pair its cue. The prototype plays nothing.
 
 ## 7. Priority and arbitration
 
-Priority, highest first: surge, danger sense, found, searching, brink, fear, rage, hurt, resolve, triumph, pride, taunt.
+Priority, highest first: surge, danger sense, hazard, found, primed, searching, fear, rage, hurt, resolve, triumph, pride, respect, taunt (the numbers are in `flashes.json`).
 - One flash at a time per fighter. A higher priority preempts (the lower fades in 0.1 s). The same priority extends the hold and never replays the attack. A lower priority waits up to 0.25 s and is then dropped.
 - **Never a flash and a crown together.** UI's crown owns wear. Rendering needs a callback from UI, `crown_up(actor) -> bool` (the crown's `crown_hold` above 0). A flash due while the crown is up waits up to 0.25 s and is then dropped. A wear event arriving while a flash is up fades the flash in 0.1 s. The surge is the exception: during a transformation cinematic the crown stays down.
 - Info flashes are never dropped for an emotion flash, only for the surge.
 - A hidden fighter shows no flash.
+- **Resolve is sequenced, not dropped.** On a Rally the crown pops first. Resolve (`flashes.json`, `flashes.resolve.sequence`) waits for `crown_up(actor)` to turn false, starts `delay_after_crown_down` (0.1 s) later, waits up to `wait_max` (2.0 s) and is never dropped by the 0.25 s rule or by a lower-priority flash. Only the surge can preempt it. `arbitration` in the data carries the default wait (0.25 s) and this exception.
+- **Primed and danger sense are opposite ways.** Danger sense points up and back (turned to the threat's bearing). Primed points forward and up, single direction, and never turns. Respect has no star and no hand pose; it is a level pair of shapes and a small one above.
 
 ## 8. Colour and motion
 
@@ -87,7 +88,7 @@ At most two draw calls per fighter, both hidden when idle (`visible = false`, ze
 
 **Acceptance:**
 1. At rest, no flash is drawn, and nothing changes in the frame.
-2. Each of the twelve fires from its debug key, with the timing in the table (within a frame), and is gone by its total time.
+2. Each of the fourteen fires from its debug key, with the timing in the table (within a frame), and is gone by its total time.
 3. Priority and arbitration behave as in section 7: a heavy hit during a taunt cancels the taunt in 0.1 s, a crown pop drops a waiting flash, the surge preempts everything.
 4. The flash mirrors with the fighter when it swaps sides, and never covers the head, the chest or the sigil area.
 5. The gameplay hash is identical with the prototype on and off, at seeds 12345 and 4, and the determinism negative control still fails when a fighter is nudged.
@@ -97,6 +98,6 @@ At most two draw calls per fighter, both hidden when idle (`visible = false`, ze
 
 - **Rendering:** the cheat-out staging (in progress) and the hybrid projection are needed first.
 - **UI:** the `crown_up` callback, and the crown changes suggested in `marked-aura.md` (pop only for wear, stay down during a cinematic).
-- **Audio:** cue ids for the twelve flashes (words are in `flashes.json`).
+- **Audio:** cue ids for the fourteen flashes (words are in `flashes.json`).
 - **Encounter and Game Design:** events for danger sense (ambush, telegraph), searching (lock lost, hunting), taunt, pride (a decisive exchange won) and the drop-act family.
 - **Open:** should the prototype also draw the sigil on the greybox head, so Orb sees a flash and a mark together? It is cheap (a decal on the head) and I recommend it as a second step.

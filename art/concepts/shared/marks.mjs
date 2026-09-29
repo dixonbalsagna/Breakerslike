@@ -10,6 +10,7 @@
 //   dome: a designed dome with a brow ridge, a jaw plane and a crown seam; no eye or mouth slots or dots, and the sigil sits on the forehead.
 
 import { ORDER, PALETTES as BASE_PALETTES } from '../directions/fighters.mjs';
+import { V, add, mul, lerp, dirDown, limb, along } from '../anti-hero/kit.mjs';
 
 export { ORDER };
 export const NAMES = { P: 'Protagonist', A: 'Anti-hero', E: 'Empress', C: 'Cyborg' };
@@ -62,9 +63,10 @@ export const yawMap = (fk, yaw) => { const f = FACE[fk], xm = (f.x0 + f.x1) / 2,
 // gap is true in hurt and brink: the sigil shows a break (a gap in the ring, a split slash, a missing chevron or step), never a line across it.
 function sigilParts(fk, gap) {
   if (fk === 'P') {
-    if (!gap) return [{ pts: circ([0, 0], 1.65, 20), fill: 'acc' }, { pts: circ([0, 0], 1.0, 18), fill: 'mask' }];
-    const arc = []; for (let a = 40; a <= 325; a += 15) arc.push([Math.cos(a * Math.PI / 180) * 2.6, Math.sin(a * Math.PI / 180) * 2.6]);
-    return [{ pts: band(arc, 1.2), fill: 'acc' }];
+    // an open arc, never a closed ring: the gap faces forward, and widens when hurt
+    const [a0, a1] = gap ? [115, 335] : [75, 350], arc = [];
+    for (let a = a0; a <= a1; a += 10) arc.push([Math.cos(a * Math.PI / 180) * 1.5, Math.sin(a * Math.PI / 180) * 1.5]);
+    return [{ pts: band(arc, gap ? 0.75 : 0.95), fill: 'acc' }];
   }
   if (fk === 'A') {
     const lean = pts => rot(pts, -12, [0, 0]);   // the slash leans, so it reads as a slash and not a bar
@@ -121,4 +123,37 @@ export function maskHead(fk, bh, pal, mask, yaw = 0) {
   if (yaw >= 85) marks = marks.map(q => ({ ...q, poly: q.poly.map(([x, y]) => [(x - 0.4) * 0.42, y]) }));
   else if (yaw > 0) { const m = yawMap(fk, yaw); marks = marks.map(q => ({ ...q, poly: q.poly.map(m) })); }
   return { ...bh, poly, shade, marks, fill: mask.fill, shadow: mask.shadow, neck: mask.shadow };
+}
+
+// ---------------------------------------------------------------------------------------------------------- shared body pieces
+const T2 = (sk, arr) => arr.map(([x, y]) => sk.T(x, y));
+const perp = d => V(-d.y, d.x);
+// The Protagonist's forearm wraps: three tone-on-tone wraps with a diagonal edge, not contrasting wristbands.
+export function pWraps(ctx, sk) {
+  const { pal } = ctx, A = sk.nearArm; let s = '';
+  for (const [t0, t1] of [[0.28, 0.44], [0.5, 0.66], [0.72, 0.9]]) {
+    const a = along(A.E, A.W, t0), b = along(A.E, A.W, t1);
+    s += ctx.poly(limb(a, b, 5.4 * sk.b.lw, 5.2 * sk.b.lw, 1.05), pal.base.light, { sw: 1 });
+    s += ctx.line([add(a, V(-1.6, -0.5)), add(b, V(1.6, 0.5))], pal.gear.shadow, 0.9);
+  }
+  return s;
+}
+// The Empress's mantle: as the base design, except that the stiff collar behind the head is a low flare that stays below the eye line,
+// so at 12 px it never reads as horns or antennae (Legal, 2026-09-29).
+export function empressBack(ctx, sk, st) {
+  const { pal } = ctx, sway = st.sway ?? 10; let s = '';
+  const S1 = sk.T(-5.8, 28), W = sk.T(-6.4, 6);
+  const hemB = add(S1, mul(dirDown(-(46 + sway * 1.2)), 66)), hemA = add(W, mul(dirDown(-(14 + sway)), 62));
+  s += ctx.poly(T2(sk, [[-3, 30.5], [-8.4, 37.2], [-14.4, 33.4], [-12.4, 28]]), pal.base.mid);
+  s += ctx.line(T2(sk, [[-3.4, 31], [-8.4, 36.8], [-14, 33.6]]), pal.accent.mid, 1.6);
+  s += ctx.poly([S1, hemB, hemA, W], pal.base.mid);
+  s += ctx.shade([S1, lerp(S1, hemB, 0.5), lerp(W, hemA, 0.5), W], pal.base.shadow);
+  s += ctx.poly([S1, lerp(S1, hemB, 0.34), lerp(W, hemA, 0.34), W], pal.accent.mid, { line: false, op: 0.9 });
+  const N = 8, e0 = hemB, e1 = hemA, d = V(e1.x - e0.x, e1.y - e0.y), l = Math.hypot(d.x, d.y) || 1, out0 = V(-d.y / l, d.x / l);
+  const outward = out0.x < 0 || (out0.x === 0 && out0.y < 0) ? out0 : mul(out0, -1);
+  for (let i = 0; i < N; i++) {
+    const p0 = lerp(e0, e1, i / N), p1 = lerp(e0, e1, (i + 1) / N), tip = add(lerp(p0, p1, 0.5), mul(outward, 6.4 + (i % 2) * 2.2));
+    s += ctx.poly([p0, tip, p1], i % 2 ? pal.gear.light : pal.gear.mid, { sw: 1 });
+  }
+  return s;
 }

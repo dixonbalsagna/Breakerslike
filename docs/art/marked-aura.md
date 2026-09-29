@@ -6,8 +6,8 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 
 **Sheets** (`art/concepts/marked-aura/`):
 - `ma-1-style.svg`: the four fighters at rest, the mask tones, 40 px and 12 px reads, and the neutral, taunt, hurt, rage and triumph strip per fighter with a head close-up.
-- `ma-2-flashes.svg`: all twelve flashes in the four shape families, and a table of what each is for, its timing, priority and sound pairing.
-- `ma-3-staging.svg`: four staged moments in the greybox scene (face-off, clash, transformation, hurt or brink) with the blocking rules.
+- `ma-2-flashes.svg`: all fourteen flashes in the four shape families, and a table of what each is for, its timing, priority and sound pairing.
+- `ma-3-staging.svg`: four staged moments in the greybox scene (face-off, clash, transformation, hurt or brink, where the crown owns the brink) with the blocking rules.
 - `ma-4-flash-rules.svg`: a flash in time, priority and arbitration, the flash against the HUD crown, and the Legal fallback.
 - `ma-5-legal-checks.svg`: the checks Legal asked Art to run, because Legal cannot view SVGs (masks in three flat colours and silhouette, each sigil beside the generic patterns to avoid, the flashes beside the two patterns to avoid, the dome, and the Coil's chest).
 - `data/art/flashes.json`: the canonical data for Rendering, UI and Audio, now with the Legal rules (`legal_rules`).
@@ -31,7 +31,7 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 
 | Fighter | Sigil | Where | Rules kept |
 |---|---|---|---|
-| Protagonist | A single ring, teal on the pale mask | Off-centre at the temple, above the brow ridge, under the raised hairline. Never centred on the forehead | No inner ring, no centre dot, never with the slash. Hurt and brink open a gap in the ring (a "C"), never a line across it |
+| Protagonist | A single open arc (a "C" with a gap facing forward), teal on the pale mask | Off-centre at the temple, above the brow ridge, under the raised hairline. Never centred on the forehead | No inner ring, no centre dot, never with the slash. Hurt and brink open a gap in the ring (a "C"), never a line across it |
 | Anti-hero | A leaning slash and a small dot, lit orchid on the dark mask | Mid-face, a mark with no pair | Never with a ring, never crossed into an X. Hurt and brink split the slash with a gap. The chest has one diagonal sash, so nothing lines up into an X |
 | Empress | Three chevrons of different sizes, offset, in moss | The brow, under the gear band | An odd count, not a tidy double chevron, moss and bone (never a car or oil brand's colours). Hurt drops the middle one |
 | Cyborg | A stair of four lit squares of growing size | Mid-face on the display | Not a line grid, no cross bars, no plus. Hurt drops one step |
@@ -42,22 +42,26 @@ No sigil sits as an eye or a mouth: none is one of a pair, and none has a line b
 
 ## The flash vocabulary
 
-Twelve flashes, each tied to a real game moment. Timings are attack + hold + fade in seconds, and every flash except the surge is under a second. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `data/art/flashes.json`.
+Fourteen flashes (Orb added Hazard, Primed and Respect; the EP cut Brink, kept Resolve and kept Pride apart from Triumph), five of them info. Each is tied to a real game moment. Timings are attack + hold + fade in seconds, and every flash except the surge is under a second. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `data/art/flashes.json`.
 
 | Flash | Class | Moment (sim event) | Time (s) | Priority |
 |---|---|---|---|---|
-| Danger sense | info | An ambush from hiding, a telegraphed heavy or beam, an attack from off screen | 0.05 + 0.15 + 0.15 = 0.35 | 2 |
-| Found | info | A hidden rival is found, or a lost lock-on is regained | 0.06 + 0.30 + 0.24 = 0.60 | 3 |
-| Searching | info | Lock-on lost, hunting a hidden rival (re-pops at most every 3 s) | 0.10 + 0.50 + 0.30 = 0.90 | 4 |
-| Brink | emotion | The fighter enters the brink | 0.08 + 0.35 + 0.55 = 0.98 | 5 |
-| Fear | emotion | An opponent starts a finisher, or the fighter watches a rival transform | 0.08 + 0.35 + 0.37 = 0.80 | 6 |
-| Rage | emotion | Drop the Act, a wrath spike, a boil-over, a humiliating parry | 0.12 + 0.45 + 0.35 = 0.92 | 7 |
-| Hurt | emotion | A heavy hit or a break launch, when the crown is not up | 0.04 + 0.16 + 0.30 = 0.50 | 8 |
-| Resolve | emotion | A Rally or Second Wind | 0.10 + 0.35 + 0.35 = 0.80 | 9 |
-| Triumph | emotion | A finisher lands, or a KO for the winner | 0.14 + 0.50 + 0.36 = 1.00 | 10 |
-| Pride | emotion | A decisive exchange won | 0.20 + 0.50 + 0.20 = 0.90 | 11 |
-| Taunt | emotion | A taunt line or gesture | 0.10 + 0.35 + 0.30 = 0.75 | 12 |
+| Danger sense | info | An ambush from hiding, a telegraphed heavy or beam, an attack from off screen (a pointer train, turned to the threat) | 0.05 + 0.15 + 0.15 = 0.35 | 2 |
+| Hazard | info | The world is about to hit the fighter: a falling building, a collapsing crater rim, a beam path, rising water. Not a fighter attack | 0.05 + 0.25 + 0.15 = 0.45 | 3 |
+| Found | info | A hidden rival is found, or a lost lock-on is regained | 0.06 + 0.30 + 0.24 = 0.60 | 4 |
+| Primed | info | Leaving cover with the ambush window open (x1.5 damage for 2.5 s). Points forward, where danger sense points back | 0.06 + 0.34 + 0.20 = 0.60 | 5 |
+| Searching | info | Lock-on lost, hunting a hidden rival (re-pops at most every 3 s) | 0.10 + 0.50 + 0.30 = 0.90 | 6 |
+| Fear | emotion | An opponent starts a finisher, or the fighter watches a rival transform | 0.08 + 0.35 + 0.37 = 0.80 | 7 |
+| Rage | emotion | Drop the Act, a wrath spike, a boil-over, a humiliating parry | 0.12 + 0.45 + 0.35 = 0.92 | 8 |
+| Hurt | emotion | A heavy hit or a break launch, when the crown is not up | 0.04 + 0.16 + 0.30 = 0.50 | 9 |
+| Resolve | emotion | A Rally or Second Wind. Sequenced: it starts 0.1 s after the crown's wear pop fades, waits up to 2 s and is never dropped by arbitration | 0.10 + 0.35 + 0.35 = 0.80 | 10 |
+| Triumph | emotion | A finisher lands, or a KO for the winner | 0.14 + 0.50 + 0.36 = 1.00 | 11 |
+| Pride | emotion | A decisive exchange won | 0.20 + 0.50 + 0.20 = 0.90 | 12 |
+| Respect | emotion | A clash ends in a draw, a finisher is blocked, or a rival gets back up after a heavy hit | 0.20 + 0.40 + 0.30 = 0.90 | 13 |
+| Taunt | emotion | A taunt line or gesture | 0.10 + 0.35 + 0.30 = 0.75 | 14 |
 | Surge | emotion | A transformation: held for the respected cinematic (up to 3 s), then faded in 1.2 s | 0.25 + 3.0 + 1.2 | 1 |
+
+**Cut and held.** Brink is cut: the crown's dashed brink ring covers it, and the sigil still dims and gaps. Winded, Smug and Bored are held for later (they are in the pitch, `ma-6-flash-pitch.svg`, and listed in the data as `held`).
 
 Notes on the moments: a parry window keeps the crown's ring (a flash would double it). The Protagonist's transformation surge is not a power-stage signature: Hot Blood stays steam and veins on the body. Sim events for danger sense, searching, taunt and the drop-act family come with Encounter's and Game Design's slices, and the rest exist today (`docs/architecture/fx-events.md`).
 
@@ -93,7 +97,7 @@ Each flash pairs with one short sound, described in words on the sheet: a low dr
 ## Timing, priority and the crown
 
 - **Transient.** A flash lasts 0.3 to 1 s and then it is gone. At rest, nothing (not even a faint trace): the fight area is clean.
-- **One channel per fighter.** A flash and a crown are never up together. The crown owns wear (a stage change, brink, Rally, facade crack, boil-over). A flash owns emotion and sense.
+- **One channel per fighter.** A flash and a crown are never up together. The crown owns wear (a stage change, brink, Rally, facade crack, boil-over). A flash owns emotion and sense. The one sequenced flash is Resolve: on a Rally the crown pops first, and Resolve starts 0.1 s after the crown goes down.
 - **Arbitration.** A wear event arriving while a flash is up fades the flash in 0.1 s and the crown takes the fighter. A flash due while the crown is up waits up to 0.25 s and is then dropped. A higher priority preempts a lower one (the lower fades in 0.1 s). The same priority extends the hold and never replays the attack. Each flash has its own cooldown per fighter.
 - **Info flashes are never dropped for an emotion flash,** only for the surge. During a transformation cinematic the surge owns the fighter and the crown stays down. A hidden fighter shows no flash.
 - **Placement.** Behind and above the head, never over the mask, the sigil or the chest. Rage sweeps forward, away from the camera-facing side.
@@ -120,7 +124,7 @@ Each flash pairs with one short sound, described in words on the sheet: a low dr
 
 | Legal's condition | What was done | Where to see it |
 |---|---|---|
-| Ring: single, no concentric rings, no centre dot | The Protagonist's sigil is one ring, no inner ring, no dot, off-centre at the temple. Hurt is a gap in the ring | `ma-5` section 2 |
+| Ring: single, no concentric rings, no centre dot | The Protagonist's sigil is a single open arc, no inner ring, no dot, off-centre at the temple (open, so the face-on view cannot read as an eye; Legal, second pass). Hurt widens the gap | `ma-5` section 2 |
 | Slash: never with the ring, never an X | The Anti-hero's slash leans and stands alone. Hurt splits it with a gap. The Coil's chest has one sash, not two crossing straps, and the buckle has a diamond and no slash | `ma-5` sections 2 and 5, `coil-turnaround.svg` |
 | Chevrons: an odd count, different sizes or offset, not a car or oil colour | Three chevrons of three sizes, offset, in moss on bone | `ma-5` section 2 |
 | Grid: not a glowing line grid | A stair of four lit squares. No lines, no cross bars | `ma-5` section 2 |
@@ -157,11 +161,13 @@ Applied on `ma-3-staging.svg`, with each flash at its peak:
 
 ## The flash-set pitch
 
+**Decided.** Orb added Hazard, Primed and Respect and left the cuts to the EP, who cut Brink, kept Resolve (sequenced after the crown's wear pop, not dropped) and kept Pride apart from Triumph: fourteen flashes, five of them info. Winded, Smug and Bored are held. The pitch that led here:
+
 Orb asked for a pitch before the set settles on twelve: `ma-6-flash-pitch.svg`. Six candidate additions (Winded, Smug, Respect, Bored, Hazard, Primed), three cuts or merges (Brink, Resolve, Pride into Triumph), each with its game moment, whether it is info or emotion, and the event it needs. My recommendation: twelve, plus Hazard, Primed and Respect, minus Brink and Resolve (the HUD crown already owns both), so thirteen flashes with five info flashes (Danger sense, Hazard, Primed, Found, Searching). Lock-on acquired is a merge into Found. Info flashes are a setting, on by default. The candidates are drawn in the four shape families but are not in `data/art/flashes.json` until Orb picks.
 
 ## Questions for Orb (through the EP, two at most)
 
-1. **Is twelve the right set?** Is any flash missing that you would want, or any you would cut?
+1. **Answered:** the set is fourteen (see the pitch section). Any further flash is a new pitch.
 2. **Should the info flashes** (danger sense, found, searching) **be always on,** or an option, since they also help players who cannot see the HUD?
 
 ## Files

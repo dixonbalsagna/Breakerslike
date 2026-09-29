@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeCtx, figure, limb, V, add, sub, mul, lerp, norm, rotCW } from '../anti-hero/kit.mjs';
 import { FIGHTERS, GUARD, PALETTES } from '../directions/fighters.mjs';
-import { PAL, MASK, NAMES, circ, band, scl, sigilMarks, maskHead } from '../shared/marks.mjs';
+import { PAL, MASK, NAMES, circ, band, scl, sigilMarks, maskHead, pWraps, empressBack } from '../shared/marks.mjs';
 
 const OUT = dirname(fileURLToPath(import.meta.url));
 const F = n => n.toFixed(2);
@@ -43,7 +43,7 @@ function blades(ctx, p0, p1, n, len, cols, sw = 1) {
 // Each keeps the fighter's own three-quarter and profile features (from directions/fighters.mjs) and adds front and back features on the
 // front and back surfaces. `st.face` is 'front' or 'back' for those two views, and undefined for three-quarter and profile.
 function tConcept(fk) {
-  const BASE = FIGHTERS[fk], mask = MASK[fk];
+  const BASE = fk === 'E' ? { ...FIGHTERS.E, back: empressBack } : FIGHTERS[fk], mask = MASK[fk];
   const c = { ...BASE, id: fk + '-T', name: NAMES[fk] };
   c.blankHead = (p, st) => {
     const yaw = st.yaw ?? 0, mh = maskHead(fk, BASE.blankHead(p), p, mask, yaw);
@@ -52,6 +52,7 @@ function tConcept(fk) {
   };
   if (fk === 'P') {
     c.back = () => '';
+    c.armGear = (ctx, sk) => pWraps(ctx, sk);
     c.over = (ctx, sk, st, cfg) => {
       const { pal } = ctx; let o = '';
       if (st.face === 'front') {
@@ -102,7 +103,7 @@ function tConcept(fk) {
     };
     const wings = (ctx, sk, a) => {
       const { pal } = ctx; let o = '';
-      for (const sg of [-1, 1]) o += ctx.poly([LAT(sk, sg * 3.2, 30.5, a), LAT(sk, sg * 8.6, 45, a), LAT(sk, sg * 13.4, 37, a), LAT(sk, sg * 10.4, 27.4, a)], pal.base.mid, { sw: 1.1 }) + ctx.line([LAT(sk, sg * 3.6, 31, a), LAT(sk, sg * 8.6, 44.4, a), LAT(sk, sg * 13, 37.2, a)], pal.accent.mid, 1.5);
+      for (const sg of [-1, 1]) o += ctx.poly([LAT(sk, sg * 3.2, 30.5, a), LAT(sk, sg * 8.0, 37.2, a), LAT(sk, sg * 13.6, 33.4, a), LAT(sk, sg * 10.4, 27.4, a)], pal.base.mid, { sw: 1.1 }) + ctx.line([LAT(sk, sg * 3.6, 31, a), LAT(sk, sg * 8.0, 36.8, a), LAT(sk, sg * 13.2, 33.6, a)], pal.accent.mid, 1.5);
       return o;
     };
     c.back = (ctx, sk, st, cfg) => (st.face === 'front' ? mantle(ctx, sk, -6.4, 28.4) + wings(ctx, sk, -6.4) : st.face === 'back' ? '' : BASE.back(ctx, sk, st, cfg));
@@ -188,34 +189,34 @@ function head(fk, state, x, y, size, opts = {}) {
 const SHEETS = {
   P: {
     file: 'protagonist-turnaround.svg', title: 'Protagonist: turnaround',
-    sub: 'Front, three-quarter right, three-quarter left, back. Pale designed dome with a temple ring, swept-back teal hair, dark tunic, light belt and knot. Working labels, placeholder design, pending Legal review.',
+    sub: 'Front, three-quarter right, three-quarter left, back. Pale designed dome with an open temple arc, swept-back teal hair, dark tunic, light belt and knot. Working labels, placeholder design, pending Legal review.',
     poseLabel: 'The pose in play (forward-leaning, open)', pose: FIGHTERS.P.poses.base,
     notes: [
       'Build: round, open, forward-leaning. Torso 1.0 of the standard height and 1.1 wide, legs 1.0, arms 1.05, head 1.08.',
       'Staging: three-quarter in play, mirrored when the fighter faces left, so the left view is the right view mirrored. The front and back are for modelling and are not staged in play.',
       'The value rule: dark tunic, light gear and mask. Tunic #1a3d46, gear #c4ece6, mask #e8f1ee, hair #3fae9c, accent #4fb9a8. Hair never changes colour.',
-      'The mask is a designed dome: a faceted crown, a brow ridge, a jaw plane and a crown seam. No eye or mouth slots or dots. The sigil is one ring, off-centre at the temple above the brow ridge, no dot, never with the slash. Hurt and brink open a gap in the ring.',
+      'The mask is a designed dome: a faceted crown, a brow ridge, a jaw plane and a crown seam. No eye or mouth slots or dots. The sigil is a single open arc (a \"C\" with a gap facing forward), off-centre at the temple above the brow ridge: never a closed ring, no dot, never with the slash. Hurt widens the gap.',
       'Front features (belt, buckle, collar trim, sash apron) sit on the front surface. Back features (knot, sash tails, apron) sit on the back surface. The back knot is one disc: no concentric rings.',
       'Legal conditions kept: the hair is a swept-back cap, never spiky or upswept, and never gold; no red or gold glow; the heat (Hot Blood) is steam and veins on the body, never a body aura.',
     ],
-    parts: [['Mask (head)', 'A designed dome with brow ridge, jaw plane and crown seam. A sigil decal slot (a ring, off-centre). No face rig.', 180], ['Hair', 'A swept-back cap and a rounded tuft on a 3-bone spring chain. Never changes colour or shape.', 80], ['Neck and torso', 'A sleeveless dark tunic with a light collar trim.', 320], ['Belt, knot and sash tails', 'A wide light belt, a solid disc knot at the back and two sash tails on a 2-bone spring chain each.', 110], ['Sash apron', 'A light cloth panel to the hip, front and back.', 60], ['Arms, two', 'Bare upper arm and forearm each.', 240], ['Wrapped bracers, three', 'Wraps on the near forearm, toggled by stage.', 90], ['Hands, two', 'Wrapped fists. Open variants for taunt and guard.', 140], ['Legs, two', 'Thigh and shin each.', 240], ['Boots, two', 'Dark, with a light cuff.', 140]],
-    rig: 'Bones, about 26: root, pelvis, two spine, neck, head, three hair tuft (spring), two sash tails of two (spring), two shoulders, upper arms, forearms, hands, thighs, shins, feet. Palette masks: red channel tunic, green gear, blue accent, alpha the emissive sigil (the ring). Wear is five floats (head, core, arms, legs, crown). Steam and veins are separate decals and particles.',
+    parts: [['Mask (head)', 'A designed dome with brow ridge, jaw plane and crown seam. A sigil decal slot (an open arc, off-centre). No face rig.', 180], ['Hair', 'A swept-back cap and a rounded tuft on a 3-bone spring chain. Never changes colour or shape.', 80], ['Neck and torso', 'A sleeveless dark tunic with a light collar trim.', 320], ['Belt, knot and sash tails', 'A wide light belt, a solid disc knot at the back and two sash tails on a 2-bone spring chain each.', 110], ['Sash apron', 'A light cloth panel to the hip, front and back.', 60], ['Arms, two', 'Bare upper arm and forearm each.', 240], ['Forearm wraps, three', 'Tone-on-tone wraps with a diagonal edge on the near forearm, toggled by stage. Not contrasting wristbands.', 90], ['Hands, two', 'Wrapped fists. Open variants for taunt and guard.', 140], ['Legs, two', 'Thigh and shin each.', 240], ['Boots, two', 'Dark, with a light cuff.', 140]],
+    rig: 'Bones, about 26: root, pelvis, two spine, neck, head, three hair tuft (spring), two sash tails of two (spring), two shoulders, upper arms, forearms, hands, thighs, shins, feet. Palette masks: red channel tunic, green gear, blue accent, alpha the emissive sigil (the arc). Wear is five floats (head, core, arms, legs, crown). Steam and veins are separate decals and particles.',
     swatches: [['tunic', PAL.P.base.mid], ['gear', PAL.P.gear.mid], ['accent', PAL.P.accent.mid], ['mask', MASK.P.fill], ['skin', PAL.P.skin.mid], ['hair', PAL.P.hair.mid]],
   },
   E: {
     file: 'empress-turnaround.svg', title: 'Empress: turnaround',
-    sub: 'Front, three-quarter right, three-quarter left, back. Pale bone mask with three offset chevrons, dark olive tunic, a bladed mantle worn as a cape-train, a stiff collar crescent. Working labels, placeholder design, pending Legal review.',
+    sub: 'Front, three-quarter right, three-quarter left, back. Pale bone mask with three offset chevrons, dark olive tunic, a bladed mantle worn as a cape-train, a low collar flare. Working labels, placeholder design, pending Legal review.',
     poseLabel: 'The pose in play (upright, sweeping)', pose: FIGHTERS.E.poses.base,
     notes: [
-      'Build: wide, sweeping, upright. Torso 0.95 wide and 1.08 tall, legs 1.08, arms 1.02, head 0.98. Taller than the others by a topknot and the collar crescent.',
+      'Build: wide, sweeping, upright. Torso 0.95 wide and 1.08 tall, legs 1.08, arms 1.02, head 0.98. Taller than the others by a topknot.',
       'Staging: three-quarter in play, mirrored when the fighter faces left. The mantle trails behind, so the front stays clear. The front and back are for modelling and are not staged in play.',
       'The value rule: dark olive body, light gear and mask. Tunic #2a2f1e, gear #e0deb8, mask #e6e0c4, accent #b8c96a. No horns, no purple, not pale overall.',
       'The mantle is a stiff cape-train with a hem of eight to nine blades and an accent band across the shoulders. It is a cloth sim on two spring chains of three. It is not a flame or hair shape.',
       'The mask is a polished bone shape. The sigil is three chevrons of different sizes, offset, in moss: an odd count, never a tidy double chevron, never in a car or oil brand\'s colours.',
-      'Front features (tunic panel, tabard, belt, bracers) sit on the front surface. Back features (mantle, collar crescent) sit on the back surface. Her flashes are a wide, low crest behind the head, so nothing tall stands above the topknot.',
+      'Front features (tunic panel, tabard, belt, bracers) sit on the front surface. Back features (mantle, collar flare) sit on the back surface. Her flashes are a wide, low crest behind the head, so nothing tall stands above the topknot.',
       'The guard of honour is a separate retinue figure, not a fighter (see the small row): one shared model with a tabard and a helm, and no sigil.',
     ],
-    parts: [['Mask and topknot', 'A polished bone mask with a chevron decal slot, and a topknot ball on the hair. No face rig.', 200], ['Headband', 'A light band across the brow, over the hair line.', 30], ['Hair', 'A cap over the skull, tucked. The topknot is a ball on a 1-bone spring.', 60], ['Neck and torso', 'A dark olive tunic with a high collar.', 300], ['Tabard and belt', 'A long light tabard to the shin and a wide belt.', 90], ['Mantle (cape-train)', 'A stiff cloth panel on two spring chains of three, with an accent band across the shoulders.', 200], ['Hem blades, nine', 'Sharp shapes along the trailing hem, alternate two shades. Rigid, parented to the mantle.', 90], ['Collar crescent', 'Two stiff wings behind the head, rigid on the upper spine.', 50], ['Arms, two', 'Sleeved upper arm and forearm each.', 240], ['Bracer and hands', 'An accent bracer on the near forearm, open and closed hands.', 180], ['Legs and boots', 'Long legs (1.08) and boots with a light cuff.', 400]],
+    parts: [['Mask and topknot', 'A polished bone mask with a chevron decal slot, and a topknot ball on the hair. No face rig.', 200], ['Headband', 'A light band across the brow, over the hair line.', 30], ['Hair', 'A cap over the skull, tucked. The topknot is a ball on a 1-bone spring.', 60], ['Neck and torso', 'A dark olive tunic with a high collar.', 300], ['Tabard and belt', 'A long light tabard to the shin and a wide belt.', 90], ['Mantle (cape-train)', 'A stiff cloth panel on two spring chains of three, with an accent band across the shoulders.', 200], ['Hem blades, nine', 'Sharp shapes along the trailing hem, alternate two shades. Rigid, parented to the mantle.', 90], ['Collar flare', 'Two low stiff flares at shoulder height, below the eye line, rigid on the upper spine. They never rise beside the head, so they never read as horns.', 50], ['Arms, two', 'Sleeved upper arm and forearm each.', 240], ['Bracer and hands', 'An accent bracer on the near forearm, open and closed hands.', 180], ['Legs and boots', 'Long legs (1.08) and boots with a light cuff.', 400]],
     rig: 'Bones, about 30: root, pelvis, two spine, neck, head, topknot, six mantle (two chains of three, spring), two shoulders, upper arms, forearms, hands, thighs, shins, feet. Palette masks: red channel body, green gear, blue accent, alpha the emissive sigil (the chevrons). Wear is five floats (head, core, arms, legs, crown). The mantle has an intact and a torn variant.',
     swatches: [['body', PAL.E.base.mid], ['gear', PAL.E.gear.mid], ['accent', PAL.E.accent.mid], ['mask', MASK.E.fill], ['skin', PAL.E.skin.mid], ['hair', PAL.E.hair.mid]],
   },

@@ -149,7 +149,7 @@ Sources: `docs/art/marked-aura.md`, `art/concepts/shared/marks.mjs`, `art/concep
 
 | Fighter | Mask | Sigil | Where |
 |---|---|---|---|
-| Protagonist | Pale `#e8f1ee`, a designed faceted dome: brow ridge, jaw plane, crown seam, high hairline | One ring, teal, painted | Off-centre at the temple, above the brow ridge |
+| Protagonist | Pale `#e8f1ee`, a designed faceted dome: brow ridge, jaw plane, crown seam, high hairline | One open arc (a "C"), teal, painted | Off-centre at the temple, above the brow ridge |
 | Anti-hero | Dark `#2b2444`, a wedge | A leaning slash and a dot, orchid, emissive | Mid-face |
 | Empress | Pale bone `#e6e0c4`, polished | Three chevrons of three sizes, offset, moss, painted | The brow, under the headband |
 | Cyborg | Dark `#34313d`, a boxy display face | A diagonal stair of four lit squares, coral, emissive | Mid-face, plus a head hatch bar |
@@ -234,7 +234,7 @@ Regions come from `spec-wounds.md`: head, core, arms and legs, plus UI's HUD wea
 VFX and Rendering own the effects. Art sets the palette, the shape language and the timing. The full design is `docs/art/marked-aura.md`, the data is `data/art/flashes.json`, and the in-engine prototype is specified in `docs/art/flash-prototype-spec.md`.
 
 - **No standing aura.** At rest there is nothing around a fighter. A power stage never draws a full-body aura: the Protagonist's heat is steam and veins on the body, the Anti-hero's is regalia and the sigil's light. The one exception is the transformation **surge**, held for the length of its cinematic (up to 3 s) and then faded in 1.2 s.
-- **A head flash** is a brief, iconic pop at and above the head, behind it, never over the mask, the sigil or the chest. Twelve flashes today (danger sense, found, searching, brink, fear, rage, hurt, resolve, triumph, pride, taunt, surge); a pitch for the final set is in `ma-6-flash-pitch.svg`. Each lasts 0.3 to 1 s (attack, hold, fade), has a priority, and a per-fighter cooldown.
+- **A head flash** is a brief, iconic pop at and above the head, behind it, never over the mask, the sigil or the chest. Fourteen flashes (danger sense, hazard, primed, found, searching, fear, rage, hurt, resolve, triumph, pride, respect, taunt, surge; Brink is cut, Winded, Smug and Bored are held); the pitch that led here is `ma-6-flash-pitch.svg`. Each lasts 0.3 to 1 s (attack, hold, fade), has a priority, and a per-fighter cooldown.
 - **Shape families.** Circles for the Protagonist, blades for the Anti-hero, wedges for the Empress, steps for the Cyborg, so a flash is recognisably ours and the four stay apart. The "!" and "?" are drawn in the family's own shapes, not a font.
 - **Two classes.** **Info flashes** (danger sense, found, searching) are solid, with a pale core and a thin keyline in the lane colour, so they read on any backdrop. **Emotion flashes** are translucent, a rim and a lighter core, at 34 to 55% opacity. Info flashes are a setting, on by default.
 - **Colour** is the fighter's accent for emotion and the pale core with a keyline for info (steel for the Cyborg). Never gold, yellow, red or orange for the Protagonist or the Anti-hero, and no thick black outline.

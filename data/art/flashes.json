@@ -1,5 +1,15 @@
 {
-  "version": 1,
+  "version": 2,
+  "decision": "Orb added Hazard, Primed and Respect; the EP cut Brink (the crown's brink ring covers it), kept Resolve (sequenced after the crown's wear pop) and kept Pride apart from Triumph. Fourteen flashes, five of them info. Winded, Smug and Bored are held.",
+  "held": [
+    "winded",
+    "smug",
+    "bored"
+  ],
+  "arbitration": {
+    "default_wait_max": 0.25,
+    "note": "A flash due while the crown is up waits up to default_wait_max and is then dropped, except a flash with a sequence block: Resolve starts delay_after_crown_down seconds after the crown goes down (crown_up() false), waits up to wait_max, and is never dropped by arbitration (only the surge can preempt it)."
+  },
   "note": "Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.",
   "families": {
     "P": "circles",
@@ -90,7 +100,61 @@
       "moment": "An ambush from hiding, a telegraphed heavy or beam, or an attack from off screen. A parry window keeps the crown's ring, because a flash would double it.",
       "event": "ambush, attack telegraph (Encounter)",
       "sound": "A low dry tick with a short upward sweep. No chirp, no stinger.",
-      "rare": false
+      "rare": false,
+      "sequence": null
+    },
+    "hazard": {
+      "name": "Hazard",
+      "class": "info",
+      "attack": 0.05,
+      "hold": 0.25,
+      "fade": 0.15,
+      "priority": 3,
+      "cooldown": 1,
+      "kind": "glyph",
+      "glyph": "bang2",
+      "layout": null,
+      "moment": "The world is about to hit the fighter: a falling building, a collapsing crater rim, a beam path, rising water. Not a fighter attack (that is danger sense).",
+      "event": "hazard_telegraph (new, World and Encounter)",
+      "sound": "Two quick low ticks.",
+      "rare": false,
+      "sequence": null
+    },
+    "primed": {
+      "name": "Primed",
+      "class": "info",
+      "attack": 0.06,
+      "hold": 0.34,
+      "fade": 0.2,
+      "priority": 5,
+      "cooldown": 3,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 36,
+          "d": 12,
+          "s": 14,
+          "op": 0.95
+        },
+        {
+          "a": 36,
+          "d": 30,
+          "s": 20,
+          "op": 0.95
+        },
+        {
+          "a": 36,
+          "d": 52,
+          "s": 28,
+          "op": 0.95
+        }
+      ],
+      "moment": "Leaving cover with the ambush window open (x1.5 damage for 2.5 s): the fighter can strike hard now. It points forward, where danger sense points back.",
+      "event": "ambush_ready (Encounter; the rule exists in the prototype)",
+      "sound": "A soft rising click.",
+      "rare": false,
+      "sequence": null
     },
     "found": {
       "name": "Found",
@@ -98,7 +162,7 @@
       "attack": 0.06,
       "hold": 0.3,
       "fade": 0.24,
-      "priority": 3,
+      "priority": 4,
       "cooldown": 1.5,
       "kind": "glyph",
       "glyph": "bang",
@@ -106,7 +170,8 @@
       "moment": "A hidden rival is found, or a lost lock-on is regained.",
       "event": "found, lock regained",
       "sound": "One bright rising note, in the fighter's own pitch.",
-      "rare": false
+      "rare": false,
+      "sequence": null
     },
     "searching": {
       "name": "Searching",
@@ -114,7 +179,7 @@
       "attack": 0.1,
       "hold": 0.5,
       "fade": 0.3,
-      "priority": 4,
+      "priority": 6,
       "cooldown": 3,
       "kind": "glyph",
       "glyph": "question",
@@ -122,42 +187,8 @@
       "moment": "Lock-on lost, hunting a hidden rival. It re-pops at most every 3 s while the search lasts.",
       "event": "lock lost, hunting (Encounter)",
       "sound": "A wavering low two-note phrase.",
-      "rare": false
-    },
-    "brink": {
-      "name": "Brink",
-      "class": "emotion",
-      "attack": 0.08,
-      "hold": 0.35,
-      "fade": 0.55,
-      "priority": 5,
-      "cooldown": 0,
-      "kind": "layout",
-      "glyph": null,
-      "layout": [
-        {
-          "a": 230,
-          "d": 18,
-          "s": 7,
-          "op": 0.34
-        },
-        {
-          "a": 190,
-          "d": 24,
-          "s": 6,
-          "op": 0.3
-        },
-        {
-          "a": 265,
-          "d": 22,
-          "s": 5,
-          "op": 0.26
-        }
-      ],
-      "moment": "The fighter enters the brink. Once per entry.",
-      "event": "brink_enter",
-      "sound": "A slow heartbeat thump.",
-      "rare": false
+      "rare": false,
+      "sequence": null
     },
     "fear": {
       "name": "Fear",
@@ -165,7 +196,7 @@
       "attack": 0.08,
       "hold": 0.35,
       "fade": 0.37,
-      "priority": 6,
+      "priority": 7,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
@@ -209,7 +240,8 @@
       "moment": "An opponent starts a finisher, or the fighter watches a rival transform.",
       "event": "finisher_start against the fighter, cinematic_start of the rival",
       "sound": "A shiver: a quick tremolo on a held breath.",
-      "rare": false
+      "rare": false,
+      "sequence": null
     },
     "rage": {
       "name": "Rage",
@@ -217,7 +249,7 @@
       "attack": 0.12,
       "hold": 0.45,
       "fade": 0.35,
-      "priority": 7,
+      "priority": 8,
       "cooldown": 1.5,
       "kind": "layout",
       "glyph": null,
@@ -268,7 +300,8 @@
       "moment": "Drop the Act, a wrath spike, a boil-over, a humiliating parry.",
       "event": "drop_act, facade_crack, boil_over, shame_stack",
       "sound": "A growl that swells and cuts off.",
-      "rare": false
+      "rare": false,
+      "sequence": null
     },
     "hurt": {
       "name": "Hurt",
@@ -276,7 +309,7 @@
       "attack": 0.04,
       "hold": 0.16,
       "fade": 0.3,
-      "priority": 8,
+      "priority": 9,
       "cooldown": 0.4,
       "kind": "layout",
       "glyph": null,
@@ -309,7 +342,8 @@
       "moment": "A heavy hit or a break launch, when the crown is not up.",
       "event": "damage kind heavy, region_broken",
       "sound": "The fighter's pain grunt.",
-      "rare": false
+      "rare": false,
+      "sequence": null
     },
     "resolve": {
       "name": "Resolve",
@@ -317,7 +351,7 @@
       "attack": 0.1,
       "hold": 0.35,
       "fade": 0.35,
-      "priority": 9,
+      "priority": 10,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
@@ -350,10 +384,16 @@
           "op": 0.5
         }
       ],
-      "moment": "A Rally or Second Wind: the fighter gathers itself.",
+      "moment": "A Rally or Second Wind: the fighter gathers itself. It fires just after the crown's wear pop fades, and it is never dropped by arbitration.",
       "event": "rally",
       "sound": "A breath in, then a low held note.",
-      "rare": false
+      "rare": false,
+      "sequence": {
+        "after": "crown_wear_pop",
+        "delay_after_crown_down": 0.1,
+        "wait_max": 2,
+        "never_dropped": true
+      }
     },
     "triumph": {
       "name": "Triumph",
@@ -361,7 +401,7 @@
       "attack": 0.14,
       "hold": 0.5,
       "fade": 0.36,
-      "priority": 10,
+      "priority": 11,
       "cooldown": 3,
       "kind": "layout",
       "glyph": null,
@@ -418,7 +458,8 @@
       "moment": "A finisher lands, or a KO for the winner.",
       "event": "ko (winner), finisher landed",
       "sound": "A bright chime with the fighter's laugh.",
-      "rare": false
+      "rare": false,
+      "sequence": null
     },
     "pride": {
       "name": "Pride",
@@ -426,7 +467,7 @@
       "attack": 0.2,
       "hold": 0.5,
       "fade": 0.2,
-      "priority": 11,
+      "priority": 12,
       "cooldown": 4,
       "kind": "layout",
       "glyph": null,
@@ -465,7 +506,44 @@
       "moment": "After a decisive exchange won, before the next one. The Anti-hero's front.",
       "event": "decisive exchange won",
       "sound": "A slow exhale and a held soft chord.",
-      "rare": false
+      "rare": false,
+      "sequence": null
+    },
+    "respect": {
+      "name": "Respect",
+      "class": "emotion",
+      "attack": 0.2,
+      "hold": 0.4,
+      "fade": 0.3,
+      "priority": 13,
+      "cooldown": 6,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 166,
+          "d": 12,
+          "s": 30,
+          "op": 0.45
+        },
+        {
+          "a": 14,
+          "d": 12,
+          "s": 30,
+          "op": 0.45
+        },
+        {
+          "a": 90,
+          "d": 10,
+          "s": 12,
+          "op": 0.4
+        }
+      ],
+      "moment": "A clash ends in a draw, a finisher is blocked, or a rival gets back up after a heavy hit: the fighter acknowledges the other.",
+      "event": "clash_draw, finisher_blocked, rally of the rival",
+      "sound": "A low, short two-note nod.",
+      "rare": false,
+      "sequence": null
     },
     "taunt": {
       "name": "Taunt",
@@ -473,7 +551,7 @@
       "attack": 0.1,
       "hold": 0.35,
       "fade": 0.3,
-      "priority": 12,
+      "priority": 14,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
@@ -500,7 +578,8 @@
       "moment": "A taunt line or gesture.",
       "event": "taunt bark",
       "sound": "The fighter's sneer or dry laugh.",
-      "rare": false
+      "rare": false,
+      "sequence": null
     },
     "surge": {
       "name": "Surge",
@@ -599,7 +678,8 @@
       "moment": "A transformation: held for the respected cinematic (up to 3 s), then it fades in 1.2 s. The one flash that lasts.",
       "event": "cinematic_start and cinematic_end",
       "sound": "A rising swell that resolves on the new form's chord.",
-      "rare": true
+      "rare": true,
+      "sequence": null
     }
   }
 }

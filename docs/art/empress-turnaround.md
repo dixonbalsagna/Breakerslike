@@ -18,9 +18,9 @@ There is no forms row (the Coil's spine plates were one per form). This fighter'
 
 | View | What reads |
 |---|---|
-| Front | A pale bone mask with three offset moss chevrons on the brow, a light headband across the hair line, a topknot; the stiff collar crescent standing behind the head like two wings; a dark olive tunic panel with a wide belt; a long tabard to the shin; accent bracers on both forearms; the mantle flaring out behind the legs with its blade hem |
-| Three-quarter | The mantle as a long stiff cape-train sweeping back, an accent band across the shoulders and a hem of blades; the collar crescent behind the head; the tabard hanging in front |
-| Back | The head is hair with the topknot; the collar crescent as two wings; the mantle covers the whole back: an accent band across the shoulders, a centre seam and a hem of nine blades |
+| Front | A pale bone mask with three offset moss chevrons on the brow, a light headband across the hair line, a topknot; a low collar flare at the shoulders, below the eye line; a dark olive tunic panel with a wide belt; a long tabard to the shin; accent bracers on both forearms; the mantle flaring out behind the legs with its blade hem |
+| Three-quarter | The mantle as a long stiff cape-train sweeping back, an accent band across the shoulders and a hem of blades; the low collar flare at the shoulder; the tabard hanging in front |
+| Back | The head is hair with the topknot; the low collar flare; the mantle covers the whole back: an accent band across the shoulders, a centre seam and a hem of nine blades |
 | Pose in play | Upright and sweeping, the near arm forward; the mantle trailing behind |
 
 **Proportions.** About 5.3 heads tall (the measure on the sheet: 106 units to the top of the topknot, a head of 20.0 units).
@@ -29,12 +29,12 @@ There is no forms row (the Coil's spine plates were one per form). This fighter'
 
 ## Notes for the modeller
 
-- Build: wide, sweeping, upright. Torso 0.95 wide and 1.08 tall, legs 1.08, arms 1.02, head 0.98. Taller than the others by a topknot and the collar crescent.
+- Build: wide, sweeping, upright. Torso 0.95 wide and 1.08 tall, legs 1.08, arms 1.02, head 0.98. Taller than the others by a topknot.
 - Staging: three-quarter in play, mirrored when the fighter faces left. The mantle trails behind, so the front stays clear. The front and back are for modelling and are not staged in play.
 - The value rule: dark olive body, light gear and mask. Tunic #2a2f1e, gear #e0deb8, mask #e6e0c4, accent #b8c96a. No horns, no purple, not pale overall.
 - The mantle is a stiff cape-train with a hem of eight to nine blades and an accent band across the shoulders. It is a cloth sim on two spring chains of three. It is not a flame or hair shape.
 - The mask is a polished bone shape. The sigil is three chevrons of different sizes, offset, in moss: an odd count, never a tidy double chevron, never in a car or oil brand's colours.
-- Front features (tunic panel, tabard, belt, bracers) sit on the front surface. Back features (mantle, collar crescent) sit on the back surface. Her flashes are a wide, low crest behind the head, so nothing tall stands above the topknot.
+- Front features (tunic panel, tabard, belt, bracers) sit on the front surface. Back features (mantle, collar flare) sit on the back surface. Her flashes are a wide, low crest behind the head, so nothing tall stands above the topknot.
 - The guard of honour is a separate retinue figure, not a fighter (see the small row): one shared model with a tabard and a helm, and no sigil.
 
 Suggested near-LOD budget, about 1,840 triangles against the 2,500 budget in the style guide:
@@ -48,7 +48,7 @@ Suggested near-LOD budget, about 1,840 triangles against the 2,500 budget in the
 | Tabard and belt | A long light tabard to the shin and a wide belt. | 90 |
 | Mantle (cape-train) | A stiff cloth panel on two spring chains of three, with an accent band across the shoulders. | 200 |
 | Hem blades, nine | Sharp shapes along the trailing hem, alternate two shades. Rigid, parented to the mantle. | 90 |
-| Collar crescent | Two stiff wings behind the head, rigid on the upper spine. | 50 |
+| Collar flare | Two low stiff flares at shoulder height, below the eye line, rigid on the upper spine. They never rise beside the head, so they never read as horns. | 50 |
 | Arms, two | Sleeved upper arm and forearm each. | 240 |
 | Bracer and hands | An accent bracer on the near forearm, open and closed hands. | 180 |
 | Legs and boots | Long legs (1.08) and boots with a light cuff. | 400 |
@@ -65,7 +65,7 @@ The base design was drawn in three-quarter. The turnaround adds a front (tunic p
 - The front and back views use extra spreads at the arms and legs so they clear the body. A real A-pose model will differ.
 - The mantle is the largest part of her silhouette, and a wide flat cape-train is expensive in cloth sim and in screen width. Rendering and Animation should cost it early.
 - The chevrons on a pale bone mask are quiet at 24 px. They pass the three-flat-colour test on the checks sheet, but the mask itself carries her at play sizes.
-- The guard of honour has a small plume on the helm that can read as an ear from the side; the real model can drop it.
+- The Empress's collar is a low flare at shoulder height, checked in the 12 px silhouette so it never reads as horns or antennae. The guard of honour has a small plume on the helm that can read as an ear from the side; the real model can drop it.
 - No human has authored the design yet (Legal 8.5.3), and I could not run a fan-recognition check.
 
 ## Files
