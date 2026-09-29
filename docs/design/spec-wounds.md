@@ -22,7 +22,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | **Region choice** | Each atom lists the regions it may hit, with weights. The director multiplies each weight by (1 + wear/50), or (1 + wear/30) from S2 (§1b), which is "go for the wound", then draws with the seeded sim RNG. Attack kind sets the family: lights go to the head and arms, heavies to the core and legs, guard hits to the arms, and beams and impacts spread |
 | **Brink** | The core breaks, or any two of head, arms and legs break. The Cyborg is the exception (§3) |
 | **Decisive exchange** | One that ends with the loser launched, a heavy or beam clash won, or a GUARD BREAK. A launch counts however it lands: slam, knockback slide, water skip, brunt or chain (`docs/world/knockback-slide.md`). A **NONE** outcome (a shove with no launch after a winning template) is **not** decisive, unless the exchange also meets one of the other clauses. An attack that stops a fill (charging, stoking, Press) is a CHARGE INTERRUPT and launches, so it counts. Transformation cinematics themselves are never interrupted (§8) |
-| **Finisher** | When the opponent of a fighter on the brink wins a decisive exchange, their **fighter-specific finisher** replaces the normal ending. The fighter on the brink survives it on a contest roll: 30% base, −10 points for each Rally that fighter has used, and −10 points per minute past 8:00, with a floor of 0 |
+| **Finisher** | When the opponent of a fighter on the brink wins a decisive exchange, their **fighter-specific finisher** replaces the normal ending. The fighter on the brink survives it on a contest roll: 30% base, −10 points for each Rally that fighter has used, and −10 points per minute past 8:00, with a floor of 0. **The last-ditch struggle (`contest.input`):** during the finisher's wind-up, the fighter on the brink gets **three timed presses** on the finisher's visible rhythm (a struggle you read, not a mash). Each press on the beat adds +10 points to survival, and each miss or early press costs 5. The base survival drops from 30% to **15%**, so a perfect struggle reaches 45% before the tilts. The AI's timing accuracy is set by difficulty. Controls sets the window widths, and an accessibility assist doubles them. QA band: average contest survival stays 20 to 35% in AI play |
 | **The end** | A KO happens only through a finisher. Stray damage never ends a match |
 | **Breaks are chapters** | A break is a 1 to 2 s set piece: a camera break shot, a bark, then a **break launch**. The break launch is long (at least 1,500 units horizontally) and chosen by the planner's distance and new-biome terms (`balance-targets.md` §10) |
 
@@ -47,6 +47,8 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
 5. **The finisher contest** (30% base survival). It sets the tail after the brink: p90 at most 10:00, p99 at most 12:00.
 
 **Sequencing.** The world rescale lands first, and it changes travel time and so the exchange rate. Re-baseline the damage rate after the rescale, before touching k. Measure time to first break and time to brink, not only match length.
+
+**After the spaced profile** (`docs/combat/s3b-loader-note.md`): exchanges lengthen to about 2.5 to 2.9 s, which slows wear. QA re-tunes k (up, within 0.06 to 0.09) against the same length targets once Encounter switches profiles.
 
 **S2 result and rulings** (commit `69c4a2f`, `docs/director/wounds-s2.md`).
 - *The result:* median 6:01, p90 8:15, first brink 5:51, no timeouts, finisher-contest survival 28%.
