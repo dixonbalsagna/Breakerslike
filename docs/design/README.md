@@ -1,0 +1,24 @@
+# Design docs
+
+Owner: Game Design. These pages define what the game is and why it is fun, and every other director builds on them. Start with Orb's vision (`docs/ep/vision.md`), then the pillars.
+
+| Page | What it answers |
+| :--- | :--- |
+| [pillars.md](pillars.md) | The seven pillars: what each means in play, how we test it, what breaks it, and where the prototype stands |
+| [stance-matrix.md](stance-matrix.md) | What each stance is for, what beats it and what it costs. Intended outcomes per pairing, P2 gaps, dominance risks, and the P2 stance rules |
+| [economy.md](economy.md) | HP, ki, tiers and transformations, ego meters, hiding and ambush, collateral scaling, and how a 5-to-7-minute match escalates |
+| [balance-targets.md](balance-targets.md) | The bands QA checks: win rate, length, escalation, collateral, variety, stance balance, story beats. Also the prototype's balance-gap diagnosis |
+| [modes.md](modes.md) | Modes with stable ids, the 1.0 scope, and the rules for each mode |
+| [systems-sketch.md](systems-sketch.md) | Transformations, minions, fusion (deferred; Tandem), keystone relocation, civilian consumption, procedural planets |
+| [open-questions.md](open-questions.md) | The questions for Orb, with options and recommendations, and the decisions Game Design made |
+| [prototype-bugs.md](prototype-bugs.md) | Prototype defects that matter to design, with the intent each one breaks. They are not fixed until the port proves parity |
+
+**Conventions**
+- **Code.** `index.html:L123` is a line of `prototype/index.html` at commit `7233c96`.
+- **QA.** "QA §n" is a section of `qa/baseline-p0.md`.
+- **Names.**
+  - Stances are AGGRESSIVE, DEFENSIVE, EVASIVE and ESCAPE. CHARGING is a state, not a stance.
+  - Attack kinds are light, heavy and signature.
+  - "Ki" is the internal name for the energy resource (Legal RL-015).
+- **Placeholders.** The prototype's KAI and VORR stand in for Orb's four fighters. KAI will not ship (Legal RL-002).
+- **Pending picks.** Signature replacements follow Legal's first option, marked "pending Orb's pick" (`docs/legal/fighter-concepts-review.md`).
