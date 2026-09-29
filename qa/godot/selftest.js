@@ -44,6 +44,13 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const h3 = withEvents(rec({ fronts: 4 }), [{ type: 'hazard_front', t: 5 }]);
     assert.strictEqual(byId(await runTests(ctx({ default: [h3] }), ['H3'])).H3.status, 'FAIL');
   });
+  await t('W3 stays PENDING until finisher_start exists; W5 reports INFO from S1 events and bands once S2 lands', async () => {
+    const s1 = withEvents(rec({ dmgByRegion: { head: 10, core: 10, arms: 10, legs: 10 } }), [{ type: 'region_broken', t: 20, actor: 1, region: 'head' }, { type: 'brink_enter', t: 25, actor: 1 }]);
+    const r = byId(await runTests(ctx({ default: [s1] }), ['W3', 'W5']));
+    assert.strictEqual(r.W3.status, 'PENDING'); assert.strictEqual(r.W5.status, 'INFO');
+    const s2 = withEvents(s1, [{ type: 'finisher_start', t: 30, actor: 0, target: 1 }]);
+    assert.strictEqual(byId(await runTests(ctx({ default: [s2] }), ['W5'])).W5.status, 'FAIL');   // only head ever breaks first: arms and legs below 10%
+  });
   await t('a test with events present but no body stays PENDING, never PASS', async () => {
     const r = byId(await runTests(ctx({ default: [withEvents(rec(), [{ type: 'brunt_chain', t: 5 }])] }), ['H5'])).H5;
     assert.strictEqual(r.status, 'PENDING');

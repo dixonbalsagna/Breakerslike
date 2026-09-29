@@ -36,7 +36,7 @@ const tests = [
       }));
       return `${ko.length} KOs`;
     } },
-  { id: 'W3', spec: 'spec-wounds §5.3', title: 'Length and chapters: 4 to 6 region breaks (median); first brink median 4:30 to 7:00; length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00', slice: 'S2 (run with --cap=43200)', needs: ['region_broken', 'brink_enter'],
+  { id: 'W3', spec: 'spec-wounds §5.3', title: 'Length and chapters: 4 to 6 region breaks (median); first brink median 4:30 to 7:00; length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00', slice: 'S2 (run with --cap=43200)', needs: ['region_broken', 'brink_enter', 'finisher_start'],
     run({ A }) {
       const D = A.default; assert.ok(!D.some(r => r.timeout), 'matches hit the cap: run with --cap=43200 (12 min)');
       const breaks = median(D.map(r => evs(r, 'region_broken').length)), brink = median(D.map(r => Math.min(...evs(r, 'brink_enter').map(e => e.t)) ).filter(Number.isFinite)), lens = D.map(r => r.koAt);
@@ -55,18 +55,19 @@ const tests = [
       })));
       return `${per.toFixed(2)} rallies per match`;
     } },
-  { id: 'W5', spec: 'spec-wounds §5.5', title: 'Spread: no region above 45% of all wear; each of head, arms and legs is the first region broken in at least 10% of matches', slice: 'S3a', needs: ['region_broken'],
+  { id: 'W5', spec: 'spec-wounds §5.5', title: 'Spread: no region above 45% of all wear; each of head, arms and legs is the first region broken in at least 10% of matches (measured and reported from S1, banded once S2 lands)', slice: 'S1 (measured), banded from S2', needs: ['region_broken'],
     run({ A }) {
       const D = A.default, first = {};
       for (const r of D) { const b = evs(r, 'region_broken')[0]; if (b) first[b.region] = (first[b.region] || 0) + 1; }
-      for (const g of ['head', 'arms', 'legs']) assert.ok((first[g] || 0) / D.length >= 0.10, `${g} is first broken in ${(((first[g] || 0) / D.length) * 100).toFixed(1)}% of matches`);
-      const w = D.map(r => r.wear).filter(x => x && x[0]);
-      if (w.length) {
-        const tot = {}; let all = 0;
-        for (const per of w) for (const f of per) for (const [reg, v] of Object.entries(f)) { tot[reg] = (tot[reg] || 0) + v; all += v; }
-        for (const [reg, v] of Object.entries(tot)) assert.ok(v / all <= 0.45, `${reg} takes ${((v / all) * 100).toFixed(0)}% of all wear`);
-      }
-      return 'first-broken shares ' + JSON.stringify(first) + (w.length ? '' : ' (wear share not checked: records carry no f.wear)');
+      const dmg = {}; let all = 0;
+      for (const r of D) for (const [reg, v] of Object.entries(r.dmgByRegion || {})) { dmg[reg] = (dmg[reg] || 0) + v; all += v; }
+      const share = Object.fromEntries(Object.entries(dmg).map(([k, v]) => [k, +(v / all * 100).toFixed(1)]));
+      const firstPct = Object.fromEntries(['head', 'core', 'arms', 'legs'].map(g => [g, +(((first[g] || 0) / D.length) * 100).toFixed(1)]));
+      const detail = `damage share by region ${JSON.stringify(share)}%; first region broken in % of matches ${JSON.stringify(firstPct)} (${D.filter(r => !evs(r, 'region_broken').length).length} of ${D.length} matches broke no region)`;
+      if (!hasEvent(A, 'finisher_start')) return { status: 'INFO', detail };
+      for (const g of ['head', 'arms', 'legs']) assert.ok(firstPct[g] >= 10, `${g} is first broken in ${firstPct[g]}% of matches; ${detail}`);
+      for (const [reg, v] of Object.entries(share)) assert.ok(v <= 45, `${reg} takes ${v}% of all wear`);
+      return detail;
     } },
   { id: 'W6', spec: 'spec-wounds §5.6', title: 'Profiles: Cyborg chip takes 0 while the hatch is closed; Anti-hero penalties follow Pride and facade; refit mends shrink; no finisher while Boiling; core wear never decreases', slice: 'F1 (roster fighters)', needs: ['hatch_open', 'facade_crack', 'boil_over'], run: null },
   { id: 'W7', spec: 'spec-wounds §5.7', title: 'Balance: every pairing 45 to 55%; pacing bands still pass; heat-track bands (Boiling reached in 40 to 80%, at most 5% of time, boil-overs at most 0.5 a match, boil-over matches won 35 to 55%, internal wear 10 to 35% of brinks)', slice: 'S2 for pairings, F1 for heat', needs: ['region_broken', 'heat_stage'], run: null },
@@ -102,7 +103,7 @@ async function runTests(ctx, only = null) {
     const base = { id: t.id, spec: t.spec, title: t.title, slice: t.slice };
     if (missing.length) { out.push({ ...base, status: 'PENDING', detail: `waiting for ${t.slice}: no ${missing.join(', ')} event in the sim` }); continue; }
     if (!t.run) { out.push({ ...base, status: 'PENDING', detail: `events present, but the check has no body yet: write it against ${t.slice}'s fields` }); continue; }
-    try { out.push({ ...base, status: 'PASS', detail: (await t.run(ctx)) || '' }); } catch (e) { out.push({ ...base, status: 'FAIL', detail: String(e.message || e).split('\n')[0] }); }
+    try { const got = await t.run(ctx); out.push(got && got.status ? { ...base, status: got.status, detail: got.detail } : { ...base, status: 'PASS', detail: got || '' }); } catch (e) { out.push({ ...base, status: 'FAIL', detail: String(e.message || e).split('\n')[0] }); }
   }
   return out;
 }

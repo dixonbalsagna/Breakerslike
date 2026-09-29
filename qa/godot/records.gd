@@ -8,10 +8,10 @@ extends SceneTree
 
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 ## fx event types that carry game meaning rather than decoration: kept in order with their fields (wounds-plan.md, living destruction).
-const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "slide", "quake", "rift", "lava", "cloud", "front_", "wound"]
+const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "slide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found"]
 ## fighter indices are meaningful at 0
 const INDEX_FIELDS: Array = ["actor", "target", "winner", "loser", "owner"]
-const KEEP_FIELDS: Array = ["actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]
+const KEEP_FIELDS: Array = ["tick", "tier", "cover", "actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]
 
 var re_atk := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) (LIGHT|HEAVY|SIG) vs (\\w+)$")
 var re_beam := RegEx.create_from_string("^(.+) over (\\w+) \\((.+)\\) → (\\w+)")
@@ -62,7 +62,7 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var launch_x: Array = [0.0, 0.0]
@@ -130,6 +130,8 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 			prev_ex = S.dirS.ex
 		for e in S.out.fx:
 			rec.fxCounts[e.type] = rec.fxCounts.get(e.type, 0) + 1
+			if e.type == "damage" and e.region != "":
+				rec.dmgByRegion[e.region] = rec.dmgByRegion.get(e.region, 0.0) + e.amount
 			if _keep(e.type):
 				var d := {"type": e.type, "t": snappedf(S.T, 0.001)}
 				for k in KEEP_FIELDS:
@@ -165,7 +167,8 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 		rows[key] = r
 	rec.rows = rows
 	rec.craters = S.world.craters
-	rec.wear = [fs[0].get("wear"), fs[1].get("wear")]   # per-region wear once Wounds (S1) lands; null before
+	rec.wear = [fs[0].get("wear"), fs[1].get("wear")]   # [head, core, arms, legs] in WEAR_SCALE units at the end (Wounds S1); null before
+	rec.stage = [fs[0].get("stage"), fs[1].get("stage")]
 	rec.menace = [fs[0].menace, fs[1].menace]
 	rec.anguish = [fs[0].anguish, fs[1].anguish]
 	rec.hash = SimHash.stateHash(S).gameplay
