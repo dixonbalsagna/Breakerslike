@@ -9,7 +9,7 @@ Since the QA-002 split, the sim holds no cosmetic state and makes no cosmetic ra
 - `step(S, inputs)` appends the tick's events to `S.out.fx`, an array (GDScript: `SimState.FxEvent` objects). The host drains it after every call: consume the events in order, then clear the array. This applies to hit-stop ticks too.
 - Events are in emission order, which is the order the prototype made its effect calls. Each tick's list holds exactly one `tick` event, placed where the prototype stepped its particles, after the fighters, the director and the beams. The only events that can follow it are the beam-clash sparks.
 - A hit-stop tick (the sim is frozen; `step` returns false) emits just `{type: 'tick', frozen: true}`.
-- Coordinates are world units, taken when the event was emitted: x in [0, 9600) on the wrapped planet, y upward with sea level at 0. Durations are in seconds.
+- Coordinates are world units, taken when the event was emitted: x in [0, W) on the wrapped planet (W = `SimConst.W`, 153,600 since the world scale), y upward with sea level at 0. Durations are in seconds.
 - Measured over 20 AI matches (85,863 ticks): about 1.35 events per tick on average, 7 at p99 and 46 at most, in a beam-and-explosion tick.
 
 ## The envelope
@@ -32,6 +32,9 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `charge` | x, y, col, ground | every tick a fighter is charging | the consumer rolls 40% for an aura spark and 6% for a dust puff, the latter only within 30 units of `ground` |
 | `crater` | x, y, r, depth, energy, cause, rim, skid, owner | a crater was dug (GDScript sim only): ground impacts, ground-level power-ups, beam ground strikes, clash blasts | nothing yet: the reference consumer ignores it. Rendering builds a bowl from it; VFX adds the burst |
 | `scorch` | x, y, w, power, variant, owner | every beam sample within reach of the ground (GDScript sim only) | nothing yet (ignored). Rendering and VFX draw the burn trail and the beam's ground contact |
+| `slide` | x, x1, w, depth, energy, variant, owner | a knockback slide ended (GDScript sim only): `x` where the fighter touched down, `x1` where he stopped or left the ground, `w` the trench's full width, `depth` its depth at the start, `variant` `"ground"` or `"paved"` (it started in a city or village), `owner` the launcher's slot | nothing yet (ignored). Rendering draws the whole trench and the dust plume's total |
+| `slide_dust` | x, y, spd, w, variant, n | a sample along a slide, every 40 x WS units, at most 60 per slide: `spd` is the normalised speed (the launch's traversal factor divided out), `w` the trench width, `variant` the surface, `n` the sample index | nothing yet (ignored). Rendering and VFX throw dust and rubble chips at each |
+| `skim` | x, y, spd, n | a launched fighter skipped off water: the surface height, the speed, and the skip number | nothing yet (ignored). VFX draws the wake |
 | `beamSplash` | x | a beam sample below y = 30 over the sea | the consumer rolls 60% for a splash of 3 at (x, 0) |
 | `damage` | x, y, amount, col, attacker, victim, region, kind, number | every hit, and every landing or collision that hurts | a damage number when `number` is true (hits): text `String(Math.round(amount))` rising 60 units/s for 0.9 s, gold when stance was ignored, white otherwise. `attacker` and `victim` are fighter slots (-1 for none); `region` is head, core, arms or legs; `kind` is light, heavy, guard, beam or impact (Audio's hit sounds; `guard_break` comes with Encounter's slice) |
 | `banner` | text, col, dur | power-ups, parries, KO, chains, clashes, ambushes; for human players also NEED 45 KI and LOCK LOST | the centre-screen banner (the latest one replaces any earlier one) for dur seconds of unfrozen time |
@@ -90,8 +93,10 @@ Events carry only transient effects. Persistent visuals come from sim state, rea
 - terrain height: `groundY` and `seaAt`, or `S.base` and `S.deform`
 - the world's persistent damage (GDScript sim), all rebuilt from state after a seek or a snapshot:
   - `S.craters`: an array of records, oldest first, capped at 400 (`WorldCrater.LIST_MAX`; the oldest is dropped, its dent stays in `S.deform`). Each has `x, y, r, depth, rim, energy, cause, owner, t, skid, sdepth`, the `crater` event's fields plus the match time `t` and the furrow's depth at the bowl `sdepth`. `S.deform` is the truth for the ground: it also holds the scorch grooves, which have no records, and the deform limits (-260 to +60) clip it, so do not rebuild it from the records; use them for the round bowls in depth.
-  - `S.scorch`: burn intensity per terrain column, 0 to 1, permanent (a `PackedFloat32Array` of 1,200, like `S.deform`).
-  - `S.water`: water depth per terrain column (`PackedFloat32Array` of 1,200). The surface of standing water is ground + depth, and it is sea level (0) once settled. A column is wet at 0.5 or more (`WorldWater.MIN_DEPTH`). `WorldWater.surfaceAt(S, x)` and `depthAt(S, x)` read it. The prototype's rule that water is drawn only where the base terrain is below -30 (`seaAt`) still holds for the sea; crater lakes that fill from the sea are the difference, and they exist only where the ground was dug below -30 and connects to the sea.
+  - `S.slides`: an array of records like `S.craters`, capped at 200: `x0, x1, hw, depth, energy, t, owner, surface` (the `slide` event's fields plus the match time and 1 for a paved start).
+  - `S.crack`: pavement crack intensity per terrain column, 0 to 1, permanent, set by slides in city and village biomes (a `PackedFloat32Array` of `NC`). Rendering tints cracked pavement from it.
+  - `S.scorch`: burn intensity per terrain column, 0 to 1, permanent (a `PackedFloat32Array` of `NC`, like `S.deform`).
+  - `S.water`: water depth per terrain column (`PackedFloat32Array` of `SimConst.NC`). The surface of standing water is ground + depth, and it is sea level (0) once settled. A column is wet at 0.5 or more (`WorldWater.MIN_DEPTH`). `WorldWater.surfaceAt(S, x)` and `depthAt(S, x)` read it. The prototype's rule that water is drawn only where the base terrain is below -30 (`seaAt`) still holds for the sea; crater lakes that fill from the sea are the difference, and they exist only where the ground was dug below -30 and connects to the sea.
 - buildings: `curH`, `alive`
 - trees
 - the `S.world` counters

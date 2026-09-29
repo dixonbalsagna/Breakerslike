@@ -25,6 +25,10 @@ Never regenerate to make an unexplained failure go away: find the cause first. A
 `core/test/frozen/golden-js.json` is the one-time equivalence record: the frozen JS core wrote it, and the GDScript sim matched it when the JS core was frozen. After the first gameplay change it will stop matching the GDScript sim (`parity.gd -- --golden=res://sim/core/test/frozen/golden-js.json`). That is expected, and it is not a gate. `npm test` still checks that the frozen JS core reproduces it.
 
 
+## World scale (SC)
+
+The world is grown against the fighters (docs/world/scale.md): `SimConst.WS` (feature scale, 8), `PS` (planet scale, 16), `MS` (mountains, 12), the traversal factors `TRAV_FREE` and `TRAV_LAUNCH`, and `CEILING`, `COL`, `NC`, `W`, `START_X` are the knobs. Fighter-scale distances (melee, hiding, the fighter's own body) are not scaled. New code that measures a distance in the world should say whether it is a fighter distance, a world-feature distance (times `WS`) or a planet distance (times `PS`). A launch's horizontal speed carries the traversal factor (`WorldSlide.launchTravel`); impact damage, energy and slides use the unboosted speed. The knockback slide is `sim/world/slide.gd` (docs/world/knockback-slide.md).
+
 ## Layout and owners
 
 | Path | Contents | Owner |

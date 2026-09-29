@@ -15,32 +15,34 @@ class_name WorldWater
 ## window closes once it has settled. Nothing here draws a random number.
 
 const SEA_LEVEL: float = 0.0
-const RESERVOIR_BASE: float = -30.0   # base ground below this is open sea (WorldTerrain.seaAt)
-const WET_GROUND: float = -30.0       # a dynamic column takes water only while its ground is below this
-const MIN_DEPTH: float = 0.5          # less than this counts as dry
+const WS: float = SimConst.WS
+const RESERVOIR_BASE: float = -30.0 * WS   # base ground below this is open sea (WorldTerrain.seaAt)
+const WET_GROUND: float = -30.0 * WS       # a dynamic column takes water only while its ground is below this
+const MIN_DEPTH: float = 0.5 * WS     # less than this counts as dry
 const FLOW_K: float = 0.4             # a link moves this share of the surface difference per step ...
-const FLOW_MAX: float = 14.0          # ... at most this much depth per step ...
-const FLOW_MIN: float = 0.25          # ... at least this much (or half the difference, if smaller), so the tail is not endless ...
+const FLOW_MAX: float = 14.0 * WS          # ... at most this much depth per step ...
+const FLOW_MIN: float = 0.25 * WS          # ... at least this much (or half the difference, if smaller), so the tail is not endless ...
 const DONOR_SHARE: float = 0.5        # ... and at most this share of the donor column's water
-const FLOW_EPS: float = 0.05          # surface differences below this do not flow
+const FLOW_EPS: float = 0.05 * WS          # surface differences below this do not flow
 const STEP_TICKS: int = 2             # a flow step every this many unfrozen ticks
 const PAD_COLS: int = 6               # a window extends this far past the changed columns
-const SETTLE_EPS: float = 0.05        # a step that moves less than this in total counts as quiet
+const SETTLE_EPS: float = 0.05 * WS        # a step that moves less than this in total counts as quiet
 const SETTLE_STEPS: int = 3           # a window closes after this many quiet steps in a row
-const MAX_AGE_STEPS: int = 600        # ... or after this many steps whatever happens (a bound on the cost)
+const MAX_AGE_STEPS: int = 900        # ... or after this many steps whatever happens (a bound on the cost)
 const MAX_WINDOWS: int = 8            # more than this and the oldest window is dropped
-const MAX_HALF: int = 120             # widest a window may grow (columns each side of its centre)
+const MAX_HALF: int = 240             # widest a window may grow (columns each side of its centre)
 ## Submerged hiding (cover.gd): 60 units under the surface, in water at least 100 deep. The prototype's rule for the sea.
 const HIDE_BELOW_SURFACE: float = 60.0
 const HIDE_MIN_DEPTH: float = 100.0
 const DRY: float = -1e9               # surfaceAt() of a dry column
 ## Launched fighters skim: a descent shallower than SKIM_MAX_TAN (rise over run), faster than SKIM_MIN_SPEED, skips off
-## the surface with vy reversed and scaled by SKIM_LIFT and vx scaled by SKIM_KEEP, up to SKIM_MAX times in a flight.
-const SKIM_MIN_SPEED: float = 650.0
-const SKIM_MAX_TAN: float = 0.5
-const SKIM_LIFT: float = 0.55
-const SKIM_KEEP: float = 0.8
-const SKIM_MAX: float = 3.0
+## the surface with vy reversed and scaled by SKIM_LIFT and vx scaled by SKIM_KEEP, up to SKIM_MAX times in a flight
+## (docs/world/knockback-slide.md section 5). Fighter-scale, so not multiplied by WS.
+const SKIM_MIN_SPEED: float = 500.0
+const SKIM_MAX_TAN: float = 0.6
+const SKIM_LIFT: float = 0.65
+const SKIM_KEEP: float = 0.85
+const SKIM_MAX: float = 6.0
 
 
 static func isReservoir(S: SimState, i: int) -> bool:

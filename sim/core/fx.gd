@@ -94,6 +94,25 @@ static func crater(S: SimState, c) -> void:
 
 
 ## A beam sample scorched the ground: x, ground height, groove width, the beam-power scalar, the variant and the owner.
+## A knockback slide ended (world/slide.gd): the whole trench, start to end.
+static func slideEvent(S: SimState, r) -> void:
+	var e := _ev(S, "slide")
+	e.x = r.x0; e.x1 = r.x1; e.w = r.hw * 2.0; e.depth = r.depth; e.energy = r.energy
+	e.variant = "paved" if r.surface > 0.5 else "ground"; e.owner = r.owner
+
+
+## A sample along a slide, for dust and chips: x, ground height, normalised speed, trench width, surface, index.
+static func slideDust(S: SimState, x: float, y: float, v: float, w: float, surface: String, i: int) -> void:
+	var e := _ev(S, "slide_dust")
+	e.x = x; e.y = y; e.spd = v; e.w = w; e.variant = surface; e.n = i
+
+
+## One skip off the water: x, surface height, speed, skip number.
+static func skim(S: SimState, x: float, y: float, v: float, i: int) -> void:
+	var e := _ev(S, "skim")
+	e.x = x; e.y = y; e.spd = v; e.n = i
+
+
 static func scorchEvent(S: SimState, x: float, y: float, w: float, power: float, variant: String, owner: float) -> void:
 	var e := _ev(S, "scorch")
 	e.x = x; e.y = y; e.w = w; e.power = power; e.variant = variant; e.owner = owner

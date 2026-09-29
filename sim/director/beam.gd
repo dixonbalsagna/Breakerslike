@@ -36,7 +36,7 @@ static func opBeamCharge(S: SimState, ex, args) -> void:
 	SimFx.banner(S, A.sigName.to_upper(), A.aura, 1.1)
 	var r := SimState.Rush.new()
 	r.px = A.x
-	r.py = SimMathx.jmin(2400.0, D.y + args.rise)
+	r.py = SimMathx.jmin(SimConst.CEILING - 200.0, D.y + args.rise)
 	r.end = S.T + 0.55
 	A.rush = r
 	SimFx.ring(S, A.x, A.y + 40.0, 260.0, A.aura, 0.8, 10.0)
@@ -52,7 +52,7 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	A.beamCharge = null
 	if D.hp <= 0.0 or A.hp <= 0.0:
 		return
-	var len: float = SimMathx.jmin(4200.0, dist + 2000.0 + A.tier * 400.0)
+	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, dist + (2000.0 + A.tier * 400.0) * SimConst.WS)
 	var ox: float = A.x
 	var oy: float = A.y + 38.0
 	var aimY: float = D.y + 36.0
@@ -149,11 +149,11 @@ static func opClashResolve(S: SimState, ex, args) -> void:
 	var L: float = SimDamage.jor(SimDetMath.hypot(dxs, dyy), 1.0)
 	var ux: float = dxs / L
 	var uy: float = dyy / L
-	var len: float = SimMathx.jmin(4200.0, L + 2000.0 + Wn.tier * 400.0)
+	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, L + (2000.0 + Wn.tier * 400.0) * SimConst.WS)
 	fireBeam(S, Wn, Wn.x, Wn.y + 38.0, ux, uy, len, variant)
 	Ls.state = "locked"
 	SimDamage.hit(S, ex, Wn, Ls, 260.0, {"ignoreStance": true, "stop": 0.16, "shake": 18.0, "big": true})
-	WorldStructures.explode(S, Ls.x, Ls.y + 30.0, 70.0 + Wn.tier * 32.0, Wn)
+	WorldStructures.explode(S, Ls.x, Ls.y + 30.0, (70.0 + Wn.tier * 32.0) * SimConst.WS, Wn)
 	if Ls.hp > 0.0:
 		DirLaunch.doLaunch(S, Wn, Ls, {"ux": ux, "uy": uy * 0.6 + 0.12}, 2600.0)
 
@@ -182,10 +182,10 @@ static func sampleBeam(S: SimState, b, s: float) -> void:
 		SimFx.dust(S, x, g + 8.0, 1, "#e6c47a" if b.variant == "GLASS TRENCH" else "#9b8f7e")
 		if b.variant == "GLASS TRENCH":
 			SimFx.spark(S, x, g + 6.0, 2, "#ffd98a", 300.0)
-	WorldStructures.damageArea(S, x, y, 26.0 + P * 8.0, 110.0 + P * 75.0, A)
+	WorldStructures.damageArea(S, x, y, (26.0 + P * 8.0) * SimConst.WS, 110.0 + P * 75.0, A)
 	if y < 30.0 and WorldTerrain.seaAt(S, x):
 		SimFx.beamSplash(S, x)   # the consumer rolls the prototype's 60% splash
-	if b.variant == "FIRESTORM" and y < g + 140.0:
+	if b.variant == "FIRESTORM" and y < g + 140.0 * SimConst.WS:
 		SimFx.fire(S, x, g, 1)
 
 
@@ -200,6 +200,6 @@ static func beamStep(S: SimState, dt: float) -> void:
 		var s: float = s0
 		while s < s1:
 			sampleBeam(S, b, s)
-			s += 36.0
+			s += 36.0 * SimConst.WS
 		if b.t > b.life:
 			S.beams.remove_at(i)

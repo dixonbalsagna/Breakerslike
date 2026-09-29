@@ -40,7 +40,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}) -> void:
 	var p1ai: bool = bool(ai["p1"]) if ai.has("p1") and ai["p1"] != null else (S.fighters[0].ai != null if S.fighters.size() > 0 else true)
 	var p2ai: bool = bool(ai["p2"]) if ai.has("p2") and ai["p2"] != null else (S.fighters[1].ai != null if S.fighters.size() > 1 else true)
 	dispose(S)
-	S.fighters = [SimRoster.createFighter(SimRoster.ROSTER[0], 2150.0, "p1", p1ai), SimRoster.createFighter(SimRoster.ROSTER[1], 2900.0, "p2", p2ai)]
+	S.fighters = [SimRoster.createFighter(SimRoster.ROSTER[0], SimConst.START_X, "p1", p1ai), SimRoster.createFighter(SimRoster.ROSTER[1], SimConst.START_X + SimConst.START_GAP, "p2", p2ai)]
 	S.fighters[0].y = 60.0
 	S.fighters[1].y = 60.0
 	S.fighters[1].face = -1.0

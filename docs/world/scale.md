@@ -102,3 +102,21 @@ The proposal: **a scale slice, SC, right after S1 with W-R, in one golden regene
 1. **How big should the planet feel, as travel time?** At life size the planet is: **small** (about 1,000 bh, W 76,800; a lap takes about 75 s at the current dash, or 18 s at 4 times); **medium** (about 4,000 bh, W 300,000; 5 min at the current dash, 75 s at 4 times); **large** (about 10,000 bh, W 750,000; 12 min at the current dash). Small is the cheapest, keeps the biomes near each other, and makes planet destruction literal (a tier-4 crater is a large slice of it). Large is the most planet-like and costs terrain resolution and tick time, and takes long flights to see it. I recommend small to medium, at 8 times to start.
 2. **How fast should fighters cross it?** Choose the lap time when dashing flat out. At the current speeds a lap of the small planet is 75 s; anime-fast (the fighters ripping across it in 10 to 20 s) needs a boost of 4 to 8 times on free flight, which gives the "shrunk fighters" feel of (a) without the cost. Melee stays as it is either way.
 3. **How big are tier-4 craters, and does a km-scale crater end the planet?** Recommendation: tier 4 is a district (60 to 100 bh across), and a km-scale blow is the pinned planet-destruction finisher, which on a small planet is a planet-sized crater. If Orb wants km craters as ordinary blows, the planet must be large (10,000 bh or more), which is expensive.
+
+## 6. As built (SC window, 2026-09-29)
+
+Built as one set of knobs in `sim/core/constants.gd`, and everything below in one golden regeneration (with W-R and the knockback slide).
+
+| Knob | Value | Effect |
+| :--- | :--- | :--- |
+| `WS` | 8 | Feature scale: buildings, trees, terrain relief (sea depth, plains, forest, desert), craters, scorch, the damage radii of blasts and beams, beam length and sample spacing, the sea and shore thresholds, the water constants, cover heights |
+| `PS` | 16 | Planet scale: `W = 9,600 * 16 = 153,600` (2,048 fighter heights around), biome spans, settlement spans, terrain wavelengths, the AI's planet-scale distances (lure step, cover search) |
+| `MS` | 12 | Mountain relief (peaks up to about 7,400: 98 fighter heights) |
+| `COL`, `NC` | 32, 4,800 | Terrain columns (0.43 fighter heights; 4 times as many columns as before) |
+| `TRAV_FREE`, `BOOST_NEAR/FAR` | 10, 1,500 / 12,000 | A dash is up to 10 times faster when the opponent is farther than 1,500 units, full at 12,000: a lap in about 15 s flat out; close in it is the melee dash it was |
+| `TRAV_LAUNCH` | 6 | The horizontal part of a launch is multiplied by `1 + 5 * (|ux| / (|ux| + |uy|))`, so vertical launches (slam, uppercut) stay vertical and horizontal ones cross the map. Impact damage, energy and the slide use the unboosted speed |
+| `CEILING` | 24,000 | Flight ceiling (was 2,600) |
+
+Resulting world (seed 1): 91 buildings (54 towers, 37 houses; was 47), the tallest tower 4,242 (57 fighter heights), 379 people (was 425; the per-building population is scaled by `WS / PS`), 67 trees, terrain from -2,810 to +7,357, 1,412 wet columns (the sea). Crater radii: tier 2 power-up 1,407 (19 bh), tier 3 2,691 (36 bh), tier 4 4,264 (57 bh); rims scale with energy (W-R). Distances that are about the fighters (melee, hiding 170 and 240, cover heights against the fighter, the launch force) did not change. `newMatch` takes 19 ms (the terrain blur is a running sum).
+
+Not done here (by design): Encounter's tempo pass (fights now drift to the sea and last longer; see the numbers in the report), skyscraper and depth rows (B1), the renderer's adaptation (its far-land, horizon curvature, camera zoom range and the seam sweep's 0.001 tolerance were tuned for W = 9,600; `SimCamera.ZOOM_MIN` is now 0.006). B1 must be written in body heights (75 units) against this.

@@ -4,42 +4,52 @@ class_name WorldTerrain
 ## to float32.
 
 
-## Terrain, buildings and trees. The layout draws from its own stream seeded 4242, never from S.rng.
+## Terrain, buildings and trees. The layout draws from its own stream seeded 4242, never from S.rng. Every original
+## length is in the coordinates of the original planet (xn = x / PS), then the relief and the object sizes are
+## multiplied by the feature scale WS (and the mountains by MS), so the planet is PS times longer with WS times bigger
+## things on it (SimConst).
 static func genWorld(S: SimState) -> void:
 	var r := SimRng.new(4242)
 	var NC: int = SimConst.NC
+	var WS: float = SimConst.WS
+	var PS: float = SimConst.PS
 	S.deform.resize(NC)
 	S.deform.fill(0.0)
 	var t := PackedFloat32Array()
 	t.resize(NC)
 	for i in range(NC):
-		var x: float = float(i) * SimConst.COL
-		var b: String = WorldBiomes.biomeAt(x)
-		var n: float = SimDetMath.sin(x * 0.0021) * 0.5 + SimDetMath.sin(x * 0.0057 + 1.3) * 0.3 + SimDetMath.sin(x * 0.013 + 2.1) * 0.2
+		var xn: float = float(i) * SimConst.COL / PS
+		var b: String = WorldBiomes.biomeAt(float(i) * SimConst.COL)
+		var n: float = SimDetMath.sin(xn * 0.0021) * 0.5 + SimDetMath.sin(xn * 0.0057 + 1.3) * 0.3 + SimDetMath.sin(xn * 0.013 + 2.1) * 0.2
 		if b == "ocean":
-			t[i] = -340.0 + n * 35.0
+			t[i] = (-340.0 + n * 35.0) * WS
 		elif b == "mountains":
-			var k: float = SimMathx.jclamp((x - 6500.0) / 1100.0, 0.0, 1.0)
+			var k: float = SimMathx.jclamp((xn - 6500.0) / 1100.0, 0.0, 1.0)
 			var env: float = SimDetMath.sin(PI * k)
-			t[i] = env * (330.0 + 560.0 * absf(SimDetMath.sin(x * 0.0042 + 0.7)) * (0.55 + 0.45 * SimDetMath.sin(x * 0.013)))
+			t[i] = env * (330.0 + 560.0 * absf(SimDetMath.sin(xn * 0.0042 + 0.7)) * (0.55 + 0.45 * SimDetMath.sin(xn * 0.013))) * SimConst.MS
 		elif b == "desert":
-			t[i] = n * 28.0
+			t[i] = n * 28.0 * WS
 		elif b == "plains":
-			t[i] = n * 16.0
+			t[i] = n * 16.0 * WS
 		elif b == "forest":
-			t[i] = 10.0 + n * 22.0
+			t[i] = (10.0 + n * 22.0) * WS
 		else:
 			t[i] = 0.0
-	# Four wrapped 25-column box blurs, ping-ponging between two float32 buffers.
+	# Four wrapped box blurs of half width SMOOTH_HALF columns (the original 12 columns of 8 units, times PS, in columns
+	# of COL), ping-ponging between two float32 buffers. A running sum keeps the cost linear.
+	var half: int = int(round(12.0 * 8.0 * PS / SimConst.COL))
+	var kw: float = float(2 * half + 1)
 	var a := t
 	var bf := PackedFloat32Array()
 	bf.resize(NC)
 	for p in range(4):
-		for i in range(NC):
-			var s: float = 0.0
-			for k in range(-12, 13):
-				s += a[(i + k + NC) % NC]
-			bf[i] = s / 25.0
+		var s: float = 0.0
+		for k in range(-half, half + 1):
+			s += a[(k + NC) % NC]
+		bf[0] = s / kw
+		for i in range(1, NC):
+			s += a[(i + half) % NC] - a[(i - half - 1 + NC) % NC]
+			bf[i] = s / kw
 		var tmp := a
 		a = bf
 		bf = tmp
@@ -47,50 +57,60 @@ static func genWorld(S: SimState) -> void:
 	S.buildings.clear()
 	S.trees.clear()
 	var pop: float = 0.0
-	pop += _row(S, r, 1260.0, 1760.0, "house")
-	pop += _row(S, r, 2370.0, 3830.0, "tower")
-	pop += _row(S, r, 3880.0, 4480.0, "house")
-	pop += _row(S, r, 7640.0, 7960.0, "house")
-	var x2: float = 4530.0
-	while x2 < 5470.0:
+	pop += _row(S, r, 1260.0 * PS, 1760.0 * PS, "house")
+	pop += _row(S, r, 2370.0 * PS, 3830.0 * PS, "tower")
+	pop += _row(S, r, 3880.0 * PS, 4480.0 * PS, "house")
+	pop += _row(S, r, 7640.0 * PS, 7960.0 * PS, "house")
+	var x2: float = 4530.0 * PS
+	while x2 < 5470.0 * PS:
 		var tr := SimState.TreeState.new()
 		tr.x = x2
-		tr.h = r.range_(46.0, 110.0)
+		tr.h = r.range_(46.0, 110.0) * WS
 		S.trees.append(tr)
-		x2 += r.range_(16.0, 40.0)
+		x2 += r.range_(16.0, 40.0) * WS
 	S.world = SimState.World.new()
 	S.world.pop0 = pop
 	S.scorch = PackedFloat32Array()
 	S.scorch.resize(NC)
 	S.scorch.fill(0.0)
 	S.craters.clear()
+	S.crack = PackedFloat32Array()
+	S.crack.resize(NC)
+	S.crack.fill(0.0)
+	S.slides.clear()
 	WorldWater.init(S)
 
 
-## One row of buildings from x0 to x1 (terrain.js row()); returns the population it added. The draws happen in the
-## JS order: tower w, h, h, seed, spacing; house w, h, pop, seed, spacing.
+## Population per building is the original's times POP_K = WS / PS, so the planet's total stays about 425 although the
+## settlements hold PS / WS times as many buildings. hp follows the building's original (unscaled) height, so a tower
+## WS times bigger is not WS times harder to knock over.
 static func _row(S: SimState, r: SimRng, x0: float, x1: float, kind: String) -> float:
+	var WS: float = SimConst.WS
+	var PS: float = SimConst.PS
+	var popK: float = WS / PS
 	var pop: float = 0.0
 	var x: float = x0
 	while x < x1:
 		var b := SimState.Building.new()
 		if kind == "tower":
-			var w: float = r.range_(30.0, 64.0)
+			var w0: float = r.range_(30.0, 64.0)
+			var w: float = w0 * WS
 			var cx: float = x + w / 2.0
-			var mid: float = 1.0 - absf((cx - 3100.0) / 760.0)
+			var mid: float = 1.0 - absf((cx - 3100.0 * PS) / (760.0 * PS))
 			var h1: float = r.range_(120.0, 280.0)
-			var h: float = h1 + SimMathx.jmax(0.0, mid) * r.range_(80.0, 380.0)
-			b.x = cx; b.w = w; b.h = h; b.maxhp = h * 6.0; b.hp = h * 6.0; b.alive = true; b.kind = "tower"
-			b.pop = SimMathx.jround(w * h / 1200.0)
+			var h0: float = h1 + SimMathx.jmax(0.0, mid) * r.range_(80.0, 380.0)
+			b.x = cx; b.w = w; b.h = h0 * WS; b.maxhp = h0 * 6.0; b.hp = h0 * 6.0; b.alive = true; b.kind = "tower"
+			b.pop = SimMathx.jmax(1.0, SimMathx.jround(w0 * h0 / 1200.0 * popK))
 			b.seed = r.next()
-			x += w + r.range_(4.0, 16.0)
+			x += w + r.range_(4.0, 16.0) * WS
 		else:
-			var w: float = r.range_(28.0, 50.0)
-			var h: float = r.range_(36.0, 72.0)
-			b.x = x + w / 2.0; b.w = w; b.h = h; b.maxhp = h * 3.0; b.hp = h * 3.0; b.alive = true; b.kind = "house"
-			b.pop = SimMathx.jround(r.range_(2.0, 6.0))
+			var w0: float = r.range_(28.0, 50.0)
+			var w: float = w0 * WS
+			var h0: float = r.range_(36.0, 72.0)
+			b.x = x + w / 2.0; b.w = w; b.h = h0 * WS; b.maxhp = h0 * 3.0; b.hp = h0 * 3.0; b.alive = true; b.kind = "house"
+			b.pop = SimMathx.jmax(1.0, SimMathx.jround(r.range_(2.0, 6.0) * popK))
 			b.seed = r.next()
-			x += w + r.range_(16.0, 70.0)
+			x += w + r.range_(16.0, 70.0) * WS
 		b.popAlive = b.pop
 		S.buildings.append(b)
 		pop += b.pop
@@ -112,4 +132,4 @@ static func groundY(S: SimState, x: float) -> float:
 ## The sea basin: water only where the original (base) terrain is below sea level (the prototype's rule). Craters that
 ## fill with water are WorldWater's business (S.water); this rule is what the AI, launch planner and fighter speed use.
 static func seaAt(S: SimState, x: float) -> bool:
-	return S.base[int(floor(SimWrap.wrap(x) / SimConst.COL))] < -30.0
+	return S.base[int(floor(SimWrap.wrap(x) / SimConst.COL))] < WorldWater.RESERVOIR_BASE

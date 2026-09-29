@@ -10,19 +10,28 @@ class_name WorldCrater
 ## The numbers and the reasoning: docs/world/craters-scorch-water.md. Events and the record list: fx-events.md.
 
 # ---- energy to size ----
-const R_BASE: float = 58.0            # bowl radius (units) at E = 1
-const R_MAX: float = 260.0            # largest bowl radius
+const WS: float = SimConst.WS         # feature scale: craters are world features (docs/world/scale.md)
+const R_BASE: float = 58.0 * WS       # bowl radius (units) at E = 1
+const R_MAX: float = 1040.0 * WS      # largest bowl radius (a tier-4 blow is about 57 fighter heights across)
 const DEPTH_RATIO: float = 0.22       # bowl depth / bowl radius for a straight-down hit
 const RELIEF_MAX_RATIO: float = 0.26  # depth of any spot below its surroundings, per unit of the new crater's R
 const RING_K: float = 1.2             # the surroundings are sampled at +-RING_K * R from the centre
-const MIN_DEPTH: float = 0.75         # a dig shallower than this is not a crater (no record, no event)
+const MIN_DEPTH: float = 0.75 * WS    # a dig shallower than this is not a crater (no record, no event)
 # ---- rim and ejecta ----
 const RIM_IN: float = 0.3             # the rim starts to rise this far (in R) inside the lip
 const RIM_OUT: float = 1.0            # the apron ends this far (in R) beyond the lip
-const RIM_H_FRAC: float = 0.5         # rim height / bowl depth
+const RIM_H_FRAC: float = 0.5         # rim height / bowl depth at the volume fraction of RIM_VOL_PER_HEIGHT (kept for reference)
+## Rim height scales with the energy (W-R): the rim and apron carry RIM_VOL_LOW of the bowl's volume at E <= RIM_E_LOW and
+## RIM_VOL_HIGH at E >= RIM_E_HIGH, smoothstep between. Rim height = depth * volume fraction * RIM_H_PER_VOL, where
+## RIM_H_PER_VOL = 0.5 / 0.6 is the measured height per unit of volume (rim 0.5 of depth carries 0.6 of the bowl).
+const RIM_VOL_LOW: float = 0.4
+const RIM_VOL_HIGH: float = 1.0
+const RIM_E_LOW: float = 1.0
+const RIM_E_HIGH: float = 16.0
+const RIM_H_PER_VOL: float = 0.5 / 0.6
 # ---- heightfield limits ----
-const DEFORM_FLOOR: float = -260.0    # deform never goes below this (the prototype's floor)
-const DEFORM_CEIL: float = 60.0       # nor above this: rims and aprons stack up to here
+const DEFORM_FLOOR: float = -260.0 * WS   # deform never goes below this (the prototype's floor, scaled)
+const DEFORM_CEIL: float = 120.0 * WS     # nor above this: rims, aprons and rubble stack up to here
 const TREE_FELL_K: float = 1.05       # trees within this many R of the centre fall
 const LIST_MAX: int = 400             # persistent crater records; the oldest is dropped when full
 # ---- glancing impacts: the bowl gets shallower, and a diagonal one skids a furrow into it ----
@@ -34,7 +43,8 @@ const SKID_DEPTH_FRAC: float = 0.35   # furrow depth at the bowl / bowl depth
 # ---- energy scalars per source (E in "energy units"; 1 is a scuff, 15 a planet-scarring blow) ----
 const IMPACT_SPEED_REF: float = 900.0 # a launched fighter hitting the ground at this speed on tier 1 has E = 1
 const IMPACT_TIER_E: float = 0.25     # +25 percent energy per tier above 1
-const POWERUP_E: float = 1.6          # ground-level power-up: E = POWERUP_E * tier^1.5
+const POWERUP_E: float = 1.0          # ground-level power-up: E = POWERUP_E * tier^POWERUP_E_EXP (tier 4 is a district)
+const POWERUP_E_EXP: float = 3.2
 const EXPLODE_E: float = 1.6          # beam-clash blast: E = EXPLODE_E * tier * (1 + 0.25 * tier)
 const EXPLODE_E_TIER: float = 0.25
 const CLASH_E0: float = 0.8           # heavy-clash shockwave: E = CLASH_E0 + CLASH_E_TIER * tier
@@ -46,12 +56,12 @@ const BEAM_STRIKE_SLOPE: float = 0.25 # a beam must descend at least this steepl
 const BEAM_P_BASE: float = 0.5        # P = BEAM_P_BASE + power / BEAM_P_POWER: equals the tier at the middle of a tier band
 const BEAM_P_POWER: float = 25.0
 # ---- scorch: a groove along the ground, target depth (carved to, not added) and permanent burn intensity ----
-const SCORCH_REACH0: float = 40.0     # the beam scorches ground within reach of it: reach = REACH0 + REACH_P * P
-const SCORCH_REACH_P: float = 12.0
-const SCORCH_HW0: float = 30.0        # groove half width = (HW0 + HW_P * P) * variant width factor
-const SCORCH_HW_P: float = 22.0
-const SCORCH_D0: float = 3.0          # groove target depth = (D0 + D_P * P) * variant depth factor
-const SCORCH_D_P: float = 2.2
+const SCORCH_REACH0: float = 40.0 * WS    # the beam scorches ground within reach of it: reach = REACH0 + REACH_P * P
+const SCORCH_REACH_P: float = 12.0 * WS
+const SCORCH_HW0: float = 30.0 * WS       # groove half width = (HW0 + HW_P * P) * variant width factor
+const SCORCH_HW_P: float = 22.0 * WS
+const SCORCH_D0: float = 3.0 * WS         # groove target depth = (D0 + D_P * P) * variant depth factor
+const SCORCH_D_P: float = 2.2 * WS
 const SCORCH_INT0: float = 0.35       # burn intensity = clamp(INT0 + INT_P * P, 0, 1)
 const SCORCH_INT_P: float = 0.15
 ## Per beam variant: [depth factor, width factor]. Ridge bore drills, glass trench fuses a wide shallow strip.
@@ -64,13 +74,14 @@ static func beamPower(A) -> float:
 	return BEAM_P_BASE + A.power / BEAM_P_POWER
 
 
+## sp is the unboosted speed: the launch's horizontal traversal factor is divided out before the energy is taken.
 static func impactEnergy(sp: float, tier: float) -> float:
 	var v: float = sp / IMPACT_SPEED_REF
 	return v * v * (1.0 + IMPACT_TIER_E * (tier - 1.0))
 
 
 static func powerupEnergy(tier: float) -> float:
-	return POWERUP_E * tier * sqrt(tier)
+	return POWERUP_E * SimDetMath.pow(tier, POWERUP_E_EXP)
 
 
 static func explodeEnergy(tier: float) -> float:
@@ -140,7 +151,9 @@ static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx:
 	var d: float = minf(dRaw, RELIEF_MAX_RATIO * R - relief)
 	if d < MIN_DEPTH:
 		return null
-	var hr: float = d * RIM_H_FRAC
+	var rt: float = clampf((energy - RIM_E_LOW) / (RIM_E_HIGH - RIM_E_LOW), 0.0, 1.0)
+	var volFrac: float = RIM_VOL_LOW + (RIM_VOL_HIGH - RIM_VOL_LOW) * rt * rt * (3.0 - 2.0 * rt)
+	var hr: float = d * volFrac * RIM_H_PER_VOL
 	var n: int = int(ceil(R * (1.0 + RIM_OUT) / COL))
 	var minG: float = 1e9
 	for k in range(-n, n + 1):
@@ -216,3 +229,45 @@ static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> v
 	S.scorch = scm
 	SimFx.scorchEvent(S, x, y0, hw * 2.0, P, variant, _slot(S, cause))
 	WorldWater.touched(S, c0, n, minG)
+
+
+## Carve the trench of a slide along the path from xa to xb (the columns the fighter has just passed over) to the given
+## depth: never deeper than the target, so a trench does not dig shafts however often it is crossed. The ground ahead of
+## the fighter is untouched, so he rides the undug surface and the trench opens behind and under his feet. paved raises
+## S.crack over the same columns by the given intensity. Used by the knockback slide.
+static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved: bool, crack: float) -> void:
+	var NC: int = SimConst.NC
+	var COL: float = SimConst.COL
+	var dx: float = SimWrap.sdx(xa, xb)
+	var dir: int = 1 if dx >= 0.0 else -1
+	var ca: int = _col(xa)
+	var cb: int = _col(xb)
+	# The columns from xa's up to but not including xb's, in the direction of travel: the ground ahead stays undug.
+	var n: int = posmod((cb - ca) * dir, NC)
+	if n == 0:
+		return
+	var base: PackedFloat32Array = S.base
+	var dfm: PackedFloat32Array = S.deform
+	var crk: PackedFloat32Array = S.crack
+	var target: float = maxf(-depth, DEFORM_FLOOR)
+	var minG: float = 1e9
+	for k in range(n):
+		var i: int = (ca + dir * k + NC) % NC
+		if target < dfm[i]:
+			dfm[i] = target
+		if paved and crack > crk[i]:
+			crk[i] = crack
+		minG = minf(minG, base[i] + dfm[i])
+	S.deform = dfm
+	S.crack = crk
+	WorldWater.touched(S, ca, n, minG)
+
+
+## A small raised lip where a slide ends: two columns ahead in the direction of travel.
+static func berm(S: SimState, x: float, vx: float, hw: float, h: float) -> void:
+	var NC: int = SimConst.NC
+	var c0: int = _col(x)
+	var dir: int = 1 if vx >= 0.0 else -1
+	for k in range(0, 3):
+		var i: int = (c0 + dir * k + NC) % NC
+		S.deform[i] = minf(DEFORM_CEIL, S.deform[i] + h * (1.0 - float(k) / 3.0))

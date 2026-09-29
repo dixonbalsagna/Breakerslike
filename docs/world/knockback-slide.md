@@ -76,3 +76,14 @@ Part of the SC window, after the world-scale constants and before the golden reg
 - **Orb decides:** the recovery time after a slide (0.35 s against 0.75), and whether a fighter may brace during a slide (an input that adds friction or steers, a Controls question; not proposed now).
 - **Game Design:** the numbers (friction, trench depth, damage split), and the collateral cost of slides in cities.
 - **Risk:** a slide that runs through a settlement can raze it. A tier-4 slide of 15 bh through Bellgate is a demolition line, which is what Orb asked for, so the casualty ramp and the tier caps (`scale.md`, `buildings-in-depth.md` 4b) must count slides as a source, and the planner should read the predicted slide when it scores a launch over a town.
+
+## 10. As built (SC window)
+
+Code: `sim/world/slide.gd` (`WorldSlide`), `WorldCrater.carveSegment` and `berm`, `SimFighter.impact` and `stepLaunched`, `DirLaunch.predictFlight` and `doLaunch`. Differences from the design above, all found while building:
+- **The trench is carved behind the fighter, not around him.** The carve covers the columns he has just passed and never the ground ahead, and he rides the undug surface (his feet drag at the old surface height, the trench opens under him). Carving a dimple around him made the ground ahead lower and the trench's own edge look like a wall, which stopped every slide after two ticks. When the slide ends he settles into the trench (the `down` state follows the ground).
+- **Trench size is half the world scale**, not fighter scale: half width `(14 + 6 sqrt(E)) * WS / 2`, depth `(4 + 0.008 v) * WS / 2` capped at `38 * WS / 2` (152 units, 2 fighter heights). At fighter scale it would be invisible beside 8-times-bigger craters.
+- **Damage is taken in a few hits, not one per tick.** Speed lost is accumulated and taken at each path sample (every 320 units) and at the end, each a wear hit (Wounds), so the total is unchanged but a slide makes 2 to 14 wear hits instead of 60. Each wear hit draws once from `S.rng` (the Wounds picker), and nothing else in a slide does: `probe.gd` checks that the draws equal the wear hits.
+- **The launch traversal is per angle** (`WorldSlide.launchTravel`), so a slam stays a slam. The predictor uses the same function.
+- **The hop:** at normalised speed 2,000 or more, and only once per flight, the first ground contact makes a small hop (vertical speed x 0.25) instead of a crater or a slide; the landing is judged afresh.
+- **Checks in `probe.gd`:** the slide's stopped distance matches the closed form within 1 to 3 percent on flat ground (405, 1,229, 2,786 units at speeds 400, 900, 1,500 with travel 6); 300 random launches on the plains give 178 slides and 150 craters and none with more than one crater.
+- **Numbers, before and after, in the SC report** (`docs/world/scale.md` section 6 and the EP report).

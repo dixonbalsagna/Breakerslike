@@ -11,7 +11,7 @@ extends SceneTree
 ##   share of fight time underwater (y < 0 over sea, both fighters) and over the ocean biome; beams by biome.
 
 const MAX_STEPS: int = 18000
-const LONG_HAUL: float = 1500.0
+const LONG_HAUL: float = 1500.0 * SimConst.TRAV_LAUNCH   # units of horizontal travel; a launch reaches TRAV_LAUNCH times as far since the world scale (SC)
 
 var re_atk := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) (LIGHT|HEAVY|SIG) vs (\\w+)$")
 var re_beam := RegEx.create_from_string("^(.+) over (\\w+) \\((.+)\\) → (\\w+)")

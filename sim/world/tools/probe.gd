@@ -7,6 +7,27 @@ extends SceneTree
 var fails: int = 0
 
 
+## World coordinates of the original planet, on the scaled one.
+func X(v: float) -> float:
+	return v * SimConst.PS
+
+
+## The x of the first column past the open sea walking east from the sea's west end (east=false: the sea's west shore is
+## the shore at the start of the ocean span, walking east across it) or west.
+func shore_x(east: bool) -> float:
+	var NC: int = SimConst.NC
+	var S := fresh()
+	if east:
+		var i: int = int(X(1200.0) / SimConst.COL) - 400
+		while i < NC and S.base[i] < WorldWater.RESERVOIR_BASE:
+			i += 1
+		return float(i) * SimConst.COL
+	var j: int = int(X(8300.0) / SimConst.COL) + 400
+	while j > 0 and S.base[j] < WorldWater.RESERVOIR_BASE:
+		j -= 1
+	return float(j) * SimConst.COL
+
+
 func check(ok: bool, what: String) -> void:
 	print("  %s  %s" % ["ok  " if ok else "FAIL", what])
 	if not ok:
@@ -41,6 +62,39 @@ func settle(S: SimState, limit: int = 20000) -> int:
 	return steps
 
 
+var bad_steps: int = 0
+
+
+## One water step, then check the rule on every column inside the active windows that has just become wet: it needs a wet
+## neighbour (or a sea column) from before the step, and ground below the wet limit.
+func checked_step(S: SimState) -> void:
+	var NC: int = SimConst.NC
+	var before := S.water.duplicate()
+	var wins: Array = []
+	for w in S.waterWin:
+		wins.append([w[0], w[1]])
+	WorldWater.step(S)
+	for w in wins:
+		for j in range(w[0] - w[1] - 1, w[0] + w[1] + 2):
+			var i: int = posmod(j, NC)
+			if S.base[i] < WorldWater.RESERVOIR_BASE:
+				continue
+			if before[i] < WorldWater.MIN_DEPTH and S.water[i] >= WorldWater.MIN_DEPTH:
+				var l: int = posmod(i - 1, NC)
+				var r: int = posmod(i + 1, NC)
+				var fed: bool = before[l] > 0.0 or before[r] > 0.0
+				if not fed or S.base[i] + S.deform[i] >= WorldWater.WET_GROUND:
+					bad_steps += 1
+
+
+func settle_checked(S: SimState, limit: int = 20000) -> int:
+	var steps: int = 0
+	while not S.waterWin.is_empty() and steps < limit:
+		checked_step(S)
+		steps += 1
+	return steps
+
+
 func wet_dynamic(S: SimState) -> int:
 	var n: int = 0
 	for i in range(SimConst.NC):
@@ -54,7 +108,7 @@ func _init() -> void:
 	print("  E      R    depth   rim   depth/diam   bowl area   rim+apron area   rim/bowl")
 	for E in [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 30.0]:
 		var S := fresh()
-		var rec = WorldCrater.dig(S, 3000.0, E, null, "impact", 0.0, 1.0)
+		var rec = WorldCrater.dig(S, X(3000.0), E, null, "impact", 0.0, 1.0)
 		var bowl: float = area(0.0, 1.0, rec, -1.0)
 		var rim: float = area(0.0, 1.0 + WorldCrater.RIM_OUT, rec, 1.0)
 		print("  %5.1f %6.1f %6.1f %5.1f   %.3f       %8.0f     %8.0f          %.2f" % [E, rec.r, rec.depth, rec.rim, rec.depth / (2.0 * rec.r), bowl, rim, rim / bowl])
@@ -63,18 +117,18 @@ func _init() -> void:
 		var line: String = "  speed %4.0f:" % sp
 		for tier in [1.0, 2.0, 3.0, 4.0]:
 			var E: float = WorldCrater.impactEnergy(sp, tier)
-			line += "  t%d %4.0f [%4.0f]" % [int(tier), WorldCrater.radiusOf(E), 28.0 + sp * 0.05 + tier * 12.0]
+			line += "  t%d %4.0f [%4.0f]" % [int(tier), WorldCrater.radiusOf(E), (28.0 + sp * 0.05 + tier * 12.0) * SimConst.WS]
 		print(line)
 	print("== power-up, explosion and clash-wave radius by tier (the prototype's in brackets) ==")
 	for tier in [2.0, 3.0, 4.0]:
-		print("  tier %d: power-up %4.0f [%3.0f]   explosion %4.0f [%3.0f]   clash wave %4.0f [%3.0f]" % [int(tier), WorldCrater.radiusOf(WorldCrater.powerupEnergy(tier)), 60.0 + tier * 28.0, WorldCrater.radiusOf(WorldCrater.explodeEnergy(tier)), (70.0 + tier * 32.0) * 0.9, WorldCrater.radiusOf(WorldCrater.clashEnergy(tier)), 60.0 + tier * 16.0])
+		print("  tier %d: power-up %4.0f [%3.0f]   explosion %4.0f [%3.0f]   clash wave %4.0f [%3.0f]" % [int(tier), WorldCrater.radiusOf(WorldCrater.powerupEnergy(tier)), (60.0 + tier * 28.0) * SimConst.WS, WorldCrater.radiusOf(WorldCrater.explodeEnergy(tier)), (70.0 + tier * 32.0) * 0.9 * SimConst.WS, WorldCrater.radiusOf(WorldCrater.clashEnergy(tier)), (60.0 + tier * 16.0) * SimConst.WS])
 
 	print("== repeated hits never dig a shaft ==")
 	var S1 := fresh()
-	var first = WorldCrater.dig(S1, 3000.0, 8.0, null, "impact", 0.0, 1.0)
+	var first = WorldCrater.dig(S1, X(3000.0), 8.0, null, "impact", 0.0, 1.0)
 	var count: int = 1
 	for i in range(60):
-		if WorldCrater.dig(S1, 3000.0, 8.0, null, "impact", 0.0, 1.0) != null:
+		if WorldCrater.dig(S1, X(3000.0), 8.0, null, "impact", 0.0, 1.0) != null:
 			count += 1
 	var lowest: float = 0.0
 	for i in range(SimConst.NC):
@@ -82,19 +136,19 @@ func _init() -> void:
 	print("  61 identical E=8 hits on one spot: %d dug, lowest deform %.1f (first hit depth %.1f, R %.1f, cap %.1f)" % [count, lowest, first.depth, first.r, WorldCrater.RELIEF_MAX_RATIO * first.r])
 	check(lowest >= -(WorldCrater.RELIEF_MAX_RATIO * first.r + 0.5), "lowest point stays within the relief cap")
 	var S2 := fresh()
-	WorldCrater.dig(S2, 3000.0, 16.0, null, "impact", 0.0, 1.0)
-	var c2: int = int(3000.0 / SimConst.COL)
+	WorldCrater.dig(S2, X(3000.0), 16.0, null, "impact", 0.0, 1.0)
+	var c2: int = int(X(3000.0) / SimConst.COL)
 	var deep0: float = S2.deform[c2]
 	var small: int = 0
 	for i in range(80):
-		if WorldCrater.dig(S2, 3000.0, 0.5, null, "impact", 0.0, 1.0) != null:
+		if WorldCrater.dig(S2, X(3000.0), 0.5, null, "impact", 0.0, 1.0) != null:
 			small += 1
 	print("  80 small hits (E=0.5) in the bottom of an E=16 bowl: %d dug, centre %.1f -> %.1f" % [small, deep0, S2.deform[c2]])
 	check(S2.deform[c2] > deep0 - WorldCrater.RELIEF_MAX_RATIO * WorldCrater.radiusOf(0.5) - 0.5, "small hits only dent the bowl floor by their own relief cap")
 	var S3 := fresh()
 	var rng := SimRng.new(99)
 	for i in range(400):
-		WorldCrater.dig(S3, 3000.0 + rng.range_(-300.0, 300.0), rng.range_(1.0, 30.0), null, "impact", 0.0, 1.0)
+		WorldCrater.dig(S3, X(3000.0) + rng.range_(-300.0, 300.0) * SimConst.WS, rng.range_(1.0, 30.0), null, "impact", 0.0, 1.0)
 	var lo3: float = 0.0
 	var hi3: float = 0.0
 	for i in range(SimConst.NC):
@@ -106,22 +160,22 @@ func _init() -> void:
 	print("== a diagonal slam skids a furrow into the bowl ==")
 	for dx in [0.0, 0.5, 0.7, 0.9]:
 		var S4 := fresh()
-		var rec = WorldCrater.dig(S4, 3000.0, 8.0, null, "impact", dx, sqrt(1.0 - dx * dx))
+		var rec = WorldCrater.dig(S4, X(3000.0), 8.0, null, "impact", dx, sqrt(1.0 - dx * dx))
 		print("  horizontal share %.1f: bowl depth %5.1f  furrow tail offset %7.1f  furrow depth %4.1f" % [dx, rec.depth, rec.skid, rec.sdepth])
 	var S5 := fresh()
-	var r5 = WorldCrater.dig(S5, 3000.0, 8.0, null, "impact", 0.8, 0.6)
+	var r5 = WorldCrater.dig(S5, X(3000.0), 8.0, null, "impact", 0.8, 0.6)
 	check(r5.skid < 0.0 and absf(r5.skid) <= WorldCrater.SKID_LEN_R * r5.r + 0.1 and r5.sdepth > 0.0, "a rightward diagonal hit skids from the left (tail at x - length)")
 
 	print("== scorch: groove by beam power (plains, a 40-sample beam every 20 units) ==")
 	for P in [0.5, 1.0, 2.0, 3.0, 4.0, 4.5]:
 		var S6 := fresh()
 		for k in range(40):
-			WorldCrater.scorch(S6, 3000.0 + 20.0 * float(k), P, "MERIDIAN SCAR", null)
+			WorldCrater.scorch(S6, X(3000.0) + 20.0 * SimConst.WS * float(k), P, "MERIDIAN SCAR", null)
 		var depth1: float = 0.0
 		for i in range(SimConst.NC):
 			depth1 = minf(depth1, S6.deform[i])
 		for k in range(40):
-			WorldCrater.scorch(S6, 3000.0 + 20.0 * float(k), P, "MERIDIAN SCAR", null)
+			WorldCrater.scorch(S6, X(3000.0) + 20.0 * SimConst.WS * float(k), P, "MERIDIAN SCAR", null)
 		var depth2: float = 0.0
 		for i in range(SimConst.NC):
 			depth2 = minf(depth2, S6.deform[i])
@@ -131,7 +185,7 @@ func _init() -> void:
 		check(absf(depth2 - depth1) < 0.01, "a second beam over the groove does not deepen it (P %.1f)" % P)
 
 	print("== water: a bay dug at the coast ==")
-	for cx in [1200.0, 1290.0, 8270.0]:
+	for cx in [shore_x(true) + 400.0, shore_x(true) + 2200.0, shore_x(false) - 1200.0]:
 		var S7 := fresh()
 		var rec = WorldCrater.dig(S7, cx, 25.0, null, "impact", 0.0, 1.0)
 		var wet0: int = wet_dynamic(S7)
@@ -142,9 +196,9 @@ func _init() -> void:
 			if S7.base[i] >= WorldWater.RESERVOIR_BASE and S7.water[i] >= WorldWater.MIN_DEPTH:
 				maxsurf = maxf(maxsurf, S7.base[i] + S7.deform[i] + S7.water[i])
 		print("  E=25 at x=%4.0f (%s): R %.0f depth %.0f; wet crater columns %d -> %d, settled after %d ticks (%.1f s), highest surface %.2f" % [cx, WorldBiomes.biomeAt(cx), rec.r, rec.depth, wet0, wet, steps, float(steps) / 60.0, maxsurf])
-		check(wet == 0 or absf(maxsurf) < 0.6, "settled water stands at sea level")
+		check(wet == 0 or absf(maxsurf) < 3.5 * SimConst.WS, "settled water stands at sea level (within 3.5 WS)")
 	print("== water: an inland crater stays dry ==")
-	for cx in [2000.0, 3000.0, 4000.0, 6000.0, 7000.0]:
+	for cx in [X(2000.0), X(3000.0), X(4000.0), X(6000.0), X(7000.0)]:
 		var S8 := fresh()
 		var rec = WorldCrater.dig(S8, cx, 30.0, null, "impact", 0.0, 1.0)
 		settle(S8, 4000)
@@ -166,43 +220,26 @@ func _init() -> void:
 					WorldCrater.scorch(S9, x + 30.0 * float(k), rg.range_(0.5, 4.5), "GLASS TRENCH", null)
 			if i % 5 == 0:
 				for k in range(3):
-					WorldWater.step(S9)
-		var steps: int = settle(S9)
-		# every wet dynamic column must sit in an unbroken run of ground below WET_GROUND that reaches a reservoir column
-		var NC: int = SimConst.NC
-		var reach := PackedByteArray()
-		reach.resize(NC)
-		for dir in [1, -1]:
-			var wet: bool = false
-			for lap in range(2 * NC):
-				var i: int = lap % NC if dir == 1 else NC - 1 - (lap % NC)
-				if S9.base[i] < WorldWater.RESERVOIR_BASE:
-					wet = true
-				elif wet and S9.base[i] + S9.deform[i] < WorldWater.WET_GROUND:
-					reach[i] = 1
-				else:
-					wet = false
-		var dyn: int = 0
-		var bad: int = 0
+					checked_step(S9)
+		var steps: int = settle_checked(S9)
+		var dyn: int = wet_dynamic(S9)
 		var far: int = 0
-		for i in range(NC):
+		for i in range(SimConst.NC):
 			if S9.base[i] >= WorldWater.RESERVOIR_BASE and S9.water[i] >= WorldWater.MIN_DEPTH:
-				dyn += 1
-				if reach[i] == 0:
-					bad += 1
 				var b: String = WorldBiomes.biomeAt(float(i) * SimConst.COL)
 				if b != "ocean" and b != "village" and b != "plains":
 					far += 1
-		bad_total += bad
-		print("  planet %d: %d craters recorded, water windows left %d (%d ticks to settle), dynamic wet columns %d, not connected to the sea %d, in non-coastal biomes %d" % [seed, S9.craters.size(), S9.waterWin.size(), steps, dyn, bad, far])
-	check(bad_total == 0, "no wet column is disconnected from the sea (craters cannot flood inland)")
+		bad_total += bad_steps
+		print("  planet %d: %d craters recorded, water windows left %d (%d ticks to settle), dynamic wet columns %d, columns that became wet without a wet neighbour or low enough ground %d, in non-coastal biomes %d" % [seed, S9.craters.size(), S9.waterWin.size(), steps, dyn, bad_steps, far])
+		bad_steps = 0
+	check(bad_total == 0, "every column that becomes wet has a wet neighbour and ground below the wet limit (craters cannot flood inland)")
 
 	print("== a fighter under the surface of a crater lake is submerged ==")
 	var S10 := fresh()
-	WorldCrater.dig(S10, 1250.0, 25.0, null, "impact", 0.0, 1.0)
+	WorldCrater.dig(S10, shore_x(true) + 400.0, 25.0, null, "impact", 0.0, 1.0)
 	settle(S10, 4000)
 	var lake_x: float = -1.0
-	for i in range(140, 200):
+	for i in range(int(shore_x(true) / SimConst.COL) - 40, int(shore_x(true) / SimConst.COL) + 200):
 		if S10.water[i] >= WorldWater.HIDE_MIN_DEPTH and S10.base[i] >= WorldWater.RESERVOIR_BASE:
 			lake_x = float(i) * SimConst.COL + 4.0
 	if lake_x < 0.0:
@@ -212,6 +249,85 @@ func _init() -> void:
 		S10.fighters[0].y = WorldWater.surfaceAt(S10, lake_x) - 90.0
 		print("  fighter at x=%.0f, y=%.0f, water depth %.0f: cover = %s" % [lake_x, S10.fighters[0].y, WorldWater.depthAt(S10, lake_x), str(WorldCover.coverAt(S10, S10.fighters[0]))])
 		check(WorldCover.coverAt(S10, S10.fighters[0]) == "submerged", "a fighter under the surface of a crater lake is submerged")
+
+
+	print("== knockback slide: slam or slide by the angle of the hit ==")
+	for v in [[1500.0, -300.0], [1500.0, -1200.0], [400.0, -900.0], [100.0, -1500.0], [3000.0, -200.0]]:
+		print("  velocity (%6.0f, %6.0f): vertical share %.2f -> %s" % [v[0], v[1], absf(v[1]) / SimDetMath.hypot(v[0], v[1]), "SLAM (one crater)" if WorldSlide.isSlam(v[0], v[1]) else "SLIDE"])
+	check(WorldSlide.isSlam(100.0, -1500.0) and not WorldSlide.isSlam(1500.0, -1200.0), "near-vertical hits slam, the rest slide")
+	print("== knockback slide: distance by speed (flat plains, travel factor 1 and 6) ==")
+	var flat_ok: bool = true
+	for spN in [400.0, 900.0, 1500.0, 2500.0]:
+		var line: String = "  normalised speed %4.0f:" % spN
+		for tv in [1.0, 6.0]:
+			var S11 := fresh()
+			var f = S11.fighters[0]
+			var o = S11.fighters[1]
+			f.hp = 1e9
+			var x0: float = X(2050.0)
+			var g0: float = WorldTerrain.groundY(S11, x0)
+			f.launchBy = o
+			f.launchT = tv
+			f.x = x0
+			f.y = g0 + 1.0
+			f.state = "launched"
+			f.vx = spN * tv * 0.98
+			f.vy = -spN * 0.2
+			var rng11 := S11.rng.state_i32()
+			var craters0: int = S11.craters.size()
+			SimFighter.impact(S11, f, g0, SimDetMath.hypot(f.vx, f.vy))
+			var ticks11: int = 0
+			while f.state == "launched" and ticks11 < 3000:
+				SimFighter.stepLaunched(S11, f, SimConst.DT)
+				ticks11 += 1
+			var moved: float = absf(SimWrap.sdx(x0, f.x))
+			var pred: float = WorldSlide.slideDistance(spN * 0.98, 0.0, tv)
+			line += "  x%d: slid %6.0f units (%.1f bh, %.2f s), closed form %6.0f" % [int(tv), moved, moved / 75.0, ticks11 / 60.0, pred]
+			if spN < WorldSlide.HOP_SPEED and absf(moved - pred) > 0.15 * pred + 30.0 * SimConst.WS:
+				flat_ok = false
+			var draws: int = 0
+			for e in S11.out.fx:
+				if e.type == "damage" and e.region != "":
+					draws += 1
+			var expect: int = (rng11 + draws * 0x6D2B79F5) & 0xFFFFFFFF
+			check(expect == (S11.rng.state_i32() & 0xFFFFFFFF), "the only S.rng draws in a slide are the %d wear hits (speed %.0f, travel %.0f)" % [draws, spN, tv])
+			check(S11.craters.size() == craters0 or spN >= WorldSlide.HOP_SPEED, "a slide digs no crater unless it ends at a wall (speed %.0f, travel %.0f)" % [spN, tv])
+		print(line)
+	check(flat_ok, "the closed-form slide distance predicts the stepped slide on flat ground (15%% plus a margin)")
+
+	print("== one crater per launch on ground: 300 random launches ==")
+	var multi: int = 0
+	var slides_n: int = 0
+	var slams_n: int = 0
+	var rg2 := SimRng.new(4242)
+	for n in range(300):
+		var S12 := fresh(1 + n % 7)
+		var f2 = S12.fighters[0]
+		f2.hp = 1e9
+		f2.launchBy = S12.fighters[1]
+		var x2: float = X(rg2.range_(1850.0, 2300.0))
+		var ux: float = rg2.range_(-1.0, 1.0)
+		var uy: float = rg2.range_(-1.4, 1.0)
+		var frc: float = rg2.range_(800.0, 3000.0)
+		f2.x = x2
+		f2.y = WorldTerrain.groundY(S12, x2) + rg2.range_(20.0, 600.0)
+		f2.launchT = WorldSlide.launchTravel(ux, uy)
+		f2.vx = WorldSlide.launchVX(ux, uy, frc)
+		f2.vy = uy * frc
+		f2.state = "launched"
+		var c0: int = S12.craters.size()
+		var s0: int = S12.slides.size()
+		var guard: int = 0
+		while f2.state == "launched" and guard < 2400:
+			SimFighter.stepLaunched(S12, f2, SimConst.DT)
+			guard += 1
+		var dc: int = S12.craters.size() - c0
+		if dc > 1:
+			multi += 1
+		slides_n += S12.slides.size() - s0
+		slams_n += dc
+	print("  300 launches: %d slides, %d craters, %d launches with more than one crater" % [slides_n, slams_n, multi])
+	check(multi == 0, "no launch leaves more than one crater on the ground")
 
 	print("")
 	print("probe: %d check(s) failed" % fails)

@@ -1,8 +1,9 @@
 class_name WorldBiomes
 ## Biome layout of the wrapped planet: the twin of biomes.js (SEG, biomeAt).
 
-## [start, end, biome] spans of world x, in order, covering [0, W). Static data, never written.
-const SEG: Array = [[0.0, 1200.0, "ocean"], [1200.0, 1800.0, "village"], [1800.0, 2350.0, "plains"], [2350.0, 3850.0, "city"], [3850.0, 4500.0, "village"], [4500.0, 5500.0, "forest"], [5500.0, 6500.0, "desert"], [6500.0, 7600.0, "mountains"], [7600.0, 8000.0, "village"], [8000.0, 8300.0, "plains"], [8300.0, 9600.0, "ocean"]]
+## [start, end, biome] spans of world x, in order, covering [0, W): the original spans times the planet scale. Static data.
+const P: float = SimConst.PS
+const SEG: Array = [[0.0 * P, 1200.0 * P, "ocean"], [1200.0 * P, 1800.0 * P, "village"], [1800.0 * P, 2350.0 * P, "plains"], [2350.0 * P, 3850.0 * P, "city"], [3850.0 * P, 4500.0 * P, "village"], [4500.0 * P, 5500.0 * P, "forest"], [5500.0 * P, 6500.0 * P, "desert"], [6500.0 * P, 7600.0 * P, "mountains"], [7600.0 * P, 8000.0 * P, "village"], [8000.0 * P, 8300.0 * P, "plains"], [8300.0 * P, 9600.0 * P, "ocean"]]
 
 
 static func biomeAt(x: float) -> String:

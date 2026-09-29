@@ -19,6 +19,8 @@ var deform := PackedFloat32Array()
 var water := PackedFloat32Array()     # water depth per terrain column (world/water.gd); the surface is ground + depth
 var scorch := PackedFloat32Array()    # scorch intensity per terrain column, 0 to 1, permanent (world/crater.gd)
 var craters: Array = []               # Crater records, oldest first, capped at WorldCrater.LIST_MAX (fx-events.md)
+var crack := PackedFloat32Array()     # pavement crack intensity per terrain column, 0 to 1, permanent (world/slide.gd)
+var slides: Array = []                # Slide records, oldest first, capped at WorldSlide.LIST_MAX
 var waterWin: Array = []              # active water-flow windows [centre column, half width, quiet steps, age steps]
 var waterTick: float = 0.0            # unfrozen ticks since the match started; paces the water step
 var buildings: Array = []
@@ -60,6 +62,18 @@ class World:
 
 ## One dug crater, kept for replay seek and snapshots (docs/architecture/fx-events.md). The renderer rebuilds a bowl
 ## in depth from these; the heightfield alone only holds the z = 0 slice.
+## One knockback slide, kept for replay seek and snapshots (docs/world/knockback-slide.md).
+class Slide:
+	var x0: float = 0.0       # where the fighter touched down
+	var x1: float = 0.0       # where he stopped or left the ground
+	var hw: float = 0.0       # trench half width
+	var depth: float = 0.0    # trench depth at the start
+	var energy: float = 0.0   # the impact energy the slide came from
+	var t: float = 0.0        # match time at the end
+	var owner: float = -1.0   # slot of the fighter who launched him, or -1
+	var surface: float = 0.0  # 1 when it started on pavement (city or village), else 0
+
+
 class Crater:
 	var x: float = 0.0        # centre, world x
 	var y: float = 0.0        # ground height at the centre before the dig
@@ -164,6 +178,7 @@ class FxEvent:
 	var region: String = ""       # wounds: head, core, arms or legs
 	var stage: int = 0            # wounds: 0 fresh, 1 bruised, 2 battered, 3 broken
 	var owner: float = -1.0      # crater and scorch: firing fighter's slot, or -1
+	var x1: float = 0.0          # slide: where it ended
 
 
 class Fighter:
@@ -213,6 +228,13 @@ class Fighter:
 	var ai = null            # AiState or null
 	var beamCharge = null    # float or null
 	var wet: bool = false
+	var launchT: float = 1.0       # horizontal traversal factor of the current launch (WorldSlide.launchTravel)
+	var slide: float = 0.0         # 0, or the normalised start speed while a knockback slide runs
+	var slideX0: float = 0.0
+	var slideD: float = 0.0        # distance slid so far
+	var slideE: float = 0.0        # impact energy of the slide
+	var slideDmg: float = 0.0      # damage still to take by speed lost
+	var slideAcc: float = 0.0      # damage earned by speed lost, not yet taken
 	var lastSeen = null      # LastSeen or null
 	var ambushUntil: float = 0.0
 	var input := SimIntent.new()   # JS f.in (in is a GDScript keyword)

@@ -124,13 +124,13 @@ const CAD_MIN: Array = [1.2, 2.0, 1.6, 1.6]      # attack-timer floor per stance
 const SURFACE_Y: float = 30.0          # over the sea, fighters who are not hiding hold at or above this height
 const LURE_EMPTY: float = 0.1          # popNear(x, 900) at or below this, on land, is empty ground the hero leads to
 const LURE_START: float = 0.2          # the hero lures while over the sea or while popNear(f.x, 900) is above this
-const LURE_STEP: float = 200.0
+const LURE_STEP: float = 200.0 * SimConst.PS
 const LURE_POP_W: float = 2.0          # route cost: distance + this x the population crossed (popNear x step)
-const LURE_KEEP: float = 800.0         # route cost discount for the way the hero is already moving (no dithering)
-const COVER_OCEAN: float = 1500.0      # cover cost: water counts as this much farther than forest or ridge
-const COVER_PAST_OPP: float = 1200.0   # cover cost: running toward and past the opponent
+const LURE_KEEP: float = 800.0 * SimConst.PS         # route cost discount for the way the hero is already moving (no dithering)
+const COVER_OCEAN: float = 1500.0 * SimConst.PS      # cover cost: water counts as this much farther than forest or ridge
+const COVER_PAST_OPP: float = 1200.0 * SimConst.PS   # cover cost: running toward and past the opponent
 const LURE_BUCKETS: int = 48           # SimConst.W / LURE_STEP
-const LURE_WINDOW: int = 4             # +-4 buckets approximates popNear(x, 900)
+const LURE_WINDOW: int = 2             # +-2 buckets (of LURE_STEP) approximate popNear(x, 900 * WS): round(900 * WS / LURE_STEP)
 
 
 ## The hero's lure: +1 or -1 to head for the nearest empty land (not sea, population at most LURE_EMPTY), by the
@@ -138,7 +138,7 @@ const LURE_WINDOW: int = 4             # +-4 buckets approximates popNear(x, 900
 ## scan walks the whole planet in LURE_STEP buckets, with population from a bucket histogram (a window of +-4 buckets
 ## approximates popNear(x, 900)), so it stays cheap enough to run every tick.
 static func heroLure(S: SimState, f) -> float:
-	if not WorldTerrain.seaAt(S, f.x) and WorldBiomes.biomeAt(f.x) != "ocean" and WorldStructures.popNear(S, f.x, 900.0) <= LURE_START:
+	if not WorldTerrain.seaAt(S, f.x) and WorldBiomes.biomeAt(f.x) != "ocean" and WorldStructures.popNear(S, f.x, 900.0 * SimConst.WS) <= LURE_START:
 		return 0.0
 	var hist: Array = []
 	hist.resize(LURE_BUCKETS)
@@ -154,7 +154,7 @@ static func heroLure(S: SimState, f) -> float:
 		var sum: float = 0.0
 		for k in range(-LURE_WINDOW, LURE_WINDOW + 1):
 			sum += hist[((idx + k) % LURE_BUCKETS + LURE_BUCKETS) % LURE_BUCKETS]
-		near[idx] = SimMathx.jclamp(sum / 70.0, 0.0, 1.0)
+		near[idx] = SimMathx.jclamp(sum / WorldStructures.POP_NEAR_REF, 0.0, 1.0)
 	var i0: int = int(floor(SimWrap.wrap(f.x) / LURE_STEP)) % LURE_BUCKETS
 	var best: float = 0.0
 	var bestCost: float = 1e9
@@ -183,7 +183,7 @@ static func chooseCover(x: float, d: float):
 	for s in [1.0, -1.0]:
 		var seen := {}
 		var off: float = 0.0
-		while off <= 4000.0:
+		while off <= 4000.0 * SimConst.PS:
 			var b: String = WorldBiomes.biomeAt(x + s * off)
 			if (b == "ocean" or b == "forest" or b == "mountains") and not seen.has(b):
 				seen[b] = true
@@ -193,5 +193,5 @@ static func chooseCover(x: float, d: float):
 				if cost < bestCost:
 					bestCost = cost
 					best = {"off": s * off, "b": b}
-			off += 100.0
+			off += 100.0 * SimConst.PS
 	return best

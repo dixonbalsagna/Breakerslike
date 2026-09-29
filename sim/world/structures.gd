@@ -4,6 +4,13 @@ class_name WorldStructures
 
 
 ## Standing height shrinks with damage to 30 percent of full; a destroyed building leaves 9 units of rubble.
+## popNear reads 1 at this many living civilians within the radius: the original 70, times WS / PS because the population
+## per building is scaled by that (terrain.gd _row) while the radius callers pass grows with WS.
+const POP_NEAR_REF: float = 70.0 * SimConst.WS / SimConst.PS
+## The nearest-building search skips buildings closer than this (the original 60, times WS: a building is WS times wider).
+const NEAR_MIN: float = 60.0 * SimConst.WS
+
+
 static func curH(b) -> float:
 	return b.h * (0.3 + 0.7 * b.hp / b.maxhp) if b.alive else 9.0
 
@@ -86,7 +93,7 @@ static func popNear(S: SimState, x: float, r: float) -> float:
 	for b in S.buildings:
 		if b.alive and absf(SimWrap.sdx(x, b.x)) < r:
 			s += b.popAlive
-	return SimMathx.jclamp(s / 70.0, 0.0, 1.0)
+	return SimMathx.jclamp(s / POP_NEAR_REF, 0.0, 1.0)
 
 
 ## Nearest standing building on one side (sign), more than 60 and less than maxD away, whose top is above y - 40.
@@ -98,7 +105,7 @@ static func nearestBuilding(S: SimState, x: float, sign: float, maxD: float, y: 
 		if not b.alive:
 			continue
 		var d: float = SimWrap.sdx(x, b.x) * sign
-		if d > 60.0 and d < maxD and d < bd and y < WorldTerrain.groundY(S, b.x) + curH(b) + 40.0:
+		if d > NEAR_MIN and d < maxD and d < bd and y < WorldTerrain.groundY(S, b.x) + curH(b) + 40.0:
 			bd = d
 			best = b
 	return {"b": best, "d": bd} if best != null else null

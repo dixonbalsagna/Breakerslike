@@ -15,45 +15,71 @@ static func tierUp(S: SimState, f) -> void:
 	SimFx.shake(S, 14.0)
 	if f.y < g + 140.0:
 		WorldCrater.dig(S, f.x, WorldCrater.powerupEnergy(f.tier), f, "powerup")
-		WorldStructures.damageArea(S, f.x, f.y, 130.0 + f.tier * 60.0, 90.0 + f.tier * 100.0, f)
+		WorldStructures.damageArea(S, f.x, f.y, (130.0 + f.tier * 60.0) * SimConst.WS, 90.0 + f.tier * 100.0, f)
 		SimFx.debris(S, f.x, g + 10.0, 10, "#6d6a66", 600.0)
 		SimFx.dust(S, f.x, g, 5)
 	SimFx.tierUp(S, f, f.y < g + 140.0)
 	SimEvents.feed(S, f.name + " reaches tier " + SimMathx.jstr(f.tier), "Ground-level power-up scarred the terrain." if f.y < g + 140.0 else "Airborne power-up, no ground damage.")
 
 
+## A launched fighter meets the ground. sp is the actual speed; the damage and the energy use the unboosted speed (the
+## horizontal traversal factor of the launch is divided out). A near-vertical slam digs one crater and stays down; anything
+## shallower is a knockback slide (world/slide.gd), with at most one small hop first at very high energy. Nothing bounces
+## more than once on ground, so a launch leaves at most one crater.
 static func impact(S: SimState, f, g: float, sp: float) -> void:
 	var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
 	var tier: float = by.tier
-	if sp > 350.0:
-		var r: float = 28.0 + sp * 0.05 + tier * 12.0
-		WorldCrater.dig(S, f.x, WorldCrater.impactEnergy(sp, tier), by, "impact", f.vx / sp, absf(f.vy) / sp)
-		if WorldTerrain.seaAt(S, f.x):
+	var WS: float = SimConst.WS
+	var spN: float = SimDetMath.hypot(f.vx / f.launchT, f.vy)
+	var vert: float = absf(f.vy) / SimMathx.jmax(sp, 0.000001)
+	var sea: bool = WorldTerrain.seaAt(S, f.x)
+	f.y = g
+	if spN > WorldSlide.MIN_IMPACT:
+		var r: float = (28.0 + spN * 0.05 + tier * 12.0) * WS
+		var E: float = WorldCrater.impactEnergy(spN, tier)
+		var slam: bool = sea or vert >= WorldSlide.SLAM_VERT
+		var hop: bool = not sea and spN >= WorldSlide.HOP_SPEED and f.bounces < 1.0
+		if slam and not hop:
+			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / SimMathx.jmax(spN, 0.000001), vert)
+		if sea:
 			SimFx.splash(S, f.x, g + 10.0, 14)
 		else:
 			SimFx.debris(S, f.x, g + 8.0, 12, "#6d6a66", 500.0)
 			SimFx.dust(S, f.x, g, 4)
-		SimFx.ring(S, f.x, g + 10.0, 700.0 + sp * 0.2, "#ffffff", 0.45, 10.0)
-		WorldStructures.damageArea(S, f.x, g + 5.0, r * 1.7, sp * (0.22 + 0.12 * tier), by)
-		SimFx.shake(S, SimMathx.jmin(30.0, sp * 0.01))
+		SimFx.ring(S, f.x, g + 10.0, 700.0 + spN * 0.2, "#ffffff", 0.45, 10.0)
+		var slideStart: bool = not slam and not hop
+		var touch: float = WorldSlide.TOUCH_AREA if slideStart else 1.0
+		WorldStructures.damageArea(S, f.x, g + 5.0, r * 1.7, spN * (0.22 + 0.12 * tier) * touch, by)
+		SimFx.shake(S, SimMathx.jmin(30.0, spN * 0.01))
 		S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.06)
-		SimDamage.hurt(S, f, sp * 0.018, by)
-	f.y = WorldTerrain.groundY(S, f.x)
-	if sp > 700.0 and f.bounces < 2.0:
-		f.bounces += 1.0
-		f.vy = absf(f.vy) * 0.3
-		f.vx *= 0.75
-	else:
-		f.state = "down"
-		f.stateT = 0.0
-		f.vx = 0.0
-		f.vy = 0.0
-		f.bounces = 0.0
-		f.launchBy = null
+		SimDamage.hurt(S, f, spN * 0.018 * (WorldSlide.TOUCH_DMG if slideStart else 1.0), by)
+		if hop:
+			f.bounces += 1.0
+			f.vy = absf(f.vy) * WorldSlide.HOP_LIFT
+			return
+		if slideStart:
+			WorldSlide.begin(S, f, by, spN, E)
+			return
+	f.state = "down"
+	f.stateT = 0.0
+	f.vx = 0.0
+	f.vy = 0.0
+	f.bounces = 0.0
+	f.launchBy = null
+	f.launchT = 1.0
 
 
+## Launched flight: gravity, air drag, water (with the skip), building collisions, the ground (slam or slide) and the
+## ceiling. A fighter that is sliding is handled by WorldSlide.step.
 static func stepLaunched(S: SimState, f, dt: float) -> void:
 	f.stateT += dt
+	if f.slide > 0.0:
+		var ox0: float = f.x
+		WorldSlide.step(S, f, dt)
+		if f.slide > 0.0 and _buildingHits(S, f, ox0):
+			var by0 = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
+			WorldSlide.finish(S, f, by0, true)
+		return
 	f.vy -= 1000.0 * dt
 	f.vx *= SimDetMath.pow(0.55, dt)
 	var ox: float = f.x
@@ -76,6 +102,7 @@ static func stepLaunched(S: SimState, f, dt: float) -> void:
 			f.wet = false
 			inW = false
 			SimFx.splash(S, f.x, wsurf, 8)
+			SimFx.skim(S, f.x, wsurf, wsp, int(f.bounces))
 	if not inW and f.wet and f.y > wsurf:
 		f.wet = false
 	if inW:
@@ -84,14 +111,29 @@ static func stepLaunched(S: SimState, f, dt: float) -> void:
 		if SimDetMath.hypot(f.vx, f.vy) < 200.0 and f.stateT > 0.3:
 			f.state = "free"
 			f.rot = 0.0
+			f.launchT = 1.0
 			return
+	_buildingHits(S, f, ox)
+	var g: float = WorldTerrain.groundY(S, f.x)
+	if f.y <= g:
+		impact(S, f, g, SimDetMath.hypot(f.vx, f.vy))
+	if f.y > SimConst.CEILING:
+		f.y = SimConst.CEILING
+		f.vy = SimMathx.jmin(f.vy, 0.0)
+
+
+## The incidental building collision (until the director-chosen brunt replaces it, buildings-in-depth.md section 3): a
+## launched or sliding fighter whose x is inside a standing building's footprint, below its top, hits it. Returns true if
+## it hit one.
+static func _buildingHits(S: SimState, f, ox: float) -> bool:
+	var hit: bool = false
 	for b in S.buildings:
 		if not b.alive:
 			continue
 		if absf(SimWrap.sdx(f.x, b.x)) < b.w / 2.0 + 16.0:
 			var gy: float = WorldTerrain.groundY(S, b.x)
 			if f.y < gy + WorldStructures.curH(b) and f.y > gy - 10.0:
-				var sp: float = SimDetMath.hypot(f.vx, f.vy)
+				var sp: float = SimDetMath.hypot(f.vx / f.launchT, f.vy)
 				var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
 				WorldStructures.damageBuilding(S, b, sp * (0.55 + 0.25 * by.tier), by)
 				SimDamage.hurt(S, f, sp * 0.006, by)
@@ -101,12 +143,8 @@ static func stepLaunched(S: SimState, f, dt: float) -> void:
 				if b.alive:
 					f.vx = -SimMathx.jsign(SimDamage.jor(f.vx, 1.0)) * absf(f.vx) * 0.25
 					f.x = SimWrap.wrap(b.x + SimMathx.jsign(SimDamage.jor(SimWrap.sdx(b.x, ox), 1.0)) * (b.w / 2.0 + 18.0))
-	var g: float = WorldTerrain.groundY(S, f.x)
-	if f.y <= g:
-		impact(S, f, g, SimDetMath.hypot(f.vx, f.vy))
-	if f.y > 2600.0:
-		f.y = 2600.0
-		f.vy = SimMathx.jmin(f.vy, 0.0)
+				hit = true
+	return hit
 
 
 static func stepRush(S: SimState, f, dt: float) -> void:
@@ -180,6 +218,10 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 				sp *= 0.8
 			if i.dash:
 				sp *= 2.4
+				# Traversal: flat out and far from the opponent, the dash is TRAV_FREE times faster (a lap of the planet in about
+				# 15 s); close in, it is the melee dash it always was.
+				var sep: float = absf(SimWrap.sdx(f.x, o.x))
+				sp *= 1.0 + (SimConst.TRAV_FREE - 1.0) * SimMathx.jclamp((sep - SimConst.BOOST_NEAR) / (SimConst.BOOST_FAR - SimConst.BOOST_NEAR), 0.0, 1.0)
 			if f.y < 0.0 and WorldTerrain.seaAt(S, f.x):
 				sp *= 0.55
 			var k: float = 1.0 - SimDetMath.pow(0.0008, dt)
@@ -192,8 +234,8 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 				f.y = g
 				if f.vy < 0.0:
 					f.vy = 0.0
-			if f.y > 2600.0:
-				f.y = 2600.0
+			if f.y > SimConst.CEILING:
+				f.y = SimConst.CEILING
 				f.vy = 0.0
 	elif f.state == "charging":
 		if not i.charge:

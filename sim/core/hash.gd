@@ -5,11 +5,12 @@ class_name SimHash
 const MASK: int = 0xFFFFFFFF
 const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName", "hp", "x", "y", "vx", "vy", "face", "ki", "power", "tier", "stance", "state", "stateT",
 	"hidden", "hideT", "hiddenFor", "menace", "anguish", "ambush", "rot", "spin", "bounces", "lastAtkT", "hurtT", "keys", "beamCharge", "wet", "ambushUntil", "dPrev",
-	"menaceSeen", "menaceQuiet", "casSeen"]
+	"menaceSeen", "menaceQuiet", "casSeen", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive"]
 const TREE: Array = ["x", "h", "alive", "burn"]
 const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col", "pw", "struck"]
+const SLIDE: Array = ["x0", "x1", "hw", "depth", "energy", "t", "owner", "surface"]
 const CRATER: Array = ["x", "y", "r", "depth", "rim", "energy", "cause", "owner", "t", "skid", "sdepth"]
 const PART: Array = ["type", "x", "y", "vx", "vy", "life", "age", "grav", "drag", "size", "col", "r", "gr", "face"]
 const FLOAT: Array = ["x", "y", "txt", "t", "col"]
@@ -158,6 +159,16 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	out.append(float(nz.size()))
 	for i in nz:
 		out.append(float(i)); out.append(S.scorch[i])
+	nz = []
+	for i in range(S.crack.size()):
+		if S.crack[i] != 0.0:
+			nz.append(i)
+	out.append(float(nz.size()))
+	for i in nz:
+		out.append(float(i)); out.append(S.crack[i])
+	out.append(float(S.slides.size()))
+	for c in S.slides:
+		_obj(out, c, SLIDE)
 	out.append(S.waterTick)
 	out.append(float(S.craters.size()))
 	for c in S.craters:
@@ -205,6 +216,7 @@ const FX_FIELDS: Dictionary = {
 	"dust": ["x", "y", "n", "col"], "splash": ["x", "y", "n"], "fire": ["x", "y", "n"], "after": ["x", "y", "life", "col", "face"],
 	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col", "attacker", "victim", "region", "kind", "number"], "banner": ["text", "col", "dur"],
 	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
+	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"],
 	"shake": ["k"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
