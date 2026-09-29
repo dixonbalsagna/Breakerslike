@@ -149,7 +149,7 @@ Each line shows its trigger and its first cue. Some are jewels; some are templat
 | 4 | structure destroyed | "Sorry about the {thing}! I'll help fix it once we're done." | laugh.short |
 | 5 | opponent's Respect rises | "Now you're really fighting me. Thank you." | sigh |
 | 6 | orb picked up | "Got one. Hold that thought, we're moving." | effort.light |
-| 7 | late and losing | "I've been holding back on your behalf. Not anymore." | growl |
+| 7 | late and losing | "I've been holding back on your behalf. Not anymore." | effort.heavy |
 | 8 | beam dodged | "Missed me! I'll hit you next time." | laugh.short |
 | 9 | transformation starts | "Give me a second. It's a long one." | effort.heavy |
 | 10 | KO won | "Best fight of my year. Rest. I'll carry you home." | laugh.long |
