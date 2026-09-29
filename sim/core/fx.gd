@@ -74,10 +74,12 @@ static func damage(S: SimState, f, attacker, amount: float, region: String, kind
 	e.region = region; e.kind = kind; e.number = number
 
 
-## Camera shake request: the consumer keeps shake = max(shake, k) and decays it at the end of the tick.
-static func shake(S: SimState, k: float) -> void:
+## Camera shake request: the consumer keeps shake = max(shake, k) and decays it at the end of the tick. x is the world x
+## of the cause, so a split-screen camera can shake only the pane that shows it.
+static func shake(S: SimState, k: float, x: float) -> void:
 	var e := _ev(S, "shake")
 	e.k = k
+	e.x = x
 
 
 ## A charging fighter's aura, once per charging tick (the consumer rolls its sparks and dust).

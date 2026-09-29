@@ -61,10 +61,12 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	A.power = SimMathx.jmin(100.0, A.power + dd * 0.006)
 	SimFx.spark(S, D.x, D.y + 34.0, 18 if o.get("big", false) else 9, "#fff3c0", 600.0)
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, jor(o.get("stop", 0.0), 0.05))
-	SimFx.shake(S, jor(o.get("shake", 0.0), 6.0))
+	SimFx.shake(S, jor(o.get("shake", 0.0), 6.0), D.x)
 	var fam: String = SimWounds.family(ex, D, o)
 	var kind: String = o.get("kind", "") if o.get("kind", "") != "" else ("guard" if fam == "guard" else ("beam" if ex != null and ex.kind == "sig" else ("heavy" if ex != null and ex.kind == "heavy" else "light")))
 	hurt(S, D, dd, A, fam, kind, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff", true)
+	if kind == "heavy" and dd > 0.0:
+		SimWounds.stagger(S, D)
 	return dd
 
 

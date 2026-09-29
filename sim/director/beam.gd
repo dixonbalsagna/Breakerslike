@@ -166,7 +166,7 @@ static func fireBeam(S: SimState, A, ox: float, oy: float, ux: float, uy: float,
 	b.p = 0.0; b.t = 0.0; b.life = 0.95; b.w = 24.0 + A.tier * 9.0; b.variant = variant; b.col = A.aura
 	b.pw = WorldCrater.beamPower(A)
 	S.beams.append(b)
-	SimFx.shake(S, 14.0)
+	SimFx.shake(S, 14.0, ox)
 
 
 static func sampleBeam(S: SimState, b, s: float) -> void:

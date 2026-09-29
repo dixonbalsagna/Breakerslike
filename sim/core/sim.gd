@@ -94,8 +94,9 @@ static func step(S: SimState, inputs = null) -> bool:
 		var mid: float = 0.5 + (1.0 if c.aw else -1.0) * 0.35 * p
 		var ax: float = c.A.x
 		var dx: float = SimWrap.sdx(ax, c.D.x)
-		SimFx.spark(S, SimWrap.wrap(ax + dx * mid), (c.A.y + (c.D.y - c.A.y) * mid) + 38.0, 3, "#ffffff", 700.0)
-		SimFx.shake(S, 7.0)
+		var sx: float = SimWrap.wrap(ax + dx * mid)
+		SimFx.spark(S, sx, (c.A.y + (c.D.y - c.A.y) * mid) + 38.0, 3, "#ffffff", 700.0)
+		SimFx.shake(S, 7.0, sx)
 	return true
 
 

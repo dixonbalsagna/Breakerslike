@@ -132,6 +132,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		for ri in range(4):
 			out.append(float(f.stage[ri]))
 		out.append(f.brink)
+		out.append(float(f.stunTicks))
 	_obj(out, S.world, ["pop0", "casualties", "structuresLost", "craters"])
 	out.append(float(S.buildings.size()))
 	for b in S.buildings:
@@ -218,7 +219,7 @@ const FX_FIELDS: Dictionary = {
 	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col", "attacker", "victim", "region", "kind", "number"], "banner": ["text", "col", "dur"],
 	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
 	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"],
-	"shake": ["k"], "tick": ["dt", "frozen"],
+	"shake": ["k", "x"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target"], "finisher_contest": ["target", "chance", "survived"],

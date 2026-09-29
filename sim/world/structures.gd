@@ -50,7 +50,7 @@ static func damageBuilding(S: SimState, b, d: float, cause) -> void:
 		SimFx.debris(S, b.x, gy + b.h * 0.5, 14, "#77808f" if b.kind == "tower" else "#8a6a4a", 620.0)
 		SimFx.dust(S, b.x, gy, 5, "#a89f92")
 		if b.h > 200.0:
-			SimFx.shake(S, 10.0)
+			SimFx.shake(S, 10.0, b.x)
 	else:
 		SimFx.debris(S, b.x, gy + curH(b), 4, "#77808f", 300.0)
 
@@ -83,7 +83,7 @@ static func explode(S: SimState, x: float, y: float, r: float, cause) -> void:
 	damageArea(S, x, y, r * 1.8, 130.0 + cause.tier * 110.0, cause)
 	if y < WorldTerrain.groundY(S, x) + r:
 		WorldCrater.dig(S, x, WorldCrater.explodeEnergy(cause.tier), cause, "beam")
-	SimFx.shake(S, 16.0)
+	SimFx.shake(S, 16.0, x)
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.08)
 
 

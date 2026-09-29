@@ -5,6 +5,9 @@ class_name SimFighter
 ## gone MENACE_QUIET_TICKS (4 s) without being fed.
 const MENACE_DECAY: float = 0.4
 const MENACE_QUIET_TICKS: int = 240
+## Water holds a launched fighter up (S3a gap fix): under water the launch's gravity is cancelled (neutral buoyancy), so
+## the drag brings it below the free speed within about a second instead of holding it at a 430 u/s sink to the seabed.
+const WATER_BUOY: float = 1000.0
 
 
 static func tierUp(S: SimState, f) -> void:
@@ -12,7 +15,7 @@ static func tierUp(S: SimState, f) -> void:
 	var g: float = WorldTerrain.groundY(S, f.x)
 	SimFx.ring(S, f.x, f.y + 34.0, 1300.0, f.aura, 0.8, 20.0)
 	SimFx.spark(S, f.x, f.y + 34.0, 20, f.aura, 700.0)
-	SimFx.shake(S, 14.0)
+	SimFx.shake(S, 14.0, f.x)
 	if f.y < g + 140.0:
 		WorldCrater.dig(S, f.x, WorldCrater.powerupEnergy(f.tier), f, "powerup")
 		WorldStructures.damageArea(S, f.x, f.y, (130.0 + f.tier * 60.0) * SimConst.WS, 90.0 + f.tier * 100.0, f)
@@ -50,7 +53,7 @@ static func impact(S: SimState, f, g: float, sp: float) -> void:
 		var slideStart: bool = not slam and not hop
 		var touch: float = WorldSlide.TOUCH_AREA if slideStart else 1.0
 		WorldStructures.damageArea(S, f.x, g + 5.0, r * 1.7, spN * (0.22 + 0.12 * tier) * touch, by)
-		SimFx.shake(S, SimMathx.jmin(30.0, spN * 0.01))
+		SimFx.shake(S, SimMathx.jmin(30.0, spN * 0.01), f.x)
 		S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.06)
 		SimDamage.hurt(S, f, spN * 0.018 * (WorldSlide.TOUCH_DMG if slideStart else 1.0), by)
 		if hop:
@@ -106,6 +109,7 @@ static func stepLaunched(S: SimState, f, dt: float) -> void:
 	if not inW and f.wet and f.y > wsurf:
 		f.wet = false
 	if inW:
+		f.vy += WATER_BUOY * dt
 		f.vx *= SimDetMath.pow(0.05, dt)
 		f.vy *= SimDetMath.pow(0.1, dt)
 		if SimDetMath.hypot(f.vx, f.vy) < 200.0 and f.stateT > 0.3:
@@ -191,6 +195,8 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 		f.menace = SimMathx.jmax(0.0, f.menace - MENACE_DECAY * dt)
 	f.menaceSeen = f.menace
 	f.casSeen = S.world.casualties
+	if SimWounds.battered(f, SimWounds.CORE):
+		regen *= SimWounds.CORE_KI_REGEN
 	if f.state == "free" or f.state == "locked" or f.state == "down":
 		f.ki = SimMathx.jmin(100.0, f.ki + regen * dt)
 	if f.hidden and f.canHide:
@@ -210,6 +216,8 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 			f.hidden = false
 		else:
 			var sp: float = 430.0 * f.spd * (1.0 + 0.10 * (f.tier - 1.0))
+			if SimWounds.battered(f, SimWounds.LEGS):
+				sp *= SimWounds.LEGS_SPEED
 			if f.stance == 2.0:
 				sp *= 1.25
 			if f.stance == 3.0:

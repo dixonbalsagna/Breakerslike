@@ -107,6 +107,11 @@ Sizes, as a rough guide to GDScript lines and review effort:
   - heavies and signatures ×0.8, and no BRACE;
   - ESCAPE slip chance −0.10.
 - **Timers:** every new timer is an **integer tick count** (determinism.md hazard 1). Existing float timers stay as they are.
+- **S3a as built.** Constants and helpers in `sim/core/wounds.gd`; "battered" means stage 2 or 3.
+  - Core battered: ki regen ×0.7 (`fighter.gd`). Legs battered: free-flight speed ×0.85 (`fighter.gd`). Legs broken: no dash, and the ESCAPE lock-break needs 1.8 s (`hiding.gd`).
+  - Stagger and daze share one integer timer, `Fighter.stunTicks` (hashed). While it is above 0, `SimWounds.gateIntent` (called from `SimControl.control`, the one line in `sim/input`) drops movement, dash, charge and attacks, so no parry either; stance changes still go through. It counts down in `SimWounds.step`, after control, so n ticks block exactly n ticks of input.
+  - Head battered: `SimDamage.hit` staggers the defender 12 ticks after a heavy that deals damage (a guarded heavy is kind `guard` and does not stagger).
+  - Head broken: `SimWounds.daze(S, f)` sets 24 ticks. **The trigger is S3b's:** the director decides who lost an exchange and calls it from `endEx`.
 - **Acceptance:** spec §5 test 5 (each of head, arms and legs is the first broken in at least 10% of matches; no region above 45% of wear), and the §10 pacing bands.
 
 ### S4: Rally, shared rule (spec §2). Placeholder trigger for the prototype fighters: survive a finisher contest (Second Wind's shape).

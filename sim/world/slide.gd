@@ -162,7 +162,7 @@ static func finish(S: SimState, f, by, wall: bool) -> void:
 		var vN: float = absf(f.vx) / f.launchT
 		WorldCrater.dig(S, f.x, E * STOP_E, by, "impact", 0.0, 1.0)
 		SimDamage.hurt(S, f, vN * STOP_DMG, by)
-		SimFx.shake(S, 10.0)
+		SimFx.shake(S, 10.0, f.x)
 	else:
 		var hw: float = HW0 + HW_E * sqrt(E)
 		var depth: float = minf(D_MAX, D0 + D_V * f.slide * 0.25)

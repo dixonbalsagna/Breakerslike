@@ -226,6 +226,7 @@ class Fighter:
 	var wear: Array = [0, 0, 0, 0]   # Wounds (wounds.gd): head, core, arms, legs, in WEAR_SCALE units
 	var stage: Array = [0, 0, 0, 0]  # per region: 0 fresh, 1 bruised, 2 battered, 3 broken
 	var brink: bool = false
+	var stunTicks: int = 0           # S3a: stagger or daze ticks left; input is gated while above 0 (wounds.gd)
 	var ambush: bool = false
 	var rush = null          # Rush or null
 	var rot: float = 0.0

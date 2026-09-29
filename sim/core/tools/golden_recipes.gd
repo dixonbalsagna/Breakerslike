@@ -9,9 +9,10 @@ const RNG_SEEDS: Array = [0, 1, 7, 4242, 2147483647, 2147483648, 4294967295, 123
 const TICK0_SEEDS: Array = [1, 2, 3, 42, 1000, 4294967295]
 const STREAM_SEEDS: Array = [0, 1, 42, 4294967295]
 const STREAM_IDS: Array = ["vfx.spark", "vfx.debris", "vfx.dust", "vfx.splash", "vfx.fire", "vfx.charge", "vfx.water", "camera", "audio"]
-## [arm, seed]: every match setup (QA's arms), 17 matches.
-const MATCHES: Array = [["default", 1], ["default", 2], ["default", 3], ["default", 4], ["default", 5], ["default", 6], ["default", 7], ["default", 8], ["default", 9], ["default", 10],
-	["swap", 1], ["mirror-villain", 1], ["mirror-hero", 1], ["default-flip", 2], ["swap-flip", 2], ["mirror-villain-flip", 2], ["mirror-hero-flip", 2]]
+## [arm, seed]: one match per QA arm, 8 matches (S2 cut: with 6-minute matches each runs to the 18000-tick cap, so the
+## 17-match set made the golden check slow; the batch tools cover the seeds this dropped).
+const MATCHES: Array = [["default", 1], ["swap", 1], ["mirror-villain", 1], ["mirror-hero", 1],
+	["default-flip", 2], ["swap-flip", 2], ["mirror-villain-flip", 2], ["mirror-hero-flip", 2]]
 const CHAR_KEYS: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 

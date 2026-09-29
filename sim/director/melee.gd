@@ -175,7 +175,7 @@ static func opGuardBreak(S: SimState, ex, _args) -> void:
 		return
 	D.ki = SimMathx.jmax(0.0, D.ki - 25.0)
 	SimFx.banner(S, "GUARD BREAK", "#ffd45a", 0.8)
-	SimFx.shake(S, 12.0)
+	SimFx.shake(S, 12.0, D.x)
 
 
 static func clashWave(S: SimState, ex) -> void:
@@ -196,7 +196,7 @@ static func clashWave(S: SimState, ex) -> void:
 		WorldCrater.dig(S, mx, WorldCrater.clashEnergy(tier), A, "impact")
 	WorldStructures.damageArea(S, mx, my, (160.0 + tier * 40.0) * SimConst.WS, 110.0 + tier * 80.0, A)
 	SimFx.banner(S, "CLASH", "#ffffff", 0.7)
-	SimFx.shake(S, 18.0)
+	SimFx.shake(S, 18.0, mx)
 
 
 const BREAK_LAUNCH_AT: float = 0.1   # the break launch follows the breaking strike after this

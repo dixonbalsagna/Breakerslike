@@ -38,7 +38,7 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `beamSplash` | x | a beam sample below y = 30 over the sea | the consumer rolls 60% for a splash of 3 at (x, 0) |
 | `damage` | x, y, amount, col, attacker, victim, region, kind, number | every hit, and every landing or collision that hurts | a damage number when `number` is true (hits): text `String(Math.round(amount))` rising 60 units/s for 0.9 s, gold when stance was ignored, white otherwise. `attacker` and `victim` are fighter slots (-1 for none); `region` is head, core, arms or legs; `kind` is light, heavy, guard, guard_break (the GUARD BREAK's finishing strike, from S2), beam or impact (Audio's hit sounds) |
 | `banner` | text, col, dur | power-ups, parries, KO, chains, clashes, ambushes; for human players also NEED 45 KI and LOCK LOST | the centre-screen banner (the latest one replaces any earlier one) for dur seconds of unfrozen time |
-| `shake` | k | anything heavy | camera shake: `shake = max(shake, k)` |
+| `shake` | k, x | anything heavy; `x` is the world x of the cause (the hit fighter, the impact, the beam's origin, the clash point, the building) | camera shake: `shake = max(shake, k)`. A split-screen camera can shake only the pane whose view holds `x` |
 | `tick` | dt, frozen | once per tick | steps the particles and damage numbers by dt (dt × 0.1 when frozen) |
 | `region_stage` | actor, region, stage | a body region's wound stage changes, up or down (Wounds, `sim/core/wounds.gd`) | nothing; for the crown and wound cards (Rendering, UI). `actor` is the fighter's slot; `region` is head, core, arms or legs; `stage` 0 fresh, 1 bruised, 2 battered, 3 broken |
 | `region_broken` | actor, region | a region reaches broken (also sent as a `region_stage`) | nothing; the break's wound card and set piece |
@@ -62,7 +62,7 @@ Fields are listed in their canonical order, the order the golden hash reads them
 | `hazard_telegraph` | actor, source, eta, x | the world is about to hit `actor` at `x` in `eta` seconds (0 when unknown). `source` brunt (a launch predicted to hit a building) from the director; World adds collapse, landslide and lava | nothing; Art's Hazard flash |
 | `searching` | actor, target, x | `actor` searches for `target` around `x`: lock was broken, or a hunt sweep | nothing; the Searching flash |
 | `danger` | actor, source, eta | `actor` is about to be hit: `source` windup (a parryable strike winds up, `eta` until it lands) or ambush | nothing; Art's danger-sense flash |
-| `launch` | actor, target, amount, face | `actor` was launched by `target` at speed `amount`, horizontally toward `face` (+1 or -1) | nothing; Camera's launch follow |
+| `launch` | actor, target, amount, face | `actor` was launched by `target` at speed `amount`, horizontally toward `face` (+1 or -1). `amount` is the drawn speed, `hypot(vx, vy)` of the fighter as it leaves: the horizontal part already carries the launch's traversal factor (`launchT`, up to TRAV_LAUNCH). Divide `vx` by `launchT` for the unboosted speed that impact damage and energy use | nothing; Camera's launch follow |
 | `rush` | actor, target, n | `actor` rushes to `target`, arriving at tick `n` | nothing; Camera |
 
 ### The `crater` and `scorch` events

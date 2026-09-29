@@ -4,9 +4,11 @@ class_name SimWounds
 ## rates are whole numbers per 60 Hz tick (1 wear per second is exactly 100 units per tick) and nothing drifts.
 ##
 ## S2 (Encounter): the HP bar no longer ends the match (HP_ENDS_MATCH false); only a finisher can KO (the director,
-## sim/director/exchange.gd). Tuning from spec-wounds.md §1b: k 0.20, bruised fade 0.25 per second, focus weight
-## (1 + wear/30). Still provisional: the region picker (family weights by attack kind), until per-atom weights arrive.
-## Stage penalties (S3), Rally (S4) and per-fighter profiles (F1) come later.
+## sim/director/exchange.gd). Tuning: k 0.06 (Encounter's sweep, docs/director/wounds-s2.md; spec §1b's 0.20 gave
+## 90 s matches), bruised fade 0.25 per second, focus weight (1 + wear/30). Still provisional: the region picker (family
+## weights by attack kind), until per-atom weights arrive.
+## S3a (Simulation): the core-side stage penalties (constants below; spec §1 "Stage penalties"). S3b (Encounter) adds the
+## director-side ones. Rally (S4) and per-fighter profiles (F1) come later.
 
 const REGIONS: Array = ["head", "core", "arms", "legs"]
 const HEAD: int = 0
@@ -38,6 +40,13 @@ const FAMILY: Dictionary = {
 const HP_ENDS_MATCH: bool = false
 ## "Go for the wound": a region's pick weight is multiplied by (1 + wear / FOCUS_WEAR) (spec §1b: 30 from S2; S1 had 50).
 const FOCUS_WEAR: float = 30.0
+
+## S3a stage penalties, core side. Battered means stage 2 or more (a broken region keeps its battered penalty).
+const CORE_KI_REGEN: float = 0.7    # core battered: ki regen -30% (fighter.gd)
+const LEGS_SPEED: float = 0.85      # legs battered: free-flight speed x0.85 (fighter.gd)
+const LEGS_LOCK_BREAK: float = 2.0  # legs broken: the ESCAPE lock-break takes twice as long, 1.8 s (hiding.gd); no dash
+const STAGGER_TICKS: int = 12       # head battered: 0.2 s stagger after taking a heavy (damage.gd)
+const DAZE_TICKS: int = 24          # head broken: 0.4 s daze after a lost exchange (daze(), called by the director, S3b)
 
 
 ## The hit family for a hit() call: guard hits on a DEFENSIVE fighter who took the stance multiplier go to the arms,
@@ -100,9 +109,12 @@ static func addWear(S: SimState, f, region: int, damage: float) -> void:
 	updateStages(S, f)
 
 
-## Recovery, once per tick from stepFighter: out of exchanges a region below 60 fades 1 per second; while hidden a
-## battered region fades 3 per second, down to 59; broken regions never fade.
+## Recovery, once per tick from stepFighter: out of exchanges a region below 60 fades FADE_OUT; a battered region fades
+## by second breath (or, for a fighter with the hiding kit, while hidden), down to 59; broken regions never fade. The
+## stagger and daze timer counts down here too.
 static func step(S: SimState, f) -> void:
+	if f.stunTicks > 0:
+		f.stunTicks -= 1
 	var ex = S.dirS.ex
 	if ex != null and (ex.A == f or ex.D == f):
 		return
@@ -159,3 +171,40 @@ static func brinkProgress(f) -> float:
 
 static func vitality(f) -> float:
 	return 1.0 - brinkProgress(f)
+
+
+## S3a: a region at battered or worse (stage 2 or 3).
+static func battered(f, region: int) -> bool:
+	return f.stage[region] >= 2
+
+
+static func broken(f, region: int) -> bool:
+	return f.stage[region] == 3
+
+
+## Head battered: a 0.2 s stagger after taking a heavy. Stagger and daze share one integer timer (the longer one wins).
+static func stagger(S: SimState, f) -> void:
+	if battered(f, HEAD):
+		f.stunTicks = maxi(f.stunTicks, STAGGER_TICKS)
+
+
+## Head broken: a 0.4 s daze after an exchange the fighter lost. The director decides who lost (S3b calls this).
+static func daze(S: SimState, f) -> void:
+	if broken(f, HEAD):
+		f.stunTicks = maxi(f.stunTicks, DAZE_TICKS)
+
+
+## The intent penalties, applied by SimControl.control after the fighter's intent is read and before any attack request:
+## a staggered or dazed fighter can neither move, dash, charge nor attack (stance changes still go through); broken legs
+## remove the dash. stunTicks counts down in step(), after control, so a stun of n ticks blocks exactly n ticks of input.
+static func gateIntent(f, i: SimIntent) -> void:
+	if f.stunTicks > 0:
+		i.mx = 0.0
+		i.my = 0.0
+		i.dash = false
+		i.charge = false
+		i.light = false
+		i.heavy = false
+		i.sig = false
+	if broken(f, LEGS):
+		i.dash = false

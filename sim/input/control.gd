@@ -12,6 +12,7 @@ static func control(S: SimState, f, intent) -> void:
 		DirAI.aiInput(S, f)
 	elif intent != null:
 		SimIntent.applyIntent(i, intent)
+	SimWounds.gateIntent(f, i)   # S3a: stagger, daze and broken legs
 	if i.stance >= 0.0:
 		f.stance = i.stance
 	if i.light or i.heavy:
