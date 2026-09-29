@@ -79,3 +79,42 @@ More characters must be addable after launch (see the Modding and Extensibility 
 | README line | "A free, open-source fighting game about wrecking a planet. No combo lists: pick a stance and the game choreographs the exchange. Inspired by the classic anime energy-brawlers." (Orb's blend; final wording waits on the licence) |
 | Repo visibility | Stays public so Orb can share the prototype with friends |
 | Licence | Undecided: Orb may want to keep commercial rights. LICENSE and LICENSE-ASSETS were removed from the repo root on 2026-09-29 (all rights reserved by default until Orb decides; the drafts stay in docs/legal/drafts/). Options in the EP's 2026-09-29 chat: open code with protected art; everything non-commercial; or MIT plus CC BY as now |
+
+## Questionnaire 3 (2026-09-29): gameplay and features
+
+Orb had played the Godot greybox before answering.
+
+| Topic | Answer |
+|---|---|
+| Greybox pace | Too fast |
+| Next priorities | Better fighting feel, the first real fighter, bigger destruction |
+| Health | **No health meters.** Location-based damage, where each fighter handles incoming damage slightly differently. Tension and dramatic build-up without traditional bars |
+| Finisher | Always: the last blow is a fighter-specific finisher |
+| Planet destruction | Pinned. Explore large-scale destruction (molten lava spewing from the mantle) short of full destruction, zero-g combat in space if the planet does go, and how stage transitions work |
+| One-liners | Both: barks during play and short pauses at set pieces |
+| Cinematics | Yes, and longer than 3 s is fine |
+| Ego meters | Yes, visible (Respect, Pride, Wrath, Hunger) |
+| Hit while transforming | Long transformations can be interrupted; the Tyrant's quick revisions are safe |
+| Transform timing | Per fighter |
+| Form duration | Permanent, except drain states |
+| Transformations | Power-ups and transformations are genre staples, and Orb wants the space explored further. The beast stage was only an example |
+| Multiplier stage | Pitch a replacement |
+| Artefacts | Orb wants orbs: find a non-infringing way to include them. A heavy hit scatters one |
+| Teleport tell | A ripple in the air |
+| Anti-hero fusion | A true merge with an original trigger and look (Legal screens it) |
+| Tyrant appendage | Keep a tail, redesigned so it doesn't read as the franchise's |
+| Tyrant forms | The numbered "revision" joke |
+| Human Tyrant during the goon phase | Snipes support shots and taunts |
+| Goons | Three: bruiser, marksman, speedster |
+| Cyborg food mechanic | Pitch it |
+| Cyborg companion | A backup drive that runs around; he catches and docks it |
+| Cyborg weak point | Pitch it |
+| Asymmetric roster | Yes, with win rates still 45 to 55% |
+| Planets | Earth-like and alien biomes; day and night plus weather; bigger for 2v2 |
+| 2v2 revive | Yes, with a risky beat next to the fallen teammate |
+| Mirror matches | Yes in 1v1, not on the same team |
+| Unlocks | Everything unlocked from the start |
+
+**Greybox notes (Orb's words):** "destructible terrain should look more like craters than canyons, water should have a simple fluid simulation, fighters seem to always fight in the ocean underwater, civilians seem too tiny, more attacks launching each other across the map, make the scale of the map seem more like a full planet"
+
+**Anything else (Orb's words):** "I want procedural systems to create near limitless sets of attacks. Voice lines don't have to be voice-acted, if each character has distinct grunts and growls and laughs those could be used to evoke emotionality of lines that appear on the screen. I want one liners and taunts and reactions that depend on all kinds of variables, so there should be a very large set of lines that can potentially be seen accounting for every situation. the combat director I'm envisioning needs to be able to create extremely vast movesets for each character, with some unique special abilities for each character, but each fight should feel unique, with dynamic combos and attacks that gives the player the sense they're not going to see the same exact series of attacks twice."
