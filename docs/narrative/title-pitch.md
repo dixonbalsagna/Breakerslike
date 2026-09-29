@@ -32,3 +32,29 @@ Pairing note: any of the top three could take "Sorry About Your Planet" as a sub
 - Nothing here is a hero or fighter name. Those wait for Legal's review of the four archetypes.
 - Rejected on search: **Grudge Season** and **Sky Grudge**. "Grudge" is crowded (The Grudge, Grudge Warriors, Grudge on Steam, and more).
 - Older titles in `name-longlist.md` still stand; this pitch reuses five of them (Skyburden, Elegy Circuit, Sorry About Your Planet, Ringstorm, Roundfall).
+
+## Round 2: sky, fire and speed (after Orb's note on "Skyburners")
+
+**The brief.** Orb dislikes Skyburden and likes the direction of "Skyburners": energetic, sky plus fire or speed, in the blended tone (graphic, Mature, funny and sincere). The taglines aim for the punch of a brutal, choreographed flash animation: short, hard, a little grin.
+
+**Self-screen (2026-09-29).** Stage 0 passed for all. Steam and App Store searches: no exact title for any. One quoted US web search each, quick and not a clearance.
+
+**Skyburners itself, screened: not clear.** "Skyburners" is a Cabal legion in Bungie's Destiny series, and Skyburner's Oath is a Destiny 2 weapon; small indie games called SkyBurner also exist. That is a tie to a big franchise, which Legal's rules treat as a no-go. Rated High. The replacements below keep the energy without the tie.
+
+| # | Title | Say it | The sell | Tagline | Self-screen | Rating |
+|---|---|---|---|---|---|---|
+| 1 | **Sunburners** ★ | SUN-bur-ners | The closest in sound and spirit to Skyburners, with no franchise attached. Fighters who burn like a sun, and it also reads like a sunburn joke. | "Light it up. Watch it fall." | No exact title. Neighbours only: Sunburnt (Steam zombie game), Sunburn (several small games). | Low |
+| 2 | **Sky Arsonists** ★ | SKY AR-sun-ists | The whole blend in two words: a Mature crime, a grin, a planet on fire. Nobody else has it. | "Nothing is off limits. Least of all the sky." | No exact title. Neighbours: Arsonist (Steam puzzler), Village Arsonist (itch.io). | Low |
+| 3 | **Redline Sky** ★ | RED-line SKY | Pure speed: the needle in the red across a wrapped sky. Sincere, easy to say, and it suits a fast, 2.5D fighter. | "Fast enough to leave a crater." | No exact title. "Redline" alone is used by several games; the pair is free. | Low |
+| 4 | **Cindersky** | SIN-der-sky | Fire and sky in one coined word. The dark, sincere end of the set. | "Fight until the sky goes to ash." | No exact title (nearest: the game Cinders). | Low |
+| 5 | **Skytorch** | SKY-torch | Carry the fire and drop it on everything. Short and iconic. | "Carry the fire. Drop it on everything." | No exact title. "Skytorch" is a tree in the game Wildmender, and a social page uses the name. | Low |
+| 6 | **Skysear** | SKY-seer | Searing beams across a sky; a cutting, cauterising sound. | "Cut it open. Burn it shut." | No exact title. Sound-alike: Skytear (a board game and publisher) and SkySeer Games. | Medium |
+| 7 | **Skyburners** | SKY-bur-ners | Orb's own pick, listed so the record is complete. | "Burn the sky. Then finish it." | See above: a Destiny faction and weapon. | High: do not use |
+
+### Top three, and why
+
+1. **Sunburners.** Keeps everything Orb liked about Skyburners, and it is clean.
+2. **Sky Arsonists.** The strongest match for the blended tone and the most distinctive.
+3. **Redline Sky.** If Orb wants speed to lead.
+
+Legal should screen the top three, and check Sunburners against Sunburnt and Sunburn for confusion.
