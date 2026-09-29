@@ -52,7 +52,7 @@ static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rec
 	w = maxf(w, UiText.width(m.name if m != null else "", tfs) + 60.0 * s) + pad * 2.0
 	var x: float = lane.position.x if left else lane.end.x - w
 	var panel := Rect2(x, lane.end.y - total_h, w, total_h)
-	UiIcons.rrect(ci, panel, 8.0 * s, Color(UiLook.col(UiLook.SCRIM), 0.66 * fade), Color(m.aura if m != null else Color.WHITE, 0.55 * fade), maxf(1.5, 2.0 * s))
+	UiIcons.rrect(ci, panel, 8.0 * s, Color(UiLook.col(UiLook.SCRIM), 0.55 * fade), Color(m.aura if m != null else Color.WHITE, 0.55 * fade), maxf(1.5, 2.0 * s))
 	var ty: float = panel.position.y + pad + UiText.ascent(tfs)
 	var name_x: float = panel.position.x + pad if left else panel.end.x - pad
 	var nw: float = UiText.draw(ci, m.name if m != null else "", Vector2(name_x, ty), tfs, Color(m.aura if m != null else Color.WHITE, fade), -1 if left else 1, 1.5)

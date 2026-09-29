@@ -51,6 +51,9 @@ var parry_dur: float = 0.0
 var chain_t: float = -1.0
 var chain_dur: float = 0.0
 var chain_n: int = 0
+var crown_a: float = 0.0           # the transient crown's opacity, 0..1: it pops on an event and fades back
+var crown_hold: float = 0.0        # seconds of full opacity still to go
+var hit_pop_age: float = 99.0      # seconds since a plain hit popped the crown (throttles a chain of blows)
 var cue: float = 99.0              # seconds since the last grunt cue (drives the voice-burst mark)
 var cue_intensity: int = 1
 var cinematic: String = ""         # "" or the kind of respected cinematic this fighter is in
@@ -85,6 +88,9 @@ func reset_wounds() -> void:
 	facade_age = 99.0
 	heat_stage = 0
 	boil_flash = 0.0
+	crown_a = 0.0
+	crown_hold = 0.0
+	hit_pop_age = 99.0
 	revision = 0
 	patch_region = ""
 	chip_station = 0
@@ -116,7 +122,29 @@ static func stage_from_wear(w: float) -> int:
 	return 0
 
 
+## Pop the crown: rise, hold for `hold` seconds, fall. A second pop while it shows extends the hold, never shortens it.
+func pop(hold: float) -> void:
+	crown_hold = maxf(crown_hold, hold)
+
+
+## A plain hit pops the crown only if it is not already showing from one, so a chain of blows does not strobe it.
+func pop_hit(region: String) -> void:
+	if region != "" and stage.has(region):
+		region_age[region] = 0.0
+		if int(region_dir[region]) == 0:
+			region_dir[region] = 1
+	if hit_pop_age >= UiLook.CROWN_HIT_GAP:
+		hit_pop_age = 0.0
+		pop(UiLook.CROWN_HOLD_HIT)
+
+
 func advance(dt: float) -> void:
+	hit_pop_age += dt
+	if crown_hold > 0.0:
+		crown_a = move_toward(crown_a, 1.0, dt / UiLook.CROWN_ATTACK)
+		crown_hold = maxf(0.0, crown_hold - dt)
+	else:
+		crown_a = move_toward(crown_a, 0.0, dt / UiLook.CROWN_RELEASE)
 	for r in regions:
 		region_age[r] = float(region_age[r]) + dt
 	brink_age += dt

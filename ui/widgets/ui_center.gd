@@ -4,7 +4,8 @@ class_name UiCenter
 ## Banner words are renamed to the glossary's wording by UiData.banner() when the event arrives.
 
 static func draw_toll(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, o: Dictionary) -> void:
-	var a: float = float(o.get("plate_alpha", 1.0))
+	# The chip dims at rest and brightens for a moment after the toll changes: nothing sits bright over the fight.
+	var a: float = float(o.get("plate_alpha", 1.0)) * lerpf(UiLook.TOLL_REST_ALPHA, 1.0, clampf(1.0 - hub.toll_age / UiLook.TOLL_SHOW, 0.0, 1.0))
 	var r: Rect2 = lay.toll
 	UiIcons.rrect(ci, r, 8.0 * s, Color(UiLook.col(UiLook.SCRIM), UiLook.SCRIM_ALPHA * a), Color(UiLook.col(UiLook.EDGE), 0.3 * a), 1.2)
 	var fs: int = UiText.px(20.0, s)

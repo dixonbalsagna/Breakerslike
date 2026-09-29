@@ -67,8 +67,16 @@ func _st(time: float, actor: int, d: Dictionary) -> void:
 	_e(time, ev)
 
 
-func _rs(time: float, actor: int, region: String, stage: String, internal: bool = false) -> void:
+func _rs(time: float, actor: int, region: String, stage: String, internal: bool = false, hit: bool = true) -> void:
+	# A wounding hit comes first, as in the sim (a damage event, then the stage change).
+	if hit and stage != "fresh" and not internal:
+		_hit(time, 1 - actor, actor, region, "heavy" if stage == "broken" else "light")
 	_e(time, {"type": "region_stage", "actor": actor, "region": region, "stage": stage, "internal": internal})
+
+
+## A hit to a region (the sim's damage event: attacker, victim, region, kind; `number` is ignored by the HUD).
+func _hit(time: float, attacker: int, victim: int, region: String, kind: String) -> void:
+	_e(time, {"type": "damage", "attacker": attacker, "victim": victim, "region": region, "kind": kind, "number": true})
 
 
 func _bark(time: float, speaker: int, text: String, gesture: String, intensity: int, prio: int = 2, setpiece: bool = false, extra_at: int = -1, extra: String = "") -> void:
@@ -108,6 +116,7 @@ func _build_hero_proud() -> void:
 	# A parry window on the Anti-hero, then a chain window on the Protagonist.
 	_e(3.6, {"type": "window_open", "actor": 1, "kind": "parry", "dur": 0.33})
 	_e(4.0, {"type": "banner", "text": "PARRY", "col": "#ffffff", "dur": 1.0})
+	_hit(3.7, 0, 1, "arms", "light")
 	_e(4.3, {"type": "chain", "actor": 0, "n": 2, "dur": 0.7})
 	_e(4.9, {"type": "chain", "actor": 0, "n": 3, "dur": 0.7})
 	# Wounds on both. The Anti-hero's bruises and batters are withheld while his Pride holds; only breaks show.
@@ -138,6 +147,7 @@ func _build_hero_proud() -> void:
 	_e(17.6, {"type": "shame_stack", "actor": 1, "n": 2})
 	# A respected cinematic (a transformation): plates recede, letterbox in, set-piece line.
 	_e(18.5, {"type": "cinematic_start", "actor": 1, "kind": "transformation", "dur": 3.0})
+	_e(18.5, {"type": "tier_up", "actor": 1, "tier": 2})
 	_bark(18.6, 1, "Regalia. Now you'll know who was watching.", "roar", 3, 4, true)
 	_bark(19.0, 0, "Wait for it...", "sigh", 1, 2, false)
 	_rs(19.4, 0, "arms", "broken")
@@ -189,8 +199,8 @@ func _build_empress_cyborg() -> void:
 	_e(11.8, {"type": "chip_stage", "actor": 1, "stage": 2})
 	_e(12.5, {"type": "hatch_close", "actor": 1})
 	_bark(11.9, 1, "Not the chip! Anything but the chip!", "static", 3)
-	_rs(13.0, 1, "arms", "battered")     # regrowth: the crown crawls back
-	_rs(14.5, 1, "arms", "bruised")
+	_rs(13.0, 1, "arms", "battered", false, false)     # regrowth: the crown crawls back
+	_rs(14.5, 1, "arms", "bruised", false, false)
 	_rs(16.0, 1, "arms", "fresh")
 	_rs(16.0, 1, "head", "bruised")
 	# The Empress's revisions: a reprint per real revision, no paperwork on screen. Guard falls are not drawn.

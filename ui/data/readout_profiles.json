@@ -30,7 +30,7 @@
     "crown": "plain",
     "silhouette": "refit",
     "ego": "wrath",
-    "numeral": true
+    "numeral": false
   },
   "cyborg": {
     "crown": "regrowth",

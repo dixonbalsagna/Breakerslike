@@ -46,10 +46,10 @@ const BIOME: Dictionary = {
 }
 
 ## Timings, seconds.
-const CARD_LIFE := 1.5                # spec-wounds.md section 3: about 1.5 s
-const CARD_LIFE_BROKEN := 2.2         # a break holds longer: it is a chapter
+const CARD_LIFE := 1.2                # brief (Orb: nothing lingers over the choreography); the spec said about 1.5
+const CARD_LIFE_BROKEN := 1.8         # a break holds a little longer: it is a chapter
 const CARD_FADE := 0.25
-const CARD_TOAST_LIFE := 0.9          # a bruise: a single line, only when nothing else is showing
+const CARD_TOAST_LIFE := 0.7          # a bruise: a single line, only when nothing else is showing
 const CARD_WAIT_MAX := 2.5            # a queued card older than this is dropped (a break waits up to CARD_WAIT_BREAK)
 const CARD_WAIT_BREAK := 6.0
 const CARD_STAMP := 0.18              # the stamp-in animation
@@ -61,7 +61,7 @@ const CUE_PULSE := 0.35
 const WINDOW_MIN_SHOWN := 0.12        # a window shorter than this still shows for this long, so it registers
 
 ## Readability caps: how much may show at once (spec section 8). Index: NORMAL, HAZARD, CINEMATIC.
-const CAP_CARDS_PER_SIDE: Array = [3, 2, 1]
+const CAP_CARDS_PER_SIDE: Array = [2, 1, 1]
 const CAP_BARK_LINES: Array = [2, 2, 1]
 const CAP_TOASTS: Array = [1, 0, 0]
 const CAP_FEED_LINES: Array = [14, 6, 0]
@@ -118,3 +118,18 @@ static func stance_col(idx: int) -> Color:
 
 static func ego_col(name: String) -> Color:
 	return col(EGO.get(name, "#cccccc"))
+
+
+## The crown is TRANSIENT (Orb, 2026-09-29): it pops on a relevant event and fades back, so at rest the fighters are clean.
+## Envelope: rise CROWN_ATTACK, hold, then fall over CROWN_RELEASE. The whole pop is about 1 to 1.5 s.
+const CROWN_ATTACK := 0.10
+const CROWN_RELEASE := 0.50
+const CROWN_HOLD_HIT := 0.35          # a hit to a region
+const CROWN_HOLD_STAGE := 0.60        # a region got worse
+const CROWN_HOLD_MAJOR := 0.90        # a break, the brink, a Rally, a transformation, a boil-over, the facade crack
+const CROWN_HIT_GAP := 1.0            # a plain hit re-pops the crown at most this often (a chain of blows is not a strobe)
+## Brink is the one persistent cue: a thin, faint, slow ring (alpha range and rate).
+const BRINK_RING_A_MIN := 0.16
+const BRINK_RING_A_MAX := 0.38
+const TOLL_REST_ALPHA := 0.5          # the world toll chip dims at rest and brightens for TOLL_SHOW seconds after a change
+const TOLL_SHOW := 2.5

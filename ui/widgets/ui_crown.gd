@@ -23,12 +23,47 @@ static func radius(h: float, s: float) -> float:
 static var _still := false   # reduced motion: no flicker, no shimmer, no shrinking rings (set by draw())
 
 
+## The crown is TRANSIENT (Orb): at rest a fighter is clean. The body of the crown draws only while the model's `crown_a`
+## is up (it pops on a hit, a stage change, the brink, a Rally, a transformation, and fades back within about 1.5 s).
+## Two things stay: a thin faint ring on the brink (the one persistent state, and the one the player must be able to
+## find at a glance), and the parry and chain windows (short, and useful only while they last).
+## o: reduced_motion, thickness, crown_always (accessibility: keep the crown up), brink_cue (default true).
 static func draw(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: float, s: float, o: Dictionary) -> void:
+	var reduced: bool = bool(o.get("reduced_motion", false))
+	_still = reduced
+	var th: float = maxf(R * UiLook.CROWN_THICK, 3.0) * float(o.get("thickness", 1.0))
+	var pop_a: float = 1.0 if bool(o.get("crown_always", false)) else m.crown_a
+	if m.brink and bool(o.get("brink_cue", true)) and pop_a < 0.98:
+		_brink_ring(ci, m, c, R, t, th, reduced, 1.0 - pop_a)
+	if pop_a > 0.02:
+		_body(ci, m, c, R, t, s, o, pop_a)
+		draw_marker(ci, m, c, R, s, t, pop_a)
+	_windows(ci, m, c, R, t, th, reduced)
+
+
+## The brink's faint cue: one thin ring, slow and low. It is the only thing left over a fighter at rest, and only on the
+## brink. Under reduced motion it is a static dashed ring (the shape carries it).
+static func _brink_ring(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: float, th: float, reduced: bool, k: float) -> void:
+	var g: float = 0.5 + 0.5 * sin(t * UiLook.HZ_BRINK * TAU)
+	var a: float = (UiLook.BRINK_RING_A_MIN + UiLook.BRINK_RING_A_MAX) * 0.5 if reduced else lerpf(UiLook.BRINK_RING_A_MIN, UiLook.BRINK_RING_A_MAX, g)
+	a *= k * (0.5 if m.hidden else 1.0)
+	var col: Color = UiLook.alpha(UiLook.INK, a)
+	var w: float = maxf(1.5, th * 0.3)
+	if reduced:
+		var n := 32
+		for i in range(n):
+			var a0: float = TAU * float(i) / float(n)
+			ci.draw_arc(c, R * 1.1, a0, a0 + TAU / float(n) * 0.5, 3, col, w, true)
+	else:
+		ci.draw_arc(c, R * 1.1, 0.0, TAU, 48, col, w, true)
+
+
+static func _body(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: float, s: float, o: Dictionary, pop_a: float) -> void:
 	var reduced: bool = bool(o.get("reduced_motion", false))
 	_still = reduced
 	var tscale: float = float(o.get("thickness", 1.0))
 	var th: float = maxf(R * UiLook.CROWN_THICK, 3.0) * tscale
-	var alpha: float = 0.35 if m.hidden else 1.0
+	var alpha: float = (0.35 if m.hidden else 1.0) * pop_a
 	# The whole crown gutters on the brink.
 	if m.brink:
 		var g: float = 0.5 + 0.5 * sin(t * UiLook.HZ_BRINK * TAU)
@@ -84,7 +119,7 @@ static func draw(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t: flo
 		var notch_angles: Array = [deg_to_rad(-38.0), deg_to_rad(142.0), deg_to_rad(212.0)]
 		for i in range(mini(m.shame, 3)):
 			_notch(ci, c, R, notch_angles[i], th)
-	_windows(ci, m, c, R, t, th, reduced)
+
 
 
 static func _region_arc(ci: CanvasItem, m: UiFighterModel, region: String, c: Vector2, r: float, a_mid: float, span: float, th: float, t: float, alpha: float, crawl: bool, second: bool = false, col_override: Color = Color(0, 0, 0, 0)) -> void:
@@ -194,16 +229,16 @@ static func _windows(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, t:
 			UiIcons.chevron(ci, Vector2(x0 + cw * float(i), c.y - R * 1.38 - th * 2.6), cw * 0.8, 1.0, maxf(2.5, th * 0.6), ccol)
 
 
-## The small marks that ride above a fighter: its stance icon, or the hidden mark. Drawn at the crown's top.
-static func draw_marker(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, s: float, t: float) -> void:
+## The small mark that rides above a fighter while its crown is up: the stance icon, or the hidden mark. It appears
+## and fades with the pop; at rest nothing sits over the fighter (the plate says the stance).
+static func draw_marker(ci: CanvasItem, m: UiFighterModel, c: Vector2, R: float, s: float, t: float, a: float) -> void:
 	var size: float = maxf(22.0 * s, 20.0)
 	var p: Vector2 = c + Vector2(0.0, -R * 1.3 - size * 0.9)
 	var chip := Rect2(p - Vector2(size * 0.75, size * 0.62), Vector2(size * 1.5, size * 1.24))
-	UiIcons.rrect(ci, chip, size * 0.3, UiLook.alpha(UiLook.SCRIM, 0.7), UiLook.alpha(UiLook.EDGE, 0.5), 1.2)
+	UiIcons.rrect(ci, chip, size * 0.3, UiLook.alpha(UiLook.SCRIM, 0.7 * a), UiLook.alpha(UiLook.EDGE, 0.5 * a), 1.2)
 	if m.hidden:
-		UiIcons.eye_slash(ci, p, size * 0.95, UiLook.col(UiLook.HIDDEN))
+		var hc: Color = UiLook.col(UiLook.HIDDEN)
+		UiIcons.eye_slash(ci, p, size * 0.95, Color(hc, a))
 	else:
-		UiIcons.stance(ci, m.stance, p, size * 0.85, UiLook.stance_col(m.stance))
-	if m.cue < UiLook.CUE_PULSE:
-		var k: float = m.cue / UiLook.CUE_PULSE
-		UiIcons.sound_burst(ci, p + Vector2(size * 1.05, -size * 0.1), size * 0.9, m.cue_intensity, UiLook.alpha(UiLook.INK, 1.0 - k))
+		var sc: Color = UiLook.stance_col(m.stance)
+		UiIcons.stance(ci, m.stance, p, size * 0.85, Color(sc, a))

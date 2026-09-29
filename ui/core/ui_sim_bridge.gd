@@ -30,10 +30,15 @@ static func patch(hud: UiHud, S) -> void:
 			into = clampf((float(f.power) - 25.0 * float(tier - 1)) / 25.0, 0.0, 1.0) * 100.0
 		var ego_name: String = ROLE_EGO.get(str(f.role), "respect")
 		var ego: float = float(f.menace) if ego_name == "menace" else float(f.anguish)
+		var wear: Dictionary = {}
+		if "wear" in f:
+			# S1's fixed-point wear (units of 1/6000 of a wear point per region): the crown thins smoothly from it.
+			for r in range(mini(4, f.wear.size())):
+				wear[["head", "core", "arms", "legs"][r]] = float(f.wear[r]) / 6000.0
 		hud.hub.patch(i, {
 			"name": str(f.name), "ai": f.ai != null, "stance": int(f.stance), "tier": tier, "momentum": into,
 			"charge": float(f.ki), "hidden": bool(f.hidden), "charging": str(f.state) == "charging",
-			"ego": ego, "aura": str(f.aura),
+			"ego": ego, "aura": str(f.aura), "wear": wear,
 		})
 	var w = S.world
 	hud.hub.consume({"type": "world", "civilians": int(round(float(w.casualties))), "pop0": int(w.pop0), "structures": int(w.structuresLost), "craters": int(w.craters)})

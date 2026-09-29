@@ -21,7 +21,7 @@ var layout := UiLayout.new()
 var anchor_fn: Callable = Callable()   # (slot: int) -> {pos: Vector2, h: float, visible: bool}
 var strip_fn: Callable = Callable()    # () -> Dictionary for UiStrip.draw
 var opts: Dictionary = {
-	"silhouette": true,        # the body figure beside each plate (on by default in training and as the accessibility default)
+	"silhouette": false,       # the body figure beside each plate: off by default; the host turns it on in training and as the accessibility default
 	"reduced_motion": false,   # no flicker, shimmer, shrinking rings or slide-ins; every cue still has a shape
 	"captions": true,          # bracketed gesture tags on barks
 	"thickness": 1.0,          # crown arc thickness multiplier (an accessibility option)
@@ -29,6 +29,8 @@ var opts: Dictionary = {
 	"show_feed": false,        # the director feed (debug toggle)
 	"show_clear_zone": false,  # draw the fighter-clear zone (debug)
 	"show_crown": true,
+	"crown_always": false,     # accessibility: keep the crown up instead of popping it (low vision)
+	"brink_cue": true,         # the faint persistent ring on the brink; the one thing left over a fighter at rest
 }
 var _t := 0.0
 var _lb := 0.0                 # letterbox progress, 0..1
@@ -97,6 +99,8 @@ func _draw() -> void:
 		"thickness": float(opts["thickness"]),
 		"region_label": bool(opts["region_label"]),
 		"plate_alpha": 1.0,
+		"crown_always": bool(opts["crown_always"]),
+		"brink_cue": bool(opts["brink_cue"]),
 	}
 	# In a respected cinematic the plates recede, so the set piece owns the screen (docs/ui/hud-spec.md section 8).
 	UiBarks.draw_letterbox(self, layout, _lb)
@@ -108,7 +112,6 @@ func _draw() -> void:
 			var R: float = UiCrown.radius(float(a.get("h", 90.0)), s)
 			var c: Vector2 = a["pos"]
 			UiCrown.draw(self, m, c, R, _t, s, o)
-			UiCrown.draw_marker(self, m, c, R, s, _t)
 	for m in hub.models:
 		var oo: Dictionary = o.duplicate()
 		if mode == UiEventHub.Mode.CINEMATIC and m.cinematic == "":

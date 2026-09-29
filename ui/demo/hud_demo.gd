@@ -4,8 +4,8 @@ extends Control
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
 ## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)
-## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | T arc thickness
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced
+## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
 const SEGS: Array = [[0.0, 1200.0, "ocean"], [1200.0, 1800.0, "village"], [1800.0, 2350.0, "plains"], [2350.0, 3850.0, "city"], [3850.0, 4500.0, "village"], [4500.0, 5500.0, "forest"], [5500.0, 6500.0, "desert"], [6500.0, 7600.0, "mountains"], [7600.0, 8000.0, "village"], [8000.0, 8300.0, "plains"], [8300.0, 9600.0, "ocean"]]
@@ -46,6 +46,10 @@ func _ready() -> void:
 		legend = false
 	if args.has("clear"):
 		hud.set_option("show_clear_zone", true)
+	if args.has("sil"):
+		hud.set_option("silhouette", true)
+	if args.has("crown"):
+		hud.set_option("crown_always", true)
 	if args.has("nosil"):
 		hud.set_option("silhouette", false)
 	if args.has("reduced"):
@@ -139,6 +143,10 @@ func _unhandled_key_input(e: InputEvent) -> void:
 			hud.set_option("show_feed", not bool(hud.opts["show_feed"]))
 		KEY_C:
 			hud.set_option("captions", not bool(hud.opts["captions"]))
+		KEY_K:
+			hud.set_option("crown_always", not bool(hud.opts["crown_always"]))
+		KEY_B:
+			hud.set_option("brink_cue", not bool(hud.opts["brink_cue"]))
 		KEY_M:
 			hud.set_option("reduced_motion", not bool(hud.opts["reduced_motion"]))
 		KEY_T:
@@ -179,7 +187,7 @@ func _draw() -> void:
 		draw_circle(p + Vector2(0, -fh * 0.42), fh * 0.11, Color(0.93, 0.78, 0.63, a))
 	if legend:
 		var fs: int = UiText.px(16.0, hud.layout.s, 12.0)
-		var text: String = "DEMO  scenario %s   %dx%d   Tab scenario  Space pause  R restart  S silhouette  F4 feed  C captions  M motion  T thickness  Z zones  L label  V size  +/- fighter  H legend" % [UiMockFeed.SCENARIOS[scenario_i], int(vp.x), int(vp.y), ]
+		var text: String = "DEMO  scenario %s   %dx%d   Tab scenario  Space pause  R restart  S silhouette  F4 feed  C captions  M motion  K crown always  B brink ring  T thickness  Z zones  L label  V size  +/- fighter  H legend" % [UiMockFeed.SCENARIOS[scenario_i], int(vp.x), int(vp.y), ]
 		var lines: PackedStringArray = UiText.wrap(text, fs, vp.x - 20.0)
 		var y: float = vp.y - float(fs) * float(lines.size()) - 2.0
 		if hud.layout.portrait:

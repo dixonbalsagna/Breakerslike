@@ -22,7 +22,11 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	var left: bool = m.left_side
 	var pad: float = float(pm["pad"])
 	var reduced: bool = bool(o.get("reduced_motion", false))
-	UiIcons.rrect(ci, rect, 10.0 * s, _c(UiLook.alpha(UiLook.SCRIM, UiLook.SCRIM_ALPHA)), _c(UiLook.alpha(UiLook.EDGE, 0.35)), maxf(1.2, 1.5 * s))
+	# A light scrim: the plate is a quiet strip on the screen's edge, not a panel (Orb: nothing in the way of the fight).
+	UiIcons.rrect(ci, rect, 10.0 * s, _c(UiLook.alpha(UiLook.SCRIM, 0.5)), _c(UiLook.alpha(UiLook.EDGE, 0.22)), maxf(1.0, 1.2 * s))
+	# Landscape plates are compact: the stance chip shares the name's row, and the state chips share the pips' row.
+	# Portrait plates (a narrow phone) keep separate rows.
+	var combined: bool = not bool(pm["compact"])
 	var x0: float = rect.position.x + pad
 	var x1: float = rect.end.x - pad
 	var inner_w: float = x1 - x0
@@ -42,7 +46,14 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		var tx: float = (x0 + nw + 10.0 * s) if left else (x1 - nw - 10.0 * s - tw - 12.0 * s)
 		UiIcons.rrect(ci, Rect2(tx, ry + 1.0, tw + 12.0 * s, rh - 2.0), 5.0 * s, _c(Color(1, 1, 1, 0.12)), _c(UiLook.alpha(UiLook.EDGE, 0.5)), 1.0)
 		UiText.draw(ci, tag, Vector2(tx + 6.0 * s, _base(ry, rh, afs)), afs, dim, -1)
-	if m.brink:
+	if m.brink and combined:
+		# Icon only, right after the name (the crown ring, the card and the silhouette say the rest).
+		var bcol2: Color = _c(Color(UiLook.col(UiLook.STAGE_BROKEN), 1.0 if reduced else (0.6 + 0.4 * (0.5 + 0.5 * sin(t * UiLook.HZ_BRINK * TAU)))))
+		var isz2: float = rh * 0.8
+		var ai_w: float = (UiText.width(UiData.t("state.ai"), int(pm["fs_state"])) + 22.0 * s) if m.ai else 0.0
+		var bx2: float = (x0 + nw + 10.0 * s + ai_w) if left else (x1 - nw - 10.0 * s - ai_w - isz2)
+		UiIcons.brink(ci, Vector2(bx2 + isz2 * 0.5, ry + rh * 0.5), isz2, bcol2)
+	if m.brink and not combined:
 		var bfs: int = int(pm["fs_state"])
 		var bt: String = UiData.t("state.brink")
 		var bw: float = UiText.width(bt, bfs)
@@ -62,7 +73,17 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 			if show_text:
 				UiText.draw(ci, bt, Vector2(bx + isz + 8.0 * s, _base(ry, rh, bfs)), bfs, bcol, -1, 1.5)
 
-	# Row 2: the stance chip, then state chips in the inward direction.
+	# The pips' geometry and the signature chip's width are needed early: the state chips sit after the pips.
+	var psize: float = float(pm["pip"])
+	var pstep: float = psize * 1.4
+	var pips_w: float = pstep * 3.0 + psize
+	var tfs: int = int(pm["fs_tier"])
+	var sig_ready: bool = m.charge >= m.sig_cost
+	var sig_label: String = UiData.t("state.signature")
+	var tier_rh: float = float(pm["tier_h"])
+	var sig_w: float = UiText.width(sig_label, tfs) + tier_rh * 0.9 + 16.0 * s if sig_ready else 0.0
+
+	# Row 2: the stance chip (far side of the name's row in landscape), then state chips in the inward direction.
 	ry = rect.position.y + float(pm["chip_y"])
 	rh = float(pm["chip_h"])
 	var cfs: int = int(pm["fs_chip"])
@@ -70,13 +91,21 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	var scol: Color = UiLook.stance_col(m.stance)
 	var isize: float = rh * 0.68
 	var cw: float = isize + UiText.width(word, cfs) + 20.0 * s
-	var cur: float = 0.0
+	var cur: float = (inner_w - cw) if combined else 0.0
 	_chip(ci, rect, left, pad, cur, cw, ry, rh, _c(UiLook.alpha(UiLook.SCRIM, 0.85)), _c(scol), 2.0)
 	var cx: float = (x0 + cur + 8.0 * s + isize * 0.5) if left else (x1 - cur - 8.0 * s - isize * 0.5)
 	UiIcons.stance(ci, m.stance, Vector2(cx, ry + rh * 0.5), isize, _c(scol))
 	var tx0: float = (x0 + cur + 8.0 * s + isize + 6.0 * s) if left else (x1 - cur - 8.0 * s - isize - 6.0 * s)
 	UiText.draw(ci, word, Vector2(tx0, _base(ry, rh, cfs)), cfs, ink, -1 if left else 1, 1.5)
-	cur += cw + 8.0 * s
+	# State chips: after the stance chip (portrait), or on the pips' row after the pips (landscape), never over SIGNATURE.
+	var chip_limit: float = inner_w
+	if combined:
+		ry = rect.position.y + float(pm["tier_y"])
+		rh = tier_rh
+		cur = pips_w + 10.0 * s
+		chip_limit = inner_w - (sig_w + 8.0 * s if sig_ready else 0.0)
+	else:
+		cur += cw + 8.0 * s
 	var chips: Array = []
 	if m.hidden:
 		chips.append(["hidden", UiData.t("state.hidden"), UiLook.col(UiLook.HIDDEN)])
@@ -93,7 +122,7 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		var label: String = ch[1]
 		var lw: float = UiText.width(label, sfs)
 		var w: float = chip_h * 0.9 + lw + 16.0 * s
-		if cur + w > inner_w:
+		if cur + w > chip_limit:
 			break
 		_chip(ci, rect, left, pad, cur, w, chip_y, chip_h, _c(UiLook.alpha(UiLook.SCRIM, 0.85)), _c(ch[2]), 1.6)
 		var icx: float = (x0 + cur + 8.0 * s + chip_h * 0.35) if left else (x1 - cur - 8.0 * s - chip_h * 0.35)
@@ -114,8 +143,6 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	# Row 3: tier pips (the next pip fills with momentum), the tier name, and SIGNATURE on the far side when ready.
 	ry = rect.position.y + float(pm["tier_y"])
 	rh = float(pm["tier_h"])
-	var psize: float = float(pm["pip"])
-	var pstep: float = psize * 1.4
 	var pcol: Color = _c(UiLook.col(UiLook.TIER_PIP))
 	var pedge: Color = _c(UiLook.alpha(UiLook.INK, 0.9))
 	for i in range(4):
@@ -127,14 +154,9 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 			UiIcons.pip(ci, pc, psize, fill, pcol, pedge)
 		else:
 			_pip_right(ci, pc, psize, fill, pcol, pedge)
-	var pips_w: float = pstep * 3.0 + psize
-	var tfs: int = int(pm["fs_tier"])
 	var tname: String = UiData.tier_name(m.tier)
 	var name_w: float = UiText.width(tname, tfs)
-	var sig_ready: bool = m.charge >= m.sig_cost
-	var sig_label: String = UiData.t("state.signature")
-	var sig_w: float = UiText.width(sig_label, tfs) + rh * 0.9 + 16.0 * s if sig_ready else 0.0
-	if pips_w + 12.0 * s + name_w + (sig_w + 8.0 * s if sig_ready else 0.0) <= inner_w:
+	if not combined and pips_w + 12.0 * s + name_w + (sig_w + 8.0 * s if sig_ready else 0.0) <= inner_w:
 		var nx: float = (x0 + pips_w + 12.0 * s) if left else (x1 - pips_w - 12.0 * s)
 		UiText.draw(ci, tname, Vector2(nx, _base(ry, rh, tfs)), tfs, dim, -1 if left else 1)
 	if sig_ready:

@@ -53,7 +53,8 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, t: float, s: fl
 		"spread":
 			_internal(ci, m, origin, sc, t, reduced)
 		"refit":
-			_numeral(ci, m, rect, s)
+			if bool(m.profile.get("numeral", false)):
+				_numeral(ci, m, rect, s)
 			if m.patch_region != "" and m.has_region(m.patch_region):
 				var polys: Array = UiBody.px_polys(m.patch_region, origin, sc)
 				if not polys.is_empty():

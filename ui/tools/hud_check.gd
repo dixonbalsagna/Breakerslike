@@ -26,6 +26,7 @@ func _run() -> void:
 	_layouts()
 	_bark_timing()
 	_hub_rules()
+	_crown_rules()
 	_scenarios()
 	await _draw_smoke()
 	await _bridge()
@@ -159,7 +160,7 @@ func _hub_rules() -> void:
 	for r in ["head", "core", "arms", "legs"]:
 		hub.consume({"type": "region_stage", "actor": 0, "region": r, "stage": "battered"})
 	hub.consume({"type": "brink_enter", "actor": 0})
-	_step(hub, 0.05)
+	_step(hub, 0.6)
 	_ok(hub.cards_of(0).filter(func(c): return not c.fading).size() <= UiLook.CAP_CARDS_PER_SIDE[0], "cap: at most %d cards per side in normal play" % UiLook.CAP_CARDS_PER_SIDE[0])
 	_ok(hub.cards_of(0).any(func(c): return c.key == "brink"), "cap: the brink card (a break-priority card) is among those shown")
 	# Portrait: the host lowers the cap to one card per side.
@@ -221,7 +222,7 @@ func _hub_rules() -> void:
 	hub.consume({"type": "brink_enter", "actor": 0})
 	_step(hub, 0.1)
 	hub.consume({"type": "rally", "actor": 0, "region": "arms"})
-	_step(hub, 0.1)
+	_step(hub, 0.9)
 	_ok(hub.model(0).stage["arms"] == 2 and not hub.model(0).brink, "rally: mends to battered and leaves the brink")
 	_ok(hub.cards_of(0).any(func(c): return c.title == "SECOND WIND"), "rally: the card uses the fighter's own name")
 	# Heat cards, the boil-over, internal wear.
@@ -350,16 +351,136 @@ func _bridge() -> void:
 	var f: Array = UiSimBridge.fighters(host.S)
 	hud.setup(f[0], f[1])
 	var events := 0
-	for i in range(900):
+	var saw_pop := false
+	var seen := {"stage": false, "damage": false}
+	host.drained.connect(func(evs: Array, _lines: Array):
+		for e in evs:
+			if e.type == "region_stage" or e.type == "damage":
+				seen[e.type if e.type in seen else "stage"] = true
+		hud.consume_all(evs))
+	for i in range(4200):
 		host.tick(1280.0, 720.0)
 		UiSimBridge.patch(hud, host.S)
 		UiSimBridge.feed(hud, host.feed.slice(maxi(0, host.feed.size() - 1)))
 		hud.advance(1.0 / 60.0)
-	events = hud.hub.stats["events"]
+		for mm in hud.hub.models:
+			if mm.crown_a > 0.5:
+				saw_pop = true
+	events = int(hud.hub.stats["events"])
 	var m0: UiFighterModel = hud.hub.model(0)
 	_ok(m0.name == "KAI" and m0.tier >= 1 and m0.charge >= 0.0, "bridge: reads name, tier and charge from the sim")
 	_ok(hud.hub.toll["pop0"] > 0, "bridge: reads the world counters")
 	var sd: Dictionary = UiSimBridge.strip_data(host.S, host.cam.x, 2000.0)
 	_ok((sd["segs"] as Array).size() == 11 and (sd["fighters"] as Array).size() == 2, "bridge: builds the planet strip's data")
-	print("  bridge ok: %d events consumed over 900 ticks" % events)
+	_ok(bool(seen["damage"]), "bridge: the live sim emits damage events (S1): " + str(seen))
+	_ok(saw_pop, "bridge: a real hit or stage change popped a crown")
+	_ok(float(m0.wear["core"]) >= 0.0, "bridge: reads wear from the sim state")
+	# The greybox balance rarely wears a region past bruised in a minute, so push one through the real S1 code: the stage
+	# events it emits must reach the HUD as they are.
+	var f0 = host.S.fighters[0]
+	SimWounds.addWear(host.S, f0, 2, 1200.0)
+	SimWounds.updateStages(host.S, f0)
+	host.tick(1280.0, 720.0)
+	hud.advance(1.0 / 60.0)
+	_ok(int(m0.true_stage["arms"]) == 3 and m0.crown_a > 0.0, "bridge: a real region_stage and region_broken from S1 reach the model and pop the crown")
+	_ok(hud.hub.cards_of(0).any(func(c): return c.title == "ARMS: BROKEN") or hud.hub.waiting.any(func(c): return c.title == "ARMS: BROKEN"), "bridge: and make the ARMS: BROKEN card")
+	print("  bridge ok: %d events consumed over 4200 ticks" % events)
 	host.S = null
+
+
+# --- The transient crown (Orb: at rest the fighters are clean) ------------------------------------------------------
+
+func _crown_rules() -> void:
+	var longest: float = UiLook.CROWN_ATTACK + UiLook.CROWN_HOLD_MAJOR + UiLook.CROWN_RELEASE
+	_ok(longest <= 1.55, "crown: the longest pop is about 1.5 s (%.2f s)" % longest)
+	var hub := _hub()
+	_step(hub, 2.0)
+	_ok(hub.model(0).crown_a == 0.0 and hub.model(1).crown_a == 0.0, "crown: at rest it is not drawn")
+	# A hit pops the victim's crown and fades back; the attacker's stays down.
+	hub.consume({"type": "damage", "attacker": 0, "victim": 1, "region": "arms", "kind": "light", "number": true})
+	_step(hub, 0.2)
+	_ok(hub.model(1).crown_a > 0.9 and hub.model(0).crown_a == 0.0, "crown: a hit pops the victim's crown only")
+	_step(hub, 1.2)
+	_ok(hub.model(1).crown_a == 0.0, "crown: it has faded back within 1.4 s")
+	_ok(hub.cards_of(1).is_empty() and hub.barks.is_empty(), "crown: a plain hit makes no card and no bark, and no number")
+	# A chain of blows does not strobe it: hits within a second of a pop do not re-pop.
+	hub = _hub()
+	for i in range(4):
+		hub.consume({"type": "damage", "attacker": 0, "victim": 1, "region": "head", "kind": "light", "number": true})
+		_step(hub, 0.2)
+	_step(hub, 0.6)
+	_ok(hub.model(1).crown_a == 0.0, "crown: a chain of four blows in 0.8 s is one short pop, not a strobe")
+	# A stage change, the brink, a Rally and a tier-up pop it; a recovery does not.
+	hub = _hub()
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": 2})
+	_step(hub, 0.3)
+	_ok(hub.model(0).crown_a > 0.9, "crown: a region getting worse pops it")
+	_step(hub, 1.4)
+	_ok(hub.model(0).crown_a == 0.0, "crown: and it is gone by 1.7 s")
+	hub.consume({"type": "region_stage", "actor": 0, "region": "arms", "stage": 1})
+	_step(hub, 0.3)
+	_ok(hub.model(0).crown_a == 0.0, "crown: a recovery does not pop it")
+	hub.consume({"type": "brink_enter", "actor": 0})
+	_step(hub, 1.7)
+	_ok(hub.model(0).crown_a == 0.0 and hub.model(0).brink, "crown: the brink pops it, then only the faint ring stays (the model keeps brink)")
+	hub.consume({"type": "rally", "actor": 0, "region": "arms"})
+	_step(hub, 0.3)
+	_ok(hub.model(0).crown_a > 0.9, "crown: a Rally pops it")
+	hub = _hub()
+	hub.consume({"type": "tier_up", "actor": 1, "tier": 2})
+	_step(hub, 0.3)
+	_ok(hub.model(1).crown_a > 0.9, "crown: a tier-up pops it")
+	# The Anti-hero's masked stage changes do not pop the crown (the front holds); a break does.
+	hub = _hub()
+	hub.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": 2})
+	_step(hub, 0.3)
+	_ok(hub.model(1).crown_a == 0.0, "crown: a masked stage change does not pop it")
+	hub.consume({"type": "region_stage", "actor": 1, "region": "arms", "stage": 3})
+	_step(hub, 0.3)
+	_ok(hub.model(1).crown_a > 0.9, "crown: a break pops it through the mask")
+	# The sim's own event objects (S1): floats for slots, strings for regions.
+	hub = _hub()
+	var dm := SimState.FxEvent.new()
+	dm.type = "damage"
+	dm.attacker = 1.0
+	dm.victim = 0.0
+	dm.region = "core"
+	dm.kind = "heavy"
+	dm.number = true
+	hub.consume(dm)
+	var rs := SimState.FxEvent.new()
+	rs.type = "region_stage"
+	rs.actor = 0.0
+	rs.region = "core"
+	rs.stage = 2
+	hub.consume(rs)
+	_step(hub, 0.2)
+	_ok(hub.model(0).crown_a > 0.9 and hub.model(0).stage["core"] == 2, "crown: the sim's damage and region_stage objects are read as they are")
+	var bi := SimState.FxEvent.new()
+	bi.type = "brink_enter"
+	bi.actor = 0.0
+	hub.consume(bi)
+	_ok(hub.model(0).brink, "crown: a brink_enter object sets the brink")
+	# The toll chip brightens for a moment after a change, then dims.
+	hub = _hub()
+	_step(hub, 1.0)
+	hub.consume({"type": "world", "civilians": 3, "pop0": 425, "structures": 0, "craters": 0})
+	_ok(hub.toll_age == 0.0, "toll: a change resets the chip's brightness")
+	_step(hub, UiLook.TOLL_SHOW + 0.1)
+	_ok(hub.toll_age > UiLook.TOLL_SHOW, "toll: and it dims again")
+	# The mock hero scenario: how much of the time is any crown showing? A busy scripted fight, still mostly clean.
+	var f: Array = UiMockFeed.fighters("hero_vs_proud")
+	hub = UiEventHub.new()
+	hub.setup_fighters(f[0], f[1])
+	var feed := UiMockFeed.new("hero_vs_proud", 5)
+	var up := 0
+	var total: int = int(feed.length * 60.0)
+	for i in range(total):
+		for e in feed.step(1.0 / 60.0):
+			hub.consume(e)
+		hub.advance(1.0 / 60.0)
+		if hub.model(0).crown_a > 0.05 or hub.model(1).crown_a > 0.05:
+			up += 1
+	var share: float = float(up) / float(total)
+	print("  crown up in %.0f%% of the scripted fight (any fighter)" % (share * 100.0))
+	_ok(share < 0.65, "crown: a crown is up in under 65%% of even a dense scripted fight (%.0f%%)" % (share * 100.0))

@@ -70,6 +70,7 @@ var cinematic_left: float = 0.0
 var cinematic_kind: String = ""
 var hazard_left: float = 0.0
 var t_now: float = 0.0
+var toll_age: float = 99.0       # seconds since the world toll last changed (the chip dims at rest)
 var stats: Dictionary = {}       # counters for the readability tests and the demo's status line
 var captions_on: bool = true
 var reduced_motion: bool = false
@@ -89,6 +90,7 @@ func reset() -> void:
 	feed.clear()
 	banner = {}
 	toll = {"civilians": 0, "pop0": 0, "structures": 0, "craters": 0}
+	toll_age = 99.0
 	mode = Mode.NORMAL
 	cinematic_left = 0.0
 	cinematic_kind = ""
@@ -120,7 +122,7 @@ func model(slot: int) -> UiFighterModel:
 # --- Event intake -------------------------------------------------------------------------------------------------
 
 const _FIELDS: Array = ["type", "actor", "target", "region", "stage", "internal", "n", "text", "dur", "k", "col", "kind",
-	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived"]
+	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived", "attacker", "victim", "tier", "cover"]
 
 
 ## Any event (a Dictionary, or an object with these properties such as the sim's FxEvent) as a Dictionary.
@@ -190,15 +192,29 @@ func consume(e) -> void:
 			if m != null and not m.brink:
 				m.brink = true
 				m.brink_age = 0.0
+				m.pop(UiLook.CROWN_HOLD_MAJOR)
 				_card(m.slot, "brink", UiData.t("card.brink"), "", "", -1, "state", PRIO_BREAK)
 		"brink_exit":
 			if m != null:
 				m.brink = false
+				m.pop(UiLook.CROWN_HOLD_MAJOR)
+		"damage":
+			# A hit to a region pops the victim's crown (never a number: the event's `number` is ignored).
+			var vf = d.get("victim", -1)
+			if (vf is int or vf is float) and float(vf) >= 0.0:
+				var vm: UiFighterModel = model(int(vf))
+				if vm != null:
+					vm.pop_hit(_region(d.get("region")))
+		"tier_up":
+			if m != null:
+				m.pop(UiLook.CROWN_HOLD_MAJOR)
 		"rally":
 			_on_rally(m, d)
 		"heat_stage":
 			_on_heat(m, int(d.get("stage", 0)))
 		"boil_over":
+			if m != null:
+				m.pop(UiLook.CROWN_HOLD_MAJOR)
 			if m != null:
 				m.heat_stage = 0
 				m.boil_flash = 0.8
@@ -212,6 +228,8 @@ func consume(e) -> void:
 				if m.shame > was:
 					_card(m.slot, "shame", UiData.t("card.shame"), "", "", -1, "state", PRIO_TOAST)
 		"drop_act":
+			if m != null:
+				m.pop(UiLook.CROWN_HOLD_MAJOR)
 			if m != null:
 				m.unrestrained = true
 				_card(m.slot, "drop_act", UiData.t("card.drop_act"), "", "", -1, "state", PRIO_BREAK)
@@ -282,13 +300,16 @@ func consume(e) -> void:
 			if float(d.get("k", 0.0)) >= UiLook.HAZARD_SHAKE_K:
 				hazard_left = UiLook.HAZARD_HOLD
 		"world":
+			var before: Array = [toll["civilians"], toll["structures"], toll["craters"]]
 			toll["civilians"] = int(d.get("civilians", toll["civilians"]))
 			toll["pop0"] = int(d.get("pop0", toll["pop0"]))
 			toll["structures"] = int(d.get("structures", toll["structures"]))
 			toll["craters"] = int(d.get("craters", toll["craters"]))
+			if before != [toll["civilians"], toll["structures"], toll["craters"]] and t_now > 0.0:
+				toll_age = 0.0
 		# Events the HUD deliberately does not draw (docs/ui/hud-spec.md section 9): the Empress's paperwork is diegetic
 		# only (Orb), the Encore's mend gauge reads through her posture, damage numbers would be a health bar in disguise.
-		"revision_fill_reset", "encore_start", "encore_end", "guard_fall", "damage", "finisher_contest", "spark", "ring", \
+		"revision_fill_reset", "encore_start", "encore_end", "guard_fall", "finisher_contest", "spark", "ring", \
 		"debris", "dust", "splash", "fire", "after", "charge", "crater", "scorch", "beamSplash", "tick":
 			pass
 		_:
@@ -343,6 +364,7 @@ func _set_region(m: UiFighterModel, r: String, st: int, internal: bool) -> void:
 		var was_i: int = m.internal_stage
 		m.internal_stage = st
 		if st > was_i and st > 0:
+			m.pop(UiLook.CROWN_HOLD_STAGE)
 			var word: String = UiData.t("internal_stage." + UiLook.STAGE_NAMES[st])
 			_card(m.slot, "internal", UiData.fmt("card.internal", {"region": UiData.t("region.core"), "stage": word}), "", "core", st, "internal", PRIO_BREAK if st == 3 else PRIO_STAGE)
 		return
@@ -359,6 +381,7 @@ func _set_region(m: UiFighterModel, r: String, st: int, internal: bool) -> void:
 	if drawn < st:
 		stats["cards_withheld"] += 1   # the Proud front holds: a battered or bruised card is withheld (spec section 3)
 		return
+	m.pop(UiLook.CROWN_HOLD_MAJOR if st == 3 else UiLook.CROWN_HOLD_STAGE)
 	_stage_card(m, r, st)
 
 
@@ -386,6 +409,7 @@ func _on_rally(m: UiFighterModel, d: Dictionary) -> void:
 		m.region_age[r] = 0.0
 		m.region_dir[r] = -1
 	m.brink = false
+	m.pop(UiLook.CROWN_HOLD_MAJOR)
 	var key: String = "card.rally." + m.id
 	var title: String = UiData.t(key)
 	if title == key:
@@ -399,6 +423,7 @@ func _on_heat(m: UiFighterModel, st: int) -> void:
 	var up: bool = st > m.heat_stage
 	m.heat_stage = clampi(st, 0, 3)
 	if up and st > 0:
+		m.pop(UiLook.CROWN_HOLD_STAGE)
 		_card(m.slot, "heat", UiData.t("card.heat." + str(st)), "", "core", -1, "internal", PRIO_STAGE)
 
 
@@ -407,6 +432,7 @@ func _on_facade(m: UiFighterModel) -> void:
 		return
 	m.pride_holds = false
 	m.facade_age = 0.0
+	m.pop(UiLook.CROWN_HOLD_MAJOR)
 	var listed: Array = []
 	for r in m.regions:
 		var tr: int = int(m.true_stage[r])
@@ -443,6 +469,7 @@ func _cinematic(slot: int, kind: String, dur: float) -> void:
 	var m: UiFighterModel = model(slot)
 	if m != null:
 		m.cinematic = kind
+		m.pop(UiLook.CROWN_HOLD_MAJOR)
 
 
 func _on_bark(d: Dictionary) -> void:
@@ -591,6 +618,7 @@ func card_alpha(c: Card) -> float:
 
 func advance(dt: float) -> void:
 	t_now += dt
+	toll_age += dt
 	for m in models:
 		m.advance(dt)
 		if _lost_trail_left.has(m.slot):
@@ -701,7 +729,7 @@ func _schedule_cards(dt: float) -> void:
 				if c.priority == PRIO_BREAK:
 					var victim = null
 					for v in live:
-						if v.priority > PRIO_BREAK and v.age >= 0.35:
+						if (v.priority > PRIO_BREAK and v.age >= 0.35) or (v.priority == PRIO_BREAK and v.age >= 0.8):
 							if victim == null or v.priority > victim.priority or (v.priority == victim.priority and v.age > victim.age):
 								victim = v
 					if victim != null:

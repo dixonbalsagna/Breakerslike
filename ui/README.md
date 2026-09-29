@@ -11,9 +11,9 @@ godot --headless --path . --import
 godot --path . res://ui/demo/hud_demo.tscn
 ```
 
-The demo draws the real HUD over a greybox backdrop, driven by `ui/mock/ui_mock_feed.gd`, a scripted feed shaped like spec-wounds.md §4's events. Keys: Tab scenario, Space pause, R restart, S silhouette, F4 feed, C captions, M reduced motion, T arc thickness, Z clear zones, L region label, V viewport size, +/- fighter size, H legend.
+The demo draws the real HUD over a greybox backdrop, driven by `ui/mock/ui_mock_feed.gd`, a scripted feed shaped like spec-wounds.md §4's events. Keys: Tab scenario, Space pause, R restart, S silhouette (off by default), F4 feed, C captions, M reduced motion, K keep the crown up, B brink ring, T arc thickness, Z clear zones, L region label, V viewport size, +/- fighter size, H legend. The crown is transient: it pops on a hit, a stage change, the brink, a Rally or a tier-up and fades back; at rest the fighters are clean.
 
-Options after `--`: `--scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress`, `--at=SECONDS` (fast-forward the feed), `--frames=N --shot=file.png` (save a frame), `--portrait`, `--clear`, `--nofeed`, `--nosil`, `--reduced`, `--nolegend`. Add Godot's `--fixed-fps 60 --resolution 1920x1080` for a known frame.
+Options after `--`: `--scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress`, `--at=SECONDS` (fast-forward the feed), `--frames=N --shot=file.png` (save a frame), `--portrait`, `--clear`, `--nofeed`, `--sil`, `--crown`, `--reduced`, `--nolegend`. Add Godot's `--fixed-fps 60 --resolution 1920x1080` for a known frame.
 
 ## Check
 
@@ -45,6 +45,7 @@ See `docs/ui/hud-spec.md` section 14. In short: instance `ui/hud/ui_hud.tscn`, c
 
 ## Rules
 
+- Transient by default: nothing sits over the fighters at rest except the brink ring (option `brink_cue`). Options: `silhouette` (off), `crown_always` (off), `numeral` in a profile (off).
 - Original HUD only: no scanner, no numeric power readout, no hair-colour cue, no borrowed font or logo. "ki" is an internal label; the player sees Charge.
 - No cue is colour-only. Every colour role is paired with a shape, pattern, icon or motion.
 - Every player-facing word is data in `data/terms.json`.

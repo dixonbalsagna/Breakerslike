@@ -37,30 +37,37 @@ var pm: Dictionary = {}                      # plate metrics for this scale
 ## Font sizes and row geometry of a nameplate at scale s; y values are relative to the plate's top.
 static func plate_metrics(scale: float, compact: bool) -> Dictionary:
 	var m := {}
-	var pad: float = maxf(10.0 * scale, 6.0)
+	var pad: float = maxf(8.0 * scale, 5.0)
 	m["pad"] = pad
-	m["fs_name"] = UiText.px(26.0, scale)
-	m["fs_chip"] = UiText.px(22.0, scale)
-	m["fs_tier"] = UiText.px(20.0, scale)
-	m["fs_ego"] = UiText.px(20.0, scale)
-	m["fs_state"] = UiText.px(20.0, scale)
+	m["fs_name"] = UiText.px(24.0, scale)
+	m["fs_chip"] = UiText.px(20.0, scale)
+	m["fs_tier"] = UiText.px(18.0, scale)
+	m["fs_ego"] = UiText.px(18.0, scale)
+	m["fs_state"] = UiText.px(18.0, scale)
 	var y: float = pad
 	m["name_y"] = y
-	m["name_h"] = float(m["fs_name"]) + 4.0
-	y += float(m["name_h"]) + 3.0 * scale
-	m["chip_y"] = y
-	m["chip_h"] = maxf(34.0 * scale, float(m["fs_chip"]) + 8.0)
-	y += float(m["chip_h"]) + 5.0 * scale
+	m["chip_h"] = maxf(30.0 * scale, float(m["fs_chip"]) + 8.0)
+	if compact:
+		# Portrait: the name, then the stance chip, on separate rows (a phone plate is too narrow to share a row).
+		m["name_h"] = float(m["fs_name"]) + 4.0
+		y += float(m["name_h"]) + 3.0 * scale
+		m["chip_y"] = y
+		y += float(m["chip_h"]) + 4.0 * scale
+	else:
+		# Landscape: the stance chip shares the name's row, and the state chips share the pips' row (see UiPlate).
+		m["name_h"] = float(m["chip_h"])
+		m["chip_y"] = y
+		y += float(m["chip_h"]) + 3.0 * scale
 	m["tier_y"] = y
-	m["pip"] = maxf(18.0 * scale, 14.0)
+	m["pip"] = maxf(16.0 * scale, 13.0)
 	m["tier_h"] = maxf(float(m["pip"]) + 4.0, float(m["fs_tier"]) + 2.0)
-	y += float(m["tier_h"]) + 4.0 * scale
+	y += float(m["tier_h"]) + 3.0 * scale
 	m["ego_y"] = y
 	m["ego_h"] = maxf(float(m["fs_ego"]) + 2.0, 16.0)
-	y += float(m["ego_h"]) + 4.0 * scale
+	y += float(m["ego_h"]) + 2.0 * scale
 	m["charge_y"] = y
 	m["charge_h"] = float(m["ego_h"])
-	m["bar_h"] = maxf(12.0 * scale, 9.0)
+	m["bar_h"] = maxf(10.0 * scale, 8.0)
 	y += float(m["charge_h"]) + pad
 	m["h"] = y
 	m["compact"] = compact
@@ -87,7 +94,7 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 	var my: float = maxf(vp.y * 0.045, 16.0)
 	safe = Rect2(mx + insets.x, my + insets.y, vp.x - 2.0 * mx - insets.x - insets.z, vp.y - 2.0 * my - insets.y - insets.w)
 	pm = plate_metrics(s, portrait)
-	card_h = maxf(68.0 * s, float(UiText.px(24.0, s)) + float(UiText.px(20.0, s)) + 18.0)
+	card_h = maxf(60.0 * s, float(UiText.px(22.0, s)) * 2.0 + 12.0)
 	if portrait:
 		_portrait()
 	else:
@@ -95,7 +102,7 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 
 
 func _landscape() -> void:
-	var col_w: float = 440.0 * s
+	var col_w: float = 380.0 * s
 	var ph: float = float(pm["h"])
 	var gap: float = 12.0 * s
 	plate[0] = Rect2(safe.position.x, safe.position.y, col_w, ph)
@@ -113,7 +120,7 @@ func _landscape() -> void:
 		if not silhouette_on:
 			cx0 = p.position.x
 			cx1 = p.end.x
-		cards[i] = Rect2(cx0, col_top, cx1 - cx0, 3.0 * (card_h + gap))
+		cards[i] = Rect2(cx0, col_top, cx1 - cx0, 2.0 * (card_h + gap))
 	var toll_w: float = 380.0 * s
 	toll = Rect2(vp.x * 0.5 - toll_w * 0.5, safe.position.y, toll_w, 2.0 * float(UiText.px(20.0, s)) + 18.0)
 	banner_c = Vector2(vp.x * 0.5, toll.end.y + gap + 28.0 * s)
