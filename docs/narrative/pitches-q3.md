@@ -274,3 +274,65 @@ Orb wants the homage to land. Legal's recognisability ladder (`docs/legal/tribut
 ## 3. Voice bibles
 
 The four voice bibles are in `docs/narrative/voices/`: `protagonist.md`, `anti-hero.md`, `tyrant.md` and `cyborg.md`. Each has the speech rhythm, vocabulary, what he never says, his reactions (winning, losing, collateral, being mocked, transforming), a grunt and laugh palette, and 5 lines per situation. The Tyrant's tail is now the bladed mantle (Orb's pick), so his lines refer to the cape.
+
+---
+
+# Round 4 (after Orb's rulings)
+
+**Names are placeholders.** Orb will name these personally later and does not want LLM-sounding names. Every name in this section is a **placeholder label**, marked *(placeholder)* where it first appears, and I am not polishing them. What matters here is the mechanic and the moment.
+
+## 1. Hot Blood
+
+Orb likes the mechanic, the cards, the look and the sound. The name is pinned: "Hot Blood" *(placeholder)*, "Heated", "Simmering", "Boiling" and the card wording all stand as labels until Orb names them.
+
+## 2. More for the Anti-hero: pride, restraint, humiliation and self-image, converted into power
+
+Orb likes **Drop the Act** (1v1) and **Humbled**. These four are in the same vein, each on Legal's ladder at rung 2 or 3. "By choice" means he does it on purpose. "Forced" means it happens to him.
+
+| # | Option *(placeholder)* | What it is | Pride converted | Rung | Keeps Spite? |
+|---|---|---|---|---|---|
+| **B1** | **Shed Regalia** | His regalia is his self-image. Each piece of it that an opponent breaks (a guard break, a heavy) is a visible humiliation, and each one grants a lasting boost and drops his Pride. The finer the piece, the bigger the boost. | Forced | 2 | Yes: no help is involved |
+| **B2** | **Credit Where Due** | He formally concedes a point to his opponent ("Point to you.") after a clean hit. Giving credit costs Pride and clears the restraint he keeps, and a surge follows. It is a choice he has to make in the middle of a fight. | By choice | 2 | Yes: conceding is not help |
+| **B3** | **The Code** | Before the match he picks up to three personal rules (for example: no blow to a downed opponent, no beam before a landed strike, never accept help). Breaking one grants a big surge and costs Pride. The rules come from his own idea of honour. | By choice, under pressure | 3 | Yes, unless the rule broken is "never accept help", which forfeits Spite |
+| **B4** | **Loss of Face** | His humiliation counts double when there is a **witness**: civilians nearby, a goon, an audience. A public humbling gives a bigger power boost than a private one, and a bigger Pride drop. It makes him fight best where he most wants nobody to see. | Forced | 2 | Yes |
+
+**Which to prefer.** B1 and B4 are forced, so they suit the AI and a new player. B2 and B3 are choices, so they suit a player who wants to make the trade. B3 has the most stories in it. All four keep the Proud front, so a Pride below half still cracks the facade and shows his hidden wear at once, which stays the honest cost. Each keeps "swallow pride for power" as the core, and **Swallow It** stays as the fallback.
+
+## 3. The fold: the orb payoff
+
+Orb: space folds inward toward the Protagonist and the planet vanishes around them, and the hero says something like "we can't hurt anyone innocent here."
+
+**Legal's rule.** Only the fighters speak or emerge. No pillar of light, no dark sky, no thunder. The fold opens inward or sideways.
+
+### Why it works in the fiction
+
+- **The fragments are the planet's bare bone.** They are pieces of the world from before anyone lived on it. With enough of them held close, the Protagonist can pull that lifeless ground over the fight, the way you draw a sheet over a bed. Nothing is summoned. It is the planet's own emptiness.
+- **Mass, not a count.** Bigger fragments pull harder, so any mix works.
+- **It costs him.** It is the only way he can fight all-out and keep his promise to protect people. It is what his earnestness buys.
+- **It is fragile.** A heavy hit that knocks a fragment loose makes the horizon flicker. If his held mass drops below the threshold, the planet comes back. That keeps the fold in the fight.
+- **Who comes along.** Whoever is inside the closing ring. In 2v2 that decides who is in the room.
+
+### The lines
+
+**His line, leading in (all rivals).** "Not here. There are people under us. Stay close. I'm taking us somewhere nobody can get hurt."
+
+**The rival's reply (per rival).**
+
+| Rival | Reply |
+|---|---|
+| **The Anti-hero** | "Running from your own mess. How like you." (then, quietly) "...Fine. Nobody is watching. Better." |
+| **The Tyrant** | "A private room! How intimate, pet. Boys, wait outside." |
+| **The Cyborg** | "A private dining room? Excellent. Please reserve me the good table." |
+| **A mirror Protagonist** | "Ha! You too? Go on, then." |
+
+**His line at the end of the fold.** "We can't hurt anyone innocent here." Then: "Now. Everything."
+
+### What the player sees (5 storyboard beats)
+
+1. **The tell.** The fragments orbiting him tighten into a ring and hum (Ring Closes). He looks down at the town below. The rival notices. No pose.
+2. **The line.** He speaks and the rival replies. The air ripples, like the teleport tell, but pulling inward toward him.
+3. **The fold.** The horizon curls inward like the edge of paper, and the ground peels back. The city, the sea and the forest slide toward a bright point inside the ring. The ambient sound of the world (wind, sirens, distant crowds) drains out to silence. The light stays constant: the sky pales and never darkens.
+4. **Arrival.** The two stand on a barren plain of pale stone under a plain sky. Nothing else lives. The camera pulls wide to show the emptiness. The fragments still orbit him.
+5. **The beat.** He exhales and says the line. The rival answers with his first strike. The music changes, and the ego meters carry over. Whatever follows is his reveal.
+
+**Tripwire check.** Nothing emerges or speaks except the fighters. No vertical column of light. No sky darkening, thunder or storm. The fragments never touch the ground. The only result is the relocation. The line "we can't hurt anyone innocent here" is spoken by the hero and is not a summons.
