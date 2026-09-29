@@ -5,7 +5,7 @@ Owner: Game Design. Status: proposal for Orb to react to. Date: 2026-09-29.
 Orb's questionnaire 3 (`docs/ep/vision.md`) asks for:
 - **no health meters**: location-based damage, where each fighter handles incoming damage slightly differently, and tension without traditional bars;
 - **a fighter-specific finisher** as the last blow of every match;
-- **long transformations that can be interrupted.** The Tyrant's quick revisions are safe.
+- **transformations that are respected.** This was "long ones can be interrupted" in questionnaire 3, and Orb later replaced it: the fill can be stopped, but the cinematic is respected (`spec-wounds.md` §8).
 
 This page proposes how damage is tracked and read, how each fighter differs, how chapters, finishers and comebacks emerge, and what the sim must store. It offers three variants, recommends one, and ends with the legibility risks. The pacing targets that go with it are in `balance-targets.md` §10.
 
@@ -106,7 +106,7 @@ Each profile is a small set of data values over the shared regions, so a re-skin
   - *Rally.* A fighter on the brink mends one broken region by one stage and leaves the brink. The per-fighter Rally rules and their limits are pitched in `pitches.md` §2, pending Orb's pick.
   - *Hiding.* Hidden recovery mends battered wear but not breaks (`economy.md` §5).
   - *Desperation.* On the brink, a fighter's damage rises, which is today's comeback bonus (`L322`) made visible through the unstable aura. Narrative's "Resolve" cue is exactly this.
-- **Interrupting a transformation.** A long transformation hit mid-beat is cancelled. The hit counts as a decisive exchange won by the attacker, and it lands on the core. The Tyrant's revisions are too short to interrupt (Orb).
+- **Transformations are respected.** An opponent stops the *fill* before a transformation. The cinematic itself is never interrupted (`spec-wounds.md` §8, which supersedes the earlier interrupt rule here).
 
 ## 6. What the sim needs (data, for Simulation and Tools)
 
