@@ -182,3 +182,36 @@ All six are original pride-for-power trades with no item, pose, beam or named st
 - **One art note:** the arrival ground ("a barren plain of pale stone under a plain sky") should not be a flat wasteland with tall rock spires. Give it its own look.
 
 Re-check at final art and the final cinematic.
+
+
+## Marked plus Aura: the character style (2026-09-29)
+
+Screens `docs/art/marked-aura.md` and `art/concepts/marked-aura/`. **Limit:** I reviewed the written descriptions, the data and the fallback notes. I cannot view the rendered SVG sheets, so Art must run the thumbnail and silhouette checks below on the sheets themselves.
+
+| Item | Verdict |
+|---|---|
+| The four sigils (ring, slash, chevrons, grid) | **GO**, with conditions |
+| The Protagonist's smooth dome mask with hair | **GO**, with conditions |
+| Anti-hero pride flash (tall blades) | **CONDITIONAL**: use the round-tipped fallback |
+| Empress fan (wedge fan) | **CONDITIONAL**: keep it wide and low |
+| The 12 head flashes | **GO**, with conditions on shape and sound |
+| Anything from Madness Combat's look | **GO**, none found; keep the exclusions |
+
+**Sigils against real-world symbols.**
+- **Ring:** a single ring is generic. No concentric rings (a target), no dot in the centre, and never four linked rings.
+- **Slash:** on its own it is generic. Never combine the ring and the slash (that is the "prohibited" sign), and never cross the slash with another stroke into an X (see Madness Combat below). The Anti-hero's chest harness of two crossing straps should not line up into a clean X with the slash.
+- **Chevrons:** two stacked chevrons, point up or point down, are two famous car and oil company logos. Use an odd count (three), of different sizes or offset, not a tidy double chevron, and never in those companies' colours.
+- **Grid:** generic. Not a glowing line-grid on a dark face styled like a famous light-cycle film.
+
+**Dome mask.** A smooth pale dome with hair and one mark can recall a well-known white mask with purple markings from an animated film. Conditions: the mask stays a designed shape (a dome, not a plain egg or mannequin head), has no eye or mouth slots or dots, and the sigil does not sit in an eye or mouth arrangement. The hair must not be spiky and upswept, and never gold.
+
+**Pride flash and fan.** A tall pointed shape above the head can recall the franchise's upswept flame-hair aura. **Use the round-tipped fallback for the Anti-hero's pride flash.** For the Empress, keep the fan wide (a spread arc behind the head, like a crest) and low. Both stay transient (under a second), sit behind and above the head, are never gold or yellow, and never stand as a permanent hair-like shape.
+
+**The 12 flashes.** "!" and "?" are punctuation and comic staples, and drawing them in each fighter's shapes with a keyline keeps them ours.
+- **Shape:** the danger sense must not be a ring of short lines radiating around the whole head (the superhero's danger-sense look), or wavy lines. Keep it directional, above or behind the head, in the fighter's shapes. Never a yellow or red-orange "!" with a thick black outline (the stealth game's alert mark).
+- **Sound:** original only. No four-note alert sting, and no chirp. Found is a single rising note. If Audio's pairing sounds close to a known cue when played beside it, change it.
+- **Colour:** keep the no red, red-orange or gold rule for the Protagonist and Anti-hero.
+
+**Madness Combat.** Nothing found in the descriptions. Keep the exclusions: no grey faceless heads, no goggles, no X or cross marks, no black-and-red palette, no dot eyes.
+
+**Art checks to run.** A silhouette and three-flat-colour test on the four masks; a side-by-side thumbnail of each sigil next to the logos and symbols named above; a look at the flashes beside the two reference graphics.

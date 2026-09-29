@@ -54,8 +54,9 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-032 | Blood-heat power stage | Q3 direction | Low | GO | Closed |
 | RL-033 | Anti-hero pride options (Drop the Act, Humbled, B1 to B4) | Q3 round 4 | Low | GO | Closed |
 | RL-034 | The fold beat (reason, lines, storyboard) | Q3 round 4 | Low | GO (meets the O2 conditions) | Closed until final art |
+| RL-035 | Marked plus Aura character style (sigils, dome mask, flashes) | Art | Low to Medium | GO with conditions; Anti-hero pride flash uses the round-tipped fallback | Open until Art runs the checks |
 
-Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030.
+Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035.
 
 ## Detail
 
