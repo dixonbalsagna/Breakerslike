@@ -81,6 +81,51 @@ Numbers a QA test can check. "Civilians" is the share of the starting population
 
 **Mechanisms.** World is proposing tier-scaled caps and a casualty ramp to meet the game bands. Game Design sets only the bands. The low-tier bleed band is the measurable form of the P3 exit criterion "no fight destroys the planet at low tiers". QA needs a per-tier split of casualties to check it. That is requested through the EP.
 
+### 4b. The collateral cap and the casualty ramp (numbers for World's wave 1)
+
+**Why now.** After the scale window (`docs/world/scale.md` §6):
+- villain-mirror collateral is 61.0%, and 10.5% of matches lose 90% or more, which fails the testbed's 7%;
+- the default arm's low-tier bleed is 19.9% of the population per minute, against a game band of 4%.
+
+World builds the mechanism; these are its numbers. The cap and the ramp apply to **every** casualty source: blows, beams, launches, slides, brunts, chains, fire, landslides, quakes and lava.
+
+**1. The ramp: a rolling casualty budget by tier.** The limit is on casualties per rolling 60 s, set by the higher fighter's tier:
+
+| Tier | Budget per 60 s (share of the starting population) |
+| :--- | :--- |
+| 1 | 2% |
+| 2 | 4% (this is the game's low-tier bleed band) |
+| 3 | 8% |
+| 4 | 15% |
+
+- *Over budget.* Casualties that would go over the budget don't happen: the people got away. It shows diegetically as evacuation, with crowds fleeing the district (World and Narrative). Structures still take their damage.
+- *Set pieces can borrow.* At tier 3 and above, a single set-piece event (a chain, a slide, a landslide, a quake) may borrow up to its own per-event budget (§5b, §5c, `living-destruction-numbers.md`). The window then refills before anything else can overdraw it. This keeps the spectacle while the average rate holds.
+- *No borrowing at tier 1 or 2,* so the low-tier bleed is firm.
+
+**2. The cap: a ceiling on cumulative losses by tier.** The share of the starting population lost can never exceed:
+
+| Highest tier reached so far | Ceiling |
+| :--- | :--- |
+| 1 | 10% |
+| 2 | 30% |
+| 3 | 60% |
+| 4 | 90% |
+
+At the ceiling, the rest are sheltered and survive. This is the P3 exit criterion "no fight destroys the planet at low tiers" as a hard rule. Losing 90% or more is only possible at tier 4, and the band (at most 10% of game matches, §4 table) checks how often a match gets there.
+
+**Expected result.** Over a 7-minute arc (acts at tiers 1 to 2, then 2, 3 and 4), the budgets add up to about 45 to 50% lost at the KO, plus set-piece borrowing. That is the lower half of the game band (45 to 75%). The Cyborg floor (at least 25% alive at 4:00) holds, because by 4:00 the ceiling is 30% at tier 2 or 60% at tier 3.
+
+**Testbed bands.** Short testbed matches (about 108 s today) will fall below the testbed mean band (25 to 50%) once the ramp lands. At that point the testbed's mean-at-KO band retires, and the per-minute ramp and ceiling tests replace it. The share of matches losing 90% or more, and the worst-pairing band, stay.
+
+**3. Per-casualty weights are normalised by population.**
+- *Why.* Procedural planets have different populations (379 on seed 1 now, 425 before), so meters must read the *share* lost, not the headcount.
+- *The rule.* Each per-casualty gain is multiplied by `425 / pop0`:
+  - menace +0.9 per casualty at 425 people, which is +3.83 per 1% of the population;
+  - anguish +0.5 per casualty, or +0.9 if the hero caused it (+2.13 or +3.83 per 1%);
+  - the roster's collateral-fed meters, including the Cyborg's per-civilian Hunger bonus and his molt thresholds.
+- *Result.* This reverses the 11% shift from the rescale, and keeps every planet equivalent.
+
+
 ## 5. Launch variety
 
 - **Cap.** In every QA arm, no launch type is above **40%** of all launches. The match-clustered 95% upper bound must be at most 42%.
@@ -152,6 +197,13 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
 Slides are a collateral source, counted toward every §4 band and under World's ramp and caps, never exempt. Casualties are credited to the launcher by the standing rule.
+
+**As built** (scale window `de1bb05`), confirmed:
+- friction of 1,200 + 1.2 v;
+- trenches at half world scale: a half-width of (14 + 6√E) × 4, and a depth of up to 152 units (about 2 bh);
+- wear applied in batches, with the total unchanged and deterministic.
+
+One rule follows from the depth: **slide trenches never count as cover**, even though they are deeper than the 1.5 bh bowl rule (`living-destruction-numbers.md` §3). Only crater bowls and rubble heaps do. Otherwise every slide would make a hiding spot and inflate the hide bands. Slide wear is caused by the rival, so it can break a region, unlike hazard wear.
 
 ## 6. Location and signature variety
 
