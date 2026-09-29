@@ -183,3 +183,5 @@ Orb had played the Godot greybox before answering.
 - Planet size between small and medium ('between 1 and 2', maybe larger after it's felt). Fighters should launch each other through the landscape and into different biomes several times per fight.
 - A flat-out dash around the planet takes 10 to 20 s: anime-fast.
 - Destruction: 'as the fighters power up, the destructiveness should keep scaling. Implement novel ways to keep this interesting so the players don't just see it as map painting, but rather interfering and actively engaging with a real landscape.'
+
+**Living destruction picks (Orb, 2026-09-29).** From docs/world/living-destruction.md: fire and smoke cover (with cover made and taken), landslides, and the top-tier set: lava, quakes and rifts. Build order: LD1 fire and smoke, then LD2 landslides, then the tier-4 lava, quakes and rifts, leading toward the pinned planet-destruction finale.
