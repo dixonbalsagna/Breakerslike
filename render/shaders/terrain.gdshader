@@ -6,6 +6,7 @@ shader_type spatial;
 render_mode unshaded, cull_disabled;
 
 #include "res://render/shaders/color.gdshaderinc"
+#include "res://render/shaders/bend.gdshaderinc"
 
 uniform sampler2D heights : filter_nearest, repeat_disable;
 uniform int nc = 1200;
@@ -28,6 +29,7 @@ void vertex() {
 	v_base = b;
 	v_def = d;
 	v_below = h - VERTEX.y;
+	POSITION = bent_clip(MODEL_MATRIX, VIEW_MATRIX, PROJECTION_MATRIX, VERTEX);
 }
 
 void fragment() {

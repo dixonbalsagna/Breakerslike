@@ -3,6 +3,8 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, blend_mix, depth_draw_never;
 
+#include "res://render/shaders/bend.gdshaderinc"
+
 uniform sampler2D heights : filter_nearest, repeat_disable;
 uniform int nc = 1200;
 uniform vec4 water : source_color;
@@ -20,6 +22,7 @@ void vertex() {
 	}
 	v_base = b;
 	v_h = h;
+	POSITION = bent_clip(MODEL_MATRIX, VIEW_MATRIX, PROJECTION_MATRIX, VERTEX);
 }
 
 void fragment() {

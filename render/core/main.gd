@@ -34,6 +34,7 @@ var _render_gpu := PackedFloat64Array()
 var _draws := PackedInt32Array()
 var _quitting: bool = false
 var _last_usec: int = 0
+var _sky_mat: ShaderMaterial
 
 
 func _ready() -> void:
@@ -98,12 +99,26 @@ func render_view(a: float) -> void:
 	var c: Vector3 = host.camera(a)
 	view_cam_x = host.camera_x(a)
 	cam_rig.frame(c.y, c.z, host.jitter, vp.y)
+	_view_cues(c, vp)
 	planet.update(S, view_cam_x)
 	for i in range(fighter_views.size()):
 		fighter_views[i].update(S, S.fighters[i], host.fighter_pose(i, a), SimWrap.sdx(view_cam_x, host.fighter_x(i, a)), c.z)
 	beams.update(S, view_cam_x, c.z)
 	particles.update(host.fxv, view_cam_x, c.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
 	hud.queue_redraw()
+
+
+## Planet-scale cues and crowd legibility for this frame, from the zoom and the camera height (presentation only).
+func _view_cues(c: Vector3, vp: Vector2) -> void:
+	var wide: float = smoothstep(RenderLook.ZOOM_CLOSE, RenderLook.ZOOM_WIDE, c.z)
+	var high: float = smoothstep(RenderLook.HIGH_FROM, RenderLook.HIGH_TO, c.y)
+	var d: float = lerpf(RenderLook.CURVE_NEAR, RenderLook.CURVE_WIDE, wide) + RenderLook.CURVE_HIGH * high
+	# A layer at full depth weight sags d * vh pixels at the fighter plane's screen edge, x = vw / 2z.
+	RenderMats.set_bend(4.0 * d * vp.y * c.z / (vp.x * vp.x))
+	_sky_mat.set_shader_parameter("space", high)
+	var boost: float = clampf(RenderLook.CROWD_MIN_PX / (CrowdMesh.HEIGHT * c.z), 1.0, RenderLook.CROWD_BOOST_MAX)
+	# The shell's push directions are unit corner diagonals, so each axis moves 1/sqrt(3) of the width.
+	planet.set_crowd_view(boost, 1.732 * RenderLook.CROWD_OUTLINE_PX / c.z)
 
 
 func take_over() -> void:
@@ -173,6 +188,7 @@ static func parse_args() -> Dictionary:
 
 func _setup_environment() -> void:
 	var sky_mat := ShaderMaterial.new()
+	_sky_mat = sky_mat
 	sky_mat.shader = preload("res://render/shaders/sky.gdshader")
 	for i in range(4):
 		sky_mat.set_shader_parameter(["top", "upper", "lower", "horizon"][i], RenderLook.col(RenderLook.SKY[i]))

@@ -1,6 +1,7 @@
 class_name PlanetView
 extends Node3D
-## The wrapped planet: the ground band, sea water, far ridges, buildings, trees and the crowd. Everything anchored to
+## The wrapped planet: the ground band, sea water, buildings, trees and the crowd, and behind them the planet-scale
+## backdrop (far land built from the real biome layout, far ridges and the atmosphere glow). Everything anchored to
 ## the world is built once per match in world x [0, W) and drawn as three copies one planet apart, placed at
 ## k * W - cam.x. The copies are identical, so the seam at x = 0 / W can never pop, at any zoom or separation, and a
 ## view wider than the planet (tiny zoom on an ultra-wide or phone screen) still shows every object at every place it
@@ -11,14 +12,15 @@ extends Node3D
 const COPIES: Array = [-1, 0, 1]
 const TERRAIN_SHADER: Shader = preload("res://render/shaders/terrain.gdshader")
 const WATER_SHADER: Shader = preload("res://render/shaders/water.gdshader")
-const CROWD_SIZE := Vector3(3.2, 9.0, 3.2)
+const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
 
 var _img: Image
 var _tex: ImageTexture
 var _deform_seen := PackedFloat32Array()
 var _terrain_mesh: ArrayMesh
 var _water_mesh: ArrayMesh
-var _ridges: Array = []            # [ArrayMesh, ShaderMaterial]
+var _ridges: Array = []            # [ArrayMesh, ShaderMaterial]: far ridges, the far land, the atmosphere
+var _crowd_mat: ShaderMaterial
 var _terrain_mat: ShaderMaterial
 var _water_mat: ShaderMaterial
 var _bld: MultiMesh
@@ -45,6 +47,14 @@ func build(S: SimState) -> void:
 		_terrain_mesh = _make_terrain_mesh()
 		for r in RenderLook.RIDGES:
 			_ridges.append([_make_ridge_mesh(r[0], r[1], r[2], _ridges.size()), RenderMats.flat(RenderLook.col(r[3]), 0.0)])
+		_ridges.append([_make_far_land(S), RenderMats.flat(Color.WHITE, 0.0)])
+		_ridges.append([_make_atmosphere(), RenderMats.flat_alpha(Color.WHITE, 1.0, 0.0)])
+		_crowd_mat = ShaderMaterial.new()
+		_crowd_mat.shader = CROWD_SHADER
+		_crowd_mat.set_shader_parameter("outline_col", RenderLook.col(RenderLook.CROWD_OUTLINE))
+		_crowd_mat.set_shader_parameter("skin_a", RenderLook.col(RenderLook.CROWD_SKIN[0]))
+		_crowd_mat.set_shader_parameter("skin_b", RenderLook.col(RenderLook.CROWD_SKIN[1]))
+		_crowd_mat.set_shader_parameter("legs", RenderLook.col(RenderLook.CROWD_LEGS))
 	_water_mesh = _make_water_mesh(S)
 	_make_props(S)
 	for k in COPIES:
@@ -58,7 +68,7 @@ func build(S: SimState) -> void:
 		_mm_child(n, "Buildings", _bld)
 		_mm_child(n, "Roofs", _roof)
 		_mm_child(n, "Trees", _tree)
-		_mm_child(n, "Crowd", _crowd)
+		_mm_child(n, "Crowd", _crowd, _crowd_mat)
 		_copies.append(n)
 	_deform_seen = PackedFloat32Array()
 	refresh(S, true)
@@ -69,6 +79,12 @@ func update(S: SimState, cam_x: float) -> void:
 	for i in range(_copies.size()):
 		_copies[i].position.x = float(COPIES[i]) * SimConst.W - cam_x
 	refresh(S, false)
+
+
+## Crowd legibility for this frame: boost scales each figure about its feet; outline is the shell width in units.
+func set_crowd_view(boost: float, outline: float) -> void:
+	_crowd_mat.set_shader_parameter("boost", boost)
+	_crowd_mat.set_shader_parameter("outline", outline)
 
 
 ## The three copy nodes, left to right (for tools and tests).
@@ -128,8 +144,7 @@ func _set_building(S: SimState, bi: int, b, h: float, crowd: bool) -> void:
 			var ci: int = first + j
 			var x: float = _crowd_x[ci]
 			if j < alive:
-				var cg: float = WorldTerrain.groundY(S, x)
-				_crowd.set_instance_transform(ci, Transform3D(Basis.from_scale(CROWD_SIZE), Vector3(x, cg + CROWD_SIZE.y * 0.5, _crowd_z[ci])))
+				_crowd.set_instance_transform(ci, Transform3D(Basis.IDENTITY, Vector3(x, WorldTerrain.groundY(S, x), _crowd_z[ci])))
 			else:
 				_crowd.set_instance_transform(ci, _hidden(x))
 
@@ -147,11 +162,11 @@ func _mesh_child(parent: Node3D, n: String, mesh: Mesh, mat: Material) -> void:
 	parent.add_child(mi)
 
 
-func _mm_child(parent: Node3D, n: String, mm: MultiMesh) -> void:
+func _mm_child(parent: Node3D, n: String, mm: MultiMesh, mat: Material = null) -> void:
 	var mi := MultiMeshInstance3D.new()
 	mi.name = n
 	mi.multimesh = mm
-	mi.material_override = RenderMats.flat(Color.WHITE)
+	mi.material_override = mat if mat != null else RenderMats.flat(Color.WHITE)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mi)
 
@@ -173,6 +188,8 @@ func _make_height_texture(S: SimState) -> void:
 		_water_mat.set_shader_parameter("nc", SimConst.NC)
 		_water_mat.set_shader_parameter("water", RenderLook.WATER)
 		_water_mat.set_shader_parameter("surface", RenderLook.WATER_SURFACE)
+		RenderMats.track(_terrain_mat)
+		RenderMats.track(_water_mat)
 	else:
 		_tex.update(_img)
 
@@ -255,6 +272,89 @@ func _make_ridge_mesh(z: float, base: float, amp: float, layer: int) -> ArrayMes
 	return m
 
 
+## The far land: the planet's own biome layout rebuilt as a distant silhouette (city skyline, mountain range, forest
+## canopy, dunes, rooftops, flat sea), hazed toward the sky. It sits far behind the fighter plane, so perspective
+## shows a wider stretch of it than of the ground band: the biomes ahead around the planet come into view first.
+## One flat-topped slab per 12-unit column (so skylines step), coloured per column.
+func _make_far_land(S: SimState) -> ArrayMesh:
+	var z: float = RenderLook.Z_FAR_LAND
+	var step: float = 12.0
+	var n: int = int(SimConst.W / step)
+	var haze: Color = RenderLook.col(RenderLook.HAZE)
+	var v := PackedVector3Array()
+	var cols := PackedColorArray()
+	var idx := PackedInt32Array()
+	for i in range(n):
+		var x0: float = float(i) * step
+		var xm: float = x0 + step * 0.5
+		var biome: String = WorldBiomes.biomeAt(xm)
+		var h: float = _far_height(S, biome, xm)
+		var c: Color = RenderLook.col(RenderLook.BIOME[biome]).lerp(haze, RenderLook.FAR_HAZE)
+		var a: int = v.size()
+		for p in [Vector3(x0, h, z), Vector3(x0 + step, h, z), Vector3(x0, RenderLook.TERRAIN_FLOOR, z), Vector3(x0 + step, RenderLook.TERRAIN_FLOOR, z)]:
+			v.append(p)
+			cols.append(c)
+		idx.append_array([a, a + 1, a + 2, a + 2, a + 1, a + 3])
+	var m := _mesh(v, PackedVector2Array(), PackedVector2Array(), cols, idx)
+	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 1600.0, z - 1.0, z + 1.0)
+	return m
+
+
+## Far-land height at x for its biome. Blocks come from a fixed hash of the block index, so the skyline is the same
+## every match and on every platform.
+static func _far_height(S: SimState, biome: String, x: float) -> float:
+	match biome:
+		"ocean":
+			return 0.0
+		"village":
+			return 20.0 + 26.0 * _h01(floor(x / 44.0))
+		"plains":
+			return 22.0 + 14.0 * sin(x * 0.004) + 8.0 * sin(x * 0.013)
+		"city":
+			var blk: float = floor(x / 36.0)
+			var mid: float = maxf(0.0, 1.0 - absf((x - 3100.0) / 820.0))
+			return 90.0 + 240.0 * _h01(blk) + mid * 560.0 * _h01(blk + 91.0)
+		"forest":
+			return 64.0 + 34.0 * absf(sin(x * 0.07)) + 16.0 * sin(x * 0.011)
+		"desert":
+			return 16.0 + 30.0 * (0.5 + 0.5 * sin(x * 0.0062))
+		"mountains":
+			var k: float = clampf((x - 6500.0) / 1100.0, 0.0, 1.0)
+			return 1.3 * S.base[int(x / SimConst.COL) % SimConst.NC] + 160.0 * sin(PI * k)
+	return 20.0
+
+
+static func _h01(i: float) -> float:
+	var s: float = sin(i * 12.9898) * 43758.5453
+	return s - floor(s)
+
+
+## The atmosphere: a glow band far behind everything, strongest just above the ridge line and fading upward. Seen
+## against the sky it is the planet's limb, and the curvature bends it with the horizon.
+func _make_atmosphere() -> ArrayMesh:
+	var z: float = RenderLook.Z_ATMOSPHERE
+	var c: Color = RenderLook.col(RenderLook.ATMOSPHERE)
+	var rows: Array = [[1700.0, 0.0], [700.0, 0.35], [380.0, 0.85], [RenderLook.TERRAIN_FLOOR, 0.85]]
+	var v := PackedVector3Array()
+	var cols := PackedColorArray()
+	var idx := PackedInt32Array()
+	var n: int = 150
+	for i in range(n + 1):
+		var x: float = SimConst.W * float(i) / float(n)
+		for r in rows:
+			v.append(Vector3(x, r[0], z))
+			cols.append(Color(c, r[1]))
+	var nr: int = rows.size()
+	for i in range(n):
+		for j in range(nr - 1):
+			var a: int = i * nr + j
+			var b: int = a + nr
+			idx.append_array([a, b, a + 1, a + 1, b, b + 1])
+	var m := _mesh(v, PackedVector2Array(), PackedVector2Array(), cols, idx)
+	m.custom_aabb = _planet_aabb(RenderLook.TERRAIN_FLOOR, 1800.0, z - 1.0, z + 1.0)
+	return m
+
+
 static func _mesh(v: PackedVector3Array, uv: PackedVector2Array, uv2: PackedVector2Array, cols: PackedColorArray, idx: PackedInt32Array) -> ArrayMesh:
 	var arr: Array = []
 	arr.resize(Mesh.ARRAY_MAX)
@@ -275,10 +375,11 @@ static func _mesh(v: PackedVector3Array, uv: PackedVector2Array, uv2: PackedVect
 	return m
 
 
-static func _multimesh(mesh: Mesh, count: int, y1: float) -> MultiMesh:
+static func _multimesh(mesh: Mesh, count: int, y1: float, custom: bool = false) -> MultiMesh:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = true
+	mm.use_colors = not custom
+	mm.use_custom_data = custom
 	mm.mesh = mesh
 	mm.instance_count = count
 	mm.custom_aabb = _planet_aabb(-700.0, y1, -300.0, 10.0)
@@ -315,15 +416,16 @@ func _make_props(S: SimState) -> void:
 	_crowd_first.resize(nb + 1)
 	_crowd_x.clear()
 	_crowd_z.clear()
-	var cols: Array = []
+	var looks: Array = []
 	for bi in range(nb):
 		_crowd_first[bi] = _crowd_x.size()
 		var b = S.buildings[bi]
 		for j in range(int(b.pop)):
-			_crowd_x.append(SimWrap.wrap(b.x + (cr.next() - 0.5) * (b.w + 28.0)))
+			_crowd_x.append(SimWrap.wrap(b.x + (cr.next() - 0.5) * (b.w + RenderLook.CROWD_SPREAD)))
 			_crowd_z.append(cr.range_(RenderLook.Z_CROWD_MIN, RenderLook.Z_CROWD_MAX))
-			cols.append(RenderLook.col(RenderLook.CROWD[int(cr.next() * RenderLook.CROWD.size())]))
+			var shirt: Color = RenderLook.col(RenderLook.CROWD[int(cr.next() * RenderLook.CROWD.size())]).srgb_to_linear()
+			looks.append(Color(shirt.r, shirt.g, shirt.b, cr.next()))
 	_crowd_first[nb] = _crowd_x.size()
-	_crowd = _multimesh(box, _crowd_x.size(), 40.0)
-	for ci in range(cols.size()):
-		_crowd.set_instance_color(ci, cols[ci])
+	_crowd = _multimesh(CrowdMesh.build(), _crowd_x.size(), 80.0, true)
+	for ci in range(looks.size()):
+		_crowd.set_instance_custom_data(ci, looks[ci])

@@ -15,13 +15,29 @@ const Z_BUILDING_FRONT: float = -44.0    # buildings stand behind the fighter pl
 const Z_TREE_MIN: float = -120.0
 const Z_TREE_MAX: float = -30.0
 const Z_CROWD_MIN: float = -40.0
-const Z_CROWD_MAX: float = -14.0
+const Z_CROWD_MAX: float = -8.0
 const Z_PARTICLES: float = 10.0
 const Z_BEAMS: float = 6.0
 const RIDGES: Array = [  # far parallax ridges: [depth z, base height, amplitude, colour]
-	[-2600.0, 260.0, 240.0, "#2b2850"],
-	[-1500.0, 120.0, 150.0, "#3a3560"],
+	[-3400.0, 330.0, 260.0, "#2b2850"],
+	[-2500.0, 190.0, 170.0, "#3a3560"],
 ]
+const Z_FAR_LAND: float = -1500.0        # the planet's biomes rebuilt as a distant silhouette
+const Z_ATMOSPHERE: float = -4200.0      # the glowing limb behind everything
+
+## Planet-scale cues. Horizon curvature: how far the world behind the fighter plane sags at the screen edge, as a
+## fraction of screen height (for the depth-weighted bend in render/shaders/bend.gdshaderinc). It grows from
+## CURVE_NEAR at close zoom to CURVE_WIDE at wide zoom, plus CURVE_HIGH as the camera climbs.
+const CURVE_NEAR: float = 0.035
+const CURVE_WIDE: float = 0.10
+const CURVE_HIGH: float = 0.06
+const ZOOM_CLOSE: float = 0.6
+const ZOOM_WIDE: float = 0.2
+const HIGH_FROM: float = 600.0           # camera y where the sky starts turning to space
+const HIGH_TO: float = 2200.0
+const HAZE := "#5a4d85"                  # aerial haze the far land fades toward
+const FAR_HAZE: float = 0.55
+const ATMOSPHERE := "#ffc48a"
 
 const BIOME: Dictionary = {
 	"ocean": "#2a6b98", "plains": "#5f9140", "city": "#6c7079", "village": "#7c8e4b",
@@ -41,7 +57,17 @@ const HOUSE_DEAD := "#5d4a37"
 const ROOF := "#7a3b2e"
 const TREE := "#1f4a26"
 const TREE_TOP := "#2f6b35"
-const CROWD: Array = ["#d9c7a0", "#b86a4c", "#5b7bb0", "#e0e0e0", "#8a5a8f", "#c9a23a"]
+## Civilians: bright shirts over dark trousers with a dark outline, so they read on any ground. They are drawn about
+## twice real scale (a person is about 7 units against 120 to 660-unit towers) and grow further as the camera zooms
+## out, up to CROWD_BOOST_MAX, so they stay about CROWD_MIN_PX tall on screen.
+const CROWD: Array = ["#f8f9fa", "#ffd43b", "#ff6b6b", "#4dabf7", "#69db7c", "#ff922b", "#da77f2", "#3bc9db"]
+const CROWD_SKIN: Array = ["#f1c9a5", "#8d5a3b"]
+const CROWD_LEGS := "#2b2f3f"
+const CROWD_OUTLINE := "#0d0e14"
+const CROWD_SPREAD: float = 50.0         # how far past a building's width its people stand
+const CROWD_MIN_PX: float = 12.0
+const CROWD_BOOST_MAX: float = 2.0
+const CROWD_OUTLINE_PX: float = 1.1
 
 const SKIN := "#efc7a2"
 const ARM := "#e6b995"
