@@ -40,8 +40,11 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-018 | Glorious Ruin | title candidate | Medium | CONDITIONAL | Open until Orb picks |
 | RL-019 | Orb's four fighter concepts | design review | Medium | CONDITIONAL: replace the listed signatures | Open |
 | RL-020 | Public-readiness scan | repo text | Medium | Must-fix list before public | Open |
+| RL-021 | Sunburners | title candidate, round 2 | Medium | CONDITIONAL | Open until Orb picks |
+| RL-022 | Sky Arsonists | title candidate, round 2 | Low | GO to the next stage | Open until Orb picks |
+| RL-023 | Redline Sky | title candidate, round 2 | Low (watch) | GO to the next stage | Open until Orb picks |
 
-Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-020.
+Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-023.
 
 ## Detail
 
@@ -194,6 +197,13 @@ Searched for each: exact-phrase web search; Steam games search; App Store search
 - **Splendid Wreckage:** "Wreckage" is a crowded word, as Narrative says, but the pair is free on every check run. Same not-run list.
 - **Glorious Ruin:** the pair is free on Steam, but the near-identical album title, the taken .com and the crowded word "Ruin" make it the weakest. Change the second word or add a distinctive word to move it to Low.
 - Order on these checks: Skyburden, then Splendid Wreckage, then Glorious Ruin. This is a screen, not a clearance. Whichever title Orb picks goes through stages 4 and 5 (`name-screening.md`).
+
+### RL-021 to RL-023 Title candidates, round 2 (2026-09-29)
+Results are in `name-screening.md`, "Title screen, round 2".
+- **RL-021 Sunburners:** Medium, CONDITIONAL. Confusable with the live games Sunburnt and Sunburn, echoes Skyburners (a Destiny faction), a live band uses the name, and the .com is taken.
+- **RL-022 Sky Arsonists:** Low, GO to the next stage.
+- **RL-023 Redline Sky:** Low (watch), GO to the next stage. Run USPTO and EUIPO first because "Redline" is crowded.
+Recommended order: Sky Arsonists, Redline Sky, Sunburners. All open until Orb picks.
 
 ### RL-019 Orb's four fighter concepts
 See `fighter-concepts-review.md`. All four are CONDITIONAL: staples kept, signatures replaced with original mechanisms. Open until Orb picks the replacements and Art's designs pass the checklist.

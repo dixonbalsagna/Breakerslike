@@ -115,3 +115,31 @@ Each screened candidate gets a review-log entry: name, stage reached, date, what
 | WIPO Global Brand Database | No, CAPTCHA | a person |
 | TMview, EUIPO, UK IPO, J-PlatPat | Not tested, may need a person to accept terms | browser |
 | Google Play, console stores, social handles | Not tested, login walls likely | by hand |
+
+
+## Title screen, round 2 (2026-09-29)
+
+Candidates from Narrative's "Round 2": Sunburners, Sky Arsonists, Redline Sky. Stages 1 to 3, a screen and not a clearance. Logged as RL-021 to RL-023 in `review-log.md`.
+
+| | Sunburners | Sky Arsonists | Redline Sky |
+|---|---|---|---|
+| Steam (games) | No title of that name. The top hit is Sunburnt (2018). Sunburn (a game released 2026-09-22) also exists. | 0 results, and none for "arsonist" | 1 unrelated result |
+| App Store | none | none | none |
+| Google Play | not run | not run | not run |
+| itch.io | Search page unreliable. A web search found only a creator's collection named "SunBurner's Collection". | not run | not run |
+| GitHub repos | 0 | not run | 0 |
+| USPTO (games classes 9, 28, 41) | No records for SUNBURNERS | 7,336 records for the two words, almost all the single word SKY. No combined mark among the top hits. | not run |
+| EUIPO, UK, Japan | not run | not run | not run |
+| .com | sunburners.com registered (since 2016, expires 2026-10-30) | free | free |
+| Web | The SunBurners, an active steel-drum party band in Cincinnati (live entertainment, class 41 in kind) | no exact match | no exact match. Redline is also a 2009 anime film and a 2007 film. |
+| Big-franchise tie | One word away from Skyburners, a Destiny faction that Narrative already rated High. | none | none found. "Redline" is a crowded word. |
+| Rating | **Medium** | **Low** | **Low (watch)** |
+| Decision | CONDITIONAL | GO to the next stage | GO to the next stage, USPTO first |
+
+**Sunburners against Sunburnt and Sunburn.** Yes, there is a real confusion risk. It differs from Sunburnt by ending and from Sunburn by two letters, and Steam's own search for "sunburners" returns Sunburnt first. Both are live games on the same store, and one launched last week. Meaning helps a little (people who burn suns, against a skin condition), and the sound is close. Add the live band with a near-identical name, the taken .com, and the one-word echo of Skyburners, and the total is Medium. A distinctive second word could bring it down, but that is a new candidate.
+
+**Sky Arsonists** is clean on every check run. "Sky" as a prefix is crowded (Skybound, Skyfire), but nothing takes "Arsonists". **Redline Sky** is clean too, but "Redline" is used everywhere, so run USPTO and EUIPO on it before it goes further.
+
+**Recommended order:** 1. Sky Arsonists, 2. Redline Sky, 3. Sunburners.
+
+Not run for any of the three: EUIPO, UK and Japan registers, Google Play, other domains and handles, a language check, and counsel (stages 4 and 5).
