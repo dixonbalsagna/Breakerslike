@@ -92,3 +92,50 @@ Stage 0 only (franchise words and habits): none of the labels contains a franchi
 
 1. Whether to accept the orb constraints, including the tripwires and the fallback.
 2. Whether the marketing rule against a hero holding an orb aloft holds for key art.
+
+## Round 2 (2026-09-29): Narrative's "recognisable but non-infringing" takes
+
+Screens `docs/narrative/pitches-q3.md`, "Round 2". Same rules and vocabulary as above.
+
+| Item | Verdict |
+|---|---|
+| O1 The Scatter | **GO** |
+| O2 The Bloom | **CONDITIONAL** (the closest to the franchise payoff) |
+| O3 Ring Closes | **GO** |
+| O4 per-fighter surges | **GO** |
+| Overcommit: look, sound, callouts | **GO** |
+| Anti-hero P1 Hat in Hand, P2 Take a Knee, P3 Swallow It | **GO** |
+| Anti-hero P4 Full Circle | **CONDITIONAL**, unchanged: the look conditions in section f |
+| Rail chip | **GO** |
+| Press (the Cyborg's food mechanic, replacing Pass-Through) | **GO**, with two conditions |
+| Bladed mantle (replacing the tail) | **GO** |
+
+### How far "recognisable" can go with orbs
+
+Fans should feel these things: glowing power objects, fought over, carried by the hero, a big spectacular payoff, and the whole cast wanting them. All of that is genre and is allowed. The line is drawn at the franchise's staging of the payoff. **Allowed:** glow, unison, escalating sound and motion, a long cinematic, a flash of light where a fragment lands, a race to reach it. **Not allowed** (each is a tripwire): a column of light shooting into the sky; the sky darkening or thunder rolling in; anything or anyone emerging or answering; a chant, summons or "come forth" style line; fragments laid out on the ground in an arrangement; an on-screen marker, arrow or radar that points to where fragments are.
+
+- **O1 The Scatter: GO.** One irregular fragment from a seeded draw, tumbling far, landing in plain sight. Keep the landing to a single flash, not a beam to the sky, and the camera shows it (no pointer or radar).
+- **O2 The Bloom: CONDITIONAL.** The ignition of orbiting fragments in unison is fine. A "column of light" is the franchise's summoning image. So: (1) no vertical pillar into the sky. The fold opens inward or sideways: the horizon curls, the ground peels, space collapses towards him. (2) No sky darkening, thunder or storm build-up. (3) Nothing emerges, speaks or answers. (4) The fragments stay orbiting his body. They are never set down on the ground. (5) The only result is the relocation. Length over 3 seconds is fine.
+- **O3 Ring Closes: GO.** Orbit tightening to a ring with a rising hum, read from motion and sound, no raised-arms pose and no count on screen.
+- **O4 per-fighter surges: GO.** Only the Protagonist holds fragments for the fold. Everyone else gets a surge. Keep each surge in the fighter's own manner, with no shared pose.
+
+### Overcommit: GO
+
+The three rungs (Committed, Overcommitted, Overdrawn), the wound-card callouts, the seams of light along the limb, the creak-and-crack sound and the posture are original. Conditions carry over: no "x" number, no named multiplier or shout, no full-body aura. One addition: the seam colour is the fighter's own, and for the Protagonist it must not be red or red-orange, even at rung 3.
+
+### Anti-hero power-ups
+
+- **P1 Hat in Hand: GO.** Asking for help and fighting side by side is a staple. The shared finisher must not be a mirrored or synchronised pose, or a matching dance, before the beam.
+- **P2 Take a Knee: GO.** Original.
+- **P3 Swallow It: GO.** A plain resource trade, and it shows in play.
+- **P4 Full Circle: CONDITIONAL.** As in section f.
+
+### Orb's picks
+
+- **Rail chip: GO.** As in section d.
+- **Press: GO, with two conditions.** Plates that clamp shut and reopen on sandwiches is a body mechanism, not a beam. (1) Keep it mechanical, with no ray, sparkle or wand-like flourish, and no victim transformed in place by a zap. (2) The output is sandwiches, not sweets, candy or chocolate. Content ratings for the graphic beat are still unchecked.
+- **Bladed mantle: GO.** A cape with blade hems is not the franchise's tail. Keep its motion a cape's, not a swishing tail. The Tyrant's overall silhouette and palette still follow the revision 9 to 12 rule in section e.
+
+### Orb decides
+
+Whether the O2 conditions (no skyward column, no darkening sky, an inward fold) fit the payoff Orb has in mind. If not, the fallback in section a still applies.

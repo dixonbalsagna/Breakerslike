@@ -49,8 +49,10 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-027 | Pass-Through | Q3 design | Medium | CONDITIONAL | Open |
 | RL-028 | Transformation ladders (Protagonist, Tyrant) | Q3 design | Medium | CONDITIONAL (final-form looks) | Open |
 | RL-029 | Full Circle fusion | Q3 design | Medium | CONDITIONAL (look) | Open |
+| RL-030 | Orb takes O1 to O4, The Bloom (O2) | Q3 round 2 | Medium (O2) | O2 CONDITIONAL, others GO | Open |
+| RL-031 | Overcommit look, Anti-hero P1 to P3, Press, bladed mantle | Q3 round 2 | Low | GO (Press with two conditions) | Closed |
 
-Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-029.
+Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030.
 
 ## Detail
 
