@@ -31,7 +31,7 @@ Return: the standard report format (SUMMARY, CHANGES, DECISIONS, NEEDS FROM EP, 
 ## Design pillars
 
 1. **The planet is the arena.** The world wraps. No walls, no corners, no side of the screen to be cornered on. Fly either way and you loop the planet.
-2. **Stances, not combos.** The player chooses intent (aggressive, defensive, evasive, escape). A procedural director choreographs the exchange that results.
+2. **Stances, not combos.** The player owns macro strategy, pacing and positioning, and chooses intent (aggressive, defensive, evasive, escape). The procedural director owns combos, tactics, blitzing and voice lines, and choreographs the exchange that results.
 3. **Never out of range.** Distance never blocks drama. Attacks always close the gap, and the escape stance is a real gamble rather than a range check.
 4. **Power has weight.** Terrain, buildings and civilians are damaged by fights, and damage escalates with power tier.
 5. **Characters are personalities.** The hero and the villain do different things to the world. The hero is pressured by collateral damage (anguish). The villain feeds on it (menace).

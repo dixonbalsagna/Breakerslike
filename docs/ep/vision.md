@@ -237,3 +237,18 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - A friend's feedback: "Love when they carve a trench, some real [genre] stuff. I did like how it zoomed out and showed them flying around the world before though. Maybe set that threshold a bit higher before it automatically splits?"
 - Combat feels slower than the prototype: fighters lock together and do nothing for moments before launching attacks. "Let's really nail down the engaging, dynamic feel of combat the prototype had."
 - Destruction must be impressive: cracked and split ground, a fighter crashing into a skyscraper and bursting out the other side with glass and steel shrapnel, buildings collapsing.
+**Playtest 2 (Orb, 2026-09-30).**
+- The skyscraper debris, the building collapse and the particles are a good start.
+- Strange geometry:
+  - weird ripples and arcs from impacts;
+  - the water level against the shoreline looks strange;
+  - buildings (often in villages) appear underwater.
+  - Ctrl+F6 (embers) showed no visible change.
+- Rampage-style skyscrapers: each has floors and windows. A fighter blasted through a building affects individual floors, and enough damage may or may not bring the whole building down.
+- Cities should be more varied, expansive and busy-looking.
+- A friend's feedback: on mobile, make every touch target and all text responsive. "Not sure what I'm supposed to do in the game… some kind of tutorial or a card explaining how to play would be good."
+- **Direction (a core principle):** the player is in charge of macro strategy, pacing and positioning. The fight director is in charge of combos, tactics, blitzing and voice lines.
+- **Voice lines, Banjo-Kazooie style:** each character has a distinct voice of grunts, laughs and chattering noises while the captions appear. Lines are chosen automatically from each fighter's stance, position, current or recent actions and anything special that happened. A procedural system sets the mood of the fight and chooses back-and-forth one-liners, reactions, thoughts and taunts that progress over the battle.
+- **One battle is a whole set:** a ranked Tekken set takes 7-8 minutes, and one battle here should feel like a whole set of rounds, without health bars, rounds or other fighting-game fixtures.
+- **Freshness:** generative, procedural systems should give fresh interactions between fighters again and again, so that across many fights a player still sees lines that are new to them.
+- Orb asked for another questionnaire on these systems.
