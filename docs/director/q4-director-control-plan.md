@@ -57,6 +57,7 @@ Notes:
 
 - **What the clock fires.** The fighter's **sticky weight**: light or heavy, starting in light. A **queued signature** fires instead at the next opening once ki reaches 45, within **180 ticks** at most (R9 answer 4). It falls back down the ladder when ki is short, with a visible mark.
 - **Charging and specials pause the clock** until they end.
+- **The signature cooldown** (questionnaire 5): 120 s per fighter after a signature fires (`sigCooldown`, data; see `location-variety-plan.md` for where it lives). The clock won't fire or queue a signature until it has passed. That sets the 2 to 4 signatures a match, and QA adds a "signatures fired" row.
 - **Chains become the director's call.** At each chain window, one draw against `chainP(stance, ki, mood, combo)` from data. It replaces the attacker's press, and the AI's press draw becomes this draw.
   - Heat (R9, ruled): only a fighter with the heat track (today the Protagonist) gets +5 points at Heated, +10 at Simmering and +20 at Boiling.
   - chainP is capped at 0.8. The chain limit stays 5, and each link still costs 6 ki.

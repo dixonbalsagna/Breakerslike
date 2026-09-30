@@ -45,11 +45,9 @@ The cause is the open-ground spawn (desert edge) plus a hero lure that only acts
 - **The SMASH ACROSS cap** (§14 B), after B2. If SMASH ACROSS is still over 40% (bound 42%), `REPEAT_1` and `REPEAT_2` in `launch.gd` move to `data/director/launch.json`, and the penalty on the most-used type goes up there. `launch.gd` is mine again after B2.
 - **The 120 s signature cooldown** (questionnaire 5): it goes into Q4 checkpoint A, the attack clock. `sigCooldown` 120 s is per-fighter data, and the clock won't fire or queue a signature until it has passed. It needs a per-fighter `sigReadyT` in hashed state (NEEDS 3).
 
-## Needs from the EP
-1. **Simulation, `state.gd` and `hash.gd`:**
-   - `S.dirS.biomeT`: per-biome seconds, a `PackedFloat64Array` indexed by biome in `WorldBiomes` order, reset at `newMatch`;
-   - one hash line covering it.
-2. **Tools:** a `director-location.schema.json` for `data/director/location.json`, the first file in `data/director/`.
-3. **Q4, for Simulation:**
-   - `Fighter.sigReadyT`, with one hash line;
-   - Game Design's call on where `sigCooldown` lives: `fighter.json` (per fighter, D1a's loader) or `data/director/cadence.json` (global, mine). I'd put it in `fighter.json`, since the questionnaire says per fighter.
+## Grants (EP, approved and committed)
+- **This slice**, after B2 and Simulation's M1b: `S.dirS.biomeT` in `state.gd` (a `PackedFloat64Array`, reset at `newMatch`) and its `hash.gd` line. Simulation reviews.
+- **Tools** writes `director-location.schema.json`.
+- **Q4:** `Fighter.sigReadyT` and its hash line, granted in that window. `sigCooldown` lives in `fighter.json` (per fighter), and Game Design has been told.
+- **No edits until the EP opens the window.**
+- **Tools' schema is committed** (`director.location/1`). It matches this plan key for key: `excessStart`, `varietyW`, `popW`, `keepW`, `oceanSurface`, `prowlTier`, `prowlAfter`, and `destinations` per role (hero, villain) from the 7 sim biomes. There are no differences to route. Future roster fighters map onto the two roles by `role` until Game Design adds more.
