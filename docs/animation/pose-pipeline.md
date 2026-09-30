@@ -844,7 +844,7 @@ QA owns the harness; the targets are mine to propose. A1, A7 and A9 are static a
 | # | Need | From |
 | :--- | :--- | :--- |
 | 1 | The composer's part record: is `anim.keySet` (renamed from `anim.clip`) and `anim.contactKey` acceptable; the readability minimum by weight; how a cancelled part is signalled; a part cue with its anchor ticks (§8.2) | Combat, Simulation |
-| 2 | **Ruled by the EP (2026-09-30):** this plan supersedes the wave-1 documents. `clip-list.md` and a short `warping-rules.md` follow after Combat's `moveset-system.md` (landed, 24af9c1) | EP |
+| 2 | **Ruled by the EP (2026-09-30):** this plan supersedes the wave-1 documents. `clip-list.md` and `warping-rules.md` are written (2026-09-30), after Combat's `moveset-system.md` (landed, 24af9c1) | EP |
 | 3 | **Ruled:** I own `data/anim/` and `art/animation/`. Tools writes the schemas, and the sim's data hash skips `data/anim/` | EP, Tools |
 | 4 | **Ruled:** the runtime lives in `render/anim/`. I own it; Rendering reviews | EP, Rendering |
 | 5 | **A0 spike done** (`render/anim/spike/`, numbers in §7.8): skinning cost and draw calls on the web and the iGPU; the draw-call budget; hands settled as palm plus finger slab; rigid-skinned single mesh confirmed. Art and Rendering still confirm the hand mesh | Rendering, Art, Performance |
