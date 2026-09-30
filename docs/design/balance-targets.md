@@ -34,7 +34,7 @@ The measurable bands the game must meet. Each is written so QA's harness (`qa/`,
 | 6 | Location and signature variety | No biome above 40% of fight time; no variant above 40% of beams | Ocean 64.6% of fight time; HORIZON CLEAVE 69% (QA §6) | Fails | Encounter Systems, World |
 | 7 | Stance balance | No forced stance above 55% | Not yet measured; DEFENSIVE at risk (`stance-matrix.md` §4) | Unknown | QA (probe), Game Design |
 | 8 | Story beats | See section 8 | Hide and ambush bands retired (hiding removed) | Not yet measured | Encounter Systems, Game Design |
-| 9 | Pacing (tempo) | 8 to 12 exchanges per minute; exchanges of 2.5 to 4 s; 1.5 to 4 s of breathing room | About 21 exchanges per minute, each about 1 s | Fails ("too fast", Orb) | Combat, Encounter Systems |
+| 9 | Pacing (tempo) | Orb's dynamic feel: melee idle at most 15%; at least 80 strikes a minute; release to the next request at most 1.0 s (§10, adopted from Combat) | Melee idle 42.5%; release-to-request gap 2.7 s (`docs/combat/dynamic-feel.md`) | Fails (Orb: "slower than the prototype") | Combat, Encounter Systems |
 
 ---
 
@@ -322,17 +322,29 @@ Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questio
 
 | Measure | Target | Greybox today |
 | :--- | :--- | :--- |
-| Exchanges started per minute | 8 to 12 | About 21 |
-| Exchange length, request to release, median | 2.5 to 4.0 s. Set pieces (beam struggles, break launches, transformations, finishers) 3 to 8 s | About 0.5 to 1.9 s |
-| Spacing of strikes inside a melee exchange | 0.25 to 0.40 s | 0.16 to 0.20 s |
+| Exchanges started per minute | 15 to 24. This follows from the dynamic targets below and replaces 8 to 12 | About 21 in the prototype |
+| Melee idle share inside exchanges (time with no visible strike, move or reaction) | **At most 15%** (Combat's dynamic-feel §3) | 42.5% (the prototype had 22%) |
+| Still stretch inside an exchange | Median at most 0.25 s, p90 at most 0.5 s. The first strike lands within 0.6 s of the request | See `docs/combat/dynamic-feel.md` |
 | Readable wind-up before a parryable strike | 0.20 to 0.30 s (Controls owns the width) | 0.10 s (0.33 s on HEAVY CLASH — WON) |
 | Hit-stop floor by impact class | Light at least 0.07 s; heavy at least 0.12 s; region break or finisher at least 0.30 s | 0.05 s default; 0.08 to 0.16 s on big hits |
-| Breathing room, release to the next request, median | 1.5 to 4.0 s; no gap over 10 s | Under about 1.8 s; director cooldown 0.22 s |
+| Release to the next request | **At most 1.0 s** (the prototype had 0.75 s). Visible strikes: **at least 80 a minute**. Standoff p90 at most 0.6 s. No gap over 10 s | 2.7 s |
 | Launches per minute | 4 to 6 | About 15.6 |
 | Long launches: at least 1,500 units of horizontal travel before landing | At least 30% of launches; every region-break launch is long | About 5% (SMASH ACROSS) |
 | Launches that land in a different biome from their start | At least 25% | Not measured |
 | Gap close over 2,500 units | A visible pursuit flight of 0.8 to 2.0 s. Blink-strikes stay a Protagonist trait, with the ripple tell | 0.65 s at most |
 | Fight time underwater | At most 10% (the ocean-share cap in §6 also applies) | Not measured; 64.6% of time over the ocean |
+
+**Orb's feel overrides this section** (playtest, `docs/ep/vision.md`): "combat now feels slower than the prototype". The dynamic targets above replace the earlier exchange-length (2.5 to 4 s), spacing and breathing-room (1.5 to 4 s) bands. The readable wind-up and hit-stop floors stay.
+- *Downtime.* The player-driven ideas (`pitches.md` §3) now live in the long gaps the fight makes itself: break launches and their chases, lock breaks, set pieces and transformation cinematics. They no longer sit between every exchange.
+- *Second breath* (`spec-wounds.md` §1c) fires mainly after those same moments, which is the intent.
+
+**The k re-band for the faster rate** (after Encounter's dynamic slice):
+- Match length stays 6 to 8 minutes, reached through wear and the overtime ramp, never through dead time.
+- More strikes a minute means more damage a minute. So QA measures damage per minute to the loser before and after the slice, and sets `k_new = k_old × (damage rate before ÷ damage rate after)`.
+- Expected: the rate roughly doubles, so k drops from 0.06 to about 0.03. Then fine-tune within ±0.005 against the median, p10 at least 5:00, and timeouts at most 1%.
+- The first-break, brink and Rally bands are unchanged. Smaller wear per strike gives smoother wound progress, which is good for the readout.
+
+**Collateral.** More strikes also mean more collateral. World's ramp and cap (§4b) bound the rate per minute and the total, so the per-minute budgets hold whatever the strike count.
 
 **What Combat should change:**
 - Exchanges of 6 to 10 beats at the spacing above, with readable wind-ups. This is the "choreographed, seamless" look, and it halves the damage rate by itself.
