@@ -1,0 +1,748 @@
+# Pose pipeline: hand-made key poses, procedural in-betweens
+
+Owner: Animation. Status: design plan, no code, for P2 onward. Date: 2026-09-30. Asked for by the EP after Orb's questionnaire 6.
+
+**Orb's pick** (`docs/ep/vision.md`, questionnaire 6): hundreds to thousands of basic attacks per fighter, built from a smaller set of hand-made pieces; a fighter's style shifts with mood, injury and form; animation is "hand-made key poses with procedural in-betweens"; the move-building system comes first and content after.
+
+**Built on:** `docs/combat/procedural-moves.md` (parts, slots, scoring, schema sketch), `move-grammar.md`, `variety-pass.md`, `data-fields.md`; `docs/architecture/fx-events.md`, `determinism.md`, `mood-style.md`; `docs/art/style-guide.md`, `marked-aura.md` and the four turnarounds; `docs/design/spec-wounds.md` and `pitches.md` §5; `docs/rendering/README.md`; `research/engine-spike/RESULT.md`; `docs/art/ai-prompt-policy.md`; `docs/legal/originality-rules.md`.
+
+**Not landed yet:** Combat's `docs/combat/moveset-system.md`. Until it does, I build on `procedural-moves.md`, and **every timing and field name here is provisional until Combat's moveset system**. "Part" is Combat's word. "Piece" is Orb's.
+
+**Assumed, because Orb already decided it:** 2.5D side-on with real low-poly 3D geometry, cel-shaded, staged three-quarter ("cheat out"), Godot 4.7 with GDScript, the Compatibility renderer, the browser and old laptops as targets (`vision.md`, ADR 0001, `style-guide.md`). That closes the 2D against 2.5D against 3D question the wave-1 brief asked. §2.7 says what would change if Orb reverses it.
+
+---
+
+## 0. The plan on one page
+
+1. **What people author: key poses and key sets.** A *pose* is one static skeleton configuration plus a few effector pins. A *key set* is two to five poses with timing roles (load, contact, follow-through) and a handful of style numbers. A Combat part points at a key set. Nobody authors a clip.
+2. **What the machine generates:** everything between the keys. Timing curves, arcs, limb lag, overshoot, IK to the contact point and the ground, secondary motion, impact reactions, style drift and situation adaptation.
+3. **Sell the pose, not the in-between.** Orb's feel reference is choreographed flash animation: held poses, snaps, smear and impact frames (`style-guide.md` §1). Staccato timing is the target look, not a compromise. That is what makes procedural in-betweens viable for a team this size.
+4. **Sizes.** Rig R1: a 22-bone core plus 3 to 10 extras per fighter. The first fighter's composed library is about 170 poses (range 130 to 210), then about 100 showcase poses later. Each further fighter adds about 50 own poses, about 30 deltas and a profile, plus a showcase set. About 700 poses across four fighters, 170 of them shared. **Thousands of attacks come from multiplying renditions, not from thousands of poses** (§3.5).
+5. **Cost.** A text-authored pose is about 20 minutes at the planning level (L1); a Blender pose about 30. The first fighter's core library is 60 to 80 hours with review. The full pipeline is about 200 engineering hours, and the first useful slice about 60 (§6).
+6. **Budget (proposal for Performance).** At most 1.0 ms mean and 2.5 ms p99 per frame for two full-rate fighters, in the browser on the reference old laptop, with a four-step degrade ladder. Expect to need the first step down on the slowest machines (§7).
+7. **The sim hash never moves.** Animation owns no sim-read field. Pose data lives outside the hashed data, animation state advances on sim ticks and only reads, and a pose edit cannot change a golden (§8).
+8. **People.** Showcase poses (specials, signatures, finishers, transformations, break beats) need a human hand (Legal 8.5.3). The composed library can start as text poses written by a Claude session and then get a human pass (§6.6).
+
+**Deliberately not doing:** mocap; runtime machine-learned motion; full-body or iterative IK on the critical path; ragdoll physics; a facial rig; cloth simulation beyond spring chains; a bespoke pose editor before the text and Blender paths prove too slow; a different skeleton per fighter.
+
+### Decisions I am making (rig and retarget standards are mine, per the charter)
+
+| Decision | Choice | Who can overrule |
+| :--- | :--- | :--- |
+| Skeleton | One topology, R1 (§2.2) | Art (bone additions), Orb |
+| Binding | One rigid-skinned mesh per fighter, after a spike (§2.3) | Rendering, Art |
+| Pose form | Forward-kinematic rotations plus effector pins, text first (§3.1) | Tools (schema) |
+| Retarget | Shared pose space, a build profile, three override levels (§2.4) | Orb (roster look) |
+| Time base | Sim ticks; solve once per displayed frame (§8.5) | Simulation |
+| IK | Own closed-form two-bone; no iterative solver (§4.4) | Rendering |
+| Springs | Own tick-stepped chains, not Godot's spring node (§4.5) | Rendering |
+| Style drift | A clamped modifier stack driven by sim state (§5) | Game Design, Narrative |
+| Data location | `data/anim/`, outside the sim's data hash (§8.4) | EP, Tools |
+
+---
+
+## 1. Terms
+
+| Term | Meaning |
+| :--- | :--- |
+| **Pose** | One static skeleton configuration: joint rotations, effector pins, hand shapes, a look mode, tags |
+| **Key set** | An ordered list of two to five poses with roles and style numbers. A part's `anim.keySet` (renamed from Combat's `anim.clip`, §12) |
+| **Part** | Combat's data record for one unit of a phrase: tick timing, reach, tags, in-state and out-state |
+| **Piece** | Orb's word for a hand-made building block. In practice a part plus its key set |
+| **Rendition** | One visible realisation of a key set, from the variation channels: side, height, tempo, situation, style |
+| **Effector pin** | A hand, foot or the head that must reach a place: a socket on the defender, the ground, a wall |
+| **Socket** | A named point on a rig, such as `hand_r_strike`, `hit_torso`, `head_flash_anchor` |
+| **Modifier** | A small data record that bends poses by sim state: posture, tempo, amplitude, limits (§5) |
+| **Profile** | A fighter's global animation numbers: build, posture offsets, timing style, spring settings |
+| **Family** | A symbolic pose class (upright, crouched, prone, airborne extended and so on) that Combat's joining rule reads as `poseIn` and `poseOut` |
+
+---
+
+## 2. The rig (item 1)
+
+### 2.1 What a blank-headed fighter needs
+
+| # | Need | Why | Rig answer |
+| :--- | :--- | :--- | :--- |
+| 1 | No face rig | Masks carry a sigil and have no eye or mouth slots (`style-guide.md` §3.6); the Coil's mask is a blank wedge with a sigil decal slot and no face rig (`coil-turnaround.md`) | No facial bones and no blend shapes. Expression comes from head and neck pose, shoulders, posture and the sigil channel |
+| 2 | A strong head read | With no eyes, where a fighter "looks" is the mask's orientation. A head turn of 15 degrees or more is what reads at 38 px | Neck and head bones; look-at with limits (yaw 70, pitch 40 degrees); the head leads the body's turn by 12 degrees (Rendering's `TURN_HEAD`); glances are authored beats (Combat's `glance`, `turn_read`, `glance_back`, `last_look`), never gaze |
+| 3 | A sigil channel | The sigil "bends with emotion": lean, scale, brightness, a gap (`marked-aura.md`) | Four render-only floats on the pose. The default comes from state (mood, wear); a pose may key it for an authored beat. It drives a shader, not a bone |
+| 4 | Torso and shoulder turn | Three-quarter staging, mirrored when the facing flips, the back never shown (`rendering/README.md` "Staging") | Two spine bones and two clavicles. Every pose is authored facing right with the near side toward the camera; mirroring flips the whole skeleton |
+| 5 | Readable hands | A hand is a few pixels at play zoom, but it carries the strike read | A palm bone plus one finger-slab bone per hand. Fist to open is one rotation, so hand shape is a pose channel with four presets (fist, open, claw, relaxed) and not a mesh swap. Art confirms the hand mesh; this is two extra bones |
+| 6 | Secondary chains | Hair tuft, sashes, the Empress's mantle, the Cyborg's cables, the Coil's tail (turnarounds) | Named spring chains. Each has a `drive` weight from 0 (pure spring) to 1 (keyed), so the Empress's mantle can be lashed like a tail and the Coil's tail can be posed |
+| 7 | Foot and hand IK | Contact accuracy, slopes, walls, water | Two-bone limbs with pole vectors and effector pins (§4.4, §4.8) |
+| 8 | Sockets for other directors | VFX wants sparks at the striking limb, Camera wants anchors, Audio wants a whoosh at peak speed | Named sockets, queryable each frame (§2.2, §8.2) |
+| 9 | Damage as a geometry toggle | Regalia have intact and broken variants; the pole top can hang | Art's meshes swap. The rig only needs bones for both variants |
+| 10 | Independence from the sim | The sim owns position, spin and launch | Two frames. The **sim frame** is `FighterView`'s pivot (position, `rot`, stance lean). The **skeleton root** sits under it and takes only a cosmetic offset of at most 0.3 body height, which the sim never reads |
+
+### 2.2 Skeleton R1
+
+**Core, 22 bones:** `root`, `pelvis`, `spine_1`, `spine_2`, `neck`, `head`; per side (`_l`, `_r`): `clavicle`, `upper_arm`, `forearm`, `hand`, `fingers`, `thigh`, `shin`, `foot`. This is Art's 20-bone humanoid core (turnarounds) plus the two finger slabs.
+
+**Extras** are prefixed `x_` and come from each fighter's turnaround:
+
+| Fighter | Extras (Art's turnarounds) | Bones |
+| :--- | :--- | ---: |
+| Protagonist | Hair tuft 3 (spring), two sash tails of 2 (spring) | 29 |
+| Anti-hero (the Coil) | Tail 3 (spring); the six spine plates are rigid on the spine bones | 25 |
+| Empress | Topknot 1, mantle 6 (two chains of 3) | 29 |
+| Cyborg | Backpack 1, four cable bones (two chains of 2) | 27 |
+
+Cap: 32 bones per fighter. A fifth fighter or a mod that needs more asks the EP.
+
+**Sockets** (points, not bones; positions are fixed offsets on a bone, set per build profile):
+- strike points: `hand_l_strike`, `hand_r_strike`, `forearm_l_guard`, `forearm_r_guard`, `foot_l_strike`, `foot_r_strike`, `knee_l`, `knee_r`, `elbow_l`, `elbow_r`, `head_strike`, `x_tail_tip` where a tail exists;
+- hit targets (they map to Combat's `location` hint and the Wounds regions head, core, arms, legs): `hit_head`, `hit_torso`, `hit_arm_l`, `hit_arm_r`, `hit_leg_l`, `hit_leg_r`;
+- emitters and anchors: `emit_hand_l`, `emit_hand_r`, `emit_chest`, `head_flash_anchor`, `chest_front`, `back`, `ground_l`, `ground_r`.
+
+**Naming:** lower snake case, side suffix `_l` or `_r`, one name per bone across all fighters, so retargeting is by name.
+
+### 2.3 Binding and draw calls (a recommendation, and a spike to prove it)
+
+The style is faceted low poly with hard planes (`style-guide.md` §1), so smooth skin weights buy little and cost a lot of labour. I recommend **one mesh per fighter, rigid-skinned**: each part of the body is modelled as a solid, assigned 100% to one bone, and the parts are merged into one mesh. There is no weight painting; a belt or collar piece hides the gap at each joint.
+
+Why it matters more than it looks: the greybox is already about 80 draw calls and about 186 with the split screen and Art's look (`rendering/README.md`). A puppet of separate meshes at 25 to 30 parts a fighter, times two fighters, times two panes, would add over 100 calls, which is a real cost on an old laptop in a browser. One skinned mesh plus the outline pass is 2 calls.
+
+**Proposed draw-call budget per fighter** (for Rendering and Performance to confirm): near at most 12 (body 1, outline 1, regalia at most 8, head flash 1), mid at most 4, far at most 2.
+
+**Spike before anything else** (Rendering and Art, about 16 hours): one fighter, 27 bones, 2,500 triangles (Art's near budget), single mesh, one Compatibility-renderer scene. Acceptance: at most 3 draw calls including the outline; skinning cost on the integrated-GPU web build within budget (§7); the inverted-hull outline stays clean under skinning. **Verify in the spike:** Compatibility-renderer skinning cost on the web; whether the built-in skeleton API or our own bone writes are cheaper for 27 bones (I expect the latter to be fine at this count).
+
+### 2.4 Build profiles and the retarget standard (four fighters, and more later)
+
+One topology, **N build profiles**. A build profile is data:
+- segment length ratios (torso, upper arm, forearm, thigh, shin, head, neck) against the neutral;
+- widths and volume capsules (used by self-collision-lite and the silhouette lint);
+- mass class (light, medium, heavy: sets spring stiffness, lag and overshoot defaults);
+- joint-limit scale;
+- socket offsets;
+- the fighter's height in body-height units (one body height is 75 sim units, `style-guide.md` §2; the Coil's pole and the Empress's mantle are extras, not height).
+
+**Poses are stored in a proportion-independent space.** Joint rotations transfer between builds unchanged. Only end effectors move, so effector pins are stored as fractions of limb length, or in body-height units relative to the chest (hands) or pelvis (feet). Retargeting a pose to a build is four steps:
+1. Copy the joint rotations.
+2. Re-solve the pinned effectors against the build's limb lengths (two-bone IK). Pins that were not authored as contact or plant pins are free and keep the copied rotations.
+3. Push out any elbow, knee or hand that enters the build's torso capsule (self-collision-lite; needed for the Cyborg's blocky chest and the Empress's tabard).
+4. Apply the profile's posture offsets (§2.5, level 1).
+
+Error budget: a contact pin is within 0.05 body height of its target after retarget, or the validator flags the pose for that build.
+
+### 2.5 Personality overrides: three levels
+
+| Level | What | Size | Example |
+| :--- | :--- | :--- | :--- |
+| **L1 Profile** | Global numbers that apply to every pose of the fighter | About 40 numbers | Posture offsets per family (chin, lean, hip height, guard height), timing style, overshoot scale, arc bias, hold bias, spring settings |
+| **L2 Pose delta** | A small additive change to one shared pose | 8 bones or fewer per delta; 20 to 40 per fighter | The Anti-hero's cross-punch contact with a flourish: a raised chin and a flicked off-hand |
+| **L3 Own piece** | A pose or key set only that fighter has | 35 to 60 poses per fighter | Tail and mantle lashes, portal approaches, consume beats, the Protagonist's ripple-step |
+
+Resolution order: **own piece, then L2 delta, then L1 profile, then the shared pose.**
+
+Combat's style weights choose *what* a fighter does (which part). The profile changes *how* that part looks. The two axes stay separate, so a "brutal" part looks different on the Protagonist than on the Anti-hero without any new part.
+
+| Fighter | Shape language (Art) | Timing style (L1, proposal) | What reads |
+| :--- | :--- | :--- | :--- |
+| Protagonist | Round, open, forward-leaning | Flowing arcs, generous follow-through, open hands | Circular limb paths; weight forward |
+| Anti-hero | Vertical, rigid | Economical, then a flourish; a held pose before the snap ("toying") | Straight lines, a lifted chin, a flick |
+| Empress | Wide, sweeping, asymmetric | Long arcs, deliberate; the mantle trails and lashes | Sweeping silhouettes, wide stance |
+| Cyborg | Heavy, blocky, steps | The fastest; snappy, quantised timing (a "steps" feel), short holds | Hard angles, low hunch |
+
+Narrative and Art co-own a short per-fighter animation style guide (`docs/animation/style-<fighter>.md`, charter duty). Not written yet: it needs the roster's locked looks.
+
+### 2.6 Who moves what
+
+- The **sim** moves the fighter: position, `rot` for launch spin, state, stance. Animation reads them.
+- **Animation** moves the skeleton *under* that frame: pose, cosmetic root offset (a lunge, a recoil, at most 0.3 body height, back to zero by the part's end tick and never read by the sim), springs.
+- Contact accuracy is done by IK to the defender's socket, not by moving the sim positions (§4.4).
+
+### 2.7 If Orb changes the presentation
+
+- **2D skeletal sprites:** the pose format and the modifier engine survive unchanged (they are joint-space data). The rig becomes a cut-out puppet with about 16 layers per fighter, poses are authored per facing with no cheat-out turn, and IK stays two-bone in 2D. The draw-call and skinning worry goes away; the turnarounds must be redrawn as cut-out sheets.
+- **Full 3D:** the rig survives. The cheat-out staging and hybrid projection stop mattering, the silhouette rules must hold from a moving camera, and view-dependent review triples. This conflicts with the browser and old-laptop targets in either engine (`RESULT.md`).
+- Both are **Orb decides.** My default is the assumption above.
+
+---
+
+## 3. The key-pose library (item 2)
+
+### 3.1 What a pose holds
+
+| Channel | Content | Read by |
+| :--- | :--- | :--- |
+| `fk` | Local rotations of the core bones, in degrees against the neutral pose. Omitted bones keep neutral | render |
+| `pins` | Effector pins: which limb, its target (a socket on the other fighter, the ground, a wall, a world offset), reach as a fraction, an elbow or knee pole hint, a plant flag, a weight | render |
+| `hands` | Left and right hand shape (fist, open, claw, relaxed) | render |
+| `look` | Mode (opponent, contact, free, down) and weight | render |
+| `sigil` | Optional deltas: lean, scale, brightness, gap | render |
+| `chains` | Optional `drive` weights per extras chain | render |
+| `family`, `band`, `dir`, `mirror` | The symbolic pose family, height band, direction of action, whether it may be mirrored | validation (and see §8.7) |
+| `tags` | Limb, weight, style, location hint (the part's own tags win) | validation |
+| `_note`, `_orig` | A one-line note and the originality note (§3.7) | humans |
+
+Shape only. Tools owns the schema and the names.
+
+```json
+// data/anim/poses/common/strike.hook_r.contact.json
+{ "id": "common/strike.hook_r.contact", "family": "upright_lunge", "band": "low", "dir": "across", "mirror": true,
+  "fk":   { "spine_1": [0, -14, 6], "spine_2": [0, -22, 4], "upper_arm_r": [10, 80, -20], "forearm_r": [0, 0, 88] },
+  "pins": [ { "eff": "hand_r", "to": "target.hit_head", "reach": 0.62, "pole": "elbow_out", "w": 1.0 },
+            { "eff": "foot_l", "to": "ground", "plant": true, "w": 1.0 } ],
+  "hands": { "l": "fist", "r": "fist" }, "look": { "mode": "contact", "w": 0.8 },
+  "_orig": "reads as a swung hook; nothing at the hip, nothing at the forehead" }
+
+// data/anim/keysets/strike.hook_r.json
+{ "id": "keys/strike.hook_r",
+  "keys": [ { "role": "load",    "pose": "common/strike.hook_r.chamber", "end": "anticipation" },
+            { "role": "contact", "pose": "common/strike.hook_r.contact", "at": "contact" },
+            { "role": "follow",  "pose": "common/strike.hook_r.follow",  "at": "contact+active" } ],
+  "style": { "arc": 0.35, "lag": [1, 2, 3, 4], "overshoot": 0.12, "smear": 2, "snap": "strong" },
+  "reach": { "min": 0.45, "max": 0.75 },
+  "variation": { "height": [-0.25, 0.25], "sides": ["near", "far"], "tempo": [0.85, 1.2] } }
+```
+
+Combat's part carries the ticks (anticipation, active, recovery, contact) and the stretch range. The key set carries only *shape*; where a role lands in time comes from the part.
+
+### 3.2 Piece types, and the poses each needs (first fighter)
+
+Counts follow Combat's first-fighter vocabulary (`procedural-moves.md` §1 and §12): about 12 approaches, 30 strike shapes, 10 reaction classes, 14 launch vectors, 8 follow-ups, and 30 to 40 parts at stage 3.
+
+| Piece type (Combat's slot) | Combat count | What is authored | Poses |
+| :--- | ---: | :--- | ---: |
+| **Foundation** (no slot; every fighter needs it) | | Stance idles (4 stances), flight (hover, dash forward, dash back, ascend, descend, glide), charge and tier-up burst, guard set (high, low, brace), down and get-up (3), hurt hold (2), emotes (taunt, glance, dismay, victory), KO (2) | 26 |
+| **Approach** | 12 | Launch-off pose per approach (12), arrival brace for four families (straight, arc, dive, ground) | 16 |
+| **Setup and feint** | 6 | Shoulder check, low probe, two feint reversals. Feints reuse strike chambers at reduced amplitude | 4 |
+| **Key strike** | 30 | 30 contact poses; 18 authored chambers (the other 12 are derived, §3.3); 12 authored follow-through or extreme variants (aerial, low) | 60 |
+| **Guard, parry, clash** | | Guard hit (light, heavy), deflect (2), clash meet (3), guard-break stagger (2), evade (lean, duck, sidestep, blink-out) | 12 |
+| **Reaction** | 10 classes | A peak pose for a hit from the front and from behind, per class | 20 |
+| **Launch flight and landing** | 14 vectors | Flight tumbles (6); landings: slide brake, crater embed, wall embed, water skim, water entry, bounce, crumple, get-up from slide | 14 |
+| **Follow-up** | 8 | Pursue, relay overtake, pin, taunt pause, disengage, beam follow-up and two more | 10 |
+| **Out-state families** | | The families other poses recover into (§3.3) | 8 |
+| | | **Total** | **170** |
+
+Range 130 to 210. Fewer strike shapes or more derived chambers pull it toward 130. Mirroring is free, so left and right hands are one pose.
+
+**Showcase set** (later; Orb: "content after"): about 100 poses for the first fighter. Four specials at about 8 keys (32), the signature (16 for the charge and release family; variants come from adaptation), a finisher (14), transformation cinematics for six or more stages (about 36 at six keys each), and the break beats (below). These are the "hand-made showcase moves" and they need a human author (§6.6).
+
+**Break beats.** Game Design's crippling moment is "a respected 1.5 s set piece" with a push-in, a crack and a long launch (`pitches.md` §5, option A). Each limb needs a one-off beat (arm, leg) plus the core's brink drop. Three showcase key sets of about 6 keys.
+
+### 3.3 Derived poses and families
+
+- **Chambers are derived by default.** A generic wind-up is computed from the contact pose: the striking limb retracts along its own axis to 60%, the torso counter-rotates, the hips dip. An author writes a chamber only where the generic one fails (a feint, a spinning strike, a two-hand hammer). That is why the table authors 18 chambers for 30 strikes.
+- **Recovery is derived.** The follow-through key relaxes toward the part's out-state family pose, so out-states are the only recovery poses authored.
+- **Mirroring is free.** `mirror: true` poses flip the near and far sides. Pose review covers both (§3.6).
+- **Families** are the symbolic vocabulary of Combat's joining rule (`poseIn` and `poseOut`, `procedural-moves.md` §2.2). Starting set: `upright`, `upright_lunge`, `crouched`, `kneel`, `prone`, `airborne_neutral`, `airborne_extended`, `tumble`, `backpedal`, `slide_brake`, `embedded`. **Animation owns this list and a can-follow table** (which out-family may precede which in-family, and the blend ticks). The validator checks that any two poses in two families that may follow each other are within a blend distance; otherwise the transition is flagged. This gives Combat's symbolic joins a physical backing.
+
+### 3.4 Per-fighter and roster totals
+
+| Set | Poses | Who |
+| :--- | ---: | :--- |
+| Shared core, authored once on the neutral build | 170 | the first fighter's library *is* the shared library |
+| Own pieces, per further fighter | 35 to 60 | Empress mantle lashes, Cyborg portal approaches and consume beats, Protagonist ripple-steps |
+| L2 deltas, per fighter | 20 to 40 (small) | |
+| Showcase, per fighter | about 100 | specials, signature, finisher, transformations, break beats |
+| **Four fighters at 1.0** | **about 700** | 170 shared, 150 own, 400 showcase, plus deltas |
+
+The showcase set is the big lever on total cost. A fighter's transformation ladder (six or more stages, the Empress's ten or more "revisions") is mostly **profile deltas**: a revision costs about a dozen numbers, not a set of poses. Only the cinematic moment of each stage is authored.
+
+### 3.5 From poses to thousands of attacks
+
+Orb's differentiators for basic attacks (q6) are: the limb or body part, the situation, the impact and reaction, and the rhythm and speed. Each is a *variation channel* that changes a rendition without a new pose:
+
+| Channel | Values | Visible at 38 px? |
+| :--- | ---: | :--- |
+| Side (near or far limb; mirror) | 2 | Yes. The cheat-out makes the two sides read differently |
+| Height (IK target height, ±0.25 body height) | 3 | Yes. A limb at the head, chest or knee |
+| Tempo (stretch 0.85 to 1.2, and the anticipation and overshoot that come with it) | 3 | As rhythm, and as a smear length |
+| Situation (§4.8: ground, air, wall, water) | up to 4 | Yes. Foot plant, splay, drag |
+
+One strike shape therefore has **2 × 3 × 3 = 18 renditions** by itself, and up to about 72 with situation. Thirty shapes give **540 distinct strike looks before any approach, reaction or launch is chosen, and about 2,000 with situation.** Combat's fingerprint then multiplies them by approach, reaction and launch class (`procedural-moves.md` §6).
+
+That is a claim, so we measure it: **test A6** (§10) counts distinct renditions actually seen over 1,000 seeded matches, where two renditions are distinct if their contact frames differ by at least 12 degrees mean joint angle or 8% silhouette area.
+
+### 3.6 Pose review rules
+
+Every pose is reviewed at the sizes and views it will be seen in:
+- **Sizes:** 22, 38 and 52 px tall (real fights are 22 to 52 px, `style-guide.md` §2), plus one large view for detail.
+- **Views:** the staged cheat-out view (about 30 degrees toward the camera, near side toward the camera), its mirror, and pure profile. A strike must read in all three.
+- **Silhouette first.** Flat black at each size. The action limb is extended by at least 20% of body height beyond the torso outline, or the pose is redrawn (the same threshold Art uses for a silhouette feature).
+- **Action in the picture plane.** Key silhouettes move across the body plane, within about 35 degrees of it. Punches toward or away from the camera foreshorten and are not used as a key silhouette. Motion in depth is left to the in-betweens, the camera and VFX.
+- **Value and colour.** Poses are judged on the three-colour and greyscale views Art already uses, so a pose that hides the mask or the sigil behind an arm is flagged.
+- **Joint limits and self-intersection.** No hyperextended elbow or knee; no limb inside the torso capsule (numeric lint, §6.2).
+- **Foot contact.** A grounded pose puts its planted foot on the ground plane within 0.02 body height.
+- **Reach.** A contact pose's reach envelope covers its part's `reach` (§8.7).
+
+### 3.7 Originality: the pose gate
+
+`originality-rules.md` lists three iconic poses we must not build (cupped hands at the hip then thrust forward, two fingers to the forehead, arms raised for a giant orb) and asks for "original charge and fire poses". Every pose in a sensitive family carries an `_orig` line in its file and passes checklist item 4 (silhouette, three flat colours, "what does this remind me of?"). Poses are built from our own atoms and are never traced from footage or from another game.
+
+| Sensitive pose family | Our pose, in words | One-line originality check |
+| :--- | :--- | :--- |
+| Power charge (hold Q) | A low, wide crouch, one fist pressed to the breastbone, the other arm hanging, head bowed, a tremble; the sigil brightens | Fist to chest with a bowed head is a vow or a brace, not cupped hands at the hip, and no orb is formed |
+| Beam release (signature) | One arm straight along the shoulder line, palm forward, the rear hand gripping that wrist across the body, feet staggered, weight leaning into it | A braced one-arm aim reads as a marksman's grip; the origin is the palm at the shoulder line, not two hands at the hip |
+| Teleport step | The torso folds forward and one hand sweeps a flat horizontal arc in front of the body as the fighter vanishes; the tell is the air ripple (VFX) | No hand ever goes to the head; the sweep ends at the hip line |
+| Transformation rise | Down on one knee with a fist on the ground, then a slow rise with the head last; the sigil lights on the rise | A kneel-and-rise is a generic hero beat; no screamed pose with arms at the sides |
+| Taunt | A slow head tilt and a dismissive backhand flick at waist height | Generic contempt; no beckoning fingers |
+| Finisher launch | A two-step lunge into an upward two-handed strike with the hips driving under it | A martial-arts uppercut chain; no raised arms held overhead |
+
+The mocap and reference rules follow Legal's clean process: no franchise reference images or footage. Self-shot reference (a contributor filming themself doing a punch, with consent) is allowed as private reference for timing and weight, never shipped, with the origin recorded (§6.1).
+
+---
+
+## 4. In-betweening (item 3)
+
+### 4.1 The layer stack
+
+Each layer reads the one before it and never writes the sim. Order matters:
+
+| # | Layer | What it does |
+| :--- | :--- | :--- |
+| 1 | **Key blend** | Poses from the part's key set, timed by the part's ticks: load, contact, follow-through, recovery |
+| 2 | **Arc and lag** | Curved effector paths; delayed distal joints (§4.3) |
+| 3 | **Transition** | Inertialised blend from the previous part's actual pose and velocity (§4.7) |
+| 4 | **Style modifiers** | Posture, tempo shape, amplitude, form (§5) |
+| 5 | **Injury constraints** | Joint limits, IK weights, slack chains (§5) |
+| 6 | **Situation** | Foot plant, wall splay, water drag (§4.8) |
+| 7 | **Secondary motion** | Spring chains on sim ticks (§4.5) |
+| 8 | **Impact reaction** | Additive, on the struck fighter, highest priority (§4.6) |
+| 9 | **Final clamp** | Joint limits, torso capsule push-out, ground clamp on hands and feet |
+| 10 | **Apply** | Write bone poses once per displayed frame, interpolating between the last two tick states |
+
+Layers with zero weight are skipped, and a held pose with no live layers costs no solve (§7).
+
+### 4.2 Timing: what the in-betweener may and may not do
+
+**The anchors belong to the sim.** A part's ticks (anticipation, active, recovery, contact, stretch) come from Combat's part. The in-betweener works inside them.
+
+| Segment | Range | Curve | Notes |
+| :--- | :--- | :--- | :--- |
+| **Load** | Part start to the chamber key | Ease in | A small counter-motion first for heavy weights |
+| **Strike** | Chamber to the contact key | Snap: accelerating, peak speed in the last two ticks | The last one to two ticks carry a smear mark |
+| **Impact hold** | The sim's hit-stop ticks | Frozen | Only the shiver and slow springs move (§4.5). Hit-stop is Controls' and Combat's, not ours (`data/combat/templates.json`: light 0.07 s, heavy 0.12 s, finisher 0.3 s are proposed floors) |
+| **Follow-through** | Contact to the follow key | Overshoot 5 to 15% along the strike, critically damped settle | Overshoot scales with weight |
+| **Recovery** | Follow key to the out-state family | Ease out | May overlap the next part's load (§4.7) |
+
+Rules that keep animation from touching gameplay timing:
+1. The contact key is reached exactly at the contact tick, so the contact pose is shown no later than the frame that shows that tick.
+2. Nothing runs past the part's end tick.
+3. Animation may **redistribute time inside a segment** (hold longer, then snap) but never move an anchor.
+4. **Readability floor:** a key pose must be on screen for at least 4 ticks (about 67 ms) to register at 60 Hz, and an anticipation pose for at least 6 ticks on a light attack and 10 on a heavy one. These are my input to Combat's readability minimums, which Combat decides.
+5. **Window safety.** Parry and chain windows (`window_open` events) open during visible motion, not during a full hold. **Moving holds** (breathing, micro-noise, spring drift) keep the still-stretch targets of `dynamic-feel.md` §3 (median at most 0.25 s, p90 at most 0.5 s) true even when a pose is held for style.
+6. **Stretch.** A part stretched within its range (0.85 to 1.2) plays the same key set faster or slower. Outside the range the composer does not offer the pairing (Combat: "a part that cannot fit is not a candidate").
+
+### 4.3 Arcs and overlap
+
+- **Arcs.** A striking effector's path bulges away from the straight line between its chamber and contact positions, by `arc` times the chord length: straight 0.05, hook 0.35, uppercut 0.25, roundhouse 0.4 (starting values). The arc is enforced on the striking effector inside the active window only, by an IK correction of the elbow or knee within its limits.
+- **Overlap and lag.** Joints lag their driver along the chain. On a strike the order is pelvis, spine 1, spine 2, clavicle, upper arm, forearm, hand, with delays of about 0, 1, 2, 3, 4, 5 and 6 ticks that the motion catches up by the contact tick. Heavier mass classes lag more, so a heavy blow whips. The `lag` array in the key set overrides it.
+- **Anticipation and exaggeration.** Anticipation depth scales with weight (light, heavy, special, finisher). Exaggeration scales with the act (`mood-style.md`): about 5% more amplitude per act.
+- **Smear and impact frames** are marks, not geometry: the animation emits `smear` and `impact_freeze` marks (§8.2) and Rendering applies the vertex stretch and the one-frame contrast flip (`style-guide.md` §5, features 13 and 14).
+- **Squash and stretch** is limited to a torso scale of about 3% on heavy impacts. The rig is rigid-skinned and faceted, so more would break the look.
+
+### 4.4 IK
+
+Solved: two-bone limbs (arms, legs) with a pole vector, head look-at, and the spine's bend shared between two bones (40% low, 60% high). Not solved: fingers (one slab), cloth (springs), whole-body IK. **An iterative solver (FABRIK, CCD) is not on the critical path.** A closed-form two-bone solve is a few dozen operations and its cost is fixed. (Godot 4.7 ships skeleton modifier nodes for IK: **verify** the set in 4.7.2 and their web cost. Ours is small enough to write and to keep on sim time.)
+
+Pins the runtime uses:
+
+| Pin | Target | When |
+| :--- | :--- | :--- |
+| Contact | The defender's hit socket for the part's region (`hit_head`, `hit_torso`, `hit_arm_*`, `hit_leg_*`) | From the chamber to the follow key; full weight at the contact tick |
+| Plant | The ground under the foot | Any grounded pose, and `landing` and `slide_brake` families |
+| Wall | A point on a surface with a normal | Wall-embed and bracing poses (§4.8) |
+| Guard | The defender's own forearm socket in a guard pose | Guard families |
+| Look | The opponent's `head` socket or the contact point | `look` channel |
+
+**Reach fudge.** The sim's contact standoff is fixed (the rush stops 58 u short in the prototype), so a target is normally within the pose's reach. If it is out by 15% or less, the **pelvis and spine lunge** (a cosmetic root offset) absorb it. Beyond 15% the validator rejects the pairing at data time. At run time the fallback is a clamped reach: the hand goes as far as it can and the strike still counts. The prototype has no hit volumes, so every strike connects on its beat (`data-fields.md`); IK is what stops that looking like an air punch.
+
+### 4.5 Secondary motion
+
+- **Spring chains on sim ticks** (own code): hair, sashes, the Empress's mantle, the Cyborg's cables, the Coil's tail. Each link is a damped spring with stiffness, damping and a drag coefficient from the mass class and the fighter's profile, stepped once per tick. It therefore holds in hit-stop and pause and is identical on every machine's replay.
+- **Hit-stop:** key-driven motion holds; springs advance at 0.1 of a tick, matching the particles (`fx-events.md`: `tick` with `frozen`). The frame does not look dead.
+- **KO slow motion:** the `tick` event's `dt` is already 0.35; springs use the event's `dt`.
+- **Godot's spring node** (`SpringBoneSimulator3D`, which Art's Anti-hero notes named as likely) steps on the render frame and would not hold in hit-stop or match `--fixed-fps` screenshots. I would use it only if a measurement shows ours costs more. **Verify** before dropping ours.
+- **Drive weight.** A chain's `drive` (0 to 1) blends between spring and keyed, so a lash is a posed chain and a snapped pole top hangs on a slack one.
+
+### 4.6 Impact reactions
+
+Combat picks the **reaction class** (flinch, stagger, spin-out, crumple, fold, knock-away, embed, bounce; `procedural-moves.md` §2.1). Animation renders it from three inputs the sim already emits:
+
+| Input | Source | Used for |
+| :--- | :--- | :--- |
+| Force | The `damage` event's `amount`, normalised by tier; the `launch` event's `amount` for launches | Amplitude of the wave and the recoil |
+| Region | `damage.region` (head, core, arms, legs) | Which bones react |
+| Kind | `damage.kind` (light, heavy, guard, guard_break, beam, impact) | Guard reactions, beam reactions and landings |
+
+What is authored is a **peak pose** per class and facing (§3.2). What is generated:
+1. **An impact wave.** An impulse along the force direction at the hit socket, propagated up the chain with delay and damping (about 6 to 10 Hz, damping ratio 0.4 to 0.7), amplitude clamped.
+2. **Recoil.** A cosmetic root offset of at most 0.15 body height along the force, settling back to zero.
+3. **The hold.** Frozen at the peak through the sim's hit-stop, then released into a critically damped recovery.
+4. **Region flavour.** A head hit snaps the head back along the force (the mask reads it); a torso hit folds the spine; an arm hit recoils the shoulder; a leg hit buckles the knee.
+5. **A hit-shiver** during hit-stop, a few pixels at most, keyed to `S.tick` (which counts frozen ticks) so it is repeatable. Reduced motion turns it off.
+
+Launched bodies: the sim owns position and `rot`. Animation picks a flight key set from the launch vector class and blends by speed (spread and stiff at high speed), with limbs trailing by drag lag. On `slide`, `skim`, `crater` and `building_hit` events it moves into the matching landing family.
+
+### 4.7 Transitions, cancels and interrupts
+
+**Inertialisation** joins two parts without a pop. When a new part starts, the difference between the current pose and velocity and the new first key is stored as an offset that decays under a critically damped spring over the part's load window (3 to 6 ticks). It costs one offset per bone and needs no cross-fade of two full poses. Combat's family joins mean the offset is small.
+
+| Interrupt | Sim signal | Animation response |
+| :--- | :--- | :--- |
+| Parry | `parry` event; the exchange's later beats are cancelled | Defender: deflect pose. Attacker: recoil pose; inertialise within 6 ticks |
+| Guard hit | `damage` kind guard | Guard reaction (arms absorb) |
+| Hit during a wind-up | `damage` on a fighter mid-part | Abort the part, inertialise into the reaction, no contact pose |
+| Launch | `launch` | Flight family; the rush is cleared |
+| KO or finisher takeover | `ko`, `finisher_start` | The finisher key set replaces the running one |
+
+### 4.8 Situation adaptation: air, ground, wall, water
+
+Combat *selects* parts by context (its altitude bands, `variety-pass.md` §3). Animation *adapts* the chosen part. The bands are shared: submerged (over the sea, y below -60), ground (within 140 u of the surface), low air (140 to 600 u), high air (600 u and up).
+
+| Situation | Sim signals | What adapts |
+| :--- | :--- | :--- |
+| **Ground** | Ground band; ground height at the feet | Foot plant IK; pelvis height from the lower supporting foot; ankles align to the ground normal (limit 35 degrees); dust marks on plants |
+| **Low air** | Low-air band | Weight fades: foot pins ramp out; "pre-landing reach" ramps in within 0.6 body height of the ground |
+| **High air** | High-air band | Pure flight: pitch to velocity (clamped to 60 degrees, eased over 3 to 6 ticks), limbs trail, no plant |
+| **Wall and surface** | `building_hit`, `slide`, launches into a mountainside; a building's face at `b.x ± w/2`; the ground slope | An embed pose splayed against the surface normal: feet flat against it, hands spread, torso pressed. A wall pin per limb; VFX draws the crack |
+| **Water** | Submerged band; `skim` (x, y, speed, n); the fighter's `wet` state | **Submerged:** limb lag ×1.5, overshoot ×0.6, springs stiffer and more damped, the sim's own 0.55 speed factor for water is read for the lean. **Skimming:** a compress-and-extend pulse at each skip, body flat to the surface. **Half in:** the submerged effect is weighted per bone by how far below the waterline that bone is |
+
+**Foot plant on slopes, including across the seam.**
+- The ground under a foot is the sim's ground height read through the shortest-arc helpers, piecewise linear between terrain columns (32 u wide at the current world scale; a foot is about 19 u). The foot's normal comes from the two columns it straddles; the pelvis reads a wider two-column average.
+- **A planted foot is pinned in the fighter's local frame, as an offset from the root along the shortest arc, never as an absolute x.** A fighter crossing the seam changes absolute x by the planet's circumference. An absolute pin would jump by that amount and read as a slide. An offset does not care.
+- A pin holds until its pose lifts the foot or the leg would stretch past 100%; then the foot **re-plants** (a step). It never stretches or slides.
+- Crater rims are the steep case: ankle limit 35 degrees, pelvis drop at most 0.15 body height; beyond that the foot re-plants on the nearest supporting point.
+- **Allowed slide:** the `slide_brake` family and a broken leg's drag (§5) let the foot travel along the ground on purpose. That is the knockback slide Orb likes; the dust and trench are VFX and World's.
+
+**Test A3** (§10): planted-foot drift while pinned at most 0.02 body height, on slopes up to 45 degrees and across the seam.
+
+**Approach warp, in one paragraph.** The sim moves the root along the rush. The pose is **time-normalised**, not fixed-length: launch-off held for the smaller of 4 ticks and 25% of the duration, flight blended with a path-following lean, the arrival brace starting at 75% and complete on the arrival tick (the `rush` event carries it as `n`). It therefore serves any duration and distance; at the shortest duration the segments compress, at the longest the flight pose holds. The prototype's rush runs 0.18 to 0.65 s and the dynamic profile is at least 0.25 s: **verify against Combat**, since this is parameterised on duration and distance, not on those constants. `warping-rules.md` (wave 1, not yet written) would hold the min and max tables.
+
+---
+
+## 5. Style drift as pose modifiers (item 4)
+
+### 5.1 What animation may read (state, never written)
+
+| Input | Source | Range |
+| :--- | :--- | :--- |
+| Wear and stage per region (head, core, arms, legs) | Wounds state and `region_stage`, `region_broken` | 0 to 100; fresh, bruised, battered, broken |
+| Brink, Rally, second breath | `brink_enter`, `brink_exit`, `rally`, a region falling a stage | Flags and events |
+| Mood band and act | `S.mood.band`, `S.mood.act` (`mood-style.md`) | Calm, Tense, Frenzied; 1 to 4 |
+| Style label | `f.style.label` | turtle, rusher, runner, charger, sniper, mixer, or none |
+| Form or transformation stage, meter-fed state | Form data and meters (F1) | Discrete stage; continuous 0 to 1 |
+| Ego meters | Roster meters (Respect, Pride, Wrath, Hunger) | 0 to 100 |
+| Stance, tier, state | Fighter state | Existing |
+| Pride break and the Proud front | `drop_act`, `facade_crack` (Wounds events) | Events |
+
+Some of these are not yet on the renderer's read list in `fx-events.md`. Simulation confirms the names (§12).
+
+### 5.2 The modifier model
+
+A modifier is data: **a trigger** (a sim value and a curve to a weight from 0 to 1), **an effect** (channels it changes), **a clamp**, **a blend time** and **a priority**. Shape only:
+
+```json
+{ "id": "mod.wear.arms.broken", "when": { "wear.arms": "stage>=3", "side": "worst" },
+  "does": { "chain.arm_x": { "ik_w": 0, "spring": "slack" }, "clavicle_x": [0, 0, -10], "hand_x": "relaxed" },
+  "clamp": { "maxDeg": 45 }, "blend": { "inTicks": 18, "outTicks": 30 }, "priority": 60 }
+```
+
+Rules:
+1. **Modifiers change amplitude and posture, not anchors.** They may move time around inside a segment; they never move a part's contact tick (§4.2).
+2. **Clamped.** The stack adds at most 25 degrees to any bone, except injury holds (up to 45).
+3. **Smoothed on sim ticks.** Weights pass a low-pass filter with time constants per source (mood 90 ticks, wear stage 30, brink or pride break 24), so style drifts and never pops, and it is identical on every machine and in every replay.
+4. **Linted at the extremes.** Every key set is rendered through every modifier at maximum and through the worst-case stack; the silhouette lint, joint limits and self-intersection tests must pass, or the modifier's clamp tightens (test A9).
+5. **Recognisability is not the goal** (Orb: 3 of 10) but **fighter identity is**: a modifier never replaces a fighter's profile, it moves around it.
+
+### 5.3 Catalogue (starting numbers, all proposals for Art, Game Design and Narrative)
+
+**Wear, by region and stage** (`spec-wounds.md`; Art's body table, `style-guide.md` §6). At broken, the silhouette must change by at least 10% of body height so it reads at 20 px.
+
+| Region | Bruised (30 to 59) | Battered (60 to 89) | Broken (90 and up) |
+| :--- | :--- | :--- | :--- |
+| Head | Nothing in the pose (decals are Art's) | Carriage drops 6 degrees; the head lags body turns by 2 extra ticks | The head hangs 25 degrees; look-at range halved; no head-strike parts (Combat's gate) |
+| Core | Breath depth ×1.3 | 8 degrees of hunch; the guard hand drifts toward the ribs | A hand pressed to the core; 15 degrees of flex; hips 6% lower |
+| Arms | Guard 4% lower | The injured side's guard 12 degrees lower; its strike amplitude ×0.9 (visual only); Combat favours the other arm | **The arm hangs**: IK weight 0, slack spring, shoulder 0.06 body height lower, hand open and limp |
+| Legs | Stance 5% narrower | Weight shifts 60 to 40 onto the good leg; uneven stride | **A limp** on the ground (hip 0.05 body height lower on that side, the foot may drag); in flight the leg trails slack |
+
+**The broken limb, as Game Design pitched it** (`pitches.md` §5, option A). This is the "dramatic swing" Orb asked for, and it is mostly a posture change:
+- **A broken arm turns the fighter feral.** The posture mode drops to a hunch, the injured arm is tucked or hangs, the good arm leads, the sigil holds its rage state, breath is heavy. Animation supplies limp-arm guards, one-armed strikes and head and knee variants in the vocabulary (pieces flagged `one_arm`); Combat's gating chooses them.
+- **Broken legs make the fighter plant.** A wide, low, squared stance and a strong guard set. The dash-lean approach poses are replaced by a lower flight lean; the sim removes the dash (Game Design).
+- **The break beat** is a showcase key set (§3.2), and the post-break posture is a modifier held until a Rally steps it down.
+
+**Mood band and act:**
+
+| Band | Lean | Hips | Breath | Micro-noise | Anticipation | Overshoot |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Calm | 0 | 0 | ×1.0 | ×1.0 | ×1.0 | ×1.0 |
+| Tense | +3 degrees | -3% | ×1.3 | ×1.5 | ×1.0 | ×1.1 |
+| Frenzied | +7 degrees | -7% | ×1.8 | ×2.5 | ×0.85 (never under the readability floor) | ×1.25 |
+
+Micro-noise is cosmetic, from the animation random stream (§8.3).
+
+**Style labels** (turtle, rusher, runner, charger, sniper, mixer) are a **habit tint** of at most 4 degrees: rusher weight forward with the lead hand low; turtle guard 6% higher and compact; runner a light bounce; charger a wide coiled stance; sniper still with the off hand extended; mixer none. They colour the posture; Combat's parts do the choosing.
+
+**Form and meter-fed states** (Orb's forms ladder, meter states and "shedding power to go faster"):
+- **Ladder of forms:** a form index selects a profile delta (height, four stance-idle variants, spring stiffness ×0.8 for looser cloth and hair on power, tempo style) and Art's regalia toggle. The transformation cinematic is authored.
+- **Meter-fed state that drains:** the weight follows the meter continuously. The Protagonist's heat stages (heated, simmering, boiling) raise the shoulders 0, 3, 6 degrees, deepen the breath and add tremor; steam and veins are VFX. As the meter drains, the posture slumps back.
+- **Shedding power to go faster:** a *negative* modifier: a lighter mass class (lag down, stiffness up), a forward lean, a longer stride.
+
+**Ego meters:** Pride (chin up 6 degrees, chest out, showy tempo; the Anti-hero's held posture); Wrath (shoulders up 5, fists tight, head lowered 4); Hunger (a forward hunch of 6 for the Cyborg); Respect (squared, upright, formal guard).
+
+**The Proud front** (`spec-wounds.md` §3): while Pride is half or more, the head, core and arms wear modifiers are multiplied by zero, so the composed posture holds whatever the wear; decals and regalia damage still show because they are Art's. On the pride break, the withheld modifiers release over 24 ticks and one showcase beat plays: posture collapses, hair falls loose, breath shows.
+
+**Brink, second breath and Rally:** the brink is a global hunch with a visible breath; second breath is one exhale pulse when a region drops a stage; Rally lifts the chest and shoulders (Resolve's posture) as the modifier steps down.
+
+### 5.4 How many
+
+About 25 modifier records cover the first fighter (12 wear, 3 mood, 5 labels, 1 Proud front, 1 brink, 3 form or meter). A second fighter adds a profile and a few own modifiers. One small engine interprets them all: per-bone additive rotation offsets, IK weights, and timing-shape parameters.
+
+---
+
+## 6. Authoring tools and the cost per pose (item 5)
+
+### 6.1 Four ways to make a pose
+
+| Path | Who | How | Cost per pose (L1) | Ceiling |
+| :--- | :--- | :--- | :--- | :--- |
+| **A. Text** (default) | A coder, or a Claude session | Write the FK values and pins in the pose file; render a contact sheet; fix; repeat | About 20 min, mostly review | Good silhouettes; limited nuance in spine curve and shoulders unless FK is tuned |
+| **B. Blender** | An artist or contributor | Pose an R1 armature with IK handles from a template; save as a pose; an add-on exports the JSON | About 30 min | Highest; needs Blender skills |
+| **C. Self-shot reference** | Anyone with a phone | Film a friend or oneself doing the motion; use stills as reference for A or B | +10 to 20 min | Better mechanics and weight. Private, never shipped, consent and origin recorded |
+| **D. AI-assisted sketch** | Any approved tool | Explore silhouettes and ideas, then re-author by A or B | Tool-dependent | Exploration only. Not approved until Legal reads the tool's terms (`ai-prompt-policy.md`) |
+
+All four end in the **same JSON**, which is what makes the pipeline open to a contributor who arrives later and keeps it diff-friendly in git.
+
+Blender is free and open source; the template and add-on are ours and get a row in `docs/legal/licence-register.md`.
+
+### 6.2 Tools
+
+| Tool | What it does | Where | Status | Cost |
+| :--- | :--- | :--- | :--- | ---: |
+| Pose and key-set format and schema | Human-diffable JSON, closed schema, `_` comment keys | Tools owns the schema; I write the field list | Design here | 12 h |
+| **Pose sheet** | Dependency-free Node script (as Art's `gen.mjs`): forward kinematics on R1 with capsule bodies, silhouettes at 22, 38 and 52 px, three views, mirrored, a modifier grid; writes SVG and numbers. Runs with no engine and no GPU, so a Claude session and CI can both run it | `art/animation/tools/` (mine) | Design here | 16 h |
+| **Pose lint** (part of the sheet) | Joint limits, torso-capsule intersection, extension against body height, foot-ground contact, reach against a part's `reach`, mirror symmetry | same | Design here | in the 16 h |
+| Pose validator rules | Added to `tools/validate.js`: key set has a contact key; contact tick equals the part's contact tick; reach fits the part; anticipation is at least the floor; family and can-follow table; sockets exist | Tools | Design here | 12 h |
+| **Motion reel** | A headless Godot script that plays one part on the mannequin and writes a 12-frame filmstrip and a slow-motion loop. Extends `render/tools/shots.gd` and `cue_sheet.gd` | `render/tools/` (Rendering's) | Spec only | 8 h |
+| Blender template and exporter | The R1 armature with sockets and IK handles, and an export add-on | `art/animation/blender/` | Optional | 20 h |
+| In-engine pose editor | Gizmos in a Godot tool scene | | **Deferred** until A and B prove too slow | 60 h or more |
+
+### 6.3 Cost per pose by level
+
+| Level | What it is | Text | Blender |
+| :--- | :--- | ---: | ---: |
+| **L0 sketch** | Pins and tags; the lint passes; enough for blockout and tests | 10 min | 15 min |
+| **L1 blocked** | Reviewed at three sizes and three views, mirror and limits checked, originality line written. **The planning unit** | 20 min | 30 min |
+| **L2 polished** | Hand-tuned FK, spine curve, hand shape, a personality delta. For showcase poses | +20 min | +25 min |
+| Review overhead | A 12-pose contact sheet, notes, one rework loop | about 4 min a pose | same |
+
+### 6.4 What the first fighter costs
+
+| Item | Hours (estimate) |
+| :--- | ---: |
+| Core library, 170 poses at L1 by text (20 min each) | 57 |
+| Review and one rework loop (+30%) | 17 |
+| **Core library total** | **60 to 80** |
+| Same by Blender (30 min each, +30%) | about 110 |
+| Showcase, about 100 poses at L2 (40 min each) | about 67 |
+| Each further fighter: 50 own poses at L1 (17 h), deltas and profile (11 h), showcase (67 h) | about 95 |
+| **Roster of four at 1.0** | **about 425** |
+
+At a hobby pace of 10 hours a week that is a long road, and the honest levers are scope: fewer strike shapes (20 instead of 30 saves about 15 poses), more derived chambers, profiles instead of deltas, and above all the size of the showcase set. Orb's ordering (system first, content after) already points the same way.
+
+**Tokens are the budget for a Claude author** (ADR 0005): batch 12 poses to one sheet, lint by numbers before looking at any picture, keep pose files short, and use images only for the final review of a batch.
+
+**Engineering** (runtime and tools; Rendering, Tools and I split it): rig spike 16 h; runtime v0 (pose apply, key blend, hit-stop, part cue) 28 h; IK and foot plant 24 h; spring chains 12 h; reactions and inertialisation 24 h; the modifier engine with 10 modifiers 24 h; situation adaptation 24 h; pose sheet 16 h; validator 12 h; motion reel 8 h. **About 200 hours in all; the first useful slice (stage A1, §9) is about 60.** These are Animation's estimates; owners re-estimate.
+
+### 6.5 The review loop
+
+1. The author renders a **pose sheet** (numbers first, then one image of the batch).
+2. A person reviews it. Poses are judged at 38 px in the staged view, not at poster size.
+3. Once a part's key set exists, the **motion reel** plays it on the mannequin and Orb (or the reviewing human) judges it **in motion, in slow motion**. Orb said he wants to judge the aura "in motion" (`vision.md`); the same applies here. A held key reads very differently from a still.
+4. Notes go back as pose edits. Nothing is locked until Orb has seen it in motion.
+
+### 6.6 Who authors what
+
+`ai-prompt-policy.md` says characters and signature designs need real human authorship, and that AI may explore but not finish. Applying it to animation, and asking Legal to confirm:
+- **Showcase poses** (specials, signatures, finishers, transformations, break beats, taunts): posed or heavily reworked by a person, with the change logged.
+- **The composed library** (generic martial-arts strikes, reactions, flight): may begin as text poses from a Claude session, then a person selects, arranges and reworks them, with the origin recorded. The generic vocabulary carries little identity and no franchise expression.
+- Each AI-assisted pose file gets a record in `art/animation/records/` in the same form as `art/prompts/TEMPLATE.md` (tool, model, date, prompt, what a human changed, checklist result). The default here is text authoring by a Claude Code session, which the policy lists as in use.
+
+**Orb decides:** who the human author of the showcase set is (an open question in `ai-prompt-policy.md` too).
+
+---
+
+## 7. Budgets for old laptops and the browser (item 6)
+
+These are **proposals for Performance** (`docs/perf/budgets.md`), from measurements other directors made. I have measured nothing yet.
+
+**Reference machine.** The old-laptop stand-in from the engine spike: an i5-7200U or i3-5005U class CPU with an integrated GPU, single-threaded CPU 2.6 to 3.9 times slower than the 9800X3D (PassMark 1,728 and 1,128 against 4,420). In a browser, GDScript compiled to WebAssembly ran about 1.85 times slower than native in the spike (0.037 against 0.020 ms).
+
+### 7.1 Frame budget
+
+| | Two full-rate fighters, dev desktop | Reference laptop, native (×3.9) | Reference laptop, browser (×3.9 ×1.85) |
+| :--- | ---: | ---: | ---: |
+| Mean per frame | at most 0.12 ms | 0.47 ms | 0.87 ms |
+| p99 per frame | at most 0.30 ms | 1.2 ms | 2.2 ms |
+| **Proposed limit** | | | **at most 1.0 ms mean, 2.5 ms p99** (6% and 15% of 16.7 ms) |
+| Stateful tick step (springs, filters, smoothers) | at most 0.02 ms a fighter | | |
+
+**My honest expectation:** a full stack of layers is about 250 quaternion operations per fighter, so 0.05 to 0.10 ms on the desktop, which projects to 0.35 to 0.7 ms a fighter in the old-laptop browser, or 0.7 to 1.4 ms for two. That is at or over the proposed limit. The degrade ladder below is therefore not optional, and the spike (§2.3) must measure it before anyone builds on the numbers.
+
+### 7.2 The degrade ladder
+
+Use one governor, not two: VFX already drops a quality level below 42 fps for 2 s and returns at 57 fps for 8 s (`effect-budgets.md`). Animation should follow the same signal, which Performance owns.
+
+| Level | What changes | Saves |
+| :--- | :--- | :--- |
+| **L0 Full** | 60 Hz solve, all layers | |
+| **L1** | 30 Hz solve (interpolated), IK on contact and plant pins only, springs on hair and tails only, modifiers at 10 Hz | about half |
+| **L2** | Key blend only, no IK or reaction waves, pose updated on part and event boundaries (hold and snap) | most of the solve |
+| **L3 Far** (fighter under 12 px, Art's far band) | No solve: blend among about 9 pre-baked silhouette poses (stance, strike, guard, hit, launch, prone, charge, beam, dodge) at 15 Hz | nearly all |
+
+Held poses cost nothing at any level. A 30 Hz solve is also close to the classic flash-animation "on twos" look, so L1 is a style the game already wants.
+
+### 7.3 LOD tie-in
+
+Art's ladder is near over 30 px (2,500 triangles), mid 12 to 30 px (900), far under 12 px (250, no regalia). Animation follows it: L0 or L1 at near, L1 at mid, L3 at far. Solve once per fighter and **apply per pane**: in the split screen each pane owns its skeleton nodes (`rendering/README.md`, "Panes"), so the apply is done twice and the solve once.
+
+### 7.4 Memory, download and load
+
+A pose is about 32 bones of half-precision quaternions plus pins and tags, roughly 350 bytes. Seven hundred poses are under 0.5 MB packed, against a 10.1 MB gzipped web build. Key sets, profiles and modifiers are small text. Load is a decode into packed arrays at start and is not measurable next to the shader compile (about 215 ms on the web, Rendering's).
+
+### 7.5 More than two fighters
+
+Four fighters (2v2) and the Empress's three guard: full rate for the two nearest the cameras, L1 for the others, minions on a small shared vocabulary at L1 always (Combat: cheap to author and quick to read).
+
+### 7.6 What to measure first
+
+The spike, in this order: (1) skinning cost of one 27-bone fighter on the integrated GPU in the web build; (2) the layer stack on the mannequin with the placeholder rig's 15 cue poses migrated; (3) IK and springs. Each result becomes a row in Performance's table. If GDScript misses the budget, the fallback is the one ADR 0001 already names for the sim, a C++ extension, which the web export handles with its dlink template.
+
+---
+
+## 8. Keeping it render-only, so the sim hash never changes (item 7)
+
+### 8.1 The one-way valve
+
+**Animation reads the sim and never writes it.** Everything it needs already arrives as state or as events:
+
+| Reads | From |
+| :--- | :--- |
+| Fighter position, facing, `rot`, state, stance, tier, wear, stage, meters, mood, style, form | `S`, read freely (`fx-events.md`, "What the renderer reads from the sim directly") |
+| Ground height, slope, water depth, buildings' faces, `S.slides`, `S.craters` | `S` |
+| What is happening now | `S.out.fx` events: `damage`, `launch`, `parry`, `window_open`, `rush`, `slide`, `skim`, `crater`, `building_hit`, `region_stage`, `cue` and the rest |
+| Which part is playing and its tick anchors | A part cue from Combat's composer (§8.2) |
+
+**Animation emits nothing into the sim.** No root motion, no hit volumes (reserved in `data-fields.md`, and not adopted here), no IK result the sim reads. `anim.rootMotion` stays a presentation offset.
+
+### 8.2 What the sim must send, and what animation sends onward
+
+**A part cue.** For each part it schedules, the composer emits one render-only cue at the part's start tick, carrying: the part id, the start, contact and end ticks (integers), the stretch in permille, the target fighter slot and region, the side and the weight class. The existing `cue` event ({actor, kind, text, source}) can carry it as kind `part` with the ticks in `text`, at no schema cost, or Simulation can add a typed `part` event. Either is emitted by the sim from data it already has and is part of the golden stream (a one-off regenerate when it lands, like any new event). **Combat and Simulation decide the form; I ask for the content.**
+
+**Cancel and interrupt** signals are already there (`parry`, `damage`, `launch`, `ko`, `finisher_start`; §4.7). Animation must also read the running exchange's `cancel` flag.
+
+**Marks animation emits on the render side** (never hashed, never in `S.out.fx`): `contact`, `smear`, `plant`, `whoosh`, `impact_freeze`, each with a slot and a socket. VFX places sparks at the actual striking socket instead of the sim's approximate point; Audio times the swing whoosh to the peak speed; Camera reads the impact freeze. A **socket query** (`socket_world(slot, name)`, valid after the frame's solve) gives them positions. This is render to render, which is allowed.
+
+### 8.3 Randomness
+
+The sim's random streams are off limits. Cosmetic variation (micro-noise, which of two equivalent renditions, shiver direction) draws from an animation stream derived from the match seed and an id, the way every other cosmetic consumer does (`fx-events.md`, "Cosmetic random streams"): proposed ids `anim` and `anim.<slot>`, integer-only derivation. Draws are keyed by (seed, slot, event tick), so a replay looks the same and adding a modifier shifts no other random number.
+
+### 8.4 Where the data lives, and what is hashed
+
+- **Poses, key sets, profiles and modifiers are not part of the sim's canonical data hash.** They live in `data/anim/` and are excluded, so editing a pose or tuning a modifier cannot change a golden or a QA baseline. A part's `anim.keySet` field is a render-only reference and is excluded too. (Combat's schema already separates `sim` and `render` blocks.)
+- This needs an **EP and Tools ruling** on two things: `data/anim/` and its schemas (my owned paths are `art/animation/` and `docs/animation/`), and that the hash skips `anim/` and the `render` blocks.
+
+### 8.5 Ticks, interpolation and frame rate
+
+- All animation state advances on **sim ticks**: springs, smoothers, inertialisation offsets, the animation random streams. The pose solve runs **once per displayed frame** from the latest tick state, interpolating between the last two ticks (as Rendering already does for fighter position). The cheap stateful work runs every tick; the expensive bone work runs per frame.
+- Consequences: animation is identical at 30, 60 or 144 fps; it holds in hit-stop and pause and follows the KO slow motion for free; `--fixed-fps 60` screenshots and replay videos are exact; and if a slow machine runs several ticks in one frame, only the last one is solved.
+
+### 8.6 Verification
+
+| Check | How | Existing tool to extend |
+| :--- | :--- | :--- |
+| Gameplay hash unchanged with animation on, off and stubbed | Run seeded matches through the full scene; compare hashes at every checkpoint | `render/tools/determinism.gd`; `cue_check.gd` already does this for poses |
+| Negative control | Nudge a fighter from the animation layer once; the check must fail | `determinism.gd --negative-control` |
+| No writes | A static check that nothing under `render/anim/` or `art/animation/` assigns to `S.*` | A small Tools script in CI |
+| Hash independent of pose data | Edit a pose, regenerate the data hash; unchanged | `tools/validate.js` canonical hash |
+
+### 8.7 The only values that cross the boundary
+
+Animation authors **no sim-read field**. Three things touch sim-read data, and each has a rule:
+
+| Value | Who authors it | Rule |
+| :--- | :--- | :--- |
+| **Family vocabulary and the can-follow table** (`poseIn`, `poseOut`) | I propose; Combat records them in its parts | Symbolic tags. A change alters what the composer may join, so **it is a sim change and re-baselines QA's golden hashes** |
+| **Silhouette-clarity flag** on a part (a composition-time filter, `procedural-moves.md` §2.2) | The lint reports; Combat records | Set once, frozen. A change is a sim change |
+| **Contact tick, reach and timing** | Combat only | I *validate* against them (contact key on the contact tick, reach inside the pose's envelope). If animation cannot meet them I file a **Combat request through the EP**; I never change them |
+
+---
+
+## 9. Stages, against Combat's plan (`procedural-moves.md` §12)
+
+| Combat stage | Animation slice | New poses | Exit |
+| :--- | :--- | ---: | :--- |
+| 0 Measure, 1 Parity as data | **A0 Formats and spike.** Pose and key-set schema, pose sheet and lint, validator rules, the rig spike, the 15 existing cue poses migrated into the pose format | 15 | Validator and sheet run; spike numbers recorded in Performance's table |
+| 2 One slot generative (6 or more strikes, 8 or more launch vectors) | **A1 Mannequin runtime.** Pose apply, key blend, hit-stop, the part cue, no IK. Foundation set, 6 strike key sets, 8 flight poses | about 50 | Hash unchanged on and off; contact key on the contact tick 100%; frame cost recorded |
+| 3 Full phrase grammar (30 to 40 parts) | **A2 The vocabulary.** All 170 core poses, IK, arcs, lag, reactions, inertialisation | 170 in all | Silhouette lint 100%; anticipation at or above the floor; no pops at joins (A8) |
+| 4 Context bends | **A3 Situation and drift.** Slope, wall and water adaptation; modifiers v1 (wear, mood) | about 10 | Foot-plant test A3; wall and water scenes; modifier extremes lint A9 |
+| 5 Specials, signature, a second fighter as data | **A4 Retarget.** A profile, deltas and own poses for fighter two; showcase for specials and the signature | about 100 | Second fighter with no code change; distinguishable from the first (Combat's T3) |
+| 6 Finisher | **A5 Set pieces.** Finisher, break beats, transformation cinematics | about 60 | Every finisher plays; Orb reviews in motion |
+| 7 Polish | **A6.** Timing polish, smear and impact marks, LOD tuning, motion reels for Orb | | Budgets met on the reference machine |
+
+The smallest useful thing is **A1**: it replaces the placeholder cue poses with the real pipeline and proves the hash and the budget before any library is written.
+
+---
+
+## 10. How we will know it works
+
+| Test | What it checks | Target |
+| :--- | :--- | :--- |
+| **A1 Silhouette** | Every pose passes the lint at 22, 38 and 52 px in three views, and mirrored | 100% |
+| **A2 Contact accuracy** | Over 100 seeded matches, the striking effector is within 0.06 body height of the defender's socket at every contact tick (headless solve, no drawing) | 99% |
+| **A3 Foot plant** | Planted-foot drift while pinned, on slopes to 45 degrees and across the seam | at most 0.02 body height |
+| **A4 Hash** | The gameplay hash with animation on, off and stubbed, seeds 12345 and 4 and more | identical, and the negative control fails |
+| **A5 Budget** | Frame cost on the integrated-GPU web build, two full-rate fighters | inside §7.1, or the ladder engages |
+| **A6 Rendition census** | Distinct contact renditions per fighter over 1,000 seeded matches (distinct means at least 12 degrees mean joint angle or 8% silhouette area) | at least 500 for the first fighter |
+| **A7 Timing fidelity** | The contact key on the contact tick; nothing past the end tick; anticipation at or above the floor | 100% by static check |
+| **A8 No pops** | Maximum joint angular velocity across part joins, and the visual root offset back to zero at each end tick | under the threshold set at A1 |
+| **A9 Modifier bounds** | Silhouette, limits and self-intersection with every modifier at maximum and with the worst-case stack | 100% |
+
+QA owns the harness; the targets are mine to propose. A1, A7 and A9 are static and can run in CI without an engine, through the pose sheet's lint.
+
+---
+
+## 11. Risks
+
+| Risk | Why | Mitigation |
+| :--- | :--- | :--- |
+| **Procedural motion looks floaty or robotic** | The in-between is the part nobody authors | Sell the pose: strong holds, snaps, smear, impact frames, moving holds. Orb reviews in motion at A1, before the library is written |
+| **The old-laptop browser budget** | GDScript is slow; the frame is already tight; my estimate is at the limit (§7.1) | Spike first; the degrade ladder; own IK and springs kept small; a C++ extension as the named fallback |
+| **Authoring capacity** | 425 hours across the roster at hobby pace | Derived chambers, profiles over deltas, a text path a Claude session can drive, and a Blender path for contributors; the showcase set is the lever |
+| **Human-authorship rule** | Showcase poses need a person; nobody is named | Orb decides (§6.6); until then the composed library proceeds and the showcase set waits |
+| **Skinning and draw calls on Compatibility** | Unverified on the web and the iGPU | The §2.3 spike; rigid-skinned single mesh as the plan |
+| **Modifier stacks make ugly poses** | Injury, mood and form can combine | Clamps, the worst-case lint (A9), smoothing on ticks |
+| **Cheat-out and mirroring** | Near-side strikes read; far-side and depth-axis ones may not | Pose review in three views (§3.6); the author picks the near limb for the key read |
+| **Facade and building contacts at depth** | Buildings stand at depth rows; a launch through one is scripted | Animation supports surface normals in the x-y plane; the staging of a facade hit needs Camera and World (§12) |
+| **A late Combat contract** | `moveset-system.md` is not written; every timing is provisional | Design against `procedural-moves.md`; keep field names in one place; re-check when it lands |
+| **AI-authored poses and copyright** | Work made only by AI is not protected (`ai-prompt-policy.md`) | Human pass with a record; showcase poses by hand |
+
+---
+
+## 12. Needs from others (through the EP)
+
+| # | Need | From |
+| :--- | :--- | :--- |
+| 1 | The composer's part record: is `anim.keySet` (renamed from `anim.clip`) and `anim.contactKey` acceptable; the readability minimum by weight; how a cancelled part is signalled; a part cue with its anchor ticks (§8.2) | Combat, Simulation |
+| 2 | The wave-1 documents (`clip-list.md`, `warping-rules.md`, `rig-options.md`) are not written. This plan supersedes most of them: the rig options are closed by Orb's decision, the clip list becomes the part-to-key-set table once `moveset-system.md` lands, and the warping rules become a short document after it. Confirm | EP |
+| 3 | `data/anim/` and its owner; the schema; the hash excluding `data/anim/` and `render` blocks | EP, Tools |
+| 4 | The runtime code's home and owner (a `render/anim/` module), to my spec | EP, Rendering |
+| 5 | The rig spike: skinning cost and draw calls on the web and the iGPU; the draw-call budget; confirm the finger-slab hands and the rigid-skinned single mesh | Rendering, Art, Performance |
+| 6 | Confirm the renderer's read list includes wear and stage, meters, form and pride state (§5.1) | Simulation |
+| 7 | Whether the human-authorship rule covers animation data; the composed library's route | Legal |
+| 8 | The staging of a facade hit at depth (a launch into a building at row 1 to 3) | Camera, World |
+| 9 | A per-fighter animation style guide, once the roster's looks lock | Narrative, Art |
+| 10 | The animation stream ids (`anim`, `anim.<slot>`) in `fx-events.md`'s table | Simulation |
+
+## 13. Open questions
+
+| Question | Owner |
+| :--- | :--- |
+| How staccato do you want it? Held poses and hard snaps, or more fluid? It is one number in the fighter's profile. I would show two motion reels at A1 and let Orb pick. | Orb |
+| Who is the human author of the showcase poses: Orb, a contributor, a commissioned artist? Poses via Blender or by reviewing text-authored poses on contact sheets? | Orb |
+| Are hands a palm plus a finger slab, and is the body rigid-skinned faceted parts? Both are cheap and look right for the style, and both are Art's to confirm. | Art |
+| Is the animation layer's proposed budget acceptable, and which governor sets the degrade level? | Performance |
+| What does the Combat contract look like when `moveset-system.md` lands: part fields, cancels, the part cue? | Combat |

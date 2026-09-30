@@ -74,15 +74,17 @@ A **showcase move** is a complete, hand-made move: a whole phrase, or a short mu
 
 ## 3. Specials and signatures
 
-### 3.1 Terms
-- **Special abilities** are what the player triggers: Hot Blood, Drop the Act, Press and the like (questionnaire 4). They are fighter mechanics, owned by Game Design, and are not in this document.
-- **Special moves** are the director's flashy attacks between basics and signatures: energy blasts, advanced footwork, and anything unique to a fighter.
+### 3.1 Terms (Game Design's `docs/design/moveset-rules.md`)
+- **Fighter mechanics** (stoke, Press, Drop the Act, the fold, the Encore) keep their own inputs and prompts. They are Game Design's, and are not in this document.
+- **Specials** are the flashy attacks between basics and signatures: energy blasts, advanced footwork, and anything unique to a fighter. The player queues them; the director times them and picks their variant.
 
 ### 3.2 Special moves: a loadout of a few, each with contextual variants
 - **Library.** About **10 special skeletons** per fighter. Each is a hand-made skeleton of 3 to 5 pieces fixing the move's identity (its silhouette moment, anchors, cost and trigger), for about 40 pieces.
-- **Loadout.** **4 are active** at a time. The fighter's data sets the default loadout, and each form swaps one or two (form deltas), so a transformation visibly changes the kit. Game Design decides whether the player picks a loadout before the match.
+- **Loadout** (Game Design's rule). **3 specials**, chosen from the fighter's pool at character select, with a default loadout in the fighter's data. The player queues one by holding **Special** plus a direction for the slot, and the director fires it at the next opening, within 180 ticks. Cost 15 to 30 ki by power class; cooldown 25 s.
+- **A fourth special from a secret.** When the Empress's hidden weapon or the Anti-hero's secret technique is revealed (a beat of about 1.5 s, with a line), it joins that fighter's loadout as a fourth special for the rest of the match. Only those two fighters have secrets.
+- **Forms change the variants, not the loadout.** Form is one of the variant keys below, so a transformation still visibly changes how each special plays.
 - **Variants.** Each skeleton varies by layers, as the signature beam does (`signature-variants.md` section 5): situation (4) × range (close, mid, far: 3) × form stage (about 2 on average) = 24 potential variants. About half are valid, so **about 12 per special**, and about **120 distinct special plays per fighter** across the library. That is inside "dozens to hundreds".
-- **Use.** The director spends a special when the template, the state and the resources allow: a special's cost (ki, a meter or a cooldown) is Game Design's. The attack weight the player queued biases which one: light favours footwork specials, heavy favours power specials.
+- **Use.** The player picks *which* special (the slot); the director picks *when* (the next opening) and *which variant*. The variant comes from context: biome and surface, altitude, distance, the opponent's stance and injuries, and the fighter's form and mood. This uses the same selector grammar as `styles.json`, and the player never picks a variant. Game Design's bands: 8 to 16 specials fired per fighter per match, and no single special above 50% of a fighter's specials.
 
 ### 3.3 Signatures: dozens per fighter, chosen three ways
 Signatures are the flashiest moves: energy attacks, hidden weapons, secret abilities, ancient knowledge and world-changing abilities.
@@ -124,7 +126,8 @@ Recognisability 3 of 10 means mostly fresh, but still unmistakably *this* fighte
 6. **Tests.** QA runs T1 to T8 from `procedural-moves.md` section 13, plus:
    - **identity:** a classifier tells the fighters apart from fingerprints at 90% or better;
    - **recognisability:** the share of exchanges containing a showcase or an identity-core piece is 25 to 35%;
-   - **drift:** the fingerprint distribution shifts measurably between Calm and Frenzied, and between healthy and injured, in forced scenarios.
+   - **drift:** the fingerprint distribution shifts measurably between Calm and Frenzied, and between healthy and injured, in forced scenarios;
+   - **Game Design's bands** (`moveset-rules.md`): the same three-piece sequence repeats in under 10% of exchanges, and in a blind review 70% of reviewers can tell a Calm stretch of a fighter from a Frenzied one.
 
 ---
 
@@ -136,7 +139,7 @@ Recognisability 3 of 10 means mostly fresh, but still unmistakably *this* fighte
 | :--- | :--- |
 | `data/combat/pieces/common/*.json` | shared pieces: entries, reactions and situation layers usable by any rig |
 | `data/fighters/<id>/pieces/*.json` | the fighter's own pieces |
-| `data/fighters/<id>/moveset.json` | the fighter's vocabulary: which pieces, their weights, the identity core, drift rules (mood, injury, form), the special library and default loadout, the signature list (place, revealed and form), showcase references and traits |
+| `data/fighters/<id>/moveset.json` | the fighter's vocabulary: which pieces, their weights, the identity core, drift rules (mood, injury, form), the special pool and default loadout of 3 (plus the secret's fourth, where the fighter has one), the signature list (place, revealed and form), showcase references and traits |
 | `data/fighters/<id>/showcases/*.json` | the showcase moves |
 | `data/combat/phrases.json` | phrase classes: slots, rules and joins |
 | `data/combat/composer.json` | scoring weights, the freshness and memory settings, showcase rate and cooldowns, rhythm curves |
@@ -191,8 +194,8 @@ At 3 to 5 key poses per piece, and 4 to 10 per showcase, that is **roughly 500 t
 | :--- | :--- |
 | **Animation** | A key-pose authoring pipeline per piece: 3 to 5 poses, the contact frame, in-states and out-states as pose families. The per-fighter budget above (roughly 500 to 900 key poses at launch; greybox placeholders first). The situation layers as additive poses. The showcase format (4 to 10 poses) |
 | **Rendering** | The procedural in-between runtime: blend key poses along a rhythm curve, stretch to the sim's ticks, and apply situation layers additively. Cue consumers (already planned). A readable hit pose on the contact tick every time |
-| **Encounter** | The composer in `sim/director/`: slot filling with keyed draws, joins, anchor fitting, the variety memory in state, and style drift from mood, wounds and form. Showcase injection. Special spending and loadout. Signature selection (place, reveal, form) and the world-changing gate. The fingerprint event log. A performance budget (composition at exchange start only) |
-| **Game Design** | Numbers: scoring weights, the identity-core weight, the showcase rate and cooldowns, special costs and the loadout rule (player-picked or fixed), signature gates and costs, and the world-changing ability's trigger, cost and rules. The injury-drift mapping. The identity and recognisability targets |
+| **Encounter** | The composer in `sim/director/`: slot filling with keyed draws, joins, anchor fitting, the variety memory in state, and style drift from mood, wounds and form. Showcase injection. The special queue (3 slots, plus the secret's fourth) with variant selection. Signature selection (place, reveal, form) and the world-changing gate. The fingerprint event log. A performance budget (composition at exchange start only) |
+| **Game Design** | Numbers: scoring weights, the identity-core weight, the showcase rate and cooldowns, special costs and cooldowns (ruled: 15 to 30 ki, 25 s; loadout 3, picked at character select), signature gates and costs, and the world-changing ability's trigger, cost and rules. The injury-drift mapping. The identity and recognisability targets |
 | **Tools** | Schemas for pieces, phrases, moveset, showcases and composer. The join, fit and coverage validation. A static enumerator of valid attacks per fighter |
 | **World** | Permanent world-changing states (reshaped land, changed sky, moved water), once per match |
 | **Narrative** | Names only for what shows on screen (showcases if named, specials, signatures and finishers, per questionnaire 4). Story-moment hooks for revealed signatures |
