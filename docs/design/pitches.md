@@ -101,3 +101,26 @@ Legal rated **Held fragments** CONDITIONAL. The conditions are binding (`docs/le
 **Questions left for Orb:**
 - Should the fold also need a time floor? Recommended: yes, 4:00.
 - Should a rival's grab be only a denial, or also a small boost to their own meter? Recommended: a surge plus a denial, with no meter bonus.
+
+## 5. Broken limbs: a dramatic swing, not a routine (questionnaire 5)
+
+Orb: "a dramatic swing during the match, not especially common but a real consideration when playing." Today limbs break 3.75 times a match (arms first in 63%), so breaks are routine. Pitch: **limbs stop breaking from plain wear.**
+
+**A. The crippling moment (recommended)**
+- **How often:** about 1 match in 3 has one limb break (0.3 to 0.5 a match), and a fighter breaks at most one limb per match.
+- **How it happens:**
+  - Limbs still wear down to battered, but they stop there.
+  - A limb breaks only in a *crippling moment*: a heavy-class blow (a heavy, a guard break, a signature or a chain ender) lands on a battered limb in a decisive exchange, and a roll succeeds.
+  - The roll starts at 15%, rises by 10 if the attacker is a tier ahead, and by 10 in act 3 or later. It drops by 10 if the defender holds DEFENSIVE, bracing.
+- **Why it's a real consideration:** you see your limb reach battered, so you guard it or keep it out of the fight. The attacker sees it too, and loads heavies to go for it.
+- **The beat:** a respected 1.5 s set piece. The camera pushes in, the crack lands, both fighters get a line, and a long launch across the map follows.
+- **What changes afterwards:**
+  - *A broken arm* weakens heavies and signatures, but the fighter turns feral: lights hit 15% harder and chain more often.
+  - *Broken legs* take away the dash, but the fighter plants: their guard gets stronger.
+  - *For both sides:* the fighter who did it gets a meter surge and the fight's mood jumps. The broken fighter gets the trailing-fighter help (comeback ruling). The rival who fights on with a wrecked arm is the story.
+- **Brink and finisher:** the brink becomes **the core broken**. Wear that would push a limb past battered spills into the core, so the fight still ends on time. The finisher rule is unchanged: a KO only comes through a finisher from the brink. Rally mends the core; a broken limb stays broken for the match, as its scar.
+- **The break band:** "3 to 5 region breaks" is retired. The new bands are limb breaks 0.3 to 0.5 a match and one core break a match (the brink), plus any re-brinks after Rallies. Acts also advance when a core reaches battered, so chapters still come.
+
+**B. A high threshold** (simpler, less dramatic). Limbs break only past 130 wear, the director spreads its hits, and the brink is the core broken, or the core battered plus one broken limb. Breaks become rarer, but they happen when the numbers say so, not in a moment.
+
+**C. The price of survival.** Limbs break only when a fighter survives a finisher: they live, but lose an arm or a leg. The rate follows contest survival (about 1 match in 4). It is very dramatic, but it only matters at the end, so it is less of a consideration during play.
