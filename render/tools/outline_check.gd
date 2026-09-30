@@ -4,7 +4,8 @@ extends SceneTree
 ## lands) is baked by OutlineBake and drawn through fighter_hull.gdshader, posed by seeded bone sweeps, near and far,
 ## with the hybrid projection and without. For each frame the body is drawn alone (its silhouette B), then with its
 ## outline (H); every pixel within OUTLINE_PX - 0.5 of B must be in H. Any that is not is a crack. The same frames with
-## the outline pushed along the faceted normals (the spike's hull) must crack: the failing control. Needs a window.
+## the outline pushed along the faceted normals (the spike's hull) must crack: the failing control. Needs a window:
+## the masks are rendered, so under --headless (no renderer) it says so and exits with code 2 (1 is a failure).
 ##   godot --path . --script res://render/tools/outline_check.gd -- [--out=DIR] [--poses=24] [--seed=7]
 
 const SIZE := 640
@@ -26,6 +27,10 @@ var bones: Array = []   # [name, parent, rest origin]
 
 
 func _initialize() -> void:
+	if DisplayServer.get_name() == "headless":
+		printerr("outline check: needs a window (it renders its masks); not run under --headless")
+		quit(2)
+		return
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out = a.substr(6)
