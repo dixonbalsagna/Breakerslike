@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/director-location",
+  "title": "director.location/1 (draft, from docs/director/location-variety-plan.md)",
+  "description": "data/director/location.json: where the fight roams (Encounter's location variety slice): the hero's variety trigger, the destination scoring weights, whether the sea is a destination, the villain's prowl, and which biomes can be destinations per role. DRAFT: the field types are read from the plan before the data exists, and the version string `director.location/1` is a guess that follows the other files' naming; Encounter's commit tightens it. Planet shares come from WorldBiomes.SEG at load, not from data. The file is hashed (DirData.dataHash). Version field: schema. Policy: closed except keys starting with an underscore.",
+  "type": "object",
+  "required": [
+    "schema",
+    "excessStart",
+    "varietyW",
+    "popW",
+    "keepW",
+    "oceanSurface",
+    "prowlTier",
+    "prowlAfter",
+    "destinations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "director.location/1"
+    },
+    "excessStart": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How far a biome's time share must exceed its planet share before the hero leaves it."
+    },
+    "varietyW": {
+      "type": "number",
+      "minimum": 0,
+      "description": "The weight on a destination biome's excess share."
+    },
+    "popW": {
+      "type": "number",
+      "minimum": 0,
+      "description": "The population weight (today's LURE_POP_W)."
+    },
+    "keepW": {
+      "type": "number",
+      "minimum": 0,
+      "description": "The discount for the way a fighter already moves (today's LURE_KEEP)."
+    },
+    "oceanSurface": {
+      "type": "boolean",
+      "description": "Lets the sea be a destination (the surface only)."
+    },
+    "prowlTier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "The villain's prowl starts at this power tier."
+    },
+    "prowlAfter": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Seconds away from towns before the villain prowls."
+    },
+    "destinations": {
+      "type": "object",
+      "required": [
+        "hero",
+        "villain"
+      ],
+      "properties": {
+        "hero": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ocean",
+              "village",
+              "plains",
+              "city",
+              "forest",
+              "desert",
+              "mountains"
+            ]
+          }
+        },
+        "villain": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ocean",
+              "village",
+              "plains",
+              "city",
+              "forest",
+              "desert",
+              "mountains"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

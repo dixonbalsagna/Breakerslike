@@ -3500,6 +3500,120 @@
         "rule": "maximum",
         "pointer": "/labels/mixer/leaveMaxStancePct"
       }
+    },
+    {
+      "id": "director-location-version",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/schema": "director.location/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "director-location-needs-prowl",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "del": [
+            "/prowlAfter"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-location-unknown-biome",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/destinations/hero/0": "volcano"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/destinations/hero/0"
+      }
+    },
+    {
+      "id": "director-location-tier",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/prowlTier": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/prowlTier"
+      }
+    },
+    {
+      "id": "director-location-negative-weight",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/popW": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/popW"
+      }
+    },
+    {
+      "id": "director-location-empty-destinations",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/destinations/villain": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/destinations/villain"
+      }
+    },
+    {
+      "id": "hash-render-in-director",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/render": {
+              "note": "x"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hash-render",
+        "pointer": "/render"
+      }
     }
   ],
   "text": [

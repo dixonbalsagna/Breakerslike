@@ -13,7 +13,9 @@ Schema changes for the batch described in `docs/combat/pending/README.md` and `d
 4. **`chainP.heat`** in `combat-styles.schema.json`: a required stage table `{Heated, Simmering, Boiling}` of numbers, replacing `heatBoiling` (which the script removes from the schema, so the data must drop it in the same commit).
 5. **`blitz.chance.cap`** in the same schema: a required number 0 to 1. A new warning, `style-blitz-cap` in `tools/lib/xref-fight.js`, fires when the Tense or Frenzied chance is above the cap (it would always be clipped).
 
-Items 4 and 5 need `data/combat/styles.json` to carry the new fields (Combat moves them out of the `_heat` and `_cap` notes in the same batch). It also makes `tools/lib/xref.js` check that a `selectorByProfile` selector points at branches of its own template (rule `selector-branch`), and adds 16 cases to `tools/fixtures/cases.json`.
+6. **`sigCooldown`** in `fighter.schema.json` (Encounter's Q4 attack clock): a required number greater than 0, seconds, 120 by default. The script also adds it to the two virtual fighter fixtures and 4 cases. It needs `data/fighters/*/fighter.json` to carry it in the same commit (until then KAI and VORR fail as "missing sigCooldown", which is the point).
+
+Items 4 and 5 need `data/combat/styles.json` to carry the new fields (Combat moves them out of the `_heat` and `_cap` notes in the same batch). It also makes `tools/lib/xref.js` check that a `selectorByProfile` selector points at branches of its own template (rule `selector-branch`), and adds 20 cases to `tools/fixtures/cases.json`.
 
 ### How to run
 
@@ -24,6 +26,14 @@ Items 4 and 5 need `data/combat/styles.json` to carry the new fields (Combat mov
 
 ### What was checked
 
-In a scratch copy, before the changes the parked copies (with a `styles.json` carrying `heat` and `cap`) fail with exactly eight errors (`byState`, four `kind`, `selectorByProfile`, `heat`, `cap`), and after them: 0 errors, 0 warnings, and the self-test passes 459 of 459 (16 new cases). Cases assume the parked shapes: template 3 is `pressure`; finishers 0 to 3 are `generic.placeholder`, `generic`, `kai`, `vorr`.
+In a scratch copy, before the changes the parked copies (with a `styles.json` carrying `heat` and `cap`) fail with exactly eight errors (`byState`, four `kind`, `selectorByProfile`, `heat`, `cap`). After them only the two expected `sigCooldown` errors remain (KAI and VORR), and the self-test passes 586 of 586 (20 new cases). The script adds cases by parsing `cases.json`, so it does not depend on its layout. Cases assume the parked shapes: template 3 is `pressure`; finishers 0 to 3 are `generic.placeholder`, `generic`, `kai`, `vorr`.
 
 Re-check after the run: if `data/combat/` has moved on (for example new templates before `pressure`), the case pointers `/templates/3/...` and `/finishers/2/...` need updating; the self-test says "fixture path missing" if so.
+
+## `apply-m1b.cjs`: Simulation's M1b mood and style shapes
+
+Run from the repo root in the same commit that lands the M1b data: `node docs/tools/pending/apply-m1b.cjs`. Re-runnable (a second run changes nothing). It edits `fight-mood.schema.json`, `fight-style.schema.json`, the two virtual fixtures and `cases.json`:
+
+- **fight.mood/1:** `rates.proportional` {on boolean, base integer at least 0, perMille integer at least 0}, required; and a new required `actBeats` {every: array of `regionBreak` or `form`; oncePerMatch: array of `limbBattered`, `coreBruised` or `coreBattered`}.
+- **fight.style/1:** a new required top-level `minHeldS` (integer at least 0). The mixer keeps `leaveMaxStancePct` and `leaveHoldS`. `qaBands` stays an open object, so Narrative's nested form (`judgedOnAI`, `judgedOnHumanOrScriptedPlay`) and the flat form both pass.
+- 9 cases. Tested in a scratch copy: with today's live M1 data the only errors after the script are the missing new keys (`minHeldS`, `actBeats`, `rates.proportional`), and the self-test passes 560 of 560.

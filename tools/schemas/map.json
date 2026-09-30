@@ -141,6 +141,10 @@
     {
       "match": "data/anim/cues.json",
       "schema": "anim-cues.schema.json"
+    },
+    {
+      "match": "data/director/location.json",
+      "schema": "director-location.schema.json"
     }
   ]
 }

@@ -14,7 +14,7 @@ const { validate, checkSchema } = require('./schema');
 
 const fixtures = path.join(core.repoRoot, 'tools', 'fixtures');
 // Folders whose data does not exist yet: the self-test uses tools/fixtures/virtual in their place and ignores real files.
-const VIRTUAL_DIRS = ['data/fighters/', 'data/fight/', 'data/input/'];
+const VIRTUAL_DIRS = ['data/fighters/', 'data/fight/', 'data/input/', 'data/director/'];
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
 function walk(dir, base, out) {

@@ -1,0 +1,25 @@
+{
+  "_about": "Validator fixture, not game data: neutral numbers in the shape docs/director/location-variety-plan.md describes.",
+  "schema": "director.location/1",
+  "excessStart": 0.15,
+  "varietyW": 600,
+  "popW": 1.5,
+  "keepW": 0.5,
+  "oceanSurface": true,
+  "prowlTier": 3,
+  "prowlAfter": 20,
+  "destinations": {
+    "hero": [
+      "ocean",
+      "plains",
+      "forest",
+      "desert",
+      "mountains"
+    ],
+    "villain": [
+      "city",
+      "village",
+      "plains"
+    ]
+  }
+}

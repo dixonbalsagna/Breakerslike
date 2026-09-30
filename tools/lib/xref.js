@@ -561,7 +561,7 @@ function xref(docs, root = repoRoot) {
   }
   // The replay's data hash covers exactly what the sim loads: data/combat/templates.json, data/combat/finishers.json (DirData)
   // and data/fighters/** (FighterData). Anything render-side must stay out of those files and out of the sim.
-  const HASHED = (rel) => rel === 'data/combat/templates.json' || rel === 'data/combat/finishers.json' || rel.startsWith('data/fighters/');
+  const HASHED = (rel) => rel === 'data/combat/templates.json' || rel === 'data/combat/finishers.json' || rel.startsWith('data/fighters/') || rel.startsWith('data/director/');
   const hasRender = (node, pointer, file) => {
     if (Array.isArray(node)) node.forEach((x, i) => hasRender(x, `${pointer}/${i}`, file));
     else if (isObj(node)) {
