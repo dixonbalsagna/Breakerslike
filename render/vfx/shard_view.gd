@@ -72,7 +72,7 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 						c.a *= 0.6
 					puffs += 1
 				VfxDebris.RING:
-					c.a = 1.0 - f
+					c.a = 0.6 * (1.0 - f)
 					sy = sx
 				_:
 					c.a = 1.0 - smoothstep(0.7, 1.0, f)

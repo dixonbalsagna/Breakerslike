@@ -1,6 +1,6 @@
 # VFX plan: speed you can read, destruction that hits
 
-Owner: VFX Director. Written 2026-09-29 for the EP's brief "make speed readable and destruction impressive". It replaces the wave-1 paper brief (inventory, style options, budgets, readability); what still fits is folded in below (section 1, section 6 and section 7). Nothing in this file is locked. Every number is a starting value that lives in one look file (`render/vfx/vfx_look.gd`), so tuning never touches logic.
+Owner: VFX Director. Written 2026-09-29 for the EP's brief "make speed readable and destruction impressive". As built: `docs/vfx/README.md`; budgets: `docs/vfx/effect-budgets.md`. It replaces the wave-1 paper brief (inventory, style options, budgets, readability); what still fits is folded in below (section 1, section 6 and section 7). Nothing in this file is locked. Every number is a starting value that lives in one look file (`render/vfx/vfx_look.gd`), so tuning never touches logic.
 
 ## 0. What Orb asked for, and what "done" is
 
@@ -85,9 +85,9 @@ The split screen draws the world twice, so the trail is drawn per pane from a sh
 
 | Effect | Sim input | Exists | What it looks like | Tier scaling | Built |
 | :--- | :--- | :---: | :--- | :--- | :--- |
-| **Ground cracks** | `crater` {x, r, depth, rim, energy, cause, skid} | yes | Hairline web out of the rim: radial spokes with jogs and Y forks, two dark steps with a lit lip on the near side, draped on the ground surface. High energy adds fissures: fewer, longer, wider splits with a dark throat, and a cutaway gash at the profile so a split reads from the side view | Spoke count and length grow with sqrt(energy); fissures only above a threshold (Orb: "save the biggest for special attacks") | tonight |
+| **Ground cracks** | `crater` {x, r, depth, rim, energy, cause, skid} | yes | Hairline web out of the rim: radial spokes with jogs and Y forks, two dark steps with a lit lip on the near side, draped on the ground surface. High energy adds fissures: fewer, longer, wider splits with a dark throat, drawn at a least thickness on screen so they read at the grazing camera (a cutaway gash at the ground profile was tried on paper and dropped: land in front of the plane occludes it) | Spoke count and length grow with sqrt(energy); fissures only above a threshold (Orb: "save the biggest for special attacks") | tonight |
 | **Slide cracks** | `slide_dust` (a sample every 40 × WS), `slide` (end), `S.crack`, `S.slides` | yes | Herringbone spurs off the trench edges on paved ground, shattered slab lines, one fissure fan off the stop berm at the end | By energy and paved or not; paved only gets the slab pattern | tonight |
-| **Skyscraper burst-through** | `building_hit` {b, x, y, z, damage, ratio, outcome, link, n, sp, keep}, `chain_link` | no (B2) | In: a flash ring, glass thrown back toward the camera, a dust puff, a jagged hole decal on the near face. Out: a cone of glass slivers and steel pieces along the flight, a hole on the far face, a smoke tunnel behind. The fighter is hidden inside by the building's own facade | `outcome` (crack, wreck, collapse) and `sp`: cracked gets dust only, wreck adds shards, collapse adds the full cone and the fall | tonight, mock-driven |
+| **Skyscraper burst-through** | `building_hit` {b, x, y, z, damage, ratio, outcome, link, n, spd, keep, ux, uy, kind, w, h, victim} (B2, `docs/world/b2-plan.md` §5), `chain_link` | no (B2) | In: a flash ring, glass thrown back toward the camera, a dust puff, a jagged hole decal on the near face. Out: a cone of glass slivers and steel pieces along the flight, a hole on the far face, a smoke tunnel behind. The fighter is hidden inside by the building's own facade | `outcome` (crack, wreck, heavy, collapse) and `spd`: crack gets dust only, wreck and heavy add shards and leave a hole, collapse adds the full cone and the fall | tonight, mock-driven |
 | **Chain link tunnel** | `chain_link` {from, to, x0..z1, dur, link} | no (B2) | Debris and dust streamed along the segment between two hits, thickening with each link | `link` index | mock-driven |
 | **Building collapse: implode** | `building_fall` {b, x, y (= z), w, depth (= height), mode "implode", delay, cx, rubble, n} | yes | A dust skirt around the base, a rising column, chips falling straight down, a ground ring, staggered by `delay` so a block goes in a ripple outward from `cx`. The heap itself is the ground (`S.rubble`, Rendering) | Size by width and height; a summary event (`b` -1, `n` folded) becomes one district cloud, not n | tonight, driven by real events plus a mock scene |
 | **Building collapse: burst** | `building_fall` mode "burst" after a `building_hit` | mode yes, hit no | The burst-through effect finishing in a fall: heavier dust, bigger chips | as above | with the burst-through |
@@ -96,7 +96,7 @@ The split screen draws the world twice, so the trail is drawn per pane from a sh
 
 Events I need that do not exist yet (through the EP, to World and Encounter for B2):
 
-- `building_hit`, `chain_link`, `launch_depth` as specified in `docs/world/buildings-in-depth.md` section 5, with one addition: a field for the launched fighter's slot (`victim`) so I can read its velocity without guessing which fighter it is. Without it I take the fighter in the `launched` state nearest to `x`.
+- `building_hit`, `chain_link`, `launch_depth` as specified in `docs/world/buildings-in-depth.md` section 5, and B2 already adds `victim`, `ux`, `uy`, `kind`, `w`, `h`, which is all I asked for (`docs/world/b2-plan.md` §5). The consumer reads those names; the mock (`render/vfx/mock/vfx_mock.gd`) emits them.
 - The direction of travel is the sign of the launched fighter's `vx` at the event tick, read from `S.fighters`. No new field is needed for that.
 - When a chain lands, one `building_hit` per building, each on the tick the fighter reaches it, exactly as B2 already plans.
 
@@ -139,7 +139,7 @@ Worst case for these effects: a chain through four towers at tier 4, a fissure f
 | Hole decals | 3 per building, 24 in all | 2 per burst-through | 1 | 5: oldest |
 | Break ring | 2 | 1 | 0 (shares the trail's MultiMesh) | 6 |
 
-Per-blast cap: 700 particles however many buildings the blast levels; the folded summary event is one cloud. Every pool drops its oldest instance when full and never drops a gameplay-critical effect: the hit flash and the fall dust of the building the director chose are reserved slots. `VfxQuality` has three levels (high, medium, low); `low` drops the marks, the outer band, hairline cracks, and cuts shard counts to 35%. An automatic step-down watches the frame time (presentation only): below 45 fps for two seconds drops a level, above 62 fps for six seconds climbs back. Desktop defaults to high, the browser to medium.
+Per-blast cap: 700 particles however many buildings the blast levels; the folded summary event is one cloud. Every pool drops its oldest instance when full and never drops a gameplay-critical effect: the hit flash and the fall dust of the building the director chose are reserved slots. `VfxQuality` has three levels (high, medium, low); `low` drops the marks, the outer band, hairline cracks, and cuts shard counts to 35%. An automatic step-down watches the frame time (presentation only): below 42 fps for two seconds drops a level, at or above 57 fps for eight seconds (and 20 s after a drop) climbs back. Desktop defaults to high, the browser to medium.
 
 ## 7. Readability rules (kept from wave 1)
 
@@ -167,7 +167,7 @@ Later (not tonight): break ring, fissure vents, variant embers, beam and clash l
 
 ## 9. Risks
 
-- **The camera is nearly level.** The ground band is foreshortened about ten to one, so surface cracks read as thin dashes unless the camera is high. Fissures therefore get a cutaway gash at the profile. If that reads badly in the screenshots I will say so and switch to a profile-only look.
+- **The camera is nearly level.** The ground band is foreshortened about ten to one, so surface cracks read as thin dashes unless the camera is high. The shader therefore widens each crack to a least thickness on screen. Built and checked in pictures (`docs/vfx/README.md`); a real notch in the ground profile (World carving fissures into `S.deform`) would read from every angle and is the stronger option if Orb wants the split more dramatic.
 - **Crater energy is being retuned** (Orb: small craters for most impacts). My crack scaling reads `energy`, so it follows World's new range; the thresholds are constants until World settles.
 - **B2 is not in.** The burst-through is a prototype on mock events. If World changes the field names, the consumer's adapter is one function.
 - **Streak strobing.** Marks shorter than a frame's travel would flicker. The length rule above prevents it and the frame-difference test checks it.

@@ -53,12 +53,13 @@ const TRAIL_CORE := "#ffffff"
 
 # ---------------------------------------------------------------------------------------------------- ground cracks
 const CRACKS_DEFAULT: bool = false      # off in the game until Orb has seen them (tools switch them on)
+const DESTRUCTION_DEFAULT: bool = false # shrapnel, collapse dust and holes: off in the game until Orb has seen them
 ## Cracks are a pure function of the sim's records (S.craters, S.slides) plus the match seed (render/vfx/crack_gen.gd),
 ## so a seek, a snapshot or a late join draws the same ones. Lengths and widths are in crater radii r or trench half
 ## widths hw; numbers of lines grow with sqrt(energy).
 const CRACK_SETS_MAX: int = 90          # crater and slide crack sets kept (oldest dropped)
 const CRACK_VISIBLE_MAX: int = 24       # drawn per pane: the nearest
-const CRACK_BUILD_PER_FRAME: int = 2
+const CRACK_BUILD_PER_FRAME: int = 1
 const CR_E_MIN: float = 0.5             # below this energy an impact leaves no cracks
 const CR_SPOKES_BASE: float = 3.0
 const CR_SPOKES_SQRT_E: float = 1.7
@@ -113,6 +114,7 @@ const DEBRIS_CAP: int = 460             # shards and dust together (docs/vfx/pla
 const SHARD_CAP: int = 220
 const PUFF_CAP: int = 240
 const BLAST_CAP: int = 700              # particles one blast may ask for, however many buildings it levels
+const SPAWN_PER_TICK: int = 260         # dust puffs past this many spawns in one tick are dropped (shards keep priority)
 const HOLES_MAX: int = 24
 const HOLES_PER_BUILDING: int = 3
 const GLASS_IN_MIN: int = 10            # a burst-through: glass thrown back at the entry ...

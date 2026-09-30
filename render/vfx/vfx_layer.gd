@@ -1,22 +1,31 @@
 class_name VfxLayer
 extends Node3D
-## One pane's VFX (docs/vfx/plan.md section 5): the motion trails and the ground cracks now; shrapnel and collapse dust
-## as they are built. It is a child of a PaneWorld ("Vfx"), so it draws in that pane's world with that pane's camera.
-## The hub (host.vfx: the history and the effects' state) is shared by every pane; main sets `hub` before the pane
-## builds. The layer only reads: update() draws, it never steps anything (the one thing it does for the hub is build a
-## queued crack mesh, which is drawing work). It finds its pane's curvature state and the planet's ground field itself,
-## through its parent, so the hooks in Rendering stay three lines.
+## One pane's VFX (docs/vfx/plan.md section 5): motion trails, ground cracks, and the destruction effects (holes in
+## facades, shrapnel, collapse dust). It is a child of a PaneWorld ("Vfx"), so it draws in that pane's world with that
+## pane's camera. The hub (host.vfx: the history and the effects' state) is shared by every pane; main sets `hub`
+## before the pane builds. The layer only reads: update() draws, it never steps anything (the one thing it does for the
+## hub is build a queued crack mesh, which is drawing work). It finds its pane's curvature state and the planet's ground
+## field itself, through its parent, so the hooks in Rendering stay three lines.
 
 var hub: VfxHub
 var trail_view := VfxTrailView.new()
 var crack_view := VfxCrackView.new()
+var hole_view := VfxHoleView.new()
+var shard_view := VfxShardView.new()
+var stat_update_usec: int = 0      # time spent in update(), for the bench and the budget table
+var stat_update_n: int = 0
+var stat_update_max: int = 0
 
 
 func _init() -> void:
 	name = "Vfx"
 	crack_view.name = "Cracks"
+	hole_view.name = "Holes"
+	shard_view.name = "Shards"
 	trail_view.name = "Trails"
 	add_child(crack_view)
+	add_child(hole_view)
+	add_child(shard_view)
 	add_child(trail_view)
 
 
@@ -34,13 +43,29 @@ func build(_S: SimState) -> void:
 ## Draw this pane's frame. cam_x: this pane's wrapped camera x; zoom: its pixels per unit at the fighter plane;
 ## vw: the pane's width in pixels.
 func update(host: SimHost, a: float, cam_x: float, zoom: float, vw: float) -> void:
+	var t0: int = Time.get_ticks_usec()
+	_update(host, a, cam_x, zoom, vw)
+	var dt_us: int = Time.get_ticks_usec() - t0
+	stat_update_usec += dt_us
+	stat_update_n += 1
+	stat_update_max = maxi(stat_update_max, dt_us)
+
+
+func _update(host: SimHost, a: float, cam_x: float, zoom: float, vw: float) -> void:
 	if hub == null or not hub.enabled:
 		trail_view.visible = false
 		crack_view.visible = false
+		hole_view.visible = false
+		shard_view.visible = false
 		return
 	trail_view.visible = true
 	crack_view.visible = hub.cracks_enabled
+	hole_view.visible = hub.destruction_enabled
+	shard_view.visible = hub.destruction_enabled
 	var half_w: float = vw * 0.5 / maxf(zoom, 1e-6)
 	if hub.cracks_enabled:
 		crack_view.update(hub, host.S, cam_x, half_w, zoom)
+	if hub.destruction_enabled:
+		hole_view.update(hub, cam_x, half_w)
+		shard_view.update(hub, cam_x, zoom, half_w)
 	trail_view.update(hub, host, a, cam_x, zoom, half_w)

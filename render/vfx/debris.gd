@@ -38,6 +38,7 @@ class Job:
 	var a: Dictionary = {}
 
 var bits: Array = []          # Bit
+var _spawned_tick: int = 0     # spawns since the last step: the per-tick budget keeps one busy tick from being a frame spike
 var jobs: Array = []          # Job, waiting
 var spawned: int = 0          # counters for the tests
 var dropped: int = 0
@@ -62,6 +63,7 @@ func reset(seed: int) -> void:
 
 ## dt: seconds of sim time this tick (a tenth in hit-stop). S: for the ground under a bouncing bit and the clock T.
 func step(S: SimState, dt: float) -> void:
+	_spawned_tick = 0
 	# Jobs are on unfrozen sim time (S.T): a hit-stopped ripple waits with the world.
 	if not jobs.is_empty():
 		var i: int = 0
@@ -121,7 +123,7 @@ func _run_job(S: SimState, j: Job) -> void:
 func burst_through(S: SimState, bx: float, w: float, h: float, front_z: float, xi: float, yi: float, xo: float, yo: float, dx: float, dy: float, sp: float, outcome: String, link: int) -> void:
 	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
 	var kscale: float = clampf(sqrt(maxf(h, 100.0)) / 40.0, 0.7, 2.4)
-	var heavy: float = 1.0 if outcome == "collapse" else (0.7 if outcome == "wreck" else 0.35)
+	var heavy: float = 1.0 if outcome == "collapse" else (0.8 if outcome == "heavy" else (0.55 if outcome == "wreck" else 0.3))
 	var ux := Vector2(dx, dy).normalized()
 	# In: glass thrown back toward the camera side of the wall, a cone opposite the flight, and a dust puff.
 	var n_in: int = int(round(lerpf(VfxLook.GLASS_IN_MIN, VfxLook.GLASS_IN_MAX, clampf(sp / 12000.0, 0.0, 1.0)) * heavy))
@@ -141,9 +143,9 @@ func burst_through(S: SimState, bx: float, w: float, h: float, front_z: float, x
 			_shard(CHUNK, xo, yo, front_z, ux, sp * 0.3, 0.6, kscale, q, 0.3)
 		_puffs(xo, yo, front_z, 8 + int(10 * heavy), 110.0 * kscale, 320.0 * kscale, q, 1.2)
 	# A ring where the wall gave way.
-	_ring(xi, yi, front_z + 6.0, 80.0 * kscale, 1500.0 * kscale, 0.35)
+	_ring(xi, yi, front_z + 6.0, 30.0 * kscale, 520.0 * kscale, 0.24)
 	if outcome != "crack":
-		_ring(xo, yo, front_z + 6.0, 80.0 * kscale, 1900.0 * kscale, 0.4)
+		_ring(xo, yo, front_z + 6.0, 30.0 * kscale, 700.0 * kscale, 0.28)
 
 
 ## The tunnel between two hits of a chain: dust and small chips streamed along the segment the fighter flies.
@@ -194,25 +196,34 @@ func _skirt(S: SimState, a: Dictionary) -> void:
 	var h: float = a.h
 	var g: float = WorldTerrain.groundY(S, bx)
 	var kscale: float = clampf(sqrt(maxf(h, 100.0)) / 40.0, 0.7, 2.4)
-	var heavy: float = 1.4 if a.mode == "burst" else 1.0
-	var n: int = int(round(clampf(w / 55.0, 6.0, 28.0) * heavy))
+	var heavy: float = 1.3 if a.mode == "burst" else 1.0
+	# The skirt: a ring of dust thrown out along the ground around the base, from one side of the footprint to the other.
+	var n: int = int(round(clampf(w / 40.0 + h / 300.0, 10.0, 40.0) * heavy))
+	var base: float = clampf(0.5 * (w + 0.15 * h), 200.0, 1100.0)   # dust scales with the tower, not only its footprint
 	for k in range(n):
 		var t: float = (float(k) + _rd.next()) / float(n) - 0.5
-		var px: float = bx + t * w
-		var out: float = signf(t) * _rd.range_(80.0, 520.0) * kscale
-		var up: float = _rd.range_(120.0, 620.0) * kscale
+		var out: float = signf(t) * _rd.range_(150.0, 700.0) * kscale
+		var up: float = _rd.range_(100.0, 500.0) * kscale
 		var kp: float = _rd.next()
-		var pz: float = _rd.range_(4.0, 40.0)
-		var ps: float = clampf(w * 0.09, 70.0, 420.0) * _rd.range_(0.7, 1.3)
-		var pl: float = _rd.range_(1.6, 3.0)
-		var py: float = _rd.range_(0.0, 60.0)
+		var pz: float = _rd.range_(6.0, 44.0)
+		var ps: float = base * _rd.range_(0.7, 1.3)
+		var pl: float = _rd.range_(2.4, 4.0)
+		var py: float = _rd.range_(0.0, 150.0)
 		if kp < q:
-			_puff_at(px, g + py, a.z + pz, out, up, ps, ps * 1.25, pl, false)
-	# A rising column over the middle, one puff a floor or so up.
-	for k in range(int(round(clampf(h / 500.0, 2.0, 10.0) * q))):
-		var fy: float = g + h * _rd.range_(0.05, 0.6)
-		_puff_at(bx + _rd.range_(-0.35, 0.35) * w, fy, a.z + 30.0, _rd.range_(-120.0, 120.0), _rd.range_(150.0, 500.0), clampf(w * 0.12, 90.0, 520.0), clampf(w * 0.12, 90.0, 520.0) * 1.3, _rd.range_(2.0, 3.6), true)
-	_ring(bx, g + 6.0, a.z + 8.0, w * 0.4, w * 2.2, 0.55)
+			_puff_at(bx + t * w * 1.4, g + py, a.z + pz, out, up, ps * 0.6, ps * 1.3, pl, true)
+	# The column: the tower's height in dust, a puff every so often up its length as it comes down.
+	var ncol: int = int(round(clampf(h / 250.0, 4.0, 16.0) * heavy))
+	var cs: float = base * 1.2
+	for k in range(ncol):
+		var fy: float = g + h * (0.05 + 0.85 * (float(k) + _rd.next()) / float(ncol))
+		var kp: float = _rd.next()
+		var vx: float = _rd.range_(-160.0, 160.0)
+		var vy: float = _rd.range_(80.0, 400.0)
+		var s: float = cs * _rd.range_(0.7, 1.3)
+		var pl: float = _rd.range_(2.6, 4.6)
+		if kp < q:
+			_puff_at(bx + _rd.range_(-0.4, 0.4) * w, fy, a.z + _rd.range_(8.0, 40.0), vx, vy, s * 0.6, s * 1.4, pl, true)
+	_ring(bx, g + 6.0, a.z + 8.0, w * 0.35, w * 1.6, 0.5)
 
 
 func _chips(S: SimState, a: Dictionary) -> void:
@@ -331,6 +342,10 @@ func _ring(x: float, y: float, z: float, r0: float, growth: float, life: float) 
 
 ## Add to the pool. When it is full a shard or chip drops the oldest puff first; a puff at the puff cap drops the oldest puff.
 func _add(b: Bit) -> void:
+	_spawned_tick += 1
+	if _spawned_tick > VfxLook.SPAWN_PER_TICK and b.kind == PUFF:
+		dropped += 1
+		return
 	spawned += 1
 	if bits.size() >= VfxLook.DEBRIS_CAP:
 		for i in range(bits.size()):

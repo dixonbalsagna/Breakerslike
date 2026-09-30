@@ -1,0 +1,60 @@
+# VFX: as built
+
+Owner: VFX Director. Code: `render/vfx/`. Plan and reasons: `docs/vfx/plan.md`. Budgets: `docs/vfx/effect-budgets.md`. Written 2026-09-29.
+
+Presentation only. VFX reads the sim's state and fx events and draws; it never writes the sim, never touches `S.rng`, and takes its randomness from streams derived from the match seed (`vfx.trail`, `vfx.shard`, `vfx.dust`, `vfx.hole`, `vfx.crack`). `render/vfx/tools/hash_check.gd` proves the gameplay hash is unchanged (below).
+
+## What is in the game now
+
+| Effect | State | Where |
+| :--- | :--- | :--- |
+| Motion trails: a tapered ribbon behind a fast fighter, and world-fixed wind marks the camera flies past | **Live** (trails are on by default) | `trail_state.gd`, `trail_view.gd`, `shaders/trail.gdshader` |
+| Ground cracks and fissures from `S.craters` and `S.slides` | Built, **off** (`VfxLook.CRACKS_DEFAULT`) | `crack_gen.gd`, `crack_mesh.gd`, `crack_view.gd`, `shaders/crack.gdshader` |
+| Burst-through shrapnel, hole decals, chain tunnel, collapse dust | Built, **off** (`VfxLook.DESTRUCTION_DEFAULT`); driven by the sim's real `building_fall` and by mock `building_hit` and `chain_link` until B2 lands | `debris.gd`, `shard_view.gd`, `hole_view.gd`, `shaders/shard.gdshader`, `shaders/hole.gdshader`, `mock/vfx_mock.gd` |
+
+Rendering's hooks (committed in ef2d55c): `SimHost.vfx` (a `VfxHub`: `reset`, `consume`), `PaneWorld.vfx_layer` (a `VfxLayer`: `hub`, `build`, `update`), and in `main.gd` `note_frame`, `reduced_motion`, `--novfx` and `--vfx-quality=0|1|2`. The layer finds its pane's curvature state and the planet's ground field through its parent, so nothing more is needed.
+
+To turn the two "off" groups on for a look: set `host.vfx.cracks_enabled` and `host.vfx.destruction_enabled` (the tools do), or change the two defaults in `vfx_look.gd`.
+
+## The effects
+
+**Trails.** Speed is the fighter's displacement per unfrozen tick in body heights a second (bh/s, 75 units). Nothing below 40 bh/s, full at 110 (Orb decides; the EP kept these defaults). Melee dash tops out at about 18, a traversal dash is 60 to 180, a median launch about 144. The ribbon has two layers (accent band, near-white core) in four hard steps, at z -12 (behind the fighter, never over it), at most 14 bh long. Wind marks are lens-shaped dashes fixed in the world, spawned 4 to 18 bh ahead of the fighter and left behind; each is at least three frames long so it never strobes. A fighter's marks draw only while it is on screen. A rush gets no trail unless it is faster than 110 bh/s (it has its own silhouettes). Reduced motion removes the marks and halves the ribbon; quality low drops the outer band and the marks.
+
+**Cracks.** A crack set is a pure function of one sim record (a crater or a slide), the match seed and the quality level, so a seek or late join rebuilds it identically (`hub._sync_cracks` reads `S.craters` and `S.slides`, not events). Hairlines run mostly along x (they read best at the grazing camera), forks and jogs, more and longer with sqrt(energy); a hard blow (E 6 or more, or `special`) adds one to three wide fissures with broken edges and a lit lip; a slide adds splits along both trench edges, a herringbone of spurs and a fan where it stopped. Lines are cut every 40 units and draped on the ground as drawn (`GroundField.ground_at`); the shader widens each to a least on-screen thickness (the ground is seen at about 6 degrees), lifts it 6 units, grows the web outward over 0.45 s of sim time, and stops at the fighter plane (the foreground rule pulls land in front down). A plan idea, a cutaway gash at the ground profile, was dropped: land in front of the plane occludes anything at the plane below the profile, so it cannot be drawn without drawing over fighters.
+
+**Shrapnel, holes, dust.** `building_hit` (B2: `b x y z damage ratio outcome link n spd keep ux uy kind w h owner victim`) gives the burst-through: glass slivers and triangles and a dust puff thrown back at the entry on the front face, a forward cone of glass, steel bars and concrete chunks at the exit, a thin ring at each. A collapse leaves no holes (the building goes); heavy, wreck and crack leave a jagged hole decal, up to three per building, removed when it falls. `chain_link` streams dust and chips along the segment. `building_fall` (exists) schedules, at its `delay`, a dust skirt around the base, a column up the tower and chips falling straight down, plus a flat ring; a folded summary (`b` -1) is one cloud. Debris flies ballistically (gravity 1,000, two bounces off the terrain), in front of the facade (z = facade + 24 to 54) and behind the fighters. Sim hit-stop slows it to a tenth, as for the reference particles.
+
+## Pictures
+
+Trail on a launched fighter in a real match (split screen; the black line is the divider): ![trail](img/trail-launch.png)
+
+Cracks from a power-up (staged) and along a slide's trench in a real match: ![power-up cracks](img/cracks-powerup.png) ![slide cracks](img/cracks-slide.png)
+
+The mock burst-through at Camera's hold (glass thrown back at the entry and forward at the exit, steel, chunks, dust), a chain between two towers, and a block imploding (the towers vanish; Rendering's fall animation is not in this scene): ![burst](img/burst-hold.png) ![chain](img/chain-between.png) ![implode](img/implode-column.png)
+
+## Tools
+
+All from the repo root, with Godot 4.7.2. Tools with pictures need a window; `--headless` ones do not. A new `class_name` script needs one `godot --headless --path . --import` before a tool can see it.
+
+| Tool | Command (after `--script res://render/vfx/tools/`) | What it does |
+| :--- | :--- | :--- |
+| `hash_check.gd` | `-- --seeds=12345,4,7 --ticks=3600 [--negative-control]` | Gameplay hash (which includes `S.rng`) against the sim alone, every 60 ticks, for 60 Hz, 144 Hz, two jittered runs, quality low with reduced motion, and the split screen, with cracks and destruction on. Fails if the effects never ran. The negative control must fail |
+| `vfx_shots.gd` | `-- --out=DIR --seed=4 --split [--cracks] [--on=impact --delay=25]` | Pictures from a real match at full trail strength, or after each impact |
+| `crack_shots.gd` | `-- --out=DIR [--only=impact_mid,slide_paved]` | Posed cracks on staged craters and slides |
+| `mock_shots.gd` | `-- --out=DIR --scenario=burst\|heavy\|chain\|implode\|all` | The mock burst-through, a heavy wreck with a hole, a three-tower chain, a block imploding, with Camera's 21-tick hold |
+| `worst_case.gd` | `-- --frames=360` | The worst scene (a chain through four towers, an imploding block, 14 crack sets, two fighters at full trail), on and off |
+
+## Checks run (2026-09-29, Godot 4.7.2, RTX 5070 Ti, Ryzen 7 9800X3D, 1280x720)
+
+- **Hash.** `hash_check.gd` passed on seeds 12345, 4 and 7 to tick 3600, all six ways, cracks and destruction on. In those matches the sim's own `building_fall` events drove 6,797 debris bits, 1,095 marks spawned and 122,780 ribbon segments were drawn, and 54 crack meshes were built in 30.4 ms. The negative control (a 0.001 nudge of one fighter's x) fails. Rendering's `determinism.gd` passes with the hooks in.
+- **Trails on a real match** (seed 4, 4,800 frames, split on): frame mean 1.688 ms without VFX, 1.702 with; p99 3.619 and 3.646; draw calls 189.6 and 189.8; the same final gameplay hash.
+- **Worst-case scene** (`worst_case.gd`, VFX on against off): frame CPU mean 0.369 against 0.226 ms, p99 0.906 against 0.342, max 0.932 against 0.406; GPU mean 0.113 against 0.112; draw calls 25 against 24 (max 31 against 26). The hub's `consume` averages 0.22 ms with a 2.9 ms peak on the tick that spawns a chain and a block at once, and the layer's `update` 0.17 ms with a 1.8 ms peak. The debris pool reaches its 460 cap, 14 crack sets are 3,718 triangles, 16 ribbon segments and 10 marks.
+- **Not measured:** the web build and an old laptop. The desktop CPU cost is small; on a machine several times slower the peak tick would be a dropped frame, which is why spawns are budgeted per tick (`SPAWN_PER_TICK`) and crack meshes build one a frame. The web number needs the CI export and `research/engine-spike/tools/bench-browser.mjs` with and without `--novfx`.
+
+## Known limits
+
+- Building depth. Rendering still draws every building's face at `RenderLook.Z_BUILDING_FRONT`; `VfxHub.front_z()` is the one place to change when it draws them at the sim's own `z`.
+- The sim's own `debris` and `dust` events for a building's fall are still drawn by Rendering's particle view, so a collapse shows both while destruction is on. One of the two should go before it ships (Rendering and VFX, through the EP).
+- The fighter is not hidden inside a building during the burst-through: that needs B2's depth (`z`) and Rendering's fighter placement. The prototype shows the fighter in front of the facade.
+- Colours are placeholders (`vfx_look.gd`); Art's semantic roles replace them as data.
+- Trails and beams share a colour language (accent and near white). If a playtest reads them as one thing, the trail moves to a neutral pale.
