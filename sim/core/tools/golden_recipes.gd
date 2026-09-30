@@ -42,6 +42,7 @@ static func build() -> Dictionary:
 		g.tick0[str(s)] = tick0Hash(s)
 	g.tick0Values = tick0Values(1)
 	g.rally = rallyHash()
+	g.cripple = crippleHash()
 	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY
 	g.rosterHash = FighterData.dataHash()
@@ -139,9 +140,9 @@ static func woundsHash() -> String:
 	return h.hex()
 
 
-## S4 Rally, forced (like woundsHash): Second Wind mends the core; the cooldown holds; the next Rally mends the head; a
-## brink too deep for one mend gets none; Spite ignores a signature win and mends the arms first on a win by hand; second
-## breath's recovered wear accumulates.
+## S4 Rally, forced (like woundsHash), under pitch A (the brink is the core broken): Second Wind mends the core; the
+## cooldown holds; the core is rallied once, so a second core break gets none; a broken limb is never mended; Spite
+## ignores a signature win and mends the core on a win by hand; second breath's recovered wear accumulates.
 static func rallyHash() -> String:
 	var S := SimCore.createSim()
 	SimCore.newMatch(S, 7)
@@ -163,19 +164,91 @@ static func rallyHash() -> String:
 			SimWounds.step(S, x)
 	put.call(f, [300000, 560000, 200000, 100000])       # core broken: on the brink
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # Second Wind mends the core
-	put.call(f, [560000, 534000, 560000, 560000])       # head, arms and legs broken (the stricter brink: three limbs)
+	put.call(f, [300000, 560000, 300000, 100000])       # the core broken again
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # the cooldown holds
 	wait.call(f, f.wd.rallyCool); snap.call(f)
-	SimWounds.onContestSurvived(S, f); snap.call(f)     # the head (core already rallied)
-	put.call(f, [534000, 560000, 560000, 560000])       # core broken (already rallied) and two limbs: no mend clears it
-	wait.call(f, f.wd.rallyCool)
+	SimWounds.onContestSurvived(S, f); snap.call(f)     # the core was rallied once: no second Rally
+	put.call(f, [534000, 300000, 560000, 300000])       # a broken arm, core bruised: not the brink, and never mended
 	SimWounds.onContestSurvived(S, f); snap.call(f)
-	put.call(g, [560000, 300000, 560000, 560000])       # head, arms and legs broken
-	SimWounds.onDecisive(S, g, "beam"); snap.call(g)    # a signature win is not by hand
-	SimWounds.onDecisive(S, g, "clash"); snap.call(g)   # Spite: arms first
+	put.call(g, [300000, 560000, 560000, 100000])       # the core and the arms broken
+	SimWounds.onDecisive(S, null, g, f, "beam"); snap.call(g)    # a signature win is not by hand
+	SimWounds.onDecisive(S, null, g, f, "clash"); snap.call(g)   # Spite: the core (the arm stays broken)
 	put.call(g, [200000, 300000, 400000, 100000])       # a battered region, 10 s after the last exchange
 	S.T = 10.0
 	wait.call(g, 60); snap.call(g)                      # second breath: 60 ticks x 100 units
+	SimHash.hashFx(h, S.out.fx)
+	SimCore.dispose(S)
+	return h.hex()
+
+
+## Pitch A, forced: spill into the core (and all of it once a limb is broken); act beats (a core's first battered, every
+## break); the crippling roll over 64 exchange indices in four contexts (base, a tier ahead, act 3, the victim DEFENSIVE),
+## with a limb reset after each break; the one-limb limit; the breaker's power surge; and the post-break modifiers
+## through hit() (a broken arm's lights, broken legs' guard).
+static func crippleHash() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 9)
+	var a = S.fighters[0]
+	var d = S.fighters[1]
+	var h := SimHash.Hasher.new()
+	var snap := func(x) -> void:
+		for r in range(4):
+			h.num(float(x.wear[r])); h.num(float(x.stage[r]))
+		h.u(1 if x.brink else 0)
+		h.num(float(x.limbBreaks)); h.u(1 if x.coreMarked else 0); h.num(x.power)
+		h.num(float(S.game.actBeats)); h.num(float(SimWounds.act(S)))
+	var put := func(x, w: Array) -> void:
+		for r in range(4):
+			x.wear[r] = w[r]
+		SimWounds.updateStages(S, x)
+	var ex := SimState.Exchange.new()
+	ex.A = a
+	ex.D = d
+	ex.kind = "heavy"
+	ex.tag = "TRADE BLOWS"
+	put.call(d, [0, 0, 530000, 0])
+	SimWounds.addWear(S, d, SimWounds.ARMS, 100.0); snap.call(d)     # the arms stop at battered; the rest spills into the core
+	for ctx in range(4):
+		a.tier = 2.0 if ctx == 1 else 1.0
+		d.tier = 1.0
+		S.game.actBeats = 2 if ctx == 2 else 0
+		ex.sD = 1.0 if ctx == 3 else 0.0
+		for n in range(64):
+			d.limbBreaks = 0
+			S.game.actBeats = 2 if ctx == 2 else 0
+			a.power = 0.0
+			put.call(d, [0, 0, 400000, 0])
+			ex.n = n
+			SimWounds.noteBlow(S, ex, a, d, SimWounds.ARMS, "heavy", {})
+			SimWounds.onDecisive(S, ex, a, d, "launch")
+			h.u(1 if d.stage[SimWounds.ARMS] == 3 else 0)
+	a.tier = 1.0
+	S.game.actBeats = 0
+	ex.sD = 0.0
+	put.call(d, [0, 0, 400000, 400000])
+	d.limbBreaks = 0
+	a.power = 0.0
+	for n in range(200):   # break the arms, then the legs must hold (at most one limb)
+		ex.n = 1000 + n
+		SimWounds.noteBlow(S, ex, a, d, SimWounds.ARMS if d.limbBreaks == 0 else SimWounds.LEGS, "heavy", {})
+		SimWounds.onDecisive(S, ex, a, d, "launch")
+	snap.call(d); snap.call(a)
+	SimWounds.addWear(S, d, SimWounds.ARMS, 50.0); snap.call(d)      # a broken limb spills everything
+	var lightEx := SimState.Exchange.new()
+	lightEx.A = d
+	lightEx.D = a
+	lightEx.kind = "light"
+	h.num(SimDamage.hit(S, lightEx, d, a, 20.0, {}))                   # the broken arm's light
+	a.wear[SimWounds.ARMS] = 0
+	var guardEx := SimState.Exchange.new()
+	guardEx.A = a
+	guardEx.D = d
+	guardEx.kind = "light"
+	guardEx.sD = 1.0
+	d.wear[SimWounds.LEGS] = d.wd.stageAt[2]
+	SimWounds.updateStages(S, d)
+	h.num(SimDamage.hit(S, guardEx, a, d, 20.0, {}))                   # broken legs' guard
+	snap.call(d)
 	SimHash.hashFx(h, S.out.fx)
 	SimCore.dispose(S)
 	return h.hex()

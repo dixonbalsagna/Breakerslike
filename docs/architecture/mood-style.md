@@ -36,7 +36,7 @@ Everything is an integer. There are no floats in the component's state, so it is
 | `band` | int | 0 Calm, 1 Tense, 2 Frenzied |
 | `cand`, `candT` | int | the band the value is in when it differs from `band`, and the ticks it has stayed there (the dwell) |
 | `act` | int | 1 to 4, never lowered (a Rally does not undo an act) |
-| `breaks`, `forms` | int | region breaks and transformations so far, both fighters; `act = min(4, 1 + breaks + forms)` |
+| `beats`, `forms` | int | act beats (region breaks, and each core's first battered: pitch A) and transformations so far, both fighters; `act = min(4, 1 + beats + forms)`. Until M1 lands this is `S.game.actBeats` |
 | `aggression` | int | the output, in permille |
 | `crowd` | int | the output: 0 `excited`, 1 `nervous`, 2 `fleeing` |
 | `casGiven` | int | the casualty impulse given so far, in units (see §4) |

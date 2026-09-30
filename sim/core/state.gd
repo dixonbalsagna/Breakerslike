@@ -38,7 +38,7 @@ class Game:
 	var ts: float = 1.0
 	var clash = null         # Clash or null
 	var seed: float = 1.0
-	var breaks: int = 0      # region breaks so far, both fighters (the act index until M1 owns it: 1 + breaks)
+	var actBeats: int = 0    # act beats so far, both fighters: region breaks and each core's first battered (act = 1 + this, until M1)
 
 
 class Clash:
@@ -279,6 +279,8 @@ class Fighter:
 	var rallyCool: int = 0           # S4: ticks until the next Rally is allowed
 	var breathWear: int = 0          # S4 (QA): wear units recovered by second breath so far
 	var id: String = ""              # S4: stable roster id (the roster entry's key); arms may rename, never re-id
+	var limbBreaks: int = 0          # pitch A: limbs broken in crippling moments this match
+	var coreMarked: bool = false     # pitch A: the core has reached battered once (an act beat)
 	var wd = null                    # D1a: the fighter's FighterData.WoundsDef (data; covered by the data hash, not hashed here)
 	var finisher: String = ""        # D1a: fighter.json finishers.base (data; data.gd still selects by byFighter until F1)
 	var ambush: bool = false
@@ -335,6 +337,9 @@ class LastSeen:
 
 class Exchange:
 	var n: int = 0            # D1a: this exchange's index (S.dirS.exN when it started)
+	var cripR: int = -1       # pitch A: a heavy-class blow landed on this battered limb (region), awaiting the decisive result
+	var cripA: int = -1       # ... by this slot
+	var cripV: int = -1       # ... on this slot
 	var A = null
 	var D = null
 	var kind: String = ""

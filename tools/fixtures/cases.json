@@ -2678,19 +2678,19 @@
       }
     },
     {
-      "id": "wounds-brink-limbs-range",
+      "id": "wounds-cripple-late-act-range",
       "schema": "fighter-wounds.schema.json",
       "mutate": [
         {
           "file": "data/fighters/FIXTURE_HERO/wounds.json",
           "set": {
-            "/brinkLimbs": 4
+            "/cripple/lateAct": 5
           }
         }
       ],
       "expect": {
         "rule": "maximum",
-        "pointer": "/brinkLimbs"
+        "pointer": "/cripple/lateAct"
       }
     },
     {

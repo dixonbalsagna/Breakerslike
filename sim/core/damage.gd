@@ -17,7 +17,8 @@ static func jor(v: float, d: float) -> float:
 
 ## fam: the wounds hit family (wounds.gd family()); kind, col and number describe the damage event. The defaults are a
 ## landing or collision: spread over the body, kind "impact", no damage number.
-static func hurt(S: SimState, f, amt: float, by, fam: String = "spread", kind: String = "impact", col: String = "", number: bool = false) -> void:
+## Returns the region the damage wore, or -1.
+static func hurt(S: SimState, f, amt: float, by, fam: String = "spread", kind: String = "impact", col: String = "", number: bool = false) -> int:
 	# Since S2 hp is a readout only (the HUD bar): it floors at 0, and wounds and finishers decide the match.
 	f.hp = f.hp - amt if SimWounds.HP_ENDS_MATCH else SimMathx.jmax(0.0, f.hp - amt)
 	f.hurtT = S.T
@@ -29,6 +30,7 @@ static func hurt(S: SimState, f, amt: float, by, fam: String = "spread", kind: S
 	# only a finisher can KO (spec-wounds.md §1, "The end").
 	if SimWounds.HP_ENDS_MATCH and f.hp <= 0.0 and S.game.ko == null:
 		ko(S, f, by if by != null else SimRoster.opp(S, f))
+	return region
 
 
 static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
@@ -49,6 +51,9 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	# S3b stage penalty (spec-wounds.md §1): the exchange attacker with broken arms deals x0.8 with heavies and signatures.
 	if ex != null and A == ex.A and (ex.kind == "heavy" or ex.kind == "sig") and SimWounds.broken(A, SimWounds.ARMS):
 		m *= A.wd.armsBrokenMul
+	# Pitch A: a broken arm turns feral, so its lights hit harder.
+	if ex != null and A == ex.A and ex.kind == "light" and SimWounds.broken(A, SimWounds.ARMS):
+		m *= A.wd.armsBrokenLightMul
 	# S3b (R8): inside an exchange the stances are the ones frozen at requestAttack; outside, the live stance.
 	var dStance: float = D.stance
 	if ex != null and (D == ex.D or D == ex.A):
@@ -59,6 +64,9 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 		# S3b stage penalty: battered arms weaken the guard (DEFENSIVE 0.38 becomes 0.55).
 		if dStance == 1.0 and SimWounds.battered(D, SimWounds.ARMS):
 			sm = D.wd.armsGuardMul
+		# Pitch A: broken legs plant the fighter, so the guard is stronger.
+		if dStance == 1.0 and SimWounds.broken(D, SimWounds.LEGS):
+			sm *= D.wd.legsBrokenGuardScale
 		if D.state == "charging":
 			sm = 1.35
 	var dd: float = dmg * m * sm
@@ -74,9 +82,10 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	SimFx.shake(S, jor(o.get("shake", 0.0), 6.0), D.x)
 	var fam: String = SimWounds.family(ex, D, o, dStance)
 	var kind: String = o.get("kind", "") if o.get("kind", "") != "" else ("guard" if fam == "guard" else ("beam" if ex != null and ex.kind == "sig" else ("heavy" if ex != null and ex.kind == "heavy" else "light")))
-	hurt(S, D, dd, A, fam, kind, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff", true)
+	var region: int = hurt(S, D, dd, A, fam, kind, "#ffd45a" if o.get("ignoreStance", false) else "#ffffff", true)
 	if kind == "heavy" and dd > 0.0:
 		SimWounds.stagger(S, D)
+	SimWounds.noteBlow(S, ex, A, D, region, kind, o)
 	return dd
 
 

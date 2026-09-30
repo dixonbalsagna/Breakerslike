@@ -11,13 +11,26 @@ const ROOT: String = "res://data/fighters/"
 const RALLY_RULES: Array = ["second_wind", "spite", "reboot", "encore", "none"]
 const PROFILES: Array = ["plain"]
 const METERS: Array = ["anguish", "menace"]
-const PENALTIES: Array = ["coreKiRegen", "legsSpeed", "legsLockBreak", "staggerTicks", "dazeTicks", "armsGuardMul", "armsBrokenMul", "headParryNarrow", "headDefence", "legsSlip"]
+const PENALTIES: Array = ["coreKiRegen", "legsSpeed", "legsLockBreak", "staggerTicks", "dazeTicks", "armsGuardMul", "armsBrokenMul", "headParryNarrow", "headDefence", "legsSlip", "armsBrokenLightMul", "legsBrokenGuardScale"]
+const BLOWS: Array = ["heavy", "beam", "guard_break", "chain"]
 
 
 ## One fighter's wound numbers (wounds.json). Read-only after load.
 class WoundsDef:
 	var wearPerDamage: float = 0.0
-	var brinkLimbs: int = 0        # the brink: the core broken, or this many limbs broken
+	var brinkRegion: Array = []    # per region: true if its break puts the fighter on the brink (pitch A: the core)
+	var spill: Array = []          # per region: true if it wears to battered and stops, spilling the rest into the core
+	var cripRegions: Array = []    # region indices a crippling moment can break
+	var cripBlows: Array = []      # heavy-class blow kinds: heavy, beam, guard_break, chain
+	var cripBase: float = 0.0
+	var cripTierAhead: float = 0.0
+	var cripLateAct: int = 0
+	var cripLateBonus: float = 0.0
+	var cripDefensive: float = 0.0
+	var cripMax: int = 0
+	var cripSurgePower: float = 0.0
+	var armsBrokenLightMul: float = 1.0
+	var legsBrokenGuardScale: float = 1.0
 	var act1Damping: float = 0.0   # wear x this while the act index is 1
 	var overtimeStart: float = 0.0 # seconds (startTicks / 60)
 	var overtimePerMin: float = 0.0
@@ -206,17 +219,22 @@ static func _wounds(id: String, j: Dictionary) -> WoundsDef:
 	var w := WoundsDef.new()
 	var regions: Dictionary = j.get("regions", {})
 	for r in SimWounds.REGIONS:
-		if not (regions.get(r, {}).get("brink", false) == true):
-			_err(where + ": D1a needs the regions head, core, arms and legs, each with brink true")
+		var rg = regions.get(r)
+		if not (rg is Dictionary and rg.get("brink") is bool and rg.get("spill") is bool):
+			_err(where + ": regions." + r + " needs brink and spill (true or false)")
+			rg = {"brink": false, "spill": false}
+		w.brinkRegion.append(rg.brink)
+		w.spill.append(rg.spill)
 	if regions.keys().filter(func(k): return not String(k).begins_with("_")).size() != 4:
 		_err(where + ": extra regions wait for F1 and N1")
+	if not w.brinkRegion.has(true):
+		_err(where + ": at least one region must put the fighter on the brink")
+	if w.spill.size() == 4 and w.spill[SimWounds.CORE]:
+		_err(where + ": the core cannot spill (limbs spill into it)")
 	w.stageAt = []
 	for x in j.get("stageAt", []):
 		w.stageAt.append(_int(where + " stageAt", x))
 	w.wearPerDamage = float(j.get("wearPerDamage", 0.0))
-	w.brinkLimbs = _int(where + " brinkLimbs", j.get("brinkLimbs", 0))
-	if w.brinkLimbs < 1 or w.brinkLimbs > 3:
-		_err(where + ": brinkLimbs must be 1 to 3")
 	w.act1Damping = float(j.get("act1Damping", 0.0))
 	if not (w.act1Damping > 0.0 and w.act1Damping <= 1.0):
 		_err(where + ": act1Damping must be in (0, 1]")
@@ -256,6 +274,30 @@ static func _wounds(id: String, j: Dictionary) -> WoundsDef:
 	w.headParryNarrow = float(p.get("headParryNarrow", 0.0))
 	w.headDefence = float(p.get("headDefence", 0.0))
 	w.legsSlip = float(p.get("legsSlip", 0.0))
+	w.armsBrokenLightMul = float(p.get("armsBrokenLightMul", 1.0))
+	w.legsBrokenGuardScale = float(p.get("legsBrokenGuardScale", 1.0))
+	var cr: Dictionary = j.get("cripple", {})
+	for key in ["regions", "blows", "base", "tierAhead", "lateAct", "lateBonus", "defensive", "maxPerFighter", "surgePower"]:
+		if not cr.has(key):
+			_err(where + ": cripple." + key + " missing")
+	for name in cr.get("regions", []):
+		var ri: int = SimWounds.REGIONS.find(name)
+		if ri < 0 or (w.spill.size() == 4 and not w.spill[ri]):
+			_err(where + ": cripple.regions: '" + str(name) + "' is not a limb that spills")
+		else:
+			w.cripRegions.append(ri)
+	for b in cr.get("blows", []):
+		if not BLOWS.has(b):
+			_err(where + ": cripple.blows: unknown blow '" + str(b) + "'")
+		else:
+			w.cripBlows.append(b)
+	w.cripBase = float(cr.get("base", 0.0))
+	w.cripTierAhead = float(cr.get("tierAhead", 0.0))
+	w.cripLateAct = _int(where + " cripple.lateAct", cr.get("lateAct", 4))
+	w.cripLateBonus = float(cr.get("lateBonus", 0.0))
+	w.cripDefensive = float(cr.get("defensive", 0.0))
+	w.cripMax = _int(where + " cripple.maxPerFighter", cr.get("maxPerFighter", 0))
+	w.cripSurgePower = float(cr.get("surgePower", 0.0))
 	w.profile = String(j.get("profile", {}).get("type", ""))
 	if not PROFILES.has(w.profile):
 		_err(where + ": unknown profile type '" + w.profile + "'")

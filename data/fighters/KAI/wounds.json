@@ -1,11 +1,15 @@
 {
   "schema": "wounds/1",
   "_about": "D1a: one fighter's wound numbers (spec-wounds.md sections 1 and 2), loaded by sim/core/fighter_data.gd into a WoundsDef (f.wd). Wear is fixed-point: 6000 units per wear point. Units and ticks are integers. The rules stay code (sim/core/wounds.gd); this file only holds their numbers. Values marked pinned are also read as SimWounds constants by another owner's file, so the loader requires them to equal the constant until that reader moves to f.wd.",
-  "regions": { "head": { "brink": true }, "core": { "brink": true }, "arms": { "brink": true }, "legs": { "brink": true } },
+  "regions": {
+    "head": { "brink": false, "spill": true },
+    "core": { "brink": true, "spill": false },
+    "arms": { "brink": false, "spill": true },
+    "legs": { "brink": false, "spill": true }
+  },
+  "_regions": "pitch A, the crippling moment (pitches.md section 5, balance-targets.md section 13): the brink is the core broken; limbs (spill) wear to battered and stop, and wear past battered spills into the core. A limb breaks only in a crippling moment (cripple)",
   "stageAt": [180000, 360000, 540000],
   "_stageAt": "bruised 30, battered 60, broken 90 (pinned: sim/director/ai.gd, qa/godot/records.gd)",
-  "brinkLimbs": 3,
-  "_brinkLimbs": "the brink: the core broken, or this many of head, arms and legs broken (the stricter brink, spec section 1b; was 2)",
   "wearPerDamage": 228.0,
   "_wearPerDamage": "k 0.038 x 6000 (Game Design's interim value with the stricter brink, spec section 1b)",
   "act1Damping": 0.85,
@@ -24,9 +28,15 @@
   },
   "penalties": {
     "coreKiRegen": 0.7, "legsSpeed": 0.85, "legsLockBreak": 2.0, "staggerTicks": 12, "dazeTicks": 24,
-    "armsGuardMul": 0.55, "armsBrokenMul": 0.8,
+    "armsGuardMul": 0.55, "armsBrokenMul": 0.8, "armsBrokenLightMul": 1.15, "legsBrokenGuardScale": 0.8,
     "headParryNarrow": 0.2, "headDefence": 0.08, "legsSlip": 0.1,
-    "_note": "S3a and S3b stage penalties. headParryNarrow (sim/director/melee.gd), headDefence and legsSlip (sim/director/data.gd) are pinned"
+    "_note": "S3a and S3b stage penalties; pitch A's post-break modifiers: a broken arm deals lights x1.15 (heavies and signatures x0.8), broken legs scale the DEFENSIVE multiplier by 0.8 (a stronger guard; the dash is gone). headParryNarrow (sim/director/melee.gd), headDefence and legsSlip (sim/director/data.gd) are pinned"
+  },
+  "cripple": {
+    "regions": ["arms", "legs"], "blows": ["heavy", "beam", "guard_break", "chain"],
+    "base": 0.15, "tierAhead": 0.10, "lateAct": 3, "lateBonus": 0.10, "defensive": -0.10,
+    "maxPerFighter": 1, "surgePower": 10.0,
+    "_note": "a heavy-class blow (a heavy, a signature, a guard break or a chain strike) that lands on a battered limb in a decisive exchange breaks it on a keyed roll: base, + tierAhead if the attacker is a tier ahead, + lateBonus from act lateAct, + defensive (negative) if the victim holds DEFENSIVE. At most maxPerFighter limbs a match; the breaker's power rises by surgePower"
   },
   "profile": { "type": "plain" },
   "rally": { "rallyWear": 534000, "coolTicks": 900, "_note": "a mended region returns battered at 89; 15 s between Rallies" }

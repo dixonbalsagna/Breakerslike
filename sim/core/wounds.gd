@@ -10,6 +10,8 @@ class_name SimWounds
 ## S3a (Simulation): the core-side stage penalties (constants below; spec §1 "Stage penalties"). S3b (Encounter) adds the
 ## director-side ones. S4 (Simulation): Rally, the shared rule (spec §2; the Rally section below). Per-fighter profiles
 ## (F1) come later.
+## Pitch A, "the crippling moment" (Orb; pitches.md §5, balance-targets.md §13): the brink is the core broken; limbs wear
+## to battered and stop, spilling the rest into the core; a limb breaks only in a crippling moment (the section below).
 ## D1a: every per-fighter number is data (data/fighters/<id>/wounds.json), read here through f.wd (FighterData.WoundsDef).
 ## What stays below is the shared frame (regions, the unit scale, the overtime ramp) and five pinned values that other
 ## owners' files still read as constants; the loader requires the data to equal them until those readers move to f.wd.
@@ -105,7 +107,17 @@ static func addWear(S: SimState, f, region: int, damage: float) -> void:
 	var k: float = wd.wearPerDamage * SimMathx.jmin(wd.overtimeCap, 1.0 + wd.overtimePerMin * SimMathx.jmax(0.0, S.T - wd.overtimeStart) / 60.0)
 	if act(S) == 1:
 		k *= wd.act1Damping
-	f.wear[region] = mini(WEAR_MAX, f.wear[region] + int(SimMathx.jround(damage * k)))
+	var add: int = int(SimMathx.jround(damage * k))
+	if wd.spill[region]:
+		# Pitch A: a limb wears to battered and stops; the rest spills into the core (all of it once the limb is broken).
+		var cap: int = f.wear[region] if f.stage[region] == 3 else wd.stageAt[2] - 1
+		var w: int = f.wear[region] + add
+		if w > cap:
+			f.wear[CORE] = mini(WEAR_MAX, f.wear[CORE] + (w - cap))
+			w = cap
+		f.wear[region] = w
+	else:
+		f.wear[region] = mini(WEAR_MAX, f.wear[region] + add)
 	updateStages(S, f)
 
 
@@ -140,7 +152,8 @@ static func step(S: SimState, f) -> void:
 		updateStages(S, f)
 
 
-## Stage changes and the brink (the core broken, or two of head, arms and legs broken), with their events.
+## Stage changes and the brink (a brink region broken: the core, pitch A), with their events. Act beats: every region
+## break, and each core's first time at battered.
 static func updateStages(S: SimState, f) -> void:
 	for r in range(4):
 		var st: int = stageOf(f.wear[r], f.wd.stageAt)
@@ -148,13 +161,15 @@ static func updateStages(S: SimState, f) -> void:
 			f.stage[r] = st
 			SimFx.regionStage(S, f, REGIONS[r], st)
 			if st == 3:
-				S.game.breaks += 1
+				S.game.actBeats += 1
 				SimFx.regionBroken(S, f, REGIONS[r])
-	var limbs: int = 0
-	for r in [HEAD, ARMS, LEGS]:
-		if f.stage[r] == 3:
-			limbs += 1
-	var brink: bool = f.stage[CORE] == 3 or limbs >= f.wd.brinkLimbs
+			if r == CORE and st >= 2 and not f.coreMarked:
+				f.coreMarked = true
+				S.game.actBeats += 1
+	var brink: bool = false
+	for r in range(4):
+		if f.wd.brinkRegion[r] and f.stage[r] == 3:
+			brink = true
 	if brink != f.brink:
 		f.brink = brink
 		if brink:
@@ -163,15 +178,15 @@ static func updateStages(S: SimState, f) -> void:
 			SimFx.brinkExit(S, f)
 
 
-## How far a fighter is from the brink, 0 (fresh) to 1 (on the brink): the core's wear, or the limb that completes the
-## brink (the brinkLimbs-th most worn of head, arms and legs: the least worn with the stricter brink of three), whichever
-## is higher, over the broken threshold. The AI and
+## How far a fighter is from the brink, 0 (fresh) to 1 (on the brink): the most worn brink region (the core, pitch A)
+## over the broken threshold. The AI and
 ## the comeback bonus read vitality() = 1 - brinkProgress() where they read hp / maxhp before S2.
 static func brinkProgress(f) -> float:
-	var limbs: Array = [f.wear[HEAD], f.wear[ARMS], f.wear[LEGS]]
-	limbs.sort()
-	var nth: int = limbs[3 - f.wd.brinkLimbs]
-	return minf(1.0, float(maxi(f.wear[CORE], nth)) / float(f.wd.stageAt[2]))
+	var w: int = 0
+	for r in range(4):
+		if f.wd.brinkRegion[r]:
+			w = maxi(w, f.wear[r])
+	return minf(1.0, float(w) / float(f.wd.stageAt[2]))
 
 
 static func vitality(f) -> float:
@@ -236,16 +251,15 @@ static func _brinkWith(f, r: int, wr: int) -> bool:
 	var st: Array = []
 	for q in range(4):
 		st.append(stageOf(wr if q == r else f.wear[q], f.wd.stageAt))
-	var limbs: int = 0
-	for q in [HEAD, ARMS, LEGS]:
-		if st[q] == 3:
-			limbs += 1
-	return st[CORE] == 3 or limbs >= f.wd.brinkLimbs
+	for q in range(4):
+		if f.wd.brinkRegion[q] and st[q] == 3:
+			return true
+	return false
 
 
 ## The region a Rally mends: the first broken, never-rallied region in the rule's order whose mend takes the fighter
-## off the brink. -1 if there is none (every broken region already rallied, or the brink is too deep for one mend: the
-## core and two limbs, or three limbs, broken).
+## off the brink. -1 if there is none (the core already rallied). Pitch A: only a brink region's mend can do that, so
+## Rally mends the core and a broken limb stays broken, as its scar.
 static func rallyRegion(f, order: Array) -> int:
 	for r in order:
 		if f.stage[r] == 3 and (f.rallied & (1 << r)) == 0 and not _brinkWith(f, r, f.wd.rallyWear):
@@ -269,10 +283,10 @@ static func rally(S: SimState, f, kind: String) -> bool:
 	return true
 
 
-## The act index (spec-wounds.md §9) until M1 owns it: 1 + region breaks so far (both fighters; forms come with F1),
-## at most 4. It never goes down: a Rally mends a region but not the act.
+## The act index (spec-wounds.md §9) until M1 owns it: 1 + act beats so far (region breaks and each core's first
+## battered, both fighters; forms come with F1), at most 4. It never goes down: a Rally mends a region but not the act.
 static func act(S: SimState) -> int:
-	return mini(4, 1 + S.game.breaks)
+	return mini(4, 1 + S.game.actBeats)
 
 
 ## The director's hooks. f survived a finisher contest (Second Wind).
@@ -281,7 +295,62 @@ static func onContestSurvived(S: SimState, f) -> void:
 		rally(S, f, "second_wind")
 
 
-## W won a decisive exchange (why: decisive()'s kind). Spite needs it won by hand.
-static func onDecisive(S: SimState, W, why: String) -> void:
+## W won a decisive exchange against L (why: decisive()'s kind). Spite needs it won by hand. Pitch A: if W's heavy-class
+## blow landed on a battered limb of L in this exchange, the crippling roll.
+static func onDecisive(S: SimState, ex, W, L, why: String) -> void:
 	if W.rally == "spite" and BY_HAND.has(why):
 		rally(S, W, "spite")
+	if ex != null and ex.cripR >= 0 and ex.cripA == S.fighters.find(W) and ex.cripV == S.fighters.find(L):
+		_crippleRoll(S, ex, W, L)
+
+
+# ---------------------------------------------------------------- the crippling moment (pitch A)
+
+## hit() reports every blow: a heavy-class blow (the victim's cripple.blows: a heavy, a signature, a guard break, a chain
+## strike) that leaves a limb of the victim's cripple.regions at battered is remembered on the exchange until the
+## exchange's decisive result (onDecisive), the latest such blow winning.
+static func noteBlow(S: SimState, ex, A, D, region: int, kind: String, o: Dictionary) -> void:
+	if ex == null or region < 0 or D.limbBreaks >= D.wd.cripMax or not D.wd.cripRegions.has(region) or D.stage[region] != 2:
+		return
+	var blow: String = ""
+	if ex.tag == "GUARD BREAK":
+		blow = "guard_break"
+	elif ex.kind == "sig":
+		blow = "beam"
+	elif ex.combo > 1.0 and o.get("noParry", false):
+		blow = "chain"
+	elif kind == "heavy":
+		blow = "heavy"
+	if blow == "" or not D.wd.cripBlows.has(blow):
+		return
+	ex.cripR = region
+	ex.cripA = S.fighters.find(A)
+	ex.cripV = S.fighters.find(D)
+
+
+## The roll, keyed on the exchange (SimRng.keyed; no S.rng draw): base, + tierAhead if W is a tier ahead, + lateBonus from
+## act lateAct, + defensive (negative) if L holds DEFENSIVE in this exchange. The victim's data set the odds.
+static func _crippleRoll(S: SimState, ex, W, L) -> void:
+	var r: int = ex.cripR
+	ex.cripR = -1
+	var wd = L.wd
+	if L.limbBreaks >= wd.cripMax or L.stage[r] != 2:
+		return
+	var chance: float = wd.cripBase
+	if W.tier >= L.tier + 1.0:
+		chance += wd.cripTierAhead
+	if act(S) >= wd.cripLateAct:
+		chance += wd.cripLateBonus
+	if (ex.sD if L == ex.D else ex.sA) == 1.0:
+		chance += wd.cripDefensive
+	if SimRng.keyed(int(S.game.seed), "cripple", ex.n * 16 + int(ex.combo)) < chance:
+		cripple(S, W, L, r)
+
+
+## W breaks L's limb r: broken for the match (Rally never mends it), a limb_break event, and W's power surges.
+static func cripple(S: SimState, W, L, r: int) -> void:
+	L.wear[r] = L.wd.stageAt[2]
+	L.limbBreaks += 1
+	W.power = SimMathx.jmin(100.0, W.power + W.wd.cripSurgePower)
+	SimFx.limbBreak(S, W, L, REGIONS[r])
+	updateStages(S, L)

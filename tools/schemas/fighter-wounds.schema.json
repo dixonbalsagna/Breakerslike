@@ -13,9 +13,9 @@
     "focusWear",
     "family",
     "penalties",
+    "cripple",
     "profile",
     "rally",
-    "brinkLimbs",
     "act1Damping",
     "overtime"
   ],
@@ -37,11 +37,16 @@
       "additionalProperties": {
         "type": "object",
         "required": [
-          "brink"
+          "brink",
+          "spill"
         ],
         "properties": {
           "brink": {
             "type": "boolean"
+          },
+          "spill": {
+            "type": "boolean",
+            "description": "Pitch A: the region wears to battered and stops; wear past battered spills into the core."
           }
         },
         "additionalProperties": false,
@@ -141,7 +146,9 @@
         "armsBrokenMul",
         "headParryNarrow",
         "headDefence",
-        "legsSlip"
+        "legsSlip",
+        "armsBrokenLightMul",
+        "legsBrokenGuardScale"
       ],
       "properties": {
         "coreKiRegen": {
@@ -190,6 +197,86 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "armsBrokenLightMul": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "legsBrokenGuardScale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "cripple": {
+      "type": "object",
+      "description": "Pitch A, the crippling moment: which limbs can break, which blows can break them, and the keyed roll.",
+      "required": [
+        "regions",
+        "blows",
+        "base",
+        "tierAhead",
+        "lateAct",
+        "lateBonus",
+        "defensive",
+        "maxPerFighter",
+        "surgePower"
+      ],
+      "properties": {
+        "regions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "head",
+              "arms",
+              "legs",
+              "mantle"
+            ]
+          }
+        },
+        "blows": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "heavy",
+              "beam",
+              "guard_break",
+              "chain"
+            ]
+          }
+        },
+        "base": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "tierAhead": {
+          "type": "number"
+        },
+        "lateAct": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "lateBonus": {
+          "type": "number"
+        },
+        "defensive": {
+          "type": "number"
+        },
+        "maxPerFighter": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "surgePower": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "additionalProperties": false,
@@ -234,12 +321,6 @@
       "patternProperties": {
         "^_": true
       }
-    },
-    "brinkLimbs": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 3,
-      "description": "The brink: the core broken, or this many of head, arms and legs broken (spec-wounds.md section 1b)."
     },
     "act1Damping": {
       "type": "number",

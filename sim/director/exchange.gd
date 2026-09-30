@@ -301,7 +301,7 @@ static func decisive(S: SimState, ex, W, L, why: String) -> void:
 	if S.game.ko != null or ex == null:
 		return
 	SimFx.decisive(S, W, L, why)
-	SimWounds.onDecisive(S, W, why)   # S4: Spite
+	SimWounds.onDecisive(S, ex, W, L, why)   # S4: Spite; pitch A: the crippling roll
 	ex.loser = S.fighters.find(L)
 	if L.brink and not finisherPlanned(ex):
 		startFinisher(S, ex, W, L)

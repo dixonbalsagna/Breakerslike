@@ -38,6 +38,7 @@ func _init() -> void:
 	check("tick-0 state", _tick0(g))
 	check("wounds (forced hits)", "" if SimGolden.woundsHash() == g.get("wounds", "") else "differs")
 	check("rally (forced)", "" if SimGolden.rallyHash() == g.get("rally", "") else "differs")
+	check("crippling (forced)", "" if SimGolden.crippleHash() == g.get("cripple", "") else "differs")
 	check("roster data", _roster(g))
 	check("roster loader rejects bad data", _rosterRejects())
 	check("keyed draws", _keyedDraws(g))

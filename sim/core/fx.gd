@@ -183,6 +183,12 @@ static func decisive(S: SimState, winner, loser, why: String) -> void:
 	e.winner = float(S.fighters.find(winner)); e.loser = float(S.fighters.find(loser)); e.kind = why
 
 
+## Pitch A: W broke L's limb (region) in a crippling moment.
+static func limbBreak(S: SimState, W, L, region: String) -> void:
+	var e := _ev(S, "limb_break")
+	e.actor = float(S.fighters.find(W)); e.victim = float(S.fighters.find(L)); e.region = region
+
+
 ## S4: f rallied by rule kind (second_wind, spite, ...), mending region (now battered at 89).
 static func rally(S: SimState, f, region: String, kind: String) -> void:
 	var e := _ev(S, "rally")

@@ -1,36 +1,39 @@
 {
   "schema": "wounds/1",
-  "_about": "Validator fixture, not game data: a copy of the real VORR file, in the D1a shape.",
+  "_about": "Validator fixture, not game data: a copy of the real VORR file, in the pitch A shape (regions with spill, cripple, no brinkLimbs).",
   "regions": {
     "head": {
-      "brink": true
+      "brink": false,
+      "spill": true
     },
     "core": {
-      "brink": true
+      "brink": true,
+      "spill": false
     },
     "arms": {
-      "brink": true
+      "brink": false,
+      "spill": true
     },
     "legs": {
-      "brink": true
+      "brink": false,
+      "spill": true
     }
   },
+  "_regions": "pitch A, the crippling moment (pitches.md section 5, balance-targets.md section 13): the brink is the core broken; limbs (spill) wear to battered and stop, and wear past battered spills into the core. A limb breaks only in a crippling moment (cripple)",
   "stageAt": [
     180000,
     360000,
     540000
   ],
   "_stageAt": "bruised 30, battered 60, broken 90 (pinned: sim/director/ai.gd, qa/godot/records.gd)",
-  "brinkLimbs": 3,
-  "_brinkLimbs": "the brink: the core broken, or this many of head, arms and legs broken (the stricter brink, spec section 1b; was 2)",
-  "wearPerDamage": 228,
+  "wearPerDamage": 228.0,
   "_wearPerDamage": "k 0.038 x 6000 (Game Design's interim value with the stricter brink, spec section 1b)",
   "act1Damping": 0.85,
   "_act1Damping": "wear x this while the act index is 1 (act = 1 + region breaks so far, both fighters; M1 will own the act)",
   "overtime": {
     "startTicks": 28800,
     "perMin": 0.25,
-    "cap": 3,
+    "cap": 3.0,
     "_note": "k x min(cap, 1 + perMin x minutes past start). Candidate A (default): 28800 ticks (8:00), 0.25. Candidate B: 30600 ticks (8:30), 0.40. QA picks by editing both fighters' files"
   },
   "fade": {
@@ -41,46 +44,68 @@
     "hiddenFloor": 354000,
     "_note": "per tick: out 0.25/s below 60 out of exchanges; breath 1/s for battered regions after 240 ticks without an exchange, down to hiddenFloor (59; pinned: sim/director/ai.gd); hidden 3/s with the hiding kit"
   },
-  "focusWear": 30,
+  "focusWear": 30.0,
   "family": {
     "light": [
-      3,
-      1,
-      3,
-      1
+      3.0,
+      1.0,
+      3.0,
+      1.0
     ],
     "heavy": [
-      1,
-      3,
-      1,
-      3
+      1.0,
+      3.0,
+      1.0,
+      3.0
     ],
     "guard": [
-      0,
-      0,
-      1,
-      0
+      0.0,
+      0.0,
+      1.0,
+      0.0
     ],
     "spread": [
-      1,
-      1,
-      1,
-      1
+      1.0,
+      1.0,
+      1.0,
+      1.0
     ],
     "_note": "region pick weights (head, core, arms, legs) by hit family"
   },
   "penalties": {
     "coreKiRegen": 0.7,
     "legsSpeed": 0.85,
-    "legsLockBreak": 2,
+    "legsLockBreak": 2.0,
     "staggerTicks": 12,
     "dazeTicks": 24,
     "armsGuardMul": 0.55,
     "armsBrokenMul": 0.8,
+    "armsBrokenLightMul": 1.15,
+    "legsBrokenGuardScale": 0.8,
     "headParryNarrow": 0.2,
     "headDefence": 0.08,
     "legsSlip": 0.1,
-    "_note": "S3a and S3b stage penalties. headParryNarrow (sim/director/melee.gd), headDefence and legsSlip (sim/director/data.gd) are pinned"
+    "_note": "S3a and S3b stage penalties; pitch A's post-break modifiers: a broken arm deals lights x1.15 (heavies and signatures x0.8), broken legs scale the DEFENSIVE multiplier by 0.8 (a stronger guard; the dash is gone). headParryNarrow (sim/director/melee.gd), headDefence and legsSlip (sim/director/data.gd) are pinned"
+  },
+  "cripple": {
+    "regions": [
+      "arms",
+      "legs"
+    ],
+    "blows": [
+      "heavy",
+      "beam",
+      "guard_break",
+      "chain"
+    ],
+    "base": 0.15,
+    "tierAhead": 0.1,
+    "lateAct": 3,
+    "lateBonus": 0.1,
+    "defensive": -0.1,
+    "maxPerFighter": 1,
+    "surgePower": 10.0,
+    "_note": "a heavy-class blow (a heavy, a signature, a guard break or a chain strike) that lands on a battered limb in a decisive exchange breaks it on a keyed roll: base, + tierAhead if the attacker is a tier ahead, + lateBonus from act lateAct, + defensive (negative) if the victim holds DEFENSIVE. At most maxPerFighter limbs a match; the breaker's power rises by surgePower"
   },
   "profile": {
     "type": "plain"

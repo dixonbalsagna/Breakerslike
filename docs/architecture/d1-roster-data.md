@@ -57,8 +57,15 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
 - `regions`: head, core, arms and legs. Each has `brink` (true, or false for the Empress's mantle later).
 - `stageAt`: `[180000, 360000, 540000]`, in units.
 - `wearPerDamage`: 228, which is k 0.038 × 6000 (Game Design's interim value with the stricter brink, spec §1b).
-- `brinkLimbs`: 3. The brink is the core broken, or this many of head, arms and legs broken. `brinkProgress` reads the limb that completes it, the least worn of the three.
-- `act1Damping`: 0.85, the wear multiplier while the act index is 1. Until M1 owns the act, it is `SimWounds.act(S)` = 1 + `S.game.breaks`, where `S.game.breaks` is region breaks so far, both fighters, hashed.
+- **Pitch A, the crippling moment** (Orb; `pitches.md` §5, `balance-targets.md` §13):
+  - `regions`: each region has `brink` and `spill`. The core alone is `brink: true`; the limbs are `spill: true`. A spill region wears to battered (539999) and stops, and the rest goes into the core (all of it once the limb is broken). The brink is any `brink` region broken, so the core, and `brinkProgress` reads the core.
+  - `cripple`: `regions` [arms, legs], `blows` [heavy, beam, guard_break, chain], `base` 0.15, `tierAhead` 0.10, `lateAct` 3, `lateBonus` 0.10, `defensive` −0.10, `maxPerFighter` 1, `surgePower` 10.
+  - A heavy-class blow that leaves such a limb battered is remembered on the exchange (`ex.cripR`). At the exchange's decisive result (`onDecisive`), a keyed roll (`SimRng.keyed(seed, "cripple", ex.n × 16 + combo)`) breaks the limb. That emits `limb_break`, and the breaker's power rises by `surgePower`.
+  - The victim's data set the odds; the breaker's data set the surge.
+  - Rally mends the core only, and a broken limb stays broken.
+  - `penalties.armsBrokenLightMul` 1.15 and `legsBrokenGuardScale` 0.8 are the post-break modifiers (in `damage.gd`).
+  - The head spills and never breaks, so its broken penalties (daze, −0.08 defence) are dormant.
+- `act1Damping`: 0.85, the wear multiplier while the act index is 1. Until M1 owns the act, it is `SimWounds.act(S)` = 1 + `S.game.actBeats`. That counts every region break, plus each core's first time at battered (pitch A: acts also advance when a core reaches battered), both fighters, hashed.
 - `overtime`: `startTicks` 28800, `perMin` 0.25, `cap` 3.0, meaning k × min(3, 1 + 0.25 × minutes past 8:00). That is candidate A. Candidate B is 30600 and 0.40. QA switches by editing both fighters' files.
 - `fade`: `out` 25, `breath` 100, `breathAfterTicks` 240, `hidden` 300 and `hiddenFloor` 354000.
 - `focusWear`: 30.

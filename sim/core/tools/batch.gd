@@ -114,7 +114,7 @@ func run_match(seed: int, arm: String) -> Dictionary:
 	var rec := {"seed": seed, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0, "launches": {}, "melee": {},
 		"beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0, "bad": "", "koAt": -1.0, "winner": -1,
 		"breaks": 0, "firstBrink": -1.0, "firstBroken": "", "wearIn": [0.0, 0.0, 0.0, 0.0],
-		"rallies": 0, "rallyTwice": 0, "rallyKinds": {}, "batteredIn": 0.0, "breathWear": 0.0}
+		"rallies": 0, "rallyTwice": 0, "rallyKinds": {}, "batteredIn": 0.0, "breathWear": 0.0, "limbBreaks": 0, "limbRegions": {}}
 	var rallied := {}
 	var prevWear: Array = [fs[0].wear.duplicate(), fs[1].wear.duplicate()]
 	var prev: Array = [fs[0].x, fs[1].x]
@@ -129,6 +129,9 @@ func run_match(seed: int, arm: String) -> Dictionary:
 					rec.firstBroken = e.region
 			elif e.type == "brink_enter" and rec.firstBrink < 0.0:
 				rec.firstBrink = S.T
+			elif e.type == "limb_break":
+				rec.limbBreaks += 1
+				rec.limbRegions[e.region] = rec.limbRegions.get(e.region, 0) + 1
 			elif e.type == "rally":
 				rec.rallies += 1
 				rec.rallyKinds[e.kind] = rec.rallyKinds.get(e.kind, 0) + 1
@@ -260,6 +263,9 @@ func aggregate(recs: Array) -> Dictionary:
 	var ticks: int = 0
 	var rallies: Array = []
 	var rallyTwice: int = 0
+	var limbBreaks: Array = []
+	var limbRegions := {}
+	var withLimb: int = 0
 	var rallyKinds := {}
 	var batteredIn: float = 0.0
 	var breathWear: float = 0.0
@@ -277,6 +283,10 @@ func aggregate(recs: Array) -> Dictionary:
 			wearIn[ri] += r.wearIn[ri]
 		rallies.append(float(r.rallies))
 		rallyTwice += int(r.rallyTwice)
+		limbBreaks.append(float(r.limbBreaks))
+		withLimb += 1 if int(r.limbBreaks) > 0 else 0
+		for k in r.limbRegions:
+			limbRegions[k] = limbRegions.get(k, 0) + int(r.limbRegions[k])
 		for k in r.rallyKinds:
 			rallyKinds[k] = rallyKinds.get(k, 0) + int(r.rallyKinds[k])
 		batteredIn += float(r.batteredIn)
@@ -327,6 +337,7 @@ func aggregate(recs: Array) -> Dictionary:
 	a.wounds = {"breaksPerMatch": _dist(breaks), "matchesWithBrink": brinks.size(), "firstBrink": _dist(brinks) if brinks.size() else {}, "firstBroken": firstBroken,
 		"wearShare": {"head": wearIn[0] / wt if wt > 0.0 else 0.0, "core": wearIn[1] / wt if wt > 0.0 else 0.0, "arms": wearIn[2] / wt if wt > 0.0 else 0.0, "legs": wearIn[3] / wt if wt > 0.0 else 0.0},
 		"ralliesPerMatch": _dist(rallies), "rallyKinds": rallyKinds, "sameRegionRalliedTwice": rallyTwice,
+		"limbBreaksPerMatch": _dist(limbBreaks), "limbRegions": limbRegions, "matchesWithLimbBreak": withLimb,
 		"batteredWearIn": batteredIn, "secondBreathWear": breathWear, "secondBreathShare": breathWear / batteredIn if batteredIn > 0.0 else 0.0}
 	return a
 
@@ -363,4 +374,6 @@ func report(a: Dictionary, n: int, base: int, arm: String) -> void:
 		("   first brink median %.0fs" % w.firstBrink.p50) if w.matchesWithBrink > 0 else "", _shares(w.firstBroken), ws.head * 100.0, ws.core * 100.0, ws.arms * 100.0, ws.legs * 100.0])
 	print("rally: %.2f/match (max %d)   %s   same region rallied twice %d   second breath recovered %.1f%% of battered wear taken" % [w.ralliesPerMatch.mean, int(w.ralliesPerMatch.max),
 		_shares(w.rallyKinds) if w.rallyKinds.size() else "none", w.sameRegionRalliedTwice, w.secondBreathShare * 100.0])
+	print("crippling: %.2f limb breaks/match (max %d)   matches with one %d of %d   %s" % [w.limbBreaksPerMatch.mean, int(w.limbBreaksPerMatch.max), w.matchesWithLimbBreak, n,
+		_shares(w.limbRegions) if w.limbRegions.size() else "none"])
 	print("speed: %d matches in %.1f s = %.0f matches per minute (%.0f ticks/s)" % [n, a.seconds, a.matchesPerMinute, a.ticks / a.seconds])
