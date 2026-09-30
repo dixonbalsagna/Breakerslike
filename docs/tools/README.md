@@ -118,7 +118,20 @@ node tools/build-site.mjs --web build/web --out build/site
 
 The `build/` folder should be in `.gitignore` (the EP's file). Serve `build/site` with any static server to try it; the web pack was about 0.6 MB and the wasm 39.5 MB (about 10 MB gzipped, which Pages applies).
 
-`tools/build-site.mjs` lays out the site: `/` a small landing page, `/prototype/` the single-file prototype (the URL Orb shares, unchanged), `/play/` the Godot build. It fails if the export folder has no `index.html` and `.wasm`.
+`tools/build-site.mjs` lays out the site: `/` a small landing page, `/prototype/` the single-file prototype (the URL Orb shares, unchanged), `/play/` the Godot build, and `/bench/` (below), which the landing page does not link. It fails if the export folder has no `index.html` and `.wasm`.
+
+### The bench page and the old-laptop range
+
+**`/bench/` (one click, the real number).** `https://dixonbalsagna.github.io/orb-combat-ex/bench/` runs the same web build (loaded from `/play/`, so the site carries one copy of the 39 MB wasm) with the bench arguments baked in: fixed 60 Hz steps, seed 4, 2400 frames, vsync off. It shows a results panel and a "Copy result" button; the copied text holds every bench figure (frame ms mean, p50, p95, p99, max, draw calls, sim tick), the build (short commit), the browser, cores, memory, screen, window and the unmasked WebGL renderer. Someone with an old laptop opens the link, leaves the tab visible for a minute or a few, and pastes the text back. It is not linked from the landing page and is marked noindex. Options in the URL: `?nosplit`, `?novfx` (combine with `&`), `?frames=N`. `build-site.mjs` fails the build if the Godot page template changes shape (it patches the exported `index.html`), so a Godot upgrade cannot silently ship a broken page.
+
+**`tools/bench-web.mjs` (a range on your own machine).** It serves a built site (`--dir`) or takes a URL (`--url`), and runs the `/bench/` page in fresh Chrome or Edge profiles: an unthrottled baseline, then each `--cpu-throttle` factor (default 4,6) using Chrome's CPU throttle, and with `--floor` a software-rendering (SwiftShader) run. It prints a table and a range, and writes every run to `--out` as JSON. About 4 minutes for baseline, x4, x6 and the floor at 1200 frames.
+
+```
+node tools/build-site.mjs --web build/web --out build/site
+node tools/bench-web.mjs --dir build/site --cpu-throttle 4,6 --floor --frames 1200 --out build/bench.json
+```
+
+Read the result as a range, never a measurement. The throttle slows the browser's CPU work (the wasm simulation and the engine building draw calls), which is the likely limit for this game, but not the GPU, memory or a hot laptop; SwiftShader is a GPU-free floor far worse than any real laptop. First run (2026-09-29, Ryzen 7 9800X3D, Chrome 154, 1366x768, 1200 frames): baseline 3.1 ms mean (p95 3.8), x4 10.3 (p95 16.3), x6 17.3 (p95 26.2), SwiftShader 145. So a machine six times slower on the CPU side would miss a 60 fps frame at p95; the real old-laptop number from `/bench/` decides whether that is a worry.
 
 ### Switching Pages to GitHub Actions (a repo setting)
 
