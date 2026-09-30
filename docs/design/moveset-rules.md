@@ -107,24 +107,30 @@ This section is the second pass Orb asked for. Nothing here is locked.
 
 ### 7.1 World-changing abilities: three options per fighter
 
-**How it works.** Each fighter **picks one of their three at character select**, as part of the loadout, so the player gets range. It stays once per match and permanent, with the same cost and counter-play as §3.
-- *Categories:* land, sky and light, water and climate, orbit and gravity, fields, pathways, technology.
-- *No duplicates:* if both fighters pick the same category, the second pick is greyed out at select.
+This merges Narrative's character pitches (`docs/narrative/world-abilities.md`) with Game Design's mechanics.
+
+**How it works.** Each fighter **picks one of their three at character select**, as part of the loadout. It stays once per match and permanent, with the same cost and counter-play as §3. Each option has a category, and if both fighters pick the same category, the second pick is greyed out at select.
 
 | Fighter | Option | Category | What it does to the fight |
 | :--- | :--- | :--- | :--- |
-| **Protagonist** | **Proving Ring** | Land | Raises a ring of ridges: new sight blockers and mountainsides, and a natural arena that pulls the fight away from towns |
-| | **Heat Wave** | Climate | His blood heats the world. The sea partly evaporates into fog banks (sight blockers), the lowlands dry out, and his heat cools half as fast. More power, and more of his own internal wear |
-| | **Break the Clouds** | Sky and light | He tears the sky open: permanent clear daylight, no cloud cover, and lock-on range +30%. An honest duel with nowhere to break lock. It hard-counters a storm |
-| **Anti-hero** | **Storm Crown** | Sky | A permanent storm: lock-on range −30%, easier lock breaks and lightning hazards. His barrages gain +20% |
-| | **Scorched Plain** | Land | He flattens a region: ridges fall, cover burns and settlements in the zone take damage, within the budgets. "Nowhere to hide from me" |
-| | **Crushing Presence** | Field | His aura presses down on the world: the flight ceiling drops by half, launches travel ×0.8 and impacts wear ×1.2. It becomes a ground brawl, where his shed forms are fastest |
-| **Empress** | **Gravity Decree** | Orbit and gravity | Her fleet shifts the planet's gravity: launches ×1.3, airborne time ×1.5, impact wear ×0.7 |
-| | **The Annexed Moon** | Orbit | She drags a moon close. Tides flood the lowlands for 20 s in every minute and then drain, on a fixed, telegraphed cycle. Moon-shadow eclipses darken the sky |
-| | **Blockade** | Sky | Her fleet fills the upper sky: anyone flying above 60% of the ceiling draws fire (hazard wear), which pushes the fight low, where her guard and volleys work best |
-| **Cyborg** | **Floodgate** | Water | His portals flood the lowlands: movement ×0.55 underwater, and civilians are herded uphill toward him |
-| | **Shortcut Network** | Pathways | Permanent portal pairs link distant parts of the planet. Flying through one exits at its twin, so the map folds into shortcuts, and his portals spew sandwiches as hazards |
-| | **Wired World** | Technology | His cabling spreads across the ground: on wired ground he regenerates +2 ki per second, and wired water becomes an electrified hazard. It is strongest once his tech is online (§7.2) |
+| **Protagonist** | **Proving Ground** (Narrative) | Land | He asks everyone to leave and presses a wide region (about 3,000 units across) into a flat arena. Its people relocate safely, so they are never casualties. Inside it there is no cover, no buildings and no sight blockers, and the escape odds count it as open ground. A fair, big fight |
+| | **Shelter Ridge** (Narrative) | Land | A stone wall rises between the fight and the nearest town. That town takes no collateral for the rest of the match, and the wall is a strong sight blocker. The rival can only take the fight to another town |
+| | **Heat Wave** (Game Design) | Climate | His blood heats the world. The sea partly boils into fog banks (sight blockers), and his heat cools half as fast. More power, and more of his own internal wear. It fits his heat-track transformation |
+| **Anti-hero** | **The Dais** (Narrative) | Land | Terraced steps rise, and he stands on the top. The fighter higher on the Dais gets +0.05 on outcome rolls: height is rank. The rival must take the high ground from him |
+| | **The Gallery** (Narrative) | Structure | Empty stone seats ring the fight, because he needs a witness. Inside it the mood gains ×1.5, and his Pride gains and losses ×1.5: dominance is witnessed, and so is humiliation. It cuts both ways |
+| | **The Mirror** (Narrative) | Water | He freezes the sea into a flat sheet of ice. There is no underwater slowdown and no skipping, and slides go ×1.5 further on the ice, making huge knockback skids. A duelling floor that suits his fast shed forms |
+| **Empress** | **Golden Hour** (Narrative) | Sky and light | She stops the sun low and gold. Long shadows break lock more easily for everyone, and her Wrath gains +25%, because she looks her best |
+| | **The Palace** (Narrative) | Structure | A symmetrical palace complex rises, uninhabited. In its grounds her Encore guard hit +25% and her guard's tag-ins are faster. It is also a huge brunt and chain set piece with no casualties |
+| | **Gravity Decree** (Game Design) | Orbit and gravity | Her fleet shifts the planet's gravity: launches ×1.3, airborne time ×1.5, impact wear ×0.7. It suits her ranged work |
+| **Cyborg** | **Central Kitchen** (Narrative) | Structure | One district becomes a factory kitchen. There his Hunger gains ×2 and sandwiches appear by themselves. It speeds his evolution toward the final form |
+| | **Harvest** (Narrative) | Land | He strips a biome bare into tidy rows. It loses all its cover, and standing on the rows feeds his Hunger slowly (+1 per second): feeding without people |
+| | **The Delivery Network** (Narrative, merged with Game Design's Shortcut Network) | Pathways | A ring of permanent portal frames. Flying through one exits at another, his blitzes can come through them, and sandwiches spew out as hazards |
+
+**Kept as notes** (not in Orb's three per fighter):
+- Protagonist: Land Bridge, Break the Clouds.
+- Anti-hero: Storm Crown, Scorched Plain, Crushing Presence.
+- Empress: The Border, the Annexed Moon, Blockade.
+- Cyborg: Floodgate, Wired World.
 
 ### 7.2 Transformations: the four refined, with one alternative each
 
@@ -133,4 +139,4 @@ This section is the second pass Orb asked for. Nothing here is locked.
 | **Empress: a ladder** | *Bureaucratic escalation.* Revisions 1 to 8 are tiny jokes; revisions 9 to 12 are dramatic. Each real revision adds its **own signature** to her pool and grows her mantle, and refits patch her up. The feel: absurd, then terrifying | **Branching ladder:** at revisions 9 and 11 she picks one of two amendments, armour or artillery. The player chooses her build mid-fight |
 | **Protagonist: a draining meter** | *Pushing past his limits.* The heat track (Heated, Simmering, Boiling) is his transformation, with glowing seams and a heartbeat. Its price is internal wear. The capstone is his final form, allowed only in the fold, where nobody else can be hurt. The feel: a man burning himself for the fight | **A ladder his rival feeds:** his forms unlock from Respect, which he earns when the rival gives everything. The opponent literally powers him up by fighting hard |
 | **Anti-hero: shedding** | *Stripping down to raw power.* Three sheds, each a respected cinematic with no way back: **regalia** (armour off: guard weaker, +speed), **the front** (Drop the Act: hidden wear shows, +damage), **restraint** (no guard at all, top speed and damage). The feel: every shed is a humiliation he turns into power | **Pride ascension:** forms that raise his power while his Pride is high, and are *lost* when it crashes. It keeps the original "power and self-importance" idea: a higher ceiling, and a risk of falling |
-| **Cyborg: evolution by consumption** | *Growing into the machine.* Wired (Hunger), then Kitchen (sandwich portals), then **Docked**: the final form, where his technology comes online. Only then does he **generate his hidden weapons**, which join his loadout as specials (Combat and Narrative design them). Before that, they show as dark, sparking ports: a visible promise. The feel: something unfinished, becoming whole | **Assimilation:** he feeds on wreckage (destroyed structures) instead of people. It is less dark and ties him to destruction rather than civilians, if the tone ever needs it |
+| **Cyborg: evolution by consumption** | *Growing into the machine.* Wired (Hunger), then Kitchen (sandwich portals), then **Docked**: the final form, where his technology comes online. Only then does he **generate his hidden weapons**, which join his loadout as specials (Combat and Narrative design them). Before that, they show as dark, sparking ports: a visible promise. The feel: something unfinished, becoming whole. Narrative's line: "the kitchen opens and the order is produced" | **Assimilation:** he feeds on wreckage (destroyed structures) instead of people. It is less dark and ties him to destruction rather than civilians, if the tone ever needs it |
