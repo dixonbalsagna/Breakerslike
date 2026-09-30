@@ -28,7 +28,7 @@ function feelRows(s, matches) {
   add('feel.idle', 'Melee idle share inside exchanges', s.melee_idle_share, pct, v => v <= 0.15, 'at most 15.0%');
   add('feel.still.med', 'Melee longest still stretch per exchange, median', s.melee_longest_idle_med_s, sec, v => v <= 0.25, 'at most 0.25 s');
   add('feel.still.p90', 'Melee longest still stretch per exchange, p90', s.melee_longest_idle_p90_s, sec, v => v <= 0.5, 'at most 0.50 s');
-  add('feel.first', 'Request to first strike, median', s.request_to_first_strike_med_s, sec, v => v <= 0.6, 'at most 0.60 s');
+  add('feel.first', 'Request to first strike, median, on exchanges that start within 2,500 units (longer ones are pursuit flights by design)', s.request_to_first_strike_near_med_s !== undefined ? s.request_to_first_strike_near_med_s : s.request_to_first_strike_med_s, sec, v => v <= 0.6, 'at most 0.60 s');
   add('feel.gap.med', 'Gap between visible strikes, median', s.gap_between_strikes_med_s, sec, v => v <= 0.25, 'at most 0.25 s');
   add('feel.gap.p90', 'Gap between visible strikes, p90', s.gap_between_strikes_p90_s, sec, v => v <= 2.0, 'at most 2.00 s');
   add('feel.strikes', 'Strikes per minute', s.strikes_per_min, v => v.toFixed(1), v => v >= 80, 'at least 80');

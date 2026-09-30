@@ -84,6 +84,21 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const ev = await runTests(ctx({ default: [withEvents(rec(), [{ type: 'press_ack', t: 1, actor: 0 }, { type: 'availability', t: 1, actor: 0 }])] }), tests.filter(x => x.stageC).map(x => x.id));
     assert.ok(ev.every(r => r.status === 'PENDING' && /not written yet/.test(r.detail)), JSON.stringify(ev.filter(r => r.status !== 'PENDING').map(r => r.id + ':' + r.status + ' ' + r.detail)));
   });
+  await t('mood and style rows: PENDING without M1 events; with them the act, band and label maths give PASS on a good match and FAIL on a bad one', async () => {
+    assert.strictEqual(evaluate({ default: [rec()] }).find(r => r.id === 'mood').status, 'PENDING');
+    const good = withEvents(rec({ koAt: 400 }), [
+      { type: 'mood_band', t: 100, kind: 'tense', n: 1 }, { type: 'act_change', t: 120, n: 2 }, { type: 'act_change', t: 200, n: 3 }, { type: 'act_change', t: 300, n: 4 },
+      { type: 'mood_band', t: 310, kind: 'frenzied', n: 4 }, { type: 'mood_band', t: 360, kind: 'tense', n: 4 }, { type: 'brink_enter', t: 350, actor: 1 },
+      { type: 'style_label', t: 40, actor: 0, kind: 'rusher', text: '' }, { type: 'style_label', t: 200, actor: 0, kind: '', text: 'rusher' }]);
+    const r = Object.fromEntries(evaluate({ default: Array.from({ length: 60 }, () => good) }).map(x => [x.id, x]));
+    assert.strictEqual(r['mood.act2'].status, 'PASS'); assert.strictEqual(r['mood.act3'].status, 'PASS'); assert.strictEqual(r['mood.act4'].status, 'PASS');
+    assert.strictEqual(r['mood.act4beforeBrink'].status, 'PASS'); assert.strictEqual(r['mood.frenzied'].status, 'PASS');
+    assert.strictEqual(r['style.entries'].status, 'PASS'); assert.strictEqual(r['style.shortest'].status, 'PASS');
+    const bad = withEvents(rec({ koAt: 400 }), [{ type: 'act_change', t: 60, n: 2 }, { type: 'act_change', t: 70, n: 3 }, { type: 'mood_band', t: 80, kind: 'tense', n: 3 },
+      { type: 'style_label', t: 10, actor: 0, kind: 'sniper', text: '' }, { type: 'style_label', t: 15, actor: 0, kind: '', text: 'sniper' }]);
+    const b = Object.fromEntries(evaluate({ default: [bad] }).map(x => [x.id, x]));
+    assert.strictEqual(b['mood.act2'].status, 'FAIL'); assert.strictEqual(b['style.shortest'].status, 'FAIL');
+  });
   await t('a test with events present but no body stays PENDING, never PASS', async () => {
     const r = byId(await runTests(ctx({ default: [withEvents(rec(), [{ type: 'brunt_chain', t: 5 }])] }), ['H5'])).H5;
     assert.strictEqual(r.status, 'PENDING');

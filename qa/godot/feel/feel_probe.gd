@@ -24,7 +24,7 @@ func _init() -> void:
 		DirData.swap(DirData.parseFile(prof), DirData.parseFile("res://data/combat/finishers.json"))
 	elif prof != "":
 		DirData.templatesProfile = prof
-	var agg := {"exFrames": 0, "exIdle": 0, "exFreeze": 0, "idleRuns": [], "firstStrike": [], "strikeGaps": [], "strikes": 0,
+	var agg := {"exFrames": 0, "exIdle": 0, "exFreeze": 0, "idleRuns": [], "firstStrike": [], "firstStrikeNear": [], "strikeGaps": [], "strikes": 0,
 		"fightSec": 0.0, "exSec": 0.0, "exLen": [], "standFrames": 0, "standRuns": [], "outFrames": 0, "breath": [], "matches": n, "mFrames": 0, "mIdle": 0, "mIdleRuns": [], "mLen": [], "setIdleRuns": []}
 	for i in range(n):
 		_match(base + i, agg)
@@ -51,6 +51,7 @@ func _sum(g: Dictionary) -> Dictionary:
 		"longest_idle_per_exchange_med_s": snappedf(_med(g.idleRuns), 0.01),
 		"longest_idle_per_exchange_p90_s": snappedf(_pct(g.idleRuns, 0.9), 0.01),
 		"request_to_first_strike_med_s": snappedf(_med(g.firstStrike), 0.01),
+		"request_to_first_strike_near_med_s": snappedf(_med(g.firstStrikeNear), 0.01),
 		"gap_between_strikes_med_s": snappedf(_med(g.strikeGaps), 0.01),
 		"gap_between_strikes_p90_s": snappedf(_pct(g.strikeGaps, 0.9), 0.01),
 		"strikes_per_min": snappedf(g.strikes / maxf(1.0, g.fightSec / 60.0), 0.1),
@@ -79,6 +80,7 @@ func _match(seed: int, g: Dictionary) -> void:
 	var run: int = 0
 	var longest: int = 0
 	var gotStrike: bool = false
+	var exDist: float = 0.0          # horizontal distance between the fighters when the exchange starts (QA, G0 triage: first strike is judged within 2,500 units)
 	var lastStrikeT: float = -1.0
 	var stand: int = 0
 	var lastRelease: float = -1.0
@@ -116,6 +118,7 @@ func _match(seed: int, g: Dictionary) -> void:
 			lastStrikeT = S.T
 		var nowEx: bool = S.dirS.ex != null
 		if nowEx and not inEx:
+			exDist = absf(SimWrap.sdx(fs[0].x, fs[1].x))
 			inEx = true; exT0 = S.T; run = 0; longest = 0; gotStrike = false; exF = 0; exI = 0
 			setPiece = S.dirS.ex.kind == "sig"
 			if lastRelease >= 0.0:
@@ -144,6 +147,8 @@ func _match(seed: int, g: Dictionary) -> void:
 			if struck and not gotStrike:
 				gotStrike = true
 				g.firstStrike.append(S.T - exT0)
+				if exDist <= 2500.0:
+					g.firstStrikeNear.append(S.T - exT0)
 		else:
 			g.outFrames += 1
 			var close: bool = absf(SimWrap.sdx(fs[0].x, fs[1].x)) < CLOSE_X and absf(fs[0].y - fs[1].y) < CLOSE_Y

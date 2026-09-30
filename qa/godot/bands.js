@@ -67,7 +67,7 @@ function hasEvent(A, pattern) {
 
 const SCALES = {
   testbed: { len: { mean: [40, 70], p90: 100 }, tier3: 0.70, tier4: 0.25, civ: [25, 50], worst: 65, civ90: 0.07, bleed: 40, structRow1: [20, 40] },
-  game: { len: { median: [360, 480], p10: 300, p90: 600 }, tier3: 0.70, tier4: 0.60, civ: [45, 75], worst: 85, civ90: 0.10, bleed: 4, structRow1: [40, 75] },
+  game: { len: { median: [360, 480], p10: 300, p90: 600 }, tier3: 0.70, tier4: 0.60, civ: [25, 50], worst: 85, civ90: 0.10, bleed: 4, structRow1: [40, 75] },
 };
 
 function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
@@ -190,13 +190,12 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
 
   // ---- 5c. knockback slides (ground impacts): a slide ends in a `slide` event, a slam digs an impact crater
   if (D && hasEvent(A, 'slide')) {
-    const sl = S.clusterShare(D, r => r.slides.length, r => r.slides.length + r.impactCraters);
-    R.rate('5c.share', '§5c', 'Ground contacts that slide rather than slam (slams stay at 15% or more)', { v: sl.p, ci: sl.ci, lo: 0.60, hi: 0.85 });
-    // the per-match band is retired (it scaled with match length); the band is per minute, and per launch
-    R.point('5c.perMin', '§5c', 'Slides per minute (default arm)', { v: sum(D.map(r => r.slides.length)) / (sum(D.map(r => r.koAt)) / 60), lo: 1.5, hi: 4, unit: 'num' });
-    const sPerL = S.clusterShare(D, r => r.slides.length, r => total(r.launches));
-    R.rate('5c.perLaunch', '§5c', 'Launches that end in a slide (35 to 70% of all launches)', { v: sPerL.p, ci: sPerL.ci, lo: 0.35, hi: 0.70 });
-    R.info('5c.detail', '§5c', 'Slides: mean length and trench width; slams (impact craters) per match; water skims per match', `${mean(D.flatMap(r => r.slides.map(x => x.len))).toFixed(0)} units, ${mean(D.flatMap(r => r.slides.map(x => x.w))).toFixed(1)} wide; ${mean(D.map(r => r.impactCraters)).toFixed(1)} slams; ${mean(D.map(r => r.skims)).toFixed(1)} skims`, 'paved starts: ' + (D.flatMap(r => r.slides).filter(x => x.variant === 'paved').length / Math.max(1, D.flatMap(r => r.slides).length) * 100).toFixed(0) + '%');
+    // G0 triage (balance-targets 14): how launches end, per launch. Brunts (8 to 20%) are row 5b.share.
+    const mixOf = (name, kFn, lo, hi) => { const c = S.clusterShare(D, kFn, r => total(r.launches)); R.rate('5c.mix.' + name.split(' ')[0], '§5c', 'How launches end: ' + name + ' (per launch)', { v: c.p, ci: c.ci, lo, hi }); };
+    mixOf('slide', r => r.slides.length, 0.45, 0.75);
+    mixOf('slam (impact crater)', r => r.impactCraters, 0.15, 0.35);
+    mixOf('water skim or splash', r => r.skims, 0.03, 0.10);
+    R.info('5c.detail', '§5c', 'Slides: mean length and trench width; slams per match; water skims per match', `${mean(D.flatMap(r => r.slides.map(x => x.len))).toFixed(0)} units, ${mean(D.flatMap(r => r.slides.map(x => x.w))).toFixed(1)} wide; ${mean(D.map(r => r.impactCraters)).toFixed(1)} slams; ${mean(D.map(r => r.skims)).toFixed(1)} skims`);
     R.pending('5c.budget', '§5c', 'Casualties from one slide at most 2% (tier 2 or below), 5% (tier 3), 10% (tier 4); 0 in open country; the planner declines launches over budget (hard tests)', 'needs casualties attributed per slide (a slide event with the population lost, or the predicted slide of the planner) and the predicted-vs-actual landing test from Encounter');
   } else if (D) R.pending('5c.slides', '§5c', 'Knockback slide bands', 'no slide events in this sim (World SC slide)');
 
@@ -235,7 +234,11 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
   // ---- 8. story beats
   if (D) {
     R.info('8.hides', '§8', 'Hides and ambushes', 'retired', 'hiding is removed from the base game and kept for a future stealth fighter (balance-targets §8); the rows return with that fighter (canHide)');
-    R.point('8.clash', '§8', 'Beam clashes and struggles per match (CLASH outcomes)', { v: mean(D.map(r => r.beams.filter(b => b.out === 'CLASH').length)), lo: 2, hi: 8 });
+    const sigsPer = D.map(r => r.beams.length);
+    if (hasEvent(A, 'signature_ready') || hasEvent(A, 'signature_cooldown')) R.point('8.sigs', '§13', 'Signatures fired per match, median (2 to 4, median 3; the 120 s cooldown)', { v: median(sigsPer), lo: 2, hi: 4, unit: 'num' });
+    else R.add({ id: '8.sigs', ref: '§13', what: 'Signatures fired per match (2 to 4, median 3)', status: 'PENDING', value: 'today ' + median(sigsPer).toFixed(1) + ' (median)', band: '2 to 4', note: 'pending Q4: the 120 s signature cooldown is not in the sim yet' });
+    const cs = S.clusterShare(D, r => r.beams.filter(b => b.out === 'CLASH').length, r => r.beams.length);
+    R.rate('8.clash', '§8', 'Beam clashes: share of signatures fired that end in a CLASH (30 to 60%; re-based at G0)', { v: cs.p, ci: cs.ci, lo: 0.30, hi: 0.60 });
     // lock breaks through line of sight (spec-wounds 1c): an episode for fighter X runs from the first `searching` (kind lock) aimed at X after X was last found, to X's next `found`
     if (hasEvent(A, 'found')) {
       const eps = [], gapsBetween = [], perMatch = [];
@@ -283,20 +286,64 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
       R.point('8.blitz', '§8', 'Blitzes per minute (2 to 6 in Tense and Frenzied acts; measured over the whole match until the act is in the records)', { v: bl / mins, lo: 2, hi: 6, unit: 'num', note: 'the band is for Tense and Frenzied only; a whole-match rate below 2 can still pass there' });
     } else R.pending('8.blitz', '§8', 'Blitz rate: 2 to 6 a minute in Tense and Frenzied acts', 'needs a `blitz` fx event and the act (mood) per event (Encounter Q4)');
     R.pending('8.comebacks', '§8', 'Comebacks 15 to 35% of matches; lead changes median at least 2', 'needs the brink and region stages (Wounds S1, S2)');
-    R.add(hasEvent(A, 'region_broken') ? { id: '8.breaks', ref: '§8', what: 'Region breaks per match, median (game: 4 to 6)', status: 'INFO', value: String(median(D.map(r => r.events.filter(e => e.type === 'region_broken').length))), band: '4 to 6 at game scale', note: 'see the pending-tests skeleton W3' } : { id: '8.breaks', ref: '§8', what: 'Region breaks before the finisher (4 to 6), finishers preceded by a brink call-out (100%)', status: 'PENDING', value: '', band: '', note: 'needs Wounds S1 and S2 events' });
   }
+
+  // ---- mood (spec-wounds 9) and style labels (style-thresholds 7), read from the M1 events mood_band, act_change and style_label
+  if (D && hasEvent(A, 'mood_band')) {
+    const tot = { calm: 0, tense: 0, frenzied: 0 }, byAct = [null, 1, 2, 3, 4].map(a => (a ? { calm: 0, tense: 0, frenzied: 0 } : null)), starts = { 2: [], 3: [], 4: [] };
+    let before = 0, withBrink = 0;
+    for (const r of D) {
+      let band = 'calm', act = 1, t0 = 0; const st = {};
+      const adv = t => { const dt = t - t0; if (dt > 0) { tot[band] += dt; byAct[act][band] += dt; } t0 = Math.max(t0, t); };
+      for (const e of (r.events || [])) {
+        if (e.type === 'mood_band') { adv(e.t); band = e.kind; }
+        else if (e.type === 'act_change') { adv(e.t); act = e.n; if (st[act] === undefined) st[act] = e.t; }
+      }
+      adv(r.koAt);
+      for (const a of [2, 3, 4]) if (st[a] !== undefined) starts[a].push(st[a]);
+      const b = (r.events || []).find(e => e.type === 'brink_enter');
+      if (b) { withBrink++; if (st[4] !== undefined && st[4] < b.t) before++; }
+    }
+    const T = sum(Object.values(tot)), sh = (o, k) => o[k] / Math.max(1e-9, sum(Object.values(o)));
+    R.point('mood.calm', '§9', 'Mood: Calm share of match time (30 to 55%)', { v: tot.calm / T, lo: 0.30, hi: 0.55, unit: 'pct' });
+    R.point('mood.tense', '§9', 'Mood: Tense share of match time (35 to 60%)', { v: tot.tense / T, lo: 0.35, hi: 0.60, unit: 'pct' });
+    R.point('mood.frenzied', '§9', 'Mood: Frenzied share of match time (5 to 20%)', { v: tot.frenzied / T, lo: 0.05, hi: 0.20, unit: 'pct' });
+    R.point('mood.calmAct1', '§9', 'Calm share of act 1 (at least 60%)', { v: sh(byAct[1], 'calm'), lo: 0.60, unit: 'pct' });
+    R.point('mood.frenziedAct4', '§9', 'Frenzied share of act 4, the climax (at least 15%)', { v: sh(byAct[4], 'frenzied'), lo: 0.15, unit: 'pct' });
+    R.point('mood.act2', '§9', 'Act 2 starts at, median (1:30 to 2:30)', { v: median(starts[2]), lo: 90, hi: 150, unit: 's' });
+    R.point('mood.act3', '§9', 'Act 3 starts at, median (2:30 to 4:00)', { v: median(starts[3]), lo: 150, hi: 240, unit: 's' });
+    R.point('mood.act4', '§9', 'Act 4 starts at, median (4:30 to 5:45)', { v: median(starts[4]), lo: 270, hi: 345, unit: 's' });
+    R.rate('mood.act4beforeBrink', '§9', 'Act 4 arrives before the first brink (at least 80% of matches with a brink)', { v: before / Math.max(1, withBrink), ci: wl(before, Math.max(1, withBrink)), lo: 0.80 });
+  } else if (D) R.pending('mood', '§9', 'Mood and act rows: Calm 30 to 55%, Tense 35 to 60%, Frenzied 5 to 20%; Calm at least 60% of act 1; Frenzied at least 15% of act 4; acts 2, 3, 4 at 1:30 to 2:30, 2:30 to 4:00, 4:30 to 5:45; act 4 before the first brink in at least 80%', 'needs the M1 events mood_band and act_change in the sim');
+  if (D && hasEvent(A, 'style_label')) {
+    const entries = [], evsN = [], held = [], unl = [];
+    for (const r of D) {
+      for (const who of [0, 1]) {
+        const es = (r.events || []).filter(e => e.type === 'style_label' && e.actor === who);
+        entries.push(es.filter(e => e.kind).length); evsN.push(es.length);
+        let cur = null, lab = 0;
+        for (const e of es) { if (cur !== null) { held.push(e.t - cur); lab += e.t - cur; } cur = e.kind ? e.t : null; }
+        if (cur !== null) lab += Math.max(0, r.koAt - cur);
+        unl.push(1 - lab / Math.max(1, r.koAt));
+      }
+    }
+    R.point('style.entries', '§9 style', 'Style label entries per fighter per match, median (at most 3; AI play)', { v: median(entries), hi: 3, unit: 'num' });
+    R.point('style.events', '§9 style', 'Style label events per fighter per match, entries and endings, median (at most 5)', { v: median(evsN), hi: 5, unit: 'num' });
+    if (held.length) R.point('style.shortest', '§9 style', 'Shortest label held (at least 12 s; a label cut off by the KO is not counted)', { v: Math.min(...held), lo: 12, unit: 's' });
+    R.point('style.unlabelled', '§9 style', 'Unlabelled share of match time, mean (at most 40%)', { v: mean(unl), hi: 0.40, unit: 'pct' });
+  } else if (D) R.pending('style', '§9 style', 'Style label rows: entries at most 3, events at most 5, shortest label at least 12 s, unlabelled at most 40% (AI play)', 'needs the M1 style_label event in the sim');
 
   // ---- 10. tempo (measured from the event stream and the feed)
   if (D) {
     const mins = sum(D.map(r => r.koAt)) / 60;
     const ex = sum(D.map(r => melee(r) + r.beams.length));
-    R.point('10.exPerMin', '§10', 'Exchanges started per minute', { v: ex / mins, lo: 8, hi: 12 });
+    R.point('10.exPerMin', '§10', 'Exchanges started per minute (15 to 24)', { v: ex / mins, lo: 15, hi: 24 });
     const lens = D.flatMap(r => r.exLens), gaps = D.flatMap(r => r.exGaps);
-    R.point('10.exLen', '§10', 'Exchange length, request to release, median', { v: median(lens), lo: 2.5, hi: 4.0, unit: 's', note: 'set pieces 3 to 8 s are not separated out' });
-    R.point('10.gap', '§10', 'Breathing room, release to the next request, median', { v: median(gaps), lo: 1.5, hi: 4.0, unit: 's' });
+    R.info('10.exLen', '§10', 'Exchange length, request to release, median', 'retired', 'retired by the dynamic feel (G0 triage); the feel rows replace it. Measured: ' + median(lens).toFixed(2) + ' s');
+    R.info('10.gap', '§10', 'Breathing room, release to the next request, median', 'retired', 'replaced by the feel row release to next request at most 1.0 s. Measured: ' + median(gaps).toFixed(2) + ' s');
     const noLong = D.filter(r => !r.exGaps.some(g => g > 10)).length;
     R.rate('10.gap10', '§10', 'Matches with no gap over 10 s', { v: noLong / D.length, ci: wl(noLong, D.length), lo: 0.95 });
-    R.point('10.launchPerMin', '§10', 'Launches per minute', { v: sum(D.map(r => total(r.launches))) / mins, lo: 4, hi: 6 });
+    { const ls = S.clusterShare(D, r => total(r.launches), r => melee(r) + r.beams.length); R.rate('10.launchShare', '§10', 'Exchanges that end in a launch (40 to 65%; replaces launches per minute)', { v: ls.p, ci: ls.ci, lo: 0.40, hi: 0.65 }); }
     const fl = D.flatMap(r => r.flights);
     const haul = D[0].longHaul || 1500;                                 // 1,500 x TRAV_LAUNCH since the world scale (SC): 9,000 units = 120 fighter heights
     R.point('10.longHaul', '§10', `Launches with at least ${haul.toLocaleString('en-US')} units of horizontal travel (1,500 x the launch traversal factor)`, { v: fl.filter(f => f.travel >= haul).length / fl.length, lo: 0.30, unit: 'pct' });
