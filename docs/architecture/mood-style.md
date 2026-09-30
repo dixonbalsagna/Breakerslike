@@ -52,7 +52,7 @@ Everything is an integer. There are no floats in the component, so it is exact o
 | `candidate`, `candT` | int | the label waiting on its hold time (hysteresis) |
 | `runKind`, `runLen`, `runMax` | int | repetition: the current run of the same attack kind, and the match's longest |
 
-**Measures (M = 13 per bucket), from Narrative's §8.2:**
+**Measures (M = 12 per bucket), from Narrative's §8.2:**
 - `stance0` to `stance3`: ticks in AGGRESSIVE, DEFENSIVE, EVASIVE and ESCAPE (Narrative's Press, Guard, Dodge and Escape);
 - `light`, `heavy`, `sig`: attack requests;
 - `closing`: ticks spent closing on the opponent (the shortest-arc distance fell by more than a dead zone);
@@ -60,14 +60,14 @@ Everything is an integer. There are no floats in the component, so it is exact o
 - `charge`: ticks charging;
 - `chargeCut`: charges interrupted;
 - `sigLanded`: signatures that hit;
-- `hidden`: ticks hidden. This keeps `hide_habit` for the stealth fighter; it is always 0 for today's roster.
+- Hiding is out of the base game (EP ruling), so there is no `hidden` measure and no `hider` label. The stealth fighter's profile adds both (`hide_habit`) when that fighter lands. The measure list is data, so adding them is a data change plus one counter.
 
-The cost is about 800 ints per fighter, plus 20 for the match, all hashed. The hash walk is linear, so this adds a few microseconds per checkpoint.
+The cost is about 740 ints per fighter, plus 20 for the match, all hashed. The hash walk is linear, so this adds a few microseconds per checkpoint.
 
 ## 3. Update rate
 
 - **Every tick** (non-frozen, at the end of `SimCore.step`, after `dirUpdate` and the beams), `SimMood.tick(S)` does four things:
-  1. Adds to each fighter's `cur` counters (stance, closing and opening, charging, hidden).
+  1. Adds to each fighter's `cur` counters (stance, closing and opening, charging).
   2. Reads this tick's events for impulses (below) and adds them to `raw`.
   3. Reads the world's casualty and structure deltas.
   4. Counts `region_broken` (and `form_change` later) into `breaks` and `forms`.
@@ -117,10 +117,9 @@ The labels are evaluated at 1 Hz on the 60 s window `win`, using integer cross-m
 | `runner` | EVASIVE + ESCAPE > 50% | 20 s | < 40% for 5 s |
 | `charger` | charge ticks > 20% | 15 s | < 12% for 5 s |
 | `sniper` | signatures ≥ 35% of attacks, with at least 4 in the window | 20 s | < 25% for 5 s |
-| `hider` | hidden > 30% (stealth fighter only) | 20 s | < 20% for 5 s |
 | `mixer` | none of the above, and no stance above 40% | 30 s | any other label enters |
 
-- **One label at a time.** When two qualify, priority is turtle, runner, rusher, charger, sniper, hider, mixer. There is no label until the first one holds (a new match starts unlabelled).
+- **One label at a time.** When two qualify, priority is turtle, runner, rusher, charger, sniper, mixer. There is no label until the first one holds (a new match starts unlabelled).
 - **A style shift** is a change from one label to another. The event carries both, `was_rusher_now_runner` in Narrative's terms.
 - **The opponent's reaction** (a rusher meets evasion) needs no extra state. It is the pair of both fighters' labels, read by Encounter and Narrative.
 

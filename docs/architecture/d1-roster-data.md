@@ -27,7 +27,7 @@ data/fighters/<id>/          id: the stable roster id (Fighter.id, "KAI" today; 
   ladder.json                power tiers: fill rate, thresholds, per-tier deltas           (D1b)
   meters.json                menace, anguish (placeholders), later Pride, heat and others  (D1b)
   forms.json                 transformations (F1 onward; spec-wounds §8)
-data/fighters/roster.json    the order of the select screen and the default pairing: ["KAI", "VORR"]
+data/fighters/roster.json    {"schema": "roster/1", "order": ["KAI", "VORR"]}: the select-screen order and the default pairing
 ```
 
 `fighter.json` for KAI holds today's values exactly (VORR's file has the same shape):
@@ -45,7 +45,7 @@ data/fighters/roster.json    the order of the select screen and the default pair
 }
 ```
 
-- **`identity`** is Narrative's text, plus Art's colours until Art has real readout ids.
+- **`identity`** is Narrative's text (`docs/narrative/identity.md`), plus Art's colours until Art has real readout ids. `role` is one of `hero`, `villain` or `rival` (the Anti-hero). It is a label only and never gates mechanics: meters come from the profile (Game Design's data-driven ruling). Today's `role ==` branches (menace, anguish, composure, regen) stay until D1b replaces them with meter checks. A `rival` must not play before D1b; the loader accepts the value from D1a.
 - **`rally.rule`** is one of `second_wind`, `spite`, `reboot`, `encore` or `none`. Parameters come with each fighter. For Spite that is the mend order; for Reboot the dock and Press ranges; for Encore the input window, 180 ticks. Every rule's code stays in `wounds.gd`, so the data only chooses a rule and its numbers.
 - **`finishers`** maps a form tier to a finisher template id in `data/combat/finishers.json`. D1a reads `base`. F1 adds form tiers. Combat's `select.byFighter` becomes a fallback during D1 and is removed in F1 (Combat's call).
 
@@ -96,7 +96,7 @@ data/fighters/roster.json    the order of the select screen and the default pair
 
 ## 6. Owners and hand-offs
 
-- **Tools:** the JSON schemas (`fighter/1`, `wounds/1`, `ladder/1`, `meters/1`) and a validator in `tools/`, wired into `npm test` with the 15-digit lint.
+- **Tools:** the JSON schemas in `tools/schemas/` (fighter, fighter-wounds, fighter-ladder, fighter-meters, fighter-roster) and the validator, with the 15-digit lint. A change to a data shape updates its schema in the same commit, or CI's data job, which gates deploy, fails. The D1a report lists every shape it lands, so Tools can tighten the schemas in that commit.
 - **Narrative:** the identity text. **Art:** readout ids when they exist.
 - **Game Design:** the numbers. D1 only moves them. Retunes happen after, as data edits.
 - **Combat:** the finisher key move (§3).

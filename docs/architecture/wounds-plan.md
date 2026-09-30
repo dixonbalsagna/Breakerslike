@@ -134,7 +134,7 @@ Sizes, as a rough guide to GDScript lines and review effort:
   - `data/fighters/kai/fighter.json`, `data/fighters/vorr/fighter.json`;
   - `sim/core/roster.gd` loads them at `newMatch`.
 - **Acceptance:** **the goldens do not change.** The same behaviour, now from data, is the proof that the move is lossless. A data hash also enters the goldens, so a data edit shows up as a golden change.
-- **Size:** M. Section 2 below has the model.
+- **Size:** M. Section 2 below has the model; `d1-roster-data.md` has the plan (schemas, loader, the D1a and D1b split, acceptance).
 
 ### F1: The first real fighter. It needs D1 and the composer's stages 0 to 2 (Combat and Encounter: the event log, parity as data, one generative slot for the first fighter).
 - **Recommendation to Orb, via the EP:**
