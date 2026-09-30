@@ -39,7 +39,11 @@ Inputs:
   - base: DEFENSIVE 25%, AGGRESSIVE 15%, EVASIVE and ESCAPE 0%;
   - modifiers: a heavy +10; a battered head −10, which replaces the 20% window narrowing; ±5 per tier of difference; 50 ki or more +5; a Boiling attacker +5.
 
+  Heat (Game Design, 7e87793): +5 against a Boiling attacker, and −5 when the defender is a Protagonist at Simmering or Boiling.
+
   On a parry, the counter beat is scheduled at the first parryable strike. `window_open` and `danger` stay as the tell, and the parry ring and counter beat stay visible. The press-timing code goes: the buffer, clean ticks and the AI press delay.
+- **The clean parry is a perfect read, decided by state.** It happens when the defender held the parrying stance for 2 s or more at attack start and has 50 ki or more. It adds a riposte launch and +8 ki. QA band: 20 to 40% of parries are clean.
+- **The hold timer** (Game Design's ruling): continuous time in the current stance, counted inside exchanges too, and read at attack start with R8's snapshot. A change mid-exchange doesn't affect that exchange but restarts the timer. It serves the clean parry and R4.
 - **The counter (R4).** PRESSURE's counter branch runs at 50% when the defender held DEFENSIVE for 2 s or more with more than 25 ki, and 20% otherwise. That is a data condition in Combat's selector; I supply `defHeld` and `ki` in the plan context. It needs a per-fighter `stanceT`, the time the stance was last set (Simulation, `state.gd` and the hash).
 - **Beam clash:** CLASH when the defender is AGGRESSIVE with 40 ki or more (Combat's beam rule), resolved as today by tier, ki and meters.
 - QA band: 5 to 15 parries per 100 melee exchanges.
@@ -50,7 +54,8 @@ Inputs:
   - base 15;
   - +15 for the matching stance: DEFENSIVE against a launch finisher, EVASIVE against a melee one, AGGRESSIVE with 40 ki or more against a beam one; +5 for any other stance;
   - +5 at 50 ki or more;
-  - the fighter-state bonuses: hooks keyed by roster data, active once F1's fighters exist;
+  - heat: +5 at Simmering, +10 at Boiling (this folds in the old +10 "Boiling on the brink");
+  - the other fighter-state bonuses: hooks keyed by roster data, active once F1's fighters exist;
   - −10 per Rally, and −10 per minute past 8:00.
 - **The three pulses** at the contest's beat ticks emit `struggle_pulse {actor, n, state}`, with state holding or slipping. The sequence depends only on the drawn result and the margin, so it reveals the outcome step by step without another draw. `struggle_press` retires.
 
@@ -61,8 +66,13 @@ Inputs:
   - Raised by: strikes landed, clashes, breaks, launches through buildings, collateral and taunts, faster under AGGRESSIVE.
   - Lowered by: decay, and long DEFENSIVE or ESCAPE stretches.
   - Bands: Calm below 30, Tense 30 to 70, Frenzied above 70.
-  - In Tense, the release-to-request gap moves to 0.6 s and blitzes get +25%. Frenzied sets the peak blitz and teleport-clash rates.
   - Events: `mood_band {band}` on each crossing, and the value in state for crowds, audio and UI.
+- **The aggression scalar** (Game Design, 7e87793). The act and the mood combine into one match-wide permille value, which Simulation's M1 produces:
+  - 1000 + 100 × (act − 1) + 0, 250 or 500 for Calm, Tense or Frenzied, at most 1,800;
+  - it divides the clock's intervals and multiplies the blitz chance;
+  - it stacks multiplicatively with the stance cadence (R9) and personality.
+
+  The director reads it and doesn't compute it, so the per-act 10% and Tense's +25% above are this one scalar.
 - **Blitzes and teleport clashes** are Combat's templates. The director only selects them, by mood and act.
 - QA bands: Frenzied at most 25% of the time; Calm at least 15%; 2 to 6 blitzes a minute while Tense or Frenzied.
 
@@ -87,12 +97,9 @@ Inputs:
    - the beam CLASH rule from state;
    - blitz and teleport-clash templates;
    - `chainP` numbers, if Combat wants them in its data rather than mine.
-3. **Game Design:**
-   - Does the clean parry go, or does it map to a state?
-   - The Boiling and heat inputs for the parry and chain terms, which wait for the heat track.
-   - The mood's per-event weights and decay rate.
-   - How "held DEFENSIVE for 2 s" treats a stance change mid-exchange.
-4. **UI and Rendering:** consumers for `weight_set`, `sig_queued`, `stance_set`, `finisher_start.kind`, `struggle_pulse`, `act_change`, `mood_band` and the tutorial events.
+3. **Game Design:** answered in 7e87793 and folded in above: the clean parry, heat, the aggression scalar and the hold timer. Still open: the heat input to `chainP`, and the mood's per-event weights if M1 doesn't carry them.
+4. **Simulation:** M1's aggression scalar, and heat stages readable by the director.
+5. **UI and Rendering:** consumers for `weight_set`, `sig_queued`, `stance_set`, `finisher_start.kind`, `struggle_pulse`, `act_change`, `mood_band` and the tutorial events.
 
 ## Risks
 - **Responsiveness.** A player whose attacks the director times may feel unheard. The weight press must acknowledge within 2 ticks, and AGGRESSIVE must feel immediate: the dynamic slice's release to request is 0.93 s, and Tense brings it to 0.6 s.
