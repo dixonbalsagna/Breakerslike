@@ -610,3 +610,10 @@ Notes:
 3. CI writes `build_info.json` (`{"commit": "<sha7>", "date": "<yyyy-mm-dd>"}`) into the project before the export so the report names the build. Without it the report says `Build: unknown`, which is the one thing Orb cannot work around.
 
 `hud_check` covers the four tags and labels, the browser and OS words from sample user agents, the time format, the settings line, the report's every field and its privacy, the panel's geometry at desktop, tablet, phone and small sizes in both states (every control 48 dp and inside the card, the text box at least three lines), the pill's geometry in landscape and portrait (clear of the ring map, the strip, the bark lanes, the plates and the fight), and the flow by mouse and touch (pill, tags, copy, back, close, Esc, the How to play card not opening over it).
+
+## 21. The toll with whole-person counts
+
+World's districts slice (D1) raises the planet's population from 390 to about 1,800 whole people (about four a building); the meters stay shares and only the counters grow. The toll chip prints `CIVILIANS LOST 1799 / 1800` and `STRUCTURES LOST 1234    CRATERS 1999`, so a four-digit number must fit at phone width. Two rules keep it so:
+- **The chip grows.** In landscape the toll chip is 380 design px wide, or as wide as four-digit counts need (measured with `9999` in every slot at the current type size) where the plates leave room, never into the plates or, on touch, the pause button. At 1920 by 1080 nothing changes; on 1024 by 576 and 800 by 480 it widens.
+- **The type shrinks.** `UiCenter.toll_fs` shrinks the toll's type from 20 design px toward the text floor until the longest line fits, with an 8 px margin. Portrait prints the civilians line only, which fits at 360 px wide.
+`hud_check` (`_toll_rules`) proves, at nine sizes from 360 by 640 to 2400 by 1080 (dp 2.6), that `1799 / 1800`, `1234` structures and `1999` craters fit the chip and the type stays at or above the floor. The wound-card and silhouette text carry no counts. Nothing else in the HUD prints a civilian number: the planet strip marks fallen buildings as ticks, not digits.

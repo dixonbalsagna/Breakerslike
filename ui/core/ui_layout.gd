@@ -231,6 +231,11 @@ func _landscape() -> void:
 			prow = maxf(prow, (2.0 * (touch_min + 4.0) + cg) if touch_grid else (touch_min + 4.0))
 		prompts[i] = Rect2(p.position.x, maxf(cards[i].end.y, silhouette[i].end.y) + gap, col_w, prow)
 	var toll_w: float = 380.0 * s
+	# The toll chip grows to hold four-digit counts (the population is whole people, about 1,800) where the plates leave room.
+	var fs_t: int = UiText.px(20.0, s)
+	var need_w: float = maxf(UiText.width("%s 9999 / 9999" % UiData.t("toll.civilians"), fs_t), UiText.width("%s 9999    %s 9999" % [UiData.t("toll.structures"), UiData.t("toll.craters")], fs_t)) + maxf(24.0 * s, 10.0)
+	var room_w: float = plate[1].position.x - plate[0].end.x - 2.0 * gap - (2.0 * (maxf(touch_min, 44.0) + gap) if touch_ui else 0.0)
+	toll_w = minf(maxf(toll_w, need_w), maxf(room_w, 200.0))
 	toll = Rect2(vp.x * 0.5 - toll_w * 0.5, safe.position.y, toll_w, 2.0 * float(UiText.px(20.0, s)) + 18.0)
 	banner_c = Vector2(vp.x * 0.5, toll.end.y + gap + 28.0 * s)
 	pause_btn = Rect2()

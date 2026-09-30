@@ -39,6 +39,7 @@ func _run() -> void:
 	await _howto_rules()
 	await _reads_hud()
 	await _feedback_rules()
+	_toll_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -1492,3 +1493,19 @@ func _feedback_rules() -> void:
 	hud.hide_feedback()
 	hud.queue_free()
 	await process_frame
+
+
+## The toll chip with the population as about 1,800 whole people: four-digit counters fit the chip at every size, phone width included.
+func _toll_rules() -> void:
+	var l1 := "%s %d / %d" % [UiData.t("toll.civilians"), 1799, 1800]
+	var l2 := "%s %d    %s %d" % [UiData.t("toll.structures"), 1234, UiData.t("toll.craters"), 1999]
+	for cs in [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(800, 480), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(1560, 720), 2.0], [Vector2(390, 844), 1.0], [Vector2(360, 640), 1.0], [Vector2(1080, 1920), 1.0]]:
+		var lay := UiLayout.new()
+		lay.dp = cs[1]
+		lay.compute(cs[0], false)
+		var fs: int = UiCenter.toll_fs(lay, lay.s, l1, l2)
+		var wide: float = UiText.width(l1, fs) if lay.portrait else maxf(UiText.width(l1, fs), UiText.width(l2, fs))
+		var tag := "toll %dx%d dp %.1f" % [int(cs[0].x), int(cs[0].y), cs[1]]
+		_ok(wide <= lay.toll.size.x - 8.0 + 0.5, "%s: four-digit counts fit the chip (%d px in %d, type %d)" % [tag, int(wide), int(lay.toll.size.x), fs])
+		_ok(fs >= int(UiLook.text_floor), "%s: and the type stays at or above the floor" % tag)
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
