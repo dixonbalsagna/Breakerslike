@@ -163,8 +163,10 @@ static func pointers(lay: UiLayout, sp: Dictionary, anchors: Array, s: float) ->
 			var nrm: Vector2 = sp["n"]
 			var dirn: Vector2 = nrm if i == 0 else -nrm   # from this pane's fighter toward the rival
 			var to_div: float = (c - p).dot(dirn)
-			var pos: Vector2 = p + dirn * maxf(0.0, to_div - half - margin)
-			out.append({"slot": i, "pos": _clamp_to(pos, lay), "dir": dirn, "text": txt})
+			var pos: Vector2 = _dodge(_clamp_to(p + dirn * maxf(0.0, to_div - half - margin), lay), Vector2(-dirn.y, dirn.x), lay, anchors)
+			if pos.x < -1e8:
+				continue   # no clear place along the edge: the chip hides rather than cover a fighter
+			out.append({"slot": i, "pos": pos, "dir": dirn, "text": txt})
 		elif mode == "always":
 			# One camera: point only when the rival is off screen, at the edge toward it.
 			var rival: Dictionary = anchors[1 - i]
@@ -174,8 +176,45 @@ static func pointers(lay: UiLayout, sp: Dictionary, anchors: Array, s: float) ->
 				var sig: float = float(sp.get("sigma", 1))
 				var dx: float = sig if i == 0 else -sig
 				var ex: float = lay.safe.end.x - half if dx > 0.0 else lay.safe.position.x + half
-				out.append({"slot": i, "pos": _clamp_to(Vector2(ex, p.y), lay), "dir": Vector2(dx, 0.0), "text": txt})
+				var pos1: Vector2 = _dodge(_clamp_to(Vector2(ex, p.y), lay), Vector2(0.0, 1.0), lay, anchors)
+				if pos1.x > -1e8:
+					out.append({"slot": i, "pos": pos1, "dir": Vector2(dx, 0.0), "text": txt})
 	return out
+
+
+## Fighters may sit far from the centre in the one-view shot (up to 44% of the width), so an edge chip can land on one. Keep a chip
+## about one fighter height (the anchor's `h`) clear of both fighters' anchors: nudge it along the edge (`along`, a unit vector
+## parallel to the edge) to the nearest clear spot inside the safe area, or return an off-screen sentinel (x < -1e8) to hide it.
+static func _dodge(pos: Vector2, along: Vector2, lay: UiLayout, anchors: Array) -> Vector2:
+	var psz: Vector2 = pointer_size(lay.s)
+	if _chip_clear(pos, psz, anchors):
+		return pos
+	var step: float = psz.y * 0.25
+	var reach: float = psz.y
+	for an in anchors:
+		if not an.is_empty():
+			reach = maxf(reach, float(an.get("h", 0.0)) * 2.5 + psz.y)
+	var k := 1
+	while float(k) * step <= reach:
+		for sgn in [1.0, -1.0]:
+			var cand: Vector2 = _clamp_to(pos + along * (sgn * float(k) * step), lay)
+			if _chip_clear(cand, psz, anchors):
+				return cand
+		k += 1
+	return Vector2(-1e9, -1e9)
+
+
+## True when the chip's rectangle at `pos` is at least one fighter height from every visible anchor.
+static func _chip_clear(pos: Vector2, psz: Vector2, anchors: Array) -> bool:
+	var r := Rect2(pos - psz * 0.5, psz)
+	for an in anchors:
+		if an.is_empty() or not bool(an.get("visible", true)):
+			continue
+		var q: Vector2 = an["pos"]
+		var d := Vector2(maxf(maxf(r.position.x - q.x, 0.0), q.x - r.end.x), maxf(maxf(r.position.y - q.y, 0.0), q.y - r.end.y))
+		if d.length() < float(an.get("h", 0.0)):
+			return false
+	return true
 
 
 static func pointer_size(s: float) -> Vector2:

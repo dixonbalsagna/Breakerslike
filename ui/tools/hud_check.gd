@@ -34,6 +34,7 @@ func _run() -> void:
 	await _layer_rules()
 	await _split_rules()
 	await _split_cost()
+	_chip_dodge()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -391,7 +392,7 @@ func _bridge() -> void:
 	# The greybox balance rarely wears a region past bruised in a minute, so push one through the real S1 code: the stage
 	# events it emits must reach the HUD as they are.
 	var f0 = host.S.fighters[0]
-	SimWounds.addWear(host.S, f0, 2, 1200.0)
+	SimWounds.addWear(host.S, f0, 2, 1600.0)   # 1600 x 390 units clears the broken floor (540,000) at the sim's current k
 	SimWounds.updateStages(host.S, f0)
 	host.tick(1280.0, 720.0)
 	hud.advance(1.0 / 60.0)
@@ -870,3 +871,34 @@ func _split_cost() -> void:
 	_ok(all_redraws <= frames, "split cost: the whole moving split redraws at most one layer a frame on average (%d in %d)" % [all_redraws, frames])
 	hud.queue_free()
 	await process_frame
+
+
+## Edge pointer chips keep about one fighter height clear of both fighters (Camera's threshold lets a fighter sit at 44% of the width).
+func _chip_dodge() -> void:
+	var tag := "chip dodge"
+	for sz in [Vector2(1920, 1080), Vector2(1280, 720)]:
+		var lay := UiLayout.new()
+		lay.compute(sz, false)
+		var c: Vector2 = sz * 0.5
+		var sp := {"sep": 1.0, "c": c, "n": Vector2(1.0, 0.0), "fade": 1.0, "sigma": 1.0, "pointer": "split", "dist_bh": 60.0}
+		var fh: float = sz.y * 0.11
+		var psz: Vector2 = UiSplit.pointer_size(lay.s)
+		# Far apart: nothing to dodge, the chips sit at the divider at their fighter's height.
+		var far: Array = [{"pos": Vector2(c.x - 0.4 * sz.x, c.y), "h": fh, "visible": true}, {"pos": Vector2(c.x + 0.4 * sz.x, c.y), "h": fh, "visible": true}]
+		var chips: Array = UiSplit.pointers(lay, sp, far, lay.s)
+		_ok(chips.size() == 2 and absf((chips[0]["pos"] as Vector2).y - c.y) < 1.0 and absf((chips[1]["pos"] as Vector2).y - c.y) < 1.0, "%s %s: fighters far from the divider leave the chips at their own height" % [tag, sz])
+		# Both fighters hard against the divider: every chip that shows is at least one fighter height from both anchors.
+		var near: Array = [{"pos": Vector2(c.x - 0.03 * sz.x, c.y), "h": fh, "visible": true}, {"pos": Vector2(c.x + 0.03 * sz.x, c.y + 0.02 * sz.y), "h": fh, "visible": true}]
+		chips = UiSplit.pointers(lay, sp, near, lay.s)
+		var bad := 0
+		for ch in chips:
+			if not UiSplit._chip_clear(ch["pos"], psz, near) or not lay.safe.grow(1.0).has_point(ch["pos"]):
+				bad += 1
+		_ok(chips.size() >= 1 and bad == 0, "%s %s: chips beside both fighters slide along the edge to a clear spot inside the safe area (%d shown)" % [tag, sz, chips.size()])
+		# A fighter as tall as the screen leaves no room: the chips hide rather than cover it.
+		var huge: Array = [{"pos": Vector2(c.x - 40.0, c.y), "h": sz.y * 1.5, "visible": true}, {"pos": Vector2(c.x + 40.0, c.y), "h": sz.y * 1.5, "visible": true}]
+		_ok(UiSplit.pointers(lay, sp, huge, lay.s).is_empty(), "%s %s: with no clear place the chips hide" % [tag, sz])
+		# An unseen fighter is not a keep-out.
+		var unseen: Array = [{"pos": Vector2(c.x - 30.0, c.y), "h": fh, "visible": false}, {"pos": Vector2(c.x + 0.4 * sz.x, c.y), "h": fh, "visible": true}]
+		chips = UiSplit.pointers(lay, sp, unseen, lay.s)
+		_ok(chips.size() == 2 and absf((chips[0]["pos"] as Vector2).y - c.y) < 1.0, "%s %s: an off-screen fighter does not move the chip" % [tag, sz])

@@ -40,6 +40,7 @@ var opts: Dictionary = {
 	"glyph_style": "neutral",  # the neutral position-diamond set; "family" (each device family's own letters) stays off until Legal answers
 	"hitstop_scale": 1.0,      # Controls' accessibility option, 0.5 to 1.0; the HUD only carries it (see ui/data/options.json)
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
+	"vfx_quality": "auto",     # auto, high, medium or low; VFX reads it (docs/vfx/plan.md), the HUD only carries it
 	"force_redraw": false,     # bench only: redraw every layer every frame, to measure what the caching saves
 }
 var insets := Vector4.ZERO     # left, top, right, bottom safe-area insets from the host (phone notches)
@@ -59,6 +60,9 @@ var _anchors: Array = [{}, {}]
 var _chips: Array = []
 var _chip_text: Array = ["", ""]
 var _chip_text_t: Array = [-1.0, -1.0]
+var _chip_at: Array = [Vector2.ZERO, Vector2.ZERO]   # where each chip node sits: it eases toward its target so a dodge slides, not pops
+var _chip_seen: Array = [false, false]
+var _dt := 1.0 / 60.0
 # The cached layers, back to front (see UiLayer): each redraws only when its signature changes.
 var _l_letter: UiLayer
 var _l_strip_base: UiLayer
@@ -164,6 +168,7 @@ func consume_all(events: Array) -> void:
 
 func advance(dt: float) -> void:
 	_t += dt
+	_dt = dt
 	_frame += 1
 	hub.captions_on = bool(opts["captions"])
 	hub.reduced_motion = bool(opts["reduced_motion"])
@@ -318,10 +323,17 @@ func _update_layers() -> void:
 		if found.is_empty():
 			chip.visible = false
 			chip.update_sig(null)
+			_chip_seen[i] = false
 			continue
 		chip.visible = true
 		chip.size = psz
-		chip.position = (found["pos"] as Vector2) - psz * 0.5
+		var target: Vector2 = found["pos"]
+		if not _chip_seen[i] or bool(opts["reduced_motion"]):
+			_chip_at[i] = target
+		else:
+			_chip_at[i] = (_chip_at[i] as Vector2).lerp(target, 1.0 - exp(-_dt * 20.0))
+		_chip_seen[i] = true
+		chip.position = (_chip_at[i] as Vector2) - psz * 0.5
 		# The number holds for at least a quarter second, so a fast-changing distance redraws the chip at most four times a second.
 		if str(found["text"]) != _chip_text[i] and (_t - float(_chip_text_t[i]) >= 0.25 or _chip_text[i] == ""):
 			_chip_text[i] = str(found["text"])
