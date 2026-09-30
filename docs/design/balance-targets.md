@@ -441,7 +441,7 @@ These rulings are binding for QA's tuning. Where they touch other docs, those do
 
 | Topic | Ruling | Band QA tunes to |
 | :--- | :--- | :--- |
-| **Brink (interim)** | Pitch A, "the crippling moment" (`pitches.md` §5), is adopted as the interim rule pending Orb's pick, so QA can resume. Limbs stop at battered, and a limb breaks only in a crippling moment. The brink is the core broken, and limb wear past battered spills into the core | Limb breaks 0.3 to 0.5 a match, at most 1 per fighter; the brink once a match plus any re-brinks after Rallies; length 6:00 to 8:00 |
+| **Brink** | **Orb picked A**, "the crippling moment" (`pitches.md` §5). Limbs stop at battered, and a limb breaks only in a crippling moment. The brink is the core broken, and limb wear past battered spills into the core | Limb breaks 0.3 to 0.5 a match, at most 1 per fighter; the brink once a match plus any re-brinks after Rallies; length 6:00 to 8:00 |
 | **Match length** | Unchanged | Median 6:00 to 8:00, p10 at least 5:00, p90 at most 10:00 |
 | **Even overall, situational** | Each fighter should have ground where they win: terrain and tier swing it | Every pairing 45 to 55% overall. Within each pairing, each fighter wins at least 58% in at least one context (a biome class or a tier band at the KO) and at most 42% in another |
 | **Comebacks common** | This replaces the S4 "rare, earned" stance. **Trailing-fighter help:** the fighter with more region stages lost gets +5 on the finisher contest, +10% ki regen and +5 on the director's parry chance, while behind by 2 or more stages | Comeback wins (the winner was on the brink, or trailed by 2 or more stages) in 30 to 45% of matches. Rallies 0.3 to 0.7 a match |
@@ -465,4 +465,4 @@ These rulings are binding for QA's tuning. Where they touch other docs, those do
 | **B. A watch force hauls one fighter out** | **Less collateral caused wins** (casualties plus structures, normalised). Ties go to higher vitality |
 | **C. The evacuated crowd returns and rings them** | **Fewer casualties caused wins.** Ties go to higher vitality |
 
-- *Recommendation: A.* It is decided by the fight itself. B and C would always hand time-cap endings to the protectors over the fighters who feed on collateral. Time-cap endings stay under 1% of matches.
+- **Orb picked A** (the crust): higher vitality wins. It is decided by the fight itself. B and C would always hand time-cap endings to the protectors over the fighters who feed on collateral. Time-cap endings stay under 1% of matches.

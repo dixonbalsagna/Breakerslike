@@ -46,6 +46,8 @@ A fighter has a small pool of signatures. **Which one fires** follows this prior
   - *Then* a respected cinematic of up to 5 s.
 - **Effects:** they apply to both fighters. The user chose the moment and the place, and their style is built to suit the change: that is the edge, and the counter-play.
 
+*The owners below are superseded by the option pool in §7.1: each fighter picks one of three at character select.*
+
 | Kind | Proposed owner | What it does to play | Counter-play |
 | :--- | :--- | :--- | :--- |
 | **Land** | Protagonist | Raises a ring of ridges around the fight: new sight blockers, mountainside launches, and a barrier that cuts lure routes. It pulls the fight away from towns | The rival uses the new cover to break lock, or leaves the ring (flight is unaffected) |
@@ -61,11 +63,7 @@ A fighter has a small pool of signatures. **Which one fires** follows this prior
 
 ## 4. Hidden weapons and secret abilities
 
-- **Who:** only **the Empress** and **the Anti-hero**. The Protagonist is open and earnest. The Cyborg's secrets are his body (the Rail chip, the drive), which are already on show.
-  - *The Empress:* a hidden weapon, a concealed seal-device of state (Narrative names it), revealed at her first real revision (9).
-  - *The Anti-hero:* a secret technique, "ancient knowledge" he has never shown, revealed when his Pride first crashes (the facade crack) or when he Drops the Act.
-- **The reveal:** a respected beat of about 1.5 s with a line. The weapon or technique joins that fighter's loadout as a fourth special for the rest of the match.
-- **Learnable:** the triggers are fixed and readable, so players learn to expect them. The reveal is a set piece, not a random surprise.
+**Orb's pick: the Cyborg only.** His hidden weapons come with his final form: his technology isn't fully online until he docks, and generating those weapons is his distinct power-up (§7.2). No other fighter has hidden weapons or secret abilities. The Empress's seal-device and the Anti-hero's secret technique are withdrawn.
 
 ## 5. Transformations: one mechanic per fighter
 
@@ -97,3 +95,42 @@ Rules:
 - It is visible: a player should see a hurt or frenzied fighter move differently.
 
 **Band** (Orb's recognisability of 3 out of 10): the same three-piece sequence repeats in under 10% of exchanges. In a blind review, 70% of reviewers can tell a Calm stretch of a fighter from a Frenzied one.
+
+## 7. For Orb: world changes and transformations, second pass
+
+Orb's picks so far:
+- broken limbs, A;
+- the time cap, A (the crust);
+- hidden weapons for the Cyborg only, coming online with his final form.
+
+This section is the second pass Orb asked for. Nothing here is locked.
+
+### 7.1 World-changing abilities: three options per fighter
+
+**How it works.** Each fighter **picks one of their three at character select**, as part of the loadout, so the player gets range. It stays once per match and permanent, with the same cost and counter-play as §3.
+- *Categories:* land, sky and light, water and climate, orbit and gravity, fields, pathways, technology.
+- *No duplicates:* if both fighters pick the same category, the second pick is greyed out at select.
+
+| Fighter | Option | Category | What it does to the fight |
+| :--- | :--- | :--- | :--- |
+| **Protagonist** | **Proving Ring** | Land | Raises a ring of ridges: new sight blockers and mountainsides, and a natural arena that pulls the fight away from towns |
+| | **Heat Wave** | Climate | His blood heats the world. The sea partly evaporates into fog banks (sight blockers), the lowlands dry out, and his heat cools half as fast. More power, and more of his own internal wear |
+| | **Break the Clouds** | Sky and light | He tears the sky open: permanent clear daylight, no cloud cover, and lock-on range +30%. An honest duel with nowhere to break lock. It hard-counters a storm |
+| **Anti-hero** | **Storm Crown** | Sky | A permanent storm: lock-on range −30%, easier lock breaks and lightning hazards. His barrages gain +20% |
+| | **Scorched Plain** | Land | He flattens a region: ridges fall, cover burns and settlements in the zone take damage, within the budgets. "Nowhere to hide from me" |
+| | **Crushing Presence** | Field | His aura presses down on the world: the flight ceiling drops by half, launches travel ×0.8 and impacts wear ×1.2. It becomes a ground brawl, where his shed forms are fastest |
+| **Empress** | **Gravity Decree** | Orbit and gravity | Her fleet shifts the planet's gravity: launches ×1.3, airborne time ×1.5, impact wear ×0.7 |
+| | **The Annexed Moon** | Orbit | She drags a moon close. Tides flood the lowlands for 20 s in every minute and then drain, on a fixed, telegraphed cycle. Moon-shadow eclipses darken the sky |
+| | **Blockade** | Sky | Her fleet fills the upper sky: anyone flying above 60% of the ceiling draws fire (hazard wear), which pushes the fight low, where her guard and volleys work best |
+| **Cyborg** | **Floodgate** | Water | His portals flood the lowlands: movement ×0.55 underwater, and civilians are herded uphill toward him |
+| | **Shortcut Network** | Pathways | Permanent portal pairs link distant parts of the planet. Flying through one exits at its twin, so the map folds into shortcuts, and his portals spew sandwiches as hazards |
+| | **Wired World** | Technology | His cabling spreads across the ground: on wired ground he regenerates +2 ki per second, and wired water becomes an electrified hazard. It is strongest once his tech is online (§7.2) |
+
+### 7.2 Transformations: the four refined, with one alternative each
+
+| Fighter | Refined mechanic and its signature feel | Alternative |
+| :--- | :--- | :--- |
+| **Empress: a ladder** | *Bureaucratic escalation.* Revisions 1 to 8 are tiny jokes; revisions 9 to 12 are dramatic. Each real revision adds its **own signature** to her pool and grows her mantle, and refits patch her up. The feel: absurd, then terrifying | **Branching ladder:** at revisions 9 and 11 she picks one of two amendments, armour or artillery. The player chooses her build mid-fight |
+| **Protagonist: a draining meter** | *Pushing past his limits.* The heat track (Heated, Simmering, Boiling) is his transformation, with glowing seams and a heartbeat. Its price is internal wear. The capstone is his final form, allowed only in the fold, where nobody else can be hurt. The feel: a man burning himself for the fight | **A ladder his rival feeds:** his forms unlock from Respect, which he earns when the rival gives everything. The opponent literally powers him up by fighting hard |
+| **Anti-hero: shedding** | *Stripping down to raw power.* Three sheds, each a respected cinematic with no way back: **regalia** (armour off: guard weaker, +speed), **the front** (Drop the Act: hidden wear shows, +damage), **restraint** (no guard at all, top speed and damage). The feel: every shed is a humiliation he turns into power | **Pride ascension:** forms that raise his power while his Pride is high, and are *lost* when it crashes. It keeps the original "power and self-importance" idea: a higher ceiling, and a risk of falling |
+| **Cyborg: evolution by consumption** | *Growing into the machine.* Wired (Hunger), then Kitchen (sandwich portals), then **Docked**: the final form, where his technology comes online. Only then does he **generate his hidden weapons**, which join his loadout as specials (Combat and Narrative design them). Before that, they show as dark, sparking ports: a visible promise. The feel: something unfinished, becoming whole | **Assimilation:** he feeds on wreckage (destroyed structures) instead of people. It is less dark and ties him to destruction rather than civilians, if the tone ever needs it |
