@@ -126,3 +126,59 @@ QA measures and tunes from here. The rusher threshold and the mixer's 50% are th
 | Unlabelled share: at most **40%**. | Sniper and runner are judged there too, since the AI seldom shows them. |
 
 **One wording change.** The old band "changes per match, at most 4" counted endings as well as entries, which double-counts every change. I suggest two figures, **entries (at most 3)** and **events including endings (at most 5)**.
+
+---
+
+## 8. Revision 3: after the M1b probe (2026-09-30)
+
+Revision 2's result on AI play, 100 matches:
+
+| Measure | Result | Band |
+|---|---|---|
+| Entries per fighter per match (median) | 4.0 | at most 3 |
+| Events including endings (median) | 6.5 | at most 5 |
+| Shortest label held | 13 s | at least 12 s: pass |
+| Unlabelled | 17.6% | at most 40%: pass |
+| Shares | rusher 51%, runner 17%, mixer 12%, turtle 1%, sniper 1%, charger 0% | (none) |
+
+### 8.1 What it says
+
+- **The unlabelled share has a lot of room.** At 17.6%, there are 22 points to spend before the band of 40%. The churn can be cut by making labels stickier, at the cost of a few more unlabelled seconds.
+- **Most churn is between rusher, runner and mixer.** They share a border. A rusher leaves below 45%, and a mixer may be entered at 50% or less, so a fighter near 45 to 50% flips between them.
+- **A match is short.** 7 to 8 minutes is about 450 s. Three entries means a label every 150 s on average. Right now it is every 110 s.
+
+### 8.2 The levers, in order of effect
+
+1. **`minHeldS`** (the longest lever): no label can be dropped before it has been held that long.
+2. **Wider hysteresis** (leave thresholds well below the enter thresholds): a fighter has to really change habit to leave.
+3. **Longer hold to enter:** a label needs a longer, steadier habit before it appears.
+4. **A stricter mixer**, so it does not catch every fighter that leaves rusher.
+5. **A longer refractory and shift gap**, so a label cannot bounce back and a shift event cannot chatter.
+
+### 8.3 The new values (data only; `style.draft.json` revision 3)
+
+| Label | Enter | Hold to enter | Leave | Hold to leave |
+|---|---|---|---|---|
+| `turtle` | above 52% | 30 s | below **40%** (was 42) | **15 s** (was 10) |
+| `rusher` | above 55% | **25 s** (was 15) | below **40%** (was 45) | **15 s** (was 10) |
+| `runner` | above 45% | **20 s** (was 15) | below **30%** (was 35) | **15 s** (was 10) |
+| `charger` | above 15% | **15 s** (was 10) | below **8%** (was 9) | **15 s** (was 10) |
+| `sniper` | 35% or more, at least 6 attacks | **30 s** (was 25) | below **20%** (was 22) | **15 s** (was 10) |
+| `mixer` | largest stance at most **45%** (was 50), at least 2 stances at 20% or more, at least 6 attacks, no kind above **70%** (was 75) | **30 s** (was 20) | another label enters, or the largest stance above **55%** (was 58) for **15 s** (was 10) | |
+
+Globals: **`minHeldS` 30** (was 12), **`shift.minGapS` 30** (was 20), **`shift.refractoryAfterLeaveS` 12** (was 6). The window, `minWindowFillS` and the priority are unchanged.
+
+### 8.4 What I expect (estimates, not measured)
+
+- **Entries per fighter per match:** down from 4.0 to about **2.5 to 3**.
+- **Events including endings:** down from 6.5 to about **4 to 5**.
+- **Shortest label held:** at least **30 s**, by construction (except at the end of a match).
+- **Unlabelled:** up from 17.6% to about **25 to 32%**, still under the 40% band.
+
+### 8.5 The cost
+
+Stickier labels **lag the behaviour**: a fighter can change habit and the label can take up to a minute to follow. That is acceptable, since the labels describe habits and not single moves, and the dialogue's style thoughts are about a habit ("only a little longer" after a minute of guarding). It does mean the training-regimen boast lands a little late.
+
+### 8.6 If it still misses
+
+If entries are still above 3, raise the hold to enter for rusher and runner by another 10 s and widen the rusher's leave to below 35%. If the unlabelled share passes 35%, give back `refractoryAfterLeaveS` first (back to 6), then the mixer's strictness (back to 50%). QA measures and tunes from there.

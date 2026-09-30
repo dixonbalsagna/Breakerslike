@@ -1,52 +1,52 @@
 {
   "schema": "fight.style/1",
-  "_about": "Narrative's draft of data/fight/style.json (Simulation's mood-style.md section 5), revision 2 after the M1 100-match AI probe (2026-09-30). Percentages are integers, compared by cross-multiplication (100 * part > pct * whole). Times are seconds at the 1 Hz evaluation. Game Design owns the final numbers; Tools owns the schema. Every value is a placeholder for QA to tune.",
+  "_about": "Narrative's draft of data/fight/style.json (Simulation's mood-style.md section 5), revision 3 after the M1b 100-match AI probe (2026-09-30). Percentages are integers, compared by cross-multiplication (100 * part > pct * whole). Times are seconds at the 1 Hz evaluation. Game Design owns the final numbers; Tools owns the schema. Every value is a placeholder for QA to tune.",
   "windowS": 60,
   "evalHz": 1,
   "minWindowFillS": 20,
-  "minHeldS": 12,
+  "minHeldS": 30,
   "priority": ["turtle", "runner", "rusher", "charger", "sniper", "mixer"],
-  "shift": { "minGapS": 20, "refractoryAfterLeaveS": 6, "startUnlabelled": true },
+  "shift": { "minGapS": 30, "refractoryAfterLeaveS": 12, "startUnlabelled": true },
   "labels": {
     "turtle": {
       "measure": "stance1 / stanceTotal",
       "enterPct": 52, "enterHoldS": 30,
-      "leavePct": 42, "leaveHoldS": 10
+      "leavePct": 40, "leaveHoldS": 15
     },
     "rusher": {
       "measure": "stance0 / stanceTotal",
-      "enterPct": 55, "enterHoldS": 15,
-      "leavePct": 45, "leaveHoldS": 10
+      "enterPct": 55, "enterHoldS": 25,
+      "leavePct": 40, "leaveHoldS": 15
     },
     "runner": {
       "measure": "(stance2 + stance3) / stanceTotal",
-      "enterPct": 45, "enterHoldS": 15,
-      "leavePct": 35, "leaveHoldS": 10
+      "enterPct": 45, "enterHoldS": 20,
+      "leavePct": 30, "leaveHoldS": 15
     },
     "charger": {
       "measure": "charge / stanceTotal",
-      "enterPct": 15, "enterHoldS": 10,
-      "leavePct": 9, "leaveHoldS": 10
+      "enterPct": 15, "enterHoldS": 15,
+      "leavePct": 8, "leaveHoldS": 15
     },
     "sniper": {
       "measure": "sig / (light + heavy + sig)",
-      "enterPct": 35, "enterHoldS": 25, "minAttacksInWindow": 6,
-      "leavePct": 22, "leaveHoldS": 10
+      "enterPct": 35, "enterHoldS": 30, "minAttacksInWindow": 6,
+      "leavePct": 20, "leaveHoldS": 15
     },
     "mixer": {
       "definition": "no dominant stance and a spread of attack kinds",
-      "maxStancePct": 50,
+      "maxStancePct": 45,
       "minStancesUsed": 2, "stanceUsedPct": 20,
-      "maxAttackKindPct": 75, "minAttacksInWindow": 6,
-      "enterHoldS": 20,
-      "leaveWhen": "any other label enters, or the largest stance share exceeds 58 percent for 10 s"
+      "maxAttackKindPct": 70, "minAttacksInWindow": 6,
+      "enterHoldS": 30,
+      "leaveWhen": "any other label enters, or the largest stance share exceeds 55 percent for 15 s"
     }
   },
   "qaBands": {
     "judgedOnAI": {
       "labelEntriesPerFighterPerMatchMedian": "at most 3",
       "labelEventsIncludingEndingsMedian": "at most 5",
-      "shortestLabelHeldS": "at least 12 (guaranteed by minHeldS except at the end of a match)",
+      "shortestLabelHeldS": "at least 12 (minHeldS now guarantees 30 except at the end of a match)",
       "unlabelledShareOfMatch": "at most 40 percent"
     },
     "judgedOnHumanOrScriptedPlay": {
