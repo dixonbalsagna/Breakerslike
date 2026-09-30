@@ -252,3 +252,20 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - **One battle is a whole set:** a ranked Tekken set takes 7-8 minutes, and one battle here should feel like a whole set of rounds, without health bars, rounds or other fighting-game fixtures.
 - **Freshness:** generative, procedural systems should give fresh interactions between fighters again and again, so that across many fights a player still sees lines that are new to them.
 - Orb asked for another questionnaire on these systems.
+**Questionnaire 4 (Orb, 2026-09-30): fight systems.**
+- **The player directly controls:** stance (intent), movement and positioning, attack weight (light, heavy, signature), charging and power-ups, when to transform, and fighter specials (Hot Blood, Drop the Act, Press…).
+- **Left to the director:** *when* to attack, and timing presses (parry, the finisher struggle).
+- Skill balance: 2 out of 10, so strategy far outweighs execution. Dialogue density: 6 out of 10.
+- Set structure: invisible acts, where the director escalates chapter by chapter at body-part breaks and transformations.
+- Inner thoughts: yes, often.
+- Lines: mostly fresh, plus a few recurring signature lines per fighter.
+- The fight's mood drives crowd behaviour and director aggression (more blitzes when heated).
+- Move names on screen: only specials, signatures and finishers.
+- Skyscraper floors: people on each floor evacuate or are lost; otherwise mostly visual spectacle.
+- Cities: a huge skyline, busy life (crowds, traffic, lights), and bigger cities covering more of the planet. **Two big cities.**
+- Onboarding: a How-to-play card and a guided first match.
+- Mobile: after the first real fighter.
+- Music: not picked yet.
+- Orb's words: "I want to see threats, boasts, one-liners, banter. It should give my imagination the impression that there are real stakes invested in the battle at hand, and the fighter's personalities should match up with how the player's fighting style is influencing the fight. A player holding defensive patterns all game might see their character think 'Only a little longer...', and a player who plays aggressively then sees his opponent start picking evasive maneuvers could see his character start boasting about their training regimen."
+- "I liked the faster fight pace. Now I want to see cleaner combos, more teleport clashing, stylistic flying combat, heavy ground combat, energy blasts, more varied beam struggles."
+- Orb will relay friends' feedback as it trickles in.
