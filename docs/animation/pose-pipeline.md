@@ -181,6 +181,11 @@ What else the cosmetics touch:
 - **Poses.** None change. A cosmetic can collide with a pose (a tall hat and an uppercut): the pose sheet renders a worn-cosmetic variant, and a cosmetic declares a clearance volume so the lint can flag it (A3).
 - **Modding.** A cosmetic is data: a mesh, a socket, palette slots, a clearance volume and a provenance record.
 
+**Conditions on merge-at-equip (Rendering approved it with these, 2026-09-30):**
+1. **Never build mid-fight.** Build at match start or in menus. A mid-fight change would need the bake spread over frames, because the web has no worker threads. The web cost is about 0.15 to 0.2 s a build on the old-laptop proxy.
+2. **A cache with an LRU.** `AnimRig._meshes` keeps the last 6 loadout meshes (about 330 KB of GPU memory each) and evicts the least recently used; it was never evicted before. Done (`MESH_CACHE` in `anim_rig.gd`).
+3. **Bake once, after the merge, and cosmetics must not use UV2.** `OutlineBake` writes each vertex's reach into UV2.x, so a cosmetic mesh is authored without UV2 and baked only as part of the merged mesh, never on its own.
+
 **Flagged for the EP:** the separate-mesh way is the only one that costs draw calls; the default merge costs none but moves the cost to a bake at loadout change, which Rendering should confirm on the web (the bake runs on the main thread). Also flagged for Art: the triangle split and the mirror rule.
 
 ---

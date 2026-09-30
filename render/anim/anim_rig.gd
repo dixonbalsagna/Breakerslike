@@ -43,7 +43,8 @@ static var parent := PackedInt32Array()
 static var rest_local := PackedVector3Array()
 static var rest_global := PackedVector3Array()
 static var _ready_: bool = false
-static var _meshes: Dictionary = {}        # palette key -> ArrayMesh
+static var _meshes: Dictionary = {}        # palette key -> ArrayMesh, least recently used first (an LRU of MESH_CACHE entries)
+const MESH_CACHE := 6                      # a loadout mesh is about 330 KB of GPU memory; a few cover a match, a locker and a mirror
 
 const TRIS_TARGET := 2500
 
@@ -170,6 +171,8 @@ static func mesh_for(pal: Dictionary) -> ArrayMesh:
 		key += (pal[k] as Color).to_html() + "|"
 	var m = _meshes.get(key)
 	if m != null:
+		_meshes.erase(key)      # most recently used goes last
+		_meshes[key] = m
 		return m
 	var parts: Array = _parts()
 	var sub := 1
@@ -183,6 +186,8 @@ static func mesh_for(pal: Dictionary) -> ArrayMesh:
 	# the outline: smoothed push directions and reach baked into the mesh (Rendering's OutlineBake)
 	m = OutlineBake.bake(st.commit())
 	_meshes[key] = m
+	while _meshes.size() > MESH_CACHE:
+		_meshes.erase(_meshes.keys()[0])   # a view that still holds the evicted mesh keeps it alive until it is freed
 	return m
 
 
