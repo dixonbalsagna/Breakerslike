@@ -23,7 +23,7 @@ static func draw_toll(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, 
 
 
 static func draw_banner(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, o: Dictionary) -> void:
-	if hub.banner.is_empty() or hub.world_card != null:
+	if hub.banner.is_empty() or hub.world_card != null or not hub.telegraph.is_empty():
 		return   # a world card (the fold) takes the banner's slot; the banner waits (its clock is paused, see the hub)
 	var b: Dictionary = hub.banner
 	var age: float = float(b["age"])

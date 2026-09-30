@@ -54,6 +54,7 @@ class Bark:
 	var reveal_time: float = 0.0
 	var fired: int = 0           # how many cues have fired
 	var wait: float = 0.0
+	var style: String = "caption"   # caption, thought (an inner line: smaller, leaning, softer) or shout
 
 
 var models: Array = []           # UiFighterModel
@@ -64,7 +65,13 @@ var barks: Array = []            # visible Bark
 var bark_wait: Array = []        # queued Bark
 var feed: Array = []             # {t, tag, sub}
 var banner: Dictionary = {}      # {text, col, dur, age} or empty
-var struggle: Dictionary = {}    # the finisher struggle on the brink fighter: {actor, beats, half, resolve, t, res, end_t}
+var struggle: Dictionary = {}    # the finisher struggle on the brink fighter: {actor, beats, half, resolve, t, res, end_t, last}
+var telegraph: Dictionary = {}   # the finisher's kind while it winds up: {actor, target, kind, age, end}; the read that answers it is a stance
+var hint: Dictionary = {}        # the tutorial's hint line: {id, key, text, kind (hint, nudge, done), age}
+var beats: Dictionary = {}       # tutorial beat id to state (start, done, skipped)
+var keep_hints: bool = false     # accessibility: a hint stays up after its beat is done, until the next one
+var act: int = 1                 # the director's invisible act (nothing shows it; the feed names it)
+var mood_band: String = ""       # the fight's mood band: calm, tense or frenzied (the feed names it)
 var toll: Dictionary = {"civilians": 0, "pop0": 0, "structures": 0, "craters": 0}
 var mode: int = Mode.NORMAL
 var cinematic_left: float = 0.0
@@ -91,6 +98,11 @@ func reset() -> void:
 	feed.clear()
 	banner = {}
 	struggle = {}
+	telegraph = {}
+	hint = {}
+	beats = {}
+	act = 1
+	mood_band = ""
 	toll = {"civilians": 0, "pop0": 0, "structures": 0, "craters": 0}
 	toll_age = 99.0
 	mode = Mode.NORMAL
@@ -124,7 +136,7 @@ func model(slot: int) -> UiFighterModel:
 # --- Event intake -------------------------------------------------------------------------------------------------
 
 const _FIELDS: Array = ["type", "actor", "target", "region", "stage", "internal", "n", "text", "dur", "k", "col", "kind",
-	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived", "attacker", "victim", "tier", "cover", "beats", "half_width", "resolve", "lead", "result", "action", "available", "dur_ticks", "clean_ticks"]
+	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived", "attacker", "victim", "tier", "cover", "beats", "half_width", "resolve", "lead", "result", "action", "available", "dur_ticks", "clean_ticks", "weight", "state", "stance", "act", "band", "id", "text_key", "display"]
 
 
 ## Any event (a Dictionary, or an object with these properties such as the sim's FxEvent) as a Dictionary.
@@ -267,7 +279,11 @@ func consume(e) -> void:
 			_world("fold", UiData.t("card.unfold"))
 		"finisher_start":
 			_cinematic(actor, "finisher", _dur(d, 3.0))
+			var fk: String = str(d.get("kind", ""))
+			if UiData.reads().get("finisher_counter", {}).has(fk):
+				telegraph = {"actor": actor, "target": int(d.get("target", -1)) if d.has("target") else -1, "kind": fk, "age": 0.0, "end": -1.0}
 		"ko":
+			telegraph = {}
 			var lo: UiFighterModel = model(int(d.get("loser", -1)))
 			if lo != null:
 				lo.ko = true
@@ -295,8 +311,31 @@ func consume(e) -> void:
 		"finisher_contest":
 			if not struggle.is_empty():
 				struggle["end_t"] = float(struggle["t"])
+			if not telegraph.is_empty():
+				telegraph["end"] = float(telegraph["age"])
+		"struggle_pulse":
+			_on_pulse(d)
 		"press_ack":
 			_on_press_ack(m, d)
+		"weight_set":
+			if m != null:
+				_set_weight(m, _weight_name(d.get("weight", "light")))
+		"sig_queued":
+			if m != null:
+				_sig_state(m, str(d.get("state", "queued")))
+		"stance_set":
+			if m != null:
+				_set_stance(m, d.get("stance", m.stance))
+		"tutorial_beat":
+			_on_beat(d)
+		"tutorial_hint":
+			_on_hint(d)
+		"act_change":
+			act = int(d.get("act", act))
+			feed_line(t_now, "ACT", str(act))
+		"mood_band":
+			mood_band = str(d.get("band", ""))
+			feed_line(t_now, "MOOD", mood_band.to_upper())
 		"availability":
 			if m != null:
 				var act: String = str(d.get("action", ""))
@@ -304,6 +343,11 @@ func consume(e) -> void:
 					m.avail[act] = bool(d.get("available", true)) if d.get("available") != null else true
 		"bark":
 			_on_bark(d)
+		"chain_ender":
+			# The heavier last impact of a chain: a CHAIN xN banner (Narrative's label); the impact itself is Rendering's.
+			var cn: int = int(d.get("n", 0))
+			if cn >= 2:
+				banner = {"text": UiData.fmt("state.chain", {"n": cn}), "col": UiLook.WARN, "dur": 1.2, "age": 0.0}
 		"banner":
 			banner = {"text": UiData.banner(str(d.get("text", ""))), "col": str(d.get("col", UiLook.INK)), "dur": float(d.get("dur", 1.4)), "age": 0.0}
 		"shake":
@@ -353,6 +397,17 @@ func patch(actor: int, d: Dictionary) -> void:
 			m.avail[act] = bool(d["avail_" + act])
 	if d.has("tier"):
 		m.tier = clampi(int(d["tier"]), 1, 4)
+	if d.has("weight"):
+		_set_weight(m, _weight_name(d["weight"]))
+	if d.has("sig_queued"):
+		m.sig_queued = bool(d["sig_queued"])
+		if not m.sig_queued:
+			m.sig_funded = false
+			m.sig_cap_t = 0.0
+	if d.has("sig_funded"):
+		m.sig_funded = bool(d["sig_funded"]) and m.sig_queued
+	if m.stance != old_stance:
+		m.stance_flash_t = 0.0
 	if d.has("wear") and d["wear"] is Dictionary:
 		for r in d["wear"]:
 			if m.has_region(r):
@@ -486,25 +541,85 @@ func _on_struggle_open(d: Dictionary) -> void:
 		"t": -float(lead if lead > 0 else 18) * TICK, "res": res, "end_t": -1.0}
 
 
-## A press was acknowledged (Controls): a small mark at the fighter for a moment. During the struggle a hit also marks its beat.
+## A press was acknowledged (Controls, stage-c-spec.md section 5): `kind` is weight_light, weight_heavy, weight_fallback, sig_queued,
+## sig_cancelled, sig_funded, sig_expired or sig_fired. There is no timing press any more, so this only drives the weight mark and
+## the signature chip (the ack shows within a frame: the same call updates the model the plate reads).
 func _on_press_ack(m: UiFighterModel, d: Dictionary) -> void:
 	if m == null:
 		return
-	var result: String = str(d.get("result", ""))
-	if result == "":
+	match str(d.get("kind", "")):
+		"weight_light":
+			_set_weight(m, "light")
+		"weight_heavy":
+			_set_weight(m, "heavy")
+		"weight_fallback":
+			m.weight_fallback_t = 0.0
+		"sig_queued":
+			_sig_state(m, "queued")
+		"sig_cancelled":
+			_sig_state(m, "cancelled")
+		"sig_funded":
+			_sig_state(m, "funded")
+		"sig_expired":
+			_sig_state(m, "expired")
+		"sig_fired":
+			_sig_state(m, "fired")
+
+
+static func _weight_name(v) -> String:
+	if v is String:
+		return "heavy" if str(v).to_lower() == "heavy" else "light"
+	return "heavy" if int(v) >= 1 else "light"
+
+
+func _set_weight(m: UiFighterModel, w: String) -> void:
+	m.weight = w
+	if w == "light":
+		m.weight_fallback_t = 99.0
+
+
+## The signature intent's life: queued, funded (45 Charge reached, the 180-tick cap starts), then fired, cancelled, expired or fallen back.
+func _sig_state(m: UiFighterModel, state: String) -> void:
+	match state:
+		"queued":
+			m.sig_queued = true
+			m.sig_funded = m.charge >= m.sig_cost
+			m.sig_cap_t = 0.0
+		"funded":
+			m.sig_queued = true
+			m.sig_funded = true
+			m.sig_cap_t = 0.0
+		"fired", "cancelled", "expired", "fallback":
+			m.sig_queued = false
+			m.sig_funded = false
+			m.sig_cap_t = 0.0
+			m.sig_note = state
+			m.sig_note_t = 0.0
+
+
+func _set_stance(m: UiFighterModel, v) -> void:
+	var idx: int = int(v)
+	if v is String:
+		idx = maxi(0, UiPlate.STANCE_IDS.find(str(v)))
+	idx = clampi(idx, 0, 3)
+	if idx != m.stance:
+		m.stance = idx
+		m.stance_prompt_t = 0.0
+		m.stance_flash_t = 0.0
+
+
+## The three pulses of the finisher struggle reveal a result the sim has already drawn (Game Design: state-resolved). `n` is 1 to 3 and
+## `state` is holding or slipping. The rings still close on their beats; a pulse only marks its own ring.
+func _on_pulse(d: Dictionary) -> void:
+	if struggle.is_empty():
+		_on_struggle_open({"actor": int(d.get("actor", -1))})
+	var n: int = clampi(int(d.get("n", 1)), 1, 3)
+	var beat: int = int(STRUGGLE_BEATS[n + 1])   # 18, 36, 54
+	var st: String = str(d.get("state", ""))
+	if not struggle["res"].has(beat) or (st != "holding" and st != "slipping"):
 		return
-	m.ack_result = result
-	m.ack_t = 0.0
-	if not struggle.is_empty() and int(struggle["actor"]) == m.slot and result == "hit":
-		var now: float = float(struggle["t"]) / TICK
-		var best: int = 99999
-		var best_d: float = 1e9
-		for b in struggle["res"]:
-			if int(b) > 0 and struggle["res"][b] == "" and absf(now - float(b)) < best_d:
-				best = int(b)
-				best_d = absf(now - float(b))
-		if best != 99999 and best_d <= float(struggle["half"]) + 3.0:
-			struggle["res"][best] = "hit"
+	struggle["res"][beat] = "hit" if st == "holding" else "miss"
+	struggle["last"] = st
 
 
 func _step_struggle(dt: float) -> void:
@@ -512,12 +627,53 @@ func _step_struggle(dt: float) -> void:
 		return
 	struggle["t"] = float(struggle["t"]) + dt
 	var now: float = float(struggle["t"]) / TICK
-	for b in struggle["res"]:
-		if int(b) > 0 and struggle["res"][b] == "" and now > float(b) + float(struggle["half"]) + 1.0:
-			struggle["res"][b] = "miss"
 	var end_t: float = float(struggle["end_t"])
 	if (end_t >= 0.0 and float(struggle["t"]) - end_t > 0.5) or now > float(struggle["resolve"]) + 30.0:
 		struggle = {}
+
+
+func _on_beat(d: Dictionary) -> void:
+	var id: String = str(d.get("id", ""))
+	if id == "":
+		return
+	var st: String = str(d.get("state", "start"))
+	beats[id] = st
+	# A beat that ticks over clears its own open hint (the done line, if any, replaces it), unless the player keeps hints up.
+	if (st == "done" or st == "skipped") and not hint.is_empty() and str(hint["id"]) == id and str(hint["kind"]) != "done" and not keep_hints:
+		hint = {}
+
+
+## A hint line: `text_key` is "b3.hint", "b3.alt0", "b3.nudge" or "b3.done" (looked up in ui/data/reads.json, Narrative's lines), or
+## the event may carry `text`. An empty key clears the line.
+func _on_hint(d: Dictionary) -> void:
+	var key: String = str(d.get("text_key", ""))
+	var text: String = str(d.get("text", "")) if d.has("text") else UiData.hint_text(key)
+	if text == "" and key == "":
+		hint = {}
+		return
+	if text == "":
+		return
+	var id: String = str(d.get("id", key.get_slice(".", 0)))
+	var suffix: String = key.get_slice(".", 1)
+	var kind: String = "nudge" if suffix == "nudge" else ("done" if suffix == "done" else "hint")
+	hint = {"id": id, "key": key, "text": text, "kind": kind, "age": 0.0}
+
+
+## The hint line's opacity: it rises in 0.25 s, a hint dims to 60% after ten seconds so it does not nag (a nudge does not; nor do
+## hints with keep_hints on), and a done line fades over its last half second of 2.6 s.
+func hint_alpha() -> float:
+	if hint.is_empty():
+		return 0.0
+	var age: float = float(hint["age"])
+	var a: float = 1.0 if reduced_motion else clampf(age / 0.25, 0.0, 1.0)
+	match str(hint["kind"]):
+		"hint":
+			if not keep_hints and age > 10.0:
+				a *= 0.6
+		"done":
+			if not keep_hints:
+				a *= clampf((2.6 - age) / 0.5, 0.0, 1.0)
+	return a
 
 
 func _on_window(m: UiFighterModel, d: Dictionary) -> void:
@@ -529,9 +685,6 @@ func _on_window(m: UiFighterModel, d: Dictionary) -> void:
 	if kind == "parry":
 		m.parry_t = 0.0
 		m.parry_dur = dur
-		# The clean-parry tail (Controls: the last 6 or 8 ticks): its share of the window, drawn as a brighter band.
-		var clean: int = int(d.get("clean_ticks", 0))
-		m.parry_clean = clampf(float(clean) / float(ticks), 0.0, 1.0) if (ticks > 0 and clean > 0) else 0.0
 	else:
 		m.chain_t = 0.0
 		m.chain_dur = dur
@@ -591,13 +744,21 @@ func _on_bark(d: Dictionary) -> void:
 	b.text = str(d.get("text", ""))
 	b.cues = d.get("cues", []) if d.get("cues", []) is Array else []
 	b.setpiece = bool(d.get("setpiece", false))
-	b.priority = int(d.get("priority", 3 if b.setpiece else 2))
+	# Narrative's display styles (dialogue-director.md): caption, thought or shout; a thought is an inner line.
+	var disp = d.get("display", "")
+	var style: String = str(disp.get("style", "")) if disp is Dictionary else str(disp)
+	if style == "" and str(d.get("kind", "")) == "thought":
+		style = "thought"
+	b.style = style if style in ["caption", "thought", "shout"] else "caption"
+	b.priority = int(d.get("priority", 3 if b.setpiece else (1 if b.style == "thought" else 2)))
 	if b.text == "":
 		return
 	b.reveal_time = UiBarkTiming.reveal_total(b.text, _intensity_of(b))
 	var hold: float = clampf(0.9 + 0.035 * b.text.length(), UiLook.BARK_MIN, UiLook.BARK_MAX)
 	if d.has("dur"):
 		hold = float(d["dur"])
+	elif disp is Dictionary and disp.has("dur_s"):
+		hold = float(disp["dur_s"])
 	if b.setpiece:
 		hold = clampf(hold, 3.0, UiLook.BARK_SETPIECE_MAX)
 	b.dur = hold
@@ -733,6 +894,14 @@ func advance(dt: float) -> void:
 	t_now += dt
 	toll_age += dt
 	_step_struggle(dt)
+	if not telegraph.is_empty():
+		telegraph["age"] = float(telegraph["age"]) + dt
+		if float(telegraph["age"]) > 8.0 or (float(telegraph["end"]) >= 0.0 and float(telegraph["age"]) - float(telegraph["end"]) > 0.4):
+			telegraph = {}
+	if not hint.is_empty():
+		hint["age"] = float(hint["age"]) + dt
+		if str(hint["kind"]) == "done" and not keep_hints and float(hint["age"]) > 2.6:
+			hint = {}
 	for m in models:
 		m.advance(dt)
 		if _lost_trail_left.has(m.slot):

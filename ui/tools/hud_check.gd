@@ -37,6 +37,7 @@ func _run() -> void:
 	_chip_dodge()
 	await _responsive()
 	await _howto_rules()
+	await _reads_hud()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -775,36 +776,155 @@ func _controls_rules() -> void:
 	_ok(is_equal_approx(float(od.get("hitstop_scale", -1.0)), 1.0) and od.get("hotseat_alt_layout") == false and od.get("show_prompts") == false, "options: hitstop_scale defaults to 1.0, the hot-seat layout to off, prompts to off")
 	var o: Dictionary = UiData.options()
 	_ok(float(o["hitstop_scale"].get("min", 0.0)) == 0.5 and float(o["hitstop_scale"].get("max", 0.0)) == 1.0 and o["hitstop_scale"].get("accessibility", false), "options: hitstop_scale runs 0.5 to 1.0 and is an accessibility option")
-	# The struggle: beats at -18, 0 (count-in), 18, 36, 54; a hit marks its beat, an untouched beat becomes a miss; no numbers.
+	# The struggle (Q4: resolved by state). Beats at -18 and 0 (count-in), 18, 36, 54; three pulses reveal holding or slipping; no press.
 	var hub := _hub()
 	hub.consume({"type": "struggle_open", "actor": 1})
-	_ok(not hub.struggle.is_empty() and hub.struggle["beats"] == [-18, 0, 18, 36, 54] and int(hub.struggle["half"]) == 4 and int(hub.struggle["resolve"]) == 66, "struggle: opens with Controls' defaults (beats -18, 0, 18, 36, 54; +-4 ticks; resolve 66)")
+	_ok(not hub.struggle.is_empty() and hub.struggle["beats"] == [-18, 0, 18, 36, 54] and int(hub.struggle["resolve"]) == 66, "struggle: opens with the default beats (-18, 0, 18, 36, 54; resolve 66)")
 	_ok(is_equal_approx(float(hub.struggle["t"]), -18.0 / 60.0), "struggle: the count-in starts 18 ticks before contestOpen")
-	_step(hub, 18.0 / 60.0 + 18.0 / 60.0)   # to tick 18 after contestOpen
+	_step(hub, 36.0 / 60.0)   # to tick 18 after contestOpen
+	hub.consume({"type": "struggle_pulse", "actor": 1, "n": 1, "state": "holding"})
+	_ok(hub.struggle["res"][18] == "hit" and hub.struggle["last"] == "holding", "struggle: a holding pulse marks its ring and names the state")
+	hub.consume({"type": "struggle_pulse", "actor": 1, "n": 2, "state": "slipping"})
+	_ok(hub.struggle["res"][36] == "miss" and hub.struggle["last"] == "slipping", "struggle: a slipping pulse marks its ring and names the state")
 	hub.consume({"type": "press_ack", "actor": 1, "kind": "struggle", "result": "hit"})
-	_ok(hub.struggle["res"][18] == "hit" and hub.model(1).ack_result == "hit", "struggle: a hit press marks the beat it is on")
-	_step(hub, 46.0 / 60.0)   # past beat 36 and 54 with no press
-	_ok(hub.struggle["res"][36] == "miss" and hub.struggle["res"][54] == "miss", "struggle: beats nobody pressed become misses")
+	_step(hub, 46.0 / 60.0)
+	_ok(hub.struggle["res"][54] == "" and hub.struggle["res"][18] == "hit", "struggle: there is no press to score: an unrevealed ring stays open, nothing turns into a miss")
+	hub.consume({"type": "struggle_pulse", "actor": 1, "n": 3, "state": "bogus"})
+	_ok(hub.struggle["res"][54] == "", "struggle: a pulse with an unknown state is ignored")
 	hub.consume({"type": "finisher_contest", "target": 1, "chance": 0.3, "survived": true})
 	_step(hub, 0.7)
 	_ok(hub.struggle.is_empty(), "struggle: it ends shortly after the contest resolves, and the chance is never shown")
-	# The assist doubles the band: +-8 ticks is twice as wide a ring as +-4.
+	var pulse_only := _hub()
+	pulse_only.consume({"type": "struggle_pulse", "actor": 0, "n": 1, "state": "slipping"})
+	_ok(not pulse_only.struggle.is_empty() and pulse_only.struggle["res"][18] == "miss", "struggle: a pulse with no open event still opens the rings")
 	var span := 100.0
 	_ok(is_equal_approx(UiStruggle.ring_radius(50.0, span, 18.0, false), 150.0) and is_equal_approx(UiStruggle.ring_radius(50.0, span, 0.0, false), 50.0) and is_equal_approx(UiStruggle.ring_radius(50.0, span, 9.0, false), 100.0), "struggle: a ring closes linearly and lands on the target exactly on the beat")
-	_ok(is_equal_approx(UiStruggle.ring_radius(50.0, span, 9.0, true), 50.0 + 100.0 * 0.667) or absf(UiStruggle.ring_radius(50.0, span, 9.0, true) - 116.67) < 0.1, "struggle: reduced motion steps the ring in thirds instead of easing")
-	# press_ack: distinct shapes per result; only the human's press draws (checked at draw), and a result is required.
+	_ok(absf(UiStruggle.ring_radius(50.0, span, 9.0, true) - 116.67) < 0.1, "struggle: reduced motion steps the ring in thirds instead of easing")
+	# Weight (sticky, Game Design R9 and Controls stage C): light at the start, set by an event, a state patch or an ack; fallback is a mark.
 	hub = _hub()
-	hub.consume({"type": "press_ack", "actor": 0, "kind": "attack", "result": "locked"})
-	_ok(hub.model(0).ack_result == "locked" and hub.model(0).ack_t == 0.0, "press_ack: a locked press is recorded")
-	hub.consume({"type": "press_ack", "actor": 0, "kind": "attack", "result": ""})
-	_ok(hub.model(0).ack_result == "locked", "press_ack: an empty result is ignored")
-	_ok(UiGlyphs.ACK_RESULTS.has("hit") and UiGlyphs.ACK_RESULTS.has("early") and UiGlyphs.ACK_RESULTS.has("locked"), "press_ack: hit, early and locked each have a shape")
-	# window_open with ticks and the clean-parry tail.
+	_ok(hub.model(0).weight == "light" and hub.model(1).weight == "light", "weight: a match starts in light")
+	hub.consume({"type": "weight_set", "actor": 1, "weight": "heavy"})
+	_ok(hub.model(1).weight == "heavy" and hub.model(0).weight == "light", "weight: weight_set sets one fighter's weight (the rival's is a read too)")
+	hub.patch(0, {"weight": 1})
+	_ok(hub.model(0).weight == "heavy", "weight: a state patch with 1 is heavy")
+	hub.consume({"type": "press_ack", "actor": 0, "kind": "weight_light"})
+	_ok(hub.model(0).weight == "light", "weight: the ack sets the mark within the same call (inside two ticks)")
+	hub.consume({"type": "press_ack", "actor": 1, "kind": "weight_fallback"})
+	_ok(hub.model(1).weight == "heavy" and hub.model(1).weight_fallback_t == 0.0, "weight: a fallback keeps the mode heavy and shows the mark")
+	_step(hub, 1.7)
+	_ok(hub.model(1).weight_fallback_t > 1.5, "weight: the fallback mark goes after 1.5 s")
+	# Signature intent: queued, funded (the 180-tick cap), fired, cancelled, expired or fallen back.
+	hub = _hub()
+	var sm: UiFighterModel = hub.model(0)
+	sm.charge = 20.0
+	hub.consume({"type": "sig_queued", "actor": 0, "state": "queued"})
+	_ok(sm.sig_queued and not sm.sig_funded, "signature: queued without the Charge waits unfunded (the chip fills toward 45)")
+	hub.patch(0, {"charge": 50.0})
+	hub.consume({"type": "press_ack", "actor": 0, "kind": "sig_funded"})
+	_ok(sm.sig_queued and sm.sig_funded and sm.sig_cap_t == 0.0, "signature: funded starts the cap")
+	_step(hub, 1.5)
+	_ok(absf(sm.sig_cap_t - 1.5) < 0.05, "signature: the 3 s cap runs down while the clock runs")
+	sm.charging = true
+	_step(hub, 1.0)
+	sm.charging = false
+	_ok(absf(sm.sig_cap_t - 1.5) < 0.05, "signature: the cap pauses while the fighter charges")
+	hub.consume({"type": "sig_queued", "actor": 0, "state": "fired"})
+	_ok(not sm.sig_queued and not sm.sig_funded and sm.sig_note == "fired" and sm.sig_note_t == 0.0, "signature: fired clears the intent and leaves a brief note")
+	for st in ["expired", "fallback"]:
+		hub.consume({"type": "sig_queued", "actor": 0, "state": "queued"})
+		hub.consume({"type": "sig_queued", "actor": 0, "state": st})
+		_ok(not sm.sig_queued and sm.sig_note == st, "signature: %s ends the intent with its note" % st)
+	hub.consume({"type": "press_ack", "actor": 0, "kind": "sig_queued"})
+	_ok(sm.sig_queued and sm.sig_funded, "signature: queueing with the Charge already there is funded at once")
+	hub.consume({"type": "press_ack", "actor": 0, "kind": "sig_cancelled"})
+	_ok(not sm.sig_queued and sm.sig_note == "cancelled", "signature: pressing again cancels it")
+	# The rival's stance is an edge as well as state: stance_set changes it and makes the chip pulse.
+	hub = _hub()
+	hub.consume({"type": "stance_set", "actor": 1, "stance": 1})
+	_ok(hub.model(1).stance == 1 and hub.model(1).stance_flash_t == 0.0, "reads: stance_set changes the stance and pulses the chip")
+	hub.consume({"type": "stance_set", "actor": 1, "stance": "escape"})
+	_ok(hub.model(1).stance == 3, "reads: a stance id works as well as an index")
+	# The finisher telegraph: the kind shows for the whole wind-up (Game Design: stance against the finisher's kind).
+	hub = _hub()
+	hub.consume({"type": "finisher_start", "actor": 1, "target": 0, "kind": "beam", "dur": 3.0})
+	_ok(hub.telegraph.get("kind", "") == "beam" and int(hub.telegraph["actor"]) == 1 and int(hub.telegraph["target"]) == 0, "telegraph: finisher_start with a kind shows it")
+	_ok(UiReads.telegraph_sig(hub, false, false) != UiReads.telegraph_sig(hub, true, false), "telegraph: prompts add the answering stance (a different picture)")
+	var cnt: Dictionary = UiData.reads()["finisher_counter"]
+	_ok(cnt["launch"] == "guard" and cnt["melee"] == "dodge" and cnt["beam"] == "press", "telegraph: the answers are GUARD a launch, DODGE a melee, PRESS a beam")
+	hub.consume({"type": "finisher_contest", "target": 0})
+	_step(hub, 0.6)
+	_ok(hub.telegraph.is_empty(), "telegraph: it goes when the contest is over")
+	hub.consume({"type": "finisher_start", "actor": 0, "target": 1})
+	_ok(hub.telegraph.is_empty(), "telegraph: a finisher with no kind has no chip (the cinematic still runs)")
+	hub.consume({"type": "finisher_start", "actor": 0, "target": 1, "kind": "bogus"})
+	_ok(hub.telegraph.is_empty(), "telegraph: an unknown kind is ignored")
+	hub.consume({"type": "finisher_start", "actor": 0, "target": 1, "kind": "melee"})
+	hub.consume({"type": "ko", "winner": 0, "loser": 1})
+	_ok(hub.telegraph.is_empty(), "telegraph: a KO clears it")
+	# Tutorial hints (Narrative's lines in ui/data/reads.json).
+	var rd_: Dictionary = UiData.reads()
+	var hints: Dictionary = rd_["hints"]
+	var bad_words := 0
+	for k in hints:
+		if str(hints[k]).split(" ", false).size() > 12:
+			bad_words += 1
+	var ids: Array = rd_["beat_ids"]
+	var no_hint := 0
+	for id in ids:
+		if not hints.has(str(id) + ".hint") or not hints.has(str(id) + ".done"):
+			no_hint += 1
+	_ok(ids.size() == 9 and no_hint == 0 and bad_words == 0, "hints: nine beats, each with a hint and a done line, every line 12 words or fewer")
+	_ok(hints.has("b1.nudge") and hints.has("b8.nudge") and not hints.has("b9.nudge"), "hints: beats 1 to 8 have a nudge, the last beat has none")
+	hub = _hub()
+	hub.consume({"type": "tutorial_beat", "id": "b3", "state": "start"})
+	hub.consume({"type": "tutorial_hint", "id": "b3", "text_key": "b3.hint"})
+	_ok(hub.hint["text"] == "They're guarding. Hit heavy." and hub.hint["kind"] == "hint" and hub.beats["b3"] == "start", "hint: a hint event shows Narrative's line for its key")
+	hub.consume({"type": "tutorial_hint", "id": "b3", "text_key": "b3.alt1"})
+	_ok(hub.hint["text"] == "Guard up? Go heavy." and hub.hint["kind"] == "hint", "hint: an alternate is a hint too")
+	hub.consume({"type": "tutorial_hint", "id": "b3", "text_key": "b3.nudge"})
+	_ok(hub.hint["kind"] == "nudge", "hint: the nudge has its own kind")
+	hub.consume({"type": "tutorial_beat", "id": "b3", "state": "done"})
+	_ok(hub.hint.is_empty(), "hint: a beat that is done clears its open hint")
+	hub.consume({"type": "tutorial_hint", "id": "b3", "text_key": "b3.done"})
+	_ok(hub.hint["kind"] == "done" and hub.hint_alpha() < 0.1, "hint: a done line rises from nothing")
+	_step(hub, 1.0)
+	_ok(is_equal_approx(hub.hint_alpha(), 1.0), "hint: it is fully up after 0.25 s")
+	_step(hub, 1.5)
+	_ok(hub.hint_alpha() < 0.5, "hint: a done line fades over its last half second")
+	_step(hub, 0.5)
+	_ok(hub.hint.is_empty(), "hint: a done line is gone after 2.6 s")
+	hub.consume({"type": "tutorial_hint", "id": "b1", "text_key": "b1.hint"})
+	_step(hub, 11.0)
+	_ok(is_equal_approx(hub.hint_alpha(), 0.6), "hint: a hint dims to 60% after ten seconds so it does not nag")
+	hub.keep_hints = true
+	_ok(is_equal_approx(hub.hint_alpha(), 1.0), "hint: keep hints on holds it at full")
+	hub.consume({"type": "tutorial_beat", "id": "b1", "state": "done"})
+	_ok(not hub.hint.is_empty(), "hint: and keeps it after the beat is done, until the next one")
+	hub.consume({"type": "tutorial_hint", "id": "b2", "text_key": ""})
+	_ok(hub.hint.is_empty(), "hint: an empty key clears the line")
+	hub.consume({"type": "tutorial_hint", "id": "b2", "text_key": "nope.hint"})
+	_ok(hub.hint.is_empty(), "hint: an unknown key shows nothing")
+	hub.consume({"type": "tutorial_hint", "id": "x", "text": "A line the sim wrote."})
+	_ok(hub.hint.get("text", "") == "A line the sim wrote.", "hint: an event may carry its own text")
+	# Thoughts (Narrative's display styles): a thought, a shout, and a caption.
+	hub = _hub()
+	hub.consume({"type": "bark", "speaker": 0, "text": "They're guarding. Something heavy, then.", "display": {"style": "thought", "dur_s": 2.0}, "cues": []})
+	_ok(hub.barks.size() == 1 and hub.barks[0].style == "thought" and is_equal_approx(hub.barks[0].dur, 2.0) and hub.barks[0].priority == 1, "thought: a display style of thought is a low-priority inner line with its own hold")
+	hub.consume({"type": "bark", "speaker": 1, "text": "Never!", "display": "shout", "cues": []})
+	_ok(hub.barks.size() == 2 and hub.barks[1].style == "shout", "thought: a shout is its own style")
+	hub.consume({"type": "bark", "speaker": 0, "text": "Another.", "kind": "thought", "cues": []})
+	_ok(hub.bark_wait.size() + hub.barks.size() >= 3 and (hub.bark_wait.back() as UiEventHub.Bark).style == "thought", "thought: kind thought alone makes a thought")
+	hub.consume({"type": "bark", "speaker": 0, "text": "Plain.", "cues": [], "priority": 3})
+	_ok(hub.barks.any(func(b): return b.style == "caption"), "thought: a line with no display style is a caption")
+	# Invisible acts and the fight's mood: nothing shows them; the feed names them.
+	hub = _hub()
+	hub.consume({"type": "act_change", "act": 2})
+	hub.consume({"type": "mood_band", "band": "tense"})
+	_ok(hub.act == 2 and hub.mood_band == "tense" and hub.feed.size() == 2, "acts and mood: recorded and named in the feed, never drawn")
+	# window_open: the closing ring is the director's moment now; the clean tail is gone.
 	hub = _hub()
 	hub.consume({"type": "window_open", "actor": 1, "kind": "parry", "dur_ticks": 20, "clean_ticks": 6})
-	_ok(is_equal_approx(hub.model(1).parry_dur, 20.0 / 60.0) and is_equal_approx(hub.model(1).parry_clean, 0.3), "window: dur_ticks sets the length and clean_ticks the clean tail's share (6 of 20)")
-	hub.consume({"type": "window_open", "actor": 0, "kind": "parry", "dur": 0.33})
-	_ok(hub.model(0).parry_clean == 0.0, "window: no clean_ticks means no clean band")
+	_ok(is_equal_approx(hub.model(1).parry_dur, 20.0 / 60.0) and hub.model(1).parry_clean == 0.0, "window: dur_ticks sets the length and a clean tail is ignored (no timing press remains)")
 	var wo := SimState.FxEvent.new()
 	wo.type = "window_open"
 	wo.actor = 0.0
@@ -991,6 +1111,7 @@ func _howto_rules() -> void:
 	for pg in UiData.howto().get("pages", []):
 		for it in pg.get("items", []):
 			all_text += " " + str(it.get("text", "")) + " " + str(it.get("heading", ""))
+	_ok(not all_text.contains("Press Light") and not all_text.contains("parry") and not all_text.contains("timing"), "howto: no copy asks for a timed press (the director times every blow)")
 	_ok(all_text.contains("strategist") and all_text.contains("director") and all_text.contains("no health bars") and all_text.contains("finisher"), "howto: the copy says the player is the strategist, the director plays the blows, there are no health bars and a finisher ends it")
 	# Geometry at desktop, tablet, phone and a small window, with every device family and touch on or off.
 	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(2560, 1600), 2.0], [Vector2(3840, 2160), 1.0]]
@@ -1105,3 +1226,83 @@ func _howto_rules() -> void:
 	await process_frame
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(UiPrefs.path))
 	UiPrefs.path = "user://ui_prefs.json"
+
+
+## The reads on screen: the read slot's geometry, the telegraph and the hint sharing it (telegraph first, banner over hint), the weight
+## and signature marks redrawing the plate, and the stance ring's weight mark.
+func _reads_hud() -> void:
+	for cs in [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2560, 1080), 1.0], [Vector2(390, 844), 1.0], [Vector2(1080, 1920), 1.0], [Vector2(2400, 1080), 2.6]]:
+		var sz: Vector2 = cs[0]
+		var lay := UiLayout.new()
+		lay.dp = cs[1]
+		lay.touch_ui = cs[1] > 1.5
+		lay.compute(sz, false)
+		var slot: Rect2 = lay.read_slot
+		var tag := "reads %dx%d" % [int(sz.x), int(sz.y)]
+		_ok(slot.size.x > 0.0 and slot.size.y > 0.0 and Rect2(Vector2.ZERO, sz).encloses(slot), "%s: the read slot is on screen" % tag)
+		_ok(not slot.intersects(lay.clear_zone) and not slot.intersects(lay.toll) and (lay.portrait or (not slot.intersects(lay.plate[0]) and not slot.intersects(lay.plate[1]))), "%s: the read slot is clear of the fight, the toll chip and the plates" % tag)
+		_ok(lay.pause_btn.size.y <= 0.0 or not slot.intersects(lay.pause_btn), "%s: and of the pause button" % tag)
+		_ok(slot.size.y >= 24.0 and slot.size.x >= 200.0, "%s: and big enough for a line (%d by %d)" % [tag, int(slot.size.x), int(slot.size.y)])
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(0).device = "xbox"
+	hud.advance(1.0 / 60.0)
+	# The hint line.
+	hud.consume({"type": "tutorial_hint", "id": "b3", "text_key": "b3.hint"})
+	for i in range(3):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_hint.sig != null and hud._l_hint.redraws > 0 and hud._l_tele.sig == null, "reads: a hint draws in the read slot")
+	# The telegraph takes the slot: the hint steps aside and the banner is held.
+	hud.consume({"type": "finisher_start", "actor": 1, "target": 0, "kind": "beam", "dur": 3.0})
+	hud.consume({"type": "banner", "text": "TIER 2", "col": "#ffffff", "dur": 1.0})
+	for i in range(3):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_tele.sig != null and hud._l_tele.redraws > 0 and hud._l_hint.sig == null, "reads: the finisher telegraph takes the slot and the hint steps aside")
+	hud.consume({"type": "finisher_contest", "target": 0})
+	for i in range(45):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_tele.sig == null, "reads: the telegraph clears after the contest")
+	_ok(hud.hub.banner.is_empty() or hud._l_hint.sig == null, "reads: a banner in the slot hides the hint (the banner wins over the hint)")
+	for i in range(80):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud.hub.banner.is_empty() and hud._l_hint.sig != null, "reads: and the hint returns when the banner is gone")
+	hud.consume({"type": "chain_ender", "actor": 0, "n": 3})
+	_ok(str(hud.hub.banner.get("text", "")).begins_with("CHAIN") and str(hud.hub.banner["text"]).contains("3"), "reads: chain_ender puts CHAIN x3 in the banner")
+	hud.consume({"type": "chain_ender", "actor": 0, "n": 1})
+	_ok(str(hud.hub.banner.get("text", "")).contains("3"), "reads: a chain of one gets no banner (the earlier one stands)")
+	# Weight, signature and stance edges redraw the plate within a frame.
+	var r0: int = hud._l_plate[1].redraws
+	hud.consume({"type": "weight_set", "actor": 1, "weight": "heavy"})
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	_ok(hud._l_plate[1].redraws > r0, "reads: a weight change redraws the plate in the next frame (the ack is inside two ticks)")
+	r0 = hud._l_plate[0].redraws
+	hud.consume({"type": "sig_queued", "actor": 0, "state": "queued"})
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	_ok(hud._l_plate[0].redraws > r0 and hud.hub.model(0).sig_queued, "reads: a queued signature redraws the plate in the next frame")
+	r0 = hud._l_plate[1].redraws
+	hud.consume({"type": "stance_set", "actor": 1, "stance": 3})
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	_ok(hud._l_plate[1].redraws > r0, "reads: the rival's stance change redraws the plate (the chip pulses)")
+	# The stance ring's weight mark: beside the four stances on a desktop row, a badge on the current stance on touch.
+	var pm0: UiFighterModel = hud.hub.model(0)
+	pm0.left_side = true
+	var chips: Array = UiPrompts.plan(pm0, hud.layout.prompts[0], hud.layout.s, {"touch": false, "prompts": false, "glyph_style": "neutral"})
+	var kinds: Array = chips.map(func(c): return c["kind"])
+	_ok(kinds.count("stance") == 4 and kinds.has("weight"), "reads: the stance ring has a weight mark beside the four stances")
+	var last_r: Rect2 = chips[chips.size() - 1]["rect"]
+	_ok(last_r.end.x <= hud.layout.prompts[0].end.x + 0.5, "reads: and it stays inside the column")
+	hud.queue_free()
+	await process_frame

@@ -35,6 +35,7 @@ var ring := Rect2()                          # the planet ring map (landscape), 
 var prompts: Array = [Rect2(), Rect2()]      # each column's prompt row (stance and hold prompts), under the cards; landscape only
 var swapped := false                         # slot 0 is on the right: the fighter on the left of the screen is slot 1
 var touch_grid := false                      # touch: the stance ring is a 2 by 2 grid because the column is too narrow for four targets in a row
+var read_slot := Rect2()                     # the telegraph chip and the tutorial hint line: the banner slot, between the plates, above the fight
 var pause_btn := Rect2()                     # touch only: the pause button (48 dp), beside the toll chip
 var dp := 1.0                                # device pixels per dp (CSS pixel on the web): 1 on a desktop, 2 to 3.5 on a phone. The host sets it before compute
 var touch_ui := false                        # touch is the last input device: targets are at least 48 dp and the prompt row is the stance ring
@@ -140,6 +141,7 @@ func _pass(insets: Vector4) -> void:
 	card_h = maxf(60.0 * s, float(UiText.px(22.0, s)) * 2.0 + 12.0)
 	ring = Rect2()
 	pause_btn = Rect2()
+	read_slot = Rect2()
 	touch_grid = false
 	prompts = [Rect2(), Rect2()]
 	if portrait:
@@ -206,6 +208,13 @@ func _landscape() -> void:
 			pause_btn = right
 		elif left.position.x >= plate[0].end.x + gap:
 			pause_btn = left
+	# The read slot (the telegraph chip and the tutorial hint): from under the toll chip to the clear zone's top edge, between the plates.
+	var rs_y: float = toll.end.y + gap * 0.5
+	read_slot = Rect2(plate[0].end.x + gap, rs_y, plate[1].position.x - plate[0].end.x - 2.0 * gap, banner_c.y + 34.0 * s - rs_y)
+	if pause_btn.size.y > 0.0:
+		# The button sits beside the toll chip and reaches below it: the slot narrows to the toll's width so a centred line never meets it.
+		var half: float = absf(pause_btn.get_center().x - vp.x * 0.5) - pause_btn.size.x * 0.5 - gap
+		read_slot = Rect2(vp.x * 0.5 - half, rs_y, 2.0 * half, read_slot.size.y)
 	world_card = Rect2(vp.x * 0.5 - 200.0 * s, banner_c.y - 26.0 * s, 400.0 * s, 52.0 * s)
 	var strip_h: float = maxf(20.0 * s, 14.0)
 	var strip_w: float = minf(safe.size.x * 0.46, 900.0 * s)
@@ -253,6 +262,8 @@ func _portrait() -> void:
 	toll = Rect2(safe.position.x, row_top + row_h + gap, safe.size.x, float(UiText.px(20.0, s)) + 12.0)
 	banner_c = Vector2(vp.x * 0.5, toll.end.y + gap + 22.0 * s)
 	world_card = Rect2(vp.x * 0.5 - 180.0 * s, banner_c.y - 22.0 * s, 360.0 * s, 44.0 * s)
+	var rs_y2: float = toll.end.y + gap * 0.5
+	read_slot = Rect2(safe.position.x, rs_y2, safe.size.x, banner_c.y + 30.0 * s - rs_y2)
 	touch_reserve = Rect2(0, vp.y * 0.78, vp.x, vp.y * 0.22)
 	var lane_h: float = bark_height(s)
 	bark[0] = Rect2(safe.position.x, touch_reserve.position.y - lane_h - gap, safe.size.x, lane_h)

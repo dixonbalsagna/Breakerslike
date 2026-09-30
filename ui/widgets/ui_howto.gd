@@ -299,10 +299,10 @@ static func _icon(ci: CanvasItem, name: String, c: Vector2, sz: float, cs: float
 		"brink":
 			UiIcons.brink(ci, c, sz * 0.8, ink)
 			ci.draw_arc(c, r, 0.0, TAU, 28, Color(ink, 0.35), w * 0.8, true)
-		"parry":
-			ci.draw_arc(c, r, 0.0, TAU, 28, dim, w, true)
-			ci.draw_arc(c, r * 0.72, -PI * 0.5, PI * 0.25, 14, ink, w * 1.8, true)
-			UiIcons.star4(ci, c + Vector2(0, -r), sz * 0.24, ink)
+		"reads":
+			# Their stance and their weight: a stance chip over a heavy barbell.
+			UiIcons.stance(ci, 1, c + Vector2(0.0, -r * 0.5), sz * 0.55, UiLook.stance_col(1))
+			UiReads.weight_mark(ci, c + Vector2(0.0, r * 0.55), sz * 0.7, true, ink)
 		"struggle":
 			ci.draw_arc(c, r * 0.45, 0.0, TAU, 20, ink, w, true)
 			ci.draw_arc(c, r * 0.75, 0.0, TAU, 24, dim, w, true)

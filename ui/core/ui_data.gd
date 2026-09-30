@@ -155,6 +155,22 @@ static func glyphs() -> Dictionary:
 	return _glyphs
 
 
+const READS_PATH := "res://ui/data/reads.json"
+static var _reads: Dictionary = {}
+
+
+## Finisher counters, tutorial beat ids and hint lines (ui/data/reads.json).
+static func reads() -> Dictionary:
+	if _reads.is_empty():
+		_reads = _read(READS_PATH)
+	return _reads
+
+
+## A tutorial hint line by key ("b3.hint", "b3.nudge", "b3.done"); "" if unknown.
+static func hint_text(key: String) -> String:
+	return str((reads().get("hints", {}) as Dictionary).get(key, ""))
+
+
 const HOWTO_PATH := "res://ui/data/howto.json"
 static var _howto: Dictionary = {}
 

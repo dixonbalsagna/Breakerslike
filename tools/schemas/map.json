@@ -99,6 +99,10 @@
       "schema": "ui-options.schema.json"
     },
     {
+      "match": "ui/data/reads.json",
+      "schema": "ui-reads.schema.json"
+    },
+    {
       "match": "ui/data/readout_profiles.json",
       "schema": "ui-readout-profiles.schema.json"
     },

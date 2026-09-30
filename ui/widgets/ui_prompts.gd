@@ -67,6 +67,14 @@ static func plan(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Arr
 			var cx: float = x if left else x - cw
 			out.append({"name": "stance_%d" % i, "kind": "stance", "i": i, "gw": gw, "h": h, "y": y, "gap": gap, "rect": Rect2(cx, y - h * 0.5 - 2.0, cw, h + 4.0)})
 			x += (cw + gap) if left else -(cw + gap)
+	# The weight mark beside the stance ring (light or heavy, sticky). It comes before the hold prompts: it is a read, they are a reminder.
+	if not touch and stance_visible(m, prompts_on):
+		var ww: float = h + 4.0
+		var used: float = (x - rect.position.x) if left else (rect.end.x - x)
+		if used + ww <= rect.size.x:
+			var wx: float = x if left else x - ww
+			out.append({"name": "weight", "kind": "weight", "gw": 0.0, "h": h, "y": y, "gap": gap, "rect": Rect2(wx, y - h * 0.5 - 2.0, ww, h + 4.0)})
+			x += (ww + gap) if left else -(ww + gap)
 	if prompts_on and not touch:
 		for act in ["special", "transform"]:
 			if not m.avail[act]:
@@ -76,8 +84,16 @@ static func plan(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Arr
 			var tw: float = UiText.width(word, fs)
 			var gw2: float = UiGlyphs.width(act, m.device, m.slot, h * 0.8, style)
 			var cw2: float = gw2 + tw + gap * 3.0 + h * 0.4
+			var used2: float = (x - rect.position.x) if left else (rect.end.x - x)
+			var short_chip: bool = false
+			if used2 + cw2 > rect.size.x:
+				# Not enough room for the word: the glyph and its ring alone, or nothing.
+				cw2 = gw2 + gap * 2.0 + h * 0.5
+				short_chip = true
+				if used2 + cw2 > rect.size.x:
+					continue
 			var cx2: float = x if left else x - cw2
-			out.append({"name": act, "kind": "hold", "act": act, "word": word, "fs": fs, "tw": tw, "gw": gw2, "h": h, "y": y, "gap": gap, "rect": Rect2(cx2, y - h * 0.5 - 2.0, cw2, h + 4.0)})
+			out.append({"name": act, "kind": "hold", "act": act, "word": "" if short_chip else word, "fs": fs, "tw": tw, "gw": gw2, "h": h, "y": y, "gap": gap, "rect": Rect2(cx2, y - h * 0.5 - 2.0, cw2, h + 4.0)})
 			x += (cw2 + gap) if left else -(cw2 + gap)
 	return out
 
@@ -111,17 +127,25 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Di
 			var current: bool = i == m.stance
 			UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), (0.75 if current else 0.5) * fade), Color(UiLook.stance_col(i), (0.95 if current else 0.35) * fade), 2.0 if current else 1.2)
 			if touch:
-				# The stance ring: the icon alone, big, centred in a square target.
+				# The stance ring: the icon alone, big, centred in a square target, and the weight mark on the current stance.
 				UiIcons.stance(ci, i, r.get_center(), h * 0.55, Color(UiLook.stance_col(i), fade))
+				if current:
+					var heavy_t: bool = m.weight == "heavy"
+					UiReads.weight_mark(ci, Vector2(r.end.x - h * 0.3, r.position.y + h * 0.2), h * 0.4, heavy_t, Color(UiLook.col(UiLook.INK), fade), heavy_t and m.weight_fallback_t < 1.5)
 			else:
 				UiIcons.stance(ci, i, Vector2(r.position.x + h * 0.55, y), h * 0.72, Color(UiLook.stance_col(i), fade))
 				# Every chip shows its own bound position solid; the current chip is told apart by its border and fill.
 				UiGlyphs.draw(ci, STANCE_ACTIONS[i], m.device, m.slot, Vector2(r.position.x + h + gap * 0.3, y), h * 0.8, fade, true, style)
+		elif c["kind"] == "weight":
+			UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.6 * fade), Color(UiLook.col(UiLook.EDGE), 0.4 * fade), 1.2)
+			var heavy: bool = m.weight == "heavy"
+			UiReads.weight_mark(ci, r.get_center(), h * 0.66, heavy, Color(UiLook.col(UiLook.INK), fade), heavy and m.weight_fallback_t < 1.5)
 		else:
 			var act: String = c["act"]
 			UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.65), Color(UiLook.col(UiLook.EDGE), 0.5), 1.4)
 			var gx: float = r.position.x + gap
 			UiGlyphs.draw(ci, act, m.device, m.slot, Vector2(gx, y), h * 0.8, 1.0, true, style)
 			UiGlyphs.hold_ring(ci, Vector2(gx + float(c["gw"]) * 0.5, y), h * 0.55, float(m.hold[act]), 1.0)
-			UiText.draw(ci, str(c["word"]), Vector2(gx + float(c["gw"]) + gap, y + float(c["fs"]) * 0.35), int(c["fs"]), Color(UiLook.col(UiLook.INK), 1.0), -1)
+			if str(c["word"]) != "":
+				UiText.draw(ci, str(c["word"]), Vector2(gx + float(c["gw"]) + gap, y + float(c["fs"]) * 0.35), int(c["fs"]), Color(UiLook.col(UiLook.INK), 1.0), -1)
 	UiText.no_outline = false

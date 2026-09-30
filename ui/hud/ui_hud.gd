@@ -42,6 +42,7 @@ var opts: Dictionary = {
 	"glyph_style": "neutral",  # the neutral position-diamond set; "family" (each device family's own letters) stays off until Legal answers
 	"hitstop_scale": 1.0,      # Controls' accessibility option, 0.5 to 1.0; the HUD only carries it (see ui/data/options.json)
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
+	"keep_hints": false,       # accessibility: a tutorial hint stays up after its beat is done, until the next hint
 	"touch_ui": false,         # touch is the last input device (the host sets it; on by default on a phone): a stance ring, a pause button, 48 dp targets
 	"vfx_quality": "auto",     # auto, high, medium or low; VFX reads it (docs/vfx/plan.md), the HUD only carries it
 	"force_redraw": false,     # bench only: redraw every layer every frame, to measure what the caching saves
@@ -71,6 +72,8 @@ var _last_dp := 1.0
 var _last_touch := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
+var _l_tele: UiLayer
+var _l_hint: UiLayer
 var _howto_open := false
 var _howto_first := false
 var _howto_page := 0
@@ -123,6 +126,8 @@ func _ready() -> void:
 	_l_feed = _layer(_paint_feed)
 	_l_debug = _layer(_paint_debug)
 	_l_pause = _layer(_paint_pause)
+	_l_tele = _layer(_paint_tele)     # the finisher telegraph and the tutorial hint share the banner slot (telegraph first)
+	_l_hint = _layer(_paint_hint)
 	_l_howto = _layer(_paint_howto)   # last: over everything
 	dp = _detect_density()
 	if OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios"):
@@ -173,7 +178,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips + [_l_pause, _l_howto]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips + [_l_pause, _l_tele, _l_hint, _l_howto]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -201,6 +206,7 @@ func consume_all(events: Array) -> void:
 
 
 func advance(dt: float) -> void:
+	hub.keep_hints = bool(opts["keep_hints"])
 	_t += dt
 	_dt = dt
 	_frame += 1
@@ -314,8 +320,7 @@ func _update_layers() -> void:
 	if bool(opts["show_crown"]) and anchor_fn.is_valid():
 		for m in hub.models:
 			var pop_on: bool = (m.crown_a > 0.01 or bool(opts["crown_always"])) and not hub.crown_locked()
-			var ack_on: bool = m.ack_result != "" and m.ack_t < 0.45 and not m.ai
-			if pop_on or ack_on or m.parry_t >= 0.0 or m.chain_t >= 0.0 or (m.brink and bool(opts["brink_cue"])):
+			if pop_on or m.parry_t >= 0.0 or m.chain_t >= 0.0 or (m.brink and bool(opts["brink_cue"])):
 				crown_on = true
 	_l_crown.update_sig(_frame if crown_on else null)
 
@@ -325,7 +330,9 @@ func _update_layers() -> void:
 		var full: bool = m.charge >= m.sig_cost
 		var pulse: int = int(_t * 8.0) if (not reduced and m.brink) else 0
 		_l_plate[m.slot].update_sig([m.name, m.ai, m.stance, m.tier, int(m.momentum), int(m.charge), int(m.ego), m.hidden, m.lost_trail,
-			m.charging, m.chain_n if m.chain_t >= 0.0 else 0, m.brink, m.shame, full, _plate_alpha(m), pulse])
+			m.charging, m.chain_n if m.chain_t >= 0.0 else 0, m.brink, m.shame, full, _plate_alpha(m), pulse,
+			m.weight, m.weight_fallback_t < 1.5, m.sig_queued, m.sig_funded, int(m.sig_cap_t * 6.0) if m.sig_funded else 0, m.sig_note if m.sig_note_t < 1.4 else "",
+			0 if reduced else int(clampf(1.0 - m.stance_flash_t / 0.8, 0.0, 1.0) * 5.0)])
 		_l_sil[m.slot].update_sig(_sil_sig(m, reduced) if layout.silhouette_on else null)
 
 	var a_toll: float = lerpf(UiLook.TOLL_REST_ALPHA, 1.0, clampf(1.0 - hub.toll_age / UiLook.TOLL_SHOW, 0.0, 1.0)) * (0.45 if cin else 1.0)
@@ -389,6 +396,8 @@ func _update_layers() -> void:
 		if m.slot < _l_prompts.size():
 			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
 		_l_pause.update_sig([layout.pause_btn, layout.touch_ui] if layout.pause_btn.size.y > 0.0 else null)
+	_l_tele.update_sig(UiReads.telegraph_sig(hub, bool(opts["show_prompts"]), reduced))
+	_l_hint.update_sig(UiReads.hint_sig(hub))
 	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s) if _howto_open else null)
 
 	var events_on: bool = not hub.cards.is_empty() or not hub.barks.is_empty() or not hub.banner.is_empty() or hub.world_card != null
@@ -634,6 +643,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif not pl["is_first"] and (pl["back"] as Rect2).has_point(pos):
 				howto_action("back")
 		get_viewport().set_input_as_handled()
+
+
+func _paint_tele(ci: CanvasItem) -> void:
+	UiReads.draw_telegraph(ci, hub, layout, layout.s, bool(opts["show_prompts"]), bool(opts["reduced_motion"]))
+
+
+func _paint_hint(ci: CanvasItem) -> void:
+	UiReads.draw_hint(ci, hub, layout, layout.s)
 
 
 func _paint_pause(ci: CanvasItem) -> void:

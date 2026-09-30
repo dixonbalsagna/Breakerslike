@@ -31,7 +31,81 @@ static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: fl
 		_bark(ci, hub, b, Rect2(lane.position.x, lane.position.y + slot_off, lane.size.x, lane.size.y), s, hub.model(b.slot).left_side)
 
 
+## Text that leans: an italic stand-in (the web build has one font), drawn with a shear about the baseline.
+static func _lean(ci: CanvasItem, text: String, pos: Vector2, fs: int, col: Color, align: int) -> void:
+	var k: float = 0.2
+	ci.draw_set_transform_matrix(Transform2D(Vector2(1.0, 0.0), Vector2(-k, 1.0), Vector2(k * pos.y, 0.0)))
+	UiText.draw(ci, text, pos, fs, col, align, 0.0)
+	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+
+
+## An inner line (Narrative, dialogue-director.md section 2.3): smaller, leaning, softer, no name and no grunt mark, with a small
+## thought trail toward the fighter. It shows what the fighter will not say, and for the tutorial what the fighter reads.
+static func _thought(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool) -> void:
+	var m: UiFighterModel = hub.model(b.slot)
+	var inten: int = int((b.cues[0] as Dictionary).get("intensity", 1)) if not b.cues.is_empty() else 1
+	var fs: int = UiText.px(23.0, s)
+	var pad: float = 10.0 * s
+	var lines: PackedStringArray = UiText.wrap(b.text, fs, lane.size.x - pad * 2.0 - 26.0 * s)
+	var shown: int = UiBarkTiming.reveal_count(b.text, b.age, inten)
+	var fade: float = 1.0
+	var left_t: float = b.reveal_time + b.dur - b.age
+	if left_t < 0.35:
+		fade = clampf(left_t / 0.35, 0.0, 1.0)
+	fade = minf(fade, clampf(b.age / 0.15, 0.0, 1.0))
+	var w: float = 0.0
+	for l in lines:
+		w = maxf(w, UiText.width(l, fs))
+	w += pad * 2.0
+	var total_h: float = pad * 1.6 + float(lines.size()) * (float(fs) + 3.0)
+	var x: float = lane.position.x + 16.0 * s if left else lane.end.x - w - 16.0 * s
+	var panel := Rect2(x, lane.end.y - total_h, w, total_h)
+	var aura: Color = m.aura if m != null else Color.WHITE
+	UiIcons.rrect(ci, panel, total_h * 0.4, Color(UiLook.col(UiLook.SCRIM), 0.38 * fade), Color(aura, 0.4 * fade), maxf(1.2, 1.5 * s))
+	# The thought trail: three circles, small to large, toward the fighter's own edge of the screen.
+	var dir: float = -1.0 if left else 1.0
+	var ty0: float = panel.end.y - 4.0 * s
+	var tx0: float = (panel.position.x + 4.0 * s) if left else (panel.end.x - 4.0 * s)
+	for k in range(3):
+		ci.draw_circle(Vector2(tx0 + dir * float(k + 1) * 7.0 * s, ty0 + float(k) * 4.0 * s), maxf(1.6, (1.4 + float(k) * 0.9) * s), Color(UiLook.col(UiLook.INK_DIM), 0.5 * fade))
+	var yy: float = panel.position.y + pad * 0.8 + float(fs)
+	var remaining: int = shown
+	for l in lines:
+		var part: String = l.substr(0, remaining) if remaining < l.length() else l
+		if part != "":
+			_lean(ci, part, Vector2(panel.position.x + pad if left else panel.end.x - pad, yy), fs, Color(UiLook.col(UiLook.INK_DIM), 0.95 * fade), -1 if left else 1)
+		remaining -= l.length() + 1
+		if remaining < 0:
+			break
+		yy += float(fs) + 3.0
+
+
+## A shout: large, heavy, no panel (the line is the event).
+static func _shout(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool) -> void:
+	var inten: int = int((b.cues[0] as Dictionary).get("intensity", 2)) if not b.cues.is_empty() else 2
+	var fs: int = UiText.px(38.0, s)
+	var lines: PackedStringArray = UiText.wrap(b.text, fs, lane.size.x)
+	var shown: int = UiBarkTiming.reveal_count(b.text, b.age, inten)
+	var fade: float = minf(clampf(b.age / 0.06, 0.0, 1.0), clampf((b.reveal_time + b.dur - b.age) / 0.25, 0.0, 1.0))
+	var yy: float = lane.end.y - float(lines.size() - 1) * (float(fs) + 4.0) - 6.0 * s
+	var remaining: int = shown
+	for l in lines:
+		var part: String = l.substr(0, remaining) if remaining < l.length() else l
+		if part != "":
+			UiText.draw(ci, part, Vector2(lane.position.x if left else lane.end.x, yy), fs, Color(UiLook.col(UiLook.INK), fade), -1 if left else 1, maxf(3.0, float(fs) * 0.14))
+		remaining -= l.length() + 1
+		if remaining < 0:
+			break
+		yy += float(fs) + 4.0
+
+
 static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool) -> void:
+	if b.style == "thought":
+		_thought(ci, hub, b, lane, s, left)
+		return
+	if b.style == "shout":
+		_shout(ci, hub, b, lane, s, left)
+		return
 	var m: UiFighterModel = hub.model(b.slot)
 	var inten: int = int((b.cues[0] as Dictionary).get("intensity", 1)) if not b.cues.is_empty() else 1
 	var fs: int = UiText.px(28.0, s)

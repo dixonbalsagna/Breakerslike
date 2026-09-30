@@ -61,7 +61,15 @@ var ko: bool = false
 var device: String = "kbd"          # the family of the device that last sent input for this slot: kbd, xbox, ps, switch, deck, generic
 var ack_result: String = ""         # the last press-acknowledged result (a small mark for a moment)
 var ack_t: float = 99.0
-var parry_clean: float = 0.0        # the clean-parry tail as a fraction of the parry window (0 = none)
+var parry_clean: float = 0.0        # retired (timing presses are gone): always 0
+var weight: String = "light"         # the sticky attack weight, "light" or "heavy" (Game Design R9); the plate and the stance ring show it
+var weight_fallback_t: float = 99.0  # seconds since a heavy fell back to light for lack of Charge (a mark shows for 1.5 s)
+var sig_queued: bool = false         # a signature is queued as an intent: the director fires it at its next opening
+var sig_funded: bool = false         # queued and the fighter has the Charge: the 180-tick cap is running
+var sig_cap_t: float = 0.0           # seconds the cap has run (it pauses while charging and in a cinematic); the ring shows it counting down from 3 s
+var sig_note: String = ""            # how the last signature intent ended: "fired", "cancelled", "expired" or "fallback"
+var sig_note_t: float = 99.0         # seconds since it ended (a brief mark)
+var stance_flash_t: float = 99.0     # seconds since the stance changed (the stance chip pulses, so a rival's change is seen)
 var avail: Dictionary = {"transform": false, "special": false}   # actions that can be used now (so their prompt shows only then)
 var hold: Dictionary = {"transform": 0.0, "special": 0.0}        # hold progress 0..1 (the hold ring)
 var stance_prompt_t: float = 99.0   # seconds since the stance changed or the match began (the stance prompt shows for 3 s)
@@ -107,6 +115,14 @@ func reset_wounds() -> void:
 	stance_prompt_t = 0.0
 	ack_t = 99.0
 	parry_clean = 0.0
+	weight = "light"
+	weight_fallback_t = 99.0
+	sig_queued = false
+	sig_funded = false
+	sig_cap_t = 0.0
+	sig_note = ""
+	sig_note_t = 99.0
+	stance_flash_t = 99.0
 	avail = {"transform": false, "special": false}
 	hold = {"transform": 0.0, "special": 0.0}
 
@@ -158,6 +174,12 @@ func advance(dt: float) -> void:
 	facade_age += dt
 	ack_t += dt
 	stance_prompt_t += dt
+	weight_fallback_t += dt
+	sig_note_t += dt
+	stance_flash_t += dt
+	# The signature's cap (180 ticks, 3 s) runs while the intent is funded and the director's clock is running.
+	if sig_queued and sig_funded and not charging and cinematic == "":
+		sig_cap_t = minf(3.0, sig_cap_t + dt)
 	boil_flash = maxf(0.0, boil_flash - dt)
 	cue += dt
 	if parry_t >= 0.0:

@@ -46,7 +46,22 @@
     "signature_need": "NEED {n} CHARGE",
     "parry": "PARRY",
     "chain": "CHAIN ×{n}",
-    "ai": "AI"
+    "ai": "AI",
+    "weight_light": "LIGHT",
+    "weight_heavy": "HEAVY",
+    "weight_fallback": "LOW CHARGE",
+    "queued": "QUEUED",
+    "sig_expired": "EXPIRED",
+    "sig_fallback": "NO CHARGE",
+    "sig_cancelled": "CANCELLED",
+    "sig_fired": "FIRED",
+    "holding": "HOLDING",
+    "slipping": "SLIPPING",
+    "finisher": "FINISHER",
+    "finisher_launch": "LAUNCH",
+    "finisher_melee": "MELEE",
+    "finisher_beam": "BEAM",
+    "answer": "ANSWER WITH"
   },
   "toll": { "civilians": "CIVILIANS LOST", "structures": "STRUCTURES LOST", "craters": "CRATERS" },
   "banner_rename": {

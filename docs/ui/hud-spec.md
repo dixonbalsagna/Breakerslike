@@ -354,14 +354,19 @@ The hub (`ui/core/ui_event_hub.gd`) takes Dictionaries or objects with the same 
 | `hatch_open`, `hatch_close`, `chip_stage` | actor, station, stage | rail, cards |
 | `fold_flicker`, `fold_start`, `unfold` | | world card; `fold_start` is a cinematic |
 | `finisher_start`, `ko` | actor, winner, loser, dur | cinematic mode |
-| `window_open` | actor, kind (parry or chain), `dur_ticks` (or `dur` seconds), `clean_ticks`, n | crown windows; the last `clean_ticks` are drawn as a thick clean band (section 15) |
-| `struggle_open` | actor, `beats` (default -18, 0, 18, 36, 54), `half_width` (ticks, default 4), `lead` (18) | the finisher's beat rings on the fighter on the brink (section 15) |
-| `finisher_contest` | actor | ends the struggle rings |
-| `press_ack` | actor, kind, result: hit, early, late, locked, miss, stray | a small mark by the fighter's stance marker; during a struggle a hit also marks its beat |
+| `window_open` | actor, kind (parry or chain), `dur_ticks` (or `dur` seconds), n | a passive closing ring (section 15); `clean_ticks` is ignored |
+| `struggle_open`, `struggle_pulse` | actor, `beats` (default -18, 0, 18, 36, 54), `lead` (18); actor, n (1 to 3), state (holding or slipping) | the finisher's beat rings on the fighter on the brink; a pulse reveals its result (section 15) |
+| `finisher_contest` | actor | ends the struggle rings and the telegraph |
+| `finisher_start` | actor, target, `kind` (launch, melee or beam), dur | cinematic mode, and the finisher telegraph chip (section 18) |
+| `weight_set`, `sig_queued`, `stance_set` | actor, weight (light or heavy); actor, state (queued, fired, fallback, expired); actor, stance | the weight chip, the signature chip, the stance chip's pulse (section 18) |
+| `press_ack` | actor, kind: weight_light, weight_heavy, weight_fallback, sig_queued, sig_cancelled, sig_funded, sig_expired, sig_fired | the same marks, within a frame (section 15) |
+| `tutorial_beat`, `tutorial_hint` | id, state (start, done, skipped); id, text_key (b3.hint, b3.alt0, b3.nudge, b3.done) or text | the hint line and its beat dots (section 19) |
+| `chain_ender` | actor, n | a CHAIN x N banner (n of 2 or more) |
+| `act_change`, `mood_band` | act; band | recorded and named in the feed; never drawn |
 | `availability` | actor, action (special, transform), available | the prompt chip for that action shows only while it is available |
 | `chain`, `lock_lost` | actor, n, dur | chain chip, `TRAIL LOST` chip |
 | `cinematic_start`, `cinematic_end` | actor, kind, dur | cinematic mode; a `transformation` or `revision` holds the crown down |
-| `bark` | speaker, text, cues, priority, dur, setpiece | bark lane or letterbox band |
+| `bark` | speaker, text, cues, priority, dur, setpiece, `display` (caption, thought or shout; or {style, dur_s}) | bark lane or letterbox band; a thought is a smaller, leaning, softer inner line (section 19) |
 | `banner`, `shake` | text, col, dur; k | banner (renamed); hazard mode |
 | `state` | actor and a patch of stance, tier, momentum, charge, ego, hidden, charging, aura, name, wear, `device`, `hold_special`, `hold_transform`, `avail_*` | plate; prompt row |
 | `world` | civilians, pop0, structures, craters | toll chip (brightens on change) |
@@ -433,17 +438,15 @@ The wall-time cost of redrawing everything each frame is about +1.1 ms; caching 
 
 ## 15. Controls' rulings: the struggle rings, press marks and prompts
 
-Built against `docs/controls/rulings.md` section 8 and `docs/controls/prompt-glyphs.md`, on a mock (the `controls` scenario) until the sim emits the events. Screenshots: `img/controls-*.png`.
+Built against `docs/controls/prompt-glyphs.md` and first drawn for `docs/controls/rulings.md` section 8. **Revised 2026-09-30 for Game Design's Q4** (`stance-matrix.md` §4b R9): no timing press exists any more, because the director times every blow, parry, chain and struggle. The struggle rings stay as a beat to watch; the press marks, the clean band and every "press now" glyph are gone. Section 18 has the new reads. Screenshots: `img/controls-prompts.png` (the prompt row) and `img/q4-*.png`.
 
-**The finisher struggle.** When `struggle_open {actor, beats, half_width, lead}` arrives, the fighter on the brink sees a target ring and, for each beat, a ring that closes on it. Beats sit at 18, 36 and 54 ticks after `contestOpen`, with a count-in at -18 and 0 (dimmed, shown but not scored). The window is plus or minus `half_width` ticks (4; 8 with the assist), drawn as the width of the target band. Three pips below the ring keep the tally: a star for a hit, an empty circle for a beat not yet scored, a cross for a miss. A press mark (`press_ack`) lands on the beat it hit and stays for 22 ticks. With prompts on, the light glyph shows large and the heavy glyph small beside the ring. Reduced motion steps the closing ring in thirds instead of a smooth close. `finisher_contest` ends the rings. An AI fighter on the brink gets no prompt.
+**The finisher struggle.** When `struggle_open {actor, beats, lead}` arrives, the fighter on the brink sees a target ring and, for each beat, a ring that closes on it. Beats sit at 18, 36 and 54 ticks after `contestOpen`, with a count-in at -18 and 0 (dimmed). The result is already drawn by the sim (state-resolved): three pulses reveal it step by step. `struggle_pulse {actor, n (1 to 3), state: holding | slipping}` leaves a star (holding) or a cross (slipping) at its ring, fills the matching tally pip, and prints the word HOLDING or SLIPPING under the pips. There is no prompt and no timing band (the target ring is a landing mark). Reduced motion steps the closing ring in thirds. `finisher_contest` ends the rings. The chance is never shown.
 
-![The finisher struggle rings](img/controls-struggle-b.png)
+![The struggle's pulses reveal HOLDING while the finisher's kind is still on the chip](img/q4-struggle.png)
 
-**Press marks.** `press_ack {actor, kind, result}` draws a small mark by the fighter's stance marker for a moment, for human fighters only: hit is a four-point star, early a ring with a lead dash, locked a square with a bar, late, miss and stray a cross. Every mark has a shape; none is colour-only.
+**Acks.** `press_ack {actor, kind}` (Controls, stage-c-spec.md section 5) is a weight or signature acknowledgement now: `weight_light`, `weight_heavy`, `weight_fallback`, `sig_queued`, `sig_cancelled`, `sig_funded`, `sig_expired`, `sig_fired`. The hub applies it in the same call, so the weight mark and the signature chip change on the next frame (inside the two-tick ack budget). The old `hit`, `early`, `late`, `locked`, `miss` and `stray` results are not sent and not drawn.
 
-**The parry window.** `window_open` now takes `dur_ticks` and `clean_ticks`. The ring closes over the window on a target ring; the last `clean_ticks` (the clean-parry tail, Controls' reward) are drawn as a thicker white band inside it, with tick marks. Pressing early or late reads on the ack mark. With prompts on, the parry and chain windows show their prompt glyph.
-
-![The parry window with its clean tail](img/controls-parry-clean.png)
+**The parry and chain windows.** `window_open` keeps `dur_ticks` (or `dur`). The closing ring is a tell the player reads, not a prompt: no glyph, no clean band (`clean_ticks` is ignored).
 
 **Availability and prompts.** A human fighter gets a row under their cards (landscape only) with four stance chips (the current one lit) and, when `availability` says so and prompts are on, hold chips for Special and Transform with a progress ring (`hold_special`, `hold_transform`, 0 to 1). The stance chips show for 3 s after a stance change or the start of a match and always with prompts on; the hold chips show only while prompts are on and the action is available. No prompt is drawn for an AI fighter. The host calls `UiHud.set_device(slot, family)` with kbd, xbox, ps, switch, deck or generic; the `device` key of a `state` patch does the same.
 
@@ -453,7 +456,7 @@ Built against `docs/controls/rulings.md` section 8 and `docs/controls/prompt-gly
 
 **New options** (`ui/data/options.json`): `show_prompts` (off; the host turns it on in training and the first three matches), `glyph_style` (neutral), `vfx_quality` (auto, high, medium, low; default auto; VFX reads it, the HUD only carries it), `hitstop_scale` (0.5 to 1.0, step 0.05, default 1.0, accessibility; the HUD stores it and Rendering or Simulation applies it, it changes nothing the HUD draws) and `hotseat_alt_layout` (off; the HUD stores it and Controls' input map reads it).
 
-**Checks.** `hud_check` (894 checks) covers the ring timing at every beat, the count-in, the assist width, the tally, the ack marks and their duration, the clean band, availability, the prompt row rules (human only, options, 3 s fade), the neutral glyph tables for every family, and both the `dur` and `dur_ticks` forms.
+**Checks.** `hud_check` covers the ring timing at every beat, the count-in, the pulses (holding, slipping, unknown, with no open event), availability, the prompt row rules (human only, options, 3 s fade), the neutral glyph tables for every family, and both the `dur` and `dur_ticks` forms.
 
 ## 16. Responsive: text and targets follow the screen's size and density
 
@@ -500,3 +503,57 @@ Orb's friend: "I'm not sure what I'm supposed to do in the game... some kind of 
 - No fighter is named and no franchise term is used. The copy avoids "ki" (the player sees Charge).
 
 **What the card does not do.** It is not a tutorial: nothing is checked, and it cannot teach timing. The guided first match is proposed in `docs/ui/tutorial-proposal.md` for Game Design.
+
+## 18. Q4: who controls what, and the reads the player must see
+
+Game Design's Q4 (Orb, questionnaire 4): the player is in charge of macro strategy, pacing and positioning (stance, weight, positioning, charging, transforming); the fight director is in charge of combos, tactics, parries, the struggle and voice lines. So the player's skill is **reading** the fight and answering it with a stance and a weight. The HUD's job changes from "what to press" to "what to read". Three reads must always be visible, and two of the player's own settings must always be visible.
+
+| Read or setting | Where it shows | Never missing because |
+| :--- | :--- | :--- |
+| **The rival's stance** | the plate's stance chip (icon, word and colour); on a change the chip's edge pulses for 0.8 s (`stance_set` or a stance patch; reduced motion: no pulse) | it is the plate's permanent chip |
+| **Weight** (light or heavy, sticky; the rival's too) | a **weight chip** first in the plate's state row: a barbell mark (small and thin for LIGHT, big for HEAVY) and the word, on both plates; on the stance ring a weight mark beside the four stances (desktop), or a badge on the current stance (touch). A heavy that fell back to light for lack of Charge shows the heavy mark struck through and LOW CHARGE for 1.5 s (`weight_fallback`) | the chip is first in its row and the last to be dropped |
+| **The finisher's kind** while it winds up | a **telegraph chip** in the banner slot: the kind's icon and "FINISHER: BEAM" (LAUNCH, MELEE, BEAM). With prompts on (the tutorial and the first matches) it adds "ANSWER WITH" and the answering stance's icon: GUARD a launch, DODGE a melee, PRESS a beam (with 40 Charge; the card says so). It takes the slot before a banner or a hint, and stays until the contest is over | it comes from `finisher_start.kind`, the telegraph is the contract, and the cue is shown in words and a shape |
+| **The signature intent** (yours and the rival's) | the plate's signature chip: `SIGNATURE` when ready (steady), **`QUEUED`** when queued and funded with a **cap ring** round the star that runs down over the 180 ticks (3 s) and pauses while the fighter charges, **`NEED 45 CHARGE`** with a fill toward 45 when queued but unfunded, and a 1.4 s note (`FIRED`, `CANCELLED`, `EXPIRED`, `NO CHARGE`) when the intent ends | it is one chip whose words change |
+
+![The finisher telegraph with its answering stance](img/q4-telegraph.png)
+
+![NEED 45 CHARGE: a queued signature waits for Charge](img/q4-sig-need.png)
+
+![The signature queued and funded: the cap ring runs down](img/q4-sig-funded.png)
+
+**Proposal: how the finisher's kind telegraphs.** Both channels, and the HUD chip is the contract:
+1. **The chip** (built): always present, words plus an icon, survives low VFX quality, colour-blindness and no sound.
+2. **Art's info-flash glyphs** (the plan in `docs/rendering/variety-cues-plan.md` asks Art for three glyphs in `flashes.json`): a launch, melee or beam mark on the attacker's head, through Rendering's FlashView, for players who look at the fighters.
+3. **Distinct wind-up silhouettes** (Combat and Rendering): a low crouch with a rising ground ring (launch), a lunge with a fist trail (melee), a gathered glow at the hands (beam). No new colour, because shape is what tells them apart.
+The chip never shows the survival chance or any number.
+
+**Events to consume** (Encounter's Q4 plan, all built against mocks): `weight_set`, `sig_queued`, `stance_set`, `finisher_start.kind`, `struggle_pulse`, `act_change` and `mood_band` (recorded and named in the feed only: acts and mood are invisible), `tutorial_beat`, `tutorial_hint`; Controls' `press_ack` kinds. A state patch may also carry `weight` and `sig_queued` for the bridge. The feed's "why the director attacked" line is Encounter's text and arrives through the existing feed path; nothing is added here.
+
+**Acks inside two ticks.** An ack or a `weight_set` changes the model in the call that consumes it, and the plate redraws on the next frame; `hud_check` proves it.
+
+## 19. The tutorial's hint line, and thoughts
+
+Game Design's guided first match has nine beats (`docs/design/tutorial.md`); Narrative wrote a hint, one or two alternates, a nudge after 20 s and a done line for each (`docs/narrative/tutorial-hints.md`). The lines are data in `ui/data/reads.json` (`hints`, keyed `b3.hint`, `b3.alt0`, `b3.alt1`, `b3.nudge`, `b3.done`); the sim picks the variant and sends `tutorial_hint {id, text_key}` (or its own `text`), and `tutorial_beat {id, state}` with state start, done or skipped.
+
+**The hint line** sits in the banner slot (the read slot under the toll chip, between the plates, above the fight). Priority: the finisher telegraph first, then a banner, then the hint. It is a pill with an icon and at most two lines, and a row of nine beat dots under the text (a filled dot for a beat done, a ring for the open one, faint for the rest).
+
+- **Hint**: an "i" in a circle. It rises over 0.25 s and stays up while its beat is open; after ten seconds it dims to 60% so it does not nag (the nudge does not dim).
+- **Nudge**: a warning triangle with a mark, a warm border. It replaces the hint after 20 s without the action, at full strength.
+- **Done**: a check mark. It shows for 2.6 s, fading in the last half second, and then the hint line is empty until the next beat.
+- A beat that ticks over clears its own open hint at once. The option **Keep tutorial hints up** (`keep_hints`, accessibility, off) keeps a hint on screen after its beat is done, until the next hint replaces it, and never dims.
+- Text plus an icon, never colour alone; reduced motion removes the fade; the type is at least the HUD's text floor (12 dp on a phone); a long line takes two lines and shrinks toward the floor before it is cut.
+
+![The hint line: a hint and its beat dots](img/q4-hint.png)
+
+**Thoughts.** Narrative's display styles for a bark (`display`: `caption`, `thought` or `shout`, or `{style, dur_s}`; `kind: "thought"` alone also works):
+- **Caption**: as before.
+- **Thought**: an inner line. Smaller type, **leaning** (the web build has one font, so the lean is a shear about the baseline, not an italic face), a softer colour, no name, no grunt mark, a faint outline panel and a small thought trail of three circles toward the fighter's own edge. A thought is low priority (1): it waits behind a spoken line, never cuts one, and is silenced in a respected cinematic like other barks. In the tutorial the player's fighter thinks the *reads* ("They're guarding. Something heavy, then.") in their own lane, in this style.
+- **Shout**: large, heavy outline, no panel.
+
+![A thought in the player's bark lane, with a hint above](img/q4-thought.png)
+
+**The How to play card** drops every timing instruction (no "press Light inside the ring"): page 1 says the director times the blows and the player sets stance and how hard to hit; page 2 names light and heavy as sticky weights and the signature as queued (45 Charge); page 3 teaches the reads: the wear ring, the wound cards, the brink ring, a read of the rival (stance, weight and finisher kind), the finisher's pulses and what answers each kind, the toll chip and the strip. `hud_check` fails the build if any copy mentions a timed press.
+
+**Also landed.** A `CHAIN xN` banner on `chain_ender {actor, n}` (n of 2 or more; Narrative's label, the same words as the chain chip), for Rendering's heavier impact cue.
+
+**Risks.** The plate's state row is now tight: the weight chip is first, and on a 380 px plate with a queued signature the other state chips (charging, chain) may not fit and are dropped. Acts and mood are invisible by design, so nothing shows the clock's tempo; the feed names it. The finisher's counter table lives in `ui/data/reads.json`; Game Design should confirm it (the stance that answers each kind and the 40 Charge for a beam).

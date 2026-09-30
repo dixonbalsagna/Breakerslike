@@ -15,6 +15,7 @@
     "hitstop_scale": { "default": 1.0, "group": "accessibility", "label": "Hit pause", "help": "How long the game freezes on a heavy hit, from half to full. The freeze is a whole number of ticks in the simulation, so this only sets which table it uses.", "accessibility": true, "min": 0.5, "max": 1.0, "step": 0.05 },
     "hotseat_alt_layout": { "default": false, "group": "controls", "label": "Alternate hot-seat keyboard layout", "help": "A second keyboard layout for two players on one keyboard. Off keeps the default layout." },
     "vfx_quality": { "default": "auto", "group": "display", "label": "Effects quality", "help": "How much debris, dust and cracking the effects draw. Auto picks by how fast the game is running; the others fix it. Fewer effects never hide a cue.", "choices": ["auto", "high", "medium", "low"] },
+    "keep_hints": { "default": false, "group": "accessibility", "label": "Keep tutorial hints up", "help": "In the guided first match, a hint stays on screen after you have done what it asks, until the next hint replaces it.", "accessibility": true },
     "thickness": { "default": 1.0, "group": "accessibility", "label": "Crown thickness", "help": "Arc thickness of the wear crown: 0.75, 1, 1.5.", "accessibility": true, "choices": [0.75, 1.0, 1.5] },
     "region_label": { "default": false, "group": "display", "label": "Place names", "help": "The place under the camera on the planet strip." }
   }

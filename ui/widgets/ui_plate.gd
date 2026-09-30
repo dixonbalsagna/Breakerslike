@@ -81,9 +81,21 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	var pips_w: float = pstep * 3.0 + psize
 	var tfs: int = int(pm["fs_tier"])
 	var sig_ready: bool = m.charge >= m.sig_cost
+	# The signature chip's states (Controls, stage-c-spec.md section 3): ready, queued (it fires at the director's next opening, with
+	# the 180-tick cap ring once funded), need (queued and short of Charge: a fill toward 45), or a brief note of how an intent ended.
+	var sig_mode: String = ""
 	var sig_label: String = UiData.t("state.signature")
+	if m.sig_queued:
+		sig_mode = "queued" if (m.sig_funded or sig_ready) else "need"
+		sig_label = UiData.t("state.queued") if sig_mode == "queued" else UiData.fmt("state.signature_need", {"n": int(m.sig_cost)})
+	elif m.sig_note != "" and m.sig_note_t < 1.4:
+		sig_mode = "note"
+		sig_label = UiData.t("state.sig_" + m.sig_note)
+	elif sig_ready:
+		sig_mode = "ready"
+	var sig_show: bool = sig_mode != ""
 	var tier_rh: float = float(pm["tier_h"])
-	var sig_w: float = UiText.width(sig_label, tfs) + tier_rh * 0.9 + 16.0 * s if sig_ready else 0.0
+	var sig_w: float = UiText.width(sig_label, tfs) + tier_rh * 0.9 + 16.0 * s if sig_show else 0.0
 
 	# Row 2: the stance chip (far side of the name's row in landscape), then state chips in the inward direction.
 	ry = rect.position.y + float(pm["chip_y"])
@@ -94,7 +106,9 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	var isize: float = rh * 0.68
 	var cw: float = isize + UiText.width(word, cfs) + 20.0 * s
 	var cur: float = (inner_w - cw) if combined else 0.0
-	_chip(ci, rect, left, pad, cur, cw, ry, rh, _c(UiLook.alpha(UiLook.SCRIM, 0.85)), _c(scol), 2.0)
+	# A stance change pulses the chip's edge for 0.8 s, so the rival's stance (a read) is seen when it changes.
+	var flash: float = 0.0 if reduced else clampf(1.0 - m.stance_flash_t / 0.8, 0.0, 1.0)
+	_chip(ci, rect, left, pad, cur, cw, ry, rh, _c(UiLook.alpha(UiLook.SCRIM, 0.85)), _c(scol), 2.0 + 3.0 * flash)
 	var cx: float = (x0 + cur + 8.0 * s + isize * 0.5) if left else (x1 - cur - 8.0 * s - isize * 0.5)
 	UiIcons.stance(ci, m.stance, Vector2(cx, ry + rh * 0.5), isize, _c(scol))
 	var tx0: float = (x0 + cur + 8.0 * s + isize + 6.0 * s) if left else (x1 - cur - 8.0 * s - isize - 6.0 * s)
@@ -105,10 +119,14 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		ry = rect.position.y + float(pm["tier_y"])
 		rh = tier_rh
 		cur = pips_w + 10.0 * s
-		chip_limit = inner_w - (sig_w + 8.0 * s if sig_ready else 0.0)
+		chip_limit = inner_w - (sig_w + 8.0 * s if sig_show else 0.0)
 	else:
 		cur += cw + 8.0 * s
 	var chips: Array = []
+	# The weight (the sticky light or heavy) comes first: the rival's weight is a read the player must always have. A heavy that fell
+	# back to light for lack of Charge shows LOW CHARGE and the mark struck through for a moment.
+	var fallback: bool = m.weight == "heavy" and m.weight_fallback_t < 1.5
+	chips.append(["weight", UiData.t("state.weight_fallback") if fallback else UiData.t("state.weight_" + m.weight), UiLook.col(UiLook.WARN) if fallback else UiLook.col(UiLook.INK if m.weight == "heavy" else UiLook.INK_DIM)])
 	if m.hidden:
 		chips.append(["hidden", UiData.t("state.hidden"), UiLook.col(UiLook.HIDDEN)])
 	if m.lost_trail:
@@ -130,6 +148,8 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		var icx: float = (x0 + cur + 8.0 * s + chip_h * 0.35) if left else (x1 - cur - 8.0 * s - chip_h * 0.35)
 		var icp := Vector2(icx, chip_y + chip_h * 0.5)
 		match ch[0]:
+			"weight":
+				UiReads.weight_mark(ci, icp, chip_h * 0.62, m.weight == "heavy", _c(ch[2]), fallback)
 			"hidden":
 				UiIcons.eye_slash(ci, icp, chip_h * 0.75, _c(ch[2]))
 			"lost":
@@ -158,21 +178,37 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 			_pip_right(ci, pc, psize, fill, pcol, pedge)
 	var tname: String = UiData.tier_name(m.tier)
 	var name_w: float = UiText.width(tname, tfs)
-	if not combined and pips_w + 12.0 * s + name_w + (sig_w + 8.0 * s if sig_ready else 0.0) <= inner_w:
+	if not combined and pips_w + 12.0 * s + name_w + (sig_w + 8.0 * s if sig_show else 0.0) <= inner_w:
 		var nx: float = (x0 + pips_w + 12.0 * s) if left else (x1 - pips_w - 12.0 * s)
 		UiText.draw(ci, tname, Vector2(nx, _base(ry, rh, tfs)), tfs, dim, -1 if left else 1)
-	if sig_ready:
-		var pl: float = 1.0   # steady: a ready signature does not pulse (nothing animates at rest)
+	if sig_show:
 		var chh: float = rh
 		# On a narrow plate (a phone) the chip shrinks to its star, so it never covers the pips.
 		var avail: float = inner_w - pips_w - 8.0 * s
 		var sw: float = sig_w if sig_w <= avail else chh * 1.2
 		if sw <= avail:
 			var sx: float = (x1 - sw) if left else x0
-			UiIcons.rrect(ci, Rect2(sx, ry, sw, chh), 6.0 * s, _c(Color(UiLook.col(UiLook.CHARGE_READY), 0.92)), _c(Color(1, 1, 1, pl)), 2.0)
-			UiIcons.star4(ci, Vector2(sx + (chh * 0.55 if sw == sig_w else sw * 0.5), ry + chh * 0.5), chh * 0.62, _c(UiLook.col(UiLook.INK_DARK)))
-			if sw == sig_w:
-				UiText.draw(ci, sig_label, Vector2(sx + chh * 0.55 + chh * 0.45 + 4.0 * s, _base(ry, chh, tfs)), tfs, _c(UiLook.col(UiLook.INK_DARK)), -1)
+			var full_chip: bool = sw == sig_w
+			var bright: bool = sig_mode == "ready" or sig_mode == "queued"
+			var dark_ink: Color = _c(UiLook.col(UiLook.INK_DARK))
+			var star_col: Color = dark_ink if bright else (ink if sig_mode == "need" else dim)
+			var chip_fill: Color = _c(Color(UiLook.col(UiLook.CHARGE_READY), 0.92)) if bright else _c(UiLook.alpha(UiLook.SCRIM, 0.85))
+			var chip_edge: Color = _c(Color(1, 1, 1, 1.0)) if bright else (_c(UiLook.col(UiLook.CHARGE)) if sig_mode == "need" else _c(UiLook.alpha(UiLook.EDGE, 0.5)))
+			UiIcons.rrect(ci, Rect2(sx, ry, sw, chh), 6.0 * s, chip_fill, chip_edge, 2.0)
+			if sig_mode == "need":
+				# The fill toward 45 Charge, from the chip's near side.
+				var frac: float = clampf(m.charge / maxf(m.sig_cost, 1.0), 0.0, 1.0)
+				var fw: float = (sw - 4.0) * frac
+				var fx: float = (sx + 2.0) if left else (sx + sw - 2.0 - fw)
+				ci.draw_rect(Rect2(fx, ry + 2.0, fw, chh - 4.0), _c(Color(UiLook.col(UiLook.CHARGE), 0.5)))
+			var scx: float = sx + (chh * 0.55 if full_chip else sw * 0.5)
+			UiIcons.star4(ci, Vector2(scx, ry + chh * 0.5), chh * 0.62, star_col)
+			if sig_mode == "queued" and m.sig_funded:
+				# The 180-tick cap: a ring round the star that runs down over 3 s (it pauses while the fighter charges).
+				var remain: float = clampf(1.0 - m.sig_cap_t / 3.0, 0.0, 1.0)
+				ci.draw_arc(Vector2(scx, ry + chh * 0.5), chh * 0.47, -PI * 0.5, -PI * 0.5 + TAU * remain, 24, dark_ink, maxf(2.0, chh * 0.09), true)
+			if full_chip:
+				UiText.draw(ci, sig_label, Vector2(sx + chh * 0.55 + chh * 0.45 + 4.0 * s, _base(ry, chh, tfs)), tfs, dark_ink if bright else (ink if sig_mode == "need" else dim), -1)
 
 	# Rows 4 and 5: the ego meter and charge, each a labelled striped bar with tick marks.
 	var efs: int = int(pm["fs_ego"])

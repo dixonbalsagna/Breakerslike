@@ -10,7 +10,7 @@
       "id": "idea",
       "title": "You choose. The fight follows.",
       "items": [
-        { "icon": "plan", "col": 0, "text": "You are the strategist: where to fly, when to press or rest, and which stance to take." },
+        { "icon": "plan", "col": 0, "text": "You are the strategist: where to fly, when to press or rest, which stance to take, and how hard you hit." },
         { "icon": "director", "col": 0, "text": "The fight director plays the blows. Combos, tactics and voice follow from your stance and position." },
         { "icon": "body", "col": 0, "text": "There are no health bars. Damage shows on the bodies: bruised, battered, broken." },
         { "icon": "finisher", "col": 0, "text": "A fight ends with a finisher, not a clock." },
@@ -28,9 +28,9 @@
       "items": [
         { "action": "move", "col": 0, "text": "Fly" },
         { "action": "dash", "col": 0, "text": "Dash (hold)" },
-        { "action": "light", "col": 0, "text": "Light attack" },
-        { "action": "heavy", "col": 0, "text": "Heavy attack" },
-        { "action": "signature", "col": 0, "text": "Signature (needs 45 Charge)" },
+        { "action": "light", "col": 0, "text": "Light attacks (sticky)" },
+        { "action": "heavy", "col": 0, "text": "Heavy attacks (sticky)" },
+        { "action": "signature", "col": 0, "text": "Signature (queued, needs 45 Charge)" },
         { "action": "charge", "col": 1, "text": "Charge (hold)" },
         { "action": "special", "col": 1, "text": "Special (hold)" },
         { "action": "transform", "col": 1, "text": "Transform (hold)" },
@@ -40,7 +40,7 @@
       ],
       "touch_items": [
         { "icon": "touch_move", "col": 0, "text": "Left thumb: fly. The stick appears where you touch." },
-        { "icon": "touch_attack", "col": 0, "text": "Right thumb: light and heavy attack. The signature appears when you have 45 Charge." },
+        { "icon": "touch_attack", "col": 0, "text": "Right thumb: choose light or heavy attacks, and queue your signature at 45 Charge." },
         { "icon": "touch_hold", "col": 1, "text": "Left edge: hold Charge or Special. Transform appears when it is ready." },
         { "icon": "stance_0", "col": 1, "text": "Stance ring under your nameplate: tap a stance." },
         { "icon": "touch_pause", "col": 1, "text": "Pause button at the top." }
@@ -53,8 +53,8 @@
         { "icon": "crown", "col": 0, "text": "A ring flashes round a fighter when a body part gets worse." },
         { "icon": "card", "col": 0, "text": "Cards name what changed, like ARMS: BROKEN." },
         { "icon": "brink", "col": 0, "text": "A faint ring marks a fighter on the brink. A finisher can end the fight." },
-        { "icon": "parry", "col": 0, "text": "A ring closing on a fighter is a window. Press Light inside it to parry, or again to chain." },
-        { "icon": "struggle", "col": 1, "text": "In a finisher, rings close on a target. Press on the beats to fight back." },
+        { "icon": "reads", "col": 0, "text": "Read your rival: their stance, how hard they hit, and the kind of finisher they wind up." },
+        { "icon": "struggle", "col": 1, "text": "In a finisher, rings pulse and show whether you hold or slip. Your stance decides it: GUARD a launch, DODGE a melee, PRESS a beam." },
         { "icon": "toll", "col": 1, "text": "The top chip counts what your fight costs the world." },
         { "icon": "strip", "col": 1, "text": "The strip is the whole planet with both of you on it. It wraps." },
         { "note": "reopen", "col": 1, "text": "" }

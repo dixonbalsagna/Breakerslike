@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-reads",
+  "title": "ui reads and tutorial hints (schema 1)",
+  "description": "ui/data/reads.json: what the HUD says about reads (which stance answers each finisher kind) and about the guided first match (docs/ui/hud-spec.md sections 18 and 19; Narrative's lines in docs/narrative/tutorial-hints.md). Version field: schema. Policy: closed. Hints are keyed beat.variant (for example b3.hint). Cross-references (the counter stances exist in terms.json, every hint belongs to a listed beat, every beat has a main hint, a hint stays short) are checked by tools/lib/xref-fight.js.",
+  "type": "object",
+  "required": ["schema", "finisher_counter", "beat_ids", "hints"],
+  "properties": {
+    "schema": { "const": 1 },
+    "note": { "type": "string" },
+    "finisher_counter": {
+      "type": "object",
+      "required": ["launch", "melee", "beam"],
+      "properties": {
+        "launch": { "type": "string", "pattern": "^[a-z]+$" },
+        "melee": { "type": "string", "pattern": "^[a-z]+$" },
+        "beam": { "type": "string", "pattern": "^[a-z]+$" }
+      },
+      "additionalProperties": false
+    },
+    "beat_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^b[0-9]+$" } },
+    "hints": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^b[0-9]+[.][a-z][a-z0-9]*$" },
+      "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 140 }
+    }
+  },
+  "additionalProperties": false
+}

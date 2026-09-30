@@ -1,14 +1,13 @@
 class_name UiStruggle
-## The finisher struggle's beat rings (docs/controls/rulings.md section 8), shown around the fighter on the brink, the one
-## who must press. Three timed presses on a visible rhythm, 300 ms apart: the beats are at 18, 36 and 54 ticks after the
-## contest opens, with a count-in at -18 and 0 so the tempo shows before the first scored beat.
+## The finisher struggle's beat rings, shown around the fighter on the brink. The struggle is resolved by state now (Game Design, Q4):
+## the sim has already drawn the result, and three pulses at the beats (18, 36 and 54 ticks after the contest opens, with a count-in
+## at -18 and 0 so the tempo shows) reveal it step by step. This is a beat to watch, not a press to make: no prompt, no timing window.
 ##
-## One ring closes on a fixed target ring for each beat, arriving exactly on the beat tick. The target ring is a BAND: its
-## width is the on-beat window (+-4 ticks, +-8 with the assist), so a player sees how forgiving it is, and the assist
-## visibly doubles it. A beat's result stays as a shape at the target for a moment: a star for a hit, a cross for a miss.
-## Three pips under the ring keep the tally (a star, a cross, or an open ring while pending). No survival percentage, no
-## number: the contest's chance is never shown. Every beat also has an audio tick and a rumble (Audio and Controls); this
-## ring carries the same information and nothing else does. Reduced motion keeps the shapes and steps the ring instead of easing it.
+## One ring closes on a fixed target ring for each beat, arriving exactly on the beat tick. When a pulse arrives (`struggle_pulse`:
+## holding or slipping) its ring leaves a shape at the target for a moment, a star for HOLDING and a cross for SLIPPING, and the
+## tally pip under the ring fills the same way; the last word (HOLDING or SLIPPING) is printed under the pips. No survival
+## percentage, no number: the chance is never shown. Every beat also has an audio tick (Audio); this ring and the word carry the
+## same information. Reduced motion keeps the shapes and steps the ring instead of easing it.
 
 const PERIOD := 18.0        # ticks between beats
 const LINGER := 22.0        # ticks a beat's result mark stays after it
@@ -30,14 +29,12 @@ static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, anchor: Diction
 	var st: Dictionary = hub.struggle
 	if st.is_empty() or anchor.is_empty() or not bool(anchor.get("visible", true)):
 		return
-	var m: UiFighterModel = hub.model(int(st["actor"]))
 	var c: Vector2 = anchor["pos"]
 	var R: float = UiCrown.radius(float(anchor.get("h", 90.0)), s)
 	var target_r: float = R * 1.2
 	var span: float = R * 0.9
 	var speed: float = span / PERIOD           # px of ring travel per tick
-	var half: float = float(st["half"])
-	var band: float = maxf(2.0 * half * speed, 4.0)
+	var band: float = maxf(3.0 * s, 3.0)   # the target ring's soft edge: a landing mark, not a timing window
 	var now: float = float(st["t"]) / UiEventHub.TICK
 	var reduced: bool = bool(o.get("reduced_motion", false))
 	var ink := Color(UiLook.col(UiLook.INK), 1.0)
@@ -83,17 +80,11 @@ static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, anchor: Diction
 				UiGlyphs.draw_ack(ci, "miss", p, pip * 1.8, a_all)
 			_:
 				ci.draw_arc(p, pip * 0.6, 0.0, TAU, 12, Color(ink, 0.8 * a_all), maxf(1.5, 1.6 * s), true)
-	# The prompt: the light glyph large, the heavy glyph small ("either counts"), when prompts are on.
-	if bool(o.get("prompts", false)) and m != null and not m.ai:
-		var fam: String = m.device
-		var style: String = str(o.get("glyph_style", "neutral"))
-		var gh: float = maxf(28.0 * s, 22.0)
-		var y: float = py + pip * 2.4 + gh * 0.5
-		var w1: float = UiGlyphs.width("light", fam, m.slot, gh, style)
-		var w2: float = UiGlyphs.width("heavy", fam, m.slot, gh * 0.7, style)
-		var x0: float = c.x - (w1 + gh * 0.3 + w2) * 0.5
-		UiGlyphs.draw(ci, "light", fam, m.slot, Vector2(x0, y), gh, a_all, true, style)
-		UiGlyphs.draw(ci, "heavy", fam, m.slot, Vector2(x0 + w1 + gh * 0.3, y), gh * 0.7, 0.8 * a_all, true, style)
+	# What the pulses have shown so far, in words as well as shapes.
+	var last: String = str(st.get("last", ""))
+	if last != "":
+		var fs: int = UiText.px(22.0, s)
+		UiText.draw(ci, UiData.t("state." + last), Vector2(c.x, py + pip * 2.0 + UiText.ascent(fs)), fs, Color(ink, a_all), 0, 2.0)
 
 
 ## The redraw key: every frame while it runs (the rings move), so it is just a frame counter; null when idle.

@@ -147,6 +147,35 @@ function xrefFight({ get, err, esc, isObj, plainKeys }) {
     walk(feel, '');
   }
 
+  // ---- ui reads and tutorial hints ----
+  const reads = get('ui/data/reads.json');
+  if (isObj(reads)) {
+    const terms = get('ui/data/terms.json');
+    const stances = new Set(isObj(terms) && Array.isArray(terms.stance_ids) ? terms.stance_ids : []);
+    if (isObj(reads.finisher_counter) && stances.size) {
+      for (const [kind, stance] of Object.entries(reads.finisher_counter)) {
+        if (!stances.has(stance)) err('ui/data/reads.json', `/finisher_counter/${esc(kind)}`, 'reads-stance', `the counter to a ${kind} finisher is "${stance}", which is not in terms.json stance_ids (${[...stances].join(', ')})`);
+      }
+    }
+    const styles2 = get(STYLES);
+    const kinds = isObj(styles2) && isObj(styles2.telegraphs) && isObj(styles2.telegraphs.finishers) && isObj(styles2.telegraphs.finishers.cues) ? Object.keys(styles2.telegraphs.finishers.cues) : [];
+    if (isObj(reads.finisher_counter) && kinds.length) {
+      for (const k of kinds) if (!(k in reads.finisher_counter)) err('ui/data/reads.json', '/finisher_counter', 'reads-kind', `finisher kind "${k}" (combat styles telegraphs) has no counter here`);
+    }
+    const beats = Array.isArray(reads.beat_ids) ? reads.beat_ids : [];
+    if (isObj(reads.hints)) {
+      for (const [key, text] of Object.entries(reads.hints)) {
+        const beat = key.split('.')[0];
+        if (beats.length && !beats.includes(beat)) err('ui/data/reads.json', `/hints/${esc(key)}`, 'reads-beat', `hint "${key}" belongs to beat "${beat}", which is not in beat_ids`);
+        const words = typeof text === 'string' ? text.trim().split(/\s+/).length : 0;
+        if (words > 14) err('ui/data/reads.json', `/hints/${esc(key)}`, 'reads-length', `${words} words; the note says at most about ten`, 'warning');
+      }
+      for (const beat of beats) {
+        if (!(`${beat}.hint` in reads.hints)) err('ui/data/reads.json', '/hints', 'reads-beat', `beat "${beat}" has no "${beat}.hint" line`);
+      }
+    }
+  }
+
   // ---- fight mood ----
   const mood = get(MOOD);
   if (isObj(mood) && isObj(mood.bands)) {

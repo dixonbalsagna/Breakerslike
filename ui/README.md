@@ -35,8 +35,8 @@ Exits 0 when the terms, the layout at ten sizes, the hub's rules, the mock scena
 | `core/ui_data.gd` | Loads `data/terms.json` and `data/readout_profiles.json` |
 | `core/ui_text.gd`, `ui_icons.gd`, `ui_body.gd`, `ui_bark_timing.gd` | Text with the arrow fix; vector icons; the body figure; bark reveal timing |
 | `core/ui_sim_bridge.gd` | Reads the live greybox sim into the HUD (read only) |
-| `widgets/` | Crown, silhouette, plate, cards, barks, centre (toll, banner), strip, feed, `ui_split.gd` (the split-screen divider geometry, ring map and pointer chips), `ui_glyphs.gd` (the neutral prompt glyphs), `ui_prompts.gd` (the prompt row) and `ui_struggle.gd` (the finisher beat rings) and `ui_howto.gd` (the How to play card): static draw functions |
-| `data/` | Player-facing terms (Narrative's glossary), per-fighter readout profiles, and the player options with their defaults (`options.json`: `info_flashes`, `crown_always`, `silhouette`, ...), feature flags (`features.json`: `hiding`, off), the prompt glyph tables (`glyphs.json`) and the How to play card's words (`howto.json`) |
+| `widgets/` | Crown, silhouette, plate, cards, barks, centre (toll, banner), strip, feed, `ui_split.gd` (the split-screen divider geometry, ring map and pointer chips), `ui_glyphs.gd` (the neutral prompt glyphs), `ui_prompts.gd` (the prompt row) and `ui_struggle.gd` (the finisher beat rings) and `ui_howto.gd` (the How to play card) and `ui_reads.gd` (the weight mark, the finisher telegraph, the tutorial hint line): static draw functions |
+| `data/` | Player-facing terms (Narrative's glossary), per-fighter readout profiles, and the player options with their defaults (`options.json`: `info_flashes`, `crown_always`, `silhouette`, ...), feature flags (`features.json`: `hiding`, off), the prompt glyph tables (`glyphs.json`) and the How to play card's words (`howto.json`), and the telegraph counters and tutorial hint lines (`reads.json`) |
 | `mock/`, `demo/`, `tools/` | The mock feed, the demo scene, the checks |
 
 ## What a host does
@@ -69,3 +69,7 @@ Add `--force` to redraw every layer every frame (the cost without caching), or `
 
 - `UiHud.set_density(dp)` (else detected), option `touch_ui`, `touch_rects()` and `touch_target_at(pos)`: see `docs/ui/hud-spec.md` section 16. Text is at least 12 dp on a dense screen, touch targets at least 48 dp. Demo: `--dp=2.6 --touch` with `--resolution 2400x1080`.
 - `show_howto(first_run, page)`, `hide_howto()`, `is_howto_open()`, `howto_seen()`, signals `howto_opened` and `howto_closed`; F1 toggles it. The host freezes the sim while it is open. Section 17. Demo: `--howto=0|1|2`, `--device=xbox`.
+
+## Q4 reads (docs/ui/hud-spec.md sections 18 and 19)
+
+The director times every blow; the player reads and answers. The plate shows the weight and the signature intent; a chip names the finisher's kind while it winds up; the struggle's pulses reveal a result; tutorial hints come from `ui/data/reads.json` through `tutorial_hint` events; barks have caption, thought and shout styles. Demo: `--scenario=controls --prompts` (the full Q4 loop), `--at=SECONDS` to jump.

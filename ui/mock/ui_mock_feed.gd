@@ -274,42 +274,67 @@ func _build_stress() -> void:
 		time += _rng.randf_range(0.05, 0.6)
 
 
-## Controls' rulings, one loop: prompts and availability, a parry with a clean tail and its acks, a chain, then the finisher
-## struggle (docs/controls/rulings.md section 8): count-in at -18 and 0 ticks, beats at 18, 36, 54 after contestOpen, +-4 ticks.
-## P1 (slot 0) is the human, on the brink; the struggle shows to it.
+## Q4: who controls what. One loop with the reads a player must see and the guided first match's hints. P1 (slot 0) is the human on a
+## pad, P2 the AI. No timing press appears anywhere: the weight is sticky, the signature is an intent the director fires, the struggle's
+## pulses reveal a result, and the rival's stance, weight and finisher kind all telegraph.
 func _build_controls() -> void:
-	length = 24.0
+	length = 32.0
 	var tk := 1.0 / 60.0
 	_e(0.0, {"type": "match_start"})
-	_st(0.0, 0, {"stance": 0, "tier": 1, "charge": 30.0, "momentum": 30.0, "ego": 20.0, "aura": "#8fd6ff", "ai": false, "device": "xbox"})
-	_st(0.0, 1, {"stance": 1, "tier": 1, "charge": 60.0, "momentum": 45.0, "ego": 50.0, "aura": "#c9a8ff", "ai": true})
+	_st(0.0, 0, {"stance": 0, "tier": 1, "charge": 30.0, "momentum": 30.0, "ego": 20.0, "aura": "#8fd6ff", "ai": false, "device": "xbox", "weight": "light"})
+	_st(0.0, 1, {"stance": 2, "tier": 1, "charge": 60.0, "momentum": 45.0, "ego": 50.0, "aura": "#c9a8ff", "ai": true, "weight": "light"})
 	_world(0.0, 0, 0, 0)
-	# Availability and holds: Special becomes available, then Transform starts to charge under a hold.
 	_e(1.0, {"type": "availability", "actor": 0, "action": "special", "available": true})
-	_st(5.0, 0, {"hold_special": 0.6})
-	_st(6.0, 0, {"hold_special": 0.0})
-	_e(6.0, {"type": "availability", "actor": 0, "action": "transform", "available": true})
-	_st(7.0, 0, {"hold_transform": 0.35})
-	_st(7.8, 0, {"hold_transform": 0.0})
-	# A stance change re-shows the stance prompt.
+	# The guided first match: each beat's hint, the done line, a nudge.
+	_e(0.5, {"type": "tutorial_beat", "id": "b1", "state": "start"})
+	_e(0.5, {"type": "tutorial_hint", "id": "b1", "text_key": "b1.hint"})
 	_st(3.0, 0, {"stance": 2})
-	# A parry on P1 with a clean tail: it opens 24 ticks, the last 8 are the clean tail. The press reads early, then clean.
-	_e(9.0, {"type": "window_open", "actor": 0, "kind": "parry", "dur_ticks": 24, "clean_ticks": 8})
-	_e(9.12, {"type": "press_ack", "actor": 0, "kind": "parry", "result": "early"})
-	_e(9.30, {"type": "press_ack", "actor": 0, "kind": "parry", "result": "hit"})
-	# A chain window on P1, a locked press, then a late one.
-	_e(10.5, {"type": "chain", "actor": 0, "n": 2, "dur": 0.7})
-	_e(10.7, {"type": "press_ack", "actor": 0, "kind": "chain", "result": "locked"})
-	_e(11.4, {"type": "press_ack", "actor": 0, "kind": "chain", "result": "late"})
-	# The finisher. P1 is on the brink; the struggle opens 18 ticks before contestOpen, then the beats.
-	_e(13.0, {"type": "brink_enter", "actor": 0})
-	_e(14.0, {"type": "finisher_start", "actor": 1, "target": 0})
-	_e(14.0, {"type": "struggle_open", "actor": 0, "half_width": 4, "lead": 18})
-	var open := 14.0 + 18.0 * tk   # contestOpen
-	_e(open + 18.0 * tk + 1.0 * tk, {"type": "press_ack", "actor": 0, "kind": "light", "result": "hit"})
-	_e(open + 36.0 * tk - 7.0 * tk, {"type": "press_ack", "actor": 0, "kind": "heavy", "result": "early"})
-	_e(open + 54.0 * tk + 9.0 * tk, {"type": "press_ack", "actor": 0, "kind": "light", "result": "late"})
-	_e(open + 66.0 * tk, {"type": "finisher_contest", "actor": 0})
-	_e(open + 66.0 * tk + 0.2, {"type": "banner", "text": "HOLD", "col": "#ffffff", "dur": 1.0})
-	_e(17.0, {"type": "brink_exit", "actor": 0})
-	_e(18.0, {"type": "rally", "actor": 0})
+	_e(3.2, {"type": "tutorial_beat", "id": "b1", "state": "done"})
+	_e(3.2, {"type": "tutorial_hint", "id": "b1", "text_key": "b1.done"})
+	_e(6.0, {"type": "tutorial_beat", "id": "b2", "state": "start"})
+	_e(6.0, {"type": "tutorial_hint", "id": "b2", "text_key": "b2.hint"})
+	# The weight: sticky, set by a button, shown on the plate and the stance ring.
+	_e(5.0, {"type": "press_ack", "actor": 0, "kind": "weight_heavy"})
+	_e(5.0, {"type": "weight_set", "actor": 0, "weight": "heavy"})
+	# The rival changes stance: an edge the plate's chip pulses on, and the rival's weight is a read too.
+	_e(7.0, {"type": "stance_set", "actor": 1, "stance": 1})
+	_e(7.0, {"type": "tutorial_beat", "id": "b3", "state": "start"})
+	_e(7.0, {"type": "tutorial_hint", "id": "b3", "text_key": "b3.hint"})
+	_e(7.3, {"type": "bark", "speaker": 0, "text": "They're guarding. Something heavy, then.", "display": {"style": "thought", "dur_s": 2.6}, "cues": []})
+	_e(8.5, {"type": "weight_set", "actor": 1, "weight": "heavy"})
+	_rs(9.0, 1, "arms", "battered")
+	_e(9.4, {"type": "tutorial_beat", "id": "b3", "state": "done"})
+	_e(9.4, {"type": "tutorial_hint", "id": "b3", "text_key": "b3.done"})
+	# The signature: queued without the Charge (NEED 45 CHARGE fills), funded (the 180-tick cap ring), fired.
+	_e(11.0, {"type": "press_ack", "actor": 0, "kind": "sig_queued"})
+	_e(11.0, {"type": "sig_queued", "actor": 0, "state": "queued"})
+	_st(11.5, 0, {"charge": 38.0})
+	_st(12.5, 0, {"charge": 50.0})
+	_e(12.5, {"type": "press_ack", "actor": 0, "kind": "sig_funded"})
+	_e(15.0, {"type": "sig_queued", "actor": 0, "state": "fired"})
+	_e(15.0, {"type": "press_ack", "actor": 0, "kind": "sig_fired"})
+	_st(15.2, 0, {"charge": 5.0})
+	# A heavy falls back to light for lack of Charge: the mark, for a moment.
+	_e(16.0, {"type": "press_ack", "actor": 0, "kind": "weight_fallback"})
+	_e(17.0, {"type": "tutorial_beat", "id": "b5", "state": "start"})
+	_e(17.0, {"type": "tutorial_hint", "id": "b5", "text_key": "b5.nudge"})
+	# A parry window stays as a passive tell: a closing ring, no prompt.
+	_e(17.5, {"type": "window_open", "actor": 1, "kind": "parry", "dur_ticks": 24})
+	# The finisher: its kind telegraphs for the whole wind-up (a beam here), then the struggle's three pulses reveal a result.
+	_e(18.0, {"type": "brink_enter", "actor": 0})
+	_e(19.0, {"type": "finisher_start", "actor": 1, "target": 0, "kind": "beam", "dur": 4.0})
+	_e(21.0, {"type": "struggle_open", "actor": 0, "lead": 18})
+	var open := 21.0 + 18.0 * tk
+	_e(open + 18.0 * tk, {"type": "struggle_pulse", "actor": 0, "n": 1, "state": "holding"})
+	_e(open + 36.0 * tk, {"type": "struggle_pulse", "actor": 0, "n": 2, "state": "holding"})
+	_e(open + 54.0 * tk, {"type": "struggle_pulse", "actor": 0, "n": 3, "state": "slipping"})
+	_e(open + 66.0 * tk, {"type": "finisher_contest", "actor": 0, "survived": true})
+	_e(23.0, {"type": "brink_exit", "actor": 0})
+	_e(23.2, {"type": "tutorial_beat", "id": "b8", "state": "done"})
+	_e(23.2, {"type": "tutorial_hint", "id": "b8", "text_key": "b8.done"})
+	# The chain ender's banner, then a launch finisher and a melee one for the chip's other kinds.
+	_e(25.0, {"type": "chain_ender", "actor": 0, "n": 3})
+	_e(27.0, {"type": "finisher_start", "actor": 0, "target": 1, "kind": "launch", "dur": 3.0})
+	_e(29.5, {"type": "finisher_contest", "actor": 1})
+	_e(30.0, {"type": "finisher_start", "actor": 1, "target": 0, "kind": "melee", "dur": 1.5})
+	_e(31.0, {"type": "finisher_contest", "actor": 0})
