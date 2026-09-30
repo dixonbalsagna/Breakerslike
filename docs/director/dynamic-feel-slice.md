@@ -2,9 +2,7 @@
 
 Owner: Encounter Systems Director. Inputs: `docs/combat/dynamic-feel.md` §2.2 (Combat); `docs/design/balance-targets.md` §10 dynamic rows and §4b rulings 3 and 6 (Game Design); `spec-wounds.md` S4 ruling 3 (the overtime ramp). The measurements that led here are in `pace-measurements.md`.
 
-**Status.** Built and verified in a scratch copy of HEAD (20d66dc; ef2d55c changes no sim file). Not yet applied to the shared tree: the session's permission check stopped the edit, which touches `sim/core` and Combat's `templates.json`, until Orb approves it. The change is one patch (`git apply --check` passes on the tree):
-- 9 files;
-- goldens regenerate cleanly.
+**Status.** Applied to the tree on Orb's go-ahead (2026-09-30), 9 files, goldens regenerated. The gates on the tree all pass: the golden check, `loader_check` (15,014 plans) and `npm test` (5 of 5 stages). Render determinism passes on HEAD's render code with the tree's `sim/` and `data/` applied. The tree also holds World's uncommitted window (collateral, terrain, water, `hasMenace`), and the regenerated goldens cover both. The results below were measured on a scratch copy of HEAD. A re-run on the applied tree agrees: melee idle 10.4%, 118 strikes a minute, release to request 0.97 s, first strike 0.63 s, 17.6 exchanges a minute, KAI 46.5% over 200 matches.
 
 ## Changes
 

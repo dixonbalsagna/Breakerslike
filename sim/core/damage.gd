@@ -6,7 +6,7 @@ const STANCE_MUL: Array = [1.12, 0.38, 1.0, 1.25]
 ## Menace's damage bonus at full menace (balance-targets.md section 9, slice S0): was 0.25.
 const MENACE_DMG_CAP: float = 0.15
 ## The hero's composure bonus while anguish is under COMPOSURE_ANGUISH (section 9's fallback, S0).
-const COMPOSURE_BONUS: float = 0.10
+const COMPOSURE_BONUS: float = 0.0   # off (balance-targets.md §4b ruling 6); was 0.10
 const COMPOSURE_ANGUISH: float = 10.0
 
 
@@ -35,7 +35,7 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	if o == null:
 		o = {}
 	var m: float = A.dmgMul * (1.0 + 0.09 * (A.tier - 1.0))
-	if A.role == "villain":
+	if A.hasMenace:
 		m *= 1.0 + MENACE_DMG_CAP * (A.menace / 100.0)
 	elif A.hasAnguish:
 		# Comeback (a fighter with the anguish meter, GD-B09): stronger the closer he is to the brink (S2: wounds replace hp / maxhp).

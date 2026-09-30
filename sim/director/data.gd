@@ -3,8 +3,8 @@ class_name DirData
 ## finishers.json; schema docs/combat/data-fields.md section 10; contract docs/combat/s3b-loader-note.md).
 ## Ops stay in code (DirExchange.runBeat): the data chooses ops, times, args and branches, with the same S.rng draws in
 ## the same order as the code it replaced. Both files are loaded once per process and are match inputs: dataHash() is
-## for the replay header. The profile field in each file picks the timing ("parity" reproduces 69c4a2f bit for bit;
-## "spaced" and "authored" are the new timings).
+## for the replay header. The profile field in each file picks the timing by name: "parity" reproduces 69c4a2f bit for
+## bit; the others ("spaced", "dynamic"; "authored" for finishers) time their beats in ticks.
 
 const TEMPLATES_PATH: String = "res://data/combat/templates.json"
 const FINISHERS_PATH: String = "res://data/combat/finishers.json"
@@ -62,8 +62,9 @@ static func finProfile() -> String:
 	return finishersProfile if finishersProfile != "" else String(_fin.profile)
 
 
-static func spaced() -> bool:
-	return tplProfile() == "spaced"
+## True when the templates' profile times its beats in ticks (timeUnit "tick"): every profile but parity.
+static func ticked() -> bool:
+	return String(_prof().get("timeUnit", "")) == "tick"
 
 
 static func _prof() -> Dictionary:
@@ -86,7 +87,7 @@ static func planMelee(S: SimState, ex) -> String:
 	var dist: float = absf(SimWrap.sdx(A.x, D.x))
 	var defState: String = "CHARGING" if (D.dPrev != null and D.dPrev == "charging") else DirExchange.STN[int(D.stance)]
 	var ctx := {"S": S, "A": A, "D": D, "heavy": heavy, "dist": dist, "base": 66.0 if heavy else 26.0}
-	var sp: bool = spaced()
+	var sp: bool = ticked()
 	if sp:
 		ctx.c = _approachTicks(dist)
 	else:
@@ -98,7 +99,7 @@ static func planMelee(S: SimState, ex) -> String:
 	var bid: String = _select(S, tp.selector, ctx)
 	var br: Dictionary = _branch(tp, bid)
 	ex.tag = br.tag
-	var key: String = "spaced" if sp else "parity"
+	var key: String = tplProfile()
 	if tp.has("shared"):
 		_scheduleList(ex, tp.shared[key], ctx, 0.0, "")
 	_scheduleList(ex, br[key], ctx, 0.0, "")
@@ -385,7 +386,7 @@ static func _args(b: Dictionary, ctx: Dictionary, w: String):
 static func planChain(ex) -> void:
 	_ensure()
 	var cl: Dictionary = _tpl.chainLink
-	_scheduleList(ex, cl["spaced" if spaced() else "parity"], {"heavy": false}, ex.t, "")
+	_scheduleList(ex, cl[tplProfile()], {"heavy": false}, ex.t, "")
 
 
 ## Plans a signature: outcome by the beam rules (their draws), the tag, and the beams' plan beats.

@@ -78,13 +78,19 @@ static func opBeamImpact(S: SimState, ex, args) -> void:
 		DirExchange.decisive(S, ex, A, D, "beam")
 
 
+const DODGE_DRIFT_X: float = 420.0   # the dodger's drift after the beam dodge, units per second
+const DODGE_DRIFT_Y: float = 180.0
+
+
 ## Beat "beamDodge".
 static func opBeamDodge(S: SimState, ex, _args) -> void:
 	var D = ex.D
 	SimFx.afterimage(S, D)
 	D.y += 300.0
-	D.vx = 0.0
-	D.vy = 0.0
+	# CC-005: freed at the dodge, drifting up and away from the beam (it hung locked for 0.9 s). No draw.
+	D.state = "free"
+	D.vx = SimMathx.jsign(SimWrap.sdx(ex.A.x, D.x)) * DODGE_DRIFT_X
+	D.vy = DODGE_DRIFT_Y
 	SimFx.banner(S, "DODGED", "#9fe0ff", 0.7)
 
 
@@ -101,7 +107,7 @@ static func opBeamEscape(S: SimState, ex, _args) -> void:
 
 ## beam.js startClash sc(f): one draw per call, attacker first.
 static func _clashScore(S: SimState, f) -> float:
-	return f.tier * 10.0 + f.ki * 0.35 + S.rng.range_(0.0, 16.0) + (f.menace * 0.08 if f.role == "villain" else 0.0)
+	return f.tier * 10.0 + f.ki * 0.35 + S.rng.range_(0.0, 16.0) + (f.menace * 0.08 if f.hasMenace else 0.0)
 
 
 static func startClash(S: SimState, ex, variant: String) -> void:

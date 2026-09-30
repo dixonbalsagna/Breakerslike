@@ -12,18 +12,17 @@ func X(v: float) -> float:
 	return v * SimConst.PS
 
 
-## The x of the first column past the open sea walking east from the sea's west end (east=false: the sea's west shore is
-## the shore at the start of the ocean span, walking east across it) or west.
+## The x of the first dry column past the sea's edge on the east coast (east = true) or the west coast (false): the shore.
 func shore_x(east: bool) -> float:
 	var NC: int = SimConst.NC
 	var S := fresh()
 	if east:
 		var i: int = int(X(1200.0) / SimConst.COL) - 400
-		while i < NC and S.base[i] < WorldWater.RESERVOIR_BASE:
+		while i < NC and (S.base[i] < WorldWater.SHORE_WET or S.water[i] > 0.0):
 			i += 1
 		return float(i) * SimConst.COL
 	var j: int = int(X(8300.0) / SimConst.COL) + 400
-	while j > 0 and S.base[j] < WorldWater.RESERVOIR_BASE:
+	while j > 0 and (S.base[j] < WorldWater.SHORE_WET or S.water[j] > 0.0):
 		j -= 1
 	return float(j) * SimConst.COL
 
@@ -102,10 +101,19 @@ func _sum(a: PackedFloat32Array) -> float:
 	return t
 
 
+var _wet0: PackedByteArray = PackedByteArray()
+
+
+## Dynamic wet columns that were not already wet at the start of the match (the shore shallows are wet from the start).
 func wet_dynamic(S: SimState) -> int:
+	if _wet0.is_empty():
+		var S0 := fresh()
+		_wet0.resize(SimConst.NC)
+		for i in range(SimConst.NC):
+			_wet0[i] = 1 if (S0.base[i] >= WorldWater.RESERVOIR_BASE and S0.water[i] >= WorldWater.MIN_DEPTH) else 0
 	var n: int = 0
 	for i in range(SimConst.NC):
-		if S.base[i] >= WorldWater.RESERVOIR_BASE and S.water[i] >= WorldWater.MIN_DEPTH:
+		if S.base[i] >= WorldWater.RESERVOIR_BASE and S.water[i] >= WorldWater.MIN_DEPTH and _wet0[i] == 0:
 			n += 1
 	return n
 
@@ -200,10 +208,10 @@ func _init() -> void:
 		var wet: int = wet_dynamic(S7)
 		var maxsurf: float = -1e9
 		for i in range(SimConst.NC):
-			if S7.base[i] >= WorldWater.RESERVOIR_BASE and S7.water[i] >= WorldWater.MIN_DEPTH:
+			if S7.base[i] >= WorldWater.RESERVOIR_BASE and S7.water[i] >= WorldWater.MIN_DEPTH and _wet0[i] == 0:
 				maxsurf = maxf(maxsurf, S7.base[i] + S7.deform[i] + S7.water[i])
 		print("  E=25 at x=%4.0f (%s): R %.0f depth %.0f; wet crater columns %d -> %d, settled after %d ticks (%.1f s), highest surface %.2f" % [cx, WorldBiomes.biomeAt(cx), rec.r, rec.depth, wet0, wet, steps, float(steps) / 60.0, maxsurf])
-		check(wet == 0 or absf(maxsurf) < 3.5 * SimConst.WS, "settled water stands at sea level (within 3.5 WS)")
+		check(wet == 0 or (maxsurf <= 3.5 * SimConst.WS and maxsurf >= WorldWater.SHORE_WET - 75.0), "a coastal bay fills toward the shore limit and never above the sea")
 	print("== water: an inland crater stays dry ==")
 	for cx in [X(2000.0), X(3000.0), X(4000.0), X(6000.0), X(7000.0)]:
 		var S8 := fresh()
@@ -430,7 +438,7 @@ func _init() -> void:
 		pop_after += b.popAlive
 	print("  budget spent, a huge blast and a huge beam: casualties %.2f, evacuated %.1f, people left in buildings %.1f of %.1f" % [Sd.world.casualties - cas0, Sd.world.evacuated, pop_after, pop_before])
 	check(Sd.world.casualties == cas0 and Sd.world.evacuated > 0.0, "with the budget spent, blasts and beams kill nobody and evacuate instead")
-	check(absf(pop_before - pop_after - Sd.world.evacuated) < 0.01, "everyone removed from a building is counted evacuated")
+	check(pop_before - pop_after <= Sd.world.evacuated + 0.01 and pop_before - pop_after >= Sd.world.evacuated - 0.01 - (Sd.world.evacuated if WorldCollateral.RELOCATE else 0.0), "everyone removed from a building is counted evacuated (some may have taken shelter in another)")
 
 	print("== depth rows, the spatial index, implode and rubble ==")
 	var Sr := fresh()
@@ -503,6 +511,82 @@ func _init() -> void:
 			line3 += ", R %.0f depth %.0f" % [c.r, c.depth]
 		print(line3 + ", hopped %s" % str(f3.hopped))
 		check(cr3.size() == 1, "a hard slam leaves exactly one crater, made by the first contact (special %s)" % str(special))
+
+
+	print("== placement and the shore (docs/world/cities.md section 6) ==")
+	var Sp := fresh()
+	var NCp: int = SimConst.NC
+	var bad_foot: int = 0
+	var in_water: int = 0
+	var names := ["Netmend", "Bellgate", "outskirts", "far village"]
+	var per := [0, 0, 0, 0]
+	for b in Sp.buildings:
+		per[WorldTerrain._settlementOf(b.x)] += 1
+		if not WorldTerrain._footOk(Sp, b.x, b.w):
+			bad_foot += 1
+		if Sp.water[int(b.x / SimConst.COL)] > 0.0:
+			in_water += 1
+	print("  buildings by settlement: Netmend %d, Bellgate %d, outskirts %d, far village %d (%d in all), people %.0f" % [per[0], per[1], per[2], per[3], Sp.buildings.size(), Sp.world.pop0])
+	check(bad_foot == 0, "every building's footprint is above BUILD_MIN_GROUND and not on a slope")
+	check(in_water == 0, "no building stands in the water")
+	var lowest_g: float = 1.0e9
+	for b in Sp.buildings:
+		var c0b: int = int(floor((b.x - b.w * 0.5) / SimConst.COL))
+		var c1b: int = int(floor((b.x + b.w * 0.5) / SimConst.COL))
+		for c in range(c0b, c1b + 1):
+			lowest_g = minf(lowest_g, Sp.base[posmod(c, NCp)])
+	print("  lowest ground under any building: %.1f (limit %.1f)" % [lowest_g, WorldTerrain.BUILD_MIN_GROUND])
+	check(lowest_g >= WorldTerrain.BUILD_MIN_GROUND - 0.01, "no building has ground below the limit under it")
+	# the waterline: no dry column below the shore limit connected to the sea; the step to the dry land is small
+	var reach := PackedByteArray()
+	reach.resize(NCp)
+	for dir in [1, -1]:
+		var on: bool = false
+		for lap in range(2 * NCp):
+			var i: int = lap % NCp if dir == 1 else NCp - 1 - (lap % NCp)
+			if Sp.base[i] < WorldWater.RESERVOIR_BASE:
+				on = true
+			elif on and Sp.base[i] < WorldWater.SHORE_WET:
+				reach[i] = 1
+			else:
+				on = false
+	var dry_connected: int = 0
+	var init_mismatch: int = 0
+	for i in range(NCp):
+		if Sp.base[i] >= WorldWater.RESERVOIR_BASE:
+			if reach[i] == 1 and Sp.water[i] <= 0.0:
+				dry_connected += 1
+			if reach[i] == 0 and Sp.water[i] > 0.0:
+				init_mismatch += 1
+	var max_step: float = 0.0
+	for i in range(NCp):
+		var j: int = (i + 1) % NCp
+		var wi: bool = Sp.water[i] > 0.0
+		var wj: bool = Sp.water[j] > 0.0
+		if wi != wj:
+			var dry: int = j if wi else i
+			max_step = maxf(max_step, absf(Sp.base[dry]))
+	print("  dry columns below sea level connected to the sea: %d; wet columns not from the flood fill: %d; largest step from the water surface to the dry ground beside it: %.1f (limit %.1f)" % [dry_connected, init_mismatch, max_step, absf(WorldWater.SHORE_WET)])
+	check(dry_connected == 0, "no dry column below the shore limit is connected to the sea")
+	check(init_mismatch == 0, "the start water is the reservoir plus the connected shallows and nothing else")
+	check(max_step <= absf(WorldWater.SHORE_WET) + 1.0, "the step from the sea's surface to the land beside it is at most a quarter of a fighter height")
+	# evacuee menace
+	var Se := fresh()
+	Se.fighters[0].tier = 1.0
+	Se.fighters[1].tier = 1.0
+	Se.world.cbSum = 1000.0
+	Se.world.cbBuckets[0] = 1000.0
+	var m0: float = Se.fighters[1].menace
+	var an0: float = Se.fighters[0].anguish
+	var bt = null
+	for b in Se.buildings:
+		if b.pop >= 3.0:
+			bt = b
+			break
+	WorldCollateral.kill(Se, bt.idx, 3.0, Se.fighters[1], 0.0, bt.x)
+	var expect_m: float = 3.0 * WorldCollateral.EVAC_MENACE * 425.0 / Se.world.pop0
+	print("  three evacuees caused by the villain: menace +%.2f (wanted %.2f), anguish +%.2f" % [Se.fighters[1].menace - m0, expect_m, Se.fighters[0].anguish - an0])
+	check(absf(Se.fighters[1].menace - m0 - expect_m) < 0.001 and Se.fighters[0].anguish == an0, "evacuees feed the causer's menace at 0.45 times 425 / pop0 and nobody's anguish")
 
 	print("")
 	print("probe: %d check(s) failed" % fails)

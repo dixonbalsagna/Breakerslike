@@ -10,6 +10,13 @@ const BH: float = 75.0
 const ROW_Z_BH: Array = [10.0, -8.0, -22.0, -38.0]
 const ROW_JITTER_BH: float = 1.0            # per-building depth jitter (rows 1 to 3), from the building's seed: no extra draw
 const FG_H_MAX_BH: float = 6.0              # the foreground row is low: at most this many fighter heights
+## Placement (docs/world/cities.md section 6): a settlement sits on a platform, its span is trimmed to where the natural
+## ground is dry enough, and a building is only accepted where its footprint is above the sea and not on a slope.
+const SETTLE_FLOOR: float = 0.5 * BH        # the platform: the ground inside a settlement is at least this high
+const TRIM_G: float = -1.0 * BH             # a span starts where the natural ground first reaches this (never fills the sea in)
+const PLATFORM_BLEND: int = 24              # columns over which the platform blends into the natural ground
+const BUILD_MIN_GROUND: float = 0.25 * BH   # every column under a footprint (and one either side) is at least this high
+const BUILD_MAX_SLOPE: float = 0.35         # and the ground under it varies by at most this share of its width
 ## Settlements: the span (original coordinates), the building kind of the front street, and the extra rows laid after it:
 ## [row, kind, height factor, gap factor, x offset in units]. The front street is generated exactly as before, so its
 ## layout is unchanged; the extra rows draw after every front street, and the settlement's people are then rescaled so
@@ -74,14 +81,15 @@ static func genWorld(S: SimState) -> void:
 	S.base = a.duplicate()
 	S.buildings.clear()
 	S.trees.clear()
+	var spans: Array = _platforms(S)
 	# Front streets first (the original layout, draw for draw), then the extra rows of each settlement.
 	var totals: Array = []
 	for st in SETTLEMENTS:
-		totals.append(_row(S, r, st.x0 * PS, st.x1 * PS, st.kind, 1, 1.0, 1.0, 0.0))
+		totals.append(_row(S, r, spans[totals.size()][0], spans[totals.size()][1], st.kind, 1, 1.0, 1.0, 0.0))
 	for k in range(SETTLEMENTS.size()):
 		var st = SETTLEMENTS[k]
 		for rw in st.rows:
-			_row(S, r, st.x0 * PS, st.x1 * PS, rw[1], rw[0], rw[2], rw[3], rw[4] * WS)
+			_row(S, r, spans[k][0], spans[k][1], rw[1], rw[0], rw[2], rw[3], rw[4] * WS)
 	# Conserve each settlement's population: rescale all its rows to the front street's total.
 	var pop: float = 0.0
 	var byS: Array = []
@@ -123,6 +131,52 @@ static func genWorld(S: SimState) -> void:
 	S.slides.clear()
 	WorldWater.init(S)
 	WorldCollateral.init(S)
+
+
+## The platform under each settlement: trim the span to where the natural ground first reaches TRIM_G (from each end), lift
+## the ground inside to at least SETTLE_FLOOR with a smooth blend over PLATFORM_BLEND columns at each end, and return the
+## trimmed spans [x start, x end] in world units.
+static func _platforms(S: SimState) -> Array:
+	var PS: float = SimConst.PS
+	var COL: float = SimConst.COL
+	var NC: int = SimConst.NC
+	var out: Array = []
+	for st in SETTLEMENTS:
+		var i0: int = int(st.x0 * PS / COL)
+		var i1: int = int(st.x1 * PS / COL)
+		while i0 < i1 and S.base[i0 % NC] < TRIM_G:
+			i0 += 1
+		while i1 > i0 and S.base[i1 % NC] < TRIM_G:
+			i1 -= 1
+		for i in range(i0 - PLATFORM_BLEND, i1 + PLATFORM_BLEND + 1):
+			var j: int = (i + NC) % NC
+			var g: float = S.base[j]
+			if g >= SETTLE_FLOOR or g < TRIM_G:
+				continue
+			var w: float = 1.0
+			if i < i0 + PLATFORM_BLEND:
+				w = clampf(float(i - (i0 - PLATFORM_BLEND)) / float(2 * PLATFORM_BLEND), 0.0, 1.0)
+			if i > i1 - PLATFORM_BLEND:
+				w = minf(w, clampf(float((i1 + PLATFORM_BLEND) - i) / float(2 * PLATFORM_BLEND), 0.0, 1.0))
+			w = w * w * (3.0 - 2.0 * w)
+			S.base[j] = g + (SETTLE_FLOOR - g) * w
+		out.append([float(i0) * COL, float(i1) * COL])
+	return out
+
+
+## Is a building of width w centred at cx on ground that is high enough and flat enough?
+static func _footOk(S: SimState, cx: float, w: float) -> bool:
+	var NC: int = SimConst.NC
+	var COL: float = SimConst.COL
+	var c0: int = int(floor((cx - w * 0.5) / COL)) - 1
+	var c1: int = int(floor((cx + w * 0.5) / COL)) + 1
+	var lo: float = 1.0e9
+	var hi: float = -1.0e9
+	for c in range(c0, c1 + 1):
+		var g: float = S.base[posmod(c, NC)]
+		lo = minf(lo, g)
+		hi = maxf(hi, g)
+	return lo >= BUILD_MIN_GROUND and hi - lo <= BUILD_MAX_SLOPE * w
 
 
 ## The settlement index a building at x belongs to (by the original spans).
@@ -171,8 +225,9 @@ static func _row(S: SimState, r: SimRng, x0: float, x1: float, kind: String, row
 		b.row = float(row)
 		b.z = ROW_Z_BH[row] * BH + ((b.seed - 0.5) * 2.0 * ROW_JITTER_BH * BH if row > 0 else 0.0)
 		b.popAlive = b.pop
-		S.buildings.append(b)
-		pop += b.pop
+		pop += b.pop   # a rejected candidate's people still count toward the settlement's total (rescaled onto the rest)
+		if _footOk(S, b.x, b.w):
+			S.buildings.append(b)
 	return pop
 
 

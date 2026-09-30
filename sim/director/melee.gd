@@ -25,7 +25,7 @@ static func opWind(S: SimState, ex, _args) -> void:
 		if not b.done and b.op == "strike" and b.args.a == "A" and (b.args.o == null or not b.args.o.get("noParry", false)):
 			width = b.t - ex.t
 			break
-	if DirData.spaced():
+	if DirData.ticked():
 		# Controls' rule: no window without a cue. windowStart and the AI's press draw exist only with a window_open.
 		if width < 0.0:
 			return

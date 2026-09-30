@@ -17,7 +17,11 @@ class_name WorldWater
 const SEA_LEVEL: float = 0.0
 const WS: float = SimConst.WS
 const RESERVOIR_BASE: float = -30.0 * WS   # base ground below this is open sea (WorldTerrain.seaAt)
-const WET_GROUND: float = -30.0 * WS       # a dynamic column takes water only while its ground is below this
+## The sea fills every sea-connected column whose ground is below SHORE_WET (a quarter of a fighter height under sea
+## level), so the waterline sits on the shore and no slab of dry land below sea level stands beside the sea
+## (docs/world/cities.md, the waterline). WET_GROUND is the same number under its old name.
+const SHORE_WET: float = -0.25 * 75.0
+const WET_GROUND: float = SHORE_WET
 const MIN_DEPTH: float = 0.5 * WS     # less than this counts as dry
 const FLOW_K: float = 0.4             # a link moves this share of the surface difference per step ...
 const FLOW_MAX: float = 14.0 * WS          # ... at most this much depth per step ...
@@ -62,8 +66,8 @@ static func surfaceAt(S: SimState, x: float) -> float:
 	return S.base[i] + S.deform[i] + d if d >= MIN_DEPTH else DRY
 
 
-## Start of a match: reservoir columns full to sea level. At the start every other column's ground is above WET_GROUND
-## (that is what makes the reservoir the reservoir), so nothing else is wet; only craters make new water.
+## Start of a match: reservoir columns full to sea level, and the shallows connected to them (an unbroken run of ground
+## below SHORE_WET) full to the same level; nothing else is wet, and only craters make new water.
 static func init(S: SimState) -> void:
 	var NC: int = SimConst.NC
 	S.water = PackedFloat32Array()
@@ -74,6 +78,18 @@ static func init(S: SimState) -> void:
 	for i in range(NC):
 		if isReservoir(S, i):
 			S.water[i] = maxf(0.0, SEA_LEVEL - (S.base[i] + S.deform[i]))
+	for dir in [1, -1]:
+		var wet: bool = false
+		for lap in range(2 * NC):   # two laps carry the fill across the seam
+			var i2: int = lap % NC if dir == 1 else NC - 1 - (lap % NC)
+			if isReservoir(S, i2):
+				wet = true
+			elif wet:
+				var g: float = S.base[i2] + S.deform[i2]
+				if g < SHORE_WET:
+					S.water[i2] = SEA_LEVEL - g
+				else:
+					wet = false
 
 
 ## Terrain changed around column c0 (half width cols) and the lowest ground there is minG: keep the reservoir

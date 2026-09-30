@@ -74,6 +74,15 @@ static func aiInput(S: SimState, f) -> void:
 		i.dash = absf(sd) > 1500.0
 		# Sweep low over land; over the sea, sweep at the surface rather than diving.
 		i.my = -1.0 if not sea else (1.0 if f.y < SURFACE_Y else 0.0)
+	elif st == 0.0 and dist <= CIRCLE_R:
+		# In reach an AGGRESSIVE fighter never halts (dynamic feel): it circles the opponent on an ellipse, weaving,
+		# until its attack beat. The two slots circle half a turn apart. No draws.
+		var ph: float = S.T * CIRCLE_RATE + (3.14159265358979 if f == S.fighters[1] else 0.0)
+		var cx: float = SimWrap.sdx(f.x, o.x + CIRCLE_X * SimDetMath.sin(ph))
+		var cy: float = SimMathx.jmax(o.y, SURFACE_Y) if sea else o.y
+		cy = cy + CIRCLE_Y * SimDetMath.cos(ph) - f.y
+		i.mx = SimMathx.jsign(cx) if absf(cx) > 20.0 else 0.0
+		i.my = SimMathx.jsign(cy) if absf(cy) > 20.0 else 0.0
 	elif st == 0.0:
 		i.mx = SimMathx.jsign(d) if dist > 130.0 else 0.0
 		i.dash = dist > 700.0
@@ -82,7 +91,12 @@ static func aiInput(S: SimState, f) -> void:
 		var dy: float = ty - f.y
 		i.my = SimMathx.jsign(dy) if absf(dy) > 40.0 else 0.0
 	elif st == 1.0:
+		# DEFENSIVE holds its ground, but in reach it sways (a small step back and in, and a bob) rather than freezing.
 		i.mx = 0.0
+		if dist <= CIRCLE_R:
+			var sw: float = SimDetMath.sin(S.T * SWAY_RATE + (1.5707963267949 if f == S.fighters[1] else 0.0))
+			i.mx = -0.5 * SimMathx.jsign(d) if sw > 0.3 else (0.5 * SimMathx.jsign(d) if sw < -0.3 else 0.0)
+			i.my = 0.35 if SimDetMath.cos(S.T * SWAY_RATE) > 0.0 else -0.35
 		if sea and f.y < 0.0:
 			i.my = 1.0
 		if f.ki < 55.0 and dist > 350.0:
@@ -109,8 +123,10 @@ static func aiInput(S: SimState, f) -> void:
 	if sea and f.y < 0.0 and i.my > 0.0:
 		i.dash = true
 	# A hunter sometimes swings blind at the last-seen spot (it pays the lock-lost cost: 2 ki and a 0.5 s cooldown).
-	var blind: bool = a.atk <= 0.0 and o.hidden and st == 0.0 and S.dirS.ex == null and S.rng.next() < BLIND_SWING
-	if a.atk <= 0.0 and (not o.hidden or blind) and st != 3.0 and S.dirS.ex == null:
+	# A beat is not spent on a press the director would refuse (the cooldown, or a target in the air): it waits.
+	var ready: bool = S.dirS.cool <= 0.0 and o.state != "launched" and o.state != "locked"
+	var blind: bool = a.atk <= 0.0 and ready and o.hidden and st == 0.0 and S.dirS.ex == null and S.rng.next() < BLIND_SWING
+	if a.atk <= 0.0 and ready and (not o.hidden or blind) and st != 3.0 and S.dirS.ex == null:
 		# Each attack beat either attacks or holds (repositions, charges): holding fills the downtime between exchanges.
 		var r: float = S.rng.next()
 		var pa: float = P_ATTACK[int(st)]
@@ -125,10 +141,10 @@ static func aiInput(S: SimState, f) -> void:
 				i.heavy = true
 			else:
 				i.light = true
-		# Attack cadence (balance-targets.md section 10): AGGRESSIVE every 1.2 to 2.5 s, the others scaled to match.
-		# Was 0.35 to 1.0 s, 1.2 to 2.5 s and 0.9 to 1.8 s.
-		a.atk = S.rng.range_(1.2, 2.5) if st == 0.0 else (S.rng.range_(2.0, 3.6) if st == 1.0 else S.rng.range_(1.6, 3.0))
-	elif a.atk <= 0.0:
+		# Attack cadence (dynamic feel): AGGRESSIVE every 0.5 to 1.2 s, DEFENSIVE 1.0 to 2.0 s, the others 0.8 to 1.6 s.
+		# S2/S3b ran 1.2 to 2.5, 2.0 to 3.6 and 1.6 to 3.0; the prototype 0.35 to 1.0, 1.2 to 2.5 and 0.9 to 1.8.
+		a.atk = S.rng.range_(0.5, 1.2) if st == 0.0 else (S.rng.range_(1.0, 2.0) if st == 1.0 else S.rng.range_(0.8, 1.6))
+	elif a.atk <= 0.0 and ready:
 		a.atk = 0.3
 
 
@@ -141,11 +157,16 @@ static func _healing(f) -> bool:
 
 
 # Tempo (balance-targets.md section 10).
-const P_ATTACK: Array = [0.52, 0.43, 0.48, 0.5]   # chance an attack beat attacks, per stance (ESCAPE never attacks)
+const P_ATTACK: Array = [0.9, 0.8, 0.85, 0.5]    # chance an attack beat attacks, per stance (ESCAPE never attacks); S3b 0.43 to 0.52
 const BLIND_SWING: float = 0.25                  # chance a hunting AGGRESSIVE attack beat swings at a target out of lock
 const GAP_URGE: float = 6.0                      # seconds since the last exchange (either fighter's exT)
 const GAP_SOON: float = 0.5                      # ... after which the next attack beat comes within this
-const CAD_MIN: Array = [1.2, 2.0, 1.6, 1.6]      # attack-timer floor per stance while an exchange runs
+const CAD_MIN: Array = [0.5, 1.0, 0.8, 0.8]      # attack-timer floor per stance while an exchange runs (the cadence minimums)
+const CIRCLE_R: float = 260.0                   # in reach: AGGRESSIVE circles, DEFENSIVE sways (dynamic feel)
+const CIRCLE_X: float = 120.0                   # the circle's half-width ...
+const CIRCLE_Y: float = 70.0                    # ... and half-height, around the opponent
+const CIRCLE_RATE: float = 2.4                  # radians per second (a turn in about 2.6 s)
+const SWAY_RATE: float = 5.0                    # DEFENSIVE sway, radians per second
 
 # Fight location (balance-targets.md section 10). Underwater is a hiding state, not a place to fight.
 const SURFACE_Y: float = 150.0         # over the sea, fighters who are not hiding hold at or above this height

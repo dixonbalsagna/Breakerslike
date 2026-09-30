@@ -186,7 +186,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 		f.tier = nt
 		tierUp(S, f)
 	var regen: float = 5.0 + (25.0 if f.hidden and f.canHide else 0.0)
-	if f.role == "villain":
+	if f.hasMenace:
 		regen += f.menace * 0.03
 	else:
 		regen = SimMathx.jmax(1.0, regen - f.anguish * 0.025)

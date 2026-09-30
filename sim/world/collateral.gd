@@ -34,10 +34,13 @@ const EVAC_MAX_PER_TICK: int = 12
 ## Where the fleeing go. With RELOCATE the people who flee take shelter in the nearest standing building outside the danger
 ## zone (SHELTER_MIN to SHELTER_MAX from the event, at most SHELTER_CAP times its own people), so the population is conserved
 ## and only the budget limits how many die; without it they leave the planet's count for good.
-const RELOCATE: bool = false
+const RELOCATE: bool = true
 const SHELTER_MIN: float = EVAC_R
 const SHELTER_MAX: float = 4.0 * EVAC_R
 const SHELTER_CAP: float = 2.0
+## Evacuees feed the menace of the fighter who caused the blow, if it has a menace meter (Game Design, 2026-09-30): +0.45 per
+## evacuee, times 425 / pop0. Anguish gets nothing from evacuees.
+const EVAC_MENACE: float = 0.45
 const HIST_BUCKETS: int = 48           # the lure's population histogram (director/ai.gd LURE_STEP = W / 48)
 const HIST_STEP: float = SimConst.W / 48.0
 
@@ -203,6 +206,8 @@ static func kill(S: SimState, bi: int, want: float, cause, evt: float, cx: float
 		w.evtEvac += evac
 	if evac > 0.000001:
 		w.evacuated += evac
+		if cause != null and cause.hasMenace:
+			cause.menace = SimMathx.jmin(100.0, cause.menace + evac * EVAC_MENACE * POP_REF / w.pop0)
 		var reason: String = "ceiling" if cl < rm + borrow else "budget"
 		var owner: float = WorldCrater._slot(S, cause)
 		var dest: int = shelter(S, cx, evac)
@@ -219,7 +224,7 @@ static func kill(S: SimState, bi: int, want: float, cause, evt: float, cx: float
 static func _feed(S: SimState, n: float, cause) -> void:
 	var norm: float = POP_REF / S.world.pop0
 	S.world.casualties += n
-	if cause != null and cause.role == "villain":
+	if cause != null and cause.hasMenace:
 		cause.menace = SimMathx.jmin(100.0, cause.menace + n * 0.9 * norm)
 		cause.power = SimMathx.jmin(100.0, cause.power + n * 0.09 * norm)
 	for f in S.fighters:

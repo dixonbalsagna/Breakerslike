@@ -30,6 +30,18 @@ Notes:
 - **The composition stream.** A keyed, stateless draw per exchange and slot (`procedural-moves.md` §10), so adding a style changes only the exchanges it could apply to. Simulation provides it in D1a, before Q4: `S.dirS.exN`, `ex.n` (set in `requestAttack`) and a stateless `SimRng.keyed(seed, key, n)`. Composition draws use `keyed(seed, "compose", ex.n)`, plus `ex.combo` for chain links, and never touch `S.rng`.
 - **Row 9 in every checkpoint.** Every new beat emits a `cue`, and the new cue names go in the fx hash map.
 
+### Rendering's event fields (`docs/rendering/variety-cues-plan.md`)
+
+| Cue | What the sim emits | Checkpoint |
+| :--- | :--- | ---: |
+| `tell_light`, `tell_heavy` | the existing `attack` event (actor, kind) | now |
+| `finisher_tell_launch`, `_melee`, `_beam` | `finisher_start` with `kind` (actor, target, dur, kind) | 5 |
+| `struggle_hold`, `struggle_slip` | `struggle_open {actor}` at `contestOpen`, then `struggle_pulse {actor, n, state}`, n 1 to 3, state HOLDING or SLIPPING (UI's spelling, `hud-spec.md` §18). It carries the pulse index a plain `cue` lacks | 5 |
+| `blink_out`, `blink_in` | `blink_out {actor, x, y}` and `blink_in {actor, x, y}`, with the slot as `actor` (like `damage` and `tier_up`) and the departure or arrival position, emitted **in the tick the position jumps** (agreed with Camera, VFX and Rendering: `docs/camera/blinks.md`). From out to in takes 6 ticks at most; a longer gap in Combat's data gets flagged | 2 |
+| `blink_meet` | `blink_meet {actor, target, x, y}`: both slots, and the contact point, in the tick both fighters arrive | 2 |
+| `chain_ender` | `chain_ender {actor, x, y, n}`: the attacker, the contact point and the chain count | 2 |
+| the clash shapes | `game.clash.shape` and its keyframes in state, set when the shape is picked: the seesaw reversal times, the deflect time and direction, the split time and angle, the mutual detonation time. Plus a `clash_shape {shape}` event at the pick | 4 |
+
 ## Sub-slices (each is a checkpoint: goldens, feel probe, tempo, QA bands)
 
 ### A. The attack clock (R9), for both fighters
@@ -53,6 +65,7 @@ Notes:
   - `weight_set {actor, weight}`;
   - `sig_queued {actor, state}`, with state queued, fired, fallback or expired;
   - `stance_set {actor, stance}`, the rival's stance read, where UI needs an edge rather than polling state.
+  - `blitz {actor, band, act}` when the director opens a chain as a blitz at the first window, with the current mood band (Calm, Tense or Frenzied; the momentum stand-in until M1) and act. It is for QA's blitz band: 2 to 6 a minute in Tense and Frenzied.
 
   Controls' `press_ack` is theirs.
 
@@ -79,7 +92,7 @@ Notes:
   - heat: +5 at Simmering, +10 at Boiling (this folds in the old +10 "Boiling on the brink");
   - the other fighter-state bonuses: hooks keyed by roster data, active once F1's fighters exist;
   - −10 per Rally, and −10 per minute past 8:00.
-- **The three pulses** at the contest's beat ticks emit `struggle_pulse {actor, n, state}`, with state holding or slipping. The sequence depends only on the drawn result and the margin, so it reveals the outcome step by step without another draw. `struggle_press` retires.
+- **`struggle_open {actor}`** is emitted at `contestOpen`. **The three pulses** at the contest's beat ticks emit `struggle_pulse {actor, n, state}`, with state HOLDING or SLIPPING. The sequence depends only on the drawn result and the margin, so it reveals the outcome step by step without another draw. `struggle_press` retires.
 
 ### D. Invisible acts and the fight's mood (§9)
 - **The act** is 1 + region breaks + transformations (both fighters, counted as events), capped at 4. Each act makes the clock 10% faster and raises the weights for blitzes, long launches, beam struggles, teleport clashes and set pieces, within the tier caps.
@@ -104,7 +117,7 @@ Notes:
   - always telegraphs its weight and finisher kind;
   - steers toward beats 3, 5 and 8 until they happen;
   - stops at the brink for beat 8 and never finishes the player.
-- **A deterministic beat runner** (`sim/director/tutorial.gd`, `data/director/tutorial.json`) reads the existing events and emits `tutorial_beat {id, state}` and `tutorial_hint {id, text_key}` (UI's spec). Hints repeat after 20 s without the action.
+- **A deterministic beat runner** (`sim/director/tutorial.gd`, `data/director/tutorial.json`) reads the existing events and emits `tutorial_beat {id, state}` and `tutorial_hint {id, text_key}` (UI's spec, `hud-spec.md` §19). Ids look like `b3`; text keys are `b3.hint`, `b3.alt0`, `b3.nudge` or `b3.done`. Hints repeat after 20 s without the action.
 - QA's bot playthrough ticks every beat.
 
 ## Needs from others (through the EP)
@@ -121,7 +134,8 @@ Notes:
    - `chainP` numbers, if Combat wants them in its data rather than mine.
 3. **Game Design:** all answered (7e87793 and R9) and folded in above: the clean parry, heat, the aggression scalar, the hold timer and chainP's heat input. The mood's per-event weights are in M1.
 4. **Simulation:** M1's aggression scalar, and heat stages readable by the director.
-5. **UI and Rendering:** consumers for `weight_set`, `sig_queued`, `stance_set`, `finisher_start.kind`, `struggle_pulse`, `act_change`, `mood_band` and the tutorial events.
+5. **Thought barks:** they carry `display: {style, dur_s}` for UI. The dialogue director emits them, and it stays read-only to me. If any bark passes through a director event, I add the field.
+6. **UI and Rendering:** consumers for `weight_set`, `sig_queued`, `stance_set`, `finisher_start.kind`, `struggle_open`, `struggle_pulse`, `act_change`, `mood_band` and the tutorial events.
 
 ## Risks
 - **Responsiveness.** A player whose attacks the director times may feel unheard. The weight press must acknowledge within 2 ticks, and AGGRESSIVE must feel immediate: the dynamic slice's release to request is 0.93 s, and Tense brings it to 0.6 s.

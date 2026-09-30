@@ -263,6 +263,7 @@ class Fighter:
 	var menace: float = 0.0
 	var anguish: float = 0.0
 	var hasAnguish: bool = false  # the fighter's profile has a pressured-by-collateral meter (roster data, not the role name)
+	var hasMenace: bool = false   # the fighter's profile has a menace meter, fed by the collateral it causes (roster data)
 	var menaceSeen: float = 0.0     # menace after the last stepFighter (S0: menace decays when not fed)
 	var menaceQuiet: int = 0         # ticks since menace was last fed
 	var casSeen: float = 0.0        # S.world.casualties after the last stepFighter

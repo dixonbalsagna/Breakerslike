@@ -1,7 +1,7 @@
 {
   "schema": "combat.templates/1",
   "_about": "Exchange templates as data (Combat). Two timing profiles per branch. 'parity' reproduces sim/director/melee.gd, beam.gd and exchange.gd chain() at commit 69c4a2f exactly: same beats, same scheduling order, same RNG draws in the same order. 'spaced' keeps every outcome, damage, force, tag and draw of parity but re-times the beats to balance-targets.md section 10 (0.25 to 0.40 s between contacts, 6 to 10 beats) and adds render-only 'cue' beats. Contract, value forms and verification: docs/combat/data-fields.md section 10 and docs/combat/s3b-loader-note.md.",
-  "profile": "spaced",
+  "profile": "dynamic",
   "profiles": {
     "parity": {
       "timeUnit": "s",

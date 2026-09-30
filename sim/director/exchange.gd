@@ -237,9 +237,9 @@ static func endEx(S: SimState, ex) -> void:
 
 ## Breathing room after an exchange (balance-targets.md section 10): 0.8 s after a quick exchange, rising with its
 ## length (ex.t, request to release) to at most 1.5 s. Was a flat 0.22 s.
-const COOL_MIN: float = 0.8
-const COOL_PER_SEC: float = 0.3
-const COOL_MAX: float = 1.5
+const COOL_MIN: float = 0.25   # dynamic feel (docs/combat/dynamic-feel.md §2.2): was 0.8 + 0.3 per s, at most 1.5
+const COOL_PER_SEC: float = 0.1
+const COOL_MAX: float = 0.6
 
 
 static func cooldownAfter(ex) -> float:

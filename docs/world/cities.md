@@ -126,3 +126,11 @@ Rendering's diagnosis: the sea floods only where the base ground is below -240 (
 - **Camera:** a fifth row at -54 bh, the fighter's on-screen size in the deep rows, and framing a 260 bh skyline.
 - **Narrative:** the second city's name and its districts.
 - **Encounter:** two cities change the lure and the fight-location rows (the location bands assume one city); rerun `tempo.gd` when the layout lands.
+
+## 9. As built: the fixes slice (2026-09-30)
+
+Code: `terrain.gd` (`_platforms`, `_footOk`, `_row`), `water.gd` (`SHORE_WET`, `init`), `collateral.gd`, checks in `sim/world/tools/probe.gd` ("placement and the shore").
+- **Platforms and trimmed spans.** Each settlement's span is trimmed from both ends to where the natural ground first reaches `TRIM_G` = -1 bh (the sea is never filled in), and the ground inside is lifted to at least `SETTLE_FLOOR` = 0.5 bh, blended smoothly over 24 columns at each end.
+- **Placement rule.** A candidate building is accepted only if the ground under its footprint (and one column either side) is at least `BUILD_MIN_GROUND` = 0.25 bh and varies by at most 0.35 of its width. A rejected candidate still consumes its draws and its people stay in the settlement's total (rescaled onto the buildings that remain), so `pop0` is unchanged: 390. Seed 1: 196 buildings (was 216): Netmend 15 (was 25), Bellgate 146, the outskirts 24, the far village 11. The lowest ground under any building is 22.5 units (0.3 bh); none stands in the water.
+- **The waterline.** The sea fills every sea-connected column below `SHORE_WET` = -0.25 bh: the start water is the deep reservoir plus the 102 connected shallow columns. Measured: 0 dry columns below the limit are connected to the sea, the start water equals the connected flood fill, and the largest step from the water's surface to the dry ground beside it is 18.2 units (0.24 bh), down from 240. The steep-shore alternative stays held.
+- **Rendering's shore rule** draws from `S.water` and needs no change; the terrain under the settlements is now flat at 0.5 bh, so the platforms have a visible plateau and a blended edge.

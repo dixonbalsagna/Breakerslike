@@ -5,7 +5,7 @@ class_name SimHash
 const MASK: int = 0xFFFFFFFF
 const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName", "hp", "x", "y", "vx", "vy", "face", "ki", "power", "tier", "stance", "state", "stateT",
 	"hidden", "hideT", "hiddenFor", "menace", "anguish", "ambush", "rot", "spin", "bounces", "lastAtkT", "hurtT", "keys", "beamCharge", "wet", "ambushUntil", "dPrev",
-	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped",
+	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "hasMenace", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped",
 	"canHide", "lockBackT", "exT"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled"]

@@ -11,3 +11,11 @@ The batch (`variety-pass.md` section 6):
 **When to land it:** after World's slice and the dynamic slice, in one commit with Tools' schema changes (items 1 to 3) and Encounter's Q4 loader work.
 
 **Before copying back:** these copies were cut from the data files as of commit `b3eaf4b`. If either file has changed since, merge rather than overwrite.
+
+**`styles.json` in the same commit.** Tools' Q4 schema script makes `chains.chainP.heat` and `chains.blitz.chance.cap` required and removes `heatBoiling`. When the batch lands, `data/combat/styles.json` must:
+- drop `chains.chainP.heatBoiling`;
+- add `chains.chainP.heat`: `{ "Heated": 0.05, "Simmering": 0.10, "Boiling": 0.20 }`;
+- add `chains.blitz.chance.cap`: 0.60;
+- delete the `_heat` and `_cap` notes that hold these values today.
+
+The numbers are Game Design's (`balance-targets.md` section 12).
