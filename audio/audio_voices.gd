@@ -89,7 +89,9 @@ func play(cue: AudioCues.Cue, cam_x: float, zoom: float = 1.0) -> bool:
 	p.stream = bank.stream(cue.sound, cue.variant)
 	p.volume_db = cue.gain_db + distance_db(dist)
 	p.pitch_scale = cue.pitch
-	p.bus = "SfxMuffled" if (cue.muffled and cue.bus == "Sfx") else cue.bus
+	p.bus = cue.bus
+	if cue.muffled:
+		p.bus = "SfxMuffled" if cue.bus == "Sfx" else ("VoiceMuffled" if cue.bus == "Voice" else cue.bus)
 	p.position = Vector2(dx * zoom, 0.0)
 	p.play()
 	_meta[slot] = {"priority": cue.priority, "group": cue.group, "t": _clock}

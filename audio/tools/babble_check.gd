@@ -24,6 +24,7 @@ func _init() -> void:
 	_punctuation()
 	_moods()
 	_gestures()
+	_director_schema()
 	_bank_cost()
 	_sim_untouched()
 	print("\nbabble check %s" % ("FAILED (%d)" % fails if fails > 0 else "passed"))
@@ -156,6 +157,39 @@ func _gestures() -> void:
 	for i in range(1, N.events.size()):
 		in_order = in_order and N.events[i].t >= N.events[i - 1].t
 	ok(in_order, "events are in time order")
+
+
+func _director_schema() -> void:
+	print("5b. Narrative's line schema and mood graph")
+	var b: Dictionary = bank.babble
+	var missing: Array = []
+	for node in ["sizing_up", "playful", "cocky", "heated", "grim", "contemptuous", "rattled", "desperate", "triumphant", "spent", "reverent",
+			"respectful-grim", "cold", "resolved", "polite", "hungry", "frantic", "grim-heated"]:
+		var emo: String = String(b.mood_map.get(node, node))
+		if not b.moods.has(emo):
+			missing.append(node)
+	ok(missing.is_empty(), "every mood node in dialogue-director.md maps to a babble mood (missing: %s)" % str(missing))
+	var t := "He means it. That is what makes it unbearable."
+	var cap := _plan("anti_hero", t, "contemptuous", 1, 21)
+	var th := bab.plan("anti_hero", t, "contemptuous", 0, [], 21, "thought")
+	var sh := bab.plan("anti_hero", t, "contemptuous", 3, [], 21, "shout")
+	ok(th.inner and not cap.inner, "a thought is marked inner (played muffled)")
+	ok(_mean(_syl(th), "gain_db") < _mean(_syl(cap), "gain_db") - 7.0, "a thought is quieter (%.1f against %.1f dB)" % [_mean(_syl(th), "gain_db"), _mean(_syl(cap), "gain_db")])
+	ok(_syl(th).size() < _syl(cap).size(), "a thought is sparser (%d against %d syllables)" % [_syl(th).size(), _syl(cap).size()])
+	ok(_mean(_syl(sh), "gain_db") > _mean(_syl(cap), "gain_db") + 2.0, "a shout is louder")
+	var thl := bab.plan("protagonist", "Ha ha. Ohoho.", "playful", 0, [{"at": 0, "gesture": "laugh.short", "intensity": 1}], 3, "thought")
+	ok(thl.count("laugh") == 0, "a thought never laughs aloud")
+	var rat := bab.plan("anti_hero", "I can't feel my arms. Help me.", "rattled", 1, [], 5)
+	var con := bab.plan("anti_hero", "I can't feel my arms. Help me.", "contemptuous", 1, [], 5)
+	ok(rat.emotion == "cracked" and con.emotion == "smug", "the Anti-hero's rattled mood is his cracked-facade voice (%s, and %s otherwise)" % [rat.emotion, con.emotion])
+	var s2 := SimCore.createSim()
+	SimCore.newMatch(s2, 5)
+	bab.reset(5)
+	var line := {"id": "anti.callback.bridge.001", "kind": "thought", "text": t, "mood": "contemptuous", "cues": [], "display": {"style": "thought", "dur_s": 2.4}}
+	var P: AudioBabble.Plan = bab.speak_line(s2, 1, line)
+	SimCore.dispose(s2)
+	ok(P != null and P.inner, "speak_line takes Narrative's line object (kind, display.style, mood, cues)")
+	bab.reset(4)
 
 
 func _bank_cost() -> void:

@@ -34,6 +34,7 @@ class Ev:
 
 class Plan:
 	var voice: String = ""
+	var inner: bool = false          # a thought: quiet, breathy and muffled
 	var emotion: String = "neutral"
 	var text: String = ""
 	var events: Array = []       # Ev, in time order
@@ -74,8 +75,11 @@ func reset(match_seed: int) -> void:
 	_match_seed = match_seed
 
 
-## The hook for the dialogue director. line = {id, text, mood, intensity, cues}. voice defaults to the fighter's voice
-## (cues.json "fighters"). Returns the plan, or null if the fighter has no voice or the line has no text.
+## The hook for the dialogue director (docs/narrative/dialogue-director.md). A line is Narrative's line object with the
+## text filled in: {id, kind, text, cues, display: {style}, mood, intensity}. `mood` is the speaker's current mood node
+## (playful, cocky, heated, rattled, ...; Narrative's graph, mapped in babble.json); `display.style` is caption, thought
+## or shout (a `thought` kind counts as a thought); `intensity` is optional and defaults from the style. voice defaults to
+## the fighter's voice (cues.json "fighters"). Returns the plan, or null if the fighter has no voice or the line no text.
 func speak_line(S: SimState, actor: int, line: Dictionary, voice: String = "") -> Plan:
 	if voice == "":
 		if actor < 0 or actor >= S.fighters.size():
@@ -84,8 +88,14 @@ func speak_line(S: SimState, actor: int, line: Dictionary, voice: String = "") -
 	var text: String = String(line.get("text", ""))
 	if voice == "" or text == "" or not cfg.voices.has(voice):
 		return null
+	var style: String = String(line.get("display", {}).get("style", "caption"))
+	if String(line.get("kind", "")) == "thought":
+		style = "thought"
+	if not cfg.styles.has(style):
+		style = "caption"
+	var intensity: int = int(line.get("intensity", cfg.styles[style].intensity))
 	var key: String = "audio.babble.%s.%d" % [String(line.get("id", text)), actor]
-	return plan(voice, text, String(line.get("mood", "neutral")), int(line.get("intensity", 1)), line.get("cues", []), SimRng.deriveSeed(_match_seed, key))
+	return plan(voice, text, String(line.get("mood", "neutral")), intensity, line.get("cues", []), SimRng.deriveSeed(_match_seed, key), style)
 
 
 ## Seconds until each character index is on screen: T[i] is the reveal time of the start of character i, T[n] the total.
@@ -102,18 +112,25 @@ func times(text: String, intensity: int) -> PackedFloat64Array:
 	return out
 
 
-func plan(voice: String, text: String, mood: String, intensity: int, cues: Array, sd: int) -> Plan:
+func plan(voice: String, text: String, mood: String, intensity: int, cues: Array, sd: int, style: String = "caption") -> Plan:
 	var P := Plan.new()
 	P.voice = voice
 	P.text = text
-	var emo: String = String(cfg.mood_map.get(mood, mood))
+	var emo: String = String(cfg.voice_moods.get(voice, {}).get(mood, cfg.mood_map.get(mood, mood)))
 	if not cfg.moods.has(emo):
 		emo = "neutral"
+	var sty: Dictionary = cfg.styles.get(style, cfg.styles.caption)
+	P.inner = style == "thought"
+	if P.inner:
+		emo = String(sty.mood)
 	P.emotion = emo
 	if not cfg.voices.has(voice) or text == "":
 		return P
-	var M: Dictionary = cfg.moods[emo]
-	var V: Dictionary = cfg.voices[voice]
+	var M: Dictionary = cfg.moods[emo].duplicate()
+	M["gain_db"] = float(M.gain_db) + float(sty.get("gain_db", 0.0))
+	var V: Dictionary = cfg.voices[voice].duplicate()
+	if sty.has("chars_mul"):
+		V["chars_per_syl"] = float(V.chars_per_syl) * float(sty.chars_mul)
 	var rnd := AudioDsp.Rand.new(sd)
 	var T: PackedFloat64Array = times(text, intensity)
 	var n: int = text.length()
@@ -156,7 +173,7 @@ func plan(voice: String, text: String, mood: String, intensity: int, cues: Array
 			if cands.size() > 0 and end_kind != "":
 				cands[cands.size() - 1]["phrase_end"] = end_kind
 			continue
-		if _laugh_re.search(core.to_lower()) != null:
+		if not P.inner and _laugh_re.search(core.to_lower()) != null:
 			cands.append({"kind": "laugh", "t": T[start + core_lo], "phrase": phrase, "phrase_end": end_kind, "comma": has_comma})
 		else:
 			var frags: PackedStringArray = core.split("-", false)
@@ -290,13 +307,15 @@ func plan(voice: String, text: String, mood: String, intensity: int, cues: Array
 		voice_last_t = maxf(voice_last_t, ev.t + syl_s)
 		# grunt or sigh after the end of a phrase
 		var ends: String = String(phrase_kind.get(last_k[k], "")) if last_k.has(k) else ""
-		if ends == "exclaim" and rnd.next() < float(M.grunt_p):
+		if ends == "exclaim" and not P.inner and rnd.next() < float(M.grunt_p):
 			_grunt(P, voice, cfg.grunt_punctuation.exclaim, ev.t + syl_s, rnd)
 		elif ends == "ellipsis" and rnd.next() < float(cfg.grunt_punctuation.ellipsis.p):
 			_grunt(P, voice, cfg.grunt_punctuation.ellipsis, ev.t + syl_s, rnd)
 
 	# 5. the line's own cues (Narrative's line system): a gesture at a character offset
 	for cue in cues:
+		if P.inner and not String(cue.get("gesture", "")).begins_with("sigh"):
+			continue
 		var at: int = clampi(int(cue.get("at", 0)), 0, n)
 		var gesture: String = String(cue.get("gesture", ""))
 		var t: float = T[at]

@@ -2,7 +2,7 @@
  "schema": 1,
  "bank_seed": 20260929,
  "rate": 12000,
- "note": "Babble voice data (audio/audio_babble.gd plans, audio/synth/babble_synth.gd renders). A caption becomes a run of short syllables shaped by the text, the mood and the fighter's voice; laughs and grunts punctuate it. The syllable bank is tiny (about 60 clips of about 100 ms per voice at 12 kHz) and is played with pitch changes, so a line costs a few play calls and no synthesis at run time.",
+ "note": "Babble voice data (audio/audio_babble.gd plans, audio/synth/babble_synth.gd renders). A caption becomes a run of short syllables shaped by the text, the mood and the fighter's voice; laughs and grunts punctuate it. The syllable bank is tiny (about 60 clips of about 100 ms per voice at 12 kHz) and is played with pitch changes, so a line costs a few play calls and no synthesis at run time. v2: moods for every node of Narrative's mood graph (docs/narrative/dialogue-director.md), a voice-specific mood for the Anti-hero's cracked facade, and three display styles: caption, thought (sparse, breathy, quiet and muffled, no laughs) and shout.",
  "timeline": {
   "note": "Must match ui/core/ui_bark_timing.gd (the text reveal), so the babble and the captions run together; babble_check.gd compares the two.",
   "base_cps": 30.0,
@@ -527,6 +527,36 @@
    "laugh_every": 0,
    "grunt_p": 0.05,
    "skip_p": 0.03
+  },
+  "thought": {
+   "timbre": "breathy",
+   "pitch_st": -1.0,
+   "slope_st": -1.0,
+   "lilt_st": 0.3,
+   "lilt_period": 6.0,
+   "gap_mul": 1.6,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.3,
+   "gain_db": -9.0,
+   "laugh_every": 0,
+   "grunt_p": 0.0,
+   "skip_p": 0.25
+  },
+  "cracked": {
+   "timbre": "breathy",
+   "pitch_st": 2.0,
+   "slope_st": 1.0,
+   "lilt_st": 0.0,
+   "lilt_period": 1.0,
+   "gap_mul": 0.85,
+   "accent_every": 5,
+   "accent_st": 1.5,
+   "jitter_st": 1.6,
+   "gain_db": 0.0,
+   "laugh_every": 0,
+   "grunt_p": 0.15,
+   "skip_p": 0.05
   }
  },
  "mood_map": {
@@ -541,7 +571,21 @@
   "fear": "desperate",
   "earnest": "neutral",
   "cruel": "smug",
-  "brink": "desperate"
+  "brink": "desperate",
+  "sizing_up": "neutral",
+  "cocky": "smug",
+  "heated": "angry",
+  "rattled": "desperate",
+  "triumphant": "laughing",
+  "spent": "hurt",
+  "reverent": "respectful",
+  "respectful-grim": "grim",
+  "cold": "smug",
+  "resolved": "grim",
+  "polite": "smug",
+  "hungry": "neutral",
+  "frantic": "desperate",
+  "grim-heated": "angry"
  },
  "grunt_punctuation": {
   "exclaim": {
@@ -580,5 +624,26 @@
   "syllable_gain_db": -4.0,
   "max_syllables": 200,
   "max_syl_per_word": 4
+ },
+ "voice_moods": {
+  "anti_hero": {
+   "rattled": "cracked",
+   "desperate": "cracked"
+  }
+ },
+ "styles": {
+  "caption": {
+   "intensity": 1
+  },
+  "thought": {
+   "intensity": 0,
+   "chars_mul": 1.6,
+   "mood": "thought",
+   "muffled": true
+  },
+  "shout": {
+   "intensity": 3,
+   "gain_db": 3.0
+  }
  }
 }

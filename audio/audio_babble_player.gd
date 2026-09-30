@@ -60,6 +60,7 @@ func sync(actor: int, age: float, x: float, y: float, cam_x: float, zoom: float 
 		cue.pitch = pow(2.0, e.st / 12.0)
 		cue.priority = 70
 		cue.bus = "Voice"
+		cue.muffled = plan.inner
 		sp["flip"] = 1 - int(sp.flip)
 		cue.group = "babble.%d.%d" % [actor, int(sp.flip)]
 		if voices != null and voices.play(cue, cam_x, zoom):
