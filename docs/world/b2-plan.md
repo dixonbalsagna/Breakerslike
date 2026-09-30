@@ -114,3 +114,49 @@ Steps 1 to 3 need no change in choices (BUILDING SMASH stays a candidate with it
 - **Aiming cost.** Up to 16 flights in the worst case; `BR_PRESELECT` 1 is the fallback.
 - **Depth and the camera.** The fighter's `z` reaches -2,850 (38 bh) for the back row; Camera's framing and Rendering's fighter placement are B3's job, and the ground band's depth must reach that far.
 - **Two fighters at once.** A second launch while a chain is open closes the first token (`beginEvent` replaces it); the first chain's allowance is then gone. Rare; documented.
+
+
+## 9. Floors: Rampage-style skyscrapers (Orb, playtest 2)
+
+Orb: "each skyscraper has floors, windows, a fighter can be blasted through the building and affect individual floors, and may not necessarily bring the building crashing down before causing enough damage." So a brunt on a tall building is local first (floors), and whole-building collapse is what happens when the damage is enough. The sim stays cheap: floors are a bit mask and a lazily allocated damage array; nothing runs per floor per tick.
+
+### What a floor is
+
+- `F = max(1, round(h / FLOOR_H))` with `FLOOR_H` = 2 bh (150 units): a 5,000-unit tower has 33 floors, a 960-unit one 6, a house 2 to 4. A building's floor height is `h / F`, and floor k spans `[g + k h/F, g + (k + 1) h/F]`.
+- **Skyscraper mode** is for `F >= FLOORS_MIN` (5). Houses and low buildings use the whole-building rule of section 3 unchanged (a house has nothing to tunnel).
+- Per building, two new fields: `fmask` (an int, one bit per standing floor; 62 floors at most, taller buildings use fatter floors) and `fdmg` (a `PackedFloat32Array` of `F` damage values, allocated on the first local hit, `null` before). Both go in the hash (sparse). Untouched buildings cost nothing.
+- **Strength.** Floor k's strength is `s_k = (maxhp / F) * FLOOR_STR * (1 + STR_GRAD * (F - 1 - k))`: the lower the floor, the stronger it is (it carries more), by `STR_GRAD` = 0.5 per floor above (starting values; QA tunes them). `maxhp` is the building's unscaled hit points, so the tower's total is what it is today.
+- **The core.** `hp` stays the building's structural pool, exactly as now: area damage (blasts, beams, slides, craters) hits `hp` and, when it reaches 0, the whole building implodes (section 4c of `buildings-in-depth.md`) with every floor. Local damage (below) takes `CORE_SHARE` = 25 percent of its damage from `hp` too, so repeated punches wear the building down toward that collapse.
+
+### A brunt on a skyscraper
+
+1. **The hit height picks the floors.** The fighter reaches the building at height `y`; the floor index is `k = floor((y - g) / (h / F))`. His body is about 1 bh tall, so it covers floor k and one neighbour (`HIT_FLOORS` = 2).
+2. **Punch-through or stopped.** `dmg = spN * (0.55 + 0.25 tier) * BRUNT_MUL` as before; `ratio = dmg / (s_k * HIT_FLOORS)`.
+   - `ratio >= 1`: **punch-through.** The floors are cleared (their `fmask` bits go), leaving a tunnel through the building, and the fighter continues: `keep = clamp(0.8 - 0.45 * (s_k * HIT_FLOORS) / 3000, 0.35, 0.8)` (the chain rule of `buildings-in-depth.md` 4b, now with the strength of the floors crossed). The next building on the line is a chain link as before.
+   - `0.4 <= ratio < 1`: **cracked floors**: `fdmg[k]` takes `dmg` and the floor stays, windows broken (a render hint), the fighter rebounds and the chain ends.
+   - below 0.4: a dent (`fdmg` only), the fighter drops.
+3. **Casualties are by floor.** People are spread evenly over the floors (`pop / F` each). A punched floor's occupants die (through `WorldCollateral.kill`, so the budget and the token apply); a cracked floor's die in proportion to `fdmg / s_k`. The rest of the building is untouched. A chain through five towers is five tunnels and a few floors of people, not five collapsed towers.
+4. **Local damage to the core.** `hp -= CORE_SHARE * dmg` (through `damageBuilding` with a floor-mode flag, so it does not itself trigger the implode unless `hp <= 0`).
+
+### Pancaking, partial wrecks and the whole tower
+
+- **A tunnel is not a collapse.** A cleared span of up to `TUNNEL_MAX` = 2 floors is carried by the columns; the floors above stay.
+- **Pancake.** If the cleared span is longer than `TUNNEL_MAX` (a heavy punch, or two punches on adjacent floors), the stack of floors above it, `m` floors of mass, falls onto the floor below. It breaks that floor if `PANCAKE_K * m >= s_j` (`PANCAKE_K` = 0.6), the floor joins the stack (`m + 1`), and it goes on to the floor below, until a floor holds. The floors it broke are cleared, and their occupants die with them (through `kill`, same cap). A punch high in a tall tower with few floors above breaks a few floors and stops (a partial wreck: the top comes down onto the floors below and the building stands, shorter); a punch low, or one with a heavy stack above, cascades to the ground, which is a whole-tower collapse (`hp` is then set to 0: implode, mode `burst`).
+- **Partial wrecks persist.** `fmask` and `fdmg` stay for the match. `curH` is the height of the top standing floor (`(highest set bit + 1) * h / F`; the old `hp` rule while the mask is full), so a pancaked tower is visibly shorter and a tunnelled one keeps its height with a hole. The rubble of the fallen floors is a heap at the foot, sized by the floors that fell (`RUBBLE_H_FRAC` of their height), as in 4c.
+- **When the whole building goes.** Either the pancake reaches the ground, or `hp <= 0` from accumulated local damage (`CORE_SHARE`) or area damage.
+
+### Windows and events
+
+- **Windows are a render hint.** Rendering draws lit or dark windows by the floor's occupancy and broken ones by `fdmg[k] / s_k` (0 whole to 1 shattered) on the floor and its neighbours; the sim stores only `fmask` and `fdmg`.
+- **New events.** `floor_hit {b, floor, n (floors), outcome (punch, crack, dent), ratio, x, y, z, ux, uy, kind, victim, owner}` for each brunt hit on a skyscraper, in addition to `building_hit`, which carries the whole-building summary (its `outcome` is then `punch` (a tunnel), `crack`, `dent`, `pancake` or `collapse`); `floors_fall {b, from, to, n, x, z, w}` when a stack pancakes, so Rendering drops the floors and VFX throws the shrapnel of what they crushed. `building_fall` fires only when the building itself goes.
+- **Shrapnel data for VFX:** `kind` (tower: glass and steel), the floor count, the hit height, the unit impact velocity, and `n` floors.
+
+### How the plan changes
+
+- Section 3's outcome table (collapse, heavy wreck, partial wreck, crack by `dmg / maxhp`) applies to buildings under `FLOORS_MIN` floors. For skyscrapers it is replaced by the floor rule above; `ratio` in `building_hit` is the floor ratio.
+- The chain's `keep` uses the strength of the floors crossed, so a skyscraper takes far more out of the fighter than a house, and a chain through skyscrapers is short by physics (2, 2, 3, 4 by tier still caps it).
+- The planner (Encounter) scores a skyscraper candidate by `F`, occupancy and height as before; the aim search also picks the hit height: it tries `uy` values that put the arrival at a chosen floor, preferring occupied floors for the villain and empty ones for the hero (the floor's `pop / F` term).
+- `WorldBrunt.hit` grows a `hitFloors` step and there is a `WorldBrunt.pancake(S, b, k)`; both are pure functions of `fmask`, `fdmg`, `maxhp` and `hp`.
+- **Cost.** A brunt allocates one `fdmg` array (up to 62 floats) and loops over at most `F` floors once; the pancake loop is at most `F` iterations. Untouched buildings keep `fdmg = null`.
+- **Tests.** A punch at a low floor of a tall tower cascades; a punch near the top stops after a few floors; two punches at the same floor deepen the tunnel and count toward the core; the sum of floor occupants equals `popAlive`; a blast still implodes the whole building; `fmask` and `fdmg` are in the hash and reproducible.
+- **Open (Orb, Game Design):** how many floors a fighter's body clears (`HIT_FLOORS`), whether a pancake may drop a skyscraper's top onto the street beside it (a "topple" for tall stacks: `living-destruction.md` idea 4), and whether floors should show a lit or dark state that reads occupancy.
