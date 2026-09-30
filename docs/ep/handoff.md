@@ -106,7 +106,14 @@ World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, 
 - World, after B2: carve real fissure notches into S.deform so split ground reads at the profile (VFX's surface cracks are subtle at the grazing camera).
 - A launch planner pass with the open-ground spawn and B2: launches are 10.8 a minute after the dynamic slice (Encounter).
 
-## Sim queue, current (2026-09-30, after questionnaire 4)
+## Sim queue, current (2026-09-30, evening)
+Done since the list below: the dynamic slice, World's fixes, k 0.034, D1a, the brink experiments, the crippling moment (pitch A) with the battered-at-start rule.
+1. D1b (Simulation, active): wire meters and ladder losslessly, then Game Design's numbers (care 0, menace 5% and 0.01, cripple 0.08 and ±0.05, guardWearSplit 0.6/0.4). Tools' meters and wounds schemas are waiting in the tree for the same commit. Then QA re-runs 800 matches (KAI at least 42%, the arm/leg split, length).
+2. World: B2 (Rampage floors), then districts and the two big cities.
+3. M1 mood and style. 4. Controls Stage A. 5. Combat M0 (move grammar skeleton) with Simulation's part cue for Animation's A2. 6. Encounter Q4 checkpoints (variety pass, the crippling set piece, trailing help, time cap A at 11:00). 7. Controls Stages B and C. 8. F1.
+Queued for when cosmetics are built: Tools (the data/unlocks and cosmetics schemas, the palette colour-blind validator, the profile save), UI (collection screen, lobby fallback), Narrative (titles and challenge names). Orb to decide: an unlock-all setting, player-made palettes.
+
+## Sim queue, previous (2026-09-30, after questionnaire 4)
 1. Encounter's dynamic-feel slice (blocked on Orb's go-ahead in the Encounter session; its auto mode denied the cross-owner edit).
 2. World: underwater placement fix, the shoreline −240 fix, RELOCATE on with evacuee menace, then B2 (Rampage floors), then districts and two big cities.
 3. D1a (Simulation).
