@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-profiles",
+  "title": "anim.profiles/1",
+  "description": "data/anim/profiles.json: timing-style profiles for the in-betweener and the per-bone lag (docs/animation/pose-pipeline.md). Times are 60 Hz ticks unless named otherwise. Render only: it never moves a part's contact tick. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (the default profile exists; bone names used by poses exist in bone_lag) are checked by tools/lib/xref-fight.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "default",
+    "profiles",
+    "bone_lag"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.profiles/1"
+    },
+    "default": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "solve_hz",
+          "snap_ticks",
+          "load_ease",
+          "load_ticks",
+          "follow_ticks",
+          "recover_ticks",
+          "overshoot",
+          "lag",
+          "base_tau",
+          "shiver",
+          "hold_drift"
+        ],
+        "properties": {
+          "solve_hz": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "snap_ticks": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "load_ease": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "load_ticks": {
+            "type": "object",
+            "required": [
+              "light",
+              "heavy"
+            ],
+            "properties": {
+              "light": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "heavy": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "follow_ticks": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "recover_ticks": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "overshoot": {
+            "type": "number",
+            "minimum": 0
+          },
+          "lag": {
+            "type": "number",
+            "minimum": 0
+          },
+          "base_tau": {
+            "type": "number",
+            "minimum": 0
+          },
+          "shiver": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hold_drift": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    },
+    "bone_lag": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

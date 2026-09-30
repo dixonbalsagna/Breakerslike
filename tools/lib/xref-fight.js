@@ -176,6 +176,48 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- animation data (render only) ----
+  const poses = get('data/anim/poses.json');
+  const keysets = get('data/anim/keysets.json');
+  const profiles = get('data/anim/profiles.json');
+  const animCues = get('data/anim/cues.json');
+  const poseNames = new Set(isObj(poses) && isObj(poses.poses) ? Object.keys(poses.poses) : []);
+  const bones = new Set(isObj(profiles) && isObj(profiles.bone_lag) ? Object.keys(profiles.bone_lag) : []);
+  if (isObj(poses) && isObj(poses.poses) && bones.size) {
+    for (const [name, p] of Object.entries(poses.poses)) {
+      if (!isObj(p) || !isObj(p.fk)) continue;
+      for (const bone of Object.keys(p.fk)) if (!bones.has(bone)) err('data/anim/poses.json', '/poses/' + esc(name) + '/fk/' + esc(bone), 'anim-bone', 'bone "' + bone + '" is not in profiles.json bone_lag');
+    }
+  }
+  if (isObj(keysets)) {
+    const sets = isObj(keysets.keysets) ? keysets.keysets : {};
+    for (const [name, k] of Object.entries(sets)) {
+      if (!isObj(k) || !Array.isArray(k.keys)) continue;
+      const roles = new Set();
+      k.keys.forEach((key, i) => {
+        if (!isObj(key)) return;
+        if (poseNames.size && !poseNames.has(key.pose)) err('data/anim/keysets.json', '/keysets/' + esc(name) + '/keys/' + i + '/pose', 'anim-pose', 'pose "' + key.pose + '" is not in poses.json');
+        if (roles.has(key.role)) err('data/anim/keysets.json', '/keysets/' + esc(name) + '/keys/' + i + '/role', 'anim-role', 'role "' + key.role + '" appears twice in key set "' + name + '"');
+        roles.add(key.role);
+      });
+    }
+    for (const which of ['light', 'heavy']) {
+      const list = isObj(keysets.picks) && Array.isArray(keysets.picks[which]) ? keysets.picks[which] : [];
+      list.forEach((n, i) => { if (!(n in sets)) err('data/anim/keysets.json', '/picks/' + which + '/' + i, 'anim-pick', 'pick "' + n + '" is not a key set'); });
+    }
+  }
+  if (isObj(profiles) && isObj(profiles.profiles) && typeof profiles.default === 'string' && !(profiles.default in profiles.profiles)) {
+    err('data/anim/profiles.json', '/default', 'anim-profile', 'default profile "' + profiles.default + '" is not in profiles (' + Object.keys(profiles.profiles).join(', ') + ')');
+  }
+  if (isObj(animCues) && isObj(animCues.cues)) {
+    const fin2 = get('data/combat/finishers.json');
+    const vocab = new Set(isObj(fin2) && isObj(fin2.cues) ? plainKeys(fin2.cues) : []);
+    for (const [cue, pose] of Object.entries(animCues.cues)) {
+      if (vocab.size && !vocab.has(cue)) err('data/anim/cues.json', '/cues/' + esc(cue), 'anim-cue', 'cue "' + cue + '" is not in the cue vocabulary of finishers.json');
+      if (poseNames.size && !poseNames.has(pose)) err('data/anim/cues.json', '/cues/' + esc(cue), 'anim-pose', 'pose "' + pose + '" is not in poses.json');
+    }
+  }
+
   // ---- fighter meters ----
   for (const rel of [...docsFor(/^data\/fighters\/[^/]+\/meters\.json$/)]) {
     const doc = get(rel);

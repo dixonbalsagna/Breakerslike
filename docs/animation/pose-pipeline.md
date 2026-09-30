@@ -762,6 +762,46 @@ Animation authors **no sim-read field**. Three things touch sim-read data, and e
 
 The smallest useful thing is **A1**: it replaces the placeholder cue poses with the real pipeline and proves the hash and the budget before any library is written.
 
+### 9.1 A1 results (2026-09-30)
+
+**What runs.** The mannequin (`render/anim/`) is in the game: `--noanim` brings the placeholder boxes back. Each fighter is one skinned mesh with the outline pass, 27 bones, about 2,700 triangles, in the game's own flat look and hybrid projection. Its pose is solved once a frame by `RenderAnim.solve` and written to every pane's copy. The pipeline:
+
+| Piece | File | What it does |
+| :--- | :--- | :--- |
+| Rig and mesh | `anim_rig.gd` | R1's 27 bones and the faceted body from a palette (the fighter's own colours) |
+| Poses | `anim_pose.gd`, `data/anim/poses.json` | 57 poses in sketch form (lean, twist, head turn, hand and foot targets, per-bone overrides), baked once at load by forward kinematics and closed-form two-bone IK; mirrored variants made on demand |
+| Data | `anim_data.gd`, `data/anim/{keysets,profiles,cues}.json` | Six strike key sets, two timing profiles (snappy, fluid), Combat's 15 cues mapped to key poses |
+| Solver | `anim_fighter.gd` | Layers: state and stance base (smoothed), cue pose, approach and strike parts from the running exchange, beam, reactions, moving hold, hit-stop shiver, spring chains on the extras |
+| Hub | `render_anim.gd` | One solver per fighter, fed by the per-tick events, solved once a frame |
+| Body | `anim_body.gd` | Skeleton and skinned mesh, baked by Rendering's `OutlineBake`, drawn with `RenderMats.fighter_body` and its `fighter_hull` outline (`OUTLINE_PX`); hit flash. Hidden fade is dropped until a fighter can hide |
+| Tools | `tools/` | `pose_sheet.gd` (contact sheets), `anim_strip.gd` (filmstrip of a real exchange), `anim_reel.gd` and `gif.mjs` (motion reels), `anim_check.gd` (the checks) |
+
+**The provisional part cue.** Simulation does not emit one yet, so the solver reads the running exchange straight from `S.dirS.ex.beats`. Every beat is scheduled before it fires, so a `strike` beat says exactly when a blow lands and who throws it, and a `rush` beat when a fighter closes; the wind-up starts early enough because of that. A strike's contact pose is reached on the beat's own time, within the profile's snap window. Blows are picked from the six key sets by a render-side integer hash of the exchange index, the blow's ordinal and the slot, so a replay looks the same and no sim random number is used.
+
+**Changes to Rendering's files** (small hooks; Rendering reviews): `render/core/fighter_view.gd` builds the mannequin next to the placeholder (which stays, hidden, so the arm and head anchors keep working), skips the placeholder's cue pose and stance lean when the mannequin is on, and passes the anchor, hit flash and zoom; `render/core/main.gd` adds one line, `RenderAnim.consume(host.S, events)`, to the drained handler. The flare, spark, guard, badge and ring of the cues stay where they were.
+
+**Checks** (`render/anim/tools/anim_check.gd`, 2 seeds, 4,200 ticks, both timing styles):
+- the gameplay hash is identical with the mannequin off, snappy and fluid (seeds 4 and 12345);
+- 164 and 128 blows reached their contact frame per match, and on each one the solved pose was the contact key to within 0.0014 rad (about 0.08 degrees);
+- no NaN rotation; no line under `render/anim/` assigns to the sim state (static scan);
+- the game's `determinism`, `cue_check`, `pane_check` and `flash_check` all pass with the mannequin on.
+
+**Cost.** The solve is about 40 µs a fighter on the desktop editor binary (the spike's synthetic stack was 20 µs; this one reads the sim and bakes sockets). In the real game the view update rose from 0.660 to 0.773 ms and the frame from 1.87 to 2.03 ms mean (desktop, 1280×720, one pane, seed 4, 3,000 frames), with the same p99. At the spike's browser-at-4× ratios two fighters cost about 0.5 ms, inside the proposed 1.0 ms.
+
+**What A1 does not do yet:** IK to the defender's socket and the ground (contact reach is authored into the poses: the lunge is in the hips), foot plant, situation adaptation, the style modifier stack, inertialisation across parts (the base pose is smoothed, which is a first version), interpolation between tick states (a pose steps with the sim tick), Combat's real part cue. The 57 poses are a first mannequin-quality pass, reviewed on the sheets at 22, 38 and 52 px; some (the extremes of the reactions and the hook) need a second pass.
+
+**Fields I need from Simulation and Combat** (through the EP, to replace the provisional cue):
+
+| # | Need | Why |
+| :--- | :--- | :--- |
+| 1 | A part cue per composed part: actor, part id, key-set id, start tick, contact tick and end tick, stretch (permille), target slot and region, side, weight class. `cue` with kind `part` and the ticks in `text` is enough; a typed `part` event is cleaner | The solver would stop inferring from beats; chain links, showcases and specials need it (they are not beats of a template) |
+| 2 | A cancel or interrupt signal per part (parry, launch, KO, finisher takeover), or an explicit `part_end` | Today it reads `ex.cancel` and the beats' `done` flags |
+| 3 | The part's `reach` and height band | To place the contact target (A2 IK) and to validate the contact key |
+| 4 | Combat's readability minima by weight (anticipation ticks) | The profiles' load lengths are provisional |
+| 5 | The render read list: wear and stage per region, brink, meters, form, Pride state | The style modifiers (A3) |
+| 6 | The `damage` event's region for every hit, the launch vector class on `launch` | Reactions and flight poses |
+| 7 | Animation stream ids `anim` and `anim.<slot>` in `fx-events.md` | Cosmetic variation beyond the integer hash |
+
 ---
 
 ## 10. How we will know it works

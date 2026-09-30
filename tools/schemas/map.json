@@ -121,6 +121,22 @@
     {
       "match": "data/input/feel.json",
       "schema": "input-feel.schema.json"
+    },
+    {
+      "match": "data/anim/poses.json",
+      "schema": "anim-poses.schema.json"
+    },
+    {
+      "match": "data/anim/keysets.json",
+      "schema": "anim-keysets.schema.json"
+    },
+    {
+      "match": "data/anim/profiles.json",
+      "schema": "anim-profiles.schema.json"
+    },
+    {
+      "match": "data/anim/cues.json",
+      "schema": "anim-cues.schema.json"
     }
   ]
 }

@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-poses",
+  "title": "anim.poses/1",
+  "description": "data/anim/poses.json: key poses on rig R1 in sketch form (docs/animation/pose-pipeline.md section 3.1), baked at load by render/anim/anim_pose.gd. Render only: never read by the sim and outside the replay data hash (guarded by tools/lib/xref.js: hash-anim-read). Version field: schema. Policy: closed except keys starting with an underscore. A pose is either a full pose (family, lean, hands and feet) or an additive one (additive: true with fk bone offsets). Cross-references (fk bones exist in profiles.json bone_lag) are checked by tools/lib/xref-fight.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "poses"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.poses/1"
+    },
+    "poses": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/pose"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  },
+  "$defs": {
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "hand": {
+      "enum": [
+        "fist",
+        "relaxed",
+        "open"
+      ]
+    },
+    "pose": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "family",
+            "lean",
+            "hand_r",
+            "hand_l",
+            "foot_r",
+            "foot_l",
+            "hands"
+          ],
+          "properties": {
+            "family": {
+              "enum": [
+                "upright",
+                "upright_lunge",
+                "crouched",
+                "kneel",
+                "prone",
+                "slide_brake",
+                "tumble",
+                "airborne_neutral",
+                "airborne_extended"
+              ]
+            },
+            "lean": {
+              "type": "number"
+            },
+            "hips": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "spine": {
+              "type": "object",
+              "properties": {
+                "lean": {
+                  "type": "number"
+                },
+                "twist": {
+                  "type": "number"
+                },
+                "bend": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            "head": {
+              "type": "object",
+              "properties": {
+                "pitch": {
+                  "type": "number"
+                },
+                "yaw": {
+                  "type": "number"
+                },
+                "roll": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            "hand_r": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "hand_l": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "foot_r": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "foot_l": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "pole_hand_r": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "hands": {
+              "type": "object",
+              "required": [
+                "l",
+                "r"
+              ],
+              "properties": {
+                "l": {
+                  "$ref": "#/$defs/hand"
+                },
+                "r": {
+                  "$ref": "#/$defs/hand"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "additive",
+            "fk"
+          ],
+          "properties": {
+            "additive": {
+              "const": true
+            },
+            "fk": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 3,
+                "maxItems": 3
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      ]
+    }
+  }
+}

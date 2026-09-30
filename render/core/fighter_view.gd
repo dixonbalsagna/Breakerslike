@@ -57,6 +57,7 @@ var ripple: MeshInstance3D
 var streaks: Array = []
 var glows: Array = []          # every glow material, for the projection anchor
 var flash_view: FlashView      # head flashes (render/core/flash_view.gd)
+var anim_body: AnimBody        # the A1 mannequin (render/anim/), null with --noanim
 var flashes_on: bool = true    # F7: the head flashes instead of the placeholder aura, streaks and charge orb
 var _badge_mat: ShaderMaterial
 var _faded: bool = false
@@ -141,6 +142,26 @@ func build(f) -> void:
 	cue_ring.rotation.x = PI * 0.5
 	cue_ring.visible = false
 	add_child(cue_ring)
+	if RenderAnim.is_enabled():
+		_build_anim(f)
+
+
+## The animation slice A1 mannequin (render/anim/, docs/animation/pose-pipeline.md): one skinned figure replaces the box
+## parts (which stay, hidden, so the arm and head anchors below keep working). The pose comes from RenderAnim, solved once
+## a frame for every pane. `--noanim` keeps the placeholder.
+func _build_anim(f) -> void:
+	AnimData.load_all()
+	var pal: Dictionary = {
+		"body": RenderLook.col(f.col), "legs": RenderLook.col(RenderLook.LEGS), "arms": RenderLook.col(RenderLook.ARM),
+		"skin": RenderLook.col(RenderLook.SKIN), "gear": RenderLook.col(RenderLook.CAPE if f.role == "villain" else "#cdd6e4"),
+		"accent": _aura_col, "hair": RenderLook.col(f.hair),
+	}
+	anim_body = AnimBody.new()
+	anim_body.build(pal, true)
+	body.add_child(anim_body)
+	anim_body.position = Vector3(0.0, -PIVOT_Y, 0.0)
+	for p in solid:
+		p[0].visible = false
 
 
 ## A cue from Combat (RenderLook.CUE_POSES), started at sim time T; kinds with no pose are ignored.
@@ -184,16 +205,19 @@ func _pose_cue(T: float, m: float, th: float, front: Vector2) -> void:
 	var step: float = 0.0
 	if w > 0.0:
 		var c: Dictionary = _cue
-		if c.has("front"):
-			front = front.lerp(Vector2(c.front[0], c.front[1]), w)
-		if c.has("back"):
-			back = back.lerp(Vector2(c.back[0], c.back[1]), w)
-		pivot.rotation.z += float(c.get("lean", 0.0)) * w * _turn
-		pivot.position.y -= float(c.get("crouch", 0.0)) * w
-		head.rotation.y -= float(c.get("head", 0.0)) * w
-		if c.has("yaw"):
-			body.basis = Basis(Vector3.UP, -m * (th + float(c.yaw) * w)) * Basis.from_scale(Vector3(m, 1.0, 1.0))
-		step = float(c.get("step", 0.0)) * w * m
+		if anim_body == null:
+			# The placeholder's pose. With the mannequin (render/anim/) the pose is a key pose (data/anim/cues.json); only the
+			# effects below (flare, spark, guard, badge, ring) and the tremble stay here.
+			if c.has("front"):
+				front = front.lerp(Vector2(c.front[0], c.front[1]), w)
+			if c.has("back"):
+				back = back.lerp(Vector2(c.back[0], c.back[1]), w)
+			pivot.rotation.z += float(c.get("lean", 0.0)) * w * _turn
+			pivot.position.y -= float(c.get("crouch", 0.0)) * w
+			head.rotation.y -= float(c.get("head", 0.0)) * w
+			if c.has("yaw"):
+				body.basis = Basis(Vector3.UP, -m * (th + float(c.yaw) * w)) * Basis.from_scale(Vector3(m, 1.0, 1.0))
+			step = float(c.get("step", 0.0)) * w * m
 		if not flash_view.reduced_motion:
 			step += sin(T * 55.0) * float(c.get("tremble", 0.0)) * w
 	elif not _cue.is_empty() and T - float(_cue.t0) >= float(_cue.dur):
@@ -244,7 +268,11 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	var th: float = deg_to_rad(lerpf(90.0, _pose, absf(_turn)))
 	body.basis = Basis(Vector3.UP, -m * th) * Basis.from_scale(Vector3(m, 1.0, 1.0))
 	head.rotation.y = -deg_to_rad(RenderLook.TURN_HEAD)
-	if sliding:
+	if anim_body != null:
+		# the mannequin's key poses carry the lean, crouch and slide brace; the pivot only spins with a launch
+		pivot.rotation.z = -pose.z
+		pivot.position.y = PIVOT_Y
+	elif sliding:
 		pivot.rotation.z = RenderLook.SLIDE_LEAN * signf(f.vx)
 		pivot.position.y = PIVOT_Y - RenderLook.SLIDE_CROUCH
 	else:
@@ -257,6 +285,13 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	var front: Vector2 = Vector2(30, 12) if punch else Vector2(22, 0)
 	_pose_cue(T, m, th, front)
 	var flash: bool = T - f.hurtT < RenderLook.HIT_FLASH_S and T >= f.hurtT
+	if anim_body != null:
+		var af: AnimFighter = RenderAnim.solve(S, f)
+		anim_body.apply(af.q, af.hips, af.curl, af.root_off)
+		anim_body.set_look(1.0 if flash else 0.0, f.hidden)
+		var off := Vector3(0.0, -PIVOT_Y, 0.0)
+		head.position = af.head_center() + off
+		arm_front.transform = Transform3D(Basis.IDENTITY, af.socket("hand_r") + off)
 	if f.hidden != _faded or flash != _flash:
 		_faded = f.hidden
 		_flash = flash
@@ -311,6 +346,8 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		RenderMats.set_glow(ripple.material_override, Color(190.0 / 255.0, 220.0 / 255.0, 1.0), 0.55 * (1.0 - rp * 0.6))
 	# The hybrid projection's anchor: the pivot, where the perspective places the fighter.
 	var anchor: Vector3 = pivot.global_position
+	if anim_body != null:
+		anim_body.set_anchor(anchor)
 	for p in solid:
 		p[3].set_shader_parameter("anchor", anchor)
 		p[4].set_shader_parameter("anchor", anchor)

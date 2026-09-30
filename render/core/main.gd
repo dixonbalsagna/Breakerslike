@@ -338,6 +338,7 @@ func _on_drained(events: Array, lines: Array) -> void:
 	planet.consume(events, host.S.T)
 	_flash_events(events)
 	_cue_events(events)
+	RenderAnim.consume(host.S, events)
 	ui_hud.consume_all(events)
 	UiSimBridge.feed(ui_hud, lines)
 

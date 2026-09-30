@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-cues",
+  "title": "anim.cues/1",
+  "description": "data/anim/cues.json: Combat's cue events (data/combat/finishers.json cues) mapped to key poses on the mannequin. Render only. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (each cue is in the cue vocabulary of finishers.json, each pose exists in poses.json) are checked by tools/lib/xref-fight.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "cues"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.cues/1"
+    },
+    "cues": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

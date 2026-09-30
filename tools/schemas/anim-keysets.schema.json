@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-keysets",
+  "title": "anim.keysets/1",
+  "description": "data/anim/keysets.json: key sets (docs/animation/pose-pipeline.md section 3.1): the poses a strike plays (load, contact, follow) and which key sets a light or heavy attack picks from. Render only. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every key pose exists in poses.json, every pick is a key set, each role appears once per set) are checked by tools/lib/xref-fight.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "keysets",
+    "picks"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.keysets/1"
+    },
+    "keysets": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "weight",
+          "keys"
+        ],
+        "properties": {
+          "weight": {
+            "enum": [
+              "light",
+              "any",
+              "heavy"
+            ]
+          },
+          "keys": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "required": [
+                "role",
+                "pose"
+              ],
+              "properties": {
+                "role": {
+                  "enum": [
+                    "load",
+                    "contact",
+                    "follow"
+                  ]
+                },
+                "pose": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    },
+    "picks": {
+      "type": "object",
+      "required": [
+        "light",
+        "heavy"
+      ],
+      "properties": {
+        "light": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+          }
+        },
+        "heavy": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

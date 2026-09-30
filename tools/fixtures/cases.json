@@ -2791,6 +2791,262 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-poses-family",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/stance.aggressive/family": "floating"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/poses/stance.aggressive"
+      }
+    },
+    {
+      "id": "anim-poses-bad-name",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/Bad Name": {
+              "additive": true,
+              "fk": {
+                "head": [
+                  0,
+                  0,
+                  1
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/poses/Bad Name"
+      }
+    },
+    {
+      "id": "anim-poses-short-vector",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/stance.aggressive/hand_r": [
+              14,
+              57
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/poses/stance.aggressive"
+      }
+    },
+    {
+      "id": "anim-poses-unknown-bone",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/react.head/fk/tail": [
+              0,
+              0,
+              5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-bone",
+        "pointer": "/poses/react.head/fk/tail"
+      }
+    },
+    {
+      "id": "anim-keysets-role",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.jab/keys/0/role": "windup"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/keysets/strike.jab/keys/0/role"
+      }
+    },
+    {
+      "id": "anim-keysets-missing-pose",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.jab/keys/1/pose": "strike.jab.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-pose",
+        "pointer": "/keysets/strike.jab/keys/1/pose"
+      }
+    },
+    {
+      "id": "anim-keysets-duplicate-role",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.jab/keys/2/role": "load"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-role",
+        "pointer": "/keysets/strike.jab/keys/2/role"
+      }
+    },
+    {
+      "id": "anim-keysets-bad-pick",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/picks/light/0": "strike.nothing"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-pick",
+        "pointer": "/picks/light/0"
+      }
+    },
+    {
+      "id": "anim-profiles-default",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/default": "jerky"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-profile",
+        "pointer": "/default"
+      }
+    },
+    {
+      "id": "anim-profiles-hz",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/profiles/snappy/solve_hz": 30.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/profiles/snappy/solve_hz"
+      }
+    },
+    {
+      "id": "anim-profiles-needs-lag",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "del": [
+            "/profiles/fluid/lag"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/fluid"
+      }
+    },
+    {
+      "id": "anim-profiles-bone-lag-range",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/bone_lag/head": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/bone_lag/head"
+      }
+    },
+    {
+      "id": "anim-cues-unknown-cue",
+      "schema": "anim-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/cues.json",
+          "set": {
+            "/cues/not_a_cue": "cue.brace"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-cue",
+        "pointer": "/cues/not_a_cue"
+      }
+    },
+    {
+      "id": "anim-cues-missing-pose",
+      "schema": "anim-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/cues.json",
+          "set": {
+            "/cues/brace": "cue.nothing"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-pose",
+        "pointer": "/cues/brace"
+      }
+    },
+    {
+      "id": "anim-cues-pose-name",
+      "schema": "anim-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/cues.json",
+          "set": {
+            "/cues/brace": "Brace"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/cues/brace"
+      }
     }
   ],
   "text": [

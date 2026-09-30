@@ -1,0 +1,9 @@
+{
+  "schema": "anim.cues/1",
+  "_about": "Animation A1: Combat's cue events (data/combat/finishers.json cues) as key poses on the mannequin, replacing the placeholder arm and lean poses in render/core/look.gd CUE_POSES. Durations, the flare, spark, guard, badge and ring stay in RenderLook.CUE_POSES. Render only, outside the sim's data hash.",
+  "cues": {
+    "brace": "cue.brace", "glance": "cue.glance", "tell": "cue.tell", "turn_read": "cue.turn_read", "overextend": "cue.overextend",
+    "circle": "cue.circle", "guard_set": "cue.guard_set", "struggle": "cue.struggle", "last_look": "cue.last_look", "breaks_hold": "cue.breaks_hold",
+    "holds_on": "cue.holds_on", "catch": "cue.catch", "glance_back": "cue.glance_back", "pursue": "cue.pursue", "reset": "cue.reset"
+  }
+}
