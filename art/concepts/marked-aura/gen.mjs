@@ -30,22 +30,26 @@ export { PAL, MASK, NAMES };
 //   info    (danger, found, searching): solid, crisp, keylined, at full opacity. Gameplay information.
 //   emotion (the rest): translucent, softer, a rim and a lighter core. Feeling and state.
 const LAY = {
-  taunt: [{ a: 125, d: 10, s: 30, op: 0.42 }, { a: 152, d: 9, s: 22, op: 0.38 }, { a: 100, d: 8, s: 16, op: 0.34 }],
-  hurt: [{ a: 205, d: 15, s: 9, op: 0.42 }, { a: 250, d: 20, s: 7, op: 0.36 }, { a: 165, d: 22, s: 8, op: 0.36 }, { a: 300, d: 16, s: 6, op: 0.32 }],
+  // Orb's playtest verdict: too large and visible, and the rays covered the fighters. Sizes are about half of before (the surge a third), the shapes
+  // are fewer and thinner, and every shape sits up and back of the head (65 to 175 degrees in the facing frame, 0 forward and 90 up), never
+  // forward toward the opponent and never below the head centre, so nothing covers a torso or a face.
+  taunt: [{ a: 125, d: 8, s: 14, op: 0.42 }, { a: 150, d: 7, s: 10, op: 0.38 }, { a: 100, d: 6, s: 8, op: 0.34 }],
+  hurt: [{ a: 110, d: 10, s: 5, op: 0.42 }, { a: 150, d: 12, s: 4, op: 0.36 }, { a: 78, d: 12, s: 4, op: 0.34 }],
   brink: [{ a: 230, d: 18, s: 7, op: 0.34 }, { a: 190, d: 24, s: 6, op: 0.3 }, { a: 265, d: 22, s: 5, op: 0.26 }],
-  rage: [{ a: 0, d: 10, s: 44, op: 0.55 }, { a: 24, d: 10, s: 56, op: 0.55 }, { a: 48, d: 10, s: 66, op: 0.55 }, { a: 74, d: 10, s: 56, op: 0.55 }, { a: 100, d: 10, s: 46, op: 0.5 }, { a: -24, d: 10, s: 36, op: 0.48 }, { a: 126, d: 10, s: 32, op: 0.46 }],
-  triumph: [20, 40, 60, 80, 100, 120, 140, 160].map((a, i) => ({ a, d: 11, s: 42 + (i % 2) * 12, op: 0.5 })),
-  pride: [{ a: 90, d: 10, s: 60, op: 0.46 }, { a: 78, d: 9, s: 44, op: 0.42 }, { a: 102, d: 9, s: 44, op: 0.42 }, { a: 66, d: 8, s: 28, op: 0.38 }, { a: 114, d: 8, s: 28, op: 0.38 }],
-  fear: [{ a: 40, d: 30, s: 14, op: 0.42, inward: true }, { a: 90, d: 32, s: 16, op: 0.42, inward: true }, { a: 140, d: 30, s: 14, op: 0.42, inward: true }, { a: 15, d: 24, s: 10, op: 0.36, inward: true }, { a: 165, d: 24, s: 10, op: 0.36, inward: true }],
-  resolve: [{ a: 20, d: 22, s: 13, op: 0.44, inward: true }, { a: 90, d: 26, s: 15, op: 0.44, inward: true }, { a: 160, d: 22, s: 13, op: 0.44, inward: true }, { a: 90, d: 6, s: 22, op: 0.5 }],
+  rage: [{ a: 72, d: 9, s: 22, op: 0.55 }, { a: 106, d: 9, s: 28, op: 0.55 }, { a: 140, d: 9, s: 20, op: 0.5 }],
+  triumph: [55, 72, 90, 108, 125].map((a, i) => ({ a, d: 9, s: 20 + (i % 2) * 6, op: 0.5 })),
+  pride: [{ a: 90, d: 8, s: 26, op: 0.46 }, { a: 72, d: 7, s: 18, op: 0.42 }, { a: 108, d: 7, s: 18, op: 0.42 }],
+  fear: [{ a: 70, d: 16, s: 7, op: 0.42, inward: true }, { a: 100, d: 17, s: 8, op: 0.42, inward: true }, { a: 130, d: 16, s: 7, op: 0.42, inward: true }],
+  resolve: [{ a: 75, d: 12, s: 7, op: 0.44, inward: true }, { a: 105, d: 13, s: 8, op: 0.44, inward: true }, { a: 90, d: 4, s: 10, op: 0.5 }],
   // Danger sense is a pointer train: three aligned shapes, growing along one ray above and behind the head. The ray (a) is the default
-  // and is rotated to the threat's bearing at run time (clamped to 60 to 200 degrees, so it is always above or behind, never around the head).
-  danger: [{ a: 132, d: 12, s: 17, op: 0.95 }, { a: 132, d: 32, s: 24, op: 0.95 }, { a: 132, d: 57, s: 34, op: 0.95 }],
-  surge: [...[60, 75, 90, 105, 120].map(a => ({ a, d: 10, s: 96, op: 0.55 })), ...[0, 30, 150, 180].map(a => ({ a, d: 12, s: 56, op: 0.5 })), ...[186, 196, 344, 354].map(a => ({ a, d: 50, s: 30, op: 0.42, ground: true }))],
+  // and is rotated to the threat's bearing at run time (clamped to 65 to 175 degrees, so it is always above or behind, never around the head).
+  danger: [{ a: 132, d: 8, s: 9, op: 0.95 }, { a: 132, d: 19, s: 12, op: 0.95 }, { a: 132, d: 32, s: 17, op: 0.95 }],
+  // The surge is three slow pulses of a small crest above and behind the head, and two small shards by the feet. No cloud, nothing over the body.
+  surge: [...[68, 92, 116].map((a, i) => ({ a, d: 9, s: i === 1 ? 40 : 30, op: 0.5 })), ...[195, 345].map(a => ({ a, d: 22, s: 10, op: 0.42, ground: true }))],
 };
 // timing t = [attack, hold, fade] in seconds; pri 1 is the highest priority; cool is the per-fighter cooldown for the same flash.
 export const FLASHES = {
-  danger: { name: 'Danger sense', cls: 'info', kind: 'layout', t: [0.05, 0.15, 0.15], pri: 2, cool: 0.5, layout: LAY.danger, moment: 'A telegraphed heavy or beam, or an attack from off screen or behind. A parry window keeps the crown\'s ring, because a flash would double it.', sound: 'A low dry tick with a short upward sweep. No chirp, no stinger.', event: 'ambush, attack telegraph (Encounter)' },
+  danger: { name: 'Danger sense', cls: 'info', kind: 'layout', t: [0.05, 0.15, 0.15], pri: 2, cool: 0.5, layout: LAY.danger, moment: 'A telegraphed heavy or beam, or an attack from off screen or behind. A parry window keeps the crown\'s ring, because a flash would double it.', sound: 'A low dry tick with a short upward sweep. No chirp, no stinger.', event: 'attack_telegraph (Encounter)' },
   found: { name: 'Found', cls: 'info', kind: 'glyph', glyph: 'bang', t: [0.06, 0.3, 0.24], pri: 4, cool: 1.5, moment: 'A lost lock-on is regained: the rival is back in line of sight.', sound: 'One bright rising note, in the fighter\'s own pitch.', event: 'found, lock regained' },
   searching: { name: 'Searching', cls: 'info', kind: 'glyph', glyph: 'question', t: [0.1, 0.5, 0.3], pri: 5, cool: 3.0, moment: 'Lock-on lost: the rival has dropped out of line of sight and the fighter looks for it. It re-pops at most every 3 s while the search lasts.', sound: 'A wavering low two-note phrase.', event: 'lock lost, hunting (Encounter)' },
   brink: { cut: true, name: 'Brink', cls: 'emotion', kind: 'layout', t: [0.08, 0.35, 0.55], pri: 0, cool: 0, layout: LAY.brink, moment: 'The fighter enters the brink. Once per entry.', sound: 'A slow heartbeat thump.', event: 'brink_enter' },
@@ -56,7 +60,7 @@ export const FLASHES = {
   triumph: { name: 'Triumph', cls: 'emotion', kind: 'layout', t: [0.14, 0.5, 0.36], pri: 10, cool: 3.0, layout: LAY.triumph, moment: 'A finisher lands, or a KO for the winner.', sound: 'A bright chime with the fighter\'s laugh.', event: 'ko (winner), finisher landed' },
   pride: { name: 'Pride', cls: 'emotion', kind: 'layout', t: [0.2, 0.5, 0.2], pri: 11, cool: 4.0, layout: LAY.pride, moment: 'After a decisive exchange won, before the next one. The Anti-hero\'s front.', sound: 'A slow exhale and a held soft chord.', event: 'decisive exchange won' },
   taunt: { name: 'Taunt', cls: 'emotion', kind: 'layout', t: [0.1, 0.35, 0.3], pri: 13, cool: 2.0, layout: LAY.taunt, moment: 'A taunt line or gesture.', sound: 'The fighter\'s sneer or dry laugh.', event: 'taunt bark' },
-  surge: { name: 'Surge', cls: 'emotion', kind: 'layout', t: [0.25, 3.0, 1.2], pri: 1, cool: 0, layout: LAY.surge, moment: 'A transformation: held for the respected cinematic (up to 3 s), then it fades in 1.2 s. The one flash that lasts.', sound: 'A rising swell that resolves on the new form\'s chord.', event: 'cinematic_start and cinematic_end', rare: true },
+  surge: { name: 'Surge', cls: 'emotion', kind: 'layout', t: [0.25, 3.0, 1.2], pri: 1, cool: 0, layout: LAY.surge, moment: 'A transformation: three slow pulses of a small crest above and behind the head at the start of the cinematic (1.85 s in all), then gone. Never a standing cloud, never over the body.', sound: 'A rising swell that resolves on the new form\'s chord.', event: 'cinematic_start and cinematic_end', rare: true },
 };
 export const FLASH_ORDER = ['danger', 'hazard', 'found', 'searching', 'fear', 'rage', 'hurt', 'resolve', 'triumph', 'pride', 'respect', 'taunt', 'surge'];
 
@@ -71,9 +75,26 @@ const CAND = {
   primed: { name: 'Primed', cls: 'info', kind: 'layout', t: [0.06, 0.34, 0.2], pri: 5, cool: 3, moment: 'Leaving cover with the ambush window open (x1.5 damage for 2.5 s): the fighter can strike hard now. It points forward, where danger sense points back.', sound: 'A soft rising click.', event: 'ambush_ready (Encounter; the rule exists in the prototype)', layout: [{ a: 36, d: 12, s: 14, op: 0.95 }, { a: 36, d: 30, s: 20, op: 0.95 }, { a: 36, d: 52, s: 28, op: 0.95 }] },
 };
 Object.assign(FLASHES, CAND);
-const totalT = f => f.t[0] + f.t[1] + f.t[2];
+// Pulses (Orb's playtest verdict: a quick pulse two or three times, then gone). Each pulse swells fast and shrinks (rise 30 percent of `on`), with
+// a beat of nothing between pulses, and the last pulse holds to the end of `on` and then fades over `fade`. Total is 0.4 to 0.8 s, the surge 1.85 s.
+const PULSE = {
+  danger: [3, 0.08, 0.05, 0.08], hazard: [2, 0.125, 0.08, 0.12], found: [2, 0.14, 0.08, 0.12], searching: [3, 0.14, 0.10, 0.14], fear: [3, 0.10, 0.07, 0.12],
+  rage: [3, 0.14, 0.08, 0.14], hurt: [2, 0.10, 0.06, 0.14], resolve: [2, 0.18, 0.10, 0.20], triumph: [3, 0.14, 0.08, 0.16], pride: [2, 0.22, 0.12, 0.20],
+  respect: [2, 0.22, 0.12, 0.20], taunt: [3, 0.10, 0.07, 0.14], surge: [3, 0.35, 0.25, 0.30],
+  brink: [2, 0.15, 0.10, 0.30], winded: [2, 0.16, 0.12, 0.20], smug: [2, 0.14, 0.10, 0.15], bored: [2, 0.20, 0.15, 0.20], primed: [2, 0.10, 0.07, 0.18],
+};
+for (const [id, v] of Object.entries(PULSE)) FLASHES[id].pulse = { count: v[0], on: v[1], off: v[2], fade: v[3] };
+const totalT = f => { const p = f.pulse; return p.count * p.on + (p.count - 1) * p.off + p.fade; };
 // The envelope: an eased attack, a hold, and an eased fade. 0 at rest, 1 at the peak.
-const env = (f, t) => { const [a, h, d] = f.t; if (t <= 0) return 0; if (t < a) return 1 - (1 - t / a) ** 2; if (t < a + h) return 1; if (t < a + h + d) return 1 - ((t - a - h) / d) ** 2; return 0; };
+const env = (f, t) => {
+  const p = f.pulse, per = p.on + p.off; if (t <= 0 || t >= totalT(f)) return 0;
+  const i = Math.min(p.count - 1, Math.floor(t / per)), x = t - i * per, rise = 0.3 * p.on, last = i === p.count - 1;
+  if (x < rise) return 1 - (1 - x / rise) ** 2;
+  if (last) return x < p.on ? 1 : Math.max(0, 1 - ((x - p.on) / p.fade) ** 2);
+  return x < p.on ? 1 - ((x - rise) / (p.on - rise)) ** 2 : 0;
+};
+// the frame times that show a flash: the peak of each pulse, the beat between, and the fade
+const frames = f => { const p = f.pulse, per = p.on + p.off, o = []; for (let i = 0; i < p.count; i++) { o.push(i * per + 0.3 * p.on); if (i < p.count - 1) o.push(i * per + p.on + p.off * 0.5); } o.push((p.count - 1) * per + p.on + p.fade * 0.6); return o; };
 
 // triangle with an optional round tip (the Legal fallback for tall pointed shapes)
 function tri(base, ux, uy, s, w, round) {
@@ -92,7 +113,7 @@ const A_ROUND = new Set(['pride', 'triumph', 'surge', 'danger']);
 const E_CREST = new Set(['pride', 'triumph', 'surge', 'resolve']);
 function crest(it) {
   const a = it.a * Math.PI / 180, x = Math.cos(a), y = Math.sin(a) * 0.4, sq = Math.atan2(y, x) * 180 / Math.PI;
-  return { ...it, a: sq + 42, s: it.s * 0.7, d: it.d + 4 };
+  return { ...it, a: Math.min(175, sq + 42), s: it.s * 0.7, d: it.d + 4 };
 }
 function layoutPolys(fk, f, hc, u, k, round, ground) {
   const out = [], info = f.cls === 'info';
@@ -104,10 +125,10 @@ function layoutPolys(fk, f, hc, u, k, round, ground) {
     const size = (0.55 + 0.45 * k);
     // Info flashes are solid with a thin keyline (the core fills 84% of the rim). Emotion flashes are a rim and a smaller, lighter core.
     for (const [kk, layer] of [[1, 'rim'], [info ? 0.84 : 0.58, 'core']]) {
-      const s = it.s * u * kk * size, w = (fk === 'A' ? 3.8 : fk === 'E' ? 8.5 : 4) * u * (kk === 1 ? 1 : info ? 0.84 : 0.6);
+      const s = it.s * u * kk * size, w = (fk === 'A' ? 2.3 : fk === 'E' ? 5.2 : 3) * u * (kk === 1 ? 1 : info ? 0.84 : 0.6);
       let pts;
-      if (fk === 'P') pts = circ([base[0] + ux * dir * s * 0.5, base[1] + uy * dir * s * 0.5], Math.max(2.5, s * 0.3), 14);
-      else if (fk === 'C') { const q = Math.max(3, s * 0.3); pts = [[base[0] - q, base[1] - q], [base[0] + q, base[1] - q], [base[0] + q, base[1] + q], [base[0] - q, base[1] + q]].map(([x, y]) => [Math.round(x / 3) * 3 + ux * dir * s * 0.5, Math.round(y / 3) * 3 + uy * dir * s * 0.5]); }
+      if (fk === 'P') pts = circ([base[0] + ux * dir * s * 0.5, base[1] + uy * dir * s * 0.5], Math.max(1.6, s * 0.3), 14);
+      else if (fk === 'C') { const q = Math.max(2.4, s * 0.3); pts = [[base[0] - q, base[1] - q], [base[0] + q, base[1] - q], [base[0] + q, base[1] + q], [base[0] - q, base[1] + q]].map(([x, y]) => [Math.round(x / 3) * 3 + ux * dir * s * 0.5, Math.round(y / 3) * 3 + uy * dir * s * 0.5]); }
       else pts = tri(base, ux * dir, uy * dir, s, w, round);
       out.push({ pts, layer, op: it.op * k, info });
     }
@@ -117,7 +138,7 @@ function layoutPolys(fk, f, hc, u, k, round, ground) {
 // The "!" and the "?" in each fighter's own shapes: capsule and dot (circles), blade and diamond (blades), wedge and triangle (wedges), squares (steps).
 function glyphPolys(fk, kind, cx, cy, u, k, round) {
   const out = [], P = (pts, layer) => out.push({ pts, layer, op: 0.97 * Math.min(1, k * 1.4), info: true });
-  const sc = (0.7 + 0.3 * k) * u * 1.7;
+  const sc = (0.7 + 0.3 * k) * u * 1.1;
   const dotAt = (x, y, r) => (fk === 'P' ? circ([x, y], r * 1.05, 10) : fk === 'C' ? [[x - r, y - r], [x + r, y - r], [x + r, y + r], [x - r, y + r]] : fk === 'A' ? [[x, y - r * 1.2], [x + r * 0.9, y], [x, y + r * 1.2], [x - r * 0.9, y]] : [[x - r * 1.2, y - r * 0.8], [x + r * 1.2, y - r * 0.8], [x, y + r * 1.2]]);
   if (kind === 'bang') {
     for (const [pad, layer] of [[1.1, 'rim'], [0, 'core']]) {
@@ -336,7 +357,7 @@ function styleSheet() {
 }
 
 // ---------------------------------------------------------------------------------------------------------- sheet 2: the flash vocabulary
-const fmtT = f => `${f.t[0].toFixed(2)} + ${f.t[1].toFixed(2)} + ${f.t[2].toFixed(2)} = ${totalT(f).toFixed(2)} s`;
+const fmtT = f => `${f.pulse.count} x ${f.pulse.on.toFixed(2)} on, ${f.pulse.off.toFixed(2)} off, fade ${f.pulse.fade.toFixed(2)} = ${totalT(f).toFixed(2)} s`;
 function vocabSheet() {
   const W = 1800, cw = 134;
   let b = rect(0, 0, W, 2000, '#dcd8e6') + rect(0, 0, W, 104, '#1b1428');
@@ -361,15 +382,15 @@ function vocabSheet() {
   let y = 184 + 4 * 214 + 30;
   b += text(24, y, 'What each flash is for', { size: 18, weight: 700 });
   y += 24;
-  const cols = [['Flash', 24], ['Class', 150], ['Moment and sim event', 232], ['Attack + hold + fade', 800], ['Priority', 960], ['Sound pairing (with Audio)', 1032]];
+  const cols = [['Flash', 24], ['Class', 150], ['Moment and sim event', 232], ['Pulses (count, on, off, fade)', 800], ['Priority', 1090], ['Sound pairing (with Audio)', 1160]];
   cols.forEach(([h, x]) => { b += text(x, y, h, { size: 12, weight: 700 }); });
   y += 8;
   FLASH_ORDER.forEach(id => {
-    const f = FLASHES[id], m = wrap(`${f.moment} (Event: ${f.event}.)`, 92), s = wrap(f.sound, 80), n = Math.max(m.length, s.length, 1);
+    const f = FLASHES[id], m = wrap(`${f.moment} (Event: ${f.event}.)`, 92), s = wrap(f.sound, 62), n = Math.max(m.length, s.length, 1);
     b += `<line x1="24" y1="${y}" x2="1776" y2="${y}" stroke="#1b1428" stroke-opacity="0.15"/>`;
-    b += text(24, y + 16, f.name, { size: 12.5, weight: 700 }) + text(150, y + 16, f.cls, { size: 12 }) + text(800, y + 16, fmtT(f), { size: 12 }) + text(960, y + 16, String(f.pri), { size: 12 });
+    b += text(24, y + 16, f.name, { size: 12.5, weight: 700 }) + text(150, y + 16, f.cls, { size: 12 }) + text(800, y + 16, fmtT(f), { size: 12 }) + text(1090, y + 16, String(f.pri), { size: 12 });
     m.forEach((l, i) => { b += text(232, y + 16 + i * 15, l, { size: 12 }); });
-    s.forEach((l, i) => { b += text(1032, y + 16 + i * 15, l, { size: 12 }); });
+    s.forEach((l, i) => { b += text(1160, y + 16 + i * 15, l, { size: 12 }); });
     y += 10 + n * 15 + 8;
   });
   y += 20;
@@ -388,10 +409,10 @@ function rulesSheet() {
   b += text(24, 136, 'A flash in time (frames at 0 s to the end; each is the envelope at that moment)', { size: 18, weight: 700 });
   const tl = [['P', 'found', 'Protagonist: found'], ['A', 'danger', 'Anti-hero: danger sense'], ['E', 'rage', 'Empress: rage'], ['C', 'fear', 'Cyborg: fear']];
   tl.forEach(([fk, id, cap], r) => {
-    const f = FLASHES[id], y0 = 148 + r * 176, T = totalT(f), fr = [0.03, 0.12, 0.3, 0.55, 0.8, 0.97];
+    const f = FLASHES[id], y0 = 148 + r * 176, ts = frames(f);
     b += text(24, y0 + 14, `${cap}  (${fmtT(f)})`, { size: 12.5, weight: 700 });
-    fr.forEach((q, j) => {
-      const t = q * T, k = env(f, t), x0 = 24 + j * 292;
+    ts.forEach((t, j) => {
+      const k = env(f, t), x0 = 24 + j * 292;
       b += rect(x0, y0 + 20, 284, 150, '#eeeaf4', 'stroke="#1b1428" stroke-opacity="0.15"');
       b += fig(fk, 96, x0 + (fk === 'E' ? 170 : 130), y0 + 164, { state: id, k: Math.max(0.001, k) });
       b += text(x0 + 8, y0 + 36, `${t.toFixed(2)} s  (${Math.round(k * 100)}%)`, { size: 11, op: 0.8 });
@@ -686,6 +707,6 @@ writeFileSync(join(OUT, 'ma-4-flash-rules.svg'), ORIGIN + rulesSheet());
 writeFileSync(join(OUT, 'ma-5-legal-checks.svg'), ORIGIN + legalSheet());
 writeFileSync(join(OUT, 'ma-6-flash-pitch.svg'), ORIGIN + pitchSheet());
 // The flash data, for Rendering, UI and Audio: ids, class, timing, priority, cooldown, shape family and the layouts.
-const json = { version: 2, decision: 'Orb added Hazard, Primed and Respect; the EP cut Brink (the crown\'s brink ring covers it), kept Resolve (sequenced after the crown\'s wear pop) and kept Pride apart from Triumph. Then Orb removed hiding from the base game (held for a future stealth fighter), so Primed (the ambush window) moves to held with Winded, Smug and Bored. Thirteen active flashes, four of them info (danger, hazard, found, searching). Found and Searching stay, for lock-on regained and lost through line of sight.', held: Object.fromEntries(['winded', 'smug', 'bored', 'primed'].map(id => [id, { name: FLASHES[id].name, class: FLASHES[id].cls, attack: FLASHES[id].t[0], hold: FLASHES[id].t[1], fade: FLASHES[id].t[2], kind: FLASHES[id].kind, glyph: FLASHES[id].glyph ?? null, layout: FLASHES[id].layout ?? null, note: id === 'primed' ? 'Held: the ambush window needs hiding, which the base game no longer has. Points forward and up, a single direction.' : 'Held from the pitch.' }])), arbitration: { default_wait_max: 0.25, note: 'A flash due while the crown is up waits up to default_wait_max and is then dropped, except a flash with a sequence block: Resolve starts delay_after_crown_down seconds after the crown goes down (crown_up() false), waits up to wait_max, and is never dropped by arbitration (only the surge can preempt it).' }, note: 'Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.', families: { P: 'circles', A: 'blades', E: 'wedges', C: 'steps' }, accents: Object.fromEntries(ORDER.map(k => [k, { light: PAL[k].accent.light, mid: PAL[k].accent.mid, shadow: PAL[k].accent.shadow }])), emotion_colours: { rule: 'Emotion flashes: rim is the accent mid step and core the accent light step, except where the accent sits on the fighter\'s own hair. The Protagonist\'s teal flashes overlap his teal hair, so his rim is the accent light step and his core is near-white. The rim must be lighter than the hair mid step by at least 15 L*.', overrides: { P: { rim: PAL.P.accent.light, core: '#e6f7f3' } }, hair_mid: { P: PAL.P.hair.mid } }, legal_rules: { round_tip: { A: [...A_ROUND] }, low_crest: { E: [...E_CREST], A: ['surge'], note: 'Wide and low behind the head: angle a becomes atan2(sin(a) * 0.4, cos(a)) + 42 degrees, size x 0.7, distance + 4. Ground shards are unchanged.' }, danger_ray: { default_angle: 132, clamp: [60, 200], note: 'Rotate the whole pointer train to the threat bearing at run time (facing frame, 0 forward, 90 up). Always above or behind the head, never around it.' }, info_colours: INFO, info_keyline: 'The core fills 84 percent of the rim. Emotion flashes keep a rim and a 58 percent core.' }, flashes: Object.fromEntries(FLASH_ORDER.map(id => { const f = FLASHES[id]; return [id, { name: f.name, class: f.cls, attack: f.t[0], hold: f.t[1], fade: f.t[2], priority: f.pri, cooldown: f.cool, kind: f.kind, glyph: f.glyph ?? null, layout: f.layout ?? null, moment: f.moment, event: f.event, sound: f.sound, rare: !!f.rare, sequence: f.sequence ?? null }]; })) };
+const json = { version: 3, decision: 'Orb added Hazard, Primed and Respect; the EP cut Brink (the crown\'s brink ring covers it), kept Resolve (sequenced after the crown\'s wear pop) and kept Pride apart from Triumph. Then Orb removed hiding from the base game (held for a future stealth fighter), so Primed (the ambush window) moves to held with Winded, Smug and Bored. Thirteen active flashes, four of them info (danger, hazard, found, searching). Found and Searching stay, for lock-on regained and lost through line of sight.', held: Object.fromEntries(['winded', 'smug', 'bored', 'primed'].map(id => [id, { name: FLASHES[id].name, class: FLASHES[id].cls, pulse: FLASHES[id].pulse, kind: FLASHES[id].kind, glyph: FLASHES[id].glyph ?? null, layout: FLASHES[id].layout ?? null, note: id === 'primed' ? 'Held: the ambush window needs hiding, which the base game no longer has. Points forward and up, a single direction.' : 'Held from the pitch.' }])), arbitration: { default_wait_max: 0.25, note: 'A flash due while the crown is up waits up to default_wait_max and is then dropped, except a flash with a sequence block: Resolve starts delay_after_crown_down seconds after the crown goes down (crown_up() false), waits up to wait_max, and is never dropped by arbitration (only the surge can preempt it).' }, note: 'Canonical data, written by art/concepts/marked-aura/gen.mjs (Art owns data/art/). Angles are degrees (0 forward, 90 up), d and s are in units of head size / 12. Names and looks are placeholders.', families: { P: 'circles', A: 'blades', E: 'wedges', C: 'steps' }, accents: Object.fromEntries(ORDER.map(k => [k, { light: PAL[k].accent.light, mid: PAL[k].accent.mid, shadow: PAL[k].accent.shadow }])), emotion_colours: { rule: 'Emotion flashes: rim is the accent mid step and core the accent light step, except where the accent sits on the fighter\'s own hair. The Protagonist\'s teal flashes overlap his teal hair, so his rim is the accent light step and his core is near-white. The rim must be lighter than the hair mid step by at least 15 L*.', overrides: { P: { rim: PAL.P.accent.light, core: '#e6f7f3' } }, hair_mid: { P: PAL.P.hair.mid } }, legal_rules: { round_tip: { A: [...A_ROUND] }, low_crest: { E: [...E_CREST], A: ['surge'], note: 'Wide and low behind the head: angle a becomes atan2(sin(a) * 0.4, cos(a)) + 42 degrees, size x 0.7, distance + 4, and the angle is clamped to 175 degrees at most, so a crest never drops below the head. Ground shards are unchanged.' }, danger_ray: { default_angle: 132, clamp: [65, 175], note: 'Rotate the whole pointer train to the threat bearing at run time (facing frame, 0 forward, 90 up). Always above or behind the head, never around it.' }, info_colours: INFO, info_keyline: 'The core fills 84 percent of the rim. Emotion flashes keep a rim and a 58 percent core.' }, keep_out: { rule: 'Every shape sits up and back of the head: angle a between 65 and 175 degrees in the facing frame (0 forward, 90 up, 180 back), never forward toward the opponent and never below the head centre. Nothing covers a torso or a face, on either fighter. The largest shape is 40 (the surge crest) and most are 30 or less, in hundredths of a body height.', angle_min: 65, angle_max: 175, ground_shards: 'The surge has two small shards at the fighter\'s own feet (195 and 345 degrees, distance 22, size 10).' }, pulse_rule: { note: 'Each flash pulses two or three times, then is gone. A pulse swells to full in 30 percent of `on`, then shrinks to nothing by the end of `on` (a beat of nothing for `off` follows). The last pulse holds to the end of `on`, then fades over `fade`. Size scales 0.55 + 0.45 k and opacity k, as before. total = count x on + (count - 1) x off + fade, 0.4 to 0.8 s, and the surge 1.85 s.', rise_fraction: 0.3 }, flashes: Object.fromEntries(FLASH_ORDER.map(id => { const f = FLASHES[id]; return [id, { name: f.name, class: f.cls, pulse: { ...f.pulse, total: +totalT(f).toFixed(3) }, total: +totalT(f).toFixed(3), priority: f.pri, cooldown: f.cool, kind: f.kind, glyph: f.glyph ?? null, layout: f.layout ?? null, moment: f.moment, event: f.event, sound: f.sound, rare: !!f.rare, sequence: f.sequence ?? null }]; })) };
 writeFileSync(join(OUT, '..', '..', '..', 'data', 'art', 'flashes.json'), JSON.stringify(json, null, 2) + String.fromCharCode(10));
 console.log('wrote ma-1 to ma-6 sheets and data/art/flashes.json');

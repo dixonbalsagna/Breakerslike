@@ -18,23 +18,24 @@ Brief, iconic pops at a fighter's head that say what it senses or feels, then no
 - **Flat filled quads, no textures.** A `MultiMeshInstance3D` of 12 quads (one draw call), plus one quad for the glyph (one draw call). Unshaded, `blend_mix`, depth test on, no depth write, cull disabled. Use `RenderMats.flat_alpha` as the pattern.
 - **Shapes are drawn in the fragment shader** from a signed distance per family, chosen by a uniform `family` (0 circles, 1 blades, 2 wedges, 3 steps). The shapes:
   - circles: a disc of radius `size * 0.3`;
-  - blades: a triangle from the base point out along the angle, half-width `3.8` units, with a rounded-tip option;
-  - wedges: the same with half-width `8.5` units;
+  - blades: a triangle from the base point out along the angle, half-width `2.3` units (thin, after the playtest), with a rounded-tip option;
+  - wedges: the same with half-width `5.2` units;
   - steps: a square of side `size * 0.6`, snapped to a 3-unit grid in world space.
 - **Each instance has custom data** `(angle, distance, size, opacity)` from the layout table, plus a per-layer tint. Two layers per shape: a rim at full size in the accent's mid step, and a core at 0.58 size in the accent's light step. Info flashes use a thin keyline for the rim (`info_colours[family].line` in `flashes.json`) and a pale core (`info_colours[family].core`), at full opacity. The core fills 84% of the rim, so the keyline is thin. Never yellow, red-orange or a thick black outline.
 - **Glyphs** ("found" is a bang, "searching" is a question, "hazard" is two bangs side by side, both in the family's shapes and never a font) are drawn in a second quad by the same shader with `glyph` set to 1 or 2. The bang is a stem and a dot; the question is a hook and a dot. Each is built from the family's primitive: capsule and dot, blade and diamond, wedge and triangle, snapped squares. `ma-2-flashes.svg` shows all four, and `gen.mjs` (`glyphPolys`) has the exact geometry.
+- **Size and keep-out (`keep_out` in the data).** About half the size of the first version (the surge a third): the largest shape is 40, most are 30 or less. Every shape sits up and back of the head, angle 65 to 175 degrees in the facing frame (0 forward, 90 up, 180 back), never forward toward the opponent and never below the head centre, so nothing covers a torso or a face on either fighter. The glyphs are drawn at 1.1 head units (were 1.7). Rendering should assert the angle range in a debug check.
 - **Unit and place.** All sizes are in hundredths of a body height (`FighterView.HEIGHT`, 90 units), so `size 60` is 54 world units. Anchor: the head centre, plus 2 units up. The glyph sits 7 units of head size above it. The flash is behind the head (about 6 units behind the fighter plane), and the glyph is above the head, so neither hides the mask, the sigil or the chest. The layout is written in the fighter's facing frame (0 degrees is forward, 90 is up) and mirrors with the body.
 - **Ground shards** (the surge only) are instances with `ground = true`: their y is the ground height under the fighter, read from the terrain the way the fighter's shadow is.
 
 ## 4. The data
 
-`flashes.json` has, per flash: `class` (info or emotion), `attack`, `hold`, `fade` (seconds), `priority` (1 is highest), `cooldown` (seconds, per fighter), `kind` (layout or glyph), `glyph`, `layout` (the instances), `moment`, `event`, `sound`. The file lives at `data/art/flashes.json`, and Rendering reads it from there (`res://data/art/flashes.json`). Art edits it through `art/concepts/marked-aura/gen.mjs`, which is where the layouts and timings are authored. Numbers live in data, not code.
+`flashes.json` has, per flash: `class` (info or emotion), `pulse` (`count`, `on`, `off`, `fade` in seconds, and `total`), `total`, `priority` (1 is highest), `cooldown` (seconds, per fighter), `kind` (layout or glyph), `glyph`, `layout` (the instances), `moment`, `event`, `sound`. The file lives at `data/art/flashes.json`, and Rendering reads it from there (`res://data/art/flashes.json`). Art edits it through `art/concepts/marked-aura/gen.mjs`, which is where the layouts and timings are authored. Numbers live in data, not code.
 
 ## 5. The state machine (per fighter)
 
 - **State:** `id` of the flash showing, `t` (seconds since it fired), a small queue, and a cooldown timer per flash id.
 - **Time base:** sim time, so a flash holds still in hit-stop and pause, like the staging turn. The surge runs on cinematic time.
-- **Envelope `k`:** an eased attack (`1 - (1 - t/attack)^2`), a hold at 1, and an eased fade (`1 - ((t - attack - hold)/fade)^2`), then 0 and hidden. Size scales by `0.55 + 0.45 k` and opacity by `k`.
+- **Envelope `k` (pulses):** a flash pulses two or three times, then is gone (`pulse.count`). Pulse `i` starts at `i * (on + off)`. It rises to 1 over `0.3 * on` (eased, `1 - (1 - x/rise)^2`) and then shrinks to 0 by the end of `on` (`1 - ((x - rise)/(on - rise))^2`), with a beat of nothing for `off`. The last pulse holds at 1 to the end of `on` and then fades over `fade` (`1 - ((x - on)/fade)^2`). `total = count * on + (count - 1) * off + fade`, 0.4 to 0.8 s, and the surge 1.85 s (three slow pulses, never a standing cloud, not held for the cinematic). Size scales by `0.55 + 0.45 k` and opacity by `k`. `reduced_motion`: one pulse and a plain fade.
 - **Firing:** `fire(actor, id)` checks the cooldown, the priority rule and the arbitration rule (section 7), then starts or queues the flash.
 
 ## 6. Triggers
@@ -70,14 +71,14 @@ Priority, highest first: surge, danger sense, hazard, found, searching, fear, ra
 - **Contrast on the hair.** The Protagonist's teal flashes overlap his teal hair (the placeholder's hair is teal too). Use `emotion_colours.overrides.P`: the rim is the accent light step and the core is near-white, so the flash stays lighter than the hair. Info flashes are unaffected (a pale core with a dark keyline).
 - **Hurt is capped.** Its cooldown is 6 s per fighter, so a flurry of heavy hits gives one flash. If it is still busy for Orb, raise it, or fire it only for `region_broken`.
 - **Emotion flashes** are translucent (34 to 55% opacity). **Info flashes** are solid and keylined. That is the rule that tells a player at a glance whether a flash is a feeling or a fact.
-- **Motion:** a flash changes shape and never blinks. Hurt fragments jitter, at most 6% of a body height, irregularly (noise on the cosmetic stream, seeded from the tick). Rage swells over its attack and sweeps forward. Nothing flashes on and off as a whole. `reduced_motion`: no jitter, no overshoot, a plain fade.
+- **Motion:** the flash pulses (section 5): a quick swell and shrink, two or three times, a beat of nothing between, then gone. It changes shape as it pulses (size scales with the envelope). Hurt fragments jitter, at most 4% of a body height, irregularly (noise on the cosmetic stream, seeded from the tick). `reduced_motion`: one pulse, no jitter, a plain fade.
 
 ## 9. Legal's conditions (in the data as `legal_rules`)
 
 Legal screened the set (`docs/legal/q3-screen.md`) and Art applied the conditions in the data, so Rendering reads them and does not hard-code them:
 - **Round tips** for the Anti-hero's `pride`, `triumph`, `surge` and `danger` (`legal_rules.round_tip.A`): the same triangle with a rounded end (radius `0.95 * half-width`). His rage stays pointed.
 - **Wide, low crest** for the Empress's `pride`, `triumph`, `surge` and `resolve`, and the Anti-hero's `surge` (`legal_rules.low_crest`): the angle `a` becomes `atan2(sin(a) * 0.4, cos(a))` plus 42 degrees, the size times 0.7, the distance plus 4. Ground shards are unchanged.
-- **Danger sense is a pointer train**: three shapes along one ray, default angle 132 degrees. Rotate the whole train to the threat's bearing (the facing frame), clamped to 60 to 200 degrees, so it is always above or behind the head. Never radiate it around the head.
+- **Danger sense is a pointer train**: three shapes along one ray, default angle 132 degrees. Rotate the whole train to the threat's bearing (the facing frame), clamped to 65 to 175 degrees, so it is always above or behind the head. Never radiate it around the head.
 - **`F8` shows the legacy shapes** (tall pointed blades and wedges, the radiating danger fan is gone for good) so Orb can compare before and after. It is a uniform (`legacy`), off by default.
 
 ## 10. Performance

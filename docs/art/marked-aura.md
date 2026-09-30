@@ -40,25 +40,33 @@ No sigil sits as an eye or a mouth: none is one of a pair, and none has a line b
 
 **The Protagonist's dome** is a designed shape and not an egg: a faceted crown, a raised brow ridge, a jaw plane and a crown seam, with no eye or mouth slots or dots. The hair is a swept-back teal cap, never upswept, never gold, and its fringe sits high so the temple ring shows.
 
+## Playtest revision (2026-09-29)
+
+Orb played it: "a little too large and visible, a bit distracting", and the Protagonist's surge cloud and the Anti-hero's blade rays "obstruct my view". Orb's suggestion: pulse two or three times to signal a thought, then disappear. Done in `data/art/flashes.json` (version 3):
+- **Half the size** (the surge a third): the largest shape is 40, most are 30 or less. Thinner blades and wedges. Fewer shapes: rage is three, triumph five, the surge a crest of three.
+- **Pulses replace hold-and-fade.** Two or three quick swell-and-shrink pulses with a beat of nothing between, 0.4 to 0.8 s in all. The surge is three slow pulses, 1.85 s, and is never a standing cloud or held for the cinematic.
+- **Keep-out.** Every shape sits up and back of the head (65 to 175 degrees), never forward toward the opponent and never below the head centre, so nothing ever covers a torso or a face on either fighter. The rage rays no longer sweep forward.
+- **Hurt** has a six-second cooldown, so a flurry gives one flash.
+
 ## The flash vocabulary
 
-Thirteen flashes (Orb added Hazard and Respect; the EP cut Brink, kept Resolve and kept Pride apart from Triumph; Orb then removed hiding from the base game, so Primed is held), four of them info. Each is tied to a real game moment. Timings are attack + hold + fade in seconds, and every flash except the surge is under a second. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `data/art/flashes.json`.
+Thirteen flashes (Orb added Hazard and Respect; the EP cut Brink, kept Resolve and kept Pride apart from Triumph; Orb then removed hiding from the base game, so Primed is held), four of them info. Each is tied to a real game moment. Timings are pulses (count, on, off, fade) in seconds: each flash pulses two or three times, then is gone, in 0.4 to 0.8 s, and the surge takes 1.85 s. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `data/art/flashes.json`.
 
 | Flash | Class | Moment (sim event) | Time (s) | Priority |
 |---|---|---|---|---|
-| Danger sense | info | A telegraphed heavy or beam, an attack from off screen or behind (a pointer train, turned to the threat) | 0.05 + 0.15 + 0.15 = 0.35 | 2 |
-| Hazard | info | The world is about to hit the fighter: a falling building, a collapsing crater rim, a beam path, rising water. Not a fighter attack | 0.05 + 0.25 + 0.15 = 0.45 | 3 |
-| Found | info | A lost lock-on is regained: the rival is back in line of sight | 0.06 + 0.30 + 0.24 = 0.60 | 4 |
-| Searching | info | Lock-on lost: the rival has dropped out of line of sight (re-pops at most every 3 s) | 0.10 + 0.50 + 0.30 = 0.90 | 5 |
-| Fear | emotion | An opponent starts a finisher, or the fighter watches a rival transform | 0.08 + 0.35 + 0.37 = 0.80 | 6 |
-| Rage | emotion | Drop the Act, a wrath spike, a boil-over, a humiliating parry | 0.12 + 0.45 + 0.35 = 0.92 | 7 |
-| Hurt | emotion | A heavy hit or a break launch, when the crown is not up | 0.04 + 0.16 + 0.30 = 0.50 | 8 |
-| Resolve | emotion | A Rally or Second Wind. Sequenced: it starts 0.1 s after the crown's wear pop fades, waits up to 2 s and is never dropped by arbitration | 0.10 + 0.35 + 0.35 = 0.80 | 9 |
-| Triumph | emotion | A finisher lands, or a KO for the winner | 0.14 + 0.50 + 0.36 = 1.00 | 10 |
-| Pride | emotion | A decisive exchange won | 0.20 + 0.50 + 0.20 = 0.90 | 11 |
-| Respect | emotion | A clash ends in a draw, a finisher is blocked, or a rival gets back up after a heavy hit | 0.20 + 0.40 + 0.30 = 0.90 | 12 |
-| Taunt | emotion | A taunt line or gesture | 0.10 + 0.35 + 0.30 = 0.75 | 13 |
-| Surge | emotion | A transformation: held for the respected cinematic (up to 3 s), then faded in 1.2 s | 0.25 + 3.0 + 1.2 | 1 |
+| Danger sense | info | A telegraphed heavy or beam, an attack from off screen or behind (a pointer train, turned to the threat) | 3 x 0.08 on, 0.05 off, fade 0.08 = 0.42 s | 2 |
+| Hazard | info | The world is about to hit the fighter: a falling building, a collapsing crater rim, a beam path, rising water. Not a fighter attack | 2 x 0.125 on, 0.08 off, fade 0.12 = 0.45 s | 3 |
+| Found | info | A lost lock-on is regained: the rival is back in line of sight | 2 x 0.14 on, 0.08 off, fade 0.12 = 0.48 s | 4 |
+| Searching | info | Lock-on lost: the rival has dropped out of line of sight (re-pops at most every 3 s) | 3 x 0.14 on, 0.10 off, fade 0.14 = 0.76 s | 5 |
+| Fear | emotion | An opponent starts a finisher, or the fighter watches a rival transform | 3 x 0.10 on, 0.07 off, fade 0.12 = 0.56 s | 6 |
+| Rage | emotion | Drop the Act, a wrath spike, a boil-over, a humiliating parry | 3 x 0.14 on, 0.08 off, fade 0.14 = 0.72 s | 7 |
+| Hurt | emotion | A heavy hit or a break launch, when the crown is not up | 2 x 0.10 on, 0.06 off, fade 0.14 = 0.40 s | 8 |
+| Resolve | emotion | A Rally or Second Wind. Sequenced: it starts 0.1 s after the crown's wear pop fades, waits up to 2 s and is never dropped by arbitration | 2 x 0.18 on, 0.10 off, fade 0.20 = 0.66 s | 9 |
+| Triumph | emotion | A finisher lands, or a KO for the winner | 3 x 0.14 on, 0.08 off, fade 0.16 = 0.74 s | 10 |
+| Pride | emotion | A decisive exchange won | 2 x 0.22 on, 0.12 off, fade 0.20 = 0.76 s | 11 |
+| Respect | emotion | A clash ends in a draw, a finisher is blocked, or a rival gets back up after a heavy hit | 2 x 0.22 on, 0.12 off, fade 0.20 = 0.76 s | 12 |
+| Taunt | emotion | A taunt line or gesture | 3 x 0.10 on, 0.07 off, fade 0.14 = 0.58 s | 13 |
+| Surge | emotion | A transformation: three slow pulses of a small crest at the start of the cinematic, then gone | 3 x 0.35 on, 0.25 off, fade 0.30 = 1.85 s | 1 |
 
 **Cut and held.** Brink is cut: the crown's dashed brink ring covers it, and the sigil still dims and gaps. Winded, Smug and Bored are held for later, and so is Primed (the ambush window needs hiding, which is held for a future stealth fighter; it keeps its layout in the data) (they are in the pitch, `ma-6-flash-pitch.svg`, and listed in the data as `held`).
 
@@ -80,7 +88,7 @@ Each flash is drawn in the fighter's shape family. That is what makes it ours, a
 - **Emotion flashes** (all the rest) are translucent, with a rim and a lighter core, at 34 to 55% opacity. Feeling and state.
 
 **Legal's conditions on shape:**
-- **Danger sense is a pointer train.** Three shapes of growing size along one ray, up and behind the head (a default of 132 degrees). Rendering turns the ray to the threat's bearing and keeps it above or behind (60 to 200 degrees). It is never a ring of short lines around the head and never wavy.
+- **Danger sense is a pointer train.** Three shapes of growing size along one ray, up and behind the head (a default of 132 degrees). Rendering turns the ray to the threat's bearing and keeps it above or behind (65 to 175 degrees). It is never a ring of short lines around the head and never wavy.
 - **The Anti-hero's upward flashes are round-tipped** (pride, triumph, surge, danger sense). His rage stays pointed, because it sweeps forward, not up.
 - **The Empress's upward flashes are a wide, low crest** behind the head (pride, triumph, surge, resolve): the angles are flattened and turned back, and the shapes are shorter. The Anti-hero's surge takes the same wide, low crest, so no transformation is a tall upswept shape.
 - **Info flashes** are a pale core inside a thin keyline in the lane's dark step. No yellow, no red-orange, no thick black outline. The Cyborg's are neutral steel.
@@ -108,7 +116,7 @@ Each flash pairs with one short sound, described in words on the sheet: a low dr
 | Shape | Filled shapes in a family. Never a thin line, never a closed ring | Thin arcs and rings, always round |
 | Place | At and above the head, in the scene, behind the fighter | Around the whole body, on the HUD layer above the fighter |
 | Colour | The fighter's accent, two steps | Neutral role colours in thin strokes |
-| Motion | Changes shape, never blinks. Pops in 0.05 to 0.25 s and fades in 0.15 to 0.55 s | Pops and fades over 1 to 1.5 s, a regular 4 Hz flicker, a slow brink ring |
+| Motion | Changes shape, never blinks. Two or three quick pulses, 0.4 to 0.8 s in all | Pops and fades over 1 to 1.5 s, a regular 4 Hz flicker, a slow brink ring |
 | Time | Under a second, an emotion or a sense | 1 to 1.5 s, an event about wear |
 
 **Suggested changes for UI:**
@@ -139,7 +147,7 @@ Each flash pairs with one short sound, described in words on the sheet: a low dr
 **Kept from before**
 - **Staples yes, signatures no.** Exclamation marks, question marks, sweat drops and anger marks are general comics staples and are drawn in each fighter's own shapes with a keyline, not as a font glyph.
 - **Sound:** original only (see the sound pairing). No four-note alert sting, no chirp. Audio can veto a pairing that sounds close to a known cue.
-- **Glow rules:** no red, red-orange or gold flash for the Protagonist or the Anti-hero; no full-body glow as a power-stage signature for anyone (the surge is head and shoulder anchored and settles after the cinematic); the Protagonist's heat stays steam and veins.
+- **Glow rules:** no red, red-orange or gold flash for the Protagonist or the Anti-hero; no full-body glow as a power-stage signature for anyone (the surge is a small crest above and behind the head, three slow pulses, gone in under two seconds); the Protagonist's heat stays steam and veins.
 - **Legal's second pass (confirmed the above):** the Protagonist's ring moved off the mid-forehead to an off-centre temple mark above the brow ridge (a centred forehead ring recalls a known three-eyed fighter), and the short rays at the sigil in rage and triumph are cut. The sigil has no rays in any state. The Cyborg's four squares are a diagonal stair, never a 2 by 2 block.
 - **Legacy view:** the earlier pointed and tall shapes stay visible on `ma-4` and `ma-5` (marked "before") so Legal can compare.
 
