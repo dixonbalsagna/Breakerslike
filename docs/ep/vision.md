@@ -289,3 +289,17 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Surprise vs player choice: 6 of 10 (a fair amount of director surprise).
 - Anguish: 3 of 10 (mostly emotional, a light handicap).
 - Orb only briefly played the latest build; more feedback later.
+
+## Questionnaire 6 (2026-09-30): moveset breadth
+- Ambition: hundreds to thousands of basic martial-arts attacks per fighter, dozens to hundreds of specials (energy blasts, advanced footwork, anything unique), dozens of signatures (flashy energy attacks, hidden weapons, secret abilities, ancient knowledge, world-changing abilities), plus a unique transformation mechanic per fighter.
+- Building it: a hybrid. Hand-made showcase moves plus a composed fill from a smaller set of hand-made pieces.
+- What makes basic attacks different: the limb or body part, reacting to the situation (air, ground, wall, water), the impact and reaction, and the rhythm and speed.
+- Recognisability: 3 of 10. Exchanges should mostly look new, not trademark combos.
+- Style: a fighter's style shifts during the match with mood, injury and form.
+- Specials: a loadout of a few, each with contextual variants.
+- Signatures: the place decides (biome, altitude, stance), some are revealed by story moments mid-fight, and some are tied to the transformation stage.
+- World-changing abilities: reshape the land, change the sky, move water, and alter the planet itself. Permanent for the rest of the match, at most once per match.
+- Hidden weapons and secret abilities: only certain fighters have them.
+- Transformation kinds Orb likes: a ladder of forms, a meter-fed state that drains, and shedding power to go faster. Each fighter's mechanic is different.
+- Animation: hand-made key poses with procedural in-betweens.
+- Priority: the move-building system first, content after.
