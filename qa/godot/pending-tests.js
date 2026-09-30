@@ -116,6 +116,50 @@ const tests = [
   { id: 'C3', spec: '§4b split', title: 'Per-tier casualty split: casualties by the higher tier at the time, checked against the ramp (tier 1 and 2 together at most about a third of the losses of a match once the ramp exists)', slice: 'World collateral ramp (after S2)', needs: ['evacuat*'], run: null },
 ];
 
+// ---------------------------------------------------------------- Stage C scripts (docs/controls/stage-c-tests.md)
+// Controls writes the 22 scripts as SceneTree scripts in sim/input/test/c01_*.gd and so on (each exits 0 on pass and runs its
+// scenario twice for determinism); QA runs them here. A script test is PENDING until its fx events exist (press_ack for the
+// press scripts, availability for C19 and C20) AND its script file exists; then it runs for real, one Godot process at a time,
+// and passes on exit code 0. The six batch checks (B1 to B6) need bodies written against the events Stage C defines.
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const { godot, ROOT } = require('./godot');
+const STAGE_C = [
+  ['SC1', 'Weight starts light', 'press_ack'], ['SC2', 'Weight sticks across exchanges', 'press_ack'], ['SC3', 'No-op on the current weight (press_ack weight_light once)', 'press_ack'],
+  ['SC4', 'Same-tick light and heavy: heavy wins', 'press_ack'], ['SC5', 'Heavy fallback to light when ki is short (press_ack weight_fallback)', 'press_ack'],
+  ['SC6', 'Signature queue and cancel (sig_queued, sig_cancelled)', 'press_ack'], ['SC7', 'Unfunded signature waits', 'press_ack'], ['SC8', 'Expiry after 600 ticks (sig_expired once)', 'press_ack'],
+  ['SC9', 'Funded signature fires within 180 ticks of sig_funded', 'press_ack'], ['SC10', 'The 180-tick cap pauses during charge', 'press_ack'], ['SC11', 'The cap pauses inside an exchange', 'press_ack'],
+  ['SC12', 'A signature has no fallback', 'press_ack'], ['SC13', 'Presses are accepted while charging', 'press_ack'], ['SC14', 'Queue cleared by a KO or a decisive launch', 'press_ack'],
+  ['SC15', 'Determinism under press timing', 'press_ack'], ['SC16', 'The AI uses the same input path', 'press_ack'], ['SC17', 'No timing dependence for parry, chain or struggle outcomes', 'press_ack'],
+  ['SC18', 'Holds pause attacks', 'press_ack'], ['SC19', 'Transform confirm: 30-tick hold', 'availability'], ['SC20', 'Encore offer: 18-tick hold, 180-tick lapse', 'availability'],
+  ['SC21', 'Stance always accepted, debounce 4 and repeat 12', 'press_ack'], ['SC22', 'Acknowledgement on the same tick (press_ack)', 'press_ack'],
+];
+const scriptFiles = id => { const dir = path.join(ROOT, 'sim', 'input', 'test'), re = new RegExp('^c' + id.slice(2).padStart(2, '0') + '_.*[.]gd$'); try { return fs.readdirSync(dir).filter(f => re.test(f)).map(f => path.join(dir, f)); } catch (e) { return []; } };
+for (const [id, title, needs] of STAGE_C) {
+  tests.push({ id, spec: 'stage-c-tests §2', title, slice: 'Controls Stage C', needs: [needs], stageC: true,
+    run() {
+      const files = scriptFiles(id);
+      if (!files.length) return { status: 'PENDING', detail: `events present, but sim/input/test/c${id.slice(2).padStart(2, '0')}_*.gd is not written yet` };
+      const g = godot(); assert.ok(g, 'Godot not found');
+      for (const f of files) {
+        const r = spawnSync(g.exe, ['--headless', '--path', ROOT, '--script', 'res://sim/input/test/' + path.basename(f)], { encoding: 'utf8', timeout: 300000 });
+        assert.strictEqual(r.status, 0, `${path.basename(f)} exited ${r.status}: ${(r.stdout || '').split('\n').filter(l => /FAIL|ERROR/i.test(l)).slice(0, 2).join(' | ')}`);
+      }
+      return `${files.length} script(s) passed`;
+    } });
+}
+const BATCH = [
+  ['SB1', 'Funded-to-fired: p99 and max at most 180 ticks (paused ticks excluded), 1,000 matches with a scripted queuer', ['sig_funded', 'sig_fired']],
+  ['SB2', 'Queue never wedges: no sigQueued older than 600 unfunded or 180 funded ticks, 1,000 matches with random presses', ['sig_queued']],
+  ['SB3', 'Weight mix follows the latched weight (within fallbacks), 400 matches per arm', ['press_ack']],
+  ['SB4', 'Stance-flick arm wins at most 55% (rulings §12 risk 5)', ['press_ack']],
+  ['SB5', 'Ki fairness: sticky heavy against sticky light, neither above 55%; ki-starved fallbacks per match reported', ['press_ack']],
+  ['SB6', 'Determinism: 100 seeds with random queue presses, run twice, identical hashes', ['press_ack']],
+];
+for (const [id, title, needs] of BATCH) tests.push({ id, spec: 'stage-c-tests §3', title, slice: 'Controls Stage C (+ Encounter scheduler for B1, B2)', needs, run: null });
+tests.push({ id: 'C-human', spec: 'stage-c-tests §4', title: 'Human checks: readability (80% say what the next attack is and why it has not fired), weightlessness (each "nothing happened" is a missing ack), agency survey against the prototype baseline', slice: 'playtest', needs: ['playtest'], run: null });
+
 // Run every test: returns [{ id, spec, title, slice, status: PASS|FAIL|PENDING, detail }].
 async function runTests(ctx, only = null) {
   const out = [];

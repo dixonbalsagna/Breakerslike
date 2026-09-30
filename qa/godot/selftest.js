@@ -73,6 +73,15 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const tele = byId(await runTests(ctx({ default: [withEvents(rec(), [{ type: 'hazard_telegraph', t: 5 }])] }), ['H2', 'H3']));
     assert.strictEqual(tele.H2.status, 'PENDING'); assert.strictEqual(tele.H3.status, 'PENDING');
   });
+  await t('Stage C: 22 script tests and 6 batch checks exist, PENDING without press_ack; with the event but no script file they stay PENDING', async () => {
+    const { tests } = require('./pending-tests');
+    assert.strictEqual(tests.filter(x => x.stageC).length, 22); assert.strictEqual(tests.filter(x => /^SB[1-6]$/.test(x.id)).length, 6);
+    const ids = tests.filter(x => x.stageC || /^SB[1-6]$/.test(x.id)).map(x => x.id);
+    const none = await runTests(ctx({ default: [rec()] }), ids);
+    assert.ok(none.every(r => r.status === 'PENDING'));
+    const ev = await runTests(ctx({ default: [withEvents(rec(), [{ type: 'press_ack', t: 1, actor: 0 }, { type: 'availability', t: 1, actor: 0 }])] }), tests.filter(x => x.stageC).map(x => x.id));
+    assert.ok(ev.every(r => r.status === 'PENDING' && /not written yet/.test(r.detail)), JSON.stringify(ev.filter(r => r.status !== 'PENDING').map(r => r.id + ':' + r.status + ' ' + r.detail)));
+  });
   await t('a test with events present but no body stays PENDING, never PASS', async () => {
     const r = byId(await runTests(ctx({ default: [withEvents(rec(), [{ type: 'brunt_chain', t: 5 }])] }), ['H5'])).H5;
     assert.strictEqual(r.status, 'PENDING');
