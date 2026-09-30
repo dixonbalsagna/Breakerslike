@@ -171,7 +171,7 @@ static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool =
 		parts.append(k.name + " " + SimMathx.jstr(SimMathx.jround(k.s)))
 	var all: PackedStringArray = []
 	for k in r.all:
-		all.append(k.name + " " + SimMathx.jstr(SimMathx.jround(k.s)))
+		all.append(k.name + ("#" + str(k.brunt.b) if k.has("brunt") else "") + " " + SimMathx.jstr(SimMathx.jround(k.s)))   # B2: which building
 	SimFx.launchPlan(S, att, tgt, "|".join(all), r.best.name)
 	if r.best.name == "NONE":
 		# Nothing scored above holding back: the strike shoves the target instead of launching it.

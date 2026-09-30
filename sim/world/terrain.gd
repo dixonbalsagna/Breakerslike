@@ -222,6 +222,8 @@ static func _row(S: SimState, r: SimRng, x0: float, x1: float, kind: String, row
 			b.seed = r.next()
 			b.d = w * 0.9
 			x += w + r.range_(16.0, 70.0) * WS * gapMul
+		b.floors = WorldBrunt.floorCount(b.h)
+		b.fmask = (1 << b.floors) - 1
 		b.row = float(row)
 		b.z = ROW_Z_BH[row] * BH + ((b.seed - 0.5) * 2.0 * ROW_JITTER_BH * BH if row > 0 else 0.0)
 		b.popAlive = b.pop

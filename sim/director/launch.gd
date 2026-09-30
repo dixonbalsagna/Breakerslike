@@ -38,6 +38,18 @@ const NONE_BASE: float = 25.0       # "no launch"
 const ACROSS_UY: float = 0.32       # SMASH ACROSS arc
 const ACROSS_FORCE: float = 2.0     # SMASH ACROSS force multiplier
 const KNOCKBACK: float = 700.0      # push when no launch is chosen
+## BUILDING SMASH scoring (B2). The occupancy term saturates at BRUNT_POP_REF living people: at today's scale a building holds
+## one to five, not the thirteen the first draft assumed.
+const BRUNT_BASE: float = 14.0
+const BRUNT_POP_REF: float = 8.0
+const BRUNT_TALL_W: float = 12.0     # the fighter who feeds on collateral seeks tall buildings
+const BRUNT_FRESH: float = 4.0       # an undamaged building
+const BRUNT_ROW_W: float = 2.0       # ... and deeper rows (more dramatic)
+const BRUNT_CHAIN_DRAMA: float = 5.0
+const BRUNT_DRAMA_CAP: float = 14.0
+const BRUNT_REPEAT: float = 12.0     # the same building twice running
+const BRUNT_RAMP: float = 5.0        # per planner launch that had a building in reach and chose something else
+const BRUNT_OVER_BUDGET: float = 40.0
 const PREDICT_REACH: float = 40000.0  # buildings farther than this from the launch point are not checked
 const PREDICT_STEPS: int = 240      # flight predictor horizon: 4 s at the fixed step
 
@@ -56,10 +68,17 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 	if not longOnly:
 		c.append({"name": "SLAM DOWN", "ux": 0.2 * f, "uy": -1.25, "s": (18.0 if alt > 140.0 else 0.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})
 	c.append({"name": "SMASH ACROSS", "ux": f, "uy": ACROSS_UY, "fm": ACROSS_FORCE, "s": 8.0})
+	var tierF: float = 1.0 + A.ld.launch * (A.tier - 1.0)   # D1b: ladder.json
+	# BUILDING SMASH (B2, docs/world/b2-plan.md section 4): one candidate per building the launch can be aimed at, in any row,
+	# scored by personality first and drama on top; a chain through several buildings is part of the candidate.
+	var hadBrunt: bool = false
+	for bi in WorldBrunt.candidates(S, D):
+		var plan = WorldBrunt.aim(S, A, D, S.buildings[bi], force, tierF, longOnly)
+		if plan != null:
+			hadBrunt = true
+			plan.s = bruntScore(S, A, plan)
+			c.append(plan)
 	for sign in [-1.0, 1.0]:
-		var nb = WorldStructures.nearestBuilding(S, D.x, sign, 1100.0 * SimConst.WS, D.y)
-		if nb != null:
-			c.append({"name": "BUILDING SMASH", "ux": sign, "uy": 0.12, "s": 7.0 + nb.b.h / (32.0 * SimConst.WS) + A.tier * 3.0 + (6.0 if sign == f else -4.0), "land": D.x + sign * nb.d})
 		# The nearest mountainside ahead, out to MOUNTAIN_REACH: near slopes give a short throw, far ones a long haul.
 		var md: float = MOUNTAIN_STEP
 		while md <= MOUNTAIN_REACH:
@@ -69,12 +88,23 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 			md += MOUNTAIN_STEP
 	if not longOnly:
 		c.append({"name": "NONE", "ux": 0.0, "uy": 0.0, "s": NONE_BASE})
-	var tierF: float = 1.0 + A.ld.launch * (A.tier - 1.0)   # D1b: ladder.json
 	for k in c:
 		k.s += S.rng.range_(0.0, NOISE)
 		if k.name == "NONE":
 			# Holding back leaves the fight where it is: the same personality term, at the target's position.
 			k.s += (-A.care) * CARE_W * WorldStructures.popNear(S, D.x, CARE_R)
+			continue
+		if k.has("brunt"):
+			# A brunt is scored by bruntScore; its flight is WorldBrunt's, so there is nothing to predict here.
+			var br: Dictionary = k.brunt
+			var lastb = S.buildings[br.chain[br.chain.size() - 1].b]
+			k.land = lastb.x
+			k.travel = absf(SimWrap.sdx(D.x, lastb.x))
+			k.p = {"x": br.hit.x, "travel": k.travel, "water": false, "building": true, "t": br.hit.t}
+			if k.name == S.dirS.lastLaunch:
+				k.s -= REPEAT_1
+			if k.name == S.dirS.lastLaunch2:
+				k.s -= REPEAT_2
 			continue
 		var fm: float = k.fm if k.has("fm") else 1.0
 		var p: Dictionary = predictFlight(S, D.x, D.y, WorldSlide.launchVX(k.ux, k.uy, force * fm * tierF), k.uy * force * fm * tierF, WorldSlide.launchTravel(k.ux, k.uy))
@@ -111,11 +141,49 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 			c[j + 1] = c[j]
 			j -= 1
 		c[j + 1] = key
+	# The pity counter: launches that had a building in reach and chose something else make the next brunt likelier.
+	if hadBrunt:
+		if c[0].name == "BUILDING SMASH":
+			S.dirS.sinceBrunt = 0.0
+			S.dirS.lastBrunt = float(c[0].brunt.b)
+		else:
+			S.dirS.sinceBrunt += 1.0
 	return {"best": c[0], "top": c.slice(0, 3), "all": c}
 
 
+## The score of a BUILDING SMASH candidate (docs/world/b2-plan.md section 4): a base, the launcher's tier, personality (who
+## is in the building and, for a fighter who feeds on collateral, how tall it is), drama on top (capped: personality decides
+## which building, drama decides among near equals), the pity counter, a repeat penalty, and a penalty for a chain that would
+## exceed the casualty budget the runtime will enforce.
+static func bruntScore(S: SimState, A, plan: Dictionary) -> float:
+	var chain: Array = plan.brunt.chain
+	var pers: float = 0.0
+	var drama: float = 0.0
+	var first = S.buildings[chain[0].b]
+	for i in range(chain.size()):
+		var cb = S.buildings[chain[i].b]
+		pers += (-A.care) * CARE_W * clampf(cb.popAlive / BRUNT_POP_REF, 0.0, 1.0)
+		if A.care < 0.0:
+			pers += (-A.care) * BRUNT_TALL_W * clampf(cb.h / SimConst.WS / 400.0, 0.0, 1.0)
+	drama += first.h / SimConst.WS / 32.0 + (BRUNT_FRESH if first.hp >= first.maxhp else 0.0)
+	if A.care < 0.0:
+		drama += BRUNT_ROW_W * first.row
+	drama += BRUNT_CHAIN_DRAMA * float(chain.size() - 1)
+	var s: float = BRUNT_BASE + 3.0 * A.tier + pers + minf(drama, BRUNT_DRAMA_CAP) + BRUNT_RAMP * S.dirS.sinceBrunt
+	if S.dirS.lastBrunt == float(chain[0].b):
+		s -= BRUNT_REPEAT
+	if chain.size() > 1:
+		var allow: float = 0.0
+		if A.tier >= 3.0:
+			allow = WorldCollateral.EVENT_ALLOW["chain"][int(A.tier) - 1] * S.world.pop0
+		if plan.brunt.deaths > WorldCollateral.room(S) + allow:
+			s -= BRUNT_OVER_BUDGET
+	return s
+
+
 ## Where a launched fighter would come to rest: the free-flight part of SimFighter.stepLaunched (gravity, air drag,
-## water drag and the stop in water, ground impacts by the slam-or-slide rule of world/slide.gd), without buildings. It reads the terrain
+## water drag and the stop in water, ground impacts by the slam-or-slide rule of world/slide.gd), without buildings (a launch
+## collides only with the building it is aimed at: WorldBrunt.aim and chainPlan predict that). It reads the terrain
 ## and never writes state. Returns {"x": landing x, "travel": horizontal distance, "water": ends in the sea}.
 static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: float, trav: float = 1.0) -> Dictionary:
 	var dt: float = SimConst.DT
@@ -128,21 +196,7 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 	var vy: float = vy0
 	var travel: float = 0.0
 	var t: float = 0.0
-	# Standing buildings ahead within reach, as [offset along the flight, half width + 16, ground, top, index], sorted by
-	# offset: the flight stops at the first one it meets (the same box as SimFighter._buildingHits; smashing through is
-	# not predicted). The flight never reverses (drag and water only slow it), so one pointer walks the list.
 	var dir0: float = -1.0 if vx0 < 0.0 else 1.0
-	var blds: Array = []
-	for bi in WorldStructures.near(S, SimWrap.wrap(x0 + dir0 * PREDICT_REACH * 0.5), PREDICT_REACH * 0.5 + 64.0):
-		var b = S.buildings[bi]
-		if b.alive and b.row == WorldStructures.PLANE_ROW:   # only the front street collides until the brunt (B2)
-			var off: float = SimWrap.sdx(x0, b.x) * dir0
-			var half: float = b.w / 2.0 + 16.0
-			if off + half > 0.0 and off < PREDICT_REACH:
-				var gy: float = WorldTerrain.groundY(S, b.x)
-				blds.append([off, half, gy, gy + WorldStructures.curH(b), bi])
-	blds.sort_custom(func(p, q): return p[0] < q[0] or (p[0] == q[0] and p[4] < q[4]))
-	var bp: int = 0
 	for n in range(PREDICT_STEPS):
 		t += dt
 		vy -= 1000.0 * dt
@@ -155,15 +209,6 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 			vy *= kWy
 			if SimDetMath.hypot(vx, vy) < 200.0 and t > 0.3:
 				return {"x": x, "travel": absf(travel), "water": true, "t": t}
-		var along: float = travel * dir0
-		while bp < blds.size() and blds[bp][0] + blds[bp][1] <= along:
-			bp += 1
-		var q: int = bp
-		while q < blds.size() and blds[q][0] - blds[q][1] < along:
-			var bb: Array = blds[q]
-			if y < bb[3] and y > bb[2] - 10.0:
-				return {"x": x, "travel": absf(travel), "water": false, "building": true, "t": t}
-			q += 1
 		var g: float = WorldTerrain.groundY(S, x)
 		if y <= g:
 			# The same rule as SimFighter.impact: a slam (or the sea, or too slow) lands here; anything shallower is a
@@ -175,13 +220,6 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 				return {"x": x, "travel": absf(travel), "water": sea, "t": t}
 			var dir: float = 1.0 if vx >= 0.0 else -1.0
 			var d: float = minf(WorldSlide.slideDistance(spN, WorldSlide.slope(S, x, dir), trav), SimConst.W * 0.25)
-			# A slide stops at the first standing building on its path (the slide keeps the flight's direction).
-			var along2: float = travel * dir0
-			for q2 in range(bp, blds.size()):
-				var ahead: float = blds[q2][0] - blds[q2][1] - along2
-				if ahead >= 0.0 and ahead < d:
-					d = ahead
-					break
 			return {"x": SimWrap.wrap(x + dir * d), "travel": absf(travel) + d, "water": false, "t": t}
 	return {"x": x, "travel": absf(travel), "water": y < 0.0 and WorldTerrain.seaAt(S, x), "t": t}
 
@@ -205,6 +243,7 @@ static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, spec
 	tgt.vy = plan.uy * f
 	tgt.spin = (1.0 if plan.ux >= 0.0 else -1.0) * S.rng.range_(8.0, 16.0)
 	SimFx.launch(S, tgt, att, SimDetMath.hypot(tgt.vx, tgt.vy), 1.0 if tgt.vx >= 0.0 else -1.0)
+	WorldBrunt.arm(S, tgt, att, plan)   # B2: the aimed building, the depth waypoints and the chain's token
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 600.0, "#ffffff", 0.3, 20.0)
 	SimFx.shake(S, 10.0, tgt.x)
 

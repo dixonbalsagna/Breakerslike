@@ -34,7 +34,12 @@ const RUBBLE_BOWL_CAP: float = 0.3         # inside a fresh bowl the heap is at 
 
 ## Standing height shrinks with damage to 30 percent of full; a destroyed building is gone (the rubble heap is ground).
 static func curH(b) -> float:
-	return b.h * (0.3 + 0.7 * b.hp / b.maxhp) if b.alive else 1.0
+	if not b.alive:
+		return 1.0
+	if b.floors >= WorldBrunt.FLOORS_MIN and b.fmask != (1 << b.floors) - 1:
+		# a skyscraper with floors gone stands as tall as its top standing floor
+		return float(WorldBrunt.topFloor(b) + 1) * WorldBrunt.floorH(b)
+	return b.h * (0.3 + 0.7 * b.hp / b.maxhp)
 
 
 ## Build the spatial index (once per world; the buildings never move).
@@ -70,14 +75,15 @@ static func dz(b) -> float:
 	return maxf(0.0, absf(b.z) - b.d * 0.5)
 
 
-static func damageBuilding(S: SimState, b, d: float, cause, mode: String = "burst", cx: float = 0.0, evt: float = 0.0) -> void:
+## local: the damage is a brunt's local floor damage (its people are handled by the floors), so only the collapse below applies.
+static func damageBuilding(S: SimState, b, d: float, cause, mode: String = "burst", cx: float = 0.0, evt: float = 0.0, local: bool = false) -> void:
 	if not b.alive or d <= 0.0:
 		return
 	var before: float = b.hp
 	b.hp -= d
 	var frac: float = SimMathx.jmin(before, d) / b.maxhp
 	var dead: float = SimMathx.jmin(b.popAlive, b.pop * frac * 1.3)
-	if dead > 0.0:
+	if dead > 0.0 and not local:
 		WorldCollateral.kill(S, b.idx, dead, cause, evt, cx)
 	var gy: float = WorldTerrain.groundY(S, b.x)
 	if b.hp <= 0.0:
@@ -105,6 +111,12 @@ static func damageBuilding(S: SimState, b, d: float, cause, mode: String = "burs
 			S.world.fallFold += 1.0
 	else:
 		SimFx.debris(S, b.x, gy + curH(b), 4, "#77808f", 300.0)
+
+
+## Bring building b down now (its hp is spent): everything left in it is lost or flees, and it falls in the given mode.
+static func collapse(S: SimState, b, cause, mode: String, cx: float, evt: float) -> void:
+	b.hp = minf(b.hp, 0.0)
+	damageBuilding(S, b, 0.001, cause, mode, cx, evt, true)
 
 
 ## The heap a fallen building leaves: a smooth mound over its footprint, added to the ground (S.deform) and recorded in

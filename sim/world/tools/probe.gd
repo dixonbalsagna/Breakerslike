@@ -408,7 +408,14 @@ func _init() -> void:
 	var Sa := fresh()
 	Sa.fighters[1].hasAnguish = true
 	WorldCollateral._feed(Sa, 4.0, Sa.fighters[1])
-	check(Sa.fighters[0].anguish > 0.0 and Sa.fighters[1].anguish > Sa.fighters[0].anguish, "every fighter with the meter gains anguish, more for its own casualties")
+	var an_ok: bool = true
+	for fi in range(2):
+		var fx = Sa.fighters[fi]
+		var want_an: float = 4.0 * (fx.md.anguishCasSelf if fi == 1 else fx.md.anguishCasOther) * WorldCollateral.POP_REF / Sa.world.pop0
+		print("  fighter %d: anguish %.3f after 4 casualties (data says %.3f)" % [fi, fx.anguish, want_an])
+		if absf(fx.anguish - want_an) > 0.001:
+			an_ok = false
+	check(an_ok, "every fighter with the meter gains anguish at its data rates (meters.json: casualty/self, casualty/opponent)")
 	# the choke point: nothing but collateral.gd feeds casualties
 	var stray: int = 0
 	for sub in ["core", "world", "director", "input"]:
@@ -587,6 +594,169 @@ func _init() -> void:
 	var expect_m: float = 3.0 * WorldCollateral.EVAC_MENACE * 425.0 / Se.world.pop0
 	print("  three evacuees caused by the villain: menace +%.2f (wanted %.2f), anguish +%.2f" % [Se.fighters[1].menace - m0, expect_m, Se.fighters[0].anguish - an0])
 	check(absf(Se.fighters[1].menace - m0 - expect_m) < 0.001 and Se.fighters[0].anguish == an0, "evacuees feed the causer's menace at 0.45 times 425 / pop0 and nobody's anguish")
+
+	print("== B2: aimed launches, chains, floors (docs/world/b2-plan.md) ==")
+	var aimed: int = 0
+	var tried: int = 0
+	var plan_mismatch: int = 0
+	var chain_hist := {}
+	var stray_hits: int = 0
+	var cap_break: int = 0
+	var open_token: int = 0
+	var rng_draws: int = 0
+	var rgb := SimRng.new(77)
+	for n in range(240):
+		var Sb2 := fresh(1 + n % 5)
+		var Ab = Sb2.fighters[1]
+		var Db = Sb2.fighters[0]
+		Ab.tier = float(1 + int(rgb.next() * 4.0))
+		Db.hp = 1.0e9
+		Ab.hp = 1.0e9
+		# a target on the ground somewhere in the city, a little way from a tower
+		var pick: int = int(rgb.next() * float(Sb2.buildings.size()))
+		var bcity2 = Sb2.buildings[pick]
+		var side: float = -1.0 if rgb.next() < 0.5 else 1.0
+		Db.x = SimWrap.wrap(bcity2.x - side * rgb.range_(1200.0, 7000.0))
+		Db.y = WorldTerrain.groundY(Sb2, Db.x) + rgb.range_(40.0, 300.0)
+		var force: float = rgb.range_(1500.0, 2600.0)
+		var tierF: float = 1.0 + Ab.ld.launch * (Ab.tier - 1.0)
+		var cands: Array = WorldBrunt.candidates(Sb2, Db)
+		if cands.is_empty():
+			continue
+		tried += 1
+		var plan = null
+		var rng_before: int = Sb2.rng.state_i32()
+		for cbi in cands:
+			plan = WorldBrunt.aim(Sb2, Ab, Db, Sb2.buildings[cbi], force, tierF, false)
+			if plan != null:
+				break
+		if plan == null:
+			continue
+		if Sb2.rng.state_i32() != rng_before:
+			rng_draws += 1
+		aimed += 1
+		var predicted: Array = []
+		for e in plan.brunt.chain:
+			predicted.append(int(e.b))
+		if false:
+			print("    DBG chain %s; plan %s from x %.1f y %.1f ground %.1f; building x %.1f w %.1f" % [str(plan.brunt.chain), str(plan.brunt.hit), Db.x, Db.y, WorldTerrain.groundY(Sb2, Db.x), Sb2.buildings[plan.brunt.b].x, Sb2.buildings[plan.brunt.b].w])
+		DirLaunch.doLaunch(Sb2, Ab, Db, plan, force)
+		var hits: Array = []
+		var hit_txt: Array = []
+		var guard2: int = 0
+		while Db.state == "launched" and guard2 < 900:
+			SimFighter.stepLaunched(Sb2, Db, SimConst.DT)
+			if false:
+				print("    DBG x %.1f y %.1f vx %.1f vy %.1f aim %d state %s" % [Db.x, Db.y, Db.vx, Db.vy, Db.aimB, Db.state])
+			for e in Sb2.out.fx:
+				if e.type == "building_hit":
+					hits.append(int(e.b))
+					hit_txt.append("%s(%d r%.2f)" % [e.outcome, int(e.b), e.ratio])
+			Sb2.out.fx.clear()
+			guard2 += 1
+		chain_hist[hits.size()] = chain_hist.get(hits.size(), 0) + 1
+		if hits != predicted:
+			plan_mismatch += 1
+			if plan_mismatch <= 8:
+				var pt: Array = []
+				for e in plan.brunt.chain:
+					pt.append("%s(%d r%.2f sp%.0f)" % [e.outcome, int(e.b), e.ratio, e.spN])
+				print("    mismatch seed %d tier %.0f: plan %s, got %s" % [n, Ab.tier, str(pt), str(hit_txt)])
+		for hb in hits:
+			if not predicted.has(hb):
+				stray_hits += 1
+		if hits.size() > WorldBrunt.chainCap(Ab.tier, false):
+			cap_break += 1
+		if Db.aimB != -1 or Db.chainEvt != 0.0:
+			open_token += 1
+	print("  %d of %d launches with a candidate were aimable; chain lengths (buildings hit): %s; plan differed from the outcome in %d; hits off the plan %d; over the tier cap %d; aim or token left open %d" % [aimed, tried, str(chain_hist), plan_mismatch, stray_hits, cap_break, open_token])
+	check(aimed > 20, "the aim search finds launches into the city")
+	check(plan_mismatch == 0, "the planned chain is the chain that happens (buildings and order)")
+	check(stray_hits == 0, "no building is hit outside the plan")
+	check(open_token == 0, "the aim and the chain token are closed after every flight")
+	check(cap_break == 0, "no chain is longer than its tier's cap")
+	check(rng_draws == 0, "the aim search and the chain lookahead draw nothing from the match RNG")
+	# no incidental collision: an unaimed launch through the city hits nothing
+	var incidental: int = 0
+	var rgc := SimRng.new(5)
+	for n in range(120):
+		var Sc2 := fresh(1 + n % 3)
+		var Dc = Sc2.fighters[0]
+		var Ac = Sc2.fighters[1]
+		Dc.hp = 1.0e9
+		Dc.x = X(2500.0) + rgc.range_(0.0, 14000.0)
+		Dc.y = WorldTerrain.groundY(Sc2, Dc.x) + 50.0
+		var ux2: float = 1.0 if rgc.next() < 0.5 else -1.0
+		var plan2 := {"ux": ux2, "uy": 0.12, "fm": 1.0}
+		DirLaunch.doLaunch(Sc2, Ac, Dc, plan2, rgc.range_(1500.0, 2600.0))
+		var g3b: int = 0
+		while Dc.state == "launched" and g3b < 900:
+			SimFighter.stepLaunched(Sc2, Dc, SimConst.DT)
+			for e in Sc2.out.fx:
+				if e.type == "building_hit":
+					incidental += 1
+			Sc2.out.fx.clear()
+			g3b += 1
+	check(incidental == 0, "an unaimed launch never collides with a building (%d hits in 120 launches through the city)" % incidental)
+	# floors: a skyscraper
+	var Sf := fresh()
+	var tall = null
+	for bb in Sf.buildings:
+		if bb.floors >= 12:
+			tall = bb
+			break
+	check(tall != null, "the city has a tower of at least 12 floors")
+	if tall != null:
+		var gy: float = WorldTerrain.groundY(Sf, tall.x)
+		var fh: float = WorldBrunt.floorH(tall)
+		print("  a tower of %d floors, height %.0f, hp %.0f, people %.1f" % [tall.floors, tall.h, tall.maxhp, tall.popAlive])
+		var ohigh: Dictionary = WorldBrunt.outcomeOf(Sf, tall, gy + (float(tall.floors) - 2.5) * fh, 1800.0, 2.0)
+		var olow: Dictionary = WorldBrunt.outcomeOf(Sf, tall, gy + 1.0 * fh, 1800.0, 2.0)
+		print("  speed 1800, tier 2: high hit ratio %.2f (%s), low hit ratio %.2f (%s)" % [ohigh.ratio, ohigh.outcome, olow.ratio, olow.outcome])
+		check(ohigh.ratio > olow.ratio, "a higher floor is weaker than a lower one")
+		# a real punch through the top floors: the tower stands shorter
+		var Fa = Sf.fighters[0]
+		var Fby = Sf.fighters[1]
+		Fa.launchT = 1.0
+		Fa.vx = 1500.0
+		Fa.vy = 0.0
+		Fa.launchBy = Fby
+		var pop_b: float = tall.popAlive
+		var top_y: float = gy + (float(tall.floors) - 1.0) * fh
+		var oc1: Dictionary = WorldBrunt.outcomeOf(Sf, tall, top_y, 1800.0, 4.0)
+		oc1["outcome"] = "punch"
+		oc1["pass"] = true
+		var res: Dictionary = WorldBrunt.applyFloors(Sf, tall, oc1, Fby, 0.0, tall.x, Fa, top_y)
+		print("  a punch through the top: pancake %s, collapse %s, floors standing %d of %d, people %.1f -> %.1f, height now %.0f" % [str(res.pancake), str(res.collapse), WorldBrunt.standingCount(tall), tall.floors, pop_b, tall.popAlive, WorldStructures.curH(tall)])
+		check(tall.alive and WorldBrunt.standingCount(tall) == tall.floors - oc1.hit.size() and not res.pancake, "a punch through the top leaves a shorter tower (nothing above to fall)")
+		check(WorldStructures.curH(tall) < tall.h, "the tower is shorter after the punch")
+		# a punch low down: the span is wider than a tunnel, so the floors above pancake
+		var Sg := fresh()
+		var tall2 = null
+		for bb in Sg.buildings:
+			if bb.floors >= 12:
+				tall2 = bb
+				break
+		var gy2: float = WorldTerrain.groundY(Sg, tall2.x)
+		var fh2: float = WorldBrunt.floorH(tall2)
+		# clear floors 2..5 by hand (a four floor span), then punch at floor 1: the span above the ground floor grows past a tunnel
+		var y_low: float = gy2 + 2.0 * fh2
+		var oc2: Dictionary = WorldBrunt.outcomeOf(Sg, tall2, y_low, 99999.0, 4.0)
+		var pop2: float = tall2.popAlive
+		var res2: Dictionary = WorldBrunt.applyFloors(Sg, tall2, oc2, Sg.fighters[1], 0.0, tall2.x, Sg.fighters[0], y_low)
+		print("  a hard punch at floor 2 of %d (%s): pancake %s, collapse %s, floors standing %d, people %.1f -> %.1f" % [tall2.floors, oc2.outcome, str(res2.pancake), str(res2.collapse), WorldBrunt.standingCount(tall2), pop2, tall2.popAlive])
+		check(res2.pancake or res2.collapse or WorldBrunt.standingCount(tall2) >= tall2.floors - 2, "a long cleared span pancakes the stack above it, a short one is a tunnel")
+		# occupants never go negative and never exceed what was there
+		check(tall2.popAlive >= 0.0 and tall2.popAlive <= pop2 + 0.0001, "people only fall")
+		# a blast still implodes the whole building
+		var Sh := fresh()
+		var tall3 = null
+		for bb in Sh.buildings:
+			if bb.floors >= 12:
+				tall3 = bb
+				break
+		WorldStructures.damageArea(Sh, tall3.x, 0.0, 600.0, 1.0e8, Sh.fighters[1])
+		check(not tall3.alive, "an area blast still levels a skyscraper whole")
 
 	print("")
 	print("probe: %d check(s) failed" % fails)

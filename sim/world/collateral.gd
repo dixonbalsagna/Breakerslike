@@ -180,7 +180,7 @@ static func shelter(S: SimState, cx: float, n: float) -> int:
 ## The one place a civilian dies. want is how many would die in building bi (or -1 for people outside any building);
 ## they all leave the building; the allowed number are casualties and the rest evacuate. cx is the x of the event that
 ## caused it (the crowd flees from it); evt is the caller's set-piece token or 0. Returns the casualties.
-static func kill(S: SimState, bi: int, want: float, cause, evt: float, cx: float) -> float:
+static func kill(S: SimState, bi: int, want: float, cause, evt: float, cx: float, floor_: int = -1) -> float:
 	if want <= 0.0:
 		return 0.0
 	var w: SimState.World = S.world
@@ -214,7 +214,7 @@ static func kill(S: SimState, bi: int, want: float, cause, evt: float, cx: float
 		if dest >= 0:
 			S.buildings[dest].popAlive += evac
 			S.popHist[histBucket(S.buildings[dest].x)] += evac
-		SimFx.evacuate(S, bi, b.x if b != null else cx, evac, cx, reason, owner, dest)
+		SimFx.evacuate(S, bi, b.x if b != null else cx, evac, cx, reason, owner, dest, floor_)
 	heavy(S, cx)
 	return granted
 

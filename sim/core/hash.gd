@@ -5,10 +5,10 @@ class_name SimHash
 const MASK: int = 0xFFFFFFFF
 const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName", "hp", "x", "y", "vx", "vy", "face", "ki", "power", "tier", "stance", "state", "stateT",
 	"hidden", "hideT", "hiddenFor", "menace", "anguish", "ambush", "rot", "spin", "bounces", "lastAtkT", "hurtT", "keys", "beamCharge", "wet", "ambushUntil", "dPrev",
-	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "hasMenace", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped",
+	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "hasMenace", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped", "aimB", "aimX0", "aimZ0", "aimZ1", "aimD", "chainEvt", "z",
 	"canHide", "lockBackT", "exT"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
-const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled"]
+const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled", "floors", "fmask"]
 const TREE: Array = ["x", "h", "alive", "burn"]
 const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col", "pw", "struck"]
 const SLIDE: Array = ["x0", "x1", "hw", "depth", "energy", "t", "owner", "surface", "pop"]
@@ -99,7 +99,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	else:
 		out.append(null)
 	var d := S.dirS
-	_obj(out, d, ["cool", "stop", "lastLaunch"])
+	_obj(out, d, ["cool", "stop", "lastLaunch", "sinceBrunt", "lastBrunt"])
 	out.append(d.lastLaunch2)
 	out.append(float(d.exN))
 	var ex = d.ex
@@ -142,6 +142,9 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(float(f.limbBreaks)); out.append(f.coreMarked)
 		out.append(float(f.brinkSetups)); out.append(f.brinkOpen); out.append(float(f.brinkEx))
 		out.append(float(f.flightHits))
+		out.append(float(f.splashed.size()))
+		for v in f.splashed:
+			out.append(float(v))
 		var st = f.style
 		if st != null:
 			for arr in [st.cur, st.buckets, st.win, st.total, st.enterT, st.leftAt]:
@@ -154,6 +157,9 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	out.append(float(S.buildings.size()))
 	for b in S.buildings:
 		_obj(out, b, BUILDING)
+		out.append(float(b.fdmg.size()))   # floor damage: empty for a building never hit locally
+		for v in b.fdmg:
+			out.append(v)
 	out.append(float(S.trees.size()))
 	for t in S.trees:
 		_obj(out, t, TREE)
@@ -243,10 +249,10 @@ const FX_FIELDS: Dictionary = {
 	"dust": ["x", "y", "n", "col"], "splash": ["x", "y", "n"], "fire": ["x", "y", "n"], "after": ["x", "y", "life", "col", "face"],
 	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col", "attacker", "victim", "region", "kind", "number"], "banner": ["text", "col", "dur"],
 	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner", "special"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
-	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner", "pop"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"], "evacuate": ["b", "x", "n", "cx", "reason", "owner", "dest"], "building_fall": ["b", "x", "y", "w", "depth", "mode", "delay", "cx", "rubble", "n"], "collateral_state": ["room", "budget", "left", "over"],
+	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner", "pop"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"], "evacuate": ["b", "x", "n", "cx", "reason", "owner", "dest", "floor"], "launch_depth": ["x", "y", "x1", "y1", "z", "b", "dur", "n", "owner", "victim"], "chain_link": ["from", "to", "x", "y", "z", "x1", "y1", "z1", "dur", "link", "owner", "victim"], "floor_hit": ["b", "floor", "n", "outcome", "ratio", "x", "y", "z", "ux", "uy", "kind", "owner", "victim"], "floors_fall": ["b", "from", "to", "n", "x", "z", "w"], "building_fall": ["b", "x", "y", "w", "depth", "mode", "delay", "cx", "rubble", "n"], "collateral_state": ["room", "budget", "left", "over"],
 	"shake": ["k", "x"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "limb_break": ["actor", "victim", "region"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"], "brink_open": ["actor", "target", "kind", "text"], "brink_close": ["actor", "kind"],
-	"mood_band": ["kind", "amount", "n"], "act_change": ["n", "kind"], "style_label": ["actor", "kind", "text"], "crowd_state": ["kind"], "building_hit": ["actor", "x", "n"],
+	"mood_band": ["kind", "amount", "n"], "act_change": ["n", "kind"], "style_label": ["actor", "kind", "text"], "crowd_state": ["kind"], "building_hit": ["actor", "x", "n", "b", "y", "z", "amount", "ratio", "outcome", "link", "spd", "keep", "ux", "uy", "kind", "w", "h", "owner", "victim"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target", "dur"], "finisher_contest": ["target", "chance", "survived"],
 	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],

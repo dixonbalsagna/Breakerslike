@@ -94,6 +94,8 @@ class DirS:
 	var stop: float = 0.0
 	var lastLaunch: String = ""
 	var lastLaunch2: String = ""
+	var sinceBrunt: float = 0.0       # B2: planner launches with a building in reach that chose something else since the last brunt
+	var lastBrunt: float = -1.0       # B2: the building index of the last brunt
 	var exN: int = 0          # D1a: exchanges started this match (the exchange index for keyed draws, SimRng.keyed)
 
 
@@ -154,6 +156,9 @@ class Crater:
 
 
 class Building:
+	var floors: int = 1        # floor count (world/brunt.gd floorCount), set at generation
+	var fmask: int = 1        # one bit per standing floor, bit 0 the ground floor
+	var fdmg := PackedFloat32Array()   # damage per floor, allocated on the first local hit (empty before)
 	var idx: int = 0          # index in S.buildings (set at generation; not hashed)
 	var fled: float = 0.0     # people who left in the district flight so far (capped at WorldCollateral.FLIGHT_MAX of pop)
 	var z: float = 0.0        # depth of the building's centre from the fighter plane (negative: behind), world units
@@ -262,6 +267,19 @@ class FxEvent:
 	var budget: float = 0.0
 	var left: float = 0.0
 	var over: bool = false
+	var ratio: float = 0.0       # building_hit, floor_hit: damage over the strength struck
+	var keep: float = 0.0        # building_hit: the speed share the fighter keeps
+	var link: int = 0            # building_hit, chain_link: 1 for the first building of a flight
+	var ux: float = 0.0          # building_hit, floor_hit: the unit impact velocity
+	var uy: float = 0.0
+	var z: float = 0.0           # launch_depth: the first hit's depth; building_hit, floor_hit, chain_link: the hit depth
+	var z1: float = 0.0          # chain_link: the next building's hit depth
+	var y1: float = 0.0          # launch_depth, chain_link: the next hit point's height
+	var from: float = -1.0       # chain_link: the building left; floors_fall: the lowest floor that fell
+	var to: float = -1.0         # chain_link: the building headed for; floors_fall: the highest
+	var outcome: String = ""     # building_hit: punch, crack, dent, pancake, collapse, heavy, wreck; floor_hit: punch, crack, dent
+	var floor: int = -1          # floor_hit: the lowest floor of the hit; evacuate: the floor the people left (-1 for a whole building)
+	var h: float = 0.0           # building_hit: the building's standing height
 	# Director events (Encounter, S2; docs/architecture/fx-events.md):
 	var target: float = -1.0     # the other fighter's slot (finisher, attack, parry, ambush, lock_lost, launch_plan, clash_draw, searching)
 	var chance: float = 0.0      # finisher_contest: the survival chance
@@ -348,6 +366,14 @@ class Fighter:
 	var slideE: float = 0.0        # impact energy of the slide
 	var slideDmg: float = 0.0      # damage still to take by speed lost
 	var slideAcc: float = 0.0      # damage earned by speed lost, not yet taken
+	var aimB: int = -1               # B2: the building this launch is aimed at, or -1 (world/brunt.gd)
+	var aimX0: float = 0.0           # x at the last waypoint (the launch, or the far face of the last building hit)
+	var aimZ0: float = 0.0           # depth at that waypoint
+	var aimZ1: float = 0.0           # depth of the aimed building's near face
+	var aimD: float = 1.0            # x distance from the waypoint to the near face
+	var chainEvt: float = 0.0        # the collateral set-piece token of a planned chain (0 for none)
+	var z: float = 0.0               # the fighter's depth from the plane, positive toward the camera; a function of his aim
+	var splashed := PackedInt32Array()   # buildings already splashed by this launch (at most WorldBrunt.SPLASH_CAP)
 	var launchSpecial: bool = false  # the current launch is a signature, finisher or break launch (its ground mark may be big)
 	var hopped: bool = false         # the launch has made its one hop
 	var slideEvt: float = 0.0      # the collateral set-piece token of the running slide (world/collateral.gd)

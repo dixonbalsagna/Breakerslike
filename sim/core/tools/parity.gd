@@ -340,7 +340,7 @@ func _fightData(g: Dictionary) -> String:
 ## D1b: every wired number in meters.json, ladder.json and guardWearSplit changes a match when edited (QA found the meters
 ## were documentation only). Each case copies data/fighters/ to user://, sets one value (ladder edits in both fighters'
 ## files), and plays seed 3 for WIRED_TICKS: by then it has a beam clash, both meters rising, evacuees and a power-up at
-## ground beside buildings (a fourth element picks another seed: 16 has a beam clash with menace up, VORR's evacuees and
+## ground beside buildings (a fourth element picks another seed: 12 has menace up, VORR's evacuees and
 ## guard hits early). The run's per-tick digest of both fighters' numbers, and its end state, must differ from the
 ## unedited run's. composure.below is left out: it only matters while composure's cap is not 0.
 const WIRED_TICKS: int = 6000
@@ -355,11 +355,11 @@ const WIRED: Array = [
 	["VORR/meters.json", ["meters", "menace", "effects", 0, "perPoint"], 0.3],
 	["VORR/meters.json", ["meters", "menace", "effects", 0, "cap"], 0.01],
 	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0],
-	["VORR/meters.json", ["meters", "menace", "effects", 2, "perPoint"], 50.0, 16],
+	["VORR/meters.json", ["meters", "menace", "effects", 2, "perPoint"], 50.0, 12],
 	["VORR/meters.json", ["meters", "menace", "decay", "rate"], 3.0],
 	["VORR/meters.json", ["meters", "menace", "decay", "delayTicks"], 30],
 	["VORR/meters.json", ["meters", "menace", "sources", 0, "amount"], 5.0],
-	["VORR/meters.json", ["meters", "menace", "sources", 1, "amount"], 5.0, 16],
+	["VORR/meters.json", ["meters", "menace", "sources", 1, "amount"], 5.0, 12],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["fillPerSec"], 2.0],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["thresholds"], [10.0, 50.0, 75.0]],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "speed"], 0.5],
@@ -378,7 +378,7 @@ func _wiredNumbers() -> String:
 	for id in FighterData.order():
 		for fname in ["fighter.json", "wounds.json", "meters.json", "ladder.json"]:
 			files[id + "/" + fname] = FileAccess.get_file_as_string(FighterData.ROOT + id + "/" + fname)
-	var base := {3: _wiredRun(3), 16: _wiredRun(16)}
+	var base := {3: _wiredRun(3), 12: _wiredRun(12), 16: _wiredRun(16)}
 	var bad: Array = []
 	FighterData.quiet = true
 	for i in range(WIRED.size()):

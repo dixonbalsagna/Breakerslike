@@ -73,22 +73,21 @@ static func impact(S: SimState, f, g: float, sp: float) -> void:
 	f.launchT = 1.0
 	f.launchSpecial = false
 	f.hopped = false
+	WorldBrunt.endFlight(S, f)
 
 
-## Launched flight: gravity, air drag, water (with the skip), building collisions, the ground (slam or slide) and the
+## Launched flight: gravity, air drag, water (with the skip), the aimed building (B2), the ground (slam or slide) and the
 ## ceiling. A fighter that is sliding is handled by WorldSlide.step.
 static func stepLaunched(S: SimState, f, dt: float) -> void:
 	f.stateT += dt
+	WorldBrunt.stepZ(S, f, dt)
 	if f.slide > 0.0:
-		var ox0: float = f.x
 		WorldSlide.step(S, f, dt)
-		if f.slide > 0.0 and _buildingHits(S, f, ox0):
-			var by0 = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
-			WorldSlide.finish(S, f, by0, true)
 		return
 	f.vy -= 1000.0 * dt
 	f.vx *= SimDetMath.pow(0.55, dt)
 	var ox: float = f.x
+	var oy: float = f.y
 	f.x = SimWrap.wrap(f.x + f.vx * dt)
 	f.y += f.vy * dt
 	f.rot += f.spin * dt
@@ -119,42 +118,15 @@ static func stepLaunched(S: SimState, f, dt: float) -> void:
 			f.state = "free"
 			f.rot = 0.0
 			f.launchT = 1.0
+			WorldBrunt.endFlight(S, f)
 			return
-	_buildingHits(S, f, ox)
+	var hitNow: bool = WorldBrunt.checkHit(S, f, ox, oy)   # B2: only the building the launch is aimed at can be hit
 	var g: float = WorldTerrain.groundY(S, f.x)
-	if f.y <= g:
+	if f.y <= g and not (hitNow and f.aimB >= 0):   # a chain link gets its next tick first (chainPlan's order)
 		impact(S, f, g, SimDetMath.hypot(f.vx, f.vy))
 	if f.y > SimConst.CEILING:
 		f.y = SimConst.CEILING
 		f.vy = SimMathx.jmin(f.vy, 0.0)
-
-
-## The incidental building collision (until the director-chosen brunt replaces it, buildings-in-depth.md section 3): a
-## launched or sliding fighter whose x is inside a standing building's footprint, below its top, hits it. Returns true if
-## it hit one.
-static func _buildingHits(S: SimState, f, ox: float) -> bool:
-	var hit: bool = false
-	for bi in WorldStructures.near(S, f.x, 64.0):
-		var b = S.buildings[bi]
-		if not b.alive or b.row != WorldStructures.PLANE_ROW:
-			continue
-		if absf(SimWrap.sdx(f.x, b.x)) < b.w / 2.0 + 16.0:
-			var gy: float = WorldTerrain.groundY(S, b.x)
-			if f.y < gy + WorldStructures.curH(b) and f.y > gy - 10.0:
-				var sp: float = SimDetMath.hypot(f.vx / f.launchT, f.vy)
-				var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
-				f.flightHits += 1
-				SimFx.buildingHit(S, f, b.x, f.flightHits)   # M1: a mood input (a launch through a building; 2 or more a chain)
-				WorldStructures.damageBuilding(S, b, sp * (0.55 + 0.25 * by.tier), by)
-				SimDamage.hurt(S, f, sp * 0.006, by)
-				SimFx.debris(S, f.x, f.y + 20.0, 6, "#77808f", 500.0)
-				f.vx *= 0.6
-				f.vy *= 0.85
-				if b.alive:
-					f.vx = -SimMathx.jsign(SimDamage.jor(f.vx, 1.0)) * absf(f.vx) * 0.25
-					f.x = SimWrap.wrap(b.x + SimMathx.jsign(SimDamage.jor(SimWrap.sdx(b.x, ox), 1.0)) * (b.w / 2.0 + 18.0))
-				hit = true
-	return hit
 
 
 static func stepRush(S: SimState, f, dt: float) -> void:

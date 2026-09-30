@@ -228,6 +228,54 @@ static func buildingHit(S: SimState, f, x: float, n: int) -> void:
 	e.actor = float(S.fighters.find(f)); e.x = x; e.n = n
 
 
+## B2: the launched fighter f will hit building bi first: the first hit point (x1, y1) at depth z1, in dur seconds, and the
+## planned chain length n. owner is the launcher's slot, victim the launched fighter's.
+static func launchDepth(S: SimState, f, att, x1: float, y1: float, z1: float, bi: int, dur: float, n: int) -> void:
+	var e := _ev(S, "launch_depth")
+	e.x = f.x; e.y = f.y; e.x1 = x1; e.y1 = y1; e.z = z1; e.b = float(bi); e.dur = dur; e.n = n
+	e.owner = float(S.fighters.find(att)); e.victim = float(S.fighters.find(f))
+
+
+## B2: the launched fighter f hit building b at height y (link-th of this flight): M1's {actor, x, n} plus the hit's detail.
+## oc is WorldBrunt.outcomeOf's result; outcome the summary word (punch, crack, dent, pancake, collapse, heavy, wreck).
+static func buildingHitB2(S: SimState, f, b, y: float, link: int, by, oc: Dictionary, outcome: String, spN: float) -> void:
+	var e := _ev(S, "building_hit")
+	e.actor = float(S.fighters.find(f)); e.x = b.x; e.n = link
+	e.b = float(b.idx); e.y = y; e.z = WorldBrunt.faceZ(b); e.amount = oc.dmg; e.ratio = oc.ratio; e.outcome = outcome
+	e.link = link; e.spd = spN; e.keep = oc.keep
+	var l: float = SimDetMath.hypot(f.vx / f.launchT, f.vy)
+	e.ux = f.vx / f.launchT / maxf(l, 0.000001); e.uy = f.vy / maxf(l, 0.000001)
+	e.kind = b.kind; e.w = b.w; e.h = WorldStructures.curH(b)
+	e.owner = float(S.fighters.find(by)); e.victim = e.actor
+
+
+## B2: after a burst through building b the fighter heads for nb: from b's far face at height y to nb's near face.
+static func chainLink(S: SimState, f, att, b, nb, y: float, r: Dictionary, link: int) -> void:
+	var e := _ev(S, "chain_link")
+	e.from = float(b.idx); e.to = float(nb.idx)
+	e.x = f.x; e.y = y; e.z = WorldBrunt.faceZ(b); e.x1 = r.x; e.y1 = r.y; e.z1 = WorldBrunt.faceZ(nb)
+	e.dur = r.t; e.link = link
+	e.owner = float(S.fighters.find(att)); e.victim = float(S.fighters.find(f))
+
+
+## B2: a brunt hit floors of a skyscraper: the lowest floor, how many were cleared (0 for a crack or a dent).
+static func floorHit(S: SimState, f, b, floor_: int, n: int, outcome: String, ratio: float, y: float, by) -> void:
+	var e := _ev(S, "floor_hit")
+	e.b = float(b.idx); e.floor = floor_; e.n = n; e.outcome = outcome; e.ratio = ratio
+	e.x = b.x; e.y = y; e.z = WorldBrunt.faceZ(b)
+	var l: float = SimDetMath.hypot(f.vx / f.launchT, f.vy)
+	e.ux = f.vx / f.launchT / maxf(l, 0.000001); e.uy = f.vy / maxf(l, 0.000001)
+	e.kind = b.kind; e.owner = float(S.fighters.find(by)); e.victim = float(S.fighters.find(f))
+
+
+## B2: a stack of floors pancaked: floors from..to (inclusive) of building b fell, n in all (broken floors, the stack, and
+## the floors that were already gone between).
+static func floorsFall(S: SimState, b, from_floor: int, to_floor: int, n: int) -> void:
+	var e := _ev(S, "floors_fall")
+	e.b = float(b.idx); e.from = float(from_floor); e.to = float(to_floor); e.n = n
+	e.x = b.x; e.z = WorldBrunt.faceZ(b); e.w = b.w
+
+
 ## Pitch A: W broke L's limb (region) in a crippling moment.
 static func limbBreak(S: SimState, W, L, region: String) -> void:
 	var e := _ev(S, "limb_break")
@@ -349,9 +397,9 @@ static func danger(S: SimState, f, source: String, eta: float) -> void:
 
 ## Civilians fled instead of dying (world/collateral.gd): the building, its x, how many (a float head count), the x the
 ## crowd flees from, the reason ("budget", "ceiling" or "flight") and the fighter's slot who caused it.
-static func evacuate(S: SimState, b: int, x: float, n: float, cx: float, reason: String, owner: float, dest: int = -1) -> void:
+static func evacuate(S: SimState, b: int, x: float, n: float, cx: float, reason: String, owner: float, dest: int = -1, floor_: int = -1) -> void:
 	var e := _ev(S, "evacuate")
-	e.b = float(b); e.x = x; e.n = n; e.cx = cx; e.reason = reason; e.owner = owner; e.dest = float(dest)
+	e.b = float(b); e.x = x; e.n = n; e.cx = cx; e.reason = reason; e.owner = owner; e.dest = float(dest); e.floor = floor_
 
 
 ## A building fell (any source). mode "implode" is area damage (straight down into its footprint, staggered by delay),

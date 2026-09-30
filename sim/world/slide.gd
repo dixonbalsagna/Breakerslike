@@ -82,6 +82,7 @@ static func slope(S: SimState, x: float, sign_: float) -> float:
 
 ## Start a slide (called from impact()): the fighter lands upright and keeps his direction. spN is the normalised speed.
 static func begin(S: SimState, f, by, spN: float, E: float) -> void:
+	WorldBrunt.endFlight(S, f)
 	f.slide = spN
 	f.slideX0 = f.x
 	f.slideD = 0.0
