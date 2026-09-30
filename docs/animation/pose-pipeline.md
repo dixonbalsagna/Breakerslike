@@ -315,7 +315,7 @@ The reference rules follow Legal's clean process (`docs/legal/animation-data-rul
 
 ### 3.8 The first fighter's lean showcase list (plan; drafts wait for Combat's M0 and the part cue)
 
-Orb confirmed Lean for the first fighter: 3 specials, 4 signatures, 6 showcases, growing by data. The first real fighter is the Anti-hero (brutal and showy; barrages; finishes by hand; Drop the Act; the Proud front). The list below is **a plan, not content**: names are working labels (Narrative names what shows on screen, Legal screens it), the moves are Combat's and Game Design's to set (`moveset-system.md`, `moveset-rules.md`), and **no draft is written until Combat's M0 grammar and the part cue exist**, because the pieces' joins, anchors and weight classes come from them. Every pose keeps an `_orig` line where it is in a sensitive family (§3.7) and a provenance record (§6.6).
+Orb confirmed Lean for the first fighter: 3 specials, 4 signatures, 6 showcases, growing by data. The first real fighter, the Lean proof, is the Anti-hero (Orb confirmed, 2026-09-30): brutal and showy; barrages; finishes by hand; Drop the Act; the Proud front. The list below is **a plan, not content**: names are working labels (Narrative names what shows on screen, Legal screens it), the moves are Combat's and Game Design's to set (`moveset-system.md`, `moveset-rules.md`), and **no draft is written until Combat's M0 grammar and the part cue exist**, because the pieces' joins, anchors and weight classes come from them. Every pose keeps an `_orig` line where it is in a sensitive family (§3.7) and a provenance record (§6.6).
 
 | # | Kind | Working label | What it is (for the pose draft) | Poses |
 | :--- | :--- | :--- | :--- | ---: |
@@ -335,7 +335,7 @@ Orb confirmed Lean for the first fighter: 3 specials, 4 signatures, 6 showcases,
 | F | Fixed | Finisher, transformation cinematics (six stages), break beats | The 68 poses that every scope needs | 68 |
 | | | **Total showcase-grade poses** | | **214** |
 
-Review format (default until Orb chooses): **contact sheets of 12 poses plus one motion reel per showcase** (§6.5). A showcase's reel is cut at the part's real timing and in the profile its weight class picks (§9.2).
+Review format (confirmed by Orb, 2026-09-30): **contact sheets of 12 poses plus one motion reel per showcase** (§6.5). A showcase's reel is cut at the part's real timing and in the profile its weight class picks (§9.2).
 
 ---
 
