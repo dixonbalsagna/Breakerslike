@@ -32,6 +32,8 @@ func _ready() -> void:
 	m.set_shader_parameter("rim_steel", Color(VfxLook.STEEL_HI))
 	m.set_shader_parameter("rim_dust", Color(VfxLook.DUST_B))
 	m.set_shader_parameter("rim_conc", Color(VfxLook.STEEL_HI))
+	m.set_shader_parameter("ember_dark", VfxPalette.ember("rim"))
+	m.set_shader_parameter("ember_light", VfxPalette.ember("hot"))
 	material_override = m
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_buf.resize(CAP * STRIDE)
@@ -77,7 +79,20 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 				_:
 					c.a = 1.0 - smoothstep(0.7, 1.0, f)
 					shards += 1
-			_put(n, Vector2(vx, b.y), b.rot if not is_puff and not is_ring else 0.0, sx, sy, b.z, c, float(b.kind), b.seed)
+			var mode: float = 0.0
+			if b.kind == VfxDebris.EMBER and b.col2.a > 0.5 and not b.glass:
+				# Art's ember ramp: core, hot, warm, then a char chip with a light rim. Brightness, not hue.
+				if f < 0.2:
+					c = VfxPalette.ember("core")
+				elif f < 0.5:
+					c = VfxPalette.ember("hot")
+				elif f < 0.8:
+					c = VfxPalette.ember("warm")
+				else:
+					c = VfxPalette.ember("char")
+					mode = 1.0
+				c.a = 1.0 - smoothstep(0.85, 1.0, f)
+			_put(n, Vector2(vx, b.y), b.rot if not is_puff and not is_ring else 0.0, sx, sy, b.z, c, float(b.kind), b.seed, mode)
 			n += 1
 	count = n
 	multimesh.visible_instance_count = n
@@ -85,7 +100,7 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 		multimesh.buffer = _buf
 
 
-func _put(i: int, c: Vector2, rot: float, sx: float, sy: float, z: float, col: Color, shape: float, sd: float) -> void:
+func _put(i: int, c: Vector2, rot: float, sx: float, sy: float, z: float, col: Color, shape: float, sd: float, mode: float = 0.0) -> void:
 	var o: int = i * STRIDE
 	var cs: float = cos(rot)
 	var sn: float = sin(rot)
@@ -107,5 +122,5 @@ func _put(i: int, c: Vector2, rot: float, sx: float, sy: float, z: float, col: C
 	_buf[o + 15] = col.a
 	_buf[o + 16] = shape
 	_buf[o + 17] = sd
-	_buf[o + 18] = 0.0
+	_buf[o + 18] = mode
 	_buf[o + 19] = 0.0

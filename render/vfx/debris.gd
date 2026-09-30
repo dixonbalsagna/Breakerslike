@@ -30,6 +30,7 @@ class Bit:
 	var col2: Color = Color.WHITE
 	var seed: float = 0.0
 	var bounces: int = 0
+	var glass: bool = false        # an ember that is a glass fleck (a glass trench): keeps its own colour
 
 ## A spawn waiting for its time (an implode's ripple delay): sim time to fire, and what to do.
 class Job:
@@ -303,6 +304,7 @@ func embers(S: SimState, x: float, y: float, power: float, variant: String) -> v
 				b = _bit(EMBER, px, y + 6.0, RenderLook.Z_BEAMS + 8.0, vx, vy, 0.5, life)
 				b.col = VfxPalette.glass("light")
 				b.col2 = Color.WHITE
+				b.glass = true
 			"HORIZON CLEAVE":
 				if _ember_tick >= VfxLook.EMBER_PER_TICK / 4:
 					continue
@@ -315,8 +317,7 @@ func embers(S: SimState, x: float, y: float, power: float, variant: String) -> v
 				continue
 			_:
 				b = _bit(EMBER, px, y + 6.0, RenderLook.Z_BEAMS + 8.0, vx, vy, 0.5, life)
-				b.col = RenderLook.col(RenderLook.HEAT_HI) if variant != "FIRESTORM" else RenderLook.col(RenderLook.HEAT_LO)
-				b.col2 = RenderLook.col(RenderLook.HEAT_HI)
+				b.col = VfxPalette.ember("hot")   # the view steps it through Art's ramp by age
 		b.sx = sz * (2.2 if variant == "FIRESTORM" else 1.4)
 		b.sy = 9.0
 		_ember_tick += 1

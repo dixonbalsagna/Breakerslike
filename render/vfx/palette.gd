@@ -83,3 +83,13 @@ static func lip(biome: String) -> Color:
 	_load()
 	var by = _d.get("by_biome", {})
 	return _hex(by.get(biome, {}).get("lip") if by.has(biome) else null, VfxLook.CRACK_LIP)
+
+
+## Art's ember lane (effects.json v2): a brightness ramp, never red. step: "core", "hot" or "warm"; "rim" is the dark
+## rim of the light steps, "char" the spent chip (which takes a light rim, the "hot" step).
+static func ember(step: String) -> Color:
+	_load()
+	var e = _d.get("lanes", {}).get("embers", {})
+	var fb: Dictionary = {"core": "#fff3c4", "hot": "#ffd27a", "warm": "#ffb347", "rim": "#2b1610", "char": "#3a1c14"}
+	var v = e.get("ramp", {}).get(step) if step in ["core", "hot", "warm"] else e.get(step)
+	return _hex(v, fb[step])

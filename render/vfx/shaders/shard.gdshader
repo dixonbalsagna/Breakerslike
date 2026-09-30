@@ -10,6 +10,8 @@ uniform vec4 rim_glass : source_color = vec4(0.88, 0.96, 0.98, 1.0);
 uniform vec4 rim_steel : source_color = vec4(0.67, 0.71, 0.76, 1.0);
 uniform vec4 rim_dust : source_color = vec4(0.54, 0.51, 0.46, 1.0);
 uniform vec4 rim_conc : source_color = vec4(0.67, 0.71, 0.76, 1.0);
+uniform vec4 ember_dark : source_color = vec4(0.17, 0.09, 0.06, 1.0);
+uniform vec4 ember_light : source_color = vec4(1.0, 0.82, 0.48, 1.0);
 
 varying vec4 v_custom;
 
@@ -30,9 +32,11 @@ void fragment() {
 	float a = 0.0;
 	float alpha_mul = COLOR.a;
 	if (shape > 5.5) {
-		// ember: a solid slanted bar, bright, no lit edge
+		// ember: a solid slanted bar with a 1 px rim: dark on the light steps, light on the spent char chip
 		float d = max(abs(p.y) - 1.0, abs(p.x + 0.4 * p.y) - 1.0);
 		a = edge(d, aa);
+		float inner = edge(d + max(fwidth(p.x), fwidth(p.y)) * 1.1, aa);
+		base = mix(v_custom.z > 0.5 ? ember_light.rgb : ember_dark.rgb, base, inner);
 	} else if (shape < 0.5) {
 		// glass sliver: a slanted parallelogram, lit along one long edge
 		float d = max(abs(p.y) - 1.0, abs(p.x + 0.35 * p.y * (0.5 + sd)) - 1.0);
