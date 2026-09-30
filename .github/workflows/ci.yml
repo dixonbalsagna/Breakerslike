@@ -5,6 +5,8 @@
 # were recorded on it (ADR 0004); on any other Node major they are skipped.
 # Every action is pinned to a full commit SHA with its version in a comment.
 # To bump one: look up the tag's commit, replace the SHA and the comment.
+# Runners are pinned to ubuntu-24.04 (not ubuntu-latest) so a GitHub image migration cannot change a
+# result without a commit here.
 # Godot 4.7.2 and its web templates are pinned and SHA-512 verified in
 # .github/actions/setup-godot/action.yml (used by the two Godot jobs).
 
@@ -27,7 +29,7 @@ concurrency:
 jobs:
   qa:
     name: QA regression suite (Node 24.19.0)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -44,7 +46,7 @@ jobs:
   # prototype tick for tick and still reproduces its frozen golden record; the live gate is the GDScript check below.
   sim:
     name: Frozen JS core, prototype-parity record (Node 24.19.0)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -57,13 +59,32 @@ jobs:
       - name: npm test --prefix sim
         run: npm test --prefix sim
 
+  # Data validation: every data file against its JSON Schema, plus the cross-references between files
+  # (tools/validate.js, docs/tools/README.md). The self-test runs first: a validator that cannot fail
+  # proves nothing. Node built-ins only, so no install step. Free and fast (a few seconds).
+  data:
+    name: Data validation (schemas and cross-references)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.19.0'
+      - name: Validator self-test
+        run: node tools/validate.js --self-test
+      - name: Validate the data
+        run: node tools/validate.js
+
   # The GDScript port against the JS reference sim's golden vectors, plus the render
   # checks. The sim job above does not set GODOT, so `npm test --prefix sim` skips its
   # godot stage there and the parity check runs once, here. The .godot/ import cache is
   # created on the runner only (it is gitignored and never committed).
   godot-parity:
     name: Godot headless checks (parity, determinism, seam)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -84,7 +105,7 @@ jobs:
   # and branches too. Only pushes to main (and manual runs on main) upload it.
   site:
     name: Build site (prototype + Godot web export)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -109,9 +130,9 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    needs: [qa, sim, godot-parity, site]
+    needs: [qa, sim, data, godot-parity, site]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read

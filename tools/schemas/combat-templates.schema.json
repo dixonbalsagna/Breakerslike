@@ -1,0 +1,473 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/combat-templates",
+  "title": "combat.templates/1",
+  "description": "data/combat/templates.json: melee exchange templates, the chain link and the signature beam (docs/combat/data-fields.md section 10). Version field: schema. Policy: objects are closed (unknown keys are errors) except keys starting with an underscore, which are comments and are skipped by the canonical data hash. Free-form args are open except the keys each op needs.",
+  "type": "object",
+  "required": ["schema", "profile", "profiles", "locals", "templates", "chainLink", "beam"],
+  "properties": {
+    "schema": { "const": "combat.templates/1" },
+    "profile": { "enum": ["parity", "spaced", "dynamic"] },
+    "profiles": {
+      "type": "object",
+      "required": ["parity", "spaced"],
+      "properties": {
+        "parity": { "$ref": "#/$defs/profileParity" },
+        "spaced": { "$ref": "#/$defs/profileSpaced" },
+        "dynamic": { "$ref": "#/$defs/profileSpaced" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "locals": { "type": "object" },
+    "templates": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/template" } },
+    "chainLink": { "$ref": "#/$defs/chainLink" },
+    "beam": { "$ref": "#/$defs/beam" }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "num": { "type": "number" },
+    "ticks": { "type": "integer", "minimum": 0 },
+    "pair": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "minItems": 2, "maxItems": 2 },
+    "profileParity": {
+      "type": "object",
+      "required": ["timeUnit", "approach", "aiParryPressDelay"],
+      "properties": {
+        "timeUnit": { "const": "s" },
+        "approach": {
+          "type": "object",
+          "required": ["divisor", "min", "max"],
+          "properties": {
+            "divisor": { "type": "number", "exclusiveMinimum": 0 },
+            "min": { "type": "number", "minimum": 0 },
+            "max": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "aiParryPressDelay": { "$ref": "#/$defs/pair" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "profileSpaced": {
+      "type": "object",
+      "required": ["timeUnit", "ticksPerSecond", "tempo", "approach", "aiParryPressDelay", "parry"],
+      "properties": {
+        "timeUnit": { "const": "tick" },
+        "ticksPerSecond": { "const": 60 },
+        "tempo": {
+          "type": "object",
+          "required": ["step", "windup", "heavyWindup", "follow", "tell"],
+          "properties": {
+            "step": { "$ref": "#/$defs/ticks" },
+            "windup": { "$ref": "#/$defs/ticks" },
+            "heavyWindup": { "$ref": "#/$defs/ticks" },
+            "follow": { "$ref": "#/$defs/ticks" },
+            "tell": { "$ref": "#/$defs/ticks" },
+            "foot": { "$ref": "#/$defs/ticks" },
+            "pursue": { "$ref": "#/$defs/ticks" }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "approach": {
+          "type": "object",
+          "required": ["divisor", "min", "max", "pursuit", "rounding"],
+          "properties": {
+            "divisor": { "type": "number", "exclusiveMinimum": 0 },
+            "min": { "type": "number", "minimum": 0 },
+            "max": { "type": "number", "minimum": 0 },
+            "pursuit": {
+              "type": "object",
+              "required": ["beyond", "base", "per", "max"],
+              "properties": {
+                "beyond": { "type": "number", "minimum": 0 },
+                "base": { "type": "number", "minimum": 0 },
+                "per": { "type": "number", "exclusiveMinimum": 0 },
+                "max": { "type": "number", "minimum": 0 }
+              },
+              "additionalProperties": false,
+              "patternProperties": { "^_": true }
+            },
+            "rounding": { "type": "string" }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "aiParryPressDelay": { "$ref": "#/$defs/pair" },
+        "parry": {
+          "type": "object",
+          "required": ["windowTicks", "bufferTicks", "cleanTicks", "reward", "cleanReward"],
+          "properties": {
+            "windowTicks": { "$ref": "#/$defs/lightHeavyTicks" },
+            "bufferTicks": { "$ref": "#/$defs/ticks" },
+            "cleanTicks": { "$ref": "#/$defs/lightHeavyTicks" },
+            "reward": { "$ref": "#/$defs/parryReward" },
+            "cleanReward": { "$ref": "#/$defs/parryReward" }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "hitstopFloors": { "type": "object", "properties": { "adopted": { "type": "boolean" } }, "additionalProperties": { "type": "number" }, "patternProperties": { "^_": true } }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "lightHeavyTicks": {
+      "type": "object",
+      "required": ["light", "heavy"],
+      "properties": { "light": { "$ref": "#/$defs/ticks" }, "heavy": { "$ref": "#/$defs/ticks" } },
+      "additionalProperties": false
+    },
+    "parryReward": {
+      "type": "object",
+      "required": ["damage", "ki", "stopTicks", "pushback", "cue"],
+      "properties": {
+        "damage": { "type": "number", "minimum": 0 },
+        "ki": { "type": "number", "minimum": 0 },
+        "stopTicks": { "$ref": "#/$defs/ticks" },
+        "pushback": { "type": "number", "minimum": 0 },
+        "cue": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "template": {
+      "type": "object",
+      "required": ["id", "trigger", "selector", "branches"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "trigger": { "$ref": "#/$defs/trigger" },
+        "selector": { "$ref": "#/$defs/selector" },
+        "shared": {
+          "type": "object",
+          "required": ["parity", "spaced"],
+          "properties": {
+            "parity": { "type": "array", "items": { "$ref": "#/$defs/parityBeat" } },
+            "spaced": { "type": "array", "items": { "$ref": "#/$defs/spacedBeat" } },
+            "dynamic": { "type": "array", "items": { "$ref": "#/$defs/spacedBeat" } }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "branches": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/branch" } }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["kinds", "defender"],
+      "properties": {
+        "kinds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["light", "heavy", "sig"] } },
+        "defender": { "enum": ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE", "CHARGING", "any"] }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "branch": {
+      "type": "object",
+      "required": ["id", "tag", "favours", "spacedTiming", "parity", "spaced"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "tag": { "type": "string", "minLength": 1 },
+        "tagProposed": { "type": "string", "minLength": 1 },
+        "favours": { "enum": ["attacker", "defender", "neutral"] },
+        "spacedTiming": { "enum": ["changes", "identical"] },
+        "dynamicTiming": { "enum": ["changes", "identical"] },
+        "parity": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parityBeat" } },
+        "spaced": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } },
+        "dynamic": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } }
+      },
+      "dependentRequired": { "dynamic": ["dynamicTiming"], "dynamicTiming": ["dynamic"] },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "chainLink": {
+      "type": "object",
+      "required": ["spacedTiming", "parity", "spaced"],
+      "properties": {
+        "spacedTiming": { "enum": ["changes", "identical"] },
+        "parity": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parityBeat" } },
+        "spaced": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } },
+        "dynamic": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "beam": {
+      "type": "object",
+      "required": ["id", "trigger", "spacedTiming", "variants", "tagFormat", "outcome", "parity"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "trigger": { "$ref": "#/$defs/trigger" },
+        "spacedTiming": { "enum": ["changes", "identical"] },
+        "dynamicTiming": { "enum": ["changes", "identical"] },
+        "variants": {
+          "type": "object",
+          "required": ["ocean", "city", "village", "forest", "mountains", "desert", "plains"],
+          "additionalProperties": { "type": "string", "minLength": 1 },
+          "patternProperties": { "^_": true }
+        },
+        "tagFormat": { "type": "string", "minLength": 1 },
+        "outcome": {
+          "type": "object",
+          "required": ["rules"],
+          "properties": {
+            "rules": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/beamRule" } }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "parity": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parityBeat" } },
+        "laterSpaced": { "type": "object" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "beamRule": {
+      "type": "object",
+      "required": ["defender", "draw"],
+      "properties": {
+        "defender": { "enum": ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE", "CHARGING"] },
+        "draw": { "enum": ["none", "next"] },
+        "if": { "$ref": "#/$defs/cond" },
+        "p": { "$ref": "#/$defs/probability" },
+        "ifBelow": { "$ref": "#/$defs/beamOutcome" },
+        "ifBelowAndNot": { "$ref": "#/$defs/cond" },
+        "out": { "$ref": "#/$defs/beamOutcome" },
+        "else": { "$ref": "#/$defs/beamOutcome" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "beamOutcome": { "enum": ["CLASH", "GUARD", "DODGE", "HIT", "ESCAPE"] },
+    "selector": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["fixed", "threshold", "gated_threshold", "bands", "score_compare"] },
+        "branch": { "$ref": "#/$defs/id" },
+        "draw": { "const": "next" },
+        "gate": { "$ref": "#/$defs/cond" },
+        "p": { "$ref": "#/$defs/probability" },
+        "override": {
+          "type": "object",
+          "required": ["if", "p"],
+          "properties": { "if": { "$ref": "#/$defs/cond" }, "p": { "type": "number", "minimum": 0, "maximum": 1 } },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "ifBelow": { "$ref": "#/$defs/id" },
+        "else": { "$ref": "#/$defs/id" },
+        "below": { "$ref": "#/$defs/band" },
+        "above": { "$ref": "#/$defs/band" },
+        "order": { "type": "array", "prefixItems": [{ "const": "A" }, { "const": "D" }], "minItems": 2, "maxItems": 2 },
+        "ifGreater": { "$ref": "#/$defs/id" },
+        "score": {
+          "type": "object",
+          "required": ["sum"],
+          "properties": { "sum": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/scoreTerm" } } },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "fixed" } }, "required": ["kind"] }, "then": { "required": ["branch"] } },
+        { "if": { "properties": { "kind": { "const": "threshold" } }, "required": ["kind"] }, "then": { "required": ["draw", "p", "ifBelow", "else"] } },
+        { "if": { "properties": { "kind": { "const": "gated_threshold" } }, "required": ["kind"] }, "then": { "required": ["gate", "draw", "p", "ifBelow", "else"] } },
+        { "if": { "properties": { "kind": { "const": "bands" } }, "required": ["kind"] }, "then": { "required": ["draw", "p", "below", "above", "else"] } },
+        { "if": { "properties": { "kind": { "const": "score_compare" } }, "required": ["kind"] }, "then": { "required": ["order", "score", "ifGreater", "else"] } }
+      ],
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "band": {
+      "type": "object",
+      "required": ["offset", "branch"],
+      "properties": { "offset": { "type": "number" }, "branch": { "$ref": "#/$defs/id" } },
+      "additionalProperties": false
+    },
+    "probability": {
+      "anyOf": [
+        { "type": "number", "minimum": 0, "maximum": 1 },
+        {
+          "type": "object",
+          "required": ["start", "terms", "clamp"],
+          "properties": {
+            "start": { "type": "number" },
+            "terms": { "type": "array", "items": { "$ref": "#/$defs/term" } },
+            "clamp": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "minItems": 2, "maxItems": 2 }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        }
+      ]
+    },
+    "term": {
+      "type": "object",
+      "properties": {
+        "coef": { "type": "number" },
+        "diff": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+        "if": { "$ref": "#/$defs/cond" },
+        "then": { "type": "number" },
+        "else": { "type": "number" }
+      },
+      "oneOf": [{ "required": ["coef", "diff"] }, { "required": ["if", "then", "else"] }],
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "scoreTerm": {
+      "type": "object",
+      "properties": {
+        "var": { "type": "string" },
+        "div": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "number" }], "minItems": 2, "maxItems": 2 },
+        "draw": { "$ref": "#/$defs/pair" },
+        "if": { "$ref": "#/$defs/cond" },
+        "then": { "type": "number" },
+        "else": { "type": "number" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "cond": {
+      "type": "object",
+      "properties": {
+        "var": { "type": "string" },
+        "op": { "enum": [">", "<", ">=", "=="] },
+        "value": { "type": ["number", "boolean", "string"] },
+        "gt": { "type": "array", "items": { "type": ["string", "number"] }, "minItems": 2, "maxItems": 2 },
+        "all": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/cond" } },
+        "not": { "$ref": "#/$defs/cond" }
+      },
+      "oneOf": [{ "required": ["var"] }, { "required": ["gt"] }, { "required": ["all"] }, { "required": ["not"] }],
+      "dependentRequired": { "op": ["value"] },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "value": {
+      "anyOf": [
+        { "type": "number" },
+        { "type": "string", "pattern": "^\\$[A-Za-z_]+$" },
+        {
+          "type": "object",
+          "properties": {
+            "ref": { "enum": ["rt", "c", "base", "dist"] },
+            "times": { "type": "number" },
+            "plus": { "type": "number" },
+            "light": { "type": "number" },
+            "heavy": { "type": "number" },
+            "clamp": { "type": "array", "minItems": 3, "maxItems": 3 },
+            "ticks": { "type": "string", "pattern": "^[A-Za-z]+$" }
+          },
+          "oneOf": [{ "required": ["ref"] }, { "required": ["light", "heavy"] }, { "required": ["clamp"] }, { "required": ["ticks"] }],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "tickValue": {
+      "anyOf": [
+        { "type": "integer" },
+        {
+          "type": "object",
+          "required": ["at"],
+          "properties": {
+            "at": { "enum": ["start", "c"] },
+            "times": { "type": "number" },
+            "step": { "type": "number" },
+            "add": { "type": "array", "items": { "type": "string" } },
+            "sub": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "beat": {
+      "type": "object",
+      "required": ["op"],
+      "properties": {
+        "t": { "$ref": "#/$defs/value" },
+        "tick": { "$ref": "#/$defs/tickValue" },
+        "op": { "$ref": "#/$defs/op" },
+        "when": { "enum": ["light", "heavy"] },
+        "args": { "$ref": "#/$defs/args" }
+      },
+      "allOf": [
+        { "if": { "properties": { "op": { "const": "rush" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["off", "dur"] } } } },
+        { "if": { "properties": { "op": { "const": "strike" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["a", "d", "dmg"] } } } },
+        { "if": { "properties": { "op": { "const": "launch" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["force", "rev"] } } } },
+        { "if": { "properties": { "op": { "const": "cue" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["cue", "who"] } } } },
+        { "if": { "properties": { "op": { "const": "finisher" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w"] } } } },
+        { "if": { "properties": { "op": { "const": "finRush" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "off", "dur"] } } } },
+        { "if": { "properties": { "op": { "const": "breakLaunch" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "force"] } } } },
+        { "if": { "properties": { "op": { "const": "contest" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "mode"], "properties": { "mode": { "enum": ["ko_now", "branch"] } } } } } },
+        { "if": { "properties": { "op": { "const": "contestOpen" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "cue", "struggle"] } } } },
+        { "if": { "properties": { "op": { "const": "finalBlow" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "dmg", "o", "launch"] } } } },
+        { "if": { "properties": { "op": { "const": "fixedLaunch" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "ux", "uy", "force", "faceRelative"] } } } },
+        { "if": { "properties": { "op": { "const": "separate" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "speed"] } } } },
+        { "if": { "properties": { "op": { "const": "beamCharge" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["rise"] } } } },
+        { "if": { "properties": { "op": { "const": "beamFire" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["out", "variant", "dist"] } } } }
+      ],
+      "additionalProperties": false
+    },
+    "parityBeat": {
+      "allOf": [{ "$ref": "#/$defs/beat" }, { "required": ["t"], "properties": { "tick": false } }]
+    },
+    "spacedBeat": {
+      "allOf": [{ "$ref": "#/$defs/beat" }, { "required": ["tick"], "properties": { "t": false } }]
+    },
+    "op": {
+      "enum": [
+        "rush", "wind", "press", "strike", "launch", "window", "nop", "slip", "dodge", "guardBreak", "clashWave", "chainStrike",
+        "beamCharge", "beamFire", "finisher", "finRush", "breakLaunch", "contest",
+        "cue", "contestOpen", "finalBlow", "fixedLaunch", "separate"
+      ]
+    },
+    "args": {
+      "type": "object",
+      "properties": {
+        "a": { "enum": ["A", "D", "W", "L"] },
+        "d": { "enum": ["A", "D", "W", "L"] },
+        "w": { "enum": ["A", "D", "W", "L"] },
+        "who": { "enum": ["A", "D", "W", "L", "both"] },
+        "cue": { "type": "string", "minLength": 1 },
+        "cam": { "type": "string", "minLength": 1 },
+        "bark": { "description": "A bark trigger id, or true for a bark pause with no trigger yet (sim/core/fx.gd cue).", "anyOf": [{ "type": "string", "minLength": 1 }, { "const": true }] },
+        "struggle": { "type": "string", "minLength": 1 },
+        "off": { "$ref": "#/$defs/value" },
+        "dur": { "$ref": "#/$defs/value" },
+        "dmg": { "$ref": "#/$defs/value" },
+        "force": { "$ref": "#/$defs/value" },
+        "rev": { "type": "boolean" },
+        "rise": { "$ref": "#/$defs/value" },
+        "o": {
+          "type": "object",
+          "properties": {
+            "noParry": { "type": "boolean" },
+            "ignoreStance": { "type": "boolean" },
+            "big": { "type": "boolean" },
+            "kb": { "type": "number" },
+            "stop": { "type": "number", "minimum": 0 },
+            "shake": { "type": "number", "minimum": 0 },
+            "kind": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "launch": {
+          "type": "object",
+          "required": ["mode"],
+          "properties": {
+            "mode": { "enum": ["fixed", "planner_long"] },
+            "ux": { "type": "number" },
+            "uy": { "type": "number" },
+            "force": { "type": "number" },
+            "faceRelative": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}

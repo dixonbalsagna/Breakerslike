@@ -39,7 +39,7 @@
     "tell": "a readable warning pose on the named fighter", "pursue": "pursuit pose", "glance_back": "the escaper looks back",
     "whiff_recover": "the attacker's swing cuts empty air", "turn_read": "the attacker pivots, reading the dodge", "exposed": "the attacker is caught off balance",
     "overextend": "the attacker stumbles through", "recover": "the named fighter recovers its stance", "guard_set": "the guard holds and shoves back",
-    "reset": "both fighters square up", "bind": "forearms lock for a beat before the deciding blow", "glance": "a feel-out contact, no damage",
+    "reset": "both fighters square up", "bind": "forearms lock for a beat before the deciding blow", "circle": "the attacker swings around to the far side before the deciding blow", "glance": "a feel-out contact, no damage",
     "brace": "both fighters load their heavies", "recoil": "both fighters thrown back by the clash", "pull_up": "the pursuer pulls up", "scan": "the pursuer searches"
   },
 

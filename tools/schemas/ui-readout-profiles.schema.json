@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-readout-profiles",
+  "title": "ui readout profiles (schema 1)",
+  "description": "ui/data/readout_profiles.json: how each fighter's damage is read (docs/design/spec-wounds.md section 3). Version field: schema. Policy: the top level is closed; each profile lists the keys UI reads and is closed too. `aliases` maps a roster name to a profile (the alias's base must exist: checked by tools/lib/xref.js).",
+  "type": "object",
+  "required": ["schema", "default", "protagonist", "anti_hero", "empress", "cyborg", "aliases"],
+  "properties": {
+    "schema": { "const": 1 },
+    "note": { "type": "string" },
+    "default": { "$ref": "#/$defs/defaultProfile" },
+    "protagonist": { "$ref": "#/$defs/profile" },
+    "anti_hero": { "$ref": "#/$defs/profile" },
+    "empress": { "$ref": "#/$defs/profile" },
+    "cyborg": { "$ref": "#/$defs/profile" },
+    "aliases": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["base"],
+        "properties": { "base": { "type": "string", "minLength": 1 }, "ego": { "type": "string", "minLength": 1 } },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "regions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["head", "core", "arms", "legs", "mantle"] } },
+    "defaultProfile": {
+      "type": "object",
+      "required": ["regions", "crown", "silhouette", "ego", "ego_notch", "sig_cost", "shame_max"],
+      "properties": {
+        "regions": { "$ref": "#/$defs/regions" },
+        "crown": { "type": "string", "minLength": 1 },
+        "silhouette": { "type": "string", "minLength": 1 },
+        "ego": { "type": "string", "minLength": 1 },
+        "ego_notch": { "type": "number", "minimum": 0 },
+        "sig_cost": { "type": "number", "minimum": 0 },
+        "shame_max": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "required": ["crown", "silhouette", "ego"],
+      "properties": {
+        "regions": { "$ref": "#/$defs/regions" },
+        "crown": { "type": "string", "minLength": 1 },
+        "silhouette": { "type": "string", "minLength": 1 },
+        "ego": { "type": "string", "minLength": 1 },
+        "ego_notch": { "type": "number", "minimum": 0 },
+        "sig_cost": { "type": "number", "minimum": 0 },
+        "shame_max": { "type": "number", "minimum": 0 },
+        "internal": { "type": "boolean" },
+        "heat": { "type": "boolean" },
+        "numeral": { "type": "boolean" },
+        "withhold_until_pride_breaks": { "type": "boolean" },
+        "rail": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

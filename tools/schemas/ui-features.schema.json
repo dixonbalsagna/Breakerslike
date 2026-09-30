@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-features",
+  "title": "ui features (schema 1)",
+  "description": "ui/data/features.json: feature flags for HUD code that is written but not part of the base game. Version field: schema. Policy: closed; every flag is a boolean.",
+  "type": "object",
+  "required": ["schema", "features"],
+  "properties": {
+    "schema": { "const": 1 },
+    "note": { "type": "string" },
+    "features": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "type": "boolean" }
+    }
+  },
+  "additionalProperties": false
+}

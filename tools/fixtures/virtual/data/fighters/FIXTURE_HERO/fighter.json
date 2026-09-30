@@ -1,0 +1,18 @@
+{
+  "_about": "Validator fixture, not game data. Neutral placeholder names and colours.",
+  "schema": "fighter/1",
+  "id": "FIXTURE_HERO",
+  "identity": {
+    "name": "Fixture Hero",
+    "title": "Test Fixture",
+    "role": "hero",
+    "sigName": "Fixture Beam",
+    "col": "#4a6fa5",
+    "aura": "#9fc5e8",
+    "hair": "#2fbfa0"
+  },
+  "stats": { "care": 1, "dmgMul": 1, "spd": 1, "maxhp": 1600 },
+  "kit": { "canHide": false },
+  "rally": { "rule": "second_wind" },
+  "finishers": { "base": "generic" }
+}

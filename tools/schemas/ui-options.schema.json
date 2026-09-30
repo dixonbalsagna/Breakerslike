@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-options",
+  "title": "ui options (schema 1)",
+  "description": "ui/data/options.json: the player-facing HUD and display options with their defaults. Version field: schema. Policy: closed. A numeric option carries min, max and step and its default must lie between min and max (checked by tools/lib/xref.js); a choice option lists its choices and its default must be one of them.",
+  "type": "object",
+  "required": ["schema", "options"],
+  "properties": {
+    "schema": { "const": 1 },
+    "note": { "type": "string" },
+    "options": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "$ref": "#/$defs/option" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "option": {
+      "type": "object",
+      "required": ["default", "group", "label", "help"],
+      "properties": {
+        "default": { "type": ["boolean", "number", "string"] },
+        "group": { "enum": ["display", "accessibility", "controls"] },
+        "label": { "type": "string", "minLength": 1 },
+        "help": { "type": "string", "minLength": 1 },
+        "accessibility": { "type": "boolean" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number", "exclusiveMinimum": 0 },
+        "choices": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": ["string", "number"] } }
+      },
+      "dependentRequired": { "min": ["max", "step"], "max": ["min", "step"], "step": ["min", "max"] },
+      "allOf": [
+        { "if": { "required": ["min"] }, "then": { "properties": { "default": { "type": "number" } } } },
+        { "if": { "required": ["choices"] }, "then": { "properties": { "default": { "type": ["string", "number"] } } } }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

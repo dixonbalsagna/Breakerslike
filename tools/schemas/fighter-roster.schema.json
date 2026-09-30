@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/fighter-roster",
+  "title": "roster order (draft, from docs/architecture/d1-roster-data.md section 3)",
+  "description": "data/fighters/roster.json: the select-screen order and the default pairing, a bare array of fighter ids. DRAFT: derived from the D1 plan before any data exists. Policy: closed. Open question for Simulation: a bare array cannot carry a version field; if the file becomes an object ({\"schema\": \"roster/1\", \"order\": [...]}) this schema and the roster cross-reference change with it. Every id must have data/fighters/<id>/fighter.json (checked by tools/lib/xref.js).",
+  "type": "array",
+  "minItems": 1,
+  "uniqueItems": true,
+  "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/fighter",
+  "title": "fighter/1 (draft, from docs/architecture/d1-roster-data.md section 3)",
+  "description": "data/fighters/<id>/fighter.json: identity, base stats, kit, the Rally rule and the finisher keys. DRAFT: derived from the D1 plan before any data exists; tighten when D1a lands. Version field: schema. Policy: identity, stats, kit and rally are closed except keys starting with an underscore (comments, ignored by the canonical data hash). Numbers carry at most 15 significant digits (checked by the validator). Cross-references (id equals the folder name and is unique; every finisher key exists in data/combat/finishers.json) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["schema", "id", "identity", "stats", "kit", "rally", "finishers"],
+  "properties": {
+    "schema": { "const": "fighter/1" },
+    "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "identity": {
+      "type": "object",
+      "required": ["name", "title", "role", "sigName", "col", "aura", "hair"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "pattern": "^[a-z][a-z_]*$" },
+        "sigName": { "type": "string", "minLength": 1 },
+        "col": { "$ref": "#/$defs/hex" },
+        "aura": { "$ref": "#/$defs/hex" },
+        "hair": { "$ref": "#/$defs/hex" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "stats": {
+      "type": "object",
+      "required": ["care", "dmgMul", "spd", "maxhp"],
+      "properties": {
+        "care": { "type": "number", "minimum": -1, "maximum": 1 },
+        "dmgMul": { "type": "number", "exclusiveMinimum": 0 },
+        "spd": { "type": "number", "exclusiveMinimum": 0 },
+        "maxhp": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "kit": {
+      "type": "object",
+      "required": ["canHide"],
+      "properties": { "canHide": { "type": "boolean" } },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "rally": {
+      "type": "object",
+      "required": ["rule"],
+      "properties": {
+        "rule": { "enum": ["second_wind", "spite", "reboot", "encore", "none"] }
+      },
+      "additionalProperties": { "type": ["number", "string", "boolean", "array", "object"] },
+      "patternProperties": { "^_": true }
+    },
+    "finishers": {
+      "type": "object",
+      "required": ["base"],
+      "properties": { "base": { "type": "string", "pattern": "^[a-z][a-z0-9_.]*$" } },
+      "additionalProperties": { "type": "string", "pattern": "^[a-z][a-z0-9_.]*$" },
+      "patternProperties": { "^_": true }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true },
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+  }
+}

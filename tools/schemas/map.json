@@ -1,0 +1,27 @@
+{
+  "_about": "The folder-to-schema map used by tools/validate.js. Paths are relative to the repo root; * matches within one folder, ** across folders. The first matching rule wins. A JSON file under data/, audio/data/ or ui/data/ that matches no rule gets a warning, not a failure.",
+  "roots": ["data", "audio/data", "ui/data"],
+  "rules": [
+    { "match": "data/combat/templates.json", "schema": "combat-templates.schema.json" },
+    { "match": "data/combat/finishers.json", "schema": "combat-finishers.schema.json" },
+    { "match": "data/art/flashes.json", "schema": "art-flashes.schema.json" },
+    { "match": "data/art/effects.json", "schema": "art-effects.schema.json" },
+    { "match": "data/fighters/roster.json", "schema": "fighter-roster.schema.json" },
+    { "match": "data/fighters/*/fighter.json", "schema": "fighter.schema.json" },
+    { "match": "data/fighters/*/wounds.json", "schema": "fighter-wounds.schema.json" },
+    { "match": "data/fighters/*/ladder.json", "schema": "fighter-ladder.schema.json" },
+    { "match": "data/fighters/*/meters.json", "schema": "fighter-meters.schema.json" },
+    { "match": "audio/data/cues.json", "schema": "audio-cues.schema.json" },
+    { "match": "audio/data/flash_cues.json", "schema": "audio-flash-cues.schema.json" },
+    { "match": "audio/data/grunts.json", "schema": "audio-grunts.schema.json" },
+    { "match": "audio/data/impacts.json", "schema": "audio-impacts.schema.json" },
+    { "match": "audio/data/mix.json", "schema": "audio-mix.schema.json" },
+    { "match": "audio/data/sketch_common.json", "schema": "audio-sketch-common.schema.json" },
+    { "match": "audio/data/sketch_*.json", "schema": "audio-sketch.schema.json" },
+    { "match": "ui/data/features.json", "schema": "ui-features.schema.json" },
+    { "match": "ui/data/glyphs.json", "schema": "ui-glyphs.schema.json" },
+    { "match": "ui/data/options.json", "schema": "ui-options.schema.json" },
+    { "match": "ui/data/readout_profiles.json", "schema": "ui-readout-profiles.schema.json" },
+    { "match": "ui/data/terms.json", "schema": "ui-terms.schema.json" }
+  ]
+}

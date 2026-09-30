@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/combat-finishers",
+  "title": "combat.finishers/1",
+  "description": "data/combat/finishers.json: finishers, the contest and struggle settings, the cue vocabulary and the per-fighter shapes (docs/combat/data-fields.md section 10). Version field: schema. Policy: objects are closed except keys starting with an underscore (comments). Beats reuse the beat definitions of combat-templates.schema.json. Cross-references (cues used exist in the vocabulary, select.byFighter targets exist) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["schema", "profile", "select", "contest", "cues", "finishers", "shapes"],
+  "properties": {
+    "schema": { "const": "combat.finishers/1" },
+    "profile": { "enum": ["parity", "authored"] },
+    "select": {
+      "type": "object",
+      "required": ["byFighter", "fallback"],
+      "properties": {
+        "byFighter": { "type": "object", "additionalProperties": { "$ref": "#/$defs/id" }, "minProperties": 1 },
+        "fallback": { "$ref": "#/$defs/id" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "contest": {
+      "type": "object",
+      "required": ["base", "tiltAfter", "tiltPerMinute", "floor", "rallyPenalty", "input", "struggle"],
+      "properties": {
+        "base": { "type": "number", "minimum": 0, "maximum": 1 },
+        "tiltAfter": { "type": "number", "minimum": 0 },
+        "tiltPerMinute": { "type": "number", "minimum": 0 },
+        "floor": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rallyPenalty": { "type": "number", "minimum": 0 },
+        "input": { "type": "string" },
+        "struggle": {
+          "type": "object",
+          "required": ["resolveTick", "beatTicks", "countInTicks", "halfWidthTicks", "assistHalfWidthTicks", "debounceTicks", "inputs", "scoring", "aiHitChance"],
+          "properties": {
+            "resolveTick": { "type": "integer", "minimum": 1 },
+            "beatTicks": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } },
+            "countInTicks": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+            "halfWidthTicks": { "type": "integer", "minimum": 0 },
+            "assistHalfWidthTicks": { "type": "integer", "minimum": 0 },
+            "debounceTicks": { "type": "integer", "minimum": 0 },
+            "inputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["light", "heavy"] } },
+            "scoring": {
+              "type": "object",
+              "required": ["base", "perHit", "perMiss", "perStray", "floor"],
+              "properties": {
+                "base": { "type": "number" },
+                "perHit": { "type": "number" },
+                "perMiss": { "type": "number" },
+                "perStray": { "type": "number" },
+                "floor": { "type": "number" },
+                "tilts": { "type": "string" }
+              },
+              "additionalProperties": false,
+              "patternProperties": { "^_": true }
+            },
+            "aiHitChance": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "cues": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string" },
+      "patternProperties": { "^_": true }
+    },
+    "finishers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/finisher" } },
+    "shapes": {
+      "type": "object",
+      "required": ["protagonist", "antihero", "empress", "cyborg"],
+      "properties": {
+        "protagonist": { "$ref": "#/$defs/shape" },
+        "antihero": { "$ref": "#/$defs/shape" },
+        "empress": { "$ref": "#/$defs/shape" },
+        "cyborg": { "$ref": "#/$defs/shape" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_.]*$" },
+    "finisher": {
+      "type": "object",
+      "required": ["id", "fighter", "profile", "timeUnit", "beats", "outcomes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "fighter": { "type": "string", "pattern": "^(\\*|[A-Z][A-Z0-9_]*)$" },
+        "profile": { "enum": ["parity", "authored"] },
+        "timeUnit": { "enum": ["s", "tick"] },
+        "name": {
+          "type": "object",
+          "required": ["text", "placeholder"],
+          "properties": {
+            "text": { "type": "string", "minLength": 1 },
+            "placeholder": { "type": "boolean" },
+            "source": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "barks": {
+          "type": "object",
+          "properties": {
+            "bark_landed": { "type": "string", "minLength": 1 },
+            "bark_survived": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "character": { "type": "string" },
+        "beats": { "type": "array", "minItems": 1 },
+        "outcomes": {
+          "type": "object",
+          "required": ["landed", "survived"],
+          "properties": {
+            "landed": { "type": ["string", "array"] },
+            "survived": { "type": ["string", "array"] }
+          },
+          "additionalProperties": false,
+          "patternProperties": { "^_": true }
+        },
+        "bends": { "type": "object" },
+        "hitstopFloorCheck": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "profile": { "const": "parity" } }, "required": ["profile"] },
+          "then": {
+            "properties": {
+              "timeUnit": { "const": "s" },
+              "beats": { "items": { "$ref": "combat-templates.schema.json#/$defs/parityBeat" } }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "profile": { "const": "authored" } }, "required": ["profile"] },
+          "then": {
+            "required": ["name", "barks"],
+            "properties": {
+              "timeUnit": { "const": "tick" },
+              "beats": { "items": { "$ref": "combat-templates.schema.json#/$defs/spacedBeat" } },
+              "outcomes": {
+                "properties": {
+                  "landed": { "type": "array", "minItems": 1, "items": { "$ref": "combat-templates.schema.json#/$defs/spacedBeat" } },
+                  "survived": { "type": "array", "minItems": 1, "items": { "$ref": "combat-templates.schema.json#/$defs/spacedBeat" } }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "shape": {
+      "type": "object",
+      "required": ["placeholderName", "kind", "fixed", "generative", "formVariants"],
+      "properties": {
+        "placeholderName": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "fixed": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "generative": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "formVariants": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    }
+  }
+}

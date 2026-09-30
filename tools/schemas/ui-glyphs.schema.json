@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-glyphs",
+  "title": "ui glyphs (schema 1)",
+  "description": "ui/data/glyphs.json: the prompt glyph tables (docs/controls/prompt-glyphs.md). Version field: schema. Policy: closed. The neutral set is our own marks; the family labels are printed only when the family style is on.",
+  "type": "object",
+  "required": ["schema", "families", "neutral", "family_labels", "actions"],
+  "properties": {
+    "schema": { "const": 1 },
+    "note": { "type": "string" },
+    "families": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z]+$" } },
+    "neutral": {
+      "type": "object",
+      "required": ["face", "pad"],
+      "properties": {
+        "face": { "$ref": "#/$defs/face" },
+        "pad": { "$ref": "#/$defs/padMarks" }
+      },
+      "additionalProperties": false
+    },
+    "family_labels": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["face", "LT", "RT", "LB", "RB", "R3"],
+        "properties": {
+          "face": { "$ref": "#/$defs/face" },
+          "LT": { "type": "string", "minLength": 1 },
+          "RT": { "type": "string", "minLength": 1 },
+          "LB": { "type": "string", "minLength": 1 },
+          "RB": { "type": "string", "minLength": 1 },
+          "R3": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "actions": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "$ref": "#/$defs/action" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "face": {
+      "type": "object",
+      "required": ["south", "east", "west", "north"],
+      "properties": {
+        "south": { "type": "string", "minLength": 1 },
+        "east": { "type": "string", "minLength": 1 },
+        "west": { "type": "string", "minLength": 1 },
+        "north": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "padMarks": {
+      "type": "object",
+      "required": ["LT", "RT", "LB", "RB", "R3"],
+      "properties": {
+        "LT": { "type": "string", "minLength": 1 },
+        "RT": { "type": "string", "minLength": 1 },
+        "LB": { "type": "string", "minLength": 1 },
+        "RB": { "type": "string", "minLength": 1 },
+        "R3": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": ["kind", "kbd"],
+      "properties": {
+        "kind": { "enum": ["face", "pad", "dpad", "stick", "text"] },
+        "pos": { "enum": ["south", "east", "west", "north"] },
+        "pad": { "type": "string", "minLength": 1 },
+        "dir": { "type": "string", "minLength": 1 },
+        "kbd": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "maxItems": 2 }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "face" } }, "required": ["kind"] }, "then": { "required": ["pos"] } },
+        { "if": { "properties": { "kind": { "const": "pad" } }, "required": ["kind"] }, "then": { "required": ["pad"] } },
+        { "if": { "properties": { "kind": { "const": "dpad" } }, "required": ["kind"] }, "then": { "required": ["dir"] } }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

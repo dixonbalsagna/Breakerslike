@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/audio-sketch-common",
+  "title": "audio sketch score (schema 1)",
+  "description": "audio/data/sketch_common.json: the score shared by the music sketches. Version field: schema. Policy: closed. The array lengths that must equal `bars` (chords, intensity, dynamics_db) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["schema", "bpm", "bars", "chords", "intensity", "tune", "dynamics_db"],
+  "properties": {
+    "schema": { "const": 1 },
+    "note": { "type": "string" },
+    "bpm": { "type": "number", "exclusiveMinimum": 0 },
+    "bars": { "type": "integer", "minimum": 1 },
+    "chords": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "array", "prefixItems": [{ "type": "string", "pattern": "^[A-G](b|#)?$" }, { "enum": ["M", "m"] }], "minItems": 2, "maxItems": 2 }
+    },
+    "intensity": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0, "maximum": 3 } },
+    "tune": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "array",
+        "prefixItems": [{ "type": "integer", "minimum": 0 }, { "type": "number", "minimum": 0 }, { "type": "integer", "minimum": 0, "maximum": 127 }, { "type": "number", "exclusiveMinimum": 0 }],
+        "minItems": 4,
+        "maxItems": 4
+      }
+    },
+    "dynamics_db": { "type": "array", "minItems": 1, "items": { "type": "number" } }
+  },
+  "additionalProperties": false
+}

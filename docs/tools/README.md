@@ -20,19 +20,67 @@ It checks, in order:
 
 Exit 0 means ready, warnings allowed. Exit 1 means a required tool is missing or an install failed. Then run `node qa/run-all.js --quick` (about 40 s) or `npm test --prefix sim`.
 
+## Data validation
+
+`node tools/validate.js` checks every data file against its JSON Schema (draft 2020-12) and then the cross-references between files. Node built-ins only, no install, deterministic (no clock, no random), about half a second.
+
+| Command | What it does |
+| :--- | :--- |
+| `node tools/validate.js` | Everything under `data/`, `audio/data/` and `ui/data/`, plus the cross-references. Exit 0 if there are no errors (warnings allowed; a missing or empty data folder is fine), 1 on any error, 2 on bad usage |
+| `node tools/validate.js <paths>` | Only those files or folders, schema and lint checks only. Add `--xref` for the cross-references too |
+| `node tools/validate.js --self-test` | Proves the validator can fail, and on the right rule (see below) |
+| `node tools/validate.js --list` | Prints the folder-to-schema map |
+
+Every finding names the file, the line, the JSON pointer and the rule, for example `error  data/combat/finishers.json:155 /finishers/3/beats/8/args/bark  [type] must be string (got boolean)`. A JSON file in a folder with no schema (for example `data/director/`) gives a warning, not a failure.
+
+**What is checked**
+- **Per file:** it must be strict JSON (no comments, trailing commas, byte-order mark), with no duplicate key in one object (`JSON.parse` and Godot silently keep the last) and no number with more than 15 significant digits (so JavaScript and Godot read the same double; `docs/architecture/d1-roster-data.md` section 4). Then the schema.
+- **Schemas** (`tools/schemas/`, one per data family, listed in `map.json`): each has a version field (`schema` or `version`, pinned by `const`) and states its policy in its description. The policy everywhere: objects are closed (an unknown key is an error) except keys starting with an underscore, which are comments and are ignored by the canonical data hash; free-form synth or option tables are open with typed values.
+- **Cross-references** (`tools/lib/xref.js`), each an error unless noted:
+
+| Rule | Checks |
+| :--- | :--- |
+| `finisher-key`, `finisher-id` | `select.byFighter` and `fallback` name real finishers; finisher ids are unique; a fighter's `finishers.*` keys exist (a finisher owned by another fighter is a warning) |
+| `cue` | every `cue` beat in templates and authored finishers uses a cue in `finishers.json` `cues` |
+| `selector-branch`, `template-id`, `branch-id` | selectors point at branches of their own template; ids are unique |
+| `flash-audio`, `flash-rank`, `flash-held`, `flash-id` | every active flash in `data/art/flashes.json` has an audio cue and a rank in `cues.json`; every audio cue is an art flash; held flashes are marked held; legal rules name real flashes |
+| `flash-pulse`, `flash-duration`, `flash-total`, `flash-priority` | audio pulses equal Art's, `max_s` equals Art's `total`, `total = count x on + (count - 1) x off + fade`, active priorities are unique |
+| `flash-keep-out` | active flash shapes sit inside Art's `keep_out` angles (ground shards exempt) |
+| `effects-haze`, `effects-family`, `effects-lightness` | in `data/art/effects.json`: the fire-range swap rim is the haze colour and names real families; glass light and mid have L* above 80, steel mid and shadow below 40 |
+| `tempo-name`, `dynamic-beats` | a tick's `add`/`sub` names and `{ticks: name}` durations are keys of that profile's `tempo`; with the `dynamic` profile active every branch and the chain link has dynamic beats |
+| `voice`, `bus`, `sound` | voices, buses and impact sounds named in `cues.json` and `flash_cues.json` exist (a voice not yet synthesised is a warning) |
+| `bars`, `stance`, `places`, `profile`, `option-default` | score arrays match `bars`; stance ids and texts agree; places tile the planet; aliases name real profiles; option defaults sit in their range or choices |
+| `fighter-id`, `roster-id`, `increasing`, `family-weights`, `fighter-files` | a fighter's id equals its folder and is unique; every roster id has a `fighter.json`; wound stages and ladder thresholds strictly increase; family weights match the region count; each fighter has `wounds.json` |
+
+**Draft schemas.** The fighter family (`fighter-roster`, `fighter`, `fighter-wounds`, `fighter-ladder`, `fighter-meters`) is derived from `docs/architecture/d1-roster-data.md` and `sim/core/wounds.gd` before any data exists. `fighter` and `fighter-wounds` follow the plan closely; `fighter-ladder` and `fighter-meters` guess field names and will change with D1b. Tighten them when D1a lands.
+
+**Self-test** (`tools/lib/selftest.js`, about 300 checks): the strict parser agrees with `JSON.parse` on every data file; every schema keyword the engine supports passes and fails as it should (`tools/fixtures/engine-cases.json`); every schema file uses only supported keywords, resolves its `$ref`s and is used; and about 90 invalid-data cases (`tools/fixtures/cases.json`) each mutate real data and must produce the named finding, at the named pointer, that the unmutated data does not. Every schema must have a valid document and at least three invalid cases. Fighter data does not exist yet, so the self-test uses neutral fixtures (`tools/fixtures/virtual/data/fighters`: `FIXTURE_HERO`, `FIXTURE_VILLAIN`) and ignores any real `data/fighters`. If a case fails with "fixture path missing", the data's shape changed: update the case.
+
+**Engine.** `tools/lib/schema.js` is a small validator of our own that implements only the keywords the schemas use and rejects a schema that uses any other, so a constraint can never be silently ignored. The trade-off against a library such as ajv: no dependency, no install step, no lockfile, no Legal register row, and it is trivial to keep identical on any runner; the cost is that we maintain about 250 lines and a new keyword needs a line of code and a test case. It is JavaScript, not GDScript: it runs in CI without downloading Godot. The loaders' own checks stay in GDScript.
+
+**Adding or changing a schema**
+1. Write `tools/schemas/<name>.schema.json` (draft 2020-12, a version field, a "Policy: ..." sentence in the description).
+2. Add a rule for its files to `tools/schemas/map.json` (first match wins).
+3. Add at least three invalid cases to `tools/fixtures/cases.json` (and a virtual valid document under `tools/fixtures/virtual/` if no real data exists).
+4. Cross-references go in `tools/lib/xref.js`, with a case each.
+5. Run `node tools/validate.js --self-test` and `node tools/validate.js`.
+
+Data files are owned by their directors; the validator reports problems and never edits data.
+
 ## CI
 
-`.github/workflows/ci.yml` runs on every push, pull request and manual run, on `ubuntu-latest`:
+`.github/workflows/ci.yml` runs on every push, pull request and manual run, on the pinned image `ubuntu-24.04` (not `ubuntu-latest`, so a GitHub image migration cannot change a result without a commit):
 
 | Job | Runs | Time |
 | :--- | :--- | :--- |
 | `qa` | `node qa/run-all.js` (Node 24.19.0) | about 35 s |
 | `sim` | `npm test --prefix sim` (Node 24.19.0) | about 1.5 min |
+| `data` | `node tools/validate.js --self-test`, then `node tools/validate.js` (Node 24.19.0): schemas and cross-references | a few seconds |
 | `godot-parity` | Godot 4.7.2 headless: import, GDScript parity, render determinism, render seam sweep | about 1 min |
 | `site` | Godot Web export, then assembles the Pages site (`tools/build-site.mjs`) | about 2 to 3 min (the 1.28 GB templates download dominates) |
-| `deploy` | Publishes the site to GitHub Pages. Only on push (or manual run) on `main`, and only after the four jobs above pass | seconds |
+| `deploy` | Publishes the site to GitHub Pages. Only on push (or manual run) on `main`, and only after the five jobs above pass | seconds |
 
-The first four run in parallel. There are no npm install steps because the suites use Node built-ins only; CI runs without `@napi-rs/canvas` and the golden hashes match with and without it (the runner never calls `render()`). Add `npm ci` (with a lockfile) the day a suite grows a dependency.
+The first five run in parallel. Two of them use Godot (`godot-parity` and `site`); the cap is six. There are no npm install steps because the suites use Node built-ins only; CI runs without `@napi-rs/canvas` and the golden hashes match with and without it (the runner never calls `render()`). Add `npm ci` (with a lockfile) the day a suite grows a dependency.
 
 Settings: `permissions: contents: read` (only `deploy` adds `pages: write` and `id-token: write`, the built-in Pages token permissions), no secrets, `persist-credentials: false` on checkout, a timeout on every job. A newer push cancels an older run of the same branch, except on `main`, where every run finishes so a deploy is never cut off.
 
@@ -83,7 +131,7 @@ Order: push the workflow first (the tests and `site` job run; `deploy` fails har
 
 ### What is and isn't proven
 
-- **Proven on GitHub:** `qa`, `sim` and `godot-parity` (parity only, before the render checks were added) have passed on `ubuntu-latest`, so the golden hashes hold across OSes.
+- **Proven on GitHub:** `qa`, `sim` and `godot-parity` (parity only, before the render checks were added) have passed on `ubuntu-latest` (before the runner pin to `ubuntu-24.04`, the same Linux family), so the golden hashes hold across OSes.
 - **Proven locally only:** the render checks (determinism 11 s, seam sweep 1 s), the Web and Windows exports, and the assembled site (loaded in a browser: title "Orb Combat EX", the greybox match runs). The template download and unpack, the Pages artifact and the deploy have not run on GitHub yet; the first run on `main` is the proof.
 - **Branch protection** is available (the repository is public) but not needed while only the EP commits.
 

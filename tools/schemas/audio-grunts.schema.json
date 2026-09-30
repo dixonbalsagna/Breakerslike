@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/audio-grunts",
+  "title": "audio grunts (schema 1)",
+  "description": "audio/data/grunts.json: the synthesised voices and their gestures (audio/synth/grunt_synth.gd). Version field: schema. Policy: the top level, voices and gestures are closed at the level of their required keys; a gesture carries any further synth parameters (numbers, pairs, formant tables).",
+  "type": "object",
+  "required": ["schema", "bank_seed", "voices"],
+  "properties": {
+    "schema": { "const": 1 },
+    "bank_seed": { "type": "integer", "minimum": 0 },
+    "note": { "type": "string" },
+    "voices": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["label", "gestures"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "placeholder": { "type": "boolean" },
+          "gestures": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": { "pattern": "^[a-z]+([.][a-z]+)?$" },
+            "additionalProperties": { "$ref": "#/$defs/gesture" }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "gesture": {
+      "type": "object",
+      "required": ["rate", "variants", "peak_db", "dur", "f0"],
+      "properties": {
+        "rate": { "type": "integer", "minimum": 8000 },
+        "variants": { "type": "integer", "minimum": 1 },
+        "peak_db": { "type": "number", "maximum": 0 },
+        "dur": { "type": "number", "exclusiveMinimum": 0 },
+        "f0": { "type": "array", "prefixItems": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "number", "exclusiveMinimum": 0 }], "minItems": 2, "maxItems": 2 },
+        "caption": { "type": "string" },
+        "jitter": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0 } }
+      },
+      "additionalProperties": { "type": ["number", "string", "boolean", "array", "object"] }
+    }
+  }
+}

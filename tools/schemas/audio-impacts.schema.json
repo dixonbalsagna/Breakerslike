@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/audio-impacts",
+  "title": "audio impacts (schema 1)",
+  "description": "audio/data/impacts.json: the synthesised impact sounds (audio/synth/impact_synth.gd). Version field: schema. Policy: the top level and each sound are closed except underscore keys; a layer must carry the keys its type needs and may carry more synth parameters.",
+  "type": "object",
+  "required": ["schema", "bank_seed", "sounds"],
+  "properties": {
+    "schema": { "const": 1 },
+    "bank_seed": { "type": "integer", "minimum": 0 },
+    "note": { "type": "string" },
+    "sounds": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]+([.][a-z]+)*$" },
+      "additionalProperties": { "$ref": "#/$defs/sound" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sound": {
+      "type": "object",
+      "required": ["rate", "variants", "peak_db", "layers"],
+      "properties": {
+        "rate": { "type": "integer", "minimum": 8000 },
+        "variants": { "type": "integer", "minimum": 1 },
+        "drive": { "type": "number", "minimum": 0 },
+        "peak_db": { "type": "number", "maximum": 0 },
+        "jitter": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0 } },
+        "layers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/layer" } }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "layer": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["noise", "tone", "rumble", "grains"] },
+        "t60": { "type": "number", "exclusiveMinimum": 0 },
+        "gain": { "type": "number", "minimum": 0 },
+        "at": { "type": "number", "minimum": 0 }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "noise" } }, "required": ["type"] }, "then": { "required": ["filter", "f", "q", "attack", "t60", "gain"] } },
+        { "if": { "properties": { "type": { "const": "tone" } }, "required": ["type"] }, "then": { "required": ["f", "f_to", "tau", "attack", "t60", "gain"] } },
+        { "if": { "properties": { "type": { "const": "rumble" } }, "required": ["type"] }, "then": { "required": ["lp", "attack", "t60", "gain"] } },
+        { "if": { "properties": { "type": { "const": "grains" } }, "required": ["type"] }, "then": { "required": ["rate0", "tau", "len", "f", "t60", "gain"] } }
+      ],
+      "additionalProperties": { "type": ["number", "string", "boolean", "array"] }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/art-effects",
+  "title": "art.effects (version 1)",
+  "description": "data/art/effects.json: Art's semantic effect colours for VFX (docs/vfx/plan.md, rule R4): trail, glass, steel, dust, crack line and lit lip, per biome. Version field: version. Policy: closed except keys starting with an underscore; colours are #rrggbb. Cross-references (the fire-range swap uses the haze colour and real family letters, glass and steel keep Art's stated lightness ranges) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["version", "lanes", "by_biome", "haze"],
+  "properties": {
+    "version": { "const": 1 },
+    "note": { "type": "string" },
+    "lanes": {
+      "type": "object",
+      "required": ["trail", "glass", "steel", "dust", "crack"],
+      "properties": {
+        "trail": {
+          "type": "object",
+          "required": ["shape", "rim", "core", "keyline", "fire_range_swap"],
+          "properties": {
+            "shape": { "type": "string", "minLength": 1 },
+            "rim": { "type": "string", "minLength": 1 },
+            "core": { "$ref": "#/$defs/hex" },
+            "keyline": { "$ref": "#/$defs/hex" },
+            "fire_range_swap": {
+              "type": "object",
+              "required": ["rim", "applies_to"],
+              "properties": {
+                "note": { "type": "string" },
+                "rim": { "$ref": "#/$defs/hex" },
+                "applies_to": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[PAEC]$" } }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "glass": { "$ref": "#/$defs/steps" },
+        "steel": { "$ref": "#/$defs/steps" },
+        "dust": {
+          "type": "object",
+          "required": ["shape", "default", "max_alpha_near_fighter"],
+          "properties": {
+            "shape": { "type": "string", "minLength": 1 },
+            "default": { "$ref": "#/$defs/triple" },
+            "max_alpha_near_fighter": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+            "note": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "crack": {
+          "type": "object",
+          "required": ["shape", "line_rule"],
+          "properties": {
+            "shape": { "type": "string", "minLength": 1 },
+            "line_rule": { "type": "string", "minLength": 1 },
+            "note": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "by_biome": {
+      "type": "object",
+      "required": ["ocean", "plains", "city", "forest", "desert", "mountains"],
+      "patternProperties": { "^(ocean|plains|city|forest|desert|mountains|proving_ground|village_[a-z]+)$": { "$ref": "#/$defs/biome" } },
+      "additionalProperties": false
+    },
+    "haze": { "$ref": "#/$defs/hex" }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true },
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "triple": {
+      "type": "object",
+      "required": ["light", "mid", "shadow"],
+      "properties": { "light": { "$ref": "#/$defs/hex" }, "mid": { "$ref": "#/$defs/hex" }, "shadow": { "$ref": "#/$defs/hex" } },
+      "additionalProperties": false
+    },
+    "steps": {
+      "type": "object",
+      "required": ["shape", "light", "mid", "shadow"],
+      "properties": {
+        "shape": { "type": "string", "minLength": 1 },
+        "light": { "$ref": "#/$defs/hex" },
+        "mid": { "$ref": "#/$defs/hex" },
+        "shadow": { "$ref": "#/$defs/hex" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "biome": {
+      "type": "object",
+      "required": ["dust", "crack", "lip"],
+      "properties": {
+        "dust": { "$ref": "#/$defs/triple" },
+        "crack": { "type": ["string", "null"], "pattern": "^#[0-9a-fA-F]{6}$" },
+        "lip": { "type": ["string", "null"], "pattern": "^#[0-9a-fA-F]{6}$" },
+        "paved": { "type": "boolean" },
+        "note": { "type": "string" }
+      },
+      "oneOf": [
+        { "properties": { "crack": { "type": "string" }, "lip": { "type": "string" } } },
+        { "properties": { "crack": { "type": "null" }, "lip": { "type": "null" } } }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/audio-sketch",
+  "title": "audio music sketch (schema 1)",
+  "description": "audio/data/sketch_a.json, sketch_b.json and sketch_c.json: one synthesised music sketch each, sharing the score in sketch_common.json (audio/synth/music_sketch.gd). Version field: schema. Policy: the top level is closed; kit, gain and patterns are open tables of a fixed value type.",
+  "type": "object",
+  "required": ["schema", "id", "title", "mood", "rate", "transpose", "drive", "kit", "gain", "patterns"],
+  "properties": {
+    "schema": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z]$" },
+    "title": { "type": "string", "minLength": 1 },
+    "mood": { "type": "string", "minLength": 1 },
+    "rate": { "type": "integer", "minimum": 8000 },
+    "transpose": { "type": "integer" },
+    "drive": { "type": "number", "minimum": 0 },
+    "kit": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+    "gain": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "number", "minimum": 0 } },
+    "patterns": { "type": "object", "minProperties": 1, "additionalProperties": { "type": ["boolean", "number", "string", "array"] } }
+  },
+  "additionalProperties": false
+}

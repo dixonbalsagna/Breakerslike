@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/art-flashes",
+  "title": "art.flashes (version 3)",
+  "description": "data/art/flashes.json: the head-flash set (docs/art/flash-prototype-spec.md). Version field: version. Policy: objects are closed except keys starting with an underscore. Family letters are P, A, E and C. Cross-references (every active flash has an audio cue and a rank, legal rules name real flashes) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["version", "families", "accents", "emotion_colours", "legal_rules", "keep_out", "pulse_rule", "arbitration", "flashes", "held"],
+  "properties": {
+    "version": { "const": 3 },
+    "decision": { "type": "string" },
+    "note": { "type": "string" },
+    "held": { "type": "object", "additionalProperties": { "$ref": "#/$defs/heldFlash" } },
+    "arbitration": {
+      "type": "object",
+      "required": ["default_wait_max"],
+      "properties": { "default_wait_max": { "type": "number", "exclusiveMinimum": 0 }, "note": { "type": "string" } },
+      "additionalProperties": false
+    },
+    "families": {
+      "type": "object",
+      "required": ["P", "A", "E", "C"],
+      "properties": {
+        "P": { "const": "circles" },
+        "A": { "const": "blades" },
+        "E": { "const": "wedges" },
+        "C": { "const": "steps" }
+      },
+      "additionalProperties": false
+    },
+    "accents": {
+      "type": "object",
+      "required": ["P", "A", "E", "C"],
+      "patternProperties": { "^[PAEC]$": { "$ref": "#/$defs/accent" } },
+      "additionalProperties": false
+    },
+    "emotion_colours": {
+      "type": "object",
+      "required": ["overrides", "hair_mid"],
+      "properties": {
+        "rule": { "type": "string" },
+        "overrides": {
+          "type": "object",
+          "patternProperties": { "^[PAEC]$": { "$ref": "#/$defs/rimCore" } },
+          "additionalProperties": false
+        },
+        "hair_mid": {
+          "type": "object",
+          "patternProperties": { "^[PAEC]$": { "$ref": "#/$defs/hex" } },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "legal_rules": {
+      "type": "object",
+      "required": ["round_tip", "low_crest", "danger_ray", "info_colours"],
+      "properties": {
+        "round_tip": { "$ref": "#/$defs/flashIdsByFamily" },
+        "low_crest": { "$ref": "#/$defs/flashIdsByFamily" },
+        "danger_ray": {
+          "type": "object",
+          "required": ["default_angle", "clamp"],
+          "properties": {
+            "default_angle": { "type": "number" },
+            "clamp": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "minItems": 2, "maxItems": 2 },
+            "note": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "info_colours": {
+          "type": "object",
+          "patternProperties": { "^[PAEC]$": { "$ref": "#/$defs/coreLine" } },
+          "additionalProperties": false
+        },
+        "info_keyline": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "keep_out": {
+      "type": "object",
+      "required": ["angle_min", "angle_max"],
+      "properties": {
+        "rule": { "type": "string" },
+        "angle_min": { "type": "number", "minimum": 0, "maximum": 360 },
+        "angle_max": { "type": "number", "minimum": 0, "maximum": 360 },
+        "ground_shards": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "pulse_rule": {
+      "type": "object",
+      "required": ["rise_fraction"],
+      "properties": { "note": { "type": "string" }, "rise_fraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 } },
+      "additionalProperties": false
+    },
+    "flashes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "$ref": "#/$defs/flash" }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true },
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "accent": {
+      "type": "object",
+      "required": ["light", "mid", "shadow"],
+      "properties": { "light": { "$ref": "#/$defs/hex" }, "mid": { "$ref": "#/$defs/hex" }, "shadow": { "$ref": "#/$defs/hex" } },
+      "additionalProperties": false
+    },
+    "rimCore": {
+      "type": "object",
+      "required": ["rim", "core"],
+      "properties": { "rim": { "$ref": "#/$defs/hex" }, "core": { "$ref": "#/$defs/hex" } },
+      "additionalProperties": false
+    },
+    "coreLine": {
+      "type": "object",
+      "required": ["core", "line"],
+      "properties": { "core": { "$ref": "#/$defs/hex" }, "line": { "$ref": "#/$defs/hex" } },
+      "additionalProperties": false
+    },
+    "flashIdsByFamily": {
+      "type": "object",
+      "patternProperties": {
+        "^[PAEC]$": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } }
+      },
+      "additionalProperties": false,
+      "properties": { "note": { "type": "string" } }
+    },
+    "pulse": {
+      "type": "object",
+      "required": ["count", "on", "off", "fade"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "on": { "type": "number", "exclusiveMinimum": 0 },
+        "off": { "type": "number", "minimum": 0 },
+        "fade": { "type": "number", "exclusiveMinimum": 0 },
+        "total": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "layer": {
+      "type": "object",
+      "required": ["a", "d", "s", "op"],
+      "properties": {
+        "a": { "type": "number", "minimum": -360, "maximum": 720 },
+        "d": { "type": "number", "minimum": 0 },
+        "s": { "type": "number", "exclusiveMinimum": 0 },
+        "op": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "inward": { "type": "boolean" },
+        "ground": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "flash": {
+      "type": "object",
+      "required": ["name", "class", "pulse", "total", "priority", "cooldown", "kind", "glyph", "layout", "moment", "event", "sound", "rare", "sequence"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "class": { "enum": ["info", "emotion"] },
+        "pulse": { "$ref": "#/$defs/pulse" },
+        "total": { "type": "number", "exclusiveMinimum": 0 },
+        "priority": { "type": "integer", "minimum": 1 },
+        "cooldown": { "type": "number", "minimum": 0 },
+        "kind": { "enum": ["layout", "glyph"] },
+        "glyph": { "enum": [null, "bang", "bang2", "question"] },
+        "layout": { "type": ["array", "null"], "items": { "$ref": "#/$defs/layer" } },
+        "moment": { "type": "string" },
+        "event": { "type": "string" },
+        "sound": { "type": "string" },
+        "rare": { "type": "boolean" },
+        "sequence": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["after", "delay_after_crown_down", "wait_max", "never_dropped"],
+              "properties": {
+                "after": { "type": "string", "minLength": 1 },
+                "delay_after_crown_down": { "type": "number", "minimum": 0 },
+                "wait_max": { "type": "number", "exclusiveMinimum": 0 },
+                "never_dropped": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "layout" } }, "required": ["kind"] }, "then": { "properties": { "glyph": { "const": null }, "layout": { "type": "array", "minItems": 1 } } } },
+        { "if": { "properties": { "kind": { "const": "glyph" } }, "required": ["kind"] }, "then": { "properties": { "glyph": { "enum": ["bang", "bang2", "question"] }, "layout": { "const": null } } } }
+      ],
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "heldFlash": {
+      "type": "object",
+      "required": ["name", "class", "pulse", "kind", "glyph", "layout"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "class": { "enum": ["info", "emotion"] },
+        "pulse": { "$ref": "#/$defs/pulse" },
+        "kind": { "enum": ["layout", "glyph"] },
+        "glyph": { "enum": [null, "bang", "bang2", "question"] },
+        "layout": { "type": ["array", "null"], "items": { "$ref": "#/$defs/layer" } },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    }
+  }
+}

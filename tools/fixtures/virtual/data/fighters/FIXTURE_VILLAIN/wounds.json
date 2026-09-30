@@ -1,0 +1,23 @@
+{
+  "_about": "Validator fixture, not game data. Values follow sim/core/wounds.gd.",
+  "schema": "wounds/1",
+  "regions": {
+    "head": { "brink": true },
+    "core": { "brink": true },
+    "arms": { "brink": true },
+    "legs": { "brink": true }
+  },
+  "stageAt": [180000, 360000, 540000],
+  "wearPerDamage": 390,
+  "fade": { "out": 25, "breath": 100, "breathAfterTicks": 240, "hidden": 300, "hiddenFloor": 354000 },
+  "focusWear": 30,
+  "family": {
+    "light": [3, 1, 3, 1],
+    "heavy": [1, 3, 1, 3],
+    "guard": [0, 0, 1, 0],
+    "spread": [1, 1, 1, 1]
+  },
+  "penalties": { "legs": { "1": { "speedMul": 0.85 } } },
+  "profile": { "type": "plain" },
+  "rally": { "rallyWear": 534000, "coolTicks": 900 }
+}

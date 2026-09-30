@@ -1,0 +1,14 @@
+{
+  "_about": "Validator fixture, not game data. Field names follow the D1 plan.",
+  "schema": "meters/1",
+  "meters": {
+    "menace": {
+      "range": [0, 100],
+      "start": 0,
+      "visible": true,
+      "sources": [{ "event": "casualty", "amount": 2, "cap": 100, "whose": "self" }],
+      "decay": { "rate": 0.4, "delayTicks": 240 },
+      "effects": [{ "key": "damage_mul", "perPoint": 0.0015, "cap": 0.15 }]
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "_about": "Invalid-data cases for `node tools/validate.js --self-test`. Each case takes the live data (fighters: tools/fixtures/virtual/data/fighters), applies the mutation, and must produce the expected finding, which the unmutated data must not already produce. `set` maps a JSON pointer to a new value; `del` lists pointers to remove. `expect.rule` is a schema keyword or an `xref:` rule; `expect.pointer` is optional; `expect.file` defaults to the first mutated file. At least three cases per schema are required. A case whose pointer no longer exists fails with 'fixture path missing': update the case when the data's shape changes.",
+  "cases": [
+    { "id": "templates-version", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/schema": "combat.templates/2" } }], "expect": { "rule": "const", "pointer": "/schema" } },
+    { "id": "templates-unknown-op", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/branches/0/parity/0/op": "teleport" } }], "expect": { "rule": "enum", "pointer": "/templates/0/branches/0/parity/0/op" } },
+    { "id": "templates-tick-in-parity", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/branches/0/parity/0/tick": 5 } }], "expect": { "rule": "false", "pointer": "/templates/0/branches/0/parity/0/tick" } },
+    { "id": "templates-cue-without-who", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "del": ["/templates/0/branches/0/spaced/1/args/who"] }], "expect": { "rule": "required", "pointer": "/templates/0/branches/0/spaced/1/args" } },
+    { "id": "templates-unknown-key", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/color": "red" } }], "expect": { "rule": "additionalProperties", "pointer": "/templates/0/color" } },
+    { "id": "templates-selector-branch", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/selector/branch": "nope" } }], "expect": { "rule": "xref:selector-branch", "pointer": "/templates/0/selector/branch" } },
+    { "id": "templates-unknown-cue", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/branches/0/spaced/1/args/cue": "not_a_cue" } }], "expect": { "rule": "xref:cue", "pointer": "/templates/0/branches/0/spaced/1/args/cue" } },
+    { "id": "templates-duplicate-template-id", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/1/id": "charge_interrupt" } }], "expect": { "rule": "xref:template-id", "pointer": "/templates/1/id" } },
+
+    { "id": "finishers-bad-profile", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/1/profile": "bogus" } }], "expect": { "rule": "enum", "pointer": "/finishers/1/profile" } },
+    { "id": "finishers-select-missing-finisher", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/select/byFighter/KAI": "missing_finisher" } }], "expect": { "rule": "xref:finisher-key", "pointer": "/select/byFighter/KAI" } },
+    { "id": "finishers-authored-needs-name", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "del": ["/finishers/2/name"] }], "expect": { "rule": "required", "pointer": "/finishers/2" } },
+    { "id": "finishers-duplicate-id", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/3/id": "kai" } }], "expect": { "rule": "xref:finisher-id", "pointer": "/finishers/3/id" } },
+    { "id": "finishers-bad-tick", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/2/beats/0/tick": "soon" } }], "expect": { "rule": "anyOf", "pointer": "/finishers/2/beats/0/tick" } },
+    { "id": "finishers-hit-chance-range", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/contest/struggle/aiHitChance": 1.5 } }], "expect": { "rule": "maximum", "pointer": "/contest/struggle/aiHitChance" } },
+    { "id": "finishers-unknown-cue", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/2/beats/1/args/cue": "made_up" } }], "expect": { "rule": "xref:cue", "pointer": "/finishers/2/beats/1/args/cue" } },
+
+    { "id": "flashes-version", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/version": 2 } }], "expect": { "rule": "const", "pointer": "/version" } },
+    { "id": "flashes-glyph-needs-a-glyph", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/flashes/found/glyph": null } }], "expect": { "rule": "enum", "pointer": "/flashes/found/glyph" } },
+    { "id": "flashes-bad-colour", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/accents/P/mid": "teal" } }], "expect": { "rule": "pattern", "pointer": "/accents/P/mid" } },
+    { "id": "flashes-pulse-total", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/flashes/danger/pulse/total": 9 } }], "expect": { "rule": "xref:flash-total", "pointer": "/flashes/danger/pulse/total" } },
+    { "id": "flashes-duplicate-priority", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/flashes/found/priority": 3 } }], "expect": { "rule": "xref:flash-priority" } },
+    { "id": "flashes-missing-audio", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "del": ["/flashes/surge"] }], "expect": { "file": "audio/data/flash_cues.json", "rule": "xref:flash-audio", "pointer": "/flashes/surge" } },
+
+    { "id":"templates-tempo-name","schema":"combat-templates.schema.json","mutate":[{"file":"data/combat/templates.json","set":{"/templates/6/branches/0/dynamic/0/tick/add":["footwrk"]}}],"expect":{"rule":"xref:tempo-name","pointer":"/templates/6/branches/0/dynamic/0/tick/add/0"} },
+    { "id":"templates-dynamic-needs-timing","schema":"combat-templates.schema.json","mutate":[{"file":"data/combat/templates.json","del":["/templates/6/branches/0/dynamicTiming"]}],"expect":{"rule":"dependentRequired","pointer":"/templates/6/branches/0"} },
+    { "id":"flashes-keep-out","schema":"art-flashes.schema.json","mutate":[{"file":"data/art/flashes.json","set":{"/flashes/danger/layout/0/a":20}}],"expect":{"rule":"xref:flash-keep-out","pointer":"/flashes/danger/layout/0/a"} },
+    { "id":"effects-bad-haze","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/haze":"blue"}}],"expect":{"rule":"pattern","pointer":"/haze"} },
+    { "id":"effects-swap-not-haze","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/lanes/trail/fire_range_swap/rim":"#ff0000"}}],"expect":{"rule":"xref:effects-haze","pointer":"/lanes/trail/fire_range_swap/rim"} },
+    { "id":"effects-glass-too-dark","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/lanes/glass/mid":"#336699"}}],"expect":{"rule":"xref:effects-lightness","pointer":"/lanes/glass/mid"} },
+    { "id":"effects-missing-biome","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","del":["/by_biome/desert"]}],"expect":{"rule":"required","pointer":"/by_biome"} },
+    { "id":"effects-crack-without-lip","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/by_biome/plains/lip":null}}],"expect":{"rule":"oneOf","pointer":"/by_biome/plains"} },
+    { "id":"grunts-placeholder-type","schema":"audio-grunts.schema.json","mutate":[{"file":"audio/data/grunts.json","set":{"/voices/empress/placeholder":"yes"}}],"expect":{"rule":"type","pointer":"/voices/empress/placeholder"} },
+    { "id": "cues-chance-range", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/grunts/0/chance": 2 } }], "expect": { "rule": "maximum", "pointer": "/grunts/0/chance" } },
+    { "id": "cues-missing-section", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "del": ["/damage"] }], "expect": { "rule": "required", "pointer": "" } },
+    { "id": "cues-unknown-bus", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/flash/bus": "Nowhere" } }], "expect": { "rule": "xref:bus", "pointer": "/flash/bus" } },
+    { "id": "cues-unknown-voice", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/fighters/KAI": "ghost" } }], "expect": { "rule": "xref:voice", "pointer": "/fighters/KAI" } },
+    { "id": "cues-flash-rank-mismatch", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/flash/rank/found": 9 } }], "expect": { "rule": "xref:flash-rank", "pointer": "/flash/rank/found" } },
+
+    { "id": "flash-cues-unknown-layer", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/danger/layers/0/type": "boom" } }], "expect": { "rule": "enum", "pointer": "/flashes/danger/layers/0/type" } },
+    { "id": "flash-cues-note-needs-semi", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "del": ["/flashes/found/layers/0/semi"] }], "expect": { "rule": "required", "pointer": "/flashes/found/layers/0" } },
+    { "id": "flash-cues-seed", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/bank_seed": -1 } }], "expect": { "rule": "minimum", "pointer": "/bank_seed" } },
+    { "id": "flash-cues-pulse-drift", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/danger/pulse/on": 0.2 } }], "expect": { "rule": "xref:flash-pulse", "pointer": "/flashes/danger/pulse/on" } },
+    { "id": "flash-cues-duration-drift", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/danger/max_s": 1 } }], "expect": { "rule": "xref:flash-duration", "pointer": "/flashes/danger/max_s" } },
+    { "id": "flash-cues-orphan-cue", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/zzz": { "peak_db": -6, "layers": [{ "type": "thump", "at": 0, "f": 60, "f_to": 40, "t60": 0.2, "level": 1 }], "max_s": 0.5 } } }], "expect": { "rule": "xref:flash-audio", "pointer": "/flashes/zzz" } },
+
+    { "id": "grunts-short-f0", "schema": "audio-grunts.schema.json", "mutate": [{ "file": "audio/data/grunts.json", "set": { "/voices/protagonist/gestures/effort.heavy/f0": [178] } }], "expect": { "rule": "minItems", "pointer": "/voices/protagonist/gestures/effort.heavy/f0" } },
+    { "id": "grunts-voice-needs-label", "schema": "audio-grunts.schema.json", "mutate": [{ "file": "audio/data/grunts.json", "del": ["/voices/protagonist/label"] }], "expect": { "rule": "required", "pointer": "/voices/protagonist" } },
+    { "id": "grunts-seed-type", "schema": "audio-grunts.schema.json", "mutate": [{ "file": "audio/data/grunts.json", "set": { "/bank_seed": "x" } }], "expect": { "rule": "type", "pointer": "/bank_seed" } },
+
+    { "id": "impacts-unknown-layer", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "set": { "/sounds/impact.light/layers/0/type": "splat" } }], "expect": { "rule": "enum", "pointer": "/sounds/impact.light/layers/0/type" } },
+    { "id": "impacts-noise-needs-filter", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "del": ["/sounds/impact.light/layers/0/filter"] }], "expect": { "rule": "required", "pointer": "/sounds/impact.light/layers/0" } },
+    { "id": "impacts-variants", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "set": { "/sounds/impact.light/variants": 0 } }], "expect": { "rule": "minimum", "pointer": "/sounds/impact.light/variants" } },
+    { "id": "impacts-unused-sound", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "del": ["/sounds/impact.heavy"] }], "expect": { "file": "audio/data/cues.json", "rule": "xref:sound" } },
+
+    { "id": "mix-voices", "schema": "audio-mix.schema.json", "mutate": [{ "file": "audio/data/mix.json", "set": { "/voices": 0 } }], "expect": { "rule": "minimum", "pointer": "/voices" } },
+    { "id": "mix-space-needs-rolloff", "schema": "audio-mix.schema.json", "mutate": [{ "file": "audio/data/mix.json", "del": ["/space/rolloff"] }], "expect": { "rule": "required", "pointer": "/space" } },
+    { "id": "mix-ceiling", "schema": "audio-mix.schema.json", "mutate": [{ "file": "audio/data/mix.json", "set": { "/master_limiter/ceiling_db": 3 } }], "expect": { "rule": "maximum", "pointer": "/master_limiter/ceiling_db" } },
+
+    { "id": "sketch-id", "schema": "audio-sketch.schema.json", "mutate": [{ "file": "audio/data/sketch_a.json", "set": { "/id": "AB" } }], "expect": { "rule": "pattern", "pointer": "/id" } },
+    { "id": "sketch-needs-kit", "schema": "audio-sketch.schema.json", "mutate": [{ "file": "audio/data/sketch_a.json", "del": ["/kit"] }], "expect": { "rule": "required", "pointer": "" } },
+    { "id": "sketch-rate-type", "schema": "audio-sketch.schema.json", "mutate": [{ "file": "audio/data/sketch_a.json", "set": { "/rate": "fast" } }], "expect": { "rule": "type", "pointer": "/rate" } },
+
+    { "id": "sketch-common-bars", "schema": "audio-sketch-common.schema.json", "mutate": [{ "file": "audio/data/sketch_common.json", "set": { "/bars": 13 } }], "expect": { "rule": "xref:bars", "pointer": "/chords" } },
+    { "id": "sketch-common-chord-quality", "schema": "audio-sketch-common.schema.json", "mutate": [{ "file": "audio/data/sketch_common.json", "set": { "/chords/0/1": "x" } }], "expect": { "rule": "enum", "pointer": "/chords/0/1" } },
+    { "id": "sketch-common-bpm", "schema": "audio-sketch-common.schema.json", "mutate": [{ "file": "audio/data/sketch_common.json", "set": { "/bpm": 0 } }], "expect": { "rule": "exclusiveMinimum", "pointer": "/bpm" } },
+
+    { "id": "features-type", "schema": "ui-features.schema.json", "mutate": [{ "file": "ui/data/features.json", "set": { "/features/hiding": "no" } }], "expect": { "rule": "type", "pointer": "/features/hiding" } },
+    { "id": "features-required", "schema": "ui-features.schema.json", "mutate": [{ "file": "ui/data/features.json", "del": ["/features"] }], "expect": { "rule": "required", "pointer": "" } },
+    { "id": "features-version", "schema": "ui-features.schema.json", "mutate": [{ "file": "ui/data/features.json", "set": { "/schema": 2 } }], "expect": { "rule": "const", "pointer": "/schema" } },
+
+    { "id": "glyphs-kind", "schema": "ui-glyphs.schema.json", "mutate": [{ "file": "ui/data/glyphs.json", "set": { "/actions/light/kind": "trigger" } }], "expect": { "rule": "enum", "pointer": "/actions/light/kind" } },
+    { "id": "glyphs-needs-kbd", "schema": "ui-glyphs.schema.json", "mutate": [{ "file": "ui/data/glyphs.json", "del": ["/actions/light/kbd"] }], "expect": { "rule": "required", "pointer": "/actions/light" } },
+    { "id": "glyphs-duplicate-family", "schema": "ui-glyphs.schema.json", "mutate": [{ "file": "ui/data/glyphs.json", "set": { "/families/1": "kbd" } }], "expect": { "rule": "uniqueItems" } },
+
+    { "id": "options-default-out-of-range", "schema": "ui-options.schema.json", "mutate": [{ "file": "ui/data/options.json", "set": { "/options/shake_scale/default": 5 } }], "expect": { "rule": "xref:option-default", "pointer": "/options/shake_scale/default" } },
+    { "id": "options-zero-step", "schema": "ui-options.schema.json", "mutate": [{ "file": "ui/data/options.json", "set": { "/options/shake_scale/step": 0 } }], "expect": { "rule": "exclusiveMinimum", "pointer": "/options/shake_scale/step" } },
+    { "id": "options-group", "schema": "ui-options.schema.json", "mutate": [{ "file": "ui/data/options.json", "set": { "/options/captions/group": "misc" } }], "expect": { "rule": "enum", "pointer": "/options/captions/group" } },
+
+    { "id": "readout-alias-profile", "schema": "ui-readout-profiles.schema.json", "mutate": [{ "file": "ui/data/readout_profiles.json", "set": { "/aliases/kai/base": "ghost" } }], "expect": { "rule": "xref:profile", "pointer": "/aliases/kai/base" } },
+    { "id": "readout-needs-crown", "schema": "ui-readout-profiles.schema.json", "mutate": [{ "file": "ui/data/readout_profiles.json", "del": ["/empress/crown"] }], "expect": { "rule": "required", "pointer": "/empress" } },
+    { "id": "readout-duplicate-region", "schema": "ui-readout-profiles.schema.json", "mutate": [{ "file": "ui/data/readout_profiles.json", "set": { "/default/regions": ["head", "head"] } }], "expect": { "rule": "uniqueItems" } },
+
+    { "id": "terms-stance-without-text", "schema": "ui-terms.schema.json", "mutate": [{ "file": "ui/data/terms.json", "set": { "/stance_ids/0": "charge" } }], "expect": { "rule": "xref:stance" } },
+    { "id": "terms-places-gap", "schema": "ui-terms.schema.json", "mutate": [{ "file": "ui/data/terms.json", "set": { "/places/1/x0": 1300 } }], "expect": { "rule": "xref:places", "pointer": "/places/1/x0" } },
+    { "id": "terms-tier-type", "schema": "ui-terms.schema.json", "mutate": [{ "file": "ui/data/terms.json", "set": { "/tier": "x" } }], "expect": { "rule": "type", "pointer": "/tier" } },
+
+    { "id": "roster-duplicate", "schema": "fighter-roster.schema.json", "mutate": [{ "file": "data/fighters/roster.json", "set": { "/1": "FIXTURE_HERO" } }], "expect": { "rule": "uniqueItems" } },
+    { "id": "roster-bad-id", "schema": "fighter-roster.schema.json", "mutate": [{ "file": "data/fighters/roster.json", "set": { "/0": "fixture-hero" } }], "expect": { "rule": "pattern", "pointer": "/0" } },
+    { "id": "roster-unknown-fighter", "schema": "fighter-roster.schema.json", "mutate": [{ "file": "data/fighters/roster.json", "set": { "/1": "GHOST" } }], "expect": { "rule": "xref:roster-id", "pointer": "/1" } },
+
+    { "id": "fighter-unknown-rally-rule", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "set": { "/rally/rule": "berserk" } }], "expect": { "rule": "enum", "pointer": "/rally/rule" } },
+    { "id": "fighter-needs-maxhp", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "del": ["/stats/maxhp"] }], "expect": { "rule": "required", "pointer": "/stats" } },
+    { "id": "fighter-missing-finisher", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "set": { "/finishers/base": "nope" } }], "expect": { "rule": "xref:finisher-key", "pointer": "/finishers/base" } },
+    { "id": "fighter-duplicate-id", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_VILLAIN/fighter.json", "set": { "/id": "FIXTURE_HERO" } }], "expect": { "rule": "xref:fighter-id", "pointer": "/id" } },
+    { "id": "fighter-hex-colour", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "set": { "/identity/hair": "gold" } }], "expect": { "rule": "pattern", "pointer": "/identity/hair" } },
+
+    { "id": "wounds-stages-order", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "set": { "/stageAt": [360000, 180000, 540000] } }], "expect": { "rule": "xref:increasing", "pointer": "/stageAt" } },
+    { "id": "wounds-fractional-units", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "set": { "/stageAt": [1.5, 2, 3] } }], "expect": { "rule": "type", "pointer": "/stageAt/0" } },
+    { "id": "wounds-needs-rally", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "del": ["/rally"] }], "expect": { "rule": "required", "pointer": "" } },
+    { "id": "wounds-family-length", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "set": { "/family/light": [1, 2, 3] } }], "expect": { "rule": "minItems", "pointer": "/family/light" } },
+
+    { "id": "ladder-thresholds-order", "schema": "fighter-ladder.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/ladder.json", "set": { "/thresholds": [50, 25, 75] } }], "expect": { "rule": "xref:increasing", "pointer": "/thresholds" } },
+    { "id": "ladder-fill", "schema": "fighter-ladder.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/ladder.json", "set": { "/fillPerSec": 0 } }], "expect": { "rule": "exclusiveMinimum", "pointer": "/fillPerSec" } },
+    { "id": "ladder-needs-tiers", "schema": "fighter-ladder.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/ladder.json", "del": ["/tiers"] }], "expect": { "rule": "required", "pointer": "" } },
+
+    { "id": "meters-unknown-effect", "schema": "fighter-meters.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/meters.json", "set": { "/meters/menace/effects/0/key": "explode" } }], "expect": { "rule": "enum", "pointer": "/meters/menace/effects/0/key" } },
+    { "id": "meters-needs-decay", "schema": "fighter-meters.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/meters.json", "del": ["/meters/menace/decay"] }], "expect": { "rule": "required", "pointer": "/meters/menace" } },
+    { "id": "meters-source-owner", "schema": "fighter-meters.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/meters.json", "set": { "/meters/menace/sources/0/whose": "everyone" } }], "expect": { "rule": "enum", "pointer": "/meters/menace/sources/0/whose" } },
+    { "id": "meters-number-digits", "schema": "fighter-meters.schema.json", "text": { "file": "data/fighters/FIXTURE_HERO/meters.json", "replace": ["\"perPoint\": 0.0015", "\"perPoint\": 0.0015000000000000001"] }, "expect": { "rule": "number-digits", "pointer": "/meters/menace/effects/0/perPoint" } }
+  ],
+  "text": [
+    { "id": "lint-trailing-comma", "text": "{\"a\": 1,}", "expect": { "rule": "json" } },
+    { "id": "lint-comment", "text": "{\"a\": 1 // no\n}", "expect": { "rule": "json" } },
+    { "id": "lint-leading-zero", "text": "{\"a\": 01}", "expect": { "rule": "json" } },
+    { "id": "lint-bom", "text": "﻿{\"a\": 1}", "expect": { "rule": "json" } },
+    { "id": "lint-duplicate-key", "text": "{\"a\": 1, \"b\": {\"c\": 1, \"c\": 2}}", "expect": { "rule": "duplicate-key", "pointer": "/b/c" } },
+    { "id": "lint-sixteen-digits", "text": "{\"x\": 0.1234567890123456}", "expect": { "rule": "number-digits", "pointer": "/x" } },
+    { "id": "lint-fifteen-digits-ok", "text": "{\"x\": 0.123456789012345, \"y\": 1200000, \"z\": 293.66}", "expect": null }
+  ]
+}

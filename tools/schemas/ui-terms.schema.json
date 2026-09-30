@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-terms",
+  "title": "ui terms (schema 1)",
+  "description": "ui/data/terms.json: every player-facing word the HUD draws (docs/narrative/glossary.md). Version field: schema. Policy: the top level is closed; each table is a map of stable keys to non-empty text, so a tone change or a translation is a data swap. Text values may hold {placeholders}. Stance ids and stance texts must agree (checked by tools/lib/xref.js).",
+  "type": "object",
+  "required": ["schema", "stance_ids", "stance", "tier", "meter", "region", "stage", "internal_stage", "card", "chip_stage", "station", "state", "toll", "banner_rename", "caption", "prompt", "planet", "places"],
+  "properties": {
+    "schema": { "const": 1 },
+    "note": { "type": "string" },
+    "stance_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z]+$" } },
+    "stance": { "$ref": "#/$defs/texts" },
+    "tier": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "meter": { "$ref": "#/$defs/texts" },
+    "region": { "$ref": "#/$defs/texts" },
+    "stage": { "$ref": "#/$defs/texts" },
+    "internal_stage": { "$ref": "#/$defs/texts" },
+    "card": { "$ref": "#/$defs/texts" },
+    "chip_stage": { "$ref": "#/$defs/texts" },
+    "station": { "$ref": "#/$defs/texts" },
+    "state": { "$ref": "#/$defs/texts" },
+    "toll": { "$ref": "#/$defs/texts" },
+    "banner_rename": { "$ref": "#/$defs/texts" },
+    "caption": { "$ref": "#/$defs/texts" },
+    "prompt": { "$ref": "#/$defs/texts" },
+    "planet": { "type": "string", "minLength": 1 },
+    "places": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["x0", "x1", "name"],
+        "properties": {
+          "x0": { "type": "number", "minimum": 0 },
+          "x1": { "type": "number", "exclusiveMinimum": 0 },
+          "name": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "texts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string", "minLength": 1 },
+      "patternProperties": { "^_": true }
+    }
+  }
+}

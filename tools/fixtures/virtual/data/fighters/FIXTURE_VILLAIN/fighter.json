@@ -1,0 +1,18 @@
+{
+  "_about": "Validator fixture, not game data. Neutral placeholder names and colours.",
+  "schema": "fighter/1",
+  "id": "FIXTURE_VILLAIN",
+  "identity": {
+    "name": "Fixture Villain",
+    "title": "Test Fixture",
+    "role": "villain",
+    "sigName": "Fixture Lance",
+    "col": "#8a3b3b",
+    "aura": "#d99694",
+    "hair": "#5b3a8a"
+  },
+  "stats": { "care": -0.8, "dmgMul": 1.05, "spd": 0.95, "maxhp": 1700 },
+  "kit": { "canHide": false },
+  "rally": { "rule": "spite" },
+  "finishers": { "base": "generic" }
+}
