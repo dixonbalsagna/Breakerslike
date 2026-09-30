@@ -1,0 +1,584 @@
+{
+ "schema": 1,
+ "bank_seed": 20260929,
+ "rate": 12000,
+ "note": "Babble voice data (audio/audio_babble.gd plans, audio/synth/babble_synth.gd renders). A caption becomes a run of short syllables shaped by the text, the mood and the fighter's voice; laughs and grunts punctuate it. The syllable bank is tiny (about 60 clips of about 100 ms per voice at 12 kHz) and is played with pitch changes, so a line costs a few play calls and no synthesis at run time.",
+ "timeline": {
+  "note": "Must match ui/core/ui_bark_timing.gd (the text reveal), so the babble and the captions run together; babble_check.gd compares the two.",
+  "base_cps": 30.0,
+  "cps_per_intensity": 11.0,
+  "pauses": {
+   ",": 0.14,
+   ";": 0.14,
+   ":": 0.14,
+   ".": 0.26,
+   "?": 0.26,
+   "!": 0.26,
+   "-": 0.18,
+   "—": 0.18,
+   "…": 0.3
+  }
+ },
+ "vowels": {
+  "a": {
+   "f": [
+    730,
+    1090,
+    2440
+   ],
+   "bw": [
+    90,
+    110,
+    160
+   ]
+  },
+  "o": {
+   "f": [
+    570,
+    840,
+    2410
+   ],
+   "bw": [
+    80,
+    100,
+    150
+   ]
+  },
+  "u": {
+   "f": [
+    300,
+    870,
+    2240
+   ],
+   "bw": [
+    60,
+    90,
+    120
+   ]
+  },
+  "e": {
+   "f": [
+    530,
+    1840,
+    2480
+   ],
+   "bw": [
+    80,
+    110,
+    160
+   ]
+  },
+  "i": {
+   "f": [
+    270,
+    2290,
+    3010
+   ],
+   "bw": [
+    60,
+    100,
+    150
+   ]
+  }
+ },
+ "nasal": {
+  "f": [
+   280,
+   1100,
+   2300
+  ],
+  "bw": [
+   80,
+   120,
+   160
+  ]
+ },
+ "onsets": {
+  "plosive": {
+   "breath": 0.75,
+   "h_onset": 0.012,
+   "glide": [
+    0.0,
+    0.02
+   ],
+   "nasal": false
+  },
+  "nasal": {
+   "breath": 0.05,
+   "h_onset": 0.01,
+   "glide": [
+    0.02,
+    0.07
+   ],
+   "nasal": true
+  },
+  "aspirate": {
+   "breath": 0.6,
+   "h_onset": 0.035,
+   "glide": [
+    0.0,
+    0.02
+   ],
+   "nasal": false
+  },
+  "none": {
+   "breath": 0.08,
+   "h_onset": 0.01,
+   "glide": [
+    0.0,
+    0.02
+   ],
+   "nasal": false
+  }
+ },
+ "syllables": {
+  "ba": {
+   "onset": "plosive",
+   "vowel": "a"
+  },
+  "be": {
+   "onset": "plosive",
+   "vowel": "e"
+  },
+  "bo": {
+   "onset": "plosive",
+   "vowel": "o"
+  },
+  "da": {
+   "onset": "plosive",
+   "vowel": "a"
+  },
+  "do": {
+   "onset": "plosive",
+   "vowel": "o"
+  },
+  "gu": {
+   "onset": "plosive",
+   "vowel": "u"
+  },
+  "ma": {
+   "onset": "nasal",
+   "vowel": "a"
+  },
+  "me": {
+   "onset": "nasal",
+   "vowel": "e"
+  },
+  "no": {
+   "onset": "nasal",
+   "vowel": "o"
+  },
+  "hi": {
+   "onset": "aspirate",
+   "vowel": "i"
+  },
+  "ho": {
+   "onset": "aspirate",
+   "vowel": "o"
+  },
+  "ha": {
+   "onset": "aspirate",
+   "vowel": "a"
+  },
+  "ah": {
+   "onset": "none",
+   "vowel": "a"
+  },
+  "oh": {
+   "onset": "none",
+   "vowel": "o"
+  },
+  "eh": {
+   "onset": "none",
+   "vowel": "e"
+  }
+ },
+ "timbres": {
+  "base": {
+   "open": 1.0,
+   "breath": 1.0,
+   "jitter": 1.0,
+   "shimmer": 1.0,
+   "drive": 1.0,
+   "fry": 0.0,
+   "attack": 1.0
+  },
+  "smooth": {
+   "open": 1.15,
+   "breath": 0.7,
+   "jitter": 0.5,
+   "shimmer": 0.6,
+   "drive": 0.7,
+   "fry": 0.0,
+   "attack": 1.3
+  },
+  "rough": {
+   "open": 0.8,
+   "breath": 0.8,
+   "jitter": 1.4,
+   "shimmer": 1.5,
+   "drive": 1.5,
+   "fry": 0.15,
+   "attack": 0.8
+  },
+  "breathy": {
+   "open": 1.2,
+   "breath": 2.0,
+   "jitter": 1.6,
+   "shimmer": 1.4,
+   "drive": 0.6,
+   "fry": 0.0,
+   "attack": 1.5
+  }
+ },
+ "voices": {
+  "protagonist": {
+   "label": "Hearty and open: many open vowels, a chatty rhythm.",
+   "ref_f0": 150,
+   "formant_k": 1.0,
+   "syl_ms": 110,
+   "min_gap": 0.07,
+   "open": 0.62,
+   "breath": 0.12,
+   "jitter": 0.012,
+   "shimmer": 0.05,
+   "drive": 1.2,
+   "crush_bits": 0,
+   "hold": 1,
+   "stutter": false,
+   "lexicon": {
+    "ba": 3,
+    "do": 2,
+    "ho": 3,
+    "ha": 3,
+    "ah": 2,
+    "ma": 1,
+    "no": 2
+   },
+   "laugh": {
+    "pulses": 5,
+    "f0": [
+     240,
+     190
+    ],
+    "spacing": [
+     0.13,
+     0.13
+    ],
+    "pulse_ms": 90,
+    "decay": 0.82,
+    "breath": 0.35,
+    "step_st": 0.0,
+    "variants": 2
+   },
+   "chars_per_syl": 2.5
+  },
+  "anti_hero": {
+   "label": "Low and clipped: closed vowels, short syllables, long silences.",
+   "ref_f0": 95,
+   "formant_k": 1.0,
+   "syl_ms": 85,
+   "min_gap": 0.095,
+   "open": 0.5,
+   "breath": 0.14,
+   "jitter": 0.02,
+   "shimmer": 0.1,
+   "drive": 1.8,
+   "crush_bits": 0,
+   "hold": 1,
+   "stutter": false,
+   "lexicon": {
+    "do": 3,
+    "no": 3,
+    "gu": 3,
+    "oh": 2,
+    "ho": 1
+   },
+   "laugh": {
+    "pulses": 1,
+    "f0": [
+     130,
+     100
+    ],
+    "spacing": [
+     0.1,
+     0.1
+    ],
+    "pulse_ms": 110,
+    "decay": 1.0,
+    "breath": 0.6,
+    "step_st": 0.0,
+    "variants": 2
+   },
+   "chars_per_syl": 3.2
+  },
+  "empress": {
+   "label": "Silky and theatrical: bright vowels, long syllables, a quick lilt.",
+   "ref_f0": 280,
+   "formant_k": 1.17,
+   "syl_ms": 120,
+   "min_gap": 0.065,
+   "open": 0.6,
+   "breath": 0.25,
+   "jitter": 0.015,
+   "shimmer": 0.06,
+   "drive": 1.4,
+   "crush_bits": 0,
+   "hold": 1,
+   "stutter": false,
+   "lexicon": {
+    "be": 3,
+    "hi": 3,
+    "me": 2,
+    "ha": 2,
+    "eh": 2,
+    "ba": 1,
+    "ma": 2
+   },
+   "laugh": {
+    "pulses": 7,
+    "f0": [
+     270,
+     380
+    ],
+    "spacing": [
+     0.15,
+     0.08
+    ],
+    "pulse_ms": 80,
+    "decay": 0.92,
+    "breath": 0.4,
+    "step_st": 0.0,
+    "variants": 2
+   },
+   "chars_per_syl": 2.4
+  },
+  "cyborg": {
+   "label": "Bright and mechanical: a few repeating syllables, stutters, bit-crushed.",
+   "ref_f0": 135,
+   "formant_k": 1.1,
+   "syl_ms": 80,
+   "min_gap": 0.06,
+   "open": 0.5,
+   "breath": 0.1,
+   "jitter": 0.008,
+   "shimmer": 0.03,
+   "drive": 3.0,
+   "crush_bits": 6,
+   "hold": 2,
+   "stutter": true,
+   "lexicon": {
+    "ba": 3,
+    "bo": 2,
+    "do": 3,
+    "be": 1
+   },
+   "laugh": {
+    "pulses": 5,
+    "f0": [
+     170,
+     170
+    ],
+    "spacing": [
+     0.09,
+     0.09
+    ],
+    "pulse_ms": 70,
+    "decay": 0.9,
+    "breath": 0.2,
+    "step_st": 1.0,
+    "variants": 2
+   },
+   "chars_per_syl": 2.6
+  }
+ },
+ "moods": {
+  "neutral": {
+   "timbre": "base",
+   "pitch_st": 0.0,
+   "slope_st": 0.0,
+   "lilt_st": 0.6,
+   "lilt_period": 5.0,
+   "gap_mul": 1.0,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.5,
+   "gain_db": 0.0,
+   "laugh_every": 0,
+   "grunt_p": 0.12,
+   "skip_p": 0.06
+  },
+  "smug": {
+   "timbre": "smooth",
+   "pitch_st": -1.0,
+   "slope_st": -0.5,
+   "lilt_st": 1.6,
+   "lilt_period": 7.0,
+   "gap_mul": 1.25,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.3,
+   "gain_db": -1.0,
+   "laugh_every": 0,
+   "grunt_p": 0.05,
+   "skip_p": 0.03
+  },
+  "angry": {
+   "timbre": "rough",
+   "pitch_st": 1.0,
+   "slope_st": 1.5,
+   "lilt_st": 0.0,
+   "lilt_period": 1.0,
+   "gap_mul": 0.82,
+   "accent_every": 3,
+   "accent_st": 2.5,
+   "jitter_st": 0.8,
+   "gain_db": 2.0,
+   "laugh_every": 0,
+   "grunt_p": 0.3,
+   "skip_p": 0.06
+  },
+  "hurt": {
+   "timbre": "breathy",
+   "pitch_st": -1.0,
+   "slope_st": -4.5,
+   "lilt_st": 0.8,
+   "lilt_period": 3.0,
+   "gap_mul": 1.15,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.5,
+   "gain_db": -3.0,
+   "laugh_every": 0,
+   "grunt_p": 0.0,
+   "skip_p": 0.03
+  },
+  "desperate": {
+   "timbre": "breathy",
+   "pitch_st": 3.0,
+   "slope_st": 3.0,
+   "lilt_st": 0.0,
+   "lilt_period": 1.0,
+   "gap_mul": 0.72,
+   "accent_every": 4,
+   "accent_st": 1.5,
+   "jitter_st": 1.4,
+   "gain_db": 1.0,
+   "laugh_every": 0,
+   "grunt_p": 0.1,
+   "skip_p": 0.0
+  },
+  "laughing": {
+   "timbre": "base",
+   "pitch_st": 2.0,
+   "slope_st": 0.0,
+   "lilt_st": 1.2,
+   "lilt_period": 2.5,
+   "gap_mul": 0.95,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.8,
+   "gain_db": 0.0,
+   "laugh_every": 4,
+   "grunt_p": 0.0,
+   "skip_p": 0.06
+  },
+  "playful": {
+   "timbre": "base",
+   "pitch_st": 1.0,
+   "slope_st": 0.0,
+   "lilt_st": 1.0,
+   "lilt_period": 3.0,
+   "gap_mul": 0.95,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.8,
+   "gain_db": 0.0,
+   "laugh_every": 9,
+   "grunt_p": 0.1,
+   "skip_p": 0.06
+  },
+  "respectful": {
+   "timbre": "smooth",
+   "pitch_st": -1.0,
+   "slope_st": 0.0,
+   "lilt_st": 0.4,
+   "lilt_period": 6.0,
+   "gap_mul": 1.1,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.3,
+   "gain_db": -1.0,
+   "laugh_every": 0,
+   "grunt_p": 0.0,
+   "skip_p": 0.06
+  },
+  "grim": {
+   "timbre": "base",
+   "pitch_st": -2.0,
+   "slope_st": -1.0,
+   "lilt_st": 0.3,
+   "lilt_period": 6.0,
+   "gap_mul": 1.2,
+   "accent_every": 0,
+   "accent_st": 0.0,
+   "jitter_st": 0.3,
+   "gain_db": -1.0,
+   "laugh_every": 0,
+   "grunt_p": 0.05,
+   "skip_p": 0.03
+  }
+ },
+ "mood_map": {
+  "contemptuous": "smug",
+  "leering": "smug",
+  "polite_menace": "smug",
+  "disgusted": "angry",
+  "competitive": "angry",
+  "delight": "laughing",
+  "wrath": "angry",
+  "pain": "hurt",
+  "fear": "desperate",
+  "earnest": "neutral",
+  "cruel": "smug",
+  "brink": "desperate"
+ },
+ "grunt_punctuation": {
+  "exclaim": {
+   "gesture": "effort.heavy",
+   "gain_db": -5.0,
+   "delay": 0.04
+  },
+  "ellipsis": {
+   "gesture": "sigh",
+   "gain_db": -6.0,
+   "delay": 0.05,
+   "p": 0.5
+  }
+ },
+ "cue_map": {
+  "effort.light": "effort.heavy",
+  "effort.heavy": "effort.heavy",
+  "wince": "pain.limb",
+  "pain.head": "pain.head",
+  "pain.limb": "pain.limb",
+  "growl": "effort.heavy",
+  "scoff": "effort.heavy",
+  "sneer": "sigh",
+  "sigh": "sigh",
+  "sigh.heavy": "sigh",
+  "gasp": "pain.head",
+  "roar": "effort.heavy",
+  "static": "effort.heavy",
+  "ragged": "pain.limb",
+  "cackle": "laugh",
+  "hm": "sigh"
+ },
+ "plan": {
+  "skip_keep_last": true,
+  "laugh_gain_db": -2.0,
+  "syllable_gain_db": -4.0,
+  "max_syllables": 200,
+  "max_syl_per_word": 4
+ }
+}

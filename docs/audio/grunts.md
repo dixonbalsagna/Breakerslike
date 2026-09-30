@@ -105,6 +105,8 @@ About 11 gestures: 33 clips. Legal's Press condition applies: mechanical, no ray
 
 Total: about 46 gestures and about 138 clips for the four fighters (some gestures, such as `effort.heavy`, exist for several fighters with different numbers), about 2.5 MB in memory, and about 1.0 s to render on a desktop for all four (about 0.5 s for the two in a match). Estimated from the 6 to 12 ms each of the working grunts.
 
+**Babble.** The captions are babbled, not only punctuated by grunts: see `direction.md` section 7.1. The babble syllables and laughs come from the same engine, and a `sigh` gesture now exists for all four voices (the babble uses it after an ellipsis).
+
 ## 3. Making them for free
 
 Three routes. They mix: the engine can carry pitch, timing and vowel, and a recording can carry breath and texture.

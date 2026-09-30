@@ -327,6 +327,38 @@ Orb: lines are unvoiced text, and each character's distinct grunts, growls and l
 - **Budget.** Nine to ten gestures, three variants each, per fighter: about 115 clips for four fighters, about 2 MB in memory and about 1.2 s to render on a desktop (estimated from the 9 to 12 ms each of the two working grunts). Only the two fighters in the match are rendered, in slices behind the loading beat (`AudioBank.warm_begin`, `warm_step`). Web timing is not measured yet.
 - **Language.** Grunts are language-neutral, which helps Localization: the captions are the only text.
 
+### 7.1 The babble voice
+
+Orb (playtest 2): voice lines should play out like a classic platformer's, "each character a distinct voice that plays in grunts, laughs and chattering noises while their captions appear". So the captions are babbled. Code: `audio/audio_babble.gd` (the planner), `audio/audio_babble_player.gd` (playback), `audio/synth/babble_synth.gd` (the bank). Data: `audio/data/babble.json`.
+
+**How a caption becomes babble.** `AudioBabble.plan(voice, text, mood, intensity, cues, seed)` returns a list of events (a time, a sound, a pitch change in semitones and a level) and nothing else. It is a pure function: the same inputs give the same plan, it draws only from its own seeded stream (`deriveSeed(matchSeed, "audio.babble.<line id>.<actor>")`), and it never touches the sim, so a replay speaks the same babble.
+
+| Driven by | How |
+| :--- | :--- |
+| The text's length | One syllable for every few letters of a word (2.4 to 3.2 letters, by voice), at most four a word. A hyphenated stutter ("N-n-not") speaks each part. The voice never chatters faster than its own minimum gap (60 to 95 ms), so a fast line is thinned, not rushed |
+| The text's clock | The same clock as the caption reveal: `ui/core/ui_bark_timing.gd` (characters a second by intensity, pauses at punctuation). The plan's times are equal to UI's for every character (checked), so a syllable sounds as its word appears, and the voice pauses where the text pauses |
+| Punctuation | A question rises over its last four syllables (+6 st). An exclamation punches its last word (+3 st, +3 dB). An ellipsis trails away (down 5 st, 6 dB quieter). A full stop falls 2 st. A comma lifts 1.5 st. An ALL-CAPS word is accented |
+| Mood | Neutral, smug, angry, hurt, desperate, laughing, plus playful, respectful and grim. Each sets a timbre (smooth, rough, breathy or plain), a base pitch, a drift across the line, a lilt, a pace, accents, pitch jitter and loudness. Narrative's registers and mood tags map onto them in `mood_map` (contemptuous, leering and polite menace are smug; disgusted and competitive are angry; delight is laughing; fear and the brink are desperate) |
+| Laughs | A laugh word ("Ha!", "Ohoho") plays the fighter's laugh, and the laughing mood adds a burst every fourth syllable. The Protagonist laughs warmly (five pulses), the Anti-hero once and dry, the Empress in a cackle that speeds up and climbs (seven pulses), the Cyborg in a stutter that steps up (five pulses, bit-crushed) |
+| Grunts | After an exclamation a fighter may grunt (the angry mood does it most); after an ellipsis it may sigh. Any gesture in the line's own `cues` (Narrative's line system) plays too, through a map from Narrative's gesture names to ours (`cue_map`) |
+
+**The voices.** Each fighter has 15 possible syllables built from a small bank (plosive, nasal and breath onsets into five vowels) and picks from its own weighted lexicon, at its own pitch and syllable length:
+
+| Fighter | Reference pitch | Syllable | Lexicon and feel |
+| :--- | :--- | :--- | :--- |
+| Protagonist | 150 Hz | 110 ms | Open vowels ("ba", "ho", "ha", "do"): chatty, warm |
+| Anti-hero | 95 Hz | 85 ms | Closed, low ("do", "no", "gu", "oh"): short and clipped, few of them |
+| Empress | 280 Hz, resonances up 17% | 120 ms | Bright ("be", "hi", "me", "eh"): silky, quick to lilt |
+| Cyborg | 135 Hz, bit-crushed | 80 ms | Four syllables ("ba", "bo", "do", "be") that repeat, and stutter |
+
+**Cheap on web.** The bank is about 100 clips of about 100 ms at 12 kHz mono (all four voices together render in about 140 ms on a desktop and take about 0.3 MB; the two fighters in a match take about half). A line is a few dozen `AudioVoices.play` calls spread over a second or two on two alternating voice groups per fighter, and no synthesis at run time. Planning a 66-character line takes 0.3 ms. Pitch is changed by the player's `pitch_scale`, so there are no per-syllable buffers.
+
+**The hook for Narrative's dialogue director.** The dialogue director picks a line and calls `AudioBabble.speak_line(S, actor, line)` with `line = {id, text, mood, intensity, cues}` (the fields the line system already carries: a register or mood tag, the intensity that already sets the text speed, and the cues) and gets the plan. UI's reveal already keeps an age for the line; each frame it calls `AudioBabblePlayer.sync(actor, age, x, y, cam_x, zoom)`, which plays whatever is due. Because the voice follows that age and has no clock of its own, a replay seek lands on the right syllable and a paused caption pauses its voice. `speak()` replaces a fighter's earlier line and `cut()` stops it, following the priority rules in `line-system.md` section 3. `audio_demo.gd` (key B) is a working example without a renderer.
+
+`docs/narrative/dialogue-director.md` did not exist when I built this, so the interface above is my proposal; the only fields I need on a line are `text`, `mood` and `intensity`, and the rest is optional.
+
+**Not yet done.** No human has listened to it. Where a caption should carry a laugh or grunt that the text does not show, Narrative adds it as a cue. The hurt, desperate and laughing moods are tuned by the numbers in `babble_check.gd` (pitch, pace and level differ as intended), not by ear. Web timing is unmeasured. The Anti-hero's cracked-facade voice (contractions back, plain, present tense) needs its own mood row when Narrative marks those lines.
+
 ## 8. Sourcing, licence and Legal
 
 Rules that bind everything (`originality-rules.md`, `licence-register.md`): original or logged; no sound-alikes, no ripped clips, no voice clips; CC BY 4.0 and CC0 accepted for audio, NC and unlicensed rejected; Legal writes `docs/legal/asset-origins.md`, and I send proposed rows in my reports (proposed rows for the prototype are in `audio/README.md`).

@@ -10,9 +10,11 @@ extends RefCounted
 const IMPACTS_PATH := "res://audio/data/impacts.json"
 const GRUNTS_PATH := "res://audio/data/grunts.json"
 const FLASH_PATH := "res://audio/data/flash_cues.json"
+const BABBLE_PATH := "res://audio/data/babble.json"
 
 var impacts: Dictionary = {}
 var grunts: Dictionary = {}
+var babble: Dictionary = {}       # babble.json: the babble voice (syllable bank, moods, timeline)
 var flashes: Dictionary = {}      # flash_cues.json: the 12 head-flash cues and the four sound families
 var _cache: Dictionary = {}       # "id#variant" -> AudioStreamWAV
 var render_ms: Dictionary = {}    # "id#variant" -> milliseconds it took to render
@@ -23,6 +25,7 @@ func _init() -> void:
 	impacts = load_json(IMPACTS_PATH)
 	grunts = load_json(GRUNTS_PATH)
 	flashes = load_json(FLASH_PATH)
+	babble = load_json(BABBLE_PATH)
 
 
 static func load_json(path: String) -> Dictionary:
@@ -40,6 +43,20 @@ func family_of_voice(voice: String) -> String:
 		if flashes.families[k].voice == voice:
 			return k
 	return ""
+
+
+## The babble bank ids for the given voices (all voices if empty): every syllable in the voice's lexicon in every
+## timbre, and the laugh. About 60 short clips per voice.
+func babble_ids(voices: Array = []) -> Array:
+	var out: Array = []
+	for v in babble.get("voices", {}):
+		if not voices.is_empty() and not (v in voices):
+			continue
+		for tm in babble.timbres:
+			for syl in babble.voices[v].lexicon:
+				out.append("babble.%s.%s.%s" % [v, tm, syl])
+		out.append("babble.%s.laugh" % v)
+	return out
 
 
 ## "flash.<flash>.<family>" for every flash and family (or just the families of the given voices). Not part of ids()
@@ -80,6 +97,11 @@ func buffer(id: String, variant: int) -> PackedFloat32Array:
 	if r.is_empty():
 		return PackedFloat32Array()
 	var v: int = posmod(variant, variants(id))
+	if id.begins_with("babble."):
+		var bp: PackedStringArray = id.split(".")
+		if bp.size() == 3:
+			return BabbleSynth.laugh(babble, bp[1], v)
+		return BabbleSynth.render(id, babble)
 	if id.begins_with("flash."):
 		var p: PackedStringArray = id.split(".")
 		return FlashSynth.render(r, flashes.families[p[2]], p[2], int(flashes.rate), int(flashes.bank_seed), p[1])
@@ -89,6 +111,8 @@ func buffer(id: String, variant: int) -> PackedFloat32Array:
 
 
 func rate_of(id: String) -> int:
+	if id.begins_with("babble."):
+		return int(babble.get("rate", 12000))
 	if id.begins_with("flash."):
 		return int(flashes.get("rate", 16000))
 	return int(_recipe(id).get("rate", 32000))
@@ -122,8 +146,12 @@ func warm() -> float:
 
 ## The same work in slices, for a loading screen or the first frames of a match: call warm_begin() once, then
 ## warm_step() each frame until it returns false. One call renders one variant (2 to 60 ms on a desktop).
-func warm_begin(only_voices: Array = [], with_flash: bool = false) -> void:
+func warm_begin(only_voices: Array = [], with_flash: bool = false, with_babble: bool = false) -> void:
 	_queue.clear()
+	if with_babble:
+		for id in babble_ids(only_voices):
+			for v in range(variants(id)):
+				_queue.append([id, v])
 	if with_flash:
 		for id in flash_ids(only_voices):
 			_queue.append([id, 0])
@@ -145,6 +173,15 @@ func warm_step() -> bool:
 
 ## The recipe for an id, or an empty dictionary.
 func _recipe(id: String) -> Dictionary:
+	if id.begins_with("babble."):
+		var b: PackedStringArray = id.split(".")
+		if b.size() < 3 or not babble.get("voices", {}).has(b[1]):
+			return {}
+		if b.size() == 3:
+			return {"variants": int(babble.voices[b[1]].laugh.variants)} if b[2] == "laugh" else {}
+		if b.size() == 4 and babble.timbres.has(b[2]) and babble.syllables.has(b[3]):
+			return {"variants": 1}
+		return {}
 	if id.begins_with("flash."):
 		var p: PackedStringArray = id.split(".")
 		if p.size() != 3 or not flashes.get("families", {}).has(p[2]):

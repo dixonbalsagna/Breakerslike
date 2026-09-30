@@ -12,7 +12,7 @@ extends RefCounted
 ##   f0_jitter    random pitch wobble per cycle (fraction); shimmer is the same for loudness
 ##   open, fry    open quotient of the glottal pulse (lower = pressed, brighter); fry = every other cycle quieter
 ##   vowel_a/b    {f: [F1, F2, F3], bw: [B1, B2, B3]}; glide = [start, end] of the a -> b move
-##   breath       aspiration noise level; h_onset = the length of the breathy "h" before the voice
+##   breath       aspiration noise level; h_onset = the length of the breathy "h" before the voice; breath_body (default 0.35) = how much of it stays under the voiced part
 ##   attack, hold, t60   the voiced envelope: ramp, flat part, then a fall of 60 dB in t60
 ##   chest        {f, bw, gain}: a low resonance on the raw source for body
 ##   drive        saturation on the way out
@@ -58,6 +58,7 @@ static func render(def: Dictionary, bank_seed: int, id: String, variant: int) ->
 	var g1: float = maxf(float(glide[1]), g0 + 0.001)
 	var breath: float = float(def.get("breath", 0.0))
 	var h_on: float = maxf(float(def.get("h_onset", 0.03)), 0.002)
+	var breath_body: float = float(def.get("breath_body", 0.35))    # how much breath stays under the voiced part
 	var attack: float = maxf(float(def.get("attack", 0.005)), 0.001)
 	var hold: float = float(def.get("hold", 0.05))
 	var t60: float = float(def.t60)
@@ -120,7 +121,7 @@ static func render(def: Dictionary, bank_seed: int, id: String, variant: int) ->
 		var src: float = (g - g_prev) * (fs / maxf(f0, 20.0)) * cyc_a * cyc_fry * ve
 		g_prev = g
 		# breath: loudest in the "h" lead, a whisper of it through the vowel
-		var ne: float = breath * (exp(-t / h_on) + 0.35 * ve)
+		var ne: float = breath * (exp(-t / h_on) + breath_body * ve)
 		var x: float = src + noise[i] * ne * 3.0
 		# cascade of the four formants
 		var y: float = x

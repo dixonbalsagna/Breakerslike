@@ -2,7 +2,7 @@ extends Node
 ## Listen to the audio prototype, no rendering needed. Run it from the repo root:
 ##   godot --path . res://audio/demo/audio_demo.tscn
 ##
-## Keys: 1 light hit, 2 heavy hit, 3 crater, 4 Protagonist effort grunt, 5 Anti-hero effort grunt,
+## Keys: B the next babbled caption of the four voices, 1 light hit, 2 heavy hit, 3 crater, 4 Protagonist effort grunt, 5 Anti-hero effort grunt,
 ##       P move the source left / centre / right (tests panning), M start or stop a live seeded match.
 ## The live match is the real sim, stepped at 60 Hz here with no graphics. Each tick's fx events go to AudioCues, and the
 ## cues go to AudioVoices, exactly as a render host would do it (audio/README.md, "Hooking it up"). The camera stand-in is
@@ -25,6 +25,11 @@ var max_frames: int = 0
 var pos_mode: int = 1               # 0 left, 1 centre, 2 right
 var log_lines: Array = []
 var label: Label
+var babble: AudioBabble
+var bab_player: AudioBabblePlayer
+var captions: Dictionary = {}
+var speech: Dictionary = {}          # voice index -> seconds into its line
+var bab_n: int = 0
 
 
 func _ready() -> void:
@@ -39,6 +44,10 @@ func _ready() -> void:
 	cues = AudioCues.new(bank)
 	voices = AudioVoices.new(bank)
 	add_child(voices)
+	babble = AudioBabble.new(bank)
+	babble.reset(seed_)
+	bab_player = AudioBabblePlayer.new(voices)
+	captions = AudioBank.load_json("res://audio/data/babble_captions.json").captions
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	label = Label.new()
@@ -63,9 +72,15 @@ func _unhandled_key_input(e: InputEvent) -> void:
 			pos_mode = (pos_mode + 1) % 3
 			_refresh()
 		KEY_M: _toggle_live()
+		KEY_B: _babble_next()
 
 
 func _process(delta: float) -> void:
+	for a in speech.keys():
+		speech[a] = float(speech[a]) + delta
+		bab_player.sync(a, speech[a], _offset(), 40.0, 0.0, 0.35)
+		if not bab_player.speaking(a):
+			speech.erase(a)
 	if live:
 		acc += minf(delta, 0.1)
 		while acc >= TICK:
@@ -110,6 +125,19 @@ func _manual(id: String, size: float) -> void:
 	_say("%-16s v%d  %+5.1f dB  x%.2f" % [c.sound, c.variant, c.gain_db, c.pitch])
 
 
+## B: the next caption of the next voice, babbled as its text would be revealed (age drives it, as UI's reveal does).
+func _babble_next() -> void:
+	var names: Array = ["protagonist", "anti_hero", "empress", "cyborg"]
+	var voice: String = names[bab_n % 4]
+	var line: Dictionary = captions[voice][(bab_n / 4) % captions[voice].size()]
+	bab_n += 1
+	var plan: AudioBabble.Plan = babble.plan(voice, line.text, line.mood, int(line.intensity), line.get("cues", []), SimRng.deriveSeed(seed_, "audio.babble." + line.text))
+	var actor: int = names.find(voice)
+	bab_player.speak(actor, plan)
+	speech[actor] = 0.0
+	_say("%s (%s): %s  [%d syllables, %d laughs, %d grunts, %.1f s]" % [voice, plan.emotion, line.text, plan.count("syl"), plan.count("laugh"), plan.count("grunt"), plan.total])
+
+
 func _voice(voice: String) -> void:
 	var id: String = "voice.%s.effort.heavy" % voice
 	var c := AudioCues.Cue.new()
@@ -141,5 +169,5 @@ func _say(line: String) -> void:
 func _refresh() -> void:
 	if label == null:
 		return
-	label.text = "Audio prototype (procedural, generated at runtime)\n\n1 light hit    2 heavy hit    3 crater\n4 Protagonist effort    5 Anti-hero effort\nP source position: %s    M live match: %s\n\n%s" % [
+	label.text = "Audio prototype (procedural, generated at runtime)\n\n1 light hit    2 heavy hit    3 crater\n4 Protagonist effort    5 Anti-hero effort\nB babble the next caption (cycles the four voices)\nP source position: %s    M live match: %s\n\n%s" % [
 		["left", "centre", "right"][pos_mode], "ON" if live else "off", "\n".join(log_lines)]

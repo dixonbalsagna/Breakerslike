@@ -1,0 +1,114 @@
+{
+ "schema": 1,
+ "note": "The five preview captions per fighter (the fighters' voice bibles, docs/narrative/voices/; original, unsearched lines), with the mood and intensity a dialogue director would attach. Used by tools/render_babble.gd and babble_check.gd.",
+ "captions": {
+  "protagonist": [
+   {
+    "text": "Good. You came. Now show me everything.",
+    "mood": "playful",
+    "intensity": 1
+   },
+   {
+    "text": "Ha! My arm. I'll need that later.",
+    "mood": "laughing",
+    "intensity": 1
+   },
+   {
+    "text": "That was somebody's roof. I'll help rebuild it once I'm done here.",
+    "mood": "hurt",
+    "intensity": 1
+   },
+   {
+    "text": "Hold on, hold on. I'll be fine in a minute.",
+    "mood": "desperate",
+    "intensity": 2
+   },
+   {
+    "text": "Say that about them once more. Just once.",
+    "mood": "angry",
+    "intensity": 2
+   }
+  ],
+  "anti_hero": [
+   {
+    "text": "You were adequate. That is the highest thing I say.",
+    "mood": "smug",
+    "intensity": 1
+   },
+   {
+    "text": "Fifth. Behind the goons.",
+    "mood": "smug",
+    "intensity": 1
+   },
+   {
+    "text": "This does not count.",
+    "mood": "angry",
+    "intensity": 2
+   },
+   {
+    "text": "I can't feel my arms. Help me.",
+    "mood": "desperate",
+    "intensity": 1
+   },
+   {
+    "text": "...Enough. Leave.",
+    "mood": "hurt",
+    "intensity": 0
+   }
+  ],
+  "empress": [
+   {
+    "text": "Ohoho. Cute. Cute! ...Filed under Cute.",
+    "mood": "laughing",
+    "intensity": 1
+   },
+   {
+    "text": "You struck us! Do you know what revision this is? ...You struck ME.",
+    "mood": "angry",
+    "intensity": 3
+   },
+   {
+    "text": "Annexing. The empire thanks you for your patronage.",
+    "mood": "smug",
+    "intensity": 1
+   },
+   {
+    "text": "This is an unapproved outcome! We appeal. ...I APPEAL.",
+    "mood": "desperate",
+    "intensity": 3
+   },
+   {
+    "text": "Revision Four. We have added a hat.",
+    "mood": "smug",
+    "intensity": 1
+   }
+  ],
+  "cyborg": [
+   {
+    "text": "Your order has been fulfilled. Please rate your experience.",
+    "mood": "smug",
+    "intensity": 1
+   },
+   {
+    "text": "Mm. Crunchy. Five stars.",
+    "mood": "smug",
+    "intensity": 1
+   },
+   {
+    "text": "Not the chip! Anything but the chip!",
+    "mood": "desperate",
+    "intensity": 3
+   },
+   {
+    "text": "I would like to speak to a manager. Is there a manager?",
+    "mood": "angry",
+    "intensity": 1
+   },
+   {
+    "text": "N-n-not the chip. Not the... not the chip.",
+    "mood": "hurt",
+    "intensity": 2
+   }
+  ]
+ }
+}
