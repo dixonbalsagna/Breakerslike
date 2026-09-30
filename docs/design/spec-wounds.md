@@ -112,6 +112,7 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
   - the struggle's base survival stays at 23%.
 
   *Measured:* brink to KO 48 s; median 6:56; first brink 5:52; Rallies 0.37; survival 35%; limb breaks 0.47 a match (57% arms, 43% legs); KAI 50%. Brink to KO sits near the bottom of its 45 to 90 s band, so any change that speeds up decisive exchanges needs a re-check of it.
+  *Tails* (QA, 800 matches): p10 5:07, p90 9:05, timeouts 0.3%. In the four-arm run only the villain mirror misses, with p10 at 4:55. **Signed off at k 0.045.** The miss is 5 s on one placeholder arm, driven by menace damage, and the roster replaces those meters. Re-check it on the roster; k 0.044 is the known fix (about +10 s on p10).
 
 ### 1c. Lock-on and line of sight (hiding is removed)
 
