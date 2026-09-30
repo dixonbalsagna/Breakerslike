@@ -333,3 +333,7 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Transformations: keep iterating.
 - Motion feel: a mix. Orb: "snappy looks really good, would work well in attack rushes. fluid looks really good, would work well with power strikes."
 - Showcase pose author: not decided; keep them as drafts. Orb questioned the hours: the game is meant to be 90% or more vibe-coded.
+
+## Moveset scope and cosmetics (2026-09-30)
+- Moveset: start the first fighter at Lean (3 specials, 4 signatures, 6 showcases) to test, then grow by data.
+- Cosmetics: leave room for player cosmetic customisation. With four fighters at launch, Orb wants a vast assortment of cosmetics that players unlock through play.
