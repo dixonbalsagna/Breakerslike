@@ -277,3 +277,61 @@ The mood has turned. The bit that started as a joke ends sincere, and the Anti-h
 - **Game Design:** the drama-to-budget curve and the match arc (the seven to eight minute target).
 - **Legal:** the boldest jewels and callback templates.
 - **Localization:** slotted templates need per-language grammars, and the tense devices may not carry.
+
+---
+
+## 8. After Orb's questionnaire 4 (2026-09-30)
+
+Orb's answers: inner thoughts, often; mostly fresh lines plus a few recurring signature lines per fighter; a dialogue density of 6 out of 10; the mood drives crowd behaviour and the director's aggression; move names only for specials, signatures and finishers. And the key ask: fighters' personalities should match up with how the player's fighting style is shaping the fight. A player who holds defensive patterns all game might see the character think "Only a little longer...", and a player who plays aggressively and sees the opponent start to evade might see the character boast about a training regimen.
+
+### 8.1 A correction to the architecture: the mood lives in the sim
+
+Because the mood now **drives the crowd and the director's aggression**, it is **simulation state**, not presentation. So:
+- The **mood model and the player-style profile are sim components**: pure functions of sim events, in fixed-point, part of the state hash, and reproducible in replays.
+- The **line selection, the freshness engine and the memory remain presentation.** They read the mood and the style profile but never write the sim.
+- The **outputs** the sim reads from the mood: `director.aggression` (a scale on how hard the fight director pushes each fighter) and `crowd.state` (`excited`, `nervous`, `fleeing`, the same input as evacuation and the runners).
+- The dialogue director's separate seeded stream is unchanged: it chooses lines, and the sim never reads which lines were chosen.
+
+### 8.2 The player-style model
+
+A **rolling profile** of how each fighter is being played (a human's controls, or the AI's choices), over a **60-second window** and a **match-long average**. It is a sim component (section 8.1).
+
+| Measure | What it is |
+|---|---|
+| `stance_share` | The fraction of time in each stance (Press, Guard, Dodge, Escape). |
+| `aggression` | Attacks per minute, and the share of time spent closing distance. |
+| `retreat` | Time in Escape and Dodge, and how much distance was opened. |
+| `charge_habit` | Time charging, and how many charges were interrupted. |
+| `special_use` | Specials and signatures fired, and the share that landed. |
+| `hide_habit` | Time hidden in cover. |
+| `repetition` | Runs of the same attack kind. |
+
+**Labels** derived from the profile (with hysteresis so they do not flicker): `turtle` (Guard above 55% for 45 s), `rusher` (Press above 60%), `runner` (Escape and Dodge above 50%), `charger` (long charge time), `sniper` (special-heavy), `hider`, and `mixer` (varied). Also **style shifts**: `was_rusher_now_runner` and so on.
+
+**The opponent's reaction.** The fight director adapts to a style (a rusher meets evasion, a turtle meets guard breaks), and the dialogue director reads **both** the style and the reaction: the fighter who is *being* the style, and the one *reacting* to it.
+
+| Style | The styled fighter thinks or boasts | The other fighter's taunt or thought |
+|---|---|---|
+| `turtle` | A thought: "Only a little longer..." | "Hiding behind your own arms. You were always small." |
+| `rusher` | A boast about pace and training | A thought about being pushed |
+| `runner` | A thought about escape | "Running again. Fifth. Behind the goons." |
+| `charger` | A thought about the build-up | "Charge all you like. I will wait." |
+| `rusher meets runner` | A boast about a training regimen | The runner's excuse or thought |
+
+The authored lines for Protagonist v Anti-hero are in `skeletons-protagonist-v-anti-hero.md`.
+
+### 8.3 Stakes framing (what is at stake, spoken)
+
+Fighters say what is on the line, in three kinds of line:
+- **`stakes_open`** at the start: what the fight is about.
+- **`stakes_raise`** when a stake grows (collateral, a transformation, the planet threatened, the brink).
+- **`stakes_reminder`** occasionally, so the stakes are heard during a long fight.
+
+The stakes come from the matchup (`sparring`, `rivalry`, `world_at_stake`, `appetite`) and rise with the fight.
+
+### 8.4 Density, thoughts, signature lines and move names
+
+- **Density 6 of 10.** The budget's `base` is the density setting times 0.9, so the default 6 means a base of 5.4 lines a minute per fighter at neutral drama. The setting runs from 0 to 10, and the accessibility settings can lower it.
+- **Thoughts, often.** Thoughts get their own budget: about 2 to 3 a minute per fighter in quiet stretches, so about a quarter of what a player sees is a thought. They fire in silences, at set pieces and at turning points, and at style patterns.
+- **Mostly fresh, with a few signature lines.** Each fighter has three or four recurring **signature lines** that are exempt from the novelty term, and that fire at most once a match, at moments that suit them (the Protagonist's "I'll fix it after", the Anti-hero's "You were adequate"). Everything else is steered toward the unseen.
+- **Move names only for specials, signatures and finishers.** The `{opp_move}` slot is filled only for those. Ordinary exchanges are never named.
