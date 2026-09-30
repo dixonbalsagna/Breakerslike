@@ -71,9 +71,9 @@ Numbers a QA test can check. "Civilians" is the share of the starting population
 
 | Measure | P2 testbed band | Game band (1v1, all pairings) | Prototype today (QA §4, default arm) |
 | :--- | :--- | :--- | :--- |
-| Civilians lost at the KO, mean | 25 to 50% | 45 to 75% | 38.7% |
-| Worst pairing's mean | at most 65% | at most 85% | 64.2% (villain mirror) |
-| Matches losing 90% or more of civilians | at most 7% | at most 10% | 5% |
+| Civilians lost at the KO, mean | 25 to 50% | **25 to 50%** (re-set after evacuation; it was 45 to 75%, §4b) | 38.7% |
+| Worst pairing's mean | at most 65% | at most 70% (re-set, §4b) | 64.2% (villain mirror) |
+| Matches losing 90% or more of civilians | at most 7% | at most 5% (re-set, §4b) | 5% |
 | Low-tier bleed: while both fighters are at tier 2 or below, civilians lost per minute | at most 40% of the population per minute (a guard against P2 work making it worse) | at most 4% of the population per minute | About 42% per minute over the whole match. Per-tier rates are not yet split out |
 | Civilians left at 4:00 (so the Cyborg's track can finish) | none | At least 25% alive in at least 80% of matches | none |
 | Structures lost at the KO, mean: a **share of row-1 (front-row) structures**. Row 1 is today's 47 buildings, unchanged by buildings in depth (`docs/world/buildings-in-depth.md`) | 20 to 40% of row 1 | 40 to 75% of row 1 | 30% (14.1 of 47) |
@@ -123,6 +123,20 @@ At the ceiling, the rest are sheltered and survive. This is the P3 exit criterio
 - *Only people still present can be Pressed:* those in buildings and streets. Evacuees in flight are safe.
 - *The floor is redefined:* at least 25% of the starting population still **present** (alive and not evacuated) at 4:00, in at least 80% of matches with the Cyborg.
 - *His thresholds are population shares that fit under the ceilings* (spec-wounds §3).
+
+**Result and rulings after World's collateral window** (commit `3612ebc`, `docs/world/collateral-caps.md` §10).
+- *The result:* civilians lost fell from 56% to 17% (default arm 13%, villain mirror 14%). No match lost 90% or more, and the low-tier bleed is 2.1% a minute.
+- *Why it's low:* the early fight at the city's edge runs over budget, so about 105 would-be deaths a match evacuate. After that the fight is mostly elsewhere, and budget use is 18%.
+- *The balance knock-on:* KAI rose from 47% to 67%, because menace feeds less.
+- The rulings below apply now. Tuning waits until after Encounter's dynamic slice, which adds strikes and collateral.
+
+1. **Budgets stay.** Tiers 1 and 2 keep 2% and 4% a minute: the low-tier bleed is the promise that "no fight destroys the planet at low tiers". Tiers 3 and 4 are not binding (18% use), so raising them would change nothing.
+2. **Relocation goes on** (`RELOCATE = true`). Evacuees shelter in the nearest standing building 3,000 to 12,000 units away, so the population is conserved. The next fight there still has people to endanger (and the Cyborg to feed on), and fleeing reads as rescue, not vanishing.
+3. **The opening moves off the city.** The spawn pairs in `modes.md` start on open ground about one settlement's distance from the nearest town, so tier-1 and tier-2 fights don't burn the population as evacuation before the stakes rise (World and Encounter).
+4. **The civilian band is re-set for the game.** Mean civilians lost at the KO: **25 to 50%** (it was 45 to 75%, set before evacuation existed). Worst pairing at most 70%; 90% or more in at most 5% of matches. The structure band is unchanged, so large-scale destruction still reads through buildings and terrain.
+5. **Menace feeds on fear as well as deaths.** The villain gains menace from evacuees at **half** the per-casualty rate (+0.45 per evacuee, normalised). The villain feeds on devastation and terror, so a fight that clears a district still feeds him. Anguish gains nothing from evacuees, because people getting out is the hero's relief.
+6. **Composure goes off** (+10% becomes 0). It was added to offset the old uncapped menace, and it now overshoots.
+7. **Target after the dynamic slice:** KAI inside 45 to 55%. If he is still high, raise menace's evacuee share (up to the full rate) before touching the budgets.
 
 **3. Per-casualty weights are normalised by population.**
 - *Why.* Procedural planets have different populations (379 on seed 1 now, 425 before), so meters must read the *share* lost, not the headcount.
