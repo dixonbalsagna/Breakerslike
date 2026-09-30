@@ -112,18 +112,74 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
   - values fall in [0, 1).
 - **Goldens:** the counter changes only the hash, not behaviour (proof in §1). The keyed draws change behaviour only where Encounter uses them, with Q4's own golden change.
 
-## 5. D1b in brief: ladder and meters
+## 5. D1b plan: meters wired, then the ladder (Simulation; ready for the window)
 
-- **`ladder.json`**: `fillPerSec` 0.45, `thresholds` [25, 50, 75], and per-tier deltas: speed +0.10, damage +0.09, launch force +0.16. It also holds the power-up crater and area-damage coefficients. Forms (F1) extend it with a fill rule per form and cinematic ticks, capped per spec §8.
-- **`meters.json`**: each meter has
-  - `range`, `start` and `visible`;
-  - `sources` (event, amount, cap and whose: self or the opponent);
-  - `decay` (rate, and delay in ticks);
-  - `effects`, from a closed list of effect keys that code implements: `regen_bonus`, `regen_penalty`, `damage_mul`, `composure`.
-- **Menace and anguish** become two meters with today's numbers:
-  - menace: `MENACE_DECAY` 0.4, quiet 240 ticks, cap 100, regen +0.03 per point, the damage cap 0.15;
-  - anguish: decay 0.6 per second, regen −0.025 per point, composure below 10.
-  - The `role == "hero"` and `role == "villain"` branches become "has this meter". The QA-003 bug (casualties pressure only the first hero) is fixed there, with World and Game Design, as the EP routed it.
+**Why now.** QA found that editing `meters.json` changes nothing: its numbers are only documentation, and the sim reads constants in `damage.gd` and `fighter.gd`. The menace regen and damage bonuses are Game Design's main levers on KAI's win rate (36 to 38%). So D1b wires the meters first, and moves the ladder second.
+
+**Two steps in one window, as in D1a.**
+1. *Lossless move.* Every number is read from data at today's values, and **the goldens do not change** (bit for bit, all 9 matches). This proves the wiring.
+2. *Game Design's numbers.* These are data edits only: the anguish ruling (§13: 0.01 per point, at most −1 ki per second), the menace targets, and the cripple data (base 0.08, ±0.05). The goldens are then regenerated once, with a 100-match probe of KAI, the median and limb breaks.
+
+### 5.1 Meters: each number, where it goes, who reads it
+
+| Today | Where | `meters.json` | Reader after D1b |
+| :--- | :--- | :--- | :--- |
+| menace regen `+0.03 × menace` | `core/fighter.gd` | `menace.effects: regen_bonus {perPoint 0.03}` | `fighter.gd` (mine) |
+| menace damage `× (1 + 0.15 × menace / 100)` | `core/damage.gd` `MENACE_DMG_CAP` | `menace.effects: damage_mul {cap 0.15}` | `damage.gd` (mine) |
+| menace decay 0.4 per second after 240 quiet ticks | `fighter.gd` `MENACE_DECAY`, `MENACE_QUIET_TICKS` | `menace.decay {rate 0.4, delayTicks 240}` | `fighter.gd` |
+| menace from casualties caused `0.9 × norm` | `world/collateral.gd` (World) | `menace.sources: casualty self 0.9` | `collateral.gd`, 1 line (the tree) |
+| menace from evacuees `0.45 × 425 / pop0` | `collateral.gd` `EVAC_MENACE` | `menace.sources: evacuee self 0.45` | `collateral.gd`, 1 line |
+| menace beam power `+0.08 × menace` | `director/beam.gd` (Encounter) | new effect `beam_power {perPoint 0.08}` | `beam.gd`, 1 line (the tree) |
+| anguish regen `max(1, regen − 0.025 × anguish)` | `fighter.gd` | `anguish.effects: regen_penalty {perPoint 0.025}` (no cap in step 1; `cap 1.0` in step 2) | `fighter.gd` |
+| anguish decay 0.6 per second | `fighter.gd` | `anguish.decay {rate 0.6, delayTicks 0}` | `fighter.gd` |
+| anguish from casualties `0.9` own, `0.5` others' | `collateral.gd` | `anguish.sources: casualty self 0.9, opponent 0.5` | `collateral.gd`, 1 line |
+| composure `× (1 + 0.0)` while anguish < 10 | `damage.gd` `COMPOSURE_*` | `anguish.effects: composure {below 10, cap 0.0}` | `damage.gd` |
+| comeback `× (1 + 0.5 × (1 − vitality)²)` for a fighter with anguish | `damage.gd` | new effect `comeback {cap 0.5}` | `damage.gd` |
+| hero lure (AI) for a fighter with anguish | `director/ai.gd` | none (it keys on the meter's presence) | unchanged |
+
+**Code shape.**
+- A `MetersDef` per fighter (`f.md`, like `f.wd`), with typed fields for the two meters D1b knows (menace and anguish): each source amount, the decay, each effect. `hasMenace` and `hasAnguish` stay; they are the meter's presence.
+- F1's own meters (Pride, heat and others) add rule code and fields the same way. A data-only new meter is not possible yet: effect keys are a closed list implemented in code.
+
+**Exactness (step 1).**
+- Each formula keeps today's operation order. For example, `1.0 + cap * (menace / 100.0)`, and `perPoint * menace` added in the same place.
+- The anguish floor, `max(1, ...)`: with base regen 5 and at most 2.5 of penalty it never binds, so dropping it for `regen − min(cap, a × perPoint)` is identical at today's numbers. A missing `cap` means uncapped.
+- The `elif` stays: a fighter with both meters gets the menace damage bonus, not the comeback.
+- The proof is the D1a one: the goldens reproduce unchanged before any number moves.
+
+**Schema (Tools, in the same change).**
+- `effects.key` gains `comeback` and `beam_power`.
+- `cap` on `regen_penalty` means "at most this much penalty".
+- The `opponent` source means "anyone but self, including no one" (a world hazard).
+
+### 5.2 Ladder (the lossless move only)
+
+- **`ladder.json`**: `fillPerSec` 0.45; `thresholds` [25, 50, 75]; `tiers` {`speed` 0.10, `damage` 0.09, `launch` 0.16}; `powerUp` {`areaR` 130, `areaRPerTier` 60, `areaDmg` 90, `areaDmgPerTier` 100}.
+- **Readers:**
+  - `fighter.gd`: the fill, thresholds, speed and the power-up area;
+  - `damage.gd`: damage;
+  - `director/launch.gd`: launch force, 2 lines, through the tree.
+- **Staying where they are** (other owners' tier terms, listed for later):
+  - beam power `tier × 10` (`beam.gd`);
+  - the launch planner's tier scores (`launch.gd`);
+  - crater energies by tier (`world/crater.gd`);
+  - building damage `0.55 + 0.25 × tier` (`fighter.gd _buildingHits`, World's number);
+  - the camera zoom (view).
+
+### 5.3 Acceptance
+
+1. Step 1 reproduces the pre-D1b goldens exactly.
+2. Editing any wired meter or ladder number changes a match (a parity negative control, like D1a's). QA's finding is closed.
+3. The loader rejects an unknown effect key, an unknown source event, a missing decay, and a ladder with thresholds out of order.
+4. Step 2 is data edits only. Then one regeneration and the 100-match probe (KAI, the median, p10 and p90, limb breaks a match).
+5. Parity, render determinism, the seam sweep, `npm test` and the validator (with Tools' schema) all pass.
+
+### 5.4 Needs
+
+- **The tree:** 3 lines in `world/collateral.gd`, 1 in `director/beam.gd`, 2 in `director/launch.gd`.
+- **Tools:** the two effect keys, in the same change.
+- **Game Design:** the step-2 numbers.
+- **QA:** the probe, after.
 
 ## 6. Owners and hand-offs
 
