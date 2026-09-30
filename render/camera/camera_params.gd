@@ -4,11 +4,12 @@ class_name CamParams
 ## Defaults marked "Orb decides" in the design doc are the ones a playtest will change.
 
 # --- the trigger (section 2) ---
-const R_SPLIT: float = 0.045           # split when a fighter's height falls under this fraction of vh (Orb decides)
-const R_MERGE: float = 0.060           # merge when it stays above this (Orb decides)
-const R_BEAM_MIN: float = 0.030        # a beam struggle keeps the merged wide shot down to this
-const MIN_PX: float = 28.0             # under 600 px of screen height the split line is at least this many pixels
+const R_SPLIT: float = 0.030           # split when a fighter's height falls under this fraction of vh (Orb decides)
+const R_MERGE: float = 0.040           # merge when it stays above this (Orb decides)
+const R_BEAM_MIN: float = 0.020        # a beam struggle keeps the merged wide shot down to this
+const MIN_PX: float = 18.0             # under 600 px of screen height the split line is at least this many pixels
 const SPLIT_DWELL: float = 0.25
+const WIDE_HOLD: float = 1.0          # extra dwell while the fighters are still moving apart: the shared zoom-out ("flying around the world") lasts this much longer
 const MERGE_DWELL: float = 0.40
 const MIN_SPLIT_AGE: float = 1.2       # before a dissolve merge
 const MIN_MERGED_AGE: float = 0.8      # before splitting again
@@ -20,7 +21,7 @@ const BODY_H: float = 75.0             # a fighter's height in world units (Figh
 const REF_MARGIN_X: float = 700.0      # the reference camera's constants
 const REF_MARGIN_Y: float = 500.0
 const REF_TIER: float = 0.06
-const ZONE_W: float = 0.51             # UI's fighter-clear zone is 51% of the width (docs/ui/hud-spec.md 2.1): both fighters fit inside it
+const ZONE_W: float = 0.0  # 0 = off. Was 0.51 (UI's clear-zone width) to keep fighters out from under UI's edge chips; Orb preferred the longer shared zoom-out, and the chips dodge the fighters instead             # UI's fighter-clear zone is 51% of the width (docs/ui/hud-spec.md 2.1): both fighters fit inside it
 const ZOOM_MIN: float = 0.006
 const ZOOM_MAX: float = 1.15
 

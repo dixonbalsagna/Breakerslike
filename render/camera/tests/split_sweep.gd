@@ -133,7 +133,7 @@ func _run() -> void:
 	await _scenario("pass-through", func(): return _pass_through(4000.0, 0.0), {"swings": 1, "sigma_changes": 1})
 	await _scenario("pass-through dead band", func(): return _pass_through(4000.0, 0.5 * CamParams.HYST_M0), {"swings": 0, "sigma_changes": 0})
 	# 4. Jitter around the split and merge lines.
-	await _scenario("split line jitter", func(): return _line_jitter(0.90, 1.10, 0.045), {"max_changes_per_second": 1.3})
+	await _scenario("split line jitter", func(): return _line_jitter(0.90, 1.10, CamParams.R_SPLIT), {"max_changes_per_second": 1.3})
 	# 5. Merges and the slam.
 	await _scenario("slam", func(): return _slam(false), {"slams": 1})
 	await _scenario("slam feint", func(): return _slam(true), {"slams": 0})

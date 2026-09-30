@@ -210,7 +210,9 @@ static func zoom_u(vw_: float, vh_: float, ad: float, dy: float, tier: float) ->
 	var span_y: float = dy + CamParams.REF_MARGIN_Y
 	# The reference framing puts fighters up to 44% of the width from the centre, outside UI's clear zone (where its edge
 	# pointer chip then sits on top of them). The zone term keeps both inside it, and the split line follows.
-	var z: float = minf(minf(vw_ / span_x, vh_ * 0.8 / span_y), CamParams.ZONE_W * vw_ / maxf(ad, 1.0))
+	var z: float = minf(vw_ / span_x, vh_ * 0.8 / span_y)
+	if CamParams.ZONE_W > 0.0:
+		z = minf(z, CamParams.ZONE_W * vw_ / maxf(ad, 1.0))
 	z = minf(z, CamParams.ZOOM_MAX)
 	z *= 1.0 - CamParams.REF_TIER * (tier - 1.0)
 	return clampf(z, CamParams.ZOOM_MIN, CamParams.ZOOM_MAX)
@@ -260,11 +262,13 @@ func _update_trigger(S: SimState) -> void:
 		return
 	if not split_wanted:
 		_below_t = _below_t + DT if r_now < rs else 0.0
-		var out_of_frame: bool = _outside_one_view(S) and r_now < rs
+		var out_of_frame: bool = _outside_one_view(S)
 		# A fighter already lost off the edge of the one view does not wait out the dwell or the full merged age.
 		var age_ok: bool = _layout_age >= CamParams.MIN_MERGED_AGE or (out_of_frame and _layout_age >= CamParams.MIN_OUT_OF_FRAME_AGE)
-		if (_below_t >= CamParams.SPLIT_DWELL or out_of_frame) and age_ok and (guard_ok or out_of_frame):
-			_set_split(true, "out of frame" if _below_t < CamParams.SPLIT_DWELL or _layout_age < CamParams.MIN_MERGED_AGE else "trigger")
+		# While they are still moving apart the shared zoom-out holds a little longer (a wide "flying around the world" beat).
+		var dwell: float = CamParams.SPLIT_DWELL + (CamParams.WIDE_HOLD if _sep_rate > 500.0 else 0.0)
+		if (_below_t >= dwell or out_of_frame) and age_ok and (guard_ok or out_of_frame):
+			_set_split(true, "out of frame" if _below_t < dwell or _layout_age < CamParams.MIN_MERGED_AGE else "trigger")
 	else:
 		_above_t = _above_t + DT if r_now > rm else 0.0
 		if _above_t >= CamParams.MERGE_DWELL and _layout_age >= CamParams.MIN_SPLIT_AGE:

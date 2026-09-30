@@ -1,16 +1,16 @@
 # Orb Combat EX: the dynamic split screen
 
-Owner: Camera and Cinematography. Code: `render/camera/`. Status: built and measured, 2026-09-29 (sections 16 and 17 say what was built, what changed from the first design and what it costs). It replaces the wave-1 camera brief; what still fits from that brief is folded in (section 13). Orb's answers are in `docs/ep/vision.md`, "Dynamic split screen". The EP accepted the defaults below (4.5% and 6.0%, solo split on, a 14% sliver, the swing, landscape only) and removed hiding from the base game.
+Owner: Camera and Cinematography. Code: `render/camera/`. Status: built and measured, 2026-09-29 (sections 16 and 17 say what was built, what changed from the first design and what it costs). It replaces the wave-1 camera brief; what still fits from that brief is folded in (section 13). Orb's answers are in `docs/ep/vision.md`, "Dynamic split screen". The EP accepted the defaults below (solo split on, a 14% sliver, the swing, landscape only) and removed hiding from the base game. After playtest feedback the split line was lowered from 4.5% to 3.0% (merge 6.0% to 4.0%) and a wide hold added, so the shared zoom-out lasts longer (section 2).
 
 **Summary**
-1. One camera while the fighters are big enough to read; two panes when zooming out further would make either one too small. The test is the fighter's on-screen height as a fraction of the screen height: split under 4.5%, merge above 6.0% (32 and 43 px at 720p).
+1. One camera while the fighters are big enough to read; two panes when zooming out further would make either one too small. The test is the fighter's on-screen height as a fraction of the screen height: split under 3.0%, merge above 4.0% (22 and 29 px at 720p), with the shared zoom-out held a second longer while the fighters are still moving apart.
 2. The divider is a straight line through the screen centre. Its normal points from one pane's fighter toward the other's, tilted up to 30° by their height difference. Each fighter sits on its own outer side, so each pane looks toward the opponent.
 3. The panes follow the shortest way round the planet. When it flips (near the antipode, or when they pass each other), a hysteresis band and a 1 s dwell keep it from flickering, and the divider swings 0.6 s through the horizontal so the panes trade sides.
 4. Merges: a 0.55 s convergence that ends in a dissolve when they fly back together; a 0.14 s slam, timed to land on contact, when one rushes in. Launches are followed by one full-screen camera locked to the launched fighter, then a merge or a split at the landing.
 5. A pure, tick-stepped rig (`SplitRig`) decides everything from `S` and never writes it. Rendering's `PaneWorld` draws the world once per pane; `SplitView` blends the two textures (section 11). On the desktop a match costs +0.3 ms a frame on average with the split on, and a two-pane frame +0.65 ms over one view (section 17).
 
 **Open questions for Orb** (defaults are mine; each is marked "Orb decides" where it appears)
-1. Is 4.5% of the screen height (a 32 px fighter at 720p) the right "too small to read"? Measured on the unsplit framing it is under that line 41% of the time; with launches and shots taking the screen, two full panes are actually up 10 to 15% of the frames. A higher number splits more often.
+1. Is 3.0% of the screen height (a 22 px fighter at 720p) the right "too small to read"? Orb's playtest found 4.5% split too soon ("hard to follow when a fighter picks up speed"; a friend liked the wide zoom-out). At 3.0% two full panes are up in 6 to 19% of the frames of an AI match. A higher number splits more often.
 2. Solo against the AI: split or single camera with an edge pointer? Recommended default: split.
 3. Respected transformation: the transformer takes the screen and the other fighter keeps a 14% sliver (recommended), or takes all of it?
 4. Swap style: divider swing (built, gap-free) or the panes passing over each other like cards (needs wider render targets)?
@@ -46,31 +46,31 @@ Consequences that shape the design:
 ## 2. The trigger: how big is the fighter on screen
 
 ```
-z_u  = min(vw / (|d| + 700), 0.8 vh / (|dy| + 500), 0.51 vw / |d|, 1.15) * (1 - 0.06 (max_tier - 1))    the reference formula plus a clear-zone term (below)
+z_u  = min(vw / (|d| + 700), 0.8 vh / (|dy| + 500), 1.15) * (1 - 0.06 (max_tier - 1))    the reference formula
 r    = 75 * z_u / vh                                                                        fighter height as a fraction of the screen height
 ```
 
-`d` is the held signed separation of section 5. The first three terms are the reference camera's own, so at fighter distances the merged shot is the shot you had before (the test checks it against `SimCamera` to 0.0000 px at rest). The fourth is new, from the playtest of the 4.5% line on the live build: the reference framing puts the fighters up to 44% of the width from the centre, outside UI's fighter-clear zone (51% of the width), and UI's edge pointer chip then sat on top of the fighter. The zone term keeps both fighters inside it, so the split line moves from 30 bh to 20 bh (and the merge line from 20 to 15): a fighter is at least 32 px tall and inside the zone, or the screen splits. Two differences from the reference: the camera's y floor is -3,200, not -180 (the reference's predates the scaled world, whose sea floor is at -2,810, and it lost fighters swimming below it), and the zoom rate is capped (section 12).
+`d` is the held signed separation of section 5. The terms are the reference camera's own, so the merged shot is the shot you had before (the test checks it against `SimCamera` to 0.0000 px at rest). The reference framing puts the fighters up to 44% of the width from the centre, outside UI's fighter-clear zone (51% of the width), and UI's edge pointer chip can then sit on top of a fighter. I tried a fourth term, `0.51 vw / |d|`, that keeps both inside the zone (`CamParams.ZONE_W`); it moved the split line to 20 bh and Orb's playtest preferred the longer shared zoom-out, so it is off (ZONE_W = 0) and the chips are to dodge the fighters instead (UI: `UiSplit.pointers` already receives the anchors). Two differences from the reference: the camera's y floor is -3,200, not -180 (the reference's predates the scaled world, whose sea floor is at -2,810, and it lost fighters swimming below it), and the zoom rate is capped (section 12).
 
 | Rule | Default | Why |
 | :--- | :--- | :--- |
-| Split when `r` stays below | 0.045 for 0.25 s | 32 px at 720p, 49 at 1080p. A head is 27% of the body, so 9 px at 720p: the least at which the Marked masks' sigils and the head flashes still read |
-| Merge when `r` stays above | 0.060 for 0.40 s | 43 px at 720p. The 1.33 ratio is the hysteresis; in separation (16:9, tier 1, level, with the zone term) it is split at 20.1 bh, merge at 15.1 bh |
+| Split when `r` stays below | 0.030 for 0.25 s, plus 1.0 s while the separation is still growing | 22 px at 720p, 32 at 1080p. A head is 27% of the body, so 6 px at 720p: below what the Marked masks' sigils and the head flashes need, which the panes then restore. The extra second is the wide "flying around the world" beat. Was 0.045 (32 px, no hold) until the playtest |
+| Merge when `r` stays above | 0.040 for 0.40 s | 29 px at 720p. The 1.33 ratio is the hysteresis; in separation (16:9, tier 1, level) it is split at 49.9 bh, merge at 35.1 bh (it was 30 and 20 at 4.5% and 6.0%) |
 | Minimum time in a split before a dissolve-merge | 1.2 s | The measured median run under the line is 2.4 s; anything shorter is not worth two transitions |
 | Minimum time merged before splitting again | 0.8 s | |
 | Closing guard | do not open if `r` predicted 0.4 s ahead (from the closing speed) is at or above the split line | A rush from 30 bh is over before the panes finish opening |
 | Beam struggle | merged is allowed down to `r` = 0.030 | The struggle is the picture; section 9 |
-| A fighter already lost | if the one-view camera has a fighter farther than 0.46 of the width from its centre (or off the top or bottom), split at once: no dwell, and 0.25 s of merged age instead of 0.8 | Found by the real-match run: the reference framing loses the lower fighter once the height difference passes about 1,500 units |
+| A fighter already lost | if the one-view camera has a fighter farther than 0.46 of the width from its centre (or off the top or bottom), split at once whatever `r` is: no dwell, and 0.25 s of merged age instead of 0.8 | Found by the real-match run: the reference framing loses the lower fighter once the height difference passes about 1,500 units |
 | Zoom-out lookahead | the one-view camera zooms for the separation it will have 0.3 s from now if it is growing | Fighters dashing apart no longer leave the frame before the split opens |
 
 Because `r` uses the reference formula, it responds to what the reference camera responds to: separation, height difference and tier. At tier 4 the split line is earlier still (the aura is bigger). A wider screen splits later and a 4:3 screen sooner. Every number is in `camera_params.gd` as a constant, so tuning does not touch code. **Orb decides** the two thresholds; the table of what they mean in pixels:
 
 | Screen height | 720 | 1080 | 1440 | 2160 |
 | :--- | ---: | ---: | ---: | ---: |
-| Split under | 32 px | 49 px | 65 px | 97 px |
-| Merge over | 43 px | 65 px | 86 px | 130 px |
+| Split under | 22 px | 32 px | 43 px | 65 px |
+| Merge over | 29 px | 43 px | 58 px | 86 px |
 
-Below 600 px of screen height the floor `r >= 28 px / vh` applies, so a small window splits earlier instead of showing 20 px fighters.
+Below 600 px of screen height the floor `r >= 18 px / vh` applies, so a small window splits earlier instead of showing 20 px fighters.
 
 **Solo against the AI** is a player setting, `camera.solo_split` (default on, **Orb decides**). Off means that where the split would open, the human fighter's pane takes the whole screen instead (the other pane stays unrendered), and the opponent is shown by the edge pointer (section 10) and the ring map; it merges by the same rules. It applies only with exactly one human. Set with `SplitView.set_solo_split(bool)` (the rig's `solo_split`). In two-player, split is always on.
 
@@ -153,7 +153,7 @@ When the trigger fires, `sep` runs 0 to 1 over 0.45 s (27 ticks) with a smoother
 
 ## 7. Merging: a dissolve, or a slam
 
-**Dissolve (fly back together).** Trigger: `r` above 0.060 for 0.40 s, after 1.2 s of split. `sep` runs 1 to 0 over 0.55 s (33 ticks) with `easeInOutCubic`. The divider's feather grows from 0 to 64 px and its line fades over the last 0.25 s, so at the hand-off the seam is a soft 64 px blend between two nearly identical pictures; the hand-off itself (render pane A only) is pixel-identical because the two cameras are equal.
+**Dissolve (fly back together).** Trigger: `r` above 0.040 for 0.40 s, after 1.2 s of split. `sep` runs 1 to 0 over 0.55 s (33 ticks) with `easeInOutCubic`. The divider's feather grows from 0 to 64 px and its line fades over the last 0.25 s, so at the hand-off the seam is a soft 64 px blend between two nearly identical pictures; the hand-off itself (render pane A only) is pixel-identical because the two cameras are equal.
 
 **Slam (one charges in).** Trigger: a fighter's `rush` is set toward the other while split, and its remaining time `rush.end - S.T` is at most 0.8 s (they all are; the longest measured is 0.78 s). The slam is timed to finish on contact, not to start with the rush:
 - Until 0.14 s before `rush.end` the panes hold (`SLAM_LEAN` is 0). A first version leaned the panes toward the merged shot during the rush; in the real-match run that pulled the defender's pane off its fighter, because a far rush has a merged shot of dots.
@@ -173,7 +173,7 @@ Trigger: a fighter's state becomes `launched` with speed at least 4,000 units pe
 | Engage | 0.32 s | If split: the launched fighter's pane expands over the whole screen (`e` 0 to 1, `easeOutCubic`); if merged: the merged camera's target becomes the launch camera. Player control is untouched |
 | Follow | until the state leaves `launched`, at most 6 s | Rigid: the focus filter's time constant is 0.02 s with the measured-velocity lead of section 4, `cam.y` filtered at 0.10 s, zoom `r_launch` = 0.06 (43 px at 720p), fighter anchored 35% from the trailing edge in the direction of travel so the path ahead shows. At the measured speeds the world streams past; the fighter stays fixed on screen |
 | Land | 0.35 s | Hold the landing site. The push-in on impact is 8% of zoom over 0.15 s and back; hit-stop is sim-owned. A knockback slide keeps following while `slide > 0` |
-| Settle | 0.60 s | Decide by the trigger at the landing: if `r` is above 0.060, merge (the follow camera eases to the merged camera, no divider ever appears); otherwise split with the launched fighter's pane already expanded, reopening by moving the divider back in over 0.35 s (`e` 1 to 0) so the far fighter's pane wipes in from its side |
+| Settle | 0.60 s | Decide by the trigger at the landing: if `r` is above the merge line, merge (the follow camera eases to the merged camera, no divider ever appears); otherwise split with the launched fighter's pane already expanded, reopening by moving the divider back in over 0.35 s (`e` 1 to 0) so the far fighter's pane wipes in from its side |
 
 Cancel or skip: a KO or a `finisher_start` ends the follow at once (the finisher's own shot takes over); a tier-up or transformation cinematic for either fighter takes precedence (section 9); reduced motion replaces the Follow with a held shot of the launch position and a cut to the landing.
 
@@ -303,17 +303,17 @@ Frame time, wall clock per frame with vsync off (seed 4 unless noted; Ryzen 7 98
 | Desktop 1280 by 720, seeds 12345 and 7 | | 1.83 and 1.74 | 2.00 and 1.91 (12% and 15%) |
 | Web 1280 by 720 (Chrome 154, ANGLE D3D11, single thread) | 2.82 / 2.14 / 3.53 / 4.61 | 3.39 / 2.63 / 4.80 / 6.72 | 3.96 / 3.90 / 5.20 / 6.30 (10% of frames) |
 
-With the zone term two full panes are up in 16%, 20% and 24% of the frames of seeds 4, 12345 and 7 (they were 12%, 12% and 15% before it), so the two-pane rows above weigh a little more in a match. Draw calls: 154 with one view, 191 on average with the split, 232 at the 95th percentile. The gameplay hash after 4,800 ticks (desktop) and 2,400 (web) is the same with and without the split (`2251e5c11e4c12c3`, `51bca31f196043ee`). Not measured: minimum-spec hardware (an old laptop, an integrated GPU, a phone). The split adds about 0.3 ms even with one pane showing (the world now draws to a SubViewport and is copied to the screen, and the rig steps each tick at about 0.05 ms), and about 0.65 ms while two panes are up; a slower CPU multiplies those, and an integrated GPU pays the doubled fill. The web frame time holds on this machine (3.4 ms mean, 6.7 ms p99 against a 16.7 ms budget). The web run's max of 634 ms is the first-use shader compile Rendering already documents.
+Two full panes are up in 6%, 13% and 19% of the frames of seeds 4, 12345 and 7 at the 3.0% line with the wide hold (they were 11%, 21% and 23% at 4.5% with no hold, measured the same day on the same tree), so a match spends about 45% fewer frames with two panes. The frame-time rows above were measured at 4.5% and weigh less in a match now. Draw calls: 154 with one view, 191 on average with the split, 232 at the 95th percentile. The gameplay hash after 4,800 ticks (desktop) and 2,400 (web) is the same with and without the split (`2251e5c11e4c12c3`, `51bca31f196043ee`). Not measured: minimum-spec hardware (an old laptop, an integrated GPU, a phone). The split adds about 0.3 ms even with one pane showing (the world now draws to a SubViewport and is copied to the screen, and the rig steps each tick at about 0.05 ms), and about 0.65 ms while two panes are up; a slower CPU multiplies those, and an integrated GPU pays the doubled fill. The web frame time holds on this machine (3.4 ms mean, 6.7 ms p99 against a 16.7 ms budget). The web run's max of 634 ms is the first-use shader compile Rendering already documents.
 
-### The 4.5% line on the live build
+### The split line, after two playtests
 
-Frames from the live game (seed 4, 1280 by 720), one view just before the line and the split just after: tick 95, 20 bh apart, both fighters about 40 px tall and inside the zone (left); tick 120, 25 bh apart, split, about 45 px tall (right).
+First playtest (mine, on the live build at 4.5%): the size was fine but the reference framing put fighters outside UI's clear zone, under its edge chip. Second (Orb and a friend): the split came too soon, was "hard to follow when a fighter picks up speed", and the friend liked the earlier wide zoom-out. So the line is now 3.0% (merge 4.0%), the clear-zone term is off, and the split waits a second longer while the fighters are still moving apart. The two frames below, at 4.5% with the zone term, show what the chip overlap looked like and the 20 bh split it caused; they are kept as evidence.
 
-| Before the line | After |
+| One view, 20 bh apart | Split, 25 bh apart |
 | :---: | :---: |
 | ![tick 95](img/line_t95.png) | ![tick 120](img/line_t120.png) |
 
-Findings: at 32 px (4.5%) a fighter's stance, head and cape still read at 720p, so the line holds; the problem was position, not size, and the zone term fixed it. What a playtest with a person on a pad would still add: whether 20 bh feels early for a player who is used to seeing both fighters, and whether the swap and the slam read in play. Those are for Orb.
+Still for Orb, on a pad: whether 50 bh feels right for the split, whether the wide beat reads as "flying around the world", and whether the chips need to dodge the fighters (UI).
 
 ## 18. Open
 
