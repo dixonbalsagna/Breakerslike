@@ -9,6 +9,7 @@ Owner: Game Design. These pages define what the game is and why it is fun, and e
 | [economy.md](economy.md) | HP, ki, tiers and transformations, ego meters, hiding and ambush, collateral scaling, and how a 5-to-7-minute match escalates |
 | [balance-targets.md](balance-targets.md) | The bands QA checks: win rate, length, escalation, collateral, variety, stance balance, story beats. Also the prototype's balance-gap diagnosis |
 | [living-destruction-numbers.md](living-destruction-numbers.md) | Numbers for fire, smoke and dust cover, landslides, quakes, rifts and lava: tier ladders, rates, hazard wear, frequencies, and the readability and collateral rules |
+| [moveset-rules.md](moveset-rules.md) | Specials, signatures, world-changing abilities, hidden weapons, one transformation mechanic per fighter, and style shifts (questionnaire 6) |
 | [tutorial.md](tutorial.md) | The How-to-play card and the guided first match: beats that teach reads, never timing |
 | [modes.md](modes.md) | Modes with stable ids, the 1.0 scope, and the rules for each mode |
 | [damage-model.md](damage-model.md) | No health bars: body-region wear, brink and finisher, how each fighter takes damage, and how the player reads it |
