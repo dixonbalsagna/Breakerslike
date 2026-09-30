@@ -65,7 +65,7 @@ static func _card(ci: CanvasItem, hub: UiEventHub, c: UiEventHub.Card, rect: Rec
 	var max_w: float = r.size.x - g - 34.0 * s
 	var title: String = c.title
 	var use_fs: int = tfs
-	while UiText.width(title, use_fs) > max_w and use_fs > int(UiLook.MIN_TEXT_PX):
+	while UiText.width(title, use_fs) > max_w and use_fs > int(UiLook.text_floor):
 		use_fs -= 1
 	# On a narrow card (a phone) a title that still does not fit splits into two lines: "CORE" over "BROKEN".
 	var lines: PackedStringArray = PackedStringArray([title])

@@ -155,6 +155,17 @@ static func glyphs() -> Dictionary:
 	return _glyphs
 
 
+const HOWTO_PATH := "res://ui/data/howto.json"
+static var _howto: Dictionary = {}
+
+
+## The How to play card's words (ui/data/howto.json).
+static func howto() -> Dictionary:
+	if _howto.is_empty():
+		_howto = _read(HOWTO_PATH)
+	return _howto
+
+
 const FEATURES_PATH := "res://ui/data/features.json"
 static var _features: Dictionary = {}
 static var _feature_override: Dictionary = {}

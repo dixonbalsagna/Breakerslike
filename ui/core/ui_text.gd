@@ -33,8 +33,8 @@ static func f() -> Font:
 
 
 ## A design size at scale s, never below the floor (real pixels).
-static func px(design: float, s: float, floor_px: float = UiLook.MIN_TEXT_PX) -> int:
-	return int(round(maxf(design * s, floor_px)))
+static func px(design: float, s: float, floor_px: float = -1.0) -> int:
+	return int(round(maxf(design * s, floor_px if floor_px >= 0.0 else UiLook.text_floor)))
 
 
 ## Replace glyphs the font lacks with ASCII. "→" is left in place: draw() and width() handle it as a vector arrow.

@@ -43,7 +43,7 @@ static func spec(action: String, family: String, slot: int, style: String = "neu
 
 
 static func _fs(h: float) -> int:
-	return maxi(int(UiLook.MIN_TEXT_PX), int(h * 0.55))
+	return maxi(int(UiLook.text_floor), int(h * 0.55))
 
 
 ## The width a glyph takes at height h.

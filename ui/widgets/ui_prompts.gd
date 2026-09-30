@@ -7,6 +7,10 @@ class_name UiPrompts
 ## Prompts are drawn here and on the crown windows and the struggle rings, never over the fighters. Glyphs are the neutral set
 ## of the fighter's own device (UiGlyphs). "Prompts on" is the Show prompts option, which the host also turns on in training
 ## and in the first three matches.
+##
+## On a touch screen (option touch_ui) the row is the STANCE RING instead (docs/controls/platform-plan.md section 7.1): four square
+## chips, each a touch target at least 48 dp, always shown, icon only (no key glyph to read on a phone). The hold buttons
+## (Special, Transform) belong to Controls' touch controls. `touch_rects` gives the chips' rectangles for Controls to hit-test.
 
 const STANCE_ACTIONS: Array = ["stance_press", "stance_guard", "stance_dodge", "stance_escape"]
 const STANCE_SHOW := 3.0
@@ -17,44 +21,53 @@ static func stance_visible(m: UiFighterModel, prompts_on: bool) -> bool:
 
 
 ## Whether the row has anything to draw for this fighter.
-static func has_content(m: UiFighterModel, prompts_on: bool) -> bool:
+static func has_content(m: UiFighterModel, prompts_on: bool, touch: bool = false) -> bool:
 	if m.ai:
 		return false   # an AI fighter has no device: nothing to prompt
+	if touch:
+		return true    # the stance ring is always there
 	return stance_visible(m, prompts_on) or (prompts_on and (m.avail["transform"] or m.avail["special"]))
 
 
 ## The redraw key for the row.
-static func sig(m: UiFighterModel, prompts_on: bool) -> Array:
-	var fade: int = int(clampf((STANCE_SHOW - m.stance_prompt_t) * 4.0, 0.0, 4.0)) if not prompts_on else 4
-	return [m.stance, m.device, prompts_on, stance_visible(m, prompts_on), fade, m.avail["transform"], m.avail["special"], int(m.hold["transform"] * 30.0), int(m.hold["special"] * 30.0)]
+static func sig(m: UiFighterModel, prompts_on: bool, touch: bool = false) -> Array:
+	var fade: int = int(clampf((STANCE_SHOW - m.stance_prompt_t) * 4.0, 0.0, 4.0)) if (not prompts_on and not touch) else 4
+	return [m.stance, m.device, prompts_on, touch, stance_visible(m, prompts_on), fade, m.avail["transform"], m.avail["special"], int(m.hold["transform"] * 30.0), int(m.hold["special"] * 30.0)]
 
 
-static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> void:
+## The chips of the row, in order, as {name, rect, kind, i or act, gw, h, y, gap}: the geometry that both draw and touch_rects
+## use, so a target is exactly what is drawn. `rect` is the row; the chips are laid from its column edge inward.
+static func plan(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Array:
+	var out: Array = []
+	var touch: bool = bool(o.get("touch", false))
 	var prompts_on: bool = bool(o.get("prompts", false))
-	if rect.size.y <= 0.0 or not has_content(m, prompts_on):
-		return
+	if rect.size.y <= 0.0 or not has_content(m, prompts_on, touch):
+		return out
 	var style: String = str(o.get("glyph_style", "neutral"))
 	var left: bool = m.left_side
-	var h: float = minf(maxf(26.0 * s, 20.0), rect.size.y * 0.8)
-	var y: float = rect.position.y + rect.size.y * 0.5
 	var gap: float = maxf(6.0 * s, 4.0)
+	var grid: bool = touch and bool(o.get("touch_grid", false))
+	var h: float = minf(maxf(26.0 * s, 20.0), rect.size.y * 0.8)
+	if touch:
+		h = ((rect.size.y - gap) * 0.5 - 4.0) if grid else (rect.size.y - 4.0)
+	var y: float = rect.position.y + rect.size.y * 0.5
 	var x: float = rect.position.x if left else rect.end.x
-	var fade: float = 1.0 if prompts_on else clampf((STANCE_SHOW - m.stance_prompt_t) * 4.0, 0.0, 1.0)
-	UiText.no_outline = true
-	# The stance prompt: [icon glyph] x4, the current one on a lit chip.
-	if stance_visible(m, prompts_on):
+	if touch or stance_visible(m, prompts_on):
 		for i in range(4):
-			var gw: float = UiGlyphs.width(STANCE_ACTIONS[i], m.device, m.slot, h * 0.8, style)
-			var cw: float = h + gw + gap * 1.5
+			var gw: float = 0.0 if touch else UiGlyphs.width(STANCE_ACTIONS[i], m.device, m.slot, h * 0.8, style)
+			var cw: float = (h + 4.0) if touch else (h + gw + gap * 1.5)
+			if grid:
+				# Two rows of two, from the column edge inward.
+				var col: int = i % 2
+				var row: int = i / 2
+				var gx0: float = rect.position.x + float(col) * (cw + gap) if left else rect.end.x - cw - float(col) * (cw + gap)
+				var gy: float = rect.position.y + float(row) * (h + 4.0 + gap) + (h + 4.0) * 0.5
+				out.append({"name": "stance_%d" % i, "kind": "stance", "i": i, "gw": gw, "h": h, "y": gy, "gap": gap, "rect": Rect2(gx0, gy - h * 0.5 - 2.0, cw, h + 4.0)})
+				continue
 			var cx: float = x if left else x - cw
-			var current: bool = i == m.stance
-			UiIcons.rrect(ci, Rect2(cx, y - h * 0.5 - 2.0, cw, h + 4.0), h * 0.25, Color(UiLook.col(UiLook.SCRIM), (0.75 if current else 0.5) * fade), Color(UiLook.stance_col(i), (0.95 if current else 0.35) * fade), 2.0 if current else 1.2)
-			UiIcons.stance(ci, i, Vector2(cx + h * 0.55, y), h * 0.72, Color(UiLook.stance_col(i), fade))
-			# Every chip shows its own bound position solid; the current chip is told apart by its border and fill.
-			UiGlyphs.draw(ci, STANCE_ACTIONS[i], m.device, m.slot, Vector2(cx + h + gap * 0.3, y), h * 0.8, fade, true, style)
+			out.append({"name": "stance_%d" % i, "kind": "stance", "i": i, "gw": gw, "h": h, "y": y, "gap": gap, "rect": Rect2(cx, y - h * 0.5 - 2.0, cw, h + 4.0)})
 			x += (cw + gap) if left else -(cw + gap)
-	# The hold prompts, only while the action can be used.
-	if prompts_on:
+	if prompts_on and not touch:
 		for act in ["special", "transform"]:
 			if not m.avail[act]:
 				continue
@@ -64,10 +77,51 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Di
 			var gw2: float = UiGlyphs.width(act, m.device, m.slot, h * 0.8, style)
 			var cw2: float = gw2 + tw + gap * 3.0 + h * 0.4
 			var cx2: float = x if left else x - cw2
-			UiIcons.rrect(ci, Rect2(cx2, y - h * 0.5 - 2.0, cw2, h + 4.0), h * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.65), Color(UiLook.col(UiLook.EDGE), 0.5), 1.4)
-			var gx: float = cx2 + gap
-			UiGlyphs.draw(ci, act, m.device, m.slot, Vector2(gx, y), h * 0.8, 1.0, true, style)
-			UiGlyphs.hold_ring(ci, Vector2(gx + gw2 * 0.5, y), h * 0.55, float(m.hold[act]), 1.0)
-			UiText.draw(ci, word, Vector2(gx + gw2 + gap, y + float(fs) * 0.35), fs, Color(UiLook.col(UiLook.INK), 1.0), -1)
+			out.append({"name": act, "kind": "hold", "act": act, "word": word, "fs": fs, "tw": tw, "gw": gw2, "h": h, "y": y, "gap": gap, "rect": Rect2(cx2, y - h * 0.5 - 2.0, cw2, h + 4.0)})
 			x += (cw2 + gap) if left else -(cw2 + gap)
+	return out
+
+
+## The touch targets of the row: name to global rectangle (empty unless touch).
+static func touch_rects(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	if not bool(o.get("touch", false)):
+		return out
+	for c in plan(m, rect, s, o):
+		out[c["name"]] = c["rect"]
+	return out
+
+
+static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> void:
+	var chips: Array = plan(m, rect, s, o)
+	if chips.is_empty():
+		return
+	var touch: bool = bool(o.get("touch", false))
+	var prompts_on: bool = bool(o.get("prompts", false))
+	var style: String = str(o.get("glyph_style", "neutral"))
+	var fade: float = 1.0 if (prompts_on or touch) else clampf((STANCE_SHOW - m.stance_prompt_t) * 4.0, 0.0, 1.0)
+	UiText.no_outline = true
+	for c in chips:
+		var r: Rect2 = c["rect"]
+		var h: float = c["h"]
+		var y: float = c["y"]
+		var gap: float = c["gap"]
+		if c["kind"] == "stance":
+			var i: int = c["i"]
+			var current: bool = i == m.stance
+			UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), (0.75 if current else 0.5) * fade), Color(UiLook.stance_col(i), (0.95 if current else 0.35) * fade), 2.0 if current else 1.2)
+			if touch:
+				# The stance ring: the icon alone, big, centred in a square target.
+				UiIcons.stance(ci, i, r.get_center(), h * 0.55, Color(UiLook.stance_col(i), fade))
+			else:
+				UiIcons.stance(ci, i, Vector2(r.position.x + h * 0.55, y), h * 0.72, Color(UiLook.stance_col(i), fade))
+				# Every chip shows its own bound position solid; the current chip is told apart by its border and fill.
+				UiGlyphs.draw(ci, STANCE_ACTIONS[i], m.device, m.slot, Vector2(r.position.x + h + gap * 0.3, y), h * 0.8, fade, true, style)
+		else:
+			var act: String = c["act"]
+			UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.65), Color(UiLook.col(UiLook.EDGE), 0.5), 1.4)
+			var gx: float = r.position.x + gap
+			UiGlyphs.draw(ci, act, m.device, m.slot, Vector2(gx, y), h * 0.8, 1.0, true, style)
+			UiGlyphs.hold_ring(ci, Vector2(gx + float(c["gw"]) * 0.5, y), h * 0.55, float(m.hold[act]), 1.0)
+			UiText.draw(ci, str(c["word"]), Vector2(gx + float(c["gw"]) + gap, y + float(c["fs"]) * 0.35), int(c["fs"]), Color(UiLook.col(UiLook.INK), 1.0), -1)
 	UiText.no_outline = false

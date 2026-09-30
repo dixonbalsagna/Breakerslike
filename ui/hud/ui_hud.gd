@@ -18,6 +18,8 @@ extends Control
 ## The demo (ui/demo/hud_demo.tscn) shows all of it driven by the mock feed.
 
 signal layout_changed
+signal howto_opened(first_run: bool)   # the How to play card opened: the host pauses the sim and releases held keys
+signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
 var layout := UiLayout.new()
@@ -40,6 +42,7 @@ var opts: Dictionary = {
 	"glyph_style": "neutral",  # the neutral position-diamond set; "family" (each device family's own letters) stays off until Legal answers
 	"hitstop_scale": 1.0,      # Controls' accessibility option, 0.5 to 1.0; the HUD only carries it (see ui/data/options.json)
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
+	"touch_ui": false,         # touch is the last input device (the host sets it; on by default on a phone): a stance ring, a pause button, 48 dp targets
 	"vfx_quality": "auto",     # auto, high, medium or low; VFX reads it (docs/vfx/plan.md), the HUD only carries it
 	"force_redraw": false,     # bench only: redraw every layer every frame, to measure what the caching saves
 }
@@ -63,6 +66,14 @@ var _chip_text_t: Array = [-1.0, -1.0]
 var _chip_at: Array = [Vector2.ZERO, Vector2.ZERO]   # where each chip node sits: it eases toward its target so a dodge slides, not pops
 var _chip_seen: Array = [false, false]
 var _dt := 1.0 / 60.0
+var dp := 1.0                  # device pixels per dp (a CSS pixel on the web): set by the host with set_density, else detected
+var _last_dp := 1.0
+var _last_touch := false
+var _l_pause: UiLayer
+var _l_howto: UiLayer
+var _howto_open := false
+var _howto_first := false
+var _howto_page := 0
 # The cached layers, back to front (see UiLayer): each redraws only when its signature changes.
 var _l_letter: UiLayer
 var _l_strip_base: UiLayer
@@ -111,6 +122,29 @@ func _ready() -> void:
 	_l_events = _layer(_paint_events)
 	_l_feed = _layer(_paint_feed)
 	_l_debug = _layer(_paint_debug)
+	_l_pause = _layer(_paint_pause)
+	_l_howto = _layer(_paint_howto)   # last: over everything
+	dp = _detect_density()
+	if OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios"):
+		opts["touch_ui"] = true    # a phone or tablet starts in touch mode; the host flips it with the last input device
+	_relayout()
+
+
+## Device pixels per dp. The host may set it (set_density); otherwise: the browser's devicePixelRatio on the web (a CSS pixel is a
+## dp there), the screen's dpi over 160 on a phone, and 1 on a desktop.
+func _detect_density() -> float:
+	if OS.has_feature("web"):
+		var v = JavaScriptBridge.eval("window.devicePixelRatio || 1", true)
+		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
+			return clampf(float(v), 1.0, 4.0)
+		return 1.0
+	if OS.has_feature("mobile"):
+		return clampf(float(DisplayServer.screen_get_dpi()) / 160.0, 1.0, 4.0)
+	return 1.0
+
+
+func set_density(d: float) -> void:
+	dp = clampf(d, 1.0, 4.0)
 	_relayout()
 
 
@@ -139,7 +173,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips + [_l_pause, _l_howto]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -208,7 +242,7 @@ func set_option(key: String, value) -> void:
 		for l in _all_layers():
 			if l != null:
 				l.force = bool(value)
-	if key == "silhouette":
+	if key == "silhouette" or key == "touch_ui":
 		_last_size = Vector2.ZERO
 	_relayout()
 	for l in _all_layers():
@@ -219,8 +253,13 @@ func set_option(key: String, value) -> void:
 func _relayout() -> void:
 	var sz: Vector2 = size if size.x > 1.0 else get_viewport_rect().size
 	var sil: bool = bool(opts["silhouette"])
-	if sz == _last_size and sil == _last_sil and insets == _last_insets and _swapped == _last_swapped:
+	var touch: bool = bool(opts["touch_ui"])
+	if sz == _last_size and sil == _last_sil and insets == _last_insets and _swapped == _last_swapped and dp == _last_dp and touch == _last_touch:
 		return
+	_last_dp = dp
+	_last_touch = touch
+	layout.dp = dp
+	layout.touch_ui = touch
 	_last_size = sz
 	_last_sil = sil
 	_last_insets = insets
@@ -255,6 +294,8 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"crown_locked": hub.crown_locked(),
 		"prompts": bool(opts["show_prompts"]),
 		"glyph_style": str(opts["glyph_style"]),
+		"touch": bool(opts["touch_ui"]),
+		"touch_grid": layout.touch_grid,
 	}
 
 
@@ -343,9 +384,12 @@ func _update_layers() -> void:
 	# The finisher struggle (beat rings on the brink fighter) and each column's prompt row.
 	_l_struggle.update_sig(UiStruggle.sig(hub, _frame) if (anchor_fn.is_valid() and not layout.portrait) else null)
 	var prompts_on: bool = bool(opts["show_prompts"])
+	var touch_on: bool = bool(opts["touch_ui"])
 	for m in hub.models:
 		if m.slot < _l_prompts.size():
-			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on) if (UiPrompts.has_content(m, prompts_on) and layout.prompts[m.slot].size.y > 0.0) else null)
+			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
+		_l_pause.update_sig([layout.pause_btn, layout.touch_ui] if layout.pause_btn.size.y > 0.0 else null)
+	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s) if _howto_open else null)
 
 	var events_on: bool = not hub.cards.is_empty() or not hub.barks.is_empty() or not hub.banner.is_empty() or hub.world_card != null
 	_l_events.update_sig(_frame if events_on else null)
@@ -457,6 +501,181 @@ func _paint_struggle(ci: CanvasItem) -> void:
 	if slot < 0 or not anchor_fn.is_valid():
 		return
 	UiStruggle.draw(ci, hub, layout, anchor_fn.call(slot), layout.s, _o())
+
+
+# --- The How to play card (docs/ui/hud-spec.md section 17) -------------------------------------------------------------------
+
+## Open the card. `first_run` marks it as the first-run overlay (closing it then records that the player has seen it). The host
+## calls this at the first match if not howto_seen(), and from the pause menu's "How to play" entry; F1 also toggles it. While it
+## is open the HUD takes every key and click (so the fighters do not move behind it): the host should freeze the sim on
+## howto_opened and unfreeze on howto_closed.
+func show_howto(first_run: bool = false, page: int = 0) -> void:
+	if _howto_open:
+		return
+	_howto_open = true
+	_howto_first = first_run
+	_howto_page = clampi(page, 0, maxi(UiHowto.page_count() - 1, 0))
+	_l_howto.invalidate()
+	howto_opened.emit(first_run)
+
+
+func hide_howto() -> void:
+	if not _howto_open:
+		return
+	_howto_open = false
+	var was_first: bool = _howto_first
+	_howto_first = false
+	if was_first:
+		mark_howto_seen()
+	_l_howto.update_sig(null)
+	howto_closed.emit(was_first)
+
+
+func is_howto_open() -> bool:
+	return _howto_open
+
+
+func howto_page() -> int:
+	return _howto_page
+
+
+func howto_seen() -> bool:
+	return UiPrefs.get_bool("howto_seen")
+
+
+func mark_howto_seen() -> void:
+	UiPrefs.set_bool("howto_seen", true)
+
+
+## One of "next", "back", "close" (what a key or a tap does). "next" on the last page closes.
+func howto_action(act: String) -> void:
+	if not _howto_open:
+		return
+	match act:
+		"next":
+			if _howto_page >= UiHowto.page_count() - 1:
+				hide_howto()
+			else:
+				_howto_page += 1
+				_l_howto.invalidate()
+		"back":
+			if _howto_page > 0:
+				_howto_page -= 1
+				_l_howto.invalidate()
+		"close":
+			hide_howto()
+
+
+## The glyph family and slot of the first human fighter, for the controls page ("kbd" and slot 0 if none is set).
+func _howto_device() -> String:
+	for m in hub.models:
+		if not m.ai and m.device != "":
+			return m.device
+	return "kbd"
+
+
+func _howto_slot() -> int:
+	for m in hub.models:
+		if not m.ai:
+			return m.slot
+	return 0
+
+
+func howto_plan() -> Dictionary:
+	return UiHowto.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), _howto_page, _howto_device(), _howto_slot())
+
+
+func _paint_howto(ci: CanvasItem) -> void:
+	if not _howto_open:
+		return
+	UiHowto.draw(ci, howto_plan(), _howto_device(), _howto_slot(), str(opts["glyph_style"]), bool(opts["touch_ui"]))
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# F1 opens or closes the card from anywhere; while it is open the HUD owns every key and click.
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
+		if _howto_open:
+			hide_howto()
+		else:
+			show_howto(false)
+		get_viewport().set_input_as_handled()
+		return
+	if not _howto_open:
+		return
+	if event is InputEventKey:
+		if event.pressed and not event.echo:
+			match event.keycode:
+				KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_RIGHT:
+					howto_action("next")
+				KEY_LEFT, KEY_BACKSPACE:
+					howto_action("back")
+				KEY_ESCAPE:
+					howto_action("close")
+		get_viewport().set_input_as_handled()
+	elif event is InputEventJoypadButton:
+		if event.pressed:
+			match event.button_index:
+				JOY_BUTTON_A, JOY_BUTTON_DPAD_RIGHT:
+					howto_action("next")
+				JOY_BUTTON_DPAD_LEFT:
+					howto_action("back")
+				JOY_BUTTON_B, JOY_BUTTON_START:
+					howto_action("close")
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton:
+		# A tap arrives as a mouse click too (Godot emulates it), so only clicks are handled: one tap, one action.
+		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			var pl: Dictionary = howto_plan()
+			var pos: Vector2 = event.position
+			if (pl["close"] as Rect2).has_point(pos):
+				howto_action("close")
+			elif (pl["next"] as Rect2).has_point(pos):
+				howto_action("next")
+			elif not pl["is_first"] and (pl["back"] as Rect2).has_point(pos):
+				howto_action("back")
+		get_viewport().set_input_as_handled()
+
+
+func _paint_pause(ci: CanvasItem) -> void:
+	var r: Rect2 = layout.pause_btn
+	if r.size.y <= 0.0:
+		return
+	UiIcons.rrect(ci, r, r.size.y * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.7), Color(UiLook.col(UiLook.EDGE), 0.6), 1.6)
+	var c: Vector2 = r.get_center()
+	var bw: float = r.size.x * 0.11
+	var bh: float = r.size.y * 0.32
+	var ink := Color(UiLook.col(UiLook.INK), 0.95)
+	ci.draw_rect(Rect2(c.x - bw * 1.8, c.y - bh, bw, bh * 2.0), ink)
+	ci.draw_rect(Rect2(c.x + bw * 0.8, c.y - bh, bw, bh * 2.0), ink)
+
+
+## The touch targets the HUD owns, name to global rectangle: the stance ring of each human fighter ("stance_0" to "stance_3",
+## with a "slot" in touch_target_at) and "pause". Empty unless the touch_ui option is on. Controls hit-tests these; the HUD
+## never consumes a touch itself (docs/controls/platform-plan.md section 7).
+func touch_rects() -> Dictionary:
+	var out: Dictionary = {}
+	if not bool(opts["touch_ui"]):
+		return out
+	for m in hub.models:
+		if m.slot < 2 and not m.ai:
+			var t: Dictionary = UiPrompts.touch_rects(m, layout.prompts[m.slot], layout.s, _o())
+			for k in t:
+				out["%s_p%d" % [k, m.slot]] = t[k]
+	if layout.pause_btn.size.y > 0.0:
+		out["pause"] = layout.pause_btn
+	return out
+
+
+## Which target a screen point is on: {name, slot, stance} (slot -1 for the pause button), or {} if none.
+func touch_target_at(p: Vector2) -> Dictionary:
+	var r: Dictionary = touch_rects()
+	for k in r:
+		if (r[k] as Rect2).has_point(p):
+			if k == "pause":
+				return {"name": "pause", "slot": -1}
+			var parts: PackedStringArray = str(k).split("_p")
+			return {"name": "stance", "slot": int(parts[1]), "stance": int(str(parts[0]).get_slice("_", 1))}
+	return {}
 
 
 func _paint_prompts(ci: CanvasItem, slot: int) -> void:

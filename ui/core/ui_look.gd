@@ -10,6 +10,9 @@ const SCALE_MIN := 0.45
 const SCALE_MAX := 2.5
 ## Smallest text ever drawn, in real pixels: player-facing text and the debug feed.
 const MIN_TEXT_PX := 14.0
+## The floor actually in force: UiLayout.compute raises it on a dense screen (12 dp on a phone) so text stays readable at arm's
+## length. Everything that floors a font reads this, not the constant.
+static var text_floor: float = MIN_TEXT_PX
 const MIN_DEBUG_PX := 12.0
 
 ## Wound stages: 0 fresh, 1 bruised, 2 battered, 3 broken (spec-wounds.md section 1).

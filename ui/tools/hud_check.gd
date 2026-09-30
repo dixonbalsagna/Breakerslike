@@ -35,6 +35,8 @@ func _run() -> void:
 	await _split_rules()
 	await _split_cost()
 	_chip_dodge()
+	await _responsive()
+	await _howto_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -902,3 +904,204 @@ func _chip_dodge() -> void:
 		var unseen: Array = [{"pos": Vector2(c.x - 30.0, c.y), "h": fh, "visible": false}, {"pos": Vector2(c.x + 0.4 * sz.x, c.y), "h": fh, "visible": true}]
 		chips = UiSplit.pointers(lay, sp, unseen, lay.s)
 		_ok(chips.size() == 2 and absf((chips[0]["pos"] as Vector2).y - c.y) < 1.0, "%s %s: an off-screen fighter does not move the chip" % [tag, sz])
+
+
+## Responsive: text and targets follow the screen's size and density (docs/ui/hud-spec.md section 16).
+func _responsive() -> void:
+	# A desktop is unchanged: dp 1 keeps the floor at 14 and the scale at the old value.
+	var d0 := UiLayout.new()
+	d0.compute(Vector2(1920, 1080), false)
+	_ok(is_equal_approx(d0.s, 1.0) and is_equal_approx(d0.text_floor, 14.0) and is_equal_approx(UiLook.text_floor, 14.0), "responsive: a desktop at dp 1 keeps the scale 1.0 and the text floor 14")
+	# Phones and tablets in landscape, at their real pixel sizes and densities, touch off and on.
+	var cases: Array = [[Vector2(2400, 1080), 2.6], [Vector2(2340, 1080), 2.75], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(1920, 1080), 1.5], [Vector2(1600, 720), 1.0], [Vector2(2560, 1600), 2.0]]
+	for cs in cases:
+		var sz: Vector2 = cs[0]
+		var dpv: float = cs[1]
+		for touch in [false, true]:
+			var lay := UiLayout.new()
+			lay.dp = dpv
+			lay.touch_ui = touch
+			lay.compute(sz, false)
+			var tag := "responsive %dx%d dp %.2f touch=%s" % [int(sz.x), int(sz.y), dpv, str(touch)]
+			var want_floor: float = maxf(14.0, 12.0 * dpv) if dpv > 1.25 else 14.0
+			_ok(is_equal_approx(lay.text_floor, want_floor), "%s: the text floor is 12 dp (%.0f px)" % [tag, lay.text_floor])
+			var low := 0
+			for k in ["fs_name", "fs_chip", "fs_tier", "fs_ego", "fs_state"]:
+				if float(lay.pm[k]) < lay.text_floor - 0.5:
+					low += 1
+			_ok(low == 0, "%s: every plate text is at or above the floor" % tag)
+			var view := Rect2(Vector2.ZERO, sz)
+			var bad := 0
+			for r in lay.hud_rects():
+				if not view.encloses(r) or r.intersects(lay.clear_zone):
+					bad += 1
+			_ok(bad == 0, "%s: every HUD rectangle is on screen and out of the fight (%d bad)" % [tag, bad])
+			_ok(lay.clear_zone.size.x > sz.x * 0.30 and lay.clear_zone.size.y > sz.y * 0.40, "%s: the fight keeps the middle (%d by %d px)" % [tag, int(lay.clear_zone.size.x), int(lay.clear_zone.size.y)])
+			if touch:
+				var tm: float = lay.touch_min
+				_ok(is_equal_approx(tm, maxf(48.0 * dpv, 44.0)) and lay.pause_btn.size.x >= tm - 0.01 and lay.pause_btn.size.y >= tm - 0.01, "%s: the pause button is a 48 dp target (%d px)" % [tag, int(lay.pause_btn.size.x)])
+				_ok(lay.pause_btn.size.y > 0.0 and not lay.pause_btn.intersects(lay.plate[0]) and not lay.pause_btn.intersects(lay.plate[1]) and not lay.pause_btn.intersects(lay.toll), "%s: the pause button clears the plates and the toll chip" % tag)
+				var hub := _hub()
+				var m: UiFighterModel = hub.model(0)
+				m.ai = false
+				m.left_side = true
+				var o := {"touch": true, "prompts": false, "glyph_style": "neutral", "touch_grid": lay.touch_grid}
+				var chips: Array = UiPrompts.plan(m, lay.prompts[0], lay.s, o)
+				var okc := chips.size() == 4
+				var prev := Rect2()
+				for c in chips:
+					var r: Rect2 = c["rect"]
+					if r.size.x < tm - 0.01 or r.size.y < tm - 0.01 or r.position.x < lay.prompts[0].position.x - 0.5 or r.end.x > lay.prompts[0].end.x + 0.5 or r.intersects(prev):
+						okc = false
+					prev = r
+				_ok(okc, "%s: the stance ring is four targets of at least 48 dp inside the column" % tag)
+	# A narrow phone (800 wide at dp 1) still keeps its floor and the fight.
+	var lay2 := UiLayout.new()
+	lay2.compute(Vector2(800, 360), false)
+	_ok(lay2.clear_zone.size.x > 800.0 * 0.30 and float(lay2.pm["fs_name"]) >= 14.0, "responsive: 800 by 360 at dp 1 keeps the floor and the fight")
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# The HUD itself: set_density and touch_ui reach the layout, and the targets and hit test agree.
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(2400, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.set_density(2.6)
+	hud.set_option("touch_ui", true)
+	hud.advance(1.0 / 60.0)
+	var tr: Dictionary = hud.touch_rects()
+	_ok(hud.layout.touch_ui and is_equal_approx(hud.layout.dp, 2.6) and tr.has("pause") and tr.has("stance_0_p0") and tr.has("stance_3_p0") and not tr.has("stance_0_p1"), "responsive: the HUD exposes the pause button and the human fighter's four stance targets (an AI gets none)")
+	var hit: Dictionary = hud.touch_target_at((tr["stance_2_p0"] as Rect2).get_center())
+	_ok(hit.get("name", "") == "stance" and int(hit.get("slot", -2)) == 0 and int(hit.get("stance", -1)) == 2, "responsive: a tap on the third chip is stance 2 for slot 0")
+	_ok(hud.touch_target_at((tr["pause"] as Rect2).get_center()).get("name", "") == "pause" and hud.touch_target_at(Vector2(1200, 540)).is_empty(), "responsive: a tap on the pause button is named and a tap on the fight is not a target")
+	hud.set_option("touch_ui", false)
+	_ok(hud.touch_rects().is_empty(), "responsive: with touch off there are no touch targets")
+	hud.queue_free()
+	await process_frame
+
+
+## The How to play card: every page fits at every size, every button is a target, and the flow works (docs/ui/hud-spec.md section 17).
+func _howto_rules() -> void:
+	var n: int = UiHowto.page_count()
+	_ok(n == 3, "howto: three pages (the idea, the controls, reading the fight)")
+	# The core principle is in the copy: the player owns the plan, the director plays the blows.
+	var all_text := ""
+	for pg in UiData.howto().get("pages", []):
+		for it in pg.get("items", []):
+			all_text += " " + str(it.get("text", "")) + " " + str(it.get("heading", ""))
+	_ok(all_text.contains("strategist") and all_text.contains("director") and all_text.contains("no health bars") and all_text.contains("finisher"), "howto: the copy says the player is the strategist, the director plays the blows, there are no health bars and a finisher ends it")
+	# Geometry at desktop, tablet, phone and a small window, with every device family and touch on or off.
+	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(2560, 1600), 2.0], [Vector2(3840, 2160), 1.0]]
+	for cs in cases:
+		var sz: Vector2 = cs[0]
+		var dpv: float = cs[1]
+		var lay := UiLayout.new()
+		lay.dp = dpv
+		lay.compute(sz, false)
+		for touch in [false, true]:
+			for dev in ["kbd", "xbox"]:
+				for pg in range(n):
+					var p: Dictionary = UiHowto.plan(sz, lay.s, dpv, touch, pg, dev, 0)
+					var tag := "howto %dx%d dp %.1f touch=%s %s page %d" % [int(sz.x), int(sz.y), dpv, str(touch), dev, pg]
+					var view := Rect2(Vector2.ZERO, sz)
+					_ok(bool(p["fits"]), "%s: the page fits (type scale %.2f)" % [tag, float(p["cs"])])
+					var card: Rect2 = p["card"]
+					var tm: float = float(p["tm"])
+					var bad := 0
+					if not view.encloses(card):
+						bad += 1
+					for k in ["close", "next"] + ([] if pg == 0 else ["back"]):
+						var r: Rect2 = p[k]
+						if r.size.x < tm - 0.01 or r.size.y < tm - 0.01 or not card.encloses(r):
+							bad += 1
+					if (p["close"] as Rect2).intersects(p["next"]) or (pg > 0 and (p["back"] as Rect2).intersects(p["next"])):
+						bad += 1
+					for rec in p["items"]:
+						if not card.encloses(rec["rect"]):
+							bad += 1
+					_ok(bad == 0, "%s: the card is on screen, every button is at least 48 dp and inside it, and every item is inside (%d bad)" % [tag, bad])
+					_ok(float(p["fs_small"]) >= UiLook.text_floor - 0.5 and float(p["fs_body"]) >= UiLook.text_floor - 0.5, "%s: type is at or above the text floor" % tag)
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# Keyboard pages show the second player's keys; pads do not.
+	var pk: Dictionary = UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "kbd", 0)
+	var px: Dictionary = UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "xbox", 0)
+	var has_note := func(pl: Dictionary) -> bool:
+		for rec in pl["items"]:
+			if rec["kind"] == "note":
+				return true
+		return false
+	_ok(has_note.call(pk) and not has_note.call(px), "howto: the keyboard page shows the second player's keys, a pad page does not")
+	# The flow in the HUD.
+	UiPrefs.path = "user://ui_prefs_test.json"
+	if FileAccess.file_exists(UiPrefs.path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(UiPrefs.path))
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	var opened := [0]
+	var closed := []
+	hud.howto_opened.connect(func(f: bool): opened[0] += 1)
+	hud.howto_closed.connect(func(f: bool): closed.append(f))
+	_ok(not hud.howto_seen() and not hud.is_howto_open(), "howto: not seen and not open at the start")
+	hud.show_howto(true)
+	hud.advance(1.0 / 60.0)
+	_ok(hud.is_howto_open() and hud.howto_page() == 0 and opened[0] == 1 and hud._l_howto.sig != null, "howto: the first-run card opens on page 0 and draws")
+	var key := func(code: int) -> InputEventKey:
+		var e := InputEventKey.new()
+		e.keycode = code
+		e.pressed = true
+		return e
+	hud._unhandled_input(key.call(KEY_ENTER))
+	hud._unhandled_input(key.call(KEY_RIGHT))
+	_ok(hud.howto_page() == 2, "howto: Enter and Right go forward a page each")
+	hud._unhandled_input(key.call(KEY_LEFT))
+	_ok(hud.howto_page() == 1, "howto: Left goes back")
+	hud._unhandled_input(key.call(KEY_SPACE))
+	hud._unhandled_input(key.call(KEY_SPACE))
+	_ok(not hud.is_howto_open() and closed == [true] and hud.howto_seen(), "howto: Space past the last page closes it and, for the first run, records that it has been seen")
+	hud.advance(1.0 / 60.0)
+	_ok(hud._l_howto.sig == null, "howto: closed, its layer draws nothing")
+	# From the pause menu or F1: it opens again, Esc closes it, and it does not touch the seen flag's meaning.
+	hud._unhandled_input(key.call(KEY_F1))
+	_ok(hud.is_howto_open(), "howto: F1 opens it again")
+	hud._unhandled_input(key.call(KEY_ESCAPE))
+	_ok(not hud.is_howto_open() and closed == [true, false], "howto: Esc closes it")
+	# A tap (a mouse click) on Next, Back and Close.
+	hud.show_howto(false)
+	var click := func(pos: Vector2) -> InputEventMouseButton:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = true
+		e.position = pos
+		return e
+	var pl: Dictionary = hud.howto_plan()
+	hud._unhandled_input(click.call((pl["next"] as Rect2).get_center()))
+	_ok(hud.howto_page() == 1, "howto: a tap on Next goes forward")
+	pl = hud.howto_plan()
+	hud._unhandled_input(click.call((pl["back"] as Rect2).get_center()))
+	_ok(hud.howto_page() == 0, "howto: a tap on Back goes back")
+	hud._unhandled_input(click.call(Vector2(5, 5)))
+	_ok(hud.is_howto_open() and hud.howto_page() == 0, "howto: a tap outside the buttons does nothing (and does not reach the game)")
+	pl = hud.howto_plan()
+	hud._unhandled_input(click.call((pl["close"] as Rect2).get_center()))
+	_ok(not hud.is_howto_open(), "howto: a tap on Close closes it")
+	# A pad: A goes forward, B closes.
+	hud.show_howto(false)
+	var pad := func(btn: int) -> InputEventJoypadButton:
+		var e := InputEventJoypadButton.new()
+		e.button_index = btn
+		e.pressed = true
+		return e
+	hud._unhandled_input(pad.call(JOY_BUTTON_A))
+	_ok(hud.howto_page() == 1, "howto: pad A goes forward")
+	hud._unhandled_input(pad.call(JOY_BUTTON_B))
+	_ok(not hud.is_howto_open(), "howto: pad B closes it")
+	hud.queue_free()
+	await process_frame
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(UiPrefs.path))
+	UiPrefs.path = "user://ui_prefs.json"

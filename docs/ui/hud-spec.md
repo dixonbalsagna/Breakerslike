@@ -421,7 +421,7 @@ The wall-time cost of redrawing everything each frame is about +1.1 ms; caching 
 
 **Automated playtest (S2, 12 matches, `ui/tools/hud_playtest.gd`).** Real players are not available here, so this feeds the HUD model with whole live matches (seeds 1 to 12, no renderer). Median match 402 s (min 281, max 597), 2.5 breaks and 21 stage changes a match. The crown is up in **3.9%** of frames (any fighter), a fighter is on the brink 1.2% of the time, cinematic 1.3%, hazard 15%. No card or bark cap is ever exceeded. **Test 9 proxy:** all 30 breaks got their card, the same tick (0.02 s), none missed. **Test 8 proxy:** the fighter the HUD shows as more worn at the midpoint (stages plus brink) is the one who loses in 8 of 10 decided cases (80%; the target is 80% of new players). Tests 10 and 11 need eyes. The run found and fixed a real bug: the sim's event objects carry `dur` 0.0 and an empty `kind`, so a finisher and a transformation cinematic had read as zero seconds; unset now reads as absent (`hud_check` covers it). Findings for others: breaks are 2.5 a match against spec-wounds.md's 4 to 6 (Simulation and QA's k), a chain window arrives without its `n` (so the `CHAIN ×N` chip never fills; Encounter could add `n` to `window_open`), and hazard mode is 15% of the time, which is fine because it only thins the HUD.
 
-**Not built.** The menu flow, character select, pause, settings and results; the full debug overlay and scrub; training's hint line and toggles; the caption levels and speed; a text-size option; screen-reader lines; touch prompts; a bundled font.
+**Not built.** The menu flow, character select, the pause menu itself (the How to play card and the touch pause button are built; the menu that hosts them is not), settings and results; the full debug overlay and scrub; training's hint line and toggles; the caption levels and speed; a text-size option; screen-reader lines; touch prompts; a bundled font.
 
 **Risks.**
 - **The crown is now rare.** It pops only for wear, so in the live sim it may almost never show until S2 retunes the wear rate; the plate, the cards and Art's flashes carry the fight until then. The spec's test 9 ("name the region most recently broken") relies on the crown and cards, so recheck it once wear is real.
@@ -454,3 +454,49 @@ Built against `docs/controls/rulings.md` section 8 and `docs/controls/prompt-gly
 **New options** (`ui/data/options.json`): `show_prompts` (off; the host turns it on in training and the first three matches), `glyph_style` (neutral), `vfx_quality` (auto, high, medium, low; default auto; VFX reads it, the HUD only carries it), `hitstop_scale` (0.5 to 1.0, step 0.05, default 1.0, accessibility; the HUD stores it and Rendering or Simulation applies it, it changes nothing the HUD draws) and `hotseat_alt_layout` (off; the HUD stores it and Controls' input map reads it).
 
 **Checks.** `hud_check` (894 checks) covers the ring timing at every beat, the count-in, the assist width, the tally, the ack marks and their duration, the clean band, availability, the prompt row rules (human only, options, 3 s fade), the neutral glyph tables for every family, and both the `dur` and `dur_ticks` forms.
+
+## 16. Responsive: text and targets follow the screen's size and density
+
+Orb's friend (Playtest 2): on mobile, "make all the touch targets and text responsive". The HUD already scaled by the viewport; it did not know how dense the screen is, so a phone drew 24 px names that are about 1.4 mm tall. Now:
+
+- **Density.** `UiHud.dp` is device pixels per dp (a CSS pixel on the web). The host may call `set_density(d)`; otherwise the HUD detects it: `window.devicePixelRatio` on the web, `screen dpi / 160` on a phone, 1 on a desktop. `UiLayout.dp` carries it.
+- **Text floor.** The smallest text is 14 px on a desktop and **12 dp** on a dense screen (31 px at dp 2.6). Every font that floors reads `UiLook.text_floor`, set by `UiLayout.compute`.
+- **Scale (landscape).** On a dense screen the whole HUD grows until its smallest text (18 design px) meets the floor, as far as each column may take 30% of the width. It then steps down in 4% steps until the fight keeps its middle (at least 30% of the width and 42% of the height), no column meets a bark lane and, in touch mode, the pause button fits. A desktop (dp 1) is unchanged: the same scale, the same floor.
+- **Touch mode** (`touch_ui` option; the host sets it with the last input device, and a phone or tablet starts in it). Every HUD target is at least **48 dp** (44 px at the least):
+  - **Stance ring.** The prompt row under the human fighter's nameplate becomes four square icon chips (always shown, no key glyph). They are the stance targets; if the column is too narrow for four in a row they form a 2 by 2 grid.
+  - **Pause button.** A square at the top beside the toll chip, on the side with room (a touch screen has no P key).
+  - **Hold buttons.** Special, Transform and Charge stay Controls' on-screen controls; the HUD does not draw hold chips in touch mode.
+- **Hit testing is Controls'.** The HUD never consumes a touch. `UiHud.touch_rects()` returns name to global rectangle (`stance_N_pS`, `pause`) and `touch_target_at(pos)` returns `{name: "stance", slot, stance}`, `{name: "pause", slot: -1}` or `{}`, so Controls' intent builder can turn a tap into a stance change or a pause (`docs/controls/platform-plan.md` section 7.1, "tap a segment = direct").
+- **Portrait** grows its fonts to the floor and keeps its layout; it has no pause button or stance ring yet (the plan's touch reserve of 22% is still Controls'). Landscape is the phone default.
+
+![A phone in landscape: 2400 by 1080 at 2.6 dp, touch mode. The stance ring is four 48 dp targets and the pause button sits beside the toll chip.](img/hud-phone.png)
+
+`hud_check` proves, at seven phone, tablet and desktop sizes with touch off and on: the floor is 12 dp; every plate text is at or above it; every HUD rectangle is on screen and out of the fight; the fight keeps its middle; the pause button is 48 dp and clears the plates and the toll chip; the stance ring is four (or a 2 by 2 of four) 48 dp targets inside their column; the HUD exposes the human fighter's targets only; a tap maps to the right name.
+
+**Limits.** Touch mode needs a landscape canvas of about 1,300 by 600 px at dp 2 (650 by 300 dp). On a smaller screen the prompt rows and the bark lanes cannot both fit, the layout falls back to its smallest scale, and some targets may overlap a lane; `hud_check` does not cover it. The touch page of the card describes Controls' planned scheme A and must be kept in step when they build it.
+
+## 17. The How to play card
+
+Orb's friend: "I'm not sure what I'm supposed to do in the game... some kind of tutorial or a card explaining how to play would be good." A short card, shown on the first run and again from the pause menu and with F1.
+
+**Three pages** (`ui/data/howto.json`, every word data; `UiHowto` draws them):
+1. **You choose. The fight follows.** Carries the core principle: the player owns strategy, pacing and positioning; the fight director owns combos, tactics and voice lines. Also: no health bars (read the bodies: bruised, battered, broken), a finisher ends a fight, and the four stances with their icons and one line each.
+2. **Controls.** The keys (P1's, and a line for P2's on a shared keyboard), the pad glyphs or the touch controls, for the **player's own device** (the first human fighter's `device`, the same neutral glyphs as the prompts). Fly, dash, light, heavy, signature, charge, special, transform, the four stances and pause.
+3. **Reading the fight.** The few HUD reads, each with a small picture: the wear ring, the wound cards, the brink ring, the closing ring (parry and chain), the finisher rings, the toll chip and the planet strip (which says it wraps).
+
+![Page 1](img/howto-1.png)
+
+![Page 2: a pad](img/howto-2.png)
+
+![Page 3](img/howto-3.png)
+
+![On a phone (2400 by 1080, dp 2.6, touch)](img/howto-phone-1.png)
+
+**How it behaves.**
+- Next, Back and Close are 48 dp targets; keys: Enter, Space or Right next (past the last page it closes), Left or Backspace back, Esc or F1 close; a pad: A next, B or Start close, D-pad left or right. A tap is one mouse click (Godot emulates it) so a tap is one action.
+- While it is open the HUD takes every key and click, so the fighters do not move behind it. **The host freezes the sim on `howto_opened(first_run)` and unfreezes on `howto_closed(first_run)`**, and releases held keys on open.
+- First run: the host calls `show_howto(true)` at the first match if `not howto_seen()`. Closing a first-run card records `howto_seen` (`UiPrefs`, `user://ui_prefs.json`, the browser's storage on the web). From the pause menu the host calls `show_howto()`; F1 also opens and closes it anywhere.
+- The card is only as tall as its tallest page, centred, and sizes its type to the screen: it shrinks the type, never clips, and `hud_check` proves every page fits and every button is a target at eight sizes from 1024 by 576 to 4K and a phone, with touch off and on and a keyboard or pad.
+- No fighter is named and no franchise term is used. The copy avoids "ki" (the player sees Charge).
+
+**What the card does not do.** It is not a tutorial: nothing is checked, and it cannot teach timing. The guided first match is proposed in `docs/ui/tutorial-proposal.md` for Game Design.

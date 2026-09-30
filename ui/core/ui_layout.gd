@@ -34,6 +34,12 @@ var touch_reserve := Rect2()                 # portrait: kept free for Controls'
 var ring := Rect2()                          # the planet ring map (landscape), centred above the strip
 var prompts: Array = [Rect2(), Rect2()]      # each column's prompt row (stance and hold prompts), under the cards; landscape only
 var swapped := false                         # slot 0 is on the right: the fighter on the left of the screen is slot 1
+var touch_grid := false                      # touch: the stance ring is a 2 by 2 grid because the column is too narrow for four targets in a row
+var pause_btn := Rect2()                     # touch only: the pause button (48 dp), beside the toll chip
+var dp := 1.0                                # device pixels per dp (CSS pixel on the web): 1 on a desktop, 2 to 3.5 on a phone. The host sets it before compute
+var touch_ui := false                        # touch is the last input device: targets are at least 48 dp and the prompt row is the stance ring
+var text_floor := UiLook.MIN_TEXT_PX         # the smallest text, real pixels: 14, or 12 dp on a dense screen
+var touch_min := 48.0                        # the smallest touch target, real pixels (48 dp)
 var pm: Dictionary = {}                      # plate metrics for this scale
 
 
@@ -94,12 +100,47 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 	silhouette_on = p_silhouette and not (portrait and vp.y < 700.0)
 	var design: Vector2 = UiLook.DESIGN_PORTRAIT if portrait else UiLook.DESIGN_LANDSCAPE
 	s = clampf(minf(vp.x / design.x, vp.y / design.y), UiLook.SCALE_MIN, UiLook.SCALE_MAX)
+	# Dense screens (phones: dp above 1.25). Text is never under 12 dp (about 2 mm), and a touch target never under 48 dp. In
+	# landscape the whole HUD grows so its smallest text (18 design px) meets that floor, as far as the two columns may take
+	# 30% of the width each; then it steps down until the fight keeps its middle, no column meets a bark lane and (on touch)
+	# the pause button fits beside the toll chip. Portrait grows its fonts only.
+	text_floor = UiLook.MIN_TEXT_PX
+	touch_min = maxf(48.0 * dp, 44.0)
+	var s_fit: float = s
+	var s_try: float = s
+	if dp > 1.25:
+		text_floor = maxf(UiLook.MIN_TEXT_PX, 12.0 * dp)
+		if not portrait:
+			s_try = clampf(maxf(s_fit, minf(text_floor / 18.0, 0.30 * vp.x / 380.0)), UiLook.SCALE_MIN, UiLook.SCALE_MAX)
+	UiLook.text_floor = text_floor
+	while true:
+		s = s_try
+		_pass(insets)
+		if portrait or s_try <= s_fit + 0.001 or _fits():
+			break
+		s_try = maxf(s_fit, s_try - 0.04)
+	if touch_ui and not portrait and pause_btn.size.y <= 0.0:
+		# A very small screen: under the toll chip, where it fits best.
+		var bs: float = maxf(touch_min, 44.0)
+		pause_btn = Rect2(vp.x * 0.5 - bs * 0.5, toll.end.y + 4.0, bs, bs)
+	if swapped:
+		# Slot 0 is on the right of the screen (the shortest way puts the rival to its left): mirror every per-slot column.
+		for arr in [plate, silhouette, cards, bark, prompts]:
+			var tmp = arr[0]
+			arr[0] = arr[1]
+			arr[1] = tmp
+
+
+## One layout pass at the current scale `s`.
+func _pass(insets: Vector4) -> void:
 	var mx: float = maxf(vp.x * 0.04, 24.0 if not portrait else 14.0)
 	var my: float = maxf(vp.y * 0.045, 16.0)
 	safe = Rect2(mx + insets.x, my + insets.y, vp.x - 2.0 * mx - insets.x - insets.z, vp.y - 2.0 * my - insets.y - insets.w)
 	pm = plate_metrics(s, portrait)
 	card_h = maxf(60.0 * s, float(UiText.px(22.0, s)) * 2.0 + 12.0)
 	ring = Rect2()
+	pause_btn = Rect2()
+	touch_grid = false
 	prompts = [Rect2(), Rect2()]
 	if portrait:
 		_portrait()
@@ -109,12 +150,20 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 		var d: float = clampf(vp.y * 0.085, 52.0, 120.0)
 		var gap: float = 12.0 * s
 		ring = Rect2(vp.x * 0.5 - d * 0.5, strip.position.y - gap - d, d, d)
-	if swapped:
-		# Slot 0 is on the right of the screen (the shortest way puts the rival to its left): mirror every per-slot column.
-		for arr in [plate, silhouette, cards, bark, prompts]:
-			var tmp = arr[0]
-			arr[0] = arr[1]
-			arr[1] = tmp
+
+
+## Whether the landscape layout at this scale is acceptable: the fight keeps the middle, the prompt rows clear the bark lanes
+## and stay on screen, and on touch the pause button found room.
+func _fits() -> bool:
+	if clear_zone.size.y < 0.42 * vp.y or clear_zone.size.x < 0.30 * vp.x:
+		return false
+	if touch_ui and pause_btn.size.y <= 0.0:
+		return false
+	var view := Rect2(Vector2.ZERO, vp)
+	for i in range(2):
+		if prompts[i].size.y > 0.0 and (prompts[i].intersects(bark[i]) or not view.encloses(prompts[i])):
+			return false
+	return true
 
 
 func _landscape() -> void:
@@ -137,10 +186,26 @@ func _landscape() -> void:
 			cx0 = p.position.x
 			cx1 = p.end.x
 		cards[i] = Rect2(cx0, col_top, cx1 - cx0, 2.0 * (card_h + gap))
-		prompts[i] = Rect2(p.position.x, maxf(cards[i].end.y, silhouette[i].end.y) + gap, col_w, maxf(40.0 * s, 30.0))
+		# On touch the row is the stance ring: its chips are real targets, so the row is at least a target tall.
+		var prow: float = maxf(40.0 * s, 30.0)
+		if touch_ui:
+			var cg: float = maxf(6.0 * s, 4.0)
+			touch_grid = col_w < 4.0 * (touch_min + 4.0) + 3.0 * cg
+			prow = maxf(prow, (2.0 * (touch_min + 4.0) + cg) if touch_grid else (touch_min + 4.0))
+		prompts[i] = Rect2(p.position.x, maxf(cards[i].end.y, silhouette[i].end.y) + gap, col_w, prow)
 	var toll_w: float = 380.0 * s
 	toll = Rect2(vp.x * 0.5 - toll_w * 0.5, safe.position.y, toll_w, 2.0 * float(UiText.px(20.0, s)) + 18.0)
 	banner_c = Vector2(vp.x * 0.5, toll.end.y + gap + 28.0 * s)
+	pause_btn = Rect2()
+	if touch_ui:
+		# The pause button: a touch screen has no P key. Beside the toll chip, on the side with room (never over a plate).
+		var bs: float = maxf(touch_min, 44.0)
+		var right := Rect2(toll.end.x + gap, safe.position.y, bs, bs)
+		var left := Rect2(toll.position.x - gap - bs, safe.position.y, bs, bs)
+		if right.end.x <= plate[1].position.x - gap:
+			pause_btn = right
+		elif left.position.x >= plate[0].end.x + gap:
+			pause_btn = left
 	world_card = Rect2(vp.x * 0.5 - 200.0 * s, banner_c.y - 26.0 * s, 400.0 * s, 52.0 * s)
 	var strip_h: float = maxf(20.0 * s, 14.0)
 	var strip_w: float = minf(safe.size.x * 0.46, 900.0 * s)
@@ -205,6 +270,8 @@ func _portrait() -> void:
 ## Every persistent HUD rectangle (for the fighter-clear check). Transient ones (cards, barks) sit inside their columns and lanes.
 func hud_rects() -> Array:
 	var out: Array = [plate[0], plate[1], toll, strip]
+	if pause_btn.size.y > 0.0:
+		out.append(pause_btn)
 	if ring.size.y > 0.0:
 		out.append(ring)
 	for i in range(2):
