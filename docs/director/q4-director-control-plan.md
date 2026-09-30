@@ -11,6 +11,25 @@ Inputs:
 
 **The principle.** The player sets stance, weight, charging, transformations and specials. The director decides when every fighter attacks, chains, parries and survives, the human's fighter included. The AI then differs from a human only in how it picks stance and weight, because both fighters go through one timing path. With no timing presses left, **everything the rival intends must telegraph**, so each sub-slice lists the events it adds.
 
+## Checkpoint order, with Combat's variety pass
+
+Combat's variety pass (`docs/combat/variety-pass.md` §5, `data/combat/styles.json`) answers Orb's questionnaire-4 asks: cleaner combos, teleport clashes, flying and ground styles, blasts and varied beam struggles. It goes early, so Orb sees it.
+
+| # | Checkpoint | Combat §5 rows | Visible result |
+| ---: | :--- | :--- | :--- |
+| 0 | The dynamic-feel slice (waiting for Orb), then the k retune after QA's damage-rate measurement | | The pace Orb liked |
+| 1 | **V1, ground and aerial styles:** the style applier, `rush` `arc`/`offY`/`ground`, and `strike` `kbMul`/`crater` | 1, 2, 5, 9 | Exchanges fly arcs, or brawl along the ground with skids and craters |
+| 2 | **A, the attack clock, with V2 blink clashes and clean chains:** R9 cadence and weight, chains by `chainP` (blitz at the first window, fixed link gaps, an ender with no window after it), and the `blink` op | 3, 6, 9 | Teleport clashes; chains that flow without press pauses |
+| 3 | **V3, volleys:** the `volley` op (scheduled arrival strikes that can't be parried, and render-only projectile fx) | 4, 9 | Energy blasts |
+| 4 | **B, parry, counter and clash by state, with V4 beam-clash shapes:** R5 and the clean parry; R4 from `selectorByProfile` with `defHeld`; the clash score from `styles.json`; shape pick and resolve (deflect, split, mutual blast) | 7, 10, 12, 9 | Varied beam struggles |
+| 5 | **C, the struggle by state:** finisher `kind` on `finisher_start`, the `byState` draw at `contestOpen`, and the pulses | 11 | Readable finishers |
+| 6 | **D, acts and mood:** styles, `chainP`, blitz and beam shapes read act and mood (M1). Until M1 lands, momentum from decisive results stands in | 8 | Escalation |
+| 7 | **E, the tutorial rival and beat runner** | | Onboarding |
+
+Notes:
+- **The composition stream.** A keyed, stateless draw per exchange and slot (`procedural-moves.md` §10), so adding a style changes only the exchanges it could apply to. It needs an exchange index in hashed state if the sim has none (Simulation).
+- **Row 9 in every checkpoint.** Every new beat emits a `cue`, and the new cue names go in the fx hash map.
+
 ## Sub-slices (each is a checkpoint: goldens, feel probe, tempo, QA bands)
 
 ### A. The attack clock (R9), for both fighters
