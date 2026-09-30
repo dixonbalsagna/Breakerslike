@@ -40,6 +40,8 @@ class Job:
 var bits: Array = []          # Bit
 var _spawned_tick: int = 0     # spawns since the last step: the per-tick budget keeps one busy tick from being a frame spike
 var _biome: String = "plains"   # the dust colours of the place being spawned at (Art's by_biome)
+var _ember_tick: int = 0        # embers spawned this tick (budget VfxLook.EMBER_PER_TICK)
+var _ember_alive: int = 0       # embers in the pool (cap VfxLook.EMBER_CAP)
 var _tone: int = 0              # 0 mid, 1 shadow (a back layer), 2 light (a front layer)
 var jobs: Array = []          # Job, waiting
 var spawned: int = 0          # counters for the tests
@@ -66,6 +68,8 @@ func reset(seed: int) -> void:
 ## dt: seconds of sim time this tick (a tenth in hit-stop). S: for the ground under a bouncing bit and the clock T.
 func step(S: SimState, dt: float) -> void:
 	_spawned_tick = 0
+	_ember_tick = 0
+	_ember_alive = 0
 	# Jobs are on unfrozen sim time (S.T): a hit-stopped ripple waits with the world.
 	if not jobs.is_empty():
 		var i: int = 0
@@ -79,6 +83,8 @@ func step(S: SimState, dt: float) -> void:
 	for i in range(bits.size() - 1, -1, -1):
 		var b: Bit = bits[i]
 		b.age += dt
+		if b.kind == EMBER:
+			_ember_alive += 1
 		if b.age >= b.life:
 			bits[i] = bits[bits.size() - 1]
 			bits.pop_back()
@@ -281,34 +287,40 @@ func _vent(S: SimState, a: Dictionary) -> void:
 ## trench, cinders over a burning forest, spray over the sea, chips and sparks elsewhere. Small, bright, few.
 func embers(S: SimState, x: float, y: float, power: float, variant: String) -> void:
 	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
-	var n: int = 1 + int(power * 0.7)
+	var n: int = 2 + int(power * 1.5)
 	for k in range(n):
 		var kp: float = _rs.next()
 		var vx: float = _rs.range_(-90.0, 90.0)
 		var vy: float = _rs.range_(200.0, 380.0 + 90.0 * power)
-		var life: float = _rs.range_(0.5, 1.1)
-		var sz: float = _rs.range_(10.0, 26.0)
+		var life: float = _rs.range_(0.8, 1.6)
+		var sz: float = _rs.range_(30.0, 80.0)
 		var px: float = x + _rs.range_(-60.0, 60.0)
-		if kp >= q:
+		if kp >= q or _ember_tick >= VfxLook.EMBER_PER_TICK or _ember_alive >= VfxLook.EMBER_CAP:
 			continue
 		var b: Bit
 		match variant:
 			"GLASS TRENCH":
-				b = _bit(GLASS, px, y + 6.0, RenderLook.Z_BEAMS - 2.0, vx, vy, 0.5, life)
+				b = _bit(EMBER, px, y + 6.0, RenderLook.Z_BEAMS + 8.0, vx, vy, 0.5, life)
 				b.col = VfxPalette.glass("light")
 				b.col2 = Color.WHITE
 			"HORIZON CLEAVE":
+				if _ember_tick >= VfxLook.EMBER_PER_TICK / 4:
+					continue
 				_biome = "ocean"
 				_tone = 2
-				_puff_at(px, y, RenderLook.Z_BEAMS - 4.0, vx * 0.6, vy * 0.6, 30.0, 110.0, life * 1.4, false)
+				_puff_at(px, y, RenderLook.Z_BEAMS + 8.0, vx * 0.6, vy * 0.6, 40.0, 150.0, life * 1.4, false)
+				_ember_tick += 1
+				_ember_alive += 1
 				_tone = 0
 				continue
 			_:
-				b = _bit(EMBER, px, y + 6.0, RenderLook.Z_BEAMS - 2.0, vx, vy, 0.5, life)
+				b = _bit(EMBER, px, y + 6.0, RenderLook.Z_BEAMS + 8.0, vx, vy, 0.5, life)
 				b.col = RenderLook.col(RenderLook.HEAT_HI) if variant != "FIRESTORM" else RenderLook.col(RenderLook.HEAT_LO)
 				b.col2 = RenderLook.col(RenderLook.HEAT_HI)
 		b.sx = sz * (2.2 if variant == "FIRESTORM" else 1.4)
-		b.sy = 5.0
+		b.sy = 9.0
+		_ember_tick += 1
+		_ember_alive += 1
 		b.grav = 160.0
 		b.spin = 0.0
 		b.rot = atan2(vy, vx)

@@ -36,7 +36,6 @@ func update(hub: VfxHub, S: SimState, cam_x: float, half_w: float, zoom: float) 
 	visible_count = 0
 	built_now = 0
 	mat.set_shader_parameter("now", S.T)
-	mat.set_shader_parameter("px_world", 1.0 / maxf(zoom, 1e-6))
 	# Build what the hub has queued (any pane may; the mesh is shared). A build needs the ground field.
 	var built: int = 0
 	while built < VfxLook.CRACK_BUILD_PER_FRAME and not hub.crack_pending.is_empty() and ground != null:

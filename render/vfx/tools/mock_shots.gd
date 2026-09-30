@@ -49,7 +49,7 @@ func _run() -> void:
 	h.enabled = not novfx
 	h.destruction_enabled = true
 	h.cracks_enabled = false
-	for sc in ["burst", "heavy", "chain", "implode"]:
+	for sc in ["burst", "heavy", "chain", "implode", "embers"]:
 		if scenario != "all" and scenario != sc:
 			continue
 		await call("_play_" + sc)
@@ -256,3 +256,23 @@ func _play_implode() -> void:
 		if marks.has(t):
 			_frame(S, cx, g + 700.0, 0.2 if t < 60 else 0.09)
 			await _save("implode_" + marks[t])
+
+
+## A beam skimming the ground: a scorch event every 36 * WS units along 20 ticks of beam, once per variant.
+func _play_embers() -> void:
+	main.host.vfx.embers_enabled = true
+	var c: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	for v in ["GLASS TRENCH", "FIRESTORM", "HORIZON CLEAVE", "MERIDIAN SCAR"]:
+		var S: SimState = _fresh()
+		_park(S, c - 400.0)
+		S.fighters[0].x = SimWrap.wrap(c - 1200.0)
+		S.fighters[0].y = WorldTerrain.groundY(S, c) + 300.0
+		for t in range(40):
+			var evs: Array = []
+			for k in range(4):
+				var x: float = c - 900.0 + float(t * 4 + k) * 36.0 * SimConst.WS * 0.08
+				evs.append(VfxMock.ev("scorch", {"x": x, "y": WorldTerrain.groundY(S, x), "w": 200.0, "power": 3.0, "variant": v, "owner": 0}))
+			_tick(S, evs)
+			if t == 38:
+				_frame(S, c - 200.0, S.fighters[0].y - 150.0, 0.5)
+				await _save("embers_" + v.replace(" ", "_"))

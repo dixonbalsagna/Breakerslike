@@ -7,7 +7,7 @@ extends RefCounted
 ##
 ## The camera looks along the ground at a grazing angle, so a line reads best when it runs along x: most spokes are
 ## drawn within CR_X_SPREAD of the x axis (CR_X_BIAS of them), the rest go anywhere. Nothing is drawn in front of the
-## fighter plane (z above Z_CRACK_MAX): the renderer's foreground rule pulls land there down.
+## fighter plane (z above Z_CRACK_MAX), where the foreground rule pulls land down, nor past the ground band (Z_CRACK_BACK), where the drawn ground is the far relief.
 
 class Line:
 	var pts := PackedVector2Array()   # (dx, z) from the set's origin; the source end first
@@ -144,7 +144,7 @@ static func _spoke_from(out: Array, rng: SimRng, start: Vector2, ang: float, len
 ## Drop the part of a line in front of the fighter plane (the first point that passes Z_CRACK_MAX ends it).
 static func _clip_front(pl: Line) -> void:
 	for i in range(pl.pts.size()):
-		if pl.pts[i].y > VfxLook.Z_CRACK_MAX:
+		if pl.pts[i].y > VfxLook.Z_CRACK_MAX or pl.pts[i].y < -VfxLook.Z_CRACK_BACK:
 			if i < 2:
 				pl.pts = PackedVector2Array()
 			else:

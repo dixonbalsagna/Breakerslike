@@ -68,3 +68,8 @@ All from the repo root, with Godot 4.7.2. Tools with pictures need a window; `--
 - **Break ring.** One thin arc, 0.25 s, at the front of a fighter the moment it reaches 110 bh/s from below (not in a rush, not twice within 1.5 s).
 - **Implode column.** Dust in three tones (dark back bank, body, light front) in the biome's colour, and the column is spawned floor by floor over half a second, top first.
 - `tools/effects_check.gd` (headless) asserts the palette, vents, embers, the pool cap and the ring; it passes, and `hash_check.gd` still passes on seeds 12345, 4 and 7 with all three groups on (9,122 debris bits from the sim's own `building_fall`).
+
+## Playtest 2 fixes (2026-09-30)
+
+- **Arcs and wires over the terrain.** Cause: the crack shader widened each strip in world z at a fixed height, so on a mountain flank the edges hung in the air, and cracks reaching past the ground band (where the drawn ground is the far relief, not the sim's) floated above it. Fixed: widening is now in screen space from vertices that stay on the ground; cracks stop at 80% of the band's depth; and they fade out between 2,500 and 7,000 units behind the plane.
+- **Embers.** They fire only on `scorch` events, that is, a beam close to the ground, and only with `embers_enabled` (Ctrl+F6). They were 10 to 26 units long with 1 to 4 per event, so invisible next to ImpactFx's sparks. Now 30 to 80 units long, 2 to 8 per event, up to 12 a tick and 100 alive, in the heat ramp (glass flecks over a glass trench, spray over the sea). `mock_shots.gd --scenario=embers` shows all four variants.
