@@ -337,3 +337,7 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 ## Moveset scope and cosmetics (2026-09-30)
 - Moveset: start the first fighter at Lean (3 specials, 4 signatures, 6 showcases) to test, then grow by data.
 - Cosmetics: leave room for player cosmetic customisation. With four fighters at launch, Orb wants a vast assortment of cosmetics that players unlock through play.
+
+## Unlocks and roster (2026-09-30)
+- Yes to an "unlock all cosmetics" setting (off by default). Player-made palettes come later.
+- Open, to be decided by Orb within a couple of days: with only four fighters planned, the unlock structure needs serious thought. Orb may expand the launch roster so there can be an arcade mode and a worthy online versus feature. Keep this in mind; don't start roster work until Orb decides.
