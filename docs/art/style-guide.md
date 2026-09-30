@@ -206,6 +206,7 @@ Target renderer: Godot 4.7 Compatibility, as in the greybox. Nothing here needs 
 Source: `docs/animation/pose-pipeline.md` section 7.8 and `art/animation/a0/`. Recorded here so the production model follows them.
 - **Hands** are a palm plus one finger slab, one bone per hand. Approved by Animation. The turnarounds' closed and open hands are built that way.
 - **Outline normals are smoothed.** The inverted-hull outline pass uses smoothed (averaged) normals stored for the hull, while the visible faces keep their hard-edged shading normals. Hard-edged face normals crack the hull outline at every facet. This is a mesh-authoring rule, not a shading one, so the faceted look stays.
+- **Cosmetics (agreed with Animation, `pose-pipeline.md` 2.8, and `cosmetics-plan.md`):** 14 attachment sockets (the rig's call), at most 4 cosmetic chain bones a fighter, at most 500 triangles of cosmetics at near LOD on a body of about 2,000 (a piece 250 at most, none at far LOD). Parts merge at equip into the body's one outlined mesh (2 draw calls however many are worn); a separate toggled part costs +2.
 - **Budgets per fighter:** at most 32 bones and 12 draw calls. The turnaround part lists (about 1,600 to 2,000 near-LOD triangles, 24 to 30 bones) already fit; the draw calls count the body, the outline pass, regalia pieces, the flash quads and the contact shadow, so regalia pieces should be merged where their variants allow.
 
 ## 6. Bodies: wear and damage

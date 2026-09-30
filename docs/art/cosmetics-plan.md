@@ -12,7 +12,7 @@ Owner: Art Director. 2026-09-30. A plan for Orb's "a vast assortment of cosmetic
 | **Mask finishes** | The mask's surface: polished, matte, glazed, cracked glaze, stamped pattern, inked edge. The sigil's own tone inside its lane | Shader parameters on the mask slot. Mask shape and tone class are fixed |
 | **Outfit and regalia parts** | Belt, sash, wraps or guards, back piece (knot, plates, mantle hem, backpack cover), boots trim, collar | Small swappable meshes inside a fixed envelope, plus a pattern id |
 | **Patterns** | Stripes, bands, chevrons, scales, weave on cloth and plating | A procedural pattern in the shader, chosen by id (no textures, `style-guide.md` section 1) |
-| **Accessories** | Charms, pins, badges, cords, a small scarf, a belt pouch | Sockets on existing bones (below). Never above the head |
+| **Accessories** | Charms, pins, badges, cords, a small scarf, a belt pouch | The rig's attachment sockets (section 4). Never above the silhouette |
 | **Trails, beam tints, flash tints** | Trail style and colour; the beam's accent; the emotion flashes' accent. Never the info flashes | `data/art/effects.json` lanes and `flashes.json` accents, per loadout |
 | **Poses and taunts** | Taunt gestures, victory poses, knockout reactions, showcase poses | Rows in the animation rig, blended as today |
 | **Victory scenes** | A short post-win staging: a camera move, a backdrop tint in the biome's own range, one prop | Camera and a data preset. No new models |
@@ -39,29 +39,32 @@ Per fighter, rough first targets. Only the mesh and animation rows cost real wor
 |---|---:|---|
 | Palettes | 40 | Data: Art hand-makes 8 and a generator fills 32 inside the lane rules, all validator-checked |
 | Mask finishes | 12 | Shader presets |
-| Outfit and regalia parts | 32 (4 slots of 8) | Small meshes of 40 to 120 triangles, shared palette and patterns |
+| Outfit and regalia parts | 32 (4 slots of 8) | Small meshes of 40 to 120 triangles (250 at most), shared palette and patterns |
 | Patterns | 10 | Shader presets, shared across all fighters |
-| Accessories | 12 | Small meshes on sockets |
+| Accessories | 12 | Small meshes on the rig's sockets |
 | Trails, beam tints, flash tints | 30 (10 + 12 + 8) | Data on VFX's and the flashes' lanes |
 | Taunts, victory poses, KO reactions | 18 (8 + 6 + 4) | Animation rows |
 | Victory scenes | 6 | Camera and data presets |
 
 About 160 items per fighter, 640 across four, with the worth of a real game in the **combinations**: 40 palettes x 12 finishes x 8 parts in each of 4 slots is over 1.9 million looks per fighter. Of the 640 items, about 250 need a mesh or an animation row (128 parts, 48 accessories and 72 pose rows), and the rest are numbers in a file. UI's titles, frames and nameplates (about 40 per account) sit on top.
 
-## 4. What the fighter mesh needs from day one (for Animation and Rendering)
+## 4. What the fighter mesh needs from day one (reconciled with Animation's rig plan, `docs/animation/pose-pipeline.md` section 2.8)
 
-The production fighter must be built for this now, because retrofitting slots is expensive.
+Agreed numbers, which are Animation's: **14 attachment sockets** (the rig's call), a budget of **4 cosmetic chain bones a fighter** at once, **at most 500 triangles of cosmetics at near LOD** (a piece 250 at most, none at far LOD) on a body of about 2,000, the cap of **32 bones**, and **12 draw calls a fighter**. Art owns silhouette and readability; the rig owns the sockets. This plan no longer states its own socket and chain numbers.
 
-- **Named swappable slots**, each its own mesh instance so a variant swaps without touching the body: `mask` (shape fixed, finish by material), `hair`, `outfit` (torso), `belt`, `arm_gear` (near forearm), `back_piece`, `boots_trim`, `collar`. The Anti-hero's plates and the Empress's mantle are back pieces with an intact and a broken variant (`style-guide.md` section 5).
-- **Sockets for accessories**, as named transforms on existing bones (not extra bones): `socket_back`, `socket_chest`, `socket_hip_l`, `socket_hip_r`, `socket_shoulder_l`, `socket_shoulder_r`, `socket_wrist_l`, `socket_wrist_r`. None above the head.
-- **Material slots, one material per fighter**: the palette mask (vertex colour R body, G gear, B accent, A emissive) plus three uniform colours for mask, hair and skin, a `pattern_id` per slot, and a `finish_id` for the mask. Parts share the material, so a cosmetic costs no new material and no texture.
-- **Envelope hulls** per slot, shipped as data for the validator and the modeller.
-- **Budgets hold with cosmetics on** (`style-guide.md` 5.1): at most 32 bones and 12 draw calls per fighter. Draw calls: body 1, outline 1, up to 5 cosmetic part instances, the flash quads 2, the contact shadow 1, regalia 1, with the rest spare. Parts merge per slot, and cloth parts take at most two spring chains each from the 32-bone budget (the Empress's mantle and the Protagonist's sash tails are the cost to watch).
-- **Smoothed outline normals** on every part (5.1), so a swapped part never cracks the hull outline.
-- **Loadout data** in `data/art/cosmetics/` (Tools adds the schema): one file per pack with the item id, category, fighter, slot, palette or mesh reference, rarity and its unlock track, and the Legal screen status. The sim never reads this folder.
+- **Sockets.** The rig's 14 `att_*` points: head top, brow and back, neck, shoulders, upper and lower back, chest, belt, wrists and ankles. They are fixed offsets per build profile, so a part fits every build by name. **Art's readability rule sits on top:** nothing worn at `att_head_top` may rise above the silhouette envelope (no horns, antennae, spikes or halos), and head sockets only take a flat cap, a band, a circlet that stays within the head's width, or a small badge. `att_head_brow` never covers the sigil. The neck, brow and top sockets are the ones Legal reads first.
+- **Named swappable slots**, each bound rigidly to existing bones: `mask` (shape fixed, finish by material), `hair`, `outfit` (torso), `belt`, `arm_gear` (near forearm), `back_piece`, `boots_trim`, `collar`. The Anti-hero's plates and the Empress's mantle are back pieces with an intact and a broken variant.
+- **How a part is drawn** (the rig's two ways). The default is **merge at equip**: the body and every worn part are built into one outlined mesh, cached by the loadout key, so any number of parts is still 2 draw calls. A part that must toggle or animate on its own (a damage variant, a glowing piece) is a **separate mesh at +2 draw calls**, and there are few of those: the regalia with broken variants, and at most two more.
+- **Materials without extra draws.** The body already carries seven vertex-colour palette slots (body, legs, arms, skin, gear, accent, hair) plus the emissive mask; a cosmetic takes a slot or uses up to two more (`cosmetic_a`, `cosmetic_b`) in the same vertex-colour data. A `pattern_id` and a `finish_id` are shader parameters on that one material. No texture and no extra material per cosmetic.
+- **Triangles.** A worn set must stay within 500 triangles of cosmetics at near LOD, so the parts in section 3 average about 125 and never exceed 250. Only the four slots plus a few accessories are worn at once.
+- **Chain bones.** A cloth or long part (mantle hem, sash tails, scarf, tassels) draws on the fighter's spare bones: at most 4 cosmetic chain bones at once. The Empress's mantle and the Protagonist's sash tails are the cost to watch, so a loadout that adds a second long cloth part must drop one.
+- **Mirroring.** A part on one side flips with the fighter. Asymmetric parts are allowed only if they are flip-safe: no letters, no numbers, nothing whose meaning depends on the side (a left-only badge becomes right-only when the fighter faces left, which is fine for a charm and not for an emblem).
+- **Clearance.** Each part declares a clearance volume so the pose lint can flag a clash (a tall collar and an uppercut). The silhouette envelope per slot ships as data for the validator and the modeller.
+- **Smoothed outline normals** on every part (`style-guide.md` 5.1), so a swapped part never cracks the hull outline.
+- **Loadout data** in `data/art/cosmetics/` (Tools adds the schema when the files exist): one file per pack with the item id, category, fighter or shared, slot or socket, palette or mesh reference, clearance, rarity and its unlock track (Game Design owns tracks), and the Legal screen status. The sim never reads this folder. **A palette is just data**, so player-made palettes stay possible later: the validator in section 2 is what would make them safe.
 
-## Open questions (through the EP)
+## Decided
 
-1. **Who owns the unlock tracks** (what play earns what)? Game Design. Art only supplies the categories and counts.
-2. **Is a cosmetic ever shared across fighters** (a pattern, a trail, a victory scene)? Patterns, trails, beam tints and scenes are designed to be, which keeps the count cheap.
-3. **Do we allow player-made palettes** later? The validator in section 2 makes that safe; it is a question of scope.
+1. **Unlock tracks** belong to Game Design.
+2. **Sharing:** patterns, trails, beam tints and victory scenes are shared across fighters.
+3. **Player-made palettes** go to Orb as an optional later feature; the data leaves room for them.
