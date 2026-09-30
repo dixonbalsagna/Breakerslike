@@ -410,3 +410,21 @@ The full set of numbers is in `living-destruction-numbers.md`: the tier ladders,
 - Every effect is credited to the fighter whose event started it, and knock-on effects keep that cause.
 - Casualties feed menace and anguish through the standing per-casualty rule, and the roster's meters later.
 - All living-destruction casualties and structure losses count toward every §4 band and fall under World's caps and ramp. They are never exempt.
+
+## 12. Combat variety numbers (for `data/combat/styles.json`)
+
+These are Game Design's values for the suggestions Combat marked in its variety pass (`docs/combat/variety-pass.md`, commit `872d879`). Combat copies them into `styles.json`.
+
+| Item | Value | Why |
+| :--- | :--- | :--- |
+| Volley opener | 3 blasts at **4** damage each (12 in all; suggested 5 each) | The approach is not the exchange. Stance multipliers apply, and ki gain is the normal 4% |
+| Contemptuous poke (volley-only exchange) | 3 blasts at 4 each | About half a light, so the Anti-hero's barrage is flavour and pressure, not a damage race |
+| Barrage (PRESSURE as blasts) | Confirmed: two blasts per strike, splitting that strike's damage | No change to damage |
+| Beam-clash **split** | Chip damage **40** to each fighter, ignoring stance | Confirmed |
+| Beam-clash **mutual blast** | Chip damage **60** to each fighter, ignoring stance, and launched apart at 1,400 | Confirmed |
+| Beam-clash **deflect** | The loser pays **20 ki**, is pushed back 700, and takes no damage | Confirmed. A deflect into a settlement is a set piece under the collateral budgets (§4b) |
+| chainP by stance and mood | AGGRESSIVE 0.50, 0.60, 0.75 (Calm, Tense, Frenzied); DEFENSIVE 0.20, 0.30, 0.40; EVASIVE 0.25, 0.35, 0.45; ESCAPE 0 | Slightly below the suggestion, to hold the chain band (15 to 35 per 100 melee exchanges) |
+| chainP modifiers | −0.15 per link already landed. Heat, for fighters with the heat track only: +0.05 Heated, +0.10 Simmering, +0.20 Boiling (`stance-matrix.md` R9). **Cap 0.80** (suggested 0.95). 0 under 6 ki | This replaces the suggested "+0.1 at Boiling" |
+| Blitz chance (first window, Tense or Frenzied) | Tense 0.25, Frenzied 0.50, **+0.05 per act above 1** (suggested +0.10), **cap 0.60** | Target 2 to 6 blitzes a minute in Tense and Frenzied (§9) |
+
+**Match length.** Volleys and chip damage add wear. They count in the damage rate QA measures for the k retune after Encounter's dynamic slice (§10), so k absorbs them and the median stays 6 to 8 minutes.
