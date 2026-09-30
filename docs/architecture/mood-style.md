@@ -91,6 +91,7 @@ The cost is about 680 ints per fighter, plus a dozen for the match, all hashed. 
 | heavy strike landed | 2.5 | 150 | `damage`, kind `heavy` |
 | chain link | 3 | 180 | the running exchange's `combo` rose this tick (state; no event needed) |
 | parry | 4 | 240 | `parry` |
+| signature beam lands (HIT or GUARD, not a clash; Game Design) | 6 | 360 | `decisive` with kind `beam` (the director's signature hit or guard) |
 | heavy or beam clash | 8 | 480 | `clash_draw`, or `decisive` with kind `clash` or `beam_clash` |
 | region break | 12 | 720 | `region_broken` |
 | launch through a building | 6, or 10 for a chain | 360 or 600 | a new core event, `building_hit` {actor, n}, from `SimFighter._buildingHits` (mine); `n` is the building's number within this flight, and 2 or more is a chain. World's brunt chain uses the same event when it lands |
@@ -208,7 +209,6 @@ There is no per-second mood event. Readers that want the value read `S.mood` (a 
 
 ## 9. Open points
 
-- **Beam hits.** A signature hit is not in spec §9's list, so as planned it adds nothing, unless it counts as a heavy strike (+2.5). This is Game Design's call.
 - **Taunts and transformations** have no sim events yet. Their impulses are in the data and dormant until `taunt` (Encounter or Narrative) and `form_change` (F1) exist.
 - **World:** how `crowd` combines with local danger in evacuation.
 - **Tools:** the schemas for `fight/mood.json` and `fight/style.json`, from §5's shapes, when the files land.

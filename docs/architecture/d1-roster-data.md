@@ -6,13 +6,17 @@ Status: plan only (Simulation, 2026-09-29). D1 runs after World's B1 and Control
 
 Every per-fighter number and rule choice moves out of code into `data/fighters/<id>/`, with no change in behaviour.
 
-**The proof: the goldens do not change.** That covers the tick-0 states, the 8 matches, the replays, the wounds and Rally vectors, and the constants vector. The only golden edit is one new entry, the roster data hash.
+**The proof: the goldens do not change.** That covers the tick-0 states, the 8 matches, the replays, the wounds and Rally vectors, and the constants vector.
+- D1a also adds hashed fields: the exchange index (§4b) and the roster data hash.
+- So the proof is done in two steps, in this order:
+  1. With `exN`, `ex.n` and the data hash left out of the hash, one run must reproduce the **pre-D1a goldens exactly**.
+  2. The goldens are then regenerated once, with those fields in.
 
 ## 2. Scope: two steps
 
 | Step | Moves to data | Code touched | Owner of the code |
 | :--- | :--- | :--- | :--- |
-| **D1a** | Identity, base stats, the Rally rule, finisher keys, the wound numbers and the profile type (`plain`) | `core/roster.gd`, `core/wounds.gd`, `core/sim.gd` (setup), a new `core/fighter_data.gd`; `director/data.gd` (the finisher key) | Simulation (Encounter reviews the `data.gd` line) |
+| **D1a** | Identity, base stats, the Rally rule, finisher keys, the wound numbers and the profile type (`plain`). Also the exchange index and keyed draws (§4b), so Encounter's Q4 starts with them ready | `core/roster.gd`, `core/wounds.gd`, `core/sim.gd` (setup), a new `core/fighter_data.gd`, `core/state.gd`, `core/hash.gd`, `core/rng.gd`; `director/data.gd` (the finisher key); `director/exchange.gd` (one line, granted to Simulation for D1a) | Simulation (Encounter reviews the two director lines) |
 | **D1b** | The power ladder (tiers today), and menace and anguish as meters | `core/fighter.gd`, `core/damage.gd`, `director/launch.gd`, `world/structures.gd` (casualty pressure) | Simulation, with the tree handed for director and world |
 
 D1a is small and self-contained. D1b touches other owners' files, so it waits for the EP to hand over the tree. Forms (transformations), per-fighter meters such as Pride, and the other profile types are F1 and later. They use the same files and schemas.
@@ -81,6 +85,23 @@ data/fighters/roster.json    {"schema": "roster/1", "order": ["KAI", "VORR"]}: t
   - The replay header records `setup`, so a replay replays its arm.
   - `golden_recipes.gd applyArm` stays for the D1a goldens (unchanged by construction). QA's runner moves to setups when it next re-baselines.
 
+## 4b. The exchange index and keyed draws (for Encounter's Q4)
+
+- **State:** `S.dirS.exN: int`, the exchanges started this match, and `ex.n: int` on each exchange.
+  - `DirExchange.requestAttack` bumps them where the exchange starts: `S.dirS.exN += 1; ex.n = S.dirS.exN`, next to `S.dirS.ex = ex`, the point that emits `attack`.
+  - Chain links stay inside their exchange (`ex.combo`). Finishers run inside theirs.
+- **Hash:** `exN` joins the `dirS` walk after `lastLaunch2`, and `n` joins the exchange's field list.
+- **`SimRng.keyed(seed, key, n) -> float` in [0, 1):** a stateless draw.
+  - It is the fmix32 of the match seed, the key's FNV-1a hash and `n`: the same mixing as `deriveSeed`, with `n` folded in. The result is divided by 2^32.
+  - A composition draw is `keyed(int(S.game.seed), "compose", ex.n)`, or it keys on `ex.n` and `ex.combo` for a chain link.
+  - It never reads or advances `S.rng`, so adding, removing or reordering a keyed draw cannot shift any other draw. That is what composition needs.
+- **Unit test** (in `parity.gd`, with a vector in the goldens):
+  - the same inputs give the same value, twice and across a fresh process (the golden vector);
+  - `S.rng.a` is unchanged after 1000 keyed calls;
+  - different keys, and consecutive `n`, give different values;
+  - values fall in [0, 1).
+- **Goldens:** the counter changes only the hash, not behaviour (proof in §1). The keyed draws change behaviour only where Encounter uses them, with Q4's own golden change.
+
 ## 5. D1b in brief: ladder and meters
 
 - **`ladder.json`**: `fillPerSec` 0.45, `thresholds` [25, 50, 75], and per-tier deltas: speed +0.10, damage +0.09, launch force +0.16. It also holds the power-up crater and area-damage coefficients. Forms (F1) extend it with a fill rule per form and cinematic ticks, capped per spec §8.
@@ -104,11 +125,12 @@ data/fighters/roster.json    {"schema": "roster/1", "order": ["KAI", "VORR"]}: t
 
 ## 7. Acceptance
 
-1. The goldens are unchanged, apart from the new `rosterHash`. The constants vector holds bit for bit.
+1. With `exN`, `ex.n` and the data hash left out of the hash, a run reproduces the pre-D1a goldens exactly, and the constants vector holds bit for bit. Only then are the goldens regenerated, once, with the new fields and `rosterHash`.
 2. Editing a number in `data/fighters/KAI/wounds.json` fails parity, naming the roster hash. Editing a `_note` does not.
 3. A third def, copied from KAI with a new id and name, loads and plays a match (the stage-5 modding test in miniature) with no code change.
 4. A replay recorded with a mirror setup plays back from its header alone.
 5. The loader rejects: a non-integral tick; a float with more than 15 significant digits; an unknown Rally rule, profile type or effect key; a duplicate id.
+6. The `keyed()` unit test passes (§4b): stateless, `S.rng` untouched, distinct across keys and `n`, in [0, 1).
 
 ## 8. Risks
 
