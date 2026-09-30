@@ -341,3 +341,13 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 ## Unlocks and roster (2026-09-30)
 - Yes to an "unlock all cosmetics" setting (off by default). Player-made palettes come later.
 - Open, to be decided by Orb within a couple of days: with only four fighters planned, the unlock structure needs serious thought. Orb may expand the launch roster so there can be an arcade mode and a worthy online versus feature. Keep this in mind; don't start roster work until Orb decides.
+
+## Questionnaire 7 (2026-09-30): open questions
+- First real fighter (the Lean moveset proof): the Anti-hero.
+- Transformations, next round: a bigger visual change per form, and clearer triggers for when you can transform.
+- Title clash with the small OrbCombat project: decide later, before the store page.
+- Licence: still thinking. Orb wants a full plain-language rundown of every option later, and asked to be reminded along the way.
+- Pose review: contact sheets of 12, plus a motion reel per showcase.
+- Release: free prototype builds for friends, for now.
+- Friends' playtests: yes to an in-game feedback button that copies a report with the match seed.
+- Orb asked where the project stands legally when a transformation or motif comes close to existing works, and how far public-domain folklore can be used. Orb wants originality, as a love letter to the genre, not a copy of any series.
