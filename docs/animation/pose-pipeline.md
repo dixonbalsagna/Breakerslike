@@ -105,7 +105,7 @@ Why it matters more than it looks: the greybox is already about 80 draw calls an
 
 **Proposed draw-call budget per fighter** (for Rendering and Performance to confirm): near at most 12 (body 1, outline 1, regalia at most 8, head flash 1), mid at most 4, far at most 2.
 
-**Spike before anything else** (Rendering and Art, about 16 hours): one fighter, 27 bones, 2,500 triangles (Art's near budget), single mesh, one Compatibility-renderer scene. Acceptance: at most 3 draw calls including the outline; skinning cost on the integrated-GPU web build within budget (§7); the inverted-hull outline stays clean under skinning. **Verify in the spike:** Compatibility-renderer skinning cost on the web; whether the built-in skeleton API or our own bone writes are cheaper for 27 bones (I expect the latter to be fine at this count).
+**Spike before anything else (done, 2026-09-30: `render/anim/spike/`, results in §7.8; the plan stands):** (original brief, kept for the record) one fighter, 27 bones, 2,500 triangles (Art's near budget), single mesh, one Compatibility-renderer scene. Acceptance: at most 3 draw calls including the outline; skinning cost on the integrated-GPU web build within budget (§7); the inverted-hull outline stays clean under skinning. **Verify in the spike:** Compatibility-renderer skinning cost on the web; whether the built-in skeleton API or our own bone writes are cheaper for 27 bones (I expect the latter to be fine at this count).
 
 ### 2.4 Build profiles and the retarget standard (four fighters, and more later)
 
@@ -274,14 +274,14 @@ Every pose is reviewed at the sizes and views it will be seen in:
 
 | Sensitive pose family | Our pose, in words | One-line originality check |
 | :--- | :--- | :--- |
-| Power charge (hold Q) | A low, wide crouch, one fist pressed to the breastbone, the other arm hanging, head bowed, a tremble; the sigil brightens | Fist to chest with a bowed head is a vow or a brace, not cupped hands at the hip, and no orb is formed |
-| Beam release (signature) | One arm straight along the shoulder line, palm forward, the rear hand gripping that wrist across the body, feet staggered, weight leaning into it | A braced one-arm aim reads as a marksman's grip; the origin is the palm at the shoulder line, not two hands at the hip |
+| Power charge (hold Q) | A low, wide crouch, one fist pressed to the breastbone, the other arm hanging, head bowed, a tremble; the sigil brightens | Fist to chest with a bowed head is a vow or a brace, not cupped hands at the hip, and no orb is formed. Never both fists clenched at the sides with the head thrown back in a scream (RL-038) |
+| Beam release (signature) | **Revised after Legal (RL-038, CONDITIONAL).** The lead arm straight along the shoulder line with a **closed fist**, the rear forearm braced **up under the lead elbow** (not gripping the wrist), feet staggered, weight leaning into it | The energy leaves the fist, not an open palm, and no hand grips a wrist; a braced fist reads as a heavy-weapon brace. Nothing at the hip |
 | Teleport step | The torso folds forward and one hand sweeps a flat horizontal arc in front of the body as the fighter vanishes; the tell is the air ripple (VFX) | No hand ever goes to the head; the sweep ends at the hip line |
-| Transformation rise | Down on one knee with a fist on the ground, then a slow rise with the head last; the sigil lights on the rise | A kneel-and-rise is a generic hero beat; no screamed pose with arms at the sides |
+| Transformation rise | Down on one knee with a fist on the ground, then a slow rise with the head last; the sigil lights on the rise | A kneel-and-rise is a generic hero beat; no screamed pose with both fists clenched at the sides and the head thrown back (RL-038) |
 | Taunt | A slow head tilt and a dismissive backhand flick at waist height | Generic contempt; no beckoning fingers |
 | Finisher launch | A two-step lunge into an upward two-handed strike with the hips driving under it | A martial-arts uppercut chain; no raised arms held overhead |
 
-The mocap and reference rules follow Legal's clean process: no franchise reference images or footage. Self-shot reference (a contributor filming themself doing a punch, with consent) is allowed as private reference for timing and weight, never shipped, with the origin recorded (§6.1).
+The reference rules follow Legal's clean process (`docs/legal/animation-data-rule.md`, RL-038): no reference footage from any franchise or game. Self-shot reference (a contributor filming themself doing a punch, with consent) is allowed as private reference for timing and weight, never shipped, with the origin recorded (§6.1). Legal screened this table: charge, teleport, transformation rise, taunt and finisher launch are GO; beam release was CONDITIONAL and is revised above.
 
 ---
 
@@ -506,7 +506,7 @@ About 25 modifier records cover the first fighter (12 wear, 3 mood, 5 labels, 1 
 
 All four end in the **same JSON**, which is what makes the pipeline open to a contributor who arrives later and keeps it diff-friendly in git.
 
-Blender is free and open source; the template and add-on are ours and get a row in `docs/legal/licence-register.md`.
+Blender is free and open source. **The exporter add-on needs its own licence check before it is added** (Blender's Python add-ons are generally treated as needing a GPL-compatible licence, so it may need its own licence header instead of the repo's default; check Blender's licence FAQ) and its own row in `docs/legal/licence-register.md`. The `.blend` template is content. Reference footage: none from any franchise or game; self-shot reference is private, with consent, never shipped, origin recorded (`docs/legal/animation-data-rule.md`).
 
 ### 6.2 Tools
 
@@ -556,12 +556,14 @@ At a hobby pace of 10 hours a week that is a long road, and the honest levers ar
 
 ### 6.6 Who authors what
 
-`ai-prompt-policy.md` says characters and signature designs need real human authorship, and that AI may explore but not finish. Applying it to animation, and asking Legal to confirm:
-- **Showcase poses** (specials, signatures, finishers, transformations, break beats, taunts): posed or heavily reworked by a person, with the change logged.
-- **The composed library** (generic martial-arts strikes, reactions, flight): may begin as text poses from a Claude session, then a person selects, arranges and reworks them, with the origin recorded. The generic vocabulary carries little identity and no franchise expression.
-- Each AI-assisted pose file gets a record in `art/animation/records/` in the same form as `art/prompts/TEMPLATE.md` (tool, model, date, prompt, what a human changed, checklist result). The default here is text authoring by a Claude Code session, which the policy lists as in use.
+**Ruled by Legal (RL-038, `docs/legal/animation-data-rule.md`).** Animation data (poses, key sets, motion data) is content and follows `ai-prompt-policy.md` and `asset-origins.md`. The minimum rule:
+1. **Every AI-assisted pose set has a record:** a franchise-free brief (the session's brief *is* the prompt: no franchise names, footage, screenshots or "in the style of" anything named), the tool, the model, the date, and **what a human changed**. A set-level record is fine for the generic library. Records live in `art/animation/records/` in the form of `art/prompts/TEMPLATE.md`; Legal also writes an origin row per pose set in `asset-origins.md`.
+2. **Showcase poses** (specials, signatures, finishers, transformations, taunts, break beats) are posed or **materially reworked by a named human**, and the record says what they changed. Selecting is not enough. **Orb has not named that person, so every showcase pose stays "proposed" and cannot lock.**
+3. **The composed library** (generic martial-arts strikes, reactions, flight) may begin as text poses from a Claude session. A later human pass counts only if the record says what the person changed.
+4. Sensitive pose families carry an `_orig` line and pass the originality checklist (§3.7).
+5. Reference footage: none from any franchise or game. Self-shot reference is private, with consent, never shipped, origin recorded.
 
-**Orb decides:** who the human author of the showcase set is (an open question in `ai-prompt-policy.md` too).
+**Orb decides:** who the named human author of the showcase set is.
 
 ---
 
@@ -580,7 +582,7 @@ These are **proposals for Performance** (`docs/perf/budgets.md`), from measureme
 | **Proposed limit** | | | **at most 1.0 ms mean, 2.5 ms p99** (6% and 15% of 16.7 ms) |
 | Stateful tick step (springs, filters, smoothers) | at most 0.02 ms a fighter | | |
 
-**My honest expectation:** a full stack of layers is about 250 quaternion operations per fighter, so 0.05 to 0.10 ms on the desktop, which projects to 0.35 to 0.7 ms a fighter in the old-laptop browser, or 0.7 to 1.4 ms for two. That is at or over the proposed limit. The degrade ladder below is therefore not optional, and the spike (§2.3) must measure it before anyone builds on the numbers.
+**My first expectation was wrong, and the A0 spike corrected it.** I estimated 0.05 to 0.10 ms a fighter on the desktop, which projects to 0.35 to 0.7 ms a fighter in the old-laptop browser. Measured (§7.8): a full stack of bone layers costs about 0.02 ms a fighter on the desktop and about 0.16 ms in the browser with the CPU throttled 4 times, so **two full-rate fighters in a split screen cost about 0.34 ms mean and 0.5 ms p99 there**, inside the proposed limit with about 3 times headroom. That headroom is for the real runtime's extra work (sim reads, data lookups, ground and contact queries), which the spike does not have. The degrade ladder stays, but as headroom, not as a necessity for two fighters.
 
 ### 7.2 The degrade ladder
 
@@ -607,9 +609,84 @@ A pose is about 32 bones of half-precision quaternions plus pins and tags, rough
 
 Four fighters (2v2) and the Empress's three guard: full rate for the two nearest the cameras, L1 for the others, minions on a small shared vocabulary at L1 always (Combat: cheap to author and quick to read).
 
-### 7.6 What to measure first
+### 7.6 What to measure first (done as A0; see §7.8)
 
 The spike, in this order: (1) skinning cost of one 27-bone fighter on the integrated GPU in the web build; (2) the layer stack on the mannequin with the placeholder rig's 15 cue poses migrated; (3) IK and springs. Each result becomes a row in Performance's table. If GDScript misses the budget, the fallback is the one ADR 0001 already names for the sim, a C++ extension, which the web export handles with its dlink template.
+
+### 7.7 The proposed numbers, after the spike
+
+| Item | Proposal |
+| :--- | :--- |
+| Bone layers, two full-rate fighters, split screen, browser on the reference old laptop | at most 1.0 ms mean and 2.5 ms p99. Spike: 0.34 ms mean, about 0.5 ms p99 with the CPU throttled 4 times |
+| Draw calls per fighter | near at most 12. Spike: 2 (body plus outline) |
+| Bones | at most 32 |
+| Triangles, near | 2,500 (spike: 2,664) |
+
+### 7.8 A0 spike results (2026-09-30)
+
+**What was built** (`render/anim/spike/`, a standalone Godot project the game ignores; it never touches the sim, the game scenes or the gameplay hash): a 27-bone fighter (R1 core of 22 plus 5 extras) of 2,664 faceted triangles, built five ways: one static mesh, one rigid-skinned mesh with the outline as a second pass (`next_pass` inverted hull), the same with separate hand meshes, and a puppet of 26 per-bone meshes. A representative layer stack in GDScript: key blend with per-bone lag, inertialisation, modifiers, forward kinematics, closed-form two-bone IK on four limbs, five spring links, an impact wave and a joint clamp, each a bit of a mask so it can be timed alone.
+
+**How it was run.** 1280×720; two panes, each its own SubViewport and World3D (as the split screen has), two fighters a pane (four instances; "p2f2"); each fighter 300 px tall, the near worst case for fill; 600 frames after 90 warm-up; vsync off. Profiles:
+- **desktop GL:** Windows release, Compatibility renderer, RTX 5070 Ti (driver default);
+- **desktop iGPU:** the Radeon iGPU through Vulkan Mobile (`--gpu-index 1`), the spike's proxy;
+- **web dGPU** and **web iGPU:** single-threaded Web export in Chrome 154 (ANGLE, D3D11), forced with `--force_high_performance_gpu` and `--force_low_power_gpu`;
+- **web iGPU ×4:** the same with Chrome's CPU throttle at 4 (`Emulation.setCPUThrottlingRate`), standing in for an i3-5005U-class CPU (PassMark 3.9 times slower).
+
+**Caveats.** The machine was a Ryzen 7 9800X3D with other sessions running (CPU 42% at one snapshot, Ultimate Performance power plan), so treat differences under about 0.1 ms as noise. No real old laptop was tested. The throttle slows the browser's main thread only; the GPU is the real Radeon iGPU. The scene has only fighters, so the frame times are the fighters' share, not the game's frame. The solve is synthetic: it has no sim reads, data lookups, contact or ground queries. There is no hybrid-projection shader.
+
+**1. Draw calls.** Per frame for the four instances (p2f2), which includes the two canvas draws for the panes:
+
+| Rig | Draw calls | Per fighter |
+| :--- | ---: | ---: |
+| One static mesh, outline | 10 | 2 |
+| **One rigid-skinned mesh, outline** | **10** | **2** |
+| Rigid-skinned, no outline | 6 | 1 |
+| Rigid-skinned, hand meshes swapped in (outline on all) | 26 | 6 |
+| Puppet of 26 per-bone meshes, outline | 210 | 52 |
+
+**2. Frame time, mean / p99 ms, no animation solve** (four instances):
+
+| Rig | Desktop GL | Desktop iGPU | Web dGPU | Web iGPU | Web iGPU ×4 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Static | 0.30 / 0.56 | 0.93 / 1.09 | 0.68 / 1.63 | 1.61 / 2.23 | 2.09 / 2.86 |
+| **Rigid-skinned** | **0.30 / 0.70** | **0.93 / 1.09** | **0.67 / 1.04** | **1.63 / 2.13** | **2.10 / 2.84** |
+| Skinned, hand swap | 0.32 / 0.62 | 0.93 / 1.10 | 0.73 / 0.99 | 1.63 / 2.31 | 2.19 / 2.88 |
+| Puppet | 0.42 / 0.72 | 0.96 / 1.13 | 1.02 / 1.50 | 1.60 / 2.17 | **3.22 / 4.08** |
+
+At sixteen fighters in one pane (17 to 33 draw calls skinned, 417 to 833 puppet): skinned 1.24 desktop iGPU, 2.36 web iGPU, 2.14 web iGPU ×4; static 1.22, 2.30, 2.07; puppet 1.24, 2.21, **5.90**.
+
+Reading it:
+- **Skinning costs nothing measurable.** Skinned against static: at most 0.07 ms at sixteen fighters on the iGPU. Twenty-seven bones and 2,664 triangles are not a load for the Compatibility renderer on the web.
+- **The outline works under skinning.** The inverted hull follows the posed body (`art/animation/a0/hull-outline.png`). Hard-edged faces leave hairline cracks in it, so the production mesh needs smoothed outline normals (Rendering and Art).
+- **The puppet's cost is CPU draw-call overhead, and it only shows on a slow CPU.** On a fast CPU it is invisible. At 4 times slower it is about 5.5 µs a draw call: +1.1 ms a frame for the split-screen four (200 extra calls), +3.8 ms for sixteen. That would be 7% of the frame in an ordinary fight, so the puppet is out.
+
+**3. The layer stack on the CPU** (GDScript, µs per fighter, solve plus the write to the skeleton; the in-scene mean divided by the four instances):
+
+| Level | Desktop | Web dGPU | Web iGPU | Web iGPU ×4 |
+| :--- | ---: | ---: | ---: | ---: |
+| L2 key blend only | 8 | 10 | 11 | 46 |
+| L1 (inertia, IK on two limbs, three springs) | 14 | 22 | 26 | 117 |
+| **L0 full stack** | **20** | **28** | **34** | **161** |
+| L0, p99 | 27 | 45 | 55 | 249 |
+| L0 solved every second frame (a 30 Hz solve) | 10 | 14 | 17 | 82 |
+
+Where the desktop time goes, in µs per solve: key blend (27 slerps) 6.1; inertia +1.2; modifiers +1.9; FK and IK on two limbs +2.9; IK on all four +4.7; springs +0.4 to 0.7; impact wave and clamp +1.3; total 16.7; the write to the skeleton 0.7. The key blend is the biggest single item, so skipping bones whose keys are identical is the first optimisation.
+
+The engine-side skeleton update shows up as frame time, not in these numbers. Adding the full stack raised the desktop frame by 0.14 ms against 0.08 ms of solve, so the engine's share is about 0.06 ms. In the browser the frame rose by about what the solve cost.
+
+**4. Against the proposed budget.** The spike solved every instance (the game solves each fighter once and writes it to each pane). Solving two fighters once and writing four skeletons at ×4 in the browser is about 2 × 154 + 4 × 7 = **0.34 ms mean and about 0.5 ms p99**, against the proposed 1.0 ms and 2.5 ms. Sixteen fighters at full rate would be 2.3 ms at ×4, which is what the degrade ladder is for. The measured L0 cost per fighter is 5 to 10 times below my first estimate.
+
+**5. Hands: settled as a palm plus one finger slab** (`art/animation/a0/hands.png`, left fighter fist, right open).
+- The finger slab is one bone per hand, one rotation from open to fist, and costs no draw call.
+- The mesh-swap alternative adds 4 draw calls a fighter (26 against 10 for four instances) and about +0.09 ms at ×4, plus a swap state to animate. It also needs the swap to line up with the pose in the same frame.
+- At Play zoom a hand is 2 to 4 px (Art: under 4% of body height is a decal), so fist against open only reads in close-ups and cinematics. That is another reason to keep it cheap.
+- Art confirms the hand mesh (the slab needs a palm and a finger block that meet cleanly).
+
+**6. What the spike settles, and what it does not.**
+- **Settled:** one rigid-skinned mesh per fighter with a second outline pass, two draw calls, no measurable skinning cost; the puppet rig is rejected; hands are a finger slab; the proposed bone-layer budget holds with about 3 times headroom.
+- **Not settled:** the real runtime's overhead (sim reads, data lookups, foot plant against the ground, contact sockets); a real old laptop; the game's own frame around the fighters; the hybrid-projection shader on a skinned mesh; blend shapes (not tried).
+
+Raw results for all 86 runs are in `art/animation/a0/results.json` and the tables in `art/animation/a0/summary.md`. The game's determinism check (`render/tools/determinism.gd`) passed with the spike in the tree. Reproduce: `render/anim/spike/README.md`.
 
 ---
 
@@ -675,7 +752,7 @@ Animation authors **no sim-read field**. Three things touch sim-read data, and e
 
 | Combat stage | Animation slice | New poses | Exit |
 | :--- | :--- | ---: | :--- |
-| 0 Measure, 1 Parity as data | **A0 Formats and spike.** Pose and key-set schema, pose sheet and lint, validator rules, the rig spike, the 15 existing cue poses migrated into the pose format | 15 | Validator and sheet run; spike numbers recorded in Performance's table |
+| 0 Measure, 1 Parity as data | **A0 Formats and spike (the spike is done, §7.8; formats and tools remain).** Pose and key-set schema, pose sheet and lint, validator rules, the rig spike, the 15 existing cue poses migrated into the pose format | 15 | Validator and sheet run; spike numbers recorded in Performance's table |
 | 2 One slot generative (6 or more strikes, 8 or more launch vectors) | **A1 Mannequin runtime.** Pose apply, key blend, hit-stop, the part cue, no IK. Foundation set, 6 strike key sets, 8 flight poses | about 50 | Hash unchanged on and off; contact key on the contact tick 100%; frame cost recorded |
 | 3 Full phrase grammar (30 to 40 parts) | **A2 The vocabulary.** All 170 core poses, IK, arcs, lag, reactions, inertialisation | 170 in all | Silhouette lint 100%; anticipation at or above the floor; no pops at joins (A8) |
 | 4 Context bends | **A3 Situation and drift.** Slope, wall and water adaptation; modifiers v1 (wear, mood) | about 10 | Foot-plant test A3; wall and water scenes; modifier extremes lint A9 |
@@ -727,12 +804,12 @@ QA owns the harness; the targets are mine to propose. A1, A7 and A9 are static a
 | # | Need | From |
 | :--- | :--- | :--- |
 | 1 | The composer's part record: is `anim.keySet` (renamed from `anim.clip`) and `anim.contactKey` acceptable; the readability minimum by weight; how a cancelled part is signalled; a part cue with its anchor ticks (§8.2) | Combat, Simulation |
-| 2 | The wave-1 documents (`clip-list.md`, `warping-rules.md`, `rig-options.md`) are not written. This plan supersedes most of them: the rig options are closed by Orb's decision, the clip list becomes the part-to-key-set table once `moveset-system.md` lands, and the warping rules become a short document after it. Confirm | EP |
-| 3 | `data/anim/` and its owner; the schema; the hash excluding `data/anim/` and `render` blocks | EP, Tools |
-| 4 | The runtime code's home and owner (a `render/anim/` module), to my spec | EP, Rendering |
-| 5 | The rig spike: skinning cost and draw calls on the web and the iGPU; the draw-call budget; confirm the finger-slab hands and the rigid-skinned single mesh | Rendering, Art, Performance |
+| 2 | **Ruled by the EP (2026-09-30):** this plan supersedes the wave-1 documents. `clip-list.md` and a short `warping-rules.md` follow after Combat's `moveset-system.md` (landed, 24af9c1) | EP |
+| 3 | **Ruled:** I own `data/anim/` and `art/animation/`. Tools writes the schemas, and the sim's data hash skips `data/anim/` | EP, Tools |
+| 4 | **Ruled:** the runtime lives in `render/anim/`. I own it; Rendering reviews | EP, Rendering |
+| 5 | **A0 spike done** (`render/anim/spike/`, numbers in §7.8): skinning cost and draw calls on the web and the iGPU; the draw-call budget; hands settled as palm plus finger slab; rigid-skinned single mesh confirmed. Art and Rendering still confirm the hand mesh | Rendering, Art, Performance |
 | 6 | Confirm the renderer's read list includes wear and stage, meters, form and pride state (§5.1) | Simulation |
-| 7 | Whether the human-authorship rule covers animation data; the composed library's route | Legal |
+| 7 | **Answered** (RL-038): animation data follows the AI prompt policy; showcase poses need a named human (§6.6). Still open: the named human, and the Blender add-on's licence check | Orb, Legal |
 | 8 | The staging of a facade hit at depth (a launch into a building at row 1 to 3) | Camera, World |
 | 9 | A per-fighter animation style guide, once the roster's looks lock | Narrative, Art |
 | 10 | The animation stream ids (`anim`, `anim.<slot>`) in `fx-events.md`'s table | Simulation |
