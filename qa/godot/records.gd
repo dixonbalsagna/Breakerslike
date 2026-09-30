@@ -8,7 +8,7 @@ extends SceneTree
 
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 ## fx event types that carry game meaning rather than decoration: kept in order with their fields (wounds-plan.md, living destruction).
-const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "landslide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found", "blitz", "volley", "decisive", "searching", "lock_lost", "launch_plan", "struggle_press"]
+const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "landslide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found", "blitz", "volley", "decisive", "searching", "lock_lost", "launch_plan", "struggle_press", "limb_break", "act_"]
 ## fighter indices are meaningful at 0
 const INDEX_FIELDS: Array = ["actor", "target", "winner", "loser", "owner"]
 const KEEP_FIELDS: Array = ["kind", "chosen", "tick", "tier", "cover", "actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]

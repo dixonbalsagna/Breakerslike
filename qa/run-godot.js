@@ -81,7 +81,7 @@ function simInfo() {
   const alt = process.env.QA_GODOT_ROOT ? path.resolve(process.env.QA_GODOT_ROOT) : null;   // a clean export of a commit, for comparisons
   const dirty = alt ? 0 : git('status', '--short', '--', 'sim').split('\n').filter(Boolean).length;
   const src = f => { try { return fs.readFileSync(path.join(alt || ROOT, f), 'utf8'); } catch (e) { return ''; } };
-  const s0 = /MENACE_DECAY/.test(src('sim/core/fighter.gd')), s1 = fs.existsSync(path.join(alt || ROOT, 'sim/core/wounds.gd'));
+  const s0 = /MENACE_DECAY/.test(src('sim/core/fighter.gd')) || /"decay"/.test(src('data/fighters/VORR/meters.json')), s1 = fs.existsSync(path.join(alt || ROOT, 'sim/core/wounds.gd'));   // S0: menace decay, in code (before D1b) or in the meters data (after)
   return `${alt ? 'clean export of commit ' + (process.env.QA_SIM_COMMIT || git('rev-parse', '--short', 'HEAD') || '?') : 'commit ' + (git('rev-parse', '--short', 'HEAD') || '?') + (dirty ? ` + ${dirty} uncommitted sim file(s)` : '')}; slices in the tree: S0 ${s0 ? 'yes' : 'no'}, S1 ${s1 ? 'yes' : 'no'}`;
 }
 function digest(recs) { const h = new (require('../prototype/tools/match-runner').Hasher)(); for (const r of recs) h.str(r.hash); return h.hex(); }
