@@ -25,7 +25,10 @@ Inputs:
 
 - **What the clock fires.** The fighter's **sticky weight**: light or heavy, starting in light. A **queued signature** fires instead at the next opening once ki reaches 45, within **180 ticks** at most (R9 answer 4). It falls back down the ladder when ki is short, with a visible mark.
 - **Charging and specials pause the clock** until they end.
-- **Chains become the director's call.** At each chain window, one draw against `chainP(stance, ki, heat, mood, combo)` from data. It replaces the attacker's press, and the AI's press draw becomes this draw.
+- **Chains become the director's call.** At each chain window, one draw against `chainP(stance, ki, mood, combo)` from data. It replaces the attacker's press, and the AI's press draw becomes this draw.
+  - Heat (R9, ruled): only a fighter with the heat track (today the Protagonist) gets +5 points at Heated, +10 at Simmering and +20 at Boiling.
+  - chainP is capped at 0.8. The chain limit stays 5, and each link still costs 6 ki.
+  - Other fighters use their own hooks, with no heat input: Drop the Act raises the Anti-hero's limit to 6.
 - **R2 comes in with this sub-slice:** the attacker-stance multipliers and the ×1.3 DEFENSIVE punish. The DEFENSIVE cadence needs the same window.
 - **Events:**
   - `weight_set {actor, weight}`;
@@ -97,7 +100,7 @@ Inputs:
    - the beam CLASH rule from state;
    - blitz and teleport-clash templates;
    - `chainP` numbers, if Combat wants them in its data rather than mine.
-3. **Game Design:** answered in 7e87793 and folded in above: the clean parry, heat, the aggression scalar and the hold timer. Still open: the heat input to `chainP`, and the mood's per-event weights if M1 doesn't carry them.
+3. **Game Design:** all answered (7e87793 and R9) and folded in above: the clean parry, heat, the aggression scalar, the hold timer and chainP's heat input. The mood's per-event weights are in M1.
 4. **Simulation:** M1's aggression scalar, and heat stages readable by the director.
 5. **UI and Rendering:** consumers for `weight_set`, `sig_queued`, `stance_set`, `finisher_start.kind`, `struggle_pulse`, `act_change`, `mood_band` and the tutorial events.
 
