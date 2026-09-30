@@ -70,6 +70,7 @@ var telegraph: Dictionary = {}   # the finisher's kind while it winds up: {actor
 var hint: Dictionary = {}        # the tutorial's hint line: {id, key, text, kind (hint, nudge, done), age}
 var beats: Dictionary = {}       # tutorial beat id to state (start, done, skipped)
 var keep_hints: bool = false     # accessibility: a hint stays up after its beat is done, until the next one
+var match_over: bool = false     # a KO has happened: the match-end feedback button shows
 var act: int = 1                 # the director's invisible act (nothing shows it; the feed names it)
 var mood_band: String = ""       # the fight's mood band: calm, tense or frenzied (the feed names it)
 var toll: Dictionary = {"civilians": 0, "pop0": 0, "structures": 0, "craters": 0}
@@ -101,6 +102,7 @@ func reset() -> void:
 	telegraph = {}
 	hint = {}
 	beats = {}
+	match_over = false
 	act = 1
 	mood_band = ""
 	toll = {"civilians": 0, "pop0": 0, "structures": 0, "craters": 0}
@@ -284,6 +286,7 @@ func consume(e) -> void:
 				telegraph = {"actor": actor, "target": int(d.get("target", -1)) if d.has("target") else -1, "kind": fk, "age": 0.0, "end": -1.0}
 		"ko":
 			telegraph = {}
+			match_over = true
 			var lo: UiFighterModel = model(int(d.get("loser", -1)))
 			if lo != null:
 				lo.ko = true

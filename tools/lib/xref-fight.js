@@ -147,6 +147,17 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     walk(feel, '');
   }
 
+  // ---- ui feedback panel ----
+  const fb = get('ui/data/feedback.json');
+  if (isObj(fb) && Array.isArray(fb.tags)) {
+    const seenTag = new Map();
+    fb.tags.forEach((tag, i) => {
+      if (!isObj(tag)) return;
+      if (seenTag.has(tag.id)) err('ui/data/feedback.json', '/tags/' + i + '/id', 'feedback-tag', 'tag id "' + tag.id + '" is already used at ' + seenTag.get(tag.id));
+      else seenTag.set(tag.id, '/tags/' + i);
+    });
+  }
+
   // ---- ui reads and tutorial hints ----
   const reads = get('ui/data/reads.json');
   if (isObj(reads)) {

@@ -19,6 +19,8 @@ extends Control
 
 signal layout_changed
 signal howto_opened(first_run: bool)   # the How to play card opened: the host pauses the sim and releases held keys
+signal feedback_opened(context: String)   # the feedback panel opened ("pause" or "match_end"): the host pauses the sim and releases held keys
+signal feedback_closed()                  # it closed: the host restores the pause it found
 signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
@@ -42,6 +44,7 @@ var opts: Dictionary = {
 	"glyph_style": "neutral",  # the neutral position-diamond set; "family" (each device family's own letters) stays off until Legal answers
 	"hitstop_scale": 1.0,      # Controls' accessibility option, 0.5 to 1.0; the HUD only carries it (see ui/data/options.json)
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
+	"match_end_feedback": true, # the SEND FEEDBACK pill after a KO; the host turns it off if its own results screen has the button
 	"keep_hints": false,       # accessibility: a tutorial hint stays up after its beat is done, until the next hint
 	"touch_ui": false,         # touch is the last input device (the host sets it; on by default on a phone): a stance ring, a pause button, 48 dp targets
 	"vfx_quality": "auto",     # auto, high, medium or low; VFX reads it (docs/vfx/plan.md), the HUD only carries it
@@ -72,6 +75,16 @@ var _last_dp := 1.0
 var _last_touch := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
+var _l_fb: UiLayer
+var _l_fbpill: UiLayer
+var _fb_open := false
+var _fb_state := "write"
+var _fb_context := "pause"
+var _fb_tags: Dictionary = {}
+var _fb_status_ok := false
+var _fb_text: TextEdit
+var _fb_prev: TextEdit
+var feedback_fn: Callable = Callable()   # the host's report context: {commit, date, seed, setup, time, ended}; any key may be missing
 var _l_tele: UiLayer
 var _l_hint: UiLayer
 var _howto_open := false
@@ -128,7 +141,19 @@ func _ready() -> void:
 	_l_pause = _layer(_paint_pause)
 	_l_tele = _layer(_paint_tele)     # the finisher telegraph and the tutorial hint share the banner slot (telegraph first)
 	_l_hint = _layer(_paint_hint)
-	_l_howto = _layer(_paint_howto)   # last: over everything
+	_l_fbpill = _layer(_paint_fbpill)
+	_l_howto = _layer(_paint_howto)
+	_l_fb = _layer(_paint_fb)        # last: over everything
+	_fb_text = TextEdit.new()        # the free-text box and the report preview are real text controls, placed by the panel's plan
+	_fb_text.visible = false
+	_fb_text.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_fb_text.placeholder_text = str(UiData.feedback().get("placeholder", ""))
+	add_child(_fb_text)
+	_fb_prev = TextEdit.new()
+	_fb_prev.visible = false
+	_fb_prev.editable = false
+	_fb_prev.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	add_child(_fb_prev)
 	dp = _detect_density()
 	if OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios"):
 		opts["touch_ui"] = true    # a phone or tablet starts in touch mode; the host flips it with the last input device
@@ -178,7 +203,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips + [_l_pause, _l_tele, _l_hint, _l_howto]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -280,6 +305,8 @@ func _relayout() -> void:
 	for l in _all_layers():
 		if l != null:
 			l.invalidate()
+	if _fb_open:
+		_fb_place()
 	layout_changed.emit()
 
 
@@ -396,6 +423,8 @@ func _update_layers() -> void:
 		if m.slot < _l_prompts.size():
 			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
 		_l_pause.update_sig([layout.pause_btn, layout.touch_ui] if layout.pause_btn.size.y > 0.0 else null)
+	_l_fbpill.update_sig([layout.feedback_btn, layout.touch_ui] if _pill_visible() else null)
+	_l_fb.update_sig(UiFeedback.sig(layout.vp, _fb_state, _fb_tags, _fb_status_ok, dp, layout.s, bool(opts["touch_ui"])) if _fb_open else null)
 	_l_tele.update_sig(UiReads.telegraph_sig(hub, bool(opts["show_prompts"]), reduced))
 	_l_hint.update_sig(UiReads.hint_sig(hub))
 	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s) if _howto_open else null)
@@ -519,7 +548,7 @@ func _paint_struggle(ci: CanvasItem) -> void:
 ## is open the HUD takes every key and click (so the fighters do not move behind it): the host should freeze the sim on
 ## howto_opened and unfreeze on howto_closed.
 func show_howto(first_run: bool = false, page: int = 0) -> void:
-	if _howto_open:
+	if _howto_open or _fb_open:
 		return
 	_howto_open = true
 	_howto_first = first_run
@@ -601,6 +630,25 @@ func _paint_howto(ci: CanvasItem) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _fb_open:
+		# The panel owns every key and click (the two text boxes take their own before this runs).
+		if event is InputEventKey:
+			if event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+				hide_feedback()
+			get_viewport().set_input_as_handled()
+		elif event is InputEventJoypadButton:
+			if event.pressed and (event.button_index == JOY_BUTTON_B or event.button_index == JOY_BUTTON_START):
+				hide_feedback()
+			get_viewport().set_input_as_handled()
+		elif event is InputEventMouseButton:
+			if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				_fb_click(event.position)
+			get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and _pill_visible() and layout.feedback_btn.has_point(event.position):
+		show_feedback("match_end")
+		get_viewport().set_input_as_handled()
+		return
 	# F1 opens or closes the card from anywhere; while it is open the HUD owns every key and click.
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
 		if _howto_open:
@@ -645,6 +693,163 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+# --- The feedback panel (docs/ui/hud-spec.md section 20) ----------------------------------------------------------------------
+
+## Open the feedback panel. `context` is "pause" (from the pause menu) or "match_end" (from the pill after a KO). While it is open the
+## HUD takes every key and click, like the How to play card: the host pauses the sim on feedback_opened and restores the pause it
+## found on feedback_closed. Nothing is sent anywhere: COPY REPORT puts plain text on the clipboard.
+func show_feedback(context: String = "pause") -> void:
+	if _fb_open or _howto_open:
+		return
+	_fb_open = true
+	_fb_context = context
+	_fb_state = UiFeedback.STATE_WRITE
+	_fb_status_ok = false
+	_fb_tags = {}
+	_fb_text.text = ""
+	_fb_place()
+	_l_fb.invalidate()
+	feedback_opened.emit(context)
+
+
+func hide_feedback() -> void:
+	if not _fb_open:
+		return
+	_fb_open = false
+	_fb_text.visible = false
+	_fb_prev.visible = false
+	_fb_text.release_focus()
+	_l_fb.update_sig(null)
+	feedback_closed.emit()
+
+
+func is_feedback_open() -> bool:
+	return _fb_open
+
+
+func toggle_feedback_tag(id: String) -> void:
+	if _fb_open and _fb_state == UiFeedback.STATE_WRITE:
+		_fb_tags[id] = not bool(_fb_tags.get(id, false))
+		_l_fb.invalidate()
+
+
+func feedback_selected_tags() -> Array:
+	var out: Array = []
+	for t in UiFeedback.tag_list():
+		if bool(_fb_tags.get(str(t["id"]), false)):
+			out.append(str(t["id"]))
+	return out
+
+
+## What the report says about this match: the host's context over the build's own info, with the HUD's own facts as the fallback.
+func feedback_context() -> Dictionary:
+	var ctx: Dictionary = UiFeedback.build_info()
+	if feedback_fn.is_valid():
+		var h = feedback_fn.call()
+		if h is Dictionary:
+			ctx.merge(h, true)
+	if not ctx.has("setup") or str(ctx["setup"]) == "":
+		var parts: PackedStringArray = []
+		for m in hub.models:
+			parts.append("%s (%s)" % [m.name, UiFeedback.word("ai") if m.ai else UiFeedback.word("you") + (", " + m.device if m.device != "" else "")])
+		ctx["setup"] = " vs ".join(parts)
+	if not ctx.has("time"):
+		ctx["time"] = hub.t_now
+	if not ctx.has("ended"):
+		ctx["ended"] = hub.match_over
+	return ctx
+
+
+## The report as plain text: the tags and the typed notes, with the platform, the screen and the settings.
+func feedback_report() -> String:
+	var env := {"screen": layout.vp, "dp": dp, "touch": bool(opts["touch_ui"]), "platform": UiFeedback.platform_info(), "settings": UiFeedback.settings_line(opts)}
+	return UiFeedback.build_report(feedback_context(), feedback_selected_tags(), _fb_text.text, env)
+
+
+## COPY REPORT: put the report on the clipboard and show it in the read-only box too, for a browser that refuses the write.
+func copy_feedback() -> String:
+	var text: String = feedback_report()
+	DisplayServer.clipboard_set(text)
+	_fb_prev.text = text
+	_fb_state = UiFeedback.STATE_COPIED
+	_fb_status_ok = true
+	_fb_place()
+	_l_fb.invalidate()
+	return text
+
+
+func feedback_action(act: String) -> void:
+	if not _fb_open:
+		return
+	match act:
+		"copy", "again":
+			copy_feedback()
+		"back":
+			_fb_state = UiFeedback.STATE_WRITE
+			_fb_status_ok = false
+			_fb_place()
+			_l_fb.invalidate()
+		"close":
+			hide_feedback()
+
+
+func feedback_plan() -> Dictionary:
+	return UiFeedback.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), _fb_state)
+
+
+## Place the two text boxes on the panel's plan and size their type to it.
+func _fb_place() -> void:
+	var p: Dictionary = feedback_plan()
+	var write: bool = _fb_state == UiFeedback.STATE_WRITE
+	_fb_text.visible = _fb_open and write
+	_fb_prev.visible = _fb_open and not write
+	var fs: int = int(p["fs_body"])
+	for box in [_fb_text, _fb_prev]:
+		box.add_theme_font_size_override("font_size", fs)
+	var r: Rect2 = p["text_rect"] if write else p["preview_rect"]
+	var box2: TextEdit = _fb_text if write else _fb_prev
+	box2.position = r.position
+	box2.size = r.size
+	if write and _fb_open and not bool(opts["touch_ui"]):
+		_fb_text.grab_focus()   # a touch screen waits for a tap, so its keyboard does not jump up on its own
+
+
+func _pill_visible() -> bool:
+	return hub.match_over and bool(opts["match_end_feedback"]) and not _fb_open and not _howto_open and layout.feedback_btn.size.y > 0.0
+
+
+func _fb_click(pos: Vector2) -> void:
+	var p: Dictionary = feedback_plan()
+	if (p["close"] as Rect2).has_point(pos):
+		hide_feedback()
+		return
+	if _fb_state == UiFeedback.STATE_WRITE:
+		for chip in p["tags"]:
+			if (chip["rect"] as Rect2).has_point(pos):
+				toggle_feedback_tag(str(chip["id"]))
+				return
+		if (p["copy"] as Rect2).has_point(pos):
+			copy_feedback()
+		elif (p["done"] as Rect2).has_point(pos):
+			hide_feedback()
+	else:
+		if (p["back"] as Rect2).has_point(pos):
+			feedback_action("back")
+		elif (p["again"] as Rect2).has_point(pos):
+			copy_feedback()
+		elif (p["done"] as Rect2).has_point(pos):
+			hide_feedback()
+
+
+func _paint_fb(ci: CanvasItem) -> void:
+	if _fb_open:
+		UiFeedback.draw(ci, feedback_plan(), _fb_tags)
+
+
+func _paint_fbpill(ci: CanvasItem) -> void:
+	UiFeedback.draw_pill(ci, layout.feedback_btn, layout.s, layout.feedback_label, layout.feedback_fs)
+
+
 func _paint_tele(ci: CanvasItem) -> void:
 	UiReads.draw_telegraph(ci, hub, layout, layout.s, bool(opts["show_prompts"]), bool(opts["reduced_motion"]))
 
@@ -680,6 +885,8 @@ func touch_rects() -> Dictionary:
 				out["%s_p%d" % [k, m.slot]] = t[k]
 	if layout.pause_btn.size.y > 0.0:
 		out["pause"] = layout.pause_btn
+	if _pill_visible():
+		out["feedback"] = layout.feedback_btn
 	return out
 
 
@@ -690,6 +897,8 @@ func touch_target_at(p: Vector2) -> Dictionary:
 		if (r[k] as Rect2).has_point(p):
 			if k == "pause":
 				return {"name": "pause", "slot": -1}
+			if k == "feedback":
+				return {"name": "feedback", "slot": -1}
 			var parts: PackedStringArray = str(k).split("_p")
 			return {"name": "stance", "slot": int(parts[1]), "stance": int(str(parts[0]).get_slice("_", 1))}
 	return {}

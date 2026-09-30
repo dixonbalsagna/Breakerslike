@@ -557,3 +557,49 @@ Game Design's guided first match has nine beats (`docs/design/tutorial.md`); Nar
 **Also landed.** A `CHAIN xN` banner on `chain_ender {actor, n}` (n of 2 or more; Narrative's label, the same words as the chain chip), for Rendering's heavier impact cue.
 
 **Risks.** The plate's state row is now tight: the weight chip is first, and on a 380 px plate with a queued signature the other state chips (charging, chain) may not fit and are dropped. Acts and mood are invisible by design, so nothing shows the clock's tempo; the feed names it. The finisher's counter table lives in `ui/data/reads.json`; Game Design should confirm it (the stance that answers each kind and the 40 Charge for a beam).
+
+## 20. The feedback panel
+
+For friends' playtests (Orb said yes): a small panel that turns a tester's thoughts into one block of plain text they paste to Orb. **No network call, no account and nothing personal.**
+
+![The panel, writing](img/feedback-write.png)
+
+![After COPY REPORT: the report is on the clipboard and shown for copying by hand](img/feedback-copied.png)
+
+**Where it opens.**
+- **The pause menu**: the host adds an entry "Send feedback" (48 dp, like the others) that calls `ui_hud.show_feedback("pause")`.
+- **The match end**: after a KO the HUD draws a pill, SEND FEEDBACK, beside the planet ring map (FEEDBACK on a tight screen), at least 48 dp on touch. A click or tap opens the panel with context `match_end`. `opts["match_end_feedback"]` turns the pill off if the host's own results screen carries the button. `touch_rects()` names it `feedback`.
+
+![The match-end pill](img/feedback-pill.png)
+
+**The panel.** A title, a one-line hint ("Please leave out anything personal"), four tag chips (Bug, Felt unfair, Confusing, Loved it; toggles, 48 dp), a free-text box (a real `TextEdit`, so typing, selecting and a phone's keyboard work), and two buttons: COPY REPORT and CLOSE. Esc, the cross and CLOSE close it. While it is open the HUD takes every key and click, like the How to play card: the host pauses the sim on `feedback_opened(context)` and restores the pause it found on `feedback_closed`. On touch the text box is not focused until it is tapped, so the keyboard does not jump up on its own.
+
+![On a phone](img/feedback-phone.png)
+
+**COPY REPORT.** Builds the report, calls `DisplayServer.clipboard_set` (on the web that is the browser's clipboard write, inside the click that started it, which browsers allow) and switches to a second state: "Copied. Paste it to Orb." with the whole report in a read-only box, "If nothing was copied, select the text below and copy it." A browser that refuses the write therefore costs one long-press, not the report. The panel cannot read the clipboard back (the web forbids it), so it never claims success it cannot check beyond that line. COPY AGAIN repeats it; BACK returns to writing with the note and tags kept.
+
+**The report** (plain text, one fact a line; every label is data in `ui/data/feedback.json`):
+```
+ORB COMBAT EX - PLAYTEST FEEDBACK
+Build: 02c8fd3 (2026-09-30)
+Seed: 123456
+Setup: PROTAGONIST (player, xbox) vs ANTI-HERO (AI)
+Match time: 03:42 (in progress)
+Screen: 1920x1080, density 1.0, touch off
+Platform: Web, Chrome 126, Windows
+Engine: 4.7.2-stable (official)
+Settings: brink_cue=on, captions=on, crown_always=off, ...
+Tags: Bug, Confusing
+Notes:
+<what the player typed>
+```
+- **Platform** is coarse on purpose: on the web the browser's user-agent is reduced to a family and a major version ("Chrome 126") and an OS family word ("Windows", "Android", "iOS", "macOS", "Linux"), never the string, a device model or a version; on desktop it is the OS name. No locale, time zone, IP, file path or user name is read. `hud_check` fails the build if the report holds a URL, a path or the user's name.
+- **Settings** are the player-facing options (`options.json`) as key=value, sorted.
+- **The build** comes from `res://build_info.json` (`{commit, date}`) if the build wrote one, and the host's context overrides it. The match seed, setup and time come from `UiHud.feedback_fn`, a `Callable` the host sets that returns any of `{commit, date, seed, setup, time, ended}`; without it the report says `unknown` for the seed and commit, derives the setup from the fighters and the time from the HUD's own match clock.
+
+**Host glue (Rendering, through the EP).**
+1. A "Send feedback" entry in the pause menu calling `ui_hud.show_feedback("pause")`; freeze on `feedback_opened`, restore on `feedback_closed`.
+2. `ui_hud.feedback_fn = func(): return {"seed": host.seed, "time": host.ticks / 60.0, ...}`.
+3. CI writes `build_info.json` (`{"commit": "<sha7>", "date": "<yyyy-mm-dd>"}`) into the project before the export so the report names the build. Without it the report says `Build: unknown`, which is the one thing Orb cannot work around.
+
+`hud_check` covers the four tags and labels, the browser and OS words from sample user agents, the time format, the settings line, the report's every field and its privacy, the panel's geometry at desktop, tablet, phone and small sizes in both states (every control 48 dp and inside the card, the text box at least three lines), the pill's geometry in landscape and portrait (clear of the ring map, the strip, the bark lanes, the plates and the fight), and the flow by mouse and touch (pill, tags, copy, back, close, Esc, the How to play card not opening over it).

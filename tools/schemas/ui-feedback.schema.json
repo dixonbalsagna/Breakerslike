@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-feedback",
+  "title": "ui feedback panel (schema 1)",
+  "description": "ui/data/feedback.json: the feedback panel's words and the plain-text report's labels (docs/ui/hud-spec.md section 20). The panel copies a report to the clipboard; nothing is sent anywhere. Version field: schema. Policy: closed. Cross-references (tag ids are unique) are checked by tools/lib/xref-fight.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "title",
+    "hint",
+    "placeholder",
+    "tags",
+    "buttons",
+    "copied",
+    "copied_fallback",
+    "report"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "placeholder": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tags": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "buttons": {
+      "type": "object",
+      "required": [
+        "copy",
+        "copy_again",
+        "back",
+        "close",
+        "match_end"
+      ],
+      "properties": {
+        "copy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "copy_again": {
+          "type": "string",
+          "minLength": 1
+        },
+        "back": {
+          "type": "string",
+          "minLength": 1
+        },
+        "close": {
+          "type": "string",
+          "minLength": 1
+        },
+        "match_end": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "copied": {
+      "type": "string",
+      "minLength": 1
+    },
+    "copied_fallback": {
+      "type": "string",
+      "minLength": 1
+    },
+    "report": {
+      "type": "object",
+      "required": [
+        "title",
+        "build",
+        "seed",
+        "setup",
+        "time",
+        "screen",
+        "platform",
+        "engine",
+        "settings",
+        "tags",
+        "notes",
+        "unknown",
+        "in_progress",
+        "ended",
+        "none",
+        "you",
+        "ai"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "build": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seed": {
+          "type": "string",
+          "minLength": 1
+        },
+        "setup": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time": {
+          "type": "string",
+          "minLength": 1
+        },
+        "screen": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "engine": {
+          "type": "string",
+          "minLength": 1
+        },
+        "settings": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tags": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unknown": {
+          "type": "string",
+          "minLength": 1
+        },
+        "in_progress": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ended": {
+          "type": "string",
+          "minLength": 1
+        },
+        "none": {
+          "type": "string",
+          "minLength": 1
+        },
+        "you": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ai": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

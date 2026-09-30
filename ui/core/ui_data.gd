@@ -171,6 +171,17 @@ static func hint_text(key: String) -> String:
 	return str((reads().get("hints", {}) as Dictionary).get(key, ""))
 
 
+const FEEDBACK_PATH := "res://ui/data/feedback.json"
+static var _feedback: Dictionary = {}
+
+
+## The feedback panel's words (ui/data/feedback.json).
+static func feedback() -> Dictionary:
+	if _feedback.is_empty():
+		_feedback = _read(FEEDBACK_PATH)
+	return _feedback
+
+
 const HOWTO_PATH := "res://ui/data/howto.json"
 static var _howto: Dictionary = {}
 

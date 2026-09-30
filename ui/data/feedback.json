@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "note": "The feedback panel's words (docs/ui/hud-spec.md section 20): every word it shows and the report's labels, as data. The panel copies a plain-text report to the clipboard for a friend to paste to Orb. Nothing is sent anywhere and nothing personal is collected: the report holds the build, the match seed and setup, the match time, the platform and browser family, the settings, the tags and what the player typed.",
+  "title": "SEND FEEDBACK",
+  "hint": "Tell Orb what you found. Please leave out anything personal.",
+  "placeholder": "What happened? What did you expect?",
+  "tags": [
+    { "id": "bug", "label": "Bug" },
+    { "id": "unfair", "label": "Felt unfair" },
+    { "id": "confusing", "label": "Confusing" },
+    { "id": "loved", "label": "Loved it" }
+  ],
+  "buttons": { "copy": "COPY REPORT", "copy_again": "COPY AGAIN", "back": "BACK", "close": "CLOSE", "match_end": "SEND FEEDBACK" },
+  "copied": "Copied. Paste it to Orb.",
+  "copied_fallback": "If nothing was copied, select the text below and copy it.",
+  "report": {
+    "title": "ORB COMBAT EX - PLAYTEST FEEDBACK",
+    "build": "Build",
+    "seed": "Seed",
+    "setup": "Setup",
+    "time": "Match time",
+    "screen": "Screen",
+    "platform": "Platform",
+    "engine": "Engine",
+    "settings": "Settings",
+    "tags": "Tags",
+    "notes": "Notes",
+    "unknown": "unknown",
+    "in_progress": "in progress",
+    "ended": "ended",
+    "none": "none",
+    "you": "player",
+    "ai": "AI"
+  }
+}

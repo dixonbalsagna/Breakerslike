@@ -36,6 +36,9 @@ var prompts: Array = [Rect2(), Rect2()]      # each column's prompt row (stance 
 var swapped := false                         # slot 0 is on the right: the fighter on the left of the screen is slot 1
 var touch_grid := false                      # touch: the stance ring is a 2 by 2 grid because the column is too narrow for four targets in a row
 var read_slot := Rect2()                     # the telegraph chip and the tutorial hint line: the banner slot, between the plates, above the fight
+var feedback_label := ""                     # the pill's words (SEND FEEDBACK, or FEEDBACK where the room is tight) and their size
+var feedback_fs := 14
+var feedback_btn := Rect2()                  # the match-end SEND FEEDBACK pill: beside the ring map (landscape) or at the clear zone's foot (portrait)
 var pause_btn := Rect2()                     # touch only: the pause button (48 dp), beside the toll chip
 var dp := 1.0                                # device pixels per dp (CSS pixel on the web): 1 on a desktop, 2 to 3.5 on a phone. The host sets it before compute
 var touch_ui := false                        # touch is the last input device: targets are at least 48 dp and the prompt row is the stance ring
@@ -142,16 +145,48 @@ func _pass(insets: Vector4) -> void:
 	ring = Rect2()
 	pause_btn = Rect2()
 	read_slot = Rect2()
+	feedback_btn = Rect2()
 	touch_grid = false
 	prompts = [Rect2(), Rect2()]
 	if portrait:
 		_portrait()
+		var fb_h2: float = maxf(touch_min if touch_ui else 40.0 * s, 34.0)
+		var fb_w2: float = _pill_fit(safe.size.x, fb_h2)
+		feedback_btn = Rect2(vp.x * 0.5 - fb_w2 * 0.5, clear_zone.end.y - fb_h2 - 8.0 * s, fb_w2, fb_h2)
 	else:
 		_landscape()
 		# The planet ring map: centred above the strip, below the clear zone and between the two bark lanes.
 		var d: float = clampf(vp.y * 0.085, 52.0, 120.0)
 		var gap: float = 12.0 * s
 		ring = Rect2(vp.x * 0.5 - d * 0.5, strip.position.y - gap - d, d, d)
+		var fb_h: float = maxf(touch_min if touch_ui else 40.0 * s, 34.0)
+		var fb_w: float = _pill_fit(bark[1].position.x - gap - (ring.end.x + gap), fb_h)
+		feedback_btn = Rect2(ring.end.x + gap, strip.position.y - 4.0 * s - fb_h, fb_w, fb_h)
+
+
+## The match-end pill's width for `avail` px: the full words at the normal size if they fit, else the same words smaller (to the text
+## floor), else the short words; sets feedback_label and feedback_fs.
+func _pill_fit(avail: float, h: float) -> float:
+	var b: Dictionary = UiFeedback.data().get("buttons", {})
+	var full: String = str(b.get("match_end", "SEND FEEDBACK"))
+	var words: PackedStringArray = full.split(" ", false)
+	var short_label: String = words[words.size() - 1] if words.size() > 1 else full   # SEND FEEDBACK becomes FEEDBACK where the room is tight
+	var fs0: int = UiText.px(20.0, s)
+	var floor_fs: int = int(text_floor)
+	for label in [full, short_label]:
+		var fs: int = fs0
+		while true:
+			var w: float = UiText.width(label, fs) + h * 0.5 + 8.0 * s
+			if w <= avail:
+				feedback_label = label
+				feedback_fs = fs
+				return w
+			if fs <= floor_fs:
+				break
+			fs -= 1
+	feedback_label = short_label
+	feedback_fs = floor_fs
+	return UiText.width(short_label, floor_fs) + h * 0.5 + 8.0 * s
 
 
 ## Whether the landscape layout at this scale is acceptable: the fight keeps the middle, the prompt rows clear the bark lanes

@@ -38,6 +38,7 @@ func _run() -> void:
 	await _responsive()
 	await _howto_rules()
 	await _reads_hud()
+	await _feedback_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -395,12 +396,13 @@ func _bridge() -> void:
 	# The greybox balance rarely wears a region past bruised in a minute, so push one through the real S1 code: the stage
 	# events it emits must reach the HUD as they are.
 	var f0 = host.S.fighters[0]
-	SimWounds.addWear(host.S, f0, 2, 1600.0)   # 1600 x 390 units clears the broken floor (540,000) at the sim's current k
+	# A limb now wears to battered and stops (the rest spills into the core), so the core is the region that can break from damage alone.
+	SimWounds.addWear(host.S, f0, SimWounds.CORE, 100000.0)
 	SimWounds.updateStages(host.S, f0)
 	host.tick(1280.0, 720.0)
 	hud.advance(1.0 / 60.0)
-	_ok(int(m0.true_stage["arms"]) == 3 and m0.crown_a > 0.0, "bridge: a real region_stage and region_broken from S1 reach the model and pop the crown")
-	_ok(hud.hub.cards_of(0).any(func(c): return c.title == "ARMS: BROKEN") or hud.hub.waiting.any(func(c): return c.title == "ARMS: BROKEN"), "bridge: and make the ARMS: BROKEN card")
+	_ok(int(m0.true_stage["core"]) == 3 and m0.crown_a > 0.0, "bridge: a real region_stage and region_broken from S1 reach the model and pop the crown")
+	_ok(hud.hub.cards_of(0).any(func(c): return str(c.title).ends_with(": BROKEN")) or hud.hub.waiting.any(func(c): return str(c.title).ends_with(": BROKEN")), "bridge: and make a BROKEN wound card")
 	print("  bridge ok: %d events consumed over 4200 ticks" % events)
 	host.S = null
 
@@ -1316,5 +1318,162 @@ func _reads_hud() -> void:
 	_ok(kinds.count("stance") == 4 and kinds.has("weight"), "reads: the stance ring has a weight mark beside the four stances")
 	var last_r: Rect2 = chips[chips.size() - 1]["rect"]
 	_ok(last_r.end.x <= hud.layout.prompts[0].end.x + 0.5, "reads: and it stays inside the column")
+	hud.queue_free()
+	await process_frame
+
+
+## The feedback panel: words, the report (no network, nothing personal), geometry at every size, the flow by mouse and touch, and the
+## match-end button (docs/ui/hud-spec.md section 20).
+func _feedback_rules() -> void:
+	var d: Dictionary = UiData.feedback()
+	var labels: Array = []
+	for t in d["tags"]:
+		labels.append(str(t["label"]))
+	_ok(labels == ["Bug", "Felt unfair", "Confusing", "Loved it"], "feedback: four quick tags: bug, felt unfair, confusing, loved it")
+	_ok(d["buttons"].has("copy") and d["buttons"].has("close") and d["buttons"].has("match_end") and str(d["title"]) != "", "feedback: the buttons and the title are data")
+	# Platform words are coarse: a family and a major version, never the user-agent string.
+	var chrome := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+	var edge := chrome + " Edg/126.0.2592.81"
+	var ff := "Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0"
+	var safari := "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
+	_ok(UiFeedback.browser_from_ua(chrome) == "Chrome 126" and UiFeedback.browser_from_ua(edge) == "Edge 126" and UiFeedback.browser_from_ua(ff) == "Firefox 127" and UiFeedback.browser_from_ua(safari) == "Safari 17" and UiFeedback.browser_from_ua("curl/8") == "unknown browser", "feedback: the browser is a family and a major version")
+	_ok(UiFeedback.os_from_ua(chrome) == "Windows" and UiFeedback.os_from_ua(ff) == "Linux" and UiFeedback.os_from_ua(safari) == "iOS" and UiFeedback.os_from_ua("... Android 14; Pixel ...") == "Android" and UiFeedback.os_from_ua("Macintosh; Intel Mac OS X 10_15") == "macOS", "feedback: the OS is a family word, with no version or device model")
+	_ok(UiFeedback.format_time(222.4) == "03:42" and UiFeedback.format_time(-3.0) == "00:00" and UiFeedback.format_time(3725.0) == "62:05", "feedback: the match time is minutes and seconds")
+	var sl: String = UiFeedback.settings_line({"captions": true, "reduced_motion": false, "shake_scale": 0.5, "glyph_style": "neutral", "not_an_option": 1})
+	_ok(sl == "captions=on, glyph_style=neutral, reduced_motion=off, shake_scale=0.50", "feedback: the settings are the player options, sorted, on or off")
+	# The report.
+	var env := {"screen": Vector2(1920, 1080), "dp": 1.0, "touch": false, "platform": {"os": "Windows", "browser": "Chrome 126", "web": true, "mobile": false, "engine": "Godot 4.7.2"}, "settings": sl}
+	var ctx := {"commit": "abc1234", "date": "2026-09-30", "seed": 987654, "setup": "ONE (player, xbox) vs TWO (AI)", "time": 222.0, "ended": true}
+	var rep: String = UiFeedback.build_report(ctx, ["bug", "confusing"], "The beam froze.\nSecond line.", env)
+	for must in ["ORB COMBAT EX - PLAYTEST FEEDBACK", "Build: abc1234 (2026-09-30)", "Seed: 987654", "Setup: ONE (player, xbox) vs TWO (AI)", "Match time: 03:42 (ended)", "Screen: 1920x1080, density 1.0, touch off", "Platform: Web, Chrome 126, Windows", "Engine: Godot 4.7.2", "Settings: " + sl, "Tags: Bug, Confusing", "Notes:", "The beam froze."]:
+		_ok(rep.contains(must), "feedback: the report has '%s'" % must.substr(0, 40))
+	var un: String = OS.get_environment("USERNAME") if OS.get_environment("USERNAME") != "" else OS.get_environment("USER")
+	_ok(not rep.to_lower().contains("http") and not rep.contains("user://") and not rep.contains("C:\\") and (un == "" or not rep.contains(un)), "feedback: the report holds no URL, path or user name")
+	var empty: String = UiFeedback.build_report({}, [], "   ", env)
+	_ok(empty.contains("Build: unknown") and empty.contains("Seed: unknown") and empty.contains("Tags: none") and empty.contains("(none)"), "feedback: missing facts read unknown and an empty note reads (none)")
+	# Geometry at desktop, tablet, phone and a small window, both states, touch off and on.
+	for cs in [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(1560, 720), 2.0], [Vector2(390, 844), 1.0], [Vector2(3840, 2160), 1.0]]:
+		var sz: Vector2 = cs[0]
+		var lay := UiLayout.new()
+		lay.dp = cs[1]
+		lay.compute(sz, false)
+		for st in [UiFeedback.STATE_WRITE, UiFeedback.STATE_COPIED]:
+			var p: Dictionary = UiFeedback.plan(sz, lay.s, cs[1], cs[1] > 1.5, st)
+			var tag := "feedback %dx%d dp %.1f %s" % [int(sz.x), int(sz.y), cs[1], st]
+			var card: Rect2 = p["card"]
+			var tm: float = float(p["tm"])
+			_ok(bool(p["fits"]) and Rect2(Vector2.ZERO, sz).encloses(card), "%s: the panel fits on screen (type scale %.2f)" % [tag, float(p["cs"])])
+			var ctrl: Array = [p["close"], p["done"]]
+			if st == UiFeedback.STATE_WRITE:
+				ctrl.append(p["copy"])
+				for chip in p["tags"]:
+					ctrl.append(chip["rect"])
+			else:
+				ctrl.append_array([p["back"], p["again"]])
+			var bad := 0
+			for i in range(ctrl.size()):
+				var r: Rect2 = ctrl[i]
+				if r.size.x < tm - 0.01 or r.size.y < tm - 0.01 or not card.encloses(r):
+					bad += 1
+				for j in range(i + 1, ctrl.size()):
+					if r.intersects(ctrl[j]):
+						bad += 1
+			_ok(bad == 0, "%s: every control is at least 48 dp, inside the card, and none overlap (%d bad)" % [tag, bad])
+			var box: Rect2 = p["text_rect"] if st == UiFeedback.STATE_WRITE else p["preview_rect"]
+			_ok(card.encloses(box) and box.size.y >= float(p["lh"]) * 2.9, "%s: the text box is inside the card and at least three lines tall" % tag)
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# The match-end pill.
+	for cs in [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(2560, 1080), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(1560, 720), 2.0]]:
+		var lay2 := UiLayout.new()
+		lay2.dp = cs[1]
+		lay2.touch_ui = cs[1] > 1.5
+		lay2.compute(cs[0], false)
+		var b: Rect2 = lay2.feedback_btn
+		var view := Rect2(Vector2.ZERO, cs[0])
+		var tag2 := "feedback pill %dx%d dp %.1f" % [int(cs[0].x), int(cs[0].y), cs[1]]
+		_ok(b.size.y > 0.0 and view.encloses(b), "%s: the pill is on screen" % tag2)
+		_ok(not b.intersects(lay2.ring) and not b.intersects(lay2.strip) and not b.intersects(lay2.bark[0]) and not b.intersects(lay2.bark[1]) and not b.intersects(lay2.plate[0]) and not b.intersects(lay2.plate[1]) and not b.intersects(lay2.clear_zone), "%s: clear of the ring map, the strip, the bark lanes, the plates and the fight" % tag2)
+		_ok(b.size.y >= (lay2.touch_min if lay2.touch_ui else 34.0) - 0.01, "%s: tall enough to tap" % tag2)
+	var lp := UiLayout.new()
+	lp.compute(Vector2(390, 844), false)
+	_ok(lp.feedback_btn.size.y > 0.0 and Rect2(Vector2.ZERO, Vector2(390, 844)).encloses(lp.feedback_btn), "feedback pill: portrait keeps one on screen")
+	# The flow in the HUD.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(0).device = "xbox"
+	hud.advance(1.0 / 60.0)
+	var ev := {"opened": [], "closed": 0}
+	hud.feedback_opened.connect(func(c: String): ev["opened"].append(c))
+	hud.feedback_closed.connect(func(): ev["closed"] += 1)
+	_ok(not hud._pill_visible() and hud._l_fbpill.sig == null and not hud.touch_rects().has("feedback"), "feedback: no pill during the fight")
+	hud.consume({"type": "ko", "winner": 0, "loser": 1})
+	hud.advance(1.0 / 60.0)
+	_ok(hud._pill_visible() and hud._l_fbpill.sig != null, "feedback: the pill shows once the match is over")
+	var click := func(pos: Vector2) -> InputEventMouseButton:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = true
+		e.position = pos
+		return e
+	hud._unhandled_input(click.call(hud.layout.feedback_btn.get_center()))
+	_ok(hud.is_feedback_open() and ev["opened"] == ["match_end"] and not hud._pill_visible(), "feedback: a tap on the pill opens the panel (context match_end) and the pill steps aside")
+	_ok(hud._fb_text.visible and not hud._fb_prev.visible and hud.feedback_plan()["card"].encloses(Rect2(hud._fb_text.position, hud._fb_text.size)), "feedback: the text box shows inside the card")
+	hud.show_howto(false)
+	_ok(not hud.is_howto_open(), "feedback: the How to play card does not open over the panel")
+	var pl: Dictionary = hud.feedback_plan()
+	hud._unhandled_input(click.call((pl["tags"][0]["rect"] as Rect2).get_center()))
+	hud._unhandled_input(click.call((pl["tags"][2]["rect"] as Rect2).get_center()))
+	_ok(hud.feedback_selected_tags() == ["bug", "confusing"], "feedback: a tap on a tag chip selects it")
+	hud._unhandled_input(click.call((pl["tags"][0]["rect"] as Rect2).get_center()))
+	_ok(hud.feedback_selected_tags() == ["confusing"], "feedback: and a second tap clears it")
+	hud._unhandled_input(click.call((pl["tags"][0]["rect"] as Rect2).get_center()))
+	hud._fb_text.text = "The beam froze."
+	hud.feedback_fn = func(): return {"commit": "abc1234", "seed": 42, "setup": "ONE vs TWO", "time": 222.0}
+	hud._unhandled_input(click.call((pl["copy"] as Rect2).get_center()))
+	var rep2: String = hud._fb_prev.text
+	_ok(hud._fb_state == "copied" and hud._fb_prev.visible and not hud._fb_text.visible, "feedback: COPY REPORT shows the report in the read-only box (the hand-copy fallback)")
+	_ok(rep2.contains("abc1234") and rep2.contains("Seed: 42") and rep2.contains("ONE vs TWO") and rep2.contains("03:42") and rep2.contains("Bug, Confusing") and rep2.contains("The beam froze.") and rep2.contains("(ended)"), "feedback: the report carries the host's build, seed, setup and time, the tags and the note")
+	_ok(rep2 == hud.feedback_report(), "feedback: copying twice gives the same report")
+	pl = hud.feedback_plan()
+	hud._unhandled_input(click.call((pl["back"] as Rect2).get_center()))
+	_ok(hud._fb_state == "write" and hud._fb_text.text == "The beam froze." and hud.feedback_selected_tags() == ["bug", "confusing"], "feedback: BACK returns to writing with the note and tags kept")
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	hud._unhandled_input(esc)
+	_ok(not hud.is_feedback_open() and ev["closed"] == 1 and not hud._fb_text.visible and not hud._fb_prev.visible, "feedback: Esc closes it and hides the boxes")
+	hud.show_feedback("pause")
+	_ok(ev["opened"] == ["match_end", "pause"] and hud.feedback_selected_tags().is_empty() and hud._fb_text.text == "", "feedback: from the pause menu it opens fresh (context pause)")
+	pl = hud.feedback_plan()
+	hud._unhandled_input(click.call((pl["close"] as Rect2).get_center()))
+	_ok(not hud.is_feedback_open() and ev["closed"] == 2, "feedback: the close cross closes it")
+	hud.show_feedback("pause")
+	pl = hud.feedback_plan()
+	hud._unhandled_input(click.call((pl["done"] as Rect2).get_center()))
+	_ok(not hud.is_feedback_open() and ev["closed"] == 3, "feedback: the CLOSE button closes it")
+	var wasd := InputEventKey.new()
+	wasd.keycode = KEY_D
+	wasd.pressed = true
+	hud.show_feedback("pause")
+	hud._unhandled_input(wasd)
+	_ok(hud.is_feedback_open(), "feedback: a game key does nothing to the open panel")
+	hud.hide_feedback()
+	# Touch: the pill is a target, the panel works by tap, and the boxes stay inside the card.
+	hud.set_density(2.6)
+	hud.set_option("touch_ui", true)
+	hud.advance(1.0 / 60.0)
+	_ok(hud.touch_rects().has("feedback") and hud.touch_target_at((hud.touch_rects()["feedback"] as Rect2).get_center()).get("name", "") == "feedback", "feedback: on touch the pill is a named target")
+	hud.show_feedback("match_end")
+	pl = hud.feedback_plan()
+	hud._unhandled_input(click.call((pl["tags"][3]["rect"] as Rect2).get_center()))
+	hud._unhandled_input(click.call((pl["copy"] as Rect2).get_center()))
+	_ok(hud._fb_state == "copied" and hud._fb_prev.text.contains("Loved it") and hud._fb_prev.text.contains("touch on"), "feedback: on touch a tag and a copy work and the report says touch on")
+	_ok(hud.feedback_plan()["card"].encloses(Rect2(hud._fb_prev.position, hud._fb_prev.size)), "feedback: and the preview stays inside the card")
+	hud.hide_feedback()
 	hud.queue_free()
 	await process_frame
