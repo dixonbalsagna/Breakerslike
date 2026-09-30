@@ -90,7 +90,8 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	out.append(float(S.rng.state_i32()))
 	var g := S.game
 	out.append(_idx(fs, g.ko))
-	_obj(out, g, ["koT", "ts", "seed", "actBeats", "timeCap"])
+	_obj(out, g, ["koT", "ts", "seed", "timeCap"])
+	_obj(out, S.mood, ["t", "sec", "v", "band", "cand", "candT", "act", "beats", "forms", "cause", "aggression", "crowd", "casGiven", "lastCombo"])
 	if g.clash != null:
 		out.append(_idx(fs, g.clash.A))
 		out.append(_idx(fs, g.clash.D))
@@ -140,6 +141,13 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(float(f.breathWear)); out.append(f.id)
 		out.append(float(f.limbBreaks)); out.append(f.coreMarked)
 		out.append(float(f.brinkSetups)); out.append(f.brinkOpen); out.append(float(f.brinkEx))
+		out.append(float(f.flightHits))
+		var st = f.style
+		if st != null:
+			for arr in [st.cur, st.buckets, st.win, st.total, st.enterT, st.leftAt]:
+				for x in arr:
+					out.append(float(x))
+			_obj(out, st, ["bi", "filled", "label", "leaveT", "shiftAt", "runKind", "runLen", "runMax", "sigLanded"])
 	_obj(out, S.world, ["pop0", "casualties", "structuresLost", "craters", "slides", "evacuated", "cbSec", "cbSum", "maxTier", "evtKind", "evtLeft", "evtToken", "evtDead", "evtEvac", "tokenSeq", "heavyX", "heavyT", "stateT"])
 	for v in S.world.cbBuckets:
 		out.append(v)
@@ -238,6 +246,7 @@ const FX_FIELDS: Dictionary = {
 	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner", "pop"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"], "evacuate": ["b", "x", "n", "cx", "reason", "owner", "dest"], "building_fall": ["b", "x", "y", "w", "depth", "mode", "delay", "cx", "rubble", "n"], "collateral_state": ["room", "budget", "left", "over"],
 	"shake": ["k", "x"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "limb_break": ["actor", "victim", "region"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"], "brink_open": ["actor", "target", "kind", "text"], "brink_close": ["actor", "kind"],
+	"mood_band": ["kind", "amount", "n"], "act_change": ["n", "kind"], "style_label": ["actor", "kind", "text"], "crowd_state": ["kind"], "building_hit": ["actor", "x", "n"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target", "dur"], "finisher_contest": ["target", "chance", "survived"],
 	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],

@@ -207,6 +207,38 @@ There is no per-second mood event. Readers that want the value read `S.mood` (a 
   2. A forced vector (like `rallyHash`) drives scripted stances and events through band and dwell, act floors, the casualty cap, every label's enter, leave and refractory timing, the shift gap and the window-fill rule. It is hashed into the goldens.
 - Encounter's and World's readers come after M1, each with its own golden change.
 
+## 8b. M1 as built (2026-09-30)
+
+**Files.**
+- `sim/core/mood.gd` (`SimMood`) loads `data/fight/mood.json` and `style.json`. It checks every shape and folds both into the replay header's data hash; the goldens record them as `fightHash`.
+- `SimState.MoodState` and `StyleState` are in `state.gd`, both hashed.
+- `SimMood.tick` runs at the end of each non-frozen `SimCore.step`, after the water. `SimMood.reset` runs in `newMatch`.
+
+**The act has one source.** `SimMood.act(S)` = min(act.max, 1 + `S.mood.beats` + `S.mood.forms`). `wounds.gd` reports its beats through `SimMood.beat` (a region break, a core's first battered), and `SimWounds.act` delegates to it. `S.game.actBeats` is gone.
+
+**Inputs.**
+- `damage` with a number, kind light or heavy, attacked by `attacker`.
+- `parry`, `clash_draw`, `decisive` (clash, beam_clash or beam), `region_broken`, `building_hit`, `finisher_start` and `attack`.
+- The running exchange's `combo`, for chain links.
+- `S.world.casualties`.
+- The fighters' stance, velocity and state.
+- `building_hit` is new, from `SimFighter._buildingHits`; `Fighter.flightHits` resets whenever the fighter isn't launched.
+
+**Measures.**
+- *Closing and opening:* x velocity toward or away from the opponent beyond a 50 u/s dead zone (`CLOSE_DEAD`, a definition of the measure).
+- *Opening* adds units of distance.
+- *Charge cut:* an `attack` whose defender state was CHARGING.
+- *Signatures landed:* counted in the match total only.
+
+**Style rules as run.**
+- The window fills to 30 s before any label is judged.
+- A label ready to enter replaces the current one only if it comes earlier in the priority (any label replaces the mixer).
+- A shift waits 20 s from the second the current label began, whether it entered or shifted in. Counting from the last shift alone let a label that had just entered be replaced a second later.
+- A label that ends can't re-enter for 10 s.
+- The mixer leaves when its largest stance share exceeds 50% for 5 s (`leaveMaxStancePct`, `leaveHoldS`).
+
+**Proof.** With the mood block, the style state, `flightHits` and the five new events left out of the hash, parity passed against the untouched pre-M1 goldens. That covered tick-0, every vector, all 9 matches (176,405 ticks, every per-tick digest and checkpoint) and the replays. The goldens were then regenerated once, with a forced vector (`moodHash`) and `fightHash`.
+
 ## 9. Open points
 
 - **Taunts and transformations** have no sim events yet. Their impulses are in the data and dormant until `taunt` (Encounter or Narrative) and `form_change` (F1) exist.

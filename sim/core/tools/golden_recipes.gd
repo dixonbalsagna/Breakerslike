@@ -43,6 +43,8 @@ static func build() -> Dictionary:
 	g.tick0Values = tick0Values(1)
 	g.rally = rallyHash()
 	g.cripple = crippleHash()
+	g.mood = moodHash()
+	g.fightHash = SimMood.dataHash()
 	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY
 	g.rosterHash = FighterData.dataHash()
@@ -196,7 +198,7 @@ static func crippleHash() -> String:
 			h.num(float(x.wear[r])); h.num(float(x.stage[r]))
 		h.u(1 if x.brink else 0)
 		h.num(float(x.limbBreaks)); h.u(1 if x.coreMarked else 0); h.num(x.power)
-		h.num(float(S.game.actBeats)); h.num(float(SimWounds.act(S)))
+		h.num(float(S.mood.beats)); h.num(float(SimWounds.act(S)))
 	var put := func(x, w: Array) -> void:
 		for r in range(4):
 			x.wear[r] = w[r]
@@ -211,11 +213,11 @@ static func crippleHash() -> String:
 	for ctx in range(4):
 		a.tier = 2.0 if ctx == 1 else 1.0
 		d.tier = 1.0
-		S.game.actBeats = 2 if ctx == 2 else 0
+		S.mood.beats = 2 if ctx == 2 else 0
 		ex.sD = 1.0 if ctx == 3 else 0.0
 		for n in range(64):
 			d.limbBreaks = 0
-			S.game.actBeats = 2 if ctx == 2 else 0
+			S.mood.beats = 2 if ctx == 2 else 0
 			a.power = 0.0
 			put.call(d, [0, 0, 400000, 0])
 			SimWounds.onExchangeStart(S, ex)
@@ -224,11 +226,11 @@ static func crippleHash() -> String:
 			SimWounds.onDecisive(S, ex, a, d, "launch")
 			h.u(1 if d.stage[SimWounds.ARMS] == 3 else 0)
 	a.tier = 1.0
-	S.game.actBeats = 0
+	S.mood.beats = 0
 	ex.sD = 0.0
 	for n in range(128):   # both limbs eligible: the pick weighs the legs by cripple.legWeight
 		d.limbBreaks = 0
-		S.game.actBeats = 0
+		S.mood.beats = 0
 		put.call(d, [0, 0, 400000, 400000])
 		SimWounds.onExchangeStart(S, ex)
 		ex.n = 5000 + n
@@ -269,6 +271,75 @@ static func crippleHash() -> String:
 	h.num(SimDamage.hit(S, guardEx, a, d, 20.0, {}))                   # broken legs' guard
 	snap.call(d)
 	SimHash.hashFx(h, S.out.fx)
+	SimCore.dispose(S)
+	return h.hex()
+
+
+## M1, forced: fabricated events and stances drive SimMood.tick directly. It covers the impulses (with the AGGRESSIVE
+## multiplier), the cap at range, the band dwell up and down, the decay to the act floors as beats raise the act, the
+## both-guarded drain, the casualty cap, and the style labels: the window fill, a turtle's hold, its leave and the shift
+## to a rusher (the minimum gap), a runner and a mixer, and a sniper from signature attacks.
+static func moodHash() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5)
+	var a = S.fighters[0]
+	var b = S.fighters[1]
+	var h := SimHash.Hasher.new()
+	var mk := func(type: String, fields: Dictionary) -> SimState.FxEvent:
+		var e := SimState.FxEvent.new()
+		e.type = type
+		for k in fields:
+			e.set(k, fields[k])
+		return e
+	var snap := func() -> void:
+		var m = S.mood
+		for x in [m.v, m.band, m.cand, m.candT, m.act, m.beats, m.aggression, m.crowd, m.casGiven, m.sec]:
+			h.num(float(x))
+		for f in S.fighters:
+			h.num(float(f.style.label)); h.num(float(f.style.leaveT)); h.num(float(f.style.filled))
+			for x in f.style.win:
+				h.num(float(x))
+	var run := func(n: int, events: Array) -> void:
+		for i in range(n):
+			for e in events:
+				S.out.fx.append(e)
+			SimMood.tick(S)
+			SimHash.hashFx(h, S.out.fx)
+			S.out.fx.clear()
+	var heavy = mk.call("damage", {"number": true, "kind": "heavy", "attacker": 0.0})
+	a.stance = 0.0
+	b.stance = 0.0
+	run.call(300, []); snap.call()
+	run.call(40, [heavy]); snap.call()                       # x1.5 while AGGRESSIVE, capped at range
+	for k in range(60):
+		run.call(20, []); snap.call()                        # the dwell up to frenzied, the decay, the dwell down
+	SimMood.beat(S, 0); SimMood.beat(S, 1)
+	run.call(600, []); snap.call()                           # act 3: the floor holds the mood
+	a.stance = 1.0
+	b.stance = 3.0
+	run.call(200, []); snap.call()                           # both guarded
+	S.world.casualties += 50.0
+	for k in range(5):
+		run.call(1, []); snap.call()                         # the casualty cap per tick
+	for e in [mk.call("parry", {"actor": 0.0}), mk.call("clash_draw", {"actor": 1.0}), mk.call("decisive", {"kind": "beam", "winner": 1.0}),
+			mk.call("region_broken", {"actor": 1.0}), mk.call("building_hit", {"actor": 1.0, "n": 2}), mk.call("finisher_start", {"actor": 0.0})]:
+		run.call(1, [e]); snap.call()
+	for f in S.fighters:
+		f.style = SimMood.newStyle()
+	var atk := [mk.call("attack", {"actor": 1.0, "target": 0.0, "kind": "light", "defStance": "AGGRESSIVE"}),
+		mk.call("attack", {"actor": 1.0, "target": 0.0, "kind": "heavy", "defStance": "CHARGING"}),
+		mk.call("attack", {"actor": 1.0, "target": 0.0, "kind": "sig", "defStance": "DEFENSIVE"})]
+	for t in range(9000):                                     # a holds DEFENSIVE then AGGRESSIVE; b cycles stances and attacks
+		a.stance = 1.0 if t < 5400 else 0.0
+		b.stance = float((t / 600) % 4) if t < 6000 else 2.0
+		var ev: Array = [atk[(t / 90) % 3]] if t % 90 == 0 else []
+		run.call(1, ev)
+		if t % 300 == 299:
+			snap.call()
+	for t in range(3600):                                     # b fires mostly signatures
+		var ev2: Array = [atk[2 if t % 180 != 0 else 0]] if t % 60 == 0 else []
+		run.call(1, ev2)
+	snap.call()
 	SimCore.dispose(S)
 	return h.hex()
 

@@ -1,61 +1,183 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/fight-style",
-  "title": "fight.style/1 (draft, from docs/narrative/style.draft.json)",
-  "description": "data/fight/style.json: how a fighter's play is labelled (turtle, rusher, runner, charger, sniper, mixer) from a 60 s window of counters, with hysteresis. DRAFT: taken from Narrative's draft before the data exists; Simulation's M1 commit tightens it, and Game Design owns the final numbers. Percentages are integers compared by cross-multiplication. Version field: schema. Policy: closed except keys starting with an underscore; the mixer label has its own field set. Cross-references (the priority list names every label, leave is below enter, holds fit the window, measure names are known counters) are checked by tools/lib/xref.js.",
+  "title": "fight.style/1 (M1 final shape, docs/narrative/style.draft.json)",
+  "description": "data/fight/style.json: how a fighter's play is labelled (turtle, rusher, runner, charger, sniper, mixer) from a 60 s window of counters, with hysteresis. Narrative's draft, with the mixer's leaveMaxStancePct and leaveHoldS added and each measure restricted to the five expressions the component evaluates. Percentages are integers compared by cross-multiplication. Version field: schema. Policy: closed except keys starting with an underscore; the mixer label has its own field set. Cross-references (the priority list names every label, leave is below enter, holds fit the window, measure names are known counters) are checked by tools/lib/xref-fight.js.",
   "type": "object",
-  "required": ["schema", "windowS", "evalHz", "minWindowFillS", "priority", "shift", "labels"],
+  "required": [
+    "schema",
+    "windowS",
+    "evalHz",
+    "minWindowFillS",
+    "priority",
+    "shift",
+    "labels"
+  ],
   "properties": {
-    "schema": { "const": "fight.style/1" },
-    "windowS": { "type": "integer", "minimum": 1 },
-    "evalHz": { "type": "integer", "minimum": 1 },
-    "minWindowFillS": { "type": "integer", "minimum": 0 },
-    "priority": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z]+$" } },
+    "schema": {
+      "const": "fight.style/1"
+    },
+    "windowS": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "evalHz": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "minWindowFillS": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "priority": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+$"
+      }
+    },
     "shift": {
       "type": "object",
-      "required": ["minGapS", "refractoryAfterLeaveS", "startUnlabelled"],
+      "required": [
+        "minGapS",
+        "refractoryAfterLeaveS",
+        "startUnlabelled"
+      ],
       "properties": {
-        "minGapS": { "type": "integer", "minimum": 0 },
-        "refractoryAfterLeaveS": { "type": "integer", "minimum": 0 },
-        "startUnlabelled": { "type": "boolean" }
+        "minGapS": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refractoryAfterLeaveS": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "startUnlabelled": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "labels": {
       "type": "object",
       "minProperties": 1,
-      "propertyNames": { "pattern": "^(_.*|[a-z]+)$" },
-      "additionalProperties": { "$ref": "#/$defs/label" },
-      "patternProperties": { "^_": true }
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z]+)$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/label"
+      },
+      "patternProperties": {
+        "^_": true
+      }
     },
-    "qaBands": { "type": "object" }
+    "qaBands": {
+      "type": "object"
+    }
   },
   "additionalProperties": false,
-  "patternProperties": { "^_": true },
+  "patternProperties": {
+    "^_": true
+  },
   "$defs": {
     "label": {
       "type": "object",
       "properties": {
-        "measure": { "type": "string", "minLength": 1 },
-        "enterPct": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "enterHoldS": { "type": "integer", "minimum": 0 },
-        "leavePct": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "leaveHoldS": { "type": "integer", "minimum": 0 },
-        "minAttacksInWindow": { "type": "integer", "minimum": 0 },
-        "definition": { "type": "string" },
-        "maxStancePct": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "minStancesUsed": { "type": "integer", "minimum": 1 },
-        "stanceUsedPct": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "maxAttackKindPct": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "leaveWhen": { "type": "string" }
+        "measure": {
+          "enum": [
+            "stance1 / stanceTotal",
+            "stance0 / stanceTotal",
+            "(stance2 + stance3) / stanceTotal",
+            "charge / stanceTotal",
+            "sig / (light + heavy + sig)"
+          ]
+        },
+        "enterPct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "enterHoldS": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "leavePct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "leaveHoldS": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minAttacksInWindow": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "definition": {
+          "type": "string"
+        },
+        "maxStancePct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "minStancesUsed": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "stanceUsedPct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "maxAttackKindPct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "leaveWhen": {
+          "type": "string"
+        },
+        "leaveMaxStancePct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
       },
       "oneOf": [
-        { "required": ["measure", "enterPct", "enterHoldS", "leavePct", "leaveHoldS"] },
-        { "required": ["maxStancePct", "minStancesUsed", "stanceUsedPct", "maxAttackKindPct", "minAttacksInWindow", "enterHoldS", "leaveWhen"] }
+        {
+          "required": [
+            "measure",
+            "enterPct",
+            "enterHoldS",
+            "leavePct",
+            "leaveHoldS"
+          ]
+        },
+        {
+          "required": [
+            "maxStancePct",
+            "minStancesUsed",
+            "stanceUsedPct",
+            "maxAttackKindPct",
+            "minAttacksInWindow",
+            "enterHoldS",
+            "leaveMaxStancePct",
+            "leaveHoldS",
+            "leaveWhen"
+          ]
+        }
       ],
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     }
   }
 }

@@ -252,14 +252,22 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
 
   // ---- fight mood ----
   const mood = get(MOOD);
-  if (isObj(mood) && isObj(mood.bands)) {
-    const b = mood.bands;
-    if (Number.isInteger(b.calmBelow) && Number.isInteger(b.tenseAt) && b.calmBelow > b.tenseAt) err(MOOD, '/bands/calmBelow', 'mood-bands', `calmBelow ${b.calmBelow} must not exceed tenseAt ${b.tenseAt} (Tense falls back below the level it rose at)`);
-    if (Number.isInteger(b.tenseBelow) && Number.isInteger(b.frenziedAt) && b.tenseBelow > b.frenziedAt) err(MOOD, '/bands/tenseBelow', 'mood-bands', `tenseBelow ${b.tenseBelow} must not exceed frenziedAt ${b.frenziedAt}`);
-    if (Number.isInteger(b.tenseAt) && Number.isInteger(b.frenziedAt) && b.tenseAt >= b.frenziedAt) err(MOOD, '/bands/frenziedAt', 'mood-bands', `frenziedAt ${b.frenziedAt} must be above tenseAt ${b.tenseAt}`);
-    if (Number.isInteger(b.calmBelow) && Number.isInteger(b.tenseBelow) && b.calmBelow >= b.tenseBelow) err(MOOD, '/bands/tenseBelow', 'mood-bands', `tenseBelow ${b.tenseBelow} must be above calmBelow ${b.calmBelow}`);
+  if (isObj(mood)) {
+    const bd = isObj(mood.bands) ? mood.bands : {};
+    if (Number.isInteger(bd.tense) && Number.isInteger(bd.frenzied) && bd.tense >= bd.frenzied) err(MOOD, '/bands/frenzied', 'mood-bands', 'frenzied ' + bd.frenzied + ' must be above tense ' + bd.tense);
+    if (Number.isInteger(mood.range)) {
+      for (const k of ['tense', 'frenzied']) if (Number.isInteger(bd[k]) && bd[k] > mood.range) err(MOOD, '/bands/' + k, 'mood-bands', k + ' ' + bd[k] + ' is above the range ' + mood.range);
+    }
+    if (Array.isArray(mood.actFloors)) {
+      if (isObj(mood.act) && Number.isInteger(mood.act.max) && mood.actFloors.length !== mood.act.max) err(MOOD, '/actFloors', 'mood-acts', 'actFloors has ' + mood.actFloors.length + ' entries, but act.max is ' + mood.act.max + ' (one floor per act)');
+      mood.actFloors.forEach((v, i) => {
+        if (i > 0 && Number.isInteger(v) && Number.isInteger(mood.actFloors[i - 1]) && v <= mood.actFloors[i - 1]) err(MOOD, '/actFloors/' + i, 'mood-acts', 'act floor ' + v + ' must be above the previous ' + mood.actFloors[i - 1]);
+        if (Number.isInteger(v) && Number.isInteger(mood.range) && v > mood.range) err(MOOD, '/actFloors/' + i, 'mood-acts', 'act floor ' + v + ' is above the range ' + mood.range);
+      });
+      if (Number.isInteger(mood.actFloors[0]) && mood.actFloors[0] !== 0) err(MOOD, '/actFloors/0', 'mood-acts', 'the first act starts at 0');
+    }
+    if (isObj(mood.aggression) && Number.isInteger(mood.aggression.base) && Number.isInteger(mood.aggression.max) && mood.aggression.max < mood.aggression.base) err(MOOD, '/aggression/max', 'mood-aggression', 'max ' + mood.aggression.max + ' is below base ' + mood.aggression.base);
   }
-
   // ---- fight style ----
   const style = get(STYLE);
   if (isObj(style) && isObj(style.labels)) {

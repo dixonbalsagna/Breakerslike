@@ -65,7 +65,7 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
   - Rally mends the core only, and a broken limb stays broken.
   - `penalties.armsBrokenLightMul` 1.15 and `legsBrokenGuardScale` 0.8 are the post-break modifiers (in `damage.gd`).
   - The head spills and never breaks, so its broken penalties (daze, −0.08 defence) are dormant.
-- `act1Damping`: 0.85, the wear multiplier while the act index is 1. Until M1 owns the act, it is `SimWounds.act(S)` = 1 + `S.game.actBeats`. That counts every region break, plus each core's first time at battered (pitch A: acts also advance when a core reaches battered), both fighters, hashed.
+- `act1Damping`: 0.85, the wear multiplier while the act index is 1. Until M1 owns the act, it is `SimMood.act(S)` = 1 + `S.mood.beats` (M1 owns the act; `S.game.actBeats` is gone). That counts every region break, plus each core's first time at battered (pitch A: acts also advance when a core reaches battered), both fighters, hashed.
 - `overtime`: `startTicks` 28800, `perMin` 0.25, `cap` 3.0, meaning k × min(3, 1 + 0.25 × minutes past 8:00). That is candidate A. Candidate B is 30600 and 0.40. QA switches by editing both fighters' files.
 - `fade`: `out` 25, `breath` 100, `breathAfterTicks` 240, `hidden` 300 and `hiddenFloor` 354000.
 - `focusWear`: 30.

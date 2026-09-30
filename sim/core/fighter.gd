@@ -143,6 +143,8 @@ static func _buildingHits(S: SimState, f, ox: float) -> bool:
 			if f.y < gy + WorldStructures.curH(b) and f.y > gy - 10.0:
 				var sp: float = SimDetMath.hypot(f.vx / f.launchT, f.vy)
 				var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
+				f.flightHits += 1
+				SimFx.buildingHit(S, f, b.x, f.flightHits)   # M1: a mood input (a launch through a building; 2 or more a chain)
 				WorldStructures.damageBuilding(S, b, sp * (0.55 + 0.25 * by.tier), by)
 				SimDamage.hurt(S, f, sp * 0.006, by)
 				SimFx.debris(S, f.x, f.y + 20.0, 6, "#77808f", 500.0)
@@ -177,6 +179,8 @@ static func stepRush(S: SimState, f, dt: float) -> void:
 
 static func stepFighter(S: SimState, f, dt: float) -> void:
 	var o = SimRoster.opp(S, f)
+	if f.state != "launched":
+		f.flightHits = 0
 	var i: SimIntent = f.input
 	f.power = SimMathx.jmin(100.0, f.power + f.ld.fill * dt)
 	var nt: float = 1.0

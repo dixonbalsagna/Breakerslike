@@ -1164,70 +1164,6 @@
       }
     },
     {
-      "id": "mood-decay",
-      "schema": "fight-mood.schema.json",
-      "mutate": [
-        {
-          "file": "data/fight/mood.json",
-          "set": {
-            "/decayPermille": 1500
-          }
-        }
-      ],
-      "expect": {
-        "rule": "maximum",
-        "pointer": "/decayPermille"
-      }
-    },
-    {
-      "id": "mood-needs-bands",
-      "schema": "fight-mood.schema.json",
-      "mutate": [
-        {
-          "file": "data/fight/mood.json",
-          "del": [
-            "/bands"
-          ]
-        }
-      ],
-      "expect": {
-        "rule": "required",
-        "pointer": ""
-      }
-    },
-    {
-      "id": "mood-fractional-impulse",
-      "schema": "fight-mood.schema.json",
-      "mutate": [
-        {
-          "file": "data/fight/mood.json",
-          "set": {
-            "/impulses/strike": 1500.5
-          }
-        }
-      ],
-      "expect": {
-        "rule": "type",
-        "pointer": "/impulses/strike"
-      }
-    },
-    {
-      "id": "mood-band-order",
-      "schema": "fight-mood.schema.json",
-      "mutate": [
-        {
-          "file": "data/fight/mood.json",
-          "set": {
-            "/bands/frenziedAt": 20
-          }
-        }
-      ],
-      "expect": {
-        "rule": "xref:mood-bands",
-        "pointer": "/bands/frenziedAt"
-      }
-    },
-    {
       "id": "style-label-priority",
       "schema": "fight-style.schema.json",
       "mutate": [
@@ -3372,6 +3308,198 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "mood-needs-bands",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "del": [
+            "/bands"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "mood-fractional-impulse",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/impulses/strike": 90.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/impulses/strike"
+      }
+    },
+    {
+      "id": "mood-unknown-impulse",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/impulses/sneeze": 10
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/impulses/sneeze"
+      }
+    },
+    {
+      "id": "mood-crowd-state",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/crowd/1": "panicking"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/crowd/1"
+      }
+    },
+    {
+      "id": "mood-band-order",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/bands/frenzied": 1000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:mood-bands",
+        "pointer": "/bands/frenzied"
+      }
+    },
+    {
+      "id": "mood-band-beyond-range",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/bands/frenzied": 9000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:mood-bands",
+        "pointer": "/bands/frenzied"
+      }
+    },
+    {
+      "id": "mood-act-floor-count",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/act/max": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:mood-acts",
+        "pointer": "/actFloors"
+      }
+    },
+    {
+      "id": "mood-act-floors-increase",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/actFloors/2": 500
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:mood-acts",
+        "pointer": "/actFloors/2"
+      }
+    },
+    {
+      "id": "mood-aggression-cap",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/aggression/max": 900
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:mood-aggression",
+        "pointer": "/aggression/max"
+      }
+    },
+    {
+      "id": "style-measure-enum",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/labels/turtle/measure": "stance1 / 2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/labels/turtle/measure"
+      }
+    },
+    {
+      "id": "style-mixer-leave-keys",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "del": [
+            "/labels/mixer/leaveHoldS"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/labels/mixer"
+      }
+    },
+    {
+      "id": "style-mixer-leave-range",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/labels/mixer/leaveMaxStancePct": 150
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/labels/mixer/leaveMaxStancePct"
+      }
     }
   ],
   "text": [

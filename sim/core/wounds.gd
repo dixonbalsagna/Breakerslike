@@ -170,11 +170,11 @@ static func updateStages(S: SimState, f) -> void:
 			f.stage[r] = st
 			SimFx.regionStage(S, f, REGIONS[r], st)
 			if st == 3:
-				S.game.actBeats += 1
+				SimMood.beat(S, 0)
 				SimFx.regionBroken(S, f, REGIONS[r])
 			if r == CORE and st >= 2 and not f.coreMarked:
 				f.coreMarked = true
-				S.game.actBeats += 1
+				SimMood.beat(S, 1)
 	var brink: bool = false
 	for r in range(4):
 		if f.wd.brinkRegion[r] and f.stage[r] == 3:
@@ -297,10 +297,10 @@ static func rally(S: SimState, f, kind: String) -> bool:
 	return true
 
 
-## The act index (spec-wounds.md §9) until M1 owns it: 1 + act beats so far (region breaks and each core's first
-## battered, both fighters; forms come with F1), at most 4. It never goes down: a Rally mends a region but not the act.
+## The act index (spec-wounds.md §9): SimMood owns it (M1), from the beats reported above. It never goes down: a Rally
+## mends a region but not the act.
 static func act(S: SimState) -> int:
-	return mini(4, 1 + S.game.actBeats)
+	return SimMood.act(S)
 
 
 ## The director's hooks. f survived a finisher contest (Second Wind).

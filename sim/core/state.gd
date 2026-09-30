@@ -29,6 +29,7 @@ var waterTick: float = 0.0            # unfrozen ticks since the match started; 
 var buildings: Array = []
 var trees: Array = []
 var beams: Array = []
+var mood := MoodState.new()           # M1 (sim/core/mood.gd): the fight's mood, the act and the outputs
 var out := Out.new()
 
 
@@ -38,8 +39,45 @@ class Game:
 	var ts: float = 1.0
 	var clash = null         # Clash or null
 	var seed: float = 1.0
-	var actBeats: int = 0    # act beats so far, both fighters: region breaks and each core's first battered (act = 1 + this, until M1)
 	var timeCap: bool = false  # the brink chapter's override: the 11:00 time-cap event sets it, and every decisive exchange is a finisher
+
+
+## M1: the fight's mood (sim/core/mood.gd). Integers only; the unit is 1/60 of a mood point.
+class MoodState:
+	var t: int = 0            # non-frozen ticks the component has run
+	var sec: int = 0          # its seconds (the 1 Hz style steps)
+	var v: int = 0            # the mood, 0 to range
+	var band: int = 0         # 0 calm, 1 tense, 2 frenzied
+	var cand: int = 0         # the band the mood is in, while it differs from band ...
+	var candT: int = 0        # ... and the ticks it has stayed there (the dwell)
+	var act: int = 1          # the act announced so far (act_change); SimMood.act() is the live value
+	var beats: int = 0        # act beats: region breaks and each core's first battered, both fighters
+	var forms: int = 0        # transformations, both fighters (F1)
+	var cause: int = 0        # the last beat's cause: 0 break, 1 core, 2 form
+	var aggression: int = 1000  # output, permille: the director's scale (Encounter's Q4)
+	var crowd: int = 0        # output: 0 excited, 1 nervous, 2 fleeing
+	var casGiven: int = 0     # casualty impulse given so far, in units
+	var lastCombo: int = 0    # the running exchange's chain count last tick
+
+
+## M1: one fighter's play style (sim/core/mood.gd): a 60 s window of one-second buckets of 11 counters, match totals and
+## the label with its holds.
+class StyleState:
+	var cur: Array = []       # this second's counters
+	var buckets: Array = []   # 60 seconds x 11, a ring
+	var bi: int = 0
+	var filled: int = 0
+	var win: Array = []       # the window's sums
+	var total: Array = []     # match-long sums
+	var label: int = -1       # the current label (SimMood.LABELS index), -1 none
+	var leaveT: int = 0       # seconds the current label's leave condition has held
+	var enterT: Array = []    # per label: seconds its enter condition has held
+	var leftAt: Array = []    # per label: the second it last ended
+	var shiftAt: int = 0      # the second the current label began (entry or shift): a shift waits minGapS from it
+	var runKind: int = -1     # the current run of one attack kind ...
+	var runLen: int = 0
+	var runMax: int = 0       # ... and the match's longest
+	var sigLanded: int = 0    # signatures that landed (match-long)
 
 
 class Clash:
@@ -285,6 +323,8 @@ class Fighter:
 	var brinkSetups: int = 0         # the brink chapter: set-up wins the rival has against this fighter while it is on the brink
 	var brinkOpen: bool = false      # ... it is open: the rival's next decisive win, in a later exchange, is the finisher
 	var brinkEx: int = -1            # ... the exchange index (ex.n) of the last set-up win: a set-up and a finisher never share one
+	var flightHits: int = 0          # M1: buildings hit in the current launched flight (building_hit's n)
+	var style = null                 # M1: StyleState (sim/core/mood.gd)
 	var wd = null                    # D1a: the fighter's FighterData.WoundsDef (data; covered by the data hash, not hashed here)
 	var md = null                    # D1b: its FighterData.MetersDef (the same)
 	var ld = null                    # D1b: its FighterData.LadderDef (the same)

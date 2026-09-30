@@ -91,11 +91,13 @@ static func play(rp: Dictionary) -> Dictionary:
 	return out
 
 
-## The data a replay depends on: Combat's data (DirData) and the roster (FighterData), one hash.
+## The data a replay depends on: Combat's data (DirData), the roster (FighterData) and the fight's mood and style data
+## (SimMood, M1), one hash.
 static func dataHash() -> String:
 	var h := SimHash.Hasher.new()
 	h.text(DirData.dataHash())
 	h.text(FighterData.dataHash())
+	h.text(SimMood.dataHash())
 	return h.hex()
 
 

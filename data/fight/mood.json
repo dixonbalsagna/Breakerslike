@@ -1,0 +1,63 @@
+{
+  "schema": "fight.mood/1",
+  "_about": "M1: the fight's mood and the invisible acts (docs/architecture/mood-style.md section 4; Game Design's numbers, spec-wounds.md section 9). Loaded by sim/core/mood.gd. The unit is 1/60 of a mood point, so a rate of one point per second is one unit per tick and every number is an integer. Impulses are added when their event happens; one whose actor holds AGGRESSIVE is multiplied by aggressiveMul. Casualties: perPerson x popRef / pop0 per person, at most capPerTick in one tick. Rates per tick: + bothAggressive while both fighters hold AGGRESSIVE; - decay toward the act's floor; - bothGuarded more while both hold DEFENSIVE or ESCAPE. Bands: calm below tense, tense up to frenzied, frenzied above; a band changes after the mood has stayed in the new one for dwellTicks. Aggression (permille) = base + perAct x (act - 1) + bandBonus[band], at most max: one match-wide output for the director (Encounter's Q4). crowd names the output per band.",
+  "unitPerPoint": 60,
+  "range": 6000,
+  "impulses": {
+    "strike": 90,
+    "heavyStrike": 150,
+    "chainLink": 180,
+    "parry": 240,
+    "clash": 480,
+    "beamLands": 360,
+    "regionBroken": 720,
+    "buildingLaunch": 360,
+    "buildingChain": 600,
+    "form": 600,
+    "finisherStart": 900,
+    "taunt": 180
+  },
+  "aggressiveMul": {
+    "num": 3,
+    "den": 2
+  },
+  "casualty": {
+    "perPerson": 30,
+    "capPerTick": 480,
+    "popRef": 425
+  },
+  "rates": {
+    "bothAggressive": 1,
+    "decay": 6,
+    "bothGuarded": 4
+  },
+  "actFloors": [
+    0,
+    600,
+    1200,
+    1800
+  ],
+  "bands": {
+    "tense": 1800,
+    "frenzied": 4200,
+    "dwellTicks": 180
+  },
+  "act": {
+    "max": 4
+  },
+  "aggression": {
+    "base": 1000,
+    "perAct": 100,
+    "bandBonus": [
+      0,
+      250,
+      500
+    ],
+    "max": 1800
+  },
+  "crowd": [
+    "excited",
+    "nervous",
+    "fleeing"
+  ]
+}

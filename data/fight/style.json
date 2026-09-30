@@ -1,6 +1,6 @@
 {
   "schema": "fight.style/1",
-  "_about": "Validator fixture, not game data. Copy of Narrative draft of data/fight/style.json (Simulation's mood-style.md section 5). Percentages are integers, compared by cross-multiplication (100 * part > pct * whole). Times are seconds at the 1 Hz evaluation. Game Design owns the final numbers; Tools owns the schema.",
+  "_about": "M1: Narrative's player-style labels (docs/narrative/style-thresholds.md, signed off by Game Design), loaded by sim/core/mood.gd. Percentages are integers, compared by cross-multiplication (100 x part > pct x whole) on the rolling window. Times are seconds at the 1 Hz evaluation. The measure strings are closed keys the code implements, not formulas it parses. An attack is an exchange the fighter's director started, counted by its weight at the start. The mixer's leaveMaxStancePct and leaveHoldS make its leaveWhen text a number.",
   "windowS": 60,
   "evalHz": 1,
   "minWindowFillS": 30,

@@ -114,7 +114,10 @@ func run_match(seed: int, arm: String) -> Dictionary:
 	var rec := {"seed": seed, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0, "launches": {}, "melee": {},
 		"beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0, "bad": "", "koAt": -1.0, "winner": -1,
 		"breaks": 0, "firstBrink": -1.0, "firstBroken": "", "wearIn": [0.0, 0.0, 0.0, 0.0],
-		"rallies": 0, "rallyTwice": 0, "rallyKinds": {}, "batteredIn": 0.0, "breathWear": 0.0, "limbBreaks": 0, "limbRegions": {}, "lastBrink": [-1.0, -1.0], "firstBrinkF": [-1.0, -1.0], "postBrink": -1.0, "postFirstBrink": -1.0, "contests": 0, "survived": 0}
+		"rallies": 0, "rallyTwice": 0, "rallyKinds": {}, "batteredIn": 0.0, "breathWear": 0.0, "limbBreaks": 0, "limbRegions": {}, "lastBrink": [-1.0, -1.0], "firstBrinkF": [-1.0, -1.0], "postBrink": -1.0, "postFirstBrink": -1.0, "contests": 0, "survived": 0,
+		"bandTicks": [0, 0, 0], "actAt": [-1.0, -1.0, -1.0], "labelSec": {}, "labelEvents": 0, "heldMin": -1, "labelsSeen": {}}
+	var lastT: int = S.mood.t
+	var labelStart: Array = [-1, -1]
 	var rallied := {}
 	var prevWear: Array = [fs[0].wear.duplicate(), fs[1].wear.duplicate()]
 	var prev: Array = [fs[0].x, fs[1].x]
@@ -133,6 +136,18 @@ func run_match(seed: int, arm: String) -> Dictionary:
 					rec.firstBrinkF[int(e.actor)] = S.T
 				if rec.firstBrink < 0.0:
 					rec.firstBrink = S.T
+			elif e.type == "act_change":
+				if int(e.n) >= 2 and rec.actAt[int(e.n) - 2] < 0.0:
+					rec.actAt[int(e.n) - 2] = S.T
+			elif e.type == "style_label":
+				rec.labelEvents += 1
+				var who: int = int(e.actor)
+				if e.text != "" and labelStart[who] >= 0:
+					var held: int = S.mood.sec - labelStart[who]
+					rec.heldMin = held if rec.heldMin < 0 else mini(rec.heldMin, held)
+				labelStart[who] = S.mood.sec if e.kind != "" else -1
+				if e.kind != "":
+					rec.labelsSeen[e.kind] = true
 			elif e.type == "finisher_contest":
 				rec.contests += 1
 				rec.survived += 1 if e.survived else 0
@@ -147,6 +162,13 @@ func run_match(seed: int, arm: String) -> Dictionary:
 					rec.rallyTwice += 1
 				rallied[key] = true
 		S.out.fx.clear()
+		if S.mood.t != lastT:
+			lastT = S.mood.t
+			rec.bandTicks[S.mood.band] += 1
+			if S.mood.t % 60 == 0:
+				for f in fs:
+					var ln: String = SimMood.LABELS[f.style.label] if f.style.label >= 0 else "none"
+					rec.labelSec[ln] = rec.labelSec.get(ln, 0) + 1
 		for i in range(2):
 			for ri in range(4):
 				var dw: int = fs[i].wear[ri] - prevWear[i][ri]
@@ -275,6 +297,12 @@ func aggregate(recs: Array) -> Dictionary:
 	var rallyTwice: int = 0
 	var limbBreaks: Array = []
 	var postBrink: Array = []
+	var bandTicks: Array = [0, 0, 0]
+	var actAt: Array = [[], [], []]
+	var labelSec := {}
+	var labelEvents: Array = []
+	var heldMins: Array = []
+	var labelsSeen := {}
 	var postFirstBrink: Array = []
 	var contests: int = 0
 	var survived: int = 0
@@ -302,6 +330,17 @@ func aggregate(recs: Array) -> Dictionary:
 			postBrink.append(float(r.postBrink))
 			postFirstBrink.append(float(r.postFirstBrink))
 		contests += int(r.contests)
+		for bi in range(3):
+			bandTicks[bi] += int(r.bandTicks[bi])
+			if float(r.actAt[bi]) >= 0.0:
+				actAt[bi].append(float(r.actAt[bi]))
+		for k in r.labelSec:
+			labelSec[k] = labelSec.get(k, 0) + int(r.labelSec[k])
+		labelEvents.append(float(r.labelEvents) / 2.0)
+		if int(r.heldMin) >= 0:
+			heldMins.append(float(r.heldMin))
+		for k in r.labelsSeen:
+			labelsSeen[k] = true
 		survived += int(r.survived)
 		withLimb += 1 if int(r.limbBreaks) > 0 else 0
 		for k in r.limbRegions:
@@ -357,6 +396,9 @@ func aggregate(recs: Array) -> Dictionary:
 		"wearShare": {"head": wearIn[0] / wt if wt > 0.0 else 0.0, "core": wearIn[1] / wt if wt > 0.0 else 0.0, "arms": wearIn[2] / wt if wt > 0.0 else 0.0, "legs": wearIn[3] / wt if wt > 0.0 else 0.0},
 		"ralliesPerMatch": _dist(rallies), "rallyKinds": rallyKinds, "sameRegionRalliedTwice": rallyTwice,
 		"limbBreaksPerMatch": _dist(limbBreaks), "limbRegions": limbRegions, "matchesWithLimbBreak": withLimb,
+		"bandShare": [float(bandTicks[0]) / maxf(1.0, float(bandTicks[0] + bandTicks[1] + bandTicks[2])), float(bandTicks[1]) / maxf(1.0, float(bandTicks[0] + bandTicks[1] + bandTicks[2])), float(bandTicks[2]) / maxf(1.0, float(bandTicks[0] + bandTicks[1] + bandTicks[2]))],
+		"actAt": [_dist(actAt[0]) if actAt[0].size() else {}, _dist(actAt[1]) if actAt[1].size() else {}, _dist(actAt[2]) if actAt[2].size() else {}], "actReached": [actAt[0].size(), actAt[1].size(), actAt[2].size()],
+		"labelSec": labelSec, "labelEventsPerFighter": _dist(labelEvents), "heldMin": _dist(heldMins) if heldMins.size() else {}, "labelsSeen": labelsSeen.keys(),
 		"postBrinkToKO": _dist(postBrink) if postBrink.size() else {}, "firstBrinkToKO": _dist(postFirstBrink) if postFirstBrink.size() else {}, "contests": contests, "contestsSurvived": survived,
 		"batteredWearIn": batteredIn, "secondBreathWear": breathWear, "secondBreathShare": breathWear / batteredIn if batteredIn > 0.0 else 0.0}
 	return a
@@ -394,6 +436,19 @@ func report(a: Dictionary, n: int, base: int, arm: String) -> void:
 		("   first brink median %.0fs" % w.firstBrink.p50) if w.matchesWithBrink > 0 else "", _shares(w.firstBroken), ws.head * 100.0, ws.core * 100.0, ws.arms * 100.0, ws.legs * 100.0])
 	print("rally: %.2f/match (max %d)   %s   same region rallied twice %d   second breath recovered %.1f%% of battered wear taken" % [w.ralliesPerMatch.mean, int(w.ralliesPerMatch.max),
 		_shares(w.rallyKinds) if w.rallyKinds.size() else "none", w.sameRegionRalliedTwice, w.secondBreathShare * 100.0])
+	var bs: Array = w.bandShare
+	var acts: PackedStringArray = []
+	for ai in range(3):
+		acts.append("act %d %s" % [ai + 2, ("median %.0fs (%d matches)" % [w.actAt[ai].p50, w.actReached[ai]]) if w.actReached[ai] > 0 else "never"])
+	print("mood: calm %.1f%%  tense %.1f%%  frenzied %.1f%%   %s" % [bs[0] * 100.0, bs[1] * 100.0, bs[2] * 100.0, "   ".join(acts)])
+	var lt: int = 0
+	for k in w.labelSec:
+		lt += int(w.labelSec[k])
+	var ls: PackedStringArray = []
+	for k in ["turtle", "rusher", "runner", "charger", "sniper", "mixer", "none"]:
+		ls.append("%s %.1f%%" % [k, 100.0 * float(w.labelSec.get(k, 0)) / maxf(1.0, float(lt))])
+	print("style: %s   label events per fighter per match median %.1f   shortest label held min %s   labels reached %s" % ["  ".join(ls), w.labelEventsPerFighter.p50,
+		("%.0fs (median of matches %.0fs)" % [w.heldMin.min, w.heldMin.p50]) if w.heldMin.size() else "n/a", str(w.labelsSeen)])
 	if w.postBrinkToKO.size():
 		print("finish: the loser's first brink to KO median %.0fs p10 %.0f p90 %.0f   last brink to KO median %.0fs p90 %.0f   finisher contests %d, survived %.1f%%" % [w.firstBrinkToKO.p50, w.firstBrinkToKO.p10, w.firstBrinkToKO.p90, w.postBrinkToKO.p50, w.postBrinkToKO.p90, w.contests,
 			100.0 * w.contestsSurvived / maxf(1.0, float(w.contests))])

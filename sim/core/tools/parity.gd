@@ -39,6 +39,8 @@ func _init() -> void:
 	check("wounds (forced hits)", "" if SimGolden.woundsHash() == g.get("wounds", "") else "differs")
 	check("rally (forced)", "" if SimGolden.rallyHash() == g.get("rally", "") else "differs")
 	check("crippling (forced)", "" if SimGolden.crippleHash() == g.get("cripple", "") else "differs")
+	check("mood and style (forced)", "" if SimGolden.moodHash() == g.get("mood", "") else "differs")
+	check("fight data", _fightData(g))
 	check("roster data", _roster(g))
 	check("roster loader rejects bad data", _rosterRejects())
 	check("wired numbers change a match", _wiredNumbers())
@@ -323,6 +325,15 @@ func _rosterRejects() -> String:
 		return played
 	if FighterData.dataHash() != h0:
 		return "reloading data/fighters/ changed the hash"
+	return ""
+
+
+## M1: data/fight/ loads clean, and its canonical hash matches the goldens (a data edit shows here by name).
+func _fightData(g: Dictionary) -> String:
+	if not SimMood.errors().is_empty():
+		return "data/fight: " + "; ".join(SimMood.errors())
+	if SimMood.dataHash() != g.get("fightHash", ""):
+		return "the fight data hash differs (data/fight/ changed): %s vs golden %s; regenerate the goldens if the edit is meant" % [SimMood.dataHash(), g.get("fightHash", "")]
 	return ""
 
 

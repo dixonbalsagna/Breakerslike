@@ -60,7 +60,6 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.T = 0.0
 	S.game.ko = null
 	S.game.koT = 0.0
-	S.game.actBeats = 0
 	S.game.ts = 1.0
 	S.game.clash = null
 	S.dirS.ex = null
@@ -69,6 +68,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.lastLaunch = ""
 	S.dirS.lastLaunch2 = ""
 	S.dirS.exN = 0
+	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
 	S.out.feed.clear()
 	S.out.fx.clear()
 	S.tick = 0
@@ -99,6 +99,7 @@ static func step(S: SimState, inputs = null) -> bool:
 	DirExchange.dirUpdate(S, dt)
 	DirBeam.beamStep(S, dt)
 	WorldWater.step(S)
+	SimMood.tick(S)   # M1: reads this tick's events; writes only its own state and events
 	WorldCollateral.tick(S)
 	SimFx.tickMark(S, dt, false)
 	if S.game.clash != null:

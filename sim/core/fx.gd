@@ -198,6 +198,36 @@ static func decisive(S: SimState, winner, loser, why: String) -> void:
 	e.winner = float(S.fighters.find(winner)); e.loser = float(S.fighters.find(loser)); e.kind = why
 
 
+## M1: the mood's band changed (after its dwell): kind calm, tense or frenzied; amount the mood in points; n the act.
+static func moodBand(S: SimState, band: String, points: float, act: int) -> void:
+	var e := _ev(S, "mood_band")
+	e.kind = band; e.amount = points; e.n = act
+
+
+## M1: the act rose to n; kind is the cause (break, core or form).
+static func actChange(S: SimState, act: int, cause: String) -> void:
+	var e := _ev(S, "act_change")
+	e.n = act; e.kind = cause
+
+
+## M1: f's style label: kind the new label ("" when one ends with none to follow), text the previous one ("" if none).
+static func styleLabel(S: SimState, f, label: String, prev: String) -> void:
+	var e := _ev(S, "style_label")
+	e.actor = float(S.fighters.find(f)); e.kind = label; e.text = prev
+
+
+## M1: the crowd output changed: excited, nervous or fleeing.
+static func crowdState(S: SimState, crowd: String) -> void:
+	var e := _ev(S, "crowd_state")
+	e.kind = crowd
+
+
+## M1: a launched fighter hit a building at x; n is the count within this flight (2 or more: a chain).
+static func buildingHit(S: SimState, f, x: float, n: int) -> void:
+	var e := _ev(S, "building_hit")
+	e.actor = float(S.fighters.find(f)); e.x = x; e.n = n
+
+
 ## Pitch A: W broke L's limb (region) in a crippling moment.
 static func limbBreak(S: SimState, W, L, region: String) -> void:
 	var e := _ev(S, "limb_break")
