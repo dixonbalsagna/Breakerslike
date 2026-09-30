@@ -93,6 +93,7 @@ Skill balance is 2 out of 10: strategy far outweighs execution.
     3. The player's lever over parry and the struggle is stance plus a ki reserve (R5, the finisher row in `spec-wounds.md`). There is no new input.
     4. A funded, queued signature fires within **180 ticks** (3 s), overriding the stance's cadence if it must, at the next exchange boundary.
     5. The special and transform holds stay (stoke, Press, the fold trigger, Drop the Act, taking a filled transformation), and so does the Encore's contextual prompt.
+    6. Controls' Stage C (`docs/controls/stage-c-spec.md`), confirmed. An unfunded signature waits, showing "NEED 45 CHARGE", and expires after 600 ticks (10 s). There is no fallback to another weight. Re-pressing the current weight does nothing, but is still acknowledged.
 - **Where skill lives now:**
   - *reads:* hold the stance that beats the opponent's likely weight, and set the weight that beats the opponent's stance (heavy into DEFENSIVE, light from AGGRESSIVE into EVASIVE);
   - *spacing and position:* which biome, near people or away from them, line-of-sight blockers, the city's edge;
@@ -139,6 +140,9 @@ The director implements these rules through Encounter Systems. Combat authors th
   - *The drama stays.* The parry ring still shows as a tell, and the parry is still a visible counter beat.
   - The Controls anti-mash lockout (the previous amendment) is **moot** and withdrawn.
   - QA band unchanged: 5 to 15 parries per 100 melee exchanges.
+  - **The clean parry becomes a "perfect read"** (Encounter's Q4 plan, question 1). A parry is **clean** when the defender had held the parrying stance for 2 s or more when the attack started, and has 50 ki or more. A clean parry adds a riposte launch and +8 extra ki. It is decided by state, never by a press. QA band: 20 to 40% of parries are clean.
+  - **Heat and parries.** Heat on the attacker: Boiling gives +5 (a reckless attacker is easier to catch). Heat on the defender: a Protagonist at Simmering or Boiling gets −5 (he isn't guarding).
+  - **How "held" is measured** (R4, the clean parry, and question 4). The hold timer counts continuous time in the current stance, including time inside exchanges. It is read at the moment the attack starts, together with R8's snapshot. A stance change during an exchange doesn't touch the frozen snapshot, but it restarts the timer for later exchanges.
 - **R6. Chains follow the exchange's result.** No chain window opens after a parry (CC-001) or after GUARD HOLDS (CC-002).
 - **R7. A tier advantage always helps its owner.** Every roll moves in the direction of whoever is ahead on tier (fixes GD-B01).
 - **R8. Switching stance stays free and instant.** The template is fixed when the attack starts (`L410-421`), so a defender must predict, not react. Revisit if P2 playtests find stance-flicking tells.

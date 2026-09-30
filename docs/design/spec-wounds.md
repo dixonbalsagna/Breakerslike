@@ -22,7 +22,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | **Region choice** | Each atom lists the regions it may hit, with weights. The director multiplies each weight by (1 + wear/50), or (1 + wear/30) from S2 (§1b), which is "go for the wound", then draws with the seeded sim RNG. Attack kind sets the family: lights go to the head and arms, heavies to the core and legs, guard hits to the arms, and beams and impacts spread |
 | **Brink** | The core breaks, or any two of head, arms and legs break. The Cyborg is the exception (§3) |
 | **Decisive exchange** | One that ends with the loser launched, a heavy or beam clash won, or a GUARD BREAK. A launch counts however it lands: slam, knockback slide, water skip, brunt or chain (`docs/world/knockback-slide.md`). A **NONE** outcome (a shove with no launch after a winning template) is **not** decisive, unless the exchange also meets one of the other clauses. An attack that stops a fill (charging, stoking, Press) is a CHARGE INTERRUPT and launches, so it counts. Transformation cinematics themselves are never interrupted (§8) |
-| **Finisher** | When the opponent of a fighter on the brink wins a decisive exchange, their **fighter-specific finisher** replaces the normal ending. The fighter on the brink survives it on a contest roll: 30% base, −10 points for each Rally that fighter has used, and −10 points per minute past 8:00, with a floor of 0. **The last-ditch struggle is resolved by state** (questionnaire 4: no timing presses). It stays a visible beat: three pulses that reveal the outcome step by step, "holding" or "slipping". Survival is 15% base, plus a **stance read** against the finisher's telegraphed kind, where each fighter's finisher kind is shown in its wind-up: +15 for DEFENSIVE against a launch finisher, EVASIVE against a melee finisher, or AGGRESSIVE with 40 ki or more against a beam finisher (a counter-clash); +5 for any other stance. Then +5 at 50 ki or more, plus the fighter's own state: Simmering or Boiling for the Protagonist +10; Pride at 50 or more for the Anti-hero +10; any guard standing for the Empress +5; the hatch closed for the Cyborg +10. Then the tilts: −10 per Rally, and −10 per minute past 8:00. QA band: average survival 20 to 35% |
+| **Finisher** | When the opponent of a fighter on the brink wins a decisive exchange, their **fighter-specific finisher** replaces the normal ending. The fighter on the brink survives it on a contest roll: 30% base, −10 points for each Rally that fighter has used, and −10 points per minute past 8:00, with a floor of 0. **The last-ditch struggle is resolved by state** (questionnaire 4: no timing presses). It stays a visible beat: three pulses that reveal the outcome step by step, "holding" or "slipping". Survival is 15% base, plus a **stance read** against the finisher's telegraphed kind, where each fighter's finisher kind is shown in its wind-up: +15 for DEFENSIVE against a launch finisher, EVASIVE against a melee finisher, or AGGRESSIVE with 40 ki or more against a beam finisher (a counter-clash); +5 for any other stance. Then +5 at 50 ki or more, plus the fighter's own state: the Protagonist +5 at Simmering or +10 at Boiling; Pride at 50 or more for the Anti-hero +10; any guard standing for the Empress +5; the hatch closed for the Cyborg +10. Then the tilts: −10 per Rally, and −10 per minute past 8:00. QA band: average survival 20 to 35% |
 | **The end** | A KO happens only through a finisher. Stray damage never ends a match |
 | **Breaks are chapters** | A break is a 1 to 2 s set piece: a camera break shot, a bark, then a **break launch**. The break launch is long (at least 1,500 units horizontally) and chosen by the planner's distance and new-biome terms (`balance-targets.md` §10) |
 
@@ -168,7 +168,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
   **Rally and finishers.**
   - **No finisher can start while he is Boiling.** The bill lands first, which is the same rule the region-loan version used.
   - Heated and Simmering finishers are allowed.
-  - On the brink he may stoke. Boiling adds +10 points to his finisher-contest survival roll, and that stacks with the tilts in §2. It is a defiant gamble.
+  - On the brink he may stoke. Heat adds to his finisher-contest survival roll: +5 at Simmering, +10 at Boiling (the §1 Finisher row, the only place this is counted). It stacks with the tilts in §2. It is a defiant gamble.
   - **Second Wind** mends the core to battered if internal wear broke it, but leaves the internal wear at 89. It also sets heat to Heated with no internal wear for 5 s. His next track step is still free.
 
   **Readout** (the Protagonist's row above):
@@ -432,12 +432,29 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
 - The player reads acts through sound, camera and voice, never through a counter.
 
 **The fight's mood.** A director value from 0 to 100, which the player shapes only indirectly.
-- *What raises it* (with a moving average over about 10 s): strikes landed, clashes, breaks, launches through buildings, collateral, and taunts. AGGRESSIVE play raises it faster.
-- *What lowers it:* decay, and long DEFENSIVE or ESCAPE stretches.
+- *What raises it* (events add points, and the value is clamped from 0 to 100; Encounter's Q4 plan, question 3):
+  - a strike landed: +1.5, or +2.5 for a heavy;
+  - a chain link: +3;
+  - a parry: +4;
+  - a heavy or beam clash: +8;
+  - a region break: +12;
+  - a launch through a building: +6, or +10 for a chain;
+  - a transformation cinematic: +10;
+  - the start of a finisher: +15;
+  - a taunt or banter line: +3;
+  - casualties: +0.5 each, normalised, and at most +8 per event;
+  - both fighters in AGGRESSIVE: +1 per second.
+- *What lowers it:*
+  - a decay of −6 per second toward an **act floor** of 0, 10, 20 and 30 for acts 1 to 4, so later acts never fall all the way back to calm;
+  - an extra −4 per second while both fighters hold DEFENSIVE or ESCAPE.
 - *Three bands (working names):*
   - **Calm**, below 30: crowds watch from a distance, the director uses its normal cadence, and inner thoughts are about patience ("Only a little longer...").
   - **Tense**, 30 to 70: crowds retreat, the director blitzes more (+25% blitz chance), and the release-to-request gap moves to the short end (0.6 s).
   - **Frenzied**, above 70: crowds flee in panic, blitzes and teleport clashes are at their most frequent, and boasts and threats dominate the barks.
+- *Bands, hysteresis and aggression* (Simulation's M1 plan, `docs/architecture/mood-style.md`; the data belongs in their files, and these are the values):
+  - *Thresholds:* Calm below 30, Tense 30 to 70, Frenzied above 70. The mood must stay across a threshold for a **3 s dwell** before the band changes, with no further hysteresis.
+  - *Aggression,* in permille: **1000 + 100 × (act − 1) + band bonus**, where the band bonus is 0 for Calm, 250 for Tense and 500 for Frenzied. The maximum is 1,800, at act 4 and Frenzied. It scales the director's strike cadence and blitz chance.
+  - *Scope:* **one match-wide scalar**, because mood belongs to the whole fight. Each fighter's own difference comes from stance cadence (`stance-matrix.md` R9) and personality data, and multiplies with it.
 - *The players' styles feed the voice* (Orb): holding DEFENSIVE surfaces patience thoughts, and an opponent who turns EVASIVE under pressure prompts boasts. Narrative writes the lines, keyed to stance history and mood.
 - *QA bands:*
   - Frenzied at most 25% of match time;
