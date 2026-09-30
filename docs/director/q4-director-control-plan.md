@@ -27,7 +27,7 @@ Combat's variety pass (`docs/combat/variety-pass.md` §5, `data/combat/styles.js
 | 7 | **E, the tutorial rival and beat runner** | | Onboarding |
 
 Notes:
-- **The composition stream.** A keyed, stateless draw per exchange and slot (`procedural-moves.md` §10), so adding a style changes only the exchanges it could apply to. It needs an exchange index in hashed state if the sim has none (Simulation).
+- **The composition stream.** A keyed, stateless draw per exchange and slot (`procedural-moves.md` §10), so adding a style changes only the exchanges it could apply to. Simulation provides it in D1a, before Q4: `S.dirS.exN`, `ex.n` (set in `requestAttack`) and a stateless `SimRng.keyed(seed, key, n)`. Composition draws use `keyed(seed, "compose", ex.n)`, plus `ex.combo` for chain links, and never touch `S.rng`.
 - **Row 9 in every checkpoint.** Every new beat emits a `cue`, and the new cue names go in the fx hash map.
 
 ## Sub-slices (each is a checkpoint: goldens, feel probe, tempo, QA bands)
