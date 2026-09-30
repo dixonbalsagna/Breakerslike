@@ -4140,6 +4140,102 @@
         "rule": "xref:settle-row",
         "pointer": "/settlements/0/districts/0/landmarks/0/row"
       }
+    },
+    {
+      "id": "settle-shape-renamed",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/shapes/0": "tower"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/shapes/0"
+      }
+    },
+    {
+      "id": "settle-kind-shape-not-art",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/kinds/0/shape": "pagoda"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/settlements/0/districts/0/kinds/0/shape"
+      }
+    },
+    {
+      "id": "settle-look-old-village",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/1/look": "village"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/settlements/0/districts/1/look"
+      }
+    },
+    {
+      "id": "settle-look-unknown",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/1/districts/0/look": "slums"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/settlements/1/districts/0/look"
+      }
+    },
+    {
+      "id": "settle-version-required",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "del": [
+            "/schema"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "settle-version-value",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/schema": "biomes.settlements/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
     }
   ],
   "text": [

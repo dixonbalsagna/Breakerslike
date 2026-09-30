@@ -2,9 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/biomes-settlements",
   "title": "settlements (World, sim/world/settlements.gd)",
-  "description": "data/biomes/settlements.json: the settlements, their districts, building kinds and landmarks (World's districts data, loaded by sim/world/settlements.gd). Mirrors the loader's _validate: ranges are ascending and inside their limits, heights stay under 85 percent of the flight ceiling (272 building heights), shares sum to 1 (district shares per settlement, settlement population shares overall) within 0.001, and every shape, landmark key and row a district names exists (checked by tools/lib/xref-fight.js). Version field: the file has none yet, so `schema` is optional here (`biomes.settlements/1` when World adds it; then make it required). Policy: closed except keys starting with an underscore.",
+  "description": "data/biomes/settlements.json: the settlements, their districts, building kinds and landmarks (World's districts data, loaded by sim/world/settlements.gd). Mirrors the loader's _validate: ranges are ascending and inside their limits, heights stay under 85 percent of the flight ceiling (272 building heights), shares sum to 1 (district shares per settlement, settlement population shares overall) within 0.001, and every shape, landmark key and row a district names exists (checked by tools/lib/xref-fight.js). The shape list is Art's 20 (docs/art/district-looks.md: `tower` is renamed `shaft`) and a district's look is one of Art's 8; a new shape or look is a schema line in the same commit as the data. Version field: schema. Policy: closed except keys starting with an underscore.",
   "type": "object",
   "required": [
+    "schema",
     "pop0",
     "pop_height_exp",
     "shapes",
@@ -29,8 +30,28 @@
       "minItems": 1,
       "uniqueItems": true,
       "items": {
-        "type": "string",
-        "pattern": "^[a-z][a-z0-9_]*$"
+        "enum": [
+          "shaft",
+          "stepped",
+          "spire",
+          "slab",
+          "block",
+          "warehouse",
+          "chimney",
+          "house",
+          "shop",
+          "hall",
+          "shed",
+          "crane",
+          "lighthouse",
+          "chapel",
+          "crown",
+          "terrace",
+          "sawtooth",
+          "thatch",
+          "quay",
+          "mast"
+        ]
       }
     },
     "landmarks": {
@@ -51,8 +72,28 @@
             "pattern": "^[a-z][a-z0-9_]*$"
           },
           "shape": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9_]*$"
+            "enum": [
+              "shaft",
+              "stepped",
+              "spire",
+              "slab",
+              "block",
+              "warehouse",
+              "chimney",
+              "house",
+              "shop",
+              "hall",
+              "shed",
+              "crane",
+              "lighthouse",
+              "chapel",
+              "crown",
+              "terrace",
+              "sawtooth",
+              "thatch",
+              "quay",
+              "mast"
+            ]
           },
           "height_bh": {
             "type": "number",
@@ -193,8 +234,16 @@
           "pattern": "^[a-z][a-z0-9_]*$"
         },
         "look": {
-          "type": "string",
-          "pattern": "^[a-z][a-z0-9_]*$"
+          "enum": [
+            "harbour",
+            "village_harbour",
+            "village_workshop",
+            "village_hill",
+            "suburb",
+            "industrial",
+            "mid_rise",
+            "downtown"
+          ]
         },
         "share": {
           "type": "number",
@@ -229,8 +278,28 @@
                 ]
               },
               "shape": {
-                "type": "string",
-                "pattern": "^[a-z][a-z0-9_]*$"
+                "enum": [
+                  "shaft",
+                  "stepped",
+                  "spire",
+                  "slab",
+                  "block",
+                  "warehouse",
+                  "chimney",
+                  "house",
+                  "shop",
+                  "hall",
+                  "shed",
+                  "crane",
+                  "lighthouse",
+                  "chapel",
+                  "crown",
+                  "terrace",
+                  "sawtooth",
+                  "thatch",
+                  "quay",
+                  "mast"
+                ]
               },
               "weight": {
                 "type": "number",
