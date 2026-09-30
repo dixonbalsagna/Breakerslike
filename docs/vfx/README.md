@@ -73,3 +73,14 @@ All from the repo root, with Godot 4.7.2. Tools with pictures need a window; `--
 
 - **Arcs and wires over the terrain.** Cause: the crack shader widened each strip in world z at a fixed height, so on a mountain flank the edges hung in the air, and cracks reaching past the ground band (where the drawn ground is the far relief, not the sim's) floated above it. Fixed: widening is now in screen space from vertices that stay on the ground; cracks stop at 80% of the band's depth; and they fade out between 2,500 and 7,000 units behind the plane.
 - **Embers.** They fire only on `scorch` events, that is, a beam close to the ground, and only with `embers_enabled` (Ctrl+F6). They were 10 to 26 units long with 1 to 4 per event, so invisible next to ImpactFx's sparks. Now 30 to 80 units long, 2 to 8 per event, up to 12 a tick and 100 alive, in the heat ramp (glass flecks over a glass trench, spray over the sea). `mock_shots.gd --scenario=embers` shows all four variants.
+
+## B2 events, live (2026-09-30)
+
+The sim now emits `building_hit` (with `floor`-less summaries for small buildings), `floor_hit`, `floors_fall`, `chain_link` and `launch_depth` (`docs/architecture/fx-events.md`). The hub reads them as they are:
+
+- `building_hit` on a small building (under 5 floors): the whole-building burst at the hit point (`x`, `y`, unit velocity `ux`, `uy`; the real speed is `spd` times the launch's traversal factor), plus a hole decal if it stands. On a skyscraper the same tick's `floor_hit` draws the burst and the summary adds nothing.
+- `floor_hit` punch: the burst confined to the floors struck, a row of windows blowing out along the facade, rings; crack: a window shower; dent: a puff and chips. **No decal**: Rendering cuts the tunnel into the mesh from `fmask` (EP ruling). `floors_fall`: dust and glass and steel at each broken floor, top first over 0.4 s, then a ring at the base.
+- `chain_link`: dust and chips along the segment. Shards and dust sit at the building's real facade depth (`z + d / 2`), now that Rendering draws buildings at the sim's own depth.
+- One tick's spawns are budgeted (260 puffs, then 200 shards) so a busy tick stays small.
+- Pictures from real matches (`tools/brunt_shots.gd`, seed 1): a four-house chain ![chain](img/b2-chain-real.png) and a punch on a 23-floor tower, far back in the depth rows ![floor punch](img/b2-floor-punch-real.png)
+- Checks: `effects_check.gd` covers punch, crack, dent, pancake, the summary being skipped when a `floor_hit` came, holes only for small buildings and the pool cap under repeated pancakes; `hash_check.gd` (seeds 12345, 4, 7, all groups on, real B2 events: 15,941 debris bits) and `render/tools/determinism.gd` pass; worst-case scene CPU +0.17 ms mean, +0.55 ms p99, GPU +0.008 ms.

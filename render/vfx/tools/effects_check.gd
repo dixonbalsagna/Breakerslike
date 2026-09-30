@@ -69,6 +69,59 @@ func _run() -> void:
 		var e := VfxMock.ev("scorch", {"x": x, "y": 50.0, "w": 100.0, "power": 4.5, "variant": "MERIDIAN SCAR", "owner": 0})
 		_tick(S, h, [e, e, e])
 	_check(h.debris.bits.size() <= VfxLook.DEBRIS_CAP, "the debris pool stays within %d (%d)" % [VfxLook.DEBRIS_CAP, h.debris.bits.size()])
+	# B2's floor events (docs/architecture/fx-events.md): a punch on a skyscraper, a crack, a dent, a pancake.
+	print("floors")
+	var tw: int = -1
+	var house: int = -1
+	for i in range(S.buildings.size()):
+		var bb = S.buildings[i]
+		if tw < 0 and bb.kind == "tower" and bb.floors >= WorldBrunt.FLOORS_MIN:
+			tw = i
+		if house < 0 and bb.floors < WorldBrunt.FLOORS_MIN and bb.h > 200.0:
+			house = i
+	_check(tw >= 0 and house >= 0, "a skyscraper (%d) and a small building (%d) exist" % [tw, house])
+	var bt = S.buildings[tw]
+	var hf := VfxHub.new()
+	hf.destruction_enabled = true
+	hf.reset(S, 4)
+	var base: int = hf.debris.spawned
+	var fh := VfxMock.ev("floor_hit", {"b": tw, "floor": 3, "n": 2, "outcome": "punch", "ratio": 1.4, "x": bt.x - bt.w * 0.5, "y": 500.0, "z": bt.z, "ux": 1.0, "uy": 0.0, "kind": "tower", "owner": 1, "victim": 0})
+	var bh := VfxMock.ev("building_hit", {"b": tw, "outcome": "punch", "link": 1, "n": 1, "x": bt.x - bt.w * 0.5, "y": 500.0, "z": bt.z, "spd": 1500.0, "ux": 1.0, "uy": 0.0, "kind": "tower", "w": bt.w, "h": 1.0})
+	_tick(S, hf, [fh, bh])
+	var n_floor: int = hf.debris.spawned - base
+	_check(n_floor > 20, "a floor punch throws shards and window glass (%d)" % n_floor)
+	_check(hf.holes.is_empty(), "no decal for a skyscraper punch (Rendering cuts the tunnel)")
+	var hf2 := VfxHub.new()
+	hf2.destruction_enabled = true
+	hf2.reset(S, 4)
+	_tick(S, hf2, [bh])
+	_check(hf2.debris.spawned > 0, "building_hit alone (no floor_hit) still bursts (%d)" % hf2.debris.spawned)
+	for kind in ["crack", "dent"]:
+		var h3 := VfxHub.new()
+		h3.destruction_enabled = true
+		h3.reset(S, 4)
+		_tick(S, h3, [VfxMock.ev("floor_hit", {"b": tw, "floor": 2, "n": 0, "outcome": kind, "ratio": 0.5, "x": bt.x, "y": 400.0, "z": bt.z, "ux": 1.0, "uy": 0.0, "kind": "tower"})])
+		_check(h3.debris.spawned > 0, "floor_hit %s throws something (%d)" % [kind, h3.debris.spawned])
+	var h4 := VfxHub.new()
+	h4.destruction_enabled = true
+	h4.reset(S, 4)
+	_tick(S, h4, [VfxMock.ev("floors_fall", {"b": tw, "from": 4, "to": 8, "n": 5, "x": bt.x, "z": bt.z, "w": bt.w})])
+	_check(h4.debris.jobs.size() == 5, "a pancake of 5 floors schedules its bursts and a ring, the top floor firing at once (%d left)" % h4.debris.jobs.size())
+	for k in range(40):
+		_tick(S, h4, [])
+	_check(h4.debris.jobs.is_empty() and h4.debris.spawned > 30, "the pancake ran top to bottom and threw dust and shrapnel (%d)" % h4.debris.spawned)
+	var h5 := VfxHub.new()
+	h5.destruction_enabled = true
+	h5.reset(S, 4)
+	_tick(S, h5, [VfxMock.ev("building_hit", {"b": house, "outcome": "heavy", "link": 1, "n": 1, "x": S.buildings[house].x, "y": 100.0, "z": S.buildings[house].z, "spd": 1200.0, "ux": 1.0, "uy": 0.0, "kind": "house", "w": S.buildings[house].w, "h": 1.0})])
+	_check(h5.holes.size() == 2, "a heavy hit on a small building leaves two holes (%d)" % h5.holes.size())
+	# The pool cap under many chains and pancakes at once.
+	var h6 := VfxHub.new()
+	h6.destruction_enabled = true
+	h6.reset(S, 4)
+	for k in range(60):
+		_tick(S, h6, [VfxMock.ev("floors_fall", {"b": tw, "from": 1, "to": 15, "n": 15, "x": bt.x, "z": bt.z, "w": bt.w}), fh, bh])
+	_check(h6.debris.bits.size() <= VfxLook.DEBRIS_CAP, "the pool holds under repeated pancakes and punches (%d)" % h6.debris.bits.size())
 	# The break ring: a fighter accelerating from rest to 130 bh/s fires it once.
 	print("break ring")
 	var t := VfxTrailState.new()

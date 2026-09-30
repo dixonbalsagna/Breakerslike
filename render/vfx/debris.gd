@@ -41,6 +41,7 @@ class Job:
 var bits: Array = []          # Bit
 var _spawned_tick: int = 0     # spawns since the last step: the per-tick budget keeps one busy tick from being a frame spike
 var _biome: String = "plains"   # the dust colours of the place being spawned at (Art's by_biome)
+var _yspread: float = 60.0      # how far above and below the spawn height a shard may start (a floor band, for floors)
 var _ember_tick: int = 0        # embers spawned this tick (budget VfxLook.EMBER_PER_TICK)
 var _ember_alive: int = 0       # embers in the pool (cap VfxLook.EMBER_CAP)
 var _tone: int = 0              # 0 mid, 1 shadow (a back layer), 2 light (a front layer)
@@ -123,6 +124,10 @@ func _run_job(S: SimState, j: Job) -> void:
 			_skirt(S, j.a)
 		"chips":
 			_chips(S, j.a)
+		"pflr":
+			_pflr(S, j.a)
+		"pring":
+			_pring(S, j.a)
 		"vent":
 			_vent(S, j.a)
 		"colpuff":
@@ -142,7 +147,7 @@ func burst_through(S: SimState, bx: float, w: float, h: float, front_z: float, x
 	_tone = 0
 	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
 	var kscale: float = clampf(sqrt(maxf(h, 100.0)) / 40.0, 0.7, 2.4)
-	var heavy: float = 1.0 if outcome == "collapse" else (0.8 if outcome == "heavy" else (0.55 if outcome == "wreck" else 0.3))
+	var heavy: float = 1.0 if outcome == "collapse" else (0.8 if outcome == "heavy" or outcome == "punch" else (0.55 if outcome == "wreck" else 0.3))
 	var ux := Vector2(dx, dy).normalized()
 	# In: glass thrown back toward the camera side of the wall, a cone opposite the flight, and a dust puff.
 	var n_in: int = int(round(lerpf(VfxLook.GLASS_IN_MIN, VfxLook.GLASS_IN_MAX, clampf(sp / 12000.0, 0.0, 1.0)) * heavy))
@@ -354,7 +359,7 @@ func _shard(kind: int, x: float, y: float, z: float, dir: Vector2, speed: float,
 	# All draws happen whatever the quality, so the stream is independent of it.
 	var ang: float = atan2(dir.y, dir.x) + _rs.range_(-spread, spread)
 	var sp: float = speed * _rs.range_(0.35, 1.0)
-	var b: Bit = _bit(kind, x + _rs.range_(-40.0, 40.0), y + _rs.range_(-60.0, 60.0), z + VfxLook.Z_SHARD_OVER + _rs.range_(0.0, 30.0), cos(ang) * sp, sin(ang) * sp + _rs.range_(0.0, 220.0), kscale, _rs.range_(1.1, 2.4))
+	var b: Bit = _bit(kind, x + _rs.range_(-40.0, 40.0), y + _rs.range_(-_yspread, _yspread), z + VfxLook.Z_SHARD_OVER + _rs.range_(0.0, 30.0), cos(ang) * sp, sin(ang) * sp + _rs.range_(0.0, 220.0), kscale, _rs.range_(1.1, 2.4))
 	var keep: bool = _rs.next() < q
 	if keep:
 		_add(b)
@@ -446,6 +451,9 @@ func _ring(x: float, y: float, z: float, r0: float, growth: float, life: float) 
 ## Add to the pool. When it is full a shard or chip drops the oldest puff first; a puff at the puff cap drops the oldest puff.
 func _add(b: Bit) -> void:
 	_spawned_tick += 1
+	if _spawned_tick > VfxLook.SPAWN_PER_TICK + VfxLook.SHARD_PER_TICK and b.kind != RING:
+		dropped += 1
+		return
 	if _spawned_tick > VfxLook.SPAWN_PER_TICK and b.kind == PUFF:
 		dropped += 1
 		return
@@ -461,3 +469,85 @@ func _add(b: Bit) -> void:
 			dropped += 1
 			return
 	bits.append(b)
+
+
+# --------------------------------------------------------------------------------------------------- floors
+
+## A brunt on floors of a skyscraper (floor_hit): the burst-through confined to the band of floors struck (ym its middle,
+## half_band its half height), a row of windows blowing out along the facade, and less for a crack or a dent. The tunnel
+## itself is Rendering's (cut from fmask); this throws glass, steel and dust.
+func floor_hit(S: SimState, bx: float, w: float, front_z: float, xi: float, xo: float, ym: float, half_band: float, dx: float, dy: float, sp: float, outcome: String) -> void:
+	_biome = VfxPalette.biome_key(bx)
+	_tone = 0
+	_yspread = clampf(half_band, 40.0, 220.0)
+	match outcome:
+		"punch":
+			burst_through(S, bx, w, 2500.0, front_z, xi, ym, xo, ym, dx, dy, sp, "heavy", 1)
+			window_row(bx, w, ym, half_band, front_z, 1.0)
+		"crack":
+			_puffs(xi, ym, front_z, 3, 60.0, 160.0, VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)], 1.0)
+			window_row(bx, w, ym, half_band, front_z, 1.6)
+			_ring(xi, ym, front_z + 6.0, 25.0, 420.0, 0.22)
+		_:
+			_puffs(xi, ym, front_z, 2, 50.0, 120.0, VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)], 1.0)
+			for k in range(3):
+				_shard(CHUNK, xi, ym, front_z, -Vector2(dx, dy), sp * 0.08, 0.7, 0.6, VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)], 0.3)
+	_yspread = 60.0
+
+
+## Window glass blowing out along a band of the facade and falling: one sliver about every window width.
+func window_row(bx: float, w: float, ym: float, half_band: float, front_z: float, scale: float) -> void:
+	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
+	var n: int = int(round(clampf(w / 70.0, 6.0, 40.0) * scale))
+	for k in range(n):
+		var px: float = bx + ((float(k) + _rs.next()) / float(n) - 0.5) * w
+		var py: float = ym + _rs.range_(-half_band, half_band)
+		var kp: float = _rs.next()
+		var b: Bit = _bit(GLASS if k % 4 != 0 else TRI, px, py, front_z + _rs.range_(6.0, 40.0), _rs.range_(-70.0, 70.0), _rs.range_(-60.0, 200.0), 1.0, _rs.range_(1.0, 1.9))
+		if kp < q:
+			_add(b)
+
+
+## The stack above a cleared span pancaked (floors_fall): floors `from` to `to` (inclusive) broke. Each broken floor gives a
+## burst of dust and glass and steel at its height, top floor first over about 0.4 s of sim time, then a ring at the base.
+## x, w: the building's centre and width; fh: a floor's height; g: the ground; front_z: its facade.
+func pancake(S: SimState, x: float, w: float, fh: float, g: float, from: int, to: int, front_z: float) -> void:
+	var n: int = maxi(to - from + 1, 1)
+	var m: int = mini(n, 14)
+	for i in range(m):
+		var f: int = to - int(floor(float(i) * float(n) / float(m)))
+		var j := Job.new()
+		j.at = S.T + 0.4 * float(i) / float(m)
+		j.kind = "pflr"
+		j.a = {"x": x, "w": w, "y": g + (float(f) + 0.5) * fh, "fh": fh, "z": front_z, "g": g}
+		jobs.append(j)
+	var r := Job.new()
+	r.at = S.T + 0.45
+	r.kind = "pring"
+	r.a = {"x": x, "w": w, "y": g + 6.0, "z": front_z}
+	jobs.append(r)
+
+
+func _pflr(S: SimState, a: Dictionary) -> void:
+	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
+	_biome = VfxPalette.biome_key(a.x)
+	_yspread = clampf(a.fh * 0.5, 40.0, 200.0)
+	var ps: float = clampf(a.w * 0.5, 150.0, 600.0)
+	for k in range(2):
+		_tone = k * 2
+		var px: float = a.x + _rd.range_(-0.45, 0.45) * a.w
+		var kp: float = _rd.next()
+		var s: float = ps * _rd.range_(0.7, 1.2)
+		var pl: float = _rd.range_(1.8, 3.2)
+		if kp < q:
+			_puff_at(px, a.y, a.z + _rd.range_(8.0, 40.0), _rd.range_(-200.0, 200.0), _rd.range_(40.0, 240.0), s * 0.6, s * 1.4, pl, true)
+	_tone = 0
+	for k in range(5):
+		_shard(GLASS if k % 3 != 0 else TRI, a.x + _rs.range_(-0.45, 0.45) * a.w, a.y, a.z, Vector2(0.0, -1.0), 500.0, 1.4, 1.3, q, 0.3)
+	for k in range(2):
+		_shard(STEEL, a.x + _rs.range_(-0.45, 0.45) * a.w, a.y, a.z, Vector2(0.0, -1.0), 400.0, 1.4, 1.3, q, 0.3)
+	_yspread = 60.0
+
+
+func _pring(S: SimState, a: Dictionary) -> void:
+	_ring(a.x, a.y, a.z + 8.0, a.w * 0.3, a.w * 1.4, 0.5)

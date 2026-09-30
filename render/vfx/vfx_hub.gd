@@ -144,11 +144,21 @@ func _consume(S: SimState, events: Array) -> void:
 	if destruction_enabled or cracks_enabled or embers_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
+		var floored: Dictionary = {}          # buildings with a floor_hit this tick: the floor path draws their burst
+		for e in events:
+			if e.type == "floor_hit":
+				floored[int(_g(e, "b", -1))] = true
 		for e in events:
 			match e.type:
 				"building_hit":
 					if destruction_enabled:
-						_on_building_hit(S, e)
+						_on_building_hit(S, e, floored)
+				"floor_hit":
+					if destruction_enabled:
+						_on_floor_hit(S, e)
+				"floors_fall":
+					if destruction_enabled:
+						_on_floors_fall(S, e)
 				"chain_link":
 					if destruction_enabled:
 						_on_chain_link(S, e)
@@ -169,65 +179,104 @@ func _consume(S: SimState, events: Array) -> void:
 
 # ------------------------------------------------------------------------------ buildings: hits, chains and falls
 
-## The depth of a building's facade, where its shrapnel and its holes sit. Rendering draws every building's front face at
-## RenderLook.Z_BUILDING_FRONT today; once it draws them at the sim's own depth (buildings-in-depth.md B3) this reads that.
-func front_z(_b) -> float:
+## The depth of a building's facade, where its shrapnel and holes sit: Rendering draws a building at the sim's own z
+## (centre z, footprint depth d; z is positive toward the camera, buildings stand behind the plane), so the facade is
+## z + d / 2. A building without depth data falls back to the old render-side place.
+func front_z(b) -> float:
+	if b != null and b.d > 0.0:
+		return b.z + b.d * 0.5
 	return RenderLook.Z_BUILDING_FRONT
 
 
-## A field of an event that may not carry it yet (building_hit and chain_link are B2's, and their fields may still change):
-## the value, or dflt when absent. Works for the sim's FxEvent and for the mock's.
+## A field of an event that may not carry it (the sim's FxEvent, or the mock's): the value, or dflt when absent.
 static func _g(e, key: String, dflt = null):
 	var v = e.get(key)
 	return dflt if v == null else v
 
 
-## A launched fighter went into a building (B2's building_hit, docs/world/b2-plan.md section 5: b, x, y, z, damage, ratio, outcome, link, n, spd,
-## keep, ux, uy, kind, w, h, victim). The direction is the impact vector (ux, uy) or, without it, the launched fighter's velocity, the
-## entry point the wall's near edge, the exit the far edge along that line.
-func _on_building_hit(S: SimState, e) -> void:
+## The launched fighter's real speed from the event's normalised one: the horizontal share of a launch carries the
+## traversal factor (TRAV_LAUNCH, up to 6), so a flat launch is several times faster than spd says.
+static func _real_speed(spd: float, ux: float, uy: float) -> float:
+	var h: float = absf(ux) / maxf(absf(ux) + absf(uy), 0.001)
+	return spd * (1.0 + (SimConst.TRAV_LAUNCH - 1.0) * h)
+
+
+## A launched fighter went into a building (building_hit, docs/architecture/fx-events.md: b, x y z at the near face, outcome,
+## link, spd, ux, uy, kind, w, h, victim). A skyscraper (5 floors or more) also sends floor_hit in the same tick; then
+## the floor path draws the burst and this only adds nothing. A smaller building gets the whole-building burst here, and a
+## hole decal if it stands (heavy, wreck, crack); Rendering cuts the tunnels of skyscrapers into their meshes.
+func _on_building_hit(S: SimState, e, floored: Dictionary) -> void:
 	var bi: int = int(_g(e, "b", -1))
-	if bi < 0 or bi >= S.buildings.size():
+	if bi < 0 or bi >= S.buildings.size() or floored.has(bi):
 		return
 	var b = S.buildings[bi]
-	var dir := Vector2.ZERO
-	var sp: float = float(_g(e, "spd", _g(e, "sp", 0.0)))
-	if _g(e, "ux") != null:
-		dir = Vector2(float(_g(e, "ux", 1.0)), float(_g(e, "uy", 0.0)))
-	else:
-		var best: float = 1e30
-		for f in S.fighters:
-			if f.state != "launched":
-				continue
-			var d: float = absf(SimWrap.sdx(f.x, b.x))
-			if d < best:
-				best = d
-				dir = Vector2(f.vx, f.vy)
-				if sp <= 0.0:
-					sp = dir.length()
-	if dir.length() < 1.0:
+	var ux: float = float(_g(e, "ux", 1.0))
+	var uy: float = float(_g(e, "uy", 0.0))
+	var dir := Vector2(ux, uy)
+	if dir.length() < 0.01:
 		dir = Vector2(1.0, 0.0)
 	dir = dir.normalized()
-	if sp <= 0.0:
+	var sp: float = _real_speed(float(_g(e, "spd", 0.0)), dir.x, dir.y)
+	if sp <= 1.0:
 		sp = 4000.0
 	var g: float = WorldTerrain.groundY(S, b.x)
 	var top: float = g + b.h
 	var sgn: float = 1.0 if dir.x >= 0.0 else -1.0
 	var yi: float = clampf(float(_g(e, "y", g + b.h * 0.4)), g + 40.0, top - 40.0)
-	var xi: float = b.x - sgn * b.w * 0.30   # on the front face, a little in from the near edge
-	var run: float = b.w * 0.6
-	var yo: float = clampf(yi + (dir.y / maxf(absf(dir.x), 0.15)) * run, g + 40.0, top - 40.0)
-	var xo: float = b.x + sgn * b.w * 0.30
+	var xi: float = SimWrap.wrap(float(_g(e, "x", b.x - sgn * b.w * 0.5)) + sgn * minf(b.w * 0.15, 60.0))
+	var xo: float = b.x + sgn * b.w * 0.5
+	var yo: float = clampf(yi + (dir.y / maxf(absf(dir.x), 0.15)) * b.w * 0.6, g + 40.0, top - 40.0)
 	var outcome: String = String(_g(e, "outcome", "collapse"))
 	var link: int = int(_g(e, "link", 1))
 	var fz: float = front_z(b)
 	debris.burst_through(S, b.x, b.w, b.h, fz, xi, yi, xo, yo, dir.x, dir.y, sp, outcome, link)
-	# The holes: where it went in, and where it came out (a cracked wall only has the mark going in).
-	var size: float = clampf(90.0 + 0.02 * float(_g(e, "h", b.h)), 110.0, 260.0)   # a fighter and a half, more for a tall tower
+	var size: float = clampf(90.0 + 0.02 * b.h, 110.0, 260.0)
 	if outcome != "collapse":
 		_add_hole(bi, xi, yi, fz, size * 0.85, size * 1.1)
 	if outcome != "crack" and outcome != "collapse":
 		_add_hole(bi, xo, yo, fz, size * 1.1, size * 1.4)
+
+
+## A brunt struck floors of a skyscraper (floor_hit: b, floor (the lowest), n (floors cleared, 0 for crack and dent), outcome
+## punch, crack or dent, x y z, ux uy). The burst is confined to the floors hit and a row of windows along the facade blows
+## out; Rendering draws the tunnel itself from fmask, so no decal is made here.
+func _on_floor_hit(S: SimState, e) -> void:
+	var bi: int = int(_g(e, "b", -1))
+	if bi < 0 or bi >= S.buildings.size():
+		return
+	var b = S.buildings[bi]
+	var F: int = maxi(int(b.floors), 1)
+	var fh: float = b.h / float(F)
+	var g: float = WorldTerrain.groundY(S, b.x)
+	var k: int = clampi(int(_g(e, "floor", 0)), 0, F - 1)
+	var span: int = maxi(int(_g(e, "n", 0)), WorldBrunt.HIT_FLOORS)
+	var y0: float = g + float(k) * fh
+	var y1: float = y0 + float(span) * fh
+	var ux: float = float(_g(e, "ux", 1.0))
+	var uy: float = float(_g(e, "uy", 0.0))
+	var dir := Vector2(ux, uy)
+	if dir.length() < 0.01:
+		dir = Vector2(1.0, 0.0)
+	dir = dir.normalized()
+	var sgn: float = 1.0 if dir.x >= 0.0 else -1.0
+	var outcome: String = String(_g(e, "outcome", "punch"))
+	var sp: float = _real_speed(float(_g(e, "spd", 0.0)), dir.x, dir.y)
+	if sp <= 1.0:
+		sp = 4000.0
+	var xi: float = SimWrap.wrap(float(_g(e, "x", b.x - sgn * b.w * 0.5)) + sgn * minf(b.w * 0.15, 60.0))
+	var xo: float = b.x + sgn * b.w * 0.5
+	var ym: float = (y0 + y1) * 0.5
+	debris.floor_hit(S, b.x, b.w, front_z(b), xi, xo, ym, (y1 - y0) * 0.5, dir.x, dir.y, sp, outcome)
+
+
+## The stack above a cleared span pancaked (floors_fall: b, from, to, n, x, z, w): floors from to to (inclusive) broke.
+func _on_floors_fall(S: SimState, e) -> void:
+	var bi: int = int(_g(e, "b", -1))
+	if bi < 0 or bi >= S.buildings.size():
+		return
+	var b = S.buildings[bi]
+	var F: int = maxi(int(b.floors), 1)
+	debris.pancake(S, float(_g(e, "x", b.x)), float(_g(e, "w", b.w)), b.h / float(F), WorldTerrain.groundY(S, b.x), int(_g(e, "from", 0)), int(_g(e, "to", 0)), front_z(b))
 
 
 func _on_chain_link(S: SimState, e) -> void:
