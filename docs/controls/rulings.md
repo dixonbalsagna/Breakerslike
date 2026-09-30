@@ -216,7 +216,7 @@ Combat's finishers open the contest window at `contestOpen` and resolve at `cont
 | :--- | :--- | :--- | ---: | :--- | :--- |
 | Dash | ×2.4 speed while the dash input is **held** | `fighter.gd:227-228` | n/a | keep; toggle-hold is an input option | |
 | Stance speed | EVASIVE ×1.25, ESCAPE ×1.35, DEFENSIVE ×0.8 | `fighter.gd:220-226` | n/a | keep | |
-| Diagonals | `mx` and `my` are independent axes, so a keyboard diagonal is √2 faster | `fighter.gd:214-237` | n/a | **flag**; the gamepad uses a square gate for parity until the sim normalises (`input-map.md` §3) | parity |
+| Diagonals | `mx` and `my` are independent axes, so a keyboard diagonal is √2 faster | `fighter.gd:214-237` | n/a | **Normalise in the sim, Stage B** (Game Design ruled); the gamepad uses a square gate until then (`input-map.md` §3.1) | parity |
 | Charge | +30 ki/s, +9 power/s; the state is exposed | `fighter.gd:254-255` | n/a | keep | |
 | Attack gating | no exchange running, `dirS.cool` ≥ 0 blocks | `exchange.gd:31` | | buffer 6 ticks | responsiveness |
 | Heavy cost | 4 ki; below 4 ki it falls back to light | `exchange.gd:42-43,65-66` | | keep; show the fallback | |
@@ -286,3 +286,24 @@ Measured from the physical input to the first visible reaction, on the target su
 - **Camera:** shake table in `shake-pass.md`.
 - **Netcode:** hit-stop and buffers as integer sim state; the struggle offset in the match header.
 - **Accessibility:** assist numbers above (parry ×2 earlier, chain buffer 8, struggle ±8, no whiff cost).
+
+## 14. Status after the EP's rulings (commit 281b3eb, 2026-09-29)
+
+- **Accepted:** light parry 15, heavy 20, chain 36 plus a 4-tick buffer, clean-parry tails, the hit-stop table and its two stages.
+- **Accepted pending Game Design:** the R5 amendment (section 3.4).
+- **Order of work:** Stage A (integer hit-stop, press ticks, `SimIntent` `special`, `transform`, `stanceStep`; goldens bit-identical, with QA's proof) comes after S3b, S4 and World's collateral window. Stage B follows. I may edit the hit-stop counter in `sim.gd` and `damage.gd` for those slices only.
+- **Stage B also includes:** holding the shake decay through freezes, with Camera's agreement.
+- **Orb-level defaults (Orb can overturn):** a dedicated second keyboard layout for hot-seat, as an option, with the current layout the default; a `hitstopScale` accessibility option, 0.5 to 1.0, default 1.0, recorded in the match header; mobile cross-play policy deferred to the online phase.
+
+## 15. Game Design's answers (2026-09-29)
+
+- **R5 amendment confirmed** (section 3.4).
+- **No Rally button.** Rallies fire automatically. The Empress's Encore is a contextual prompt: `transform`, offered for 180 ticks after she enters the brink, hold 18 ticks to confirm (`input-map.md` §4).
+- **Press is a hold**: the charge input held near people. No `special` slot is needed for the Cyborg.
+- **Diagonal movement is normalised in the sim.** It changes the goldens, so it is in **Stage B**. Stage A stays bit-identical.
+- **Camera confirmed the shake pass:** far pane 35%, falloff `clamp(1 - d/4000, 0.35, 1)`, and holding the decay through freezes.
+
+## 16. Game Design's R5 ruling: where the lockout lives (2026-09-29)
+
+- The parry anti-mash rule (first stray free, 12-tick lockout, 5 ki per press inside a lockout; section 3.4) lives in the **input layer** in `sim/input/`, next to the press ticks. Encounter's `strike()` only consumes a **validated** press; it never sees a stray.
+- **Stage A** (bit-identical) carries the press ticks only: `f.pressTick` replaces `lastAtkT` with the same parry behaviour as today. **Stage B** adds the lockout and the ki tax, together with diagonal normalisation, the hit-stop values and the shake decay hold, because each changes behaviour or the goldens.

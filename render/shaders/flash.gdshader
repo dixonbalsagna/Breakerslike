@@ -22,8 +22,9 @@ uniform float jitter = 0.0;      // layout units of irregular jitter per shape (
 uniform float jitter_step = 0.0; // steps a few times a second
 uniform float seed = 0.0;        // from the cosmetic vfx.flash stream
 uniform float ground_y = -60.0;  // the ground under the fighter, in this frame
-uniform float blade_w = 3.8;     // half widths: blades and wedges (spec section 3)
-uniform float wedge_w = 8.5;
+uniform float blade_w = 2.3;     // RenderLook.FLASH_BLADE_W, FLASH_WEDGE_W: half widths of blades and wedges
+uniform float wedge_w = 5.2;
+uniform float glyph_scale = 1.1; // RenderLook.FLASH_GLYPH_SCALE
 uniform float min_r = 2.5;       // the smallest disc radius and square half side
 uniform float min_q = 3.0;
 uniform float grid = 3.0;        // steps snap to this grid
@@ -54,7 +55,7 @@ void vertex() {
 	vec2 pos;
 	float op;
 	if (glyph) {
-		float sc = 1.7 * (1.0 - grow * 0.66 + grow * 0.66 * k);   // (0.7 + 0.3 k) x 1.7, as Art draws it
+		float sc = glyph_scale * (1.0 - grow * 0.66 + grow * 0.66 * k);   // (0.7 + 0.3 k) x the scale, as Art draws it
 		float pad = (fl & 8) != 0 ? 0.0 : 0.66;
 		vec2 p = mix(vec2(-6.5, -2.5), vec2(6.5, 18.0), f);
 		v_p = p;

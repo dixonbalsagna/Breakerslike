@@ -63,7 +63,19 @@ func _init() -> void:
 				print("flash cue %s is %.2f s, longer than its flash (%.2f s)" % [c.sound, len_s, float(bank.flashes.flashes[fl].max_s)])
 			n_flash += 1
 	SimCore.dispose(fs)
-	print("\nflash cues: %d checked (2 fighters x 12 flashes), %s" % [n_flash, "all present and within their flash time" if flash_ok else "FAILED"])
+	# the pulse numbers must match Art's data/art/flashes.json (copied into flash_cues.json)
+	if FileAccess.file_exists("res://data/art/flashes.json"):
+		var art: Dictionary = AudioBank.load_json("res://data/art/flashes.json").get("flashes", {})
+		for fl in bank.flashes.flashes:
+			if bool(bank.flashes.flashes[fl].get("held", false)) or not art.has(fl) or not bank.flashes.flashes[fl].has("pulse"):
+				continue
+			var mine: Dictionary = bank.flashes.flashes[fl].pulse
+			var theirs: Dictionary = art[fl].pulse
+			for key in ["count", "on", "off", "fade"]:
+				if absf(float(mine[key]) - float(theirs[key])) > 0.0005:
+					flash_ok = false
+					print("flash %s: pulse %s is %s here but %s in data/art/flashes.json" % [fl, key, str(mine[key]), str(theirs[key])])
+	print("\nflash cues: %d checked (every fighter x every active flash), %s" % [n_flash,"all present and within their flash time" if flash_ok else "FAILED"])
 	ok = ok and flash_ok
 	print("\naudio host check passed" if ok else "\naudio host check FAILED")
 	quit(0 if ok else 1)

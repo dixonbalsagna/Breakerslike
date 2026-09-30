@@ -139,6 +139,7 @@ Colour is never the only carrier of meaning. Shape, pattern and position come fi
 | Barrage and beam | The fighter's accent, with a near-white core | The beam core is the brightest thing on screen |
 | Danger and collateral | World: dust in the biome's ground colour, smoke grey `#5c5760`, fire `HEAT_LO` to `HEAT_HI` | Never a fighter colour |
 | Wound stages | Pattern first: steady, flicker, gap. Tint second | Stage tints are neutral, not fighter colours |
+| Effect lanes (VFX) | `data/art/effects.json`: trail (accent rim, near-white core), glass (pale cyan slivers), steel (dark grey chunks), dust (biome grey-brown soft disc), crack (dark line, lit lip) | Each also carried by shape or motion. Fire keeps orange and yellow |
 | Blood | One flat red `#b3202f`, with a `#7d1420` shadow step | A decal, never a mesh. Off or neutral under the graphic dial (section 6) |
 | Ego meters (proposal) | Each meter uses its owner's accent: Respect (Protagonist teal), Pride (Anti-hero violet), Wrath (Empress chartreuse), Hunger (Cyborg red) | So a meter says whose it is |
 | UI accent | UI and UX decide. Keep it out of every fighter lane | |

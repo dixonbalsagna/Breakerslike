@@ -1,32 +1,35 @@
 {
-  "version": 2,
+  "version": 3,
   "decision": "Orb added Hazard, Primed and Respect; the EP cut Brink (the crown's brink ring covers it), kept Resolve (sequenced after the crown's wear pop) and kept Pride apart from Triumph. Then Orb removed hiding from the base game (held for a future stealth fighter), so Primed (the ambush window) moves to held with Winded, Smug and Bored. Thirteen active flashes, four of them info (danger, hazard, found, searching). Found and Searching stay, for lock-on regained and lost through line of sight.",
   "held": {
     "winded": {
       "name": "Winded",
       "class": "emotion",
-      "attack": 0.15,
-      "hold": 0.5,
-      "fade": 0.4,
+      "pulse": {
+        "count": 2,
+        "on": 0.16,
+        "off": 0.12,
+        "fade": 0.2
+      },
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 238,
-          "d": 14,
-          "s": 10,
+          "a": 150,
+          "d": 10,
+          "s": 5,
           "op": 0.42
         },
         {
-          "a": 258,
-          "d": 22,
-          "s": 8,
+          "a": 165,
+          "d": 14,
+          "s": 4,
           "op": 0.38
         },
         {
-          "a": 214,
-          "d": 22,
-          "s": 7,
+          "a": 135,
+          "d": 14,
+          "s": 4,
           "op": 0.34
         }
       ],
@@ -35,22 +38,25 @@
     "smug": {
       "name": "Smug",
       "class": "emotion",
-      "attack": 0.15,
-      "hold": 0.4,
-      "fade": 0.3,
+      "pulse": {
+        "count": 2,
+        "on": 0.14,
+        "off": 0.1,
+        "fade": 0.15
+      },
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 16,
-          "d": 12,
-          "s": 36,
+          "a": 70,
+          "d": 9,
+          "s": 18,
           "op": 0.45
         },
         {
-          "a": 38,
-          "d": 12,
-          "s": 20,
+          "a": 90,
+          "d": 9,
+          "s": 10,
           "op": 0.4
         }
       ],
@@ -59,9 +65,12 @@
     "bored": {
       "name": "Bored",
       "class": "emotion",
-      "attack": 0.3,
-      "hold": 0.4,
-      "fade": 0.3,
+      "pulse": {
+        "count": 2,
+        "on": 0.2,
+        "off": 0.15,
+        "fade": 0.2
+      },
       "kind": "layout",
       "glyph": null,
       "layout": [
@@ -83,28 +92,31 @@
     "primed": {
       "name": "Primed",
       "class": "info",
-      "attack": 0.06,
-      "hold": 0.34,
-      "fade": 0.2,
+      "pulse": {
+        "count": 2,
+        "on": 0.1,
+        "off": 0.07,
+        "fade": 0.18
+      },
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 36,
-          "d": 12,
-          "s": 14,
+          "a": 70,
+          "d": 8,
+          "s": 9,
           "op": 0.95
         },
         {
-          "a": 36,
-          "d": 30,
-          "s": 20,
+          "a": 70,
+          "d": 19,
+          "s": 12,
           "op": 0.95
         },
         {
-          "a": 36,
-          "d": 52,
-          "s": 28,
+          "a": 70,
+          "d": 32,
+          "s": 17,
           "op": 0.95
         }
       ],
@@ -175,13 +187,13 @@
       "A": [
         "surge"
       ],
-      "note": "Wide and low behind the head: angle a becomes atan2(sin(a) * 0.4, cos(a)) + 42 degrees, size x 0.7, distance + 4. Ground shards are unchanged."
+      "note": "Wide and low behind the head: angle a becomes atan2(sin(a) * 0.4, cos(a)) + 42 degrees, size x 0.7, distance + 4, Ground shards are unchanged. So the transformed angle lands within 65 to 175, every flash in the crest set keeps its input angles between 65 and 110 degrees (checked by gen.mjs, which fails if a drawn angle leaves 65 to 175)."
     },
     "danger_ray": {
       "default_angle": 132,
       "clamp": [
-        60,
-        200
+        65,
+        175
       ],
       "note": "Rotate the whole pointer train to the threat bearing at run time (facing frame, 0 forward, 90 up). Always above or behind the head, never around it."
     },
@@ -205,13 +217,28 @@
     },
     "info_keyline": "The core fills 84 percent of the rim. Emotion flashes keep a rim and a 58 percent core."
   },
+  "keep_out": {
+    "rule": "Every shape sits up and back of the head: angle a between 65 and 175 degrees in the facing frame (0 forward, 90 up, 180 back), never forward toward the opponent and never below the head centre. Nothing covers a torso or a face, on either fighter. The largest shape is 40 (the surge crest) and most are 30 or less, in hundredths of a body height.",
+    "angle_min": 65,
+    "angle_max": 175,
+    "ground_shards": "The surge has two small shards at the fighter's own feet (195 and 345 degrees, distance 22, size 10)."
+  },
+  "pulse_rule": {
+    "note": "Each flash pulses two or three times, then is gone. A pulse swells to full in 30 percent of `on`, then shrinks to nothing by the end of `on` (a beat of nothing for `off` follows). The last pulse holds to the end of `on`, then fades over `fade`. Size scales 0.55 + 0.45 k and opacity k, as before. total = count x on + (count - 1) x off + fade, 0.4 to 0.8 s, and the surge 1.85 s.",
+    "rise_fraction": 0.3
+  },
   "flashes": {
     "danger": {
       "name": "Danger sense",
       "class": "info",
-      "attack": 0.05,
-      "hold": 0.15,
-      "fade": 0.15,
+      "pulse": {
+        "count": 3,
+        "on": 0.08,
+        "off": 0.05,
+        "fade": 0.08,
+        "total": 0.42
+      },
+      "total": 0.42,
       "priority": 2,
       "cooldown": 0.5,
       "kind": "layout",
@@ -219,25 +246,25 @@
       "layout": [
         {
           "a": 132,
-          "d": 12,
-          "s": 17,
+          "d": 8,
+          "s": 9,
+          "op": 0.95
+        },
+        {
+          "a": 132,
+          "d": 19,
+          "s": 12,
           "op": 0.95
         },
         {
           "a": 132,
           "d": 32,
-          "s": 24,
-          "op": 0.95
-        },
-        {
-          "a": 132,
-          "d": 57,
-          "s": 34,
+          "s": 17,
           "op": 0.95
         }
       ],
       "moment": "A telegraphed heavy or beam, or an attack from off screen or behind. A parry window keeps the crown's ring, because a flash would double it.",
-      "event": "ambush, attack telegraph (Encounter)",
+      "event": "attack_telegraph (Encounter)",
       "sound": "A low dry tick with a short upward sweep. No chirp, no stinger.",
       "rare": false,
       "sequence": null
@@ -245,9 +272,14 @@
     "hazard": {
       "name": "Hazard",
       "class": "info",
-      "attack": 0.05,
-      "hold": 0.25,
-      "fade": 0.15,
+      "pulse": {
+        "count": 2,
+        "on": 0.125,
+        "off": 0.08,
+        "fade": 0.12,
+        "total": 0.45
+      },
+      "total": 0.45,
       "priority": 3,
       "cooldown": 1,
       "kind": "glyph",
@@ -262,9 +294,14 @@
     "found": {
       "name": "Found",
       "class": "info",
-      "attack": 0.06,
-      "hold": 0.3,
-      "fade": 0.24,
+      "pulse": {
+        "count": 2,
+        "on": 0.14,
+        "off": 0.08,
+        "fade": 0.12,
+        "total": 0.48
+      },
+      "total": 0.48,
       "priority": 4,
       "cooldown": 1.5,
       "kind": "glyph",
@@ -279,9 +316,14 @@
     "searching": {
       "name": "Searching",
       "class": "info",
-      "attack": 0.1,
-      "hold": 0.5,
-      "fade": 0.3,
+      "pulse": {
+        "count": 3,
+        "on": 0.14,
+        "off": 0.1,
+        "fade": 0.14,
+        "total": 0.76
+      },
+      "total": 0.76,
       "priority": 5,
       "cooldown": 3,
       "kind": "glyph",
@@ -296,47 +338,38 @@
     "fear": {
       "name": "Fear",
       "class": "emotion",
-      "attack": 0.08,
-      "hold": 0.35,
-      "fade": 0.37,
+      "pulse": {
+        "count": 3,
+        "on": 0.1,
+        "off": 0.07,
+        "fade": 0.12,
+        "total": 0.56
+      },
+      "total": 0.56,
       "priority": 6,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 40,
-          "d": 30,
-          "s": 14,
+          "a": 70,
+          "d": 16,
+          "s": 7,
           "op": 0.42,
           "inward": true
         },
         {
-          "a": 90,
-          "d": 32,
-          "s": 16,
+          "a": 100,
+          "d": 17,
+          "s": 8,
           "op": 0.42,
           "inward": true
         },
         {
-          "a": 140,
-          "d": 30,
-          "s": 14,
+          "a": 130,
+          "d": 16,
+          "s": 7,
           "op": 0.42,
-          "inward": true
-        },
-        {
-          "a": 15,
-          "d": 24,
-          "s": 10,
-          "op": 0.36,
-          "inward": true
-        },
-        {
-          "a": 165,
-          "d": 24,
-          "s": 10,
-          "op": 0.36,
           "inward": true
         }
       ],
@@ -349,55 +382,36 @@
     "rage": {
       "name": "Rage",
       "class": "emotion",
-      "attack": 0.12,
-      "hold": 0.45,
-      "fade": 0.35,
+      "pulse": {
+        "count": 3,
+        "on": 0.14,
+        "off": 0.08,
+        "fade": 0.14,
+        "total": 0.72
+      },
+      "total": 0.72,
       "priority": 7,
       "cooldown": 1.5,
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 0,
-          "d": 10,
-          "s": 44,
+          "a": 72,
+          "d": 9,
+          "s": 22,
           "op": 0.55
         },
         {
-          "a": 24,
-          "d": 10,
-          "s": 56,
+          "a": 106,
+          "d": 9,
+          "s": 28,
           "op": 0.55
         },
         {
-          "a": 48,
-          "d": 10,
-          "s": 66,
-          "op": 0.55
-        },
-        {
-          "a": 74,
-          "d": 10,
-          "s": 56,
-          "op": 0.55
-        },
-        {
-          "a": 100,
-          "d": 10,
-          "s": 46,
+          "a": 140,
+          "d": 9,
+          "s": 20,
           "op": 0.5
-        },
-        {
-          "a": -24,
-          "d": 10,
-          "s": 36,
-          "op": 0.48
-        },
-        {
-          "a": 126,
-          "d": 10,
-          "s": 32,
-          "op": 0.46
         }
       ],
       "moment": "Drop the Act, a wrath spike, a boil-over, a humiliating parry.",
@@ -409,37 +423,36 @@
     "hurt": {
       "name": "Hurt",
       "class": "emotion",
-      "attack": 0.04,
-      "hold": 0.16,
-      "fade": 0.3,
+      "pulse": {
+        "count": 2,
+        "on": 0.1,
+        "off": 0.06,
+        "fade": 0.14,
+        "total": 0.4
+      },
+      "total": 0.4,
       "priority": 8,
       "cooldown": 6,
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 205,
-          "d": 15,
-          "s": 9,
+          "a": 110,
+          "d": 10,
+          "s": 5,
           "op": 0.42
         },
         {
-          "a": 250,
-          "d": 20,
-          "s": 7,
+          "a": 150,
+          "d": 12,
+          "s": 4,
           "op": 0.36
         },
         {
-          "a": 165,
-          "d": 22,
-          "s": 8,
-          "op": 0.36
-        },
-        {
-          "a": 300,
-          "d": 16,
-          "s": 6,
-          "op": 0.32
+          "a": 78,
+          "d": 12,
+          "s": 4,
+          "op": 0.34
         }
       ],
       "moment": "A heavy hit or a break launch, when the crown is not up. A flurry gives one flash: a six-second cooldown per fighter keeps it from being busy (AI play fired it about 9 times a minute).",
@@ -451,39 +464,37 @@
     "resolve": {
       "name": "Resolve",
       "class": "emotion",
-      "attack": 0.1,
-      "hold": 0.35,
-      "fade": 0.35,
+      "pulse": {
+        "count": 2,
+        "on": 0.18,
+        "off": 0.1,
+        "fade": 0.2,
+        "total": 0.66
+      },
+      "total": 0.66,
       "priority": 9,
       "cooldown": 2,
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 20,
-          "d": 22,
-          "s": 13,
+          "a": 75,
+          "d": 12,
+          "s": 7,
+          "op": 0.44,
+          "inward": true
+        },
+        {
+          "a": 105,
+          "d": 13,
+          "s": 8,
           "op": 0.44,
           "inward": true
         },
         {
           "a": 90,
-          "d": 26,
-          "s": 15,
-          "op": 0.44,
-          "inward": true
-        },
-        {
-          "a": 160,
-          "d": 22,
-          "s": 13,
-          "op": 0.44,
-          "inward": true
-        },
-        {
-          "a": 90,
-          "d": 6,
-          "s": 22,
+          "d": 4,
+          "s": 10,
           "op": 0.5
         }
       ],
@@ -501,60 +512,47 @@
     "triumph": {
       "name": "Triumph",
       "class": "emotion",
-      "attack": 0.14,
-      "hold": 0.5,
-      "fade": 0.36,
+      "pulse": {
+        "count": 3,
+        "on": 0.14,
+        "off": 0.08,
+        "fade": 0.16,
+        "total": 0.74
+      },
+      "total": 0.74,
       "priority": 10,
       "cooldown": 3,
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 20,
-          "d": 11,
-          "s": 42,
+          "a": 66,
+          "d": 9,
+          "s": 20,
           "op": 0.5
         },
         {
-          "a": 40,
-          "d": 11,
-          "s": 54,
+          "a": 77,
+          "d": 9,
+          "s": 26,
           "op": 0.5
         },
         {
-          "a": 60,
-          "d": 11,
-          "s": 42,
+          "a": 88,
+          "d": 9,
+          "s": 20,
           "op": 0.5
         },
         {
-          "a": 80,
-          "d": 11,
-          "s": 54,
+          "a": 99,
+          "d": 9,
+          "s": 26,
           "op": 0.5
         },
         {
-          "a": 100,
-          "d": 11,
-          "s": 42,
-          "op": 0.5
-        },
-        {
-          "a": 120,
-          "d": 11,
-          "s": 54,
-          "op": 0.5
-        },
-        {
-          "a": 140,
-          "d": 11,
-          "s": 42,
-          "op": 0.5
-        },
-        {
-          "a": 160,
-          "d": 11,
-          "s": 54,
+          "a": 110,
+          "d": 9,
+          "s": 20,
           "op": 0.5
         }
       ],
@@ -567,9 +565,14 @@
     "pride": {
       "name": "Pride",
       "class": "emotion",
-      "attack": 0.2,
-      "hold": 0.5,
-      "fade": 0.2,
+      "pulse": {
+        "count": 2,
+        "on": 0.22,
+        "off": 0.12,
+        "fade": 0.2,
+        "total": 0.76
+      },
+      "total": 0.76,
       "priority": 11,
       "cooldown": 4,
       "kind": "layout",
@@ -577,33 +580,21 @@
       "layout": [
         {
           "a": 90,
-          "d": 10,
-          "s": 60,
+          "d": 8,
+          "s": 26,
           "op": 0.46
         },
         {
-          "a": 78,
-          "d": 9,
-          "s": 44,
+          "a": 72,
+          "d": 7,
+          "s": 18,
           "op": 0.42
         },
         {
-          "a": 102,
-          "d": 9,
-          "s": 44,
+          "a": 108,
+          "d": 7,
+          "s": 18,
           "op": 0.42
-        },
-        {
-          "a": 66,
-          "d": 8,
-          "s": 28,
-          "op": 0.38
-        },
-        {
-          "a": 114,
-          "d": 8,
-          "s": 28,
-          "op": 0.38
         }
       ],
       "moment": "After a decisive exchange won, before the next one. The Anti-hero's front.",
@@ -615,30 +606,35 @@
     "respect": {
       "name": "Respect",
       "class": "emotion",
-      "attack": 0.2,
-      "hold": 0.4,
-      "fade": 0.3,
+      "pulse": {
+        "count": 2,
+        "on": 0.22,
+        "off": 0.12,
+        "fade": 0.2,
+        "total": 0.76
+      },
+      "total": 0.76,
       "priority": 12,
       "cooldown": 6,
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 166,
-          "d": 12,
-          "s": 30,
+          "a": 120,
+          "d": 9,
+          "s": 16,
           "op": 0.45
         },
         {
-          "a": 14,
-          "d": 12,
-          "s": 30,
+          "a": 70,
+          "d": 9,
+          "s": 16,
           "op": 0.45
         },
         {
-          "a": 90,
-          "d": 10,
-          "s": 12,
+          "a": 95,
+          "d": 8,
+          "s": 8,
           "op": 0.4
         }
       ],
@@ -651,9 +647,14 @@
     "taunt": {
       "name": "Taunt",
       "class": "emotion",
-      "attack": 0.1,
-      "hold": 0.35,
-      "fade": 0.3,
+      "pulse": {
+        "count": 3,
+        "on": 0.1,
+        "off": 0.07,
+        "fade": 0.14,
+        "total": 0.58
+      },
+      "total": 0.58,
       "priority": 13,
       "cooldown": 2,
       "kind": "layout",
@@ -661,20 +662,20 @@
       "layout": [
         {
           "a": 125,
-          "d": 10,
-          "s": 30,
+          "d": 8,
+          "s": 14,
           "op": 0.42
         },
         {
-          "a": 152,
-          "d": 9,
-          "s": 22,
+          "a": 150,
+          "d": 7,
+          "s": 10,
           "op": 0.38
         },
         {
           "a": 100,
-          "d": 8,
-          "s": 16,
+          "d": 6,
+          "s": 8,
           "op": 0.34
         }
       ],
@@ -687,98 +688,53 @@
     "surge": {
       "name": "Surge",
       "class": "emotion",
-      "attack": 0.25,
-      "hold": 3,
-      "fade": 1.2,
+      "pulse": {
+        "count": 3,
+        "on": 0.35,
+        "off": 0.25,
+        "fade": 0.3,
+        "total": 1.85
+      },
+      "total": 1.85,
       "priority": 1,
       "cooldown": 0,
       "kind": "layout",
       "glyph": null,
       "layout": [
         {
-          "a": 60,
-          "d": 10,
-          "s": 96,
-          "op": 0.55
-        },
-        {
-          "a": 75,
-          "d": 10,
-          "s": 96,
-          "op": 0.55
+          "a": 70,
+          "d": 9,
+          "s": 30,
+          "op": 0.5
         },
         {
           "a": 90,
-          "d": 10,
-          "s": 96,
-          "op": 0.55
-        },
-        {
-          "a": 105,
-          "d": 10,
-          "s": 96,
-          "op": 0.55
-        },
-        {
-          "a": 120,
-          "d": 10,
-          "s": 96,
-          "op": 0.55
-        },
-        {
-          "a": 0,
-          "d": 12,
-          "s": 56,
+          "d": 9,
+          "s": 40,
           "op": 0.5
         },
         {
-          "a": 30,
-          "d": 12,
-          "s": 56,
-          "op": 0.5
-        },
-        {
-          "a": 150,
-          "d": 12,
-          "s": 56,
-          "op": 0.5
-        },
-        {
-          "a": 180,
-          "d": 12,
-          "s": 56,
-          "op": 0.5
-        },
-        {
-          "a": 186,
-          "d": 50,
+          "a": 108,
+          "d": 9,
           "s": 30,
+          "op": 0.5
+        },
+        {
+          "a": 195,
+          "d": 22,
+          "s": 10,
           "op": 0.42,
           "ground": true
         },
         {
-          "a": 196,
-          "d": 50,
-          "s": 30,
-          "op": 0.42,
-          "ground": true
-        },
-        {
-          "a": 344,
-          "d": 50,
-          "s": 30,
-          "op": 0.42,
-          "ground": true
-        },
-        {
-          "a": 354,
-          "d": 50,
-          "s": 30,
+          "a": 345,
+          "d": 22,
+          "s": 10,
           "op": 0.42,
           "ground": true
         }
       ],
-      "moment": "A transformation: held for the respected cinematic (up to 3 s), then it fades in 1.2 s. The one flash that lasts.",
+      "moment": "A transformation: three slow pulses of a small crest above and behind the head at the start of the cinematic (1.85 s in all), then gone. Never a standing cloud, never over the body.",
       "event": "cinematic_start and cinematic_end",
       "sound": "A rising swell that resolves on the new form's chord.",
       "rare": true,

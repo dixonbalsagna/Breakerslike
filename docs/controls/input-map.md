@@ -78,7 +78,7 @@ Godot's `JOY_BUTTON_A/B/X/Y` are positional (south, east, west, north). The layo
 ### 3.1 Stick and trigger handling
 - **Deadzone:** inner 0.20 radial, outer 0.90 (full speed at 90% tilt, so no one needs to pin the stick). Response is linear between them.
 - **Quantised to 1/16** before the intent is built, stored as integers −16 to +16, so replays and rollback see integers and not floats.
-- **Square gate (for parity, for now):** the sim takes `mx` and `my` as independent axes (`fighter.gd:214-237`), so a keyboard diagonal is (1, 1), √2 times faster than a stick held at the diagonal of a round gate. Until Simulation normalises diagonals, the pad output is clamped **per axis** after scaling so a full diagonal also reads (1, 1). When the sim normalises, drop the gate. Flagged in the report.
+- **Square gate (for parity, until Stage B):** the sim takes `mx` and `my` as independent axes (`fighter.gd:214-237`), so a keyboard diagonal is (1, 1), √2 times faster than a stick held at the diagonal of a round gate. Until Simulation normalises diagonals, the pad output is clamped **per axis** after scaling so a full diagonal also reads (1, 1). Game Design has ruled that the sim normalises diagonals (**Stage B**, because it changes the goldens). When it lands, drop the gate and let the pad use a round gate; keyboard diagonals become (0.707, 0.707) in `control()`. Stage A stays bit-identical.
 - **Triggers** are digital: on at 0.35, off at 0.25 (hysteresis).
 - **D-pad** edges with a 4-tick debounce; stance cycle repeat while held: 12 ticks.
 - **Hot-plug:** `Input.joy_connection_changed`. A pad that disconnects mid-match releases everything (`release_all`) and shows a "reconnect" prompt; the fighter idles. It does not hand the fighter to the AI without the player choosing to.
@@ -91,10 +91,10 @@ The buttons are slots. What a slot does comes from the fighter's kit. A fighter 
 | :--- | :--- | :--- | :--- |
 | Protagonist | **Stoke**: +25 heat per second, no ki, exposed like charging (attack on him = CHARGE INTERRUPT), spec-wounds §1b | **The fold**, once the ring has closed and the floor has passed | The confirm is an input safeguard, not the 1.5 s interruptible hold Game Design dropped |
 | Anti-hero | **Swallow It** (reserved; inert unless Orb keeps it) | **Drop the Act**: once per match, after 2:00, Pride ≥ 50 | Prompt only when available |
-| Empress | none | none | Her revisions are automatic |
-| Cyborg | **Press** (assumed a hold; Game Design to confirm) | none | Molts and docking are automatic |
+| Empress | none | **Encore**: a contextual prompt for 180 ticks (3 s) after she enters the brink, once per match, hold 18 ticks to confirm | Her revisions are automatic. No new button (spec-wounds §2) |
+| Cyborg | none (**Press is the charge input held near people**, Game Design) | none | Press needs no slot of its own; the sim reads `charge` plus nearby civilians. Molts and docking are automatic |
 
-Open, for Game Design: is **Rally** a player action? If yes, it takes `transform` on fighters that do not use it, and a context prompt on the others. I have not assigned it.
+**Rally has no button** (Game Design): Rallies fire automatically. The one contextual input is the Empress's **Encore** (`transform`, above); the prompt is drawn only inside its 180-tick offer, with a ring that shows the time left. If she does not confirm, the offer lapses (the AI decides for itself). The 18-tick confirm is shorter than the 30-tick default because the offer is short and she is on the brink; it is a data value (`encoreConfirm`).
 
 ### 4.1 Hold rules (sim-side, deterministic)
 - **Confirm-hold, `transform`:** `confirmTicks = 30` (0.5 s). The fighter stays in `free`: it is not exposed as charging and is attacked normally. Releasing early resets the count to 0. Reaching 30 ends the hold and starts the respected cinematic. The prompt shows a filling ring and is drawn only when the action is available.

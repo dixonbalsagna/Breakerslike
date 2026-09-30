@@ -148,6 +148,34 @@ const STARTLE_S: float = 4.0
 const STARTLE_ARMS: float = 2.4          # radians the arms swing up, over the head
 const STARTLE_CROUCH: float = 0.1        # share of the height they drop
 const STARTLE_TREMBLE: float = 0.3
+## Combat's cue events (data/combat/finishers.json `cues`) as placeholder poses on the fighter rig
+## (render/core/fighter_view.gd): each blends in over CUE_IN, holds, and blends out over CUE_OUT by `dur` seconds of
+## sim time (hit-stop holds it). front and back: the hands' targets in the body plane (x forward, y up from the pivot,
+## fighter units; the shoulders are at (12, 14) and (-12, 14)); lean: radians, negative leans forward (the stance lean's
+## sign); crouch and step: units down and forward; head and yaw: radians the head, and the whole body, turn toward the
+## camera; tremble: units of shake; flare, spark and guard: a brief chest flare, a spark at the front hand, the guard
+## glow; badge: the stance badge's size (a tell); ring_other: a ring around the other fighter (circle). The body
+## signals (lean, crouch, yaw, flare) carry the pose at gameplay zoom, where the arms are a few pixels. Cues not listed draw nothing here (camera, banner and HUD cues).
+const CUE_IN: float = 0.08
+const CUE_OUT: float = 0.14
+const CUE_RING_S: float = 0.45
+const CUE_POSES: Dictionary = {
+	"brace": {"dur": 0.45, "front": [8, 8], "back": [-8, 6], "lean": 0.2, "crouch": 9.0, "flare": 0.45},
+	"glance": {"dur": 0.3, "front": [28, 18], "lean": -0.1, "spark": 1.0},
+	"tell": {"dur": 0.4, "back": [2, 26], "lean": 0.32, "crouch": 6.0, "step": -8.0, "badge": 1.8},
+	"turn_read": {"dur": 0.45, "front": [2, 24], "lean": -0.14, "head": 0.5, "yaw": 0.7},
+	"overextend": {"dur": 0.5, "front": [34, -6], "back": [-24, 2], "lean": -0.4, "crouch": 3.0, "step": 12.0},
+	"circle": {"dur": 0.45, "front": [20, 6], "lean": -0.28, "ring_other": 0.6},
+	"guard_set": {"dur": 0.45, "front": [32, 14], "back": [10, 18], "lean": -0.2, "step": 8.0, "guard": 1.0},
+	"struggle": {"dur": 1.2, "front": [14, 26], "back": [-8, 24], "crouch": 8.0, "tremble": 2.4},
+	"last_look": {"dur": 0.9, "front": [-2, 22], "lean": 0.08, "head": 0.6, "flare": 0.25},
+	"breaks_hold": {"dur": 0.55, "front": [26, 30], "back": [-26, 28], "lean": 0.24, "flare": 0.9},
+	"holds_on": {"dur": 0.7, "front": [18, 22], "back": [-4, 22], "crouch": -3.0, "flare": 0.3},
+	"catch": {"dur": 0.45, "front": [30, 20], "lean": -0.18, "step": 8.0, "spark": 0.8},
+	"glance_back": {"dur": 0.5, "lean": -0.12, "head": 2.0, "yaw": 0.4},
+	"pursue": {"dur": 0.5, "front": [6, 2], "back": [-26, 8], "lean": -0.42},
+	"reset": {"dur": 0.4, "front": [22, 0], "back": [-20, -4], "crouch": 5.0},
+}
 ## Head flashes (render/core/flash_view.gd; Art's spec docs/art/flash-prototype-spec.md, data data/art/flashes.json).
 ## The layouts, timings, priorities, colours of the info flashes and Legal's rules are Art's data; these are the
 ## drawing's own numbers from the spec. Sizes are in layout units: a twelfth of the fighter's head size, the data's
@@ -162,9 +190,12 @@ const FLASH_ART_HEAD_R: float = 6.0     # Art's head radius in layout units (hea
 const FLASH_GLYPH_AT: Array = [[2.0, 5.0]]                 # a glyph's place from the origin; hazard's two bangs:
 const FLASH_GLYPH2_AT: Array = [[-5.5, 5.0], [9.0, 5.0]]
 const FLASH_OUT: float = 0.1            # seconds a preempted flash takes to fade (spec section 7)
-const FLASH_JITTER: Dictionary = {"hurt": 0.06}     # irregular jitter per shape, as a share of the body height
+const FLASH_JITTER: Dictionary = {"hurt": 0.04}     # irregular jitter per shape, as a share of the body height
 const FLASH_JITTER_HZ: float = 18.0     # how often the jitter moves
-const FLASH_SWEEP: Dictionary = {"rage": 20.0}      # degrees the layout sweeps forward over its attack
+const FLASH_SWEEP: Dictionary = {}     # degrees a layout sweeps over its first pulse's swell (rage no longer does)
+const FLASH_BLADE_W: float = 2.3        # half widths of blades and wedges, layout units (thin, after the playtest)
+const FLASH_WEDGE_W: float = 5.2
+const FLASH_GLYPH_SCALE: float = 1.1    # glyph units to layout units at full size
 ## The placeholders' shape families: P1 draws as the Protagonist, P2 as the Anti-hero; Alt+F (Alt+Shift+F for P2)
 ## cycles a fighter through all four. The colours are Art's (flashes.json `accents`, `emotion_colours`).
 const FLASH_FAMILY: Array = ["P", "A"]

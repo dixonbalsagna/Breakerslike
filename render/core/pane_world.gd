@@ -18,6 +18,7 @@ var planet := PlanetView.new()
 var fighters_root := Node3D.new()
 var beams := BeamView.new()
 var particles := ParticleView.new()
+var vfx_layer := VfxLayer.new()    # VFX's drawing for this pane (render/vfx/); main sets its hub, which every pane shares
 var fighter_views: Array = []
 var source: PaneWorld = null       # a second pane: the first, whose world it draws
 var view_cam_x: float = 0.0        # this frame's camera's wrapped world x
@@ -32,8 +33,9 @@ func _init() -> void:
 	fighters_root.name = "Fighters"
 	beams.name = "Beams"
 	particles.name = "Particles"
+	vfx_layer.name = "Vfx"
 	planet.mats = mats
-	for n in [cam_rig, env, planet, fighters_root, beams, particles]:
+	for n in [cam_rig, env, planet, fighters_root, beams, particles, vfx_layer]:
 		add_child(n)
 	_setup_environment()
 
@@ -53,6 +55,7 @@ func build(S: SimState) -> void:
 		if source != null and i < source.fighter_views.size():
 			v.flash_view.set_leader(source.fighter_views[i].flash_view)
 		fighter_views.append(v)
+	vfx_layer.build(S)
 
 
 ## Draw one frame from a camera: its wrapped world x (float64), cam.y and cam.z (the reference camera's height and
@@ -67,6 +70,7 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 	planet.update(S, cam_x, host.impact.heat, host.impact.heat_changed)
 	for i in range(fighter_views.size()):
 		fighter_views[i].update(S, S.fighters[i], host.fighter_pose(i, a), SimWrap.sdx(cam_x, host.fighter_x(i, a)), cam.z)
+	vfx_layer.update(host, a, cam_x, cam.z, vp.x)
 	beams.update(S, cam_x, cam.z)
 	particles.update(host.fxv, host.impact, cam_x, cam.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
 

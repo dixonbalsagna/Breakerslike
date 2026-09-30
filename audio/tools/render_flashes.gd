@@ -17,6 +17,8 @@ func _init() -> void:
 	print("%-22s %7s %8s %8s %9s" % ["cue", "seconds", "peak dB", "rms dB", "render ms"])
 	for fam in fams:
 		for fl in bank.flashes.flashes:
+			if bool(bank.flashes.flashes[fl].get("held", false)):
+				continue
 			var id: String = "flash.%s.%s" % [fl, fam]
 			var t0: int = Time.get_ticks_usec()
 			var buf: PackedFloat32Array = bank.buffer(id, 0)
@@ -29,5 +31,5 @@ func _init() -> void:
 				quit(1)
 				return
 			print("%-22s %7.3f %8.1f %8.1f %9.1f" % ["%s.%s" % [fam, fl], float(buf.size()) / rate, 20.0 * log(maxf(AudioDsp.peak(buf), 1e-9)) / log(10.0), 20.0 * log(maxf(AudioDsp.rms(buf), 1e-9)) / log(10.0), ms])
-	print("rendered %d cues in %.0f ms" % [fams.size() * bank.flashes.flashes.size(), total])
+	print("rendered the cues of %d families in %.0f ms" % [fams.size(), total])
 	quit(0)

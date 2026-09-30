@@ -21,6 +21,7 @@ var impact := ImpactFx.new()    # render-side crater, scorch and water effects (
 var audio_cues := AudioCues.new()   # Audio's event reader (audio/audio_cues.gd); its own stream, seeded per match
 var pending_cues: Array = []    # cues made this frame's ticks, for the scene to play
 var evac_mock: EvacMock = null  # main's --mock-evac: World's planned evacuate events, until the sim sends them
+var vfx := VfxHub.new()         # VFX's state (render/vfx/, docs/vfx/plan.md): trails and the rest, from each tick's events
 var cam_rng: SimRng             # the 'camera' cosmetic stream: shake jitter
 var seed: int = 1
 var acc: float = 0.0
@@ -50,6 +51,7 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	audio_cues.reset(seed)
 	if evac_mock != null:
 		evac_mock.reset(S)
+	vfx.reset(S, seed)
 	pending_cues.clear()
 	cam_rng = SimRng.new(SimRng.deriveSeed(seed, "camera"))
 	acc = 0.0
@@ -104,6 +106,7 @@ func tick(vw: float, vh: float) -> void:
 	if evac_mock != null:
 		fx = fx + evac_mock.step(S, fx)
 	drained.emit(fx, lines)
+	vfx.consume(S, S.out.fx)
 	S.out.fx.clear()
 	if fxv.shake > 0.5:
 		jitter = Vector2((cam_rng.next() - 0.5) * fxv.shake, (cam_rng.next() - 0.5) * fxv.shake)

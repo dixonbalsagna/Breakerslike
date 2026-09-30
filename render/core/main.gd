@@ -20,7 +20,8 @@ extends Node3D
 ##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
-## full panes were drawn), --novsync, --nosplit, --mock-evac
+## full panes were drawn; VFX at a fixed quality), --novsync, --nosplit, --novfx (VFX off, for A/B runs),
+## --vfx-quality=0|1|2 (VFX's low, medium or high, fixed), --mock-evac
 ## (World's planned evacuate events from a render-side mock, render/tools/evac_mock.gd, until the sim sends them).
 ## Head flashes (render/core/flash_view.gd): F7 on and off (on by default, in place of the placeholder aura), F8 the
 ## legacy shapes, Alt plus 1 to 9, 0, -, =, [ and ] fires each flash in the data's order on P1 (Shift: P2), Alt+F
@@ -73,6 +74,7 @@ var ui_hud: UiHud                 # UI's HUD
 var audio: AudioVoices            # Audio's voice pool
 var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
 var flashes_on: bool = true       # F7: head flashes instead of the placeholder aura
+var cues_on: bool = true          # Combat's cue events as placeholder poses on the fighters (tools switch it off for A/B)
 var flash_legacy: bool = false    # F8: the flashes' shapes before Legal's conditions
 var flash_family: Array = RenderLook.FLASH_FAMILY.duplicate()   # each fighter's shape family (Alt+F cycles)
 ## The flash debug keys, in the data's order (FlashSet.ids()).
@@ -92,6 +94,13 @@ func _ready() -> void:
 	particles = pane.particles
 	fighter_views = pane.fighter_views
 	host = SimHost.new()
+	if args.has("novfx"):
+		host.vfx.enabled = false
+	if args.has("vfx-quality"):
+		host.vfx.quality = clampi(int(args["vfx-quality"]), 0, 2)
+		host.vfx.auto_quality = false
+	if args.has("bench"):
+		host.vfx.auto_quality = false
 	hud.main = self
 	ui_hud = preload("res://ui/hud/ui_hud.tscn").instantiate()
 	$HUD.add_child(ui_hud)
@@ -134,6 +143,7 @@ func start_match(seed: int, ai: Dictionary = {}) -> void:
 	var fl: Array = UiSimBridge.fighters(host.S)
 	ui_hud.setup(fl[0], fl[1])
 	for p in panes:
+		p.vfx_layer.hub = host.vfx
 		p.build(host.S)
 		for v in p.fighter_views:
 			v.flashes_on = flashes_on
@@ -150,6 +160,7 @@ func make_pane(size: Vector2i) -> SubViewport:
 	var sv := _pane_viewport(size)
 	var p := PaneWorld.new()
 	p.source = pane
+	p.vfx_layer.hub = host.vfx
 	sv.add_child(p)
 	panes.append(p)
 	p.build(host.S)
@@ -209,6 +220,28 @@ func fire_flash(actor: int, id: String) -> void:
 	fighter_views[actor].flash_view.fire(id, S.T, f.hidden, b)
 
 
+## Combat's cue events (the `cue` op; data/combat/finishers.json `cues`) as placeholder poses, on the fighter the cue
+## names (or both) in every pane. A cue with a ring_other ring also rings the other fighter (circle). Cues with no
+## pose in RenderLook.CUE_POSES (the camera, banner and HUD ones) are left to their owners.
+func _cue_events(events: Array) -> void:
+	if not cues_on:
+		return
+	var T: float = host.S.T
+	for e in events:
+		if e.type != "cue":
+			continue
+		var kind: String = String(e.kind)
+		var who: int = int(e.actor)
+		var pose: Dictionary = RenderLook.CUE_POSES.get(kind, {})
+		for pw in panes:
+			var views: Array = pw.fighter_views
+			for i in range(views.size()):
+				if who < 0 or i == who:
+					views[i].cue(kind, T)
+			if pose.has("ring_other") and who >= 0 and who < 2 and views.size() == 2:
+				views[1 - who].ring(T, float(pose.ring_other))
+
+
 ## The flashes today's events can drive (spec section 6); the rest wait for Encounter's events and have debug keys.
 func _flash_events(events: Array) -> void:
 	for e in events:
@@ -242,6 +275,8 @@ func frame(delta: float) -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var t0: int = Time.get_ticks_usec()
 	_sync_split_options()
+	host.vfx.note_frame(delta)
+	host.vfx.reduced_motion = bool(ui_hud.opts.get("reduced_motion", false))
 	var n: int = host.advance(delta, vp.x, vp.y)
 	if args.has("flash-soak") and frames % 40 == 0 and not FlashSet.ids().is_empty():
 		var ids: Array = FlashSet.ids()
@@ -293,6 +328,7 @@ func _on_drained(events: Array, lines: Array) -> void:
 		split_rig.step(host.S, vp.x, vp.y, events)
 	planet.consume(events)
 	_flash_events(events)
+	_cue_events(events)
 	ui_hud.consume_all(events)
 	UiSimBridge.feed(ui_hud, lines)
 

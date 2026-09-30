@@ -9,14 +9,14 @@ Owner: Camera and Cinematography. Status: design note, 2026-09-29, for World's B
 4. In the widest case (the back row, 38 fighter heights deep) the fighter cannot reach the normal 47 px from the plane's zoom range; the shot accepts about 25 px there for the second or two it lasts.
 5. The tick-level work is small: `SplitFrame.screen_pos` and `hud_anchor` take `z`, `_cam_from_focus` and the zoom target take the fighter's depth, three event reads. Tests get a depth sweep.
 
-**Open questions for Orb**: none from Camera. For World and Rendering: see the end.
+**Open questions for Orb**: none from Camera. For World and Rendering: see the end. The back-row size risk is World's to fix in B2 step 4.
 
 ## 1. Facts from B2
 
-- Rows of buildings sit at +10, -8, -22 and -38 fighter heights from the plane (750, -600, -1,650 and -2,850 units); the fighter's `z` follows an eased path from `aimZ0` to `aimZ1` while it flies to its target building (a smoothstep of x progress), so `z` is smooth sim state, 0 when not aimed and easing to 0 in 0.3 s afterwards.
+- Rows of buildings sit at +10 (foreground), -8 (front street), -22 (mid) and -38 (back) fighter heights from the plane (+750, -600, -1,650 and -2,850 units; `z` is positive toward the camera, confirmed by World, and `launch_depth.dur` and `chain_link.dur` are seconds of match time); the fighter's `z` follows an eased path from `aimZ0` to `aimZ1` while it flies to its target building (a smoothstep of x progress), so `z` is smooth sim state, 0 when not aimed and easing to 0 in 0.3 s afterwards.
 - Events: `launch_depth` {x, y, x1, y1, z, b, dur, n, owner, victim} at the launch beat; `building_hit` {b, x, y, z, damage, ratio, outcome, link, n, spd, ux, uy, kind, w, h, victim} on each hit; `chain_link` {from, to, x, y, z, x1, y1, z1, dur, link, victim} when the fighter bursts through toward the next; `building_fall`.
 - Holds: 0.35 s on the first hit, 0.12 s on each further one, capped at 0.8 s in all, taken by the sim (`dirS.stop`). The camera reads them and never sets them.
-- The camera's distance to the fighter plane is `d = vh / (2 zoom tan(15 degrees))`, i.e. `K / zoom` with `K = vh / 0.536` (1,343 at 720p). At the usual zoom 0.6 that is 2,240 units, so a fighter 2,850 units behind the plane is at 5,090: it draws at `s = 0.44` of its plane size, and 0.44 of the way from the screen centre to where it would be. A fighter on the front street (+750) draws at `s = 1.5` and is pushed outward.
+- The camera's distance to the fighter plane is `d = vh / (2 zoom tan(15 degrees))`, i.e. `K / zoom` with `K = vh / 0.536` (1,343 at 720p). At the usual zoom 0.6 that is 2,240 units, so a fighter 2,850 units behind the plane is at 5,090: it draws at `s = 0.44` of its plane size, and 0.44 of the way from the screen centre to where it would be. A fighter at the foreground row (+750) draws at `s = 1.5` and is pushed outward.
 
 ## 2. Mapping a fighter at depth
 
@@ -58,6 +58,6 @@ The lead and the chain re-aim become cuts to the hit point at each `building_hit
 
 ## 6. For World, Rendering and the EP
 
-- **World:** `z` on the fighter in `hash` order and as a plain float in the fx `state` the views read; a `dur` on `launch_depth` in seconds (not ticks) or tell me which; the sign convention (I assume `z` positive toward the camera, matching the row list).
-- **Rendering (B3):** the fighter's pivot uses the same perspective factor `s` as above; the ground band must reach `w` = 2,850 behind the plane for the back row to show ground under a building; near-plane clamp when the camera distance `d` falls below the front row's +750 (at the zoom cap `d` is 1,168, which clears it).
+- **World:** `z` on the fighter in `hash` order and as a plain float in the fx `state` the views read. Sign and `dur` units are confirmed (above).
+- **Rendering (B3):** the fighter's pivot uses the same perspective factor `s` as above; the ground band must reach `w` = 2,850 behind the plane for the back row to show ground under a building; near-plane clamp when the camera distance `d` falls below the foreground row's +750 (at the zoom cap `d` is 1,168, which clears it).
 - **Risk:** at the back row a fighter is 25 px at best, under the 32 px the split line assumes elsewhere, for a second or two. If Orb finds that too small, the answer is to shorten the flight or slow it in the last row (World's tuning), not to move the camera plane.

@@ -1,8 +1,8 @@
 class_name FlashSet
 extends RefCounted
-## Art's head-flash data (data/art/flashes.json; docs/art/flash-prototype-spec.md), read once. Rendering reads it and
-## never edits it: layouts, timings, priorities, cooldowns, the info flashes' colours, the arbitration waits and
-## Legal's rules (round tips, the low crest, the danger ray) all come from here.
+## Art's head-flash data (data/art/flashes.json, version 3; docs/art/flash-prototype-spec.md), read once. Rendering
+## reads it and never edits it: layouts, pulses, priorities, cooldowns, colours, the arbitration waits, the keep-out
+## zone and Legal's rules (round tips, the low crest, the danger ray) all come from here.
 
 const PATH := "res://data/art/flashes.json"
 ## The shader's family index for each shape name in the data's `families`.
@@ -37,9 +37,27 @@ static func priority(id: String) -> int:
 	return int(flash(id).get("priority", 99))
 
 
-static func total(id: String) -> float:
-	var f: Dictionary = flash(id)
-	return float(f.get("attack", 0.0)) + float(f.get("hold", 0.0)) + float(f.get("fade", 0.0))
+## A flash's pulses: {count, on, off, fade, total} (spec section 5).
+static func pulse(id: String) -> Dictionary:
+	return flash(id).get("pulse", {})
+
+
+## A flash's whole time, from its pulses: count x on + (count - 1) x off + fade (one pulse with reduced motion).
+static func total(id: String, reduced: bool = false) -> float:
+	var p: Dictionary = pulse(id)
+	var n: int = 1 if reduced else int(p.get("count", 1))
+	return n * float(p.get("on", 0.0)) + (n - 1) * float(p.get("off", 0.0)) + float(p.get("fade", 0.0))
+
+
+## The share of a pulse's `on` it takes to swell to full (pulse_rule).
+static func rise_fraction() -> float:
+	return float(data().get("pulse_rule", {}).get("rise_fraction", 0.3))
+
+
+## The keep-out zone: every layout shape sits between these angles (degrees, facing frame), ground shards excepted.
+static func keep_out() -> Vector2:
+	var k: Dictionary = data().get("keep_out", {})
+	return Vector2(float(k.get("angle_min", 0.0)), float(k.get("angle_max", 360.0)))
 
 
 ## The shader's family index (circles, blades, wedges, steps) of a fighter's family key (P, A, E, C).

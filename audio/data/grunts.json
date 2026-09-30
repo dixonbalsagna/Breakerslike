@@ -372,6 +372,378 @@
           "caption": "[grunt]"
         }
       }
+    },
+    "empress": {
+      "label": "The Empress. PLACEHOLDER until the F-slices: a theatrical high voice, pitch 190 to 300 Hz, resonances up 17%. Her cackle, snort, shriek and mutter are planned in docs/audio/grunts.md; nothing sincere.",
+      "placeholder": true,
+      "gestures": {
+        "effort.heavy": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -7.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.34,
+          "f0": [
+            300,
+            215
+          ],
+          "f0_tau": 0.09,
+          "f0_jitter": 0.015,
+          "shimmer": 0.06,
+          "open": 0.6,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              854,
+              1275,
+              2855
+            ],
+            "bw": [
+              105,
+              129,
+              187
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              690,
+              1030,
+              2820
+            ],
+            "bw": [
+              94,
+              117,
+              176
+            ]
+          },
+          "glide": [
+            0.05,
+            0.28
+          ],
+          "breath": 0.28,
+          "h_onset": 0.05,
+          "attack": 0.006,
+          "hold": 0.07,
+          "t60": 0.22,
+          "chest": {
+            "f": 240,
+            "bw": 140,
+            "gain": 0.4
+          },
+          "drive": 1.8,
+          "caption": "[effort]"
+        },
+        "pain.head": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -7.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.26,
+          "f0": [
+            360,
+            250
+          ],
+          "f0_tau": 0.06,
+          "f0_jitter": 0.025,
+          "shimmer": 0.09,
+          "open": 0.55,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              620,
+              2153,
+              2902
+            ],
+            "bw": [
+              94,
+              129,
+              187
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              854,
+              1275,
+              2855
+            ],
+            "bw": [
+              105,
+              129,
+              187
+            ]
+          },
+          "glide": [
+            0.02,
+            0.18
+          ],
+          "breath": 0.3,
+          "h_onset": 0.02,
+          "attack": 0.004,
+          "hold": 0.05,
+          "t60": 0.16,
+          "chest": {
+            "f": 240,
+            "bw": 140,
+            "gain": 0.3
+          },
+          "drive": 1.6,
+          "caption": "[indignant cry]"
+        },
+        "pain.limb": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -8.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.3,
+          "f0": [
+            280,
+            200
+          ],
+          "f0_tau": 0.08,
+          "f0_jitter": 0.02,
+          "shimmer": 0.07,
+          "open": 0.58,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              667,
+              983,
+              2820
+            ],
+            "bw": [
+              94,
+              117,
+              176
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              585,
+              1053,
+              2808
+            ],
+            "bw": [
+              94,
+              117,
+              176
+            ]
+          },
+          "glide": [
+            0.03,
+            0.22
+          ],
+          "breath": 0.4,
+          "h_onset": 0.05,
+          "attack": 0.006,
+          "hold": 0.09,
+          "t60": 0.2,
+          "chest": {
+            "f": 240,
+            "bw": 140,
+            "gain": 0.4
+          },
+          "drive": 1.5,
+          "caption": "[indignant cry]"
+        }
+      }
+    },
+    "cyborg": {
+      "label": "The Cyborg. PLACEHOLDER until the F-slices: the voice engine with a slightly raised, tight vocal tract and heavy saturation; the bit-crush, ring-modulator and glitch stages in docs/audio/grunts.md are not built yet.",
+      "placeholder": true,
+      "gestures": {
+        "effort.heavy": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -7.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.32,
+          "f0": [
+            150,
+            112
+          ],
+          "f0_tau": 0.08,
+          "f0_jitter": 0.01,
+          "shimmer": 0.04,
+          "open": 0.5,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              803,
+              1199,
+              2684
+            ],
+            "bw": [
+              99,
+              121,
+              176
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              649,
+              968,
+              2651
+            ],
+            "bw": [
+              88,
+              110,
+              165
+            ]
+          },
+          "glide": [
+            0.05,
+            0.26
+          ],
+          "breath": 0.2,
+          "h_onset": 0.04,
+          "attack": 0.005,
+          "hold": 0.06,
+          "t60": 0.2,
+          "chest": {
+            "f": 160,
+            "bw": 120,
+            "gain": 0.5
+          },
+          "drive": 3.2,
+          "caption": "[static effort]"
+        },
+        "pain.head": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -7.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.26,
+          "f0": [
+            210,
+            150
+          ],
+          "f0_tau": 0.06,
+          "f0_jitter": 0.02,
+          "shimmer": 0.06,
+          "open": 0.5,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              583,
+              2024,
+              2728
+            ],
+            "bw": [
+              88,
+              121,
+              176
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              803,
+              1199,
+              2684
+            ],
+            "bw": [
+              99,
+              121,
+              176
+            ]
+          },
+          "glide": [
+            0.02,
+            0.18
+          ],
+          "breath": 0.22,
+          "h_onset": 0.02,
+          "attack": 0.004,
+          "hold": 0.05,
+          "t60": 0.16,
+          "chest": {
+            "f": 160,
+            "bw": 120,
+            "gain": 0.4
+          },
+          "drive": 3.0,
+          "caption": "[static cry]"
+        },
+        "pain.limb": {
+          "rate": 24000,
+          "variants": 3,
+          "peak_db": -8.0,
+          "jitter": {
+            "f0": 0.05,
+            "formant": 0.03,
+            "dur": 0.06
+          },
+          "dur": 0.3,
+          "f0": [
+            170,
+            120
+          ],
+          "f0_tau": 0.08,
+          "f0_jitter": 0.015,
+          "shimmer": 0.05,
+          "open": 0.5,
+          "fry": 0.0,
+          "vowel_a": {
+            "f": [
+              627,
+              924,
+              2651
+            ],
+            "bw": [
+              88,
+              110,
+              165
+            ]
+          },
+          "vowel_b": {
+            "f": [
+              550,
+              990,
+              2640
+            ],
+            "bw": [
+              88,
+              110,
+              165
+            ]
+          },
+          "glide": [
+            0.03,
+            0.22
+          ],
+          "breath": 0.3,
+          "h_onset": 0.05,
+          "attack": 0.006,
+          "hold": 0.08,
+          "t60": 0.2,
+          "chest": {
+            "f": 160,
+            "bw": 120,
+            "gain": 0.5
+          },
+          "drive": 3.0,
+          "caption": "[static cry]"
+        }
+      }
     }
   }
 }

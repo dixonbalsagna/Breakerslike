@@ -9,7 +9,9 @@ extends Node3D
 ## - tier: the aura grows with tier, and at tier 3+ (or while charging) aura streaks rise from the feet;
 ## - hidden: the whole figure fades to RenderLook.HIDDEN_ALPHA inside a sonar ripple;
 ## - head flashes (flash_view.gd, the aura's replacement): brief pops at the head for what the fighter senses or
-##   feels. While they are on (F7), the aura, its streaks and the charge orb are hidden.
+##   feels. While they are on (F7), the aura, its streaks and the charge orb are hidden;
+## - Combat's cues (brace, glance, tell, turn_read and the rest; RenderLook.CUE_POSES): short placeholder poses blended
+##   onto the rig (arms, lean, crouch, step, head, tremble) with a brief flare, spark, guard or ring. Presentation only.
 ##
 ## Staging (Orb: fighters "cheat out" like stage actors). The body is turned toward the camera by a pose angle
 ## (RenderLook.TURN per state, TURN_STANCE per stance, measured from a pure profile) and the head leads by TURN_HEAD.
@@ -23,6 +25,9 @@ extends Node3D
 const PIVOT_Y := 34.0
 const HEIGHT := 90.0           # feet to the top of the hair, in world units (for UI's anchors)
 const HEAD_Y := 30.0
+const FRONT_SHOULDER := Vector2(12, 14)
+const BACK_SHOULDER := Vector2(-12, 14)
+const BACK_HAND := Vector2(-20, -4)
 ## Hair outlines in the prototype's canvas units (x forward, y down), extruded to low-poly prisms. The hero's crest is
 ## swept back rather than spiked upward, to keep the placeholder away from genre-classic silhouettes.
 const HAIR_HERO: Array = [[-10, -30], [-24, -39], [-12, -41], [-19, -49], [-2, -45], [9, -46], [12, -37], [10, -30]]
@@ -35,6 +40,14 @@ var body := Node3D.new()       # turned toward the camera and mirrored by facing
 var head := Node3D.new()       # leads the body's turn by TURN_HEAD
 var solid: Array = []          # [MeshInstance3D, base Color, flashes on hit, opaque material, faded material]
 var arm_front: MeshInstance3D
+var arm_back: MeshInstance3D
+var flare: MeshInstance3D      # a cue's brief chest flare
+var spark: MeshInstance3D      # a cue's contact spark at the front hand
+var cue_ring: MeshInstance3D   # a ring around this fighter when the other circles it
+var _cue: Dictionary = {}      # the cue pose showing: a RenderLook.CUE_POSES entry, plus t0 and kind
+var _ring_t0: float = -1.0
+var _ring_a: float = 0.0
+var cues_started: Dictionary = {}   # kind -> poses started this match (for tools)
 var aura: MeshInstance3D
 var orb_outer: MeshInstance3D
 var orb_core: MeshInstance3D
@@ -72,8 +85,8 @@ func build(f) -> void:
 		_part(_extrude(CAPE, 4.0), Vector3(0, 0, -10), RenderLook.col(RenderLook.CAPE), false)
 	_part(_box(Vector3(28, 32, 18)), Vector3(0, 4, 0), RenderLook.col(f.col), true)
 	var arm := RenderLook.col(RenderLook.ARM)
-	var back_arm := _part(_box(Vector3(6, 1, 6)), Vector3.ZERO, arm, true)
-	_limb(back_arm, Vector2(-12, 14), Vector2(-20, -4), -10.0)
+	arm_back = _part(_box(Vector3(6, 1, 6)), Vector3.ZERO, arm, true)
+	_limb(arm_back, BACK_SHOULDER, BACK_HAND, -10.0)
 	arm_front = _part(_box(Vector3(6, 1, 6)), Vector3.ZERO, arm, true)
 	var hs := SphereMesh.new()
 	hs.radius = 10.0
@@ -110,14 +123,102 @@ func build(f) -> void:
 	flash_view = FlashView.new()
 	add_child(flash_view)
 	flash_view.set_head(hs.radius)
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.93
-	ring.outer_radius = 1.0
-	ring.rings = 24
-	ring.ring_segments = 4
-	ripple = _glow(ring, Color(190.0 / 255.0, 220.0 / 255.0, 1.0), 0.55, 0.0)
+	flare = _glow(_sphere(), _aura_col, 0.0, 1.4)
+	flare.visible = false
+	pivot.add_child(flare)
+	spark = _glow(_sphere(), Color(1.0, 0.95, 0.8), 0.0, 0.6)
+	spark.visible = false
+	add_child(spark)
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.93
+	torus.outer_radius = 1.0
+	torus.rings = 24
+	torus.ring_segments = 4
+	ripple = _glow(torus, Color(190.0 / 255.0, 220.0 / 255.0, 1.0), 0.55, 0.0)
 	ripple.rotation.x = PI * 0.5
 	add_child(ripple)
+	cue_ring = _glow(torus, Color(1.0, 1.0, 1.0), 0.0, 0.0)
+	cue_ring.rotation.x = PI * 0.5
+	cue_ring.visible = false
+	add_child(cue_ring)
+
+
+## A cue from Combat (RenderLook.CUE_POSES), started at sim time T; kinds with no pose are ignored.
+func cue(kind: String, T: float) -> void:
+	var p = RenderLook.CUE_POSES.get(kind)
+	if p == null:
+		return
+	_cue = p.duplicate()
+	_cue["t0"] = T
+	_cue["kind"] = kind
+	cues_started[kind] = int(cues_started.get(kind, 0)) + 1
+
+
+## A ring around this fighter (the other one circles it), at alpha a.
+func ring(T: float, a: float) -> void:
+	_ring_t0 = T
+	_ring_a = a
+
+
+## The cue's weight now: in over CUE_IN, out over CUE_OUT, 0 outside its time.
+func _cue_weight(T: float) -> float:
+	if _cue.is_empty():
+		return 0.0
+	var t: float = T - float(_cue.t0)
+	var d: float = float(_cue.dur)
+	if t < 0.0 or t >= d:
+		return 0.0
+	return smoothstep(0.0, RenderLook.CUE_IN, t) * (1.0 - smoothstep(d - RenderLook.CUE_OUT, d, t))
+
+
+## A part of the cue showing, times its weight (0 when the cue has none).
+func _cue_part(key: String, T: float) -> float:
+	return float(_cue.get(key, 0.0)) * _cue_weight(T) if not _cue.is_empty() else 0.0
+
+
+## The cue pose on top of the state's own: the arms, lean, crouch, step, head and tremble, and its flare, spark and
+## ring. m, th: the body's mirror and turn this frame; front: the front hand's own target.
+func _pose_cue(T: float, m: float, th: float, front: Vector2) -> void:
+	var w: float = _cue_weight(T)
+	var back: Vector2 = BACK_HAND
+	var step: float = 0.0
+	if w > 0.0:
+		var c: Dictionary = _cue
+		if c.has("front"):
+			front = front.lerp(Vector2(c.front[0], c.front[1]), w)
+		if c.has("back"):
+			back = back.lerp(Vector2(c.back[0], c.back[1]), w)
+		pivot.rotation.z += float(c.get("lean", 0.0)) * w * _turn
+		pivot.position.y -= float(c.get("crouch", 0.0)) * w
+		head.rotation.y -= float(c.get("head", 0.0)) * w
+		if c.has("yaw"):
+			body.basis = Basis(Vector3.UP, -m * (th + float(c.yaw) * w)) * Basis.from_scale(Vector3(m, 1.0, 1.0))
+		step = float(c.get("step", 0.0)) * w * m
+		if not flash_view.reduced_motion:
+			step += sin(T * 55.0) * float(c.get("tremble", 0.0)) * w
+	elif not _cue.is_empty() and T - float(_cue.t0) >= float(_cue.dur):
+		_cue = {}
+	pivot.position.x = step
+	_limb(arm_front, FRONT_SHOULDER, front, 10.0)
+	_limb(arm_back, BACK_SHOULDER, back, -10.0)
+	var t: float = T - float(_cue.get("t0", 0.0))
+	var fl: float = _cue_part("flare", T) * clampf(1.0 - t / float(_cue.get("dur", 1.0)), 0.0, 1.0)
+	flare.visible = fl > 0.01
+	if flare.visible:
+		flare.scale = Vector3.ONE * 2.0 * (40.0 + 30.0 * t / float(_cue.dur))
+		RenderMats.set_glow(flare.material_override, _aura_col, fl)
+	var sp: float = float(_cue.get("spark", 0.0)) * clampf(1.0 - t / 0.2, 0.0, 1.0) if not _cue.is_empty() else 0.0
+	spark.visible = sp > 0.01
+	if spark.visible:
+		spark.position = to_local(arm_front.global_transform * Vector3(0.0, 0.5, 0.0))
+		spark.scale = Vector3.ONE * 2.0 * (6.0 + 10.0 * t / 0.2)
+		RenderMats.set_glow(spark.material_override, Color(1.0, 0.95, 0.8), sp)
+	var rt: float = (T - _ring_t0) / RenderLook.CUE_RING_S if _ring_t0 >= 0.0 else 2.0
+	cue_ring.visible = rt >= 0.0 and rt < 1.0
+	if cue_ring.visible:
+		cue_ring.position = Vector3(0.0, PIVOT_Y, 0.0)
+		cue_ring.scale = Vector3.ONE * (40.0 + 40.0 * rt)
+		RenderMats.set_glow(cue_ring.material_override, Color(1.0, 1.0, 1.0), _ring_a * (1.0 - rt))
 
 
 ## The pose angle for the fighter's state and stance, in degrees from a pure profile toward the camera.
@@ -153,7 +254,8 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		pivot.rotation.z = -pose.z + lean * _turn
 		pivot.position.y = PIVOT_Y
 	var punch: bool = f.state == "locked" or f.beamCharge != null
-	_limb(arm_front, Vector2(12, 14), Vector2(30, 12) if punch else Vector2(22, 0), 10.0)
+	var front: Vector2 = Vector2(30, 12) if punch else Vector2(22, 0)
+	_pose_cue(T, m, th, front)
 	var flash: bool = T - f.hurtT < RenderLook.HIT_FLASH_S and T >= f.hurtT
 	if f.hidden != _faded or flash != _flash:
 		_faded = f.hidden
@@ -195,11 +297,12 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		orb_core.scale = Vector3.ONE * r * 0.8
 	badge.visible = not f.hidden and not (flashes_on and flash_view.glyph_up())
 	badge.position = Vector3(0.0, 84.0 + tier * 3.0 + 8.0, 0.0)
+	badge.scale = Vector3.ONE * (1.0 + (float(_cue.get("badge", 1.0)) - 1.0) * _cue_weight(T))
 	badge.rotation.y = T * 2.0
 	if stance != _stance:
 		_stance = stance
 		_badge_mat.set_shader_parameter("albedo", RenderLook.col(RenderLook.STANCE_COL[stance]))
-	guard.visible = stance == 1 and not f.hidden and (f.state == "free" or f.state == "locked")
+	guard.visible = (stance == 1 and (f.state == "free" or f.state == "locked") or _cue_part("guard", T) > 0.3) and not f.hidden
 	ripple.visible = f.hidden
 	if f.hidden:
 		var rp: float = fmod(T * 1.2, 1.0)

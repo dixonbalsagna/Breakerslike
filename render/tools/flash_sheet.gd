@@ -1,7 +1,8 @@
 extends SceneTree
 ## The head flashes on a contact sheet, for the rendering docs and Art's review: every flash in the data's order
 ## (columns) in every shape family, then the blades and wedges again with the legacy shapes (F8; rows), each at its
-## peak on P1's head in the real scene, and a last row on P2, who faces the other way (the flashes mirror with it).
+## last pulse's peak on P1's head in the real scene, and a last row on P2, who faces the other way (the flashes mirror
+## with it).
 ## The fighters are posed, no sim ticks run, and time is stepped by hand, so the state machine sees each flash start
 ## and reach its hold as in play. Needs a window (not --headless).
 ##   godot --path . --script res://render/tools/flash_sheet.gd -- --out=DIR [--cell=240]
@@ -58,9 +59,10 @@ func _run() -> void:
 			T += 20.0
 			S.T = T
 			fv.fire(ids[ci], T, false, 150.0)
-			var f: Dictionary = FlashSet.flash(ids[ci])
 			var seq: Dictionary = FlashSet.sequence(ids[ci])
-			for t in [0.0, float(seq.get("delay_after_crown_down", 0.0)) + 0.02, float(f.attack) + minf(0.1, float(f.hold) * 0.5) + float(seq.get("delay_after_crown_down", 0.0)) + 0.02]:
+			var pl: Dictionary = FlashSet.pulse(ids[ci])
+			var peak: float = (int(pl.get("count", 1)) - 1) * (float(pl.get("on", 0.0)) + float(pl.get("off", 0.0))) + 0.6 * float(pl.get("on", 0.0))
+			for t in [0.0, float(seq.get("delay_after_crown_down", 0.0)) + 0.02, peak + float(seq.get("delay_after_crown_down", 0.0)) + 0.02]:
 				S.T = T + t
 				main.render_view(1.0)
 			await RenderingServer.frame_post_draw

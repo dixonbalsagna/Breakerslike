@@ -226,7 +226,7 @@ A beam's scorch trail sizzles by beam power. A beam clash is two tones that beat
 | :--- | :--- |
 | Hide | The fighter's power hum stops and the world dulls (the absence is the cue) |
 | Lock lost | A soft two-tone tick-down |
-| Found | A single sonar-like ping |
+| Found | One soft-attack note rising a whole step, mid register, swelling gently twice (still a single note) | 0.48 s |
 | Ambush | A sharp stab and a reverse swell |
 | Region stage, break | Stage change: a soft tick. A break is the chapter sting (one big hit, short tail) |
 | Brink | A heartbeat and laboured breath, and the aura guttering as a stuttering hum |
@@ -236,7 +236,7 @@ A beam's scorch trail sizzles by beam power. A beam clash is two tones that beat
 
 ### 5.6 Head-flash cues
 
-Art's thirteen active head flashes (plus the held Primed) (`docs/art/marked-aura.md`, `art/concepts/marked-aura/flashes.json`) each have one short cue, cut to the flash's own time (`max_s`), so a sound is never longer than its flash. The recipe is the same for every fighter; the fighter's shape family sets only the timbre, so the Protagonist's flashes sound round, the Anti-hero's thin and metallic, the Empress's nasal and theatrical and the Cyborg's stepped. Brink was cut from the set and Hazard, Primed and Respect added (EP and Orb, 2026-09-29); their times and priority ranks are provisional until Art's `data/art/flashes.json` lands. Recipes: `audio/data/flash_cues.json`; synth: `audio/synth/flash_synth.gd`.
+Art's thirteen active head flashes (plus the held Primed) (`docs/art/marked-aura.md`, `data/art/flashes.json`) each have one short cue, cut to the flash's own total time, so a sound is never longer than its flash. The recipe is the same for every fighter; the fighter's shape family sets only the timbre, so the Protagonist's flashes sound round, the Anti-hero's thin and metallic, the Empress's nasal and theatrical and the Cyborg's stepped. Brink was cut from the set and Hazard, Primed and Respect added (EP and Orb, 2026-09-29); their times and priority ranks are provisional until Art's `data/art/flashes.json` lands. Recipes: `audio/data/flash_cues.json`; synth: `audio/synth/flash_synth.gd`.
 
 | Family (fighter) | Timbre |
 | :--- | :--- |
@@ -247,20 +247,22 @@ Art's thirteen active head flashes (plus the held Primed) (`docs/art/marked-aura
 
 | Flash | Cue (as the Protagonist hears it) | Length |
 | :--- | :--- | :--- |
-| Danger sense | A low dry tick and a quiet upward noise sweep. No pitched chirp | 0.32 s |
-| Hazard | Two low dry ticks a beat apart over a low rumble swell, no upward sweep: the world is about to hit you | 0.45 s |
+| Danger sense | A low dry tick, then a quiet noise sweep that swells three times, no pitched chirp | 0.42 s |
+| Hazard | Two low dry ticks, one per pulse, over a rumble that swells twice: the world is about to hit you | 0.45 s |
 | Found | One soft-attack note rising a whole step, mid register | 0.60 s |
-| Searching | A wavering low two-note phrase, falling | 0.90 s |
+| Searching | A wavering low two-note phrase, falling, in three swells | 0.76 s |
 | Primed (held, not loaded: hiding was removed from the base game) | A short breath in, then one low held note that lifts a semitone: sprung and live | 0.60 s |
-| Fear | A shiver: breath noise with a 13 Hz tremolo | 0.80 s |
-| Rage | A low creaking growl that swells and is cut off | 0.59 s |
-| Hurt | A short falling blip and a knock, layered under the pain grunt | 0.31 s |
-| Resolve | A breath in, then a low held note. It fires just after the crown's Rally pop fades | 0.80 s |
-| Respect | Two notes that meet from either side and settle into a soft chime | 0.90 s |
-| Triumph | A two-note bell chime a fifth apart (the fighter's laugh joins when the laugh gesture exists) | 1.00 s |
-| Pride | A slow exhale and a soft held fifth | 0.90 s |
-| Taunt | A nasal sneer and a dry "tch" | 0.41 s |
-| Surge | A three-second rising swell that resolves on a chord that differs per family (major, minor, suspended, open fifth) | 4.45 s |
+| Fear | A shiver: breath noise with a 13 Hz tremolo, swelling three times | 0.56 s |
+| Rage | A low creaking growl that swells three times, each louder, and is cut off | 0.72 s |
+| Hurt | Two short falling blips with a knock, layered under the pain grunt | 0.40 s |
+| Resolve | A breath in on the first pulse, a low held note on the second. It fires just after the crown's Rally pop fades | 0.66 s |
+| Respect | Two notes that meet from either side and settle into a soft chime | 0.76 s |
+| Triumph | Three soft bell notes on two pitches (a root, then a fifth twice), the last one longest | 0.74 s |
+| Pride | A slow exhale, then a soft held fifth | 0.76 s |
+| Taunt | A nasal sneer, a low nasal note and a dry "tch", one per pulse | 0.58 s |
+| Surge | Three slow rising swells that resolve on a chord that differs per family (major, minor, suspended, open fifth) | 1.85 s |
+
+**Pulses.** Art's v3 flashes are two or three quick pulses (0.40 to 0.76 s, the surge 1.85 s). Each cue is articulated to its flash's pulse count from `data/art/flashes.json`: a pulsed layer swells once per pulse (a raised-cosine swell over the pulse's `on` time, a floor level between pulses), so sound and picture pulse together. Where a flash has three pulses the swells belong to one continuous sound, not three separate notes, so nothing becomes a three-note alert sting. `host_check` compares the pulse numbers with Art's file, and a check of the rendered cues shows the level at each pulse centre is 5 to 20 dB above the gap after it (the found cue is the gentlest, on purpose).
 
 **Veto check against known alert cues** (Art asked me to veto anything that sounds like a stealth-game alert or a spider-sense cue). The rules I applied, and how the set does:
 1. No fast repeated staccato notes or "stab" (the classic alert): no cue has three or more repeated notes (Hazard has two low ticks); the fastest attack on a pitched note is 15 ms and the danger cue has no pitched note at all.

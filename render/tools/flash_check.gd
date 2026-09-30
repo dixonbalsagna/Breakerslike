@@ -4,7 +4,10 @@ extends SceneTree
 ## crown it controls, and then real matches through the full scene:
 ## 1. rest: nothing drawn before a flash;
 ## 2. timing: each flash in the data shows from the frame after it fires and is gone by its total time (plus its
-##    sequence delay), within a frame;
+##    sequence delay), within a frame; its pulses have a beat of nothing between them; with reduced motion it is one
+##    pulse; the data's `total` agrees with its pulses;
+## 2b. keep-out: every layout shape, as drawn in every family (Legal's rules applied, danger turned to any bearing),
+##    sits in the data's keep-out zone, ground shards excepted;
 ## 3. arbitration: a heavy hit during a taunt cancels the taunt in FLASH_OUT; a flash due while the crown is up is
 ##    dropped after the default wait; a crown coming up fades the flash; the surge preempts everything and ignores the
 ##    crown; Resolve starts its delay after the crown goes down, waits past lower flashes, and gives up after wait_max;
@@ -40,7 +43,8 @@ func _view() -> FlashView:
 	return v
 
 
-## Step a view from T0 to T1, one frame at a time; returns [first frame shown, frame it ended] (-1 if never).
+## Step a view from T0 to T1, one frame at a time; returns [first frame shown, frame it ended] (-1 if never). A flash
+## is showing from its start to its end, through the beats of nothing between its pulses.
 func _run_view(v: FlashView, T0: float, T1: float, at: Dictionary = {}, id: String = "") -> Array:
 	var shown: float = -1.0
 	var ended: float = -1.0
@@ -50,12 +54,12 @@ func _run_view(v: FlashView, T0: float, T1: float, at: Dictionary = {}, id: Stri
 		if at.has(snappedf(T, DT)):
 			at[snappedf(T, DT)].call(T)
 		v.step(T, false, Vector3.ZERO, 1.0, Vector3.ZERO, -100.0)
-		var on: bool = v.level(T) > 0.0 and (id == "" or v.cur == id)
-		if on and shown < 0.0:
+		var showing: bool = v.cur != "" and (id == "" or v.cur == id)
+		if showing and v.level(T) > 0.0 and shown < 0.0:
 			shown = T
-		if was and not on and ended < 0.0:
+		if was and not showing and ended < 0.0:
 			ended = T
-		was = on
+		was = showing
 		T += DT
 	return [shown, ended]
 
@@ -80,10 +84,36 @@ func _run() -> void:
 		var seq: Dictionary = FlashSet.sequence(id)
 		var delay: float = float(seq.get("delay_after_crown_down", 0.0))
 		var r: Array = _run_view(v, 0.0, FlashSet.total(id) + delay + 0.5)
+		var pl: Dictionary = FlashSet.pulse(id)
+		_expect(absf(float(pl.get("total", -1.0)) - FlashSet.total(id)) < 1e-6, "%s: the data's total %.3f s does not match its pulses (%.3f s)" % [id, float(pl.get("total", -1.0)), FlashSet.total(id)])
 		_expect(r[0] >= 0.0 and r[0] <= delay + DT + 1e-6, "%s: first shown at %.3f s (want by %.3f)" % [id, r[0], delay + DT])
 		_expect(v.visible == false, "%s: still drawn after it ended" % id)
 		_expect(absf(r[1] - (FlashSet.total(id) + delay)) <= DT + 1e-6, "%s: gone at %.3f s (want %.3f)" % [id, r[1], FlashSet.total(id) + delay])
 		v.free()
+		# The beat of nothing after the first pulse, and one pulse with reduced motion.
+		if int(pl.get("count", 1)) >= 2 and delay == 0.0:
+			v = _view()
+			v.fire(id, 0.0, false)
+			var gap: float = float(pl.on) + 0.5 * float(pl.off)
+			var gap_level: Array = [1.0]
+			_run_view(v, 0.0, gap + DT, {snappedf(gap, DT): func(T): gap_level[0] = v.level(T)})
+			_expect(gap_level[0] == 0.0, "%s: %.2f between its first pulses (want nothing)" % [id, gap_level[0]])
+			v.free()
+		v = _view()
+		v.reduced_motion = true
+		v.fire(id, 0.0, false)
+		r = _run_view(v, 0.0, FlashSet.total(id) + delay + 0.5)
+		_expect(absf(r[1] - (FlashSet.total(id, true) + delay)) <= DT + 1e-6, "%s with reduced motion: gone at %.3f s (want one pulse, %.3f)" % [id, r[1], FlashSet.total(id, true) + delay])
+		v.free()
+	# 2b: keep-out.
+	var ray: Dictionary = FlashSet.danger_ray()
+	for id in ids:
+		if String(FlashSet.flash(id).get("kind", "")) != "layout":
+			continue
+		for fk in ["P", "A", "E", "C"]:
+			for b in ([NAN, 0.0, 90.0, 180.0, 270.0] if id == "danger" else [NAN]):
+				var bad: Array = FlashView.keep_out_breaks(id, fk, b)
+				_expect(bad.is_empty(), "keep-out: %s in family %s%s has shapes at %s degrees (zone %s)" % [id, fk, "" if is_nan(b) else " (bearing %.0f)" % b, bad, FlashSet.keep_out()])
 	# 3: arbitration.
 	if FlashSet.flash("taunt").size() and FlashSet.flash("hurt").size():
 		var v := _view()
@@ -133,12 +163,14 @@ func _run() -> void:
 		_expect(r[0] < 0.0, "Resolve waited past its wait_max (started at %.3f s)" % r[0])
 		v.free()
 	if FlashSet.flash("hurt").size():
-		var f: Dictionary = FlashSet.flash("hurt")
+		var pl: Dictionary = FlashSet.pulse("hurt")
 		var v := _view()
 		v.fire("hurt", 0.0, false)
-		var r: Array = _run_view(v, 0.0, 1.5, {0.1: func(T): v.fire("hurt", T, false)})
-		var want: float = 0.1 + float(f.hold) + float(f.fade)
-		_expect(absf(r[1] - want) <= DT + 1e-6, "the same flash again extends its hold: ended at %.3f s (want %.3f)" % [r[1], want])
+		# Again during the last pulse's fade: it holds at full for another `on`, then fades (no new swell).
+		var again: float = snappedf(FlashSet.total("hurt") - 0.5 * float(pl.fade), DT)
+		var r: Array = _run_view(v, 0.0, 2.0, {again: func(T): v.fire("hurt", T, false)})
+		var want: float = again + float(pl.on) + float(pl.fade)
+		_expect(absf(r[1] - want) <= 1.5 * DT, "the same flash again extends its last pulse: ended at %.3f s (want %.3f)" % [r[1], want])
 		v.free()
 	if FlashSet.flash("found").size():
 		var v := _view()

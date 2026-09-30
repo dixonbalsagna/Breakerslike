@@ -77,7 +77,7 @@ Priority, highest first: surge, danger sense, hazard, found, searching, fear, ra
 
 Legal screened the set (`docs/legal/q3-screen.md`) and Art applied the conditions in the data, so Rendering reads them and does not hard-code them:
 - **Round tips** for the Anti-hero's `pride`, `triumph`, `surge` and `danger` (`legal_rules.round_tip.A`): the same triangle with a rounded end (radius `0.95 * half-width`). His rage stays pointed.
-- **Wide, low crest** for the Empress's `pride`, `triumph`, `surge` and `resolve`, and the Anti-hero's `surge` (`legal_rules.low_crest`): the angle `a` becomes `atan2(sin(a) * 0.4, cos(a))` plus 42 degrees, the size times 0.7, the distance plus 4. Ground shards are unchanged.
+- **Wide, low crest** for the Empress's `pride`, `triumph`, `surge` and `resolve`, and the Anti-hero's `surge` (`legal_rules.low_crest`): the angle `a` becomes `atan2(sin(a) * 0.4, cos(a))` plus 42 degrees (the layouts in this set keep their input angles between 65 and 110 degrees, so the drawn angle always lands within 65 to 175, and `gen.mjs` fails if it does not), the size times 0.7, the distance plus 4. Ground shards are unchanged.
 - **Danger sense is a pointer train**: three shapes along one ray, default angle 132 degrees. Rotate the whole train to the threat's bearing (the facing frame), clamped to 65 to 175 degrees, so it is always above or behind the head. Never radiate it around the head.
 - **`F8` shows the legacy shapes** (tall pointed blades and wedges, the radiating danger fan is gone for good) so Orb can compare before and after. It is a uniform (`legacy`), off by default.
 

@@ -10,10 +10,15 @@ extends Node3D
 ## hidden and costs nothing; its first frame draws one fully transparent quad, so the shader compiles then and not
 ## at the first flash in a fight (about 210 ms on the web).
 ##
+## A flash pulses (spec section 5, the data's `pulse`): two or three quick swells and shrinks with a beat of nothing
+## between, the last holding to the end of its `on` and then fading, and it is gone (one pulse with reduced motion).
+## Every layout shape sits in the data's keep-out zone, up and back of the head; a debug build warns when one does
+## not (keep_out_breaks, also run by render/tools/flash_check.gd).
+##
 ## The state machine runs on sim time, so hit-stop and pause hold it (spec sections 5 and 7):
 ## - one flash at a time. A higher priority preempts (the one showing fades in FLASH_OUT); the same flash firing
-##   again extends its hold and never replays its attack; a lower one waits up to the data's default wait, then is
-##   dropped;
+##   again extends its last pulse's hold and never replays a swell; a lower one waits up to the data's default wait,
+##   then is dropped;
 ## - never with UI's wear crown. A flash due while the crown is up waits, and a crown that comes up fades the flash
 ##   showing. The surge is the exception;
 ## - a flash with a sequence block (Resolve) starts its delay after the crown goes down, waits up to its own wait_max,
@@ -50,12 +55,16 @@ var _mi := MultiMeshInstance3D.new()
 var _mat := ShaderMaterial.new()
 var _unit: float = 1.0           # world units per layout unit (set_head)
 var _warm: bool = false
+var _warned: Dictionary = {}      # keep-out warnings already given (debug builds), by family and flash
 
 
 func _init() -> void:
 	_mat.shader = preload("res://render/shaders/flash.gdshader")
 	_mat.set_shader_parameter("ortho", 1.0)
 	_mat.set_shader_parameter("u", _unit)
+	_mat.set_shader_parameter("blade_w", RenderLook.FLASH_BLADE_W)
+	_mat.set_shader_parameter("wedge_w", RenderLook.FLASH_WEDGE_W)
+	_mat.set_shader_parameter("glyph_scale", RenderLook.FLASH_GLYPH_SCALE)
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE
 	_mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -103,7 +112,7 @@ func fire(id: String, T: float, hidden: bool, bearing: float = NAN) -> void:
 	if String(f.get("class", "")) == "info" and info_fn.is_valid() and not bool(info_fn.call()):
 		return
 	if id == cur and _out < 0.0:
-		_hold_end = maxf(_hold_end, T + float(f.hold))
+		_hold_end = maxf(_hold_end, T + float(FlashSet.pulse(id).get("on", 0.0)))
 		return
 	if T < float(_cool.get(id, -1.0e9)):
 		return
@@ -140,8 +149,8 @@ func step(T: float, hidden: bool, pos: Vector3, m: float, anchor: Vector3, groun
 	_mat.set_shader_parameter("fade", maxf(0.0, 1.0 - (T - _out) / RenderLook.FLASH_OUT) if _out >= 0.0 else 1.0)
 	_mat.set_shader_parameter("anchor", anchor)
 	_mat.set_shader_parameter("ground_y", (ground - position.y) / _unit)
-	var f: Dictionary = FlashSet.flash(cur)
-	_mat.set_shader_parameter("sweep_k", clampf((T - _t0) / maxf(float(f.attack), 1.0e-3), 0.0, 1.0))
+	var rise: float = FlashSet.rise_fraction() * float(FlashSet.pulse(cur).get("on", 0.1))
+	_mat.set_shader_parameter("sweep_k", clampf((T - _t0) / maxf(rise, 1.0e-3), 0.0, 1.0))
 	_mat.set_shader_parameter("jitter_step", floorf((T - _t0) * RenderLook.FLASH_JITTER_HZ))
 
 
@@ -158,6 +167,7 @@ func _follow() -> void:
 		_t0 = leader._t0
 		for key in ["family", "grow", "sweep", "jitter", "seed"]:
 			_mat.set_shader_parameter(key, leader._mat.get_shader_parameter(key))
+	reduced_motion = leader.reduced_motion
 	_hold_end = leader._hold_end
 	_out = leader._out
 
@@ -183,7 +193,7 @@ func _run(T: float, hidden: bool) -> void:
 			_out = T
 		if _out < 0.0 and not _queue.is_empty() and _can_start(_queue[0], T, crown) and _preempts(_queue[0][0], cur):
 			_out = T
-		if (_out >= 0.0 and T - _out >= RenderLook.FLASH_OUT) or T >= _hold_end + float(FlashSet.flash(cur).fade):
+		if (_out >= 0.0 and T - _out >= RenderLook.FLASH_OUT) or T >= _hold_end + float(FlashSet.pulse(cur).get("fade", 0.0)):
 			_end()
 	if cur == "" and not hidden:
 		for i in range(_queue.size()):
@@ -213,21 +223,38 @@ func _preempts(id: String, over: String) -> bool:
 	return FlashSet.priority(id) < FlashSet.priority(over)
 
 
-## The envelope: an eased attack, the hold, an eased fade (spec section 5).
+## The envelope (spec section 5). Pulse i starts at i x (on + off): it swells to 1 over rise (eased), then shrinks
+## to 0 by the end of `on`, and a beat of nothing follows for `off`. The last pulse swells, holds at 1 to its hold end
+## (the end of its `on`, later if the flash fired again) and fades over `fade`.
 func _env(T: float) -> float:
 	if cur == "":
 		return 0.0
-	var f: Dictionary = FlashSet.flash(cur)
-	var a: float = float(f.attack)
-	var d: float = float(f.fade)
-	var t: float = T - _t0
-	if t < a:
-		return 1.0 - pow(1.0 - maxf(t, 0.0) / a, 2.0)
+	var p: Dictionary = FlashSet.pulse(cur)
+	var on: float = maxf(float(p.get("on", 0.1)), 1.0e-3)
+	var off: float = float(p.get("off", 0.0))
+	var fade: float = maxf(float(p.get("fade", 0.1)), 1.0e-3)
+	var rise: float = FlashSet.rise_fraction() * on
+	var t: float = maxf(T - _t0, 0.0)
+	var last: float = (_pulses() - 1) * (on + off)
+	if t < last:
+		var x: float = fmod(t, on + off)
+		if x >= on:
+			return 0.0
+		if x < rise:
+			return 1.0 - pow(1.0 - x / rise, 2.0)
+		return 1.0 - pow((x - rise) / (on - rise), 2.0)
+	var y: float = t - last
+	if y < rise:
+		return 1.0 - pow(1.0 - y / rise, 2.0)
 	if T < _hold_end:
 		return 1.0
-	if T < _hold_end + d:
-		return 1.0 - pow((T - _hold_end) / d, 2.0)
+	if T < _hold_end + fade:
+		return 1.0 - pow((T - _hold_end) / fade, 2.0)
 	return 0.0
+
+
+func _pulses() -> int:
+	return 1 if reduced_motion else maxi(1, int(FlashSet.pulse(cur).get("count", 1)))
 
 
 ## The envelope times any forced fade.
@@ -247,7 +274,8 @@ func _start(id: String, T: float, bearing: float) -> void:
 	var f: Dictionary = FlashSet.flash(id)
 	cur = id
 	_t0 = T
-	_hold_end = T + float(f.attack) + float(f.hold)
+	var p: Dictionary = FlashSet.pulse(id)
+	_hold_end = T + (_pulses() - 1) * (float(p.get("on", 0.0)) + float(p.get("off", 0.0))) + float(p.get("on", 0.0))
 	_out = -1.0
 	_cool[id] = T + float(f.get("cooldown", 0.0))
 	_write(id, f, bearing)
@@ -290,29 +318,55 @@ func _write(id: String, f: Dictionary, bearing: float) -> void:
 			_mm.set_instance_color(n + 1, Color(core, 0.97))
 			n += 2
 	else:
-		var turn: float = 0.0
-		if id == "danger":
-			var ray: Dictionary = FlashSet.danger_ray()
-			var b: float = float(ray.get("default_angle", 132.0)) if is_nan(bearing) else bearing
-			var lim: Array = ray.get("clamp", [60.0, 200.0])
-			turn = clampf(b, float(lim[0]), float(lim[1])) - float(ray.get("default_angle", 132.0))
 		var round_tip: bool = not legacy and FlashSet.rule("round_tip", family, id)
-		var crest: bool = not legacy and FlashSet.rule("low_crest", family, id)
-		for it in f.get("layout", []):
-			var a: float = float(it.a) + turn
-			var d: float = float(it.d)
-			var s: float = float(it.s)
-			var ground: bool = bool(it.get("ground", false))
-			if crest and not ground:
-				var r: float = deg_to_rad(a)
-				a = rad_to_deg(atan2(sin(r) * 0.4, cos(r))) + 42.0
-				s *= 0.7
-				d += 4.0
-			var flags: int = (1 if bool(it.get("inward", false)) else 0) + (2 if ground else 0) + (4 if round_tip else 0) + (16 if info else 0)
-			var op: float = float(it.get("op", 1.0))
-			_mm.set_instance_custom_data(n, Color(deg_to_rad(a), d, s, flags))
-			_mm.set_instance_color(n, Color(rim, op))
-			_mm.set_instance_custom_data(n + 1, Color(deg_to_rad(a), d, s * (0.84 if info else 0.58), flags + 8))
-			_mm.set_instance_color(n + 1, Color(core, op))
+		for sh in layout_shapes(id, family, bearing, legacy):
+			var flags: int = (1 if sh.inward else 0) + (2 if sh.ground else 0) + (4 if round_tip else 0) + (16 if info else 0)
+			_mm.set_instance_custom_data(n, Color(deg_to_rad(sh.a), sh.d, sh.s, flags))
+			_mm.set_instance_color(n, Color(rim, sh.op))
+			_mm.set_instance_custom_data(n + 1, Color(deg_to_rad(sh.a), sh.d, sh.s * (0.84 if info else 0.58), flags + 8))
+			_mm.set_instance_color(n + 1, Color(core, sh.op))
 			n += 2
+		if OS.is_debug_build() and not _warned.has(family + id):
+			var bad: Array = keep_out_breaks(id, family, bearing, legacy)
+			if not bad.is_empty():
+				_warned[family + id] = true
+				push_warning("Head flash %s (%s): shapes at %s degrees break the keep-out zone %s (data/art/flashes.json)" % [id, family, bad, FlashSet.keep_out()])
 	_mm.visible_instance_count = n
+
+
+## A layout's shapes as drawn, with Legal's rules applied (unless legacy): danger's train turned to the bearing
+## (clamped by the data), the low crest. Each: {a (degrees, facing frame), d, s, ground, inward, op}.
+static func layout_shapes(id: String, fk: String, bearing: float = NAN, legacy: bool = false) -> Array:
+	var f: Dictionary = FlashSet.flash(id)
+	var turn: float = 0.0
+	if id == "danger":
+		var ray: Dictionary = FlashSet.danger_ray()
+		var b: float = float(ray.get("default_angle", 132.0)) if is_nan(bearing) else bearing
+		var lim: Array = ray.get("clamp", [65.0, 175.0])
+		turn = clampf(b, float(lim[0]), float(lim[1])) - float(ray.get("default_angle", 132.0))
+	var crest: bool = not legacy and FlashSet.rule("low_crest", fk, id)
+	var out: Array = []
+	for it in f.get("layout", []):
+		var a: float = float(it.a) + turn
+		var d: float = float(it.d)
+		var s: float = float(it.s)
+		var ground: bool = bool(it.get("ground", false))
+		if crest and not ground:
+			var r: float = deg_to_rad(a)
+			a = rad_to_deg(atan2(sin(r) * 0.4, cos(r))) + 42.0
+			s *= 0.7
+			d += 4.0
+		out.append({"a": a, "d": d, "s": s, "ground": ground, "inward": bool(it.get("inward", false)), "op": float(it.get("op", 1.0))})
+	return out
+
+
+## The angles (degrees) of a layout's shapes, as drawn, that fall outside the data's keep-out zone (ground shards
+## excepted). Empty when the flash keeps out of the fight's way.
+static func keep_out_breaks(id: String, fk: String, bearing: float = NAN, legacy: bool = false) -> Array:
+	var z: Vector2 = FlashSet.keep_out()
+	var bad: Array = []
+	for sh in layout_shapes(id, fk, bearing, legacy):
+		var a: float = fposmod(sh.a, 360.0)
+		if not sh.ground and (a < z.x - 1.0e-3 or a > z.y + 1.0e-3):
+			bad.append(snappedf(a, 0.1))
+	return bad

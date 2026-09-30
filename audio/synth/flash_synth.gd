@@ -14,6 +14,8 @@ static func render(def: Dictionary, fam: Dictionary, fam_id: String, rate: int, 
 	var mix := PackedFloat32Array()
 	var sd: int = SimRng.deriveSeed(bank_seed, "audio.bank.flash." + id + "." + fam_id)
 	var k: int = 0
+	var pulse: Dictionary = def.get("pulse", {})
+	var period: float = float(pulse.get("on", 0.0)) + float(pulse.get("off", 0.0))
 	for L in def.layers:
 		var buf: PackedFloat32Array
 		match String(L.type):
@@ -23,19 +25,48 @@ static func render(def: Dictionary, fam: Dictionary, fam_id: String, rate: int, 
 			"thump": buf = _thump(L, rate)
 			"growl": buf = _growl(L, fam, rate, sd + k)
 			_: buf = PackedFloat32Array()
-		AudioDsp.mix_into(mix, buf, int(float(L.get("at", 0.0)) * rate), float(L.get("level", 1.0)))
+		var at: float = float(L.get("at", 0.0)) + float(L.get("at_pulse", 0)) * period
+		if bool(L.get("pulsed", false)) and not pulse.is_empty():
+			_pulse(buf, pulse, float(L.get("floor", 0.2)), float(def.get("grow", 0.0)), at, rate)
+		AudioDsp.mix_into(mix, buf, int(at * rate), float(L.get("level", 1.0)))
 		k += 1
 	if int(fam.bits) > 0:
 		var q: float = pow(2.0, float(fam.bits) - 1.0)
 		for i in range(mix.size()):
 			mix[i] = roundf(mix[i] * q) / q if absf(mix[i]) > 1.0 / q else mix[i]
-	var max_n: int = int(float(def.get("max_s", 0.0)) * rate)
+	var max_s: float = float(def.get("max_s", 0.0))
+	if not pulse.is_empty():
+		max_s = float(pulse.count) * float(pulse.on) + float(int(pulse.count) - 1) * float(pulse.off) + float(pulse.fade)
+	var max_n: int = int(max_s * rate)
 	if max_n > 0 and mix.size() > max_n:
 		mix.resize(max_n)
 	AudioDsp.dc_block(mix, 20.0, rate)
 	AudioDsp.normalize(mix, AudioDsp.db_to_lin(float(def.get("peak_db", -10.0))))
 	AudioDsp.fade(mix, 0.0004, 0.04, rate)
 	return mix
+
+
+## Shape a layer with the flash's pulses: a raised-cosine swell over each `on`, a floor level between pulses, later
+## pulses louder by `grow`, and a fade after the last. t0 is the layer's start in the cue's own time.
+static func _pulse(buf: PackedFloat32Array, pulse: Dictionary, floor_lvl: float, grow: float, t0: float, rate: int) -> void:
+	var count: int = int(pulse.count)
+	var on: float = float(pulse.on)
+	var period: float = on + float(pulse.off)
+	var end: float = float(count - 1) * period + on
+	var fade: float = maxf(float(pulse.fade), 0.001)
+	var top: float = 1.0 + grow * float(count - 1)
+	for i in range(buf.size()):
+		var t: float = t0 + float(i) / float(rate)
+		var k: int = clampi(int(t / period), 0, count - 1)
+		var within: float = t - float(k) * period
+		var g: float = (1.0 + grow * float(k)) / top
+		var e: float = floor_lvl * g
+		if within < on:
+			var sw: float = sin(PI * within / on)
+			e = maxf(e, sw * sw * g)
+		if t > end:
+			e *= maxf(0.0, 1.0 - (t - end) / fade)
+		buf[i] *= e
 
 
 static func _semi(L: Dictionary, fam_id: String) -> float:

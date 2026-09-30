@@ -47,7 +47,8 @@ Main            Node3D               core/main.gd         the frame loop, input,
 │ ├ Planet      Node3D               core/planet_view.gd  ground and water to the horizon (5 copies), buildings, trees, crowd (3)
 │ ├ Fighters    Node3D                                    one core/fighter_view.gd per fighter, built per match
 │ ├ Beams       Node3D               core/beam_view.gd    signature beams and beam clashes
-│ └ Particles   MultiMeshInstance3D  core/particle_view.gd  the fx consumer's particles, one draw call
+│ ├ Particles   MultiMeshInstance3D  core/particle_view.gd  the fx consumer's particles, one draw call
+│ └ Vfx         Node3D               vfx/vfx_layer.gd     VFX's drawing for the pane (its hub is SimHost.vfx, shared)
 ├ HUD           CanvasLayer
 │ ├ UiHud       Control              ui/hud/ui_hud.gd     UI's HUD (added in main.gd; docs/ui/hud-spec.md)
 │ └ Overlay     Control              core/hud.gd          take-over prompt, seed and tick, F3 perf; the whole greybox HUD on F2
@@ -203,20 +204,44 @@ The placeholder rig was drawn as a side sprite with its limbs spread across the 
 
 **Knockback slides and skims.** A sliding fighter stays upright, leaning back against the slide (`SLIDE_LEAN`) and crouched (`SLIDE_CROUCH`), a placeholder pose. The trench carved behind the fighter is drawn from the sim's own profile, and across the band's depth at the width its `S.slides` record gives. Paved ground cracks from `S.crack`, with a slab-and-crack pattern. Each `slide_dust` sample throws dust and rubble chips, grey on pavement and earth elsewhere, more at speed, and the slide's end throws a burst off the berm. Each `skim` leaves ripple rings that grow with the speed and a spray burst, so a skim reads as a skipping stone. Pose `slide` in `tools/shots.gd` stages one mid-slide across a plaza: ![slide](img/slide.png)
 
+## Combat's cues as poses (placeholder)
+
+Orb's "fighters lock together and do nothing" is partly that Combat's `cue` events drew nothing. Each cue (`{actor, kind}`; the vocabulary is `data/combat/finishers.json` `cues`) is now a short pose on the fighter it names, or on both.
+- **The pose.** It blends onto the rig on sim time: in over 0.08 s, out over 0.14 s, 0.3 to 1.2 s in all (`RenderLook.CUE_POSES`). It changes the hands' targets, the lean, crouch, step, head turn, body turn and tremble, plus a brief chest flare, a spark at the front hand, the guard glow, a badge pop, or a ring around the other fighter.
+- **Readable at gameplay zoom.** The body signals carry each pose, since the placeholder's arms are a few pixels there: tell leans back and pops the stance badge; brace crouches and flares; overextend and pursue lean hard forward; turn_read and glance_back turn toward the camera; glance and catch spark; circle rings the defender; struggle trembles.
+- **Covered.** brace, glance, tell, turn_read, overextend, circle, guard_set, the finisher set (struggle, last_look, breaks_hold, holds_on), and catch, glance_back, pursue and reset. The rest (finisher_open, ascend_charge, exposed, recover, bind, parry, recoil, whiff_recover, pull_up, scan) are left to Camera, UI and VFX, or wait for a pose.
+- **Presentation only.** Main sends each cue to every pane's fighter views; `cues_on` switches it off for A/B runs.
+
+Every pose at its peak on P1, facing P2 (`tools/cue_sheet.gd`), left to right and top to bottom: brace, glance, tell, turn_read, overextend; circle (the ring on P2), guard_set, struggle, last_look, breaks_hold; holds_on, catch, glance_back, pursue, reset. ![cues](img/cue-sheet.png)
+
+`tools/cue_check.gd` runs AI matches with a templates profile forced through `DirData.templatesProfile`. It checks:
+- every cue with a pose starts that pose on the fighter it names;
+- `circle` rings the other fighter;
+- no pose outlives its duration;
+- the gameplay hash is the same with the poses on and off.
+
+On the `spaced` profile, over two full matches (seeds 4 and 12345, 21,570 and 36,260 ticks), it passes 46 checks: 167 posed cues (58 and 109), including the finisher's struggle and last_look. The `dynamic` profile fires no template cues yet: the director reads only `spaced` or `parity` step lists (`DirData.spaced()`, `sim/director/data.gd` lines 66 and 101).
+
 ## Head flashes (prototype)
 
 Orb (`docs/ep/vision.md`, "Head flashes"): the transient aura becomes brief, iconic pops at a fighter's head that say what it senses or feels, then nothing. This is Art's spec, `docs/art/flash-prototype-spec.md`, built on the placeholder fighters so Orb can judge it in motion. It is data-driven from Art's `data/art/flashes.json`: 13 active flashes (4 of them info) today. A flash added, held or renumbered there shows up with no code change.
+
+**The playtest revision (data version 3).** Orb found the first version "a little too large and visible, a bit distracting", so Art revised it (`docs/art/marked-aura.md`, "Playtest revision"):
+- about half the size, the surge a third, and fewer shapes;
+- thinner blades and wedges (half widths 2.3 and 5.2, `FLASH_BLADE_W`, `FLASH_WEDGE_W`), glyphs at 1.1 (`FLASH_GLYPH_SCALE`), Hurt's jitter 4% of a body height; Rage no longer sweeps forward;
+- **pulses** instead of hold-and-fade (the data's `pulse`; spec §5). Two or three quick swells, each rising to full in 30% of its `on` and shrinking away, with a beat of nothing between. The last holds to the end of its `on` and fades. Reduced motion gives one pulse and a plain fade. A flash firing again extends its last pulse's hold. The surge is three slow pulses (1.85 s) and is never held;
+- **keep-out**: every layout shape sits 65–175° in the facing frame, up and back of the head, never forward or below it (the surge's two ground shards excepted). `FlashView.layout_shapes` gives the shapes as drawn, with Legal's rules applied. `keep_out_breaks` finds any outside the zone; a debug build warns once per flash and family, and the flash check fails on them.
 
 **How it draws** (`flash_view.gd`, `flash.gdshader`, `flash_set.gd`).
 - One `FlashView` per fighter, placed each frame at the head. It faces the camera, mirrors with the body's facing and uses the fighter's hybrid projection.
 - A flash is one MultiMesh of quads, one draw call, glyphs included. Each shape is placed by the vertex stage from its instance data and filled by a signed distance: discs, blades, wedges or snapped squares, by the fighter's family. Each shape is a rim and a core (58% for emotions; 84% for info flashes, with their pale core and thin keyline).
 - Glyphs are drawn in the family's own primitives: the bang, the question and Hazard's double bang. A glyph's place mirrors with the facing but its shape never does.
 - Legal's rules come from the data when a flash starts: the Anti-hero's round tips, the low crest, and Danger's pointer train turned to the opponent's bearing, clamped to 60–200°. F8 shows the legacy shapes.
-- Hurt jitters (6% of a body height, seeded from the tick on the cosmetic `vfx.flash` stream) and Rage sweeps forward over its attack. Reduced motion (UI's option) gives a plain fade.
+- Hurt jitters (4% of a body height, seeded from the tick on the cosmetic `vfx.flash` stream). Reduced motion (UI's option) gives one pulse, no jitter and a plain fade.
 - Idle, the view is hidden and costs nothing. Its first frame draws one transparent quad, so the shader compiles then rather than mid-fight (about 210 ms on the web).
 
 **The state machine** runs on sim time, so hit-stop and pause hold it (spec §5 and §7):
-- One flash at a time. A higher priority preempts (the lower fades in 0.1 s). The same flash again extends its hold. A lower one waits up to the data's 0.25 s, then is dropped.
+- One flash at a time. A higher priority preempts (the lower fades in 0.1 s). The same flash again extends its last pulse's hold. A lower one waits up to the data's 0.25 s, then is dropped.
 - Never together with UI's wear crown (`crown_up`). A flash due while it is up waits; the crown coming up fades a flash. The surge is the exception.
 - Resolve (the data's `sequence`) starts 0.1 s after the crown goes down, holds back anything lower meanwhile, and gives up after 2 s.
 - Cooldowns hold. Info flashes follow UI's `info_flashes()`, and a hidden fighter shows none.
@@ -236,9 +261,10 @@ Orb (`docs/ep/vision.md`, "Head flashes"): the transient aura becomes brief, ico
 
 The contact sheet, every flash at its peak (`tools/flash_sheet.gd`). Columns follow the data's order. Rows: circles, blades, wedges and steps; blades and wedges as they were before Legal's conditions (F8); blades on P2, facing left. ![flashes](img/flash-sheet.png)
 
-**Checks.** `tools/flash_check.gd` (91 checks, passed):
+**Checks.** `tools/flash_check.gd` (185 checks on version 3):
 - nothing is drawn at rest;
-- each flash shows from the frame after it fires and is gone by its total time, within a frame;
+- each flash shows from the frame after it fires and is gone by its total time, within a frame; the data's `total` matches its pulses; there is nothing between the first pulses; reduced motion gives one pulse;
+- the keep-out, for every flash in every family, danger turned to any bearing. On version 3's data, 10 cases fail, and they are the data's to fix: triumph has a shape at 55° (every family, and 192° after the Empress's low crest), respect one at 14° (forward, every family), and the surge 183° after the crest (the Anti-hero and the Empress);
 - arbitration: a heavy hit cancels a taunt in 0.1 s, a crown pop drops a waiting flash, the surge preempts and ignores the crown, Resolve's sequence, holds extend, cooldowns, the info setting, hidden fighters;
 - the gameplay hash is identical with flashes on and off (seeds 12345 and 4). Determinism and its negative control pass as before.
 
@@ -284,6 +310,9 @@ The first pane and the second, drawn from the rig's two cameras: ![panes](img/pa
 
 ## Hosting UI's HUD and Audio
 
+**VFX** (`docs/vfx/plan.md` §5). `SimHost` owns VFX's `VfxHub`: it resets on each match and consumes each tick's events just before they are cleared. Each pane has a `VfxLayer` ("Vfx"), drawn after the fighters, sharing the one hub. Each frame main passes the hub the frame time (for its automatic quality) and UI's reduced motion. `--novfx` turns it off for A/B runs, and `--vfx-quality=0|1|2` fixes the quality (the bench fixes it too). `planet.ground` stays public for VFX's cracks. Desktop cost with VFX on against off: frame p50 1.44 against 1.43 ms.
+
+
 Both are other directors' work, hosted here as their docs ask (`docs/ui/hud-spec.md` section 14, `audio/README.md` "Hooking it up"). Both only read.
 - **UI's HUD.** `main.gd` adds `ui/hud/ui_hud.tscn` under the `HUD` layer and calls `setup(ids, names)` at match start (`UiSimBridge.fighters`). `anchor_fn(slot)` returns the fighter's torso on screen, through the 3D camera, and its height in pixels (`FighterView.HEIGHT` times the zoom). `strip_fn()` returns `UiSimBridge.strip_data(S, cam_x, view width)`. Each tick, `SimHost.drained(events, lines)` fires just before `S.out.fx` is cleared, and the HUD takes the events (`consume_all`) and feed lines. Each frame it gets `UiSimBridge.patch`, and `advance(delta)` (0 while paused). The greybox HUD stays behind F2.
 - **Audio.** `SimHost` owns an `AudioCues`, reseeded per match, that reads each tick's events before they are cleared into `pending_cues`. `main.gd` adds an `AudioVoices` pool and plays the frame's cues relative to the camera's x and zoom. The bank renders every sound once at startup (about 0.3 s on desktop), so none renders mid-fight; headless tools skip that and render lazily. On the web, the page's AudioContext starts suspended and Godot resumes it on the first key or click, which is also the greybox's take-over key. This was checked in Chrome with a DevTools key press: "suspended" before, "running" after, and 23 sounds played.
@@ -302,8 +331,9 @@ All commands run from the repo root; each exits 0 on success.
 | Determinism | `godot --headless --path . --script res://render/tools/determinism.gd` | passed (seeds 12345 and 4) |
 | Ground check | `godot --headless --path . --script res://render/tools/ground_check.gd` | passed (seeds 4, 12345, 7) |
 | Flight check | `godot --headless --path . --script res://render/tools/flight_check.gd` | passed (seeds 4, 12345, 7; with the evacuation mock) |
-| Flash check | `godot --headless --path . --script res://render/tools/flash_check.gd` | passed (91 checks; hash on and off at 12345 and 4) |
+| Flash check | `godot --headless --path . --script res://render/tools/flash_check.gd` | 185 checks on data version 3: all of the code's pass (the hash is the same on and off at 12345 and 4); 10 keep-out cases fail on the data (see Head flashes) |
 | Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (16 checks; hash with and without a compositor) |
+| Cue check | `godot --headless --path . --script res://render/tools/cue_check.gd -- --profile=spaced` | passed (46 checks over two full matches; hash with and without the poses) |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
 
 **Ground check.** It runs three matches through the full scene and checks every 120 ticks:
