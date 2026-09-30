@@ -102,6 +102,10 @@ Orb upgraded the subscription ('more tokens to play with, keep going'). More dir
 ## Collateral ramp and cap (Game Design §4b)
 World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, over budget), a cumulative ceiling (10, 30, 60 and 90%), and per-casualty weights times 425/pop0. Narrative and World make evacuation read as fleeing. QA adds the rolling-window test, the ceiling test and the per-tier split.
 
+## Later queue items
+- World, after B2: carve real fissure notches into S.deform so split ground reads at the profile (VFX's surface cracks are subtle at the grazing camera).
+- A launch planner pass with the open-ground spawn and B2: launches are 10.8 a minute after the dynamic slice (Encounter).
+
 ## Sim queue, revised again (Orb's pace feedback)
 World (active), then Encounter's dynamic-feel slice (profile dynamic, cooldown, AI cadence, no close-range halts, the beam-dodge hang, the overtime ramp, k), then D1a, then Controls Stage A, then D1b, then Controls Stage B, then F1.
 Push hold: local commit 9794840 (Tools' schemas expect flashes v3) waits until Rendering's flash v3 code lands. Then commit flashes.json v3, the audio retime and the render changes together, check a clean export, and push.
