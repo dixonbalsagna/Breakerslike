@@ -358,7 +358,7 @@ const WIRED: Array = [
 	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaRPerTier"], 300.0],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmg"], 900.0],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmgPerTier"], 900.0],
-	[["KAI/wounds.json", "VORR/wounds.json"], ["guardWearSplit"], {"arms": 0.6, "legs": 0.4}, 16],   # the data is 0.5 / 0.5 since the brink chapter; edit back to D1b's split
+	[["KAI/wounds.json", "VORR/wounds.json"], ["guardWearSplit"], {"arms": 0.6, "legs": 0.4}, 16],   # the data is 0.4 / 0.6 (QA's value set); any other split
 ]
 
 

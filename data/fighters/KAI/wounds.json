@@ -26,8 +26,8 @@
     540000
   ],
   "_stageAt": "bruised 30, battered 60, broken 90 (pinned: sim/director/ai.gd, qa/godot/records.gd)",
-  "wearPerDamage": 246.0,
-  "_wearPerDamage": "k 0.041 x 6000 (Game Design, spec-wounds section 1b)",
+  "wearPerDamage": 270.0,
+  "_wearPerDamage": "k 0.045 x 6000 (QA's 800-match value set within Game Design's fallbacks, spec-wounds section 1b)",
   "act1Damping": 0.85,
   "_act1Damping": "wear x this while the act index is 1 (act = 1 + region breaks so far, both fighters; M1 will own the act)",
   "overtime": {
@@ -73,8 +73,8 @@
     "_note": "region pick weights (head, core, arms, legs) by hit family"
   },
   "guardWearSplit": {
-    "arms": 0.5,
-    "legs": 0.5,
+    "arms": 0.4,
+    "legs": 0.6,
     "_note": "a guard hit's wear: this share to the arms, this to the legs (Game Design: spread so legs can become battered)"
   },
   "penalties": {
@@ -103,11 +103,11 @@
       "guard_break",
       "chain"
     ],
-    "base": 0.08,
-    "tierAhead": 0.05,
+    "base": 0.048,
+    "tierAhead": 0.03,
     "lateAct": 3,
-    "lateBonus": 0.05,
-    "defensive": -0.05,
+    "lateBonus": 0.03,
+    "defensive": -0.03,
     "maxPerFighter": 1,
     "legWeight": 1.5,
     "surgePower": 10.0,
