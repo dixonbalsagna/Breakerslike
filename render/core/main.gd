@@ -22,7 +22,8 @@ extends Node3D
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
 ## full panes were drawn; VFX at a fixed quality), --novsync, --nosplit, --novfx (VFX off, for A/B runs),
 ## UI's How to play card opens at the first run and with F1 (the HUD handles the key) or from the pause menu (P, then
-## How to play); the sim is frozen while it is open. --vfx-quality=0|1|2 (VFX's low, medium or high, fixed). F6 toggles VFX's ground cracks (on by default), Shift+F6 its
+## How to play), and its feedback panel from the pause menu (Send feedback) or its match-end pill; the sim is frozen
+## while either is open. --vfx-quality=0|1|2 (VFX's low, medium or high, fixed). F6 toggles VFX's ground cracks (on by default), Shift+F6 its
 ## destruction (shards, collapse dust, holes; off by default until B2), and while that is on the particles skip a
 ## building fall's dust and debris (SimHost._without_fall_debris), which VFX draws instead. Ctrl+F6 toggles VFX's scorch
 ## embers (on by default), which replace ImpactFx's scorch sparks while on.
@@ -74,7 +75,7 @@ var _last_usec: int = 0
 var _bench_two := PackedFloat64Array()     # wall-clock frame ms while two full panes are drawn
 var _bench_other := PackedFloat64Array()   # ... and otherwise
 var ui_hud: UiHud                 # UI's HUD
-var _howto_resume: bool = false   # the pause state the How to play card found when it opened
+var _overlay_resume: bool = false  # the pause state the How to play card or the feedback panel found when it opened
 var _touch_last: bool = false     # touch was the last input device (UI's touch_ui option)
 var audio: AudioVoices            # Audio's voice pool
 var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
@@ -117,6 +118,9 @@ func _ready() -> void:
 	ui_hud.split_fn = _split_record
 	ui_hud.howto_opened.connect(_on_howto_opened)
 	ui_hud.howto_closed.connect(_on_howto_closed)
+	ui_hud.feedback_opened.connect(func(_context): _hold_for_overlay())
+	ui_hud.feedback_closed.connect(_release_overlay)
+	ui_hud.feedback_fn = _feedback_context
 	_touch_last = bool(ui_hud.opts["touch_ui"])
 	host.drained.connect(_on_drained)
 	audio = AudioVoices.new(host.audio_cues.bank)
@@ -392,30 +396,59 @@ func set_legacy_hud(on: bool) -> void:
 	ui_hud.visible = not on
 
 
-## The How to play card holds the fight: the sim freezes while it is open (the HUD takes every key and click), and held
-## and pending keys are let go so no one flies on when it closes. Closing restores the pause the card found, so a card
-## opened from the pause menu goes back to the menu.
+## The How to play card and the feedback panel hold the fight: the sim freezes while one is open (the HUD takes every
+## key and click), and held and pending keys are let go so no one flies on when it closes. Closing restores the pause
+## it found, so one opened from the pause menu goes back to the menu. (The HUD never opens both at once.)
 func _on_howto_opened(_first_run: bool) -> void:
-	_howto_resume = host.paused
+	_hold_for_overlay()
+
+
+func _on_howto_closed(_first_run: bool) -> void:
+	_release_overlay()
+
+
+func _hold_for_overlay() -> void:
+	_overlay_resume = host.paused
 	host.paused = true
 	host.release_all()
 	host.edges.clear()
 
 
-func _on_howto_closed(_first_run: bool) -> void:
-	host.paused = _howto_resume
+func _release_overlay() -> void:
+	host.paused = _overlay_resume
+
+
+## The feedback report's match facts (UI's feedback_fn, docs/ui/hud-spec.md section 20): the seed, the match time from
+## sim ticks, whether it has ended, and the setup: the fighters as the HUD names them (who plays, on what device) and
+## what only the host knows, the view and the effects this build runs.
+func _feedback_context() -> Dictionary:
+	var parts: PackedStringArray = []
+	for m in ui_hud.hub.models:
+		parts.append("%s (%s)" % [m.name, UiFeedback.word("ai") if m.ai else UiFeedback.word("you") + (", " + m.device if m.device != "" else "")])
+	var fx: PackedStringArray = []
+	for k in ["cracks", "destruction", "embers"]:
+		if bool(host.vfx.get(k + "_enabled")):
+			fx.append(k)
+	var view: String = "split screen" if split_view != null and split_view.is_attached() else "one view"
+	var setup: String = " vs ".join(parts) + "; %s; effects: %s" % [view, ", ".join(fx) if not fx.is_empty() else "none"]
+	return {"seed": host.seed, "time": host.ticks * SimConst.DT, "ended": host.S.game.ko != null, "setup": setup}
 
 
 ## A click (or a tap, which Godot turns into one) on the pause menu's entries (hud.gd pause_items), or on UI's pause
 ## button in touch mode: host glue until Controls' touch scheme hit-tests the HUD's targets (the stance ring is theirs).
 func _menu_click(pos: Vector2) -> bool:
-	if host.paused and not ui_hud.is_howto_open():
+	if ui_hud.is_howto_open() or ui_hud.is_feedback_open():
+		return false
+	if host.paused:
 		var items: Dictionary = hud.pause_items()
 		if (items["resume"] as Rect2).has_point(pos):
 			host.paused = false
 			return true
 		if (items["howto"] as Rect2).has_point(pos):
 			ui_hud.show_howto()
+			return true
+		if (items["feedback"] as Rect2).has_point(pos):
+			ui_hud.show_feedback("pause")
 			return true
 	if bool(ui_hud.opts["touch_ui"]) and String(ui_hud.touch_target_at(pos).get("name", "")) == "pause":
 		host.paused = not host.paused
@@ -424,14 +457,15 @@ func _menu_click(pos: Vector2) -> bool:
 
 
 ## The last input device sets UI's touch mode: a touch turns it on, a key or a pad turns it off (a mouse leaves it as
-## it is). Read before anything consumes the event.
+## it is). Read before anything consumes the event. Keys typed into the feedback panel don't count: a phone's on-screen
+## keyboard sends key events, and the panel must not switch layout under the player's thumbs.
 func _input(e: InputEvent) -> void:
 	if ui_hud == null:
 		return
 	var touch: bool = _touch_last
 	if e is InputEventScreenTouch or e is InputEventScreenDrag:
 		touch = true
-	elif e is InputEventKey or e is InputEventJoypadButton or (e is InputEventJoypadMotion and absf(e.axis_value) > 0.5):
+	elif (e is InputEventKey and not ui_hud.is_feedback_open()) or e is InputEventJoypadButton or (e is InputEventJoypadMotion and absf(e.axis_value) > 0.5):
 		touch = false
 	if touch != _touch_last:
 		_touch_last = touch

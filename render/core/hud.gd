@@ -4,7 +4,7 @@ extends Control
 ## ki, power, tier, stance, menace or anguish), world counters, the chain counter, the banner, fighter labels, damage
 ## numbers, the director's feed and the planet strip, shown only when `legacy` is on (F2) now that UI's HUD is hosted;
 ## and always the take-over prompt, the seed and tick, the F3 performance readout and the pause menu (Resume, How to
-## play: host glue until UI draws a menu; main hit-tests pause_items()).
+## play, Send feedback: host glue until UI draws a menu; main hit-tests pause_items()).
 ## Reads the sim and the fx consumer only; world positions go to the screen through the 3D camera.
 
 const FEED_LINES := 8
@@ -55,7 +55,7 @@ func _draw() -> void:
 
 
 func _prompt(host: SimHost, vw: float, vh: float) -> void:
-	var card: bool = main.ui_hud != null and main.ui_hud.is_howto_open()
+	var card: bool = main.ui_hud != null and (main.ui_hud.is_howto_open() or main.ui_hud.is_feedback_open())
 	var dp: float = _dp()
 	var touch: bool = main.ui_hud != null and bool(main.ui_hud.opts.get("touch_ui", false))
 	if not main.started and not card and touch:
@@ -79,7 +79,8 @@ func pause_items() -> Dictionary:
 	var w: float = minf(maxf(280.0 * dp, size.x * 0.28), size.x - 32.0)
 	var c: Vector2 = size * 0.5
 	var gap: float = 12.0 * dp
-	return {"resume": Rect2(c.x - w * 0.5, c.y - gap * 0.5 - h, w, h), "howto": Rect2(c.x - w * 0.5, c.y + gap * 0.5, w, h)}
+	var y0: float = c.y - h * 1.5 - gap
+	return {"resume": Rect2(c.x - w * 0.5, y0, w, h), "howto": Rect2(c.x - w * 0.5, y0 + h + gap, w, h), "feedback": Rect2(c.x - w * 0.5, y0 + 2.0 * (h + gap), w, h)}
 
 
 func _dp() -> float:
@@ -93,7 +94,7 @@ func _pause_menu(vw: float) -> void:
 	var keys: bool = not bool(main.ui_hud.opts.get("touch_ui", false))
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.35))
 	_text("PAUSED", Vector2(vw * 0.5, (it["resume"] as Rect2).position.y - 18.0 * dp), fs + int(6 * dp), Color(1, 1, 1, 0.95), 0)
-	for e in [["resume", "Resume", "  (P)"], ["howto", "How to play", "  (F1)"]]:
+	for e in [["resume", "Resume", "  (P)"], ["howto", "How to play", "  (F1)"], ["feedback", "Send feedback", ""]]:
 		var r: Rect2 = it[e[0]]
 		draw_rect(r, Color(0.08, 0.09, 0.14, 0.85))
 		draw_rect(r, Color(1, 1, 1, 0.5), false, 1.5)
