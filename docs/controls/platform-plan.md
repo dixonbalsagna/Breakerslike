@@ -121,3 +121,7 @@ Rules for both schemes:
 | **G2** | Device layer, bindings, intent builder for keyboard and pad on desktop; the intent-builder tests | Rendering hosts it, I specify | Rendering (host and `RenderKeys`) |
 | **G3** | Web pad pass on four browsers; rebinding UI; glyphs | Rendering, UI, me | UI/UX for the screen and the glyph art |
 | **G4 (P5)** | Mobile schemes A and B; phone tests | me and UI | Orb's ruling on cross-play |
+
+## 9. Note from the EP: touch HUD is live (2026-09-30)
+
+UI's touch-mode HUD (a stance ring and a pause button, hit-tested with `UiHud.touch_target_at`) and Rendering's host glue are live; a tap on the pause button pauses for now. When I build scheme A (§7.1), the intent builder hit-tests `touch_target_at` for the stance ring and replaces the pause-tap glue. The How-to-play card's touch page describes scheme A, so the two are kept in step: any change to §7.1 updates that card through the EP.

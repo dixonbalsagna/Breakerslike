@@ -1,5 +1,7 @@
 # Controls and Game Feel: rulings on windows, buffering, hit-stop and the finisher struggle
 
+> **2026-09-30 notice:** Orb's questionnaire 4 moves parry and the finisher struggle to the director, so the press-timing parts of this document (sections 3, 4, 6, 8 and the press ticks of Stage A) are **on hold** until Game Design reports. Sections 5, 7, 10 and the hit-stop stages stand. See [intent-queue-plan.md](intent-queue-plan.md).
+
 Owner: Controls and Game Feel. Audience: Combat (windows), Encounter Systems (sim), Game Design, UI/UX, Camera, Accessibility, QA. Date: 2026-09-29. Status: **design, no code yet** (ADR 0006: the GDScript sim is the source of truth; I write code in `sim/input/` when the EP hands me the tree). Numbers are whole 60 Hz ticks, stored as data. ms = ticks × 16.67.
 
 Sources checked in the GDScript sim: `sim/input/control.gd`, `sim/core/sim.gd` (step), `sim/core/damage.gd`, `sim/director/melee.gd`, `exchange.gd`, `beam.gd`, `sim/core/fighter.gd`, and Combat's `data/combat/templates.json` (spaced profile), `finishers.json`, `docs/combat/data-fields.md` §10.
