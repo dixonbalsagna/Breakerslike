@@ -335,3 +335,48 @@ The stakes come from the matchup (`sparring`, `rivalry`, `world_at_stake`, `appe
 - **Thoughts, often.** Thoughts get their own budget: about 2 to 3 a minute per fighter in quiet stretches, so about a quarter of what a player sees is a thought. They fire in silences, at set pieces and at turning points, and at style patterns.
 - **Mostly fresh, with a few signature lines.** Each fighter has three or four recurring **signature lines** that are exempt from the novelty term, and that fire at most once a match, at moments that suit them (the Protagonist's "I'll fix it after", the Anti-hero's "You were adequate"). Everything else is steered toward the unseen.
 - **Move names only for specials, signatures and finishers.** The `{opp_move}` slot is filled only for those. Ordinary exchanges are never named.
+
+---
+
+## 9. Aligned with Game Design's mood and acts (spec-wounds section 9)
+
+Game Design has fixed the sim's side of the mood, and this section maps my model onto it. **Where the two differ, Game Design's names and thresholds win.**
+
+### 9.1 What the sim owns, and what stays presentation
+
+| Sim (Game Design's) | Presentation (mine) |
+|---|---|
+| **The fight's mood value**, 0 to 100, with three bands: **Calm** (below 30), **Tense** (30 to 70), **Frenzied** (above 70). | The **per-fighter emotional colour** (my mood nodes: `sizing_up`, `playful`, `heated`, `rattled` and so on). It reads the band and the register, and it never writes the sim. |
+| **The act index**, `1 + region breaks + transformations` (both fighters), capped at 4. | The **arc phase names**, which are now labels for the acts (table below). |
+| **The style profile** and its labels (section 8.2), because the fight director reacts to it. | The threads, callbacks, thoughts, bits, freshness and the seen memory. |
+
+This refines section 8.1: the sim keeps the **scalar mood, the act index and the style profile**. The emotional nodes and all the line selection are presentation.
+
+### 9.2 Acts are my arc phases
+
+| Act | My phase name | Typical feel | Line budget (per fighter, at density 6) |
+|---|---|---|---|
+| **1** | Opening: sizing up | Greetings, feel-out taunts, patience thoughts | About 3 to 4 a minute |
+| **2** | Escalation | Insults with edges, the first callbacks, running jokes start | About 5 to 7 |
+| **3** | Turning points | A register shifts: transformations, the fold, momentum swings | About 6 to 8, in short exchanges |
+| **4** | Brink and finale | Short lines, breathing, silence, then set pieces only | About 4 to 6, then set pieces |
+
+A brink or a finisher **overrides** the act (it plays as act 4 even if the index is lower), because a fight that is on the brink should sound like it.
+
+### 9.3 The three bands drive the voice
+
+The **fight mood band** sets the intensity of the talk. My per-fighter mood node sets its colour. Together they pick the line.
+
+| Band | What the fight sounds like | Inner thoughts | Threads and lines |
+|---|---|---|---|
+| **Calm** (below 30) | Long gaps, sizing up. The fight breathes. | About patience ("Only a little longer..."), and about the other fighter. | Banter, greetings, stakes openers. |
+| **Tense** (30 to 70) | Callbacks, insults, running jokes. | About the reads and the stakes. | Full threads (opener, reply, retort), callbacks, `stakes_raise`. |
+| **Frenzied** (above 70) | Panic, boasts, threats, shouts. | Fewer, and short. | Boasts and threats dominate. Short exchanges, and panic barks from the crowd. |
+
+**The style model feeds the voice**, as Game Design says: holding Guard for a long stretch (which lowers the mood) surfaces patience thoughts, and an opponent who turns to Dodge under pressure prompts boasts.
+
+The mood **thresholds and bands** in section 1 are replaced by these three. My other variables (`momentum`, `dominance`, `stakes`, `fatigue`, `rivalry_heat`, `collateral`) stay as inputs to which line to choose within a band. `drama` in the budget formula is now `0.6 x (fight mood / 100) + 0.4 x stakes`.
+
+### 9.4 Names
+
+Stances are shown as PRESS, GUARD, DODGE and ESCAPE (`glossary.md`), and Game Design's internal names (AGGRESSIVE, DEFENSIVE, EVASIVE, ESCAPE) stay in the sim. My style labels map like this: `turtle` is long DEFENSIVE, `rusher` is long AGGRESSIVE, `runner` is long EVASIVE or ESCAPE.
