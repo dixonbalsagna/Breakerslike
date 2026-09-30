@@ -38,6 +38,7 @@ class Game:
 	var ts: float = 1.0
 	var clash = null         # Clash or null
 	var seed: float = 1.0
+	var breaks: int = 0      # region breaks so far, both fighters (the act index until M1 owns it: 1 + breaks)
 
 
 class Clash:

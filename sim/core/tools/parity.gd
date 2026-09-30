@@ -221,7 +221,8 @@ func _roster(g: Dictionary) -> String:
 	return ""
 
 
-## D1a negative controls: fixtures made from KAI's real files with one fault each, in user://, must each be rejected with
+## D1a negative controls: fixtures made from KAI's real files with one fault each (edits keyed to the key name, not its
+## value, so a retune does not break them; the old value stays behind as a "_was" note), in user://, must each be rejected with
 ## the right message; a changed _note must not change the data hash, and a changed number must. Reloads data/fighters/
 ## at the end.
 func _rosterRejects() -> String:
@@ -231,12 +232,12 @@ func _rosterRejects() -> String:
 	var h0: String = FighterData.dataHash()
 	var cases: Array = [
 		["note", "", "", "", ""],
-		["number", "wounds.json", "\"focusWear\": 30.0", "\"focusWear\": 31.0", ""],
-		["nonint", "wounds.json", "\"out\": 25,", "\"out\": 25.5,", "must be an integer"],
-		["digits", "wounds.json", "\"wearPerDamage\": 204.0", "\"wearPerDamage\": 204.00000000000001", "more than 15 significant digits"],
+		["number", "wounds.json", "\"focusWear\": ", "\"focusWear\": 31.5, \"_was\": ", ""],
+		["nonint", "wounds.json", "\"out\": ", "\"out\": 25.5, \"_was\": ", "must be an integer"],
+		["digits", "wounds.json", "\"wearPerDamage\": ", "\"wearPerDamage\": 204.00000000000001, \"_was\": ", "more than 15 significant digits"],
 		["rally", "fighter.json", "\"second_wind\"", "\"berserk\"", "unknown Rally rule"],
 		["profile", "wounds.json", "\"type\": \"plain\"", "\"type\": \"spread\"", "unknown profile type"],
-		["pinned", "wounds.json", "\"legsSlip\": 0.1", "\"legsSlip\": 0.2", "is pinned"],
+		["pinned", "wounds.json", "\"legsSlip\": ", "\"legsSlip\": 0.3, \"_was\": ", "is pinned"],
 		["meter", "meters.json", "\"anguish\": {", "\"pride\": {", "unknown meter"],
 		["dup", "", "", "", "duplicate"],
 	]

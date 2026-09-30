@@ -1,78 +1,282 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/fighter-wounds",
-  "title": "wounds/1 (draft, from docs/architecture/d1-roster-data.md section 3 and sim/core/wounds.gd)",
-  "description": "data/fighters/<id>/wounds.json: the per-fighter wound numbers, under the names of today's SimWounds constants. DRAFT: derived from the D1 plan and wounds.gd before any data exists; the penalties table is left open until D1a fixes its shape. Version field: schema. Policy: closed at the top level and in the tables below, except keys starting with an underscore. Integer fields (units and ticks) must be integral; other numbers carry at most 15 significant digits (checked by the validator).",
+  "title": "wounds/1 (D1a as built, docs/architecture/d1-roster-data.md sections 3 and 7b)",
+  "description": "data/fighters/<id>/wounds.json: the per-fighter wound numbers, loaded into a WoundsDef (sim/core/fighter_data.gd). Version field: schema. Policy: closed at every level, except keys starting with an underscore. Integer fields (units and ticks) must be integral; other numbers carry at most 15 significant digits (checked by the validator). Cross-references (stage thresholds strictly increase, family weights match the region count) are checked by tools/lib/xref.js. The stricter brink (brinkLimbs), the act-1 damping and the overtime ramp are part of the shape.",
   "type": "object",
-  "required": ["schema", "regions", "stageAt", "wearPerDamage", "fade", "focusWear", "family", "penalties", "profile", "rally"],
+  "required": [
+    "schema",
+    "regions",
+    "stageAt",
+    "wearPerDamage",
+    "fade",
+    "focusWear",
+    "family",
+    "penalties",
+    "profile",
+    "rally",
+    "brinkLimbs",
+    "act1Damping",
+    "overtime"
+  ],
   "properties": {
-    "schema": { "const": "wounds/1" },
+    "schema": {
+      "const": "wounds/1"
+    },
     "regions": {
       "type": "object",
-      "required": ["head", "core", "arms", "legs"],
-      "propertyNames": { "pattern": "^(head|core|arms|legs|mantle)$" },
+      "required": [
+        "head",
+        "core",
+        "arms",
+        "legs"
+      ],
+      "propertyNames": {
+        "pattern": "^(head|core|arms|legs|mantle)$"
+      },
       "additionalProperties": {
         "type": "object",
-        "required": ["brink"],
-        "properties": { "brink": { "type": "boolean" } },
+        "required": [
+          "brink"
+        ],
+        "properties": {
+          "brink": {
+            "type": "boolean"
+          }
+        },
         "additionalProperties": false,
-        "patternProperties": { "^_": true }
+        "patternProperties": {
+          "^_": true
+        }
       },
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "stageAt": {
       "type": "array",
       "minItems": 3,
       "maxItems": 3,
-      "items": { "type": "integer", "exclusiveMinimum": 0 },
+      "items": {
+        "type": "integer",
+        "exclusiveMinimum": 0
+      },
       "description": "Wear thresholds for the three stages, in units; strictly increasing (checked by tools/lib/xref.js)."
     },
-    "wearPerDamage": { "type": "number", "exclusiveMinimum": 0 },
+    "wearPerDamage": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
     "fade": {
       "type": "object",
-      "required": ["out", "breath", "breathAfterTicks", "hidden", "hiddenFloor"],
+      "required": [
+        "out",
+        "breath",
+        "breathAfterTicks",
+        "hidden",
+        "hiddenFloor"
+      ],
       "properties": {
-        "out": { "type": "integer", "minimum": 0 },
-        "breath": { "type": "integer", "minimum": 0 },
-        "breathAfterTicks": { "type": "integer", "minimum": 0 },
-        "hidden": { "type": "integer", "minimum": 0 },
-        "hiddenFloor": { "type": "integer", "minimum": 0 }
+        "out": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "breath": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "breathAfterTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hidden": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hiddenFloor": {
+          "type": "integer",
+          "minimum": 0
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
-    "focusWear": { "type": "number", "exclusiveMinimum": 0 },
+    "focusWear": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
     "family": {
       "type": "object",
-      "required": ["light", "heavy", "guard", "spread"],
+      "required": [
+        "light",
+        "heavy",
+        "guard",
+        "spread"
+      ],
       "additionalProperties": {
         "type": "array",
         "minItems": 4,
-        "maxItems": 5,
-        "items": { "type": "number", "minimum": 0 }
+        "maxItems": 4,
+        "items": {
+          "type": "number",
+          "minimum": 0
+        }
       },
-      "patternProperties": { "^_": true },
-      "description": "Region pick weights per hit family, in region order (head, core, arms, legs; a fifth for the mantle)."
+      "patternProperties": {
+        "^_": true
+      },
+      "description": "Region pick weights per hit family, in region order (head, core, arms, legs)."
     },
-    "penalties": { "type": "object", "minProperties": 1 },
+    "penalties": {
+      "type": "object",
+      "required": [
+        "coreKiRegen",
+        "legsSpeed",
+        "legsLockBreak",
+        "staggerTicks",
+        "dazeTicks",
+        "armsGuardMul",
+        "armsBrokenMul",
+        "headParryNarrow",
+        "headDefence",
+        "legsSlip"
+      ],
+      "properties": {
+        "coreKiRegen": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "legsSpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "legsLockBreak": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "staggerTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dazeTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "armsGuardMul": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "armsBrokenMul": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "headParryNarrow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "headDefence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "legsSlip": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
     "profile": {
       "type": "object",
-      "required": ["type"],
-      "properties": { "type": { "enum": ["plain"] } },
-      "additionalProperties": { "type": ["number", "string", "boolean", "array", "object"] },
-      "patternProperties": { "^_": true }
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "plain"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     },
     "rally": {
       "type": "object",
-      "required": ["rallyWear", "coolTicks"],
+      "required": [
+        "rallyWear",
+        "coolTicks"
+      ],
       "properties": {
-        "rallyWear": { "type": "integer", "exclusiveMinimum": 0 },
-        "coolTicks": { "type": "integer", "minimum": 0 }
+        "rallyWear": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "coolTicks": {
+          "type": "integer",
+          "minimum": 0
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "brinkLimbs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "The brink: the core broken, or this many of head, arms and legs broken (spec-wounds.md section 1b)."
+    },
+    "act1Damping": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "description": "Wear is multiplied by this while the act index is 1."
+    },
+    "overtime": {
+      "type": "object",
+      "required": [
+        "startTicks",
+        "perMin",
+        "cap"
+      ],
+      "description": "k x min(cap, 1 + perMin x minutes past start).",
+      "properties": {
+        "startTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "perMin": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cap": {
+          "type": "number",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     }
   },
   "additionalProperties": false,
-  "patternProperties": { "^_": true }
+  "patternProperties": {
+    "^_": true
+  }
 }

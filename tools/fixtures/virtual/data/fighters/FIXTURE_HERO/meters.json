@@ -1,14 +1,46 @@
 {
-  "_about": "Validator fixture, not game data. Field names follow the D1 plan.",
   "schema": "meters/1",
+  "_about": "Validator fixture, not game data: a copy of the real KAI file, in the D1a shape.",
   "meters": {
-    "menace": {
-      "range": [0, 100],
+    "anguish": {
+      "range": [
+        0,
+        100
+      ],
       "start": 0,
       "visible": true,
-      "sources": [{ "event": "casualty", "amount": 2, "cap": 100, "whose": "self" }],
-      "decay": { "rate": 0.4, "delayTicks": 240 },
-      "effects": [{ "key": "damage_mul", "perPoint": 0.0015, "cap": 0.15 }]
+      "sources": [
+        {
+          "event": "casualty",
+          "amount": 0.9,
+          "whose": "self",
+          "_note": "casualties this fighter caused"
+        },
+        {
+          "event": "casualty",
+          "amount": 0.5,
+          "whose": "opponent",
+          "_note": "casualties anyone else caused"
+        }
+      ],
+      "decay": {
+        "rate": 0.6,
+        "delayTicks": 0
+      },
+      "effects": [
+        {
+          "key": "regen_penalty",
+          "perPoint": 0.025,
+          "_note": "ki regen falls by this per point, floor 1 per second"
+        },
+        {
+          "key": "composure",
+          "below": 10,
+          "cap": 0,
+          "_note": "damage bonus while below; 0 = off (balance-targets.md section 4b ruling 6)"
+        }
+      ],
+      "_note": "a fighter with anguish also gets the comeback damage term (damage.gd, GD-B09)"
     }
   }
 }

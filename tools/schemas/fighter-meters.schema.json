@@ -1,69 +1,213 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/fighter-meters",
-  "title": "meters/1 (draft, from docs/architecture/d1-roster-data.md section 5)",
-  "description": "data/fighters/<id>/meters.json: menace, anguish and later per-fighter meters (D1b). DRAFT: derived from the plan before any data exists; the field names follow the plan and will change when D1b lands. Version field: schema. Policy: closed except keys starting with an underscore. `effects` is a closed list of effect keys that code implements.",
+  "title": "meters/1 (D1a as built, docs/architecture/d1-roster-data.md sections 5 and 7b)",
+  "description": "data/fighters/<id>/meters.json: which meters a fighter has (D1a reads only that: hasAnguish, hasMenace) and the numbers that document today's rules, wired in D1b. Version field: schema. Policy: closed except keys starting with an underscore. `effects` is a closed list of effect keys that code implements, each with the fields it needs. Cross-references (the start value lies inside the range) are checked by tools/lib/xref.js.",
   "type": "object",
-  "required": ["schema", "meters"],
+  "required": [
+    "schema",
+    "meters"
+  ],
   "properties": {
-    "schema": { "const": "meters/1" },
+    "schema": {
+      "const": "meters/1"
+    },
     "meters": {
       "type": "object",
       "minProperties": 1,
-      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
-      "additionalProperties": { "$ref": "#/$defs/meter" }
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/meter"
+      }
     }
   },
   "additionalProperties": false,
-  "patternProperties": { "^_": true },
+  "patternProperties": {
+    "^_": true
+  },
   "$defs": {
     "meter": {
       "type": "object",
-      "required": ["range", "start", "visible", "sources", "decay", "effects"],
+      "required": [
+        "range",
+        "start",
+        "visible",
+        "sources",
+        "decay",
+        "effects"
+      ],
       "properties": {
-        "range": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "minItems": 2, "maxItems": 2 },
-        "start": { "type": "number" },
-        "visible": { "type": "boolean" },
+        "range": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "start": {
+          "type": "number"
+        },
+        "visible": {
+          "type": "boolean"
+        },
         "sources": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["event", "amount", "whose"],
+            "required": [
+              "event",
+              "amount",
+              "whose"
+            ],
             "properties": {
-              "event": { "type": "string", "minLength": 1 },
-              "amount": { "type": "number" },
-              "cap": { "type": "number" },
-              "whose": { "enum": ["self", "opponent"] }
+              "event": {
+                "enum": [
+                  "casualty",
+                  "evacuee"
+                ]
+              },
+              "amount": {
+                "type": "number"
+              },
+              "cap": {
+                "type": "number"
+              },
+              "whose": {
+                "enum": [
+                  "self",
+                  "opponent"
+                ]
+              }
             },
             "additionalProperties": false,
-            "patternProperties": { "^_": true }
+            "patternProperties": {
+              "^_": true
+            }
           }
         },
         "decay": {
           "type": "object",
-          "required": ["rate", "delayTicks"],
-          "properties": { "rate": { "type": "number", "minimum": 0 }, "delayTicks": { "type": "integer", "minimum": 0 } },
+          "required": [
+            "rate",
+            "delayTicks"
+          ],
+          "properties": {
+            "rate": {
+              "type": "number",
+              "minimum": 0
+            },
+            "delayTicks": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
         "effects": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["key"],
+            "required": [
+              "key"
+            ],
             "properties": {
-              "key": { "enum": ["regen_bonus", "regen_penalty", "damage_mul", "composure"] },
-              "perPoint": { "type": "number" },
-              "cap": { "type": "number" },
-              "below": { "type": "number" }
+              "key": {
+                "enum": [
+                  "regen_bonus",
+                  "regen_penalty",
+                  "damage_mul",
+                  "composure"
+                ]
+              },
+              "perPoint": {
+                "type": "number"
+              },
+              "cap": {
+                "type": "number"
+              },
+              "below": {
+                "type": "number"
+              }
             },
             "additionalProperties": false,
-            "patternProperties": { "^_": true }
+            "patternProperties": {
+              "^_": true
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "key": {
+                      "enum": [
+                        "regen_bonus",
+                        "regen_penalty"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "perPoint"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "key": {
+                      "const": "damage_mul"
+                    }
+                  },
+                  "required": [
+                    "key"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "cap"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "key": {
+                      "const": "composure"
+                    }
+                  },
+                  "required": [
+                    "key"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "below",
+                    "cap"
+                  ]
+                }
+              }
+            ]
           }
         }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     }
   }
 }

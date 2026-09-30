@@ -12,7 +12,7 @@ const STYLE = 'data/fight/style.json';
 // The per-second counters a style label may measure (docs/architecture/mood-style.md section 2), plus the derived total.
 const MEASURES = new Set(['stance0', 'stance1', 'stance2', 'stance3', 'light', 'heavy', 'sig', 'closing', 'opened', 'charge', 'chargeCut', 'sigLanded', 'stanceTotal']);
 
-function xrefFight({ get, err, esc, isObj, plainKeys }) {
+function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
   // ---- combat styles ----
   const styles = get(STYLES);
   if (isObj(styles)) {
@@ -173,6 +173,18 @@ function xrefFight({ get, err, esc, isObj, plainKeys }) {
       for (const beat of beats) {
         if (!(`${beat}.hint` in reads.hints)) err('ui/data/reads.json', '/hints', 'reads-beat', `beat "${beat}" has no "${beat}.hint" line`);
       }
+    }
+  }
+
+  // ---- fighter meters ----
+  for (const rel of [...docsFor(/^data\/fighters\/[^/]+\/meters\.json$/)]) {
+    const doc = get(rel);
+    if (!isObj(doc) || !isObj(doc.meters)) continue;
+    for (const [name, m] of Object.entries(doc.meters)) {
+      if (!isObj(m) || !Array.isArray(m.range) || m.range.length !== 2) continue;
+      const at = '/meters/' + esc(name);
+      if (!(m.range[0] < m.range[1])) err(rel, at + '/range', 'meter-range', 'range ' + JSON.stringify(m.range) + ' must run from low to high');
+      if (typeof m.start === 'number' && (m.start < m.range[0] || m.start > m.range[1])) err(rel, at + '/start', 'meter-range', 'start ' + m.start + ' is outside the range ' + JSON.stringify(m.range));
     }
   }
 

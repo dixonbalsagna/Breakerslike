@@ -1,10 +1,41 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/fighter-roster",
-  "title": "roster order (draft, from docs/architecture/d1-roster-data.md section 3)",
-  "description": "data/fighters/roster.json: the select-screen order and the default pairing, a bare array of fighter ids. DRAFT: derived from the D1 plan before any data exists. Policy: closed. Open question for Simulation: a bare array cannot carry a version field; if the file becomes an object ({\"schema\": \"roster/1\", \"order\": [...]}) this schema and the roster cross-reference change with it. Every id must have data/fighters/<id>/fighter.json (checked by tools/lib/xref.js).",
-  "type": "array",
-  "minItems": 1,
-  "uniqueItems": true,
-  "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }
+  "title": "roster order (D1a as built, docs/architecture/d1-roster-data.md sections 3 and 7b)",
+  "description": "data/fighters/roster.json: the select-screen order and the default pairing. Two forms, both accepted by the loader: a bare array of fighter ids, or {\"schema\": \"roster/1\", \"order\": [...]} (the form that can carry a version). Policy: the object form is closed except keys starting with an underscore. Every id must have data/fighters/<id>/fighter.json (checked by tools/lib/xref.js).",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/order"
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "order"
+      ],
+      "properties": {
+        "schema": {
+          "const": "roster/1"
+        },
+        "order": {
+          "$ref": "#/$defs/order"
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  ],
+  "$defs": {
+    "order": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]*$"
+      }
+    }
+  }
 }

@@ -23,8 +23,8 @@ const LEGS: int = 3
 const WEAR_SCALE: int = 6000                 # units per wear point
 const WEAR_MAX: int = 600000                 # 100 wear
 ## k (wear per damage point, in units) is f.wd.wearPerDamage: 204 = 0.034 x 6000, Game Design's final (spec §1b).
-const OVERTIME_AT: float = 540.0             # the overtime ramp (spec-wounds.md, S4 ruling 3): past 9:00 ...
-const OVERTIME_PER_MIN: float = 0.25         # ... k rises by 25% of itself per minute (read as linear)
+## The overtime ramp (f.wd.overtimeStart, overtimePerMin, overtimeCap: k x min(cap, 1 + perMin x minutes past the
+## start)) and the act-1 damping (f.wd.act1Damping while act() is 1) are data (spec-wounds.md §1b).
 ## Stage floors in units: bruised 30, battered 60, broken 90. Stages: 0 fresh, 1 bruised, 2 battered, 3 broken.
 ## Pinned: sim/director/ai.gd and qa/godot/records.gd read it (f.wd.stageAt is the fighter's own copy).
 const STAGE_AT: Array = [180000, 360000, 540000]
@@ -101,7 +101,10 @@ static func pickRegion(S: SimState, f, fam: String) -> int:
 
 
 static func addWear(S: SimState, f, region: int, damage: float) -> void:
-	var k: float = f.wd.wearPerDamage * (1.0 + OVERTIME_PER_MIN * SimMathx.jmax(0.0, S.T - OVERTIME_AT) / 60.0)
+	var wd = f.wd
+	var k: float = wd.wearPerDamage * SimMathx.jmin(wd.overtimeCap, 1.0 + wd.overtimePerMin * SimMathx.jmax(0.0, S.T - wd.overtimeStart) / 60.0)
+	if act(S) == 1:
+		k *= wd.act1Damping
 	f.wear[region] = mini(WEAR_MAX, f.wear[region] + int(SimMathx.jround(damage * k)))
 	updateStages(S, f)
 
@@ -145,12 +148,13 @@ static func updateStages(S: SimState, f) -> void:
 			f.stage[r] = st
 			SimFx.regionStage(S, f, REGIONS[r], st)
 			if st == 3:
+				S.game.breaks += 1
 				SimFx.regionBroken(S, f, REGIONS[r])
 	var limbs: int = 0
 	for r in [HEAD, ARMS, LEGS]:
 		if f.stage[r] == 3:
 			limbs += 1
-	var brink: bool = f.stage[CORE] == 3 or limbs >= 2
+	var brink: bool = f.stage[CORE] == 3 or limbs >= f.wd.brinkLimbs
 	if brink != f.brink:
 		f.brink = brink
 		if brink:
@@ -159,15 +163,15 @@ static func updateStages(S: SimState, f) -> void:
 			SimFx.brinkExit(S, f)
 
 
-## How far a fighter is from the brink, 0 (fresh) to 1 (on the brink): the core's wear, or the second most worn of
-## head, arms and legs (the brink needs two of them broken), whichever is higher, over the broken threshold. The AI and
+## How far a fighter is from the brink, 0 (fresh) to 1 (on the brink): the core's wear, or the limb that completes the
+## brink (the brinkLimbs-th most worn of head, arms and legs: the least worn with the stricter brink of three), whichever
+## is higher, over the broken threshold. The AI and
 ## the comeback bonus read vitality() = 1 - brinkProgress() where they read hp / maxhp before S2.
 static func brinkProgress(f) -> float:
-	var a: int = f.wear[HEAD]
-	var b: int = f.wear[ARMS]
-	var c: int = f.wear[LEGS]
-	var second: int = maxi(mini(a, b), mini(maxi(a, b), c))
-	return minf(1.0, float(maxi(f.wear[CORE], second)) / float(f.wd.stageAt[2]))
+	var limbs: Array = [f.wear[HEAD], f.wear[ARMS], f.wear[LEGS]]
+	limbs.sort()
+	var nth: int = limbs[3 - f.wd.brinkLimbs]
+	return minf(1.0, float(maxi(f.wear[CORE], nth)) / float(f.wd.stageAt[2]))
 
 
 static func vitality(f) -> float:
@@ -236,7 +240,7 @@ static func _brinkWith(f, r: int, wr: int) -> bool:
 	for q in [HEAD, ARMS, LEGS]:
 		if st[q] == 3:
 			limbs += 1
-	return st[CORE] == 3 or limbs >= 2
+	return st[CORE] == 3 or limbs >= f.wd.brinkLimbs
 
 
 ## The region a Rally mends: the first broken, never-rallied region in the rule's order whose mend takes the fighter
@@ -263,6 +267,12 @@ static func rally(S: SimState, f, kind: String) -> bool:
 	SimFx.rally(S, f, REGIONS[r], kind)
 	updateStages(S, f)
 	return true
+
+
+## The act index (spec-wounds.md §9) until M1 owns it: 1 + region breaks so far (both fighters; forms come with F1),
+## at most 4. It never goes down: a Rally mends a region but not the act.
+static func act(S: SimState) -> int:
+	return mini(4, 1 + S.game.breaks)
 
 
 ## The director's hooks. f survived a finisher contest (Second Wind).

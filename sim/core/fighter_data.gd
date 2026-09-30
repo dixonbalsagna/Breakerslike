@@ -17,6 +17,11 @@ const PENALTIES: Array = ["coreKiRegen", "legsSpeed", "legsLockBreak", "staggerT
 ## One fighter's wound numbers (wounds.json). Read-only after load.
 class WoundsDef:
 	var wearPerDamage: float = 0.0
+	var brinkLimbs: int = 0        # the brink: the core broken, or this many limbs broken
+	var act1Damping: float = 0.0   # wear x this while the act index is 1
+	var overtimeStart: float = 0.0 # seconds (startTicks / 60)
+	var overtimePerMin: float = 0.0
+	var overtimeCap: float = 0.0
 	var stageAt: Array = []        # int units: bruised, battered, broken
 	var fadeOut: int = 0
 	var fadeBreath: int = 0
@@ -209,6 +214,21 @@ static func _wounds(id: String, j: Dictionary) -> WoundsDef:
 	for x in j.get("stageAt", []):
 		w.stageAt.append(_int(where + " stageAt", x))
 	w.wearPerDamage = float(j.get("wearPerDamage", 0.0))
+	w.brinkLimbs = _int(where + " brinkLimbs", j.get("brinkLimbs", 0))
+	if w.brinkLimbs < 1 or w.brinkLimbs > 3:
+		_err(where + ": brinkLimbs must be 1 to 3")
+	w.act1Damping = float(j.get("act1Damping", 0.0))
+	if not (w.act1Damping > 0.0 and w.act1Damping <= 1.0):
+		_err(where + ": act1Damping must be in (0, 1]")
+	var ot: Dictionary = j.get("overtime", {})
+	for key in ["startTicks", "perMin", "cap"]:
+		if not ot.has(key):
+			_err(where + ": overtime." + key + " missing")
+	w.overtimeStart = float(_int(where + " overtime.startTicks", ot.get("startTicks", 0))) / 60.0
+	w.overtimePerMin = float(ot.get("perMin", 0.0))
+	w.overtimeCap = float(ot.get("cap", 1.0))
+	if w.overtimeCap < 1.0 or w.overtimePerMin < 0.0:
+		_err(where + ": overtime needs cap >= 1 and perMin >= 0")
 	var fd: Dictionary = j.get("fade", {})
 	w.fadeOut = _int(where + " fade.out", fd.get("out", 0))
 	w.fadeBreath = _int(where + " fade.breath", fd.get("breath", 0))

@@ -45,6 +45,7 @@ function loadBase() {
 const tokens = (pointer) => (pointer === '' ? [] : pointer.slice(1).split('/').map((t) => t.replace(/~1/g, '/').replace(/~0/g, '~')));
 
 function applyValueMutation(value, m) {
+  if (m.root !== undefined) return structuredClone(m.root);
   const doc = structuredClone(value);
   const parentOf = (pointer) => {
     const ts = tokens(pointer);
@@ -162,7 +163,7 @@ function run() {
   for (const name of onDisk) {
     const s = core.loadSchema(name);
     guard('schemas', `${name} declares a version field`, () => {
-      const req = (s.required || []).includes('schema') || (s.required || []).includes('version') || s.type === 'array';
+      const req = (s.required || []).includes('schema') || (s.required || []).includes('version') || s.type === 'array' || Array.isArray(s.oneOf);
       record('schemas', `${name} requires a version field (schema or version), or is a bare array`, req);
     });
     record('schemas', `${name} states its additionalProperties policy`, typeof s.description === 'string' && /policy/i.test(s.description), 'add "Policy: ..." to the description');

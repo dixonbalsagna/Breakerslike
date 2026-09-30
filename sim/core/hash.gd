@@ -90,7 +90,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	out.append(float(S.rng.state_i32()))
 	var g := S.game
 	out.append(_idx(fs, g.ko))
-	_obj(out, g, ["koT", "ts", "seed"])
+	_obj(out, g, ["koT", "ts", "seed", "breaks"])
 	if g.clash != null:
 		out.append(_idx(fs, g.clash.A))
 		out.append(_idx(fs, g.clash.D))

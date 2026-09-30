@@ -1,179 +1,2796 @@
 {
   "_about": "Invalid-data cases for `node tools/validate.js --self-test`. Each case takes the live data (fighters: tools/fixtures/virtual/data/fighters), applies the mutation, and must produce the expected finding, which the unmutated data must not already produce. `set` maps a JSON pointer to a new value; `del` lists pointers to remove. `expect.rule` is a schema keyword or an `xref:` rule; `expect.pointer` is optional; `expect.file` defaults to the first mutated file. At least three cases per schema are required. A case whose pointer no longer exists fails with 'fixture path missing': update the case when the data's shape changes.",
   "cases": [
-    { "id": "templates-version", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/schema": "combat.templates/2" } }], "expect": { "rule": "const", "pointer": "/schema" } },
-    { "id": "templates-unknown-op", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/branches/0/parity/0/op": "teleport" } }], "expect": { "rule": "enum", "pointer": "/templates/0/branches/0/parity/0/op" } },
-    { "id": "templates-tick-in-parity", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/branches/0/parity/0/tick": 5 } }], "expect": { "rule": "false", "pointer": "/templates/0/branches/0/parity/0/tick" } },
-    { "id": "templates-cue-without-who", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "del": ["/templates/0/branches/0/spaced/1/args/who"] }], "expect": { "rule": "required", "pointer": "/templates/0/branches/0/spaced/1/args" } },
-    { "id": "templates-unknown-key", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/color": "red" } }], "expect": { "rule": "additionalProperties", "pointer": "/templates/0/color" } },
-    { "id": "templates-selector-branch", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/selector/branch": "nope" } }], "expect": { "rule": "xref:selector-branch", "pointer": "/templates/0/selector/branch" } },
-    { "id": "templates-unknown-cue", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/0/branches/0/spaced/1/args/cue": "not_a_cue" } }], "expect": { "rule": "xref:cue", "pointer": "/templates/0/branches/0/spaced/1/args/cue" } },
-    { "id": "templates-duplicate-template-id", "schema": "combat-templates.schema.json", "mutate": [{ "file": "data/combat/templates.json", "set": { "/templates/1/id": "charge_interrupt" } }], "expect": { "rule": "xref:template-id", "pointer": "/templates/1/id" } },
-
-    { "id": "finishers-bad-profile", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/1/profile": "bogus" } }], "expect": { "rule": "enum", "pointer": "/finishers/1/profile" } },
-    { "id": "finishers-select-missing-finisher", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/select/byFighter/KAI": "missing_finisher" } }], "expect": { "rule": "xref:finisher-key", "pointer": "/select/byFighter/KAI" } },
-    { "id": "finishers-authored-needs-name", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "del": ["/finishers/2/name"] }], "expect": { "rule": "required", "pointer": "/finishers/2" } },
-    { "id": "finishers-duplicate-id", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/3/id": "kai" } }], "expect": { "rule": "xref:finisher-id", "pointer": "/finishers/3/id" } },
-    { "id": "finishers-bad-tick", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/2/beats/0/tick": "soon" } }], "expect": { "rule": "anyOf", "pointer": "/finishers/2/beats/0/tick" } },
-    { "id": "finishers-hit-chance-range", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/contest/struggle/aiHitChance": 1.5 } }], "expect": { "rule": "maximum", "pointer": "/contest/struggle/aiHitChance" } },
-    { "id": "finishers-unknown-cue", "schema": "combat-finishers.schema.json", "mutate": [{ "file": "data/combat/finishers.json", "set": { "/finishers/2/beats/1/args/cue": "made_up" } }], "expect": { "rule": "xref:cue", "pointer": "/finishers/2/beats/1/args/cue" } },
-
-    { "id": "flashes-version", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/version": 2 } }], "expect": { "rule": "const", "pointer": "/version" } },
-    { "id": "flashes-glyph-needs-a-glyph", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/flashes/found/glyph": null } }], "expect": { "rule": "enum", "pointer": "/flashes/found/glyph" } },
-    { "id": "flashes-bad-colour", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/accents/P/mid": "teal" } }], "expect": { "rule": "pattern", "pointer": "/accents/P/mid" } },
-    { "id": "flashes-pulse-total", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/flashes/danger/pulse/total": 9 } }], "expect": { "rule": "xref:flash-total", "pointer": "/flashes/danger/pulse/total" } },
-    { "id": "flashes-duplicate-priority", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "set": { "/flashes/found/priority": 3 } }], "expect": { "rule": "xref:flash-priority" } },
-    { "id": "flashes-missing-audio", "schema": "art-flashes.schema.json", "mutate": [{ "file": "data/art/flashes.json", "del": ["/flashes/surge"] }], "expect": { "file": "audio/data/flash_cues.json", "rule": "xref:flash-audio", "pointer": "/flashes/surge" } },
-
-    { "id":"templates-tempo-name","schema":"combat-templates.schema.json","mutate":[{"file":"data/combat/templates.json","set":{"/templates/6/branches/0/dynamic/0/tick/add":["footwrk"]}}],"expect":{"rule":"xref:tempo-name","pointer":"/templates/6/branches/0/dynamic/0/tick/add/0"} },
-    { "id":"templates-dynamic-needs-timing","schema":"combat-templates.schema.json","mutate":[{"file":"data/combat/templates.json","del":["/templates/6/branches/0/dynamicTiming"]}],"expect":{"rule":"dependentRequired","pointer":"/templates/6/branches/0"} },
-    { "id":"flashes-keep-out","schema":"art-flashes.schema.json","mutate":[{"file":"data/art/flashes.json","set":{"/flashes/danger/layout/0/a":20}}],"expect":{"rule":"xref:flash-keep-out","pointer":"/flashes/danger/layout/0/a"} },
-    { "id":"effects-bad-haze","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/haze":"blue"}}],"expect":{"rule":"pattern","pointer":"/haze"} },
-    { "id":"effects-swap-not-haze","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/lanes/trail/fire_range_swap/rim":"#ff0000"}}],"expect":{"rule":"xref:effects-haze","pointer":"/lanes/trail/fire_range_swap/rim"} },
-    { "id":"effects-glass-too-dark","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/lanes/glass/mid":"#336699"}}],"expect":{"rule":"xref:effects-lightness","pointer":"/lanes/glass/mid"} },
-    { "id":"effects-missing-biome","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","del":["/by_biome/desert"]}],"expect":{"rule":"required","pointer":"/by_biome"} },
-    { "id":"effects-crack-without-lip","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/by_biome/plains/lip":null}}],"expect":{"rule":"oneOf","pointer":"/by_biome/plains"} },
-    { "id":"grunts-placeholder-type","schema":"audio-grunts.schema.json","mutate":[{"file":"audio/data/grunts.json","set":{"/voices/empress/placeholder":"yes"}}],"expect":{"rule":"type","pointer":"/voices/empress/placeholder"} },
-    { "id":"babble-seed","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","set":{"/bank_seed":-1}}],"expect":{"rule":"minimum","pointer":"/bank_seed"} },
-    { "id":"babble-voice-needs-lexicon","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","del":["/voices/protagonist/lexicon"]}],"expect":{"rule":"required","pointer":"/voices/protagonist"} },
-    { "id":"babble-mood-probability","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","set":{"/moods/angry/grunt_p":2}}],"expect":{"rule":"maximum","pointer":"/moods/angry/grunt_p"} },
-    { "id":"babble-unknown-voice","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","set":{"/voices/ghost":{"label":"x","ref_f0":100,"formant_k":1,"syl_ms":90,"min_gap":0.05,"open":0.5,"breath":0.1,"jitter":0.01,"shimmer":0.05,"drive":1,"crush_bits":0,"hold":1,"stutter":false,"lexicon":{"ba":1},"laugh":{"pulses":3,"f0":[200,180],"spacing":[0.1,0.1],"pulse_ms":80,"decay":0.8,"breath":0.2,"step_st":0,"variants":1},"chars_per_syl":2.5}}}],"expect":{"rule":"xref:voice","pointer":"/voices/ghost"} },
-    { "id":"babble-unknown-vowel","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","set":{"/syllables/ba/vowel":"y"}}],"expect":{"rule":"xref:babble-vowel","pointer":"/syllables/ba/vowel"} },
-    { "id":"babble-lexicon-syllable","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","set":{"/voices/protagonist/lexicon/zz":2}}],"expect":{"rule":"xref:babble-syllable","pointer":"/voices/protagonist/lexicon/zz"} },
-    { "id":"babble-mood-map-target","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","set":{"/mood_map/leering":"sneering"}}],"expect":{"rule":"xref:babble-mood","pointer":"/mood_map/leering"} },
-    { "id":"babble-gesture","schema":"audio-babble.schema.json","mutate":[{"file":"audio/data/babble.json","set":{"/cue_map/growl":"bellow"}}],"expect":{"rule":"xref:babble-gesture","pointer":"/cue_map/growl"} },
-    { "id":"captions-intensity","schema":"audio-babble-captions.schema.json","mutate":[{"file":"audio/data/babble_captions.json","set":{"/captions/protagonist/0/intensity":9}}],"expect":{"rule":"maximum","pointer":"/captions/protagonist/0/intensity"} },
-    { "id":"captions-needs-text","schema":"audio-babble-captions.schema.json","mutate":[{"file":"audio/data/babble_captions.json","del":["/captions/protagonist/0/text"]}],"expect":{"rule":"required","pointer":"/captions/protagonist/0"} },
-    { "id":"captions-unknown-mood","schema":"audio-babble-captions.schema.json","mutate":[{"file":"audio/data/babble_captions.json","set":{"/captions/protagonist/0/mood":"sulking"}}],"expect":{"rule":"xref:babble-mood","pointer":"/captions/protagonist/0/mood"} },
-    { "id":"captions-unknown-voice","schema":"audio-babble-captions.schema.json","mutate":[{"file":"audio/data/babble_captions.json","set":{"/captions/ghost":[{"text":"Boo.","mood":"neutral","intensity":1}]}}],"expect":{"rule":"xref:voice","pointer":"/captions/ghost"} },
-    { "id":"effects-embers-required","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","del":["/lanes/embers"]}],"expect":{"rule":"required","pointer":"/lanes"} },
-    { "id":"effects-ember-bad-hex","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/lanes/embers/ramp/hot":"orange"}}],"expect":{"rule":"pattern","pointer":"/lanes/embers/ramp/hot"} },
-    { "id":"effects-deutan-table-drift","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/lanes/embers/deutan_check/core_with_rim/0":9.99}}],"expect":{"rule":"xref:effects-deutan","pointer":"/lanes/embers/deutan_check/core_with_rim/0"} },
-    { "id":"effects-ember-loses-contrast","schema":"art-effects.schema.json","mutate":[{"file":"data/art/effects.json","set":{"/lanes/embers/ramp/warm":"#8a4a1c"}}],"expect":{"rule":"xref:effects-deutan","pointer":"/lanes/embers/ramp"} },
-    { "id":"howto-version","schema":"ui-howto.schema.json","mutate":[{"file":"ui/data/howto.json","set":{"/schema":2}}],"expect":{"rule":"const","pointer":"/schema"} },
-    { "id":"howto-needs-title","schema":"ui-howto.schema.json","mutate":[{"file":"ui/data/howto.json","del":["/pages/0/title"]}],"expect":{"rule":"required","pointer":"/pages/0"} },
-    { "id":"howto-column","schema":"ui-howto.schema.json","mutate":[{"file":"ui/data/howto.json","set":{"/pages/0/items/0/col":2}}],"expect":{"rule":"enum","pointer":"/pages/0/items/0/col"} },
-    { "id":"howto-unknown-action","schema":"ui-howto.schema.json","mutate":[{"file":"ui/data/howto.json","set":{"/pages/1/items/0/action":"teleport"}}],"expect":{"rule":"xref:howto-action","pointer":"/pages/1/items/0/action"} },
-    { "id":"howto-duplicate-page","schema":"ui-howto.schema.json","mutate":[{"file":"ui/data/howto.json","set":{"/pages/1/id":"idea"}}],"expect":{"rule":"xref:howto-page","pointer":"/pages/1/id"} },
-    { "id":"styles-version","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/schema":"combat.styles/2"}}],"expect":{"rule":"const","pointer":"/schema"} },
-    { "id":"styles-unknown-key","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/styles/0/colour":"red"}}],"expect":{"rule":"additionalProperties","pointer":"/styles/0/colour"} },
-    { "id":"styles-bad-condition","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/styles/0/gates":{"op":">"}}}],"expect":{"rule":"oneOf","pointer":"/styles/0/gates"} },
-    { "id":"styles-unknown-template","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/styles/0/appliesTo/0":"no_such_template"}}],"expect":{"rule":"xref:style-template","pointer":"/styles/0/appliesTo/0"} },
-    { "id":"styles-duplicate-id","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/styles/1/id":"ground_brawl"}}],"expect":{"rule":"xref:style-id","pointer":"/styles/1/id"} },
-    { "id":"styles-band-gap","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/selectors/mood/Tense/from":35}}],"expect":{"rule":"xref:style-bands","pointer":"/selectors/mood/Tense/from"} },
-    { "id":"styles-clash-order","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/beamClash/order/0":"nonexistent"}}],"expect":{"rule":"xref:style-clash-order","pointer":"/beamClash/order/0"} },
-    { "id":"styles-tempo-name","schema":"combat-styles.schema.json","mutate":[{"file":"data/combat/styles.json","set":{"/chains/blitz/gap":"nopeGap"}}],"expect":{"rule":"xref:style-tempo-name","pointer":"/chains/blitz/gap"} },
-    { "id":"feel-weight-start","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/weight/start":"medium"}}],"expect":{"rule":"enum","pointer":"/weight/start"} },
-    { "id":"feel-missing-final-blow","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","del":["/hitstopTicks/finalBlow"]}],"expect":{"rule":"required","pointer":"/hitstopTicks"} },
-    { "id":"feel-fractional-ticks","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/signature/maxWaitFunded":1.5}}],"expect":{"rule":"type","pointer":"/signature/maxWaitFunded"} },
-    { "id":"feel-unknown-key","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/extra":1}}],"expect":{"rule":"additionalProperties","pointer":"/extra"} },
-    { "id":"feel-underscore-key-is-fine","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/hitstopTicks/_note":"a comment"}}],"expect":null },
-    { "id":"feel-trigger-order","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/hold/triggerOff":0.5}}],"expect":{"rule":"xref:feel-order","pointer":"/hold/triggerOff"} },
-    { "id":"feel-cap","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/signature/maxWaitFunded":900}}],"expect":{"rule":"xref:feel-cap","pointer":"/signature/maxWaitFunded"} },
-    { "id":"feel-encore-offer","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/hold/encoreOffer":10}}],"expect":{"rule":"xref:feel-encore","pointer":"/hold/encoreOffer"} },
-    { "id":"feel-hitstop-order","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/hitstopTicks/light":12}}],"expect":{"rule":"xref:feel-hitstop-order","pointer":"/hitstopTicks/light"} },
-    { "id":"feel-hitstop-budget","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/hitstopTicks/finalBlow":45}}],"expect":{"rule":"xref:feel-hitstop-budget","pointer":"/hitstopTicks/finalBlow"} },
-    { "id":"feel-seconds-key","schema":"input-feel.schema.json","mutate":[{"file":"data/input/feel.json","set":{"/hold/_x":1,"/stance/cycleSeconds":0.2}}],"expect":{"rule":"xref:feel-ticks-only","pointer":"/stance/cycleSeconds"} },
-    { "id":"mood-decay","schema":"fight-mood.schema.json","mutate":[{"file":"data/fight/mood.json","set":{"/decayPermille":1500}}],"expect":{"rule":"maximum","pointer":"/decayPermille"} },
-    { "id":"mood-needs-bands","schema":"fight-mood.schema.json","mutate":[{"file":"data/fight/mood.json","del":["/bands"]}],"expect":{"rule":"required","pointer":""} },
-    { "id":"mood-fractional-impulse","schema":"fight-mood.schema.json","mutate":[{"file":"data/fight/mood.json","set":{"/impulses/strike":1500.5}}],"expect":{"rule":"type","pointer":"/impulses/strike"} },
-    { "id":"mood-band-order","schema":"fight-mood.schema.json","mutate":[{"file":"data/fight/mood.json","set":{"/bands/frenziedAt":20}}],"expect":{"rule":"xref:mood-bands","pointer":"/bands/frenziedAt"} },
-    { "id":"style-label-priority","schema":"fight-style.schema.json","mutate":[{"file":"data/fight/style.json","set":{"/priority/0":"hermit"}}],"expect":{"rule":"xref:style-priority","pointer":"/priority/0"} },
-    { "id":"style-hysteresis","schema":"fight-style.schema.json","mutate":[{"file":"data/fight/style.json","set":{"/labels/turtle/leavePct":60}}],"expect":{"rule":"xref:style-hysteresis","pointer":"/labels/turtle/leavePct"} },
-    { "id":"style-unknown-measure","schema":"fight-style.schema.json","mutate":[{"file":"data/fight/style.json","set":{"/labels/turtle/measure":"stance1 / totalTicks"}}],"expect":{"rule":"xref:style-measure","pointer":"/labels/turtle/measure"} },
-    { "id":"style-percent-range","schema":"fight-style.schema.json","mutate":[{"file":"data/fight/style.json","set":{"/labels/rusher/enterPct":160}}],"expect":{"rule":"maximum","pointer":"/labels/rusher/enterPct"} },
-    { "id":"style-window","schema":"fight-style.schema.json","mutate":[{"file":"data/fight/style.json","set":{"/labels/turtle/enterHoldS":90}}],"expect":{"rule":"xref:style-window","pointer":"/labels/turtle/enterHoldS"} },
-    { "id":"reads-version","schema":"ui-reads.schema.json","mutate":[{"file":"ui/data/reads.json","set":{"/schema":2}}],"expect":{"rule":"const","pointer":"/schema"} },
-    { "id":"reads-bad-hint-key","schema":"ui-reads.schema.json","mutate":[{"file":"ui/data/reads.json","set":{"/hints/tutorial":"hello"}}],"expect":{"rule":"propertyNames","pointer":"/hints/tutorial"} },
-    { "id":"reads-needs-melee","schema":"ui-reads.schema.json","mutate":[{"file":"ui/data/reads.json","del":["/finisher_counter/melee"]}],"expect":{"rule":"required","pointer":"/finisher_counter"} },
-    { "id":"reads-unknown-stance","schema":"ui-reads.schema.json","mutate":[{"file":"ui/data/reads.json","set":{"/finisher_counter/launch":"sprint"}}],"expect":{"rule":"xref:reads-stance","pointer":"/finisher_counter/launch"} },
-    { "id":"reads-orphan-hint","schema":"ui-reads.schema.json","mutate":[{"file":"ui/data/reads.json","set":{"/hints/b99.hint":"A hint for no beat."}}],"expect":{"rule":"xref:reads-beat","pointer":"/hints/b99.hint"} },
-    { "id":"reads-beat-without-hint","schema":"ui-reads.schema.json","mutate":[{"file":"ui/data/reads.json","del":["/hints/b1.hint"]}],"expect":{"rule":"xref:reads-beat","pointer":"/hints"} },
-    { "id": "cues-chance-range", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/grunts/0/chance": 2 } }], "expect": { "rule": "maximum", "pointer": "/grunts/0/chance" } },
-    { "id": "cues-missing-section", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "del": ["/damage"] }], "expect": { "rule": "required", "pointer": "" } },
-    { "id": "cues-unknown-bus", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/flash/bus": "Nowhere" } }], "expect": { "rule": "xref:bus", "pointer": "/flash/bus" } },
-    { "id": "cues-unknown-voice", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/fighters/KAI": "ghost" } }], "expect": { "rule": "xref:voice", "pointer": "/fighters/KAI" } },
-    { "id": "cues-flash-rank-mismatch", "schema": "audio-cues.schema.json", "mutate": [{ "file": "audio/data/cues.json", "set": { "/flash/rank/found": 9 } }], "expect": { "rule": "xref:flash-rank", "pointer": "/flash/rank/found" } },
-
-    { "id": "flash-cues-unknown-layer", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/danger/layers/0/type": "boom" } }], "expect": { "rule": "enum", "pointer": "/flashes/danger/layers/0/type" } },
-    { "id": "flash-cues-note-needs-semi", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "del": ["/flashes/found/layers/0/semi"] }], "expect": { "rule": "required", "pointer": "/flashes/found/layers/0" } },
-    { "id": "flash-cues-seed", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/bank_seed": -1 } }], "expect": { "rule": "minimum", "pointer": "/bank_seed" } },
-    { "id": "flash-cues-pulse-drift", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/danger/pulse/on": 0.2 } }], "expect": { "rule": "xref:flash-pulse", "pointer": "/flashes/danger/pulse/on" } },
-    { "id": "flash-cues-duration-drift", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/danger/max_s": 1 } }], "expect": { "rule": "xref:flash-duration", "pointer": "/flashes/danger/max_s" } },
-    { "id": "flash-cues-orphan-cue", "schema": "audio-flash-cues.schema.json", "mutate": [{ "file": "audio/data/flash_cues.json", "set": { "/flashes/zzz": { "peak_db": -6, "layers": [{ "type": "thump", "at": 0, "f": 60, "f_to": 40, "t60": 0.2, "level": 1 }], "max_s": 0.5 } } }], "expect": { "rule": "xref:flash-audio", "pointer": "/flashes/zzz" } },
-
-    { "id": "grunts-short-f0", "schema": "audio-grunts.schema.json", "mutate": [{ "file": "audio/data/grunts.json", "set": { "/voices/protagonist/gestures/effort.heavy/f0": [178] } }], "expect": { "rule": "minItems", "pointer": "/voices/protagonist/gestures/effort.heavy/f0" } },
-    { "id": "grunts-voice-needs-label", "schema": "audio-grunts.schema.json", "mutate": [{ "file": "audio/data/grunts.json", "del": ["/voices/protagonist/label"] }], "expect": { "rule": "required", "pointer": "/voices/protagonist" } },
-    { "id": "grunts-seed-type", "schema": "audio-grunts.schema.json", "mutate": [{ "file": "audio/data/grunts.json", "set": { "/bank_seed": "x" } }], "expect": { "rule": "type", "pointer": "/bank_seed" } },
-
-    { "id": "impacts-unknown-layer", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "set": { "/sounds/impact.light/layers/0/type": "splat" } }], "expect": { "rule": "enum", "pointer": "/sounds/impact.light/layers/0/type" } },
-    { "id": "impacts-noise-needs-filter", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "del": ["/sounds/impact.light/layers/0/filter"] }], "expect": { "rule": "required", "pointer": "/sounds/impact.light/layers/0" } },
-    { "id": "impacts-variants", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "set": { "/sounds/impact.light/variants": 0 } }], "expect": { "rule": "minimum", "pointer": "/sounds/impact.light/variants" } },
-    { "id": "impacts-unused-sound", "schema": "audio-impacts.schema.json", "mutate": [{ "file": "audio/data/impacts.json", "del": ["/sounds/impact.heavy"] }], "expect": { "file": "audio/data/cues.json", "rule": "xref:sound" } },
-
-    { "id": "mix-voices", "schema": "audio-mix.schema.json", "mutate": [{ "file": "audio/data/mix.json", "set": { "/voices": 0 } }], "expect": { "rule": "minimum", "pointer": "/voices" } },
-    { "id": "mix-space-needs-rolloff", "schema": "audio-mix.schema.json", "mutate": [{ "file": "audio/data/mix.json", "del": ["/space/rolloff"] }], "expect": { "rule": "required", "pointer": "/space" } },
-    { "id": "mix-ceiling", "schema": "audio-mix.schema.json", "mutate": [{ "file": "audio/data/mix.json", "set": { "/master_limiter/ceiling_db": 3 } }], "expect": { "rule": "maximum", "pointer": "/master_limiter/ceiling_db" } },
-
-    { "id": "sketch-id", "schema": "audio-sketch.schema.json", "mutate": [{ "file": "audio/data/sketch_a.json", "set": { "/id": "AB" } }], "expect": { "rule": "pattern", "pointer": "/id" } },
-    { "id": "sketch-needs-kit", "schema": "audio-sketch.schema.json", "mutate": [{ "file": "audio/data/sketch_a.json", "del": ["/kit"] }], "expect": { "rule": "required", "pointer": "" } },
-    { "id": "sketch-rate-type", "schema": "audio-sketch.schema.json", "mutate": [{ "file": "audio/data/sketch_a.json", "set": { "/rate": "fast" } }], "expect": { "rule": "type", "pointer": "/rate" } },
-
-    { "id": "sketch-common-bars", "schema": "audio-sketch-common.schema.json", "mutate": [{ "file": "audio/data/sketch_common.json", "set": { "/bars": 13 } }], "expect": { "rule": "xref:bars", "pointer": "/chords" } },
-    { "id": "sketch-common-chord-quality", "schema": "audio-sketch-common.schema.json", "mutate": [{ "file": "audio/data/sketch_common.json", "set": { "/chords/0/1": "x" } }], "expect": { "rule": "enum", "pointer": "/chords/0/1" } },
-    { "id": "sketch-common-bpm", "schema": "audio-sketch-common.schema.json", "mutate": [{ "file": "audio/data/sketch_common.json", "set": { "/bpm": 0 } }], "expect": { "rule": "exclusiveMinimum", "pointer": "/bpm" } },
-
-    { "id": "features-type", "schema": "ui-features.schema.json", "mutate": [{ "file": "ui/data/features.json", "set": { "/features/hiding": "no" } }], "expect": { "rule": "type", "pointer": "/features/hiding" } },
-    { "id": "features-required", "schema": "ui-features.schema.json", "mutate": [{ "file": "ui/data/features.json", "del": ["/features"] }], "expect": { "rule": "required", "pointer": "" } },
-    { "id": "features-version", "schema": "ui-features.schema.json", "mutate": [{ "file": "ui/data/features.json", "set": { "/schema": 2 } }], "expect": { "rule": "const", "pointer": "/schema" } },
-
-    { "id": "glyphs-kind", "schema": "ui-glyphs.schema.json", "mutate": [{ "file": "ui/data/glyphs.json", "set": { "/actions/light/kind": "trigger" } }], "expect": { "rule": "enum", "pointer": "/actions/light/kind" } },
-    { "id": "glyphs-needs-kbd", "schema": "ui-glyphs.schema.json", "mutate": [{ "file": "ui/data/glyphs.json", "del": ["/actions/light/kbd"] }], "expect": { "rule": "required", "pointer": "/actions/light" } },
-    { "id": "glyphs-duplicate-family", "schema": "ui-glyphs.schema.json", "mutate": [{ "file": "ui/data/glyphs.json", "set": { "/families/1": "kbd" } }], "expect": { "rule": "uniqueItems" } },
-
-    { "id": "options-default-out-of-range", "schema": "ui-options.schema.json", "mutate": [{ "file": "ui/data/options.json", "set": { "/options/shake_scale/default": 5 } }], "expect": { "rule": "xref:option-default", "pointer": "/options/shake_scale/default" } },
-    { "id": "options-zero-step", "schema": "ui-options.schema.json", "mutate": [{ "file": "ui/data/options.json", "set": { "/options/shake_scale/step": 0 } }], "expect": { "rule": "exclusiveMinimum", "pointer": "/options/shake_scale/step" } },
-    { "id": "options-group", "schema": "ui-options.schema.json", "mutate": [{ "file": "ui/data/options.json", "set": { "/options/captions/group": "misc" } }], "expect": { "rule": "enum", "pointer": "/options/captions/group" } },
-
-    { "id": "readout-alias-profile", "schema": "ui-readout-profiles.schema.json", "mutate": [{ "file": "ui/data/readout_profiles.json", "set": { "/aliases/kai/base": "ghost" } }], "expect": { "rule": "xref:profile", "pointer": "/aliases/kai/base" } },
-    { "id": "readout-needs-crown", "schema": "ui-readout-profiles.schema.json", "mutate": [{ "file": "ui/data/readout_profiles.json", "del": ["/empress/crown"] }], "expect": { "rule": "required", "pointer": "/empress" } },
-    { "id": "readout-duplicate-region", "schema": "ui-readout-profiles.schema.json", "mutate": [{ "file": "ui/data/readout_profiles.json", "set": { "/default/regions": ["head", "head"] } }], "expect": { "rule": "uniqueItems" } },
-
-    { "id": "terms-stance-without-text", "schema": "ui-terms.schema.json", "mutate": [{ "file": "ui/data/terms.json", "set": { "/stance_ids/0": "charge" } }], "expect": { "rule": "xref:stance" } },
-    { "id": "terms-places-gap", "schema": "ui-terms.schema.json", "mutate": [{ "file": "ui/data/terms.json", "set": { "/places/1/x0": 1300 } }], "expect": { "rule": "xref:places", "pointer": "/places/1/x0" } },
-    { "id": "terms-tier-type", "schema": "ui-terms.schema.json", "mutate": [{ "file": "ui/data/terms.json", "set": { "/tier": "x" } }], "expect": { "rule": "type", "pointer": "/tier" } },
-
-    { "id": "roster-duplicate", "schema": "fighter-roster.schema.json", "mutate": [{ "file": "data/fighters/roster.json", "set": { "/1": "FIXTURE_HERO" } }], "expect": { "rule": "uniqueItems" } },
-    { "id": "roster-bad-id", "schema": "fighter-roster.schema.json", "mutate": [{ "file": "data/fighters/roster.json", "set": { "/0": "fixture-hero" } }], "expect": { "rule": "pattern", "pointer": "/0" } },
-    { "id": "roster-unknown-fighter", "schema": "fighter-roster.schema.json", "mutate": [{ "file": "data/fighters/roster.json", "set": { "/1": "GHOST" } }], "expect": { "rule": "xref:roster-id", "pointer": "/1" } },
-
-    { "id": "fighter-unknown-rally-rule", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "set": { "/rally/rule": "berserk" } }], "expect": { "rule": "enum", "pointer": "/rally/rule" } },
-    { "id": "fighter-needs-maxhp", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "del": ["/stats/maxhp"] }], "expect": { "rule": "required", "pointer": "/stats" } },
-    { "id": "fighter-missing-finisher", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "set": { "/finishers/base": "nope" } }], "expect": { "rule": "xref:finisher-key", "pointer": "/finishers/base" } },
-    { "id": "fighter-duplicate-id", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_VILLAIN/fighter.json", "set": { "/id": "FIXTURE_HERO" } }], "expect": { "rule": "xref:fighter-id", "pointer": "/id" } },
-    { "id": "fighter-hex-colour", "schema": "fighter.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/fighter.json", "set": { "/identity/hair": "gold" } }], "expect": { "rule": "pattern", "pointer": "/identity/hair" } },
-
-    { "id": "wounds-stages-order", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "set": { "/stageAt": [360000, 180000, 540000] } }], "expect": { "rule": "xref:increasing", "pointer": "/stageAt" } },
-    { "id": "wounds-fractional-units", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "set": { "/stageAt": [1.5, 2, 3] } }], "expect": { "rule": "type", "pointer": "/stageAt/0" } },
-    { "id": "wounds-needs-rally", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "del": ["/rally"] }], "expect": { "rule": "required", "pointer": "" } },
-    { "id": "wounds-family-length", "schema": "fighter-wounds.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/wounds.json", "set": { "/family/light": [1, 2, 3] } }], "expect": { "rule": "minItems", "pointer": "/family/light" } },
-
-    { "id": "ladder-thresholds-order", "schema": "fighter-ladder.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/ladder.json", "set": { "/thresholds": [50, 25, 75] } }], "expect": { "rule": "xref:increasing", "pointer": "/thresholds" } },
-    { "id": "ladder-fill", "schema": "fighter-ladder.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/ladder.json", "set": { "/fillPerSec": 0 } }], "expect": { "rule": "exclusiveMinimum", "pointer": "/fillPerSec" } },
-    { "id": "ladder-needs-tiers", "schema": "fighter-ladder.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/ladder.json", "del": ["/tiers"] }], "expect": { "rule": "required", "pointer": "" } },
-
-    { "id": "meters-unknown-effect", "schema": "fighter-meters.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/meters.json", "set": { "/meters/menace/effects/0/key": "explode" } }], "expect": { "rule": "enum", "pointer": "/meters/menace/effects/0/key" } },
-    { "id": "meters-needs-decay", "schema": "fighter-meters.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/meters.json", "del": ["/meters/menace/decay"] }], "expect": { "rule": "required", "pointer": "/meters/menace" } },
-    { "id": "meters-source-owner", "schema": "fighter-meters.schema.json", "mutate": [{ "file": "data/fighters/FIXTURE_HERO/meters.json", "set": { "/meters/menace/sources/0/whose": "everyone" } }], "expect": { "rule": "enum", "pointer": "/meters/menace/sources/0/whose" } },
-    { "id": "meters-number-digits", "schema": "fighter-meters.schema.json", "text": { "file": "data/fighters/FIXTURE_HERO/meters.json", "replace": ["\"perPoint\": 0.0015", "\"perPoint\": 0.0015000000000000001"] }, "expect": { "rule": "number-digits", "pointer": "/meters/menace/effects/0/perPoint" } }
+    {
+      "id": "templates-version",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/schema": "combat.templates/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "templates-unknown-op",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/parity/0/op": "teleport"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/templates/0/branches/0/parity/0/op"
+      }
+    },
+    {
+      "id": "templates-tick-in-parity",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/parity/0/tick": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "false",
+        "pointer": "/templates/0/branches/0/parity/0/tick"
+      }
+    },
+    {
+      "id": "templates-cue-without-who",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/0/branches/0/spaced/1/args/who"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/templates/0/branches/0/spaced/1/args"
+      }
+    },
+    {
+      "id": "templates-unknown-key",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/color": "red"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/templates/0/color"
+      }
+    },
+    {
+      "id": "templates-selector-branch",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/selector/branch": "nope"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:selector-branch",
+        "pointer": "/templates/0/selector/branch"
+      }
+    },
+    {
+      "id": "templates-unknown-cue",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/spaced/1/args/cue": "not_a_cue"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:cue",
+        "pointer": "/templates/0/branches/0/spaced/1/args/cue"
+      }
+    },
+    {
+      "id": "templates-duplicate-template-id",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/1/id": "charge_interrupt"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:template-id",
+        "pointer": "/templates/1/id"
+      }
+    },
+    {
+      "id": "finishers-bad-profile",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/finishers/1/profile": "bogus"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/finishers/1/profile"
+      }
+    },
+    {
+      "id": "finishers-select-missing-finisher",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/select/byFighter/KAI": "missing_finisher"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:finisher-key",
+        "pointer": "/select/byFighter/KAI"
+      }
+    },
+    {
+      "id": "finishers-authored-needs-name",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "del": [
+            "/finishers/2/name"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/finishers/2"
+      }
+    },
+    {
+      "id": "finishers-duplicate-id",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/finishers/3/id": "kai"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:finisher-id",
+        "pointer": "/finishers/3/id"
+      }
+    },
+    {
+      "id": "finishers-bad-tick",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/finishers/2/beats/0/tick": "soon"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "anyOf",
+        "pointer": "/finishers/2/beats/0/tick"
+      }
+    },
+    {
+      "id": "finishers-hit-chance-range",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/struggle/aiHitChance": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/contest/struggle/aiHitChance"
+      }
+    },
+    {
+      "id": "finishers-unknown-cue",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/finishers/2/beats/1/args/cue": "made_up"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:cue",
+        "pointer": "/finishers/2/beats/1/args/cue"
+      }
+    },
+    {
+      "id": "flashes-version",
+      "schema": "art-flashes.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/flashes.json",
+          "set": {
+            "/version": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/version"
+      }
+    },
+    {
+      "id": "flashes-glyph-needs-a-glyph",
+      "schema": "art-flashes.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/flashes.json",
+          "set": {
+            "/flashes/found/glyph": null
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/flashes/found/glyph"
+      }
+    },
+    {
+      "id": "flashes-bad-colour",
+      "schema": "art-flashes.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/flashes.json",
+          "set": {
+            "/accents/P/mid": "teal"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/accents/P/mid"
+      }
+    },
+    {
+      "id": "flashes-pulse-total",
+      "schema": "art-flashes.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/flashes.json",
+          "set": {
+            "/flashes/danger/pulse/total": 9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flash-total",
+        "pointer": "/flashes/danger/pulse/total"
+      }
+    },
+    {
+      "id": "flashes-duplicate-priority",
+      "schema": "art-flashes.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/flashes.json",
+          "set": {
+            "/flashes/found/priority": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flash-priority"
+      }
+    },
+    {
+      "id": "flashes-missing-audio",
+      "schema": "art-flashes.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/flashes.json",
+          "del": [
+            "/flashes/surge"
+          ]
+        }
+      ],
+      "expect": {
+        "file": "audio/data/flash_cues.json",
+        "rule": "xref:flash-audio",
+        "pointer": "/flashes/surge"
+      }
+    },
+    {
+      "id": "templates-tempo-name",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/6/branches/0/dynamic/0/tick/add": [
+              "footwrk"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:tempo-name",
+        "pointer": "/templates/6/branches/0/dynamic/0/tick/add/0"
+      }
+    },
+    {
+      "id": "templates-dynamic-needs-timing",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/6/branches/0/dynamicTiming"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "dependentRequired",
+        "pointer": "/templates/6/branches/0"
+      }
+    },
+    {
+      "id": "flashes-keep-out",
+      "schema": "art-flashes.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/flashes.json",
+          "set": {
+            "/flashes/danger/layout/0/a": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flash-keep-out",
+        "pointer": "/flashes/danger/layout/0/a"
+      }
+    },
+    {
+      "id": "effects-bad-haze",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "set": {
+            "/haze": "blue"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/haze"
+      }
+    },
+    {
+      "id": "effects-swap-not-haze",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "set": {
+            "/lanes/trail/fire_range_swap/rim": "#ff0000"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:effects-haze",
+        "pointer": "/lanes/trail/fire_range_swap/rim"
+      }
+    },
+    {
+      "id": "effects-glass-too-dark",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "set": {
+            "/lanes/glass/mid": "#336699"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:effects-lightness",
+        "pointer": "/lanes/glass/mid"
+      }
+    },
+    {
+      "id": "effects-missing-biome",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "del": [
+            "/by_biome/desert"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/by_biome"
+      }
+    },
+    {
+      "id": "effects-crack-without-lip",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "set": {
+            "/by_biome/plains/lip": null
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/by_biome/plains"
+      }
+    },
+    {
+      "id": "grunts-placeholder-type",
+      "schema": "audio-grunts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/grunts.json",
+          "set": {
+            "/voices/empress/placeholder": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/voices/empress/placeholder"
+      }
+    },
+    {
+      "id": "babble-seed",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "set": {
+            "/bank_seed": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bank_seed"
+      }
+    },
+    {
+      "id": "babble-voice-needs-lexicon",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "del": [
+            "/voices/protagonist/lexicon"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/voices/protagonist"
+      }
+    },
+    {
+      "id": "babble-mood-probability",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "set": {
+            "/moods/angry/grunt_p": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/moods/angry/grunt_p"
+      }
+    },
+    {
+      "id": "babble-unknown-voice",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "set": {
+            "/voices/ghost": {
+              "label": "x",
+              "ref_f0": 100,
+              "formant_k": 1,
+              "syl_ms": 90,
+              "min_gap": 0.05,
+              "open": 0.5,
+              "breath": 0.1,
+              "jitter": 0.01,
+              "shimmer": 0.05,
+              "drive": 1,
+              "crush_bits": 0,
+              "hold": 1,
+              "stutter": false,
+              "lexicon": {
+                "ba": 1
+              },
+              "laugh": {
+                "pulses": 3,
+                "f0": [
+                  200,
+                  180
+                ],
+                "spacing": [
+                  0.1,
+                  0.1
+                ],
+                "pulse_ms": 80,
+                "decay": 0.8,
+                "breath": 0.2,
+                "step_st": 0,
+                "variants": 1
+              },
+              "chars_per_syl": 2.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:voice",
+        "pointer": "/voices/ghost"
+      }
+    },
+    {
+      "id": "babble-unknown-vowel",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "set": {
+            "/syllables/ba/vowel": "y"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:babble-vowel",
+        "pointer": "/syllables/ba/vowel"
+      }
+    },
+    {
+      "id": "babble-lexicon-syllable",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "set": {
+            "/voices/protagonist/lexicon/zz": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:babble-syllable",
+        "pointer": "/voices/protagonist/lexicon/zz"
+      }
+    },
+    {
+      "id": "babble-mood-map-target",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "set": {
+            "/mood_map/leering": "sneering"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:babble-mood",
+        "pointer": "/mood_map/leering"
+      }
+    },
+    {
+      "id": "babble-gesture",
+      "schema": "audio-babble.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble.json",
+          "set": {
+            "/cue_map/growl": "bellow"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:babble-gesture",
+        "pointer": "/cue_map/growl"
+      }
+    },
+    {
+      "id": "captions-intensity",
+      "schema": "audio-babble-captions.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble_captions.json",
+          "set": {
+            "/captions/protagonist/0/intensity": 9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/captions/protagonist/0/intensity"
+      }
+    },
+    {
+      "id": "captions-needs-text",
+      "schema": "audio-babble-captions.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble_captions.json",
+          "del": [
+            "/captions/protagonist/0/text"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/captions/protagonist/0"
+      }
+    },
+    {
+      "id": "captions-unknown-mood",
+      "schema": "audio-babble-captions.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble_captions.json",
+          "set": {
+            "/captions/protagonist/0/mood": "sulking"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:babble-mood",
+        "pointer": "/captions/protagonist/0/mood"
+      }
+    },
+    {
+      "id": "captions-unknown-voice",
+      "schema": "audio-babble-captions.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/babble_captions.json",
+          "set": {
+            "/captions/ghost": [
+              {
+                "text": "Boo.",
+                "mood": "neutral",
+                "intensity": 1
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:voice",
+        "pointer": "/captions/ghost"
+      }
+    },
+    {
+      "id": "effects-embers-required",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "del": [
+            "/lanes/embers"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/lanes"
+      }
+    },
+    {
+      "id": "effects-ember-bad-hex",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "set": {
+            "/lanes/embers/ramp/hot": "orange"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/lanes/embers/ramp/hot"
+      }
+    },
+    {
+      "id": "effects-deutan-table-drift",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "set": {
+            "/lanes/embers/deutan_check/core_with_rim/0": 9.99
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:effects-deutan",
+        "pointer": "/lanes/embers/deutan_check/core_with_rim/0"
+      }
+    },
+    {
+      "id": "effects-ember-loses-contrast",
+      "schema": "art-effects.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/effects.json",
+          "set": {
+            "/lanes/embers/ramp/warm": "#8a4a1c"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:effects-deutan",
+        "pointer": "/lanes/embers/ramp"
+      }
+    },
+    {
+      "id": "howto-version",
+      "schema": "ui-howto.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/howto.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "howto-needs-title",
+      "schema": "ui-howto.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/howto.json",
+          "del": [
+            "/pages/0/title"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/pages/0"
+      }
+    },
+    {
+      "id": "howto-column",
+      "schema": "ui-howto.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/howto.json",
+          "set": {
+            "/pages/0/items/0/col": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/pages/0/items/0/col"
+      }
+    },
+    {
+      "id": "howto-unknown-action",
+      "schema": "ui-howto.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/howto.json",
+          "set": {
+            "/pages/1/items/0/action": "teleport"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:howto-action",
+        "pointer": "/pages/1/items/0/action"
+      }
+    },
+    {
+      "id": "howto-duplicate-page",
+      "schema": "ui-howto.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/howto.json",
+          "set": {
+            "/pages/1/id": "idea"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:howto-page",
+        "pointer": "/pages/1/id"
+      }
+    },
+    {
+      "id": "styles-version",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/schema": "combat.styles/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "styles-unknown-key",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/styles/0/colour": "red"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/styles/0/colour"
+      }
+    },
+    {
+      "id": "styles-bad-condition",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/styles/0/gates": {
+              "op": ">"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/styles/0/gates"
+      }
+    },
+    {
+      "id": "styles-unknown-template",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/styles/0/appliesTo/0": "no_such_template"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-template",
+        "pointer": "/styles/0/appliesTo/0"
+      }
+    },
+    {
+      "id": "styles-duplicate-id",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/styles/1/id": "ground_brawl"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-id",
+        "pointer": "/styles/1/id"
+      }
+    },
+    {
+      "id": "styles-band-gap",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/selectors/mood/Tense/from": 35
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-bands",
+        "pointer": "/selectors/mood/Tense/from"
+      }
+    },
+    {
+      "id": "styles-clash-order",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/beamClash/order/0": "nonexistent"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-clash-order",
+        "pointer": "/beamClash/order/0"
+      }
+    },
+    {
+      "id": "styles-tempo-name",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/chains/blitz/gap": "nopeGap"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-tempo-name",
+        "pointer": "/chains/blitz/gap"
+      }
+    },
+    {
+      "id": "feel-weight-start",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/weight/start": "medium"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/weight/start"
+      }
+    },
+    {
+      "id": "feel-missing-final-blow",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "del": [
+            "/hitstopTicks/finalBlow"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/hitstopTicks"
+      }
+    },
+    {
+      "id": "feel-fractional-ticks",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/signature/maxWaitFunded": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/signature/maxWaitFunded"
+      }
+    },
+    {
+      "id": "feel-unknown-key",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "feel-underscore-key-is-fine",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/hitstopTicks/_note": "a comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "feel-trigger-order",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/hold/triggerOff": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:feel-order",
+        "pointer": "/hold/triggerOff"
+      }
+    },
+    {
+      "id": "feel-cap",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/signature/maxWaitFunded": 900
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:feel-cap",
+        "pointer": "/signature/maxWaitFunded"
+      }
+    },
+    {
+      "id": "feel-encore-offer",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/hold/encoreOffer": 10
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:feel-encore",
+        "pointer": "/hold/encoreOffer"
+      }
+    },
+    {
+      "id": "feel-hitstop-order",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/hitstopTicks/light": 12
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:feel-hitstop-order",
+        "pointer": "/hitstopTicks/light"
+      }
+    },
+    {
+      "id": "feel-hitstop-budget",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/hitstopTicks/finalBlow": 45
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:feel-hitstop-budget",
+        "pointer": "/hitstopTicks/finalBlow"
+      }
+    },
+    {
+      "id": "feel-seconds-key",
+      "schema": "input-feel.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/feel.json",
+          "set": {
+            "/hold/_x": 1,
+            "/stance/cycleSeconds": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:feel-ticks-only",
+        "pointer": "/stance/cycleSeconds"
+      }
+    },
+    {
+      "id": "mood-decay",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/decayPermille": 1500
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/decayPermille"
+      }
+    },
+    {
+      "id": "mood-needs-bands",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "del": [
+            "/bands"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "mood-fractional-impulse",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/impulses/strike": 1500.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/impulses/strike"
+      }
+    },
+    {
+      "id": "mood-band-order",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/bands/frenziedAt": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:mood-bands",
+        "pointer": "/bands/frenziedAt"
+      }
+    },
+    {
+      "id": "style-label-priority",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/priority/0": "hermit"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-priority",
+        "pointer": "/priority/0"
+      }
+    },
+    {
+      "id": "style-hysteresis",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/labels/turtle/leavePct": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-hysteresis",
+        "pointer": "/labels/turtle/leavePct"
+      }
+    },
+    {
+      "id": "style-unknown-measure",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/labels/turtle/measure": "stance1 / totalTicks"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-measure",
+        "pointer": "/labels/turtle/measure"
+      }
+    },
+    {
+      "id": "style-percent-range",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/labels/rusher/enterPct": 160
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/labels/rusher/enterPct"
+      }
+    },
+    {
+      "id": "style-window",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/labels/turtle/enterHoldS": 90
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-window",
+        "pointer": "/labels/turtle/enterHoldS"
+      }
+    },
+    {
+      "id": "reads-version",
+      "schema": "ui-reads.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/reads.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "reads-bad-hint-key",
+      "schema": "ui-reads.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/reads.json",
+          "set": {
+            "/hints/tutorial": "hello"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/hints/tutorial"
+      }
+    },
+    {
+      "id": "reads-needs-melee",
+      "schema": "ui-reads.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/reads.json",
+          "del": [
+            "/finisher_counter/melee"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/finisher_counter"
+      }
+    },
+    {
+      "id": "reads-unknown-stance",
+      "schema": "ui-reads.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/reads.json",
+          "set": {
+            "/finisher_counter/launch": "sprint"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:reads-stance",
+        "pointer": "/finisher_counter/launch"
+      }
+    },
+    {
+      "id": "reads-orphan-hint",
+      "schema": "ui-reads.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/reads.json",
+          "set": {
+            "/hints/b99.hint": "A hint for no beat."
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:reads-beat",
+        "pointer": "/hints/b99.hint"
+      }
+    },
+    {
+      "id": "reads-beat-without-hint",
+      "schema": "ui-reads.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/reads.json",
+          "del": [
+            "/hints/b1.hint"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:reads-beat",
+        "pointer": "/hints"
+      }
+    },
+    {
+      "id": "cues-chance-range",
+      "schema": "audio-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/cues.json",
+          "set": {
+            "/grunts/0/chance": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/grunts/0/chance"
+      }
+    },
+    {
+      "id": "cues-missing-section",
+      "schema": "audio-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/cues.json",
+          "del": [
+            "/damage"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "cues-unknown-bus",
+      "schema": "audio-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/cues.json",
+          "set": {
+            "/flash/bus": "Nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bus",
+        "pointer": "/flash/bus"
+      }
+    },
+    {
+      "id": "cues-unknown-voice",
+      "schema": "audio-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/cues.json",
+          "set": {
+            "/fighters/KAI": "ghost"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:voice",
+        "pointer": "/fighters/KAI"
+      }
+    },
+    {
+      "id": "cues-flash-rank-mismatch",
+      "schema": "audio-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/cues.json",
+          "set": {
+            "/flash/rank/found": 9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flash-rank",
+        "pointer": "/flash/rank/found"
+      }
+    },
+    {
+      "id": "flash-cues-unknown-layer",
+      "schema": "audio-flash-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/flash_cues.json",
+          "set": {
+            "/flashes/danger/layers/0/type": "boom"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/flashes/danger/layers/0/type"
+      }
+    },
+    {
+      "id": "flash-cues-note-needs-semi",
+      "schema": "audio-flash-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/flash_cues.json",
+          "del": [
+            "/flashes/found/layers/0/semi"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/flashes/found/layers/0"
+      }
+    },
+    {
+      "id": "flash-cues-seed",
+      "schema": "audio-flash-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/flash_cues.json",
+          "set": {
+            "/bank_seed": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bank_seed"
+      }
+    },
+    {
+      "id": "flash-cues-pulse-drift",
+      "schema": "audio-flash-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/flash_cues.json",
+          "set": {
+            "/flashes/danger/pulse/on": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flash-pulse",
+        "pointer": "/flashes/danger/pulse/on"
+      }
+    },
+    {
+      "id": "flash-cues-duration-drift",
+      "schema": "audio-flash-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/flash_cues.json",
+          "set": {
+            "/flashes/danger/max_s": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flash-duration",
+        "pointer": "/flashes/danger/max_s"
+      }
+    },
+    {
+      "id": "flash-cues-orphan-cue",
+      "schema": "audio-flash-cues.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/flash_cues.json",
+          "set": {
+            "/flashes/zzz": {
+              "peak_db": -6,
+              "layers": [
+                {
+                  "type": "thump",
+                  "at": 0,
+                  "f": 60,
+                  "f_to": 40,
+                  "t60": 0.2,
+                  "level": 1
+                }
+              ],
+              "max_s": 0.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flash-audio",
+        "pointer": "/flashes/zzz"
+      }
+    },
+    {
+      "id": "grunts-short-f0",
+      "schema": "audio-grunts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/grunts.json",
+          "set": {
+            "/voices/protagonist/gestures/effort.heavy/f0": [
+              178
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/voices/protagonist/gestures/effort.heavy/f0"
+      }
+    },
+    {
+      "id": "grunts-voice-needs-label",
+      "schema": "audio-grunts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/grunts.json",
+          "del": [
+            "/voices/protagonist/label"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/voices/protagonist"
+      }
+    },
+    {
+      "id": "grunts-seed-type",
+      "schema": "audio-grunts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/grunts.json",
+          "set": {
+            "/bank_seed": "x"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bank_seed"
+      }
+    },
+    {
+      "id": "impacts-unknown-layer",
+      "schema": "audio-impacts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/impacts.json",
+          "set": {
+            "/sounds/impact.light/layers/0/type": "splat"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/sounds/impact.light/layers/0/type"
+      }
+    },
+    {
+      "id": "impacts-noise-needs-filter",
+      "schema": "audio-impacts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/impacts.json",
+          "del": [
+            "/sounds/impact.light/layers/0/filter"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/sounds/impact.light/layers/0"
+      }
+    },
+    {
+      "id": "impacts-variants",
+      "schema": "audio-impacts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/impacts.json",
+          "set": {
+            "/sounds/impact.light/variants": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/sounds/impact.light/variants"
+      }
+    },
+    {
+      "id": "impacts-unused-sound",
+      "schema": "audio-impacts.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/impacts.json",
+          "del": [
+            "/sounds/impact.heavy"
+          ]
+        }
+      ],
+      "expect": {
+        "file": "audio/data/cues.json",
+        "rule": "xref:sound"
+      }
+    },
+    {
+      "id": "mix-voices",
+      "schema": "audio-mix.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/mix.json",
+          "set": {
+            "/voices": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/voices"
+      }
+    },
+    {
+      "id": "mix-space-needs-rolloff",
+      "schema": "audio-mix.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/mix.json",
+          "del": [
+            "/space/rolloff"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/space"
+      }
+    },
+    {
+      "id": "mix-ceiling",
+      "schema": "audio-mix.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/mix.json",
+          "set": {
+            "/master_limiter/ceiling_db": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/master_limiter/ceiling_db"
+      }
+    },
+    {
+      "id": "sketch-id",
+      "schema": "audio-sketch.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/sketch_a.json",
+          "set": {
+            "/id": "AB"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/id"
+      }
+    },
+    {
+      "id": "sketch-needs-kit",
+      "schema": "audio-sketch.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/sketch_a.json",
+          "del": [
+            "/kit"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "sketch-rate-type",
+      "schema": "audio-sketch.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/sketch_a.json",
+          "set": {
+            "/rate": "fast"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/rate"
+      }
+    },
+    {
+      "id": "sketch-common-bars",
+      "schema": "audio-sketch-common.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/sketch_common.json",
+          "set": {
+            "/bars": 13
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bars",
+        "pointer": "/chords"
+      }
+    },
+    {
+      "id": "sketch-common-chord-quality",
+      "schema": "audio-sketch-common.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/sketch_common.json",
+          "set": {
+            "/chords/0/1": "x"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/chords/0/1"
+      }
+    },
+    {
+      "id": "sketch-common-bpm",
+      "schema": "audio-sketch-common.schema.json",
+      "mutate": [
+        {
+          "file": "audio/data/sketch_common.json",
+          "set": {
+            "/bpm": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bpm"
+      }
+    },
+    {
+      "id": "features-type",
+      "schema": "ui-features.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/features.json",
+          "set": {
+            "/features/hiding": "no"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/features/hiding"
+      }
+    },
+    {
+      "id": "features-required",
+      "schema": "ui-features.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/features.json",
+          "del": [
+            "/features"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "features-version",
+      "schema": "ui-features.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/features.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "glyphs-kind",
+      "schema": "ui-glyphs.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/glyphs.json",
+          "set": {
+            "/actions/light/kind": "trigger"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/actions/light/kind"
+      }
+    },
+    {
+      "id": "glyphs-needs-kbd",
+      "schema": "ui-glyphs.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/glyphs.json",
+          "del": [
+            "/actions/light/kbd"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/actions/light"
+      }
+    },
+    {
+      "id": "glyphs-duplicate-family",
+      "schema": "ui-glyphs.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/glyphs.json",
+          "set": {
+            "/families/1": "kbd"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems"
+      }
+    },
+    {
+      "id": "options-default-out-of-range",
+      "schema": "ui-options.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/options.json",
+          "set": {
+            "/options/shake_scale/default": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:option-default",
+        "pointer": "/options/shake_scale/default"
+      }
+    },
+    {
+      "id": "options-zero-step",
+      "schema": "ui-options.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/options.json",
+          "set": {
+            "/options/shake_scale/step": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/options/shake_scale/step"
+      }
+    },
+    {
+      "id": "options-group",
+      "schema": "ui-options.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/options.json",
+          "set": {
+            "/options/captions/group": "misc"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/options/captions/group"
+      }
+    },
+    {
+      "id": "readout-alias-profile",
+      "schema": "ui-readout-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/readout_profiles.json",
+          "set": {
+            "/aliases/kai/base": "ghost"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:profile",
+        "pointer": "/aliases/kai/base"
+      }
+    },
+    {
+      "id": "readout-needs-crown",
+      "schema": "ui-readout-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/readout_profiles.json",
+          "del": [
+            "/empress/crown"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/empress"
+      }
+    },
+    {
+      "id": "readout-duplicate-region",
+      "schema": "ui-readout-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/readout_profiles.json",
+          "set": {
+            "/default/regions": [
+              "head",
+              "head"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems"
+      }
+    },
+    {
+      "id": "terms-stance-without-text",
+      "schema": "ui-terms.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/terms.json",
+          "set": {
+            "/stance_ids/0": "charge"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:stance"
+      }
+    },
+    {
+      "id": "terms-places-gap",
+      "schema": "ui-terms.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/terms.json",
+          "set": {
+            "/places/1/x0": 1300
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:places",
+        "pointer": "/places/1/x0"
+      }
+    },
+    {
+      "id": "terms-tier-type",
+      "schema": "ui-terms.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/terms.json",
+          "set": {
+            "/tier": "x"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/tier"
+      }
+    },
+    {
+      "id": "roster-duplicate",
+      "schema": "fighter-roster.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/roster.json",
+          "set": {
+            "/1": "FIXTURE_HERO"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "roster-bad-id",
+      "schema": "fighter-roster.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/roster.json",
+          "set": {
+            "/0": "fixture-hero"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "roster-unknown-fighter",
+      "schema": "fighter-roster.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/roster.json",
+          "set": {
+            "/1": "GHOST"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:roster-id",
+        "pointer": "/1"
+      }
+    },
+    {
+      "id": "fighter-unknown-rally-rule",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/rally/rule": "berserk"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/rally/rule"
+      }
+    },
+    {
+      "id": "fighter-needs-maxhp",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "del": [
+            "/stats/maxhp"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/stats"
+      }
+    },
+    {
+      "id": "fighter-missing-finisher",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/finishers/base": "nope"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:finisher-key",
+        "pointer": "/finishers/base"
+      }
+    },
+    {
+      "id": "fighter-duplicate-id",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_VILLAIN/fighter.json",
+          "set": {
+            "/id": "FIXTURE_HERO"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighter-id",
+        "pointer": "/id"
+      }
+    },
+    {
+      "id": "fighter-hex-colour",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/identity/hair": "gold"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/identity/hair"
+      }
+    },
+    {
+      "id": "wounds-stages-order",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/stageAt": [
+              360000,
+              180000,
+              540000
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:increasing",
+        "pointer": "/stageAt"
+      }
+    },
+    {
+      "id": "wounds-fractional-units",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/stageAt": [
+              1.5,
+              2,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/stageAt/0"
+      }
+    },
+    {
+      "id": "wounds-needs-rally",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "del": [
+            "/rally"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "wounds-family-length",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/family/light": [
+              1,
+              2,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/family/light"
+      }
+    },
+    {
+      "id": "ladder-thresholds-order",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/thresholds": [
+              50,
+              25,
+              75
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:increasing",
+        "pointer": "/thresholds"
+      }
+    },
+    {
+      "id": "ladder-fill",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/fillPerSec": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/fillPerSec"
+      }
+    },
+    {
+      "id": "ladder-needs-tiers",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "del": [
+            "/tiers"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "meters-unknown-effect",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "set": {
+            "/meters/anguish/effects/0/key": "explode"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/meters/anguish/effects/0/key"
+      }
+    },
+    {
+      "id": "meters-needs-decay",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "del": [
+            "/meters/anguish/decay"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/meters/anguish"
+      }
+    },
+    {
+      "id": "meters-source-owner",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "set": {
+            "/meters/anguish/sources/0/whose": "everyone"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/meters/anguish/sources/0/whose"
+      }
+    },
+    {
+      "id": "meters-number-digits",
+      "schema": "fighter-meters.schema.json",
+      "text": {
+        "file": "data/fighters/FIXTURE_HERO/meters.json",
+        "replace": [
+          "\"perPoint\": 0.025",
+          "\"perPoint\": 0.0250000000000000001"
+        ]
+      },
+      "expect": {
+        "rule": "number-digits",
+        "pointer": "/meters/anguish/effects/0/perPoint"
+      }
+    },
+    {
+      "id": "wounds-penalties-unknown-key",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/penalties/armsSpeed": 0.9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/penalties/armsSpeed"
+      }
+    },
+    {
+      "id": "wounds-penalties-missing-key",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "del": [
+            "/penalties/legsSlip"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/penalties"
+      }
+    },
+    {
+      "id": "wounds-penalties-fractional-ticks",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/penalties/staggerTicks": 12.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/penalties/staggerTicks"
+      }
+    },
+    {
+      "id": "wounds-profile-type",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/profile/type": "fancy"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/profile/type"
+      }
+    },
+    {
+      "id": "wounds-family-five-weights",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/family/light": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maxItems",
+        "pointer": "/family/light"
+      }
+    },
+    {
+      "id": "wounds-fade-fraction",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/fade/out": 25.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/fade/out"
+      }
+    },
+    {
+      "id": "meters-effect-needs-perpoint",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "del": [
+            "/meters/anguish/effects/0/perPoint"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/meters/anguish/effects/0"
+      }
+    },
+    {
+      "id": "meters-unknown-event",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "set": {
+            "/meters/anguish/sources/0/event": "birthday"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/meters/anguish/sources/0/event"
+      }
+    },
+    {
+      "id": "meters-start-outside-range",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "set": {
+            "/meters/anguish/start": 150
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:meter-range",
+        "pointer": "/meters/anguish/start"
+      }
+    },
+    {
+      "id": "fighter-bad-pronoun",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/identity/pronoun": "xe"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/identity/pronoun"
+      }
+    },
+    {
+      "id": "fighter-missing-voice-bible",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/identity/voice_bible": "docs/narrative/voices/no-such-bible.md"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighter-voice-bible",
+        "pointer": "/identity/voice_bible"
+      }
+    },
+    {
+      "id": "fighter-identity-narrative-keys-ok",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/identity/tagline": "A test line.",
+            "/identity/blurb": "Two sentences. Both invented.",
+            "/identity/voice_device": "future_tense",
+            "/identity/pronoun": "he",
+            "/identity/placeholder": true
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "fighter-finishers-note-key-ok",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/finishers/_note": "a comment, not a finisher"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "roster-object-form-ok",
+      "schema": "fighter-roster.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/roster.json",
+          "root": {
+            "schema": "roster/1",
+            "order": [
+              "FIXTURE_HERO",
+              "FIXTURE_VILLAIN"
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "roster-object-bad-version",
+      "schema": "fighter-roster.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/roster.json",
+          "root": {
+            "schema": "roster/9",
+            "order": [
+              "FIXTURE_HERO"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "roster-object-unknown-fighter",
+      "schema": "fighter-roster.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/roster.json",
+          "root": {
+            "schema": "roster/1",
+            "order": [
+              "FIXTURE_HERO",
+              "GHOST"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:roster-id",
+        "pointer": "/order/1"
+      }
+    },
+    {
+      "id": "wounds-brink-limbs-range",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/brinkLimbs": 4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/brinkLimbs"
+      }
+    },
+    {
+      "id": "wounds-damping-range",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/act1Damping": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/act1Damping"
+      }
+    },
+    {
+      "id": "wounds-overtime-needs-cap",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "del": [
+            "/overtime/cap"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/overtime"
+      }
+    },
+    {
+      "id": "wounds-overtime-fractional-start",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/overtime/startTicks": 28800.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/overtime/startTicks"
+      }
+    }
   ],
   "text": [
-    { "id": "lint-trailing-comma", "text": "{\"a\": 1,}", "expect": { "rule": "json" } },
-    { "id": "lint-comment", "text": "{\"a\": 1 // no\n}", "expect": { "rule": "json" } },
-    { "id": "lint-leading-zero", "text": "{\"a\": 01}", "expect": { "rule": "json" } },
-    { "id": "lint-bom", "text": "﻿{\"a\": 1}", "expect": { "rule": "json" } },
-    { "id": "lint-duplicate-key", "text": "{\"a\": 1, \"b\": {\"c\": 1, \"c\": 2}}", "expect": { "rule": "duplicate-key", "pointer": "/b/c" } },
-    { "id": "lint-sixteen-digits", "text": "{\"x\": 0.1234567890123456}", "expect": { "rule": "number-digits", "pointer": "/x" } },
-    { "id": "lint-fifteen-digits-ok", "text": "{\"x\": 0.123456789012345, \"y\": 1200000, \"z\": 293.66}", "expect": null }
+    {
+      "id": "lint-trailing-comma",
+      "text": "{\"a\": 1,}",
+      "expect": {
+        "rule": "json"
+      }
+    },
+    {
+      "id": "lint-comment",
+      "text": "{\"a\": 1 // no\n}",
+      "expect": {
+        "rule": "json"
+      }
+    },
+    {
+      "id": "lint-leading-zero",
+      "text": "{\"a\": 01}",
+      "expect": {
+        "rule": "json"
+      }
+    },
+    {
+      "id": "lint-bom",
+      "text": "﻿{\"a\": 1}",
+      "expect": {
+        "rule": "json"
+      }
+    },
+    {
+      "id": "lint-duplicate-key",
+      "text": "{\"a\": 1, \"b\": {\"c\": 1, \"c\": 2}}",
+      "expect": {
+        "rule": "duplicate-key",
+        "pointer": "/b/c"
+      }
+    },
+    {
+      "id": "lint-sixteen-digits",
+      "text": "{\"x\": 0.1234567890123456}",
+      "expect": {
+        "rule": "number-digits",
+        "pointer": "/x"
+      }
+    },
+    {
+      "id": "lint-fifteen-digits-ok",
+      "text": "{\"x\": 0.123456789012345, \"y\": 1200000, \"z\": 293.66}",
+      "expect": null
+    }
   ]
 }

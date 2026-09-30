@@ -163,14 +163,14 @@ static func rallyHash() -> String:
 			SimWounds.step(S, x)
 	put.call(f, [300000, 560000, 200000, 100000])       # core broken: on the brink
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # Second Wind mends the core
-	put.call(f, [560000, 534000, 560000, 100000])       # head and arms broken
+	put.call(f, [560000, 534000, 560000, 560000])       # head, arms and legs broken (the stricter brink: three limbs)
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # the cooldown holds
 	wait.call(f, f.wd.rallyCool); snap.call(f)
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # the head (core already rallied)
-	put.call(f, [534000, 560000, 560000, 560000])       # core and two limbs: too deep for one mend
+	put.call(f, [534000, 560000, 560000, 560000])       # core broken (already rallied) and two limbs: no mend clears it
 	wait.call(f, f.wd.rallyCool)
 	SimWounds.onContestSurvived(S, f); snap.call(f)
-	put.call(g, [200000, 300000, 560000, 560000])       # arms and legs broken
+	put.call(g, [560000, 300000, 560000, 560000])       # head, arms and legs broken
 	SimWounds.onDecisive(S, g, "beam"); snap.call(g)    # a signature win is not by hand
 	SimWounds.onDecisive(S, g, "clash"); snap.call(g)   # Spite: arms first
 	put.call(g, [200000, 300000, 400000, 100000])       # a battered region, 10 s after the last exchange

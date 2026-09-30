@@ -56,7 +56,10 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
 `wounds.json` holds today's `SimWounds` constants, under the same names:
 - `regions`: head, core, arms and legs. Each has `brink` (true, or false for the Empress's mantle later).
 - `stageAt`: `[180000, 360000, 540000]`, in units.
-- `wearPerDamage`: 204, which is k 0.034 × 6000 (Game Design's final).
+- `wearPerDamage`: 228, which is k 0.038 × 6000 (Game Design's interim value with the stricter brink, spec §1b).
+- `brinkLimbs`: 3. The brink is the core broken, or this many of head, arms and legs broken. `brinkProgress` reads the limb that completes it, the least worn of the three.
+- `act1Damping`: 0.85, the wear multiplier while the act index is 1. Until M1 owns the act, it is `SimWounds.act(S)` = 1 + `S.game.breaks`, where `S.game.breaks` is region breaks so far, both fighters, hashed.
+- `overtime`: `startTicks` 28800, `perMin` 0.25, `cap` 3.0, meaning k × min(3, 1 + 0.25 × minutes past 8:00). That is candidate A. Candidate B is 30600 and 0.40. QA switches by editing both fighters' files.
 - `fade`: `out` 25, `breath` 100, `breathAfterTicks` 240, `hidden` 300 and `hiddenFloor` 354000.
 - `focusWear`: 30.
 - `family`: the four weight rows.
@@ -156,7 +159,7 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
 
 **Not moved in D1a.**
 - `data.gd` still selects finishers by `select.byFighter[W.id]`. `f.finisher` is loaded and equal ("kai", "vorr"), and becomes the selector when Combat and Encounter switch that line.
-- The overtime ramp (`OVERTIME_AT`, `OVERTIME_PER_MIN`) is a match rule, so it stays in `wounds.gd` for now.
+- The overtime ramp moved to `wounds.json` in the brink and spread slice (see §3).
 
 **The proof, as run.**
 1. With `exN` and `ex.n` left out of the hash (and no roster hash in the goldens), parity passed against the untouched pre-D1a `golden.json` (d8ed601). That covered the tick-0 states, the wounds and Rally vectors, all 8 matches (144,000 ticks, every per-tick digest and checkpoint) and both replays.

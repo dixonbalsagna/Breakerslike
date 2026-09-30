@@ -514,6 +514,7 @@ function xref(docs, root = repoRoot) {
     }
     if (finIds && isObj(f.finishers)) {
       for (const [tier, key] of Object.entries(f.finishers)) {
+        if (tier.startsWith('_')) continue;
         if (!finIds.has(key)) {
           err(file, `/finishers/${esc(tier)}`, 'finisher-key', `finisher "${key}" does not exist in ${FIN}`);
         } else {
@@ -543,13 +544,22 @@ function xref(docs, root = repoRoot) {
     if (!docs.has(sibling) && !fs.existsSync(path.join(root, sibling))) err(file, '', 'fighter-files', `${file.split('/')[2]} has no wounds.json next to fighter.json (D1a defines both)`);
   }
   const roster = get(ROSTER);
-  if (Array.isArray(roster)) {
-    dupes(ROSTER, roster.map((id, i) => ({ id, pointer: `/${i}` })), '', 'roster-id', 'roster id');
-    roster.forEach((id, i) => {
-      if (fighterFiles.length && !seenIds.has(id)) err(ROSTER, `/${i}`, 'roster-id', `roster lists "${id}", but no data/fighters/${id}/fighter.json defines it`);
+  const rosterIds = Array.isArray(roster) ? roster : isObj(roster) && Array.isArray(roster.order) ? roster.order : null;
+  const rosterAt = Array.isArray(roster) ? '' : '/order';
+  if (rosterIds) {
+    dupes(ROSTER, rosterIds.map((id, i) => ({ id, pointer: `${rosterAt}/${i}` })), '', 'roster-id', 'roster id');
+    rosterIds.forEach((id, i) => {
+      if (fighterFiles.length && !seenIds.has(id)) err(ROSTER, `${rosterAt}/${i}`, 'roster-id', `roster lists "${id}", but no data/fighters/${id}/fighter.json defines it`);
     });
   }
-  xrefFight({ get, err, esc, isObj, plainKeys });
+
+  // A fighter's voice bible is a real file.
+  for (const file of fighterFiles) {
+    const f = get(file);
+    const vb = isObj(f) && isObj(f.identity) ? f.identity.voice_bible : undefined;
+    if (typeof vb === 'string' && !fs.existsSync(path.join(root, vb))) err(file, '/identity/voice_bible', 'fighter-voice-bible', `voice bible ${vb} does not exist`);
+  }
+  xrefFight({ get, err, esc, isObj, plainKeys, docsFor: (re) => [...docs.keys()].filter((k) => re.test(k)).sort() });
   return findings;
 }
 

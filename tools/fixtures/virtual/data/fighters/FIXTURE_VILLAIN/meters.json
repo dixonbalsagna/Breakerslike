@@ -1,0 +1,44 @@
+{
+  "schema": "meters/1",
+  "_about": "Validator fixture, not game data: a copy of the real VORR file, in the D1a shape.",
+  "meters": {
+    "menace": {
+      "range": [
+        0,
+        100
+      ],
+      "start": 0,
+      "visible": true,
+      "sources": [
+        {
+          "event": "casualty",
+          "amount": 0.9,
+          "whose": "self",
+          "_note": "casualties this fighter caused"
+        },
+        {
+          "event": "evacuee",
+          "amount": 0.45,
+          "whose": "self",
+          "_note": "people this fighter's blows forced to flee"
+        }
+      ],
+      "decay": {
+        "rate": 0.4,
+        "delayTicks": 240,
+        "_note": "after 240 ticks without being fed"
+      },
+      "effects": [
+        {
+          "key": "regen_bonus",
+          "perPoint": 0.03
+        },
+        {
+          "key": "damage_mul",
+          "cap": 0.15,
+          "_note": "x (1 + 0.15 x menace / 100)"
+        }
+      ]
+    }
+  }
+}
