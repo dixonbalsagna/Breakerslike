@@ -11,7 +11,7 @@ Owner: Narrative and Fighter Identity. Version 1, 2026-09-30. The text for Game 
 | # | The player learns to... | Hint | Alternates | Nudge (after 20 s) | Done |
 |---|---|---|---|---|---|
 | 1 | Fly, and that the planet wraps | "Fly. The world wraps: keep going and you come back round." | "Head for your rival, or keep going and watch the world wrap." | "Try flying the other way. It's the same planet." | "See? No edges." |
-| 2 | Pick a stance | "Your stance is your intent. The fight follows it." | "Change stance and watch how the fight changes." / "Try a different stance. See what the fight does." | "Pick another stance. The fight will follow." | "Different stance, different fight." |
+| 2 | Pick a stance | "You are the fighter. Pick a stance and your blows play out to match." | "Change stance and watch your fighter change." / "Try a different stance. Your blows follow it." | "Pick another stance. Your blows will change with it." | "Different stance, different blows." |
 | 3 | Set the attack weight to beat a stance | "They're guarding. Hit heavy." | "A guarding rival breaks under heavy blows." / "Guard up? Go heavy." | "Set your attack to heavy while they guard." | "Guard broken. That's the read." |
 | 4 | Read damage on bodies | "Watch the body: that's how you read damage." | "No health bar. Look at their arms, legs and head." / "Where is the rival hurt? Look." | "Look at the rival. Where are they worn?" | "Now you can read a wound." |
 | 5 | Read a wind-up and answer with a stance | "Big swing coming. Slip it." | "A heavy is winding up. DODGE, or GUARD and wait." / "See the wind-up? Answer it with a stance." | "When they wind up big, choose DODGE or GUARD." | "You read it and answered it. That's the game." |
@@ -36,9 +36,22 @@ The player's fighter thinks these when the matching situation appears, in the be
 
 ## Notes
 
-- **Never timing.** No hint contains a timing instruction. Beats 5 and 8 say to *choose a stance*, because the director owns the moment of the strike and the player owns the answer.
+- **Never timing.** No hint contains a timing instruction. Beats 5 and 8 say to *choose a stance*, because the blows themselves play out automatically and the player owns the choice.
 - **No franchise terms.** The words "Charge", "signature", "transformation" and "stance" are ours. "Guard break" is a common fighting-game phrase.
 - **Length.** Hints fit a one-line hint bar. Thoughts are shorter still.
 - **Accessibility.** The lines are text with an icon, so they work with the "keep hints on" toggle and screen readers. Localization can translate them, since there are no puns.
 - **Tone.** The tutorial voice is the system's, plain and friendly. Only the thoughts carry the fighter's personality, and they use the Protagonist's warmth.
 - **Numbers.** "A full 45" refers to the signature's cost of 45 Charge. If the number changes, this line does.
+
+## Orb's rule for all player-facing text (2026-09-30)
+
+**The player IS the fighter.** Never call them a strategist, and never say a director plays the fight ("director" and "strategist" stay internal). Be blunt about what they control, and that there are no combo inputs to learn.
+
+**What you control** (for the How to play card and the onboarding; alternates):
+1. "You are the fighter. You fly, dash, pick a stance, choose light or heavy, charge, call your signature and specials, and transform."
+2. "There are no combo inputs to learn. Blows and combos play out on their own from those choices."
+3. "Fly and dash. Pick PRESS, GUARD, DODGE or ESCAPE. Choose light or heavy. Charge, and call your signature."
+4. "You decide where to go and how to fight. The blows play out by themselves."
+5. "Nothing to memorise. Choose, and your fighter fights."
+
+**Lines I changed in this file:** beat 2's hint, alternates, nudge and done line, and the note about who owns the strike. The other eight beats say nothing about a director, so they stay.
