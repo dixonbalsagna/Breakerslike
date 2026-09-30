@@ -4,7 +4,7 @@ class_name SimWounds
 ## rates are whole numbers per 60 Hz tick (1 wear per second is exactly 100 units per tick) and nothing drifts.
 ##
 ## S2 (Encounter): the HP bar no longer ends the match (HP_ENDS_MATCH false); only a finisher can KO (the director,
-## sim/director/exchange.gd). Tuning: k 0.065 (S3b; Encounter's sweeps, docs/director/wounds-s2.md; spec §1b's 0.20
+## sim/director/exchange.gd). Tuning: k 0.034 (Game Design's final, spec §1b; S3b had 0.065 and §1b's first 0.20
 ## gave 90 s matches), bruised fade 0.25 per second, focus weight (1 + wear/30). Still provisional: the region picker (family
 ## weights by attack kind), until per-atom weights arrive.
 ## S3a (Simulation): the core-side stage penalties (constants below; spec §1 "Stage penalties"). S3b (Encounter) adds the
@@ -19,7 +19,7 @@ const LEGS: int = 3
 
 const WEAR_SCALE: int = 6000                 # units per wear point
 const WEAR_MAX: int = 600000                 # 100 wear
-const WEAR_PER_DAMAGE: float = 390.0         # k = 0.065 wear per damage point, in units (0.065 x 6000); S3b retune after the spaced timing (S2: 0.06, S1: 0.08)
+const WEAR_PER_DAMAGE: float = 204.0         # k = 0.034 wear per damage point, in units (0.034 x 6000); Game Design's final (spec §1b; S3b: 0.065, S2: 0.06, S1: 0.08)
 const OVERTIME_AT: float = 540.0             # the overtime ramp (spec-wounds.md, S4 ruling 3): past 9:00 ...
 const OVERTIME_PER_MIN: float = 0.25         # ... k rises by 25% of itself per minute (read as linear)
 ## Stage floors in units: bruised 30, battered 60, broken 90. Stages: 0 fresh, 1 bruised, 2 battered, 3 broken.

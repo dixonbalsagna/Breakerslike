@@ -56,7 +56,7 @@ data/fighters/roster.json    {"schema": "roster/1", "order": ["KAI", "VORR"]}: t
 `wounds.json` holds today's `SimWounds` constants, under the same names:
 - `regions`: head, core, arms and legs. Each has `brink` (true, or false for the Empress's mantle later).
 - `stageAt`: `[180000, 360000, 540000]`, in units.
-- `wearPerDamage`: 390, which is k 0.065 × 6000.
+- `wearPerDamage`: 204, which is k 0.034 × 6000 (Game Design's final).
 - `fade`: `out` 25, `breath` 100, `breathAfterTicks` 240, `hidden` 300 and `hiddenFloor` 354000.
 - `focusWear`: 30.
 - `family`: the four weight rows.
