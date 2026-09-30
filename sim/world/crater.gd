@@ -11,8 +11,10 @@ class_name WorldCrater
 
 # ---- energy to size ----
 const WS: float = SimConst.WS         # feature scale: craters are world features (docs/world/scale.md)
-const R_BASE: float = 58.0 * WS       # bowl radius (units) at E = 1
-const R_MAX: float = 1040.0 * WS      # largest bowl radius (a tier-4 blow is about 57 fighter heights across)
+const R_BASE: float = 20.0 * WS       # bowl radius (units) at E = 1: an ordinary impact leaves a modest bowl
+const ORD_R_MAX: float = 8.0 * 75.0   # the largest bowl an ordinary blow leaves (8 fighter heights)
+const R_MAX: float = 1040.0 * WS      # the largest bowl of all: a special blow or a tier-4 power-up
+const SPECIAL_E_MULT: float = 9.0     # a signature, finisher, break launch or beam clash has 9 times the energy (3 times the radius)
 const DEPTH_RATIO: float = 0.22       # bowl depth / bowl radius for a straight-down hit
 const RELIEF_MAX_RATIO: float = 0.26  # depth of any spot below its surroundings, per unit of the new crater's R
 const RING_K: float = 1.2             # the surroundings are sampled at +-RING_K * R from the centre
@@ -100,8 +102,8 @@ static func beamReach(P: float) -> float:
 	return SCORCH_REACH0 + SCORCH_REACH_P * P
 
 
-static func radiusOf(energy: float) -> float:
-	return minf(R_MAX, R_BASE * sqrt(energy))
+static func radiusOf(energy: float, uncapped: bool = false) -> float:
+	return minf(R_MAX if uncapped else ORD_R_MAX, R_BASE * sqrt(energy))
 
 
 ## Height change at distance u (in R) from a crater centre for bowl depth d and rim height hr: a smooth bowl inside
@@ -133,17 +135,22 @@ static func _col(x: float) -> int:
 	return int(floor(SimWrap.wrap(x) / SimConst.COL))
 
 
-## Dig a crater of energy E at x. kind is "impact", "beam" or "powerup". dirx is the impact velocity's signed horizontal
-## share (vx / speed) and vert its vertical share (|vy| / speed); both only matter for impacts. Returns the record, or
-## null when the spot was already too dented to take a crater of this size.
-static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0):
+## Dig a crater of energy E at x. kind is "impact", "beam" or "powerup". special marks the blows that are meant to leave the
+## big marks: a signature, a finisher, a break launch, a beam clash; its energy is multiplied by SPECIAL_E_MULT (bowl radius
+## times its square root) and its radius may reach R_MAX, where an ordinary blow is held to ORD_R_MAX (a power-up is its
+## own ladder and is held only by R_MAX). dirx is the impact velocity's signed horizontal share (vx / speed) and vert its
+## vertical share (|vy| / speed); both only matter for impacts. Returns the record, or null when the spot was already too
+## dented to take a crater of this size.
+static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0, special: bool = false):
 	if energy <= 0.0:
 		return null
+	var E: float = energy * (SPECIAL_E_MULT if special else 1.0)
 	var NC: int = SimConst.NC
 	var COL: float = SimConst.COL
-	var R: float = radiusOf(energy)
-	var c0: int = _col(x)
-	var y0: float = WorldTerrain.groundY(S, x)
+	var R: float = radiusOf(E, special or kind == "powerup")
+	var xw: float = SimWrap.wrap(x)
+	var c0: int = _col(xw)
+	var y0: float = WorldTerrain.groundY(S, xw)
 	var nr: int = int(round(RING_K * R / COL))
 	var ring: float = (S.deform[(c0 - nr + NC) % NC] + S.deform[(c0 + nr) % NC]) * 0.5
 	var relief: float = ring - S.deform[c0]
@@ -151,16 +158,26 @@ static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx:
 	var d: float = minf(dRaw, RELIEF_MAX_RATIO * R - relief)
 	if d < MIN_DEPTH:
 		return null
-	var rt: float = clampf((energy - RIM_E_LOW) / (RIM_E_HIGH - RIM_E_LOW), 0.0, 1.0)
+	var rt: float = clampf((E - RIM_E_LOW) / (RIM_E_HIGH - RIM_E_LOW), 0.0, 1.0)
 	var volFrac: float = RIM_VOL_LOW + (RIM_VOL_HIGH - RIM_VOL_LOW) * rt * rt * (3.0 - 2.0 * rt)
 	var hr: float = d * volFrac * RIM_H_PER_VOL
-	var n: int = int(ceil(R * (1.0 + RIM_OUT) / COL))
+	var n: int = int(ceil(R * (1.0 + RIM_OUT) / COL)) + 1
 	var minG: float = 1e9
+	var pre := PackedFloat32Array()   # the deform before this crater, for the furrow's target
+	pre.resize(2 * n + 1)
 	for k in range(-n, n + 1):
 		var i: int = (c0 + k + NC) % NC
-		var u: float = absf(float(k) * COL) / R
-		var v: float = S.deform[i] + profile(u, d, hr)
-		S.deform[i] = clampf(v, DEFORM_FLOOR, DEFORM_CEIL)
+		# u from the true distance to the centre, so the profile is centred on x and not on its column
+		var u: float = absf(SimWrap.sdx(xw, float(i) * COL)) / R
+		var old: float = S.deform[i]
+		pre[k + n] = old
+		var h: float = profile(u, d, hr)
+		# A rim that lands on ground that is already raised merges with it (the higher of the two) instead of stacking.
+		var v: float = maxf(old, h) if (h > 0.0 and old > 0.0) else old + h
+		var nv: float = clampf(v, DEFORM_FLOOR, DEFORM_CEIL)
+		if nv < old and S.rubble[i] > 0.0:
+			S.rubble[i] = maxf(0.0, S.rubble[i] - (old - nv))   # a dig removes the heap first
+		S.deform[i] = nv
 		minG = minf(minG, S.base[i] + S.deform[i])
 	var skid: float = 0.0
 	var sdepth: float = 0.0
@@ -176,17 +193,26 @@ static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx:
 				var q: float = 1.0 - float(j) * COL / len
 				if q <= 0.0:
 					break
-				var i2: int = (c0 - int(dir) * j + NC) % NC
-				S.deform[i2] = clampf(S.deform[i2] - sdepth * q * q, DEFORM_FLOOR, DEFORM_CEIL)
+				var k2: int = -int(dir) * j
+				var i2: int = (c0 + k2 + NC) % NC
+				# The furrow cuts toward a target below the ground as it was before the crater, so it opens a channel
+				# through the rim and never digs deeper than the bowl floor it runs into.
+				var before: float = pre[k2 + n] if absi(k2) <= n else S.deform[i2]
+				var target: float = clampf(before - sdepth * q * q, DEFORM_FLOOR, DEFORM_CEIL)
+				if target < S.deform[i2]:
+					if S.rubble[i2] > 0.0:
+						S.rubble[i2] = maxf(0.0, S.rubble[i2] - (S.deform[i2] - target))
+					S.deform[i2] = target
 			skid = -dir * len
 	for t in S.trees:
-		if t.alive and absf(SimWrap.sdx(x, t.x)) < R * TREE_FELL_K:
+		if t.alive and absf(SimWrap.sdx(xw, t.x)) < R * TREE_FELL_K:
 			t.alive = false
 			SimFx.debris(S, t.x, WorldTerrain.groundY(S, t.x) + 10.0, 3, "#2f4a25", 300.0)
 	S.world.craters += 1.0
 	var rec := SimState.Crater.new()
-	rec.x = SimWrap.wrap(x); rec.y = y0; rec.r = R; rec.depth = d; rec.rim = hr; rec.energy = energy
+	rec.x = xw; rec.y = y0; rec.r = R; rec.depth = d; rec.rim = hr; rec.energy = E
 	rec.cause = kind; rec.owner = _slot(S, cause); rec.t = S.T; rec.skid = skid; rec.sdepth = sdepth
+	rec.special = 1.0 if special else 0.0
 	S.craters.append(rec)
 	if S.craters.size() > LIST_MAX:
 		S.craters.remove_at(0)
@@ -220,6 +246,8 @@ static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> v
 		var t: float = 1.0 - u * u
 		var target: float = maxf(-depth * t * t, DEFORM_FLOOR)
 		if target < dfm[i]:
+			if S.rubble[i] > 0.0:
+				S.rubble[i] = maxf(0.0, S.rubble[i] - (dfm[i] - target))
 			dfm[i] = target
 		var sc: float = inten * t
 		if sc > scm[i]:
@@ -254,6 +282,8 @@ static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved:
 	for k in range(n):
 		var i: int = (ca + dir * k + NC) % NC
 		if target < dfm[i]:
+			if S.rubble[i] > 0.0:
+				S.rubble[i] = maxf(0.0, S.rubble[i] - (dfm[i] - target))
 			dfm[i] = target
 		if paved and crack > crk[i]:
 			crk[i] = crack

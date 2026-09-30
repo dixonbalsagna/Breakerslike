@@ -87,6 +87,7 @@ static func step(S: SimState, inputs = null) -> bool:
 	DirExchange.dirUpdate(S, dt)
 	DirBeam.beamStep(S, dt)
 	WorldWater.step(S)
+	WorldCollateral.tick(S)
 	SimFx.tickMark(S, dt, false)
 	if S.game.clash != null:
 		var c = S.game.clash

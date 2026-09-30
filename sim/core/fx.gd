@@ -92,13 +92,14 @@ static func chargeFx(S: SimState, f, ground: float) -> void:
 static func crater(S: SimState, c) -> void:
 	var e := _ev(S, "crater")
 	e.x = c.x; e.y = c.y; e.r = c.r; e.depth = c.depth; e.energy = c.energy; e.cause = c.cause
-	e.rim = c.rim; e.skid = c.skid; e.owner = c.owner
+	e.rim = c.rim; e.skid = c.skid; e.owner = c.owner; e.special = c.special > 0.5
 
 
 ## A beam sample scorched the ground: x, ground height, groove width, the beam-power scalar, the variant and the owner.
 ## A knockback slide ended (world/slide.gd): the whole trench, start to end.
 static func slideEvent(S: SimState, r) -> void:
 	var e := _ev(S, "slide")
+	e.pop = r.pop
 	e.x = r.x0; e.x1 = r.x1; e.w = r.hw * 2.0; e.depth = r.depth; e.energy = r.energy
 	e.variant = "paved" if r.surface > 0.5 else "ground"; e.owner = r.owner
 
@@ -293,6 +294,26 @@ static func rush(S: SimState, f, target, endTick: int) -> void:
 static func danger(S: SimState, f, source: String, eta: float) -> void:
 	var e := _ev(S, "danger")
 	e.actor = float(S.fighters.find(f)); e.source = source; e.eta = eta
+
+
+## Civilians fled instead of dying (world/collateral.gd): the building, its x, how many (a float head count), the x the
+## crowd flees from, the reason ("budget", "ceiling" or "flight") and the fighter's slot who caused it.
+static func evacuate(S: SimState, b: int, x: float, n: float, cx: float, reason: String, owner: float, dest: int = -1) -> void:
+	var e := _ev(S, "evacuate")
+	e.b = float(b); e.x = x; e.n = n; e.cx = cx; e.reason = reason; e.owner = owner; e.dest = float(dest)
+
+
+## A building fell (any source). mode "implode" is area damage (straight down into its footprint, staggered by delay),
+## "burst" a launch through it; rubble is the heap left; n folds in further implodes of the same blast past the event cap.
+static func buildingFall(S: SimState, b: int, x: float, z: float, w: float, h: float, mode: String, delay: float, cx: float, rubble: float, n: float) -> void:
+	var e := _ev(S, "building_fall")
+	e.b = float(b); e.x = x; e.y = z; e.w = w; e.depth = h; e.mode = mode; e.delay = delay; e.cx = cx; e.rubble = rubble; e.n = n
+
+
+## The collateral window once a second: the room left, the budget, the ceiling left, and whether the window is over.
+static func collateralState(S: SimState, room: float, budget: float, left: float, over: bool) -> void:
+	var e := _ev(S, "collateral_state")
+	e.room = room; e.budget = budget; e.left = left; e.over = over
 
 
 ## End of the sim's part of a tick: where the prototype stepped its particles (dt, or dt*0.1 during hit-stop).

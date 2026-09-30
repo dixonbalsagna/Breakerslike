@@ -5,14 +5,14 @@ class_name SimHash
 const MASK: int = 0xFFFFFFFF
 const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName", "hp", "x", "y", "vx", "vy", "face", "ki", "power", "tier", "stance", "state", "stateT",
 	"hidden", "hideT", "hiddenFor", "menace", "anguish", "ambush", "rot", "spin", "bounces", "lastAtkT", "hurtT", "keys", "beamCharge", "wet", "ambushUntil", "dPrev",
-	"menaceSeen", "menaceQuiet", "casSeen", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc",
+	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped",
 	"canHide", "lockBackT", "exT"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
-const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive"]
+const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled"]
 const TREE: Array = ["x", "h", "alive", "burn"]
 const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col", "pw", "struck"]
-const SLIDE: Array = ["x0", "x1", "hw", "depth", "energy", "t", "owner", "surface"]
-const CRATER: Array = ["x", "y", "r", "depth", "rim", "energy", "cause", "owner", "t", "skid", "sdepth"]
+const SLIDE: Array = ["x0", "x1", "hw", "depth", "energy", "t", "owner", "surface", "pop"]
+const CRATER: Array = ["x", "y", "r", "depth", "rim", "energy", "cause", "owner", "t", "skid", "sdepth", "special"]
 const PART: Array = ["type", "x", "y", "vx", "vy", "life", "age", "grav", "drag", "size", "col", "r", "gr", "face"]
 const FLOAT: Array = ["x", "y", "txt", "t", "col"]
 
@@ -135,7 +135,9 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(float(f.stunTicks))
 		out.append(f.rally); out.append(float(f.rallied)); out.append(float(f.rallies)); out.append(float(f.rallyCool))
 		out.append(float(f.breathWear)); out.append(f.id)
-	_obj(out, S.world, ["pop0", "casualties", "structuresLost", "craters"])
+	_obj(out, S.world, ["pop0", "casualties", "structuresLost", "craters", "slides", "evacuated", "cbSec", "cbSum", "maxTier", "evtKind", "evtLeft", "evtToken", "evtDead", "evtEvac", "tokenSeq", "heavyX", "heavyT", "stateT"])
+	for v in S.world.cbBuckets:
+		out.append(v)
 	out.append(float(S.buildings.size()))
 	for b in S.buildings:
 		_obj(out, b, BUILDING)
@@ -170,6 +172,14 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	out.append(float(nz.size()))
 	for i in nz:
 		out.append(float(i)); out.append(S.crack[i])
+	for arr in [S.rubble, S.world.lotAcc]:
+		nz = []
+		for i in range(arr.size()):
+			if arr[i] != 0.0:
+				nz.append(i)
+		out.append(float(nz.size()))
+		for i in nz:
+			out.append(float(i)); out.append(arr[i])
 	out.append(float(S.slides.size()))
 	for c in S.slides:
 		_obj(out, c, SLIDE)
@@ -219,8 +229,8 @@ const FX_FIELDS: Dictionary = {
 	"spark": ["x", "y", "n", "col", "spd"], "ring": ["x", "y", "gr", "col", "life", "r0"], "debris": ["x", "y", "n", "col", "spd"],
 	"dust": ["x", "y", "n", "col"], "splash": ["x", "y", "n"], "fire": ["x", "y", "n"], "after": ["x", "y", "life", "col", "face"],
 	"charge": ["x", "y", "col", "ground"], "beamSplash": ["x"], "damage": ["x", "y", "amount", "col", "attacker", "victim", "region", "kind", "number"], "banner": ["text", "col", "dur"],
-	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
-	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"],
+	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner", "special"], "scorch": ["x", "y", "w", "power", "variant", "owner"],
+	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner", "pop"], "slide_dust": ["x", "y", "spd", "w", "variant", "n"], "skim": ["x", "y", "spd", "n"], "evacuate": ["b", "x", "n", "cx", "reason", "owner", "dest"], "building_fall": ["b", "x", "y", "w", "depth", "mode", "delay", "cx", "rubble", "n"], "collateral_state": ["room", "budget", "left", "over"],
 	"shake": ["k", "x"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"],
 	"tier_up": ["actor", "tier", "onGround"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],

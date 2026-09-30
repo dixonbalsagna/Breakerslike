@@ -155,7 +155,7 @@ static func runBeat(S: SimState, ex, b) -> void:
 		"fixedLaunch":
 			var fw2 = A if a.w == "A" else D
 			var fl2 = D if a.w == "A" else A
-			DirLaunch.doLaunch(S, fw2, fl2, {"ux": a.ux * (fw2.face if a.get("faceRelative", false) else 1.0), "uy": a.uy}, a.force)
+			DirLaunch.doLaunch(S, fw2, fl2, {"ux": a.ux * (fw2.face if a.get("faceRelative", false) else 1.0), "uy": a.uy}, a.force, true)
 		"separate":
 			var sw = A if a.w == "A" else D
 			var sl = D if a.w == "A" else A
@@ -499,7 +499,7 @@ static func _opFinalBlow(S: SimState, ex, a) -> void:
 	DirMelee.strike(S, ex, W, L, float(a.dmg), a.o)
 	var ln: Dictionary = a.launch
 	if ln.get("mode", "") == "fixed":
-		DirLaunch.doLaunch(S, W, L, {"ux": float(ln.ux) * (W.face if ln.get("faceRelative", false) else 1.0), "uy": float(ln.uy)}, float(ln.force))
+		DirLaunch.doLaunch(S, W, L, {"ux": float(ln.ux) * (W.face if ln.get("faceRelative", false) else 1.0), "uy": float(ln.uy)}, float(ln.force), true)
 	else:
 		DirMelee.launchBeat(S, ex, W, L, float(ln.force), true)
 	SimDamage.ko(S, L, W)

@@ -37,11 +37,11 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	var m: float = A.dmgMul * (1.0 + 0.09 * (A.tier - 1.0))
 	if A.role == "villain":
 		m *= 1.0 + MENACE_DMG_CAP * (A.menace / 100.0)
-	else:
-		# Comeback: stronger the closer the hero is to the brink (S2: wounds replace hp / maxhp).
+	elif A.hasAnguish:
+		# Comeback (a fighter with the anguish meter, GD-B09): stronger the closer he is to the brink (S2: wounds replace hp / maxhp).
 		m *= 1.0 + 0.5 * SimDetMath.pow(1.0 - SimWounds.vitality(A), 2.0)
 	# Composure (balance-targets.md section 9, S0 fallback): the hero hits harder while collateral has not rattled him.
-	if A.role == "hero" and A.anguish < COMPOSURE_ANGUISH:
+	if A.hasAnguish and A.anguish < COMPOSURE_ANGUISH:
 		m *= 1.0 + COMPOSURE_BONUS
 	m *= 1.0 + 0.12 * ((ex.combo if ex != null else 1.0) - 1.0)
 	if A.ambush:

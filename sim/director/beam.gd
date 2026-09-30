@@ -74,7 +74,7 @@ static func opBeamImpact(S: SimState, ex, args) -> void:
 	WorldStructures.explode(S, D.x, D.y + 30.0, 60.0 + A.tier * 30.0, A)
 	if S.game.ko == null:
 		D.state = "locked"
-		DirLaunch.doLaunch(S, A, D, {"ux": args.ux, "uy": args.uy * 0.6 + 0.12}, 1300.0 if out == "GUARD" else 2600.0)
+		DirLaunch.doLaunch(S, A, D, {"ux": args.ux, "uy": args.uy * 0.6 + 0.12}, 1300.0 if out == "GUARD" else 2600.0, true)
 		DirExchange.decisive(S, ex, A, D, "beam")
 
 
@@ -141,7 +141,7 @@ static func opClashResolve(S: SimState, ex, args) -> void:
 	SimDamage.hit(S, ex, Wn, Ls, 260.0, {"ignoreStance": true, "stop": 0.16, "shake": 18.0, "big": true})
 	WorldStructures.explode(S, Ls.x, Ls.y + 30.0, (70.0 + Wn.tier * 32.0) * SimConst.WS, Wn)
 	if S.game.ko == null:
-		DirLaunch.doLaunch(S, Wn, Ls, {"ux": ux, "uy": uy * 0.6 + 0.12}, 2600.0)
+		DirLaunch.doLaunch(S, Wn, Ls, {"ux": ux, "uy": uy * 0.6 + 0.12}, 2600.0, true)
 		DirExchange.decisive(S, ex, Wn, Ls, "beam_clash")
 
 
@@ -165,7 +165,7 @@ static func sampleBeam(S: SimState, b, s: float) -> void:
 		WorldCrater.scorch(S, x, P, b.variant, A)
 		if not b.struck and b.uy <= -WorldCrater.BEAM_STRIKE_SLOPE:
 			b.struck = true   # a steep beam digs one strike crater where it first meets the ground
-			WorldCrater.dig(S, x, WorldCrater.beamStrikeEnergy(P), A, "beam")
+			WorldCrater.dig(S, x, WorldCrater.beamStrikeEnergy(P), A, "beam", 0.0, 1.0, true)
 		SimFx.dust(S, x, g + 8.0, 1, "#e6c47a" if b.variant == "GLASS TRENCH" else "#9b8f7e")
 		if b.variant == "GLASS TRENCH":
 			SimFx.spark(S, x, g + 6.0, 2, "#ffd98a", 300.0)

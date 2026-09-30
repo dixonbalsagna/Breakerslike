@@ -95,6 +95,13 @@ func settle_checked(S: SimState, limit: int = 20000) -> int:
 	return steps
 
 
+func _sum(a: PackedFloat32Array) -> float:
+	var t: float = 0.0
+	for v in a:
+		t += v
+	return t
+
+
 func wet_dynamic(S: SimState) -> int:
 	var n: int = 0
 	for i in range(SimConst.NC):
@@ -121,7 +128,7 @@ func _init() -> void:
 		print(line)
 	print("== power-up, explosion and clash-wave radius by tier (the prototype's in brackets) ==")
 	for tier in [2.0, 3.0, 4.0]:
-		print("  tier %d: power-up %4.0f [%3.0f]   explosion %4.0f [%3.0f]   clash wave %4.0f [%3.0f]" % [int(tier), WorldCrater.radiusOf(WorldCrater.powerupEnergy(tier)), (60.0 + tier * 28.0) * SimConst.WS, WorldCrater.radiusOf(WorldCrater.explodeEnergy(tier)), (70.0 + tier * 32.0) * 0.9 * SimConst.WS, WorldCrater.radiusOf(WorldCrater.clashEnergy(tier)), (60.0 + tier * 16.0) * SimConst.WS])
+		print("  tier %d: power-up %4.0f [%3.0f]   explosion %4.0f [%3.0f]   clash wave %4.0f [%3.0f]" % [int(tier), WorldCrater.radiusOf(WorldCrater.powerupEnergy(tier), true), (60.0 + tier * 28.0) * SimConst.WS, WorldCrater.radiusOf(WorldCrater.explodeEnergy(tier)), (70.0 + tier * 32.0) * 0.9 * SimConst.WS, WorldCrater.radiusOf(WorldCrater.clashEnergy(tier)), (60.0 + tier * 16.0) * SimConst.WS])
 
 	print("== repeated hits never dig a shaft ==")
 	var S1 := fresh()
@@ -328,6 +335,174 @@ func _init() -> void:
 		slams_n += dc
 	print("  300 launches: %d slides, %d craters, %d launches with more than one crater" % [slides_n, slams_n, multi])
 	check(multi == 0, "no launch leaves more than one crater on the ground")
+
+
+	print("== collateral: the rolling budget, borrowing, the ceiling, evacuation ==")
+	var Sc := fresh()
+	var pop0: float = Sc.world.pop0
+	var bcity: int = -1
+	for b in Sc.buildings:
+		if b.kind == "tower" and b.row == 1.0 and b.pop >= 8.0:
+			bcity = b.idx
+			break
+	var cause = Sc.fighters[1]
+	Sc.fighters[0].tier = 1.0
+	Sc.fighters[1].tier = 1.0
+	var want_total: float = 0.0
+	var granted_total: float = 0.0
+	for k in range(60):
+		var bb = Sc.buildings[bcity + (k % 20)]
+		var w: float = minf(bb.popAlive, 2.0)
+		want_total += w
+		granted_total += WorldCollateral.kill(Sc, bb.idx, w, cause, 0.0, bb.x)
+	print("  tier 1, T 0: %.1f people would die, %.2f may (budget %.2f = 2 percent of %.0f), evacuated %.2f" % [want_total, granted_total, 0.02 * pop0, pop0, Sc.world.evacuated])
+	check(granted_total <= 0.02 * pop0 + 0.001, "tier 1: no more than 2 percent die in 60 s")
+	check(absf(granted_total + Sc.world.evacuated - want_total) < 0.001, "casualties plus evacuated equal what would have died")
+	Sc.T = 61.0
+	check(WorldCollateral.room(Sc) > 0.019 * pop0, "the window refills after 60 s")
+	# borrowing: only at tier 3 and above, only for the event's own token
+	var Sb := fresh()
+	Sb.fighters[0].tier = 3.0
+	Sb.fighters[1].tier = 1.0
+	var tok: float = WorldCollateral.beginEvent(Sb, "slide", Sb.fighters[1])
+	var g3: float = 0.0
+	var pop3: float = Sb.world.pop0
+	for bb in Sb.buildings:
+		g3 += WorldCollateral.kill(Sb, bb.idx, bb.popAlive, Sb.fighters[1], tok, bb.x)
+	print("  tier 3, one slide: %.2f died (window 8 percent = %.2f plus the slide allowance 5 percent = %.2f)" % [g3, 0.08 * pop3, 0.05 * pop3])
+	check(g3 <= 0.13 * pop3 + 0.001 and g3 > 0.08 * pop3, "tier 3: a slide borrows up to 5 percent beyond the window")
+	var Sn := fresh()
+	Sn.fighters[0].tier = 3.0
+	Sn.fighters[1].tier = 1.0
+	WorldCollateral.beginEvent(Sn, "slide", Sn.fighters[1])
+	var gn: float = 0.0
+	for bb in Sn.buildings:
+		gn += WorldCollateral.kill(Sn, bb.idx, bb.popAlive, Sn.fighters[1], 0.0, bb.x)
+	check(gn <= 0.08 * Sn.world.pop0 + 0.001, "another source (token 0) cannot use the slide allowance")
+	var S1t := fresh()
+	S1t.fighters[0].tier = 1.0
+	WorldCollateral.beginEvent(S1t, "slide", S1t.fighters[1])
+	check(S1t.world.evtLeft == 0.0, "no borrowing at tier 1 or 2")
+	# the ceiling
+	var Sx := fresh()
+	Sx.fighters[0].tier = 4.0
+	Sx.world.maxTier = 1.0
+	Sx.world.casualties = 0.099 * Sx.world.pop0
+	WorldCollateral.kill(Sx, bcity, 5.0, Sx.fighters[1], 0.0, 0.0)
+	check(Sx.world.casualties <= 0.10 * Sx.world.pop0 + 0.001, "the cumulative ceiling holds (10 percent at highest tier 1)")
+	# normalisation and data-driven anguish
+	var Sm1 := fresh()
+	var Sm2 := fresh()
+	Sm2.world.pop0 = Sm1.world.pop0 * 2.0
+	WorldCollateral._feed(Sm1, 0.01 * Sm1.world.pop0, Sm1.fighters[1])
+	WorldCollateral._feed(Sm2, 0.01 * Sm2.world.pop0, Sm2.fighters[1])
+	check(absf(Sm1.fighters[1].menace - Sm2.fighters[1].menace) < 0.001 and absf(Sm1.fighters[0].anguish - Sm2.fighters[0].anguish) < 0.001, "a share of the population lost feeds the meters the same on any planet")
+	var Sa := fresh()
+	Sa.fighters[1].hasAnguish = true
+	WorldCollateral._feed(Sa, 4.0, Sa.fighters[1])
+	check(Sa.fighters[0].anguish > 0.0 and Sa.fighters[1].anguish > Sa.fighters[0].anguish, "every fighter with the meter gains anguish, more for its own casualties")
+	# the choke point: nothing but collateral.gd feeds casualties
+	var stray: int = 0
+	for sub in ["core", "world", "director", "input"]:
+		var d2 := DirAccess.open("res://sim/" + sub)
+		for fname in d2.get_files():
+			if fname.ends_with(".gd") and fname != "collateral.gd":
+				var txt: String = FileAccess.get_file_as_string("res://sim/" + sub + "/" + fname)
+				if txt.contains("casualty(") or txt.contains("world.casualties +=") or txt.contains("_feed("):
+					stray += 1
+					print("  stray casualty code in " + sub + "/" + fname)
+	check(stray == 0, "no casualty is counted outside collateral.gd")
+	# every source, budget spent: nothing dies, the people flee
+	var Sd := fresh()
+	Sd.fighters[0].tier = 1.0
+	Sd.fighters[1].tier = 1.0
+	Sd.world.cbSum = 1000.0
+	Sd.world.cbBuckets[0] = 1000.0
+	var cas0: float = Sd.world.casualties
+	var pop_before: float = 0.0
+	for b in Sd.buildings:
+		pop_before += b.popAlive
+	var cxx: float = Sd.buildings[bcity].x
+	WorldStructures.damageArea(Sd, cxx, 0.0, 3000.0, 100000.0, Sd.fighters[1])
+	WorldStructures.damageArea(Sd, cxx, 0.0, 3000.0, 100000.0, Sd.fighters[1], true)
+	var pop_after: float = 0.0
+	for b in Sd.buildings:
+		pop_after += b.popAlive
+	print("  budget spent, a huge blast and a huge beam: casualties %.2f, evacuated %.1f, people left in buildings %.1f of %.1f" % [Sd.world.casualties - cas0, Sd.world.evacuated, pop_after, pop_before])
+	check(Sd.world.casualties == cas0 and Sd.world.evacuated > 0.0, "with the budget spent, blasts and beams kill nobody and evacuate instead")
+	check(absf(pop_before - pop_after - Sd.world.evacuated) < 0.01, "everyone removed from a building is counted evacuated")
+
+	print("== depth rows, the spatial index, implode and rubble ==")
+	var Sr := fresh()
+	var rows := [0, 0, 0, 0]
+	for b in Sr.buildings:
+		rows[int(b.row)] += 1
+	print("  buildings by row (foreground, front street, mid, back): %s of %d, people %.0f" % [str(rows), Sr.buildings.size(), Sr.world.pop0])
+	check(rows[1] > 0 and rows[2] > 0 and rows[3] > 0 and rows[0] > 0, "every depth row has buildings")
+	var idx_ok: bool = true
+	var rg3 := SimRng.new(5)
+	for k in range(60):
+		var xq: float = rg3.range_(0.0, SimConst.W)
+		var rq: float = rg3.range_(500.0, 20000.0)
+		var brute: float = 0.0
+		for b in Sr.buildings:
+			if b.alive and absf(SimWrap.sdx(xq, b.x)) < rq:
+				brute += b.popAlive
+		var viaIdx: float = WorldStructures.popNear(Sr, xq, rq) * WorldStructures.POP_NEAR_REF
+		var cl: float = minf(brute, WorldStructures.POP_NEAR_REF)
+		if absf(viaIdx - cl) > 0.01:
+			idx_ok = false
+	check(idx_ok, "popNear through the spatial index equals the brute-force sum")
+	var tw = null
+	for b in Sr.buildings:
+		if b.kind == "tower" and b.row == 1.0:
+			tw = b
+			break
+	Sr.out.fx.clear()
+	WorldStructures.damageArea(Sr, tw.x + 4000.0, 0.0, 6000.0, 1.0e7, Sr.fighters[1])
+	var fell: int = 0
+	var implode: int = 0
+	for e in Sr.out.fx:
+		if e.type == "building_fall":
+			fell += 1
+			if e.mode == "implode":
+				implode += 1
+	var ci: int = int(tw.x / SimConst.COL)
+	print("  a huge blast at the city: %d building_fall events (%d implode), heap at the tower %.0f (crest wanted %.0f), rubble total %.0f" % [fell, implode, Sr.rubble[ci], clampf(0.10 * tw.h, WorldStructures.RUBBLE_MIN, WorldStructures.RUBBLE_MAX), _sum(Sr.rubble)])
+	check(fell > 0 and fell == implode and Sr.rubble[ci] > 0.0 and not tw.alive, "blast-levelled buildings implode and leave a rubble heap")
+	var r_before: float = _sum(Sr.rubble)
+	WorldCrater.dig(Sr, tw.x, 12.0, Sr.fighters[1], "impact", 0.0, 1.0)
+	print("  then a crater on it: rubble %.0f -> %.0f" % [r_before, _sum(Sr.rubble)])
+
+
+	print("== the hard hit makes the mark (Orb's playtest bug) ==")
+	for special in [false, true]:
+		var S13 := fresh()
+		var f3 = S13.fighters[0]
+		f3.hp = 1e9
+		f3.launchBy = S13.fighters[1]
+		var x3: float = X(2050.0)
+		f3.x = x3
+		f3.y = WorldTerrain.groundY(S13, x3) + 400.0
+		f3.launchT = 1.0
+		f3.vx = 200.0
+		f3.vy = -2800.0
+		f3.state = "launched"
+		f3.launchSpecial = special
+		var g3guard: int = 0
+		var first_t: float = -1.0
+		while f3.state == "launched" and g3guard < 1200:
+			var nb: int = S13.craters.size()
+			SimFighter.stepLaunched(S13, f3, SimConst.DT)
+			if S13.craters.size() > nb and first_t < 0.0:
+				first_t = S13.T
+			g3guard += 1
+		var cr3: Array = S13.craters
+		var line3: String = "  a %s slam at speed 2800: %d crater(s)" % ["special" if special else "ordinary", cr3.size()]
+		for c in cr3:
+			line3 += ", R %.0f depth %.0f" % [c.r, c.depth]
+		print(line3 + ", hopped %s" % str(f3.hopped))
+		check(cr3.size() == 1, "a hard slam leaves exactly one crater, made by the first contact (special %s)" % str(special))
 
 	print("")
 	print("probe: %d check(s) failed" % fails)

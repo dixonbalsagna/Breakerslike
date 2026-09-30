@@ -182,7 +182,7 @@ static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool =
 		if ex.tag.begins_with("HEAVY CLASH") or ex.tag == "GUARD BREAK" or ex.tag == "CHARGE INTERRUPT":
 			DirExchange.decisive(S, ex, att, tgt, "clash" if ex.tag.begins_with("HEAVY CLASH") else ("guard_break" if ex.tag == "GUARD BREAK" else "interrupt"))
 		return
-	DirLaunch.doLaunch(S, att, tgt, r.best, force)
+	DirLaunch.doLaunch(S, att, tgt, r.best, force, longOnly)
 	if r.best.has("p") and r.best.p.get("building", false):
 		SimFx.hazardTelegraph(S, tgt, "brunt", r.best.p.t, r.best.p.x)
 	S.dirS.lastLaunch2 = S.dirS.lastLaunch

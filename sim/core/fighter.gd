@@ -11,6 +11,7 @@ const WATER_BUOY: float = 1000.0
 
 
 static func tierUp(S: SimState, f) -> void:
+	S.world.maxTier = maxf(S.world.maxTier, f.tier)
 	SimFx.banner(S, f.name + " POWERS UP  TIER " + SimMathx.jstr(f.tier), f.aura, 1.4)
 	var g: float = WorldTerrain.groundY(S, f.x)
 	SimFx.ring(S, f.x, f.y + 34.0, 1300.0, f.aura, 0.8, 20.0)
@@ -41,23 +42,25 @@ static func impact(S: SimState, f, g: float, sp: float) -> void:
 		var r: float = (28.0 + spN * 0.05 + tier * 12.0) * WS
 		var E: float = WorldCrater.impactEnergy(spN, tier)
 		var slam: bool = sea or vert >= WorldSlide.SLAM_VERT
-		var hop: bool = not sea and spN >= WorldSlide.HOP_SPEED and f.bounces < 1.0
-		if slam and not hop:
-			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / SimMathx.jmax(spN, 0.000001), vert)
+		# A very hard slam makes its mark on the first contact and then hops once; the hop's landing digs nothing more (the
+		# hard hit makes the crater, never the lighter one after it). A slide never hops: it starts at the first contact.
+		var hop: bool = slam and not sea and spN >= WorldSlide.HOP_SPEED and not f.hopped
+		if slam and not f.hopped:
+			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / SimMathx.jmax(spN, 0.000001), vert, f.launchSpecial)
 		if sea:
 			SimFx.splash(S, f.x, g + 10.0, 14)
 		else:
 			SimFx.debris(S, f.x, g + 8.0, 12, "#6d6a66", 500.0)
 			SimFx.dust(S, f.x, g, 4)
 		SimFx.ring(S, f.x, g + 10.0, 700.0 + spN * 0.2, "#ffffff", 0.45, 10.0)
-		var slideStart: bool = not slam and not hop
+		var slideStart: bool = not slam
 		var touch: float = WorldSlide.TOUCH_AREA if slideStart else 1.0
 		WorldStructures.damageArea(S, f.x, g + 5.0, r * 1.7, spN * (0.22 + 0.12 * tier) * touch, by)
 		SimFx.shake(S, SimMathx.jmin(30.0, spN * 0.01), f.x)
 		S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.06)
 		SimDamage.hurt(S, f, spN * 0.018 * (WorldSlide.TOUCH_DMG if slideStart else 1.0), by)
 		if hop:
-			f.bounces += 1.0
+			f.hopped = true
 			f.vy = absf(f.vy) * WorldSlide.HOP_LIFT
 			return
 		if slideStart:
@@ -70,6 +73,8 @@ static func impact(S: SimState, f, g: float, sp: float) -> void:
 	f.bounces = 0.0
 	f.launchBy = null
 	f.launchT = 1.0
+	f.launchSpecial = false
+	f.hopped = false
 
 
 ## Launched flight: gravity, air drag, water (with the skip), building collisions, the ground (slam or slide) and the
@@ -131,8 +136,9 @@ static func stepLaunched(S: SimState, f, dt: float) -> void:
 ## it hit one.
 static func _buildingHits(S: SimState, f, ox: float) -> bool:
 	var hit: bool = false
-	for b in S.buildings:
-		if not b.alive:
+	for bi in WorldStructures.near(S, f.x, 64.0):
+		var b = S.buildings[bi]
+		if not b.alive or b.row != WorldStructures.PLANE_ROW:
 			continue
 		if absf(SimWrap.sdx(f.x, b.x)) < b.w / 2.0 + 16.0:
 			var gy: float = WorldTerrain.groundY(S, b.x)
@@ -184,7 +190,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 		regen += f.menace * 0.03
 	else:
 		regen = SimMathx.jmax(1.0, regen - f.anguish * 0.025)
-	if f.role == "hero":
+	if f.hasAnguish:
 		f.anguish = SimMathx.jmax(0.0, f.anguish - 0.6 * dt)
 	# Menace decays when it is not fed (balance-targets.md section 9, S0): after MENACE_QUIET_TICKS without a rise it
 	# falls by MENACE_DECAY per second. At the cap a casualty cannot raise it, so there a rise in world casualties also

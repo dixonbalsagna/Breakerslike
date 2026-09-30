@@ -4,6 +4,24 @@ class_name WorldTerrain
 ## to float32.
 
 
+## Depth rows (docs/world/buildings-in-depth.md, written in fighter heights, 1 bh = 75 units): the depth of each row's
+## centre from the fighter plane. Row 0 is the foreground (in front of the plane), 1 the front street, 2 mid, 3 back.
+const BH: float = 75.0
+const ROW_Z_BH: Array = [10.0, -8.0, -22.0, -38.0]
+const ROW_JITTER_BH: float = 1.0            # per-building depth jitter (rows 1 to 3), from the building's seed: no extra draw
+const FG_H_MAX_BH: float = 6.0              # the foreground row is low: at most this many fighter heights
+## Settlements: the span (original coordinates), the building kind of the front street, and the extra rows laid after it:
+## [row, kind, height factor, gap factor, x offset in units]. The front street is generated exactly as before, so its
+## layout is unchanged; the extra rows draw after every front street, and the settlement's people are then rescaled so
+## its population is the front street's.
+const SETTLEMENTS: Array = [
+	{"x0": 1260.0, "x1": 1760.0, "kind": "house", "rows": [[0, "house", 1.0, 3.5, 120.0], [2, "house", 1.0, 1.8, 200.0]]},
+	{"x0": 2370.0, "x1": 3830.0, "kind": "tower", "rows": [[0, "house", 1.0, 5.5, 300.0], [2, "tower", 1.2, 1.0, 260.0], [3, "tower", 1.4, 1.4, 500.0]]},
+	{"x0": 3880.0, "x1": 4480.0, "kind": "house", "rows": [[2, "house", 1.0, 1.5, 200.0]]},
+	{"x0": 7640.0, "x1": 7960.0, "kind": "house", "rows": [[2, "house", 1.0, 1.5, 200.0]]},
+]
+
+
 ## Terrain, buildings and trees. The layout draws from its own stream seeded 4242, never from S.rng. Every original
 ## length is in the coordinates of the original planet (xn = x / PS), then the relief and the object sizes are
 ## multiplied by the feature scale WS (and the mountains by MS), so the planet is PS times longer with WS times bigger
@@ -56,11 +74,32 @@ static func genWorld(S: SimState) -> void:
 	S.base = a.duplicate()
 	S.buildings.clear()
 	S.trees.clear()
+	# Front streets first (the original layout, draw for draw), then the extra rows of each settlement.
+	var totals: Array = []
+	for st in SETTLEMENTS:
+		totals.append(_row(S, r, st.x0 * PS, st.x1 * PS, st.kind, 1, 1.0, 1.0, 0.0))
+	for k in range(SETTLEMENTS.size()):
+		var st = SETTLEMENTS[k]
+		for rw in st.rows:
+			_row(S, r, st.x0 * PS, st.x1 * PS, rw[1], rw[0], rw[2], rw[3], rw[4] * WS)
+	# Conserve each settlement's population: rescale all its rows to the front street's total.
 	var pop: float = 0.0
-	pop += _row(S, r, 1260.0 * PS, 1760.0 * PS, "house")
-	pop += _row(S, r, 2370.0 * PS, 3830.0 * PS, "tower")
-	pop += _row(S, r, 3880.0 * PS, 4480.0 * PS, "house")
-	pop += _row(S, r, 7640.0 * PS, 7960.0 * PS, "house")
+	var byS: Array = []
+	for k in range(SETTLEMENTS.size()):
+		byS.append([])
+	for i in range(S.buildings.size()):
+		var b = S.buildings[i]
+		var k: int = _settlementOf(b.x)
+		byS[k].append(b)
+	for k in range(SETTLEMENTS.size()):
+		var raw: float = 0.0
+		for b in byS[k]:
+			raw += b.pop
+		var scale: float = totals[k] / maxf(raw, 1.0)
+		for b in byS[k]:
+			b.pop = SimMathx.jmax(1.0, SimMathx.jround(b.pop * scale))
+			b.popAlive = b.pop
+			pop += b.pop
 	var x2: float = 4530.0 * PS
 	while x2 < 5470.0 * PS:
 		var tr := SimState.TreeState.new()
@@ -70,6 +109,10 @@ static func genWorld(S: SimState) -> void:
 		x2 += r.range_(16.0, 40.0) * WS
 	S.world = SimState.World.new()
 	S.world.pop0 = pop
+	S.rubble = PackedFloat32Array()
+	S.rubble.resize(NC)
+	S.rubble.fill(0.0)
+	WorldStructures.buildIndex(S)
 	S.scorch = PackedFloat32Array()
 	S.scorch.resize(NC)
 	S.scorch.fill(0.0)
@@ -79,17 +122,27 @@ static func genWorld(S: SimState) -> void:
 	S.crack.fill(0.0)
 	S.slides.clear()
 	WorldWater.init(S)
+	WorldCollateral.init(S)
 
 
-## Population per building is the original's times POP_K = WS / PS, so the planet's total stays about 425 although the
-## settlements hold PS / WS times as many buildings. hp follows the building's original (unscaled) height, so a tower
-## WS times bigger is not WS times harder to knock over.
-static func _row(S: SimState, r: SimRng, x0: float, x1: float, kind: String) -> float:
+## The settlement index a building at x belongs to (by the original spans).
+static func _settlementOf(x: float) -> int:
+	var xn: float = x / SimConst.PS
+	for k in range(SETTLEMENTS.size()):
+		if xn >= SETTLEMENTS[k].x0 - 100.0 and xn < SETTLEMENTS[k].x1 + 100.0:
+			return k
+	return 0
+
+
+## One row of buildings across a span. Population per building is the original's times POP_K = WS / PS (rescaled per
+## settlement afterwards). hp follows the building's original (unscaled) height, so a tower WS times bigger is not WS
+## times harder to knock over. hmul makes the row taller, gapMul sparser, xoff staggers it. Returns the row's population.
+static func _row(S: SimState, r: SimRng, x0: float, x1: float, kind: String, row: int, hmul: float, gapMul: float, xoff: float) -> float:
 	var WS: float = SimConst.WS
 	var PS: float = SimConst.PS
 	var popK: float = WS / PS
 	var pop: float = 0.0
-	var x: float = x0
+	var x: float = x0 + xoff
 	while x < x1:
 		var b := SimState.Building.new()
 		if kind == "tower":
@@ -98,19 +151,25 @@ static func _row(S: SimState, r: SimRng, x0: float, x1: float, kind: String) -> 
 			var cx: float = x + w / 2.0
 			var mid: float = 1.0 - absf((cx - 3100.0 * PS) / (760.0 * PS))
 			var h1: float = r.range_(120.0, 280.0)
-			var h0: float = h1 + SimMathx.jmax(0.0, mid) * r.range_(80.0, 380.0)
+			var h0: float = (h1 + SimMathx.jmax(0.0, mid) * r.range_(80.0, 380.0)) * hmul
 			b.x = cx; b.w = w; b.h = h0 * WS; b.maxhp = h0 * 6.0; b.hp = h0 * 6.0; b.alive = true; b.kind = "tower"
 			b.pop = SimMathx.jmax(1.0, SimMathx.jround(w0 * h0 / 1200.0 * popK))
 			b.seed = r.next()
-			x += w + r.range_(4.0, 16.0) * WS
+			b.d = w * 0.8
+			x += w + r.range_(4.0, 16.0) * WS * gapMul
 		else:
 			var w0: float = r.range_(28.0, 50.0)
 			var w: float = w0 * WS
-			var h0: float = r.range_(36.0, 72.0)
+			var h0: float = r.range_(36.0, 72.0) * hmul
+			if row == 0:
+				h0 = minf(h0, FG_H_MAX_BH * BH / WS)   # the foreground is low
 			b.x = x + w / 2.0; b.w = w; b.h = h0 * WS; b.maxhp = h0 * 3.0; b.hp = h0 * 3.0; b.alive = true; b.kind = "house"
 			b.pop = SimMathx.jmax(1.0, SimMathx.jround(r.range_(2.0, 6.0) * popK))
 			b.seed = r.next()
-			x += w + r.range_(16.0, 70.0) * WS
+			b.d = w * 0.9
+			x += w + r.range_(16.0, 70.0) * WS * gapMul
+		b.row = float(row)
+		b.z = ROW_Z_BH[row] * BH + ((b.seed - 0.5) * 2.0 * ROW_JITTER_BH * BH if row > 0 else 0.0)
 		b.popAlive = b.pop
 		S.buildings.append(b)
 		pop += b.pop

@@ -93,6 +93,7 @@ static func begin(S: SimState, f, by, spN: float, E: float) -> void:
 	f.slideE = E
 	f.slideDmg = spN * 0.018 * (1.0 - TOUCH_DMG)   # what is left to take by speed lost
 	f.slideAcc = 0.0
+	f.slideEvt = WorldCollateral.beginEvent(S, "slide", by)
 
 
 static func _paved(x: float) -> bool:
@@ -146,7 +147,7 @@ static func step(S: SimState, f, dt: float) -> void:
 		if idx <= SAMPLE_MAX:
 			SimFx.slideDust(S, f.x, y2, vN, hw * 2.0, "paved" if pav else "ground", idx)
 		SimFx.debris(S, f.x, y2 + 4.0, 3 if pav else 2, "#8f8b84" if pav else "#6d6a66", 500.0)
-		WorldStructures.damageArea(S, f.x, y2 + 5.0, hw * 2.0, (0.22 + 0.12 * by.tier) * PATH_AREA * vN, by)
+		WorldStructures.damageArea(S, f.x, y2 + 5.0, hw * 2.0, (0.22 + 0.12 * by.tier) * PATH_AREA * vN, by, false, f.slideEvt)
 		if f.slideAcc > 0.0:
 			SimDamage.hurt(S, f, f.slideAcc, by)
 			f.slideAcc = 0.0
@@ -179,6 +180,8 @@ static func finish(S: SimState, f, by, wall: bool) -> void:
 	f.bounces = 0.0
 	f.launchBy = null
 	f.launchT = 1.0
+	f.launchSpecial = false
+	f.hopped = false
 
 
 ## The persistent record and the event of a slide, at its end (or where a cliff released the fighter).
@@ -193,7 +196,11 @@ static func _record(S: SimState, f, by) -> void:
 	rec.t = S.T
 	rec.owner = WorldCrater._slot(S, by)
 	rec.surface = 1.0 if _paved(f.slideX0) else 0.0
+	var er: Dictionary = WorldCollateral.endEvent(S, f.slideEvt)
+	rec.pop = er.dead
+	f.slideEvt = 0.0
 	S.slides.append(rec)
+	S.world.slides += 1.0
 	if S.slides.size() > LIST_MAX:
 		S.slides.remove_at(0)
 	SimFx.slideEvent(S, rec)

@@ -2,7 +2,7 @@ class_name SimRoster
 ## Fighter definitions and construction: the twin of roster.js (the prototype's ROSTER, mkF and opp).
 
 const ROSTER: Array = [
-	{"id": "KAI", "name": "KAI", "title": "Meridian Warden", "role": "hero", "col": "#3d8fdc", "aura": "#8fd6ff", "hair": "#22c7a9", "care": 1.0, "dmgMul": 1.0, "spd": 1.0, "maxhp": 1600.0, "sigName": "Meridian Lance", "canHide": false, "rally": "second_wind"},
+	{"id": "KAI", "name": "KAI", "title": "Meridian Warden", "role": "hero", "col": "#3d8fdc", "aura": "#8fd6ff", "hair": "#22c7a9", "care": 1.0, "dmgMul": 1.0, "spd": 1.0, "maxhp": 1600.0, "sigName": "Meridian Lance", "canHide": false, "rally": "second_wind", "anguish": true},
 	{"id": "VORR", "name": "VORR", "title": "Calamity Sovereign", "role": "villain", "col": "#a52a2a", "aura": "#ff5a3c", "hair": "#181818", "care": -0.8, "dmgMul": 1.0, "spd": 0.95, "maxhp": 1600.0, "sigName": "Calamity Wave", "canHide": false, "rally": "second_wind"},
 ]
 
@@ -23,6 +23,7 @@ static func createFighter(def: Dictionary, x: float, keys: String, ai: bool) -> 
 	f.maxhp = def.maxhp
 	f.sigName = def.sigName
 	f.canHide = def.get("canHide", false)
+	f.hasAnguish = def.get("anguish", false)
 	f.rally = def.get("rally", "")
 	f.hp = def.maxhp
 	f.x = x

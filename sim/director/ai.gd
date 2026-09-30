@@ -55,7 +55,7 @@ static func aiInput(S: SimState, f) -> void:
 	# The hero leads fights away from people and out of the water, toward the nearest empty land.
 	# A DEFENSIVE hero low on ki charges first (the lure used to starve it of ki).
 	var wantsCharge: bool = st == 1.0 and f.ki < 55.0 and dist > 350.0
-	var lure: float = heroLure(S, f) if f.role == "hero" and st != 3.0 and not wantsCharge else 0.0
+	var lure: float = heroLure(S, f) if f.hasAnguish and st != 3.0 and not wantsCharge else 0.0
 	var sea: bool = WorldTerrain.seaAt(S, f.x)
 	if lure != 0.0:
 		i.mx = lure
@@ -172,9 +172,8 @@ static func heroLure(S: SimState, f) -> float:
 	# Hot path (every tick while the hero is off empty land): plain arithmetic, no helper calls inside the loops.
 	var hist := PackedFloat64Array()
 	hist.resize(LURE_BUCKETS)
-	for b in S.buildings:
-		if b.alive:
-			hist[mini(int(b.x / LURE_STEP), LURE_BUCKETS - 1)] += b.popAlive
+	for k in range(LURE_BUCKETS):
+		hist[k] = S.popHist[k]   # kept up to date by WorldCollateral (kill and the district flight)
 	var i0: int = mini(int(SimWrap.wrap(f.x) / LURE_STEP), LURE_BUCKETS - 1)
 	if not WorldTerrain.seaAt(S, f.x) and WorldBiomes.biomeAt(f.x) != "ocean" and _window(hist, i0) <= LURE_START:
 		return 0.0

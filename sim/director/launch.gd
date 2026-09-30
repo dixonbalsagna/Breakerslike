@@ -133,15 +133,14 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 	# not predicted). The flight never reverses (drag and water only slow it), so one pointer walks the list.
 	var dir0: float = -1.0 if vx0 < 0.0 else 1.0
 	var blds: Array = []
-	var bi: int = 0
-	for b in S.buildings:
-		if b.alive:
+	for bi in WorldStructures.near(S, SimWrap.wrap(x0 + dir0 * PREDICT_REACH * 0.5), PREDICT_REACH * 0.5 + 64.0):
+		var b = S.buildings[bi]
+		if b.alive and b.row == WorldStructures.PLANE_ROW:   # only the front street collides until the brunt (B2)
 			var off: float = SimWrap.sdx(x0, b.x) * dir0
 			var half: float = b.w / 2.0 + 16.0
 			if off + half > 0.0 and off < PREDICT_REACH:
 				var gy: float = WorldTerrain.groundY(S, b.x)
 				blds.append([off, half, gy, gy + WorldStructures.curH(b), bi])
-		bi += 1
 	blds.sort_custom(func(p, q): return p[0] < q[0] or (p[0] == q[0] and p[4] < q[4]))
 	var bp: int = 0
 	for n in range(PREDICT_STEPS):
@@ -187,12 +186,15 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 	return {"x": x, "travel": absf(travel), "water": y < 0.0 and WorldTerrain.seaAt(S, x), "t": t}
 
 
-static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float) -> void:
+## special marks a signature, a finisher or a break launch: its ground impact may leave a big crater (world/crater.gd).
+static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, special: bool = false) -> void:
 	var fm: float = plan.fm if plan.has("fm") else 1.0
 	var f: float = force * fm * (1.0 + 0.16 * (att.tier - 1.0))
 	tgt.state = "launched"
 	tgt.launchBy = att
 	tgt.bounces = 0.0
+	tgt.launchSpecial = special
+	tgt.hopped = false
 	tgt.stateT = 0.0
 	tgt.rush = null
 	tgt.hidden = false

@@ -19,6 +19,9 @@ var deform := PackedFloat32Array()
 var water := PackedFloat32Array()     # water depth per terrain column (world/water.gd); the surface is ground + depth
 var scorch := PackedFloat32Array()    # scorch intensity per terrain column, 0 to 1, permanent (world/crater.gd)
 var craters: Array = []               # Crater records, oldest first, capped at WorldCrater.LIST_MAX (fx-events.md)
+var rubble := PackedFloat32Array()    # rubble heap height per terrain column (world/structures.gd): part of S.deform, kept apart for cover, tint and digging
+var bIdx: Array = []                  # spatial index of the buildings: PackedInt32Array per x bucket (world/structures.gd), never changes in a match
+var popHist := PackedFloat32Array()   # living civilians per lure bucket (director/ai.gd LURE_STEP), kept up to date by WorldCollateral
 var crack := PackedFloat32Array()     # pavement crack intensity per terrain column, 0 to 1, permanent (world/slide.gd)
 var slides: Array = []                # Slide records, oldest first, capped at WorldSlide.LIST_MAX
 var waterWin: Array = []              # active water-flow windows [centre column, half width, quiet steps, age steps]
@@ -58,12 +61,32 @@ class World:
 	var casualties: float = 0.0
 	var structuresLost: float = 0.0
 	var craters: float = 0.0
+	var slides: float = 0.0           # knockback slides that have ended (the HUD's other mark counter)
+	var evacuated: float = 0.0        # civilians who fled instead of dying (over budget or at the ceiling); they never return
+	var cbBuckets := PackedFloat32Array()   # casualties per second of match time, 60 buckets (rolling budget window)
+	var cbSec: float = 0.0            # the last second index the window has advanced to
+	var cbSum: float = 0.0            # sum of the window
+	var maxTier: float = 1.0          # highest tier either fighter has reached this match (the cumulative ceiling)
+	var evtKind: String = ""          # the open set piece ("slide", "chain", ...) or ""
+	var evtLeft: float = 0.0          # what the open set piece may still borrow, in people
+	var evtToken: float = 0.0         # its token; 0 when none is open
+	var evtDead: float = 0.0          # casualties the open set piece has caused
+	var evtEvac: float = 0.0          # civilians it has made flee
+	var tokenSeq: float = 0.0         # token counter
+	var heavyX: float = -1.0          # x of the latest heavy event (the district flight flees from it)
+	var heavyT: float = -1.0e9        # its match time
+	var lotAcc := PackedFloat32Array()      # per building: evacuees not yet reported in an evacuate event (district flight lots)
+	var stateT: float = 0.0           # match time of the last collateral_state event
+	var fallTick: float = -1.0        # scratch for the implode event cap of one blast (not hashed)
+	var fallN: float = 0.0
+	var fallFold: float = 0.0
 
 
 ## One dug crater, kept for replay seek and snapshots (docs/architecture/fx-events.md). The renderer rebuilds a bowl
 ## in depth from these; the heightfield alone only holds the z = 0 slice.
 ## One knockback slide, kept for replay seek and snapshots (docs/world/knockback-slide.md).
 class Slide:
+	var pop: float = 0.0      # civilians killed by this slide
 	var x0: float = 0.0       # where the fighter touched down
 	var x1: float = 0.0       # where he stopped or left the ground
 	var hw: float = 0.0       # trench half width
@@ -75,6 +98,7 @@ class Slide:
 
 
 class Crater:
+	var special: float = 0.0  # 1 for a signature, finisher, break launch or beam clash (the big marks)
 	var x: float = 0.0        # centre, world x
 	var y: float = 0.0        # ground height at the centre before the dig
 	var r: float = 0.0        # bowl radius (the rim crest is at r)
@@ -89,6 +113,11 @@ class Crater:
 
 
 class Building:
+	var idx: int = 0          # index in S.buildings (set at generation; not hashed)
+	var fled: float = 0.0     # people who left in the district flight so far (capped at WorldCollateral.FLIGHT_MAX of pop)
+	var z: float = 0.0        # depth of the building's centre from the fighter plane (negative: behind), world units
+	var d: float = 0.0        # footprint depth
+	var row: float = 1.0      # 0 foreground, 1 front street (the fighter plane's row for collisions), 2 mid, 3 back
 	var x: float = 0.0
 	var w: float = 0.0
 	var h: float = 0.0
@@ -141,7 +170,7 @@ class FxEvent:
 	var type: String = ""
 	var x: float = 0.0
 	var y: float = 0.0
-	var n: int = 0
+	var n = 0                    # an int for most events, a float head count for evacuate and building_fall
 	var col: String = ""
 	var spd: float = 0.0
 	var gr: float = 0.0
@@ -178,7 +207,20 @@ class FxEvent:
 	var region: String = ""       # wounds: head, core, arms or legs
 	var stage: int = 0            # wounds: 0 fresh, 1 bruised, 2 battered, 3 broken
 	var owner: float = -1.0      # crater and scorch: firing fighter's slot, or -1
+	var special: bool = false    # crater: a special blow (the big marks)
 	var x1: float = 0.0          # slide: where it ended
+	var pop: float = 0.0         # slide: civilians it killed
+	var b: float = -1.0          # evacuate, building_fall: the building's index
+	var dest: float = -1.0       # evacuate: the building the people ran to (-1: out of the district for good)
+	var cx: float = 0.0          # evacuate, building_fall: the event's x (the crowd flees from it; the ripple starts there)
+	var reason: String = ""      # evacuate: "budget", "ceiling" or "flight"
+	var mode: String = ""        # building_fall: "implode" or "burst"
+	var delay: float = 0.0       # building_fall: the ripple delay in seconds (cosmetic)
+	var rubble: float = 0.0      # building_fall: the heap height left
+	var room: float = 0.0        # collateral_state
+	var budget: float = 0.0
+	var left: float = 0.0
+	var over: bool = false
 	# Director events (Encounter, S2; docs/architecture/fx-events.md):
 	var target: float = -1.0     # the other fighter's slot (finisher, attack, parry, ambush, lock_lost, launch_plan, clash_draw, searching)
 	var chance: float = 0.0      # finisher_contest: the survival chance
@@ -220,6 +262,7 @@ class Fighter:
 	var hiddenFor: float = 0.0
 	var menace: float = 0.0
 	var anguish: float = 0.0
+	var hasAnguish: bool = false  # the fighter's profile has a pressured-by-collateral meter (roster data, not the role name)
 	var menaceSeen: float = 0.0     # menace after the last stepFighter (S0: menace decays when not fed)
 	var menaceQuiet: int = 0         # ticks since menace was last fed
 	var casSeen: float = 0.0        # S.world.casualties after the last stepFighter
@@ -252,6 +295,9 @@ class Fighter:
 	var slideE: float = 0.0        # impact energy of the slide
 	var slideDmg: float = 0.0      # damage still to take by speed lost
 	var slideAcc: float = 0.0      # damage earned by speed lost, not yet taken
+	var launchSpecial: bool = false  # the current launch is a signature, finisher or break launch (its ground mark may be big)
+	var hopped: bool = false         # the launch has made its one hop
+	var slideEvt: float = 0.0      # the collateral set-piece token of the running slide (world/collateral.gd)
 	var lastSeen = null      # LastSeen or null
 	var ambushUntil: float = 0.0
 	var input := SimIntent.new()   # JS f.in (in is a GDScript keyword)
