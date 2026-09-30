@@ -434,3 +434,35 @@ These are Game Design's values for the suggestions Combat marked in its variety 
 | Blitz chance (first window, Tense or Frenzied) | Tense 0.25, Frenzied 0.50, **+0.05 per act above 1** (suggested +0.10), **cap 0.60** | Target 2 to 6 blitzes a minute in Tense and Frenzied (§9) |
 
 **Match length.** Volleys and chip damage add wear. They count in the damage rate QA measures for the k retune after Encounter's dynamic slice (§10), so k absorbs them and the median stays 6 to 8 minutes.
+
+## 13. Questionnaire 5 rulings (Orb, 2026-09-30)
+
+These rulings are binding for QA's tuning. Where they touch other docs, those docs point here.
+
+| Topic | Ruling | Band QA tunes to |
+| :--- | :--- | :--- |
+| **Brink (interim)** | Pitch A, "the crippling moment" (`pitches.md` §5), is adopted as the interim rule pending Orb's pick, so QA can resume. Limbs stop at battered, and a limb breaks only in a crippling moment. The brink is the core broken, and limb wear past battered spills into the core | Limb breaks 0.3 to 0.5 a match, at most 1 per fighter; the brink once a match plus any re-brinks after Rallies; length 6:00 to 8:00 |
+| **Match length** | Unchanged | Median 6:00 to 8:00, p10 at least 5:00, p90 at most 10:00 |
+| **Even overall, situational** | Each fighter should have ground where they win: terrain and tier swing it | Every pairing 45 to 55% overall. Within each pairing, each fighter wins at least 58% in at least one context (a biome class or a tier band at the KO) and at most 42% in another |
+| **Comebacks common** | This replaces the S4 "rare, earned" stance. **Trailing-fighter help:** the fighter with more region stages lost gets +5 on the finisher contest, +10% ki regen and +5 on the director's parry chance, while behind by 2 or more stages | Comeback wins (the winner was on the brink, or trailed by 2 or more stages) in 30 to 45% of matches. Rallies 0.3 to 0.7 a match |
+| **DEFENSIVE punished over time** | **Guard fatigue.** After 3 s of continuous DEFENSIVE, the guard multiplier worsens from 0.38 by +0.05 per second, up to 0.80, and the guard's ki drain doubles after 6 s. The patience rewards (R4's counter and the clean parry at 2 s) sit in the 2 to 4 s sweet spot | Median continuous DEFENSIVE hold 2 to 5 s; holds over 10 s in under 5% of DEFENSIVE time |
+| **Escape by terrain and distance** | The pursuit slip chance is 0.5, then: +0.10 beyond 1,500 units and +0.20 beyond 4,000; **+0.10 near sight blockers** (forest, mountains, smoke, skyline); **−0.10 over open ground** (plains, desert, the sea surface); ±0.07 per tier. It is clamped at 0.05 and 0.88 | Slip rate 35 to 65% overall, with covered and open terrain at least 15 points apart |
+| **2 to 4 signatures a match, each an event** | A **120 s signature cooldown per fighter** after one fires. The cost stays 45 ki. The director stages each as a set piece: a wide shot and the clash-shape pool | 2 to 4 signatures fired per match (median 3) |
+| **Transformations are a big swing** | Each completed transformation starts a **15 s surge**: +20% damage and +10 mood for the transformer, and the director makes the opponent's next exchange a read (a telegraphed attack) | In the 15 s after a transformation, the transformer wins at least 60% of decisive exchanges, and the opponent changes stance within 5 s in at least 70% of cases |
+| **Adaptive AI** | The AI adapts its *decisions*, never its numbers: read accuracy (predicting the player's stance) drifts within ±15% of its difficulty, toward keeping the match close, based on the standing in the match and the player's last 3 results | In AI matches, 40 to 60% are close finishes (the loser was within 1 stage of the brink) |
+| **What decides who wins** | Stance reads, energy management and transformation timing | In the neutral-mirror probe, a good policy beats a naive one by at least 10 points on each of the three. Positioning alone moves it at most 10 points |
+| **Surprise, 6 out of 10** | The director's random terms are sized so that the state-favoured fighter wins most decisive exchanges, but not all | Upsets (the fighter the state favours loses the exchange) in 30 to 40% of decisive exchanges |
+| **Anguish, 3 out of 10** | Mostly emotional. The regen penalty drops from 0.025 × anguish to **0.01 × anguish** (at most −1 ki per second), with no other mechanical effect. Anguish mainly drives voice and posture | None beyond the win-rate bands |
+
+### The time-cap story event
+
+- *Rule:* at **11:00** a story event starts and lasts up to 60 s. Both fighters are on the brink, Rallies are off, and every decisive exchange is a finisher. Play still decides most of these endings.
+- *If nothing decides it in 60 s,* the event picks the winner by one of the rules below. Narrative's options are in `docs/narrative/time-cap-endings.md`, and Orb picks:
+
+| Narrative's option | Winner rule |
+| :--- | :--- |
+| **A. The crust gives way** (the surviving plate decides) | **Higher vitality wins** (less core and limb wear), and the weaker fighter falls with the plate. Ties go to the higher tier, then the most damage dealt in the event |
+| **B. A watch force hauls one fighter out** | **Less collateral caused wins** (casualties plus structures, normalised). Ties go to higher vitality |
+| **C. The evacuated crowd returns and rings them** | **Fewer casualties caused wins.** Ties go to higher vitality |
+
+- *Recommendation: A.* It is decided by the fight itself. B and C would always hand time-cap endings to the protectors over the fighters who feed on collateral. Time-cap endings stay under 1% of matches.

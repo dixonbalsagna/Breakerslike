@@ -12,6 +12,8 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 
 ## 1. Core rules
 
+> **Questionnaire 5** (`balance-targets.md` §13) changes several rules below. The brink is now the **core broken**, and limbs break only in a crippling moment (interim, pitch A). Trailing-fighter help applies. Each completed transformation starts a 15 s surge. At 11:00 a time-cap story event takes over. Where §13 and this spec differ, §13 wins until this spec is rewritten.
+
 | Rule | Spec |
 | :--- | :--- |
 | **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |

@@ -69,6 +69,8 @@ Reasoned from the rules and QA's data. None of these was tested with new batches
 4. **Parry mashing.** Medium risk. A mistimed parry press costs nothing (Combat CC-008), so the parry is not yet a read.
 5. **Guard bypass through a chain.** Medium risk. After PRESSURE — GUARD HOLDS, a chain opens. The chain's strike ignores stance, so the guard stops mattering (Combat CC-002, GD-B04).
 
+> **Questionnaire 5** (`balance-targets.md` §13): DEFENSIVE now suffers **guard fatigue** after 3 s, and the ESCAPE slip chance depends on **terrain and distance**.
+
 ## 4b. Who controls what (Orb, questionnaire 4)
 
 | The player controls | The director controls |
