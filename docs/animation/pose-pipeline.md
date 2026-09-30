@@ -93,7 +93,8 @@ Cap: 32 bones per fighter. A fifth fighter or a mod that needs more asks the EP.
 **Sockets** (points, not bones; positions are fixed offsets on a bone, set per build profile):
 - strike points: `hand_l_strike`, `hand_r_strike`, `forearm_l_guard`, `forearm_r_guard`, `foot_l_strike`, `foot_r_strike`, `knee_l`, `knee_r`, `elbow_l`, `elbow_r`, `head_strike`, `x_tail_tip` where a tail exists;
 - hit targets (they map to Combat's `location` hint and the Wounds regions head, core, arms, legs): `hit_head`, `hit_torso`, `hit_arm_l`, `hit_arm_r`, `hit_leg_l`, `hit_leg_r`;
-- emitters and anchors: `emit_hand_l`, `emit_hand_r`, `emit_chest`, `head_flash_anchor`, `chest_front`, `back`, `ground_l`, `ground_r`.
+- emitters and anchors: `emit_hand_l`, `emit_hand_r`, `emit_chest`, `head_flash_anchor`, `chest_front`, `back`, `ground_l`, `ground_r`;
+- **cosmetic attachment points** (§2.8): `att_head_top`, `att_head_brow`, `att_head_back`, `att_neck`, `att_shoulder_l`, `att_shoulder_r`, `att_back_upper`, `att_back_lower`, `att_chest`, `att_belt`, `att_wrist_l`, `att_wrist_r`, `att_ankle_l`, `att_ankle_r`.
 
 **Naming:** lower snake case, side suffix `_l` or `_r`, one name per bone across all fighters, so retargeting is by name.
 
@@ -157,6 +158,30 @@ Narrative and Art co-own a short per-fighter animation style guide (`docs/animat
 - **2D skeletal sprites:** the pose format and the modifier engine survive unchanged (they are joint-space data). The rig becomes a cut-out puppet with about 16 layers per fighter, poses are authored per facing with no cheat-out turn, and IK stays two-bone in 2D. The draw-call and skinning worry goes away; the turnarounds must be redrawn as cut-out sheets.
 - **Full 3D:** the rig survives. The cheat-out staging and hybrid projection stop mattering, the silhouette rules must hold from a moving camera, and view-dependent review triples. This conflicts with the browser and old-laptop targets in either engine (`RESULT.md`).
 - Both are **Orb decides.** My default is the assumption above.
+
+### 2.8 Room for unlockable cosmetics (Orb, 2026-09-30)
+
+Orb wants a vast set of unlockable cosmetics; Art is planning the categories. R1 leaves room in three ways, and the draw-call cost of each is stated, because the near budget is 12 draws a fighter (§2.3) and a fighter is 2 today (body plus outline).
+
+**1. Attachment points.** The `att_*` sockets in §2.2 cover the head (top, brow, back), neck, shoulders, upper and lower back, chest, belt, wrists and ankles. A cosmetic is a small mesh in the bone's space plus the socket it sits on; nothing about a pose changes when one is worn. Sockets are fixed offsets per build profile (§2.4), so a hat fits the four builds by name.
+
+**2. Swappable part meshes on the same skeleton.** A cosmetic binds 100% to an existing bone (rigid, like the body) and so needs no new bone. Two ways to draw it, chosen per cosmetic:
+
+| Way | Draw calls | Use for | Cost |
+| :--- | :--- | :--- | :--- |
+| **Merge at equip** (default): the body and every worn cosmetic are built into one mesh, baked with the outline (`OutlineBake`) and cached by the loadout's key | **No change: 2 a fighter** however many are worn | Everything rigid: hats, masks' trim, shoulder pieces, belts, bracers, back plates | A mesh build and outline bake at loadout change (tens of milliseconds, done at match start or in the locker, never mid-fight); triangles add to the body's |
+| **Separate mesh** on the bone | **+2 each** (itself and its outline) | A cosmetic that must be toggled or animated independently in a match: a damage variant, a glowing part | Counts against the 12 |
+
+**3. Per-part material slots, without extra draws.** Recolour and finish by the vertex-colour palette, not by extra materials: the body already carries seven palette slots (body, legs, arms, skin, gear, accent, hair, §2.3 and `anim_rig.gd`), and a cosmetic takes a slot or adds up to two more (`cosmetic_a`, `cosmetic_b`) in the same vertex-colour data. One surface, one material, **no extra draw call**, however many palettes. A second surface or a second material on the same mesh (for a translucent or emissive cosmetic) **is another draw call each**; if Art wants glass or glow, prefer an emissive channel in the vertex alpha over a second material, and count any real exception against the 12.
+
+What else the cosmetics touch:
+- **Bones.** The cap stays 32 (§2.2). A cosmetic that moves on its own (a cape, a long scarf, tassels) needs spring bones; the core plus a fighter's extras is 25 to 29, so there are **3 to 7 spare**, and I propose a budget of **4 cosmetic chain bones a fighter** at once. More needs the EP (and a check of the skinning cost).
+- **Triangles.** Art's near budget is 2,500 (§2.3 of the style guide); the A1 body is 2,664. Proposed: a body of about 2,000 and at most **500 triangles of cosmetics** at near LOD (a piece 250 at most, as Art's regalia rule), dropped entirely at far LOD.
+- **Mirroring.** A cosmetic on one side flips with the fighter; a left-only badge is a right-only badge when facing left. Art decides whether that is acceptable or an asymmetric cosmetic needs a flip-safe design.
+- **Poses.** None change. A cosmetic can collide with a pose (a tall hat and an uppercut): the pose sheet renders a worn-cosmetic variant, and a cosmetic declares a clearance volume so the lint can flag it (A3).
+- **Modding.** A cosmetic is data: a mesh, a socket, palette slots, a clearance volume and a provenance record.
+
+**Flagged for the EP:** the separate-mesh way is the only one that costs draw calls; the default merge costs none but moves the cost to a bake at loadout change, which Rendering should confirm on the web (the bake runs on the main thread). Also flagged for Art: the triangle split and the mirror rule.
 
 ---
 
@@ -282,6 +307,30 @@ Every pose is reviewed at the sizes and views it will be seen in:
 | Finisher launch | A two-step lunge into an upward two-handed strike with the hips driving under it | A martial-arts uppercut chain; no raised arms held overhead |
 
 The reference rules follow Legal's clean process (`docs/legal/animation-data-rule.md`, RL-038): no reference footage from any franchise or game. Self-shot reference (a contributor filming themself doing a punch, with consent) is allowed as private reference for timing and weight, never shipped, with the origin recorded (§6.1). Legal screened this table: charge, teleport, transformation rise, taunt and finisher launch are GO; beam release was CONDITIONAL and is revised above.
+
+### 3.8 The first fighter's lean showcase list (plan; drafts wait for Combat's M0 and the part cue)
+
+Orb confirmed Lean for the first fighter: 3 specials, 4 signatures, 6 showcases, growing by data. The first real fighter is the Anti-hero (brutal and showy; barrages; finishes by hand; Drop the Act; the Proud front). The list below is **a plan, not content**: names are working labels (Narrative names what shows on screen, Legal screens it), the moves are Combat's and Game Design's to set (`moveset-system.md`, `moveset-rules.md`), and **no draft is written until Combat's M0 grammar and the part cue exist**, because the pieces' joins, anchors and weight classes come from them. Every pose keeps an `_orig` line where it is in a sensitive family (§3.7) and a provenance record (§6.6).
+
+| # | Kind | Working label | What it is (for the pose draft) | Poses |
+| :--- | :--- | :--- | :--- | ---: |
+| S1 | Special | Barrage volley | Both hands fan a spread of bolts in a long arc, torso turning through; variants by range and form (Game Design's barrage +20% in the storm) | 16 |
+| S2 | Special | Cutting step | A short vertical dash-through ending in a sweeping strike, advanced footwork | 16 |
+| S3 | Special | Grip and drag | A grab at speed and a drag along the ground into a throw (slides and craters are World's) | 16 |
+| G1 | Signature | Sweeping line | The place-variant beam signature: charge (`beam.charge`) and release (`beam.fire`) with a biome-specific follow-up | 14 |
+| G2 | Signature | Ground-shatter barrage | A slam that sends a wave of bolts along the ground; altitude variants | 14 |
+| G3 | Signature | The unrestrained state | The form-tied signature of Drop the Act: a respected cinematic, then the attack | 14 |
+| G4 | Signature | Revealed technique | Story-moment reveal (Game Design withdrew the Anti-hero's secret technique; this slot may become the Dais's world change, to settle with Game Design) | 14 |
+| W1 | Showcase | Dismissive backhand | A toying strike with a taunt pause (`emote.taunt` family) | 7 |
+| W2 | Showcase | Seal break | The Proud front collapsing in one beat: posture drops, breath shows | 7 |
+| W3 | Showcase | Overhead hammer | The SLAM DOWN send-off: a hammer follow key with a crater embed | 7 |
+| W4 | Showcase | Rising spear | The UPPERCUT chain-ender, a long rising launch | 7 |
+| W5 | Showcase | Tail whip | The Coil's tail as a driven chain (`drive` 1), one lash | 7 |
+| W6 | Showcase | The hand finish | The finisher by hand: a slow closing walk, the last blow and a held pose | 7 |
+| F | Fixed | Finisher, transformation cinematics (six stages), break beats | The 68 poses that every scope needs | 68 |
+| | | **Total showcase-grade poses** | | **214** |
+
+Review format (default until Orb chooses): **contact sheets of 12 poses plus one motion reel per showcase** (§6.5). A showcase's reel is cut at the part's real timing and in the profile its weight class picks (§9.2).
 
 ---
 
