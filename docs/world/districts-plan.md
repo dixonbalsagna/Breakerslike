@@ -41,8 +41,8 @@ D1 first, because D2 is the same generator given a second archetype. Each slice 
 It replaces `_row` and the `SETTLEMENTS` constant in `terrain.gd` (mine). The platform, the footprint rule (`_footOk`), the spatial index and the depth row centres (`ROW_Z_BH`) are kept as they are.
 
 1. **Streams.** One derived stream per settlement, district and row: `SimRng.deriveSeed(4242, "settle:<id>:<district>:<row>")`. A district added later, or a number changed in another district, never shifts the draws of the rest. (This breaks draw-for-draw equality with today's layout on purpose: D1 regenerates the goldens anyway, and the front street no longer needs to be special.)
-2. **Districts along the span.** A city's districts are laid from the centre outward (`from: centre`), a village's from one end; each takes `share` of the trimmed span in order. Height's centre bump uses the settlement's centre, not the hard-coded 3100.
-3. **Blocks and avenues.** A row is laid in blocks of `block.min` to `block.max` buildings with an avenue-sized gap between blocks. The avenue x positions are decided once per district (from the district's stream) and used by **every row**, so an avenue is a gap through the whole depth of the city, and a row-2 building never stands in an avenue. Between blocks inside a row, gaps are drawn from `gap_bh`.
+2. **Districts along the span.** The file lists a settlement's districts west to east; each takes its `share` of the trimmed span in order (as built in the scratch generator: explicit order is simpler than "from the centre"). Height's centre bump uses the settlement's centre, not the hard-coded 3100.
+3. **Blocks and avenues.** A district is cut into blocks of `block_bh` (a length, as built) with an avenue of `avenue_bh` between them. The avenue x positions are decided once per district (from the district's stream) and used by **every row**, so an avenue is a gap through the whole depth of the city, and a row-2 building never stands in an avenue. Between blocks inside a row, gaps are drawn from `gap_bh`.
 4. **Rows.** Each district lists the rows it fills (`rows`); a harbour fills 0 and 1, an industrial edge 1 and 2, a downtown 1 to 3. Row offsets (`xoff`) come from the district's stream so the back rows show the gap pattern of the front ones. Row 0 keeps its low-height cap.
 5. **Heights.** Drawn from the district's log-normal (median, spread) and clamped to `max` and to `CEILING / 1.25`; the centre bump raises downtown toward the middle so the skyline has a silhouette. Floors are derived from `h` by `WorldBrunt.floorCount` as now.
 6. **People.** `pop_density` times footprint area gives a weight per building; the settlement's population is `pop_share` of `pop0`, and the weights are turned into whole people by the largest-remainder rule (so the sum is exact, and industrial buildings may hold 0). `pop0` itself is raised (section 6).
@@ -53,7 +53,7 @@ It replaces `_row` and the `SETTLEMENTS` constant in `terrain.gd` (mine). The pl
 ## 4. D1: sim state, events, planner
 
 - **Building fields** (granted lines in `sim/core/state.gd` and `hash.gd`, Simulation's files): `district:int` (index into the settlement's list), `shape:int`, `landmark:int` (0 none, otherwise 1 plus the index into the file's landmark list; the key is data). All three are set at generation and hashed; nothing in the tick reads `shape`.
-- **Events** (`fx.gd`, `view/fx.gd`, grants): `building_fall` gains `landmark` (the int) so Narrative's and Audio's barks and Camera's hold can react to "the bell tower falls"; no new event. The M1 mood inputs do not change. Whether a landmark loss should count as a mood input is Game Design's call (section 7).
+- **Events** (`fx.gd`, `view/fx.gd`, grants): `building_fall` gains `landmark` (the int) so Narrative's and Audio's barks and Camera's hold can react to "the bell tower falls"; no new event. The M1 mood inputs do not change. **Decided (Game Design): a landmark's fall is a +10 mood input, once per landmark**, on top of the launch and casualty impulses. `building_fall.landmark` feeds M1's impulses through a new `mood.json` key, which Simulation's M1b shape needs to take (and Tools' schema for `mood.json` lists it).
 - **Planner** (`launch.gd`, Encounter's review): `bruntScore` gains `BRUNT_LANDMARK_W * landmark * (-A.care)` so the villain seeks a landmark and the hero does not choose one; the brunt candidates already cover any row, and a landmark stays a candidate by the cheap score (`_cheap` gains a term for it so it is not cut by `BR_PRESELECT`).
 - **Collateral, brunts and floors** need no change. Checked points: a 260 bh tower has 62 floors, each band 4.2 bh, so a fighter's body (1 bh) clears one or two whole bands, a hole larger than the body (section 9, risk 2); the flight ceiling (24,000 units) is above the tallest allowed building (19,500).
 
@@ -75,8 +75,8 @@ The second city is a **harbour metropolis**: `archetype: city_harbour`, district
 
 ## 6. Population and scale
 
-- **Count.** From the footprints: a city of 23,000 to 26,000 units at 5 rows holds roughly 150 to 220 buildings at these widths and gaps, so D1 brings the planet from 196 buildings to about 300 to 400, and D2 to about 500 (the `cities.md` 500 to 700 needs narrower downtown footprints or more rows). The generator prints the counts per district; a cap `BUILDING_CAP` = 800 makes the probe fail if a data edit overshoots.
-- **Pop.** `pop0` is about 390 today, and with 300 to 500 buildings each holds about one person or fewer. The meters and the collateral bands are shares (`425 / pop0`, budgets as shares of `pop0`), so a larger `pop0` changes nothing the player feels except the casualty counter. Proposal: `pop0` about 1,800 (about four people a building; downtown 6 to 10 on a tall tower, industrial 0 to 1, a house 1 to 3), set by the `pop_share` and density in the file. Game Design and UI confirm (section 7). The mood module's casualties-per-person input (`cas_perPerson * cas_popRef * casualties / pop0`) is already normalised.
+- **Count.** With four depth rows and downtown footprints of 2 to 5 bh, a city of 23,000 units holds about 140 buildings (measured, section 11). D1 is therefore about variety, height and structure, not count: the planet goes from 196 buildings to about 190, with a much taller skyline and whole districts. The count roughly doubles in D2 (a second city, about 330 in all), and `cities.md`'s 500 to 700 needs a fifth row or a longer second city, which is held for Camera. The generator prints the counts per district; a cap `BUILDING_CAP` = 800 makes the probe fail if a data edit overshoots.
+- **Pop.** `pop0` is about 390 today, and with 300 to 500 buildings each holds about one person or fewer. The meters and the collateral bands are shares (`425 / pop0`, budgets as shares of `pop0`), so a larger `pop0` changes nothing the player feels except the casualty counter. **Decided (Game Design, via the EP): `pop0` about 1,800 whole people**, set by `pop0`, `pop_share` and the density in the file. At D1's 190 buildings that is about 9 a building (downtown towers up to 40, a house 1 to 3); about 4 after D2. The mood module's casualties-per-person input (`cas_perPerson * cas_popRef * casualties / pop0`) is already normalised.
 - **Cost.** Generation is about 20 ms more at `newMatch`; the tick is unchanged (the spatial index; `WorldCollateral.tick` loops buildings only once a second at most and I will measure it); the hash grows by a few hundred building records (measured in D1).
 
 ## 7. Who gives what, who takes what
@@ -100,6 +100,16 @@ In the D1 window: (4) the generator behind the data, with the new fields, hashed
 ## 10. Open questions for the EP
 
 1. Second city at 12% (recommended first) or 17% (moves the forest, desert and mountains)?
-2. `pop0` about 1,800 (Game Design and UI to confirm), or keep 390 with fractional people per building?
-3. Is a landmark's fall a mood input (Game Design), and does Audio or Narrative want a flag beyond `building_fall.landmark`?
+2. (Answered: `pop0` about 1,800 whole people.)
+3. (Answered: a landmark's fall is a +10 mood input, once each.) Does Audio or Narrative want a flag beyond `building_fall.landmark`?
 4. Do the harbour and industrial districts stay the no-collateral places to fight (Orb, open in `cities.md`)?
+
+## 11. Scratch results (2026-09-30, seed 1, before the window)
+
+`data/biomes/settlements.json` and `sim/world/settlements.gd` (`WorldSettle`: load, validate, generate; unused by the sim, plain dictionaries, no `S.rng`) exist, and `sim/world/tools/skyline.gd` prints the report and writes `docs/world/d1-skyline-bellgate.svg` and `d1-skyline-planet.svg` (true-scale front elevations: row 0 to 3 in greys, landmarks red). Run: `godot --headless --path . --script res://sim/world/tools/skyline.gd`.
+
+- **Buildings:** 188 (196 today): Netmend 12, Bellgate 138, the outskirts 26, the far village 12; 1,800 people. Bellgate by district: suburbs 17 and 30, industrial 5, mid-rise 10 and 16, downtown 60 (20 a row, rows 1 to 3).
+- **Skyline:** downtown median 88 bh, tallest 245 bh (the ceiling share is 272); mid-rise median 35; suburbs 4; the bell tower 150 bh, the chimney stack 45 bh, the lighthouse 40. A run of tight towers with avenue gaps reads as a skyline in the SVG.
+- **People:** downtown holds about 740 of Bellgate's 1,260 (up to 42 in a tower); suburb houses 1 to 3. The hero's "avoid populated areas" term and the villain's seeking now have a clear centre of mass.
+- **What the data check does:** shares sum to 1, rows 0 to 3, kinds tower or house, every shape on the closed list, landmark keys, places and rows valid, heights under the ceiling share, `pop_share` sums to 1.
+- **Not yet in the scratch:** fdmg/fmask, the hash, the Building fields, the `building_fall.landmark` event and the planner term (the D1 window); Tools' schema (`data/biomes` has none: the validator warns).
