@@ -4,8 +4,9 @@ class_name SimMood
 ## integer (S.mood, f.style) and hashed. It reads this tick's events and a few state values and writes only its own
 ## state and its events (mood_band, act_change, style_label, crowd_state), so no other code changes behaviour until
 ## something reads its outputs: S.mood.aggression (the director's scale, Encounter's Q4) and S.mood.crowd (World).
-## The act is counted here and nowhere else: act() = min(max, 1 + beats + forms); wounds.gd reports its beats (a region
-## break, a core's first battered) through beat().
+## The act is counted here and nowhere else: act() = min(max, 1 + beats). wounds.gd reports every stage change through
+## onStage(), and mood.json's actBeats decide which are beats (M1b: every region break and transformation; the first limb
+## battered, the first core bruised and the first core battered, once per match each).
 ## Numbers are data: data/fight/mood.json (fight.mood/1) and data/fight/style.json (fight.style/1), loaded once per
 ## process and folded into the replay header's data hash.
 
@@ -13,7 +14,8 @@ const MOOD_PATH: String = "res://data/fight/mood.json"
 const STYLE_PATH: String = "res://data/fight/style.json"
 const BANDS: Array = ["calm", "tense", "frenzied"]
 const LABELS: Array = ["turtle", "rusher", "runner", "charger", "sniper", "mixer"]   # label index -> name
-const CAUSES: Array = ["break", "core", "form"]                                        # act_change kinds
+const CAUSES: Array = ["regionBreak", "form", "limbBattered", "coreBruised", "coreBattered"]   # act beats (act_change kind)
+const ONCE: Array = ["limbBattered", "coreBruised", "coreBattered"]                       # S.mood.onceMask bits
 ## Style measures, by index into the per-second counters.
 const M_S0: int = 0          # ticks in AGGRESSIVE ... M_S0 + 3: ESCAPE
 const M_LIGHT: int = 4       # exchanges started, by weight at the start
@@ -44,8 +46,11 @@ static var mood: Dictionary = {}    # parsed mood.json
 static var imp: Dictionary = {}     # impulse name -> [plain units, AGGRESSIVE units]
 static var defs: Array = []         # per LABELS index: the label's numbers
 static var priority: Array = []     # label indices, first wins
+static var beatsEvery: Array = []
+static var beatsOnce: Array = []
 static var windowS: int = 60
 static var minFill: int = 30
+static var minHeld: int = 0
 static var minGap: int = 20
 static var refractory: int = 10
 
@@ -108,7 +113,7 @@ static func _loadMood(j: Dictionary) -> void:
 		den = 1
 	imp = {}
 	var ij: Dictionary = j.get("impulses", {})
-	for k in ["strike", "heavyStrike", "chainLink", "parry", "clash", "beamLands", "regionBroken", "buildingLaunch", "buildingChain", "form", "finisherStart", "taunt"]:
+	for k in ["strike", "heavyStrike", "chainLink", "parry", "clash", "beamLands", "regionBroken", "buildingLaunch", "buildingChain", "form", "finisherStart", "taunt", "landmarkFall"]:
 		var u: int = _int("mood.impulses." + k, ij.get(k))
 		imp[k] = [u, int(floor(float(u * num) / float(den)))]
 	for k in ij:
@@ -120,6 +125,23 @@ static func _loadMood(j: Dictionary) -> void:
 	var r: Dictionary = j.get("rates", {})
 	for k in ["bothAggressive", "decay", "bothGuarded"]:
 		mood[k] = _int("mood.rates." + k, r.get(k))
+	var pr: Dictionary = r.get("proportional", {})
+	mood.propOn = pr.get("on", false) == true
+	mood.propBase = _int("mood.rates.proportional.base", pr.get("base", 0))
+	mood.propPerMille = _int("mood.rates.proportional.perMille", pr.get("perMille", 0))
+	var ab: Dictionary = j.get("actBeats", {})
+	beatsEvery = []
+	beatsOnce = []
+	for k in ab.get("every", []):
+		if k in ["regionBreak", "form"]:
+			beatsEvery.append(k)
+		else:
+			_err("mood.actBeats.every: unknown beat " + str(k))
+	for k in ab.get("oncePerMatch", []):
+		if ONCE.has(k):
+			beatsOnce.append(k)
+		else:
+			_err("mood.actBeats.oncePerMatch: unknown beat " + str(k))
 	var am: int = _int("mood.act.max", j.get("act", {}).get("max"))
 	mood.actMax = am
 	var fl = j.get("actFloors", [])
@@ -153,6 +175,7 @@ static func _loadStyle(j: Dictionary) -> void:
 		_err("style: the code runs a 60 s window at 1 Hz")
 		windowS = 60
 	minFill = _int("style.minWindowFillS", j.get("minWindowFillS"))
+	minHeld = _int("style.minHeldS", j.get("minHeldS"))
 	var sh: Dictionary = j.get("shift", {})
 	minGap = _int("style.shift.minGapS", sh.get("minGapS"))
 	refractory = _int("style.shift.refractoryAfterLeaveS", sh.get("refractoryAfterLeaveS"))
@@ -222,16 +245,41 @@ static func _zeros(n: int) -> Array:
 	return a
 
 
-## The act (1 to act.max): 1 + beats + forms. The one source of truth for acts (wounds.gd's damping and crippling read it).
+## The act (1 to act.max): 1 + beats. The one source of truth for acts (wounds.gd's damping and crippling read it).
 static func act(S: SimState) -> int:
 	_ensure()
-	return mini(mood.actMax, 1 + S.mood.beats + S.mood.forms)
+	return mini(mood.actMax, 1 + S.mood.beats)
 
 
-## wounds.gd reports an act beat: cause 0 a region break, 1 a core's first battered (2, a form, comes with F1).
-static func beat(S: SimState, cause: int) -> void:
+## wounds.gd reports each stage change of f's region r (from prev to st). The data decide the beats: a region break
+## ("every"), and the first limb (arms or legs) battered, the first core bruised and the first core battered, once per
+## match each whichever fighter reaches it ("oncePerMatch").
+static func onStage(S: SimState, f, r: int, st: int, prev: int) -> void:
+	_ensure()
+	if st == 3 and beatsEvery.has("regionBreak"):
+		beat(S, "regionBreak")
+	if st > prev:
+		if (r == SimWounds.ARMS or r == SimWounds.LEGS) and st >= 2:
+			_once(S, "limbBattered")
+		if r == SimWounds.CORE and st >= 1:
+			_once(S, "coreBruised")
+		if r == SimWounds.CORE and st >= 2:
+			_once(S, "coreBattered")
+
+
+static func _once(S: SimState, name: String) -> void:
+	var bit: int = 1 << ONCE.find(name)
+	if beatsOnce.has(name) and (S.mood.onceMask & bit) == 0:
+		S.mood.onceMask |= bit
+		beat(S, name)
+
+
+## An act beat (cause: a CAUSES name). A transformation (F1) calls beat(S, "form") when actBeats.every lists it.
+static func beat(S: SimState, cause: String) -> void:
+	if cause == "form" and not beatsEvery.has("form"):
+		return
 	S.mood.beats += 1
-	S.mood.cause = cause
+	S.mood.cause = CAUSES.find(cause)
 
 
 # ---------------------------------------------------------------- the tick
@@ -264,6 +312,11 @@ static func tick(S: SimState) -> void:
 				add += _imp(fs, "regionBroken", -1)
 			"building_hit":
 				add += _imp(fs, "buildingLaunch" if int(e.n) <= 1 else "buildingChain", -1)
+			"building_fall":
+				# A landmark falling (Game Design): dormant until World's D1 emits building_fall with landmark true. A building
+				# falls once, so this is once per landmark.
+				if e.get("landmark") == true:
+					add += _imp(fs, "landmarkFall", -1)
 			"finisher_start":
 				add += _imp(fs, "finisherStart", int(e.actor))
 			"attack":
@@ -285,7 +338,10 @@ static func tick(S: SimState) -> void:
 	if fs[0].stance == 0.0 and fs[1].stance == 0.0:
 		v += mood.bothAggressive
 	if v > fl:
-		v = maxi(fl, v - mood.decay)
+		var dec: int = mood.decay
+		if mood.propOn:
+			dec = mood.propBase + int(floor(float((v - fl) * mood.propPerMille) / 60000.0))
+		v = maxi(fl, v - dec)
 	if _guarded(fs[0]) and _guarded(fs[1]) and v > fl:
 		v = maxi(fl, v - mood.bothGuarded)
 	m.v = clampi(v, 0, mood.range)
@@ -381,7 +437,7 @@ static func _labels(S: SimState, f) -> void:
 		st.enterT[li] = st.enterT[li] + 1 if _enters(st, li) else 0
 	if st.label >= 0:
 		st.leaveT = st.leaveT + 1 if _leaves(st, st.label) else 0
-		if st.leaveT >= defs[st.label].leaveHold:
+		if st.leaveT >= defs[st.label].leaveHold and sec - st.shiftAt >= minHeld:
 			var gone: int = st.label
 			st.leftAt[gone] = sec
 			st.label = -1

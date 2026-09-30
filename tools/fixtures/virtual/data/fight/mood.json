@@ -15,7 +15,8 @@
     "buildingChain": 600,
     "form": 600,
     "finisherStart": 900,
-    "taunt": 180
+    "taunt": 180,
+    "landmarkFall": 600
   },
   "aggressiveMul": {
     "num": 3,

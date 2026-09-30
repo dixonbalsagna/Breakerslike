@@ -161,20 +161,18 @@ static func step(S: SimState, f) -> void:
 		updateStages(S, f)
 
 
-## Stage changes and the brink (a brink region broken: the core, pitch A), with their events. Act beats: every region
-## break, and each core's first time at battered.
+## Stage changes and the brink (a brink region broken: the core, pitch A), with their events. Every stage change goes to
+## SimMood.onStage, which decides the act beats (mood.json actBeats).
 static func updateStages(S: SimState, f) -> void:
 	for r in range(4):
 		var st: int = stageOf(f.wear[r], f.wd.stageAt)
 		if st != f.stage[r]:
+			var prev: int = f.stage[r]
 			f.stage[r] = st
 			SimFx.regionStage(S, f, REGIONS[r], st)
+			SimMood.onStage(S, f, r, st, prev)
 			if st == 3:
-				SimMood.beat(S, 0)
 				SimFx.regionBroken(S, f, REGIONS[r])
-			if r == CORE and st >= 2 and not f.coreMarked:
-				f.coreMarked = true
-				SimMood.beat(S, 1)
 	var brink: bool = false
 	for r in range(4):
 		if f.wd.brinkRegion[r] and f.stage[r] == 3:

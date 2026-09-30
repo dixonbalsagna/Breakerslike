@@ -222,12 +222,6 @@ static func crowdState(S: SimState, crowd: String) -> void:
 	e.kind = crowd
 
 
-## M1: a launched fighter hit a building at x; n is the count within this flight (2 or more: a chain).
-static func buildingHit(S: SimState, f, x: float, n: int) -> void:
-	var e := _ev(S, "building_hit")
-	e.actor = float(S.fighters.find(f)); e.x = x; e.n = n
-
-
 ## B2: the launched fighter f will hit building bi first: the first hit point (x1, y1) at depth z1, in dur seconds, and the
 ## planned chain length n. owner is the launcher's slot, victim the launched fighter's.
 static func launchDepth(S: SimState, f, att, x1: float, y1: float, z1: float, bi: int, dur: float, n: int) -> void:

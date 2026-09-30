@@ -51,9 +51,9 @@ class MoodState:
 	var cand: int = 0         # the band the mood is in, while it differs from band ...
 	var candT: int = 0        # ... and the ticks it has stayed there (the dwell)
 	var act: int = 1          # the act announced so far (act_change); SimMood.act() is the live value
-	var beats: int = 0        # act beats: region breaks and each core's first battered, both fighters
-	var forms: int = 0        # transformations, both fighters (F1)
-	var cause: int = 0        # the last beat's cause: 0 break, 1 core, 2 form
+	var beats: int = 0        # act beats so far (mood.json actBeats): act = 1 + beats
+	var onceMask: int = 0     # the once-per-match beats already counted (SimMood.ONCE bits)
+	var cause: int = 0        # the last beat's cause (SimMood.CAUSES index)
 	var aggression: int = 1000  # output, permille: the director's scale (Encounter's Q4)
 	var crowd: int = 0        # output: 0 excited, 1 nervous, 2 fleeing
 	var casGiven: int = 0     # casualty impulse given so far, in units
@@ -337,7 +337,6 @@ class Fighter:
 	var breathWear: int = 0          # S4 (QA): wear units recovered by second breath so far
 	var id: String = ""              # S4: stable roster id (the roster entry's key); arms may rename, never re-id
 	var limbBreaks: int = 0          # pitch A: limbs broken in crippling moments this match
-	var coreMarked: bool = false     # pitch A: the core has reached battered once (an act beat)
 	var brinkSetups: int = 0         # the brink chapter: set-up wins the rival has against this fighter while it is on the brink
 	var brinkOpen: bool = false      # ... it is open: the rival's next decisive win, in a later exchange, is the finisher
 	var brinkEx: int = -1            # ... the exchange index (ex.n) of the last set-up win: a set-up and a finisher never share one

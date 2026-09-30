@@ -11,7 +11,8 @@
     "minWindowFillS",
     "priority",
     "shift",
-    "labels"
+    "labels",
+    "minHeldS"
   ],
   "properties": {
     "schema": {
@@ -78,6 +79,11 @@
     },
     "qaBands": {
       "type": "object"
+    },
+    "minHeldS": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The shortest time a label is held before it may change (M1b)."
     }
   },
   "additionalProperties": false,

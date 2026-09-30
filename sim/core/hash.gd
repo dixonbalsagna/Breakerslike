@@ -91,7 +91,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	var g := S.game
 	out.append(_idx(fs, g.ko))
 	_obj(out, g, ["koT", "ts", "seed", "timeCap"])
-	_obj(out, S.mood, ["t", "sec", "v", "band", "cand", "candT", "act", "beats", "forms", "cause", "aggression", "crowd", "casGiven", "lastCombo"])
+	_obj(out, S.mood, ["t", "sec", "v", "band", "cand", "candT", "act", "beats", "onceMask", "cause", "aggression", "crowd", "casGiven", "lastCombo"])
 	if g.clash != null:
 		out.append(_idx(fs, g.clash.A))
 		out.append(_idx(fs, g.clash.D))
@@ -139,7 +139,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(float(f.stunTicks))
 		out.append(f.rally); out.append(float(f.rallied)); out.append(float(f.rallies)); out.append(float(f.rallyCool))
 		out.append(float(f.breathWear)); out.append(f.id)
-		out.append(float(f.limbBreaks)); out.append(f.coreMarked)
+		out.append(float(f.limbBreaks))
 		out.append(float(f.brinkSetups)); out.append(f.brinkOpen); out.append(float(f.brinkEx))
 		out.append(float(f.flightHits))
 		out.append(float(f.splashed.size()))

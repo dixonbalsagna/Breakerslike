@@ -45,7 +45,8 @@
         "buildingChain",
         "form",
         "finisherStart",
-        "taunt"
+        "taunt",
+        "landmarkFall"
       ],
       "properties": {
         "strike": {

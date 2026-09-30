@@ -239,6 +239,36 @@ There is no per-second mood event. Readers that want the value read `S.mood` (a 
 
 **Proof.** With the mood block, the style state, `flightHits` and the five new events left out of the hash, parity passed against the untouched pre-M1 goldens. That covered tick-0, every vector, all 9 matches (176,405 ticks, every per-tick digest and checkpoint) and the replays. The goldens were then regenerated once, with a forced vector (`moodHash`) and `fightHash`.
 
+## 8c. M1b as built (2026-09-30)
+
+**Game Design's retune (data):**
+- `rates.decay` 4;
+- `impulses.heavyStrike` 210 (3.5 points);
+- `actFloors` [0, 600, 1500, 2400] (0, 10, 25 and 40 points).
+
+**Proportional decay (data, off).** `rates.proportional {on, base, perMille}`. When on, the decay is `base + floor((mood − floor) × perMille / 60000)` units a tick, which is 2 + 0.08 × the points above the floor, per second.
+
+**Act beats (data).**
+- `actBeats.every` is [regionBreak, form]; `actBeats.oncePerMatch` is [limbBattered, coreBruised, coreBattered], each the first time either fighter reaches it. Limbs are the arms and legs.
+- `wounds.gd` reports every stage change through `SimMood.onStage`.
+- `S.mood.onceMask` (hashed) holds the once-per-match beats already counted.
+- `Fighter.coreMarked` and `S.mood.forms` are gone. A transformation (F1) calls `SimMood.beat(S, "form")`.
+- `act_change.kind` is the beat's name.
+
+**Style revision 2.**
+- Narrative's `style.draft.json` goes in as written, plus the mixer's `leaveMaxStancePct` 58 and `leaveHoldS` 10.
+- `minHeldS` (12) is a code rule: a label can't end, or be replaced, until it has been held that long. A shift already waits 20 s from the label's start.
+
+**Landmarks:** `impulses.landmarkFall` 600 (+10) is read from a `building_fall` event whose `landmark` field is true. It stays dormant until World's D1 emits that field. A building falls only once, so the impulse comes once per landmark.
+
+**Removed:** `SimFx.buildingHit`. World's `buildingHitB2` emits `building_hit` since B2.
+
+**The act beats change behaviour.** Two gameplay rules read the act: the act-1 wear damping, and the crippling roll's late-act bonus. The new beats end act 1 earlier, at the first limb battered or the first core bruised, so they change matches.
+
+**The proof, as run.**
+1. With the old beat rule kept by a temporary switch, and the mood and style state and the mood events left out of the hash, the M1b code reproduced goldens made the same way from the pre-M1b code. That covered tick-0, the wound, Rally and crippling vectors, all 9 matches (171,959 ticks, every digest and checkpoint) and the replays. So everything except the act beats leaves the match unchanged.
+2. The new beats were then switched on, and the goldens regenerated once.
+
 ## 9. Open points
 
 - **Taunts and transformations** have no sim events yet. Their impulses are in the data and dormant until `taunt` (Encounter or Narrative) and `form_change` (F1) exist.

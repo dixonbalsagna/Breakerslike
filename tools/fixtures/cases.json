@@ -4236,6 +4236,38 @@
         "rule": "const",
         "pointer": "/schema"
       }
+    },
+    {
+      "id": "mood-landmark-fall-required",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "del": [
+            "/impulses/landmarkFall"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/impulses"
+      }
+    },
+    {
+      "id": "mood-landmark-fall-type",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/impulses/landmarkFall": 600.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/impulses/landmarkFall"
+      }
     }
   ],
   "text": [

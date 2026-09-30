@@ -197,7 +197,7 @@ static func crippleHash() -> String:
 		for r in range(4):
 			h.num(float(x.wear[r])); h.num(float(x.stage[r]))
 		h.u(1 if x.brink else 0)
-		h.num(float(x.limbBreaks)); h.u(1 if x.coreMarked else 0); h.num(x.power)
+		h.num(float(x.limbBreaks)); h.num(float(S.mood.onceMask)); h.num(x.power)
 		h.num(float(S.mood.beats)); h.num(float(SimWounds.act(S)))
 	var put := func(x, w: Array) -> void:
 		for r in range(4):
@@ -313,7 +313,7 @@ static func moodHash() -> String:
 	run.call(40, [heavy]); snap.call()                       # x1.5 while AGGRESSIVE, capped at range
 	for k in range(60):
 		run.call(20, []); snap.call()                        # the dwell up to frenzied, the decay, the dwell down
-	SimMood.beat(S, 0); SimMood.beat(S, 1)
+	SimMood.beat(S, "regionBreak"); SimMood.beat(S, "coreBattered")
 	run.call(600, []); snap.call()                           # act 3: the floor holds the mood
 	a.stance = 1.0
 	b.stance = 3.0
