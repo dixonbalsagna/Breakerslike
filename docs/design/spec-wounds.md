@@ -481,14 +481,18 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
 ## 9. Invisible acts and the fight's mood (Orb, questionnaire 4)
 
 **Invisible acts.** The director escalates chapter by chapter, with no act UI.
-- The act index is `1 + region breaks + transformations` (both fighters counted), capped at 4.
+- The act index is `1 + act beats`, capped at 4. **The act beats** (M1 retune, 2026-09-30) are:
+  - every region break and every transformation, from both fighters, as before;
+  - three wound beats, **each counted once per match**, the first time either fighter reaches it: the first limb reaching battered, the first core reaching bruised, and the first core reaching battered.
+
+  Each wound beat is a visible stage change on the body, and the first battered limb is also the crippling warning. Counting them once per match keeps both fighters from racing the acts to 4 by 3:00. Simulation moves the beat list into `data/fight/mood.json` (`actBeats`), so later tuning is data only.
 - Each act raises the director's strike cadence by 10%, and makes blitzes (short multi-strike flurries), long launches, beam struggles, teleport clashes and collateral set pieces more likely, within every tier cap in `balance-targets.md`.
 - Each act also cues a music layer (Audio), a camera stance (Camera) and bark density (Narrative).
 - The player reads acts through sound, camera and voice, never through a counter.
 
 **The fight's mood.** A director value from 0 to 100, which the player shapes only indirectly.
 - *What raises it* (events add points, and the value is clamped from 0 to 100; Encounter's Q4 plan, question 3):
-  - a strike landed: +1.5, or +2.5 for a heavy;
+  - a strike landed: +1.5, or **+3.5** for a heavy (it was +2.5: a heavy should move the room);
   - a chain link: +3;
   - a parry: +4;
   - a heavy or beam clash: +8;
@@ -501,7 +505,7 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
   - casualties: +0.5 each, normalised, and at most +8 per event;
   - both fighters in AGGRESSIVE: +1 per second.
 - *What lowers it:*
-  - a decay of −6 per second toward an **act floor** of 0, 10, 20 and 30 for acts 1 to 4, so later acts never fall all the way back to calm;
+  - a decay of **−4 per second** (it was −6) toward an **act floor** of **0, 10, 25 and 40** for acts 1 to 4 (it was 0, 10, 20 and 30). Act 4 can never fall below Tense, and later acts never fall all the way back to calm;
   - an extra −4 per second while both fighters hold DEFENSIVE or ESCAPE.
 - *Three bands (working names):*
   - **Calm**, below 30: crowds watch from a distance, the director uses its normal cadence, and inner thoughts are about patience ("Only a little longer...").
@@ -517,3 +521,8 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
   - Frenzied at most 25% of match time;
   - Calm at least 15% of match time (the fight breathes);
   - blitzes 2 to 6 a minute in Tense and Frenzied.
+- **M1 retune** (M1 `4123f3a` measured Calm 87.5%, Tense 12.4% and Frenzied 0.1%, with act 2 at 5:15, act 3 at 5:54 and act 4 at 6:18). The −6 decay outpaced the impulses, and the only early beats were cores reaching battered. The values above are the ruling, and the targets are:
+  - *band shares over the match:* Calm 30 to 55%, Tense 35 to 60%, Frenzied 5 to 20%;
+  - *by act:* Calm at least 60% of act 1; Frenzied at least 15% of act 4, which is the climax;
+  - *act timing (medians):* act 2 at 1:30 to 2:30, act 3 at 2:30 to 4:00, act 4 at 4:30 to 5:45. Act 4 arrives before the first brink in at least 80% of matches, so the brink chapter plays in the top act.
+  - *Tuning, data only:* decay first, as a whole number from 3 to 5 per second, then the floors. If no decay value lands the shares, because linear decay is knife-edged, Simulation adds a proportional term as a small code change: decay = 2 + 0.08 × (mood − floor) per second. It settles about 25 points above each act's floor at today's impulse rate: Calm in act 1, and Tense from act 2.

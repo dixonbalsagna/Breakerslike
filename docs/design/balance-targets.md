@@ -113,7 +113,7 @@ World builds the mechanism; these are its numbers. The cap and the ramp apply to
 
 At the ceiling, the rest are sheltered and survive. This is the P3 exit criterion "no fight destroys the planet at low tiers" as a hard rule. Losing 90% or more is only possible at tier 4, and the band (at most 10% of game matches, §4 table) checks how often a match gets there.
 
-**Expected result.** Over a 7-minute arc (acts at tiers 1 to 2, then 2, 3 and 4), the budgets add up to about 45 to 50% lost at the KO, plus set-piece borrowing. That is the lower half of the game band (45 to 75%). The Cyborg floor (at least 25% alive at 4:00) holds, because by 4:00 the ceiling is 30% at tier 2 or 60% at tier 3.
+**Expected result.** Over a 7-minute arc (acts at tiers 1 to 2, then 2, 3 and 4), the budgets add up to about 45 to 50% lost at the KO, plus set-piece borrowing. That was the lower half of the old game band (45 to 75%). *Superseded:* with evacuation the band is 25 to 50% (§4b), and G0 measured 29%. The Cyborg floor (at least 25% alive at 4:00) holds, because by 4:00 the ceiling is 30% at tier 2 or 60% at tier 3.
 
 **Testbed bands.** Short testbed matches (about 108 s today) will fall below the testbed mean band (25 to 50%) once the ramp lands. At that point the testbed's mean-at-KO band retires, and the per-minute ramp and ceiling tests replace it. The share of matches losing 90% or more, and the worst-pairing band, stay.
 
@@ -198,7 +198,7 @@ Orb wants the director to "often" choose one building to take the brunt of a lau
 **Checked against the collateral bands:**
 - *At tier 2 or below,* one chain must fit inside the game-scale low-tier bleed cap of 4% of the population per minute (§4). World's 8% would break that cap with a single event, so the budget is set to 4%.
 - *At tiers 3 and 4* the low-tier cap does not apply. Chains there are bounded by:
-  - the mean-at-KO band (45 to 75%);
+  - the mean-at-KO band (25 to 50%, §4b);
   - the band for matches losing 90% or more (at most 10% of matches);
   - the Cyborg floor: at least 25% of civilians alive at 4:00 in at least 80% of matches.
   If QA sees the floor fail, the first lever is the tier-3 budget.
@@ -218,9 +218,10 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 
 | Measure | Band |
 | :--- | :--- |
-| Ground contacts that slide rather than slam | 60 to 85%. Slams stay at 15% or more, so craters still read (pillar 4) |
+| Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
-| Slides per minute, game scale | 1.5 to 4, which is §10's 4 to 6 launches a minute times the share that lands on ground times the 60 to 85% slide share. Also measured per launch: 35 to 70% of all launches end in a slide |
+| Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
+| **How launches end** (G0 re-base) | Slide 45 to 75%; slam 15 to 35%; brunt 8 to 20% (§5b); water skim or splash 3 to 10% |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -264,7 +265,8 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 | Region breaks before the finisher (1v1), under the core-only brink | **1.5 to 2.5 a match:** limb breaks 0.3 to 0.5 (§13), plus brinks (the final brink, re-brinks after Rallies and the rare double brink). The old 2 to 4 and 3 to 5 bands are retired. The first-break timing gate is retired too: the first brink at a median of 4:30 to 7:00 (`spec-wounds.md` §5) covers timing | 1.7 (QA's crippling tune on `580c5a0`) |
 | Finishers preceded by a brink call-out | 100% | none |
 | Lead changes: which fighter has more region stages lost flips | Median at least 2 | Not measured |
-| Beam clashes and struggles | 2 to 8 per match | Beams 3.65 per match, 40% of them clashes (QA §6) |
+| Signatures fired | 2 to 4 per match, median 3 (§13, the 120 s cooldown) | Not measured at G0 |
+| Beam clashes | **Re-based at G0:** 30 to 60% of signatures fired end in a CLASH. The old 2 to 8 per match predates the cooldown | 10.2 per match at G0, with no cooldown in the sim |
 | Chains | 15 to 35 per 100 melee exchanges | 23.8 |
 
 ## 9. The prototype's balance gap (the KAI gap)
@@ -359,11 +361,11 @@ Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questio
 | :--- | :--- | :--- |
 | Exchanges started per minute | 15 to 24. This follows from the dynamic targets below and replaces 8 to 12 | About 21 in the prototype |
 | Melee idle share inside exchanges (time with no visible strike, move or reaction) | **At most 15%** (Combat's dynamic-feel §3) | 42.5% (the prototype had 22%) |
-| Still stretch inside an exchange | Median at most 0.25 s, p90 at most 0.5 s. The first strike lands within 0.6 s of the request | See `docs/combat/dynamic-feel.md` |
+| Still stretch inside an exchange | Median at most 0.25 s, p90 at most 0.5 s. The first strike lands within 0.6 s of the request, **measured only for exchanges that start within 2,500 units**; longer gaps are pursuit flights of 0.8 to 2.0 s by design (G0 re-base) | See `docs/combat/dynamic-feel.md` |
 | Readable wind-up before a parryable strike | 0.20 to 0.30 s (Controls owns the width) | 0.10 s (0.33 s on HEAVY CLASH — WON) |
 | Hit-stop floor by impact class | Light at least 0.07 s; heavy at least 0.12 s; region break or finisher at least 0.30 s | 0.05 s default; 0.08 to 0.16 s on big hits |
 | Release to the next request | **At most 1.0 s** (the prototype had 0.75 s). Visible strikes: **at least 80 a minute**. Standoff p90 at most 0.6 s. No gap over 10 s | 2.7 s |
-| Launches per minute | 4 to 6 | About 15.6 |
+| Launches | **Re-based at G0:** 40 to 65% of exchanges started end in a launch. The old 4 to 6 a minute came from the 8 to 12 exchange tempo, and Orb asked for more launches across the map | 10.65 a minute, 60% of 17.6 exchanges (G0) |
 | Long launches: at least 1,500 units of horizontal travel before landing | At least 30% of launches; every region-break launch is long | About 5% (SMASH ACROSS) |
 | Launches that land in a different biome from their start | At least 25% | Not measured |
 | Gap close over 2,500 units | A visible pursuit flight of 0.8 to 2.0 s. Blink-strikes stay a Protagonist trait, with the ripple tell | 0.65 s at most |
@@ -483,3 +485,38 @@ These rulings are binding for QA's tuning. Where they touch other docs, those do
 | **C. The evacuated crowd returns and rings them** | **Fewer casualties caused wins.** Ties go to higher vitality |
 
 - **Orb picked A** (the crust): higher vitality wins. It is decided by the fight itself. B and C would always hand time-cap endings to the protectors over the fighters who feed on collateral. Time-cap endings stay under 1% of matches.
+
+## 14. G0 baseline triage (QA `docs/qa/baseline-g0.md`, 2026-09-30)
+
+Every brink-chapter band passes. The 24 failing rows sort into three groups.
+
+**A. Stale in QA's harness: re-base the harness, no game change** (QA)
+
+| Row | G0 | What to change |
+| :--- | :--- | :--- |
+| §4 civilians lost at the KO | 29% against 45 to 75% | The band has been **25 to 50%** since evacuation (§4b). 29% passes |
+| §10 exchanges started per minute | 17.6 against 8 to 12 | The band is **15 to 24** (§10). Passes |
+| §10 exchange length, request to release | 1.7 s against 2.5 to 4.0 s | **Retired** by Orb's dynamic feel (§10). Retire the row |
+| §10 breathing room, release to request | 0.9 s against 1.5 to 4.0 s | **Retired.** It is replaced by "at most 1.0 s", which passes at 0.93 s |
+| §10 launches per minute | 10.65 against 4 to 6 | **Re-based:** 40 to 65% of exchanges end in a launch. 60% passes |
+| §10 feel, request to first strike | 0.72 s against at most 0.6 s | **Re-measure** on exchanges that start within 2,500 units; longer ones are pursuit flights by design. If it still misses, Q4's attack clock (A) trims the first strike's lead-in (Encounter, with Combat) |
+| §5c ground contacts that slide (59%), slides per minute (9.4), and launches ending in a slide (88%) | Three rows | **Re-based** into one landing mix per launch (§5c). G0 is about 88% slide, and the fix is in groups B and C |
+| §8 INFO row, region breaks "4 to 6" | 2 | **Retire.** The band is 1.5 to 2.5 (§8), which passes at 2.04 |
+
+**B. Fixed by World's B2 or Q4** (re-measure after they land)
+
+| Row | G0 | Why it follows |
+| :--- | :--- | :--- |
+| §5b brunt share of launches | 1.3% against 8 to 20% | **B2** (the brunt) puts BUILDING SMASH candidates in every row and aims at the director's chosen building |
+| §5b launches picking a building when one is in reach | 18.4% against 35 to 60% | **B2**, the same. The personality split still applies: collateral-feeders 40 to 60%, the protector 20 to 35% |
+| §5 SMASH ACROSS at 44% (eight rows, four arms) | Cap 40%, bound 42% | **B2**: brunts take launch share from SMASH ACROSS. If it is still over after B2, Encounter raises the planner's variety penalty on the most-used type (data) |
+| Landing mix: slides at about 88% of launches | 45 to 75% | Partly **B2** (brunts end launches in buildings) and partly the ocean fix in group C (skims). If slides are still over 75%, World raises the slam share of steep impacts |
+| §8 beam clashes, 10.2 a match | Re-based: 30 to 60% of signatures | **The 120 s signature cooldown** (§13) is not in the sim. Encounter adds it in Q4 as data, and QA adds the "signatures fired, 2 to 4" row. Q4's clash-by-state rule (B) then sets the share |
+
+**C. Fix now**
+
+| Row | G0 | Who and what |
+| :--- | :--- | :--- |
+| §6 biome floors: ocean 0.5%, plains 0.4%, city 2.1% | Floor: half the planet share, or 3% | **Encounter** (AI location, data). The lure now runs to forest, desert and mountains only. Put ocean and plains back in the lure rotation, and add a biome-variety term to the AI's location choice: a penalty on a biome's excess over its planet share, like the launch variety penalty. The villain's pull toward settlements lifts the city. Water time stays under the §10 cap of 10% underwater |
+| §6 beam variants: HORIZON CLEAVE 0.5%, MERIDIAN SCAR 0.5% | At least 3% each | **Follows the biome fix** (the ocean and plains variants). No separate change |
+| §1c lock breaks, 0.85 a match at 0.7 s | 1 to 4 a match, 2 to 3 s | **Waits for living destruction** (LD1 to LD3: smoke, dust and fire clouds). Today only terrain breaks lock, briefly. Re-measure after LD. If it is still short then, re-base the length to 1 to 3 s |
