@@ -107,7 +107,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(_idx(fs, ex.D))
 		_obj(out, ex, ["kind", "t", "combo", "tag", "windowStart", "cancel", "sA", "sD", "loser"])
 		out.append(float(ex.n))
-		out.append(float(ex.cripR)); out.append(float(ex.cripA)); out.append(float(ex.cripV))
+		out.append(float(ex.cripR)); out.append(float(ex.cripA)); out.append(float(ex.cripV)); out.append(float(ex.startBattered))
 		_obj(out, ex.ext, ["start", "until"])
 		out.append(float(ex.beats.size()))
 		for b in ex.beats:

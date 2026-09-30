@@ -306,11 +306,24 @@ static func onDecisive(S: SimState, ex, W, L, why: String) -> void:
 
 # ---------------------------------------------------------------- the crippling moment (pitch A)
 
+## At an exchange's start: which limbs of both fighters are already battered. Only those can be crippled in it, so the
+## blow that makes a limb battered cannot also break it (Game Design: a visible warning before every break).
+static func onExchangeStart(S: SimState, ex) -> void:
+	var mask: int = 0
+	for s in range(S.fighters.size()):
+		for r in range(4):
+			if S.fighters[s].stage[r] == 2:
+				mask |= 1 << (s * 4 + r)
+	ex.startBattered = mask
+
+
 ## hit() reports every blow: a heavy-class blow (the victim's cripple.blows: a heavy, a signature, a guard break, a chain
-## strike) that leaves a limb of the victim's cripple.regions at battered is remembered on the exchange until the
-## exchange's decisive result (onDecisive), the latest such blow winning.
+## strike) on a limb of the victim's cripple.regions that was battered when the exchange started (and still is) is
+## remembered on the exchange until the exchange's decisive result (onDecisive), the latest such blow winning.
 static func noteBlow(S: SimState, ex, A, D, region: int, kind: String, o: Dictionary) -> void:
 	if ex == null or region < 0 or D.limbBreaks >= D.wd.cripMax or not D.wd.cripRegions.has(region) or D.stage[region] != 2:
+		return
+	if (ex.startBattered & (1 << (S.fighters.find(D) * 4 + region))) == 0:
 		return
 	var blow: String = ""
 	if ex.tag == "GUARD BREAK":

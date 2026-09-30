@@ -340,6 +340,7 @@ class Exchange:
 	var cripR: int = -1       # pitch A: a heavy-class blow landed on this battered limb (region), awaiting the decisive result
 	var cripA: int = -1       # ... by this slot
 	var cripV: int = -1       # ... on this slot
+	var startBattered: int = 0  # pitch A: limbs at battered when the exchange started (bit slot * 4 + region)
 	var A = null
 	var D = null
 	var kind: String = ""

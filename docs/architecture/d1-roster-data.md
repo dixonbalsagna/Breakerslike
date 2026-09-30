@@ -60,7 +60,7 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
 - **Pitch A, the crippling moment** (Orb; `pitches.md` §5, `balance-targets.md` §13):
   - `regions`: each region has `brink` and `spill`. The core alone is `brink: true`; the limbs are `spill: true`. A spill region wears to battered (539999) and stops, and the rest goes into the core (all of it once the limb is broken). The brink is any `brink` region broken, so the core, and `brinkProgress` reads the core.
   - `cripple`: `regions` [arms, legs], `blows` [heavy, beam, guard_break, chain], `base` 0.15, `tierAhead` 0.10, `lateAct` 3, `lateBonus` 0.10, `defensive` −0.10, `maxPerFighter` 1, `surgePower` 10.
-  - A heavy-class blow that leaves such a limb battered is remembered on the exchange (`ex.cripR`). At the exchange's decisive result (`onDecisive`), a keyed roll (`SimRng.keyed(seed, "cripple", ex.n × 16 + combo)`) breaks the limb. That emits `limb_break`, and the breaker's power rises by `surgePower`.
+  - A heavy-class blow on such a limb is remembered on the exchange (`ex.cripR`), but only if the limb was already battered when the exchange started (`ex.startBattered`, taken by `SimWounds.onExchangeStart`). The blow that makes a limb battered can't also break it (Game Design: a visible warning before every break). At the exchange's decisive result (`onDecisive`), a keyed roll (`SimRng.keyed(seed, "cripple", ex.n × 16 + combo)`) breaks the limb. That emits `limb_break`, and the breaker's power rises by `surgePower`.
   - The victim's data set the odds; the breaker's data set the surge.
   - Rally mends the core only, and a broken limb stays broken.
   - `penalties.armsBrokenLightMul` 1.15 and `legsBrokenGuardScale` 0.8 are the post-break modifiers (in `damage.gd`).

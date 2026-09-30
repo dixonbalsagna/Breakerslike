@@ -218,6 +218,7 @@ static func crippleHash() -> String:
 			S.game.actBeats = 2 if ctx == 2 else 0
 			a.power = 0.0
 			put.call(d, [0, 0, 400000, 0])
+			SimWounds.onExchangeStart(S, ex)
 			ex.n = n
 			SimWounds.noteBlow(S, ex, a, d, SimWounds.ARMS, "heavy", {})
 			SimWounds.onDecisive(S, ex, a, d, "launch")
@@ -225,7 +226,16 @@ static func crippleHash() -> String:
 	a.tier = 1.0
 	S.game.actBeats = 0
 	ex.sD = 0.0
+	put.call(d, [0, 0, 350000, 0])      # bruised at the start: the blow that makes it battered cannot break it
+	SimWounds.onExchangeStart(S, ex)
+	SimWounds.addWear(S, d, SimWounds.ARMS, 200.0)
+	for n in range(64):
+		ex.n = 3000 + n
+		SimWounds.noteBlow(S, ex, a, d, SimWounds.ARMS, "heavy", {})
+		SimWounds.onDecisive(S, ex, a, d, "launch")
+	snap.call(d)
 	put.call(d, [0, 0, 400000, 400000])
+	SimWounds.onExchangeStart(S, ex)
 	d.limbBreaks = 0
 	a.power = 0.0
 	for n in range(200):   # break the arms, then the legs must hold (at most one limb)

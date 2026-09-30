@@ -79,6 +79,7 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	D.dPrev = dState
 	S.dirS.ex = ex
 	S.dirS.exN += 1; ex.n = S.dirS.exN   # D1a (granted line): the exchange index for keyed draws (SimRng.keyed)
+	SimWounds.onExchangeStart(S, ex)   # pitch A: which limbs were already battered (only those can be crippled)
 	var chk = null
 	if planCheck.is_valid():
 		chk = _planByCode(S, ex, "sig" if kind == "sig" else "melee")
