@@ -247,3 +247,15 @@ From Art's written descriptions of `docs/art/{protagonist,empress,cyborg}-turnar
 - **Empress.** Check the collar crescent in the 12 px silhouette: it must not read as horns or antennae (the pale horned emperor rule). The nine-blade hem, tabard and plumed guard are fine. Keep it not pale overall, with no purple.
 - **Cyborg.** The rail, hatches, vents, cables and mail apron are original. Dark red plating with a cool grey mask avoids the black-and-red look. No horns or antennae on the boxy head.
 - **New flashes.** Hazard (a double "!") is two stacked or paired shapes in the fighter's family, not a font glyph. Primed (a forward pointer train) is fine, and must stay clearly forward and single-direction, not a burst. Respect is fine as long as it is drawn in the fighter's shapes, with no sparkle star or hand-fold pose. The standing rules apply: no rays or wavy lines, original sounds, no yellow or red-orange "!".
+
+### Landmark ideas (2026-09-30)
+
+Screens the five landmarks in `docs/art/district-looks.md` section 3, from the written descriptions. Generic building types in our faceted style, with no real landmark or franchise building.
+
+| Landmark | Verdict | Condition |
+|---|---|---|
+| The Gatebell tower | **GO** | Keep it without a clock face. Not a spire over four clock faces (a famous clock tower). |
+| Chimney stack | **GO** | No red-and-white stripes or a real station's markings. No cooling-tower silhouette. |
+| Lighthouse | **GO** | Plain wide bands only. No spiral or diagonal stripes or black-and-white banding of a famous light. No beam geometry, as drawn. |
+| Village hall | **GO** | A generic timber hall. No resemblance to a named hall or studio building. |
+| Hill chapel | **GO** | A generic stone chapel with a thatch roof. No resemblance to a named chapel or shrine. |

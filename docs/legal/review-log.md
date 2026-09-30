@@ -59,6 +59,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-037 | Console face-button symbols as input prompts | Controls | Medium | CONDITIONAL: own neutral set by default; Steam Input glyphs on Steam; console makers' symbols only under their terms | Closed |
 | RL-038 | Animation data rule and pose screen (section 3.7) | Animation | Medium (beam release) | GO, except the beam release: CONDITIONAL | Open until the beam release changes |
 | RL-039 | ADR 0007: no human author required for any content class | Policy | Low (ownership), liability controls kept | GO: art AI policy, animation rule and 8.5.3 updated; screens and records stay mandatory | Closed |
+| RL-040 | Five landmark ideas (district looks) | Art | Low | GO, with light conditions | Closed |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 
