@@ -260,6 +260,13 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
       const bin = sum(D.map(r => r.batteredIn)), bre = sum(D.map(r => r.breathWear));
       R.point('8.breath', '§8', 'Second breath: battered wear recovered through it, as a share of all battered wear taken (at most 25%)', { v: bre / bin, hi: 0.25, unit: 'pct', note: bre === 0 ? 'no breathWear in these records (sim before S4?)' : '' });
     } else R.pending('8.breath', '§8', 'Second breath: battered wear recovered through it is at most 25% of all battered wear taken', 'needs breathWear (S4) in the sim');
+    // the damage rate that the wear constant k scales: damage to the eventual loser per minute (balance-targets §10, §12). k_new = k_old x (rate before / rate after).
+    const dec = D.filter(r => !r.timeout && r.winner >= 0 && r.dmgVictim);
+    if (dec.length) R.info('k.rate', '§10 k', 'Damage per minute to the loser (input to the k retune: k_new = k_old x rate before / rate after)', (sum(dec.map(r => r.dmgVictim[1 - r.winner])) / (sum(dec.map(r => r.koAt)) / 60)).toFixed(1), 'volleys and beam-clash chip count once Encounter Q4 lands, so k absorbs them; median length target 6 to 8 min, p10 at least 5:00, timeouts at most 1%');
+    if (hasEvent(A, 'blitz')) {
+      const mins = sum(D.map(r => r.koAt)) / 60, bl = sum(D.map(r => (r.events || []).filter(e => e.type === 'blitz').length));
+      R.point('8.blitz', '§8', 'Blitzes per minute (2 to 6 in Tense and Frenzied acts; measured over the whole match until the act is in the records)', { v: bl / mins, lo: 2, hi: 6, unit: 'num', note: 'the band is for Tense and Frenzied only; a whole-match rate below 2 can still pass there' });
+    } else R.pending('8.blitz', '§8', 'Blitz rate: 2 to 6 a minute in Tense and Frenzied acts', 'needs a `blitz` fx event and the act (mood) per event (Encounter Q4)');
     R.pending('8.comebacks', '§8', 'Comebacks 15 to 35% of matches; lead changes median at least 2', 'needs the brink and region stages (Wounds S1, S2)');
     R.add(hasEvent(A, 'region_broken') ? { id: '8.breaks', ref: '§8', what: 'Region breaks per match, median (game: 4 to 6)', status: 'INFO', value: String(median(D.map(r => r.events.filter(e => e.type === 'region_broken').length))), band: '4 to 6 at game scale', note: 'see the pending-tests skeleton W3' } : { id: '8.breaks', ref: '§8', what: 'Region breaks before the finisher (4 to 6), finishers preceded by a brink call-out (100%)', status: 'PENDING', value: '', band: '', note: 'needs Wounds S1 and S2 events' });
   }

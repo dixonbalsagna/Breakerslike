@@ -8,7 +8,7 @@ extends SceneTree
 
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 ## fx event types that carry game meaning rather than decoration: kept in order with their fields (wounds-plan.md, living destruction).
-const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "landslide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found", "decisive", "searching", "lock_lost", "launch_plan", "struggle_press"]
+const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "landslide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found", "blitz", "volley", "decisive", "searching", "lock_lost", "launch_plan", "struggle_press"]
 ## fighter indices are meaningful at 0
 const INDEX_FIELDS: Array = ["actor", "target", "winner", "loser", "owner"]
 const KEEP_FIELDS: Array = ["kind", "chosen", "tick", "tier", "cover", "actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]
@@ -60,7 +60,7 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var launch_x: Array = [0.0, 0.0]
@@ -161,6 +161,8 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 				rec.skims += 1
 			if e.type == "damage" and e.region != "":
 				rec.dmgByRegion[e.region] = rec.dmgByRegion.get(e.region, 0.0) + e.amount
+				if int(e.victim) >= 0 and int(e.victim) < 2:
+					rec.dmgVictim[int(e.victim)] += e.amount   # damage taken by each fighter: the rate k scales (blows, volleys, clash chip, impacts that hit a region)
 			if _keep(e.type):
 				var d := {"type": e.type, "t": snappedf(S.T, 0.001)}
 				for k in KEEP_FIELDS:
