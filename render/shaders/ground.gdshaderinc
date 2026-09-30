@@ -27,6 +27,7 @@ uniform float furrow_wmin = 20.0;
 uniform float z_band_back = -520.0;  // RenderLook: rows behind this are the far terrain ...
 uniform float far_blend = 900.0;     // ... which blends in from the band's heights over this depth
 uniform float rubble_edge = 240.0;   // RenderLook.RUBBLE_EDGE: a heap eases off over this depth past its range
+uniform float shore_flood = 24.0;    // RenderLook.SHORE_FLOOD: dry land this shallow under the water beside it is drawn flooded
 uniform float meander_amp = 600.0;   // RenderLook.MEANDER: how far (in x) the far land's biomes wander with depth
 uniform vec4 biome_colors[7] : source_color;   // RenderLook.BIOME in ground_field.gd's BIOME_ORDER
 uniform vec3 fore_cam = vec3(0.0, 0.0, 3000.0);  // the camera's world position, every frame (planet_view.gd)
@@ -279,11 +280,11 @@ vec4 ground4(int i, float xw, float z, bool exact, float ox) {
 		vec3 f = far_height3(xs, xw, z);
 		h = mix(h, f.x, s);
 		grad = mix(grad, f.yz, s);
-		top = (h < 0.0 && mix(b, gfx(xs, 0), s) < sea_base) ? 0.0 : h;
+		top = (h < 0.0 && (mix(b, gfx(xs, 0), s) < sea_base || gfx(xs, 4) >= wet_min)) ? 0.0 : h;
 	} else {
 		float wd = gf(i, 4);
 		float surf = b + gf(i, 1) + wd;
-		top = (wd >= wet_min && (b < sea_base || off < -wet_min) && surf > h) ? surf : h;
+		top = (wd >= wet_min && (b < sea_base || off < -wet_min || abs(surf) < wet_min) && surf > h) ? surf : h;
 	}
 	fore_fall(h, grad, top, xw + ox, z, ox);
 	return vec4(h, grad, off * (1.0 - s));

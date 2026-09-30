@@ -11,7 +11,10 @@
 // 20, ground_field.gd) keeps that level, so a triangle from the water to the land stays flat and is cut where the land
 // rises through it (v_depth crosses zero): the shoreline and a lake's outline in depth follow the ground's own contour.
 // Without it the land vertex took the ground's height, the sheet sloped up the bank and was cut halfway between the
-// vertices, a jagged wedge climbing the land at the mesh's stride. Land below the water's level stays dry as before.
+// vertices, a jagged wedge climbing the land at the mesh's stride. Dry land a little below the water beside it (at
+// most shore_flood, as World's sea edge leaves a strip of up to 0.25 bh) is drawn flooded at that level, so the
+// waterline is where the land rises through it and the drop at the sea's last column stays under water; deeper low
+// land beside water stays dry, as the sim has it.
 // It fogs into the sky like the ground. UV.x: terrain column. UV2.y: 1 on the fighter-plane row. Same data as the
 // terrain (ground.gdshaderinc).
 shader_type spatial;
@@ -54,9 +57,14 @@ void vertex() {
 			off = ground_offset(i, xw, z);
 		}
 		ground = b + off;
-		v_ok = (b < sea_base || off < -wet_min) ? 1.0 : 0.0;
+		// The sea is wherever the sim's water stands at sea level (World's edge follows S.water, not the base rule).
+		v_ok = (b < sea_base || off < -wet_min || abs(surf) < wet_min) ? 1.0 : 0.0;
 		if (lv > -1.0e8 && ground >= lv) {
 			shore = true;
+			surf = lv;
+			v_wet = 1.0;
+			v_ok = 1.0;
+		} else if (lv > -1.0e8 && v_wet < 0.5 && lv - ground <= shore_flood) {
 			surf = lv;
 			v_wet = 1.0;
 			v_ok = 1.0;
@@ -65,7 +73,7 @@ void vertex() {
 		float xs = far_x(xw, z, s);
 		ground = mix(b, far_height3(xs, xw, z).x, s);
 		surf = 0.0;
-		v_wet = (ground < 0.0 && mix(b, gfx(xs, 0), s) < sea_base) ? 1.0 : 0.0;
+		v_wet = (ground < 0.0 && (mix(b, gfx(xs, 0), s) < sea_base || gfx(xs, 4) >= wet_min)) ? 1.0 : 0.0;
 		v_ok = 1.0;
 	}
 	// The foreground rule on the surface and the ground under it, as the terrain shader applies it to that ground.

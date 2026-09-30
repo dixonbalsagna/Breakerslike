@@ -385,6 +385,7 @@ func _make_materials() -> void:
 		m.set_shader_parameter("fog_far", RenderLook.FOG_FAR)
 		m.set_shader_parameter("fore_drop", RenderLook.FORE_DROP)
 		m.set_shader_parameter("rubble_edge", RenderLook.RUBBLE_EDGE)
+		m.set_shader_parameter("shore_flood", RenderLook.SHORE_FLOOD)
 		mats.track(m)
 	_terrain_mat.set_shader_parameter("sea_floor", RenderLook.col(RenderLook.SEA_FLOOR))
 	_terrain_mat.set_shader_parameter("crater", RenderLook.col(RenderLook.CRATER))
