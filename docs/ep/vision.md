@@ -273,3 +273,19 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - The player is the fighter. The controls just differ from a traditional fighting game: there are no combos to learn.
 - "Strategist" and "the fight director" are internal terms only. Player-facing text states bluntly what the player controls (fly, dash, stance, light or heavy, charge, signature, specials, transform) and that blows and combos play out automatically from those choices.
 - Why: it shapes what testers look for and expect.
+
+## Questionnaire 5 (2026-09-30): balance and gameplay
+- Match length: 6 to 8 minutes (keep the current target).
+- At the time cap: a story event. The planet or a third party intervenes to force an ending (no draw or judges' decision).
+- Matchup: even overall, but each fighter wins in different situations (terrain and power tier swing it).
+- Momentum: comebacks are common. The trailing fighter gets help.
+- Broken limbs: a dramatic swing during the match, not especially common, but a real consideration when playing. Orb asked for a pitch.
+- Holding the defensive stance: punished more the longer it is held.
+- Escape stance: its odds depend on terrain and distance.
+- Signature beams: 2 to 4 a match, each an event.
+- Transformations: a big swing that the opponent must respond to.
+- Computer opponent: adapts to how the player is doing.
+- The choices that should decide who wins: stance reads, charge and energy management, and transformation timing.
+- Surprise vs player choice: 6 of 10 (a fair amount of director surprise).
+- Anguish: 3 of 10 (mostly emotional, a light handicap).
+- Orb only briefly played the latest build; more feedback later.
