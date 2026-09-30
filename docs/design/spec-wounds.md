@@ -75,6 +75,12 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
   2. **the overtime ramp** (the S4 ruling), tuned to pull in p90.
   The target stays p10 at least 5:00 after those levers.
 - *KAI at about 43%* is acceptable for the placeholder testbed (the floor there is 42%, `balance-targets.md` §9), but not for the roster, which must sit at 45 to 55%. It is re-checked after the spread levers.
+- *Result:* k 0.037 missed on timeouts (1.6%). **k 0.038 is the interim value** with the stricter brink: p10 4:47, timeouts 0.4%, median 7:22, KAI 42.9%.
+- *Next slice* (Simulation, after D1a): act-1 damping ×0.85, plus the overtime ramp. QA tests two ramp candidates:
+  - **A:** starts at **8:00**; k × (1 + 0.25 × minutes past 8:00);
+  - **B:** starts at **8:30**; k × (1 + 0.40 × minutes past 8:30).
+  Both are linear and capped at ×3.
+- *Pick* the candidate that gives timeouts of 1% or less and p90 of 10:00 or less, with the median unmoved. The p10 target (5:00 or more) comes from the damping.
 
 ### 1c. Lock-on and line of sight (hiding is removed)
 
