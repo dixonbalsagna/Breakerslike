@@ -1,0 +1,38 @@
+{
+  "_about": "Validator fixture, not game data: the sample in docs/controls/stage-c-spec.md section 7.",
+  "schema": 1,
+  "ticksPerSecond": 60,
+  "weight": { "start": "light", "heavyKi": 4 },
+  "signature": {
+    "ki": 45,
+    "maxWaitFunded": 180,
+    "unfundedExpiry": 600,
+    "clockPausedBy": ["charge", "special", "transform", "cinematic", "exchange"]
+  },
+  "stance": { "cycleRepeat": 12, "cycleDebounce": 4 },
+  "hitstopTicks": {
+    "light": 4,
+    "chain": 5,
+    "tradeFinal": 6,
+    "heavy": 7,
+    "guardBreak": 8,
+    "parry": 9,
+    "clashWave": 7,
+    "impact": 4,
+    "explosion": 5,
+    "beamConnect": 9,
+    "beamClash": 10,
+    "finisherHit1": 4,
+    "finisherHit2": 7,
+    "finalBlow": 18
+  },
+  "hold": {
+    "confirmTicks": 30,
+    "encoreConfirm": 18,
+    "encoreOffer": 180,
+    "stickDeadzone": 0.2,
+    "stickQuant": 16,
+    "triggerOn": 0.35,
+    "triggerOff": 0.25
+  }
+}

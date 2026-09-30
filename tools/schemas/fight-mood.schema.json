@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/fight-mood",
+  "title": "fight.mood/1 (draft, from docs/architecture/mood-style.md sections 2 to 4)",
+  "description": "data/fight/mood.json: the fight-mood component's numbers (impulses, decay, long-guard drain, bands with hysteresis, act step, aggression output). DRAFT: the field names are a guess from mood-style.md before the data exists; Simulation's M1 commit tightens it. Everything is an integer, as the component is (permille, ticks, whole seconds). Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (band thresholds and hysteresis order correctly) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["schema", "ringSeconds", "decayPermille", "impulses", "aggressiveMul", "longGuard", "raw", "bands", "act", "aggression"],
+  "properties": {
+    "schema": { "const": "fight.mood/1" },
+    "ringSeconds": { "type": "integer", "minimum": 1 },
+    "decayPermille": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "impulses": {
+      "type": "object",
+      "required": ["strike", "clash", "decisive", "regionBroken", "launch", "structureLost", "casualty", "casualtyCapPerSecond", "taunt"],
+      "additionalProperties": { "type": "integer", "minimum": 0 },
+      "patternProperties": { "^_": true }
+    },
+    "aggressiveMul": {
+      "type": "object",
+      "required": ["num", "den"],
+      "properties": { "num": { "type": "integer", "minimum": 1 }, "den": { "type": "integer", "minimum": 1 } },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "longGuard": {
+      "type": "object",
+      "required": ["afterS", "drain"],
+      "properties": { "afterS": { "type": "integer", "minimum": 0 }, "drain": { "type": "integer", "minimum": 0 } },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "raw": {
+      "type": "object",
+      "required": ["floor", "cap"],
+      "properties": { "floor": { "type": "integer", "minimum": 0 }, "cap": { "type": "integer", "exclusiveMinimum": 0 } },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "bands": {
+      "type": "object",
+      "required": ["tenseAt", "calmBelow", "frenziedAt", "tenseBelow", "minDwellS"],
+      "properties": {
+        "tenseAt": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "calmBelow": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "frenziedAt": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "tenseBelow": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "minDwellS": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "act": {
+      "type": "object",
+      "required": ["max"],
+      "properties": { "max": { "type": "integer", "minimum": 1 } },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "aggression": {
+      "type": "object",
+      "required": ["base", "actStep", "bandBonus"],
+      "properties": {
+        "base": { "type": "integer", "minimum": 0 },
+        "actStep": { "type": "integer", "minimum": 0 },
+        "bandBonus": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "integer", "minimum": 0 } }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true }
+}

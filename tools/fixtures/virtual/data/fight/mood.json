@@ -1,0 +1,23 @@
+{
+  "_about": "Validator fixture, not game data. Numbers follow docs/architecture/mood-style.md section 4; the field names are a guess until Simulation's M1.",
+  "schema": "fight.mood/1",
+  "ringSeconds": 10,
+  "decayPermille": 70,
+  "impulses": {
+    "strike": 1500,
+    "clash": 4000,
+    "decisive": 3000,
+    "regionBroken": 8000,
+    "launch": 2000,
+    "structureLost": 3000,
+    "casualty": 200,
+    "casualtyCapPerSecond": 3000,
+    "taunt": 1000
+  },
+  "aggressiveMul": { "num": 3, "den": 2 },
+  "longGuard": { "afterS": 5, "drain": 1500 },
+  "raw": { "floor": 0, "cap": 100000 },
+  "bands": { "tenseAt": 30, "calmBelow": 25, "frenziedAt": 70, "tenseBelow": 62, "minDwellS": 3 },
+  "act": { "max": 4 },
+  "aggression": { "base": 1000, "actStep": 100, "bandBonus": [0, 250, 500] }
+}

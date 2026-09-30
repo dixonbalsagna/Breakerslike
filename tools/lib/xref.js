@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const repoRoot = path.resolve(__dirname, '..', '..');
+const { xrefFight } = require('./xref-fight');
 // Cross-reference rules between data files. Each rule runs only when the files it reads are
 // present and parsed; problems inside a single file are the schema's job, not this file's.
 // Findings are {level, file, line, pointer, rule, message} with rule "xref:<name>".
@@ -548,6 +549,7 @@ function xref(docs, root = repoRoot) {
       if (fighterFiles.length && !seenIds.has(id)) err(ROSTER, `/${i}`, 'roster-id', `roster lists "${id}", but no data/fighters/${id}/fighter.json defines it`);
     });
   }
+  xrefFight({ get, err, esc, isObj, plainKeys });
   return findings;
 }
 

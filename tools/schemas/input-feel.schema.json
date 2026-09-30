@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/input-feel",
+  "title": "input feel (schema 1)",
+  "description": "data/input/feel.json: weight, signature intent, hit-stop, hold and stick settings for sim/input and the hit-stop counter (docs/controls/feel-schema.md, adopted from Controls' proposal). Times are whole ticks at 60 per second. Version field: schema. Policy: closed except keys starting with an underscore. hitstopTicks is a map with a required set of keys, so a new impact class is data plus one code read; underscore keys are comments there too. Cross-references (feel-order, feel-cap, feel-encore, feel-hitstop-order, feel-hitstop-budget, feel-ticks-only) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["schema", "ticksPerSecond", "weight", "signature", "stance", "hitstopTicks", "hold"],
+  "properties": {
+    "schema": { "const": 1 },
+    "ticksPerSecond": { "const": 60 },
+    "weight": {
+      "type": "object",
+      "required": ["start", "heavyKi"],
+      "properties": {
+        "start": { "enum": ["light", "heavy"] },
+        "heavyKi": { "type": "number", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "signature": {
+      "type": "object",
+      "required": ["ki", "maxWaitFunded", "unfundedExpiry", "clockPausedBy"],
+      "properties": {
+        "ki": { "type": "number", "minimum": 0, "maximum": 100 },
+        "maxWaitFunded": { "type": "integer", "minimum": 1 },
+        "unfundedExpiry": { "type": "integer", "minimum": 1 },
+        "clockPausedBy": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["charge", "special", "transform", "cinematic", "exchange"] }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "stance": {
+      "type": "object",
+      "required": ["cycleRepeat", "cycleDebounce"],
+      "properties": {
+        "cycleRepeat": { "type": "integer", "minimum": 1 },
+        "cycleDebounce": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    },
+    "hitstopTicks": {
+      "type": "object",
+      "required": ["light", "chain", "tradeFinal", "heavy", "guardBreak", "parry", "clashWave", "impact", "explosion", "beamConnect", "beamClash", "finisherHit1", "finisherHit2", "finalBlow"],
+      "propertyNames": { "pattern": "^(_.*|[a-z][A-Za-z0-9]*)$" },
+      "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 60 },
+      "patternProperties": { "^_": true }
+    },
+    "hold": {
+      "type": "object",
+      "required": ["confirmTicks", "encoreConfirm", "encoreOffer", "stickDeadzone", "stickQuant", "triggerOn", "triggerOff"],
+      "properties": {
+        "confirmTicks": { "type": "integer", "minimum": 1 },
+        "encoreConfirm": { "type": "integer", "minimum": 1 },
+        "encoreOffer": { "type": "integer", "minimum": 1 },
+        "stickDeadzone": { "type": "number", "minimum": 0, "exclusiveMaximum": 0.5 },
+        "stickQuant": { "type": "integer", "minimum": 2, "maximum": 127 },
+        "triggerOn": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "triggerOff": { "type": "number", "minimum": 0, "exclusiveMaximum": 1 }
+      },
+      "additionalProperties": false,
+      "patternProperties": { "^_": true }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true }
+}

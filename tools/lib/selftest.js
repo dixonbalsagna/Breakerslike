@@ -13,6 +13,8 @@ const core = require('./core');
 const { validate, checkSchema } = require('./schema');
 
 const fixtures = path.join(core.repoRoot, 'tools', 'fixtures');
+// Folders whose data does not exist yet: the self-test uses tools/fixtures/virtual in their place and ignores real files.
+const VIRTUAL_DIRS = ['data/fighters/', 'data/fight/', 'data/input/'];
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
 function walk(dir, base, out) {
@@ -32,7 +34,7 @@ function loadBase() {
     base.set(rel, { text, parsed, lint: findings, value: parsed.ok ? parsed.value : undefined, lineOf: parsed.line });
   };
   for (const rel of core.discover([])) {
-    if (rel.startsWith('data/fighters/')) continue;
+    if (VIRTUAL_DIRS.some((p) => rel.startsWith(p))) continue;
     add(rel, fs.readFileSync(path.join(core.repoRoot, rel), 'utf8'));
   }
   const vdir = path.join(fixtures, 'virtual');
@@ -178,8 +180,13 @@ function run() {
     perSchema.set(c.schema, (perSchema.get(c.schema) || 0) + 1);
     guard('data', c.id, () => {
       const mutations = c.mutate || [{ file: c.text.file, replace: c.text.replace }];
-      const file = (c.expect.file) || mutations[0].file;
       const got = analyze(base, mutations).filter((f) => !baseKeys.has(keyOf(f)));
+      if (c.expect === null) {
+        // A "must be accepted" case: the mutation may add no error.
+        const errors = got.filter((f) => f.level === 'error');
+        return record('data', c.id, errors.length === 0, `unexpected errors: ${errors.slice(0, 3).map((f) => `${f.file} ${JSON.stringify(f.pointer)} [${f.rule}]`).join('; ')}`);
+      }
+      const file = c.expect.file || mutations[0].file;
       const hit = got.find((f) => f.file === file && f.rule === c.expect.rule && (c.expect.pointer === undefined || f.pointer === c.expect.pointer));
       record('data', c.id, Boolean(hit), `expected [${c.expect.rule}] in ${file}${c.expect.pointer !== undefined ? ` at ${JSON.stringify(c.expect.pointer)}` : ''}; new findings: ${got.slice(0, 4).map((f) => `${f.file} ${JSON.stringify(f.pointer)} [${f.rule}]`).join('; ') || 'none'}`);
     });

@@ -1,0 +1,888 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/combat-styles",
+  "title": "combat.styles/1",
+  "description": "data/combat/styles.json: the variety pass (docs/combat/variety-pass.md): context selectors, tempo, telegraph cues, styles with their gates, weights and overlays, chain plans and the beam clash shapes. Written from the file, since the draft schema Combat mentioned is not in the tree; the file says it is design data that is not loaded yet, so this schema is deliberately loose inside overlays and chain beats and is tightened when the loader lands. Version field: schema. Policy: the top level, selectors, tempo, telegraphs, style items and clash shapes are closed except keys starting with an underscore; overlays and chain beat lists are open objects. Cross-references (appliesTo names real templates, telegraph kinds name real finishers, tempo names used in beats exist, the clash order lists every shape) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "selectors",
+    "tempo",
+    "telegraphs",
+    "styles",
+    "chains",
+    "beamClash"
+  ],
+  "properties": {
+    "schema": {
+      "const": "combat.styles/1"
+    },
+    "status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selectors": {
+      "type": "object",
+      "required": [
+        "altitudeBands",
+        "mood",
+        "act",
+        "distance",
+        "traits"
+      ],
+      "properties": {
+        "altitudeBands": {
+          "type": "object",
+          "required": [
+            "submerged",
+            "ground",
+            "lowAir",
+            "highAir"
+          ],
+          "properties": {
+            "submerged": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ground": {
+              "$ref": "#/$defs/range"
+            },
+            "lowAir": {
+              "$ref": "#/$defs/range"
+            },
+            "highAir": {
+              "$ref": "#/$defs/range"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "mood": {
+          "type": "object",
+          "required": [
+            "Calm",
+            "Tense",
+            "Frenzied"
+          ],
+          "properties": {
+            "Calm": {
+              "$ref": "#/$defs/range"
+            },
+            "Tense": {
+              "$ref": "#/$defs/range"
+            },
+            "Frenzied": {
+              "$ref": "#/$defs/range"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "act": {
+          "type": "object",
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "distance": {
+          "type": "object",
+          "required": [
+            "volleyOpener",
+            "volleyOpenerTrait",
+            "pursuitFlight"
+          ],
+          "properties": {
+            "volleyOpener": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "volleyOpenerTrait": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "pursuitFlight": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "traits": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z]+$"
+            }
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "tempo": {
+      "type": "object",
+      "required": [
+        "blinkGap",
+        "swoop",
+        "skid",
+        "volleyGap",
+        "travel",
+        "linkGap",
+        "blitzGap",
+        "cross",
+        "pop"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "telegraphs": {
+      "type": "object",
+      "required": [
+        "weight",
+        "finishers",
+        "struggle",
+        "parry"
+      ],
+      "properties": {
+        "weight": {
+          "type": "object",
+          "required": [
+            "light",
+            "heavy",
+            "sig"
+          ],
+          "properties": {
+            "light": {
+              "$ref": "#/$defs/weightCue"
+            },
+            "heavy": {
+              "$ref": "#/$defs/weightCue"
+            },
+            "sig": {
+              "$ref": "#/$defs/weightCue"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "finishers": {
+          "type": "object",
+          "required": [
+            "cues"
+          ],
+          "properties": {
+            "kinds": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "enum": [
+                  "launch",
+                  "melee",
+                  "beam"
+                ]
+              },
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "cues": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1
+              },
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "futureKinds": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "enum": [
+                  "launch",
+                  "melee",
+                  "beam"
+                ]
+              },
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "struggle": {
+          "type": "object",
+          "required": [
+            "pulseTicks",
+            "cues"
+          ],
+          "properties": {
+            "pulseTicks": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "cues": {
+              "type": "object",
+              "required": [
+                "hold",
+                "slip"
+              ],
+              "properties": {
+                "hold": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "slip": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "parry": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "styles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/style"
+      }
+    },
+    "chains": {
+      "type": "object",
+      "required": [
+        "blitz",
+        "link",
+        "ender",
+        "cadence",
+        "chainP",
+        "capHits",
+        "kiPerLink"
+      ],
+      "properties": {
+        "blitz": {
+          "type": "object",
+          "required": [
+            "when",
+            "chance",
+            "minLinks",
+            "gap",
+            "cue"
+          ],
+          "properties": {
+            "when": {
+              "$ref": "#/$defs/cond"
+            },
+            "chance": {
+              "type": "object",
+              "required": [
+                "Tense",
+                "Frenzied",
+                "perActAbove1"
+              ],
+              "properties": {
+                "Tense": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "Frenzied": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "perActAbove1": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "minLinks": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "gap": {
+              "type": "string",
+              "pattern": "^[A-Za-z]+$"
+            },
+            "cue": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "link": {
+          "$ref": "#/$defs/beats"
+        },
+        "ender": {
+          "$ref": "#/$defs/beats"
+        },
+        "cadence": {
+          "type": "object",
+          "required": [
+            "linkGap"
+          ],
+          "properties": {
+            "linkGap": {
+              "type": "string",
+              "pattern": "^[A-Za-z]+$"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "chainP": {
+          "type": "object",
+          "required": [
+            "byStance",
+            "minKi",
+            "floor",
+            "cap"
+          ],
+          "properties": {
+            "byStance": {
+              "type": "object",
+              "required": [
+                "AGGRESSIVE",
+                "DEFENSIVE",
+                "EVASIVE",
+                "ESCAPE"
+              ],
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "Calm",
+                  "Tense",
+                  "Frenzied"
+                ],
+                "properties": {
+                  "Calm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "Tense": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "Frenzied": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "perComboAbove1": {
+              "type": "number"
+            },
+            "heatBoiling": {
+              "type": "number"
+            },
+            "minKi": {
+              "type": "number",
+              "minimum": 0
+            },
+            "floor": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "cap": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "capHits": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kiPerLink": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "beamClash": {
+      "type": "object",
+      "required": [
+        "order",
+        "shapes"
+      ],
+      "properties": {
+        "order": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]+$"
+          }
+        },
+        "shapes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/clashShape"
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "actWeight": {
+          "type": "object"
+        },
+        "rule": {
+          "type": "object"
+        },
+        "score": {
+          "type": "object",
+          "required": [
+            "tier",
+            "ki",
+            "draw"
+          ],
+          "properties": {
+            "tier": {
+              "type": "number"
+            },
+            "ki": {
+              "type": "number"
+            },
+            "draw": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "meter": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  },
+  "$defs": {
+    "range": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "number"
+        },
+        "below": {
+          "type": "number"
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "linkRange": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "weightCue": {
+      "type": "object",
+      "required": [
+        "cue",
+        "who"
+      ],
+      "properties": {
+        "cue": {
+          "type": "string",
+          "minLength": 1
+        },
+        "who": {
+          "enum": [
+            "A",
+            "D",
+            "W",
+            "L",
+            "both"
+          ]
+        },
+        "at": {
+          "type": "string"
+        },
+        "look": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cond": {
+      "type": "object",
+      "properties": {
+        "var": {
+          "type": "string",
+          "minLength": 1
+        },
+        "op": {
+          "enum": [
+            "==",
+            "!=",
+            ">",
+            "<",
+            ">=",
+            "<="
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "boolean"
+          ]
+        },
+        "in": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "has": {
+          "type": "string",
+          "minLength": 1
+        },
+        "all": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/cond"
+          }
+        },
+        "any": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/cond"
+          }
+        },
+        "not": {
+          "$ref": "#/$defs/cond"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "var"
+          ]
+        },
+        {
+          "required": [
+            "all"
+          ]
+        },
+        {
+          "required": [
+            "any"
+          ]
+        },
+        {
+          "required": [
+            "not"
+          ]
+        }
+      ],
+      "dependentRequired": {
+        "op": [
+          "value"
+        ]
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "beats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "op"
+        ],
+        "properties": {
+          "op": {
+            "type": "string",
+            "pattern": "^[A-Za-z]+$"
+          },
+          "tick": {
+            "$ref": "combat-templates.schema.json#/$defs/tickValue"
+          }
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "required": [
+        "id",
+        "appliesTo",
+        "gates",
+        "weight",
+        "overlay"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "appliesTo": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          }
+        },
+        "gates": {
+          "$ref": "#/$defs/cond"
+        },
+        "weight": {
+          "type": "object",
+          "required": [
+            "base",
+            "factors"
+          ],
+          "properties": {
+            "base": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "factors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "if": {
+                    "$ref": "#/$defs/cond"
+                  },
+                  "mul": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "perAct": {
+                    "type": "number"
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "if",
+                      "mul"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "perAct"
+                    ]
+                  }
+                ],
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^_": true
+                }
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "overlay": {
+          "type": "object",
+          "minProperties": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "clashShape": {
+      "type": "object",
+      "required": [
+        "durTicks",
+        "favours",
+        "cue"
+      ],
+      "properties": {
+        "margin": {
+          "$ref": "#/$defs/range"
+        },
+        "any": {
+          "type": "array",
+          "minItems": 1
+        },
+        "gate": {
+          "$ref": "#/$defs/cond"
+        },
+        "mood": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "durTicks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "favours": {
+          "enum": [
+            "winner",
+            "neutral",
+            "loser"
+          ]
+        },
+        "cue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "redirect": {
+          "type": "object"
+        },
+        "loser": {
+          "type": "object"
+        },
+        "chip": {
+          "type": "number",
+          "minimum": 0
+        },
+        "veerDegrees": {
+          "type": "number"
+        },
+        "launchApart": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reversals": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  }
+}

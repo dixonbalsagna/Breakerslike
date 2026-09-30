@@ -1,6 +1,6 @@
 # Variety pass
 
-Owner: Combat and Choreography. Implementation: Encounter Systems. Numbers: Game Design. Date: 2026-09-30. Status: design, with data in `data/combat/styles.json` (not read by the sim until Encounter's style slice).
+Owner: Combat and Choreography. Implementation: Encounter Systems. Numbers: Game Design. Date: 2026-09-30. Status: design, with data in `data/combat/styles.json` (not read by the sim until Encounter's style slice). Folds in Game Design's Q4 redesign (`stance-matrix.md` R4, R5 and R9; `spec-wounds.md` sections 1 and 9) and Encounter's Q4 plan (`docs/director/q4-director-control-plan.md`).
 
 **Orb** (`docs/ep/vision.md`, questionnaire 4): "I liked the faster fight pace. Now I want to see cleaner combos, more teleport clashing, stylistic flying combat, heavy ground combat, energy blasts, more varied beam struggles."
 
@@ -38,10 +38,17 @@ Each style is the same small set of authored parts, reused across every template
 **The problem today.** Every chain link is the same shape (a 0.24 s rush, a strike, a launch, a window), at a random cadence: the AI presses 0.12 to 0.35 s into the window. A long chain reads as launch, catch, launch: mush.
 
 **The design: a chain is a phrase.** It has an opener, links on a fixed beat, and one ender.
-- **Planned by the director.** At the first chain window, the director decides the chain's length, with one draw. It uses the mood's aggression (section 3): cool 1 to 2 links, warm 2 to 3, heated 3 to 4. It is also capped by ki (6 per link) and at 5 hits in all. No press is needed.
+- **Decided by the director at each window** (R9, Encounter's Q4 plan). One draw against `chainP` replaces the attacker's press. `chainP` comes from the stance and the mood band (`styles.json` `chains.chainP`):
+  - AGGRESSIVE: Calm 0.55, Tense 0.7, Frenzied 0.85;
+  - DEFENSIVE: 0.25, 0.35, 0.5;
+  - EVASIVE: 0.3, 0.45, 0.55;
+  - ESCAPE never chains (R2 hit and run).
+
+  Then −0.15 per link already landed, +0.1 at the Protagonist's Boiling heat, and zero under 6 ki.
+- **A blitz is a fast chain.** Chosen at the first window in Tense or Frenzied (25% or 50%, +10% per act above 1): at least 3 links at a 10-tick gap. Game Design tunes it toward 2 to 6 blitzes a minute.
 - **A fixed rhythm.** Links land 18 ticks (0.3 s) apart, so the player hears and sees the count.
 - **Distinct links.** Each link's strike cycles a shape cue (`link_knee`, `link_elbow`, `link_kick`), so no two consecutive links look alike. Styles can swap the pursuit, for example an aerial *relay* that overtakes the flying body and strikes back.
-- **One ender.** The last link is the chain's finishing blow: a heavier strike (`chainStrike` with `ender`), a long-only launch (`breakLaunch`), the `chain_ender` cue and the CHAIN ×N banner (Narrative's label). Every chain ends on a clear full stop.
+- **One ender.** When the draw says stop, or the cap is next, the director plays the ender instead of a link: a heavier strike (`chainStrike` with `ender`), a long-only launch (`breakLaunch`), the `chain_ender` cue and the CHAIN ×N banner (Narrative's label). Links only juggle (a small pop), and only the ender sends the body away. Every chain ends on a clear full stop.
 
 ### 2.2 Teleport clashes
 **The blink clash:** a style for HEAVY CLASH and aerial TRADE BLOWS.
@@ -100,7 +107,8 @@ When several shapes qualify, the first in this priority order wins: breakthrough
 | **Altitude band** (both fighters) | submerged (over the sea, y below −60); ground (under 140 above the surface); low air (140 to 600); high air (600 and up) | aerial and blink need both fighters airborne; ground needs both on the ground over land; split needs the meeting point low |
 | **Terrain and biome** | land or sea under each fighter; structures in range; slopes | ground brawl only on land; ground throws toward structures (World's brunts) |
 | **Stance** | the attacker's and the defender's stance at exchange start (frozen, as for damage) | blink weight (both AGGRESSIVE); ground weight (a DEFENSIVE defender); barrage (light against DEFENSIVE) |
-| **Mood aggression** | Narrative's fight-mood model: `aggression = clamp(0.6·rivalry_heat + 0.4·max(0, momentum), 0, 1)`. Bands: cool below 0.35, warm up to 0.7, heated above | chain length; blink and seesaw weights; "more blitzes when heated" (Orb) |
+| **Mood** | Game Design's fight mood (`spec-wounds.md` section 9), a director value 0 to 100: Calm below 30, Tense 30 to 70, Frenzied above 70 | `chainP`; blitz chance; blink-clash weight (×1.5 Tense, ×2.5 Frenzied); seesaw beam shapes (Frenzied); "more blitzes when heated" (Orb) |
+| **Act** | 1 + region breaks + transformations, capped at 4 (`spec-wounds.md` section 9) | raises blitz, blink-clash, long-launch and beam-struggle weights (+0.3 per act on blink clashes; long shapes favoured from act 3) |
 | **Attack weight** (queued by the player) | light, heavy, signature | ground favours heavy; volleys favour light at range; signatures lead to beam shapes |
 | **Distance** | the shortest-arc gap at the request | volley opener over 1,200 u; pursuit flights over 2,500 u |
 | **Fighter traits** (roster data, D1) | `blink`, `volley`, `brawler`, `aerial` | weights: the Protagonist blinks; the Anti-hero and the Empress volley; the Cyborg brawls |
@@ -116,8 +124,17 @@ When several shapes qualify, the first in this priority order wins: breakthrough
 ## 4. Cues for Rendering and VFX
 These are new names in the cue vocabulary (`data/combat/finishers.json` `cues`). The render and audio consumers map them to poses and effects. They are render-only: the sim just emits them.
 
+**Telegraphs** (players now play by reads, R9):
+- **The attacker's weight** shows through every approach: `tell_light` or `tell_heavy`, driven by the existing `attack` fx event, which carries the kind. Every template's approach starts at tick 0, so no data beat is needed.
+- **The finisher's kind** shows in its wind-up: `finisher_tell_launch`, `_melee` or `_beam`, driven by `finisher_start.kind` (Encounter adds it from each finisher's `kind`).
+- **The struggle's three pulses** show `struggle_hold` or `struggle_slip`.
+- **A director parry** (R5) keeps its wind-up tell and flash.
+
 | Cue | Look (for Rendering, VFX and Audio to design) | Priority |
 | :--- | :--- | ---: |
+| `tell_light`, `tell_heavy` | the attacker's weight, shown through the approach | 1 |
+| `finisher_tell_launch`, `finisher_tell_melee`, `finisher_tell_beam` | the finisher's kind in its wind-up | 1 |
+| `struggle_hold`, `struggle_slip` | the three pulses of the struggle | 1 |
 | `blink_out`, `blink_in` | the air ripple at departure and arrival, and a short afterimage | 1 |
 | `blink_meet` | two fighters snapping together in mid-air; a fist and forearm spark | 1 |
 | `chain_ender` | the chain's full stop: a heavier impact flash, the CHAIN ×N banner | 1 |
@@ -140,9 +157,12 @@ These are new names in the cue vocabulary (`data/combat/finishers.json` `cues`).
 | 3 | **The `blink` op:** `{w, rel, dist}`. W teleports to a slot relative to the other fighter (`above`, `behind`, `below`, `front`), or both meet at the midpoint (`w: "both", rel: "meet"`), with the ripple fx at departure and arrival | No RNG: slots come from the data, cycling in order |
 | 4 | **The `volley` op:** `{w, count, gapTicks, travelTicks, dmgEach, result}`. It schedules one arrival strike per blast (`result`: `land`, `guard` or `evade`), and emits the render-only projectile fx | No sim entities; blasts are not parryable |
 | 5 | **`strike` `o` flags:** `kbMul` (knockback multiplier) and `crater` (`{radius, depth}` at the contact point, through World's crater rules) | Ground brawl |
-| 6 | **The chain plan.** At the first window the director decides the length (mood aggression, ki, cap; one draw). Links start a fixed `linkGapTicks` after each window, with no press delay; the last link plays the `ender` beats | Replaces the AI chain-press policy for both fighters (director-owned timing, questionnaire 4) |
+| 6 | **Chains by `chainP`.** At each window, one draw against `chainP` (`styles.json`): continue with a link, or play the ender. Blitz is chosen at the first window. Links start a fixed `linkGap` or `blitzGap` after the last, with no press delay; no window opens after the ender | Replaces the chain press for both fighters (R9) |
 | 7 | **Beam-clash shapes.** `startClash` and `clashResolve` pick a shape from the score margin and context (section 2.6), set `game.clash.shape` and its keyframes, and resolve by shape: deflect fires the loser's beam on the deflected path, split fires two veering beams, mutual blast detonates at the midpoint | The draws are unchanged: the two clash scores |
-| 8 | **Mood aggression as an input.** Expose Narrative's `rivalry_heat` and `momentum` to the director, read-only, or compute an equivalent from the sim's events. The dialogue director must stay read-only | Director aggression rising with heat is Orb's ask |
+| 8 | **Mood and act as selector inputs.** Game Design's mood value (band) and act index are director state (Encounter's Q4 plan, section D); styles, `chainP`, blitz and beam shapes read them | The dialogue director stays read-only |
+| 10 | **The R4 counter from data.** Read `selectorByProfile[profile]` before `selector`, and supply `defHeld` (S.T − D.stanceT) in the plan context | Parked edit 3, section 6 |
+| 11 | **The finisher kind.** Copy `finishers.json` `kind` into `finisher_start`; draw the struggle once at `contestOpen` by `contest.struggle.byState`; emit the pulses at `beatTicks` | Parked edits 1 and 2, section 6 |
+| 12 | **The clash score from data.** In the dynamic profile, read `styles.json` `beamClash.score`: tier 10, ki 0.35, a 0 to 16 draw, and the meter term by fighter. The CLASH rule stays the state rule in `templates.json` (AGGRESSIVE with 40 ki or more) | R9 answer 2 |
 | 9 | Keep `cue` emission for every new beat, and add the new cue names to the fx hash map | Rendering maps them |
 
 **Staging:**
@@ -154,7 +174,18 @@ These are new names in the cue vocabulary (`data/combat/finishers.json` `cues`).
 
 ---
 
-## 6. How we will know it worked
+## 6. Parked data edits (land after World's slice, with Tools' schemas)
+These edits change `templates.json` and `finishers.json`, and therefore the data hash and the goldens. They land after World's slice and the dynamic slice, in one commit with Tools' schema changes and Encounter's Q4 loader work (EP-approved). The finished copies are with Combat.
+
+| # | File | Edit | Schema change for Tools |
+| :--- | :--- | :--- | :--- |
+| 1 | `finishers.json` | `"kind"` on every finisher: `generic.placeholder` launch, `generic` launch, `kai` beam, `vorr` launch | `$defs.finisher.properties.kind`: enum `launch`, `melee`, `beam` |
+| 2 | `finishers.json` | `contest.struggle.byState`: base 0.15; stance read +0.15 on a match (launch: DEFENSIVE; melee: EVASIVE; beam: AGGRESSIVE with 40 ki), +0.05 otherwise; +0.05 at 50 ki or more; −0.10 per Rally; −0.10 per minute past 8:00; fighter-state hooks | `contest.struggle.properties.byState` (object). Later, drop the press fields `halfWidthTicks`, `assistHalfWidthTicks`, `debounceTicks`, `inputs`, `aiHitChance` and the press `scoring` from `required` |
+| 3 | `templates.json` | PRESSURE `selectorByProfile.dynamic`: the R4 counter (50% after 2 s held DEFENSIVE with more than 25 ki, 20% otherwise; one draw) | template `properties.selectorByProfile`: an object of profile name to selector (same shape as `selector`); the condition variable `defHeld` |
+| 4 | `finishers.json` | about 30 new cue names in `cues` | none (`cues` takes any string keys) |
+| 5 | `styles.json` (in the tree, not loaded) | the whole file | done: Tools' `combat-styles.schema.json` is mapped, and the file validates |
+
+## 7. How we will know it worked
 QA's feel probe (`qa/godot/feel/`) plus a style census from the structured event log:
 - **Variety:**
   - every style fires in its context;
@@ -167,8 +198,8 @@ QA's feel probe (`qa/godot/feel/`) plus a style census from the structured event
 - **Feel holds:** the dynamic-feel targets still pass (melee idle at most 15%, still stretch p90 at most 0.5 s).
 - **Orb plays it.** "Never the same series twice" (procedural-moves T4) gets its first real test.
 
-## 7. Open for others
+## 8. Open for others
 - **Game Design:** volley and barrage damage (placeholders in `styles.json`); split and mutual-blast chip damage; the deflect ki cost; the director's parry and struggle rolls (their redesign).
-- **Narrative:** the CHAIN ×N label is theirs; the mood model's aggression feed.
+- **Narrative:** the CHAIN ×N label is theirs; the lines keyed to mood and stance history.
 - **World:** small stomp craters within the new crater rules; ground throws that slide.
-- **Tools:** a schema for `data/combat/styles.json`. A draft is in `docs/combat/schemas/combat-styles.schema.json`, for Tools to move into `tools/schemas/` and register.
+- **Tools:** the schema changes for parked edits 1 to 3 (section 6). `styles.json` already has its schema.
