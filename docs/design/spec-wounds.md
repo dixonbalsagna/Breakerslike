@@ -67,6 +67,15 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
 - *Breaks* at 2.6 a match are under the 3-to-5 band, and k cannot fix that. The separate lever is the **stricter brink** from the S2 ruling: the core broken, or **three** limbs broken. Then re-tune k upward (starting around 0.045) to hold the median.
 - *Accept it* if breaks reach 3 to 5 with the length and timeout bands intact, and a playtest check finds a fighter with two broken limbs still fun to play. Otherwise keep the two-limb brink and re-base breaks to 2 to 4.
 
+**The stricter brink, measured** (core, or three limbs broken; QA, 800 matches per k).
+- *Breaks* are 3.6 a match at every k, so the band is met and the stricter brink is adopted, pending Orb's playtest of a fighter with two broken limbs.
+- *The spread* is wide: p10 is about 0.65 of the median and p90 about 1.3. So k alone can't land both tails.
+- *Ruling, conditional on QA's 0.037 run:* if 0.037 gives p10 of 4:45 or more and timeouts of 1% or less, it is the interim k. Then narrow the spread with two levers, rather than leaning on k:
+  1. **act-1 wear damping:** wear ×0.85 while the act index is 1, which slows the fastest brinks and lifts p10;
+  2. **the overtime ramp** (the S4 ruling), tuned to pull in p90.
+  The target stays p10 at least 5:00 after those levers.
+- *KAI at about 43%* is acceptable for the placeholder testbed (the floor there is 42%,  §9), but not for the roster, which must sit at 45 to 55%. It is re-checked after the spread levers.
+
 ### 1c. Lock-on and line of sight (hiding is removed)
 
 Orb removed hiding from the base game and kept it for a future stealth-specialist fighter (`docs/ep/vision.md`; `future-stealth-fighter.md` holds the kit as it was). What remains is **line of sight**: smoke, dust, rubble and terrain can break lock-on for a moment. There is no recovery bonus, no ambush and no concealment on screen.
