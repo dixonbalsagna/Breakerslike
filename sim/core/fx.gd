@@ -145,6 +145,21 @@ static func brinkEnter(S: SimState, f) -> void:
 	e.actor = float(S.fighters.find(f))
 
 
+## The brink chapter (spec-wounds.md §1b): actor, on the brink, is open to target's finisher. It is staggered with its
+## guard dropped, and the finisher telegraphs: kind is the finisher's kind (launch, melee or beam; empty until Combat's
+## finishers carry one), text the finisher's id.
+static func brinkOpen(S: SimState, f, target, kind: String, finisher: String) -> void:
+	var e := _ev(S, "brink_open")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.kind = kind; e.text = finisher
+
+
+## The opening on actor closed. kind: won (actor won a decisive exchange), survived (it survived a finisher) or rally
+## (a Rally took it off the brink). The rival needs a new set-up.
+static func brinkClose(S: SimState, f, kind: String) -> void:
+	var e := _ev(S, "brink_close")
+	e.actor = float(S.fighters.find(f)); e.kind = kind
+
+
 static func brinkExit(S: SimState, f) -> void:
 	var e := _ev(S, "brink_exit")
 	e.actor = float(S.fighters.find(f))

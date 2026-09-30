@@ -80,6 +80,10 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	S.dirS.ex = ex
 	S.dirS.exN += 1; ex.n = S.dirS.exN   # D1a (granted line): the exchange index for keyed draws (SimRng.keyed)
 	SimWounds.onExchangeStart(S, ex)   # pitch A: which limbs were already battered (only those can be crippled)
+	# The brink chapter: who was on the brink as it began (the exchange that causes a brink never sets up or finishes).
+	for s in range(S.fighters.size()):
+		if S.fighters[s].brink:
+			ex.startBrink |= 1 << s
 	var chk = null
 	if planCheck.is_valid():
 		chk = _planByCode(S, ex, "sig" if kind == "sig" else "melee")
@@ -304,8 +308,32 @@ static func decisive(S: SimState, ex, W, L, why: String) -> void:
 	SimFx.decisive(S, W, L, why)
 	SimWounds.onDecisive(S, ex, W, L, why)   # S4: Spite; pitch A: the crippling roll
 	ex.loser = S.fighters.find(L)
-	if L.brink and not finisherPlanned(ex):
+	# The brink chapter (spec-wounds.md §1b). A win by the fighter on the brink closes its opening (Spite, above, fired
+	# first; a Rally has already reset it). A win against it finishes it only once it is open, and in a later exchange
+	# than the set-up; before that, a win is a set-up, and the exchange that caused the brink is neither.
+	if W.brink and (W.brinkOpen or W.brinkSetups > 0):
+		if W.brinkOpen:
+			SimFx.brinkClose(S, W, "won")
+		W.brinkOpen = false
+		W.brinkSetups = 0
+	if not L.brink or finisherPlanned(ex):
+		return
+	if S.game.timeCap or (L.brinkOpen and L.brinkEx != ex.n):
 		startFinisher(S, ex, W, L)
+	elif not L.brinkOpen and (ex.startBrink & (1 << S.fighters.find(L))) != 0 and L.brinkEx != ex.n:
+		L.brinkSetups += 1
+		L.brinkEx = ex.n
+		if L.brinkSetups >= DirData.brinkSetups():
+			_openBrink(S, W, L)
+
+
+## The set-up is won: L, on the brink, is open to W's finisher. A stagger (the fighter's own stagger length) and a
+## dropped guard (UI and Rendering, from the event); the finisher's kind telegraphs in brink_open.
+static func _openBrink(S: SimState, W, L) -> void:
+	L.brinkOpen = true
+	L.stunTicks = maxi(L.stunTicks, L.wd.staggerTicks)
+	SimFx.brinkOpen(S, L, W, DirData.finisherKind(W), DirData.finisherId(W))
+	SimEvents.feed(S, L.name + " IS OPEN", W.name + " can finish on the next decisive win")
 
 
 static func finisherPlanned(ex) -> bool:
@@ -383,6 +411,7 @@ static func _opContest(S: SimState, ex, a) -> void:
 	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")
 	if survived:
 		SimFx.banner(S, L.name + " HOLDS ON", L.aura, 1.2)
+		_closeOnSurvival(S, L)
 		SimWounds.onContestSurvived(S, L)   # S4: Second Wind
 	else:
 		SimDamage.ko(S, L, W)
@@ -487,8 +516,17 @@ static func _opContestBranch(S: SimState, ex, a) -> void:
 	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")
 	if survived:
 		SimFx.banner(S, L.name + " HOLDS ON", L.aura, 1.2)
+		_closeOnSurvival(S, L)
 		SimWounds.onContestSurvived(S, L)   # S4: Second Wind
 	DirData.scheduleOutcome(ex, W, not survived)
+
+
+## The brink chapter: surviving a finisher closes the opening; the rival needs a new set-up.
+static func _closeOnSurvival(S: SimState, L) -> void:
+	if L.brinkOpen:
+		SimFx.brinkClose(S, L, "survived")
+	L.brinkOpen = false
+	L.brinkSetups = 0
 
 
 ## The final blow: a strike W to L, then the launch (fixed, or the planner's long-haul candidates), then the KO. The launch

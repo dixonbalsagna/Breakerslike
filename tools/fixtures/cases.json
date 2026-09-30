@@ -3327,6 +3327,51 @@
         "rule": "xref:feedback-tag",
         "pointer": "/tags/1/id"
       }
+    },
+    {
+      "id": "finishers-brink-setups-min",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/brinkSetups": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/contest/brinkSetups"
+      }
+    },
+    {
+      "id": "finishers-brink-setups-integer",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/brinkSetups": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/contest/brinkSetups"
+      }
+    },
+    {
+      "id": "finishers-brink-setups-accepted",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/brinkSetups": 4
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

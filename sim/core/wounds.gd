@@ -181,6 +181,11 @@ static func updateStages(S: SimState, f) -> void:
 			brink = true
 	if brink != f.brink:
 		f.brink = brink
+		# The brink chapter: entering or leaving the brink (a Rally) starts the set-up count over; an open fighter closes.
+		if f.brinkOpen:
+			SimFx.brinkClose(S, f, "rally")
+		f.brinkOpen = false
+		f.brinkSetups = 0
 		if brink:
 			SimFx.brinkEnter(S, f)
 		else:

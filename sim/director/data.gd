@@ -489,3 +489,20 @@ static func parryBlock() -> Dictionary:
 static func contest() -> Dictionary:
 	_ensure()
 	return _fin.contest
+
+
+## The brink chapter: decisive wins the rival needs against a fighter on the brink before it is open to a finisher
+## (finishers.json contest.brinkSetups; spec-wounds.md §1b).
+static func brinkSetups() -> int:
+	return int(contest().get("brinkSetups", 1))
+
+
+## W's finisher: its id, and its kind (launch, melee or beam) once Combat's finishers carry one (empty until then).
+static func finisherId(W) -> String:
+	_ensure()
+	return String(_finisherFor(W).get("id", ""))
+
+
+static func finisherKind(W) -> String:
+	_ensure()
+	return String(_finisherFor(W).get("kind", ""))

@@ -11,6 +11,8 @@
   "contest": {
     "base": 0.30, "tiltAfter": 480, "tiltPerMinute": 0.10, "floor": 0.0,
     "rallyPenalty": 0.10,
+    "brinkSetups": 1,
+    "_brinkSetups": "the brink chapter (spec-wounds.md section 1b): decisive wins the rival needs against a fighter on the brink before it is open to a finisher. The exchange that causes the brink is never one. Game Design: 2 if brink to KO stays under a 45 s median",
     "_note": "survival chance = max(floor, base - tiltPerMinute * max(0, (T - tiltAfter) / 60)) - rallyPenalty per Rally used (Rally is S4; the parity profile ignores rallyPenalty). One S.rng.next() when the contest resolves: survived if draw < chance. Numbers are Game Design's (spec-wounds.md section 1); constants match exchange.gd lines 261-263.",
     "input": "struggle",
     "struggle": {

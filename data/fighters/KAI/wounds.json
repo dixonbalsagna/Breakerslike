@@ -73,8 +73,8 @@
     "_note": "region pick weights (head, core, arms, legs) by hit family"
   },
   "guardWearSplit": {
-    "arms": 0.6,
-    "legs": 0.4,
+    "arms": 0.5,
+    "legs": 0.5,
     "_note": "a guard hit's wear: this share to the arms, this to the legs (Game Design: spread so legs can become battered)"
   },
   "penalties": {

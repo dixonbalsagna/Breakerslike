@@ -39,6 +39,7 @@ class Game:
 	var clash = null         # Clash or null
 	var seed: float = 1.0
 	var actBeats: int = 0    # act beats so far, both fighters: region breaks and each core's first battered (act = 1 + this, until M1)
+	var timeCap: bool = false  # the brink chapter's override: the 11:00 time-cap event sets it, and every decisive exchange is a finisher
 
 
 class Clash:
@@ -281,6 +282,9 @@ class Fighter:
 	var id: String = ""              # S4: stable roster id (the roster entry's key); arms may rename, never re-id
 	var limbBreaks: int = 0          # pitch A: limbs broken in crippling moments this match
 	var coreMarked: bool = false     # pitch A: the core has reached battered once (an act beat)
+	var brinkSetups: int = 0         # the brink chapter: set-up wins the rival has against this fighter while it is on the brink
+	var brinkOpen: bool = false      # ... it is open: the rival's next decisive win, in a later exchange, is the finisher
+	var brinkEx: int = -1            # ... the exchange index (ex.n) of the last set-up win: a set-up and a finisher never share one
 	var wd = null                    # D1a: the fighter's FighterData.WoundsDef (data; covered by the data hash, not hashed here)
 	var md = null                    # D1b: its FighterData.MetersDef (the same)
 	var ld = null                    # D1b: its FighterData.LadderDef (the same)
@@ -343,6 +347,7 @@ class Exchange:
 	var cripA: int = -1       # ... by this slot
 	var cripV: int = -1       # ... on this slot
 	var startBattered: int = 0  # pitch A: limbs at battered when the exchange started (bit slot * 4 + region)
+	var startBrink: int = 0     # the brink chapter: fighters on the brink when the exchange started (bit per slot)
 	var A = null
 	var D = null
 	var kind: String = ""
