@@ -74,7 +74,7 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
   1. **act-1 wear damping:** wear ×0.85 while the act index is 1, which slows the fastest brinks and lifts p10;
   2. **the overtime ramp** (the S4 ruling), tuned to pull in p90.
   The target stays p10 at least 5:00 after those levers.
-- *KAI at about 43%* is acceptable for the placeholder testbed (the floor there is 42%,  §9), but not for the roster, which must sit at 45 to 55%. It is re-checked after the spread levers.
+- *KAI at about 43%* is acceptable for the placeholder testbed (the floor there is 42%, `balance-targets.md` §9), but not for the roster, which must sit at 45 to 55%. It is re-checked after the spread levers.
 
 ### 1c. Lock-on and line of sight (hiding is removed)
 
