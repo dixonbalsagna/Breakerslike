@@ -559,6 +559,38 @@ function xref(docs, root = repoRoot) {
     const vb = isObj(f) && isObj(f.identity) ? f.identity.voice_bible : undefined;
     if (typeof vb === 'string' && !fs.existsSync(path.join(root, vb))) err(file, '/identity/voice_bible', 'fighter-voice-bible', `voice bible ${vb} does not exist`);
   }
+  // The replay's data hash covers exactly what the sim loads: data/combat/templates.json, data/combat/finishers.json (DirData)
+  // and data/fighters/** (FighterData). Anything render-side must stay out of those files and out of the sim.
+  const HASHED = (rel) => rel === 'data/combat/templates.json' || rel === 'data/combat/finishers.json' || rel.startsWith('data/fighters/');
+  const hasRender = (node, pointer, file) => {
+    if (Array.isArray(node)) node.forEach((x, i) => hasRender(x, `${pointer}/${i}`, file));
+    else if (isObj(node)) {
+      for (const [k, v] of Object.entries(node)) {
+        if (k === 'render') err(file, `${pointer}/render`, 'hash-render', 'a "render" block in a file the sim hashes: render data changes the replay data hash and the goldens, so it belongs in a render-side file (data/anim/, data/art/, ui/data/)');
+        else if (!k.startsWith('_')) hasRender(v, `${pointer}/${esc(k)}`, file);
+      }
+    }
+  };
+  for (const [rel, d] of docs) if (HASHED(rel)) hasRender(d.value, '', rel);
+  // No sim file may read data/anim (it is not hashed, so a read would make a match depend on unhashed data).
+  const scanSim = (dir) => {
+    let names = [];
+    try { names = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of names) {
+      const abs = path.join(dir, e.name);
+      if (e.isDirectory()) scanSim(abs);
+      else if (/[.](gd|js)$/.test(e.name)) {
+        const text = fs.readFileSync(abs, 'utf8');
+        const at = text.indexOf('data/anim');
+        if (at >= 0) {
+          const line = text.slice(0, at).split('\n').length;
+          findings.push({ level: 'error', file: path.relative(root, abs).split(path.sep).join('/'), line, pointer: '', rule: 'xref:hash-anim-read', message: 'the sim reads data/anim, which the replay data hash does not cover; animation data is render-side only' });
+        }
+      }
+    }
+  };
+  if (docs.size > 1) scanSim(path.join(root, 'sim'));
+
   xrefFight({ get, err, esc, isObj, plainKeys, docsFor: (re) => [...docs.keys()].filter((k) => re.test(k)).sort() });
   return findings;
 }

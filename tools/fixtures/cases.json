@@ -2740,6 +2740,57 @@
         "rule": "type",
         "pointer": "/overtime/startTicks"
       }
+    },
+    {
+      "id": "hash-render-in-templates",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/render": {
+              "note": "x"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hash-render",
+        "pointer": "/render"
+      }
+    },
+    {
+      "id": "hash-render-in-fighter",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/render": {
+              "model": "x"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hash-render",
+        "pointer": "/render"
+      }
+    },
+    {
+      "id": "hash-render-comment-is-fine",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/_render": {
+              "note": "a comment"
+            }
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [
