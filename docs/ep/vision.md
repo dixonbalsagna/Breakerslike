@@ -269,3 +269,7 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Orb's words: "I want to see threats, boasts, one-liners, banter. It should give my imagination the impression that there are real stakes invested in the battle at hand, and the fighter's personalities should match up with how the player's fighting style is influencing the fight. A player holding defensive patterns all game might see their character think 'Only a little longer...', and a player who plays aggressively then sees his opponent start picking evasive maneuvers could see his character start boasting about their training regimen."
 - "I liked the faster fight pace. Now I want to see cleaner combos, more teleport clashing, stylistic flying combat, heavy ground combat, energy blasts, more varied beam struggles."
 - Orb will relay friends' feedback as it trickles in.
+## Player-facing wording (2026-09-30)
+- The player is the fighter. The controls just differ from a traditional fighting game: there are no combos to learn.
+- "Strategist" and "the fight director" are internal terms only. Player-facing text states bluntly what the player controls (fly, dash, stance, light or heavy, charge, signature, specials, transform) and that blows and combos play out automatically from those choices.
+- Why: it shapes what testers look for and expect.
