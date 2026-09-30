@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // QA on the GDScript sim (ADR 0006): plays seeded AI-vs-AI batches in headless Godot, checks the bands in
 // docs/design/balance-targets.md, runs the acceptance-test skeletons, and re-tests slice S0. From the repo root:
-//   node qa/run-godot.js                     400 matches per arm, all eight arms, 7 or so minutes on 8 jobs
+//   node qa/run-godot.js                     400 matches per arm, all eight arms, 20 or so minutes on 6 jobs
 //   node qa/run-godot.js --quick             100 matches, arms default and swap only (about 30 s)
 //   options: --matches=N  --jobs=N  --arms=default,swap,...  --scale=testbed|game  --cap=18000  --seed=1
-//            --fail (exit 1 on any FAIL, bands included)  --md=docs/qa/baseline-g0.md  --json=file  --only=bands|tests|s0
+//            --save-records=file / --load-records=file (keep the records, re-evaluate later without replaying)  --feel=N (matches for the dynamic-feel probe, 0 skips)  --fail (exit 1 on any FAIL, bands included)  --md=docs/qa/baseline-g0.md  --json=file  --only=bands|tests|s0
 // Exit code: 0 unless the run itself broke (no Godot, NaN, a fighter outside the world, a non-deterministic seed) or a
 // hard test failed (soft tuning tests such as W3 and W5 only report). Band FAILs are the point of a baseline, so they exit 1 only with --fail.
 // Needs Godot 4.7 ($GODOT, PATH, or the Windows install folder). The Node prototype suite is separate: node qa/run-all.js.
@@ -20,12 +20,13 @@ const val = (n, d) => { const a = args.find(x => x.startsWith('--' + n + '=')); 
 const flag = n => args.includes('--' + n);
 const quick = flag('quick');
 const N = parseInt(val('matches', quick ? '100' : '400'), 10);
-const JOBS = parseInt(val('jobs', String(Math.max(1, Math.min(8, require('os').cpus().length - 1)))), 10);
+const JOBS = parseInt(val('jobs', String(Math.max(1, Math.min(6, require('os').cpus().length - 1)))), 10);
 let SCALE = val('scale', 'auto');                          // auto: game scale once the sim has finishers (S2), testbed before
 const CAP = parseInt(val('cap', '43200'), 10);            // 12 minutes, the cap S2 uses
 const BASE = parseInt(val('seed', '1'), 10);
 const ARMS = (val('arms', quick ? 'default,swap' : 'default,swap,mirror-villain,mirror-hero,default-flip,swap-flip,mirror-villain-flip,mirror-hero-flip')).split(',');
 const ONLY = val('only', null);
+const FEEL = parseInt(val('feel', '40'), 10);            // matches for Combat's dynamic-feel probe (0 skips it)
 const ROOT = path.join(__dirname, '..');
 
 async function main() {
@@ -36,7 +37,10 @@ async function main() {
   console.log(`sim: ${sim}\n`);
 
   const A = {}, t0 = Date.now();
-  for (const arm of ARMS) A[arm] = await runRecords({ arm, base: BASE, count: N, jobs: JOBS, cap: CAP });
+  const load = val('load-records', null);          // re-evaluate saved records without replaying (after a band change)
+  if (load) Object.assign(A, JSON.parse(fs.readFileSync(path.resolve(load), 'utf8')));
+  else for (const arm of ARMS) A[arm] = await runRecords({ arm, base: BASE, count: N, jobs: JOBS, cap: CAP });
+  if (val('save-records', null)) fs.writeFileSync(path.resolve(val('save-records')), JSON.stringify(A));
   if (SCALE === 'auto') SCALE = require('./godot/bands').hasEvent(A, 'finisher_start') ? 'game' : 'testbed';
   const bad = Object.values(A).flat().filter(r => r.bad);
   if (bad.length) { for (const r of bad.slice(0, 5)) console.log(`FAIL  seed ${r.seed} (${r.arm}): ${r.bad}`); process.exit(1); }
@@ -48,6 +52,9 @@ async function main() {
 
   if (!ONLY || ONLY === 'bands') {
     const rows = evaluate(A, { scale: SCALE, cap: CAP });
+    if (FEEL > 0) {
+      try { const feel = require('./godot/feel'); rows.push(...feel.feelRows(await feel.runFeel({ matches: FEEL, base: BASE }), FEEL)); } catch (e) { console.log('feel probe skipped: ' + String(e.message).split(String.fromCharCode(10))[0]); }
+    }
     result.bands = rows; printBands(rows);
   }
   const ctx = { A, runRecords: o => runRecords({ jobs: JOBS, cap: CAP, ...o }) };

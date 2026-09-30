@@ -176,10 +176,10 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
     const brunt = r => sum(Object.entries(r.launches).filter(([n]) => isBrunt(n)).map(([, v]) => v));
     const bs = S.clusterShare(D, brunt, r => total(r.launches));
     R.rate('5b.share', '§5b', 'Share of all planner launches that are building brunts', { v: bs.p, ci: bs.ci, lo: 0.08, hi: 0.20 });
-    const perMatch = recs => mean(recs.map(brunt));
-    R.point('5b.perMatch', '§5b', 'Brunts per match, P2 testbed (default arm)', { v: perMatch(D), lo: 0.5, hi: 2 });
-    if (have('mirror-villain')) R.add({ id: '5b.villain>default', ref: '§5b', what: 'Villain mirror has more brunts per match than the default arm', status: perMatch(A['mirror-villain']) > perMatch(D) ? 'PASS' : 'FAIL', value: `${perMatch(A['mirror-villain']).toFixed(2)} vs ${perMatch(D).toFixed(2)}`, band: 'greater', note: '' });
-    if (have('mirror-hero')) R.point('5b.hero', '§5b', 'Hero mirror: brunts per match at most 0.6', { v: perMatch(A['mirror-hero']), hi: 0.6 });
+    const perMin = recs => sum(recs.map(brunt)) / (sum(recs.map(r => r.koAt)) / 60);   // brunts per minute of match, pooled
+    R.point('5b.perMin', '§5b', 'Brunts per minute (default arm)', { v: perMin(D), lo: 0.1, hi: 0.35 });
+    if (have('mirror-villain')) R.add({ id: '5b.villain>default', ref: '§5b', what: 'Villain mirror has more brunts per minute than the default arm', status: perMin(A['mirror-villain']) > perMin(D) ? 'PASS' : 'FAIL', value: `${perMin(A['mirror-villain']).toFixed(2)} vs ${perMin(D).toFixed(2)}`, band: 'greater', note: '' });
+    if (have('mirror-hero')) R.point('5b.hero', '§5b', 'Hero mirror: brunts per minute at most 0.15', { v: perMin(A['mirror-hero']), hi: 0.15 });
     if (hasEvent(A, 'launch_plan')) {
       const plans = D.flatMap(r => (r.events || []).filter(e => e.type === 'launch_plan' && /BUILDING|BRUNT/.test(e.text || '')));
       const picked = plans.filter(e => /BUILDING|BRUNT/.test(e.chosen || '')).length;
@@ -192,7 +192,10 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
   if (D && hasEvent(A, 'slide')) {
     const sl = S.clusterShare(D, r => r.slides.length, r => r.slides.length + r.impactCraters);
     R.rate('5c.share', '§5c', 'Ground contacts that slide rather than slam (slams stay at 15% or more)', { v: sl.p, ci: sl.ci, lo: 0.60, hi: 0.85 });
-    R.point('5c.perMatch', '§5c', 'Slides per match, P2 testbed (default arm)', { v: mean(D.map(r => r.slides.length)), lo: 6, hi: 12 });
+    // the per-match band is retired (it scaled with match length); the band is per minute, and per launch
+    R.point('5c.perMin', '§5c', 'Slides per minute (default arm)', { v: sum(D.map(r => r.slides.length)) / (sum(D.map(r => r.koAt)) / 60), lo: 1.5, hi: 4, unit: 'num' });
+    const sPerL = S.clusterShare(D, r => r.slides.length, r => total(r.launches));
+    R.rate('5c.perLaunch', '§5c', 'Launches that end in a slide (35 to 70% of all launches)', { v: sPerL.p, ci: sPerL.ci, lo: 0.35, hi: 0.70 });
     R.info('5c.detail', '§5c', 'Slides: mean length and trench width; slams (impact craters) per match; water skims per match', `${mean(D.flatMap(r => r.slides.map(x => x.len))).toFixed(0)} units, ${mean(D.flatMap(r => r.slides.map(x => x.w))).toFixed(1)} wide; ${mean(D.map(r => r.impactCraters)).toFixed(1)} slams; ${mean(D.map(r => r.skims)).toFixed(1)} skims`, 'paved starts: ' + (D.flatMap(r => r.slides).filter(x => x.variant === 'paved').length / Math.max(1, D.flatMap(r => r.slides).length) * 100).toFixed(0) + '%');
     R.pending('5c.budget', '§5c', 'Casualties from one slide at most 2% (tier 2 or below), 5% (tier 3), 10% (tier 4); 0 in open country; the planner declines launches over budget (hard tests)', 'needs casualties attributed per slide (a slide event with the population lost, or the predicted slide of the planner) and the predicted-vs-actual landing test from Encounter');
   } else if (D) R.pending('5c.slides', '§5c', 'Knockback slide bands', 'no slide events in this sim (World SC slide)');
@@ -233,13 +236,13 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
   if (D) {
     R.info('8.hides', '§8', 'Hides and ambushes', 'retired', 'hiding is removed from the base game and kept for a future stealth fighter (balance-targets §8); the rows return with that fighter (canHide)');
     R.point('8.clash', '§8', 'Beam clashes and struggles per match (CLASH outcomes)', { v: mean(D.map(r => r.beams.filter(b => b.out === 'CLASH').length)), lo: 2, hi: 8 });
-    // lock breaks through line of sight (spec-wounds 1c): an episode for fighter X runs from the first `searching` aimed at X after X was last found, to X's next `found`
+    // lock breaks through line of sight (spec-wounds 1c): an episode for fighter X runs from the first `searching` (kind lock) aimed at X after X was last found, to X's next `found`
     if (hasEvent(A, 'found')) {
       const eps = [], gapsBetween = [], perMatch = [];
       for (const r of D) {
         let n = 0; const lastFound = {}, start = {};
         for (const e of (r.events || [])) {
-          if (e.type === 'searching' && start[e.target] === undefined) start[e.target] = e.t;
+          if (e.type === 'searching' && e.kind !== 'sweep' && start[e.target] === undefined) start[e.target] = e.t;   // kind lock only: sweeps are AI hunt points, not lock loss
           if (e.type === 'found' && start[e.actor] !== undefined) { eps.push(e.t - start[e.actor]); if (lastFound[e.actor] !== undefined) gapsBetween.push(start[e.actor] - lastFound[e.actor]); lastFound[e.actor] = e.t; delete start[e.actor]; n++; }
         }
         perMatch.push(n);
@@ -253,7 +256,10 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
       const ll = mean(D.map(r => (r.events || []).filter(e => e.type === 'lock_lost').length));
       R.info('8.lock.attempts', '§1c', 'Attacks refused for lost lock (lock_lost) per match', ll.toFixed(2));
     } else R.pending('8.lock', '§1c', 'Lock breaks through line of sight: 1 to 4 a match, median 2 to 3 s, at most 4 s, never within 6 s of the last', 'needs the found and searching events (S2)');
-    R.pending('8.breath', '§8', 'Second breath: battered wear recovered through it is at most 25% of all battered wear taken', 'needs an event or a total for wear recovered by second breath');
+    if (D.some(r => r.batteredIn > 0)) {
+      const bin = sum(D.map(r => r.batteredIn)), bre = sum(D.map(r => r.breathWear));
+      R.point('8.breath', '§8', 'Second breath: battered wear recovered through it, as a share of all battered wear taken (at most 25%)', { v: bre / bin, hi: 0.25, unit: 'pct', note: bre === 0 ? 'no breathWear in these records (sim before S4?)' : '' });
+    } else R.pending('8.breath', '§8', 'Second breath: battered wear recovered through it is at most 25% of all battered wear taken', 'needs breathWear (S4) in the sim');
     R.pending('8.comebacks', '§8', 'Comebacks 15 to 35% of matches; lead changes median at least 2', 'needs the brink and region stages (Wounds S1, S2)');
     R.add(hasEvent(A, 'region_broken') ? { id: '8.breaks', ref: '§8', what: 'Region breaks per match, median (game: 4 to 6)', status: 'INFO', value: String(median(D.map(r => r.events.filter(e => e.type === 'region_broken').length))), band: '4 to 6 at game scale', note: 'see the pending-tests skeleton W3' } : { id: '8.breaks', ref: '§8', what: 'Region breaks before the finisher (4 to 6), finishers preceded by a brink call-out (100%)', status: 'PENDING', value: '', band: '', note: 'needs Wounds S1 and S2 events' });
   }

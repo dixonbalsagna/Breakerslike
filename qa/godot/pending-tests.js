@@ -45,7 +45,7 @@ const tests = [
       assert.ok(median(lens) >= 360 && median(lens) <= 480 && q(lens, 0.9) <= 600 && q(lens, 0.99) <= 720, `length median ${median(lens).toFixed(0)}, p90 ${q(lens, 0.9).toFixed(0)}, p99 ${q(lens, 0.99).toFixed(0)}`);
       return `breaks ${breaks}, first brink ${brink.toFixed(0)} s, median length ${median(lens).toFixed(0)} s`;
     } },
-  { id: 'W4', spec: 'spec-wounds §5.4', title: 'No loops: 0.5 to 2.0 rallies per match; no region rallied twice; finisher survival 0 after a third rally and after 11:00', slice: 'S4', needs: ['rally', 'finisher_contest'],
+  { id: 'W4', spec: 'spec-wounds §5.4', title: 'No loops: 0.5 to 2.0 rallies per match; no region rallied twice; finisher survival 0 after a third rally and after 11:00', soft: true, slice: 'S4 (rate is a tuning target: Game Design rules)', needs: ['rally', 'finisher_contest'],
     run({ A }) {
       const D = A.default, per = D.reduce((s, r) => s + evs(r, 'rally').length, 0) / D.length;
       assert.ok(per >= 0.5 && per <= 2.0, `rallies per match ${per.toFixed(2)}`);

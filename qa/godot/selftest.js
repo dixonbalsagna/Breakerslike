@@ -64,7 +64,7 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
   });
   await t('lock-break rows: one 2.5 s break passes, a 5 s break and a repeat inside 6 s fail; hazard_telegraph alone does not switch on the hazard tests', async () => {
     const mk = evs => evaluate({ default: [withEvents(rec(), evs)] });
-    const ok = mk([{ type: 'searching', t: 10, actor: 0, target: 1 }, { type: 'found', t: 12.5, actor: 1 }]);
+    const ok = mk([{ type: 'searching', t: 9, actor: 0, target: 1, kind: 'sweep' }, { type: 'searching', t: 10, actor: 0, target: 1, kind: 'lock' }, { type: 'found', t: 12.5, actor: 1 }]);
     assert.strictEqual(ok.find(r => r.id === '8.lock.median').status, 'PASS'); assert.strictEqual(ok.find(r => r.id === '8.lock.max').status, 'PASS');
     const long = mk([{ type: 'searching', t: 10, actor: 0, target: 1 }, { type: 'found', t: 15, actor: 1 }]);
     assert.strictEqual(long.find(r => r.id === '8.lock.max').status, 'FAIL');

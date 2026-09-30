@@ -1,5 +1,5 @@
 // Combat feel probe for the prototype (prototype/index.html, unchanged since 7233c96): same frame classes and thresholds as
-// feel_probe.gd. From the repo root: node docs/combat/tools/proto_probe.js [matches=40] [baseSeed=100001]
+// feel_probe.gd. From the repo root: node qa/godot/feel/proto_probe.js [matches=40] [baseSeed=100001]
 // Strike-type events are read from state: an hp drop of either fighter, a fighter becoming 'launched', or a parry feed line.
 const path = require('path');
 const ROOT = path.join(__dirname, '..', '..', '..');

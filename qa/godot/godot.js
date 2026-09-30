@@ -31,7 +31,7 @@ let cached;
 const godot = () => (cached === undefined ? (cached = findGodot()) : cached);
 
 // Run `count` matches of `arm` from `base` over `jobs` Godot processes. Resolves to the records in seed order.
-function runRecords({ arm = 'default', base = 1, count = 100, jobs = Math.max(1, Math.min(8, os.cpus().length - 1)), cap = 18000, quiet = false }) {
+function runRecords({ arm = 'default', base = 1, count = 100, jobs = Math.max(1, Math.min(6, os.cpus().length - 1)), cap = 18000, quiet = false }) {
   const g = godot();
   if (!g) return Promise.reject(new Error('Godot 4.7 not found. Set GODOT to the console executable, e.g. C:\\...\\Godot_v4.7.2-stable_win64_console.exe'));
   jobs = Math.max(1, Math.min(jobs, count));

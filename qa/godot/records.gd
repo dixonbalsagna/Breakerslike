@@ -8,10 +8,10 @@ extends SceneTree
 
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 ## fx event types that carry game meaning rather than decoration: kept in order with their fields (wounds-plan.md, living destruction).
-const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "landslide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found", "decisive", "searching", "lock_lost", "launch_plan"]
+const KEEP_PREFIXES: Array = ["region_", "brink_", "finisher_", "rally", "ko", "hazard", "fire_", "landslide", "quake", "rift", "lava", "cloud", "front_", "wound", "tier_up", "hide_start", "found", "decisive", "searching", "lock_lost", "launch_plan", "struggle_press"]
 ## fighter indices are meaningful at 0
 const INDEX_FIELDS: Array = ["actor", "target", "winner", "loser", "owner"]
-const KEEP_FIELDS: Array = ["chosen", "tick", "tier", "cover", "actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]
+const KEEP_FIELDS: Array = ["kind", "chosen", "tick", "tier", "cover", "actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]
 
 var re_atk := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) (LIGHT|HEAVY|SIG) vs (\\w+)$")
 var re_beam := RegEx.create_from_string("^(.+) over (\\w+) \\((.+)\\) → (\\w+)")
@@ -60,12 +60,13 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "casTimeline": [], "slides": [], "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var launch_x: Array = [0.0, 0.0]
 	var prev_t: float = 0.0
 	var prev_cas: float = 0.0
+	var prev_wear: Array = [[0, 0, 0, 0], [0, 0, 0, 0]]
 	var last_sec: int = 0
 	var prev_ex = null
 	var ex_start: float = 0.0
@@ -114,6 +115,17 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 		prev_cas = S.world.casualties
 		if dcas != 0.0 or top <= 2:
 			rec.casByTier[clampi(top, 1, 4)] += dcas
+		# wear taken inside the battered band (60 to 90): the denominator of the second-breath band (balance-targets 8)
+		var wear0 = fs[0].get("wear")
+		if wear0 != null:
+			for i in range(2):
+				for ri in range(4):
+					var w: int = fs[i].wear[ri]
+					if w > prev_wear[i][ri]:
+						var band: int = mini(w, SimWounds.STAGE_AT[2]) - maxi(prev_wear[i][ri], SimWounds.STAGE_AT[1])
+						if band > 0:
+							rec.batteredIn += float(band) / SimWounds.WEAR_SCALE
+					prev_wear[i][ri] = w
 		# casualty timeline for the rolling-budget and ceiling tests (balance-targets 4b): [second, share of the starting population lost, higher tier]
 		if int(S.T) > last_sec:
 			last_sec = int(S.T)
@@ -184,6 +196,8 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 		rows[key] = r
 	rec.rows = rows
 	rec.craters = S.world.craters
+	if fs[0].get("breathWear") != null:
+		rec.breathWear = float(fs[0].breathWear + fs[1].breathWear) / SimWounds.WEAR_SCALE   # S4: wear recovered by second breath
 	rec.wear = [fs[0].get("wear"), fs[1].get("wear")]   # [head, core, arms, legs] in WEAR_SCALE units at the end (Wounds S1); null before
 	rec.stage = [fs[0].get("stage"), fs[1].get("stage")]
 	rec.menace = [fs[0].menace, fs[1].menace]

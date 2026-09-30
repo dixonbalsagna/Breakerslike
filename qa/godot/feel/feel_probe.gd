@@ -4,7 +4,7 @@ extends SceneTree
 ##   active  : a fighter moved faster than MOVE u/s, or a strike-type event happened in the last HOLD_VIS frames
 ##   idle    : neither (inside an exchange), or both fighters close and still (outside one: a "standoff")
 ## From the repo root:
-##   godot --headless --path . --script res://docs/combat/tools/feel_probe.gd -- <matches> <baseSeed> [profile | path to a templates.json] [label]
+##   godot --headless --path . --script res://qa/godot/feel/feel_probe.gd -- <matches> <baseSeed> [profile | path to a templates.json] [label]
 ## A profile name forces DirData.templatesProfile; a .json path swaps that templates file in (for profiles today's loader
 ## cannot select by name). Prints one JSON line. Definitions: docs/combat/dynamic-feel.md section 1.
 const MOVE: float = 100.0          # u/s: about 1.3 fighter heights a second

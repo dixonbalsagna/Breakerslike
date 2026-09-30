@@ -6,11 +6,13 @@ Owner: QA and Balance. Since ADR 0006 the GDScript sim is the source of truth. Q
 
 | Command | What it does | Time |
 | :--- | :--- | :--- |
-| `node qa/run-godot.js` | 400 matches in each of the 8 arms, all band checks, the acceptance-test skeletons, the slice S0 re-test | about 5 min on 8 jobs |
+| `node qa/run-godot.js` | 400 matches in each of the 8 arms, all band checks, the acceptance-test skeletons, the slice S0 re-test | about 25 min on 6 jobs (the machine rule: at most 6 Godot processes) |
 | `node qa/run-godot.js --quick` | default and swap arms, 100 matches | about 30 s |
 | `node qa/run-godot.js --md=docs/qa/baseline-g0.md` | also writes the report | |
 | `node qa/godot/selftest.js` | proves the skeletons and the evaluator work on synthetic records (no Godot) | 1 s |
 | `node qa/run-all.js` | legacy: prototype and frozen-core suite (tables, determinism, seam, soak, diff, known bugs, self-test) | about 90 s |
+
+The run also executes Combat's dynamic-feel probe (`qa/godot/feel/feel_probe.gd`, 40 default-arm matches, one Godot process; `--feel=N`, `--feel=0` skips) and reports the §10 dynamic-feel targets: melee idle share, still stretches, first strike, strike gaps, strikes per minute, release to next request, standoffs, time inside exchanges, hit-stop share. `qa/godot/feel/proto_probe.js` is the same probe on the prototype. `--save-records=file` / `--load-records=file` keep the records so bands can be re-evaluated without replaying.
 
 Options: `--matches=N --jobs=N --arms=a,b --scale=testbed|game --cap=TICKS --seed=BASE --fail --json=file --only=bands|tests|s0`. Godot is found through `$GODOT`, then `godot` on the PATH, then the Windows install folder. `QA_GODOT_ROOT=<dir>` points the run at another checkout, for example a `git archive <commit> | tar -x -C <dir>` export of an earlier or a clean commit (copy `qa/godot/` in and run `godot --headless --path <dir> --import` once). That is how a run is made against committed code while the working tree is in flux, and how before-and-after comparisons are made.
 
