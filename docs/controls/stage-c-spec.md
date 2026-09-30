@@ -32,7 +32,7 @@ The three attack buttons keep their bindings. Their meaning changes, the keys do
 | Press | sets `sigQueued`. Pressing again while queued **cancels** it |
 | Fires | at the director's **next opening**, once ki ≥ 45 |
 | Unfunded | stays queued while ki builds; the plate shows `NEED 45 CHARGE` and a fill toward 45 |
-| Unfunded expiry | **600 ticks (10 s)** after the press, so a stale intent does not fire minutes later (my value; Game Design may overrule) |
+| Unfunded expiry | **600 ticks (10 s)** after the press, so a stale intent does not fire minutes later (confirmed by Game Design) |
 | Maximum wait once funded | **180 ticks (3 s)**, overriding the stance's cadence if it must, **at the next exchange boundary** (Game Design) |
 | Clock pauses while | the fighter is charging, using a special, holding transform, in a cinematic, or (director rule) under a running exchange. It does not run down while attacks are paused |
 | After it fires | the mode returns to the latched weight; `sigQueued` clears |
@@ -80,11 +80,11 @@ Game Design: charging and specials pause the director's attacks until they end. 
 | The director's cadence, not the button, decides everything, so presses feel weightless | instant acknowledge on the ring and chip; the feed names why the director attacked (Encounter) |
 | Stance flicking becomes the fast input | R8 stands; QA's forced-flick arm (at most 55%) |
 
-## 7. Draft data (`data/input/feel.json`, replaces the earlier `parry`, `chain`, `struggle` and `attackBuffer` blocks)
+## 7. Draft data (`data/input/feel.json`, schema in `feel-schema.md`; replaces the earlier `parry`, `chain`, `struggle` and `attackBuffer` blocks)
 
 ```json
 {
-  "schema": "input.feel/2",
+  "schema": 1,
   "ticksPerSecond": 60,
   "weight": { "start": "light", "heavyKi": 4 },
   "signature": { "ki": 45, "maxWaitFunded": 180, "unfundedExpiry": 600,
@@ -111,6 +111,6 @@ The `parry` hit-stop stays: it is the freeze on a director-resolved parry, not a
 ## 9. Needs
 
 - **Encounter Systems:** the director reads `weight` and `sigQueued`; the opening and cadence per stance; the 180-tick cap at the next exchange boundary; the AI writes the same fields.
-- **Game Design:** confirm the 600-tick unfunded expiry, the no-op on pressing the current weight, and that a signature has no fallback.
+- **Game Design: confirmed (commit 7e87793, R9).** The 600-tick unfunded expiry, the no-op on re-pressing the current weight (still acknowledged), and no signature fallback (it waits showing NEED 45 CHARGE until funded or expired) all stand as written.
 - **UI/UX:** the weight mark on the stance ring; the signature chip with the `NEED 45 CHARGE` fill; `press_ack` marks (`prompt-glyphs.md`).
 - **Combat:** none new; the wind-up beats stay as poses only.

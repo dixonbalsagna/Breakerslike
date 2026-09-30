@@ -9,6 +9,9 @@ Owner: Controls and Game Feel. Date: 2026-09-29. Design first; code in `sim/inpu
 | [shake-pass.md](shake-pass.md) | Per-event shake for Camera, and the split's per-pane rule |
 | [prompt-glyphs.md](prompt-glyphs.md) | Prompt glyphs per device family for UI |
 | [stage-c-spec.md](stage-c-spec.md) | **Final Stage C spec:** sticky weight, the signature intent, the sim shape, tests, draft data, the final stage plan |
+| [stage-a-proof.md](stage-a-proof.md) | Stage A proof checklist for QA (integer hit-stop, inert intent fields, bit-identical goldens) |
+| [stage-c-tests.md](stage-c-tests.md) | Stage C test scripts and batch checks (weight, signature intent, holds) |
+| [feel-schema.md](feel-schema.md) | JSON Schema and cross-reference rules for `data/input/feel.json`, for Tools |
 | [intent-queue-plan.md](intent-queue-plan.md) | options considered before Game Design's answers (superseded by stage-c-spec.md) |
 | [platform-plan.md](platform-plan.md) | Gamepad in the web build and on desktop (Godot input), rebinding, tests, and mobile's two schemes |
 
