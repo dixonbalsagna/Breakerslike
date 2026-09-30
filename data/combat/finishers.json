@@ -16,7 +16,7 @@
     "struggle": {
       "resolveTick": 66, "beatTicks": [18, 36, 54], "countInTicks": [-18, 0],
       "halfWidthTicks": 4, "assistHalfWidthTicks": 8, "debounceTicks": 4, "inputs": ["light", "heavy"],
-      "scoring": { "base": 0.15, "perHit": 0.10, "perMiss": -0.05, "perStray": -0.05, "floor": 0.0,
+      "scoring": { "base": 0.23, "perHit": 0.10, "perMiss": -0.05, "perStray": -0.05, "floor": 0.0,
                    "tilts": "the contest's rallyPenalty per Rally used and tiltPerMinute past tiltAfter, as above" },
       "aiHitChance": 0.60,
       "_note": "Used by the authored profile. Ticks are counted from contestOpen, which sits 66 ticks before contest in every authored finisher; the cue just before contestOpen (final_windup, ascend_charge, lift_and_display) is the count-in. Widths and rhythm: Controls (rulings section 8). Scoring: Game Design (spec-wounds.md section 1). aiHitChance: Encounter maps difficulty to it (0.44 to 0.78 fits QA's 20 to 35% survival band). The contest still draws once, so the RNG sequence does not depend on the number of presses. Parity ignores this block (base 0.30, no input)."

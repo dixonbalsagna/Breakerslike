@@ -32,6 +32,7 @@ class WoundsDef:
 	var cripDefensive: float = 0.0
 	var cripMax: int = 0
 	var cripSurgePower: float = 0.0
+	var cripLegWeight: float = 1.0   # the crippling pick: the legs' weight against the arms' 1 when both are eligible
 	var armsBrokenLightMul: float = 1.0
 	var guardArms: float = 1.0     # guardWearSplit: a guard hit's wear, this share to the arms ...
 	var guardLegs: float = 0.0     # ... and this share to the legs
@@ -346,6 +347,9 @@ static func _wounds(id: String, j: Dictionary) -> WoundsDef:
 	w.cripDefensive = float(cr.get("defensive", 0.0))
 	w.cripMax = _int(where + " cripple.maxPerFighter", cr.get("maxPerFighter", 0))
 	w.cripSurgePower = float(cr.get("surgePower", 0.0))
+	w.cripLegWeight = float(cr.get("legWeight", 1.0))
+	if not (w.cripLegWeight > 0.0):
+		_err(where + ": cripple.legWeight must be above 0")
 	w.profile = String(j.get("profile", {}).get("type", ""))
 	if not PROFILES.has(w.profile):
 		_err(where + ": unknown profile type '" + w.profile + "'")

@@ -26,8 +26,8 @@
     540000
   ],
   "_stageAt": "bruised 30, battered 60, broken 90 (pinned: sim/director/ai.gd, qa/godot/records.gd)",
-  "wearPerDamage": 228.0,
-  "_wearPerDamage": "k 0.038 x 6000 (Game Design's interim value with the stricter brink, spec section 1b)",
+  "wearPerDamage": 246.0,
+  "_wearPerDamage": "k 0.041 x 6000 (Game Design, spec-wounds section 1b)",
   "act1Damping": 0.85,
   "_act1Damping": "wear x this while the act index is 1 (act = 1 + region breaks so far, both fighters; M1 will own the act)",
   "overtime": {
@@ -109,8 +109,9 @@
     "lateBonus": 0.05,
     "defensive": -0.05,
     "maxPerFighter": 1,
+    "legWeight": 1.5,
     "surgePower": 10.0,
-    "_note": "a heavy-class blow (a heavy, a signature, a guard break or a chain strike) that lands on a battered limb in a decisive exchange breaks it on a keyed roll: base, + tierAhead if the attacker is a tier ahead, + lateBonus from act lateAct, + defensive (negative) if the victim holds DEFENSIVE. At most maxPerFighter limbs a match; the breaker's power rises by surgePower"
+    "_note": "a heavy-class blow (a heavy, a signature, a guard break or a chain strike) that lands on a battered limb in a decisive exchange breaks it on a keyed roll: base, + tierAhead if the attacker is a tier ahead, + lateBonus from act lateAct, + defensive (negative) if the victim holds DEFENSIVE. At most maxPerFighter limbs a match; the breaker's power rises by surgePower. The pick: among the victim's eligible limbs (cripple regions, battered at the exchange's start and still battered), the legs weigh legWeight against the arms' 1"
   },
   "profile": {
     "type": "plain"

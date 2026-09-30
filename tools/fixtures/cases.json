@@ -3186,6 +3186,147 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "wounds-leg-weight-required",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "del": [
+            "/cripple/legWeight"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/cripple"
+      }
+    },
+    {
+      "id": "wounds-leg-weight-positive",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/cripple/legWeight": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/cripple/legWeight"
+      }
+    },
+    {
+      "id": "wounds-leg-weight-type",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/cripple/legWeight": "heavy"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/cripple/legWeight"
+      }
+    },
+    {
+      "id": "wounds-leg-weight-accepted",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/cripple/legWeight": 3
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "feedback-version",
+      "schema": "ui-feedback.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/feedback.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "feedback-needs-report-label",
+      "schema": "ui-feedback.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/feedback.json",
+          "del": [
+            "/report/seed"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/report"
+      }
+    },
+    {
+      "id": "feedback-empty-button",
+      "schema": "ui-feedback.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/feedback.json",
+          "set": {
+            "/buttons/copy": ""
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/buttons/copy"
+      }
+    },
+    {
+      "id": "feedback-tag-shape",
+      "schema": "ui-feedback.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/feedback.json",
+          "set": {
+            "/tags/0/id": "Bug Report"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/tags/0/id"
+      }
+    },
+    {
+      "id": "feedback-duplicate-tag",
+      "schema": "ui-feedback.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/feedback.json",
+          "set": {
+            "/tags/1/id": "bug"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:feedback-tag",
+        "pointer": "/tags/1/id"
+      }
     }
   ],
   "text": [

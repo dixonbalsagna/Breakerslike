@@ -225,7 +225,8 @@
         "lateBonus",
         "defensive",
         "maxPerFighter",
-        "surgePower"
+        "surgePower",
+        "legWeight"
       ],
       "properties": {
         "regions": {
@@ -278,6 +279,11 @@
         "surgePower": {
           "type": "number",
           "minimum": 0
+        },
+        "legWeight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The legs' weight against the arms (1) when the crippling pick chooses among eligible limbs."
         }
       },
       "additionalProperties": false,

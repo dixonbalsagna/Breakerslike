@@ -366,7 +366,28 @@ static func _crippleRoll(S: SimState, ex, W, L) -> void:
 	if (ex.sD if L == ex.D else ex.sA) == 1.0:
 		chance += wd.cripDefensive
 	if SimRng.keyed(int(S.game.seed), "cripple", ex.n * 16 + int(ex.combo)) < chance:
-		cripple(S, W, L, r)
+		cripple(S, W, L, _cripplePick(S, ex, L, r))
+
+
+## Which limb breaks (Game Design's leg weighting, balance-targets §13): among the victim's eligible limbs (its cripple
+## regions, battered when the exchange started and still battered), the legs weigh cripLegWeight against the arms' 1; a
+## second keyed draw picks. With one eligible limb it is the one the blow landed on.
+static func _cripplePick(S: SimState, ex, L, r: int) -> int:
+	var slot: int = S.fighters.find(L)
+	var elig: Array = []
+	var sum: float = 0.0
+	for q in L.wd.cripRegions:
+		if L.stage[q] == 2 and (ex.startBattered & (1 << (slot * 4 + q))) != 0:
+			elig.append(q)
+			sum += L.wd.cripLegWeight if q == LEGS else 1.0
+	if elig.size() < 2:
+		return r
+	var pick: float = SimRng.keyed(int(S.game.seed), "crippick", ex.n * 16 + int(ex.combo)) * sum
+	for q in elig:
+		pick -= L.wd.cripLegWeight if q == LEGS else 1.0
+		if pick < 0.0:
+			return q
+	return elig[elig.size() - 1]
 
 
 ## W breaks L's limb r: broken for the match (Rally never mends it), a limb_break event, and W's power surges.

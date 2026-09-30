@@ -56,10 +56,10 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
 `wounds.json` holds today's `SimWounds` constants, under the same names:
 - `regions`: head, core, arms and legs. Each has `brink` (true, or false for the Empress's mantle later).
 - `stageAt`: `[180000, 360000, 540000]`, in units.
-- `wearPerDamage`: 228, which is k 0.038 × 6000 (Game Design's interim value with the stricter brink, spec §1b).
+- `wearPerDamage`: 246, which is k 0.041 × 6000 (Game Design, spec §1b).
 - **Pitch A, the crippling moment** (Orb; `pitches.md` §5, `balance-targets.md` §13):
   - `regions`: each region has `brink` and `spill`. The core alone is `brink: true`; the limbs are `spill: true`. A spill region wears to battered (539999) and stops, and the rest goes into the core (all of it once the limb is broken). The brink is any `brink` region broken, so the core, and `brinkProgress` reads the core.
-  - `cripple`: `regions` [arms, legs], `blows` [heavy, beam, guard_break, chain], `base` 0.15, `tierAhead` 0.10, `lateAct` 3, `lateBonus` 0.10, `defensive` −0.10, `maxPerFighter` 1, `surgePower` 10.
+  - `cripple`: `regions` [arms, legs], `blows` [heavy, beam, guard_break, chain], `base` 0.08, `tierAhead` 0.05, `lateAct` 3, `lateBonus` 0.05, `defensive` −0.05, `maxPerFighter` 1, `legWeight` 1.5, `surgePower` 10. On a successful roll, `_cripplePick` chooses which limb breaks. The candidates are the victim's eligible limbs: its cripple regions, battered at the exchange's start and still battered. The legs weigh `legWeight` against the arms' 1, and a second keyed draw (`crippick`) decides. With one eligible limb, it is the limb the blow landed on.
   - A heavy-class blow on such a limb is remembered on the exchange (`ex.cripR`), but only if the limb was already battered when the exchange started (`ex.startBattered`, taken by `SimWounds.onExchangeStart`). The blow that makes a limb battered can't also break it (Game Design: a visible warning before every break). At the exchange's decisive result (`onDecisive`), a keyed roll (`SimRng.keyed(seed, "cripple", ex.n × 16 + combo)`) breaks the limb. That emits `limb_break`, and the breaker's power rises by `surgePower`.
   - The victim's data set the odds; the breaker's data set the surge.
   - Rally mends the core only, and a broken limb stays broken.
