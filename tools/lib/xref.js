@@ -18,6 +18,8 @@ const TERMS = 'ui/data/terms.json';
 const PROFILES = 'ui/data/readout_profiles.json';
 const ROSTER = 'data/fighters/roster.json';
 const EFFECTS = 'data/art/effects.json';
+const BABBLE = 'audio/data/babble.json';
+const BABBLE_CAPTIONS = 'audio/data/babble_captions.json';
 const OPTIONS = 'ui/data/options.json';
 const SKETCH_COMMON = 'audio/data/sketch_common.json';
 
@@ -286,6 +288,29 @@ function xref(docs, root = repoRoot) {
         if (limit.below !== undefined && v >= limit.below) err(EFFECTS, `/lanes/${name}/${step}`, 'effects-lightness', `${name} ${step} ${l[step]} has L* ${v.toFixed(1)}; Art's rule needs below ${limit.below}`);
       }
     };
+    // Embers: Art's deuteranopia contrast table is recomputed from the hex values (Machado severity 1.0 on linear RGB,
+    // WCAG relative luminance, best of the step and its rim against each ground) and must match, and must meet the 3.7 the
+    // result line promises.
+    const em = fx.lanes && fx.lanes.embers;
+    if (isObj(em) && isObj(em.ramp) && isObj(em.deutan_check) && Array.isArray(em.deutan_check.grounds)) {
+      const hexOf = (s) => { const m = /#[0-9a-fA-F]{6}/.exec(String(s)); return m ? m[0] : null; };
+      const linear = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      const M = [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]];
+      const lum = (h) => { const c = linear(h); const s = M.map((r) => Math.min(1, Math.max(0, r[0] * c[0] + r[1] * c[1] + r[2] * c[2]))); return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2]; };
+      const ratio = (a, b) => { const x = lum(a); const y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+      const grounds = em.deutan_check.grounds.map(hexOf);
+      const rows = [['core_with_rim', em.ramp.core, em.rim], ['hot_with_rim', em.ramp.hot, em.rim], ['warm_with_rim', em.ramp.warm, em.rim], ['char_with_light_rim', em.char, em.ramp.hot]];
+      for (const [key, step, rim] of rows) {
+        const listed = em.deutan_check[key];
+        if (!Array.isArray(listed) || ![step, rim, ...grounds].every((h) => typeof h === 'string' && /^#[0-9a-fA-F]{6}$/.test(h))) continue;
+        if (listed.length !== grounds.length) { err(EFFECTS, `/lanes/embers/deutan_check/${key}`, 'effects-deutan', `has ${listed.length} ratios for ${grounds.length} grounds`); continue; }
+        grounds.forEach((g, i) => {
+          const want = Math.max(ratio(step, g), ratio(rim, g));
+          if (Math.abs(want - listed[i]) > 0.01) err(EFFECTS, `/lanes/embers/deutan_check/${key}/${i}`, 'effects-deutan', `listed ${listed[i]}, but the colours give ${want.toFixed(2)} against ${g}`);
+          if (want < 3.7) err(EFFECTS, `/lanes/embers/${key === 'char_with_light_rim' ? 'char' : 'ramp'}`, 'effects-deutan', `contrast ${want.toFixed(2)} against ${g} is under the 3.7 that Art's result promises`);
+        });
+      }
+    }
     lane('glass', ['light', 'mid'], { above: 80 });
     lane('steel', ['mid', 'shadow'], { below: 40 });
   }
@@ -366,6 +391,79 @@ function xref(docs, root = repoRoot) {
     const names = new Set(plainKeys(profiles).filter((k) => k !== 'schema' && k !== 'aliases' && k !== 'note'));
     for (const [alias, a] of Object.entries(profiles.aliases)) {
       if (isObj(a) && a.base !== undefined && !names.has(a.base)) err(PROFILES, `/aliases/${esc(alias)}/base`, 'profile', `alias "${alias}" uses profile "${a.base}", which does not exist`);
+    }
+  }
+
+  // ---- audio: babble ----
+  const babble = get(BABBLE);
+  if (isObj(babble)) {
+    const moods = new Set(isObj(babble.moods) ? plainKeys(babble.moods) : []);
+    const timbres = new Set(isObj(babble.timbres) ? plainKeys(babble.timbres) : []);
+    const onsets = new Set(isObj(babble.onsets) ? plainKeys(babble.onsets) : []);
+    const vowels = new Set(isObj(babble.vowels) ? plainKeys(babble.vowels) : []);
+    const syllables = new Set(isObj(babble.syllables) ? plainKeys(babble.syllables) : []);
+    if (isObj(babble.syllables)) {
+      for (const [name, s] of Object.entries(babble.syllables)) {
+        if (!isObj(s)) continue;
+        if (!onsets.has(s.onset)) err(BABBLE, `/syllables/${esc(name)}/onset`, 'babble-onset', `onset "${s.onset}" is not in onsets (${[...onsets].join(', ')})`);
+        if (!vowels.has(s.vowel)) err(BABBLE, `/syllables/${esc(name)}/vowel`, 'babble-vowel', `vowel "${s.vowel}" is not in vowels (${[...vowels].join(', ')})`);
+      }
+    }
+    if (isObj(babble.moods)) {
+      for (const [name, m] of Object.entries(babble.moods)) {
+        if (isObj(m) && !timbres.has(m.timbre)) err(BABBLE, `/moods/${esc(name)}/timbre`, 'babble-timbre', `timbre "${m.timbre}" is not in timbres (${[...timbres].join(', ')})`);
+      }
+    }
+    if (isObj(babble.mood_map)) {
+      for (const [tag, mood] of Object.entries(babble.mood_map)) {
+        if (!moods.has(mood)) err(BABBLE, `/mood_map/${esc(tag)}`, 'babble-mood', `Narrative tag "${tag}" maps to "${mood}", which is not a babble mood (${[...moods].join(', ')})`);
+        if (moods.has(tag)) err(BABBLE, `/mood_map/${esc(tag)}`, 'babble-mood', `"${tag}" is already a babble mood; a mapped tag must not shadow one`);
+      }
+    }
+    // A voice's own laugh (the babble laugh, not a grunt clip) is a valid gesture target as well.
+    const gestureNames = new Set(['laugh']);
+    if (isObj(babble.voice_moods)) {
+      for (const [vid, map] of Object.entries(babble.voice_moods)) {
+        if (isObj(babble.voices) && !(vid in babble.voices)) err(BABBLE, `/voice_moods/${esc(vid)}`, 'voice', `voice_moods names "${vid}", which is not a voice in babble.json`);
+        for (const [tag, mood] of Object.entries(isObj(map) ? map : {})) {
+          if (!moods.has(mood)) err(BABBLE, `/voice_moods/${esc(vid)}/${esc(tag)}`, 'babble-mood', `"${vid}" maps "${tag}" to "${mood}", which is not a babble mood (${[...moods].join(', ')})`);
+        }
+      }
+    }
+    if (isObj(babble.styles)) {
+      for (const [name, s] of Object.entries(babble.styles)) {
+        if (isObj(s) && s.mood !== undefined && !moods.has(s.mood)) err(BABBLE, `/styles/${esc(name)}/mood`, 'babble-mood', `style "${name}" uses mood "${s.mood}", which is not a babble mood (${[...moods].join(', ')})`);
+      }
+    }
+    if (isObj(grunts) && isObj(grunts.voices)) {
+      for (const v of Object.values(grunts.voices)) {
+        if (isObj(v) && isObj(v.gestures)) Object.keys(v.gestures).forEach((n) => gestureNames.add(n));
+      }
+    }
+    if (isObj(babble.voices)) {
+      for (const [vid, v] of Object.entries(babble.voices)) {
+        if (voices && !voices.includes(vid)) err(BABBLE, `/voices/${esc(vid)}`, 'voice', `babble voice "${vid}" is not in grunts.json voices (${voices.join(', ')})`);
+        if (isObj(v) && isObj(v.lexicon)) {
+          for (const syl of Object.keys(v.lexicon)) if (!syllables.has(syl)) err(BABBLE, `/voices/${esc(vid)}/lexicon/${esc(syl)}`, 'babble-syllable', `lexicon uses syllable "${syl}", which is not in syllables`);
+        }
+      }
+      if (voices) for (const vid of voices) if (!(vid in babble.voices)) err(BABBLE, '/voices', 'voice', `grunts.json has voice "${vid}", but babble.json has none for it`, 'warning');
+    }
+    if (gestureNames.size) {
+      const pairs = [];
+      if (isObj(babble.cue_map)) for (const [cue, g] of Object.entries(babble.cue_map)) pairs.push([`/cue_map/${esc(cue)}`, g]);
+      if (isObj(babble.grunt_punctuation)) for (const [k, p] of Object.entries(babble.grunt_punctuation)) if (isObj(p)) pairs.push([`/grunt_punctuation/${esc(k)}/gesture`, p.gesture]);
+      for (const [pointer, g] of pairs) if (typeof g === 'string' && !gestureNames.has(g)) err(BABBLE, pointer, 'babble-gesture', `gesture "${g}" is not defined by any voice in grunts.json`);
+    }
+    const caps = get(BABBLE_CAPTIONS);
+    if (isObj(caps) && isObj(caps.captions)) {
+      const known = new Set([...moods, ...(isObj(babble.mood_map) ? Object.keys(babble.mood_map) : []), ...Object.values(isObj(babble.voice_moods) ? babble.voice_moods : {}).flatMap((m) => (isObj(m) ? Object.keys(m) : []))]);
+      for (const [vid, list] of Object.entries(caps.captions)) {
+        if (isObj(babble.voices) && !(vid in babble.voices)) err(BABBLE_CAPTIONS, `/captions/${esc(vid)}`, 'voice', `captions for "${vid}", which is not a voice in babble.json`);
+        (Array.isArray(list) ? list : []).forEach((c, i) => {
+          if (isObj(c) && !known.has(c.mood)) err(BABBLE_CAPTIONS, `/captions/${esc(vid)}/${i}/mood`, 'babble-mood', `mood "${c.mood}" is neither a babble mood nor a Narrative tag in mood_map`);
+        });
+      }
     }
   }
 

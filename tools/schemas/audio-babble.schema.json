@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/audio-babble",
+  "title": "audio babble (schema 1)",
+  "description": "audio/data/babble.json: the babble voices, the syllable bank and how a caption's mood and text become a run of syllables (audio/audio_babble.gd plans, audio/synth/babble_synth.gd renders). Version field: schema. Policy: closed except keys starting with an underscore; every voice, mood, timbre and onset lists the keys the synth reads. Cross-references (voice ids exist in grunts.json, syllables use real onsets and vowels, lexicons use real syllables, moods use real timbres, mood_map targets are moods, cue and punctuation gestures exist in grunts.json) are checked by tools/lib/xref.js.",
+  "type": "object",
+  "required": ["schema", "bank_seed", "rate", "timeline", "vowels", "nasal", "onsets", "syllables", "timbres", "voices", "moods", "mood_map", "grunt_punctuation", "cue_map", "plan", "voice_moods", "styles"],
+  "properties": {
+    "schema": { "const": 1 },
+    "bank_seed": { "type": "integer", "minimum": 0 },
+    "rate": { "type": "integer", "minimum": 8000 },
+    "note": { "type": "string" },
+    "timeline": {
+      "type": "object",
+      "required": ["base_cps", "cps_per_intensity", "pauses"],
+      "properties": {
+        "note": { "type": "string" },
+        "base_cps": { "type": "number", "exclusiveMinimum": 0 },
+        "cps_per_intensity": { "type": "number", "minimum": 0 },
+        "pauses": { "type": "object", "propertyNames": { "pattern": "^.$" }, "additionalProperties": { "type": "number", "minimum": 0 } }
+      },
+      "additionalProperties": false
+    },
+    "vowels": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]$" },
+      "additionalProperties": { "$ref": "#/$defs/formants" }
+    },
+    "nasal": { "$ref": "#/$defs/formants" },
+    "onsets": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["breath", "h_onset", "glide", "nasal"],
+        "properties": {
+          "breath": { "type": "number", "minimum": 0, "maximum": 1 },
+          "h_onset": { "type": "number", "minimum": 0 },
+          "glide": { "$ref": "#/$defs/pair" },
+          "nasal": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "syllables": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]{2}$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["onset", "vowel"],
+        "properties": { "onset": { "type": "string", "pattern": "^[a-z]+$" }, "vowel": { "type": "string", "pattern": "^[a-z]$" } },
+        "additionalProperties": false
+      }
+    },
+    "timbres": {
+      "type": "object",
+      "required": ["base"],
+      "propertyNames": { "pattern": "^[a-z]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["open", "breath", "jitter", "shimmer", "drive", "fry", "attack"],
+        "properties": {
+          "open": { "type": "number", "minimum": 0 },
+          "breath": { "type": "number", "minimum": 0 },
+          "jitter": { "type": "number", "minimum": 0 },
+          "shimmer": { "type": "number", "minimum": 0 },
+          "drive": { "type": "number", "minimum": 0 },
+          "fry": { "type": "number", "minimum": 0 },
+          "attack": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "voices": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "$ref": "#/$defs/voice" }
+    },
+    "moods": {
+      "type": "object",
+      "required": ["neutral"],
+      "propertyNames": { "pattern": "^[a-z]+$" },
+      "additionalProperties": { "$ref": "#/$defs/mood" }
+    },
+    "mood_map": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-z]+$" }, "propertyNames": { "pattern": "^[a-z][a-z_-]*$" } },
+    "voice_moods": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-z]+$" }, "propertyNames": { "pattern": "^[a-z][a-z_-]*$" } }
+    },
+    "styles": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["intensity"],
+        "properties": {
+          "intensity": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "chars_mul": { "type": "number", "exclusiveMinimum": 0 },
+          "mood": { "type": "string", "pattern": "^[a-z]+$" },
+          "muffled": { "type": "boolean" },
+          "gain_db": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "grunt_punctuation": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["gesture", "gain_db", "delay"],
+        "properties": {
+          "gesture": { "type": "string", "pattern": "^[a-z]+([.][a-z]+)?$" },
+          "gain_db": { "type": "number" },
+          "delay": { "type": "number", "minimum": 0 },
+          "p": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "cue_map": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-z]+([.][a-z]+)?$" } },
+    "plan": {
+      "type": "object",
+      "required": ["skip_keep_last", "laugh_gain_db", "syllable_gain_db", "max_syllables", "max_syl_per_word"],
+      "properties": {
+        "skip_keep_last": { "type": "boolean" },
+        "laugh_gain_db": { "type": "number" },
+        "syllable_gain_db": { "type": "number" },
+        "max_syllables": { "type": "integer", "minimum": 1 },
+        "max_syl_per_word": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": { "^_": true },
+  "$defs": {
+    "pair": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "minItems": 2, "maxItems": 2 },
+    "triple": { "type": "array", "prefixItems": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "number", "exclusiveMinimum": 0 }, { "type": "number", "exclusiveMinimum": 0 }], "minItems": 3, "maxItems": 3 },
+    "formants": {
+      "type": "object",
+      "required": ["f", "bw"],
+      "properties": { "f": { "$ref": "#/$defs/triple" }, "bw": { "$ref": "#/$defs/triple" } },
+      "additionalProperties": false
+    },
+    "voice": {
+      "type": "object",
+      "required": ["label", "ref_f0", "formant_k", "syl_ms", "min_gap", "open", "breath", "jitter", "shimmer", "drive", "crush_bits", "hold", "stutter", "lexicon", "laugh", "chars_per_syl"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "ref_f0": { "type": "number", "exclusiveMinimum": 0 },
+        "formant_k": { "type": "number", "exclusiveMinimum": 0 },
+        "syl_ms": { "type": "number", "exclusiveMinimum": 0 },
+        "min_gap": { "type": "number", "minimum": 0 },
+        "open": { "type": "number", "minimum": 0, "maximum": 1 },
+        "breath": { "type": "number", "minimum": 0 },
+        "jitter": { "type": "number", "minimum": 0 },
+        "shimmer": { "type": "number", "minimum": 0 },
+        "drive": { "type": "number", "minimum": 0 },
+        "crush_bits": { "type": "integer", "minimum": 0 },
+        "hold": { "type": "number", "minimum": 1 },
+        "stutter": { "type": "boolean" },
+        "lexicon": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } },
+        "laugh": {
+          "type": "object",
+          "required": ["pulses", "f0", "spacing", "pulse_ms", "decay", "breath", "step_st", "variants"],
+          "properties": {
+            "pulses": { "type": "integer", "minimum": 1 },
+            "f0": { "$ref": "#/$defs/pair" },
+            "spacing": { "$ref": "#/$defs/pair" },
+            "pulse_ms": { "type": "number", "exclusiveMinimum": 0 },
+            "decay": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+            "breath": { "type": "number", "minimum": 0 },
+            "step_st": { "type": "number" },
+            "variants": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "chars_per_syl": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "mood": {
+      "type": "object",
+      "required": ["timbre", "pitch_st", "slope_st", "lilt_st", "lilt_period", "gap_mul", "accent_every", "accent_st", "jitter_st", "gain_db", "laugh_every", "grunt_p", "skip_p"],
+      "properties": {
+        "timbre": { "type": "string", "pattern": "^[a-z]+$" },
+        "pitch_st": { "type": "number" },
+        "slope_st": { "type": "number" },
+        "lilt_st": { "type": "number", "minimum": 0 },
+        "lilt_period": { "type": "number", "exclusiveMinimum": 0 },
+        "gap_mul": { "type": "number", "exclusiveMinimum": 0 },
+        "accent_every": { "type": "integer", "minimum": 0 },
+        "accent_st": { "type": "number" },
+        "jitter_st": { "type": "number", "minimum": 0 },
+        "gain_db": { "type": "number" },
+        "laugh_every": { "type": "integer", "minimum": 0 },
+        "grunt_p": { "type": "number", "minimum": 0, "maximum": 1 },
+        "skip_p": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

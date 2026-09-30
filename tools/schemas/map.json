@@ -15,6 +15,8 @@
     { "match": "audio/data/flash_cues.json", "schema": "audio-flash-cues.schema.json" },
     { "match": "audio/data/grunts.json", "schema": "audio-grunts.schema.json" },
     { "match": "audio/data/impacts.json", "schema": "audio-impacts.schema.json" },
+    { "match": "audio/data/babble.json", "schema": "audio-babble.schema.json" },
+    { "match": "audio/data/babble_captions.json", "schema": "audio-babble-captions.schema.json" },
     { "match": "audio/data/mix.json", "schema": "audio-mix.schema.json" },
     { "match": "audio/data/sketch_common.json", "schema": "audio-sketch-common.schema.json" },
     { "match": "audio/data/sketch_*.json", "schema": "audio-sketch.schema.json" },

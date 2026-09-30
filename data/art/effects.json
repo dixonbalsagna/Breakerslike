@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "note": "Art's semantic effect colours for VFX (docs/vfx/plan.md, rule R4): trail rim, glass, steel, dust, crack line, lit lip. Authored by the Art Director session (Claude, claude-sonnet-5-5), 2026-09-29, human direction from Orb via the EP. Working values, pending Legal and Orb. Each lane is also carried by shape or motion, so none depends on hue alone. Fire keeps orange and yellow (HEAT_LO, HEAT_HI in render/core/look.gd); nothing here uses them. Colours are three steps (light, mid, shadow) in the same ramp rule as the fighters (docs/art/style-guide.md 3.2).",
   "lanes": {
     "trail": {
@@ -7,7 +7,13 @@
       "rim": "The fighter's accent mid step (data/art/flashes.json accents), with a near-white core and a thin dark keyline so it reads on bright and dark backdrops.",
       "core": "#f4f7fb",
       "keyline": "#2a2f3a",
-      "fire_range_swap": { "note": "If an accent falls in the fire range (orange, yellow, red-orange) the rim swaps to the haze neutral. Only the Cyborg's coral accent does.", "rim": "#cfe6f0", "applies_to": ["C"] }
+      "fire_range_swap": {
+        "note": "If an accent falls in the fire range (orange, yellow, red-orange) the rim swaps to the haze neutral. Only the Cyborg's coral accent does.",
+        "rim": "#cfe6f0",
+        "applies_to": [
+          "C"
+        ]
+      }
     },
     "glass": {
       "shape": "Thin slivers, long and narrow, never chunky.",
@@ -25,7 +31,11 @@
     },
     "dust": {
       "shape": "A soft disc (a cel disc with a lighter top edge), rising and spreading. Never a hard shard.",
-      "default": { "light": "#c9bfae", "mid": "#a89b88", "shadow": "#7d7264" },
+      "default": {
+        "light": "#c9bfae",
+        "mid": "#a89b88",
+        "shadow": "#7d7264"
+      },
       "max_alpha_near_fighter": 0.6,
       "note": "Biome grey-brown. Use by_biome where the biome is known, the default otherwise. Near a fighter it is capped at 60 percent alpha and never draws in front of the body (R1)."
     },
@@ -33,19 +43,177 @@
       "shape": "A dark line with a lit lip: a thin dark crack and a lighter edge on the lit side of it.",
       "line_rule": "The biome's ground shadow step, darker by about 30 L*, never pure black.",
       "note": "See by_biome for the line and the lip. Paved ground (the city) gets slab lines, and ocean has no cracks (skim spray instead)."
+    },
+    "embers": {
+      "shape": "Small hard-edged chips and cinders that rise and drift. Never a soft glow as the main read.",
+      "ramp": {
+        "core": "#fff3c4",
+        "hot": "#ffd27a",
+        "warm": "#ffb347"
+      },
+      "rim": "#2b1610",
+      "char": "#3a1c14",
+      "life": "An ember starts at core, steps down through hot and warm, and ends as a char chip (dark) that fades out. It never cools to red, because red on green has no brightness contrast for red-green colour blindness.",
+      "rule": "Embers read by brightness, not hue: light steps (core, hot, warm) carry a 1 px dark rim (`rim`), and the spent char chip carries a light rim (`hot`). Between them every ember separates from grass and forest by value. Do not use HEAT_LO (#c2381c) for an ember; it stays for the ground groove's glow only.",
+      "deutan_check": {
+        "method": "Machado deuteranopia (severity 1.0) on linear RGB, WCAG relative-luminance contrast. Best of the ember step and its rim against each ground.",
+        "grounds": [
+          "grass light #9cc95a",
+          "grass stripe #8cb04d",
+          "grass base #6da043",
+          "grass shadow #3f6e34",
+          "canopy light #4f9a4a",
+          "canopy base #2e6a35",
+          "canopy shadow #17421f",
+          "forest litter #6b4b2c"
+        ],
+        "old_HEAT_LO": [
+          2.37,
+          1.84,
+          1.46,
+          1.34,
+          1.28,
+          1.46,
+          2.53,
+          1.63
+        ],
+        "core_with_rim": [
+          8.62,
+          6.68,
+          5.29,
+          5.62,
+          4.67,
+          6.12,
+          10.65,
+          6.85
+        ],
+        "hot_with_rim": [
+          8.62,
+          6.68,
+          5.29,
+          4.53,
+          4.67,
+          4.93,
+          8.59,
+          5.52
+        ],
+        "warm_with_rim": [
+          8.62,
+          6.68,
+          5.29,
+          3.72,
+          4.67,
+          4.06,
+          7.06,
+          4.54
+        ],
+        "char_with_light_rim": [
+          7.69,
+          5.96,
+          4.72,
+          4.53,
+          4.17,
+          4.93,
+          8.59,
+          5.52
+        ],
+        "result": "Every ember step and the char chip reach at least 3.7:1 against every grass and forest ground under the deutan simulation. The old red-orange cooling end was 1.3 to 1.5 against grass base and canopy."
+      }
     }
   },
   "by_biome": {
-    "ocean": { "dust": { "light": "#e6f6fa", "mid": "#b9dbe6", "shadow": "#8fb8c8" }, "crack": null, "lip": null, "note": "Spray and foam, not dust. No cracks." },
-    "plains": { "dust": { "light": "#c2bd94", "mid": "#a39a78", "shadow": "#766e56" }, "crack": "#2a4a24", "lip": "#b6d97a" },
-    "city": { "dust": { "light": "#c8ccd3", "mid": "#a8adb6", "shadow": "#7a808b" }, "crack": "#1f2329", "lip": "#6b7280", "paved": true },
-    "forest": { "dust": { "light": "#a8957a", "mid": "#8a7860", "shadow": "#5f5140" }, "crack": "#3d2f22", "lip": "#8a6a45" },
-    "desert": { "dust": { "light": "#f0d9a0", "mid": "#e0c48a", "shadow": "#b0925a" }, "crack": "#6a4e28", "lip": "#f5e2b0" },
-    "mountains": { "dust": { "light": "#c5bda9", "mid": "#a89f8c", "shadow": "#7a7264" }, "crack": "#2d2a26", "lip": "#c9c1ae" },
-    "village_harbour": { "dust": { "light": "#d3c8ac", "mid": "#b9ac8f", "shadow": "#8b806a" }, "crack": "#7d7260", "lip": "#d6ccb2" },
-    "village_workshop": { "dust": { "light": "#b99a72", "mid": "#a07d55", "shadow": "#755a3b" }, "crack": "#6d5236", "lip": "#c29d70" },
-    "village_hill": { "dust": { "light": "#a3ba80", "mid": "#8a9a6a", "shadow": "#61704a" }, "crack": "#465a2d", "lip": "#8fa86a" },
-    "proving_ground": { "dust": { "light": "#e6e1d5", "mid": "#c9c3b5", "shadow": "#948d80" }, "crack": "#5d574d", "lip": "#d9d4c8" }
+    "ocean": {
+      "dust": {
+        "light": "#e6f6fa",
+        "mid": "#b9dbe6",
+        "shadow": "#8fb8c8"
+      },
+      "crack": null,
+      "lip": null,
+      "note": "Spray and foam, not dust. No cracks."
+    },
+    "plains": {
+      "dust": {
+        "light": "#c2bd94",
+        "mid": "#a39a78",
+        "shadow": "#766e56"
+      },
+      "crack": "#2a4a24",
+      "lip": "#b6d97a"
+    },
+    "city": {
+      "dust": {
+        "light": "#c8ccd3",
+        "mid": "#a8adb6",
+        "shadow": "#7a808b"
+      },
+      "crack": "#1f2329",
+      "lip": "#6b7280",
+      "paved": true
+    },
+    "forest": {
+      "dust": {
+        "light": "#a8957a",
+        "mid": "#8a7860",
+        "shadow": "#5f5140"
+      },
+      "crack": "#3d2f22",
+      "lip": "#8a6a45"
+    },
+    "desert": {
+      "dust": {
+        "light": "#f0d9a0",
+        "mid": "#e0c48a",
+        "shadow": "#b0925a"
+      },
+      "crack": "#6a4e28",
+      "lip": "#f5e2b0"
+    },
+    "mountains": {
+      "dust": {
+        "light": "#c5bda9",
+        "mid": "#a89f8c",
+        "shadow": "#7a7264"
+      },
+      "crack": "#2d2a26",
+      "lip": "#c9c1ae"
+    },
+    "village_harbour": {
+      "dust": {
+        "light": "#d3c8ac",
+        "mid": "#b9ac8f",
+        "shadow": "#8b806a"
+      },
+      "crack": "#7d7260",
+      "lip": "#d6ccb2"
+    },
+    "village_workshop": {
+      "dust": {
+        "light": "#b99a72",
+        "mid": "#a07d55",
+        "shadow": "#755a3b"
+      },
+      "crack": "#6d5236",
+      "lip": "#c29d70"
+    },
+    "village_hill": {
+      "dust": {
+        "light": "#a3ba80",
+        "mid": "#8a9a6a",
+        "shadow": "#61704a"
+      },
+      "crack": "#465a2d",
+      "lip": "#8fa86a"
+    },
+    "proving_ground": {
+      "dust": {
+        "light": "#e6e1d5",
+        "mid": "#c9c3b5",
+        "shadow": "#948d80"
+      },
+      "crack": "#5d574d",
+      "lip": "#d9d4c8"
+    }
   },
   "haze": "#cfe6f0"
 }
