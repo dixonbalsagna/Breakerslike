@@ -13,6 +13,7 @@ Owner: Art Director. 2026-09-29. Art owns `art/` and `docs/art/`.
 | `flash-prototype-spec.md` | The spec for a small in-engine head-flash prototype on the placeholder fighters (for Rendering) | v0 draft |
 | `coil-turnaround.md` | The Anti-hero (the Coil) turnaround: front, three-quarter left and right, back, the crouch, forms, wear, a part list | v0, pending Legal review |
 | `protagonist-turnaround.md`, `empress-turnaround.md`, `cyborg-turnaround.md` | The other three turnarounds in the Coil's format (front, three-quarter left and right, back, the pose in play, read sizes, wear, mask close-ups, a part list) | v0, pending Legal review |
+| `cosmetics-plan.md` | The plan for a vast unlockable cosmetic set by data: categories, what keeps each fighter readable, counts per fighter, and what the fighter mesh needs from day one | v0 draft |
 | `ai-prompt-policy.md` | How AI-assisted art is made, recorded and reviewed | v0 draft, for Legal and Orb to review |
 | `../../art/concepts/anti-hero/` | The SVG sheets and the deterministic generator that writes them | v0 |
 | `../../art/prompts/` | Prompt records (`TEMPLATE.md`, `ART-0001` to `ART-0008`) | v0 |
