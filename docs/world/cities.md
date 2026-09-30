@@ -1,6 +1,6 @@
 # Cities: varied, expansive, busy
 
-Owner: World and Environment. Status: pitch and plan, docs only (2026-09-30). Nothing here is in the sim. It answers Orb's playtest 2: "cities should be more varied, expansive, busy-looking", and the bug where buildings appear underwater, often in villages (section 6, which is a sim fix). Depth rows and floors are in `buildings-in-depth.md` and `b2-plan.md`; this note is about what settlements are made of and how they are generated.
+Owner: World and Environment. Status: pitch and plan, docs only (2026-09-30), updated for Orb's answers (Questionnaire 4): two big cities, a huge skyline, busy life as render dressing, and cities covering more of the planet. Nothing here is in the sim. It answers Orb's playtest 2: "cities should be more varied, expansive, busy-looking", and the bug where buildings appear underwater, often in villages (section 6, which is a sim fix). Depth rows and floors are in `buildings-in-depth.md` and `b2-plan.md`; this note is about what settlements are made of and how they are generated.
 
 **The rule that keeps it cheap:** the sim owns *layout and population* (which building stands where, how big, how many people, what it is worth), which are gameplay. Rendering owns *dressing* (window lights, signs, roofs, vehicles, smoke, crowds' density and animation), which is cosmetic, is derived from the building's `seed`, `kind`, `district` and `shape` and never enters the sim or its hash.
 
@@ -14,10 +14,10 @@ A settlement is a list of **districts** along its span; each district is a set o
 
 | District | Where | Rows | Buildings | Height | Footprint | Gaps | People per building |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Downtown | the city centre | 0 to 3 | towers, skyscrapers, one landmark | 20 to 90 bh, taller at the centre | narrow to medium (3 to 7 bh) | tight, avenues every 8 to 12 buildings | many |
-| Mid-rise | around downtown | 0 to 2 | slabs and blocks, some towers | 6 to 20 bh | wide (5 to 10 bh) | medium | medium |
+| Downtown | the city centre | 0 to 4 | towers, skyscrapers, supertalls, one or two landmarks | 40 to 200 bh (median about 90), a few supertalls to 260, taller at the centre | narrow to medium (3 to 8 bh) | tight, avenues every 8 to 12 buildings | many |
+| Mid-rise | around downtown | 0 to 3 | slabs and blocks, some towers | 12 to 45 bh | wide (5 to 10 bh) | medium | medium |
 | Industrial | the city's edge, one side | 0 to 2 | warehouses, factories, chimneys (thin and tall, few people) | 3 to 10 bh, chimneys to 25 | very wide (8 to 20 bh) | wide | few |
-| Harbour | at the coast | 0 to 1 | quays, sheds, cranes, a lighthouse | 2 to 8 bh, lighthouse 25 | mixed | irregular, along the shore line | few, some houses |
+| Harbour | at the coast | 0 to 1 | quays, sheds, cranes, a lighthouse | 2 to 10 bh, lighthouse 40 | mixed | irregular, along the shore line | few, some houses |
 | Suburb | beyond mid-rise | 0 to 2 | houses, in short streets | 3 to 6 bh | small (3 to 5 bh) | regular | few |
 | Village core | in a village | 0 to 2 | houses, a well or hall, a church-like landmark | 3 to 7 bh | small | irregular | few |
 | Ruin | a district a fight has destroyed | (runtime) | rubble heaps | | | | none |
@@ -39,7 +39,29 @@ Generic names (Narrative names the places: Bellgate, Netmend); no franchise arch
 
 ## 4. Size and busyness
 
-**City size relative to the planet.** Bellgate is 16 percent of the length now. Proposal: a planet's settled share is a planet-record parameter (default 25 to 35 percent of the length in settlements, up from 26 percent) with the city 15 to 20 percent alone, so the world has more places to fight. That means about 400 to 600 buildings on the current planet (from 216), with the spatial index (B1) making that free and the per-building cost in the sim a struct of about 20 fields. It is not a population change: the sim's people are abstract crowd units (`pop0` about 400; the collateral bands are shares), so the extra buildings hold fewer or emptier units, and industrial and harbour districts hold almost none (they are the places to fight without collateral, which the hero's lure reads: `popNear` is low there). Each district type sets a `pop_density` and the settlement is rescaled to its population share (as `terrain.gd` does today), so `pop0` stays put.
+**Two major cities, and more of the planet settled (Orb).** Orb's priorities are a huge skyline, busy life and cities covering more of the planet, with two big cities. The planet is 153,600 units (about 2,050 bh) around; the proposed layout, as shares of the length (the planet record's `SEG`, W1 makes it data):
+
+| Span | Share | Notes |
+| :--- | ---: | :--- |
+| Ocean, west of the seam | 9% | one sea across the seam (12% east of it), 21% in all |
+| Netmend, the harbour village | 5% | a harbour district and a village core |
+| **Bellgate, the first city** | **17%** (26,000 units) | downtown, mid-rise, suburb, industrial edge, one or two landmarks |
+| Plains | 3% | |
+| Outskirts village | 4% | |
+| Forest | 8% | canopy cover |
+| Desert | 8% | |
+| Mountains | 11% | ridge cover, the range between the cities |
+| Far village | 3% | |
+| **The second city, a harbour metropolis on the far coast** | **17%** | a big harbour and industrial district, its own downtown and skyline; Narrative names it |
+| Plains, then ocean | 3% + 12% | |
+
+**The settled share is about 46 percent of the length** (two cities 34 percent, villages 12 percent), up from about 26 percent today; each city is 15 to 20 percent (17 in the table, so 34 together). The two cities face each other across the mountains and the sea, so a launch or a chase from one to the other crosses the whole planet's variety, and the fights near a coast can be at either end of the sea. The second city also gives the hero's lure and the villain's seeking two very different places (the harbour's industrial edge has few people; the far downtown many).
+
+**Buildings and people.** About 500 to 700 buildings on the current planet (from 216), with the spatial index (B1) making that free and the per-building cost a struct of about 20 fields. It is not a population change: the sim's people stay abstract crowd units (`pop0` about 400; the collateral bands are shares; Game Design has not asked for more), so the extra buildings hold fewer or emptier units, and industrial and harbour districts hold almost none (the places to fight without collateral, which the hero's lure reads: `popNear` is low there). Each district type sets a `pop_density` and each settlement is rescaled to its population share (as `terrain.gd` does today), so `pop0` stays put. A skyline of 300 towers holds a handful of people each; the crowds Orb wants to see are dressing (below).
+
+**A huge skyline.** Downtown heights are pushed up (the table): 40 to 200 bh with supertalls to 260 bh (about 19,500 units), against today's 13 to 91 bh. Consequences: (1) the flight ceiling is 24,000 units, so supertalls stay under it (raise it if they go higher); (2) a tower of 200 bh has a hit-point value from its unscaled height (`h / WS * 6`, about 11,000) so it is tough, which is what floors and the brunt's punch-through are for; (3) floors: `floors = min(62, round(h / FLOOR_H))`, so above 124 bh a floor is a band of more than 2 bh (a 260 bh tower has 62 bands of 4.2 bh); (4) the back rows and the skyline need Camera's and Rendering's depth budget (a fifth row at -54 bh is proposed); (5) `F` is state (`Building.floors`), so nothing copies the formula.
+
+**Floors and people (Orb).** People on each floor evacuate or are lost: a floor's occupants (`pop / F`) go through `WorldCollateral.kill`, so when a floor is punched or falls they die within the budget and flee past it (the `evacuate` event, which carries the floor for Rendering to run them out of that floor's windows and doors); otherwise the floors are mostly visual spectacle (windows, tunnels, pancakes), as Orb says.
 
 **Busy-looking is dressing.** All render-only, from `seed`, `kind`, `district`, `shape` and the sim's `popAlive` and `alive`:
 - **Crowd density.** Render draws several figures per crowd unit (Rendering's `CROWD` multiplier; the `evacuate` runners already work from the sim's counts), more in downtown and mid-rise streets, fewer in industrial ones; figures come out of doors and stand at crossings; the count follows `popAlive`, so an evacuated district visibly empties.
@@ -65,9 +87,29 @@ The sim's ground is one heightfield for every row (the depth rows share it), so 
 **The fix (mine, in `terrain.gd`, in the next world window):**
 1. **Placement rule.** A candidate building is accepted only if the minimum base ground over its footprint (its columns plus one either side) is at least `BUILD_MIN_GROUND` = 0.25 bh (19 units) above sea level, and the slope across the footprint is at most `BUILD_MAX_SLOPE` = 0.35 of its width. A rejected candidate still consumes its draws and the row's x advances by its width, so the layout of the others does not shift.
 2. **The settlement platform.** Inside a settlement span the base ground is raised to at least `SETTLE_FLOOR` = 0.5 bh, with a smooth blend at the span's ends, so the towns sit on a shore that is above the water and flat enough to build on. Where the natural ground is deeper than that at a span's end (Netmend's west end), the span is **trimmed** to the first x where the ground reaches the floor (a coast inset), not filled in: a village never turns a sea into land.
-3. **Coasts get a beach.** The blur made the shore slope gentle over 6,000 units; an optional `shore_steep` step (a local sharpening of the sea-to-land transition around the sea threshold) restores a clean waterline. This is a terrain look change, so Art and Rendering see it first.
+3. **The waterline** is the sea filling to the shore: see the next subsection. The steeper-shore alternative (`shore_steep`) is held until Art and Rendering have seen a picture.
 4. **Rows and crater bowls.** A crater's 3D bowl lowers the ground at depth (`sqrt(dx^2 + z^2) < R`), which only matters for special craters (R up to about 1,500 units) reaching the front street; footings take the highest ground under the footprint (`buildings-in-depth.md` section 2), which is Rendering's placement (it owns the drawn ground). If Rendering finds the rows still float or sink, the sim can provide a per-row ground query.
 5. **Test.** No building's footprint has ground below `BUILD_MIN_GROUND` at generation; no building stands in `S.water`; population conserved per settlement; the front street's building order unchanged from the seed except for rejections. The count of rejected candidates is reported (Netmend loses most of its west half).
+
+### The waterline: the sea fills to the shore (route chosen, 2026-09-30)
+
+Rendering's diagnosis: the sea floods only where the base ground is below -240 (`WorldWater.RESERVOIR_BASE`) but its surface is at 0, so land beside the sea's edge sits up to 240 units below the water surface: 22,144 units of dry land below sea level on the east coast (50 buildings) and 4,512 on the west (6), the same for every seed (the layout stream is fixed): the drawn "slab". Two routes were on the table: a steep shore (the ground crosses from -240 to above 0 within a column or two) or filling every sea-connected column below 0. I measured the second (`shore.gd`, connected flood fill from the sea at several thresholds):
+
+| Wet limit (sea-connected ground below this floods) | Extra sea (units) | Where |
+| ---: | ---: | :--- |
+| -240 (today) | 0 | |
+| -75 | 2,208 | village 31 columns, plains 38 |
+| -37 | 3,456 | village 45, plains 63 |
+| **-19 (0.25 bh)** | **4,800** | village 87, plains 63 |
+| 0 | 26,656 | village 303, plains 338, **city 192** |
+
+**Decision: the sea fills every sea-connected column below `SHORE_WET` = -0.25 bh (-19 units).** A limit of 0 would flood 6,144 units of Bellgate's west end (the city ground dips below 0 where the blur meets the plains); a steep shore changes the terrain's look for Art to judge first. At -19 the sea gains 4.8 km of shallows, and the step between the water surface and the dry ground beside it is at most 19 units (a quarter of a fighter height, invisible against a 240-unit slab). Land above -19 and below 0 is a mud flat the sea does not reach; it keeps its 0.25 bh of "below sea level", which is what the test allows.
+- **Rule.** `WET_GROUND` becomes `SHORE_WET` (-19). `RESERVOIR_BASE` stays -240 (the deep sea, instantly full by the ground; `seaAt`, the AI and the launch predictor keep reading it). Everything else of the water model is unchanged: water enters a column only from a wet neighbour, and only where the ground is below `SHORE_WET`.
+- **Start of a match.** `WorldWater.init` fills the dynamic columns that are connected to the reservoir through ground below `SHORE_WET` to depth `-ground` (the 150 columns above), as the first version of the model did before the scale window.
+- **Craters** at the coast flood a little more easily (any dig below -19 that connects to the sea), which is the natural rule; inland pits are still dry (no wet neighbour), and the flood test still applies.
+- **Build first, with the placement and platform fix.** Settlements sit on a platform of at least 0.5 bh, so no building is ever below the new shoreline.
+- **Tests (`probe.gd`).** (1) After generation, no dry column with ground below `SHORE_WET` is connected to the sea by ground below `SHORE_WET` (the flood fill is empty); (2) the step from a water surface to the dry column beside it is at most 19 units; (3) the initial wet set equals the connected flood fill; (4) the inland-crater and flood-connectivity tests of `craters-scorch-water.md` still pass with the new limit; (5) no building's footprint ground is below `BUILD_MIN_GROUND`.
+- **Cost.** Coastal digs open water windows more often (the shallows are wider); the tick is measured before and after. Rendering's shore rule draws the result from `S.water` and needs no change.
 
 ## 7. Slot and cost
 
@@ -78,7 +120,9 @@ The sim's ground is one heightfield for every row (the depth rows share it), so 
 
 ## 8. Open questions
 
-- **Orb:** how large should cities be against the planet (section 4: 15 to 20 percent for the biggest, 25 to 35 percent settled)? Should there be one big city or two? Should the harbour and industrial districts be places to fight without collateral, as proposed?
-- **Game Design:** the collateral bands are shares, so more buildings holding fewer people is neutral; do they want more people (a larger `pop0`, hence the meters' `425 / pop0` rule doing real work)?
+- **Orb (answered):** two big cities, each 15 to 20 percent of the planet, about 46 percent settled, a huge skyline. Still open: whether the harbour and industrial districts should be places to fight without collateral, as proposed.
+- **Game Design:** pop stays abstract unless they ask; the bands are shares, so more buildings holding fewer people is neutral. A larger `pop0` would make the meters' `425 / pop0` rule do real work.
 - **Art and Narrative:** district looks and names; the landmarks' names (a bell tower for Bellgate).
-- **Camera:** a fifth row at -54 bh and the fighter's on-screen size in the deep rows.
+- **Camera:** a fifth row at -54 bh, the fighter's on-screen size in the deep rows, and framing a 260 bh skyline.
+- **Narrative:** the second city's name and its districts.
+- **Encounter:** two cities change the lure and the fight-location rows (the location bands assume one city); rerun `tempo.gd` when the layout lands.
