@@ -141,7 +141,7 @@ This merges Narrative's character pitches (`docs/narrative/world-abilities.md`) 
 | **Anti-hero: shedding** | *Stripping down to raw power.* Three sheds, each a respected cinematic with no way back: **regalia** (armour off: guard weaker, +speed), **the front** (Drop the Act: hidden wear shows, +damage), **restraint** (no guard at all, top speed and damage). The feel: every shed is a humiliation he turns into power | **Pride ascension:** forms that raise his power while his Pride is high, and are *lost* when it crashes. It keeps the original "power and self-importance" idea: a higher ceiling, and a risk of falling |
 | **Cyborg: evolution by consumption** | *Growing into the machine.* Wired (Hunger), then Kitchen (sandwich portals), then **Docked**: the final form, where his technology comes online. Only then does he **generate his hidden weapons**, which join his loadout as specials (Combat and Narrative design them). Before that, they show as dark, sparking ports: a visible promise. The feel: something unfinished, becoming whole. Narrative's line: "the kitchen opens and the order is produced" | **Assimilation:** he feeds on wreckage (destroyed structures) instead of people. It is less dark and ties him to destruction rather than civilians, if the tone ever needs it |
 
-## 8. For Orb: third pass
+## 8. For Orb: third pass (merged into §9; read §9)
 
 Orb liked two world changes per fighter. The transformations are the main mechanic for the Empress and the Protagonist, and the alternative for the Anti-hero and the Cyborg. Each world change below gets one line of fantasy and one line of mechanic. The rules in §3 hold throughout: once per match, permanent, a stoppable channel, a respected cinematic, and every collateral budget.
 
@@ -225,3 +225,62 @@ Orb liked two world changes per fighter. The transformations are the main mechan
     - power lines become an arc whip.
     So every match's arsenal is different, and each weapon joins his loadout as a special.
 - **Counter-play:** keep the fight in open country (less to eat), or fold into the proving ground, where he can still press loose fragments.
+
+## 9. For Orb: the merged list (Game Design plus Narrative's pass 2)
+
+This is one list per fighter. It merges §8 with Narrative's `docs/narrative/worlds-and-forms-pass-2.md`: Narrative's ideas get Game Design's mechanics, and the form stages take Narrative's names. **Read this section rather than §8.** All the §3 rules hold: once per match, permanent, a stoppable channel, a respected cinematic, and every budget.
+
+### 9.1 World changes (Orb's two liked ones, plus six more each)
+
+**Protagonist.** *Liked:* Heat Wave, Proving Ground. *The spirit:* his fire turned outward, making a world where he can go all out and nobody gets hurt.
+
+| Idea | Source | Mechanic |
+| :--- | :--- | :--- |
+| **Beacon** | Narrative, with Game Design's Gale | A stone beacon rises, and every district within 5,000 of the fight relocates at once. Collateral is near zero for the match |
+| **Hot Spring** | Narrative | Craters become springs and geysers. In a spring, second breath starts after 2 s instead of 4, for both fighters. Geysers periodically throw anyone above them upward |
+| **Green Up** | Narrative | Growth follows him: scorched and burnt ground regrows canopy behind him, sight blockers return, fresh growth won't burn, and his anguish fades twice as fast |
+| **Tide Wall** | Narrative | The sea stands up as a wall around the fight. Shore towns take no flood or water collateral, the wall blocks sight, and launched fighters skim along it |
+| **Magma Ring** | Game Design | The arena's rim becomes a lava moat. No collateral is possible inside, and his heat cools half as fast there |
+| **High Summer** | Game Design | Fire spreads ×1.5 across the planet, and he stokes 25% faster |
+
+**Anti-hero.** *Liked:* Storm Crown, Scorched Plain. *The spirit:* domination by ruin and spectacle. The world loses its comforts, and everyone must watch.
+
+| Idea | Source | Mechanic |
+| :--- | :--- | :--- |
+| **Obelisk of Names** | Narrative | While the obelisk stands, his Pride can't fall below 40. It can be destroyed as a heavy set piece, and if it falls his Pride drops by 20: a witness that can be turned against him |
+| **The Long Silence** | Narrative | The world goes still: clouds stop drifting, no new dust or smoke clouds form (no lock breaks from dust), and the mood stops decaying, so tension holds |
+| **The Circle** | Narrative | A circular chasm rings the fight, about 4,000 units across. Crossing it costs 20 ki (the world still wraps; leaving is only punished), bodies launched into it take a fall, and the ESCAPE slip chance is −0.15 inside |
+| **The Watch Fire** | Narrative | A bonfire the whole world can see: every moment counts as witnessed (Pride gains and humblings ×1.5), and the ridge burns as a hazard |
+| **Thunderhead Throne** | Game Design | Telegraphed lightning hunts the rival every 8 s. His barrages gain +20% |
+| **Salted Earth** | Game Design | The glassy ground burns the legs (1 wear per second, capped at battered), so the fight goes airborne |
+
+**Empress.** *Liked:* Blockade, Golden Hour. *The spirit:* imperial staging. She frames herself and dictates where the fight may happen.
+
+| Idea | Source | Mechanic |
+| :--- | :--- | :--- |
+| **Grand Avenue** | Narrative | A straight avenue lined with statues. Her decree line gains +30% reach and damage along it, the statues are destructible sight blockers, and launches along it travel ×1.3 |
+| **The Throne Hall** | Narrative | A roofed hall over the fight: the flight ceiling is capped at the hall's height, sky effects are cancelled inside (so it counters storms and blackouts), and her guard tag in without the salute delay |
+| **Portrait Clouds** | Narrative, with Game Design's Portrait Sky | Each decisive exchange she wins adds +10 mood and +10 Wrath: the sky applauds |
+| **Gilded Coast** | Narrative | Shores turn to gold. Beams fired along the coast ricochet once, knockback slides go ×1.5 on the gold, and there is no water skip there |
+| **Searchlights** | Game Design | The rival can never break lock. She can, in the fleet's shadow |
+| **Tariff Zone** | Game Design | Below 30% of the ceiling, the rival's ki costs are +10% |
+
+**Cyborg.** *Liked:* Wired World, Harvest. *The spirit:* industrial conversion. He eats the planet, not its people, which fits assimilation.
+
+| Idea | Source | Mechanic |
+| :--- | :--- | :--- |
+| **Drive-Thru** | Narrative | A ring road around the planet. He flies ×1.3 along it, and sandwich pickups spawn at its windows (Hunger) |
+| **Kitchen Weather** | Narrative | Steam and oil: low steam blocks sight across the planet, slides go ×1.3 on the oiled ground, and fire spreads faster on it |
+| **Pantry Mountain** | Narrative | A hollow warehouse mountain. Wreckage he absorbs beyond his molt thresholds is banked, and he can draw on it inside the mountain. The halls block sight |
+| **The Stockpot** | Narrative | A sea simmers: being submerged or launched into it causes hazard wear, and steam fogs it. The fight is pushed onto land, where the wreckage is |
+| **Scrap Tide** | Game Design | Rubble within 3,000 converts to Hunger over time, and the heaps shrink away |
+| **Recycling Plant** | Game Design | After his final form, his hidden weapons recharge 50% faster |
+
+### 9.2 Form stages, aligned to Narrative's names
+
+| Fighter | Stages, each with its mechanic and signature moment (Narrative's defining moments are kept) |
+| :--- | :--- |
+| **Empress** (revisions) | **1, the form on file**, bored under the salute. **2, louder**. **4, the hat**, and the guard check whether to salute it. **6, smaller**, with the train too long. **9, Field Revision:** armour, and her decree line doubles into twin lines. **10, Council Revision:** the fleet's shadow, and her volleys become barrages. **11, Executive Revision:** the train becomes the weapon, as blade-wings with +50% reach. **12, Final Approved:** she smiles, and finishes with the "seal of approval". Each revision adds one tell and never removes one, and her revision number is worn on her regalia |
+| **Protagonist** (Hot Blood) | **Heated:** seams glow, faster footwork, and he grins at his own steam. **Simmering:** heavier blows and more chains; he takes a hit to shelter a wall. **Boiling:** reckless and blitz-prone, a roar, hands shaking. **Boiled over:** the stagger and vent, and he looks round for who he might have hurt (heat memory: after two, he never cools below Heated). **Open Hand** (the reveal on the proving ground): locked at Boiling with no internal wear for 20 s, and the fragments spin out into a ring |
+| **Anti-hero** (pride ascension) | Five forms at Pride 55, 65, 75, 85 and 95, each adding +5% damage and +3% speed. **Poise:** the noise drops out, and he parries one-handed. **Regalia:** a piece forms, and he checks they saw. **Hierarchy:** he talks *about* the rival, and a crown of barrage fire. **Sovereign:** he stands above the fight, with the height bonus of the Dais. **Apex:** he finishes only by hand, with a terrible smile. **The crash** (Pride below 50): he loses one form as the regalia flakes away, and he can climb back. **Abdicate** (Drop the Act): he sheds every form for unrestrained, once per match |
+| **Cyborg** (assimilation) | **Base:** the bow. **Scavenger** (first Hunger threshold): a girder bolted onto his arm, harder and faster. **Kitchen** (second threshold): the table set mid-fight, portal frames and sandwich hazards. **Assembled** (third threshold): a building block worn as a shawl, wreckage armour taking incoming wear ×0.85, and the hunt for the drive begins. **Online** (the drive docked): lights come on like a restaurant opening, the tech is online, and hidden weapons appear on trays, generated from what he ate |
