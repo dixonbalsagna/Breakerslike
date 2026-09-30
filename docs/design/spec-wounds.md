@@ -22,7 +22,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | **Region choice** | Each atom lists the regions it may hit, with weights. The director multiplies each weight by (1 + wear/50), or (1 + wear/30) from S2 (§1b), which is "go for the wound", then draws with the seeded sim RNG. Attack kind sets the family: lights go to the head and arms, heavies to the core and legs, guard hits to the arms, and beams and impacts spread |
 | **Brink** | The core breaks, or any two of head, arms and legs break. The Cyborg is the exception (§3) |
 | **Decisive exchange** | One that ends with the loser launched, a heavy or beam clash won, or a GUARD BREAK. A launch counts however it lands: slam, knockback slide, water skip, brunt or chain (`docs/world/knockback-slide.md`). A **NONE** outcome (a shove with no launch after a winning template) is **not** decisive, unless the exchange also meets one of the other clauses. An attack that stops a fill (charging, stoking, Press) is a CHARGE INTERRUPT and launches, so it counts. Transformation cinematics themselves are never interrupted (§8) |
-| **Finisher** | When the opponent of a fighter on the brink wins a decisive exchange, their **fighter-specific finisher** replaces the normal ending. The fighter on the brink survives it on a contest roll: 30% base, −10 points for each Rally that fighter has used, and −10 points per minute past 8:00, with a floor of 0. **The last-ditch struggle (`contest.input`):** during the finisher's wind-up, the fighter on the brink gets **three timed presses** on the finisher's visible rhythm (a struggle you read, not a mash). Each press on the beat adds +10 points to survival, and each miss or early press costs 5. The base survival drops from 30% to **15%**, so a perfect struggle reaches 45% before the tilts. The AI's timing accuracy is set by difficulty. Controls sets the window widths, and an accessibility assist doubles them. QA band: average contest survival stays 20 to 35% in AI play |
+| **Finisher** | When the opponent of a fighter on the brink wins a decisive exchange, their **fighter-specific finisher** replaces the normal ending. The fighter on the brink survives it on a contest roll: 30% base, −10 points for each Rally that fighter has used, and −10 points per minute past 8:00, with a floor of 0. **The last-ditch struggle is resolved by state** (questionnaire 4: no timing presses). It stays a visible beat: three pulses that reveal the outcome step by step, "holding" or "slipping". Survival is 15% base, plus a **stance read** against the finisher's telegraphed kind, where each fighter's finisher kind is shown in its wind-up: +15 for DEFENSIVE against a launch finisher, EVASIVE against a melee finisher, or AGGRESSIVE with 40 ki or more against a beam finisher (a counter-clash); +5 for any other stance. Then +5 at 50 ki or more, plus the fighter's own state: Simmering or Boiling for the Protagonist +10; Pride at 50 or more for the Anti-hero +10; any guard standing for the Empress +5; the hatch closed for the Cyborg +10. Then the tilts: −10 per Rally, and −10 per minute past 8:00. QA band: average survival 20 to 35% |
 | **The end** | A KO happens only through a finisher. Stray damage never ends a match |
 | **Breaks are chapters** | A break is a 1 to 2 s set piece: a camera break shot, a bark, then a **break launch**. The break launch is long (at least 1,500 units horizontally) and chosen by the planner's distance and new-biome terms (`balance-targets.md` §10) |
 
@@ -385,7 +385,7 @@ His best play is to break the fold, and that is the matchup's story. The backup 
 
 Orb: "with few exceptions, transformations should be cinematic and uninterruptible. The gauge or some mechanic must fill or otherwise complete, which can be stopped, but once the transformation happens it should be respected." This replaces questionnaire 3's "long transformations can be interrupted" wherever it appears in these docs.
 
-**Every transformation has two phases:**
+**Every transformation has two phases.** When a fill completes, **the player chooses when to take the transformation** (questionnaire 4), and the AI chooses for itself. The Empress's joke revisions stay automatic.
 1. **A fill** (a gauge, a condition, or an action), which the opponent can stop.
 2. **A cinematic**, which the opponent cannot interrupt. They wait, and may charge while they do, in the genre's tradition.
 
@@ -422,3 +422,24 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
 - no cinematic starts during a finisher (0 cases);
 - no cinematic runs longer than 6 s;
 - the "no gap over 10 s" band counts a cinematic as action, not as dead air.
+
+## 9. Invisible acts and the fight's mood (Orb, questionnaire 4)
+
+**Invisible acts.** The director escalates chapter by chapter, with no act UI.
+- The act index is `1 + region breaks + transformations` (both fighters counted), capped at 4.
+- Each act raises the director's strike cadence by 10%, and makes blitzes (short multi-strike flurries), long launches, beam struggles, teleport clashes and collateral set pieces more likely, within every tier cap in `balance-targets.md`.
+- Each act also cues a music layer (Audio), a camera stance (Camera) and bark density (Narrative).
+- The player reads acts through sound, camera and voice, never through a counter.
+
+**The fight's mood.** A director value from 0 to 100, which the player shapes only indirectly.
+- *What raises it* (with a moving average over about 10 s): strikes landed, clashes, breaks, launches through buildings, collateral, and taunts. AGGRESSIVE play raises it faster.
+- *What lowers it:* decay, and long DEFENSIVE or ESCAPE stretches.
+- *Three bands (working names):*
+  - **Calm**, below 30: crowds watch from a distance, the director uses its normal cadence, and inner thoughts are about patience ("Only a little longer...").
+  - **Tense**, 30 to 70: crowds retreat, the director blitzes more (+25% blitz chance), and the release-to-request gap moves to the short end (0.6 s).
+  - **Frenzied**, above 70: crowds flee in panic, blitzes and teleport clashes are at their most frequent, and boasts and threats dominate the barks.
+- *The players' styles feed the voice* (Orb): holding DEFENSIVE surfaces patience thoughts, and an opponent who turns EVASIVE under pressure prompts boasts. Narrative writes the lines, keyed to stance history and mood.
+- *QA bands:*
+  - Frenzied at most 25% of match time;
+  - Calm at least 15% of match time (the fight breathes);
+  - blitzes 2 to 6 a minute in Tense and Frenzied.

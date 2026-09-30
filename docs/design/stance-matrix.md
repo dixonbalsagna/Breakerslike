@@ -69,6 +69,38 @@ Reasoned from the rules and QA's data. None of these was tested with new batches
 4. **Parry mashing.** Medium risk. A mistimed parry press costs nothing (Combat CC-008), so the parry is not yet a read.
 5. **Guard bypass through a chain.** Medium risk. After PRESSURE — GUARD HOLDS, a chain opens. The chain's strike ignores stance, so the guard stops mattering (Combat CC-002, GD-B04).
 
+## 4b. Who controls what (Orb, questionnaire 4)
+
+| The player controls | The director controls |
+| :--- | :--- |
+| Stance (intent); movement and positioning; attack **weight** (light, heavy, signature); charging and power-ups; **when to transform**; fighter specials (the heat track, Drop the Act, Press, the fold, the Encore call) | **When** to attack; combos and chain continuation; parries; the finisher struggle; voice and barks |
+
+Skill balance is 2 out of 10: strategy far outweighs execution.
+
+- **R9. Attacks are timed by the director; the player sets their weight.**
+  - *Weight is a sticky setting.* Pressing light or heavy sets the weight of every strike from then on, until the player changes it. It shows on the stance ring.
+  - *Signature is a one-shot intent.* It fires at the director's next opening, once the fighter has 45 ki.
+  - *The player shapes when through stance.* Each stance sets the director's attack cadence for the player's own fighter:
+    - AGGRESSIVE: the director's fastest tempo, and it chains most readily;
+    - DEFENSIVE: it attacks mostly as a punish (the R2 punish window) after absorbing an exchange;
+    - EVASIVE: it attacks after dodges and reads, plus the occasional poke;
+    - ESCAPE: it only hits and runs when the opponent has committed, and otherwise disengages and breaks lock.
+  - *Charging and specials* pause the director's attacks until they end.
+  - *Chains:* whether to continue is the director's call. It reads stance (AGGRESSIVE chains most), ki, heat and the fight's mood (`spec-wounds.md` §9).
+  - *Controls' intent queue* (`docs/controls/intent-queue-plan.md`), answered:
+    1. Light and heavy latch as the weight mode. The match starts in light. Signature is a one-shot in the queue slot, and returns to the latched weight after it fires.
+    2. No timing press remains anywhere. Chain follow-ups are the director's call. The beam clash is resolved by state: AGGRESSIVE with 40 ki or more meets the beam, and the winner is decided by tier, ki and meters.
+    3. The player's lever over parry and the struggle is stance plus a ki reserve (R5, the finisher row in `spec-wounds.md`). There is no new input.
+    4. A funded, queued signature fires within **180 ticks** (3 s), overriding the stance's cadence if it must, at the next exchange boundary.
+    5. The special and transform holds stay (stoke, Press, the fold trigger, Drop the Act, taking a filled transformation), and so does the Encore's contextual prompt.
+- **Where skill lives now:**
+  - *reads:* hold the stance that beats the opponent's likely weight, and set the weight that beats the opponent's stance (heavy into DEFENSIVE, light from AGGRESSIVE into EVASIVE);
+  - *spacing and position:* which biome, near people or away from them, line-of-sight blockers, the city's edge;
+  - *resource timing:* ki for a signature or held back for a clash; when to charge; the heat stages; spending Pride; when to Press;
+  - *transform and special timing:* when to take a filled transformation or fire the fold, Drop the Act or the Encore.
+
+  There is no execution test anywhere in the base game.
+
 ## 5. Stance rules for P2 (Game Design decisions)
 
 The director implements these rules through Encounter Systems. Combat authors the beats.
@@ -95,10 +127,18 @@ The director implements these rules through Encounter Systems. Combat authors th
   - *CHARGING, light or heavy:* INTERRUPT if the charge has run under 1.0 s. After that, BURST: the aura throws both fighters apart, with no damage to the charger.
   - *CHARGING against a signature:* an OVERCHARGE CLASH after 1.0 s of charge with 40 ki or more, otherwise HIT.
   - *AGGRESSIVE against a light:* the feed names the winner.
-- **R4. The defender earns the counter against a light.** PRESSURE's counter fires when the defender presses attack during the pressure string, not on a 40% roll. Controls owns the window width.
-- **R5. The parry is a read.** A parry press with no parryable strike inside its window costs 5 ki and locks the parry out for 0.5 s. Controls owns the window widths. The windows must be visible (Combat CC-011, UI).
-  - *Amended with Controls* (`docs/controls/rulings.md`): the first stray press is free and starts a 12-tick (0.2 s) lockout. Each press inside a lockout costs 5 ki. One early press is forgiven; mashing costs ki.
-  - *Where it lives:* in Controls' Stage A input layer (`sim/input`), with the press ticks: the lockout, the ki cost and the forgiven first press. Encounter's `strike` only consumes a validated parry press inside the window. It is deterministic, and replays carry the presses.
+- **R4. The counter against a light is earned by patience** (questionnaire 4: no timing presses). PRESSURE's counter is decided by state: **50%** if the defender has held DEFENSIVE for 2 s or more before the attack and has more than 25 ki, **20%** otherwise. Holding a guard is the read; the director times the counter.
+- **R5. The parry is a director outcome, resolved by state** (questionnaire 4). There is no parry button.
+  - *Base chance,* in the four parryable templates: DEFENSIVE **25%**, AGGRESSIVE **15%**, EVASIVE and ESCAPE 0% (they dodge or leave instead).
+  - *Modifiers:*
+    - the attack is a heavy: +10, because a heavy wind-up is easier to read;
+    - the defender's head is battered: −10;
+    - ±5 per tier of difference;
+    - the defender has 50 ki or more: +5;
+    - the attacker is Boiling on the heat track: +5, because a reckless attacker is easier to catch.
+  - *The drama stays.* The parry ring still shows as a tell, and the parry is still a visible counter beat.
+  - The Controls anti-mash lockout (the previous amendment) is **moot** and withdrawn.
+  - QA band unchanged: 5 to 15 parries per 100 melee exchanges.
 - **R6. Chains follow the exchange's result.** No chain window opens after a parry (CC-001) or after GUARD HOLDS (CC-002).
 - **R7. A tier advantage always helps its owner.** Every roll moves in the direction of whoever is ahead on tier (fixes GD-B01).
 - **R8. Switching stance stays free and instant.** The template is fixed when the attack starts (`L410-421`), so a defender must predict, not react. Revisit if P2 playtests find stance-flicking tells.
