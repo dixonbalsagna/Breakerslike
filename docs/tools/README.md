@@ -127,6 +127,8 @@ node tools/build-site.mjs --web build/web --out build/site
 
 The `build/` folder should be in `.gitignore` (the EP's file). Serve `build/site` with any static server to try it; the web pack was about 0.6 MB and the wasm 39.5 MB (about 10 MB gzipped, which Pages applies).
 
+**Build info for the feedback report.** `node tools/write-build-info.mjs` writes `build_info.json` at the repo root (`res://build_info.json`) as `{"commit": "<sha7>", "date": "<yyyy-mm-dd>"}`: the commit from `--commit`, then `GITHUB_SHA`, then `git rev-parse`, and the date is that commit's own date (`git log -1 --format=%cs`), never the clock. With no git it writes `"unknown"` and still exits 0, so a local build without git does not break. CI runs it before the web export. The export presets pack it through `include_filter="build_info.json"`; an export without the file still succeeds (the game must treat a missing file as unknown, as it does in the editor). The file is not under `data/`, so the sim hash never sees it, and `/build_info.json` must be in `.gitignore` (the EP's file). For a local web export, run the script first.
+
 `tools/build-site.mjs` lays out the site: `/` a small landing page, `/prototype/` the single-file prototype (the URL Orb shares, unchanged), `/play/` the Godot build, and `/bench/` (below), which the landing page does not link. It fails if the export folder has no `index.html` and `.wasm`.
 
 ### The bench page and the old-laptop range

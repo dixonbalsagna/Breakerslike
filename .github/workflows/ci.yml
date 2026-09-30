@@ -116,6 +116,9 @@ jobs:
           web-templates: 'true'
       - name: Import project
         run: '"$GODOT" --headless --path . --import'
+      # build_info.json (commit and commit date) for the feedback report; git-ignored, packed by the export's include_filter.
+      - name: Write build_info.json
+        run: node tools/write-build-info.mjs --commit "${GITHUB_SHA}"
       - name: Export Web (Compatibility, single-threaded)
         run: |
           mkdir -p "${RUNNER_TEMP}/web"
