@@ -8,6 +8,7 @@ class_name WorldSettle
 ## moves another's buildings. Every number is in the file.
 
 const PATH: String = "res://data/biomes/settlements.json"
+const SCHEMA: String = "biomes.settlements/1"   # the file's "schema" value (Tools requires the version)
 const LAYOUT_SEED: int = 4242               # the layout stream's seed (terrain.gd)
 const BH: float = 75.0
 const CEILING_FRAC: float = 0.85            # no building is taller than this share of the flight ceiling
@@ -88,6 +89,8 @@ static func _hdist(v, where: String) -> void:
 
 
 static func _validate(d: Dictionary) -> void:
+	if d.get("schema", "") != SCHEMA:
+		_err("schema: expected \"%s\", got \"%s\"" % [SCHEMA, str(d.get("schema", ""))])
 	if not d.has("pop_height_exp") or not _num(d.pop_height_exp) or d.pop_height_exp < 0.0 or d.pop_height_exp > 1.0:
 		_err("pop_height_exp: a number from 0 to 1 (people grow with height to this power)")
 	if not d.has("pop0") or not _num(d.pop0) or d.pop0 < 1:

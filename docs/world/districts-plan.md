@@ -31,7 +31,7 @@ D1 first, because D2 is the same generator given a second archetype. Each slice 
       { "name": "mid_rise", ... }, { "name": "suburb", ... }, { "name": "industrial", ... } ] } ] }
 ```
 
-- **Kinds stay `tower` and `house`** in the sim (the two box types the brunt, floors and collateral already know); a district adds a `shape` hint (an int from a list in the file: slab, tower, stepped, spire, warehouse, chimney, house, shop, hall, quay, crane, lighthouse) that only Rendering reads. New sim kinds are not needed.
+- **Kinds stay `tower` and `house`** in the sim (the two box types the brunt, floors and collateral already know); a district adds a `shape` hint (an int from a list in the file: slab, shaft, stepped, spire, warehouse, chimney, house, shop, hall, quay, crane, lighthouse) that only Rendering reads. New sim kinds are not needed.
 - **Units.** Heights, widths and gaps in fighter heights (bh = 75 units) so Art and Camera read them; the loader converts once.
 - **Span.** In D1 the span is the current one (original coordinates, then the platform trim of `_platforms`). In D2 it comes from the planet record.
 - **Schema and validator.** `tools/schemas/settlements.schema.json` and a check in `tools/validate.js` (Tools' files: a grant, section 7). The validator checks ranges, that district shares sum to 1, that `rows` are in 0 to 3, that every `shape` is known, and that landmark counts fit.
