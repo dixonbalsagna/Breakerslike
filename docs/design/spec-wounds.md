@@ -455,6 +455,7 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
   - *Thresholds:* Calm below 30, Tense 30 to 70, Frenzied above 70. The mood must stay across a threshold for a **3 s dwell** before the band changes, with no further hysteresis.
   - *Aggression,* in permille: **1000 + 100 × (act − 1) + band bonus**, where the band bonus is 0 for Calm, 250 for Tense and 500 for Frenzied. The maximum is 1,800, at act 4 and Frenzied. It scales the director's strike cadence and blitz chance.
   - *Scope:* **one match-wide scalar**, because mood belongs to the whole fight. Each fighter's own difference comes from stance cadence (`stance-matrix.md` R9) and personality data, and multiplies with it.
+- *Style labels* (turtle, rusher, runner, charger, sniper and mixer): Narrative's thresholds, holds, hysteresis and QA bands (`docs/narrative/style-thresholds.md`) are **signed off by Game Design**. One clarification from questionnaire 4: an "attack" in the sniper and mixer measures is an exchange the fighter's director started, counted by its weight at the start, not a button press.
 - *The players' styles feed the voice* (Orb): holding DEFENSIVE surfaces patience thoughts, and an opponent who turns EVASIVE under pressure prompts boasts. Narrative writes the lines, keyed to stance history and mood.
 - *QA bands:*
   - Frenzied at most 25% of match time;
