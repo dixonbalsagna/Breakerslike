@@ -148,6 +148,7 @@ func _ready() -> void:
 	_fb_text.visible = false
 	_fb_text.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	_fb_text.placeholder_text = str(UiData.feedback().get("placeholder", ""))
+	_fb_text.text_changed.connect(_fb_sync)
 	add_child(_fb_text)
 	_fb_prev = TextEdit.new()
 	_fb_prev.visible = false
@@ -707,7 +708,9 @@ func show_feedback(context: String = "pause") -> void:
 	_fb_status_ok = false
 	_fb_tags = {}
 	_fb_text.text = ""
+	UiWebClip.install(hide_feedback)
 	_fb_place()
+	_fb_sync()
 	_l_fb.invalidate()
 	feedback_opened.emit(context)
 
@@ -719,6 +722,7 @@ func hide_feedback() -> void:
 	_fb_text.visible = false
 	_fb_prev.visible = false
 	_fb_text.release_focus()
+	UiWebClip.clear()
 	_l_fb.update_sig(null)
 	feedback_closed.emit()
 
@@ -730,6 +734,7 @@ func is_feedback_open() -> bool:
 func toggle_feedback_tag(id: String) -> void:
 	if _fb_open and _fb_state == UiFeedback.STATE_WRITE:
 		_fb_tags[id] = not bool(_fb_tags.get(id, false))
+		_fb_sync()
 		_l_fb.invalidate()
 
 
@@ -770,6 +775,7 @@ func feedback_report() -> String:
 func copy_feedback() -> String:
 	var text: String = feedback_report()
 	DisplayServer.clipboard_set(text)
+	UiWebClip.copy(text)   # on the web also from the page itself (see UiWebClip); a no-op elsewhere
 	_fb_prev.text = text
 	_fb_state = UiFeedback.STATE_COPIED
 	_fb_status_ok = true
@@ -797,12 +803,25 @@ func feedback_plan() -> Dictionary:
 	return UiFeedback.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), _fb_state)
 
 
-## Place the two text boxes on the panel's plan and size their type to it.
+## Keep the web page's copy of the report current, so its pointer listener can copy it inside the user's gesture.
+func _fb_sync() -> void:
+	if _fb_open and UiWebClip.available():
+		UiWebClip.set_report(feedback_report())
+
+
+## Place the two text boxes on the panel's plan and size their type to it. On the web the read-only report is a real DOM textarea over
+## its box (native select, Ctrl+C and long-press Copy), removed and placed again here on every layout, so a resize never strands it.
 func _fb_place() -> void:
 	var p: Dictionary = feedback_plan()
 	var write: bool = _fb_state == UiFeedback.STATE_WRITE
+	var web: bool = UiWebClip.available()
 	_fb_text.visible = _fb_open and write
-	_fb_prev.visible = _fb_open and not write
+	_fb_prev.visible = _fb_open and not write and not web
+	if web:
+		UiWebClip.hide_textarea()
+		UiWebClip.set_copy_rect((p["copy"] if write else p["again"]) if _fb_open else Rect2())
+		if _fb_open and not write:
+			UiWebClip.show_textarea(p["preview_rect"], float(p["fs_body"]), _fb_prev.text)
 	var fs: int = int(p["fs_body"])
 	for box in [_fb_text, _fb_prev]:
 		box.add_theme_font_size_override("font_size", fs)

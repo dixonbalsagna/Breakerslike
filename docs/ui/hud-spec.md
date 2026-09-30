@@ -576,7 +576,14 @@ For friends' playtests (Orb said yes): a small panel that turns a tester's thoug
 
 ![On a phone](img/feedback-phone.png)
 
-**COPY REPORT.** Builds the report, calls `DisplayServer.clipboard_set` (on the web that is the browser's clipboard write, inside the click that started it, which browsers allow) and switches to a second state: "Copied. Paste it to Orb." with the whole report in a read-only box, "If nothing was copied, select the text below and copy it." A browser that refuses the write therefore costs one long-press, not the report. The panel cannot read the clipboard back (the web forbids it), so it never claims success it cannot check beyond that line. COPY AGAIN repeats it; BACK returns to writing with the note and tags kept.
+**COPY REPORT.** Builds the report, calls `DisplayServer.clipboard_set` and switches to a second state: "Copied. Paste it to Orb." with the whole report in a read-only box, "If nothing was copied, select the text below and copy it." The panel cannot read the clipboard back (the web forbids it), so it never claims success beyond that line. COPY AGAIN repeats it; BACK returns to writing with the note and tags kept.
+
+**On the web** (`OS.has_feature("web")`, `ui/core/ui_web_clip.gd`; Rendering's web pass found that Godot's canvas text cannot be copied by hand, because Ctrl+C never reaches Godot's clipboard and a phone cannot long-press canvas text, and that Safari may count a tap Godot handles a frame late as no gesture):
+- **A real DOM `<textarea readonly>`** sits over the report box, so native select, Ctrl+C and long-press Copy work. Godot's own read-only box is hidden there. The textarea is removed on close, on BACK and whenever the panel is laid out again, so a resize never strands it, and it is placed again at once from the new plan (canvas pixels are scaled by the canvas's CSS size). Esc inside it closes the panel (a JS callback).
+- **A pointer listener on the canvas** watches the COPY REPORT button (COPY AGAIN in the second state). A tap or click inside it calls `navigator.clipboard.writeText(report)` in that same browser event, with an `execCommand('copy')` fallback, which is the gesture Safari and iOS require. Godot keeps `window.__fb.report` current as the player types and picks tags. Godot's own click path calls the same copy too, so the two routes cannot disagree. Nothing leaves the page.
+- Off the web every bridge call is a no-op and Godot's own read-only box is shown.
+
+![The report as a DOM textarea over the box, with the listener's copy (a page test with a mock canvas; see the note in the report)](img/feedback-web-dom.png)
 
 **The report** (plain text, one fact a line; every label is data in `ui/data/feedback.json`):
 ```

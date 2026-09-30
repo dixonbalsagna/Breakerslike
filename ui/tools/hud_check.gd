@@ -1463,6 +1463,21 @@ func _feedback_rules() -> void:
 	hud._unhandled_input(wasd)
 	_ok(hud.is_feedback_open(), "feedback: a game key does nothing to the open panel")
 	hud.hide_feedback()
+	# The web's clipboard bridge: the page-side code is there, and off the web every call is a harmless no-op.
+	for must in ["navigator.clipboard.writeText", "execCommand('copy')", "readonly", "pointerup", "createElement('textarea')", "__fbClose"]:
+		_ok(UiWebClip.JS_INSTALL.contains(must), "feedback web: the page-side code has %s" % must)
+	_ok(not UiWebClip.available(), "feedback web: this headless run is not the web, so the bridge stays out of the way")
+	UiWebClip.install(func(): pass)
+	UiWebClip.set_report("x")
+	UiWebClip.set_copy_rect(Rect2(1, 2, 3, 4))
+	UiWebClip.copy("x")
+	UiWebClip.show_textarea(Rect2(0, 0, 10, 10), 12.0, "x")
+	UiWebClip.clear()
+	_ok(hud._fb_prev.visible == false and not hud.is_feedback_open(), "feedback web: the no-op calls leave the HUD alone")
+	hud.show_feedback("pause")
+	hud.copy_feedback()
+	_ok(hud._fb_prev.visible and hud._fb_prev.text.contains("Notes:"), "feedback web: off the web the read-only Godot box shows the report")
+	hud.hide_feedback()
 	# Touch: the pill is a target, the panel works by tap, and the boxes stay inside the card.
 	hud.set_density(2.6)
 	hud.set_option("touch_ui", true)
