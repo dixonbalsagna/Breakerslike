@@ -12,6 +12,12 @@ Owner: World and Environment, with Encounter (the planner's scoring) and Simulat
 
 B2 replaces the incidental collision with the director's chosen building, adds depth to the flight, adds the chain, and moves BUILDING SMASH candidates to every row.
 
+## 0b. Conventions Camera and Rendering can rely on
+
+- **Sign of `z`.** Positive is toward the camera, as everywhere in the renderer. The fighter plane is 0; the foreground row is in front of it at `+10 bh` (+750 units) and the rows behind are negative: front street `-8 bh` (-600), mid `-22 bh` (-1,650), back `-38 bh` (-2,850). (B1's constants, `ROW_Z_BH` in `terrain.gd`; an earlier line in `buildings-in-depth.md`, "+70 x WS", was the pre-scale draft and is superseded by these.) A building's `z` is its centre's depth, so a hit point on its face is about `z + d / 2` for a building behind the plane. The fighter's `z` uses the same sign: it runs from 0 to a negative number as it flies into the rows behind.
+- **Time.** `launch_depth.dur` is in seconds of match time (a float), the predicted time from the launch to the first hit, as the predictor's `t`. `chain_link.dur` is the same, in seconds, from leaving one building to reaching the next. No event in this plan counts ticks.
+- **Small back-row fighter.** At 38 bh the fighter is about 25 px tall for a second or two. If Orb finds it too small, the fix is mine, in the aim: shorten or slow the last-row flights (a back-row candidate's force multiplier capped, or the row's score penalised), to be tuned in B2 step 4. Camera does not have to solve it.
+
 ## 1. Split of the work
 
 | Piece | File | Owner |
