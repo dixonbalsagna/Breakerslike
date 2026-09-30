@@ -310,3 +310,16 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - World-changing ability owners: revisit, with more ideas pitched first.
 - Transformation mechanics per fighter: close, a good start; iterate on the proposals.
 - Hidden weapons: only the Cyborg, for now. His final form is what lets him generate his hidden weapons. His technology isn't fully online until he reaches his final form, and those weapons are what give him his distinct power-up.
+
+## World changes and transformations, second pass picks (2026-09-30)
+- World changes Orb liked:
+  - Protagonist: Heat Wave, Proving Ground.
+  - Anti-hero: Storm Crown, Scorched Plain.
+  - Empress: Blockade, Golden Hour.
+  - Cyborg: Wired World, Harvest.
+- Transformations:
+  - Empress: the main version, escalating revisions, each adding a signature.
+  - Protagonist: the main version, pushing past his limits (heat).
+  - Anti-hero: the alternative, pride ascension, with forms lost when Pride crashes.
+  - Cyborg: the alternative, assimilation, feeding on wreckage. It keeps the earlier note that his final form brings his technology online and generates his hidden weapons.
+- Orb: "take these and pitch more. this is heading in a good direction, I want more ideas to work with."
