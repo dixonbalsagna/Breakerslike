@@ -303,3 +303,10 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Transformation kinds Orb likes: a ladder of forms, a meter-fed state that drains, and shedding power to go faster. Each fighter's mechanic is different.
 - Animation: hand-made key poses with procedural in-betweens.
 - Priority: the move-building system first, content after.
+
+## Fighter mechanics picks (2026-09-30)
+- Broken limbs: pitch A, "the crippling moment" (docs/design/pitches.md §5).
+- Time cap: A, the planet gives way.
+- World-changing ability owners: revisit, with more ideas pitched first.
+- Transformation mechanics per fighter: close, a good start; iterate on the proposals.
+- Hidden weapons: only the Cyborg, for now. His final form is what lets him generate his hidden weapons. His technology isn't fully online until he reaches his final form, and those weapons are what give him his distinct power-up.
