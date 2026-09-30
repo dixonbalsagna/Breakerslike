@@ -1,0 +1,50 @@
+{
+  "schema": "fight.style/1",
+  "_about": "Narrative's draft of data/fight/style.json (Simulation's mood-style.md section 5). Percentages are integers, compared by cross-multiplication (100 * part > pct * whole). Times are seconds at the 1 Hz evaluation. Game Design owns the final numbers; Tools owns the schema.",
+  "windowS": 60,
+  "evalHz": 1,
+  "minWindowFillS": 30,
+  "priority": ["turtle", "runner", "rusher", "charger", "sniper", "mixer"],
+  "shift": { "minGapS": 20, "refractoryAfterLeaveS": 10, "startUnlabelled": true },
+  "labels": {
+    "turtle": {
+      "measure": "stance1 / stanceTotal",
+      "enterPct": 55, "enterHoldS": 45,
+      "leavePct": 45, "leaveHoldS": 5
+    },
+    "rusher": {
+      "measure": "stance0 / stanceTotal",
+      "enterPct": 60, "enterHoldS": 20,
+      "leavePct": 50, "leaveHoldS": 5
+    },
+    "runner": {
+      "measure": "(stance2 + stance3) / stanceTotal",
+      "enterPct": 50, "enterHoldS": 20,
+      "leavePct": 40, "leaveHoldS": 5
+    },
+    "charger": {
+      "measure": "charge / stanceTotal",
+      "enterPct": 20, "enterHoldS": 15,
+      "leavePct": 12, "leaveHoldS": 5
+    },
+    "sniper": {
+      "measure": "sig / (light + heavy + sig)",
+      "enterPct": 35, "enterHoldS": 20, "minAttacksInWindow": 4,
+      "leavePct": 25, "leaveHoldS": 5
+    },
+    "mixer": {
+      "definition": "no dominant stance and a spread of attack kinds",
+      "maxStancePct": 40,
+      "minStancesUsed": 3, "stanceUsedPct": 15,
+      "maxAttackKindPct": 70, "minAttacksInWindow": 6,
+      "enterHoldS": 30,
+      "leaveWhen": "any other label enters, or the largest stance share exceeds 50 percent for 5 s"
+    }
+  },
+  "qaBands": {
+    "labelChangesPerMatchMedian": "at most 4",
+    "shortestLabelHeldS": "at least 10",
+    "unlabelledShareOfMatch": "at most 40 percent",
+    "everyLabelReachedAcrossABatch": true
+  }
+}
