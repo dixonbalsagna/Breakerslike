@@ -50,6 +50,18 @@ static func fk(lq: Array[Quaternion], hip_off: Vector3, gq: Array[Quaternion], g
 			gp[i] = gp[p] + gq[p] * AnimRig.rest_local[i] + (hip_off if i == 1 else Vector3.ZERO)
 
 
+## Forward kinematics for a chain of bones only: `order` lists bone indices, parents before children.
+static func fk_chain(lq: Array[Quaternion], hip_off: Vector3, gq: Array[Quaternion], gp: PackedVector3Array, order: Array) -> void:
+	for i in order:
+		var p: int = AnimRig.parent[i]
+		if p < 0:
+			gq[i] = lq[i]
+			gp[i] = Vector3.ZERO
+		else:
+			gq[i] = gq[p] * lq[i]
+			gp[i] = gp[p] + gq[p] * AnimRig.rest_local[i] + (hip_off if i == 1 else Vector3.ZERO)
+
+
 ## Closed-form two-bone IK on local rotations: bends bones a, b so the end c reaches `target`, elbow or knee toward
 ## `pole` (a point). gq and gp are current FK arrays and are updated for a, b and c.
 static func ik2(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVector3Array, a: int, b: int, c: int, target: Vector3, pole: Vector3) -> void:

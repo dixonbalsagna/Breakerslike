@@ -25,11 +25,17 @@ var root_off := Vector3.ZERO
 var gq: Array[Quaternion] = []
 var gp := PackedVector3Array()
 var frame: int = -1
+var version: int = 0                   # bumped by every real solve; a body skips its bone writes when it has this one
+var _lag_k: float = -1.0
+var _settle: int = 0
+var _bkey: int = -1
+var _full_fk: bool = false
+const SOCKET_CHAIN := [0, 1, 2, 3, 4, 5, 11, 12, 13, 14]   # root, pelvis, spines, neck, head, near clavicle, arm, forearm, hand
+const SOCKET_SET := ["root", "pelvis", "spine_1", "spine_2", "neck", "head", "clavicle_r", "upper_arm_r", "forearm_r", "hand_r"]
 
 var _base: Array[Quaternion] = []
 var _base_hips := Vector3.ZERO
 var _base_curl := Vector2(0.5, 0.5)
-var _cur: Array[Quaternion] = []       # the base as smoothed this frame (recovery blends back to it)
 var _tq: Array[Quaternion] = []
 var _last_T: float = -1.0
 var _cue: Dictionary = {}
@@ -48,7 +54,6 @@ func _init(slot_: int) -> void:
 	slot = slot_
 	q = AnimPose.identity_q()
 	_base = AnimPose.identity_q()
-	_cur = AnimPose.identity_q()
 	_tq = AnimPose.identity_q()
 	gq.resize(AnimRig.N)
 	gp.resize(AnimRig.N)
@@ -76,6 +81,9 @@ func on_hit(T: float, region: String, front: bool, amp: float) -> void:
 
 
 func socket(name: String) -> Vector3:
+	if not _full_fk and not SOCKET_SET.has(name):
+		AnimPose.fk(q, hips, gq, gp)
+		_full_fk = true
 	return gp[AnimRig.index[name]] + root_off
 
 
@@ -103,23 +111,36 @@ func _mixh(dst_h: Vector3, src_h: Vector3, w: float) -> Vector3:
 
 func solve(S: SimState, f, prof: Dictionary) -> void:
 	_prof = prof
+	# On twos: a snappy fighter with nothing happening (no exchange, cue, reaction or beam) solves every second tick and the
+	# bone writes are skipped on the others. A blow always solves, so no contact frame is missed.
+	if version > 0 and float(prof.get("solve_hz", 60.0)) < 59.0 and (S.tick & 1) == 1 and _idle(S, f):
+		frame = RenderAnim._frame_key(S)
+		return
+	version += 1
 	var T: float = S.T
 	var dt: float = clampf(T - _last_T, 0.0, 0.1) if _last_T >= 0.0 else 0.0
 	var first: bool = _last_T < 0.0
 	_last_T = T
 	var lagk: float = float(prof.get("lag", 0.3))
-	for i in range(AnimRig.N):
-		_lag[i] = AnimData.bone_lag[i] * lagk / 0.45
+	if lagk != _lag_k:
+		_lag_k = lagk
+		for i in range(AnimRig.N):
+			_lag[i] = AnimData.bone_lag[i] * lagk / 0.45
 	# 1. the base pose: what the fighter is doing when no blow, cue or reaction is on
 	_target_base(S, f, T)
 	var k: float = 1.0 if first else 1.0 - exp(-dt / maxf(float(prof.get("base_tau", 0.08)), 0.001))
-	for i in range(AnimRig.N):
-		_base[i] = _base[i].slerp(_tq[i], k)
-	_base_hips = _base_hips.lerp(_tq_hips, k)
-	_base_curl = _base_curl.lerp(_tq_curl, k)
+	if _settle <= 40 or first:
+		for i in range(AnimRig.N):
+			_base[i] = _base[i].slerp(_tq[i], k)
+		_base_hips = _base_hips.lerp(_tq_hips, k)
+		_base_curl = _base_curl.lerp(_tq_curl, k)
+	elif _settle == 41:
+		for i in range(AnimRig.N):
+			_base[i] = _tq[i]
+		_base_hips = _tq_hips
+		_base_curl = _tq_curl
 	for i in range(AnimRig.N):
 		q[i] = _base[i]
-		_cur[i] = _base[i]
 	hips = _base_hips
 	curl = _base_curl
 	# 2. a cue pose from Combat's cue events
@@ -154,13 +175,24 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	else:
 		root_off = root_off * 0.0
 	_springs(f)
-	# 7. sockets
-	AnimPose.fk(q, hips, gq, gp)
-	for i in range(AnimRig.N):
-		if is_nan(q[i].x) or is_nan(q[i].w):
-			debug["nan"] += 1
-			q[i] = Quaternion.IDENTITY
+	# 7. sockets: only the chains the views read (the head and the near hand); the rest is on demand
+	AnimPose.fk_chain(q, hips, gq, gp, SOCKET_CHAIN)
+	_full_fk = false
+	if is_nan(q[0].x) or is_nan(q[5].w):
+		debug["nan"] += 1
+		q[0] = Quaternion.IDENTITY
+	elif RenderAnim.debug_checks:
+		for i in range(AnimRig.N):
+			if is_nan(q[i].x) or is_nan(q[i].w):
+				debug["nan"] += 1
+				q[i] = Quaternion.IDENTITY
 	frame = RenderAnim._frame_key(S)
+
+
+## Nothing is asking for a precise pose this tick.
+func _idle(S: SimState, f) -> bool:
+	var ex = S.dirS.ex
+	return (ex == null or (ex.A != f and ex.D != f)) and _cue.is_empty() and _reacts.is_empty() and f.beamCharge == null and S.beams.is_empty() and S.dirS.stop <= 0.0
 
 
 ## A blow counts as heavy from the exchange kind, the strike's own weight (o.big) or its damage.
@@ -179,37 +211,62 @@ var _tq_curl := Vector2(0.5, 0.5)
 
 func _target_base(S: SimState, f, T: float) -> void:
 	var stance: int = clampi(int(f.stance), 0, 3)
+	var face: float = f.face
+	var vf: float = f.vx * face
+	var state: String = f.state
+	# The blend weights, quantised to sixteenths: while they and the stance do not change the target is not rebuilt (the
+	# base smoothing hides the steps), and once it has settled the smoothing stops too.
+	var w1: float = 0.0
+	var w2: float = 0.0
+	var w3: float = 0.0
+	var mode: int = 0
+	if f.slide > 0.0:
+		mode = 1
+	elif state == "launched":
+		var speed: float = Vector2(f.vx, f.vy).length()
+		w1 = smoothstep(700.0, 2200.0, speed)
+		w2 = (1.0 - smoothstep(150.0, 600.0, speed)) * 0.7
+		mode = 2
+	elif state == "down":
+		w1 = smoothstep(0.42, 0.72, f.stateT)
+		mode = 3
+	elif state == "charging":
+		mode = 4
+	else:
+		w1 = smoothstep(140.0, 720.0, vf)
+		w2 = smoothstep(140.0, 520.0, -vf) * (1.0 - w1)
+		if w1 > 0.01:
+			w3 = clampf(atan2(f.vy, maxf(absf(f.vx), 60.0)), -0.9, 0.9) * 0.7 * w1
+		mode = 5
+	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15)
+	if key == _bkey:
+		_settle += 1
+		return
+	_bkey = key
+	_settle = 0
 	var sp: AnimPose = AnimData.pose("stance." + STANCES[stance])
 	for i in range(AnimRig.N):
 		_tq[i] = sp.q[i]
 	_tq_hips = sp.hips
 	_tq_curl = sp.curl
-	var face: float = f.face
-	var vf: float = f.vx * face
-	var state: String = f.state
-	if f.slide > 0.0:
-		_blend_target("slide.brake", 1.0)
-	elif state == "launched":
-		var speed: float = Vector2(f.vx, f.vy).length()
-		var stream: float = smoothstep(700.0, 2200.0, speed)
-		var slow: float = 1.0 - smoothstep(150.0, 600.0, speed)
-		_blend_target("launch.spread", 1.0)
-		_blend_target("launch.stream", stream)
-		_blend_target("launch.tuck", slow * 0.7)
-	elif state == "down":
-		_blend_target("down.prone", 1.0)
-		_blend_target("down.getup", smoothstep(0.42, 0.72, f.stateT))
-	elif state == "charging":
-		_blend_target("charge.hold", 1.0)
-	else:
-		var wd: float = smoothstep(140.0, 720.0, vf)
-		var wr: float = smoothstep(140.0, 520.0, -vf)
-		_blend_target("move.dash", wd)
-		_blend_target("move.retreat", wr * (1.0 - wd))
-		if wd > 0.01:
-			var pitch: float = clampf(atan2(f.vy, maxf(absf(f.vx), 60.0)), -0.9, 0.9) * 0.7 * wd
-			var pi_: int = AnimRig.index["pelvis"]
-			_tq[pi_] = _tq[pi_] * Quaternion(Vector3(0, 0, 1), pitch)
+	match mode:
+		1:
+			_blend_target("slide.brake", 1.0)
+		2:
+			_blend_target("launch.spread", 1.0)
+			_blend_target("launch.stream", w1)
+			_blend_target("launch.tuck", w2)
+		3:
+			_blend_target("down.prone", 1.0)
+			_blend_target("down.getup", w1)
+		4:
+			_blend_target("charge.hold", 1.0)
+		_:
+			_blend_target("move.dash", w1)
+			_blend_target("move.retreat", w2)
+			if w3 != 0.0:
+				var pi_: int = AnimRig.index["pelvis"]
+				_tq[pi_] = _tq[pi_] * Quaternion(Vector3(0, 0, 1), w3)
 
 
 func _blend_target(id: String, w: float) -> void:
@@ -330,7 +387,7 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 		var u4: float = clampf((dtc - F) / R, 0.0, 1.0)
 		var w4: float = u4 * u4 * (3.0 - 2.0 * u4)
 		for i in range(AnimRig.N):
-			q[i] = q[i].slerp(_cur[i], w4)
+			q[i] = q[i].slerp(_base[i], w4)
 		hips = pf.hips.lerp(_base_hips, w4)
 		curl = pf.curl.lerp(_base_curl, w4)
 	# timing fidelity: on the frame of contact the pose must be the contact key

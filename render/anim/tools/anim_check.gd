@@ -61,6 +61,7 @@ func _run() -> void:
 	await process_frame
 	_scan_writes()
 	AnimData.load_all()
+	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}
 		for mode in ["off", "snappy", "fluid"]:
@@ -92,6 +93,7 @@ func _run() -> void:
 		_expect(hashes["off"] == hashes["snappy"] and hashes["off"] == hashes["fluid"], "seed %d: the gameplay hash differs with the mannequin (off %s, snappy %s, fluid %s)" % [seed, hashes["off"], hashes["snappy"], hashes["fluid"]])
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
+	RenderAnim.debug_checks = false
 	print("Anim check  %d checks" % checks)
 	if fails.is_empty():
 		print("\nanim check passed")

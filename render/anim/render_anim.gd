@@ -15,6 +15,8 @@ static var _fighters: Dictionary = {}
 static var _sid: int = 0
 static var _last_tick: int = -1
 ## Cost counters for tools: microseconds spent in AnimFighter.solve, and how many solves.
+## Tools set this to scan every bone for NaN each solve (the game checks two).
+static var debug_checks: bool = false
 static var solve_usec: int = 0
 static var solve_count: int = 0
 

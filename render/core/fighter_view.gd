@@ -160,8 +160,14 @@ func _build_anim(f) -> void:
 	anim_body.build(pal, true)
 	body.add_child(anim_body)
 	anim_body.position = Vector3(0.0, -PIVOT_Y, 0.0)
+	# The placeholder box figure is dropped (its materials would only cost per-frame parameter writes); the two arm nodes stay
+	# as bare transform holders for the orb, spark and head anchors below.
 	for p in solid:
-		p[0].visible = false
+		if p[0] == arm_front or p[0] == arm_back:
+			p[0].mesh = null
+		else:
+			p[0].queue_free()
+	solid.clear()
 
 
 ## A cue from Combat (RenderLook.CUE_POSES), started at sim time T; kinds with no pose are ignored.
@@ -223,8 +229,9 @@ func _pose_cue(T: float, m: float, th: float, front: Vector2) -> void:
 	elif not _cue.is_empty() and T - float(_cue.t0) >= float(_cue.dur):
 		_cue = {}
 	pivot.position.x = step
-	_limb(arm_front, FRONT_SHOULDER, front, 10.0)
-	_limb(arm_back, BACK_SHOULDER, back, -10.0)
+	if anim_body == null:
+		_limb(arm_front, FRONT_SHOULDER, front, 10.0)
+		_limb(arm_back, BACK_SHOULDER, back, -10.0)
 	var t: float = T - float(_cue.get("t0", 0.0))
 	var fl: float = _cue_part("flare", T) * clampf(1.0 - t / float(_cue.get("dur", 1.0)), 0.0, 1.0)
 	flare.visible = fl > 0.01
@@ -283,15 +290,17 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		pivot.position.y = PIVOT_Y
 	var punch: bool = f.state == "locked" or f.beamCharge != null
 	var front: Vector2 = Vector2(30, 12) if punch else Vector2(22, 0)
-	_pose_cue(T, m, th, front)
 	var flash: bool = T - f.hurtT < RenderLook.HIT_FLASH_S and T >= f.hurtT
 	if anim_body != null:
 		var af: AnimFighter = RenderAnim.solve(S, f)
-		anim_body.apply(af.q, af.hips, af.curl, af.root_off)
+		if af.version != anim_body.applied_version:
+			anim_body.applied_version = af.version
+			anim_body.apply(af.q, af.hips, af.curl, af.root_off)
 		anim_body.set_look(1.0 if flash else 0.0, f.hidden)
 		var off := Vector3(0.0, -PIVOT_Y, 0.0)
 		head.position = af.head_center() + off
 		arm_front.transform = Transform3D(Basis.IDENTITY, af.socket("hand_r") + off)
+	_pose_cue(T, m, th, front)
 	if f.hidden != _faded or flash != _flash:
 		_faded = f.hidden
 		_flash = flash

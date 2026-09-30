@@ -11,6 +11,7 @@ var _hull: ShaderMaterial
 var _fingers_l: int
 var _fingers_r: int
 var _flash: float = 0.0
+var applied_version: int = -1   # the AnimFighter solve last written to this body (FighterView skips the bone writes when it has not changed)
 
 ## Palette keys: body, legs, arms, skin, gear, accent, hair (Colors). game true uses the hybrid projection (the game's
 ## fighters); false the plain perspective path (tools).
