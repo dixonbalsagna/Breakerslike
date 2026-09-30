@@ -38,7 +38,6 @@ Ordered by weight. "Proto" is the value the sim writes today. "Proposed" is to f
 | Launch impact (ground) | `fighter.gd:56` | min(30, v×0.01) | **unchanged** | 4 | landing pane | 35% | Proportional to speed already |
 | **Finisher final blow** | finisher `finalBlow` | 14 | **22** | **18** | both | 7.7 | The peak of the game; give it the biggest freeze and shake |
 | Clash held (beam struggle) | `sim.gd:99` | 7 per tick | **4 per tick** | 0 | source's pane | 1.4 | Sustained: 3.4 s of 7 tires the eye |
-| Struggle press (finisher) | new | n/a | **0** | 0 | | | No camera motion: it would hide the beat ring. Feedback is the ring, audio and rumble |
 
 Five values are unchanged on purpose (GUARD BREAK 12, beam connect 16, resolution 18, structure collapse 10, ground impact): they were already in proportion once the light and chain values came down.
 
@@ -60,5 +59,5 @@ Five values are unchanged on purpose (GUARD BREAK 12, beam connect 16, resolutio
 
 - **Camera:** confirm the falloff constant, the near test and the far weight; confirm k maps through your cap as in §1. You own the cap and decay; I own the per-event k.
 - **Rendering / Camera:** hold the shake through freezes (§4) if you agree.
-- **VFX:** the struggle beat ring must not compete with camera motion: no shake on struggle presses.
+- **VFX:** the finisher struggle is a state-resolved beat with no press; no extra camera motion is added for it.
 - **Accessibility:** shake scale and reduced motion are yours. Note that hit-stop is a sim value and **cannot** be scaled by the player without changing the simulation; I propose a match-header `hitstopScale` (0.5 or 1.0) recorded in replays if Accessibility wants a "reduce freezes" option. Netcode would have to agree it for online matches. **Orb decides** whether that option exists.

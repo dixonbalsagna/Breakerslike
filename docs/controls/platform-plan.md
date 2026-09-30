@@ -13,7 +13,7 @@ device events  →  [1] device layer   →  [2] binding layer  →  [3] intent b
 - **Layer 1, device.** Reads Godot events (`InputEventKey`, `InputEventJoypadButton`, `InputEventJoypadMotion`, touch) into a per-device state: buttons held, edges since the last tick, axes. It is host code and never touches the sim. Today's equivalent is `render/core/main.gd` (`_unhandled_input`) plus `sim_host.gd` (`held`, `edges`).
 - **Layer 2, bindings.** Maps device controls to *actions* per slot. Defaults are data (`data/input/bindings.json`, mine); the player's overrides are `user://input.json`. Rebinding writes only the override.
 - **Layer 3, intent builder.** Once per sim tick, per slot: build a `SimIntent` (`input-map.md` §1) from the action states: edges as bools, holds as bools, sticks quantised to 1/16 integers, `stanceStep` from cycle edges. This is the only thing recorded in a replay and the only thing a network peer sends.
-- **The sim owns everything that changes behaviour:** buffers, hold counters (`confirmTicks`), windows, lockouts and hit-stop are integer state on the fighter and in `S`. The host never buffers on the sim's behalf. Today the host holds edges across a freeze (`step()` returns false, `sim.gd:73-76`); under this plan the input stage runs during a freeze, so what the replay records is what the sim saw.
+- **The sim owns everything that changes behaviour:** the weight and signature state, hold counters (`confirmTicks`) and hit-stop are integer state on the fighter and in `S`. The host never buffers on the sim's behalf. Today the host holds edges across a freeze (`step()` returns false, `sim.gd:73-76`); under this plan the input stage runs during a freeze, so what the replay records is what the sim saw.
 - **No wall-clock timing anywhere below layer 3.** Press times are ticks. A key that goes down and up between two ticks is kept as an edge (as `edges` does now), so no press is lost at any frame rate.
 
 ## 2. Godot input, concretely
@@ -57,8 +57,8 @@ device events  →  [1] device layer   →  [2] binding layer  →  [3] intent b
 
 - **UI:** a controls screen per device with the action list, the current glyph, and "press a key or button". Duplicates are refused with a message. "Reset to default" per device.
 - **Storage:** `user://input.json`: bindings per device family, stick deadzones, toggle options, stance style (bumper cycle or radial), glyph style, struggle timing offset (−6 to +6), assist flags.
-- **Accessibility options that live here:** hold-to-toggle for dash, charge and special; stance radial; pad-only one-hand layouts (a preset that moves dash to a bumper for a one-handed pad); the assist widths (`input-map.md` §4, `rulings.md` §3, §4, §8). Accessibility derives the presets from my numbers.
-- **Nothing here changes the sim's rules.** Assist widths and the timing offset are match inputs recorded in the replay header.
+- **Accessibility options that live here:** hold-to-toggle for dash, charge and special; stance radial; pad-only one-hand layouts (a preset that moves dash to a bumper for a one-handed pad); the timing-press assists no longer exist (there is no timing press). Accessibility derives any presets from `stage-c-spec.md`.
+- **Nothing here changes the sim's rules.** The only match-header values are `hitstopScale` and any handicap Game Design defines.
 
 ## 6. Tests and QA
 
@@ -68,7 +68,7 @@ device events  →  [1] device layer   →  [2] binding layer  →  [3] intent b
 | Synthetic-event test: the same script through keyboard events and pad events yields **identical** intents | byte-identical logs |
 | Replay: a match with mixed devices replays to the same hash from the intent log alone | hash equal |
 | Latency harness per platform (event, consuming tick, drawing frame) | p95 within the budget |
-| Parity bots (`input-map.md` §7.7): a route bot and a rhythm bot per device profile | within 2% |
+| Parity bots (`input-map.md` §7.7): a route bot per device profile | within 2% |
 | Disconnect and focus-out mid-hold: nothing sticks | no stuck hold after re-focus |
 | Web pad pass: Chrome, Edge, Firefox, Safari with an Xbox pad and a PlayStation pad | logged |
 
@@ -82,10 +82,9 @@ Both schemes produce the same `SimIntent` from the same three layers. Neither in
 | :--- | :--- |
 | Move | Floating left stick: appears where the left thumb lands, dead zone 0.20, quantised like a pad. Full deflection at 90% |
 | Dash (hold) | A button under the right thumb's arc, or "flick past the stick's edge to hold dash" (option) |
-| Light, heavy, signature | Three buttons in an arc, positions like the pad's X, Y and B; the signature ring shows the charge |
+| Light, heavy, signature | Three buttons in an arc, positions like the pad's X, Y and B: the two weight buttons set the sticky weight, the signature button queues or cancels; the signature ring shows the charge |
 | Charge, special | Two hold buttons on the left edge above the stick; the transform hold is a small button shown only when available |
 | Stance | A four-segment **stance ring** at the top right that shows the current stance; **tap = next**, **tap a segment = direct**. One tap always changes one stance |
-| Parry, chain, struggle | The light or heavy button, as on every device; the ring is drawn near the button so the thumb does not have to look away |
 | Layout | Sizes at least 9 mm (about 48 dp); left-handed mirror; a layout editor for position and size |
 
 ### 7.2 Scheme B: simplified tap
@@ -95,7 +94,7 @@ For players who want the fight, not the flying. The sim still runs the full rule
 | Control | Touch design |
 | :--- | :--- |
 | Move | **Auto-approach**: the fighter holds a comfortable range and follows the opponent. A swipe on the left half sets a **dash direction** (a burst), and a hold there is a hold-dash |
-| Attack | **One large Attack button**: **tap = light, hold 0.25 s then release = heavy**, and the signature is a **ring that appears around the button when charge is 45 or more** (tap the ring). The same button is the **parry, chain and struggle** press, and the ring cues sit on it |
+| Weight and signature | **One weight switch** (tap to flip light and heavy; the state shows on it and on the stance ring) and a **signature ring** that appears around it when charge is 45 or more (tap to queue, tap again to cancel). There is no attack button: the director times attacks |
 | Stance | The same four-segment ring (tap = next, tap a segment = direct). Optionally a "smart stance" preset that Game Design and Accessibility can define later |
 | Charge, special, transform | Two hold buttons on the left, same as scheme A |
 | Everything else | Unchanged |

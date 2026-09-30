@@ -1,5 +1,7 @@
 # Plan: input map revision for intent queuing (no timing presses)
 
+> **Superseded 2026-09-30 by [stage-c-spec.md](stage-c-spec.md)**, after Game Design's answers (`stance-matrix.md` R9). Weight is a sticky mode (light or heavy, starting light), not a one-shot queue; the signature is the one-shot; there is no timing press anywhere; the 180-tick cap is confirmed. Kept as the record of the options.
+
 Owner: Controls and Game Feel. Date: 2026-09-30. Status: **plan only, no sim edits.** Trigger: Orb's questionnaire 4 (`docs/ep/vision.md`): the player controls stance, movement and positioning, attack weight, charging, transform timing and specials, but **not when to attack and not timing presses** (parry, the finisher struggle). Those go to the director. Skill balance is 2 of 10. Game Design is redesigning parry and the struggle as director outcomes driven by strategy.
 
 ## 1. What is held, what stands

@@ -1,6 +1,6 @@
 # Controls and Game Feel: rulings on windows, buffering, hit-stop and the finisher struggle
 
-> **2026-09-30 notice:** Orb's questionnaire 4 moves parry and the finisher struggle to the director, so the press-timing parts of this document (sections 3, 4, 6, 8 and the press ticks of Stage A) are **on hold** until Game Design reports. Sections 5, 7, 10 and the hit-stop stages stand. See [intent-queue-plan.md](intent-queue-plan.md).
+> **2026-09-30 notice (final):** Game Design's Q4 redesign removes every timing press. **Superseded, kept for the record:** sections 2 (windows table), 3 (parry), 4 (chain), 6 (buffering), 8 (struggle), 12 risks 1, 2, 3, 4 and 7, and the press ticks and stray lockout in sections 14 to 16. **Still in force:** section 5 (hit-stop and shake), 7 (stance switching), 9 (mechanics, except attack gating), 10 (latency, for movement, stance and holds), and section 11 as replaced by `stage-c-spec.md` section 7. The sticky weight and the signature intent are specified in [stage-c-spec.md](stage-c-spec.md); the stage plan is there too.
 
 Owner: Controls and Game Feel. Audience: Combat (windows), Encounter Systems (sim), Game Design, UI/UX, Camera, Accessibility, QA. Date: 2026-09-29. Status: **design, no code yet** (ADR 0006: the GDScript sim is the source of truth; I write code in `sim/input/` when the EP hands me the tree). Numbers are whole 60 Hz ticks, stored as data. ms = ticks × 16.67.
 
@@ -309,3 +309,10 @@ Measured from the physical input to the first visible reaction, on the target su
 
 - The parry anti-mash rule (first stray free, 12-tick lockout, 5 ki per press inside a lockout; section 3.4) lives in the **input layer** in `sim/input/`, next to the press ticks. Encounter's `strike()` only consumes a **validated** press; it never sees a stray.
 - **Stage A** (bit-identical) carries the press ticks only: `f.pressTick` replaces `lastAtkT` with the same parry behaviour as today. **Stage B** adds the lockout and the ki tax, together with diagonal normalisation, the hit-stop values and the shake decay hold, because each changes behaviour or the goldens.
+
+## 17. Final position (2026-09-30)
+
+- **No timing press exists.** Parry, chain and the finisher struggle are resolved by state; the anti-mash lockout is withdrawn (Game Design, R5). Window widths, the clean parry, the parry buffer and the struggle beats have no inputs to apply to. Combat's wind-up beats remain as poses and readability cues.
+- **Kept and unchanged:** the hit-stop table and Stages A and B (integer counter first, values second), including the parry hit-stop (the freeze on a director-resolved parry), the shake pass, diagonal normalisation in Stage B, stance switching, the holds, the Encore prompt, and the latency budget for movement, stance and holds.
+- **New:** [stage-c-spec.md](stage-c-spec.md): the sticky light or heavy weight and the one-shot signature intent (fires at the director's next opening once 45 ki is there, at most 180 ticks after it is funded).
+- **Stage A** is now only the integer hit-stop counter and the `SimIntent` fields (`special`, `transform`, `stanceStep`); it waits for the tree.

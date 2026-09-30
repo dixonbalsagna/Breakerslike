@@ -45,9 +45,9 @@ Screen-reader and tooltip text uses plain words: "south face button", "right tri
 
 | Prompt | Keyboard P1 | Keyboard P2 | Pad (neutral) |
 | :--- | :--- | :--- | :--- |
-| Light (also parry, chain, struggle) | F | , | diamond, west filled |
-| Heavy (also parry, chain, struggle) | G | . | diamond, north filled |
-| Signature | R | / | diamond, east filled |
+| Light (sets weight) | F | , | diamond, west filled |
+| Heavy (sets weight) | G | . | diamond, north filled |
+| Signature (queue or cancel) | R | / | diamond, east filled |
 | Dash (hold) | Space | Enter | diamond, south filled |
 | Charge (hold; also Press near people) | Q | ; | right trigger |
 | Special (hold) | E | ' | left trigger |
@@ -64,18 +64,19 @@ The map is by position, so a Switch-layout pad (where the south button is physic
 
 ## 5. Prompt kinds and what they carry
 
+There are **no press prompts for parry, chain or the struggle**: no timing press exists (Game Design, Q4). Their tells stay as non-interactive reads (a pose, a ring that shows what the director is about to do).
+
 | Prompt | Where | Content | Timing |
 | :--- | :--- | :--- | :--- |
-| **Parry** | on the parry ring (crown) | the light glyph large, the heavy glyph small ("either") | drawn for the window's `dur_ticks`; the clean-parry sector (last 6 or 8 ticks) is a brighter band |
-| **Chain** | on the chevrons | light glyph (extend), heavy glyph (cash out) once Combat's link grammar exists | drawn for 36 ticks |
-| **Struggle** | on the beat rings | one glyph (light), heavy small | rings at −18 and 0 (count-in), then 18, 36, 54 ticks from `contestOpen` |
-| **Signature** | on the ki chip | glyph plus `NEED 45 CHARGE` when short (glossary) | while ki < 45 and the button is pressed |
+| **Weight** | on the stance ring | a light or heavy mark beside the current stance; the light and heavy glyphs in training | always shown; changes within 2 ticks of a press |
+| **Weight fallback** | on the stance ring | a small "short of ki" mark on the heavy mark | while ki < 4 and heavy is latched |
+| **Signature** | on the plate's chip | the signature glyph; an armed state when queued; a fill toward 45 with `NEED 45 CHARGE` while unfunded; a countdown ring for the 180-tick cap once funded | from the press until it fires, cancels or expires |
 | **Stance** | on the stance chip | four positions with the glyph for each; the current one filled | in training, at match start for 3 s, and whenever the stance changes |
-| **Special / Transform** | on the plate | glyph plus a hold ring that fills over `confirmTicks` (30) for transform | drawn only when the action is available |
+| **Special** | on the plate | glyph and a hold state | drawn only when the fighter has a special |
+| **Transform** | on the plate | glyph plus a hold ring that fills over `confirmTicks` (30) | drawn only when a fill is complete or the action is available |
 | **Encore** (Empress) | on the plate | the transform glyph, an 18-tick hold ring, and a second ring showing the 180-tick offer's time left | only inside the offer, after she enters the brink |
-| **Press acknowledged** | small mark at the fighter | `hit`, `early`, `locked` as three distinct shapes | within 2 ticks of the press (`press_ack`) |
 
-Sim events UI needs: `window_open {actor, kind, dur_ticks, clean_ticks}`, `press_ack {actor, kind, result}`, `struggle_open {actor, beats[], half_width}`, and `availability {actor, action, ticks_left}` for transform, special and the Encore offer, so a prompt appears only when the action can be used.
+Sim events UI needs: `press_ack {actor, kind}` with `kind` in `weight_light`, `weight_heavy`, `weight_fallback`, `sig_queued`, `sig_cancelled`, `sig_funded`, `sig_expired`, `sig_fired` (`stage-c-spec.md` section 5); `availability {actor, action, ticks_left}` for transform, special and the Encore offer, so a prompt appears only when the action can be used. `window_open` and `struggle_open` are no longer press cues; whether UI keeps a read-only ring is UI's and Combat's call.
 
 ## 6. Test
 

@@ -8,7 +8,8 @@ Owner: Controls and Game Feel. Date: 2026-09-29. Design first; code in `sim/inpu
 | [input-map.md](input-map.md) | Keyboard (P1, P2) and gamepad maps, the intent record, special and transform holds per fighter, parity rules |
 | [shake-pass.md](shake-pass.md) | Per-event shake for Camera, and the split's per-pane rule |
 | [prompt-glyphs.md](prompt-glyphs.md) | Prompt glyphs per device family for UI |
-| [intent-queue-plan.md](intent-queue-plan.md) | 2026-09-30 revision plan: timing presses (parry, chain, struggle) on hold; the weight buttons become an intent queue |
+| [stage-c-spec.md](stage-c-spec.md) | **Final Stage C spec:** sticky weight, the signature intent, the sim shape, tests, draft data, the final stage plan |
+| [intent-queue-plan.md](intent-queue-plan.md) | options considered before Game Design's answers (superseded by stage-c-spec.md) |
 | [platform-plan.md](platform-plan.md) | Gamepad in the web build and on desktop (Godot input), rebinding, tests, and mobile's two schemes |
 
 This folder replaces the wave-1 plan for `docs/feel/` (tuning table, input map, risks): its content is folded into `rulings.md` and `input-map.md`.

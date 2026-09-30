@@ -14,7 +14,7 @@ Today `SimIntent` is `{mx, my, dash, charge, light, heavy, sig, stance}` (`sim/i
 | `transform` | bool, held | a deliberate, once-only choice (Drop the Act, the fold); the sim counts `confirmTicks` |
 | `stanceStep` | int −1, 0, +1 | cycle one stance around the ring. If `stance` (direct) is also set, direct wins |
 
-Everything else keeps its meaning. `light`, `heavy`, `sig` are edges (a press this tick); `dash`, `charge`, `special`, `transform` are holds. Sticks are quantised (section 3).
+Everything else keeps its meaning. `light`, `heavy`, `sig` are edges (a press this tick) whose **meaning changed on 2026-09-30**: light and heavy set the sticky weight, and `sig` queues or cancels the one-shot signature (`stage-c-spec.md`). `dash`, `charge`, `special`, `transform` are holds. Sticks are quantised (section 3).
 
 ## 2. Keyboard
 
@@ -25,9 +25,9 @@ Everything else keeps its meaning. `light`, `heavy`, `sig` are edges (a press th
 | Move left / right | `KeyA` / `KeyD` | `ArrowLeft` / `ArrowRight` |
 | Move up / down | `KeyW` / `KeyS` | `ArrowUp` / `ArrowDown` |
 | Dash (hold) | `Space` | `Enter` |
-| Light | `KeyF` | `Comma` |
-| Heavy | `KeyG` | `Period` |
-| Signature | `KeyR` | `Slash` |
+| Light (sets weight) | `KeyF` | `Comma` |
+| Heavy (sets weight) | `KeyG` | `Period` |
+| Signature (queue or cancel) | `KeyR` | `Slash` |
 | Charge (hold) | `KeyQ` | `Semicolon` |
 | Stance 1, 2, 3, 4 | `Digit1`, `Digit2`, `Digit3`, `Digit4` | `Digit7`, `Digit8`, `Digit9`, `Digit0` |
 
@@ -56,17 +56,14 @@ Godot's `JOY_BUTTON_A/B/X/Y` are positional (south, east, west, north). The layo
 | :--- | :--- | :--- | :--- |
 | Move | Left stick | left thumb | WASD / arrows |
 | Dash (hold) | **A** (south) | right thumb | Space / Enter |
-| Light | **X** (west) | right thumb | F / comma |
-| Heavy | **Y** (north) | right thumb | G / period |
-| Signature | **B** (east) | right thumb | R / slash |
+| Light: sets weight to light | **X** (west) | right thumb | F / comma |
+| Heavy: sets weight to heavy | **Y** (north) | right thumb | G / period |
+| Signature: queue, press again to cancel | **B** (east) | right thumb | R / slash |
 | Charge (hold) | **RT** | right index | Q / semicolon |
 | Special (hold) | **LT** | left index | E / apostrophe |
 | Transform (hold to confirm) | **R3** (right stick click) | right thumb | X / left bracket |
 | **Stance: previous / next** (one button) | **LB / RB** | index fingers | prev / next keys |
 | Stance: direct (parity with 1 to 4) | **D-pad** up, right, down, left = PRESS, GUARD, DODGE, ESCAPE | left thumb | 1, 2, 3, 4 |
-| Parry (defender) | **X or Y** (light or heavy) | | F or G |
-| Chain (attacker) | **X or Y** | | F or G |
-| Finisher struggle | **X or Y** | | F or G |
 | Pause | Start | | P |
 | Take over (join) | any button | | any key |
 | Dev: new match / toggle AI | View (back) + Start held 1 s / not exposed | | N / T, Y |
@@ -85,7 +82,7 @@ Godot's `JOY_BUTTON_A/B/X/Y` are positional (south, east, west, north). The layo
 
 ## 4. The special and transform holds, per fighter
 
-The buttons are slots. What a slot does comes from the fighter's kit. A fighter has at most two extra actions; a kit that needs a third has to use a context prompt on an existing button.
+The buttons are slots. `transform` also takes **a filled transformation** when the player's kit lets them choose the moment (Game Design: the choice stays with the player once the fill completes); the prompt appears only when the fill is complete. What a slot does comes from the fighter's kit. A fighter has at most two extra actions; a kit that needs a third has to use a context prompt on an existing button.
 
 | Fighter | `special` (hold) | `transform` (hold to confirm) | Notes |
 | :--- | :--- | :--- | :--- |
@@ -102,17 +99,19 @@ The buttons are slots. What a slot does comes from the fighter's kit. A fighter 
 - **A hold begun while illegal** (locked in an exchange, launched, stunned) starts counting when it becomes legal, so a player who keeps the button down does not have to re-press.
 - **Toggle option (accessibility, host-side):** dash, charge and special can be set to toggle. The host converts a toggle to the held bool per tick; the sim sees no difference.
 
-## 5. Actions used by the exchange
+## 5. What the attack buttons and holds do (Stage C)
 
 | Situation | Input | Rule |
 | :--- | :--- | :--- |
-| Attacker starts an exchange | light, heavy or signature | buffer 6 ticks; priority signature > heavy > light (`rulings.md` §6) |
-| Defender parries | light or heavy in the window | 15 ticks light, 20 heavy, buffer 4, clean parry in the last 6 or 8 |
-| Attacker chains | light or heavy in the chain window | 36 ticks, buffer 4 |
-| Fighter on the brink, finisher | light or heavy on three beats | ±4 ticks, assist ±8 |
-| Waiting through the opponent's cinematic | charge, special and stance only | attacks dropped, not buffered |
+| Set the weight | light or heavy, any time | sticky; the match starts in light; shown on the stance ring |
+| Queue the signature | signature; press again to cancel | one-shot; fires at the director's next opening once ki >= 45, at most 180 ticks after it is funded |
+| Attack timing, parry, chain, finisher struggle | none | the director resolves them by state; there is **no timing press** |
+| Charge or special | hold | pauses this fighter's attacks while active |
+| Transform (a filled transformation, the fold, Drop the Act) | hold 30 ticks to confirm | the fighter stays in `free` while holding |
+| Encore (Empress) | hold 18 ticks within the 180-tick offer | contextual prompt only |
+| Waiting through the opponent's cinematic | charge, special and stance stay live | movement and dash are ignored; weight and signature presses are still accepted |
 
-The signature never parries or chains (CC-010).
+Full rules and tests: `stage-c-spec.md`.
 
 ## 6. Who drives whom (devices to fighters)
 
@@ -126,7 +125,7 @@ The signature never parries or chains (CC-010).
 1. **Same action set.** Every row above has both a keyboard binding and a pad binding. A missing one is a bug.
 2. **Same reach.** Any stance is at most two presses on both devices; direct select exists on both.
 3. **Same movement envelope.** After the gate and quantisation, a pad can reach exactly the (mx, my) values a keyboard can, plus fractions. Fractions never exceed ±1.
-4. **Same timing rules.** Windows, buffers and lockouts do not depend on the device. There is no pad-only auto-parry and no keyboard-only shortcut.
+4. **Same rules.** Weight, signature and hold rules do not depend on the device. There is no pad-only assist and no keyboard-only shortcut (assists are settings, on both).
 5. **Same feedback.** Rumble, when present, only repeats what the picture and audio already say (`press_ack`, struggle beats). It carries no information alone.
 6. **No chords needed in play.** Nothing in a fight needs two buttons pressed together; LT or RT plus a face button is comfortable but never required.
-7. **Test:** the scripted route and rhythm bots run once per device profile and must agree within 2% on route time and parry rate.
+7. **Test:** the scripted route bot runs once per device profile and must agree within 2% on route time.
