@@ -138,6 +138,12 @@ At the ceiling, the rest are sheltered and survive. This is the P3 exit criterio
 6. **Composure goes off** (+10% becomes 0). It was added to offset the old uncapped menace, and it now overshoots.
 7. **Target after the dynamic slice:** KAI inside 45 to 55%. If he is still high, raise menace's evacuee share (up to the full rate) before touching the budgets.
 
+**After World's fixes and the dynamic slice** (commit `da5fb09`): civilians lost average about 17% (hero mirror 13%, villain mirror 16%), and no match reaches 90%.
+- *Ruling:* the tier-1 and tier-2 budgets **stay**, because the low-tier promise is not a tuning lever.
+- *Wait for QA's k retune first.* Longer matches spend more time at tiers 3 and 4, where the budgets have room.
+- *If the mean is still under 25% after the retune,* re-base the civilian band to **15 to 40%**. The low number comes from the mechanisms working as intended (evacuation, relocation, fights opening on open ground), and destruction still reads through structures and terrain.
+- *Before any budget change,* first ask Encounter to strengthen the villain's pull toward settlements at tiers 3 and 4, within the personality-weighted targeting Orb set.
+
 **3. Per-casualty weights are normalised by population.**
 - *Why.* Procedural planets have different populations (379 on seed 1 now, 425 before), so meters must read the *share* lost, not the headcount.
 - *The rule.* Each per-casualty gain is multiplied by `425 / pop0`:
