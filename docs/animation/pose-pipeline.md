@@ -543,6 +543,34 @@ Blender is free and open source. **The exporter add-on needs its own licence che
 
 At a hobby pace of 10 hours a week that is a long road, and the honest levers are scope: fewer strike shapes (20 instead of 30 saves about 15 poses), more derived chambers, profiles instead of deltas, and above all the size of the showcase set. Orb's ordering (system first, content after) already points the same way.
 
+**Correction, and the scope choice for Orb (2026-09-30).** The roster row above counted only about 100 showcase poses a fighter. Combat's moveset plan (`docs/combat/moveset-system.md`) has about 10 special skeletons, 11 to 15 signature skeletons and about 20 showcases at launch size, all showcase-grade poses that need a named human author (RL-038). Costed on that plan, the roster is two to five times what the row says. The table lets Orb pick the scope. It assumes: a special skeleton is about 16 poses (4 pieces of 4 keys), a signature skeleton about 14, a showcase about 7, the finisher, transformation cinematics and break beats about 68 poses whatever the scope, the basic set 170 poses (60 to 80 hours), and showcase-grade poses at 40 minutes each plus 30% review. Hours are estimates.
+
+| | Lean | Middle | Full (Combat's launch size) |
+| :--- | ---: | ---: | ---: |
+| Specials in the pool (skeletons) | 3 | 6 | 10 |
+| Signatures (skeletons) | 4 | 8 | 12 |
+| Showcases | 6 | 12 | 20 |
+| Special poses | 48 | 96 | 160 |
+| Signature poses | 56 | 112 | 168 |
+| Showcase poses | 42 | 84 | 140 |
+| Finisher, transformations, break beats | 68 | 68 | 68 |
+| **Showcase-grade poses** | **214** | **360** | **536** |
+| Basic set (shared) | 170 | 170 | 170 |
+| **Poses, first fighter** | **384** | **530** | **706** |
+| Hours, showcase-grade poses (40 min plus 30% review) | about 185 | about 310 | about 465 |
+| **Hours, first fighter** (with the 70-hour basic set) | **about 255** | **about 380** | **about 535** |
+| Hours, each further fighter (adds about 28 hours of own poses, deltas and profile) | about 215 | about 340 | about 495 |
+| **Hours, four fighters** | **about 900** | **about 1,400** | **about 2,000** |
+| Weeks at 10 hours a week | about 90 | about 140 | about 200 |
+
+What moves the numbers, in order of size:
+1. **The count of specials, signatures and showcases**, which is Orb's and Game Design's choice. Each special skeleton costs about 14 hours, each signature skeleton about 12, each showcase about 6.
+2. **Sharing across fighters.** A special or signature skeleton re-posed on another fighter's build with an L2 delta costs a fraction of a fresh one. The table charges every fighter in full, so it is the pessimistic case.
+3. **Transformations as profile deltas.** Only each stage's cinematic moment is authored; the Empress's ten or more "revisions" cost about a dozen numbers each, not poses.
+4. **Who authors.** A Claude session can draft the composed set as text poses, but a named human must pose or materially rework every showcase-grade pose (RL-038). Their hours are the constraint, not the session's.
+
+My recommendation is **Lean for the first fighter**: it proves the system and the pipeline in about 255 hours, and the count grows by data after that (Orb's own order, system first). **Orb decides** the scope and names the human author.
+
 **Tokens are the budget for a Claude author** (ADR 0005): batch 12 poses to one sheet, lint by numbers before looking at any picture, keep pose files short, and use images only for the final review of a batch.
 
 **Engineering** (runtime and tools; Rendering, Tools and I split it): rig spike 16 h; runtime v0 (pose apply, key blend, hit-stop, part cue) 28 h; IK and foot plant 24 h; spring chains 12 h; reactions and inertialisation 24 h; the modifier engine with 10 modifiers 24 h; situation adaptation 24 h; pose sheet 16 h; validator 12 h; motion reel 8 h. **About 200 hours in all; the first useful slice (stage A1, §9) is about 60.** These are Animation's estimates; owners re-estimate.
