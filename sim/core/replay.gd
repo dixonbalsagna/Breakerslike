@@ -3,7 +3,9 @@ extends RefCounted
 ## Replays: a seed, the AI flags and the intents the host passed to step() reproduce a match bit for bit. The GDScript
 ## twin of replay.js, format v2. A replay is plain JSON-able data:
 ##   {format, v, data, seed, ai, ticks, inputs, toggles, checkpoints, final}
-##   data         DirData.dataHash(): the combat data the match ran on (S4). It plays back only on the same data.
+##   data         dataHash(): the combat data and the roster data the match ran on (S4, D1a). It plays back only on the
+##                same data.
+##   setup        newMatch's setup (D1a): {"slots", "names", "flip"}, {} for the default match; absent in older files.
 ##   inputs       [tick, slot, intent dictionary or null], only where a slot's intent changed from its previous one
 ##   toggles      [tick, slot]: toggleAI before that tick
 ##   checkpoints  [tick, gameplay hash] every CHECK_EVERY ticks; final: the gameplay hash at the end
@@ -21,11 +23,11 @@ var _last: Array = [null, null]
 
 
 ## Start recording a match: runs newMatch(S, seed, ai). Use rec.step and rec.toggle instead of SimCore.step and toggleAI.
-static func recorder(S_: SimState, seed: int, ai: Dictionary = {}) -> SimReplay:
-	SimCore.newMatch(S_, seed, ai)
+static func recorder(S_: SimState, seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> SimReplay:
+	SimCore.newMatch(S_, seed, ai, setup)
 	var rec := SimReplay.new()
 	rec.S = S_
-	rec.replay = {"format": FORMAT, "v": V, "data": DirData.dataHash(), "seed": seed,
+	rec.replay = {"format": FORMAT, "v": V, "data": dataHash(), "seed": seed, "setup": setup.duplicate(true),
 		"ai": {"p1": S_.fighters[0].ai != null, "p2": S_.fighters[1].ai != null},
 		"ticks": 0, "inputs": [], "toggles": [], "checkpoints": [], "final": ""}
 	return rec
@@ -60,10 +62,10 @@ func finish() -> Dictionary:
 static func play(rp: Dictionary) -> Dictionary:
 	if rp.get("format", "") != FORMAT or int(rp.get("v", 0)) != V:
 		return {"ok": false, "firstBadTick": -1, "reason": "format", "final": ""}
-	if rp.get("data", "") != DirData.dataHash():
+	if rp.get("data", "") != dataHash():
 		return {"ok": false, "firstBadTick": -1, "reason": "data", "final": ""}
 	var S_ := SimCore.createSim()
-	SimCore.newMatch(S_, int(rp.seed), rp.ai)
+	SimCore.newMatch(S_, int(rp.seed), rp.ai, rp.get("setup", {}))
 	var checks := {}
 	for c in rp.checkpoints:
 		checks[int(c[0])] = c[1]
@@ -87,6 +89,14 @@ static func play(rp: Dictionary) -> Dictionary:
 		out = {"ok": false, "firstBadTick": int(rp.ticks), "reason": "final", "final": out.final}
 	SimCore.dispose(S_)
 	return out
+
+
+## The data a replay depends on: Combat's data (DirData) and the roster (FighterData), one hash.
+static func dataHash() -> String:
+	var h := SimHash.Hasher.new()
+	h.text(DirData.dataHash())
+	h.text(FighterData.dataHash())
+	return h.hex()
 
 
 static func _dict(i):

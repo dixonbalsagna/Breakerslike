@@ -48,7 +48,7 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 		m *= 1.5
 	# S3b stage penalty (spec-wounds.md §1): the exchange attacker with broken arms deals x0.8 with heavies and signatures.
 	if ex != null and A == ex.A and (ex.kind == "heavy" or ex.kind == "sig") and SimWounds.broken(A, SimWounds.ARMS):
-		m *= SimWounds.ARMS_BROKEN_MUL
+		m *= A.wd.armsBrokenMul
 	# S3b (R8): inside an exchange the stances are the ones frozen at requestAttack; outside, the live stance.
 	var dStance: float = D.stance
 	if ex != null and (D == ex.D or D == ex.A):
@@ -58,7 +58,7 @@ static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 		sm = STANCE_MUL[int(dStance)]
 		# S3b stage penalty: battered arms weaken the guard (DEFENSIVE 0.38 becomes 0.55).
 		if dStance == 1.0 and SimWounds.battered(D, SimWounds.ARMS):
-			sm = SimWounds.ARMS_GUARD_MUL
+			sm = D.wd.armsGuardMul
 		if D.state == "charging":
 			sm = 1.35
 	var dd: float = dmg * m * sm

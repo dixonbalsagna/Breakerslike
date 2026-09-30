@@ -1,13 +1,9 @@
 class_name SimRoster
-## Fighter definitions and construction: the twin of roster.js (the prototype's ROSTER, mkF and opp).
+## Fighter construction: the twin of roster.js (mkF and opp). D1a: the definitions are data (data/fighters/, loaded by
+## FighterData); a def is FighterData.def(id).
 
-const ROSTER: Array = [
-	{"id": "KAI", "name": "KAI", "title": "Meridian Warden", "role": "hero", "col": "#3d8fdc", "aura": "#8fd6ff", "hair": "#22c7a9", "care": 1.0, "dmgMul": 1.0, "spd": 1.0, "maxhp": 1600.0, "sigName": "Meridian Lance", "canHide": false, "rally": "second_wind", "anguish": true},
-	{"id": "VORR", "name": "VORR", "title": "Calamity Sovereign", "role": "villain", "col": "#a52a2a", "aura": "#ff5a3c", "hair": "#181818", "care": -0.8, "dmgMul": 1.0, "spd": 0.95, "maxhp": 1600.0, "sigName": "Calamity Wave", "canHide": false, "rally": "second_wind", "menace": true},
-]
-
-
-## roster.js createFighter: mkF's fields and initial values (the class defaults in state.gd hold the constants).
+## roster.js createFighter: mkF's fields and initial values (the class defaults in state.gd hold the constants). def is a
+## FighterData def: its scalars are copied, and f.wd points at its WoundsDef.
 static func createFighter(def: Dictionary, x: float, keys: String, ai: bool) -> SimState.Fighter:
 	var f := SimState.Fighter.new()
 	f.id = def.id
@@ -26,6 +22,8 @@ static func createFighter(def: Dictionary, x: float, keys: String, ai: bool) -> 
 	f.hasAnguish = def.get("anguish", false)
 	f.hasMenace = def.get("menace", false)
 	f.rally = def.get("rally", "")
+	f.wd = def.wd
+	f.finisher = def.get("finisher", "")
 	f.hp = def.maxhp
 	f.x = x
 	f.keys = keys

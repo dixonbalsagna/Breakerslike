@@ -52,7 +52,7 @@ static func _lockBreak(S: SimState, f, dt: float) -> void:
 		var want: bool = f.stance == 3.0 and f.state == "free" and S.T - f.lockBackT >= LOCK_REBREAK_T and dist > LOCK_FOUND_R and not lineOfSight(S, o, f)
 		if want:
 			f.hideT += dt
-			if f.hideT > LOCK_BREAK_T * (SimWounds.LEGS_LOCK_BREAK if SimWounds.broken(f, SimWounds.LEGS) else 1.0):
+			if f.hideT > LOCK_BREAK_T * (f.wd.legsLockBreak if SimWounds.broken(f, SimWounds.LEGS) else 1.0):
 				f.hidden = true
 				f.hiddenFor = 0.0
 				var ls := SimState.LastSeen.new()

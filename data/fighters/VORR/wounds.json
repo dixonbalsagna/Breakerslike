@@ -1,0 +1,27 @@
+{
+  "schema": "wounds/1",
+  "_about": "D1a: one fighter's wound numbers (spec-wounds.md sections 1 and 2), loaded by sim/core/fighter_data.gd into a WoundsDef (f.wd). Wear is fixed-point: 6000 units per wear point. Units and ticks are integers. The rules stay code (sim/core/wounds.gd); this file only holds their numbers. Values marked pinned are also read as SimWounds constants by another owner's file, so the loader requires them to equal the constant until that reader moves to f.wd.",
+  "regions": { "head": { "brink": true }, "core": { "brink": true }, "arms": { "brink": true }, "legs": { "brink": true } },
+  "stageAt": [180000, 360000, 540000],
+  "_stageAt": "bruised 30, battered 60, broken 90 (pinned: sim/director/ai.gd, qa/godot/records.gd)",
+  "wearPerDamage": 204.0,
+  "_wearPerDamage": "k 0.034 x 6000 (Game Design's final, spec section 1b)",
+  "fade": { "out": 25, "breath": 100, "breathAfterTicks": 240, "hidden": 300, "hiddenFloor": 354000,
+            "_note": "per tick: out 0.25/s below 60 out of exchanges; breath 1/s for battered regions after 240 ticks without an exchange, down to hiddenFloor (59; pinned: sim/director/ai.gd); hidden 3/s with the hiding kit" },
+  "focusWear": 30.0,
+  "family": {
+    "light": [3.0, 1.0, 3.0, 1.0],
+    "heavy": [1.0, 3.0, 1.0, 3.0],
+    "guard": [0.0, 0.0, 1.0, 0.0],
+    "spread": [1.0, 1.0, 1.0, 1.0],
+    "_note": "region pick weights (head, core, arms, legs) by hit family"
+  },
+  "penalties": {
+    "coreKiRegen": 0.7, "legsSpeed": 0.85, "legsLockBreak": 2.0, "staggerTicks": 12, "dazeTicks": 24,
+    "armsGuardMul": 0.55, "armsBrokenMul": 0.8,
+    "headParryNarrow": 0.2, "headDefence": 0.08, "legsSlip": 0.1,
+    "_note": "S3a and S3b stage penalties. headParryNarrow (sim/director/melee.gd), headDefence and legsSlip (sim/director/data.gd) are pinned"
+  },
+  "profile": { "type": "plain" },
+  "rally": { "rallyWear": 534000, "coolTicks": 900, "_note": "a mended region returns battered at 89; 15 s between Rallies" }
+}

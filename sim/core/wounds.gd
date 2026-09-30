@@ -10,6 +10,9 @@ class_name SimWounds
 ## S3a (Simulation): the core-side stage penalties (constants below; spec §1 "Stage penalties"). S3b (Encounter) adds the
 ## director-side ones. S4 (Simulation): Rally, the shared rule (spec §2; the Rally section below). Per-fighter profiles
 ## (F1) come later.
+## D1a: every per-fighter number is data (data/fighters/<id>/wounds.json), read here through f.wd (FighterData.WoundsDef).
+## What stays below is the shared frame (regions, the unit scale, the overtime ramp) and five pinned values that other
+## owners' files still read as constants; the loader requires the data to equal them until those readers move to f.wd.
 
 const REGIONS: Array = ["head", "core", "arms", "legs"]
 const HEAD: int = 0
@@ -19,43 +22,26 @@ const LEGS: int = 3
 
 const WEAR_SCALE: int = 6000                 # units per wear point
 const WEAR_MAX: int = 600000                 # 100 wear
-const WEAR_PER_DAMAGE: float = 204.0         # k = 0.034 wear per damage point, in units (0.034 x 6000); Game Design's final (spec §1b; S3b: 0.065, S2: 0.06, S1: 0.08)
+## k (wear per damage point, in units) is f.wd.wearPerDamage: 204 = 0.034 x 6000, Game Design's final (spec §1b).
 const OVERTIME_AT: float = 540.0             # the overtime ramp (spec-wounds.md, S4 ruling 3): past 9:00 ...
 const OVERTIME_PER_MIN: float = 0.25         # ... k rises by 25% of itself per minute (read as linear)
 ## Stage floors in units: bruised 30, battered 60, broken 90. Stages: 0 fresh, 1 bruised, 2 battered, 3 broken.
+## Pinned: sim/director/ai.gd and qa/godot/records.gd read it (f.wd.stageAt is the fighter's own copy).
 const STAGE_AT: Array = [180000, 360000, 540000]
-const FADE_OUT: int = 25                     # 0.25 wear per second, regions below 60, out of exchanges (S1: 1)
-const FADE_HIDDEN: int = 300                 # 3 wear per second, battered regions, while hidden
-const FADE_HIDDEN_FLOOR: int = 354000        # hidden fading stops at 59
-## Second breath (spec-wounds.md §1c, S2): after BREATH_AFTER seconds with no exchange involving the fighter, battered
-## regions fade 1 wear per second, down to 59. It replaces the hidden fade for everyone without the stealth kit.
-const BREATH_AFTER: float = 4.0
-const FADE_BREATH: int = 100
-## Provisional region weights (head, core, arms, legs) by hit family (spec §1 "Region choice"): lights mostly head and
-## arms, heavies mostly core and legs, guard hits arms only, beams and impacts spread. Encounter moves this to atoms.
-const FAMILY: Dictionary = {
-	"light": [3.0, 1.0, 3.0, 1.0],
-	"heavy": [1.0, 3.0, 1.0, 3.0],
-	"guard": [0.0, 0.0, 1.0, 0.0],
-	"spread": [1.0, 1.0, 1.0, 1.0],
-}
+## Pinned (sim/director/ai.gd): battered regions fade down to 59 (f.wd.hiddenFloor). The fade rates, second breath's delay
+## (spec-wounds.md §1c) and the region weights by hit family are f.wd.fadeOut, fadeBreath, breathAfter, fadeHidden and
+## family.
+const FADE_HIDDEN_FLOOR: int = 354000
 ## S2: only a finisher can KO (spec §1, "The end"). The HP bar no longer ends the match.
 const HP_ENDS_MATCH: bool = false
-## "Go for the wound": a region's pick weight is multiplied by (1 + wear / FOCUS_WEAR) (spec §1b: 30 from S2; S1 had 50).
-const FOCUS_WEAR: float = 30.0
+## "Go for the wound": a region's pick weight is multiplied by (1 + wear / f.wd.focusWear) (spec §1b).
 
-## S3a stage penalties, core side. Battered means stage 2 or more (a broken region keeps its battered penalty).
-const CORE_KI_REGEN: float = 0.7    # core battered: ki regen -30% (fighter.gd)
-const LEGS_SPEED: float = 0.85      # legs battered: free-flight speed x0.85 (fighter.gd)
-const LEGS_LOCK_BREAK: float = 2.0  # legs broken: the ESCAPE lock-break takes twice as long, 1.8 s (hiding.gd); no dash
-const STAGGER_TICKS: int = 12       # head battered: 0.2 s stagger after taking a heavy (damage.gd)
-## S3b, the director-side penalties (spec-wounds.md §1; wounds-plan.md S3b):
-const HEAD_PARRY_NARROW: float = 0.2  # head battered: the parry window is 20% narrower (its early part stops counting)
-const HEAD_DEFENCE: float = 0.08      # head broken: -0.08 on the defender's rolls
-const ARMS_GUARD_MUL: float = 0.55    # arms battered: the DEFENSIVE multiplier rises from 0.38 to 0.55
-const ARMS_BROKEN_MUL: float = 0.8    # arms broken: heavies and signatures deal x0.8 (no BRACE: BRACE is not in the game yet)
-const LEGS_SLIP: float = 0.10         # legs battered: -0.10 on the ESCAPE slip chance (pursuit and beam escape)
-const DAZE_TICKS: int = 24          # head broken: 0.4 s daze after a lost exchange (daze(), called by the director, S3b)
+## Stage penalties (S3a core side, S3b director side): battered means stage 2 or more (a broken region keeps its battered
+## penalty). The numbers are f.wd: coreKiRegen, legsSpeed, legsLockBreak, staggerTicks, dazeTicks, armsGuardMul and
+## armsBrokenMul. Pinned (the director reads the constants):
+const HEAD_PARRY_NARROW: float = 0.2  # head battered: the parry window is 20% narrower (sim/director/melee.gd)
+const HEAD_DEFENCE: float = 0.08      # head broken: -0.08 on the defender's rolls (sim/director/data.gd)
+const LEGS_SLIP: float = 0.10         # legs battered: -0.10 on the ESCAPE slip chance (sim/director/data.gd)
 
 
 ## The hit family for a hit() call: guard hits on a DEFENSIVE fighter who took the stance multiplier go to the arms,
@@ -71,12 +57,12 @@ static func family(ex, D, o: Dictionary, stance: float = -1.0) -> String:
 	return "heavy" if ex.kind == "heavy" else "light"
 
 
-static func stageOf(w: int) -> int:
-	if w >= STAGE_AT[2]:
+static func stageOf(w: int, at: Array = STAGE_AT) -> int:
+	if w >= at[2]:
 		return 3
-	if w >= STAGE_AT[1]:
+	if w >= at[1]:
 		return 2
-	if w >= STAGE_AT[0]:
+	if w >= at[0]:
 		return 1
 	return 0
 
@@ -90,15 +76,15 @@ static func applyHit(S: SimState, f, damage: float, fam: String) -> int:
 	return region
 
 
-## The region a hit lands on: one S.rng draw, weights by family x "go for the wound" (1 + wear / FOCUS_WEAR), except that
+## The region a hit lands on: one S.rng draw, weights by family x "go for the wound" (1 + wear / focusWear), except that
 ## a broken region keeps its base weight (S2: hits spent on a region that cannot worsen stalled matches at the cap).
 static func pickRegion(S: SimState, f, fam: String) -> int:
-	var base: Array = FAMILY[fam]
+	var base: Array = f.wd.family[fam]
 	var w: Array = []
 	var sum: float = 0.0
 	for r in range(4):
 		# A broken region cannot get worse, so the focus goes to the next wound: broken regions keep their base weight.
-		var x: float = base[r] * (1.0 + (0.0 if f.stage[r] == 3 else float(f.wear[r]) / (FOCUS_WEAR * WEAR_SCALE)))
+		var x: float = base[r] * (1.0 + (0.0 if f.stage[r] == 3 else float(f.wear[r]) / (f.wd.focusWear * WEAR_SCALE)))
 		w.append(x)
 		sum += x
 	var pick: float = S.rng.next() * sum
@@ -115,12 +101,12 @@ static func pickRegion(S: SimState, f, fam: String) -> int:
 
 
 static func addWear(S: SimState, f, region: int, damage: float) -> void:
-	var k: float = WEAR_PER_DAMAGE * (1.0 + OVERTIME_PER_MIN * SimMathx.jmax(0.0, S.T - OVERTIME_AT) / 60.0)
+	var k: float = f.wd.wearPerDamage * (1.0 + OVERTIME_PER_MIN * SimMathx.jmax(0.0, S.T - OVERTIME_AT) / 60.0)
 	f.wear[region] = mini(WEAR_MAX, f.wear[region] + int(SimMathx.jround(damage * k)))
 	updateStages(S, f)
 
 
-## Recovery, once per tick from stepFighter: out of exchanges a region below 60 fades FADE_OUT; a battered region fades
+## Recovery, once per tick from stepFighter: out of exchanges a region below 60 fades f.wd.fadeOut; a battered region fades
 ## by second breath (or, for a fighter with the hiding kit, while hidden), down to 59; broken regions never fade. The
 ## stagger and daze timer counts down here too.
 static func step(S: SimState, f) -> void:
@@ -132,18 +118,19 @@ static func step(S: SimState, f) -> void:
 	if ex != null and (ex.A == f or ex.D == f):
 		return
 	var changed: bool = false
+	var wd = f.wd
 	for r in range(4):
 		var w: int = f.wear[r]
 		if w == 0:
 			continue
-		if w < STAGE_AT[1]:
-			f.wear[r] = maxi(0, w - FADE_OUT)
+		if w < wd.stageAt[1]:
+			f.wear[r] = maxi(0, w - wd.fadeOut)
 			changed = true
-		elif w < STAGE_AT[2] and f.hidden and f.canHide:
-			f.wear[r] = maxi(FADE_HIDDEN_FLOOR, w - FADE_HIDDEN)
+		elif w < wd.stageAt[2] and f.hidden and f.canHide:
+			f.wear[r] = maxi(wd.hiddenFloor, w - wd.fadeHidden)
 			changed = f.wear[r] != w or changed
-		elif w < STAGE_AT[2] and w > FADE_HIDDEN_FLOOR and S.T - f.exT >= BREATH_AFTER:
-			f.wear[r] = maxi(FADE_HIDDEN_FLOOR, w - FADE_BREATH)
+		elif w < wd.stageAt[2] and w > wd.hiddenFloor and S.T - f.exT >= wd.breathAfter:
+			f.wear[r] = maxi(wd.hiddenFloor, w - wd.fadeBreath)
 			f.breathWear += w - f.wear[r]
 			changed = true
 	if changed:
@@ -153,7 +140,7 @@ static func step(S: SimState, f) -> void:
 ## Stage changes and the brink (the core broken, or two of head, arms and legs broken), with their events.
 static func updateStages(S: SimState, f) -> void:
 	for r in range(4):
-		var st: int = stageOf(f.wear[r])
+		var st: int = stageOf(f.wear[r], f.wd.stageAt)
 		if st != f.stage[r]:
 			f.stage[r] = st
 			SimFx.regionStage(S, f, REGIONS[r], st)
@@ -180,7 +167,7 @@ static func brinkProgress(f) -> float:
 	var b: int = f.wear[ARMS]
 	var c: int = f.wear[LEGS]
 	var second: int = maxi(mini(a, b), mini(maxi(a, b), c))
-	return minf(1.0, float(maxi(f.wear[CORE], second)) / float(STAGE_AT[2]))
+	return minf(1.0, float(maxi(f.wear[CORE], second)) / float(f.wd.stageAt[2]))
 
 
 static func vitality(f) -> float:
@@ -199,13 +186,13 @@ static func broken(f, region: int) -> bool:
 ## Head battered: a 0.2 s stagger after taking a heavy. Stagger and daze share one integer timer (the longer one wins).
 static func stagger(S: SimState, f) -> void:
 	if battered(f, HEAD):
-		f.stunTicks = maxi(f.stunTicks, STAGGER_TICKS)
+		f.stunTicks = maxi(f.stunTicks, f.wd.staggerTicks)
 
 
 ## Head broken: a 0.4 s daze after an exchange the fighter lost. The director decides who lost (S3b calls this).
 static func daze(S: SimState, f) -> void:
 	if broken(f, HEAD):
-		f.stunTicks = maxi(f.stunTicks, DAZE_TICKS)
+		f.stunTicks = maxi(f.stunTicks, f.wd.dazeTicks)
 
 
 ## The intent penalties, applied by SimControl.control after the fighter's intent is read and before any attack request:
@@ -233,8 +220,8 @@ static func gateIntent(f, i: SimIntent) -> void:
 ## Rules (Fighter.rally): "second_wind" survives the finisher contest; "spite" wins a decisive exchange by hand (no
 ## signature), mending the arms first; "reboot" (the dock or a Press) and "encore" (an input) come with their fighters;
 ## "" has no Rally.
-const RALLY_WEAR: int = 534000       # 89 wear: the mended region is battered, one good hit from breaking again
-const RALLY_COOL_TICKS: int = 900    # 15 s (Orb's looser limit; was 30 s)
+## The mend (f.wd.rallyWear, 89 wear: battered, one good hit from breaking again) and the cooldown (f.wd.rallyCool, 15 s,
+## Orb's looser limit) are data.
 const BY_HAND: Array = ["launch", "clash", "guard_break", "interrupt"]   # decisive kinds won without a signature
 const RALLY_ORDER: Array = [CORE, HEAD, ARMS, LEGS]
 const SPITE_ORDER: Array = [ARMS, CORE, HEAD, LEGS]
@@ -244,7 +231,7 @@ const SPITE_ORDER: Array = [ARMS, CORE, HEAD, LEGS]
 static func _brinkWith(f, r: int, wr: int) -> bool:
 	var st: Array = []
 	for q in range(4):
-		st.append(stageOf(wr if q == r else f.wear[q]))
+		st.append(stageOf(wr if q == r else f.wear[q], f.wd.stageAt))
 	var limbs: int = 0
 	for q in [HEAD, ARMS, LEGS]:
 		if st[q] == 3:
@@ -257,7 +244,7 @@ static func _brinkWith(f, r: int, wr: int) -> bool:
 ## core and two limbs, or three limbs, broken).
 static func rallyRegion(f, order: Array) -> int:
 	for r in order:
-		if f.stage[r] == 3 and (f.rallied & (1 << r)) == 0 and not _brinkWith(f, r, RALLY_WEAR):
+		if f.stage[r] == 3 and (f.rallied & (1 << r)) == 0 and not _brinkWith(f, r, f.wd.rallyWear):
 			return r
 	return -1
 
@@ -269,10 +256,10 @@ static func rally(S: SimState, f, kind: String) -> bool:
 	var r: int = rallyRegion(f, SPITE_ORDER if kind == "spite" else RALLY_ORDER)
 	if r < 0:
 		return false
-	f.wear[r] = RALLY_WEAR
+	f.wear[r] = f.wd.rallyWear
 	f.rallied |= 1 << r
 	f.rallies += 1
-	f.rallyCool = RALLY_COOL_TICKS
+	f.rallyCool = f.wd.rallyCool
 	SimFx.rally(S, f, REGIONS[r], kind)
 	updateStages(S, f)
 	return true

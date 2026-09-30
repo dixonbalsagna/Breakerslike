@@ -1,0 +1,13 @@
+{
+  "schema": "fighter/1",
+  "_about": "D1a (docs/architecture/d1-roster-data.md section 3): identity, base stats, kit, the Rally rule and the finisher keys of one fighter, loaded by sim/core/fighter_data.gd into Fighter fields. Identity text is Narrative's (docs/narrative/identity.md); colours are Art's placeholders. finishers.base is the finisher template id in data/combat/finishers.json (form tiers come with F1). The id is the stable roster id (Fighter.id) and equals the folder name. Keys starting with '_' are comments: the canonical data hash skips them.",
+  "id": "VORR",
+  "identity": {
+    "name": "VORR", "title": "Calamity Sovereign", "role": "villain", "sigName": "Calamity Wave",
+    "col": "#a52a2a", "aura": "#ff5a3c", "hair": "#181818"
+  },
+  "stats": { "care": -0.8, "dmgMul": 1.0, "spd": 0.95, "maxhp": 1600.0 },
+  "kit": { "canHide": false },
+  "rally": { "rule": "second_wind", "_note": "the prototype fighters' placeholder rule (wounds-plan.md S4)" },
+  "finishers": { "base": "vorr" }
+}

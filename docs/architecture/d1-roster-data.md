@@ -31,7 +31,7 @@ data/fighters/<id>/          id: the stable roster id (Fighter.id, "KAI" today; 
   ladder.json                power tiers: fill rate, thresholds, per-tier deltas           (D1b)
   meters.json                menace, anguish (placeholders), later Pride, heat and others  (D1b)
   forms.json                 transformations (F1 onward; spec-wounds §8)
-data/fighters/roster.json    {"schema": "roster/1", "order": ["KAI", "VORR"]}: the select-screen order and the default pairing
+data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader also takes {"schema": "roster/1", "order": [...]})
 ```
 
 `fighter.json` for KAI holds today's values exactly (VORR's file has the same shape):
@@ -131,6 +131,50 @@ data/fighters/roster.json    {"schema": "roster/1", "order": ["KAI", "VORR"]}: t
 4. A replay recorded with a mirror setup plays back from its header alone.
 5. The loader rejects: a non-integral tick; a float with more than 15 significant digits; an unknown Rally rule, profile type or effect key; a duplicate id.
 6. The `keyed()` unit test passes (§4b): stateless, `S.rng` untouched, distinct across keys and `n`, in [0, 1).
+
+## 7b. D1a as built (2026-09-30)
+
+**Data files.**
+- `data/fighters/roster.json`: `["KAI", "VORR"]`, a bare array, per Tools' current schema. The loader also accepts `{"schema": "roster/1", "order": [...]}` for when Tools switches.
+- `data/fighters/<id>/fighter.json` and `wounds.json`, as in §3.
+- `data/fighters/<id>/meters.json`, which D1a reads only for **which meters a fighter has** (`hasAnguish`, `hasMenace`: World's data-driven meters from da5fb09).
+  - Its numbers document today's rules in D1b's shape, and D1b wires them.
+  - It is needed because `fighter.json`'s `kit` is closed in Tools' schema. The flags could move to `kit` if Tools prefers.
+
+**Loader** (`sim/core/fighter_data.gd`).
+- `FighterData.def(id)` returns the def. `createFighter` copies its scalars and sets `f.wd` (a `WoundsDef`) and `f.finisher`.
+- `newMatch(S, seed, ai, setup)` takes `{"slots", "names", "flip"}`. `flip` swaps the spawn sides, in place of spawn coordinates, so a setup survives world-scale changes.
+- `errors()` collects every problem. `loadFrom(dir)` and `quiet` exist for the negative controls.
+
+**Pinned values.**
+- These stay `SimWounds` constants because other owners' files read them:
+  - `STAGE_AT` (sim/director/ai.gd, qa/godot/records.gd);
+  - `FADE_HIDDEN_FLOOR` (ai.gd);
+  - `HEAD_PARRY_NARROW` (sim/director/melee.gd);
+  - `HEAD_DEFENCE` and `LEGS_SLIP` (sim/director/data.gd).
+- The loader rejects data that differs from them, so an edit can't be silently half-applied. Each unpins when its reader moves to `f.wd`.
+
+**Not moved in D1a.**
+- `data.gd` still selects finishers by `select.byFighter[W.id]`. `f.finisher` is loaded and equal ("kai", "vorr"), and becomes the selector when Combat and Encounter switch that line.
+- The overtime ramp (`OVERTIME_AT`, `OVERTIME_PER_MIN`) is a match rule, so it stays in `wounds.gd` for now.
+
+**The proof, as run.**
+1. With `exN` and `ex.n` left out of the hash (and no roster hash in the goldens), parity passed against the untouched pre-D1a `golden.json` (d8ed601). That covered the tick-0 states, the wounds and Rally vectors, all 8 matches (144,000 ticks, every per-tick digest and checkpoint) and both replays.
+2. The goldens were then regenerated once.
+
+**Also in the regeneration:**
+- a ninth golden match, default seed 11, with the 43,200-tick cap. It ends in a finisher and a KO at 19,084 ticks;
+- `rosterHash` and the keyed vector;
+- a bug fix in `SimGolden.applyArm`. Since da5fb09 it moved only the identity keys, so the meters, kit, Rally rule and wound data stayed with the slot: a swapped VORR kept KAI's anguish. The swap and mirror matches changed with the fix. The parity check "arm setups" now holds `applyArm` equal to the setups.
+
+**Parity checks added:**
+- roster data (clean, and the hash names itself);
+- the loader's negative controls (a non-integer, 16 digits, an unknown Rally rule, profile or meter, a pinned value, a duplicate id; a `_note` edit keeps the hash, a number edit changes it; a third fighter from data plays a match);
+- keyed draws;
+- arm setups;
+- a setup replay.
+
+`check()` now fails a check that returns null (one that stopped on a script error). Before, a crashed check could print "ok".
 
 ## 8. Risks
 

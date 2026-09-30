@@ -11,9 +11,16 @@ const STREAM_SEEDS: Array = [0, 1, 42, 4294967295]
 const STREAM_IDS: Array = ["vfx.spark", "vfx.debris", "vfx.dust", "vfx.splash", "vfx.fire", "vfx.charge", "vfx.water", "camera", "audio"]
 ## [arm, seed]: one match per QA arm, 8 matches (S2 cut: with 6-minute matches each runs to the 18000-tick cap, so the
 ## 17-match set made the golden check slow; the batch tools cover the seeds this dropped).
+## D1a: plus one match with the 12-minute cap that ends in a finisher and a KO (seed 11, KO + 3 s at 19084 ticks, the
+## shortest of seeds 1 to 15), so the match goldens keep a KO at k 0.034. [arm, seed, cap]; the cap defaults to CAP.
 const MATCHES: Array = [["default", 1], ["swap", 1], ["mirror-villain", 1], ["mirror-hero", 1],
-	["default-flip", 2], ["swap-flip", 2], ["mirror-villain-flip", 2], ["mirror-hero-flip", 2]]
-const CHAR_KEYS: Array = ["id", "name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName"]
+	["default-flip", 2], ["swap-flip", 2], ["mirror-villain-flip", 2], ["mirror-hero-flip", 2], ["default", 11, 43200]]
+const CAP: int = 18000
+## Everything that comes from a fighter's definition, so an arm moves the whole fighter. D1a fix: the meters (hasAnguish,
+## hasMenace, from da5fb09), the kit, the Rally rule, the wound data and the finisher key used to stay with the slot, so a
+## swapped "VORR" kept KAI's anguish. The parity gate's "arm setups" check holds applyArm equal to newMatch's setup.
+const CHAR_KEYS: Array = ["id", "name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName",
+	"canHide", "rally", "hasAnguish", "hasMenace", "wd", "finisher"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 
 
@@ -37,9 +44,11 @@ static func build() -> Dictionary:
 	g.rally = rallyHash()
 	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY
+	g.rosterHash = FighterData.dataHash()
+	g.keyed = keyedHash()
 	g.matches = []
 	for m in MATCHES:
-		g.matches.append(goldenRun(m[0], m[1], null))
+		g.matches.append(goldenRun(m[0], m[1], null, m[2] if m.size() > 2 else CAP))
 	g.replays = []
 	for rp in [scriptedReplay(11, 3000, false, [1500, 2100]), scriptedReplay(12, 2400, true, [])]:
 		g.replays.append({"replay": rp, "run": goldenRun("default", rp.seed, rp)})
@@ -156,10 +165,10 @@ static func rallyHash() -> String:
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # Second Wind mends the core
 	put.call(f, [560000, 534000, 560000, 100000])       # head and arms broken
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # the cooldown holds
-	wait.call(f, SimWounds.RALLY_COOL_TICKS); snap.call(f)
+	wait.call(f, f.wd.rallyCool); snap.call(f)
 	SimWounds.onContestSurvived(S, f); snap.call(f)     # the head (core already rallied)
 	put.call(f, [534000, 560000, 560000, 560000])       # core and two limbs: too deep for one mend
-	wait.call(f, SimWounds.RALLY_COOL_TICKS)
+	wait.call(f, f.wd.rallyCool)
 	SimWounds.onContestSurvived(S, f); snap.call(f)
 	put.call(g, [200000, 300000, 560000, 560000])       # arms and legs broken
 	SimWounds.onDecisive(S, g, "beam"); snap.call(g)    # a signature win is not by hand
@@ -170,6 +179,34 @@ static func rallyHash() -> String:
 	SimHash.hashFx(h, S.out.fx)
 	SimCore.dispose(S)
 	return h.hex()
+
+
+## D1a keyed draws (SimRng.keyed): a fixed vector over seeds, keys and indices, so the draw is the same in every process.
+static func keyedHash() -> String:
+	var h := SimHash.Hasher.new()
+	for seed in [0, 1, 7, 4294967295]:
+		for key in ["compose", "chain", "blitz", ""]:
+			for n in range(64):
+				h.num(SimRng.keyed(seed, key, n))
+	return h.hex()
+
+
+## D1a: QA's arm as a match setup (newMatch's setup, the replay header's `setup`). The parity gate checks each against
+## applyArm, which the golden matches still use.
+static func armSetup(arm: String) -> Dictionary:
+	var base_arm: String = arm.trim_suffix("-flip")
+	var su := {}
+	if base_arm == "swap":
+		su.slots = ["VORR", "KAI"]
+	elif base_arm == "mirror-villain":
+		su.slots = ["VORR", "VORR"]
+		su.names = ["VORR-A", "VORR-B"]
+	elif base_arm == "mirror-hero":
+		su.slots = ["KAI", "KAI"]
+		su.names = ["KAI-A", "KAI-B"]
+	if arm.ends_with("-flip"):
+		su.flip = true
+	return su
 
 
 static func tick0Hash(seed: int) -> String:
@@ -256,7 +293,7 @@ static func _full(S: SimState, V: SimFxView, cam: SimCamera) -> String:
 ## One golden run. Every tick folds a light digest (time, rng, fighters' core numbers and state, feed lines, fx events);
 ## every CHECK_EVERY ticks and at the end the full state is recorded (sim, reference cosmetic view, camera). With a
 ## replay the run applies its AI toggles and intents for exactly replay.ticks; without, it runs to KO + 3 s or 18000.
-static func goldenRun(arm: String, seed: int, replay) -> Dictionary:
+static func goldenRun(arm: String, seed: int, replay, cap: int = CAP) -> Dictionary:
 	var S := SimCore.createSim()
 	var cam := SimCamera.new()
 	SimCore.newMatch(S, seed, replay.ai if replay != null else {})
@@ -268,7 +305,7 @@ static func goldenRun(arm: String, seed: int, replay) -> Dictionary:
 	var steps: int = 0
 	var ii: int = 0
 	var ti: int = 0
-	while (steps < int(replay.ticks)) if replay != null else (steps < 18000 and not (S.game.ko != null and S.game.koT > 3.0)):
+	while (steps < int(replay.ticks)) if replay != null else (steps < cap and not (S.game.ko != null and S.game.koT > 3.0)):
 		if replay != null:
 			while ti < replay.toggles.size() and int(replay.toggles[ti][0]) == steps:
 				SimCore.toggleAI(S, int(replay.toggles[ti][1]))
@@ -295,7 +332,7 @@ static func goldenRun(arm: String, seed: int, replay) -> Dictionary:
 		S.out.fx.clear()
 		if steps % CHECK_EVERY == 0:
 			checkpoints.append(_full(S, V, cam))
-	var result := {"arm": arm, "seed": seed, "ticks": steps, "light": h.hex(), "checkpoints": checkpoints, "final": _full(S, V, cam)}
+	var result := {"arm": arm, "seed": seed, "cap": cap, "ticks": steps, "light": h.hex(), "checkpoints": checkpoints, "final": _full(S, V, cam)}
 	SimCore.dispose(S)
 	return result
 

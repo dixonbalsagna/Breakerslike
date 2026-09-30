@@ -202,7 +202,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 	f.menaceSeen = f.menace
 	f.casSeen = S.world.casualties
 	if SimWounds.battered(f, SimWounds.CORE):
-		regen *= SimWounds.CORE_KI_REGEN
+		regen *= f.wd.coreKiRegen
 	if f.state == "free" or f.state == "locked" or f.state == "down":
 		f.ki = SimMathx.jmin(100.0, f.ki + regen * dt)
 	if f.hidden and f.canHide:
@@ -223,7 +223,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 		else:
 			var sp: float = 430.0 * f.spd * (1.0 + 0.10 * (f.tier - 1.0))
 			if SimWounds.battered(f, SimWounds.LEGS):
-				sp *= SimWounds.LEGS_SPEED
+				sp *= f.wd.legsSpeed
 			if f.stance == 2.0:
 				sp *= 1.25
 			if f.stance == 3.0:

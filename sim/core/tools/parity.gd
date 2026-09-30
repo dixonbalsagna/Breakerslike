@@ -38,6 +38,10 @@ func _init() -> void:
 	check("tick-0 state", _tick0(g))
 	check("wounds (forced hits)", "" if SimGolden.woundsHash() == g.get("wounds", "") else "differs")
 	check("rally (forced)", "" if SimGolden.rallyHash() == g.get("rally", "") else "differs")
+	check("roster data", _roster(g))
+	check("roster loader rejects bad data", _rosterRejects())
+	check("keyed draws", _keyedDraws(g))
+	check("arm setups", _armSetups())
 	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
@@ -50,8 +54,10 @@ func _init() -> void:
 	quit(1 if failures else 0)
 
 
-func check(name: String, err: String) -> void:
-	if err == "":
+## err is "" for a pass. Anything else fails, including null: a check that stops on a script error returns null, and must
+## not read as a pass.
+func check(name: String, err) -> void:
+	if err is String and err == "":
 		print("ok    " + name)
 	else:
 		failures += 1
@@ -136,7 +142,7 @@ func _matches(g: Dictionary) -> String:
 	var bad: Array = []
 	var ticks: int = 0
 	for m in g.matches:
-		var got: Dictionary = SimGolden.goldenRun(m.arm, int(m.seed), null)
+		var got: Dictionary = SimGolden.goldenRun(m.arm, int(m.seed), null, int(m.get("cap", SimGolden.CAP)))
 		ticks += got.ticks
 		var e := SimGolden.compareRun(got, m, "%s seed %d" % [m.arm, int(m.seed)])
 		if e != "":
@@ -191,6 +197,177 @@ func _replayModule() -> String:
 	mid.light = not mid.light
 	if SimReplay.play(bad).ok:
 		return "a changed input was not caught"
+	# D1a: a replay of a mirror setup plays back from its header alone.
+	var S2 := SimCore.createSim()
+	var rec2 := SimReplay.recorder(S2, 21, {}, SimGolden.armSetup("mirror-hero-flip"))
+	for t in range(900):
+		rec2.step(null)
+	var rp2: Dictionary = rec2.finish()
+	SimCore.dispose(S2)
+	r = SimReplay.play(JSON.parse_string(JSON.stringify(rp2)))
+	if not r.ok or rp2.setup.get("names", []) != ["KAI-A", "KAI-B"]:
+		return "setup replay: %s at tick %d" % [r.reason, r.firstBadTick]
+	return ""
+
+
+## D1a: the roster data load clean, and their canonical hash matches the goldens (a data edit shows here by name).
+func _roster(g: Dictionary) -> String:
+	if not FighterData.errors().is_empty():
+		return "data/fighters: " + "; ".join(FighterData.errors())
+	if FighterData.order() != ["KAI", "VORR"]:
+		return "roster order " + str(FighterData.order())
+	if FighterData.dataHash() != g.get("rosterHash", ""):
+		return "the roster data hash differs (data/fighters/ changed): %s vs golden %s; regenerate the goldens if the edit is meant" % [FighterData.dataHash(), g.get("rosterHash", "")]
+	return ""
+
+
+## D1a negative controls: fixtures made from KAI's real files with one fault each, in user://, must each be rejected with
+## the right message; a changed _note must not change the data hash, and a changed number must. Reloads data/fighters/
+## at the end.
+func _rosterRejects() -> String:
+	var src: String = FighterData.ROOT + "KAI/"
+	var base := {"fighter.json": FileAccess.get_file_as_string(src + "fighter.json"), "wounds.json": FileAccess.get_file_as_string(src + "wounds.json"),
+		"meters.json": FileAccess.get_file_as_string(src + "meters.json")}
+	var h0: String = FighterData.dataHash()
+	var cases: Array = [
+		["note", "", "", "", ""],
+		["number", "wounds.json", "\"focusWear\": 30.0", "\"focusWear\": 31.0", ""],
+		["nonint", "wounds.json", "\"out\": 25,", "\"out\": 25.5,", "must be an integer"],
+		["digits", "wounds.json", "\"wearPerDamage\": 204.0", "\"wearPerDamage\": 204.00000000000001", "more than 15 significant digits"],
+		["rally", "fighter.json", "\"second_wind\"", "\"berserk\"", "unknown Rally rule"],
+		["profile", "wounds.json", "\"type\": \"plain\"", "\"type\": \"spread\"", "unknown profile type"],
+		["pinned", "wounds.json", "\"legsSlip\": 0.1", "\"legsSlip\": 0.2", "is pinned"],
+		["meter", "meters.json", "\"anguish\": {", "\"pride\": {", "unknown meter"],
+		["dup", "", "", "", "duplicate"],
+	]
+	var hashes := {}
+	var err: String = ""
+	FighterData.quiet = true
+	for c in cases:
+		var dir: String = "user://d1a_fixtures/%s/" % c[0]
+		DirAccess.make_dir_recursive_absolute(dir + "KAI")
+		var ros := FileAccess.open(dir + "roster.json", FileAccess.WRITE)
+		ros.store_string("[\"KAI\", \"KAI\"]" if c[0] == "dup" else "[\"KAI\"]")
+		ros.close()
+		for fname in base:
+			var text: String = base[fname]
+			if fname == c[1]:
+				if text.count(c[2]) != 1:
+					err = "fixture %s: pattern not found once" % c[0]
+				text = text.replace(c[2], c[3])
+			if c[0] == "note" and fname == "wounds.json":
+				text = text.replace("\"_about\": \"", "\"_about\": \"(edited note) ")
+			var fw := FileAccess.open(dir + "KAI/" + fname, FileAccess.WRITE)
+			fw.store_string(text)
+			fw.close()
+		FighterData.loadFrom(dir)
+		var errs: String = "; ".join(FighterData.errors())
+		hashes[c[0]] = FighterData.dataHash()
+		if err == "" and c[4] == "" and errs != "":
+			err = "fixture %s: unexpected errors: %s" % [c[0], errs]
+		elif err == "" and c[4] != "" and not errs.contains(c[4]):
+			err = "fixture %s: not rejected (%s)" % [c[0], errs]
+	if err != "":
+		FighterData.quiet = false
+		FighterData.loadFrom()
+		return err
+	var numberBlind: bool = hashes.note == hashes.number
+	# The note fixture is KAI alone, so compare it with KAI alone unedited: the dup-free base is the "number" case minus the edit.
+	var plain := "user://d1a_fixtures/plain/"
+	DirAccess.make_dir_recursive_absolute(plain + "KAI")
+	var rp := FileAccess.open(plain + "roster.json", FileAccess.WRITE)
+	rp.store_string("[\"KAI\"]")
+	rp.close()
+	for fname in base:
+		var fp := FileAccess.open(plain + "KAI/" + fname, FileAccess.WRITE)
+		fp.store_string(base[fname])
+		fp.close()
+	FighterData.loadFrom(plain)
+	var hPlain: String = FighterData.dataHash()
+	# A third fighter from data alone (the stage-5 modding test in miniature): KAI's files copied as TEST, no code change.
+	var third := "user://d1a_fixtures/third/"
+	for id in ["KAI", "TEST"]:
+		DirAccess.make_dir_recursive_absolute(third + id)
+		for fname in base:
+			var ft := FileAccess.open(third + id + "/" + fname, FileAccess.WRITE)
+			ft.store_string(base[fname].replace("\"KAI\"", "\"TEST\"") if id == "TEST" else base[fname])
+			ft.close()
+	var rt := FileAccess.open(third + "roster.json", FileAccess.WRITE)
+	rt.store_string("[\"KAI\", \"TEST\"]")
+	rt.close()
+	FighterData.loadFrom(third)
+	var thirdErr: String = "; ".join(FighterData.errors())
+	var played: String = ""
+	if thirdErr == "":
+		var S := SimCore.createSim()
+		SimCore.newMatch(S, 5, {}, {"slots": ["TEST", "KAI"]})
+		for t in range(1200):
+			SimCore.step(S)
+			S.out.fx.clear()
+			S.out.feed.clear()
+		if S.fighters[0].id != "TEST" or S.fighters[0].name != "TEST" or not is_finite(S.fighters[0].x):
+			played = "the TEST fighter did not play"
+		SimCore.dispose(S)
+	FighterData.quiet = false
+	FighterData.loadFrom()
+	if numberBlind:
+		return "a changed number did not change the data hash"
+	if hPlain != hashes.note:
+		return "a changed _note changed the data hash"
+	if thirdErr != "":
+		return "a third fighter from data: " + thirdErr
+	if played != "":
+		return played
+	if FighterData.dataHash() != h0:
+		return "reloading data/fighters/ changed the hash"
+	return ""
+
+
+## D1a: SimRng.keyed is stateless (same inputs, same value; no stream moves), spread over keys and indices, in [0, 1), and
+## the same as the golden vector (so the same in every process).
+func _keyedDraws(g: Dictionary) -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 3)
+	var a0: int = S.rng.a
+	var seen := {}
+	for n in range(1000):
+		var x: float = SimRng.keyed(int(S.game.seed), "compose", n)
+		if x < 0.0 or x >= 1.0:
+			return "out of [0, 1): " + str(x)
+		if x != SimRng.keyed(int(S.game.seed), "compose", n):
+			return "not stateless at n %d" % n
+		seen[x] = true
+	var moved: bool = S.rng.a != a0
+	SimCore.dispose(S)
+	if moved:
+		return "a keyed draw moved S.rng"
+	if seen.size() < 1000:
+		return "only %d distinct values over 1000 indices" % seen.size()
+	if SimRng.keyed(3, "compose", 5) == SimRng.keyed(3, "chain", 5):
+		return "keys do not separate"
+	return "" if SimGolden.keyedHash() == g.get("keyed", "") else "the keyed vector differs from the golden"
+
+
+## D1a: each QA arm as a match setup gives the same match as newMatch plus applyArm (full state at ticks 0, 60, 150, 300).
+func _armSetups() -> String:
+	for arm in ["default", "swap", "mirror-villain", "mirror-hero", "default-flip", "swap-flip", "mirror-villain-flip", "mirror-hero-flip"]:
+		var A := SimCore.createSim()
+		SimCore.newMatch(A, 2)
+		SimGolden.applyArm(arm, A.fighters)
+		var B := SimCore.createSim()
+		SimCore.newMatch(B, 2, {}, SimGolden.armSetup(arm))
+		var e: String = ""
+		for t in range(301):
+			if (t == 0 or t == 60 or t == 150 or t == 300) and SimHash.stateHash(A).gameplay != SimHash.stateHash(B).gameplay:
+				e = "%s: setup and applyArm differ by tick %d" % [arm, t]
+				break
+			SimCore.step(A)
+			SimCore.step(B)
+			A.out.fx.clear(); A.out.feed.clear(); B.out.fx.clear(); B.out.feed.clear()
+		SimCore.dispose(A)
+		SimCore.dispose(B)
+		if e != "":
+			return e
 	return ""
 
 

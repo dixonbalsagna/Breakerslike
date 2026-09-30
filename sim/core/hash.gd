@@ -100,11 +100,13 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	var d := S.dirS
 	_obj(out, d, ["cool", "stop", "lastLaunch"])
 	out.append(d.lastLaunch2)
+	out.append(float(d.exN))
 	var ex = d.ex
 	if ex != null:
 		out.append(_idx(fs, ex.A))
 		out.append(_idx(fs, ex.D))
 		_obj(out, ex, ["kind", "t", "combo", "tag", "windowStart", "cancel", "sA", "sD", "loser"])
+		out.append(float(ex.n))
 		_obj(out, ex.ext, ["start", "until"])
 		out.append(float(ex.beats.size()))
 		for b in ex.beats:

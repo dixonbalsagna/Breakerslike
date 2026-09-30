@@ -14,7 +14,8 @@ What gates determinism now:
 ## 1. What we need
 
 Bit-identical simulation state, tick by tick, for:
-- **Replays.** Seed plus intents gives the same match on any machine. Implemented and tested for the JS core (`sim/core/replay.js`).
+- **Replays.** Seed plus intents gives the same match on any machine. Implemented and tested for the JS core (`sim/core/replay.js`) and the GDScript sim (`sim/core/replay.gd`, with the data hash and the match setup in the header).
+- **Keyed draws (D1a).** `SimRng.keyed(seed, key, n)` is a stateless draw from the match seed, a key and an index (the exchange index `S.dirS.exN`, `ex.combo`). It never touches `S.rng`, so a keyed draw can be added or removed without shifting any other draw. Composition choices use it; the shared stream stays for everything that was already drawn from it.
 - **Rollback online.** Both peers resimulate from the same state and must agree to the bit. Orb has put online play after launch, so this is not a launch blocker, but the sim must be designed so it stays possible.
 - **The parity oracle.** Every engine port must reproduce the reference core's per-tick hashes, and the reference core reproduces the prototype.
 

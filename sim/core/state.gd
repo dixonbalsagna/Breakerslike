@@ -54,6 +54,7 @@ class DirS:
 	var stop: float = 0.0
 	var lastLaunch: String = ""
 	var lastLaunch2: String = ""
+	var exN: int = 0          # D1a: exchanges started this match (the exchange index for keyed draws, SimRng.keyed)
 
 
 class World:
@@ -277,6 +278,8 @@ class Fighter:
 	var rallyCool: int = 0           # S4: ticks until the next Rally is allowed
 	var breathWear: int = 0          # S4 (QA): wear units recovered by second breath so far
 	var id: String = ""              # S4: stable roster id (the roster entry's key); arms may rename, never re-id
+	var wd = null                    # D1a: the fighter's FighterData.WoundsDef (data; covered by the data hash, not hashed here)
+	var finisher: String = ""        # D1a: fighter.json finishers.base (data; data.gd still selects by byFighter until F1)
 	var ambush: bool = false
 	var rush = null          # Rush or null
 	var rot: float = 0.0
@@ -330,6 +333,7 @@ class LastSeen:
 
 
 class Exchange:
+	var n: int = 0            # D1a: this exchange's index (S.dirS.exN when it started)
 	var A = null
 	var D = null
 	var kind: String = ""

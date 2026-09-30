@@ -33,17 +33,27 @@ static func dispose(S: SimState) -> void:
 
 
 ## ai is {"p1": bool, "p2": bool}; a missing entry keeps the previous fighter's setting, or true with no fighters yet.
-static func newMatch(S: SimState, seed: int, ai: Dictionary = {}) -> void:
+## setup (D1a; the replay header's `setup`): {"slots": [id, id]} picks the fighters (default: the roster's first two),
+## "names": [name, name] renames them (the mirror arms), "flip": true swaps the spawn sides. {} is the default match.
+static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> void:
 	S.game.seed = float(seed & 0xFFFFFFFF)
 	S.rng = SimRng.new(seed & 0xFFFFFFFF)
 	WorldTerrain.genWorld(S)
 	var p1ai: bool = bool(ai["p1"]) if ai.has("p1") and ai["p1"] != null else (S.fighters[0].ai != null if S.fighters.size() > 0 else true)
 	var p2ai: bool = bool(ai["p2"]) if ai.has("p2") and ai["p2"] != null else (S.fighters[1].ai != null if S.fighters.size() > 1 else true)
 	dispose(S)
-	S.fighters = [SimRoster.createFighter(SimRoster.ROSTER[0], SimConst.START_X, "p1", p1ai), SimRoster.createFighter(SimRoster.ROSTER[1], SimConst.START_X + SimConst.START_GAP, "p2", p2ai)]
+	var slots: Array = setup.get("slots", FighterData.order().slice(0, 2))
+	var x0: float = SimConst.START_X
+	var x1: float = SimConst.START_X + SimConst.START_GAP
+	var flip: bool = setup.get("flip", false)
+	S.fighters = [SimRoster.createFighter(FighterData.def(slots[0]), x1 if flip else x0, "p1", p1ai), SimRoster.createFighter(FighterData.def(slots[1]), x0 if flip else x1, "p2", p2ai)]
+	if setup.has("names"):
+		S.fighters[0].name = setup.names[0]
+		S.fighters[1].name = setup.names[1]
 	S.fighters[0].y = 60.0
 	S.fighters[1].y = 60.0
-	S.fighters[1].face = -1.0
+	S.fighters[0].face = -1.0 if flip else 1.0
+	S.fighters[1].face = 1.0 if flip else -1.0
 	S.fighters[0].stance = 0.0
 	S.fighters[1].stance = 0.0
 	S.beams.clear()
@@ -57,6 +67,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}) -> void:
 	S.dirS.stop = 0.0
 	S.dirS.lastLaunch = ""
 	S.dirS.lastLaunch2 = ""
+	S.dirS.exN = 0
 	S.out.feed.clear()
 	S.out.fx.clear()
 	S.tick = 0

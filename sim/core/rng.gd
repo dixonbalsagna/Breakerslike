@@ -47,3 +47,24 @@ static func deriveSeed(seed: int, id: String) -> int:
 	x = imul(x, 0xc2b2ae35)
 	x ^= x >> 16
 	return x & MASK
+
+
+## D1a: a stateless keyed draw in [0, 1) from the match seed, a key and an index (the exchange index S.dirS.exN, and
+## ex.combo for a chain link). It never reads or advances any stream, so adding, removing or reordering a keyed draw
+## cannot shift another draw. The mix: fmix32(fmix32(seed ^ fnv1a32(key)) ^ n * 0x9E3779B1).
+static func keyed(seed: int, key: String, n: int) -> float:
+	var h: int = 0x811c9dc5
+	for i in range(key.length()):
+		h = imul((h ^ key.unicode_at(i)) & MASK, 0x01000193)
+	var x: int = _fmix((seed ^ h) & MASK)
+	x = _fmix(x ^ imul(n & MASK, 0x9E3779B1))
+	return float(x) / 4294967296.0
+
+
+static func _fmix(x: int) -> int:
+	x ^= x >> 16
+	x = imul(x, 0x85ebca6b)
+	x ^= x >> 13
+	x = imul(x, 0xc2b2ae35)
+	x ^= x >> 16
+	return x & MASK

@@ -1,0 +1,44 @@
+{
+  "schema": "meters/1",
+  "_about": "D1a reads only which meters this fighter has (Fighter.hasAnguish, hasMenace: the data-driven meters of Game Design's ruling). The numbers document today's rules in sim/core/fighter.gd, damage.gd and sim/world/collateral.gd and are wired in D1b (docs/architecture/d1-roster-data.md section 5); until then editing them changes nothing but the data hash. Casualty amounts are per person, normalised by 425 / pop0. Event names are D1b placeholders.",
+  "meters": {
+    "menace": {
+      "range": [
+        0.0,
+        100.0
+      ],
+      "start": 0.0,
+      "visible": true,
+      "sources": [
+        {
+          "event": "casualty",
+          "amount": 0.9,
+          "whose": "self",
+          "_note": "casualties this fighter caused"
+        },
+        {
+          "event": "evacuee",
+          "amount": 0.45,
+          "whose": "self",
+          "_note": "people this fighter's blows forced to flee"
+        }
+      ],
+      "decay": {
+        "rate": 0.4,
+        "delayTicks": 240,
+        "_note": "after 240 ticks without being fed"
+      },
+      "effects": [
+        {
+          "key": "regen_bonus",
+          "perPoint": 0.03
+        },
+        {
+          "key": "damage_mul",
+          "cap": 0.15,
+          "_note": "x (1 + 0.15 x menace / 100)"
+        }
+      ]
+    }
+  }
+}
