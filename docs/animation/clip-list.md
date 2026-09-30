@@ -67,7 +67,7 @@ Atom names are the prototype's (`move-grammar.md` §2). "Key set" names are the 
 | Cue poses (Combat's 15 cues) | | 1 | 15 | 15 |
 | **Basic set** | **64 pieces** | | **about 170** | **57** |
 
-**Reconciling with Combat's total.** Combat estimates 500 to 900 key poses per fighter at launch size: 64 basic pieces, about 40 special pieces, about 40 signature pieces and about 20 showcases, at 3 to 5 poses per piece and 4 to 10 per showcase. `pose-pipeline.md` §3.2 counted the basic set at about 170 poses (sharing and derived chambers) and put only about 100 showcase poses on top. **That understates the specials and signatures.** Combat's 80 special and signature pieces are another 240 to 400 poses (they are showcase-grade, human-authored under RL-038 at about 40 minutes each), and the 20 showcases another 80 to 200. The honest first-fighter total is **about 500 to 800 poses**, of which about 170 are the shared basic set. At `pose-pipeline.md` §6.3's costs that is roughly 60 to 80 hours for the basic set and **200 to 400 hours more for the showcase-grade poses**, so `pose-pipeline.md` §6.4's roster total of about 425 hours is low by a factor of about two to three. This is a scope fact for the EP and Orb, and the lever is the number of specials and signatures, not the tooling.
+**Reconciling with Combat's total.** Combat estimates 500 to 900 key poses per fighter at launch size: 64 basic pieces, about 40 special pieces, about 40 signature pieces and about 20 showcases, at 3 to 5 poses per piece and 4 to 10 per showcase. `pose-pipeline.md` §3.2 counted the basic set at about 170 poses (sharing and derived chambers) and put only about 100 showcase poses on top. **That understates the specials and signatures.** Combat's 80 special and signature pieces are another 240 to 400 poses (they are showcase-grade poses, authored by directors and reviewed by Orb under ADR 0007), and the 20 showcases another 80 to 200. The honest first-fighter total is **about 500 to 800 poses**, of which about 170 are the shared basic set. The cost is director usage plus Orb's review time, not human authoring hours; `pose-pipeline.md` §6.4 has the scope table (lean, middle, full) and the estimates. This is a scope fact for the EP and Orb, and the lever is the number of specials and signatures, not the tooling.
 
 ---
 
@@ -141,7 +141,7 @@ Two parts, because a change to the second is a sim change and re-baselines QA's 
 | Question | Owner |
 | :--- | :--- |
 | Is the scope of about 500 to 800 poses per fighter (§2) what Orb wants, or should specials and signatures shrink first? | Orb |
-| Who is the named human author of the showcase-grade poses (RL-038)? | Orb |
+| How does Orb want to review showcase-grade poses (contact-sheet batches, motion reels per part)? | Orb |
 | Do the dodge templates (CC-009) get a real window, so the wind-up read matters? | Combat |
 | Are 6 ticks (light) and 10 ticks (heavy) the minimum visible anticipation? | Combat, Controls |
 | Does a dodged or guarded signature get its own aftermath beat (CC-005) so the pose has something to play? | Combat, Game Design |

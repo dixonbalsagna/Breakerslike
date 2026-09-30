@@ -21,7 +21,7 @@ Owner: Animation. Status: design plan, no code, for P2 onward. Date: 2026-09-30.
 5. **Cost.** A text-authored pose is about 20 minutes at the planning level (L1); a Blender pose about 30. The first fighter's core library is 60 to 80 hours with review. The full pipeline is about 200 engineering hours, and the first useful slice about 60 (§6).
 6. **Budget (proposal for Performance).** At most 1.0 ms mean and 2.5 ms p99 per frame for two full-rate fighters, in the browser on the reference old laptop, with a four-step degrade ladder. Expect to need the first step down on the slowest machines (§7).
 7. **The sim hash never moves.** Animation owns no sim-read field. Pose data lives outside the hashed data, animation state advances on sim ticks and only reads, and a pose edit cannot change a golden (§8).
-8. **People.** Showcase poses (specials, signatures, finishers, transformations, break beats) need a human hand (Legal 8.5.3). The composed library can start as text poses written by a Claude session and then get a human pass (§6.6).
+8. **People.** Directors (Claude sessions) author every pose, showcase poses included; Orb reviews and steers (ADR 0007, which dropped the human-authorship requirement). Provenance records and the originality notes stay (§6.6).
 
 **Deliberately not doing:** mocap; runtime machine-learned motion; full-body or iterative IK on the critical path; ragdoll physics; a facial rig; cloth simulation beyond spring chains; a bespoke pose editor before the text and Blender paths prove too slow; a different skeleton per fighter.
 
@@ -174,7 +174,7 @@ Narrative and Art co-own a short per-fighter animation style guide (`docs/animat
 | `chains` | Optional `drive` weights per extras chain | render |
 | `family`, `band`, `dir`, `mirror` | The symbolic pose family, height band, direction of action, whether it may be mirrored | validation (and see §8.7) |
 | `tags` | Limb, weight, style, location hint (the part's own tags win) | validation |
-| `_note`, `_orig` | A one-line note and the originality note (§3.7) | humans |
+| `_note`, `_orig` | A one-line note and the originality note (§3.7) | reviewers |
 
 Shape only. Tools owns the schema and the names.
 
@@ -218,7 +218,7 @@ Counts follow Combat's first-fighter vocabulary (`procedural-moves.md` §1 and �
 
 Range 130 to 210. Fewer strike shapes or more derived chambers pull it toward 130. Mirroring is free, so left and right hands are one pose.
 
-**Showcase set** (later; Orb: "content after"): about 100 poses for the first fighter. Four specials at about 8 keys (32), the signature (16 for the charge and release family; variants come from adaptation), a finisher (14), transformation cinematics for six or more stages (about 36 at six keys each), and the break beats (below). These are the "hand-made showcase moves" and they need a human author (§6.6).
+**Showcase set** (later; Orb: "content after"): about 100 poses for the first fighter. Four specials at about 8 keys (32), the signature (16 for the charge and release family; variants come from adaptation), a finisher (14), transformation cinematics for six or more stages (about 36 at six keys each), and the break beats (below). These are the "hand-made showcase moves"; directors author them and Orb reviews (ADR 0007, §6.6).
 
 **Break beats.** Game Design's crippling moment is "a respected 1.5 s set piece" with a push-in, a crack and a long launch (`pitches.md` §5, option A). Each limb needs a one-off beat (arm, leg) plus the core's brink drop. Three showcase key sets of about 6 keys.
 
@@ -543,7 +543,10 @@ Blender is free and open source. **The exporter add-on needs its own licence che
 
 At a hobby pace of 10 hours a week that is a long road, and the honest levers are scope: fewer strike shapes (20 instead of 30 saves about 15 poses), more derived chambers, profiles instead of deltas, and above all the size of the showcase set. Orb's ordering (system first, content after) already points the same way.
 
-**Correction, and the scope choice for Orb (2026-09-30).** The roster row above counted only about 100 showcase poses a fighter. Combat's moveset plan (`docs/combat/moveset-system.md`) has about 10 special skeletons, 11 to 15 signature skeletons and about 20 showcases at launch size, all showcase-grade poses that need a named human author (RL-038). Costed on that plan, the roster is two to five times what the row says. The table lets Orb pick the scope. It assumes: a special skeleton is about 16 poses (4 pieces of 4 keys), a signature skeleton about 14, a showcase about 7, the finisher, transformation cinematics and break beats about 68 poses whatever the scope, the basic set 170 poses (60 to 80 hours), and showcase-grade poses at 40 minutes each plus 30% review. Hours are estimates.
+**Scope choice for Orb, revised for ADR 0007 (2026-09-30).** The roster row above counted only about 100 showcase poses a fighter. Combat's moveset plan (`docs/combat/moveset-system.md`) has about 10 special skeletons, 11 to 15 signature skeletons and about 20 showcases at launch size. Orb has since dropped the human-authorship requirement (ADR 0007): directors author these poses and Orb reviews. So the cost is no longer a human's hours at the pose. It is **director usage (tokens, in usage windows) plus Orb's review time**. The table lets Orb pick the scope. It assumes: a special skeleton is about 16 poses (4 pieces of 4 keys), a signature skeleton about 14, a showcase about 7, the finisher, transformation cinematics and break beats about 68 poses whatever the scope, and the basic set 170 poses. Both costs are estimates.
+
+- **Authoring (director usage):** about 3 to 6 thousand tokens a pose including the sheet reviews (A1's 57 poses and sheets ran at the low end of that), times 1.5 for the rework after Orb's notes. Batches of 12 poses to a sheet keep it there (ADR 0005).
+- **Orb's review:** about 2 minutes a pose (a contact sheet for the shape, the motion reel for the timing), times 1.5 for a second look at what he sends back.
 
 | | Lean | Middle | Full (Combat's launch size) |
 | :--- | ---: | ---: | ---: |
@@ -557,19 +560,20 @@ At a hobby pace of 10 hours a week that is a long road, and the honest levers ar
 | **Showcase-grade poses** | **214** | **360** | **536** |
 | Basic set (shared) | 170 | 170 | 170 |
 | **Poses, first fighter** | **384** | **530** | **706** |
-| Hours, showcase-grade poses (40 min plus 30% review) | about 185 | about 310 | about 465 |
-| **Hours, first fighter** (with the 70-hour basic set) | **about 255** | **about 380** | **about 535** |
-| Hours, each further fighter (adds about 28 hours of own poses, deltas and profile) | about 215 | about 340 | about 495 |
-| **Hours, four fighters** | **about 900** | **about 1,400** | **about 2,000** |
-| Weeks at 10 hours a week | about 90 | about 140 | about 200 |
+| Director usage, first fighter (tokens, with rework) | about 1.7 to 3.5 M | about 2.4 to 4.8 M | about 3.2 to 6.3 M |
+| **Orb's review, first fighter** | **about 19 hours** | **about 27 hours** | **about 35 hours** |
+| Director usage, four fighters (tokens) | about 6 to 12 M | about 8 to 17 M | about 11 to 22 M |
+| Orb's review, four fighters | about 58 hours | about 89 hours | about 122 hours |
+
+The four-fighter rows charge every fighter in full, without sharing, so they are the pessimistic case. Tokens are spread over usage windows (ADR 0005); the window limit, not the tooling, sets how fast a fighter finishes.
 
 What moves the numbers, in order of size:
-1. **The count of specials, signatures and showcases**, which is Orb's and Game Design's choice. Each special skeleton costs about 14 hours, each signature skeleton about 12, each showcase about 6.
-2. **Sharing across fighters.** A special or signature skeleton re-posed on another fighter's build with an L2 delta costs a fraction of a fresh one. The table charges every fighter in full, so it is the pessimistic case.
+1. **The count of specials, signatures and showcases**, which is Orb's and Game Design's choice. Each special skeleton is about 16 poses, each signature skeleton about 14, each showcase about 7.
+2. **Sharing across fighters.** A special or signature skeleton re-posed on another fighter's build with an L2 delta costs a fraction of a fresh one.
 3. **Transformations as profile deltas.** Only each stage's cinematic moment is authored; the Empress's ten or more "revisions" cost about a dozen numbers each, not poses.
-4. **Who authors.** A Claude session can draft the composed set as text poses, but a named human must pose or materially rework every showcase-grade pose (RL-038). Their hours are the constraint, not the session's.
+4. **Review load.** Orb's time scales with poses and with how often a batch comes back. Reviewing by motion reel per part, not per pose, and approving in batches, cuts it.
 
-My recommendation is **Lean for the first fighter**: it proves the system and the pipeline in about 255 hours, and the count grows by data after that (Orb's own order, system first). **Orb decides** the scope and names the human author.
+**Orb's pick is effectively lean first, grow by data** (system first, content after): about 1.7 to 3.5 M tokens and 19 hours of review for the first fighter, and every added special, signature or showcase is a data drop after that. I recommend exactly that.
 
 **Tokens are the budget for a Claude author** (ADR 0005): batch 12 poses to one sheet, lint by numbers before looking at any picture, keep pose files short, and use images only for the final review of a batch.
 
@@ -579,19 +583,17 @@ My recommendation is **Lean for the first fighter**: it proves the system and th
 
 1. The author renders a **pose sheet** (numbers first, then one image of the batch).
 2. A person reviews it. Poses are judged at 38 px in the staged view, not at poster size.
-3. Once a part's key set exists, the **motion reel** plays it on the mannequin and Orb (or the reviewing human) judges it **in motion, in slow motion**. Orb said he wants to judge the aura "in motion" (`vision.md`); the same applies here. A held key reads very differently from a still.
+3. Once a part's key set exists, the **motion reel** plays it on the mannequin and Orb judges it **in motion, in slow motion**. Orb said he wants to judge the aura "in motion" (`vision.md`); the same applies here. A held key reads very differently from a still.
 4. Notes go back as pose edits. Nothing is locked until Orb has seen it in motion.
 
 ### 6.6 Who authors what
 
-**Ruled by Legal (RL-038, `docs/legal/animation-data-rule.md`).** Animation data (poses, key sets, motion data) is content and follows `ai-prompt-policy.md` and `asset-origins.md`. The minimum rule:
-1. **Every AI-assisted pose set has a record:** a franchise-free brief (the session's brief *is* the prompt: no franchise names, footage, screenshots or "in the style of" anything named), the tool, the model, the date, and **what a human changed**. A set-level record is fine for the generic library. Records live in `art/animation/records/` in the form of `art/prompts/TEMPLATE.md`; Legal also writes an origin row per pose set in `asset-origins.md`.
-2. **Showcase poses** (specials, signatures, finishers, transformations, taunts, break beats) are posed or **materially reworked by a named human**, and the record says what they changed. Selecting is not enough. **Orb has not named that person, so every showcase pose stays "proposed" and cannot lock.**
-3. **The composed library** (generic martial-arts strikes, reactions, flight) may begin as text poses from a Claude session. A later human pass counts only if the record says what the person changed.
-4. Sensitive pose families carry an `_orig` line and pass the originality checklist (§3.7).
-5. Reference footage: none from any franchise or game. Self-shot reference is private, with consent, never shipped, origin recorded.
-
-**Orb decides:** who the named human author of the showcase set is.
+**Ruled by Orb (ADR 0007, 2026-09-30), superseding the human-authorship part of Legal's RL-038 (`docs/legal/animation-data-rule.md`).** A human author is no longer required for any pose class. Directors author poses, showcase poses included, and Orb reviews and steers. Purely AI-made parts may not be protected by copyright, and Orb has accepted that; the concern is liability, not ownership. What stays mandatory:
+1. **Provenance records** for every AI-assisted pose set: a franchise-free brief (the session's brief *is* the prompt: no franchise names, footage, screenshots or "in the style of" anything named), the tool, the model and the date. Records live in `art/animation/records/` in the form of `art/prompts/TEMPLATE.md`; Legal writes the origin row in `asset-origins.md`. They also feed the store's AI-content disclosure. The "what a human changed" line is now whatever Orb changed, if anything.
+2. **The originality rules and Legal's screens.** Sensitive pose families carry an `_orig` line and pass the checklist (§3.7); Legal's screen of the six families stands (RL-038's table).
+3. **Reference footage:** none from any franchise or game. Self-shot reference is private, with consent, never shipped, origin recorded.
+4. **Third-party licences:** the Blender add-on (if it is ever built) needs its own licence check.
+5. **Status:** showcase poses are no longer held as drafts for want of an author. They lock when Orb has reviewed them.
 
 ---
 
@@ -782,7 +784,7 @@ Animation authors **no sim-read field**. Three things touch sim-read data, and e
 | :--- | :--- | ---: | :--- |
 | 0 Measure, 1 Parity as data | **A0 Formats and spike (the spike is done, §7.8; formats and tools remain).** Pose and key-set schema, pose sheet and lint, validator rules, the rig spike, the 15 existing cue poses migrated into the pose format | 15 | Validator and sheet run; spike numbers recorded in Performance's table |
 | 2 One slot generative (6 or more strikes, 8 or more launch vectors) | **A1 Mannequin runtime.** Pose apply, key blend, hit-stop, the part cue, no IK. Foundation set, 6 strike key sets, 8 flight poses | about 50 | Hash unchanged on and off; contact key on the contact tick 100%; frame cost recorded |
-| 3 Full phrase grammar (30 to 40 parts) | **A2 The vocabulary.** All 170 core poses, IK, arcs, lag, reactions, inertialisation | 170 in all | Silhouette lint 100%; anticipation at or above the floor; no pops at joins (A8) |
+| 3 Full phrase grammar (30 to 40 parts) | **A2 The vocabulary.** All 170 core poses, IK, arcs, lag, reactions, inertialisation, and the timing profile chosen per part by weight class (§9.2) | 170 in all | Silhouette lint 100%; anticipation at or above the floor; no pops at joins (A8) |
 | 4 Context bends | **A3 Situation and drift.** Slope, wall and water adaptation; modifiers v1 (wear, mood) | about 10 | Foot-plant test A3; wall and water scenes; modifier extremes lint A9 |
 | 5 Specials, signature, a second fighter as data | **A4 Retarget.** A profile, deltas and own poses for fighter two; showcase for specials and the signature | about 100 | Second fighter with no code change; distinguishable from the first (Combat's T3) |
 | 6 Finisher | **A5 Set pieces.** Finisher, break beats, transformation cinematics | about 60 | Every finisher plays; Orb reviews in motion |
@@ -830,6 +832,26 @@ The smallest useful thing is **A1**: it replaces the placeholder cue poses with 
 | 6 | The `damage` event's region for every hit, the launch vector class on `launch` | Reactions and flight poses |
 | 7 | Animation stream ids `anim` and `anim.<slot>` in `fx-events.md` | Cosmetic variation beyond the integer hash |
 
+### 9.2 A profile per part (Orb, 2026-09-30, after the reels)
+
+Orb watched the two reels: snappy "would work well in attack rushes", fluid "would work well with power strikes". So the timing profile is no longer one global choice. **It is chosen per part by weight class, from data,** in A2:
+
+| Part or weight class | Profile |
+| :--- | :--- |
+| Approach and rush (every `rush`, `rush.chain`, `rush.far`) | snappy |
+| Light strikes and chain links | snappy |
+| Heavy strikes, power strikes (`o.big`, heavy weight), heavy clash | fluid |
+| Launches (the striker's send-off and the flight that follows) | fluid |
+| Everything else (base pose, cues, reactions) | the fighter's default |
+
+How it is built:
+- `data/anim/profiles.json` gains a `by_part` table (weight class to profile name) next to `default`. A fighter's profile (personality override L1, §2.5) can replace any row, so the Cyborg's heavy strikes can stay snappy. No constant lives in code.
+- The solver reads the profile of the part it is playing (today it reads one for the whole fighter). The weight class comes from the part's own tag once Combat's part cue carries it (`weight`: light, heavy, special, finisher); until then from the exchange kind and the strike's `o.big`.
+- **Blending at a change of profile.** A rush (snappy) into a heavy strike (fluid) changes profile inside one exchange. The in-betweener already inertialises between parts (A2), so the hand-over has no pop; the profile's numbers apply from the next part's first tick, and the contact tick never moves.
+- **Hit-pause.** The shiver follows the striking part's profile (0.9 u snappy, 0.4 u fluid), so a fluid power strike gets the gentler hold.
+- **Test.** Extend `anim_check.gd`: a forced exchange with a rush into a heavy strike must show snappy load and snap lengths on the rush and fluid ones on the strike, and the gameplay hash must not change.
+- The reels will be re-cut in the mixed setting for Orb after A2.
+
 ---
 
 ## 10. How we will know it works
@@ -857,13 +879,12 @@ QA owns the harness; the targets are mine to propose. A1, A7 and A9 are static a
 | **Procedural motion looks floaty or robotic** | The in-between is the part nobody authors | Sell the pose: strong holds, snaps, smear, impact frames, moving holds. Orb reviews in motion at A1, before the library is written |
 | **The old-laptop browser budget** | GDScript is slow; the frame is already tight; my estimate is at the limit (§7.1) | Spike first; the degrade ladder; own IK and springs kept small; a C++ extension as the named fallback |
 | **Authoring capacity** | 425 hours across the roster at hobby pace | Derived chambers, profiles over deltas, a text path a Claude session can drive, and a Blender path for contributors; the showcase set is the lever |
-| **Human-authorship rule** | Showcase poses need a person; nobody is named | Orb decides (§6.6); until then the composed library proceeds and the showcase set waits |
+| **Authorship and copyright** | Purely AI-made poses may not be protected (ADR 0007) | Orb accepted it; protection rests on the title mark, Orb's direction and selection, and the game as a whole. Provenance records and the originality screens stay |
 | **Skinning and draw calls on Compatibility** | Unverified on the web and the iGPU | The §2.3 spike; rigid-skinned single mesh as the plan |
 | **Modifier stacks make ugly poses** | Injury, mood and form can combine | Clamps, the worst-case lint (A9), smoothing on ticks |
 | **Cheat-out and mirroring** | Near-side strikes read; far-side and depth-axis ones may not | Pose review in three views (§3.6); the author picks the near limb for the key read |
 | **Facade and building contacts at depth** | Buildings stand at depth rows; a launch through one is scripted | Animation supports surface normals in the x-y plane; the staging of a facade hit needs Camera and World (§12) |
 | **A late Combat contract** | `moveset-system.md` is not written; every timing is provisional | Design against `procedural-moves.md`; keep field names in one place; re-check when it lands |
-| **AI-authored poses and copyright** | Work made only by AI is not protected (`ai-prompt-policy.md`) | Human pass with a record; showcase poses by hand |
 
 ---
 
@@ -877,7 +898,7 @@ QA owns the harness; the targets are mine to propose. A1, A7 and A9 are static a
 | 4 | **Ruled:** the runtime lives in `render/anim/`. I own it; Rendering reviews | EP, Rendering |
 | 5 | **A0 spike done** (`render/anim/spike/`, numbers in §7.8): skinning cost and draw calls on the web and the iGPU; the draw-call budget; hands settled as palm plus finger slab; rigid-skinned single mesh confirmed. Art and Rendering still confirm the hand mesh | Rendering, Art, Performance |
 | 6 | Confirm the renderer's read list includes wear and stage, meters, form and pride state (§5.1) | Simulation |
-| 7 | **Answered** (RL-038): animation data follows the AI prompt policy; showcase poses need a named human (§6.6). Still open: the named human, and the Blender add-on's licence check | Orb, Legal |
+| 7 | **Answered** (ADR 0007): no named human is required; provenance records and originality screens stay (§6.6). Still open: the Blender add-on's licence check if it is built | Legal |
 | 8 | The staging of a facade hit at depth (a launch into a building at row 1 to 3) | Camera, World |
 | 9 | A per-fighter animation style guide, once the roster's looks lock | Narrative, Art |
 | 10 | The animation stream ids (`anim`, `anim.<slot>`) in `fx-events.md`'s table | Simulation |
@@ -887,7 +908,7 @@ QA owns the harness; the targets are mine to propose. A1, A7 and A9 are static a
 | Question | Owner |
 | :--- | :--- |
 | How staccato do you want it? Held poses and hard snaps, or more fluid? It is one number in the fighter's profile. I would show two motion reels at A1 and let Orb pick. | Orb |
-| Who is the human author of the showcase poses: Orb, a contributor, a commissioned artist? Poses via Blender or by reviewing text-authored poses on contact sheets? | Orb |
+| How does Orb want to review showcase-grade poses: contact sheets in batches of 12, motion reels per part, or both? (§6.4 assumes about 2 minutes a pose) | Orb |
 | Are hands a palm plus a finger slab, and is the body rigid-skinned faceted parts? Both are cheap and look right for the style, and both are Art's to confirm. | Art |
 | Is the animation layer's proposed budget acceptable, and which governor sets the degrade level? | Performance |
 | What does the Combat contract look like when `moveset-system.md` lands: part fields, cancels, the part cue? | Combat |
