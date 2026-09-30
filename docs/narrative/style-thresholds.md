@@ -71,3 +71,58 @@ The entry times follow from the hold times plus the time the window needs to fil
 - **Changed:** the mixer's definition (section 2).
 - **Added:** `minWindowFillS`, `shift.minGapS` and `shift.refractoryAfterLeaveS` (section 3), a minimum for the sniper's sample, and the QA bands.
 - **Removed:** `hider` (hiding is removed).
+
+---
+
+## 7. Revision 2: after the M1 probe (2026-09-30)
+
+Simulation's 100-match AI-against-AI probe, against my bands:
+
+| Measure | Result | Band |
+|---|---|---|
+| Label shares | rusher 38%, runner 7.5%, sniper 4.3%, mixer 0.8%, turtle 0.2%, charger 0%, unlabelled 49% | (none) |
+| Changes per fighter per match (median, counting endings) | 5.8 | at most 4 |
+| Shortest label held | 5 s (probably the sniper) | at least 10 s |
+| Unlabelled | 49% | at most 40% |
+| Charger reached | never | every label reached |
+
+### 7.1 What the probe says
+
+- **The AI is a rusher.** It presses most of the time, so it sits in the gap between "rusher" (above 60%) and "mixer" (no stance above 40%) for much of a match. That gap is the unlabelled 49%.
+- **The first minute is unlabelled by construction.** With `minWindowFillS` 30 and holds of 15 to 45 s, about a minute of every match (roughly 12%) cannot have a label.
+- **Flicker comes from the leave rules.** A 5 s leave hold lets a label drop on a brief dip, and a label that has only just entered can leave at once. The 5 s minimum is that.
+- **The sniper's share rests on few attacks**, so one or two attacks swing it.
+- **Turtle and charger are human habits.** The AI rarely guards for long or charges, so 0.2% and 0% are expected.
+
+### 7.2 The new values (data only; `style.draft.json` revision 2)
+
+| Label | Enter | Hold to enter | Leave | Hold to leave |
+|---|---|---|---|---|
+| `turtle` | above **52%** (was 55) | **30 s** (was 45) | below **42%** (was 45) | **10 s** (was 5) |
+| `rusher` | above **55%** (was 60) | **15 s** (was 20) | below **45%** (was 50) | **10 s** (was 5) |
+| `runner` | above **45%** (was 50) | **15 s** (was 20) | below **35%** (was 40) | **10 s** (was 5) |
+| `charger` | above **15%** (was 20) | **10 s** (was 15) | below **9%** (was 12) | **10 s** (was 5) |
+| `sniper` | 35% or more, with at least **6** attacks (was 4) | **25 s** (was 20) | below **22%** (was 25) | **10 s** (was 5) |
+| `mixer` | largest stance at most **50%** (was 40), at least **2** stances at **20%** or more (was 3 at 15%), at least 6 attacks, no kind above **75%** (was 70) | **20 s** (was 30) | another label enters, or the largest stance above **58%** for **10 s** (was 50% for 5 s) | |
+
+New or changed global keys: `minWindowFillS` **20** (was 30), a new **`minHeldS` 12** (a label cannot be dropped until it has been held 12 s), `shift.refractoryAfterLeaveS` **6** (was 10). The gap and shift minimum stay at 20 s.
+
+### 7.3 What I expect (estimates, not measured)
+
+- **Unlabelled falls to about 30 to 35%.** A lower rusher threshold and a wider mixer close the gap, the faster first label shortens the opening, and longer leave holds keep labels on.
+- **Label events (entries plus endings) fall to about 4 to 5 a fighter a match.** The minimum hold and the longer leave hold remove most of the flicker.
+- **The shortest label is at least 12 s**, by construction, except when the match ends.
+- **Rusher's share probably rises** (the AI does rush). That is honest behaviour, not a fault.
+
+QA measures and tunes from here. The rusher threshold and the mixer's 50% are the two numbers most likely to need another turn.
+
+### 7.4 Which bands to judge on AI play, and which on human play
+
+| Judged on AI against AI (stability) | Judged on human or scripted play (coverage) |
+|---|---|
+| Label entries per fighter per match: a median of at most **3**. | **Every label is reached**, using scripted style bots (a turtler, a charger, a runner, a sniper, a mixer) and real playtests. |
+| Label events including endings: a median of at most **5**. | **Label shares are a description, not a target.** Report them, and do not band them. |
+| The shortest label held: at least **12 s**. | Charger and turtle are **human habits**, so their reach is judged only on human and scripted play. |
+| Unlabelled share: at most **40%**. | Sniper and runner are judged there too, since the AI seldom shows them. |
+
+**One wording change.** The old band "changes per match, at most 4" counted endings as well as entries, which double-counts every change. I suggest two figures, **entries (at most 3)** and **events including endings (at most 5)**.
