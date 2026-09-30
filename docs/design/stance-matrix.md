@@ -87,6 +87,7 @@ Skill balance is 2 out of 10: strategy far outweighs execution.
     - ESCAPE: it only hits and runs when the opponent has committed, and otherwise disengages and breaks lock.
   - *Charging and specials* pause the director's attacks until they end.
   - *Chains:* whether to continue is the director's call. It reads stance (AGGRESSIVE chains most), ki, heat and the fight's mood (`spec-wounds.md` §9).
+  - *Heat and chainP* (Encounter's open item). The heat track is the Protagonist's alone, so only fighters with it get this. The chain probability gains +5 points at Heated, +10 at Simmering and +20 at Boiling: reckless flurries. It is capped at 0.8, the chain limit stays 5, and every link still costs 6 ki. Other fighters use their own hooks: the Anti-hero's Drop the Act raises his chain limit to 6. There is no heat input for anyone else.
   - *Controls' intent queue* (`docs/controls/intent-queue-plan.md`), answered:
     1. Light and heavy latch as the weight mode. The match starts in light. Signature is a one-shot in the queue slot, and returns to the latched weight after it fires.
     2. No timing press remains anywhere. Chain follow-ups are the director's call. The beam clash is resolved by state: AGGRESSIVE with 40 ki or more meets the beam, and the winner is decided by tier, ki and meters.
