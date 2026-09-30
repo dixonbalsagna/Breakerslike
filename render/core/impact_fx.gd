@@ -2,7 +2,8 @@ class_name ImpactFx
 extends RefCounted
 ## Render-side live effects for World's events (docs/architecture/fx-events.md). A crater throws ejecta, raises dust
 ## on its rim and sends a shock ring across the ground. A scorch sample heats its groove, drawn as a glow by the
-## terrain shader from `heat`: hotter and longer-lasting for stronger beams. It also sheds embers. A knockback slide
+## terrain shader from `heat`: hotter and longer-lasting for stronger beams. It also sheds sparks, unless VFX draws its
+## embers instead (scorch_sparks, set by SimHost). A knockback slide
 ## throws dust and rubble chips along its trench (grey on pavement, earth elsewhere) and a burst where it stops. A skim
 ## (each skip off the water) leaves ripple rings, a spray burst and a spreading wake; a splash on a water surface leaves
 ## ripples, and a fighter flying fast just over water throws spray. World sizes scale with the sim's WS. Cosmetic only: its random numbers come from its own streams seeded from the match seed. Nothing here is
@@ -18,6 +19,7 @@ var parts: Array = []          # SimFxView.Part, the same records the reference 
 var heat := PackedFloat32Array()
 var heat_changed: bool = false   # set when heat moves; the renderer clears it after uploading
 var _hot: bool = false
+var scorch_sparks: bool = true   # false while VFX's scorch embers are on (SimHost): the groove's glow stays either way
 var _ticks: int = 0
 var _re: SimRng
 var _rm: SimRng
@@ -99,6 +101,8 @@ func _scorch(e) -> void:
 	var P: float = e.power
 	var hw: float = e.w * 0.5
 	_heat_at(e.x, hw, minf(1.6, 0.35 + 0.28 * P))
+	if not scorch_sparks:
+		return
 	var col: String = "#ffe08a" if P > 2.5 else "#ff9a3c"
 	for k in range(1 + int(P * 0.8)):
 		var p := _part("spark", e.x + _rm.range_(-0.5, 0.5) * hw, e.y + 3.0, col)

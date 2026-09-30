@@ -6,7 +6,8 @@
 // sight line to the fighter plane. Columns coarsen away from the fighter plane in runs (planet_view.gd); a run's
 // boundary row snaps to the coarser stride.
 // UV.x: terrain column (NC wraps to 0). UV2.y: 1 on the fighter-plane row, 2 or more a snapping boundary.
-// COLOR: biome colour, alpha 1 in desert. Scorch chars the ground, heat glows, cracked pavement darkens (S.crack).
+// COLOR: biome colour, alpha 1 in desert. Scorch chars the ground, heat glows, cracked pavement darkens (S.crack),
+// rubble heaps (S.rubble, in depth as ground.gdshaderinc lays them) take the rubble colour, broken up in blocks.
 shader_type spatial;
 render_mode unshaded, cull_disabled;
 
@@ -24,6 +25,8 @@ uniform vec4 heat_lo : source_color;
 uniform vec4 heat_hi : source_color;
 uniform vec4 snow : source_color;
 uniform vec4 cracked : source_color;
+uniform vec4 rubble : source_color;
+uniform float rubble_tint_h = 20.0;
 uniform float snow_from = 560.0;
 uniform float snow_full = 900.0;
 uniform float z_front = 140.0;   // RenderLook.Z_TERRAIN_FRONT: the top brightens from the back of the band to here
@@ -40,6 +43,7 @@ varying float v_heat;
 varying float v_back;
 varying vec3 v_view;
 varying float v_crack;
+varying float v_rubble;
 varying vec2 v_px;
 varying float v_wz;
 
@@ -69,6 +73,7 @@ void vertex() {
 	v_scorch = gf(i, 3) * t;
 	v_heat = gf(i, 5) * t;
 	v_crack = gf(i, 15) * t;
+	v_rubble = abs(z) <= -z_band_back ? rubble_at(i, z) : 0.0;
 	v_px = vec2(xw, z);
 	v_back = clamp((z_front - z) / (z_front - z_band_back), 0.0, 1.0);
 	vec4 bw = bent_world(MODEL_MATRIX, VERTEX);
@@ -97,6 +102,11 @@ void fragment() {
 		float diag = abs(f.x - f.y * (0.4 + 0.6 * h1));
 		float line = 1.0 - smoothstep(0.0, 0.05, min(edge, diag));
 		c = mix(c, cracked.rgb, clamp(v_crack, 0.0, 1.0) * (0.3 + 0.7 * line));
+	}
+	if (v_rubble > 0.01) {
+		vec2 q = v_px / 45.0;
+		float n = fract(sin(dot(floor(q), vec2(41.3, 289.1))) * 43758.5453);
+		c = mix(c, rubble.rgb * (0.8 + 0.4 * n), clamp(v_rubble / rubble_tint_h, 0.0, 1.0) * 0.9);
 	}
 	c = mix(c, char_col.rgb, clamp(v_scorch * 1.1, 0.0, 0.92));
 	c = flat_shade(c, NORMAL, 0.55) * mix(1.2, 0.95, v_back);

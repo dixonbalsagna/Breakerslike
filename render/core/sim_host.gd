@@ -20,7 +20,6 @@ var fxv := SimFxView.new(1)     # reference fx consumer (sim/core/view/fx.gd)
 var impact := ImpactFx.new()    # render-side crater, scorch and water effects (render/core/impact_fx.gd)
 var audio_cues := AudioCues.new()   # Audio's event reader (audio/audio_cues.gd); its own stream, seeded per match
 var pending_cues: Array = []    # cues made this frame's ticks, for the scene to play
-var evac_mock: EvacMock = null  # main's --mock-evac: World's planned evacuate events, until the sim sends them
 var vfx := VfxHub.new()         # VFX's state (render/vfx/, docs/vfx/plan.md): trails and the rest, from each tick's events
 var cam_rng: SimRng             # the 'camera' cosmetic stream: shake jitter
 var seed: int = 1
@@ -49,8 +48,6 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	fxv.reset(seed)
 	impact.reset(seed)
 	audio_cues.reset(seed)
-	if evac_mock != null:
-		evac_mock.reset(S)
 	vfx.reset(S, seed)
 	pending_cues.clear()
 	cam_rng = SimRng.new(SimRng.deriveSeed(seed, "camera"))
@@ -99,13 +96,11 @@ func tick(vw: float, vh: float) -> void:
 	while feed.size() > FEED_KEEP:
 		feed.pop_front()
 	S.out.feed.clear()
-	fxv.consume(S, S.out.fx)
+	fxv.consume(S, _without_fall_debris(S, S.out.fx) if vfx.enabled and vfx.destruction_enabled else S.out.fx)
+	impact.scorch_sparks = not (vfx.enabled and vfx.embers_enabled)
 	impact.consume(S, S.out.fx)
 	pending_cues.append_array(audio_cues.consume(S, S.out.fx))
-	var fx: Array = S.out.fx
-	if evac_mock != null:
-		fx = fx + evac_mock.step(S, fx)
-	drained.emit(fx, lines)
+	drained.emit(S.out.fx, lines)
 	vfx.consume(S, S.out.fx)
 	S.out.fx.clear()
 	if fxv.shake > 0.5:
@@ -118,6 +113,28 @@ func tick(vw: float, vh: float) -> void:
 	_prev = _cur
 	_cur = _capture()
 	ticked.emit(ticks)
+
+
+## A tick's events less the dust and debris of the buildings that fell in it, for the particle consumer while VFX
+## draws the collapses itself (VfxHub.destruction_enabled), so a fall is not drawn twice. A fall's dust and debris sit
+## at its building's x, and a fallen building takes no more damage, so any at a fallen building's x are the fall's;
+## the dead buildings are read too, for the falls past the event cap that fold into one summary (b = -1).
+static func _without_fall_debris(S: SimState, fx: Array) -> Array:
+	var falls: bool = false
+	for e in fx:
+		if e.type == "building_fall":
+			falls = true
+			break
+	if not falls:
+		return fx
+	var xs: Dictionary = {}
+	for e in fx:
+		if e.type == "building_fall":
+			xs[snappedf(e.x, 0.01)] = true
+	for b in S.buildings:
+		if not b.alive:
+			xs[snappedf(b.x, 0.01)] = true
+	return fx.filter(func(e): return not ((e.type == "debris" or e.type == "dust") and xs.has(snappedf(e.x, 0.01))))
 
 
 ## Re-frame without stepping: the camera follows the current state for one tick and the snapshots shift, as after

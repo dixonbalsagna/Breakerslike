@@ -27,6 +27,7 @@ godot --path .
 | F2 | swap UI's HUD for the greybox HUD (until UI's playtest) |
 | F3 | performance overlay |
 | F4 | the director feed in UI's HUD |
+| F6 / Shift+F6 / Ctrl+F6 | VFX's ground cracks (on) / its destruction: shards, collapse dust, holes (off until World's B2) / its scorch embers (on) |
 | F7 / F8 | head flashes on and off / their legacy shapes |
 | F9 | Camera's split screen on and off (on by default) |
 | F10 / F11 | the split against the AI (UI's `split_solo`) / reduced motion (UI's `reduced_motion`) |
@@ -63,8 +64,8 @@ Main            Node3D               core/main.gd         the frame loop, input,
 | `core/pane_world.gd` | One camera's view of the world (see Panes and the split screen). |
 | `core/crowd_mesh.gd` | The generated civilian figure (see Civilians below). |
 | `core/ground_field.gd` | The ground band's data for the GPU and its CPU mirror: round crater bowls in depth, scorch, water (see Craters, scorch and water below). |
-| `core/impact_fx.gd` | Render-side live effects for World's crater, scorch and splash events: ejecta, rim dust, shock rings, the glow of fresh grooves, embers, ripples and skim spray. |
-| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` over `ground.gdshaderinc` (the ground field); `crowd`; `particle` (shapes per instance); `sky` over `skycol.gdshaderinc` (the horizon-anchored gradient the ground also fogs into, space, stars); `bend.gdshaderinc` (horizon curvature). |
+| `core/impact_fx.gd` | Render-side live effects for World's crater, scorch and splash events: ejecta, rim dust, shock rings, the glow of fresh grooves, embers (sparks, dropped while VFX's embers are on), ripples and skim spray. |
+| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` over `ground.gdshaderinc` (the ground field); `crowd`; `front` (row-0 buildings, faded by dither per pane); `particle` (shapes per instance); `sky` over `skycol.gdshaderinc` (the horizon-anchored gradient the ground also fogs into, space, stars); `bend.gdshaderinc` (horizon curvature). |
 | `tools/seam_sweep.gd`, `tools/determinism.gd` | The seam and determinism checks (see below). |
 | `tools/shots.gd` | Posed screenshots for these docs (see below). |
 | `tools/ground_check.gd` | The ground check: the drawn ground against the sim's (see Verification). |
@@ -89,27 +90,23 @@ Orb's notes on the first live build were "civilians seem too tiny" and "make the
 | :---: | :---: |
 | ![civilians before](img/civilians-before.png) | ![civilians after](img/civilians-after.png) |
 
-**Evacuation: people fleeing, not immortal civilians.** Built against World's planned `evacuate {b, x, z, n, cx, reason, owner}` (`docs/world/collateral-caps.md` §5), which comes in the same tick as the building's `popAlive` falls. `crowd_flight.gd` decides and draws it:
-- **The crowd thins.** A building's figures standing at home are always the people it has, `int(popAlive)`. No one a blow took is ever left standing, and an emptied district stays empty.
+**Evacuation: people fleeing, not immortal civilians.** World's `evacuate {b, x, n, cx, reason, owner, dest}` (`docs/world/collateral-caps.md` §5, in the sim since 3612ebc) comes in the same tick as the building's `popAlive` falls. `crowd_flight.gd` decides and draws it:
+- **The crowd thins.** A building's figures standing at home are always the people it has, `int(popAlive)`, less any still running to it. No one a blow took is ever left standing, and an emptied district stays empty.
 - **Who runs.** When figures vanish from a building a blow hit this frame (its `debris` event; the sim's damage always throws one), as many run as its events have reported fled, farthest from the blow first. The rest, nearest the blow, were casualties and go at once. From a building no blow hit, everyone who vanished left on foot (people die only by damage), so they all run, even before the lot that reports them. World reports flights in lots of half a person.
-- **How they run.** Runners use their own crowd instances, on sim time (pause and hit-stop hold them). They run away from the event's `cx`, up to 60% faster the closer they were (`RUN_*` in `look.gd`), and drift back behind the building row. About one in seven looks back once, and each fades out by dither at the end of its 2.4 to 4 s run. The crowd shader plays the run cycle in the figure's own plane, as a runner seen side-on: legs and arms scissor, the body bobs and leans into the run. The figure stays nearly face-on (back-on running left; it looks the same from behind), so it never thins to a plank.
-
+- **How they run.** Runners use their own crowd instances, on sim time (pause and hit-stop hold them). They run away from the event's `cx`, up to 60% faster the closer they were (`RUN_*` in `look.gd`), and drift `RUN_BEHIND` back past their own row's face. About one in seven looks back once, and each fades out by dither at the end of its 2.4 to 4 s run. The crowd shader plays the run cycle in the figure's own plane, as a runner seen side-on: legs and arms scissor, the body bobs and leans into the run. The figure stays nearly face-on (back-on running left; it looks the same from behind), so it never thins to a plank.
+- **To shelter.** An event with a `dest` (World's `shelter()`, when its `RELOCATE` is on) sends its runners straight to that building's street, arriving as the run ends (they speed up past `RUN_DEST_MAX`, 6 s). The building gains figures only as they arrive (`CrowdFlight.incoming`). `RELOCATE` is off today, so no match sends one yet: a staged event (4 people to a building 4,800 units away) ran 4 runners, all arrived within 6 s, and the building then showed its people.
 - **Survivors are startled.** Figures still standing within `STARTLE_R` of a blow (a crater, a beam's scorch or a building hit) stop their idle hop for `STARTLE_S` (4 s). They cower, hands over their heads, crouch a little and tremble, until the flight takes them or they calm down. The crowd shader draws it from the instance colour's red channel, and the planet view refreshes it only when a blow lands or the earliest calm-down comes. Cost with the mock, on desktop: frame p50 1.33 → 1.37 ms. Survivors in a fresh crater: ![startled](img/startled.png)
 
-A blow on the city's edge with the mock on, every second (left to right): ![flight](img/flight-strip.png) Two runners close up: ![run](img/flight-run.png)
+A blow on the city's edge, every second (left to right), from before World's events, when a render-side mock made them: ![flight](img/flight-strip.png) Two runners close up: ![run](img/flight-run.png)
 
-**Until the sim sends it**, `render/tools/evac_mock.gd` makes World's events from what the sim does, and never writes the sim. `main --mock-evac` turns it on in the game.
-- A 60% share of each building's losses is reported as fled, in the same tick.
-- For 5 s after a blow that cost lives, standing buildings within World's `EVAC_R` empty at its 30% a second, on the render side only: the crowd shows `popAlive` less the mock's own `extra`.
-- The flag, the mock and `PlanetView.crowd_extra` go when World's evacuation lands.
+The mock (`render/tools/evac_mock.gd`, `--mock-evac`, `PlanetView.crowd_extra`) and its strip tool are gone now that the sim sends the events.
 
-`render/tools/flight_check.gd` runs AI matches with the mock (seeds 4, 12345 and 7; 15,346 frames) and checks:
-- every frame, every building's standing figures equal its people;
-- no runner outlives its run;
-- per building, runners equal the events' n within 2. Result: 491 runners for 462.3 people; the worst building is off by 1.4, since figures are whole people and lots are half a person;
-- the sim's hash is the same with the mock on and off.
+`render/tools/flight_check.gd` runs AI matches on World's events (seeds 4, 12345 and 7; 16,200 frames) and checks:
+- every frame, every building's standing figures equal its people less the runners heading to it;
+- no runner outlives its run, and each building's incoming count is the runners heading to it;
+- per building, runners equal the events' n within 2. Result: 319 runners for 258.3 people; the worst building is off by 1.47, since figures are whole people and lots are half a person.
 
-Cost on desktop (seed 4, 4,800 frames, about 70 runners at most): frame time p50 1.19 → 1.24 ms, p95 2.00 → 2.15 ms, p99 2.60 → 2.91 ms. The flight step itself is under 0.08 ms at p99.
+Cost on desktop, measured with the mock (seed 4, 4,800 frames, about 70 runners at most): frame time p50 1.19 → 1.24 ms, p95 2.00 → 2.15 ms, p99 2.60 → 2.91 ms. The flight step itself is under 0.08 ms at p99.
 
 **Planet scale.** I picked the three cheapest cues that read at the zoom real fights use. In AI matches the zoom stays around 0.3 to 0.7 and the camera below about 850 units, so cues that only showed at extreme zoom would rarely be seen. All three are static meshes or shader uniforms, with no per-frame CPU work beyond a few uniforms.
 
@@ -148,6 +145,23 @@ Before and after, left to right. Far zoom (pose `far`): ![far](img/fore-far.png)
 | ![max altitude before](img/world-high-before.png) | ![max altitude after](img/world-high-after.png) |
 
 Poses `coast` and `max` in `tools/shots.gd`. Both columns use the committed sim (51cdbec). "Before" is the committed renderer.
+
+## Buildings in depth (World's B1)
+
+World's B1 (`docs/world/buildings-in-depth.md`, in the sim since 3612ebc) gives every building a depth `z`, a depth size `d` and a row: 0 in front of the fighter plane (about +750 at world scale), then 1, 2 and 3 behind it (about -600, -1,650 and -2,800). The planet view draws them there:
+- **Rows.** Each box spans its own `z ± d/2` and stands on the lowest ground under its footprint (a 3×3 sample of the ground field). Its civilians stand on its street side, `CROWD_GAP` out from the face and up to `CROWD_DEEP` more: behind a row-0 building (towards the plane), in front of the others.
+- **Row 0 fades.** Row 0 stands between the camera and the fight. Its buildings are their own MultiMesh with `front.gdshader`. While one covers a fighter on a pane's screen it fades by dither to `FRONT_FADE` (0.35), easing over 0.15 s. The fade is per pane, from that pane's camera.
+- **The implode ripple.** A `building_fall` in mode `implode` carries a `delay` (the distance from the blast over World's `IMPLODE_SPEED`, at most 1 s). The building stands until then and sinks straight down into its footprint over `IMPLODE_S` (0.5 s, easing in). A fold (`b = -1`, the falls past World's event cap) gives its buildings the same delay by their own distance. VFX draws the dust skirt.
+- **Rubble heaps.** The sim adds each fallen building's heap to the ground on the fighter plane (`S.rubble`, part of `S.deform`). The ground field carries it in depth as a plateau from the plane back to the fallen building's far face (row 0: forward to its near face), easing off over `RUBBLE_EDGE` beyond (three more rows in the ground texture). The terrain shader tints it `RUBBLE` in a blocky noise, full at `RUBBLE_TINT_H` of heap. The plane's row still reads `S.deform` bit for bit (ground check).
+- **One collapse, not two.** While VFX's destruction is on (Shift+F6), the particles skip a fall's dust and debris, which VFX draws instead (`SimHost._without_fall_debris`, falls in a fold included). While its embers are on (Ctrl+F6), ImpactFx drops its scorch sparks and keeps the groove's glow.
+
+A blast in a city block: the row-0 house in front of the fighter plane stands until its delay, sinks into its footprint and leaves its heap at the crater's front edge. Before, then 0, 0.25, 0.5, 0.8, 1.4 and 2.5 s after: ![implode](img/b1-implode.png)
+
+A wider blast (`--x=2900 --r=4000`): the row-0 house on the right fades while it covers P2, then sinks with the ripple. Before, then 0, 0.25 and 0.5 s after: ![row 0](img/b1-front.png)
+
+Both come from `godot --path . --script res://render/tools/b1_strip.gd -- --out=DIR` (`--x`, `--r` and `--row` pick the blast), which poses the fighters and steps time by hand, sending each tick's events to the planet view and VFX as in the game. VFX's destruction is off in both, so the dust is the particles'.
+
+Cost on desktop (seed 4, 4,800 frames, split on, against HEAD 254ec59): frame p50 1.58 → 1.72 ms, p99 3.65 → 4.0 ms. Turning VFX's cracks and embers on by default adds nothing measurable (1.73 against 1.73 ms p50).
 
 ## Craters, scorch and water
 
@@ -330,7 +344,7 @@ All commands run from the repo root; each exits 0 on success.
 | Seam sweep | `godot --headless --path . --script res://render/tools/seam_sweep.gd -- --size=1280x720` | passed at 1280×720, 2560×720 and 720×1280 |
 | Determinism | `godot --headless --path . --script res://render/tools/determinism.gd` | passed (seeds 12345 and 4) |
 | Ground check | `godot --headless --path . --script res://render/tools/ground_check.gd` | passed (seeds 4, 12345, 7) |
-| Flight check | `godot --headless --path . --script res://render/tools/flight_check.gd` | passed (seeds 4, 12345, 7; with the evacuation mock) |
+| Flight check | `godot --headless --path . --script res://render/tools/flight_check.gd` | passed (seeds 4, 12345, 7; World's evacuate events) |
 | Flash check | `godot --headless --path . --script res://render/tools/flash_check.gd` | 185 checks on data version 3: all of the code's pass (the hash is the same on and off at 12345 and 4); 10 keep-out cases fail on the data (see Head flashes) |
 | Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (16 checks; hash with and without a compositor) |
 | Cue check | `godot --headless --path . --script res://render/tools/cue_check.gd -- --profile=spaced` | passed (46 checks over two full matches; hash with and without the poses) |
@@ -418,8 +432,8 @@ For the web: export with a Web preset (single-threaded) and pass `--fixed-fps 60
 - The prototype's palette and the fx event colours (CSS hex strings) are used as they are.
 - The camera is the reference camera. Camera will own framing. When the fighters' separation passes half the planet, it re-targets the other arc and pans across (up to about 80 to 180 px per frame, depending on the window size). That is reference-camera behaviour, not a render pop.
 - The HUD is a debug HUD drawn with the fallback font. UI will own the real one.
-- No window lights on towers, no damage state on towers beyond height and colour, no burning trees, no debris volume.
-- Particles follow the reference consumer (`sim/core/view/fx.gd`) exactly, one quad each. VFX will own the real effects.
+- No window lights on towers, no damage state on towers beyond height and colour, no burning trees. Rubble is a smooth heap with a flat tint, not chunks.
+- Particles follow the reference consumer (`sim/core/view/fx.gd`), one quad each, except that they skip a fall's dust and debris while VFX's destruction is on. VFX will own the real effects.
 
 ## Next
 

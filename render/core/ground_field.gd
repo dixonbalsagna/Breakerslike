@@ -4,16 +4,21 @@ extends RefCounted
 ## S.deform at the fighter plane); the band also has depth, where impacts must read as round bowls and beam trails as
 ## grooves. The band's height at world x and depth z is
 ##     base(x) + sum over nearby craters of WorldCrater.profile(sqrt(dx^2 + z^2) / r) + furrow(dx, z)
-##            + G(x) * groove(z)
+##            + (G(x) - R(x)) * groove(z) + R(x) * heap(z)
 ## where G(x) = deform(x) - (the same crater sum at z = 0) is the residual: scorch grooves (which have no records),
-## dents of records the sim dropped, and clipping. At z = 0 the formula gives deform(x) back, and the mesh row that lies
-## exactly on the fighter plane reads S.deform itself, so the slice the fighters stand on is the sim's, bit for bit.
+## dents of records the sim dropped, and clipping. R(x) is the rubble heap (S.rubble, part of S.deform): the sim's heap
+## lies on the fighter plane, and in depth it runs as a plateau from there back to the fallen building's far face (row
+## 0: forward to its near face), easing off over RenderLook.RUBBLE_EDGE beyond, so a levelled building's rubble fills
+## its footprint and the street in front of it. heap(0) = groove(0) = 1, so at z = 0 the formula gives deform(x) back,
+## and the mesh row that lies exactly on the fighter plane reads S.deform itself, so the slice the fighters stand on
+## is the sim's, bit for bit.
 ##
 ## Data (one RF texture, a column per terrain column): row 0 base, 1 deform, 2 G, 3 scorch, 4 water, 5 heat (the
 ## render-side glow of fresh grooves), 6 to 11 up to K crater indices overlapping the column (-1 for none), 12 and 13
 ## the far terrain's relief amplitude and base multiplier (static, per biome, smoothed across borders), 14 the
 ## column's biome (an index into BIOME_ORDER), 15 pavement cracks (S.crack), 16 the half width across the band of any
-## knockback-slide trench through the column (from S.slides). Each data row of NC values is laid out as RPL texture
+## knockback-slide trench through the column (from S.slides), 17 the rubble height (S.rubble), 18 and 19 the depth
+## range the column's heap spans (from the fallen buildings' z and d). Each data row of NC values is laid out as RPL texture
 ## rows of TW texels (TW at most 2,048, WebGL2's guaranteed minimum), so the bytes are the same either way. Crater
 ## records go to an RGBAF texture, a column per S.craters entry: (x, r, depth, rim) and (skid, sdepth, energy, t).
 ## Everything is rebuilt from state (S.craters, S.deform, S.scorch, S.water), incrementally when the crater list
@@ -33,7 +38,10 @@ const ROW_FAR_MUL := ROW_FAR_AMP + 1
 const ROW_BIOME := ROW_FAR_MUL + 1
 const ROW_CRACK := ROW_BIOME + 1
 const ROW_TRENCH := ROW_CRACK + 1
-const ROWS := ROW_TRENCH + 1
+const ROW_RUBBLE := ROW_TRENCH + 1
+const ROW_RUB_LO := ROW_RUBBLE + 1
+const ROW_RUB_HI := ROW_RUB_LO + 1
+const ROWS := ROW_RUB_HI + 1
 const TW_MAX := 2048
 ## Biome index order for the biome row and the shaders' biome_colors array.
 const BIOME_ORDER: Array = ["ocean", "plains", "city", "village", "forest", "desert", "mountains"]
@@ -52,6 +60,9 @@ var full_rebuilds: int = 0           # for tests
 var _heat := PackedFloat32Array()
 var _far := PackedFloat32Array()     # rows 12 to 14
 var trench := PackedFloat32Array()   # row 16
+var rub_lo := PackedFloat32Array()   # rows 18 and 19: the depth range of the heap in each column
+var rub_hi := PackedFloat32Array()
+var _rubble_seen := PackedFloat32Array()
 var rpl: int = 1                     # texture rows per data row
 var tw: int = 1                      # texture width
 var _nsl: int = 0
@@ -73,6 +84,8 @@ func _init() -> void:
 		rpl += 1
 	tw = nc / rpl
 	trench.resize(nc)
+	rub_lo.resize(nc)
+	rub_hi.resize(nc)
 	g.resize(nc)
 	lists.resize(nc * K)
 	dirty.resize(nc)
@@ -105,6 +118,7 @@ func rebuild(S: SimState) -> void:
 	_nsl = S.slides.size()
 	_sl_first = S.slides[0] if _nsl > 0 else null
 	_sl_last = S.slides[_nsl - 1] if _nsl > 0 else null
+	_rubble_depths(S)
 	_deform_seen = S.deform.duplicate()
 	_scorch_seen = S.scorch.duplicate()
 	_water_seen = S.water.duplicate()
@@ -143,6 +157,9 @@ func update(S: SimState, heat: PackedFloat32Array, heat_changed: bool) -> bool:
 			_heat = heat
 			rebuild(S)
 			return true
+	if S.rubble != _rubble_seen:
+		_rubble_depths(S)
+		cchg = true
 	if cchg or S.deform != _deform_seen:
 		var nc: int = SimConst.NC
 		for i in range(nc):
@@ -178,7 +195,41 @@ func offset_at(S: SimState, i: int, xw: float, z: float) -> float:
 		s += WorldCrater.profile(sqrt(dx * dx + z * z) / c.r, c.depth, c.rim) + furrow(dx, z, c.r, c.skid, c.sdepth)
 	var w: float = groove_half(S.scorch[i], trench[i])
 	var t: float = clampf(1.0 - z * z / (w * w), 0.0, 1.0)
-	return s + g[i] * t * t
+	var r: float = S.rubble[i] if i < S.rubble.size() else 0.0
+	return s + (g[i] - r) * t * t + r * heap(z, rub_lo[i], rub_hi[i])
+
+
+## The heap's share in depth (1 on its range, easing to 0 over RenderLook.RUBBLE_EDGE beyond): the CPU twin of
+## heap_at() in render/shaders/ground.gdshaderinc.
+static func heap(z: float, lo: float, hi: float) -> float:
+	var out: float = maxf(lo - z, z - hi)
+	if out <= 0.0:
+		return 1.0
+	var u: float = clampf(out / RenderLook.RUBBLE_EDGE, 0.0, 1.0)
+	return 1.0 - u * u * (3.0 - 2.0 * u)
+
+
+## The depth range each column's heap spans: from the fighter plane (where the sim puts it) back to the far face of
+## the fallen building it came from (row 0: forward to its near face). Columns with no fallen building over them keep
+## [0, 0] (the heap is only the plane's ridge).
+func _rubble_depths(S: SimState) -> void:
+	rub_lo.fill(0.0)
+	rub_hi.fill(0.0)
+	_rubble_seen = S.rubble.duplicate()
+	var nc: int = SimConst.NC
+	for b in S.buildings:
+		if b.alive:
+			continue
+		var half: float = WorldStructures.RUBBLE_SPILL * b.w
+		var c0: int = int(floor((b.x - half) / SimConst.COL))
+		var c1: int = int(ceil((b.x + half) / SimConst.COL))
+		for c in range(c0, c1 + 1):
+			var i: int = posmod(c, nc)
+			if S.rubble[i] <= 0.0:
+				continue
+			rub_lo[i] = minf(rub_lo[i], b.z - b.d * 0.5)
+			rub_hi[i] = maxf(rub_hi[i], b.z + b.d * 0.5)
+			dirty[i] = 1
 
 
 ## Ground height at world x and depth z, as drawn: groundY on the fighter plane, the bowl field elsewhere (linear
@@ -290,7 +341,7 @@ func _g_col(S: SimState, i: int) -> void:
 
 
 func _upload(S: SimState, craters_changed: bool) -> void:
-	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array() + _far.to_byte_array() + S.crack.to_byte_array() + trench.to_byte_array()
+	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array() + _far.to_byte_array() + S.crack.to_byte_array() + trench.to_byte_array() + S.rubble.to_byte_array() + rub_lo.to_byte_array() + rub_hi.to_byte_array()
 	img.set_data(tw, ROWS * rpl, false, Image.FORMAT_RF, bytes)
 	tex.update(img)
 	if craters_changed:

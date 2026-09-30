@@ -2,7 +2,7 @@
 // render/core/ground_field.gd (whose offset_at() is the CPU twin of ground_offset() below). The crater profile is
 // WorldCrater.profile from sim/world/crater.gd. Every size is a uniform set from the sim's constants (WorldCrater)
 // or RenderLook by planet_view.gd, so nothing here assumes today's world scale.
-uniform sampler2D heights : filter_nearest, repeat_disable;   // RF: 17 data rows of NC, each as rpl texture rows of tw
+uniform sampler2D heights : filter_nearest, repeat_disable;   // RF: 20 data rows of NC, each as rpl texture rows of tw
 uniform sampler2D craters : filter_nearest, repeat_disable;   // RGBAF, 400 x 2
 uniform int nc = 1200;
 uniform int tw = 1200;
@@ -26,6 +26,7 @@ uniform float furrow_wr = 0.3;       // RenderLook.FURROW_W_R and FURROW_W_MIN
 uniform float furrow_wmin = 20.0;
 uniform float z_band_back = -520.0;  // RenderLook: rows behind this are the far terrain ...
 uniform float far_blend = 900.0;     // ... which blends in from the band's heights over this depth
+uniform float rubble_edge = 240.0;   // RenderLook.RUBBLE_EDGE: a heap eases off over this depth past its range
 uniform float meander_amp = 600.0;   // RenderLook.MEANDER: how far (in x) the far land's biomes wander with depth
 uniform vec4 biome_colors[7] : source_color;   // RenderLook.BIOME in ground_field.gd's BIOME_ORDER
 uniform vec3 fore_cam = vec3(0.0, 0.0, 3000.0);  // the camera's world position, every frame (planet_view.gd)
@@ -82,6 +83,23 @@ float groove_half_at(int i) {
 	return w > 0.0 ? w : spread_w;
 }
 
+// A heap's share in depth and its slope: 1 on [lo, hi], easing to 0 over rubble_edge beyond (ground_field.gd heap()).
+vec2 heap_at(float z, float lo, float hi) {
+	float out_d = max(lo - z, z - hi);
+	if (out_d <= 0.0) {
+		return vec2(1.0, 0.0);
+	}
+	float u = clamp(out_d / rubble_edge, 0.0, 1.0);
+	float du = u < 1.0 ? 6.0 * u * (1.0 - u) / rubble_edge : 0.0;
+	return vec2(1.0 - u * u * (3.0 - 2.0 * u), z > hi ? -du : du);
+}
+
+// The heap's height at column i, depth z (for the rubble tint).
+float rubble_at(int i, float z) {
+	float r = gf(i, 17);
+	return r > 0.0 ? r * heap_at(z, gf(i, 18), gf(i, 19)).x : 0.0;
+}
+
 // (height offset added to base, d/dx, d/dz) at column i, world x xw, depth z; the height is not used on the
 // fighter-plane row, which reads the sim's deform directly. The gradient gives the terrain smooth normals.
 vec3 ground_offset3(int i, float xw, float z) {
@@ -101,16 +119,25 @@ vec3 ground_offset3(int i, float xw, float z) {
 		float k2 = rho > 0.0001 ? p.y / (a.y * rho) : 0.0;
 		s += vec3(p.x, k2 * dx, k2 * z) + furrow(dx, z, a.y, b.x, b.y);
 	}
+	// The residual less the heap, spread across the band; the heap as its own plateau in depth (ground_field.gd).
+	int il = (i + nc - 1) % nc;
+	int ir = (i + 1) % nc;
+	float r = gf(i, 17);
 	float w = groove_half_at(i);
 	float t = 1.0 - z * z / (w * w);
 	if (t > 0.0) {
-		float gl = gf((i + nc - 1) % nc, 2);
-		float gr = gf((i + 1) % nc, 2);
-		float g = gf(i, 2);
+		float gl = gf(il, 2) - gf(il, 17);
+		float gr = gf(ir, 2) - gf(ir, 17);
+		float g = gf(i, 2) - r;
 		s += vec3(g * t * t, (gr - gl) / (2.0 * col_w) * t * t, -4.0 * g * t * z / (w * w));
+	}
+	if (r > 0.0) {
+		vec2 h = heap_at(z, gf(i, 18), gf(i, 19));
+		s += vec3(r * h.x, (gf(ir, 17) - gf(il, 17)) / (2.0 * col_w) * h.x, r * h.y);
 	}
 	return s;
 }
+
 
 float ground_offset(int i, float xw, float z) {
 	return ground_offset3(i, xw, z).x;

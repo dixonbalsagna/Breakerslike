@@ -19,6 +19,7 @@ extends Node3D
 const TERRAIN_SHADER: Shader = preload("res://render/shaders/terrain.gdshader")
 const WATER_SHADER: Shader = preload("res://render/shaders/water.gdshader")
 const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
+const FRONT_SHADER: Shader = preload("res://render/shaders/front.gdshader")
 
 var ground := GroundField.new()
 var mats: RenderMats = RenderMats.new()   # this pane's material state (PaneWorld sets it)
@@ -32,6 +33,16 @@ var _bld: MultiMesh
 var _roof: MultiMesh
 var _tree: MultiMesh
 var _crowd: MultiMesh
+var _bld0: MultiMesh                 # row 0, in front of the fighter plane: its own MultiMesh, faded per pane
+var _roof0: MultiMesh
+var _row0 := PackedInt32Array()      # per building: its index in _bld0, or -1
+var _row0_b := PackedInt32Array()    # per row-0 index: the building
+var _front_mat: ShaderMaterial       # this pane's material for row 0 (its fade)
+var _fade := PackedFloat32Array()    # this pane's row-0 fade, per row-0 index (1 solid)
+var _fade_t: float = -1.0
+var _foot: Array = []                # per building: the lowest and highest ground under its footprint (shared by panes)
+var _falls: Dictionary = {}          # building -> [sim time its sink starts, standing height]: implodes in progress
+var _fold: Array = []                # [cx, sim time]: a district of implodes folded into one event this tick
 var _copies: Array = []
 var _bld_seen: Array = []          # per building: [curH, alive, popAlive]
 var _tree_seen: Array = []         # per tree: alive
@@ -41,9 +52,6 @@ var _crowd_x := PackedFloat64Array()   # world x per person
 var _crowd_z := PackedFloat64Array()
 var _shown := PackedInt32Array()       # per building: figures standing at home, -1 before the first placement
 var flight := CrowdFlight.new()
-## Per building, people the evacuation mock has taken out of a building on its own (render/tools/evac_mock.gd, main's
-## --mock-evac): the crowd shows popAlive minus these. Empty in the game; goes when World's evacuation lands.
-var crowd_extra: Array = []
 var _blows: Array = []                 # this frame's blows (x): craters, scorch, building damage
 var _startled: Dictionary = {}         # crowd instance -> sim time it calms down (RenderLook.STARTLE_*)
 var _calm_at: float = INF              # the earliest of those
@@ -85,6 +93,17 @@ func build(S: SimState) -> void:
 		_roof = source._roof
 		_tree = source._tree
 		_crowd = source._crowd
+		_bld0 = source._bld0
+		_roof0 = source._roof0
+		_row0_b = source._row0_b
+		_foot = source._foot
+		_falls = source._falls
+	if _front_mat == null:
+		_front_mat = ShaderMaterial.new()
+		_front_mat.shader = FRONT_SHADER
+	_fade.resize(64)
+	_fade.fill(1.0)
+	_front_mat.set_shader_parameter("fade", _fade)
 	for k in range(-RenderLook.PLANET_COPIES, RenderLook.PLANET_COPIES + 1):
 		var n := Node3D.new()
 		n.name = "Copy%d" % (k + RenderLook.PLANET_COPIES)
@@ -96,6 +115,8 @@ func build(S: SimState) -> void:
 		if absi(k) <= 1:
 			_mm_child(n, "Buildings", _bld)
 			_mm_child(n, "Roofs", _roof)
+			_mm_child(n, "Buildings0", _bld0, _front_mat)
+			_mm_child(n, "Roofs0", _roof0, _front_mat)
 			_mm_child(n, "Trees", _tree)
 			_mm_child(n, "Crowd", _crowd, _crowd_mat)
 		_copies.append(n)
@@ -117,12 +138,18 @@ func update(S: SimState, cam_x: float, heat: PackedFloat32Array = PackedFloat32A
 	_startle(S)
 
 
-## One tick's fx events, as the host drains them: the evacuate events start the flight, and blows startle the crowd.
-func consume(events: Array) -> void:
+## One tick's fx events at sim time T, as the host drains them: the evacuate events start the flight, blows startle
+## the crowd, and implodes start their buildings' sink at the ripple's delay.
+func consume(events: Array, T: float = 0.0) -> void:
 	flight.consume(events)
 	for e in events:
 		if e.type == "crater" or e.type == "scorch" or e.type == "debris":
 			_blows.append(e.x)
+		elif e.type == "building_fall" and String(e.mode) == "implode":
+			if int(e.b) >= 0:
+				_falls[int(e.b)] = [T + float(e.delay), -1.0]
+			else:
+				_fold = [float(e.cx), T]
 
 
 ## Survivors standing near this frame's blows are startled for STARTLE_S; the calm ones go back to idle. A startled
@@ -194,10 +221,19 @@ func refresh(S: SimState, force: bool) -> void:
 		var h: float = WorldStructures.curH(b)
 		var seen: Array = _bld_seen[bi]
 		var moved: bool = dchg and (force or dirty[_col(b.x)] == 1)
-		var pa: float = b.popAlive - (float(crowd_extra[bi]) if bi < crowd_extra.size() else 0.0)
-		if moved or h != seen[0] or b.alive != seen[1] or pa != seen[2]:
+		var pa: float = b.popAlive - float(flight.incoming[bi])
+		if b.alive != seen[1] and not b.alive and seen[1] == true:
+			# Levelled: an implode sinks from the height it last stood at (a folded one from its distance to the blast).
+			if _falls.has(bi):
+				_falls[bi][1] = seen[0]
+			elif not _fold.is_empty() and absf(float(_fold[1]) - S.T) < 0.5:
+				var delay: float = clampf(absf(SimWrap.sdx(float(_fold[0]), b.x)) / WorldStructures.IMPLODE_SPEED, 0.0, WorldStructures.IMPLODE_MAX_DELAY)
+				_falls[bi] = [float(_fold[1]) + delay, seen[0]]
+		if moved or force:
+			_foot[bi] = _footing(S, b)
+		if moved or h != seen[0] or b.alive != seen[1] or pa != seen[2] or _falls.has(bi):
 			_set_building(S, bi, b, h, pa, moved or pa != seen[2])
-			_bld_seen[bi] = [h, b.alive, pa]
+			_bld_seen[bi] = [h if b.alive else seen[0], b.alive, pa]
 	for ti in range(S.trees.size()):
 		var t = S.trees[ti]
 		if (dchg and (force or dirty[_col(t.x)] == 1)) or t.alive != _tree_seen[ti]:
@@ -217,22 +253,60 @@ static func _col(x: float) -> int:
 
 
 ## pa: the people the building's crowd shows (popAlive, less the mock's own evacuations).
+## A building's depth: [centre z, footprint depth] from the sim (B1), or the old render-side place if it has none.
+static func _depth(b) -> Vector2:
+	if b.d > 0.0:
+		return Vector2(b.z, b.d)
+	var d: float = b.w * (0.8 if b.kind == "tower" else 0.9)
+	return Vector2(RenderLook.Z_BUILDING_FRONT - d * 0.5, d)
+
+
+## The lowest and highest ground under a building's footprint (its corners, edges and centre, as drawn).
+func _footing(S: SimState, b) -> Vector2:
+	var zd: Vector2 = _depth(b)
+	var lo: float = INF
+	var hi: float = -INF
+	for x in [b.x - b.w * 0.5, b.x, b.x + b.w * 0.5]:
+		for z in [zd.x + zd.y * 0.5, zd.x, zd.x - zd.y * 0.5]:
+			var g: float = ground.ground_at(S, x, z)
+			lo = minf(lo, g)
+			hi = maxf(hi, g)
+	return Vector2(lo, hi)
+
+
 func _set_building(S: SimState, bi: int, b, h: float, pa: float, crowd: bool) -> void:
 	var tower: bool = b.kind == "tower"
-	var d: float = b.w * (0.8 if tower else 0.9)
-	var zc: float = RenderLook.Z_BUILDING_FRONT - d * 0.5
-	var g: float = minf(ground.ground_at(S, b.x, zc + d * 0.5), ground.ground_at(S, b.x, zc - d * 0.5))
-	_bld.set_instance_transform(bi, Transform3D(Basis.from_scale(Vector3(b.w, h, d)), Vector3(b.x, g + h * 0.5, zc)))
-	var c: String
-	if tower:
-		c = RenderLook.TOWER if b.alive else RenderLook.TOWER_DEAD
+	var zd: Vector2 = _depth(b)
+	var zc: float = zd.x
+	var d: float = zd.y
+	var foot: Vector2 = _foot[bi]
+	var standing: bool = b.alive
+	var sink: float = 0.0
+	if _falls.has(bi):
+		var f: Array = _falls[bi]
+		var u: float = (S.T - float(f[0])) / RenderLook.IMPLODE_S
+		if u >= 1.0 or float(f[1]) < 0.0:
+			_falls.erase(bi)
+		else:
+			standing = true
+			h = float(f[1])
+			var e: float = clampf(u, 0.0, 1.0)
+			sink = h * e * e
+	var mm: MultiMesh = _bld0 if _row0[bi] >= 0 else _bld
+	var roof: MultiMesh = _roof0 if _row0[bi] >= 0 else _roof
+	var k: int = _row0[bi] if _row0[bi] >= 0 else bi
+	if standing:
+		# On the highest ground under it, the footing extended down to the lowest; sinking into the ground as it implodes.
+		var top: float = foot.y + h - sink
+		var bottom: float = foot.x - sink
+		mm.set_instance_transform(k, Transform3D(Basis.from_scale(Vector3(b.w, top - bottom, d)), Vector3(b.x, (top + bottom) * 0.5, zc)))
+		mm.set_instance_color(k, RenderLook.col(RenderLook.TOWER if tower else RenderLook.HOUSE))
 	else:
-		c = RenderLook.HOUSE if b.alive else RenderLook.HOUSE_DEAD
-	_bld.set_instance_color(bi, RenderLook.col(c))
-	if not tower and b.alive:
-		_roof.set_instance_transform(bi, Transform3D(Basis.from_scale(Vector3(b.w * 1.2, RenderLook.ROOF_H, d * 1.1)), Vector3(b.x, g + h + RenderLook.ROOF_H * 0.5, zc)))
+		mm.set_instance_transform(k, _hidden(b.x))
+	if not tower and standing:
+		roof.set_instance_transform(k, Transform3D(Basis.from_scale(Vector3(b.w * 1.2, RenderLook.ROOF_H, d * 1.1)), Vector3(b.x, foot.y + h - sink + RenderLook.ROOF_H * 0.5, zc)))
 	else:
-		_roof.set_instance_transform(bi, _hidden(b.x))
+		roof.set_instance_transform(k, _hidden(b.x))
 	if crowd:
 		var first: int = _crowd_first[bi]
 		var n: int = _crowd_first[bi + 1] - first
@@ -310,6 +384,7 @@ func _make_materials() -> void:
 		m.set_shader_parameter("fog_near", RenderLook.FOG_NEAR)
 		m.set_shader_parameter("fog_far", RenderLook.FOG_FAR)
 		m.set_shader_parameter("fore_drop", RenderLook.FORE_DROP)
+		m.set_shader_parameter("rubble_edge", RenderLook.RUBBLE_EDGE)
 		mats.track(m)
 	_terrain_mat.set_shader_parameter("sea_floor", RenderLook.col(RenderLook.SEA_FLOOR))
 	_terrain_mat.set_shader_parameter("crater", RenderLook.col(RenderLook.CRATER))
@@ -323,6 +398,8 @@ func _make_materials() -> void:
 	_terrain_mat.set_shader_parameter("snow_from", RenderLook.SNOW_FROM)
 	_terrain_mat.set_shader_parameter("snow_full", RenderLook.SNOW_FULL)
 	_terrain_mat.set_shader_parameter("cracked", RenderLook.col(RenderLook.CRACKED))
+	_terrain_mat.set_shader_parameter("rubble", RenderLook.col(RenderLook.RUBBLE))
+	_terrain_mat.set_shader_parameter("rubble_tint_h", RenderLook.RUBBLE_TINT_H)
 	_water_mat.set_shader_parameter("water", RenderLook.WATER)
 	_water_mat.set_shader_parameter("surface", RenderLook.WATER_SURFACE)
 	_water_mat.set_shader_parameter("fall_body", RenderLook.WATER_FALL_BODY)
@@ -487,15 +564,57 @@ static func _mesh(v: PackedVector3Array, uv: PackedVector2Array, uv2: PackedVect
 
 
 ## custom: per-instance custom data, with instance colours too only if colors (else colours alone).
-static func _multimesh(mesh: Mesh, count: int, y1: float, custom: bool = false, colors: bool = false) -> MultiMesh:
+## z0, z1: the depth the instances span (default: the trees' and old props' band).
+static func _multimesh(mesh: Mesh, count: int, y1: float, custom: bool = false, colors: bool = false, z0: float = RenderLook.Z_TREE_MIN * 1.5, z1: float = 100.0) -> MultiMesh:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = colors or not custom
 	mm.use_custom_data = custom
 	mm.mesh = mesh
 	mm.instance_count = count
-	mm.custom_aabb = _planet_aabb(-1000.0 * RenderLook.WS, y1 * RenderLook.WS, RenderLook.Z_TREE_MIN * 1.5, 100.0)
+	mm.custom_aabb = _planet_aabb(-1000.0 * RenderLook.WS, y1 * RenderLook.WS, z0, z1)
 	return mm
+
+
+## Per frame, per pane: fade each row-0 building that covers a fighter on this pane's screen. cam: the pane's camera;
+## cam_x its wrapped world x; rects: the fighters' screen rectangles.
+func fade_front(S: SimState, cam: Camera3D, cam_x: float, rects: Array) -> void:
+	var n: int = mini(_row0_b.size(), 64)
+	if n == 0:
+		return
+	var step: float = clampf(S.T - _fade_t, 0.0, 0.1) / RenderLook.FRONT_FADE_S if _fade_t >= 0.0 else 1.0
+	_fade_t = S.T
+	var changed: bool = false
+	for j in range(n):
+		var bi: int = _row0_b[j]
+		var b = S.buildings[bi]
+		var zd: Vector2 = _depth(b)
+		var foot: Vector2 = _foot[bi]
+		var cover: bool = false
+		if b.alive or _falls.has(bi):
+			var bx: float = SimWrap.sdx(cam_x, b.x)
+			var box := Rect2()
+			var first: bool = true
+			for cx in [bx - b.w * 0.5, bx + b.w * 0.5]:
+				for cy in [foot.x, foot.y + WorldStructures.curH(b)]:
+					for cz in [zd.x - zd.y * 0.5, zd.x + zd.y * 0.5]:
+						var p := Vector3(cx, cy, cz)
+						if cam.is_position_behind(p):
+							continue
+						var s: Vector2 = cam.unproject_position(p)
+						box = Rect2(s, Vector2.ZERO) if first else box.expand(s)
+						first = false
+			if not first:
+				for r in rects:
+					if box.intersects(r):
+						cover = true
+		var want: float = RenderLook.FRONT_FADE if cover else 1.0
+		var v: float = move_toward(_fade[j], want, step * (1.0 - RenderLook.FRONT_FADE))
+		if v != _fade[j]:
+			_fade[j] = v
+			changed = true
+	if changed:
+		_front_mat.set_shader_parameter("fade", _fade)
 
 
 ## Buildings, roofs, trees and the crowd. Placement that the sim doesn't define (tree depth, where each civilian
@@ -510,13 +629,42 @@ func _make_props(S: SimState) -> void:
 	cone.height = 1.0
 	cone.radial_segments = 6
 	cone.rings = 0
-	_bld = _multimesh(box, nb, 1400.0)
-	_roof = _multimesh(prism, nb, 1400.0)
+	var z0: float = 0.0
+	var z1: float = 0.0
+	_row0.resize(nb)
+	_row0.fill(-1)
+	_row0_b.clear()
+	for bi in range(nb):
+		var b = S.buildings[bi]
+		var zd: Vector2 = _depth(b)
+		z0 = minf(z0, zd.x - zd.y)
+		z1 = maxf(z1, zd.x + zd.y)
+		if int(b.row) == 0 and b.d > 0.0:
+			_row0[bi] = _row0_b.size()
+			_row0_b.append(bi)
+	z0 -= RenderLook.CROWD_GAP + RenderLook.CROWD_DEEP + 200.0
+	z1 += RenderLook.CROWD_GAP + RenderLook.CROWD_DEEP + 200.0
+	_bld = _multimesh(box, nb, 1400.0, false, false, z0, z1)
+	_roof = _multimesh(prism, nb, 1400.0, false, false, z0, z1)
+	_bld0 = _multimesh(box, maxi(1, _row0_b.size()), 1400.0, false, false, z0, z1)
+	_roof0 = _multimesh(prism, maxi(1, _row0_b.size()), 1400.0, false, false, z0, z1)
 	_tree = _multimesh(cone, S.trees.size(), 400.0)
 	_bld_seen.clear()
+	_foot.resize(nb)
+	_foot.fill(Vector2.ZERO)
+	_falls.clear()
+	_fold = []
 	for bi in range(nb):
 		_bld_seen.append([-1.0, false, -1.0])
 		_roof.set_instance_color(bi, RenderLook.col(RenderLook.ROOF))
+		if _row0[bi] >= 0:
+			_bld.set_instance_transform(bi, _hidden(S.buildings[bi].x))
+			_roof.set_instance_transform(bi, _hidden(S.buildings[bi].x))
+	for j in range(_row0_b.size()):
+		_roof0.set_instance_color(j, RenderLook.col(RenderLook.ROOF))
+	if _row0_b.is_empty():
+		_bld0.set_instance_transform(0, _hidden(0.0))
+		_roof0.set_instance_transform(0, _hidden(0.0))
 	var tr := SimRng.new(SimRng.deriveSeed(4242, "render.trees"))
 	_tree_seen.clear()
 	_tree_z.resize(S.trees.size())
@@ -532,13 +680,18 @@ func _make_props(S: SimState) -> void:
 	for bi in range(nb):
 		_crowd_first[bi] = _crowd_x.size()
 		var b = S.buildings[bi]
+		# On the building's street side: in front of its face for rows 1 to 3, between row 0 and the fighter plane.
+		var zd: Vector2 = _depth(b)
+		var front: bool = b.d > 0.0 and int(b.row) == 0
+		var face: float = zd.x - zd.y * 0.5 if front else zd.x + zd.y * 0.5
 		for j in range(int(b.pop)):
 			_crowd_x.append(SimWrap.wrap(b.x + (cr.next() - 0.5) * (b.w + RenderLook.CROWD_SPREAD)))
-			_crowd_z.append(cr.range_(RenderLook.Z_CROWD_MIN, RenderLook.Z_CROWD_MAX))
+			var out: float = RenderLook.CROWD_GAP + cr.next() * RenderLook.CROWD_DEEP
+			_crowd_z.append(face - out if front else face + out)
 			var shirt: Color = RenderLook.col(RenderLook.CROWD[int(cr.next() * RenderLook.CROWD.size())]).srgb_to_linear()
 			looks.append(Color(shirt.r, shirt.g, shirt.b, cr.next()))
 	_crowd_first[nb] = _crowd_x.size()
-	_crowd = _multimesh(CrowdMesh.build(), _crowd_x.size(), 80.0, true, true)
+	_crowd = _multimesh(CrowdMesh.build(), _crowd_x.size(), 80.0, true, true, z0, z1)
 	for ci in range(looks.size()):
 		_crowd.set_instance_custom_data(ci, looks[ci])
 		_crowd.set_instance_color(ci, Color.WHITE)

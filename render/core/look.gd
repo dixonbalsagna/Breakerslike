@@ -35,13 +35,21 @@ const ROW_STEP0: float = 16.0
 const ROW_GROWTH: float = 0.15
 const STRIDES: Array = [[400.0, 1], [2000.0, 2], [-Z_TERRAIN_BACK, 4], [1.0e12, 8]]
 const CHUNK_COLS: int = 320              # a multiple of the largest stride
-const Z_BUILDING_FRONT: float = -140.0   # buildings stand behind the fighter plane, the crowd between
+const Z_BUILDING_FRONT: float = -140.0   # a building with no depth from the sim stands here (B1 gives z and d)
+## Buildings in depth (World's B1, docs/world/buildings-in-depth.md): each stands at its sim z with footprint depth d,
+## on the highest ground under its footprint, its footing extended down to the lowest. An implode sinks it straight
+## down over IMPLODE_S from the ripple's delay (VFX draws the dust skirt). Row 0 stands in front of the fighter plane:
+## while one covers a fighter on screen it fades to FRONT_FADE, easing over FRONT_FADE_S. Civilians stand on their
+## building's street side, CROWD_GAP units out from its face and up to CROWD_DEEP more.
+const IMPLODE_S: float = 0.5
+const FRONT_FADE: float = 0.35
+const FRONT_FADE_S: float = 0.15
+const CROWD_GAP: float = 20.0
+const CROWD_DEEP: float = 90.0
 const Z_TREE_MIN: float = -120.0 * WS
 const Z_TREE_MAX: float = -30.0 * WS
 const TREE_W: float = 26.0 * WS
 const ROOF_H: float = 16.0 * WS
-const Z_CROWD_MIN: float = -125.0       # life-size people stand behind the fighters' depth (about +-30 turned)
-const Z_CROWD_MAX: float = -45.0
 const Z_PARTICLES: float = 10.0
 const Z_BEAMS: float = 6.0
 ## The ground continues behind the crater rows to the horizon as one surface (no separate backdrop): the far terrain
@@ -92,6 +100,9 @@ const HEAT_HI := "#ffd27a"               # a fresh groove from a strong beam
 const FURROW_W_R: float = 0.3            # a furrow's half width across the band, per unit of its crater's r ...
 const FURROW_W_MIN: float = 20.0 * WS    # ... and at least this
 const GROUND_SPREAD: float = 60.0 * WS   # half width across the band of dents with no record (dropped craters, clips)
+const RUBBLE_EDGE: float = 30.0 * WS     # a rubble heap eases off over this depth past the range it spans
+const RUBBLE_TINT_H: float = 20.0        # heap height at which the rubble tint is full
+const RUBBLE := "#6f675d"                # rubble: broken concrete and brick dust
 const WATER := Color(30.0 / 255.0, 110.0 / 255.0, 175.0 / 255.0)
 const WATER_SURFACE := Color(0.42, 0.68, 0.9, 0.55)
 const SKY: Array = ["#111a3e", "#4b4483", "#d9776b", "#f4b87a"]   # top to horizon
@@ -132,7 +143,8 @@ const RUN_NEAR: float = 0.6             # up to this much faster for people righ
 const RUN_NEAR_R: float = 200.0 * WS    # ... falling to none this far from it
 const RUN_TIME: float = 3.2             # seconds of running before a runner is gone (each 75% to 125% of this)
 const RUN_FADE: float = 0.45            # the last seconds of a run, fading out
-const RUN_Z_END: float = Z_BUILDING_FRONT - 60.0   # the depth they drift back to, behind the building row's front
+const RUN_BEHIND: float = 60.0          # they drift this far back past their own row's face (into the row)
+const RUN_DEST_MAX: float = 6.0         # the longest run to shelter in another building (they speed up past it)
 const RUN_YAW: float = 20.0             # degrees they turn from face-on (back-on, running left) toward where they run
 const RUN_LOOK_SHARE: float = 0.15      # the share that look back once ...
 const RUN_LOOK_S: float = 0.35          # ... for this long, slowing

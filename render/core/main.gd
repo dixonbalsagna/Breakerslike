@@ -21,8 +21,10 @@ extends Node3D
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
 ## full panes were drawn; VFX at a fixed quality), --novsync, --nosplit, --novfx (VFX off, for A/B runs),
-## --vfx-quality=0|1|2 (VFX's low, medium or high, fixed), --mock-evac
-## (World's planned evacuate events from a render-side mock, render/tools/evac_mock.gd, until the sim sends them).
+## --vfx-quality=0|1|2 (VFX's low, medium or high, fixed). F6 toggles VFX's ground cracks (on by default), Shift+F6 its
+## destruction (shards, collapse dust, holes; off by default until B2), and while that is on the particles skip a
+## building fall's dust and debris (SimHost._without_fall_debris), which VFX draws instead. Ctrl+F6 toggles VFX's scorch
+## embers (on by default), which replace ImpactFx's scorch sparks while on.
 ## Head flashes (render/core/flash_view.gd): F7 on and off (on by default, in place of the placeholder aura), F8 the
 ## legacy shapes, Alt plus 1 to 9, 0, -, =, [ and ] fires each flash in the data's order on P1 (Shift: P2), Alt+F
 ## cycles a fighter's shape family (Shift: P2). The Alt keys never take P1 over. --flash-soak (for the bench) keeps
@@ -94,6 +96,8 @@ func _ready() -> void:
 	particles = pane.particles
 	fighter_views = pane.fighter_views
 	host = SimHost.new()
+	host.vfx.cracks_enabled = true     # Orb asked for cracked ground; VFX's destruction stays off until B2's events (F6)
+	host.vfx.embers_enabled = true     # VFX's scorch embers, in place of ImpactFx's scorch sparks (Ctrl+F6)
 	if args.has("novfx"):
 		host.vfx.enabled = false
 	if args.has("vfx-quality"):
@@ -109,9 +113,6 @@ func _ready() -> void:
 	ui_hud.strip_fn = _hud_strip
 	ui_hud.split_fn = _split_record
 	host.drained.connect(_on_drained)
-	if args.has("mock-evac"):
-		host.evac_mock = EvacMock.new()
-		planet.crowd_extra = host.evac_mock.extra
 	audio = AudioVoices.new(host.audio_cues.bank)
 	add_child(audio)
 	if DisplayServer.get_name() != "headless":
@@ -326,7 +327,7 @@ func _on_drained(events: Array, lines: Array) -> void:
 	if compositor != null:
 		var vp: Vector2 = get_viewport().get_visible_rect().size
 		split_rig.step(host.S, vp.x, vp.y, events)
-	planet.consume(events)
+	planet.consume(events, host.S.T)
 	_flash_events(events)
 	_cue_events(events)
 	ui_hud.consume_all(events)
@@ -422,6 +423,14 @@ func _unhandled_input(e: InputEvent) -> void:
 				return
 			if code == "F4":
 				ui_hud.set_option("show_feed", not bool(ui_hud.opts["show_feed"]))
+				return
+			if code == "F6":
+				if e.ctrl_pressed:
+					host.vfx.embers_enabled = not host.vfx.embers_enabled
+				elif e.shift_pressed:
+					host.vfx.destruction_enabled = not host.vfx.destruction_enabled
+				else:
+					host.vfx.cracks_enabled = not host.vfx.cracks_enabled
 				return
 			if code == "F9" and split_view != null:
 				if split_view.is_attached():

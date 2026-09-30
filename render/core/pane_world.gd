@@ -68,11 +68,26 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 	planet.set_camera(cam_rig.position)
 	_view_cues(cam, vp)
 	planet.update(S, cam_x, host.impact.heat, host.impact.heat_changed)
+	var rects: Array = []
 	for i in range(fighter_views.size()):
 		fighter_views[i].update(S, S.fighters[i], host.fighter_pose(i, a), SimWrap.sdx(cam_x, host.fighter_x(i, a)), cam.z)
+		rects.append(_screen_rect(fighter_views[i]))
+	planet.fade_front(S, cam_rig, cam_x, rects)
 	vfx_layer.update(host, a, cam_x, cam.z, vp.x)
 	beams.update(S, cam_x, cam.z)
 	particles.update(host.fxv, host.impact, cam_x, cam.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
+
+
+## A fighter's rectangle on this pane's screen (feet to the top of the head, a body's width), a little grown.
+func _screen_rect(v: FighterView) -> Rect2:
+	var feet: Vector3 = v.global_position
+	var top: Vector3 = feet + Vector3(0.0, FighterView.HEIGHT, 0.0)
+	if cam_rig.is_position_behind(feet):
+		return Rect2()
+	var a: Vector2 = cam_rig.unproject_position(feet)
+	var b: Vector2 = cam_rig.unproject_position(top)
+	var h: float = absf(a.y - b.y)
+	return Rect2(Vector2(a.x - 0.3 * h, minf(a.y, b.y)), Vector2(0.6 * h, h)).grow(0.1 * h)
 
 
 ## Planet-scale cues and crowd legibility for this frame, from the zoom and the camera height (presentation only).

@@ -7,8 +7,9 @@ extends RefCounted
 ## reported fled, farthest from the blow first; the rest, nearest the blow, were casualties and are simply gone.
 ## From a building no blow hit, everyone who vanished left on foot (people die only by damage), so they all run at
 ## once, even before the event that reports them (World reports a building's fled people in lots of half a person). Then it animates the runners on sim time (so pause and hit-stop hold them): away from the
-## event's x at a run, faster the closer they were, and drifting back behind the building row; a share look back once;
-## each fades out at the end of its run (RenderLook.RUN_*). Runners reuse their own
+## event's x at a run, faster the closer they were, and drifting back behind their own row's face; a share look back
+## once; each fades out at the end of its run (RenderLook.RUN_*). People sheltering elsewhere (the event's `dest`) run
+## to that building instead, into its street, and it shows them only as they arrive (`incoming`). Runners reuse their own
 ## crowd instances; the crowd shader draws the run cycle and the fade from the instance colour (g: 1 - run, a: fade).
 ## Render-side only: reads the sim and the events, never writes either.
 
@@ -21,15 +22,20 @@ class Run:
 	var dur: float
 	var look: float    # seconds into the run it looks back, or -1
 	var dy: float      # the drawn ground at its depth minus the fighter-plane profile, at the start
+	var z1: float      # the depth it runs to
+	var dest: int = -1 # the building it shelters in, or -1
 
 var _evac := PackedFloat64Array()   # per building: people evacuated so far (the events' n)
 var _cx := PackedFloat64Array()     # per building: the x of the latest blow they fled
 var _ran := PackedInt32Array()      # per building: figures sent running so far
+var _dest := PackedInt32Array()     # per building: where its latest event's people shelter, or -1
+var incoming := PackedInt32Array()  # per building: runners on their way to shelter in it (not shown there yet)
 var _runs: Dictionary = {}          # crowd instance -> Run
 var _hit_x: Array = []              # this frame's damage (debris) x, cleared after each step
 var _blow_x: float = 0.0            # the latest blow's x (crater, scorch or damage), for flights not yet reported
 var started: int = 0                # runners started this match (for tools)
 var events_n: float = 0.0           # the evacuate events' n this match (for tools)
+var sheltered: int = 0              # runners sent to shelter in another building this match (for tools)
 
 
 func reset(nb: int) -> void:
@@ -39,11 +45,16 @@ func reset(nb: int) -> void:
 	_cx.fill(0.0)
 	_ran.resize(nb)
 	_ran.fill(0)
+	_dest.resize(nb)
+	_dest.fill(-1)
+	incoming.resize(nb)
+	incoming.fill(0)
 	_runs.clear()
 	_hit_x.clear()
 	_blow_x = 0.0
 	started = 0
 	events_n = 0.0
+	sheltered = 0
 
 
 ## The evacuate events among one tick's fx events.
@@ -63,6 +74,7 @@ func consume(events: Array) -> void:
 			continue
 		_evac[b] += float(e.n)
 		_cx[b] = float(e.cx)
+		_dest[b] = int(e.dest) if "dest" in e else -1
 		events_n += float(e.n)
 
 
@@ -87,7 +99,7 @@ func vanish(S: SimState, bi: int, bx: float, slots: Array, xs: PackedFloat64Arra
 	order.sort_custom(func(a, b): return absf(SimWrap.sdx(cx, xs[a])) > absf(SimWrap.sdx(cx, xs[b])))
 	for k in range(want):
 		var ci: int = order[k]
-		_start(S, ci, xs[ci], zs[ci], cx, ground)
+		_start(S, ci, bi, xs[ci], zs[ci], cx, ground)
 	_ran[bi] += want
 	started += want
 	return order.slice(want)
@@ -101,7 +113,7 @@ func count() -> int:
 	return _runs.size()
 
 
-func _start(S: SimState, ci: int, x: float, z: float, cx: float, ground: GroundField) -> void:
+func _start(S: SimState, ci: int, bi: int, x: float, z: float, cx: float, ground: GroundField) -> void:
 	var r := Run.new()
 	var dx: float = SimWrap.sdx(cx, x)
 	r.t0 = S.T
@@ -113,7 +125,31 @@ func _start(S: SimState, ci: int, x: float, z: float, cx: float, ground: GroundF
 	r.dur = RenderLook.RUN_TIME * (0.75 + 0.5 * _h(ci, 2))
 	r.look = r.dur * (0.3 + 0.3 * _h(ci, 4)) if _h(ci, 3) < RenderLook.RUN_LOOK_SHARE else -1.0
 	r.dy = ground.ground_at(S, x, z) - WorldTerrain.groundY(S, x)
+	r.z1 = street(S.buildings[bi], -RenderLook.RUN_BEHIND)
+	var dest: int = _dest[bi]
+	if dest >= 0 and dest < S.buildings.size() and dest != bi and S.buildings[dest].alive:
+		# To shelter: straight to that building's street, arriving as the run ends.
+		var tb = S.buildings[dest]
+		var tx: float = SimWrap.sdx(x, tb.x)
+		r.dir = signf(tx) if absf(tx) > 1.0 else r.dir
+		r.dur = clampf(absf(tx) / r.speed, 0.4, RenderLook.RUN_DEST_MAX)
+		r.speed = absf(tx) / r.dur
+		r.look = -1.0
+		r.z1 = street(tb, RenderLook.CROWD_GAP)
+		r.dest = dest
+		incoming[dest] += 1
+		sheltered += 1
 	_runs[ci] = r
+
+
+## A depth on a building's street side: `out` units out from its street-facing face (negative: into the row). Rows 1
+## to 3 face the camera; row 0 faces the fighter plane.
+static func street(b, out: float) -> float:
+	if b.d <= 0.0:
+		return RenderLook.Z_BUILDING_FRONT + out
+	if int(b.row) == 0:
+		return b.z - b.d * 0.5 - out
+	return b.z + b.d * 0.5 + out
 
 
 ## Per frame: move every runner, and hide the ones whose run is over.
@@ -135,7 +171,7 @@ func step(S: SimState, mm: MultiMesh) -> void:
 		var d: float = r.speed * (maxf(t, 0.0) - 0.7 * lk)
 		var x: float = r.x0 + r.dir * d
 		var u: float = clampf(t / r.dur, 0.0, 1.0)
-		var z: float = lerpf(r.z0, RenderLook.RUN_Z_END, u * u * (3.0 - 2.0 * u))
+		var z: float = lerpf(r.z0, r.z1, u * u * (3.0 - 2.0 * u))
 		var y: float = WorldTerrain.groundY(S, SimWrap.wrap(x)) + r.dy * maxf(0.0, 1.0 - d / 200.0)
 		# Local +x where it runs (or, looking back, where it came from), turned a little toward it.
 		var turn: float = yaw if (r.dir > 0.0) != looking else PI - yaw
@@ -143,6 +179,8 @@ func step(S: SimState, mm: MultiMesh) -> void:
 		mm.set_instance_color(ci, Color(1.0, 0.8 if looking else 0.0, 1.0, clampf((r.dur - t) / RenderLook.RUN_FADE, 0.0, 1.0)))
 	for ci in done:
 		var r: Run = _runs[ci]
+		if r.dest >= 0:
+			incoming[r.dest] = maxi(0, incoming[r.dest] - 1)
 		mm.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ZERO), Vector3(r.x0, 0.0, 0.0)))
 		mm.set_instance_color(ci, Color.WHITE)
 		_runs.erase(ci)
