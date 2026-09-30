@@ -15,7 +15,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | Rule | Spec |
 | :--- | :--- |
 | **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |
-| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). k = **0.06** at S2 (`docs/director/wounds-s2.md`), retuned to 0.065 at S3b, and back to 0.06 by the S4 ruling (§2). It is set by the length target. QA tunes it within 0.05 to 0.07 (§1b) |
+| **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). k = **0.034** after the dynamic slice (§1b). History: 0.06 at S2, 0.065 at S3b, 0.06 by the S4 ruling. It is set by the length target. QA tunes it within 0.05 to 0.07 (§1b) |
 | **Stages** | Fresh below 30; bruised 30 to 59; battered 60 to 89; broken at 90 or more |
 | **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time needed to break lock through line of sight (1.8 s) |
 | **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second (0.25 from S2, §1b). A battered region fades 1 per second, down to 59, after 4 s without an exchange ("second breath", §1c). Broken regions never fade (only a Rally mends them). Hidden recovery is removed with hiding |
@@ -60,6 +60,12 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
   - Breaks per 1v1: 2 to 4 before Rally, and 3 to 5 once Rally lands (today 2).
   - *If the chapters feel thin* after S4, the experiment is a stricter brink: core, or **three** limbs broken, with k × 1.4. That gives an earlier first break and more breaks at the same length. QA runs it; Game Design decides.
 - *Collateral.* Six-minute matches raise collateral: 51% overall, and the villain mirror about 92%, which is over the worst-pairing and 90%-loss bands. World's ramp and cap land with B1 (`balance-targets.md` §4b) and are expected to bring both back into band.
+
+**Final k after the dynamic slice** (QA; the damage rate rose from 905 to 1,693 a minute).
+- **k = 0.034:** median 6:51, p10 5:05, p90 9:00, timeouts 0.3%, KAI 47.9%, civilians 30%. Every length, balance and collateral band passes.
+- *Rallies* at 0.27 a match are inside the contest-gated band (0.2 to 0.5, §2).
+- *Breaks* at 2.6 a match are under the 3-to-5 band, and k cannot fix that. The separate lever is the **stricter brink** from the S2 ruling: the core broken, or **three** limbs broken. Then re-tune k upward (starting around 0.045) to hold the median.
+- *Accept it* if breaks reach 3 to 5 with the length and timeout bands intact, and a playtest check finds a fighter with two broken limbs still fun to play. Otherwise keep the two-limb brink and re-base breaks to 2 to 4.
 
 ### 1c. Lock-on and line of sight (hiding is removed)
 
