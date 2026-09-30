@@ -140,3 +140,88 @@ This merges Narrative's character pitches (`docs/narrative/world-abilities.md`) 
 | **Protagonist: a draining meter** | *Pushing past his limits.* The heat track (Heated, Simmering, Boiling) is his transformation, with glowing seams and a heartbeat. Its price is internal wear. The capstone is his final form, allowed only in the fold, where nobody else can be hurt. The feel: a man burning himself for the fight | **A ladder his rival feeds:** his forms unlock from Respect, which he earns when the rival gives everything. The opponent literally powers him up by fighting hard |
 | **Anti-hero: shedding** | *Stripping down to raw power.* Three sheds, each a respected cinematic with no way back: **regalia** (armour off: guard weaker, +speed), **the front** (Drop the Act: hidden wear shows, +damage), **restraint** (no guard at all, top speed and damage). The feel: every shed is a humiliation he turns into power | **Pride ascension:** forms that raise his power while his Pride is high, and are *lost* when it crashes. It keeps the original "power and self-importance" idea: a higher ceiling, and a risk of falling |
 | **Cyborg: evolution by consumption** | *Growing into the machine.* Wired (Hunger), then Kitchen (sandwich portals), then **Docked**: the final form, where his technology comes online. Only then does he **generate his hidden weapons**, which join his loadout as specials (Combat and Narrative design them). Before that, they show as dark, sparking ports: a visible promise. The feel: something unfinished, becoming whole. Narrative's line: "the kitchen opens and the order is produced" | **Assimilation:** he feeds on wreckage (destroyed structures) instead of people. It is less dark and ties him to destruction rather than civilians, if the tone ever needs it |
+
+## 8. For Orb: third pass
+
+Orb liked two world changes per fighter. The transformations are the main mechanic for the Empress and the Protagonist, and the alternative for the Anti-hero and the Cyborg. Each world change below gets one line of fantasy and one line of mechanic. The rules in §3 hold throughout: once per match, permanent, a stoppable channel, a respected cinematic, and every collateral budget.
+
+### 8.1 World changes: four more per fighter
+
+**Protagonist.** *Liked: Heat Wave, Proving Ground.* **What they share:** he turns his inner fire outward, and remakes the world into a fair place where he can go all out without anyone getting hurt.
+
+| Idea | Kind | Fantasy | Mechanic |
+| :--- | :--- | :--- | :--- |
+| **Magma Ring** | Escalation (arena plus heat) | The arena's rim cracks open into a moat of lava, and the fight is sealed in | A ring arena whose edge is a lava hazard. No collateral is possible inside, and his heat cools half as fast there |
+| **High Summer** | Variation (Heat Wave) | The sun blazes, the seas steam and the forests are tinder | Fire spreads ×1.5 across the planet, and his stoking is 25% faster |
+| **Evacuation Gale** | Protector twist | A hot wind sweeps the planet and carries everyone clear | Any district within 3,000 of the fight relocates at once, so collateral is near zero, and all clouds are swept away |
+| **Training Peak** | Combo (land plus endurance) | A single towering peak rises for the two of them to fight up | A peak about 100 fighter heights tall: mountainside launches weigh ×2, and slides are possible from tier 2. At Simmering or above he gains +5 on rolls on its slopes |
+
+**Anti-hero.** *Liked: Storm Crown, Scorched Plain.* **What they share:** domination by ruin. He strips the world of comfort, cover and light, so only strength counts, and he makes it a spectacle.
+
+| Idea | Kind | Fantasy | Mechanic |
+| :--- | :--- | :--- | :--- |
+| **Thunderhead Throne** | Escalation (Storm Crown) | The storm gathers into one eye over him, and the lightning hunts his rival | Every 8 s a lightning strike falls on the rival's position, telegraphed 1 s ahead (hazard wear, capped at battered). His barrages gain +20% |
+| **Salted Earth** | Variation (Scorched Plain) | The scorched land stays glassy and burning hot | Standing on the ground costs 1 wear per second to the legs (capped at battered). The fight goes airborne, where his barrages rule |
+| **Blackout** | Variation (sky) | He swallows the light, and only the fighters' auras still shine | Lock-on range is capped at 2,000. Beyond it, attacks need the fighter to close in first (a pursuit flight) |
+| **Tempest Wasteland** | Combo (storm plus scorch) | A smaller zone, burned bare with a storm locked above it | Both effects at full strength inside a 4,000-unit zone, with the rest of the planet untouched |
+
+**Empress.** *Liked: Blockade, Golden Hour.* **What they share:** imperial staging. She rearranges the sky to frame herself and to dictate where the fight may happen.
+
+| Idea | Kind | Fantasy | Mechanic |
+| :--- | :--- | :--- | :--- |
+| **Searchlights** | Escalation (Blockade) | Her fleet's searchlights sweep the planet and pin her rival in light | The rival can never break lock. She can, in the fleet's shadow |
+| **Portrait Sky** | Variation (Golden Hour) | The whole sky becomes her portrait, watching | Each decisive exchange she wins adds +10 mood and +10 Wrath: applause |
+| **Tariff Zone** | Bureaucratic | The lowlands are declared a taxed province | Below 30% of the ceiling, the rival's ki costs are +10%: a tariff on energy |
+| **Gilded Eclipse** | Combo (Blockade plus Golden Hour) | The fleet eclipses the sun into a gold ring | Both effects at half strength |
+
+**Cyborg.** *Liked: Wired World, Harvest.* **What they share:** industrial conversion. The world becomes infrastructure that feeds him, so he eats the planet rather than its people. This fits the assimilation mechanic below.
+
+| Idea | Kind | Fantasy | Mechanic |
+| :--- | :--- | :--- | :--- |
+| **Scrap Tide** | Escalation (Harvest) | Wreckage everywhere animates and crawls toward him | Rubble within 3,000 converts to Hunger over time (+2 per ruined building), and the heaps shrink away |
+| **Power Grid** | Variation (Wired World) | Pylons march across the land | On the grid, his specials cost 30% less ki, and the rival charges ×0.75 (interference) |
+| **Assembly Line** | Combo | Conveyors carry harvested stock to him wherever he fights | A passive Hunger stream of +0.5 per second for the rest of the match |
+| **Recycling Plant** | Final-form tie-in | A district becomes a plant that manufactures parts | After his final form, his hidden weapons recharge 50% faster |
+
+### 8.2 Transformations: deeper
+
+**Empress: escalating revisions** (main).
+1. **Every revision adds one tell and never removes one:** a hat, a louder voice, one pixel taller, a second pair of eyes, a cape, the anger. So her silhouette is a visible history of the fight.
+2. **Each real revision adds its signature moment:**
+   - *9, Field Revision:* armour snaps on, and her decree line doubles into twin lines;
+   - *10, Executive Revision:* the mantle unfurls into blade-wings with +50% reach;
+   - *11, Council Revision:* the fleet's shadow passes over, and her volleys become barrages;
+   - *12, Final Approved:* the sun dims, and her finisher is a "seal of approval".
+3. **Refits show:** a patched region keeps a visible mend, and her voice lines list what changed, as the comedy.
+4. **Her revision number is worn on her regalia:** tiny, in-world, and readable.
+
+**Protagonist: heat, past his limits** (main).
+1. **The stages, how they look and play, and their signature moments:**
+   - *Heated:* seams glow at the joints and his footwork quickens; the moment is a stamp-and-ripple step;
+   - *Simmering:* steam rises from his skin, his blows hit heavier and chain more; the moment is a steam burst that clears nearby dust;
+   - *Boiling:* his skin cracks with light and he goes reckless and blitz-prone; the moment is a roar that knocks the rival back, a warning of the boil-over.
+2. **Last push:** at Boiling on the brink, his finisher gets its own all-out variant, and his contest bonus stands.
+3. **Limit Unbound,** the final form in the fold: heat is locked at Boiling with **no internal wear** for 20 s. It is his capstone.
+4. **Heat memory:** each boil-over leaves a permanent glowing scar, and after two, his heat never cools below Heated. He runs hotter as the match goes on.
+
+**Anti-hero: pride ascension** (the alternative, in full).
+- **Three forms,** unlocked at Pride 60, 80 and 100 (working names Ascendant, Exalted and Sovereign). Each adds damage, speed and regalia, and each has a signature moment:
+  - *Ascendant:* a contemptuous one-handed parry;
+  - *Exalted:* a crown of barrage fire;
+  - *Sovereign:* he finishes only by hand.
+- **Pride** rises with dominance (clashes won, chains, finishers, witnessed by the mood) and falls with humblings (being parried, guard-broken, having a region broken).
+- **The crash:** when Pride drops below 50, he loses **one** form in a humiliating, respected cinematic as his regalia shatters. He can climb back. The Proud front and the facade crack still apply.
+- **Combined with Drop the Act,** which becomes **Abdicate:** at any form, he can voluntarily drop every form and his front at once to become unrestrained, once per match. The desperate card joins the pride ladder.
+
+**Cyborg: assimilation** (the alternative, in full).
+- **What he eats:** wreckage feeds his Hunger. Structures destroyed within 2,000 of him give Hunger by size. **Press** now clamps on rubble and reopens on sandwiches, so the gag stays.
+- **Civilians are no longer his food.** That lightens the tone, and it retires the Cyborg's civilian floor and the Press-and-evacuation rules (`balance-targets.md` §4b).
+- **The stages:**
+  - *Wired* (first Hunger threshold): cables sprout, and he gets faster;
+  - *Kitchen* (second threshold): portal frames open, with sandwich hazards;
+  - *Docked* (the drive caught): the final form. **His technology comes online**, "the kitchen opens and the order is produced", and he **generates hidden weapons from what he ate**:
+    - tower steel becomes a lance;
+    - wrecked vehicles become a wheel-saw;
+    - power lines become an arc whip.
+    So every match's arsenal is different, and each weapon joins his loadout as a special.
+- **Counter-play:** keep the fight in open country (less to eat), or fold into the proving ground, where he can still press loose fragments.
