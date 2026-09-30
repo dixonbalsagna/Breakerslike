@@ -10,17 +10,20 @@ Schema changes for the batch described in `docs/combat/pending/README.md` and `d
 2. **`contest.struggle.byState`** in the same schema: a closed object (`base`, `stanceRead` with `match`, `other` and `matches`, `kiBonus`, `rallyPenalty`, `tiltPerMinute`, `tiltAfter`, `floor`, optional `fighterState` and `pulses`). The press fields (`halfWidthTicks`, `assistHalfWidthTicks`, `debounceTicks`, `inputs`, `aiHitChance`, the press `scoring`) stay required for now. Making them optional is the later step; do that by hand when Combat says so.
 3. **`selectorByProfile`** on a template in `combat-templates.schema.json`: profile name (`parity`, `spaced`, `dynamic`) to a selector, same shape as `selector`. The condition variable `defHeld` needs no schema change (conditions take any variable name).
 
-It also makes `tools/lib/xref.js` check that a `selectorByProfile` selector points at branches of its own template (rule `selector-branch`), and adds 9 cases to `tools/fixtures/cases.json`.
+4. **`chainP.heat`** in `combat-styles.schema.json`: a required stage table `{Heated, Simmering, Boiling}` of numbers, replacing `heatBoiling` (which the script removes from the schema, so the data must drop it in the same commit).
+5. **`blitz.chance.cap`** in the same schema: a required number 0 to 1. A new warning, `style-blitz-cap` in `tools/lib/xref-fight.js`, fires when the Tense or Frenzied chance is above the cap (it would always be clipped).
+
+Items 4 and 5 need `data/combat/styles.json` to carry the new fields (Combat moves them out of the `_heat` and `_cap` notes in the same batch). It also makes `tools/lib/xref.js` check that a `selectorByProfile` selector points at branches of its own template (rule `selector-branch`), and adds 16 cases to `tools/fixtures/cases.json`.
 
 ### How to run
 
-1. Put Combat's batch data in place: copy `docs/combat/pending/templates.q4.json` over `data/combat/templates.json` and `finishers.q4.json` over `data/combat/finishers.json`. The parked copies were cut from commit `b3eaf4b`; if the data files changed since, merge rather than overwrite, and read the case pointers below.
+1. Put Combat's batch data in place (including the `styles.json` edits for items 4 and 5): copy `docs/combat/pending/templates.q4.json` over `data/combat/templates.json` and `finishers.q4.json` over `data/combat/finishers.json`. The parked copies were cut from commit `b3eaf4b`; if the data files changed since, merge rather than overwrite, and read the case pointers below.
 2. From the repo root: `node docs/tools/pending/apply-q4.cjs`. It edits the two schemas, `tools/lib/xref.js` and `tools/fixtures/cases.json`, and throws (changing nothing further) if a place it expects to edit has moved.
 3. Run `node tools/validate.js` (expect 0 errors) and `node tools/validate.js --self-test` (expect every check to pass).
 4. Commit the data and these edits together, then delete this script or move it to a "done" note. Run it **once**: it is not idempotent (a second run would add the cases twice).
 
 ### What was checked
 
-In a scratch copy, before the changes the parked copies fail with exactly six errors (`byState`, four `kind`, `selectorByProfile` unknown), and after them: 0 errors, 0 warnings, and the self-test passes 452 of 452 (9 new cases). Cases assume the parked shapes: template 3 is `pressure`; finishers 0 to 3 are `generic.placeholder`, `generic`, `kai`, `vorr`.
+In a scratch copy, before the changes the parked copies (with a `styles.json` carrying `heat` and `cap`) fail with exactly eight errors (`byState`, four `kind`, `selectorByProfile`, `heat`, `cap`), and after them: 0 errors, 0 warnings, and the self-test passes 459 of 459 (16 new cases). Cases assume the parked shapes: template 3 is `pressure`; finishers 0 to 3 are `generic.placeholder`, `generic`, `kai`, `vorr`.
 
 Re-check after the run: if `data/combat/` has moved on (for example new templates before `pressure`), the case pointers `/templates/3/...` and `/finishers/2/...` need updating; the self-test says "fixture path missing" if so.

@@ -75,12 +75,49 @@ const b = "      const selectors = [['selector', t.selector], ...Object.entries(
 x = x.replace(a, () => b);
 fs.writeFileSync(xf, x);
 
+
+// ---- combat-styles: chainP.heat replaces heatBoiling; blitz.chance.cap (same batch; Combat moves them out of underscore notes) ----
+const sf = 'tools/schemas/combat-styles.schema.json';
+const ss = JSON.parse(fs.readFileSync(sf, 'utf8'));
+const chainP = ss.properties.chains.properties.chainP;
+delete chainP.properties.heatBoiling;
+chainP.properties.heat = {
+  type: 'object',
+  description: 'Heat bonus added to the chain probability for fighters with the heat track (stance-matrix.md R9), by heat stage. Replaces heatBoiling.',
+  required: ['Heated', 'Simmering', 'Boiling'],
+  properties: { Heated: { type: 'number' }, Simmering: { type: 'number' }, Boiling: { type: 'number' } },
+  additionalProperties: false,
+  patternProperties: { '^_': true },
+};
+chainP.required = ['byStance', 'heat', 'minKi', 'floor', 'cap'];
+const chance = ss.properties.chains.properties.blitz.properties.chance;
+chance.properties.cap = { type: 'number', minimum: 0, maximum: 1, description: 'The blitz chance never exceeds this (balance-targets.md section 12).' };
+chance.required = ['Tense', 'Frenzied', 'perActAbove1', 'cap'];
+fs.writeFileSync(sf, JSON.stringify(ss, null, 2) + '\n');
+
+const xf2 = 'tools/lib/xref-fight.js';
+let x2 = fs.readFileSync(xf2, 'utf8');
+const marker = '    // Tempo names used in beats';
+if (!x2.includes(marker)) throw new Error('xref-fight marker not found');
+x2 = x2.replace(marker, () => [
+  '    // The blitz chance cap should not sit below the chances it caps (it would silently clip them).',
+  '    const bl = isObj(styles.chains) && isObj(styles.chains.blitz) ? styles.chains.blitz.chance : undefined;',
+  "    if (isObj(bl) && typeof bl.cap === 'number') {",
+  "      for (const k of ['Tense', 'Frenzied']) {",
+  "        if (typeof bl[k] === 'number' && bl[k] > bl.cap) err(STYLES, '/chains/blitz/chance/' + k, 'style-blitz-cap', k + ' chance ' + bl[k] + ' is above the cap ' + bl.cap + ', so it is always clipped', 'warning');",
+  '      }',
+  '    }',
+  marker,
+].join('\n'));
+fs.writeFileSync(xf2, x2);
+
 // ---- cases ----
 const cf = 'tools/fixtures/cases.json';
 let c = fs.readFileSync(cf, 'utf8');
 const anchor = '    { "id": "flashes-version"';
 if (!c.includes(anchor)) throw new Error('cases anchor');
 const F = 'data/combat/finishers.json';
+const S = 'data/combat/styles.json';
 const T = 'data/combat/templates.json';
 const cases = [
   { id: 'finishers-kind-enum', schema: 'combat-finishers.schema.json', mutate: [{ file: F, set: { '/finishers/2/kind': 'sniper' } }], expect: { rule: 'enum', pointer: '/finishers/2/kind' } },
@@ -91,9 +128,16 @@ const cases = [
   { id: 'templates-profile-selector-kind', schema: 'combat-templates.schema.json', mutate: [{ file: T, set: { '/templates/3/selectorByProfile/dynamic/kind': 'roulette' } }], expect: { rule: 'enum', pointer: '/templates/3/selectorByProfile/dynamic/kind' } },
   { id: 'templates-profile-name', schema: 'combat-templates.schema.json', mutate: [{ file: T, set: { '/templates/3/selectorByProfile/turbo': { kind: 'fixed', branch: 'holds' } } }], expect: { rule: 'propertyNames', pointer: '/templates/3/selectorByProfile/turbo' } },
   { id: 'templates-profile-selector-branch', schema: 'combat-templates.schema.json', mutate: [{ file: T, set: { '/templates/3/selectorByProfile/dynamic/ifBelow': 'nope' } }], expect: { rule: 'xref:selector-branch', pointer: '/templates/3/selectorByProfile/dynamic/ifBelow' } },
+  { id: 'styles-heat-type', schema: 'combat-styles.schema.json', mutate: [{ file: S, set: { '/chains/chainP/heat/Simmering': 'hot' } }], expect: { rule: 'type', pointer: '/chains/chainP/heat/Simmering' } },
+  { id: 'styles-heat-needs-boiling', schema: 'combat-styles.schema.json', mutate: [{ file: S, del: ['/chains/chainP/heat/Boiling'] }], expect: { rule: 'required', pointer: '/chains/chainP/heat' } },
+  { id: 'styles-heat-unknown-stage', schema: 'combat-styles.schema.json', mutate: [{ file: S, set: { '/chains/chainP/heat/Scalding': 0.3 } }], expect: { rule: 'additionalProperties', pointer: '/chains/chainP/heat/Scalding' } },
+  { id: 'styles-heat-boiling-retired', schema: 'combat-styles.schema.json', mutate: [{ file: S, set: { '/chains/chainP/heatBoiling': 0.2 } }], expect: { rule: 'additionalProperties', pointer: '/chains/chainP/heatBoiling' } },
+  { id: 'styles-blitz-cap-range', schema: 'combat-styles.schema.json', mutate: [{ file: S, set: { '/chains/blitz/chance/cap': 1.4 } }], expect: { rule: 'maximum', pointer: '/chains/blitz/chance/cap' } },
+  { id: 'styles-blitz-cap-required', schema: 'combat-styles.schema.json', mutate: [{ file: S, del: ['/chains/blitz/chance/cap'] }], expect: { rule: 'required', pointer: '/chains/blitz/chance' } },
+  { id: 'styles-blitz-cap-clips', schema: 'combat-styles.schema.json', mutate: [{ file: S, set: { '/chains/blitz/chance/cap': 0.3 } }], expect: { rule: 'xref:style-blitz-cap', pointer: '/chains/blitz/chance/Frenzied' } },
   { id: 'templates-profile-selector-needs-draw', schema: 'combat-templates.schema.json', mutate: [{ file: T, del: ['/templates/3/selectorByProfile/dynamic/draw'] }], expect: { rule: 'required', pointer: '/templates/3/selectorByProfile/dynamic' } },
 ];
 const text = cases.map((k) => '    ' + JSON.stringify(k).replace(/^\{/, '{ ').replace(/\}$/, ' }') + ',\n').join('');
 c = c.replace(anchor, () => text + anchor);
 fs.writeFileSync(cf, c);
-console.log('prep applied');
+console.log('Q4 schema changes applied');
