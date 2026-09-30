@@ -1,6 +1,6 @@
 # Animation data: the origin rule and the pose screen
 
-Owner: Legal and IP Compliance. 2026-09-30. Answers Animation's question about `docs/animation/pose-pipeline.md` (sections 3.7 and 6.6) and `docs/art/ai-prompt-policy.md`. A screen, not legal advice.
+Owner: Legal and IP Compliance. 2026-09-30. **Updated 2026-09-30 for ADR 0007:** no human author is required for any content class, including showcase poses. Sections below are marked where the human-author points no longer apply. Answers Animation's question about `docs/animation/pose-pipeline.md` (sections 3.7 and 6.6) and `docs/art/ai-prompt-policy.md`. A screen, not legal advice.
 
 ## Does the AI prompt policy cover animation data?
 
@@ -10,8 +10,8 @@ In spirit, yes. In letter, no. The policy's table lists art classes (concepts, d
 
 Mostly. Section 6.6 already follows the policy's shape: showcase poses posed or reworked by a person, the generic library allowed to start as text from a Claude session, a record for each AI-assisted file. Gaps to close:
 
-1. **The named human.** Showcase poses need a named human author, and Orb has not named one. Until Orb does, showcase poses are "proposed" and cannot lock.
-2. **"A later human pass" must be recorded.** For the generic library, "selects and arranges" is enough only if the record says what the person changed. For showcase poses, selecting is not enough. A person poses it or materially reworks it.
+1. ~~The named human.~~ **No longer required (ADR 0007).** Showcase poses no longer wait on a named human. Claude sessions may author them and Orb reviews and steers.
+2. ~~"A later human pass" must be recorded.~~ **Optional (ADR 0007).** If Orb or another person changed or selected something, the record may say so. It is not a gate.
 3. **The session's brief is the prompt.** A Claude session writing pose JSON must not be briefed with franchise names, footage, screenshots or "in the style of" anything named. Keep the brief in the record.
 4. **Origin rows.** Each pose set needs a row in `asset-origins.md` (Legal writes it), not only a file in `art/animation/records/`.
 5. **Blender add-on licence.** Blender's Python add-ons are generally treated as needing a GPL-compatible licence. Our exporter add-on and template may therefore need their own licence header instead of the repo's default. Check Blender's licence FAQ, and give the add-on its own register row. (The `.blend` template is content.)
@@ -19,8 +19,8 @@ Mostly. Section 6.6 already follows the policy's shape: showcase poses posed or 
 ## The minimum rule
 
 1. Animation data (poses, key sets, motion data) is content. It follows the AI prompt policy and `asset-origins.md`.
-2. Every AI-assisted pose set has a record: the brief (franchise-free), tool, model, date, and what a human changed. A set-level record is fine for the generic library.
-3. Showcase poses (specials, signatures, finishers, transformations, taunts) are posed or materially reworked by a named human, and the record says what they changed.
+2. Every AI-assisted pose set has a record: the brief (franchise-free), tool, model and date. What a human changed is noted if anything. A set-level record is fine.
+3. Showcase poses (specials, signatures, finishers, transformations, taunts) may be authored by Claude sessions. No named human is required (ADR 0007). Orb reviews and steers.
 4. Sensitive pose families carry an `_orig` line and pass the originality checklist.
 5. Reference footage: none from any franchise or game. Self-shot reference is private, with consent, never shipped, and its origin recorded.
 

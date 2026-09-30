@@ -148,7 +148,7 @@ See section 7. Steam: content that ships or appears on the store page. itch.io: 
 ### 8.5 Rules for this project
 1. No franchise names, character names, reference images or audio in any prompt, brief or image-to-image input.
 2. Every shipped asset gets an origin row (`licence-register.md`, part B): tool, model, date, where the prompt is kept, and what a human changed.
-3. Characters, signature designs and music themes need real human authorship: drawn, written or composed by a person, or heavily reworked. That protects the copyright and improves originality.
+3. ~~Characters, signature designs and music themes need real human authorship.~~ **Changed by ADR 0007 (2026-09-30):** no content class requires a human author. Orb accepts that purely AI-made parts may be unprotected. Protection rests on the trademark, Orb's own contributions and the whole work. The originality screens, franchise-free briefs, provenance records, third-party licence checks and Legal's pre-store review stay mandatory.
 4. Review AI code before it merges. Reject long verbatim snippets and anything that carries someone else's licence header. Use a licence scanner when in doubt.
 5. State AI assistance in the README, and answer each store's disclosure honestly. Git history already records it through the `Co-Authored-By` lines.
 6. **Orb decides:** may AI-generated art, audio or dialogue ship in the game at all? "No" keeps the store disclosures simplest ("No AI" on assets, and coding assistance is exempt on Steam). "Yes, with human authorship and disclosure" is workable.

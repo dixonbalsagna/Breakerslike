@@ -1,6 +1,6 @@
 # AI-assisted art: prompt policy
 
-Owner: Art Director. Version 0, 2026-09-29. A working policy for Orb, the EP and Legal to review. Not legal advice. Follows `docs/legal/licence-recommendation.md` section 8 (the rules for AI output), `originality-rules.md` and `asset-origins.md`.
+Owner: Art Director. Version 0, 2026-09-29. Updated by Legal 2026-09-30 for ADR 0007 (no human author required). A working policy for Orb, the EP and Legal to review. Not legal advice. Follows `docs/legal/licence-recommendation.md` section 8 (the rules for AI output), `originality-rules.md` and `asset-origins.md`.
 
 Orb's answer: AI-generated assets are allowed (`docs/ep/vision.md`). This policy is how we use them without copying anything and without losing the records Legal needs.
 
@@ -10,7 +10,7 @@ Orb's answer: AI-generated assets are allowed (`docs/ep/vision.md`). This policy
 2. **No reference images.** No image-to-image input from any franchise, fan game or third-party source. No screenshots, no traced sketches. Lemming Ball Z and Lemming Ball Z 3d are off limits like any other franchise (`originality-rules.md`).
 3. **Describe the design, not a resemblance.** Prompts say shape, material, palette, camera and purpose in plain words.
 4. **Keep every prompt.** For every asset that ships, and for every asset that is sent to Legal, the full prompt, tool, model and date are saved in the repo.
-5. **A human authors the characters.** Characters and signature designs need real human authorship: drawn, or heavily reworked, by a person. AI may explore. It does not finish (Legal 8.5.3).
+5. **No human author is required** (ADR 0007, Orb's decision). Claude sessions may author characters, signature designs and key art. Orb reviews and steers. Purely AI-made parts may not be protected by copyright, and Orb accepts that. Protection rests on the trademark, Orb's own contributions and the whole work. The rules above and below (franchise-free briefs, originality screens, records, third-party licence checks, Legal's review before any store page) stay mandatory, because they guard against liability, not ownership.
 6. **Nothing ships without an origin row and the checklist.** A row in `asset-origins.md` (Legal writes it) and Legal's originality checklist, item 4 above all.
 7. **If an output looks like something, stop.** Do not refine it. See "When an output resembles something".
 
@@ -19,16 +19,16 @@ Orb's answer: AI-generated assets are allowed (`docs/ep/vision.md`). This policy
 | Asset class | AI allowed? | Condition |
 |---|---|---|
 | Concept exploration (thumbnails, mood, palette ideas) | Yes | Private working files. Nothing here ships, and nothing goes public. Prompts still follow the rules |
-| Fighter and signature designs | Explore only | A person draws or heavily reworks the final. The prompt and the human changes are logged |
+| Fighter and signature designs | Yes | Brief and records as above. Originality screen and Legal review before lock. Orb reviews and steers |
 | Procedural generators and the art they output | Yes, this is the default | One origin row per generator, naming its files and seed rules. Generator code is reviewed as code |
 | Icons, decals, wear-mask shapes, UI glyphs | Yes | Log per asset set. Human review of every output |
 | Textures | Not needed | The look is untextured (`style-guide.md`) |
 | 3D meshes from AI tools | Not yet | Needs a Legal review of the tool's terms first |
-| Logo, title lettering and key art | No | Human-authored. Legal's marketing rule: no hero holding an orb aloft, no row of matching orbs |
-| Environment concept and biome kits | Yes | Same as fighters: explore, then a person authors |
+| Logo, title lettering and key art | Yes, with care | Legal's marketing rule: no hero holding an orb aloft, no row of matching orbs. The title and logo are protected as a trademark (Legal's clearance first), which does not depend on who drew them |
+| Environment concept and biome kits | Yes | Same as fighters |
 | Music, voice and sound | Out of scope | Audio's policy |
 
-**Why not more.** The US Copyright Office's position (Legal 8.1) is that work made entirely by AI is not protected. Our licence would have nothing to grip on those parts, and anyone could copy them. Designs that carry the game's identity need a human hand. Under a consumer plan the infringement risk sits with us and not the vendor (Legal 8.2 and 8.3).
+**What this means (ADR 0007).** The US Copyright Office's position (Legal 8.1) is that work made entirely by AI is not protected. Our licence has nothing to grip on those parts, and anyone could copy them. Orb accepts that. The real risk is liability: under a consumer plan the infringement risk sits with us and not the vendor (Legal 8.2 and 8.3), so the originality screens matter more, not less.
 
 ## Writing a prompt
 
@@ -77,7 +77,7 @@ For generator code, the record is the origin row plus the code header: the tool,
 
 1. **Originality checklist** (`originality-rules.md`): shrink to a silhouette, then to three flat colours, and ask "what does this remind me of?" If a specific character comes up, redo it. Answer in the record.
 2. **Reverse-image search.** Before a design is locked, someone runs a reverse-image search on the outputs (Legal recommends who). AI output can resemble existing work even from a clean prompt.
-3. **Human authorship check.** For characters and signatures: the record names what a person made or changed.
+3. **Human contribution noted (not required).** The record says what Orb or another person directed, selected or changed. It helps the record and the store disclosure. It is not a gate.
 4. **Legal** answers GO, CONDITIONAL or NO-GO in `review-log.md`. A flagged design cannot lock or ship.
 
 ## When an output resembles something
@@ -105,6 +105,6 @@ If a result looks like a named character, a costume, a pose or a logo:
 
 ## Open questions for Orb
 
-1. **May AI-assisted concept art appear in public devlogs and the store page?** It is safest to show only human-authored finals.
-2. **Who is the human author** of the four fighters' final designs: Orb, or a commissioned artist? Legal needs a name against each locked design.
+1. **May AI-assisted concept art appear in public devlogs and the store page?** Yes, with the AI-content disclosure. Legal reviews before any store page.
+2. ~~Who is the human author of the four fighters' final designs?~~ Closed by ADR 0007: no named human author is required.
 3. **Are AI 3D mesh tools in scope at all?** The default here is no until Legal has read a tool's terms.
