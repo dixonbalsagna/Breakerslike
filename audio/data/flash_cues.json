@@ -737,6 +737,139 @@
     }
    ],
    "held": true
+  },
+  "finisher_launch": {
+   "peak_db": -7.0,
+   "pulse": {
+    "count": 2,
+    "on": 0.12,
+    "off": 0.07,
+    "fade": 0.12
+   },
+   "max_s": 0.43,
+   "layers": [
+    {
+     "type": "breath",
+     "at": 0.0,
+     "dur": 0.36,
+     "filter": "bp",
+     "f": 300,
+     "f_to": 2200,
+     "q": 1.0,
+     "a": 0.02,
+     "hold": 0.3,
+     "t60": 0.08,
+     "level": 1.0,
+     "pulsed": true,
+     "floor": 0.2
+    },
+    {
+     "type": "tick",
+     "at": 0.0,
+     "f": 220,
+     "t60": 0.03,
+     "click": 0.5,
+     "level": 0.4
+    }
+   ]
+  },
+  "finisher_melee": {
+   "peak_db": -6.0,
+   "pulse": {
+    "count": 2,
+    "on": 0.12,
+    "off": 0.07,
+    "fade": 0.12
+   },
+   "max_s": 0.43,
+   "layers": [
+    {
+     "type": "tick",
+     "at_pulse": 0,
+     "f": 200,
+     "t60": 0.04,
+     "click": 0.8,
+     "level": 1.0
+    },
+    {
+     "type": "thump",
+     "at_pulse": 0,
+     "f": 90,
+     "f_to": 55,
+     "t60": 0.12,
+     "level": 1.0
+    },
+    {
+     "type": "tick",
+     "at_pulse": 1,
+     "f": 170,
+     "t60": 0.045,
+     "click": 0.9,
+     "level": 1.1
+    },
+    {
+     "type": "thump",
+     "at_pulse": 1,
+     "f": 75,
+     "f_to": 45,
+     "t60": 0.14,
+     "level": 1.1
+    }
+   ]
+  },
+  "finisher_beam": {
+   "peak_db": -7.0,
+   "pulse": {
+    "count": 2,
+    "on": 0.14,
+    "off": 0.08,
+    "fade": 0.14
+   },
+   "max_s": 0.5,
+   "grow": 0.9,
+   "layers": [
+    {
+     "type": "note",
+     "at": 0.0,
+     "dur": 0.46,
+     "semi": -12,
+     "glide": 7,
+     "a": 0.04,
+     "hold": 0.4,
+     "t60": 0.08,
+     "level": 1.0,
+     "pulsed": true,
+     "floor": 0.5
+    },
+    {
+     "type": "note",
+     "at": 0.0,
+     "dur": 0.46,
+     "semi": 0,
+     "glide": 7,
+     "a": 0.04,
+     "hold": 0.4,
+     "t60": 0.08,
+     "level": 0.3,
+     "pulsed": true,
+     "floor": 0.5
+    },
+    {
+     "type": "breath",
+     "at": 0.0,
+     "dur": 0.46,
+     "filter": "lp",
+     "f": 300,
+     "f_to": 1200,
+     "q": 0.8,
+     "a": 0.05,
+     "hold": 0.35,
+     "t60": 0.08,
+     "level": 0.35,
+     "pulsed": true,
+     "floor": 0.4
+    }
+   ]
   }
  }
 }

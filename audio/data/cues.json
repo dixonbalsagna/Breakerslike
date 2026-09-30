@@ -106,7 +106,10 @@
       "triumph": 10,
       "pride": 11,
       "respect": 12,
-      "taunt": 13
+      "taunt": 13,
+      "finisher_launch": 14,
+      "finisher_melee": 15,
+      "finisher_beam": 16
     },
     "note": "Head-flash cues (docs/art/flash-prototype-spec.md). Priority follows Art's rank: the surge outranks everything. Rendering calls AudioCues.flash(S, actor, id) when a flash starts, or emits a cosmetic flash event {actor, id}. The ranks are copied from Art's data/art/flashes.json (v2, updated to 13 active flashes). Held flashes (Primed: hiding was removed from the base game) keep their recipe but are not ranked, rendered or played.",
     "held": [

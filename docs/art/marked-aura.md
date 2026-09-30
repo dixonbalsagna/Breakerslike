@@ -6,7 +6,7 @@ Orb's pick was Marked plus Aura. On seeing it, Orb found the standing aura distr
 
 **Sheets** (`art/concepts/marked-aura/`):
 - `ma-1-style.svg`: the four fighters at rest, the mask tones, 40 px and 12 px reads, and the neutral, taunt, hurt, rage and triumph strip per fighter with a head close-up.
-- `ma-2-flashes.svg`: all thirteen flashes in the four shape families, and a table of what each is for, its timing, priority and sound pairing.
+- `ma-2-flashes.svg`: all sixteen flashes in the four shape families, and a table of what each is for, its timing, priority and sound pairing.
 - `ma-3-staging.svg`: four staged moments in the greybox scene (face-off, clash, transformation, hurt or brink, where the crown owns the brink) with the blocking rules.
 - `ma-4-flash-rules.svg`: a flash in time, priority and arbitration, the flash against the HUD crown, and the Legal fallback.
 - `ma-5-legal-checks.svg`: the checks Legal asked Art to run, because Legal cannot view SVGs (masks in three flat colours and silhouette, each sigil beside the generic patterns to avoid, the flashes beside the two patterns to avoid, the dome, and the Coil's chest).
@@ -50,12 +50,15 @@ Orb played it: "a little too large and visible, a bit distracting", and the Prot
 
 ## The flash vocabulary
 
-Thirteen flashes (Orb added Hazard and Respect; the EP cut Brink, kept Resolve and kept Pride apart from Triumph; Orb then removed hiding from the base game, so Primed is held), four of them info. Each is tied to a real game moment. Timings are pulses (count, on, off, fade) in seconds: each flash pulses two or three times, then is gone, in 0.4 to 0.8 s, and the surge takes 1.85 s. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `data/art/flashes.json`.
+Sixteen flashes (the three finisher tells were added for Rendering's variety cues, seven of them info; Orb added Hazard and Respect; the EP cut Brink, kept Resolve and kept Pride apart from Triumph; Orb then removed hiding from the base game, so Primed is held), four of them info. Each is tied to a real game moment. Timings are pulses (count, on, off, fade) in seconds: each flash pulses two or three times, then is gone, in 0.4 to 0.8 s, and the surge takes 1.85 s. Priority 1 is the highest. Full table, cooldowns and sound pairings are on `ma-2-flashes.svg` and in `data/art/flashes.json`.
 
 | Flash | Class | Moment (sim event) | Time (s) | Priority |
 |---|---|---|---|---|
 | Danger sense | info | A telegraphed heavy or beam, an attack from off screen or behind (a pointer train, turned to the threat) | 3 x 0.08 on, 0.05 off, fade 0.08 = 0.42 s | 2 |
 | Hazard | info | The world is about to hit the fighter: a falling building, a collapsing crater rim, a beam path, rising water. Not a fighter attack | 2 x 0.125 on, 0.08 off, fade 0.12 = 0.45 s | 3 |
+| Finisher: launch | info | The fighter starts a launch finisher (`finisher_start` kind launch): a rising train of three shapes straight up | 2 x 0.12 on, 0.07 off, fade 0.12 = 0.43 s | 14 |
+| Finisher: melee | info | The fighter starts a melee finisher: a tight fan of five short shapes (a fist-burst) | 2 x 0.12 on, 0.07 off, fade 0.12 = 0.43 s | 15 |
+| Finisher: beam | info | The fighter starts a beam finisher: an arc of five small shapes (a ring) | 2 x 0.14 on, 0.08 off, fade 0.14 = 0.50 s | 16 |
 | Found | info | A lost lock-on is regained: the rival is back in line of sight | 2 x 0.14 on, 0.08 off, fade 0.12 = 0.48 s | 4 |
 | Searching | info | Lock-on lost: the rival has dropped out of line of sight (re-pops at most every 3 s) | 3 x 0.14 on, 0.10 off, fade 0.14 = 0.76 s | 5 |
 | Fear | emotion | An opponent starts a finisher, or the fighter watches a rival transform | 3 x 0.10 on, 0.07 off, fade 0.12 = 0.56 s | 6 |
@@ -67,6 +70,8 @@ Thirteen flashes (Orb added Hazard and Respect; the EP cut Brink, kept Resolve a
 | Respect | emotion | A clash ends in a draw, a finisher is blocked, or a rival gets back up after a heavy hit | 2 x 0.22 on, 0.12 off, fade 0.20 = 0.76 s | 12 |
 | Taunt | emotion | A taunt line or gesture | 3 x 0.10 on, 0.07 off, fade 0.14 = 0.58 s | 13 |
 | Surge | emotion | A transformation: three slow pulses of a small crest at the start of the cinematic, then gone | 3 x 0.35 on, 0.25 off, fade 0.30 = 1.85 s | 1 |
+
+**Finisher tells.** The three finisher flashes say the kind by arrangement and never by hue (all share the info colours, a pale core with a thin keyline), so they are colour-blind safe: a rising train straight up (launch), a tight fan (melee), an arc (beam). They sit at priority 14 to 16 so no existing rank moves; they are info, so an emotion flash never drops them.
 
 **Cut and held.** Brink is cut: the crown's dashed brink ring covers it, and the sigil still dims and gaps. Winded, Smug and Bored are held for later, and so is Primed (the ambush window needs hiding, which is held for a future stealth fighter; it keeps its layout in the data) (they are in the pitch, `ma-6-flash-pitch.svg`, and listed in the data as `held`).
 

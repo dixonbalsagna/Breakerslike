@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "decision": "Orb added Hazard, Primed and Respect; the EP cut Brink (the crown's brink ring covers it), kept Resolve (sequenced after the crown's wear pop) and kept Pride apart from Triumph. Then Orb removed hiding from the base game (held for a future stealth fighter), so Primed (the ambush window) moves to held with Winded, Smug and Bored. Thirteen active flashes, four of them info (danger, hazard, found, searching). Found and Searching stay, for lock-on regained and lost through line of sight.",
+  "decision": "Orb added Hazard, Primed and Respect; the EP cut Brink (the crown's brink ring covers it), kept Resolve (sequenced after the crown's wear pop) and kept Pride apart from Triumph. Then Orb removed hiding from the base game (held for a future stealth fighter), so Primed (the ambush window) moves to held with Winded, Smug and Bored. Thirteen active flashes, four of them info (danger, hazard, found, searching). Then three info flashes were added for the finisher kinds (launch, melee, beam; for the Rendering variety cues): sixteen active, seven info. Found and Searching stay, for lock-on regained and lost through line of sight.",
   "held": {
     "winded": {
       "name": "Winded",
@@ -174,7 +174,8 @@
         "pride",
         "triumph",
         "surge",
-        "danger"
+        "danger",
+        "finisher_melee"
       ]
     },
     "low_crest": {
@@ -288,6 +289,153 @@
       "moment": "The world is about to hit the fighter: a falling building, a collapsing crater rim, a beam path, rising water. Not a fighter attack (that is danger sense).",
       "event": "hazard_telegraph (new, World and Encounter)",
       "sound": "Two quick low ticks.",
+      "rare": false,
+      "sequence": null
+    },
+    "finisher_launch": {
+      "name": "Finisher: launch",
+      "class": "info",
+      "pulse": {
+        "count": 2,
+        "on": 0.12,
+        "off": 0.07,
+        "fade": 0.12,
+        "total": 0.43
+      },
+      "total": 0.43,
+      "priority": 14,
+      "cooldown": 3,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 90,
+          "d": 8,
+          "s": 9,
+          "op": 0.95
+        },
+        {
+          "a": 90,
+          "d": 18,
+          "s": 11,
+          "op": 0.95
+        },
+        {
+          "a": 90,
+          "d": 30,
+          "s": 14,
+          "op": 0.95
+        }
+      ],
+      "moment": "The fighter starts a launch finisher (the up-chevron cue): a rising train of shapes straight up, three shapes of growing size.",
+      "event": "finisher_start kind launch",
+      "sound": "A dry, quick rising sweep.",
+      "rare": false,
+      "sequence": null
+    },
+    "finisher_melee": {
+      "name": "Finisher: melee",
+      "class": "info",
+      "pulse": {
+        "count": 2,
+        "on": 0.12,
+        "off": 0.07,
+        "fade": 0.12,
+        "total": 0.43
+      },
+      "total": 0.43,
+      "priority": 15,
+      "cooldown": 3,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 66,
+          "d": 8,
+          "s": 8,
+          "op": 0.95
+        },
+        {
+          "a": 78,
+          "d": 8,
+          "s": 12,
+          "op": 0.95
+        },
+        {
+          "a": 90,
+          "d": 8,
+          "s": 8,
+          "op": 0.95
+        },
+        {
+          "a": 102,
+          "d": 8,
+          "s": 12,
+          "op": 0.95
+        },
+        {
+          "a": 114,
+          "d": 8,
+          "s": 8,
+          "op": 0.95
+        }
+      ],
+      "moment": "The fighter starts a melee finisher (the fist-burst cue): a tight fan of five short shapes, alternating two sizes.",
+      "event": "finisher_start kind melee",
+      "sound": "A sharp two-tap thud.",
+      "rare": false,
+      "sequence": null
+    },
+    "finisher_beam": {
+      "name": "Finisher: beam",
+      "class": "info",
+      "pulse": {
+        "count": 2,
+        "on": 0.14,
+        "off": 0.08,
+        "fade": 0.14,
+        "total": 0.5
+      },
+      "total": 0.5,
+      "priority": 16,
+      "cooldown": 3,
+      "kind": "layout",
+      "glyph": null,
+      "layout": [
+        {
+          "a": 72,
+          "d": 14,
+          "s": 6,
+          "op": 0.95
+        },
+        {
+          "a": 94,
+          "d": 14,
+          "s": 6,
+          "op": 0.95
+        },
+        {
+          "a": 116,
+          "d": 14,
+          "s": 6,
+          "op": 0.95
+        },
+        {
+          "a": 138,
+          "d": 14,
+          "s": 6,
+          "op": 0.95
+        },
+        {
+          "a": 160,
+          "d": 14,
+          "s": 6,
+          "op": 0.95
+        }
+      ],
+      "moment": "The fighter starts a beam finisher (the ring cue): an arc of five small shapes at one distance above and behind the head.",
+      "event": "finisher_start kind beam",
+      "sound": "A rising hum that swells on the last pulse.",
       "rare": false,
       "sequence": null
     },

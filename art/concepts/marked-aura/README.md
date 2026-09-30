@@ -5,7 +5,7 @@ Concept art for Orb to choose from. Working labels, pending Legal review. Read `
 | File | What it is |
 |---|---|
 | `ma-1-style.svg` | The style: four fighters, mask tones, 40 px and 12 px reads, expression strips with head close-ups |
-| `ma-2-flashes.svg` | The thirteen head flashes in the four shape families, with the table of moments, timing, priority and sound pairing |
+| `ma-2-flashes.svg` | The sixteen head flashes in the four shape families, with the table of moments, timing, priority and sound pairing |
 | `ma-3-staging.svg` | Four staged moments in the greybox scene (face-off, clash, transformation, hurt or brink) with the blocking rules |
 | `ma-4-flash-rules.svg` | A flash in time, priority and arbitration, the flash against the HUD crown, and the round-tipped Legal fallback |
 | `ma-5-legal-checks.svg` | The checks Legal asked Art to run: masks in three flat colours and as silhouettes, sigils beside the generic patterns to avoid, the flashes beside the two patterns to avoid, the dome, the Coil's chest |

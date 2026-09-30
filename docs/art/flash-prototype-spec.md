@@ -4,7 +4,7 @@ Owner: Art Director, for Rendering and Technical Art (routed by the EP). 2026-09
 
 ## 1. What the prototype must show
 
-Brief, iconic pops at a fighter's head that say what it senses or feels, then nothing. Thirteen flashes in the fighter's own shape family, driven by a state, with real timing (0.3 to 1 s), a real priority rule, and no clutter at rest. Orb should be able to play a match, see the flashes fire from real events, and fire each one by hand to compare.
+Brief, iconic pops at a fighter's head that say what it senses or feels, then nothing. Sixteen flashes in the fighter's own shape family, driven by a state, with real timing (0.3 to 1 s), a real priority rule, and no clutter at rest. Orb should be able to play a match, see the flashes fire from real events, and fire each one by hand to compare.
 
 ## 2. Scope
 
@@ -50,9 +50,10 @@ Wire the events that exist today, and add debug triggers for the rest.
 | Surge | `tier_up` as a stand-in, until `cinematic_start` and `cinematic_end` exist (hold for the cinematic length) | |
 | Resolve | `brink_exit` as a stand-in, until `rally` exists. Sequenced (section 7): it starts 0.1 s after the crown's wear pop fades | |
 | Rage | `banner` events for a clash, as a stand-in only for the prototype | debug key |
+| Finisher launch, melee, beam | `finisher_start` with `kind` launch, melee or beam, on the attacker | debug key |
 | Danger sense, hazard, searching, fear, pride, respect, taunt | none yet (Encounter's slices: `hazard_telegraph`, lock lost by line of sight; Game Design; Narrative barks; respect from `clash_draw`, `finisher_blocked` and the rival's `rally`) | debug key |
 
-**Debug triggers** (Rendering's debug overlay, not Controls' bindings): hold Alt and press the keys in the order of `flashes.json`: 1 to 9 for danger sense, hazard, found, searching, fear, rage, hurt, resolve, triumph; 0 for pride; minus for respect; equals for taunt; the left bracket for the surge. It fires on P1; add Shift for P2.
+**Debug triggers** (Rendering's debug overlay, not Controls' bindings): hold Alt and press the keys in the order of `flashes.json`: 1 to 9 for danger sense, hazard, found, searching, fear, rage, hurt, resolve, triumph; 0 for pride; minus for respect; equals for taunt; the left bracket, the right bracket, semicolon and apostrophe for the rest in data order (the finisher flashes follow hazard, so the keys after hazard shift by three; use the order in `flashes.json`). It fires on P1; add Shift for P2.
 **Audio:** emit a cosmetic `flash` event `{actor, id}` when a flash starts, so Audio can pair its cue. The prototype plays nothing.
 
 ## 7. Priority and arbitration
@@ -91,7 +92,7 @@ At most two draw calls per fighter, both hidden when idle (`visible = false`, ze
 
 **Acceptance:**
 1. At rest, no flash is drawn, and nothing changes in the frame.
-2. Each of the thirteen fires from its debug key, with the timing in the table (within a frame), and is gone by its total time.
+2. Each of the sixteen fires from its debug key, with the timing in the table (within a frame), and is gone by its total time.
 3. Priority and arbitration behave as in section 7: a heavy hit during a taunt cancels the taunt in 0.1 s, a crown pop drops a waiting flash, the surge preempts everything.
 4. The flash mirrors with the fighter when it swaps sides, and never covers the head, the chest or the sigil area.
 5. The gameplay hash is identical with the prototype on and off, at seeds 12345 and 4, and the determinism negative control still fails when a fighter is nudged.
@@ -101,6 +102,6 @@ At most two draw calls per fighter, both hidden when idle (`visible = false`, ze
 
 - **Rendering:** the cheat-out staging (in progress) and the hybrid projection are needed first.
 - **UI:** the `crown_up` callback, and the crown changes suggested in `marked-aura.md` (pop only for wear, stay down during a cinematic).
-- **Audio:** cue ids for the thirteen flashes (words are in `flashes.json`).
+- **Audio:** cue ids for the sixteen flashes (words are in `flashes.json`).
 - **Encounter and Game Design:** events for danger sense (ambush, telegraph), searching (lock lost, hunting), taunt, pride (a decisive exchange won) and the drop-act family.
 - **Open:** should the prototype also draw the sigil on the greybox head, so Orb sees a flash and a mark together? It is cheap (a decal on the head) and I recommend it as a second step.
