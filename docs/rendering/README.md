@@ -351,6 +351,7 @@ All commands run from the repo root; each exits 0 on success.
 | Flash check | `godot --headless --path . --script res://render/tools/flash_check.gd` | 185 checks on data version 3: all of the code's pass (the hash is the same on and off at 12345 and 4); 10 keep-out cases fail on the data (see Head flashes) |
 | Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (16 checks; hash with and without a compositor) |
 | Cue check | `godot --headless --path . --script res://render/tools/cue_check.gd -- --profile=spaced` | passed (46 checks over two full matches; hash with and without the poses) |
+| Outline check | `godot --path . --script res://render/tools/outline_check.gd` (a window) | passed: 0 crack pixels over 24 poses; the unbaked control 9,024 (`docs/rendering/outline-normals-plan.md`) |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
 
 **Ground check.** It runs three matches through the full scene and checks every 120 ticks:

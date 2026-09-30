@@ -59,6 +59,30 @@ static func fighter_flat(c: Color, alpha: float = 1.0, shade: float = 0.35) -> S
 	return m
 
 
+## A skinned fighter mesh's body (render/shaders/fighter_body.gdshader; the mesh baked by OutlineBake): faceted from
+## the position's derivatives, since the baked NORMAL is the outline's. Its outline (fighter_hull) is the next pass.
+static func fighter_body(c: Color, shade: float = 0.35, outline: bool = true) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = preload("res://render/shaders/fighter_body.gdshader")
+	m.set_shader_parameter("albedo", c)
+	m.set_shader_parameter("shade", shade)
+	m.set_shader_parameter("ortho", 1.0)
+	if outline:
+		m.next_pass = fighter_hull()
+	return m
+
+
+## A fighter mesh's outline pass (render/shaders/fighter_hull.gdshader; the mesh baked by OutlineBake): set it as the
+## body material's next_pass. Like fighter_flat it uses the hybrid projection, the owner setting its "anchor" every frame.
+static func fighter_hull(px: float = RenderLook.OUTLINE_PX) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = preload("res://render/shaders/fighter_hull.gdshader")
+	m.set_shader_parameter("outline_px", px)
+	m.set_shader_parameter("col", RenderLook.col(RenderLook.OUTLINE))
+	m.set_shader_parameter("ortho", 1.0)
+	return m
+
+
 ## A new additive glow material; the owner animates it with set_glow().
 static func glow(c: Color, alpha: float = 1.0, soft: float = 1.5) -> ShaderMaterial:
 	var m := ShaderMaterial.new()

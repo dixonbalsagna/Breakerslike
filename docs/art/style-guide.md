@@ -201,6 +201,13 @@ Target renderer: Godot 4.7 Compatibility, as in the greybox. Nothing here needs 
 
 **Ramp values worked example** (Anti-hero concept C, body base): lit `#55427a`, mid `#33264f`, shadow `#1f1633`. Gear: lit `#efeaf6`, mid `#d3cde3`, shadow `#8d86a8`.
 
+### 5.1 Production fighter mesh rules (from Animation's A0 spike)
+
+Source: `docs/animation/pose-pipeline.md` section 7.8 and `art/animation/a0/`. Recorded here so the production model follows them.
+- **Hands** are a palm plus one finger slab, one bone per hand. Approved by Animation. The turnarounds' closed and open hands are built that way.
+- **Outline normals are smoothed.** The inverted-hull outline pass uses smoothed (averaged) normals stored for the hull, while the visible faces keep their hard-edged shading normals. Hard-edged face normals crack the hull outline at every facet. This is a mesh-authoring rule, not a shading one, so the faceted look stays.
+- **Budgets per fighter:** at most 32 bones and 12 draw calls. The turnaround part lists (about 1,600 to 2,000 near-LOD triangles, 24 to 30 bones) already fit; the draw calls count the body, the outline pass, regalia pieces, the flash quads and the contact shadow, so regalia pieces should be merged where their variants allow.
+
 ## 6. Bodies: wear and damage
 
 Regions come from `spec-wounds.md`: head, core, arms and legs, plus UI's HUD wear crown. The Empress adds the mantle. Wear is 0 to 100 per region. Stages: fresh below 30, bruised 30 to 59, battered 60 to 89, broken 90 and above.
