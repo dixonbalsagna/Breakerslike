@@ -102,6 +102,10 @@ Orb upgraded the subscription ('more tokens to play with, keep going'). More dir
 ## Collateral ramp and cap (Game Design §4b)
 World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, over budget), a cumulative ceiling (10, 30, 60 and 90%), and per-casualty weights times 425/pop0. Narrative and World make evacuation read as fleeing. QA adds the rolling-window test, the ceiling test and the per-tier split.
 
+## Sim queue, revised again (Orb's pace feedback)
+World (active), then Encounter's dynamic-feel slice (profile dynamic, cooldown, AI cadence, no close-range halts, the beam-dodge hang, the overtime ramp, k), then D1a, then Controls Stage A, then D1b, then Controls Stage B, then F1.
+Push hold: local commit 9794840 (Tools' schemas expect flashes v3) waits until Rendering's flash v3 code lands. Then commit flashes.json v3, the audio retime and the render changes together, check a clean export, and push.
+
 ## Sim queue, revised (2026-09-29, night)
 World (collateral, B1, anguish, slide pop, structures index; active), then D1a (Simulation), then Controls Stage A, then D1b, then Encounter's overtime ramp and k 0.06, then Controls Stage B, then F1 (the Anti-hero). Tools is doing schemas and the validator in parallel (no sim edits).
 
