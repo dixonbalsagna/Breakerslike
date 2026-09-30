@@ -106,6 +106,14 @@ World builds it with B1: a rolling 60 s budget by tier (evacuation, not deaths, 
 - World, after B2: carve real fissure notches into S.deform so split ground reads at the profile (VFX's surface cracks are subtle at the grazing camera).
 - A launch planner pass with the open-ground spawn and B2: launches are 10.8 a minute after the dynamic slice (Encounter).
 
+## Sim queue, current (2026-09-30, after questionnaire 4)
+1. Encounter's dynamic-feel slice (blocked on Orb's go-ahead in the Encounter session; its auto mode denied the cross-owner edit).
+2. World: underwater placement fix, the shoreline −240 fix, RELOCATE on with evacuee menace, then B2 (Rampage floors), then districts and two big cities.
+3. D1a (Simulation).
+4. M1, mood and style (Simulation; plan docs/architecture/mood-style.md; numbers in spec-wounds §9; thresholds in docs/narrative/style.draft.json).
+5. Controls Stage A. 6. D1b. 7. Encounter's Q4 checkpoints A to E (with Combat's variety pass, data/combat/styles.json). 8. Controls Stages B and C. 9. F1 (the Anti-hero).
+Tools: schemas for combat styles, fight mood and fight style (no sim edits).
+
 ## Sim queue, revised again (Orb's pace feedback)
 World (active), then Encounter's dynamic-feel slice (profile dynamic, cooldown, AI cadence, no close-range halts, the beam-dodge hang, the overtime ramp, k), then D1a, then Controls Stage A, then D1b, then Controls Stage B, then F1.
 Push hold: local commit 9794840 (Tools' schemas expect flashes v3) waits until Rendering's flash v3 code lands. Then commit flashes.json v3, the audio retime and the render changes together, check a clean export, and push.
