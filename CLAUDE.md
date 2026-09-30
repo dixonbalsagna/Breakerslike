@@ -102,7 +102,7 @@ World and terrain: `wrap`, `sdx`, `biomeAt`, `genWorld`, `groundY`, `seaAt`. Des
 ## Conventions and definition of done
 
 - Every change keeps the sim deterministic: seeded RNG, fixed step, no rendering state in the sim.
-- Numbers live in data, not code.
+- Numbers live in data, not code. A change to a data file's shape updates its schema in tools/schemas/ in the same commit; CI's data job gates the deploy.
 - A task is done when it meets its acceptance criteria, the headless sim still runs clean, and the deliverable is documented in the owning director's docs folder.
 - Suggested layout (adjust with the engine ADR): `sim/`, `data/`, `render/`, `ui/`, `audio/`, `net/`, `tools/`, `art/`, `qa/`, `research/`, `docs/`.
 - Commits are small and named for the outcome. Reference the ADR number when a decision drove the change.
