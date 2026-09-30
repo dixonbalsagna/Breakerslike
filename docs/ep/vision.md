@@ -323,3 +323,13 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
   - Anti-hero: the alternative, pride ascension, with forms lost when Pride crashes.
   - Cyborg: the alternative, assimilation, feeding on wreckage. It keeps the earlier note that his final form brings his technology online and generates his hidden weapons.
 - Orb: "take these and pitch more. this is heading in a good direction, I want more ideas to work with."
+
+## Third-pass picks and animation feel (2026-09-30)
+- World changes Orb picked from the third pass:
+  - Protagonist: Beacon.
+  - Anti-hero: Salted Earth.
+  - Empress: Grand Avenue.
+  - Cyborg: The Stockpot.
+- Transformations: keep iterating.
+- Motion feel: a mix. Orb: "snappy looks really good, would work well in attack rushes. fluid looks really good, would work well with power strikes."
+- Showcase pose author: not decided; keep them as drafts. Orb questioned the hours: the game is meant to be 90% or more vibe-coded.
