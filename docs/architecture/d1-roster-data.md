@@ -181,6 +181,39 @@ data/fighters/roster.json    ["KAI", "VORR"] (Tools' schema today; the loader al
 - **Game Design:** the step-2 numbers.
 - **QA:** the probe, after.
 
+### 5.5 D1b as built (2026-09-30)
+
+**Wiring.**
+- `FighterData.MetersDef` (`f.md`) and `LadderDef` (`f.ld`) hold typed fields, and the readers are those in §5.1 and §5.2.
+- The loader rejects:
+  - a (meter, effect) or (meter, source) pair the code doesn't implement;
+  - a source `cap`;
+  - an anguish decay delay;
+  - a meter range or start other than [0, 100] and 0;
+  - a ladder whose thresholds are not three, strictly increasing;
+  - unknown tier keys.
+- `regen_bonus` gained an optional `cap`, mirroring `regen_penalty`.
+- The arm moves `md` and `ld` with the fighter.
+
+**Guard lever.** `wounds.json guardWearSplit {arms, legs}` (Tools' schema) splits a guard-family hit's wear between the arms and the legs (`SimWounds.addGuardWear`). The region pick still makes its one `S.rng` draw, and the damage event still reports the arms.
+
+**The proof, as run.**
+1. With today's numbers in data (the split `{1, 0}`, no caps), parity against the pre-D1b goldens passed everything except the roster hash, which changes with any data file. That covered tick-0, the wounds, Rally and crippling vectors, all 9 matches (171,671 ticks) and the replays.
+2. Game Design's numbers are data edits:
+   - `care` 0 for both fighters;
+   - menace `damage_mul` 0.05, and `regen_bonus` 0.01 capped at 1;
+   - anguish `regen_penalty` 0.01 capped at 1;
+   - cripple `base` 0.08, and ±0.05 for the tier, late-act and DEFENSIVE terms;
+   - `guardWearSplit` 0.6 and 0.4.
+   One regeneration followed.
+
+**QA's finding, closed.** The parity check "wired numbers change a match" edits each of 25 wired numbers in turn, in a copy of `data/fighters/`, and plays seed 3 (or 16) for 6,000 ticks. The per-tick digest of both fighters' numbers, and the end state, must differ from the unedited run. Comparing end states alone was too weak: a changed ki path can end in the same state.
+
+**Left as they are** (other owners' lines, outside this window's grants):
+- `world/collateral.gd` feeds a menace fighter's power, `+0.09` per casualty (a ladder source for later);
+- `EVAC_MENACE` is still read by World's probe tool;
+- QA's runner labels slice S0 by searching `fighter.gd` for `MENACE_DECAY`, which is gone (the label only).
+
 ## 6. Owners and hand-offs
 
 - **Tools:** the JSON schemas in `tools/schemas/` (fighter, fighter-wounds, fighter-ladder, fighter-meters, fighter-roster) and the validator, with the 15-digit lint. A change to a data shape updates its schema in the same commit, or CI's data job, which gates deploy, fails. The D1a report lists every shape it lands, so Tools can tighten the schemas in that commit.

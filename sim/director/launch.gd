@@ -69,7 +69,7 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 			md += MOUNTAIN_STEP
 	if not longOnly:
 		c.append({"name": "NONE", "ux": 0.0, "uy": 0.0, "s": NONE_BASE})
-	var tierF: float = 1.0 + 0.16 * (A.tier - 1.0)
+	var tierF: float = 1.0 + A.ld.launch * (A.tier - 1.0)   # D1b: ladder.json
 	for k in c:
 		k.s += S.rng.range_(0.0, NOISE)
 		if k.name == "NONE":
@@ -189,7 +189,7 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 ## special marks a signature, a finisher or a break launch: its ground impact may leave a big crater (world/crater.gd).
 static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, special: bool = false) -> void:
 	var fm: float = plan.fm if plan.has("fm") else 1.0
-	var f: float = force * fm * (1.0 + 0.16 * (att.tier - 1.0))
+	var f: float = force * fm * (1.0 + att.ld.launch * (att.tier - 1.0))   # D1b: ladder.json
 	tgt.state = "launched"
 	tgt.launchBy = att
 	tgt.bounces = 0.0

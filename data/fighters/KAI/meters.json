@@ -1,6 +1,6 @@
 {
   "schema": "meters/1",
-  "_about": "D1a reads only which meters this fighter has (Fighter.hasAnguish, hasMenace: the data-driven meters of Game Design's ruling). The numbers document today's rules in sim/core/fighter.gd, damage.gd and sim/world/collateral.gd and are wired in D1b (docs/architecture/d1-roster-data.md section 5); until then editing them changes nothing but the data hash. Casualty amounts are per person, normalised by 425 / pop0. Event names are D1b placeholders.",
+  "_about": "D1b: the meters' numbers, loaded by sim/core/fighter_data.gd into a MetersDef (f.md) and read by fighter.gd (regen, decay), damage.gd (damage_mul, comeback, composure), world/collateral.gd (sources) and director/beam.gd (beam_power). Casualty and evacuee amounts are per person, normalised by 425 / pop0. The range and start are pinned to 0 to 100 and 0 until F1.",
   "meters": {
     "anguish": {
       "range": [
@@ -30,17 +30,22 @@
       "effects": [
         {
           "key": "regen_penalty",
-          "perPoint": 0.025,
-          "_note": "ki regen falls by this per point, floor 1 per second"
+          "perPoint": 0.01,
+          "_note": "ki regen - perPoint x anguish, at most cap (balance-targets section 13: 0.01, at most -1)",
+          "cap": 1.0
         },
         {
           "key": "composure",
           "below": 10.0,
           "cap": 0.0,
           "_note": "damage bonus while below; 0 = off (balance-targets.md section 4b ruling 6)"
+        },
+        {
+          "key": "comeback",
+          "cap": 0.5,
+          "_note": "damage x (1 + cap x (1 - vitality)^2): stronger the closer to the brink (GD-B09)"
         }
-      ],
-      "_note": "a fighter with anguish also gets the comeback damage term (damage.gd, GD-B09)"
+      ]
     }
   }
 }

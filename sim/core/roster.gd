@@ -23,6 +23,8 @@ static func createFighter(def: Dictionary, x: float, keys: String, ai: bool) -> 
 	f.hasMenace = def.get("menace", false)
 	f.rally = def.get("rally", "")
 	f.wd = def.wd
+	f.md = def.md
+	f.ld = def.ld
 	f.finisher = def.get("finisher", "")
 	f.hp = def.maxhp
 	f.x = x

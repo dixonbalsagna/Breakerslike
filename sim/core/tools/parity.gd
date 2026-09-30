@@ -41,6 +41,7 @@ func _init() -> void:
 	check("crippling (forced)", "" if SimGolden.crippleHash() == g.get("cripple", "") else "differs")
 	check("roster data", _roster(g))
 	check("roster loader rejects bad data", _rosterRejects())
+	check("wired numbers change a match", _wiredNumbers())
 	check("keyed draws", _keyedDraws(g))
 	check("arm setups", _armSetups())
 	check("replay module", _replayModule())
@@ -229,7 +230,7 @@ func _roster(g: Dictionary) -> String:
 func _rosterRejects() -> String:
 	var src: String = FighterData.ROOT + "KAI/"
 	var base := {"fighter.json": FileAccess.get_file_as_string(src + "fighter.json"), "wounds.json": FileAccess.get_file_as_string(src + "wounds.json"),
-		"meters.json": FileAccess.get_file_as_string(src + "meters.json")}
+		"meters.json": FileAccess.get_file_as_string(src + "meters.json"), "ladder.json": FileAccess.get_file_as_string(src + "ladder.json")}
 	var h0: String = FighterData.dataHash()
 	var cases: Array = [
 		["note", "", "", "", ""],
@@ -323,6 +324,98 @@ func _rosterRejects() -> String:
 	if FighterData.dataHash() != h0:
 		return "reloading data/fighters/ changed the hash"
 	return ""
+
+
+## D1b: every wired number in meters.json, ladder.json and guardWearSplit changes a match when edited (QA found the meters
+## were documentation only). Each case copies data/fighters/ to user://, sets one value (ladder edits in both fighters'
+## files), and plays seed 3 for WIRED_TICKS: by then it has a beam clash, both meters rising, evacuees and a power-up at
+## ground beside buildings (a fourth element picks another seed: 16 has a beam clash with menace up, VORR's evacuees and
+## guard hits early). The run's per-tick digest of both fighters' numbers, and its end state, must differ from the
+## unedited run's. composure.below is left out: it only matters while composure's cap is not 0.
+const WIRED_TICKS: int = 6000
+const WIRED: Array = [
+	["KAI/meters.json", ["meters", "anguish", "effects", 0, "perPoint"], 0.2],
+	["KAI/meters.json", ["meters", "anguish", "effects", 0, "cap"], 0.05],
+	["KAI/meters.json", ["meters", "anguish", "effects", 1, "cap"], 0.3],
+	["KAI/meters.json", ["meters", "anguish", "effects", 2, "cap"], 2.0],
+	["KAI/meters.json", ["meters", "anguish", "decay", "rate"], 3.0],
+	["KAI/meters.json", ["meters", "anguish", "sources", 0, "amount"], 5.0],
+	["KAI/meters.json", ["meters", "anguish", "sources", 1, "amount"], 5.0],
+	["VORR/meters.json", ["meters", "menace", "effects", 0, "perPoint"], 0.3],
+	["VORR/meters.json", ["meters", "menace", "effects", 0, "cap"], 0.01],
+	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0],
+	["VORR/meters.json", ["meters", "menace", "effects", 2, "perPoint"], 50.0, 16],
+	["VORR/meters.json", ["meters", "menace", "decay", "rate"], 3.0],
+	["VORR/meters.json", ["meters", "menace", "decay", "delayTicks"], 30],
+	["VORR/meters.json", ["meters", "menace", "sources", 0, "amount"], 5.0],
+	["VORR/meters.json", ["meters", "menace", "sources", 1, "amount"], 5.0, 16],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["fillPerSec"], 2.0],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["thresholds"], [10.0, 50.0, 75.0]],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "speed"], 0.5],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "damage"], 0.5],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "launch"], 0.8],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaR"], 600.0],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaRPerTier"], 300.0],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmg"], 900.0],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmgPerTier"], 900.0],
+	[["KAI/wounds.json", "VORR/wounds.json"], ["guardWearSplit"], {"arms": 0.5, "legs": 0.5}, 16],
+]
+
+
+func _wiredNumbers() -> String:
+	var files := {}
+	for id in FighterData.order():
+		for fname in ["fighter.json", "wounds.json", "meters.json", "ladder.json"]:
+			files[id + "/" + fname] = FileAccess.get_file_as_string(FighterData.ROOT + id + "/" + fname)
+	var base := {3: _wiredRun(3), 16: _wiredRun(16)}
+	var bad: Array = []
+	FighterData.quiet = true
+	for i in range(WIRED.size()):
+		var c: Array = WIRED[i]
+		var dir: String = "user://d1b_wired/%d/" % i
+		for id in ["KAI", "VORR"]:
+			DirAccess.make_dir_recursive_absolute(dir + id)
+		var rf := FileAccess.open(dir + "roster.json", FileAccess.WRITE)
+		rf.store_string("[\"KAI\", \"VORR\"]")
+		rf.close()
+		var targets: Array = c[0] if c[0] is Array else [c[0]]
+		for key in files:
+			var text: String = files[key]
+			if targets.has(key):
+				var d = JSON.parse_string(text)
+				var node = d
+				for k in range(c[1].size() - 1):
+					node = node[c[1][k]]
+				node[c[1][c[1].size() - 1]] = c[2]
+				text = JSON.stringify(d, "  ")
+			var fw := FileAccess.open(dir + key, FileAccess.WRITE)
+			fw.store_string(text)
+			fw.close()
+		FighterData.loadFrom(dir)
+		if not FighterData.errors().is_empty():
+			bad.append("%s %s: %s" % [str(c[0]), str(c[1]), "; ".join(FighterData.errors())])
+		elif _wiredRun(c[3] if c.size() > 3 else 3) == base[c[3] if c.size() > 3 else 3]:
+			bad.append("%s %s: no effect" % [str(c[0]), str(c[1])])
+	FighterData.quiet = false
+	FighterData.loadFrom()
+	return "" if bad.is_empty() else "; ".join(bad)
+
+
+func _wiredRun(seed: int) -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, seed)
+	var h := SimHash.Hasher.new()
+	for t in range(WIRED_TICKS):
+		SimCore.step(S)
+		S.out.fx.clear()
+		S.out.feed.clear()
+		for f in S.fighters:
+			h.num(f.x); h.num(f.y); h.num(f.ki); h.num(f.power); h.num(f.menace); h.num(f.anguish)
+			for r in range(4):
+				h.num(float(f.wear[r]))
+	var got: String = h.hex() + ":" + SimHash.stateHash(S).gameplay
+	SimCore.dispose(S)
+	return got
 
 
 ## D1a: SimRng.keyed is stateless (same inputs, same value; no stream moves), spread over keys and indices, in [0, 1), and

@@ -3047,6 +3047,145 @@
         "rule": "pattern",
         "pointer": "/cues/brace"
       }
+    },
+    {
+      "id": "meters-comeback-needs-cap",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "del": [
+            "/meters/anguish/effects/2/cap"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/meters/anguish/effects/2"
+      }
+    },
+    {
+      "id": "meters-beam-power-needs-perpoint",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_VILLAIN/meters.json",
+          "del": [
+            "/meters/menace/effects/2/perPoint"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/meters/menace/effects/2"
+      }
+    },
+    {
+      "id": "meters-comeback-and-beam-power-accepted",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/meters.json",
+          "set": {
+            "/meters/anguish/effects/2/cap": 0.25
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "meters-effect-still-closed",
+      "schema": "fighter-meters.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_VILLAIN/meters.json",
+          "set": {
+            "/meters/menace/effects/2/key": "beam_overdrive"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/meters/menace/effects/2/key"
+      }
+    },
+    {
+      "id": "wounds-guard-split-required",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "del": [
+            "/guardWearSplit"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "wounds-guard-split-range",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/guardWearSplit/arms": 1.4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/guardWearSplit/arms"
+      }
+    },
+    {
+      "id": "wounds-guard-split-missing-share",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "del": [
+            "/guardWearSplit/legs"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/guardWearSplit"
+      }
+    },
+    {
+      "id": "wounds-guard-split-sum",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/guardWearSplit/legs": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:guard-split",
+        "pointer": "/guardWearSplit"
+      }
+    },
+    {
+      "id": "wounds-guard-split-epsilon-ok",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/guardWearSplit/arms": 0.6000000000001,
+            "/guardWearSplit/legs": 0.4
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

@@ -38,6 +38,11 @@
           "below": 10,
           "cap": 0,
           "_note": "damage bonus while below; 0 = off (balance-targets.md section 4b ruling 6)"
+        },
+        {
+          "key": "comeback",
+          "cap": 0.5,
+          "_note": "x (1 + cap x (1 - vitality)^2)"
         }
       ],
       "_note": "a fighter with anguish also gets the comeback damage term (damage.gd, GD-B09)"

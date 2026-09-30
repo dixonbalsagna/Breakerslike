@@ -218,6 +218,15 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- fighter wounds: the guard wear split sums to 1 ----
+  for (const rel of docsFor(/^data\/fighters\/[^/]+\/wounds\.json$/)) {
+    const w = get(rel);
+    const g = isObj(w) ? w.guardWearSplit : undefined;
+    if (isObj(g) && typeof g.arms === 'number' && typeof g.legs === 'number' && Math.abs(g.arms + g.legs - 1) > 1e-9) {
+      err(rel, '/guardWearSplit', 'guard-split', 'arms ' + g.arms + ' + legs ' + g.legs + ' = ' + (g.arms + g.legs) + ', but the two shares must sum to 1');
+    }
+  }
+
   // ---- fighter meters ----
   for (const rel of [...docsFor(/^data\/fighters\/[^/]+\/meters\.json$/)]) {
     const doc = get(rel);

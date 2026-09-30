@@ -207,7 +207,7 @@ static func kill(S: SimState, bi: int, want: float, cause, evt: float, cx: float
 	if evac > 0.000001:
 		w.evacuated += evac
 		if cause != null and cause.hasMenace:
-			cause.menace = SimMathx.jmin(100.0, cause.menace + evac * EVAC_MENACE * POP_REF / w.pop0)
+			cause.menace = SimMathx.jmin(100.0, cause.menace + evac * cause.md.menaceEvac * POP_REF / w.pop0)   # D1b: meters.json
 		var reason: String = "ceiling" if cl < rm + borrow else "budget"
 		var owner: float = WorldCrater._slot(S, cause)
 		var dest: int = shelter(S, cx, evac)
@@ -225,11 +225,11 @@ static func _feed(S: SimState, n: float, cause) -> void:
 	var norm: float = POP_REF / S.world.pop0
 	S.world.casualties += n
 	if cause != null and cause.hasMenace:
-		cause.menace = SimMathx.jmin(100.0, cause.menace + n * 0.9 * norm)
+		cause.menace = SimMathx.jmin(100.0, cause.menace + n * cause.md.menaceCas * norm)   # D1b: meters.json
 		cause.power = SimMathx.jmin(100.0, cause.power + n * 0.09 * norm)
 	for f in S.fighters:
 		if f.hasAnguish:
-			f.anguish = SimMathx.jmin(100.0, f.anguish + n * (0.9 if cause == f else 0.5) * norm)
+			f.anguish = SimMathx.jmin(100.0, f.anguish + n * (f.md.anguishCasSelf if cause == f else f.md.anguishCasOther) * norm)   # D1b: meters.json
 
 
 ## Once per unfrozen tick: advance the window, report the state once a second, and run the district flight.

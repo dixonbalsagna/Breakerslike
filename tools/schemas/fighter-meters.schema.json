@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/fighter-meters",
   "title": "meters/1 (D1a as built, docs/architecture/d1-roster-data.md sections 5 and 7b)",
-  "description": "data/fighters/<id>/meters.json: which meters a fighter has (D1a reads only that: hasAnguish, hasMenace) and the numbers that document today's rules, wired in D1b. Version field: schema. Policy: closed except keys starting with an underscore. `effects` is a closed list of effect keys that code implements, each with the fields it needs. Cross-references (the start value lies inside the range) are checked by tools/lib/xref.js.",
+  "description": "data/fighters/<id>/meters.json: which meters a fighter has (D1a reads only that: hasAnguish, hasMenace) and the numbers that document today's rules, wired in D1b. Version field: schema. Policy: closed except keys starting with an underscore. `effects` is a closed list of effect keys that code implements, each with the fields it needs: regen_bonus and regen_penalty need perPoint (regen_penalty may add a cap, the most penalty it applies), damage_mul needs cap, composure needs below and cap, comeback needs cap, beam_power needs perPoint (docs/architecture/d1-roster-data.md section 5.1). Cross-references (the start value lies inside the range) are checked by tools/lib/xref.js.",
   "type": "object",
   "required": [
     "schema",
@@ -127,7 +127,9 @@
                   "regen_bonus",
                   "regen_penalty",
                   "damage_mul",
-                  "composure"
+                  "composure",
+                  "comeback",
+                  "beam_power"
                 ]
               },
               "perPoint": {
@@ -197,6 +199,40 @@
                   "required": [
                     "below",
                     "cap"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "key": {
+                      "const": "comeback"
+                    }
+                  },
+                  "required": [
+                    "key"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "cap"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "key": {
+                      "const": "beam_power"
+                    }
+                  },
+                  "required": [
+                    "key"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "perPoint"
                   ]
                 }
               }

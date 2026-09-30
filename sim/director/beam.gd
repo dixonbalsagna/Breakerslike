@@ -107,7 +107,7 @@ static func opBeamEscape(S: SimState, ex, _args) -> void:
 
 ## beam.js startClash sc(f): one draw per call, attacker first.
 static func _clashScore(S: SimState, f) -> float:
-	return f.tier * 10.0 + f.ki * 0.35 + S.rng.range_(0.0, 16.0) + (f.menace * 0.08 if f.hasMenace else 0.0)
+	return f.tier * 10.0 + f.ki * 0.35 + S.rng.range_(0.0, 16.0) + (f.menace * f.md.menaceBeam if f.hasMenace else 0.0)   # D1b: meters.json beam_power
 
 
 static func startClash(S: SimState, ex, variant: String) -> void:

@@ -1,10 +1,8 @@
 class_name SimFighter
 ## Fighter simulation: the twin of fighter.js (tierUp, impact, stepLaunched, stepRush, stepFighter).
 
-## Placeholder balance (balance-targets.md section 9, slice S0): menace decays at MENACE_DECAY per second once it has
-## gone MENACE_QUIET_TICKS (4 s) without being fed.
-const MENACE_DECAY: float = 0.4
-const MENACE_QUIET_TICKS: int = 240
+## D1b: the meters' numbers (regen, decay) are f.md and the power ladder's are f.ld (data/fighters/<id>/meters.json and
+## ladder.json).
 ## Water holds a launched fighter up (S3a gap fix): under water the launch's gravity is cancelled (neutral buoyancy), so
 ## the drag brings it below the free speed within about a second instead of holding it at a 430 u/s sink to the seabed.
 const WATER_BUOY: float = 1000.0
@@ -19,7 +17,7 @@ static func tierUp(S: SimState, f) -> void:
 	SimFx.shake(S, 14.0, f.x)
 	if f.y < g + 140.0:
 		WorldCrater.dig(S, f.x, WorldCrater.powerupEnergy(f.tier), f, "powerup")
-		WorldStructures.damageArea(S, f.x, f.y, (130.0 + f.tier * 60.0) * SimConst.WS, 90.0 + f.tier * 100.0, f)
+		WorldStructures.damageArea(S, f.x, f.y, (f.ld.areaR + f.tier * f.ld.areaRPerTier) * SimConst.WS, f.ld.areaDmg + f.tier * f.ld.areaDmgPerTier, f)
 		SimFx.debris(S, f.x, g + 10.0, 10, "#6d6a66", 600.0)
 		SimFx.dust(S, f.x, g, 5)
 	SimFx.tierUp(S, f, f.y < g + 140.0)
@@ -180,25 +178,34 @@ static func stepRush(S: SimState, f, dt: float) -> void:
 static func stepFighter(S: SimState, f, dt: float) -> void:
 	var o = SimRoster.opp(S, f)
 	var i: SimIntent = f.input
-	f.power = SimMathx.jmin(100.0, f.power + 0.45 * dt)
-	var nt: float = 1.0 + (1.0 if f.power >= 25.0 else 0.0) + (1.0 if f.power >= 50.0 else 0.0) + (1.0 if f.power >= 75.0 else 0.0)
+	f.power = SimMathx.jmin(100.0, f.power + f.ld.fill * dt)
+	var nt: float = 1.0
+	for th in f.ld.thresholds:
+		if f.power >= th:
+			nt += 1.0
 	if nt > f.tier:
 		f.tier = nt
 		tierUp(S, f)
 	var regen: float = 5.0 + (25.0 if f.hidden and f.canHide else 0.0)
 	if f.hasMenace:
-		regen += f.menace * 0.03
+		var bonus: float = f.menace * f.md.menaceRegen
+		if f.md.menaceRegenCap >= 0.0:
+			bonus = SimMathx.jmin(f.md.menaceRegenCap, bonus)
+		regen += bonus
 	else:
-		regen = SimMathx.jmax(1.0, regen - f.anguish * 0.025)
+		var pen: float = f.anguish * f.md.anguishRegen
+		if f.md.anguishRegenCap >= 0.0:
+			pen = SimMathx.jmin(f.md.anguishRegenCap, pen)
+		regen = SimMathx.jmax(1.0, regen - pen)
 	if f.hasAnguish:
-		f.anguish = SimMathx.jmax(0.0, f.anguish - 0.6 * dt)
-	# Menace decays when it is not fed (balance-targets.md section 9, S0): after MENACE_QUIET_TICKS without a rise it
-	# falls by MENACE_DECAY per second. At the cap a casualty cannot raise it, so there a rise in world casualties also
+		f.anguish = SimMathx.jmax(0.0, f.anguish - f.md.anguishDecay * dt)
+	# Menace decays when it is not fed (balance-targets.md section 9, S0): after f.md.menaceDelay ticks without a rise it
+	# falls by f.md.menaceDecay per second. At the cap a casualty cannot raise it, so there a rise in world casualties also
 	# counts as fed. (sim/world stays untouched: menace only ever rises through a casualty.)
 	var fed: bool = f.menace > f.menaceSeen or (f.menace >= 100.0 and S.world.casualties > f.casSeen)
 	f.menaceQuiet = 0 if fed else f.menaceQuiet + 1
-	if f.menaceQuiet > MENACE_QUIET_TICKS:
-		f.menace = SimMathx.jmax(0.0, f.menace - MENACE_DECAY * dt)
+	if f.menaceQuiet > f.md.menaceDelay:
+		f.menace = SimMathx.jmax(0.0, f.menace - f.md.menaceDecay * dt)
 	f.menaceSeen = f.menace
 	f.casSeen = S.world.casualties
 	if SimWounds.battered(f, SimWounds.CORE):
@@ -221,7 +228,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 			f.state = "charging"
 			f.hidden = false
 		else:
-			var sp: float = 430.0 * f.spd * (1.0 + 0.10 * (f.tier - 1.0))
+			var sp: float = 430.0 * f.spd * (1.0 + f.ld.speed * (f.tier - 1.0))
 			if SimWounds.battered(f, SimWounds.LEGS):
 				sp *= f.wd.legsSpeed
 			if f.stance == 2.0:

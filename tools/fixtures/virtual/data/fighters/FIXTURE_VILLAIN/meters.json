@@ -37,6 +37,11 @@
           "key": "damage_mul",
           "cap": 0.15,
           "_note": "x (1 + 0.15 x menace / 100)"
+        },
+        {
+          "key": "beam_power",
+          "perPoint": 0.08,
+          "_note": "+perPoint x menace to the beam score"
         }
       ]
     }

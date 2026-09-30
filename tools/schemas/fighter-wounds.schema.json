@@ -17,7 +17,8 @@
     "profile",
     "rally",
     "act1Damping",
-    "overtime"
+    "overtime",
+    "guardWearSplit"
   ],
   "properties": {
     "schema": {
@@ -348,6 +349,30 @@
         "cap": {
           "type": "number",
           "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "guardWearSplit": {
+      "type": "object",
+      "required": [
+        "arms",
+        "legs"
+      ],
+      "description": "How the wear of a hit into a raised guard is split between the arms and the legs. Each share is 0 to 1 and the two sum to 1 (checked by tools/lib/xref-fight.js, with a small epsilon).",
+      "properties": {
+        "arms": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "legs": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
         }
       },
       "additionalProperties": false,

@@ -20,7 +20,7 @@ const CAP: int = 18000
 ## hasMenace, from da5fb09), the kit, the Rally rule, the wound data and the finisher key used to stay with the slot, so a
 ## swapped "VORR" kept KAI's anguish. The parity gate's "arm setups" check holds applyArm equal to newMatch's setup.
 const CHAR_KEYS: Array = ["id", "name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName",
-	"canHide", "rally", "hasAnguish", "hasMenace", "wd", "finisher"]
+	"canHide", "rally", "hasAnguish", "hasMenace", "wd", "finisher", "md", "ld"]
 const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 
 

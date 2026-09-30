@@ -121,6 +121,15 @@ static func addWear(S: SimState, f, region: int, damage: float) -> void:
 	updateStages(S, f)
 
 
+## A hit into a raised guard (family guard): its wear is split between the arms and the legs by f.wd.guardArms and
+## guardLegs (wounds.json guardWearSplit), so legs can become battered from guarding (Game Design's lever on the arm skew).
+static func addGuardWear(S: SimState, f, damage: float) -> void:
+	if f.wd.guardArms > 0.0:
+		addWear(S, f, ARMS, damage * f.wd.guardArms)
+	if f.wd.guardLegs > 0.0:
+		addWear(S, f, LEGS, damage * f.wd.guardLegs)
+
+
 ## Recovery, once per tick from stepFighter: out of exchanges a region below 60 fades f.wd.fadeOut; a battered region fades
 ## by second breath (or, for a fighter with the hiding kit, while hidden), down to 59; broken regions never fade. The
 ## stagger and daze timer counts down here too.

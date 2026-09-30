@@ -6,7 +6,7 @@
     "name": "KAI", "title": "Meridian Warden", "role": "hero", "sigName": "Meridian Lance",
     "col": "#3d8fdc", "aura": "#8fd6ff", "hair": "#22c7a9"
   },
-  "stats": { "care": 1.0, "dmgMul": 1.0, "spd": 1.0, "maxhp": 1600.0 },
+  "stats": { "care": 0.0, "dmgMul": 1.0, "spd": 1.0, "maxhp": 1600.0 },
   "kit": { "canHide": false },
   "rally": { "rule": "second_wind", "_note": "the prototype fighters' placeholder rule (wounds-plan.md S4)" },
   "finishers": { "base": "kai" }

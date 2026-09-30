@@ -3,11 +3,8 @@ class_name SimDamage
 ## (ignoreStance, big, stop, shake, kb, noParry); a missing key reads as JS undefined.
 
 const STANCE_MUL: Array = [1.12, 0.38, 1.0, 1.25]
-## Menace's damage bonus at full menace (balance-targets.md section 9, slice S0): was 0.25.
-const MENACE_DMG_CAP: float = 0.15
-## The hero's composure bonus while anguish is under COMPOSURE_ANGUISH (section 9's fallback, S0).
-const COMPOSURE_BONUS: float = 0.0   # off (balance-targets.md §4b ruling 6); was 0.10
-const COMPOSURE_ANGUISH: float = 10.0
+## D1b: the meters' damage effects (menace's damage_mul, anguish's comeback and composure) are A.md, and the tier's
+## damage step is A.ld (data/fighters/<id>/meters.json and ladder.json).
 
 
 ## JS `v || d` for a number: d when v is 0, -0 or NaN.
@@ -25,7 +22,10 @@ static func hurt(S: SimState, f, amt: float, by, fam: String = "spread", kind: S
 	var region: int = SimWounds.pickRegion(S, f, fam) if amt > 0.0 else -1
 	SimFx.damage(S, f, by, amt, SimWounds.REGIONS[region] if region >= 0 else "", kind, col, number)
 	if region >= 0:
-		SimWounds.addWear(S, f, region, amt)
+		if fam == "guard":
+			SimWounds.addGuardWear(S, f, amt)   # D1b lever: a guard hit's wear is split between arms and legs
+		else:
+			SimWounds.addWear(S, f, region, amt)
 	# The Wounds hook (wounds-plan.md S1/S2): the HP bar ends the match until Encounter's S2 flips HP_ENDS_MATCH; then
 	# only a finisher can KO (spec-wounds.md §1, "The end").
 	if SimWounds.HP_ENDS_MATCH and f.hp <= 0.0 and S.game.ko == null:
@@ -36,15 +36,15 @@ static func hurt(S: SimState, f, amt: float, by, fam: String = "spread", kind: S
 static func hit(S: SimState, ex, A, D, dmg: float, o = null) -> float:
 	if o == null:
 		o = {}
-	var m: float = A.dmgMul * (1.0 + 0.09 * (A.tier - 1.0))
+	var m: float = A.dmgMul * (1.0 + A.ld.damage * (A.tier - 1.0))
 	if A.hasMenace:
-		m *= 1.0 + MENACE_DMG_CAP * (A.menace / 100.0)
+		m *= 1.0 + A.md.menaceDmgCap * (A.menace / 100.0)
 	elif A.hasAnguish:
 		# Comeback (a fighter with the anguish meter, GD-B09): stronger the closer he is to the brink (S2: wounds replace hp / maxhp).
-		m *= 1.0 + 0.5 * SimDetMath.pow(1.0 - SimWounds.vitality(A), 2.0)
+		m *= 1.0 + A.md.comeback * SimDetMath.pow(1.0 - SimWounds.vitality(A), 2.0)
 	# Composure (balance-targets.md section 9, S0 fallback): the hero hits harder while collateral has not rattled him.
-	if A.hasAnguish and A.anguish < COMPOSURE_ANGUISH:
-		m *= 1.0 + COMPOSURE_BONUS
+	if A.hasAnguish and A.anguish < A.md.composureBelow:
+		m *= 1.0 + A.md.composureBonus
 	m *= 1.0 + 0.12 * ((ex.combo if ex != null else 1.0) - 1.0)
 	if A.ambush:
 		m *= 1.5

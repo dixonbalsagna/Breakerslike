@@ -282,6 +282,8 @@ class Fighter:
 	var limbBreaks: int = 0          # pitch A: limbs broken in crippling moments this match
 	var coreMarked: bool = false     # pitch A: the core has reached battered once (an act beat)
 	var wd = null                    # D1a: the fighter's FighterData.WoundsDef (data; covered by the data hash, not hashed here)
+	var md = null                    # D1b: its FighterData.MetersDef (the same)
+	var ld = null                    # D1b: its FighterData.LadderDef (the same)
 	var finisher: String = ""        # D1a: fighter.json finishers.base (data; data.gd still selects by byFighter until F1)
 	var ambush: bool = false
 	var rush = null          # Rush or null
