@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/ui-howto",
   "title": "ui how to play (schema 1)",
-  "description": "PROPOSED for tools/schemas/ui-howto.schema.json and a rule in tools/schemas/map.json (ui/data/howto.json). UI owns ui/ and docs/ui/, not tools/, so this waits for Tools through the EP; until then validate.js warns [no-schema] for the file. ui/data/howto.json: the How to play card's words. Version field: schema. Policy: closed. Each page has an id, a title and items; an item is a heading, a note, an action row (one glyph action or a list of them) or an icon row; col is 0 or 1.",
+  "description": "ui/data/howto.json: the How to play card's words. Version field: schema. Policy: closed. Cross-references (action ids exist in glyphs.json actions, stance ids in terms.json, device labels are glyph families or touch, page ids are unique) are checked by tools/lib/xref.js. Each page has an id, a title and items; an item is a heading, a note, an action row (one glyph action or a list of them) or an icon row; col is 0 or 1.",
   "type": "object",
   "required": ["schema", "title", "buttons", "hint", "reopen", "pages"],
   "properties": {

@@ -22,6 +22,7 @@
     { "match": "audio/data/sketch_*.json", "schema": "audio-sketch.schema.json" },
     { "match": "ui/data/features.json", "schema": "ui-features.schema.json" },
     { "match": "ui/data/glyphs.json", "schema": "ui-glyphs.schema.json" },
+    { "match": "ui/data/howto.json", "schema": "ui-howto.schema.json" },
     { "match": "ui/data/options.json", "schema": "ui-options.schema.json" },
     { "match": "ui/data/readout_profiles.json", "schema": "ui-readout-profiles.schema.json" },
     { "match": "ui/data/terms.json", "schema": "ui-terms.schema.json" }
