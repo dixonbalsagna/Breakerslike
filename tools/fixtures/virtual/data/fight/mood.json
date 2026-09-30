@@ -29,7 +29,12 @@
   "rates": {
     "bothAggressive": 1,
     "decay": 6,
-    "bothGuarded": 4
+    "bothGuarded": 4,
+    "proportional": {
+      "on": true,
+      "base": 0,
+      "perMille": 50
+    }
   },
   "actFloors": [
     0,
@@ -59,5 +64,16 @@
     "excited",
     "nervous",
     "fleeing"
-  ]
+  ],
+  "actBeats": {
+    "every": [
+      "regionBreak",
+      "form"
+    ],
+    "oncePerMatch": [
+      "limbBattered",
+      "coreBruised",
+      "coreBattered"
+    ]
+  }
 }

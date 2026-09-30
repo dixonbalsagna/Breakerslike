@@ -3614,6 +3614,532 @@
         "rule": "xref:hash-render",
         "pointer": "/render"
       }
+    },
+    {
+      "id": "mood-proportional-required",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "del": [
+            "/rates/proportional"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/rates"
+      }
+    },
+    {
+      "id": "mood-proportional-type",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/rates/proportional/on": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/rates/proportional/on"
+      }
+    },
+    {
+      "id": "mood-proportional-fraction",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/rates/proportional/perMille": 12.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/rates/proportional/perMille"
+      }
+    },
+    {
+      "id": "mood-act-beats-required",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "del": [
+            "/actBeats"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "mood-act-beats-every-enum",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/actBeats/every/0": "coreBroken"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/actBeats/every/0"
+      }
+    },
+    {
+      "id": "mood-act-beats-once-enum",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/actBeats/oncePerMatch/1": "headBattered"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/actBeats/oncePerMatch/1"
+      }
+    },
+    {
+      "id": "style-min-held-required",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "del": [
+            "/minHeldS"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "style-min-held-negative",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/minHeldS": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/minHeldS"
+      }
+    },
+    {
+      "id": "style-qa-bands-nested-ok",
+      "schema": "fight-style.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/style.json",
+          "set": {
+            "/qaBands": {
+              "judgedOnAI": {
+                "labelChangesPerMatchMedian": "at most 4"
+              },
+              "judgedOnHumanOrScriptedPlay": {
+                "everyLabelReached": true
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settle-pop0",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/pop0": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/pop0"
+      }
+    },
+    {
+      "id": "settle-height-exp",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/pop_height_exp": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/pop_height_exp"
+      }
+    },
+    {
+      "id": "settle-landmark-width",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/landmarks/0/width_bh": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/landmarks/0/width_bh"
+      }
+    },
+    {
+      "id": "settle-landmark-mult",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/landmarks/0/hp_mult": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/landmarks/0/hp_mult"
+      }
+    },
+    {
+      "id": "settle-landmark-shape",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/landmarks/0/shape": "pyramid"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-shape",
+        "pointer": "/landmarks/0/shape"
+      }
+    },
+    {
+      "id": "settle-landmark-duplicate",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/landmarks/1/key": "bell_tower"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-landmark",
+        "pointer": "/landmarks/1/key"
+      }
+    },
+    {
+      "id": "settle-id-duplicate",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/1/id": "netmend"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-id",
+        "pointer": "/settlements/1/id"
+      }
+    },
+    {
+      "id": "settle-span-range",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/span/1": 9700
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/settlements/0/span/1"
+      }
+    },
+    {
+      "id": "settle-span-order",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/span": [
+              1760,
+              1260
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-range",
+        "pointer": "/settlements/0/span"
+      }
+    },
+    {
+      "id": "settle-district-shares",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/share": 0.8
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-share",
+        "pointer": "/settlements/0/districts"
+      }
+    },
+    {
+      "id": "settle-population-shares",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/pop_share": 0.3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-share",
+        "pointer": "/settlements"
+      }
+    },
+    {
+      "id": "settle-district-duplicate",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/1/name": "harbour"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-district",
+        "pointer": "/settlements/0/districts/1/name"
+      }
+    },
+    {
+      "id": "settle-rows-range",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/rows/0": 4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/settlements/0/districts/0/rows/0"
+      }
+    },
+    {
+      "id": "settle-kind-enum",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/kinds/0/kind": "castle"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/settlements/0/districts/0/kinds/0/kind"
+      }
+    },
+    {
+      "id": "settle-kind-shape",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/kinds/0/shape": "igloo"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-shape",
+        "pointer": "/settlements/0/districts/0/kinds/0/shape"
+      }
+    },
+    {
+      "id": "settle-height-ceiling",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/height_bh/max": 300
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/settlements/0/districts/0/height_bh/max"
+      }
+    },
+    {
+      "id": "settle-height-order",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/height_bh/median": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-height",
+        "pointer": "/settlements/0/districts/0/height_bh"
+      }
+    },
+    {
+      "id": "settle-block-range",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/block_bh": [
+              2,
+              30
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/settlements/0/districts/0/block_bh/0"
+      }
+    },
+    {
+      "id": "settle-row-h-count",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/row_h": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/settlements/0/districts/0/row_h"
+      }
+    },
+    {
+      "id": "settle-density",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/pop_density": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/settlements/0/districts/0/pop_density"
+      }
+    },
+    {
+      "id": "settle-landmark-key",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/landmarks/0/key": "no_such_landmark"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-landmark",
+        "pointer": "/settlements/0/districts/0/landmarks/0/key"
+      }
+    },
+    {
+      "id": "settle-landmark-place",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/landmarks/0/place": "middle"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/settlements/0/districts/0/landmarks/0/place"
+      }
+    },
+    {
+      "id": "settle-landmark-row",
+      "schema": "biomes-settlements.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/settlements.json",
+          "set": {
+            "/settlements/0/districts/0/landmarks/0/row": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settle-row",
+        "pointer": "/settlements/0/districts/0/landmarks/0/row"
+      }
     }
   ],
   "text": [

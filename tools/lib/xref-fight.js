@@ -238,6 +238,64 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- settlements (mirrors sim/world/settlements.gd _validate) ----
+  const st = get('data/biomes/settlements.json');
+  if (isObj(st)) {
+    const F = 'data/biomes/settlements.json';
+    const shapes = new Set(Array.isArray(st.shapes) ? st.shapes : []);
+    const eps = 0.001;
+    const asc = (pair, pointer) => { if (Array.isArray(pair) && pair.length === 2 && typeof pair[0] === 'number' && typeof pair[1] === 'number' && pair[0] > pair[1]) err(F, pointer, 'settle-range', '[' + pair[0] + ', ' + pair[1] + '] is not ascending'); };
+    const hdist = (h, pointer) => {
+      if (!isObj(h) || ![h.median, h.spread, h.min, h.max].every((n) => typeof n === 'number')) return;
+      if (h.min > h.max || h.median < h.min || h.median > h.max) err(F, pointer, 'settle-height', 'needs min <= median <= max (got ' + h.min + ', ' + h.median + ', ' + h.max + ')');
+    };
+    const seenLm = new Set();
+    (Array.isArray(st.landmarks) ? st.landmarks : []).forEach((l, i) => {
+      if (!isObj(l)) return;
+      if (seenLm.has(l.key)) err(F, '/landmarks/' + i + '/key', 'settle-landmark', 'landmark key "' + l.key + '" is repeated');
+      seenLm.add(l.key);
+      if (shapes.size && !shapes.has(l.shape)) err(F, '/landmarks/' + i + '/shape', 'settle-shape', 'unknown shape "' + l.shape + '"');
+    });
+    const ids = new Set();
+    let popTotal = 0;
+    (Array.isArray(st.settlements) ? st.settlements : []).forEach((s, si) => {
+      if (!isObj(s)) return;
+      const at = '/settlements/' + si;
+      if (ids.has(s.id)) err(F, at + '/id', 'settle-id', 'settlement id "' + s.id + '" is repeated');
+      ids.add(s.id);
+      asc(s.span, at + '/span');
+      if (typeof s.pop_share === 'number') popTotal += s.pop_share;
+      let shareSum = 0;
+      const names = new Set();
+      (Array.isArray(s.districts) ? s.districts : []).forEach((d, di) => {
+        if (!isObj(d)) return;
+        const dat = at + '/districts/' + di;
+        if (names.has(d.name)) err(F, dat + '/name', 'settle-district', 'district name "' + d.name + '" is repeated in ' + s.id);
+        names.add(d.name);
+        if (typeof d.share === 'number') shareSum += d.share;
+        const rows = Array.isArray(d.rows) ? d.rows : [];
+        let wsum = 0;
+        (Array.isArray(d.kinds) ? d.kinds : []).forEach((k, ki) => {
+          if (!isObj(k)) return;
+          if (typeof k.weight === 'number') wsum += k.weight;
+          if (shapes.size && !shapes.has(k.shape)) err(F, dat + '/kinds/' + ki + '/shape', 'settle-shape', 'unknown shape "' + k.shape + '"');
+          hdist(k.height_bh, dat + '/kinds/' + ki + '/height_bh');
+          asc(k.width_bh, dat + '/kinds/' + ki + '/width_bh');
+        });
+        if (Array.isArray(d.kinds) && d.kinds.length && wsum <= 0) err(F, dat + '/kinds', 'settle-weights', 'kind weights sum to zero');
+        hdist(d.height_bh, dat + '/height_bh');
+        for (const k of ['width_bh', 'depth_aspect', 'gap_bh', 'block_bh', 'avenue_bh']) asc(d[k], dat + '/' + k);
+        (Array.isArray(d.landmarks) ? d.landmarks : []).forEach((lm, li) => {
+          if (!isObj(lm)) return;
+          if (!seenLm.has(lm.key)) err(F, dat + '/landmarks/' + li + '/key', 'settle-landmark', 'unknown landmark key "' + lm.key + '"');
+          if (!rows.includes(lm.row)) err(F, dat + '/landmarks/' + li + '/row', 'settle-row', 'the landmark\'s row ' + lm.row + ' is not one of the district\'s rows ' + JSON.stringify(rows));
+        });
+      });
+      if (Array.isArray(s.districts) && s.districts.length && Math.abs(shareSum - 1) > eps) err(F, at + '/districts', 'settle-share', 'district shares sum to ' + shareSum.toFixed(3) + ', not 1');
+    });
+    if (Array.isArray(st.settlements) && st.settlements.length && Math.abs(popTotal - 1) > eps) err(F, '/settlements', 'settle-share', 'pop_share sums to ' + popTotal.toFixed(3) + ', not 1');
+  }
+
   // ---- fighter meters ----
   for (const rel of [...docsFor(/^data\/fighters\/[^/]+\/meters\.json$/)]) {
     const doc = get(rel);

@@ -16,7 +16,8 @@
     "bands",
     "act",
     "aggression",
-    "crowd"
+    "crowd",
+    "actBeats"
   ],
   "properties": {
     "schema": {
@@ -94,6 +95,11 @@
         "taunt": {
           "type": "integer",
           "minimum": 0
+        },
+        "landmarkFall": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The mood impulse for a landmark falling (600 units is +10 points); dormant until D1."
         }
       },
       "additionalProperties": false,
@@ -153,7 +159,8 @@
       "required": [
         "bothAggressive",
         "decay",
-        "bothGuarded"
+        "bothGuarded",
+        "proportional"
       ],
       "properties": {
         "bothAggressive": {
@@ -167,6 +174,32 @@
         "bothGuarded": {
           "type": "integer",
           "minimum": 0
+        },
+        "proportional": {
+          "type": "object",
+          "required": [
+            "on",
+            "base",
+            "perMille"
+          ],
+          "description": "A rate that grows with the mood (M1b): on switches it, base and perMille are integers of at least 0.",
+          "properties": {
+            "on": {
+              "type": "boolean"
+            },
+            "base": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "perMille": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
         }
       },
       "additionalProperties": false,
@@ -273,6 +306,41 @@
         ]
       },
       "uniqueItems": true
+    },
+    "actBeats": {
+      "type": "object",
+      "required": [
+        "every",
+        "oncePerMatch"
+      ],
+      "description": "Which events raise the act: every occurrence, or once per match.",
+      "properties": {
+        "every": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "regionBreak",
+              "form"
+            ]
+          }
+        },
+        "oncePerMatch": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "limbBattered",
+              "coreBruised",
+              "coreBattered"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     }
   },
   "additionalProperties": false,

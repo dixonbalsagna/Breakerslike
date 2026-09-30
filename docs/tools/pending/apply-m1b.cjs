@@ -35,6 +35,19 @@ const nonNeg = { type: 'integer', minimum: 0 };
   wj(f, s);
 }
 
+// ---------------- fight-mood: impulses.landmarkFall becomes required (it is already an optional property) ----------------
+{
+  const f = 'tools/schemas/fight-mood.schema.json';
+  const s = rj(f);
+  s.properties.impulses.properties.landmarkFall = { type: 'integer', minimum: 0, description: 'The mood impulse for a landmark falling (600 units is +10 points); dormant until D1.' };
+  if (!s.properties.impulses.required.includes('landmarkFall')) s.properties.impulses.required.push('landmarkFall');
+  wj(f, s);
+  const g = 'tools/fixtures/virtual/data/fight/mood.json';
+  const d = rj(g);
+  d.impulses.landmarkFall = 600;
+  wj(g, d);
+}
+
 // ---------------- fight-style: minHeldS; qaBands stays open ----------------
 {
   const f = 'tools/schemas/fight-style.schema.json';
@@ -72,6 +85,8 @@ const nonNeg = { type: 'integer', minimum: 0 };
     { id: 'mood-act-beats-required', schema: 'fight-mood.schema.json', mutate: [{ file: M, del: ['/actBeats'] }], expect: { rule: 'required', pointer: '' } },
     { id: 'mood-act-beats-every-enum', schema: 'fight-mood.schema.json', mutate: [{ file: M, set: { '/actBeats/every/0': 'coreBroken' } }], expect: { rule: 'enum', pointer: '/actBeats/every/0' } },
     { id: 'mood-act-beats-once-enum', schema: 'fight-mood.schema.json', mutate: [{ file: M, set: { '/actBeats/oncePerMatch/1': 'headBattered' } }], expect: { rule: 'enum', pointer: '/actBeats/oncePerMatch/1' } },
+    { id: 'mood-landmark-fall-required', schema: 'fight-mood.schema.json', mutate: [{ file: M, del: ['/impulses/landmarkFall'] }], expect: { rule: 'required', pointer: '/impulses' } },
+    { id: 'mood-landmark-fall-type', schema: 'fight-mood.schema.json', mutate: [{ file: M, set: { '/impulses/landmarkFall': 600.5 } }], expect: { rule: 'type', pointer: '/impulses/landmarkFall' } },
     { id: 'style-min-held-required', schema: 'fight-style.schema.json', mutate: [{ file: ST, del: ['/minHeldS'] }], expect: { rule: 'required', pointer: '' } },
     { id: 'style-min-held-negative', schema: 'fight-style.schema.json', mutate: [{ file: ST, set: { '/minHeldS': -1 } }], expect: { rule: 'minimum', pointer: '/minHeldS' } },
     { id: 'style-qa-bands-nested-ok', schema: 'fight-style.schema.json', mutate: [{ file: ST, set: { '/qaBands': { judgedOnAI: { labelChangesPerMatchMedian: 'at most 4' }, judgedOnHumanOrScriptedPlay: { everyLabelReached: true } } } }], expect: null },

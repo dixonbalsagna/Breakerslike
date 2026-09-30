@@ -145,6 +145,10 @@
     {
       "match": "data/director/location.json",
       "schema": "director-location.schema.json"
+    },
+    {
+      "match": "data/biomes/settlements.json",
+      "schema": "biomes-settlements.schema.json"
     }
   ]
 }

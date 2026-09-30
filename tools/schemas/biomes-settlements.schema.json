@@ -1,0 +1,369 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/biomes-settlements",
+  "title": "settlements (World, sim/world/settlements.gd)",
+  "description": "data/biomes/settlements.json: the settlements, their districts, building kinds and landmarks (World's districts data, loaded by sim/world/settlements.gd). Mirrors the loader's _validate: ranges are ascending and inside their limits, heights stay under 85 percent of the flight ceiling (272 building heights), shares sum to 1 (district shares per settlement, settlement population shares overall) within 0.001, and every shape, landmark key and row a district names exists (checked by tools/lib/xref-fight.js). Version field: the file has none yet, so `schema` is optional here (`biomes.settlements/1` when World adds it; then make it required). Policy: closed except keys starting with an underscore.",
+  "type": "object",
+  "required": [
+    "pop0",
+    "pop_height_exp",
+    "shapes",
+    "landmarks",
+    "settlements"
+  ],
+  "properties": {
+    "schema": {
+      "const": "biomes.settlements/1"
+    },
+    "pop0": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pop_height_exp": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "shapes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      }
+    },
+    "landmarks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "shape",
+          "height_bh",
+          "width_bh",
+          "hp_mult",
+          "pop_mult"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "shape": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "height_bh": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 272
+          },
+          "width_bh": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 40
+          },
+          "hp_mult": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "pop_mult": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    },
+    "settlements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "archetype",
+          "span",
+          "pop_share",
+          "districts"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "archetype": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "span": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 9600
+            }
+          },
+          "pop_share": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "districts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/district"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  },
+  "$defs": {
+    "hdist": {
+      "type": "object",
+      "required": [
+        "median",
+        "spread",
+        "min",
+        "max"
+      ],
+      "properties": {
+        "median": {
+          "type": "number",
+          "minimum": 0
+        },
+        "spread": {
+          "type": "number",
+          "minimum": 0
+        },
+        "min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 272
+        },
+        "centre_bump": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "district": {
+      "type": "object",
+      "required": [
+        "name",
+        "look",
+        "share",
+        "rows",
+        "kinds",
+        "height_bh",
+        "width_bh",
+        "depth_aspect",
+        "gap_bh",
+        "block_bh",
+        "avenue_bh",
+        "row_h",
+        "pop_density"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "look": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "share": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        },
+        "kinds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "shape",
+              "weight"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "tower",
+                  "house"
+                ]
+              },
+              "shape": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              },
+              "height_bh": {
+                "$ref": "#/$defs/hdist"
+              },
+              "width_bh": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number",
+                  "minimum": 0.5,
+                  "maximum": 40
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "height_bh": {
+          "$ref": "#/$defs/hdist"
+        },
+        "width_bh": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 40
+          }
+        },
+        "depth_aspect": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0.2,
+            "maximum": 3
+          }
+        },
+        "gap_bh": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 40
+          }
+        },
+        "block_bh": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 4,
+            "maximum": 200
+          }
+        },
+        "avenue_bh": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 40
+          }
+        },
+        "row_h": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        },
+        "pop_density": {
+          "type": "number",
+          "minimum": 0
+        },
+        "landmarks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "count",
+              "place",
+              "row"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "place": {
+                "enum": [
+                  "centre",
+                  "start",
+                  "end"
+                ]
+              },
+              "row": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  }
+}

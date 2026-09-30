@@ -72,5 +72,6 @@
     "shortestLabelHeldS": "at least 10",
     "unlabelledShareOfMatch": "at most 40 percent",
     "everyLabelReachedAcrossABatch": true
-  }
+  },
+  "minHeldS": 10
 }
