@@ -1,0 +1,179 @@
+{
+  "schema": "combat.styles/1",
+  "_about": "Choreography styles, chain plans, telegraphs and beam-clash shapes (Combat). Design: docs/combat/variety-pass.md. Templates stay the judge (outcome, tags, selector draws); a style only changes how the chosen branch looks, as an overlay on its 'dynamic' beats. Not read by the sim until Encounter's style slice. Numbers marked 'suggestion' are Game Design's to set. Draft schema: docs/combat/schemas/combat-styles.schema.json (for Tools).",
+  "status": "design data, not yet loaded",
+
+  "selectors": {
+    "altitudeBands": {
+      "_note": "height above the local surface (groundY, or sea level over water), read at exchange start",
+      "submerged": "over the sea and y < -60",
+      "ground": { "below": 140 },
+      "lowAir": { "from": 140, "below": 600 },
+      "highAir": { "from": 600 }
+    },
+    "mood": {
+      "_note": "Game Design's fight mood (spec-wounds.md section 9): a director value 0 to 100",
+      "Calm": { "below": 30 }, "Tense": { "from": 30, "below": 70 }, "Frenzied": { "from": 70 }
+    },
+    "act": { "_note": "1 + region breaks + transformations (both fighters), capped at 4 (spec-wounds.md section 9)", "min": 1, "max": 4 },
+    "distance": { "volleyOpener": 1200, "volleyOpenerTrait": 700, "pursuitFlight": 2500 },
+    "traits": {
+      "_note": "per fighter; moves to the roster data (D1) when it lands. Placeholders now, archetypes later.",
+      "KAI": ["blink", "aerial"], "VORR": ["volley", "brawler"],
+      "protagonist": ["blink", "aerial"], "antihero": ["volley", "aerial"], "empress": ["volley", "aerial"], "cyborg": ["brawler", "blink"]
+    }
+  },
+
+  "tempo": {
+    "_note": "ticks, added to profiles.dynamic.tempo for styled beats. Suggestions.",
+    "blinkGap": 12, "swoop": 10, "skid": 9, "volleyGap": 6, "travel": 10, "linkGap": 18, "blitzGap": 10, "cross": 30, "pop": 3
+  },
+
+  "telegraphs": {
+    "_about": "Players now play by reads (questionnaire 4, stance-matrix.md R9): every exchange shows the attacker's weight, and every finisher shows its kind, in-world as well as on the stance ring.",
+    "weight": {
+      "light": { "cue": "tell_light", "who": "A", "at": "the first beat of the approach", "look": "a quick guard-up bounce, a small aura spark" },
+      "heavy": { "cue": "tell_heavy", "who": "A", "at": "the first beat of the approach", "look": "a coil, a glowing fist, a heavier aura" },
+      "sig": { "cue": "beamCharge (existing)", "who": "A", "look": "the charge orb and the name banner, 0.8 s" },
+      "_rule": "Encounter emits the weight cue with the approach of every melee template, in every profile except parity. Blink approaches emit it at the first blink_out."
+    },
+    "finishers": {
+      "_rule": "each finisher's kind is shown in its wind-up: the cue 'finisher_tell_<kind>' fires with finisher_open. The stance read against the kind feeds the struggle (spec-wounds.md section 1: DEFENSIVE vs launch, EVASIVE vs melee, AGGRESSIVE with 40+ ki vs beam)",
+      "kinds": { "generic": "launch", "kai": "beam", "vorr": "launch", "protagonist": "beam", "antihero": "melee", "empress": "beam", "cyborg": "melee" },
+      "cues": { "launch": "finisher_tell_launch", "melee": "finisher_tell_melee", "beam": "finisher_tell_beam" }
+    },
+    "struggle": {
+      "_rule": "resolved by state (spec-wounds.md section 1, finisher row): no presses. The three pulses at the existing beat ticks (18, 36, 54 from contestOpen) reveal the outcome step by step; each pulse emits struggle_hold or struggle_slip, and the third matches the result. finishers.json's press fields (halfWidthTicks, debounceTicks, inputs, aiHitChance) are obsolete; Tools' schema update will drop them.",
+      "pulseTicks": [18, 36, 54], "cues": { "hold": "struggle_hold", "slip": "struggle_slip" }
+    },
+    "parry": {
+      "_rule": "R5: a director roll resolved by state in the four parryable templates. The wind beat stays as the visible tell (with the weight cue), and a successful parry plays its flash and the clean-parry cue on the parryable strike. No press, no window input."
+    }
+  },
+
+  "styles": [
+    {
+      "id": "ground_brawl",
+      "appliesTo": ["pressure", "guard_break", "trade_blows", "heavy_clash", "dodge", "charge_interrupt", "pursuit"],
+      "gates": { "all": [ { "var": "band.A", "in": ["ground"] }, { "var": "band.D", "in": ["ground"] }, { "not": { "var": "overSea.A" } }, { "not": { "var": "overSea.D" } } ] },
+      "weight": { "base": 1.0, "factors": [ { "if": { "var": "heavy" }, "mul": 1.5 }, { "if": { "var": "D.stance", "op": "==", "value": 1 }, "mul": 1.3 }, { "if": { "var": "trait.A", "has": "brawler" }, "mul": 1.5 }, { "if": { "var": "act", "op": ">=", "value": 3 }, "mul": 1.2 } ] },
+      "overlay": {
+        "approach": { "merge": { "ground": true }, "cue": "skid" },
+        "contacts": { "o": { "kbMul": 2.0 }, "cue": "skid" },
+        "decider": { "heavy": { "o": { "crater": { "radius": 40, "depth": 6 } }, "cue": "stomp" }, "light": { "cue": "ground_throw" } },
+        "launch": { "hint": { "light": "ground_throw", "heavy": "ground_slam" } },
+        "pursuit": { "merge": { "ground": true } }
+      }
+    },
+    {
+      "id": "aerial",
+      "appliesTo": ["pressure", "guard_break", "trade_blows", "heavy_clash", "dodge", "charge_interrupt", "pursuit"],
+      "gates": { "all": [ { "var": "band.A", "in": ["lowAir", "highAir"] }, { "var": "band.D", "in": ["lowAir", "highAir"] } ] },
+      "weight": { "base": 1.0, "factors": [ { "if": { "var": "trait.A", "has": "aerial" }, "mul": 1.5 }, { "if": { "var": "act", "op": ">=", "value": 2 }, "mul": 1.1 } ] },
+      "overlay": {
+        "approach": { "merge": { "arc": 160 }, "cue": { "ifAbove": "dive", "else": "swoop" } },
+        "between": [ { "tick": { "at": "prev", "add": ["pop"] }, "op": "rush", "args": { "off": -70, "arc": 120, "offY": 60, "dur": { "ticks": "swoop" } }, "cue": "swoop", "skipAfterLast": true } ],
+        "decider": { "cue": "dive" },
+        "launch": { "hint": "across_or_up" },
+        "pursuit": { "merge": { "arc": 300, "dur": { "ticks": "cross" } }, "cue": "swoop" }
+      }
+    },
+    {
+      "id": "blink_clash",
+      "appliesTo": ["heavy_clash", "trade_blows"],
+      "gates": { "all": [ { "not": { "var": "band.A", "in": ["submerged"] } }, { "not": { "var": "band.D", "in": ["submerged"] } },
+                          { "any": [ { "var": "band.A", "in": ["lowAir", "highAir"] }, { "var": "trait.A", "has": "blink" } ] } ] },
+      "weight": { "base": 0.6, "factors": [ { "if": { "all": [ { "var": "A.stance", "op": "==", "value": 0 }, { "var": "D.stance", "op": "==", "value": 0 } ] }, "mul": 1.8 },
+                                             { "if": { "var": "mood", "in": ["Tense"] }, "mul": 1.5 }, { "if": { "var": "mood", "in": ["Frenzied"] }, "mul": 2.5 },
+                                             { "perAct": 0.3 }, { "if": { "var": "trait.A", "has": "blink" }, "mul": 2.0 } ] },
+      "overlay": {
+        "heavy_clash": {
+          "prelude": [
+            { "tick": 0, "op": "blink", "args": { "w": "both", "rel": "meet", "dist": 0 } },
+            { "tick": 12, "op": "cue", "args": { "cue": "blink_meet", "who": "both" } },
+            { "tick": 24, "op": "blink", "args": { "w": "A", "rel": "above", "dist": 90 } },
+            { "tick": 36, "op": "cue", "args": { "cue": "blink_meet", "who": "both" } },
+            { "tick": 48, "op": "blink", "args": { "w": "A", "rel": "behind", "dist": 70 } },
+            { "tick": 60, "op": "cue", "args": { "cue": "blink_meet", "who": "both" } },
+            { "tick": 72, "op": "blink", "args": { "w": "both", "rel": "meet", "dist": 0 } }
+          ],
+          "deciderAt": 84,
+          "_rule": "the prelude replaces the approach and footwork; the branch's decider (strike or clashWave) lands at deciderAt, its wind (WON only) at deciderAt - heavyWindup, and every later beat of the branch shifts by the same amount"
+        },
+        "trade_blows": {
+          "beforeEachContact": { "op": "blink", "args": { "w": "both", "rel": "cycle", "cycle": ["meet_high", "meet_left", "meet_right", "meet_low"] }, "leadTicks": 4 },
+          "_rule": "each exchanged blow lands at a new blink position, 4 ticks after the pair reappears; the decider stays where the dynamic profile puts it"
+        }
+      }
+    },
+    {
+      "id": "volley_barrage",
+      "appliesTo": ["pressure"],
+      "gates": { "var": "band.A", "in": ["ground", "lowAir", "highAir"] },
+      "weight": { "base": 0.5, "factors": [ { "if": { "var": "trait.A", "has": "volley" }, "mul": 3.0 }, { "if": { "var": "mood", "in": ["Tense", "Frenzied"] }, "mul": 1.3 } ] },
+      "overlay": {
+        "approach": { "hold": true, "_rule": "no rush: the attacker fires from where it stands" },
+        "contactsAs": { "op": "volley", "args": { "count": 2, "gapTicks": 6, "travelTicks": 10, "result": "guard" }, "splitDamage": true, "cue": "barrage" },
+        "_rule": "each of PRESSURE's three strikes becomes two blasts carrying half its damage into the raised guard (stance multiplier applies as today); the guard shove and the chain window follow as in the dynamic profile"
+      }
+    },
+    {
+      "id": "volley_opener",
+      "appliesTo": ["trade_blows", "heavy_clash", "pressure", "guard_break", "dodge", "charge_interrupt"],
+      "gates": { "any": [ { "var": "dist", "op": ">", "value": 1200 }, { "all": [ { "var": "trait.A", "has": "volley" }, { "var": "dist", "op": ">", "value": 700 } ] } ] },
+      "weight": { "base": 0.8, "factors": [ { "if": { "var": "trait.A", "has": "volley" }, "mul": 2.0 }, { "if": { "var": "heavy" }, "mul": 0.6 } ] },
+      "overlay": {
+        "addBeats": [ { "tick": 0, "op": "volley", "args": { "w": "A", "count": 3, "gapTicks": 8, "travelTicks": 12, "dmgEach": 5, "result": "byBranch" }, "cue": "volley_fire" } ],
+        "_rule": "the approach still closes (pillar 3): the blasts fly while the attacker rushes in. result byBranch: land on an attacker-favoured branch, guard against DEFENSIVE, evade on a defender or neutral branch. dmgEach 5 is a suggestion (Game Design)"
+      }
+    }
+  ],
+
+  "chains": {
+    "_about": "Cleaner combos: a chain is a phrase with an opener (the exchange's own launch), links on a fixed rhythm and one ender. Whether and how far to chain is the director's call (stance-matrix.md R9): decided once, at the first window, with one composition-stream draw. Suggestions.",
+    "plan": {
+      "links": {
+        "AGGRESSIVE": { "Calm": [1, 2], "Tense": [2, 3], "Frenzied": [3, 4] },
+        "DEFENSIVE": { "Calm": [0, 1], "Tense": [1, 1], "Frenzied": [1, 2] },
+        "EVASIVE": { "Calm": [0, 1], "Tense": [1, 2], "Frenzied": [1, 2] },
+        "ESCAPE": { "Calm": [0, 0], "Tense": [0, 0], "Frenzied": [0, 0] }
+      },
+      "kiPerLink": 6, "capHits": 5,
+      "heatBonus": { "_note": "the Protagonist at Boiling heat: +1 link, suggestion", "links": 1 },
+      "_rule": "the range is [min, max] links after the opener, drawn once; clipped by ki (6 per link) and by capHits in all; ESCAPE never chains (R2 hit and run)"
+    },
+    "blitz": {
+      "when": { "var": "mood", "in": ["Tense", "Frenzied"] },
+      "chance": { "Tense": 0.25, "Frenzied": 0.5, "perActAbove1": 0.1 },
+      "minLinks": 3, "gap": "blitzGap", "cue": "blitz",
+      "_rule": "a blitz is a fast chain: at least 3 links at blitzGap instead of linkGap. Game Design tunes the chance toward 2 to 6 blitzes a minute in Tense and Frenzied"
+    },
+    "link": [
+      { "tick": 0, "op": "rush", "args": { "off": 60, "dur": { "ticks": "foot" } } },
+      { "tick": { "at": "start", "add": ["foot", "pop"] }, "op": "chainStrike", "cueCycle": ["link_knee", "link_elbow", "link_kick"] },
+      { "tick": { "at": "start", "add": ["foot", "pop", "pop"] }, "op": "launch", "args": { "force": 700, "rev": false }, "_note": "a small pop that keeps the body near: links juggle, only the ender sends it away" }
+    ],
+    "ender": [
+      { "tick": 0, "op": "rush", "args": { "off": 60, "dur": { "ticks": "foot" } } },
+      { "tick": { "at": "start", "add": ["foot", "pop"] }, "op": "chainStrike", "args": { "ender": true }, "cue": "chain_ender" },
+      { "tick": { "at": "start", "add": ["foot", "pop", "pop"] }, "op": "breakLaunch", "args": { "w": "A", "force": 1800 } },
+      { "tick": { "at": "start", "add": ["foot", "pop", "pop", "pop"] }, "op": "rush", "args": { "off": 180, "dur": { "ticks": "pursue" } } }
+    ],
+    "cadence": { "linkGap": "linkGap", "_rule": "each link starts linkGap (or blitzGap) ticks after the previous one starts; no press delay; the last link is always the ender, and no window opens after it" }
+  },
+
+  "beamClash": {
+    "_about": "Six clash shapes, chosen from the margin between the two clash scores the code already draws (no new draws) plus position and mood. First match in this order wins.",
+    "order": ["breakthrough", "deflect", "split", "mutual", "seesaw", "overpower"],
+    "shapes": {
+      "breakthrough": { "margin": { "from": 20 }, "durTicks": 48, "favours": "winner", "cue": "clash_breakthrough" },
+      "deflect": { "margin": { "from": 6 }, "gate": { "var": "band.winner", "in": ["lowAir", "highAir"] }, "durTicks": 84, "favours": "winner", "cue": "clash_deflect",
+                   "redirect": { "careAbove0": "skyward", "careBelow0": "nearest_settlement" }, "loser": { "kiCost": 20, "pushback": 700, "damage": 0 }, "_note": "numbers are suggestions" },
+      "split": { "margin": { "below": 4 }, "gate": { "var": "meetHeight", "op": "<", "value": 300 }, "durTicks": 96, "favours": "neutral", "cue": "clash_split", "chip": 40, "veerDegrees": 25 },
+      "mutual": { "margin": { "below": 4 }, "durTicks": 96, "favours": "neutral", "cue": "clash_mutual", "chip": 60, "launchApart": 1400 },
+      "seesaw": { "any": [ { "margin": { "from": 4, "below": 10 } }, { "mood": ["Frenzied"] } ], "durTicks": 144, "reversals": 2, "favours": "winner", "cue": "clash_seesaw" },
+      "overpower": { "margin": { "from": 0 }, "durTicks": 96, "favours": "winner", "cue": null, "_note": "today's clash (1.6 s)" }
+    },
+    "actWeight": { "_rule": "higher acts favour the long shapes: at act 3 or more, a margin in the overpower band plays as a seesaw 40% of the time (composition-stream draw)" }
+  }
+}
