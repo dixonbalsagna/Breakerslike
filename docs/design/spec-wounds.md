@@ -437,6 +437,7 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
   - a chain link: +3;
   - a parry: +4;
   - a heavy or beam clash: +8;
+  - a signature beam landing (HIT or GUARD, not a clash): **+6**, its own value, between a heavy and a clash, because a landed signature is a set-piece moment;
   - a region break: +12;
   - a launch through a building: +6, or +10 for a chain;
   - a transformation cinematic: +10;
