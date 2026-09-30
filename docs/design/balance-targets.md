@@ -261,7 +261,7 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 | Lock breaks through line of sight (`spec-wounds.md` §1c) | 1 to 4 per match; median length 2 to 3 s; never more than 4 s (a hard test); never within 6 s of the same fighter's last one (a hard test) | Not measured |
 | Second breath | Battered wear recovered through second breath is at most 25% of all battered wear taken | Not measured |
 | Comebacks: the winner was on the brink at some point, or rallied (`damage-model.md` §5) | 15 to 35% of matches | Not measurable yet. The prototype has no brink |
-| Region breaks before the finisher (1v1) | 2 to 4 per match before Rally (S2); 3 to 5 once Rally lands (S4); first break at a median of 2:30 to 4:00 | S2: 2 breaks; first break 3:45 (`docs/director/wounds-s2.md`) |
+| Region breaks before the finisher (1v1), under the core-only brink | **1.5 to 2.5 a match:** limb breaks 0.3 to 0.5 (§13), plus brinks (the final brink, re-brinks after Rallies and the rare double brink). The old 2 to 4 and 3 to 5 bands are retired. The first-break timing gate is retired too: the first brink at a median of 4:30 to 7:00 (`spec-wounds.md` §5) covers timing | 1.7 (QA's crippling tune on `580c5a0`) |
 | Finishers preceded by a brink call-out | 100% | none |
 | Lead changes: which fighter has more region stages lost flips | Median at least 2 | Not measured |
 | Beam clashes and struggles | 2 to 8 per match | Beams 3.65 per match, 40% of them clashes (QA §6) |
@@ -302,6 +302,21 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 - The lever is weak: +30% reaches only 43.9%.
 - The EP ruled to keep +10%, because the roster meters replace the placeholders. The testbed runs at about 41% for KAI until then.
 - The lesson for the roster: collateral-fed buffs outweigh small calm-state bonuses, so each fighter's meter needs comparable expected value from the start (see below).
+
+**QA's trace and the ruling** (2026-09-30; 800 matches, default and swap seeds).
+- *The finding.* The gap comes from the hero and villain package, not the slot: swapping the whole package flips it (KAI 59.4%). It opens in act 1. KAI suffers the first break in 63% of matches and wins only 12% of those. VORR wins the quick matches and KAI the long ones.
+- *The ruling: adopt QA's combined package for the placeholders.* It puts KAI at **43.6%**, over the 42% testbed floor, with length unchanged.
+  1. **Planner care 0 for both fighters.** This is the launch planner's personality term, worth +3.8. On the testbed the personality lives in the lure and the meters instead. For the roster, care returns as a per-fighter data value, and its expected value counts in that fighter's balance.
+  2. **Menace damage cap +5%**, down from +15%.
+  3. **Menace regen of 0.01 × menace** ki per second, so at most +1. This mirrors the anguish ruling (§13).
+- *Kept, because removing them costs KAI:*
+  - VORR's ×0.95 speed (−2.9 without it);
+  - the hero's lure (−4.1 without it);
+  - menace decay and the composure bonus, unchanged;
+  - the anguish regen penalty at 0.01 (§13). It has no balance effect, which is what that ruling intended.
+- *Targets.*
+  - **Testbed:** KAI at least 42% on QA's default and swap set, re-measured once D1b wires the meters' data effects. No further placeholder levers.
+  - **Roster:** every pairing 45 to 55% (§1, §13). The trace confirms the lesson below: the gap opens in act 1, so each fighter's meter needs comparable expected value from the first minute.
 
 **Anguish with more than one protector** (the rule for QA-003 and GD-B09; World implements it in its window).
 - Every fighter whose profile has a pressured-by-collateral meter (anguish today) gains it from **every** casualty. This is set by the fighter's data, not by the role name "hero".
@@ -442,7 +457,7 @@ These rulings are binding for QA's tuning. Where they touch other docs, those do
 | Topic | Ruling | Band QA tunes to |
 | :--- | :--- | :--- |
 | **Brink** | **Orb picked A**, "the crippling moment" (`pitches.md` §5). Limbs stop at battered, and a limb breaks only in a crippling moment. The brink is the core broken, and limb wear past battered spills into the core | Limb breaks 0.3 to 0.5 a match, at most 1 per fighter; the brink once a match plus any re-brinks after Rallies; length 6:00 to 8:00 |
-| **Crippling moment, as built** (`580c5a0`) | The head spills into the core and never breaks: only arms and legs can be crippled. The limb must **already be battered when the exchange starts** (not by the same blow), so there is always a visible warning. The breaker gets a meter surge: +10 power for the placeholders, and +10 to the fighter's ego meter for the roster. Broken legs make the DEFENSIVE multiplier ×0.8 (0.38 becomes 0.30), and guard fatigue still starts from the new value | QA tunes the rate to 0.3 to 0.5 limb breaks a match |
+| **Crippling moment, as built** (`580c5a0`) | The head spills into the core and never breaks: only arms and legs can be crippled. The limb must **already be battered when the exchange starts** (not by the same blow), so there is always a visible warning. The breaker gets a meter surge: +10 power for the placeholders, and +10 to the fighter's ego meter for the roster. Broken legs make the DEFENSIVE multiplier ×0.8 (0.38 becomes 0.30), and guard fatigue still starts from the new value.<br>**Tuned values (QA, adopted):** base 0.08, with tierAhead, lateBonus and the DEFENSIVE modifier at ±0.05 each, as QA ran them. That gives 0.44 limb breaks a match, with length unchanged.<br>**Arm skew:** arms take 85% of limb breaks, because the guard puts its wear on them. The lever is to **spread guard wear**. A guard is braced through the whole body, so guard wear splits 60% to the arms and 40% to the legs (data: `guardWearSplit`). This fixes the cause and keeps the warning rule, since a leg must still be battered first. Weighting the pick toward legs alone can't break legs that are rarely battered. *Fallback,* only if arms still take more than 65% after the split: weight the crippling pick ×1.5 toward legs when both are eligible | Limb breaks 0.3 to 0.5 a match (0.44 at the tuned values). Arms and legs each take 35 to 65% of limb breaks, with length still in band |
 | **Match length** | Unchanged | Median 6:00 to 8:00, p10 at least 5:00, p90 at most 10:00 |
 | **Even overall, situational** | Each fighter should have ground where they win: terrain and tier swing it | Every pairing 45 to 55% overall. Within each pairing, each fighter wins at least 58% in at least one context (a biome class or a tier band at the KO) and at most 42% in another |
 | **Comebacks common** | This replaces the S4 "rare, earned" stance. **Trailing-fighter help:** the fighter with more region stages lost gets +5 on the finisher contest, +10% ki regen and +5 on the director's parry chance, while behind by 2 or more stages | Comeback wins (the winner was on the brink, or trailed by 2 or more stages) in 30 to 45% of matches. Rallies 0.3 to 0.7 a match |

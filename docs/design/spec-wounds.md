@@ -59,7 +59,7 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
 - *Ruling 2: the comeback term is accepted.* The damage bonus reads **closeness to the brink**, `vitality`: 1 minus the higher of core wear or the second-most-worn limb, over the broken threshold. The bonus is `×(1 + 0.5·(1 − vitality)²)`. It peaks at ×1.5 on the brink, which is the "desperation" of `damage-model.md` §5. The AI's reads of wounds use the same value.
 - *Ruling 3: the chapter bands move.* Breaks aren't the only chapters. Transformations, break launches, set pieces and the landscape carry chapters too.
   - First break: a median of 2:30 to 4:00 (today 3:45).
-  - Breaks per 1v1: 2 to 4 before Rally, and 3 to 5 once Rally lands (today 2).
+  - Breaks per 1v1: 2 to 4 before Rally, and 3 to 5 once Rally lands (today 2). *Retired by the core-only brink; the band is now 1.5 to 2.5 (`balance-targets.md` §8).*
   - *If the chapters feel thin* after S4, the experiment is a stricter brink: core, or **three** limbs broken, with k × 1.4. That gives an earlier first break and more breaks at the same length. QA runs it; Game Design decides.
 - *Collateral.* Six-minute matches raise collateral: 51% overall, and the villain mirror about 92%, which is over the worst-pairing and 90%-loss bands. World's ramp and cap land with B1 (`balance-targets.md` §4b) and are expected to bring both back into band.
 
@@ -316,7 +316,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 **QA harness** (seeded batches, 1,000 or more matches per arm, measured from events):
 1. **Determinism.** The same seed and inputs give an identical event hash across runs and ports (JS and GDScript).
 2. **No KO without a finisher.** 100% of KOs follow the loser's `brink_enter` and a `finisher_start`. There are no KOs from stray damage.
-3. **Length and chapters.** Region breaks per 1v1 (median): 2 to 4 before Rally (S2), 3 to 5 once Rally lands (S4). First break (median) 2:30 to 4:00. Median time to first brink 4:30 to 7:00. Match length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00 (`balance-targets.md` §2).
+3. **Length and chapters.** Region breaks per 1v1: 1.5 to 2.5 under the core-only brink (`balance-targets.md` §8). Median time to first brink 4:30 to 7:00. Match length median 6:00 to 8:00, p90 at most 10:00, p99 at most 12:00 (`balance-targets.md` §2).
 4. **No loops.**
    - Rallies per match average 0.2 to 0.5 for contest-gated Rallies, or 0.3 to 1.0 with the roster's other Rallies (S4 ruling, §2).
    - No fighter rallies the same region twice.
