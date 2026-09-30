@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "note": "The How to play card (docs/ui/hud-spec.md section 17): every word it shows, as data, so a tone change or a translation is a data swap. Pages hold items; an item is an icon (drawn by UiHowto) and a line. Keys on the controls page come from Controls' map through ui/data/glyphs.json. The core principle in the copy: the player owns strategy, pacing and positioning; the fight director owns combos, tactics and voice lines. Keep lines short: a phone shows them at 12 dp or more.",
+  "note": "The How to play card (docs/ui/hud-spec.md section 17): every word it shows, as data, so a tone change or a translation is a data swap. Pages hold items; an item is an icon (drawn by UiHowto) and a line. Keys on the controls page come from Controls' map through ui/data/glyphs.json. Orb's direction for the copy: the player IS the fighter. Say bluntly what they control (fly, dash, stances, light or heavy, charge, signature, specials, transform) and what is automatic (no combo inputs: the blows and combos play out on their own). Never frame the player as directing someone else; 'director' and 'strategist' are internal words.",
   "title": "HOW TO PLAY",
   "buttons": { "next": "NEXT", "back": "BACK", "done": "GOT IT", "close": "CLOSE" },
   "hint": "Enter: next   Esc: close",
@@ -8,10 +8,10 @@
   "pages": [
     {
       "id": "idea",
-      "title": "You choose. The fight follows.",
+      "title": "What you control",
       "items": [
-        { "icon": "plan", "col": 0, "text": "You are the strategist: where to fly, when to press or rest, which stance to take, and how hard you hit." },
-        { "icon": "director", "col": 0, "text": "The fight director plays the blows. Combos, tactics and voice follow from your stance and position." },
+        { "icon": "plan", "col": 0, "text": "You are the fighter. You fly, dash, pick a stance, choose light or heavy, charge, call your signature and specials, and transform." },
+        { "icon": "auto", "col": 0, "text": "There are no combo inputs to learn. Blows and combos play out on their own from those choices." },
         { "icon": "body", "col": 0, "text": "There are no health bars. Damage shows on the bodies: bruised, battered, broken." },
         { "icon": "finisher", "col": 0, "text": "A fight ends with a finisher, not a clock." },
         { "heading": "Four stances", "col": 1 },

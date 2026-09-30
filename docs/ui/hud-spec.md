@@ -483,7 +483,7 @@ Orb's friend (Playtest 2): on mobile, "make all the touch targets and text respo
 Orb's friend: "I'm not sure what I'm supposed to do in the game... some kind of tutorial or a card explaining how to play would be good." A short card, shown on the first run and again from the pause menu and with F1.
 
 **Three pages** (`ui/data/howto.json`, every word data; `UiHowto` draws them):
-1. **You choose. The fight follows.** Carries the core principle: the player owns strategy, pacing and positioning; the fight director owns combos, tactics and voice lines. Also: no health bars (read the bodies: bruised, battered, broken), a finisher ends a fight, and the four stances with their icons and one line each.
+1. **What you control.** Orb's direction (2026-09-30): the player IS the fighter, so the page says bluntly what they control in plain verbs ("You are the fighter. You fly, dash, pick a stance, choose light or heavy, charge, call your signature and specials, and transform.") and what is automatic ("There are no combo inputs to learn. Blows and combos play out on their own from those choices."). Also: no health bars (read the bodies: bruised, battered, broken), a finisher ends a fight, and the four stances with their icons and one line each. "Strategist", "director" and "intent" are internal words: no player-facing copy (the card, the hints) says them, and `hud_check` fails the build if it does.
 2. **Controls.** The keys (P1's, and a line for P2's on a shared keyboard), the pad glyphs or the touch controls, for the **player's own device** (the first human fighter's `device`, the same neutral glyphs as the prompts). Fly, dash, light, heavy, signature, charge, special, transform, the four stances and pause.
 3. **Reading the fight.** The few HUD reads, each with a small picture: the wear ring, the wound cards, the brink ring, the closing ring (parry and chain), the finisher rings, the toll chip and the planet strip (which says it wraps).
 
@@ -552,7 +552,7 @@ Game Design's guided first match has nine beats (`docs/design/tutorial.md`); Nar
 
 ![A thought in the player's bark lane, with a hint above](img/q4-thought.png)
 
-**The How to play card** drops every timing instruction (no "press Light inside the ring"): page 1 says the director times the blows and the player sets stance and how hard to hit; page 2 names light and heavy as sticky weights and the signature as queued (45 Charge); page 3 teaches the reads: the wear ring, the wound cards, the brink ring, a read of the rival (stance, weight and finisher kind), the finisher's pulses and what answers each kind, the toll chip and the strip. `hud_check` fails the build if any copy mentions a timed press.
+**The How to play card** drops every timing instruction (no "press Light inside the ring"): page 1 says what you control and that there are no combo inputs; page 2 names light and heavy as sticky weights and the signature as queued (45 Charge); page 3 teaches the reads: the wear ring, the wound cards, the brink ring, a read of the rival (stance, weight and finisher kind), the finisher's pulses and what answers each kind, the toll chip and the strip. `hud_check` fails the build if any copy mentions a timed press.
 
 **Also landed.** A `CHAIN xN` banner on `chain_ender {actor, n}` (n of 2 or more; Narrative's label, the same words as the chain chip), for Rendering's heavier impact cue.
 

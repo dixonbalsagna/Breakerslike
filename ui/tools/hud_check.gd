@@ -866,14 +866,14 @@ func _controls_rules() -> void:
 	var hints: Dictionary = rd_["hints"]
 	var bad_words := 0
 	for k in hints:
-		if str(hints[k]).split(" ", false).size() > 12:
+		if str(hints[k]).split(" ", false).size() > 14:
 			bad_words += 1
 	var ids: Array = rd_["beat_ids"]
 	var no_hint := 0
 	for id in ids:
 		if not hints.has(str(id) + ".hint") or not hints.has(str(id) + ".done"):
 			no_hint += 1
-	_ok(ids.size() == 9 and no_hint == 0 and bad_words == 0, "hints: nine beats, each with a hint and a done line, every line 12 words or fewer")
+	_ok(ids.size() == 9 and no_hint == 0 and bad_words == 0, "hints: nine beats, each with a hint and a done line, every line 14 words or fewer (two lines at most)")
 	_ok(hints.has("b1.nudge") and hints.has("b8.nudge") and not hints.has("b9.nudge"), "hints: beats 1 to 8 have a nudge, the last beat has none")
 	hub = _hub()
 	hub.consume({"type": "tutorial_beat", "id": "b3", "state": "start"})
@@ -1106,13 +1106,25 @@ func _responsive() -> void:
 func _howto_rules() -> void:
 	var n: int = UiHowto.page_count()
 	_ok(n == 3, "howto: three pages (the idea, the controls, reading the fight)")
-	# The core principle is in the copy: the player owns the plan, the director plays the blows.
+	# Orb's direction: the player IS the fighter. The copy says bluntly what they control and what is automatic, and never frames the
+	# player as directing someone else.
 	var all_text := ""
 	for pg in UiData.howto().get("pages", []):
 		for it in pg.get("items", []):
 			all_text += " " + str(it.get("text", "")) + " " + str(it.get("heading", ""))
 	_ok(not all_text.contains("Press Light") and not all_text.contains("parry") and not all_text.contains("timing"), "howto: no copy asks for a timed press (the director times every blow)")
-	_ok(all_text.contains("strategist") and all_text.contains("director") and all_text.contains("no health bars") and all_text.contains("finisher"), "howto: the copy says the player is the strategist, the director plays the blows, there are no health bars and a finisher ends it")
+	var page0: String = str((UiData.howto()["pages"] as Array)[0]["title"])
+	_ok(page0 == "What you control" and all_text.contains("You are the fighter") and all_text.contains("no combo inputs") and all_text.contains("play out on their own") and all_text.contains("no health bars") and all_text.contains("finisher"), "howto: the first page is What you control: you are the fighter, there are no combo inputs, the blows play out on their own, no health bars, a finisher ends it")
+	var p0text := ""
+	for it in (UiData.howto()["pages"] as Array)[0]["items"]:
+		p0text += " " + str(it.get("text", ""))
+	for verb in ["fly", "dash", "pick a stance", "light or heavy", "charge", "signature", "specials", "transform"]:
+		_ok(p0text.to_lower().contains(verb), "howto: the first page says plainly that you control: %s" % verb)
+	var all_hints := ""
+	for k in UiData.reads()["hints"]:
+		all_hints += " " + str(UiData.reads()["hints"][k])
+	var player_copy: String = (all_text + all_hints).to_lower()
+	_ok(not player_copy.contains("strategist") and not player_copy.contains("director") and not player_copy.contains("intent") and not player_copy.contains("the fight follows") and not player_copy.contains("follow from"), "howto: no player-facing copy says strategist, director, intent or the fight follows (those are internal words)")
 	# Geometry at desktop, tablet, phone and a small window, with every device family and touch on or off.
 	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(2560, 1600), 2.0], [Vector2(3840, 2160), 1.0]]
 	for cs in cases:

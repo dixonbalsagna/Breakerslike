@@ -276,8 +276,10 @@ static func _icon(ci: CanvasItem, name: String, c: Vector2, sz: float, cs: float
 				var d: Vector2 = Vector2.from_angle(float(k) * PI * 0.5)
 				ci.draw_line(c + d * r * 0.4, c + d * r * 1.05, ink, w)
 			ci.draw_circle(c, sz * 0.07, ink)
-		"director":
-			UiIcons.star4(ci, c, sz * 0.95, ink)
+		"auto":
+			# Three chevrons in a row: it plays out on its own.
+			for k in range(3):
+				UiIcons.chevron(ci, c + Vector2((float(k) - 1.0) * sz * 0.26, 0.0), sz * 0.3, 1.0, w, ink)
 		"body":
 			var cols: Array = [UiLook.STAGE_FRESH, UiLook.STAGE_BRUISED, UiLook.STAGE_BATTERED, UiLook.STAGE_BROKEN]
 			for k in range(4):
