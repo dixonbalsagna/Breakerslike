@@ -228,3 +228,12 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Orb questions whether hiding earns its place ('maybe it could be something for a character we introduce down the line'). The EP pitches it; see the next entry.
 
 **Hiding saved for a future fighter (Orb, 2026-09-29).** Hiding is removed from the base game and becomes the signature of a later stealth-specialist character. Cover stays as line-of-sight only (smoke, rubble and terrain can break lock-on). The ambush bonus, the Primed flash and hide-based recovery go with it and are held for that fighter.
+
+**Playtest feedback (Orb, 2026-09-29, night, on the live build).**
+- Bug: a fighter often hits the ground hard with no crater, bounces, and the second, lighter impact leaves a large crater. Some deformation on existing craters looks strange.
+- Crater size: tune it way down for most impacts. Save the largest craters for special attacks and highly telegraphed, obviously extra-powerful knockbacks.
+- Head flashes are too large and visible (the surge's blue gas cloud and the giant purple lines obstruct the view). They should quickly pulse two or three times to signal a thought or reaction, then disappear.
+- Split screen is good, but it's hard to follow when a fighter picks up a lot of speed. Use simple stylised motion trails, sparingly and effectively, to ground the viewer.
+- A friend's feedback: "Love when they carve a trench, some real [genre] stuff. I did like how it zoomed out and showed them flying around the world before though. Maybe set that threshold a bit higher before it automatically splits?"
+- Combat feels slower than the prototype: fighters lock together and do nothing for moments before launching attacks. "Let's really nail down the engaging, dynamic feel of combat the prototype had."
+- Destruction must be impressive: cracked and split ground, a fighter crashing into a skyscraper and bursting out the other side with glass and steel shrapnel, buildings collapsing.
