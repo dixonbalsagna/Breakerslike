@@ -256,6 +256,21 @@ function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
       const ll = mean(D.map(r => (r.events || []).filter(e => e.type === 'lock_lost').length));
       R.info('8.lock.attempts', '§1c', 'Attacks refused for lost lock (lock_lost) per match', ll.toFixed(2));
     } else R.pending('8.lock', '§1c', 'Lock breaks through line of sight: 1 to 4 a match, median 2 to 3 s, at most 4 s, never within 6 s of the last', 'needs the found and searching events (S2)');
+    // the brink chapter and crippling moment (Game Design, spec-wounds 1b; values set by the brink-chapter tuning)
+    if (hasEvent(A, 'brink_enter') && hasEvent(A, 'ko')) {
+      const evs = (r, t) => (r.events || []).filter(e => e.type === t);
+      const b2k = D.map(r => { const b = evs(r, 'brink_enter')[0], k = evs(r, 'ko')[0]; return b && k ? k.t - b.t : null; }).filter(x => x !== null);
+      R.point('8.brink2ko', '§8', 'Brink to KO, median (45 to 90 s)', { v: median(b2k), lo: 45, hi: 90, unit: 's' });
+      const fb = D.map(r => { const b = evs(r, 'brink_enter')[0]; return b ? b.t : null; }).filter(x => x !== null);
+      R.point('8.firstBrink', '§8', 'First brink, median (4:30 to 7:00)', { v: median(fb), lo: 270, hi: 420, unit: 's' });
+      const cont = D.flatMap(r => evs(r, 'finisher_contest'));
+      if (cont.length) R.rate('8.survival', '§8', 'Finisher survival rate (25 to 40%)', { v: cont.filter(e => e.survived).length / cont.length, ci: wl(cont.filter(e => e.survived).length, cont.length), lo: 0.25, hi: 0.40 });
+      R.point('8.rallies', '§8', 'Rallies per match (0.3 to 0.7)', { v: mean(D.map(r => evs(r, 'rally').length)), lo: 0.3, hi: 0.7, unit: 'num' });
+      R.point('8.regionBreaks', '§8', 'Region breaks per match (1.5 to 2.5)', { v: mean(D.map(r => evs(r, 'region_broken').length)), lo: 1.5, hi: 2.5, unit: 'num' });
+      const lb = D.flatMap(r => evs(r, 'limb_break'));
+      R.point('8.limbBreaks', '§8', 'Limb breaks per match (0.3 to 0.5)', { v: lb.length / D.length, lo: 0.3, hi: 0.5, unit: 'num' });
+      if (lb.length) { const ar = lb.filter(e => e.region === 'arms').length / lb.length; R.point('8.limbArms', '§8', 'Arms share of limb breaks (35 to 65%; legs is the rest)', { v: ar, lo: 0.35, hi: 0.65, unit: 'pct' }); }
+    }
     if (D.some(r => r.batteredIn > 0)) {
       const bin = sum(D.map(r => r.batteredIn)), bre = sum(D.map(r => r.breathWear));
       R.point('8.breath', '§8', 'Second breath: battered wear recovered through it, as a share of all battered wear taken (at most 25%)', { v: bre / bin, hi: 0.25, unit: 'pct', note: bre === 0 ? 'no breathWear in these records (sim before S4?)' : '' });

@@ -49,7 +49,9 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const r = byId(await runTests(ctx({ default: [s1] }), ['W3', 'W5']));
     assert.strictEqual(r.W3.status, 'PENDING'); assert.strictEqual(r.W5.status, 'INFO');
     const s2 = withEvents(s1, [{ type: 'finisher_start', t: 30, actor: 0, target: 1 }]);
-    assert.strictEqual(byId(await runTests(ctx({ default: [s2] }), ['W5'])).W5.status, 'FAIL');   // only head ever breaks first: arms and legs below 10%
+    assert.strictEqual(byId(await runTests(ctx({ default: [s2] }), ['W5'])).W5.status, 'PASS');
+    const skew = withEvents(rec({ dmgByRegion: { head: 90, core: 10, arms: 5, legs: 5 } }), [{ type: 'region_broken', t: 20, actor: 1, region: 'core' }, { type: 'finisher_start', t: 30, actor: 0, target: 1 }]);
+    assert.strictEqual(byId(await runTests(ctx({ default: [skew] }), ['W5'])).W5.status, 'FAIL');   // one region takes over 45% of the damage
   });
   await t('C1 and C2 stay PENDING until an evacuation event exists, then fail on an over-budget window and an over-ceiling match', async () => {
     const tl = []; for (let i = 0; i <= 100; i++) tl.push([i, Math.min(0.5, i * 0.01), 1]);          // 1% a second at tier 1: far over 2% per minute and past the 10% ceiling
