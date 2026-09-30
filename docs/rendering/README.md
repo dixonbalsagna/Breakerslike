@@ -23,7 +23,8 @@ godot --path .
 | any key or click | take control of P1 (the demo starts AI vs AI) |
 | WASD, Space, F, G, R, Q, 1-4 | P1: move, dash, light, heavy, signature, charge, stances |
 | arrows, Enter, comma, period, slash, semicolon, 7-0 | P2 (the same, as in the prototype) |
-| N / T / Y / P | new match / toggle P2 AI / toggle P1 AI / pause |
+| N / T / Y / P | new match / toggle P2 AI / toggle P1 AI / pause (with a menu: Resume, How to play) |
+| F1 | UI's How to play card, open or close (it also opens at the first run) |
 | F2 | swap UI's HUD for the greybox HUD (until UI's playtest) |
 | F3 | performance overlay |
 | F4 | the director feed in UI's HUD |
@@ -323,6 +324,8 @@ F10 and F11 flip the first two through UI's `set_option`. Camera's `render/camer
 The first pane and the second, drawn from the rig's two cameras: ![panes](img/panes.png)
 
 ## Hosting UI's HUD and Audio
+
+**How to play and touch** (`docs/ui/hud-spec.md` §16 and §17). At the first run, main opens UI's How to play card (`show_howto(true)` unless `howto_seen()`). The card doesn't open under the tools (`manual`), `--bench`, `--frames` or `--shot`. F1 opens and closes it anywhere, and the HUD handles that key. P pauses and shows a small pause menu drawn by the greybox overlay (`hud.gd`, host glue until UI draws one), with Resume and How to play entries, each at least 48 dp. While the card is open the sim is frozen, and held and pending keys are released. Closing it restores the pause state it found, so a card opened from the menu goes back to the menu. The last input device sets UI's `touch_ui` option: a touch turns it on, a key or a pad turns it off, and a mouse leaves it. In touch mode a tap on UI's pause button pauses and resumes. That is glue until Controls' touch scheme hit-tests the HUD; the stance ring is left to them. The demo prompt becomes one tap line at 16 dp. `set_density` isn't called, since UI's own detection (`devicePixelRatio` on the web) is right. A scratch check drives real key, click and touch events through the full scene with the prefs in a scratch file, 24 checks.
 
 **VFX** (`docs/vfx/plan.md` §5). `SimHost` owns VFX's `VfxHub`: it resets on each match and consumes each tick's events just before they are cleared. Each pane has a `VfxLayer` ("Vfx"), drawn after the fighters, sharing the one hub. Each frame main passes the hub the frame time (for its automatic quality) and UI's reduced motion. `--novfx` turns it off for A/B runs, and `--vfx-quality=0|1|2` fixes the quality (the bench fixes it too). `planet.ground` stays public for VFX's cracks. Desktop cost with VFX on against off: frame p50 1.44 against 1.43 ms.
 

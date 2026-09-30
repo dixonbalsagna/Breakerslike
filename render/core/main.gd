@@ -21,7 +21,8 @@ extends Node3D
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
 ## full panes were drawn; VFX at a fixed quality), --novsync, --nosplit, --novfx (VFX off, for A/B runs),
-## --vfx-quality=0|1|2 (VFX's low, medium or high, fixed). F6 toggles VFX's ground cracks (on by default), Shift+F6 its
+## UI's How to play card opens at the first run and with F1 (the HUD handles the key) or from the pause menu (P, then
+## How to play); the sim is frozen while it is open. --vfx-quality=0|1|2 (VFX's low, medium or high, fixed). F6 toggles VFX's ground cracks (on by default), Shift+F6 its
 ## destruction (shards, collapse dust, holes; off by default until B2), and while that is on the particles skip a
 ## building fall's dust and debris (SimHost._without_fall_debris), which VFX draws instead. Ctrl+F6 toggles VFX's scorch
 ## embers (on by default), which replace ImpactFx's scorch sparks while on.
@@ -73,6 +74,8 @@ var _last_usec: int = 0
 var _bench_two := PackedFloat64Array()     # wall-clock frame ms while two full panes are drawn
 var _bench_other := PackedFloat64Array()   # ... and otherwise
 var ui_hud: UiHud                 # UI's HUD
+var _howto_resume: bool = false   # the pause state the How to play card found when it opened
+var _touch_last: bool = false     # touch was the last input device (UI's touch_ui option)
 var audio: AudioVoices            # Audio's voice pool
 var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
 var flashes_on: bool = true       # F7: head flashes instead of the placeholder aura
@@ -112,6 +115,9 @@ func _ready() -> void:
 	ui_hud.anchor_fn = _hud_anchor
 	ui_hud.strip_fn = _hud_strip
 	ui_hud.split_fn = _split_record
+	ui_hud.howto_opened.connect(_on_howto_opened)
+	ui_hud.howto_closed.connect(_on_howto_closed)
+	_touch_last = bool(ui_hud.opts["touch_ui"])
 	host.drained.connect(_on_drained)
 	audio = AudioVoices.new(host.audio_cues.bank)
 	add_child(audio)
@@ -126,6 +132,8 @@ func _ready() -> void:
 		split_view = SplitView.new()
 		add_child(split_view)
 		_sync_split_options()
+	if not manual and not args.has("bench") and not args.has("frames") and not args.has("shot") and not ui_hud.howto_seen():
+		ui_hud.show_howto(true)     # the first run's How to play card (docs/ui/hud-spec.md section 17)
 		if not args.has("nosplit"):
 			split_view.attach(self)
 	if args.has("bench") or args.has("novsync"):
@@ -383,6 +391,52 @@ func set_legacy_hud(on: bool) -> void:
 	ui_hud.visible = not on
 
 
+## The How to play card holds the fight: the sim freezes while it is open (the HUD takes every key and click), and held
+## and pending keys are let go so no one flies on when it closes. Closing restores the pause the card found, so a card
+## opened from the pause menu goes back to the menu.
+func _on_howto_opened(_first_run: bool) -> void:
+	_howto_resume = host.paused
+	host.paused = true
+	host.release_all()
+	host.edges.clear()
+
+
+func _on_howto_closed(_first_run: bool) -> void:
+	host.paused = _howto_resume
+
+
+## A click (or a tap, which Godot turns into one) on the pause menu's entries (hud.gd pause_items), or on UI's pause
+## button in touch mode: host glue until Controls' touch scheme hit-tests the HUD's targets (the stance ring is theirs).
+func _menu_click(pos: Vector2) -> bool:
+	if host.paused and not ui_hud.is_howto_open():
+		var items: Dictionary = hud.pause_items()
+		if (items["resume"] as Rect2).has_point(pos):
+			host.paused = false
+			return true
+		if (items["howto"] as Rect2).has_point(pos):
+			ui_hud.show_howto()
+			return true
+	if bool(ui_hud.opts["touch_ui"]) and String(ui_hud.touch_target_at(pos).get("name", "")) == "pause":
+		host.paused = not host.paused
+		return true
+	return false
+
+
+## The last input device sets UI's touch mode: a touch turns it on, a key or a pad turns it off (a mouse leaves it as
+## it is). Read before anything consumes the event.
+func _input(e: InputEvent) -> void:
+	if ui_hud == null:
+		return
+	var touch: bool = _touch_last
+	if e is InputEventScreenTouch or e is InputEventScreenDrag:
+		touch = true
+	elif e is InputEventKey or e is InputEventJoypadButton or (e is InputEventJoypadMotion and absf(e.axis_value) > 0.5):
+		touch = false
+	if touch != _touch_last:
+		_touch_last = touch
+		ui_hud.set_option("touch_ui", touch)
+
+
 func take_over() -> void:
 	if started:
 		return
@@ -482,6 +536,9 @@ func _unhandled_input(e: InputEvent) -> void:
 		elif not fkey:
 			host.held[code] = true
 	elif e is InputEventMouseButton and e.pressed:
+		if e.button_index == MOUSE_BUTTON_LEFT and _menu_click(e.position):
+			get_viewport().set_input_as_handled()
+			return
 		take_over()
 
 

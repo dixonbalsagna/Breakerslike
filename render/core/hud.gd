@@ -3,7 +3,8 @@ extends Control
 ## The greybox 2D overlay (prototype drawHUD and the text parts of drawFighter and drawParts): fighter panels (HP,
 ## ki, power, tier, stance, menace or anguish), world counters, the chain counter, the banner, fighter labels, damage
 ## numbers, the director's feed and the planet strip, shown only when `legacy` is on (F2) now that UI's HUD is hosted;
-## and always the take-over prompt, the seed and tick, and the F3 performance readout.
+## and always the take-over prompt, the seed and tick, the F3 performance readout and the pause menu (Resume, How to
+## play: host glue until UI draws a menu; main hit-tests pause_items()).
 ## Reads the sim and the fx consumer only; world positions go to the screen through the 3D camera.
 
 const FEED_LINES := 8
@@ -54,13 +55,49 @@ func _draw() -> void:
 
 
 func _prompt(host: SimHost, vw: float, vh: float) -> void:
-	if not main.started:
+	var card: bool = main.ui_hud != null and main.ui_hud.is_howto_open()
+	var dp: float = _dp()
+	var touch: bool = main.ui_hud != null and bool(main.ui_hud.opts.get("touch_ui", false))
+	if not main.started and not card and touch:
+		# A touch screen has no keys to list: one line, at least 12 dp like UI's text floor.
+		_text("AI vs AI demo. Tap to take control of P1.", Vector2(vw * 0.5, vh - 96.0 * dp), int(round(16.0 * dp)), Color(1, 1, 1, 0.9), 0)
+	elif not main.started and not card:
 		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, vh - 96.0 if not legacy else 104.0), 16, Color(1, 1, 1, 0.9), 0)
-		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F2 old HUD, F3 perf, F4 feed, F6 cracks (Shift: destruction, Ctrl: embers), F9 split", Vector2(vw * 0.5, vh - 78.0 if not legacy else 124.0), 11, Color(1, 1, 1, 0.7), 0)
+		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F1 how to play, F2 old HUD, F3 perf, F4 feed, F6 cracks (Shift: destruction, Ctrl: embers), F9 split", Vector2(vw * 0.5, vh - 78.0 if not legacy else 124.0), 11, Color(1, 1, 1, 0.7), 0)
 		_text(_flash_keys(), Vector2(vw * 0.5, vh - 62.0 if not legacy else 140.0), 11, Color(1, 1, 1, 0.6), 0)
 	_text("seed %d   tick %d%s" % [host.seed, host.ticks, "   PAUSED" if host.paused else ""], Vector2(vw - 10, vh - 30), 10, Color(1, 1, 1, 0.5), 1)
 	if show_perf:
 		_perf(vw)
+	if host.paused and not card:
+		_pause_menu(vw)
+
+
+## The pause menu's entries, name to rectangle: each at least 48 dp tall (44 px at the least), centred.
+func pause_items() -> Dictionary:
+	var dp: float = _dp()
+	var h: float = maxf(48.0 * dp, 44.0)
+	var w: float = minf(maxf(280.0 * dp, size.x * 0.28), size.x - 32.0)
+	var c: Vector2 = size * 0.5
+	var gap: float = 12.0 * dp
+	return {"resume": Rect2(c.x - w * 0.5, c.y - gap * 0.5 - h, w, h), "howto": Rect2(c.x - w * 0.5, c.y + gap * 0.5, w, h)}
+
+
+func _dp() -> float:
+	return maxf(float(main.ui_hud.dp), 1.0) if main != null and main.ui_hud != null else 1.0
+
+
+func _pause_menu(vw: float) -> void:
+	var it: Dictionary = pause_items()
+	var dp: float = _dp()
+	var fs: int = int(round(16.0 * dp))
+	var keys: bool = not bool(main.ui_hud.opts.get("touch_ui", false))
+	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.35))
+	_text("PAUSED", Vector2(vw * 0.5, (it["resume"] as Rect2).position.y - 18.0 * dp), fs + int(6 * dp), Color(1, 1, 1, 0.95), 0)
+	for e in [["resume", "Resume", "  (P)"], ["howto", "How to play", "  (F1)"]]:
+		var r: Rect2 = it[e[0]]
+		draw_rect(r, Color(0.08, 0.09, 0.14, 0.85))
+		draw_rect(r, Color(1, 1, 1, 0.5), false, 1.5)
+		_text(e[1] + (e[2] if keys else ""), Vector2(r.get_center().x, r.get_center().y + fs * 0.35), fs, Color(1, 1, 1, 0.95), 0)
 
 
 ## The head flashes' debug keys, in the data's order (main.gd FLASH_KEYS).
