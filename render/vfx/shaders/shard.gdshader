@@ -29,7 +29,11 @@ void fragment() {
 	vec3 base = COLOR.rgb;
 	float a = 0.0;
 	float alpha_mul = COLOR.a;
-	if (shape < 0.5) {
+	if (shape > 5.5) {
+		// ember: a solid slanted bar, bright, no lit edge
+		float d = max(abs(p.y) - 1.0, abs(p.x + 0.4 * p.y) - 1.0);
+		a = edge(d, aa);
+	} else if (shape < 0.5) {
 		// glass sliver: a slanted parallelogram, lit along one long edge
 		float d = max(abs(p.y) - 1.0, abs(p.x + 0.35 * p.y * (0.5 + sd)) - 1.0);
 		a = edge(d, aa);
@@ -56,7 +60,7 @@ void fragment() {
 		float lump = 0.82 + 0.08 * sin(ang * 5.0 + sd * 12.0) + 0.05 * sin(ang * 9.0 + sd * 5.0);
 		a = edge(r - lump, aa);
 		float inner = edge(r - lump * 0.62, aa);
-		base = mix(rim_dust.rgb, base, inner * step(0.0, p.y * 0.4 - p.x * 0.3 + 0.6));
+		base = mix(base * 0.72, base, inner * step(0.0, p.y * 0.4 - p.x * 0.3 + 0.6));
 	} else {
 		// ring: a thin cel ring that thins as it fades
 		float r = length(p);

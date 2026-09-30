@@ -26,6 +26,9 @@ var marks: Array = []              # Mark
 var spawned: int = 0               # counters for the tests
 var max_marks_seen: int = 0
 var max_k: float = 0.0
+var ring_age: float = 99.0          # seconds since the break ring began (it lasts VfxLook.RING_S)
+var rings: int = 0                 # for the tests
+var _was_full: bool = false
 var _has_prev: bool = false
 var _px: float = 0.0
 var _py: float = 0.0
@@ -41,6 +44,9 @@ func reset() -> void:
 	sspeed = 0.0
 	dir = Vector2(1.0, 0.0)
 	_has_prev = false
+	ring_age = 99.0
+	rings = 0
+	_was_full = false
 	spawned = 0
 	max_marks_seen = 0
 	max_k = 0.0
@@ -79,6 +85,12 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 		target = 0.0
 	var tau: float = VfxLook.K_UP_TAU if target > k else VfxLook.K_DOWN_TAU
 	k += (target - k) * (1.0 - exp(-dt / tau))
+	# The break ring: once, each time it crosses the top of the scale from below (not during a rush, not again within a second and a half).
+	ring_age += dt
+	if speed_bh >= VfxLook.V_FULL and not _was_full and target > 0.99 and ring_age > VfxLook.RING_GAP_S:
+		ring_age = 0.0
+		rings += 1
+	_was_full = speed_bh >= VfxLook.V_FULL
 	max_k = maxf(max_k, k)
 	hx.append(f.x)
 	hy.append(f.y)

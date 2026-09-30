@@ -10,11 +10,13 @@ Presentation only. VFX reads the sim's state and fx events and draws; it never w
 | :--- | :--- | :--- |
 | Motion trails: a tapered ribbon behind a fast fighter, and world-fixed wind marks the camera flies past | **Live** (trails are on by default) | `trail_state.gd`, `trail_view.gd`, `shaders/trail.gdshader` |
 | Ground cracks and fissures from `S.craters` and `S.slides` | Built, **off** (`VfxLook.CRACKS_DEFAULT`) | `crack_gen.gd`, `crack_mesh.gd`, `crack_view.gd`, `shaders/crack.gdshader` |
-| Burst-through shrapnel, hole decals, chain tunnel, collapse dust | Built, **off** (`VfxLook.DESTRUCTION_DEFAULT`); driven by the sim's real `building_fall` and by mock `building_hit` and `chain_link` until B2 lands | `debris.gd`, `shard_view.gd`, `hole_view.gd`, `shaders/shard.gdshader`, `shaders/hole.gdshader`, `mock/vfx_mock.gd` |
+
+| Scorch embers by beam variant | Built, **off** (`VfxLook.EMBERS_DEFAULT`) until Rendering stops drawing ImpactFx's own scorch sparks | `debris.gd` (`embers`) |
+| Break ring: one thin arc at the front the moment a fighter reaches full speed | **Live** | `trail_state.gd`, `trail_view.gd` |
 
 Rendering's hooks (committed in ef2d55c): `SimHost.vfx` (a `VfxHub`: `reset`, `consume`), `PaneWorld.vfx_layer` (a `VfxLayer`: `hub`, `build`, `update`), and in `main.gd` `note_frame`, `reduced_motion`, `--novfx` and `--vfx-quality=0|1|2`. The layer finds its pane's curvature state and the planet's ground field through its parent, so nothing more is needed.
 
-To turn the two "off" groups on for a look: set `host.vfx.cracks_enabled` and `host.vfx.destruction_enabled` (the tools do), or change the two defaults in `vfx_look.gd`.
+To turn the "off" groups on for a look: set `host.vfx.cracks_enabled`, `destruction_enabled` and `embers_enabled` (the tools do), or change the defaults in `vfx_look.gd`. Colours are read from `data/art/effects.json` (`palette.gd`, warmed at match start; the placeholders in `vfx_look.gd` only stand in if the file is missing): glass, steel and dust by biome, the crack line and lit lip by biome (the ocean takes no cracks), the trail core.
 
 ## The effects
 
@@ -58,3 +60,11 @@ All from the repo root, with Godot 4.7.2. Tools with pictures need a window; `--
 - The fighter is not hidden inside a building during the burst-through: that needs B2's depth (`z`) and Rendering's fighter placement. The prototype shows the fighter in front of the facade.
 - Colours are placeholders (`vfx_look.gd`); Art's semantic roles replace them as data.
 - Trails and beams share a colour language (accent and near white). If a playtest reads them as one thing, the trail moves to a neutral pale.
+
+## Added after the first report
+
+- **Fissure vents.** A fresh fissure (a record under half a second old) throws two dust puffs up from every third point as its front reaches it; a set rebuilt after a seek has none.
+- **Scorch embers.** `scorch` events shed embers by variant: glass flecks (GLASS TRENCH), cinders (FIRESTORM), spray puffs (HORIZON CLEAVE), heat-ramp sparks elsewhere. Fire keeps the orange and yellow. Rendering's `ImpactFx` still draws its own sparks for the same event, so this stays off until it stops.
+- **Break ring.** One thin arc, 0.25 s, at the front of a fighter the moment it reaches 110 bh/s from below (not in a rush, not twice within 1.5 s).
+- **Implode column.** Dust in three tones (dark back bank, body, light front) in the biome's colour, and the column is spawned floor by floor over half a second, top first.
+- `tools/effects_check.gd` (headless) asserts the palette, vents, embers, the pool cap and the ring; it passes, and `hash_check.gd` still passes on seeds 12345, 4 and 7 with all three groups on (9,122 debris bits from the sim's own `building_fall`).

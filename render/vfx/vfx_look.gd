@@ -19,6 +19,10 @@ const SPAN_MIN: float = 0.07            # seconds of path the ribbon covers at k
 const SPAN_MAX: float = 0.20            # ... and at k = 1
 const LEN_MAX_BH: float = 14.0          # a ribbon is never longer than this
 const SEGS: int = 4                     # straight segments per ribbon (a curved launch bends)
+const RING_S: float = 0.25              # the break ring: one thin arc at the front the moment a fighter reaches full speed
+const RING_GAP_S: float = 1.5
+const RING_R0_BH: float = 1.5
+const RING_R1_BH: float = 4.5
 const W_OUTER_BH: float = 0.50          # head width of the outer band
 const W_CORE_BH: float = 0.22           # head width of the core
 const MIN_CORE_PX: float = 2.0          # the core is never thinner than this on screen
@@ -54,6 +58,7 @@ const TRAIL_CORE := "#ffffff"
 # ---------------------------------------------------------------------------------------------------- ground cracks
 const CRACKS_DEFAULT: bool = false      # off in the game until Orb has seen them (tools switch them on)
 const DESTRUCTION_DEFAULT: bool = false # shrapnel, collapse dust and holes: off in the game until Orb has seen them
+const EMBERS_DEFAULT: bool = false      # scorch embers by variant: off until Rendering suppresses ImpactFx's own
 ## Cracks are a pure function of the sim's records (S.craters, S.slides) plus the match seed (render/vfx/crack_gen.gd),
 ## so a seek, a snapshot or a late join draws the same ones. Lengths and widths are in crater radii r or trench half
 ## widths hw; numbers of lines grow with sqrt(energy).
@@ -141,5 +146,5 @@ const SPOKES_BY_QUALITY: Array = [0.5, 0.75, 1.0]     # multiplier on hairline s
 static func trail_accent(hex: String) -> Color:
 	var c: Color = RenderLook.col(hex)
 	if c.s > 0.35 and c.v > 0.35 and (c.h < 0.19 or c.h > 0.96):
-		return RenderLook.col(TRAIL_NEUTRAL)
+		return VfxPalette.haze()
 	return c

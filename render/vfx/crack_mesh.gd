@@ -20,7 +20,7 @@ var aabb := AABB()
 
 ## origin_x: the set's origin (wrapped world x). lines: Array of VfxCrackGen.Line. born: sim time the set began.
 ## Returns an ArrayMesh, or null when nothing is left to draw (every line ended in water, say).
-func build(S: SimState, ground: GroundField, origin_x: float, lines: Array, born: float) -> ArrayMesh:
+func build(S: SimState, ground: GroundField, origin_x: float, lines: Array, born: float, biome: String = "plains") -> ArrayMesh:
 	reach = 1.0
 	for ln in lines:
 		for p in ln.pts:
@@ -32,9 +32,9 @@ func build(S: SimState, ground: GroundField, origin_x: float, lines: Array, born
 	var idx := PackedInt32Array()
 	var lo := Vector3(1e30, 1e30, 1e30)
 	var hi := Vector3(-1e30, -1e30, -1e30)
-	var core: Color = Color(RenderLook.col(VfxLook.CRACK_CORE), VfxLook.CRACK_A_CORE)
-	var edge: Color = Color(RenderLook.col(VfxLook.CRACK_EDGE), VfxLook.CRACK_A_EDGE)
-	var lip: Color = Color(RenderLook.col(VfxLook.CRACK_LIP), VfxLook.CRACK_A_LIP)
+	var core: Color = Color(VfxPalette.crack(biome), VfxLook.CRACK_A_CORE)
+	var edge: Color = Color(VfxPalette.dust(biome, "shadow"), VfxLook.CRACK_A_EDGE)
+	var lip: Color = Color(VfxPalette.lip(biome), VfxLook.CRACK_A_LIP)
 	lines_used = 0
 	for ln in lines:
 		var pts: PackedVector2Array = _dry_part(S, origin_x, _subdivide(ln.pts, VfxLook.CRACK_SEG))

@@ -68,6 +68,19 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 			_put(n + 1, Vector2(vx, m.y), Vector2(m.dx, m.dy), mlen, w, m.z, Color(col, al), 1.0, 0.0, 1.0)
 			n += 2
 			mark_count += 1
+	# The break ring: one thin arc at the front of a fighter that has just reached full speed.
+	if not hub.reduced_motion and q > VfxLook.Q_LOW:
+		for i in range(mini(2, hub.trails.size())):
+			var tr: VfxTrailState = hub.trails[i]
+			if tr.ring_age >= VfxLook.RING_S or n >= CAP - 1:
+				continue
+			var f: float = tr.ring_age / VfxLook.RING_S
+			var fpos: Vector2 = Vector2(SimWrap.sdx(cam_x, host.fighter_x(i, a)), host.fighter_pose(i, a).y + VfxLook.CHEST_Y)
+			var rr: float = lerpf(VfxLook.RING_R0_BH, VfxLook.RING_R1_BH, 1.0 - pow(1.0 - f, 2.0)) * VfxLook.BH
+			var rc: Color = VfxPalette.trail_core().lerp(hub.accents[i], 0.2)
+			rc.a = 0.85 * (1.0 - f)
+			_put(n, fpos + tr.dir * rr * 0.35, tr.dir, rr * 2.0, rr * 2.0, VfxLook.Z_TRAIL + 1.0, rc, 1.0, 0.0, 2.0)
+			n += 1
 	# Ribbons.
 	for i in range(mini(2, hub.trails.size())):
 		var ts: VfxTrailState = hub.trails[i]
@@ -87,7 +100,7 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 		var layers: Array = []
 		if VfxLook.OUTER_BY_QUALITY[q]:
 			layers.append([VfxLook.W_OUTER_BH, VfxLook.A_OUTER, acc.lightened(0.25), VfxLook.Z_TRAIL - 0.5, 1.0])
-		layers.append([VfxLook.W_CORE_BH, VfxLook.A_CORE, Color(VfxLook.TRAIL_CORE).lerp(acc, 0.12), VfxLook.Z_TRAIL, VfxLook.MIN_CORE_PX / zoom])
+		layers.append([VfxLook.W_CORE_BH, VfxLook.A_CORE, VfxPalette.trail_core().lerp(acc, 0.12), VfxLook.Z_TRAIL, VfxLook.MIN_CORE_PX / zoom])
 		var kk: float = smoothstep(0.0, 1.0, ts.k)
 		if hub.reduced_motion:
 			kk *= 0.5

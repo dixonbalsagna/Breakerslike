@@ -22,6 +22,7 @@ class CrackSet:
 	var reach: float = 1.0
 	var tris: int = 0
 	var fissures: int = 0
+	var biome: String = "plains"
 
 ## A hole a fighter left in a facade.
 class Hole:
@@ -43,6 +44,7 @@ var reduced_motion: bool = false:   # the player's option (main sets it every fr
 		reduced_motion = v or force_reduced
 var cracks_enabled: bool = VfxLook.CRACKS_DEFAULT   # ground cracks: off in the live build until they are approved
 var destruction_enabled: bool = VfxLook.DESTRUCTION_DEFAULT   # shrapnel, collapse dust and holes: off in the live build until approved
+var embers_enabled: bool = VfxLook.EMBERS_DEFAULT   # scorch embers by beam variant: off until Rendering stops drawing its own
 var debris := VfxDebris.new()
 var holes: Array = []               # Hole
 var trails: Array = [VfxTrailState.new(), VfxTrailState.new()]
@@ -78,6 +80,7 @@ func reset(S: SimState, p_seed: int) -> void:
 	_rng_trail = SimRng.new(SimRng.deriveSeed(seed, "vfx.trail"))
 	_rng_hole = SimRng.new(SimRng.deriveSeed(seed, "vfx.hole"))
 	debris.reset(seed)
+	VfxPalette.warm()
 	holes.clear()
 	for i in range(trails.size()):
 		trails[i].reset()
@@ -138,17 +141,23 @@ func _consume(S: SimState, events: Array) -> void:
 			dt = e.dt
 			frozen = e.frozen
 	_sync_cracks(S)
-	if destruction_enabled:
+	if destruction_enabled or cracks_enabled or embers_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
 		for e in events:
 			match e.type:
 				"building_hit":
-					_on_building_hit(S, e)
+					if destruction_enabled:
+						_on_building_hit(S, e)
 				"chain_link":
-					_on_chain_link(S, e)
+					if destruction_enabled:
+						_on_chain_link(S, e)
 				"building_fall":
-					_on_building_fall(S, e)
+					if destruction_enabled:
+						_on_building_fall(S, e)
+				"scorch":
+					if embers_enabled:
+						debris.embers(S, float(e.x), float(e.y), float(e.power), String(e.variant))
 		# Bits fly on sim time: a tenth of a step in hit-stop, like the reference consumer's particles.
 		debris.step(S, dt * 0.1 if frozen else dt)
 	if frozen:
@@ -315,15 +324,18 @@ func _queue_crater(S: SimState, c) -> void:
 	var special: bool = bool(sp) if sp != null else false
 	var key: int = VfxCrackGen.crater_key(c.x, c.r, c.depth)
 	var lines: Array = VfxCrackGen.crater_lines(seed, key, c.r, c.energy, special, String(c.cause), quality)
-	if lines.is_empty() or WorldWater.surfaceAt(S, c.x) != WorldWater.DRY:
+	var biome: String = VfxPalette.biome_key(c.x)
+	if lines.is_empty() or WorldWater.surfaceAt(S, c.x) != WorldWater.DRY or not VfxPalette.takes_cracks(biome):
 		return
 	var cs := CrackSet.new()
 	cs.kind = 0
 	cs.key = key
 	cs.x = SimWrap.wrap(c.x)
 	cs.born = c.t
+	cs.biome = biome
 	cs.lines = lines
 	_add(cs)
+	_add_vents(S, cs)
 
 
 func _queue_slide(S: SimState, sl) -> void:
@@ -337,8 +349,12 @@ func _queue_slide(S: SimState, sl) -> void:
 	cs.key = key
 	cs.x = SimWrap.wrap(sl.x0)
 	cs.born = sl.t
+	cs.biome = VfxPalette.biome_key(sl.x0)
 	cs.lines = lines
+	if not VfxPalette.takes_cracks(cs.biome):
+		return
 	_add(cs)
+	_add_vents(S, cs)
 
 
 func _add(cs: CrackSet) -> void:
@@ -358,7 +374,7 @@ func build_next_crack(S: SimState, ground: GroundField) -> void:
 	var cs: CrackSet = crack_pending.pop_front()
 	var t0: int = Time.get_ticks_usec()
 	var b := VfxCrackMesh.new()
-	cs.mesh = b.build(S, ground, cs.x, cs.lines, cs.born)
+	cs.mesh = b.build(S, ground, cs.x, cs.lines, cs.born, cs.biome)
 	cs.reach = b.reach
 	cs.tris = b.tris
 	for ln in cs.lines:
@@ -369,3 +385,22 @@ func build_next_crack(S: SimState, ground: GroundField) -> void:
 	crack_build_usec += Time.get_ticks_usec() - t0
 	if cs.mesh == null:
 		crack_sets.erase(cs)
+
+
+## Dust jets along a fresh fissure, one where the crack's front reaches each few points, so the split breathes as it opens.
+## Only for a set that is fresh (a rebuild after a seek draws none), and only if the debris pool is running.
+func _add_vents(S: SimState, cs: CrackSet) -> void:
+	if S.T - cs.born > 0.5:
+		return
+	var reach: float = 1.0
+	for ln in cs.lines:
+		for p in ln.pts:
+			reach = maxf(reach, p.length())
+	for ln in cs.lines:
+		if not ln.fissure:
+			continue
+		var i: int = 2
+		while i < ln.pts.size():
+			var p: Vector2 = ln.pts[i]
+			debris.vent(cs.born + clampf(p.length() / reach, 0.0, 1.0) * VfxLook.CRACK_GROW_S / 1.15, SimWrap.wrap(cs.x + p.x), p.y, ln.w0)
+			i += 3

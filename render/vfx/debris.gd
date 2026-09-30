@@ -8,7 +8,7 @@ extends RefCounted
 ## height for the bounce). A fixed number of draws per spawned bit, so the streams do not depend on the quality level:
 ## quality only decides how many of the drawn bits are kept.
 
-enum { GLASS, TRI, STEEL, CHUNK, PUFF, RING }
+enum { GLASS, TRI, STEEL, CHUNK, PUFF, RING, EMBER }
 
 class Bit:
 	var kind: int = 0
@@ -39,6 +39,8 @@ class Job:
 
 var bits: Array = []          # Bit
 var _spawned_tick: int = 0     # spawns since the last step: the per-tick budget keeps one busy tick from being a frame spike
+var _biome: String = "plains"   # the dust colours of the place being spawned at (Art's by_biome)
+var _tone: int = 0              # 0 mid, 1 shadow (a back layer), 2 light (a front layer)
 var jobs: Array = []          # Job, waiting
 var spawned: int = 0          # counters for the tests
 var dropped: int = 0
@@ -114,6 +116,14 @@ func _run_job(S: SimState, j: Job) -> void:
 			_skirt(S, j.a)
 		"chips":
 			_chips(S, j.a)
+		"vent":
+			_vent(S, j.a)
+		"colpuff":
+			var a: Dictionary = j.a
+			_biome = VfxPalette.biome_key(a.x)
+			_tone = a.tone
+			_puff_at(a.x, a.y, a.z + (-30.0 if _tone == 1 else (14.0 if _tone == 2 else 0.0)), a.vx, a.vy, a.s0, a.s1, a.life, true)
+			_tone = 0
 
 
 # ---------------------------------------------------------------------------------------------------------- spawners
@@ -121,6 +131,8 @@ func _run_job(S: SimState, j: Job) -> void:
 ## The burst-through: in one side, out the other. b: the building {x, w, h, front_z}; the fighter enters at (xi, yi) and
 ## leaves at (xo, yo) travelling along (dx, dy) at speed sp. size: a scale for the bits from the building's size.
 func burst_through(S: SimState, bx: float, w: float, h: float, front_z: float, xi: float, yi: float, xo: float, yo: float, dx: float, dy: float, sp: float, outcome: String, link: int) -> void:
+	_biome = VfxPalette.biome_key(bx)
+	_tone = 0
 	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
 	var kscale: float = clampf(sqrt(maxf(h, 100.0)) / 40.0, 0.7, 2.4)
 	var heavy: float = 1.0 if outcome == "collapse" else (0.8 if outcome == "heavy" else (0.55 if outcome == "wreck" else 0.3))
@@ -150,6 +162,8 @@ func burst_through(S: SimState, bx: float, w: float, h: float, front_z: float, x
 
 ## The tunnel between two hits of a chain: dust and small chips streamed along the segment the fighter flies.
 func chain_tunnel(x0: float, y0: float, x1: float, y1: float, z: float, link: int, size: float) -> void:
+	_biome = VfxPalette.biome_key(x0)
+	_tone = 0
 	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
 	var d: float = maxf(absf(SimWrap.sdx(x0, x1)), 1.0)
 	var n: int = clampi(int(d / 260.0), 3, 24)
@@ -181,6 +195,8 @@ func building_fall(S: SimState, bx: float, w: float, h: float, front_z: float, m
 
 ## A district of implodes folded into one event past the cap: one big cloud, not n.
 func district(S: SimState, x: float, n: float) -> void:
+	_biome = VfxPalette.biome_key(x)
+	_tone = 0
 	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)]
 	var span: float = clampf(n * 90.0, 600.0, 6000.0)
 	for k in range(int(round(minf(n, 30.0) * q))):
@@ -194,12 +210,14 @@ func _skirt(S: SimState, a: Dictionary) -> void:
 	var bx: float = a.x
 	var w: float = a.w
 	var h: float = a.h
+	_biome = VfxPalette.biome_key(bx)
 	var g: float = WorldTerrain.groundY(S, bx)
 	var kscale: float = clampf(sqrt(maxf(h, 100.0)) / 40.0, 0.7, 2.4)
 	var heavy: float = 1.3 if a.mode == "burst" else 1.0
-	# The skirt: a ring of dust thrown out along the ground around the base, from one side of the footprint to the other.
-	var n: int = int(round(clampf(w / 40.0 + h / 300.0, 10.0, 40.0) * heavy))
 	var base: float = clampf(0.5 * (w + 0.15 * h), 200.0, 1100.0)   # dust scales with the tower, not only its footprint
+	# The skirt: a ring of dust thrown out along the ground around the base, in three layers (a dark back bank, the body,
+	# and a light front edge), so it has depth and reads as one heavy cloud.
+	var n: int = int(round(clampf(w / 40.0 + h / 300.0, 10.0, 40.0) * heavy))
 	for k in range(n):
 		var t: float = (float(k) + _rd.next()) / float(n) - 0.5
 		var out: float = signf(t) * _rd.range_(150.0, 700.0) * kscale
@@ -209,24 +227,96 @@ func _skirt(S: SimState, a: Dictionary) -> void:
 		var ps: float = base * _rd.range_(0.7, 1.3)
 		var pl: float = _rd.range_(2.4, 4.0)
 		var py: float = _rd.range_(0.0, 150.0)
+		_tone = k % 3
 		if kp < q:
-			_puff_at(bx + t * w * 1.4, g + py, a.z + pz, out, up, ps * 0.6, ps * 1.3, pl, true)
-	# The column: the tower's height in dust, a puff every so often up its length as it comes down.
-	var ncol: int = int(round(clampf(h / 250.0, 4.0, 16.0) * heavy))
+			_puff_at(bx + t * w * 1.4, g + py, a.z + pz + (-30.0 if _tone == 1 else (14.0 if _tone == 2 else 0.0)), out, up, ps * 0.6, ps * 1.3, pl, true)
+	# The column: the tower's height in dust, floor by floor. Each puff waits its turn, top of the tower first, over about
+	# half a second, as the floors give way.
+	var ncol: int = int(round(clampf(h / 200.0, 5.0, 20.0) * heavy))
 	var cs: float = base * 1.2
 	for k in range(ncol):
-		var fy: float = g + h * (0.05 + 0.85 * (float(k) + _rd.next()) / float(ncol))
+		var fr: float = (float(k) + _rd.next()) / float(ncol)
 		var kp: float = _rd.next()
 		var vx: float = _rd.range_(-160.0, 160.0)
 		var vy: float = _rd.range_(80.0, 400.0)
 		var s: float = cs * _rd.range_(0.7, 1.3)
 		var pl: float = _rd.range_(2.6, 4.6)
+		var px: float = bx + _rd.range_(-0.4, 0.4) * w
+		var pz: float = _rd.range_(8.0, 40.0)
 		if kp < q:
-			_puff_at(bx + _rd.range_(-0.4, 0.4) * w, fy, a.z + _rd.range_(8.0, 40.0), vx, vy, s * 0.6, s * 1.4, pl, true)
+			var j := Job.new()
+			j.at = S.T + 0.5 * (1.0 - fr)
+			j.kind = "colpuff"
+			j.a = {"x": px, "y": g + h * (0.05 + 0.85 * fr), "z": a.z + pz, "vx": vx, "vy": vy, "s0": s * 0.6, "s1": s * 1.4, "life": pl, "tone": k % 3}
+			jobs.append(j)
+	_tone = 0
 	_ring(bx, g + 6.0, a.z + 8.0, w * 0.35, w * 1.6, 0.5)
 
 
+## A dust jet from a fresh fissure: two puffs shot up out of the split at (x, z), when its front reaches it (sim time `at`).
+func vent(at: float, x: float, z: float, width: float) -> void:
+	var j := Job.new()
+	j.at = at
+	j.kind = "vent"
+	j.a = {"x": x, "z": z, "w": width}
+	jobs.append(j)
+
+
+func _vent(S: SimState, a: Dictionary) -> void:
+	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
+	_biome = VfxPalette.biome_key(a.x)
+	_tone = 0
+	var g: float = WorldTerrain.groundY(S, a.x)
+	var s: float = clampf(a.w * 3.0, 60.0, 500.0)
+	for k in range(2):
+		var kp: float = _rd.next()
+		var vy: float = _rd.range_(350.0, 800.0)
+		var vx: float = _rd.range_(-80.0, 80.0)
+		var pl: float = _rd.range_(1.0, 1.7)
+		if kp < q:
+			_puff_at(a.x, g, a.z, vx, vy, s * 0.5, s * 1.2, pl, false)
+
+
+## Scorch embers for a beam's ground contact (the sim's scorch event), by the beam's variant: glass flecks over a glass
+## trench, cinders over a burning forest, spray over the sea, chips and sparks elsewhere. Small, bright, few.
+func embers(S: SimState, x: float, y: float, power: float, variant: String) -> void:
+	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
+	var n: int = 1 + int(power * 0.7)
+	for k in range(n):
+		var kp: float = _rs.next()
+		var vx: float = _rs.range_(-90.0, 90.0)
+		var vy: float = _rs.range_(200.0, 380.0 + 90.0 * power)
+		var life: float = _rs.range_(0.5, 1.1)
+		var sz: float = _rs.range_(10.0, 26.0)
+		var px: float = x + _rs.range_(-60.0, 60.0)
+		if kp >= q:
+			continue
+		var b: Bit
+		match variant:
+			"GLASS TRENCH":
+				b = _bit(GLASS, px, y + 6.0, RenderLook.Z_BEAMS - 2.0, vx, vy, 0.5, life)
+				b.col = VfxPalette.glass("light")
+				b.col2 = Color.WHITE
+			"HORIZON CLEAVE":
+				_biome = "ocean"
+				_tone = 2
+				_puff_at(px, y, RenderLook.Z_BEAMS - 4.0, vx * 0.6, vy * 0.6, 30.0, 110.0, life * 1.4, false)
+				_tone = 0
+				continue
+			_:
+				b = _bit(EMBER, px, y + 6.0, RenderLook.Z_BEAMS - 2.0, vx, vy, 0.5, life)
+				b.col = RenderLook.col(RenderLook.HEAT_HI) if variant != "FIRESTORM" else RenderLook.col(RenderLook.HEAT_LO)
+				b.col2 = RenderLook.col(RenderLook.HEAT_HI)
+		b.sx = sz * (2.2 if variant == "FIRESTORM" else 1.4)
+		b.sy = 5.0
+		b.grav = 160.0
+		b.spin = 0.0
+		b.rot = atan2(vy, vx)
+		_add(b)
+
+
 func _chips(S: SimState, a: Dictionary) -> void:
+	_biome = VfxPalette.biome_key(a.x)
 	var q: float = VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced else 1.0)
 	var bx: float = a.x
 	var w: float = a.w
@@ -273,23 +363,23 @@ func _bit(kind: int, x: float, y: float, z: float, vx: float, vy: float, kscale:
 		GLASS:
 			b.sx = _rs.range_(26.0, 64.0) * kscale
 			b.sy = _rs.range_(6.0, 14.0) * kscale
-			b.col = Color(VfxLook.GLASS)
-			b.col2 = Color(VfxLook.GLASS_HI)
+			b.col = VfxPalette.glass("mid")
+			b.col2 = VfxPalette.glass("light")
 		TRI:
 			b.sx = _rs.range_(22.0, 46.0) * kscale
 			b.sy = b.sx * _rs.range_(0.6, 1.0)
-			b.col = Color(VfxLook.GLASS)
-			b.col2 = Color(VfxLook.GLASS_HI)
+			b.col = VfxPalette.glass("mid")
+			b.col2 = VfxPalette.glass("light")
 		STEEL:
 			b.sx = _rs.range_(50.0, 150.0) * kscale
 			b.sy = _rs.range_(9.0, 18.0) * kscale
-			b.col = Color(VfxLook.STEEL)
-			b.col2 = Color(VfxLook.STEEL_HI)
+			b.col = VfxPalette.steel("mid")
+			b.col2 = VfxPalette.steel("light")
 		_:
 			b.sx = _rs.range_(28.0, 70.0) * kscale
 			b.sy = b.sx * _rs.range_(0.6, 1.0)
-			b.col = Color(VfxLook.CONCRETE)
-			b.col2 = Color(VfxLook.STEEL_HI)
+			b.col = VfxPalette.steel("light")
+			b.col2 = VfxPalette.steel("light")
 	return b
 
 
@@ -318,8 +408,8 @@ func _puff_at(x: float, y: float, z: float, vx: float, vy: float, s0: float, s1:
 	b.life = life
 	b.grav = -40.0 if big else -20.0      # dust drifts up a little
 	b.drag = 0.035
-	b.col = Color(VfxLook.DUST_A)
-	b.col2 = Color(VfxLook.DUST_B)
+	b.col = VfxPalette.dust(_biome, "shadow" if _tone == 1 else ("light" if _tone == 2 else "mid"))
+	b.col2 = VfxPalette.dust(_biome, "shadow")
 	b.seed = _rd.next()
 	_add(b)
 
@@ -335,7 +425,7 @@ func _ring(x: float, y: float, z: float, r0: float, growth: float, life: float) 
 	b.grow = growth * 2.0
 	b.life = life
 	b.grav = 0.0
-	b.col = Color(VfxLook.DUST_A)
+	b.col = VfxPalette.dust(_biome, "light")
 	b.col2 = Color(VfxLook.STEEL_HI)
 	_add(b)
 

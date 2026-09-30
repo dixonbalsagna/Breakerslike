@@ -61,11 +61,12 @@ func _update(host: SimHost, a: float, cam_x: float, zoom: float, vw: float) -> v
 	trail_view.visible = true
 	crack_view.visible = hub.cracks_enabled
 	hole_view.visible = hub.destruction_enabled
-	shard_view.visible = hub.destruction_enabled
+	shard_view.visible = hub.destruction_enabled or hub.cracks_enabled or hub.embers_enabled
 	var half_w: float = vw * 0.5 / maxf(zoom, 1e-6)
 	if hub.cracks_enabled:
 		crack_view.update(hub, host.S, cam_x, half_w, zoom)
 	if hub.destruction_enabled:
 		hole_view.update(hub, cam_x, half_w)
+	if hub.destruction_enabled or hub.cracks_enabled or hub.embers_enabled:
 		shard_view.update(hub, cam_x, zoom, half_w)
 	trail_view.update(hub, host, a, cam_x, zoom, half_w)

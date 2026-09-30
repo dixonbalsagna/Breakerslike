@@ -49,6 +49,7 @@ func _run() -> void:
 	main.host.vfx.auto_quality = false
 	main.host.vfx.cracks_enabled = true
 	main.host.vfx.destruction_enabled = true
+	main.host.vfx.embers_enabled = true
 	var ok := true
 	var pures: Dictionary = {}
 	for seed in seeds:
