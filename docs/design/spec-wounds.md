@@ -412,6 +412,8 @@ Orb: "with few exceptions, transformations should be cinematic and uninterruptib
 1. **A fill** (a gauge, a condition, or an action), which the opponent can stop.
 2. **A cinematic**, which the opponent cannot interrupt. They wait, and may charge while they do, in the genre's tradition.
 
+The ready tell, the Transform input (hold 0.5 s) and the look of each form are in `moveset-rules.md` §10.
+
 | Fighter | Fill (can be stopped) | How the opponent stops it | Respected cinematic |
 | :--- | :--- | :--- | :--- |
 | Protagonist, track forms | Respect fills when the rival commits fully | By not committing: the rival controls the fuel | Each track step, 2 to 3 s |

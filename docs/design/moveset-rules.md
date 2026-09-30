@@ -67,6 +67,8 @@ A fighter has a small pool of signatures. **Which one fires** follows this prior
 
 ## 5. Transformations: one mechanic per fighter
 
+*Triggers, the Transform input and the look of each form: §10.*
+
 | Fighter | Mechanic | How it works (existing rules) | Trade-off |
 | :--- | :--- | :--- | :--- |
 | **Empress** | **A ladder of forms** | 12 revisions: jokes 1 to 8, then real revisions 9 to 12 through the processing fill, with refits (`spec-wounds.md` §3) | Slow to peak and exposed while processing. Strong late, and heals a little on the way |
@@ -284,3 +286,97 @@ This is one list per fighter. It merges §8 with Narrative's `docs/narrative/wor
 | **Protagonist** (Hot Blood) | **Heated:** seams glow, faster footwork, and he grins at his own steam. **Simmering:** heavier blows and more chains; he takes a hit to shelter a wall. **Boiling:** reckless and blitz-prone, a roar, hands shaking. **Boiled over:** the stagger and vent, and he looks round for who he might have hurt (heat memory: after two, he never cools below Heated). **Open Hand** (the reveal on the proving ground): locked at Boiling with no internal wear for 20 s, and the fragments spin out into a ring |
 | **Anti-hero** (pride ascension) | Five forms at Pride 55, 65, 75, 85 and 95, each adding +5% damage and +3% speed. **Poise:** the noise drops out, and he parries one-handed. **Regalia:** a piece forms, and he checks they saw. **Hierarchy:** he talks *about* the rival, and a crown of barrage fire. **Sovereign:** he stands above the fight, with the height bonus of the Dais. **Apex:** he finishes only by hand, with a terrible smile. **The crash** (Pride below 50): he loses one form as the regalia flakes away, and he can climb back. **Abdicate** (Drop the Act): he sheds every form for unrestrained, once per match |
 | **Cyborg** (assimilation) | **Base:** the bow. **Scavenger** (first Hunger threshold): a girder bolted onto his arm, harder and faster. **Kitchen** (second threshold): the table set mid-fight, portal frames and sandwich hazards. **Assembled** (third threshold): a building block worn as a shawl, wreckage armour taking incoming wear ×0.85, and the hunt for the drive begins. **Online** (the drive docked): lights come on like a restaurant opening, the tech is online, and hidden weapons appear on trays, generated from what he ate |
+
+## 10. For Orb: transformations you can't miss
+
+Orb's direction: a bigger visual change per form, and clearer triggers. The rules in §5 and `spec-wounds.md` §8 hold: a fill the rival can stop, then a respected cinematic, with the player choosing when to transform. The looks below are Game Design's brief. Art and Narrative refine them, and Legal's screen notes hold throughout (§10.7).
+
+### 10.1 One trigger, the same for every fighter
+
+Players learn it once.
+
+1. **Ready.** When a form becomes available, three cues fire together:
+   - *on the body:* the fighter's own ready tell (below), followed by a slow pulse for as long as the form stays ready;
+   - *in sound and feel:* a short sting unique to the fighter, a rumble pulse on controllers, and a one-line bark (text with a grunt);
+   - *on the HUD:* one "ready" icon beside the fighter's portrait, showing the Transform button.
+2. **The input: hold Transform for 0.5 s.** It is one button for every fighter. Controls binds it; the proposal is E for P1, beside charge on Q. The hold prevents accidents. A hold made mid-exchange goes in at the next exchange boundary, like a queued signature.
+3. **Losing it.** Where the rival can still take the form away (for example by draining Pride), the pulse flickers when the form is close to being lost.
+4. **The change lands in one beat.** The 2 to 3 s cinematic ends on a held pose that shows the new form clearly, then play resumes.
+5. **Both players see both fighters' cues,** and the AI uses the same ones. The rival's ready pulse is your signal to press them.
+
+### 10.2 A bigger change per form: the rule for Art
+
+Every form changes at least three of the following, always including the first two:
+- the silhouette at 40 px: a new part, or a big change of size or shape;
+- the posture and the idle;
+- the aura's shape;
+- the markings, or the mask's lit sigil;
+- the colour mass, which is the far read at 12 px.
+
+The Empress's joke revisions stay small on purpose, because they are the comedy.
+
+### 10.3 The Anti-hero (the first real fighter): pride ascension
+
+- **The fill:** Pride reaches 55, 65, 75, 85 and 95. Humbling him drains it.
+- **The ready tell:** he rises out of his crouch for a beat and looks straight at the rival. The slash sigil on his mask burns brighter, and his violet ring aura snaps tight at his feet. The sting is a single low tone.
+- **The forms.** Art's Coil today adds one spine plate per form, which is too small a change.
+
+| Form | Silhouette | Posture and aura |
+| :--- | :--- | :--- |
+| **Poise** (55) | Forearm guards lock on, and the first spine plates flare | The crouch drops lower and goes perfectly still. The ring aura stops flickering |
+| **Regalia** (65) | A stiff, low collar rises behind his head, round-tipped | He checks that they saw. The ring doubles |
+| **Hierarchy** (75) | The spine plates fan into a short, round-tipped crest, and the sash drops into a floor-length panel | He stands upright for the first time, and a slow crown of barrage shards circles him |
+| **Sovereign** (85) | The plates lift off and hang behind him in a fixed arc | His idle floats, feet never quite touching the ground. His palette inverts within its lane (a light body with dark marks), which reads from across the planet |
+| **Apex** (95) | The guards fall away, and lit lines run down his bare forearms | Utterly still, and the air around him warps |
+
+- **The crash** (Pride below 50): the last form's pieces flake off as ash, and his posture drops back one step.
+- **Abdicate** (Drop the Act): every piece bursts off at once, the sigil dims to a thin line, and he fights feral in the crouch. It keeps its own input (`stance-matrix.md` R9).
+- **His revealed signature (Lean slot G4).**
+  - *The trigger* is the first time he takes Apex. The reveal is the held pose at the end of the Apex cinematic, and its name shows on screen.
+  - *Why not Abdicate:* Abdicate already has its own form-tied signature (G3), and a form-tied signature always wins over a revealed one (§2), so a reveal there would never be seen.
+  - Once revealed, it replaces his place signatures for the rest of the match, including after a crash below Apex.
+  - *QA band:* he reveals it in 25 to 50% of his matches. If it falls under 25%, the trigger moves down to Sovereign.
+  - At Lean it is his only revealed signature. A second, from a rivalry thread (§2), can come as his moveset grows.
+
+### 10.4 The Protagonist: heat, then Open Hand
+
+- **Heat stages are power states,** driven by his stoke hold, so his own input is their trigger. Each stage crossing gets a 0.3 s beat that doesn't pause play:
+  - *Heated:* the seams at his joints light, and a stamp sends a ripple out;
+  - *Simmering:* steam vents from the seams on his limbs, and a burst clears nearby dust;
+  - *Boiling:* light cracks spread along his limbs and steam jets out. He hunches forward with his hands shaking, and roars.
+- **The boil-over warning:** the Boiling cracks strobe for a second before heat reaches 100.
+- **Open Hand,** the transformation:
+  - *The fill* is the fold.
+  - *The ready tell:* the ring of fragments he has gathered closes and hums in time with his seams. Hold Transform.
+  - *The change* is the reverse of Boiling. The steam stops dead, and the cracks close into clean, calm markings across his limbs and mask. He stands upright with one open hand forward, and the fragments spin out into a ring on the ground.
+
+### 10.5 The Empress: revisions
+
+- **Joke revisions** (1, 2, 4 and 6) stay automatic and small.
+- **Real revisions** (9 to 12):
+  - *The fill* is Wrath, then the 8 s processing that her guard reads out in three protocol gestures (no text).
+  - *The ready tell:* the third gesture is held, and the revision number worn on her regalia turns over to the next number and lights. The sting is a deep chime. Hold Transform.
+- **The changes,** each one large:
+  - *Field Revision:* armour snaps on and bulks out her silhouette, and her decree line doubles;
+  - *Council Revision:* the fleet's shadow falls across the screen and stays over her, and her volleys become barrages;
+  - *Executive Revision:* her train rises into blade-wings, the biggest silhouette change on the roster;
+  - *Final Approved:* the sun dims, her regalia is complete, and she smiles.
+
+### 10.6 The Cyborg: assimilation
+
+- **The fill:** Hunger thresholds, fed by wreckage. For the final form, it is catching the backup drive.
+- **The ready tell:** an order-up bell rings, and a lamp on his chest lights. With the drive in hand, the dock port on his back opens and glows instead. Hold Transform.
+- **The changes:**
+  - *Scavenger:* a girder bolted along one arm;
+  - *Kitchen:* portal frames mounted on his shoulders;
+  - *Assembled:* a whole building block worn as a shawl, which doubles his mass on screen;
+  - *Online:* lights come on across his body, and trays fold out carrying the weapons generated from what he ate.
+
+### 10.7 What the looks avoid (Legal's notes stay)
+
+- No form changes hair colour or hair shape, and nothing goes golden, white, or spiky and upswept.
+- No body-wide glow. The Protagonist's heat stays on his limbs, seams and steam, and is never red or gold.
+- No form names built on "Super", "Ultra" or "God", or on colours, and no "x" multiplier call-outs.
+- No tall, pointed, flame-shaped aura or crest above the head. The Anti-hero's shapes are round-tipped.
+- The Anti-hero's regalia is his own: no shoulder-pad armour with white gloves and boots.
+- Every look goes through Legal's screen before it is final.

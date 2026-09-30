@@ -19,7 +19,7 @@ Owner: Game Design. Orb wants a vast assortment of cosmetics across the four fig
 | :--- | :--- |
 | **Play** | Every finished match in Versus, Versus CPU, Arcade, Survival or Team Battle gives mastery points to the fighter used (§3). A losing player still progresses. Training and replays give nothing |
 | **Per-fighter mastery** | 60 levels per fighter, and each level gives one item from that fighter's pool. Every 5th level offers a choice of 3, so players steer toward what they want without a currency. The two items not picked stay in the pool for later levels. Levels 10, 30 and 60 give a showpiece: an outfit set, a victory pose or a scene |
-| **Milestones** | Per fighter: the first win, the Arcade clear (a showpiece), and 25 and 100 matches. Account-wide: 10, 50, 100, 250 and 500 matches; the first Team Battle win; every mode played; all four Arcade clears; and one per biome class |
+| **Milestones** | Per fighter: the first win, the Arcade clear (a showpiece), and 25 and 100 matches. Account-wide: 10, 50, 100, 250 and 500 matches; the first Team Battle win; every mode played; every fighter's Arcade clear; and one per biome class |
 | **Style labels** | Finishing a match with a style label (turtle, rusher, runner, charger, sniper or mixer; `docs/narrative/style-thresholds.md`) counts toward that label for that fighter. 3 finishes unlock an item and 10 unlock a title. All six labels on one fighter is a showpiece. It rewards trying every way to play |
 | **Set pieces (feats)** | First-time moments, per fighter (list below) |
 | **Challenges** | Three challenges are open at a time, drawn from one fixed, seeded sequence, so they are the same for everyone and work offline. Finishing one opens the next, and a skipped challenge goes to the back of the sequence. Examples: win at tier 1 only; win as the Protagonist with under 10% casualties; land 3 signatures in one match. Authored challenges join with the `scenarios` mode after 1.0 |
@@ -78,11 +78,39 @@ UI's roughly 40 titles, frames and nameplates come on top.
 | **Match 1** | An item: mastery level 1 costs 100 points |
 | **First 10 hours** (about 70 matches) | About 50 to 65 items, about 10% of the pool. Mastery reaches about level 25 on the fighter played, and early feats, milestones and challenges land. It starts at about one item a match and eases to one every two |
 | **10 to 100 hours** | One item every 2 to 3 matches when rotating fighters (their early levels are cheap), or every 3 to 4 when sticking to one. About 75% of the collection is owned by 100 hours |
-| **The long tail** | Mastery 60 on one fighter comes at about 36 hours, which finishes most of that fighter's pool. 100% takes about 150 hours (about 1,050 matches), set by mastery 60 on all four fighters |
+| **The long tail** | Mastery 60 on one fighter comes at about 36 hours, which finishes most of that fighter's pool. 100% takes about 150 hours (about 1,050 matches), set by mastery 60 on every fighter (four today) |
 
-- **Tuning.** The points, costs and allocation are data (`data/unlocks/`). QA checks the pace table from AI-vs-AI batches using the same event log. The target bands are: first item in match 1; 40 to 70 items by 10 hours; 60 to 85% by 100 hours; 100% in 150 to 200 hours.
+- **Tuning.** The points, costs and allocation are data (`data/unlocks/`). QA checks the pace table from AI-vs-AI batches using the same event log. The target bands are: first item in match 1; 40 to 70 items by 10 hours; 60 to 85% by 100 hours; one fighter's mastery in 30 to 40 hours; 100% in 150 to 200 hours at four fighters (§3b).
 - **Growth.** New items from updates slot into the existing tracks: mastery levels past 60, new feats, new challenges, and a signature log that grows as movesets grow from Lean. Returning players always have something new to earn.
 - **No duplicates.** A reward is never an item the player already owns.
+
+### 3b. Re-fitting for another roster size
+
+Nothing in the tracks names a fighter count. The rules are data, and the allocation is computed from Art's item list.
+
+**The inputs:**
+- `N`, the number of fighters (4 today);
+- `F`, the items per fighter (122);
+- `S`, the shared items (38);
+- each fighter's feat count, which comes from their content (24 today: 7 fixed moments, 8 world changes, up to 4 form stages and 5 signature-log thresholds).
+
+**The rules:**
+1. **Per fighter:**
+   - mastery levels are about half of `F` (60 of 122);
+   - the feats are whatever that fighter's content gives;
+   - there are 4 milestones, 7 style-label items and 2 secrets;
+   - challenges take the rest.
+2. **Shared:** the milestones and secrets above; shared challenges take the rest. Roster-wide milestones say "every fighter", never a number.
+3. **Level costs:** the curve keeps its shape, with the cost rising up to half the levels and then flat. One factor scales it so a fighter's mastery takes 30 to 40 hours, which is about 25,000 points at about 100 points a match and 7 matches an hour.
+4. **The fixed target is per fighter:** one fighter's pool is mostly done in 30 to 40 hours. The full collection takes about `N` × 36 hours, so the 150 to 200 hour band holds only for 4 or 5 fighters. With a bigger roster the full collection simply takes longer, and no player needs every fighter at max mastery.
+
+At Art's current sizes:
+
+| Fighters | Items | Full collection |
+| ---: | ---: | ---: |
+| 4 | 526 | About 150 hours |
+| 6 | 770 | About 220 hours |
+| 8 | 1,014 | About 290 hours |
 
 ## 4. The save: offline now, online later
 
@@ -100,7 +128,14 @@ UI's roughly 40 titles, frames and nameplates come on top.
   - The local profile stays the source of truth. Cosmetics can't change balance, so there is nothing to cheat and no server check is needed.
   - In a lobby, each side sends its equipped cosmetic ids. An item the other player's build lacks shows as the default.
   - Account sync can come later as a convenience, not a requirement.
-- **Open source.** Anyone can edit their save, and that is fine. *For Orb:* an "unlock all cosmetics" setting, off by default, would be the honest version of that, and it helps players who just want the looks. Orb decides.
+- **Unlock all cosmetics** (Orb: yes, 2026-09-30). This is a plain setting, off by default. Anyone can edit their save in an open-source game, and this is the honest version of that.
+  - It makes every item equippable, but it doesn't mark anything as earned. Progress keeps counting underneath, so switching the setting off returns the player's earned collection exactly.
+  - The collection screen marks items the player earned, so the earned collection stays meaningful.
+  - It changes nothing else: cosmetics can't touch balance, and online opponents see equipped items as usual.
+- **Player-made palettes** (Orb: later).
+  - Players build a palette in an editor. Art's palette validator checks it against the lane rules and every readability lock in §5.
+  - A player-made palette is stored in the profile as data. It is a tool, not a reward: it is open from the start when it lands, and it doesn't count toward the collection.
+  - Online, it travels as palette data in the lobby. The receiving side validates it again and shows the default if it fails, or if that player has chosen to show opponents in default cosmetics.
 
 ## 5. Cosmetics never touch balance
 
