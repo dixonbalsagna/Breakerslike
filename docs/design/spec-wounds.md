@@ -499,6 +499,7 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
   - a signature beam landing (HIT or GUARD, not a clash): **+6**, its own value, between a heavy and a clash, because a landed signature is a set-piece moment;
   - a region break: +12;
   - a launch through a building: +6, or +10 for a chain;
+  - **a landmark falling: +10**, once for each landmark, on top of any launch or casualty impulse. It is a set-piece moment the whole planet sees (districts plan, `building_fall.landmark`). Ordinary buildings falling stay covered by the launch and casualty impulses;
   - a transformation cinematic: +10;
   - the start of a finisher: +15;
   - a taunt or banter line: +3;
