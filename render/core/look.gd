@@ -103,6 +103,7 @@ const GROUND_SPREAD: float = 60.0 * WS   # half width across the band of dents w
 const RUBBLE_EDGE: float = 30.0 * WS     # a rubble heap eases off over this depth past the range it spans
 const RUBBLE_TINT_H: float = 20.0        # heap height at which the rubble tint is full
 const RUBBLE := "#6f675d"                # rubble: broken concrete and brick dust
+const SHORE_COLS: int = 8                # a land vertex this many columns from water (the band mesh's widest stride and more) keeps its level
 const WATER := Color(30.0 / 255.0, 110.0 / 255.0, 175.0 / 255.0)
 const WATER_SURFACE := Color(0.42, 0.68, 0.9, 0.55)
 const SKY: Array = ["#111a3e", "#4b4483", "#d9776b", "#f4b87a"]   # top to horizon

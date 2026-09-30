@@ -7,6 +7,11 @@
 // (fore_fall) lowers the surface and the ground under it together, below the sight line to the fighter plane's water.
 // Where it had to fall (the camera near or below the waterline) or is seen from under its own level, the water shows
 // its body, so what is under the water reads as under it, as the old front face did.
+// The shore (in the crater rows): a vertex whose ground stands at or above the level of the water at or beside it (row
+// 20, ground_field.gd) keeps that level, so a triangle from the water to the land stays flat and is cut where the land
+// rises through it (v_depth crosses zero): the shoreline and a lake's outline in depth follow the ground's own contour.
+// Without it the land vertex took the ground's height, the sheet sloped up the bank and was cut halfway between the
+// vertices, a jagged wedge climbing the land at the mesh's stride. Land below the water's level stays dry as before.
 // It fogs into the sky like the ground. UV.x: terrain column. UV2.y: 1 on the fighter-plane row. Same data as the
 // terrain (ground.gdshaderinc).
 shader_type spatial;
@@ -39,15 +44,23 @@ void vertex() {
 	float s = far_weight(z);
 	float surf;
 	float ground;
+	bool shore = false;
 	if (s <= 0.0) {
 		v_wet = wd >= wet_min ? 1.0 : 0.0;
 		surf = b + d0 + wd;
+		float lv = gf(i, 20);
 		float off = d0;
-		if (v_wet > 0.5 && UV2.y < 0.5) {
+		if ((v_wet > 0.5 || lv > -1.0e8) && UV2.y < 0.5) {
 			off = ground_offset(i, xw, z);
 		}
 		ground = b + off;
 		v_ok = (b < sea_base || off < -wet_min) ? 1.0 : 0.0;
+		if (lv > -1.0e8 && ground >= lv) {
+			shore = true;
+			surf = lv;
+			v_wet = 1.0;
+			v_ok = 1.0;
+		}
 	} else {
 		float xs = far_x(xw, z, s);
 		ground = mix(b, far_height3(xs, xw, z).x, s);
@@ -57,12 +70,22 @@ void vertex() {
 	}
 	// The foreground rule on the surface and the ground under it, as the terrain shader applies it to that ground.
 	float surf0 = surf;
-	if (v_wet < 0.5 || v_ok < 0.5 || surf <= ground) {
+	if (!shore && (v_wet < 0.5 || v_ok < 0.5 || surf <= ground)) {
 		surf = ground;
 	}
 	vec2 gr = vec2(0.0);
 	float ox = MODEL_MATRIX[3].x;
-	fore_fall(ground, gr, surf, xw + ox, z, ox);
+	if (shore) {
+		// The land falls as dry land does; the sheet falls with the water beside it, to the sight line's cap for tops.
+		float top = ground;
+		fore_fall(ground, gr, top, xw + ox, z, ox);
+		if (z > 0.0) {
+			surf = min(surf, fore_cap3(xw + ox, z, ox, true).x);
+		}
+		surf = min(surf, ground);   // never over land the rule pushed below it
+	} else {
+		fore_fall(ground, gr, surf, xw + ox, z, ox);
+	}
 	v_under = max(clamp((surf0 - fore_cam.y) / fall_body, 0.0, 1.0), smoothstep(0.0, fall_body, surf0 - surf));
 	VERTEX.y = surf;
 	v_depth = surf - ground;

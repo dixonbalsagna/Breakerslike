@@ -2,7 +2,7 @@
 // render/core/ground_field.gd (whose offset_at() is the CPU twin of ground_offset() below). The crater profile is
 // WorldCrater.profile from sim/world/crater.gd. Every size is a uniform set from the sim's constants (WorldCrater)
 // or RenderLook by planet_view.gd, so nothing here assumes today's world scale.
-uniform sampler2D heights : filter_nearest, repeat_disable;   // RF: 20 data rows of NC, each as rpl texture rows of tw
+uniform sampler2D heights : filter_nearest, repeat_disable;   // RF: 21 data rows of NC, each as rpl texture rows of tw
 uniform sampler2D craters : filter_nearest, repeat_disable;   // RGBAF, 400 x 2
 uniform int nc = 1200;
 uniform int tw = 1200;

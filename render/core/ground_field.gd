@@ -18,7 +18,8 @@ extends RefCounted
 ## the far terrain's relief amplitude and base multiplier (static, per biome, smoothed across borders), 14 the
 ## column's biome (an index into BIOME_ORDER), 15 pavement cracks (S.crack), 16 the half width across the band of any
 ## knockback-slide trench through the column (from S.slides), 17 the rubble height (S.rubble), 18 and 19 the depth
-## range the column's heap spans (from the fallen buildings' z and d). Each data row of NC values is laid out as RPL texture
+## range the column's heap spans (from the fallen buildings' z and d), 20 the shore level (the standing level of the
+## nearest water within RenderLook.SHORE_COLS, NO_SHORE if none). Each data row of NC values is laid out as RPL texture
 ## rows of TW texels (TW at most 2,048, WebGL2's guaranteed minimum), so the bytes are the same either way. Crater
 ## records go to an RGBAF texture, a column per S.craters entry: (x, r, depth, rim) and (skid, sdepth, energy, t).
 ## Everything is rebuilt from state (S.craters, S.deform, S.scorch, S.water), incrementally when the crater list
@@ -41,7 +42,10 @@ const ROW_TRENCH := ROW_CRACK + 1
 const ROW_RUBBLE := ROW_TRENCH + 1
 const ROW_RUB_LO := ROW_RUBBLE + 1
 const ROW_RUB_HI := ROW_RUB_LO + 1
-const ROWS := ROW_RUB_HI + 1
+const ROW_SHORE := ROW_RUB_HI + 1
+const ROWS := ROW_SHORE + 1
+const NO_SHORE := -1.0e9
+const SHORE_CHUNK := 64   # the water is compared in runs of this many columns, to find the few that changed
 const TW_MAX := 2048
 ## Biome index order for the biome row and the shaders' biome_colors array.
 const BIOME_ORDER: Array = ["ocean", "plains", "city", "village", "forest", "desert", "mountains"]
@@ -63,6 +67,7 @@ var trench := PackedFloat32Array()   # row 16
 var rub_lo := PackedFloat32Array()   # rows 18 and 19: the depth range of the heap in each column
 var rub_hi := PackedFloat32Array()
 var _rubble_seen := PackedFloat32Array()
+var shore := PackedFloat32Array()    # row 20: the level of the water at or nearest each column (water.gdshader)
 var rpl: int = 1                     # texture rows per data row
 var tw: int = 1                      # texture width
 var _nsl: int = 0
@@ -86,6 +91,7 @@ func _init() -> void:
 	trench.resize(nc)
 	rub_lo.resize(nc)
 	rub_hi.resize(nc)
+	shore.resize(nc)
 	g.resize(nc)
 	lists.resize(nc * K)
 	dirty.resize(nc)
@@ -119,6 +125,7 @@ func rebuild(S: SimState) -> void:
 	_sl_first = S.slides[0] if _nsl > 0 else null
 	_sl_last = S.slides[_nsl - 1] if _nsl > 0 else null
 	_rubble_depths(S)
+	_shore_levels(S)
 	_deform_seen = S.deform.duplicate()
 	_scorch_seen = S.scorch.duplicate()
 	_water_seen = S.water.duplicate()
@@ -160,16 +167,28 @@ func update(S: SimState, heat: PackedFloat32Array, heat_changed: bool) -> bool:
 	if S.rubble != _rubble_seen:
 		_rubble_depths(S)
 		cchg = true
+	var moved := PackedInt32Array()   # columns whose ground or water changed, for the shore levels
 	if cchg or S.deform != _deform_seen:
 		var nc: int = SimConst.NC
 		for i in range(nc):
 			if dirty[i] == 1 or S.deform[i] != _deform_seen[i]:
 				dirty[i] = 1
 				_g_col(S, i)
+				moved.append(i)
 		_deform_seen = S.deform.duplicate()
 		shape = true
 		any_dirty = true
 	var other: bool = S.scorch != _scorch_seen or S.water != _water_seen or S.crack != _crack_seen
+	if S.water != _water_seen:
+		var nc2: int = SimConst.NC
+		for c0 in range(0, nc2, SHORE_CHUNK):
+			var c1: int = mini(c0 + SHORE_CHUNK, nc2)
+			if S.water.slice(c0, c1) != _water_seen.slice(c0, c1):
+				for i in range(c0, c1):
+					if S.water[i] != _water_seen[i]:
+						moved.append(i)
+	if not moved.is_empty():
+		_shore_near(S, moved)
 	if other:
 		_scorch_seen = S.scorch.duplicate()
 		_water_seen = S.water.duplicate()
@@ -207,6 +226,65 @@ static func heap(z: float, lo: float, hi: float) -> float:
 		return 1.0
 	var u: float = clampf(out / RenderLook.RUBBLE_EDGE, 0.0, 1.0)
 	return 1.0 - u * u * (3.0 - 2.0 * u)
+
+
+## Each column's shore level: the standing level (ground plus water) of the water in it, or else of the nearest wet
+## column within RenderLook.SHORE_COLS either side (the nearer; the higher on a tie), or NO_SHORE. The water shader
+## keeps a land vertex beside water at that level when the land stands above it, so the sheet stays flat and the
+## shoreline is where the land rises through it. Two sweeps, run only when the water or the ground changed.
+func _shore_levels(S: SimState) -> void:
+	var nc: int = SimConst.NC
+	var k: int = RenderLook.SHORE_COLS
+	var dist := PackedInt32Array()
+	dist.resize(nc)
+	dist.fill(k + 1)
+	shore.fill(NO_SHORE)
+	for dir in [1, -1]:
+		var lv: float = NO_SHORE
+		var d: int = k + 1
+		for n in range(-k, nc):
+			var i: int = posmod(n if dir == 1 else nc - 1 - n, nc)
+			if S.water[i] >= WorldWater.MIN_DEPTH:
+				lv = S.base[i] + S.deform[i] + S.water[i]
+				d = 0
+			else:
+				d += 1
+			if d <= k and n >= 0 and (d < dist[i] or (d == dist[i] and lv > shore[i])):
+				dist[i] = d
+				shore[i] = lv
+
+
+## The shore levels again within RenderLook.SHORE_COLS of the columns whose ground or water changed (the same answer
+## as _shore_levels, for the few columns a tick touches).
+func _shore_near(S: SimState, moved: PackedInt32Array) -> void:
+	var nc: int = SimConst.NC
+	var k: int = RenderLook.SHORE_COLS
+	var todo := PackedByteArray()
+	todo.resize(nc)
+	var list := PackedInt32Array()
+	for c in moved:
+		for d in range(-k, k + 1):
+			var i: int = posmod(c + d, nc)
+			if todo[i] == 0:
+				todo[i] = 1
+				list.append(i)
+	for i in list:
+		shore[i] = _shore_at(S, i)
+
+
+func _shore_at(S: SimState, i: int) -> float:
+	var nc: int = SimConst.NC
+	var m: float = WorldWater.MIN_DEPTH
+	if S.water[i] >= m:
+		return S.base[i] + S.deform[i] + S.water[i]
+	for d in range(1, RenderLook.SHORE_COLS + 1):
+		var a: int = posmod(i + d, nc)
+		var b: int = posmod(i - d, nc)
+		var la: float = S.base[a] + S.deform[a] + S.water[a] if S.water[a] >= m else NO_SHORE
+		var lb: float = S.base[b] + S.deform[b] + S.water[b] if S.water[b] >= m else NO_SHORE
+		if la > NO_SHORE or lb > NO_SHORE:
+			return maxf(la, lb)
+	return NO_SHORE
 
 
 ## The depth range each column's heap spans: from the fighter plane (where the sim puts it) back to the far face of
@@ -341,7 +419,7 @@ func _g_col(S: SimState, i: int) -> void:
 
 
 func _upload(S: SimState, craters_changed: bool) -> void:
-	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array() + _far.to_byte_array() + S.crack.to_byte_array() + trench.to_byte_array() + S.rubble.to_byte_array() + rub_lo.to_byte_array() + rub_hi.to_byte_array()
+	var bytes: PackedByteArray = S.base.to_byte_array() + S.deform.to_byte_array() + g.to_byte_array() + S.scorch.to_byte_array() + S.water.to_byte_array() + _heat.to_byte_array() + lists.to_byte_array() + _far.to_byte_array() + S.crack.to_byte_array() + trench.to_byte_array() + S.rubble.to_byte_array() + rub_lo.to_byte_array() + rub_hi.to_byte_array() + shore.to_byte_array()
 	img.set_data(tw, ROWS * rpl, false, Image.FORMAT_RF, bytes)
 	tex.update(img)
 	if craters_changed:
