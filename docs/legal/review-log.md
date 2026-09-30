@@ -57,6 +57,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-035 | Marked plus Aura character style (sigils, dome mask, flashes) | Art | Low to Medium | GO with conditions; Anti-hero pride flash uses the round-tipped fallback | Open until Art runs the checks |
 | RL-036 | Turnarounds (Protagonist, Empress, Cyborg) and flashes Hazard, Primed, Respect | Art | Low | GO; front-view ring and Empress crescent checks | Open until Art confirms |
 | RL-037 | Console face-button symbols as input prompts | Controls | Medium | CONDITIONAL: own neutral set by default; Steam Input glyphs on Steam; console makers' symbols only under their terms | Closed |
+| RL-038 | Animation data rule and pose screen (section 3.7) | Animation | Medium (beam release) | GO, except the beam release: CONDITIONAL | Open until the beam release changes |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 
