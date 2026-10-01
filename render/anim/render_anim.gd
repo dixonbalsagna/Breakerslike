@@ -12,6 +12,7 @@ static var enabled: bool = true
 static var style_override: String = ""
 static var _args_read: bool = false
 static var _style_arg: String = ""
+static var _quality_arg: String = ""
 static var _fighters: Dictionary = {}
 static var _sid: int = 0
 static var _last_tick: int = -1
@@ -24,6 +25,28 @@ static var ragdoll_enabled: bool = true
 static var reduced_motion: bool = false
 ## Feet planted on the slope under a standing fighter, and a skid pitched to the ground (overhaul unit D); tools turn it off for the A/B.
 static var ground_feet: bool = true
+## The quality switch (overhaul unit H): a level from data/anim/quality.json switches whole layers off for the web's low setting and
+## old laptops. Tools switch single layers off with `layers_off` to measure what each costs (solve_bench).
+static var quality: String = "high"
+static var layers_off: Dictionary = {}
+static var _quality_off: Dictionary = {}
+
+
+static func set_quality(level: String) -> void:
+	AnimData.load_all()
+	quality = level
+	_quality_off.clear()
+	for nm in AnimData.quality_levels.get(level, []):
+		_quality_off[String(nm)] = true
+
+
+## Whether an overhaul layer runs: the master switch (--noragdoll), the quality level and the tools' own switches.
+static func layer(name: String) -> bool:
+	if not ragdoll_enabled:
+		return false
+	if name == "feet" and not ground_feet:
+		return false
+	return not _quality_off.has(name) and not layers_off.has(name)
 static var solve_usec: int = 0
 static var solve_count: int = 0
 
@@ -37,12 +60,16 @@ static func _read_args() -> void:
 			enabled = false
 		elif a == "--noragdoll":
 			ragdoll_enabled = false
+		elif a.begins_with("--anim-quality="):
+			_quality_arg = a.substr(15)
 		elif a.begins_with("--anim-style="):
 			_style_arg = a.substr(13)
 
 
 static func is_enabled() -> bool:
 	_read_args()
+	if _quality_arg != "" and quality != _quality_arg:
+		set_quality(_quality_arg)
 	return enabled
 
 
@@ -112,6 +139,12 @@ static func consume(S: SimState, events: Array) -> void:
 			"tick":
 				for f in S.fighters:
 					fighter(S, f).on_tick(float(e.dt), bool(e.frozen), S, f)
+			"crater":
+				# a crater was dug: a fighter near it feels it (the energy and the distance set how much)
+				for f in S.fighters:
+					var dxc: float = absf(SimWrap.sdx(f.x, float(e.x)))
+					if dxc < 700.0:
+						fighter(S, f).on_shock(S.T, clampf(float(_ev(e, "energy", 1.0)) / 8.0, 0.2, 1.0) * (1.0 - dxc / 700.0))
 			"skim":
 				# a launched fighter skipped off water: the event carries no actor, so it is the launched one at that x
 				for f in S.fighters:
@@ -119,9 +152,14 @@ static func consume(S: SimState, events: Array) -> void:
 						fighter(S, f).on_skim(S.T, float(e.spd))
 			"left_ground", "bounce", "land", "tumble_end":
 				# World's ground-contact events (docs/world/ground-contact.md section 4); none exist until its G3 lands
-				var ga: int = int(e.get("actor", -1))
+				var ga: int = int(_ev(e, "actor", -1))
 				if ga >= 0 and ga < S.fighters.size():
-					fighter(S, S.fighters[ga]).on_ground_event(String(e.type), e, S.T)
+					var gd: Dictionary = {}
+					for key in ["actor", "k", "vn", "vt", "keep", "surface", "kind", "sin_a", "how", "cause", "contacts", "t"]:
+						var gv = e.get(key)
+						if gv != null:
+							gd[key] = gv
+					fighter(S, S.fighters[ga]).on_ground_event(String(e.type), gd, S.T)
 			"transform":
 				var who2: int = int(e.actor)
 				if who2 >= 0 and who2 < S.fighters.size():
@@ -146,6 +184,12 @@ static func consume(S: SimState, events: Array) -> void:
 						if dw.length() > 1.0:
 							dm = Vector2(dw.x * fighter(S, vf).vface, dw.y).normalized()
 					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0, String(e.kind), dm, float(e.amount) / 60.0, S.tick)
+
+
+## A field of an event that may not exist yet (World's ground-contact events arrive with their fields; until then the event is not sent).
+static func _ev(e, key: String, default):
+	var v = e.get(key)
+	return default if v == null else v
 
 
 ## Which frame a solve belongs to: the engine frame and the sim tick (tools step several ticks in one engine frame).

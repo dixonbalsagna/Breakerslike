@@ -41,6 +41,8 @@ var _prev_cx: float = 0.0
 var _smear: float = 0.0                 # the contact catch: how far behind the anchor the body is drawn (model units), decaying
 var _smear_t0: float = -10.0
 var _full_fk: bool = false
+const _LEG_BONES := [16, 17, 19, 20]                  # thigh_l, shin_l, thigh_r, shin_r
+const LEG_CHAIN := [0, 1, 16, 17, 18, 19, 20, 21]   # root, pelvis, thigh, shin, foot of each leg
 const SOCKET_CHAIN := [0, 1, 2, 3, 4, 5, 11, 12, 13, 14]   # root, pelvis, spines, neck, head, near clavicle, arm, forearm, hand
 const SOCKET_SET := ["root", "pelvis", "spine_1", "spine_2", "neck", "head", "clavicle_r", "upper_arm_r", "forearm_r", "hand_r"]
 
@@ -58,7 +60,7 @@ var _spring_bones := PackedInt32Array()
 var _lag := PackedFloat32Array()
 var _prof: Dictionary = {}
 var _part: String = ""                 # the key set playing this frame, "" for none (for tools)
-var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0, "skims": 0, "ground_events": 0, "rd_ticks": 0, "rd_usec": 0, "catches": 0, "slope_frames": 0, "aims": 0}
+var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0, "skims": 0, "ground_events": 0, "rd_ticks": 0, "rd_usec": 0, "catches": 0, "slope_frames": 0, "aims": 0, "pre_brace": 0, "near_miss": 0, "guard_kicks": 0, "personality": 0, "feet_usec": 0, "feet_n": 0, "turn_steps": 0, "bursts": 0, "brakes": 0, "shocks": 0}
 
 ## The facing the mannequin is drawn with (-1 or 1). The sim's `face` can lag a dodge warp or a swap of sides, so this one
 ## is derived from the opponent in an exchange and from the travel direction otherwise (A2, docs/animation section 9.3).
@@ -100,9 +102,28 @@ var _rd_prev_slide: bool = false
 var _rd_prev_speed: float = 0.0
 var _skim_t0: float = -1.0
 var _shape_set: bool = false
+var _bank: float = 0.0                 # roll into a turn (flight overhaul, unit G), smoothed
+var _burst_t0: float = -10.0           # a dash start and a stop: when they were seen (sim time)
+var _brake_t0: float = -10.0
+var _shock_t0: float = -10.0           # a nearby impact: when, and how hard
+var _shock_amp: float = 0.0
+var _gait_speed: float = 0.0
+var _turn_t0: float = -10.0            # a turn-around is a step: when the visual facing last flipped, and to which side
+var _turn_dir: float = 1.0
+var _stance_prev: int = -1
+var _base_r := PackedFloat32Array()
+var _hit_w: float = 0.0                 # how much of the fighter's own flinch shape is pulled in after a hit (decays)
+var _hit_crum: float = 0.0              # ... and how much of it is the crumple (a heavy blow) rather than the brace (a light one)
+var _miss_id: int = -1                  # the last near miss flinched at
 var _sp_vw := Vector2.ZERO
 var _sp_have: bool = false
+var _look_target: float = 0.0
 var _look: float = 0.0                 # the head's pitch toward the opponent, smoothed
+var _leg_dq: Array[Quaternion] = []
+var _leg_tick: int = -10
+var _gf_gtick: int = -100
+var _gf_gx: float = 0.0
+var _gf_g0c: float = 0.0
 var _gf_x_valid: bool = false
 var _gf_x: float = 0.0
 var _gf_face: float = 1.0
@@ -167,9 +188,26 @@ func on_tick(dt: float, frozen: bool, S: SimState = null, f = null) -> void:
 	_spring_dt += dt * (0.1 if frozen else 1.0)
 	_ip_acc += dt * (0.5 if frozen else 1.0)
 	if S != null and f != null:
+		update_face(S, f)   # the facing is decided once per sim tick too, so everything keyed on it replays
 		_spring_tick(S, f, dt, frozen)
 		if not frozen:
 			_rd_tick(S, f, dt)
+			if RenderAnim.layer("look"):
+				_look_tick(S, f, dt)
+
+
+## A crater was dug near him (the sim's crater event): a hover shudders and the arms start; amp 0 to 1 from the energy and the distance.
+func on_shock(T: float, amp: float) -> void:
+	if amp <= 0.02:
+		return
+	_shock_t0 = T
+	_shock_amp = minf(1.0, _shock_amp * exp(-(T - _shock_t0) / 0.5) + amp)
+	var a: float = _rd_amp() * amp
+	_rd.kick(2, 4.0 * a)
+	_rd.kick(5, 4.0 * a)
+	_rd.kick(1, -2.0 * a)
+	_rd.out_w = 1.0
+	debug["shocks"] += 1
 
 
 ## A launched fighter skipped off water (the sim's skim event): the body arches and flares for an instant.
@@ -223,7 +261,7 @@ func on_hit(T: float, region: String, front: bool, amp: float, kind: String = ""
 	_reacts.append({"t0": T, "region": region, "front": front, "amp": clampf(amp, 0.2, 1.0), "kind": kind, "dx": d.x, "dy": d.y, "f": clampf(force, 0.15, 1.6), "u": u})
 	if _reacts.size() > 4:
 		_reacts.pop_front()
-	if not RenderAnim.ragdoll_enabled:
+	if not RenderAnim.layer("ragdoll"):
 		return
 	var ra: float = _rd_amp()
 	var wear_k: float = 1.0 + 0.7 * _worn + 0.5 * _brinkp
@@ -232,6 +270,10 @@ func on_hit(T: float, region: String, front: bool, amp: float, kind: String = ""
 		F *= 0.4
 	_rd.hit(d.x, d.y, F, int(AnimRagdoll.REGIONS.get(region, 1)), u, u2)
 	_hit_free = minf(1.0, _hit_free + 0.5 * F + 0.3 * _worn)
+	# the fighter's own shapes are the flinch keys: a light blow pulls in his brace shape, a heavy one his crumple shape
+	var heavy_s: float = smoothstep(0.5, 1.1, force * wear_k)
+	_hit_crum = heavy_s
+	_hit_w = minf(1.0, _hit_w + 0.5 + 0.3 * heavy_s)
 	_rd.out_w = 1.0
 
 
@@ -274,6 +316,8 @@ func update_face(S: SimState, f) -> float:
 	elif S.T - _face_want_t >= FACE_HOLD:
 		vface = want
 		_face_want_t = -1.0
+		_turn_t0 = S.T
+		_turn_dir = want
 		debug["face_flips"] += 1
 	return vface
 
@@ -340,8 +384,14 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	var bprof: Dictionary = _part_prof("launch") if f.state == "launched" else (_part_prof("power") if f.state == "charging" else prof)
 	var k: float = 1.0 if first else 1.0 - exp(-dt / maxf(float(bprof.get("base_tau", 0.08)), 0.001))
 	if _settle <= 40 or first:
-		for i in range(AnimRig.N):
-			_base[i] = _base[i].slerp(_tq[i], k)
+		if RenderAnim.layer("transitions") and not first and _base_lagged():
+			# the arms and hands follow the torso a little later (a guard comes up with overlap, not as one block)
+			var e0: float = 1.0 - k
+			for i in range(AnimRig.N):
+				_base[i] = _base[i].slerp(_tq[i], 1.0 - pow(e0, _base_r[i]))
+		else:
+			for i in range(AnimRig.N):
+				_base[i] = _base[i].slerp(_tq[i], k)
 		_base_hips = _base_hips.lerp(_tq_hips, k)
 		_base_curl = _base_curl.lerp(_tq_curl, k)
 	elif _settle == 41:
@@ -385,7 +435,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	if not _form.is_empty():
 		_transform_layer(S, T)
 	# 4a. the head looks at the opponent
-	if RenderAnim.ragdoll_enabled:
+	if RenderAnim.layer("look"):
 		_look_at(S, f, dt)
 	# 4b. a broken arm hangs, a broken leg is favoured
 	if _arm_broken or _leg_broken:
@@ -396,16 +446,30 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	_step_x = 0.0
 	_reaction_layer(T)
 	# 5a. feet on the slope under him, a skid pitched to the ground (before the contact solve, so a blow reaches from the new stance)
-	if RenderAnim.ground_feet and RenderAnim.ragdoll_enabled:
+	if RenderAnim.layer("feet"):
+		var tf: int = Time.get_ticks_usec() if RenderAnim.debug_checks else 0
 		_ground_feet(S, f, dt)
+		if RenderAnim.debug_checks:
+			debug["feet_usec"] += Time.get_ticks_usec() - tf
+			debug["feet_n"] += 1
 	# 5b. the striking limb reaches the defender (the contact solve)
 	if _ci_w > 0.001:
 		_contact_ik(S, f)
 	# 5c. the active ragdoll: the body's own motion on top of the pose (the pose is in charge while a blow is thrown)
 	if _rd.out_w > 0.001:
 		_rd.apply(q, _rd.out_w * (0.3 if (_part != "" or _ci_w > 0.001) else 1.0))
+	# 5d00. flight overhaul (unit G): the burst and the brake poses, the bank, the shudder of a nearby impact
+	if RenderAnim.layer("flight"):
+		_flight_layers(T, f)
+	# 5d0. idles and transitions with personality (overhaul unit F): the weight shift, the knee bounce and the breath of the stance and
+	# the form, and a turn-around as a step
+	if RenderAnim.layer("personality") and (f.state == "free" or f.state == "locked") and _part == "" and _ci_w < 0.001:
+		var calm: float = 1.0 - clampf(absf(f.vx) / 300.0, 0.0, 1.0)
+		if f.state == "free" and calm > 0.05:
+			_personality_layer(T, int(f.stance), clampi(int(f.tier) - 1, 0, 3), calm)
+		_turn_layer(T)
 	# 5d. polish: lean into acceleration (free flight and movement), the hover bob
-	if RenderAnim.ragdoll_enabled:
+	if RenderAnim.layer("lean"):
 		if absf(_lean) > 0.002:
 			q[AnimRig.index["pelvis"]] = q[AnimRig.index["pelvis"]] * Quaternion(Vector3(0, 0, 1), -_lean * 0.6)
 			q[AnimRig.index["spine_2"]] = q[AnimRig.index["spine_2"]] * Quaternion(Vector3(0, 0, 1), -_lean * 0.4)
@@ -473,6 +537,10 @@ var _tq_curl := Vector2(0.5, 0.5)
 
 func _target_base(S: SimState, f, T: float) -> void:
 	var stance: int = clampi(int(f.stance), 0, 3)
+	if _stance_prev != stance:
+		if _stance_prev >= 0 and RenderAnim.layer("transitions"):
+			_stance_kick(_stance_prev, stance)
+		_stance_prev = stance
 	var vf: float = f.vx * vface
 	var state: String = f.state
 	# The blend weights, quantised to sixteenths: while they and the stance do not change the target is not rebuilt (the
@@ -498,7 +566,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 		_was_down = false
 		_rise_t0 = T
 		_rise_dur = 0.25 + 0.55 * maxf(_worn, _brinkp)
-	if _rise_t0 >= 0.0 and RenderAnim.ragdoll_enabled:
+	if _rise_t0 >= 0.0 and RenderAnim.layer("transitions"):
 		var rt: float = T - _rise_t0
 		if rt >= _rise_dur:
 			_rise_t0 = -1.0
@@ -1062,7 +1130,7 @@ func _rd_amp() -> float:
 ## taken in the body frame: the body is rotated by the sim's rot, mirrored by the visual facing. A launch, a slam, a skid, a
 ## brace before the ground and a tuck in a spin are all this one controller.
 func _rd_tick(S: SimState, f, dt: float) -> void:
-	if not RenderAnim.ragdoll_enabled:
+	if not RenderAnim.layer("ragdoll"):
 		if _rd.out_w > 0.0 or _rd.energy() > 0.0:
 			_rd.reset()
 		_rd_have = false
@@ -1121,6 +1189,26 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 	elif st == "down":
 		free_t = 0.25 if f.stateT < 0.6 else 0.0
 		crum = AnimRagdoll.crumple_down_w if f.stateT < 0.7 else 0.0
+	# E: the defender's side. The blow the attacker is about to land is in the beat list ahead of time: a heavy one is braced for
+	# (arms up, chin down, in the fighter's own brace shape) in the last 0.25 s, and a blow that misses (no damage) is flinched at
+	var exc = S.dirS.ex
+	var pre: float = 0.0
+	if exc != null and exc.D == f and not flying and not sliding and st != "down" and RenderAnim.layer("defender"):
+		var nb: Array = _next_blow(exc)
+		if not nb.is_empty():
+			var dtc: float = nb[0]
+			if dtc > 0.0 and nb[2] > 0.0:
+				pre = (1.0 - clampf(dtc / 0.25, 0.0, 1.0)) * (0.7 if nb[1] else 0.25) * (1.0 if int(f.stance) == 1 else 0.7)
+				if pre > 0.05:
+					debug["pre_brace"] += 1
+			elif nb[2] <= 0.0 and dtc <= 0.0 and _miss_id != int(exc.n) * 64 + int(nb[3]) and not _has_evade(exc):
+				_miss_id = int(exc.n) * 64 + int(nb[3])
+				_near_miss(S, f, amp)
+	if not flying and not sliding:
+		brace = maxf(brace, (1.0 - _hit_crum) * _hit_w * 0.45 + pre)
+		crum = maxf(crum, _hit_crum * _hit_w * 0.5)
+		free_t = maxf(free_t, 0.5 * _hit_w + 0.3 * pre)
+	_hit_w = maxf(0.0, _hit_w - dt / (0.3 + 0.4 * _worn))
 	_rd.w_tuck = tuck
 	_rd.w_brace = brace
 	_rd.w_skid = skid
@@ -1132,6 +1220,20 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 	if st == "free" or st == "locked":
 		lean_t = clampf(ao.x / 9000.0, -1.0, 1.0) * 0.35 * amp
 	_lean += (lean_t - _lean) * (1.0 - exp(-dt / 0.12))
+	# G: banking into a turn, a burst on a dash start, a brake on a stop
+	var bank_t: float = 0.0
+	if (st == "free" or st == "locked") and (speed > 300.0 or _air_w > 0.3):
+		bank_t = clampf(-ao.x / 9000.0, -1.0, 1.0) * 0.3 * amp
+	_bank += (bank_t - _bank) * (1.0 - exp(-dt / 0.15))
+	if st == "free":
+		var ge: String = _gait_event(ao.x, _gait_speed, absf(vo.x))
+		if ge == "burst" and S.T - _burst_t0 > 0.4:
+			_burst_t0 = S.T
+			debug["bursts"] += 1
+		elif ge == "brake" and S.T - _brake_t0 > 0.5:
+			_brake_t0 = S.T
+			debug["brakes"] += 1
+	_gait_speed = absf(vo.x)
 	var cx: float = SimWrap.sdx(_prev_x, f.x) if _have_x else 0.0
 	var pcx: float = _prev_cx
 	_prev_x = f.x
@@ -1167,7 +1269,14 @@ func _ground_feet(S: SimState, f, dt: float) -> void:
 	var st: String = f.state
 	var sliding: bool = f.slide > 0.0
 	# one ground read a solve; the slope reads only while he stands or slides, and cached while he stays within 3 units
-	var g0: float = WorldTerrain.groundY(S, f.x)
+	var g0: float
+	if S.tick - _gf_gtick < 4 and absf(SimWrap.sdx(_gf_gx, f.x)) < 20.0:
+		g0 = _gf_g0c
+	else:
+		g0 = WorldTerrain.groundY(S, f.x)
+		_gf_g0c = g0
+		_gf_gx = f.x
+		_gf_gtick = S.tick
 	var stand: bool = (st == "free" or st == "locked" or st == "charging") and not sliding and absf(f.y - g0) < 8.0
 	var target_w: float = 0.0
 	var pitch_t: float = 0.0
@@ -1182,9 +1291,9 @@ func _ground_feet(S: SimState, f, dt: float) -> void:
 			_gf_sl = (WorldTerrain.groundY(S, f.x + vface * 12.0) - WorldTerrain.groundY(S, f.x - vface * 12.0)) / 24.0
 		if sliding:
 			pitch_t = atan(_gf_sl) * 0.9
-		elif absf(_gf_dF) > 1.5 or absf(_gf_dB) > 1.5:
-			target_w = 1.0
-	if absf(target_w - _foot_w) < 0.001 and absf(pitch_t - _skid_pitch) < 0.001 and _foot_w < 0.02:
+		elif absf(_gf_dF) > 2.5 or absf(_gf_dB) > 2.5:
+			target_w = 1.0   # a gentler slope than this is under the pose's own tolerance and costs a leg solve for nothing
+	if absf(target_w - _foot_w) < 0.001 and absf(pitch_t - _skid_pitch) < 0.001 and _foot_w < 0.02 and absf(_skid_pitch) < 0.01:
 		_foot_shift = 0.0
 		_foot_dh = Vector2.ZERO
 		return
@@ -1199,8 +1308,16 @@ func _ground_feet(S: SimState, f, dt: float) -> void:
 		_foot_dh = Vector2.ZERO
 		return
 	var ix: Dictionary = AnimRig.index
-	AnimPose.fk(q, hips, gq, gp)
-	_full_fk = true
+	# the leg solve runs every second tick; in between the last solve's local corrections are applied again (the pose moves little)
+	if _leg_tick >= 0 and S.tick - _leg_tick == 1 and (S.tick & 1) == 1:
+		hips.y += _foot_shift
+		for kk in range(4):
+			var bi: int = _LEG_BONES[kk]
+			q[bi] = q[bi] * _leg_dq[kk]
+		_leg_tick = S.tick
+		return
+	var q0: Array[Quaternion] = [q[16], q[17], q[19], q[20]]
+	AnimPose.fk_chain(q, hips, gq, gp, LEG_CHAIN)   # only the legs and what they hang from
 	var fl: int = ix["foot_l"]
 	var fr: int = ix["foot_r"]
 	var dhl: float = WorldTerrain.groundY(S, f.x + vface * gp[fl].x) - g0
@@ -1209,19 +1326,176 @@ func _ground_feet(S: SimState, f, dt: float) -> void:
 	var shift: float = clampf((dhl + dhr) * 0.5, -10.0, 10.0) * _foot_w
 	_foot_shift = shift
 	hips.y += shift
-	for i in range(1, AnimRig.N):
-		gp[i].y += shift
+	for i in LEG_CHAIN:
+		if i > 0:
+			gp[i].y += shift
 	debug["slope_frames"] += 1
 	for leg in [["thigh_l", "shin_l", "foot_l", dhl], ["thigh_r", "shin_r", "foot_r", dhr]]:
 		var a: int = ix[leg[0]]
 		var b: int = ix[leg[1]]
 		var c: int = ix[leg[2]]
-		var qa0: Quaternion = q[a]
-		var qb0: Quaternion = q[b]
-		var tgt := Vector3(gp[c].x, gp[c].y - shift + float(leg[3]) * _foot_w, gp[c].z)
+		var want: float = float(leg[3]) * _foot_w - shift
+		if absf(want) < 0.4:
+			continue   # this foot is already where the ground is
+		var tgt := Vector3(gp[c].x, gp[c].y + want, gp[c].z)
 		var pole: Vector3 = gp[b]
 		AnimPose.ik2(q, gq, gp, a, b, c, tgt, pole)
 		AnimPose.hinge_fix(q, gq, gp, a, b, c, -1.0)
+	if _leg_dq.size() != 4:
+		_leg_dq.resize(4)
+	for kk in range(4):
+		_leg_dq[kk] = q0[kk].inverse() * q[_LEG_BONES[kk]]
+	_leg_tick = S.tick
+
+
+## The next blow the attacker throws in the running exchange: [time to contact, heavy, damage, beat index], or [] (a parried
+## exchange has none). A blow just fired (up to 0.03 s ago) still counts, so a miss can be flinched at.
+static func _next_blow(ex) -> Array:
+	if ex.cancel:
+		return []
+	var best: Array = []
+	var i: int = 0
+	for b in ex.beats:
+		if b.op == "strike" and String(b.args.a) == "A":
+			var dtc: float = b.t - ex.t
+			if dtc >= -0.03 and (best.is_empty() or dtc < best[0]):
+				best = [dtc, _is_heavy(ex, b.args), float(b.args.get("dmg", 0.0)), i]
+		i += 1
+	return best
+
+
+static func _has_evade(ex) -> bool:
+	for b in ex.beats:
+		if b.op == "dodge" or b.op == "slip":
+			return true
+	return false
+
+
+## A blow that does not land passes close: the head is pulled back and the body flinches, small, from the attacker's side.
+func _near_miss(S: SimState, f, amp: float) -> void:
+	var a = S.dirS.ex.A
+	var d := Vector2(SimWrap.sdx(a.x, f.x) * vface, f.y - a.y)
+	d = d.normalized() if d.length() > 1.0 else Vector2(-1.0, 0.0)
+	_rd.hit(d.x, d.y, 0.3 * amp, 0, 0.0, 0.0)
+	_hit_free = minf(1.0, _hit_free + 0.2)
+	_rd.out_w = 1.0
+	debug["near_miss"] += 1
+
+
+func _flight_layers(T: float, f) -> void:
+	if f.state != "free" or _part != "":
+		return
+	var tb: float = T - _burst_t0
+	if tb >= 0.0 and tb < 0.22:
+		_mix_pose(AnimData.pose("move.burst"), smoothstep(0.0, 0.03, tb) * (1.0 - smoothstep(0.08, 0.22, tb)) * 0.9)
+	var tk: float = T - _brake_t0
+	if tk >= 0.0 and tk < 0.3:
+		_mix_pose(AnimData.pose("move.brake"), smoothstep(0.0, 0.04, tk) * (1.0 - smoothstep(0.1, 0.3, tk)) * 0.85)
+	if absf(_bank) > 0.004:
+		var ix: Dictionary = AnimRig.index
+		q[ix["pelvis"]] = q[ix["pelvis"]] * Quaternion(Vector3(1, 0, 0), _bank * 0.6)
+		q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(1, 0, 0), _bank * 0.4)
+	_shock_layer(T)
+
+
+func _shock_layer(T: float) -> void:
+	var ts: float = T - _shock_t0
+	if ts >= 0.0 and ts < 1.2 and _shock_amp > 0.0:
+		var e: float = exp(-ts / 0.5) * _shock_amp * _rd_amp()
+		var w: float = sin(ts * TAU * 3.2)
+		hips.y += 1.6 * e * w
+		var s2: int = AnimRig.index["spine_2"]
+		q[s2] = q[s2] * Quaternion(Vector3(0, 0, 1), 0.06 * e * cos(ts * TAU * 2.6))
+
+
+func _base_lagged() -> bool:
+	if _base_r.size() != AnimRig.N:
+		_base_r.resize(AnimRig.N)
+		var lagk: float = float(AnimData.personality.get("guard", {}).get("lag", 2.0))
+		for i in range(AnimRig.N):
+			_base_r[i] = 1.0 / (1.0 + lagk * AnimData.bone_lag[i])
+	return true
+
+
+## The guard comes up or goes down with overlap: the arms are kicked toward the new guard and settle back on their springs.
+func _stance_kick(old: int, new: int) -> void:
+	var g: Dictionary = AnimData.personality.get("guard", {})
+	var amp: float = _rd_amp()
+	var dir: Array = []
+	if new == 1:
+		dir = g.get("up", [6.0, 4.0])
+	elif old == 1:
+		dir = g.get("down", [-5.0, -3.0])
+	if dir.is_empty():
+		return
+	_rd.kick(2, float(dir[0]) * amp)
+	_rd.kick(5, float(dir[0]) * amp)
+	_rd.kick(4, float(dir[1]) * amp)
+	_rd.kick(7, float(dir[1]) * amp)
+	_rd.out_w = 1.0
+	debug["guard_kicks"] += 1
+
+
+## The weight shift, the knee bounce, the heel lift and the breath of a stance, scaled by the form's tier. calm is 1 for a fighter
+## standing still and falls to 0 as he moves.
+func _personality_layer(T: float, stance: int, tier: int, calm: float) -> void:
+	var P: Dictionary = AnimData.personality
+	var st: Dictionary = P.stances[STANCES[clampi(stance, 0, 3)]]
+	var tr: Dictionary = P.tiers[clampi(tier, 0, 3)]
+	var amp: float = _rd_amp() * calm
+	var ix: Dictionary = AnimRig.index
+	var ph: float = float(slot) * 1.9
+	var sway: float = float(st.sway) * float(tr.sway) * amp
+	var s1: float = sin(T * TAU * float(st.hz) * float(tr.hz) + ph)
+	var pe: int = ix["pelvis"]
+	q[pe] = q[pe] * Quaternion(Vector3(1, 0, 0), s1 * 0.02 * sway)
+	hips.z += s1 * 0.6 * sway
+	hips.x += sin(T * TAU * float(st.hz) * float(tr.hz) * 0.7 + ph + 1.0) * 0.3 * sway
+	var bn: float = float(st.bounce) * float(tr.bounce) * amp
+	var b1: float = sin(T * TAU * float(st.bounce_hz) * float(tr.hz) + ph)
+	hips.y += absf(b1) * 0.45 * bn   # a hop on the toes (never a dip: the legs are posed, so a dip would sink the feet)
+	var heel: float = float(st.heel) * amp
+	q[ix["thigh_l"]] = q[ix["thigh_l"]] * Quaternion(Vector3(0, 0, 1), heel * maxf(0.0, b1))
+	q[ix["shin_l"]] = q[ix["shin_l"]] * Quaternion(Vector3(0, 0, 1), -heel * 1.2 * maxf(0.0, b1))
+	q[ix["thigh_r"]] = q[ix["thigh_r"]] * Quaternion(Vector3(0, 0, 1), heel * maxf(0.0, -b1))
+	q[ix["shin_r"]] = q[ix["shin_r"]] * Quaternion(Vector3(0, 0, 1), -heel * 1.2 * maxf(0.0, -b1))
+	var br: float = sin(T * TAU * 0.45 * float(tr.breath_hz) + ph) * 0.012 * float(tr.breath_amp) * float(st.breath) * amp
+	q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(0, 0, 1), br)
+	q[ix["head"]] = q[ix["head"]] * Quaternion(Vector3(0, 0, 1), -br * 0.5)
+	debug["personality"] += 1
+
+
+## A turn-around is a step: the weight dips, one foot swings through, the hips twist toward the new side and the shoulders against
+## it, over 0.22 s from the moment the visual facing flipped (the view turns through front-on over the same time).
+func _turn_layer(T: float) -> void:
+	var tp: Dictionary = AnimData.personality.get("turn", {})
+	var dur: float = float(tp.get("dur", 0.22))
+	var tau: float = T - _turn_t0
+	if tau < 0.0 or tau >= dur:
+		return
+	var u: float = tau / dur
+	var s: float = sin(PI * u) * _rd_amp()
+	var ix: Dictionary = AnimRig.index
+	hips.y -= float(tp.get("dip", 1.4)) * s
+	var sw: float = float(tp.get("swing", 0.5)) * s
+	q[ix["thigh_r"]] = q[ix["thigh_r"]] * Quaternion(Vector3(0, 0, 1), sw)
+	q[ix["shin_r"]] = q[ix["shin_r"]] * Quaternion(Vector3(0, 0, 1), -sw * 1.2)
+	q[ix["thigh_l"]] = q[ix["thigh_l"]] * Quaternion(Vector3(0, 0, 1), -sw * 0.4)
+	var tw: float = float(tp.get("twist", 0.35)) * s * (1.0 - u) * _turn_dir
+	var pe: int = ix["pelvis"]
+	q[pe] = q[pe] * Quaternion(Vector3(0, 1, 0), tw)
+	q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(0, 1, 0), -tw * 0.6)
+	debug["turn_steps"] += 1
+
+
+## What a change of speed along the facing is: a dash start (a hard push from nearly still) or a brake (a hard slowdown from a run).
+## ax the acceleration along the facing (u/s^2), prev and now the speeds before and after (u/s).
+static func _gait_event(ax: float, prev: float, now: float) -> String:
+	if ax > 15000.0 and prev < 250.0 and now > prev:
+		return "burst"
+	if ax < -9000.0 and prev > 500.0 and now < prev:
+		return "brake"
+	return ""
 
 
 func _wound_read(f) -> void:
@@ -1373,7 +1647,7 @@ func _aim_angle(S: SimState, f, b) -> float:
 
 ## Both arms (and a little of the chest) turn to the aim: a beam is thrown along its line, not along the pose's fixed forward.
 func _aim_arms(alpha: float, w: float) -> void:
-	if not RenderAnim.ragdoll_enabled or w <= 0.001:
+	if not RenderAnim.layer("aim") or w <= 0.001:
 		return
 	var a: float = alpha * w * _rd_amp()
 	var ix: Dictionary = AnimRig.index
@@ -1384,15 +1658,21 @@ func _aim_arms(alpha: float, w: float) -> void:
 
 
 ## The head looks at the opponent: up or down by where his head is, smoothed, in an exchange or when he is near (overhaul unit D).
+func _look_tick(S: SimState, f, dt: float) -> void:
+	# once per sim tick (so a replay shows the same head); the target is re-aimed every third tick, the smoothing is linear
+	if (S.tick + slot) % 3 == 0:
+		var opp = _opponent(S, f)
+		var t: float = 0.0
+		var st: String = f.state
+		if opp != null and st != "launched" and st != "down" and not (f.beamCharge != null):
+			var dxo: float = SimWrap.sdx(f.x, opp.x) * vface
+			if dxo > 10.0 and dxo < 1200.0:
+				t = clampf(atan2(opp.y - f.y, maxf(dxo, 40.0)), -0.7, 0.7) * 0.8
+		_look_target = t
+	_look += (_look_target - _look) * clampf(dt * 8.0, 0.0, 1.0)
+
+
 func _look_at(S: SimState, f, dt: float) -> void:
-	var opp = _opponent(S, f)
-	var t: float = 0.0
-	var st: String = f.state
-	if opp != null and st != "launched" and st != "down" and not (f.beamCharge != null):
-		var dxo: float = SimWrap.sdx(f.x, opp.x) * vface
-		if dxo > 10.0 and dxo < 1200.0:
-			t = clampf(atan2((opp.y + 60.0) - (f.y + 60.0), maxf(dxo, 40.0)), -0.7, 0.7) * 0.8
-	_look += (t - _look) * (1.0 - exp(-dt / 0.12))
 	if absf(_look) > 0.004:
 		var a: float = _look * _rd_amp()
 		var ix: Dictionary = AnimRig.index
@@ -1455,9 +1735,9 @@ func _spring_tick(S: SimState, f, dt: float, frozen: bool) -> void:
 	_sp_have = true
 	var h_all: float = dt * (0.1 if frozen else 1.0)
 	var sp_n: float = clampf(vw.length() / 1600.0, 0.0, 1.0)
-	var flutter: float = 0.12 * sp_n * (0.35 if RenderAnim.reduced_motion else 1.0) * (1.0 if RenderAnim.ragdoll_enabled else 0.0)
-	var ov: float = 1.0 if RenderAnim.ragdoll_enabled else 0.0
-	var target: float = -clampf(vw.x / 1600.0, -1.0, 1.0) * 0.9 - clampf(aw.x / 12000.0, -1.0, 1.0) * 0.5 * ov
+	var flutter: float = 0.12 * sp_n * (0.35 if RenderAnim.reduced_motion else 1.0) * (1.0 if RenderAnim.layer("cloth") else 0.0)
+	var ov: float = 1.0 if RenderAnim.layer("cloth") else 0.0
+	var target: float = -clampf(vw.x / 1600.0, -1.0, 1.0) * 0.9 - clampf(aw.x / 12000.0, -1.0, 1.0) * 0.5 * ov - clampf(-vw.y / 2400.0, 0.0, 1.0) * 0.6 * ov
 	var n: int = 2
 	var h: float = h_all / float(n)
 	for _s in range(n):

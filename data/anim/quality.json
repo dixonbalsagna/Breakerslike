@@ -1,0 +1,10 @@
+{
+  "schema": "anim.quality/1",
+  "_about": "Animation overhaul, unit H: the quality switch. Each level lists the overhaul layers it switches off (render/anim; RenderAnim.set_quality or --anim-quality=NAME; the web's low setting and old laptops pick a lower level). Layers: ragdoll (the active ragdoll: flail, tuck, brace, crumple, hit kicks), feet (feet on slopes), look (the head at the opponent), aim (the arms along the beam), personality (idle sway, bounce and breath, the turn-around step), transitions (the guard's overlap, the slower rise), defender (the brace before a heavy blow, the near-miss flinch), flight (burst, brake, bank, the shudder of a nearby impact), cloth (the cloth's acceleration and flutter), lean (the lean into acceleration, the hover bob). The order of the levels follows what each layer costs (measured with render/anim/tools/solve_bench.gd): the cheapest to lose and the least visible go first. Render only, outside the sim's data hash.",
+  "levels": {
+    "high": [],
+    "medium": ["look","feet","personality"],
+    "low": ["look","feet","personality","transitions","defender","flight","cloth","lean","aim"],
+    "minimal": ["ragdoll","look","feet","personality","transitions","defender","flight","cloth","lean","aim"]
+  }
+}

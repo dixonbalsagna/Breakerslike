@@ -166,6 +166,8 @@ func _slope_clip(S: SimState, sv: SubViewport, root3: Node3D, pivot: Node3D, bod
 			for i in range(AnimRig.N):
 				af.q[i] = base.q[i]
 			af.hips = base.hips
+			af._gf_gtick = -100
+			af._gf_x_valid = false
 			af._ground_feet(S, f, 0.05)
 		body.apply(af.q, af.hips, af.curl, Vector3.ZERO)
 		var g0: float = WorldTerrain.groundY(S, x)

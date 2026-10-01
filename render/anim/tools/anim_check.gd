@@ -238,7 +238,12 @@ func _test_ragdoll() -> void:
 	var a: Dictionary = _rd_run(1, 1200, false)
 	var b: Dictionary = _rd_run(2, 1200, false)
 	_expect(a.ticks == b.ticks, "ragdoll test: the runs ended on different ticks (%d, %d)" % [a.ticks, b.ticks])
-	_expect(a.th == b.th, "ragdoll test: the ragdoll differs between one tick a frame and two (%s against %s)" % [str(a.th.slice(0, 6)), str(b.th.slice(0, 6))])
+	var di: int = -1
+	for i in range(mini(a.th.size(), b.th.size())):
+		if a.th[i] != b.th[i]:
+			di = i
+			break
+	_expect(di < 0, "ragdoll test: the ragdoll state differs between one tick a frame and two at entry %d of %d (%s against %s; per fighter: 12 joints, out_w, 5 cloth, look)" % [di, a.th.size(), str(a.th[di] if di >= 0 else 0), str(b.th[di] if di >= 0 else 0)])
 	_expect(a.active > 20, "ragdoll test: the ragdoll was never active (%d frames)" % a.active)
 	var r: Dictionary = _rd_run(1, 1200, true)
 	_expect(r.maxe < a.maxe * 0.7, "ragdoll test: reduced motion moves %.2f against %.2f" % [r.maxe, a.maxe])
@@ -342,6 +347,8 @@ func _slope_run(on: bool, S: SimState, X: float) -> Dictionary:
 				for i in range(AnimRig.N):
 					af.q[i] = base.q[i]
 				af.hips = base.hips
+				af._gf_gtick = -100
+				af._gf_x_valid = false
 				af._ground_feet(S, f, 0.05)
 		AnimPose.fk(af.q, af.hips, gq, gp)
 		for nm in ["foot_l", "foot_r"]:
@@ -396,6 +403,135 @@ func _test_weight_aim() -> void:
 	var turned: float = af.q[AnimRig.index["upper_arm_r"]].angle_to(before)
 	_expect(absf(turned - 0.5) < 0.02, "aim test: the arm turned %.3f rad for an aim of 0.5" % turned)
 	print("weight test: blow weights %.2f %.2f %.2f for 20 50 90 damage; aim turns the arms %.2f rad for 0.5" % [w20, w50, w90, turned])
+
+
+## Unit E: the defender's side and the fighters' own flinch shapes.
+func _test_defender() -> void:
+	var stub: Dictionary = {"cancel": false, "t": 0.0, "kind": "heavy", "beats": [{"op": "strike", "t": 0.1, "done": false, "args": {"a": "A", "dmg": 60.0}}, {"op": "strike", "t": 0.4, "done": false, "args": {"a": "A", "dmg": 0.0}}]}
+	var nb: Array = AnimFighter._next_blow(stub)
+	_expect(nb.size() == 4 and absf(float(nb[0]) - 0.1) < 0.001 and nb[1] == true and float(nb[2]) == 60.0, "defender test: the next blow is %s" % str(nb))
+	stub.cancel = true
+	_expect(AnimFighter._next_blow(stub).is_empty(), "defender test: a parried exchange still has a next blow")
+	stub.cancel = false
+	stub.t = 0.42
+	var miss: Array = AnimFighter._next_blow(stub)
+	_expect(miss.size() == 4 and float(miss[2]) == 0.0 and float(miss[0]) < 0.0, "defender test: a blow just missed should be found (%s)" % str(miss))
+	stub.beats.append({"op": "dodge", "t": 0.2, "done": true, "args": {}})
+	_expect(AnimFighter._has_evade(stub), "defender test: a dodge beat is not seen")
+	# the flinch keys differ per fighter: the same heavy blow, a few ticks of the ragdoll, two shapes
+	RenderAnim.ragdoll_enabled = true
+	RenderAnim.reduced_motion = false
+	var res: Array = []
+	for rid in ["KAI", "VORR"]:
+		var af := AnimFighter.new(0)
+		af._rd.set_shape(rid)
+		af.on_hit(1.0, "core", true, 0.9, "", Vector2(-1, 0), 1.2, 500)
+		for i in range(25):
+			af._rd.w_crumple = af._hit_crum * af._hit_w * 0.5
+			af._rd.w_brace = (1.0 - af._hit_crum) * af._hit_w * 0.45
+			af._hit_w = maxf(0.0, af._hit_w - (1.0 / 60.0) / 0.3)
+			af._rd.step(1.0 / 60.0, Vector2.ZERO, Vector2.ZERO, 0.4, 1.0, 1.0 + i / 60.0)
+		res.append(af._rd.th.duplicate())
+	var dist := 0.0
+	for i in range(AnimRagdoll.N):
+		dist += absf(res[0][i] - res[1][i])
+	_expect(dist > 0.3, "defender test: two fighters flinch the same (%.3f rad apart in total)" % dist)
+	print("defender test: next blow %s, a miss is found, the two shapes flinch %.2f rad apart in total" % [str(nb), dist])
+
+
+## Unit F: idles with personality, the guard's overlap, the turn-around step.
+func _test_personality() -> void:
+	RenderAnim.ragdoll_enabled = true
+	RenderAnim.reduced_motion = false
+	var ranges: Dictionary = {}
+	for stance in [1, 2]:
+		var lo := 99.0
+		var hi := -99.0
+		for k in range(240):
+			var af := AnimFighter.new(0)
+			af.hips = Vector3.ZERO
+			af._personality_layer(float(k) / 60.0, stance, 0, 1.0)
+			lo = minf(lo, af.hips.y)
+			hi = maxf(hi, af.hips.y)
+		ranges[stance] = hi - lo
+	_expect(ranges[2] > ranges[1] * 2.0, "personality test: the evasive bounce is %.2f and the defensive %.2f" % [ranges[2], ranges[1]])
+	var chest: Array = []
+	for tier in [0, 3]:
+		var m := 0.0
+		for k in range(240):
+			var af2 := AnimFighter.new(0)
+			af2._personality_layer(float(k) / 60.0, 0, tier, 1.0)
+			m = maxf(m, af2.q[AnimRig.index["spine_2"]].angle_to(Quaternion.IDENTITY))
+		chest.append(m)
+	_expect(chest[1] > chest[0] * 1.15, "personality test: the breath of tier 4 (%.4f) is not deeper than tier 1 (%.4f)" % [chest[1], chest[0]])
+	var g := AnimFighter.new(0)
+	g._stance_kick(0, 1)
+	var up: float = g._rd.om[2]
+	var g2 := AnimFighter.new(0)
+	g2._stance_kick(1, 0)
+	var down: float = g2._rd.om[2]
+	_expect(up > 1.0 and down < -1.0, "personality test: the guard kicks are %.2f up and %.2f down" % [up, down])
+	var t := AnimFighter.new(0)
+	t._turn_t0 = 5.0
+	t._turn_dir = 1.0
+	t._turn_layer(5.11)
+	_expect(t.hips.y < -0.8 and t.q[AnimRig.index["thigh_r"]].angle_to(Quaternion.IDENTITY) > 0.2, "personality test: the turn step does not dip and swing (%.2f)" % t.hips.y)
+	var t2 := AnimFighter.new(0)
+	t2._turn_t0 = 5.0
+	t2._turn_layer(5.3)
+	_expect(t2.hips == Vector3.ZERO, "personality test: the turn step runs past its time")
+	print("personality test: bounce %.2f evasive against %.2f defensive, breath %.4f tier 4 against %.4f tier 1, guard kicks %.1f up %.1f down, turn dip %.2f" % [ranges[2], ranges[1], chest[1], chest[0], up, down, t.hips.y])
+
+
+## Unit G: the gait events, the shudder of a nearby impact, the bank.
+func _test_flight() -> void:
+	_expect(AnimFighter._gait_event(20000.0, 100.0, 300.0) == "burst", "flight test: a hard push from nearly still is not a burst")
+	_expect(AnimFighter._gait_event(20000.0, 900.0, 1100.0) == "", "flight test: a run getting faster is a burst")
+	_expect(AnimFighter._gait_event(-12000.0, 900.0, 600.0) == "brake", "flight test: a hard slowdown from a run is not a brake")
+	_expect(AnimFighter._gait_event(-12000.0, 100.0, 80.0) == "", "flight test: a slow body is braking")
+	RenderAnim.ragdoll_enabled = true
+	RenderAnim.reduced_motion = false
+	var af := AnimFighter.new(0)
+	af.on_shock(1.0, 0.8)
+	var h := 0.0
+	for k in range(30):
+		af.hips = Vector3.ZERO
+		af._shock_layer(1.0 + float(k) / 60.0)
+		h = maxf(h, absf(af.hips.y))
+	var late := AnimFighter.new(0)
+	late.on_shock(1.0, 0.8)
+	late.hips = Vector3.ZERO
+	late._shock_layer(2.5)
+	_expect(h > 0.5 and late.hips.y == 0.0, "flight test: the shudder is %.2f at its height and %.2f after 1.5 s" % [h, late.hips.y])
+	var far := AnimFighter.new(0)
+	far.on_shock(1.0, 0.0)
+	_expect(far._shock_amp == 0.0, "flight test: an impact of no strength shook him")
+	print("flight test: gait events found, the shudder of a nearby impact peaks at %.2f u" % h)
+
+
+## Unit H: the quality levels switch the layers they list off, and only those, and never touch the simulation.
+func _test_quality() -> void:
+	RenderAnim.ragdoll_enabled = true
+	RenderAnim.set_quality("high")
+	for nm in ["ragdoll", "feet", "look", "aim", "personality", "transitions", "defender", "flight", "cloth", "lean"]:
+		_expect(RenderAnim.layer(nm), "quality test: layer %s is off at high" % nm)
+	RenderAnim.set_quality("medium")
+	_expect(not RenderAnim.layer("look") and not RenderAnim.layer("feet") and not RenderAnim.layer("personality") and RenderAnim.layer("ragdoll") and RenderAnim.layer("defender"), "quality test: medium switches the wrong layers")
+	RenderAnim.set_quality("low")
+	_expect(RenderAnim.layer("ragdoll") and not RenderAnim.layer("cloth") and not RenderAnim.layer("flight"), "quality test: low keeps the ragdoll and drops the cloth and flight layers")
+	RenderAnim.set_quality("minimal")
+	_expect(not RenderAnim.layer("ragdoll"), "quality test: minimal keeps the ragdoll")
+	var hashes: Dictionary = {}
+	for lv in ["high", "low", "minimal"]:
+		RenderAnim.set_quality(lv)
+		main.start_match(4, {"p1": true, "p2": true})
+		var S: SimState = main.host.S
+		while main.host.ticks < 600:
+			main.frame(DT)
+		hashes[lv] = str(SimHash.stateHash(S).gameplay)
+	RenderAnim.set_quality("high")
+	_expect(hashes.high == hashes.low and hashes.high == hashes.minimal, "quality test: the gameplay hash differs between quality levels (%s)" % str(hashes))
+	print("quality test: levels switch their layers, the gameplay hash is the same at high, low and minimal (%s)" % hashes.high)
 
 
 func _run() -> void:
@@ -483,6 +619,10 @@ func _run() -> void:
 	_test_slope()
 	_test_hits()
 	_test_weight_aim()
+	_test_defender()
+	_test_personality()
+	_test_flight()
+	_test_quality()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	RenderAnim.debug_checks = false

@@ -1068,6 +1068,50 @@ Determinism: one step per tick, no random draw; `anim_check` runs the same match
 
 **Cost.** `render/anim/tools/solve_bench.gd` (the same seeded match, alternating configurations): the whole overhaul is about 14 us more a solve than with it off (66 against 56), of which the ground feet about 2. Reading it: 14 us x 2 fighters x 60 a second is under 2 ms a second of native CPU; the web number is in the report.
 
+### 9.10 The overhaul, units E to H (2026-10-02)
+
+Poses: move.burst and move.brake (`art/animation/records/A2-poses.md`). Data: `data/anim/personality.json` (F), `data/anim/quality.json` (H). Everything is behind `--noragdoll` (and the quality levels), render only, and deterministic (sim time and tick state only). The write-ups below give the numbers from `anim_check`, `solve_bench` and the GIFs in `art/animation/overhaul-*.gif`.
+
+**E. The defender's side and the fighters' own flinch.**
+- *The flinch keys.* A hit pulls the victim toward his own shapes (the fighter's brace shape for a light blow, his crumple shape for a heavy one, from Art's silhouettes), weighted by how hard and decaying over 0.3 to 0.7 s (longer when worn), on top of the blow-driven kicks of unit B. A disc-shaped fighter curls, a blade-shaped one throws his limbs: two shapes flinch 0.37 rad apart in total after the same blow (the test), and the GIF shows both.
+- *Anticipation.* The attacker's blows are in the beat list ahead of time. In the last 0.25 s before a heavy blow lands the defender braces (arms up, chin down, in his own brace shape, 70% for a heavy blow, 25% for a light one, and 30% less if he is not in the defensive stance); the near-miss flinch (a blow with no damage that he did not evade) is a small head-back kick. In seeds 4 and 12345 the brace played 114 to 156 ticks a fighter in 3000; a near miss without a dodge or slip beat never occurred (the misses in play are all dodged).
+- `_next_blow` and `_has_evade` are tested on a stub exchange.
+
+**F. Transitions and idles with personality** (`personality.json`).
+| What | Effect |
+| :--- | :--- |
+| Weight shift | a slow sway of the pelvis and a little shift of the hips, per stance (evasive 2.4, aggressive 1.6, escape 1.0, defensive 0.7) |
+| Knee bounce, heel lift | a hop on the toes at the stance's rate (evasive 2 units at 3 Hz; defensive almost still) |
+| Breath | per stance, and by form: a higher tier breathes slower and deeper (tier 4 at 70% the rate and 140% the depth; tested 0.0168 against 0.0120 rad) |
+| The guard comes up and goes down | the arms are kicked toward the new guard when the stance changes to or from defensive, and the base pose lets the arms follow the torso a little later (the base smoothing is per bone, by the bone's lag) |
+| A turn-around is a step | when the visual facing flips: the weight dips, one foot swings through, the hips twist toward the new side and the shoulders against it, over 0.22 s, with the view's turn through front-on |
+Only while standing still or nearly (the sway fades out as he moves), never in a blow, and the sway is capped by reduced motion at 35%.
+
+**G. Flight.**
+- *Bank:* a roll into a turn (the shoulders tilt toward the camera with the lateral acceleration, up to 17 degrees), in flight and when fast.
+- *Burst and brake:* a hard push from nearly still is a coil (move.burst, 0.22 s) before the dash; a hard slowdown from a run is a brake (move.brake, 0.3 s): leaning back, feet and arms thrown forward. They fire once per move.
+- *Cloth:* the streaming is now also driven by a vertical fall (a fall lifts the sashes). The mannequin has no hair bones; the cloth chains (pack and sashes) are what streams. Per-fighter hair is Art's attachments.
+- *Nearby impacts:* the sim's crater event shakes a fighter within 700 u: a damped hover shudder (1.6 u, 3.2 Hz, 0.5 s) and a startle in the arms, scaled by the crater's energy and the distance.
+- The ground-event handler no longer breaks on the sim's event type (the fields are read through `get`, so World's events can add theirs).
+
+**H. The quality switch.** `RenderAnim.set_quality(level)`, or `--anim-quality=NAME`, with the levels of `data/anim/quality.json`; the host should call it from the web's quality setting (a line for Rendering, in the report). Layers: ragdoll, feet, look, aim, personality, transitions, defender, flight, cloth, lean (one call, `RenderAnim.layer(name)`, at each site; `--noragdoll` is the master). `solve_bench.gd` alternates configurations round by round and reports the minimum; on this machine (loaded, so read the order and the rough sizes, not the decimals):
+| Layer off | Saves, us a solve |
+| :--- | ---: |
+| ragdoll | 16 |
+| feet | 15 (about 5 of it when standing on flat ground; the leg solve runs every second tick) |
+| look | 6 |
+| transitions | 6 |
+| cloth | 6 |
+| lean | 4 |
+| flight | 3 |
+| defender | 2 |
+| personality | 2 |
+| aim | 0 (it only runs while a beam charges or fires) |
+| the whole overhaul | 27 (53 to 80 us a solve) |
+Levels, mean us a solve: high 86, medium 75 (drops look, feet, personality), low 68 (also transitions, defender, flight, cloth, lean, aim: keeps the ragdoll, the hit reactions and the launches), minimal 64 (the ragdoll too: the A2 behaviour). **Drop first:** feet, then look, then transitions and cloth; keep the ragdoll for the launches and the hits as long as possible (it is what Orb asked for most). The gameplay hash is identical at every level (`anim_check`).
+
+**Also fixed.** Placing a skid's pitch no longer stops once it settles; the ground-feet cache; and the catch smear's trigger (unit D). The catch smear still waits for Encounter's contact slice.
+
 ---
 
 ## 10. How we will know it works

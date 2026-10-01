@@ -2,7 +2,7 @@
 
 Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; results: its sections 9.1 and 9.3 (A2: the visual facing `vface`, the hinge bake and limb pass, the contact solve, the per-part profile mix). Render only: it reads the sim (fighter state, the running exchange's beats, the per-tick events) and never writes it, draws no sim random numbers, and moves no anchor. Data is in `data/anim/`, outside the sim's data hash.
 
-`--noanim` keeps the placeholder box figures. `--anim-style=snappy|fluid` picks a timing profile from `data/anim/profiles.json`.
+`--noanim` keeps the placeholder box figures. `--noragdoll` switches the overhaul layers off (A/B); `--anim-quality=high|medium|low|minimal` picks a quality level of `data/anim/quality.json`. `--anim-style=snappy|fluid` picks a timing profile from `data/anim/profiles.json`.
 
 | File | What it is |
 | :--- | :--- |
@@ -20,7 +20,7 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/anim_check.gd` | The checks: hash off, mixed, snappy and fluid, contact-frame accuracy, the contact solve reaching the defender, no NaN, no writes to the sim |
 | `tools/face_scan.gd` | Facing and pass-through scan over seeded matches (`--anim` reads the visual facing) |
 | `tools/pop_scan.gd` | Join scan: bones turning more than a limit in one tick, by what was playing (the evidence for inertialisation) |
-| `tools/solve_bench.gd` | The solve cost with the overhaul on, the ground feet off and the overhaul off, alternating rounds |
+| `tools/solve_bench.gd` | The solve cost of every overhaul layer and quality level, alternating rounds (the order to drop layers in) |
 | `tools/ragdoll_lab.gd` | A close fixed view of one fighter in a real match for judging launches, skids and hits; `--noragdoll` for the before |
 | `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 
