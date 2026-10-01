@@ -359,7 +359,7 @@ Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questio
 
 | Measure | Target | Greybox today |
 | :--- | :--- | :--- |
-| Exchanges started per minute | 15 to 24. This follows from the dynamic targets below and replaces 8 to 12 | About 21 in the prototype |
+| Exchanges started per minute | **15 to 26** (§22; it was 15 to 24). This follows from the dynamic targets below and replaces 8 to 12 | About 21 in the prototype |
 | Melee idle share inside exchanges (time with no visible strike, move or reaction) | **At most 15%** (Combat's dynamic-feel §3) | 42.5% (the prototype had 22%) |
 | Still stretch inside an exchange | Median at most 0.25 s, p90 at most 0.5 s. The first strike lands within 0.6 s of the request, **measured only for exchanges that start within 2,500 units**; longer gaps are pursuit flights of 0.8 to 2.0 s by design (G0 re-base) | See `docs/combat/dynamic-feel.md` |
 | Readable wind-up before a parryable strike | 0.20 to 0.30 s (Controls owns the width) | 0.10 s (0.33 s on HEAVY CLASH — WON) |
@@ -878,3 +878,15 @@ QA's recommended data set is accepted: k 0.052, the mood and location values, an
 ### Still to come
 
 Encounter's 2b, the landing slice and the contact slice are built but not committed, and KAI reads 57 to 59% in the contact probe on the un-retuned base. QA re-centres with the placeholder `dmgMul` values after those land. No band moves for it.
+
+## 22. Rulings on the step-3 baseline (QA's `docs/qa/baseline-step3.md`, 2026-10-02)
+
+KAI is at 52.6% and the median is 7:10, with 72 bands passing and 14 failing. Perfect blocks per 100 exchanges are 5.9, 10.0 and 15.2 for the easy, medium and hard AI, all inside their bands.
+
+| Row | Measured | Ruling |
+| :--- | :--- | :--- |
+| **Limb breaks** | 0.62 a match against 0.3 to 0.5, with arms only 21.7% of them against 35 to 65% | **The bands stay; the data moves.** Step 3 made guarding real, so the legs now take more guard wear, and the leg weighting that was added to lift legs is now pushing the wrong way. In order: `cripple.legWeight` from 1.8 back to **1.0**; then `guardWearSplit` back to 0.5 / 0.5 if arms are still under 35%; then scale `cripple.base` down by about a fifth, to bring the rate to about 0.45. QA's wound-spread retune can replace these if it reaches both bands |
+| **Exchanges started** | 24.6 a minute against 15 to 24 | **The band widens to 15 to 26.** Perfect blocks and bursts end exchanges sooner, which is the agency Orb asked for. Encounter does not slow it. The other feel bands in §10 still have to pass |
+| **Speed lines** | Heavies land 12.3 a minute and launches 11.8, so the streak would ride on about 25 hits a minute | **A cap: one streak per exchange,** on its launch if it has one, otherwise on its last landed heavy, and never on a hit that gets a panel. That is about 17 a minute. The panel rule is unchanged |
+| **Frenzied mood** | 3.7%, and 8.1% of act 4 | No ruling. It waits for the form impulse in Simulation's next slice |
+| **The masher** | QA reads 0 of 40 against the medium AI, and Encounter reads 41% | The band of 35 to 50% stands while the two probes are reconciled |
