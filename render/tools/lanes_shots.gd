@@ -1,21 +1,28 @@
 extends SceneTree
 ## Posed pictures for the fight-lanes work (docs/rendering/README.md, "Occlusion", "The camera's pitch" and "The inset
-## pane"): the two occlusion methods with one fighter and with both behind a block of towers, the camera's pitch, and
-## Camera's inset pane. The sim keeps fighters on the plane until the fight-lanes slices land, so the tool poses a
+## pane", "Streets and the lane cue"): the two occlusion methods with one fighter and with both behind a block of
+## towers, the camera's pitch, the painted streets with the lane cue, and Camera's inset pane. The sim keeps fighters on the plane until the fight-lanes slices land, so the tool poses a
 ## fresh match's fighters at depth by hand (its own state, never the game's), runs no ticks and draws the real scene.
 ## Needs a window (not --headless).
 ##   godot --path . --script res://render/tools/lanes_shots.gd -- --out=DIR [--size=1280x720] [--s=1] [--only=pair_hole,inset]
 
-## [name, both fighters behind the block, the occlusion method, the camera's pitch in degrees]
+## [name, the pose, the occlusion method, the camera's pitch in degrees]
+const SOLO := 0      # fighter 0 behind the block, fighter 1 out on the plane
+const PAIR := 1      # both behind the block
+const PLANE := 2     # both on the plane, in the front street
 const SHOTS: Array = [
-	["solo_hole", false, PaneWorld.OCCL_HOLE, 0.0],
-	["solo_stub", false, PaneWorld.OCCL_STUB, 0.0],
-	["pair_hole", true, PaneWorld.OCCL_HOLE, 0.0],
-	["pair_stub", true, PaneWorld.OCCL_STUB, 0.0],
-	["pair_hole_p11", true, PaneWorld.OCCL_HOLE, 11.0],
-	["pair_stub_p11", true, PaneWorld.OCCL_STUB, 11.0],
-	["pair_hole_p49", true, PaneWorld.OCCL_HOLE, 49.0],
-	["pair_stub_p49", true, PaneWorld.OCCL_STUB, 49.0],
+	["solo_hole", SOLO, PaneWorld.OCCL_HOLE, 0.0],
+	["solo_stub", SOLO, PaneWorld.OCCL_STUB, 0.0],
+	["pair_hole", PAIR, PaneWorld.OCCL_HOLE, 0.0],
+	["pair_stub", PAIR, PaneWorld.OCCL_STUB, 0.0],
+	["pair_hole_p11", PAIR, PaneWorld.OCCL_HOLE, 11.0],
+	["pair_stub_p11", PAIR, PaneWorld.OCCL_STUB, 11.0],
+	["pair_hole_p49", PAIR, PaneWorld.OCCL_HOLE, 49.0],
+	["pair_stub_p49", PAIR, PaneWorld.OCCL_STUB, 49.0],
+	["streets", PLANE, PaneWorld.OCCL_HOLE, 0.0],
+	["streets_p11", PLANE, PaneWorld.OCCL_HOLE, 11.0],
+	["cue_p11", SOLO, PaneWorld.OCCL_STUB, 11.0],
+	["cue_p49", SOLO, PaneWorld.OCCL_STUB, 49.0],
 ]
 const BEHIND: float = 220.0     # how far behind the block's back faces the fighters stand
 const INSET := Vector2i(320, 180)
@@ -120,11 +127,16 @@ static func _block(S: SimState) -> int:
 	return best
 
 
-## Fighter 0 behind the block (in the street behind row 1); fighter 1 beside him there (pair) or out on the plane.
-func _pose(S: SimState, block: int, pair: bool) -> void:
+## Fighter 0 behind the block (in the street behind row 1) and fighter 1 out on the plane (SOLO), both behind it
+## (PAIR), or both on the plane (PLANE).
+func _pose(S: SimState, block: int, pose: int) -> void:
 	var b = S.buildings[block]
 	var back: float = b.z - b.d * 0.5 - BEHIND
-	var at: Array = [[b.x - (260.0 if pair else 0.0), back], [b.x + 260.0, back] if pair else [b.x + 700.0, 0.0]]
+	var at: Array = [[b.x, back], [b.x + 700.0, 0.0]]
+	if pose == PAIR:
+		at = [[b.x - 260.0, back], [b.x + 260.0, back]]
+	elif pose == PLANE:
+		at = [[b.x - 300.0, 0.0], [b.x + 300.0, 0.0]]
 	for i in range(2):
 		var f = S.fighters[i]
 		f.x = SimWrap.wrap(at[i][0])
@@ -136,7 +148,7 @@ func _pose(S: SimState, block: int, pair: bool) -> void:
 ## The split's compositor with an inset: fighter 0 behind the block in the main view, fighter 1 far off and high in
 ## the inset, top right.
 func _inset(S: SimState, block: int, vp: Vector2) -> void:
-	_pose(S, block, false)
+	_pose(S, block, SOLO)
 	var f1 = S.fighters[1]
 	f1.x = SimWrap.wrap(S.buildings[block].x + 1500.0)
 	f1.y = WorldTerrain.groundY(S, f1.x) + 900.0
