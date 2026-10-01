@@ -25143,7 +25143,9 @@
           "file": "data/biomes/contact.json",
           "set": {
             "/area": {
-              "laterShare": 0.5
+              "slam": 0.9,
+              "touch": 0.4,
+              "laterShare": 0
             }
           }
         }
@@ -25370,7 +25372,7 @@
       }
     },
     {
-      "id": "biomes-contact-area-slam-only-ok",
+      "id": "biomes-contact-area-slam-only-incomplete",
       "schema": "biomes-contact.schema.json",
       "mutate": [
         {
@@ -25383,7 +25385,10 @@
           }
         }
       ],
-      "expect": null
+      "expect": {
+        "rule": "required",
+        "pointer": "/area"
+      }
     },
     {
       "id": "biomes-contact-air-drag-accepted",
@@ -25458,6 +25463,131 @@
         "rule": "type",
         "pointer": "/bounce/airDrag"
       }
+    },
+    {
+      "id": "biomes-contact-area-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/area"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-contact-area-slam-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/area/slam"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/area"
+      }
+    },
+    {
+      "id": "biomes-contact-area-touch-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/area/touch"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/area"
+      }
+    },
+    {
+      "id": "biomes-contact-area-later-share-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/area/laterShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/area"
+      }
+    },
+    {
+      "id": "biomes-contact-gravity-mul-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/bounce/gravityMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bounce"
+      }
+    },
+    {
+      "id": "biomes-contact-air-drag-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/bounce/airDrag"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bounce"
+      }
+    },
+    {
+      "id": "biomes-contact-wear-cap-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/wear/cap"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/wear"
+      }
+    },
+    {
+      "id": "biomes-contact-later-share-zero-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/area/laterShare": 0
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

@@ -29,7 +29,9 @@
     ],
     "tangentKeep": 0.8,
     "hopSpeed": 2000,
-    "hopLift": 0.25
+    "hopLift": 0.25,
+    "gravityMul": 3,
+    "airDrag": 0.08
   },
   "tumble": {
     "brakeMul": 2,
@@ -42,7 +44,13 @@
   },
   "wear": {
     "touch": 0.3,
-    "perSpeed": 0.0126
+    "perSpeed": 0.0126,
+    "cap": 1
+  },
+  "area": {
+    "slam": 0.9,
+    "touch": 0.4,
+    "laterShare": 0
   },
   "spin": {
     "capTurns": [

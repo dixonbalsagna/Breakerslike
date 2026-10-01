@@ -13,6 +13,7 @@
     "tumble",
     "journey",
     "wear",
+    "area",
     "spin",
     "surfaces",
     "water",
@@ -110,7 +111,9 @@
         "vertKeep",
         "tangentKeep",
         "hopSpeed",
-        "hopLift"
+        "hopLift",
+        "gravityMul",
+        "airDrag"
       ],
       "properties": {
         "perTier": {
@@ -149,13 +152,13 @@
         "gravityMul": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "description": "Gravity after a journey's first contact, times the launch's (1 = unchanged; more makes the flights after a bounce, a hop or a lip shorter). Optional until World commits it."
+          "description": "Gravity after a journey's first contact, times the launch's (1 = unchanged; more makes the flights after a bounce, a hop or a lip shorter)."
         },
         "airDrag": {
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 1,
-          "description": "The horizontal drag base after a first contact, per second (above 0 and at most 1; flight's own is 0.55). Optional until World commits it."
+          "description": "The horizontal drag base after a first contact, per second (above 0 and at most 1; flight's own is 0.55)."
         }
       },
       "additionalProperties": false,
@@ -216,7 +219,8 @@
       "type": "object",
       "required": [
         "touch",
-        "perSpeed"
+        "perSpeed",
+        "cap"
       ],
       "properties": {
         "touch": {
@@ -230,7 +234,7 @@
         "cap": {
           "type": "number",
           "minimum": 0,
-          "description": "The most wear a journey pays, as a share of its single-impact budget. Optional until World commits it."
+          "description": "The most wear a journey pays, as a share of its single-impact budget."
         }
       },
       "additionalProperties": false,
@@ -551,7 +555,9 @@
     "area": {
       "type": "object",
       "required": [
-        "laterShare"
+        "laterShare",
+        "slam",
+        "touch"
       ],
       "properties": {
         "laterShare": {
@@ -573,7 +579,7 @@
           "maximum": 1
         }
       },
-      "description": "Area damage to structures from a journey's contacts: the first contact pays slam (a slam) or touch (anything else) of an impact's damage; a later contact pays laterShare of the damage of the speed it removes. Optional until World commits it (then slam, touch and laterShare are all required, and so are bounce.gravityMul, bounce.airDrag and wear.cap).",
+      "description": "Area damage to structures from a journey's contacts: the first contact pays slam (a slam) or touch (anything else) of an impact's damage; a later contact pays laterShare of the damage of the speed it removes.",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true
