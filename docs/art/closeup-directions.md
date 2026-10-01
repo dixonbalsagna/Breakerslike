@@ -2,7 +2,7 @@
 
 Owner: Art Director. 2026-10-02. Orb: "loop on the art style to create stylized closeups of the fighters' faces so the on-screen closeups can be memorable and recognizable." Concept art, working labels, **pending Legal review**. Orb picks. This replaces the faceless portraits as the thing to choose from (`rule-of-cool-art.md` section 1 still holds the frame, the sizes and the zero-budget texture note).
 
-**The one page for Orb:** `art/concepts/closeups/closeups-comparison.svg`. The path (eight rounds, the rejected ones kept): `art/concepts/closeups/rounds/NOTES.md` and `rounds/round-1/` to `round-8/`.
+**The one page for Orb:** `art/concepts/closeups/closeups-comparison.svg`. The path (nine rounds, the rejected ones kept): `art/concepts/closeups/rounds/NOTES.md` and `rounds/round-1/` to `round-9/`.
 
 ## The three directions
 
@@ -54,8 +54,16 @@ Legal screened the close-ups: the blank-mask fallback is not required, lit shape
 | No X or cross marks, goggles, red lips or red mouth marks; mouths are thin lines in the lane colour | Lit mouths are thin lines in the lane colour (a deeper lane tone on the pale masks); teeth are off-white, no tongue colour; the loose strand in the damage stages now ends above the brow (round 7's crossed it, a cross), and the two mask cracks no longer intersect |
 | Lit shapes from each fighter's own family | Anti-hero: blades and hexagons. Protagonist: capsules and ring arcs. Empress: wedges. Cyborg: rectangles |
 | The Protagonist's lit circle becomes a capsule or ring arc | A capsule (B and A) |
-| No lone glowing red eye on a metal half | The Cyborg's lit eye is one part of a display: a lit brow, scan bars through the eye, a three-pip readout, in pale peach, never a single red eye. Direction C has the same cluster on the steel |
+| No lone glowing red eye on a metal half | Round 8 gave the Cyborg's lit eye a display cluster; Legal found a scanner on the eye, so round 9 replaced it with a plain pale lit rectangle (see below) |
 | The Cyborg's split diagonal or off-centre (about a third to two thirds), in B and C | A stair that runs diagonally down and to the right; the display or steel is about a third of the face (more at the brow, less at the jaw), and the transition and damage retreat it further. The Anti-hero's jagged vertical break stays (a mask with lit shapes against a plain face) |
 | No bolts or stitches on the box head, no spiky hair, no gold, no torn-paper frame | The stitch ticks on the damage cuts are gone; no bolts anywhere; the hair is unchanged (smooth masses, a swept tuft); no gold; the frame is the chamfered square |
 
 Also in round 8: the Empress's diadem tabs are shorter and hug the head (so they cannot read as a winged helmet), the Protagonist's tuft is shorter, and `damage-expressions-B.svg` shows the four damage stages on all eight expressions for each fighter.
+
+## Round 9: Legal's two round 8 conditions (RL-045), and damage for direction A
+
+- **The Cyborg's lit eye** is now a plain lit rectangle in a pale cream-peach (high lightness, low colour). The scan bars, pips and halo are gone from the eye. The lit brow is the same pale tone (dark steel on the steel half in direction C), and every lit edge, crack and scuff on him is the same pale tone, so the 120 px greyscale view reads as light, not red. The readout is three small pale pips on the jaw plate, away from the eye.
+- **The Protagonist's swollen eye** (damage stage 3) is a plain opaque swollen shape with a slit; the eye under it no longer shows through as a ring. The same swelling is used for all four fighters.
+- **Damage stages for direction A** (`damage-expressions-A.svg`, next to `damage-expressions-B.svg`): stage 1 scuffs and one chip, stage 2 a crack down the cheek, more chips (the mask broken away to show skin) and a bruise showing through, stage 3 a long crack beside the nose, a corner of the mask gone and a second bruise. The cracks never cross, and there are no stitch marks. Orb can now compare A and B across all eight expressions and four damage stages.
+
+Stop here and wait for Orb's pick (B, or A as the Anti-hero's composed state).

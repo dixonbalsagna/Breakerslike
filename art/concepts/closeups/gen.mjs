@@ -185,13 +185,13 @@ function writeCrops() {
 }
 
 // damage stages on all eight expressions (the face with the mask retreating and the damage building), for the four fighters
-function damageExpr() {
+function damageExpr(dir = 'B') {
   const W = 1800, ps = 104, bw = 8 * (ps + 4), bh = 36 + 4 * (ps + 6) + 14, H = 130 + 2 * bh + 20;
-  let b = rect(0, 0, W, H, '#dcd8e6') + header(`Damage stages on the eight expressions, direction B (round ${round})`, 'Each fighter: rows fresh, stage 1 scuffed, stage 2 torn, stage 3 ruined; columns the eight expressions. The damage stays and builds. Working labels, pending Legal review.', W);
+  let b = rect(0, 0, W, H, '#dcd8e6') + header(`Damage stages on the eight expressions, direction ${DIRS[dir]} (round ${round})`, dir === 'A' ? 'Each fighter: rows fresh, stage 1 scuffed with a chip, stage 2 cracked and chipped, stage 3 ruined (a long crack, a corner gone, a bruise showing through); columns the eight expressions. The damage stays and builds. Working labels, pending Legal review.' : 'Each fighter: rows fresh, stage 1 scuffed, stage 2 torn, stage 3 ruined; columns the eight expressions. The damage stays and builds. Working labels, pending Legal review.', W);
   [['A', 'Anti-hero'], ['P', 'Protagonist'], ['E', 'Empress'], ['C', 'Cyborg']].forEach(([fk, nm], n) => {
     const x0 = 24 + (n % 2) * (bw + 24), y0 = 124 + Math.floor(n / 2) * bh;
     b += text(x0, y0 + 14, nm, { size: 15, weight: 700 });
-    [0, 1, 2, 3].forEach(st => ALLX.forEach((e, i) => { b += placeX('B', fk, e, x0 + i * (ps + 4), y0 + 24 + st * (ps + 6), ps, { stage: st }); }));
+    [0, 1, 2, 3].forEach(st => ALLX.forEach((e, i) => { b += placeX(dir, fk, e, x0 + i * (ps + 4), y0 + 24 + st * (ps + 6), ps, { stage: st }); }));
   });
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${GREY}${b}</svg>`;
 }
@@ -209,6 +209,6 @@ if (!only || only === 'blank' || only === 'all') { BLANK = true; const s = ORIGI
 if (stripArt && (!only || only === 'expr' || only === 'all')) { const s = ORIGIN + expressions(); writeFileSync(join(dir0, 'expressions-B.svg'), s); if (FINAL) writeFileSync(join(OUT, 'expressions-B.svg'), s); }
 if (stripArt && (!only || only === 'transition' || only === 'all')) { const s = ORIGIN + transition(); writeFileSync(join(dir0, 'anti-hero-transition.svg'), s); if (FINAL) writeFileSync(join(OUT, 'anti-hero-transition.svg'), s); }
 if (stripArt && (!only || only === 'crops' || only === 'all')) { const s = ORIGIN + cropsSheet(); writeFileSync(join(dir0, 'crops-sheet.svg'), s); if (FINAL) { writeFileSync(join(OUT, 'crops-sheet.svg'), s); console.log('wrote ' + writeCrops() + ' crop pairs'); } }
-if (stripArt && (!only || only === 'dmgx' || only === 'all')) { const s = ORIGIN + damageExpr(); writeFileSync(join(dir0, 'damage-expressions-B.svg'), s); if (FINAL) writeFileSync(join(OUT, 'damage-expressions-B.svg'), s); }
+if (stripArt && (!only || only === 'dmgx' || only === 'all')) for (const d of ['B', 'A']) { const s = ORIGIN + damageExpr(d); writeFileSync(join(dir0, `damage-expressions-${d}.svg`), s); if (FINAL) writeFileSync(join(OUT, `damage-expressions-${d}.svg`), s); }
 if (!engineArg) copyFileSync(join(OUT, 'engine.mjs'), join(dir0, 'engine.snapshot.mjs'));
 console.log(`wrote round ${round}${FINAL ? ' (and final)' : ''}`);

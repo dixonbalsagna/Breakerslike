@@ -7,3 +7,5 @@ Origin (proposed rows for `docs/legal/asset-origins.md`): ART-0011-GEN is `art/c
 Round 7 adds `expressions-B.svg`, `anti-hero-transition.svg`, `crops-sheet.svg` and `crops/` (`square/` and `strip/`, 32 each, named `<fighter>-<expression>.svg`). `engine.mjs` exports `portrait`, `strip`, `faceGroup` and `EXPRESSIONS`; direction `T` with `{ t }` is the transition.
 
 Round 8 adds `damage-expressions-B.svg` and applies Legal's constraints (`docs/art/closeup-directions.md`, round 8). The blank-mask sheets are kept as the zero-risk fallback.
+
+Round 9 adds `damage-expressions-A.svg` and applies Legal's RL-045 conditions (the Cyborg's plain pale lit eye, the Protagonist's plain swollen eye).
