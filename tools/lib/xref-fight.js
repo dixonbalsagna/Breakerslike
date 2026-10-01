@@ -705,6 +705,25 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- biomes contact: orders and references ----
+  const gc = get('data/biomes/contact.json');
+  if (isObj(gc)) {
+    const GC = 'data/biomes/contact.json';
+    const b = isObj(gc.bands) ? gc.bands : {};
+    if (typeof b.nothingBelow === 'number' && typeof b.tumbleBelow === 'number' && b.nothingBelow >= b.tumbleBelow) err(GC, '/bands/nothingBelow', 'contact-order', `nothingBelow ${b.nothingBelow} is not below tumbleBelow ${b.tumbleBelow}`);
+    if (typeof b.skidSin2 === 'number' && typeof b.slamSin2 === 'number' && b.skidSin2 >= b.slamSin2) err(GC, '/bands/skidSin2', 'contact-order', `skidSin2 ${b.skidSin2} is not below slamSin2 ${b.slamSin2}`);
+    if (typeof b.nothingBelow === 'number' && typeof b.tumbleBelow === 'number' && typeof b.skidToTumble === 'number' && (b.skidToTumble < b.nothingBelow || b.skidToTumble > b.tumbleBelow)) err(GC, '/bands/skidToTumble', 'contact-order', `skidToTumble ${b.skidToTumble} is outside nothingBelow ${b.nothingBelow} to tumbleBelow ${b.tumbleBelow}`, 'warning');
+    const vk = isObj(gc.bounce) ? gc.bounce.vertKeep : undefined;
+    if (Array.isArray(vk)) for (let i = 1; i < vk.length; i++) if (typeof vk[i] === 'number' && typeof vk[i - 1] === 'number' && vk[i] > vk[i - 1]) err(GC, `/bounce/vertKeep/${i}`, 'contact-order', `bounce ${i + 1} keeps ${vk[i]}, more than bounce ${i} (${vk[i - 1]}); a body loses energy on each bounce`);
+    const rising = (a, pointer, what) => { if (Array.isArray(a)) for (let i = 1; i < a.length; i++) if (typeof a[i] === 'number' && typeof a[i - 1] === 'number' && a[i] < a[i - 1]) err(GC, `${pointer}/${i}`, 'contact-order', `${what} falls from ${a[i - 1]} to ${a[i]} at tier ${i + 1}; it must not fall with the tier`, 'warning'); };
+    rising(isObj(gc.bounce) ? gc.bounce.perTier : undefined, '/bounce/perTier', 'bounces per tier');
+    rising(isObj(gc.spin) ? gc.spin.capTurns : undefined, '/spin/capTurns', 'spin cap');
+    const surfaces = isObj(gc.surfaces) ? Object.keys(gc.surfaces).filter((k) => !k.startsWith('_')) : [];
+    const bs = isObj(gc.biomeSurface) ? gc.biomeSurface : {};
+    for (const [biome, s] of Object.entries(bs)) if (!biome.startsWith('_') && surfaces.length && typeof s === 'string' && !surfaces.includes(s)) err(GC, `/biomeSurface/${esc(biome)}`, 'contact-surface', `biome "${biome}" uses surface "${s}", which is not in surfaces (${surfaces.join(', ')})`);
+    if (isObj(gc.paving) && Array.isArray(gc.paving.biomes)) gc.paving.biomes.forEach((bn, i) => { if (typeof bn === 'string' && !(bn in bs)) err(GC, `/paving/biomes/${i}`, 'contact-surface', `paving biome "${bn}" has no entry in biomeSurface`); });
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

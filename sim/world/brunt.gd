@@ -323,6 +323,20 @@ static func arm(S: SimState, f, att, plan: Dictionary) -> void:
 	f.chainEvt = 0.0
 	f.flightHits = 0
 	f.splashed = PackedInt32Array()
+	# a new launch starts a new journey (world/contact.gd) and takes the next launch number, which its events carry
+	f.jContacts = 0
+	f.jT = 0
+	f.jV0 = 0.0
+	f.tumbleT = -1
+	f.contactT = 0
+	f.jLips = 0
+	f.launchN += 1
+	var slot: float = float(S.fighters.find(f))
+	for i in range(S.out.fx.size() - 1, -1, -1):
+		var le = S.out.fx[i]
+		if le.type == "launch" and le.actor == slot:
+			le.n = f.launchN
+			break
 	if not plan.has("brunt"):
 		return
 	var br: Dictionary = plan.brunt

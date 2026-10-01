@@ -938,6 +938,77 @@ func _init() -> void:
 	WorldStructures.damageArea(S3_g, x3_g, WorldTerrain.groundY(S3_g, x3_g) + 10.0, 300.0, 5000.0, A3_g, false, 0.0, -1, 0.0, 1.0)
 	check(h3_g.hp == hp3_g or Sx_g.fighters[1].ld.reachStructure[3] <= 1.5, "a beam's path sample (reach 1.0) is not widened by the tier")
 
+	print("== G2: ground contact: the journey function against the played journey (docs/world/ground-contact.md) ==")
+	var cd_on: bool = WorldContact.enabled()
+	print("  contact data enabled: %s (these checks force the flag on for the sim they use)" % str(cd_on))
+	var jn_n: int = 0
+	var jn_same_end: int = 0
+	var jn_same_contacts: int = 0
+	var jn_near: int = 0
+	var open_n: int = 0
+	var open_near: int = 0
+	var town_n: int = 0
+	var town_near: int = 0
+	var jn_max_dx: float = 0.0
+	var jn_caps_ok: bool = true
+	var jn_nan: bool = false
+	var kinds_seen := {}
+	var rgj := SimRng.new(91)
+	for n in range(240):
+		var Sj := fresh(1 + n % 7)
+		Sj.contactOn = true
+		var Aj = Sj.fighters[1]
+		var Dj = Sj.fighters[0]
+		Aj.tier = float(1 + int(rgj.next() * 4.0))
+		Dj.hp = 1.0e9
+		Dj.x = rgj.range_(0.0, SimConst.W)
+		Dj.y = WorldTerrain.groundY(Sj, Dj.x) + rgj.range_(40.0, 900.0)
+		var uyj: float = [0.05, 0.12, 0.25, -0.6, -1.25, 0.6][int(rgj.next() * 6.0) % 6]
+		var uxj: float = 1.0 if rgj.next() < 0.5 else -1.0
+		var planj := {"ux": uxj, "uy": uyj, "fm": 1.0}
+		DirLaunch.doLaunch(Sj, Aj, Dj, planj, rgj.range_(1500.0, 3200.0))
+		var bj: WorldContact.Body = WorldContact.launchBody(Dj.x, Dj.y, Dj.vx, Dj.vy, Dj.launchT, Aj.tier, Dj.wet)
+		bj.age = 0.0
+		var pj: Dictionary = WorldContact.journey(Sj, bj)
+		var gj: int = 0
+		var ev_kinds: Array = []
+		var last_contacts: int = 0
+		var wet_end: bool = false
+		while Dj.state == "launched" and gj < 3000:
+			SimFighter.stepLaunched(Sj, Dj, SimConst.DT)
+			for e in Sj.out.fx:
+				if e.type == "journey_end":
+					last_contacts = e.contacts
+					kinds_seen[e.kind] = kinds_seen.get(e.kind, 0) + 1
+			Sj.out.fx.clear()
+			gj += 1
+			if is_nan(Dj.x) or is_nan(Dj.y):
+				jn_nan = true
+				break
+		jn_n += 1
+		var dxj: float = absf(SimWrap.sdx(Dj.x, pj.end.x))
+		jn_max_dx = maxf(jn_max_dx, dxj)
+		var in_town: bool = not WorldStructures.near(Sj, Dj.x, 9000.0).is_empty() or not WorldStructures.near(Sj, pj.end.x, 9000.0).is_empty()
+		if in_town:
+			town_n += 1
+			if dxj < 60.0:
+				town_near += 1
+		else:
+			open_n += 1
+			if dxj < 60.0:
+				open_near += 1
+		if dxj < 60.0:
+			jn_near += 1
+		if int(pj.n) == last_contacts:
+			jn_same_contacts += 1
+		if last_contacts > 8:
+			jn_caps_ok = false
+	print("  %d launches: the predicted end is within 60 units of the played one in %d, the same contact count in %d, journey end kinds %s (largest end difference %.0f)" % [jn_n, jn_near, jn_same_contacts, str(kinds_seen), jn_max_dx])
+	check(not jn_nan, "no NaN in 240 journeys")
+	check(jn_caps_ok, "no journey has more than 8 contacts")
+	print("  open ground: %d of %d within 60 units; near a town (buildings within 9,000 units, whose collapse raises heaps ahead of a skid): %d of %d" % [open_near, open_n, town_near, town_n])
+	check(open_near >= int(0.9 * open_n), "on open ground the journey function predicts the played end within 60 units for at least 90 percent of launches")
+
 	print("")
 	print("probe: %d check(s) failed" % fails)
 	quit(1 if fails > 0 else 0)

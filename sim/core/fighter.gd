@@ -82,6 +82,9 @@ static func impact(S: SimState, f, g: float, sp: float) -> void:
 static func stepLaunched(S: SimState, f, dt: float) -> void:
 	f.stateT += dt
 	WorldBrunt.stepZ(S, f, dt)
+	if S.contactOn:   # ground contact (world/contact.gd): leave, land, bounce, skid, tumble
+		WorldContact.stepFighter(S, f, dt)
+		return
 	if f.slide > 0.0:
 		WorldSlide.step(S, f, dt)
 		return
@@ -183,7 +186,10 @@ static func stepDepth(S: SimState, f, dt: float) -> void:
 const SPIN_AIR: int = 0
 const SPIN_FREE: int = 1
 const SPIN_STOP: int = 2
-static func spin(_S: SimState, f, dt: float, how: int) -> void:
+static func spin(S: SimState, f, dt: float, how: int) -> void:
+	if S.contactOn:   # the journey's own rolling (world/contact.gd): rot only integrated or eased
+		WorldContact.spinFighter(f, dt, how)
+		return
 	if how == SPIN_AIR:
 		f.rot += f.spin * dt
 	elif how == SPIN_FREE:

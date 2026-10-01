@@ -1,0 +1,540 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/biomes-contact",
+  "title": "biomes.contact/1",
+  "description": "data/biomes/contact.json: how a launched body meets and leaves the ground (docs/world/ground-contact.md; balance-targets.md section 20), read by sim/world/contact.gd. Speeds are the sim's normalised units. enabled false keeps the old slide model bit for bit. Version field: schema. Policy: every key required, objects closed except keys starting with an underscore. Orders and references (nothingBelow below tumbleBelow; skidSin2 below slamSin2; each bounce keeps less than the one before; per-tier arrays do not fall; every biomeSurface value is one of the surfaces; every paving biome has a biomeSurface) are checked by tools/lib/xref-fight.js (contact-order, contact-surface).",
+  "type": "object",
+  "required": [
+    "schema",
+    "enabled",
+    "bands",
+    "leave",
+    "bounce",
+    "tumble",
+    "journey",
+    "wear",
+    "spin",
+    "surfaces",
+    "water",
+    "biomeSurface",
+    "paving",
+    "rubbleMin"
+  ],
+  "properties": {
+    "schema": {
+      "const": "biomes.contact/1"
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "false keeps the old slide model."
+    },
+    "bands": {
+      "type": "object",
+      "required": [
+        "nothingBelow",
+        "tumbleBelow",
+        "skidToTumble",
+        "skidSin2",
+        "slamSin2"
+      ],
+      "properties": {
+        "nothingBelow": {
+          "description": "Below this speed a contact does nothing.",
+          "type": "number",
+          "minimum": 0
+        },
+        "tumbleBelow": {
+          "description": "Below this speed a contact tumbles rather than skids.",
+          "type": "number",
+          "minimum": 0
+        },
+        "skidToTumble": {
+          "description": "The speed at which a skid becomes a tumble.",
+          "type": "number",
+          "minimum": 0
+        },
+        "skidSin2": {
+          "description": "sin^2 of the contact angle below which the body skids.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "slamSin2": {
+          "description": "sin^2 of the contact angle above which the body slams.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "leave": {
+      "type": "object",
+      "required": [
+        "clear",
+        "lipLift",
+        "wall",
+        "stop"
+      ],
+      "properties": {
+        "clear": {
+          "type": "number",
+          "minimum": 0
+        },
+        "lipLift": {
+          "type": "number",
+          "minimum": 0
+        },
+        "wall": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stop": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "description": "How the body leaves the ground.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "bounce": {
+      "type": "object",
+      "required": [
+        "perTier",
+        "vertKeep",
+        "tangentKeep",
+        "hopSpeed",
+        "hopLift"
+      ],
+      "properties": {
+        "perTier": {
+          "description": "Bounces per power tier 1 to 4.",
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "vertKeep": {
+          "description": "The share of the vertical speed each bounce keeps.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "tangentKeep": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "hopSpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "hopLift": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "tumble": {
+      "type": "object",
+      "required": [
+        "brakeMul",
+        "maxSeconds",
+        "cappedTail"
+      ],
+      "properties": {
+        "brakeMul": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "cappedTail": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "journey": {
+      "type": "object",
+      "required": [
+        "maxContacts",
+        "maxSeconds"
+      ],
+      "properties": {
+        "maxContacts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "description": "The cap on a launch's whole ground journey.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "wear": {
+      "type": "object",
+      "required": [
+        "touch",
+        "perSpeed"
+      ],
+      "properties": {
+        "touch": {
+          "type": "number",
+          "minimum": 0
+        },
+        "perSpeed": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "spin": {
+      "type": "object",
+      "required": [
+        "capTurns",
+        "halfLife",
+        "bodyR"
+      ],
+      "properties": {
+        "capTurns": {
+          "description": "The most turns a body spins, per power tier 1 to 4.",
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "halfLife": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bodyR": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "surfaces": {
+      "type": "object",
+      "required": [
+        "paving",
+        "rock",
+        "soil",
+        "sand",
+        "rubble"
+      ],
+      "properties": {
+        "paving": {
+          "type": "object",
+          "required": [
+            "brake",
+            "tumble"
+          ],
+          "properties": {
+            "brake": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tumble": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "rock": {
+          "type": "object",
+          "required": [
+            "brake",
+            "tumble"
+          ],
+          "properties": {
+            "brake": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tumble": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "soil": {
+          "type": "object",
+          "required": [
+            "brake",
+            "tumble"
+          ],
+          "properties": {
+            "brake": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tumble": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "sand": {
+          "type": "object",
+          "required": [
+            "brake",
+            "tumble"
+          ],
+          "properties": {
+            "brake": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tumble": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "rubble": {
+          "type": "object",
+          "required": [
+            "brake",
+            "tumble"
+          ],
+          "properties": {
+            "brake": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tumble": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "description": "The five ground surfaces: how hard each brakes a slide, and whether a body tumbles on it.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "water": {
+      "type": "object",
+      "required": [
+        "skimMinSpeed",
+        "skimMaxTan",
+        "skimLift",
+        "skimKeep",
+        "skimMax",
+        "sinkBelow"
+      ],
+      "properties": {
+        "skimMinSpeed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "skimMaxTan": {
+          "type": "number",
+          "minimum": 0
+        },
+        "skimLift": {
+          "type": "number",
+          "minimum": 0
+        },
+        "skimKeep": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "skimMax": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sinkBelow": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "description": "Skimming across water and sinking.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "biomeSurface": {
+      "type": "object",
+      "required": [
+        "ocean",
+        "village",
+        "plains",
+        "city",
+        "forest",
+        "desert",
+        "mountains"
+      ],
+      "properties": {
+        "ocean": {
+          "enum": [
+            "paving",
+            "rock",
+            "soil",
+            "sand",
+            "rubble"
+          ]
+        },
+        "village": {
+          "enum": [
+            "paving",
+            "rock",
+            "soil",
+            "sand",
+            "rubble"
+          ]
+        },
+        "plains": {
+          "enum": [
+            "paving",
+            "rock",
+            "soil",
+            "sand",
+            "rubble"
+          ]
+        },
+        "city": {
+          "enum": [
+            "paving",
+            "rock",
+            "soil",
+            "sand",
+            "rubble"
+          ]
+        },
+        "forest": {
+          "enum": [
+            "paving",
+            "rock",
+            "soil",
+            "sand",
+            "rubble"
+          ]
+        },
+        "desert": {
+          "enum": [
+            "paving",
+            "rock",
+            "soil",
+            "sand",
+            "rubble"
+          ]
+        },
+        "mountains": {
+          "enum": [
+            "paving",
+            "rock",
+            "soil",
+            "sand",
+            "rubble"
+          ]
+        }
+      },
+      "description": "The surface of each biome.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "paving": {
+      "type": "object",
+      "required": [
+        "biomes",
+        "dugBelow"
+      ],
+      "properties": {
+        "biomes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ocean",
+              "village",
+              "plains",
+              "city",
+              "forest",
+              "desert",
+              "mountains"
+            ]
+          }
+        },
+        "dugBelow": {
+          "type": "number"
+        }
+      },
+      "description": "Biomes with paving, and how far the ground must be dug below its base before the paving is gone.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "rubbleMin": {
+      "type": "number",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

@@ -255,6 +255,10 @@
       "schema": "biomes-settlements.schema.json"
     },
     {
+      "match": "data/biomes/contact.json",
+      "schema": "biomes-contact.schema.json"
+    },
+    {
       "match": "data/input/actions.json",
       "schema": "input-actions.schema.json"
     },

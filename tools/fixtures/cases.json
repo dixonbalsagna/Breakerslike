@@ -21889,6 +21889,710 @@
         "rule": "xref:ai-level",
         "pointer": "/level"
       }
+    },
+    {
+      "id": "biomes-contact-valid",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/enabled": true
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-key-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/water"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-contact-unknown-key",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "biomes-contact-underscore-key-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bands/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-schema-version",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/schema": "biomes.contact/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "biomes-contact-enabled-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/enabled": "no"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/enabled"
+      }
+    },
+    {
+      "id": "biomes-contact-bands-key-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/bands/slamSin2"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands"
+      }
+    },
+    {
+      "id": "biomes-contact-bands-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bands/nothingBelow": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bands/nothingBelow"
+      }
+    },
+    {
+      "id": "biomes-contact-bands-sin2-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bands/slamSin2": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/bands/slamSin2"
+      }
+    },
+    {
+      "id": "biomes-contact-bands-nothing-above-tumble",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bands/nothingBelow": 950
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-order",
+        "pointer": "/bands/nothingBelow"
+      }
+    },
+    {
+      "id": "biomes-contact-bands-skid-above-slam",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bands/skidSin2": 0.9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-order",
+        "pointer": "/bands/skidSin2"
+      }
+    },
+    {
+      "id": "biomes-contact-bands-skid-to-tumble-outside-warns",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bands/skidToTumble": 100
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-order",
+        "pointer": "/bands/skidToTumble"
+      }
+    },
+    {
+      "id": "biomes-contact-leave-key-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/leave/stop"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/leave"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-per-tier-length",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/perTier": [
+              1,
+              2,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/bounce/perTier"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-per-tier-integer",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/perTier": [
+              1,
+              2,
+              3.5,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bounce/perTier/2"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-per-tier-falls-warns",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/perTier": [
+              1,
+              3,
+              2,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-order",
+        "pointer": "/bounce/perTier/2"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-keep-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/vertKeep": [
+              0.45,
+              1.2
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/bounce/vertKeep/1"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-keep-rises",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/vertKeep": [
+              0.25,
+              0.35,
+              0.45
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-order",
+        "pointer": "/bounce/vertKeep/1"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-tangent-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/tangentKeep": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/bounce/tangentKeep"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-hop-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/hopSpeed": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bounce/hopSpeed"
+      }
+    },
+    {
+      "id": "biomes-contact-tumble-tail-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/tumble/cappedTail": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/tumble/cappedTail"
+      }
+    },
+    {
+      "id": "biomes-contact-tumble-seconds-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/tumble/maxSeconds": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/tumble/maxSeconds"
+      }
+    },
+    {
+      "id": "biomes-contact-journey-contacts-integer",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/journey/maxContacts": 8.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/journey/maxContacts"
+      }
+    },
+    {
+      "id": "biomes-contact-journey-contacts-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/journey/maxContacts": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/journey/maxContacts"
+      }
+    },
+    {
+      "id": "biomes-contact-wear-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/perSpeed": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/wear/perSpeed"
+      }
+    },
+    {
+      "id": "biomes-contact-spin-caps-length",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/spin/capTurns": [
+              1.5,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/spin/capTurns"
+      }
+    },
+    {
+      "id": "biomes-contact-spin-caps-fall-warns",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/spin/capTurns": [
+              3,
+              1.5,
+              3,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-order",
+        "pointer": "/spin/capTurns/1"
+      }
+    },
+    {
+      "id": "biomes-contact-spin-half-life-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/spin/halfLife": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/spin/halfLife"
+      }
+    },
+    {
+      "id": "biomes-contact-surface-missing",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/surfaces/rubble"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/surfaces"
+      }
+    },
+    {
+      "id": "biomes-contact-surface-unknown",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/surfaces/ice": {
+              "brake": 0.5,
+              "tumble": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/surfaces/ice"
+      }
+    },
+    {
+      "id": "biomes-contact-surface-brake-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/surfaces/soil/brake": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/surfaces/soil/brake"
+      }
+    },
+    {
+      "id": "biomes-contact-surface-tumble-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/surfaces/rubble/tumble": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/surfaces/rubble/tumble"
+      }
+    },
+    {
+      "id": "biomes-contact-water-keep-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/water/skimKeep": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/water/skimKeep"
+      }
+    },
+    {
+      "id": "biomes-contact-water-skim-max-integer",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/water/skimMax": 6.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/water/skimMax"
+      }
+    },
+    {
+      "id": "biomes-contact-biome-surface-missing",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/biomeSurface/desert"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/biomeSurface"
+      }
+    },
+    {
+      "id": "biomes-contact-biome-surface-unknown-biome",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/biomeSurface/tundra": "soil"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/biomeSurface/tundra"
+      }
+    },
+    {
+      "id": "biomes-contact-biome-surface-enum",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/biomeSurface/forest": "ice"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/biomeSurface/forest"
+      }
+    },
+    {
+      "id": "biomes-contact-biome-surface-not-in-surfaces",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/surfaces/sand"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-surface",
+        "pointer": "/biomeSurface/desert"
+      }
+    },
+    {
+      "id": "biomes-contact-paving-biome-enum",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/paving/biomes": [
+              "city",
+              "tundra"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/paving/biomes/1"
+      }
+    },
+    {
+      "id": "biomes-contact-paving-biome-duplicate",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/paving/biomes": [
+              "city",
+              "city"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/paving/biomes/1"
+      }
+    },
+    {
+      "id": "biomes-contact-paving-dug-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/paving/dugBelow": "deep"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/paving/dugBelow"
+      }
+    },
+    {
+      "id": "biomes-contact-rubble-min-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/rubbleMin": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/rubbleMin"
+      }
     }
   ],
   "text": [
