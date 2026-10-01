@@ -454,3 +454,10 @@ Orb's picks.
 - **The world reacts from:** tier 3.
 - **Bystander tone:** 6 of 10 (1 grim, 10 comic relief).
 - **Pitches requested:** which hits earn the big impact treatment; what a last stand at the brink gives the fighter; what a completed taunt does ("depends on fighter").
+
+## Rule-of-cool pitch picks and the stacking rule (2026-10-01)
+
+- **Impact treatment:** option B, two levels. Speed lines alone on every launch and landed heavy (a brief streak, no cut); the panel cut-in for the peaks (signatures, finishers, crippling blows, the KO) and for hits the player earned, sharing one panel per 12 s.
+- **Last stand at the brink:** option B, one last signature: free and ready at once for 20 s, the first time a fighter reaches the brink, once per fighter per match.
+- **Taunts:** "taunts should just feed meters" (option A, meter only), with the shared rules (punishable, the face cut-in).
+- **Legal's stacking rule:** accepted. No single moment shows more than two of the seven power-up marks; the charging aura is a thin outline in our own shapes.
