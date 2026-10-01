@@ -206,7 +206,7 @@ Orb wants the director to "often" choose one building to take the brunt of a lau
 
 ### 5c. Knockback slides (ground impacts)
 
-This is Orb's trope: a fighter who hits the ground skids to a stop in one trench, rather than bouncing. The design is World's (`docs/world/knockback-slide.md`). Game Design confirms the physics as World wrote it:
+This is Orb's trope: a fighter who hits the ground skids to a stop in one trench. *Since 2026-10-01 Orb also wants bounces, tumbles and flights off a crater's lip; §20 extends these rules.* The design is World's (`docs/world/knockback-slide.md`). Game Design confirms the physics as World wrote it:
 - a slam (a crater) when at least **94%** of the velocity is vertical, otherwise a slide. It was 85% until §19;
 - braking of `v' = v - (1200 + 1.2 v) dt`, about 2.5 bh from 900 units per second and about 15 bh from 2,500;
 - a trench half-width of `14 + 6√E`, and a depth of at most 0.5 bh;
@@ -221,7 +221,7 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
 | Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
-| **How launches end** | One landing class per launch (§19): slide 40 to 60%; slam 12 to 25%; caught in the air 10 to 25%; water 5 to 15%; brunt 4 to 10% |
+| **How launches end** | One landing class per launch (§20): slide 40 to 55%; bounce 8 to 15%; slam 8 to 15%; caught in the air 10 to 25%; water 5 to 15%; brunt 4 to 10% |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -635,7 +635,7 @@ This replaces the "How launches end" row in §5c. **§19 replaces the table abov
 | Water | 5 to 15% |
 | Brunt | 4 to 10% |
 
-This replaces the table in §18.
+This replaces the table in §18. *§20 replaces it in turn, adding a bounce class.*
 
 **How to get there,** in this order, re-measuring after each step:
 1. **The slam threshold** (World, one value): a contact slams only when **94%** of its velocity is vertical, up from 85%. That is steeper than about 70 degrees, against 58 today. Impacts between the two keep enough sideways speed to skid 2 bh or more, so they become slides.
@@ -645,3 +645,69 @@ This replaces the table in §18.
 Slams keep their floor, because Orb also asked for craters with rims and ejecta. The intent is that a slam is an event and a slide is the norm.
 
 Encounter implements steps 2 and 3 with the variety work. World changes the threshold.
+
+## 20. Knocked about: how a launched fighter crosses the ground (Orb, 2026-10-01)
+
+Orb wants fighters to be ragdolled: to skid, tumble and bounce over the course of a fight, the way they already skip across the ocean. A fighter who skids up a crater's side should fly off the lip, not ride down the inside. These are the rules for World and Encounter. Every number is a proposal for data, in the sim's normalised speed units (today a ground hit under 350 is no impact, and 2,000 is a hard one).
+
+**The rule Orb approved.** A skidding or tumbling fighter leaves the ground whenever the terrain curves away beneath him faster than gravity pulls him down. He keeps the speed and direction he had. It applies to crater rims, ridges, rubble heaps and cliff edges, and it replaces today's cliff rule (a drop steeper than 1.0). There is no speed threshold to tune: a slow fighter simply follows the ground over the rim.
+
+### The states
+
+| State | He enters it when | While in it | He leaves it when |
+| :--- | :--- | :--- | :--- |
+| **Airborne** | He is launched, flies off a lip, or rebounds from a bounce or a skip | Ballistic flight, as today | He touches ground or water |
+| **Skid** | Ground contact shallower than 30 degrees, at a speed over 900 | Today's slide: braking of 1,200 + 1.2 v, and a trench. The surface scales the braking: ×0.8 on paving and rock, ×1.3 on sand and soil | His speed falls under 600 (tumble); the ground curves away (airborne); or a rise steeper than 0.8 stops him with a stop-impact, as today |
+| **Bounce** | Contact between 30 and 70 degrees, at a speed over 900, with a bounce left | He rebounds, keeping 80% of his speed along the ground and 45% of his vertical speed. The second bounce keeps 35% and the third 25% | At once: he is airborne again |
+| **Slam** | Contact steeper than 70 degrees (§19) | A crater. One small hop at a speed of 2,000 or more, as today | He is down |
+| **Tumble** | Any contact or skid at a speed of 350 to 900; any contact on rubble; or a 30 to 70 degree contact with no bounce left and too little speed to skid | He rolls, with double braking, for 1.2 s at most | He stops (down), recovers early (below), or the ground curves away (airborne) |
+| **Skip** | On water, as today: a speed over 500 and shallower than about 31 degrees | Up to 6 skips, each keeping 85% of the speed along the water | He sinks with a splash |
+| **Down** | He stops | Recovery of 0.35 s after a skid or a tumble, or 0.75 s after a slam | He is free |
+
+- A 30 to 70 degree contact over 900 with no bounce left is a skid: he digs in.
+- **Bounces allowed,** by the launcher's tier: 1 at tier 1, 2 at tier 2, and 3 at tiers 3 and 4.
+- **Bounds on one journey** (hard tests): at most 8 contacts of all kinds, and at most 4 s from the first contact to the stop. Past either, he tumbles to a stop.
+- Everything is decided by speed, angle and surface. There is no random draw, so the journey is deterministic and the planner can predict it.
+
+### Wear
+
+- **A journey never costs more than one impact.** Today a slide pays 30% of its impact wear at touch-down and 70% over the speed it loses. The same budget now covers the whole journey: each bounce and the tumble pay for the speed they take off, and a flight off a lip costs nothing.
+- So a tumble does wear, but only its share of that budget. The wear is impact wear to the legs and core, as today.
+- The collateral rules are unchanged. Each contact does its area damage, the slide budgets by tier apply (§5c), and the planner declines a launch whose predicted journey, lips and bounces included, would go over budget.
+
+### Recovering early (the tech)
+
+- **A dodge tap** recovers him: he flips to his feet with no recovery time, and the rest of the journey's wear isn't paid.
+- **When it works:** within 8 ticks of a bounce's contact, or at any time in a tumble.
+- **When it doesn't:** in a skid over 900 (he must shed speed first), in a slam, on water, and on a break or finisher launch, which are set pieces.
+- **Cost:** 15 ki, and it shares the dodge-cancel's 3 s cooldown (`control-rules.md` §2).
+- The AI recovers on 20%, 50% or 80% of chances (easy, medium, hard).
+
+### The landing bands (this replaces §19's table)
+
+A launch is still classed by its first contact. A bounce is a new class. A flight off a lip happens after a skid has started, so that launch stays a **slide**; lips are counted as their own event.
+
+| Class | Band (share of all launches) |
+| :--- | :--- |
+| Slide | 40 to 55%, and still the largest class |
+| Bounce | 8 to 15% |
+| Slam | 8 to 15% |
+| Caught in the air | 10 to 25% |
+| Water | 5 to 15% |
+| Brunt | 4 to 10% |
+
+| Event | Band |
+| :--- | :--- |
+| Bounces per bounced launch | A mean of 1.3 to 2.2 |
+| Flights off a lip | 0.3 to 1.5 a minute once craters have rims. They rise through the match, because craters accumulate |
+| Journeys ending in a tumble | 30 to 60% |
+| Early recoveries | 20 to 40% of the chances, at medium AI |
+
+### What keeps it from looking silly at low power
+
+- **Physics does most of it.** Tier-1 launches are slower, so they rarely reach bounce speed or clear a lip.
+- **The bounce cap** is 1 at tier 1.
+- **Bounces lose height fast** (45%, 35%, 25%), so he never trampolines.
+- **Every contact has weight:** a mark on the ground, dust or debris, a hit-stop, and shake scaled by speed.
+- **A tumble is short** (1.2 s at most) and ends in a hard stop, not a long floppy roll. Animation keeps the body braced, not limp.
+- **Nothing happens under a speed of 350:** he lands.
