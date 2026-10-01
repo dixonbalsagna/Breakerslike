@@ -9,7 +9,7 @@ extends RefCounted
 ## once, even before the event that reports them (World reports a building's fled people in lots of half a person). Then it animates the runners on sim time (so pause and hit-stop hold them): away from the
 ## event's x at a run, faster the closer they were, and drifting back behind their own row's face; a share look back
 ## once; each fades out at the end of its run (RenderLook.RUN_*). People sheltering elsewhere (the event's `dest`) run
-## to that building instead, into its street, and it shows them only as they arrive (`incoming`). Runners reuse their own
+## to that building instead, into its street, and it shows them only as they arrive (`incoming`, `arrived`). Runners reuse their own
 ## crowd instances; the crowd shader draws the run cycle and the fade from the instance colour (g: 1 - run, a: fade).
 ## Render-side only: reads the sim and the events, never writes either.
 
@@ -28,8 +28,10 @@ class Run:
 var _evac := PackedFloat64Array()   # per building: people evacuated so far (the events' n)
 var _cx := PackedFloat64Array()     # per building: the x of the latest blow they fled
 var _ran := PackedInt32Array()      # per building: figures sent running so far
+var _lost := PackedInt32Array()     # per building: figures that have left home so far (ran or gone)
 var _dest := PackedInt32Array()     # per building: where its latest event's people shelter, or -1
 var incoming := PackedInt32Array()  # per building: runners on their way to shelter in it (not shown there yet)
+var arrived := PackedInt32Array()   # per building: runners who reached it and are not shown there yet (the planet view takes them)
 var _runs: Dictionary = {}          # crowd instance -> Run
 var _hit_x: Array = []              # this frame's damage (debris) x, cleared after each step
 var _blow_x: float = 0.0            # the latest blow's x (crater, scorch or damage), for flights not yet reported
@@ -45,10 +47,14 @@ func reset(nb: int) -> void:
 	_cx.fill(0.0)
 	_ran.resize(nb)
 	_ran.fill(0)
+	_lost.resize(nb)
+	_lost.fill(0)
 	_dest.resize(nb)
 	_dest.fill(-1)
 	incoming.resize(nb)
 	incoming.fill(0)
+	arrived.resize(nb)
+	arrived.fill(0)
 	_runs.clear()
 	_hit_x.clear()
 	_blow_x = 0.0
@@ -79,9 +85,11 @@ func consume(events: Array) -> void:
 
 
 ## Building bi (at bx)'s figures in slots (crowd instances) just vanished: its people fell to what its figures now
-## show. gone: the people it has lost in all (dead or fled); vanished: its figures gone in all, these included. Starts
-## the runners and returns the rest (the casualties), for the caller to hide.
-func vanish(S: SimState, bi: int, bx: float, slots: Array, xs: PackedFloat64Array, zs: PackedFloat64Array, gone: float, vanished: int, ground: GroundField) -> Array:
+## show. Starts the runners and returns the rest (the casualties), for the caller to hide. A building that sheltered
+## others holds more people than it has figures, so its events can report more fled than figures ever left it:
+## the runners are counted against the figures it has lost in all (`_lost`), not against its people.
+func vanish(S: SimState, bi: int, bx: float, slots: Array, xs: PackedFloat64Array, zs: PackedFloat64Array, ground: GroundField) -> Array:
+	_lost[bi] += slots.size()
 	var hit: bool = false
 	for hx in _hit_x:
 		if absf(SimWrap.sdx(hx, bx)) < 1.0:
@@ -89,9 +97,9 @@ func vanish(S: SimState, bi: int, bx: float, slots: Array, xs: PackedFloat64Arra
 			break
 	var want: int = slots.size()
 	if hit:
-		if gone <= 0.0 or _evac[bi] <= 0.0:
+		if _evac[bi] <= 0.0:
 			return slots
-		want = clampi(mini(vanished, int(roundf(_evac[bi]))) - _ran[bi], 0, slots.size())
+		want = clampi(mini(_lost[bi], int(roundf(_evac[bi]))) - _ran[bi], 0, slots.size())
 		if want == 0:
 			return slots
 	var cx: float = _cx[bi] if _evac[bi] > 0.0 else _blow_x
@@ -152,19 +160,37 @@ static func street(b, out: float) -> float:
 	return b.z + b.d * 0.5 + out
 
 
-## Per frame: move every runner, and hide the ones whose run is over.
+## Per frame, before the planet view places its figures: hide the runners whose run is over. One that reached its
+## shelter is counted there (`arrived`), so the building shows a figure for it in the same frame.
+func arrive(S: SimState, mm: MultiMesh) -> void:
+	if _runs.is_empty():
+		return
+	var done: Array = []
+	for ci in _runs:
+		var r: Run = _runs[ci]
+		if S.T - r.t0 >= r.dur:
+			done.append(ci)
+	for ci in done:
+		var r: Run = _runs[ci]
+		if r.dest >= 0:
+			incoming[r.dest] = maxi(0, incoming[r.dest] - 1)
+			arrived[r.dest] += 1
+		mm.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ZERO), Vector3(r.x0, 0.0, 0.0)))
+		mm.set_instance_color(ci, Color.WHITE)
+		_runs.erase(ci)
+
+
+## Per frame, after the planet view placed its figures (which starts this frame's runners): move every runner.
 func step(S: SimState, mm: MultiMesh) -> void:
 	_hit_x.clear()
 	if _runs.is_empty():
 		return
-	var done: Array = []
 	var yaw: float = deg_to_rad(RenderLook.RUN_YAW)
 	var scale := Basis.from_scale(Vector3.ONE * RenderLook.CROWD_SCALE)
 	for ci in _runs:
 		var r: Run = _runs[ci]
 		var t: float = S.T - r.t0
 		if t >= r.dur:
-			done.append(ci)
 			continue
 		var lk: float = clampf(t - r.look, 0.0, RenderLook.RUN_LOOK_S) if r.look >= 0.0 else 0.0
 		var looking: bool = lk > 0.0 and lk < RenderLook.RUN_LOOK_S
@@ -177,13 +203,6 @@ func step(S: SimState, mm: MultiMesh) -> void:
 		var turn: float = yaw if (r.dir > 0.0) != looking else PI - yaw
 		mm.set_instance_transform(ci, Transform3D(Basis(Vector3.UP, turn) * scale, Vector3(x, y, z)))
 		mm.set_instance_color(ci, Color(1.0, 0.8 if looking else 0.0, 1.0, clampf((r.dur - t) / RenderLook.RUN_FADE, 0.0, 1.0)))
-	for ci in done:
-		var r: Run = _runs[ci]
-		if r.dest >= 0:
-			incoming[r.dest] = maxi(0, incoming[r.dest] - 1)
-		mm.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ZERO), Vector3(r.x0, 0.0, 0.0)))
-		mm.set_instance_color(ci, Color.WHITE)
-		_runs.erase(ci)
 
 
 ## A fixed hash in [0, 1) per figure and channel: the same look for a figure at any frame rate.

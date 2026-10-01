@@ -49,7 +49,8 @@ var _foot: Array = []                # per building: the lowest and highest grou
 var _falls: Dictionary = {}          # building -> [sim time its sink starts, standing height]: implodes in progress
 var _fold: Array = []                # [cx, sim time]: a district of implodes folded into one event this tick
 var _copies: Array = []
-var _bld_seen: Array = []          # per building: [curH, alive, popAlive, fmask]
+var _bld_seen: Array = []          # per building: [curH, alive, fmask]
+var _grow := PackedInt32Array()    # this refresh's buildings with more people than figures at home
 var _tree_seen: Array = []         # per tree: alive
 var _tree_z := PackedFloat64Array()
 var _crowd_first := PackedInt32Array()
@@ -143,6 +144,7 @@ func update(S: SimState, cam_x: float, heat: PackedFloat32Array = PackedFloat32A
 	if source != null:
 		return
 	ground.update(S, heat, heat_changed)
+	flight.arrive(S, _crowd)
 	refresh(S, false)
 	flight.step(S, _crowd)
 	_startle(S)
@@ -226,12 +228,18 @@ func near_chunks() -> int:
 func refresh(S: SimState, force: bool) -> void:
 	var dirty: PackedByteArray = ground.dirty
 	var dchg: bool = force or ground.any_dirty
+	_grow.clear()
 	for bi in range(S.buildings.size()):
 		var b = S.buildings[bi]
 		var h: float = WorldStructures.curH(b)
 		var seen: Array = _bld_seen[bi]
 		var moved: bool = dchg and (force or _foot_dirty(dirty, b))
-		var pa: float = b.popAlive - float(flight.incoming[bi])
+		# The figures at home: the people it has, as many as it has figures. Fewer go now (they run or are gone, and the
+		# runners may head for a building this loop has passed); more wait for the second pass below.
+		var have: int = clampi(int(b.popAlive), 0, _crowd_first[bi + 1] - _crowd_first[bi])
+		var show: int = have if _shown[bi] < 0 else mini(have, _shown[bi])
+		if have > show:
+			_grow.append(bi)
 		if b.alive != seen[1] and not b.alive and seen[1] == true:
 			# Levelled: an implode sinks from the height it last stood at (a folded one from its distance to the blast).
 			if _falls.has(bi):
@@ -241,9 +249,26 @@ func refresh(S: SimState, force: bool) -> void:
 				_falls[bi] = [float(_fold[1]) + delay, seen[0]]
 		if moved or force:
 			_foot[bi] = _footing(S, b)
-		if moved or h != seen[0] or b.alive != seen[1] or pa != seen[2] or b.fmask != seen[3] or _falls.has(bi):
-			_set_building(S, bi, b, h, pa, moved or pa != seen[2])
-			_bld_seen[bi] = [h if b.alive else seen[0], b.alive, pa, b.fmask]
+		if moved or h != seen[0] or b.alive != seen[1] or b.fmask != seen[2] or _falls.has(bi):
+			_set_building(S, bi, b, h)
+			_bld_seen[bi] = [h if b.alive else seen[0], b.alive, b.fmask]
+		if moved or show != _shown[bi]:
+			_set_crowd(S, bi, b, show)
+	# People sheltering in a building (World's RELOCATE) are shown there as their runners arrive: one figure for each
+	# arrival (CrowdFlight.arrived), and all it is owed once no one is on the way. A figure that is still running (it
+	# left this building a moment ago) is not put back until its run is over.
+	for bi in _grow:
+		var b = S.buildings[bi]
+		var have: int = clampi(int(b.popAlive), 0, _crowd_first[bi + 1] - _crowd_first[bi])
+		var want: int = have - _shown[bi]
+		if flight.incoming[bi] > 0:
+			want = mini(want, flight.arrived[bi])
+		var add: int = 0
+		while add < want and not flight.running(_crowd_first[bi] + _shown[bi] + add):
+			add += 1
+		if add > 0:
+			flight.arrived[bi] = maxi(0, flight.arrived[bi] - add)
+			_set_crowd(S, bi, b, _shown[bi] + add)
 	for ti in range(S.trees.size()):
 		var t = S.trees[ti]
 		if (dchg and (force or dirty[_col(t.x)] == 1)) or t.alive != _tree_seen[ti]:
@@ -277,7 +302,6 @@ static func _foot_dirty(dirty: PackedByteArray, b) -> bool:
 	return false
 
 
-## pa: the people the building's crowd shows (popAlive, less the mock's own evacuations).
 ## A building's depth: [centre z, footprint depth] from the sim (B1), or the old render-side place if it has none.
 static func _depth(b) -> Vector2:
 	if b.d > 0.0:
@@ -299,7 +323,7 @@ func _footing(S: SimState, b) -> Vector2:
 	return Vector2(lo, hi)
 
 
-func _set_building(S: SimState, bi: int, b, h: float, pa: float, crowd: bool) -> void:
+func _set_building(S: SimState, bi: int, b, h: float) -> void:
 	var tower: bool = b.kind == "tower"
 	var zd: Vector2 = _depth(b)
 	var zc: float = zd.x
@@ -339,24 +363,26 @@ func _set_building(S: SimState, bi: int, b, h: float, pa: float, crowd: bool) ->
 		roof.set_instance_transform(k, Transform3D(Basis.from_scale(Vector3(b.w * 1.2, RenderLook.ROOF_H, d * 1.1)), Vector3(b.x, base + h - sink + RenderLook.ROOF_H * 0.5, zc)))
 	else:
 		roof.set_instance_transform(k, _hidden(b.x))
-	if crowd:
-		var first: int = _crowd_first[bi]
-		var n: int = _crowd_first[bi + 1] - first
-		var alive: int = clampi(int(pa), 0, n)
-		# Figures that just vanished: the fled share runs (the flight), the rest were casualties and go now.
-		var gone_now := {}
-		if _shown[bi] > alive:
-			var slots: Array = range(first + alive, first + _shown[bi])
-			for ci in flight.vanish(S, bi, b.x, slots, _crowd_x, _crowd_z, b.pop - pa, n - alive, ground):
-				gone_now[ci] = true
-		_shown[bi] = alive
-		for j in range(n):
-			var ci: int = first + j
-			var x: float = _crowd_x[ci]
-			if j < alive:
-				_crowd.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ONE * RenderLook.CROWD_SCALE), Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
-			elif gone_now.has(ci) or not flight.running(ci):
-				_crowd.set_instance_transform(ci, _hidden(x))
+
+
+## Building bi's crowd: `alive` of its figures stand at home, on the ground as drawn.
+func _set_crowd(S: SimState, bi: int, b, alive: int) -> void:
+	var first: int = _crowd_first[bi]
+	var n: int = _crowd_first[bi + 1] - first
+	# Figures that just vanished: the fled share runs (the flight), the rest were casualties and go now.
+	var gone_now := {}
+	if _shown[bi] > alive:
+		var slots: Array = range(first + alive, first + _shown[bi])
+		for ci in flight.vanish(S, bi, b.x, slots, _crowd_x, _crowd_z, ground):
+			gone_now[ci] = true
+	_shown[bi] = alive
+	for j in range(n):
+		var ci: int = first + j
+		var x: float = _crowd_x[ci]
+		if j < alive:
+			_crowd.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ONE * RenderLook.CROWD_SCALE), Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
+		elif gone_now.has(ci) or not flight.running(ci):
+			_crowd.set_instance_transform(ci, _hidden(x))
 
 
 ## A skyscraper's cleared floors for building.gdshader (a texel of cut_tex): r and g the floors 0 to 47 (24 bits each),
@@ -762,7 +788,7 @@ func _make_props(S: SimState) -> void:
 	_falls.clear()
 	_fold = []
 	for bi in range(nb):
-		_bld_seen.append([-1.0, false, -1.0, -1])
+		_bld_seen.append([-1.0, false, -1])
 		_roof.set_instance_color(bi, RenderLook.col(RenderLook.ROOF))
 		if _row0[bi] >= 0:
 			_bld.set_instance_transform(bi, _hidden(S.buildings[bi].x))
