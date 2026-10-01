@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "_note": "VFX's water effects (docs/vfx/water-plan.md): the numbers behind the skip spray, the plunge column, a beam striking the sea and the wake. Authored by the VFX Director session (Claude, claude-sonnet-5-5), 2026-10-01, from Orb's request for more dramatic splashes. Presentation only: read by render/vfx/water.gd, never by the sim. A missing key falls back to the same default in water.gd. Speeds are world units a second, sizes world units, lives seconds. Counts are at quality high and are multiplied by 0.7 at medium, 0.35 at low and halved again in reduced motion.",
+  "scale": { "ref_speed": 4000, "min": 0.45, "max": 3.0, "tier_gain": 0.25 },
+  "skim": {
+    "streaks_base": 14, "streaks_per_scale": 10, "elev_min_deg": 15, "elev_max_deg": 55,
+    "len_min": 40, "len_max": 110, "speed_frac_min": 0.12, "speed_frac_max": 0.38, "speed_cap": 2600,
+    "life_min": 0.6, "life_max": 1.2, "tail_puffs_base": 4, "tail_puffs_per_scale": 3, "skip_decay": 0.85
+  },
+  "plunge": {
+    "height_per_speed": 0.25, "height_min": 300, "height_max": 3500, "streaks_base": 22, "streaks_per_scale": 18,
+    "cone_deg": 26, "column_puffs_base": 6, "column_puffs_per_scale": 5, "rebound_delay": 0.28, "rebound_share": 0.45
+  },
+  "beam": { "throw_chance": 0.3, "throws_per_tick": 4, "streaks_per_throw": 4, "power_gain": 0.35, "puff_every": 2, "forward_deg_min": 20, "forward_deg_max": 60 },
+  "wake": { "min_speed": 2200, "max_height": 160, "streaks_per_tick": 2, "puff_every": 4 },
+  "caps": { "spray_alive": 260, "per_tick": 60 }
+}

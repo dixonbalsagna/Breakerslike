@@ -59,6 +59,7 @@ const TRAIL_CORE := "#ffffff"
 const CRACKS_DEFAULT: bool = false      # off in the game until Orb has seen them (tools switch them on)
 const DESTRUCTION_DEFAULT: bool = false # shrapnel, collapse dust and holes: off in the game until Orb has seen them
 const EMBERS_DEFAULT: bool = false      # scorch embers by variant: off until Rendering suppresses ImpactFx's own
+const WATER_DEFAULT: bool = true        # dramatic water effects (Orb asked for them): on; Rendering's own splash spray stays until it chooses to drop it
 ## Cracks are a pure function of the sim's records (S.craters, S.slides) plus the match seed (render/vfx/crack_gen.gd),
 ## so a seek, a snapshot or a late join draws the same ones. Lengths and widths are in crater radii r or trench half
 ## widths hw; numbers of lines grow with sqrt(energy).

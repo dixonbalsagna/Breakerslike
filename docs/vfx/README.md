@@ -92,3 +92,9 @@ Bug: a trail bent behind a fighter flying straight. Cause: the ribbon's head was
 ## Trail at depth (B3, 2026-10-01)
 
 A launched fighter now flies into the building rows at the sim's depth (`Fighter.z`, interpolated by `host.fighter_z`). The trail keeps `z` in its history, draws the ribbon head at the fighter's depth (12 units behind it) and each segment at the depth it came from, scales its least on-screen width by the perspective at that depth (the pane camera's distance is passed by the layer), and places marks and the break ring relative to the fighter's depth, so the tip meets the fighter and the ribbon sorts with it. `effects_check.gd` asserts the ribbon's depth run (head at the fighter's z, tail at the earlier depths). Picture (mock burst, the fighter eased into a tower's row): ![trail at depth](img/trail-at-depth.png)
+
+## More dramatic splashes (2026-10-01)
+
+Orb on the skipping: "looks great, and i'd like to see more dramatic splash effects." Skip, plunge, beam strike and a low fast flight's wake now throw cel-drawn spray streaks and foam scaled by the fighter's speed and tier (code `water.gd`, numbers `data/vfx/water.json`, flag `water_enabled`, default on). Full write-up with before and after pictures, budgets and the plan for the coming `left_ground`, `bounce`, `skip` and `land` events: [water-plan.md](water-plan.md). A plunge 10 ticks in, before and after: ![before](img/water-plunge_t10-before.png) ![after](img/water-plunge_t10-after.png)
+
+- Checks: `effects_check.gd` has 16 water cases (scale, a skip and a fifth skip, a splash of 8 not double-handled, plunge and rebound, low quality, beam, the cap, wake, off, data fallback, data against defaults); `hash_check.gd` (seeds 12345, 4, 7, six ways) and `determinism.gd` pass with water on; `worst_case.gd --sea` is the cost scene.

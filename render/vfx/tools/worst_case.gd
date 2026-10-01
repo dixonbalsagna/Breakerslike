@@ -4,7 +4,7 @@ extends SceneTree
 ## crack set from every impact and slide staged around the camera, all on the real planet at a gameplay zoom. It plays the
 ## same scene with VFX on and with VFX off (hub.enabled false) and prints frame CPU time, the GPU render time, draw
 ## calls and the VFX pools' peak. Needs a window (not --headless) for the GPU numbers.
-##   godot --path . --script res://render/vfx/tools/worst_case.gd -- [--frames=360] [--size=1280x720] [--quality=2]
+##   godot --path . --script res://render/vfx/tools/worst_case.gd -- [--frames=360] [--size=1280x720] [--quality=2] [--sea]   (--sea: the water effects instead)
 
 const DT := SimConst.DT
 
@@ -12,6 +12,7 @@ var main: Node
 var frames: int = 360
 var size := Vector2i(1280, 720)
 var quality: int = 2
+var sea: bool = false
 
 
 func _initialize() -> void:
@@ -21,6 +22,8 @@ func _initialize() -> void:
 		elif a.begins_with("--size="):
 			var wh: PackedStringArray = a.substr(7).split("x")
 			size = Vector2i(int(wh[0]), int(wh[1]))
+		elif a == "--sea":
+			sea = true
 		elif a.begins_with("--quality="):
 			quality = int(a.substr(10))
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -38,6 +41,17 @@ func _run() -> void:
 	await process_frame
 	main.started = true
 	RenderingServer.viewport_set_measure_render_time(main.get_viewport().get_viewport_rid(), true)
+	if sea:
+		var son: Dictionary = await _sea(true)
+		var soff: Dictionary = await _sea(false)
+		print("SEA WORST CASE %dx%d, %d frames, quality %d" % [size.x, size.y, frames, quality])
+		for k in ["cpu", "gpu"]:
+			print("  %-4s VFX on  %s" % [k, son[k]])
+			print("  %-4s VFX off %s" % [k, soff[k]])
+		print("  draw calls   on %s | off %s" % [son["draws"], soff["draws"]])
+		print("  vfx: consume mean %.3f ms max %.3f ms; peak bits %d (cap %d), peak spray %d" % [son["consume_ms"], son["consume_max"], son["peak_bits"], VfxLook.DEBRIS_CAP, son["peak_spray"]])
+		quit()
+		return
 	var on: Dictionary = await _scene(true)
 	var off: Dictionary = await _scene(false)
 	print("WORST CASE %dx%d, %d frames, quality %d" % [size.x, size.y, frames, quality])
@@ -153,6 +167,93 @@ func _scene(vfx_on: bool) -> Dictionary:
 		"consume_ms": h.stat_consume_usec / 1000.0 / maxf(1.0, float(h.stat_consume_n)), "consume_max": h.stat_consume_max / 1000.0,
 		"update_ms": lay2.stat_update_usec / 1000.0 / maxf(1.0, float(lay2.stat_update_n)), "update_max": lay2.stat_update_max / 1000.0,
 		"peak_bits": peak_bits, "sets": h.crack_sets.size(), "tris": tris, "peak_holes": peak_holes, "peak_ribbons": peak_ribbons, "peak_marks": peak_marks,
+	}
+
+
+## The sea worst case (docs/vfx/water-plan.md): a fighter raking the ocean at 9000 u/s with a skip every third of a second, a
+## plunge every second, a power-4 beam sweeping the surface and the wake on, so every water effect is firing every tick.
+func _sea(vfx_on: bool) -> Dictionary:
+	main.start_match(1)
+	var S: SimState = main.host.S
+	S.out.fx.clear()
+	var h = main.host.vfx
+	h.auto_quality = false
+	h.enabled = vfx_on
+	h.water_enabled = true
+	h.quality = quality
+	var sx: float = 0.0
+	while sx < SimConst.W:
+		var wet: bool = true
+		for k in range(-6, 14):
+			if WorldWater.surfaceAt(S, SimWrap.wrap(sx + float(k) * 2000.0)) == WorldWater.DRY:
+				wet = false
+				break
+		if wet:
+			break
+		sx += 2000.0
+	var f = S.fighters[0]
+	f.tier = 4.0
+	var bm := SimState.Beam.new()
+	bm.A = f
+	bm.ox = sx
+	bm.oy = 100.0
+	bm.ux = 1.0
+	bm.pw = 4.0
+	S.beams.append(bm)
+	var v: float = 9000.0
+	var cpu := PackedFloat64Array()
+	var gpu := PackedFloat64Array()
+	var draws := PackedFloat64Array()
+	var peak_bits: int = 0
+	var peak_spray: int = 0
+	var rid: RID = main.get_viewport().get_viewport_rid()
+	var vp: Vector2 = main.get_viewport().get_visible_rect().size
+	for t in range(frames):
+		var evs: Array = []
+		var x: float = sx + v * DT * float(t)
+		f.x = SimWrap.wrap(x)
+		f.y = 60.0
+		f.vx = v
+		f.vy = 0.0
+		f.state = "launched"
+		S.fighters[1].x = SimWrap.wrap(x + 6000.0)
+		S.fighters[1].y = 800.0
+		if t % 20 == 0:
+			evs.append(VfxMock.ev("skim", {"x": f.x, "y": 0.0, "spd": v, "n": 1 + (t / 20) % 4}))
+		if t % 60 == 30:
+			evs.append(VfxMock.ev("splash", {"x": f.x, "y": 0.0, "n": 12}))
+		for k in range(14):
+			evs.append(VfxMock.ev("beamSplash", {"x": SimWrap.wrap(x + float(k) * 12.0)}))
+		S.T += DT
+		S.tick += 1
+		var tk := SimState.FxEvent.new()
+		tk.type = "tick"
+		tk.dt = DT
+		tk.frozen = false
+		evs.append(tk)
+		if vfx_on:
+			h.consume(S, evs)
+		main.host.follow(vp.x, vp.y)
+		main.host.cam.x = SimWrap.wrap(f.x + 400.0)
+		main.host.cam.y = 230.0
+		main.host.cam.z = 0.4
+		main.host._prev = main.host._capture()
+		main.host._cur = main.host._prev
+		var t0: int = Time.get_ticks_usec()
+		main.render_view(1.0)
+		var t1: int = Time.get_ticks_usec()
+		await RenderingServer.frame_post_draw
+		if t > 20:
+			cpu.append((t1 - t0) / 1000.0)
+			gpu.append(RenderingServer.viewport_get_measured_render_time_gpu(rid))
+			draws.append(float(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)))
+		peak_bits = maxi(peak_bits, h.debris.bits.size())
+		peak_spray = maxi(peak_spray, h.debris._spray_alive)
+	S.beams.clear()
+	return {
+		"cpu": _dist(cpu), "gpu": _dist(gpu), "draws": "%.0f mean, %.0f max" % [_mean(draws), _max(draws)],
+		"consume_ms": h.stat_consume_usec / 1000.0 / maxf(1.0, float(h.stat_consume_n)), "consume_max": h.stat_consume_max / 1000.0,
+		"peak_bits": peak_bits, "peak_spray": peak_spray,
 	}
 
 

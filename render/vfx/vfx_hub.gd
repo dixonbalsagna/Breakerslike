@@ -45,7 +45,9 @@ var reduced_motion: bool = false:   # the player's option (main sets it every fr
 var cracks_enabled: bool = VfxLook.CRACKS_DEFAULT   # ground cracks: off in the live build until they are approved
 var destruction_enabled: bool = VfxLook.DESTRUCTION_DEFAULT   # shrapnel, collapse dust and holes: off in the live build until approved
 var embers_enabled: bool = VfxLook.EMBERS_DEFAULT   # scorch embers by beam variant: off until Rendering stops drawing its own
+var water_enabled: bool = VfxLook.WATER_DEFAULT      # dramatic water: skip spray, plunge column, beam spray, wake
 var debris := VfxDebris.new()
+var water := VfxWater.new()
 var holes: Array = []               # Hole
 var trails: Array = [VfxTrailState.new(), VfxTrailState.new()]
 var accents: Array = [Color.WHITE, Color.WHITE]
@@ -80,6 +82,9 @@ func reset(S: SimState, p_seed: int) -> void:
 	_rng_trail = SimRng.new(SimRng.deriveSeed(seed, "vfx.trail"))
 	_rng_hole = SimRng.new(SimRng.deriveSeed(seed, "vfx.hole"))
 	debris.reset(seed)
+	water.debris = debris
+	water.reset()
+	debris.water = water
 	VfxPalette.warm()
 	holes.clear()
 	for i in range(trails.size()):
@@ -141,9 +146,10 @@ func _consume(S: SimState, events: Array) -> void:
 			dt = e.dt
 			frozen = e.frozen
 	_sync_cracks(S)
-	if destruction_enabled or cracks_enabled or embers_enabled:
+	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
+		water.begin_tick()
 		var floored: Dictionary = {}          # buildings with a floor_hit this tick: the floor path draws their burst
 		for e in events:
 			if e.type == "floor_hit":
@@ -168,6 +174,17 @@ func _consume(S: SimState, events: Array) -> void:
 				"scorch":
 					if embers_enabled:
 						debris.embers(S, float(e.x), float(e.y), float(e.power), String(e.variant))
+				"splash":
+					if water_enabled and int(e.n) >= 10:
+						water.plunge(S, float(e.x), float(e.y), int(e.n))
+				"skim":
+					if water_enabled:
+						water.skim(S, float(e.x), float(e.y), float(e.spd), int(e.n))
+				"beamSplash":
+					if water_enabled:
+						_on_beam_splash(S, float(e.x))
+		if water_enabled and not frozen:
+			water.wake(S)
 		# Bits fly on sim time: a tenth of a step in hit-stop, like the reference consumer's particles.
 		debris.step(S, dt * 0.1 if frozen else dt)
 	if frozen:
@@ -453,3 +470,17 @@ func _add_vents(S: SimState, cs: CrackSet) -> void:
 			var p: Vector2 = ln.pts[i]
 			debris.vent(cs.born + clampf(p.length() / reach, 0.0, 1.0) * VfxLook.CRACK_GROW_S / 1.15, SimWrap.wrap(cs.x + p.x), p.y, ln.w0)
 			i += 3
+
+
+## A beam sample low over the sea: the beam's power and direction come from the beam nearest to x (S.beams).
+func _on_beam_splash(S: SimState, x: float) -> void:
+	var best = null
+	var bd: float = 1e30
+	for b in S.beams:
+		var d: float = absf(SimWrap.sdx(b.ox, x))
+		if d < bd:
+			bd = d
+			best = b
+	var power: float = best.pw if best != null else 1.0
+	var dir: float = 1.0 if best == null or best.ux >= 0.0 else -1.0
+	water.beam(S, x, power, dir, S.tick)

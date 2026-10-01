@@ -8,7 +8,7 @@ extends RefCounted
 ## height for the bounce). A fixed number of draws per spawned bit, so the streams do not depend on the quality level:
 ## quality only decides how many of the drawn bits are kept.
 
-enum { GLASS, TRI, STEEL, CHUNK, PUFF, RING, EMBER }
+enum { GLASS, TRI, STEEL, CHUNK, PUFF, RING, EMBER, SPRAY }
 
 class Bit:
 	var kind: int = 0
@@ -31,6 +31,7 @@ class Bit:
 	var seed: float = 0.0
 	var bounces: int = 0
 	var glass: bool = false        # an ember that is a glass fleck (a glass trench): keeps its own colour
+	var ky: float = -1e9           # a water streak ends when it falls back below this height (the surface)
 
 ## A spawn waiting for its time (an implode's ripple delay): sim time to fire, and what to do.
 class Job:
@@ -44,6 +45,8 @@ var _biome: String = "plains"   # the dust colours of the place being spawned at
 var _yspread: float = 60.0      # how far above and below the spawn height a shard may start (a floor band, for floors)
 var _ember_tick: int = 0        # embers spawned this tick (budget VfxLook.EMBER_PER_TICK)
 var _ember_alive: int = 0       # embers in the pool (cap VfxLook.EMBER_CAP)
+var _spray_alive: int = 0       # water streaks in the pool (cap data/vfx/water.json caps.spray_alive)
+var water: VfxWater             # the water effects (set by the hub); a plunge's second jet comes back through it
 var _tone: int = 0              # 0 mid, 1 shadow (a back layer), 2 light (a front layer)
 var jobs: Array = []          # Job, waiting
 var spawned: int = 0          # counters for the tests
@@ -58,6 +61,7 @@ var reduced: bool = false
 func reset(seed: int) -> void:
 	bits.clear()
 	jobs.clear()
+	_spray_alive = 0
 	spawned = 0
 	dropped = 0
 	max_live = 0
@@ -72,6 +76,7 @@ func step(S: SimState, dt: float) -> void:
 	_spawned_tick = 0
 	_ember_tick = 0
 	_ember_alive = 0
+	var spray_n: int = 0   # recounted below, after the jobs, so a job's throws see the real count
 	# Jobs are on unfrozen sim time (S.T): a hit-stopped ripple waits with the world.
 	if not jobs.is_empty():
 		var i: int = 0
@@ -85,6 +90,9 @@ func step(S: SimState, dt: float) -> void:
 	for i in range(bits.size() - 1, -1, -1):
 		var b: Bit = bits[i]
 		b.age += dt
+		if b.kind == SPRAY:
+			spray_n += 1
+			b.rot = atan2(b.vy, b.vx)
 		if b.kind == EMBER:
 			_ember_alive += 1
 		if b.age >= b.life:
@@ -102,7 +110,9 @@ func step(S: SimState, dt: float) -> void:
 		if b.grow != 0.0:
 			b.sx += b.grow * dt
 			b.sy += b.grow * dt
-		if b.kind != PUFF and b.kind != RING and b.z > -200.0:
+		if b.kind == SPRAY and b.vy < 0.0 and b.y < b.ky:
+			b.age = b.life
+		elif b.kind != PUFF and b.kind != RING and b.z > -200.0:
 			var g: float = WorldTerrain.groundY(S, b.x)
 			if b.y < g:
 				b.y = g
@@ -115,6 +125,7 @@ func step(S: SimState, dt: float) -> void:
 					b.vy = 0.0
 					b.vx *= 0.85
 					b.spin = 0.0
+	_spray_alive = spray_n
 	max_live = maxi(max_live, bits.size())
 
 
@@ -124,6 +135,9 @@ func _run_job(S: SimState, j: Job) -> void:
 			_skirt(S, j.a)
 		"chips":
 			_chips(S, j.a)
+		"plunge2":
+			if water != null:
+				water.rebound(j.a)
 		"pflr":
 			_pflr(S, j.a)
 		"pring":
@@ -551,3 +565,36 @@ func _pflr(S: SimState, a: Dictionary) -> void:
 
 func _pring(S: SimState, a: Dictionary) -> void:
 	_ring(a.x, a.y, a.z + 8.0, a.w * 0.3, a.w * 1.4, 0.5)
+
+
+# ---------------------------------------------------------------------------------------------------------- water
+
+## A spray streak: a cel droplet stretched along its velocity, falling at the water's gravity, gone when it is back down
+## at kill_y (the surface). Colours are Art's ocean dust.
+func spray(x: float, y: float, vx: float, vy: float, len: float, life: float, kill_y: float) -> void:
+	var b := Bit.new()
+	b.kind = SPRAY
+	b.x = SimWrap.wrap(x)
+	b.y = y
+	b.z = -5.0
+	b.vx = vx
+	b.vy = vy
+	b.sx = len
+	b.sy = maxf(len * 0.2, 7.0)
+	b.life = life
+	b.grav = 1200.0
+	b.ky = kill_y - 4.0
+	b.col = VfxPalette.dust("ocean", "light")
+	b.col2 = VfxPalette.dust("ocean", "mid")
+	b.seed = _rd.next()
+	b.rot = atan2(vy, vx)
+	_spray_alive += 1   # counted at once, so one tick's throws cannot pass the cap before the next step recounts
+	_add(b)
+
+
+## A foam puff: a cel cloud in the ocean's colours that rises, spreads and fades.
+func foam(x: float, y: float, vx: float, vy: float, size: float, life: float) -> void:
+	_biome = "ocean"
+	_tone = 2 if _rd.next() < 0.5 else 0
+	_puff_at(x, y, -8.0, vx, vy, size * 0.6, size * 1.3, life, false)
+	_tone = 0

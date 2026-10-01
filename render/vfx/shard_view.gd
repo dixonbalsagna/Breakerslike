@@ -32,6 +32,7 @@ func _ready() -> void:
 	m.set_shader_parameter("rim_steel", Color(VfxLook.STEEL_HI))
 	m.set_shader_parameter("rim_dust", Color(VfxLook.DUST_B))
 	m.set_shader_parameter("rim_conc", Color(VfxLook.STEEL_HI))
+	m.set_shader_parameter("rim_spray", VfxPalette.dust("ocean", "shadow"))
 	m.set_shader_parameter("ember_dark", VfxPalette.ember("rim"))
 	m.set_shader_parameter("ember_light", VfxPalette.ember("hot"))
 	material_override = m

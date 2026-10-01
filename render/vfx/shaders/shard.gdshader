@@ -10,6 +10,7 @@ uniform vec4 rim_glass : source_color = vec4(0.88, 0.96, 0.98, 1.0);
 uniform vec4 rim_steel : source_color = vec4(0.67, 0.71, 0.76, 1.0);
 uniform vec4 rim_dust : source_color = vec4(0.54, 0.51, 0.46, 1.0);
 uniform vec4 rim_conc : source_color = vec4(0.67, 0.71, 0.76, 1.0);
+uniform vec4 rim_spray : source_color = vec4(0.55, 0.72, 0.78, 1.0);
 uniform vec4 ember_dark : source_color = vec4(0.17, 0.09, 0.06, 1.0);
 uniform vec4 ember_light : source_color = vec4(1.0, 0.82, 0.48, 1.0);
 
@@ -31,7 +32,14 @@ void fragment() {
 	vec3 base = COLOR.rgb;
 	float a = 0.0;
 	float alpha_mul = COLOR.a;
-	if (shape > 5.5) {
+	if (shape > 6.5) {
+		// water spray: a droplet streak, round at the head (+x) and tapering to the tail, a 1 px rim
+		float w = mix(0.2, 0.55, p.x * 0.5 + 0.5);
+		float d = (length(vec2(p.x, p.y / max(w, 0.05))) - 1.0) * w;
+		a = edge(d, aa);
+		float inner = edge(d + max(fwidth(p.x), fwidth(p.y)) * 1.0, aa);
+		base = mix(rim_spray.rgb, base, inner);
+	} else if (shape > 5.5) {
 		// ember: a solid slanted bar with a 1 px rim: dark on the light steps, light on the spent char chip
 		float d = max(abs(p.y) - 1.0, abs(p.x + 0.4 * p.y) - 1.0);
 		a = edge(d, aa);

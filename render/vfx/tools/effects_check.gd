@@ -176,8 +176,124 @@ func _run() -> void:
 		f.x += minf(float(k) * 12.0, 130.0 * VfxLook.BH * SimConst.DT)
 		t.step(S, f, SimConst.DT, rng, VfxLook.Q_HIGH, false)
 	_check(t.rings == 1, "one break ring on reaching full speed (%d)" % t.rings)
+	_water(S)
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
+
+
+## Water effects (docs/vfx/water-plan.md): skip, plunge, beam strike and wake, their scaling, their budgets and the data fallback.
+func _water(S: SimState) -> void:
+	print("water")
+	var sx: float = 0.0
+	while sx < SimConst.W:
+		var wet: bool = true
+		for k in range(-5, 6):
+			if WorldWater.surfaceAt(S, SimWrap.wrap(sx + float(k) * 2000.0)) == WorldWater.DRY:
+				wet = false
+				break
+		if wet:
+			break
+		sx += 2000.0
+	_check(sx < SimConst.W, "open sea found at x=%.0f" % sx)
+	var f0 = S.fighters[0]
+	f0.x = sx
+	f0.y = 100.0
+	f0.vx = 6000.0
+	f0.vy = 0.0
+	f0.tier = 3.0
+	f0.hidden = false
+	var skim_ev := func(n: int, spd: float): return VfxMock.ev("skim", {"x": sx, "y": 0.0, "spd": spd, "n": n})
+	# Scale grows with speed and tier.
+	_check(VfxWater.scale_of(6000.0, 4.0) > VfxWater.scale_of(1500.0, 1.0) * 2.0, "the effect scale grows with speed and tier (%.2f vs %.2f)" % [VfxWater.scale_of(6000.0, 4.0), VfxWater.scale_of(1500.0, 1.0)])
+	# A skip: spray and foam; later skips smaller; a skip at n=8 is not a plunge.
+	var hs := VfxHub.new()
+	hs.reset(S, 4)
+	_tick(S, hs, [skim_ev.call(1, 5000.0)])
+	var first: int = hs.debris.spawned
+	_check(hs.water.skims == 1 and first > 20 and hs.debris._spray_alive > 10, "a skip throws spray and foam (%d bits, %d spray)" % [first, hs.debris._spray_alive])
+	var hs2 := VfxHub.new()
+	hs2.reset(S, 4)
+	_tick(S, hs2, [skim_ev.call(5, 5000.0)])
+	_check(hs2.debris.spawned < first, "the fifth skip is smaller than the first (%d < %d)" % [hs2.debris.spawned, first])
+	var hs3 := VfxHub.new()
+	hs3.reset(S, 4)
+	_tick(S, hs3, [VfxMock.ev("splash", {"x": sx, "y": 0.0, "n": 8}), skim_ev.call(1, 5000.0)])
+	_check(hs3.water.plunges == 0 and hs3.water.skims == 1, "a splash of 8 (a skip's own) is not also a plunge")
+	# A plunge: a splash of 12 or more draws the column, scaled by the fighter's speed; the rebound comes later.
+	var hp := VfxHub.new()
+	hp.reset(S, 4)
+	_tick(S, hp, [VfxMock.ev("splash", {"x": sx, "y": 0.0, "n": 12})])
+	_check(hp.water.plunges == 1 and hp.debris.spawned > first, "a plunge throws more than a skip (%d > %d)" % [hp.debris.spawned, first])
+	_check(hp.debris.jobs.size() >= 1, "the plunge schedules its rebound")
+	var before_rebound: int = hp.debris.spawned
+	for k in range(40):
+		_tick(S, hp, [])
+	_check(hp.debris.spawned > before_rebound, "the rebound jet follows (%d more)" % (hp.debris.spawned - before_rebound))
+	# Quality and reduced motion thin it out.
+	var hl := VfxHub.new()
+	hl.quality = VfxLook.Q_LOW
+	hl.reset(S, 4)
+	hl.quality = VfxLook.Q_LOW
+	_tick(S, hl, [skim_ev.call(1, 5000.0)])
+	_check(hl.debris.spawned < first, "low quality throws less (%d < %d)" % [hl.debris.spawned, first])
+	# A beam raking the sea: spray along it, bounded.
+	var hb := VfxHub.new()
+	hb.reset(S, 4)
+	var bm := SimState.Beam.new()
+	bm.A = f0
+	bm.ox = sx
+	bm.oy = 100.0
+	bm.ux = 1.0
+	bm.pw = 3.0
+	S.beams.append(bm)
+	var worst_alive: int = 0
+	for t in range(60):
+		var evs: Array = []
+		for k in range(12):
+			evs.append(VfxMock.ev("beamSplash", {"x": sx + float(t) * 160.0 + float(k) * 13.0}))
+		_tick(S, hb, evs)
+		worst_alive = maxi(worst_alive, hb.debris._spray_alive)
+	S.beams.clear()
+	_check(hb.water.beam_hits == 720 and hb.debris.spawned > 80, "a beam over the sea throws spray along its length (%d hits, %d bits)" % [hb.water.beam_hits, hb.debris.spawned])
+	_check(worst_alive <= int(VfxWater.p("caps", "spray_alive")) and hb.debris.bits.size() <= VfxLook.DEBRIS_CAP, "the spray stays within its cap (%d) and the pool within %d" % [worst_alive, VfxLook.DEBRIS_CAP])
+	# The wake: a fast low flight over water leaves one; slow, high or hidden does not.
+	var hw := VfxHub.new()
+	hw.reset(S, 4)
+	f0.vx = 5000.0
+	f0.y = 60.0
+	_tick(S, hw, [])
+	_check(hw.water.wakes >= 1 and hw.debris.spawned > 0, "a fast low flight leaves a wake (%d)" % hw.debris.spawned)
+	var hw2 := VfxHub.new()
+	hw2.reset(S, 4)
+	f0.vx = 800.0
+	_tick(S, hw2, [])
+	f0.vx = 5000.0
+	f0.y = 900.0
+	_tick(S, hw2, [])
+	f0.y = 60.0
+	f0.hidden = true
+	_tick(S, hw2, [])
+	f0.hidden = false
+	_check(hw2.water.wakes == 0, "no wake when slow, high or hidden")
+	# Off: with the flag down nothing is thrown.
+	var ho := VfxHub.new()
+	ho.water_enabled = false
+	ho.reset(S, 4)
+	_tick(S, ho, [skim_ev.call(1, 5000.0), VfxMock.ev("splash", {"x": sx, "y": 0.0, "n": 12})])
+	_check(ho.debris.spawned == 0, "water_enabled off throws nothing")
+	# The data file is optional: with it gone every number falls back to the same default.
+	var saved: Dictionary = VfxWater._data
+	VfxWater._data = {}
+	var ok_fallback: bool = VfxWater.p("scale", "ref_speed") == 4000.0 and VfxWater.p("caps", "spray_alive") == 260.0
+	VfxWater._data = saved
+	_check(ok_fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for g in VfxWater.DEFAULTS.keys():
+		for k in VfxWater.DEFAULTS[g].keys():
+			if not saved.has(g) or not saved[g].has(k) or float(saved[g][k]) != float(VfxWater.DEFAULTS[g][k]):
+				same = false
+				print("    differs: %s.%s" % [g, k])
+	_check(same, "data/vfx/water.json and the built-in defaults agree")
 
 
 func _tick(S: SimState, h: VfxHub, events: Array) -> void:
