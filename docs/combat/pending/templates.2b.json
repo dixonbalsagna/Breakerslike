@@ -1,7 +1,7 @@
 {
   "schema": "combat.templates/1",
   "_about": "Exchange templates as data (Combat). Two timing profiles per branch. 'parity' reproduces sim/director/melee.gd, beam.gd and exchange.gd chain() at commit 69c4a2f exactly: same beats, same scheduling order, same RNG draws in the same order. 'spaced' keeps every outcome, damage, force, tag and draw of parity but re-times the beats to balance-targets.md section 10 (0.25 to 0.40 s between contacts, 6 to 10 beats) and adds render-only 'cue' beats. Contract, value forms and verification: docs/combat/data-fields.md section 10 and docs/combat/s3b-loader-note.md.",
-  "profile": "spaced",
+  "profile": "dynamic",
   "profiles": {
     "parity": {
       "timeUnit": "s",
@@ -56,7 +56,8 @@
         "tell": 12,
         "foot": 9,
         "pursue": 21,
-        "_note": "ticks. step 0.233 s between contacts (Orb's feel over section 10's 0.25 to 0.40; the prototype ran 0.16 to 0.20). windup and heavyWindup are Controls' rulings (15 and 20). foot 0.15 s is a footwork move (backstep, pivot, circle). pursue 0.35 s is the attacker (or the winning defender) chasing a launched body through the chain window. No beat is a still hold: every cue shares its tick with a motion or a contact."
+        "enderWindup": 18,
+        "_note": "ticks. step 0.233 s between contacts (Orb's feel over section 10's 0.25 to 0.40; the prototype ran 0.16 to 0.20). windup and heavyWindup are Controls' rulings (15 and 20). foot 0.15 s is a footwork move (backstep, pivot, circle). pursue 0.35 s is the attacker (or the winning defender) chasing a launched body through the chain window. No beat is a still hold: every cue shares its tick with a motion or a contact. enderWindup 0.3 s is the wind-up of a string's last blow (Game Design: 18 ticks, with a perfect-block window)."
       },
       "approach": {
         "divisor": 2600,
@@ -64,7 +65,9 @@
         "max": 0.65,
         "pursuit": { "beyond": 2500, "base": 0.8, "per": 3000, "max": 2.0 },
         "rounding": "round half up to whole ticks",
-        "_note": "min 0.25 s (15 ticks) so the light wind-up always falls inside the approach flight: the attacker is visibly closing while the parry window is open."
+        "_note": "min 0.25 s (15 ticks) so the light wind-up always falls inside the approach flight: the attacker is visibly closing while the parry window is open.",
+        "minHeavy": 0.3334,
+        "_minHeavy": "seconds; 20 ticks. A heavy exchange approaches in at least this, so the heavy opener's 20-tick wind-up fits inside the flight (min stays for lights)."
       },
       "aiParryPressDelay": [0.05, 0.54],
       "_aiNote": "as spaced: keeps the AI's parry success per attempt near 41% with the 15-tick window. Encounter owns it.",
@@ -74,7 +77,8 @@
         "cleanTicks": { "light": 6, "heavy": 8 },
         "reward": { "damage": 18, "ki": 8, "stopTicks": 9, "pushback": 520, "cue": "parry" },
         "cleanReward": { "damage": 18, "ki": 12, "stopTicks": 12, "pushback": 520, "cue": "clean_parry" },
-        "_note": "Widths, buffer and hit-stop ticks are Controls' (docs/controls/rulings.md sections 3 and 5). Combat accepts the clean-parry reward: +4 ki (12 in all), a 12-tick freeze and a distinct cue, with no extra damage, so the parry stays a tempo and resource reward rather than a damage source. Parity keeps the code's values (18 damage, 8 ki, stop 0.12 s, pushback 520)."
+        "_note": "Widths, buffer and hit-stop ticks are Controls' (docs/controls/rulings.md sections 3 and 5). Combat accepts the clean-parry reward: +4 ki (12 in all), a 12-tick freeze and a distinct cue, with no extra damage, so the parry stays a tempo and resource reward rather than a damage source. Parity keeps the code's values (18 damage, 8 ki, stop 0.12 s, pushback 520).",
+        "_retire": "Leaves with Encounter's step 3 (the perfect block replaces the parry and Game Design withdrew the clean parry). Kept in 2b so behaviour does not change early."
       },
       "hitstopFloors": {
         "light": 0.07,
@@ -82,6 +86,25 @@
         "finisher": 0.3,
         "adopted": false,
         "_note": "section 10 floors, a proposal for Controls (hit-stop table owner). The loader applies max(stop, floor) only once Controls adopts them"
+      },
+      "windups": {
+        "opener": { "light": 15, "heavy": 20 },
+        "heavy": 20,
+        "ender": 18,
+        "blast": { "light": 15, "heavy": 20 },
+        "mid": 6,
+        "_note": "ticks of visible wind-up by strike class (moveset-system.md section 9.7; control-rules.md section 1). opener, heavy, ender and blast carry a perfect-block window in their last perfectBlock.windowTicks; mid and none have none."
+      },
+      "perfectBlock": {
+        "windowTicks": 10,
+        "lockoutTicks": 20,
+        "staggerTicks": 24,
+        "riposteTicks": 30,
+        "_note": "Game Design's numbers (control-rules.md section 1). Read from Encounter's step 3; until then the 'parry' block and the wind beats run as today."
+      },
+      "strikeClass": {
+        "_rule2b": "In the dynamic profile a strike's o.class replaces o.noParry. Until step 3 wires per-strike windows, a strike can be parried only when its class is opener, heavy or ender AND it is the attacker's first strike after a wind beat. That reproduces today's dynamic behaviour exactly: the parryable strikes are the openers of TRADE BLOWS, PRESSURE and GUARD BREAK and HEAVY CLASH - WON's deciding blow.",
+        "classes": ["opener", "heavy", "ender", "blast", "mid", "none"]
       }
     }
   },
@@ -89,6 +112,35 @@
     "rt": "approach(dist) in the active profile: 'rt' in parity (seconds), 'c' in spaced (ticks)",
     "base": { "light": 26, "heavy": 66 },
     "dist": "abs(sdx(A.x, D.x)) at plan time"
+  },
+  "interrupts": {
+    "_about": "Branch takeovers that arrive inside an exchange (docs/combat/control-scheme-data.md section 4; Encounter's control-scheme-plan.md). The director drops the branch's pending beats and schedules the interrupt's beats from that tick. A branch lists the ones it allows in 'interrupts'; dodge_cancel and burst apply to every branch by control-rules.md section 2. Same-tick precedence: perfect_block, reversal, dodge_cancel, burst, the defender before the attacker. Read from Encounter's step 3; step 2b only carries the data.",
+    "perfect_block": {
+      "on": ["opener", "heavy", "ender", "blast"],
+      "beats": [
+        { "tick": 0, "op": "cue", "args": {"cue": "perfect_block", "who": "D"} },
+        { "tick": 0, "op": "stagger", "args": {"w": "A", "ticks": {"ref": "perfectBlock.staggerTicks"}} }
+      ],
+      "opens": { "template": "riposte", "withinTicks": {"ref": "perfectBlock.riposteTicks"} },
+      "_note": "the attacker's string ends and it staggers; the defender keeps its momentum. A perfect block of a blast deflects it; of a signature, see beam.outcomeByProfile"
+    },
+    "reversal": {
+      "after": "normal_block",
+      "beats": [
+        { "tick": 0, "op": "cue", "args": {"cue": "reversal", "who": "D"} },
+        { "tick": 8, "op": "nop" }
+      ],
+      "then": "the defender's own exchange starts (a throw or a sweep), with the roles swapped",
+      "_note": "20 ki, or 10 after 2 s of continuous guard; 6 s cooldown (Game Design)"
+    },
+    "dodge_cancel": {
+      "beats": [],
+      "_note": "Encounter's step 3: 12 ticks of invulnerability and a dash in the held direction; the exchange ends with no winner. 15 ki, 3 s cooldown"
+    },
+    "burst": {
+      "beats": [],
+      "_note": "Encounter's step 3: the defender's answer under pressure; 30 ki and a cooldown. A guarding rival absorbs it and the burster staggers 30 ticks"
+    }
   },
   "templates": [
     {
@@ -118,7 +170,7 @@
           "dynamic": [
             { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
             { "tick": {"at": "c", "sub": ["tell"]}, "op": "cue", "args": {"cue": "tell", "who": "D"} },
-            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "times": 1.4}, "o": {"noParry": true, "ignoreStance": true, "big": true}} },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "times": 1.4}, "o": {"class": "none", "ignoreStance": true, "big": true}} },
             { "tick": {"at": "c", "add": ["follow"]}, "op": "launch", "args": {"force": {"light": 900, "heavy": 1500}, "rev": false} },
             { "tick": {"at": "c", "add": ["follow", "follow"]}, "op": "rush", "args": {"off": 180, "dur": {"ticks": "pursue"}} },
             { "tick": {"at": "c", "add": ["follow", "follow"]}, "op": "window" }
@@ -197,12 +249,13 @@
           "dynamic": [
             { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
             { "tick": {"at": "c", "sub": ["tell"]}, "op": "cue", "args": {"cue": "glance_back", "who": "D"} },
-            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "times": 1.2}, "o": {"noParry": true}} },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "times": 1.2}, "o": {"class": "opener"}} },
             { "tick": {"at": "c", "add": ["follow"]}, "op": "launch", "args": {"force": {"light": 800, "heavy": 1500}, "rev": false} },
             { "tick": {"at": "c", "add": ["follow", "follow"]}, "op": "rush", "args": {"off": 180, "dur": {"ticks": "pursue"}} },
             { "tick": {"at": "c", "add": ["follow", "follow"]}, "op": "window" }
           ],
-          "dynamicTiming": "changes"
+          "dynamicTiming": "changes",
+          "interrupts": ["perfect_block"]
         }
       ]
     },
@@ -259,12 +312,13 @@
             { "tick": {"at": "c"}, "op": "dodge" },
             { "tick": {"at": "c", "add": ["follow"]}, "op": "rush", "args": {"off": 58, "dur": {"ticks": "foot"}} },
             { "tick": {"at": "c", "add": ["follow"]}, "op": "cue", "args": {"cue": "turn_read", "who": "A"} },
-            { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base"}, "o": {"noParry": true}} },
-            { "tick": {"at": "c", "step": 1, "add": ["follow"]}, "op": "launch", "when": "heavy", "args": {"force": 1400, "rev": false} },
-            { "tick": {"at": "c", "step": 1, "add": ["follow", "follow"]}, "op": "rush", "args": {"off": 150, "dur": {"ticks": "foot"}} },
-            { "tick": {"at": "c", "step": 1, "add": ["follow", "follow"]}, "op": "window" }
+            { "tick": {"at": "c", "add": ["heavyWindup"]}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base"}, "o": {"class": "opener"}} },
+            { "tick": {"at": "c", "add": ["heavyWindup", "follow"]}, "op": "launch", "when": "heavy", "args": {"force": 1400, "rev": false} },
+            { "tick": {"at": "c", "add": ["heavyWindup", "follow", "follow"]}, "op": "rush", "args": {"off": 150, "dur": {"ticks": "foot"}} },
+            { "tick": {"at": "c", "add": ["heavyWindup", "follow", "follow"]}, "op": "window" }
           ],
-          "dynamicTiming": "changes"
+          "dynamicTiming": "changes",
+          "interrupts": ["perfect_block"]
         },
         {
           "id": "counter",
@@ -296,14 +350,49 @@
             { "tick": {"at": "c", "sub": ["tell"]}, "op": "cue", "args": {"cue": "tell", "who": "D"} },
             { "tick": {"at": "c"}, "op": "dodge" },
             { "tick": {"at": "c"}, "op": "cue", "args": {"cue": "overextend", "who": "A"} },
-            { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": {"ref": "base", "times": 0.9}, "o": {"noParry": true}} },
-            { "tick": {"at": "c", "step": 1, "add": ["follow"]}, "op": "launch", "args": {"force": 900, "rev": true} },
-            { "tick": {"at": "c", "step": 1, "add": ["follow", "follow"]}, "op": "finRush", "args": {"w": "D", "off": 180, "dur": {"ticks": "pursue"}} },
-            { "tick": {"at": "c", "step": 1, "add": ["follow", "follow", "pursue"]}, "op": "nop" }
+            { "tick": {"at": "c", "add": ["windup"]}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": {"ref": "base", "times": 0.9}, "o": {"class": "opener"}} },
+            { "tick": {"at": "c", "add": ["windup", "follow"]}, "op": "launch", "args": {"force": 900, "rev": true} },
+            { "tick": {"at": "c", "add": ["windup", "follow", "follow"]}, "op": "finRush", "args": {"w": "D", "off": 180, "dur": {"ticks": "pursue"}} },
+            { "tick": {"at": "c", "add": ["windup", "follow", "follow", "pursue"]}, "op": "nop" }
           ],
           "dynamicTiming": "changes"
+        },
+        {
+          "id": "clean",
+          "only": ["dynamic"],
+          "tag": "DODGE — CLEAN",
+          "favours": "neutral",
+          "_note": "stance-matrix.md section 7.2: not read, and the defender asked for no counter. The dodge succeeds and nobody is hit.",
+          "dynamic": [
+            { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
+            { "tick": {"at": "c", "sub": ["tell"]}, "op": "cue", "args": {"cue": "tell", "who": "D"} },
+            { "tick": {"at": "c"}, "op": "dodge" },
+            { "tick": {"at": "c", "add": ["follow"]}, "op": "rush", "args": {"off": 58, "dur": {"ticks": "foot"}} },
+            { "tick": {"at": "c", "add": ["follow"]}, "op": "cue", "args": {"cue": "whiff_recover", "who": "A"} },
+            { "tick": {"at": "c", "add": ["follow", "foot"]}, "op": "nop" }
+          ]
         }
-      ]
+      ],
+      "selectorByProfile": {
+        "dynamic": {
+          "kind": "threshold",
+          "draw": "next",
+          "ifBelow": "read",
+          "else": { "if": {"var": "defQueued"}, "then": "counter", "else": "clean" },
+          "override": { "if": {"var": "A.ambush"}, "p": 1.0 },
+          "p": {
+            "start": 0.42,
+            "terms": [
+              { "coef": 0.08, "diff": ["A.tier", "D.tier"] },
+              { "if": {"var": "A.stance", "op": "==", "value": 0}, "then": 0.08, "else": 0.0 },
+              { "if": {"var": "A.ki", "op": "<", "value": 12}, "then": -0.12, "else": 0.0 },
+              { "if": {"var": "heavy"}, "then": -0.05, "else": 0.0 }
+            ],
+            "clamp": [0.15, 0.8]
+          },
+          "_formula": "the read roll is unchanged (one S.rng.next(), always drawn). Not read: DODGE & COUNTER only when the defender has its own attack queued (defQueued, from Encounter), otherwise DODGE - CLEAN (stance-matrix.md section 7.2)"
+        }
+      }
     },
     {
       "id": "pressure",
@@ -335,9 +424,9 @@
         "dynamic": [
           { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
           { "tick": {"at": "c", "sub": ["windup"]}, "op": "wind" },
-          { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 26, "o": {"kb": 120}} },
-          { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 26, "o": {"kb": 120, "noParry": true}} },
-          { "tick": {"at": "c", "step": 2}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 26, "o": {"kb": 120, "noParry": true}} }
+          { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 26, "o": {"class": "opener", "kb": 120}} },
+          { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 26, "o": {"class": "mid", "kb": 120}} },
+          { "tick": {"at": "c", "step": 2}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 26, "o": {"class": "mid", "kb": 120}} }
         ]
       },
       "branches": [
@@ -360,7 +449,8 @@
             { "tick": {"at": "c", "step": 3, "add": ["foot"]}, "op": "rush", "args": {"off": 58, "dur": {"ticks": "foot"}} },
             { "tick": {"at": "c", "step": 3}, "op": "window" }
           ],
-          "dynamicTiming": "changes"
+          "dynamicTiming": "changes",
+          "interrupts": ["perfect_block", "reversal"]
         },
         {
           "id": "counter",
@@ -377,7 +467,7 @@
             { "tick": {"at": "c", "step": 5}, "op": "nop" }
           ],
           "dynamic": [
-            { "tick": {"at": "c", "step": 3}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 24, "o": {"noParry": true, "ignoreStance": true}} },
+            { "tick": {"at": "c", "step": 3}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 24, "o": {"class": "mid", "ignoreStance": true}} },
             { "tick": {"at": "c", "step": 3, "add": ["follow"]}, "op": "separate", "args": {"w": "D", "speed": 400} },
             { "tick": {"at": "c", "step": 4, "add": ["follow"]}, "op": "nop" }
           ],
@@ -386,27 +476,9 @@
       ],
       "selectorByProfile": {
         "dynamic": {
-          "kind": "threshold",
-          "draw": "next",
-          "ifBelow": "counter",
-          "else": "holds",
-          "p": {
-            "start": 0.2,
-            "terms": [
-              {
-                "if": {
-                  "all": [
-                    { "var": "defHeld", "op": ">=", "value": 2.0 },
-                    { "var": "D.ki", "op": ">", "value": 25 }
-                  ]
-                },
-                "then": 0.3,
-                "else": 0.0
-              }
-            ],
-            "clamp": [0.0, 1.0]
-          },
-          "_formula": "R4 (stance-matrix.md): counter at 50% when the defender has held DEFENSIVE for 2 s or more with more than 25 ki, 20% otherwise; one S.rng.next(), always drawn. defHeld = S.T - D.stanceT, supplied by Encounter in the plan context. parity and spaced keep 'selector' (today's 40% gated roll)"
+          "kind": "fixed",
+          "branch": "holds",
+          "_formula": "R4 re-ruled (stance-matrix.md section 7.3): a held guard never counters by itself, so there is no roll. The counter comes from the perfect_block interrupt (then the riposte) or the reversal interrupt"
         }
       }
     },
@@ -442,16 +514,17 @@
           ],
           "dynamic": [
             { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
-            { "tick": {"at": "c", "sub": ["windup"]}, "op": "wind" },
-            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 45, "o": {"kb": 150}} },
-            { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 45, "o": {"kb": 150, "noParry": true}} },
+            { "tick": {"at": "c", "sub": ["heavyWindup"]}, "op": "wind" },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 45, "o": {"class": "opener", "kb": 150}} },
+            { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 45, "o": {"class": "mid", "kb": 150}} },
             { "tick": {"at": "c", "step": 2}, "op": "guardBreak" },
-            { "tick": {"at": "c", "step": 2, "add": ["foot"]}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "times": 1.15}, "o": {"noParry": true, "ignoreStance": true, "stop": 0.12, "shake": 12, "big": true, "kind": "guard_break"}} },
+            { "tick": {"at": "c", "step": 2, "add": ["foot"]}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "times": 1.15}, "o": {"class": "heavy", "ignoreStance": true, "stop": 0.12, "shake": 12, "big": true, "kind": "guard_break"}} },
             { "tick": {"at": "c", "step": 2, "add": ["foot", "follow"]}, "op": "launch", "args": {"force": 1700, "rev": false} },
             { "tick": {"at": "c", "step": 2, "add": ["foot", "follow", "follow"]}, "op": "rush", "args": {"off": 180, "dur": {"ticks": "pursue"}} },
             { "tick": {"at": "c", "step": 2, "add": ["foot", "follow", "follow"]}, "op": "window" }
           ],
-          "dynamicTiming": "changes"
+          "dynamicTiming": "changes",
+          "interrupts": ["perfect_block", "reversal"]
         }
       ]
     },
@@ -494,12 +567,13 @@
         "dynamic": [
           { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
           { "tick": {"at": "c", "sub": ["windup"]}, "op": "wind" },
-          { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 24} },
-          { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 20, "o": {"noParry": true}} },
-          { "tick": {"at": "c", "step": 2}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 24, "o": {"noParry": true}} },
-          { "tick": {"at": "c", "step": 3}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 20, "o": {"noParry": true}} },
-          { "tick": {"at": "c", "step": 3, "add": ["follow", "follow"]}, "op": "rush", "args": {"off": -70, "dur": {"ticks": "foot"}} },
-          { "tick": {"at": "c", "step": 3, "add": ["follow", "follow"]}, "op": "cue", "args": {"cue": "circle", "who": "A"} }
+          { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 24, "o": {"class": "opener"}} },
+          { "tick": {"at": "c", "step": 1}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 20, "o": {"class": "mid"}} },
+          { "tick": {"at": "c", "step": 2}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 24, "o": {"class": "mid"}} },
+          { "tick": {"at": "c", "step": 3}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 20, "o": {"class": "mid"}} },
+          { "tick": {"at": "c", "step": 3, "add": ["follow"]}, "op": "rush", "args": {"off": 150, "dur": {"ticks": "foot"}} },
+          { "tick": {"at": "c", "step": 3, "add": ["follow"]}, "op": "cue", "args": {"cue": "backstep", "who": "A"} },
+          { "tick": {"at": "c", "step": 3, "add": ["follow", "foot"]}, "op": "rush", "args": {"off": 58, "dur": {"ticks": "enderWindup"}} }
         ]
       },
       "branches": [
@@ -520,12 +594,13 @@
             { "tick": {"at": "c", "step": 6, "add": ["follow"]}, "op": "window" }
           ],
           "dynamic": [
-            { "tick": {"at": "c", "step": 4, "add": ["follow"]}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 34, "o": {"noParry": true, "stop": 0.1}} },
-            { "tick": {"at": "c", "step": 4, "add": ["follow", "follow"]}, "op": "launch", "args": {"force": 1000, "rev": false} },
-            { "tick": {"at": "c", "step": 4, "add": ["follow", "follow", "follow"]}, "op": "rush", "args": {"off": 180, "dur": {"ticks": "pursue"}} },
-            { "tick": {"at": "c", "step": 4, "add": ["follow", "follow", "follow"]}, "op": "window" }
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup"]}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": 34, "o": {"class": "ender", "stop": 0.1}} },
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup", "follow"]}, "op": "launch", "args": {"force": 1000, "rev": false} },
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup", "follow", "follow"]}, "op": "rush", "args": {"off": 180, "dur": {"ticks": "pursue"}} },
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup", "follow", "follow"]}, "op": "window" }
           ],
-          "dynamicTiming": "changes"
+          "dynamicTiming": "changes",
+          "interrupts": ["perfect_block"]
         },
         {
           "id": "lost",
@@ -545,14 +620,43 @@
             { "tick": {"at": "c", "step": 7, "add": ["follow"]}, "op": "nop" }
           ],
           "dynamic": [
-            { "tick": {"at": "c", "step": 4, "add": ["follow"]}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 32, "o": {"noParry": true, "stop": 0.1}} },
-            { "tick": {"at": "c", "step": 4, "add": ["follow", "follow"]}, "op": "launch", "args": {"force": 1000, "rev": true} },
-            { "tick": {"at": "c", "step": 4, "add": ["follow", "follow", "follow"]}, "op": "finRush", "args": {"w": "D", "off": 180, "dur": {"ticks": "pursue"}} },
-            { "tick": {"at": "c", "step": 4, "add": ["follow", "follow", "follow", "pursue"]}, "op": "nop" }
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup"]}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": 32, "o": {"class": "ender", "stop": 0.1}} },
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup", "follow"]}, "op": "launch", "args": {"force": 1000, "rev": true} },
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup", "follow", "follow"]}, "op": "finRush", "args": {"w": "D", "off": 180, "dur": {"ticks": "pursue"}} },
+            { "tick": {"at": "c", "step": 3, "add": ["follow", "foot", "enderWindup", "follow", "follow", "pursue"]}, "op": "nop" }
           ],
-          "dynamicTiming": "changes"
+          "dynamicTiming": "changes",
+          "interrupts": ["perfect_block"]
         }
-      ]
+      ],
+      "selectorByProfile": {
+        "dynamic": {
+          "kind": "score_compare",
+          "order": ["A", "D"],
+          "ifGreater": "won",
+          "else": "lost",
+          "score": {
+            "sum": [
+              { "var": "f.tier" },
+              { "div": ["f.ki", 70] },
+              { "draw": [0.0, 1.6] },
+              { "if": {"gt": ["vitality(f)", "vitality(o)"]}, "then": 0.3, "else": 0.0 }
+            ]
+          },
+          "defenderAdd": {
+            "if": {
+              "all": [
+                { "var": "defEntry", "op": "==", "value": -1 },
+                { "var": "atkEntry", "op": "==", "value": 1 }
+              ]
+            },
+            "then": 0.24,
+            "else": 0.0
+          },
+          "_formula": "as 'selector', plus the retreat entry: defenderAdd is added to the defender's score after its sum (about +15 points of win chance against a rush, stance-matrix.md section 7.2). No extra draw"
+        }
+      },
+      "_trigger2b": "AGGRESSIVE is Press: the defender has its own attack request (defQueued). A defender holding nothing is NEUTRAL and gets clean_hit or clean_hit_heavy (stance-matrix.md section 7.1)."
     },
     {
       "id": "heavy_clash",
@@ -608,12 +712,13 @@
           ],
           "dynamic": [
             { "tick": {"at": "c", "add": ["foot"]}, "op": "wind" },
-            { "tick": {"at": "c", "add": ["foot", "heavyWindup"]}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "plus": 8}, "o": {"stop": 0.12, "shake": 12, "ignoreStance": true, "big": true}} },
+            { "tick": {"at": "c", "add": ["foot", "heavyWindup"]}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base", "plus": 8}, "o": {"class": "heavy", "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true}} },
             { "tick": {"at": "c", "add": ["foot", "heavyWindup", "follow"]}, "op": "launch", "args": {"force": 1800, "rev": false} },
             { "tick": {"at": "c", "add": ["foot", "heavyWindup", "follow", "follow"]}, "op": "rush", "args": {"off": 180, "dur": {"ticks": "pursue"}} },
             { "tick": {"at": "c", "add": ["foot", "heavyWindup", "follow", "follow"]}, "op": "window" }
           ],
-          "dynamicTiming": "changes"
+          "dynamicTiming": "changes",
+          "interrupts": ["perfect_block"]
         },
         {
           "id": "countered",
@@ -632,7 +737,7 @@
             { "tick": {"at": "c", "step": 5, "add": ["follow"]}, "op": "nop" }
           ],
           "dynamic": [
-            { "tick": {"at": "c", "add": ["foot", "heavyWindup"]}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": {"ref": "base"}, "o": {"noParry": true, "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true}} },
+            { "tick": {"at": "c", "add": ["foot", "heavyWindup"]}, "op": "strike", "args": {"a": "D", "d": "A", "dmg": {"ref": "base"}, "o": {"class": "heavy", "stop": 0.12, "shake": 12, "ignoreStance": true, "big": true}} },
             { "tick": {"at": "c", "add": ["foot", "heavyWindup", "follow"]}, "op": "launch", "args": {"force": 1600, "rev": true} },
             { "tick": {"at": "c", "add": ["foot", "heavyWindup", "follow", "follow"]}, "op": "finRush", "args": {"w": "D", "off": 180, "dur": {"ticks": "pursue"}} },
             { "tick": {"at": "c", "add": ["foot", "heavyWindup", "follow", "follow", "pursue"]}, "op": "nop" }
@@ -661,6 +766,130 @@
             { "tick": {"at": "c", "step": 2, "add": ["foot", "heavyWindup"]}, "op": "nop" }
           ],
           "dynamicTiming": "changes"
+        }
+      ],
+      "selectorByProfile": {
+        "dynamic": {
+          "kind": "bands",
+          "draw": "next",
+          "p": {
+            "start": 0.5,
+            "terms": [
+              { "coef": 0.09, "diff": ["A.tier", "D.tier"] },
+              { "if": {"gt": ["A.ki", "D.ki"]}, "then": 0.05, "else": -0.05 },
+              {
+                "if": {
+                  "all": [
+                    { "var": "defEntry", "op": "==", "value": -1 },
+                    { "var": "atkEntry", "op": "==", "value": 1 }
+                  ]
+                },
+                "then": -0.1,
+                "else": 0.0
+              }
+            ],
+            "clamp": [0.2, 0.8]
+          },
+          "below": { "offset": -0.12, "branch": "won" },
+          "above": { "offset": 0.12, "branch": "countered" },
+          "else": "shockwave",
+          "_formula": "as 'selector', plus the retreat entry: a defender who pressed while holding away, against a rush, takes 0.10 off the attacker's p (stance-matrix.md section 7.2). defEntry and atkEntry are -1, 0 or +1, from Encounter; 0 until entries are wired"
+        }
+      },
+      "_trigger2b": "AGGRESSIVE is Press: the defender has its own attack request (defQueued). A defender holding nothing is NEUTRAL and gets clean_hit or clean_hit_heavy (stance-matrix.md section 7.1)."
+    },
+    {
+      "id": "clean_hit",
+      "only": ["dynamic"],
+      "trigger": { "kinds": ["light"], "defender": "NEUTRAL" },
+      "selector": {
+        "kind": "condition",
+        "if": { "var": "defClipped" },
+        "then": "clipped",
+        "else": "clean",
+        "_formula": "stance-matrix.md section 7.1: a defender holding nothing is hit. CLIPPED when it was flying at more than half speed across or away (defClipped, from Encounter). No draw"
+      },
+      "branches": [
+        {
+          "id": "clean",
+          "tag": "CLEAN HIT",
+          "favours": "attacker",
+          "interrupts": ["perfect_block"],
+          "dynamic": [
+            { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base"}, "o": {"class": "opener", "ignoreStance": true}} },
+            { "tick": {"at": "c", "add": ["follow", "follow"]}, "op": "window" }
+          ]
+        },
+        {
+          "id": "clipped",
+          "tag": "CLIPPED",
+          "favours": "attacker",
+          "interrupts": ["perfect_block"],
+          "dynamic": [
+            { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base"}, "o": {"class": "opener", "ignoreStance": true, "kb": 300}} },
+            { "tick": {"at": "c", "add": ["foot"]}, "op": "nop" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "clean_hit_heavy",
+      "only": ["dynamic"],
+      "trigger": { "kinds": ["heavy"], "defender": "NEUTRAL" },
+      "selector": {
+        "kind": "condition",
+        "if": { "var": "defClipped" },
+        "then": "clipped",
+        "else": "clean",
+        "_formula": "as clean_hit. No draw"
+      },
+      "branches": [
+        {
+          "id": "clean",
+          "tag": "CLEAN HIT",
+          "favours": "attacker",
+          "interrupts": ["perfect_block"],
+          "dynamic": [
+            { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base"}, "o": {"class": "opener", "ignoreStance": true, "big": true}} },
+            { "tick": {"at": "c", "add": ["follow"]}, "op": "launch", "args": {"force": 1500, "rev": false} },
+            { "tick": {"at": "c", "add": ["follow", "follow"]}, "op": "rush", "args": {"off": 180, "dur": {"ticks": "pursue"}} },
+            { "tick": {"at": "c", "add": ["follow", "follow"]}, "op": "window" }
+          ]
+        },
+        {
+          "id": "clipped",
+          "tag": "CLIPPED",
+          "favours": "attacker",
+          "interrupts": ["perfect_block"],
+          "dynamic": [
+            { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base"}, "o": {"class": "opener", "ignoreStance": true, "kb": 400}} },
+            { "tick": {"at": "c", "add": ["foot"]}, "op": "nop" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "riposte",
+      "only": ["dynamic"],
+      "trigger": { "kinds": ["light", "heavy"], "context": "riposte" },
+      "selector": { "kind": "fixed", "branch": "lands" },
+      "_about": "control-rules.md section 1: the defender's attack within perfectBlock.riposteTicks of its perfect block. It cannot be blocked or dodged, and it launches when the blocked strike was a heavy or an ender (riposteLaunch, from Encounter). Read from step 3.",
+      "branches": [
+        {
+          "id": "lands",
+          "tag": "RIPOSTE",
+          "favours": "attacker",
+          "dynamic": [
+            { "tick": {"at": "start"}, "op": "rush", "args": {"off": 58, "dur": {"ref": "c"}} },
+            { "tick": {"at": "start"}, "op": "cue", "args": {"cue": "riposte", "who": "A"} },
+            { "tick": {"at": "c"}, "op": "strike", "args": {"a": "A", "d": "D", "dmg": {"ref": "base"}, "o": {"class": "none", "ignoreStance": true, "big": true}} },
+            { "tick": {"at": "c", "add": ["follow"]}, "op": "launch", "when": "riposteLaunch", "args": {"force": {"light": 900, "heavy": 1500}, "rev": false} },
+            { "tick": {"at": "c", "add": ["foot"]}, "op": "nop" }
+          ]
         }
       ]
     }
@@ -759,6 +988,61 @@
       "clashHold": 3.0,
       "_note": "proposed: non-clash beams 2.4 s, clashes 4.2 s (section 10 set pieces: 3 to 8 s), with a 'focus' cue at 0.65 s"
     },
-    "dynamicTiming": "identical"
+    "dynamicTiming": "identical",
+    "outcomeByProfile": {
+      "dynamic": {
+        "decideAt": "fire",
+        "_about": "stance-matrix.md section 7.2 and control-rules.md section 1: the director never fires a beam on its own. The outcome is decided at the fire beat from what the defender did during the tell; the first matching rule wins. The draws below move to that tick. The automatic rule (AGGRESSIVE with 40 ki) is gone from this profile.",
+        "rules": [
+          {
+            "if": { "var": "defAnswer", "is": "signature" },
+            "out": "CLASH",
+            "draw": "none",
+            "_note": "the defender fired its own signature (45 ki, off cooldown): a full struggle"
+          },
+          {
+            "if": { "var": "defAnswer", "is": "heavy_blast" },
+            "out": "CLASH",
+            "draw": "none",
+            "clashScoreAdd": { "D": -10 },
+            "_note": "a heavy energy attack with 40 ki or more: a clash at -10 on the defender's score"
+          },
+          {
+            "if": { "var": "defPerfect" },
+            "out": "DEFLECT",
+            "draw": "none",
+            "_note": "a perfect block during the tell (from step 3)"
+          },
+          { "defender": "DEFENSIVE", "out": "GUARD", "draw": "none" },
+          {
+            "defender": "EVASIVE",
+            "draw": "next",
+            "p": { "start": 0.55, "terms": [{"coef": -0.06, "diff": ["A.tier", "D.tier"]}], "clamp": [0.2, 0.8] },
+            "ifBelowAndNot": { "var": "A.ambush" },
+            "out": "DODGE",
+            "else": "HIT"
+          },
+          {
+            "defender": "ESCAPE",
+            "draw": "next",
+            "p": {
+              "start": 0.5,
+              "terms": [
+                { "coef": -0.05, "diff": ["A.tier", "D.tier"] },
+                { "if": {"var": "dist", "op": "<", "value": 500}, "then": 0.3, "else": 0.0 }
+              ],
+              "clamp": [0.15, 0.9]
+            },
+            "ifBelow": "HIT",
+            "else": "ESCAPE"
+          },
+          {
+            "out": "HIT",
+            "draw": "none",
+            "_note": "Press without an energy answer, NEUTRAL, or CHARGING: the beam goes through"
+          }
+        ]
+      }
+    }
   }
 }
