@@ -78,7 +78,15 @@ if S.dirS.stop > 0: ...         # the hit-stop, as today
 
 ## 4. QA's tuning data
 
-Data only, in the same slice when QA reports: the mood decay (3), the act floors (0, 600, 1,800, 2,700 units), style revision 3 and the wound values. If a wound value is one of the pinned constants in `wounds.gd`, the constant moves with it. If any of it touches `data/combat`, the frozen parity copy needs your refresh.
+Final (`docs/qa/tuning-m1b.md`), data only, applied as the data flip's starting point:
+
+| File | Change |
+| :--- | :--- |
+| `data/fight/mood.json` | `rates.decay` 4 to 3; `actFloors` [0, 600, 1500, 2400] to [0, 600, 1800, 2700] |
+| `data/fight/style.json` | Narrative's revision 3 (`docs/narrative/style.draft.json`), as it is |
+| Both fighters' `wounds.json` | `act1Damping` 0.85 to 1.30; `wearPerDamage` 270 to 216 (k 0.036); `cripple.base` 0.048 to 0.036 |
+
+None is a pinned constant in `wounds.gd`, and none touches `data/combat`. QA tuned these on today's ladder; this slice slows the ladder and changes the act rule, so QA re-tunes on the slice's commit.
 
 ## 5. Order of work and proof
 
