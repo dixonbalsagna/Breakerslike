@@ -10,11 +10,14 @@ func _init() -> void:
 	var level: String = ""
 	var gap: int = 8
 	var capsec: float = 900.0
+	var fixed_slot: int = -1       # -1 alternates by seed; 0 or 1 pins the masher to that slot
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--level="):
 			level = a.substr(8)
 		elif a.begins_with("--gap="):
 			gap = int(a.substr(6))
+		elif a.begins_with("--slot="):
+			fixed_slot = int(a.substr(7))
 		elif a.begins_with("--capsec="):
 			capsec = float(a.substr(9))
 		else:
@@ -34,19 +37,25 @@ func _init() -> void:
 	var lens: Array = []
 	for i in range(n):
 		var seed: int = base + i
-		var slot: int = 0 if seed % 2 == 1 else 1
+		var slot: int = fixed_slot if fixed_slot >= 0 else (0 if seed % 2 == 1 else 1)
 		var S: SimState = SimCore.createSim()
 		SimCore.newMatch(S, seed, {"p1": slot != 0, "p2": slot != 1}, {"v2": [slot == 0, slot == 1]})
 		var ticks: int = 0
-		var k: int = 0
+		var live: int = 0
+		var pending: bool = false
 		while S.T < capsec and not (S.game.ko != null and S.game.koT > 3.0) and ticks < 400000:
 			var it := SimIntent.new()
 			ticks += 1
-			if ticks % gap == 0:
-				it.light = true
+			it.light = pending
 			var ins: Array = [null, null]
 			ins[slot] = it
-			SimCore.step(S, ins)
+			# step() returns false in hit-stop or a pause: the press was not consumed, so it is held for the next call (a real player keeps the button down)
+			if SimCore.step(S, ins):
+				live += 1
+				if pending:
+					pending = false
+				if live % gap == 0:
+					pending = true
 		lens.append(S.T)
 		if S.game.ko == null:
 			timeouts += 1

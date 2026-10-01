@@ -297,7 +297,8 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
   // ---- 7. stance balance (the parts measurable from AI matches)
   if (D) {
     const m = sum(D.map(melee));
-    R.point('7.parry', '§7', 'Parries per 100 melee exchanges', { v: sum(D.map(r => sum(r.parries))) / m * 100, lo: 5, hi: 15 });
+    if (D.every(r => r.cues) && sum(D.map(r => r.cues.perfect_block || 0)) > 0) R.info('7.parry', '§7', 'Parries per 100 melee exchanges', 'retired', 'the parry window was replaced by the perfect block in step 3 (ADR 0008); the perfect-block rows below carry the band. Measured parries: ' + (sum(D.map(r => sum(r.parries))) / m * 100).toFixed(2));
+    else R.point('7.parry', '§7', 'Parries per 100 melee exchanges', { v: sum(D.map(r => sum(r.parries))) / m * 100, lo: 5, hi: 15 });
     // control-rules 6 / moveset-rules 11: perfect blocks per 100 melee exchanges by AI level (the main run is the data's level, medium)
     if (D.every(r => r.cues)) R.point('7.pb.medium', '§7', 'Perfect blocks per 100 melee exchanges, medium AI (5 to 15)', { v: sum(D.map(r => r.cues.perfect_block || 0)) / m * 100, lo: 5, hi: 15, unit: 'num' });
     R.point('7.chain', '§7', 'Chains per 100 melee exchanges', { v: sum(D.map(r => r.chains.length)) / m * 100, lo: 15, hi: 35 });
