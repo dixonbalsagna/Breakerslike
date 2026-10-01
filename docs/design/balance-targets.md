@@ -221,7 +221,7 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
 | Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
-| **How launches end** | One landing class per launch (§20): slide 40 to 55%; bounce 8 to 15%; slam 8 to 15%; caught in the air 10 to 25%; water 2 to 10% (§21); brunt 4 to 10% |
+| **How launches end** | By how the journey ends (§20, the landing ruling): skids or tumbles to a halt 55 to 75%; slam 8 to 18%; caught in the air 10 to 25%; water 2 to 10%; brunt 4 to 10%. Bounces are an event rate: 15 to 30% of launches |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -663,14 +663,14 @@ Orb wants fighters to be ragdolled: to skid, tumble and bounce over the course o
 | State | He enters it when | While in it | He leaves it when |
 | :--- | :--- | :--- | :--- |
 | **Airborne** | He is launched, flies off a lip, or rebounds from a bounce or a skip | Ballistic flight, as today | He touches ground or water |
-| **Skid** | Ground contact shallower than 30 degrees, at a speed over 900 | Today's slide: braking of 1,200 + 1.2 v, and a trench. The surface scales the braking: ×0.8 on paving and rock, ×1.3 on sand and soil | His speed falls under 600 (tumble); the ground curves away (airborne); or a rise steeper than 0.8 stops him with a stop-impact, as today |
-| **Bounce** | Contact between 30 and 70 degrees, at a speed over 900, with a bounce left | He rebounds, keeping 80% of his speed along the ground and 45% of his vertical speed. The second bounce keeps 35% and the third 25% | At once: he is airborne again |
+| **Skid** | Ground contact shallower than **40** degrees, at a speed over 900 (30 before the ruling at the end of this section) | Today's slide: braking of 1,200 + 1.2 v, and a trench. The surface scales the braking: ×0.8 on paving and rock, ×1.3 on sand and soil | His speed falls under 600 (tumble); the ground curves away (airborne); or a rise steeper than 0.8 stops him with a stop-impact, as today |
+| **Bounce** | Contact between **40** and 70 degrees, at a speed over 900, with a bounce left | He rebounds, keeping 80% of his speed along the ground and 45% of his vertical speed. The second bounce keeps 35% and the third 25% | At once: he is airborne again |
 | **Slam** | Contact steeper than 70 degrees (§19) | A crater. One small hop at a speed of 2,000 or more, as today | He is down |
-| **Tumble** | Any contact or skid at a speed of 350 to 900; any contact on rubble; or a 30 to 70 degree contact with no bounce left and too little speed to skid | He rolls, with double braking, for 1.2 s at most | He stops (down), recovers early (below), or the ground curves away (airborne) |
+| **Tumble** | Any contact or skid at a speed of 350 to 900; any contact on rubble; or a 40 to 70 degree contact with no bounce left and too little speed to skid | He rolls, with double braking, for 1.2 s at most | He stops (down), recovers early (below), or the ground curves away (airborne) |
 | **Skip** | On water, as today: a speed over 500 and shallower than about 31 degrees | Up to 6 skips, each keeping 85% of the speed along the water | He sinks with a splash |
 | **Down** | He stops | Recovery of 0.35 s after a skid or a tumble, or 0.75 s after a slam | He is free |
 
-- A 30 to 70 degree contact over 900 with no bounce left is a skid: he digs in.
+- A 40 to 70 degree contact over 900 with no bounce left is a skid: he digs in.
 - **Bounces allowed,** by the launcher's tier: 1 at tier 1, 2 at tier 2, and 3 at tiers 3 and 4.
 - **Bounds on one journey** (hard tests): at most 8 contacts of all kinds, and at most 4 s from the first contact to the stop. Past either, he tumbles to a stop.
 - Everything is decided by speed, angle and surface. There is no random draw, so the journey is deterministic and the planner can predict it.
@@ -689,7 +689,7 @@ Orb wants fighters to be ragdolled: to skid, tumble and bounce over the course o
 - **Cost:** 15 ki, and it shares the dodge-cancel's 3 s cooldown (`control-rules.md` §2).
 - The AI recovers on 20%, 50% or 80% of chances (easy, medium, hard).
 
-### The landing bands (this replaces §19's table)
+### The landing bands (replaced by "The landing ruling after World's build", at the end of this section)
 
 A launch is still classed by its first contact. A bounce is a new class. A flight off a lip happens after a skid has started, so that launch stays a **slide**; lips are counted as their own event.
 
@@ -737,6 +737,42 @@ World's plan is accepted, including these points: contact angles are measured ag
 **Two consequences to expect.**
 - Today's slow slide, from a speed of 350 down to 60, becomes a tumble. Slides at low power get shorter, with fewer and shorter trenches. That is intended: it is the "rolls to a hard stop" look.
 - For the landing classes, a first contact that is a skid or a tumble counts as a **slide**, and a slam is a first contact that makes a crater. This replaces the 2 bh distance test in §18.
+
+
+### The landing ruling after World's build (2026-10-02)
+
+**What World measured** with the ground-contact model on, by first contact (`docs/world/ground-contact.md` §8 and §9): skid and tumble 24%, bounce 36%, slam 21%, caught in the air 16%, water 3%. The 30 to 70 degree landings that the old model called slides are now bounces. This was measured before Encounter's landing slice (`93d5e0d`), which makes the drive shallower and should move it toward skids.
+
+**The ruling does both things, lightly.** Orb's two wishes are that landings are weighted toward skidding to a halt, and that fighters visibly skid, tumble and bounce over the course of a fight. A bounce that ends in a skid serves both.
+
+1. **The bounce boundary moves to 40 degrees.** A contact under 40 degrees skids, and 40 to 70 bounces. With the drive at 25 to 50 degrees by altitude (§19), a low drive now skids at once and only a high one bounces.
+2. **Launches are classed by how the journey ends,** not by its first contact. A journey that bounces and then skids or tumbles to a halt counts toward the skidding majority.
+
+| The journey ends | Band (share of all launches) |
+| :--- | :--- |
+| **Skidding or tumbling to a halt,** with or without bounces first | **55 to 75%** |
+| In a slam (a crater) | 8 to 18% |
+| Caught in the air | 10 to 25% |
+| In water | 2 to 10% |
+| In a brunt | 4 to 10% |
+
+3. **Bounces are an event rate.**
+
+| Event | Band |
+| :--- | :--- |
+| Launches with at least one bounce | **15 to 30%** of launches. Orb wants to see them, but not on most landings |
+| Bounces per bounced journey | A mean of 1.3 to 2.2, unchanged (World measured 1.5) |
+| First contacts | Skids are at least as common as bounces |
+| Journeys ending in a tumble, flights off a lip, early recoveries | Unchanged from the tables above |
+
+**What World re-measures on top of `93d5e0d`:**
+- the five ending classes;
+- the share of launches with a bounce, at boundaries of 30, 40 and 45 degrees. 40 is the default. Take 45 if 40 leaves bounced launches over 30%;
+- bounces per bounced journey;
+- journey time and distance (mean and 90th percentile), and how often the 4 s or 8-contact bound is hit;
+- flights off a lip per minute;
+- the wear paid per journey against the single-impact budget, and the collateral per journey;
+- how often the journey carries him off screen, for Camera.
 
 ## 21. Rulings after the Q10 retune (QA's `docs/qa/retune-q10.md`, 2026-10-02)
 
