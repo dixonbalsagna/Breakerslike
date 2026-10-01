@@ -259,6 +259,53 @@ Each step is a checkpoint with goldens, the feel probe, tempo and QA's bands.
 - **The one match over 10% before tier 3** lost its structures to launches and slides, not beams. World's rolling structure budget is the ruled fallback.
 - **Old parry rule.** A defender's attack press during the wind-up still parries, until the perfect block replaces it in step 3. For a v2 slot that press now also queues an attack, so a parry is followed by the defender's own attack.
 
+## Step 2b as built (the Neutral column, request-only counters, the beam decided at fire)
+
+**Status.** In the tree with Combat's three 2b data files and Tools' `apply-2b` schemas. Goldens regenerated. Only the `dynamic` profile changes; `parity` and `spaced` are untouched.
+
+**What runs**
+
+| Part | What the director does | Where |
+| :--- | :--- | :--- |
+| **The Neutral column** | A defender in Press with no attack request of its own is NEUTRAL: the attack lands as CLEAN HIT, or CLIPPED when the defender is moving away or mostly vertically at over half its flight speed. No draw | `data.gd` `_flags`, `_matches`, `hasNeutral`, the `condition` selector |
+| **Request-only counters** | A trade or a counter needs the defender's own request: one in its queue, or a press in the last 20 ticks (`defQueued`). A dodge that isn't read gives DODGE & COUNTER only with it, else DODGE — CLEAN. A guard holds and never counters by itself | `data.gd` `_selector` (`selectorByProfile`), `_pick` |
+| **The Press skill number** | The AI gets a trade or a counter the way a player does, by an input. Attacked in Press it has a request in with chance 0.6, and in Dodge with chance 0.5 (one draw; the request goes through its queue). Guard and Escape: 0 | `ai.gd` `react`; `data/director/ai.json` `pressReact` |
+| **The beam is decided at fire** | The request plans the beam without an outcome. At the fire beat the rules of `beam.outcomeByProfile.dynamic` run in order on what the defender did in the tell: an answering signature (45 ki, off cooldown) or heavy blast (40 ki, at -10) gives CLASH; then the live held state gives GUARD, the DODGE read or the ESCAPE gamble; otherwise HIT. The answer is paid for at fire, and an answered clash doesn't charge the old 40 ki | `beam.gd` `opBeamFire`, `_answer`; `data.gd` `beamOutcome` |
+| **The AI in the tell** | It answers when it can with chance 0.35 (its own signature, or else a heavy blast), by a press during the tell. Its Dodge tap and its Escape sprint keep going through the tell, so those states read at fire | `beam.gd` `opBeamCharge`; `ai.gd` `_beamTell`; `ai.json` `beamAnswer` |
+| **Strike classes** | Combat's `o.class` replaces `noParry`. The 2b parry rule: only an `opener`, `heavy` or `ender` that is the attacker's first strike after a wind-up can be parried, which is today's behaviour | `data.gd` `_args`; `melee.gd` `opWind`, `strike` |
+| **`approach.minHeavy`** | A heavy opener's approach lasts at least 20 ticks, so its wind-up fits | `data.gd` `_approachTicks` |
+| **The AI's skill numbers are data** | `data/director/ai.json`: `pressReact` by stance, `beamAnswer`, `sigPick`. Hashed with the combat data | `ai.gd` `skill` |
+| **New event** | `beam_outcome` {actor, target, kind} at the fire beat. The `attack` event of a `dynamic` signature no longer carries the outcome | `sim/core/fx.gd`, `hash.gd`, `view/fx.gd` (granted) |
+
+**Not read yet** (data for step 3 and 4): the `interrupts` block, `perfectBlock`, the `riposte` template, `defPerfect`, and the entry terms (`atkEntry`, `defEntry` are 0 until entries are wired).
+
+**Results** (seeds 1 to 100 per arm, capped at 15:00; before is the Q10 slice, `21390f6`)
+
+| Measure | Band | Before | After |
+| :--- | :--- | ---: | ---: |
+| TRADE BLOWS, share of melee exchanges | | 28.5% | **12.9%** |
+| CLEAN HIT and CLIPPED | | none | 19.7% and 6.9% |
+| DODGE & COUNTER / DODGE — CLEAN | | 13.8% / none | 5.6% / 7.5% |
+| A guard that counters | none (R4) | 4.5% | **0** |
+| HEAVY CLASH, all three | | 18.1% | 7.8% |
+| Beam outcomes: CLASH | 30 to 60% | 46 to 47% | **33 to 36%** |
+| ... HIT | | 16 to 17% | **41%** |
+| ... GUARD / DODGE / ESCAPE | | 18 to 21 / 13 to 15 / 4 to 5% | 12 / 8 to 10 / 2 to 4% |
+| Signatures per match, median | 2 to 4 | 3 | 3 |
+| Match median, default / swap | 6:00 to 8:00 | 10:01 / 10:00 | 10:25 / 9:59 |
+| KAI, default / swap arm | 45 to 55% | 65% / 44% | 67% / 54% |
+| Chain links per match | | 58 to 60 | 81 to 83 |
+| Attacks per minute | | 18.4 | 19.9 |
+| Structures lost at the KO | 25 to 60% | 24 to 25% | 28 to 29% |
+| No KO by 15:00 | | 0 | 0 |
+
+**Notes for Game Design and QA**
+- **Beams hit more.** An AI in Press that doesn't answer is hit, where the old rule gave it a free clash. A medium AI never switches to Guard on a tell; that is the AI profile of step 4.
+- **KAI rose 6 points** over both arms (54.5% to 60.5%), and chain links rose from about 59 to about 82 a match. The likely cause of the longer chains is that a clean hit opens a chain window where a trade did not; that is not checked.
+- **The scripted masher** still wins 100 of 100, in about 2:10. Its exchanges are now mixed (CLEAN HIT 652, TRADE BLOWS 716, GUARD HOLDS 854), where on 2a nearly every one was a trade.
+- **The old parry rule** stays until step 3: a defender's press in the wind-up parries, and for a v2 slot that press also queues an attack.
+- **VORR's menace is rarely fed early.** It rises inside the first 100 s in 14 of seeds 1 to 240. The parity tool's end-to-end row needed new seeds for that reason.
+
 ## Queued after step 2a (EP notes)
 
 - **Teleporting is on hold** (Orb). Blinks and the teleport clash drop out of the variety steps. The ping-pong blitz uses flight paths only (`docs/combat/blitz.md`).

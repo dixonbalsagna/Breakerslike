@@ -69,13 +69,21 @@ function xref(docs, root = repoRoot) {
       if (!isObj(t) || !Array.isArray(t.branches)) return;
       const ids = new Set(t.branches.map((b) => b && b.id));
       dupes(TPL, t.branches.map((b, bi) => ({ id: b && b.id, pointer: `/templates/${ti}/branches/${bi}/id` })), '', 'branch-id', `branch id in template "${t.id}"`);
-      const s = t.selector;
-      if (isObj(s)) {
-        const refs = [['branch', s.branch], ['ifBelow', s.ifBelow], ['else', s.else], ['ifGreater', s.ifGreater]];
+      // a branch needs parity, spaced and spacedTiming unless it (or its template) is for some profiles only
+      t.branches.forEach((b, bi) => {
+        if (!isObj(b) || t.only !== undefined || b.only !== undefined) return;
+        for (const k of ['parity', 'spaced', 'spacedTiming']) if (b[k] === undefined) err(TPL, `/templates/${ti}/branches/${bi}`, 'branch-profiles', `branch "${b.id}" has no ${k}; a branch without "only" carries parity and spaced beats`);
+        if (b.dynamic !== undefined && b.dynamicTiming === undefined) err(TPL, `/templates/${ti}/branches/${bi}`, 'branch-profiles', `branch "${b.id}" has dynamic beats but no dynamicTiming`);
+      });
+      const selectors = [['selector', t.selector], ...Object.entries(isObj(t.selectorByProfile) ? t.selectorByProfile : {}).map(([p, sel]) => [`selectorByProfile/${p}`, sel])];
+      for (const [where, s] of selectors) {
+        if (!isObj(s)) continue;
+        const elseRefs = isObj(s.else) ? [['else/then', s.else.then], ['else/else', s.else.else]] : [['else', s.else]];
+        const refs = [['branch', s.branch], ['ifBelow', s.ifBelow], ...elseRefs, ['then', s.then], ['ifGreater', s.ifGreater]];
         if (isObj(s.below)) refs.push(['below/branch', s.below.branch]);
         if (isObj(s.above)) refs.push(['above/branch', s.above.branch]);
         for (const [key, target] of refs) {
-          if (target !== undefined && !ids.has(target)) err(TPL, `/templates/${ti}/selector/${key}`, 'selector-branch', `selector points at branch "${target}", but template "${t.id}" has only: ${[...ids].join(', ')}`);
+          if (target !== undefined && !ids.has(target)) err(TPL, `/templates/${ti}/${where}/${key}`, 'selector-branch', `selector points at branch "${target}", but template "${t.id}" has only: ${[...ids].join(', ')}`);
         }
       }
       if (Array.isArray(t.shared && t.shared.spaced)) beatLists.push({ file: TPL, pointer: `/templates/${ti}/shared/spaced`, beats: t.shared.spaced, profile: 'spaced' });

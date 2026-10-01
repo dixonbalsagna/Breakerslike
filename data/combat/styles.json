@@ -29,7 +29,8 @@
       "protagonist": ["blink", "aerial"],
       "antihero": ["volley", "aerial"],
       "empress": ["volley", "aerial"],
-      "cyborg": ["brawler", "blink"]
+      "cyborg": ["brawler", "blink"],
+      "_held": "The blink trait has no effect while teleporting is on hold (the blink_clash style has weight 0)."
     }
   },
   "tempo": {
@@ -137,7 +138,7 @@
         ]
       },
       "weight": {
-        "base": 0.6,
+        "base": 0.0,
         "factors": [
           {
             "if": {
@@ -172,7 +173,8 @@
           "beforeEachContact": { "op": "blink", "args": {"w": "both", "rel": "cycle", "cycle": ["meet_high", "meet_left", "meet_right", "meet_low"]}, "leadTicks": 4 },
           "_rule": "each exchanged blow lands at a new blink position, 4 ticks after the pair reappears; the decider stays where the dynamic profile puts it"
         }
-      }
+      },
+      "_held": "Teleporting is on hold (Orb, 2026-10-01): base weight 0 switches this style off. The factors and the overlay are kept for when it returns; it may become one character's signature ability."
     },
     {
       "id": "volley_barrage",
@@ -216,12 +218,11 @@
     "_about": "Cleaner combos: a chain is a phrase with an opener (the exchange's own launch), links on a fixed rhythm and always one ender. The director decides at each window with one draw against chainP (Encounter's Q4 plan: it replaces the attacker's press). Suggestions for Game Design.",
     "blitz": {
       "when": { "var": "mood", "in": ["Tense", "Frenzied"] },
-      "chance": { "Tense": 0.25, "Frenzied": 0.5, "perActAbove1": 0.05 },
+      "chance": { "Tense": 0.25, "Frenzied": 0.5, "perActAbove1": 0.05, "cap": 0.6 },
       "minLinks": 3,
       "gap": "blitzGap",
       "cue": "blitz",
-      "_rule": "decided at the first window when a chain starts: a blitz is a fast chain of at least minLinks links at blitzGap instead of linkGap (later windows force 'continue' until minLinks). Game Design tunes the chance toward 2 to 6 blitzes a minute in Tense and Frenzied.",
-      "_cap": "the blitz chance is capped at 0.60 (Game Design, balance-targets.md section 12); the cap field waits for Tools' schema change (blitz.chance.cap)"
+      "_rule": "decided at the first window when a chain starts: a blitz is a fast chain of at least minLinks links at blitzGap instead of linkGap (later windows force 'continue' until minLinks). Game Design tunes the chance toward 2 to 6 blitzes a minute in Tense and Frenzied."
     },
     "link": [
       { "tick": 0, "op": "rush", "args": {"off": 60, "dur": {"ticks": "foot"}} },
@@ -246,12 +247,11 @@
         "ESCAPE": { "Calm": 0.0, "Tense": 0.0, "Frenzied": 0.0 }
       },
       "perComboAbove1": -0.15,
-      "heatBoiling": 0.2,
+      "heat": { "Heated": 0.05, "Simmering": 0.1, "Boiling": 0.2 },
       "minKi": 6,
       "floor": 0.0,
       "cap": 0.8,
-      "_rule": "p = clamp(byStance[stance][mood] + perComboAbove1 * (combo - 1) + (heat == Boiling ? heatBoiling : 0), floor, cap), and 0 when ki < minKi. First window: continue if draw < p, else no chain. Later windows: continue with a link if draw < p and combo + 1 < capHits, else play the ender. The ender is always the last link, so every chain ends on a finishing blow. ESCAPE never chains (R2 hit and run).",
-      "_heat": "heat bonus for fighters with the heat track only: Heated +0.05, Simmering +0.10, Boiling +0.20 (stance-matrix.md R9). Only Boiling fits the current schema (heatBoiling); the stage table waits for Tools' schema change (chainP.heat)",
+      "_rule": "p = clamp(byStance[stance][mood] + perComboAbove1 * (combo - 1) + heat[stage], floor, cap), and 0 when ki < minKi. The heat bonus is for fighters with the heat track only (stance-matrix.md R9). First window: continue if draw < p, else no chain. Later windows: continue with a link if draw < p and combo + 1 < capHits, else play the ender. Under ADR 0008 the queued presses set the links for human players; chainP is the AI's and the Simple layout's policy.",
       "_source": "Game Design, balance-targets.md section 12: slightly below the suggestion to hold the chain band (15 to 35 per 100 melee exchanges)"
     },
     "capHits": 5,

@@ -171,6 +171,13 @@ static func tierUp(S: SimState, f, onGround: bool) -> void:
 	e.actor = float(S.fighters.find(f)); e.tier = f.tier; e.onGround = onGround
 
 
+## Step 2b: actor's signature reached its fire beat and its outcome was decided there (target the defender): kind is
+## CLASH, GUARD, DODGE, ESCAPE, HIT or DEFLECT. The attack event at the request no longer carries it.
+static func beamOutcome(S: SimState, f, target, kind: String) -> void:
+	var e := _ev(S, "beam_outcome")
+	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(target)); e.kind = kind
+
+
 ## I2b, the placeholder transform (ADR 0008): actor's power crossed a threshold and tier waits for the transform input.
 ## source is the input that takes it: triggers (the two-trigger chord), power (the power hold of the Simple layout and of
 ## today's keyboard and touch) or ai.

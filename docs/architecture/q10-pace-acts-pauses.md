@@ -155,3 +155,44 @@ The two `SimPause.request` calls in Encounter's file are granted to me for this 
 
 The pace, the acts and the pause budget land in their targets. The rest is out, as Game Design's "Knock-on" predicted and more: the slower ladder cuts damage, so matches run ten minutes, the first brink comes at nine, most finisher contests fall after 8:00 where the tilt has eaten the survival chance, and the long tail in act 4 with a decay of 3 keeps the mood frenzied. QA's M1b values were tuned on the old ladder; QA re-tunes on this commit.
 
+## 8. The break: the tier-up moves to the end of the gather (plan, 2026-10-01)
+
+Plan only, for my next turn in the sim slot, with QA's re-tuned values. It builds the EP's ruling on Game Design's staging (`moveset-rules.md` section 10.8): the burst, the crater, the power and size step and the `tier_up` event happen at the **break**, after the gather (60 ticks full, 24 short, 10 live). Today they happen on the request tick, at the start of the gather.
+
+### How
+
+**One pending break per fighter.** A new hashed field `Fighter.act.breakIn` (ticks until the break, -1 for none).
+
+1. **The request tick** (the director, as today): `SimPause.request`, the `transform` event, the hold. `SimFighter.transform` no longer raises the tier: it clears `formReady` and sets `breakIn` to the version's gather.
+2. **The count.**
+   - *Full and short:* `SimPause.frozenTick` counts the pause's own fighter down. The pause is not split into two: the break is applied by the sim on a frozen tick inside it, and the rest of the pause runs on. A split with a live tick between would let the clock, the AI and the players' inputs run for a tick in the middle of a cinematic.
+   - *Live:* `SimFighter.stepFighter` counts it on live ticks. The same rule serves the second fighter of two requests on one tick: its gather starts when the first one's pause ends.
+3. **The break** (`SimFighter.formBreak`, at 0): the tier rises, then today's `tierUp` runs unchanged (the burst, the crater and area damage if he is near the ground, `tier_up`, the act's cause). If a further tier is already earned, `formReady` is set again and `transform_ready` is sent for it (this closes the gap I reported at I2b).
+4. **The rival's push** is Encounter's and sits at the request today. Game Design puts it at the break ("the snap, with the burst that pushes the rival back"). I propose the core calls `DirExchange.formBreak(S, f)` at the break and Encounter moves its push there. The direction is the same as the core's existing calls into the director.
+
+**A frozen tick now changes the world.** On a paused version the crater, the area damage and any building it fells happen on a frozen tick. That is deterministic and hashed like anything else. What it means for others:
+- Rendering must not assume the ground and the buildings are unchanged while the sim is frozen.
+- The mood does not tick on a frozen tick. Casualties still reach it (it reads the casualty total, not events). An event-driven impulse raised at the break would be missed; the only one that could matter is the landmark's fall, and it is dormant.
+- If the match ends during a live gather, the break does not happen.
+
+### The beat lengths: who owns them
+
+- **The sim owns the gather**, because it now decides when the world changes. It goes in `data/fight/pause.json` as `gatherTicks` per version (60, 24, 10), inside the replay's data hash. Ticks, not seconds: 10 ticks is not a round number of seconds.
+- **The sim already owns each version's total** (`lengthS`).
+- **Break and settle stay Animation's** in `data/anim/forms.json`: they change nothing in the sim.
+- **So nobody has to read two files:** the `transform` event gains `gather` (seconds), next to `dur` and `version`. And since `tier_up` now arrives exactly at the break, Animation, VFX and Camera can key the break on that event and not on a count.
+- `forms.json` keeps its `gather` for now, with a cross-check from Tools that it equals `pause.json`'s and that gather, break and settle add up to the version's length. Dropping it later is Animation's call.
+
+### Replays, the hash, the goldens
+
+- **Replays:** the format and the inputs do not change. The data hash in the header changes (`pause.json` gains keys), so a replay recorded before this refuses with reason `data`, as after any data change.
+- **Hash:** one new field, `act.breakIn`. `transform` gains `gather`. `tier_up` moves later by the gather, and on a paused version it is sent on a frozen tick.
+- **Goldens:** regenerated once, in the same slice as QA's values. This is a behaviour change, not a neutral one: on the live version the tier (damage, speed, the act) arrives 10 ticks later, and on every version the crater and its water come in a different order against the request tick's other work.
+- **Tests:** parity checks for the break at the right tick in each version (frozen ticks for full and short, live ticks for live), the second fighter's gather starting after the first one's pause, no break after a KO, and `transform_ready` for a further earned tier.
+
+### Open points for the EP
+
+1. Encounter: move the push to the break through `DirExchange.formBreak`, or keep it at the request?
+2. Tools: `gatherTicks` in the fight-pause schema, and the cross-check with `forms.json`.
+3. The mood's form impulse (+10 for a transformation, spec-wounds section 9) is in the data but no code gives it, today or before. It could be given at the break. It would raise a mood that is already too frenzied, so I would add it only if QA includes it in its re-tune.
+

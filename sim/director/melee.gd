@@ -22,8 +22,11 @@ static func opWind(S: SimState, ex, _args) -> void:
 	# The window is real only if a parryable strike by the attacker follows; its length is the time until that strike.
 	var width: float = -1.0
 	for b in ex.beats:
+		# Step 2b: with strike classes, only the attacker's first strike after the wind beat can be parried.
 		if not b.done and b.op == "strike" and b.args.a == "A" and (b.args.o == null or not b.args.o.get("noParry", false)):
 			width = b.t - ex.t
+			break
+		if not b.done and b.op == "strike" and b.args.a == "A" and b.args.o != null and b.args.o.has("class"):
 			break
 	if DirData.ticked():
 		# Controls' rule: no window without a cue. windowStart and the AI's press draw exist only with a window_open.
@@ -111,7 +114,11 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 	a.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(a.x, d.x)), a.face)
 	var pb: Dictionary = DirData.parryBlock()
 	var early: float = float(pb.bufferTicks) / DirData.TICKS_PER_SEC if not pb.is_empty() else 0.0
-	if a == ex.A and not o.get("noParry", false) and ex.windowStart >= 0.0 and d.lastAtkT >= ex.windowStart - early:
+	var armed: bool = ex.windowStart >= 0.0
+	var winStart: float = ex.windowStart
+	if a == ex.A and o.has("class"):
+		ex.windowStart = -1.0   # step 2b: the window serves the attacker's first strike after a wind beat, and no later one
+	if a == ex.A and not o.get("noParry", false) and armed and d.lastAtkT >= winStart - early:
 		ex.cancel = true
 		ex.loser = S.fighters.find(a)
 		if pb.is_empty():

@@ -78,6 +78,13 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
         }
       }
     }
+    // The blitz chance cap should not sit below the chances it caps (it would silently clip them).
+    const bl = isObj(styles.chains) && isObj(styles.chains.blitz) ? styles.chains.blitz.chance : undefined;
+    if (isObj(bl) && typeof bl.cap === 'number') {
+      for (const k of ['Tense', 'Frenzied']) {
+        if (typeof bl[k] === 'number' && bl[k] > bl.cap) err(STYLES, '/chains/blitz/chance/' + k, 'style-blitz-cap', k + ' chance ' + bl[k] + ' is above the cap ' + bl.cap + ', so it is always clipped', 'warning');
+      }
+    }
     // Tempo names used in beats (and by the chain cadence) exist in styles.tempo or the dynamic profile's tempo.
     const names = new Set(isObj(styles.tempo) ? plainKeys(styles.tempo) : []);
     const dyn = isObj(tpl) && isObj(tpl.profiles) && isObj(tpl.profiles.dynamic) && isObj(tpl.profiles.dynamic.tempo) ? plainKeys(tpl.profiles.dynamic.tempo) : [];

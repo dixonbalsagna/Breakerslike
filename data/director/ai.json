@@ -1,0 +1,15 @@
+{
+  "schema": "director.ai/1",
+  "_about": "The AI's skill numbers (sim/director/ai.gd, DirAI). Under ADR 0008 the AI plays by the player's rules: it gets an outcome only by an input, and these numbers say how often it makes that input. One difficulty for now (medium); step 4's AI profile adds easy and hard.",
+  "pressReact": {
+    "AGGRESSIVE": 0.6,
+    "DEFENSIVE": 0.0,
+    "EVASIVE": 0.5,
+    "ESCAPE": 0.0,
+    "_note": "Press (stance-matrix.md section 7.2): a trade or a counter needs the defender's own attack request. Attacked in this stance, the AI has a request in with this chance (one draw; the request goes through its queue). AGGRESSIVE: it trades instead of taking a clean hit. EVASIVE: it counters after a dodge instead of dodging clean. A guard never counters by itself."
+  },
+  "beamAnswer": 0.35,
+  "_beamAnswer": "control-rules.md section 10: the chance the AI answers a beam when it can: with its own signature (45 ki, off cooldown), or else with a heavy blast (40 ki). Easy 0.15, medium 0.35, hard 0.60",
+  "sigPick": 0.025,
+  "_sigPick": "the chance an AI attack is the signature, with 50 ki and the cooldown over: about 3 signatures a match (band 2 to 4)"
+}

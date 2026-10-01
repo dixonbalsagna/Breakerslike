@@ -367,7 +367,7 @@
         }
       ],
       "expect": {
-        "rule": "dependentRequired",
+        "rule": "xref:branch-profiles",
         "pointer": "/templates/6/branches/0"
       }
     },
@@ -8029,6 +8029,615 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "2b-trigger-defender-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/7/trigger/defender": "FLOATING"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/templates/7/trigger/defender"
+      }
+    },
+    {
+      "id": "2b-trigger-needs-defender-or-context",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/9/trigger/context"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/templates/9/trigger"
+      }
+    },
+    {
+      "id": "2b-only-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/7/only": [
+              "turbo"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/templates/7/only/0"
+      }
+    },
+    {
+      "id": "2b-branch-needs-parity",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/0/branches/0/parity"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:branch-profiles",
+        "pointer": "/templates/0/branches/0"
+      }
+    },
+    {
+      "id": "2b-branch-interrupt-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/3/branches/0/interrupts/0": "parry"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/templates/3/branches/0/interrupts/0"
+      }
+    },
+    {
+      "id": "2b-strike-class-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/dynamic/2/args/o/class": "weak"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/templates/0/branches/0/dynamic/2/args/o/class"
+      }
+    },
+    {
+      "id": "2b-no-parry-still-valid",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/dynamic/2/args/o/noParry": true
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "2b-profile-selector-name",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/2/selectorByProfile/turbo": {
+              "kind": "fixed",
+              "branch": "read"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/templates/2/selectorByProfile/turbo"
+      }
+    },
+    {
+      "id": "2b-condition-selector-needs-then",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/7/selector/then"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/templates/7/selector"
+      }
+    },
+    {
+      "id": "2b-condition-selector-branch",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/7/selector/then": "nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:selector-branch",
+        "pointer": "/templates/7/selector/then"
+      }
+    },
+    {
+      "id": "2b-else-condition-branch",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/2/selectorByProfile/dynamic/else/then": "nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:selector-branch",
+        "pointer": "/templates/2/selectorByProfile/dynamic/else/then"
+      }
+    },
+    {
+      "id": "2b-defender-add-type",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/5/selectorByProfile/dynamic/defenderAdd/then": "high"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/templates/5/selectorByProfile/dynamic/defenderAdd/then"
+      }
+    },
+    {
+      "id": "2b-condition-is-type",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/beam/outcomeByProfile/dynamic/rules/0/if/is": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/beam/outcomeByProfile/dynamic/rules/0/if/is"
+      }
+    },
+    {
+      "id": "2b-dynamic-needs-windups",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/windups"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic"
+      }
+    },
+    {
+      "id": "2b-windup-ticks-integer",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/windups/ender": 18.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/profiles/dynamic/windups/ender"
+      }
+    },
+    {
+      "id": "2b-perfect-block-needs-stagger",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/perfectBlock/staggerTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic/perfectBlock"
+      }
+    },
+    {
+      "id": "2b-min-heavy-positive",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/approach/minHeavy": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/profiles/dynamic/approach/minHeavy"
+      }
+    },
+    {
+      "id": "2b-ender-windup-type",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/tempo/enderWindup": "long"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/profiles/dynamic/tempo/enderWindup"
+      }
+    },
+    {
+      "id": "2b-strike-class-list-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/strikeClass/classes/0": "weak"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/profiles/dynamic/strikeClass/classes/0"
+      }
+    },
+    {
+      "id": "2b-interrupt-unknown",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/interrupts/parry": {
+              "beats": []
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/interrupts/parry"
+      }
+    },
+    {
+      "id": "2b-interrupt-stagger-needs-ticks",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/interrupts/perfect_block/beats/1/args/ticks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/interrupts/perfect_block/beats/1/args"
+      }
+    },
+    {
+      "id": "2b-when-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/9/branches/0/dynamic/3/when": "sometimes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/templates/9/branches/0/dynamic/3/when"
+      }
+    },
+    {
+      "id": "2b-beam-outcome-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/beam/outcomeByProfile/dynamic/rules/2/out": "MISS"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/beam/outcomeByProfile/dynamic/rules/2/out"
+      }
+    },
+    {
+      "id": "2b-beam-decide-at",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/beam/outcomeByProfile/dynamic/decideAt": "never"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/beam/outcomeByProfile/dynamic/decideAt"
+      }
+    },
+    {
+      "id": "2b-beam-clash-score-side",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/beam/outcomeByProfile/dynamic/rules/1/clashScoreAdd/X": -5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/beam/outcomeByProfile/dynamic/rules/1/clashScoreAdd/X"
+      }
+    },
+    {
+      "id": "2b-kind-enum",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/finishers/2/kind": "sniper"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/finishers/2/kind"
+      }
+    },
+    {
+      "id": "2b-kind-required",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "del": [
+            "/finishers/2/kind"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/finishers/2"
+      }
+    },
+    {
+      "id": "2b-by-state-type",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/struggle/byState/base": "high"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/contest/struggle/byState/base"
+      }
+    },
+    {
+      "id": "2b-by-state-read-enum",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/struggle/byState/stanceRead/matches/launch": "SPRINT"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/contest/struggle/byState/stanceRead/matches/launch"
+      }
+    },
+    {
+      "id": "2b-by-state-needs-read",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "del": [
+            "/contest/struggle/byState/stanceRead"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/contest/struggle/byState"
+      }
+    },
+    {
+      "id": "2b-heat-stage-required",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "del": [
+            "/chains/chainP/heat/Boiling"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/chains/chainP/heat"
+      }
+    },
+    {
+      "id": "2b-heat-type",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/chains/chainP/heat/Simmering": "hot"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/chains/chainP/heat/Simmering"
+      }
+    },
+    {
+      "id": "2b-heat-boiling-retired",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/chains/chainP/heatBoiling": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/chains/chainP/heatBoiling"
+      }
+    },
+    {
+      "id": "2b-blitz-cap-range",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/chains/blitz/chance/cap": 1.4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/chains/blitz/chance/cap"
+      }
+    },
+    {
+      "id": "2b-blitz-cap-required",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "del": [
+            "/chains/blitz/chance/cap"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/chains/blitz/chance"
+      }
+    },
+    {
+      "id": "2b-style-weight-zero-held-ok",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/styles/0/weight/base": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "2b-style-weight-negative",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/styles/0/weight/base": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/styles/0/weight/base"
+      }
+    },
+    {
+      "id": "2b-blitz-cap-clips",
+      "schema": "combat-styles.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/styles.json",
+          "set": {
+            "/chains/blitz/chance/cap": 0.3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:style-blitz-cap",
+        "pointer": "/chains/blitz/chance/Frenzied"
+      }
     },
     {
       "id": "anim-forms-live-valid",

@@ -342,7 +342,8 @@
               "required": [
                 "Tense",
                 "Frenzied",
-                "perActAbove1"
+                "perActAbove1",
+                "cap"
               ],
               "properties": {
                 "Tense": {
@@ -359,6 +360,12 @@
                   "type": "number",
                   "minimum": 0,
                   "maximum": 1
+                },
+                "cap": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "The blitz chance never exceeds this (balance-targets.md section 12)."
                 }
               },
               "additionalProperties": false
@@ -409,7 +416,8 @@
             "byStance",
             "minKi",
             "floor",
-            "cap"
+            "cap",
+            "heat"
           ],
           "properties": {
             "byStance": {
@@ -450,9 +458,6 @@
             "perComboAbove1": {
               "type": "number"
             },
-            "heatBoiling": {
-              "type": "number"
-            },
             "minKi": {
               "type": "number",
               "minimum": 0
@@ -466,6 +471,30 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "heat": {
+              "type": "object",
+              "description": "Heat bonus added to the chain probability for fighters with the heat track, by heat stage. Replaces heatBoiling.",
+              "required": [
+                "Heated",
+                "Simmering",
+                "Boiling"
+              ],
+              "properties": {
+                "Heated": {
+                  "type": "number"
+                },
+                "Simmering": {
+                  "type": "number"
+                },
+                "Boiling": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
             }
           },
           "additionalProperties": false,
@@ -763,7 +792,7 @@
           "properties": {
             "base": {
               "type": "number",
-              "exclusiveMinimum": 0
+              "minimum": 0
             },
             "factors": {
               "type": "array",

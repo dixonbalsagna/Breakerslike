@@ -7,6 +7,10 @@ const VARIANT: Dictionary = {"ocean": "HORIZON CLEAVE", "city": "BOULEVARD RAZE"
 ## Plans a signature from Combat's data (DirData).
 static func planBeam(S: SimState, ex) -> void:
 	var out: String = DirData.planBeam(S, ex)
+	_setLoser(S, ex, out)
+
+
+static func _setLoser(S: SimState, ex, out: String) -> void:
 	if out == "HIT" or out == "GUARD":
 		ex.loser = S.fighters.find(ex.D)
 	elif out == "DODGE" or out == "ESCAPE":
@@ -25,6 +29,12 @@ static func opBeamCharge(S: SimState, ex, args) -> void:
 	r.end = S.T + 0.55
 	A.rush = r
 	SimFx.ring(S, A.x, A.y + 40.0, 260.0, A.aura, 0.8, 10.0)
+	# Step 2b: an AI defender may answer the beam, by the same rule as a player: its own signature (45 ki and the cooldown
+	# over), or else a heavy blast (40 ki). How often is its difficulty (control-rules.md §10); the press comes in the tell.
+	if DirData.beamAtFire() and D.ai != null:
+		var canSig: bool = D.ki >= 45.0 and S.T >= D.sigReadyT
+		if (canSig or D.ki >= 40.0) and S.rng.next() < DirAI.skill().beamAnswer:
+			DirExchange.schedule(ex, ex.t + S.rng.range_(0.15, 0.6), "press", {"who": "D", "sig": canSig, "blast": not canSig})
 
 
 ## Beat "beamFire": fire, or start a beam clash; the outcome was decided when the beam was planned.
@@ -37,13 +47,28 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	A.beamCharge = null
 	if S.game.ko != null:
 		return
+	var dAdd: float = 0.0
+	var answered: bool = false
+	if out == "":
+		# Step 2b: the outcome is decided now, from what the defender did during the tell (DirData.beamOutcome).
+		var answer: String = _answer(S, D)
+		var res: Dictionary = DirData.beamOutcome(S, ex, dist, answer)
+		out = res.out
+		dAdd = res.dAdd
+		answered = true
+		ex.branch = out
+		ex.tag += " → " + out
+		_setLoser(S, ex, out)
+		SimEvents.feed(S, A.sigName + " → " + out, "the defender's answer: " + answer)
+		SimFx.beamOutcome(S, A, D, out)
 	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, dist + float(A.ld.beamOvershoot[_tierIx(A)]) * SimConst.WS)   # the tier gate: was 2000 + 400 x tier
 	var ox: float = A.x
 	var oy: float = A.y + 38.0
 	var aimY: float = D.y + 36.0
 	if out == "CLASH":
-		D.ki -= 40.0
-		startClash(S, ex, variant)
+		if not answered:
+			D.ki -= 40.0   # the old profiles' automatic clash; an answering request has paid its own cost
+		startClash(S, ex, variant, dAdd)
 		return
 	var dxs: float = SimWrap.sdx(ox, D.x)
 	var dyy: float = aimY - oy
@@ -59,6 +84,25 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	else:
 		DirExchange.schedule(ex, ex.t + 0.02, "beamEscape")
 	DirExchange.schedule(ex, ex.t + 0.9, "nop")
+
+
+## The defender's answer to a beam, taken from its queue at the fire beat (stance-matrix.md §7.2): its own signature
+## (45 ki, the cooldown over), or a heavy energy attack with 40 ki. The request is spent and its cost paid here. A light
+## blast or a physical attack is no answer: the beam goes through.
+static func _answer(S: SimState, D) -> String:
+	var q: Array = D.act.queue
+	for k in range(q.size()):
+		if int(q[k][0]) == SimAct.SIG and D.ki >= 45.0 and S.T >= D.sigReadyT:
+			q.remove_at(k)
+			D.ki -= 45.0
+			D.sigReadyT = S.T + D.sigCooldown
+			return "signature"
+	for k in range(q.size()):
+		if int(q[k][0]) == SimAct.HEAVY and int(q[k][1]) == 1 and D.ki >= 40.0:
+			q.remove_at(k)
+			D.ki -= 40.0
+			return "heavy_blast"
+	return "none"
 
 
 ## Beat "beamImpact": the beam connects (HIT) or is blocked (GUARD).
@@ -110,10 +154,11 @@ static func _clashScore(S: SimState, f) -> float:
 	return f.tier * 10.0 + f.ki * 0.35 + S.rng.range_(0.0, 16.0) + (f.menace * f.md.menaceBeam if f.hasMenace else 0.0)   # D1b: meters.json beam_power
 
 
-static func startClash(S: SimState, ex, variant: String) -> void:
+## dAdd: added to the defender's score (an answering heavy blast clashes at -10).
+static func startClash(S: SimState, ex, variant: String, dAdd: float = 0.0) -> void:
 	var A = ex.A
 	var D = ex.D
-	var aw: bool = _clashScore(S, A) > _clashScore(S, D)
+	var aw: bool = _clashScore(S, A) > _clashScore(S, D) + dAdd
 	var c := SimState.Clash.new()
 	c.A = A
 	c.D = D

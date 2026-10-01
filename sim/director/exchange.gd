@@ -47,6 +47,10 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	_drain(S)
 
 
+## The entry of the request being started (+1 toward, 0, -1 away); 0 outside _drain. Not state: it lives for one call.
+static var planEntry: int = 0
+
+
 ## Starts the oldest queued request the director can take: the older one first, the slots alternating on a tie. A request
 ## that cannot start yet (the cooldown, an exchange running, a target in the air) waits in its queue until it expires.
 static func _drain(S: SimState) -> void:
@@ -62,7 +66,9 @@ static func _drain(S: SimState) -> void:
 	for k in order:
 		var f = S.fighters[k]
 		while not SimAct.peek(f).is_empty():
+			planEntry = int(SimAct.peek(f)[2])   # step 2b: the direction held at the press, for the plan's atkEntry
 			var r: int = _start(S, f, KIND[int(SimAct.peek(f)[0])])
+			planEntry = 0
 			if r == WAIT:
 				break
 			SimAct.pop(f)
@@ -79,7 +85,10 @@ static func _queues(S: SimState) -> void:
 		var up: int = f.input.upgrade
 		if up > 0 and not SimAct.upgrade(f, SimAct.HEAVY if up == 1 else SimAct.SIG):
 			SimAct.push(f, SimAct.HEAVY if up == 1 else SimAct.SIG, f.act.mode, 0, S.tick)
-		if not (S.dirS.ex != null and S.dirS.ex.A == f):
+		# A waiting request expires, except the attacker's own links during its exchange, and the defender's answer during
+		# a beam's tell (step 2b: the tell is longer than the expiry).
+		var ex = S.dirS.ex
+		if not (ex != null and (ex.A == f or (ex.kind == "sig" and ex.D == f and ex.branch == ""))):
 			SimAct.expire(f, S.tick, QUEUE_LIFE)
 	_drain(S)
 
@@ -149,6 +158,8 @@ static func _start(S: SimState, A, kind: String) -> int:
 	for s in range(S.fighters.size()):
 		if S.fighters[s].brink:
 			ex.startBrink |= 1 << s
+	if kind != "sig" and DirData.hasNeutral():
+		DirAI.react(S, D, dState)   # step 2b: the AI defender's press, before the plan reads defQueued (dState: its state before the lock)
 	var chk = null
 	if planCheck.is_valid():
 		chk = _planByCode(S, ex, "sig" if kind == "sig" else "melee")
@@ -159,7 +170,7 @@ static func _start(S: SimState, A, kind: String) -> int:
 		ex.loser = S.fighters.find(D) if fav == "attacker" else (S.fighters.find(A) if fav == "defender" else -1)
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "sig" if kind == "sig" else "melee")
-	var stanceLabel: String = "CHARGING" if dState == "charging" else STN[int(D.stance)]
+	var stanceLabel: String = DirData.defLabel if DirData.defLabel != "" else ("CHARGING" if dState == "charging" else STN[int(D.stance)])   # step 2b: NEUTRAL too
 	SimEvents.feed(S, A.name + " " + kind.to_upper() + " vs " + stanceLabel, ex.tag + ("  (ambush)" if A.ambush else ""))
 	SimFx.attack(S, A, D, kind, stanceLabel, ex.tag, A.ambush)
 	if A.ambush:
@@ -185,7 +196,11 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirMelee.opWind(S, ex, a)
 		"press":
 			var who = A if a.who == "A" else D
-			if a.get("queue", false):
+			if a.get("sig", false):
+				SimAct.push(who, SimAct.SIG, who.act.mode, 0, S.tick)   # step 2b: the AI answers a beam with its own signature
+			elif a.get("blast", false):
+				SimAct.push(who, SimAct.HEAVY, 1, 0, S.tick)   # ... or with a heavy blast when its signature is not ready
+			elif a.get("queue", false):
 				SimAct.push(who, SimAct.LIGHT, who.act.mode, 0, S.tick)   # the AI's chain press is a queued request, as a player's is
 			else:
 				who.lastAtkT = S.T

@@ -178,6 +178,132 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "byState": {
+              "type": "object",
+              "description": "The struggle resolved by state (no presses): one draw at contestOpen. The press fields beside it retire when Encounter switches the struggle over.",
+              "required": [
+                "base",
+                "stanceRead",
+                "kiBonus",
+                "rallyPenalty",
+                "tiltPerMinute",
+                "tiltAfter",
+                "floor"
+              ],
+              "properties": {
+                "base": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "stanceRead": {
+                  "type": "object",
+                  "required": [
+                    "match",
+                    "other",
+                    "matches"
+                  ],
+                  "properties": {
+                    "match": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "other": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "matches": {
+                      "type": "object",
+                      "required": [
+                        "launch",
+                        "melee",
+                        "beam"
+                      ],
+                      "properties": {
+                        "launch": {
+                          "enum": [
+                            "AGGRESSIVE",
+                            "DEFENSIVE",
+                            "EVASIVE",
+                            "ESCAPE",
+                            "AGGRESSIVE_40KI"
+                          ]
+                        },
+                        "melee": {
+                          "enum": [
+                            "AGGRESSIVE",
+                            "DEFENSIVE",
+                            "EVASIVE",
+                            "ESCAPE",
+                            "AGGRESSIVE_40KI"
+                          ]
+                        },
+                        "beam": {
+                          "enum": [
+                            "AGGRESSIVE",
+                            "DEFENSIVE",
+                            "EVASIVE",
+                            "ESCAPE",
+                            "AGGRESSIVE_40KI"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                },
+                "kiBonus": {
+                  "type": "object",
+                  "required": [
+                    "atLeast",
+                    "add"
+                  ],
+                  "properties": {
+                    "atLeast": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "add": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "rallyPenalty": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "tiltPerMinute": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "tiltAfter": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "floor": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "fighterState": {
+                  "type": "string"
+                },
+                "pulses": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
             }
           },
           "additionalProperties": false,
@@ -263,7 +389,8 @@
         "profile",
         "timeUnit",
         "beats",
-        "outcomes"
+        "outcomes",
+        "kind"
       ],
       "properties": {
         "id": {
@@ -359,6 +486,14 @@
         },
         "hitstopFloorCheck": {
           "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "launch",
+            "melee",
+            "beam"
+          ],
+          "description": "What the finisher is, so the loser can read it in the wind-up (copied into finisher_start; the telegraph cue is finisher_tell_<kind>)."
         }
       },
       "allOf": [

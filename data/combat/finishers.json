@@ -23,6 +23,7 @@
       "scoring": { "base": 0.23, "perHit": 0.10, "perMiss": -0.05, "perStray": -0.05, "floor": 0.0,
                    "tilts": "the contest's rallyPenalty per Rally used and tiltPerMinute past tiltAfter, as above" },
       "aiHitChance": 0.60,
+      "byState": { "base": 0.23, "stanceRead": { "match": 0.15, "other": 0.05, "matches": { "launch": "DEFENSIVE", "melee": "EVASIVE", "beam": "AGGRESSIVE_40KI" } }, "kiBonus": { "atLeast": 50, "add": 0.05 }, "rallyPenalty": 0.10, "tiltPerMinute": 0.10, "tiltAfter": 480, "floor": 0.0, "fighterState": "hooks keyed by roster data: Protagonist Simmering or Boiling +0.10, Anti-hero Pride 50+ +0.10, Empress any guard standing +0.05, Cyborg hatch closed +0.10", "pulses": "at beatTicks (18, 36, 54): struggle_pulse holding or slipping, revealing the drawn result with no further draw", "_note": "spec-wounds.md section 1: the struggle is resolved by state and drawn once at contestOpen. The stance names are the sim's; under ADR 0008 they are the held states Guard, Dodge and Press. The press fields above (halfWidthTicks, assistHalfWidthTicks, debounceTicks, inputs, aiHitChance) and the press scoring retire when Encounter switches the struggle to this block" },
       "_note": "Used by the authored profile. Ticks are counted from contestOpen, which sits 66 ticks before contest in every authored finisher; the cue just before contestOpen (final_windup, ascend_charge, lift_and_display) is the count-in. Widths and rhythm: Controls (rulings section 8). Scoring: Game Design (spec-wounds.md section 1). aiHitChance: Encounter maps difficulty to it (0.44 to 0.78 fits QA's 20 to 35% survival band). The contest still draws once, so the RNG sequence does not depend on the number of presses. Parity ignores this block (base 0.30, no input)."
     }
   },
@@ -43,13 +44,14 @@
     "tell": "a readable warning pose on the named fighter", "pursue": "pursuit pose", "glance_back": "the escaper looks back",
     "whiff_recover": "the attacker's swing cuts empty air", "turn_read": "the attacker pivots, reading the dodge", "exposed": "the attacker is caught off balance",
     "overextend": "the attacker stumbles through", "recover": "the named fighter recovers its stance", "guard_set": "the guard holds and shoves back",
-    "reset": "both fighters square up", "bind": "forearms lock for a beat before the deciding blow", "circle": "the attacker swings around to the far side before the deciding blow", "glance": "a feel-out contact, no damage",
+    "reset": "both fighters square up", "bind": "forearms lock for a beat before the deciding blow", "backstep": "the attacker gives ground before lunging back in for the deciding blow (same side, no pass-through)", "perfect_block": "a perfect block: a sharp deflect flash on the guard, the attacker staggers", "riposte": "the riposte after a perfect block: an unblockable answer", "reversal": "a guard-cancel turn into the defender's own attack", "tell_light": "the attacker's light-weight tell through the approach (driven by the attack event's kind)", "tell_heavy": "the attacker's heavy-weight tell through the approach: a coil, a glowing fist", "finisher_tell_launch": "the finisher's wind-up shows a launch finisher (read: Guard)", "finisher_tell_melee": "the finisher's wind-up shows a melee finisher (read: Dodge)", "finisher_tell_beam": "the finisher's wind-up shows a beam finisher (read: answer with a beam)", "struggle_hold": "a struggle pulse: holding", "struggle_slip": "a struggle pulse: slipping", "blink_out": "air ripple at departure", "blink_in": "air ripple at arrival", "blink_meet": "a mid-air meet: fist and forearm spark", "chain_ender": "the chain's full stop: heavier flash, CHAIN xN", "blitz": "a fast chain: speed lines, rhythm accent", "link_knee": "chain link: knee", "link_elbow": "chain link: elbow", "link_kick": "chain link: kick", "relay": "aerial chain: overtake and strike back", "dive": "head-down dive", "swoop": "banking swoop with a trail", "skid": "dust skid along the ground", "stomp": "stamping foot, ground dent", "ground_slam": "two-handed slam into the ground", "ground_throw": "hip throw along the ground", "volley_fire": "small energy bolts leave the hand", "barrage": "sustained volley stance", "blast_hit": "bolt impact puff", "blast_guard": "bolt swatted off the guard", "blast_evade": "sidestep afterimage past a bolt", "clash_seesaw": "beam push swings back and forth", "clash_split": "beams bend apart and carve twin trenches", "clash_deflect": "one beam angles the other away", "clash_mutual": "the meeting point detonates", "clash_breakthrough": "the weaker beam fails fast", "circle": "the attacker swings around to the far side before the deciding blow", "glance": "a feel-out contact, no damage",
     "brace": "both fighters load their heavies", "recoil": "both fighters thrown back by the clash", "pull_up": "the pursuer pulls up", "scan": "the pursuer searches"
   },
 
   "finishers": [
     {
       "id": "generic.placeholder",
+      "kind": "launch",
       "fighter": "*",
       "profile": "parity",
       "_about": "Today's placeholder, exchange.gd lines 283-298, in the same scheduling order. The contest here resolves with a KO at the draw (mode 'ko_now'), as _opContest does.",
@@ -68,6 +70,7 @@
 
     {
       "id": "generic",
+      "kind": "launch",
       "fighter": "*",
       "profile": "authored",
       "name": { "text": "Finishing Blow", "placeholder": true, "source": "docs/narrative/finishers.md" },
@@ -102,6 +105,7 @@
 
     {
       "id": "kai",
+      "kind": "beam",
       "fighter": "KAI",
       "profile": "authored",
       "name": { "text": "Skyward Lance", "placeholder": true, "source": "docs/narrative/finishers.md" },
@@ -141,6 +145,7 @@
 
     {
       "id": "vorr",
+      "kind": "launch",
       "fighter": "VORR",
       "profile": "authored",
       "name": { "text": "The Display", "placeholder": true, "source": "docs/narrative/finishers.md" },

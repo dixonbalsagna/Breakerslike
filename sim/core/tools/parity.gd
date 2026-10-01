@@ -834,7 +834,7 @@ const WIRED: Array = [
 	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0, "match"],   # end to end: any of WIRED_SEEDS
 ]
 const WIRED_TICKS: int = 6000
-const WIRED_SEEDS: Array = [10, 17, 3, 7, 12]   # Q10: with the slower ladder VORR's menace first rises inside WIRED_TICKS on seeds 10 and 17
+const WIRED_SEEDS: Array = [45, 47, 77, 92, 99]   # step 2b (EP, QA): the seeds on which VORR's menace rises inside WIRED_TICKS after 2b
 
 
 func _wiredNumbers() -> String:

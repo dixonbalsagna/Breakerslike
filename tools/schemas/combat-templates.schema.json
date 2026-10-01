@@ -4,381 +4,1635 @@
   "title": "combat.templates/1",
   "description": "data/combat/templates.json: melee exchange templates, the chain link and the signature beam (docs/combat/data-fields.md section 10). Version field: schema. Policy: objects are closed (unknown keys are errors) except keys starting with an underscore, which are comments and are skipped by the canonical data hash. Free-form args are open except the keys each op needs.",
   "type": "object",
-  "required": ["schema", "profile", "profiles", "locals", "templates", "chainLink", "beam"],
+  "required": [
+    "schema",
+    "profile",
+    "profiles",
+    "locals",
+    "templates",
+    "chainLink",
+    "beam",
+    "interrupts"
+  ],
   "properties": {
-    "schema": { "const": "combat.templates/1" },
-    "profile": { "enum": ["parity", "spaced", "dynamic"] },
+    "schema": {
+      "const": "combat.templates/1"
+    },
+    "profile": {
+      "enum": [
+        "parity",
+        "spaced",
+        "dynamic"
+      ]
+    },
     "profiles": {
       "type": "object",
-      "required": ["parity", "spaced"],
+      "required": [
+        "parity",
+        "spaced"
+      ],
       "properties": {
-        "parity": { "$ref": "#/$defs/profileParity" },
-        "spaced": { "$ref": "#/$defs/profileSpaced" },
-        "dynamic": { "$ref": "#/$defs/profileSpaced" }
+        "parity": {
+          "$ref": "#/$defs/profileParity"
+        },
+        "spaced": {
+          "$ref": "#/$defs/profileSpaced"
+        },
+        "dynamic": {
+          "$ref": "#/$defs/profileDynamic"
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
-    "locals": { "type": "object" },
-    "templates": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/template" } },
-    "chainLink": { "$ref": "#/$defs/chainLink" },
-    "beam": { "$ref": "#/$defs/beam" }
-  },
-  "additionalProperties": false,
-  "patternProperties": { "^_": true },
-  "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
-    "num": { "type": "number" },
-    "ticks": { "type": "integer", "minimum": 0 },
-    "pair": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "minItems": 2, "maxItems": 2 },
-    "profileParity": {
+    "locals": {
+      "type": "object"
+    },
+    "templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/template"
+      }
+    },
+    "chainLink": {
+      "$ref": "#/$defs/chainLink"
+    },
+    "beam": {
+      "$ref": "#/$defs/beam"
+    },
+    "interrupts": {
       "type": "object",
-      "required": ["timeUnit", "approach", "aiParryPressDelay"],
+      "description": "Branch takeovers that arrive inside an exchange (docs/combat/control-scheme-data.md section 4). Step 2b only carries the data; Encounter's step 3 reads it.",
       "properties": {
-        "timeUnit": { "const": "s" },
-        "approach": {
+        "perfect_block": {
           "type": "object",
-          "required": ["divisor", "min", "max"],
+          "required": [
+            "beats"
+          ],
           "properties": {
-            "divisor": { "type": "number", "exclusiveMinimum": 0 },
-            "min": { "type": "number", "minimum": 0 },
-            "max": { "type": "number", "minimum": 0 }
+            "on": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "opener",
+                  "heavy",
+                  "ender",
+                  "blast",
+                  "mid",
+                  "none"
+                ]
+              }
+            },
+            "after": {
+              "type": "string"
+            },
+            "beats": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/spacedBeat"
+              }
+            },
+            "opens": {
+              "type": "object",
+              "required": [
+                "template",
+                "withinTicks"
+              ],
+              "properties": {
+                "template": {
+                  "$ref": "#/$defs/id"
+                },
+                "withinTicks": {
+                  "$ref": "#/$defs/value"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "then": {
+              "type": "string"
+            }
           },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
-        "aiParryPressDelay": { "$ref": "#/$defs/pair" }
+        "reversal": {
+          "type": "object",
+          "required": [
+            "beats"
+          ],
+          "properties": {
+            "on": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "opener",
+                  "heavy",
+                  "ender",
+                  "blast",
+                  "mid",
+                  "none"
+                ]
+              }
+            },
+            "after": {
+              "type": "string"
+            },
+            "beats": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/spacedBeat"
+              }
+            },
+            "opens": {
+              "type": "object",
+              "required": [
+                "template",
+                "withinTicks"
+              ],
+              "properties": {
+                "template": {
+                  "$ref": "#/$defs/id"
+                },
+                "withinTicks": {
+                  "$ref": "#/$defs/value"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "then": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "dodge_cancel": {
+          "type": "object",
+          "required": [
+            "beats"
+          ],
+          "properties": {
+            "on": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "opener",
+                  "heavy",
+                  "ender",
+                  "blast",
+                  "mid",
+                  "none"
+                ]
+              }
+            },
+            "after": {
+              "type": "string"
+            },
+            "beats": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/spacedBeat"
+              }
+            },
+            "opens": {
+              "type": "object",
+              "required": [
+                "template",
+                "withinTicks"
+              ],
+              "properties": {
+                "template": {
+                  "$ref": "#/$defs/id"
+                },
+                "withinTicks": {
+                  "$ref": "#/$defs/value"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "then": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "burst": {
+          "type": "object",
+          "required": [
+            "beats"
+          ],
+          "properties": {
+            "on": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "opener",
+                  "heavy",
+                  "ender",
+                  "blast",
+                  "mid",
+                  "none"
+                ]
+              }
+            },
+            "after": {
+              "type": "string"
+            },
+            "beats": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/spacedBeat"
+              }
+            },
+            "opens": {
+              "type": "object",
+              "required": [
+                "template",
+                "withinTicks"
+              ],
+              "properties": {
+                "template": {
+                  "$ref": "#/$defs/id"
+                },
+                "withinTicks": {
+                  "$ref": "#/$defs/value"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "then": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "num": {
+      "type": "number"
+    },
+    "ticks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pair": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "profileParity": {
+      "type": "object",
+      "required": [
+        "timeUnit",
+        "approach",
+        "aiParryPressDelay"
+      ],
+      "properties": {
+        "timeUnit": {
+          "const": "s"
+        },
+        "approach": {
+          "type": "object",
+          "required": [
+            "divisor",
+            "min",
+            "max"
+          ],
+          "properties": {
+            "divisor": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "aiParryPressDelay": {
+          "$ref": "#/$defs/pair"
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     },
     "profileSpaced": {
       "type": "object",
-      "required": ["timeUnit", "ticksPerSecond", "tempo", "approach", "aiParryPressDelay", "parry"],
+      "required": [
+        "timeUnit",
+        "ticksPerSecond",
+        "tempo",
+        "approach",
+        "aiParryPressDelay",
+        "parry"
+      ],
       "properties": {
-        "timeUnit": { "const": "tick" },
-        "ticksPerSecond": { "const": 60 },
+        "timeUnit": {
+          "const": "tick"
+        },
+        "ticksPerSecond": {
+          "const": 60
+        },
         "tempo": {
           "type": "object",
-          "required": ["step", "windup", "heavyWindup", "follow", "tell"],
+          "required": [
+            "step",
+            "windup",
+            "heavyWindup",
+            "follow",
+            "tell"
+          ],
           "properties": {
-            "step": { "$ref": "#/$defs/ticks" },
-            "windup": { "$ref": "#/$defs/ticks" },
-            "heavyWindup": { "$ref": "#/$defs/ticks" },
-            "follow": { "$ref": "#/$defs/ticks" },
-            "tell": { "$ref": "#/$defs/ticks" },
-            "foot": { "$ref": "#/$defs/ticks" },
-            "pursue": { "$ref": "#/$defs/ticks" }
+            "step": {
+              "$ref": "#/$defs/ticks"
+            },
+            "windup": {
+              "$ref": "#/$defs/ticks"
+            },
+            "heavyWindup": {
+              "$ref": "#/$defs/ticks"
+            },
+            "follow": {
+              "$ref": "#/$defs/ticks"
+            },
+            "tell": {
+              "$ref": "#/$defs/ticks"
+            },
+            "foot": {
+              "$ref": "#/$defs/ticks"
+            },
+            "pursue": {
+              "$ref": "#/$defs/ticks"
+            }
           },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
         "approach": {
           "type": "object",
-          "required": ["divisor", "min", "max", "pursuit", "rounding"],
+          "required": [
+            "divisor",
+            "min",
+            "max",
+            "pursuit",
+            "rounding"
+          ],
           "properties": {
-            "divisor": { "type": "number", "exclusiveMinimum": 0 },
-            "min": { "type": "number", "minimum": 0 },
-            "max": { "type": "number", "minimum": 0 },
+            "divisor": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0
+            },
             "pursuit": {
               "type": "object",
-              "required": ["beyond", "base", "per", "max"],
+              "required": [
+                "beyond",
+                "base",
+                "per",
+                "max"
+              ],
               "properties": {
-                "beyond": { "type": "number", "minimum": 0 },
-                "base": { "type": "number", "minimum": 0 },
-                "per": { "type": "number", "exclusiveMinimum": 0 },
-                "max": { "type": "number", "minimum": 0 }
+                "beyond": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "base": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "per": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
               },
               "additionalProperties": false,
-              "patternProperties": { "^_": true }
+              "patternProperties": {
+                "^_": true
+              }
             },
-            "rounding": { "type": "string" }
+            "rounding": {
+              "type": "string"
+            }
           },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
-        "aiParryPressDelay": { "$ref": "#/$defs/pair" },
+        "aiParryPressDelay": {
+          "$ref": "#/$defs/pair"
+        },
         "parry": {
           "type": "object",
-          "required": ["windowTicks", "bufferTicks", "cleanTicks", "reward", "cleanReward"],
+          "required": [
+            "windowTicks",
+            "bufferTicks",
+            "cleanTicks",
+            "reward",
+            "cleanReward"
+          ],
           "properties": {
-            "windowTicks": { "$ref": "#/$defs/lightHeavyTicks" },
-            "bufferTicks": { "$ref": "#/$defs/ticks" },
-            "cleanTicks": { "$ref": "#/$defs/lightHeavyTicks" },
-            "reward": { "$ref": "#/$defs/parryReward" },
-            "cleanReward": { "$ref": "#/$defs/parryReward" }
+            "windowTicks": {
+              "$ref": "#/$defs/lightHeavyTicks"
+            },
+            "bufferTicks": {
+              "$ref": "#/$defs/ticks"
+            },
+            "cleanTicks": {
+              "$ref": "#/$defs/lightHeavyTicks"
+            },
+            "reward": {
+              "$ref": "#/$defs/parryReward"
+            },
+            "cleanReward": {
+              "$ref": "#/$defs/parryReward"
+            }
           },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
-        "hitstopFloors": { "type": "object", "properties": { "adopted": { "type": "boolean" } }, "additionalProperties": { "type": "number" }, "patternProperties": { "^_": true } }
+        "hitstopFloors": {
+          "type": "object",
+          "properties": {
+            "adopted": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "lightHeavyTicks": {
       "type": "object",
-      "required": ["light", "heavy"],
-      "properties": { "light": { "$ref": "#/$defs/ticks" }, "heavy": { "$ref": "#/$defs/ticks" } },
+      "required": [
+        "light",
+        "heavy"
+      ],
+      "properties": {
+        "light": {
+          "$ref": "#/$defs/ticks"
+        },
+        "heavy": {
+          "$ref": "#/$defs/ticks"
+        }
+      },
       "additionalProperties": false
     },
     "parryReward": {
       "type": "object",
-      "required": ["damage", "ki", "stopTicks", "pushback", "cue"],
+      "required": [
+        "damage",
+        "ki",
+        "stopTicks",
+        "pushback",
+        "cue"
+      ],
       "properties": {
-        "damage": { "type": "number", "minimum": 0 },
-        "ki": { "type": "number", "minimum": 0 },
-        "stopTicks": { "$ref": "#/$defs/ticks" },
-        "pushback": { "type": "number", "minimum": 0 },
-        "cue": { "type": "string", "minLength": 1 }
+        "damage": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ki": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stopTicks": {
+          "$ref": "#/$defs/ticks"
+        },
+        "pushback": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cue": {
+          "type": "string",
+          "minLength": 1
+        }
       },
       "additionalProperties": false
     },
     "template": {
       "type": "object",
-      "required": ["id", "trigger", "selector", "branches"],
+      "required": [
+        "id",
+        "trigger",
+        "selector",
+        "branches"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "trigger": { "$ref": "#/$defs/trigger" },
-        "selector": { "$ref": "#/$defs/selector" },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "trigger": {
+          "$ref": "#/$defs/trigger"
+        },
+        "selector": {
+          "$ref": "#/$defs/selector"
+        },
         "shared": {
           "type": "object",
-          "required": ["parity", "spaced"],
+          "required": [
+            "parity",
+            "spaced"
+          ],
           "properties": {
-            "parity": { "type": "array", "items": { "$ref": "#/$defs/parityBeat" } },
-            "spaced": { "type": "array", "items": { "$ref": "#/$defs/spacedBeat" } },
-            "dynamic": { "type": "array", "items": { "$ref": "#/$defs/spacedBeat" } }
+            "parity": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/parityBeat"
+              }
+            },
+            "spaced": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/spacedBeat"
+              }
+            },
+            "dynamic": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/spacedBeat"
+              }
+            }
           },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
-        "branches": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/branch" } }
+        "branches": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/branch"
+          }
+        },
+        "only": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "parity",
+              "spaced",
+              "dynamic"
+            ]
+          },
+          "description": "The profiles this template or branch exists in. Without it, parity and spaced beats are required (checked by tools/lib/xref.js, branch-profiles)."
+        },
+        "selectorByProfile": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "A selector per timing profile, read before `selector` when the active profile has one. Same shape as `selector`. Conditions may use defHeld, defQueued, defClipped, defPerfect, defEntry, atkEntry and defAnswer (supplied by Encounter).",
+          "propertyNames": {
+            "enum": [
+              "parity",
+              "spaced",
+              "dynamic"
+            ]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/selector"
+          }
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "trigger": {
       "type": "object",
-      "required": ["kinds", "defender"],
+      "required": [
+        "kinds"
+      ],
       "properties": {
-        "kinds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["light", "heavy", "sig"] } },
-        "defender": { "enum": ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE", "CHARGING", "any"] }
+        "kinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "light",
+              "heavy",
+              "sig"
+            ]
+          }
+        },
+        "defender": {
+          "enum": [
+            "AGGRESSIVE",
+            "DEFENSIVE",
+            "EVASIVE",
+            "ESCAPE",
+            "CHARGING",
+            "NEUTRAL",
+            "any"
+          ]
+        },
+        "context": {
+          "enum": [
+            "riposte"
+          ]
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      },
+      "oneOf": [
+        {
+          "required": [
+            "defender"
+          ]
+        },
+        {
+          "required": [
+            "context"
+          ]
+        }
+      ]
     },
     "branch": {
       "type": "object",
-      "required": ["id", "tag", "favours", "spacedTiming", "parity", "spaced"],
+      "required": [
+        "id",
+        "tag",
+        "favours"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "tag": { "type": "string", "minLength": 1 },
-        "tagProposed": { "type": "string", "minLength": 1 },
-        "favours": { "enum": ["attacker", "defender", "neutral"] },
-        "spacedTiming": { "enum": ["changes", "identical"] },
-        "dynamicTiming": { "enum": ["changes", "identical"] },
-        "parity": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parityBeat" } },
-        "spaced": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } },
-        "dynamic": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tagProposed": {
+          "type": "string",
+          "minLength": 1
+        },
+        "favours": {
+          "enum": [
+            "attacker",
+            "defender",
+            "neutral"
+          ]
+        },
+        "spacedTiming": {
+          "enum": [
+            "changes",
+            "identical"
+          ]
+        },
+        "dynamicTiming": {
+          "enum": [
+            "changes",
+            "identical"
+          ]
+        },
+        "parity": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/parityBeat"
+          }
+        },
+        "spaced": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/spacedBeat"
+          }
+        },
+        "dynamic": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/spacedBeat"
+          }
+        },
+        "only": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "parity",
+              "spaced",
+              "dynamic"
+            ]
+          },
+          "description": "The profiles this template or branch exists in. Without it, parity and spaced beats are required (checked by tools/lib/xref.js, branch-profiles)."
+        },
+        "interrupts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "perfect_block",
+              "reversal",
+              "dodge_cancel",
+              "burst"
+            ]
+          },
+          "description": "The interrupts this branch allows (the data is read from Encounter's step 3)."
+        }
       },
-      "dependentRequired": { "dynamic": ["dynamicTiming"], "dynamicTiming": ["dynamic"] },
+      "dependentRequired": {
+        "dynamicTiming": [
+          "dynamic"
+        ]
+      },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "chainLink": {
       "type": "object",
-      "required": ["spacedTiming", "parity", "spaced"],
+      "required": [
+        "spacedTiming",
+        "parity",
+        "spaced"
+      ],
       "properties": {
-        "spacedTiming": { "enum": ["changes", "identical"] },
-        "parity": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parityBeat" } },
-        "spaced": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } },
-        "dynamic": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/spacedBeat" } }
+        "spacedTiming": {
+          "enum": [
+            "changes",
+            "identical"
+          ]
+        },
+        "parity": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/parityBeat"
+          }
+        },
+        "spaced": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/spacedBeat"
+          }
+        },
+        "dynamic": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/spacedBeat"
+          }
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "beam": {
       "type": "object",
-      "required": ["id", "trigger", "spacedTiming", "variants", "tagFormat", "outcome", "parity"],
+      "required": [
+        "id",
+        "trigger",
+        "spacedTiming",
+        "variants",
+        "tagFormat",
+        "outcome",
+        "parity"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "trigger": { "$ref": "#/$defs/trigger" },
-        "spacedTiming": { "enum": ["changes", "identical"] },
-        "dynamicTiming": { "enum": ["changes", "identical"] },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "trigger": {
+          "$ref": "#/$defs/trigger"
+        },
+        "spacedTiming": {
+          "enum": [
+            "changes",
+            "identical"
+          ]
+        },
+        "dynamicTiming": {
+          "enum": [
+            "changes",
+            "identical"
+          ]
+        },
         "variants": {
           "type": "object",
-          "required": ["ocean", "city", "village", "forest", "mountains", "desert", "plains"],
-          "additionalProperties": { "type": "string", "minLength": 1 },
-          "patternProperties": { "^_": true }
+          "required": [
+            "ocean",
+            "city",
+            "village",
+            "forest",
+            "mountains",
+            "desert",
+            "plains"
+          ],
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          },
+          "patternProperties": {
+            "^_": true
+          }
         },
-        "tagFormat": { "type": "string", "minLength": 1 },
+        "tagFormat": {
+          "type": "string",
+          "minLength": 1
+        },
         "outcome": {
           "type": "object",
-          "required": ["rules"],
+          "required": [
+            "rules"
+          ],
           "properties": {
-            "rules": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/beamRule" } }
+            "rules": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/beamRule"
+              }
+            }
           },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
-        "parity": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parityBeat" } },
-        "laterSpaced": { "type": "object" }
+        "parity": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/parityBeat"
+          }
+        },
+        "laterSpaced": {
+          "type": "object"
+        },
+        "outcomeByProfile": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "parity",
+              "spaced",
+              "dynamic"
+            ]
+          },
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "decideAt",
+              "rules"
+            ],
+            "properties": {
+              "decideAt": {
+                "enum": [
+                  "fire",
+                  "start"
+                ]
+              },
+              "rules": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/beamRuleDynamic"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "beamRule": {
       "type": "object",
-      "required": ["defender", "draw"],
+      "required": [
+        "defender",
+        "draw"
+      ],
       "properties": {
-        "defender": { "enum": ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE", "CHARGING"] },
-        "draw": { "enum": ["none", "next"] },
-        "if": { "$ref": "#/$defs/cond" },
-        "p": { "$ref": "#/$defs/probability" },
-        "ifBelow": { "$ref": "#/$defs/beamOutcome" },
-        "ifBelowAndNot": { "$ref": "#/$defs/cond" },
-        "out": { "$ref": "#/$defs/beamOutcome" },
-        "else": { "$ref": "#/$defs/beamOutcome" }
+        "defender": {
+          "enum": [
+            "AGGRESSIVE",
+            "DEFENSIVE",
+            "EVASIVE",
+            "ESCAPE",
+            "CHARGING"
+          ]
+        },
+        "draw": {
+          "enum": [
+            "none",
+            "next"
+          ]
+        },
+        "if": {
+          "$ref": "#/$defs/cond"
+        },
+        "p": {
+          "$ref": "#/$defs/probability"
+        },
+        "ifBelow": {
+          "$ref": "#/$defs/beamOutcome"
+        },
+        "ifBelowAndNot": {
+          "$ref": "#/$defs/cond"
+        },
+        "out": {
+          "$ref": "#/$defs/beamOutcome"
+        },
+        "else": {
+          "$ref": "#/$defs/beamOutcome"
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
-    "beamOutcome": { "enum": ["CLASH", "GUARD", "DODGE", "HIT", "ESCAPE"] },
+    "beamOutcome": {
+      "enum": [
+        "CLASH",
+        "GUARD",
+        "DODGE",
+        "HIT",
+        "ESCAPE",
+        "DEFLECT"
+      ]
+    },
     "selector": {
       "type": "object",
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "properties": {
-        "kind": { "enum": ["fixed", "threshold", "gated_threshold", "bands", "score_compare"] },
-        "branch": { "$ref": "#/$defs/id" },
-        "draw": { "const": "next" },
-        "gate": { "$ref": "#/$defs/cond" },
-        "p": { "$ref": "#/$defs/probability" },
+        "kind": {
+          "enum": [
+            "fixed",
+            "threshold",
+            "gated_threshold",
+            "bands",
+            "score_compare",
+            "condition"
+          ]
+        },
+        "branch": {
+          "$ref": "#/$defs/id"
+        },
+        "draw": {
+          "const": "next"
+        },
+        "gate": {
+          "$ref": "#/$defs/cond"
+        },
+        "p": {
+          "$ref": "#/$defs/probability"
+        },
         "override": {
           "type": "object",
-          "required": ["if", "p"],
-          "properties": { "if": { "$ref": "#/$defs/cond" }, "p": { "type": "number", "minimum": 0, "maximum": 1 } },
+          "required": [
+            "if",
+            "p"
+          ],
+          "properties": {
+            "if": {
+              "$ref": "#/$defs/cond"
+            },
+            "p": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         },
-        "ifBelow": { "$ref": "#/$defs/id" },
-        "else": { "$ref": "#/$defs/id" },
-        "below": { "$ref": "#/$defs/band" },
-        "above": { "$ref": "#/$defs/band" },
-        "order": { "type": "array", "prefixItems": [{ "const": "A" }, { "const": "D" }], "minItems": 2, "maxItems": 2 },
-        "ifGreater": { "$ref": "#/$defs/id" },
+        "ifBelow": {
+          "$ref": "#/$defs/id"
+        },
+        "else": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "$ref": "#/$defs/condElse"
+            }
+          ]
+        },
+        "below": {
+          "$ref": "#/$defs/band"
+        },
+        "above": {
+          "$ref": "#/$defs/band"
+        },
+        "order": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "A"
+            },
+            {
+              "const": "D"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "ifGreater": {
+          "$ref": "#/$defs/id"
+        },
         "score": {
           "type": "object",
-          "required": ["sum"],
-          "properties": { "sum": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/scoreTerm" } } },
+          "required": [
+            "sum"
+          ],
+          "properties": {
+            "sum": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/scoreTerm"
+              }
+            }
+          },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "if": {
+          "$ref": "#/$defs/cond"
+        },
+        "then": {
+          "$ref": "#/$defs/id"
+        },
+        "defenderAdd": {
+          "type": "object",
+          "required": [
+            "if",
+            "then",
+            "else"
+          ],
+          "properties": {
+            "if": {
+              "$ref": "#/$defs/cond"
+            },
+            "then": {
+              "type": "number"
+            },
+            "else": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
         }
       },
       "allOf": [
-        { "if": { "properties": { "kind": { "const": "fixed" } }, "required": ["kind"] }, "then": { "required": ["branch"] } },
-        { "if": { "properties": { "kind": { "const": "threshold" } }, "required": ["kind"] }, "then": { "required": ["draw", "p", "ifBelow", "else"] } },
-        { "if": { "properties": { "kind": { "const": "gated_threshold" } }, "required": ["kind"] }, "then": { "required": ["gate", "draw", "p", "ifBelow", "else"] } },
-        { "if": { "properties": { "kind": { "const": "bands" } }, "required": ["kind"] }, "then": { "required": ["draw", "p", "below", "above", "else"] } },
-        { "if": { "properties": { "kind": { "const": "score_compare" } }, "required": ["kind"] }, "then": { "required": ["order", "score", "ifGreater", "else"] } }
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "fixed"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "branch"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "threshold"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "draw",
+              "p",
+              "ifBelow",
+              "else"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "gated_threshold"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "gate",
+              "draw",
+              "p",
+              "ifBelow",
+              "else"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "bands"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "draw",
+              "p",
+              "below",
+              "above",
+              "else"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "score_compare"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "order",
+              "score",
+              "ifGreater",
+              "else"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "condition"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "if",
+              "then",
+              "else"
+            ]
+          }
+        }
       ],
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "band": {
       "type": "object",
-      "required": ["offset", "branch"],
-      "properties": { "offset": { "type": "number" }, "branch": { "$ref": "#/$defs/id" } },
+      "required": [
+        "offset",
+        "branch"
+      ],
+      "properties": {
+        "offset": {
+          "type": "number"
+        },
+        "branch": {
+          "$ref": "#/$defs/id"
+        }
+      },
       "additionalProperties": false
     },
     "probability": {
       "anyOf": [
-        { "type": "number", "minimum": 0, "maximum": 1 },
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         {
           "type": "object",
-          "required": ["start", "terms", "clamp"],
+          "required": [
+            "start",
+            "terms",
+            "clamp"
+          ],
           "properties": {
-            "start": { "type": "number" },
-            "terms": { "type": "array", "items": { "$ref": "#/$defs/term" } },
-            "clamp": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "minItems": 2, "maxItems": 2 }
+            "start": {
+              "type": "number"
+            },
+            "terms": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/term"
+              }
+            },
+            "clamp": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
           },
           "additionalProperties": false,
-          "patternProperties": { "^_": true }
+          "patternProperties": {
+            "^_": true
+          }
         }
       ]
     },
     "term": {
       "type": "object",
       "properties": {
-        "coef": { "type": "number" },
-        "diff": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
-        "if": { "$ref": "#/$defs/cond" },
-        "then": { "type": "number" },
-        "else": { "type": "number" }
+        "coef": {
+          "type": "number"
+        },
+        "diff": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "if": {
+          "$ref": "#/$defs/cond"
+        },
+        "then": {
+          "type": "number"
+        },
+        "else": {
+          "type": "number"
+        }
       },
-      "oneOf": [{ "required": ["coef", "diff"] }, { "required": ["if", "then", "else"] }],
+      "oneOf": [
+        {
+          "required": [
+            "coef",
+            "diff"
+          ]
+        },
+        {
+          "required": [
+            "if",
+            "then",
+            "else"
+          ]
+        }
+      ],
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "scoreTerm": {
       "type": "object",
       "properties": {
-        "var": { "type": "string" },
-        "div": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "number" }], "minItems": 2, "maxItems": 2 },
-        "draw": { "$ref": "#/$defs/pair" },
-        "if": { "$ref": "#/$defs/cond" },
-        "then": { "type": "number" },
-        "else": { "type": "number" }
+        "var": {
+          "type": "string"
+        },
+        "div": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "draw": {
+          "$ref": "#/$defs/pair"
+        },
+        "if": {
+          "$ref": "#/$defs/cond"
+        },
+        "then": {
+          "type": "number"
+        },
+        "else": {
+          "type": "number"
+        }
       },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "cond": {
       "type": "object",
       "properties": {
-        "var": { "type": "string" },
-        "op": { "enum": [">", "<", ">=", "=="] },
-        "value": { "type": ["number", "boolean", "string"] },
-        "gt": { "type": "array", "items": { "type": ["string", "number"] }, "minItems": 2, "maxItems": 2 },
-        "all": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/cond" } },
-        "not": { "$ref": "#/$defs/cond" }
+        "var": {
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            ">",
+            "<",
+            ">=",
+            "=="
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "boolean",
+            "string"
+          ]
+        },
+        "gt": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "all": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/cond"
+          }
+        },
+        "not": {
+          "$ref": "#/$defs/cond"
+        },
+        "is": {
+          "type": "string",
+          "minLength": 1
+        }
       },
-      "oneOf": [{ "required": ["var"] }, { "required": ["gt"] }, { "required": ["all"] }, { "required": ["not"] }],
-      "dependentRequired": { "op": ["value"] },
+      "oneOf": [
+        {
+          "required": [
+            "var"
+          ]
+        },
+        {
+          "required": [
+            "gt"
+          ]
+        },
+        {
+          "required": [
+            "all"
+          ]
+        },
+        {
+          "required": [
+            "not"
+          ]
+        }
+      ],
+      "dependentRequired": {
+        "op": [
+          "value"
+        ]
+      },
       "additionalProperties": false,
-      "patternProperties": { "^_": true }
+      "patternProperties": {
+        "^_": true
+      }
     },
     "value": {
       "anyOf": [
-        { "type": "number" },
-        { "type": "string", "pattern": "^\\$[A-Za-z_]+$" },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\$[A-Za-z_]+$"
+        },
         {
           "type": "object",
           "properties": {
-            "ref": { "enum": ["rt", "c", "base", "dist"] },
-            "times": { "type": "number" },
-            "plus": { "type": "number" },
-            "light": { "type": "number" },
-            "heavy": { "type": "number" },
-            "clamp": { "type": "array", "minItems": 3, "maxItems": 3 },
-            "ticks": { "type": "string", "pattern": "^[A-Za-z]+$" }
+            "ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_.]*$"
+            },
+            "times": {
+              "type": "number"
+            },
+            "plus": {
+              "type": "number"
+            },
+            "light": {
+              "type": "number"
+            },
+            "heavy": {
+              "type": "number"
+            },
+            "clamp": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "ticks": {
+              "type": "string",
+              "pattern": "^[A-Za-z]+$"
+            }
           },
-          "oneOf": [{ "required": ["ref"] }, { "required": ["light", "heavy"] }, { "required": ["clamp"] }, { "required": ["ticks"] }],
+          "oneOf": [
+            {
+              "required": [
+                "ref"
+              ]
+            },
+            {
+              "required": [
+                "light",
+                "heavy"
+              ]
+            },
+            {
+              "required": [
+                "clamp"
+              ]
+            },
+            {
+              "required": [
+                "ticks"
+              ]
+            }
+          ],
           "additionalProperties": false
         }
       ]
     },
     "tickValue": {
       "anyOf": [
-        { "type": "integer" },
+        {
+          "type": "integer"
+        },
         {
           "type": "object",
-          "required": ["at"],
+          "required": [
+            "at"
+          ],
           "properties": {
-            "at": { "enum": ["start", "c"] },
-            "times": { "type": "number" },
-            "step": { "type": "number" },
-            "add": { "type": "array", "items": { "type": "string" } },
-            "sub": { "type": "array", "items": { "type": "string" } }
+            "at": {
+              "enum": [
+                "start",
+                "c"
+              ]
+            },
+            "times": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            },
+            "add": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sub": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           },
           "additionalProperties": false
         }
@@ -386,87 +1640,1011 @@
     },
     "beat": {
       "type": "object",
-      "required": ["op"],
+      "required": [
+        "op"
+      ],
       "properties": {
-        "t": { "$ref": "#/$defs/value" },
-        "tick": { "$ref": "#/$defs/tickValue" },
-        "op": { "$ref": "#/$defs/op" },
-        "when": { "enum": ["light", "heavy"] },
-        "args": { "$ref": "#/$defs/args" }
+        "t": {
+          "$ref": "#/$defs/value"
+        },
+        "tick": {
+          "$ref": "#/$defs/tickValue"
+        },
+        "op": {
+          "$ref": "#/$defs/op"
+        },
+        "when": {
+          "enum": [
+            "light",
+            "heavy",
+            "riposteLaunch"
+          ]
+        },
+        "args": {
+          "$ref": "#/$defs/args"
+        }
       },
       "allOf": [
-        { "if": { "properties": { "op": { "const": "rush" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["off", "dur"] } } } },
-        { "if": { "properties": { "op": { "const": "strike" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["a", "d", "dmg"] } } } },
-        { "if": { "properties": { "op": { "const": "launch" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["force", "rev"] } } } },
-        { "if": { "properties": { "op": { "const": "cue" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["cue", "who"] } } } },
-        { "if": { "properties": { "op": { "const": "finisher" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w"] } } } },
-        { "if": { "properties": { "op": { "const": "finRush" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "off", "dur"] } } } },
-        { "if": { "properties": { "op": { "const": "breakLaunch" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "force"] } } } },
-        { "if": { "properties": { "op": { "const": "contest" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "mode"], "properties": { "mode": { "enum": ["ko_now", "branch"] } } } } } },
-        { "if": { "properties": { "op": { "const": "contestOpen" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "cue", "struggle"] } } } },
-        { "if": { "properties": { "op": { "const": "finalBlow" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "dmg", "o", "launch"] } } } },
-        { "if": { "properties": { "op": { "const": "fixedLaunch" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "ux", "uy", "force", "faceRelative"] } } } },
-        { "if": { "properties": { "op": { "const": "separate" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["w", "speed"] } } } },
-        { "if": { "properties": { "op": { "const": "beamCharge" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["rise"] } } } },
-        { "if": { "properties": { "op": { "const": "beamFire" } }, "required": ["op"] }, "then": { "required": ["args"], "properties": { "args": { "required": ["out", "variant", "dist"] } } } }
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "rush"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "off",
+                  "dur"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "strike"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "a",
+                  "d",
+                  "dmg"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "launch"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "force",
+                  "rev"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "cue"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "cue",
+                  "who"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "finisher"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "finRush"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "off",
+                  "dur"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "breakLaunch"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "force"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "contest"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "mode"
+                ],
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "ko_now",
+                      "branch"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "contestOpen"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "cue",
+                  "struggle"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "finalBlow"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "dmg",
+                  "o",
+                  "launch"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "fixedLaunch"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "ux",
+                  "uy",
+                  "force",
+                  "faceRelative"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "separate"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "speed"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "beamCharge"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "rise"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "beamFire"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "out",
+                  "variant",
+                  "dist"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "stagger"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "properties": {
+              "args": {
+                "required": [
+                  "w",
+                  "ticks"
+                ]
+              }
+            }
+          }
+        }
       ],
       "additionalProperties": false
     },
     "parityBeat": {
-      "allOf": [{ "$ref": "#/$defs/beat" }, { "required": ["t"], "properties": { "tick": false } }]
+      "allOf": [
+        {
+          "$ref": "#/$defs/beat"
+        },
+        {
+          "required": [
+            "t"
+          ],
+          "properties": {
+            "tick": false
+          }
+        }
+      ]
     },
     "spacedBeat": {
-      "allOf": [{ "$ref": "#/$defs/beat" }, { "required": ["tick"], "properties": { "t": false } }]
+      "allOf": [
+        {
+          "$ref": "#/$defs/beat"
+        },
+        {
+          "required": [
+            "tick"
+          ],
+          "properties": {
+            "t": false
+          }
+        }
+      ]
     },
     "op": {
       "enum": [
-        "rush", "wind", "press", "strike", "launch", "window", "nop", "slip", "dodge", "guardBreak", "clashWave", "chainStrike",
-        "beamCharge", "beamFire", "finisher", "finRush", "breakLaunch", "contest",
-        "cue", "contestOpen", "finalBlow", "fixedLaunch", "separate"
+        "rush",
+        "wind",
+        "press",
+        "strike",
+        "launch",
+        "window",
+        "nop",
+        "slip",
+        "dodge",
+        "guardBreak",
+        "clashWave",
+        "chainStrike",
+        "beamCharge",
+        "beamFire",
+        "finisher",
+        "finRush",
+        "breakLaunch",
+        "contest",
+        "cue",
+        "contestOpen",
+        "finalBlow",
+        "fixedLaunch",
+        "separate",
+        "stagger"
       ]
     },
     "args": {
       "type": "object",
       "properties": {
-        "a": { "enum": ["A", "D", "W", "L"] },
-        "d": { "enum": ["A", "D", "W", "L"] },
-        "w": { "enum": ["A", "D", "W", "L"] },
-        "who": { "enum": ["A", "D", "W", "L", "both"] },
-        "cue": { "type": "string", "minLength": 1 },
-        "cam": { "type": "string", "minLength": 1 },
-        "bark": { "description": "A bark trigger id, or true for a bark pause with no trigger yet (sim/core/fx.gd cue).", "anyOf": [{ "type": "string", "minLength": 1 }, { "const": true }] },
-        "struggle": { "type": "string", "minLength": 1 },
-        "off": { "$ref": "#/$defs/value" },
-        "dur": { "$ref": "#/$defs/value" },
-        "dmg": { "$ref": "#/$defs/value" },
-        "force": { "$ref": "#/$defs/value" },
-        "rev": { "type": "boolean" },
-        "rise": { "$ref": "#/$defs/value" },
+        "a": {
+          "enum": [
+            "A",
+            "D",
+            "W",
+            "L"
+          ]
+        },
+        "d": {
+          "enum": [
+            "A",
+            "D",
+            "W",
+            "L"
+          ]
+        },
+        "w": {
+          "enum": [
+            "A",
+            "D",
+            "W",
+            "L"
+          ]
+        },
+        "who": {
+          "enum": [
+            "A",
+            "D",
+            "W",
+            "L",
+            "both"
+          ]
+        },
+        "cue": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cam": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bark": {
+          "description": "A bark trigger id, or true for a bark pause with no trigger yet (sim/core/fx.gd cue).",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "const": true
+            }
+          ]
+        },
+        "struggle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "off": {
+          "$ref": "#/$defs/value"
+        },
+        "dur": {
+          "$ref": "#/$defs/value"
+        },
+        "dmg": {
+          "$ref": "#/$defs/value"
+        },
+        "force": {
+          "$ref": "#/$defs/value"
+        },
+        "rev": {
+          "type": "boolean"
+        },
+        "rise": {
+          "$ref": "#/$defs/value"
+        },
         "o": {
           "type": "object",
           "properties": {
-            "noParry": { "type": "boolean" },
-            "ignoreStance": { "type": "boolean" },
-            "big": { "type": "boolean" },
-            "kb": { "type": "number" },
-            "stop": { "type": "number", "minimum": 0 },
-            "shake": { "type": "number", "minimum": 0 },
-            "kind": { "type": "string" }
+            "noParry": {
+              "type": "boolean"
+            },
+            "ignoreStance": {
+              "type": "boolean"
+            },
+            "big": {
+              "type": "boolean"
+            },
+            "kb": {
+              "type": "number"
+            },
+            "stop": {
+              "type": "number",
+              "minimum": 0
+            },
+            "shake": {
+              "type": "number",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string"
+            },
+            "class": {
+              "enum": [
+                "opener",
+                "heavy",
+                "ender",
+                "blast",
+                "mid",
+                "none"
+              ],
+              "description": "In the dynamic profile a strike class replaces noParry (noParry stays valid in the older profiles)."
+            }
           },
           "additionalProperties": false
         },
         "launch": {
           "type": "object",
-          "required": ["mode"],
+          "required": [
+            "mode"
+          ],
           "properties": {
-            "mode": { "enum": ["fixed", "planner_long"] },
-            "ux": { "type": "number" },
-            "uy": { "type": "number" },
-            "force": { "type": "number" },
-            "faceRelative": { "type": "boolean" }
+            "mode": {
+              "enum": [
+                "fixed",
+                "planner_long"
+              ]
+            },
+            "ux": {
+              "type": "number"
+            },
+            "uy": {
+              "type": "number"
+            },
+            "force": {
+              "type": "number"
+            },
+            "faceRelative": {
+              "type": "boolean"
+            }
           },
           "additionalProperties": false
+        },
+        "ticks": {
+          "$ref": "#/$defs/value"
         }
+      }
+    },
+    "condElse": {
+      "type": "object",
+      "required": [
+        "if",
+        "then",
+        "else"
+      ],
+      "properties": {
+        "if": {
+          "$ref": "#/$defs/cond"
+        },
+        "then": {
+          "$ref": "#/$defs/id"
+        },
+        "else": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      },
+      "description": "A selector `else` that is itself a condition (no draw)."
+    },
+    "profileDynamic": {
+      "type": "object",
+      "required": [
+        "timeUnit",
+        "ticksPerSecond",
+        "tempo",
+        "approach",
+        "aiParryPressDelay",
+        "parry",
+        "windups",
+        "perfectBlock",
+        "strikeClass"
+      ],
+      "properties": {
+        "timeUnit": {
+          "const": "tick"
+        },
+        "ticksPerSecond": {
+          "const": 60
+        },
+        "tempo": {
+          "type": "object",
+          "required": [
+            "step",
+            "windup",
+            "heavyWindup",
+            "follow",
+            "tell",
+            "enderWindup"
+          ],
+          "properties": {
+            "step": {
+              "$ref": "#/$defs/ticks"
+            },
+            "windup": {
+              "$ref": "#/$defs/ticks"
+            },
+            "heavyWindup": {
+              "$ref": "#/$defs/ticks"
+            },
+            "follow": {
+              "$ref": "#/$defs/ticks"
+            },
+            "tell": {
+              "$ref": "#/$defs/ticks"
+            },
+            "foot": {
+              "$ref": "#/$defs/ticks"
+            },
+            "pursue": {
+              "$ref": "#/$defs/ticks"
+            },
+            "enderWindup": {
+              "$ref": "#/$defs/ticks"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "approach": {
+          "type": "object",
+          "required": [
+            "divisor",
+            "min",
+            "max",
+            "pursuit",
+            "rounding",
+            "minHeavy"
+          ],
+          "properties": {
+            "divisor": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0
+            },
+            "pursuit": {
+              "type": "object",
+              "required": [
+                "beyond",
+                "base",
+                "per",
+                "max"
+              ],
+              "properties": {
+                "beyond": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "base": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "per": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "rounding": {
+              "type": "string"
+            },
+            "minHeavy": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "aiParryPressDelay": {
+          "$ref": "#/$defs/pair"
+        },
+        "parry": {
+          "type": "object",
+          "required": [
+            "windowTicks",
+            "bufferTicks",
+            "cleanTicks",
+            "reward",
+            "cleanReward"
+          ],
+          "properties": {
+            "windowTicks": {
+              "$ref": "#/$defs/lightHeavyTicks"
+            },
+            "bufferTicks": {
+              "$ref": "#/$defs/ticks"
+            },
+            "cleanTicks": {
+              "$ref": "#/$defs/lightHeavyTicks"
+            },
+            "reward": {
+              "$ref": "#/$defs/parryReward"
+            },
+            "cleanReward": {
+              "$ref": "#/$defs/parryReward"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "hitstopFloors": {
+          "type": "object",
+          "properties": {
+            "adopted": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "windups": {
+          "type": "object",
+          "required": [
+            "opener",
+            "heavy",
+            "ender",
+            "blast",
+            "mid"
+          ],
+          "properties": {
+            "opener": {
+              "type": "object",
+              "required": [
+                "light",
+                "heavy"
+              ],
+              "properties": {
+                "light": {
+                  "$ref": "#/$defs/ticks"
+                },
+                "heavy": {
+                  "$ref": "#/$defs/ticks"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "heavy": {
+              "$ref": "#/$defs/ticks"
+            },
+            "ender": {
+              "$ref": "#/$defs/ticks"
+            },
+            "blast": {
+              "type": "object",
+              "required": [
+                "light",
+                "heavy"
+              ],
+              "properties": {
+                "light": {
+                  "$ref": "#/$defs/ticks"
+                },
+                "heavy": {
+                  "$ref": "#/$defs/ticks"
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "mid": {
+              "$ref": "#/$defs/ticks"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "perfectBlock": {
+          "type": "object",
+          "required": [
+            "windowTicks",
+            "lockoutTicks",
+            "staggerTicks",
+            "riposteTicks"
+          ],
+          "properties": {
+            "windowTicks": {
+              "$ref": "#/$defs/ticks"
+            },
+            "lockoutTicks": {
+              "$ref": "#/$defs/ticks"
+            },
+            "staggerTicks": {
+              "$ref": "#/$defs/ticks"
+            },
+            "riposteTicks": {
+              "$ref": "#/$defs/ticks"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "strikeClass": {
+          "type": "object",
+          "required": [
+            "classes"
+          ],
+          "properties": {
+            "classes": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "opener",
+                  "heavy",
+                  "ender",
+                  "blast",
+                  "mid",
+                  "none"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "beamRuleDynamic": {
+      "type": "object",
+      "required": [
+        "draw"
+      ],
+      "properties": {
+        "defender": {
+          "enum": [
+            "AGGRESSIVE",
+            "DEFENSIVE",
+            "EVASIVE",
+            "ESCAPE",
+            "CHARGING",
+            "NEUTRAL"
+          ]
+        },
+        "draw": {
+          "enum": [
+            "none",
+            "next"
+          ]
+        },
+        "if": {
+          "$ref": "#/$defs/cond"
+        },
+        "p": {
+          "$ref": "#/$defs/probability"
+        },
+        "ifBelow": {
+          "$ref": "#/$defs/beamOutcome"
+        },
+        "ifBelowAndNot": {
+          "$ref": "#/$defs/cond"
+        },
+        "out": {
+          "$ref": "#/$defs/beamOutcome"
+        },
+        "else": {
+          "$ref": "#/$defs/beamOutcome"
+        },
+        "clashScoreAdd": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "enum": [
+              "A",
+              "D"
+            ]
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
       }
     }
   }

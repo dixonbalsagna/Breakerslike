@@ -5,6 +5,12 @@ class_name DirAI
 ## Timers count down by the fixed DT.
 
 
+## True while f is the defender of a signature whose outcome is still to be decided at its fire beat (step 2b).
+static func _beamTell(S: SimState, f) -> bool:
+	var ex = S.dirS.ex
+	return ex != null and ex.kind == "sig" and ex.D == f and ex.branch == "" and DirData.beamAtFire()
+
+
 ## Index drawn with probability proportional to its weight. One draw from S.rng.
 static func pickW(S: SimState, w: Array) -> int:
 	var s: float = 0.0
@@ -59,9 +65,12 @@ static func aiInput(S: SimState, f) -> void:
 	if st == 1.0:
 		i.guard = true
 	elif st == 2.0:
-		i.dodge = S.dirS.ex == null and S.tick - f.act.dodgeTick >= SimAct.dodgeWindow - 1   # never inside an exchange: there a dodge is the cancel (step 3)
+		# Never inside a melee exchange: there a dodge is the cancel (step 3). During a beam's tell it is the Dodge answer.
+		i.dodge = (S.dirS.ex == null or _beamTell(S, f)) and S.tick - f.act.dodgeTick >= SimAct.dodgeWindow - 1
 	elif st == 3.0:
 		i.sprint = true
+		if _beamTell(S, f):
+			i.mx = -SimMathx.jsign(d) if d != 0.0 else 1.0   # still sprinting away at the fire beat: the ESCAPE gamble
 	var free: bool = f.state == "free" or f.state == "charging"
 	if not free:
 		return
@@ -156,9 +165,10 @@ static func aiInput(S: SimState, f) -> void:
 			pa = 1.0
 		if r < pa:
 			var q: float = r / pa
-			if f.ki >= 50.0 and q < SIG_PICK and S.T >= f.sigReadyT:   # the signature cooldown (fighter.json sigCooldown)
+			var sigPick: float = skill().sigPick
+			if f.ki >= 50.0 and q < sigPick and S.T >= f.sigReadyT:   # the signature cooldown (fighter.json sigCooldown)
 				i.sig = true
-			elif q < SIG_PICK + (1.0 - SIG_PICK) * HEAVY_SHARE:
+			elif q < sigPick + (1.0 - sigPick) * HEAVY_SHARE:
 				i.heavy = true
 			else:
 				i.light = true
@@ -167,6 +177,16 @@ static func aiInput(S: SimState, f) -> void:
 		a.atk = S.rng.range_(0.5, 1.2) if st == 0.0 else (S.rng.range_(1.0, 2.0) if st == 1.0 else S.rng.range_(0.8, 1.6))
 	elif a.atk <= 0.0 and ready:
 		a.atk = 0.3
+
+
+## Called by the director as a melee attack starts against D, before it is planned: the AI defender's press (ai.json pressReact).
+## No draw for a human, or in a stance that does not press.
+static func react(S: SimState, D, state: String) -> void:
+	if D.ai == null or (state != "free" and state != "charging"):
+		return
+	var p: float = skill().pressReact[int(D.ai.st)]
+	if p > 0.0 and S.rng.next() < p:
+		SimAct.push(D, SimAct.LIGHT, D.act.mode, 0, S.tick)
 
 
 ## True while hiding still mends a wound: a battered region above the hidden fade floor (spec-wounds.md §1 Recovery).
@@ -178,7 +198,35 @@ static func _healing(f) -> bool:
 
 
 # Tempo (balance-targets.md section 10).
-const SIG_PICK: float = 0.025                    # chance an attack is the signature, with 50 ki and the cooldown over: about 3 a match (band 2 to 4); 0.2 gave 7
+## The AI's skill numbers (data/director/ai.json), read once: pressReact by stance (the chance it has an attack request
+## in when attacked: its Press, stance-matrix.md §7.2), beamAnswer (the chance it answers a beam with its own signature when
+## it can) and sigPick (the chance an attack is the signature when it can be). They are the AI's inputs made by a number,
+## as a player's are made by hand: the outcome still goes through the same rules.
+const SKILL_PATH: String = "res://data/director/ai.json"
+static var _skill = null
+static var _skillText: String = ""
+
+
+static func skill() -> Dictionary:
+	if _skill == null:
+		_skillText = FileAccess.get_file_as_string(SKILL_PATH)
+		var j = JSON.parse_string(_skillText)
+		if j == null:
+			push_error("DirAI: could not parse " + SKILL_PATH)
+			j = {"pressReact": {}, "beamAnswer": 0.0, "sigPick": 0.0}
+		var pr: Array = []
+		for name in DirExchange.STN:
+			pr.append(float(j.pressReact.get(name, 0.0)))
+		_skill = {"pressReact": pr, "beamAnswer": float(j.beamAnswer), "sigPick": float(j.sigPick)}
+	return _skill
+
+
+## The data file's text, for DirData.dataHash() (the replay header).
+static func skillText() -> String:
+	skill()
+	return _skillText
+
+
 const HEAVY_SHARE: float = 0.375                # of the other attacks, the share that are heavies (it was 0.3 of all)
 const P_ATTACK: Array = [0.9, 0.8, 0.85, 0.5]    # chance an attack beat attacks, per stance (ESCAPE never attacks); S3b 0.43 to 0.52
 const BLIND_SWING: float = 0.25                  # chance a hunting AGGRESSIVE attack beat swings at a target out of lock
