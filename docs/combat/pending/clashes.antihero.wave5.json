@@ -1,0 +1,61 @@
+{
+  "schema": "combat-clash-specs/0-draft",
+  "_about": "PARKED. The pulse clashes and the three beam answers of ../m0-rich.md (its waves 4 and 7; the EP's wave 5). Not loaded, not hashed. The pulse numbers and the answers' rules are Game Design's and are quoted, not set, here.",
+  "fighter": "antihero",
+  "pulse": {"source": "docs/design/rule-of-cool.md section 2; moveset-rules.md section 11(c)", "count": 3, "windowTicks": 8, "windowTicksTouch": 10, "surge": 10, "lockoutTicks": 20, "swingMax": 30, "tie": "the scores differ by less than 10: both are thrown back, nobody wins the exchange, mood +8", "start": "the score starts from state (tier, ki, meters), as the clash does today", "ai": "hits 40, 65 or 85 in 100 pulses (easy, medium, hard)", "budget": "one big set piece every 20 s; a second inside it plays as its ordinary version"},
+  "clashes": [
+    {
+      "id": "clash.fist",
+      "name": "Fist clash",
+      "trigger": "a heavy meets a heavy (the HEAVY CLASH template), when the set-piece budget allows",
+      "ordinary": "today's HEAVY CLASH: won, countered or the shockwave, with no pulses",
+      "ticks": {"meet": 0, "pulses": [24, 48, 72], "resolve": 84},
+      "distance": "the longer of the two heavies' contact distances (wave 1); each striking limb is solved onto the other's striking limb",
+      "composed": {"opens": "each fighter's own heavy opener: 10 to choose from", "resolves": "the winner's blow goes through as an ender (the same piece, at full blow weight) and launches by its hint"},
+      "between": "the strain: Animation blends pressing and giving by the running score; each surge drives the pair up to 6 u toward the loser's side",
+      "onAPulse": "a ring from the meeting point; from tier 3 it damages structures, inside the collateral budgets",
+      "poses": [{"id": "clash.lock", "look": "The two blows have met and stopped: his limb straight behind the point of contact, shoulder and back leg in one line with it, the other arm wide for balance.", "uses": {}, "derive": ["the heavy's own contact pose"]}, {"id": "clash.pressing", "look": "Winning: his weight is over the front leg, the limb driving through, his head lowered past the meeting point.", "uses": {}}, {"id": "clash.giving", "look": "Losing: bent back at the waist, the front knee folding, the limb collapsing toward his own chest.", "uses": {}}],
+      "_legal": "no cracked-sky or shattered-space effect; the lock is a strain in motion, never a freeze frame on two locked fists"
+    },
+    {
+      "id": "clash.blur",
+      "name": "Blur exchange",
+      "trigger": "both attacking with strings queued, in Tense or Frenzied, at tier 2 or above, when the budget allows",
+      "ordinary": "the two strings resolve as ordinary exchanges, one after the other",
+      "ticks": {"meet": 0, "bursts": 3, "blowsAt": [6, 12, 18], "pulses": [24, 48, 72], "resolve": 84},
+      "distance": "each blow at its own contact distance; the pair travels about 6 bh a burst along a level line clear of structures",
+      "composed": {"blows": "nine alternating lights (five for the one who started, four for the other) and three pulse blows each, all from the light pool: 16 to choose from, no key strike twice", "resolves": "the winner's ender lands at 84, after a 12-tick wind-up, and launches"},
+      "between": "the alternating lights; on each pulse both strike at once and the press decides whose blow gets through",
+      "onAPulse": "the blow that got through snaps the other's head or body by the computed reaction; no ring",
+      "damage": "PROPOSAL for Game Design: each traded light does x0.5 of a light, since both sides land them",
+      "poses": [{"id": "clash.blur_advance", "look": "Travelling forward while striking: hips square to the line of travel, the body leaning into it, the rear leg trailing straight.", "uses": {}}, {"id": "clash.blur_retreat", "look": "Travelling backward while striking: weight on the back hip, the chin tucked, the lead arm already returning to guard.", "uses": {}}],
+      "_legal": "the bodies stay readable: every blow is a drawn contact pose held 4 ticks or more; never invisible fighters with only shock rings; no freeze on locked fists; no cut to an onlooker who cannot follow"
+    },
+    {
+      "id": "clash.grapple",
+      "name": "Grapple lock",
+      "trigger": "two grabs meet in the air, or a dive grab meets a grab; rare (under one a match)",
+      "ordinary": "none: two grabs that meet are always the lock",
+      "ticks": {"meet": 0, "pulses": [30, 60, 90], "resolve": 102},
+      "distance": "36 u, the hold's distance (wave 4); each is held by the other",
+      "composed": {"opens": "both reaches (wave 4)", "resolves": "the winner throws the loser down: the drive down, or the spike with one arm"},
+      "between": "the strain: the pair turns a quarter turn about the grip and sinks about 1 bh over the lock",
+      "onAPulse": "a wrench: the surging fighter turns the other's shoulders a step further",
+      "poses": [{"id": "clash.tieup", "look": "A collar-and-elbow tie-up: one hand behind the rival's neck plate, the other on the elbow, foreheads close, backs flat.", "uses": {"arms": 2}}, {"id": "clash.tieup_over", "look": "Winning: he has driven over the top, the rival's head under his shoulder, his hips high.", "uses": {"arms": 2}}, {"id": "clash.tieup_under", "look": "Losing: folded under, one knee dropping, his grip sliding from the collar to the forearm.", "uses": {"arms": 2}}, {"id": "clash.tieup_one_arm", "look": "With a broken arm: the forearm guard of the good arm across the collar, his shoulder set against the rival's chest.", "uses": {"arms": 1}}],
+      "_legal": "Combat's proposal: a collar-and-elbow tie-up only; never hands locked palm to palm with fingers laced, and never arms raised overhead in a test of strength"
+    }
+  ],
+  "beamAnswers": {
+    "source": "docs/design/rule-of-cool.md section 2; control-rules.md section 1; the live beam.outcomeByProfile.dynamic rule DEFLECT",
+    "trigger": "a perfect block against a signature: a fresh Guard press in the last 10 ticks of its tell. The direction held on that press picks the look",
+    "reward": "no damage, no ki cost, +8 ki; no stagger and no riposte. The walk through leaves the attacker 20 ticks into recovery",
+    "ticks": {"in": 6, "hold": "as long as the beam lasts", "out": 6},
+    "looks": [
+      {"id": "answer.swat", "held": "away", "uses": {"arms": 1}, "sim": "the beam is turned aside and carves where the game sends it; the damage counts against the beam's tier cap and is credited to him", "poses": ["in: side-on, the plated forearm drawn across his chest", "hold: the forearm swept out to full length, the whole body turned with it, the beam bending off the plate", "out: the arm still out, the head already turned back to the rival"], "_legal": "Combat's proposal: the forearm guard does it, with the whole body turning: not a casual flick of one hand, and not an open palm held out against the beam"},
+      {"id": "answer.split", "held": "neutral", "uses": {}, "sim": "the beam parts round him and scars the ground on both sides behind him", "poses": ["in: he turns side-on, the plated shoulder and spine to the beam", "hold: leaning into it on the plates, head turned away, hands open at his chest", "out: he straightens and turns back, plates smoking in his own violet"], "_legal": "Combat's proposal: no arms crossed in front of him as a block; it parts on the shoulder and spine"},
+      {"id": "answer.walk", "held": "toward", "uses": {}, "sim": "he advances through the beam and arrives at contact distance in front of the attacker, who is 20 ticks into recovery", "poses": ["in: upright, chin level, hands open and low", "stride: one unhurried step, mirrored for the next, the beam breaking round his chest", "arrive: stopped at arm's length, weight even, looking at the rival"], "_legal": "Combat's proposal: hands open and low: no palm held out against the beam, no arms crossed, no clenched fists; no line shouted as he walks"}
+    ],
+    "_legal": "Legal (rule-of-cool.md section 3b, feature 16): no named technique and no borrowed hand pose; a swatted beam does not end in a mushroom cloud staged like a known scene"
+  },
+  "needs": {"sim": ["a beat op `pulse` that opens a window and reads the press", "the running clash score as readable state or an event per pulse", "a strike target that is the rival's striking limb", "the held state both ways for the grapple lock", "an `answer` on the DEFLECT outcome: swat, split or walk, from the direction held"], "tempo": {"pulseFist": 24, "pulseBlur": 24, "pulseGrapple": 30, "answerIn": 6, "answerOut": 6}}
+}

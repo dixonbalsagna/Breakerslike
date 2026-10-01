@@ -124,5 +124,5 @@ The struck body is the ragdoll throughout: it flails off each knock and is caugh
 | **VFX** | the trail sampled from P(s); no afterimage that hides him |
 | **Animation** | the intercept turn; the bank from his heading; the over-commit after a dodge-cancel |
 | **Game Design** | the ender's longer bounce (section 1); the per-class perfect-block window |
-| **Legal** | the intercept turn's line: flight only, he is drawn the whole way, and at each return blow he is on screen for the 6 anticipation ticks and at least 4 after contact, so a rally is never shock rings with no fighter in them |
+| **Legal** | done: GO (`docs/legal/rule-of-cool-screen.md`, the waves 3 and 4 section). For the whole rally: he is drawn the whole way: no vanish, no blink cut and no afterimage that hides him; he is on screen at every contact for the 6 anticipation ticks and at least 4 after; no cut to a bystander who cannot follow, and no frozen shock-ring frame between knocks; no shout and no named technique on the rally or on the round-the-world ender |
 | **Tools** | `return` in the strike-class enum; a per-class perfect-block window |

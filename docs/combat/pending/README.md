@@ -92,7 +92,15 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 ## Wave 4: the grab and throw family (for Animation; not for applying)
 
-`wave4-grabs.md` and `grabs.antihero.wave4.json`: 16 pieces (2 grabs, the hold, 7 throws, the tackle, the dive grab, the reversal) with grip, ticks, limb tags, where each throw sends the rival and one line on the look; the turning throw as Game Design ruled it; the `held` state the sim must carry for the pinned ragdoll. 22 new poses, and 2 for the tail throw, which is held until Orb rules on the tail.
+`wave4-grabs.md` and `grabs.antihero.wave4.json`: 16 pieces (2 grabs, the hold, 7 throws, the tackle, the dive grab, the reversal) with grip, ticks, limb tags, where each throw sends the rival and one line on the look; the turning throw as Game Design ruled it; the `held` state the sim must carry for the pinned ragdoll. 22 new poses, and 2 for the tail throw, which is held until Orb rules on the tail. Legal screened waves 3 and 4: GO, with its conditions in the rows.
+
+## Wave 5: the pulse clashes and the beam answers (for Animation; not for applying)
+
+`wave5-clashes.md` and `clashes.antihero.wave5.json`: the fist clash, the blur exchange and the grapple lock on Game Design's pulse (ticks, what is composed from the strike and grab pools, the strain poses), and the three looks of a perfect block against a signature (swat, split, walk through). 9 new poses for the clashes and 9 for the answers.
+
+## Wave 6: the energy family (for Animation and VFX; not for applying)
+
+`wave6-energy.md` and `energy.antihero.wave6.json`: 7 emission shapes with range and travel, 6 hands, the 13 strikes that also emit, 5 energy poses, and all 31 energy strikes as emitter and shape. 7 new body poses. Every range band keeps at least 8 lights and 4 heavies, with a broken limb too.
 
 ## The Anti-hero's rich M0 piece list (not for applying)
 
