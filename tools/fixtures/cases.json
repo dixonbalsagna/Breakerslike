@@ -5233,16 +5233,111 @@
       }
     },
     {
-      "id": "input-timing-new-keys-optional",
+      "id": "input-timing-chord-window-required",
       "schema": "input-timing.schema.json",
       "mutate": [
         {
           "file": "data/input/timing.json",
           "del": [
-            "/tapHold/chordWindow",
-            "/dodge/stateTicks",
+            "/tapHold/chordWindow"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/tapHold"
+      }
+    },
+    {
+      "id": "input-timing-state-ticks-required",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "del": [
+            "/dodge/stateTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/dodge"
+      }
+    },
+    {
+      "id": "input-timing-away-dead-required",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "del": [
             "/stick/awayDead"
           ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/stick"
+      }
+    },
+    {
+      "id": "input-timing-lunge-ticks-min",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/dodge/lungeTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/dodge/lungeTicks"
+      }
+    },
+    {
+      "id": "input-timing-lunge-ticks-type",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/dodge/lungeTicks": 12.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/dodge/lungeTicks"
+      }
+    },
+    {
+      "id": "input-timing-full-at-range",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/stick/fullAt": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/stick/fullAt"
+      }
+    },
+    {
+      "id": "input-timing-lunge-and-full-at-accepted",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/dodge/lungeTicks": 12,
+            "/stick/fullAt": 0.9
+          }
         }
       ],
       "expect": null

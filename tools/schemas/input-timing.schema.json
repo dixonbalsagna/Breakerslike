@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/input-timing",
   "title": "input timing (schema 1)",
-  "description": "data/input/timing.json: every tick value of the input scheme: hold thresholds, the perfect-block windows, buffers and lockouts, the attack queue, the mode toggle, touch gestures, stick and trigger settings, and the hit-stop table (docs/controls/input-schema.md section 5; it carries over feel-schema.md's hit-stop, hold and stick values). Times are whole ticks at 60 per second unless a key says otherwise (px, dp, ki, fractions). Version field: schema. Policy: closed except keys starting with an underscore; hitstopTicks takes underscore comment keys. An unfunded signature is refused at once, so there is no unfunded-expiry key (I2c). The keys chordWindow, stateTicks and awayDead are optional until Controls' data carries them, then required. Cross-references (timing-order, timing-perfect, timing-hold, timing-hitstop-order, timing-hitstop-budget) are checked by tools/lib/xref-input.js.",
+  "description": "data/input/timing.json: every tick value of the input scheme: hold thresholds, the perfect-block windows, buffers and lockouts, the attack queue, the mode toggle, touch gestures, stick and trigger settings, and the hit-stop table (docs/controls/input-schema.md section 5; it carries over feel-schema.md's hit-stop, hold and stick values). Times are whole ticks at 60 per second unless a key says otherwise (px, dp, ki, fractions). Version field: schema. Policy: closed except keys starting with an underscore; hitstopTicks takes underscore comment keys. An unfunded signature is refused at once, so there is no unfunded-expiry key (I2c). chordWindow, stateTicks and awayDead are required; dodge.lungeTicks and stick.fullAt are optional (code defaults 12 and 0.9) until Controls' data carries them. Cross-references (timing-order, timing-perfect, timing-hold, timing-hitstop-order, timing-hitstop-budget) are checked by tools/lib/xref-input.js.",
   "type": "object",
   "required": [
     "schema",
@@ -29,7 +29,8 @@
         "holdStart",
         "transformConfirm",
         "encoreConfirm",
-        "encoreOffer"
+        "encoreOffer",
+        "chordWindow"
       ],
       "properties": {
         "holdStart": {
@@ -103,7 +104,8 @@
     "dodge": {
       "type": "object",
       "required": [
-        "buffer"
+        "buffer",
+        "stateTicks"
       ],
       "properties": {
         "buffer": {
@@ -114,6 +116,11 @@
           "type": "integer",
           "minimum": 1,
           "description": "Ticks the dodge state lasts (I2c)."
+        },
+        "lungeTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The free lunge (today's dash) that goes with a dodge, in ticks (12 by default in code until the director moves the fighter itself)."
         }
       },
       "additionalProperties": false,
@@ -233,7 +240,8 @@
         "deadzone",
         "quant",
         "triggerOn",
-        "triggerOff"
+        "triggerOff",
+        "awayDead"
       ],
       "properties": {
         "deadzone": {
@@ -261,6 +269,12 @@
           "minimum": 0,
           "exclusiveMaximum": 1,
           "description": "The dead zone for pushing away (I2c)."
+        },
+        "fullAt": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "description": "A stick reaches full speed at this fraction of its travel (0.9 by default in code)."
         }
       },
       "additionalProperties": false,
