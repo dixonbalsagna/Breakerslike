@@ -35,6 +35,8 @@ static func dispose(S: SimState) -> void:
 ## ai is {"p1": bool, "p2": bool}; a missing entry keeps the previous fighter's setting, or true with no fighters yet.
 ## setup (D1a; the replay header's `setup`): {"slots": [id, id]} picks the fighters (default: the roster's first two),
 ## "names": [name, name] renames them (the mirror arms), "flip": true swaps the spawn sides. {} is the default match.
+## I2a: "v2": [bool, bool] marks the slots whose intents are v2 (the stance follows the held fields), and "assists":
+## [[names], [names]] the Simple layout's assists per slot (SimAct.ASSISTS).
 static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> void:
 	S.game.seed = float(seed & 0xFFFFFFFF)
 	S.rng = SimRng.new(seed & 0xFFFFFFFF)
@@ -71,6 +73,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.lastBrunt = -1.0
 	S.dirS.exN = 0
 	S.dirS.biomeT = PackedFloat64Array()   # location variety (granted line): the director sizes it on the first tick
+	SimAct.setup(S, setup)   # I2a: each fighter's action state
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
 	S.out.feed.clear()
 	S.out.fx.clear()

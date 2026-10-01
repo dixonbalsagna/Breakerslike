@@ -47,6 +47,7 @@ func _init() -> void:
 	check("keyed draws", _keyedDraws(g))
 	check("arm setups", _armSetups())
 	check("intent pack", _intentPack())
+	check("action state", _actState())
 	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
@@ -225,6 +226,152 @@ func _intentPack() -> String:
 	return ""
 
 
+## I2a: the action state's rules (sim/core/act.gd), each asserted: the setup's v2 and assists, the stance from the held
+## states (and today's stance field for a slot that is not v2), guard, dodge, mode and the cooldowns, the stun gate, the
+## burst flag, the queue, and the tier-up gate with its data flag on and off.
+func _actState() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5, {"p1": false, "p2": false}, {"v2": [true, false], "assists": [["autoBurst"], []]})
+	var a = S.fighters[0]
+	var b = S.fighters[1]
+	if not a.act.v2 or b.act.v2 or not SimAct.assisted(a, "autoBurst") or SimAct.assisted(a, "specialAuto") or SimAct.assisted(b, "autoBurst"):
+		return "the setup's v2 and assists did not reach the fighters"
+	var ia := SimIntent.new()
+	var ib := SimIntent.new()
+	var away: float = -SimMathx.jsign(SimWrap.sdx(a.x, b.x))
+	var go := func() -> void:
+		SimCore.step(S, [ia, ib])
+		S.out.fx.clear()
+		S.out.feed.clear()
+	ib.stance = 1.0
+	ia.stance = 1.0          # ignored for the v2 slot
+	go.call()
+	if b.stance != 1.0 or a.stance != 0.0:
+		return "the stance field: b %s (wants 1, not v2), a %s (wants 0, v2 ignores it)" % [str(b.stance), str(a.stance)]
+	ia.guard = true
+	go.call()
+	var t0: int = S.tick
+	if a.stance != 1.0 or a.act.guardSince != t0:
+		return "guard held: stance %s, guardSince %d (tick %d)" % [str(a.stance), a.act.guardSince, t0]
+	go.call()
+	if a.act.guardSince != t0:
+		return "guardSince moved while the guard was held"
+	ia.guard = false
+	go.call()
+	if a.stance != 0.0 or a.act.guardSince != -1:
+		return "guard released: stance %s, guardSince %d" % [str(a.stance), a.act.guardSince]
+	ia.dodge = true
+	go.call()
+	ia.dodge = false
+	var held: int = 1
+	while a.stance == 2.0 and held < 40:
+		go.call()
+		held += 1
+	if held != SimAct.dodgeWindow + 1:
+		return "a dodge read as Dodge for %d ticks, not %d" % [held - 1, SimAct.dodgeWindow]
+	ia.sprint = true
+	ia.mx = away
+	go.call()
+	if a.stance != 3.0:
+		return "sprint away is not Escape (stance %s)" % str(a.stance)
+	ia.mx = -away
+	go.call()
+	if a.stance != 0.0:
+		return "sprint toward read as %s" % str(a.stance)
+	ia.sprint = false
+	ia.mx = 0.0
+	ia.mode = 1
+	go.call()
+	ia.mode = -1
+	go.call()
+	if a.act.mode != 1:
+		return "the mode did not hold through auto (%d)" % a.act.mode
+	a.act.dodgeCool = 3
+	a.act.burstCool = 2
+	go.call(); go.call(); go.call()
+	if a.act.dodgeCool != 0 or a.act.burstCool != 0:
+		return "the cooldowns did not count down"
+	ia.guard = true
+	a.stunTicks = 5
+	go.call()
+	if a.stance != 0.0 or a.input.guard:
+		return "a stunned fighter kept its guard"
+	a.stunTicks = 0
+	ia.guard = false
+	# the burst flag
+	var ip := SimIntent.new()
+	ip.powerPress = true
+	SimAct.update(S, a, ip)
+	if not SimAct.wantsBurst(a, ip, true):
+		return "a threatened power press did not burst"
+	var it := SimIntent.new()
+	it.powerTap = true
+	SimAct.update(S, a, it)
+	if SimAct.wantsBurst(a, it, false):
+		return "the tap after a burst-on-press fired a second burst"
+	SimAct.update(S, a, ip)
+	if SimAct.wantsBurst(a, ip, false):
+		return "an unthreatened press burst at once"
+	SimAct.update(S, a, it)
+	if not SimAct.wantsBurst(a, it, false):
+		return "an unthreatened tap did not burst"
+	# the queue
+	var pushed: int = 0
+	for n in range(5):
+		if SimAct.push(a, SimAct.LIGHT, 0, 1, 100 + n):
+			pushed += 1
+	if pushed != SimAct.queueMax or a.act.queue.size() != SimAct.queueMax:
+		return "the queue took %d requests, not %d" % [pushed, SimAct.queueMax]
+	if not SimAct.upgrade(a, SimAct.HEAVY) or a.act.queue[SimAct.queueMax - 1][0] != SimAct.HEAVY or a.act.queue[0][0] != SimAct.LIGHT:
+		return "an upgrade did not replace the newest request's weight"
+	SimAct.expire(a, 138, 36)   # pushed at ticks 100, 101, 102: the first two are older than 36 ticks, the last is exactly 36
+	if a.act.queue.size() != SimAct.queueMax - 2 or SimAct.peek(a)[3] != 100 + SimAct.queueMax - 1:
+		return "expiry left %d requests" % a.act.queue.size()
+	if SimAct.pop(a)[0] != SimAct.HEAVY or not SimAct.pop(a).is_empty() or SimAct.upgrade(a, SimAct.SIG):
+		return "pop or upgrade on an empty queue"
+	# the tier-up gate, off (the data): the tier rises by itself
+	a.power = 30.0
+	SimFighter.stepFighter(S, a, SimConst.DT)
+	if a.tier != 2.0 or a.act.formReady or SimFighter.transform(S, a):
+		return "with manualTierUp off the tier did not rise by itself"
+	SimCore.dispose(S)
+	# ... and on, from a copy of the data
+	var dir := "user://i2a_gate/"
+	for id in ["KAI", "VORR"]:
+		DirAccess.make_dir_recursive_absolute(dir + id)
+		for fname in ["fighter.json", "wounds.json", "meters.json", "ladder.json"]:
+			var text: String = FileAccess.get_file_as_string(FighterData.ROOT + id + "/" + fname)
+			if fname == "ladder.json":
+				var d = JSON.parse_string(text)
+				d.manualTierUp = true
+				text = JSON.stringify(d, "  ")
+			var fw := FileAccess.open(dir + id + "/" + fname, FileAccess.WRITE)
+			fw.store_string(text)
+			fw.close()
+	var rf := FileAccess.open(dir + "roster.json", FileAccess.WRITE)
+	rf.store_string("[\"KAI\", \"VORR\"]")
+	rf.close()
+	FighterData.quiet = true
+	FighterData.loadFrom(dir)
+	var err: String = "; ".join(FighterData.errors())
+	if err == "":
+		var G := SimCore.createSim()
+		SimCore.newMatch(G, 5)
+		var f = G.fighters[0]
+		f.power = 60.0
+		SimFighter.stepFighter(G, f, SimConst.DT)
+		if f.tier != 1.0 or not f.act.formReady:
+			err = "with manualTierUp on the tier did not wait (tier %s, ready %s)" % [str(f.tier), str(f.act.formReady)]
+		elif not SimFighter.transform(G, f) or f.tier != 2.0 or not f.act.formReady:
+			err = "the first transform: tier %s, ready %s" % [str(f.tier), str(f.act.formReady)]
+		elif not SimFighter.transform(G, f) or f.tier != 3.0 or f.act.formReady or SimFighter.transform(G, f):
+			err = "the second transform: tier %s, ready %s" % [str(f.tier), str(f.act.formReady)]
+		SimCore.dispose(G)
+	FighterData.quiet = false
+	FighterData.loadFrom()
+	return err
+
+
 ## SimReplay (S4): record a scripted two-human run, play it back and play its JSON round trip; a changed input and a
 ## replay from other combat data must both fail.
 func _replayModule() -> String:
@@ -286,6 +433,26 @@ func _replayModule() -> String:
 	r = SimReplay.play(JSON.parse_string(JSON.stringify(rp2)))
 	if not r.ok or rp2.setup.get("names", []) != ["KAI-A", "KAI-B"]:
 		return "setup replay: %s at tick %d" % [r.reason, r.firstBadTick]
+	# I2a: two v2 slots, their stance following the scripted held fields, record and play back from the header alone.
+	var src3: Dictionary = SimGolden.scriptedReplay(17, 900, true, [])
+	var S3 := SimCore.createSim()
+	var rec3 := SimReplay.recorder(S3, 17, src3.ai, {"v2": [true, true]})
+	var cur3: Array = [null, null]
+	var i3: int = 0
+	var stances := {}
+	for t in range(int(src3.ticks)):
+		while i3 < src3.inputs.size() and int(src3.inputs[i3][0]) == t:
+			cur3[int(src3.inputs[i3][1])] = SimGolden._intent(src3.inputs[i3][2])
+			i3 += 1
+		rec3.step(cur3)
+		stances[S3.fighters[0].stance] = true
+	var rp3: Dictionary = rec3.finish()
+	SimCore.dispose(S3)
+	r = SimReplay.play(JSON.parse_string(JSON.stringify(rp3)))
+	if not r.ok:
+		return "v2 replay: %s at tick %d" % [r.reason, r.firstBadTick]
+	if stances.size() < 3:
+		return "the v2 replay's derived stance took only %d values" % stances.size()
 	return ""
 
 

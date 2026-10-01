@@ -89,6 +89,7 @@ class MetersDef:
 class LadderDef:
 	var fill: float = 0.0             # power per second
 	var thresholds: Array = []        # power at which tiers 2, 3 and 4 begin
+	var manualTierUp: bool = false    # I2a: a threshold makes the fighter ready and the tier waits for the transform
 	var speed: float = 0.0            # per tier above 1: free-flight speed x (1 + this x (tier - 1))
 	var damage: float = 0.0           # ... damage
 	var launch: float = 0.0           # ... launch force
@@ -435,6 +436,7 @@ static func _ladder(id: String, j: Dictionary) -> LadderDef:
 	var where: String = id + "/ladder.json"
 	var l := LadderDef.new()
 	l.fill = float(j.get("fillPerSec", 0.0))
+	l.manualTierUp = j.get("manualTierUp", false) == true
 	var th = j.get("thresholds", [])
 	if not (th is Array and th.size() == 3):
 		_err(where + ": thresholds needs three values (four tiers)")

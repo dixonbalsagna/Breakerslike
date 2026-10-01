@@ -42,6 +42,20 @@ class Game:
 	var timeCap: bool = false  # the brink chapter's override: the 11:00 time-cap event sets it, and every decisive exchange is a finisher
 
 
+## I2a (intent v2): the action state derived from a fighter's intents (sim/core/act.gd). Integers and bools.
+class ActState:
+	var v2: bool = false          # the fighter's intents are v2: the stance and this state follow the held fields
+	var queue: Array = []         # pending requests, oldest first: [weight, mode, entry, tick]
+	var guardSince: int = -1      # S.tick when the guard went up, -1 while it is down
+	var dodgeTick: int = -100000  # S.tick of the last dodge (SimAct.NEVER)
+	var dodgeCool: int = 0        # ticks until the next dodge cancel
+	var burstCool: int = 0        # ticks until the next burst
+	var mode: int = 0             # 0 physical, 1 energy
+	var assist: int = 0           # SimAct.ASSISTS bit flags, from the setup
+	var formReady: bool = false   # a tier is ready and waits for the transform (ladder.json manualTierUp)
+	var burstFired: bool = false  # the burst already fired on this power press
+
+
 ## M1: the fight's mood (sim/core/mood.gd). Integers only; the unit is 1/60 of a mood point.
 class MoodState:
 	var t: int = 0            # non-frozen ticks the component has run
@@ -342,6 +356,7 @@ class Fighter:
 	var brinkOpen: bool = false      # ... it is open: the rival's next decisive win, in a later exchange, is the finisher
 	var brinkEx: int = -1            # ... the exchange index (ex.n) of the last set-up win: a set-up and a finisher never share one
 	var flightHits: int = 0          # M1: buildings hit in the current launched flight (building_hit's n)
+	var act := ActState.new()        # I2a: what the fighter's presses mean now (sim/core/act.gd)
 	var style = null                 # M1: StyleState (sim/core/mood.gd)
 	var wd = null                    # D1a: the fighter's FighterData.WoundsDef (data; covered by the data hash, not hashed here)
 	var md = null                    # D1b: its FighterData.MetersDef (the same)
@@ -409,6 +424,8 @@ class LastSeen:
 
 class Exchange:
 	var n: int = 0            # D1a: this exchange's index (S.dirS.exN when it started)
+	var tpl: String = ""      # I2a: the template id the exchange was planned from (the director sets it, I2b) ...
+	var branch: String = ""   # ... and the branch id, so an interrupt finds its branch's `interrupts` block
 	var cripR: int = -1       # pitch A: a heavy-class blow landed on this battered limb (region), awaiting the decisive result
 	var cripA: int = -1       # ... by this slot
 	var cripV: int = -1       # ... on this slot

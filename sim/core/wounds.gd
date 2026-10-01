@@ -238,8 +238,21 @@ static func gateIntent(f, i: SimIntent) -> void:
 		i.light = false
 		i.heavy = false
 		i.sig = false
+		# intent v2 (I2a): the held states end and every edge is dropped; the mode stays.
+		i.guard = false
+		i.guardPress = false
+		i.dodge = false
+		i.sprint = false
+		i.power = false
+		i.powerPress = false
+		i.powerTap = false
+		i.upgrade = 0
+		i.special = 0
+		i.context = false
+		i.transform = false
 	if broken(f, LEGS):
 		i.dash = false
+		i.sprint = false
 
 
 # ---------------------------------------------------------------- Rally (S4; spec-wounds.md §2)

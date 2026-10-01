@@ -2,7 +2,18 @@
   "_about": "Validator fixture, not game data. Field names are a guess from the D1 plan.",
   "schema": "ladder/1",
   "fillPerSec": 0.45,
-  "thresholds": [25, 50, 75],
-  "tiers": { "speedPerTier": 0.1, "damagePerTier": 0.09, "launchPerTier": 0.16 },
-  "powerUp": { "craterScale": 1 }
+  "thresholds": [
+    25,
+    50,
+    75
+  ],
+  "tiers": {
+    "speedPerTier": 0.1,
+    "damagePerTier": 0.09,
+    "launchPerTier": 0.16
+  },
+  "powerUp": {
+    "craterScale": 1
+  },
+  "manualTierUp": false
 }

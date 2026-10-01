@@ -5077,6 +5077,51 @@
         "rule": "minLength",
         "pointer": "/issue/title_prefix"
       }
+    },
+    {
+      "id": "ladder-manual-tier-up-required",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "del": [
+            "/manualTierUp"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "ladder-manual-tier-up-type",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/manualTierUp": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/manualTierUp"
+      }
+    },
+    {
+      "id": "ladder-manual-tier-up-true-accepted",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/manualTierUp": true
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

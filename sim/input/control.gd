@@ -13,7 +13,11 @@ static func control(S: SimState, f, intent) -> void:
 	elif intent != null:
 		SimIntent.applyIntent(i, intent)
 	SimWounds.gateIntent(f, i)   # S3a: stagger, daze and broken legs
-	if i.stance >= 0.0:
+	if f.act.v2:
+		# I2a: a v2 slot's stance follows its held states (SimAct); today's stance field is not read for it.
+		SimAct.update(S, f, i)
+		f.stance = SimAct.stance(S, f, i)
+	elif i.stance >= 0.0:
 		f.stance = i.stance
 	if i.light or i.heavy:
 		f.lastAtkT = S.T

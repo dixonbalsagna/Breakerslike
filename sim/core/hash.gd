@@ -110,6 +110,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(_idx(fs, ex.D))
 		_obj(out, ex, ["kind", "t", "combo", "tag", "windowStart", "cancel", "sA", "sD", "loser"])
 		out.append(float(ex.n))
+		out.append(ex.tpl); out.append(ex.branch)
 		out.append(float(ex.cripR)); out.append(float(ex.cripA)); out.append(float(ex.cripV)); out.append(float(ex.startBattered)); out.append(float(ex.startBrink))
 		_obj(out, ex.ext, ["start", "until"])
 		out.append(float(ex.beats.size()))
@@ -144,6 +145,12 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(float(f.limbBreaks))
 		out.append(float(f.brinkSetups)); out.append(f.brinkOpen); out.append(float(f.brinkEx))
 		out.append(float(f.flightHits))
+		var act = f.act
+		_obj(out, act, ["v2", "guardSince", "dodgeTick", "dodgeCool", "burstCool", "mode", "assist", "formReady", "burstFired"])
+		out.append(float(act.queue.size()))
+		for rq in act.queue:
+			for x in rq:
+				out.append(float(x))
 		out.append(float(f.splashed.size()))
 		for v in f.splashed:
 			out.append(float(v))

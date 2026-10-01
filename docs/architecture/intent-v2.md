@@ -168,6 +168,52 @@ The match-based digest stays as one end-to-end case (a single number over one se
 - `batch.gd` and `tempo.gd` cut a match off at 900 s of match time (`S.T`), not at 43,200 steps. Hit-stop steps don't count, and `MAX_STEPS` (120,000) is only a safety stop.
 - The wired-number check runs a forced probe per number (`_wiredProbe`: a fresh match, the state that number needs, one call into its reader), with no seed to maintain. One end-to-end row still plays matches and passes on any of five seeds.
 
+## 6c. I2a as built (2026-10-01): the core lines, behaviour-neutral
+
+**The switch.** A slot is v2 when `f.act.v2` is true. The match setup sets it (`"v2": [bool, bool]`), or the slot's writer does (the AI, in I2b). It is an explicit flag, not "the intent carries v2 fields", for two reasons:
+- a neutral v2 intent carries none;
+- the scripted golden replays have driven every v2 field since I1.
+
+For a slot that isn't v2, today's `stance` field works as before, so the keyboard and the touch bridge still play. The flag goes in I3.
+
+**State** (`SimState.ActState`, `Fighter.act`, hashed): `v2`, `queue` (each request is [weight, mode, entry, tick]), `guardSince`, `dodgeTick`, `dodgeCool`, `burstCool`, `mode`, `assist`, `formReady`, `burstFired`. `Exchange` gains `tpl` and `branch`, hashed.
+
+**What runs for a v2 slot** (`SimControl.control`, after the stun gate):
+- `SimAct.update(S, f, i)`: the cooldowns count down; `guardSince` and `dodgeTick` follow the record (stamped with `S.tick`); a non-auto `mode` is kept; a `powerPress` clears `burstFired`.
+- `f.stance = SimAct.stance(S, f, i)`:
+  - Guard (`guard` held);
+  - Escape (`sprint` with the stick beyond `awayDead`, away from the opponent);
+  - Dodge (inside `dodgeWindow` ticks of a `dodge`);
+  - otherwise Press. Neutral reads as Press for now.
+
+**What the other two windows call:**
+
+| Who | Call or field | For |
+| :--- | :--- | :--- |
+| Encounter (I2b) | `f.stance`, as today | the derived stance, snapshotted at exchange start |
+| | `f.act.v2 = true` in the AI's writer (or the setup) | the AI on v2 |
+| | `SimAct.wantsBurst(f, i, threatened)` | the burst: on the press when threatened, on the tap otherwise, never twice for one press |
+| | `SimAct.push`, `upgrade`, `expire`, `peek`, `pop`, `clear` | the request queue (depth `SimAct.queueMax`) |
+| | `f.act.dodgeCool`, `f.act.burstCool` | set on use; they count down in `update` |
+| | `f.act.guardSince`, `f.act.dodgeTick`, `f.act.mode` | hold time, the dodge window, the piece family |
+| | `ex.tpl`, `ex.branch` | set when the exchange is planned |
+| | `ladder.json manualTierUp: true`, then `SimFighter.transform(S, f)` | the gate on: a threshold sets `f.act.formReady`, and the transform raises the tier one step with today's power-up. `transform` returns false when nothing is ready. The rising edge of `formReady` is in `stepFighter`; `transform_ready` can be emitted from the director when it sees the flag |
+| | `SimAct.assisted(f, "autoBurst")` and the other assists | the Simple layout's assists |
+| Controls (I2c) | the setup's `"v2"` and `"assists"` per slot | marking a layout's slot |
+| | `SimIntent.canon(i)` before `SimCore.step` | live play on the 1/127 grid |
+| | `SimAct.dodgeWindow`, `awayDead`, `queueMax` (static, defaults from `input-scheme.md`) | set from Controls' data at load |
+
+**The stun gate** (`SimWounds.gateIntent`) now also ends the v2 held states and drops the v2 edges; broken legs clear `sprint`.
+
+**The proof, as run.**
+1. With the hash list untouched and the stun gate's v2 lines not yet in, parity passed against the untouched goldens, except the roster hash (`ladder.json` gained `manualTierUp`). That covered every vector, 9 matches (164,457 ticks) and the replays.
+2. The new state was then hashed, and the goldens regenerated once.
+3. The per-tick digests of all 9 matches and both replays are identical to the set before I2a.
+
+**Parity checks added:**
+- "action state": every rule above asserted, including the gate with its flag off and on.
+- A v2 replay: two v2 slots, record, play and JSON round trip, with the derived stance taking at least three values.
+
 ## 7. Open points
 
 1. **Controls:** confirm the two power edges (`powerPress`, `powerTap`) are enough for the burst rule, and the `sprint` threshold in the layout.

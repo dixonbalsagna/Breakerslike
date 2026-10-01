@@ -149,19 +149,39 @@ static func stepRush(S: SimState, f, dt: float) -> void:
 	f.y += (ty - f.y) * k
 
 
+## The tier a fighter's power has earned: 1, plus one per threshold reached.
+static func tierByPower(f) -> float:
+	var nt: float = 1.0
+	for th in f.ld.thresholds:
+		if f.power >= th:
+			nt += 1.0
+	return nt
+
+
+## I2a: take a ready form (ladder.json manualTierUp): the tier rises one step with today's power-up. The director's
+## placeholder transform calls it between exchanges (I2b). Returns false if nothing was ready.
+static func transform(S: SimState, f) -> bool:
+	if not f.act.formReady:
+		return false
+	f.tier += 1.0
+	tierUp(S, f)
+	f.act.formReady = tierByPower(f) > f.tier
+	return true
+
+
 static func stepFighter(S: SimState, f, dt: float) -> void:
 	var o = SimRoster.opp(S, f)
 	if f.state != "launched":
 		f.flightHits = 0
 	var i: SimIntent = f.input
 	f.power = SimMathx.jmin(100.0, f.power + f.ld.fill * dt)
-	var nt: float = 1.0
-	for th in f.ld.thresholds:
-		if f.power >= th:
-			nt += 1.0
+	var nt: float = tierByPower(f)
 	if nt > f.tier:
-		f.tier = nt
-		tierUp(S, f)
+		if f.ld.manualTierUp:
+			f.act.formReady = true   # I2a: the tier waits for the transform (transform())
+		else:
+			f.tier = nt
+			tierUp(S, f)
 	var regen: float = 5.0 + (25.0 if f.hidden and f.canHide else 0.0)
 	if f.hasMenace:
 		var bonus: float = f.menace * f.md.menaceRegen

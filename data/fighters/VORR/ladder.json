@@ -7,6 +7,8 @@
     50.0,
     75.0
   ],
+  "manualTierUp": false,
+  "_manualTierUp": "false: a threshold raises the tier by itself, as before. true: the fighter becomes ready (formReady) and the tier waits for the transform (ADR 0008; the director's placeholder transform switches it on)",
   "tiers": {
     "speed": 0.1,
     "damage": 0.09,

@@ -1,28 +1,60 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/fighter-ladder",
-  "title": "ladder/1 (draft, from docs/architecture/d1-roster-data.md section 5)",
-  "description": "data/fighters/<id>/ladder.json: the power ladder (D1b). DRAFT: derived from the plan before any data exists; the field names are a guess and will change when D1b lands. Version field: schema. Policy: the top level is closed except keys starting with an underscore; the per-tier deltas and the power-up coefficients are open tables of numbers.",
+  "title": "ladder/1 (D1b as built, docs/architecture/d1-roster-data.md section 5)",
+  "description": "data/fighters/<id>/ladder.json: the power ladder, loaded into a LadderDef. Power fills by fillPerSec up to 100 and each threshold starts the next tier; per-tier deltas and the power-up area coefficients are open tables of numbers (their names are Simulation's). manualTierUp: when true, crossing a threshold sets formReady instead of raising the tier. Version field: schema. Policy: the top level is closed except keys starting with an underscore. Thresholds strictly increase (checked by tools/lib/xref.js).",
   "type": "object",
-  "required": ["schema", "fillPerSec", "thresholds", "tiers"],
+  "required": [
+    "schema",
+    "fillPerSec",
+    "thresholds",
+    "tiers",
+    "manualTierUp"
+  ],
   "properties": {
-    "schema": { "const": "ladder/1" },
-    "fillPerSec": { "type": "number", "exclusiveMinimum": 0 },
+    "schema": {
+      "const": "ladder/1"
+    },
+    "fillPerSec": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
     "thresholds": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "number", "exclusiveMinimum": 0 },
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
       "description": "Fill levels at which each tier begins; strictly increasing (checked by tools/lib/xref.js)."
     },
     "tiers": {
       "type": "object",
       "minProperties": 1,
-      "additionalProperties": { "type": "number" },
-      "patternProperties": { "^_": true },
+      "additionalProperties": {
+        "type": "number"
+      },
+      "patternProperties": {
+        "^_": true
+      },
       "description": "Per-tier deltas, for example speed, damage and launch force."
     },
-    "powerUp": { "type": "object", "additionalProperties": { "type": "number" }, "patternProperties": { "^_": true } }
+    "powerUp": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "manualTierUp": {
+      "type": "boolean",
+      "description": "When true, crossing a power threshold sets formReady instead of raising the tier (the transformation is then chosen by the player)."
+    }
   },
   "additionalProperties": false,
-  "patternProperties": { "^_": true }
+  "patternProperties": {
+    "^_": true
+  }
 }
