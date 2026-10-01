@@ -73,6 +73,8 @@ Reasoned from the rules and QA's data. None of these was tested with new batches
 
 ## 4b. Who controls what (Orb, questionnaire 4)
 
+> **Superseded in part by ADR 0008** (questionnaire 8). Stances are now held states, the perfect block is a timed tap, and attack presses are requests. The rules are in `control-rules.md`. R9's weight latch and signature queue no longer apply, and R5's numbers stay only as the AI's skill model.
+
 | The player controls | The director controls |
 | :--- | :--- |
 | Stance (intent); movement and positioning; attack **weight** (light, heavy, signature); charging and power-ups; **when to transform**; fighter specials (the heat track, Drop the Act, Press, the fold, the Encore call) | **When** to attack; combos and chain continuation; parries; the finisher struggle; voice and barks |

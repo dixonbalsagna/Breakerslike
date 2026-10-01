@@ -124,3 +124,32 @@ Orb: "a dramatic swing during the match, not especially common but a real consid
 **B. A high threshold** (simpler, less dramatic). Limbs break only past 130 wear, the director spreads its hits, and the brink is the core broken, or the core battered plus one broken limb. Breaks become rarer, but they happen when the numbers say so, not in a moment.
 
 **C. The price of survival.** Limbs break only when a fighter survives a finisher: they live, but lose an arm or a leg. The rate follows contest survival (about 1 match in 4). It is very dramatic, but it only matters at the end, so it is less of a consideration during play.
+
+## 6. For Orb: the in-match upgrade draft (questionnaire 8)
+
+The idea, from a friend: during a match, pick one of three upgrades. Most are stat and movement picks, a rarer one is a special, and the picks come at transformations or act changes, with short early phases building to a peak.
+
+**The same in every option:**
+- **Small numbers.** A pick is worth at most +10%, and a stat can't be raised past +25% in one match.
+- **Fair and replayable.** Each fighter's three offers come from a seeded deck, so replays and online play match. Both players see what was picked, as icons under the portrait.
+- **Nothing is locked.** Every card is in the deck from the start (questionnaire 3).
+- **Optional.** A "Draft: on or off" switch at match setup. The 45 to 55% balance band must hold either way.
+
+**Example cards.**
+- *Stats:* Might (+8% damage); Reserve (+15 ki cap); Thick Skin (guard takes 10% less).
+- *Movement:* Slip (dodge cooldown 1 s shorter); Afterburn (sprint 15% faster); Quick Break (burst cooldown 2 s shorter).
+- *Special (rarer):* a fourth special for this match, or a signature variant.
+
+| | **A. Form picks** (recommended) | **B. Act picks** | **C. The plan** |
+| :--- | :--- | :--- | :--- |
+| **When** | Each time a fighter transforms. The three cards appear **inside the transformation cinematic**, so the fight never stops for it | At each act change, about 2:00, 3:00 and 5:00. A 3 s beat where **both fighters pick at once** | **Before the match:** each player drafts three picks, one of three each time. They switch on in stages as the acts advance |
+| **How many** | Up to 3 per fighter: the first, second and final form | 3 per fighter | 3 per fighter |
+| **The special pick** | At the final form only | At the last act change only | The third draft |
+| **Feels like** | Every transformation is also a build choice, and you earn it by getting there | A shared interval, like a round break, that both players read | A game plan chosen up front, with no interruption at all |
+| **Good** | No added pause. It rewards transforming, and the rival can delay a pick by stopping the fill | Perfectly even: both get the same picks at the same time | The simplest to build, and the best for online play. Acts stay invisible |
+| **Risk** | The leader may pick first, which can snowball. The trailing-fighter help offsets it, and QA checks | It pauses the fight three times, and it makes the invisible acts visible, which changes your questionnaire 4 pick | You can't adapt to how the fight is going, which is half the fun of a draft |
+| **Phases building to a peak** | Early forms come quickly and the final form is the peak | Acts 2 and 3 are a minute apart, then the long final act | The picks arrive on the same act timing, but they were chosen earlier |
+
+**Recommendation: A.** The cinematic is already a respected pause where the rival waits, so the pick costs no extra downtime, and it gives the Transform hold a second reason to matter. If you want it perfectly even, B is the one. C is the fallback if pausing mid-match tests badly on phones or online.
+
+**The next build** would not include the draft. The placeholder transform lands first (`control-rules.md` §7), and option A needs it.

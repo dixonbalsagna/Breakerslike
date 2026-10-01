@@ -11,7 +11,7 @@ Owner: Game Design. Status: rulings for questionnaire 6 (`docs/ep/vision.md`). D
 
 - **Loadout.** **3 specials** per fighter, chosen from that fighter's pool at character select. Each fighter has a default loadout.
 - **Contextual variants.** Each special has variants, and the director picks one from context: biome and surface (air, ground, wall, water), altitude, distance, the opponent's stance and injuries, and the fighter's form and mood. It uses the same selector grammar as Combat's styles. The player never picks a variant.
-- **The control.** Hold **Special** plus a direction to choose the slot (for example up, forward or down). That queues the special, and the director fires it at the next opening, within 180 ticks, as with the signature queue.
+- **The control** (ADR 0008). Hold the power trigger and press a face button for that slot. A funded press fires at the next exchange boundary, and an unfunded one is refused (`control-rules.md` §3). On the Simple layout the director picks the slot.
 - **Cost:** 15 to 30 ki each, set by power class. **Cooldown:** 25 s per special.
 - Specials never count toward the signature band.
 - **Kept apart from specials:** the fighter mechanics (stoke, Press, Drop the Act, the fold, the Encore) keep their own inputs and prompts (`stance-matrix.md` R9).
@@ -299,7 +299,7 @@ Players learn it once.
    - *on the body:* the fighter's own ready tell (below), followed by a slow pulse for as long as the form stays ready;
    - *in sound and feel:* a short sting unique to the fighter, a rumble pulse on controllers, and a one-line bark (text with a grunt);
    - *on the HUD:* one "ready" icon beside the fighter's portrait, showing the Transform button.
-2. **The input: hold Transform for 0.5 s.** It is one button for every fighter. Controls binds it; the proposal is E for P1, beside charge on Q. The hold prevents accidents. A hold made mid-exchange goes in at the next exchange boundary, like a queued signature.
+2. **The input: hold both triggers for 0.5 s** (ADR 0008; the chord rules are in `control-rules.md` §3). It is the same for every fighter, and on touch the ready icon is the button. The hold prevents accidents. A hold made mid-exchange goes in at the next exchange boundary.
 3. **Losing it.** Where the rival can still take the form away (for example by draining Pride), the pulse flickers when the form is close to being lost.
 4. **The change lands in one beat.** The 2 to 3 s cinematic ends on a held pose that shows the new form clearly, then play resumes.
 5. **Both players see both fighters' cues,** and the AI uses the same ones. The rival's ready pulse is your signal to press them.
