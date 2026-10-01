@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/vfx-water",
+  "title": "vfx water effects (version 1)",
+  "description": "data/vfx/water.json: the numbers behind the skip spray, the plunge column, a beam striking the sea and the wake (docs/vfx/water-plan.md). Presentation only: read by render/vfx/water.gd, never by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because water.gd falls back to the same default; speeds are world units a second, sizes world units, lives seconds, angles degrees. Range pairs (min not above max) are checked by tools/lib/xref.js (vfx-water-range).",
+  "type": "object",
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scale": {
+      "type": "object",
+      "description": "How a splash scales with the impact speed (against ref_speed) and the power tier, clamped to min..max.",
+      "properties": {
+        "ref_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tier_gain": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "skim": {
+      "type": "object",
+      "description": "The spray of a skip across the water.",
+      "properties": {
+        "streaks_base": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "streaks_per_scale": {
+          "type": "number",
+          "minimum": 0
+        },
+        "elev_min_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "elev_max_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "len_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "len_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "speed_frac_min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "speed_frac_max": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "speed_cap": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "life_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "life_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tail_puffs_base": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tail_puffs_per_scale": {
+          "type": "number",
+          "minimum": 0
+        },
+        "skip_decay": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "plunge": {
+      "type": "object",
+      "description": "The column of a fighter plunging in.",
+      "properties": {
+        "height_per_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "streaks_base": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "streaks_per_scale": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cone_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "column_puffs_base": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column_puffs_per_scale": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rebound_delay": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rebound_share": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "beam": {
+      "type": "object",
+      "description": "A beam striking the sea.",
+      "properties": {
+        "throw_chance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "throws_per_tick": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "streaks_per_throw": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "power_gain": {
+          "type": "number",
+          "minimum": 0
+        },
+        "puff_every": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "forward_deg_min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "forward_deg_max": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "wake": {
+      "type": "object",
+      "description": "The wake of a fighter flying low over the water.",
+      "properties": {
+        "min_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "streaks_per_tick": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "puff_every": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "caps": {
+      "type": "object",
+      "description": "Hard limits on spray particles.",
+      "properties": {
+        "spray_alive": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "per_tick": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

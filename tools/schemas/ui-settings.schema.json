@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/ui-settings",
   "title": "ui settings screen (schema 1)",
-  "description": "ui/data/settings.json: the Settings screen (docs/ui/hud-spec.md section 26): its sections, which options each lists and in what order, the words for each choice and the screen's own words. The controls themselves come from options.json. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every listed option exists in options.json, every needs names a flag in features.json, hidden and labels name real options, labels cover real choices, no option is listed twice, section ids are unique) are checked by tools/lib/xref.js.",
+  "description": "ui/data/settings.json: the Settings screen (docs/ui/hud-spec.md section 26): its sections, which options each lists and in what order, the words for each choice and the screen's own words. The controls themselves come from options.json. Version field: schema. Policy: closed except keys starting with an underscore. The Remap controls words live in `remap` (the older `_remap` spelling is accepted until UI renames it). Cross-references (every listed option exists in options.json, every needs names a flag in features.json, hidden and labels name real options, labels cover real choices, no option is listed twice, section ids are unique) are checked by tools/lib/xref.js.",
   "type": "object",
   "required": [
     "schema",
@@ -157,6 +157,508 @@
           "type": "string",
           "minLength": 1
         }
+      }
+    },
+    "remap": {
+      "type": "object",
+      "description": "The Remap controls screen (docs/ui/hud-spec.md): its words. {action}, {control}, {other} and {layout} are filled in by the screen, and each sentence that needs one must keep it. layouts keys are preset ids in data/input/layouts.json, actions and helps keys are action ids in data/input/actions.json, controls keys are pad control names (the part after \"pad:\"). Cross-checks in tools/lib/xref.js (settings-remap).",
+      "required": [
+        "title",
+        "layout",
+        "layout_help",
+        "reset",
+        "reset_button",
+        "reset_help",
+        "hint_keys",
+        "hint_pad",
+        "capture_key",
+        "capture_pad",
+        "capture_word",
+        "conflict",
+        "reserved",
+        "pair",
+        "wrong_device_kb",
+        "wrong_device_pad",
+        "done",
+        "same",
+        "cancelled",
+        "reset_done",
+        "swap",
+        "cancel",
+        "move_steps",
+        "layouts",
+        "actions",
+        "helps",
+        "controls"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layout": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layout_help": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset_button": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset_help": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hint_keys": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hint_pad": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capture_key": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            }
+          ]
+        },
+        "capture_pad": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            }
+          ]
+        },
+        "capture_word": {
+          "type": "string",
+          "minLength": 1
+        },
+        "conflict": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            },
+            {
+              "pattern": "\\{other\\}"
+            }
+          ]
+        },
+        "reserved": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "pair": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "wrong_device_kb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wrong_device_pad": {
+          "type": "string",
+          "minLength": 1
+        },
+        "done": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            },
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "same": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            },
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "cancelled": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset_done": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{layout\\}"
+            }
+          ]
+        },
+        "swap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cancel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "move_steps": {
+          "type": "object",
+          "required": [
+            "up",
+            "left",
+            "down",
+            "right"
+          ],
+          "properties": {
+            "up": {
+              "type": "string",
+              "minLength": 1
+            },
+            "left": {
+              "type": "string",
+              "minLength": 1
+            },
+            "down": {
+              "type": "string",
+              "minLength": 1
+            },
+            "right": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "layouts": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "actions": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "helps": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "controls": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "_remap": {
+      "type": "object",
+      "description": "The Remap controls screen (docs/ui/hud-spec.md): its words. {action}, {control}, {other} and {layout} are filled in by the screen, and each sentence that needs one must keep it. layouts keys are preset ids in data/input/layouts.json, actions and helps keys are action ids in data/input/actions.json, controls keys are pad control names (the part after \"pad:\"). Cross-checks in tools/lib/xref.js (settings-remap).",
+      "required": [
+        "title",
+        "layout",
+        "layout_help",
+        "reset",
+        "reset_button",
+        "reset_help",
+        "hint_keys",
+        "hint_pad",
+        "capture_key",
+        "capture_pad",
+        "capture_word",
+        "conflict",
+        "reserved",
+        "pair",
+        "wrong_device_kb",
+        "wrong_device_pad",
+        "done",
+        "same",
+        "cancelled",
+        "reset_done",
+        "swap",
+        "cancel",
+        "move_steps",
+        "layouts",
+        "actions",
+        "helps",
+        "controls"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layout": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layout_help": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset_button": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset_help": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hint_keys": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hint_pad": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capture_key": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            }
+          ]
+        },
+        "capture_pad": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            }
+          ]
+        },
+        "capture_word": {
+          "type": "string",
+          "minLength": 1
+        },
+        "conflict": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            },
+            {
+              "pattern": "\\{other\\}"
+            }
+          ]
+        },
+        "reserved": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "pair": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "wrong_device_kb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wrong_device_pad": {
+          "type": "string",
+          "minLength": 1
+        },
+        "done": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            },
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "same": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{action\\}"
+            },
+            {
+              "pattern": "\\{control\\}"
+            }
+          ]
+        },
+        "cancelled": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reset_done": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{layout\\}"
+            }
+          ]
+        },
+        "swap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cancel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "move_steps": {
+          "type": "object",
+          "required": [
+            "up",
+            "left",
+            "down",
+            "right"
+          ],
+          "properties": {
+            "up": {
+              "type": "string",
+              "minLength": 1
+            },
+            "left": {
+              "type": "string",
+              "minLength": 1
+            },
+            "down": {
+              "type": "string",
+              "minLength": 1
+            },
+            "right": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "layouts": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "actions": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "helps": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "controls": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
       }
     }
   },

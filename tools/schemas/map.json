@@ -173,6 +173,10 @@
     {
       "match": "data/input/timing.json",
       "schema": "input-timing.schema.json"
+    },
+    {
+      "match": "data/vfx/water.json",
+      "schema": "vfx-water.schema.json"
     }
   ]
 }

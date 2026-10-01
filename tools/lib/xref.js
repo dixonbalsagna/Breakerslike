@@ -26,6 +26,7 @@ const BABBLE = 'audio/data/babble.json';
 const BABBLE_CAPTIONS = 'audio/data/babble_captions.json';
 const OPTIONS = 'ui/data/options.json';
 const SETTINGS = 'ui/data/settings.json';
+const WATER = 'data/vfx/water.json';
 const FEATURES = 'ui/data/features.json';
 const SKETCH_COMMON = 'audio/data/sketch_common.json';
 
@@ -514,6 +515,34 @@ function xref(docs, root = repoRoot) {
       for (const k of Object.keys(words)) if (!k.startsWith('_') && !ch.some((c) => String(c) === k || (typeof c === 'number' && Number(k) === c))) err(SETTINGS, `${at}/${esc(k)}`, 'settings-labels', `label for "${k}", which is not a choice of "${o}" (${ch.join(', ')})`);
     }
     for (const o of Object.keys(opts)) if (!listed.has(o) && !hidden.includes(o)) err(SETTINGS, '/hidden', 'settings-unlisted', `option "${o}" is neither on a screen section nor in hidden, so no player can reach it`, 'warning');
+  }
+
+  // ---- vfx: water ----
+  const water = get(WATER);
+  if (isObj(water)) {
+    const pairs = [['scale', 'min', 'max'], ['skim', 'elev_min_deg', 'elev_max_deg'], ['skim', 'len_min', 'len_max'], ['skim', 'speed_frac_min', 'speed_frac_max'], ['skim', 'life_min', 'life_max'], ['plunge', 'height_min', 'height_max'], ['beam', 'forward_deg_min', 'forward_deg_max']];
+    for (const [g, lo, hi] of pairs) {
+      const o = water[g];
+      if (isObj(o) && typeof o[lo] === 'number' && typeof o[hi] === 'number' && o[lo] > o[hi]) err(WATER, `/${g}/${lo}`, 'vfx-water-range', `${lo} ${o[lo]} is above ${hi} ${o[hi]}`);
+    }
+  }
+
+  // ---- ui: the Remap controls words ----
+  {
+    const remap = isObj(settings) ? (isObj(settings.remap) ? settings.remap : settings._remap) : undefined;
+    const at = isObj(settings) && isObj(settings.remap) ? '/remap' : '/_remap';
+    const layouts = get('data/input/layouts.json');
+    const inputActions = get('data/input/actions.json');
+    if (isObj(remap)) {
+      const presets = isObj(layouts) && Array.isArray(layouts.presets) ? layouts.presets.filter(isObj) : [];
+      const ids = new Set(presets.map((p) => p.id));
+      if (ids.size && isObj(remap.layouts)) {
+        for (const k of plainKeys(remap.layouts)) if (!ids.has(k)) err(SETTINGS, `${at}/layouts/${esc(k)}`, 'settings-remap', `layout "${k}" is not a preset in data/input/layouts.json (${[...ids].join(', ')})`);
+        for (const p of presets) if (p.device !== 'touch' && !(p.id in remap.layouts)) err(SETTINGS, `${at}/layouts`, 'settings-remap', `preset "${p.id}" has no name in layouts, so the screen cannot list it`, 'warning');
+      }
+      const actionIds = new Set(isObj(inputActions) && Array.isArray(inputActions.actions) ? inputActions.actions.filter(isObj).map((a) => a.id) : []);
+      if (actionIds.size) for (const g of ['actions', 'helps']) if (isObj(remap[g])) for (const k of plainKeys(remap[g])) if (!actionIds.has(k)) err(SETTINGS, `${at}/${g}/${esc(k)}`, 'settings-remap', `${g} names action "${k}", which is not in data/input/actions.json`);
+    }
   }
 
   // ---- ui: how to play ----

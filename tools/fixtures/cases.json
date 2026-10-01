@@ -6118,6 +6118,963 @@
         "pointer": "/hidden",
         "file": "ui/data/settings.json"
       }
+    },
+    {
+      "id": "vfx-water-live-valid",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-water-version-required",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "del": [
+            "/version"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "vfx-water-unknown-group",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/spray": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/spray"
+      }
+    },
+    {
+      "id": "vfx-water-unknown-key",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/skim/streaks": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/skim/streaks"
+      }
+    },
+    {
+      "id": "vfx-water-underscore-key-ok",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/skim/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-water-empty-group-ok",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/wake": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-water-count-integer",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/skim/streaks_base": 14.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/skim/streaks_base"
+      }
+    },
+    {
+      "id": "vfx-water-count-negative",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/plunge/streaks_base": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/plunge/streaks_base"
+      }
+    },
+    {
+      "id": "vfx-water-share-above-one",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/plunge/rebound_share": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/plunge/rebound_share"
+      }
+    },
+    {
+      "id": "vfx-water-chance-above-one",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/beam/throw_chance": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/beam/throw_chance"
+      }
+    },
+    {
+      "id": "vfx-water-angle-range",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/plunge/cone_deg": 120
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/plunge/cone_deg"
+      }
+    },
+    {
+      "id": "vfx-water-every-zero",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/wake/puff_every": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/wake/puff_every"
+      }
+    },
+    {
+      "id": "vfx-water-speed-positive",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/scale/ref_speed": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/scale/ref_speed"
+      }
+    },
+    {
+      "id": "vfx-water-type-string",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/caps/per_tick": "60"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/caps/per_tick"
+      }
+    },
+    {
+      "id": "vfx-water-scale-range",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/scale/min": 4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-water-range",
+        "pointer": "/scale/min"
+      }
+    },
+    {
+      "id": "vfx-water-elevation-range",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/skim/elev_min_deg": 70
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-water-range",
+        "pointer": "/skim/elev_min_deg"
+      }
+    },
+    {
+      "id": "vfx-water-height-range",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/plunge/height_min": 5000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-water-range",
+        "pointer": "/plunge/height_min"
+      }
+    },
+    {
+      "id": "vfx-water-equal-range-ok",
+      "schema": "vfx-water.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/water.json",
+          "set": {
+            "/skim/life_min": 1.2
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-remap-valid",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-remap-old-spelling-valid",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/_remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-remap-missing-key",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/remap"
+      }
+    },
+    {
+      "id": "settings-remap-unknown-key",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "extra": "x"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/remap/extra"
+      }
+    },
+    {
+      "id": "settings-remap-token-action",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press a key.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/remap/capture_key"
+      }
+    },
+    {
+      "id": "settings-remap-token-conflict-other",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is taken.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/remap/conflict"
+      }
+    },
+    {
+      "id": "settings-remap-token-layout",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "Back to defaults.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/remap/reset_done"
+      }
+    },
+    {
+      "id": "settings-remap-move-steps-closed",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": 3,
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/remap/move_steps/up"
+      }
+    },
+    {
+      "id": "settings-remap-unknown-layout",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena",
+                "nowhere": "Nowhere"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-remap",
+        "pointer": "/remap/layouts/nowhere"
+      }
+    },
+    {
+      "id": "settings-remap-unknown-action",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light",
+                "fly": "Fly"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-remap",
+        "pointer": "/remap/actions/fly"
+      }
+    },
+    {
+      "id": "settings-remap-unknown-help-action",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow.",
+                "fly": "Fly."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-remap",
+        "pointer": "/remap/helps/fly"
+      }
+    },
+    {
+      "id": "settings-remap-unnamed-preset-warns",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-remap",
+        "pointer": "/remap/layouts"
+      }
     }
   ],
   "text": [
