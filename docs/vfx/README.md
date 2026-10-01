@@ -84,3 +84,7 @@ The sim now emits `building_hit` (with `floor`-less summaries for small building
 - One tick's spawns are budgeted (260 puffs, then 200 shards) so a busy tick stays small.
 - Pictures from real matches (`tools/brunt_shots.gd`, seed 1): a four-house chain ![chain](img/b2-chain-real.png) and a punch on a 23-floor tower, far back in the depth rows ![floor punch](img/b2-floor-punch-real.png)
 - Checks: `effects_check.gd` covers punch, crack, dent, pancake, the summary being skipped when a `floor_hit` came, holes only for small buildings and the pool cap under repeated pancakes; `hash_check.gd` (seeds 12345, 4, 7, all groups on, real B2 events: 15,941 debris bits) and `render/tools/determinism.gd` pass; worst-case scene CPU +0.17 ms mean, +0.55 ms p99, GPU +0.008 ms.
+
+## Trail kink fix (2026-09-30)
+
+Bug: a trail bent behind a fighter flying straight. Cause: the ribbon's head was drawn at the fighter's chest (feet + 36) but the history behind it was stored at the feet, so the first segment dropped 36 units and then ran level, a kink at the head on every flight. The hybrid projection, camera motion, pane anchors and the seam were not involved (the ribbon is built in world space and a planar line stays a line under the perspective). Fix: the history is stored at chest height (`trail_state.gd`). `effects_check.gd` now asserts a level and a climbing flight give a ribbon on one line (it measured 36.000 units off before the fix and 0.000 after). Before and after, same seed and tick: ![before](img/trail-kink-before.png) ![after](img/trail-kink-after.png)

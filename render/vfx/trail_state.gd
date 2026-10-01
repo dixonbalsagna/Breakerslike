@@ -16,7 +16,7 @@ class Mark:
 	var life: float = 0.5
 
 var hx := PackedFloat64Array()     # history, oldest first: one point per unfrozen tick (wrapped x)
-var hy := PackedFloat64Array()
+var hy := PackedFloat64Array()       # (at chest height)
 var k: float = 0.0                 # eased intensity 0..1
 var speed: float = 0.0             # world units a second over the last unfrozen tick
 var speed_bh: float = 0.0
@@ -93,7 +93,7 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 	_was_full = speed_bh >= VfxLook.V_FULL
 	max_k = maxf(max_k, k)
 	hx.append(f.x)
-	hy.append(f.y)
+	hy.append(f.y + VfxLook.CHEST_Y)   # chest height, like the ribbon's head, so a straight flight is a straight ribbon
 	if hx.size() > VfxLook.HIST_MAX:
 		hx.remove_at(0)
 		hy.remove_at(0)

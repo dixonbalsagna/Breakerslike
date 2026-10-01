@@ -122,6 +122,30 @@ func _run() -> void:
 	for k in range(60):
 		_tick(S, h6, [VfxMock.ev("floors_fall", {"b": tw, "from": 1, "to": 15, "n": 15, "x": bt.x, "z": bt.z, "w": bt.w}), fh, bh])
 	_check(h6.debris.bits.size() <= VfxLook.DEBRIS_CAP, "the pool holds under repeated pancakes and punches (%d)" % h6.debris.bits.size())
+	# A straight flight draws a straight ribbon: the polyline from the interpolated head back through the history is
+	# collinear (the history is kept at chest height, like the head), flat for a level flight and on one line for a climb.
+	print("ribbon straightness")
+	for slope in [0.0, 0.6]:
+		var ts := VfxTrailState.new()
+		var rg := SimRng.new(2)
+		var ff = S.fighters[0]
+		ff.state = "launched"
+		ff.hidden = false
+		ff.rush = null
+		ff.x = 20000.0
+		ff.y = 800.0
+		for k in range(40):
+			ff.x += 150.0
+			ff.y += 150.0 * slope
+			ts.step(S, ff, SimConst.DT, rg, VfxLook.Q_HIGH, true)
+		var head_x: float = ff.x - 70.0                     # a frame part-way between the last two ticks
+		var head_y: float = ff.y - 70.0 * slope + VfxLook.CHEST_Y
+		var pts: PackedVector2Array = ts.ribbon(head_x, head_y, 900.0, VfxLook.SEGS)
+		var worst: float = 0.0
+		for p in pts:
+			var line_y: float = head_y + p.x * slope
+			worst = maxf(worst, absf(p.y - line_y))
+		_check(pts.size() == VfxLook.SEGS + 1 and worst < 0.01, "slope %.1f: ribbon points lie on the flight line (worst off-line %.3f units)" % [slope, worst])
 	# The break ring: a fighter accelerating from rest to 130 bh/s fires it once.
 	print("break ring")
 	var t := VfxTrailState.new()
