@@ -2,7 +2,7 @@
 
 Owner: Art Director. 2026-10-02. Orb: "loop on the art style to create stylized closeups of the fighters' faces so the on-screen closeups can be memorable and recognizable." Concept art, working labels, **pending Legal review**. Orb picks. This replaces the faceless portraits as the thing to choose from (`rule-of-cool-art.md` section 1 still holds the frame, the sizes and the zero-budget texture note).
 
-**The one page for Orb:** `art/concepts/closeups/closeups-comparison.svg`. The path (seven rounds, the rejected ones kept): `art/concepts/closeups/rounds/NOTES.md` and `rounds/round-1/` to `round-7/`.
+**The one page for Orb:** `art/concepts/closeups/closeups-comparison.svg`. The path (eight rounds, the rejected ones kept): `art/concepts/closeups/rounds/NOTES.md` and `rounds/round-1/` to `round-8/`.
 
 ## The three directions
 
@@ -43,3 +43,19 @@ Sheets in `art/concepts/closeups/`: `expressions-B.svg`, `anti-hero-transition.s
 - **Silhouettes for Animation:** `art/concepts/silhouettes/ragdoll-silhouettes.svg` (ART-0012).
 
 Regenerate: `node art/concepts/closeups/gen.mjs 7 --final` (the crops are written only with `--final`).
+
+## Round 8: Legal's constraints applied (RL-044, `docs/legal/q3-screen.md`)
+
+Legal screened the close-ups: the blank-mask fallback is not required, lit shapes may stay with constraints, and the silhouettes and the frame are GO. Every sheet, the eight expressions, the transition and the crops were regenerated under them; the damage ladder and direction C, which Legal did not look at, were checked against the same rules.
+
+| Constraint | How it is met |
+|---|---|
+| No matched pair of round eyes plus a line mouth on a smooth white mask | The Protagonist's lit eyes are tilted capsules (never round); his A mask and the Empress's carry a seam (the line their B break follows), so neither is a smooth white face; the lit mouth is a thin lane-colour line |
+| No X or cross marks, goggles, red lips or red mouth marks; mouths are thin lines in the lane colour | Lit mouths are thin lines in the lane colour (a deeper lane tone on the pale masks); teeth are off-white, no tongue colour; the loose strand in the damage stages now ends above the brow (round 7's crossed it, a cross), and the two mask cracks no longer intersect |
+| Lit shapes from each fighter's own family | Anti-hero: blades and hexagons. Protagonist: capsules and ring arcs. Empress: wedges. Cyborg: rectangles |
+| The Protagonist's lit circle becomes a capsule or ring arc | A capsule (B and A) |
+| No lone glowing red eye on a metal half | The Cyborg's lit eye is one part of a display: a lit brow, scan bars through the eye, a three-pip readout, in pale peach, never a single red eye. Direction C has the same cluster on the steel |
+| The Cyborg's split diagonal or off-centre (about a third to two thirds), in B and C | A stair that runs diagonally down and to the right; the display or steel is about a third of the face (more at the brow, less at the jaw), and the transition and damage retreat it further. The Anti-hero's jagged vertical break stays (a mask with lit shapes against a plain face) |
+| No bolts or stitches on the box head, no spiky hair, no gold, no torn-paper frame | The stitch ticks on the damage cuts are gone; no bolts anywhere; the hair is unchanged (smooth masses, a swept tuft); no gold; the frame is the chamfered square |
+
+Also in round 8: the Empress's diadem tabs are shorter and hug the head (so they cannot read as a winged helmet), the Protagonist's tuft is shorter, and `damage-expressions-B.svg` shows the four damage stages on all eight expressions for each fighter.
