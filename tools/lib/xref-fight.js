@@ -398,6 +398,30 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     });
   }
 
+  // ---- anim ragdoll: ids, bones, orders ----
+  const rag = get('data/anim/ragdoll.json');
+  if (isObj(rag)) {
+    const RG = 'data/anim/ragdoll.json';
+    const lagDoc = get('data/anim/profiles.json');
+    const bones = new Set(isObj(lagDoc) && isObj(lagDoc.bone_lag) ? Object.keys(lagDoc.bone_lag) : []);
+    const seenIds = new Map();
+    (Array.isArray(rag.dofs) ? rag.dofs : []).forEach((d, i) => {
+      if (!isObj(d)) return;
+      const at = `/dofs/${i}`;
+      if (typeof d.id === 'string') { if (seenIds.has(d.id)) err(RG, `${at}/id`, 'ragdoll-id', `dof id "${d.id}" is already used at /dofs/${seenIds.get(d.id)}`); else seenIds.set(d.id, i); }
+      if (bones.size) for (const k of ['bone', 'bone2']) if (typeof d[k] === 'string' && !bones.has(d[k])) err(RG, `${at}/${k}`, 'ragdoll-bone', `${k} "${d[k]}" is not in profiles.json bone_lag`);
+      if (d.share !== undefined && d.bone2 === undefined) err(RG, `${at}/share`, 'ragdoll-bone', 'share has no bone2 to share with');
+      if (d.bone2 !== undefined && d.share === undefined) err(RG, at, 'ragdoll-bone', 'bone2 needs a share');
+      if (typeof d.lo === 'number' && typeof d.hi === 'number' && d.lo >= d.hi) err(RG, `${at}/lo`, 'ragdoll-limits', `lo ${d.lo} is not below hi ${d.hi}`);
+      if (typeof d.k_loose === 'number' && typeof d.k_stiff === 'number' && d.k_loose > d.k_stiff) err(RG, `${at}/k_loose`, 'ragdoll-limits', `k_loose ${d.k_loose} is above k_stiff ${d.k_stiff}; a loose body should be softer than a posed one`);
+      if (typeof d.lo === 'number' && typeof d.hi === 'number') for (const k of ['tsg', 'tuck', 'brace']) if (typeof d[k] === 'number' && (d[k] < d.lo || d[k] > d.hi)) err(RG, `${at}/${k}`, 'ragdoll-limits', `${k} ${d[k]} is outside the limits ${d.lo} to ${d.hi}, so the spring would be clipped`, 'warning');
+    });
+    const dr = rag.drive;
+    if (isObj(dr) && typeof dr.a0 === 'number' && typeof dr.a_max === 'number' && dr.a0 > dr.a_max) err(RG, '/drive/a0', 'ragdoll-limits', `a0 ${dr.a0} is above a_max ${dr.a_max}`);
+    const rg = rag.regimes;
+    if (isObj(rg)) for (const k of ['tuck_spin', 'brace_time']) if (Array.isArray(rg[k]) && rg[k].length === 2 && rg[k][0] > rg[k][1]) err(RG, `/regimes/${k}`, 'ragdoll-limits', `${k} runs from ${rg[k][0]} down to ${rg[k][1]}; it must rise`);
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

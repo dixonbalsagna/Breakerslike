@@ -167,6 +167,10 @@
       "schema": "anim-forms.schema.json"
     },
     {
+      "match": "data/anim/ragdoll.json",
+      "schema": "anim-ragdoll.schema.json"
+    },
+    {
       "match": "data/anim/profiles.json",
       "schema": "anim-profiles.schema.json"
     },
