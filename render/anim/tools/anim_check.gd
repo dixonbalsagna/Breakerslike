@@ -262,7 +262,18 @@ func _test_ragdoll() -> void:
 	_expect(di < 0, "ragdoll test: the ragdoll state differs between one tick a frame and two at entry %d of %d (%s against %s; per fighter: 12 joints, out_w, 5 cloth, look)" % [di, a.th.size(), str(a.th[di] if di >= 0 else 0), str(b.th[di] if di >= 0 else 0)])
 	_expect(a.active > 20, "ragdoll test: the ragdoll was never active (%d frames)" % a.active)
 	var r: Dictionary = _rd_run(1, 1200, true)
-	_expect(r.maxe < a.maxe * 0.7, "ragdoll test: reduced motion moves %.2f against %.2f" % [r.maxe, a.maxe])
+	# a whole match saturates the joint limits in a hard tumble, so the match-level ratio is only a sanity bound; the controlled one is the proof
+	_expect(r.maxe < a.maxe * 0.85, "ragdoll test: reduced motion moves %.2f against %.2f" % [r.maxe, a.maxe])
+	var kick_e: Array = []
+	for amp_k in [1.0, 0.35]:
+		var rdk := AnimRagdoll.new()
+		rdk.crumple(1.0, amp_k)
+		var mk := 0.0
+		for tk in range(40):
+			rdk.step(DT, Vector2.ZERO, Vector2.ZERO, 1.0, amp_k, float(tk) * DT)
+			mk = maxf(mk, rdk.energy())
+		kick_e.append(mk)
+	_expect(float(kick_e[1]) < float(kick_e[0]) * 0.5, "ragdoll test: the same crumple moves %.2f at reduced motion against %.2f" % [kick_e[1], kick_e[0]])
 	var off: Dictionary = _rd_run(1, 600, false, false)
 	_expect(off.maxe == 0.0, "ragdoll test: the switch left the ragdoll moving (%.3f)" % off.maxe)
 	RenderAnim.ragdoll_enabled = true
