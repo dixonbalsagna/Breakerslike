@@ -29,7 +29,8 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 - **The risk.** Tapping without holding guard is the "moving parry": it works the same, but a late tap takes the full hit with no guard up.
 - **Mashing Guard gives normal blocks only.** A Guard press outside a window locks the perfect block out for **20 ticks**, and each further press restarts the lockout. The guard itself still works. This value replaces the 18 ticks in Controls' spec.
 - **Beam clash.** The director never fires a beam on its own, so the old "AGGRESSIVE with 40 ki meets the beam" rule goes. A clash now happens only when the defender answers during the incoming beam's tell, with their own signature (45 ki) or a heavy energy attack (40 ki). The selector conditions are in `stance-matrix.md` §7.2.
-- **QA bands:** perfect blocks are 5 to 15 per 100 melee exchanges at mid skill, and at most 2 per 100 for a scripted Guard masher.
+- **QA bands:** perfect blocks are 5 to 15 per 100 melee exchanges at mid skill and for the medium AI (3 to 8 for the easy AI and 12 to 20 for the hard one; `moveset-rules.md` §11), and at most 2 per 100 for a scripted Guard masher.
+- The window per strike class is in `moveset-rules.md` §11(f).
 
 > **Two additions from the rule-of-cool plan** (`rule-of-cool.md` §2). Clashes, including the beam struggle, are decided on timed pulses. A perfect block against a signature takes one of three looks by the direction held: swat, split or walk through.
 

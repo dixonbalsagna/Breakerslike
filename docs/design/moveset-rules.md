@@ -457,3 +457,20 @@ So a match reads as a climb: a place signature, Regalia's, Sovereign's, and then
 - it takes 10 ticks, during which the held fighter can't act.
 
 **It costs no ki.** The 10 ticks and the score penalty are the price, and the strike that set it up has already been paid for. The smash it leads to is a brunt like any other, inside the collateral budgets (`balance-targets.md` §5b).
+
+**(e) The ping-pong's timing** (Combat's `docs/combat/pending/wave3-pingpong.md`), confirmed.
+- A middle return is 34 ticks from the knock to the contact, or 28 in Frenzied.
+- The ender's bounce is **12 ticks longer:** the same travel, then the whole 18-tick wind-up in place. Squeezing the wind-up into the flight would leave too little travel to read. The longer beat also tells the defender that the ender is coming, which is when the perfect block is worth most.
+
+**(f) The perfect-block window is set per strike class,** as data.
+
+| Class | Window | Early tolerance |
+| :--- | ---: | ---: |
+| A light opener, or a light blast | 8 ticks | 4 |
+| A heavy, an ender, or a charged shot | 10 ticks | 4 |
+| A return blow | 6 ticks | None |
+| A mid-string hit | No window | |
+
+Touch adds 2 ticks of tolerance, and a one-armed guard takes 2 ticks off each window (`spec-wounds.md` §1d).
+
+**(g) The AI's perfect blocks.** Encounter's step 3 has the AI landing about 18 perfect blocks per 100 melee exchanges, with RIPOSTE at 15% of them, against a band of 5 to 15. **The band stays, and R5's rates are cut by difficulty:** the easy AI uses ×0.35 of them, the medium AI ×0.6 and the hard AI ×1.0. That puts medium at about 11 per 100. The band of 5 to 15 is for the medium AI and for mid-skill players; easy should land 3 to 8 and hard 12 to 20. A riposte is a large swing, so the default opponent shouldn't land one in every six exchanges.
