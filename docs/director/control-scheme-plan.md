@@ -314,4 +314,9 @@ Each step is a checkpoint with goldens, the feel probe, tempo and QA's bands.
   2. SLAM DOWN becomes a drive by default, 40 to 55 degrees below level. The straight-down slam stays for break and finisher launches, a rival directly below, and the tier-3 crater set piece.
   3. Only if slides are still under 40%: more planner weight for shallow launches, and more forward carry on UPPERCUT.
 - **Fights in the city** (Rendering). In two AI matches no fighter was ever behind a building, so occlusion can't be judged in play yet. Keep it in mind for variety and L4.
+- **Steps 3 and 4, from Game Design's §21** (after 2b):
+  - The AI uses the new defences by difficulty: it guards a repeated string, perfect-blocks enders at R5's rates, punishes a fully blocked string, and throws a fighter who only guards.
+  - A staleness rule for repeated attacks.
+  - The medium AI doesn't guard on a beam tell yet (HIT is 41% of beams after 2b); that belongs to the same AI profile.
+- **Contact constants move to Combat's data:** the step-around's 8 ticks, 98 u rise and 74 u end distance on the `dodge` beat, and the 3-reach placement limit in the contact block. I read them from data when Combat adds them (`contact-plan.md`).
 - **Knocked-about rules** (`balance-targets.md` §20) replace §19's band table. The new bands, as shares of launches: slide 40 to 55%, bounce 8 to 15%, slam 8 to 15%, caught in the air 10 to 25%, water 5 to 15%, brunt 4 to 10%. §19's steps (`SLAM_VERT` 0.94, the drive) still stand. World plans the physics and a journey prediction. My part, later: the launch planner's budget check on the predicted journey, and the AI's tech on the dodge tap.
