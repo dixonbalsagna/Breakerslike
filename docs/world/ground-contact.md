@@ -28,7 +28,7 @@ Owner: World and Environment. Status: plan, docs only (2026-10-01), written agai
 
 **Where I disagree or add:**
 1. **Rims (revised after Game Design's wider-lip request, section 3 has the numbers).** Today's rims are 0.33 to 0.83 of the depth with a lip 0.3 R wide, and the big ones are walls (inner slope 0.77 to 1.13). With the lip widened to 0.5 R the crest can be taller and still be a ramp: **lip 0.5 R, crest 0.40 d** (inner slope 0.57, 1D rim-and-apron volume 0.53 of the bowl), with 0.45 d the most that holds 0.6. The 0.5 d crest Game Design asked for gives 0.63, over the limit, unless the lip is 0.6 R. I first proposed a 0.12 R rim (0.55 d, slope 0.8) and a 0.33 d cap at the old lip; both are superseded.
-2. **New hashed fighter fields.** Section 20's journey bounds, the tumble, and the early recovery need state: `jContacts` (contacts so far), `jT` (seconds since the first contact), `jV0` (the journey's starting normalised speed, for the one-impact wear budget), `tumbleT` (seconds rolled), `contactT` (seconds since the last contact, for the 8-tick recovery window). `bounces` exists. These are granted lines in `state.gd` and `hash.gd` (Simulation).
+2. **New hashed fighter fields.** Section 20's journey bounds, the tumble, and the early recovery need state: `jContacts` (contacts so far), `jT` (seconds since the first contact), `jV0` (the journey's starting normalised speed, for the one-impact wear budget), `tumbleT` (seconds rolled), `contactT` (seconds since the last contact, for the 8-tick recovery window), `launchN` (the launch number, so every event pairs to its launch). `bounces` exists. These are granted lines in `state.gd` and `hash.gd` (Simulation).
 3. **The tumble is a mode of the skid, not a separate system:** braking doubled, no trench, `rot` free, ends at 1.2 s or at a stop. Contact on rubble is always a tumble (a surface-class flag).
 4. **Today's slide runs from 350 to 60 (`STOP`);** under section 20 a contact at 350 to 900 is a tumble and a skid under 600 becomes one. That shortens slides at low power and gives them the "rolls to a hard stop" look. It is a behaviour change QA should expect in slide length and trench counts.
 5. **The leave test has one tolerance,** `LEAVE_CLEAR` (about 1.5 units: the ballistic step must end that far above the ground). It is not a speed threshold; it only keeps column-level noise from making a slow fighter hop.
@@ -75,15 +75,20 @@ One pure function shared by the runtime and Encounter's launch predictor (the B2
 
 ## 4. Events (Camera, VFX, Animation, Audio)
 
-New events (`docs/architecture/fx-events.md` gets them in the same slice; each carries `z` per the lanes plan):
+New events (`docs/architecture/fx-events.md` gets them in the same slice). **Every one carries `x`, `y`, `z` (the body's depth) and `speed` (normalised), and `n`, the launch number** that pairs it to its launch: a per-fighter counter `launchN`, set when `doLaunch` arms a launch and hashed (one more fighter field), copied onto every event of that journey and onto the `launch` event itself.
 
-| Event | Fields | When |
+| Event | Fields (besides actor, x, y, z, speed, n) | When |
 | :--- | :--- | :--- |
-| `left_ground` | actor, x, y, vx, vy, speed, cause (`lip`, `crest`, `heap`, `cliff`, `ridge`, `bounce`) | the leave test fires, or a bounce lifts off |
-| `bounce` | actor, x, y, n, speed, vn, vt, keep, surface | a ground bounce; water skims keep `skim` and also emit this |
-| `land` | actor, x, y, speed, kind (`skid`, `tumble`, `slam`, `stop`), sin_a, surface | a contact that is not a bounce |
-| `tumble_end` | actor, x, y, t, how (`stop`, `recover`, `air`) | a tumble ends |
-| existing slide events | unchanged | the trench, dust and record |
+| `left_ground` | vx, vy, cause (`lip`, `crest`, `heap`, `cliff`, `ridge`, `bounce`), contacts | the leave test fires, or a bounce lifts off |
+| `bounce` | k (the bounce number, 1 for the first), vn, vt, keep, surface | a ground bounce; a water skim keeps its `skim` event and also emits this, with `surface` `water` |
+| `land` | kind (`skid`, `tumble`, `slam`, `stop`), sin_a, surface, contacts, t | a contact that is not a bounce; `contacts` and `t` are the journey's counts so far |
+| `tumble_end` | how (`stop`, `recover`, `air`), contacts, t | a tumble ends |
+| **`journey_end`** | contacts (all kinds, at most 8), lips (flights off a lip), bounces, t (seconds from the first contact, at most 4), end (`stop`, `tumble`, `slam`, `water`, `recover`, `capped`) | once per journey, when it ends for any reason, including the 8-contact and 4 s caps (`capped`); the pairing event QA counts |
+| existing `skim` | gains `z`, `speed`, `n` | each water skip |
+| existing water events (`splash`, the water `ring`) | gain `z` (the body's depth, for a body at another lane), so VFX draws them at the right depth | as before |
+| existing slide events | unchanged, plus `n` | the trench, dust and record |
+
+**Why the journey counters come from state, not from the events:** `contacts` and `t` are the fighter's `jContacts` and `jT` (section 1, point 2), so the numbers on the events are exactly the ones the caps use and the planner's `journey` function predicts; QA can compare a predicted journey to the played one field by field. `launchN` is the only new field the events add. Nothing here draws a random number.
 
 Camera takes `left_ground` to `land` as an airborne phase with a known arc; VFX hangs dust, tumble blur and the contact flash on `bounce` and `land` by speed and surface; Animation picks skid, tumble, bounce and air from the events and from `mode`, `spin`, `bounces`; Audio takes surface and speed. The early recovery (a dodge tap in a tumble or within 8 ticks of a bounce) is Controls' and Combat's; the window is readable from `contactT` and the mode.
 
@@ -103,7 +108,7 @@ G1 can land first and alone (terrain only). G2 to G4 follow the lanes order (the
 
 **Applied:** a trench in paving becomes soil for braking (the surface class reads the trench: a column whose `S.deform` is below its settlement platform's paving level counts as soil); heaps at slope 0.6 (`RUBBLE_SLOPE`); highlands flanks 0.35 to 0.6 (`HIGHLAND_SLOPE_MIN`, `HIGHLAND_SLOPE_MAX`); the leave uses the normalised tangent, with an optional lip-lift factor (`LIP_LIFT`, 1 to 2, data in `contact.json`, default 1) that multiplies the vertical rate at the leave; no personality difference; no random draw anywhere.
 
-**Still open** (small, for Game Design): the spin at a bounce and its decay, and whether a tumble marks the ground per roll or per contact; the wear split across contacts (one impact in all); `LEAVE_CLEAR` (my 1.5 units) or none; and Orb's view of the rim, now 0.40 d on a 0.5 R lip: the taller crest the ruling hoped for (0.5 d) needs a 0.6 R lip to hold the slope.
+**Answered (balance-targets section 20, end):** spin is my formula, halving every 0.5 s in the air, capped at 3 turns a second (1.5 at tier 1); a tumble leaves one scuff and one dust puff per contact, at most 3 a second, and no trench; wear is 30% at the first touch-down and 70% in proportion to the speed each contact removes, a slam pays all, a lip flight pays nothing; `LEAVE_CLEAR` about 1.5 accepted. **Rim ruling (EP):** lip 0.5 R and crest 0.40 d as data (`RIM_IN`, `RIM_DEPTH_MAX`), with the pair 0.6 R and 0.5 d as the switch if Orb wants a taller lip after seeing it. Nothing is open on the plan.
 
 ## 7. Risks
 

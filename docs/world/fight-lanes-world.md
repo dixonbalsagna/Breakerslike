@@ -154,3 +154,10 @@ WorldLanes.clearLane(S, x, z) -> float                   # the nearest depth, at
 | Avenues, 3 floats each | `x0`, `x1`, `district`. The cross streets: the same intervals in every block row of the district. |
 
 A shader finds a pixel's lane by `z`, its strip by `z` within a street, its district by `x`, and whether it is in an avenue by `x`; everything else (sidewalk, kerb, carriageway, block) follows from the table. `looks` is a new top-level list in `settlements.json` (the stable order of the look names), so the index is data, not code. `dataHash()` (section 9) covers it.
+
+## 11. Orb's answers, Questionnaire 10 (2026-10-01)
+
+- **The ridge row.** The tall mountains are a damageable scenery row far behind the band: `lanes.json` gains a lane of kind `ridge` at a depth beyond the background scenery row (proposal: z about -90 bh, as data), outside `Z_BACK`, so the clamp keeps every fighter, launch, prop and blast away from it. A beam is the only thing that reaches it: L5's beam ray (`oz`, `zs`) crossing the ridge depth below the profile scars it by the scorch rule into `S.ridgeDmg` (see `districts-plan.md` section 14). `S.lanes` gains one lane record (kind 3, ridge); the shader reads the scarred profile from `S.ridgeDmg`. Before L5 the ridge is Rendering's static backdrop and `S.ridgeDmg` stays zero.
+- **Workers evacuate fast.** The district data carries `worker_share` and `vehicle_share` (numbers from Game Design); the lane table needs nothing new. Harbour and industrial districts are the low-civilian places.
+- **The second city is 12%**, so the lane table has two city districts sets (Bellgate and the harbour metropolis) and no 17% layout.
+- **30 fps with reduced effects** relaxes the cost worries in sections 5 and 10 (water windows, digs per row); the plan does not change.
