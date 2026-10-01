@@ -7,7 +7,10 @@
     "strike.hook": {"limb": "hand_r", "target": "head", "weight": "any", "keys": [{"role": "load", "pose": "strike.hook.chamber"}, {"role": "contact", "pose": "strike.hook.contact"}, {"role": "follow", "pose": "strike.hook.follow"}]},
     "strike.upper": {"limb": "hand_r", "target": "head", "weight": "heavy", "keys": [{"role": "load", "pose": "strike.upper.chamber"}, {"role": "contact", "pose": "strike.upper.contact"}, {"role": "follow", "pose": "strike.upper.follow"}]},
     "strike.kick": {"limb": "foot_r", "target": "gut", "weight": "any", "keys": [{"role": "load", "pose": "strike.kick.chamber"}, {"role": "contact", "pose": "strike.kick.contact"}, {"role": "follow", "pose": "strike.kick.follow"}]},
-    "strike.round": {"limb": "foot_r", "target": "chest", "weight": "heavy", "keys": [{"role": "load", "pose": "strike.round.chamber"}, {"role": "contact", "pose": "strike.round.contact"}, {"role": "follow", "pose": "strike.round.follow"}]}
+    "strike.round": {"limb": "foot_r", "target": "chest", "weight": "heavy", "keys": [{"role": "load", "pose": "strike.round.chamber"}, {"role": "contact", "pose": "strike.round.contact"}, {"role": "follow", "pose": "strike.round.follow"}]},
+    "strike.elbow": {"limb": "elbow_r", "target": "chest", "weight": "heavy", "step_max": 20, "keys": [{"role": "load", "pose": "strike.elbow.chamber"}, {"role": "contact", "pose": "strike.elbow.contact"}, {"role": "follow", "pose": "strike.elbow.follow"}]},
+    "strike.knee": {"limb": "knee_r", "target": "gut", "weight": "heavy", "step_max": 18, "keys": [{"role": "load", "pose": "strike.knee.chamber"}, {"role": "contact", "pose": "strike.knee.contact"}, {"role": "follow", "pose": "strike.knee.follow"}]},
+    "strike.headbutt": {"limb": "head", "target": "jaw", "weight": "heavy", "step_max": 18, "keys": [{"role": "load", "pose": "strike.headbutt.chamber"}, {"role": "contact", "pose": "strike.headbutt.contact"}, {"role": "follow", "pose": "strike.headbutt.follow"}]}
   },
   "picks": {
     "light": ["strike.jab", "strike.cross", "strike.hook", "strike.kick"],

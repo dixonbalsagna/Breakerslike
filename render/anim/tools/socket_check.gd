@@ -9,7 +9,7 @@ extends SceneTree
 
 const DT := 1.0 / 60.0
 const LIMBS := ["hand_r", "foot_r", "elbow_r", "knee_r", "head"]
-const REGIONS := ["head", "chest", "gut", "legs"]
+const REGIONS := ["head", "jaw", "chest", "gut", "legs"]
 
 var tol: float = 1.0
 var json_out: String = ""

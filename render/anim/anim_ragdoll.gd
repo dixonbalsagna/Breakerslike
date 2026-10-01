@@ -31,6 +31,8 @@ static var crumple_k := PackedFloat32Array()
 static var flail_amp := PackedFloat32Array()
 static var flail_hz := PackedFloat32Array()
 static var flail_fade := Vector2(0.35, 1.2)
+var shape_key: String = ""
+var hit_k := PackedFloat32Array()               # per degree of freedom: the flinch multiplier of this fighter's shape (data/anim/shapes.json)
 static var shapes: Dictionary = {}              # shape key -> {tuck, brace, skid, crumple: PackedFloat32Array}
 static var shape_of: Dictionary = {}            # roster id -> shape key
 static var hit_gain: float = 1.6
@@ -175,6 +177,19 @@ func _init() -> void:
 func set_shape(roster_id: String) -> void:
 	var key: String = String(shape_of.get(roster_id, shape_of.get("default", "")))
 	shape = shapes.get(key, {})
+	shape_key = key
+	var ht: Dictionary = AnimData.shapes.get(key, {}).get("hit", {})
+	hit_k.resize(N)
+	for i in range(N):
+		var bn: String = String(AnimRig.BONES[bone_a[i]][0])
+		var grp: String = "legs"
+		if bn.begins_with("head") or bn.begins_with("neck"):
+			grp = "head"
+		elif bn.begins_with("spine") or bn.begins_with("pelvis"):
+			grp = "spine"
+		elif bn.begins_with("upper_arm") or bn.begins_with("forearm") or bn.begins_with("clavicle"):
+			grp = "arms"
+		hit_k[i] = float(ht.get("gain", 1.0)) * float(ht.get(grp, 1.0))
 
 
 ## How much the body is moving on its own (for deciding whether to keep stepping).
@@ -266,7 +281,7 @@ func hit(dx: float, dy: float, force: float, region: int, u: float, u2: float) -
 				cv = u2
 			3:
 				cv = 1.0
-		om[i] += f * (hit_kx[k] * dx * (1.0 + hit_vx[i] * vv) + hit_ky[k] * dy + hit_kc[k] * cv)
+		om[i] += f * (hit_k[i] if i < hit_k.size() else 1.0) * (hit_kx[k] * dx * (1.0 + hit_vx[i] * vv) + hit_ky[k] * dy + hit_kc[k] * cv)
 
 
 ## Adds the motion to the solved pose, shown at weight w.

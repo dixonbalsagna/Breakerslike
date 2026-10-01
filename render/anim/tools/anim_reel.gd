@@ -4,7 +4,7 @@ extends SceneTree
 ## of the same seed line up frame for frame. tools/gif.mjs turns the raw files into GIFs (one, or two side by side).
 ## Needs a window (not --headless).
 ##   godot --path . --script res://render/anim/tools/anim_reel.gd -- --out=reel.rgb [--seed=4] [--from=730] [--count=150]
-##       [--step=2] [--style=snappy] [--crop=220x140] [--scale=2]
+##       [--step=2] [--style=snappy] [--crop=220x140] [--scale=2] [--shape=E] [--keyset=strike.elbow]
 ## Output: a 12-byte header (width, height, frames as little-endian int32) then width*height*3 bytes a frame.
 
 const DT := 1.0 / 60.0
@@ -17,6 +17,7 @@ var step: int = 2
 var style: String = ""
 var crop := Vector2i(220, 140)
 var scale: int = 2
+var shape: String = ""      # a shape key (P, A, E, C) both fighters take, to compare idles and flinches (a look test; the sim is unchanged)
 var wound: String = ""      # e.g. 0:arms+legs,1:brink: sets the wear of a fighter by hand after the start (a look test; the match then differs)
 var main: Node
 
@@ -33,6 +34,8 @@ func _initialize() -> void:
 			count = int(a.substr(8))
 		elif a.begins_with("--step="):
 			step = int(a.substr(7))
+		elif a.begins_with("--shape="):
+			shape = a.substr(8)
 		elif a.begins_with("--wound="):
 			wound = a.substr(8)
 		elif a.begins_with("--style="):
@@ -57,6 +60,8 @@ func _initialize() -> void:
 func _run() -> void:
 	await process_frame
 	main.start_match(seed_, {"p1": true, "p2": true})
+	if shape != "":
+		AnimRagdoll.shape_of = {"default": shape, "KAI": shape, "VORR": shape}
 	while main.host.ticks < from_tick:
 		main.frame(DT)
 	if wound != "":

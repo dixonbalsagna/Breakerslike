@@ -647,6 +647,34 @@ func _test_hunch() -> void:
 	print("hunch test: shoulder moved by %s, the reach hunch brought it %.1f units forward, %d limbs and %d regions in the socket table" % [str(moved), float(shx[0]) - float(shx[1]), limbs.size(), regs.size()])
 
 
+## Per-fighter tuning against the four shape languages (data/anim/shapes.json): the same blow flinches each shape by its own
+## amount (the heavy build least, the sweeping build most in the arms and spine), and every shape has an idle entry.
+func _test_shapes() -> void:
+	var out: Dictionary = {}
+	for key in ["P", "A", "E", "C"]:
+		AnimRagdoll.shape_of["T_" + key] = key
+		var rd := AnimRagdoll.new()
+		rd.set_shape("T_" + key)
+		rd.hit(1.0, 0.0, 1.0, 1, 0.0, 0.0)
+		var sums: Dictionary = {"head": 0.0, "spine": 0.0, "arms": 0.0, "legs": 0.0}
+		for i in range(AnimRagdoll.N):
+			var bn: String = String(AnimRig.BONES[AnimRagdoll.bone_a[i]][0])
+			var grp: String = "legs"
+			if bn.begins_with("head") or bn.begins_with("neck"):
+				grp = "head"
+			elif bn.begins_with("spine") or bn.begins_with("pelvis"):
+				grp = "spine"
+			elif bn.begins_with("upper_arm") or bn.begins_with("forearm") or bn.begins_with("clavicle"):
+				grp = "arms"
+			sums[grp] = float(sums[grp]) + absf(rd.om[i])
+		out[key] = sums
+		_expect(AnimData.shapes.get(key, {}).has("idle") and AnimData.shapes.get(key, {}).has("hit"), "shape test: no idle and hit entry for shape %s" % key)
+		AnimRagdoll.shape_of.erase("T_" + key)
+	_expect(float(out["C"].head) < float(out["P"].head) and float(out["C"].head) < float(out["A"].head), "shape test: the heavy build's head does not flinch least (%s)" % str(out))
+	_expect(float(out["E"].arms) > float(out["A"].arms) and float(out["E"].arms) > float(out["C"].arms), "shape test: the sweeping build's arms do not flinch most (%s)" % str(out))
+	print("shape test: head flinch P %.1f A %.1f E %.1f C %.1f, arms P %.1f A %.1f E %.1f C %.1f" % [out.P.head, out.A.head, out.E.head, out.C.head, out.P.arms, out.A.arms, out.E.arms, out.C.arms])
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -654,6 +682,7 @@ func _run() -> void:
 	_test_beats()
 	_test_form()
 	_test_hunch()
+	_test_shapes()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}

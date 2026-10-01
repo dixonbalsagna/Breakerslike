@@ -165,6 +165,7 @@ var _ci_w: float = 0.0
 var _ci_limb: String = "hand_r"
 var _ci_target: String = "chest"
 var _ci_side: bool = false
+var _ci_step: float = -1.0              # the key set's own step-in limit (model units), or -1 for the limb's default in sockets.json
 var _ci_opp = null
 var _ci_tc: float = 0.0
 var _ci_dmg: float = 0.0
@@ -836,6 +837,8 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var side: bool = (_hash(int(ex.n), int(strikes[best][1]), slot + 1) & 1) == 1
 	var picks: Array = AnimData.picks["heavy" if heavy2 else "light"]
 	var ksid: String = String(picks[_hash(int(ex.n), int(strikes[best][1]), 3 + slot) % picks.size()])
+	if RenderAnim.force_keyset != "" and AnimData.keysets.has(RenderAnim.force_keyset):
+		ksid = RenderAnim.force_keyset
 	var ks: Dictionary = AnimData.keysets[ksid]
 	# a broken arm does not strike and a broken leg does not kick: the blow uses the other limb (the sim keeps no side)
 	var lb: String = String(ks.get("limb", "hand_r"))
@@ -913,6 +916,7 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	if cw > 0.001:
 		_ci_w = cw
 		_ci_limb = String(ks.get("limb", "hand_r"))
+		_ci_step = float(ks.get("step_max", -1.0))
 		_ci_target = String(ks.get("target", "chest"))
 		_ci_side = side
 		_ci_opp = ex.D if role == "A" else ex.A
@@ -1034,7 +1038,7 @@ func _contact_ik(S: SimState, f) -> void:
 	var zs: float = (1.0 if sfx == "r" else -1.0) if sided else 0.0
 	var end_len: float = float(sk.get("end_len", 6.0))
 	var lunge_max: float = float(sk.get("lunge_max", 8.0))
-	var step_max: float = float(sk.get("step_max", 10.0))
+	var step_max: float = float(sk.get("step_max", 10.0)) if _ci_step < 0.0 else _ci_step
 	var dx: float = SimWrap.sdx(f.x, opp.x)
 	var rp: Vector3 = oaf._region_point(_ci_target)
 	var mx: float = (dx + oaf.vface * rp.x) * vface
@@ -1640,23 +1644,38 @@ func _personality_layer(T: float, stance: int, tier: int, calm: float) -> void:
 	var amp: float = _rd_amp() * calm
 	var ix: Dictionary = AnimRig.index
 	var ph: float = float(slot) * 1.9
-	var sway: float = float(st.sway) * float(tr.sway) * amp
-	var s1: float = sin(T * TAU * float(st.hz) * float(tr.hz) + ph)
+	var shp: Dictionary = AnimData.shapes.get(_rd.shape_key, {}).get("idle", {})
+	var sway: float = float(st.sway) * float(tr.sway) * amp * float(shp.get("sway", 1.0))
+	var hzm: float = float(shp.get("hz", 1.0))
+	var s1: float = sin(T * TAU * float(st.hz) * float(tr.hz) * hzm + ph)
 	var pe: int = ix["pelvis"]
 	q[pe] = q[pe] * Quaternion(Vector3(1, 0, 0), s1 * 0.02 * sway)
 	hips.z += s1 * 0.6 * sway
-	hips.x += sin(T * TAU * float(st.hz) * float(tr.hz) * 0.7 + ph + 1.0) * 0.3 * sway
-	var bn: float = float(st.bounce) * float(tr.bounce) * amp
-	var b1: float = sin(T * TAU * float(st.bounce_hz) * float(tr.hz) + ph)
+	hips.x += sin(T * TAU * float(st.hz) * float(tr.hz) * hzm * 0.7 + ph + 1.0) * 0.3 * sway
+	var bn: float = float(st.bounce) * float(tr.bounce) * amp * float(shp.get("bounce", 1.0))
+	var b1: float = sin(T * TAU * float(st.bounce_hz) * float(tr.hz) * hzm + ph)
 	hips.y += absf(b1) * 0.45 * bn   # a hop on the toes (never a dip: the legs are posed, so a dip would sink the feet)
-	var heel: float = float(st.heel) * amp
+	var heel: float = float(st.heel) * amp * float(shp.get("heel", 1.0))
 	q[ix["thigh_l"]] = q[ix["thigh_l"]] * Quaternion(Vector3(0, 0, 1), heel * maxf(0.0, b1))
 	q[ix["shin_l"]] = q[ix["shin_l"]] * Quaternion(Vector3(0, 0, 1), -heel * 1.2 * maxf(0.0, b1))
 	q[ix["thigh_r"]] = q[ix["thigh_r"]] * Quaternion(Vector3(0, 0, 1), heel * maxf(0.0, -b1))
 	q[ix["shin_r"]] = q[ix["shin_r"]] * Quaternion(Vector3(0, 0, 1), -heel * 1.2 * maxf(0.0, -b1))
-	var br: float = sin(T * TAU * 0.45 * float(tr.breath_hz) + ph) * 0.012 * float(tr.breath_amp) * float(st.breath) * amp
+	var br: float = sin(T * TAU * 0.45 * float(tr.breath_hz) + ph) * 0.012 * float(tr.breath_amp) * float(st.breath) * amp * float(shp.get("breath", 1.0))
 	q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(0, 0, 1), br)
 	q[ix["head"]] = q[ix["head"]] * Quaternion(Vector3(0, 0, 1), -br * 0.5)
+	# the shape's own idle: arms that drift out and in (a sweeping build), a head that glances and holds (a machine)
+	var sweep: float = float(shp.get("sweep", 0.0)) * amp
+	if sweep > 0.0:
+		var sv: float = sin(T * TAU * 0.31 + ph) * sweep
+		q[ix["upper_arm_r"]] = q[ix["upper_arm_r"]] * Quaternion(Vector3(1, 0, 0), sv)
+		q[ix["upper_arm_l"]] = q[ix["upper_arm_l"]] * Quaternion(Vector3(1, 0, 0), -sv)
+	var servo: float = float(shp.get("servo", 0.0)) * amp
+	if servo > 0.0:
+		var cyc: float = T / 2.6 + float(slot) * 0.37
+		var tt: float = cyc - floorf(cyc)
+		var gl: float = smoothstep(0.0, 0.04, tt) * (1.0 - smoothstep(0.5, 0.54, tt))
+		var sgn: float = 1.0 if (_hash(int(floorf(cyc)), slot, 17) & 1) == 0 else -1.0
+		q[ix["head"]] = q[ix["head"]] * Quaternion(Vector3(0, 1, 0), servo * 0.1 * gl * sgn)
 	debug["personality"] += 1
 
 

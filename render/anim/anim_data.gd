@@ -23,6 +23,7 @@ static var personality: Dictionary = {}
 static var ragdoll_motion: Dictionary = {}
 static var ragdoll: Dictionary = {}      # data/anim/ragdoll.json (read by AnimRagdoll.setup)
 static var form_poses: Dictionary = {}  # beat -> pose id
+static var shapes: Dictionary = {}      # data/anim/shapes.json: shape key -> {idle, hit} tuning
 static var sockets: Dictionary = {}     # data/anim/sockets.json (regions a blow lands on, limbs that land it)
 static var effector_poses: Dictionary = {}   # data/anim/effectors.json: pose id -> authored clavicle hunch
 
@@ -48,6 +49,7 @@ static func load_all() -> void:
 	AnimPose.hunch_up_max = float(hj.get("up_max", 2.0))
 	effector_poses = ej.get("poses", {})
 	sockets = _read("sockets.json")
+	shapes = _read("shapes.json").get("shapes", {})
 	var pj: Dictionary = _read("poses.json")
 	var src: Dictionary = pj.get("poses", {})
 	for id in src:
