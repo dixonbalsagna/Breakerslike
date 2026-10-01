@@ -165,8 +165,8 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     const shares = names.map(n => [n, S.clusterShare(recs, r => r.launches[n] || 0, r => total(r.launches))]).sort((x, y) => y[1].p - x[1].p);
     if (!shares.length) continue;
     const top = shares[0];
-    R.rate(`5.cap.${a}`, '§5', `No launch type above 40% (${a}): largest is ${top[0]}`, { v: top[1].p, ci: [top[1].ci[0], top[1].ci[1]], hi: 0.40, note: 'match-clustered upper bound must be at most 42%' });
-    R.add({ id: `5.cap.${a}.upper`, ref: '§5', what: `Largest launch type's clustered upper bound at most 42% (${a})`, status: top[1].ci[1] <= 0.42 ? 'PASS' : 'FAIL', value: fmt.pct(top[1].ci[1]), band: 'at most 42.0%', note: '' });
+    R.rate(`5.cap.${a}`, '§5', `No launch type above 45% (${a}): largest is ${top[0]}`, { v: top[1].p, ci: [top[1].ci[0], top[1].ci[1]], hi: 0.45, note: 'match-clustered upper bound must be at most 47% (M1b re-banding, balance-targets 18)' });
+    R.add({ id: `5.cap.${a}.upper`, ref: '§5', what: `Largest launch type's clustered upper bound at most 47% (${a})`, status: top[1].ci[1] <= 0.47 ? 'PASS' : 'FAIL', value: fmt.pct(top[1].ci[1]), band: 'at most 47.0%', note: '' });
   }
   if (D) {
     const names = [...new Set(D.flatMap(r => Object.keys(r.launches)))];
@@ -175,11 +175,11 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     const isBrunt = n => /BUILDING|BRUNT/.test(n);
     const brunt = r => sum(Object.entries(r.launches).filter(([n]) => isBrunt(n)).map(([, v]) => v));
     const bs = S.clusterShare(D, brunt, r => total(r.launches));
-    R.rate('5b.share', '§5b', 'Share of all planner launches that are building brunts', { v: bs.p, ci: bs.ci, lo: 0.08, hi: 0.20 });
+    R.rate('5b.share', '§5b', 'Share of all planner launches that are building brunts (4 to 10%; re-based at M1b)', { v: bs.p, ci: bs.ci, lo: 0.04, hi: 0.10 });
     const perMin = recs => sum(recs.map(brunt)) / (sum(recs.map(r => r.koAt)) / 60);   // brunts per minute of match, pooled
-    R.point('5b.perMin', '§5b', 'Brunts per minute (default arm)', { v: perMin(D), lo: 0.1, hi: 0.35 });
-    if (have('mirror-villain')) R.add({ id: '5b.villain>default', ref: '§5b', what: 'Villain mirror has more brunts per minute than the default arm', status: perMin(A['mirror-villain']) > perMin(D) ? 'PASS' : 'FAIL', value: `${perMin(A['mirror-villain']).toFixed(2)} vs ${perMin(D).toFixed(2)}`, band: 'greater', note: '' });
-    if (have('mirror-hero')) R.point('5b.hero', '§5b', 'Hero mirror: brunts per minute at most 0.15', { v: perMin(A['mirror-hero']), hi: 0.15 });
+    R.point('5b.perMin', '§5b', 'Brunts per minute (0.3 to 1.0, game-scale band; re-based at M1b)', { v: perMin(D), lo: 0.3, hi: 1.0 });
+    // M1b re-banding (balance-targets 18): both placeholders run at planner care 0, so the mirror brunt rows are retired on the testbed; they return with the roster's per-fighter care
+    R.info('5b.mirrors', '§5b', 'Villain and hero mirror brunt rows', 'retired', 'retired on the testbed (balance-targets 18); measured per minute: villain mirror ' + (have('mirror-villain') ? perMin(A['mirror-villain']).toFixed(2) : 'n/a') + ', hero mirror ' + (have('mirror-hero') ? perMin(A['mirror-hero']).toFixed(2) : 'n/a'));
     if (hasEvent(A, 'launch_plan')) {
       const plans = D.flatMap(r => (r.events || []).filter(e => e.type === 'launch_plan' && /BUILDING|BRUNT/.test(e.text || '')));
       const picked = plans.filter(e => /BUILDING|BRUNT/.test(e.chosen || '')).length;
@@ -191,10 +191,22 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
   // ---- 5c. knockback slides (ground impacts): a slide ends in a `slide` event, a slam digs an impact crater
   if (D && hasEvent(A, 'slide')) {
     // G0 triage (balance-targets 14): how launches end, per launch. Brunts (8 to 20%) are row 5b.share.
-    const mixOf = (name, kFn, lo, hi) => { const c = S.clusterShare(D, kFn, r => total(r.launches)); R.rate('5c.mix.' + name.split(' ')[0], '§5c', 'How launches end: ' + name + ' (per launch)', { v: c.p, ci: c.ci, lo, hi }); };
-    mixOf('slide', r => r.slides.length, 0.45, 0.75);
-    mixOf('slam (impact crater)', r => r.impactCraters, 0.15, 0.35);
-    mixOf('water skim or splash', r => r.skims, 0.03, 0.10);
+    const mixOf = (name, kFn, lo, hi, den) => { const c = S.clusterShare(D, kFn, den || (r => total(r.launches))); R.rate('5c.mix.' + name.split(' ')[0], '§5c', 'How launches end: ' + name + ' (per launch)', { v: c.p, ci: c.ci, lo, hi }); };
+    if (D.every(r => r.landings)) {
+      // balance-targets 18: one landing class per launch, by first contact (brunt, then water, then slide at 2 bh = 150 units or more, else slam); the classes add up to 100% with the few launches that make no contact ("other")
+      const L = r => sum(Object.values(r.landings));
+      mixOf('slide (first ground contact carries on 2 bh or more)', r => r.landings.slide, 0.45, 0.70, L);
+      mixOf('slam (first ground contact stops within 2 bh)', r => r.landings.slam, 0.15, 0.35, L);
+      mixOf('water (skim or splash first)', r => r.landings.water, 0.05, 0.15, L);
+      mixOf('brunt (a building first)', r => r.landings.brunt, 0.04, 0.10, L);
+      R.info('5c.other', '§5c', 'Planner launches with no contact (caught in the air by the follow-up, KO, the cap), share of launches', fmt.pct(sum(D.map(r => r.landings.other)) / Math.max(1, sum(D.map(L)))), 'a class of its own so the five add up to 100%');
+      { const t = k => sum(D.map(r => r.landings[k])) / Math.max(1, sum(D.map(L))), sh = sum(D.map(r => r.slideShortPl || 0)) / Math.max(1, sum(D.map(L))); R.info('5c.nothreshold', '§5c', 'Planner landing mix if any slide counts as a slide (no 2 bh test)', `slide ${fmt.pct(t('slide') + sh)}, slam ${fmt.pct(t('slam') - sh)}`, 'for comparison with the one-class bands'); }
+      if (D.every(r => r.landingsAll)) { const LA = r => sum(Object.values(r.landingsAll)); const t = k => sum(D.map(r => r.landingsAll[k])) / Math.max(1, sum(D.map(LA))); R.info('5c.all', '§5c', 'Landing mix over every launch event, beam and finisher launches included (not banded)', `slide ${fmt.pct(t('slide'))}, slam ${fmt.pct(t('slam'))}, water ${fmt.pct(t('water'))}, brunt ${fmt.pct(t('brunt'))}, none ${fmt.pct(t('other'))}`, `of which ${(sum(D.map(r => r.slideShort)) / D.length).toFixed(1)} short slides (under 2 bh) a match are counted as slams`); }
+    } else {
+      mixOf('slide (overlapping count: records without landings)', r => r.slides.length, 0.45, 0.70);
+      mixOf('slam (impact crater, overlapping count)', r => r.impactCraters, 0.15, 0.35);
+      mixOf('water skim or splash (overlapping count)', r => r.skims, 0.05, 0.15);
+    }
     R.info('5c.detail', '§5c', 'Slides: mean length and trench width; slams per match; water skims per match', `${mean(D.flatMap(r => r.slides.map(x => x.len))).toFixed(0)} units, ${mean(D.flatMap(r => r.slides.map(x => x.w))).toFixed(1)} wide; ${mean(D.map(r => r.impactCraters)).toFixed(1)} slams; ${mean(D.map(r => r.skims)).toFixed(1)} skims`);
     R.pending('5c.budget', '§5c', 'Casualties from one slide at most 2% (tier 2 or below), 5% (tier 3), 10% (tier 4); 0 in open country; the planner declines launches over budget (hard tests)', 'needs casualties attributed per slide (a slide event with the population lost, or the predicted slide of the planner) and the predicted-vs-actual landing test from Encounter');
   } else if (D) R.pending('5c.slides', '§5c', 'Knockback slide bands', 'no slide events in this sim (World SC slide)');

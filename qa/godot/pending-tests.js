@@ -46,15 +46,12 @@ const tests = [
       assert.ok(median(lens) >= 360 && median(lens) <= 480 && q(lens, 0.9) <= 600 && q(lens, 0.99) <= 720, `length median ${median(lens).toFixed(0)}, p90 ${q(lens, 0.9).toFixed(0)}, p99 ${q(lens, 0.99).toFixed(0)}`);
       return `breaks ${breaks}, first brink ${brink.toFixed(0)} s, median length ${median(lens).toFixed(0)} s`;
     } },
-  { id: 'W4', spec: 'spec-wounds §5.4', title: 'No loops: 0.3 to 0.7 rallies per match (rebased); no region rallied twice; finisher survival 0 after a third rally and after 11:00', soft: true, slice: 'S4 (rate is a tuning target: Game Design rules)', needs: ['rally', 'finisher_contest'],
+  { id: 'W4', spec: 'spec-wounds §5.4', title: 'No loops: 0.3 to 0.7 rallies per match (rebased); no region rallied twice; finisher survival 0 from 11:00 (relaxed for the third Rally at M1b, balance-targets 18; the sim enforces the 11:00 rule)', soft: true, slice: 'S4 (rate is a tuning target: Game Design rules)', needs: ['rally', 'finisher_contest'],
     run({ A }) {
       const D = A.default, per = D.reduce((s, r) => s + evs(r, 'rally').length, 0) / D.length;
       assert.ok(per >= 0.3 && per <= 0.7, `rallies per match ${per.toFixed(2)} (rebased band 0.3 to 0.7)`);
       noBad('a fighter rallied the same region twice', failing(D, r => { const seen = new Set(); return evs(r, 'rally').every(e => { const k = e.actor + ':' + e.region; if (seen.has(k)) return false; seen.add(k); return true; }); }));
-      noBad('finisher survival chance above 0 after a third rally or after 11:00', failing(D, r => evs(r, 'finisher_contest').every(c => {
-        const rallies = evs(r, 'rally').filter(e => e.actor === c.target && e.t < c.t).length;
-        return !(rallies >= 3 || c.t >= 660) || !c.chance;
-      })));
+      noBad('finisher survival chance above 0 from 11:00', failing(D, r => evs(r, 'finisher_contest').every(c => !(c.t >= 660) || !c.chance)));
       return `${per.toFixed(2)} rallies per match`;
     } },
   { id: 'W5', spec: 'spec-wounds §5.5', title: 'Spread: no region above 45% of all wear; arms take 35 to 65% of limb breaks (the old first-broken shares are retired: the brink is the core)', soft: true, slice: 'S1 (measured), banded from S2', needs: ['region_broken'],

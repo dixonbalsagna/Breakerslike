@@ -63,9 +63,12 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "other": 0}, "slideShort": 0, "slideShortPl": 0, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
+	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
+	var new_fl: Array = []   # launch events of this tick
+	var open_fl: Array = []   # launches whose first contact has not been seen: {"v": victim index, "cls": ""}; balance-targets 18 (one landing class per launch)
 	var launch_x: Array = [0.0, 0.0]
 	var prev_t: float = 0.0
 	var prev_cas: float = 0.0
@@ -108,6 +111,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 			if now_launched and not was_launched[i]:
 				launch_x[i] = f.x
 			elif was_launched[i] and not now_launched:
+				ended[i] = true
 				rec.flights.append({"travel": snappedf(absf(SimWrap.sdx(launch_x[i], f.x)), 0.1), "newBiome": WorldBiomes.biomeAt(launch_x[i]) != WorldBiomes.biomeAt(f.x)})
 			was_launched[i] = now_launched
 		for tt in range(2, 5):
@@ -155,6 +159,24 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				rec.found += 1
 			elif e.type == "tier_up":
 				rec.maxTier[int(e.actor)] = maxi(rec.maxTier[int(e.actor)], int(e.tier))
+			# one landing class per launch, by first contact (balance-targets 18): brunt (a building first), water (a skim or splash, or an impact in the sea), slide (a first ground contact carrying on for 2 bh = 150 units or more), else slam
+			if e.type == "launch":
+				var v0: int = int(e.actor)
+				for fl in open_fl:
+					if fl.v == v0 and fl.cls == "":
+						fl.cls = "other"   # launched again before any contact
+				var nf := {"v": v0, "cls": "", "pl": false}
+				open_fl.append(nf)
+				new_fl.append(nf)
+			elif e.type == "building_hit":
+				_land(open_fl, int(e.actor), "brunt")
+			elif e.type == "skim" or e.type == "splash":
+				_land(open_fl, _nearest_open(S, open_fl, e.x), "water")
+			elif e.type == "crater" and e.cause == "impact":
+				_land(open_fl, 1 - int(e.owner), "water" if WorldTerrain.seaAt(S, e.x) else "slam")
+			elif e.type == "slide":
+				var long_slide: bool = absf(e.get("x1") - e.x) >= 150.0
+				_land(open_fl, 1 - int(e.owner), "slide" if long_slide else "slideShort")   # a short slide is counted as a slam (balance-targets 18); the tally keeps its count
 			# knockback slides and slams (docs/world/knockback-slide.md): a slide ends in one `slide` event, a slam digs an impact crater
 			if e.type == "slide":
 				rec.slides.append({"len": snappedf(absf(e.get("x1") - e.x), 1.0), "w": snappedf(e.w, 0.1), "depth": snappedf(e.depth, 0.1), "energy": snappedf(e.energy, 0.1), "variant": e.variant, "owner": e.owner, "t": snappedf(S.T, 0.001)})
@@ -173,12 +195,32 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 					if v != null and not (v is String and v == "") and not (v is float and v == 0.0 and not (k in INDEX_FIELDS)):
 						d[k] = v
 				rec.events.append(d)
+		for i in range(2):
+			if ended[i]:
+				ended[i] = false
+				var fe = fs[i]
+				for fl in open_fl:
+					if fl.v == i and fl.cls == "":
+						# the flight ended with no named contact: a hit too weak to slam or slide (350 units a second or less) counts as a slam, in the sea as water; a flight that ends in the air stays "other"
+						if fe.y <= 0.0 and WorldTerrain.seaAt(S, fe.x):
+							_land(open_fl, i, "water")
+						elif fe.y <= WorldTerrain.groundY(S, fe.x) + 5.0:
+							_land(open_fl, i, "slam")
 		var fr = S.get("frontsInFrame")   # hazard fronts inside the camera framing, once living destruction lands; null before
 		if fr != null:
 			rec.fronts = maxi(rec.fronts, int(fr))
 		S.out.fx.clear()
+		var pl_before: int = 0
+		for n_ in rec.launches.values():
+			pl_before += int(n_)
 		for l in S.out.feed:
 			parse(rec, l.tag, l.sub, slot)
+		var pl_after: int = 0
+		for n_ in rec.launches.values():
+			pl_after += int(n_)
+		if pl_after > pl_before and not new_fl.is_empty():
+			new_fl[new_fl.size() - 1].pl = true   # the planner launch: its LAUNCH line is in the same tick as its launch event (the last one if a scripted launch follows in the tick)
+		new_fl.clear()
 		S.out.feed.clear()
 		if rec.bad != "":
 			break
@@ -207,9 +249,40 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	rec.stage = [fs[0].get("stage"), fs[1].get("stage")]
 	rec.menace = [fs[0].menace, fs[1].menace]
 	rec.anguish = [fs[0].anguish, fs[1].anguish]
+	for fl in open_fl:
+		var c: String = "other" if fl.cls == "" else String(fl.cls)   # a launch that never made contact (KO or the cap first) is "other"
+		if c == "slideShort":
+			c = "slam"
+			rec.slideShort += 1
+			if fl.pl:
+				rec.slideShortPl += 1
+		rec.landingsAll[c] += 1
+		if fl.pl:
+			rec.landings[c] += 1
 	rec.hash = SimHash.stateHash(S).gameplay
 	SimCore.dispose(S)
 	return rec
+
+
+## The first contact of the oldest open launch of victim v (balance-targets 18): one class per launch.
+func _land(open_fl: Array, v: int, cls: String) -> void:
+	for fl in open_fl:
+		if fl.v == v and fl.cls == "":
+			fl.cls = cls
+			return
+
+
+## The victim whose open launch is nearest a water event (a skim or splash carries no actor).
+func _nearest_open(S, open_fl: Array, x: float) -> int:
+	var best: int = -1
+	var bd: float = 1.0e30
+	for fl in open_fl:
+		if fl.cls == "":
+			var d: float = absf(SimWrap.sdx(S.fighters[fl.v].x, x))
+			if d < bd:
+				bd = d
+				best = fl.v
+	return best
 
 
 func _keep(t: String) -> bool:
