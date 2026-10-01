@@ -20,7 +20,8 @@ const RELIEF_MAX_RATIO: float = 0.26  # depth of any spot below its surroundings
 const RING_K: float = 1.2             # the surroundings are sampled at +-RING_K * R from the centre
 const MIN_DEPTH: float = 0.75 * WS    # a dig shallower than this is not a crater (no record, no event)
 # ---- rim and ejecta ----
-const RIM_IN: float = 0.3             # the rim starts to rise this far (in R) inside the lip
+const RIM_IN: float = 0.5             # the rim starts to rise this far (in R) inside the lip (ground-contact.md: a wide lip is a ramp)
+const RIM_DEPTH_MAX: float = 0.40     # the crest is at most this share of the bowl depth: with RIM_IN 0.5 the inner slope stays at 0.57
 const RIM_OUT: float = 1.0            # the apron ends this far (in R) beyond the lip
 const RIM_H_FRAC: float = 0.5         # rim height / bowl depth at the volume fraction of RIM_VOL_PER_HEIGHT (kept for reference)
 ## Rim height scales with the energy (W-R): the rim and apron carry RIM_VOL_LOW of the bowl's volume at E <= RIM_E_LOW and
@@ -167,11 +168,12 @@ static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx:
 		return null
 	var rt: float = clampf((E - RIM_E_LOW) / (RIM_E_HIGH - RIM_E_LOW), 0.0, 1.0)
 	var volFrac: float = RIM_VOL_LOW + (RIM_VOL_HIGH - RIM_VOL_LOW) * rt * rt * (3.0 - 2.0 * rt)
-	var hr: float = d * volFrac * RIM_H_PER_VOL
+	var hr: float = minf(d * volFrac * RIM_H_PER_VOL, RIM_DEPTH_MAX * d)
 	var n: int = int(ceil(R * (1.0 + RIM_OUT) / COL)) + 1
 	var minG: float = 1e9
 	var pre := PackedFloat32Array()   # the deform before this crater, for the furrow's target
 	pre.resize(2 * n + 1)
+	var pinD: PackedByteArray = WorldStructures.pinned(S, c0, n)   # the rim and apron skip footings (T4 extended)
 	for k in range(-n, n + 1):
 		var i: int = (c0 + k + NC) % NC
 		# u from the true distance to the centre, so the profile is centred on x and not on its column
@@ -179,6 +181,8 @@ static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx:
 		var old: float = S.deform[i]
 		pre[k + n] = old
 		var h: float = profile(u, d, hr)
+		if h > 0.0 and pinD[k + n] == 1:
+			h = 0.0
 		# A rim that lands on ground that is already raised merges with it (the higher of the two) instead of stacking.
 		var v: float = maxf(old, h) if (h > 0.0 and old > 0.0) else old + h
 		var nv: float = clampf(v, DEFORM_FLOOR, DEFORM_CEIL)
@@ -277,7 +281,7 @@ static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> v
 ## until a sweep moves nothing or REPOSE_PASSES is reached. A step the original ground already had is allowed, and the columns
 ## under a standing building's footing (WorldStructures.pinned) may be lowered but never raised. Returns the lowest
 ## ground in the window. Deterministic (fixed order, no draws); the cost is one pass over the window per call.
-static func relax(S: SimState, c0: int, half: int) -> float:
+static func relax(S: SimState, c0: int, half: int, freezeFrom: int = 0, freezeDir: int = 0) -> float:
 	var NC: int = SimConst.NC
 	var limit: float = REPOSE_SLOPE * SimConst.COL
 	var base: PackedFloat32Array = S.base
@@ -301,6 +305,11 @@ static func relax(S: SimState, c0: int, half: int) -> float:
 			m0 = minf(m0, base[c0m] + dfm[c0m])
 		return m0
 	var pin: PackedByteArray = WorldStructures.pinned(S, c0, half)   # a standing building's footing is never moved
+	if freezeDir != 0:   # columns from freezeFrom on, in this direction, are not touched at all (value 2)
+		for kf in range(cnt):
+			var cf: int = posmod(lo + kf, NC)
+			if posmod((cf - freezeFrom) * freezeDir, NC) < NC / 2:
+				pin[kf] = 2
 	for pass_n in range(REPOSE_PASSES):
 		var moved: float = 0.0
 		for sweep in range(2):
@@ -315,6 +324,8 @@ static func relax(S: SimState, c0: int, half: int) -> float:
 				var e: float = ex * 0.5
 				var hi: int = j if d > 0.0 else i
 				var lw: int = i if d > 0.0 else j
+				if pin[kk] == 2 or pin[kk + 1] == 2:
+					continue
 				if pin[kk + 1 if lw == j else kk] == 1:
 					continue   # a footing may be lowered but never raised
 				dfm[hi] = maxf(DEFORM_FLOOR, dfm[hi] - e)
@@ -370,7 +381,7 @@ static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved:
 	var mid: int = posmod(ca + dir * (n / 2), NC)
 	var half: int = n / 2 + REPOSE_PAD
 	if carved:
-		minG = minf(minG, relax(S, mid, half))
+		minG = minf(minG, relax(S, mid, half, cb, dir))
 	WorldWater.touched(S, mid, half, minG)
 
 

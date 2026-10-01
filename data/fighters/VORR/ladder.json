@@ -20,6 +20,11 @@
     "areaDmg": 90.0,
     "areaDmgPerTier": 100.0
   },
+  "reach": {
+    "structure": [1.0, 1.0, 1.6, 2.8],
+    "ringCap": -1,
+    "_note": "high-tier structure reach (docs/world/structure-reach.md): the area in which impacts, power-ups, clashes and blasts damage structures grows by tier (the whole blast scales); ringCap is a per-blast cap on buildings levelled beyond the old reach, -1 for none"
+  },
   "beam": {
     "structure": [0.25, 0.5, 1.0, 1.5],
     "levelCapShare": [0.01, 0.03, 0.08, 0.2],

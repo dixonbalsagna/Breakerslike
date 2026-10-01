@@ -54,6 +54,34 @@
       "type": "boolean",
       "description": "When true, crossing a power threshold sets formReady instead of raising the tier (the transformation is then chosen by the player)."
     },
+    "reach": {
+      "type": "object",
+      "required": [
+        "structure",
+        "ringCap"
+      ],
+      "description": "High-tier structure reach (docs/world/structure-reach.md): structure is the factor on the area in which impacts, power-ups, clashes and blasts damage structures, one per tier; ringCap the buildings one blast may level beyond the old reach, -1 for no cap.",
+      "properties": {
+        "structure": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 6
+          }
+        },
+        "ringCap": {
+          "type": "integer",
+          "minimum": -1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
     "beam": {
       "type": "object",
       "required": [

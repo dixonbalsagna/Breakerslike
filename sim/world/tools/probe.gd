@@ -255,7 +255,7 @@ func _init() -> void:
 	settle(S10, 4000)
 	var lake_x: float = -1.0
 	for i in range(int(shore_x(true) / SimConst.COL) - 40, int(shore_x(true) / SimConst.COL) + 200):
-		if S10.water[i] >= WorldWater.HIDE_MIN_DEPTH and S10.base[i] >= WorldWater.RESERVOIR_BASE:
+		if S10.water[i] >= WorldWater.HIDE_MIN_DEPTH + 20.0 and S10.base[i] >= WorldWater.RESERVOIR_BASE:   # a margin: the ground between columns is a little shallower than at one
 			lake_x = float(i) * SimConst.COL + 4.0
 	if lake_x < 0.0:
 		print("  (no dynamic column in this bay reaches the %.0f-unit hiding depth; the sea itself does)" % WorldWater.HIDE_MIN_DEPTH)
@@ -853,6 +853,90 @@ func _init() -> void:
 	var cc_t: int = int(floor((tb_t.x + tb_t.w * 0.5) / SimConst.COL))
 	Sf2_t.deform[cc_t] = 150.0
 	check(WorldStructures.baseY(Sf2_t, tb_t) >= Sf2_t.base[cc_t] + 150.0 - 0.01, "a building's footing is the highest ground under its footprint (%.0f)" % WorldStructures.baseY(Sf2_t, tb_t))
+
+	print("== G1: rims as ramps, gentle heaps, structure reach by tier (docs/world/ground-contact.md, structure-reach.md) ==")
+	var worst_in: float = 0.0
+	var worst_vol: float = 0.0
+	var crest_ok: bool = true
+	for E in [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 30.0]:
+		var Sr1_g := fresh()
+		var rc1 = WorldCrater.dig(Sr1_g, X(2050.0), E, Sr1_g.fighters[1], "impact", 0.0, 1.0)
+		var c01: int = int(X(2050.0) / SimConst.COL)
+		var nn: int = int(ceil(rc1.r * 2.0 / SimConst.COL)) + 2
+		# the steepest rise on the way out from the centre to the crest
+		var crest_k: int = 0
+		var crest_v: float = -1.0e9
+		for k in range(0, nn):
+			if Sr1_g.deform[c01 + k] > crest_v and k * SimConst.COL > rc1.r * 0.5:
+				crest_v = Sr1_g.deform[c01 + k]
+				crest_k = k
+		var mx_in: float = 0.0
+		for k in range(0, crest_k):
+			mx_in = maxf(mx_in, (Sr1_g.deform[c01 + k + 1] - Sr1_g.deform[c01 + k]) / SimConst.COL)
+		worst_in = maxf(worst_in, mx_in)
+		if crest_v > WorldCrater.RIM_DEPTH_MAX * rc1.depth + 1.0:
+			crest_ok = false
+		var neg1: float = 0.0
+		var pos1: float = 0.0
+		for k in range(-nn, nn + 1):
+			var dv: float = Sr1_g.deform[c01 + k]
+			if dv < 0.0:
+				neg1 += -dv
+			else:
+				pos1 += dv
+		worst_vol = maxf(worst_vol, pos1 / maxf(neg1, 1.0))
+		print("  E %.1f: R %.0f depth %.0f, crest %.1f (%.2f d), steepest slope into the crest %.2f, rim and apron area / bowl area %.2f" % [E, rc1.r, rc1.depth, crest_v, crest_v / rc1.depth, mx_in, pos1 / maxf(neg1, 1.0)])
+	check(worst_in <= 0.62, "a crater's inner slope up to the lip is at most 0.6 at every energy (largest %.2f)" % worst_in)
+	check(crest_ok, "the rim crest is at most RIM_DEPTH_MAX of the depth")
+	check(worst_vol <= 1.0, "the rim and apron hold no more than the bowl (the 1D profile)")
+	# heaps: gentle
+	var Sh1_g := fresh()
+	var fh1_g = null
+	for b in Sh1_g.buildings:
+		if b.row == 1.0 and fh1_g == null and b.h > 2000.0:
+			fh1_g = b
+	WorldStructures.damageBuilding(Sh1_g, fh1_g, 1.0e9, Sh1_g.fighters[1], "implode", fh1_g.x, 0.0)
+	var ch1_g: int = int(fh1_g.x / SimConst.COL)
+	var hs1_g: float = 0.0
+	for k in range(-90, 90):
+		hs1_g = maxf(hs1_g, absf(Sh1_g.deform[ch1_g + k + 1] - Sh1_g.deform[ch1_g + k]) / SimConst.COL)
+	check(hs1_g <= WorldStructures.RUBBLE_SLOPE * 1.1, "a heap is a ramp: its steepest slope is at most %.2f (largest %.2f)" % [WorldStructures.RUBBLE_SLOPE, hs1_g])
+	# structure reach: a house, a blast, three tiers
+	var Sx_g := fresh()
+	var house_g = null
+	for b in Sx_g.buildings:
+		if b.kind == "house" and b.row == 1.0 and b.maxhp < 400.0 and house_g == null:
+			house_g = b
+	var hits_g: Array = []
+	for tier in [1.0, 2.0, 3.0, 4.0]:
+		for mul in [1.05, 1.5, 1.7, 2.3, 2.7, 3.0]:
+			var S2_g := fresh()
+			var A2_g = S2_g.fighters[1]
+			A2_g.tier = tier
+			var h2_g = S2_g.buildings[house_g.idx]
+			var r0_g: float = 300.0
+			var xb_g: float = SimWrap.wrap(h2_g.x - (r0_g * mul + h2_g.w * 0.5))
+			var hp0_g: float = h2_g.hp
+			WorldStructures.damageArea(S2_g, xb_g, WorldTerrain.groundY(S2_g, xb_g) + 10.0, r0_g, 5000.0, A2_g)
+			if h2_g.hp < hp0_g:
+				hits_g.append([tier, mul])
+	var reach_ok_g: bool = true
+	for tier in [1.0, 2.0, 3.0, 4.0]:
+		var want_g: float = Sx_g.fighters[1].ld.reachStructure[int(tier) - 1]
+		for mul in [1.05, 1.5, 1.7, 2.3, 2.7, 3.0]:
+			var got_g: bool = hits_g.has([tier, mul])
+			if got_g != (mul <= want_g):
+				reach_ok_g = false
+	print("  structure reach hits (tier, distance in old radii): %s" % str(hits_g))
+	check(reach_ok_g, "a blast reaches a building out to the tier's factor times the old radius and no further (data: %s)" % str(Sx_g.fighters[1].ld.reachStructure))
+	var S3_g := fresh()
+	var A3_g = S3_g.fighters[1]
+	A3_g.tier = 4.0
+	var h3_g = S3_g.buildings[house_g.idx]
+	var x3_g: float = SimWrap.wrap(h3_g.x - (300.0 * 1.5 + h3_g.w * 0.5))
+	var hp3_g: float = h3_g.hp
+	WorldStructures.damageArea(S3_g, x3_g, WorldTerrain.groundY(S3_g, x3_g) + 10.0, 300.0, 5000.0, A3_g, false, 0.0, -1, 0.0, 1.0)
+	check(h3_g.hp == hp3_g or Sx_g.fighters[1].ld.reachStructure[3] <= 1.5, "a beam's path sample (reach 1.0) is not widened by the tier")
 
 	print("")
 	print("probe: %d check(s) failed" % fails)

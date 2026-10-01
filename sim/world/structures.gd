@@ -28,10 +28,11 @@ const BH: float = 75.0
 const RUBBLE_H_FRAC: float = 0.06          # heap height as a share of the building's standing height
 const RUBBLE_MIN: float = 0.5 * BH
 const RUBBLE_MAX: float = 4.0 * BH
-const RUBBLE_SPILL: float = 0.8            # the heap is 2 * this * w wide (a mound 1.6 w across the footprint)
-const RUBBLE_SLOPE: float = 1.0            # the heap's steepest slope (crest height is capped to it): at most 45 degrees
+const RUBBLE_SPILL: float = 1.0            # the heap is 2 * this * w wide (a mound 2.0 w across the footprint; above about 1.1 a low chain flight lands on the heap and plan and outcome differ)
+const RUBBLE_SLOPE: float = 0.6            # the heap's steepest slope (crest height is capped to it): a ramp a skid can climb (ground-contact.md)
 const RUBBLE_CREST_K: float = 1.54         # the steepest slope of the (1 - u^2)^2 profile is this times crest over half width
 const RUBBLE_ROW_MAX: float = 1.0          # only buildings in rows up to this leave a heap on the ground (the fighter plane's); deeper rows' heaps are the event's cosmetic ones
+const RING_KEEP: float = 0.25               # a building past a blast's ring cap is left at this share of its hit points
 const RUBBLE_BOWL_CAP: float = 0.3         # inside a fresh bowl the heap is at most this share of the local depth
 
 
@@ -193,7 +194,7 @@ static func _heap(S: SimState, b) -> float:
 			if pin[q + n] == 1:
 				gap = mini(gap, absi(q - k))
 		var t: float = 1.0 - u * u
-		var add: float = minf(H * t * t, float(gap) * lim * 0.9)
+		var add: float = minf(H * t * t, float(gap) * RUBBLE_SLOPE * COL)
 		var v: float = minf(WorldCrater.DEFORM_CEIL, S.deform[i] + add)
 		var got: float = v - S.deform[i]
 		S.deform[i] = v
@@ -208,9 +209,21 @@ static func _heap(S: SimState, b) -> float:
 ## caller's set-piece token for the collateral allowance (0 for none).
 ## capLeft and keep (the beam tier gate): once this call has levelled capLeft buildings, each further one is left standing
 ## at keep x maxhp. capLeft -1 is no cap. Returns the number of buildings the call levelled.
-static func damageArea(S: SimState, x: float, y: float, r: float, dmg: float, cause, beam: bool = false, evt: float = 0.0, capLeft: int = -1, keep: float = 0.0) -> int:
+## reachMul: the area's growth by the causing fighter's tier (docs/world/structure-reach.md): -1 takes cause.ld.reach, a number
+## uses that (the beam's path samples pass 1.0: the beam has its own tier gate). The whole blast scales, its falloff too.
+## ringCap (cause.ld.reachRingCap, -1 off): at most this many buildings levelled beyond the old reach per call.
+static func damageArea(S: SimState, x: float, y: float, r0: float, dmg: float, cause, beam: bool = false, evt: float = 0.0, capLeft: int = -1, keep: float = 0.0, reachMul: float = -1.0) -> int:
 	var levelled: int = 0
 	S.world.fallTick = -1.0
+	var tf: float = 1.0
+	var ringCap: int = -1
+	if reachMul >= 0.0:
+		tf = reachMul
+	elif cause != null and "ld" in cause and cause.ld != null:
+		tf = float(cause.ld.reachStructure[clampi(int(cause.tier), 1, 4) - 1])
+		ringCap = int(cause.ld.reachRingCap)
+	var r: float = r0 * tf
+	var ringLevelled: int = 0
 	for bi in near(S, x, r):
 		var b = S.buildings[bi]
 		if not b.alive:
@@ -224,9 +237,15 @@ static func damageArea(S: SimState, x: float, y: float, r: float, dmg: float, ca
 		if y - r * 0.6 > top:
 			continue
 		var lost0: float = S.world.structuresLost
-		damageBuilding(S, b, dmg * (1.0 - SimMathx.jclamp(d / r, 0.0, 1.0) * 0.7), cause, "implode", x, evt, false, keep if (capLeft >= 0 and levelled >= capLeft) else 0.0)
+		var inRing: bool = d > r0
+		var kp: float = keep if (capLeft >= 0 and levelled >= capLeft) else 0.0
+		if inRing and ringCap >= 0 and ringLevelled >= ringCap:
+			kp = RING_KEEP
+		damageBuilding(S, b, dmg * (1.0 - SimMathx.jclamp(d / r, 0.0, 1.0) * 0.7), cause, "implode", x, evt, false, kp)
 		if S.world.structuresLost > lost0:
 			levelled += 1
+			if inRing:
+				ringLevelled += 1
 	if S.world.fallFold > 0.0:
 		SimFx.buildingFall(S, -1, x, 0.0, 0.0, 0.0, "implode", 0.0, x, 0.0, S.world.fallFold)
 		S.world.fallFold = 0.0

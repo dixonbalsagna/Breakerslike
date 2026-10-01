@@ -245,7 +245,7 @@ static func sampleBeam(S: SimState, b, s: float) -> void:
 		SimFx.dust(S, x, g + 8.0, 1, "#e6c47a" if b.variant == "GLASS TRENCH" else "#9b8f7e")
 		if b.variant == "GLASS TRENCH":
 			SimFx.spark(S, x, g + 6.0, 2, "#ffd98a", 300.0)
-	b.levelled += WorldStructures.damageArea(S, x, y, (26.0 + P * 8.0) * SimConst.WS, (110.0 + P * 75.0) * b.sf, A, false, 0.0, maxi(0, b.cap - b.levelled), BEAM_KEEP)
+	b.levelled += WorldStructures.damageArea(S, x, y, (26.0 + P * 8.0) * SimConst.WS, (110.0 + P * 75.0) * b.sf, A, false, 0.0, maxi(0, b.cap - b.levelled), BEAM_KEEP, 1.0)
 	if y < 30.0 and WorldTerrain.seaAt(S, x):
 		SimFx.beamSplash(S, x)   # the consumer rolls the prototype's 60% splash
 	if b.variant == "FIRESTORM" and y < g + 140.0 * SimConst.WS:

@@ -99,6 +99,8 @@ class LadderDef:
 	var areaRPerTier: float = 0.0
 	var areaDmg: float = 0.0          # ... and damage areaDmg + tier x areaDmgPerTier
 	var areaDmgPerTier: float = 0.0
+	var reachStructure: Array = [1.0, 1.0, 1.0, 1.0]   # structure reach by tier (docs/world/structure-reach.md)
+	var reachRingCap: float = -1.0                      # buildings one blast may level beyond the old reach (-1: off)
 	var beamStructure: Array = []     # step 2, the beam tier gate (balance-targets.md §15), per tier 1 to 4: the structure-damage factor ...
 	var beamLevelCapShare: Array = [] # ... the share of all structures one beam may level ...
 	var beamOvershoot: Array = []     # ... and the beam's length past its target, in units before WS
@@ -483,6 +485,17 @@ static func _ladder(id: String, j: Dictionary) -> LadderDef:
 	l.areaRPerTier = float(pu.get("areaRPerTier", 0.0))
 	l.areaDmg = float(pu.get("areaDmg", 0.0))
 	l.areaDmgPerTier = float(pu.get("areaDmgPerTier", 0.0))
+	var rc: Dictionary = j.get("reach", {})
+	var rs = rc.get("structure", [1.0, 1.0, 1.0, 1.0])
+	if not (rs is Array and rs.size() == 4):
+		_err(where + ": reach.structure needs four values (one per tier)")
+		rs = [1.0, 1.0, 1.0, 1.0]
+	l.reachStructure = []
+	for v in rs:
+		if not (float(v) >= 1.0 and float(v) <= 6.0):
+			_err(where + ": reach.structure values are 1 to 6")
+		l.reachStructure.append(float(v))
+	l.reachRingCap = float(rc.get("ringCap", -1))
 	var bm: Dictionary = j.get("beam", {})
 	for k in ["structure", "levelCapShare", "overshoot"]:
 		var arr = bm.get(k, [])
