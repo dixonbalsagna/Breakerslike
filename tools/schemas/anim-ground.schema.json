@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-ground",
+  "title": "anim.ground/1",
+  "description": "data/anim/ground.json: how World's ground-contact events (docs/world/ground-contact.md section 4) shape the poses (render/anim/anim_fighter.gd, on_ground_event; docs/animation/pose-pipeline.md section 9.18). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-reference: surface has a multiplier for each of the five surfaces in data/biomes/contact.json (and may add `water`) (checked by tools/lib/xref-fight.js, ground-surface; a surface that is livelier than soil on the soft ones, or deader on the hard ones, is a warning, ground-order).",
+  "type": "object",
+  "required": [
+    "schema",
+    "surface",
+    "bounce",
+    "launch",
+    "hold",
+    "getup"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.ground/1"
+    },
+    "surface": {
+      "type": "object",
+      "required": [
+        "paving",
+        "rock",
+        "soil",
+        "sand",
+        "rubble"
+      ],
+      "properties": {
+        "paving": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rock": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "soil": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sand": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rubble": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "water": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "description": "A multiplier on the bounce's crumple and pose weight by the surface class (World's bounceMul): paving and rock lively, sand and rubble dead.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "bounce": {
+      "type": "object",
+      "required": [
+        "ref",
+        "min"
+      ],
+      "properties": {
+        "ref": {
+          "description": "The speed that gives the pose its full weight.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "min": {
+          "description": "The least weight the pose gets.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "description": "The bounce: the event's vn.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "launch": {
+      "type": "object",
+      "required": [
+        "ref",
+        "min"
+      ],
+      "properties": {
+        "ref": {
+          "description": "The speed that gives the pose its full weight.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "min": {
+          "description": "The least weight the pose gets.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "description": "The lip launch: the event's spd.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "hold": {
+      "type": "object",
+      "required": [
+        "in",
+        "out"
+      ],
+      "properties": {
+        "in": {
+          "type": "number",
+          "minimum": 0
+        },
+        "out": {
+          "type": "number",
+          "minimum": 0
+        },
+        "brace": {
+          "description": "The weight of the brace of a tumble (the older spelling of weight).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "weight": {
+          "description": "The share of the pose the brace is (about half, so the flail of the ragdoll shows through).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "slow_k": {
+          "description": "The multiplier below slow_speed of the landing (firmer at low speed).",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fast_k": {
+          "description": "The multiplier above fast_speed of the landing (looser at high speed).",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "slow_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fast_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "worn_loosen": {
+          "description": "How much a worn fighter loosens it.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "worn_from": {
+          "description": "The wear (or brink) above which a fighter counts as worn.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "max": {
+          "description": "The cap on the brace weight.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "description": "The brace of a tumble: in and out times (s), and optionally its weight, speed multipliers, wear loosening and cap.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "getup": {
+      "type": "object",
+      "required": [
+        "slow_above"
+      ],
+      "properties": {
+        "slow_above": {
+          "description": "The wear (or brink) above which the get-up is the slow one.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "brace": {
+      "description": "The brace weight, as a top-level key (also accepted inside hold).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

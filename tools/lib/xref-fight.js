@@ -800,6 +800,26 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim ground: a multiplier for every surface World knows, and the order of them ----
+  const gnd = get('data/anim/ground.json');
+  const gct = get('data/biomes/contact.json');
+  if (isObj(gnd) && isObj(gnd.surface)) {
+    const GD = 'data/anim/ground.json';
+    if (isObj(gct) && isObj(gct.surfaces)) {
+      const known = Object.keys(gct.surfaces).filter((k) => !k.startsWith('_'));
+      for (const k of known) if (!(k in gnd.surface)) err(GD, '/surface', 'ground-surface', `surface "${k}" of data/biomes/contact.json has no multiplier`);
+      for (const k of Object.keys(gnd.surface)) if (!k.startsWith('_') && k !== 'water' && !known.includes(k)) err(GD, `/surface/${esc(k)}`, 'ground-surface', `surface "${k}" is not one of contact.json surfaces (${known.join(', ')}) nor water`);
+    }
+    const hd = gnd.hold;
+    if (isObj(hd) && typeof hd.slow_speed === 'number' && typeof hd.fast_speed === 'number' && hd.slow_speed >= hd.fast_speed) err('data/anim/ground.json', '/hold/slow_speed', 'ground-hold', `slow_speed ${hd.slow_speed} is not below fast_speed ${hd.fast_speed}`);
+    if (isObj(hd) && typeof hd.slow_k === 'number' && typeof hd.fast_k === 'number' && hd.slow_k < hd.fast_k) err('data/anim/ground.json', '/hold/slow_k', 'ground-hold', `slow_k ${hd.slow_k} is below fast_k ${hd.fast_k}; the brace should be firmer at low speed`, 'warning');
+    const s = gnd.surface;
+    if (typeof s.soil === 'number') {
+      for (const k of ['paving', 'rock']) if (typeof s[k] === 'number' && s[k] < s.soil) err(GD, `/surface/${k}`, 'ground-order', `${k} ${s[k]} is below soil ${s.soil}; hard ground should be livelier than soil`, 'warning');
+      for (const k of ['sand', 'rubble']) if (typeof s[k] === 'number' && s[k] > s.soil) err(GD, `/surface/${k}`, 'ground-order', `${k} ${s[k]} is above soil ${s.soil}; soft ground should be deader than soil`, 'warning');
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);
