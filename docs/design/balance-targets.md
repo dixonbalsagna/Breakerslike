@@ -71,13 +71,13 @@ Numbers a QA test can check. "Civilians" is the share of the starting population
 
 | Measure | P2 testbed band | Game band (1v1, all pairings) | Prototype today (QA §4, default arm) |
 | :--- | :--- | :--- | :--- |
-| Civilians lost at the KO, mean | 25 to 50% | **25 to 50%** (re-set after evacuation; it was 45 to 75%, §4b) | 38.7% |
-| Worst pairing's mean | at most 65% | at most 70% (re-set, §4b) | 64.2% (villain mirror) |
+| Civilians lost at the KO, mean | 25 to 50% | **12 to 30%** (re-based for the slower ladder, §21; it was 25 to 50% after evacuation, and 45 to 75% before) | 38.7% |
+| Worst pairing's mean | at most 65% | at most 55% (§21; it was 70%) | 64.2% (villain mirror) |
 | Matches losing 90% or more of civilians | at most 7% | at most 5% (re-set, §4b) | 5% |
 | Low-tier bleed: while both fighters are at tier 2 or below, civilians lost per minute | at most 40% of the population per minute (a guard against P2 work making it worse) | at most 4% of the population per minute | About 42% per minute over the whole match. Per-tier rates are not yet split out |
 | Civilians left at 4:00 (so the Cyborg's track can finish) | none | At least 25% alive in at least 80% of matches | none |
-| Structures lost at the KO, mean: a **share of row-1 (front-row) structures**. Row 1 is today's 47 buildings, unchanged by buildings in depth (`docs/world/buildings-in-depth.md`) | 20 to 40% of row 1 | 40 to 75% of row 1 | 30% (14.1 of 47) |
-| Structures lost at the KO, all rows (about 110): a watch metric, not a gate | 10 to 35% | 25 to 60% | Not yet measured |
+| Structures lost at the KO, mean: a **share of row-1 (front-row) structures**. Row 1 is today's 47 buildings, unchanged by buildings in depth (`docs/world/buildings-in-depth.md`) | 20 to 40% of row 1 | **25 to 50% of row 1** (§21; it was 40 to 75%) | 30% (14.1 of 47) |
+| Structures lost at the KO, all rows (about 110): a watch metric, not a gate | 10 to 35% | 15 to 40% (§21; it was 25 to 60%) | Not yet measured |
 
 **Mechanisms.** World is proposing tier-scaled caps and a casualty ramp to meet the game bands. Game Design sets only the bands. The low-tier bleed band is the measurable form of the P3 exit criterion "no fight destroys the planet at low tiers". QA needs a per-tier split of casualties to check it. That is requested through the EP. Structures have their own tier gate for beams, with per-tier bands, in §15.
 
@@ -221,7 +221,7 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
 | Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
-| **How launches end** | One landing class per launch (§20): slide 40 to 55%; bounce 8 to 15%; slam 8 to 15%; caught in the air 10 to 25%; water 5 to 15%; brunt 4 to 10% |
+| **How launches end** | One landing class per launch (§20): slide 40 to 55%; bounce 8 to 15%; slam 8 to 15%; caught in the air 10 to 25%; water 2 to 10% (§21); brunt 4 to 10% |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -698,7 +698,7 @@ A launch is still classed by its first contact. A bounce is a new class. A fligh
 | Bounce | 8 to 15% |
 | Slam | 8 to 15% |
 | Caught in the air | 10 to 25% |
-| Water | 5 to 15% |
+| Water | 2 to 10% (§21; it was 5 to 15%) |
 | Brunt | 4 to 10% |
 
 | Event | Band |
@@ -736,3 +736,54 @@ World's plan is accepted, including these points: contact angles are measured ag
 **Two consequences to expect.**
 - Today's slow slide, from a speed of 350 down to 60, becomes a tumble. Slides at low power get shorter, with fewer and shorter trenches. That is intended: it is the "rolls to a hard stop" look.
 - For the landing classes, a first contact that is a skid or a tumble counts as a **slide**, and a slam is a first contact that makes a crater. This replaces the 2 bh distance test in §18.
+
+## 21. Rulings after the Q10 retune (QA's `docs/qa/retune-q10.md`, 2026-10-02)
+
+QA's recommended data set is accepted: k 0.052, the mood and location values, and the two placeholder `dmgMul` values. It gives matches of 7:36, KAI at 48.5%, and 73 bands passing. Five fail, and three items were deferred from Encounter's 2a.
+
+### Collateral at the KO: re-band the totals, and fix the top tiers in code
+
+**What happened.** Civilians lost fell to 16.3% and front-row structures to 27.8%. The slower ladder is Orb's choice, and it leaves about 2:20 at tier 4 where there used to be 4:30. No data lever reached the old bands without spending the hero's avoidance or the length band.
+
+**The ruling has two halves.**
+
+1. **The totals are re-based,** because they follow from the time spent at each tier. The old numbers were set when tier 4 came at 2:00.
+
+| Measure | Old band | New band |
+| :--- | :--- | :--- |
+| Civilians lost at the KO, mean | 25 to 50% | **12 to 30%** |
+| Worst pairing's mean | At most 70% | At most 55% |
+| Front-row structures lost at the KO, mean | 40 to 75% | **25 to 50%** |
+| All rows (a watch metric) | 25 to 60% | 15 to 40% |
+
+2. **The per-tier rates are not re-based.** They are the pillar-4 test: damage escalates with tier. After 2a, structures levelled per minute were 1.2 to 3.0% at tier 3 and 3.4% at tier 4, against bands of 3 to 10% and 6 to 20% (§15). The top tiers are too gentle, and no data lever moves them, because the fight is rarely inside a town. **World adds a code-side lever: high-tier impacts reach further.**
+   - The area in which impacts, power-ups, clashes and blasts damage **structures** grows by tier: ×1.0 at tiers 1 and 2, **×1.6 at tier 3** and **×2.4 at tier 4**. The factors are data.
+   - Casualties are unchanged. They stay under the collateral window and its ramp (§4b), and by tier 3 most of a threatened district has already fled.
+   - Tiers 1 and 2 are untouched, so the low-tier rules hold: at most 2% and 4% a minute, and no more than 10% lost before tier 3.
+
+**Against the pillars.**
+- *Power has weight, and it escalates:* a tier-4 fight near a town now wrecks its edge without needing to be inside it.
+- *No fight destroys the planet at low tiers:* nothing changes below tier 3.
+- *The hero is pressured by collateral:* he keeps his lure. At tier 4 leading the fight away is no longer enough by itself to save a town's edge, which is the pressure the pillar asks for.
+
+**Expected result:** with the tier rates in band, front-row structures at the KO should land at 35 to 45%. QA re-measures, and the new totals above are the gate.
+
+### The other failing rows
+
+| Row | Measured | Ruling |
+| :--- | :--- | :--- |
+| Water landings | 3.0% against 5 to 15% | **Re-based to 2 to 10%.** The 13% behind the old band came from the event-order misread that QA has now fixed. It rises again with World's ocean-and-islands layout, and is revisited then |
+| MERIDIAN SCAR | 2.3% against a 3% floor, in one run | **The floor is 2% on a single planet,** and stays 3% pooled over the set of 20 planets, where §6 says it should be measured |
+| Lock breaks | Still under band | Unchanged: it waits for living destruction (§14) |
+
+### The three items deferred from 2a
+
+| Item | Ruling |
+| :--- | :--- |
+| Structures per minute under band at tiers 3 and 4 | Covered above by World's reach lever. The bands stay |
+| Matches at 8:31 | Resolved by the retune (7:36) |
+| A light masher beats the AI 100 times in 100 | **The bands stand** (`control-rules.md` §6): at least 60% against the easy AI, 35 to 50% against medium and at most 15% against the perfect-block script. The fix is Encounter's. The AI must use the new defences at its difficulty: guard a repeated string, perfect-block enders at the R5 rates, punish a fully blocked string, and throw a fighter who only guards. The staleness rule (+2 ticks of wind-up per repeat) must also be in. QA then re-tests each difficulty |
+
+### Still to come
+
+Encounter's 2b, the landing slice and the contact slice are built but not committed, and KAI reads 57 to 59% in the contact probe on the un-retuned base. QA re-centres with the placeholder `dmgMul` values after those land. No band moves for it.
