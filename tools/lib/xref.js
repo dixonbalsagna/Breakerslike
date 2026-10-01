@@ -476,6 +476,9 @@ function xref(docs, root = repoRoot) {
   if (isObj(howto) && Array.isArray(howto.pages)) {
     const glyphs = get(GLYPHS);
     const actions = new Set(isObj(glyphs) && isObj(glyphs.actions) ? Object.keys(glyphs.actions) : []);
+    // A how-to row may name a glyph action or an input action (ADR 0008 layouts).
+    const inputActions = get('data/input/actions.json');
+    if (isObj(inputActions) && Array.isArray(inputActions.actions)) for (const x of inputActions.actions) if (isObj(x) && typeof x.id === 'string') actions.add(x.id);
     const families = new Set([...(isObj(glyphs) && Array.isArray(glyphs.families) ? glyphs.families : []), 'touch']);
     const stances = new Set(isObj(terms) && Array.isArray(terms.stance_ids) ? terms.stance_ids : []);
     dupes(HOWTO, howto.pages.map((p, i) => ({ id: p && p.id, pointer: `/pages/${i}/id` })), '', 'howto-page', 'page id');
@@ -491,7 +494,7 @@ function xref(docs, root = repoRoot) {
           const ids = [];
           if (typeof it.action === 'string') ids.push([`${at}/action`, it.action]);
           if (Array.isArray(it.actions)) it.actions.forEach((a, ai) => ids.push([`${at}/actions/${ai}`, a]));
-          if (actions.size) for (const [pointer, a] of ids) if (!actions.has(a)) err(HOWTO, pointer, 'howto-action', `action "${a}" is not in glyphs.json actions`);
+          if (actions.size) for (const [pointer, a] of ids) if (!actions.has(a)) err(HOWTO, pointer, 'howto-action', `action "${a}" is in neither glyphs.json actions nor data/input/actions.json`);
           if (stances.size && typeof it.stance === 'string' && !stances.has(it.stance)) err(HOWTO, `${at}/stance`, 'howto-stance', `stance "${it.stance}" is not in terms.json stance_ids (${[...stances].join(', ')})`);
           if (typeof it.heading === 'string' && (it.text !== undefined || it.icon !== undefined || it.action !== undefined || it.actions !== undefined)) err(HOWTO, at, 'howto-item', 'a heading item carries no other content');
           if (typeof it.action === 'string' && Array.isArray(it.actions)) err(HOWTO, at, 'howto-item', 'an item has action or actions, not both');

@@ -4957,13 +4957,19 @@
         {
           "file": "ui/data/hints.json",
           "set": {
-            "/schemes/today/rows/9/actions/1": "stance_nowhere"
+            "/schemes/today/rows/-": {
+              "actions": [
+                "move",
+                "stance_nowhere"
+              ],
+              "label": "Test"
+            }
           }
         }
       ],
       "expect": {
         "rule": "xref:hints-action",
-        "pointer": "/schemes/today/rows/9/actions/1"
+        "pointerEndsWith": "/actions/1"
       }
     },
     {
@@ -5512,7 +5518,10 @@
         {
           "file": "ui/data/hints.json",
           "set": {
-            "/schemes/today/rows/0/action": "upgrade_heavy"
+            "/schemes/today/rows/-": {
+              "action": "upgrade_heavy",
+              "label": "Test"
+            }
           }
         }
       ],

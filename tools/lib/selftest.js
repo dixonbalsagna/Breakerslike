@@ -59,8 +59,11 @@ function applyValueMutation(value, m) {
   for (const [pointer, v] of Object.entries(m.set || {})) {
     if (pointer === '') throw new Error('cannot replace the root');
     const { node, key } = parentOf(pointer);
-    if (Array.isArray(node) && !(Number(key) in node)) throw new Error(`fixture path missing: ${pointer}`);
-    node[key] = v;
+    if (Array.isArray(node) && key === '-') node.push(v);
+    else {
+      if (Array.isArray(node) && !(Number(key) in node)) throw new Error(`fixture path missing: ${pointer}`);
+      node[key] = v;
+    }
   }
   for (const pointer of m.del || []) {
     const { node, key } = parentOf(pointer);
@@ -128,7 +131,7 @@ function run() {
     guard('parser', c.id, () => {
       const { findings } = core.lintText('case.json', c.text);
       if (c.expect === null) return record('parser', c.id, findings.length === 0, `unexpected: ${findings.map((f) => f.rule).join(', ')}`);
-      const hit = findings.find((f) => f.rule === c.expect.rule && (c.expect.pointer === undefined || f.pointer === c.expect.pointer));
+      const hit = findings.find((f) => f.rule === c.expect.rule && (c.expect.pointer === undefined || f.pointer === c.expect.pointer) && (c.expect.pointerEndsWith === undefined || f.pointer.endsWith(c.expect.pointerEndsWith)));
       record('parser', c.id, Boolean(hit), `expected [${c.expect.rule}]${c.expect.pointer ? ` at ${c.expect.pointer}` : ''}, got ${findings.map((f) => `[${f.rule}] ${f.pointer}`).join('; ') || 'nothing'}`);
     });
   }
