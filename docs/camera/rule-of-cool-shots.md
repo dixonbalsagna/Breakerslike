@@ -85,12 +85,36 @@ The planet wraps, so the victim leaves one side of the screen and returns from t
 - **Tier 4 only; the big one.** The camera takes `big` from the event.
 - **Reduced.** No chase and no widening: the attacker's framing the whole time, the victim entering from the edge.
 
-### Row 13: the ping-pong rally (planned; wave 1)
+### Row 13: the ping-pong rally, and the curved rush it is built on (planned; wave 1; Combat's spec is `docs/combat/pending/wave3-pingpong.md`)
 
-- **Events (new).** `rally_start {a, b}`, `rally_bounce {from, to, n, x, y, z, t_next, x_next, y_next, z_next}` (the target position and time of the next bounce, so the camera can lead), `rally_end {ender}`.
-- **Shot.** One shared view for the rally's length (no split flips, no merges: a layout hold, except for the lag bound's safety), zoom pulled out to fit the pair and the next bounce point (the lookahead is the event's `x_next`), a 3% impact push and a small shake at each bounce that grows with `n` (1% a bounce, capped at 3 bounces' worth), no cut. At `rally_end` the ender's own shot takes over (a slam, the round-the-world hit, a launch).
-- **Humans.** Two humans in a rally are in one view for its length and split again after the rally's end dwell.
-- **Reduced.** No pushes, no shake; the lookahead framing stays.
+Nothing is built until Encounter's rush has paths and the events exist. This is the plan, so the events can be named once.
+
+**What the camera needs from the sim.**
+- `path {actor, shape (spiral, arc, ground), S, I, sigma, plane (up, down or a depth lane), turn or h, start tick, end tick}` at planning, before the first tick of travel (Combat section 2). I can compute the spiral from `S`, `I`, `sigma` and `n` (the formula is in section 2) and the arc from `h`, so the widest offset's side and size are optional extras.
+- `rally_start {a, b, pattern (rally, ladder, orbit), centre (x, y, z) and radius for the orbit}`, `rally_bounce {from, to, n, contact tick}` at each knock (the hit-stop tick), and `rally_end {ender}`. The `path` events already say where he arrives, so `rally_bounce` only has to say that the knock happened and which contact comes next.
+- `big` on the ender, as for every set piece (rule 2 of the plan), and the ender's own event for what it does next (a crater slam, a long launch, the round-the-world hit).
+
+**The curved rush alone (the spiral entry, the arc dive, the skid).**
+1. *Before he leaves (the 4 hit-stop ticks).* The merged target takes the box of: his position `S`, the arrival `I`, the curve's widest point (0.205 of the chord to the bulge side for a spiral; the apex `h` for an arc), and the struck body. The zoom eases out to fit that box with a 15% margin, and the focus eases toward its centre. The look-ahead is the event's, so the camera is in place when he moves; today's rig sees him only as he moves and lags a rush (the lag bound whips it).
+2. *In flight (about 24 to 28 ticks, 0.4 s).* The focus aims between his current position and `I`, weighted toward `I` as he nears it (the ease brakes him, so the camera brakes with him); the zoom holds. No cut. A depth-lane bulge needs nothing new: the depth code already scales the zoom by `Fighter.z`, and the back row keeps at least 24 px (the depth tests).
+3. *Arrival (the intercept turn, the brake).* A 3% push over 0.1 s and a light shake at the brake tick. For the ground path the dust is VFX's, and the camera stays level with no pitch.
+4. *Reduced.* The look-ahead framing stays (it is framing, not motion); the push and the shake go.
+
+**The rally, as a whole.** One shared view for its length: the layout is held (no split flips, no merges) unless the lag bound or the one-view limit would lose a fighter, in which case the split opens as it does now. For two humans in a split the same applies: the panes merge for the rally if the pair is within the one-view limit and each follows its own fighter if not.
+- *Framing.* At each knock the target box is {the struck body now, `I` of the next path, the next path's widest point, him}; the zoom goes to fit the chord (typically 7% to 9%; the widest rally chord, about 1,800 units, fits at 5%). It eases back in as the pair converges, so the contact is at fight size (11%). The contact tick is a 3% impact push over 0.1 s and a shake that grows by 1% a bounce (capped at three bounces' worth); the ender is a 6% push.
+- *Readability (Legal and the defender's windows).* The attacker must be on screen for the whole 6-tick anticipation of a return blow (the defender's perfect-block window) and at least 4 ticks after contact, and the struck body is always on screen. The test fails a rally in which either is outside the frame at those ticks.
+- *The panel.* The ender is an earned hit and takes the panel (shared one in 12 s). Middle bounces do not.
+- *Pace.* One big set piece in 20 s: the ender's `big` flag decides whether it is the full ender or the ordinary one; the camera plays the bounces the same either way.
+
+**The three patterns.**
+
+| Pattern | Camera |
+| :--- | :--- |
+| **Rally** (back and forth on one line) | The shared view pans along the line with the look-ahead above; the horizontal extent is the widest, so it sets the zoom. The ender is *across* (a long launch: the launch follow takes over, below) or the targeted smash (the building-smash cut-in, if it is big enough) |
+| **Ladder** (a zigzag that climbs, 30 degrees a knock) | The vertical extent grows with each bounce, so the zoom is set by the height. The focus follows the pair's midpoint with the look-ahead, and the altitude factor eases the zoom out as the pair climbs. The ender is *down* (the drive or the crater slam): at the ender's wind-up the camera drops to ground level ahead of the fall, using the event's landing point |
+| **Orbit** (each knock turns 70 degrees; the body circles a point) | "The camera holds one frame": a fixed frame on the orbit's centre with the radius plus a margin, no following, a slow 2% push over the rally. The fighters circle inside the frame; at the ender (*down* onto the point or *across* away) the frame releases into the ender's shot. Needs the centre and radius from the event; without them it falls back to the rally framing |
+
+**Tests when it can be built.** Injected `path` events for the three shapes: the box is framed before the first travel tick, he is never outside the frame, no cut. Rally scenarios for the three patterns: the attacker is on screen for the 6 anticipation ticks and 4 after contact, the body is always on screen, the layout does not change inside a rally except for the one-view limit, the orbit frame does not move, and the impact pushes are 3% and 6%.
 
 ### Rows 14, 15, 20, 21: the pulse clashes (planned; wave 1 for the beam struggle, wave 2 for the rest)
 
@@ -143,6 +167,15 @@ A slanted close-up strip over the live view. **The main view is untouched: no cu
 - **Rate today.** In five-minute AI matches the events above give 0.7 to 1.3 panels a minute (mostly clashes won; a few signatures; a crippling blow once). Orb's target of about 2.5 a minute needs the earned hits that have no event yet (the ping-pong's enders) and real play, where the human fires more signatures than the AI demo. The ration and priority are tested; the rate is for QA to tune with the 12 s gap and the lengths.
 - **Tests.** `split_sweep.gd`: "panel signature" (54 ticks, wipe open then shut, the subject's upper body in the strip, band 0, and the main view's cameras identical to a run without the strip), "panel ration and priority", "panel riposte", "panel modes", "panel band dx dy" (six poses, the strip never covers a fighter), and the composite picture (`--render --only=panel`). `panel_shot.gd` draws the strip on the real renderer.
 
+## 2b. How the launch follow copes with long knocked-about journeys
+
+World measured that one journey in six goes beyond a normal framing (about 4,000 units; the mean is 34 body heights, about 2,550 units; the 90th percentile 5,638 units). What the camera does with that:
+- **The victim is never lost, whatever the distance.** The chase is a solo shot on the launched fighter held by the lag bound (the focus is never more than 20% of the screen width from where he should be, and anything faster than 1.5 screens a tick is a counted cut). The tests fly launches to 10,816 units at 26,000 to 45,000 units a second with zero ticks out of frame; the old rig lost the fighter for 11 to 13 ticks at those speeds. A 5,638 unit journey is inside that range. The follow ends at the landing plus a 0.35 s hold, capped at 6 s.
+- **What is lost is the attacker.** On the chase the attacker is off the screen for the journey. The hybrid rule handles it: with one human attacking, the camera holds on him and cuts to the victim for 0.5 s at the impact (so he sees the hit, not the flight); with the human launched, the camera chases him; with two humans the split gives each his own pane; with no human (the demo) it chases.
+- **The layout after a long journey.** If the pair end more than the one-view limit apart (the merged view fits about 4,100 units at its widest, 3.2% fighter height), the split opens as the follow ends (the 0.3 s opening), each pane on its own fighter, and merges when the rush closes the gap. So a journey beyond 4,000 units ends in a split, never in a view that cannot hold both.
+- **What would help, and is not built.** (1) A direction cue for the off-screen opponent during a long chase: UI's pointer chip is the natural one, and the rig can say when the opponent is more than a screen away. (2) For a journey whose predicted flight is over 1.5 s (the `launch` event has the speed and direction), a cut ahead to the landing site 0.5 s before touchdown, as the orbit plan does, so the player sees the landing and not the tail of the flight. I would build (2) only if Orb finds long flights dull, since the chase is rigid and readable now.
+- **A check to add** with the next launch work: the real-match sweep can report, per journey, its length and the ticks the attacker spent off screen, so the one-in-six figure is measured on the camera's side too. The data is in the rig's launch bookkeeping.
+
 ## 3. What I need, in one list
 
 | From | Item | For rows |
@@ -150,7 +183,7 @@ A slanted close-up strip over the live view. **The main view is untouched: no cu
 | Simulation | An intro phase before the clock, skippable, with `intro_start`, `entrance_land`, `staredown_start`, `clock_start` | 7 |
 | Simulation | `big` on every event of rows 13 to 22 (the sim's own rationing) | all |
 | Simulation | `orbit_launch`, `orbit_land`, `tunnel_start`, `tunnel_end`, `world_hit` with the fields above | 18, 19, 22 |
-| Simulation, Encounter | `rally_start`, `rally_bounce` (with the next bounce's place and time), `rally_end`; `clash_*` events or a shared Clash record with `kind`, `beam_answer` | 13 to 16, 20, 21 |
+| Simulation, Encounter | `path` (Combat section 2), `rally_start {pattern, centre, radius}`, `rally_bounce`, `rally_end {ender}`; `clash_*` events or a shared Clash record with `kind`, `beam_answer` | 13 to 16, 20, 21 |
 | World | Entrance craters on open ground at least 900 units apart; the landing crater radius in the orbit event | 7, 19 |
 | Animation | Fall, landing crouch, staredown idle, face close-ups | 7 |
 | Rendering | The cut-away request off keeping a rock whole; terrain LOD at a 3,300 unit wide view; the cost of the panel strip's second render on the phone budget | 18, 8, 11 |
