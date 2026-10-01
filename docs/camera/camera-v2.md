@@ -200,3 +200,25 @@ In `render/camera/` (`camera_params.gd`, `split_rig.gd`, `split_frame.gd`, `spli
   - Tests: the human is held on and never leaves the screen by a pixel; the cut lasts 31 ticks (0.5 s) with exactly one cut frame, the victim on screen throughout it; the split does not open during the hold; two humans get the split and no hold; a launched human is chased. The inset (option A) is not built; the inset pane Rendering made (`make_inset`) stays unused.
 - **Checks** (clean HEAD copy plus these files): `split_sweep` including the new scenarios (hybrid, pitch 11 and 49 depth runs, three real matches with a human slot idle and one at pitch 49), the composite picture check, `pane_check` and `determinism` pass; the sim's gameplay hash is identical with and without the rig. A live frame at 49 degrees with the split open is in `img/split-pitch-49.png`.
 - **Next:** the set-piece shots of section 4 in the order of how often they fire (the building smash cut, the crippling close-up, then the sim-owned finisher, transformation and KO shots as their events land), with Game Design's list of what pauses the fight.
+
+## 15. The set-piece shots (2026-10-03)
+
+Built against events that exist today. Two kinds: **sim-owned shots** (the fighters are locked by the sim for the event's `dur`; the camera fills it, no cooldown) and **camera-only cut-ins** (they never touch the sim, run in one view only, never over a launch hold or the impact cut, and are held to a 6 s cooldown and 6 a minute).
+
+| Shot | Event (fields read) | What the camera does | Length |
+| :--- | :--- | :--- | :--- |
+| **Transformation** | `transform {actor, dur}` (also `cinematic_start`) | One hard cut to the transformer, then a dolly: face (14%), body (11%), wide reveal (7%) at 25%, 45% and 70% to 95% of the hold. The opponent keeps the 14% sliver in a split. The tier-up push is part of the shot | the sim's hold |
+| **Finisher** | `finisher_start {target, dur}` | One hard cut to the loser at fight size, dolly to 16%; the KO takes over at the end (its dolly and the sim's slow motion) | the sim's `dur` |
+| **KO** | `ko` (state) | as before: dolly to a close-up on the loser | the sim's slow motion |
+| **Crippling moment** | `region_broken {actor}` | Cut to a close-up of the broken fighter, 11% to 16%, 0.8 s, cut back | 0.8 s |
+| **Building smash** | `building_hit {link 1, h >= 300, x, y, z}` | Cut to a wide view of the wall: zoom to fit 70% of its height (down to the floor, up to 11%), the point at the lower middle, the occlusion cut-away off so the wall stays whole; cut back | 0.45 s (the sim's 0.35 s hold and a beat) |
+| **Beam struggle** | `game.clash` set | A push on the shared view (the tier push's shape: in 0.25 s, hold 0.5 s, out 0.6 s) | 1.35 s |
+
+- **Cuts.** A cut is one frame (the frame is flagged `cut`, so it is not interpolated); the tests count exactly one at the start of a transformation or a finisher and two (in and out) for a cut-in. The safety cut of the lag bound is separate and counted apart (`lag_cuts`).
+- **Settings.** Reduced motion turns every camera-only cut-in off (the sim-owned shots stay but their cut becomes the ordinary pane take-over), as it turns the pushes off.
+- **Tests.** Injected events: the transformation goes face, body, reveal (101, 86 and 64 px at 720p) with one cut; the finisher dollies 83 to 111 px with one cut; a crippling cut-in lasts 48 ticks with two cut frames and six more breaks inside the cooldown change nothing; a building smash cut-in lasts 27 ticks with the wall on screen and the cut-away request off; the clash push raises the shared zoom by more than 6%; and in real matches (eight, up to 8,000 ticks, some with a human slot and one at pitch 49) the per-minute cap holds. Real AI matches fired only one cut-in in 8,000 ticks (`region_broken` is rare early); the live rate will be seen in play.
+
+### Orb's later additions (planned, not built)
+
+- **Tumbles, bounces, skips and launches off crater lips** (World and Game Design are planning events `left_ground`, `bounce`, `skip`, `land`). The lag bound and the launch rules already cover the motion. What the camera adds when the events exist: a `bounce` or `skip` is a small impact push (3%, 0.1 s, at the contact point, in the pane that holds it) and no cut; `land` ends a chase's land hold at once instead of waiting for the state change; a launch off a lip is an ordinary launch (the `launch` event's speed gate decides whether it is followed). A tumble slower than 4,000 units a second is not followed; the shared view zooms for it. I need `x`, `y`, `z` and the speed on each event.
+- **"On the Chin" (the rival's signature absorb, pitches.md section 7b): a 1.5 s pause with a camera push.** It is a sim-owned shot like the finisher: on its start event (name and fields to come, I assume `absorb_start {actor, dur}`) the camera cuts to the absorber at fight size and pushes in to 16% over the pause, with a short breath of the pair framing at the end; no cooldown. It is built after his first moveset, with the event.

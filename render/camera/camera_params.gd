@@ -142,6 +142,17 @@ const CUT_SHOT: float = 0.5            # the impact cut lasts this long
 const CUT_PUSH: float = 0.10           # ... zoomed in this much past the chase size
 const CUTAWAY_MIN_PX: float = 70.0     # the occlusion hole's radius is at least this, and 1.6 x the fighter's height
 const CUTAWAY_K: float = 1.6
+
+# --- the set-piece shots (camera-v2.md section 4) ---
+const R_FIGHT: float = 0.11            # the fight size, for the start of a dolly
+const R_FINISH: float = 0.16           # a finisher dollies in to this
+const TRANSFORM_R0: float = 0.14       # a transformation: the face, then the body, then the reveal
+const TRANSFORM_R1: float = 0.11
+const TRANSFORM_R2: float = 0.07
+const OV_COOLDOWN: float = 6.0         # between camera-only cuts (the sim-owned shots are exempt)
+const OV_MAX_PER_MIN: int = 6
+const OV_SMASH_DUR: float = 0.45       # the building-smash cut: the sim's 0.35 s hold and a beat
+const OV_CRIPPLE_DUR: float = 0.80
 const SHAKE_FALLOFF: float = 4000.0   # a shake event at this distance from a pane's centre is scaled down to SHAKE_FAR (Controls' shake pass)
 const SHAKE_FAR: float = 0.35         # ... and the pane farther from the event gets this share of it
 const SHAKE_DECAY: float = 0.02       # per second, the fx consumer's decay

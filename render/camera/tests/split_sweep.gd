@@ -157,6 +157,11 @@ func _run() -> void:
 		for row in [[-600.0, "front street"], [-2025.0, "block row 2"]]:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
+	await _scenario("shot transformation", func(): return _shot_transform(), {})
+	await _scenario("shot finisher", func(): return _shot_finisher(), {})
+	await _scenario("shot crippling cut-in and cooldown", func(): return _shot_cripple(), {})
+	await _scenario("shot building smash cut-in", func(): return _shot_smash(), {})
+	await _scenario("shot beam struggle push", func(): return _shot_clash(), {})
 	await _scenario("hybrid hold and cut", func(): return _hybrid(1, 20000.0), {})
 	await _scenario("hybrid launched human chases", func(): return _hybrid_chased(), {})
 	await _scenario("hybrid two humans split", func(): return _hybrid(2, 20000.0), {})
@@ -374,7 +379,9 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 	for i in range(2):
 		var share: float = float(owned[i]) / float(GRID_X * GRID_Y)
 		# A single shot on one fighter (a launch follow, a KO dolly) leaves the other out of frame by design.
-		var excluded: bool = _rig.solo_kind != "" and _rig.solo_slot != i
+		# A shot on one fighter (a launch, a cut-in), its ease back to the pair (solo_w), and an expanded pane (e) leave the
+		# other fighter out of the picture by design.
+		var excluded: bool = (_rig.solo_kind != "" and _rig.solo_slot != i) or (_rig._ov_kind != "" and _rig._ov_slot != i) or _rig.solo_w > 0.001 or fr.e > 0.001
 		if share < 0.15 or not bool(fr.active[i]) or excluded:
 			_offscreen_t[i] = 0.0
 			continue
@@ -882,6 +889,163 @@ func _hybrid_chased() -> Dictionary:
 	return {}
 
 
+func _apparent_px(slot: int, fr: SplitFrame) -> float:
+	var f = _S.fighters[slot]
+	var pi: int = slot if fr.shows(slot) else 0
+	return fr.apparent_height(pi, f.x, f.y, float(f.z))
+
+
+func _shot_events(type: String, fields: Dictionary) -> SimState.FxEvent:
+	var ev := SimState.FxEvent.new()
+	ev.type = type
+	for k in fields:
+		ev.set(k, fields[k])
+	return ev
+
+
+## A transformation: cut to a close-up of the face, ease to the body, then a wide reveal, over the sim's hold.
+func _shot_transform() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 600.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var dur: float = 2.4
+	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": dur})])
+	var cut_frames: int = 1 if _rig.current().cut else 0
+	var sizes: Array = []
+	var n: int = int(dur * 60.0)
+	for k in range(n):
+		_tick_rig()
+		if _rig.current().cut:
+			cut_frames += 1
+		if k in [int(0.10 * n), int(0.50 * n), int(0.93 * n)]:
+			sizes.append(_apparent_px(0, _rig.current()))
+	for _i in range(200):
+		_tick_rig()
+	_check(cut_frames == 1, "%s: %d cut frames at the start of a transformation (want one)" % [_label, cut_frames])
+	_check(sizes.size() == 3 and sizes[0] > sizes[1] * 1.05 and sizes[1] > sizes[2] * 1.2, "%s: the shot did not go face, body, reveal: %s" % [_label, str(sizes)])
+	_check(_rig.solo_kind == "", "%s: the shot did not end" % _label)
+	stats["shot transformation sizes (px)"] = str(sizes)
+	return {}
+
+
+## A finisher: cut to the loser and dolly in over the sim's lock.
+func _shot_finisher() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 300.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var dur: float = 3.0
+	_tick_rig([_shot_events("finisher_start", {"actor": 0.0, "target": 1.0, "dur": dur})])
+	var cut_frames: int = 1 if _rig.current().cut else 0
+	var first: float = _apparent_px(1, _rig.current())
+	var last: float = first
+	for k in range(int(dur * 60.0)):
+		_tick_rig()
+		if _rig.current().cut:
+			cut_frames += 1
+		last = _apparent_px(1, _rig.current())
+	for _i in range(200):
+		_tick_rig()
+	_check(cut_frames == 1, "%s: %d cut frames at the start of a finisher (want one)" % [_label, cut_frames])
+	_check(last > first * 1.2, "%s: no dolly: %.0f px to %.0f px" % [_label, first, last])
+	_check(_rig.solo_kind == "", "%s: the shot did not end" % _label)
+	stats["shot finisher sizes (px)"] = "%.0f to %.0f" % [first, last]
+	return {}
+
+
+## A crippling moment: a 0.8 s cut-in on the broken fighter, then back; further breaks inside the cooldown change nothing.
+func _shot_cripple() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 500.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var cuts: int = 0
+	_tick_rig([_shot_events("region_broken", {"actor": 1.0, "region": "arms"})])
+	if _rig.current().cut:
+		cuts += 1
+	var overlay_ticks: int = 0
+	for k in range(120):
+		var evs: Array = []
+		if k % 20 == 5:
+			evs = [_shot_events("region_broken", {"actor": 0.0, "region": "legs"})]
+		_tick_rig(evs)
+		if _rig.current().cut:
+			cuts += 1
+		if _rig._ov_kind != "":
+			overlay_ticks += 1
+	_check(_rig.cut_ins == 1, "%s: %d cut-ins inside the cooldown (want one)" % [_label, _rig.cut_ins])
+	_check(cuts == 2, "%s: %d cut frames (want two: in and out)" % [_label, cuts])
+	_check(absi(overlay_ticks - int(CamParams.OV_CRIPPLE_DUR * 60.0)) <= 2, "%s: the cut-in lasted %d ticks" % [_label, overlay_ticks])
+	# after the cooldown a second one is allowed, and the per-minute cap holds
+	for _i in range(int(CamParams.OV_COOLDOWN * 60.0)):
+		_tick_rig()
+	_tick_rig([_shot_events("region_broken", {"actor": 1.0, "region": "head"})])
+	_check(_rig.cut_ins == 2, "%s: no cut-in after the cooldown (%d)" % [_label, _rig.cut_ins])
+	for _round in range(10):
+		for _i in range(int(CamParams.OV_COOLDOWN * 60.0) + 60):
+			_tick_rig()
+		_tick_rig([_shot_events("region_broken", {"actor": 1.0, "region": "head"})])
+	_check(_rig.cut_ins <= CamParams.OV_MAX_PER_MIN + 4, "%s: %d cut-ins in %.0f s" % [_label, _rig.cut_ins, _rig.time])
+	return {}
+
+
+## A building smash: the first hit on a building of size cuts to a wide view of the wall for the sim's hold and a beat.
+func _shot_smash() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 500.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var cuts: int = 0
+	var request_off: bool = false
+	var hit := _shot_events("building_hit", {"victim": 1.0, "link": 1, "x": ax + 2500.0, "y": 300.0, "z": -600.0, "h": 1200.0})
+	_tick_rig([hit])
+	var overlay_ticks: int = 0
+	var on_screen: bool = true
+	for k in range(60):
+		_tick_rig()
+		if _rig.current().cut:
+			cuts += 1
+		if _rig._ov_kind != "":
+			overlay_ticks += 1
+			request_off = request_off or (not bool(_rig.current().cutaway[0]["request"]))
+			var pt: Vector2 = _rig.current().screen_pos(0, ax + 2500.0, 300.0, -600.0)
+			on_screen = on_screen and pt.x >= 0.0 and pt.x <= vw and pt.y >= 0.0 and pt.y <= vh
+	_check(_rig.cut_ins == 1, "%s: %d cut-ins (want one)" % [_label, _rig.cut_ins])
+	_check(absi(overlay_ticks - int(CamParams.OV_SMASH_DUR * 60.0)) <= 2, "%s: the cut-in lasted %d ticks" % [_label, overlay_ticks])
+	_check(request_off, "%s: the cut-away stayed on during the smash cut (the wall should stay whole)" % _label)
+	_check(on_screen, "%s: the wall was not in the cut-in" % _label)
+	_check(cuts >= 1, "%s: no cut frames" % _label)
+	return {}
+
+
+## A beam struggle opens with a push on the shared view.
+func _shot_clash() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 1200.0, 40.0)
+	_seed_rig()
+	for _i in range(240):
+		_tick_rig()
+	var z0: float = _rig.current().cam_z[0]
+	var c := SimState.Clash.new()
+	c.A = _S.fighters[0]
+	c.D = _S.fighters[1]
+	c.t0 = _S.T
+	c.dur = 2.0
+	_S.game.clash = c
+	var zmax: float = z0
+	for _i in range(120):
+		_tick_rig()
+		zmax = maxf(zmax, _rig.current().cam_z[0])
+	_S.game.clash = null
+	_check(zmax > z0 * 1.06, "%s: no push at the clash (z %.3f to %.3f)" % [_label, z0, zmax])
+	return {}
+
+
 func _transformation() -> Dictionary:
 	var ax: float = 20000.0
 	_pose(ax, 40.0, ax + 6000.0, 40.0)
@@ -1152,7 +1316,8 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0) -> void:
 	var mods: Array = []
 	for k in modes:
 		mods.append("%s %d" % [k, modes[k]])
-	stats[_label] = "%d ticks: %s; layout changes %d, slams %d" % [t, ", ".join(PackedStringArray(mods)), _rig.mode_change_times().size(), slams]
+	stats[_label] = "%d ticks: %s; layout changes %d, slams %d, cut-ins %d" % [t, ", ".join(PackedStringArray(mods)), _rig.mode_change_times().size(), slams, _rig.cut_ins]
+	_check(float(_rig.cut_ins) <= float(CamParams.OV_MAX_PER_MIN) * (float(t) / 3600.0) + 2.0, "%s: %d camera-only cut-ins in %.0f s (cap %d a minute)" % [_label, _rig.cut_ins, float(t) / 60.0, CamParams.OV_MAX_PER_MIN])
 	SimCore.dispose(_S)
 	_S = null
 

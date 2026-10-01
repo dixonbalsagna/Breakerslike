@@ -81,6 +81,16 @@ var _chase_land_t: float = 0.0
 var _launch_victim: int = -1            # a launched fighter the hybrid rule may hold on the attacker for
 var _impact_evt: Array = [false, false]
 var _last_pitch: float = 0.0
+var _ov_kind: String = ""               # a camera-only cut-in (building smash, crippling moment); "" when none
+var _ov_t: float = 0.0
+var _ov_dur: float = 0.0
+var _ov_slot: int = -1
+var _ov_pt: Vector3 = Vector3.ZERO
+var _ov_r0: float = 0.11
+var _ov_r1: float = 0.11
+var _ov_times: Array = []               # start times of recent cut-ins, for the cooldown and the per-minute cap
+var _clash_prev: bool = false
+var cut_ins: int = 0                    # camera-only cut-ins started (counted for the tests)
 var _cut_fade: float = 0.0              # seconds left of a safety cut's fade-in
 var _cut_now: bool = false              # a safety cut happened this tick: the frame is a cut
 var lag_whips: int = 0                  # ticks the hard bound had to pull a focus (counted for the tests)
@@ -181,6 +191,10 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 	r_now = _metric(S)
 	_update_solo(S)
 	_impact_evt = [false, false]
+	var clash_now: bool = S.game.clash != null
+	if clash_now and not _clash_prev and not reduced_motion:
+		_push = [0.0, 0.0]   # the beam struggle opens with the tier push's shape: in, hold, out
+	_clash_prev = clash_now
 	if absf(pitch_deg - _last_pitch) > 0.01:
 		_last_pitch = pitch_deg
 		_cut_now = true
@@ -516,7 +530,7 @@ func _read_events(S: SimState, events: Array) -> void:
 			"tier_up":
 				if not reduced_motion:
 					var a: int = int(_ef(ev, "actor", -1))
-					if a >= 0 and a < 2:
+					if a >= 0 and a < 2 and not (solo_kind == "transform" and solo_slot == a):
 						_push[a] = 0.0
 			"launch":
 				# Encounter's S2 event (actor = the launched fighter): the follow starts on it. The state poll below stays
@@ -534,12 +548,37 @@ func _read_events(S: SimState, events: Array) -> void:
 				var hv: int = int(_ef(ev, "victim", -1))
 				if hv >= 0 and hv < 2:
 					_impact_evt[hv] = true
+					# The building-smash cut: the first hit on a building of some size cuts to a wide, low view of the wall.
+					if int(_ef(ev, "link", 1)) <= 1 and float(_ef(ev, "h", 0.0)) >= 300.0:
+						var bh: float = float(_ef(ev, "h", 0.0))
+						var r_fit: float = clampf(0.7 * CamParams.BODY_H / minf(bh, 2500.0), CamParams.R_FLOOR, CamParams.R_FIGHT)
+						_start_overlay("smash", -1, Vector3(float(_ef(ev, "x", 0.0)), float(_ef(ev, "y", 0.0)), float(_ef(ev, "z", 0.0))), r_fit, r_fit * 1.08, CamParams.OV_SMASH_DUR)
 				if hv >= 0 and hv < 2 and not reduced_motion:
 					var link: int = int(_ef(ev, "link", 1))
 					_hit_t[hv] = 0.0
 					_hit_amp[hv] = CamParams.HIT_PUSH if link <= 1 else CamParams.HIT_PUSH_LATER
 					_hit_hold[hv] = CamParams.HIT_HOLD_FIRST if link <= 1 else CamParams.HIT_HOLD_LATER
 					_aim[hv] = null
+			"transform":
+				# A transformation (I2b): the shot is a close-up on the face, the body, then a wide reveal over the sim's hold.
+				var ta: int = int(_ef(ev, "actor", -1))
+				if ta >= 0 and ta < 2 and not fold_active:
+					_push[ta] = -1.0   # the tier-up push is part of this shot
+					_begin_solo("transform", ta, 3, CamParams.CINE_SLIVER, S, true)
+					if solo_kind == "transform" and solo_slot == ta:
+						_solo_dur = float(_ef(ev, "dur", 0.0))
+			"finisher_start":
+				# A finisher: the fighters are in contact and locked by the sim for `dur`; cut to the loser and dolly in.
+				var ft: int = int(_ef(ev, "target", -1))
+				if ft >= 0 and ft < 2 and not fold_active:
+					_begin_solo("finisher", ft, 4, 0.0, S, true)
+					if solo_kind == "finisher" and solo_slot == ft:
+						_solo_dur = float(_ef(ev, "dur", 0.0))
+			"region_broken":
+				# A crippling moment: a quick cut to a close-up on the fighter who was broken.
+				var ra: int = int(_ef(ev, "actor", -1))
+				if ra >= 0 and ra < 2:
+					_start_overlay("cripple", ra, Vector3.ZERO, CamParams.R_FIGHT, CamParams.R_FINISH, CamParams.OV_CRIPPLE_DUR)
 			"cinematic_start":
 				var kd: String = String(_ef(ev, "kind", ""))
 				if kd == "transformation" or kd == "revision":
@@ -603,7 +642,7 @@ func _begin_solo_clear() -> void:
 	_slam_slot = -1
 
 
-func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = null) -> void:
+func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = null, cut_in: bool = false) -> void:
 	if slot < 0 or slot > 1 or fold_active:
 		return
 	if solo_kind != "" and prio < solo_prio:
@@ -624,7 +663,14 @@ func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = nu
 	_launch_anchor_y = 0.62
 	# A launch out of the one view takes the screen at once, from where the fighter is in that view: the same zoom, the
 	# same screen position, then it eases to the chase size and the trailing anchor. No ramp in which he can be lost.
-	if (kind == "launch" or kind == "hold") and S != null and sep < 0.5:
+	if cut_in and S != null:
+		# A cut to the shot: the pane takes the screen at once, on the fighter, at the shot's first size.
+		solo_w = 1.0
+		e = 1.0
+		_snap_focus(S, slot)
+		_zo[slot] = _own_zoom_target(S, slot)
+		_cut_now = true
+	elif (kind == "launch" or kind == "hold") and S != null and sep < 0.5:
 		var lf = S.fighters[slot]
 		_zo[slot] = _mz
 		solo_w = 1.0
@@ -726,7 +772,7 @@ func _update_solo(S: SimState) -> void:
 			if solo_t >= CamParams.CUT_SHOT:
 				_launch_victim = -1
 				_end_solo(S)
-		"transform":
+		"transform", "finisher":
 			if _solo_dur > 0.0 and solo_t >= _solo_dur + 0.05:
 				_end_solo(S)
 		"ko":
@@ -772,7 +818,57 @@ func _start_cut(S: SimState, v: int) -> void:
 	_cut_now = true
 
 
+## A camera-only cut-in (a building smash, a crippling moment): a hard cut to a fixed or followed view for `dur` seconds,
+## then a hard cut back. It runs in one view only, never over a launch hold, a cut or a sim-owned shot, with a cooldown
+## and a per-minute cap so cuts stay events (docs/camera/camera-v2.md section 4).
+func _start_overlay(kind: String, slot: int, pt: Vector3, r0: float, r1: float, dur: float) -> void:
+	if _ov_kind != "" or fold_active or sep >= 0.5 or reduced_motion:
+		return
+	if solo_kind != "" and solo_kind != "launch":
+		return
+	if not _ov_times.is_empty() and time - float(_ov_times[-1]) < CamParams.OV_COOLDOWN:
+		return
+	var recent: int = 0
+	for t0 in _ov_times:
+		if time - float(t0) < 60.0:
+			recent += 1
+	if recent >= CamParams.OV_MAX_PER_MIN:
+		return
+	_ov_kind = kind
+	_ov_t = 0.0
+	_ov_dur = dur
+	_ov_slot = slot
+	_ov_pt = pt
+	_ov_r0 = r0
+	_ov_r1 = r1
+	_ov_times.append(time)
+	if _ov_times.size() > 12:
+		_ov_times.pop_front()
+	cut_ins += 1
+	_cut_now = true
+
+
+func _overlay_cam(S: SimState) -> Vector3:
+	var p: float = clampf(_ov_t / maxf(_ov_dur, 0.01), 0.0, 1.0)
+	var r: float = lerpf(_ov_r0, _ov_r1, smoothstep(0.0, 1.0, p)) * _m()
+	var z: float = clampf(r * vh / CamParams.BODY_H / cos(deg_to_rad(pitch_deg)), CamParams.ZOOM_MIN, _zcap() * 1.5)
+	var fx: float = _ov_pt.x
+	var fy: float = _ov_pt.y
+	var fz: float = _ov_pt.z
+	if _ov_slot >= 0:
+		var f = S.fighters[_ov_slot]
+		fx = f.x
+		fy = f.y + CamParams.CHEST
+		fz = float(f.z)
+	return _cam_at(fx, fy, fz, z, Vector2(vw * 0.5, vh * 0.62))
+
+
 func _update_pushes() -> void:
+	if _ov_kind != "":
+		_ov_t += DT
+		if _ov_t >= _ov_dur:
+			_ov_kind = ""
+			_cut_now = true
 	for i in range(2):
 		if _hit_t[i] >= 0.0:
 			_hit_t[i] += DT
@@ -912,6 +1008,14 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 				alt_f = 1.0
 			"transform":
 				r = CamParams.R_CINE * m
+				if _solo_dur > 0.0:
+					var tp: float = clampf(solo_t / _solo_dur, 0.0, 1.0)
+					r = lerpf(CamParams.TRANSFORM_R0, CamParams.TRANSFORM_R1, smoothstep(0.25, 0.45, tp))
+					r = lerpf(r, CamParams.TRANSFORM_R2, smoothstep(0.7, 0.95, tp)) * m
+				alt_f = 1.0
+			"finisher":
+				var fp: float = clampf(solo_t / maxf(_solo_dur, 0.1), 0.0, 1.0)
+				r = lerpf(CamParams.R_FIGHT, CamParams.R_FINISH, smoothstep(0.0, 1.0, fp)) * m
 				alt_f = 1.0
 			"ko":
 				r = CamParams.R_KO * m
@@ -921,7 +1025,7 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 	if solo_kind == "launch" and solo_slot == i and solo_phase == "land":
 		z *= 1.0 + CamParams.LAND_PUSH * sin(PI * clampf(_land_t / 0.3, 0.0, 1.0))
 	var zmax: float = _zcap() * (1.0 + CamParams.TIER_PUSH)
-	if solo_kind == "transform" or solo_kind == "ko":
+	if solo_kind == "transform" or solo_kind == "ko" or solo_kind == "finisher":
 		zmax = maxf(zmax, CamParams.R_CLOSE * m * vh / CamParams.BODY_H)   # a close-up may go past the cap
 	# A fighter in depth (Fighter.z, positive toward the camera) draws at s = d / (d + w) of his plane size, d = K / zoom.
 	# The zoom that gives the apparent height the plane zoom z would have is 1 / (1/z - w / K); where that cannot be
@@ -979,6 +1083,11 @@ func _anchor(S: SimState, i: int) -> Vector2:
 
 
 func _cam_from_focus(i: int, z: float, p: Vector2, fz: float = 0.0) -> Vector3:
+	return _cam_at(_fx[i], _fy[i], fz, z, p)
+
+
+## The camera (x, y, zoom) that puts the world point (fx, fy) at depth fz on the screen point p.
+func _cam_at(fx: float, fy: float, fz: float, z: float, p: Vector2) -> Vector3:
 	# A deep fighter lands at C + (plane point - C) * s, so aim the plane mapping at C + (p - C) / s.
 	var target: Vector2 = p
 	if fz != 0.0:
@@ -986,11 +1095,11 @@ func _cam_from_focus(i: int, z: float, p: Vector2, fz: float = 0.0) -> Vector3:
 		var s: float = maxf(d / maxf(d - fz, 1.0), CamParams.DEPTH_S_MIN)
 		var c0 := Vector2(vw * 0.5, vh * 0.5)
 		p = c0 + (p - c0) / s
-	var x: float = SimWrap.wrap(_fx[i] - (p.x - vw * 0.5) / z)
-	var y: float = clampf(_fy[i] - (vh * CamParams.PLANE_Y - p.y) / z, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
+	var x: float = SimWrap.wrap(fx - (p.x - vw * 0.5) / z)
+	var y: float = clampf(fy - (vh * CamParams.PLANE_Y - p.y) / z, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
 	if pitch_deg == 0.0:
 		return Vector3(x, y, z)
-	return _refine_cam(Vector3(x, y, z), _fx[i], _fy[i], fz, target)
+	return _refine_cam(Vector3(x, y, z), fx, fy, fz, target)
 
 
 ## With a pitch the plane mapping is a projection: refine the straight-on guess with Newton steps (a numerical Jacobian)
@@ -1105,7 +1214,7 @@ func _update_cameras(S: SimState) -> void:
 		# own zoom: first-order filter, then the rate cap
 		var zt: float = _own_zoom_target(S, i)
 		var tau_z: float = CamParams.TAU_Z
-		if solo_kind == "ko" and solo_slot == i:
+		if (solo_kind == "ko" or solo_kind == "finisher") and solo_slot == i:
 			tau_z = CamParams.KO_DOLLY / 3.0
 		if stiff:
 			tau_z = CamParams.SLAM_TAU
@@ -1162,6 +1271,12 @@ func _outputs(S: SimState) -> void:
 			o.z = exp(log(_oz[i]) + clampf(log(o.z) - log(_oz[i]), -cap, cap))
 		_outs[i] = o
 		_oz[i] = o.z
+	if _ov_kind != "":
+		var oc: Vector3 = _overlay_cam(S)
+		_outs[0] = oc
+		_outs[1] = oc
+		_oz[0] = oc.z
+		_oz[1] = oc.z
 	_oz_valid = true
 
 
@@ -1173,7 +1288,7 @@ static func _smootherstep(t: float) -> float:
 # ---------------------------------------------------------------------------------------------------- frame
 
 func _mode_name() -> String:
-	if fold_active:
+	if fold_active or _ov_kind != "":
 		return "solo"
 	if _slam_slot >= 0:
 		return "slam"
@@ -1240,6 +1355,6 @@ func _make_frame(S: SimState) -> SplitFrame:
 	for ci in range(2):
 		var cf = S.fighters[ci]
 		var h_px: float = f.apparent_height(ci, cf.x, cf.y, float(cf.z))
-		f.cutaway[ci] = {"request": true, "radius_px": maxf(CamParams.CUTAWAY_MIN_PX, CamParams.CUTAWAY_K * h_px), "only": ci if two_up else -1}
+		f.cutaway[ci] = {"request": _ov_kind != "smash", "radius_px": maxf(CamParams.CUTAWAY_MIN_PX, CamParams.CUTAWAY_K * h_px), "only": ci if two_up else -1}
 	f.cut = false
 	return f
