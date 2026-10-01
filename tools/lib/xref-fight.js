@@ -499,6 +499,17 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim winner: end keys are ragdoll shape keys ----
+  const winner = get('data/anim/winner.json');
+  const motionDoc = get('data/anim/ragdoll_motion.json');
+  if (isObj(winner) && isObj(winner.end) && isObj(motionDoc) && isObj(motionDoc.shapes)) {
+    const shapes = Object.keys(motionDoc.shapes).filter((k) => !k.startsWith('_'));
+    for (const k of Object.keys(winner.end)) {
+      if (k === 'default' || k.startsWith('_')) continue;
+      if (!shapes.includes(k)) err('data/anim/winner.json', `/end/${esc(k)}`, 'winner-shape', `end names shape "${k}", which is not in ragdoll_motion.json shapes (${shapes.join(', ')})`);
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

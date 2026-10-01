@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-winner",
+  "title": "anim.winner/1",
+  "description": "data/anim/winner.json: the winner in the wreckage after a KO (docs/animation/overhaul-plan.md, unit K). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-reference: every `end` key other than `default` is a shape key in data/anim/ragdoll_motion.json shapes (checked by tools/lib/xref-fight.js, winner-shape).",
+  "type": "object",
+  "required": [
+    "schema",
+    "start",
+    "stand",
+    "survey",
+    "yaw",
+    "end"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.winner/1"
+    },
+    "start": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Seconds after the KO when the winner stops (win.stand)."
+    },
+    "stand": {
+      "type": "number",
+      "minimum": 0,
+      "description": "How long he stands spent."
+    },
+    "survey": {
+      "type": "number",
+      "minimum": 0,
+      "description": "How long he looks over the scene (win.survey)."
+    },
+    "yaw": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 3.14159,
+      "description": "Radians the head sweeps each way during the survey."
+    },
+    "end": {
+      "type": "object",
+      "description": "Per shape key (the ragdoll shapes of ragdoll_motion.json), or `default`: whether he then holds the survey or takes emote.victory.",
+      "required": [
+        "default"
+      ],
+      "propertyNames": {
+        "pattern": "^(_.*|default|[A-Za-z][A-Za-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "enum": [
+          "hold",
+          "victory"
+        ]
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

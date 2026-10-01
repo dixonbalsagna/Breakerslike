@@ -16015,6 +16015,236 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-winner-live-valid",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/schema": "anim.winner/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-winner-key-required",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "del": [
+            "/yaw"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-winner-unknown-key",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/pose": "x"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/pose"
+      }
+    },
+    {
+      "id": "anim-winner-underscore-key-ok",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-winner-schema-version",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/schema": "anim.winner/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-winner-start-negative",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/start": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/start"
+      }
+    },
+    {
+      "id": "anim-winner-stand-type",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/stand": "long"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/stand"
+      }
+    },
+    {
+      "id": "anim-winner-survey-zero-ok",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/survey": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-winner-yaw-range",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/yaw": 4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/yaw"
+      }
+    },
+    {
+      "id": "anim-winner-yaw-negative",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/yaw": -0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/yaw"
+      }
+    },
+    {
+      "id": "anim-winner-end-default-required",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/end": {
+              "P": "hold"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/end"
+      }
+    },
+    {
+      "id": "anim-winner-end-value-enum",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/end/default": "dance"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/end/default"
+      }
+    },
+    {
+      "id": "anim-winner-end-key-shape",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/end/bad key": "hold"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/end/bad key"
+      }
+    },
+    {
+      "id": "anim-winner-end-unknown-shape",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/end/Z": "hold"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:winner-shape",
+        "pointer": "/end/Z"
+      }
+    },
+    {
+      "id": "anim-winner-end-existing-shape-ok",
+      "schema": "anim-winner.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/winner.json",
+          "set": {
+            "/end/E": "victory"
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

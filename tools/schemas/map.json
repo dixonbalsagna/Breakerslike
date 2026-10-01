@@ -179,6 +179,10 @@
       "schema": "anim-personality.schema.json"
     },
     {
+      "match": "data/anim/winner.json",
+      "schema": "anim-winner.schema.json"
+    },
+    {
       "match": "data/anim/quality.json",
       "schema": "anim-quality.schema.json"
     },
