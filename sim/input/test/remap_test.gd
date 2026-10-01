@@ -23,6 +23,9 @@ func _init() -> void:
 	_listing_and_required()
 	_rebind()
 	_diff_and_apply()
+	_chords()
+	_gestures()
+	_move()
 	_check()
 	_file_and_hub()
 	_names()
@@ -49,7 +52,12 @@ func _listing_and_required() -> void:
 		if r["fixed"]:
 			fixed += 1
 	ok(rows.size() == _kb()["bindings"].size() and tf == 2, "listing: one row per binding, transform has two")
-	ok(fixed == 1, "listing: the keyboard move axis is fixed")
+	ok(fixed == 1, "listing: only the chord is fixed on the solo keyboard")
+	var mv: Dictionary = {}
+	for r2 in rows:
+		if r2["action"] == "move":
+			mv = r2
+	ok(mv.get("controls", []).size() == 4 and not mv.get("fixed", true), "listing: the move axis is one row of four keys and can be changed")
 	ok(_used(_kb()).get("kb:KeyJ", "") == "light", "controls_used: J is light on the base layer")
 	ok(_used(_kb(), "power").get("kb:KeyJ", "") == "special1", "controls_used: J is special1 on the power layer")
 	for id in SimInputData.presets:
@@ -77,7 +85,7 @@ func _rebind() -> void:
 	var used: Dictionary = _used(r["preset"])
 	ok(r["ok"] and used.get("kb:KeyK", "") == "light" and used.get("kb:KeyJ", "") == "heavy", "swap: light and heavy trade J and K")
 	ok(SimInputRemap.swap(kb, "light", null, 0, "kb:KeyU")["ok"], "swap: with no conflict it is a plain rebind")
-	ok(SimInputRemap.rebind(kb, "transform", null, 0, ["kb:Space", "kb:KeyQ"])["ok"], "rebind: a chord of two controls")
+	ok(not SimInputRemap.rebind(kb, "transform", null, 0, ["kb:Space", "kb:KeyQ"])["ok"], "rebind: a chord cannot be made or changed (chords are fixed)")
 
 
 func _diff_and_apply() -> void:
@@ -215,3 +223,111 @@ func _names() -> void:
 	for idx in SimInputNames.PAD_BUTTONS:
 		var name: String = SimInputNames.PAD_BUTTONS[idx]
 		ok(name != "", "names: button %d has a name" % idx)
+
+
+func _chords() -> void:
+	var ar: Dictionary = SimInputData.original("arena")
+	var used: Dictionary = _used(ar)
+	ok(not used.has("pad:l3") and not used.has("pad:r3") and used.get("pad:lt", "") == "dodge" and used.get("pad:rt", "") == "power", "chords: L3 and R3 (chord-only) are free; LT and RT are dodge and power's own")
+	var chords_before: int = 0
+	for b in ar["bindings"]:
+		if b["controls"].size() > 1:
+			chords_before += 1
+	var r: Dictionary = SimInputRemap.rebind(ar, "light", null, 0, ["pad:l3"])
+	var chords_after: int = 0
+	for b in r["preset"]["bindings"]:
+		if b["controls"].size() > 1:
+			chords_after += 1
+	ok(r["ok"] and chords_before == 2 and chords_after == 2, "chords: light can take L3 and both chords are untouched")
+	r = SimInputRemap.swap(ar, "dodge", null, 0, "pad:lb")
+	var u: Dictionary = _used(r["preset"])
+	var kept: bool = false
+	for b in r["preset"]["bindings"]:
+		if b["controls"] == ["pad:lt", "pad:rt"] and b["action"] == "transform":
+			kept = true
+	ok(r["ok"] and u.get("pad:lb", "") == "dodge" and u.get("pad:lt", "") == "guard" and kept, "chords: dodge and guard swap across a chord member and the chord stays")
+	r = SimInputRemap.rebind(ar, "power", null, 0, ["pad:dpad_left"])
+	ok(r["ok"] and SimInputRemap.rebind(r["preset"], "mode", null, 0, ["pad:rt"])["ok"], "chords: power can leave RT and mode take it")
+	var kb: Dictionary = _kb()
+	ok(_used(kb).get("kb:Space", "") == "dodge" and _used(kb).get("kb:KeyE", "") == "power", "chords: Space and E belong to dodge and power, not to the chord")
+	r = SimInputRemap.swap(kb, "power", null, 0, "kb:KeyQ")
+	ok(r["ok"] and _used(r["preset"]).get("kb:KeyQ", "") == "power" and _used(r["preset"]).get("kb:KeyE", "") == "mode", "chords: power and mode swap, E (a chord member) goes to mode")
+	ok(SimInputData.check_bindings(r["preset"]).is_empty(), "chords: and the result checks clean")
+	var chord_rows: int = 0
+	for row in SimInputRemap.listing(ar):
+		if row["controls"].size() > 1 and row["fixed"]:
+			chord_rows += 1
+	ok(chord_rows == 2, "chords: listing marks both Arena chords fixed")
+
+
+func _gestures() -> void:
+	var sp: Dictionary = SimInputData.original("simple-pad")
+	var eff: Dictionary = SimInputRemap.apply_overrides(sp, [{"controls": ["pad:dpad_up"], "action": "light"}])
+	var hold_on: String = ""
+	var auto_on: String = ""
+	for b in eff["bindings"]:
+		if b["action"] == "upgrade_heavy":
+			hold_on = b["controls"][0]
+		if b["action"] == "special_auto":
+			auto_on = b["controls"][0]
+	ok(_used(eff).get("pad:dpad_up", "") == "light", "gesture: light moved to the d-pad")
+	ok(hold_on == "pad:dpad_up", "gesture: the hold-to-heavy follows light")
+	ok(auto_on == "pad:dpad_up", "gesture: and the power-layer special follows too")
+	var l := SimLayout.new(eff)
+	l.press("pad:dpad_up")
+	for k in range(12):
+		l.build()
+	ok(l.build().heavy, "gesture: the moved control still gives a heavy when held")
+	ok(SimInputRemap.apply_overrides(sp, []) == sp, "gesture: no overrides leave the preset alone")
+	var d: Array = SimInputRemap.diff(sp, eff)
+	ok(SimInputRemap.diff(sp, SimInputRemap.apply_overrides(sp, d)).size() == d.size(), "gesture: the diff round-trips")
+
+
+func _move() -> void:
+	var kb: Dictionary = _kb()
+	var arrows: Array = ["kb:ArrowUp", "kb:ArrowLeft", "kb:ArrowDown", "kb:ArrowRight"]
+	var r: Dictionary = SimInputRemap.rebind(kb, "move", null, 0, arrows)
+	ok(r["ok"] and _used(r["preset"]).get("kb:ArrowLeft", "") == "move" and not _used(r["preset"]).has("kb:KeyW"), "move: the four keys change as one row")
+	ok(SimInputRemap.preset_has_axis(r["preset"]), "move: and the axis binding survives")
+	ok(not SimInputRemap.rebind(kb, "move", null, 0, ["kb:ArrowUp", "kb:ArrowUp", "kb:ArrowDown", "kb:ArrowRight"])["ok"], "move: four different keys are required")
+	ok(not SimInputRemap.rebind(kb, "move", null, 0, ["kb:ArrowUp"])["ok"], "move: one key is refused")
+	var c: Dictionary = SimInputRemap.rebind(kb, "move", null, 0, ["kb:KeyJ", "kb:ArrowLeft", "kb:ArrowDown", "kb:ArrowRight"])
+	ok(not c["ok"] and c["conflict"]["action"] == "light", "move: a key another action uses is a conflict, named")
+	var c2: Dictionary = SimInputRemap.rebind(kb, "light", null, 0, ["kb:KeyW"])
+	ok(not c2["ok"] and c2["conflict"]["action"] == "move", "move: an action cannot take a move key")
+	ok(not SimInputRemap.swap(kb, "light", null, 0, "kb:KeyW")["ok"], "move: and a swap with a move key is refused")
+	var d: Array = SimInputRemap.diff(kb, r["preset"])
+	ok(d.size() == 1 and d[0]["action"] == "move" and d[0]["controls"] == arrows, "move: the diff is one row of four keys")
+	var eff: Dictionary = SimInputRemap.apply_overrides(kb, d)
+	ok(SimInputRemap.preset_has_axis(eff) and _used(eff).get("kb:ArrowRight", "") == "move", "move: apply_overrides keeps the axis shape")
+	ok(SimInputData.check_bindings(eff).is_empty(), "move: the arrows check clean")
+	var ar: Dictionary = SimInputData.original("arena")
+	ok(not SimInputRemap.rebind(ar, "move", null, 0, ["pad:dpad_up"])["ok"], "move: the pad stick cannot be rebound")
+	ok(SimInputRemap.apply_overrides(ar, [{"controls": ["pad:dpad_up", "pad:dpad_left", "pad:dpad_down", "pad:dpad_right"], "action": "move"}]) == ar, "move: an override for the pad's move is ignored")
+	var rows_fixed: bool = false
+	for row in SimInputRemap.listing(ar):
+		if row["action"] == "move":
+			rows_fixed = row["fixed"]
+	ok(rows_fixed, "move: the pad's move row is fixed")
+	var p1: Dictionary = SimInputData.original("kb-shared-p1")
+	var bad: Dictionary = SimInputRemap.apply_overrides(p1, [{"controls": ["kb:KeyI", "kb:KeyJ", "kb:KeyK", "kb:KeyL"], "action": "move"}])
+	var pair_hits: int = 0
+	for pr in SimInputData.check_bindings(bad):
+		if pr["rule"] == "layout-pair":
+			pair_hits += 1
+	ok(pair_hits == 4, "move: slot 0 on slot 1's four keys is four pair conflicts (%d)" % pair_hits)
+	var free: Dictionary = SimInputRemap.apply_overrides(p1, [{"controls": arrows, "action": "move"}])
+	ok(not SimInputData.check_bindings(free).any(func(x): return x["rule"] == "layout-pair"), "move: the arrows are free for slot 0")
+	SimInputData.apply_overrides("kb-solo", d)
+	var hub := SimInputHub.new()
+	hub.set_humans(true, false)
+	hub.key("ArrowUp", true)
+	hub.key("ArrowRight", true)
+	var i: SimIntent = hub.intent(0)
+	ok(i.my == 1.0 and i.mx == 1.0, "move: Up and Right move the fighter after the remap")
+	hub.consumed()
+	hub.key("ArrowUp", false)
+	hub.key("ArrowRight", false)
+	hub.key("KeyW", true)
+	ok(hub.intent(0).my == 0.0, "move: and W no longer does")
+	SimInputData.apply_overrides("kb-solo", [])
