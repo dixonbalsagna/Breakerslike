@@ -67,29 +67,35 @@ Every field below is hashed. "Exists" means the field is already in state and ha
 | Structures and formations | No new field (`x`, `w`, `z`, `d` exist). D1 adds `district`, `shape`, `landmark`. | The x-bucket index stays; the depth test follows the bucket lookup. A bucket holds a handful of boxes. |
 | Trees | New: `z` per tree. | A tree falls only inside a crater's plan radius. |
 | Civilians | None. | They stay counts per building; the building has the depth. |
-| Traffic and street crowd | None. | Cosmetic: Rendering places them from the lane table and the `evacuate` events (V1's fast evacuees are counts). |
+| Traffic and street crowd | None. | Cosmetic: Rendering places them from the lane table and the `evacuate` events (V1's fast evacuees are counts). Nothing cosmetic is ever within a fighter's reach; anything still standing near the fight is a prop in state. |
 | Props (V1) | `S.props`: World's record gains `z` and the same waypoint as a fighter's flight. | Only held and thrown props step. A parked prop is a blocker with a footprint. |
-| Terrain | `deform`, `water`, `scorch`, `rubble`, `crack` become `NR` rows each. The base relief stays one row. | Below. |
+| Terrain | `deform` and `rubble` become rows. `water`, `scorch`, `crack` and the base relief stay one row. | Below. |
 | Events | Every event with an `x` and a `y` carries `z` (the field exists on `FxEvent`). | For Rendering, VFX, Camera and Audio. |
 
 ### Terrain rows
 
-- **Proposal: 8 rows, 300 units (4 bh) apart, across the band.** `groundY(S, x, z)` interpolates linearly between the two nearest rows, so the ground is continuous in depth. An ordinary crater (bowl radius 160 to 600 units) covers 1 to 4 rows and reads as a bowl; a special one (up to 8,320 units) covers them all, as now.
-- **The base relief stays one row** (section 3), so generation, biomes and the sea rule do not change.
-- **Not a full grid.** 32-unit cells in depth would be 75 rows and 1.8 million values: too slow to step and to hash in GDScript.
-- **Water.** Each row floods along x by today's rule. Flow between rows is World's question (section 8); the cost below assumes none.
+Revised after World's and Rendering's sections (the reasons are in section 12).
+
+- **8 rows, 300 units (4 bh) apart, as data** (`rows`, `spacing` in `lanes.json`), **with one row exactly on z = 0**: z = +300, 0, -300 … -1,800. The plane row is then the sim's ground bit for bit, as today.
+- **`groundY(S, x, z)`** blends linearly between the two nearest rows and clamps to the edge row outside them. At z = 0 it reads one row and costs what it costs today.
+- **Only the heights get rows: `deform` and `rubble`.** The base relief, `scorch` and `crack` stay one row (the last two are paint, which Rendering spreads to a width as now).
+- **Water stays one row, on the lowest ground across the rows.** The writers keep a derived array `low` (the minimum of the rows at each column), and the water model runs on it unchanged. The surface is one value per column for every row, and a row's depth there is the surface less its own ground. So water is level across the band (Rendering's ask), `water.gd` barely changes, and its cost does not grow.
+- **Storage is dense, writes are local.** A dig writes only the rows and columns inside its plan radius. Sparse storage would save 300 KB and cost a second code path.
+- **A dig's depth centre snaps to the nearest row.** A small bowl (radius 160) centred between two rows would otherwise be missed by both. The error is at most 150 units in depth, about a tenth of that on screen.
+- **Local writes are gated by `S.depthOn`.** With it off every writer writes the whole band, so the rows are identical and the ground is today's.
+- **Not a full grid.** 32-unit cells in depth would be 75 rows and 1.8 million values: too slow to hash in GDScript.
 
 **Cost, measured on Orb's PC today** (seed 3, 20,000 ticks, one row) and estimated for 8 rows:
 
 | | Today | With 8 rows |
 | :--- | :--- | :--- |
-| Mean tick | 99 µs | about 110 to 130 µs |
-| `groundY` | 0.48 µs a call | about 1 µs a call (two rows and a blend). A launch decision runs up to 16 predicted flights of 240 steps: up to 2 ms more on that one tick in the worst case, about 0.5 ms typically. |
-| A dig, with its relaxation | 0.13 to 0.41 ms each, 46 in the run | Times the rows touched: 0.13 to 1.6 ms for an ordinary crater, 1 to 3.3 ms across all 8 at the size measured. The largest specials were not measured. |
-| Water, while a window is open (12% of ticks) | 90 µs a tick | 200 to 350 µs a tick. The worst case is unchanged: `MAX_WINDOWS` (8) bounds it whatever the row count. |
-| Full state hash | 29 ms (19,030 values) | About 80 ms if `deform` is hashed densely; about 30 ms if rows are hashed as their non-zero columns, which I recommend. |
-| Memory of the per-column arrays | 96 KB | 768 KB |
-| Copy of those arrays (a rollback save) | 2.8 µs | about 25 µs |
+| Mean tick | 99 µs | about 105 to 120 µs |
+| `groundY` | 0.48 µs a call | The same on the plane row; about 1 µs off it (two rows and a blend). |
+| A dig, with its relaxation | 0.13 to 0.41 ms each, 46 in the run | Times the rows touched: 0.13 to 1.6 ms for an ordinary crater, 1 to 3.3 ms across all 8 at the size measured. The largest specials were not measured. A relaxation between rows, if World adds one, costs more. |
+| Water, while a window is open (12% of ticks) | 90 µs a tick | Unchanged: one row. |
+| Full state hash | 29 ms (19,030 values) | About 30 ms with rows hashed as their non-zero columns; about 60 ms if hashed densely. |
+| Memory of the per-column arrays | 96 KB | 365 KB |
+| Copy of those arrays (a rollback save) | 2.8 µs | about 10 µs |
 
 On a desktop the mean tick stays under 1% of a 16.7 ms frame. I have no measurement on an old laptop or a phone in the browser. If they run GDScript 5 to 10 times slower, the mean is still about 1 ms, but a dig tick could reach 10 to 30 ms. Levers, in order: a shared result for rows that were identical before the dig, a cap on relaxation passes, and spreading a dig's rows over the following ticks (a hashed queue).
 
@@ -111,7 +117,7 @@ On a desktop the mean tick stays under 1% of a 16.7 ms frame. I have no measurem
 
 ## 5. The slices
 
-One sim editor at a time. Mechanisms land behaviour-neutral, switched off by data; one slice switches them on. That gives one large behaviour change and one QA re-baseline for it.
+One sim editor at a time. Mechanisms land behaviour-neutral, switched off by data; one slice switches them on. That gives one large behaviour change and one QA re-baseline for it. Revised twice: with World's section (L1 rides with D1) and with Rendering's (the terrain rows come before the switch-on; section 12).
 
 | # | Slice | Owner | Behaviour | Goldens |
 | :--- | :--- | :--- | :--- | :--- |
@@ -119,16 +125,16 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 | L1 | The lane table (`data/biomes/lanes.json`, `S.lanes`) and the layout on it: streets clear by construction, footprints by lane, rows 0 and 3 as scenery, brunt candidates from rows 1 and 2 only. Part of D1, which re-lays the city anyway. No new state. | World | Changes (the layout) | D1's regeneration |
 | L2 | Depth in the core, switched off: the free ease to `zT`, the rush homing, the exchange alignment, the waypoint for every flight and slide, the band clamp, ground height at `z`. The director still passes zero. | Simulation | Neutral. Proof: parity on untouched goldens. | None |
 | L3 | True collisions, behind a data flag (off): the swept footprint test for bodies in `fighter.gd`'s launched branch (by grant), the same test in the predictors, blasts by plan distance, the free-fighter contact rule (section 9, ruling 2; granted lines in `fighter.gd`). The probe's plan-equals-outcome test gains depth. | World | Neutral while off | None |
-| L4 | **The switch-on.** The director plans depth: the small deviation on every smash, launch and throw (keyed draws by exchange index, numbers in `data/director/depth.json`), the targeted deviations, alignment before an exchange, where a flight's end leaves the fighter. `enabled` goes true, which turns the collisions on with it. | Encounter | Changes | Regenerated; QA re-baselines every band |
+| L4 | **The switch-on, after T.** The director plans depth: the small deviation on every smash, launch and throw (keyed draws by exchange index, numbers in `data/director/depth.json`), the targeted deviations, alignment before an exchange, where a flight's end leaves the fighter. `enabled` goes true, which turns the collisions on with it. | Encounter | Changes | Regenerated; QA re-baselines every band |
 | L5 | Beams in depth: the beam plan sets `oz` and `zs`; hits, scorch and the strike crater follow the ray. | Encounter, with World for scorch | Changes | Regenerated |
-| T1 | Terrain rows, storage only: the five arrays become rows, every writer still writes the whole band, the hash takes rows sparsely. | World, with granted lines in `state.gd` and `hash.gd` | Neutral. Proof: light digests identical. | Regenerated once (hash only) |
-| T2 | Terrain rows, local: craters, furrows, scorch, rubble and water written by depth extent. | World | Changes (small while fights stay in one street) | Regenerated |
+| T | Terrain rows, behind the switch: `deform` and `rubble` become rows, water runs on the lowest ground, craters, furrows, grooves and heaps are written by depth extent when `S.depthOn` is set and across the whole band when it is not. Rendering's row texture lands with it. | World, with granted lines in `state.gd` and `hash.gd` | Neutral while off. Proof: light digests identical; the probes run it with the switch forced on. | Regenerated once (hash only) |
 | P1 | Props and formations as blockers on lanes (V1 and N1, already planned). | World, with Combat and Controls for the context button | Changes | Their own regenerations |
 
-- **Order** (revised with World's section). I2c (Controls) keeps the next window. Then L1 with D1 (World), L0 and L2 (mine: one window, two proofs), L3 (World), L4 (Encounter), L5. L1 needs no state field and no L0, so it rides with D1. T1 can land any time after L1. T2 lands with or after L4. P1 follows D2 as planned. I3 (the intent clean-up) fits anywhere after I2c.
-- **Why the terrain rows are not first.** True collisions and lane fights do not need them, and they are the largest refactor (World's five terrain files, and Rendering has to draw eight deformable strips). Until T2 the ground is as today: a crater is a trench across the band.
+- **Order.** I2c (Controls) keeps the next window. Then L1 with D1 (World), L0 and L2 (mine: one window, two proofs), L3 and T (World, in either order or one window), L4 (Encounter), L5. P1 follows D2 as planned. I3 (the intent clean-up) fits anywhere after I2c.
+- **The switch is the last step.** L4's code can land with `enabled` false and be tested with the switch forced in a match setup. `enabled` goes true only when L3, T and L4 are all in, in a data commit with the golden regeneration. So no build ever has fighters at depth over ground that is a trench across the band.
+- **Beams at the switch.** Until L5 a beam has no depth, so its groove would cross the whole band. L4 should at least set `oz` to the firing fighter's depth, or L5 lands with it.
 - **Camera and Rendering** work alongside and need no sim window. After L1 the lane table exists; after L0 every event carries `z`.
-- **My part.** L0 and L2, the state and hash lines of every other slice, a read-only review of each, and the neutrality proofs.
+- **My part.** L0 and L2, the state and hash lines of every other slice (T's are the row arrays and `low`), a read-only review of each, and the neutrality proofs.
 
 ## 6. Risks
 
@@ -139,9 +145,10 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 - Facing flips when two fighters are at the same x in different streets. Rule to settle in L2: facing keeps its last sign while `|dx|` is under a small threshold.
 
 **Cost on old laptops and phones**
-- The numbers in section 2 are from one desktop. A measured tick on the lowest target (the browser on a phone or an old laptop) is needed before T1.
+- The numbers in section 2 are from one desktop. A measured tick on the lowest target (the browser on a phone or an old laptop) is needed before T.
 - A launch decision's predictor cost grows with depth candidates and the two-row ground lookup. Encounter measures it in L4; the first lever is fewer candidates.
 - A dig across all rows is a one-tick spike (levers in section 2).
+- T is one more World window before the switch. If it runs long, the switch waits; L4's code does not.
 - The full hash is already 29 ms. Rollback or desync checks online cannot run it every tick; that is a note for Netcode, and the reason rows are hashed sparsely.
 - Occlusion: the prototype hid a fighter behind a building 35% of the time. That is Rendering's and Camera's core problem, not an edge case.
 
@@ -160,7 +167,7 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 - **No depth in the intent:** the lint of section 4.
 - **The seam:** a flight with a waypoint that crosses x = 0 gives the same `z` per tick as the same flight half a planet away.
 - **The band clamp:** no body leaves the band, at any tier.
-- **Rows:** with identical rows, `groundY(S, x, z)` equals `groundY(S, x, 0)` bit for bit (T1).
+- **Rows:** with identical rows, `groundY(S, x, z)` equals `groundY(S, x, 0)` bit for bit (T).
 - The plan-equals-outcome test with depth is World's (the probe).
 
 ## 8. What I need from the other directors
@@ -174,11 +181,7 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 2. What it reads each tick: I offer `z`, `zT`, `ex.z` and `launch_depth` for every launch (the end depth and the time to it).
 3. Framing two fighters in different streets, in one view and in split-screen.
 
-**Rendering**
-1. The occlusion method (cut-away or porthole) and the state it needs. The footprints near each fighter are already in state.
-2. Whether 8 deformable terrain strips are affordable on the Compatibility renderer and on a phone, or how many are.
-3. The depth aids (shadow, lane line) and what they read: `groundY(S, x, z)` is enough for both.
-4. Traffic and street crowd as cosmetic, placed from the lane table.
+**Rendering:** answered (section 12).
 
 Also: Tools for the schemas of the new data files (in the same commit as each file), and QA for the re-baseline at L4.
 
@@ -186,7 +189,7 @@ Also: Tools for the schemas of the new data files (in the same commit as each fi
 
 1. **The band.** Two streets and two block rows, 32 bh deep, with rows 0 and 3 as scenery. Camera may shrink it for readability.
 2. **A free fighter meets a footprint.** It is stopped, as in the prototype Orb liked: it slides along the wall or lands on the roof, and an attack ploughs through. The sim does not side-step it. Streets are kept clear, so in a city this happens only after a flight ends inside a block.
-3. **Terrain rows come after the switch-on** (T1 and T2 as their own track), so a playable depth build arrives sooner.
+3. **Terrain rows come after the switch-on** (T1 and T2 as their own track), so a playable depth build arrives sooner. *Reopened by the EP after Rendering's finding. My recommendation is the reverse, with a smaller terrain slice (section 12); the EP rules.*
 
 ## 10. Encounter's section (folded from `docs/director/fight-lanes-director.md`)
 
@@ -207,7 +210,7 @@ That file is the plan for L4 and L5 and holds the detail. What it decides, and w
 **The budget does not fit its step cap.** I measured the predictor today on Orb's PC (400 flights, 190 steps each on average): 0.87 µs a step.
 - 3,000 steps is 2.6 ms today, not 1 ms.
 - A typical decision (4 to 6 flights) is 0.7 to 1.0 ms, not 0.3 ms.
-- With the depth waypoint, and the two-row ground after T1, a step is about 1.3 to 1.5 µs: up to 4.5 ms for 3,000 steps.
+- With the depth waypoint, and the two-row ground after T, a step is about 1.3 to 1.5 µs: up to 4.5 ms for 3,000 steps.
 
 Either the cap comes down to about 1,100 steps for 1 ms, or the target is restated as about 1 ms typical and 4.5 ms worst on this PC. A decision comes about ten times a minute, so the mean is unaffected; the question is the one-tick spike on a machine 5 to 10 times slower. Encounter's rule that a non-targeted flight in a city needs no footprint test keeps the swept test off most steps.
 
@@ -234,9 +237,37 @@ That file is the plan for L1, L3, T1 and T2 and holds the detail (`districts-pla
 
 **The replay header.** `SimReplay.dataHash()` covers the director's, the roster's and the mood's data, and none of World's. `lanes.json` and `settlements.json` should join it, so a replay refuses a different layout with reason `data` and does not diverge at tick 0. World supplies a `dataHash()`; the line in `replay.gd` is mine (L0).
 
-**Two cost notes for T1 and T2.**
+**Two cost notes for T1 and T2** (superseded by section 12: water keeps one row, so the first no longer applies).
 - **Shared water windows cost up to eight times today's step.** I measured 90 µs a tick while a window is open, for one row. A window that steps all 8 rows is about 0.7 ms a tick while open, and the worst case (8 windows) about 2.9 ms. If a window records the rows it covers, only the rows a dig touched are stepped, and my estimate of 200 to 350 µs holds.
 - **The relaxation between rows adds to a dig.** My estimate (the rows touched, times today's 0.13 to 0.41 ms) did not include a sweep across rows. Allow half as much again until it is measured.
 
 **Still open.** Trees' `z` (World's section does not say; a tree line across the band is the fallback). Camera's confirmation of -27 bh.
+
+## 12. Rendering's section, and the terrain rows before the switch-on
+
+Folded from `docs/rendering/fight-lanes-render.md`, which holds the detail (occlusion, depth aids, closer framing).
+
+**The finding.** After L4 fighters stand at any depth on the sim's ground. If the rows came later, a crater would still be a trench across the band in the sim while Rendering draws a bowl. Rendering would have to draw the trenches (the "canyons" Orb rejected) or let fighters at depth float over or sink into the drawn ground. Neither is acceptable, so the terrain rows have to be in before the switch.
+
+**Recommendation: one terrain slice (T) before L4, smaller than T1 and T2 were, and neutral.** What makes it smaller:
+- **Rows for the heights only** (`deform`, `rubble`). `scorch` and `crack` are paint and stay one row.
+- **Water is not touched.** It runs on the lowest ground across the rows (section 2). `water.gd` is the most delicate of World's terrain files (the no-inland-flooding proof), and it keeps its code, its windows and its cost. This also answers Rendering's water ask: the surface is level across the rows by construction.
+- **One slice, not two.** The local writes sit behind `S.depthOn`, so the slice is neutral and proven on the light digests, and the probes exercise it with the switch forced. The behaviour arrives with the one switch-on.
+- **No relaxation between rows is needed for craters:** a bowl is as smooth in depth as along x. A heap's edge is the one steep step; World decides whether rubble spills into the street.
+
+**The EP's interim** (bowls in depth by formula at dig time, stored per row only inside the crater's footprint) is this slice's dig: the bowl formula takes the plan distance, and only the rows inside the footprint are written. The difference is dense arrays under it, which are simpler than a sparse store and cost 300 KB. I see no cheaper interim that Rendering would not also have to mirror and then throw away.
+
+**The delay.** One World window more before the switch (D1 with L1, L3, T, in place of D1 with L1, L3). L4's code does not wait: it lands switched off, and only the flip of `enabled` waits for T (section 5). World should confirm T's size against its own estimate for T1 and T2.
+
+**Rendering's other asks**
+
+| Ask | Answer |
+| :--- | :--- |
+| One row exactly on z = 0 | Yes: rows at +300, 0, -300 … -1,800 (section 2). `lanes.json` gives `rows`, `spacing` and the first row's z; the validator checks that 0 is a row. |
+| `groundY` clamped outside the edge rows | Yes. The band's front edge (+375) and back edge (-2,025) read the edge rows. |
+| The lane table in a form the ground shader can read | World's `S.lanes`: I ask World for a flat packed array (per lane: z range, kind; per strip: z range, kind), the same all round the band, plus each district's x interval and lane use. It is derived data, so Rendering may read it every frame. |
+| Nothing cosmetic within a fighter's reach | Agreed, as a rule of this plan (section 2). The sim sends what Rendering needs to clear the way: `launch_depth` for every launch (L0) and the attack events. Anything that stays near a fight is a prop in state (P1). |
+| Water between rows | Level by construction (above). |
+| 8 rows or 16 | 8. Rendering can draw 16; the sim's dig cost doubles with them. The count is data, so 16 rows of 150 can be tried if the camera is raised. |
+| Occlusion, depth aids, close-ups | No new sim state: Rendering reads `z`, the footprints, `ex.z`, the waypoint and the beam's `oz` and `zs`. The picks are Orb's and Camera's. |
 
