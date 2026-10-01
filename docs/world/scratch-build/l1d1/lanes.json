@@ -1,0 +1,15 @@
+{
+  "schema": "biomes.lanes/1",
+  "_about": "The fight lanes (docs/world/fight-lanes-world.md). Depths in fighter heights (bh = 75 units), z positive toward the camera. The band is z_front to z_back; rows 0 and 3 are scenery, rows 1 and 2 hold the blocks, the two streets hold no footprint.",
+  "z_front": 5.0,
+  "z_back": -27.0,
+  "lanes": [
+    { "name": "foreground", "kind": "scenery", "top": 12.5, "bottom": 7.5, "row": 0 },
+    { "name": "front_street", "kind": "street", "top": 5.0, "bottom": -4.0, "row": -1 },
+    { "name": "block_1", "kind": "block", "top": -4.0, "bottom": -12.0, "row": 1 },
+    { "name": "back_street", "kind": "street", "top": -12.0, "bottom": -18.0, "row": -1 },
+    { "name": "block_2", "kind": "block", "top": -18.0, "bottom": -27.0, "row": 2 },
+    { "name": "background", "kind": "scenery", "top": -34.0, "bottom": -42.0, "row": 3 }
+  ],
+  "d_min_bh": 1.5
+}

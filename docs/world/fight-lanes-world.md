@@ -161,3 +161,27 @@ A shader finds a pixel's lane by `z`, its strip by `z` within a street, its dist
 - **Workers evacuate fast.** The district data carries `worker_share` and `vehicle_share` (numbers from Game Design); the lane table needs nothing new. Harbour and industrial districts are the low-civilian places.
 - **The second city is 12%**, so the lane table has two city districts sets (Bellgate and the harbour metropolis) and no 17% layout.
 - **30 fps with reduced effects** relaxes the cost worries in sections 5 and 10 (water windows, digs per row); the plan does not change.
+
+## 12. L1 inside D1: scratch build and measurements (2026-10-03, on HEAD 76c9485)
+
+Built in a scratch copy of HEAD, switched on by data (`"enabled": true` in `settlements.json`); the files are in `docs/world/scratch-build/l1d1/` (`l1d1.diff` for `settlements.gd`, `terrain.gd` and the probe; `lanes.json`; the data file `settlements.json` with `depth_fill` for `depth_aspect`; `lane_check.gd`). What it does: `genWorld` takes its buildings from `WorldSettle.generate` (the D1 generator) instead of the old rows; **a building's z and d come from its lane** (blocks flush to their street: row 1 at z = -4 bh less half the depth, row 2 at -18 bh; the scenery rows centred; depth = lane width x `depth_fill`, no jitter); the avenues are the same x gaps in both block rows; a landmark clears the neighbours its footprint overlaps in its row and is never placed across an avenue. It writes only the fields that exist today (the new D1 fields, the hash lines and the landmark event are the window's, not part of this scratch).
+
+**Layout checks (seed 1):** 186 buildings (196 today): row 0 17, row 1 65, row 2 65, row 3 39; mean footprint depth 3.4, 5.9, 6.7 and 6.5 bh; population 1,800; tallest 245 bh. **Footprints outside their lane: 0. Block footprints touching a street: 0. Overlaps in a row: 0. Buildings across an avenue: 0.** (The first run had one overlap and one building across an avenue, both from a landmark wider than the building it replaced; fixed as above.)
+
+**Match effect (200 matches, seeds 101 to 300, the tree's tuned contact model on in both):** layout today against L1 with D1.
+
+| | Today | L1 with D1 |
+| :--- | ---: | ---: |
+| Length to KO | 432 s | 435 s |
+| Structures levelled | 52.0 of 196 (26.5%) | 44.3 of 186 (23.8%) |
+| Civilians lost | 16% | 16% |
+| Craters a match | 35 | 36 |
+| KAI wins | 50% | 51.5% |
+| BUILDING SMASH share of launches | 3% | 2% |
+| Ticks a second | 12,331 | 12,709 |
+
+Reading it: the layout is neutral for length, civilians and balance; levelled structures fall 15% (not investigated; the likely causes are the deeper, tighter towers and the avenue gaps, which I have not separated); the brunt share loses a point (3 to 2%), not investigated either (the candidates are the rows 1 and 2 buildings the planner can aim at). **If the brunt band (Game Design: 4 to 10%) matters for the layout, it is the planner's (Encounter's) lever, not the layout's.**
+
+**The one probe finding.** The probe's "a front-row building leaves a heap no steeper than the angle of repose" took the steepest step of the *ground* around the first tall front-row tower; in the D1 layout that tower stands 1,280 units from a step in the base relief (58 units a column, the coast of the city's platform), so it failed on terrain that has nothing to do with the heap. The check now measures the heap's own step (the change in deform; 19.1 units a column, the 0.6 slope, in limit). That is a one-line change to World's probe, which the D1 window makes.
+
+**Not in the scratch:** the lane table as `S.lanes`, the street strips, scenery rows' exclusion from the brunt candidates (the filter is the plan's step 3), the Building fields and hash lines, and the landmark event: those are the window's. The cost of the window is as section 7 says.

@@ -1,0 +1,164 @@
+--- a/sim/world/settlements.gd
++++ b/sim/world/settlements.gd
+@@ -15,6 +15,22 @@
+ const PLACES: Array = ["centre", "start", "end"]
+ const SHARE_EPS: float = 0.001
+ 
++const LANES_PATH: String = "res://data/biomes/lanes.json"
++static var _lanes: Array = []
++static var _dmin: float = 1.5
++
++## The lane (top, bottom in bh, kind) that holds building row `row`.
++static func laneOfRow(row: int) -> Dictionary:
++	if _lanes.is_empty():
++		var f := FileAccess.open(LANES_PATH, FileAccess.READ)
++		var j = JSON.parse_string(f.get_as_text())
++		_lanes = j.lanes
++		_dmin = float(j.d_min_bh)
++	for l in _lanes:
++		if int(l.row) == row:
++			return l
++	return {}
++
+ static var _data: Dictionary = {}
+ static var _errors: Array = []
+ static var _loaded: bool = false
+@@ -154,7 +170,7 @@
+ 				_err(dn + "/kinds: weights sum to zero")
+ 			_hdist(dd.get("height_bh", null), dn + "/height_bh")
+ 			_range2(dd.get("width_bh", null), dn + "/width_bh", 0.5, 40.0)
+-			_range2(dd.get("depth_aspect", null), dn + "/depth_aspect", 0.2, 3.0)
++			_range2(dd.get("depth_fill", null), dn + "/depth_fill", 0.1, 1.0)
+ 			_range2(dd.get("gap_bh", null), dn + "/gap_bh", 0.0, 40.0)
+ 			_range2(dd.get("block_bh", null), dn + "/block_bh", 4.0, 200.0)
+ 			_range2(dd.get("avenue_bh", null), dn + "/avenue_bh", 1.0, 40.0)
+@@ -256,7 +272,7 @@
+ 				var wr: Array = kd.width_bh if kd.has("width_bh") else dd.width_bh
+ 				var hd: Dictionary = kd.height_bh if kd.has("height_bh") else dd.height_bh
+ 				var w: float = (wr[0] + uw * (wr[1] - wr[0])) * BH
+-				var aspect: float = dd.depth_aspect[0] + ua * (dd.depth_aspect[1] - dd.depth_aspect[0])
++				var fillf: float = dd.depth_fill[0] + ua * (dd.depth_fill[1] - dd.depth_fill[0])
+ 				var gap: float = (dd.gap_bh[0] + ug * (dd.gap_bh[1] - dd.gap_bh[0])) * BH
+ 				var blocked: bool = false
+ 				for av in avenues:
+@@ -280,8 +296,13 @@
+ 					rejected += 1
+ 					continue
+ 				var h: float = h_bh * BH
+-				out.append({"x": cx, "w": w, "d": w * aspect, "h": h, "kind": kd.kind, "shape": kd.shape, "row": int(row),
+-					"z": WorldTerrain.ROW_Z_BH[int(row)] * BH + ((seed_ - 0.5) * 2.0 * WorldTerrain.ROW_JITTER_BH * BH if int(row) > 0 else 0.0),
++				# L1: the footprint lies inside its lane; the blocks are flush to their street, the scenery rows centred
++				var ln: Dictionary = laneOfRow(int(row))
++				var lw: float = float(ln.top) - float(ln.bottom)
++				var dd_bh: float = clampf(lw * fillf, _dmin, lw)
++				var zc: float = (float(ln.top) - dd_bh * 0.5) if ln.kind == "block" else 0.5 * (float(ln.top) + float(ln.bottom))
++				out.append({"x": cx, "w": w, "d": dd_bh * BH, "h": h, "kind": kd.kind, "shape": kd.shape, "row": int(row),
++					"z": zc * BH,
+ 					"district": di, "landmark": 0, "seed": seed_, "hp_mult": 1.0, "pop_mult": 1.0, "dens": float(dd.pop_density)})
+ 		# landmarks: by rule, not by draw
+ 		for lmr in dd.landmarks:
+@@ -296,6 +317,13 @@
+ 					if b.landmark != 0 or b.row != int(lmr.row):
+ 						continue
+ 					var dist: float = absf(b.x - target)
++					var lw2: float = float(lm.width_bh) * BH * 0.5
++					var crosses: bool = false
++					for av in avenues:
++						if b.x - lw2 < av[1] and b.x + lw2 > av[0]:
++							crosses = true
++					if crosses:
++						continue
+ 					if dist < bestd:
+ 						bestd = dist
+ 						best = i
+@@ -306,10 +334,19 @@
+ 				b2.shape = lm.shape
+ 				b2.h = float(lm.height_bh) * BH
+ 				b2.w = float(lm.width_bh) * BH
+-				b2.d = b2.w * 0.9
++				var lnl: Dictionary = laneOfRow(int(b2.row))
++				b2.d = minf(b2.w * 0.9, (float(lnl.top) - float(lnl.bottom)) * BH)
++				if lnl.kind == "block":
++					b2.z = (float(lnl.top) * BH) - b2.d * 0.5
+ 				b2.kind = "tower" if lm.height_bh >= 12.0 else "house"
+ 				b2.hp_mult = float(lm.hp_mult)
+ 				b2.pop_mult = float(lm.pop_mult)
++				# the landmark's footprint takes the room it needs: the neighbours it overlaps in its row go
++				for i in range(out.size() - 1, first - 1, -1):
++					if i != best and out[i].row == b2.row and absf(out[i].x - b2.x) < (out[i].w + b2.w) * 0.5:
++						out.remove_at(i)
++						if i < best:
++							best -= 1
+ 				# a plaza: the foreground row is cleared in front of it
+ 				for i in range(out.size() - 1, first - 1, -1):
+ 					var f: Dictionary = out[i]
+--- a/sim/world/terrain.gd
++++ b/sim/world/terrain.gd
+@@ -84,12 +84,27 @@
+ 	var spans: Array = _platforms(S)
+ 	# Front streets first (the original layout, draw for draw), then the extra rows of each settlement.
+ 	var totals: Array = []
+-	for st in SETTLEMENTS:
+-		totals.append(_row(S, r, spans[totals.size()][0], spans[totals.size()][1], st.kind, 1, 1.0, 1.0, 0.0))
+-	for k in range(SETTLEMENTS.size()):
+-		var st = SETTLEMENTS[k]
+-		for rw in st.rows:
+-			_row(S, r, spans[k][0], spans[k][1], rw[1], rw[0], rw[2], rw[3], rw[4] * WS)
++	var newPop: float = -1.0
++	if bool(WorldSettle.data().get("enabled", false)):
++		newPop = 0.0
++		for sd in WorldSettle.data().settlements:
++			var g: Dictionary = WorldSettle.generate(S, sd)
++			for e in g.buildings:
++				var nb := SimState.Building.new()
++				nb.x = e.x; nb.w = e.w; nb.d = e.d; nb.h = e.h; nb.kind = e.kind; nb.row = float(e.row); nb.z = e.z; nb.seed = e.seed
++				nb.floors = e.floors
++				nb.fmask = (1 << nb.floors) - 1
++				nb.maxhp = e.maxhp; nb.hp = e.maxhp; nb.alive = true
++				nb.pop = float(e.pop); nb.popAlive = nb.pop
++				newPop += nb.pop
++				S.buildings.append(nb)
++	else:
++		for st in SETTLEMENTS:
++			totals.append(_row(S, r, spans[totals.size()][0], spans[totals.size()][1], st.kind, 1, 1.0, 1.0, 0.0))
++		for k in range(SETTLEMENTS.size()):
++			var st = SETTLEMENTS[k]
++			for rw in st.rows:
++				_row(S, r, spans[k][0], spans[k][1], rw[1], rw[0], rw[2], rw[3], rw[4] * WS)
+ 	# Conserve each settlement's population: rescale all its rows to the front street's total.
+ 	var pop: float = 0.0
+ 	var byS: Array = []
+@@ -100,6 +115,8 @@
+ 		var k: int = _settlementOf(b.x)
+ 		byS[k].append(b)
+ 	for k in range(SETTLEMENTS.size()):
++		if newPop >= 0.0:
++			break
+ 		var raw: float = 0.0
+ 		for b in byS[k]:
+ 			raw += b.pop
+@@ -108,6 +125,8 @@
+ 			b.pop = SimMathx.jmax(1.0, SimMathx.jround(b.pop * scale))
+ 			b.popAlive = b.pop
+ 			pop += b.pop
++	if newPop >= 0.0:
++		pop = newPop
+ 	var x2: float = 4530.0 * PS
+ 	while x2 < 5470.0 * PS:
+ 		var tr := SimState.TreeState.new()
+--- a/sim/world/tools/probe.gd
++++ b/sim/world/tools/probe.gd
+@@ -837,7 +837,12 @@
+ 	for k in range(-80, 80):
+ 		var i2: int = cf_t + k
+ 		heap_max = maxf(heap_max, Sr_t.deform[i2] - d1_t[i2])
+-		heap_step = maxf(heap_step, absf((Sr_t.base[i2 + 1] + Sr_t.deform[i2 + 1]) - (Sr_t.base[i2] + Sr_t.deform[i2])))
++		var at_wall: bool = false
++		for b2 in Sr_t.buildings:
++			if b2.alive and b2 != f1_t and absf(float(i2) * SimConst.COL - b2.x) < b2.w * 0.5 + 2.0 * SimConst.COL:
++				at_wall = true
++		if not at_wall:
++			heap_step = maxf(heap_step, absf((Sr_t.deform[i2 + 1] - d1_t[i2 + 1]) - (Sr_t.deform[i2] - d1_t[i2])))   # the heap's own step: the terrain's relief is not the heap's
+ 	for b in Sr_t.buildings:
+ 		if b.alive and b != f1_t:
+ 			var c0f: int = int(floor((b.x - b.w * 0.5) / SimConst.COL)) - 1
