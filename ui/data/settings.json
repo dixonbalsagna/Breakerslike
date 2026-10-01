@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "note": "The Settings screen (docs/ui/hud-spec.md section 26): its sections, which options each lists and in what order, the words for each choice, and the screen's own words. The controls themselves (default, range, step, choices, label, help) come from options.json: a toggle for a boolean, a slider for a number with min and max, a choice for a list. An item may also be an action button. needs: a feature flag in features.json; until it is on the row is dimmed and marked Soon, and the screen skips it. hidden: options that stay in options.json (and the HUD's options) but not on this screen.",
+  "title": "SETTINGS",
+  "close": "CLOSE",
+  "hint_keys": "Up and Down: choose.  Left and Right: change.  Enter: switch.  Esc: close.",
+  "hint_pad": "D-pad: choose and change.  A: switch.  B: close.",
+  "on": "On",
+  "off": "Off",
+  "soon": "Soon",
+  "sections": [
+    { "id": "controls", "title": "Controls", "items": [
+      "pad_preset",
+      "touch_preset",
+      "left_handed",
+      "hotseat_alt_layout",
+      "control_hints",
+      "show_prompts",
+      { "action": "remap", "label": "Remap controls", "value": "Open", "help": "Change which button or key does what, for the layout you are using.", "needs": "remap" }
+    ] },
+    { "id": "camera", "title": "Camera", "items": ["camera_zoom", "camera_shake", "split_solo"] },
+    { "id": "display", "title": "Display", "items": ["vfx_quality", "info_flashes", "brink_cue", "silhouette", "region_label"] },
+    { "id": "access", "title": "Accessibility", "items": ["reduced_motion", "captions", "crown_always", "thickness", "hitstop_scale", "keep_hints"] },
+    { "id": "cosmetics", "title": "Cosmetics", "items": ["unlock_all"] }
+  ],
+  "needs": { "touch_preset": "touch_full" },
+  "hidden": ["shake_scale", "glyph_style"],
+  "hidden_note": "shake_scale (0 to 1) is superseded by camera_shake (0 to 10); glyph_style has one choice.",
+  "labels": {
+    "pad_preset": { "arena": "Arena", "brawler": "Brawler", "simple-pad": "Simple" },
+    "touch_preset": { "touch-simple": "Simple", "touch-full": "Full" },
+    "vfx_quality": { "auto": "Auto", "high": "High", "medium": "Medium", "low": "Low" },
+    "control_hints": { "auto": "Auto", "always": "Always", "off": "Off" },
+    "thickness": { "0.75": "Thin", "1.0": "Normal", "1.5": "Thick" }
+  }
+}

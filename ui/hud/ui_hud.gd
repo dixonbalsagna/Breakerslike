@@ -22,6 +22,9 @@ signal howto_opened(first_run: bool)   # the How to play card opened: the host p
 signal feedback_opened(context: String)   # the feedback panel opened ("pause" or "match_end"): the host pauses the sim and releases held keys
 signal feedback_closed()                  # it closed: the host restores the pause it found
 signal option_changed(key: String, value)   # set_option changed an option's value: the host applies the ones it owns (pad_preset to SimInputHub.pad_preset)
+signal settings_opened                     # the Settings screen opened: the host pauses the sim and releases held keys (as for How to play)
+signal settings_closed                     # it closed: the host restores the pause it found
+signal settings_action_requested(action: String)   # a button on the screen was pressed ("remap"): the host opens what it names
 signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
@@ -83,6 +86,14 @@ var _last_touch := false
 var _last_lh := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
+var _l_settings: UiLayer
+var _set_open := false
+var _set_focus := -1                  # the focused row of UiSettings.rows()
+var _set_scroll := 0.0
+var _set_drag: Dictionary = {}        # a press in progress: {mode: "slider" | "tap" | "scroll", row, part, y0, scroll0, moved}
+var _set_axis: Dictionary = {}        # pad stick axis -> -1, 0 or 1 (a push is one step, like a key press)
+var _set_device := "kbd"              # the last device that drove the screen ("kbd" or "pad"): which key hint it shows
+var _saved_opts: Dictionary = {}      # the options the player changed on the Settings screen (kept in UiPrefs, applied by load_saved_options)
 var _l_fb: UiLayer
 var _l_hints: Array = []
 var _l_you: UiLayer
@@ -164,6 +175,7 @@ func _ready() -> void:
 	_l_hint = _layer(_paint_hint)
 	_l_fbpill = _layer(_paint_fbpill)
 	_l_howto = _layer(_paint_howto)
+	_l_settings = _layer(_paint_settings)
 	_l_fb = _layer(_paint_fb)        # last: over everything
 	_fb_text = TextEdit.new()        # the free-text box and the report preview are real text controls, placed by the panel's plan
 	_fb_text.visible = false
@@ -225,7 +237,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_settings, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -485,6 +497,8 @@ func _update_layers() -> void:
 	_l_hint.update_sig(UiReads.hint_sig(hub))
 	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s, _howto_preset() + str(opts["glyph_style"])) if _howto_open else null)
 
+	_l_settings.update_sig(_settings_sig() if _set_open else null)
+
 	var events_on: bool = not hub.cards.is_empty() or not hub.barks.is_empty() or not hub.banner.is_empty() or hub.world_card != null
 	_l_events.update_sig(_frame if events_on else null)
 	_l_feed.update_sig([int(_t * 4.0), hub.feed.size(), hub.mode, hub.cards.size(), hub.barks.size()] if bool(opts["show_feed"]) else null)
@@ -604,7 +618,7 @@ func _paint_struggle(ci: CanvasItem) -> void:
 ## is open the HUD takes every key and click (so the fighters do not move behind it): the host should freeze the sim on
 ## howto_opened and unfreeze on howto_closed.
 func show_howto(first_run: bool = false, page: int = 0) -> void:
-	if _howto_open or _fb_open:
+	if _howto_open or _fb_open or _set_open:
 		return
 	_howto_open = true
 	_howto_first = first_run
@@ -694,6 +708,9 @@ func _paint_howto(ci: CanvasItem) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _set_open:
+		_settings_input(event)
+		return
 	if _fb_open:
 		# The panel owns every key and click (the two text boxes take their own before this runs).
 		if event is InputEventKey:
@@ -757,13 +774,297 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+# --- The Settings screen (docs/ui/hud-spec.md section 26) ---------------------------------------------------------------------
+
+## Open the Settings screen (the host's pause menu entry). While it is open the HUD takes every key, pad button and click (so no fighter
+## moves behind it): the host should freeze the sim on settings_opened and restore the pause it found on settings_closed, as for How to
+## play, and skip its own pad handling while is_settings_open() (see is_overlay_open()). Every change goes through set_option, so
+## option_changed fires as it always does; the changes are kept for the next run (load_saved_options).
+func show_settings() -> void:
+	if _set_open or _howto_open or _fb_open:
+		return
+	_set_open = true
+	_set_scroll = 0.0
+	_set_drag = {}
+	_set_axis = {}
+	var fo: Array = UiSettings.focusable(UiSettings.rows())
+	_set_focus = int(fo[0]) if not fo.is_empty() else -1
+	_set_scroll = UiSettings.scroll_to(settings_plan(), _set_focus, 0.0) if _set_focus >= 0 else 0.0
+	_l_settings.invalidate()
+	settings_opened.emit()
+
+
+func hide_settings() -> void:
+	if not _set_open:
+		return
+	_set_open = false
+	_set_drag = {}
+	_l_settings.update_sig(null)
+	settings_closed.emit()
+
+
+func is_settings_open() -> bool:
+	return _set_open
+
+
+## Any of the three overlays (How to play, feedback, Settings) is open: the host leaves keys, pad and touch to the HUD.
+func is_overlay_open() -> bool:
+	return _howto_open or _fb_open or _set_open
+
+
+func settings_focus() -> int:
+	return _set_focus
+
+
+func settings_plan() -> Dictionary:
+	return UiSettings.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), {"focus": _set_focus, "scroll": _set_scroll, "device": _set_device}, opts)
+
+
+func _settings_sig() -> Array:
+	return UiSettings.sig(settings_plan(), opts, bool(opts["touch_ui"])) + [_set_device]
+
+
+func _paint_settings(ci: CanvasItem) -> void:
+	if _set_open:
+		UiSettings.draw(ci, settings_plan(), opts)
+
+
+## Change an option from the screen: through set_option (the clamp and option_changed), and remembered.
+func settings_set(key: String, value) -> void:
+	set_option(key, value)
+	_saved_opts[key] = opts[key]
+	UiPrefs.set_value("options", _saved_opts)
+	_l_settings.invalidate()
+
+
+## Apply the options the player saved on the Settings screen (a new run). The host calls it once at startup, after it has connected
+## option_changed (so it hears pad_preset and the rest) and after it has pushed its own starting values.
+func load_saved_options() -> void:
+	var saved = UiPrefs.get_value("options", {})
+	if not (saved is Dictionary):
+		return
+	var od: Dictionary = UiData.options()
+	for k in saved:
+		if od.has(k):
+			_saved_opts[k] = saved[k]
+			set_option(k, saved[k])
+
+
+func _settings_row(i: int) -> Dictionary:
+	var rws: Array = UiSettings.rows()
+	return rws[i] if i >= 0 and i < rws.size() else {}
+
+
+func _settings_step(i: int, dir: int) -> void:
+	var r: Dictionary = _settings_row(i)
+	if r.is_empty() or not bool(r["enabled"]) or r["kind"] == UiSettings.BUTTON or r["kind"] == UiSettings.HEADING:
+		return
+	var v = UiSettings.stepped(r, opts, dir)
+	# A toggle flips, a slider stops at its ends, a choice cycles.
+	settings_set(str(r["key"]), v)
+
+
+func _settings_accept(i: int) -> void:
+	var r: Dictionary = _settings_row(i)
+	if r.is_empty() or not bool(r["enabled"]):
+		return
+	match r["kind"]:
+		UiSettings.TOGGLE:
+			_settings_step(i, 1)
+		UiSettings.CHOICE:
+			_settings_step(i, 1)
+		UiSettings.BUTTON:
+			settings_action_requested.emit(str(r["action"]))
+
+
+## One of "up", "down", "left", "right", "accept", "page_up", "page_down", "home", "end", "close" (what a key, a pad button or a stick push does).
+func settings_action(act: String) -> void:
+	if not _set_open:
+		return
+	var fo: Array = UiSettings.focusable(UiSettings.rows())
+	var at: int = fo.find(_set_focus)
+	match act:
+		"close":
+			hide_settings()
+			return
+		"up", "down", "page_up", "page_down", "home", "end":
+			if fo.is_empty():
+				return
+			var n: int = fo.size()
+			var jump: int = 5 if act.begins_with("page") else 1
+			match act:
+				"up", "page_up":
+					at = maxi(at - jump, 0) if at >= 0 else 0
+				"down", "page_down":
+					at = mini(at + jump, n - 1) if at >= 0 else 0
+				"home":
+					at = 0
+				"end":
+					at = n - 1
+			_set_focus = int(fo[at])
+			_set_scroll = UiSettings.scroll_to(settings_plan(), _set_focus, _set_scroll)
+		"left":
+			_settings_step(_set_focus, -1)
+		"right":
+			_settings_step(_set_focus, 1)
+		"accept":
+			_settings_accept(_set_focus)
+	_l_settings.invalidate()
+
+
+func _settings_scroll_by(px: float) -> void:
+	var p: Dictionary = settings_plan()
+	_set_scroll = clampf(_set_scroll + px, 0.0, float(p["max_scroll"]))
+	_l_settings.invalidate()
+
+
+func _settings_press(pos: Vector2) -> void:
+	var p: Dictionary = settings_plan()
+	var h: Dictionary = UiSettings.hit(p, pos)
+	_set_drag = {}
+	if h.is_empty():
+		return
+	var part: String = str(h["part"])
+	if part == "close":
+		hide_settings()
+		return
+	var i: int = int(h["row"])
+	if i >= 0 and part != "off":
+		_set_focus = i
+	if part == "track":
+		var rec: Dictionary = (p["rows"] as Array)[i]
+		var r: Dictionary = _settings_row(i)
+		settings_set(str(r["key"]), UiSettings.slider_at(r, rec["ctl"]["track"], pos.x))
+		_set_drag = {"mode": "slider", "row": i}
+		return
+	_set_drag = {"mode": "tap" if i >= 0 and part != "body" else "scroll", "row": i, "part": part, "y0": pos.y, "scroll0": _set_scroll, "moved": false}
+	_l_settings.invalidate()
+
+
+func _settings_motion(pos: Vector2) -> void:
+	if _set_drag.is_empty():
+		return
+	if str(_set_drag["mode"]) == "slider":
+		var p: Dictionary = settings_plan()
+		var i: int = int(_set_drag["row"])
+		var r: Dictionary = _settings_row(i)
+		var rec: Dictionary = (p["rows"] as Array)[i]
+		settings_set(str(r["key"]), UiSettings.slider_at(r, rec["ctl"]["track"], pos.x))
+		return
+	var dy: float = pos.y - float(_set_drag["y0"])
+	if absf(dy) > maxf(10.0 * dp, 8.0):
+		_set_drag["moved"] = true
+	if bool(_set_drag["moved"]):
+		var p2: Dictionary = settings_plan()
+		_set_scroll = clampf(float(_set_drag["scroll0"]) - dy, 0.0, float(p2["max_scroll"]))
+		_l_settings.invalidate()
+
+
+func _settings_release() -> void:
+	var d: Dictionary = _set_drag
+	_set_drag = {}
+	if d.is_empty() or str(d["mode"]) != "tap" or bool(d["moved"]):
+		return
+	var i: int = int(d["row"])
+	match str(d["part"]):
+		"minus", "left":
+			_settings_step(i, -1)
+		"plus", "right":
+			_settings_step(i, 1)
+		"tap", "button", "row":
+			_settings_accept(i)
+	_l_settings.invalidate()
+
+
+func _settings_input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		_set_device = "kbd"
+		if event.pressed:
+			var act := ""
+			match event.keycode:
+				KEY_UP, KEY_W:
+					act = "up"
+				KEY_DOWN, KEY_S, KEY_TAB:
+					act = "down"
+				KEY_LEFT, KEY_A:
+					act = "left"
+				KEY_RIGHT, KEY_D:
+					act = "right"
+				KEY_PAGEUP:
+					act = "page_up"
+				KEY_PAGEDOWN:
+					act = "page_down"
+				KEY_HOME:
+					act = "home"
+				KEY_END:
+					act = "end"
+				KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+					act = "accept" if not event.echo else ""
+				KEY_ESCAPE:
+					act = "close" if not event.echo else ""
+			if act != "":
+				settings_action(act)
+	elif event is InputEventJoypadButton:
+		_set_device = "pad"
+		if event.pressed:
+			match event.button_index:
+				JOY_BUTTON_DPAD_UP:
+					settings_action("up")
+				JOY_BUTTON_DPAD_DOWN:
+					settings_action("down")
+				JOY_BUTTON_DPAD_LEFT:
+					settings_action("left")
+				JOY_BUTTON_DPAD_RIGHT:
+					settings_action("right")
+				JOY_BUTTON_A:
+					settings_action("accept")
+				JOY_BUTTON_LEFT_SHOULDER:
+					settings_action("page_up")
+				JOY_BUTTON_RIGHT_SHOULDER:
+					settings_action("page_down")
+				JOY_BUTTON_B, JOY_BUTTON_START:
+					settings_action("close")
+	elif event is InputEventJoypadMotion:
+		var ax: int = event.axis
+		if ax == JOY_AXIS_LEFT_X or ax == JOY_AXIS_LEFT_Y:
+			var v: float = event.axis_value
+			var was: int = int(_set_axis.get(ax, 0))
+			var now: int = 0
+			if v > 0.6:
+				now = 1
+			elif v < -0.6:
+				now = -1
+			elif absf(v) > 0.3:
+				now = was   # inside the hysteresis band: no new push
+			if now != was:
+				_set_axis[ax] = now
+				if now != 0:
+					_set_device = "pad"
+					settings_action(("right" if now > 0 else "left") if ax == JOY_AXIS_LEFT_X else ("down" if now > 0 else "up"))
+	elif event is InputEventMouseButton:
+		_set_device = "kbd"
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				_settings_press(event.position)
+			else:
+				_settings_release()
+		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_settings_scroll_by(-maxf(48.0 * dp, 44.0) * 1.2)
+		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_settings_scroll_by(maxf(48.0 * dp, 44.0) * 1.2)
+	elif event is InputEventMouseMotion:
+		if (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+			_settings_motion(event.position)
+	get_viewport().set_input_as_handled()
+
+
 # --- The feedback panel (docs/ui/hud-spec.md section 20) ----------------------------------------------------------------------
 
 ## Open the feedback panel. `context` is "pause" (from the pause menu) or "match_end" (from the pill after a KO). While it is open the
 ## HUD takes every key and click, like the How to play card: the host pauses the sim on feedback_opened and restores the pause it
 ## found on feedback_closed. Nothing is sent anywhere: COPY REPORT puts plain text on the clipboard.
 func show_feedback(context: String = "pause") -> void:
-	if _fb_open or _howto_open:
+	if _fb_open or _howto_open or _set_open:
 		return
 	_fb_open = true
 	_fb_context = context
@@ -955,7 +1256,7 @@ func _fb_place() -> void:
 
 
 func _pill_visible() -> bool:
-	return hub.match_over and bool(opts["match_end_feedback"]) and not _fb_open and not _howto_open and layout.feedback_btn.size.y > 0.0
+	return hub.match_over and bool(opts["match_end_feedback"]) and not _fb_open and not _howto_open and not _set_open and layout.feedback_btn.size.y > 0.0
 
 
 func _fb_click(pos: Vector2) -> void:

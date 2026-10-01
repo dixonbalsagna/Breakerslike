@@ -22,6 +22,15 @@ static func get_bool(key: String, default: bool = false) -> bool:
 
 
 static func set_bool(key: String, value: bool) -> void:
+	set_value(key, value)
+
+
+## Any JSON value (a bool, a number, a string, a dictionary).
+static func get_value(key: String, default = null):
+	return load_all().get(key, default)
+
+
+static func set_value(key: String, value) -> void:
 	var d: Dictionary = load_all()
 	d[key] = value
 	var f := FileAccess.open(path, FileAccess.WRITE)

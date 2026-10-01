@@ -4,7 +4,7 @@ extends Control
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
 ## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress|controls   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch[=press|ready] --left --device=xbox --preset=arena|brawler|simple-pad|kb-solo|kb-shared-p2 --ready --stance=N --target=github|mailto|form --howto[=PAGE] --ko --feedback[=copied|review]
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch[=press|ready] --left --device=xbox --preset=arena|brawler|simple-pad|kb-solo|kb-shared-p2 --ready --stance=N --target=github|mailto|form --settings[=FOCUS_STEPS] [--pad] [--sscroll=PX] --howto[=PAGE] --ko --feedback[=copied|review]
 ## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
@@ -114,6 +114,15 @@ func _ready() -> void:
 		if str(args["feedback"]) == "copied":
 			hud.feedback_fn = func(): return {"commit": "02c8fd3", "date": "2026-09-30", "seed": 123456, "time": 222.0}
 			hud.copy_feedback()
+	if args.has("settings"):
+		hud.show_settings()
+		var want: int = int(args["settings"]) if str(args["settings"]).is_valid_int() else 0
+		for _i in range(want):
+			hud.settings_action("down")
+		if args.has("pad"):
+			hud._set_device = "pad"
+		if args.has("sscroll"):
+			hud._set_scroll = float(args["sscroll"])
 	if args.has("howto"):
 		hud.show_howto(false, int(args["howto"]) if str(args["howto"]).is_valid_int() else 0)
 

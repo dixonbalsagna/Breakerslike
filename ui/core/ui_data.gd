@@ -226,6 +226,17 @@ static func howto() -> Dictionary:
 	return _howto
 
 
+const SETTINGS_PATH := "res://ui/data/settings.json"
+static var _settings: Dictionary = {}
+
+
+## The Settings screen's layout and words (ui/data/settings.json).
+static func settings() -> Dictionary:
+	if _settings.is_empty():
+		_settings = _read(SETTINGS_PATH)
+	return _settings
+
+
 const FEATURES_PATH := "res://ui/data/features.json"
 static var _features: Dictionary = {}
 static var _feature_override: Dictionary = {}

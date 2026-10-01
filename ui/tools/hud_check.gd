@@ -42,6 +42,7 @@ func _run() -> void:
 	_toll_rules()
 	await _hints_rules()
 	await _touch_controls_rules()
+	await _settings_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -1903,3 +1904,350 @@ func _touch_controls_rules() -> void:
 	_ok(float(hud.layout.touch_ctrl["attack"].x) < hud.layout.vp.x * 0.5 and float(hud.layout.touch_ctrl["stick"].x0) > hud.layout.vp.x * 0.5, "touch controls: left-handed mirrors the buttons to the left and the stick zone to the right")
 	hud.queue_free()
 	await process_frame
+
+
+# --- The Settings screen (docs/ui/hud-spec.md section 26) ------------------------------------------------------------------------
+
+func _settings_rules() -> void:
+	var od: Dictionary = UiData.options()
+	var sd: Dictionary = UiData.settings()
+	# The data: every option is on the screen or on its hidden list, every item exists, every shown choice has a word.
+	var listed := {}
+	var missing := 0
+	for sec in sd["sections"]:
+		for it in sec["items"]:
+			if it is Dictionary:
+				continue
+			listed[str(it)] = true
+			if not od.has(str(it)):
+				missing += 1
+	for k in sd["hidden"]:
+		listed[str(k)] = true
+	var unlisted := 0
+	for k in od:
+		if not listed.has(k):
+			unlisted += 1
+	var unworded := 0
+	for k in listed:
+		if sd["hidden"].has(k):
+			continue
+		if od.has(k) and (od[k] as Dictionary).has("choices"):
+			for c in od[k]["choices"]:
+				if not (sd["labels"].get(k, {}) as Dictionary).has(str(c)):
+					unworded += 1
+	_ok(missing == 0 and unlisted == 0 and unworded == 0, "settings: every option is on the screen or hidden on purpose, every item exists and every choice has a word (%d missing, %d unlisted, %d unworded)" % [missing, unlisted, unworded])
+	var keys := []
+	for r in UiSettings.rows():
+		keys.append(r["key"])
+	_ok(keys.has("pad_preset") and keys.has("touch_preset") and keys.has("camera_zoom") and keys.has("camera_shake") and keys.has("left_handed") and keys.has("unlock_all") and keys.has("reduced_motion"), "settings: it lists the controller layout, the touch layout, camera zoom and shake, left-handed, unlock all and the accessibility options")
+	_ok(od["unlock_all"]["default"] == false and od["touch_preset"]["choices"] == ["touch-simple", "touch-full"], "settings: unlock all is off by default and the touch layout offers Simple and Full")
+	var pads_ok := true
+	for c in od["pad_preset"]["choices"]:
+		pads_ok = pads_ok and sd["labels"]["pad_preset"].has(c)
+	_ok(pads_ok and sd["labels"]["pad_preset"]["simple-pad"] == "Simple" and sd["labels"]["pad_preset"]["arena"] == "Arena", "settings: Arena, Brawler and Simple are the words for the three pad layouts")
+	# Rows that wait for a feature are listed but disabled and skipped by the focus.
+	UiData.set_feature("touch_full", null)
+	UiData.set_feature("remap", null)
+	var soon := {}
+	for r in UiSettings.rows():
+		if r["kind"] != UiSettings.HEADING and not bool(r["enabled"]):
+			soon[str(r["key"]) if r["key"] != "" else str(r["action"])] = true
+	var fo: Array = UiSettings.focusable(UiSettings.rows())
+	var rows0: Array = UiSettings.rows()
+	var focus_on_soon := false
+	for i in fo:
+		focus_on_soon = focus_on_soon or not bool(rows0[i]["enabled"])
+	_ok(soon.has("touch_preset") and soon.has("remap") and not focus_on_soon and UiSettings.value_word(rows0[keys.find("touch_preset")], {}) == "Soon", "settings: the Full touch layout and Remap wait for their features: listed, dimmed, marked Soon and skipped by the focus")
+	UiData.set_feature("touch_full", true)
+	UiData.set_feature("remap", true)
+	var all_on := true
+	for r in UiSettings.rows():
+		all_on = all_on and (r["kind"] == UiSettings.HEADING or bool(r["enabled"]))
+	_ok(all_on, "settings: with the features on every row is live")
+	UiData.set_feature("touch_full", null)
+	UiData.set_feature("remap", null)
+	# Values: words, steps and the slider's point.
+	var rzoom: Dictionary = {}
+	var rpad: Dictionary = {}
+	var rtog: Dictionary = {}
+	var rthick: Dictionary = {}
+	var rhit: Dictionary = {}
+	for r in UiSettings.rows():
+		match str(r["key"]):
+			"camera_zoom": rzoom = r
+			"pad_preset": rpad = r
+			"left_handed": rtog = r
+			"thickness": rthick = r
+			"hitstop_scale": rhit = r
+	var vo := {"camera_zoom": 7.0, "pad_preset": "arena", "left_handed": false, "thickness": 1.0, "hitstop_scale": 0.5}
+	_ok(UiSettings.value_word(rzoom, vo) == "7" and UiSettings.value_word(rpad, vo) == "Arena" and UiSettings.value_word(rtog, vo) == "Off" and UiSettings.value_word(rthick, vo) == "Normal" and UiSettings.value_word(rhit, vo) == "50%", "settings: values read as words (7, Arena, Off, Normal, 50%)")
+	_ok(UiSettings.stepped(rzoom, vo, 1) == 8.0 and UiSettings.stepped(rzoom, {"camera_zoom": 10.0}, 1) == 10.0 and UiSettings.stepped(rzoom, {"camera_zoom": 0.0}, -1) == 0.0, "settings: a slider steps by one and stops at its ends")
+	_ok(UiSettings.stepped(rpad, vo, 1) == "brawler" and UiSettings.stepped(rpad, {"pad_preset": "simple-pad"}, 1) == "arena" and UiSettings.stepped(rpad, vo, -1) == "simple-pad", "settings: a choice cycles round its list in both directions")
+	_ok(UiSettings.stepped(rtog, vo, 1) == true and UiSettings.stepped(rthick, vo, 1) == 1.5, "settings: a toggle flips and a numeric choice moves to the next choice")
+	var trk := Rect2(100, 0, 200, 48)
+	_ok(UiSettings.slider_at(rzoom, trk, 100.0) == 0.0 and UiSettings.slider_at(rzoom, trk, 300.0) == 10.0 and UiSettings.slider_at(rzoom, trk, 200.0) == 5.0 and UiSettings.slider_at(rzoom, trk, 999.0) == 10.0, "settings: a point on the track is a whole step of the slider")
+	# Geometry at desktop, tablet, phone and small sizes, touch on and off.
+	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(3840, 2160), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0],
+		[Vector2(844, 390), 1.0], [Vector2(1170, 2532), 3.0], [Vector2(1080, 2340), 2.75], [Vector2(828, 1792), 2.0], [Vector2(750, 1334), 2.0], [Vector2(390, 844), 1.0], [Vector2(360, 640), 1.0]]
+	var rcount: int = UiSettings.rows().size()
+	for cs in cases:
+		var sz: Vector2 = cs[0]
+		var dpv: float = cs[1]
+		var lay := UiLayout.new()
+		lay.dp = dpv
+		lay.compute(sz, false)
+		for touch in [false, true]:
+			var tag := "settings %dx%d dp %.1f touch=%s" % [int(sz.x), int(sz.y), dpv, str(touch)]
+			var p: Dictionary = UiSettings.plan(sz, lay.s, dpv, touch, {"focus": 1, "scroll": 0.0}, vo)
+			var card: Rect2 = p["card"]
+			var body: Rect2 = p["body"]
+			var tm: float = float(p["tm"])
+			_ok(bool(p["fits"]) and Rect2(Vector2.ZERO, sz).encloses(card) and card.encloses(body) and card.encloses(p["close"]), "%s: the card is on screen and the screen's parts are inside it (%d bad controls)" % [tag, int(p["bad"])])
+			_ok((p["close"] as Rect2).size.x >= tm - 0.01 and (p["close"] as Rect2).size.y >= tm - 0.01, "%s: the close cross is at least 48 dp" % tag)
+			_ok(body.size.y >= tm * 2.4 and float(p["fs_body"]) >= UiLook.text_floor - 0.5 and float(p["fs_small"]) >= UiLook.text_floor - 0.5, "%s: the body shows at least two rows and the type is at the floor or above (body %d px, row %d px)" % [tag, int(body.size.y), int(tm)])
+			# Every row is reachable by scrolling and the focus scrolls into view.
+			var seen := 0
+			var maxs: float = float(p["max_scroll"])
+			var vis_ok := true
+			for i in range(rcount):
+				var rec: Dictionary = (p["rows"] as Array)[i]
+				if rec["kind"] == UiSettings.HEADING or not bool(rec["enabled"]):
+					continue
+				var sc: float = UiSettings.scroll_to(p, i, 0.0)
+				var pp: Dictionary = UiSettings.plan(sz, lay.s, dpv, touch, {"focus": i, "scroll": sc}, vo)
+				var rr: Rect2 = (pp["rows"] as Array)[i]["rect"]
+				if rr.position.y < body.position.y - 0.5 or rr.end.y > (pp["body"] as Rect2).end.y + 0.5:
+					vis_ok = false
+				seen += 1
+			_ok(vis_ok and seen >= 20 and (maxs > 0.0 or seen > 0), "%s: every row can be scrolled fully into view by the focus (%d rows, content %d in %d)" % [tag, seen, int(p["content_h"]), int(body.size.y)])
+			# Rows do not overlap and each control's centre hits itself.
+			var hits_ok := true
+			var overlap := 0
+			var prev_end: float = -1e9
+			for rec in p["rows"]:
+				var rect: Rect2 = rec["rect"]
+				if float(rect.position.y) < prev_end - 0.5:
+					overlap += 1
+				prev_end = rect.end.y
+			var p2: Dictionary = UiSettings.plan(sz, lay.s, dpv, touch, {"focus": 1, "scroll": 0.0}, vo)
+			for rec in p2["rows"]:
+				if rec["kind"] == UiSettings.HEADING or not bool(rec["enabled"]) or not (rec["rect"] as Rect2).intersects(p2["body"]):
+					continue
+				if not (p2["body"] as Rect2).encloses(rec["rect"]):
+					continue
+				for k in rec["ctl"]:
+					if k == "switch" or k == "value":
+						continue
+					var cr: Rect2 = rec["ctl"][k]
+					var h: Dictionary = UiSettings.hit(p2, cr.get_center())
+					if int(h.get("row", -9)) != int(rec["idx"]) or str(h.get("part", "")) != k:
+						hits_ok = false
+			_ok(overlap == 0 and hits_ok, "%s: rows do not overlap and every control's centre hits that control (%d overlaps)" % [tag, overlap])
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# The flow in the HUD: keys, pad, mouse and touch, the signals and what is remembered.
+	UiPrefs.path = "user://ui_prefs_test_settings.json"
+	if FileAccess.file_exists(UiPrefs.path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(UiPrefs.path))
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.advance(1.0 / 60.0)
+	var ev := {"opened": 0, "closed": 0, "changes": [], "actions": []}
+	hud.settings_opened.connect(func(): ev["opened"] += 1)
+	hud.settings_closed.connect(func(): ev["closed"] += 1)
+	hud.option_changed.connect(func(k, v): ev["changes"].append([k, v]))
+	hud.settings_action_requested.connect(func(a): ev["actions"].append(a))
+	var rws: Array = UiSettings.rows()
+	var idx_of := func(key: String) -> int:
+		for i in range(rws.size()):
+			if str(rws[i]["key"]) == key:
+				return i
+		return -1
+	hud.show_settings()
+	_ok(hud.is_settings_open() and hud.is_overlay_open() and ev["opened"] == 1 and hud.settings_focus() == idx_of.call("pad_preset"), "settings: it opens on the first live row and tells the host")
+	hud.show_howto()
+	hud.show_feedback("pause")
+	_ok(not hud.is_howto_open() and not hud.is_feedback_open(), "settings: How to play and the feedback panel do not open over it")
+	var key := func(code: int) -> InputEventKey:
+		var e := InputEventKey.new()
+		e.keycode = code
+		e.pressed = true
+		return e
+	# Keys: down to Control hints skips the dimmed Touch layout, right changes it, Enter flips a toggle, Esc closes.
+	hud._unhandled_input(key.call(KEY_DOWN))
+	_ok(hud.settings_focus() == idx_of.call("left_handed"), "settings keys: Down skips the dimmed Touch layout row")
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(hud.opts["left_handed"] == true and ev["changes"].back() == ["left_handed", true], "settings keys: Enter switches a toggle and option_changed fires")
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(hud.opts["left_handed"] == false, "settings keys: and again switches it back")
+	hud.settings_action("end")
+	hud.settings_action("home")
+	_ok(hud.settings_focus() == idx_of.call("pad_preset"), "settings keys: Home goes to the first row")
+	hud._unhandled_input(key.call(KEY_RIGHT))
+	_ok(hud.opts["pad_preset"] == "brawler" and ev["changes"].back() == ["pad_preset", "brawler"], "settings keys: Right changes the controller layout and the host hears it (pad_preset, brawler)")
+	hud._unhandled_input(key.call(KEY_LEFT))
+	hud._unhandled_input(key.call(KEY_LEFT))
+	_ok(hud.opts["pad_preset"] == "simple-pad", "settings keys: Left cycles back round the list")
+	hud.settings_action("right")
+	var zoom_i: int = idx_of.call("camera_zoom")
+	while hud.settings_focus() != zoom_i:
+		hud.settings_action("down")
+	hud._unhandled_input(key.call(KEY_RIGHT))
+	hud._unhandled_input(key.call(KEY_RIGHT))
+	hud._unhandled_input(key.call(KEY_RIGHT))
+	hud._unhandled_input(key.call(KEY_RIGHT))
+	_ok(hud.opts["camera_zoom"] == 10.0 and ev["changes"].back() == ["camera_zoom", 10.0], "settings keys: Right on camera zoom moves it a step at a time and stops at 10")
+	hud._unhandled_input(key.call(KEY_LEFT))
+	_ok(hud.opts["camera_zoom"] == 9.0, "settings keys: Left lowers it")
+	var p0: Dictionary = hud.settings_plan()
+	var fr: Rect2 = (p0["rows"] as Array)[hud.settings_focus()]["rect"]
+	_ok(fr.position.y >= (p0["body"] as Rect2).position.y - 0.5 and fr.end.y <= (p0["body"] as Rect2).end.y + 0.5, "settings keys: the focused row is scrolled into view")
+	# The pad.
+	var pad := func(btn: int) -> InputEventJoypadButton:
+		var e := InputEventJoypadButton.new()
+		e.button_index = btn
+		e.pressed = true
+		return e
+	hud.settings_action("home")
+	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_RIGHT))
+	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_RIGHT))
+	var after_pad: String = str(hud.opts["pad_preset"])
+	_ok(after_pad == "simple-pad", "settings pad: D-pad right changes a choice (brawler, then simple)")
+	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_DOWN))
+	_ok(hud.settings_focus() == idx_of.call("left_handed"), "settings pad: D-pad down moves the focus")
+	hud._unhandled_input(pad.call(JOY_BUTTON_A))
+	_ok(hud.opts["left_handed"] == true, "settings pad: A switches a toggle")
+	hud._unhandled_input(pad.call(JOY_BUTTON_A))
+	var jm := InputEventJoypadMotion.new()
+	jm.axis = JOY_AXIS_LEFT_Y
+	jm.axis_value = 0.9
+	hud._unhandled_input(jm)
+	hud._unhandled_input(jm)
+	_ok(hud.settings_focus() == idx_of.call("hotseat_alt_layout"), "settings pad: a stick push is one step, not a stream")
+	var jr := InputEventJoypadMotion.new()
+	jr.axis = JOY_AXIS_LEFT_Y
+	jr.axis_value = 0.0
+	hud._unhandled_input(jr)
+	hud._unhandled_input(jm)
+	_ok(hud.settings_focus() == idx_of.call("control_hints"), "settings pad: and after the stick returns, the next push is another step")
+	hud._unhandled_input(jr)
+	# The mouse and a finger: a tap on a control, a drag on a track, a drag elsewhere to scroll, the wheel.
+	var mouse := func(pos: Vector2, pressed: bool) -> InputEventMouseButton:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = pressed
+		e.position = pos
+		return e
+	var tap := func(pos: Vector2) -> void:
+		hud._unhandled_input(mouse.call(pos, true))
+		hud._unhandled_input(mouse.call(pos, false))
+	hud._unhandled_input(key.call(KEY_ESCAPE))
+	_ok(not hud.is_settings_open() and ev["closed"] == 1, "settings: Esc closes it and tells the host")
+	hud.show_settings()
+	var pl: Dictionary = hud.settings_plan()
+	var prec: Dictionary = (pl["rows"] as Array)[idx_of.call("pad_preset")]
+	var before: String = str(hud.opts["pad_preset"])
+	tap.call((prec["ctl"]["right"] as Rect2).get_center())
+	_ok(hud.opts["pad_preset"] != before and hud.settings_focus() == idx_of.call("pad_preset"), "settings touch: a tap on the right chevron changes the controller layout and focuses the row")
+	tap.call((prec["ctl"]["left"] as Rect2).get_center())
+	_ok(hud.opts["pad_preset"] == before, "settings touch: a tap on the left chevron changes it back")
+	pl = hud.settings_plan()
+	var lrec: Dictionary = (pl["rows"] as Array)[idx_of.call("left_handed")]
+	tap.call((lrec["ctl"]["tap"] as Rect2).get_center())
+	_ok(hud.opts["left_handed"] == true, "settings touch: a tap on a toggle switches it")
+	tap.call((lrec["rect"] as Rect2).get_center() + Vector2(-100, 0))
+	_ok(hud.opts["left_handed"] == false, "settings touch: a tap anywhere on a toggle's row switches it too")
+	# Scroll first so the camera rows are on screen, then drag a slider's track.
+	var zoom_rec: Dictionary = (hud.settings_plan()["rows"] as Array)[zoom_i]
+	hud._set_scroll = UiSettings.scroll_to(hud.settings_plan(), zoom_i, 0.0)
+	zoom_rec = (hud.settings_plan()["rows"] as Array)[zoom_i]
+	var trk2: Rect2 = zoom_rec["ctl"]["track"]
+	hud._unhandled_input(mouse.call(Vector2(trk2.position.x + 2.0, trk2.get_center().y), true))
+	_ok(hud.opts["camera_zoom"] == 0.0, "settings touch: a press at the left end of a track sets 0")
+	var mm := InputEventMouseMotion.new()
+	mm.button_mask = MOUSE_BUTTON_MASK_LEFT
+	mm.position = Vector2(trk2.get_center().x, trk2.get_center().y + 30.0)
+	hud._unhandled_input(mm)
+	var mid: float = float(hud.opts["camera_zoom"])
+	mm.position = Vector2(trk2.end.x + 50.0, trk2.get_center().y)
+	hud._unhandled_input(mm)
+	hud._unhandled_input(mouse.call(mm.position, false))
+	_ok(mid >= 4.0 and mid <= 6.0 and hud.opts["camera_zoom"] == 10.0, "settings touch: dragging along a track follows the finger (to about the middle, then to the end)")
+	var plus_rec: Rect2 = (hud.settings_plan()["rows"] as Array)[zoom_i]["ctl"]["minus"]
+	tap.call(plus_rec.get_center())
+	_ok(hud.opts["camera_zoom"] == 9.0, "settings touch: the minus button steps a slider down")
+	# Dragging on a label scrolls instead of acting.
+	hud._set_scroll = 0.0
+	var pl2: Dictionary = hud.settings_plan()
+	var lab: Rect2 = (pl2["rows"] as Array)[idx_of.call("show_prompts")]["rect"]
+	var start := Vector2(lab.position.x + 40.0, lab.get_center().y)
+	var show_before: bool = bool(hud.opts["show_prompts"])
+	hud._unhandled_input(mouse.call(start, true))
+	var drag := InputEventMouseMotion.new()
+	drag.button_mask = MOUSE_BUTTON_MASK_LEFT
+	drag.position = start + Vector2(0, -160)
+	hud._unhandled_input(drag)
+	hud._unhandled_input(mouse.call(drag.position, false))
+	_ok(hud._set_scroll > 100.0 and bool(hud.opts["show_prompts"]) == show_before, "settings touch: a drag on a row scrolls the list and does not switch the row")
+	var wheel := InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+	wheel.pressed = true
+	var s0: float = hud._set_scroll
+	hud._unhandled_input(wheel)
+	_ok(hud._set_scroll < s0, "settings mouse: the wheel scrolls")
+	tap.call((hud.settings_plan()["close"] as Rect2).get_center())
+	_ok(not hud.is_settings_open() and ev["closed"] == 2, "settings touch: the close cross closes it")
+	# The remap entry emits its action once its feature is on.
+	UiData.set_feature("remap", true)
+	hud.show_settings()
+	var ridx := -1
+	rws = UiSettings.rows()
+	for i in range(rws.size()):
+		if rws[i]["kind"] == UiSettings.BUTTON:
+			ridx = i
+	hud._set_focus = ridx
+	hud.settings_action("accept")
+	_ok(ev["actions"] == ["remap"], "settings: the Remap controls entry asks the host to open the remap screen")
+	hud.hide_settings()
+	UiData.set_feature("remap", null)
+	hud.show_settings()
+	hud._set_focus = ridx
+	hud.settings_action("accept")
+	_ok(ev["actions"] == ["remap"], "settings: and does nothing while it is marked Soon")
+	hud.hide_settings()
+	# Remembered: the changes are in the prefs file and a new HUD applies them.
+	hud.settings_set("camera_shake", 9)
+	hud.settings_set("pad_preset", "brawler")
+	hud.queue_free()
+	await process_frame
+	var hud2: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud2.size = Vector2(1920, 1080)
+	root.add_child(hud2)
+	await process_frame
+	var got: Array = []
+	hud2.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud2.option_changed.connect(func(k, v): got.append(k))
+	var fresh_ok: bool = hud2.opts["camera_shake"] == 2 and hud2.opts["pad_preset"] == "arena"
+	hud2.load_saved_options()
+	_ok(fresh_ok and hud2.opts["camera_shake"] == 9.0 and hud2.opts["pad_preset"] == "brawler" and got.has("pad_preset") and got.has("camera_shake") and hud2.opts["show_prompts"] == false, "settings: what the player changed on the screen comes back on the next run (and the host hears it), and nothing else does")
+	# The screen draws without error at a desktop and a phone size, and costs nothing while closed.
+	var redraws: int = hud2.redraw_count()
+	hud2.advance(1.0 / 60.0)
+	hud2.advance(1.0 / 60.0)
+	_ok(hud2.redraw_count() == redraws, "settings: a closed screen costs no redraws")
+	hud2.show_settings()
+	hud2.advance(1.0 / 60.0)
+	await process_frame
+	await process_frame
+	_ok(hud2._l_settings.sig != null, "settings: an open screen has its layer drawing")
+	hud2.hide_settings()
+	_ok(hud2._l_settings.sig == null, "settings: and none once closed")
+	hud2.queue_free()
+	await process_frame
+	UiPrefs.path = "user://ui_prefs.json"
+	if FileAccess.file_exists("user://ui_prefs_test_settings.json"):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ui_prefs_test_settings.json"))
