@@ -62,3 +62,32 @@ No other file changes. Keyboard, pad and mouse paths are untouched; `touch_on` i
 - Fighting the browser: a long press can open the context menu or scroll the page on some phones; the web shell must set `touch-action: none` on the canvas and prevent default on `contextmenu` (Rendering; in the plan, `platform-plan.md` §4).
 - The flick uses a 6-tick window; a thumb that lands and moves slowly walks, as designed.
 - A pad or key press turns touch off and releases everything (`host.touch.release_all()`).
+
+## Display state and host wiring (2026-10-01)
+
+`SimTouch.display_state()` returns what UI draws: `{attack: {down, hold 0..1}, guard: {down}, power: {down}, stick: {active, base, thumb, sprint}, transform: {down}}`. `main.gd` sets `ui_hud.touch_state_fn = host.touch.display_state`. The Transform button shares the context slot: `transform.down` is a finger on SimTouch's `"context"` widget (the bridge has no transform action yet, so it only shows state). Pause and feedback are asked first (UI's `touch_target_at`) and win.
+
+## Playtest: scratch web export, phone profile (844 by 390), 2026-10-01
+
+Clean HEAD (3a03cbd) plus my files, exported with the Web preset, served locally, driven in the Browser pane with real `TouchEvent`s dispatched on the canvas (the pane's own clicks arrive as mouse events). Screenshots: [guard held](img/touch-bridge-guard.jpg), [flick, with the stick base and thumb](img/touch-bridge-flick.jpg), [feedback panel by touch](img/touch-bridge-feedback.jpg).
+
+| Check | Result |
+| :--- | :--- |
+| Buttons and stick draw from `SimTouch.layout()` and the hit tests agree | yes: attack, guard, power drawn; every touch landed on the widget named in the log |
+| Guard hold | the plate shows GUARD while held, the button fills, PRESS again on release |
+| Power hold | the button shows its ring while charging |
+| Attack tap | a light exchange starts when the director is free (the feed reads `KAI LIGHT vs EVASIVE`) |
+| Attack hold | a heavy request arrives at the 12-tick mark |
+| Swipe up | a signature request arrives, with no light or heavy |
+| Stick flick | the plate shows DODGE and the fighter lunges; the floating base and thumb draw where the thumb landed |
+| Drag past the outer ring | the sprint ring draws |
+| Pause button, How to play, Send feedback by touch | all open, take touches (Next, close, a tag) and resume the match |
+| Long press | the canvas has `touch-action: none`, `contextmenu` is prevented on it, and a `touchmove` is prevented: no browser menu or scroll |
+
+**Findings**
+1. **A request the director refuses is lost**, as a key press is. In the session most of the taps I logged landed while an exchange was running or the cooldown was on (the log shows `ex=true` or a positive cooldown at the tick), so nothing happened; one or two started an exchange. This is the bridge, not a bug; Stage C's queue is the fix. If it feels bad on phones, a short buffer in the host is possible, but it would also stamp `lastAtkT` as a parry press, so I did not add one.
+2. **The How to play card's touch page is stale** (it says "Stance ring: tap a stance" and "Left edge: Charge and Special"); it should describe the stick, Attack (tap, hold, swipe up), Guard and Power. UI's text.
+3. **Canvas `user-select` is `auto`.** Add `user-select: none` and `-webkit-touch-callout: none` on the canvas so iOS does not offer a text callout on a long press (Tools, web shell).
+4. **Method note:** a hidden tab does not tick the sim; screenshots wake it. A match that has just loaded refuses attacks for its first 0.6 s (the opening cooldown).
+
+**Not tested:** a real phone and real touch latency, portrait, left-handed, and several fingers at once on the real page (the headless glue test covers a stick plus a button). The EP's acceptance for those is a phone in hand.

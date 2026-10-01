@@ -261,6 +261,28 @@ func build() -> SimIntent:
 	return i
 
 
+## What the on-screen controls show (UI's touch_state_fn, docs/ui/hud-spec.md section 24): {attack: {down, hold 0..1},
+## guard: {down}, power: {down}, stick: {active, base, thumb, sprint}, transform: {down}}. Read-only, host side. In this
+## build the context slot carries Transform, so `transform.down` is a finger on the "context" button.
+func display_state() -> Dictionary:
+	var out: Dictionary = {"attack": {"down": false, "hold": 0.0}, "guard": {"down": false}, "power": {"down": false},
+			"stick": {"active": false, "base": Vector2.ZERO, "thumb": Vector2.ZERO, "sprint": false}, "transform": {"down": false}}
+	for id in _touches:
+		var t: Dictionary = _touches[id]
+		match t.w:
+			"attack":
+				out.attack = {"down": true, "hold": 1.0 if t.fired else clampf(float(tick - int(t.t0)) / float(cfg.holdTicks), 0.0, 1.0)}
+			"guard":
+				out.guard = {"down": true}
+			"power":
+				out.power = {"down": true}
+			"context":
+				out.transform = {"down": true}
+			"stick":
+				out.stick = {"active": true, "base": Vector2(float(t.x0), float(t.y0)), "thumb": Vector2(float(t.x), float(t.y)), "sprint": _sprinting}
+	return out
+
+
 ## SimCore.step consumed the intent (it did not freeze for hit-stop): the requests are spent.
 func consumed() -> void:
 	req_light = false

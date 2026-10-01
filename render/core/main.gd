@@ -123,6 +123,7 @@ func _ready() -> void:
 	ui_hud.feedback_fn = _feedback_context
 	_touch_last = bool(ui_hud.opts["touch_ui"])
 	host.touch_on = _touch_last
+	ui_hud.touch_state_fn = host.touch.display_state
 	host.drained.connect(_on_drained)
 	audio = AudioVoices.new(host.audio_cues.bank)
 	add_child(audio)
@@ -499,6 +500,8 @@ func _touch_event(e: InputEvent) -> void:
 	if ui_hud.is_howto_open() or ui_hud.is_feedback_open() or host.paused:
 		return
 	take_over()
+	# UI's own targets are asked first: pause and feedback are the HUD's. Transform shares the context slot, so its
+	# touch is SimTouch's "context" (the bridge has no transform action yet; the button only shows state).
 	var hud_target: String = String(ui_hud.touch_target_at(p).get("name", ""))
 	if hud_target == "pause" or hud_target == "feedback":
 		return

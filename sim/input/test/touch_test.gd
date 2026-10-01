@@ -20,6 +20,7 @@ func _init() -> void:
 	_taps_and_holds(dp)
 	_guard_power(dp)
 	_stick(dp)
+	_display(dp)
 	_layout()
 	_determinism()
 	print("touch_test: %d checks, %d failed" % [checks, fails])
@@ -173,6 +174,30 @@ func _stick(dp: float) -> void:
 	t.touch_move(5, 200.0 + 60.0 * dp, 700.0)
 	i = _run(t, 2)
 	ok(not i.dash, "sprint: ends inside 1.15 radii")
+
+
+func _display(dp: float) -> void:
+	var t := _mk(dp)
+	var d: Dictionary = t.display_state()
+	ok(not d.attack.down and not d.guard.down and not d.power.down and not d.stick.active and not d.transform.down, "display: everything idle at rest")
+	t.touch_down(1, 700.0, 300.0, "attack")
+	_run(t, 6)
+	d = t.display_state()
+	ok(d.attack.down and absf(d.attack.hold - 0.5) < 0.01, "display: attack hold progress is half at 6 of 12 ticks")
+	_run(t, 8)
+	ok(t.display_state().attack.hold == 1.0, "display: attack hold is full once it is a heavy")
+	t.touch_up(1)
+	t.touch_down(2, 600.0, 300.0, "guard")
+	t.touch_down(3, 500.0, 300.0, "power")
+	t.touch_down(4, 400.0, 300.0, "context")
+	t.touch_down(5, 200.0, 700.0, "stick")
+	t.touch_move(5, 230.0, 690.0)
+	d = t.display_state()
+	ok(d.guard.down and d.power.down and d.transform.down, "display: guard, power and the transform slot report down")
+	ok(d.stick.active and d.stick.base == Vector2(200.0, 700.0) and d.stick.thumb == Vector2(230.0, 690.0), "display: the stick reports its base and thumb")
+	t.release_all()
+	d = t.display_state()
+	ok(not d.guard.down and not d.stick.active, "display: idle again after release_all")
 
 
 func _layout() -> void:
