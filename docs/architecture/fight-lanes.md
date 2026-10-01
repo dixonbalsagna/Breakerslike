@@ -1,6 +1,6 @@
 # Fight lanes: the architecture plan for real depth (ADR 0009)
 
-Owner: Simulation and Engine. Status: plan, docs only (2026-10-01). Nothing here is in the sim yet. It answers ADR 0009 ("depth is real, and the choreographer owns it entirely") with a depth model, the state it touches, what stays as it is, the slices and their owners, and the risks. Sections 8 and 9 list what Encounter, World, Camera and Rendering have to decide; their answers become sections of this file.
+Owner: Simulation and Engine. Status: plan, docs only (2026-10-01). Nothing here is in the sim yet. It answers ADR 0009 ("depth is real, and the choreographer owns it entirely") with a depth model, the state it touches, what stays as it is, the slices and their owners, and the risks. Section 8 lists what Encounter, World, Camera and Rendering have to decide; their answers become sections of this file. Section 9 records the EP's rulings.
 
 Sources: `docs/decisions/0009-fight-lanes-depth.md`, `research/band-proto/README.md` (the prototype Orb played), `docs/world/b2-plan.md` section 10 (today's depth), `docs/world/districts-plan.md` (D1, N1, V1), `docs/camera/depth-and-chains.md`.
 
@@ -115,19 +115,19 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 
 | # | Slice | Owner | Behaviour | Goldens |
 | :--- | :--- | :--- | :--- | :--- |
-| L0 | Depth plumbing: `zT`, `Rush.pz`, `Exchange.z`, `Beam.oz` and `zs`, `Slide.z0` and `z1`, `z` on every positioned event, `launch_depth` for every launch, the band constants, `groundY(S, x, z)` with a default (World's line, by grant). All zero. | Simulation | Neutral. Proof: parity passes on the untouched goldens before the fields are hashed; after the regeneration the per-tick light digests and tick counts are identical. | Regenerated once (hash only) |
-| L1 | The lane table (`WorldLanes`) and the layout on it: streets kept clear, footprints by lane, rows 0 and 3 as scenery, trees' `z`. Folded into D1, which re-lays the city anyway. | World | Changes (the layout) | D1's regeneration |
+| L0 | Depth plumbing: `zT`, `Rush.pz`, `Exchange.z`, `Beam.oz` and `zs`, `Slide.z0` and `z1`, `z` on every positioned event, `launch_depth` for every launch, the switch `S.depthOn` (section 11), World's data hash in the replay header, `groundY(S, x, z)` with a default (World's line, by grant). All zero. | Simulation | Neutral. Proof: parity passes on the untouched goldens before the fields are hashed; after the regeneration the per-tick light digests and tick counts are identical. | Regenerated once (hash only) |
+| L1 | The lane table (`data/biomes/lanes.json`, `S.lanes`) and the layout on it: streets clear by construction, footprints by lane, rows 0 and 3 as scenery, brunt candidates from rows 1 and 2 only. Part of D1, which re-lays the city anyway. No new state. | World | Changes (the layout) | D1's regeneration |
 | L2 | Depth in the core, switched off: the free ease to `zT`, the rush homing, the exchange alignment, the waypoint for every flight and slide, the band clamp, ground height at `z`. The director still passes zero. | Simulation | Neutral. Proof: parity on untouched goldens. | None |
-| L3 | True collisions, behind a data flag (off): the swept footprint test for bodies in `fighter.gd`'s launched branch (by grant), the same test in the predictors, blasts by plan distance, the free-fighter contact rule (section 9, question 2). The probe's plan-equals-outcome test gains depth. | World | Neutral while off | None |
-| L4 | **The switch-on.** The director plans depth: the small deviation on every smash, launch and throw (a keyed draw by exchange index, numbers in data), the targeted deviations, alignment before an exchange, where a flight's end leaves the fighter. The collision flag goes on. | Encounter | Changes | Regenerated; QA re-baselines every band |
+| L3 | True collisions, behind a data flag (off): the swept footprint test for bodies in `fighter.gd`'s launched branch (by grant), the same test in the predictors, blasts by plan distance, the free-fighter contact rule (section 9, ruling 2; granted lines in `fighter.gd`). The probe's plan-equals-outcome test gains depth. | World | Neutral while off | None |
+| L4 | **The switch-on.** The director plans depth: the small deviation on every smash, launch and throw (keyed draws by exchange index, numbers in `data/director/depth.json`), the targeted deviations, alignment before an exchange, where a flight's end leaves the fighter. `enabled` goes true, which turns the collisions on with it. | Encounter | Changes | Regenerated; QA re-baselines every band |
 | L5 | Beams in depth: the beam plan sets `oz` and `zs`; hits, scorch and the strike crater follow the ray. | Encounter, with World for scorch | Changes | Regenerated |
 | T1 | Terrain rows, storage only: the five arrays become rows, every writer still writes the whole band, the hash takes rows sparsely. | World, with granted lines in `state.gd` and `hash.gd` | Neutral. Proof: light digests identical. | Regenerated once (hash only) |
 | T2 | Terrain rows, local: craters, furrows, scorch, rubble and water written by depth extent. | World | Changes (small while fights stay in one street) | Regenerated |
 | P1 | Props and formations as blockers on lanes (V1 and N1, already planned). | World, with Combat and Controls for the context button | Changes | Their own regenerations |
 
-- **Order.** I2c (Controls) keeps the next window. Then L0, L1 with D1, L2, L3, L4, L5. T1 can land any time after L1. T2 lands with or after L4. P1 follows D2 as planned. I3 (the intent clean-up) fits anywhere after I2c.
+- **Order** (revised with World's section). I2c (Controls) keeps the next window. Then L1 with D1 (World), L0 and L2 (mine: one window, two proofs), L3 (World), L4 (Encounter), L5. L1 needs no state field and no L0, so it rides with D1. T1 can land any time after L1. T2 lands with or after L4. P1 follows D2 as planned. I3 (the intent clean-up) fits anywhere after I2c.
 - **Why the terrain rows are not first.** True collisions and lane fights do not need them, and they are the largest refactor (World's five terrain files, and Rendering has to draw eight deformable strips). Until T2 the ground is as today: a crater is a trench across the band.
-- **Camera and Rendering** work alongside and need no sim window. After L0 every event carries `z`; after L1 the lane table exists.
+- **Camera and Rendering** work alongside and need no sim window. After L1 the lane table exists; after L0 every event carries `z`.
 - **My part.** L0 and L2, the state and hash lines of every other slice, a read-only review of each, and the neutrality proofs.
 
 ## 6. Risks
@@ -165,21 +165,9 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 
 ## 8. What I need from the other directors
 
-**Encounter**
-1. The default deviation: its size (I suggest a few bh over a whole flight), its distribution, and whether the hero and the villain differ.
-2. Alignment before an exchange: who moves to whom, how fast, and whether an exchange may be fought inside a block row or only in a street.
-3. A rush with a footprint in the way: plough through (the prototype), go round, or go over.
-4. Where a fighter stays after a flight: where it landed, or back to a street.
-5. The data file for these numbers (I suggest `data/combat/depth.json`) and the debug feed lines that explain a depth choice.
-6. The predictor's cost budget at a launch decision.
+**Encounter:** answered (section 10).
 
-**World**
-1. The lane table: its shape, per district or per settlement, the guarantee that a street is clear, and the cross streets.
-2. Confirm the band (section 1) and which rows are scenery.
-3. Terrain rows: 8 by 300 units or another count; water between rows or not; whether any base relief must vary in depth (a quay, a riverbank).
-4. The swept test's interface (I suggest `WorldStructures.sweep(S, x0, y0, z0, x1, y1, z1, r)` returning the building index and the crossing point).
-5. The free-fighter contact rule (section 9, question 2) once it is decided.
-6. Whether L1 can be part of D1.
+**World:** answered (section 11).
 
 **Camera**
 1. The deepest `z` at which a fighter stays readable, and whether the lens changes. This sets the band.
@@ -194,8 +182,61 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 
 Also: Tools for the schemas of the new data files (in the same commit as each file), and QA for the re-baseline at L4.
 
-## 9. Questions for the EP
+## 9. Rulings (EP, 2026-10-01)
 
-1. **The band.** Two streets and two block rows, 32 bh deep, with rows 0 and 3 as scenery. Camera's answer may shrink it.
-2. **A free fighter meets a footprint.** My recommendation is the prototype's rule: it is stopped, slides along the wall or lands on the roof, and an attack ploughs through. Streets are kept clear, so in a city it happens only after a flight ends inside a block. The alternative is that the sim side-steps the fighter into the nearest clear lane. This is a feel call for Orb.
-3. **Terrain rows after the switch-on** (T1 and T2 as their own track), so a playable depth build arrives sooner. The alternative is rows first, which delays L4 by World's largest refactor.
+1. **The band.** Two streets and two block rows, 32 bh deep, with rows 0 and 3 as scenery. Camera may shrink it for readability.
+2. **A free fighter meets a footprint.** It is stopped, as in the prototype Orb liked: it slides along the wall or lands on the roof, and an attack ploughs through. The sim does not side-step it. Streets are kept clear, so in a city this happens only after a flight ends inside a block.
+3. **Terrain rows come after the switch-on** (T1 and T2 as their own track), so a playable depth build arrives sooner.
+
+## 10. Encounter's section (folded from `docs/director/fight-lanes-director.md`)
+
+That file is the plan for L4 and L5 and holds the detail. What it decides, and what it changes here:
+
+| Ask | Encounter's answer | Effect on this plan |
+| :--- | :--- | :--- |
+| The default deviation | A target depth at the end of the flight (`aimZ1`). 0.3 to 1.0 bh for a shove, 0.3 to 1.2 bh for a vertical launch, 0.6 to 2.5 bh for a long one. Skewed small (`u²`), leaning back toward the lane's centre near an edge, and clamped inside the starting lane with a 0.5 bh margin. Two keyed draws per decision; `S.rng` is not touched. No difference between hero and villain. | A shove is not a flight, so it moves depth through `zT` and the free ease. The keyed draw takes one integer: `ex.n * 8 + combo` covers the chain links. |
+| Targeted deviations | Only a BUILDING SMASH, or a throw or launch at a formation or a prop, leaves the lane. | None: B2's aim fills the waypoint as now. |
+| Alignment | The attacker moves. `ex.z` is the defender's depth at `requestAttack`, and the rush or pursuit homes to it in its own time. An exchange is fought wherever the defender is, inside a block row too. | `Exchange.z` and the rush homing (L0, L2) are enough. |
+| A rush with a footprint in the way | It ploughs through, and each footprint takes a brunt hit. A fighter with care above 0 arcs over a building whose roof is within 6 bh of the path. | See "The rush" below. |
+| After a flight | The fighter stays where it landed: `zT` is the landing depth. Inside a block row, when it is next free and moves, `zT` becomes the nearest point of the adjacent street, 1 bh in from the kerb. | `zT` is set by the sim at a flight's end and may be set by the director (the block exit). |
+| Data and feed | `data/director/depth.json`, with `enabled` false until L4, and Tools' `director-depth.schema.json`. Feed lines `DEPTH`, `ALIGN`, `RUSH`, `REST`; `launch_plan` lists each candidate's end depth. | The file is the director's, not `data/combat/` as I suggested. |
+| Predictor budget | At most 12 flights, 16 aim solves and 3,000 steps a decision; 0.3 ms typical and 1 ms worst. One gather of the footprints near the launch, reused by every candidate. | See "The budget" below. |
+
+**The rush (my proposal for L3 and L4).** The director finds the crossings once, at the request, with World's swept test along the rush line, and schedules each hit as a beat at its crossing time. `SimFighter.stepRush` stays a tween with no collision test, so the plan and the outcome cannot differ. Going over a roof needs an arc on the rush: a `Rush.arc` field (core, hashed), which Combat's variety pass also asks for.
+
+**The budget does not fit its step cap.** I measured the predictor today on Orb's PC (400 flights, 190 steps each on average): 0.87 µs a step.
+- 3,000 steps is 2.6 ms today, not 1 ms.
+- A typical decision (4 to 6 flights) is 0.7 to 1.0 ms, not 0.3 ms.
+- With the depth waypoint, and the two-row ground after T1, a step is about 1.3 to 1.5 µs: up to 4.5 ms for 3,000 steps.
+
+Either the cap comes down to about 1,100 steps for 1 ms, or the target is restated as about 1 ms typical and 4.5 ms worst on this PC. A decision comes about ten times a minute, so the mean is unaffected; the question is the one-tick spike on a machine 5 to 10 times slower. Encounter's rule that a non-targeted flight in a city needs no footprint test keeps the swept test off most steps.
+
+**The switch.** One flag, in the director's file (section 11).
+
+**Still open, for Game Design** (Encounter's asks): the protector going over while the feeder ploughs, exchanges fought inside a block row, and the sizes above.
+
+## 11. World's section (folded from `docs/world/fight-lanes-world.md`)
+
+That file is the plan for L1, L3, T1 and T2 and holds the detail (`districts-plan.md` section 13 is D1's revision). What it decides, and what it changes here:
+
+| Ask | World's answer | Effect on this plan |
+| :--- | :--- | :--- |
+| The lane table | `data/biomes/lanes.json`: the band (`z_front`, `z_back`), the lanes (name, kind, z range, row), the street strips (sidewalk, kerb parking, carriageway) and each archetype's use of them. The derived table is `S.lanes`, not hashed; a probe checks that the data reproduces it bit for bit. | The band limits are read from `S.lanes`, not from `SimConst`. `S.lanes` is unhashed like `S.bIdx`. World's data files join the replay header's data hash (below). |
+| Streets clear | By construction: every row 1 and row 2 footprint lies inside its block lane, flush to its street, with no z jitter. Avenues are the same x intervals in both block rows, so they are real cross streets. A hard probe checks it on every seed. | A flight that stays in a street needs no footprint test (Encounter's cost rule holds). |
+| The band | Confirmed: +5 to -27 bh. Rows 0 and 3 are scenery: damaged by blasts and beams, never brunt targets or collision candidates. Brunt candidates come from rows 1 and 2 only, from D1. | None. A flight that leaves the band is a bug, and my band-clamp test covers it. |
+| Terrain rows | 8 rows of 300 units, as data (`rows`, `spacing`), so a phone build can try 6 rows of 400. The base relief stays one row. No water flow between rows: every wet column's surface is the sea level, so the rows agree. One water window steps all rows. The relaxation limits the step between neighbouring rows. | The row count is data, so the arrays are sized at `genWorld`. Two cost notes below. |
+| The swept test | Pure functions: `WorldStructures.along(S, xa, xb, pad)` (the candidate list, once per flight, in index order), `WorldStructures.sweep(S, list, x0, y0, z0, x1, y1, z1, rx, ry, rz)` (the earliest crossing, ties to the lower index, with the face and the wall normal), `WorldStructures.blocked(...)`, `WorldLanes.laneAt(z)` and `WorldLanes.clearLane(S, x, z)`. Buildings, formations and props share one candidate list. A fighter's body is 0.3 by 0.5 by 0.3 bh (data). | This replaces my suggested signature. `laneAt` and `clearLane` are what Encounter asked for (the lane's bounds come from `S.lanes`). |
+| The contact rule | World supplies `blocked` and the wall normal. The rule is ruled (section 9): stopped, slides along the wall or lands on the roof. | It lands in L3, in the free branch of `fighter.gd`, by grant. |
+| L1 in D1 | Yes: no state field, no dependence on L0. | The order in section 5. |
+| Traffic and props | Moving vehicles and foot traffic are Rendering's dressing in the street strips, outside the sim and the hash. Parked cars are V1 props in the kerb strips, clear of the fighters' corridor. | As section 2 assumed. |
+
+**The switch: one flag, in `data/director/depth.json`.** World suggested `data/combat/depth.json` and Encounter `data/director/depth.json`. The numbers are the director's policy and the file is Encounter's, with Tools' `director-depth.schema.json`; `data/combat/` was only my first suggestion. So that World and the core do not read the director's file, `SimCore.newMatch` copies `enabled` into `S.depthOn` (hashed, one bool), and the collision test, the contact rule and the core's depth rules read only `S.depthOn`. A match setup may force it (`"depth": true`), so the probes can exercise L2 and L3 before L4.
+
+**The replay header.** `SimReplay.dataHash()` covers the director's, the roster's and the mood's data, and none of World's. `lanes.json` and `settlements.json` should join it, so a replay refuses a different layout with reason `data` and does not diverge at tick 0. World supplies a `dataHash()`; the line in `replay.gd` is mine (L0).
+
+**Two cost notes for T1 and T2.**
+- **Shared water windows cost up to eight times today's step.** I measured 90 µs a tick while a window is open, for one row. A window that steps all 8 rows is about 0.7 ms a tick while open, and the worst case (8 windows) about 2.9 ms. If a window records the rows it covers, only the rows a dig touched are stepped, and my estimate of 200 to 350 µs holds.
+- **The relaxation between rows adds to a dig.** My estimate (the rows touched, times today's 0.13 to 0.41 ms) did not include a sweep across rows. Allow half as much again until it is measured.
+
+**Still open.** Trees' `z` (World's section does not say; a tree line across the band is the fallback). Camera's confirmation of -27 bh.
+
