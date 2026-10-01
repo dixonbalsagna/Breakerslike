@@ -87,6 +87,7 @@ var _anchors: Array = [{}, {}]
 var _chips: Array = []
 var _chip_text: Array = ["", ""]
 var _chip_text_t: Array = [-1.0, -1.0]
+var _chip_big := false           # the larger, slower chip (rival over 100 fighter heights away)
 var _chip_at: Array = [Vector2.ZERO, Vector2.ZERO]   # where each chip node sits: it eases toward its target so a dodge slides, not pops
 var _chip_seen: Array = [false, false]
 var _dt := 1.0 / 60.0
@@ -476,9 +477,13 @@ func _update_layers() -> void:
 	if not _split.is_empty() and anchor_fn.is_valid() and _lb < 0.5:
 		for i in range(mini(2, hub.models.size())):
 			_anchors[i] = anchor_fn.call(i)
-		chips = UiSplit.pointers(layout, _split, _anchors, layout.s)
+		var bh: float = UiSplit.distance_bh(_split)
+		_chip_big = bh >= UiSplit.BIG_FROM or (_chip_big and bh >= UiSplit.BIG_UNTIL)   # a far rival gets the larger chip, with a margin so it does not flicker
+		chips = UiSplit.pointers(layout, _split, _anchors, layout.s, _chip_big)
+	else:
+		_chip_big = false
 	_chips = chips
-	var psz: Vector2 = UiSplit.pointer_size(layout.s)
+	var psz: Vector2 = UiSplit.pointer_size(layout.s, _chip_big)
 	for i in range(2):
 		var chip: UiLayer = _l_chips[i]
 		var found: Dictionary = {}
@@ -500,10 +505,10 @@ func _update_layers() -> void:
 		_chip_seen[i] = true
 		chip.position = (_chip_at[i] as Vector2) - psz * 0.5
 		# The number holds for at least a quarter second, so a fast-changing distance redraws the chip at most four times a second.
-		if str(found["text"]) != _chip_text[i] and (_t - float(_chip_text_t[i]) >= 0.25 or _chip_text[i] == ""):
+		if str(found["text"]) != _chip_text[i] and (_t - float(_chip_text_t[i]) >= (0.6 if _chip_big else 0.25) or _chip_text[i] == ""):
 			_chip_text[i] = str(found["text"])
 			_chip_text_t[i] = _t
-		chip.update_sig(UiSplit.chip_sig(i, found["dir"], _chip_text[i], 1.0))
+		chip.update_sig(UiSplit.chip_sig(i, found["dir"], _chip_text[i], 1.0, _chip_big))
 
 	# The finisher struggle (beat rings on the brink fighter) and each column's prompt row.
 	_l_struggle.update_sig(UiStruggle.sig(hub, _frame) if (anchor_fn.is_valid() and not layout.portrait) else null)
@@ -2409,7 +2414,7 @@ func _paint_chip(ci: CanvasItem, slot: int) -> void:
 ## geometry changes.
 func _update_divider() -> void:
 	var geo: Dictionary = {}
-	if UiSplit.divider_active(_split) and _lb < 0.5:
+	if UiSplit.divider_visible(layout, _split, layout.s) and _lb < 0.5:
 		geo = UiSplit.divider_geometry(layout, _split, layout.s)
 	var key: Array = UiSplit.divider_key(geo)
 	if key == _div_key:

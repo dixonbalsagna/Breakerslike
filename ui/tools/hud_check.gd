@@ -727,6 +727,61 @@ func _split_rules() -> void:
 	_ok(bad_chip == 0, "hud split: each pointer points the rival's way and sits in its own pane inside the safe area")
 	_ok(hud._chips[0]["text"] == str(int(round(40000.0 / 75.0 / 25.0)) * 25), "hud split: the distance is in fighter heights (from the ring's angles and the planet's size)")
 	_ok(hud.pane_clear_zone(0).size() >= 3 and hud.pane_clear_zone(1).size() >= 3, "hud split: pane_clear_zone gives each fighter's zone")
+	# A solo shot (a launch): Camera pushes the divider out to the screen's edge with its fade still up. No line, but the chips stay.
+	var solo_rec := {"sep": 1.0, "c": Vector2(1280.0, 360.0), "n": Vector2(1.0, 0.0), "gap": 6.0, "fade": 1.0, "sigma": 1.0, "pointer": "split",
+		"ring": {"angle_A": 1.0, "angle_B": 1.0 + 40000.0 / SimConst.W * TAU, "sigma": 1, "arc_A": 0.3, "arc_B": 0.3, "swing": 0.0, "sep": 1.0}}
+	var saved_split: Callable = hud.split_fn
+	hud.split_fn = func(): return solo_rec
+	hud.anchor_fn = func(slot): return {"pos": Vector2(500.0, 360.0), "h": 90.0, "visible": slot == 0}
+	for i in range(4):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(not UiSplit.divider_visible(hud.layout, solo_rec, hud.layout.s) and not hud._div_light.visible and not hud._div_dark.visible and hud._l_chips[0].visible, "hud split: a solo shot (divider pushed to the screen edge) draws no divider line, and the pointer chip stays")
+	var edge_sliver: Dictionary = solo_rec.duplicate()
+	edge_sliver["c"] = Vector2(1280.0 - 0.1 * 1280.0, 360.0)
+	var edge_bent: Dictionary = solo_rec.duplicate()
+	edge_bent["c"] = Vector2(640.0, 360.0)
+	edge_bent["n"] = Vector2(cos(0.3), -sin(0.3))
+	_ok(UiSplit.divider_visible(hud.layout, edge_sliver, hud.layout.s) and UiSplit.divider_visible(hud.layout, edge_bent, hud.layout.s), "hud split: a divider with a real sliver, or one through the middle, still draws")
+	hud.split_fn = saved_split
+	hud.anchor_fn = func(slot):
+		var n := Vector2(st["sigma"] * cos(st["phi"]), -sin(st["phi"]))
+		return {"pos": _anchor_for(hud.layout, Vector2(640.0, 360.0), n, slot), "h": 90.0, "visible": true}
+	# A launched fighter flies past his attacker: Camera's sigma still holds the old side, the ring has the new one. The arrow follows the ring.
+	var lay_p: UiLayout = hud.layout
+	var held_rec := {"sep": 1.0, "c": Vector2(640.0, 360.0), "n": Vector2(1.0, 0.0), "gap": 3.0, "fade": 1.0, "sigma": 1, "pointer": "split",
+		"ring": {"angle_A": 1.0, "angle_B": 1.0 - 3000.0 / SimConst.W * TAU, "sigma": 1, "arc_A": 0.3, "arc_B": 0.3, "swing": 0.0, "sep": 1.0}}
+	var anc_p: Array = [{"pos": Vector2(900.0, 360.0), "h": 80.0, "visible": true}, {"pos": Vector2(380.0, 360.0), "h": 80.0, "visible": true}]
+	var chips_p: Array = UiSplit.pointers(lay_p, held_rec, anc_p, lay_p.s)
+	_ok(UiSplit.rival_side(held_rec, 0) == -1 and UiSplit.rival_side(held_rec, 1) == 1 and chips_p.size() == 2 and (chips_p[0]["dir"] as Vector2).x < -0.99 and (chips_p[1]["dir"] as Vector2).x > 0.99, "pointers: the layout still holds the old side but the rival has flown past, so each arrow follows the rival's real direction")
+	_ok((chips_p[0]["pos"] as Vector2).x < 640.0 and (chips_p[1]["pos"] as Vector2).x > 640.0 and lay_p.safe.grow(1.0).has_point(chips_p[0]["pos"]) and lay_p.safe.grow(1.0).has_point(chips_p[1]["pos"]), "pointers: and each chip sits at the edge toward him, inside the safe area")
+	var agree_rec: Dictionary = held_rec.duplicate(true)
+	agree_rec["ring"]["angle_B"] = 1.0 + 3000.0 / SimConst.W * TAU
+	var chips_a: Array = UiSplit.pointers(lay_p, agree_rec, anc_p, lay_p.s)
+	_ok(UiSplit.rival_side(agree_rec, 0) == 1 and chips_a.size() == 2 and (chips_a[0]["dir"] as Vector2).x > 0.99, "pointers: when the layout and the world agree the arrow follows the divider as before")
+	var near_opposite: Dictionary = held_rec.duplicate(true)
+	near_opposite["ring"]["angle_B"] = 1.0 + PI * 0.97
+	_ok(UiSplit.rival_side(near_opposite, 0) == 1 and UiSplit.rival_side({"sigma": -1}, 0) == -1 and UiSplit.rival_side({"sigma": -1}, 1) == 1, "pointers: nearly opposite on the planet, or with no ring, the held side stands in (no flicker)")
+	var one_cam := {"sep": 0.0, "sigma": 1, "pointer": "always", "ring": {"angle_A": 1.0, "angle_B": 1.0 - 3000.0 / SimConst.W * TAU, "sigma": 1}}
+	var chips_o: Array = UiSplit.pointers(lay_p, one_cam, [{"pos": Vector2(300.0, 300.0), "h": 90.0, "visible": true}, {"pos": Vector2(300.0, 300.0), "h": 90.0, "visible": false}], lay_p.s)
+	_ok(chips_o.size() >= 1 and (chips_o[0]["dir"] as Vector2).x < -0.99, "pointers: one camera, the arrow follows the real side as well")
+	# A far rival: the larger chip, with a margin so it does not flicker, and the number settling more slowly.
+	st["sigma"] = 1.0
+	st["sep"] = 1.0
+	var sizes := []
+	for dist_bh in [60.0, 120.0, 95.0, 80.0, 90.0]:
+		st["dist"] = dist_bh * 75.0
+		for i in range(3):
+			hud.advance(1.0 / 60.0)
+			await process_frame
+		sizes.append(hud._l_chips[0].size.x)
+	var small_w: float = UiSplit.pointer_size(hud.layout.s).x
+	var big_w: float = UiSplit.pointer_size(hud.layout.s, true).x
+	_ok(big_w > small_w * 1.25 and is_equal_approx(sizes[0], small_w) and is_equal_approx(sizes[1], big_w) and is_equal_approx(sizes[2], big_w) and is_equal_approx(sizes[3], small_w) and is_equal_approx(sizes[4], small_w), "hud split: over 100 fighter heights the chip is larger and stays so down to 85; back to the usual size under it (%s)" % [sizes])
+	st["dist"] = 40000.0
+	for i in range(3):
+		hud.advance(1.0 / 60.0)
+		await process_frame
 	st["sigma"] = -1.0
 	for i in range(30):
 		hud.advance(1.0 / 60.0)

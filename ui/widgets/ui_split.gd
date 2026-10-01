@@ -23,8 +23,21 @@ const FIGHTER_HEIGHT := 75.0   # world units (render/core/fighter_view.gd HEIGHT
 
 # --- The divider ----------------------------------------------------------------------------------------------------
 
+## The panes are open (the pointers and the clear zones follow this).
 static func divider_active(sp: Dictionary) -> bool:
 	return sp.has("c") and sp.has("n") and float(sp.get("sep", 0.0)) > 0.01 and float(sp.get("fade", 1.0)) > 0.01
+
+
+## The divider line is worth drawing: the panes are open and the line is inside the screen by more than a sliver. In a solo
+## shot (a launch, a cinematic) Camera pushes the divider out to the screen's edge with `fade` (line_alpha) still up, and a
+## bar centred on the edge would show as a thin line along it.
+static func divider_visible(lay: UiLayout, sp: Dictionary, s: float) -> bool:
+	if not divider_active(sp):
+		return false
+	var n: Vector2 = sp["n"]
+	var half: float = 0.5 * (absf(n.x) * lay.vp.x + absf(n.y) * lay.vp.y)
+	var off: float = absf(((sp["c"] as Vector2) - lay.vp * 0.5).dot(n))
+	return off < half - maxf(float(sp.get("gap", 0.0)), 3.0 * s) * 2.0
 
 
 ## The divider as a rotated bar: {mid, len, angle, w, a, slam}, or {} when the line misses the band. The HUD draws it with
@@ -142,15 +155,34 @@ static func distance_bh(sp: Dictionary) -> float:
 	return 0.0
 
 
-## The chips to draw: [{slot, pos, dir, text}]. `anchors` is [{pos, h, visible}] per slot from the host's anchor_fn.
-static func pointers(lay: UiLayout, sp: Dictionary, anchors: Array, s: float) -> Array:
+## Which way the rival really lies from `slot`'s fighter: +1 to the right, -1 to the left. Camera's `sigma` is the side the layout
+## holds, which can lag the world for up to a second when a launched fighter flies past his attacker, so the ring's angles
+## (the shortest arc, as the fighters are on the planet) decide; sigma stands in when they are missing, equal or nearly opposite.
+static func rival_side(sp: Dictionary, slot: int) -> int:
+	var sig: int = 1 if int(sp.get("sigma", 1)) >= 0 else -1
+	var held: int = sig if slot == 0 else -sig
+	var rg = sp.get("ring")
+	if rg is Dictionary and (rg as Dictionary).has("angle_A") and (rg as Dictionary).has("angle_B"):
+		var d: float = shortest(float(rg["angle_A"]), float(rg["angle_B"]))
+		if absf(d) > 0.0005 and absf(d) < PI * 0.92:
+			return (1 if d > 0.0 else -1) * (1 if slot == 0 else -1)
+	return held
+
+
+## Farther than this (fighter heights) the chip grows and its number settles, so the distance reads at a glance.
+const BIG_FROM := 100.0
+const BIG_UNTIL := 85.0   # and it stays big until the distance falls below this
+
+## The chips to draw: [{slot, pos, dir, text}]. `anchors` is [{pos, h, visible}] per slot from the host's anchor_fn. `big` is the
+## large chip (the host decides it with BIG_FROM and BIG_UNTIL, so it does not flicker around the limit).
+static func pointers(lay: UiLayout, sp: Dictionary, anchors: Array, s: float, big: bool = false) -> Array:
 	var mode: String = str(sp.get("pointer", "split"))
 	var out: Array = []
 	if mode == "off" or anchors.size() < 2:
 		return out
 	var dist: float = distance_bh(sp)
 	var txt: String = _dist_text(dist)
-	var half: float = pointer_size(s).x * 0.5
+	var half: float = pointer_size(s, big).x * 0.5
 	var margin: float = 24.0 * s   # the reserve band UI keeps around the clear zone
 	var split_open: bool = divider_active(sp)
 	for i in range(2):
@@ -162,8 +194,16 @@ static func pointers(lay: UiLayout, sp: Dictionary, anchors: Array, s: float) ->
 			var c: Vector2 = sp["c"]
 			var nrm: Vector2 = sp["n"]
 			var dirn: Vector2 = nrm if i == 0 else -nrm   # from this pane's fighter toward the rival
+			var sig0: int = 1 if int(sp.get("sigma", 1)) >= 0 else -1
+			var true_side: int = rival_side(sp, i)
+			if true_side != (sig0 if i == 0 else -sig0):
+				# The layout still holds the old side: the rival is on the other one. Point at the edge toward him, level with the fighter.
+				var flipped: Vector2 = _edge_chip(lay, p, float(true_side), half, anchors, big)
+				if flipped.x > -1e8:
+					out.append({"slot": i, "pos": flipped, "dir": Vector2(float(true_side), 0.0), "text": txt})
+				continue
 			var to_div: float = (c - p).dot(dirn)
-			var pos: Vector2 = _dodge(_clamp_to(p + dirn * maxf(0.0, to_div - half - margin), lay), Vector2(-dirn.y, dirn.x), lay, anchors)
+			var pos: Vector2 = _dodge(_clamp_to(p + dirn * maxf(0.0, to_div - half - margin), lay, big), Vector2(-dirn.y, dirn.x), lay, anchors, big)
 			if pos.x < -1e8:
 				continue   # no clear place along the edge: the chip hides rather than cover a fighter
 			out.append({"slot": i, "pos": pos, "dir": dirn, "text": txt})
@@ -173,20 +213,24 @@ static func pointers(lay: UiLayout, sp: Dictionary, anchors: Array, s: float) ->
 			var rp: Vector2 = rival.get("pos", p)
 			var off: bool = rival.is_empty() or not bool(rival.get("visible", true)) or not Rect2(Vector2.ZERO, lay.vp).grow(-margin).has_point(rp)
 			if off:
-				var sig: float = float(sp.get("sigma", 1))
-				var dx: float = sig if i == 0 else -sig
-				var ex: float = lay.safe.end.x - half if dx > 0.0 else lay.safe.position.x + half
-				var pos1: Vector2 = _dodge(_clamp_to(Vector2(ex, p.y), lay), Vector2(0.0, 1.0), lay, anchors)
+				var dx: float = float(rival_side(sp, i))
+				var pos1: Vector2 = _edge_chip(lay, p, dx, half, anchors, big)
 				if pos1.x > -1e8:
 					out.append({"slot": i, "pos": pos1, "dir": Vector2(dx, 0.0), "text": txt})
 	return out
 
 
+## A chip at the screen edge on side `dx` (+1 right, -1 left), level with the fighter at `p`; off-screen sentinel if no clear place.
+static func _edge_chip(lay: UiLayout, p: Vector2, dx: float, half: float, anchors: Array, big: bool) -> Vector2:
+	var ex: float = lay.safe.end.x - half if dx > 0.0 else lay.safe.position.x + half
+	return _dodge(_clamp_to(Vector2(ex, p.y), lay, big), Vector2(0.0, 1.0), lay, anchors, big)
+
+
 ## Fighters may sit far from the centre in the one-view shot (up to 44% of the width), so an edge chip can land on one. Keep a chip
 ## about one fighter height (the anchor's `h`) clear of both fighters' anchors: nudge it along the edge (`along`, a unit vector
 ## parallel to the edge) to the nearest clear spot inside the safe area, or return an off-screen sentinel (x < -1e8) to hide it.
-static func _dodge(pos: Vector2, along: Vector2, lay: UiLayout, anchors: Array) -> Vector2:
-	var psz: Vector2 = pointer_size(lay.s)
+static func _dodge(pos: Vector2, along: Vector2, lay: UiLayout, anchors: Array, big: bool = false) -> Vector2:
+	var psz: Vector2 = pointer_size(lay.s, big)
 	if _chip_clear(pos, psz, anchors):
 		return pos
 	var step: float = psz.y * 0.25
@@ -197,7 +241,7 @@ static func _dodge(pos: Vector2, along: Vector2, lay: UiLayout, anchors: Array) 
 	var k := 1
 	while float(k) * step <= reach:
 		for sgn in [1.0, -1.0]:
-			var cand: Vector2 = _clamp_to(pos + along * (sgn * float(k) * step), lay)
+			var cand: Vector2 = _clamp_to(pos + along * (sgn * float(k) * step), lay, big)
 			if _chip_clear(cand, psz, anchors):
 				return cand
 		k += 1
@@ -217,12 +261,13 @@ static func _chip_clear(pos: Vector2, psz: Vector2, anchors: Array) -> bool:
 	return true
 
 
-static func pointer_size(s: float) -> Vector2:
-	return Vector2(maxf(112.0 * s, 96.0), maxf(34.0 * s, 26.0))
+static func pointer_size(s: float, big: bool = false) -> Vector2:
+	var k: float = 1.3 if big else 1.0
+	return Vector2(maxf(112.0 * s, 96.0), maxf(34.0 * s, 26.0)) * k
 
 
-static func _clamp_to(p: Vector2, lay: UiLayout) -> Vector2:
-	var h: Vector2 = pointer_size(lay.s) * 0.5
+static func _clamp_to(p: Vector2, lay: UiLayout, big: bool = false) -> Vector2:
+	var h: Vector2 = pointer_size(lay.s, big) * 0.5
 	return Vector2(clampf(p.x, lay.safe.position.x + h.x, lay.safe.end.x - h.x), clampf(p.y, lay.safe.position.y + h.y, lay.safe.end.y - h.y))
 
 
@@ -238,8 +283,8 @@ static func _dist_text(bh: float) -> String:
 
 ## What a chip's picture depends on (its position does not: the chip is a node the HUD moves, so following a fighter costs no
 ## redraw). The arrow's direction changes slowly and is rounded to about 5 degrees; the distance text is rounded (see _dist_text).
-static func chip_sig(slot: int, dir: Vector2, text: String, alpha: float) -> Array:
-	return [slot, int(dir.x * 12.0), int(dir.y * 12.0), text, int(alpha * 20.0)]
+static func chip_sig(slot: int, dir: Vector2, text: String, alpha: float, big: bool = false) -> Array:
+	return [slot, int(dir.x * 12.0), int(dir.y * 12.0), text, int(alpha * 20.0), big]
 
 
 ## One chip, drawn at the centre of `ci` (a node of pointer_size): the arrow along `dir`, the rival's strip shape (circle for A,
@@ -249,7 +294,8 @@ static func draw_chip(ci: Control, hub: UiEventHub, slot: int, dir: Vector2, tex
 	var a: float = float(o.get("plate_alpha", 1.0))
 	var sz: Vector2 = ci.size
 	var p: Vector2 = sz * 0.5
-	var fs: int = UiText.px(20.0, s)
+	var k: float = sz.y / maxf(maxf(34.0 * s, 26.0), 1.0)   # 1 for the usual chip, 1.3 for the big one: the number grows with it
+	var fs: int = UiText.px(20.0 * k, s)
 	var rival: UiFighterModel = hub.model(1 - slot)
 	UiText.no_outline = true
 	UiIcons.rrect(ci, Rect2(Vector2.ZERO, sz), sz.y * 0.4, Color(UiLook.col(UiLook.SCRIM), 0.6 * a), Color(UiLook.col(UiLook.EDGE), 0.35 * a), 1.2)
