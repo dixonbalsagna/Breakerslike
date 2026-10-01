@@ -1,6 +1,6 @@
 // Shrapnel and collapse dust (docs/vfx/plan.md section 3): one MultiMesh quad per bit, its shape drawn by a signed
 // test in the fragment stage, cel style: two value steps and a one-pixel edge, no soft falloff.
-// INSTANCE_CUSTOM: x = shape (0 glass sliver, 1 glass triangle, 2 steel bar, 3 chunk, 4 dust puff, 5 ring), y = a seed for
+// INSTANCE_CUSTOM: x = shape (0 glass sliver, 1 glass triangle, 2 steel bar, 3 chunk, 4 dust puff, 5 ring, 6 ember, 7 water spray, 8 flame), y = a seed for
 // the shape's small variations. COLOR is the body colour with the fade in alpha; the lit or rim colour of each material
 // is a uniform, so every bit needs only one draw call.
 shader_type spatial;
@@ -13,6 +13,8 @@ uniform vec4 rim_conc : source_color = vec4(0.67, 0.71, 0.76, 1.0);
 uniform vec4 rim_spray : source_color = vec4(0.55, 0.72, 0.78, 1.0);
 uniform vec4 ember_dark : source_color = vec4(0.17, 0.09, 0.06, 1.0);
 uniform vec4 ember_light : source_color = vec4(1.0, 0.82, 0.48, 1.0);
+uniform vec4 flame_mid : source_color = vec4(1.0, 0.82, 0.48, 1.0);
+uniform vec4 flame_core : source_color = vec4(1.0, 0.95, 0.77, 1.0);
 
 varying vec4 v_custom;
 
@@ -32,7 +34,34 @@ void fragment() {
 	vec3 base = COLOR.rgb;
 	float a = 0.0;
 	float alpha_mul = COLOR.a;
-	if (shape > 6.5) {
+	if (shape > 7.5) {
+		// flame: a cel tongue in three bands (outer, mid, core) that leans and wobbles with its age (mode), a rounded base, a
+		// second small lick beside it, and a blunt tip; the outer band is the body colour, the others the flame_mid and flame_core uniforms
+		float f = v_custom.z;
+		float lean = (sd - 0.5) * 0.9;
+		float y = 0.5 - p.y * 0.5;     // 0 at the base, 1 at the tip (UV.y runs down the quad)
+		float wob = 0.12 * sin(y * 6.0 + sd * 12.0 + f * 9.0) * y;
+		float xx = p.x - wob - lean * y * y;
+		float hf = 0.78 * pow(max(1.0 - pow(y, 1.4), 0.0), 0.75) * smoothstep(0.0, 0.18, y + 0.06);
+		hf *= 1.0 - 0.3 * f;
+		float d1 = abs(xx) - hf;
+		// the side lick: a shorter tongue, to the side the seed picks
+		float y2 = y / 0.62;
+		float side = (sd > 0.5 ? 1.0 : -1.0) * 0.5;
+		float xx2 = p.x - side - 0.12 * sin(y2 * 5.0 + sd * 7.0 + f * 11.0) * y2 - 0.3 * side * y2 * y2;
+		float hf2 = 0.42 * pow(max(1.0 - pow(y2, 1.4), 0.0), 0.75) * smoothstep(0.0, 0.2, y2 + 0.06);
+		float d2 = (y2 > 1.0 || y2 < 0.0) ? 1.0 : abs(xx2) - hf2;
+		float d = min(d1, d2);
+		d = max(d, abs(p.y) - 1.0);
+		a = edge(d, aa);
+		float ax = abs(xx);
+		if (ax < hf * 0.62 && y < 0.74) {
+			base = flame_mid.rgb;
+		}
+		if (ax < hf * 0.34 && y < 0.5) {
+			base = flame_core.rgb;
+		}
+	} else if (shape > 6.5) {
 		// water spray: a droplet streak, round at the head (+x) and tapering to the tail, a 1 px rim
 		float w = mix(0.2, 0.55, p.x * 0.5 + 0.5);
 		float d = (length(vec2(p.x, p.y / max(w, 0.05))) - 1.0) * w;
@@ -64,7 +93,12 @@ void fragment() {
 		// chunk: a block with two cut corners, lit on the upper left
 		float d = max(max(abs(p.x) - 0.95, abs(p.y) - 0.95), max(abs(p.x + p.y) - 1.25 - 0.2 * sd, abs(p.x - p.y) - 1.4));
 		a = edge(d, aa);
-		base = mix(base, rim_conc.rgb, step(0.2, -p.x * 0.6 + p.y * 0.8));
+		float litside = step(0.2, -p.x * 0.6 + p.y * 0.8);
+		if (v_custom.z > 1.5) {
+			base = mix(base * 0.78, min(base * 1.22, vec3(1.0)), litside);   // earth: its own colour, a lit and a shaded side
+		} else {
+			base = mix(base, rim_conc.rgb, litside);
+		}
 	} else if (shape < 4.5) {
 		// dust puff: a scalloped disc, a body and a darker rim (two steps, hard edge)
 		float ang = atan(p.y, p.x);

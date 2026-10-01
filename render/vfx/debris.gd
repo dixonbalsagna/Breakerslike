@@ -8,7 +8,7 @@ extends RefCounted
 ## height for the bounce). A fixed number of draws per spawned bit, so the streams do not depend on the quality level:
 ## quality only decides how many of the drawn bits are kept.
 
-enum { GLASS, TRI, STEEL, CHUNK, PUFF, RING, EMBER, SPRAY }
+enum { GLASS, TRI, STEEL, CHUNK, PUFF, RING, EMBER, SPRAY, FLAME }
 
 class Bit:
 	var kind: int = 0
@@ -32,6 +32,7 @@ class Bit:
 	var bounces: int = 0
 	var glass: bool = false        # an ember that is a glass fleck (a glass trench): keeps its own colour
 	var ky: float = -1e9           # a water streak ends when it falls back below this height (the surface)
+	var mode: int = 0              # a chunk: 0 concrete (the shared rim colour), 2 earth (lit and shaded sides of its own colour)
 
 ## A spawn waiting for its time (an implode's ripple delay): sim time to fire, and what to do.
 class Job:
@@ -47,6 +48,7 @@ var _ember_tick: int = 0        # embers spawned this tick (budget VfxLook.EMBER
 var _ember_alive: int = 0       # embers in the pool (cap VfxLook.EMBER_CAP)
 var _spray_alive: int = 0       # water streaks in the pool (cap data/vfx/water.json caps.spray_alive)
 var _rubble_alive: int = 0      # slow rising rubble bits in the pool (cap data/vfx/react.json rubble.alive_cap)
+var _flame_alive: int = 0       # flames in the pool (cap data/vfx/earth.json flame.alive_cap)
 var _water_ref: WeakRef = null     # weak: VfxWater holds this pool, so a strong link back would be a reference cycle (the exit warning)
 var water: VfxWater:             # the water effects (set by the hub); a plunge's second jet comes back through it
 	set(v):
@@ -54,6 +56,7 @@ var water: VfxWater:             # the water effects (set by the hub); a plunge'
 	get:
 		return _water_ref.get_ref() if _water_ref != null else null
 var _tone: int = 0              # 0 mid, 1 shadow (a back layer), 2 light (a front layer)
+var _tint: Color = Color(0.0, 0.0, 0.0, 0.0)   # a puff's own colour instead of the biome's, while set (dust_puff)
 var jobs: Array = []          # Job, waiting
 var spawned: int = 0          # counters for the tests
 var dropped: int = 0
@@ -69,6 +72,7 @@ func reset(seed: int) -> void:
 	jobs.clear()
 	_spray_alive = 0
 	_rubble_alive = 0
+	_flame_alive = 0
 	spawned = 0
 	dropped = 0
 	max_live = 0
@@ -85,6 +89,7 @@ func step(S: SimState, dt: float) -> void:
 	_ember_alive = 0
 	var spray_n: int = 0   # recounted below, after the jobs, so a job's throws see the real count
 	var rubble_n: int = 0
+	var flame_n: int = 0
 	# Jobs are on unfrozen sim time (S.T): a hit-stopped ripple waits with the world.
 	if not jobs.is_empty():
 		var i: int = 0
@@ -103,6 +108,8 @@ func step(S: SimState, dt: float) -> void:
 			b.rot = atan2(b.vy, b.vx)
 		if b.grav < 0.0 and b.kind == CHUNK:
 			rubble_n += 1
+		if b.kind == FLAME:
+			flame_n += 1
 		if b.kind == EMBER:
 			_ember_alive += 1
 		if b.age >= b.life:
@@ -122,7 +129,7 @@ func step(S: SimState, dt: float) -> void:
 			b.sy += b.grow * dt
 		if b.kind == SPRAY and b.vy < 0.0 and b.y < b.ky:
 			b.age = b.life
-		elif b.kind != PUFF and b.kind != RING and b.z > -200.0:
+		elif b.kind != PUFF and b.kind != RING and b.kind != FLAME and b.z > -200.0:
 			var g: float = WorldTerrain.groundY(S, b.x)
 			if b.y < g:
 				b.y = g
@@ -137,6 +144,7 @@ func step(S: SimState, dt: float) -> void:
 					b.spin = 0.0
 	_spray_alive = spray_n
 	_rubble_alive = rubble_n
+	_flame_alive = flame_n
 	max_live = maxi(max_live, bits.size())
 
 
@@ -454,6 +462,8 @@ func _puff_at(x: float, y: float, z: float, vx: float, vy: float, s0: float, s1:
 	b.grav = -40.0 if big else -20.0      # dust drifts up a little
 	b.drag = 0.035
 	b.col = VfxPalette.dust(_biome, "shadow" if _tone == 1 else ("light" if _tone == 2 else "mid"))
+	if _tint.a > 0.0:
+		b.col = _tint.darkened(0.25) if _tone == 1 else (_tint.lightened(0.2) if _tone == 2 else _tint)
 	b.col2 = VfxPalette.dust(_biome, "shadow")
 	b.seed = _rd.next()
 	_add(b)
@@ -645,3 +655,69 @@ func rubble(x: float, y: float, z: float, vx: float, vy: float, size: float, lif
 func _blow(_S: SimState, a: Dictionary) -> void:
 	for fl in a.floors:
 		window_row(a.x, a.w, a.base + (float(fl) + 0.5) * a.fh, a.fh * 0.3, a.z, a.scale)
+
+
+# ------------------------------------------------------------------------------------------------- material chunks and flame
+
+## One chunk of earth, paving, rock or whatever the event named, tumbling: it flies under gravity, spins, bounces off the
+## ground twice and fades. tones: [mid, light, shadow] colours of its material. mode 2 draws it with a lit and a shaded side of
+## its own colour (the shared concrete rim is only for steel and concrete).
+func chunk(x: float, y: float, z: float, vx: float, vy: float, size: float, life: float, tones: Array, mode: int, spin: float = 9.0) -> void:
+	var b := Bit.new()
+	b.kind = CHUNK
+	b.x = SimWrap.wrap(x)
+	b.y = y
+	b.z = z
+	b.vx = vx
+	b.vy = vy
+	b.rot = _rd.range_(0.0, TAU)
+	b.spin = _rd.range_(-spin, spin)
+	b.sx = size
+	b.sy = size * _rd.range_(0.6, 0.95)
+	b.life = life
+	b.mode = mode
+	b.col = tones[0]
+	b.col2 = tones[1]
+	b.seed = _rd.next()
+	_add(b)
+
+
+## A cel flame: a three-banded tongue that rises with a wobble and shrinks as it burns out. size: its width (the tongue is
+## 1.35 times as tall). Counted for the cap (the caller checks it).
+func flame(x: float, y: float, z: float, vx: float, vy: float, size: float, life: float) -> void:
+	var b := Bit.new()
+	b.kind = FLAME
+	b.x = SimWrap.wrap(x)
+	b.y = y
+	b.z = z
+	b.vx = vx
+	b.vy = vy
+	b.rot = 0.0
+	b.spin = _rd.range_(-0.5, 0.5)
+	b.sx = size
+	b.sy = size * 1.35
+	b.life = life
+	b.grav = -30.0
+	b.drag = 0.03
+	b.col = Color("#ff9a2e")
+	b.seed = _rd.next()
+	_flame_alive += 1
+	_add(b)
+
+
+## A wisp of smoke: a dark soft puff that drifts up and spreads. (The dust ramp's shadow step, so it never leaves Art's colours.)
+func smoke(x: float, y: float, z: float, size: float, life: float) -> void:
+	_biome = "city"
+	_tone = 1
+	_puff_at(x, y, z, _rd.range_(-14.0, 14.0), _rd.range_(40.0, 90.0), size * 0.7, size * 1.6, life, false)
+	_tone = 0
+
+
+## A dust puff in a biome's colours (the contact and settle effects, earth.gd): size s0 to s1 over its life.
+func dust_puff(biome: String, x: float, y: float, z: float, vx: float, vy: float, s0: float, s1: float, life: float, tone: int = 0, tint: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
+	_biome = biome
+	_tone = tone
+	_tint = tint
+	_puff_at(x, y, z, vx, vy, s0, s1, life, tone == 2)
+	_tone = 0
+	_tint = Color(0.0, 0.0, 0.0, 0.0)

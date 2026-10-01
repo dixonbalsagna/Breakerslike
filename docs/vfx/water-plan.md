@@ -42,9 +42,9 @@ Pictures: `godot --path . --script res://render/vfx/tools/water_shots.gd -- --ou
 
 Water is drawn flat on the fighter plane like the other effects, so at the 49 degree camera a column reads 0.66 as tall (the EP's standing note). Re-shoot once Orb picks an angle.
 
-## Planned for the knocked-about events (not built)
+## Planned for the knocked-about events (the ground ones are built: earth-plan.md)
 
-Game Design's knocked-about rules (skid, bounce, tumble, lip launches, the tech) will add the sim events `left_ground`, `bounce`, `skip` and `land`. Plan: each is a new case in `water.gd` reading the same data keys, no new pools.
+Game Design's knocked-about rules (skid, bounce, tumble, lip launches, the tech) added the sim events `left_ground`, `bounce`, `land`, `tumble_end` and `journey_end` (World's ground contact, on in HEAD since 2026-10-01); the ground effects for them are built in earth.gd (see earth-plan.md), and a water bounce is the existing `skim`. The plan was: each is a new case in `water.gd` reading the same data keys, no new pools.
 
 - `skip` (a body bouncing off the water): the same function as `skim`, with `spd` the body's speed and `n` the bounce count, so a tumbling body's skips decay the same way. Nothing new to draw.
 - `bounce` on dry ground at a crater lip: the same machinery with the dirt ramp (`VfxPalette.dust(biome)`) and a kill height at the ground, a short fan of chips and dust thrown along the lip's tangent, same `scale_of`.

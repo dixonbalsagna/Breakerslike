@@ -35,6 +35,8 @@ func _ready() -> void:
 	m.set_shader_parameter("rim_spray", VfxPalette.dust("ocean", "shadow"))
 	m.set_shader_parameter("ember_dark", VfxPalette.ember("rim"))
 	m.set_shader_parameter("ember_light", VfxPalette.ember("hot"))
+	m.set_shader_parameter("flame_mid", VfxPalette.ember("hot"))
+	m.set_shader_parameter("flame_core", VfxPalette.ember("core"))
 	material_override = m
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_buf.resize(CAP * STRIDE)
@@ -74,6 +76,11 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 					if hub.reduced_motion:
 						c.a *= 0.6
 					puffs += 1
+				VfxDebris.FLAME:
+					c.a = 1.0 - smoothstep(0.7, 1.0, f)
+					sx = maxf(b.sx * (1.0 - 0.45 * f), minpx)
+					sy = maxf(b.sy * (1.0 - 0.45 * f), minpx)
+					shards += 1
 				VfxDebris.RING:
 					c.a = 0.6 * (1.0 - f)
 					sy = sx
@@ -81,6 +88,14 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 					c.a = 1.0 - smoothstep(0.7, 1.0, f)
 					shards += 1
 			var mode: float = 0.0
+			var rot_v: float = b.rot if not is_puff and not is_ring else 0.0
+			var cy_v: float = b.y
+			if b.kind == VfxDebris.CHUNK:
+				mode = float(b.mode)
+			elif b.kind == VfxDebris.FLAME:
+				mode = f
+				rot_v = 0.0 if hub.reduced_motion else sin(b.age * 7.0 + b.seed * 6.0) * 0.12
+				cy_v = b.y + sy * 0.5
 			if b.kind == VfxDebris.EMBER and b.col2.a > 0.5 and not b.glass:
 				# Art's ember ramp: core, hot, warm, then a char chip with a light rim. Brightness, not hue.
 				if f < 0.2:
@@ -93,7 +108,7 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 					c = VfxPalette.ember("char")
 					mode = 1.0
 				c.a = 1.0 - smoothstep(0.85, 1.0, f)
-			_put(n, Vector2(vx, b.y), b.rot if not is_puff and not is_ring else 0.0, sx, sy, b.z, c, float(b.kind), b.seed, mode)
+			_put(n, Vector2(vx, cy_v), rot_v, sx, sy, b.z, c, float(b.kind), b.seed, mode)
 			n += 1
 	count = n
 	multimesh.visible_instance_count = n

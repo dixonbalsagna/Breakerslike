@@ -181,6 +181,7 @@ func _run() -> void:
 	_aura()
 	_react()
 	_speed()
+	_earth()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -678,6 +679,7 @@ func _react() -> void:
 	_check(hw2.react.blow_buildings == 0, "the owner's tier decides (the other fighter is tier 1)")
 	var hw3 := VfxHub.new()
 	hw3.react_enabled = false
+	hw3.earth_enabled = false
 	hw3.reset(S, 6)
 	place.call(4.0)
 	for k in range(200):
@@ -783,6 +785,267 @@ func _speed() -> void:
 	ho.reset(S, 6)
 	_tick(S, ho, [heavy.call(0.0, 1.0)])
 	_check(ho.speed.made == 0, "speedlines_enabled off starts none")
+	SimCore.dispose(S)
+
+
+## Earth, material and fire (docs/vfx/earth-plan.md): `debris` as tumbling chunks, `fire` as flames, the ground-contact events.
+func _earth() -> void:
+	print("earth, material and fire")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var deb := func(col: String, n: int): return VfxMock.ev("debris", {"x": plains, "y": g + 10.0, "n": n, "col": col, "spd": 600.0, "z": 0.0})
+	# debris: chunks that tumble, in the material's colours.
+	var h := VfxHub.new()
+	h.reset(S, 6)
+	_tick(S, h, [deb.call("#6d6a66", 12)])
+	var chunks: Array = h.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK)
+	_check(chunks.size() > 6 and chunks.size() <= 12, "a debris event of 12 throws up to 12 chunks (%d)" % chunks.size())
+	var spins: int = 0
+	var earth_mode: int = 0
+	for b in chunks:
+		if absf(b.spin) > 0.5:
+			spins += 1
+		if b.mode == 2:
+			earth_mode += 1
+	_check(spins >= chunks.size() - 1 and earth_mode == chunks.size(), "they tumble (every chunk spins) and are drawn as earth (%d of %d)" % [spins, chunks.size()])
+	_check(chunks[0].col.to_html(false) == VfxPalette.dust(VfxPalette.biome_key(plains), "mid").to_html(false), "grey ground debris takes the biome's own earth colour (%s)" % chunks[0].col.to_html(false))
+	var hs := VfxHub.new()
+	hs.reset(S, 6)
+	_tick(S, hs, [deb.call("#77808f", 10)])
+	var steel: Array = hs.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK)
+	_check(steel.size() > 0 and steel[0].mode == 0 and steel[0].col.to_html(false) == VfxPalette.steel("mid").to_html(false), "a tower's debris is steel and concrete, drawn with the shared rim")
+	var hw := VfxHub.new()
+	hw.reset(S, 6)
+	_tick(S, hw, [deb.call("#8a6a4a", 10)])
+	var wood: Array = hw.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK)
+	_check(wood.size() > 0 and wood[0].col.to_html(false) == "8a6a4a", "a house's debris keeps its wood colour")
+	var hb := VfxHub.new()
+	hb.reset(S, 6)
+	for k in range(60):
+		_tick(S, hb, [deb.call("#6d6a66", 14)])
+	_check(hb.debris.bits.size() <= VfxLook.DEBRIS_CAP, "the pool holds under a flood of debris (%d)" % hb.debris.bits.size())
+	var hq := VfxHub.new()
+	hq.quality = VfxLook.Q_LOW
+	hq.reset(S, 6)
+	hq.quality = VfxLook.Q_LOW
+	_tick(S, hq, [deb.call("#6d6a66", 14)])
+	_check(hq.earth.deb_made < 8, "low quality throws fewer (%d)" % hq.earth.deb_made)
+	# The reference consumer is not given what this hub draws.
+	var evs: Array = [deb.call("#6d6a66", 3), VfxMock.ev("fire", {"x": plains, "y": g, "n": 2, "z": 0.0}), VfxMock.ev("dust", {"x": plains, "y": g, "n": 2, "col": "", "z": 0.0}), VfxMock.ev("splash", {"x": plains, "y": g, "n": 4, "z": 0.0})]
+	var ref: Array = h.reference_events(evs)
+	_check(ref.size() == 1 and ref[0].type == "splash", "reference_events leaves the reference consumer only what this hub does not draw (%d of 4)" % ref.size())
+	var hoff := VfxHub.new()
+	hoff.earth_enabled = false
+	hoff.reset(S, 6)
+	_check(hoff.reference_events(evs).size() == 4, "with the effects off it returns every event")
+	_tick(S, hoff, [deb.call("#6d6a66", 12)])
+	_check(hoff.debris.spawned == 0, "earth_enabled off throws nothing")
+	# A building that fell this tick: its debris is the fall's, not these.
+	var hf := VfxHub.new()
+	hf.destruction_enabled = true
+	hf.reset(S, 6)
+	var bi: int = 0
+	var bb = S.buildings[bi]
+	var bx: float = bb.x
+	var fall := VfxMock.building_fall(S, bi, "burst", 0.0, bx)
+	var bd := VfxMock.ev("debris", {"x": bx, "y": g + 10.0, "n": 12, "col": "#77808f", "spd": 600.0, "z": 0.0})
+	var made0: int = hf.earth.deb_made
+	_tick(S, hf, [fall, bd])
+	_check(hf.earth.deb_made == made0, "debris at a building that fell in the tick is left to the fall's own effect")
+	# Dust: scalloped puffs in the biome's colours, or the colour the event names when it is not grey.
+	var hd := VfxHub.new()
+	hd.reset(S, 6)
+	_tick(S, hd, [VfxMock.ev("dust", {"x": plains, "y": g, "n": 5, "col": "#9b8f7e", "z": 0.0})])
+	var dp: Array = hd.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF)
+	var biome_mid: String = VfxPalette.dust(VfxPalette.biome_key(plains), "mid").to_html(false)
+	var biome_cols: Array = [VfxPalette.dust(VfxPalette.biome_key(plains), "mid").to_html(false), VfxPalette.dust(VfxPalette.biome_key(plains), "shadow").to_html(false), VfxPalette.dust(VfxPalette.biome_key(plains), "light").to_html(false)]
+	var all_biome: bool = dp.size() > 2
+	for b in dp:
+		if not biome_cols.has(b.col.to_html(false)):
+			all_biome = false
+	_check(all_biome, "a dust event throws puffs in the biome's own dust colours (%d puffs, %s)" % [dp.size(), biome_mid])
+	var hg := VfxHub.new()
+	hg.reset(S, 6)
+	_tick(S, hg, [VfxMock.ev("dust", {"x": plains, "y": g, "n": 5, "col": "#e6c47a", "z": 0.0})])
+	var gp: Array = hg.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF)
+	_check(gp.size() > 2 and gp[0].col.to_html(false) in ["e6c47a", "b8a362", "ffd68f", "ecc882"] or (gp.size() > 2 and absf(gp[0].col.h - Color("#e6c47a").h) < 0.03), "a coloured dust event (a glass trench) keeps its own hue")
+	# Fire: cel flames with a cap, and smoke only when not reduced.
+	var hr := VfxHub.new()
+	hr.reset(S, 6)
+	for k in range(30):
+		_tick(S, hr, [VfxMock.ev("fire", {"x": plains, "y": g, "n": 6, "z": 0.0})])
+	_check(hr.earth.flames_made > 20 and hr.debris._flame_alive <= int(VfxEarth.p("flame", "alive_cap")), "fire events throw flames, within the cap (%d made, %d alive of %d)" % [hr.earth.flames_made, hr.debris._flame_alive, int(VfxEarth.p("flame", "alive_cap"))])
+	var smokes: int = hr.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF).size()
+	_check(smokes > 0, "with a little smoke (%d puffs)" % smokes)
+	var hrr := VfxHub.new()
+	hrr.reset(S, 6)
+	hrr.reduced_motion = true
+	for k in range(30):
+		_tick(S, hrr, [VfxMock.ev("fire", {"x": plains, "y": g, "n": 6, "z": 0.0})])
+	_check(hrr.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF).size() == 0 and hrr.earth.flames_made < hr.earth.flames_made, "reduced motion: fewer flames and no smoke (%d)" % hrr.earth.flames_made)
+	# Ground contact events.
+	var contact := func(type: String, d: Dictionary): return VfxMock.ev(type, d)
+	var land := func(kind: String, surface: String, spd: float): return VfxMock.ev("land", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": spd, "n": 1, "surface": surface, "kind": kind, "vn": -spd * 0.8, "vt": spd * 0.3, "sina": 0.9, "slope": 0.0, "contacts": 1, "dur": 0.1})
+	S.fighters[0].vx = 2000.0
+	var counts: Dictionary = {}
+	for surf in ["soil", "sand", "paving"]:
+		var hc := VfxHub.new()
+		hc.reset(S, 6)
+		_tick(S, hc, [land.call("slam", surf, 3500.0)])
+		var ch: int = hc.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK).size()
+		var pf: int = hc.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF).size()
+		counts[surf] = [ch, pf]
+	_check(counts["soil"][0] > 6 and counts["soil"][1] > 3, "a slam throws clods and dust (%d chunks, %d puffs on soil)" % [counts["soil"][0], counts["soil"][1]])
+	_check(counts["sand"][0] < counts["soil"][0] and counts["sand"][1] > counts["soil"][1], "sand throws fewer chunks and more dust (%d, %d against %d, %d)" % [counts["sand"][0], counts["sand"][1], counts["soil"][0], counts["soil"][1]])
+	_check(counts["paving"][0] >= counts["soil"][0], "paving throws sharper, more chunks (%d)" % counts["paving"][0])
+	var hsmall := VfxHub.new()
+	hsmall.reset(S, 6)
+	_tick(S, hsmall, [land.call("slam", "soil", 800.0)])
+	var hbig := VfxHub.new()
+	hbig.reset(S, 6)
+	_tick(S, hbig, [land.call("slam", "soil", 5000.0)])
+	_check(hbig.earth.contact_made > hsmall.earth.contact_made, "a faster landing throws more (%d against %d)" % [hbig.earth.contact_made, hsmall.earth.contact_made])
+	var hk := VfxHub.new()
+	hk.reset(S, 6)
+	_tick(S, hk, [land.call("skid", "soil", 3000.0)])
+	var thrown_back: bool = false
+	for b in hk.debris.bits:
+		if b.kind == VfxDebris.CHUNK and b.vx < 0.0:
+			thrown_back = true
+	_check(thrown_back, "a skid throws its surface back along the way he came")
+	# Water is the skip's, not these.
+	var sea: float = 0.0
+	while sea < SimConst.W:
+		var wet: bool = true
+		for k in range(-3, 4):
+			if WorldWater.surfaceAt(S, SimWrap.wrap(sea + float(k) * 1500.0)) == WorldWater.DRY:
+				wet = false
+				break
+		if wet:
+			break
+		sea += 1500.0
+	var hwtr := VfxHub.new()
+	hwtr.reset(S, 6)
+	_tick(S, hwtr, [VfxMock.ev("bounce", {"actor": 0.0, "x": sea, "y": 0.0, "z": 0.0, "spd": 3000.0, "surface": "water", "k": 1.0, "vn": -2000.0}), VfxMock.ev("left_ground", {"actor": 0.0, "x": sea, "y": 0.0, "z": 0.0, "spd": 3000.0, "cause": "bounce", "vx": 2500.0, "vy": 800.0})])
+	_check(hwtr.earth.contact_made == 0, "a bounce and a leave over water throw no earth")
+	# Bounce, leaving from a lip, settling.
+	var hbo := VfxHub.new()
+	hbo.reset(S, 6)
+	_tick(S, hbo, [VfxMock.ev("bounce", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 2600.0, "surface": "soil", "k": 1.0, "vn": -1800.0, "keep": 0.45})])
+	_check(hbo.earth.contact_made > 2, "a bounce throws clods and dust (%d)" % hbo.earth.contact_made)
+	var hl := VfxHub.new()
+	hl.reset(S, 6)
+	_tick(S, hl, [VfxMock.ev("left_ground", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 3000.0, "cause": "lip", "vx": 2500.0, "vy": 1500.0, "slope": 0.4})])
+	var forward: int = 0
+	var up: int = 0
+	for b in hl.debris.bits:
+		if b.kind == VfxDebris.CHUNK:
+			if b.vx > 0.0:
+				forward += 1
+			if b.vy > 0.0:
+				up += 1
+	_check(forward >= 3 and up >= 3, "leaving a lip throws chunks along his leaving vector, forward and up (%d, %d)" % [forward, up])
+	var hcr := VfxHub.new()
+	hcr.reset(S, 6)
+	_tick(S, hcr, [VfxMock.ev("left_ground", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 3000.0, "cause": "crest", "vx": 2500.0, "vy": 300.0, "slope": 0.1})])
+	_check(hcr.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK).size() == 0, "leaving a crest throws only dust")
+	var hte := VfxHub.new()
+	hte.reset(S, 6)
+	_tick(S, hte, [VfxMock.ev("tumble_end", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 200.0, "kind": "air"})])
+	_check(hte.earth.contact_made == 0, "a tumble that ends in the air (water) throws nothing")
+	_tick(S, hte, [VfxMock.ev("tumble_end", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 200.0, "kind": "stop"}), VfxMock.ev("journey_end", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 100.0, "kind": "stop"})])
+	_check(hte.earth.contact_made > 0, "a tumble and a journey that stop leave a settling cloud (%d)" % hte.earth.contact_made)
+	var hwl := VfxHub.new()
+	hwl.reset(S, 6)
+	_tick(S, hwl, [VfxMock.ev("journey_end", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 1500.0, "kind": "wall"})])
+	_check(hwl.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK).size() > 3, "a journey that ends at a wall bursts chunks")
+	# A flood of contact events keeps the pool bounded.
+	var hfl := VfxHub.new()
+	hfl.reset(S, 6)
+	for k in range(120):
+		_tick(S, hfl, [land.call("slam", "soil", 5000.0), VfxMock.ev("bounce", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 4000.0, "surface": "soil", "k": 1.0, "vn": -3000.0, "keep": 0.4})])
+	_check(hfl.debris.bits.size() <= VfxLook.DEBRIS_CAP, "the pool holds under a flood of contact events (%d)" % hfl.debris.bits.size())
+	# A crater's ejecta and the slide's end, which ImpactFx drew as squares.
+	var hcr2 := VfxHub.new()
+	hcr2.reset(S, 6)
+	_tick(S, hcr2, [VfxMock.ev("crater", {"x": plains, "y": g, "r": 220.0, "depth": 60.0, "energy": 14.0, "cause": "impact", "owner": 1.0, "special": 0.0, "rim": 20.0, "z": 0.0})])
+	var ej: int = hcr2.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK).size()
+	var ejd: int = hcr2.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF).size()
+	_check(ej >= 12 and ejd >= 8, "a crater throws its ejecta as tumbling chunks and lifts dust off the rim (%d chunks, %d puffs)" % [ej, ejd])
+	var hcr3 := VfxHub.new()
+	hcr3.reset(S, 6)
+	_tick(S, hcr3, [VfxMock.ev("crater", {"x": plains, "y": g, "r": 100.0, "depth": 20.0, "energy": 1.0, "cause": "impact", "owner": 1.0, "special": 0.0, "rim": 5.0, "z": 0.0})])
+	_check(hcr3.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK).size() < ej, "a small impact throws less")
+	var hsd := VfxHub.new()
+	hsd.reset(S, 6)
+	_tick(S, hsd, [VfxMock.ev("slide", {"x": plains, "x1": plains + 900.0, "w": 120.0, "energy": 8.0, "variant": "ground", "z1": 0.0})])
+	_check(hsd.debris.bits.size() > 6, "where a slide stops, a burst of dust and chunks off the berm (%d)" % hsd.debris.bits.size())
+	# The skid itself: a body sliding on the ground throws spray, more the faster; none when slow, in the air or at sea.
+	var hsk := VfxHub.new()
+	hsk.reset(S, 6)
+	var f0 = S.fighters[0]
+	f0.x = plains
+	f0.y = g
+	f0.vx = 4000.0
+	f0.state = "launched"
+	f0.slide = 4000.0
+	for k in range(60):
+		_tick(S, hsk, [])
+	var fast: int = hsk.earth.contact_made
+	var hsl := VfxHub.new()
+	hsl.reset(S, 6)
+	f0.slide = 700.0
+	for k in range(60):
+		_tick(S, hsl, [])
+	var slow: int = hsl.earth.contact_made
+	f0.slide = 100.0
+	var hsn := VfxHub.new()
+	hsn.reset(S, 6)
+	for k in range(60):
+		_tick(S, hsn, [])
+	_check(fast > 10 and fast > slow and slow > 0 and hsn.earth.contact_made == 0, "a sliding body sprays his surface back, more when fast, none when nearly stopped (%d, %d, %d)" % [fast, slow, hsn.earth.contact_made])
+	f0.slide = 0.0
+	f0.state = "free"
+	# Real ground-contact events, when World's switch is on in the data (a scratch copy has it on; HEAD has it off).
+	var on: bool = FileAccess.get_file_as_string("res://data/biomes/contact.json").find("\"enabled\": true") >= 0
+	if on:
+		var S2 := SimCore.createSim()
+		SimCore.newMatch(S2, 12345)
+		var h2 := VfxHub.new()
+		h2.reset(S2, 12345)
+		var f2 = S2.fighters[0]
+		for k in range(1800):
+			if k % 200 == 20:
+				f2.x = SimWrap.wrap(2250.0 * SimConst.PS)
+				f2.y = WorldTerrain.groundY(S2, f2.x) + 900.0
+				f2.vx = 3500.0
+				f2.vy = -2600.0
+				f2.state = "launched"
+				f2.launchT = 1.0
+				f2.stateT = 0.0
+			SimCore.step(S2)
+			h2.consume(S2, S2.out.fx)
+			S2.out.fx.clear()
+			S2.out.feed.clear()
+		_check(h2.earth.contact_events > 3 and h2.earth.contact_made > 20, "real ground-contact events (data/biomes/contact.json enabled): %d events handled, %d chunks and puffs thrown" % [h2.earth.contact_events, h2.earth.contact_made])
+		SimCore.dispose(S2)
+	else:
+		print("  skip real ground-contact events: data/biomes/contact.json is off in this copy")
+	# The data.
+	var saved: Dictionary = VfxEarth._data
+	VfxEarth._data = {}
+	var fallback: bool = VfxEarth.p("deb", "max_per_event") == 14.0 and VfxEarth.p("flame", "alive_cap") == 40.0
+	VfxEarth._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for gk in VfxEarth.DEFAULTS.keys():
+		for k in VfxEarth.DEFAULTS[gk].keys():
+			if not saved.has(gk) or not saved[gk].has(k) or float(saved[gk][k]) != float(VfxEarth.DEFAULTS[gk][k]):
+				same = false
+				print("    differs: %s.%s" % [gk, k])
+	_check(same, "data/vfx/earth.json and the built-in defaults agree")
 	SimCore.dispose(S)
 
 

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "_note": "VFX's earth, material and fire effects (docs/vfx/earth-plan.md): the sim's `debris` events drawn as tumbling chunks of the right material, the `fire` events drawn as cel flames, and the ground-contact events (land, bounce, left_ground, tumble_end, journey_end; World's G3, data/biomes/contact.json) drawn as spray, clods and dust by surface and speed. Authored by the VFX Director session (Claude, claude-sonnet-5-5), 2026-10-01. Presentation only: read by render/vfx/earth.gd, never by the sim. A missing key falls back to the same default in earth.gd. Speeds are world units a second (the sim's normalised speeds), sizes world units, lives seconds. Counts are at quality high and are multiplied by 0.7 at medium, 0.35 at low and halved in reduced motion, which also drops the smoke and the flames' wobble.",
+  "deb": { "size_min": 6, "size_max": 15, "life_min": 1.2, "life_max": 2.4, "max_per_event": 14, "spin": 10, "speed_scale": 1.0 },
+  "flame": {
+    "per_unit": 1.0, "max_per_event": 8, "size_min": 22, "size_max": 46, "life_min": 0.7, "life_max": 1.5, "rise_min": 70, "rise_max": 190,
+    "smoke_every": 3, "smoke_life": 1.6, "alive_cap": 40
+  },
+  "land": {
+    "speed_ref": 2500, "chunks_slam": 10, "chunks_skid": 5, "chunks_tumble": 6, "size_min": 8, "size_max": 16,
+    "dust_slam": 5, "dust_skid": 3, "dust_tumble": 3, "sand_chunks": 0.5, "sand_dust": 1.6, "paving_chunks": 1.2, "paving_dust": 0.8
+  },
+  "bounce": { "vn_ref": 1500, "chunks": 4, "dust": 2 },
+  "leave": { "speed_ref": 2500, "chunks_lip": 6, "chunks_heap": 8, "chunks_cliff": 4, "chunks_crest": 0, "chunks_bounce": 2, "dust": 2 },
+  "settle": { "tumble_dust": 2, "journey_dust": 3, "wall_chunks": 8, "capped_scale": 1.5 },
+  "skid": { "min_speed": 500, "rate_per_s": 14, "dust_every": 3, "speed_ref": 2500 }
+}

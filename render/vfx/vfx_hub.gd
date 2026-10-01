@@ -56,6 +56,8 @@ var flicker_enabled: bool = VfxLook.FLICKER_DEFAULT  # the aura flickers when th
 var react := VfxReact.new()
 var speedlines_enabled: bool = VfxLook.SPEEDLINES_DEFAULT   # speed lines alone on every launch and landed heavy (impact treatment B)
 var speed := VfxSpeed.new()
+var earth_enabled: bool = VfxLook.EARTH_DEFAULT   # material chunks for `debris`, cel flames for `fire`, and the ground-contact events (docs/vfx/earth-plan.md)
+var earth := VfxEarth.new()
 var debris := VfxDebris.new()
 var water := VfxWater.new()
 var holes: Array = []               # Hole
@@ -97,6 +99,8 @@ func reset(S: SimState, p_seed: int) -> void:
 	react.debris = debris
 	react.reset()
 	speed.reset(seed)
+	earth.debris = debris
+	earth.reset()
 	water.debris = debris
 	water.reset()
 	debris.water = water
@@ -175,14 +179,27 @@ func _consume(S: SimState, events: Array) -> void:
 			elif e.type == "damage" and e.kind == "heavy" and e.number:
 				_speed_heavy(S, e)
 	_sync_cracks(S)
-	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled:
+	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
 		water.begin_tick()
+		if earth_enabled and not frozen:
+			earth.step_skid(S)
 		if react_enabled and not frozen:
 			react.step(S, self, xform.forms)
 		if react_enabled:
 			react.prune(S)
+		var fall_xs: Dictionary = {}          # the dust and debris of a building that fell in this tick are the fall's (building_fall), not the `debris` events'
+		if destruction_enabled and earth_enabled:
+			var any_fall: bool = false
+			for e in events:
+				if e.type == "building_fall":
+					any_fall = true
+					fall_xs[snappedf(float(e.x), 0.01)] = true
+			if any_fall:
+				for b in S.buildings:
+					if not b.alive:
+						fall_xs[snappedf(b.x, 0.01)] = true
 		var floored: Dictionary = {}          # buildings with a floor_hit this tick: the floor path draws their burst
 		for e in events:
 			if e.type == "floor_hit":
@@ -213,7 +230,24 @@ func _consume(S: SimState, events: Array) -> void:
 				"skim":
 					if water_enabled:
 						water.skim(S, float(e.x), float(e.y), float(e.spd), int(e.n))
+				"debris":
+					if earth_enabled and not fall_xs.has(snappedf(float(e.x), 0.01)):
+						earth.on_debris(e)
+				"dust":
+					if earth_enabled and not fall_xs.has(snappedf(float(e.x), 0.01)):
+						earth.on_dust(e)
+				"fire":
+					if earth_enabled:
+						earth.on_fire(e)
+				"land", "bounce", "left_ground", "tumble_end", "journey_end":
+					if earth_enabled:
+						earth.on_contact(S, e)
+				"slide":
+					if earth_enabled:
+						earth.on_slide_end(S, e)
 				"crater":
+					if earth_enabled:
+						earth.on_crater_ejecta(e)
 					if react_enabled:
 						react.on_crater(S, e, self)
 				"beamSplash":
@@ -560,3 +594,16 @@ func _speed_heavy(S: SimState, e) -> void:
 		dy = float(e.y) - (S.fighters[at].y + VfxLook.CHEST_Y)
 	var z: float = S.fighters[v].z if v >= 0 and v < S.fighters.size() else 0.0
 	speed.add(float(e.x), float(e.y), dx, dy, v, z)
+
+
+## The events the reference particle consumer (render/core/particle_view.gd's source, `SimFxView`) should be given: the tick's
+## events less the `debris`, `fire` and `dust` events this hub draws itself as material chunks, cel flames and dust puffs (VfxEarth). Rendering's
+## host passes this to the reference consumer so a chunk or a flame is not drawn twice; with the effects off, or the hub disabled,
+## it returns the events as they came.
+func reference_events(events: Array) -> Array:
+	if not (enabled and earth_enabled):
+		return events
+	for e in events:
+		if e.type == "debris" or e.type == "fire" or e.type == "dust":
+			return events.filter(func(ev): return ev.type != "debris" and ev.type != "fire" and ev.type != "dust")
+	return events
