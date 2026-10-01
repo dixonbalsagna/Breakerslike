@@ -265,7 +265,7 @@ Measured with the fixed-stance probe in `stance-matrix.md` §6. It uses two iden
 | Region breaks before the finisher (1v1), under the core-only brink | **1.5 to 2.5 a match:** limb breaks 0.3 to 0.5 (§13), plus brinks (the final brink, re-brinks after Rallies and the rare double brink). The old 2 to 4 and 3 to 5 bands are retired. The first-break timing gate is retired too: the first brink at a median of 4:30 to 7:00 (`spec-wounds.md` §5) covers timing | 1.7 (QA's crippling tune on `580c5a0`) |
 | Finishers preceded by a brink call-out | 100% | none |
 | Lead changes: which fighter has more region stages lost flips | Median at least 2 | Not measured |
-| Signatures fired | 2 to 4 per match, median 3 (§13, the 120 s cooldown) | Not measured at G0 |
+| Signatures fired | 2 to 5 per match, median 3: the 120 s cooldown (§13), plus the last stand's free signature (`spec-wounds.md` §1b). It was 2 to 4 | Not measured at G0 |
 | Beam clashes | **Re-based at G0:** 30 to 60% of signatures fired end in a CLASH. The old 2 to 8 per match predates the cooldown | 10.2 per match at G0, with no cooldown in the sim |
 | Chains | 15 to 35 per 100 melee exchanges | 23.8 |
 

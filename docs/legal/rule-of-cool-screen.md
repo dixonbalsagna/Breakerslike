@@ -47,3 +47,9 @@ Clear = go as written. Constraint = go with the condition. Change = alter it fir
 1. The stacking rule above, as a review item for VFX, Animation, Camera and Audio.
 2. Names, lines and sounds are screened as usual. Staging notes in the plan stay inside our own pose and effect language.
 3. Re-screen features 12, 20, 22 and the aura when Art's and VFX's first versions exist. Legal reviews the first transformation cinematic.
+
+## Follow-ups (2026-10-01)
+
+- **Last stand, option B "one last signature": Clear.** At the first brink the fighter's signature is free and ready for 20 s, once per fighter per match. A comeback beat is a trope, and the mechanism (a free signature the rival can still answer) is ours. Constraint: the brink moment stays inside the stacking rule. No glowing-blood power-up, no final speech with a body aura, no lightning. The camera cut, face cut-in and line are fine. The signature then plays as an ordinary signature.
+- **The rival's line "Was that supposed to hurt?": Clear.** One exact-phrase web search (US-only) found no character or work that owns it. It is a common taunt, close to the stock phrase "that's gotta hurt". No change needed. Re-run the search if the wording changes.
+- **Anti-hero aura colour. Red-orange is out. Use his art lane.** The aura rule bars gold, white and red because red and orange flame is the franchise's rage-form and multiplier look. The Anti-hero's art lane is orchid violet. **Safe range:** orchid or violet, shifting toward magenta or blue-violet (roughly hue 260 to 320 degrees), with a lighter tint of the same hue for the core, never pure white. **Not safe:** red, red-orange (hue 0 to 40), gold or yellow (40 to 65), and a white-hot core. The Cyborg's brick coral lane is separate and stays as it is. The fighter data for the Anti-hero's aura should change from red-orange to the orchid lane. The same rule covers his flashes and any power-stage glow.

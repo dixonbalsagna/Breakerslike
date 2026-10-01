@@ -61,6 +61,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-039 | ADR 0007: no human author required for any content class | Policy | Low (ownership), liability controls kept | GO: art AI policy, animation rule and 8.5.3 updated; screens and records stay mandatory | Closed |
 | RL-040 | Five landmark ideas (district looks) | Art | Low | GO, with light conditions | Closed |
 | RL-041 | Rule-of-cool plan (25 features), On the Chin, transformation staging | Game Design | Medium | CLEAR or CONSTRAINT; feature 12 changed; the two-marks stacking cap | Open until first builds are reviewed |
+| RL-042 | Last stand B, the rival bravado line, Anti-hero aura colour | Game Design | Low | Clear; aura red-orange changed to the orchid lane | Open until the data changes |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 

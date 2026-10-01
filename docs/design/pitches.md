@@ -241,9 +241,9 @@ Orb picked speed lines and panel cut-ins, with no impact frames and no slow moti
 
 | Candidate | Rate |
 | :--- | :--- |
-| A heavy that lands | About 6 a minute (est.) |
+| A heavy that lands | 8.3 a minute (QA's first reading; the estimate was 6) |
 | A launch | 11.8 a minute |
-| A heavy clash won | About 1.5 a minute (est.) |
+| A heavy clash won | 0.69 a minute (QA's first reading; the estimate was 1.5) |
 | A signature | 3.0 a match |
 | A finisher | About 1.5 a match |
 | A crippling blow | 0.5 a match |
@@ -257,7 +257,9 @@ Orb picked speed lines and panel cut-ins, with no impact frames and no slow moti
 | **On Orb's scale** | About 2 of 10 | About 4 of 10 | About 8 of 10 |
 | **Risk** | Long stretches look plain | The ration needs tuning so panels don't cluster | The panel stops meaning anything, and it hides the fight |
 
-**Recommendation: B.** Speed lines are cheap and never cover the screen, so they can ride on every launch. The panel stays rare enough to mean "that one mattered", and it lands at 4 of 10.
+**Orb picked B, two levels.** With QA's measured rates the panel count holds: about 0.8 a minute from the peaks, plus about 1.6 from earned hits under the 12 s ration, so about 2.4 a minute. Speed lines alone ride on about 15 to 20 hits a minute.
+
+*The recommendation was B:* speed lines are cheap and never cover the screen, so they can ride on every launch. The panel stays rare enough to mean "that one mattered", and it lands at 4 of 10.
 
 ### 8b. A last stand at the brink
 
@@ -272,7 +274,9 @@ Orb didn't pick this as a story beat at first, then asked for a pitch. The wound
 | **How often** | Once per fighter per match | Once per fighter per match. A second brink after a Rally gives nothing | Once per fighter per match |
 | **Risk** | It may feel like a promise with nothing behind it | One more signature a match, so the band becomes 2 to 5 | It undercuts the finisher, which Orb set at 7 of 10 |
 
-**Recommendation: B.** It gives the fighter on the brink one clear, dramatic thing to do, the player chooses the moment, and the rival can answer it. It needs no new system.
+**Orb picked B, one last signature.** The rule is in `spec-wounds.md` §1b. Legal's re-screen of it is pending.
+
+*The recommendation was B:* it gives the fighter on the brink one clear, dramatic thing to do, the player chooses the moment, and the rival can answer it. It needs no new system.
 
 ### 8c. What a completed taunt does
 
@@ -297,4 +301,6 @@ Orb picked a mid-fight taunt that can be punished, with an effect that depends o
 | **How it works** | Every taunt feeds its fighter's own meter | Each taunt does a different kind of thing: meter, goading, angering, and a pickup | A completed taunt arms a dare for 8 s. His next decisive win pays double meter and mood +6. If he loses it, the opponent gets +10 on theirs |
 | **Risk** | All four feel the same | Four small rules to tune. "Riled" must stay readable | High stakes on every taunt may make players stop taunting |
 
-**Recommendation: B.** The taunt becomes a small piece of each fighter's personality, which is what "depends on fighter" asks for, and the rival's version is already built into his Pride.
+**Orb picked A, meter only** ("taunts should just feed meters"): Pride +6, heat +10, Wrath +8 and Hunger +5, with the shared rules above kept. The rule is in `control-rules.md` §4.
+
+*The recommendation had been B.*

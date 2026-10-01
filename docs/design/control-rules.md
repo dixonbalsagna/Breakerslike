@@ -77,7 +77,16 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 | 4 | The rival within 1.5 bh | **Grab and throw** | A grab beats Guard, loses to an attack, and whiffs against a dodge. A whiff has a 1.5 s cooldown. No ki cost |
 | 5 | A liftable object within 2 bh | **Pick it up** | The next attack press throws it (a heavy press slams it down). The power tier caps the object's size |
 | 6 | Civilians within 3 bh | **The fighter's own action** | Set in fighter data, with a 10 s cooldown. None of them causes casualties (below) |
-| 7 | Nothing else | **The fallback by mode** | Physical: a provoke (mood +3, and +5 to the fighter's ego meter if it finishes), or a feint when the rival is guarding in rush range. Energy: a short frontal shove for 5 ki, which a guard stops |
+| 7 | Nothing else | **The fallback by mode** | Physical: a taunt (below), or a feint when the rival is guarding in rush range. Energy: a short frontal shove for 5 ki, which a guard stops |
+
+**The taunt** (Orb's pick: taunts feed meters).
+- It takes 1 s. A dodge-cancel can end it in the first 20 ticks; after that he is committed.
+- A hit that lands during it is a clean hit at ×1.2.
+- Completed, it gives mood +3, the face cut-in, and the fighter's meter: Pride +6 for the Anti-hero, heat +10 for the Protagonist, Wrath +8 for the Empress and Hunger +5 for the Cyborg. The placeholders gain +5 on their own meter.
+- Cooldown: 15 s.
+- The AI opponent is baited for 4 s: it attacks 50% more on easy and 25% more on medium, and not at all more on hard.
+- The gesture is each fighter's own, and never beckoning fingers (Legal).
+- QA: 1 to 3 completed taunts per fighter per match, with 20 to 40% of attempts punished.
 
 **Civilian actions** (working labels; Narrative names them):
 - *Protagonist:* shelter. The group evacuates at once, and his anguish drops by 5.

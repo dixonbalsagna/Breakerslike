@@ -2,7 +2,7 @@
 
 Owner: Game Design. This turns Orb's picks from questionnaires 11 and 12 (`docs/ep/vision.md`) into a list the directors can build from: one row per feature, with its trigger, tier gate, frequency, cost in play, owners and build order. Legal has screened the list: its constraints are in §3b, and its stacking rule is in §1. Every name is a working label, and every number is a proposal for data.
 
-Three items wait on Orb's picks in `pitches.md` §8: which hits get the panel cut-in, the last stand, and the taunt.
+Orb has picked all three items from `pitches.md` §8: the two-level impact treatment, one last signature for the last stand, and taunts that feed meters. Orb also accepted Legal's stacking rule.
 
 ## 1. The rationing rules
 
@@ -62,20 +62,20 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 | 8 | **The winner stands in the wreckage** | The KO | Any | Once | None. The camera pulls back over the match's real scars | Presentation | Camera, Rendering |
 | 9 | **Land scars stay; water closes** | Any crater, trench or beam scar | Any | Always | None. Water closes within seconds by the existing flow | Already in the sim | World |
 | 10 | **Crowds watch, then flee** | The mood bands and the evacuation rules | Any | Always | None | Already in the sim | World, Rendering, Narrative |
-| 11 | **Speed lines and panel cut-ins** | Orb's pick in `pitches.md` §8a | Any | About 2.5 panels a minute if option B | None | Presentation | Camera, VFX, UI |
+| 11 | **Speed lines and panel cut-ins** (Orb's pick: two levels) | Speed lines alone on every launch and every heavy that lands, as a 6-tick streak. The panel on signatures, finishers, crippling blows and the KO, and on earned hits (a clash won, a riposte that launches, a ping-pong's ender), which share one panel every 12 s | Any | About 2.4 panels a minute at QA's measured rates (8.3 landed heavies and 0.69 heavy clash wins a minute). Speed lines on about 15 to 20 hits a minute | None | Presentation | Camera, VFX, UI |
 | 12 | **The world reacts** (the sky pales or parts, rubble lifts gently, cracks spread under a standing fighter, windows blow out for blocks; changed by Legal, §3b) | A fighter reaches tier 3; stronger at tier 4 | 3 and up | Continuous while at that tier. Windows blow out as the visible form of the wider structure reach in `balance-targets.md` §21 | None beyond that reach | Presentation, on a sim value | VFX, Rendering, World |
 | 13 | **The ping-pong rally** | `control-rules.md` §11 | Any; longer with tier | 2 to 6 blitzes a minute in Tense and Frenzied | 6 ki a bounce | Sim | Combat, Encounter, Animation |
-| 14 | **Beam struggle on the pulse** | A beam answered by a beam | Any | 30 to 60% of signatures | The answer's ki, as today | Sim | Encounter, Controls, UI, Audio |
+| 14 | **Beam struggle on the pulse** | A beam answered by a beam | Any | 30 to 60% of signatures (2 to 5 a match, with the last stand) | The answer's ki, as today | Sim | Encounter, Controls, UI, Audio |
 | 15 | **Fist clash shockwave** | A heavy meets a heavy, on the pulse | Any. The shockwave damages structures from tier 3 | About 1.5 a minute; the big version under rule 2 | A heavy's ki. The shockwave's damage counts against the collateral budgets | Sim | Combat, Encounter, World, VFX |
-| 16 | **Swat, split or walk through a beam** | A perfect block against a signature (§2) | Any | Up to the 2 to 4 signatures a match | Timing only | Sim (small) | Encounter, Combat, VFX |
+| 16 | **Swat, split or walk through a beam** | A perfect block against a signature (§2) | Any | Up to the 2 to 5 signatures a match | Timing only | Sim (small) | Encounter, Combat, VFX |
 | 17 | **Throwable vehicles and ships** | The context button's pick-up | Cars at any tier, lorries and boats from tier 2, ships from tier 3 | As the props allow. At tone 6 of 10 the people bail out first, and it is played for comedy | None. The throw's damage is by size | Sim | World, Combat, Art |
 | 18 | **Through the mountain** | A launch aimed at a rock formation or mesa | Small formations from tier 2, mesas from tier 3 | In the shared budget of 3 a match | A normal launch. The tunnel stays all match, and later launches can pass through it | Sim | World, Encounter, Rendering |
 | 19 | **Orbit and re-entry** | An upward launch at high power: a break or finisher launch, or the crater set piece | 3 and up | In the shared budget of 3 | One impact of wear. The game picks the most dramatic landing spot within the collateral budget (below) | Sim | Encounter, World, Camera, VFX |
 | 20 | **Blur exchange across the sky** | Both fighters attacking with strings queued, in Tense or Frenzied, on the pulse | 2 and up | About 1 a minute in Tense and Frenzied, under rule 2 | The strings' own ki | Sim | Combat, Encounter, Camera |
 | 21 | **Mid-air grapple lock** | Two grabs meet in the air, or a dive grab meets a grab, on the pulse | Any | Rare: under 1 a match | None. The winner slams the loser | Sim | Combat, Encounter, Animation |
 | 22 | **The round-the-world hit** | A ping-pong's ender or a finisher launch, in Frenzied | **4 only** | In the shared budget of 3, once per fighter | 20 ki. He flies above everything, so there is no collateral on the way | Sim | Encounter, Simulation, Camera, VFX |
-| 23 | **The last stand** | Orb's pick in `pitches.md` §8b | Any | Once per fighter | If option B: a free signature | Sim (small) | Encounter, Narrative, Camera |
-| 24 | **The taunt's effect per fighter** | Orb's pick in `pitches.md` §8c | Any | 1 to 3 per fighter per match | 1 s of exposure | Sim (small) | Combat, Narrative, Encounter |
+| 23 | **The last stand** (Orb's pick: one last signature; **Legal's re-screen is pending**) | The first time a fighter reaches the brink: a camera cut, his face cut-in and a line, and his signature is free and ready at once for 20 s | Any | Once per fighter per match | A free signature. The rival answers it like any other | Sim (small) | Encounter, Narrative, Camera |
+| 24 | **The taunt feeds the meter** (Orb's pick: meter only) | A completed taunt: Pride +6, heat +10, Wrath +8 or Hunger +5, with mood +3 and the face cut-in | Any | 1 to 3 per fighter per match, with a 15 s cooldown | 1 s of exposure: a hit during it is a clean hit at ×1.2 | Sim (small) | Combat, Narrative, Encounter |
 | 25 | **A highlight reel at the match end** | The KO | Any | Once: 3 to 5 clips of 3 to 4 s | None. It replays from the seed and the input log | Needs the replay system | Tools, Camera, UI |
 
 **How "the most dramatic landing spot" is picked** (feature 19). The game scores the candidates inside the re-entry's reach, and takes the best one that fits the collateral budget for the tier:

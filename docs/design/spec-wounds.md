@@ -102,6 +102,7 @@ The arithmetic: the most-worn region nets about 0.6 to 0.9 wear per second. That
      - If brink to KO is still under a median of 45 s, set it to 2.
      - If it goes over 90 s, lower the struggle's base survival back toward 19%.
      - If the match median passes 7:30, raise k (up to 0.045) so the first brink comes earlier. The first-brink band of 4:30 to 7:00 holds.
+  7. **The last stand** (Orb's pick, questionnaire 12 follow-up; Legal's re-screen pending). The first time a fighter reaches the brink in a match, his signature is free and off cooldown for 20 s. A camera cut, his face cut-in and a line mark it, live. The rival answers it like any signature. A signature that lands is a decisive win, so it closes his opening. A second brink after a Rally gives nothing. The signature band becomes 2 to 5 a match.
   - *Why this option:* it turns the brink into two readable steps, the opening and then the finisher. The fighter on the brink gets a real turn: a stance read, Spite, the Encore, a Reboot or a last stoke. A timed grace period would be dead air, and removing only the brink-causing finisher would add a single exchange.
 - **Arm skew, second step** (arms at 70%, because legs are rarely battered at exchange start): **`guardWearSplit` 0.5 / 0.5**, keeping the ×1.5 leg weighting. If arms are still over 65%, try 0.4 / 0.6, where the braced guard sinks into the stance.
 - **Values in force** (QA; every band hit at once, using the authorised fallbacks; Simulation applies them):
