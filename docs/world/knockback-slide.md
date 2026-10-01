@@ -14,7 +14,7 @@ At a ground contact, with `sp` the speed, `vert = |vy| / sp` the share of the ve
 
 | Case | Test | Result |
 | :--- | :--- | :--- |
-| **Slam** | `vert >= SLAM_VERT (0.85)` (about 58 degrees or steeper) | One crater, as now, with the bowl and rim. No bounce. The fighter goes `down`. At `sp >= HOP_SPEED (2,000)` and `E >= HOP_E` it may make one small hop first (`vy` x 0.25, one time) so a huge slam reads; the hop's landing is a slide or a slam by the same rule but cannot hop again |
+| **Slam** | `vert >= SLAM_VERT` (0.85 as built; 0.94 from Game Design's balance-targets section 19, about 70 degrees or steeper) | One crater, as now, with the bowl and rim. No bounce. The fighter goes `down`. At `sp >= HOP_SPEED (2,000)` and `E >= HOP_E` it may make one small hop first (`vy` x 0.25, one time) so a huge slam reads; the hop's landing is a slide or a slam by the same rule but cannot hop again |
 | **Slide** | everything shallower than a slam | No crater. The fighter lands upright and slides. See 3 |
 | **Too slow** | `sp <= 350` | As now: no crater and no slide, the fighter drops `down` |
 

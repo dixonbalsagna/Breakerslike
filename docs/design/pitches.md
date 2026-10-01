@@ -187,3 +187,42 @@ Orb's picture: the Protagonist and the rival (the Anti-hero) are both solid all-
 **"Playing along" pays** in every version: the player who leans into his ego (taunting, toying, granting, wagering) reaches a bigger Apex sooner, and the player who fights plainly gets an ordinary all-rounder.
 
 The ego mechanic is scheduled after his first moveset (questionnaire 8), so nothing here is in the next build.
+
+## 7b. For Orb: hybrids of A and B, with "take it on the chin" (2026-10-01)
+
+Orb asked for hybrids of §7's A (the opponent's ask) and B (the Heavy Crown), leaning on B, built around Orb's own idea. Every number is a proposal for data. §7's win-rate rules stay: 45 to 55% overall, under 45% in matches that end before Apex, and over 60% in those that reach it.
+
+### Take it on the chin (in all three hybrids)
+
+The rival plants his feet, opens his arms and lets the opponent hit him. What he absorbs counts in full toward his ego, and only in part against his body.
+
+| Question | Proposal |
+| :--- | :--- |
+| **When the prompt appears** | His Pride is 60 or more (he has taken his first form), he is free and not guarding, he is not on the brink or opened up, and the move is off cooldown. The context icon gains a "hold" mark |
+| **The input** | **Hold** the context button for 12 ticks. A tap still does the usual context action, so ADR 0008's priority list is untouched. The stance lasts while held, for 4 s at most |
+| **How many attacks** | Up to 3 ordinary hits, or 1 signature, which ends it |
+| **The reduction** | Ordinary attacks hurt 17% less (Orb's figure; the tuning range is 15 to 25%). A signature hurts **70% less**. Nothing launches, staggers or moves him |
+| **Against his body** | Only the reduced damage becomes wear, and it lands on the head and the core, half each. That is the real price: his core is his brink |
+| **Toward his ego** | The move's **full** damage counts: +1 Pride per 12 damage. That is about +2 for a light, +5 for a heavy and +20 for a signature, the best rate in his kit. A completed absorb (3 hits, or a signature) also adds to Apex's size |
+| **What he gives up** | Movement, guard, dodge, attacks and the burst. Releasing early ends it with 20 ticks of recovery |
+| **How often** | A 25 s cooldown from the end of the stance |
+| **A signature absorbed** | A set piece: a 1.5 s pause, a camera push and a line of bravado ("Was that supposed to hurt?"). It is the short version in the pause budget and draws on the bank. When the bank can't cover it, it plays live with a camera cut. Signatures come 2 to 4 times a match, so this costs 1.5 to 3 s in a match with a 17 s budget |
+| **The opponent's counterplay** | **Throw him:** a grab or tackle beats the stance at full damage and humbles him (−15 Pride). **Don't attack:** he gains nothing, the cooldown starts, and the opponent has up to 4 s to charge untouched. **Hit him anyway** when ahead on wear: every hit goes to his head and core |
+| **The AI rival** | It uses the stance when its core is below battered and it isn't within 15 Pride of a crash. It answers a signature tell on 20%, 45% or 70% of chances (easy, medium, hard), and otherwise uses it when the opponent has a string queued |
+| **The AI opponent** | Easy attacks into it. Medium charges. Hard throws him |
+
+**How it fits B.** In B his damage falls as his Pride rises, so the middle of the match is his weak stretch. The chin gives that stretch a job: he can't out-hit the opponent, so he banks their attacks to reach Apex sooner. It also fits the Proud front, which already hides his wear.
+
+### Three hybrids
+
+| | **1. On the Chin** (lead) | **2. The Open Invitation** | **3. The Slow Burn** |
+| :--- | :--- | :--- | :--- |
+| **How much of A** | A little. There is no ask. The opponent's choice is built into the stance: hit him and feed him, or charge for free | The most. The stance is an open offer, and the opponent can also ask once | None |
+| **B's debuff** | Full: −4% damage per 10 Pride above 50, so −18% before Apex | Full, as in 1 | Half: −2% per 10 Pride, so −9% before Apex |
+| **The opponent's buff** | None beyond the free charging time | While he holds the stance, an opponent who charges gains at double rate, and he gains +10 Pride for waiting. At Pride 80 or more the opponent may **ask** once a match: they gain a whole ladder step and he gains +20 Pride | None |
+| **Apex** | +36% damage, +3% per completed absorb, up to **+45%** | +34%, +3% per completed absorb and +6% for granting the ask, up to **+49%** | +30%, +2% per completed absorb, up to **+36%** |
+| **The swing at Apex** | 54 to 63 points | 52 to 67 points | 39 to 45 points |
+| **What it needs** | One hold prompt, one short set piece, and data | Two more prompts (the offer and the ask), and AI for both | The same as 1 |
+| **Risk** | His middle is weak if the opponent never attacks into the stance. The 25 s cooldown and the opponent's own need to deal damage limit that | Both players may take every offer, so both just get stronger and the choice goes flat | Safer, but less of an identity: his swing is still the roster's largest, by less |
+
+**Recommendation: 1, On the Chin.** It is B at full strength with Orb's move as the engine, and it needs only one new prompt. The piece of A it keeps costs nothing to build: every time he poses, the opponent chooses between feeding his ego and powering up. If playtests show that the talk between the two players is missing, 2's open invitation adds onto it without changing anything in 1. 3 is the fallback if his weak middle feels bad rather than arrogant.
