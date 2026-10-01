@@ -495,3 +495,20 @@ Touch adds 2 ticks of tolerance, and a one-armed guard takes 2 ticks off each wi
 **(j) The poke's count by Pride** is confirmed: 3 shards, then 5 at Regalia, 7 at Sovereign and 9 at Apex, **for the same total damage.** It shows his Pride without changing the balance. Two conditions keep it that way:
 - a volley or a shard spread counts as **one** landed strike for mood, meters and the strike counts, however many pieces it has;
 - its total follows the Heavy Crown like any other attack of his.
+
+**(k) The first kit's three specials** (Combat's `docs/combat/pending/wave7-first-kit.md`).
+
+| Special | Ki | Ruling |
+| :--- | ---: | :--- |
+| Barrage volley | 20 | Confirmed |
+| Cutting step | **20** | Combat proposed 15. It now does more than a dodge-cancel, which costs 15, so it costs more |
+| Grip and drag | 25 | Confirmed |
+
+- **The barrage's count by Pride** is confirmed: 9, 11, 13 and 15 for the same total, counted as one landed strike and following the Heavy Crown, as the poke does (j).
+- **The cutting step beats an attack in progress.** That is what makes it a special. Against a rival who is attacking, his step takes him off the line: their strike misses and his cut lands clean, with no trade roll. Its limits keep it fair:
+  - a held guard **blocks** it, with no GUARD BREAK, although it is a heavy;
+  - a dodge avoids it, and a perfect block in its last 10 ticks beats it;
+  - it has the 25 s cooldown of every special.
+- **A perfect block against the ground shatter** always plays the split, whatever direction is held. There is no beam to swat or walk through, so the wave parts around him.
+
+**(l) The clinch floor is 28 units,** down from 32, from Animation's measurements. Two fighters in a close exchange stay at least that far apart, and at 28 the two knee strikes reach without a step-in.
