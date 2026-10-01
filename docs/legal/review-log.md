@@ -64,6 +64,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-042 | Last stand B, the rival bravado line, Anti-hero aura colour | Game Design | Low | Clear; aura red-orange changed to the orchid lane | Open until the data changes |
 | RL-043 | Narrative placeholders: signature shouts, Chin Up and alternates, taunt and last-stand lines, DRIVE DOWN, CRATER SLAM | Narrative | Low | GO | Closed |
 | RL-044 | Close-up face directions A, B, C and the blank fallback | Art | Medium | CONDITIONAL: lit shapes may stay; Protagonist A and the Cyborg split face change | Open until Art revises |
+| RL-045 | Close-ups round 8 (capsule eyes, seam, Cyborg split and display cluster, diadem) | Art | Low to Medium | GO; Cyborg display cluster CONDITIONAL (remove scan bars and pips, paler peach) | Open until Art revises |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 

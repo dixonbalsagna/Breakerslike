@@ -287,3 +287,20 @@ Screens `docs/art/closeup-directions.md`. **I rendered and looked at the sheets*
 **Silhouettes and faces.** The long ponytail, swept teal tuft, topknot with the chevron diadem and box head are distinct, and none matches the franchise's upswept hair or a known face. Keep the box head from reading as a flat-topped monster: no bolts, no stitches. The thick-lash Empress eye and the half-lidded Anti-hero eye are common manga styles, fine. No spiky hair, no gold.
 
 **Frame.** The slanted panel with a chamfered corner and diagonal bands is generic. Keep away from a red, black and white torn-paper style (a well-known role-playing game's look).
+
+### Close-ups, round 8 re-look (2026-10-01)
+
+I rendered and looked at: Protagonist and Empress A, the others' B and C, the damage ladder, the eight expressions, the damage-by-expression grid, and the Anti-hero's A-to-B transition.
+
+| Item | Verdict |
+|---|---|
+| Protagonist and Empress A masks (capsule eyes, seam) | **GO** |
+| Empress diadem with shortened tabs | **GO** |
+| Direction C (all three), eight expressions, damage ladder, transition | **GO** |
+| Cyborg stair-shaped diagonal split | **GO** |
+| Cyborg display cluster (lit eye, scan bars, three-pip readout) | **CONDITIONAL: change** |
+
+- **Protagonist and Empress A:** the pill-shaped eyes, brow bars and seam read as a designed mask, not a smiley or the white film mask. Fine.
+- **Cyborg display cluster.** A lit lens over one eye with scan bars and a row of readout pips is a scanner device on the eye, which is the "scouter" idea the rules exclude. **Remove the scan bars and the pips from the eye.** Keep a plain lit rectangle. If a readout is wanted, put it on the jaw or temple plate, away from the eye.
+- **Peach.** Go paler. At 120 px the peach and the coral brow read as a red glowing eye on a metal half. Make the lit eye a pale cream-peach (high lightness, low colour), and make the brow dark steel or the same pale tone, never saturated coral. Check the 120 px greyscale view: it should read as light, not red.
+- **Small notes.** The swollen-eye bruise on the Protagonist's ruined stage shows a concentric ring like a target. Make it a plain swollen shape. The shortened diadem tabs do not read as horns.
