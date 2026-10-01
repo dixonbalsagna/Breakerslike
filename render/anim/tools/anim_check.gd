@@ -95,11 +95,57 @@ func _test_beats() -> void:
 	print("beat test: %d cases on a stub exchange (parry forced)" % cases.size())
 
 
+## The transformation's three beats, in each version, without a match: the gather compresses, the break is exactly the break
+## pose on its first tick, the settle holds the settle pose, and the last tick is back on the base pose.
+func _test_form() -> void:
+	var n := 0
+	for v in ["full", "short", "live"]:
+		var spec: Dictionary = AnimData.forms[v]
+		var g: int = int(spec.gather)
+		var b: int = int(spec["break"])
+		var tot: int = g + b + int(spec.settle)
+		var poses: Dictionary = {}
+		for k in AnimData.form_poses:
+			poses[k] = AnimData.pose(String(AnimData.form_poses[k]))
+		var base: AnimPose = AnimData.pose("stance.aggressive")
+		var steps: Array = [["gather", float(g - 1)], ["break", float(g) + 0.5], ["settle", float(g + b) + minf(float(spec.hold) * 0.5, 4.0) + 1.0]]
+		for st in steps:
+			var af := AnimFighter.new(0)
+			af._base = base.q.duplicate()
+			af._base_hips = base.hips
+			af._base_curl = base.curl
+			for i in range(AnimRig.N):
+				af.q[i] = base.q[i]
+			af.hips = base.hips
+			af._form_pose(spec, st[1], v == "live")
+			var key: AnimPose = poses[st[0]]
+			var d_base := 0.0
+			var d_after := 0.0
+			for i in range(AnimRig.N):
+				d_base += base.q[i].angle_to(key.q[i])
+				d_after += af.q[i].angle_to(key.q[i])
+			var tol: float = 0.05 if st[0] == "break" else (0.7 if (st[0] == "gather" and v == "live") else 0.45)
+			_expect(d_after <= d_base * tol + 0.001, "form test: %s %s beat at tick %.1f is %.2f from its pose (the base is %.2f)" % [v, st[0], st[1], d_after, d_base])
+			n += 1
+		var af2 := AnimFighter.new(0)
+		af2._base = base.q.duplicate()
+		af2._base_hips = base.hips
+		af2._base_curl = base.curl
+		af2._form_pose(spec, float(tot) - 0.5, v == "live")
+		var back := 0.0
+		for i in range(AnimRig.N):
+			back += af2.q[i].angle_to(base.q[i])
+		_expect(back < 0.3, "form test: %s ends %.2f rad from the base pose" % [v, back])
+		n += 1
+	print("form test: %d checks (full, short, live: gather, break, settle, end)" % n)
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
 	AnimData.load_all()
 	_test_beats()
+	_test_form()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}

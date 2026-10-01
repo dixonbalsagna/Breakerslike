@@ -83,7 +83,10 @@ var _ip_cos: float = cos(INERTIA_JUMP * 0.5)
 var layers: String = ""                # tools: which layers shaped this frame (set only with debug_checks)
 var _rushing: bool = false
 var _contact_now: bool = false
+var _form: Dictionary = {}           # the running transformation: {t0, version}
 var _seen_tc: int = -1
+var _cx_n: int = -1                  # the parried exchange whose parry time is remembered
+var _cx_t: float = 0.0               # ... its exchange time when the parry was first seen
 var _tc_left: float = -1.0            # seconds to the next blow's contact, -1 when none is coming
 var _ci_w: float = 0.0
 var _ci_limb: String = "hand_r"
@@ -126,6 +129,14 @@ func on_hit(T: float, region: String, front: bool, amp: float, kind: String = ""
 	_reacts.append({"t0": T, "region": region, "front": front, "amp": clampf(amp, 0.2, 1.0), "kind": kind})
 	if _reacts.size() > 4:
 		_reacts.pop_front()
+
+
+## A transformation took place (the sim's `transform` event). Its three beats (data/anim/forms.json) play over the pause's
+## own ticks (full and short) or over sim time (live).
+func on_transform(T: float, version: String) -> void:
+	if AnimData.forms.has(version):
+		_form = {"t0": T, "version": version}
+		debug["variants"]["transform_" + version] = int(debug["variants"].get("transform_" + version, 0)) + 1
 
 
 func socket(name: String) -> Vector3:
@@ -258,8 +269,10 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	var ex = S.dirS.ex
 	if ex != null and (ex.A == f or ex.D == f):
 		_exchange_layers(S, f, ex, T)
-	# 4. the signature beam
+	# 4. the signature beam, and a transformation
 	_beam_layer(S, f, T)
+	if not _form.is_empty():
+		_transform_layer(S, T)
 	# 5. reactions to blows
 	_recoil_x = 0.0
 	_step_x = 0.0
@@ -302,7 +315,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 ## Nothing is asking for a precise pose this tick.
 func _idle(S: SimState, f) -> bool:
 	var ex = S.dirS.ex
-	return (ex == null or (ex.A != f and ex.D != f)) and _cue.is_empty() and _reacts.is_empty() and f.beamCharge == null and S.beams.is_empty() and S.dirS.stop <= 0.0
+	return (ex == null or (ex.A != f and ex.D != f)) and _cue.is_empty() and _reacts.is_empty() and f.beamCharge == null and S.beams.is_empty() and S.dirS.stop <= 0.0 and _form.is_empty()
 
 
 ## A blow counts as heavy from the exchange kind, the strike's own weight (o.big) or its damage.
@@ -332,6 +345,9 @@ func _target_base(S: SimState, f, T: float) -> void:
 	var w5: float = 0.0              # climbing
 	var w6: float = 0.0              # diving
 	var w7: float = 0.0              # winded (1) or relaxed (0.5) idle
+	var w8: float = 0.0              # sprint, on top of the dash
+	var w9: float = 0.0              # a guarded step forward
+	var w10: float = 0.0             # a guarded step back
 	var mode: int = 0
 	if f.slide > 0.0:
 		mode = 1
@@ -352,6 +368,9 @@ func _target_base(S: SimState, f, T: float) -> void:
 		w2 = smoothstep(140.0, 520.0, -vf) * (1.0 - w1)
 		if w1 > 0.01:
 			w3 = clampf(atan2(f.vy, maxf(absf(f.vx), 60.0)), -0.9, 0.9) * 0.7 * w1
+		w8 = smoothstep(1000.0, 2200.0, vf)
+		w9 = smoothstep(50.0, 180.0, vf) * (1.0 - smoothstep(300.0, 600.0, vf))
+		w10 = smoothstep(50.0, 160.0, -vf) * (1.0 - smoothstep(260.0, 480.0, -vf))
 		mode = 5
 		# the variants: hovering (feet off the ground), climbing, diving; on the ground a winded idle when the ki is spent and
 		# a relaxed one far from the opponent
@@ -367,7 +386,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 				var opp = _opponent(S, f)
 				if opp != null and absf(SimWrap.sdx(f.x, opp.x)) > IDLE_FAR:
 					w7 = 0.5
-	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33)
+	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33) | (int(w8 * 8.0) << 35) | (int(w9 * 8.0) << 39) | (int(w10 * 8.0) << 43)
 	if key == _bkey:
 		_settle += 1
 		return
@@ -380,6 +399,10 @@ func _target_base(S: SimState, f, T: float) -> void:
 		vk = "victory"
 	elif w4 > 0.5:
 		vk = "hover" if w5 < 0.5 and w6 < 0.5 else ("climb" if w5 >= w6 else "dive")
+	elif w8 > 0.5:
+		vk = "sprint"
+	elif w9 > 0.5 or w10 > 0.5:
+		vk = "step"
 	elif w7 >= 1.0:
 		vk = "winded"
 	elif w7 > 0.0:
@@ -410,6 +433,9 @@ func _target_base(S: SimState, f, T: float) -> void:
 		_:
 			_blend_target("move.dash", w1)
 			_blend_target("move.retreat", w2)
+			_blend_target("move.sprint", w8)
+			_blend_target("move.step_f", w9)
+			_blend_target("move.step_b", w10)
 			_blend_target("stance.air", w4)
 			_blend_target("move.ascend", w5)
 			_blend_target("move.descend", w6)
@@ -453,14 +479,22 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var strikes: Array = []
 	var rushes: Array = []
 	var ordinal: int = 0
+	# a parried exchange: only the blows timed before the parry are drawn (the sim keeps listing, and later firing, the rest of
+	# the string; Encounter will end it there)
+	var ct: float = 1.0e9
+	if ex.cancel:
+		if _cx_n != int(ex.n):
+			_cx_n = int(ex.n)
+			_cx_t = ex.t
+		ct = _cx_t
 	for b in ex.beats:
 		if b.op == "strike":
 			var who: String = String(b.args.a)
-			if who == role and (b.done or not ex.cancel):
+			if who == role and (not ex.cancel or b.t <= ct + 0.0001):
 				strikes.append([t0 + b.t, ordinal, b.args, "heavy" if _is_heavy(ex, b.args) else "light"])
 			ordinal += 1
 		elif b.op == "chainStrike":
-			if role == "A" and (b.done or not ex.cancel):
+			if role == "A" and (not ex.cancel or b.t <= ct + 0.0001):
 				strikes.append([t0 + b.t, ordinal, {"o": {"big": true}}, "chain"])
 			ordinal += 1
 		elif b.op == "rush" and role == "A":
@@ -705,6 +739,8 @@ func _contact_ik(S: SimState, f) -> void:
 	var excess: float = need - float(LUNGE_MAX[kind]) - float(STEP_MAX[kind])
 	if side2 >= reach * reach:
 		excess = sqrt(side2) - reach
+	elif need <= 0.0 and d3.length() > reach:
+		excess = d3.length() - reach   # the target is behind the shoulder (the fighters overlap): no step forward helps
 	var lunge: float = minf(need, float(LUNGE_MAX[kind])) * _ci_w
 	var step: float = clampf(need - float(LUNGE_MAX[kind]), 0.0, float(STEP_MAX[kind])) * _ci_w
 	_step_x = step
@@ -733,6 +769,16 @@ func _contact_ik(S: SimState, f) -> void:
 
 func _inertialise(dt: float, prof: Dictionary) -> void:
 	var n: int = AnimRig.N
+	if not _form.is_empty() and _ip_have:
+		# a transformation plays inside a pause (no ticks, so nothing to settle a join on): its own beats are the easing, and
+		# the way back into the fight is inertialised once the ticks run again
+		for i in range(n):
+			_ip_raw[i] = q[i]
+			_ip_cur[i] = Quaternion.IDENTITY
+		_ip_hraw = hips
+		_ip_hcur = Vector3.ZERO
+		_ip_active = false
+		return
 	if not _ip_have:
 		_ip_have = true
 		_ip_raw.resize(n)
@@ -799,6 +845,58 @@ func _part_prof(kind: String) -> Dictionary:
 
 
 # ------------------------------------------------------------------ beam, reactions, springs
+
+## The elapsed ticks of the running transformation, or -1 when it is over. full and short play inside the sim's pause, whose
+## own ticks are the clock (S.pause.left counts them down); live has none and runs on sim time.
+func _transform_layer(S: SimState, T: float) -> void:
+	var v: String = String(_form.version)
+	var spec: Dictionary = AnimData.forms[v]
+	var total: int = int(spec.gather) + int(spec["break"]) + int(spec.settle)
+	var e: float
+	if v == "live":
+		e = (T - float(_form.t0)) * 60.0
+	elif S.pause.left > 0 and S.pause.actor == slot:
+		e = float(total - S.pause.left)
+	else:
+		e = -1.0 if T > float(_form.t0) + 0.05 else 0.0
+	if e < 0.0 or e >= float(total):
+		_form = {}
+		return
+	_form_pose(spec, e, v == "live")
+
+
+## The pose layer at `e` ticks into the transformation (the part tools test without a match).
+func _form_pose(spec: Dictionary, e: float, live: bool) -> void:
+	var g: float = float(spec.gather)
+	var b: float = float(spec["break"])
+	var s_: float = float(spec.settle)
+	var hold: float = float(spec.hold)
+	var fp: Dictionary = AnimData.form_poses
+	if e < g:
+		# the gather: compress (a live one is only a flinch inward)
+		var u: float = e / g
+		_mix_pose(AnimData.pose(String(fp.gather)), smoothstep(0.0, 1.0, u) * (0.6 if live else 1.0))
+	elif e < g + b:
+		# the break: one snap, the new pose locks on in this frame and the silhouette changes here and nowhere else
+		var pb: AnimPose = AnimData.pose(String(fp["break"]))
+		_set_pose(pb)
+		var ub: float = (e - g) / b
+		# a few ticks of overshoot past the lock, then the break pose holds
+		var ov: float = sin(PI * clampf(ub * 4.0, 0.0, 1.0)) * 0.1
+		AnimPose.mix(q, AnimData.pose(String(fp.settle)).q, clampf(smoothstep(0.4, 1.0, ub) - ov, 0.0, 1.0))
+	else:
+		# the settle: the new pose holds for `hold` ticks, then eases back into the fight (live: the upper body holds while he
+		# drifts back, so it fades from the first tick)
+		var ps: AnimPose = AnimData.pose(String(fp.settle))
+		_set_pose(ps)
+		var es: float = e - g - b
+		var w: float = 1.0 - smoothstep(hold, s_, es)
+		# back toward what he is doing
+		for i in range(AnimRig.N):
+			q[i] = _base[i].slerp(ps.q[i], w)
+		hips = _base_hips.lerp(ps.hips, w)
+		curl = _base_curl.lerp(ps.curl, w)
+
 
 func _beam_layer(S: SimState, f, T: float) -> void:
 	if f.beamCharge != null:

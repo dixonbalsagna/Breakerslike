@@ -103,6 +103,10 @@ static func consume(S: SimState, events: Array) -> void:
 			"tick":
 				for f in S.fighters:
 					fighter(S, f).on_tick(float(e.dt), bool(e.frozen))
+			"transform":
+				var who2: int = int(e.actor)
+				if who2 >= 0 and who2 < S.fighters.size():
+					fighter(S, S.fighters[who2]).on_transform(S.T, String(e.version))
 			"cue":
 				var who: int = int(e.actor)
 				for i in range(S.fighters.size()):

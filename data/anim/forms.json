@@ -1,0 +1,10 @@
+{
+  "schema": "anim.forms/1",
+  "_about": "Animation A2: the transformation's three beats per version (docs/design/moveset-rules.md section 10.8), in 60 Hz ticks. gather: the body compresses; break: one snap to the new pose, the only frame the silhouette changes; settle: the new pose holds for `hold` ticks and then eases back into the fight. full and short run inside the sim's pause (their gather, break and settle add up to its length, 180 and 90 ticks), so the clock is the pause's own ticks; live has no pause and runs on sim time. Placeholder poses until a fighter has form art. Render only, outside the sim's data hash.",
+  "versions": {
+    "full": {"gather": 60, "break": 30, "settle": 90, "hold": 45},
+    "short": {"gather": 24, "break": 18, "settle": 48, "hold": 30},
+    "live": {"gather": 10, "break": 14, "settle": 24, "hold": 0}
+  },
+  "poses": {"gather": "form.gather", "break": "form.break", "settle": "form.settle"}
+}

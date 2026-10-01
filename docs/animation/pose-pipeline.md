@@ -957,7 +957,7 @@ What the check also found (Combat's and Encounter's, not fixable in render): of 
 
 **Inertialisation** (`AnimFighter._inertialise`). A bone that turns more than 0.5 rad between two solves is a join (a part starting or ending, a cue, a reaction, a mirrored key set). The jump is taken as an offset from what was drawn last solve, and it settles by itself on an eased 0.1 s (snappy) or 0.18 s (fluid) curve, in tick time, so a hit-stop still lets it finish at half speed. A join announced close to a blow settles before the contact tick, so the contact key stays exact. `pop_scan.gd` (4 seeds x 3000 ticks, 18000 fighter-frames, bone turns above 0.6 rad in one tick): 493 before, 230 after, worst 3.12 rad before, 1.40 rad after. The 230 left are eased swings (a 2.8 rad arm settling in six ticks), not jumps. The settle times are `inertia_s` in `data/anim/profiles.json` (0.1 snappy, 0.18 fluid; the schema field arrived in bf8f941).
 **The contact solve's pole** is now the authored pose's own elbow or knee, so the solved limb is its neighbour and the blend does not turn the upper arm through a hinge twist.
-**What it found for Combat.** Blows announced to the animator fewer than 4 ticks before they land cannot be wound up. In seeds 4 and 12345 only TRADE BLOWS does it: 7 or 8 of 78 blows (both fighters' counter strikes appear in the beat list on the tick they land). Those blows still pop to their contact pose (the offset smooths the rest). Asking Combat to schedule each TRADE BLOWS strike at least 6 ticks ahead.
+**What it found for Combat.** Blows announced to the animator fewer than 4 ticks before they land cannot be wound up. In seeds 4 and 12345 only TRADE BLOWS does it: 7 or 8 of 78 blows (both fighters' counter strikes appear in the beat list on the tick they land). Those blows still pop to their contact pose (the offset smooths the rest). (Combat traced them to a parried string, not to TRADE BLOWS scheduling; fixed on the render side in §9.6.)
 
 **Vocabulary: nine poses, 57 to 66** (`art/animation/a2-vocab-sheet.png`, record `art/animation/records/A2-poses.md`). Driven by the beats the sim already runs, so no new sim data:
 | Beat or event | Who | Pose | Window |
@@ -989,6 +989,24 @@ The ground-contact poses (braced tumble, bounce, lip launch, tech flip, quick an
 **The forced-parry test.** `anim_check` now runs the defensive and clash beats on a stub exchange (wind, a parryable blow, slip, dodge, guardBreak, clashWave) with the parry forced by setting `cancel`: 13 cases, each layer must pull the pose toward its own key and leave the other fighter alone. It found a real bug in the second pass: the parried attacker never played react.rebuff (the wind branch returned for the attacker). Fixed.
 
 Transformation poses (3 s, 1.5 s, 0.8 s, from the new `version` on the transform event) are not started: they need a design brief and Combat's cue.
+
+### 9.6 A2 fourth pass: movement variants, the transformation, the parried string (2026-10-01)
+
+**Movement variants, three poses (72 to 75)** (`art/animation/a2-vocab3-sheet.png`). Free fighters never move in depth (`z` is non-zero only in building launches), so a strafe has no sim motion to follow; the guarded steps stand in for it:
+| Pose | When |
+| :--- | :--- |
+| move.step_f | on the ground, 50 to about 450 u/s toward the opponent: a guarded advance, fading into the dash as it speeds up |
+| move.step_b | the same going back (the retreat pose takes over above about 300 u/s) |
+| move.sprint | above 1000 u/s, blended over the dash to full at 2200: body almost level, arms swept back |
+In seeds 99 and 12345 (7000 ticks): 1205 to 1602 step blends and 64 to 270 sprint blends a match.
+
+**The transformation, placeholder poses for all three versions** (`data/anim/forms.json`, `art/animation/a2-form-sheet.png`). Keyed to the sim's `transform` event and its `version`, with the beats of moveset-rules §10.8 in ticks (full 60, 30, 90; short 24, 18, 48; live 10, 14, 24):
+- *gather*: form.gather (the charge pose compressed: knees bent, feet together, hands drawn in to the breastbone, head down), eased in; a live one is a flinch inward at 0.6;
+- *break*: one snap to form.break (full height, chest open, arms out and down, open hands, chin up) on the first tick of the beat, a little overshoot, then it eases toward form.settle: the silhouette changes here and nowhere else;
+- *settle*: form.settle (a taller idle) holds for 45 ticks (full) or 30 (short) and then eases back into the fight; live fades from the first tick (the upper body holds while he drifts back).
+The clock is the pause's own ticks (`S.pause.left` counts them down, and the beats add up to the pause's 180 and 90 ticks): the sim is frozen, so sim time does not move. Live has no pause and runs on sim time. A transformation's frames skip inertialisation (no ticks to settle on); the way back into the fight is inertialised when the ticks run again. No scream, no fists at the hips, no hair change; the burst, the ring, the crater and the aura swap are VFX's and the camera's. `anim_check` tests all three versions at the gather, the break, the settle and the end without a match (12 checks), and a real full transformation played in seed 99 with no NaN. The size step of a tier is the view's.
+
+**A parried string.** Combat traced the 'late' blows (the 7 or 8 of 78) to the leftover strike beats of parried exchanges: the sim keeps listing them and fires them later, and the animator drew each one when it was done. In a parried exchange only the blows timed before the parry are drawn now (the exchange time at the first sight of `cancel` is remembered). Blows announced under 4 ticks ahead, 4 seeds: 7 or 8 of 78 before, 0 after. Encounter will end the string in the sim later.
 
 ---
 

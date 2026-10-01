@@ -16,6 +16,8 @@ static var default_profile: String = "snappy"
 static var by_part: Dictionary = {}          # part kind (light, heavy, chain, rush, launch, power) -> profile name
 static var bone_lag := PackedFloat32Array()
 static var cue_poses: Dictionary = {}   # cue kind -> pose id
+static var forms: Dictionary = {}       # transformation: version -> {gather, break, settle, hold} in ticks
+static var form_poses: Dictionary = {}  # beat -> pose id
 
 
 static func _read(name: String) -> Dictionary:
@@ -48,6 +50,9 @@ static func load_all() -> void:
 	for i in range(AnimRig.N):
 		bone_lag[i] = float(bl.get(AnimRig.BONES[i][0], 0.0))
 	cue_poses = _read("cues.json").get("cues", {})
+	var fj: Dictionary = _read("forms.json")
+	forms = fj.get("versions", {})
+	form_poses = fj.get("poses", {})
 
 
 static func pose(id: String, mirror: bool = false) -> AnimPose:
