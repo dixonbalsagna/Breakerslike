@@ -51,6 +51,7 @@ func _init() -> void:
 	check("pausing set pieces", _pause())
 	check("act rule and time cap", _actRule())
 	check("the break", _formBreak())
+	check("depth in the core", _depth())
 	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
@@ -521,6 +522,119 @@ func _pause() -> String:
 		var res: Dictionary = SimReplay.play(JSON.parse_string(JSON.stringify(rp)))
 		return "" if res.ok else "a replay through a pause: %s at tick %d" % [res.reason, res.firstBadTick]
 	return "no AI match of seeds 3, 7 and 12 reached a pause in four minutes"
+
+
+## Fight lanes, L0 and L2 (docs/architecture/fight-lanes.md). The player never steers depth: the intent has no depth field
+## and nothing in sim/input writes a depth. Depth is off unless the setup or the director's switch asks for it, and a
+## default match keeps every home depth at 0. With it on (a forced setup): a free fighter eases to his home depth; a rush
+## homes in depth and leaves him there; a fighter in an exchange takes its depth; a flight's end is the new home; and
+## nothing leaves the band.
+func _depth() -> String:
+	for prop in SimIntent.new().get_property_list():
+		var pn: String = prop.name
+		if pn == "z" or pn == "zT" or pn == "depth" or pn == "lane" or pn == "mz":
+			return "SimIntent has a depth field: " + pn
+	var rx := RegEx.new()
+	rx.compile("\\.(z|zT|zWay|aimZ0|aimZ1|pz|oz|zs)\\s*(=[^=]|\\+=|-=|\\*=)")
+	var d := DirAccess.open("res://sim/input")
+	for fname in d.get_files():
+		if not fname.ends_with(".gd"):
+			continue
+		var src: String = FileAccess.get_file_as_string("res://sim/input/" + fname)
+		var m := rx.search(src)
+		if m != null:
+			return "sim/input/%s writes a depth: %s" % [fname, m.get_string()]
+	var P := SimCore.createSim()
+	SimCore.newMatch(P, 5)
+	if P.depthOn:
+		return "depth is on in a default match"
+	for t in range(600):
+		SimCore.step(P)
+		P.out.fx.clear()
+		P.out.feed.clear()
+		for f in P.fighters:
+			if f.zT != 0.0:
+				return "with depth off a home depth moved (%s at tick %d)" % [str(f.zT), t]
+	SimCore.dispose(P)
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5, {"p1": false, "p2": false}, {"depth": true})
+	if not S.depthOn:
+		return "the setup's depth switch did not reach the sim"
+	var a = S.fighters[0]
+	var b = S.fighters[1]
+	var dt: float = SimConst.DT
+	# the free ease, and the band
+	a.z = 300.0
+	a.zT = -600.0
+	var last: float = a.z
+	for t in range(240):
+		SimFighter.stepDepth(S, a, dt)
+		if a.z > last:
+			return "the free ease moved away from the home depth"
+		last = a.z
+	if a.z != -600.0:
+		return "a free fighter did not reach his home depth (%s)" % str(a.z)
+	a.zT = -99999.0
+	for t in range(600):
+		SimFighter.stepDepth(S, a, dt)
+	if a.z != SimConst.Z_BACK or a.zT != SimConst.Z_BACK:
+		return "the band did not hold the back edge (z %s, home %s)" % [str(a.z), str(a.zT)]
+	a.z = 99999.0
+	SimFighter.stepDepth(S, a, dt)
+	if a.z > SimConst.Z_FRONT:
+		return "the band did not hold the front edge"
+	# a rush homes in depth and leaves him there
+	a.z = 0.0
+	a.zT = 0.0
+	b.z = -900.0
+	b.zT = -900.0
+	var r := SimState.Rush.new()
+	r.tgt = b
+	r.off = -60.0
+	r.end = S.T + 0.5
+	a.rush = r
+	var steps: int = 0
+	while a.rush != null and steps < 200:
+		SimFighter.stepRush(S, a, dt)
+		SimFighter.stepDepth(S, a, dt)
+		S.T += dt
+		steps += 1
+	if a.z != -900.0 or a.zT != -900.0:
+		return "a rush did not home in depth (z %s, home %s after %d ticks)" % [str(a.z), str(a.zT), steps]
+	var r2 := SimState.Rush.new()
+	r2.px = a.x + 400.0
+	r2.py = a.y
+	r2.pz = -300.0
+	r2.end = S.T + 0.3
+	a.rush = r2
+	steps = 0
+	while a.rush != null and steps < 200:
+		SimFighter.stepRush(S, a, dt)
+		S.T += dt
+		steps += 1
+	if a.z != -300.0:
+		return "a point rush did not reach its depth (%s)" % str(a.z)
+	# an exchange's depth is the home of both fighters
+	var ex := SimState.Exchange.new()
+	ex.A = a
+	ex.D = b
+	ex.z = -450.0
+	S.dirS.ex = ex
+	SimFighter.stepDepth(S, a, dt)
+	SimFighter.stepDepth(S, b, dt)
+	if a.zT != -450.0 or b.zT != -450.0:
+		return "an exchange's depth did not become the fighters' home (%s, %s)" % [str(a.zT), str(b.zT)]
+	S.dirS.ex = null
+	# a flight's end is the new home
+	a.state = "launched"
+	a.z = -1200.0
+	SimFighter.stepDepth(S, a, dt)
+	a.state = "free"
+	SimFighter.stepDepth(S, a, dt)
+	if a.zT != -1200.0 or a.z != -1200.0:
+		return "a flight's end did not become the home depth (z %s, home %s)" % [str(a.z), str(a.zT)]
+	SimCore.dispose(S)
+	return ""
 
 
 ## The break (moveset-rules.md section 10.8): a transformation's tier-up lands at the end of the version's gather, not on

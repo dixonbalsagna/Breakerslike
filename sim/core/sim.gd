@@ -35,6 +35,7 @@ static func dispose(S: SimState) -> void:
 ## ai is {"p1": bool, "p2": bool}; a missing entry keeps the previous fighter's setting, or true with no fighters yet.
 ## setup (D1a; the replay header's `setup`): {"slots": [id, id]} picks the fighters (default: the roster's first two),
 ## "names": [name, name] renames them (the mirror arms), "flip": true swaps the spawn sides. {} is the default match.
+## Fight lanes: "depth": true makes depth physical for this match (S.depthOn).
 ## I2a: "v2": [bool, bool] marks the slots whose intents are v2 (the stance follows the held fields), and "assists":
 ## [[names], [names]] the Simple layout's assists per slot (SimAct.ASSISTS).
 static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> void:
@@ -75,6 +76,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.biomeT = PackedFloat64Array()   # location variety (granted line): the director sizes it on the first tick
 	S.dirS.craterT = PackedFloat64Array()   # Encounter's slice (a) (granted line)
 	SimAct.setup(S, setup)   # I2a: each fighter's action state
+	S.depthOn = setup.get("depth", false) == true   # fight lanes: off until the director's switch-on (L4); a setup may force it for probes
 	SimPause.reset(S)        # Q10: the pause bank
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
 	S.out.feed.clear()
@@ -121,8 +123,9 @@ static func step(S: SimState, inputs = null) -> bool:
 		var ax: float = c.A.x
 		var dx: float = SimWrap.sdx(ax, c.D.x)
 		var sx: float = SimWrap.wrap(ax + dx * mid)
-		SimFx.spark(S, sx, (c.A.y + (c.D.y - c.A.y) * mid) + 38.0, 3, "#ffffff", 700.0)
-		SimFx.shake(S, 7.0, sx)
+		var sz: float = c.A.z + (c.D.z - c.A.z) * mid
+		SimFx.spark(S, sx, (c.A.y + (c.D.y - c.A.y) * mid) + 38.0, 3, "#ffffff", 700.0, sz)
+		SimFx.shake(S, 7.0, sx, sz)
 	return true
 
 

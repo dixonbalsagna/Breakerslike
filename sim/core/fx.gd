@@ -13,48 +13,50 @@ static func _ev(S: SimState, type: String) -> SimState.FxEvent:
 	return e
 
 
-static func spark(S: SimState, x: float, y: float, n: int, col: String, spd: float) -> void:
+## L0 (fight lanes): every positioned event carries z, the depth it happens at (0 is the fighter plane). The emitters
+## that take a position take z last, 0 by default; the ones that take a fighter read his.
+static func spark(S: SimState, x: float, y: float, n: int, col: String, spd: float, z: float = 0.0) -> void:
 	var e := _ev(S, "spark")
-	e.x = x; e.y = y; e.n = n
+	e.x = x; e.y = y; e.n = n; e.z = z
 	e.col = col if col != "" else "#fff3c0"
 	e.spd = spd if spd != 0.0 else 500.0
 
 
-static func ring(S: SimState, x: float, y: float, gr: float, col: String, life: float, r0: float) -> void:
+static func ring(S: SimState, x: float, y: float, gr: float, col: String, life: float, r0: float, z: float = 0.0) -> void:
 	var e := _ev(S, "ring")
-	e.x = x; e.y = y; e.gr = gr
+	e.x = x; e.y = y; e.gr = gr; e.z = z
 	e.col = col if col != "" else "#ffffff"
 	e.life = life if life != 0.0 else 0.5
 	e.r0 = r0 if r0 != 0.0 else 10.0
 
 
-static func debris(S: SimState, x: float, y: float, n: int, col: String, spd: float) -> void:
+static func debris(S: SimState, x: float, y: float, n: int, col: String, spd: float, z: float = 0.0) -> void:
 	var e := _ev(S, "debris")
-	e.x = x; e.y = y; e.n = n
+	e.x = x; e.y = y; e.n = n; e.z = z
 	e.col = col if col != "" else "#6d6a66"
 	e.spd = spd if spd != 0.0 else 500.0
 
 
-static func dust(S: SimState, x: float, y: float, n: int, col: String = "") -> void:
+static func dust(S: SimState, x: float, y: float, n: int, col: String = "", z: float = 0.0) -> void:
 	var e := _ev(S, "dust")
-	e.x = x; e.y = y; e.n = n
+	e.x = x; e.y = y; e.n = n; e.z = z
 	e.col = col if col != "" else "#9b8f7e"
 
 
-static func splash(S: SimState, x: float, y: float, n: int) -> void:
+static func splash(S: SimState, x: float, y: float, n: int, z: float = 0.0) -> void:
 	var e := _ev(S, "splash")
-	e.x = x; e.y = y; e.n = n
+	e.x = x; e.y = y; e.n = n; e.z = z
 
 
-static func fire(S: SimState, x: float, y: float, n: int) -> void:
+static func fire(S: SimState, x: float, y: float, n: int, z: float = 0.0) -> void:
 	var e := _ev(S, "fire")
-	e.x = x; e.y = y; e.n = n
+	e.x = x; e.y = y; e.n = n; e.z = z
 
 
 ## An afterimage of f: 0.45 s for a dodge or escape, 0.16 s for each tick of a rush trail.
 static func afterimage(S: SimState, f, life: float = 0.45) -> void:
 	var e := _ev(S, "after")
-	e.x = f.x; e.y = f.y; e.life = life; e.col = f.aura; e.face = f.face
+	e.x = f.x; e.y = f.y; e.z = f.z; e.life = life; e.col = f.aura; e.face = f.face
 
 
 static func banner(S: SimState, text: String, col: String, dur: float) -> void:
@@ -69,23 +71,24 @@ static func banner(S: SimState, text: String, col: String, dur: float) -> void:
 ## for landings and collisions, which never showed one.
 static func damage(S: SimState, f, attacker, amount: float, region: String, kind: String, col: String, number: bool) -> void:
 	var e := _ev(S, "damage")
-	e.x = f.x; e.y = f.y + 90.0; e.amount = amount; e.col = col
+	e.x = f.x; e.y = f.y + 90.0; e.z = f.z; e.amount = amount; e.col = col
 	e.victim = float(S.fighters.find(f)); e.attacker = -1.0 if attacker == null else float(S.fighters.find(attacker))
 	e.region = region; e.kind = kind; e.number = number
 
 
 ## Camera shake request: the consumer keeps shake = max(shake, k) and decays it at the end of the tick. x is the world x
 ## of the cause, so a split-screen camera can shake only the pane that shows it.
-static func shake(S: SimState, k: float, x: float) -> void:
+static func shake(S: SimState, k: float, x: float, z: float = 0.0) -> void:
 	var e := _ev(S, "shake")
 	e.k = k
 	e.x = x
+	e.z = z
 
 
 ## A charging fighter's aura, once per charging tick (the consumer rolls its sparks and dust).
 static func chargeFx(S: SimState, f, ground: float) -> void:
 	var e := _ev(S, "charge")
-	e.x = f.x; e.y = f.y; e.col = f.aura; e.ground = ground
+	e.x = f.x; e.y = f.y; e.z = f.z; e.col = f.aura; e.ground = ground
 
 
 ## A crater was dug (world/crater.gd): the persistent record's fields, as the render side needs them.
@@ -100,31 +103,32 @@ static func crater(S: SimState, c) -> void:
 static func slideEvent(S: SimState, r) -> void:
 	var e := _ev(S, "slide")
 	e.pop = r.pop
-	e.x = r.x0; e.x1 = r.x1; e.w = r.hw * 2.0; e.depth = r.depth; e.energy = r.energy
+	e.x = r.x0; e.x1 = r.x1; e.z = r.z0; e.z1 = r.z1; e.w = r.hw * 2.0; e.depth = r.depth; e.energy = r.energy
 	e.variant = "paved" if r.surface > 0.5 else "ground"; e.owner = r.owner
 
 
 ## A sample along a slide, for dust and chips: x, ground height, normalised speed, trench width, surface, index.
-static func slideDust(S: SimState, x: float, y: float, v: float, w: float, surface: String, i: int) -> void:
+static func slideDust(S: SimState, x: float, y: float, v: float, w: float, surface: String, i: int, z: float = 0.0) -> void:
 	var e := _ev(S, "slide_dust")
-	e.x = x; e.y = y; e.spd = v; e.w = w; e.variant = surface; e.n = i
+	e.x = x; e.y = y; e.z = z; e.spd = v; e.w = w; e.variant = surface; e.n = i
 
 
 ## One skip off the water: x, surface height, speed, skip number.
-static func skim(S: SimState, x: float, y: float, v: float, i: int) -> void:
+static func skim(S: SimState, x: float, y: float, v: float, i: int, z: float = 0.0) -> void:
 	var e := _ev(S, "skim")
-	e.x = x; e.y = y; e.spd = v; e.n = i
+	e.x = x; e.y = y; e.z = z; e.spd = v; e.n = i
 
 
-static func scorchEvent(S: SimState, x: float, y: float, w: float, power: float, variant: String, owner: float) -> void:
+static func scorchEvent(S: SimState, x: float, y: float, w: float, power: float, variant: String, owner: float, z: float = 0.0) -> void:
 	var e := _ev(S, "scorch")
-	e.x = x; e.y = y; e.w = w; e.power = power; e.variant = variant; e.owner = owner
+	e.x = x; e.y = y; e.z = z; e.w = w; e.power = power; e.variant = variant; e.owner = owner
 
 
 ## A beam sample low over water (the consumer rolls the splash).
-static func beamSplash(S: SimState, x: float) -> void:
+static func beamSplash(S: SimState, x: float, z: float = 0.0) -> void:
 	var e := _ev(S, "beamSplash")
 	e.x = x
+	e.z = z
 
 
 ## Wounds (wounds.gd): a region changed stage.
@@ -406,11 +410,31 @@ static func strugglePress(S: SimState, f, kind: String, n: int) -> void:
 	e.actor = float(S.fighters.find(f)); e.kind = kind; e.n = n
 
 
-## Camera: actor was launched by target at speed amount, horizontally toward face (+1 or -1).
-static func launch(S: SimState, f, by, speed: float, dir: float) -> void:
+## A ground-contact event (World, G3; world/contact.gd): left_ground, bounce, land, tumble_end, journey_end. Every one
+## carries the body's x, y, z, speed and the launch number n; the caller sets the rest.
+static func contactEvent(S: SimState, type: String, f, x: float, y: float, speed: float) -> SimState.FxEvent:
+	var e := _ev(S, type)
+	e.actor = float(S.fighters.find(f))
+	e.x = x
+	e.y = y
+	e.z = f.z
+	e.spd = speed
+	e.n = int(f.launchN)
+	return e
+
+
+## Camera: actor was launched by target at speed amount, horizontally toward face (+1 or -1). ux, uy: the launch's unit
+## direction before the traversal boost (from the fighter's velocity, which the launch has just set), so Animation's first
+## frame points the right way. n: the launch number that pairs a journey's events (World's launchN; 0 until it lands).
+static func launch(S: SimState, f, by, speed: float, dir: float, n: int = 0) -> void:
 	var e := _ev(S, "launch")
 	e.actor = float(S.fighters.find(f)); e.target = float(S.fighters.find(by)) if by != null else -1.0
-	e.amount = speed; e.face = dir
+	e.amount = speed; e.face = dir; e.n = n
+	var hx: float = f.vx / f.launchT
+	var d: float = SimDetMath.hypot(hx, f.vy)
+	if d > 0.0:
+		e.ux = hx / d
+		e.uy = f.vy / d
 
 
 ## Camera: actor rushes to target, arriving at tick n.

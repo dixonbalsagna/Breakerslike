@@ -59,3 +59,14 @@ It is a hash-only change for gameplay (the light digests should not move), so it
 - The contact catch record (Animation's ask 5) is Encounter's event.
 - The early recovery (a dodge tap in a tumble, or within 8 ticks of a bounce) is Controls' and Combat's rule; it reads `contactT` and the mode.
 - Animation's rates (gravity 1,000, launch flight 0.3 to 2 s): gravity is a literal in `stepLaunched` and in the predictors. If it ever becomes data, Animation hears first.
+
+## 7. In the tree since L0 (2026-10-02)
+
+The grant lines went in with L0, neutral and proven on the light digests (`fight-lanes.md` section 15 lists them). What World's G2 still adds in my files, by grant:
+1. `S.contactOn = WorldContact.enabled()` in `SimCore.newMatch`.
+2. The hook at the top of `stepLaunched`.
+3. In `SimFighter.spin`: `if S.contactOn:` hand over to `WorldContact.spinStep` and return.
+4. The journey's wear budget at the impact's call into `SimDamage`.
+
+World's script should drop its edits to `state.gd`, `hash.gd`, `fx.gd` and `view/fx.gd`, and in `WorldBrunt.arm` set only the launch event's `n` (the event already carries a unit `ux`, `uy`).
+

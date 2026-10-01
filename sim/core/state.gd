@@ -11,6 +11,7 @@ var tick: int = 0               # steps since newMatch, hit-stop ticks included 
 var dt: float = 0.0
 var rng: SimRng = SimRng.new(7)
 var game := Game.new()
+var contactOn: bool = false           # ground contact on (World, G2: a copy of data/biomes/contact.json enabled, taken by newMatch)
 var dirS := DirS.new()
 var fighters: Array = []
 var world: World = null
@@ -31,6 +32,7 @@ var trees: Array = []
 var beams: Array = []
 var mood := MoodState.new()           # M1 (sim/core/mood.gd): the fight's mood, the act and the outputs
 var pause := PauseState.new()         # Q10 (sim/core/pause.gd): the pausing set pieces' bank and the running pause
+var depthOn: bool = false             # fight lanes: depth is physical (the director's depth.json switch, or the setup's "depth"); off until L4
 var out := Out.new()
 
 
@@ -56,6 +58,7 @@ class ActState:
 	var formReady: bool = false   # a tier is ready and waits for the transform (ladder.json manualTierUp)
 	var burstFired: bool = false  # the burst already fired on this power press
 	var breakIn: int = -1         # the break: ticks until a transformation's tier-up lands (SimPause gather), -1 for none
+	var dirI: PackedInt32Array = PackedInt32Array()   # the director's per-fighter integers (DirInterrupt: lockouts, openings, staleness); it sizes and owns them
 
 
 ## Q10: pausing set pieces (sim/core/pause.gd). Integers; a tick is a real tick, frozen or live.
@@ -165,6 +168,8 @@ class Slide:
 	var pop: float = 0.0      # civilians killed by this slide
 	var x0: float = 0.0       # where the fighter touched down
 	var x1: float = 0.0       # where he stopped or left the ground
+	var z0: float = 0.0       # L0: the furrow's depth at each end
+	var z1: float = 0.0
 	var hw: float = 0.0       # trench half width
 	var depth: float = 0.0    # trench depth at the start
 	var energy: float = 0.0   # the impact energy the slide came from
@@ -231,6 +236,8 @@ class Beam:
 	var col: String = ""
 	var pw: float = 1.0          # beam-power scalar, fixed at fire time (WorldCrater.beamPower)
 	var struck: bool = false     # has this beam already dug its ground-strike crater?
+	var oz: float = 0.0          # L0: the depth at the beam's origin ...
+	var zs: float = 0.0          # ... and its change per unit of length
 	var sf: float = 1.0          # step 2, the tier gate (balance-targets.md §15): the structure-damage factor at fire time
 	var cap: int = -1            # ... buildings this beam may level (-1: no cap); past it they are left at 25% hp
 	var levelled: int = 0        # ... and how many it has levelled so far
@@ -308,6 +315,16 @@ class FxEvent:
 	var link: int = 0            # building_hit, chain_link: 1 for the first building of a flight
 	var ux: float = 0.0          # building_hit, floor_hit: the unit impact velocity
 	var uy: float = 0.0
+	var surface: String = ""     # bounce, land: the surface class (paving, rock, soil, sand, rubble, water)
+	var vn: float = 0.0          # bounce, land: the speed into the surface (negative into the ground)
+	var vt: float = 0.0          # bounce, land: the speed along the surface
+	var sina: float = 0.0        # land, bounce: the sine of the contact angle to the surface
+	var vx: float = 0.0          # left_ground: the velocity he leaves with
+	var vy: float = 0.0
+	var slope: float = 0.0       # left_ground, bounce, land: the ground slope (rise over run) at the contact
+	var contacts: int = 0        # left_ground, land, bounce, tumble_end, journey_end: contacts so far
+	var lips: int = 0            # journey_end: flights off a lip
+	var nb: int = 0              # journey_end: bounces
 	var z: float = 0.0           # launch_depth: the first hit's depth; building_hit, floor_hit, chain_link: the hit depth
 	var z1: float = 0.0          # chain_link: the next building's hit depth
 	var y1: float = 0.0          # launch_depth, chain_link: the next hit point's height
@@ -413,8 +430,17 @@ class Fighter:
 	var aimD: float = 1.0            # x distance from the waypoint to the near face
 	var chainEvt: float = 0.0        # the collateral set-piece token of a planned chain (0 for none)
 	var z: float = 0.0               # the fighter's depth from the plane, positive toward the camera; a function of his aim
+	var zT: float = 0.0              # L0: the home depth a free fighter eases to (where a flight left him, or the director's choice)
+	var zWay: bool = false           # L0: a depth waypoint is armed for this flight whether or not it is aimed (aimX0, aimZ0, aimZ1, aimD)
 	var splashed := PackedInt32Array()   # buildings already splashed by this launch (at most WorldBrunt.SPLASH_CAP)
 	var launchSpecial: bool = false  # the current launch is a signature, finisher or break launch (its ground mark may be big)
+	var jContacts: int = 0           # ground contact (World, G2; world/contact.gd): contacts of this journey so far
+	var jT: int = 0                  # ticks since the journey's first contact (cap 240)
+	var jV0: float = 0.0             # the journey's first-contact normalised speed (the wear budget)
+	var tumbleT: int = -1            # ticks rolled in a tumble, -1 when not tumbling (cap 72)
+	var contactT: int = 0            # ticks since the last contact, saturating at 8 (the early-recovery window)
+	var launchN: int = 0             # this fighter's launch number: every contact event carries it
+	var jLips: int = 0               # flights off a lip so far in this journey (journey_end carries it)
 	var hopped: bool = false         # the launch has made its one hop
 	var slideEvt: float = 0.0      # the collateral set-piece token of the running slide (world/collateral.gd)
 	var lastSeen = null      # LastSeen or null
@@ -432,6 +458,7 @@ class Rush:
 	var off: float = 0.0
 	var px: float = 0.0
 	var py: float = 0.0
+	var pz: float = 0.0      # L0: a point rush's depth (a fighter rush homes to its target's z)
 	var end: float = 0.0
 
 
@@ -467,6 +494,7 @@ class Exchange:
 	var ext = null           # Ext or null
 	var windowStart: float = -1.0
 	var cancel: bool = false
+	var z: float = 0.0           # L0: the depth the exchange is fought at (the director sets it at requestAttack)
 	var sA: float = 0.0          # S3b (R8): the attacker's stance, frozen at requestAttack; hit() reads it in the exchange
 	var sD: float = 0.0          # ... and the defender's
 	var loser: int = -1          # S3b: the slot that lost the exchange (branch favours, a decisive result, a parry), -1 none

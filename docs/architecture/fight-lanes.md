@@ -301,3 +301,23 @@ Added to L0 from the ground-contact review: `launch` carries `ux`, `uy` and `n`.
 
 **Order (EP, with Orb's ruling that depth stays behind the ragdoll physics):** Encounter's landing and contact slices; World's G1 and structure reach; **L0 and L2** (neutral, accepted ahead of G2 because both rewrite the launched branch); World's G2 to G5; the intro phase; the last stand; then the rest of the lanes (L1 with D1, L3 and T, L4, L5).
 
+## 15. L0 and L2 as built (2026-10-02, on 940cf02)
+
+The parked scripts applied with no line moved. Files: `sim/core` `constants.gd`, `state.gd`, `sim.gd`, `fx.gd`, `fighter.gd`, `damage.gd`, `hash.gd`, `view/fx.gd`, `tools/parity.gd`, `test/golden.json`, and a new tool `tools/golden_cmp.py`.
+
+**Proofs, in the tree**
+1. L0's code, with World's grant lines, passes parity on the untouched goldens (9 matches, 169,029 ticks).
+2. With the new state fields hashed (L0's, World's journey fields, `S.contactOn`), every light digest and tick count is identical to 940cf02's; only the full-state checkpoints move.
+3. With the events' new fields hashed, the goldens are regenerated: the light digest folds the events, so it moves here by design.
+4. L2 passes parity on those goldens untouched, with the new check "depth in the core".
+5. Encounter's `dirI` lines, added last: light digests identical again.
+
+One golden file comes out of the slice. Gates on a clean export of 940cf02 plus the ten files: parity, determinism, seam sweep, `npm test`, the validator (0 errors) and its self-test (1,496 of 1,496) and the touch test pass. The loader check fails the same way on 940cf02 itself (CHARGE INTERRUPT is not exercised in its 50 matches): not from this slice.
+
+**Also in, for other owners, all neutral**
+
+| For | What is in | What is left for them |
+| :--- | :--- | :--- |
+| World, G2 and G3 | Fighter fields `jContacts`, `jT`, `jV0`, `tumbleT` (-1), `contactT`, `launchN`, `jLips`, hashed. `S.contactOn` (false), hashed. `FxEvent` fields `surface`, `vn`, `vt`, `sina`, `vx`, `vy`, `slope`, `contacts`, `lips`, `nb`. `SimFx.contactEvent`. The five events in the hash table and the reference consumer's list. `launch` with `ux`, `uy` (unit direction, from the velocity) and `n`. Body rotation through one function, `SimFighter.spin(S, f, dt, how)`, called from the four places | `S.contactOn = WorldContact.enabled()` in `newMatch`; the hook in `stepLaunched`; `spin()` handing over to `WorldContact.spinStep` when contact is on; the wear budget at the impact call. Its script's edits to `state.gd`, `hash.gd`, `fx.gd` and `view/fx.gd` are no longer needed. In `WorldBrunt.arm` it should set only the launch event's `n`, not `ux` and `uy` |
+| Encounter, step 3 | `ActState.dirI` (an empty `PackedInt32Array`) and its hash line, as its script writes them | Run its script without `--core` |
+

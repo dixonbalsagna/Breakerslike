@@ -24,3 +24,7 @@ const HALF: float = W / 2.0    # the largest shortest-arc separation
 const CEILING: float = 24000.0 # flight ceiling (was 2,600): above the tallest building
 const START_X: float = 5600.0 * PS   # where the first fighter starts: open ground at the desert's west edge, clear of every town (balance-targets.md §4b ruling 3; was 2150 x PS, the plains by the city); the second is 750 units on
 const START_GAP: float = 750.0
+## Fight lanes (ADR 0009, docs/architecture/fight-lanes.md): the band of depth fighters, props and beams live in. z is
+## positive toward the camera and the fighter plane is z = 0. Placeholders for World's lane table (S.lanes, L1).
+const Z_FRONT: float = 375.0     # +5 fighter heights: the front street's near kerb
+const Z_BACK: float = -2025.0    # -27 fighter heights: block row 2's back face
