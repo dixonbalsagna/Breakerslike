@@ -58,7 +58,7 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 | 4 | **Silence before a huge hit** | 8 ticks before a finisher, a crippling blow or a signature lands | Any | With those hits | None. The sim doesn't slow | Presentation | Audio |
 | 5 | **The fighter's theme on transformation** | A transformation's break beat | Any | Each transformation | None | Presentation | Audio |
 | 6 | **A delayed boom from far-off impacts** | An impact off screen, or beyond 30 bh | Any | With those impacts. The delay is capped at 1.5 s | None | Presentation | Audio |
-| 7 | **The crater-landing entrance and the staredown** | The match intro, before the clock starts | Any | Once. Both can be skipped | None. The entrance craters are real, on open ground, with no collateral | Sim (small) | Camera, World, Animation |
+| 7 | **The crater-landing entrance and the staredown** | The match intro, before the clock starts | Any | Once. Both can be skipped | None. The entrance craters are real, on open ground, with no collateral. The landing spots need to be 900 units apart, so `START_GAP` goes from 750 to 900 for every match | Sim (small) | Camera, World, Animation |
 | 8 | **The winner stands in the wreckage** | The KO | Any | Once | None. The camera pulls back over the match's real scars | Presentation | Camera, Rendering |
 | 9 | **Land scars stay; water closes** | Any crater, trench or beam scar | Any | Always | None. Water closes within seconds by the existing flow | Already in the sim | World |
 | 10 | **Crowds watch, then flee** | The mood bands and the evacuation rules | Any | Always | None | Already in the sim | World, Rendering, Narrative |
@@ -74,7 +74,7 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 | 20 | **Blur exchange across the sky** | Both fighters attacking with strings queued, in Tense or Frenzied, on the pulse | 2 and up | About 1 a minute in Tense and Frenzied, under rule 2 | The strings' own ki | Sim | Combat, Encounter, Camera |
 | 21 | **Mid-air grapple lock** | Two grabs meet in the air, or a dive grab meets a grab, on the pulse | Any | Rare: under 1 a match | None. The winner slams the loser | Sim | Combat, Encounter, Animation |
 | 22 | **The round-the-world hit** | A ping-pong's ender or a finisher launch, in Frenzied | **4 only** | In the shared budget of 3, once per fighter | 20 ki. He flies above everything, so there is no collateral on the way | Sim | Encounter, Simulation, Camera, VFX |
-| 23 | **The last stand** (Orb's pick: one last signature; **Legal's re-screen is pending**) | The first time a fighter reaches the brink: a camera cut, his face cut-in and a line, and his signature is free and ready at once for 20 s | Any | Once per fighter per match | A free signature. The rival answers it like any other | Sim (small) | Encounter, Narrative, Camera |
+| 23 | **The last stand** (Orb's pick: one last signature; **cleared by Legal**) | The first time a fighter reaches the brink: a camera cut, his face cut-in and a line, and his signature is free and ready at once for 20 s | Any | Once per fighter per match | A free signature. The rival answers it like any other | Sim (small) | Encounter, Narrative, Camera |
 | 24 | **The taunt feeds the meter** (Orb's pick: meter only) | A completed taunt: Pride +6, heat +10, Wrath +8 or Hunger +5, with mood +3 and the face cut-in | Any | 1 to 3 per fighter per match, with a 15 s cooldown | 1 s of exposure: a hit during it is a clean hit at ×1.2 | Sim (small) | Combat, Narrative, Encounter |
 | 25 | **A highlight reel at the match end** | The KO | Any | Once: 3 to 5 clips of 3 to 4 s | None. It replays from the seed and the input log | Needs the replay system | Tools, Camera, UI |
 
@@ -102,7 +102,7 @@ From Legal's screen (`docs/legal/rule-of-cool-screen.md`). A feature not listed 
 | 16 | Swat, split or walk through | No named technique and no borrowed hand pose. A swatted beam doesn't end in a mushroom cloud staged like a known scene |
 | 20 | Blur exchange | The bodies stay readable. It is not invisible fighters with only shock rings, a freeze on locked fists, or a cut to an onlooker who can't follow |
 | 22 | Round-the-world hit | Our own name for it, and no shouted name or borrowed pose |
-| 23 | The last stand | Screened again when Orb picks. No glowing-blood look and no final speech |
+| 23 | The last stand | **Cleared.** No glowing-blood power-up look, no final speech with a body aura, and no lightning |
 | 24 | The taunt | No beckoning fingers |
 | | On the Chin (`spec-wounds.md` §3) | Clear. Its bravado line gets an exact-phrase search before it is locked, like any line |
 | | The transformation's break (`moveset-rules.md` §10.8) | The snap is not arms thrown wide with the head back, and there is no shrieking sound. The flash is never gold, white or red |

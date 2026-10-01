@@ -274,7 +274,7 @@ Orb didn't pick this as a story beat at first, then asked for a pitch. The wound
 | **How often** | Once per fighter per match | Once per fighter per match. A second brink after a Rally gives nothing | Once per fighter per match |
 | **Risk** | It may feel like a promise with nothing behind it | One more signature a match, so the band becomes 2 to 5 | It undercuts the finisher, which Orb set at 7 of 10 |
 
-**Orb picked B, one last signature.** The rule is in `spec-wounds.md` §1b. Legal's re-screen of it is pending.
+**Orb picked B, one last signature.** The rule is in `spec-wounds.md` §1b, and Legal has cleared it.
 
 *The recommendation was B:* it gives the fighter on the brink one clear, dramatic thing to do, the player chooses the moment, and the rival can answer it. It needs no new system.
 
