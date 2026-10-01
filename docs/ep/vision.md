@@ -385,3 +385,16 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Smashes, launches and throws all get a slight variation of angle, so back-and-forth fights zigzag slightly. Bigger deviations from the lane happen only when a building or another dynamic blocker is targeted.
 - Orb on the prototypes: "it looked fantastic". Believable city blocks, cars, bikes and foot traffic follow from this; even the bare prototype looked more organic.
 - Camera: "I really want the camera and cinematography to sell the impacts." Fighters seem a little too small, especially in the faster parts of a fight where the zoom extends out. Character cosmetics will look much better up close.
+
+## Questionnaire 9 (2026-10-01): camera
+- Fighter size on screen: 7 of 10 (clearly larger than today).
+- Far apart or fast: zoom out, but never below a minimum fighter size.
+- Selling impacts: a fast push-in to the point of contact, camera shake, and a chase camera behind the launched fighter.
+- Cuts to another angle: big set pieces (finishers, transformations, world changes), plus crippling moments, building smashes and beam struggles.
+- Camera angle in the lanes: not sure; show both (side-on and three-quarter) in the real game.
+- A building between camera and fighter: a circular cut-away around the fighter.
+- Player control: a zoom preference in settings (closer or wider).
+- Shake and slow-motion intensity: 2 of 10 (subtle by default).
+- Close-ups: the match intro, transformations, finishers and the knockout.
+- Orb's notes: the camera sometimes doesn't catch up to the fighter; fighters are often launched out of the visible area faster than the camera follows; the camera often follows the launched fighter, so after knocking the opponent away Orb can't tell what their own character is doing.
+- Not answered (options to pitch): what happens to control during a cinematic moment.
