@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/director-ai",
+  "title": "director.ai/1",
+  "description": "data/director/ai.json: the AI's skill numbers (sim/director/ai.gd). Under ADR 0008 the AI plays by the player's rules and gets an outcome only by an input; these numbers say how often it makes that input. One difficulty for now. Version field: schema. Policy: closed except keys starting with an underscore. Every number is a chance from 0 to 1.",
+  "type": "object",
+  "required": [
+    "schema",
+    "pressReact",
+    "beamAnswer",
+    "sigPick"
+  ],
+  "properties": {
+    "schema": {
+      "const": "director.ai/1"
+    },
+    "pressReact": {
+      "type": "object",
+      "description": "Per defender stance: the chance the AI has an attack request in when it is attacked in that stance (the press: a trade or a counter needs the defender's own request).",
+      "required": [
+        "AGGRESSIVE",
+        "DEFENSIVE",
+        "EVASIVE",
+        "ESCAPE"
+      ],
+      "properties": {
+        "AGGRESSIVE": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "DEFENSIVE": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "EVASIVE": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "ESCAPE": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "beamAnswer": {
+      "description": "The chance the AI answers a beam when it can: with its own signature, or else a heavy blast.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "sigPick": {
+      "description": "The chance an AI attack is the signature, with the ki and the cooldown over.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

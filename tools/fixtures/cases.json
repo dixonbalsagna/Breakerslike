@@ -9352,6 +9352,206 @@
         "rule": "xref:vfx-transform-beats",
         "pointer": "/beats/full/settle"
       }
+    },
+    {
+      "id": "director-ai-valid",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamAnswer": 0.35
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-key-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/sigPick"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-unknown-key",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/skill": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/skill"
+      }
+    },
+    {
+      "id": "director-ai-underscore-key-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-stance-missing",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/pressReact/ESCAPE"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/pressReact"
+      }
+    },
+    {
+      "id": "director-ai-stance-unknown",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/pressReact/NEUTRAL": 0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/pressReact/NEUTRAL"
+      }
+    },
+    {
+      "id": "director-ai-stance-above-one",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/pressReact/AGGRESSIVE": 1.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/pressReact/AGGRESSIVE"
+      }
+    },
+    {
+      "id": "director-ai-stance-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/pressReact/EVASIVE": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/pressReact/EVASIVE"
+      }
+    },
+    {
+      "id": "director-ai-stance-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/pressReact/DEFENSIVE": "never"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/pressReact/DEFENSIVE"
+      }
+    },
+    {
+      "id": "director-ai-zero-and-one-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/pressReact/AGGRESSIVE": 1,
+            "/pressReact/DEFENSIVE": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-beam-answer-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamAnswer": 35
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/beamAnswer"
+      }
+    },
+    {
+      "id": "director-ai-sig-pick-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/sigPick": -0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/sigPick"
+      }
+    },
+    {
+      "id": "director-ai-schema-version",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/schema": "director.ai/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
     }
   ],
   "text": [

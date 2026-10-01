@@ -167,6 +167,10 @@
       "schema": "director-location.schema.json"
     },
     {
+      "match": "data/director/ai.json",
+      "schema": "director-ai.schema.json"
+    },
+    {
       "match": "data/biomes/settlements.json",
       "schema": "biomes-settlements.schema.json"
     },
