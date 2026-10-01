@@ -31,9 +31,8 @@ func _init() -> void:
 func _fresh() -> void:
 	main.start_match(5, {"p1": false, "p2": false})   # an idle opponent, so nothing else starts an exchange
 	host = main.host
-	host.touch.release_all()
+	host.hub.release_all()
 	main._touch_last = false   # the next touch flips the device, as a first touch does
-	host.touch_on = false
 	main.ui_hud.dp = 2.75
 	main.ui_hud.set_option("touch_ui", true)
 	host.touch.dp = 2.75
@@ -69,11 +68,10 @@ func _run() -> void:
 	_fresh()
 	var f = host.S.fighters[0]
 	_frames(2)
-	ok(not host.touch_on or true, "setup")
 	# Touch takes the slot over, and guard is the DEFENSIVE stance while held.
 	_touch(1, _at("guard"), true)
 	_frames(3)
-	ok(host.touch_on, "a touch makes touch the active device")
+	ok(host.hub.device_of(0) == "touch", "a touch makes touch the active device")
 	ok(f.ai == null, "a touch takes the fighter over from the demo")
 	ok(f.stance == 1.0, "guard held: DEFENSIVE")
 	_touch(1, _at("guard"), false)
@@ -149,6 +147,42 @@ func _run() -> void:
 	var moved: float = absf(f.x - x0)
 	ok(moved > 20.0, "flick: the fighter lunged (moved %.1f)" % moved)
 	_touch(6, s0 + Vector2(50.0 * 2.75, 0.0), false)
+	# A gamepad through the same scene: LB is guard, RT charges, the stick moves.
+	_fresh()
+	f = host.S.fighters[0]
+	_frames(5)
+	var jb := InputEventJoypadButton.new()
+	jb.device = 0
+	jb.button_index = JOY_BUTTON_LEFT_SHOULDER
+	jb.pressed = true
+	main._input(jb)
+	_frames(3)
+	ok(host.hub.device_of(0) == "pad" and f.ai == null, "a pad button takes the fighter over from the demo")
+	ok(f.stance == 1.0, "pad: LB held is DEFENSIVE")
+	jb.pressed = false
+	main._input(jb)
+	_frames(3)
+	ok(f.stance == 0.0, "pad: LB released is Press")
+	var jm := InputEventJoypadMotion.new()
+	jm.device = 0
+	jm.axis = JOY_AXIS_TRIGGER_RIGHT
+	jm.axis_value = 0.9
+	f.ki = 10.0
+	main._input(jm)
+	_frames(30)
+	ok(f.state == "charging" or f.ki > 10.0, "pad: RT held is the channel (charge)")
+	jm.axis_value = 0.0
+	main._input(jm)
+	var js := InputEventJoypadMotion.new()
+	js.device = 0
+	js.axis = JOY_AXIS_LEFT_X
+	js.axis_value = 1.0
+	var px: float = f.x
+	main._input(js)
+	_frames(20)
+	ok(absf(f.x - px) > 5.0, "pad: the left stick moves the fighter (moved %.1f)" % absf(f.x - px))
+	js.axis_value = 0.0
+	main._input(js)
 	# The HUD's pause button is the HUD's, not a control; an open overlay swallows touches.
 	_fresh()
 	f = host.S.fighters[0]

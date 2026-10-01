@@ -1,5 +1,4 @@
 {
-  "_about": "Validator fixture, not game data: the timing.json sample from docs/controls/input-schema.md.",
   "schema": 1,
   "ticksPerSecond": 60,
   "tapHold": {
@@ -14,7 +13,7 @@
     "heavyWindow": 10,
     "buffer": 4,
     "touchBufferBonus": 2,
-    "antiMashLockout": 18,
+    "antiMashLockout": 20,
     "assistFactor": 2
   },
   "dodge": {
@@ -32,12 +31,12 @@
     "toggleCooldown": 12
   },
   "touch": {
-    "flickToDodgeTicks": 4,
+    "flickToDodgeTicks": 6,
     "flickThreshold": 0.7,
     "outerRingScale": 1.3,
     "outerRingHold": 6,
     "fullDeflectionSprint": 30,
-    "swipeUpPx": 48,
+    "swipeUpPx": 40,
     "swipeUpTicks": 24,
     "edgeIgnoreDp": 8
   },

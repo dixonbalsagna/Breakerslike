@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/input-timing",
   "title": "input timing (schema 1)",
-  "description": "data/input/timing.json: every tick value of the input scheme: hold thresholds, the perfect-block windows, buffers and lockouts, the attack queue, the mode toggle, touch gestures, stick and trigger settings, and the hit-stop table (docs/controls/input-schema.md section 5; it carries over feel-schema.md's hit-stop, hold and stick values). Times are whole ticks at 60 per second unless a key says otherwise (px, dp, ki, fractions). Version field: schema. Policy: closed except keys starting with an underscore; hitstopTicks takes underscore comment keys. Cross-references (timing-order, timing-perfect, timing-hold, timing-queue, timing-hitstop-order, timing-hitstop-budget) are checked by tools/lib/xref-input.js.",
+  "description": "data/input/timing.json: every tick value of the input scheme: hold thresholds, the perfect-block windows, buffers and lockouts, the attack queue, the mode toggle, touch gestures, stick and trigger settings, and the hit-stop table (docs/controls/input-schema.md section 5; it carries over feel-schema.md's hit-stop, hold and stick values). Times are whole ticks at 60 per second unless a key says otherwise (px, dp, ki, fractions). Version field: schema. Policy: closed except keys starting with an underscore; hitstopTicks takes underscore comment keys. An unfunded signature is refused at once, so there is no unfunded-expiry key (I2c). The keys chordWindow, stateTicks and awayDead are optional until Controls' data carries them, then required. Cross-references (timing-order, timing-perfect, timing-hold, timing-hitstop-order, timing-hitstop-budget) are checked by tools/lib/xref-input.js.",
   "type": "object",
   "required": [
     "schema",
@@ -47,6 +47,11 @@
         "encoreOffer": {
           "type": "integer",
           "minimum": 1
+        },
+        "chordWindow": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Ticks within which the controls of a chord must all be down (I2c)."
         }
       },
       "additionalProperties": false,
@@ -104,6 +109,11 @@
         "buffer": {
           "type": "integer",
           "minimum": 0
+        },
+        "stateTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Ticks the dodge state lasts (I2c)."
         }
       },
       "additionalProperties": false,
@@ -118,8 +128,7 @@
         "expiry",
         "upgradeWindow",
         "heavyKi",
-        "signatureKi",
-        "signatureUnfundedExpiry"
+        "signatureKi"
       ],
       "properties": {
         "max": {
@@ -143,10 +152,6 @@
           "type": "number",
           "minimum": 0,
           "maximum": 100
-        },
-        "signatureUnfundedExpiry": {
-          "type": "integer",
-          "minimum": 1
         }
       },
       "additionalProperties": false,
@@ -250,6 +255,12 @@
           "type": "number",
           "minimum": 0,
           "exclusiveMaximum": 1
+        },
+        "awayDead": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1,
+          "description": "The dead zone for pushing away (I2c)."
         }
       },
       "additionalProperties": false,

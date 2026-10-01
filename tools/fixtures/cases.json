@@ -4821,22 +4821,6 @@
       }
     },
     {
-      "id": "input-timing-queue-expiry",
-      "schema": "input-timing.schema.json",
-      "mutate": [
-        {
-          "file": "data/input/timing.json",
-          "set": {
-            "/attackQueue/signatureUnfundedExpiry": 90
-          }
-        }
-      ],
-      "expect": {
-        "rule": "xref:timing-queue",
-        "pointer": "/attackQueue/signatureUnfundedExpiry"
-      }
-    },
-    {
       "id": "input-timing-hitstop-order",
       "schema": "input-timing.schema.json",
       "mutate": [
@@ -5164,6 +5148,101 @@
           "set": {
             "/contest/timeCapAt": 660
           }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-chord-window-min",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/tapHold/chordWindow": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/tapHold/chordWindow"
+      }
+    },
+    {
+      "id": "input-timing-chord-window-type",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/tapHold/chordWindow": 6.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/tapHold/chordWindow"
+      }
+    },
+    {
+      "id": "input-timing-state-ticks-min",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/dodge/stateTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/dodge/stateTicks"
+      }
+    },
+    {
+      "id": "input-timing-away-dead-range",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/stick/awayDead": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMaximum",
+        "pointer": "/stick/awayDead"
+      }
+    },
+    {
+      "id": "input-timing-unfunded-expiry-retired",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/attackQueue/signatureUnfundedExpiry": 600
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/attackQueue/signatureUnfundedExpiry"
+      }
+    },
+    {
+      "id": "input-timing-new-keys-optional",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "del": [
+            "/tapHold/chordWindow",
+            "/dodge/stateTicks",
+            "/stick/awayDead"
+          ]
         }
       ],
       "expect": null

@@ -27,8 +27,8 @@ var acc: float = 0.0
 var ticks: int = 0
 var paused: bool = false
 var held: Dictionary = {}       # key code -> true while down
-var touch := SimTouch.new()     # touch Simple (sim/input/touch.gd): pointer events in, an intent per tick out
-var touch_on: bool = false      # touch is the last input device, so it drives the human fighter in slot 0
+var hub := SimInputHub.new()    # every device's input and the intent v2 per human slot (sim/input/hub.gd)
+var touch: SimTouch = hub.touch  # the hub's touch layer, for the host's hit tests and UI's button state
 var edges: Dictionary = {}      # key codes pressed since the last tick that consumed input
 var feed: Array = []            # recent SimState.FeedLine, oldest first
 var jitter := Vector2.ZERO      # screen shake offset in pixels for the current tick
@@ -45,7 +45,7 @@ func _init() -> void:
 ## A new match. ai is {"p1": bool, "p2": bool}; missing entries keep the current setting (both AI at first).
 func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	seed = p_seed & 0xFFFFFFFF
-	SimCore.newMatch(S, seed, ai)
+	SimCore.newMatch(S, seed, ai, hub.setup())   # both slots are v2; a Simple layout sets its assists
 	cam.reset()
 	fxv.reset(seed)
 	impact.reset(seed)
@@ -57,7 +57,7 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	ticks = 0
 	feed.clear()
 	edges.clear()
-	touch.release_all()
+	hub.release_all()
 	jitter = Vector2.ZERO
 	_cur = _capture()
 	_prev = _cur
@@ -84,17 +84,14 @@ func alpha() -> float:
 ## One fixed tick: intents for human slots, step, camera, then drain the feed and the fx events.
 func tick(vw: float, vh: float) -> void:
 	var inputs: Array = [null, null]
+	hub.set_humans(S.fighters[0].ai == null, S.fighters[1].ai == null)
 	for k in range(2):
-		var f = S.fighters[k]
-		if f.ai == null:
-			if touch_on and k == 0:
-				inputs[k] = touch.build()
-			else:
-				inputs[k] = SimKeyboard.intentFromKeys(SimKeyboard.KEYS[f.keys], held, edges)
+		if S.fighters[k].ai == null:
+			inputs[k] = hub.intent(k)
 	var t0: int = Time.get_ticks_usec()
 	if SimCore.step(S, inputs):
 		edges.clear()
-		touch.consumed()
+		hub.consumed()
 	var t1: int = Time.get_ticks_usec()
 	cam.camStep(S, S.dt, vw, vh)
 	var lines: Array = S.out.feed.duplicate()
@@ -155,15 +152,17 @@ func follow(vw: float, vh: float) -> void:
 func key_down(code: String) -> void:
 	held[code] = true
 	edges[code] = true
+	hub.key(code, true)
 
 
 func key_up(code: String) -> void:
 	held.erase(code)
+	hub.key(code, false)
 
 
 func release_all() -> void:
 	held.clear()
-	touch.release_all()
+	hub.release_all()
 
 
 func toggle_ai(idx: int) -> void:

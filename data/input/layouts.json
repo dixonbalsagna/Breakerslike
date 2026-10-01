@@ -1,0 +1,853 @@
+{
+  "schema": 1,
+  "presets": [
+    {
+      "id": "arena",
+      "name": "Arena",
+      "device": "pad",
+      "players": 1,
+      "default": true,
+      "bindings": [
+        {
+          "controls": [
+            "pad:ls"
+          ],
+          "action": "move"
+        },
+        {
+          "controls": [
+            "pad:lt"
+          ],
+          "action": "dodge"
+        },
+        {
+          "controls": [
+            "pad:lb"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "pad:rb"
+          ],
+          "action": "mode"
+        },
+        {
+          "controls": [
+            "pad:rt"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "pad:west"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "pad:north"
+          ],
+          "action": "heavy"
+        },
+        {
+          "controls": [
+            "pad:east"
+          ],
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "pad:south"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "pad:west"
+          ],
+          "layer": "power",
+          "action": "special1"
+        },
+        {
+          "controls": [
+            "pad:north"
+          ],
+          "layer": "power",
+          "action": "special2"
+        },
+        {
+          "controls": [
+            "pad:south"
+          ],
+          "layer": "power",
+          "action": "special3"
+        },
+        {
+          "controls": [
+            "pad:east"
+          ],
+          "layer": "power",
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "pad:lt",
+            "pad:rt"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "pad:l3",
+            "pad:r3"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "pad:start"
+          ],
+          "action": "pause"
+        },
+        {
+          "controls": [
+            "pad:back"
+          ],
+          "action": "hints"
+        }
+      ]
+    },
+    {
+      "id": "brawler",
+      "name": "Brawler",
+      "device": "pad",
+      "players": 1,
+      "bindings": [
+        {
+          "controls": [
+            "pad:ls"
+          ],
+          "action": "move"
+        },
+        {
+          "controls": [
+            "pad:lt"
+          ],
+          "action": "dodge"
+        },
+        {
+          "controls": [
+            "pad:lb"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "pad:rb"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "pad:rt"
+          ],
+          "action": "heavy"
+        },
+        {
+          "controls": [
+            "pad:west"
+          ],
+          "action": "mode"
+        },
+        {
+          "controls": [
+            "pad:north"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "pad:east"
+          ],
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "pad:south"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "pad:rb"
+          ],
+          "layer": "power",
+          "action": "special1"
+        },
+        {
+          "controls": [
+            "pad:rt"
+          ],
+          "layer": "power",
+          "action": "special2"
+        },
+        {
+          "controls": [
+            "pad:west"
+          ],
+          "layer": "power",
+          "action": "special3"
+        },
+        {
+          "controls": [
+            "pad:east"
+          ],
+          "layer": "power",
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "pad:l3",
+            "pad:r3"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "pad:start"
+          ],
+          "action": "pause"
+        },
+        {
+          "controls": [
+            "pad:back"
+          ],
+          "action": "hints"
+        }
+      ]
+    },
+    {
+      "id": "simple-pad",
+      "name": "Simple",
+      "device": "pad",
+      "players": 1,
+      "slot": {
+        "autoMode": true,
+        "autoBurst": true,
+        "specialPick": "auto"
+      },
+      "bindings": [
+        {
+          "controls": [
+            "pad:ls"
+          ],
+          "action": "move"
+        },
+        {
+          "controls": [
+            "pad:west"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "pad:west"
+          ],
+          "action": "upgrade_heavy",
+          "gesture": "hold"
+        },
+        {
+          "controls": [
+            "pad:north"
+          ],
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "pad:east"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "pad:south"
+          ],
+          "action": "dodge"
+        },
+        {
+          "controls": [
+            "pad:rt"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "pad:lb"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "pad:west"
+          ],
+          "layer": "power",
+          "action": "special_auto"
+        },
+        {
+          "controls": [
+            "pad:north"
+          ],
+          "layer": "power",
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "pad:rb"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "pad:l3",
+            "pad:r3"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "pad:start"
+          ],
+          "action": "pause"
+        }
+      ]
+    },
+    {
+      "id": "kb-solo",
+      "name": "Keyboard, one player",
+      "device": "kb",
+      "players": 1,
+      "default": true,
+      "bindings": [
+        {
+          "controls": [
+            "kb:KeyW",
+            "kb:KeyA",
+            "kb:KeyS",
+            "kb:KeyD"
+          ],
+          "action": "move",
+          "axis": [
+            "up",
+            "left",
+            "down",
+            "right"
+          ]
+        },
+        {
+          "controls": [
+            "kb:Space"
+          ],
+          "action": "dodge"
+        },
+        {
+          "controls": [
+            "kb:Shift"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "kb:KeyQ"
+          ],
+          "action": "mode"
+        },
+        {
+          "controls": [
+            "kb:KeyE"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "kb:KeyJ"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "kb:KeyK"
+          ],
+          "action": "heavy"
+        },
+        {
+          "controls": [
+            "kb:KeyL"
+          ],
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "kb:KeyI"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "kb:KeyJ"
+          ],
+          "layer": "power",
+          "action": "special1"
+        },
+        {
+          "controls": [
+            "kb:KeyK"
+          ],
+          "layer": "power",
+          "action": "special2"
+        },
+        {
+          "controls": [
+            "kb:KeyI"
+          ],
+          "layer": "power",
+          "action": "special3"
+        },
+        {
+          "controls": [
+            "kb:KeyL"
+          ],
+          "layer": "power",
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "kb:Space",
+            "kb:KeyE"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "kb:KeyR"
+          ],
+          "action": "transform"
+        }
+      ]
+    },
+    {
+      "id": "kb-shared-p1",
+      "name": "Shared keyboard, left",
+      "device": "kb",
+      "players": 2,
+      "pair": "kb-shared-p2",
+      "bindings": [
+        {
+          "controls": [
+            "kb:KeyW",
+            "kb:KeyA",
+            "kb:KeyS",
+            "kb:KeyD"
+          ],
+          "action": "move",
+          "axis": [
+            "up",
+            "left",
+            "down",
+            "right"
+          ]
+        },
+        {
+          "controls": [
+            "kb:KeyF"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "kb:KeyG"
+          ],
+          "action": "heavy"
+        },
+        {
+          "controls": [
+            "kb:KeyR"
+          ],
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "kb:KeyV"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "kb:KeyE"
+          ],
+          "action": "mode"
+        },
+        {
+          "controls": [
+            "kb:Space"
+          ],
+          "action": "dodge"
+        },
+        {
+          "controls": [
+            "kb:Shift"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "kb:KeyQ"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "kb:KeyF"
+          ],
+          "layer": "power",
+          "action": "special1"
+        },
+        {
+          "controls": [
+            "kb:KeyG"
+          ],
+          "layer": "power",
+          "action": "special2"
+        },
+        {
+          "controls": [
+            "kb:KeyV"
+          ],
+          "layer": "power",
+          "action": "special3"
+        },
+        {
+          "controls": [
+            "kb:KeyR"
+          ],
+          "layer": "power",
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "kb:Space",
+            "kb:KeyQ"
+          ],
+          "action": "transform"
+        }
+      ]
+    },
+    {
+      "id": "kb-shared-p2",
+      "name": "Shared keyboard, right",
+      "device": "kb",
+      "players": 2,
+      "pair": "kb-shared-p1",
+      "bindings": [
+        {
+          "controls": [
+            "kb:KeyI",
+            "kb:KeyJ",
+            "kb:KeyK",
+            "kb:KeyL"
+          ],
+          "action": "move",
+          "axis": [
+            "up",
+            "left",
+            "down",
+            "right"
+          ]
+        },
+        {
+          "controls": [
+            "kb:KeyH"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "kb:KeyM"
+          ],
+          "action": "heavy"
+        },
+        {
+          "controls": [
+            "kb:KeyU"
+          ],
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "kb:Comma"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "kb:KeyO"
+          ],
+          "action": "mode"
+        },
+        {
+          "controls": [
+            "kb:Period"
+          ],
+          "action": "dodge"
+        },
+        {
+          "controls": [
+            "kb:Semicolon"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "kb:Slash"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "kb:KeyH"
+          ],
+          "layer": "power",
+          "action": "special1"
+        },
+        {
+          "controls": [
+            "kb:KeyM"
+          ],
+          "layer": "power",
+          "action": "special2"
+        },
+        {
+          "controls": [
+            "kb:Comma"
+          ],
+          "layer": "power",
+          "action": "special3"
+        },
+        {
+          "controls": [
+            "kb:KeyU"
+          ],
+          "layer": "power",
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "kb:Period",
+            "kb:Slash"
+          ],
+          "action": "transform"
+        }
+      ]
+    },
+    {
+      "id": "touch-simple",
+      "name": "Simple touch",
+      "device": "touch",
+      "players": 1,
+      "default": true,
+      "slot": {
+        "autoMode": true,
+        "autoBurst": true,
+        "specialPick": "auto"
+      },
+      "bindings": [
+        {
+          "controls": [
+            "touch:stick"
+          ],
+          "action": "move"
+        },
+        {
+          "controls": [
+            "touch:attack"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "touch:attack"
+          ],
+          "action": "upgrade_heavy",
+          "gesture": "hold"
+        },
+        {
+          "controls": [
+            "touch:attack"
+          ],
+          "action": "upgrade_sig",
+          "gesture": "swipe_up"
+        },
+        {
+          "controls": [
+            "touch:guard"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "touch:power"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "touch:attack"
+          ],
+          "layer": "power",
+          "action": "special_auto"
+        },
+        {
+          "controls": [
+            "touch:stick"
+          ],
+          "action": "dodge",
+          "gesture": "flick"
+        },
+        {
+          "controls": [
+            "touch:stick"
+          ],
+          "action": "dodge",
+          "gesture": "outer_ring_hold"
+        },
+        {
+          "controls": [
+            "touch:context"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "touch:transform"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "touch:pause"
+          ],
+          "action": "pause"
+        }
+      ]
+    },
+    {
+      "id": "touch-full",
+      "name": "Full touch",
+      "device": "touch",
+      "players": 1,
+      "bindings": [
+        {
+          "controls": [
+            "touch:stick"
+          ],
+          "action": "move"
+        },
+        {
+          "controls": [
+            "touch:stick"
+          ],
+          "action": "dodge",
+          "gesture": "flick"
+        },
+        {
+          "controls": [
+            "touch:dodge"
+          ],
+          "action": "dodge"
+        },
+        {
+          "controls": [
+            "touch:guard"
+          ],
+          "action": "guard"
+        },
+        {
+          "controls": [
+            "touch:mode"
+          ],
+          "action": "mode"
+        },
+        {
+          "controls": [
+            "touch:power"
+          ],
+          "action": "power"
+        },
+        {
+          "controls": [
+            "touch:light"
+          ],
+          "action": "light"
+        },
+        {
+          "controls": [
+            "touch:heavy"
+          ],
+          "action": "heavy"
+        },
+        {
+          "controls": [
+            "touch:signature"
+          ],
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "touch:context"
+          ],
+          "action": "context"
+        },
+        {
+          "controls": [
+            "touch:light"
+          ],
+          "layer": "power",
+          "action": "special1"
+        },
+        {
+          "controls": [
+            "touch:heavy"
+          ],
+          "layer": "power",
+          "action": "special2"
+        },
+        {
+          "controls": [
+            "touch:context"
+          ],
+          "layer": "power",
+          "action": "special3"
+        },
+        {
+          "controls": [
+            "touch:signature"
+          ],
+          "layer": "power",
+          "action": "signature"
+        },
+        {
+          "controls": [
+            "touch:transform"
+          ],
+          "action": "transform"
+        },
+        {
+          "controls": [
+            "touch:pause"
+          ],
+          "action": "pause"
+        }
+      ]
+    }
+  ]
+}

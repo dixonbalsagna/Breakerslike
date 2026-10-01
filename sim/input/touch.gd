@@ -1,7 +1,7 @@
 class_name SimTouch
 extends RefCounted
 ## Touch Simple, host side (docs/controls/touch-bridge.md, input-scheme.md section 6.1): pointer events in, one
-## SimIntent per fixed tick out. It resolves the gestures (tap against hold, flick, swipe, hold beyond the outer
+## intent v2 per fixed tick out (I2c). It resolves the gestures (tap against hold, flick, swipe, hold beyond the outer
 ## ring) in tick time and never touches the sim. Today's intents are the bridge: attack tap is a light, attack hold
 ## a heavy, attack swipe up the signature, guard hold the DEFENSIVE stance, a stick flick the EVASIVE stance plus a
 ## dash, power hold a charge. The resolved actions are kept in the named fields below, so the intent v2 adapter
@@ -28,9 +28,6 @@ const DEFAULTS: Dictionary = {
 	"sprintTicks": 6,         # beyond the ring for this long before the sprint starts
 	"dodgeStanceTicks": 30,   # the EVASIVE stance after a flick (the director reads stance at exchange start)
 	"dashTicks": 12,          # the flick's dash, in the flick direction
-	"stanceGuard": 1,         # today's stance ids: AGGRESSIVE 0, DEFENSIVE 1, EVASIVE 2, ESCAPE 3
-	"stanceDodge": 2,
-	"stanceNeutral": 0,
 	"hitPadDp": 8.0,          # a button's hit radius is its visual radius plus this
 	"minHitDp": 24.0,         # and never under this radius (a 48 dp target)
 }
@@ -65,6 +62,18 @@ var req_light: bool = false       # requests are held until consumed()
 var req_heavy: bool = false
 var req_sig: bool = false
 
+# I2c: edges and holds that intent v2 carries.
+var _guard_press: bool = false
+var _dodge_edge: bool = false
+var _power_press: bool = false
+var _power_tap: bool = false
+var _power_t0: int = 0
+var _power_voided: bool = false   # a layer press (Attack with Power held) fired during this hold
+var _special_edge: int = 0
+var _tf_t0: int = -1              # the Transform button's press tick, or -1
+var _tf_sent: bool = false
+var _transform_edge: bool = false
+
 var _touches: Dictionary = {}     # pointer id -> {w, x0, y0, x, y, t0, fired, flicked, beyond}
 var _owner: Dictionary = {}       # widget -> pointer id, so a button has one finger
 var _dodge_until: int = -1
@@ -76,6 +85,18 @@ var _sprinting: bool = false
 
 func _init(overrides: Dictionary = {}) -> void:
 	cfg = DEFAULTS.duplicate()
+	# The numbers are data (data/input/timing.json); DEFAULTS above stand in where a key is missing.
+	cfg.holdTicks = SimInputData.ti(["tapHold", "holdStart"], int(cfg.holdTicks))
+	cfg.transformTicks = SimInputData.ti(["tapHold", "transformConfirm"], 30)
+	cfg.swipeDp = SimInputData.tf(["touch", "swipeUpPx"], float(cfg.swipeDp))
+	cfg.flickTicks = SimInputData.ti(["touch", "flickToDodgeTicks"], int(cfg.flickTicks))
+	cfg.flickFrac = SimInputData.tf(["touch", "flickThreshold"], float(cfg.flickFrac))
+	cfg.outerRing = SimInputData.tf(["touch", "outerRingScale"], float(cfg.outerRing))
+	cfg.sprintTicks = SimInputData.ti(["touch", "outerRingHold"], int(cfg.sprintTicks))
+	cfg.deadzone = SimInputData.tf(["stick", "deadzone"], float(cfg.deadzone))
+	cfg.quant = SimInputData.ti(["stick", "quant"], int(cfg.quant))
+	cfg.dodgeStanceTicks = SimInputData.ti(["dodge", "stateTicks"], 12)
+	cfg.dashTicks = SimInputData.ti(["dodge", "lungeTicks"], int(cfg.dashTicks))
 	for k in overrides:
 		cfg[k] = overrides[k]
 
@@ -131,9 +152,26 @@ func touch_down(id: int, x: float, y: float, widget: String) -> void:
 	if _owner.has(widget):
 		return   # one finger per control; the second is ignored
 	_owner[widget] = id
-	_touches[id] = {"w": widget, "x0": x, "y0": y, "x": x, "y": y, "t0": tick, "fired": false, "flicked": false, "beyond": 0}
-	if widget == "stick":
-		_check_flick(_touches[id])
+	_touches[id] = {"w": widget, "x0": x, "y0": y, "x": x, "y": y, "t0": tick, "fired": false, "flicked": false, "beyond": 0, "layer": false}
+	match widget:
+		"stick":
+			_check_flick(_touches[id])
+		"guard":
+			_guard_press = true
+		"power":
+			_power_press = true
+			_power_t0 = tick
+			_power_voided = false
+		"attack":
+			if _owner.has("power"):
+				# The power layer: Attack with Power held is the director's pick of a special, at once, and not a light.
+				_touches[id].layer = true
+				_touches[id].fired = true
+				_special_edge = 7
+				_power_voided = true
+		"context":
+			_tf_t0 = tick
+			_tf_sent = false
 
 
 func touch_move(id: int, x: float, y: float) -> void:
@@ -155,6 +193,10 @@ func touch_up(id: int) -> void:
 	var t: Dictionary = _touches[id]
 	if t.w == "attack" and not t.fired:
 		req_light = true   # a tap: released before holdTicks (the bridge fires it on release; see touch-bridge.md)
+	if t.w == "power" and not _power_voided and (tick - _power_t0) < int(cfg.holdTicks):
+		_power_tap = true
+	if t.w == "context":
+		_tf_t0 = -1
 	_owner.erase(t.w)
 	_touches.erase(id)
 
@@ -169,6 +211,14 @@ func release_all() -> void:
 	req_light = false
 	req_heavy = false
 	req_sig = false
+	_guard_press = false
+	_dodge_edge = false
+	_power_press = false
+	_power_tap = false
+	_power_voided = false
+	_special_edge = 0
+	_tf_t0 = -1
+	_transform_edge = false
 
 
 func _check_swipe(t: Dictionary) -> void:
@@ -195,6 +245,7 @@ func _check_flick(t: Dictionary) -> void:
 	_dash_my = (1.0 if uy > 0.0 else -1.0) if absf(uy) >= 0.38 else 0.0
 	_dodge_until = tick + int(cfg.dodgeStanceTicks)
 	_dash_until = tick + int(cfg.dashTicks)
+	_dodge_edge = true
 
 
 func _axis(a: float) -> float:
@@ -244,20 +295,29 @@ func build() -> SimIntent:
 	if dashing:
 		mx = _dash_mx
 		my = _dash_my
+	if _tf_t0 >= 0 and not _tf_sent and tick - _tf_t0 >= int(cfg.transformTicks):
+		_tf_sent = true
+		_transform_edge = true
 	var i := SimIntent.new()
 	i.mx = mx
 	i.my = my
-	i.dash = dashing or sprint
-	i.charge = power
+	i.guard = guard
+	i.guardPress = _guard_press
+	i.dodge = _dodge_edge
+	i.sprint = sprint
+	i.power = power
+	i.powerPress = _power_press
+	i.powerTap = _power_tap
+	i.mode = -1   # Simple: the director picks the piece family
 	i.light = req_light
 	i.heavy = req_heavy
 	i.sig = req_sig
-	if guard:
-		i.stance = float(cfg.stanceGuard)
-	elif dodge_active:
-		i.stance = float(cfg.stanceDodge)
-	else:
-		i.stance = float(cfg.stanceNeutral)
+	i.special = _special_edge
+	i.transform = _transform_edge
+	# Today's fields, until I3: a flick's dash or a sprint is the dash; Power held past holdTicks is the channel.
+	i.dash = dashing or sprint
+	i.charge = power and not _power_voided and (tick - _power_t0) >= int(cfg.holdTicks)
+	i.stance = -1.0
 	return i
 
 
@@ -288,3 +348,9 @@ func consumed() -> void:
 	req_light = false
 	req_heavy = false
 	req_sig = false
+	_guard_press = false
+	_dodge_edge = false
+	_power_press = false
+	_power_tap = false
+	_special_edge = 0
+	_transform_edge = false

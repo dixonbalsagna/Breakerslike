@@ -99,6 +99,7 @@ func _ready() -> void:
 	beams = pane.beams
 	particles = pane.particles
 	fighter_views = pane.fighter_views
+	SimInputData.load_and_apply()   # the input data and SimAct's three numbers, before the host builds its hub
 	host = SimHost.new()
 	host.vfx.cracks_enabled = true     # Orb asked for cracked ground; VFX's destruction stays off until B2's events (F6)
 	host.vfx.embers_enabled = true     # VFX's scorch embers, in place of ImpactFx's scorch sparks (Ctrl+F6)
@@ -122,7 +123,6 @@ func _ready() -> void:
 	ui_hud.feedback_closed.connect(_release_overlay)
 	ui_hud.feedback_fn = _feedback_context
 	_touch_last = bool(ui_hud.opts["touch_ui"])
-	host.touch_on = _touch_last
 	ui_hud.touch_state_fn = host.touch.display_state
 	host.drained.connect(_on_drained)
 	audio = AudioVoices.new(host.audio_cues.bank)
@@ -474,11 +474,11 @@ func _input(e: InputEvent) -> void:
 		touch = false
 	if touch != _touch_last:
 		_touch_last = touch
-		host.touch_on = touch
-		host.touch.release_all()
 		ui_hud.set_option("touch_ui", touch)
 	if e is InputEventScreenTouch or e is InputEventScreenDrag:
 		_touch_event(e)
+	elif e is InputEventJoypadButton or e is InputEventJoypadMotion:
+		_pad_event(e)
 
 
 ## The touch controls' geometry for the current screen (sim/input/touch.gd): UI draws the buttons from the same
@@ -495,10 +495,10 @@ func touch_layout() -> Dictionary:
 func _touch_event(e: InputEvent) -> void:
 	var p: Vector2 = e.position
 	if e is InputEventScreenDrag:
-		host.touch.touch_move(e.index, p.x, p.y)
+		host.hub.touch_move(e.index, p.x, p.y)
 		return
 	if not e.pressed:
-		host.touch.touch_up(e.index)
+		host.hub.touch_up(e.index)
 		return
 	if ui_hud.is_howto_open() or ui_hud.is_feedback_open() or host.paused:
 		return
@@ -509,7 +509,51 @@ func _touch_event(e: InputEvent) -> void:
 	if hud_target == "pause" or hud_target == "feedback":
 		return
 	host.touch.dp = ui_hud.dp
-	host.touch.touch_down(e.index, p.x, p.y, host.touch.widget_at(p.x, p.y, touch_layout()))
+	host.hub.touch_down(e.index, p.x, p.y, host.touch.widget_at(p.x, p.y, touch_layout()))
+
+
+## A gamepad, by position (docs/controls/input-scheme.md): buttons, the left stick and the analog triggers go to the
+## input hub, which maps them through the pad preset. Start pauses, as P does. Overlays take the pad as they take keys.
+const PAD_BUTTONS: Dictionary = {JOY_BUTTON_A: "south", JOY_BUTTON_B: "east", JOY_BUTTON_X: "west", JOY_BUTTON_Y: "north",
+		JOY_BUTTON_BACK: "back", JOY_BUTTON_START: "start", JOY_BUTTON_LEFT_STICK: "l3", JOY_BUTTON_RIGHT_STICK: "r3",
+		JOY_BUTTON_LEFT_SHOULDER: "lb", JOY_BUTTON_RIGHT_SHOULDER: "rb", JOY_BUTTON_DPAD_UP: "dpad_up",
+		JOY_BUTTON_DPAD_DOWN: "dpad_down", JOY_BUTTON_DPAD_LEFT: "dpad_left", JOY_BUTTON_DPAD_RIGHT: "dpad_right"}
+var _pad_stick: Dictionary = {}   # device -> the left stick, x right and y up
+
+
+func _pad_event(e: InputEvent) -> void:
+	if ui_hud.is_howto_open() or ui_hud.is_feedback_open():
+		return
+	if e is InputEventJoypadButton:
+		var btn: String = PAD_BUTTONS.get(e.button_index, "")
+		if btn == "":
+			return
+		if e.pressed:
+			take_over()
+			if btn == "start":
+				host.paused = not host.paused
+				return
+		host.hub.pad_button(e.device, btn, e.pressed)
+	else:
+		match e.axis:
+			JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y:
+				var st: Vector2 = _pad_stick.get(e.device, Vector2.ZERO)
+				if e.axis == JOY_AXIS_LEFT_X:
+					st.x = e.axis_value
+				else:
+					st.y = -e.axis_value
+				_pad_stick[e.device] = st
+				if absf(e.axis_value) > 0.5:
+					take_over()
+				host.hub.pad_stick(e.device, st.x, st.y)
+			JOY_AXIS_TRIGGER_LEFT:
+				if e.axis_value > 0.5:
+					take_over()
+				host.hub.pad_trigger(e.device, "lt", e.axis_value)
+			JOY_AXIS_TRIGGER_RIGHT:
+				if e.axis_value > 0.5:
+					take_over()
+				host.hub.pad_trigger(e.device, "rt", e.axis_value)
 
 
 func take_over() -> void:

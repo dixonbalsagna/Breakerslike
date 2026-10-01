@@ -132,7 +132,6 @@ function xrefInput({ get, err, esc, isObj }) {
   if (isObj(timing)) {
     const th = isObj(timing.tapHold) ? timing.tapHold : {};
     const pb = isObj(timing.perfectBlock) ? timing.perfectBlock : {};
-    const aq = isObj(timing.attackQueue) ? timing.attackQueue : {};
     const st = isObj(timing.stick) ? timing.stick : {};
     const hs = isObj(timing.hitstopTicks) ? timing.hitstopTicks : {};
     if (typeof st.triggerOff === 'number' && typeof st.triggerOn === 'number' && !(st.triggerOff < st.triggerOn)) err(TIMING, '/stick/triggerOff', 'timing-order', `triggerOff ${st.triggerOff} must be below triggerOn ${st.triggerOn}`);
@@ -140,7 +139,6 @@ function xrefInput({ get, err, esc, isObj }) {
     if (Number.isInteger(pb.heavyWindow) && pb.heavyWindow > 20) err(TIMING, '/perfectBlock/heavyWindow', 'timing-perfect', `heavyWindow ${pb.heavyWindow} is above 20, the authored tell`);
     if (Number.isInteger(th.encoreConfirm) && Number.isInteger(th.transformConfirm) && th.encoreConfirm > th.transformConfirm) err(TIMING, '/tapHold/encoreConfirm', 'timing-hold', `encoreConfirm ${th.encoreConfirm} must not exceed transformConfirm ${th.transformConfirm}`);
     if (Number.isInteger(th.transformConfirm) && Number.isInteger(th.encoreOffer) && !(th.transformConfirm < th.encoreOffer)) err(TIMING, '/tapHold/encoreOffer', 'timing-hold', `transformConfirm ${th.transformConfirm} must be below encoreOffer ${th.encoreOffer}`);
-    if (Number.isInteger(aq.signatureUnfundedExpiry) && aq.signatureUnfundedExpiry < 180) err(TIMING, '/attackQueue/signatureUnfundedExpiry', 'timing-queue', `signatureUnfundedExpiry ${aq.signatureUnfundedExpiry} must be at least 180 ticks`);
     for (const [chain, label] of [[['light', 'chain', 'heavy', 'guardBreak', 'parry'], 'light <= chain <= heavy <= guardBreak <= parry'], [['beamConnect', 'beamClash', 'finalBlow'], 'beamConnect <= beamClash <= finalBlow']]) {
       for (let i = 0; i + 1 < chain.length; i++) {
         const a = hs[chain[i]];
