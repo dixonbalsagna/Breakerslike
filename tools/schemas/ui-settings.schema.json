@@ -430,6 +430,12 @@
         "twice": {
           "type": "string",
           "minLength": 1
+        },
+        "shared": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^{}]+$",
+          "description": "A plain sentence (no {tokens}) about the two players sharing a keyboard layout."
         }
       },
       "additionalProperties": false,
@@ -708,6 +714,12 @@
         "twice": {
           "type": "string",
           "minLength": 1
+        },
+        "shared": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^{}]+$",
+          "description": "A plain sentence (no {tokens}) about the two players sharing a keyboard layout."
         }
       },
       "additionalProperties": false,

@@ -12386,6 +12386,289 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "settings-remap-shared-valid",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "shared": "Two players share this keyboard, so the keys of the other player are kept."
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-remap-shared-optional",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-remap-shared-no-tokens",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "shared": "Shared with {other}."
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/remap/shared"
+      }
+    },
+    {
+      "id": "settings-remap-shared-type",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "shared": 3
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/remap/shared"
+      }
+    },
+    {
+      "id": "settings-remap-shared-empty",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "shared": ""
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/remap/shared"
+      }
     }
   ],
   "text": [
