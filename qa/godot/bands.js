@@ -193,18 +193,44 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     // G0 triage (balance-targets 14): how launches end, per launch. Brunts (8 to 20%) are row 5b.share.
     const mixOf = (name, kFn, lo, hi, den) => { const c = S.clusterShare(D, kFn, den || (r => total(r.launches))); R.rate('5c.mix.' + name.split(' ')[0], '§5c', 'How launches end: ' + name + ' (per launch)', { v: c.p, ci: c.ci, lo, hi }); };
     if (D.every(r => r.landings)) {
-      // balance-targets 18: one landing class per launch, by first contact (brunt, then water, then slide at 2 bh = 150 units or more, else slam); the classes add up to 100% with the few launches that make no contact ("other")
-      const L = r => sum(Object.values(r.landings));
-      mixOf('slide (first ground contact carries on 2 bh or more)', r => r.landings.slide, 0.45, 0.70, L);
-      mixOf('slam (first ground contact stops within 2 bh)', r => r.landings.slam, 0.15, 0.35, L);
-      mixOf('water (skim or splash first)', r => r.landings.water, 0.05, 0.15, L);
-      mixOf('brunt (a building first)', r => r.landings.brunt, 0.04, 0.10, L);
-      R.info('5c.other', '§5c', 'Planner launches with no contact (caught in the air by the follow-up, KO, the cap), share of launches', fmt.pct(sum(D.map(r => r.landings.other)) / Math.max(1, sum(D.map(L)))), 'a class of its own so the five add up to 100%');
-      { const t = k => sum(D.map(r => r.landings[k])) / Math.max(1, sum(D.map(L))), sh = sum(D.map(r => r.slideShortPl || 0)) / Math.max(1, sum(D.map(L))); R.info('5c.nothreshold', '§5c', 'Planner landing mix if any slide counts as a slide (no 2 bh test)', `slide ${fmt.pct(t('slide') + sh)}, slam ${fmt.pct(t('slam') - sh)}`, 'for comparison with the one-class bands'); }
-      if (D.every(r => r.landingsAll)) { const LA = r => sum(Object.values(r.landingsAll)); const t = k => sum(D.map(r => r.landingsAll[k])) / Math.max(1, sum(D.map(LA))); R.info('5c.all', '§5c', 'Landing mix over every launch event, beam and finisher launches included (not banded)', `slide ${fmt.pct(t('slide'))}, slam ${fmt.pct(t('slam'))}, water ${fmt.pct(t('water'))}, brunt ${fmt.pct(t('brunt'))}, none ${fmt.pct(t('other'))}`, `of which ${(sum(D.map(r => r.slideShort)) / D.length).toFixed(1)} short slides (under 2 bh) a match are counted as slams`); }
+      // balance-targets 19 and 20: one landing class per planner launch, by first contact: brunt (a building first), water (a skim or splash), bounce (G5), caught in the air (the follow-up reached the victim before any contact),
+      // then the ground: a slam digs the crater; before G5 a ground contact is a slide only if it carries on 2 bh = 150 units or more (the distance test), and from G5 (bounce, lip or tumble events) by the first contact's kind, so every skid or tumble is a slide.
+      const g5 = hasEvent(A, 'bounce') || hasEvent(A, 'lip') || hasEvent(A, 'tumble');
+      const L = r => sum(Object.values(r.landings)), shortPl = r => (g5 ? (r.slideShortPl || 0) : 0);
+      const slideC = r => r.landings.slide + shortPl(r), slamC = r => r.landings.slam - shortPl(r);
+      const how = g5 ? 'by the first contact kind' : '2 bh distance test';
+      if (!g5) {
+        mixOf(`slide (first ground contact, ${how}; 40 to 60%)`, slideC, 0.40, 0.60, L);
+        mixOf('slam (the first contact digs a crater; 12 to 25%)', slamC, 0.12, 0.25, L);
+        const gs = S.clusterShare(D, slideC, r => slideC(r) + slamC(r));
+        R.rate('5c.slideOfGround', '§5c', 'Slides as a share of ground landings (slides plus slams; at least 65%)', { v: gs.p, ci: gs.ci, lo: 0.65, hi: 1 });
+        mixOf('caught in the air (the follow-up before any contact; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
+      } else {
+        mixOf(`slide (first contact a skid or tumble, ${how}; 40 to 55%)`, slideC, 0.40, 0.55, L);
+        mixOf('bounce (first contact a bounce; 8 to 15%)', r => r.landings.bounce, 0.08, 0.15, L);
+        mixOf('slam (the first contact digs a crater; 8 to 15%)', slamC, 0.08, 0.15, L);
+        mixOf('caught in the air (the follow-up before any contact; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
+        const classes = ['slide', 'bounce', 'slam', 'caught', 'water', 'brunt'], share = k => sum(D.map(k === 'slide' ? slideC : k === 'slam' ? slamC : r => r.landings[k])) / Math.max(1, sum(D.map(L)));
+        R.add({ id: '5c.largest', ref: '§5c', what: 'Slide is still the largest class (balance-targets 20)', status: classes.every(k => k === 'slide' || share(k) < share('slide')) ? 'PASS' : 'FAIL', value: classes.map(k => `${k} ${fmt.pct(share(k))}`).join(', '), band: 'slide largest', note: '' });
+      }
+      mixOf('water (skim or splash first; 5 to 15%)', r => r.landings.water, 0.05, 0.15, L);
+      mixOf('brunt (a building first; 4 to 10%)', r => r.landings.brunt, 0.04, 0.10, L);
+      R.info('5c.other', '§5c', 'Planner launches with no contact and not caught (KO, the cap, launched again first), share of launches', fmt.pct(sum(D.map(r => r.landings.other)) / Math.max(1, sum(D.map(L)))), 'a class of its own so the classes add up to 100%');
+      if (!g5) { const sh = sum(D.map(r => r.slideShortPl || 0)) / Math.max(1, sum(D.map(L))); R.info('5c.nothreshold', '§5c', 'Planner slide share if any slide counts as a slide (the kind rule that replaces the 2 bh test at G5)', `slide ${fmt.pct(sum(D.map(slideC)) / Math.max(1, sum(D.map(L))) + sh)}`, 'for comparison with the 40 to 60% band'); }
+      if (D.every(r => r.landingsAll)) { const LA = r => sum(Object.values(r.landingsAll)); const t = k => sum(D.map(r => r.landingsAll[k])) / Math.max(1, sum(D.map(LA))); R.info('5c.all', '§5c', 'Landing mix over every launch event, beam and finisher launches included (not banded)', `slide ${fmt.pct(t('slide'))}, slam ${fmt.pct(t('slam'))}, caught ${fmt.pct(t('caught'))}, bounce ${fmt.pct(t('bounce'))}, water ${fmt.pct(t('water'))}, brunt ${fmt.pct(t('brunt'))}, none ${fmt.pct(t('other'))}`, ''); }
+      // balance-targets 20: the events of the knocked-about rules (World G1 to G5): `bounce {actor}` per bounce, `lip {actor}` per flight off a lip, `tumble {actor}` when a journey enters a tumble, `tech_offer {actor}` and `tech {actor}` for an early recovery
+      const J = f => sum(D.map(r => r.journeys[f])), minutes = sum(D.map(r => r.koAt)) / 60;
+      if (hasEvent(A, 'lip')) R.point('5c.lip', '§5c', 'Flights off a lip a minute (0.3 to 1.5; they rise through the match)', { v: sum(D.map(r => r.fxCounts.lip || 0)) / minutes, lo: 0.3, hi: 1.5, unit: 'num' });
+      else R.pending('5c.lip', '§5c', 'Flights off a lip a minute (0.3 to 1.5)', 'switches on with World G5 (a `lip` event per flight off a rim, ridge or heap)');
+      if (hasEvent(A, 'bounce') && J('bounced') > 0) R.point('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', { v: J('bounces') / J('bounced'), lo: 1.3, hi: 2.2, unit: 'num' });
+      else R.pending('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', 'switches on with World G5 (a `bounce` event per bounce)');
+      if (hasEvent(A, 'tumble') && J('n') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (30 to 60%)', { v: J('tumbled') / J('n'), ci: wl(J('tumbled'), J('n')), lo: 0.30, hi: 0.60 });
+      else R.pending('5c.tumble', '§5c', 'Journeys that end in a tumble (30 to 60%)', 'switches on with World G5 (a `tumble` event when a journey enters a tumble)');
+      if (hasEvent(A, 'tech_offer') && hasEvent(A, 'tech')) { const o = sum(D.map(r => r.fxCounts.tech_offer || 0)), k = sum(D.map(r => r.fxCounts.tech || 0)); R.rate('5c.tech', '§5c', 'Early recoveries as a share of the chances, medium AI (20 to 40%)', { v: k / o, ci: wl(k, o), lo: 0.20, hi: 0.40 }); }
+      else R.pending('5c.tech', '§5c', 'Early recoveries as a share of the chances, medium AI (20 to 40%)', 'switches on with World G5 (`tech_offer` when the chance opens, `tech` when taken)');
     } else {
-      mixOf('slide (overlapping count: records without landings)', r => r.slides.length, 0.45, 0.70);
-      mixOf('slam (impact crater, overlapping count)', r => r.impactCraters, 0.15, 0.35);
+      mixOf('slide (overlapping count: records without landings)', r => r.slides.length, 0.40, 0.60);
+      mixOf('slam (impact crater, overlapping count)', r => r.impactCraters, 0.12, 0.25);
       mixOf('water skim or splash (overlapping count)', r => r.skims, 0.05, 0.15);
     }
     R.info('5c.detail', '§5c', 'Slides: mean length and trench width; slams per match; water skims per match', `${mean(D.flatMap(r => r.slides.map(x => x.len))).toFixed(0)} units, ${mean(D.flatMap(r => r.slides.map(x => x.w))).toFixed(1)} wide; ${mean(D.map(r => r.impactCraters)).toFixed(1)} slams; ${mean(D.map(r => r.skims)).toFixed(1)} skims`);

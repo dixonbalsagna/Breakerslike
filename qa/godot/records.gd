@@ -63,11 +63,12 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "other": 0}, "slideShort": 0, "slideShortPl": 0, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "caught": 0, "other": 0}, "slideShort": 0, "slideShortPl": 0, "journeys": {"n": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
 	var new_fl: Array = []   # launch events of this tick
+	var last_fl: Array = [null, null]   # the latest launch of each fighter, for the bounce, lip and tumble counts of its journey
 	var open_fl: Array = []   # launches whose first contact has not been seen: {"v": victim index, "cls": ""}; balance-targets 18 (one landing class per launch)
 	var launch_x: Array = [0.0, 0.0]
 	var prev_t: float = 0.0
@@ -165,9 +166,20 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				for fl in open_fl:
 					if fl.v == v0 and fl.cls == "":
 						fl.cls = "other"   # launched again before any contact
-				var nf := {"v": v0, "cls": "", "pl": false}
+				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false}
 				open_fl.append(nf)
+				last_fl[v0] = nf
 				new_fl.append(nf)
+			elif e.type == "bounce":   # balance-targets 20 (World G1 to G5): the first contact was a bounce (a new class); every bounce counts toward its journey
+				_land(open_fl, int(e.actor), "bounce")
+				if last_fl[int(e.actor)] != null:
+					last_fl[int(e.actor)].bn += 1
+			elif e.type == "lip":
+				if last_fl[int(e.actor)] != null:
+					last_fl[int(e.actor)].lip += 1
+			elif e.type == "tumble":
+				if last_fl[int(e.actor)] != null:
+					last_fl[int(e.actor)].tum = true
 			elif e.type == "building_hit":
 				_land(open_fl, int(e.actor), "brunt")
 			elif e.type == "skim" or e.type == "splash":
@@ -206,6 +218,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 							_land(open_fl, i, "water")
 						elif fe.y <= WorldTerrain.groundY(S, fe.x) + 5.0:
 							_land(open_fl, i, "slam")
+						else:
+							_land(open_fl, i, "caught")   # still in the air when the flight ended: the follow-up caught him (balance-targets 19)
 		var fr = S.get("frontsInFrame")   # hazard fronts inside the camera framing, once living destruction lands; null before
 		if fr != null:
 			rec.fronts = maxi(rec.fronts, int(fr))
@@ -259,6 +273,14 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 		rec.landingsAll[c] += 1
 		if fl.pl:
 			rec.landings[c] += 1
+			if c == "slide" or c == "slam" or c == "bounce":   # a journey: a launch that reached the ground
+				rec.journeys.n += 1
+				rec.journeys.bounces += fl.bn
+				rec.journeys.lips += fl.lip
+				if fl.bn > 0:
+					rec.journeys.bounced += 1
+				if fl.tum:
+					rec.journeys.tumbled += 1
 	rec.hash = SimHash.stateHash(S).gameplay
 	SimCore.dispose(S)
 	return rec

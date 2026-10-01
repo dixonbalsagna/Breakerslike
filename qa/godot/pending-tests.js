@@ -90,6 +90,15 @@ const tests = [
       noBad('more than 3 fronts in frame', bad); return 'max fronts in frame <= 3';
     } },
   { id: 'H4', spec: '§11', title: 'Effects are credited to the fighter whose event started them; knock-on effects keep the cause; no hazard starts during a finisher or a cinematic', slice: 'LD1 and Wounds S2', needs: ['hazard*', 'finisher_start'], run: null },
+  // ---------------------------------------------------------------- knocked about (balance-targets 20; World G1 to G5)
+  // Event contract assumed (change here and in records.gd if World names them differently): bounce {actor}, lip {actor}, tumble {actor}, tech_offer {actor}, tech {actor}; per-contact events carry the journey's contact count in n.
+  { id: 'G1', spec: 'balance-targets §20 hard test', title: 'One journey has at most 8 contacts of all kinds and lasts at most 4 s from the first contact to the stop', slice: 'World G5', needs: ['bounce'], run: null },
+  { id: 'G2', spec: 'balance-targets §20 hard test', title: 'Bounces allowed by the launcher tier: at most 1 at tier 1, 2 at tier 2, 3 at tiers 3 and 4; a journey never costs more wear than one impact', slice: 'World G5', needs: ['bounce'], run: null },
+  // ---------------------------------------------------------------- the rival's On the Chin (spec-wounds §3; built after his first moveset)
+  // Contract assumed: form {actor, name} with name 'apex' at the third form; chin_start {actor}; chin_end {actor, kind: complete | thrown | released | expired}; absorb {actor, n}.
+  { id: 'OC1', spec: 'spec-wounds §3 QA bands', title: 'The rival reaches Apex in 30 to 50% of his matches', soft: true, slice: 'the rival mechanic (after his moveset)', needs: ['chin_start'], run: null },
+  { id: 'OC2', spec: 'spec-wounds §3 QA bands', title: 'The rival completes 1 to 3 absorbs a match (3 hits, or a signature)', soft: true, slice: 'the rival mechanic (after his moveset)', needs: ['chin_start'], run: null },
+  { id: 'OC3', spec: 'spec-wounds §3 QA bands', title: 'The rival is thrown out of On the Chin in 15 to 35% of its uses', soft: true, slice: 'the rival mechanic (after his moveset)', needs: ['chin_start'], run: null },
   { id: 'H5', spec: '§5b hard tests', title: 'A chain never exceeds the launcher\'s tier cap (2 at tiers 1 and 2, 3 at tier 3, 4 at tier 4; 5 only for a scripted finisher) and the planner drops any chain over its casualty budget (4% at tier 2 or below, 12% at 3, 20% at 4)', slice: 'World buildings-in-depth §4b', needs: ['brunt_chain'], run: null },
   // ---------------------------------------------------------------- casualty ramp and ceiling (balance-targets §4b), World's wave 1
   { id: 'C1', spec: '§4b rolling budget', title: 'Rolling 60 s casualty budget by the higher tier: 2%, 4%, 8%, 15% of the starting population. No borrowing at tier 1 or 2; at tier 3 and above a set piece may borrow its own per-event budget', slice: 'World collateral ramp (after S2)', needs: ['evacuat*'],
