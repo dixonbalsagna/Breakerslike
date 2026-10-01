@@ -179,6 +179,8 @@ func _run() -> void:
 	_water(S)
 	_transform(S)
 	_aura()
+	_react()
+	_speed()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -509,6 +511,279 @@ func _aura() -> void:
 			same = false
 			print("    differs: standing.%s" % k)
 	_check(same, "data/vfx/aura.json and the built-in defaults agree")
+
+
+## The reactions to power (docs/vfx/react-plan.md): the flicker when worn, and from tier 3 rubble, standing cracks and windows
+## blowing out; Legal's colour rule for auras.
+func _react() -> void:
+	print("reactions to power")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var f = S.fighters[0]
+	var o = S.fighters[1]
+	o.x = SimWrap.wrap(plains + 6000.0)
+	o.y = WorldTerrain.groundY(S, o.x)
+	var place := func(tier: float):
+		f.x = plains
+		f.y = WorldTerrain.groundY(S, plains)
+		f.vx = 0.0
+		f.vy = 0.0
+		f.state = "free"
+		f.hidden = false
+		f.beamCharge = null
+		f.tier = tier
+	# Flicker: not worn, nothing; worn, dropouts; more worn, deeper; reduced motion, steady; a pure function of the tick.
+	f.stage[1] = 0
+	f.brink = false
+	_check(VfxReact.flicker(f, 17, 0, false) == 1.0, "a fighter who is not worn has a steady aura")
+	f.stage[1] = 2
+	var lo_min: float = 1.0
+	var dips: int = 0
+	for t in range(300):
+		var v: float = VfxReact.flicker(f, t, 0, false)
+		lo_min = minf(lo_min, v)
+		if v < 0.7:
+			dips += 1
+	_check(lo_min < 0.7 and dips > 20 and dips < 250, "a battered core makes the aura drop out (%d of 300 ticks, lowest %.2f)" % [dips, lo_min])
+	f.stage[1] = 3
+	f.brink = true
+	var lo3: float = 1.0
+	for t in range(300):
+		lo3 = minf(lo3, VfxReact.flicker(f, t, 0, false))
+	_check(lo3 < lo_min, "a broken core on the brink drops it deeper (%.2f against %.2f)" % [lo3, lo_min])
+	var differ: bool = false
+	for t in range(60):
+		if VfxReact.flicker(f, t, 0, false) != VfxReact.flicker(f, t, 1, false):
+			differ = true
+	_check(VfxReact.flicker(f, 41, 0, false) == VfxReact.flicker(f, 41, 0, false) and differ, "the flicker is a pure function of the tick, and the two slots do not flicker in step")
+	_check(VfxReact.flicker(f, 9, 0, true) == VfxReact.flicker(f, 10, 0, true) and VfxReact.flicker(f, 9, 0, true) < 1.0, "reduced motion: a steady dimming, no flicker (%.2f)" % VfxReact.flicker(f, 9, 0, true))
+	f.stage[1] = 0
+	f.brink = false
+	# Rubble.
+	var run_rubble := func(tier: float, ticks: int, setup: Callable) -> VfxHub:
+		var h := VfxHub.new()
+		h.cracks_enabled = false
+		h.reset(S, 6)
+		place.call(tier)
+		setup.call()
+		for k in range(ticks):
+			_tick(S, h, [])
+		return h
+	var none := func(): pass
+	var h2: VfxHub = run_rubble.call(2.0, 240, none)
+	_check(h2.react.rubble_made == 0 and h2.debris.spawned == 0, "tier 2: no rubble, nothing at all from the world")
+	var h3: VfxHub = run_rubble.call(3.0, 240, none)
+	var h4: VfxHub = run_rubble.call(4.0, 240, none)
+	_check(h3.react.rubble_made > 8 and h4.react.rubble_made > h3.react.rubble_made, "rubble lifts from tier 3 and more of it at tier 4 (%d, %d in 4 s)" % [h3.react.rubble_made, h4.react.rubble_made])
+	var left: int = 0
+	var right: int = 0
+	var under: int = 0
+	var rising: int = 0
+	for b in h4.debris.bits:
+		if b.grav < 0.0:
+			var dx: float = SimWrap.sdx(plains, b.x)
+			if dx < 0.0:
+				left += 1
+			else:
+				right += 1
+			if false:
+				under += 1
+			if b.vy > 0.0:
+				rising += 1
+	_check(left > 0 and right > 0 and h4.react.min_dx >= 0.25 * VfxLook.BH - 0.01 and rising > 0, "rubble is scattered on both sides, never spawned straight under him, and rising (%d left, %d right, %d rising, nearest spawn %.0f units)" % [left, right, rising, h4.react.min_dx])
+	var hc: VfxHub = run_rubble.call(4.0, 240, func(): f.state = "charging")
+	_check(hc.react.rubble_made == 0, "the world stands down while he charges (Legal's stacking rule)")
+	var hh: VfxHub = run_rubble.call(4.0, 240, func(): f.hidden = true)
+	_check(hh.react.rubble_made == 0, "nothing for a hidden fighter")
+	var hs: VfxHub = run_rubble.call(4.0, 240, func(): f.y = WorldTerrain.groundY(S, plains) + 1500.0)
+	_check(hs.react.rubble_made == 0, "nothing while he is high in the air")
+	var hr := VfxHub.new()
+	hr.reset(S, 6)
+	hr.reduced_motion = true
+	place.call(4.0)
+	for k in range(240):
+		_tick(S, hr, [])
+	_check(hr.react.rubble_made < h4.react.rubble_made, "reduced motion throws less rubble (%d < %d)" % [hr.react.rubble_made, h4.react.rubble_made])
+	_check(h4.debris._rubble_alive <= int(VfxReact.p("rubble", "alive_cap")), "rubble stays within its cap (%d of %d)" % [h4.debris._rubble_alive, int(VfxReact.p("rubble", "alive_cap"))])
+	# Standing cracks: tier 3 or more, still, on the ground: a set spreads from his feet, stays, and fades away after he leaves.
+	var hk := VfxHub.new()
+	hk.cracks_enabled = true
+	hk.reset(S, 6)
+	place.call(3.0)
+	for k in range(20):
+		_tick(S, hk, [])
+	_check(hk.react.stand_sets == 0, "no cracks before he has stood still for half a second")
+	for k in range(30):
+		_tick(S, hk, [])
+	_check(hk.react.stand_sets == 1 and hk.crack_sets.any(func(cs): return cs.kind == 2 and cs.slot == 0), "standing still at tier 3 starts a web of cracks under him")
+	for k in range(30):
+		_tick(S, hk, [])
+	_check(hk.react.level[0] > 0.99, "it fades in and stays while he stands (%.2f)" % hk.react.level[0])
+	f.x = SimWrap.wrap(plains + 3000.0)
+	f.y = WorldTerrain.groundY(S, f.x)
+	var gone: int = -1
+	for k in range(400):
+		_tick(S, hk, [])
+		if gone < 0 and not hk.crack_sets.any(func(cs): return cs.kind == 2):
+			gone = k
+	_check(gone > int(VfxReact.p("cracks", "stay_ticks")) and gone < 300, "after he walks away it stays a moment, fades and is removed (after %d ticks)" % gone)
+	var hk2 := VfxHub.new()
+	hk2.cracks_enabled = true
+	hk2.reset(S, 6)
+	place.call(2.0)
+	for k in range(120):
+		_tick(S, hk2, [])
+	_check(hk2.react.stand_sets == 0, "no standing cracks below tier 3")
+	var hk3 := VfxHub.new()
+	hk3.cracks_enabled = true
+	hk3.reset(S, 6)
+	place.call(4.0)
+	f.state = "charging"
+	for k in range(120):
+		_tick(S, hk3, [])
+	_check(hk3.react.stand_sets == 0, "none while charging either")
+	# Windows: a tier 3 or 4 fighter's big impact blows glass out of the block along it, nearest first, and publishes the list.
+	var hw := VfxHub.new()
+	hw.reset(S, 6)
+	place.call(3.0)
+	var city: float = SimWrap.wrap(2960.0 * SimConst.PS)
+	var towers: Array = VfxMock.towers_near(S, city, 40000.0)
+	var bt = S.buildings[towers[0]]
+	var cx: float = SimWrap.wrap(bt.x - 700.0)
+	var crater := func(energy: float, owner: float): return VfxMock.ev("crater", {"x": cx, "y": 0.0, "r": 200.0, "depth": 60.0, "energy": energy, "cause": "impact", "owner": owner, "special": 0.0})
+	_tick(S, hw, [crater.call(18.0, 0.0)])
+	_check(hw.react.blow_buildings >= 3 and hw.react.blowouts.size() >= 3, "a big impact blows the windows of the block (%d buildings listed for Rendering)" % hw.react.blow_buildings)
+	var first: float = 1e30
+	var last_at: float = 0.0
+	for w in hw.react.blowouts:
+		first = minf(first, float(w["at"]))
+		last_at = maxf(last_at, float(w["at"]))
+	_check(last_at > first, "the shock travels: the farther buildings go later (%.2f s spread)" % (last_at - first))
+	for k in range(90):
+		_tick(S, hw, [])
+	_check(hw.debris.spawned > 60 and hw.debris.bits.size() <= VfxLook.DEBRIS_CAP, "the glass flies and the pool holds (%d thrown, %d live)" % [hw.debris.spawned, hw.debris.bits.size()])
+	for k in range(500):
+		_tick(S, hw, [])
+	_check(hw.react.blowouts.is_empty(), "the list is pruned after a few seconds")
+	var hw2 := VfxHub.new()
+	hw2.reset(S, 6)
+	place.call(2.0)
+	_tick(S, hw2, [crater.call(18.0, 0.0)])
+	_check(hw2.react.blow_buildings == 0, "nothing below tier 3")
+	place.call(3.0)
+	_tick(S, hw2, [crater.call(3.0, 0.0)])
+	_check(hw2.react.blow_buildings == 0, "a small impact blows nothing")
+	_tick(S, hw2, [crater.call(18.0, 1.0)])
+	_check(hw2.react.blow_buildings == 0, "the owner's tier decides (the other fighter is tier 1)")
+	var hw3 := VfxHub.new()
+	hw3.react_enabled = false
+	hw3.reset(S, 6)
+	place.call(4.0)
+	for k in range(200):
+		_tick(S, hw3, [crater.call(18.0, 0.0)] if k == 0 else [])
+	_check(hw3.react.rubble_made == 0 and hw3.react.blow_buildings == 0 and hw3.debris.spawned == 0, "react_enabled off does nothing")
+	# Legal's colour rule: no gold, white or red in an aura.
+	var c_red: Color = VfxAura.lane_color("#ff5a3c")
+	var c_gold: Color = VfxAura.lane_color("#ffd27a")
+	var c_white: Color = VfxAura.lane_color("#ffffff")
+	var c_blue: Color = VfxAura.lane_color("#8fd6ff")
+	_check(c_red.to_html(false) == "9a80d8" and c_gold.to_html(false) == "9a80d8" and c_white.to_html(false) == "9a80d8", "red, gold and white auras are drawn in Art's Anti-hero violet (%s)" % c_red.to_html(false))
+	_check(c_blue.to_html(false) == "8fd6ff", "a cool aura colour is kept as it is")
+	# The data.
+	var saved: Dictionary = VfxReact._data
+	VfxReact._data = {}
+	var fallback: bool = VfxReact.p("rubble", "alive_cap") == 36.0 and VfxReact.p("windows", "reach_t4") == 3200.0
+	VfxReact._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for g in VfxReact.DEFAULTS.keys():
+		for k in VfxReact.DEFAULTS[g].keys():
+			if not saved.has(g) or not saved[g].has(k) or float(saved[g][k]) != float(VfxReact.DEFAULTS[g][k]):
+				same = false
+				print("    differs: %s.%s" % [g, k])
+	_check(same, "data/vfx/react.json and the built-in defaults agree")
+	SimCore.dispose(S)
+
+
+## Speed lines alone (docs/vfx/react-plan.md): a six-tick streak on every launch and landed heavy, quiet and rationed.
+func _speed() -> void:
+	print("speed lines")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var f = S.fighters[0]
+	var o = S.fighters[1]
+	f.x = 20000.0
+	f.y = 500.0
+	o.x = 20400.0
+	o.y = 500.0
+	var heavy := func(victim: float, attacker: float): return VfxMock.ev("damage", {"x": f.x, "y": f.y + 40.0, "amount": 40.0, "col": "#ffffff", "attacker": attacker, "victim": victim, "region": "core", "kind": "heavy", "number": true})
+	var h := VfxHub.new()
+	h.reset(S, 6)
+	_tick(S, h, [heavy.call(0.0, 1.0)])
+	_check(h.speed.streaks.size() == 1 and h.speed.made == 1, "a heavy that lands starts one streak")
+	var s0: VfxSpeed.Streak = h.speed.streaks[0]
+	_check(s0.dx < -0.9, "it points along the blow, from the attacker (to the right) toward the hit (%.2f)" % s0.dx)
+	# Its life is six ticks, through frozen ticks too.
+	for k in range(5):
+		S.tick += 1
+		var tk := SimState.FxEvent.new()
+		tk.type = "tick"
+		tk.dt = SimConst.DT
+		tk.frozen = true
+		h.consume(S, [tk])
+	_check(h.speed.streaks.size() == 1, "still playing after five ticks, hit-stop ticks included")
+	_tick(S, h, [])
+	_check(h.speed.streaks.is_empty(), "gone after six")
+	# Other damage does not start one.
+	var hl := VfxHub.new()
+	hl.reset(S, 6)
+	_tick(S, hl, [VfxMock.ev("damage", {"x": f.x, "y": f.y, "amount": 5.0, "col": "#fff", "attacker": 1.0, "victim": 0.0, "region": "arms", "kind": "light", "number": true})])
+	_tick(S, hl, [VfxMock.ev("damage", {"x": f.x, "y": f.y, "amount": 5.0, "col": "#fff", "attacker": 1.0, "victim": 0.0, "region": "arms", "kind": "heavy", "number": false})])
+	_check(hl.speed.made == 0, "a light hit, or a heavy landing with no number (a landing or collision), starts none")
+	# A launch starts one along its direction; a heavy and the launch it causes are one streak.
+	var hn := VfxHub.new()
+	hn.reset(S, 6)
+	f.vx = 3000.0
+	f.vy = 900.0
+	_tick(S, hn, [VfxMock.ev("launch", {"actor": 0.0, "target": 1.0, "amount": 3100.0, "face": 1.0})])
+	_check(hn.speed.made == 1, "a launch starts a streak")
+	var sn: VfxSpeed.Streak = hn.speed.streaks[0]
+	_check(sn.dx > 0.9 and sn.dy > 0.2, "pointing along his launch (%.2f, %.2f)" % [sn.dx, sn.dy])
+	var hd := VfxHub.new()
+	hd.reset(S, 6)
+	_tick(S, hd, [heavy.call(0.0, 1.0), VfxMock.ev("launch", {"actor": 0.0, "target": 1.0, "amount": 3100.0, "face": 1.0})])
+	_check(hd.speed.made == 1 and hd.speed.skipped == 1, "a heavy that launches is one streak, not two")
+	# Rationing: a gap between two, and no more than four alive.
+	var hr := VfxHub.new()
+	hr.reset(S, 6)
+	_tick(S, hr, [heavy.call(0.0, 1.0)])
+	_tick(S, hr, [heavy.call(1.0, 0.0)])
+	_check(hr.speed.made == 1, "two hits two ticks apart on different fighters give one streak (the gap)")
+	for k in range(5):
+		_tick(S, hr, [])
+	_tick(S, hr, [heavy.call(1.0, 0.0)])
+	_check(hr.speed.made == 2, "and the next after the gap gives another")
+	# The count in a real minute of AI play against the 20 a minute Orb's treatment B was sized on.
+	var S2 := SimCore.createSim()
+	SimCore.newMatch(S2, 12345)
+	var h2 := VfxHub.new()
+	h2.reset(S2, 12345)
+	for k in range(3600):
+		SimCore.step(S2)
+		h2.consume(S2, S2.out.fx)
+		S2.out.fx.clear()
+		S2.out.feed.clear()
+	var per_min: int = h2.speed.made
+	_check(per_min >= 6 and per_min <= 30, "in a real minute %d streaks (%d skipped by the dedupe and the gap), about the 20 a minute it was sized for" % [per_min, h2.speed.skipped])
+	SimCore.dispose(S2)
+	# Off, and the drawing budget.
+	var ho := VfxHub.new()
+	ho.speedlines_enabled = false
+	ho.reset(S, 6)
+	_tick(S, ho, [heavy.call(0.0, 1.0)])
+	_check(ho.speed.made == 0, "speedlines_enabled off starts none")
+	SimCore.dispose(S)
 
 
 func _tick(S: SimState, h: VfxHub, events: Array) -> void:

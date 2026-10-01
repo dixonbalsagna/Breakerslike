@@ -46,6 +46,7 @@ var _yspread: float = 60.0      # how far above and below the spawn height a sha
 var _ember_tick: int = 0        # embers spawned this tick (budget VfxLook.EMBER_PER_TICK)
 var _ember_alive: int = 0       # embers in the pool (cap VfxLook.EMBER_CAP)
 var _spray_alive: int = 0       # water streaks in the pool (cap data/vfx/water.json caps.spray_alive)
+var _rubble_alive: int = 0      # slow rising rubble bits in the pool (cap data/vfx/react.json rubble.alive_cap)
 var _water_ref: WeakRef = null     # weak: VfxWater holds this pool, so a strong link back would be a reference cycle (the exit warning)
 var water: VfxWater:             # the water effects (set by the hub); a plunge's second jet comes back through it
 	set(v):
@@ -67,6 +68,7 @@ func reset(seed: int) -> void:
 	bits.clear()
 	jobs.clear()
 	_spray_alive = 0
+	_rubble_alive = 0
 	spawned = 0
 	dropped = 0
 	max_live = 0
@@ -82,6 +84,7 @@ func step(S: SimState, dt: float) -> void:
 	_ember_tick = 0
 	_ember_alive = 0
 	var spray_n: int = 0   # recounted below, after the jobs, so a job's throws see the real count
+	var rubble_n: int = 0
 	# Jobs are on unfrozen sim time (S.T): a hit-stopped ripple waits with the world.
 	if not jobs.is_empty():
 		var i: int = 0
@@ -98,6 +101,8 @@ func step(S: SimState, dt: float) -> void:
 		if b.kind == SPRAY:
 			spray_n += 1
 			b.rot = atan2(b.vy, b.vx)
+		if b.grav < 0.0 and b.kind == CHUNK:
+			rubble_n += 1
 		if b.kind == EMBER:
 			_ember_alive += 1
 		if b.age >= b.life:
@@ -131,6 +136,7 @@ func step(S: SimState, dt: float) -> void:
 					b.vx *= 0.85
 					b.spin = 0.0
 	_spray_alive = spray_n
+	_rubble_alive = rubble_n
 	max_live = maxi(max_live, bits.size())
 
 
@@ -143,6 +149,8 @@ func _run_job(S: SimState, j: Job) -> void:
 		"plunge2":
 			if water != null:
 				water.rebound(j.a)
+		"blow":
+			_blow(S, j.a)
 		"pflr":
 			_pflr(S, j.a)
 		"pring":
@@ -603,3 +611,37 @@ func foam(x: float, y: float, vx: float, vy: float, size: float, life: float) ->
 	_tone = 2 if _rd.next() < 0.5 else 0
 	_puff_at(x, y, -8.0, vx, vy, size * 0.6, size * 1.3, life, false)
 	_tone = 0
+
+
+# ------------------------------------------------------------------------------------------------------------ the world reacts
+
+## One piece of rubble lifted off the ground by a high-tier fighter (react.gd): a chunk of the biome's earth that rises
+## slowly, with weight (a small upward acceleration and drag, a heavy slow spin), and is gone in a couple of seconds. Not a
+## ring: react.gd scatters them. size in units; accel the upward acceleration.
+func rubble(x: float, y: float, z: float, vx: float, vy: float, size: float, life: float, accel: float, biome: String) -> void:
+	var b := Bit.new()
+	b.kind = CHUNK
+	b.x = SimWrap.wrap(x)
+	b.y = y
+	b.z = z
+	b.vx = vx
+	b.vy = vy
+	b.rot = _rd.range_(0.0, TAU)
+	b.spin = _rd.range_(-1.6, 1.6)
+	b.sx = size
+	b.sy = size * _rd.range_(0.55, 0.9)
+	b.life = life
+	b.grav = -accel
+	b.drag = 0.012
+	b.col = VfxPalette.dust(biome, "mid")
+	b.col2 = VfxPalette.dust(biome, "light")
+	b.seed = _rd.next()
+	_rubble_alive += 1
+	_add(b)
+
+
+## A wave of windows blowing out of one building (react.gd): glass shards thrown out of a few floors' rows. a: x, w (the
+## building), base (its foot), fh (a floor's height), z (its facade), floors (the floor numbers), scale.
+func _blow(_S: SimState, a: Dictionary) -> void:
+	for fl in a.floors:
+		window_row(a.x, a.w, a.base + (float(fl) + 0.5) * a.fh, a.fh * 0.3, a.z, a.scale)

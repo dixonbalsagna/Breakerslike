@@ -9,6 +9,7 @@ extends Node3D
 var mats: RenderMats               # this pane's material state (the curvature)
 var ground: GroundField            # the planet's ground field, for building meshes
 var mat: ShaderMaterial
+var stand_mats: Array = []            # the standing cracks' own materials, one a slot: they spread slowly and fade (react.gd)
 var built_frame: int = -1          # for the tests
 var visible_count: int = 0
 var built_now: int = 0
@@ -21,6 +22,12 @@ func _init() -> void:
 	mat.shader = preload("res://render/vfx/shaders/crack.gdshader")
 	mat.render_priority = 0
 	mat.set_shader_parameter("grow_t", VfxLook.CRACK_GROW_S)
+	for i in range(2):
+		var sm := ShaderMaterial.new()
+		sm.shader = mat.shader
+		sm.render_priority = 0
+		sm.set_shader_parameter("grow_t", 2.5)
+		stand_mats.append(sm)
 
 
 func attach(p_mats: RenderMats, p_ground: GroundField) -> void:
@@ -29,6 +36,8 @@ func attach(p_mats: RenderMats, p_ground: GroundField) -> void:
 		mats = p_mats
 		if mats != null:
 			mats.track(mat)
+			for sm in stand_mats:
+				mats.track(sm)
 
 
 ## cam_x: this pane's wrapped camera x; half_w: half the visible width at the fighter plane (world units); zoom: pixels per unit there.
@@ -36,6 +45,10 @@ func update(hub: VfxHub, S: SimState, cam_x: float, half_w: float, zoom: float) 
 	visible_count = 0
 	built_now = 0
 	mat.set_shader_parameter("now", S.T)
+	for i in range(stand_mats.size()):
+		stand_mats[i].set_shader_parameter("now", S.T)
+		stand_mats[i].set_shader_parameter("fade", hub.react.level[i])
+		stand_mats[i].set_shader_parameter("grow_t", 0.45 if hub.reduced_motion else VfxReact.p("cracks", "grow_s"))
 	# Build what the hub has queued (any pane may; the mesh is shared). A build needs the ground field.
 	var built: int = 0
 	while built < VfxLook.CRACK_BUILD_PER_FRAME and not hub.crack_pending.is_empty() and ground != null:
@@ -69,7 +82,7 @@ func update(hub: VfxHub, S: SimState, cam_x: float, half_w: float, zoom: float) 
 		if mi == null:
 			mi = MeshInstance3D.new()
 			mi.mesh = cs.mesh
-			mi.material_override = mat
+			mi.material_override = stand_mats[clampi(cs.slot, 0, 1)] if cs.kind == 2 else mat
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			add_child(mi)
 			_items[cs.id] = mi

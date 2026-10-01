@@ -36,3 +36,7 @@ Pictures: `godot --path . --script res://render/vfx/tools/transform_shots.gd -- 
 - It reads the same sim signals the director already exposes; if a future attack state is added that does not set one of them (a new rush kind, say), add it to `VfxAura.is_active`.
 - The aura is a standing aura of the **tier**; the later rule-of-cool picks (flicker when worn, rubble, cracks at high tiers, windows, speed lines) are not built.
 - `data/vfx/aura.json` needs a Tools schema (the validator warns "no schema for this folder" until then).
+
+## Legal's notes (2026-10-01)
+
+Colour: never gold, white or red; the aura uses `VfxAura.lane_color`, which swaps a fire-range or near-white colour for Art's Anti-hero accent (`#9a80d8`) and uses a cool one (KAI's `#8fd6ff`) as it is. The tier "mix" toward white is 0, the fills are thinner (0.14 to 0.17, half that for the standing aura), so it reads as an outline. It flickers when the fighter is worn (the core's wear stage and the brink): `react-plan.md`.

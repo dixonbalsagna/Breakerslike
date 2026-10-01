@@ -4,7 +4,7 @@ extends MultiMeshInstance3D
 ## dim disc behind the fighter, the aura, the gather's inward streaks, the break's flash and ring. Everything is a function
 ## of the form's age at this frame, positioned on the fighter's interpolated pose. Reads only.
 
-const CAP := 140
+const CAP := 220
 const STRIDE := 20
 const SHAPE_STREAK := 0.0
 const SHAPE_RING := 1.0
@@ -15,6 +15,7 @@ const Z_AURA := -10.0
 const Z_MOTE := -8.0
 const Z_FLASH := -6.0
 const Z_RING := 3.0
+const Z_SPEED := -9.0
 const DIM_COL := Color(0.03, 0.04, 0.09)
 
 var _buf := PackedFloat32Array()
@@ -74,10 +75,46 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 			var pulse: float = 1.0
 			if not hub.reduced_motion:
 				pulse = 1.0 + VfxAura.p("standing", "pulse") * sin(TAU * (float(hub.aura.clock) + a) / maxf(VfxAura.p("standing", "pulse_ticks"), 1.0) + float(i) * 2.0)
-			var colr: Color = RenderLook.col(String(fs.aura)).lerp(Color.WHITE, float(ads["mix"]))
+			var colr: Color = VfxAura.lane_color(String(fs.aura))
 			var fill: float = 0.0 if q == VfxLook.Q_LOW else float(ads["fill"]) * VfxAura.p("standing", "fill_scale")
 			colr.a = VfxAura.p("standing", "alpha") * smoothstep(0.0, 1.0, lvl)
+			if hub.flicker_enabled:
+				colr.a *= VfxReact.flicker(fs, hub.aura.clock, i, hub.reduced_motion)
+				pulse *= VfxReact.jitter(fs, hub.aura.clock, i, hub.reduced_motion)
 			n = _put(n, Vector2(rels, ps.y + ahs * 0.5 - 0.1 * bh), Vector2(1.0, 0.0), float(ads["w_bh"]) * bh * pulse, ahs * pulse, fzs + Z_AURA, colr, float(ads["lobes"]), fill, SHAPE_AURA)
+	# Speed lines alone (speed.gd): thin lines running toward the hit for six ticks, behind the fighters, quiet.
+	if hub.speedlines_enabled:
+		var nl: int = int(round(VfxReact.p("speed", "lines") * (0.5 if (hub.reduced_motion or q == VfxLook.Q_LOW) else 1.0)))
+		var rim_on: bool = not (hub.reduced_motion or q == VfxLook.Q_LOW)
+		var dur: float = VfxReact.p("speed", "ticks")
+		var ln_w: float = maxf(VfxReact.p("speed", "width_bh") * bh, minpx)
+		for s: VfxSpeed.Streak in hub.speed.streaks:
+			var relx: float = SimWrap.sdx(cam_x, s.x)
+			if absf(relx) > half_w + 6.0 * bh or n >= CAP - 20:
+				continue
+			var st: float = maxf(s.age - (1.0 - a), 0.0)
+			var per: Vector2 = Vector2(-s.dy, s.dx)
+			var dirv: Vector2 = Vector2(s.dx, s.dy)
+			for k in range(nl):
+				var o: int = k * VfxSpeed.LINE_STRIDE
+				var across: float = s.lines[o] * bh
+				var len_l: float = s.lines[o + 1] * bh
+				var gap: float = s.lines[o + 2] * bh
+				var tt: float = clampf((st - s.lines[o + 3]) / maxf(dur - s.lines[o + 3], 1.0), 0.0, 1.0)
+				if tt <= 0.0:
+					continue
+				var head: float = lerpf(-VfxReact.p("speed", "dist_bh") * bh, -gap, 1.0 - pow(1.0 - tt, 2.0))
+				var tail: float = head - len_l
+				var al: float = VfxReact.p("speed", "alpha") * smoothstep(0.0, 0.15, tt) * (1.0 - smoothstep(0.65, 1.0, tt))
+				if al < 0.01:
+					continue
+				var mid: Vector2 = Vector2(relx, s.y) + dirv * (head + tail) * 0.5 + per * across
+				var core: Color = VfxPalette.trail_core()
+				core.a = al
+				if rim_on:
+					var rimc: Color = Color(0.08, 0.1, 0.18, al * VfxReact.p("speed", "rim_alpha") / maxf(VfxReact.p("speed", "alpha"), 0.01))
+					n = _put(n, mid, dirv, head - tail, ln_w * 2.6, s.z + Z_SPEED - 0.5, rimc, 0.5, 0.05, SHAPE_STREAK)
+				n = _put(n, mid, dirv, head - tail, ln_w, s.z + Z_SPEED, core, 0.5, 0.05, SHAPE_STREAK)
 	for f: VfxTransform.Form in xf.forms:
 		if f.slot >= host.S.fighters.size() or n >= CAP - 8:
 			continue
@@ -87,7 +124,7 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 			continue
 		var pose: Vector3 = host.fighter_pose(f.slot, a)
 		var fz: float = host.fighter_z(f.slot, a)
-		var col: Color = RenderLook.col(String(host.S.fighters[f.slot].aura))
+		var col: Color = VfxAura.lane_color(String(host.S.fighters[f.slot].aura))
 		var t: float = f.at(a)
 		var beat: int = VfxTransform.beat_of(f, t)
 		var sx: float = rel
@@ -105,14 +142,19 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 			n = _put(n, Vector2(sx, sy), Vector2(1.0, 0.0), dr * 2.0, dr * 2.0, fz + Z_DIM, Color(DIM_COL, da), 1.8, 0.0, SHAPE_DISC)
 		# The aura: the old tier's shape drawn in on the gather, the new one in a single frame at the break.
 		var al: float = VfxTransform.aura_alpha(f, t)
+		var wj: float = 1.0
+		if hub.flicker_enabled:
+			var sfi = host.S.fighters[f.slot]
+			al *= VfxReact.flicker(sfi, int(f.age), f.slot, hub.reduced_motion)
+			wj = VfxReact.jitter(sfi, int(f.age), f.slot, hub.reduced_motion)
 		if al > 0.002:
 			var ad: Dictionary = VfxTransform.aura(f.old_tier if beat == 0 else f.tier)
-			var sc: float = VfxTransform.aura_scale(f, t)
+			var sc: float = VfxTransform.aura_scale(f, t) * wj
 			var aw: float = float(ad["w_bh"]) * bh
 			var ah: float = float(ad["h_bh"]) * bh
 			var cy_full: float = pose.y + ah * 0.5 - 0.1 * bh
 			var cy: float = sy + (cy_full - sy) * sc
-			var ac: Color = col.lerp(Color.WHITE, float(ad["mix"]))
+			var ac: Color = col
 			n = _put(n, Vector2(sx, cy), Vector2(1.0, 0.0), aw * sc, ah * sc, fz + Z_AURA, Color(ac, al), float(ad["lobes"]), float(ad["fill"]), SHAPE_AURA)
 		# The gather: streaks of aura and loose dust, drawn inward to the sigil.
 		if beat == 0:
@@ -129,7 +171,7 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 			if tb < rt:
 				var u: float = tb / rt
 				var rr: float = lerpf(VfxTransform.p("break", "ring_r0_bh"), VfxTransform.p("break", "ring_r1_bh"), 1.0 - pow(1.0 - u, 2.0)) * bh
-				var rc: Color = col.lerp(Color.WHITE, 0.2)
+				var rc: Color = col
 				rc.a = VfxTransform.p("break", "ring_alpha") * pow(1.0 - u, 1.5)
 				var thick: float = maxf(VfxTransform.p("break", "ring_thick"), 1.6 * minpx / maxf(rr, 1.0))
 				n = _put(n, Vector2(sx, sy), Vector2(1.0, 0.0), rr * 2.0, rr * 2.0, fz + Z_RING, rc, thick, 0.0, SHAPE_RING)
@@ -156,7 +198,7 @@ func _motes(n: int, f: VfxTransform.Form, t: float, sx: float, sy: float, fz: fl
 	var total: int = f.motes.size() / VfxTransform.MOTE_STRIDE
 	var want_aura: int = int(round(float(nm) * qshare))
 	var want_dust: int = int(round(float(total - nm) * qshare)) if q > VfxLook.Q_LOW else 0
-	var cmote: Color = col.lerp(Color.WHITE, 0.2)
+	var cmote: Color = col.lightened(0.1)
 	var cdust: Color = VfxPalette.dust(VfxPalette.biome_key(wx), "light")
 	var ai: int = 0
 	var di: int = 0

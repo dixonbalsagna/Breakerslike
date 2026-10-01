@@ -52,3 +52,7 @@ One MultiMesh draw per pane, at most 140 quads (51 for one fighter in the gather
 ## Standing aura (2026-10-01)
 
 One quad a fighter, in the transformation's one draw call (it adds none), no pool. The fill is dropped at quality low. Cost is under the transformation's 80 microseconds a frame and not separately measured.
+
+## Reactions to power and speed lines (2026-10-01)
+
+Rubble alive 36 at quality high (inside the pool's 460, thinned with quality), windows at most 10 buildings and 6 floors a wave, one standing crack set a fighter (two more crack materials), speed lines at most 4 streaks of 7 lines (the transformation's draw call, now up to 220 quads). Everything at once (`react_shots.gd --case=bench`, both fighters tier 4 and worn in the city, a big crater a second, a heavy every 8 ticks, 1280x720, fast desktop): frame CPU mean 1.02 ms against 0.40 with the reactions off (p99 1.59 against 0.61), draw calls 27.7 against 24.6, peak bits 426 of 460, consume 0.41 ms mean (1.23 max). Not measured: the web build and an old laptop. Degrade order: speed lines and the flicker's size stutter first (they are cheap), then the rubble count, then the glass, then the standing cracks.

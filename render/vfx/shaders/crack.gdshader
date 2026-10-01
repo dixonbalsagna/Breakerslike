@@ -20,6 +20,7 @@ uniform float lift = 6.0;             // units above the ground as drawn (the st
 uniform float max_px = 14.0;          // the most a vertex is stretched on screen, in pixels of half thickness
 uniform float fade_from = 2500.0;     // cracks fade out with depth behind the fighter plane, gone by fade_to (they are only detail up close)
 uniform float fade_to = 7000.0;
+uniform float fade = 1.0;             // a standing set's own fade in and out (react.gd), 1 for every other set
 
 varying vec4 v_col;
 
@@ -50,7 +51,7 @@ void vertex() {
 	}
 	POSITION = p0;
 	float back = max(-(MODEL_MATRIX * vec4(VERTEX, 1.0)).z, 0.0);
-	v_col = vec4(COLOR.rgb, COLOR.a * (1.0 - smoothstep(fade_from, fade_to, back)));
+	v_col = vec4(COLOR.rgb, COLOR.a * fade * (1.0 - smoothstep(fade_from, fade_to, back)));
 }
 
 void fragment() {

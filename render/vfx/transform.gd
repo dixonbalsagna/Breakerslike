@@ -24,10 +24,10 @@ const DEFAULT_BEATS: Dictionary = {
 	"live": [10, 14, 24],
 }
 const DEFAULT_AURA: Dictionary = {
-	1: {"w_bh": 1.0, "h_bh": 1.45, "lobes": 0, "fill": 0.24, "mix": 0.08},
-	2: {"w_bh": 1.2, "h_bh": 1.6, "lobes": 1, "fill": 0.26, "mix": 0.12},
-	3: {"w_bh": 1.45, "h_bh": 1.75, "lobes": 2, "fill": 0.28, "mix": 0.18},
-	4: {"w_bh": 1.7, "h_bh": 1.9, "lobes": 3, "fill": 0.3, "mix": 0.25},
+	1: {"w_bh": 1.0, "h_bh": 1.45, "lobes": 0, "fill": 0.14, "mix": 0.0},
+	2: {"w_bh": 1.2, "h_bh": 1.6, "lobes": 1, "fill": 0.15, "mix": 0.0},
+	3: {"w_bh": 1.45, "h_bh": 1.75, "lobes": 2, "fill": 0.16, "mix": 0.0},
+	4: {"w_bh": 1.7, "h_bh": 1.9, "lobes": 3, "fill": 0.17, "mix": 0.0},
 }
 const MOTE_STRIDE := 5   # theta, start radius share, phase, length jitter, kind (0 aura mote, 1 dust)
 

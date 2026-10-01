@@ -10,7 +10,7 @@ extends RefCounted
 ## Presentation only: reads the sim, writes nothing, draws no randomness.
 
 const DEFAULTS: Dictionary = {
-	"standing": {"ease_in_ticks": 8, "ease_out_ticks": 24, "hold_ticks": 18, "alpha": 0.4, "fill_scale": 0.7, "pulse": 0.03, "pulse_ticks": 50, "min_tier": 1},
+	"standing": {"ease_in_ticks": 8, "ease_out_ticks": 24, "hold_ticks": 18, "alpha": 0.4, "fill_scale": 0.5, "pulse": 0.03, "pulse_ticks": 50, "min_tier": 1},
 }
 
 static var _data: Dictionary = {}
@@ -98,3 +98,35 @@ func step(S: SimState, frozen: bool, forms: Array) -> void:
 			level[i] = minf(level[i] + 1.0 / maxf(p("standing", "ease_in_ticks"), 1.0), 1.0)
 		else:
 			level[i] = maxf(level[i] - 1.0 / maxf(p("standing", "ease_out_ticks"), 1.0), 0.0)
+
+
+## The colour an aura, a transformation's ring and its flash are drawn in: the fighter's own `aura` colour, except that
+## Legal's screen (docs/legal/rule-of-cool-screen.md) rules out gold, white and red for them. A colour in the fire range
+## (red, orange, gold) or close to white is swapped for Art's Anti-hero accent (data/art/flashes.json, accents.A.mid), the
+## lane colour that fighter is meant to have. Fighter data is not changed; see docs/vfx/aura-plan.md for the one-line
+## recommendation. A cool colour (KAI's light blue) is used as it is.
+static func lane_color(hex: String) -> Color:
+	var c: Color = RenderLook.col(hex)
+	var fire: bool = c.s > 0.35 and c.v > 0.35 and (c.h < 0.19 or c.h > 0.96)
+	var whiteish: bool = c.s < 0.12 and c.v > 0.8
+	if not (fire or whiteish):
+		return c
+	return _lane_sub()
+
+
+static var _sub: Color = Color(0.0, 0.0, 0.0, 0.0)
+
+
+static func _lane_sub() -> Color:
+	if _sub.a > 0.0:
+		return _sub
+	var col := Color("#9a80d8")
+	var path := "res://data/art/flashes.json"
+	if FileAccess.file_exists(path):
+		var v = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if v is Dictionary and v.get("accents") is Dictionary and v["accents"].get("A") is Dictionary:
+			var m = v["accents"]["A"].get("mid")
+			if m is String and m.begins_with("#"):
+				col = Color(m)
+	_sub = col
+	return _sub

@@ -62,6 +62,9 @@ const EMBERS_DEFAULT: bool = false      # scorch embers by variant: off until Re
 const WATER_DEFAULT: bool = true        # dramatic water effects (Orb asked for them): on; Rendering's own splash spray stays until it chooses to drop it
 const TRANSFORM_DEFAULT: bool = true   # the transformation effects (docs/vfx/transform-plan.md)
 const STANDING_AURA_DEFAULT: bool = true   # Orb: the aura shows while charging or attacking (docs/vfx/aura-plan.md)
+const REACT_DEFAULT: bool = true         # the world reacts from tier 3 (rule of cool row 12)
+const FLICKER_DEFAULT: bool = true       # the aura flickers when worn (rule of cool row 1)
+const SPEEDLINES_DEFAULT: bool = true    # Orb picked impact treatment B: speed lines alone on every launch and landed heavy
 ## Cracks are a pure function of the sim's records (S.craters, S.slides) plus the match seed (render/vfx/crack_gen.gd),
 ## so a seek, a snapshot or a late join draws the same ones. Lengths and widths are in crater radii r or trench half
 ## widths hw; numbers of lines grow with sqrt(energy).

@@ -13,7 +13,7 @@ extends RefCounted
 ## One crater's or slide's set of cracks.
 class CrackSet:
 	var id: int = 0
-	var kind: int = 0             # 0 crater, 1 slide
+	var kind: int = 0             # 0 crater, 1 slide, 2 standing (react.gd)
 	var key: int = 0
 	var x: float = 0.0            # origin, wrapped world x
 	var born: float = 0.0         # sim time the record was made
@@ -23,6 +23,7 @@ class CrackSet:
 	var tris: int = 0
 	var fissures: int = 0
 	var biome: String = "plains"
+	var slot: int = -1            # kind 2 (a high-tier fighter's standing cracks, react.gd): the fighter's slot
 
 ## A hole a fighter left in a facade.
 class Hole:
@@ -50,6 +51,11 @@ var transform_enabled: bool = VfxLook.TRANSFORM_DEFAULT   # the transformation: 
 var xform := VfxTransform.new()
 var standing_aura_enabled: bool = VfxLook.STANDING_AURA_DEFAULT   # the aura while charging or attacking (needs transform_enabled)
 var aura := VfxAura.new()
+var react_enabled: bool = VfxLook.REACT_DEFAULT      # from tier 3 the world answers: rubble, standing cracks, windows blowing out (docs/vfx/react-plan.md)
+var flicker_enabled: bool = VfxLook.FLICKER_DEFAULT  # the aura flickers when the fighter is worn
+var react := VfxReact.new()
+var speedlines_enabled: bool = VfxLook.SPEEDLINES_DEFAULT   # speed lines alone on every launch and landed heavy (impact treatment B)
+var speed := VfxSpeed.new()
 var debris := VfxDebris.new()
 var water := VfxWater.new()
 var holes: Array = []               # Hole
@@ -88,6 +94,9 @@ func reset(S: SimState, p_seed: int) -> void:
 	debris.reset(seed)
 	xform.reset(seed)
 	aura.reset()
+	react.debris = debris
+	react.reset()
+	speed.reset(seed)
 	water.debris = debris
 	water.reset()
 	debris.water = water
@@ -158,11 +167,22 @@ func _consume(S: SimState, events: Array) -> void:
 				xform.begin(int(e.actor), float(e.tier), String(_g(e, "version", "live")), float(_g(e, "dur", 0.0)))
 	if transform_enabled and standing_aura_enabled:
 		aura.step(S, frozen, xform.forms)
+	if speedlines_enabled:
+		speed.step()
+		for e in events:
+			if e.type == "launch":
+				_speed_launch(S, e)
+			elif e.type == "damage" and e.kind == "heavy" and e.number:
+				_speed_heavy(S, e)
 	_sync_cracks(S)
-	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled:
+	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
 		water.begin_tick()
+		if react_enabled and not frozen:
+			react.step(S, self, xform.forms)
+		if react_enabled:
+			react.prune(S)
 		var floored: Dictionary = {}          # buildings with a floor_hit this tick: the floor path draws their burst
 		for e in events:
 			if e.type == "floor_hit":
@@ -193,6 +213,9 @@ func _consume(S: SimState, events: Array) -> void:
 				"skim":
 					if water_enabled:
 						water.skim(S, float(e.x), float(e.y), float(e.spd), int(e.n))
+				"crater":
+					if react_enabled:
+						react.on_crater(S, e, self)
 				"beamSplash":
 					if water_enabled:
 						_on_beam_splash(S, float(e.x))
@@ -497,3 +520,43 @@ func _on_beam_splash(S: SimState, x: float) -> void:
 	var power: float = best.pw if best != null else 1.0
 	var dir: float = 1.0 if best == null or best.ux >= 0.0 else -1.0
 	water.beam(S, x, power, dir, S.tick)
+
+
+## A crack set made by the reactions (react.gd), queued for a mesh like any other. Returns it.
+func make_set(kind: int, key: int, x: float, born: float, biome: String, lines: Array) -> CrackSet:
+	var cs := CrackSet.new()
+	cs.kind = kind
+	cs.key = key
+	cs.x = x
+	cs.born = born
+	cs.biome = biome
+	cs.lines = lines
+	_add(cs)
+	return cs
+
+
+## A launch (the sim's `launch`: actor was launched by target): a streak toward the launched fighter along his launch.
+func _speed_launch(S: SimState, e) -> void:
+	var a: int = int(e.actor)
+	if a < 0 or a >= S.fighters.size():
+		return
+	var f = S.fighters[a]
+	var dx: float = f.vx
+	var dy: float = f.vy
+	if absf(dx) + absf(dy) < 1.0:
+		dx = float(_g(e, "face", 1.0))
+		dy = 0.0
+	speed.add(f.x, f.y + VfxLook.CHEST_Y, dx, dy, a, f.z)
+
+
+## A heavy that landed (a `damage` event of kind heavy with a number): a streak from the attacker toward the hit.
+func _speed_heavy(S: SimState, e) -> void:
+	var v: int = int(e.victim)
+	var at: int = int(e.attacker)
+	var dx: float = 1.0
+	var dy: float = 0.0
+	if at >= 0 and at < S.fighters.size():
+		dx = SimWrap.sdx(S.fighters[at].x, float(e.x))
+		dy = float(e.y) - (S.fighters[at].y + VfxLook.CHEST_Y)
+	var z: float = S.fighters[v].z if v >= 0 and v < S.fighters.size() else 0.0
+	speed.add(float(e.x), float(e.y), dx, dy, v, z)
