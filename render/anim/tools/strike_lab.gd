@@ -27,7 +27,8 @@ var json_out: String = ""
 var measure: bool = false
 var variant: String = ""
 var sweep: bool = false        # --sweep (with --measure): the farthest distance each strike still reaches and the nearest it stays clear at
-var ab_label: bool = false     # --ab: caption the A and B versions of a pair
+var sheet_pre: float = 0.0     # --sheet-pre=S: the sheet takes each strike this many seconds before contact (the wind-up) instead of at contact
+var label_text: String = ""    # --label=TEXT: the caption (an A/B pair names its version); empty: the strike, its distance and its weight
 var dist_over: float = -1.0
 var size := Vector2i(300, 190)
 var step: int = 2
@@ -51,8 +52,10 @@ func _initialize() -> void:
 			measure = true
 		elif a == "--sweep":
 			sweep = true
-		elif a == "--ab":
-			ab_label = true
+		elif a.begins_with("--sheet-pre="):
+			sheet_pre = float(a.substr(12))
+		elif a.begins_with("--label="):
+			label_text = a.substr(8)
 		elif a.begins_with("--variant="):
 			variant = a.substr(10)
 		elif a.begins_with("--dist="):
@@ -245,8 +248,8 @@ func _run() -> void:
 					clip = c2
 			if not measure and k >= start_tick and (k - start_tick) % step == 0:
 				label.text = "%s   %d u   %s" % [String(m.name), int(dist), "heavy" if heavy else "light"]
-				if ab_label:
-					label.text = ("B: %s" % String(m.alt)) if variant == "b" else "A: as drawn"
+				if label_text != "":
+					label.text = label_text
 				for i in range(2):
 					var af: AnimFighter = af0 if i == 0 else af1
 					pivots[i].scale = Vector3(af.vface, 1.0, 1.0)
@@ -255,7 +258,7 @@ func _run() -> void:
 					bodies[i].apply(af.q, af.hips, af.curl, af.root_off)
 				for _w in range(4):
 					await process_frame
-				if sheet != "" and at_contact:
+				if sheet != "" and absf(ex.t - (TC - sheet_pre)) < DT * 0.5:
 					var im: Image = sv.get_texture().get_image()
 					im.convert(Image.FORMAT_RGB8)
 					tiles.append(im)

@@ -47,6 +47,7 @@ function runGodot(script, args, { headless = true, timeout = 900 } = {}) {
   if (r.status !== 0 && r.status !== null && r.stdout.indexOf('passed') < 0 && r.stdout.indexOf('FAILED') < 0) console.error(`[review] ${script} exited ${r.status}`);
   return r.stdout || '';
 }
+const readManifest = () => { const a = join(project, `data/anim/waves/${waveName}.entrymap.json`); const b = join(project, `data/anim/waves/${waveName}.manifest.json`); return readJson(existsSync(a) ? a : b); };
 const readJson = p => existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
 
 function wave() {
@@ -54,7 +55,8 @@ function wave() {
   const seeds = opt('seeds', '4,12345');
   const ticks = opt('ticks', '3000');
   const idArgs = ids ? [`--ids=${ids}`] : [];
-  const manifest = waveName ? readJson(join(project, `data/anim/waves/${waveName}.manifest.json`)) : null;
+  const manifest = waveName ? readManifest() : null;
+  const isEntries = manifest?.kind === 'entries';
   const found = [];
   const add = (severity, source, subject, detail, action) => found.push({ severity, source, subject, detail, action });
   // pose lint
@@ -68,9 +70,9 @@ function wave() {
     else add('review', 'pose_lint', it.id, `${it.kind}: ${it.detail}`, 'adjust the pose');
   }
   // silhouette lint (the review threshold is a little under the lint's own)
-  runGodot('silhouette_lint', [...idArgs, ...(waveName ? ['--contact-only'] : []), '--cross=0.80', '--same=0.92', `--json=${join(rawDir, 'silhouette.json')}`]);
+  runGodot('silhouette_lint', [...idArgs, ...(waveName ? ['--suffix=' + (isEntries ? '.travel' : '.contact')] : []), '--cross=0.80', '--same=0.92', `--json=${join(rawDir, 'silhouette.json')}`]);
   const sl = readJson(join(rawDir, 'silhouette.json'));
-  const fromOf = id => manifest?.strikes?.find(m => id.startsWith(m.id + '.') || id.startsWith(m.id + '~'))?.from ?? null;
+  const fromOf = id => isEntries ? null : manifest?.strikes?.find(m => id.startsWith(m.id + '.') || id.startsWith(m.id + '~'))?.from ?? null;
   for (const pr of sl?.pairs ?? []) if (waveName && fromOf(pr.a) && fromOf(pr.a) === fromOf(pr.b)) add('note', 'silhouette_lint', `${pr.a} / ${pr.b}`, `overlap ${pr.iou}: two strikes derived from the same family (they differ by the hands or the target)`, 'by design (Combat\'s derive rows); the hands and the target tell them apart');
   for (const pr of (sl?.pairs ?? []).filter(p => !(waveName && fromOf(p.a) && fromOf(p.a) === fromOf(p.b)))) add(pr.iou >= (pr.kind === 'same family' ? 0.95 : 0.85) ? 'review' : 'note', 'silhouette_lint', `${pr.a} / ${pr.b}`, `overlap ${pr.iou} (${pr.kind})`, pr.kind === 'same family' ? 'a key that barely moves: make the poses differ or drop one' : 'two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)');
   // stacking lint
@@ -83,7 +85,19 @@ function wave() {
   for (const id of st?.mark_one_poses ?? []) add('note', 'stacking_lint', id, 'mark 1: a crouch with fists at the sides', 'fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash');
   // the strike lab: reach and clipping at each strike's own distance (waves only)
   let labNote = '';
-  if (waveName && !flag('no-lab')) {
+  if (isEntries && !flag('no-lab')) {
+    // how each entry flows into the strikes it favours: the mean turn of the eight limb bones from its last pose to the strike's wind-up
+    runGodot('entry_lab', ['--measure', `--wave=${waveName}`, `--json=${join(rawDir, 'flow.json')}`]);
+    const fj = readJson(join(rawDir, 'flow.json'));
+    for (const r of fj?.flows ?? []) {
+      const bad = r.flows.filter(f => f.mean > 1.6);
+      if (bad.length) add('review', 'entry_lab', r.name, `the arrival is far from the wind-up of ${bad.map(f => f.strike + ' (' + f.mean + ' rad)').join(', ')}`, 'an arrival pose closer to those wind-ups, or let the join (inertialised) carry it');
+      const mid = r.flows.filter(f => f.mean > 1.3 && f.mean <= 1.6);
+      if (mid.length) add('note', 'entry_lab', r.name, `a long join into ${mid.map(f => f.strike + ' (' + f.mean + ' rad)').join(', ')}`, 'none needed unless the reel shows a jump');
+    }
+    labNote = `${fj?.flows?.length ?? 0} entries measured against the strikes they favour (the mean limb turn from the arrival to the wind-up)`;
+  }
+  if (waveName && !isEntries && !flag('no-lab')) {
     runGodot('strike_lab', ['--measure', `--wave=${waveName}`, `--json=${join(rawDir, 'reach.json')}`]);
     const rj = readJson(join(rawDir, 'reach.json'));
     for (const r of rj?.strikes ?? []) {
@@ -122,7 +136,7 @@ function wave() {
   found.sort((a, b) => rank[a.severity] - rank[b.severity]);
   const flagged = [];
   for (const f of found) if (f.severity !== 'note') for (const part of f.subject.split(' / ')) if (/^[a-z][a-z0-9_~]*(\.[a-z0-9_~]+)*$/.test(part) && !flagged.includes(part) && flagged.length < 24) flagged.push(part);
-  if (waveName) for (let i = 0; i < flagged.length; i++) { const m = manifest?.strikes?.find(x => x.name === flagged[i]); if (m) flagged[i] = m.id + '.contact'; }
+  if (waveName) for (let i = 0; i < flagged.length; i++) { const m = manifest?.strikes?.find(x => x.name === flagged[i]); if (m) flagged[i] = m.id + '.contact'; const e = manifest?.entries?.find(x => x.name === flagged[i]); if (e) flagged[i] = e.poses[e.poses.length - 1]; }
   let sheet = '';
   if (flagged.length && !flag('no-sheet')) {
     sheet = join(outDir, 'exceptions-sheet.png');
@@ -172,7 +186,8 @@ function reel(extraA = [], extraB = [], labelA = 'noragdoll', labelB = '', gifNa
 function pack() {
   if (!waveName) { console.error('pack needs --wave waveN'); process.exit(2); }
   wave();
-  const man = readJson(join(project, `data/anim/waves/${waveName}.manifest.json`));
+  const man = readManifest();
+  if (man?.kind === 'entries') { packEntries(man); return; }
   const dir = outDir;
   // the reach table: the distance each strike reaches at, measured by the lab against Combat's own contact distance
   runGodot('strike_lab', ['--measure', '--sweep', `--wave=${waveName}`, `--json=${join(rawDir, 'sweep.json')}`]);
@@ -192,15 +207,21 @@ function pack() {
   console.log(g.stdout.trim());
   runGodot('strike_lab', [`--wave=${waveName}`, `--sheet=${join(dir, `${waveName}-contact-sheet.png`)}`], { headless: false, timeout: 900 });
   // A/B pairs: a strike with a B version, side by side
-  const pairs = (man?.strikes ?? []).filter(m => m.alt);
+  const pairs = [];
+  for (const m of man?.strikes ?? []) {
+    if (m._genericAb) pairs.push({ m, a: 'g', b: '', la: 'A: the generic wind-up of its limb', lb: 'B: its own family wind-up', note: `A is the generic wind-up of its limb, B its own family's (${m._family})` });
+    if (m.alt) pairs.push({ m, a: '', b: 'b', la: 'A: as drawn', lb: 'B: ' + m.alt, note: `A is the strike as drawn; B is "${m.alt}"` });
+  }
   const abs = [];
-  for (const m of pairs) {
-    runGodot('strike_lab', [`--wave=${waveName}`, `--ids=${m.name}`, '--ab', `--out=${join(rawDir, 'ab_a.rgb')}`, '--step=2'], { headless: false, timeout: 300 });
-    runGodot('strike_lab', [`--wave=${waveName}`, `--ids=${m.name}`, '--ab', '--variant=b', `--out=${join(rawDir, 'ab_b.rgb')}`, '--step=2'], { headless: false, timeout: 300 });
-    const gf = join(dir, `ab-${m.name}.gif`);
+  for (const pr of pairs) {
+    const nm = pr.m.name;
+    const run = (v, label, f) => runGodot('strike_lab', [`--wave=${waveName}`, `--ids=${nm}`, ...(v ? [`--variant=${v}`] : []), `--label=${label}`, `--out=${join(rawDir, f)}`, '--step=2'], { headless: false, timeout: 300 });
+    run(pr.a, pr.la, 'ab_a.rgb');
+    run(pr.b, pr.lb, 'ab_b.rgb');
+    const gf = join(dir, `ab-${nm}${pr.a === 'g' ? '-wind-up' : ''}.gif`);
     const r = spawnSync(process.execPath, [join(project, 'render/anim/tools/gif.mjs'), gf, join(rawDir, 'ab_a.rgb'), join(rawDir, 'ab_b.rgb'), '--delay', '5'], { encoding: 'utf8' });
     console.log(r.stdout.trim());
-    abs.push({ name: m.name, label: m.alt });
+    abs.push({ file: `ab-${nm}${pr.a === 'g' ? '-wind-up' : ''}.gif`, note: pr.note });
   }
   const sum = readJson(join(dir, 'summary.json'));
   const c = sum?.counts ?? {};
@@ -211,9 +232,48 @@ function pack() {
     `2. **The contact sheet** \`${waveName}-contact-sheet.png\`: the contact frame of every strike, one tile each, for a still look.`,
     '3. **The exceptions** `exceptions.md` and, when there are flagged poses, `exceptions-sheet.png`; and `reach-table.md`, the reach of every strike measured against the contact distances in the Combat rows.',
     `4. **${abs.length} A/B pairs**, each a choice between two versions of one strike, to be answered with a letter:`, '',
-    ...abs.map(a => `   - \`ab-${a.name}.gif\`: A is the strike as drawn; B is "${a.label}".`), ''];
+    ...abs.map(a => `   - \`${a.file}\`: ${a.note}.`), ''];
   writeFileSync(join(dir, 'README.md'), lines.join('\n'));
   for (const f of ['lab.rgb', 'ab_a.rgb', 'ab_b.rgb']) rmSync(join(rawDir, f), { force: true });   // the raw frames are 140 MB; the GIFs are the product
+  console.log(`[review] pack ${waveName}: ${dir}`);
+}
+
+function packEntries(man) {
+  const dir = outDir;
+  const E = man.entries;
+  // the flow table
+  const fj = readJson(join(rawDir, 'flow.json'));
+  const tl = [`# ${waveName}: the flow table`, '',
+    "Each entry's last pose against the wind-up of every wave 1 strike it favours (Combat's `favours`): the mean turn of the eight limb bones in radians. Under 0.8 the join is nearly free, 0.8 to 1.3 it is a visible change the inertialisation smooths, over 1.3 the strike starts from a different shape (the pelvis and spine are the body's orientation, which the sim's rotation carries in flight, so only the limbs are compared).", '',
+    '| Entry | Last pose | Strikes it favours (mean limb turn, rad) |', '| :--- | :--- | :--- |'];
+  for (const r of fj?.flows ?? []) tl.push(`| ${r.name} | ${r.last} | ${r.flows.map(f => `${f.strike} ${f.mean}`).join(', ')} |`);
+  writeFileSync(join(dir, 'flow-table.md'), tl.join('\n') + '\n');
+  // the reel of every entry into its favoured strike, and the sheet (start, middle, arrival)
+  runGodot('entry_lab', [`--wave=${waveName}`, `--out=${join(rawDir, 'lab.rgb')}`, '--size=420x260'], { headless: false, timeout: 1800 });
+  const g = spawnSync(process.execPath, [join(project, 'render/anim/tools/gif.mjs'), join(dir, `${waveName}-reel.gif`), join(rawDir, 'lab.rgb'), '--delay', opt('delay', '4')], { encoding: 'utf8' });
+  console.log(g.stdout.trim());
+  runGodot('entry_lab', [`--wave=${waveName}`, `--sheet=${join(dir, `${waveName}-sheet.png`)}`, '--size=360x230'], { headless: false, timeout: 900 });
+  const abs = [];
+  for (const m of E.filter(x => x.alt)) {
+    const run = (v, label, f) => runGodot('entry_lab', [`--wave=${waveName}`, `--ids=${m.name}`, ...(v ? [`--variant=${v}`] : []), `--label=${label}`, `--out=${join(rawDir, f)}`, '--step=2', '--size=360x230'], { headless: false, timeout: 300 });
+    run('', 'A: as drawn', 'ab_a.rgb');
+    run('b', 'B: ' + m.alt, 'ab_b.rgb');
+    const file = `ab-${m.name}.gif`;
+    const r = spawnSync(process.execPath, [join(project, 'render/anim/tools/gif.mjs'), join(dir, file), join(rawDir, 'ab_a.rgb'), join(rawDir, 'ab_b.rgb'), '--delay', '5'], { encoding: 'utf8' });
+    console.log(r.stdout.trim());
+    abs.push({ file, note: `A is the entry as drawn; B is "${m.alt}"` });
+  }
+  const sum = readJson(join(dir, 'summary.json'));
+  const c = sum?.counts ?? {};
+  const lines = [`# ${waveName}: the pack for Orb`, '',
+    `Machine pass first (see exceptions.md): **${c.error ?? 0} errors, ${c.review ?? 0} for review, ${c.note ?? 0} notes** over ${sum?.poses ?? 0} poses of ${E.length} entries. Then what Orb sees:`, '',
+    `1. **The reel** \`${waveName}-reel.gif\`: every entry, in order, played into the strike it favours, against a dummy defender. The lab moves him along a simple path (the sim owns the real one) and compresses the distance: a real rush covers 650 to 1,700 u, the reel shows 170.`,
+    `2. **The sheet** \`${waveName}-sheet.png\`: three frames of each entry (the start, the middle, the arrival).`,
+    '3. **The exceptions** `exceptions.md` and `exceptions-sheet.png`; and `flow-table.md`, how each arrival flows into the wind-ups of the strikes it favours.',
+    `4. **${abs.length} A/B pairs**, each a choice between two versions of one entry, to be answered with a letter:`, '',
+    ...abs.map(a => `   - \`${a.file}\`: ${a.note}.`), ''];
+  writeFileSync(join(dir, 'README.md'), lines.join('\n'));
+  for (const f of ['lab.rgb', 'ab_a.rgb', 'ab_b.rgb']) rmSync(join(rawDir, f), { force: true });
   console.log(`[review] pack ${waveName}: ${dir}`);
 }
 

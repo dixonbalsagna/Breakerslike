@@ -10,7 +10,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 72,
+   "reach": 98,
    "band": "long",
    "ticks": {
     "load": 6,
@@ -30,7 +30,9 @@
     "w1.jab.contact",
     "w1.jab.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.cross",
@@ -41,7 +43,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 74,
+   "reach": 98,
    "band": "long",
    "ticks": {
     "load": 6,
@@ -61,7 +63,9 @@
     "w1.cross.contact",
     "w1.cross.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.hook",
@@ -72,7 +76,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 72,
+   "reach": 98,
    "band": "long",
    "ticks": {
     "load": 6,
@@ -92,7 +96,9 @@
     "w1.hook.contact",
     "w1.hook.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.backfist",
@@ -103,7 +109,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 72,
+   "reach": 88,
    "band": "long",
    "ticks": {
     "load": 6,
@@ -123,7 +129,9 @@
     "w1.backfist.contact",
     "w1.backfist.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": true,
+   "_family": "hand_arc"
   },
   {
    "id": "w1.palm_heel",
@@ -134,7 +142,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 74,
+   "reach": 98,
    "band": "long",
    "ticks": {
     "load": 6,
@@ -157,7 +165,9 @@
     "w1.palm_heel.contact",
     "w1.palm_heel.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.spear_hand",
@@ -167,8 +177,8 @@
    "target": "gut",
    "limb": "hand_r",
    "limb2": null,
-   "offset": 52,
-   "reach": 66,
+   "offset": 54,
+   "reach": 98,
    "band": "mid",
    "ticks": {
     "load": 6,
@@ -188,18 +198,20 @@
     "w1.spear_hand.contact",
     "w1.spear_hand.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.uppercut",
    "combat": "strike.uppercut",
    "name": "uppercut",
    "weight": "heavy",
-   "target": "head",
+   "target": "jaw",
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 72,
+   "reach": 98,
    "band": "long",
    "ticks": {
     "load": 10,
@@ -222,7 +234,9 @@
     "w1.uppercut.contact",
     "w1.uppercut.follow"
    ],
-   "alt": "upright and open-chested"
+   "alt": "upright and open-chested",
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.hammer",
@@ -232,8 +246,8 @@
    "target": "head",
    "limb": "hand_r",
    "limb2": null,
-   "offset": 58,
-   "reach": 72,
+   "offset": 56,
+   "reach": 86,
    "band": "long",
    "ticks": {
     "load": 14,
@@ -253,7 +267,9 @@
     "w1.hammer.contact",
     "w1.hammer.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.overhand",
@@ -264,7 +280,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 72,
+   "reach": 86,
    "band": "long",
    "ticks": {
     "load": 10,
@@ -284,7 +300,9 @@
     "w1.overhand.contact",
     "w1.overhand.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": "hand_arc"
   },
   {
    "id": "w1.haymaker",
@@ -295,7 +313,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 72,
+   "reach": 98,
    "band": "long",
    "ticks": {
     "load": 12,
@@ -315,7 +333,9 @@
     "w1.haymaker.contact",
     "w1.haymaker.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.short_elbow",
@@ -325,8 +345,8 @@
    "target": "jaw",
    "limb": "elbow_r",
    "limb2": null,
-   "offset": 34,
-   "reach": 46,
+   "offset": 38,
+   "reach": 64,
    "band": "close",
    "ticks": {
     "load": 6,
@@ -339,14 +359,16 @@
    },
    "from": null,
    "legal": [],
-   "look": "The forearm folded shut and the point of the elbow cut across at face height: a small, sharp triangle.",
+   "look": "The forearm folded shut and the point of the elbow cut across under the jaw: a small, sharp triangle.",
    "orig": "the forearm folded shut and the point of the elbow cut across at face height: a small sharp triangle",
    "poses": [
     "w1.short_elbow.chamber",
     "w1.short_elbow.contact",
     "w1.short_elbow.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.rising_elbow",
@@ -356,8 +378,8 @@
    "target": "jaw",
    "limb": "elbow_r",
    "limb2": null,
-   "offset": 34,
-   "reach": 46,
+   "offset": 38,
+   "reach": 64,
    "band": "close",
    "ticks": {
     "load": 6,
@@ -370,14 +392,16 @@
    },
    "from": null,
    "legal": [],
-   "look": "The elbow driven up the centre line, the hand ending behind his own ear, the plate edge leading.",
+   "look": "The elbow driven up the centre line under the jaw, the hand ending behind his own ear, the plate edge leading.",
    "orig": "the elbow driven up the centre line, the hand ending behind his own ear, the plate edge leading",
    "poses": [
     "w1.rising_elbow.chamber",
     "w1.rising_elbow.contact",
     "w1.rising_elbow.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.spinning_elbow",
@@ -388,7 +412,7 @@
    "limb": "elbow_r",
    "limb2": null,
    "offset": 34,
-   "reach": 46,
+   "reach": 62,
    "band": "close",
    "ticks": {
     "load": 14,
@@ -403,14 +427,16 @@
    "legal": [
     "single_turn"
    ],
-   "look": "One turn with his back shown, the elbow whipping through level at the end of it.",
+   "look": "One turn with his back shown, the elbow whipping through level at jaw height at the end of it.",
    "orig": "one turn with his back shown, the elbow whipping through level at the end of it",
    "poses": [
     "w1.spinning_elbow.chamber",
     "w1.spinning_elbow.contact",
     "w1.spinning_elbow.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.dropping_elbow",
@@ -421,7 +447,7 @@
    "limb": "elbow_r",
    "limb2": null,
    "offset": 38,
-   "reach": 50,
+   "reach": 72,
    "band": "close",
    "ticks": {
     "load": 12,
@@ -441,7 +467,9 @@
     "w1.dropping_elbow.contact",
     "w1.dropping_elbow.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.twin_spear",
@@ -452,7 +480,7 @@
    "limb": "hand_r",
    "limb2": "hand_l",
    "offset": 52,
-   "reach": 66,
+   "reach": 98,
    "band": "mid",
    "ticks": {
     "load": 8,
@@ -472,7 +500,9 @@
     "w1.twin_spear.contact",
     "w1.twin_spear.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.double_palm",
@@ -483,7 +513,7 @@
    "limb": "hand_r",
    "limb2": "hand_l",
    "offset": 52,
-   "reach": 66,
+   "reach": 98,
    "band": "mid",
    "ticks": {
     "load": 10,
@@ -507,7 +537,9 @@
     "w1.double_palm.contact",
     "w1.double_palm.follow"
    ],
-   "alt": "elbows in"
+   "alt": "elbows in",
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.double_hammer",
@@ -518,7 +550,7 @@
    "limb": "hand_r",
    "limb2": "hand_l",
    "offset": 50,
-   "reach": 64,
+   "reach": 84,
    "band": "mid",
    "ticks": {
     "load": 14,
@@ -541,7 +573,9 @@
     "w1.double_hammer.contact",
     "w1.double_hammer.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.cross_arm_ram",
@@ -552,7 +586,7 @@
    "limb": "elbow_r",
    "limb2": "elbow_l",
    "offset": 38,
-   "reach": 50,
+   "reach": 70,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -574,7 +608,9 @@
     "w1.cross_arm_ram.contact",
     "w1.cross_arm_ram.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.front_kick",
@@ -585,7 +621,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 54,
-   "reach": 64,
+   "reach": 82,
    "band": "mid",
    "ticks": {
     "load": 6,
@@ -605,7 +641,9 @@
     "w1.front_kick.contact",
     "w1.front_kick.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.side_kick",
@@ -616,7 +654,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 60,
+   "reach": 70,
    "band": "mid",
    "ticks": {
     "load": 6,
@@ -636,7 +674,9 @@
     "w1.side_kick.contact",
     "w1.side_kick.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.low_kick",
@@ -647,7 +687,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 60,
+   "reach": 76,
    "band": "mid",
    "ticks": {
     "load": 6,
@@ -667,7 +707,9 @@
     "w1.low_kick.contact",
     "w1.low_kick.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.snap_round",
@@ -678,7 +720,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 60,
+   "reach": 72,
    "band": "mid",
    "ticks": {
     "load": 6,
@@ -698,7 +740,9 @@
     "w1.snap_round.contact",
     "w1.snap_round.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.roundhouse",
@@ -709,7 +753,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 60,
+   "reach": 78,
    "band": "mid",
    "ticks": {
     "load": 12,
@@ -729,7 +773,9 @@
     "w1.roundhouse.contact",
     "w1.roundhouse.follow"
    ],
-   "alt": "guard stays up"
+   "alt": "guard stays up",
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.axe_kick",
@@ -739,8 +785,8 @@
    "target": "chest",
    "limb": "foot_r",
    "limb2": null,
-   "offset": 50,
-   "reach": 60,
+   "offset": 48,
+   "reach": 66,
    "band": "mid",
    "ticks": {
     "load": 14,
@@ -760,7 +806,9 @@
     "w1.axe_kick.contact",
     "w1.axe_kick.follow"
    ],
-   "alt": "leaning back, arms wide"
+   "alt": "leaning back, arms wide",
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.spinning_heel",
@@ -771,7 +819,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 60,
+   "reach": 70,
    "band": "mid",
    "ticks": {
     "load": 14,
@@ -793,7 +841,9 @@
     "w1.spinning_heel.contact",
     "w1.spinning_heel.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.stomp",
@@ -804,7 +854,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 54,
-   "reach": 64,
+   "reach": 76,
    "band": "mid",
    "ticks": {
     "load": 12,
@@ -824,7 +874,9 @@
     "w1.stomp.contact",
     "w1.stomp.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.sweep",
@@ -835,7 +887,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 60,
+   "reach": 72,
    "band": "mid",
    "ticks": {
     "load": 8,
@@ -855,7 +907,9 @@
     "w1.sweep.contact",
     "w1.sweep.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.drop_kick",
@@ -866,7 +920,7 @@
    "limb": "foot_r",
    "limb2": "foot_l",
    "offset": 50,
-   "reach": 60,
+   "reach": 64,
    "band": "mid",
    "ticks": {
     "load": 12,
@@ -886,7 +940,9 @@
     "w1.drop_kick.contact",
     "w1.drop_kick.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.short_knee",
@@ -896,8 +952,8 @@
    "target": "gut",
    "limb": "knee_r",
    "limb2": null,
-   "offset": 32,
-   "reach": 42,
+   "offset": 28,
+   "reach": 48,
    "band": "close",
    "ticks": {
     "load": 6,
@@ -917,7 +973,9 @@
     "w1.short_knee.contact",
     "w1.short_knee.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.rising_knee",
@@ -928,7 +986,7 @@
    "limb": "knee_r",
    "limb2": null,
    "offset": 32,
-   "reach": 42,
+   "reach": 54,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -948,7 +1006,9 @@
     "w1.rising_knee.contact",
     "w1.rising_knee.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.driving_knee",
@@ -958,8 +1018,8 @@
    "target": "gut",
    "limb": "knee_r",
    "limb2": null,
-   "offset": 32,
-   "reach": 42,
+   "offset": 28,
+   "reach": 54,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -979,7 +1039,9 @@
     "w1.driving_knee.contact",
     "w1.driving_knee.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.headbutt",
@@ -989,8 +1051,8 @@
    "target": "jaw",
    "limb": "head",
    "limb2": null,
-   "offset": 34,
-   "reach": 44,
+   "offset": 36,
+   "reach": 58,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -1003,14 +1065,16 @@
    },
    "from": null,
    "legal": [],
-   "look": "The masked brow snapped forward from the neck and waist, hands holding the rival's arms down.",
+   "look": "The masked brow driven into the jaw from the waist, hands holding the rival's arms down.",
    "orig": "the masked brow snapped forward from the neck and waist, the hands holding the rival arms down",
    "poses": [
     "w1.headbutt.chamber",
     "w1.headbutt.contact",
     "w1.headbutt.follow"
    ],
-   "alt": "hands pulled back"
+   "alt": "hands pulled back",
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.shoulder_check",
@@ -1021,7 +1085,7 @@
    "limb": "shoulder_r",
    "limb2": null,
    "offset": 34,
-   "reach": 44,
+   "reach": 60,
    "band": "close",
    "ticks": {
     "load": 6,
@@ -1039,7 +1103,9 @@
     "w1.shoulder_check.contact",
     "w1.shoulder_check.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   },
   {
    "id": "w1.body_ram",
@@ -1050,7 +1116,7 @@
    "limb": "shoulder_r",
    "limb2": null,
    "offset": 34,
-   "reach": 44,
+   "reach": 68,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -1061,14 +1127,16 @@
    "uses": {},
    "from": null,
    "legal": [],
-   "look": "The whole body thrown in behind the shoulder, both feet leaving the ground.",
+   "look": "He turns as he arrives and throws his plated back and the back of the shoulder into the chest, head turned away over the far shoulder, both feet leaving the ground.",
    "orig": "the whole body thrown in behind the shoulder, both feet leaving the ground",
    "poses": [
     "w1.body_ram.chamber",
     "w1.body_ram.contact",
     "w1.body_ram.follow"
    ],
-   "alt": null
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
   }
  ],
  "skipped": [

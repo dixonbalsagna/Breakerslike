@@ -25,6 +25,7 @@ static var ragdoll: Dictionary = {}      # data/anim/ragdoll.json (read by AnimR
 static var form_poses: Dictionary = {}  # beat -> pose id
 static var load_waves: bool = false      # --waves: also bake the parked pose waves of data/anim/waves/ (tools only; no live match plays them)
 static var raw: Dictionary = {}         # id -> the sketch each pose was baked from (poses.json, and the waves when loaded)
+static var entries: Dictionary = {}      # parked entry sequences (data/anim/waves/*.entries.json): id -> {phases: [{pose, ticks}]}; played by an `entry` beat
 static var wave_of: Dictionary = {}     # pose id -> the wave file it came from
 static var shapes: Dictionary = {}      # data/anim/shapes.json: shape key -> {idle, hit} tuning
 static var sockets: Dictionary = {}     # data/anim/sockets.json (regions a blow lands on, limbs that land it)
@@ -81,9 +82,14 @@ static func load_all() -> void:
 					poses[id] = AnimPose.bake(id, wp[id])
 					raw[id] = wp[id]
 					wave_of[id] = wn
-				var wk: Dictionary = _read("waves/" + wn + ".keysets.json").get("keysets", {})
-				for kid in wk:
-					keysets[kid] = wk[kid]
+				if FileAccess.file_exists(DIR + "waves/" + wn + ".keysets.json"):
+					var wk: Dictionary = _read("waves/" + wn + ".keysets.json").get("keysets", {})
+					for kid in wk:
+						keysets[kid] = wk[kid]
+				if FileAccess.file_exists(DIR + "waves/" + wn + ".entries.json"):
+					var we: Dictionary = _read("waves/" + wn + ".entries.json").get("entries", {})
+					for eid in we:
+						entries[eid] = we[eid]
 	var prj: Dictionary = _read("profiles.json")
 	profiles = prj.get("profiles", {})
 	default_profile = String(prj.get("default", "snappy"))

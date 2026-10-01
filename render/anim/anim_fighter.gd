@@ -757,11 +757,42 @@ static func _blow_weight(args: Dictionary) -> float:
 	return clampf(d / 70.0, 0.2, 1.4)
 
 
+## An entry (data/anim/waves/*.entries.json, parked: no live beat names one yet): a sequence of poses over `dur` seconds. A phase with
+## `ticks` holds that long, the others share the rest by their weight `w`; the poses cross-fade over three ticks at each boundary. The
+## strike that follows takes over from here by its own load (the join is inertialised).
+func _entry_layer(es: float, dur: float, id: String, T: float, dq: float) -> void:
+	var en = AnimData.entries.get(id)
+	if en == null or T < es - 0.0001 or T >= es + dur + 0.05:
+		return
+	var ph: Array = en.phases
+	var fixed: float = 0.0
+	var sumw: float = 0.0
+	for p in ph:
+		if p.has("ticks"):
+			fixed += float(p.ticks) * DT
+		else:
+			sumw += float(p.get("w", 1.0))
+	var flex: float = maxf(dur - fixed, DT)
+	var bounds: Array = [0.0]
+	for p in ph:
+		var seg: float = float(p.ticks) * DT if p.has("ticks") else flex * float(p.get("w", 1.0)) / maxf(sumw, 0.001)
+		bounds.append(float(bounds[-1]) + seg)
+	var tt: float = floorf(clampf(T - es, 0.0, dur) / dq + 0.0001) * dq
+	var e: float = 1.5 * DT
+	_mix_pose(AnimData.pose(String(ph[0].pose)), 1.0)
+	for i in range(1, ph.size()):
+		var w: float = smoothstep(float(bounds[i]) - e, float(bounds[i]) + e, tt)
+		if w > 0.001:
+			_mix_pose(AnimData.pose(String(ph[i].pose)), w)
+	debug["entries"] = int(debug.get("entries", 0)) + 1
+
+
 func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var role: String = "A" if ex.A == f else "D"
 	var t0: float = T - ex.t
 	var strikes: Array = []
 	var rushes: Array = []
+	var entries: Array = []   # parked entry sequences (data/anim/waves/*.entries.json), played by an `entry` beat or a rush beat that names one
 	var ordinal: int = 0
 	# a parried exchange: only the blows timed before the parry are drawn (the sim keeps listing, and later firing, the rest of
 	# the string; Encounter will end it there)
@@ -781,16 +812,23 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 			if role == "A" and (not ex.cancel or b.t <= ct + 0.0001):
 				strikes.append([t0 + b.t, ordinal, {"o": {"big": true}}, "chain"])
 			ordinal += 1
+		elif b.op == "entry" and String(b.args.get("who", "A")) == role:
+			entries.append([t0 + b.t, float(b.args.dur), String(b.args.get("id", ""))])
 		elif b.op == "rush" and role == "A":
-			rushes.append([t0 + b.t, float(b.args.dur)])
+			rushes.append([t0 + b.t, float(b.args.dur), String(b.args.get("entry", ""))])
 		elif b.op == "finRush" and String(b.args.w) == role:
-			rushes.append([t0 + b.t, float(b.args.dur)])
+			rushes.append([t0 + b.t, float(b.args.dur), ""])
 	# approach: launch-off, flight, arrival (a rush is snappy)
 	var rprof: Dictionary = _part_prof("rush")
 	var rdq: float = 1.0 / float(rprof.get("solve_hz", 60.0))
+	for en in entries:
+		_entry_layer(float(en[0]), maxf(float(en[1]), DT), String(en[2]), T, rdq)
 	for r in rushes:
 		var rs: float = r[0]
 		var dur: float = maxf(r[1], DT)
+		if String(r[2]) != "" and AnimData.entries.has(String(r[2])):
+			_entry_layer(rs, dur, String(r[2]), T, rdq)
+			continue
 		if T >= rs and T < rs + dur + 0.05:
 			var tq: float = rs + floorf((T - rs) / rdq) * rdq
 			var p: float = clampf((tq - rs) / dur, 0.0, 1.0)

@@ -1,0 +1,707 @@
+{
+ "wave": "wave2",
+ "kind": "entries",
+ "entries": [
+  {
+   "id": "w2.dash",
+   "combat": "entry.dash",
+   "name": "dash",
+   "direction": "rush",
+   "ground": "ok",
+   "path": "straight",
+   "when": "any distance; the default",
+   "ticks": {
+    "travel": "c",
+    "start": 3,
+    "arrive": 3
+   },
+   "favours": [
+    "jab",
+    "cross",
+    "haymaker",
+    "front_kick",
+    "shoulder_check",
+    "driving_knee"
+   ],
+   "sim": "today",
+   "legal": [
+    "not_both_arms_back",
+    "no_fist_punched_ahead"
+   ],
+   "look": "One narrow blade: a shoulder and its forearm guard lead, the other arm folded to the chest, legs together behind.",
+   "lab": {
+    "d0": 170,
+    "shape": "straight"
+   },
+   "alt": "the shoulder rolled lower, the guard tucked tight",
+   "poses": [
+    "w2.dash.start",
+    "w2.dash.travel",
+    "w2.dash.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [],
+   "derive": [
+    "approach.launch",
+    "move.dash",
+    "move.brake"
+   ]
+  },
+  {
+   "id": "w2.arc_dive",
+   "combat": "entry.arc_dive",
+   "name": "arc_dive",
+   "direction": "rush",
+   "ground": "no",
+   "path": "arc",
+   "when": "in the air, 600 u or more away, or 2 bh or more above the rival",
+   "ticks": {
+    "travel": "c",
+    "start": 4,
+    "arrive": 5
+   },
+   "favours": [
+    "hammer",
+    "dropping_elbow",
+    "axe_kick",
+    "stomp",
+    "double_hammer",
+    "tail_spike"
+   ],
+   "sim": "needs a path on the rush",
+   "legal": [],
+   "look": "He climbs first, then folds at the top and comes down on the rival like a dropped blade, level with him on the last tick.",
+   "lab": {
+    "d0": 170,
+    "shape": "arc",
+    "apex": 60
+   },
+   "alt": "tucked at the top, the knees drawn to the chest",
+   "poses": [
+    "w2.arc_dive.start",
+    "w2.arc_dive.climb",
+    "w2.arc_dive.top",
+    "w2.arc_dive.arrive"
+   ],
+   "phases": [
+    "start",
+    "climb",
+    "top",
+    "arrive"
+   ],
+   "newPoses": [
+    "start: a kick upward off nothing, back arched",
+    "arrive: head down over the rival, the striking limb already raised"
+   ],
+   "derive": [
+    "move.ascend",
+    "move.descend"
+   ]
+  },
+  {
+   "id": "w2.rising",
+   "combat": "entry.rising",
+   "name": "rising",
+   "direction": "rush",
+   "ground": "ok",
+   "path": "straight",
+   "when": "the rival is 1.5 bh or more above him, or he is on the ground and the rival is in the air",
+   "ticks": {
+    "travel": "c",
+    "start": 3,
+    "arrive": 4
+   },
+   "favours": [
+    "uppercut",
+    "rising_elbow",
+    "rising_knee",
+    "spear_hand",
+    "headbutt"
+   ],
+   "sim": "today",
+   "legal": [],
+   "look": "Straight up from below, the body one vertical line, open hands flat along his thighs until the last moment.",
+   "lab": {
+    "d0": 120,
+    "shape": "rising"
+   },
+   "alt": null,
+   "poses": [
+    "w2.rising.start",
+    "w2.rising.travel",
+    "w2.rising.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "arrive: under the rival, body a vertical line, the striking limb low and loaded"
+   ],
+   "derive": [
+    "move.ascend",
+    "approach.launch"
+   ]
+  },
+  {
+   "id": "w2.skid",
+   "combat": "entry.skid",
+   "name": "skid",
+   "direction": "rush",
+   "ground": "only",
+   "path": "ground",
+   "when": "both on the ground, 200 to 1,500 u apart",
+   "ticks": {
+    "travel": "c",
+    "start": 4,
+    "arrive": 6
+   },
+   "favours": [
+    "sweep",
+    "low_kick",
+    "spear_hand",
+    "rising_knee",
+    "tail_sweep"
+   ],
+   "sim": "needs a path on the rush",
+   "legal": [],
+   "look": "He runs, drops and slides the last stretch on a hip and a hand, arriving under the rival's guard.",
+   "lab": {
+    "d0": 200,
+    "shape": "ground"
+   },
+   "alt": "sitting further back, the free leg higher",
+   "poses": [
+    "w2.skid.run",
+    "w2.skid.drop",
+    "w2.skid.slide",
+    "w2.skid.arrive"
+   ],
+   "phases": [
+    "run",
+    "drop",
+    "slide",
+    "arrive"
+   ],
+   "newPoses": [
+    "start: the drop onto one hip and one hand",
+    "arrive: braking on the hand and the outside foot, the other leg free"
+   ],
+   "derive": [
+    "move.sprint"
+   ]
+  },
+  {
+   "id": "w2.spiral",
+   "combat": "entry.spiral",
+   "name": "spiral",
+   "direction": "rush",
+   "ground": "no",
+   "path": "spiral",
+   "when": "in the air, 800 u or more away; always the ping-pong's intercept",
+   "ticks": {
+    "travel": "c",
+    "start": 4,
+    "arrive": 6
+   },
+   "favours": [
+    "hook",
+    "backfist",
+    "snap_round",
+    "side_kick",
+    "spinning_heel",
+    "tail_whip"
+   ],
+   "sim": "needs a path on the rush",
+   "legal": [],
+   "look": "He leaves at an angle and curves back in, banked like a blade on edge, arriving from the side.",
+   "lab": {
+    "d0": 190,
+    "shape": "spiral"
+   },
+   "alt": "a steeper bank, the lead arm trailing",
+   "poses": [
+    "w2.spiral.start",
+    "w2.spiral.travel",
+    "w2.spiral.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "start: a banked turn away from the rival, one arm leading the curve"
+   ],
+   "derive": [
+    "move.dash",
+    "move.burst"
+   ]
+  },
+  {
+   "id": "w2.coil_spring",
+   "combat": "entry.coil_spring",
+   "name": "coil_spring",
+   "direction": "rush",
+   "ground": "only",
+   "path": "straight",
+   "when": "from the ground or a wall, within 900 u; needs both legs",
+   "ticks": {
+    "travel": "c",
+    "start": 6,
+    "arrive": 3
+   },
+   "favours": [
+    "spear_hand",
+    "twin_spear",
+    "shoulder_check",
+    "body_ram",
+    "driving_knee",
+    "cross_arm_ram"
+   ],
+   "sim": "today",
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "He sinks, holds for a beat, and uncoils flat and low at the rival's middle.",
+   "lab": {
+    "d0": 150,
+    "shape": "ground"
+   },
+   "alt": null,
+   "poses": [
+    "w2.coil_spring.start",
+    "w2.coil_spring.travel",
+    "w2.coil_spring.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "start: the deepest crouch, one hand on the ground, hips above the head"
+   ],
+   "derive": [
+    "move.burst",
+    "move.brake"
+   ]
+  },
+  {
+   "id": "w2.step_in",
+   "combat": "entry.step_in",
+   "name": "step_in",
+   "direction": "stand",
+   "ground": "plant",
+   "path": "step",
+   "when": "in reach",
+   "ticks": {
+    "travel": 6,
+    "start": 0,
+    "arrive": 0
+   },
+   "favours": [
+    "jab",
+    "cross",
+    "palm_heel",
+    "front_kick",
+    "short_elbow",
+    "short_knee"
+   ],
+   "sim": "today",
+   "legal": [],
+   "look": "One short, flat step, the head level, the hands already where the strike starts.",
+   "lab": {
+    "d0": 70,
+    "shape": "none",
+    "advance": 10
+   },
+   "alt": null,
+   "poses": [
+    "w2.step_in.start",
+    "w2.step_in.travel",
+    "w2.step_in.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [],
+   "derive": [
+    "move.step_f"
+   ]
+  },
+  {
+   "id": "w2.pivot",
+   "combat": "entry.pivot",
+   "name": "pivot",
+   "direction": "stand",
+   "ground": "plant",
+   "path": "step",
+   "when": "in reach",
+   "ticks": {
+    "travel": 9,
+    "start": 0,
+    "arrive": 0
+   },
+   "favours": [
+    "hook",
+    "backfist",
+    "snap_round",
+    "roundhouse",
+    "spinning_elbow",
+    "spinning_heel"
+   ],
+   "sim": "today",
+   "legal": [],
+   "look": "He turns on the lead foot and lets the turn become the blow.",
+   "lab": {
+    "d0": 70,
+    "shape": "none"
+   },
+   "alt": null,
+   "poses": [
+    "w2.pivot.start",
+    "w2.pivot.travel",
+    "w2.pivot.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "the pivot: weight on the lead foot, the rear hip swinging round, shoulders a beat behind the hips"
+   ],
+   "derive": [
+    "move.step_f"
+   ]
+  },
+  {
+   "id": "w2.plant_coil",
+   "combat": "entry.plant_coil",
+   "name": "plant_coil",
+   "direction": "stand",
+   "ground": "plant",
+   "path": "step",
+   "when": "in reach",
+   "ticks": {
+    "travel": 9,
+    "start": 0,
+    "arrive": 0
+   },
+   "favours": [
+    "uppercut",
+    "rising_elbow",
+    "spear_hand",
+    "rising_knee",
+    "headbutt"
+   ],
+   "sim": "today",
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "He drops into the crouch where he stands and strikes up out of it.",
+   "lab": {
+    "d0": 70,
+    "shape": "none"
+   },
+   "alt": "the eyes level on the rival, the spine straighter",
+   "poses": [
+    "w2.plant_coil.start",
+    "w2.plant_coil.travel",
+    "w2.plant_coil.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "the plant: a drop into the crouch on the spot, spine curled, eyes up"
+   ],
+   "derive": []
+  },
+  {
+   "id": "w2.lane_step",
+   "combat": "entry.lane_step",
+   "name": "lane_step",
+   "direction": "stand",
+   "ground": "plant",
+   "path": "step",
+   "when": "in reach; only once fight lanes land",
+   "ticks": {
+    "travel": 9,
+    "start": 0,
+    "arrive": 0
+   },
+   "favours": [
+    "side_kick",
+    "hook",
+    "low_kick",
+    "short_elbow"
+   ],
+   "sim": "needs fight lanes",
+   "legal": [],
+   "look": "A sidestep off the line, so the blow comes from beside the rival's guard.",
+   "lab": {
+    "d0": 70,
+    "shape": "none"
+   },
+   "alt": null,
+   "poses": [
+    "w2.lane_step.start",
+    "w2.lane_step.travel",
+    "w2.lane_step.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "the lane step: a sidestep toward or away from the camera, body turned a quarter"
+   ],
+   "derive": []
+  },
+  {
+   "id": "w2.rooted",
+   "combat": "entry.rooted",
+   "name": "rooted",
+   "direction": "stand",
+   "ground": "ok",
+   "path": "none",
+   "when": "in reach; the only stand entry with a broken leg on the ground",
+   "ticks": {
+    "travel": 0,
+    "start": 0,
+    "arrive": 0
+   },
+   "favours": [
+    "jab",
+    "cross",
+    "palm_heel",
+    "headbutt",
+    "tail_jab",
+    "hammer"
+   ],
+   "sim": "today",
+   "legal": [
+    "hands_open_or_claw",
+    "no_cross_hold"
+   ],
+   "look": "He does not move his feet at all: the blow comes out of the stance.",
+   "lab": {
+    "d0": 60,
+    "shape": "none"
+   },
+   "alt": null,
+   "poses": [
+    "w2.rooted.start"
+   ],
+   "phases": [
+    "start"
+   ],
+   "newPoses": [],
+   "derive": [
+    "stance.aggressive",
+    "stance.air"
+   ]
+  },
+  {
+   "id": "w2.backstep_counter",
+   "combat": "entry.backstep_counter",
+   "name": "backstep_counter",
+   "direction": "retreat",
+   "ground": "plant",
+   "path": "back",
+   "when": "in reach, or as the counter stance out of reach",
+   "ticks": {
+    "travel": 9,
+    "start": 0,
+    "arrive": 0,
+    "counterStep": 6,
+    "holdOutOfReach": 45,
+    "recoverIfNobodyComes": 10
+   },
+   "favours": [
+    "cross",
+    "front_kick",
+    "side_kick",
+    "overhand"
+   ],
+   "sim": "today",
+   "legal": [],
+   "look": "One step back with the weight on the rear leg, then straight back in as the rival follows.",
+   "lab": {
+    "d0": 60,
+    "shape": "back"
+   },
+   "alt": null,
+   "poses": [
+    "w2.backstep_counter.start",
+    "w2.backstep_counter.travel",
+    "w2.backstep_counter.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [],
+   "derive": [
+    "move.step_b",
+    "move.retreat"
+   ]
+  },
+  {
+   "id": "w2.fade",
+   "combat": "entry.fade",
+   "name": "fade",
+   "direction": "retreat",
+   "ground": "ok",
+   "path": "none",
+   "when": "in reach; the only retreat entry with a broken leg on the ground",
+   "ticks": {
+    "travel": 6,
+    "start": 0,
+    "arrive": 0,
+    "counterStep": 0,
+    "holdOutOfReach": 45,
+    "recoverIfNobodyComes": 10
+   },
+   "favours": [
+    "uppercut",
+    "hook",
+    "rising_elbow",
+    "short_knee",
+    "headbutt"
+   ],
+   "sim": "today",
+   "legal": [
+    "lean_max"
+   ],
+   "look": "His feet stay; the head and chest slip back out of range and come forward again with the counter.",
+   "lab": {
+    "d0": 60,
+    "shape": "none"
+   },
+   "alt": null,
+   "poses": [
+    "w2.fade.start",
+    "w2.fade.travel",
+    "w2.fade.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [],
+   "derive": [
+    "the dodge lean (Animation's unit K)"
+   ]
+  },
+  {
+   "id": "w2.hop_back",
+   "combat": "entry.hop_back",
+   "name": "hop_back",
+   "direction": "retreat",
+   "ground": "plant",
+   "path": "back",
+   "when": "in reach",
+   "ticks": {
+    "travel": 9,
+    "start": 0,
+    "arrive": 0,
+    "counterStep": 6,
+    "holdOutOfReach": 45,
+    "recoverIfNobodyComes": 10
+   },
+   "favours": [
+    "front_kick",
+    "side_kick",
+    "tail_jab",
+    "axe_kick"
+   ],
+   "sim": "today",
+   "legal": [],
+   "look": "A short hop back and up, so the counter comes down from a little above.",
+   "lab": {
+    "d0": 60,
+    "shape": "hop"
+   },
+   "alt": null,
+   "poses": [
+    "w2.hop_back.start",
+    "w2.hop_back.travel",
+    "w2.hop_back.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "the hop: both knees drawn up, body leaning in toward the rival"
+   ],
+   "derive": [
+    "move.retreat"
+   ]
+  },
+  {
+   "id": "w2.drop_back",
+   "combat": "entry.drop_back",
+   "name": "drop_back",
+   "direction": "retreat",
+   "ground": "plant",
+   "path": "back",
+   "when": "in reach, on the ground",
+   "ticks": {
+    "travel": 9,
+    "start": 0,
+    "arrive": 0,
+    "counterStep": 6,
+    "holdOutOfReach": 45,
+    "recoverIfNobodyComes": 10
+   },
+   "favours": [
+    "sweep",
+    "spear_hand",
+    "rising_knee",
+    "uppercut"
+   ],
+   "sim": "today",
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "He gives ground downward: back into the crouch under the blow, then up through the rival's middle.",
+   "lab": {
+    "d0": 60,
+    "shape": "back"
+   },
+   "alt": null,
+   "poses": [
+    "w2.drop_back.start",
+    "w2.drop_back.travel",
+    "w2.drop_back.arrive"
+   ],
+   "phases": [
+    "start",
+    "travel",
+    "arrive"
+   ],
+   "newPoses": [
+    "the drop: back and down into the crouch, under the line of the blow"
+   ],
+   "derive": []
+  }
+ ],
+ "skipped": []
+}

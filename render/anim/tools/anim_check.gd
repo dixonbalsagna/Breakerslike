@@ -675,6 +675,26 @@ func _test_shapes() -> void:
 	print("shape test: head flinch P %.1f A %.1f E %.1f C %.1f, arms P %.1f A %.1f E %.1f C %.1f" % [out.P.head, out.A.head, out.E.head, out.C.head, out.P.arms, out.A.arms, out.E.arms, out.C.arms])
 
 
+## The entry layer (parked sequences of poses played by an `entry` beat): a phase with ticks holds that long, the last phase is shown at the end,
+## and the first at the start.
+func _test_entry() -> void:
+	AnimData.entries["t.entry"] = {"phases": [{"pose": "stance.aggressive", "ticks": 3}, {"pose": "move.dash"}, {"pose": "move.brake", "ticks": 3}]}
+	var ix: Dictionary = AnimRig.index
+	var errs: Array = []
+	for pair in [[0.0, "stance.aggressive"], [0.5, "move.dash"], [0.9999, "move.brake"]]:
+		var af := AnimFighter.new(0)
+		var dur: float = 0.4
+		af._entry_layer(0.0, dur, "t.entry", float(pair[0]) * dur, 1.0 / 60.0)
+		var pz: AnimPose = AnimData.pose(String(pair[1]))
+		var worst: float = 0.0
+		for bn in ["upper_arm_r", "thigh_l", "spine_2"]:
+			worst = maxf(worst, af.q[ix[bn]].angle_to(pz.q[ix[bn]]))
+		errs.append(snappedf(worst, 0.001))
+		_expect(worst < 0.05, "entry test: at %.2f of the entry the pose is %.3f rad from %s" % [float(pair[0]), worst, String(pair[1])])
+	AnimData.entries.erase("t.entry")
+	print("entry test: the entry's start, middle and end are %s rad from their poses" % str(errs))
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -683,6 +703,7 @@ func _run() -> void:
 	_test_form()
 	_test_hunch()
 	_test_shapes()
+	_test_entry()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}

@@ -25,7 +25,8 @@ func _initialize() -> void:
 ## hands_open_or_claw (no fist, no cupped state), wrists_apart (two hands at least 7 u apart), no_clasp (two fists not together), not_at_hip
 ## (no open hand chambered at the hip), no_held_raise (no hand above 80 u in a follow-through: no victory pose), no_leap (both feet
 ## within 6 u of the floor), single_turn (hip and spine twist together under 140 degrees), no_cross_hold (arms not crossed in a wind-up or
-## a follow-through; only the blow itself may cross them).
+## a follow-through; only the blow itself may cross them), not_both_arms_back (no pose with both hands trailing behind), no_fist_punched_ahead
+## (no fist at 30 u ahead), lean_max (pelvis and spine lean together at most 32 degrees).
 static func legal_issues(id: String, d: Dictionary) -> Array:
 	var out: Array = []
 	var rules: Array = d.get("_legal", [])
@@ -71,6 +72,18 @@ static func legal_issues(id: String, d: Dictionary) -> Array:
 				var tw: float = absf(float(d.get("hip_twist", 0.0))) + absf(float(d.get("spine", {}).get("twist", 0.0)))
 				if tw > 140.0:
 					out.append("single_turn: %.0f degrees of twist" % tw)
+			"not_both_arms_back":
+				if both and float(hr[0]) <= -6.0 and float(hl[0]) <= -6.0:
+					out.append("not_both_arms_back: both hands trail behind (x %.0f and %.0f)" % [float(hr[0]), float(hl[0])])
+			"no_fist_punched_ahead":
+				for hv4 in [["r", hr], ["l", hl]]:
+					var tg4 = hv4[1]
+					if tg4 != null and float(tg4[0]) >= 30.0 and String(hs.get(hv4[0], "")) == "fist":
+						out.append("no_fist_punched_ahead: the %s fist is at x %.0f" % [hv4[0], float(tg4[0])])
+			"lean_max":
+				var lm: float = absf(float(d.get("lean", 0.0))) + absf(float(d.get("spine", {}).get("lean", 0.0)))
+				if lm > 32.0:
+					out.append("lean_max: a lean of %.0f degrees from the hips" % lm)
 			"no_cross_hold":
 				if part != "contact" and both and float(hr[2]) < 0.0 and float(hl[2]) > 0.0:
 					out.append("no_cross_hold: the arms are crossed in the %s" % part)

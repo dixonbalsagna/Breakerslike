@@ -5,7 +5,7 @@ extends SceneTree
 ## across families at --cross (default 0.85), inside a family at --same (default 0.95, where a chamber that is the contact pose is
 ## a key that does nothing). Per pose: area, width, height, and whether a limb is hidden inside the body's mass (the readability
 ## of a silhouette at 40 px). Pairs listed in data/anim/lint_allow.json are not flagged, and its overlay prefixes are not compared.
-##   godot --headless --path . --script res://render/anim/tools/silhouette_lint.gd [-- --ids=prefix,prefix --cross=0.90 --same=0.97 --json=out.json --mirror --contact-only]
+##   godot --headless --path . --script res://render/anim/tools/silhouette_lint.gd [-- --ids=prefix,prefix --cross=0.90 --same=0.97 --json=out.json --mirror --contact-only | --suffix=.travel]
 
 const W := 160
 const H := 140
@@ -26,7 +26,7 @@ var cross_thr: float = 0.85
 var same_thr: float = 0.95
 var json_out: String = ""
 var mirror: bool = false
-var contact_only: bool = false   # across families, compare only the poses that end in .contact (a wave: wind-ups and follow-throughs share templates by design)
+var suffix: String = ""   # across families, compare only the poses that end in this suffix (a wave: wind-ups and follow-throughs share templates by design)
 var overlay: Array = []
 
 
@@ -43,7 +43,9 @@ func _initialize() -> void:
 		elif a == "--mirror":
 			mirror = true
 		elif a == "--contact-only":
-			contact_only = true
+			suffix = ".contact"
+		elif a.begins_with("--suffix="):
+			suffix = a.substr(9)
 	_run.call_deferred()
 
 
@@ -175,7 +177,7 @@ func _run() -> void:
 			var fa: String = a.substr(0, a.rfind(".")) if a.contains(".") else a
 			var fb: String = b.substr(0, b.rfind(".")) if b.contains(".") else b
 			var same: bool = fa == fb
-			if contact_only and not same and not (a.ends_with(".contact") and b.ends_with(".contact")):
+			if suffix != "" and not same and not (a.ends_with(suffix) and b.ends_with(suffix)):
 				continue
 			if (same and v >= same_thr) or (not same and v >= cross_thr):
 				pairs.append({"a": a, "b": b, "iou": snappedf(v, 0.001), "kind": "same family" if same else "across families"})
