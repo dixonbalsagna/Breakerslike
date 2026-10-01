@@ -259,3 +259,31 @@ Screens the five landmarks in `docs/art/district-looks.md` section 3, from the w
 | Lighthouse | **GO** | Plain wide bands only. No spiral or diagonal stripes or black-and-white banding of a famous light. No beam geometry, as drawn. |
 | Village hall | **GO** | A generic timber hall. No resemblance to a named hall or studio building. |
 | Hill chapel | **GO** | A generic stone chapel with a thatch roof. No resemblance to a named chapel or shrine. |
+
+### Close-up face directions (2026-10-01)
+
+Screens `docs/art/closeup-directions.md`. **I rendered and looked at the sheets** (comparison, Anti-hero B, the others B and the two blank-mask fallbacks) with headless Chrome. A screen, not legal advice.
+
+| Item | Verdict |
+|---|---|
+| Direction B (mask partly broken, real face behind), as Art's standard | **CONDITIONAL** |
+| Direction A (the mask as a face) | **CONDITIONAL**: the Protagonist's A must change |
+| Direction C (no mask) | **CONDITIONAL**: same split-face check on the Cyborg |
+| Blank-mask fallback | **Not required.** The lit shapes may stay with the constraints below. Keep the blank sheets as the zero-risk fallback. |
+| Silhouettes (long tail, swept tuft, topknot and diadem, box head) | **GO** |
+| Frame (slanted panel, chamfered corner, diagonal bands) | **GO** |
+
+**Why the lit shapes can stay.** The earlier "no eye or mouth slots or dots" condition on the dome guarded against a smooth white mask with matched marks that reads as a well-known white film mask, a mime, or a smiley, and against faceless goggled and X-marked looks. The B sheets do not do that: one lit shape on a broken half, and a real, drawn eye on the other.
+
+**Constraints on lit shapes:**
+1. **No matched pair of round eyes plus a line mouth on a smooth white mask.** The Protagonist's A sheet does exactly this (two round teal eyes, brow bars, a flat mouth). Change those to capsule or arc shapes in his family, or take A off him.
+2. No X or cross marks, no goggles, no red lips or red mouth marks. Mouths are thin lines in the lane colour.
+3. Lit shapes are in each fighter's shape family (hexagon and wedge for the Anti-hero, rectangles for the Cyborg), not stock round eyes.
+4. The Protagonist's lit circle on his masked half should be a capsule or ring arc, so it does not read as a monocle.
+5. No lone glowing red eye on any metal half.
+
+**Split faces.** The Cyborg's pale and dark halves, with one lit eye, echo a well-known cyborg hero's half-metal face and the "Two-Face" split. Make the break diagonal or off-centre (about one third against two thirds) and not a near-vertical line down the middle. The Anti-hero's jagged vertical break is acceptable because one side is a mask with lit shapes and the other a plain face. Keep a mask half without a smooth white half-mask and a straight divide (the white half-mask of a famous stage musical).
+
+**Silhouettes and faces.** The long ponytail, swept teal tuft, topknot with the chevron diadem and box head are distinct, and none matches the franchise's upswept hair or a known face. Keep the box head from reading as a flat-topped monster: no bolts, no stitches. The thick-lash Empress eye and the half-lidded Anti-hero eye are common manga styles, fine. No spiky hair, no gold.
+
+**Frame.** The slanted panel with a chamfered corner and diagonal bands is generic. Keep away from a red, black and white torn-paper style (a well-known role-playing game's look).
