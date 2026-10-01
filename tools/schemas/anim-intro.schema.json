@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-intro",
+  "title": "anim.intro/1",
+  "description": "data/anim/intro.json: the opening's tuning (render/anim/anim_fighter.gd, _intro_layer; docs/architecture/intro-phase.md; pose-pipeline.md section 9.19). tense_lead and tense_ramp: the tension pose comes in over tense_ramp seconds, finishing tense_lead seconds before the end of the staredown. beats: for a shape key, the staredown's one small beat: a sequence of data/anim/waves/intro1.sequences.json and when it starts (seconds after the staredown starts). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every beat shape key is in ragdoll_motion.json shapes; every seq is in intro1.sequences.json) are checked by tools/lib/xref-fight.js (intro-shape, intro-seq).",
+  "type": "object",
+  "required": [
+    "schema",
+    "tense_lead",
+    "tense_ramp",
+    "beats"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.intro/1"
+    },
+    "tense_lead": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Seconds before the end of the staredown at which the tension pose is complete."
+    },
+    "tense_ramp": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Seconds the tension pose takes to come in."
+    },
+    "beats": {
+      "type": "object",
+      "description": "Shape key to its one small beat.",
+      "propertyNames": {
+        "pattern": "^(_.*|[A-Za-z][A-Za-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "seq",
+          "at"
+        ],
+        "properties": {
+          "seq": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+          },
+          "at": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Seconds after the staredown starts."
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

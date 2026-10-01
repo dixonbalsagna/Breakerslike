@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/vfx-earth",
+  "title": "vfx earth, material and fire effects (version 1)",
+  "description": "data/vfx/earth.json: the sim's `debris` events drawn as tumbling chunks of the right material, the `fire` events drawn as cel flames, and the ground-contact events (land, bounce, left_ground, tumble_end, journey_end; data/biomes/contact.json) drawn as spray, clods and dust by surface and speed (docs/vfx/earth-plan.md). Presentation only: read by render/vfx/earth.gd, never by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because earth.gd falls back to the same default. Speeds are world units a second, sizes world units, lives seconds. Pairs where the minimum must not exceed the maximum are checked by tools/lib/xref.js (vfx-earth-range).",
+  "type": "object",
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "deb": {
+      "type": "object",
+      "description": "Tumbling chunks for the sim's debris events.",
+      "properties": {
+        "size_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "size_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "life_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "life_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_per_event": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "spin": {
+          "type": "number",
+          "minimum": 0
+        },
+        "speed_scale": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "flame": {
+      "type": "object",
+      "description": "Cel flames for the sim's fire events.",
+      "properties": {
+        "per_unit": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_per_event": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "size_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "size_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "life_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "life_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rise_min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rise_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "smoke_every": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "smoke_life": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alive_cap": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "land": {
+      "type": "object",
+      "description": "A landing: chunks and dust by kind, scaled by the speed against speed_ref, and by surface (sand and paving multipliers).",
+      "properties": {
+        "speed_ref": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "chunks_slam": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chunks_skid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chunks_tumble": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "size_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dust_slam": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dust_skid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dust_tumble": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sand_chunks": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sand_dust": {
+          "type": "number",
+          "minimum": 0
+        },
+        "paving_chunks": {
+          "type": "number",
+          "minimum": 0
+        },
+        "paving_dust": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "bounce": {
+      "type": "object",
+      "description": "A bounce.",
+      "properties": {
+        "vn_ref": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "chunks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dust": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "leave": {
+      "type": "object",
+      "description": "Leaving the ground, by how.",
+      "properties": {
+        "speed_ref": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "chunks_lip": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chunks_heap": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chunks_cliff": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chunks_crest": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chunks_bounce": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dust": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "settle": {
+      "type": "object",
+      "description": "The end of a tumble or a journey.",
+      "properties": {
+        "tumble_dust": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "journey_dust": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wall_chunks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capped_scale": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "skid": {
+      "type": "object",
+      "description": "A skid.",
+      "properties": {
+        "min_speed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rate_per_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dust_every": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "speed_ref": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

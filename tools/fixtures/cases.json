@@ -24257,7 +24257,7 @@
       }
     },
     {
-      "id": "anim-ground-hold-brace-ok",
+      "id": "anim-ground-hold-brace-closed",
       "schema": "anim-ground.schema.json",
       "mutate": [
         {
@@ -24267,10 +24267,13 @@
           }
         }
       ],
-      "expect": null
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/hold/brace"
+      }
     },
     {
-      "id": "anim-ground-hold-brace-range",
+      "id": "anim-ground-hold-brace-closed-range",
       "schema": "anim-ground.schema.json",
       "mutate": [
         {
@@ -24281,12 +24284,12 @@
         }
       ],
       "expect": {
-        "rule": "maximum",
+        "rule": "additionalProperties",
         "pointer": "/hold/brace"
       }
     },
     {
-      "id": "anim-ground-brace-top-level-ok",
+      "id": "anim-ground-brace-closed",
       "schema": "anim-ground.schema.json",
       "mutate": [
         {
@@ -24296,10 +24299,13 @@
           }
         }
       ],
-      "expect": null
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/brace"
+      }
     },
     {
-      "id": "anim-ground-brace-range",
+      "id": "anim-ground-brace-closed-range",
       "schema": "anim-ground.schema.json",
       "mutate": [
         {
@@ -24310,12 +24316,12 @@
         }
       ],
       "expect": {
-        "rule": "minimum",
+        "rule": "additionalProperties",
         "pointer": "/brace"
       }
     },
     {
-      "id": "anim-ground-brace-type",
+      "id": "anim-ground-brace-closed-type",
       "schema": "anim-ground.schema.json",
       "mutate": [
         {
@@ -24326,7 +24332,7 @@
         }
       ],
       "expect": {
-        "rule": "type",
+        "rule": "additionalProperties",
         "pointer": "/brace"
       }
     },
@@ -24479,6 +24485,751 @@
       "expect": {
         "rule": "xref:ground-hold",
         "pointer": "/hold/slow_k"
+      }
+    },
+    {
+      "id": "vfx-earth-live-valid",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-earth-version-required",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "del": [
+            "/version"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "vfx-earth-version-value",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/version": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/version"
+      }
+    },
+    {
+      "id": "vfx-earth-unknown-group",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/embers": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/embers"
+      }
+    },
+    {
+      "id": "vfx-earth-unknown-key",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/land/gravel": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/land/gravel"
+      }
+    },
+    {
+      "id": "vfx-earth-underscore-key-ok",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/skid/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-earth-empty-group-ok",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/settle": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-earth-chunks-integer",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/land/chunks_slam": 10.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/land/chunks_slam"
+      }
+    },
+    {
+      "id": "vfx-earth-chunks-negative",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/bounce/chunks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bounce/chunks"
+      }
+    },
+    {
+      "id": "vfx-earth-chunks-zero-ok",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/leave/chunks_crest": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-earth-multiplier-fraction-ok",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/land/sand_chunks": 0.25
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-earth-multiplier-negative",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/land/paving_dust": -0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/land/paving_dust"
+      }
+    },
+    {
+      "id": "vfx-earth-ref-positive",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/leave/speed_ref": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/leave/speed_ref"
+      }
+    },
+    {
+      "id": "vfx-earth-size-positive",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/deb/size_min": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/deb/size_min"
+      }
+    },
+    {
+      "id": "vfx-earth-cap-positive",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/flame/alive_cap": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/flame/alive_cap"
+      }
+    },
+    {
+      "id": "vfx-earth-every-positive",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/skid/dust_every": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/skid/dust_every"
+      }
+    },
+    {
+      "id": "vfx-earth-type-string",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/skid/rate_per_s": "fast"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/skid/rate_per_s"
+      }
+    },
+    {
+      "id": "vfx-earth-deb-size-order",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/deb/size_min": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-earth-range",
+        "pointer": "/deb/size_min"
+      }
+    },
+    {
+      "id": "vfx-earth-deb-life-order",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/deb/life_min": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-earth-range",
+        "pointer": "/deb/life_min"
+      }
+    },
+    {
+      "id": "vfx-earth-flame-size-order",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/flame/size_min": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-earth-range",
+        "pointer": "/flame/size_min"
+      }
+    },
+    {
+      "id": "vfx-earth-flame-life-order",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/flame/life_min": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-earth-range",
+        "pointer": "/flame/life_min"
+      }
+    },
+    {
+      "id": "vfx-earth-flame-rise-order",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/flame/rise_min": 300
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-earth-range",
+        "pointer": "/flame/rise_min"
+      }
+    },
+    {
+      "id": "vfx-earth-land-size-order",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/land/size_min": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-earth-range",
+        "pointer": "/land/size_min"
+      }
+    },
+    {
+      "id": "vfx-earth-equal-range-ok",
+      "schema": "vfx-earth.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/earth.json",
+          "set": {
+            "/deb/size_min": 15
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-intro-live-valid",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/schema": "anim.intro/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-intro-key-required",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "del": [
+            "/beats"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-intro-schema-version",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/schema": "anim.intro/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-intro-unknown-key",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-intro-underscore-key-ok",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-intro-lead-negative",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/tense_lead": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/tense_lead"
+      }
+    },
+    {
+      "id": "anim-intro-ramp-type",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/tense_ramp": "slow"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/tense_ramp"
+      }
+    },
+    {
+      "id": "anim-intro-beats-empty-ok",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-intro-beat-key-required",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "del": [
+            "/beats/A/at"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beats/A"
+      }
+    },
+    {
+      "id": "anim-intro-beat-unknown-key",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/A/loop": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/beats/A/loop"
+      }
+    },
+    {
+      "id": "anim-intro-beat-at-negative",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/A/at": -0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beats/A/at"
+      }
+    },
+    {
+      "id": "anim-intro-beat-seq-shape",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/A/seq": "In Cuff"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/beats/A/seq"
+      }
+    },
+    {
+      "id": "anim-intro-beat-shape-name",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/bad key": {
+              "seq": "in.cuff",
+              "at": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/beats/bad key"
+      }
+    },
+    {
+      "id": "anim-intro-beat-shape-unknown",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/Z": {
+              "seq": "in.cuff",
+              "at": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-shape",
+        "pointer": "/beats/Z"
+      }
+    },
+    {
+      "id": "anim-intro-beat-shape-new-ok",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/E": {
+              "seq": "in.cuff",
+              "at": 1
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-intro-beat-seq-unknown",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/A/seq": "in.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-seq",
+        "pointer": "/beats/A/seq"
+      }
+    },
+    {
+      "id": "biomes-contact-wear-cap-accepted",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/cap": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-wear-cap-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/cap": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/wear/cap"
+      }
+    },
+    {
+      "id": "biomes-contact-area-accepted",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/area": {
+              "laterShare": 0.5
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-area-share-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/area": {
+              "laterShare": 1.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/area/laterShare"
+      }
+    },
+    {
+      "id": "biomes-contact-area-key-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/area": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/area"
+      }
+    },
+    {
+      "id": "biomes-contact-area-unknown-key",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/area": {
+              "laterShare": 0.5,
+              "rim": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/area/rim"
+      }
+    },
+    {
+      "id": "biomes-contact-bounce-gravity-accepted",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/gravityMul": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-bounce-gravity-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/bounce/gravityMul": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bounce/gravityMul"
       }
     }
   ],

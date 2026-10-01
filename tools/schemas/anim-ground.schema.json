@@ -122,12 +122,6 @@
           "type": "number",
           "minimum": 0
         },
-        "brace": {
-          "description": "The weight of the brace of a tumble (the older spelling of weight).",
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
         "weight": {
           "description": "The share of the pose the brace is (about half, so the flail of the ragdoll shows through).",
           "type": "number",
@@ -194,12 +188,6 @@
       "patternProperties": {
         "^_": true
       }
-    },
-    "brace": {
-      "description": "The brace weight, as a top-level key (also accepted inside hold).",
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1
     }
   },
   "additionalProperties": false,

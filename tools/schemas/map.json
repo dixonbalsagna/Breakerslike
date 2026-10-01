@@ -207,6 +207,10 @@
       "schema": "anim-ground.schema.json"
     },
     {
+      "match": "data/anim/intro.json",
+      "schema": "anim-intro.schema.json"
+    },
+    {
       "match": "data/anim/waves/*.poses.json",
       "schema": "anim-wave-poses.schema.json"
     },
@@ -305,6 +309,10 @@
     {
       "match": "data/vfx/react.json",
       "schema": "vfx-react.schema.json"
+    },
+    {
+      "match": "data/vfx/earth.json",
+      "schema": "vfx-earth.schema.json"
     },
     {
       "match": "data/narrative/combat_barks.json",

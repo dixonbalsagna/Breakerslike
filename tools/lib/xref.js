@@ -577,6 +577,16 @@ function xref(docs, root = repoRoot) {
     }
   }
 
+  // ---- vfx: earth ----
+  const earth = get('data/vfx/earth.json');
+  if (isObj(earth)) {
+    const pairs = [['deb', 'size_min', 'size_max'], ['deb', 'life_min', 'life_max'], ['flame', 'size_min', 'size_max'], ['flame', 'life_min', 'life_max'], ['flame', 'rise_min', 'rise_max'], ['land', 'size_min', 'size_max']];
+    for (const [g, lo, hi] of pairs) {
+      const o = earth[g];
+      if (isObj(o) && typeof o[lo] === 'number' && typeof o[hi] === 'number' && o[lo] > o[hi]) err('data/vfx/earth.json', `/${g}/${lo}`, 'vfx-earth-range', `${lo} ${o[lo]} is above ${hi} ${o[hi]}`);
+    }
+  }
+
   // ---- vfx: water ----
   const water = get(WATER);
   if (isObj(water)) {

@@ -145,6 +145,11 @@
         "hopLift": {
           "type": "number",
           "minimum": 0
+        },
+        "gravityMul": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "A multiplier on gravity while a body bounces."
         }
       },
       "additionalProperties": false,
@@ -213,6 +218,11 @@
           "minimum": 0
         },
         "perSpeed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cap": {
+          "description": "The most wear one journey adds.",
           "type": "number",
           "minimum": 0
         }
@@ -531,6 +541,25 @@
     "rubbleMin": {
       "type": "number",
       "minimum": 0
+    },
+    "area": {
+      "type": "object",
+      "required": [
+        "laterShare"
+      ],
+      "properties": {
+        "laterShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of the structure damage area a later contact of a journey takes."
+        }
+      },
+      "description": "The damage area of the contacts of a journey.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     }
   },
   "additionalProperties": false,

@@ -820,6 +820,21 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim intro: beats name shapes and sequences that exist ----
+  const intro = get('data/anim/intro.json');
+  if (isObj(intro) && isObj(intro.beats)) {
+    const IN = 'data/anim/intro.json';
+    const motI = get('data/anim/ragdoll_motion.json');
+    const seqI = get('data/anim/waves/intro1.sequences.json');
+    const shapesI = isObj(motI) && isObj(motI.shapes) ? Object.keys(motI.shapes).filter((k) => !k.startsWith('_')) : [];
+    const seqsI = isObj(seqI) && isObj(seqI.sequences) ? seqI.sequences : undefined;
+    for (const [k, b] of Object.entries(intro.beats)) {
+      if (k.startsWith('_') || !isObj(b)) continue;
+      if (shapesI.length && !shapesI.includes(k)) err(IN, `/beats/${esc(k)}`, 'intro-shape', `beat shape "${k}" is not in ragdoll_motion.json shapes (${shapesI.join(', ')})`);
+      if (seqsI && typeof b.seq === 'string' && !(b.seq in seqsI)) err(IN, `/beats/${esc(k)}/seq`, 'intro-seq', `sequence "${b.seq}" is not in data/anim/waves/intro1.sequences.json`);
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);
