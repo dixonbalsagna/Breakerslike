@@ -1,5 +1,7 @@
 # Plan: the director takes the timing (Q4)
 
+> **Revised by ADR 0008** (the control scheme, 2026-09-30): see `control-scheme-plan.md`. Checkpoint A (the attack clock) is now the AI's policy only, and B (parry by state) is replaced by the perfect block. C (struggle by state), D (acts and mood), E (the tutorial), the variety checkpoints and the event shapes below stay.
+
 Owner: Encounter Systems Director. Status: plan only, no edits. It follows the dynamic-feel slice, which is not yet applied.
 
 Inputs:
