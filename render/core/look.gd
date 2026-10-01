@@ -75,6 +75,12 @@ const LANE_CUE_DZ: float = 40.0          # the fighters count as at different de
 const LANE_CUE_VZ: float = 60.0          # ... and a depth as changing past this many units a second
 const LANE_CUE_IN_S: float = 0.15        # it comes up over this long,
 const LANE_CUE_OUT_S: float = 0.6        # ... and goes over this long
+## Windows on the buildings' walls (building.gdshader): a row a floor, a column every WINDOW_PITCH along the wall, lit
+## or dark by a hash. A floor's windows go out with VFX's blow-outs (PlanetView.blow_windows) and stay out.
+const WINDOW_PITCH: float = 62.0
+const WINDOW_LIT_SHARE: float = 0.3
+const WINDOW_LIT: String = "#f3cf86"
+const WINDOW_GLASS: String = "#2c3550"
 const BUILDING_INSIDE := "#12131a"       # the inside of a tower seen through its cut floors (a tunnel)
 const CROWD_GAP: float = 20.0
 const CROWD_DEEP: float = 90.0
@@ -143,6 +149,21 @@ const SHADOW_ALPHA: float = 0.38         # its strength under a fighter on the g
 const SHADOW_FADE_H: float = 900.0       # ... easing to a quarter of that (and half again as wide) this high above it
 const SHADOW_LIFT: float = 2.0           # it lies this far above the ground, clear of it
 const OUTLINE_PX: float = 1.5            # fighter outline width on screen, in pixels (placeholder until Art sets it)
+## The sky's clouds, and its reaction to a fighter at tier 3 or more (docs/design/rule-of-cool.md feature 12;
+## render/shaders/sky.gdshader): the clouds part in a tall opening above him and the sky there takes his colour.
+const CLOUD_PERIOD: float = 32.0         # cloud cells round the planet (the pattern wraps with it)
+const CLOUD_COVER: float = 0.52          # the share of the cloud band that is cloud
+const CLOUD_WIND: float = 0.004          # cells a second the clouds drift
+const SKY_REACT_R: float = 0.2           # the opening's half width, in tan units (half a screen's height is 0.27)
+const SKY_REACT_S: float = 1.5           # the reaction eases in and out over this long
+## Battle damage on the mannequin (docs/design/rule-of-cool.md feature 1; fighter_body.gdshader): marks by wound
+## region that stay and build with the wounds' stages. Colours are plain palette numbers, like the mesh's.
+const DAMAGE_GRIME: String = "#2a2220"   # scuffs on clothing and gear, and a tear's frayed edge
+const DAMAGE_BRUISE: String = "#6b3a62"  # bruises on skin
+const DAMAGE_GROW_S: float = 0.6         # a stage's marks grow in over this long
+## Which of Art's outfits (data/art/damage.json) each placeholder fighter wears, until the roster names one.
+const DAMAGE_OUTFIT: Dictionary = {"KAI": "protagonist", "VORR": "empress"}
+const DAMAGE_OUTFIT_DEFAULT: String = "protagonist"
 const OUTLINE_F_MAX: float = 2.5         # the most a corner's outline reaches past the width (outline_bake.gd)
 const OUTLINE := "#0a0d14"               # fighter outline colour
 const SHORE_FLOOD: float = 24.0          # dry land at most this far below the water beside it is drawn under that water (World's shore step is at most 0.25 bh)

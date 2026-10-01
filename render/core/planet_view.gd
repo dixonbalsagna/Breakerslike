@@ -25,6 +25,7 @@ const STREET_STRIPS := 8      # the ground shader's array sizes (ground.gdshader
 const STREET_SPANS := 16
 
 static var streets: bool = true   # paint the lane table's streets on the ground (main's --nostreets, for A/B)
+static var windows: bool = true   # draw the buildings' windows (main's --nowindows, for A/B)
 
 var ground := GroundField.new()
 var mats: RenderMats = RenderMats.new()   # this pane's material state (PaneWorld sets it)
@@ -52,6 +53,10 @@ var _stub_t: float = -1.0
 var _top := PackedFloat64Array()     # per building: its top as drawn (-INF when it does not stand), shared by panes
 var _cut: Array = []                 # [Image, ImageTexture, dirty]: each building's cut floors (building.gdshader), shared by panes
 var _cut0: Array = []                # ... and the row-0 buildings', by row-0 index
+var _win: Array = []                 # [Image, ImageTexture, dirty]: each building's windows (building.gdshader win_tex), shared by panes
+var _win0: Array = []                # ... and the row-0 buildings'
+var _blown: Array = []               # per building: a bit per floor whose windows have gone out (VFX's blow-outs), shared by panes
+var _blow_seen: Dictionary = {}      # the blow-outs already taken: Vector2(building, its time)
 var _holes_on: bool = false          # a porthole is open in this pane's building materials
 var _cues_on: bool = false           # a lane cue shows in this pane's ground materials
 var _foot: Array = []                # per building: the lowest and highest ground under its footprint (shared by panes)
@@ -117,6 +122,9 @@ func build(S: SimState) -> void:
 		_falls = source._falls
 		_cut = source._cut
 		_cut0 = source._cut0
+		_win = source._win
+		_win0 = source._win0
+		_blown = source._blown
 	if _front_mat == null:
 		_front_mat = _building_mat()
 		_bld_mat = _building_mat()
@@ -128,6 +136,10 @@ func build(S: SimState) -> void:
 	_stub_tex0 = _stub_texture(_front_mat, _row0_b.size())
 	_bld_mat.set_shader_parameter("cut_tex", _cut[1])
 	_front_mat.set_shader_parameter("cut_tex", _cut0[1])
+	_bld_mat.set_shader_parameter("win_tex", _win[1])
+	_front_mat.set_shader_parameter("win_tex", _win0[1])
+	for m in [_bld_mat, _front_mat]:
+		m.set_shader_parameter("windows", 1.0 if windows else 0.0)
 	_set_lanes(S)
 	for k in range(-RenderLook.PLANET_COPIES, RenderLook.PLANET_COPIES + 1):
 		var n := Node3D.new()
@@ -292,7 +304,7 @@ func refresh(S: SimState, force: bool) -> void:
 				_tree.set_instance_transform(ti, Transform3D(Basis.from_scale(Vector3(RenderLook.TREE_W, t.h, RenderLook.TREE_W)), Vector3(t.x, g + t.h * 0.5, _tree_z[ti])))
 			else:
 				_tree.set_instance_transform(ti, _hidden(t.x))
-	for ct in [_cut, _cut0]:
+	for ct in [_cut, _cut0, _win, _win0]:
 		if ct[2]:
 			(ct[1] as ImageTexture).update(ct[0])
 			ct[2] = false
@@ -363,6 +375,7 @@ func _set_building(S: SimState, bi: int, b, h: float) -> void:
 	if (ct[0] as Image).get_pixel(k, 0) != cut:
 		(ct[0] as Image).set_pixel(k, 0, cut)
 		ct[2] = true
+	_write_windows(S, bi, b, sink)
 	# The sim's footing (World's T4): the highest ground under the footprint on the fighter plane. The fighter's brunt
 	# geometry uses it, so the drawn top is base + height; the box runs down to the lowest ground as drawn under it.
 	var base: float = WorldStructures.baseY(S, b)
@@ -398,6 +411,52 @@ func _set_crowd(S: SimState, bi: int, b, alive: int) -> void:
 			_crowd.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ONE * RenderLook.CROWD_SCALE), Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
 		elif gone_now.has(ci) or not flight.running(ci):
 			_crowd.set_instance_transform(ci, _hidden(x))
+
+
+## A building's windows for building.gdshader (two texels of win_tex): a bit per floor whose windows are out (24, 24
+## and 14 bits, as the floor cut packs them) and the height of a floor (0: no windows); then the wall's base and how
+## many floors stand. The shader draws a row of windows a floor from these.
+func _write_windows(S: SimState, bi: int, b, sink: float = 0.0) -> void:
+	var wt: Array = _win0 if _row0[bi] >= 0 else _win
+	var k: int = _row0[bi] if _row0[bi] >= 0 else bi
+	var floors: int = maxi(int(b.floors), 1)
+	var fh: float = b.h / float(floors)
+	var m: int = int(_blown[bi])
+	var a := Color(float(m & 0xFFFFFF), float((m >> 24) & 0xFFFFFF), float((m >> 48) & 0x3FFF), fh if b.alive else 0.0)
+	var c := Color(WorldStructures.baseY(S, b) - sink, ceilf(WorldStructures.curH(b) / maxf(fh, 1.0)), 0.0, 0.0)
+	var img: Image = wt[0]
+	if img.get_pixel(k, 0) != a or img.get_pixel(k, 1) != c:
+		img.set_pixel(k, 0, a)
+		img.set_pixel(k, 1, c)
+		wt[2] = true
+
+
+## Per frame, the first pane's planet: windows going out. VFX throws the glass (render/vfx/react.gd) and lists each
+## blow-out as {b: the building, at: the sim time its windows go, strength: 0 to 1, lo, hi: the floor range}, pruned
+## six seconds on. From `at` the facade's own windows on the same rows of floors are out, and they stay out for the
+## match. The rows are VFX's: round(floors x strength x 0.6) of them, at most its floors_max, spread up the building.
+func blow_windows(S: SimState, list: Array) -> void:
+	if list.is_empty():
+		return
+	for w in list:
+		var at: float = float(w["at"])
+		var bi: int = int(w["b"])
+		var key := Vector2(float(bi), at)
+		if at > S.T or _blow_seen.has(key) or bi < 0 or bi >= S.buildings.size():
+			continue
+		_blow_seen[key] = true
+		var b = S.buildings[bi]
+		var floors: int = maxi(int(b.floors), 1)
+		var rows: int = clampi(int(round(float(floors) * float(w["strength"]) * 0.6)), 1, int(VfxReact.p("windows", "floors_max")))
+		var m: int = int(_blown[bi])
+		for r in range(rows):
+			m |= 1 << mini(int(floor((float(r) + 0.5) / float(rows) * float(floors))), mini(floors - 1, 61))
+		_blown[bi] = m
+		_write_windows(S, bi, b)
+	if _blow_seen.size() > 256:
+		for key in _blow_seen.keys():
+			if S.T - (key as Vector2).y > 12.0 or (key as Vector2).y > S.T + 12.0:
+				_blow_seen.erase(key)
 
 
 ## A skyscraper's cleared floors for building.gdshader (a texel of cut_tex): r and g the floors 0 to 47 (24 bits each),
@@ -838,8 +897,19 @@ func _building_mat() -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = BUILDING_SHADER
 	m.set_shader_parameter("inside", RenderLook.col(RenderLook.BUILDING_INSIDE))
+	m.set_shader_parameter("win_pitch", RenderLook.WINDOW_PITCH)
+	m.set_shader_parameter("win_lit_share", RenderLook.WINDOW_LIT_SHARE)
+	m.set_shader_parameter("win_lit", RenderLook.col(RenderLook.WINDOW_LIT))
+	m.set_shader_parameter("win_glass", RenderLook.col(RenderLook.WINDOW_GLASS))
 	mats.track(m)
 	return m
+
+
+## A two-row float texture of window data, a column an instance: [image, texture, dirty].
+static func _win_texture(n: int) -> Array:
+	var img := Image.create_empty(maxi(1, n), 2, false, Image.FORMAT_RGBAF)
+	img.fill(Color(0, 0, 0, 0))
+	return [img, ImageTexture.create_from_image(img), false]
 
 
 ## A one-row float texture of floor cuts, one texel an instance: [image, texture, dirty].
@@ -890,6 +960,11 @@ func _make_props(S: SimState) -> void:
 	_bld0 = _multimesh(box, maxi(1, _row0_b.size()), 1400.0, false, false, z0, z1)
 	_cut = _cut_texture(nb)
 	_cut0 = _cut_texture(maxi(1, _row0_b.size()))
+	_win = _win_texture(nb)
+	_win0 = _win_texture(maxi(1, _row0_b.size()))
+	_blown.resize(nb)
+	_blown.fill(0)
+	_blow_seen.clear()
 	_roof0 = _multimesh(prism, maxi(1, _row0_b.size()), 1400.0, false, false, z0, z1)
 	_tree = _multimesh(cone, S.trees.size(), 400.0)
 	_bld_seen.clear()

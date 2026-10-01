@@ -21,7 +21,10 @@ extends Node3D
 ## view; docs/camera/camera-v2.md section 8), and Ctrl+F9 swaps the occlusion method (a hole around the fighter, or the
 ## buildings in front cut down to stubs; docs/rendering/README.md, "Occlusion"). Neither takes P1 over (Alt and Ctrl
 ## are not game keys; Shift is). --pitch=DEG and --occl=hole|stub set them at start. --nostreets leaves the lane table's
-## streets unpainted (for A/B). Camera's inset pane comes from make_inset and the compositor's inset_view (below).
+## streets unpainted, --nodamage the fighters unmarked, --noclouds the sky bare and --nowindows the buildings' walls blank (for A/B). Camera's inset pane comes from make_inset and the compositor's inset_view (below).
+## Local two-player (docs/controls/local-two-player.md): SimHost takes the input hub's joins and leaves each tick. A
+## join turns the split screen on if it was off; T makes P2 human or hands the slot back; the pause menu's entry hands
+## it back at once. UI's HUD is told each player's device and layout every frame (_sync_players).
 ##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
@@ -111,6 +114,8 @@ func _ready() -> void:
 	cam_pitch = float(args.get("pitch", 0.0))
 	occlusion = PaneWorld.OCCL_STUB if String(args.get("occl", "hole")) == "stub" else PaneWorld.OCCL_HOLE
 	PlanetView.streets = not args.has("nostreets")
+	FighterView.damage_on = not args.has("nodamage")
+	PlanetView.windows = not args.has("nowindows")
 	host = SimHost.new()
 	host.vfx.cracks_enabled = true     # Orb asked for cracked ground; VFX's destruction stays off until B2's events (F6)
 	host.vfx.embers_enabled = true     # VFX's scorch embers, in place of ImpactFx's scorch sparks (Ctrl+F6)
@@ -135,12 +140,19 @@ func _ready() -> void:
 	ui_hud.feedback_fn = _feedback_context
 	ui_hud.settings_opened.connect(_hold_for_overlay)
 	ui_hud.settings_closed.connect(_release_overlay)
+	# The panel cut-in's border takes each fighter's lane colour from UI (it fires at the HUD's first advance).
+	ui_hud.lane_colors_changed.connect(func(a: Color, b: Color):
+		if split_view != null:
+			split_view.set_panel_colors(a, b))
+	# The pause menu's "hand player two back to the AI" entry.
+	ui_hud.player_two_leave_requested.connect(_on_player_two_leave)
 	ui_hud.pause_menu_opened.connect(_on_pause_menu_opened)
 	ui_hud.pause_menu_closed.connect(_on_pause_menu_closed)
 	ui_hud.new_match_requested.connect(func(): start_match(fresh_seed()))
 	ui_hud.option_changed.connect(_on_option_changed)
 	# The hub's defaults go into the HUD first (its legend and prompts show the layouts in use) ...
 	ui_hud.set_option("pad_preset", host.hub.pad_preset)
+	ui_hud.set_option("pad_preset_p2", host.hub.pad_preset)
 	ui_hud.set_option("touch_preset", host.hub.touch_preset)
 	if ui_hud.has_signal("remap_changed"):
 		ui_hud.remap_changed.connect(_on_remap_changed)
@@ -148,9 +160,13 @@ func _ready() -> void:
 		# ... then what the player saved on the Settings screen, so the saved choice wins (the order matters). The
 		# tools, the bench and scripted runs keep the defaults, so a saved option never changes a check or a measurement.
 		ui_hud.load_saved_options()
+	# Each player's own controller layout, whatever was saved (an option that loads at its default fires no change).
+	_on_option_changed("pad_preset", ui_hud.opts["pad_preset"])
+	_on_option_changed("pad_preset_p2", ui_hud.opts["pad_preset_p2"])
 	_touch_last = bool(ui_hud.opts["touch_ui"])
 	ui_hud.touch_state_fn = host.touch.display_state
 	host.drained.connect(_on_drained)
+	host.input_note.connect(_on_input_note)
 	Input.joy_connection_changed.connect(_on_joy_connection)
 	audio = AudioVoices.new(host.audio_cues.bank)
 	add_child(audio)
@@ -218,15 +234,17 @@ func make_pane(size: Vector2i) -> SubViewport:
 ## The compositor places the viewport's texture and switches its updates on and off.
 func make_inset(size: Vector2i) -> SubViewport:
 	var sv := _pane_viewport(size)
-	inset = _follower(sv)
+	inset = _follower(sv, false)
 	inset.name = "Inset"
 	return sv
 
 
-## A new pane that draws the first pane's world, in sv, built into the current match.
-func _follower(sv: SubViewport) -> PaneWorld:
+## A new pane that draws the first pane's world, in sv, built into the current match. markers false leaves out the
+## fighters' head markers (the stance badge), which would poke into the inset's close-up strip.
+func _follower(sv: SubViewport, markers: bool = true) -> PaneWorld:
 	var p := PaneWorld.new()
 	p.source = pane
+	p.markers = markers
 	p.vfx_layer.hub = host.vfx
 	sv.add_child(p)
 	p.build(host.S)
@@ -345,12 +363,20 @@ func frame(delta: float) -> void:
 	_sync_split_options()
 	host.vfx.note_frame(delta)
 	host.vfx.reduced_motion = bool(ui_hud.opts.get("reduced_motion", false))
+	if not manual:
+		RenderAnim.reduced_motion = host.vfx.reduced_motion   # Animation's ragdoll honours it (a tool sets its own)
+	# The reduced versions (docs/design/rule-of-cool.md rule 6) follow VFX's quality: at its lowest, battle damage is a
+	# flat tint and the sky has no clouds (its reaction is then a tint alone).
+	var low: bool = host.vfx.enabled and host.vfx.quality == VfxLook.Q_LOW
+	FighterView.damage_reduced = low
+	PaneWorld.clouds_on = not low and not args.has("noclouds")
 	var n: int = host.advance(delta, vp.x, vp.y)
 	if args.has("flash-soak") and frames % 40 == 0 and not FlashSet.ids().is_empty():
 		var ids: Array = FlashSet.ids()
 		fire_flash(0, ids[(frames / 40) % ids.size()])
 		fire_flash(1, ids[(frames / 40 + 7) % ids.size()])
 	var t1: int = Time.get_ticks_usec()
+	_sync_players()
 	render_view(host.alpha())
 	ui_hud.advance(0.0 if host.paused else delta)
 	for c in host.pending_cues:
@@ -420,6 +446,56 @@ func _on_drained(events: Array, lines: Array) -> void:
 	UiSimBridge.feed(ui_hud, lines)
 
 
+## A player joined or left (Controls' input hub, through the host; docs/controls/local-two-player.md): the match is
+## no longer the demo, and with two people playing the split screen is on, each pane on its own player (Camera's rig
+## reads who is human and splits a launch between them).
+func _on_input_note(note: Dictionary) -> void:
+	var kind: String = String(note.get("kind", ""))
+	if int(note.get("slot", -1)) == 1:
+		ui_hud.show_join_note(kind)   # UI's brief "joined" or "left" line
+	if kind != "joined":
+		return
+	started = true
+	if host.S.fighters[0].ai == null and host.S.fighters[1].ai == null and split_view != null and not split_view.is_attached():
+		split_view.attach(self)
+
+
+## The pause menu handed player two back to the AI: the hub frees their device (it can join again), and the slot
+## changes hands now, with the sim still frozen, so the menu shows it.
+func _on_player_two_leave() -> void:
+	host.hub.leave(1)
+	host.take_players()
+
+
+## What UI's HUD is told about the players each frame (docs/ui/hud-spec.md section 30): whether a second person can
+## join now (Controls' hub.joinable) and whether the keyboard is the only device (the prompt then says to press T);
+## and each player's device and layout, for the legend, prompts and glyphs. The hub knows which device drives a slot
+## and the layout it plays with (a pad's own preset; the solo keyboard or its shared halves). A touch player's layout
+## stays UI's to choose (its touch mode).
+func _sync_players() -> void:
+	ui_hud.set_join_available(host.hub.joinable(), Input.get_connected_joypads().is_empty())
+	for s in range(2):
+		var human: bool = host.S.fighters[s].ai == null
+		var dev: String = host.hub.device_of(s)
+		if human:
+			ui_hud.set_device(s, pad_family(int(host.hub.slot_pad[s])) if dev == "pad" else ("touch" if dev == "touch" else "kbd"))
+		ui_hud.set_slot_layout(s, host.hub.layout_of(s) if human and dev != "touch" else "")
+
+
+## A pad's family for UI's glyphs (xbox, ps, switch, deck or generic), from the name the system gives it.
+static func pad_family(device: int) -> String:
+	var n: String = Input.get_joy_name(device).to_lower()
+	if n.contains("xbox") or n.contains("xinput"):
+		return "xbox"
+	if n.contains("playstation") or n.contains("dualsense") or n.contains("dualshock") or n.contains("sony") or n.contains("ps4") or n.contains("ps5"):
+		return "ps"
+	if n.contains("switch") or n.contains("nintendo") or n.contains("joy-con"):
+		return "switch"
+	if n.contains("steam deck"):
+		return "deck"
+	return "generic"
+
+
 ## UI's HUD anchor: a fighter's torso on screen and its height in pixels (in a split, in its own pane: the rig's).
 func _hud_anchor(slot: int) -> Dictionary:
 	if slot < 0 or slot >= fighter_views.size():
@@ -441,7 +517,8 @@ func _hud_anchor(slot: int) -> Dictionary:
 
 ## UI's options for the split screen, applied each frame (UI has no change signal): solo against the AI, reduced
 ## motion (the rig's swing, the shake), Camera's zoom and shake settings (0 to 10; UI's options camera_zoom and
-## camera_shake) and who the camera follows on a launch (camera_launch_follow; "auto" until UI has it).
+## camera_shake), who the camera follows on a launch (camera_launch_follow), the panel cut-ins (camera_panels:
+## full, still or off) and where UI's layout lets the strip's top band start.
 func _sync_split_options() -> void:
 	var o: Dictionary = ui_hud.opts
 	split_rig.solo_split = bool(o.get("split_solo", true))
@@ -451,13 +528,24 @@ func _sync_split_options() -> void:
 		split_view.set_zoom_pref(float(o.get("camera_zoom", CamParams.ZOOM_PREF_DEFAULT)))
 		split_view.set_shake_pref(float(o.get("camera_shake", CamParams.SHAKE_PREF_DEFAULT)))
 		split_view.set_launch_follow(String(o.get("camera_launch_follow", "auto")))
+		# The panel cut-ins: at VFX's lowest quality a live strip becomes a still one. Measured, a strip held up costs
+		# about 0.45 ms on desktop and about 3 ms on the web at a 4x CPU slowdown; a still strip costs nothing.
+		var panels: String = String(o.get("camera_panels", "full"))
+		if panels == "full" and host.vfx.enabled and host.vfx.quality == VfxLook.Q_LOW:
+			panels = "still"
+		split_view.set_panel_mode(panels)
+		split_view.set_panel_floor(ui_hud.panel_floor_y())   # the strip's top band starts below UI's plates
 
 
 ## UI's options the host owns: the pad and touch layouts go to Controls' input hub (a pad's takes effect on its next
-## input).
+## input). Each slot has its own pad layout: pad_preset is slot 0's, pad_preset_p2 slot 1's. They are set a slot at a
+## time and never through the hub's default for both: changing between the two when a second player joins would drop
+## the first player's pad layout, and what they hold with it.
 func _on_option_changed(key: String, value) -> void:
 	if key == "pad_preset":
-		host.hub.set_pad_preset(str(value))
+		host.hub.set_pad_preset(str(value), 0)
+	elif key == "pad_preset_p2":
+		host.hub.set_pad_preset(str(value), 1)
 	elif key == "touch_preset":
 		host.hub.set_touch_preset(str(value))
 
@@ -754,7 +842,10 @@ func _unhandled_input(e: InputEvent) -> void:
 					start_match(fresh_seed())
 					return
 				"KeyT":
-					host.toggle_ai(1)
+					# A person playing P2 leaves through the input hub (it frees their device to join again); else T
+					# makes P2 human, and the next unused device to press a button plays it.
+					if host.S.fighters[1].ai != null or not host.hub.leave(1):
+						host.toggle_ai(1)
 					return
 				"KeyY":
 					host.toggle_ai(0)

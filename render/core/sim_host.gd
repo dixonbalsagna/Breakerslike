@@ -13,6 +13,8 @@ signal ticked(n: int)
 ## Every tick, with that tick's fx events and new feed lines, just before S.out is cleared: the hook for other
 ## render-side readers (UI's HUD). Listeners only read.
 signal drained(events: Array, lines: Array)
+## A player joined or left: {kind: "joined" | "left", slot, device} (UI's "P2 joined" line), from the input hub.
+signal input_note(note: Dictionary)
 
 var S: SimState
 var cam := SimCamera.new()      # reference camera (sim/core/view/camera.gd), stepped after every tick
@@ -88,6 +90,7 @@ func alpha() -> float:
 ## One fixed tick: intents for human slots, step, camera, then drain the feed and the fx events.
 func tick(vw: float, vh: float) -> void:
 	var inputs: Array = [null, null]
+	take_players()
 	hub.set_humans(S.fighters[0].ai == null, S.fighters[1].ai == null)
 	for k in range(2):
 		if S.fighters[k].ai == null:
@@ -176,6 +179,20 @@ func release_all() -> void:
 
 func toggle_ai(idx: int) -> void:
 	SimCore.toggleAI(S, idx)
+
+
+## Local two-player (docs/controls/local-two-player.md): the hub asks for a second player when a new device presses a
+## button, and hands the slot back to the AI when the player leaves or unplugs. Every tick takes them before its
+## intents; the main scene also calls this when the pause menu hands player two back, so it shows at once.
+func take_players() -> void:
+	for s in hub.take_joins():
+		if S.fighters[s].ai != null:
+			toggle_ai(s)
+	for s in hub.take_leaves():
+		if S.fighters[s].ai == null:
+			toggle_ai(s)
+	for n in hub.take_notes():
+		input_note.emit(n)
 
 
 ## Interpolated fighter pose [x, y, rot]; x follows the shortest arc, so crossing the seam never lerps the long way.

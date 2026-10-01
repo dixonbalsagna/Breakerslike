@@ -61,6 +61,7 @@ var anim_body: AnimBody        # the A1 mannequin (render/anim/), null with --no
 var depth: float = 0.0         # B3: the sim's depth of this fighter this frame (Fighter.z; the pane sets it before update)
 var sag: float = 0.0           # ... and how far the planet's bend lowers that spot (RenderMats.sag), as it does the world there
 var flashes_on: bool = true    # F7: the head flashes instead of the placeholder aura, streaks and charge orb
+var markers: bool = true       # the stance badge over the head; off in Camera's inset pane, a close-up strip it would poke into
 var _badge_mat: ShaderMaterial
 var _faded: bool = false
 var _flash: bool = false
@@ -69,6 +70,15 @@ var _aura_col := Color.WHITE
 var _turn: float = 1.0         # visual facing, -1 to 1: follows f.face through 0 (facing the camera)
 var _pose: float = 30.0        # the pose angle in degrees, eased toward the current pose's
 var _last_t: float = -1.0
+## Battle damage on the mannequin (fighter_body.gdshader): per wound region (head, core, arms, legs), the marks showing,
+## 0 to 3. They ease up to the worst stage the region has reached this match and stay, whatever the wear does after.
+static var damage_on: bool = true         # main's --nodamage switches it off, for A/B
+static var damage_reduced: bool = false   # the reduced version, a flat tint by stage (main sets it from VFX's quality)
+var _dmg: Array = [0.0, 0.0, 0.0, 0.0]
+var _dmg_worst: Array = [0, 0, 0, 0]
+var _dmg_sent := Vector4(-1.0, -1.0, -1.0, -1.0)
+var _dmg_detail: float = -1.0
+var _dmg_snap: bool = true                # the next update shows the marks at once (the first frame, or a posed tool)
 
 
 func build(f) -> void:
@@ -161,6 +171,18 @@ func _build_anim(f) -> void:
 	anim_body = AnimBody.new()
 	anim_body.build(pal, true)
 	body.add_child(anim_body)
+	var bm := anim_body.mi.material_override as ShaderMaterial
+	bm.set_shader_parameter("bone_region", bone_regions())
+	bm.set_shader_parameter("skin", pal["skin"])
+	bm.set_shader_parameter("gear", pal["gear"])
+	bm.set_shader_parameter("grime", RenderLook.col(RenderLook.DAMAGE_GRIME))
+	bm.set_shader_parameter("bruise", RenderLook.col(RenderLook.DAMAGE_BRUISE))
+	bm.set_shader_parameter("damage_seed", float(absi(String(f.name).hash()) % 97) / 97.0)
+	# How much of each mark the fighter's outfit shows at each stage: Art's stage data (render/core/damage_look.gd).
+	var marks: Dictionary = RenderDamage.marks(String(RenderLook.DAMAGE_OUTFIT.get(String(f.name), RenderLook.DAMAGE_OUTFIT_DEFAULT)))
+	bm.set_shader_parameter("mark_scuff", marks["scuff"])
+	bm.set_shader_parameter("mark_bruise", marks["bruise"])
+	bm.set_shader_parameter("mark_tear", marks["tear"])
 	anim_body.position = Vector3(0.0, -PIVOT_Y, 0.0)
 	# The placeholder box figure is dropped (its materials would only cost per-frame parameter writes); the two arm nodes stay
 	# as bare transform holders for the orb, spark and head anchors below.
@@ -170,6 +192,49 @@ func _build_anim(f) -> void:
 		else:
 			p[0].queue_free()
 	solid.clear()
+
+
+## Each bone's wound region for the body shader (0 head, 1 core, 2 arms, 3 legs), from the rig's bone names.
+static func bone_regions() -> PackedInt32Array:
+	var out := PackedInt32Array()
+	out.resize(32)
+	out.fill(1)
+	for i in range(mini(AnimRig.N, 32)):
+		var n: String = AnimRig.BONES[i][0]
+		if n == "neck" or n == "head":
+			out[i] = 0
+		elif n.begins_with("clavicle") or n.begins_with("upper_arm") or n.begins_with("forearm") or n.begins_with("hand") or n.begins_with("fingers"):
+			out[i] = 2
+		elif n.begins_with("thigh") or n.begins_with("shin") or n.begins_with("foot"):
+			out[i] = 3
+	return out
+
+
+## Battle damage: each region's marks grow toward the worst wound stage it has reached this match (the sim's
+## Fighter.stage: 1 bruised, 2 battered, 3 broken), over DAMAGE_GROW_S of sim time, and never fade.
+func _damage(f, dt: float) -> void:
+	var v := Vector4.ZERO
+	for r in range(4):
+		_dmg_worst[r] = maxi(_dmg_worst[r], int(f.stage[r])) if damage_on else 0
+		_dmg[r] = float(_dmg_worst[r]) if _dmg_snap else move_toward(_dmg[r], float(_dmg_worst[r]), dt / RenderLook.DAMAGE_GROW_S)
+		v[r] = _dmg[r]
+	_dmg_snap = false
+	var detail: float = 0.0 if damage_reduced else 1.0
+	if v == _dmg_sent and detail == _dmg_detail:
+		return
+	_dmg_sent = v
+	_dmg_detail = detail
+	var bm := anim_body.mi.material_override as ShaderMaterial
+	bm.set_shader_parameter("damage", v)
+	bm.set_shader_parameter("damage_detail", detail)
+
+
+## The next update shows the marks at their full stage at once (for tools that pose a frame); forget also drops what
+## the regions have been through, so a posed sheet can step the stages back down.
+func snap_damage(forget: bool = false) -> void:
+	_dmg_snap = true
+	if forget:
+		_dmg_worst = [0, 0, 0, 0]
 
 
 ## A cue from Combat (RenderLook.CUE_POSES), started at sim time T; kinds with no pose are ignored.
@@ -301,6 +366,7 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 			anim_body.applied_version = af.version
 			anim_body.apply(af.q, af.hips, af.curl, af.root_off)
 		anim_body.set_look(1.0 if flash else 0.0, f.hidden)
+		_damage(f, dt)
 		var off := Vector3(0.0, -PIVOT_Y, 0.0)
 		head.position = af.head_center() + off
 		arm_front.transform = Transform3D(Basis.IDENTITY, af.socket("hand_r") + off)
@@ -343,7 +409,7 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		orb_outer.scale = Vector3.ONE * 2.0 * r
 		orb_core.position = at
 		orb_core.scale = Vector3.ONE * r * 0.8
-	badge.visible = not f.hidden and not (flashes_on and flash_view.glyph_up())
+	badge.visible = markers and not f.hidden and not (flashes_on and flash_view.glyph_up())
 	badge.position = Vector3(0.0, 84.0 + tier * 3.0 + 8.0, 0.0)
 	badge.scale = Vector3.ONE * (1.0 + (float(_cue.get("badge", 1.0)) - 1.0) * _cue_weight(T))
 	badge.rotation.y = T * 2.0

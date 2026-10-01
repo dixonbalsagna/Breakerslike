@@ -9,6 +9,8 @@ extends RefCounted
 ##   wrecks a smoothed direction kept there; the outline check caught it.)
 ## - its reach, 1 / (the least cosine between that direction and those faces), clamped to OUTLINE_F_MAX, in UV2.x: so
 ##   every face plane there moves out by the full width (a box corner would otherwise draw 42% thin).
+## It also leaves two things for the body's battle damage (fighter_body.gdshader): the vertex's bone in UV2.y, which
+## gives its wound region, and its rest position in CUSTOM0, so a mark stays on its spot of the body in every pose.
 ## The body no longer reads NORMAL for its facets: fighter_body.gdshader takes each face's normal from the screen-space
 ## derivatives of its position, exact and free. Positions are never merged across bones: a seam between two bones
 ## opens as they turn. render/shaders/fighter_hull.gdshader reads both.
@@ -24,13 +26,16 @@ static func bake(mesh: ArrayMesh, f_max: float = RenderLook.OUTLINE_F_MAX) -> Ar
 		if mesh.surface_get_primitive_type(s) == Mesh.PRIMITIVE_TRIANGLES:
 			bake_arrays(arr, f_max)
 		var keep: int = mesh.surface_get_format(s) & (Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS | Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES)
+		if arr[Mesh.ARRAY_CUSTOM0] != null:
+			keep |= Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
 		out.add_surface_from_arrays(mesh.surface_get_primitive_type(s), arr, [], {}, keep)
 		out.surface_set_material(s, mesh.surface_get_material(s))
 		out.surface_set_name(s, mesh.surface_get_name(s))
 	return out
 
 
-## Bakes one surface's arrays in place: ARRAY_NORMAL (the push direction) and ARRAY_TEX_UV2 (x: its reach).
+## Bakes one surface's arrays in place: ARRAY_NORMAL (the push direction), ARRAY_TEX_UV2 (x: its reach; y: the
+## vertex's bone) and ARRAY_CUSTOM0 (its rest position, three floats).
 static func bake_arrays(arr: Array, f_max: float = RenderLook.OUTLINE_F_MAX) -> void:
 	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
 	var nv: int = v.size()
@@ -83,13 +88,19 @@ static func bake_arrays(arr: Array, f_max: float = RenderLook.OUTLINE_F_MAX) -> 
 	out_n.resize(nv)
 	var uv2 := PackedVector2Array()
 	uv2.resize(nv)
+	var rest := PackedFloat32Array()
+	rest.resize(nv * 3)
 	for k in range(nv):
 		var g: int = gid[k]
 		out_n[k] = dir[g]
-		uv2[k] = Vector2(clampf(1.0 / maxf(least[g], 1.0 / f_max), 1.0, f_max), 0.0)
+		uv2[k] = Vector2(clampf(1.0 / maxf(least[g], 1.0 / f_max), 1.0, f_max), float(_bone(bones, weights, bpv, k)))
+		rest[k * 3] = v[k].x
+		rest[k * 3 + 1] = v[k].y
+		rest[k * 3 + 2] = v[k].z
 	arr[Mesh.ARRAY_NORMAL] = out_n
 	arr[Mesh.ARRAY_TANGENT] = null
 	arr[Mesh.ARRAY_TEX_UV2] = uv2
+	arr[Mesh.ARRAY_CUSTOM0] = rest
 
 
 ## The bone a vertex follows (its heaviest; 0 for an unskinned mesh).

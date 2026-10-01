@@ -28,6 +28,7 @@ var fighter_views: Array = []
 var shadows: Array = []            # per fighter: the ground shadow under him (render/shaders/shadow.gdshader)
 var source: PaneWorld = null       # a second pane: the first, whose world it draws
 var view_cam_x: float = 0.0        # this frame's camera's wrapped world x
+var markers: bool = true           # the fighters' head markers (the stance badge); main's inset pane has none
 var occlusion: int = OCCL_HOLE     # main sets it (a debug toggle)
 ## Camera's request for this pane's cut-away, each frame (docs/camera/camera-v2.md section 6). Every key is optional:
 ## request (false: no cut-away, for a shot that wants the wall whole), radius_px (the hole's radius; 0 or absent:
@@ -40,6 +41,9 @@ var _cue := PackedFloat32Array()   # per fighter: his lane cue, 0 to 1
 var _cue_z := PackedFloat32Array() # ... his depth at the last tick seen,
 var _cue_want: Array = []          # ... and whether the cue was wanted then
 var _cue_t: float = -1.0
+static var clouds_on: bool = true          # the sky's clouds (main's --noclouds, and off at VFX's lowest quality)
+var _react := PackedFloat32Array()         # per fighter: the sky's reaction to him, 0 to 1 (tier 3 half, tier 4 full)
+var _react_t: float = -1.0
 var _sky_mat: ShaderMaterial
 
 
@@ -69,6 +73,7 @@ func build(S: SimState) -> void:
 	for i in range(S.fighters.size()):
 		var v := FighterView.new()
 		fighters_root.add_child(v)
+		v.markers = markers
 		v.build(S.fighters[i])
 		if source != null and i < source.fighter_views.size():
 			v.flash_view.set_leader(source.fighter_views[i].flash_view)
@@ -98,6 +103,8 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 	cam_rig.frame(cam.y, cam.z, jitter, vp.y, pitch)
 	planet.set_camera(cam_rig.position)
 	_view_cues(cam, vp)
+	if source == null and host.vfx.enabled and host.vfx.react_enabled:
+		planet.blow_windows(S, host.vfx.react.blowouts)   # the facades' windows go out with VFX's glass
 	planet.update(S, cam_x, host.impact.heat, host.impact.heat_changed)
 	for i in range(fighter_views.size()):
 		var v: FighterView = fighter_views[i]
@@ -110,6 +117,7 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 		_place_shadow(S, i, wx, vx, pose.y, v.depth)
 	_occlusion(S, cam_x, vp)
 	_lane_cues(host, a)
+	_sky_react(host, cam_x)
 	vfx_layer.update(host, a, cam_x, cam.z, vp.x)
 	beams.update(S, cam_x, cam.z)
 	particles.update(host.fxv, host.impact, cam_x, cam.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
@@ -216,6 +224,60 @@ func snap_occlusion() -> void:
 	planet.snap_stubs()
 	_join_t = -1.0
 	_cue_t = -1.0
+	_react_t = -1.0
+	for v in fighter_views:
+		v.snap_damage()
+
+
+## The sky (render/shaders/sky.gdshader): its clouds drift with the camera's place round the planet and a slow wind,
+## and from tier 3 the sky reacts to a fighter (docs/design/rule-of-cool.md feature 12; nothing below tier 3): the
+## clouds part in a tall opening above him and the sky there pales toward his colour, half at tier 3 and full at tier
+## 4, easing over SKY_REACT_S of tick time. It never darkens the sky (Legal). It stands down while he charges or
+## transforms, as VFX's rubble and cracks do (the stacking rule, rule 9 of the list: his own show has the moment).
+func _sky_react(host: SimHost, cam_x: float) -> void:
+	var S: SimState = host.S
+	var n: int = fighter_views.size()
+	var now: float = PlanetView.tick_time(S)
+	var snap: bool = _react_t < 0.0 or _react.size() != n
+	var dt: float = 0.0 if snap else clampf(now - _react_t, 0.0, 0.1)
+	_react_t = now
+	if _react.size() != n:
+		_react.resize(n)
+		_react.fill(0.0)
+	var dirs: Array = []
+	var cols := PackedColorArray()
+	for i in range(2):
+		var w: float = 0.0
+		var d := Vector3(0.0, 0.0, -1.0)
+		var c := Color.BLACK
+		if i < n:
+			var f = S.fighters[i]
+			var want: float = 0.0 if _busy(host, i) else clampf((float(f.tier) - 2.0) / 2.0, 0.0, 1.0)
+			_react[i] = want if snap else move_toward(_react[i], want, dt / RenderLook.SKY_REACT_S)
+			w = _react[i]
+			var v: FighterView = fighter_views[i]
+			d = (v.position + Vector3(0.0, FighterView.HEIGHT * 0.5, 0.0) - cam_rig.position).normalized()
+			c = v._aura_col
+		dirs.append(Vector4(d.x, d.y, d.z, w))
+		cols.append(c)
+	_sky_mat.set_shader_parameter("sky_react", dirs)
+	_sky_mat.set_shader_parameter("sky_react_col", cols)
+	_sky_mat.set_shader_parameter("cloud_on", 1.0 if clouds_on else 0.0)
+	_sky_mat.set_shader_parameter("cloud_shift", SimWrap.wrap(cam_x) / SimConst.W * RenderLook.CLOUD_PERIOD + now * RenderLook.CLOUD_WIND)
+
+
+## Whether fighter i is charging or transforming now (VFX's own test, render/vfx/react.gd, plus the sim's state for a
+## build with VFX off).
+static func _busy(host: SimHost, i: int) -> bool:
+	var S: SimState = host.S
+	var f = S.fighters[i]
+	if f.state == "charging" or f.beamCharge != null or ("breakIn" in f.act and int(f.act.breakIn) >= 0) or (S.pause.left > 0 and int(S.pause.actor) == i):
+		return true
+	if host.vfx.enabled:
+		for fm in host.vfx.xform.forms:
+			if int(fm.slot) == i:
+				return true
+	return false
 
 
 ## The lane cue (RenderLook.LANE_CUE_*): a stripe on the ground at a fighter's depth, in his colour, while it says
@@ -309,6 +371,8 @@ func _setup_environment() -> void:
 		"sky_upper_at": RenderLook.SKY_UPPER_AT, "sky_top_at": RenderLook.SKY_TOP_AT, "sky_thin": RenderLook.SKY_THIN,
 		"fog_band": RenderLook.FOG_BAND,
 	}
+	for k in [["cloud_period", RenderLook.CLOUD_PERIOD], ["cloud_cover", RenderLook.CLOUD_COVER], ["react_r", RenderLook.SKY_REACT_R]]:
+		_sky_mat.set_shader_parameter(k[0], k[1])
 	for k in skyp:
 		_sky_mat.set_shader_parameter(k, skyp[k])
 		mats.set_sky(k, skyp[k])
