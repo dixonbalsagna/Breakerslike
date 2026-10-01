@@ -206,12 +206,12 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
         R.rate('5c.slideOfGround', '§5c', 'Slides as a share of ground landings (slides plus slams; at least 65%)', { v: gs.p, ci: gs.ci, lo: 0.65, hi: 1 });
         mixOf('caught in the air (the follow-up before any contact; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
       } else {
-        mixOf(`slide (first contact a skid or tumble, ${how}; 40 to 55%)`, slideC, 0.40, 0.55, L);
-        mixOf('bounce (first contact a bounce; 8 to 15%)', r => r.landings.bounce, 0.08, 0.15, L);
-        mixOf('slam (the first contact digs a crater; 8 to 15%)', slamC, 0.08, 0.15, L);
-        mixOf('caught in the air (the follow-up before any contact; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
-        const classes = ['slide', 'bounce', 'slam', 'caught', 'water', 'brunt'], share = k => sum(D.map(k === 'slide' ? slideC : k === 'slam' ? slamC : r => r.landings[k])) / Math.max(1, sum(D.map(L)));
-        R.add({ id: '5c.largest', ref: '§5c', what: 'Slide is still the largest class (balance-targets 20)', status: classes.every(k => k === 'slide' || share(k) < share('slide')) ? 'PASS' : 'FAIL', value: classes.map(k => `${k} ${fmt.pct(share(k))}`).join(', '), band: 'slide largest', note: '' });
+        // balance-targets 20 (the landing ruling after World's build): a launch is classed by how its journey ends; a bounce that ends in a skid, a tumble or a halt counts toward the skidding majority
+        mixOf('halt: the journey ends skidding or tumbling to a stop, with or without bounces first (55 to 75%)', slideC, 0.55, 0.75, L);
+        mixOf('slam: the journey ends in a crater (8 to 18%)', slamC, 0.08, 0.18, L);
+        mixOf('caught in the air (the follow-up before the journey ends; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
+        { const c = S.clusterShare(D, r => r.journeys.anyBounce || 0, L); R.rate('5c.bounced', '§5c', 'Launches with at least one bounce (15 to 30%; the boundary is 40 degrees)', { v: c.p, ci: c.ci, lo: 0.15, hi: 0.30 }); }
+        { const fc = k => sum(D.map(r => (r.firstContact || {})[k] || 0)); R.add({ id: '5c.firstContacts', ref: '§5c', what: 'First contacts: skids at least as common as bounces', status: fc('slide') >= fc('bounce') ? 'PASS' : 'FAIL', value: `skid or tumble ${fc('slide')}, bounce ${fc('bounce')}, slam ${fc('slam')}, stop ${fc('stop')}`, band: 'skids at least bounces', note: '' }); }
       }
       mixOf('water (skim or splash first; 2 to 10%, re-based at §21)', r => r.landings.water, 0.02, 0.10, L);
       mixOf('brunt (a building first; 4 to 10%)', r => r.landings.brunt, 0.04, 0.10, L);
@@ -243,6 +243,15 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
       const recs = A[a], min = sum(recs.map(r => r.koAt)) / 60;
       R.info(`10.heavy.${a}`, '§10', `Heavies landed and heavy clashes won per minute of match, both fighters (${a}; Game Design's estimates about 6 and 1.5)`, `${(sum(recs.map(r => r.heavyLanded[0] + r.heavyLanded[1])) / min).toFixed(2)} and ${(sum(recs.map(r => r.heavyClashWins[0] + r.heavyClashWins[1])) / min).toFixed(2)}`, `per fighter ${recs[0].names[0]}/${recs[0].names[1]}: ${(sum(recs.map(r => r.heavyLanded[0])) / min).toFixed(2)}/${(sum(recs.map(r => r.heavyLanded[1])) / min).toFixed(2)} landed; ${(sum(recs.map(r => r.heavyClashWins[0])) / min).toFixed(2)}/${(sum(recs.map(r => r.heavyClashWins[1])) / min).toFixed(2)} clash wins (slot order)`);
     }
+  }
+
+  // Reach (Encounter's contact slice, 2026-10-02): every damaging melee strike lands within 68 units, and a height difference beyond 68 only on sloped ground
+  { const all = arms.flatMap(a => A[a]).filter(r => r.reach);
+    if (all.length) {
+      const n = sum(all.map(r => r.reach.n)), far = sum(all.map(r => r.reach.far)), tall = sum(all.map(r => r.reach.tall)), flat = sum(all.map(r => r.reach.tallFlat)), maxD = Math.max(...all.map(r => r.reach.maxD)), maxDy = Math.max(...all.map(r => r.reach.maxDy));
+      R.add({ id: '10.reach', ref: '§10', what: 'Damaging melee strikes within 68 units of horizontal reach (hard test, 100%)', status: far === 0 ? 'PASS' : 'FAIL', value: `${far} of ${n} strikes beyond 68 units; longest ${maxD.toFixed(1)}`, band: '100% within 68', note: 'lights, heavies and guarded hits, at the damage event, every arm' });
+      R.add({ id: '10.reach.height', ref: '§10', what: 'A height difference beyond 68 units only on sloped ground (hard test)', status: flat === 0 ? 'PASS' : 'FAIL', value: `${tall} strikes with more than 68 units of height difference, ${flat} of them on flat ground; largest ${maxDy.toFixed(1)}`, band: 'none on flat ground (slope at most 0.15)', note: 'the slope is read over 80 units at the victim' });
+    } else R.pending('10.reach', '§10', 'Damaging melee strikes within 68 units of reach', 'records without the reach tally');
   }
 
   // ---- 6. location and signature variety

@@ -14,7 +14,7 @@ const INDEX_FIELDS: Array = ["actor", "target", "winner", "loser", "owner"]
 const KEEP_FIELDS: Array = ["kind", "chosen", "tick", "tier", "cover", "actor", "target", "region", "stage", "chance", "survived", "winner", "loser", "amount", "n", "cause", "owner", "kind", "front", "text", "x"]
 
 var re_atk := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) (LIGHT|HEAVY|SIG) vs (\\w+)$")
-var re_beam := RegEx.create_from_string("^(.+) over (\\w+) \\((.+)\\) → (\\w+)")
+var re_beam := RegEx.create_from_string("^(.+) over (\\w+) \\((.+?)\\)(?: → (\\w+))?")   # since step 2b the tag has no outcome: it arrives as a beam_outcome event
 var re_launch := RegEx.create_from_string("^LAUNCH: (.+)$")
 var re_parry := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) PARRIES$")
 var re_chain := RegEx.create_from_string("^CHAIN x(\\d+) ended$")
@@ -63,7 +63,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"n": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "firstContact": {}, "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"n": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
@@ -169,7 +169,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				for fl in open_fl:
 					if fl.v == v0 and fl.cls == "":
 						fl.cls = "other"   # launched again before any contact
-				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false, "kc": ""}
+				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false, "kc": "", "endk": ""}
 				open_fl.append(nf)
 				last_fl[v0] = nf
 				new_fl.append(nf)
@@ -189,6 +189,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 					_land(open_fl, int(e.actor), "water")
 				else:
 					_kind(open_fl, int(e.actor), "slam" if lk == "slam" else ("stop" if lk == "stop" else "slide"))
+					if last_fl[int(e.actor)] != null:
+						last_fl[int(e.actor)].endk = "slam" if lk == "slam" else ("stop" if lk == "stop" else "slide")   # the journey is classed by how it ends (balance-targets 20, the landing ruling after World's build)
 			elif e.type == "left_ground":
 				if str(e.get("cause")) != "bounce":
 					rec.lips += 1
@@ -197,6 +199,11 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 			elif e.type == "tumble_end":
 				if str(e.get("how")) != "air" and last_fl[int(e.actor)] != null:
 					last_fl[int(e.actor)].tum = true   # the journey ended from a tumble (it stopped or he recovered early)
+			elif e.type == "beam_outcome":   # step 2b (ADR 0008): the signature's outcome, decided at its fire beat; the oldest unresolved beam of this actor takes it
+				for bm in rec.beams:
+					if bm.out == "" and (bm.who == int(e.actor) or bm.who < 0):
+						bm.out = str(e.get("kind"))
+						break
 			elif e.type == "building_hit":
 				_land(open_fl, int(e.actor), "brunt")
 			elif e.type == "skim" or e.type == "splash":
@@ -213,6 +220,24 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				rec.impactCraters += 1
 			elif e.type == "skim":
 				rec.skims += 1
+			# reach (Encounter's contact slice): every damaging strike of a light or heavy melee exchange (a light, a heavy or a guarded hit; signatures and their guarded hits are beams, not strikes) is measured from the attacker to the victim at the damage event: the horizontal distance must stay within 68 units, and a height difference beyond 68 is allowed only on sloped ground
+			var rex = S.dirS.ex
+			if e.type == "damage" and e.number and e.amount > 0.0 and rex != null and (str(rex.kind) == "light" or str(rex.kind) == "heavy") and (str(e.get("kind")) == "light" or str(e.get("kind")) == "heavy" or str(e.get("kind")) == "guard") and int(e.attacker) >= 0 and int(e.attacker) < 2 and int(e.victim) >= 0 and int(e.victim) < 2:
+				var fa = fs[int(e.attacker)]
+				var fv = fs[int(e.victim)]
+				var rdx: float = absf(SimWrap.sdx(fa.x, fv.x))
+				var rdy: float = absf(fa.y - fv.y)
+				rec.reach.n += 1
+				rec.reach.maxD = maxf(rec.reach.maxD, rdx)
+				rec.reach.maxDy = maxf(rec.reach.maxDy, rdy)
+				if rdx > 68.0:
+					rec.reach.far += 1
+				if rdy > 68.0:
+					rec.reach.tall += 1
+					var gx: float = fv.x
+					var slope: float = absf(WorldTerrain.groundY(S, gx + 40.0) - WorldTerrain.groundY(S, gx - 40.0)) / 80.0
+					if slope <= 0.15:
+						rec.reach.tallFlat += 1
 			# Game Design's pitch measures: heavies that landed (a heavy blow dealing damage; a guarded one is kind guard and does not count) and heavy clashes won (a decisive exchange of kind clash), by the fighter who dealt or won it
 			if e.type == "damage" and str(e.get("kind")) == "heavy" and e.number and e.amount > 0.0 and int(e.attacker) >= 0 and int(e.attacker) < 2:
 				rec.heavyLanded[int(e.attacker)] += 1
@@ -289,6 +314,13 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 		var c: String = "other" if fl.cls == "" else String(fl.cls)   # a launch that never made contact (KO or the cap first) is "other"
 		if fl.kc != "" and (fl.cls == "" or fl.cls == "slide" or fl.cls == "slam" or fl.cls == "slideShort"):
 			c = String(fl.kc)   # World's events name the first contact: the kind rule replaces the 2 bh distance test
+			if fl.pl:
+				rec.firstContact[c] = rec.firstContact.get(c, 0) + 1
+			# the journey is classed by how it ends: a bounce that ends in a skid, a tumble or a stop is a halt (a slide); one that ends in a crater is a slam
+			if fl.endk != "":
+				c = "slide" if (fl.endk == "stop" and fl.bn > 0) else String(fl.endk)
+			elif c == "bounce":
+				c = "slide"
 		if c == "slideShort":
 			c = "slam"
 			rec.slideShort += 1
@@ -297,6 +329,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 		rec.landingsAll[c] += 1
 		if fl.pl:
 			rec.landings[c] += 1
+			if fl.bn > 0:
+				rec.journeys.anyBounce += 1   # launches with at least one bounce, whatever the journey's ending
 			if c == "slide" or c == "slam" or c == "bounce":   # a journey: a launch that reached the ground
 				rec.journeys.n += 1
 				rec.journeys.bounces += fl.bn
@@ -356,7 +390,7 @@ func parse(rec: Dictionary, tag: String, sub: String, slot: Dictionary) -> void:
 		if kind == "sig":
 			var b := re_beam.search(sub)
 			if b:
-				rec.beams.append({"bio": b.get_string(2), "variant": b.get_string(3), "out": b.get_string(4), "ds": m.get_string(3)})
+				rec.beams.append({"bio": b.get_string(2), "variant": b.get_string(3), "out": b.get_string(4), "ds": m.get_string(3), "who": slot.get(m.get_string(1), -1)})
 		else:
 			var base: String = sub.trim_suffix("  (ambush)").trim_suffix(" → COUNTER")
 			rec.melee[base] = rec.melee.get(base, 0) + 1
