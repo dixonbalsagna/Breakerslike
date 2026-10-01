@@ -39,3 +39,26 @@ Owner: Controls and Game Feel. Date: 2026-10-01. Status: built and tested (`rema
 3. **The keyboard move axis is rebindable** as one row: `{action: "move", controls: [up, left, down, right], fixed: false}`. `rebind(preset, "move", null, 0, four_keys)` needs four different keys; each is checked against the other actions (the conflict names the key and its action); another action cannot take a move key; `swap` with a move key is refused (the screen rebinds the whole row). `diff` emits one `{controls: [4], action: "move"}` row, `apply_overrides` keeps the axis shape, and `check_bindings` applies the pair rule to all four keys. The pad stick stays fixed (its row is `fixed: true`).
 
 **What UI must change:** show chord rows as fixed (greyed, no capture); allow L3, R3 and the other chord members when capturing a control for a single binding; show the Fly row on the keyboard as one row that captures four keys in order (Up, Left, Down, Right) and emit `{controls: [four keys], action: "move"}`; do not offer "swap" on a move-key conflict; leave the pad's move row fixed. Nothing changes for gesture or layered rows (they follow on their own).
+
+## Per-player remaps (2026-10-01)
+
+Two players on the same layout can now remap it separately. **Slot 0 is player one, slot 1 is player two**; every call that read or wrote a preset's overrides takes `slot` last, default 0, so nothing existing changes.
+
+| Call | With a slot |
+| :--- | :--- |
+| `SimInputData.preset(id, slot := 0)` | the layout as that player plays it |
+| `SimInputData.apply_overrides(id, overrides, slot := 0)`, `set_overrides(id, entries, slot := 0)` | that player's overrides |
+| `SimInputData.check_bindings(preset, slot := 0)` | the shared-keyboard pair rule compares this player's half with **the other player's** half (`preset(pair, 1 - slot)`) |
+| `SimInputData.save_overrides()` | writes `presets` (player one) and `presets_p2` (player two); the same shape in each: `{id: {"overrides": [...]}}` |
+| `SimInputRemap.apply_file(d)` | reads both; an old file with only `presets` is player one's |
+
+In the hub, **each slot builds its layout from its own remap**: a pad from `preset(pad_preset_of(slot), slot)`, the solo keyboard from `preset("kb-solo", slot)` (so P2 on the solo keyboard has their own keys), the shared halves P1 from slot 0 and P2 from slot 1. `reload_layouts()` rebuilds them all; it needs no slot.
+
+**What UI must change:**
+1. **A player selector on the Remap screen** (Player 1, Player 2), shown while a second person plays or has a device (`host.hub.joinable()` false) or always; the screen edits the chosen player's copy of the chosen layout. The "shared remap" wording goes.
+2. **Everything the screen reads goes through the slot:** `UiRemapModel.preset(id, slot)`, `rows`, `attempt`, `check_move_key`, `attempt_move`, `_verdict` (its `check_bindings(eff, slot)`) and `commit(layout_id, overrides, slot)` (which calls `SimInputData.apply_overrides(layout_id, overrides, slot)` and `save_overrides`). `ui_remap_model.gd:150` reads the pair with `SimInputData.preset(str(p["pair"]))`; it must be `preset(pair, 1 - slot)`.
+3. **`remap_changed` carries the slot** (`remap_changed(layout_id, overrides, slot)`); Rendering's handler only calls `host.hub.reload_layouts()`, which takes no slot, so `main.gd` needs no change.
+4. **Glyphs and prompts per player:** `UiGlyphs.specs_for(action, family, slot, style, preset)` already has the slot; its `UiRemapModel.preset(preset)` calls (`ui_glyphs.gd` `bound` and `specs_for`) become `preset(preset, slot)`, so a prompt shows the key *that* player bound. `bound(preset, action)` needs a slot argument too.
+5. **Default the selector to the player whose device last pressed in the Remap screen** (pad slot from `hub.slot_pad`), so a player who opens Settings from their pad edits their own layout by default.
+
+Tests: `remap_test.gd` section `_per_slot` (separate remaps on one preset, the default slot, two pads through the real hub, P2's solo keyboard, the pair rule across players, the file round trip with `presets_p2`).

@@ -1,0 +1,13 @@
+--- a/render/core/main.gd	2026-10-01 10:40:24.030124200 -0700
++++ b/render/core/main.gd	2026-10-01 10:40:24.085296600 -0700
+@@ -715,7 +715,9 @@
+ 			return
+ 		if e.pressed:
+ 			take_over()
+-			if btn == "start":
++			# Start pauses, except on a pad that is not playing while a second player could join: there it is the new
++			# player's first button, and joins like any other (docs/controls/local-two-player.md).
++			if btn == "start" and not host.hub.start_joins(e.device):
+ 				_toggle_pause()
+ 				get_viewport().set_input_as_handled()   # or the HUD, hearing the same press with its menu now open, closes it
+ 				return

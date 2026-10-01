@@ -92,6 +92,21 @@ func _pad_pad() -> void:
 	hub2.pad_button(2, "west", true)
 	_tick(S2, hub2, 2)
 	ok(hub2.slot_pad[0] == 1 and hub2.slot_pad[1] == 2 and S2.fighters[0].stance == 1.0, "pad+pad: a pad plugged in mid-play joins as P2 and P1 keeps guarding")
+	# Start: on a new pad it joins (when someone could), on a playing pad or with nobody to join it pauses.
+	var hub3 := SimInputHub.new()
+	var S3: SimState = _new(hub3)
+	ok(not hub3.start_joins(7), "start: in the demo nobody is playing, so Start pauses")
+	hub3.pad_button(1, "south", true)
+	_tick(S3, hub3, 2)
+	ok(not hub3.start_joins(1) and hub3.start_joins(7), "start: the playing pad pauses, a new pad would join")
+	hub3.pad_button(7, "start", true)       # what main.gd does for a joining Start
+	hub3.pad_button(7, "start", false)
+	_tick(S3, hub3, 2)
+	ok(hub3.slot_pad[1] == 7 and S3.fighters[1].ai == null, "start: Start on the new pad made it player two")
+	ok(not hub3.start_joins(7) and not hub3.start_joins(1) and not hub3.start_joins(8), "start: once both play, Start pauses on every pad")
+	hub3.leave(1)
+	_tick(S3, hub3, 2)
+	ok(hub3.start_joins(7), "start: after P2 leaves, their pad's Start joins again")
 
 
 func _pad_keyboard() -> void:

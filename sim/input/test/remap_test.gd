@@ -27,6 +27,7 @@ func _init() -> void:
 	_gestures()
 	_move()
 	_check()
+	_per_slot()
 	_file_and_hub()
 	_names()
 	SimInputData.clear_overrides()
@@ -331,3 +332,66 @@ func _move() -> void:
 	hub.key("KeyW", true)
 	ok(hub.intent(0).my == 0.0, "move: and W no longer does")
 	SimInputData.apply_overrides("kb-solo", [])
+
+
+func _per_slot() -> void:
+	SimInputData.clear_overrides()
+	var light_up: Array = [{"controls": ["pad:dpad_up"], "action": "light"}]
+	var e1: Dictionary = SimInputData.apply_overrides("arena", light_up, 1)
+	ok(SimInputData.preset("arena", 0) == SimInputData.original("arena"), "per slot: player one's Arena is untouched by player two's remap")
+	ok(SimInputData.preset("arena", 1) == e1 and e1 != SimInputData.original("arena"), "per slot: player two's Arena has it")
+	ok(SimInputRemap.controls_used(SimInputData.preset("arena", 1)).get("pad:dpad_up", "") == "light" and SimInputRemap.controls_used(SimInputData.preset("arena", 0)).get("pad:west", "") == "light", "per slot: player two's light is on the d-pad, player one's on X")
+	# The default slot is player one's, as before.
+	SimInputData.apply_overrides("arena", [{"controls": ["pad:dpad_left"], "action": "light"}])
+	ok(SimInputRemap.controls_used(SimInputData.preset("arena")).get("pad:dpad_left", "") == "light" and SimInputRemap.controls_used(SimInputData.preset("arena", 1)).get("pad:dpad_up", "") == "light", "per slot: no slot argument is player one, and player two's stays")
+	# The hub: two pads on Arena, each with their own remap.
+	var hub := SimInputHub.new()
+	hub.set_humans(true, true)
+	hub.pad_button(3, "dpad_left", true)    # player one's light is on the d-pad's left
+	hub.pad_button(9, "dpad_up", true)      # player two's is on the d-pad's up
+	var a: SimIntent = hub.intent(0)
+	var b: SimIntent = hub.intent(1)
+	ok(a.light and b.light, "per slot: each pad's remapped light works for its own player")
+	hub.consumed()
+	hub.pad_button(3, "dpad_left", false)
+	hub.pad_button(9, "dpad_up", false)
+	hub.pad_button(3, "west", true)         # X is no longer player one's light
+	hub.pad_button(9, "west", true)         # player two is a different remap; the X press is not theirs either
+	ok(not hub.intent(0).light, "per slot: X is no longer a light for player one")
+	hub.consumed()
+	# The solo keyboard under a player's own remap: player one on a pad, player two on the keyboard.
+	SimInputData.clear_overrides()
+	SimInputData.apply_overrides("kb-solo", [{"controls": ["kb:KeyU"], "action": "light"}], 1)
+	var hub2 := SimInputHub.new()
+	hub2.set_humans(true, false)
+	hub2.pad_button(0, "south", true)
+	hub2.set_humans(true, false)
+	hub2.key("KeyU", true)
+	ok(hub2.device_of(1) == "kb" and hub2.layout_of(1) == "kb-solo", "per slot: the keyboard joins as player two")
+	hub2.set_humans(true, true)
+	ok(hub2.intent(1).light, "per slot: player two's solo keyboard has their own light key")
+	hub2.consumed()
+	hub2.key("KeyU", false)
+	hub2.key("KeyJ", true)
+	ok(not hub2.intent(1).light, "per slot: and the default J is not a light for them")
+	hub2.consumed()
+	hub2.key("KeyJ", false)
+	# check_bindings compares the shared halves across players: slot 0's half against slot 1's.
+	SimInputData.clear_overrides()
+	SimInputData.apply_overrides("kb-shared-p2", [{"controls": ["kb:KeyB"], "action": "light"}], 1)
+	var p1_try: Dictionary = SimInputRemap.apply_overrides(SimInputData.original("kb-shared-p1"), [{"controls": ["kb:KeyB"], "action": "light"}])
+	ok(SimInputData.check_bindings(p1_try, 0).any(func(x): return x["rule"] == "layout-pair" and x["control"] == "kb:KeyB"), "per slot: slot 0 cannot take the B key player two's half now uses")
+	ok(not SimInputData.check_bindings(SimInputData.preset("kb-shared-p2", 1), 1).any(func(x): return x["rule"] == "layout-pair"), "per slot: and player two's own half is fine")
+	# The file keeps both players apart.
+	SimInputData.clear_overrides()
+	SimInputData.apply_overrides("arena", light_up, 1)
+	SimInputData.apply_overrides("arena", [{"controls": ["pad:dpad_left"], "action": "light"}], 0)
+	var path: String = "user://input_slot_test.json"
+	ok(SimInputData.save_overrides(path), "per slot: the file saves")
+	var d: Dictionary = SimInputRemap.load_file(path)
+	ok(d["presets"].has("arena") and d["presets_p2"].has("arena") and d["presets"]["arena"]["overrides"][0]["controls"] == ["pad:dpad_left"] and d["presets_p2"]["arena"]["overrides"][0]["controls"] == ["pad:dpad_up"], "per slot: presets is player one's and presets_p2 is player two's")
+	SimInputData.clear_overrides()
+	SimInputRemap.apply_file(d)
+	ok(SimInputRemap.controls_used(SimInputData.preset("arena", 0)).get("pad:dpad_left", "") == "light" and SimInputRemap.controls_used(SimInputData.preset("arena", 1)).get("pad:dpad_up", "") == "light", "per slot: and loads back into the right players")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	SimInputData.clear_overrides()

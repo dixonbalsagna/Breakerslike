@@ -40,9 +40,10 @@ func _init() -> void:
 	touch = SimTouch.new()
 	pad_preset = SimInputData.default_preset("pad")
 	touch_preset = SimInputData.default_preset("touch")
-	layouts["solo"] = SimLayout.new(SimInputData.preset("kb-solo"))
-	layouts["p1"] = SimLayout.new(SimInputData.preset("kb-shared-p1"))
-	layouts["p2"] = SimLayout.new(SimInputData.preset("kb-shared-p2"))
+	layouts["solo"] = SimLayout.new(SimInputData.preset("kb-solo", 0))
+	layouts["solo2"] = SimLayout.new(SimInputData.preset("kb-solo", 1))   # the same layout under player two's own remap
+	layouts["p1"] = SimLayout.new(SimInputData.preset("kb-shared-p1", 0))
+	layouts["p2"] = SimLayout.new(SimInputData.preset("kb-shared-p2", 1))
 
 
 ## Who is human this tick (the host reads f.ai == null). A slot that stopped being human is no longer driven.
@@ -77,7 +78,7 @@ func _kb_shared() -> bool:
 func _kb_layout(slot: int) -> SimLayout:
 	if _kb_shared():
 		return layouts["p1"] if slot == 0 else layouts["p2"]
-	return layouts["solo"]
+	return layouts["solo"] if slot == 0 else layouts["solo2"]
 
 
 ## Whatever the slot's previous device held is let go, so nothing sticks.
@@ -124,6 +125,15 @@ func _assign(device: String) -> int:
 ## "P2: press any button to join" while this is true.
 func joinable() -> bool:
 	return _taken(0) and not _taken(1)
+
+
+## Whether a Start press on this pad should join instead of pausing: the pad drives no slot yet and a second player could join.
+## A pad that is playing, or any pad when nobody could join (the demo, two players already), still pauses with Start.
+func start_joins(dev: int) -> bool:
+	for s in range(2):
+		if slot_pad[s] == dev and claimed[s]:
+			return false
+	return joinable()
 
 
 ## Slots to make human (the host toggles the AI off) and slots to hand back to the AI; each call drains its list.
@@ -192,7 +202,7 @@ func _kb_input(c: String) -> void:
 
 func _pad(dev: int, slot: int) -> SimLayout:
 	if not pads.has(dev):
-		pads[dev] = SimLayout.new(SimInputData.preset(pad_preset_of(slot)))
+		pads[dev] = SimLayout.new(SimInputData.preset(pad_preset_of(slot), slot))
 	return pads[dev]
 
 
@@ -382,9 +392,10 @@ func set_pad_preset(id: String, slot: int = -1) -> void:
 ## Safe in the middle of a match; slot claims are kept, so a pad stays on its slot.
 func reload_layouts() -> void:
 	release_all()
-	layouts["solo"].set_preset(SimInputData.preset("kb-solo"))
-	layouts["p1"].set_preset(SimInputData.preset("kb-shared-p1"))
-	layouts["p2"].set_preset(SimInputData.preset("kb-shared-p2"))
+	layouts["solo"].set_preset(SimInputData.preset("kb-solo", 0))
+	layouts["solo2"].set_preset(SimInputData.preset("kb-solo", 1))
+	layouts["p1"].set_preset(SimInputData.preset("kb-shared-p1", 0))
+	layouts["p2"].set_preset(SimInputData.preset("kb-shared-p2", 1))
 	pads.clear()
 	touch.set_preset(touch_preset)
 

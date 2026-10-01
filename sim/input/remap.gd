@@ -390,7 +390,7 @@ static func load_file(path: String = USER_PATH) -> Dictionary:
 		var d = JSON.parse_string(FileAccess.get_file_as_string(path))
 		if d is Dictionary and int(d.get("schema", 0)) == 1:
 			return d
-	return {"schema": 1, "presets": {}, "options": {}}
+	return {"schema": 1, "presets": {}, "presets_p2": {}, "options": {}}
 
 
 static func save_file(d: Dictionary, path: String = USER_PATH) -> bool:
@@ -406,15 +406,17 @@ static func save_file(d: Dictionary, path: String = USER_PATH) -> bool:
 static func apply_file(d: Dictionary) -> Array:
 	var dropped: Array = []
 	SimInputData.clear_overrides()
-	for id in d.get("presets", {}):
-		if SimInputData.presets.has(id):
-			var entries: Array = []
-			for o in d["presets"][id].get("overrides", []):
-				if SimInputData.actions.is_empty() or SimInputData.actions.has(str(o.get("action", ""))):
-					entries.append(o)
-				else:
-					dropped.append("%s: unknown action %s" % [id, str(o.get("action", ""))])
-			SimInputData.set_overrides(id, entries)
-		else:
-			dropped.append("unknown preset %s" % id)
+	for slot in range(2):
+		var key: String = "presets" if slot == 0 else "presets_p2"
+		for id in d.get(key, {}):
+			if SimInputData.presets.has(id):
+				var entries: Array = []
+				for o in d[key][id].get("overrides", []):
+					if SimInputData.actions.is_empty() or SimInputData.actions.has(str(o.get("action", ""))):
+						entries.append(o)
+					else:
+						dropped.append("%s: unknown action %s" % [id, str(o.get("action", ""))])
+				SimInputData.set_overrides(id, entries, slot)
+			else:
+				dropped.append("unknown preset %s" % id)
 	return dropped
