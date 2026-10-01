@@ -60,7 +60,7 @@ var _spring_bones := PackedInt32Array()
 var _lag := PackedFloat32Array()
 var _prof: Dictionary = {}
 var _part: String = ""                 # the key set playing this frame, "" for none (for tools)
-var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0, "skims": 0, "ground_events": 0, "rd_ticks": 0, "rd_usec": 0, "catches": 0, "slope_frames": 0, "aims": 0, "pre_brace": 0, "near_miss": 0, "guard_kicks": 0, "personality": 0, "feet_usec": 0, "feet_n": 0, "turn_steps": 0, "bursts": 0, "brakes": 0, "shocks": 0}
+var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0, "skims": 0, "ground_events": 0, "rd_ticks": 0, "rd_usec": 0, "catches": 0, "slope_frames": 0, "aims": 0, "pre_brace": 0, "near_miss": 0, "guard_kicks": 0, "personality": 0, "feet_usec": 0, "feet_n": 0, "survey": 0, "ko_falls": 0, "leans": 0, "overcommits": 0, "blocked": 0, "turn_steps": 0, "bursts": 0, "brakes": 0, "shocks": 0}
 
 ## The facing the mannequin is drawn with (-1 or 1). The sim's `face` can lag a dodge warp or a swap of sides, so this one
 ## is derived from the opponent in an exchange and from the travel direction otherwise (A2, docs/animation section 9.3).
@@ -102,6 +102,12 @@ var _rd_prev_slide: bool = false
 var _rd_prev_speed: float = 0.0
 var _skim_t0: float = -1.0
 var _shape_set: bool = false
+var _skip_inertia: bool = false
+var _lean_id: int = -1                  # the dodge already leaned away from
+var _over_id: int = -1                  # the whiff already over-committed on
+var _lean_t0: float = -10.0             # sim time of the lean-away, the over-commit and the blocked recoil
+var _over_t0: float = -10.0
+var _block_t0: float = -10.0
 var _bank: float = 0.0                 # roll into a turn (flight overhaul, unit G), smoothed
 var _burst_t0: float = -10.0           # a dash start and a stop: when they were seen (sim time)
 var _brake_t0: float = -10.0
@@ -423,6 +429,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			_mix_pose(AnimData.pose("skip.water"), smoothstep(0.0, 0.04, sk_t) * (1.0 - smoothstep(0.12, 0.35, sk_t)) * 0.85)
 	# 3. the exchange: approach and strike parts
 	_part = ""
+	_skip_inertia = false
 	_ci_w = 0.0
 	_rushing = false
 	_contact_now = false
@@ -461,6 +468,9 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	# 5d00. flight overhaul (unit G): the burst and the brake poses, the bank, the shudder of a nearby impact
 	if RenderAnim.layer("flight"):
 		_flight_layers(T, f)
+	# 5d01. the winner in the wreckage (unit K)
+	if RenderAnim.layer("personality"):
+		_win_layer(S, f, T)
 	# 5d0. idles and transitions with personality (overhaul unit F): the weight shift, the knee bounce and the breath of the stance and
 	# the form, and a turn-around as a step
 	if RenderAnim.layer("personality") and (f.state == "free" or f.state == "locked") and _part == "" and _ci_w < 0.001:
@@ -489,6 +499,8 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	else:
 		root_off = root_off * 0.0
 	root_off.x += _recoil_x + _step_x
+	if _lean_t0 > -5.0 or _over_t0 > -5.0 or _block_t0 > -5.0:
+		root_off.x += _evade_offsets(T)
 	root_off.y += _recoil_y
 	if _smear != 0.0:
 		root_off.x += _smear_now(T)
@@ -559,6 +571,8 @@ func _target_base(S: SimState, f, T: float) -> void:
 	var w12: float = 0.0             # skidding on the back (moving away from the way he faces)
 	var w13: float = 0.0             # skidding face down
 	var w15: float = 0.0             # the push-up stage of a get-up
+	var w16: int = 0                 # the winner's beat (1 stand, 2 survey, 3 the end)
+	var w17: float = 0.0             # a KO's fall, 0 to 1 over the first half second down
 	var w14: float = 0.0             # the rise out of the crouch after it (slower when worn)
 	if state == "down":
 		_was_down = true
@@ -592,11 +606,13 @@ func _target_base(S: SimState, f, T: float) -> void:
 			w15 = smoothstep(0.28, 0.5, f.stateT)
 		else:
 			w1 = smoothstep(0.42, 0.72, f.stateT)
-		mode = 7 if S.game.ko == f else 3
+		mode = 7 if is_same(S.game.ko, f) else 3
+		w17 = smoothstep(0.0, 0.5, f.stateT) if RenderAnim.layer("personality") else 1.0
 	elif state == "charging":
 		mode = 4
-	elif S.game.ko != null and S.game.ko != f and S.game.koT > 0.8 and state == "free":
+	elif S.game.ko != null and not is_same(S.game.ko, f) and S.game.koT > float(AnimData.winner.get("start", 0.8)) and state == "free":
 		mode = 6
+		w16 = _win_phase(S.game.koT, String(f.id)) if RenderAnim.layer("personality") else 4
 	else:
 		w1 = smoothstep(140.0, 720.0, vf)
 		w2 = smoothstep(140.0, 520.0, -vf) * (1.0 - w1)
@@ -624,7 +640,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 				if opp != null and absf(SimWrap.sdx(f.x, opp.x)) > IDLE_FAR:
 					w7 = 0.5
 	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33) | (int(w8 * 8.0) << 35) | (int(w9 * 8.0) << 39) | (int(w10 * 8.0) << 43) | (int(w11 * 8.0) << 47) | (int(w12 * 8.0) << 50) | (int(w13 * 8.0) << 54)
-	var key2: int = int(w15 * 8.0) | (int(w14 * 8.0) << 4)
+	var key2: int = int(w15 * 8.0) | (int(w14 * 8.0) << 4) | (w16 << 8) | (int(w17 * 8.0) << 11)
 	if key == _bkey and key2 == _bkey2:
 		_settle += 1
 		return
@@ -669,9 +685,17 @@ func _target_base(S: SimState, f, T: float) -> void:
 		4:
 			_blend_target("charge.hold", 1.0)
 		6:
-			_blend_target("emote.victory", 1.0)
+			match w16:
+				1:
+					_blend_target("win.stand", 1.0)
+				2:
+					_blend_target("win.survey", 1.0)
+				_:
+					_blend_target("emote.victory" if (w16 == 4 or _win_end(String(f.id)) == "victory") else "win.survey", 1.0)
 		7:
-			_blend_target("down.ko", 1.0)
+			# a KO falls: a stagger first, then flat on the back
+			_blend_target("react.stagger", (1.0 - w17) * 0.8)
+			_blend_target("down.ko", w17)
 		_:
 			_blend_target("move.dash", w1)
 			_blend_target("move.retreat", w2)
@@ -766,7 +790,8 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 		if T >= rs and T < rs + dur + 0.05:
 			var tq: float = rs + floorf((T - rs) / rdq) * rdq
 			var p: float = clampf((tq - rs) / dur, 0.0, 1.0)
-			var fly: float = smoothstep(0.0, 0.18, p) * (1.0 - smoothstep(0.78, 1.0, p))
+			# the streak holds to the last tick: the fastest ticks of a rush are its end, and they must not be drawn in a standing pose
+			var fly: float = smoothstep(0.0, 0.18, p) * (1.0 - smoothstep(0.93, 1.0, p))
 			_rushing = true
 			_mix_pose(AnimData.pose("move.dash"), fly)
 			var off: float = 1.0 - smoothstep(0.0, minf(4.0 * DT / dur, 0.3), p)
@@ -926,7 +951,18 @@ func _beat_layers(ex, role: String, t0: float, T: float) -> void:
 					_window_pose("def.slip", T - bt, 0.05, 0.15, 0.35)
 			"dodge":
 				if role == "D":
-					_window_pose("def.blink_in", T - bt, 0.04, 0.12, 0.3)
+					if String(b.args.get("side", "")) == "cross":
+						# the step-around: up and over the attacker, then down behind him (two moves, a few ticks each)
+						var leg: float = float(b.args.get("dur", 0.15)) * 0.5
+						var tau: float = T - bt
+						if tau >= -0.02 and tau < 2.0 * leg + 0.2:
+							_skip_inertia = true   # the two moves are a few ticks each: the pose pulses must show, not be smoothed away
+						if tau >= 0.0 and tau < leg + 0.05:
+							_mix_pose(AnimData.pose("def.hop"), smoothstep(0.0, 0.025, tau) * (1.0 - smoothstep(leg - 0.04, leg + 0.04, tau)))
+						if tau >= leg - 0.05 and tau < 2.0 * leg + 0.2:
+							_mix_pose(AnimData.pose("def.drop"), smoothstep(leg - 0.04, leg + 0.03, tau) * (1.0 - smoothstep(2.0 * leg - 0.02, 2.0 * leg + 0.15, tau)))
+					else:
+						_window_pose("def.blink_in", T - bt, 0.04, 0.12, 0.3)
 			"guardBreak":
 				if role == "D":
 					_window_pose("def.guard_break", T - bt, 0.05, 0.25, 0.5)
@@ -1037,7 +1073,7 @@ func _contact_ik(S: SimState, f) -> void:
 
 func _inertialise(dt: float, prof: Dictionary) -> void:
 	var n: int = AnimRig.N
-	if not _form.is_empty() and _ip_have:
+	if (_skip_inertia or not _form.is_empty()) and _ip_have:
 		# a transformation plays inside a pause (no ticks, so nothing to settle a join on): its own beats are the easing, and
 		# the way back into the fight is inertialised once the ticks run again
 		for i in range(n):
@@ -1159,6 +1195,10 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 		# a slam (flight to down) folds the body; a skid starting from a flight whips it
 		if st == "down" and _rd_prev_state == "launched":
 			_rd.crumple(clampf(_rd_prev_speed / 3000.0, 0.3, 1.5), amp)
+		elif st == "down" and _rd_prev_state != "down" and is_same(S.game.ko, f):
+			_rd.crumple(0.9, amp)
+			_rd.kick(0, 6.0 * amp)
+			debug["ko_falls"] += 1
 		elif sliding and not _rd_prev_slide and _rd_prev_state == "launched":
 			_rd.crumple(clampf(_rd_prev_speed / 4000.0, 0.2, 0.9), amp)
 	if not _shape_set:
@@ -1204,6 +1244,23 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 			elif nb[2] <= 0.0 and dtc <= 0.0 and _miss_id != int(exc.n) * 64 + int(nb[3]) and not _has_evade(exc):
 				_miss_id = int(exc.n) * 64 + int(nb[3])
 				_near_miss(S, f, amp)
+		# J: the dodge itself. He sees the blow coming and leans away from it in the 0.14 s before his dodge or slip beat
+		var ev: Array = _next_evade(exc)
+		if not ev.is_empty() and ev[0] > 0.0 and ev[0] < 0.14 and _lean_id != int(exc.n) * 64 + int(ev[1]):
+			_lean_id = int(exc.n) * 64 + int(ev[1])
+			_lean_away(S.T, amp)
+	if exc != null and exc.A == f and not flying and not sliding and st != "down" and RenderAnim.layer("defender"):
+		# J: the attacker's whiff: a blow that finds nothing (no damage, the defender gone) carries him past, off balance
+		var ms: Array = _next_miss(exc)
+		if not ms.is_empty() and ms[0] < 0.02 and _over_id != int(exc.n) * 64 + int(ms[1]):
+			_over_id = int(exc.n) * 64 + int(ms[1])
+			_over_commit(S.T, amp)
+		else:
+			# a dodge is the whiff of a rush: the defender is gone as the attacker arrives, and he is carried past
+			var ea: Array = _next_evade(exc)
+			if not ea.is_empty() and ea[0] < 0.02 and _over_id != int(exc.n) * 64 + 32 + int(ea[1]):
+				_over_id = int(exc.n) * 64 + 32 + int(ea[1])
+				_over_commit(S.T, amp)
 	if not flying and not sliding:
 		brace = maxf(brace, (1.0 - _hit_crum) * _hit_w * 0.45 + pre)
 		crum = maxf(crum, _hit_crum * _hit_w * 0.5)
@@ -1240,8 +1297,9 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 	_prev_cx = cx
 	_have_x = true
 	var ex = S.dirS.ex
-	if absf(cx) > 160.0 and absf(cx) > 1.5 * absf(pcx) and ex != null and ex.A == f and not flying and not sliding and amp > 0.5:
-		_smear = clampf(-cx * m * 0.15, -24.0, 24.0)
+	if absf(cx) > 250.0 and ex != null and ex.A == f and not flying and not sliding and amp > 0.5 and _blow_due(ex):
+		# a catch: the striker is carried far on the tick his blow lands; the body lags the anchor a little and the contact reaches that far
+		_smear = clampf(-cx * m * 0.05, -10.0, 10.0)
 		_smear_t0 = S.T
 		debug["catches"] += 1
 	_hit_free = maxf(0.0, _hit_free - dt * (1.6 - 0.8 * _worn))
@@ -1362,6 +1420,98 @@ static func _next_blow(ex) -> Array:
 				best = [dtc, _is_heavy(ex, b.args), float(b.args.get("dmg", 0.0)), i]
 		i += 1
 	return best
+
+
+## The next dodge or slip beat of the exchange: [time to it, beat index], or [].
+static func _next_evade(ex) -> Array:
+	var best: Array = []
+	var i: int = 0
+	for b in ex.beats:
+		if b.op == "dodge" or b.op == "slip":
+			var dt_e: float = b.t - ex.t
+			if dt_e >= 0.0 and (best.is_empty() or dt_e < best[0]):
+				best = [dt_e, i]
+		i += 1
+	return best
+
+
+## The attacker's next blow that does no damage (a whiff): [time to contact, beat index] from 0.03 s after it to 0.1 s before, or [].
+static func _next_miss(ex) -> Array:
+	var best: Array = []
+	var i: int = 0
+	for b in ex.beats:
+		if b.op == "strike" and String(b.args.a) == "A" and float(b.args.get("dmg", 0.0)) <= 0.0:
+			var dtc: float = b.t - ex.t
+			if dtc >= -0.03 and dtc < 0.1 and (best.is_empty() or dtc < best[0]):
+				best = [dtc, i]
+		i += 1
+	return best
+
+
+## The defender's lean away from a blow he is about to dodge: head and chest back, arms flung back, the weight on the heels.
+func _lean_away(T: float, amp: float) -> void:
+	_lean_t0 = T
+	_rd.kick(0, 8.0 * amp)
+	_rd.kick(1, 7.0 * amp)
+	_rd.kick(2, -3.0 * amp)
+	_rd.kick(5, -3.0 * amp)
+	_hit_free = minf(1.0, _hit_free + 0.25)
+	_rd.out_w = 1.0
+	debug["leans"] += 1
+
+
+## The whiff's over-commit: the chest and head go forward after the blow, the arms with it, the body carried a step past.
+func _over_commit(T: float, amp: float) -> void:
+	_over_t0 = T
+	_rd.kick(1, -8.0 * amp)
+	_rd.kick(0, -5.0 * amp)
+	_rd.kick(2, 6.0 * amp)
+	_rd.kick(5, 6.0 * amp)
+	_rd.kick(4, 3.0 * amp)
+	_rd.kick(7, 3.0 * amp)
+	_hit_free = minf(1.0, _hit_free + 0.3)
+	_rd.out_w = 1.0
+	debug["overcommits"] += 1
+
+
+## His blow was blocked (the sim's damage event of kind guard): the arms bounce back, the chest rocks, a small step back.
+func on_blocked(T: float) -> void:
+	if not RenderAnim.layer("defender"):
+		return
+	_block_t0 = T
+	var amp: float = _rd_amp()
+	_rd.kick(2, -5.0 * amp)
+	_rd.kick(5, -5.0 * amp)
+	_rd.kick(1, 3.0 * amp)
+	_rd.kick(0, 3.0 * amp)
+	_rd.out_w = 1.0
+	debug["blocked"] += 1
+
+
+## The root offsets of the lean-away (back), the over-commit (forward) and the blocked recoil (back), decaying.
+func _evade_offsets(T: float) -> float:
+	var x: float = 0.0
+	var a: float = _rd_amp()
+	var tl: float = T - _lean_t0
+	if tl >= 0.0 and tl < 0.6:
+		x -= 3.0 * a * sin(minf(tl / 0.12, 1.0) * PI * 0.5) * exp(-tl / 0.3)
+	var to: float = T - _over_t0
+	if to >= 0.0 and to < 0.8:
+		x += 7.0 * a * sin(minf(to / 0.1, 1.0) * PI * 0.5) * exp(-to / 0.25)
+	var tb: float = T - _block_t0
+	if tb >= 0.0 and tb < 0.5:
+		x -= 4.0 * a * exp(-tb / 0.12)
+	return x
+
+
+## The attacker has a blow due now (from 0.03 s ago to 0.05 s ahead).
+static func _blow_due(ex) -> bool:
+	for b in ex.beats:
+		if b.op == "chainStrike" or (b.op == "strike" and String(b.args.a) == "A"):
+			var dtc: float = b.t - ex.t
+			if dtc >= -0.03 and dtc <= 0.05:
+				return true
+	return false
 
 
 static func _has_evade(ex) -> bool:
@@ -1496,6 +1646,44 @@ static func _gait_event(ax: float, prev: float, now: float) -> String:
 	if ax < -9000.0 and prev > 500.0 and now < prev:
 		return "brake"
 	return ""
+
+
+## The winner's beat after the KO: 1 standing spent, 2 looking over the wreckage, 3 the end (held or a raised fist).
+static func _win_phase(ko_t: float, _id: String) -> int:
+	var w: Dictionary = AnimData.winner
+	var t0: float = float(w.get("start", 0.8))
+	if ko_t < t0 + float(w.get("stand", 1.0)):
+		return 1
+	if ko_t < t0 + float(w.get("stand", 1.0)) + float(w.get("survey", 2.5)):
+		return 2
+	return 3
+
+
+## How the winner ends: "hold" the survey or "victory" (emote.victory), by his shape key (a data choice, not code).
+func _win_end(roster_id: String) -> String:
+	var ends: Dictionary = AnimData.winner.get("end", {})
+	var key: String = String(AnimRagdoll.shape_of.get(roster_id, AnimRagdoll.shape_of.get("default", "")))
+	return String(ends.get(key, ends.get("default", "hold")))
+
+
+## The survey: the head and neck sweep slowly across the scene, the chest heaves; only the winner, only after the KO.
+func _win_layer(S: SimState, f, T: float) -> void:
+	if S.game.ko == null or is_same(S.game.ko, f) or f.state != "free":
+		return
+	var w: Dictionary = AnimData.winner
+	var t0: float = float(w.get("start", 0.8)) + float(w.get("stand", 1.0))
+	var tau: float = S.game.koT - t0
+	var amp: float = _rd_amp()
+	var ix: Dictionary = AnimRig.index
+	var heave: float = sin(T * TAU * 0.9) * 0.05 * amp
+	q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(0, 0, 1), heave)
+	if tau >= 0.0 and tau < float(w.get("survey", 2.5)):
+		var u: float = tau / float(w.get("survey", 2.5))
+		var yaw: float = sin(u * TAU) * float(w.get("yaw", 0.8)) * smoothstep(0.0, 0.15, u) * amp
+		q[ix["head"]] = q[ix["head"]] * Quaternion(Vector3(0, 1, 0), yaw * 0.6)
+		q[ix["neck"]] = q[ix["neck"]] * Quaternion(Vector3(0, 1, 0), yaw * 0.4)
+		q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(0, 1, 0), yaw * 0.1)
+		debug["survey"] += 1
 
 
 func _wound_read(f) -> void:

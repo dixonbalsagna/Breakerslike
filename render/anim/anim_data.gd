@@ -18,6 +18,7 @@ static var bone_lag := PackedFloat32Array()
 static var cue_poses: Dictionary = {}   # cue kind -> pose id
 static var forms: Dictionary = {}       # transformation: version -> {gather, break, settle, hold} in ticks
 static var quality_levels: Dictionary = {}   # level -> the overhaul layers it switches off
+static var winner: Dictionary = {}          # data/anim/winner.json (the winner after a KO)
 static var personality: Dictionary = {}
 static var ragdoll_motion: Dictionary = {}
 static var ragdoll: Dictionary = {}      # data/anim/ragdoll.json (read by AnimRagdoll.setup)
@@ -60,6 +61,7 @@ static func load_all() -> void:
 	ragdoll = _read("ragdoll.json")
 	ragdoll_motion = _read("ragdoll_motion.json")
 	personality = _read("personality.json")
+	winner = _read("winner.json")
 	quality_levels = _read("quality.json").get("levels", {})
 
 

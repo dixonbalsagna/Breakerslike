@@ -184,6 +184,8 @@ static func consume(S: SimState, events: Array) -> void:
 						if dw.length() > 1.0:
 							dm = Vector2(dw.x * fighter(S, vf).vface, dw.y).normalized()
 					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0, String(e.kind), dm, float(e.amount) / 60.0, S.tick)
+					if String(e.kind) == "guard" and a >= 0 and a < S.fighters.size():
+						fighter(S, S.fighters[a]).on_blocked(S.T)
 
 
 ## A field of an event that may not exist yet (World's ground-contact events arrive with their fields; until then the event is not sent).

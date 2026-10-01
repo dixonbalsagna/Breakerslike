@@ -1,0 +1,9 @@
+{
+  "schema": "anim.winner/1",
+  "_about": "Animation overhaul, unit K: the winner in the wreckage after a KO. start: seconds after the KO when the winner stops (win.stand), stand: how long he stands spent, survey: how long he looks over the scene (win.survey, the head sweeping yaw radians each way), end: per shape key (the ragdoll shapes of ragdoll_motion.json) whether he then holds the survey or takes emote.victory. Render only, outside the sim's data hash.",
+  "start": 0.8,
+  "stand": 1,
+  "survey": 2.5,
+  "yaw": 0.8,
+  "end": {"default":"hold","P":"hold","A":"victory"}
+}

@@ -68,6 +68,7 @@ func _test_beats() -> void:
 		{"op": "dodge", "t": 1.5, "args": {}},
 		{"op": "guardBreak", "t": 2.0, "args": {}},
 		{"op": "clashWave", "t": 2.5, "args": {}},
+		{"op": "dodge", "t": 3.0, "args": {"side": "cross", "dur": 0.15}},
 	]
 	# [role, cancel, time, the pose that must come, true if it must come]
 	var cases: Array = [
@@ -75,6 +76,7 @@ func _test_beats() -> void:
 		["D", true, 0.34, "def.parry", true], ["A", true, 0.34, "react.rebuff", true],
 		["D", false, 1.1, "def.slip", true], ["A", false, 1.1, "def.slip", false],
 		["D", false, 1.6, "def.blink_in", true], ["A", false, 1.6, "def.blink_in", false],
+		["D", false, 3.04, "def.hop", true], ["D", false, 3.12, "def.drop", true], ["A", false, 3.04, "def.hop", false],
 		["D", false, 2.1, "def.guard_break", true], ["A", false, 2.1, "def.guard_break", false],
 		["D", false, 2.6, "clash.push", true], ["A", false, 2.6, "clash.push", true],
 		["D", false, 3.6, "def.parry_ready", false],
@@ -436,6 +438,18 @@ func _test_defender() -> void:
 	for i in range(AnimRagdoll.N):
 		dist += absf(res[0][i] - res[1][i])
 	_expect(dist > 0.3, "defender test: two fighters flinch the same (%.3f rad apart in total)" % dist)
+	var ev: Array = AnimFighter._next_evade({"beats": [{"op": "dodge", "t": 0.5, "args": {}}, {"op": "slip", "t": 0.3, "args": {}}], "t": 0.2})
+	_expect(ev.size() == 2 and absf(float(ev[0]) - 0.1) < 0.001 and int(ev[1]) == 1, "defender test: the next evade is %s" % str(ev))
+	var ms: Array = AnimFighter._next_miss({"beats": [{"op": "strike", "t": 0.3, "args": {"a": "A", "dmg": 0.0}}, {"op": "strike", "t": 0.1, "args": {"a": "A", "dmg": 40.0}}], "t": 0.25})
+	_expect(ms.size() == 2 and absf(float(ms[0]) - 0.05) < 0.001 and int(ms[1]) == 0, "defender test: the next whiff is %s" % str(ms))
+	var lean := AnimFighter.new(0)
+	lean._lean_away(1.0, 1.0)
+	var over := AnimFighter.new(0)
+	over._over_commit(1.0, 1.0)
+	var blk := AnimFighter.new(0)
+	blk.on_blocked(1.0)
+	_expect(lean._rd.om[0] > 3.0 and over._rd.om[1] < -3.0 and blk._rd.om[2] < -3.0, "defender test: lean-away, over-commit and blocked recoil do not point the right ways (%.1f, %.1f, %.1f)" % [lean._rd.om[0], over._rd.om[1], blk._rd.om[2]])
+	_expect(lean._evade_offsets(1.15) < -0.5 and over._evade_offsets(1.15) > 0.5 and blk._evade_offsets(1.03) < -1.0, "defender test: the evade root offsets do not move the body the right way")
 	print("defender test: next blow %s, a miss is found, the two shapes flinch %.2f rad apart in total" % [str(nb), dist])
 
 
@@ -534,6 +548,55 @@ func _test_quality() -> void:
 	print("quality test: levels switch their layers, the gameplay hash is the same at high, low and minimal (%s)" % hashes.high)
 
 
+## Unit K: the winner's beats after a KO (stand, survey, then hold or a raised fist by shape) and the KO's fall, on stub fighters
+## (position and state only) in a real world.
+func _tq_nearest(af: AnimFighter, ids: Array) -> String:
+	var best: String = ""
+	var bd := 1.0e9
+	for id in ids:
+		var p: AnimPose = AnimData.pose(id)
+		var d := 0.0
+		for i in range(AnimRig.N):
+			d += af._tq[i].angle_to(p.q[i])
+		if d < bd:
+			bd = d
+			best = id
+	return best
+
+
+func _stub(S: SimState, state: String, st: float, id: String) -> Dictionary:
+	return {"state": state, "stateT": st, "slide": 0.0, "stance": 0, "vx": 0.0, "vy": 0.0, "ki": 50.0, "x": S.fighters[0].x, "y": WorldTerrain.groundY(S, S.fighters[0].x), "id": id, "tier": 1.0, "beamCharge": null}
+
+
+func _test_win_ko() -> void:
+	RenderAnim.enabled = true
+	RenderAnim.ragdoll_enabled = true
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	for i in range(5):
+		main.frame(DT)
+	S.game.ko = S.fighters[1]
+	var cands: Array = ["win.stand", "win.survey", "emote.victory", "stance.aggressive"]
+	var got: Array = []
+	for pair in [[1.2, "KAI"], [2.5, "KAI"], [6.0, "KAI"], [6.0, "VORR"]]:
+		S.game.koT = pair[0]
+		var af := AnimFighter.new(0)
+		af._target_base(S, _stub(S, "free", 0.0, pair[1]), 5.0)
+		got.append(_tq_nearest(af, cands))
+	_expect(got == ["win.stand", "win.survey", "win.survey", "emote.victory"], "win test: the winner's beats are %s" % str(got))
+	var f2: Dictionary = _stub(S, "down", 0.0, "KAI")
+	S.game.ko = f2
+	var early := AnimFighter.new(0)
+	early._target_base(S, f2, 5.0)
+	f2.stateT = 0.6
+	var late := AnimFighter.new(0)
+	late._target_base(S, f2, 5.0)
+	var fall: Array = [_tq_nearest(early, ["react.stagger", "down.ko"]), _tq_nearest(late, ["react.stagger", "down.ko"])]
+	_expect(fall == ["react.stagger", "down.ko"], "win test: the KO falls %s" % str(fall))
+	S.game.ko = null
+	print("win test: the winner's beats %s, a KO falls %s" % [str(got), str(fall)])
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -623,6 +686,7 @@ func _run() -> void:
 	_test_personality()
 	_test_flight()
 	_test_quality()
+	_test_win_ko()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	RenderAnim.debug_checks = false
