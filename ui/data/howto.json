@@ -39,10 +39,10 @@
         { "note": "kbd_p2", "col": 1, "text": "Player 2: arrows, Enter, comma, period, slash, and 7 8 9 0." }
       ],
       "touch_items": [
-        { "icon": "touch_move", "col": 0, "text": "Left thumb: fly." },
-        { "icon": "touch_attack", "col": 0, "text": "Right thumb: light, heavy, signature." },
-        { "icon": "touch_hold", "col": 1, "text": "Left edge: Charge and Special." },
-        { "icon": "stance_0", "col": 1, "text": "Stance ring: tap a stance." },
+        { "icon": "touch_move", "col": 0, "text": "Left thumb: the stick. Flick to dodge, push out to sprint." },
+        { "icon": "touch_attack", "col": 0, "text": "Attack: tap light, hold heavy, swipe up for your signature." },
+        { "icon": "stance_1", "col": 1, "text": "Guard: hold." },
+        { "icon": "touch_hold", "col": 1, "text": "Power: hold to charge." },
         { "icon": "touch_pause", "col": 1, "text": "Pause: the top button." }
       ]
     },

@@ -1155,6 +1155,12 @@ func _howto_rules() -> void:
 					var dbox := Rect2((dots[0] as Vector2) - Vector2(dr, dr), Vector2((dots[dots.size() - 1] as Vector2).x - (dots[0] as Vector2).x + 2.0 * dr, 2.0 * dr))
 					_ok(dots.size() == n and ((dots[1] as Vector2).x - (dots[0] as Vector2).x) >= 2.0 * dr + 1.0 and not dbox.intersects(p["next"]) and (pg == 0 or not dbox.intersects(p["back"])) and card.encloses(dbox), "%s: the page dots do not overlap each other or the buttons" % tag)
 	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# The touch page describes touch Simple (the stick, Attack, Guard and Power) and nothing from the retired stance ring.
+	var touch_text := ""
+	for it in UiData.howto()["pages"][1]["touch_items"]:
+		touch_text += " " + str(it.get("text", ""))
+	var tl: String = touch_text.to_lower()
+	_ok(tl.contains("flick to dodge") and tl.contains("push out to sprint") and tl.contains("tap light") and tl.contains("hold heavy") and tl.contains("swipe up") and tl.contains("signature") and tl.contains("guard: hold") and tl.contains("power: hold to charge") and not tl.contains("stance ring") and not tl.contains("left edge"), "howto: the touch page describes the stick (flick, sprint), Attack (tap, hold, swipe up), Guard and Power, and no stance ring")
 	# Keyboard pages show the second player's keys; pads do not.
 	var pk: Dictionary = UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "kbd", 0)
 	var px: Dictionary = UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "xbox", 0)
