@@ -4,7 +4,7 @@ extends Control
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
 ## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress|controls   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch[=press|ready] --left --device=xbox --howto[=PAGE] --ko --feedback[=copied|review]
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch[=press|ready] --left --device=xbox --preset=arena|brawler|simple-pad|kb-solo|kb-shared-p2 --ready --stance=N --target=github|mailto|form --howto[=PAGE] --ko --feedback[=copied|review]
 ## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
@@ -83,6 +83,22 @@ func _ready() -> void:
 		hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": str(args["touch"]) == "press"})
 	if args.has("device"):
 		hud.set_device(0, str(args["device"]))
+	if args.has("preset"):
+		# A control layout: a pad preset (arena, brawler, simple-pad) or any layout id (kb-solo, kb-shared-p2) forced onto the legend and the card.
+		if ["arena", "brawler", "simple-pad"].has(str(args["preset"])):
+			hud.set_option("pad_preset", str(args["preset"]))
+		else:
+			hud.set_option("control_scheme", str(args["preset"]))
+	if args.has("ready"):
+		hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	if args.has("stance"):
+		hud.consume({"type": "stance_set", "actor": 0, "stance": int(args["stance"])})
+	if args.has("target"):
+		# A send target for the feedback screenshots (the shipped data has none yet): github, mailto or form, with a sample address.
+		var tg: Dictionary = UiData.send()["_targets"]
+		tg["mailto"]["to"] = "team@example.test"
+		tg["form"]["url"] = "https://forms.example.test/f?t={title}&b={body}"
+		UiFeedback.target_override = str(args["target"])
 	if args.has("ko"):
 		hud.consume({"type": "ko", "winner": 0, "loser": 1})
 		for i in range(240):

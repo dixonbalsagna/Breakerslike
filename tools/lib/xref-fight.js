@@ -245,6 +245,11 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
   if (isObj(profiles) && isObj(profiles.profiles) && typeof profiles.default === 'string' && !(profiles.default in profiles.profiles)) {
     err('data/anim/profiles.json', '/default', 'anim-profile', 'default profile "' + profiles.default + '" is not in profiles (' + Object.keys(profiles.profiles).join(', ') + ')');
   }
+  if (isObj(profiles) && isObj(profiles.by_part) && isObj(profiles.profiles)) {
+    for (const [part, p] of Object.entries(profiles.by_part)) {
+      if (!part.startsWith('_') && !(p in profiles.profiles)) err('data/anim/profiles.json', '/by_part/' + esc(part), 'anim-by-part', 'part class "' + part + '" uses profile "' + p + '", which is not in profiles (' + Object.keys(profiles.profiles).join(', ') + ')');
+    }
+  }
   if (isObj(animCues) && isObj(animCues.cues)) {
     const fin2 = get('data/combat/finishers.json');
     const vocab = new Set(isObj(fin2) && isObj(fin2.cues) ? plainKeys(fin2.cues) : []);

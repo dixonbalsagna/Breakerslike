@@ -5526,6 +5526,100 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-keysets-limb-enum",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.jab/limb": "elbow"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/keysets/strike.jab/limb"
+      }
+    },
+    {
+      "id": "anim-keysets-target-shape",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.jab/target": "Head!"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/keysets/strike.jab/target"
+      }
+    },
+    {
+      "id": "anim-keysets-target-limb-optional",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "del": [
+            "/keysets/strike.jab/target",
+            "/keysets/strike.jab/limb"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-profiles-by-part-unknown-class",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/by_part/idle": "snappy"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/by_part/idle"
+      }
+    },
+    {
+      "id": "anim-profiles-by-part-unknown-profile",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/by_part/heavy": "jerky"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-by-part",
+        "pointer": "/by_part/heavy"
+      }
+    },
+    {
+      "id": "anim-profiles-by-part-value-shape",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/by_part/light": "Snappy"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/by_part/light"
+      }
     }
   ],
   "text": [

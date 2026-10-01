@@ -1,6 +1,25 @@
 {
   "schema": 1,
-  "note": "The feedback panel's Send step (docs/ui/hud-spec.md section 20): SEND opens a review of exactly what will go into a prefilled GitHub issue, and OPEN ISSUE opens it. Nothing is sent until the player submits the issue on GitHub. The issue is public, and the review says so. issue.repo is the repository's issues page; issue.limit is the longest link we open (browsers and proxies cut long ones); a report too long for it is copied to the clipboard instead and the issue opens with a short body that asks to paste it.",
+  "note": "The feedback panel's Send step (docs/ui/hud-spec.md section 20). SEND opens a review of exactly what will go out, and the open button hands it to the player's browser or email app; nothing is sent until the player submits it there. WHERE it goes is `_target`: none (the default: SEND is hidden and only COPY REPORT shows), mailto (a private email to `_targets.mailto.to`), form (a private form at `_targets.form.url`, with {title} and {body} where the text goes) or github (a PUBLIC issue on issue.repo, the review says so). The EP gives the address when Orb picks it. Each target carries its own words (open, review, opened) and its own link limit (browsers and proxies cut long ones); a report too long for it is copied to the clipboard instead and the link opens with a short body that asks to paste it. The github target's words are the top-level buttons.open, review and opened below. Keys starting with an underscore are UI's own (the schema ignores them).",
+  "_target": "none",
+  "_targets": {
+    "mailto": {
+      "to": "",
+      "limit": 1800,
+      "short_body": "Playtest report copied to the clipboard. Paste it here:",
+      "open": "OPEN EMAIL",
+      "review": "OPEN EMAIL opens your email app with the text below, addressed to the team. Only the team sees it. Nothing is sent until you press send there. Please leave out anything personal.",
+      "opened": "Your email app opened. The report is also copied: paste it if the message is empty."
+    },
+    "form": {
+      "url": "",
+      "limit": 3000,
+      "short_body": "Playtest report copied to the clipboard. Paste it here:",
+      "open": "OPEN FORM",
+      "review": "OPEN FORM opens a private feedback form with the text below. Only the team sees it. Nothing is sent until you submit the form. Please leave out anything personal.",
+      "opened": "The form opened in a new tab. The report is also copied: paste it if the form is empty."
+    }
+  },
   "issue": {
     "repo": "https://github.com/dixonbalsagna/orb-combat-ex",
     "limit": 3000,
@@ -12,5 +31,5 @@
   "review_title": "Review before sending",
   "review": "OPEN ISSUE opens a public GitHub issue with the text below. Nothing is sent until you submit it there. Please leave out anything personal.",
   "opened": "GitHub opened in a new tab. The report is also copied: paste it if the page is empty.",
-  "too_long": "This report is too long for a link, so it is copied. Paste it into the issue that opens."
+  "too_long": "This report is too long for a link, so it is copied. Paste it into the page that opens."
 }

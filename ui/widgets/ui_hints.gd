@@ -39,49 +39,81 @@ static func visible_alpha(m: UiFighterModel, mode: String, prompts_on: bool, t: 
 	return clampf((intro - t) / 2.0, 0.0, 1.0)
 
 
-## The rows to show now, from the named scheme (falling back to "today"): an action or group and a word. Rows marked only_when_avail
-## appear only while the fighter can use that action.
+## The layout id this fighter plays on: touch-simple on touch; on a keyboard kb-solo, or kb-shared-p1 and kb-shared-p2 when two humans
+## share it; on a pad the pad_preset option (arena, brawler or simple-pad). `o["control_scheme"]` overrides it (a test, or a preview).
+static func preset_id(m: UiFighterModel, o: Dictionary) -> String:
+	var forced: String = str(o.get("control_scheme", ""))
+	if forced != "":
+		return forced
+	if bool(o.get("touch", false)):
+		return "touch-simple"
+	if m.device == "" or m.device == "kbd":
+		if int(o.get("humans", 1)) >= 2:
+			return "kb-shared-p%d" % (clampi(m.slot, 0, 1) + 1)
+		return "kb-solo"
+	return str(o.get("pad_preset", "arena"))
+
+
+## The rows to show now, from the layout's scheme (falling back to "today"): an action or group and a word. A row for an action the
+## layout does not bind is skipped, and a row marked only_when_avail appears only while the fighter can use that action.
 static func rows(m: UiFighterModel, scheme: String) -> Array:
 	var schemes: Dictionary = data().get("schemes", {})
 	var sc: Dictionary = schemes.get(scheme, schemes.get("today", {}))
 	var out: Array = []
 	for r in sc.get("rows", []):
+		var acts: Array = r["actions"] if r.has("actions") else [r.get("action", "")]
+		if not UiGlyphs.bound(scheme, str(acts[0])):
+			continue
 		if bool(r.get("only_when_avail", false)):
 			var a: String = str(r.get("action", ""))
 			if not (m.avail.has(a) and bool(m.avail[a])):
 				continue
-		var acts: Array = r["actions"] if r.has("actions") else [r.get("action", "")]
 		out.append({"acts": acts, "label": str(r.get("label", ""))})
 	return out
 
 
-## The layout of the legend in `rect`: as many rows as fit, in order. Returns {rows: [{acts, label, y}], label_x, gh, fs, row_h, box}.
+## The glyph specs of one row, flat: each action's binding in the layout, a power group (Power then its face buttons) joined by a plus.
+static func row_specs(m: UiFighterModel, acts: Array, preset: String, style: String) -> Array:
+	var fam: String = m.device if m.device != "" else "kbd"
+	return UiGlyphs.group_specs(acts, fam, m.slot, style, preset)
+
+
+static func _row_width(specs: Array, gh: float, gap: float) -> float:
+	var w := 0.0
+	for sp in specs:
+		w += UiGlyphs.width_spec(sp, gh) + gap * 0.4
+	return w
+
+
+## The layout of the legend in `rect`: as many rows as fit, in order. Returns {rows: [{specs, label, y}], label_x, gh, fs, row_h, box}.
 static func plan(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Dictionary:
 	var out := {"rows": [], "label_x": 0.0, "gh": 0.0, "fs": 0, "row_h": 0.0, "box": Rect2()}
 	if rect.size.y <= 0.0 or rect.size.x <= 0.0:
 		return out
-	var fam: String = m.device if m.device != "" else "kbd"
+	var preset: String = preset_id(m, o)
 	var style: String = str(o.get("glyph_style", "neutral"))
 	var fs: int = UiText.px(18.0, s)
 	var gh: float = maxf(24.0 * s, 20.0)
 	var row_h: float = maxf(gh, float(fs) * 1.4) + 4.0 * s
 	var pad: float = maxf(8.0 * s, 5.0)
 	var cap: int = int(floor((rect.size.y - pad * 2.0) / row_h))
-	var all: Array = rows(m, str(o.get("scheme", "today")))
+	var all: Array = rows(m, preset)
 	var shown: Array = all.slice(0, maxi(cap, 0))
 	if shown.is_empty():
 		return out
 	var gap: float = maxf(8.0 * s, 5.0)
 	var maxw: float = 0.0
+	var full: Array = []
 	for r in shown:
-		var w := 0.0
-		for a in r["acts"]:
-			w += UiGlyphs.width(str(a), fam, m.slot, gh, style) + gap * 0.4
-		maxw = maxf(maxw, w)
+		var specs: Array = row_specs(m, r["acts"], preset, style)
+		full.append(specs)
+		maxw = maxf(maxw, _row_width(specs, gh, gap))
+	# A row too wide for the column (a long chord) would crowd the words: cap the glyph block at 60% of the column.
+	maxw = minf(maxw, rect.size.x * 0.6)
 	var y: float = rect.position.y + pad
 	var placed: Array = []
-	for r in shown:
-		placed.append({"acts": r["acts"], "label": r["label"], "y": y + row_h * 0.5})
+	for i in range(shown.size()):
+		placed.append({"specs": full[i], "label": shown[i]["label"], "y": y + row_h * 0.5})
 		y += row_h
 	out["rows"] = placed
 	out["label_x"] = rect.position.x + pad + maxw + gap
@@ -90,6 +122,7 @@ static func plan(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Dic
 	out["row_h"] = row_h
 	out["gap"] = gap
 	out["pad"] = pad
+	out["preset"] = preset
 	out["box"] = Rect2(rect.position, Vector2(minf(rect.size.x, (out["label_x"] as float) - rect.position.x + _widest_label(placed, fs) + pad), float(placed.size()) * row_h + pad * 2.0))
 	return out
 
@@ -101,15 +134,14 @@ static func _widest_label(placed: Array, fs: int) -> float:
 	return w
 
 
-static func sig(m: UiFighterModel, alpha: float, scheme: String) -> Array:
-	return [m.device, m.slot, int(alpha * 10.0), scheme, m.avail["special"], m.avail["transform"], m.left_side]
+static func sig(m: UiFighterModel, alpha: float, preset: String) -> Array:
+	return [m.device, m.slot, int(alpha * 10.0), preset, m.avail["transform"], m.left_side]
 
 
 static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Dictionary, alpha: float) -> void:
 	var p: Dictionary = plan(m, rect, s, o)
 	if p["rows"].is_empty() or alpha <= 0.01:
 		return
-	var fam: String = m.device if m.device != "" else "kbd"
 	var style: String = str(o.get("glyph_style", "neutral"))
 	var gh: float = p["gh"]
 	var fs: int = p["fs"]
@@ -122,8 +154,8 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Di
 	UiIcons.rrect(ci, Rect2(bx, box.position.y, box.size.x, box.size.y), 8.0 * s, Color(UiLook.col(UiLook.SCRIM), 0.5 * alpha), Color(UiLook.col(UiLook.EDGE), 0.25 * alpha), 1.2)
 	for r in p["rows"]:
 		var x: float = rect.position.x + float(p["pad"]) + shift
-		for a in r["acts"]:
-			var w: float = UiGlyphs.draw(ci, str(a), fam, m.slot, Vector2(x, float(r["y"])), gh, alpha, true, style)
+		for sp in r["specs"]:
+			var w: float = UiGlyphs.draw_spec(ci, sp, Vector2(x, float(r["y"])), gh, alpha, true)
 			x += w + gap * 0.4
 		UiText.draw(ci, str(r["label"]), Vector2(float(p["label_x"]) + shift, float(r["y"]) - UiText.height(fs) * 0.5 + UiText.ascent(fs)), fs, Color(UiLook.col(UiLook.INK), alpha), -1)
 	UiText.no_outline = false

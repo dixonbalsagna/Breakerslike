@@ -1,7 +1,7 @@
 class_name UiHowto
 extends RefCounted
 ## The How to play card (docs/ui/hud-spec.md section 17): three short pages, shown on the first run and from the pause menu.
-##   1. You choose. The fight follows.   (the core idea and the four stances)
+##   1. What you control                 (the core idea and the four held states: press, guard, dodge, escape)
 ##   2. Controls                         (the keys, pad glyphs or touch controls of the player's own device)
 ##   3. Reading the fight                (the few HUD reads: crown, cards, brink, windows, finisher rings, toll, strip)
 ## Every word is data (ui/data/howto.json). `plan` is pure geometry, so hud_check can prove that every page fits at every size and
@@ -18,7 +18,7 @@ static func page_count() -> int:
 
 ## The geometry of page `page_i` for a viewport: {card, title, close, back, next, dots, items[], cs, fits, tm, ...}. `device` is the
 ## glyph family ("kbd", "xbox", ...), `slot` the player's slot (P1 or P2 keys), `touch` true for the touch controls page.
-static func plan(vp: Vector2, s: float, dp: float, touch: bool, page_i: int, device: String = "kbd", slot: int = 0) -> Dictionary:
+static func plan(vp: Vector2, s: float, dp: float, touch: bool, page_i: int, device: String = "kbd", slot: int = 0, preset: String = "", style: String = "neutral") -> Dictionary:
 	var data: Dictionary = UiData.howto()
 	var pages: Array = data.get("pages", [])
 	var n: int = pages.size()
@@ -39,7 +39,7 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, page_i: int, dev
 		need_h = 0.0
 		all_fit = true
 		for k in range(n):
-			var r: Dictionary = _layout(card, cs, tm, touch, pages[k], k, n, device, slot, data)
+			var r: Dictionary = _layout(card, cs, tm, touch, pages[k], k, n, device, slot, data, preset, style)
 			need_h = maxf(need_h, float(r["need_h"]))
 			all_fit = all_fit and bool(r["fits"])
 		if all_fit or cs <= cs_min + 0.001:
@@ -48,7 +48,7 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, page_i: int, dev
 	# The card is as tall as its tallest page needs (centred), not the whole screen.
 	var h2: float = minf(ch, maxf(need_h, 240.0 * cs))
 	card = Rect2(card.position.x, (vp.y - h2) * 0.5, cw, h2)
-	var out: Dictionary = _layout(card, cs, tm, touch, page, pi, n, device, slot, data)
+	var out: Dictionary = _layout(card, cs, tm, touch, page, pi, n, device, slot, data, preset, style)
 	out["fits"] = all_fit
 	out["page"] = pi
 	out["pages"] = n
@@ -56,7 +56,7 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, page_i: int, dev
 	return out
 
 
-static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictionary, pi: int, n: int, device: String, slot: int, data: Dictionary) -> Dictionary:
+static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictionary, pi: int, n: int, device: String, slot: int, data: Dictionary, preset: String = "", style: String = "neutral") -> Dictionary:
 	var pad: float = maxf(PAGE_PAD * cs, 10.0)
 	var fs_title: int = UiText.px(36.0, cs)
 	var fs_body: int = UiText.px(24.0, cs)
@@ -99,8 +99,13 @@ static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictio
 	name_w += gap
 	for it in items:
 		var col: int = mini(int(it.get("col", 0)), cols - 1) if cols == 2 else 0
-		if it.has("note") and str(it["note"]) == "kbd_p2" and device != "kbd":
+		if it.has("note") and str(it["note"]) == "kbd_p2" and not preset.begins_with("kb-shared"):
 			continue
+		if (it.has("action") or it.has("actions")) and not touch:
+			# A row for an action the player's layout does not bind is left out.
+			var first: String = str((it["actions"] as Array)[0]) if it.has("actions") else str(it["action"])
+			if not UiGlyphs.bound(preset, first):
+				continue
 		var x: float = body.position.x + float(col) * (colw + gap)
 		var y: float = body.position.y + float(heights[col])
 		var rec: Dictionary = {"item": it, "col": col, "fs": fs_body, "fs_small": fs_small}
@@ -125,15 +130,17 @@ static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictio
 		elif it.has("action") or it.has("actions"):
 			var acts: Array = it["actions"] if it.has("actions") else [it["action"]]
 			var gh: float = isz
+			var specs: Array = UiGlyphs.group_specs(acts, device, slot, style, preset)
 			var gw_total: float = 0.0
-			for a in acts:
-				gw_total += UiGlyphs.width(str(a), device, slot, gh) + gh * 0.25
+			for sp in specs:
+				gw_total += UiGlyphs.width_spec(sp, gh) + gh * 0.08
 			var label_x: float = x + maxf(gw_total, isz * 2.2) + gap
 			var lines_a: PackedStringArray = UiText.wrap(text, fs_body, maxf(colw - (label_x - x), 20.0))
 			var ha: float = maxf(isz, float(lines_a.size()) * lh) + 2.0
 			rec["rect"] = Rect2(x, y, colw, ha)
 			rec["kind"] = "action"
 			rec["acts"] = acts
+			rec["specs"] = specs
 			rec["gh"] = gh
 			rec["label_x"] = label_x
 			rec["lines"] = lines_a
@@ -172,8 +179,8 @@ static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictio
 
 
 ## The redraw key: changes only with the page, the size, the device and the touch mode.
-static func sig(vp: Vector2, page_i: int, device: String, slot: int, touch: bool, dp: float, s: float) -> Array:
-	return [int(vp.x), int(vp.y), page_i, device, slot, touch, int(dp * 100.0), int(s * 100.0)]
+static func sig(vp: Vector2, page_i: int, device: String, slot: int, touch: bool, dp: float, s: float, preset: String = "") -> Array:
+	return [int(vp.x), int(vp.y), page_i, device, slot, touch, int(dp * 100.0), int(s * 100.0), preset]
 
 
 # --- Drawing -------------------------------------------------------------------------------------------------------------------
@@ -225,9 +232,9 @@ static func draw(ci: CanvasItem, p: Dictionary, device: String, slot: int, style
 			"action":
 				var gh: float = rec["gh"]
 				var gx: float = r.position.x
-				for a in rec["acts"]:
-					var w: float = UiGlyphs.draw(ci, str(a), device, slot, Vector2(gx, r.position.y + gh * 0.5), gh, 1.0, true, style)
-					gx += w + gh * 0.25
+				for sp in rec["specs"]:
+					var w: float = UiGlyphs.draw_spec(ci, sp, Vector2(gx, r.position.y + gh * 0.5), gh, 1.0, true)
+					gx += w + gh * 0.08
 				var ly: float = r.position.y + maxf(0.0, (r.size.y - float(rec["lines"].size()) * lh) * 0.5) + UiText.ascent(fs_body) + (lh - UiText.height(fs_body)) * 0.5
 				for ln in rec["lines"]:
 					UiText.draw(ci, ln, Vector2(rec["label_x"], ly), fs_body, ink, -1)

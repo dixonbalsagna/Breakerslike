@@ -57,6 +57,20 @@
               },
               "additionalProperties": false
             }
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[a-z][a-z_]*$",
+            "description": "Where the strike lands on the opponent (head, chest, gut ...)."
+          },
+          "limb": {
+            "enum": [
+              "hand_r",
+              "hand_l",
+              "foot_r",
+              "foot_l"
+            ],
+            "description": "The limb that strikes (a pose hand or foot field)."
           }
         },
         "additionalProperties": false,

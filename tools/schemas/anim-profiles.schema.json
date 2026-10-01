@@ -117,6 +117,40 @@
         "minimum": 0,
         "maximum": 1
       }
+    },
+    "by_part": {
+      "type": "object",
+      "description": "The timing profile per part class (Orb's mix: snappy for light blows, rushes and chains; fluid for heavy and power blows and launches). Each value is a profile in `profiles` (checked by tools/lib/xref-fight.js, anim-profile).",
+      "properties": {
+        "light": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "rush": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "chain": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "heavy": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "power": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "launch": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     }
   },
   "additionalProperties": false,

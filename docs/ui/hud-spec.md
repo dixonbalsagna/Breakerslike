@@ -480,6 +480,8 @@ Orb's friend (Playtest 2): on mobile, "make all the touch targets and text respo
 
 ## 17. The How to play card
 
+> **Section 25 (2026-10-01) replaces the Controls page and the stance wording of page 1**: the rows follow the player's own layout and the stances are the held states.
+
 Orb's friend: "I'm not sure what I'm supposed to do in the game... some kind of tutorial or a card explaining how to play would be good." A short card, shown on the first run and again from the pause menu and with F1.
 
 **Three pages** (`ui/data/howto.json`, every word data; `UiHowto` draws them):
@@ -585,6 +587,8 @@ For friends' playtests (Orb said yes): a small panel that turns a tester's thoug
 
 ![The report as a DOM textarea over the box, with the listener's copy (a page test with a mock canvas; see the note in the report)](img/feedback-web-dom.png)
 
+**SEND goes to a private target now (section 25.4); the paragraph below describes the GitHub target, which is one option.**
+
 **SEND: a prefilled GitHub issue.** The write state has a third button, SEND. It does not send anything: it opens a **review** of exactly what will go in the issue (the same report, in the read-only box, with "OPEN ISSUE opens a public GitHub issue with the text below. Nothing is sent until you submit it there. Please leave out anything personal."). Its buttons are OPEN ISSUE, COPY REPORT and BACK.
 
 ![The review before sending](img/feedback-review.png)
@@ -629,6 +633,8 @@ World's districts slice (D1) raises the planet's population from 390 to about 1,
 `hud_check` (`_toll_rules`) proves, at nine sizes from 360 by 640 to 2400 by 1080 (dp 2.6), that `1799 / 1800`, `1234` structures and `1999` craters fit the chip and the type stays at or above the floor. The wound-card and silhouette text carry no counts. Nothing else in the HUD prints a civilian number: the planet strip marks fallen buildings as ticks, not digits.
 
 ## 22. Control hints and the YOU label
+
+> **Superseded by section 25 (2026-10-01)** for the keys and the schemes: the stances, Dash and Charge are gone, and the legend follows the player's own layout. The timing, the YOU marker and the options below still hold.
 
 Friends could not tell which fighter was theirs, and could not find the controls. Two small additions, for today's controls and ready for the new layouts (ADR 0008):
 
@@ -678,3 +684,38 @@ Controls' bridge (`docs/controls/touch-bridge.md`, `sim/input/touch.gd`) plays a
 **State from the host.** `UiHud.touch_state_fn` is a `Callable` returning `{attack: {down, hold 0..1}, guard: {down}, power: {down}, stick: {active, base, thumb, sprint}, transform: {down}}`. Without it every button is drawn idle. `SimTouch` already exposes `guard`, `power` and `sprint`; Attack's hold progress and the stick's base and thumb points are in its private touch table, so the host (or a small public accessor on SimTouch) has to pass them.
 
 `hud_check` proves, at eleven sizes in both orientations and both hands (a 2400 by 1080 phone at 2.6x down to a 390 by 844 canvas): the layout comes from SimTouch with the three circles; each button is on screen and at least 48 dp across; no two overlap; none overlaps the plates, the toll, the pause button, the pill, the read slot, the ring map, the strip, the cards, the bark lane or the fight; portrait's reserve holds them; the fight keeps its middle; SimTouch hit-tests each button where it is drawn and the pause button is under none; the layer draws from the host's state, costs no redraws idle and none for a thumb that moves under 2 px; Transform appears only when available; pause, feedback and transform are HUD targets; left-handed mirrors. On a real phone (at least 1.5 dp and 380 dp tall) the buttons always leave room for a wound card a side.
+
+## 25. Controls' I2c vocabulary (2026-10-01)
+
+Controls' I2c (`docs/controls/i2c.md`, commit a87f624) replaced the stances, Dash and Charge with held guard, dodge and sprint, a power button, a mode button, a context button and a transform control, in per-layout presets (`data/input/layouts.json`): `kb-solo`, `kb-shared-p1`, `kb-shared-p2`, the pad presets `arena`, `brawler` and `simple-pad`, and touch Simple. The HUD now follows that data instead of a table of its own.
+
+### 25.1 The glyph of an action is the layout's own binding
+`UiGlyphs.specs_for(action, family, slot, style, preset)` reads the preset's base-layer binding: a single control in preference to a chord (R, not Space + E, for Transform on the solo keyboard), four axis keys as one cap (`WASD`, `IJKL`), a chord as its controls joined by a plus (`LT + RT`), and the power layer for the specials (`E + J K I`). `UiGlyphs.bound(preset, action)` says whether a layout binds an action (Simple has no heavy, mode or specials key). The pad faces keep the neutral position diamond and letter; no maker's icons. `glyphs.json` keeps the per-device table as the fallback for an action no preset binds and for the keyboard slot labels; its action set is now move, light, heavy, signature, guard, dodge, sprint, power, mode, context, specials, special1 to 3, transform and pause.
+
+### 25.2 The legend
+One scheme per layout in `hints.json`, named by the layout id (`kb-solo`, `kb-shared-p1`, `kb-shared-p2`, `arena`, `brawler`, `simple-pad`; `today` is the fallback). `UiHints.preset_id` picks it: touch-simple on touch; on a keyboard kb-solo, or kb-shared-p1 and kb-shared-p2 when two humans share it; on a pad the `pad_preset` option (`arena` by default; the host keeps it equal to `SimInputHub.pad_preset`). The option `control_scheme` ("" by default) forces a layout for a preview or a test. Rows: Fly, Light, Heavy, Signature, Guard (hold), Dodge and sprint, Power (hold), Mode, Context, Specials (Power plus the three face keys) and Transform only while a form is ready; a row the layout does not bind is skipped. Simple has eight rows and no Heavy, Mode or Specials.
+
+![The solo keyboard legend, Guard held](img/hints-desktop.png)
+![The Arena pad legend, a form ready](img/hints-arena.png)
+![The Simple pad legend, Dodge held](img/hints-simple.png)
+
+### 25.3 The prompt row and the How to play card
+- **No stance keys.** The row shows the four held states, PRESS, GUARD, DODGE and ESCAPE, with the current one lit: that is the state the fighter is in now, driven by the held controls. GUARD and DODGE carry the glyph of the control that holds them in the player's layout (Shift and Space, LB and LT). PRESS is the rest state and ESCAPE is dodge held while moving away, so neither has a key. The Transform hold chip shows the layout's transform control and a ring that fills while it is held; the Special chip is gone. On touch the row is still empty (the buttons are on screen).
+- **Page 1** says "fly, dodge, guard, hit light or heavy, hold power, call your signature, transform" and lists the four states ("Hold guard", "Tap dodge", "Hold dodge and move away").
+- **Page 2, Controls**, keeps one concise list per device, drawn from the first human's layout: Fly, Light, Heavy, Signature, Context, Mode, Guard, Dodge (tap) and sprint (hold), Power, Specials, Transform, Pause; a row the layout does not bind is left out (Simple shows six lines), and a shared keyboard adds one line saying the other player has the right-hand keys. Touch lists the stick, Attack, Guard, Power, Transform (the button appears when a form is ready) and Pause.
+
+![Controls page, keyboard](img/howto-controls-kb.png)
+![Controls page, pad (Simple)](img/howto-controls-simple.png)
+
+### 25.4 Feedback SEND goes somewhere private
+A public GitHub issue is the wrong default for playtest feedback. `ui/data/send.json` now has a target: `_target` is `none` (the shipped default), `mailto`, `form` or `github`.
+- **none**: the SEND button is hidden and nothing else changes: COPY REPORT, the tags, the note and CLOSE are as before (a quiet fallback, not a dead button).
+- **mailto**: `_targets.mailto.to` is the address; the link is `mailto:ADDRESS?subject=TITLE&body=REPORT`, all percent-encoded, with a 1800-character limit. OPEN EMAIL opens the player's email app. The review says it is private and that nothing is sent until the player presses send.
+- **form**: `_targets.form.url` is a form address with `{title}` and `{body}` where the text goes (limit 3000); OPEN FORM.
+- **github**: the existing public-issue route (OPEN ISSUE, the review still says it is public), kept as one option.
+
+All targets share the same fallback: a report over the limit drops its Settings and Engine lines, then falls back to a short body that asks the player to paste, with the full report on the clipboard. The report is copied on every open. On the web the page-side listener opens a `mailto:` by navigating (a new tab for a web link). A target with no address is `none`, so the address can go in later without a code change: the EP gives it when Orb chooses.
+
+![The email review](img/feedback-review-mailto.png)
+
+`hud_check` covers the glyph bindings per layout (kb-solo, kb-shared-p2, arena, brawler, simple-pad), the legend rows and the layout picked, the Controls page rows per layout, the shared-keyboard note, SEND hidden with no target, and the mailto, form and GitHub links and reviews.

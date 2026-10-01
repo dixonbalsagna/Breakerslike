@@ -773,10 +773,21 @@ func _controls_rules() -> void:
 				if UiGlyphs.spec(act, fam, slot).is_empty() or str(UiGlyphs.spec(act, fam, slot).get("kind", "")) == "":
 					missing += 1
 	_ok(missing == 0 and fams.size() == 6, "glyphs: every action has an entry for every device family (%d missing)" % missing)
-	_ok(UiGlyphs.spec("light", "xbox", 0)["label"] == "W" and UiGlyphs.spec("signature", "switch", 0)["label"] == "E" and UiGlyphs.spec("dash", "ps", 0)["label"] == "S", "glyphs: the neutral style prints position letters (W, E, S), not a maker's letters")
+	_ok(UiGlyphs.spec("light", "xbox", 0)["label"] == "W" and UiGlyphs.spec("signature", "switch", 0)["label"] == "E" and UiGlyphs.spec("context", "ps", 0)["label"] == "S", "glyphs: the neutral style prints position letters (W, E, S), not a maker's letters")
 	_ok(UiGlyphs.spec("light", "xbox", 0, "family")["label"] == "X" and UiGlyphs.spec("signature", "switch", 0, "family")["label"] == "A", "glyphs: the family style exists in the data (X on xbox, A on switch) but is not the default")
-	_ok(UiGlyphs.spec("light", "kbd", 0)["label"] == "F" and UiGlyphs.spec("light", "kbd", 1)["label"] == "," and UiGlyphs.spec("charge", "kbd", 1)["label"] == ";", "glyphs: keyboard slots show their own keys")
-	_ok(UiGlyphs.spec("stance_press", "xbox", 0)["kind"] == "dpad" and UiGlyphs.spec("stance_press", "xbox", 0)["dir"] == "up", "glyphs: stances are D-pad shapes, never arrow characters")
+	_ok(UiGlyphs.spec("light", "kbd", 0)["label"] == "J" and UiGlyphs.spec("light", "kbd", 1)["label"] == "H" and UiGlyphs.spec("guard", "kbd", 1)["label"] == ";", "glyphs: keyboard slots show their own keys")
+	_ok(UiGlyphs.spec("dash", "xbox", 0).is_empty() and UiGlyphs.spec("stance_press", "xbox", 0).is_empty() and UiGlyphs.spec("charge", "kbd", 0).is_empty(), "glyphs: the retired actions (dash, stances, charge) have no glyph")
+	# The glyph of an action is the active layout's own binding (data/input/layouts.json): a single control in preference to a chord,
+	# four axis keys as one cap, a chord as its controls joined by a plus, and nothing for an action the layout does not bind.
+	var lbl := func(preset: String, action: String, fam: String) -> String:
+		var parts := PackedStringArray()
+		for sp in UiGlyphs.specs_for(action, fam, 0, "neutral", preset):
+			parts.append(str(sp.get("label", "")))
+		return " ".join(parts)
+	_ok(lbl.call("kb-solo", "move", "kbd") == "WASD" and lbl.call("kb-solo", "dodge", "kbd") == "Space" and lbl.call("kb-solo", "guard", "kbd") == "Shift" and lbl.call("kb-solo", "light", "kbd") == "J" and lbl.call("kb-solo", "transform", "kbd") == "R", "glyphs: kb-solo reads WASD, Space, Shift, J and R for transform (the single key beats the chord)")
+	_ok(lbl.call("kb-shared-p2", "move", "kbd") == "IJKL" and lbl.call("kb-shared-p2", "guard", "kbd") == ";" and lbl.call("kb-shared-p2", "dodge", "kbd") == "." and lbl.call("kb-shared-p2", "transform", "kbd") == ". + /", "glyphs: kb-shared-p2 reads IJKL, ; and . and the chord . + / for transform")
+	_ok(lbl.call("arena", "guard", "xbox") == "LB" and lbl.call("arena", "dodge", "xbox") == "LT" and lbl.call("arena", "transform", "xbox") == "LT + RT" and lbl.call("brawler", "light", "xbox") == "RB" and lbl.call("simple-pad", "transform", "xbox") == "RB", "glyphs: the pad presets read LB guard, LT dodge, the LT + RT chord (RB on Simple) for transform")
+	_ok(UiGlyphs.bound("brawler", "mode") and not UiGlyphs.bound("simple-pad", "mode") and not UiGlyphs.bound("simple-pad", "heavy") and UiGlyphs.bound("arena", "specials") and UiGlyphs.bound("", "mode"), "glyphs: a layout that does not bind an action is told apart (Simple has no mode or heavy key)")
 	# Options: hitstop_scale and the hot-seat layout are in the data.
 	var od: Dictionary = UiData.option_defaults()
 	_ok(is_equal_approx(float(od.get("hitstop_scale", -1.0)), 1.0) and od.get("hotseat_alt_layout") == false and od.get("show_prompts") == false, "options: hitstop_scale defaults to 1.0, the hot-seat layout to off, prompts to off")
@@ -1111,7 +1122,7 @@ func _howto_rules() -> void:
 	var p0text := ""
 	for it in (UiData.howto()["pages"] as Array)[0]["items"]:
 		p0text += " " + str(it.get("text", ""))
-	for verb in ["fly", "dash", "pick a stance", "light or heavy", "charge", "signature", "specials", "transform"]:
+	for verb in ["fly", "dodge", "guard", "light or heavy", "power", "signature", "transform"]:
 		_ok(p0text.to_lower().contains(verb), "howto: the first page says plainly that you control: %s" % verb)
 	var all_hints := ""
 	for k in UiData.reads()["hints"]:
@@ -1169,7 +1180,19 @@ func _howto_rules() -> void:
 			if rec["kind"] == "note":
 				return true
 		return false
-	_ok(has_note.call(pk) and not has_note.call(px), "howto: the keyboard page shows the second player's keys, a pad page does not")
+	var pks: Dictionary = UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "kbd", 1, "kb-shared-p2")
+	_ok(has_note.call(pks) and not has_note.call(pk) and not has_note.call(px), "howto: the controls page notes the shared keyboard (and only then)")
+	# The rows follow the layout: Simple has no mode or heavy row, the keyboard shows its own keys.
+	var row_texts := func(pl: Dictionary) -> Array:
+		var out: Array = []
+		for rec in pl["items"]:
+			if rec["kind"] == "action":
+				out.append(str((rec["item"] as Dictionary).get("text", "")))
+		return out
+	var rt_solo: Array = row_texts.call(UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "kbd", 0, "kb-solo"))
+	var rt_simple: Array = row_texts.call(UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "xbox", 0, "simple-pad"))
+	_ok(rt_solo.has("Heavy") and rt_solo.has("Mode") and rt_solo.has("Specials") and not rt_simple.has("Heavy") and not rt_simple.has("Mode") and not rt_simple.has("Specials") and rt_simple.has("Guard (hold)"), "howto: the controls page lists the actions the layout binds (Simple has no heavy, mode or specials row)")
+	_ok(rt_solo.size() >= 10 and rt_simple.size() >= 6, "howto: the controls page keeps its rows (%d keyboard, %d Simple)" % [rt_solo.size(), rt_simple.size()])
 	# The flow in the HUD.
 	UiPrefs.path = "user://ui_prefs_test.json"
 	if FileAccess.file_exists(UiPrefs.path):
@@ -1317,7 +1340,7 @@ func _reads_hud() -> void:
 	pm0.left_side = true
 	var chips: Array = UiPrompts.plan(pm0, hud.layout.prompts[0], hud.layout.s, {"touch": false, "prompts": false, "glyph_style": "neutral"})
 	var kinds: Array = chips.map(func(c): return c["kind"])
-	_ok(kinds.count("stance") == 4 and kinds.has("weight"), "reads: the stance ring has a weight mark beside the four stances")
+	_ok(kinds.count("stance") == 4 and kinds.has("weight"), "reads: the held-state row has a weight mark beside the four states")
 	var last_r: Rect2 = chips[chips.size() - 1]["rect"]
 	_ok(last_r.end.x <= hud.layout.prompts[0].end.x + 0.5, "reads: and it stays inside the column")
 	hud.queue_free()
@@ -1327,6 +1350,7 @@ func _reads_hud() -> void:
 ## The feedback panel: words, the report (no network, nothing personal), geometry at every size, the flow by mouse and touch, and the
 ## match-end button (docs/ui/hud-spec.md section 20).
 func _feedback_rules() -> void:
+	UiFeedback.target_override = "github"   # most of these exercise SEND; the targets themselves are tested near the end
 	var d: Dictionary = UiData.feedback()
 	var labels: Array = []
 	for t in d["tags"]:
@@ -1474,7 +1498,7 @@ func _feedback_rules() -> void:
 	_ok(hud.is_feedback_open(), "feedback: a game key does nothing to the open panel")
 	hud.hide_feedback()
 	# The web's clipboard bridge: the page-side code is there, and off the web every call is a harmless no-op.
-	for must in ["navigator.clipboard.writeText", "execCommand('copy')", "readonly", "pointerup", "createElement('textarea')", "__fbClose", "window.open(url, '_blank', 'noopener')", "openRect"]:
+	for must in ["navigator.clipboard.writeText", "execCommand('copy')", "readonly", "pointerup", "createElement('textarea')", "__fbClose", "window.open(url, '_blank', 'noopener')", "openRect", "mailto:"]:
 		_ok(UiWebClip.JS_INSTALL.contains(must), "feedback web: the page-side code has %s" % must)
 	_ok(not UiWebClip.available(), "feedback web: this headless run is not the web, so the bridge stays out of the way")
 	UiWebClip.install(func(): pass)
@@ -1521,6 +1545,42 @@ func _feedback_rules() -> void:
 	_ok(str(hud.feedback_plan()["note"]).contains("too long for a link"), "feedback send: and the review says the full report is copied")
 	hud.hide_feedback()
 	UiFeedback.opener = Callable()
+	# The send targets. With no target (the shipped default until an address is chosen) SEND is hidden and COPY REPORT stays.
+	UiFeedback.target_override = ""
+	_ok(UiFeedback.send_target() == "none", "feedback targets: the shipped data has no target yet (none)")
+	hud.show_feedback("pause")
+	pl = hud.feedback_plan()
+	_ok((pl["send"] as Rect2).size.y <= 0.0 and (pl["copy"] as Rect2).size.y > 0.0 and (pl["done"] as Rect2).size.y > 0.0 and bool(pl["fits"]) and hud.send_feedback().is_empty() and hud._fb_state == "write", "feedback targets: with no target the SEND button is hidden, COPY REPORT and CLOSE stay, and send does nothing")
+	hud.hide_feedback()
+	var sd0: Dictionary = UiData.send()
+	var tg: Dictionary = sd0["_targets"]
+	var keep_to: String = str(tg["mailto"]["to"])
+	var keep_form: String = str(tg["form"]["url"])
+	UiFeedback.target_override = "mailto"
+	_ok(UiFeedback.send_target() == "none", "feedback targets: a mailto with no address is still none")
+	tg["mailto"]["to"] = "team@example.test"
+	tg["form"]["url"] = "https://forms.example.test/f?t={title}&b={body}"
+	_ok(UiFeedback.send_target() == "mailto" and UiFeedback.send_is_private() and UiFeedback.target_word("open") == "OPEN EMAIL", "feedback targets: with an address the mailto target is on, private, and says OPEN EMAIL")
+	var mrep := "Build: x\nNotes:\nThe beam froze & a line"
+	var mu: Dictionary = UiFeedback.send_url(mrep, "Playtest: Bug")
+	_ok(str(mu["url"]).begins_with("mailto:team@example.test?subject=Playtest%3A%20Bug&body=") and not bool(mu["fallback"]) and str(mu["url"]).get_slice("&body=", 1).uri_decode() == mrep and str(mu["url"]).length() <= 1800, "feedback targets: the mailto link carries the address, a percent-encoded subject and the report as the body")
+	var mlong: Dictionary = UiFeedback.send_url("x".repeat(3000), "T")
+	_ok(bool(mlong["fallback"]) and str(mlong["url"]).length() <= 1800 and str(mlong["url"]).get_slice("&body=", 1).uri_decode().contains("clipboard"), "feedback targets: an email too long for its 1800-character limit opens with a short body that asks to paste")
+	hud.show_feedback("pause")
+	pl = hud.feedback_plan()
+	_ok((pl["send"] as Rect2).size.y > 0.0, "feedback targets: with an address SEND is back")
+	hud._unhandled_input(click.call((pl["send"] as Rect2).get_center()))
+	pl = hud.feedback_plan()
+	_ok(hud._fb_state == "review" and str(pl["note"]).contains("Only the team sees it") and not str(pl["note"]).contains("public") and not str(pl["note"]).contains("GitHub"), "feedback targets: the email review says it is private (and not that it is a public issue)")
+	hud.hide_feedback()
+	UiFeedback.target_override = "form"
+	var fu: Dictionary = UiFeedback.send_url(mrep, "T 1")
+	_ok(UiFeedback.send_target() == "form" and str(fu["url"]).begins_with("https://forms.example.test/f?t=T%201&b=") and str(fu["url"]).get_slice("&b=", 1).uri_decode() == mrep and UiFeedback.target_word("open") == "OPEN FORM", "feedback targets: the form link fills {title} and {body}")
+	UiFeedback.target_override = "github"
+	_ok(UiFeedback.send_target() == "github" and not UiFeedback.send_is_private() and UiFeedback.target_word("open") == "OPEN ISSUE" and str(UiFeedback.send_url(mrep, "T")["url"]).begins_with("https://github.com/"), "feedback targets: GitHub is one option, public, with OPEN ISSUE")
+	tg["mailto"]["to"] = keep_to
+	tg["form"]["url"] = keep_form
+	UiFeedback.target_override = "github"
 	# The title and link helpers on their own.
 	_ok(UiFeedback.issue_title([], "") == "Playtest: feedback" and UiFeedback.issue_title(["bug", "loved"], "").begins_with("Playtest: Bug, Loved it") and UiFeedback.issue_title(["bug"], "y".repeat(300)).length() <= 80, "feedback send: the title falls back to Playtest: feedback, lists the tags and stays under 80 characters")
 	var shorter: Dictionary = UiFeedback.issue_url("A\nSettings: a=on\nEngine: 4\nB", "T")
@@ -1528,6 +1588,7 @@ func _feedback_rules() -> void:
 	var trimmed: String = "Build: x\nSettings: " + "s".repeat(3400) + "\nEngine: 1\nNotes:\nhi"
 	var tr_issue: Dictionary = UiFeedback.issue_url(trimmed, "T")
 	_ok(not bool(tr_issue["fallback"]) and not str(tr_issue["url"]).uri_decode().contains("Settings:") and str(tr_issue["url"]).uri_decode().contains("hi"), "feedback send: a report only too long for its settings line drops that line and keeps the rest")
+	UiFeedback.target_override = ""
 	hud.set_density(2.6)
 	hud.set_option("touch_ui", true)
 	hud.advance(1.0 / 60.0)
@@ -1588,12 +1649,19 @@ func _hints_rules() -> void:
 	m.ai = true
 	_ok(UiHints.visible_alpha(m, "always", true, 0.0) == 0.0, "hints: an AI fighter never gets a legend")
 	m.ai = false
-	var rows0: Array = UiHints.rows(m, "today")
-	_ok(rows0.size() == 7, "hints: seven rows at first (fly, dash, light, heavy, signature, charge, stances)")
-	hub.consume({"type": "availability", "actor": 0, "action": "special", "available": true})
+	var rows0: Array = UiHints.rows(m, "kb-solo")
+	_ok(rows0.size() == 10, "hints: ten rows at first on a keyboard (fly, light, heavy, signature, guard, dodge, power, mode, context, specials)")
 	hub.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
-	_ok(UiHints.rows(m, "today").size() == 9, "hints: Special and Transform join the legend only while they are available")
-	_ok(UiHints.rows(m, "no_such_scheme").size() == 9, "hints: an unknown scheme falls back to today")
+	_ok(UiHints.rows(m, "kb-solo").size() == 11, "hints: Transform joins the legend only while a form is ready")
+	_ok(UiHints.rows(m, "no_such_scheme").size() == UiHints.rows(m, "today").size() and UiHints.rows(m, "today").size() == 11, "hints: an unknown scheme falls back to today (a layout is looked up by its own id)")
+	_ok(UiHints.rows(m, "simple-pad").size() == 8 and UiHints.rows(m, "arena").size() == 11 and UiHints.rows(m, "brawler").size() == 11, "hints: Simple's legend is shorter (no heavy, mode or specials) and Arena and Brawler show every row")
+	hub.consume({"type": "availability", "actor": 0, "action": "transform", "available": false})
+	var pid := func(dev: String, slot: int, o: Dictionary) -> String:
+		var mm := UiFighterModel.new()
+		mm.device = dev
+		mm.slot = slot
+		return UiHints.preset_id(mm, o)
+	_ok(pid.call("kbd", 0, {}) == "kb-solo" and pid.call("kbd", 0, {"humans": 2}) == "kb-shared-p1" and pid.call("kbd", 1, {"humans": 2}) == "kb-shared-p2" and pid.call("xbox", 0, {"pad_preset": "brawler"}) == "brawler" and pid.call("xbox", 0, {}) == "arena" and pid.call("kbd", 0, {"touch": true}) == "touch-simple" and pid.call("kbd", 0, {"control_scheme": "simple-pad"}) == "simple-pad", "hints: the layout comes from the device, how many humans share the keyboard, the pad preset and touch")
 	# Geometry: the legend sits in the column under the prompt row, clear of the fight, and not on touch or in portrait.
 	for cs in [[Vector2(1920, 1080), 1.0], [Vector2(1366, 768), 1.0], [Vector2(1280, 720), 1.0], [Vector2(2560, 1080), 1.0], [Vector2(1024, 576), 1.0]]:
 		var lay := UiLayout.new()
@@ -1603,7 +1671,7 @@ func _hints_rules() -> void:
 		var r0: Rect2 = lay.hints[0]
 		var view := Rect2(Vector2.ZERO, cs[0])
 		_ok(r0.size.y > 0.0 and view.encloses(r0) and not r0.intersects(lay.clear_zone) and not r0.intersects(lay.prompts[0]) and not r0.intersects(lay.bark[0]) and not r0.intersects(lay.cards[0]), "%s: the legend's room is in the column, clear of the fight, the prompt row, the cards and the bark lane" % tag)
-		var pl: Dictionary = UiHints.plan(m, r0, lay.s, {"glyph_style": "neutral", "scheme": "today"})
+		var pl: Dictionary = UiHints.plan(m, r0, lay.s, {"glyph_style": "neutral", "control_scheme": "kb-solo"})
 		var placed: Array = pl["rows"]
 		_ok(placed.size() >= 3 and (pl["box"] as Rect2).size.y <= r0.size.y + 0.5 and r0.encloses(pl["box"]), "%s: at least three rows fit and the legend stays inside its room (%d rows)" % [tag, placed.size()])
 		var lw := UiLayout.new()

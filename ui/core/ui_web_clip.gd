@@ -42,7 +42,9 @@ const JS_INSTALL := """
   };
   fb.open = function (url) {
     fb.openedAt = Date.now();
-    try { window.open(url, '_blank', 'noopener'); } catch (e) { }
+    try {
+      if (/^mailto:/i.test(url)) { window.location.href = url; } else { window.open(url, '_blank', 'noopener'); }
+    } catch (e) { }
   };
   fb.inside = function (r, ev) {
     if (!r) { return false; }

@@ -68,7 +68,7 @@ Add `--force` to redraw every layer every frame (the cost without caching), or `
 ## Responsive and touch, and the How to play card
 
 - `UiHud.set_density(dp)` (else detected), option `touch_ui`, `touch_rects()` and `touch_target_at(pos)`: see `docs/ui/hud-spec.md` section 16. Text is at least 12 dp on a dense screen, touch targets at least 48 dp. Demo: `--dp=2.6 --touch` with `--resolution 2400x1080`.
-- `show_howto(first_run, page)`, `hide_howto()`, `is_howto_open()`, `howto_seen()`, signals `howto_opened` and `howto_closed`; F1 toggles it. The host freezes the sim while it is open. Section 17. Demo: `--howto=0|1|2`, `--device=xbox`.
+- `show_howto(first_run, page)`, `hide_howto()`, `is_howto_open()`, `howto_seen()`, signals `howto_opened` and `howto_closed`; F1 toggles it. The host freezes the sim while it is open. Section 17. Demo: `--howto=0|1|2`, `--device=xbox`, `--preset=arena|brawler|simple-pad|kb-solo|kb-shared-p2` (the layout the legend and the card describe), `--ready` (a form is ready), `--stance=N`, `--target=github|mailto|form` (a send target for the feedback shots).
 
 ## Q4 reads (docs/ui/hud-spec.md sections 18 and 19)
 

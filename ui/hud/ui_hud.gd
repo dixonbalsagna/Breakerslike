@@ -45,7 +45,8 @@ var opts: Dictionary = {
 	"hitstop_scale": 1.0,      # Controls' accessibility option, 0.5 to 1.0; the HUD only carries it (see ui/data/options.json)
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
 	"control_hints": "auto",   # the legend of the player's controls: auto (match start and first matches), always, off
-	"control_scheme": "today", # which scheme of ui/data/hints.json the legend shows; Controls' new layouts are more schemes (ADR 0008)
+	"control_scheme": "",      # "" = the scheme of the player's own layout (ui/data/hints.json); a layout id forces one (a preview or a test)
+	"pad_preset": "arena",     # the pad layout in use (arena, brawler or simple-pad); the host keeps it equal to SimInputHub.pad_preset
 	"match_end_feedback": true, # the SEND FEEDBACK pill after a KO; the host turns it off if its own results screen has the button
 	"keep_hints": false,       # accessibility: a tutorial hint stays up after its beat is done, until the next hint
 	"left_handed": false,      # touch: the buttons on the left, the stick on the right (SimTouch mirrors its layout)
@@ -349,7 +350,9 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"glyph_style": str(opts["glyph_style"]),
 		"touch": bool(opts["touch_ui"]),
 		"touch_grid": layout.touch_grid,
-		"scheme": str(opts["control_scheme"]),
+		"control_scheme": str(opts["control_scheme"]),
+		"pad_preset": str(opts["pad_preset"]),
+		"humans": _humans(),
 	}
 
 
@@ -457,7 +460,7 @@ func _update_layers() -> void:
 				var an: Dictionary = anchor_fn.call(m.slot)
 				var ap: Vector2 = an.get("pos", Vector2.ZERO)
 				you_sig.append([m.slot, m.you_label, int(ap.x * 0.5), int(ap.y * 0.5), int(float(an.get("h", 0.0)) * 0.5), int(ya * 10.0), bool(an.get("visible", true))])
-			_l_hints[m.slot].update_sig(UiHints.sig(m, ha, str(opts["control_scheme"])) if (ha > 0.01 and layout.hints[m.slot].size.y > 0.0) else null)
+			_l_hints[m.slot].update_sig(UiHints.sig(m, ha, UiHints.preset_id(m, _o())) if (ha > 0.01 and layout.hints[m.slot].size.y > 0.0) else null)
 	_l_you.update_sig(you_sig if not you_sig.is_empty() else null)
 	# The touch buttons: drawn from SimTouch.layout (UiLayout.touch_ctrl) with the host's state; redrawn only when something about them changes.
 	if touch_on and not layout.touch_ctrl.is_empty():
@@ -467,13 +470,13 @@ func _update_layers() -> void:
 		_l_touchctl.update_sig(null)
 	for m in hub.models:
 		if m.slot < _l_prompts.size():
-			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
+			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on, UiHints.preset_id(m, _o())) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
 		_l_pause.update_sig([layout.pause_btn, layout.touch_ui] if layout.pause_btn.size.y > 0.0 else null)
 	_l_fbpill.update_sig([layout.feedback_btn, layout.touch_ui] if _pill_visible() else null)
 	_l_fb.update_sig(UiFeedback.sig(layout.vp, _fb_state, _fb_tags, _fb_status_ok, dp, layout.s, bool(opts["touch_ui"]), "%s|%s" % [_fb_opened, bool(_fb_issue.get("fallback", false))]) if _fb_open else null)
 	_l_tele.update_sig(UiReads.telegraph_sig(hub, bool(opts["show_prompts"]), reduced))
 	_l_hint.update_sig(UiReads.hint_sig(hub))
-	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s) if _howto_open else null)
+	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s, _howto_preset() + str(opts["glyph_style"])) if _howto_open else null)
 
 	var events_on: bool = not hub.cards.is_empty() or not hub.barks.is_empty() or not hub.banner.is_empty() or hub.world_card != null
 	_l_events.update_sig(_frame if events_on else null)
@@ -665,8 +668,16 @@ func _howto_slot() -> int:
 	return 0
 
 
+## The layout id the controls page describes: the first human's own (touch-simple on touch, kb-solo or a shared half, a pad preset).
+func _howto_preset() -> String:
+	for m in hub.models:
+		if not m.ai:
+			return UiHints.preset_id(m, _o())
+	return "touch-simple" if bool(opts["touch_ui"]) else UiHints.preset_id(hub.models[0], _o())
+
+
 func howto_plan() -> Dictionary:
-	return UiHowto.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), _howto_page, _howto_device(), _howto_slot())
+	return UiHowto.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), _howto_page, _howto_device(), _howto_slot(), _howto_preset(), str(opts["glyph_style"]))
 
 
 func _paint_howto(ci: CanvasItem) -> void:
@@ -832,12 +843,15 @@ func copy_feedback() -> String:
 	return text
 
 
-## SEND: the review of exactly what OPEN ISSUE will put in a prefilled GitHub issue. Nothing leaves the game until the player submits the
-## issue on GitHub; the review says the issue is public. Returns {url, fallback, body}.
+## SEND: the review of exactly what the open button will hand to the player's email app, form or GitHub issue (the send target, ui/data/
+## send.json). Nothing leaves the game until the player submits it there; a GitHub review says the issue is public. With no target
+## there is no SEND (the button is hidden) and this returns {}. Returns {url, fallback, body}.
 func send_feedback() -> Dictionary:
+	if UiFeedback.send_target() == "none":
+		return {}
 	var text: String = feedback_report()
 	_fb_prev.text = text
-	_fb_issue = UiFeedback.issue_url(text, UiFeedback.issue_title(feedback_selected_tags(), _fb_text.text))
+	_fb_issue = UiFeedback.send_url(text, UiFeedback.issue_title(feedback_selected_tags(), _fb_text.text))
 	_fb_state = UiFeedback.STATE_REVIEW
 	_fb_status_ok = false
 	_fb_opened = false
@@ -847,7 +861,7 @@ func send_feedback() -> Dictionary:
 	return _fb_issue
 
 
-## OPEN ISSUE: copy the report (so a link too long to prefill, or a page that ignores it, costs one paste) and open the link. On the web
+## The open button (OPEN EMAIL, OPEN FORM or OPEN ISSUE): copy the report (so a link too long to prefill, or a page that ignores it, costs one paste) and open the link. On the web
 ## the page's own listener normally opens it inside the real click; this is the fallback and the desktop route.
 func open_issue() -> String:
 	if not _fb_open or _fb_state != UiFeedback.STATE_REVIEW or _fb_issue.is_empty():
@@ -891,9 +905,9 @@ func _fb_texts() -> Array:
 		if _fb_status_ok:
 			status = str(d.get("copied", ""))
 		if _fb_opened:
-			note = str(sd.get("opened", ""))
+			note = UiFeedback.target_word("opened")
 		elif bool(_fb_issue.get("fallback", false)):
-			note = str(sd.get("review", "")) + " " + str(sd.get("too_long", ""))
+			note = UiFeedback.target_word("review") + " " + str(sd.get("too_long", ""))
 	return [status, note]
 
 
@@ -976,6 +990,14 @@ func _paint_fb(ci: CanvasItem) -> void:
 
 func _paint_fbpill(ci: CanvasItem) -> void:
 	UiFeedback.draw_pill(ci, layout.feedback_btn, layout.s, layout.feedback_label, layout.feedback_fs)
+
+
+func _humans() -> int:
+	var n := 0
+	for m in hub.models:
+		if not m.ai:
+			n += 1
+	return n
 
 
 func _you_alpha(m: UiFighterModel) -> float:

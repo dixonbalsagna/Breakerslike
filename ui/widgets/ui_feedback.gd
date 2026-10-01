@@ -181,7 +181,77 @@ static func issue_title(tags: Array, notes: String) -> String:
 	return title.substr(0, 80).strip_edges()
 
 
-## The prefilled link: {url, fallback, body}. The whole report if the link stays under the limit; else the report without its
+## The send target in use: "github", "mailto", "form" or "none". `target_override` (a test, or a preview) wins; otherwise `_target` in
+## send.json, and a mailto without an address or a form without a URL is "none": SEND is then hidden and COPY REPORT is all there is.
+static var target_override: String = ""
+
+
+static func send_target() -> String:
+	var t: String = target_override if target_override != "" else str(send_data().get("_target", "none"))
+	match t:
+		"github":
+			return "github" if str((send_data().get("issue", {}) as Dictionary).get("repo", "")) != "" else "none"
+		"mailto":
+			return "mailto" if str(target_cfg("mailto").get("to", "")).strip_edges() != "" else "none"
+		"form":
+			return "form" if str(target_cfg("form").get("url", "")).strip_edges() != "" else "none"
+	return "none"
+
+
+static func target_cfg(key: String) -> Dictionary:
+	return (send_data().get("_targets", {}) as Dictionary).get(key, {})
+
+
+## A word of the active target: its open button, its review text or its "opened" note. The github target's are send.json's own.
+static func target_word(field: String) -> String:
+	var t: String = send_target()
+	var sd: Dictionary = send_data()
+	if t == "mailto" or t == "form":
+		return str(target_cfg(t).get(field, ""))
+	if field == "open":
+		return str((sd.get("buttons", {}) as Dictionary).get("open", "OPEN ISSUE"))
+	return str(sd.get(field, ""))
+
+
+## Whether what SEND offers is private (an email or a form) or public (a GitHub issue).
+static func send_is_private() -> bool:
+	var t: String = send_target()
+	return t == "mailto" or t == "form"
+
+
+## The link for the active target: {url, fallback, body}, or {} when there is no target.
+static func send_url(report: String, title: String) -> Dictionary:
+	match send_target():
+		"github":
+			return issue_url(report, title)
+		"mailto":
+			var c: Dictionary = target_cfg("mailto")
+			var to: String = str(c["to"]).strip_edges()
+			return _fit(report, int(c.get("limit", 1800)), str(c.get("short_body", "")), func(body: String) -> String:
+				return "mailto:%s?subject=%s&body=%s" % [to, title.uri_encode(), body.uri_encode()])
+		"form":
+			var c2: Dictionary = target_cfg("form")
+			var tmpl: String = str(c2["url"])
+			return _fit(report, int(c2.get("limit", 3000)), str(c2.get("short_body", "")), func(body: String) -> String:
+				return tmpl.replace("{title}", title.uri_encode()).replace("{body}", body.uri_encode()))
+	return {}
+
+
+## The whole report if the link stays under the limit; else the report without its Settings and Engine lines; else a short body that
+## asks the player to paste the clipboard (fallback true: the caller copies the full report).
+static func _fit(report: String, limit: int, short_body: String, build: Callable) -> Dictionary:
+	var compact: PackedStringArray = []
+	for ln in report.split("\n"):
+		if not (ln.begins_with(word("settings") + ":") or ln.begins_with(word("engine") + ":")):
+			compact.append(ln)
+	for body in [report, "\n".join(compact)]:
+		var url: String = str(build.call(str(body)))
+		if url.length() <= limit:
+			return {"url": url, "fallback": false, "body": body}
+	return {"url": str(build.call(short_body)), "fallback": true, "body": short_body}
+
+
+## The prefilled GitHub link: {url, fallback, body}. The whole report if the link stays under the limit; else the report without its
 ## Settings and Engine lines; else (too long even then) a short body that asks the player to paste the clipboard, with fallback true
 ## (the caller copies the full report). The repository's issues page and every character of the title and body are percent-encoded.
 static func issue_url(report: String, title: String) -> Dictionary:
@@ -298,11 +368,15 @@ static func _layout(card: Rect2, cs: float, tm: float, state: String, rows: int,
 		var box_h: float = lh * float(rows) + pad
 		out["text_rect"] = Rect2(inner.position.x, y, inner.size.x, box_h)
 		y += box_h + gap * 1.4
-		y = _flow(out, [["copy", str(btns.get("copy", "COPY REPORT"))], ["send", str(sbtn.get("send", "SEND"))], ["done", str(btns.get("close", "CLOSE"))]], inner.position.x, y, inner.end.x, tm, gap, fs_body, pad)
+		var wr: Array = [["copy", str(btns.get("copy", "COPY REPORT"))]]
+		if send_target() != "none":
+			wr.append(["send", str(sbtn.get("send", "SEND"))])
+		wr.append(["done", str(btns.get("close", "CLOSE"))])
+		y = _flow(out, wr, inner.position.x, y, inner.end.x, tm, gap, fs_body, pad)
 	else:
 		var review: bool = state == STATE_REVIEW
 		var st: String = status if status != "" else (str(sd.get("review_title", "")) if review else str(d.get("copied", "")))
-		var nt: String = note if note != "" else (str(sd.get("review", "")) if review else str(d.get("copied_fallback", "")))
+		var nt: String = note if note != "" else (target_word("review") if review else str(d.get("copied_fallback", "")))
 		out["status"] = st
 		out["note"] = nt
 		out["status_pos"] = Vector2(inner.position.x, y)
@@ -314,7 +388,7 @@ static func _layout(card: Rect2, cs: float, tm: float, state: String, rows: int,
 		var box_h2: float = lh * float(rows) + pad
 		out["preview_rect"] = Rect2(inner.position.x, y, inner.size.x, box_h2)
 		y += box_h2 + gap * 1.4
-		var pairs: Array = [["issue", str(sbtn.get("open", "OPEN ISSUE"))], ["again", str(btns.get("copy", "COPY REPORT"))], ["back", str(btns.get("back", "BACK"))]] if review else [["again", str(btns.get("copy_again", "COPY AGAIN"))], ["back", str(btns.get("back", "BACK"))], ["done", str(btns.get("close", "CLOSE"))]]
+		var pairs: Array = [["issue", target_word("open")], ["again", str(btns.get("copy", "COPY REPORT"))], ["back", str(btns.get("back", "BACK"))]] if review else [["again", str(btns.get("copy_again", "COPY AGAIN"))], ["back", str(btns.get("back", "BACK"))], ["done", str(btns.get("close", "CLOSE"))]]
 		y = _flow(out, pairs, inner.position.x, y, inner.end.x, tm, gap, fs_body, pad)
 		if st == "":
 			fits = false
@@ -388,7 +462,7 @@ static func draw(ci: CanvasItem, p: Dictionary, selected: Dictionary) -> void:
 			UiText.draw(ci, ln, Vector2(fp.x, fp.y + UiText.ascent(fs_small)), fs_small, dim, -1)
 			fp.y += UiText.height(fs_small) * 1.15
 		if p["state"] == STATE_REVIEW:
-			_button(ci, p["issue"], str(sbtn.get("open", "OPEN ISSUE")), fs_body, true)
+			_button(ci, p["issue"], target_word("open"), fs_body, true)
 			_button(ci, p["again"], str(btns.get("copy", "COPY REPORT")), fs_body, false)
 			_button(ci, p["back"], str(btns.get("back", "BACK")), fs_body, false)
 		else:

@@ -1,33 +1,223 @@
 {
   "schema": 1,
   "note": "The prompt glyph tables (docs/controls/prompt-glyphs.md sections 2, 3 and 5), as data. Controls owns the bindings and this map; UI draws the glyphs. The default style is NEUTRAL: our own position diamond with a letter mark for the face buttons, and plain text marks for the rest; no console maker's icon art is reproduced, and no platform's face symbols are used until Legal answers (prompt-glyphs.md rule 7). The 'family' style, which prints each family's own letters, exists in the data but is off until then. Keyboard glyphs are a keycap with the label on the player's layout (the host may replace the label with DisplayServer.keyboard_get_label_from_physical).",
-  "families": ["kbd", "xbox", "ps", "switch", "deck", "generic"],
+  "families": [
+    "kbd",
+    "xbox",
+    "ps",
+    "switch",
+    "deck",
+    "generic"
+  ],
   "neutral": {
-    "face": { "south": "S", "east": "E", "west": "W", "north": "N" },
-    "pad": { "LT": "LT", "RT": "RT", "LB": "LB", "RB": "RB", "R3": "R3" }
+    "face": {
+      "south": "S",
+      "east": "E",
+      "west": "W",
+      "north": "N"
+    },
+    "pad": {
+      "LT": "LT",
+      "RT": "RT",
+      "LB": "LB",
+      "RB": "RB",
+      "R3": "R3"
+    }
   },
   "family_labels": {
-    "xbox": { "face": { "south": "A", "east": "B", "west": "X", "north": "Y" }, "LT": "LT", "RT": "RT", "LB": "LB", "RB": "RB", "R3": "R3" },
-    "ps": { "face": { "south": "S", "east": "E", "west": "W", "north": "N" }, "LT": "L2", "RT": "R2", "LB": "L1", "RB": "R1", "R3": "R3" },
-    "switch": { "face": { "south": "B", "east": "A", "west": "Y", "north": "X" }, "LT": "ZL", "RT": "ZR", "LB": "L", "RB": "R", "R3": "R3" },
-    "deck": { "face": { "south": "A", "east": "B", "west": "X", "north": "Y" }, "LT": "L2", "RT": "R2", "LB": "L1", "RB": "R1", "R3": "R3" },
-    "generic": { "face": { "south": "S", "east": "E", "west": "W", "north": "N" }, "LT": "LT", "RT": "RT", "LB": "LB", "RB": "RB", "R3": "R3" }
+    "xbox": {
+      "face": {
+        "south": "A",
+        "east": "B",
+        "west": "X",
+        "north": "Y"
+      },
+      "LT": "LT",
+      "RT": "RT",
+      "LB": "LB",
+      "RB": "RB",
+      "R3": "R3"
+    },
+    "ps": {
+      "face": {
+        "south": "S",
+        "east": "E",
+        "west": "W",
+        "north": "N"
+      },
+      "LT": "L2",
+      "RT": "R2",
+      "LB": "L1",
+      "RB": "R1",
+      "R3": "R3"
+    },
+    "switch": {
+      "face": {
+        "south": "B",
+        "east": "A",
+        "west": "Y",
+        "north": "X"
+      },
+      "LT": "ZL",
+      "RT": "ZR",
+      "LB": "L",
+      "RB": "R",
+      "R3": "R3"
+    },
+    "deck": {
+      "face": {
+        "south": "A",
+        "east": "B",
+        "west": "X",
+        "north": "Y"
+      },
+      "LT": "L2",
+      "RT": "R2",
+      "LB": "L1",
+      "RB": "R1",
+      "R3": "R3"
+    },
+    "generic": {
+      "face": {
+        "south": "S",
+        "east": "E",
+        "west": "W",
+        "north": "N"
+      },
+      "LT": "LT",
+      "RT": "RT",
+      "LB": "LB",
+      "RB": "RB",
+      "R3": "R3"
+    }
   },
   "actions": {
-    "light": { "kind": "face", "pos": "west", "kbd": ["F", ","] },
-    "heavy": { "kind": "face", "pos": "north", "kbd": ["G", "."] },
-    "signature": { "kind": "face", "pos": "east", "kbd": ["R", "/"] },
-    "dash": { "kind": "face", "pos": "south", "kbd": ["Space", "Enter"] },
-    "charge": { "kind": "pad", "pad": "RT", "kbd": ["Q", ";"] },
-    "special": { "kind": "pad", "pad": "LT", "kbd": ["E", "'"] },
-    "transform": { "kind": "pad", "pad": "R3", "kbd": ["X", "["] },
-    "stance_press": { "kind": "dpad", "dir": "up", "kbd": ["1", "7"] },
-    "stance_guard": { "kind": "dpad", "dir": "right", "kbd": ["2", "8"] },
-    "stance_dodge": { "kind": "dpad", "dir": "down", "kbd": ["3", "9"] },
-    "stance_escape": { "kind": "dpad", "dir": "left", "kbd": ["4", "0"] },
-    "stance_prev": { "kind": "pad", "pad": "LB", "kbd": ["`", "6"] },
-    "stance_next": { "kind": "pad", "pad": "RB", "kbd": ["5", "-"] },
-    "move": { "kind": "stick", "kbd": ["WASD", "Arrows"] },
-    "pause": { "kind": "text", "pad": "Start", "kbd": ["P", "P"] }
+    "move": {
+      "kind": "stick",
+      "kbd": [
+        "WASD",
+        "IJKL"
+      ]
+    },
+    "light": {
+      "kind": "face",
+      "pos": "west",
+      "kbd": [
+        "J",
+        "H"
+      ]
+    },
+    "heavy": {
+      "kind": "face",
+      "pos": "north",
+      "kbd": [
+        "K",
+        "M"
+      ]
+    },
+    "signature": {
+      "kind": "face",
+      "pos": "east",
+      "kbd": [
+        "L",
+        "U"
+      ]
+    },
+    "guard": {
+      "kind": "pad",
+      "pad": "LB",
+      "kbd": [
+        "Shift",
+        ";"
+      ]
+    },
+    "dodge": {
+      "kind": "pad",
+      "pad": "LT",
+      "kbd": [
+        "Space",
+        "."
+      ]
+    },
+    "sprint": {
+      "kind": "pad",
+      "pad": "LT",
+      "kbd": [
+        "Space",
+        "."
+      ]
+    },
+    "power": {
+      "kind": "pad",
+      "pad": "RT",
+      "kbd": [
+        "E",
+        "/"
+      ]
+    },
+    "mode": {
+      "kind": "pad",
+      "pad": "RB",
+      "kbd": [
+        "Q",
+        "O"
+      ]
+    },
+    "context": {
+      "kind": "face",
+      "pos": "south",
+      "kbd": [
+        "I",
+        ","
+      ]
+    },
+    "special1": {
+      "kind": "face",
+      "pos": "west",
+      "kbd": [
+        "J",
+        "H"
+      ]
+    },
+    "special2": {
+      "kind": "face",
+      "pos": "north",
+      "kbd": [
+        "K",
+        "M"
+      ]
+    },
+    "special3": {
+      "kind": "face",
+      "pos": "south",
+      "kbd": [
+        "I",
+        ","
+      ]
+    },
+    "specials": {
+      "kind": "face",
+      "pos": "west",
+      "kbd": [
+        "J",
+        "H"
+      ]
+    },
+    "transform": {
+      "kind": "pad",
+      "pad": "R3",
+      "kbd": [
+        "R",
+        ". + /"
+      ]
+    },
+    "pause": {
+      "kind": "text",
+      "pad": "Start",
+      "kbd": [
+        "P",
+        "P"
+      ]
+    }
   }
 }
