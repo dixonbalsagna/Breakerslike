@@ -19,6 +19,10 @@ const BUTTON := "button"
 const BIND := "bind"        # the Remap screen's row: an action's name and the controls it has now (row["specs"] are glyph specs)
 
 
+## True while two people play: the HUD sets it before it asks for the rows. Then the controller layout and Remap rows for player two are listed.
+static var two_humans: bool = false
+
+
 static func data() -> Dictionary:
 	return UiData.settings()
 
@@ -36,13 +40,15 @@ static func rows() -> Array:
 		out.append({"kind": HEADING, "key": "", "label": str(sec.get("title", "")), "help": "", "enabled": false, "section": str(sec.get("id", ""))})
 		for it in sec.get("items", []):
 			if it is Dictionary:
+				if str(it.get("action", "")) == "remap_two" and not two_humans:
+					continue
 				var need: String = str(it.get("needs", ""))
 				out.append({"kind": BUTTON, "key": "", "action": str(it.get("action", "")), "label": str(it.get("label", "")), "value": str(it.get("value", "")),
 					"help": str(it.get("help", "")), "enabled": need == "" or UiData.feature(need)})
 				continue
 			var key: String = str(it)
 			var o: Dictionary = od.get(key, {})
-			if o.is_empty():
+			if o.is_empty() or (key == "pad_preset_p2" and not two_humans):
 				continue
 			var kind: String = TOGGLE if o["default"] is bool else (SLIDER if o.has("min") else CHOICE)
 			var need2: String = str(needs.get(key, ""))

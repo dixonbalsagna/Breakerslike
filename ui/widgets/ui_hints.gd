@@ -45,12 +45,18 @@ static func preset_id(m: UiFighterModel, o: Dictionary) -> String:
 	var forced: String = str(o.get("control_scheme", ""))
 	if forced != "":
 		return forced
+	var sp: Dictionary = o.get("slot_presets", {})
+	if sp.has(m.slot):
+		return str(sp[m.slot])   # the host named this player's layout (Controls' per-slot preset)
 	if bool(o.get("touch", false)):
 		return "touch-simple"
 	if m.device == "" or m.device == "kbd":
-		if int(o.get("humans", 1)) >= 2:
+		# The shared-keyboard halves only when both people are on the keyboard; one on the keyboard and one on a pad is the solo layout.
+		if int(o.get("kbd_humans", o.get("humans", 1))) >= 2:
 			return "kb-shared-p%d" % (clampi(m.slot, 0, 1) + 1)
 		return "kb-solo"
+	if m.slot == 1 and o.has("pad_preset_p2"):
+		return str(o["pad_preset_p2"])
 	return str(o.get("pad_preset", "arena"))
 
 

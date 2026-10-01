@@ -6,23 +6,27 @@ extends RefCounted
 ## height allows and two when it does not), `hit` says what a point is on, `draw` paints from a plan. Every word is in terms.json (prompt.pause_*).
 
 const ENTRIES: Array = ["resume", "howto", "settings", "feedback", "new"]
+## While two people play, player two can be handed back to the AI from here.
+const ENTRIES_TWO: Array = ["resume", "howto", "settings", "feedback", "p2_leave", "new"]
 const CONFIRM: Array = ["new_yes", "new_no"]
 const KEYS: Dictionary = {"resume": "pause_resume_key", "howto": "pause_howto_key", "new": "pause_new_key"}
 
 
-static func ids(confirm: bool) -> Array:
-	return CONFIRM if confirm else ENTRIES
+static func ids(confirm: bool, two: bool = false) -> Array:
+	return CONFIRM if confirm else (ENTRIES_TWO if two else ENTRIES)
 
 
 static func label(id: String) -> String:
 	return UiData.t("prompt.pause_" + id)
 
 
-## The geometry for a viewport. `st` is {focus: index into ids(confirm), confirm: bool}. Returns {card, title, title_pos, items[{id, label, key, rect}],
+## The geometry for a viewport. `st` is {focus: index into ids(confirm, two), confirm: bool, two: bool (two people play: the hand-back entry),
+## join: bool (player two is the AI and may join: a line under the buttons says how)}. Returns {card, title, title_pos, items[{id, label, key, rect}],
 ## cols, tm, fs_body, fs_title, fs_small, fits, bw}.
 static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary) -> Dictionary:
 	var confirm: bool = bool(st.get("confirm", false))
-	var list: Array = ids(confirm)
+	var list: Array = ids(confirm, bool(st.get("two", false)))
+	var join: bool = bool(st.get("join", false)) and not confirm
 	var tm: float = maxf(48.0 * dp, 44.0)
 	var margin: float = maxf(vp.x * 0.03, 12.0)
 	var my: float = maxf(vp.y * 0.04, 10.0)
@@ -41,13 +45,18 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary) 
 		var w: float = UiText.width(label(id), fs_body) + (UiText.width(UiData.t("prompt." + str(KEYS[id])) , fs_small) + pad if (not touch and KEYS.has(id)) else 0.0)
 		widest = maxf(widest, w)
 	var bw0: float = maxf(maxf(300.0 * cs, tm * 4.0), widest + tm * 0.9)
+	var join_text: String = UiData.t("prompt.pause_p2_join") if join else ""
+	var lh_small: float = UiText.height(fs_small) * 1.15
 	var cols: int = 1
-	if title_h + float(list.size()) * (tm + gap) - gap > avail_h:
+	var join_h1: float = (lh_small * 2.0 + gap) if join else 0.0
+	if title_h + float(list.size()) * (tm + gap) - gap + join_h1 > avail_h:
 		cols = 2
 	var rows_n: int = int(ceil(float(list.size()) / float(cols)))
 	var bw: float = minf(bw0, (avail_w - float(cols - 1) * gap) / float(cols))
 	var cw: float = float(cols) * bw + float(cols - 1) * gap + 2.0 * pad
-	var chh: float = pad * 2.0 + title_h + float(rows_n) * (tm + gap) - gap
+	var join_lines: PackedStringArray = UiText.wrap(join_text, fs_small, cw - 2.0 * pad) if join else PackedStringArray()
+	var join_h: float = (float(join_lines.size()) * lh_small + gap) if join else 0.0
+	var chh: float = pad * 2.0 + title_h + float(rows_n) * (tm + gap) - gap + join_h
 	var card := Rect2((vp.x - cw) * 0.5, (vp.y - chh) * 0.5, cw, chh)
 	var items: Array = []
 	for i in range(list.size()):
@@ -61,8 +70,9 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary) 
 		var need: float = UiText.width(str(it["label"]), fs_body) + (UiText.width(str(it["key"]), fs_small) + gap * 2.0 if str(it["key"]) != "" else 0.0) + 16.0
 		if need > bw or not card.encloses(it["rect"]) or (it["rect"] as Rect2).size.y < tm - 0.01:
 			fits = false
-	return {"card": card, "title": title, "title_pos": Vector2(card.position.x + pad, card.position.y + pad + UiText.ascent(fs_title)), "items": items, "cols": cols, "tm": tm,
-		"fs_body": fs_body, "fs_title": fs_title, "fs_small": fs_small, "fits": fits, "bw": bw, "focus": int(st.get("focus", 0)), "confirm": confirm, "touch": touch, "cs": cs, "pad": pad, "gap": gap}
+	var join_pos := Vector2(card.position.x + pad, card.end.y - pad - float(join_lines.size()) * lh_small + UiText.ascent(fs_small))
+	return {"join_lines": join_lines, "join_pos": join_pos, "lh_small": lh_small, "card": card, "title": title, "title_pos": Vector2(card.position.x + pad, card.position.y + pad + UiText.ascent(fs_title)), "items": items, "cols": cols, "tm": tm,
+		"fs_body": fs_body, "fs_title": fs_title, "fs_small": fs_small, "fits": fits, "bw": bw, "focus": int(st.get("focus", 0)), "confirm": confirm, "two": bool(st.get("two", false)), "join": join, "touch": touch, "cs": cs, "pad": pad, "gap": gap}
 
 
 ## The id of the button a point is on, or "".
@@ -92,7 +102,7 @@ static func moved(p: Dictionary, focus: int, dx: int, dy: int) -> int:
 
 
 static func sig(p: Dictionary) -> Array:
-	return [int((p["card"] as Rect2).size.x), int((p["card"] as Rect2).size.y), int(p["cs"] * 100.0), p["touch"], int(p["focus"]), p["confirm"]]
+	return [int((p["card"] as Rect2).size.x), int((p["card"] as Rect2).size.y), int(p["cs"] * 100.0), p["touch"], int(p["focus"]), p["confirm"], p["two"], p["join"]]
 
 
 static func draw(ci: CanvasItem, p: Dictionary) -> void:
@@ -121,4 +131,8 @@ static func draw(ci: CanvasItem, p: Dictionary) -> void:
 		UiText.draw(ci, str(it["label"]), Vector2(r.position.x + r.size.y * 0.4, r.get_center().y + float(fs_body) * 0.35), fs_body, col, -1)
 		if str(it["key"]) != "":
 			UiText.draw(ci, str(it["key"]), Vector2(r.end.x - r.size.y * 0.4, r.get_center().y + float(p["fs_small"]) * 0.35), int(p["fs_small"]), Color(dark if on else dim, 0.8), 1)
+	var jp: Vector2 = p["join_pos"]
+	for ln in p["join_lines"]:
+		UiText.draw(ci, ln, jp, int(p["fs_small"]), Color(dim, 0.9), -1)
+		jp.y += float(p["lh_small"])
 	UiText.no_outline = false

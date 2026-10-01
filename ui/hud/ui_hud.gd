@@ -31,6 +31,7 @@ signal pause_menu_closed(reason: String)   # it closed: "resume" (the host unfre
 signal pause_entry(entry: String)          # an entry was chosen: resume, howto, settings, feedback, new (then new_yes or new_no)
 signal new_match_requested                 # New match was confirmed
 signal lane_colors_changed(a: Color, b: Color)   # a fighter's lane colour (its aura, used for its plate, bark and face borders) changed: the host passes them to SplitView.set_panel_colors
+signal player_two_leave_requested          # the pause menu's "Player two: hand back to the AI" was chosen: the host gives slot 1 back to the AI
 signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
@@ -95,6 +96,14 @@ var _last_lh := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
 var _l_settings: UiLayer
+var _l_join: UiLayer
+var join_enabled := true              # the host turns the player-two join prompt off where joining is not allowed (the tutorial, training for one)
+var _join_t := -1.0                   # fight-time seconds since the join prompt became due (-1: it is not due)
+var _join_note: Dictionary = {}       # {kind: "joined" | "left", age: seconds}: the brief note that replaces the prompt
+var _join_kbd := false                # the keyboard is the only device: the prompt says "press T" (Controls' joinable rule)
+var _join_ready := false              # the first advance has run (so a human slot at the start of a match is not a "join")
+var _join_prev_t := 0.0
+var _slot_presets: Dictionary = {}    # slot -> layout id, named by the host for each player's own layout (Controls' per-slot preset)
 var _lane_sent: Array = [Color(0, 0, 0, 0), Color(0, 0, 0, 0)]
 var _l_pmenu: UiLayer
 var _pm_open := false
@@ -202,6 +211,7 @@ func _ready() -> void:
 	_l_fbpill = _layer(_paint_fbpill)
 	_l_pmenu = _layer(_paint_pmenu)
 	_l_howto = _layer(_paint_howto)
+	_l_join = _layer(_paint_join)
 	_l_settings = _layer(_paint_settings)
 	_l_remap = _layer(_paint_remap)
 	_l_fb = _layer(_paint_fb)        # last: over everything
@@ -265,7 +275,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_join, _l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -403,6 +413,9 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"control_scheme": str(opts["control_scheme"]),
 		"pad_preset": str(opts["pad_preset"]),
 		"humans": _humans(),
+		"kbd_humans": _kbd_humans(),
+		"slot_presets": _slot_presets,
+		"pad_preset_p2": str(opts["pad_preset_p2"]),
 	}
 
 
@@ -496,6 +509,9 @@ func _update_layers() -> void:
 	# Who is the player (YOU), and the control legend: it shows for 12 s from the match start, or from the moment a fighter became human.
 	if hub.t_now < _prev_clock:
 		_hint_t0 = [0.0, 0.0]
+		_join_t = -1.0
+		_join_note = {}
+		_join_prev_t = 0.0
 	_prev_clock = hub.t_now
 	var you_sig: Array = []
 	for m in hub.models:
@@ -503,6 +519,13 @@ func _update_layers() -> void:
 			m.you_label = UiHints.you_label(hub.models, m)
 			if _prev_ai[m.slot] and not m.ai:
 				_hint_t0[m.slot] = hub.t_now
+			if _join_ready and m.slot == 1 and _prev_ai[1] != m.ai and hub.models.size() >= 2:
+				# Player two joined, or was handed back to the AI: a brief note, and (on a join) both players' legends and badges show again.
+				_join_note = {"kind": "left" if m.ai else "joined", "age": 0.0}
+				if not m.ai:
+					for h in hub.models:
+						if not h.ai:
+							_hint_t0[h.slot] = hub.t_now
 			_prev_ai[m.slot] = m.ai
 			var ya: float = UiHints.visible_alpha(m, str(opts["control_hints"]), prompts_on, hub.t_now - float(_hint_t0[m.slot]))
 			var ha: float = 0.0 if (touch_on or layout.portrait) else ya   # the legend is for a keyboard or a pad; the YOU marker is for every screen
@@ -512,6 +535,10 @@ func _update_layers() -> void:
 				you_sig.append([m.slot, m.you_label, int(ap.x * 0.5), int(ap.y * 0.5), int(float(an.get("h", 0.0)) * 0.5), int(ya * 10.0), bool(an.get("visible", true))])
 			_l_hints[m.slot].update_sig(UiHints.sig(m, ha, UiHints.preset_id(m, _o())) if (ha > 0.01 and layout.hints[m.slot].size.y > 0.0) else null)
 	_l_you.update_sig(you_sig if not you_sig.is_empty() else null)
+	_join_step(hub.t_now - _join_prev_t, _dt)
+	_join_prev_t = hub.t_now
+	_join_ready = true
+	_l_join.update_sig(_join_sig())
 	# The touch buttons: drawn from SimTouch.layout (UiLayout.touch_ctrl) with the host's state; redrawn only when something about them changes.
 	if touch_on and not layout.touch_ctrl.is_empty():
 		var tstate: Dictionary = _touch_state()
@@ -520,7 +547,7 @@ func _update_layers() -> void:
 		_l_touchctl.update_sig(null)
 	for m in hub.models:
 		if m.slot < _l_prompts.size():
-			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on, UiHints.preset_id(m, _o())) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
+			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on, UiHints.preset_id(m, _o())) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0 and not (m.slot == 1 and not _join_note.is_empty())) else null)
 		_l_pause.update_sig([layout.pause_btn, layout.touch_ui] if layout.pause_btn.size.y > 0.0 else null)
 	_l_fbpill.update_sig([layout.feedback_btn, layout.touch_ui] if _pill_visible() else null)
 	_l_fb.update_sig(UiFeedback.sig(layout.vp, _fb_state, _fb_tags, _fb_status_ok, dp, layout.s, bool(opts["touch_ui"]), "%s|%s" % [_fb_opened, bool(_fb_issue.get("fallback", false))]) if _fb_open else null)
@@ -856,7 +883,7 @@ func pause_menu_focus() -> int:
 
 
 func pause_menu_plan() -> Dictionary:
-	return UiPause.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), {"focus": _pm_focus, "confirm": _pm_confirm})
+	return UiPause.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), {"focus": _pm_focus, "confirm": _pm_confirm, "two": _humans() >= 2, "join": join_due()})
 
 
 func _paint_pmenu(ci: CanvasItem) -> void:
@@ -886,7 +913,9 @@ func pause_menu_choose(id: String) -> void:
 			new_match_requested.emit()
 		"new_no":
 			_pm_confirm = false
-			_pm_focus = UiPause.ENTRIES.find("new")
+			_pm_focus = UiPause.ids(false, _humans() >= 2).find("new")
+		"p2_leave":
+			player_two_leave_requested.emit()
 	_l_pmenu.invalidate()
 
 
@@ -895,7 +924,8 @@ func pause_menu_action(act: String) -> void:
 	if not _pm_open:
 		return
 	var p: Dictionary = pause_menu_plan()
-	var list: Array = UiPause.ids(_pm_confirm)
+	var list: Array = UiPause.ids(_pm_confirm, _humans() >= 2)
+	_pm_focus = clampi(_pm_focus, 0, list.size() - 1)
 	match act:
 		"up":
 			_pm_focus = UiPause.moved(p, _pm_focus, 0, -1)
@@ -979,7 +1009,7 @@ func _pause_input(event: InputEvent) -> void:
 			var id: String = UiPause.hit(pause_menu_plan(), event.position)
 			if event.pressed:
 				_pm_down = id
-				var list: Array = UiPause.ids(_pm_confirm)
+				var list: Array = UiPause.ids(_pm_confirm, _humans() >= 2)
 				if id != "" and list.has(id):
 					_pm_focus = list.find(id)
 					_l_pmenu.invalidate()
@@ -993,6 +1023,77 @@ func _pause_input(event: InputEvent) -> void:
 
 # --- The Settings screen (docs/ui/hud-spec.md section 26) ---------------------------------------------------------------------
 
+# --- Player two joins (docs/ui/hud-spec.md section 30) --------------------------------------------------------------------------------
+
+## Whether the join prompt is due: one human on slot 0, the AI on slot 1, not a touch screen, the host and the option allow it, and the AI's prompt row
+## (where it goes) exists.
+func join_due() -> bool:
+	return join_enabled and bool(opts["join_prompt"]) and not bool(opts["touch_ui"]) and hub.models.size() >= 2 and not (hub.models[0] as UiFighterModel).ai and (hub.models[1] as UiFighterModel).ai
+
+
+## The join prompt's opacity now (0 to 1): full from the start, fading after UiJoin.SHOW seconds of fight time. The pause menu shows it as a line whatever this is.
+func join_prompt_alpha() -> float:
+	return UiJoin.alpha(_join_t) if (join_due() and _join_note.is_empty()) else 0.0
+
+
+## "joined", "left" or "" (the brief note showing now).
+func join_note() -> String:
+	return str(_join_note.get("kind", ""))
+
+
+func _join_step(sim_dt: float, real_dt: float) -> void:
+	if join_due():
+		_join_t = maxf(_join_t, 0.0) + maxf(sim_dt, 0.0)
+	else:
+		_join_t = -1.0
+	if not _join_note.is_empty():
+		_join_note["age"] = float(_join_note["age"]) + real_dt
+		if float(_join_note["age"]) > UiJoin.NOTE:
+			_join_note = {}
+
+
+## The host's word on joining (Controls' `hub.joinable()`): whether a second person can join now, and whether the keyboard is the only device (then the prompt
+## says "press T"). Not joinable hides the prompt, the pause menu's line included.
+func set_join_available(available: bool, keyboard_only: bool = false) -> void:
+	join_enabled = available
+	_join_kbd = keyboard_only
+
+
+## The host's brief note (Controls' `input_note`): "joined" or "left", for player two. The HUD also raises it itself when slot 1 flips between AI and human.
+func show_join_note(kind: String) -> void:
+	if kind == "joined" or kind == "left":
+		_join_note = {"kind": kind, "age": 0.0}
+
+
+func _join_plan() -> Dictionary:
+	var kind: String = join_note() if not _join_note.is_empty() else "prompt"
+	return UiJoin.plan(layout.prompts[1], layout.s, kind, _join_kbd)
+
+
+func _join_alpha() -> float:
+	if not _join_note.is_empty():
+		var age: float = float(_join_note["age"])
+		return clampf(age / 0.15, 0.0, 1.0) * clampf((UiJoin.NOTE - age) / 0.3, 0.0, 1.0)
+	return join_prompt_alpha()
+
+
+func _join_sig():
+	if hub.models.size() < 2 or layout.prompts[1].size.y <= 0.0:
+		return null
+	var a: float = _join_alpha()
+	if a <= 0.01:
+		return null
+	return UiJoin.sig(_join_plan(), join_note() if not _join_note.is_empty() else "prompt", a) + [_join_kbd]
+
+
+func _paint_join(ci: CanvasItem) -> void:
+	if hub.models.size() < 2:
+		return
+	var a: float = _join_alpha()
+	if a > 0.01:
+		UiJoin.draw(ci, _join_plan(), (hub.models[1] as UiFighterModel).aura, a, layout.s)
+
+
 ## Open the Settings screen (the host's pause menu entry). While it is open the HUD takes every key, pad button and click (so no fighter
 ## moves behind it): the host should freeze the sim on settings_opened and restore the pause it found on settings_closed, as for How to
 ## play, and skip its own pad handling while is_settings_open() (see is_overlay_open()). Every change goes through set_option, so
@@ -1000,6 +1101,7 @@ func _pause_input(event: InputEvent) -> void:
 func show_settings() -> void:
 	if _set_open or _howto_open or _fb_open:
 		return
+	UiSettings.two_humans = _humans() >= 2
 	_set_open = true
 	_set_scroll = 0.0
 	_set_drag = {}
@@ -1037,6 +1139,7 @@ func settings_focus() -> int:
 
 
 func settings_plan() -> Dictionary:
+	UiSettings.two_humans = _humans() >= 2
 	return UiSettings.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), {"focus": _set_focus, "scroll": _set_scroll, "device": _set_device}, opts)
 
 
@@ -1071,6 +1174,7 @@ func load_saved_options() -> void:
 
 
 func _settings_row(i: int) -> Dictionary:
+	UiSettings.two_humans = _humans() >= 2
 	var rws: Array = UiSettings.rows()
 	return rws[i] if i >= 0 and i < rws.size() else {}
 
@@ -1096,6 +1200,8 @@ func _settings_accept(i: int) -> void:
 		UiSettings.BUTTON:
 			if str(r["action"]) == "remap":
 				show_remap()
+			elif str(r["action"]) == "remap_two":
+				show_remap("", 1)
 			else:
 				settings_action_requested.emit(str(r["action"]))
 
@@ -1286,7 +1392,7 @@ func _settings_input(event: InputEvent) -> void:
 ## Open the Remap controls screen (from the Settings entry; the host may also call it). `layout_id` is a keyboard or pad preset; "" picks the
 ## first human's own. While it is open the HUD takes every key, pad button and click. Opened without Settings under it, it opens Settings too
 ## (the host's pause handling is then the same) and closing it closes both.
-func show_remap(layout_id: String = "") -> void:
+func show_remap(layout_id: String = "", player: int = 0) -> void:
 	if _rm_open or _howto_open or _fb_open:
 		return
 	if not _set_open:
@@ -1299,7 +1405,9 @@ func show_remap(layout_id: String = "") -> void:
 	var ids: Array = UiRemapModel.layouts()
 	if layout_id == "" or not ids.has(layout_id):
 		layout_id = "kb-solo"
-		for m in hub.models:
+		# The layout of the player asked for (player two: slot 1), else the first human's.
+		var order: Array = [hub.models[player]] if (player >= 0 and player < hub.models.size() and not (hub.models[player] as UiFighterModel).ai) else hub.models
+		for m in order:
 			if not m.ai:
 				var pid: String = UiHints.preset_id(m, _o())
 				layout_id = pid if ids.has(pid) else (str(opts["pad_preset"]) if m.device != "" and m.device != "kbd" and m.device != "touch" else "kb-solo")
@@ -1392,6 +1500,15 @@ func _rm_rows() -> Array:
 	return out
 
 
+## Whether both humans play on the layout being changed (Controls keeps remaps per layout for now, so a change is for both).
+func _rm_layout_shared() -> bool:
+	var n := 0
+	for m in hub.models:
+		if not m.ai and UiHints.preset_id(m, _o()) == _rm_layout:
+			n += 1
+	return n >= 2
+
+
 func _rm_status_text() -> String:
 	var w: Dictionary = _rm_words()
 	match _rm_mode:
@@ -1405,6 +1522,8 @@ func _rm_status_text() -> String:
 			return str(w.get(key, "")).replace("{action}", act)
 		"confirm":
 			return str(w.get("conflict", "")).replace("{control}", _rm_control_word(str(_rm_pending["control"]))).replace("{other}", _rm_action_word(str(_rm_pending["with"])))
+	if _rm_status == "" and _humans() >= 2 and _rm_layout_shared():
+		return str(w.get("_shared", ""))   # both players are on this layout (remaps are per layout): a change is for both
 	return _rm_status
 
 
@@ -2095,6 +2214,24 @@ func _sync_lane_colors() -> void:
 ## Where Camera's panel strip may start at the top: the lowest edge of the plates, the toll chip and the pause button, in pixels from the top.
 func panel_floor_y() -> float:
 	return layout.panel_floor()
+
+
+## How many of the humans are on the keyboard (the shared-keyboard layouts are for two of them; one on the keyboard and one on a pad is the solo layout).
+func _kbd_humans() -> int:
+	var n := 0
+	for m in hub.models:
+		if not m.ai and (m.device == "" or m.device == "kbd"):
+			n += 1
+	return n
+
+
+## Name a player's own layout (a preset id of data/input/layouts.json), for the legend, the prompts and the card: Controls' per-slot preset, from
+## the host. An empty id clears it (the pad_preset and pad_preset_p2 options and the keyboard layouts decide).
+func set_slot_layout(slot: int, layout_id: String) -> void:
+	if layout_id == "":
+		_slot_presets.erase(slot)
+	else:
+		_slot_presets[slot] = layout_id
 
 
 func _humans() -> int:

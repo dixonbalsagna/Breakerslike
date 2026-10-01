@@ -79,7 +79,8 @@
   "prompt": { "special": "SPECIAL", "transform": "TRANSFORM", "attack": "ATTACK", "attack_hint": "TAP  HOLD  SWIPE UP", "guard": "GUARD", "guard_hint": "HOLD", "power": "POWER", "power_hint": "HOLD", "move": "MOVE", "move_hint": "FLICK TO DODGE",
     "full_light": "LIGHT", "full_heavy": "HEAVY", "full_signature": "SIGN", "full_context": "CONTEXT", "full_mode": "MODE", "full_transform": "FORM", "full_dodge": "DODGE",
     "pause_title": "PAUSED", "pause_resume": "Resume", "pause_howto": "How to play", "pause_settings": "Settings", "pause_feedback": "Send feedback", "pause_new": "New match",
-    "pause_new_ask": "Start a new match?", "pause_new_yes": "New match", "pause_new_no": "Keep playing", "pause_resume_key": "P", "pause_howto_key": "F1", "pause_new_key": "N" },
+    "pause_new_ask": "Start a new match?", "pause_new_yes": "New match", "pause_new_no": "Keep playing", "pause_resume_key": "P", "pause_howto_key": "F1", "pause_new_key": "N",
+    "join": "P2: press any button to join", "join_short": "P2: press a button", "join_key": "P2: press T to join", "join_key_short": "P2: T to join", "join_tiny": "P2: any button", "join_key_tiny": "P2: press T", "left_short": "P2 left", "joined": "P2 joined", "left": "P2 handed back to the AI", "pause_p2_leave": "Player two: hand back to the AI", "pause_p2_join": "Player two: press any button to join" },
   "planet": "EVERHOLD",
   "places": [
     { "x0": 0,    "x1": 1200, "name": "LONGWATER" },

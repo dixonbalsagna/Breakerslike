@@ -47,6 +47,7 @@ func _run() -> void:
 	await _remap_rules()
 	await _pause_menu_rules()
 	await _faces_rules()
+	await _two_player_rules()
 	await _sim_pause_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
@@ -2071,6 +2072,7 @@ func _settings_rules() -> void:
 	await process_frame
 	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
 	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
 	hud.advance(1.0 / 60.0)
 	var ev := {"opened": 0, "closed": 0, "changes": [], "actions": []}
 	hud.settings_opened.connect(func(): ev["opened"] += 1)
@@ -2110,8 +2112,10 @@ func _settings_rules() -> void:
 	_ok(hud.opts["pad_preset"] == "simple-pad", "settings keys: Left cycles back round the list")
 	hud.settings_action("right")
 	var zoom_i: int = idx_of.call("camera_zoom")
-	while hud.settings_focus() != zoom_i:
+	var guard := 0
+	while hud.settings_focus() != zoom_i and guard < 60:
 		hud.settings_action("down")
+		guard += 1
 	hud._unhandled_input(key.call(KEY_RIGHT))
 	hud._unhandled_input(key.call(KEY_RIGHT))
 	hud._unhandled_input(key.call(KEY_RIGHT))
@@ -3132,5 +3136,181 @@ func _faces_rules() -> void:
 	var lc: Array = hud.lane_colors()
 	_ok(lc[0] == Color("#ff8800") and lc[1] == Color("#2299ff") and seen.size() == 1 and seen[0] == [Color("#ff8800"), Color("#2299ff")], "faces: lane_colors() is each fighter's aura and lane_colors_changed fires once when they change (for SplitView.set_panel_colors)")
 	_ok(hud.panel_floor_y() == hud.layout.panel_floor() and hud.panel_floor_y() > hud.layout.plate[0].end.y, "faces: panel_floor_y() is where the strip's top band may start")
+	hud.queue_free()
+	await process_frame
+
+
+# --- Local two-player: the join prompt, the notes, each player's own legend, the pause menu and Settings (docs/ui/hud-spec.md section 30) ----------
+
+func _two_player_rules() -> void:
+	UiData.reload()
+	for id in ["join", "join_short", "join_key", "join_key_short", "joined", "left", "pause_p2_leave", "pause_p2_join"]:
+		_ok(UiData.t("prompt." + id) != "prompt." + id, "two players: the word %s exists" % id)
+	var od: Dictionary = UiData.options()
+	_ok(od["pad_preset_p2"]["choices"] == od["pad_preset"]["choices"] and od["pad_preset_p2"]["default"] == "arena" and od["join_prompt"]["default"] == true and UiData.settings()["labels"]["pad_preset_p2"]["simple-pad"] == "Simple", "two players: the options for player two's controller layout and the join prompt are in the data")
+	# Each player's own layout.
+	var pid := func(dev: String, slot: int, o: Dictionary) -> String:
+		var mm := UiFighterModel.new()
+		mm.device = dev
+		mm.slot = slot
+		return UiHints.preset_id(mm, o)
+	_ok(pid.call("kbd", 0, {"kbd_humans": 2}) == "kb-shared-p1" and pid.call("kbd", 1, {"kbd_humans": 2}) == "kb-shared-p2", "two players: two people on the keyboard get the shared-keyboard halves")
+	_ok(pid.call("kbd", 0, {"kbd_humans": 1, "humans": 2}) == "kb-solo" and pid.call("xbox", 1, {"pad_preset": "arena", "pad_preset_p2": "brawler"}) == "brawler" and pid.call("xbox", 0, {"pad_preset": "simple-pad", "pad_preset_p2": "brawler"}) == "simple-pad", "two players: one on the keyboard and one on a pad is the solo layout and the pad's own layout (player two's option for slot 1)")
+	_ok(pid.call("xbox", 1, {"slot_presets": {1: "simple-pad"}, "pad_preset_p2": "arena"}) == "simple-pad" and pid.call("kbd", 0, {"slot_presets": {1: "simple-pad"}}) == "kb-solo", "two players: a layout the host names for a slot wins")
+	# The join prompt's fade and its fit.
+	_ok(UiJoin.alpha(-1.0) == 0.0 and UiJoin.alpha(1.0) == 1.0 and UiJoin.alpha(UiJoin.SHOW) == 1.0 and is_equal_approx(UiJoin.alpha(UiJoin.SHOW + UiJoin.FADE * 0.5), 0.5) and UiJoin.alpha(UiJoin.SHOW + UiJoin.FADE + 1.0) == 0.0, "two players: the join prompt is full from the start, fades after 25 s of fight time and is gone")
+	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(3840, 2160), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0],
+		[Vector2(844, 390), 1.0], [Vector2(1170, 2532), 3.0], [Vector2(1080, 2340), 2.75], [Vector2(828, 1792), 2.0], [Vector2(750, 1334), 2.0], [Vector2(390, 844), 1.0], [Vector2(360, 640), 1.0]]
+	for cs in cases:
+		var sz: Vector2 = cs[0]
+		for touch in [false, true]:
+			var lay := UiLayout.new()
+			lay.dp = cs[1]
+			lay.touch_ui = touch
+			lay.compute(sz, false)
+			var tag := "two players %dx%d dp %.1f touch=%s" % [int(sz.x), int(sz.y), cs[1], str(touch)]
+			var rect: Rect2 = lay.prompts[1]
+			if rect.size.y <= 0.0:
+				_ok(UiJoin.plan(rect, lay.s, "prompt")["text"] == "", "%s: no prompt row (touch or portrait), so no join line" % tag)
+				continue
+			var ok_all := true
+			for kind in ["prompt", "joined", "left"]:
+				for kbd in [false, true]:
+					var p: Dictionary = UiJoin.plan(rect, lay.s, kind, kbd)
+					ok_all = ok_all and bool(p["fits"]) and UiText.width(str(p["text"]), int(p["fs"])) <= rect.size.x and int(p["fs"]) >= int(UiLook.text_floor) - 1
+			_ok(ok_all, "%s: the join line, the joined and left notes and the press-T wording fit the AI's prompt row at a readable size" % tag)
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# In the HUD: one person against the AI.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.advance(1.0 / 60.0)
+	for i in range(60):
+		hud.advance(1.0 / 60.0)
+	_ok(hud.join_due() and hud.join_prompt_alpha() > 0.99 and hud._l_join.sig != null, "two players: a person against the AI sees \"P2: press any button to join\" on the AI's side")
+	hud.set_join_available(false)
+	hud.advance(1.0 / 60.0)
+	_ok(not hud.join_due() and hud._l_join.sig == null and not (hud.pause_menu_plan()["join"] as bool), "two players: when the host says nobody can join, the prompt and the pause line are gone")
+	hud.set_join_available(true, true)
+	hud.advance(1.0 / 60.0)
+	_ok(hud.join_due() and hud._join_plan()["text"] == "P2: press T to join", "two players: with only the keyboard to join on, the prompt says press T")
+	hud.set_join_available(true)
+	hud.set_option("join_prompt", false)
+	hud.advance(1.0 / 60.0)
+	_ok(not hud.join_due(), "two players: the option turns the prompt off")
+	hud.set_option("join_prompt", true)
+	hud.set_option("touch_ui", true)
+	hud.advance(1.0 / 60.0)
+	_ok(not hud.join_due(), "two players: a touch screen hides it")
+	hud.set_option("touch_ui", false)
+	hud.advance(1.0 / 60.0)
+	for i in range(60 * 27):
+		hud.advance(1.0 / 60.0)
+	_ok(hud.join_due() and hud.join_prompt_alpha() == 0.0 and hud._l_join.sig == null, "two players: after 27 s of fight time the prompt has faded")
+	hud.show_pause_menu()
+	var pmp: Dictionary = hud.pause_menu_plan()
+	_ok(bool(pmp["join"]) and (pmp["join_lines"] as Array).size() >= 1 and bool(pmp["fits"]), "two players: and it is back in the pause menu as a line")
+	hud.pause_menu_action("back")
+	# Player two joins.
+	hud.hub.model(1).ai = false
+	hud.advance(1.0 / 60.0)
+	_ok(hud.join_note() == "joined" and hud._l_join.sig != null and not hud.join_due(), "two players: when player two joins a \"P2 joined\" note takes the prompt's place")
+	hud.advance(1.0 / 60.0)
+	_ok(hud.hub.model(0).you_label == "P1" and hud.hub.model(1).you_label == "P2" and hud._l_hints[0].sig != null and hud._l_hints[1].sig != null, "two players: both nameplates show P1 and P2 and both players get their legend again")
+	for i in range(int(UiJoin.NOTE * 60.0) + 30):
+		hud.advance(1.0 / 60.0)
+	_ok(hud.join_note() == "" and hud._l_join.sig == null, "two players: the note goes after about 2.6 s")
+	hud.hub.model(1).ai = true
+	hud.advance(1.0 / 60.0)
+	_ok(hud.join_note() == "left" and hud.hub.model(0).you_label == "YOU" and hud._l_hints[1].sig == null, "two players: handed back, a \"P2 handed back to the AI\" note shows, the badges go back to YOU and player two's legend goes")
+	hud.show_join_note("joined")
+	_ok(hud.join_note() == "joined", "two players: the host can raise the note itself (Controls' input_note)")
+	# Each player's own legend: one on the keyboard, one on a pad.
+	hud.hub.model(1).ai = false
+	hud.hub.model(0).device = "kbd"
+	hud.hub.model(1).device = "xbox"
+	hud.set_option("pad_preset_p2", "brawler")
+	var o2: Dictionary = hud._o()
+	_ok(UiHints.preset_id(hud.hub.model(0), o2) == "kb-solo" and UiHints.preset_id(hud.hub.model(1), o2) == "brawler", "two players: player one's legend is the solo keyboard's and player two's is the pad's own layout")
+	hud.set_slot_layout(1, "simple-pad")
+	_ok(UiHints.preset_id(hud.hub.model(1), hud._o()) == "simple-pad", "two players: a layout the host names for a slot is the one its legend shows")
+	hud.set_slot_layout(1, "")
+	hud.hub.model(1).device = "kbd"
+	_ok(UiHints.preset_id(hud.hub.model(0), hud._o()) == "kb-shared-p1" and UiHints.preset_id(hud.hub.model(1), hud._o()) == "kb-shared-p2", "two players: both on the keyboard they get the two halves")
+	# The pause menu: hand player two back.
+	var got := {"leave": 0, "entries": []}
+	hud.player_two_leave_requested.connect(func(): got["leave"] += 1)
+	hud.pause_entry.connect(func(e): got["entries"].append(e))
+	hud.show_pause_menu()
+	var ids2: Array = UiPause.ids(false, true)
+	var pmp2: Dictionary = hud.pause_menu_plan()
+	var item_ids: Array = []
+	for it in pmp2["items"]:
+		item_ids.append(it["id"])
+	_ok(item_ids == ids2 and ids2.has("p2_leave") and ids2.find("p2_leave") == ids2.find("new") - 1 and not bool(pmp2["join"]), "two players: while two people play the pause menu has \"Player two: hand back to the AI\" before New match, and no join line")
+	hud._pm_focus = ids2.find("p2_leave")
+	hud.pause_menu_action("accept")
+	_ok(got["leave"] == 1 and got["entries"].back() == "p2_leave" and hud.is_pause_menu_open(), "two players: choosing it tells the host and the menu stays open")
+	hud.hub.model(1).ai = true
+	hud.pause_menu_action("down")
+	_ok(not UiPause.ids(false, false).has("p2_leave") and hud.pause_menu_focus() < UiPause.ids(false, false).size(), "two players: once player two is the AI the entry is gone and the focus stays on a button")
+	hud.pause_menu_action("back")
+	# Settings and Remap for each player.
+	hud.hub.model(1).ai = true
+	UiData.set_feature("remap", true)
+	hud.show_settings()
+	var keys1: Array = []
+	for r in UiSettings.rows():
+		keys1.append(str(r["key"]) if r["key"] != "" else str(r.get("action", "")))
+	hud.hide_settings()
+	hud.hub.model(1).ai = false
+	hud.show_settings()
+	var keys2: Array = []
+	for r in UiSettings.rows():
+		keys2.append(str(r["key"]) if r["key"] != "" else str(r.get("action", "")))
+	_ok(not keys1.has("pad_preset_p2") and not keys1.has("remap_two") and keys2.has("pad_preset_p2") and keys2.has("remap_two") and keys2.find("pad_preset_p2") == keys2.find("pad_preset") + 1, "two players: Settings lists player two's controller layout and Remap row only while two people play")
+	var rows_now: Array = UiSettings.rows()
+	var ridx := -1
+	for i in range(rows_now.size()):
+		if str(rows_now[i].get("action", "")) == "remap_two":
+			ridx = i
+	hud._set_focus = ridx
+	hud.hub.model(0).device = "kbd"
+	hud.hub.model(1).device = "xbox"
+	hud.settings_action("accept")
+	_ok(hud.is_remap_open() and hud.remap_layout() == "brawler", "two players: Remap player 2's controls opens player two's own layout (the pad layout set for player two)")
+	hud.hide_remap()
+	hud.hide_settings()
+	hud.hub.model(1).device = "kbd"
+	hud.show_remap("", 1)
+	_ok(hud.remap_layout() == "kb-shared-p2" and hud.remap_plan()["status"] == "", "two players: on the keyboard it is player two's half, and a layout only one person uses has no shared note")
+	hud.hide_remap()
+	hud.hub.model(1).device = "xbox"
+	hud.hub.model(0).device = "xbox"
+	hud.set_option("pad_preset", "arena")
+	hud.set_option("pad_preset_p2", "arena")
+	hud.show_remap("arena", 0)
+	_ok(str(hud.remap_plan()["status"]) == "Both players use this layout: a remap here is for both.", "two players: two people on one layout are told a remap is for both")
+	hud.hide_remap()
+	UiData.set_feature("remap", null)
+	# The pause menu's geometry with the hand-back entry and the join line.
+	for cs in cases:
+		var sz2: Vector2 = cs[0]
+		var lay2 := UiLayout.new()
+		lay2.dp = cs[1]
+		lay2.compute(sz2, false)
+		for touch in [false, true]:
+			for variant in [[true, false], [false, true]]:
+				var p2: Dictionary = UiPause.plan(sz2, lay2.s, cs[1], touch, {"focus": 0, "confirm": false, "two": variant[0], "join": variant[1]})
+				var hits_ok := true
+				for it in p2["items"]:
+					hits_ok = hits_ok and UiPause.hit(p2, (it["rect"] as Rect2).get_center()) == it["id"] and (it["rect"] as Rect2).size.y >= float(p2["tm"]) - 0.01
+				_ok(bool(p2["fits"]) and hits_ok and (p2["items"] as Array).size() == (6 if variant[0] else 5), "pause menu two-player %dx%d dp %.1f touch=%s %s: it fits and every button is 48 dp" % [int(sz2.x), int(sz2.y), cs[1], str(touch), "hand-back entry" if variant[0] else "join line"])
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
 	hud.queue_free()
 	await process_frame

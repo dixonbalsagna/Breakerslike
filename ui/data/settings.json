@@ -11,12 +11,15 @@
   "sections": [
     { "id": "controls", "title": "Controls", "items": [
       "pad_preset",
+      "pad_preset_p2",
       "touch_preset",
       "left_handed",
       "hotseat_alt_layout",
       "control_hints",
       "show_prompts",
-      { "action": "remap", "label": "Remap controls", "value": "Open", "help": "Change which button or key does what, for the layout you are using.", "needs": "remap" }
+      "join_prompt",
+      { "action": "remap", "label": "Remap controls", "value": "Open", "help": "Change which button or key does what, for the layout you are using.", "needs": "remap" },
+      { "action": "remap_two", "label": "Remap player 2's controls", "value": "Open", "help": "Change which button or key does what for player two, when two people play.", "needs": "remap" }
     ] },
     { "id": "camera", "title": "Camera", "items": ["camera_zoom", "camera_shake", "camera_launch_follow", "camera_panels", "split_solo"] },
     { "id": "display", "title": "Display", "items": ["vfx_quality", "info_flashes", "brink_cue", "silhouette", "region_label"] },
@@ -28,6 +31,7 @@
   "hidden_note": "glyph_style has one choice.",
   "labels": {
     "pad_preset": { "arena": "Arena", "brawler": "Brawler", "simple-pad": "Simple" },
+    "pad_preset_p2": { "arena": "Arena", "brawler": "Brawler", "simple-pad": "Simple" },
     "touch_preset": { "touch-simple": "Simple", "touch-full": "Full" },
     "vfx_quality": { "auto": "Auto", "high": "High", "medium": "Medium", "low": "Low" },
     "control_hints": { "auto": "Auto", "always": "Always", "off": "Off" },
@@ -57,6 +61,7 @@
     "done": "{action} is now {control}.",
     "same": "{action} already uses {control}.",
     "cancelled": "Cancelled.",
+    "_shared": "Both players use this layout: a remap here is for both.",
     "reset_done": "{layout} is back to its defaults.",
     "move_steps": {
       "up": "up",
