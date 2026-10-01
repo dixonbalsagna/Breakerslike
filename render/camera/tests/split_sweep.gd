@@ -153,10 +153,22 @@ func _run() -> void:
 	for row in [[750.0, "foreground"], [-600.0, "front street"], [-1650.0, "mid row"], [-2850.0, "back row"]]:
 		await _scenario("depth %s one view" % row[1], func(): return _depth(float(row[0]), 600.0), {})
 		await _scenario("depth %s split" % row[1], func(): return _depth(float(row[0]), 9000.0), {})
+	for pitch in [11.0, 49.0]:
+		for row in [[-600.0, "front street"], [-2025.0, "block row 2"]]:
+			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
+			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
+	await _scenario("hybrid hold and cut", func(): return _hybrid(1, 20000.0), {})
+	await _scenario("hybrid launched human chases", func(): return _hybrid_chased(), {})
+	await _scenario("hybrid two humans split", func(): return _hybrid(2, 20000.0), {})
 	_static_equals_reference()
-	# 8. Real AI matches, then the determinism of the sim.
+	await _projection_matches_the_rig()
+	# 8. Real AI matches (and a few with a human fighter idle, or a raised camera), then the determinism of the sim.
 	for seed in seeds:
 		_real_match(int(seed))
+	for k in range(mini(3, seeds.size())):
+		_real_match(int(seeds[k]), 1 - (k % 2), 0.0)
+	if not seeds.is_empty():
+		_real_match(int(seeds[0]), -1, 49.0)
 	_sim_unchanged()
 	print("frames checked  %d, checks %d" % [frames_checked, checks])
 	for k in stats:
@@ -719,7 +731,8 @@ func _launch(speed: float, dist: float, vertical: bool = false, gap: float = 500
 
 ## A brunt: B is launched toward a building 6,000 units away in the row at depth z, its z eases there, it hits (a
 ## building_hit event) and eases back. The camera has to keep B on screen at a readable size the whole way.
-func _depth(zrow: float, gap: float) -> Dictionary:
+func _depth(zrow: float, gap: float, pitch: float = 0.0) -> Dictionary:
+	_rig.pitch_deg = pitch
 	var ax: float = 70000.0
 	_pose(ax, 40.0, ax + gap, 40.0)
 	_seed_rig()
@@ -764,7 +777,7 @@ func _depth(zrow: float, gap: float) -> Dictionary:
 		# The pane that has B: his own while two panes or his expanded pane are up, else the one view (pane 0).
 		var pi: int = 1 if cur.shows(1) else 0
 		var p: Vector2 = cur.screen_pos(pi, B.x, B.y + CamParams.CHEST, B.z)
-		var px: float = CamParams.BODY_H * cur.cam_z[pi] * cur.depth_scale(pi, B.z)
+		var px: float = cur.apparent_height(pi, B.x, B.y, B.z)
 		if cur.mode == "solo" or cur.mode == "split":
 			min_px = minf(min_px, px)
 			max_off = maxf(max_off, maxf(maxf(-p.x, p.x - vw), maxf(-p.y, p.y - vh)))
@@ -775,9 +788,97 @@ func _depth(zrow: float, gap: float) -> Dictionary:
 		_tick_rig()
 	# The back row can reach about 25 px at the zoom cap (depth-and-chains.md); the others keep their 40 px or so.
 	var want: float = 20.0 if zrow < -2000.0 else 28.0
+	if pitch > 0.0:
+		want *= 0.7   # a raised camera sees a deep standing fighter smaller (docs/camera/camera-v2.md section 8)
 	_check(min_px >= want * vh / 720.0, "%s: the deep fighter shrank to %.1f px (want at least %.0f)" % [_label, min_px, want * vh / 720.0])
 	_check(max_off <= 0.0, "%s: the deep fighter left the screen by %.0f px" % [_label, max_off])
 	stats["depth min px " + _label] = "%.1f px, worst off-screen %.0f px" % [min_px, max_off]
+	return {}
+
+
+## The hybrid launch rule. humans = 1: the human is slot 0, who launches slot 1 (AI) 20,000 units away: the camera stays on
+## the human, cuts to the impact for 0.5 s, then returns. humans = 2: both are human, so the split opens and a pane chases.
+func _hybrid(humans: int, dist: float) -> Dictionary:
+	var ax: float = 70000.0
+	_S.fighters[0].ai = null
+	if humans >= 2:
+		_S.fighters[1].ai = null
+	_pose(ax, 40.0, ax + 600.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var B = _S.fighters[1]
+	var A = _S.fighters[0]
+	B.state = "launched"
+	var flight: float = 1.0
+	B.vx = dist / flight
+	var max_human_off: float = 0.0
+	var holds: int = 0
+	var cuts: int = 0
+	var cut_visible: bool = true
+	var saw_split: bool = false
+	for k in range(60):
+		B.x = SimWrap.wrap(B.x + B.vx * SplitRig.DT)
+		B.y = 40.0 + 200.0 * smoothstep(0.0, 0.7, float(k) * SplitRig.DT)
+		_tick_rig()
+		var cur: SplitFrame = _rig.current()
+		if _rig.solo_kind == "hold":
+			holds += 1
+		if _rig.solo_kind == "cut":
+			cuts += 1
+			var pv: Vector2 = cur.screen_pos(1 if cur.shows(1) else 0, B.x, B.y + CamParams.CHEST, B.z)
+			cut_visible = cut_visible and pv.x >= 0.0 and pv.x <= vw and pv.y >= 0.0 and pv.y <= vh
+		if cur.mode == "split" or cur.mode == "opening":
+			saw_split = true
+		if _rig.solo_kind == "hold":
+			var ph: Vector2 = cur.screen_pos(0, A.x, A.y + CamParams.CHEST, A.z)
+			max_human_off = maxf(max_human_off, maxf(maxf(-ph.x, ph.x - vw), maxf(-ph.y, ph.y - vh)))
+	B.state = "down"
+	B.vx = 0.0
+	var cut_frames: int = 0
+	var end_modes: Array = []
+	for _i in range(150):
+		_tick_rig()
+		if _rig.solo_kind == "cut":
+			cuts += 1
+		if _rig.current().cut:
+			cut_frames += 1
+	if humans == 1:
+		_check(holds > 0, "%s: the camera never held on the attacker" % _label)
+		_check(cuts > 0 and cuts <= int(CamParams.CUT_SHOT * 60.0) + 2, "%s: the impact cut lasted %d ticks (want about %d)" % [_label, cuts, int(CamParams.CUT_SHOT * 60.0)])
+		_check(cut_visible, "%s: the victim was off screen during the impact cut" % _label)
+		_check(max_human_off <= 0.0, "%s: the human fighter left the screen by %.0f px while the camera held on him" % [_label, max_human_off])
+		_check(not saw_split, "%s: the split opened although the human was held on" % _label)
+		_check(_rig.solo_kind == "", "%s: the shot did not end" % _label)
+	else:
+		_check(holds == 0 and cuts == 0, "%s: two humans got a hold or a cut (holds %d cuts %d)" % [_label, holds, cuts])
+		_check(saw_split, "%s: the split did not open for the launch" % _label)
+	stats["hybrid " + _label] = "holds %d, cut ticks %d, cut frames %d, human off %.0f px, split %s" % [holds, cuts, cut_frames, max_human_off, str(saw_split)]
+	return {}
+
+
+## The human is launched: the chase, as before.
+func _hybrid_chased() -> Dictionary:
+	var ax: float = 70000.0
+	_S.fighters[1].ai = null
+	_pose(ax, 40.0, ax + 600.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var B = _S.fighters[1]
+	B.state = "launched"
+	B.vx = 20000.0
+	var chased: bool = false
+	for k in range(60):
+		B.x = SimWrap.wrap(B.x + B.vx * SplitRig.DT)
+		_tick_rig()
+		if _rig.solo_kind == "launch" and _rig.solo_slot == 1:
+			chased = true
+	B.state = "down"
+	B.vx = 0.0
+	for _i in range(150):
+		_tick_rig()
+	_check(chased, "%s: the launched human was not chased" % _label)
 	return {}
 
 
@@ -936,6 +1037,33 @@ func _hard_cut() -> Dictionary:
 	return {}
 
 
+## SplitFrame.project is the pinhole of Rendering's CameraRig: the same pixel for the same point, at every pitch.
+func _projection_matches_the_rig() -> void:
+	var vpn := SubViewport.new()
+	vpn.size = Vector2i(int(vw), int(vh))
+	root.add_child(vpn)
+	var rig := CameraRig.new()
+	vpn.add_child(rig)
+	await process_frame
+	var worst: float = 0.0
+	var pts: Array = [Vector3(0, 0, 0), Vector3(300, 120, 0), Vector3(-800, 400, -1650), Vector3(1500, 60, 750), Vector3(-200, 900, -2850), Vector3(2400, 30, -600)]
+	for pitch in [0.0, 11.0, 49.0]:
+		for zoom in [0.35, 0.8, 1.3]:
+			var cx: float = 91234.5
+			var cy: float = 220.0
+			rig.frame(cy, zoom, Vector2.ZERO, vh, pitch)
+			for q in pts:
+				var wx: float = cx + q.x
+				var mine: Vector2 = SplitFrame.project(cx, cy, zoom, pitch, vw, vh, wx, q.y, q.z)
+				var theirs: Vector2 = rig.unproject_position(Vector3(q.x, q.y, q.z))
+				if not rig.is_position_behind(Vector3(q.x, q.y, q.z)):
+					worst = maxf(worst, mine.distance_to(theirs))
+	rig.queue_free()
+	vpn.queue_free()
+	stats["projection vs CameraRig"] = "worst %.4f px over 3 pitches, 3 zooms, 6 points" % worst
+	_check(worst < 0.05, "SplitFrame.project differs from CameraRig by %.4f px" % worst)
+
+
 ## With the panes merged and everything at rest, the merged frame is the reference camera's.
 func _static_equals_reference() -> void:
 	_begin("merged equals the reference camera")
@@ -960,9 +1088,10 @@ func _static_equals_reference() -> void:
 
 # ------------------------------------------------------------------------------------------------ real matches
 
-func _real_match(seed: int) -> void:
-	_begin("real match %d" % seed)
-	SimCore.newMatch(_S, seed, {"p1": true, "p2": true})
+func _real_match(seed: int, human: int = -1, pitch: float = 0.0) -> void:
+	_begin("real match %d%s%s" % [seed, (" human %d" % human) if human >= 0 else "", (" pitch %d" % int(pitch)) if pitch > 0.0 else ""])
+	SimCore.newMatch(_S, seed, {"p1": human != 0, "p2": human != 1})
+	_rig.pitch_deg = pitch
 	_rig.reset(_S, vw, vh)
 	_watch_first()
 	_last_sigma = _rig.sigma_shown

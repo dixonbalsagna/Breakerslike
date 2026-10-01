@@ -12,6 +12,8 @@ const DT: float = 1.0 / 60.0
 # --- settings (the player's) ---
 var solo_split: bool = true            # against the AI: split like two players (false: follow the human fighter alone when far)
 var reduced_motion: bool = false
+var pitch_deg: float = 0.0               # the cameras' pitch (Rendering's debug toggle sets it); 0 is straight on
+var launch_follow: String = "auto"    # "auto" (the hybrid), "chase" or "split" (camera-v2.md section 3)
 var zoom_pref: float = CamParams.ZOOM_PREF_DEFAULT   # the player's zoom setting, 0 to 10 (default 7)
 var pane_request_fn: Callable = Callable()   # (slot) -> {"kind": "normal" | "search", ...}: the hiding hook, unused
 
@@ -74,6 +76,11 @@ var _hit_t: Array = [-1.0, -1.0]        # seconds since this fighter's last buil
 var _hit_amp: Array = [0.0, 0.0]
 var _hit_hold: Array = [0.0, 0.0]
 var _launch_anchor_y: float = 0.62
+var chase_slot: int = -1                # a split pane that chases a launched fighter (no solo shot)
+var _chase_land_t: float = 0.0
+var _launch_victim: int = -1            # a launched fighter the hybrid rule may hold on the attacker for
+var _impact_evt: Array = [false, false]
+var _last_pitch: float = 0.0
 var _cut_fade: float = 0.0              # seconds left of a safety cut's fade-in
 var _cut_now: bool = false              # a safety cut happened this tick: the frame is a cut
 var lag_whips: int = 0                  # ticks the hard bound had to pull a focus (counted for the tests)
@@ -173,6 +180,10 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 	_update_orientation(S)
 	r_now = _metric(S)
 	_update_solo(S)
+	_impact_evt = [false, false]
+	if absf(pitch_deg - _last_pitch) > 0.01:
+		_last_pitch = pitch_deg
+		_cut_now = true
 	_update_trigger(S)
 	_update_layout()
 	_update_pushes()
@@ -290,6 +301,11 @@ func _update_trigger(S: SimState) -> void:
 	if not split_wanted:
 		_below_t = _below_t + DT if r_now < rs else 0.0
 		var out_of_frame: bool = _outside_one_view(S)
+		# The hybrid launch rule: when the human knocked the opponent out of the shared view, stay with the human instead
+		# of splitting; the impact cut follows (camera-v2.md section 3).
+		if _launch_victim >= 0 and (out_of_frame or r_now <= maxf(CamParams.R_FLOOR, CamParams.MIN_PX / vh)) and S.fighters[_launch_victim].state == "launched":
+			_begin_solo("hold", 1 - _launch_victim, 2, 0.0, S)
+			return
 		# A fighter already lost off the edge of the one view does not wait out the dwell or the full merged age.
 		var age_ok: bool = _layout_age >= CamParams.MIN_MERGED_AGE or (out_of_frame and _layout_age >= CamParams.MIN_OUT_OF_FRAME_AGE)
 		# While they are still moving apart the shared zoom-out holds a little longer (a wide "flying around the world" beat).
@@ -516,6 +532,8 @@ func _read_events(S: SimState, events: Array) -> void:
 			"building_hit":
 				# B2: an impact push, inside the sim's hold (0.35 s on the first hit, 0.12 s on each further one).
 				var hv: int = int(_ef(ev, "victim", -1))
+				if hv >= 0 and hv < 2:
+					_impact_evt[hv] = true
 				if hv >= 0 and hv < 2 and not reduced_motion:
 					var link: int = int(_ef(ev, "link", 1))
 					_hit_t[hv] = 0.0
@@ -606,7 +624,7 @@ func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = nu
 	_launch_anchor_y = 0.62
 	# A launch out of the one view takes the screen at once, from where the fighter is in that view: the same zoom, the
 	# same screen position, then it eases to the chase size and the trailing anchor. No ramp in which he can be lost.
-	if kind == "launch" and S != null and sep < 0.5:
+	if (kind == "launch" or kind == "hold") and S != null and sep < 0.5:
 		var lf = S.fighters[slot]
 		_zo[slot] = _mz
 		solo_w = 1.0
@@ -648,12 +666,27 @@ func _update_solo(S: SimState) -> void:
 		if f.state == "launched" and (_prev_state[i] != "launched" or _launch_evt[i]):
 			var sp: float = sqrt(f.vx * f.vx + f.vy * f.vy)
 			if sp >= CamParams.LAUNCH_MIN_SPEED and not fold_active:
-				if solo_kind == "launch" and solo_slot == i:
+				var lmode: String = _launch_mode(S, i)
+				if lmode == "hold":
+					_launch_victim = i
+				elif lmode == "split":
+					chase_slot = i
+					_chase_land_t = 0.0
+				elif solo_kind == "launch" and solo_slot == i:
 					solo_phase = "follow"
 					solo_t = 0.0
 				elif solo_kind == "":
 					_begin_solo("launch", i, 2, 0.0, S)
 	_launch_evt = [false, false]
+	if _launch_victim >= 0 and S.fighters[_launch_victim].state != "launched" and solo_kind != "hold" and solo_kind != "cut":
+		_launch_victim = -1
+	if chase_slot >= 0:
+		if S.fighters[chase_slot].state != "launched":
+			_chase_land_t += DT
+			if _chase_land_t > CamParams.LAND_HOLD:
+				chase_slot = -1
+		else:
+			_chase_land_t = 0.0
 	for ai in range(2):
 		if _aim[ai] != null and S.fighters[ai].state != "launched":
 			_aim[ai] = null
@@ -681,11 +714,62 @@ func _update_solo(S: SimState) -> void:
 					solo_t = 0.0
 				elif _land_t >= CamParams.LAND_HOLD and f.slide <= 0.0:
 					_end_solo(S)
+		"hold":
+			# On the attacker until the impact (a building hit, or the landing, or the cap), then the cut to the victim.
+			var v: int = _launch_victim
+			if v < 0 or _impact_evt[v] or S.fighters[v].state != "launched" or solo_t >= CamParams.HOLD_MAX:
+				if v >= 0:
+					_start_cut(S, v)
+				else:
+					_end_solo(S)
+		"cut":
+			if solo_t >= CamParams.CUT_SHOT:
+				_launch_victim = -1
+				_end_solo(S)
 		"transform":
 			if _solo_dur > 0.0 and solo_t >= _solo_dur + 0.05:
 				_end_solo(S)
 		"ko":
 			pass
+
+
+## Who follows a launched fighter i: "chase" (a solo shot on him), "hold" (stay with the human attacker, then the impact
+## cut) or "split" (a pane chases him, no solo). The hybrid of Orb's pick: one human who launched the opponent holds; one
+## human who was launched chases; two humans use the split; no human (the demo) chases.
+func _launch_mode(S: SimState, i: int) -> String:
+	if launch_follow == "chase":
+		return "chase"
+	var humans: int = 0
+	var h: int = -1
+	for k in range(2):
+		if S.fighters[k].ai == null:
+			humans += 1
+			h = k
+	if launch_follow == "split" or humans >= 2:
+		return "split"
+	if humans == 1 and i != h:
+		return "hold" if sep < 0.5 else "split"
+	return "chase"
+
+
+## The cut to the impact: a hard cut to the launched fighter v at the push-in size, for CUT_SHOT seconds.
+func _start_cut(S: SimState, v: int) -> void:
+	solo_kind = "cut"
+	solo_slot = v
+	solo_prio = 2
+	solo_t = 0.0
+	solo_phase = "cut"
+	solo_target = 1.0
+	solo_w = 1.0
+	e_target = 1.0
+	e = 1.0
+	e_slot = v
+	sliver = 0.0
+	_launch_anchor_x = 0.5
+	_launch_anchor_y = 0.62
+	_snap_focus(S, v)
+	_zo[v] = _own_zoom_target(S, v)
+	_cut_now = true
 
 
 func _update_pushes() -> void:
@@ -779,7 +863,23 @@ func _merged_target(S: SimState) -> Vector3:
 	var mult: float = maxf(_push_mult(0), _push_mult(1))
 	if solo_kind == "ko":
 		pass
-	return Vector3(SimWrap.wrap(mx), my, clampf(z * mult, CamParams.ZOOM_MIN, _zcap() * (1.0 + CamParams.TIER_PUSH)))
+	var pz: float = 1.0 / cos(deg_to_rad(pitch_deg))
+	z = clampf(z * mult * pz, CamParams.ZOOM_MIN, _zcap() * pz * (1.0 + CamParams.TIER_PUSH))
+	if pitch_deg != 0.0:
+		# Put the pair's chest midpoint at 0.7 of the height, as the straight-on camera does: a few Newton steps on cam_y.
+		var cwx: float = SimWrap.wrap(mx)
+		var chest_y: float = (A.y + B.y) * 0.5 + CamParams.CHEST
+		var zmid: float = (float(A.z) + float(B.z)) * 0.5
+		var cy: float = my
+		for it in range(3):
+			var s0: float = SplitFrame.project(cwx, cy, z, pitch_deg, vw, vh, cwx, chest_y, zmid).y
+			var s1: float = SplitFrame.project(cwx, cy + 25.0, z, pitch_deg, vw, vh, cwx, chest_y, zmid).y
+			var slope: float = (s1 - s0) / 25.0
+			if absf(slope) < 1e-9:
+				break
+			cy += (vh * CamParams.PLANE_Y - s0) / slope
+		my = clampf(cy, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
+	return Vector3(SimWrap.wrap(mx), my, z)
 
 
 func _snap_merged(S: SimState) -> void:
@@ -795,6 +895,9 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 	var f = S.fighters[i]
 	var m: float = _m()
 	var r: float = CamParams.R_PANE * m
+	var pz: float = 1.0 / cos(deg_to_rad(pitch_deg))   # a pitched camera foreshortens a standing fighter by cos(pitch)
+	if chase_slot == i:
+		r = CamParams.R_LAUNCH * m
 	var tier_f: float = 1.0 - CamParams.REF_TIER * (f.tier - 1.0)
 	var alt_f: float = 1.0
 	var h: float = (f.y - WorldTerrain.groundY(S, f.x)) / CamParams.BODY_H
@@ -803,6 +906,9 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 		match solo_kind:
 			"launch":
 				r = CamParams.R_LAUNCH * m
+				alt_f = 1.0
+			"cut":
+				r = CamParams.R_LAUNCH * m * (1.0 + CamParams.CUT_PUSH)
 				alt_f = 1.0
 			"transform":
 				r = CamParams.R_CINE * m
@@ -825,7 +931,7 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 		var k: float = CamParams.K_FACTOR * vh
 		var den: float = 1.0 / z - w / k
 		z = zmax if den <= 1.0 / zmax else 1.0 / den
-	return clampf(z, CamParams.ZOOM_MIN, zmax)
+	return clampf(z * pz, CamParams.ZOOM_MIN, zmax * pz)
 
 
 func _anchor_rest(i: int) -> Vector2:
@@ -844,9 +950,13 @@ func _anchor(S: SimState, i: int) -> Vector2:
 	var q: float = 0.0
 	var target: Vector2 = rest
 	var solo_pt: Vector2 = Vector2(vw * 0.5, vh * 0.62)
-	if solo_kind == "launch" and solo_slot == i:
+	if (solo_kind == "launch" or solo_kind == "hold") and solo_slot == i:
 		var f = S.fighters[i]
 		var want: float = CamParams.LAUNCH_TRAIL if f.vx >= 0.0 else 1.0 - CamParams.LAUNCH_TRAIL
+		if solo_kind == "hold" and _launch_victim >= 0:
+			# The attacker stands on the side away from where the opponent was thrown, so the throw has room.
+			var to_v: float = SimWrap.sdx(f.x, S.fighters[_launch_victim].x)
+			want = 0.4 if to_v >= 0.0 else 0.6
 		_launch_anchor_x += (want - _launch_anchor_x) * (1.0 - exp(-DT / 0.25))
 		_launch_anchor_y += (0.62 - _launch_anchor_y) * (1.0 - exp(-DT / 0.25))
 		solo_pt.x = vw * _launch_anchor_x
@@ -868,14 +978,39 @@ func _anchor(S: SimState, i: int) -> Vector2:
 	return rest.lerp(target, smoothstep(0.0, 1.0, q))
 
 
-func _cam_from_focus(i: int, z: float, p: Vector2, s: float = 1.0) -> Vector3:
+func _cam_from_focus(i: int, z: float, p: Vector2, fz: float = 0.0) -> Vector3:
 	# A deep fighter lands at C + (plane point - C) * s, so aim the plane mapping at C + (p - C) / s.
-	if s != 1.0:
+	var target: Vector2 = p
+	if fz != 0.0:
+		var d: float = CamParams.K_FACTOR * vh / z
+		var s: float = maxf(d / maxf(d - fz, 1.0), CamParams.DEPTH_S_MIN)
 		var c0 := Vector2(vw * 0.5, vh * 0.5)
 		p = c0 + (p - c0) / s
 	var x: float = SimWrap.wrap(_fx[i] - (p.x - vw * 0.5) / z)
 	var y: float = clampf(_fy[i] - (vh * CamParams.PLANE_Y - p.y) / z, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
-	return Vector3(x, y, z)
+	if pitch_deg == 0.0:
+		return Vector3(x, y, z)
+	return _refine_cam(Vector3(x, y, z), _fx[i], _fy[i], fz, target)
+
+
+## With a pitch the plane mapping is a projection: refine the straight-on guess with Newton steps (a numerical Jacobian)
+## until the fighter's chest lands on `target`.
+func _refine_cam(cam: Vector3, fx: float, fy: float, fz: float, target: Vector2) -> Vector3:
+	var cx: float = cam.x
+	var cy: float = cam.y
+	for it in range(3):
+		var s0: Vector2 = SplitFrame.project(cx, cy, cam.z, pitch_deg, vw, vh, fx, fy, fz)
+		var er: Vector2 = target - s0
+		if er.length() < 0.2:
+			break
+		var sx: Vector2 = (SplitFrame.project(cx + 25.0, cy, cam.z, pitch_deg, vw, vh, fx, fy, fz) - s0) / 25.0
+		var sy: Vector2 = (SplitFrame.project(cx, cy + 25.0, cam.z, pitch_deg, vw, vh, fx, fy, fz) - s0) / 25.0
+		var det: float = sx.x * sy.y - sy.x * sx.y
+		if absf(det) < 1e-12:
+			break
+		cx = SimWrap.wrap(cx + (sy.y * er.x - sy.x * er.y) / det)
+		cy += (-sx.y * er.x + sx.x * er.y) / det
+	return Vector3(cx, clampf(cy, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP), cam.z)
 
 
 ## The perspective scale of fighter i at the depth he has now, for the pane's current zoom.
@@ -913,7 +1048,7 @@ func _update_cameras(S: SimState) -> void:
 		var tau_x: float = CamParams.TAU_X
 		var tau_y: float = CamParams.TAU_Y
 		var freeze: bool = false
-		if solo_kind == "launch" and solo_slot == i and solo_phase == "follow":
+		if (solo_kind == "launch" and solo_slot == i and solo_phase == "follow") or chase_slot == i:
 			tau_x = CamParams.LAUNCH_TAU
 			tau_y = CamParams.TAU_Y * 0.7
 			freeze = reduced_motion
@@ -1013,7 +1148,7 @@ func _update_cameras(S: SimState) -> void:
 func _outputs(S: SimState) -> void:
 	for i in range(2):
 		_anchors[i] = _anchor(S, i)
-		_owns[i] = _cam_from_focus(i, _zo[i], _anchors[i], _depth_s(S, i, _zo[i]))
+		_owns[i] = _cam_from_focus(i, _zo[i], _anchors[i], float(S.fighters[i].z))
 	var shared: Vector3 = Vector3(_mx, _my, _mz)
 	if solo_slot >= 0 and solo_w > 0.0:
 		shared = _blend_cam(shared, _owns[solo_slot], smoothstep(0.0, 1.0, solo_w))
@@ -1089,6 +1224,7 @@ func _make_frame(S: SimState) -> SplitFrame:
 	f.flash = _flash
 	f.slam = _slam_done
 	f.shake = _shk.duplicate()
+	f.pitch = pitch_deg
 	f.fade = clampf(_cut_fade / (CamParams.REDUCED_CUT_FADE if reduced_motion else CamParams.CUT_FADE), 0.0, 1.0) if _cut_fade > 0.0 else 0.0
 	_slam_done = false
 	# Which panes must be rendered.
@@ -1100,5 +1236,10 @@ func _make_frame(S: SimState) -> SplitFrame:
 		elif e_slot == 1:
 			show0 = false
 	f.active = [show0, show1]
+	var two_up: bool = show0 and show1
+	for ci in range(2):
+		var cf = S.fighters[ci]
+		var h_px: float = f.apparent_height(ci, cf.x, cf.y, float(cf.z))
+		f.cutaway[ci] = {"request": true, "radius_px": maxf(CamParams.CUTAWAY_MIN_PX, CamParams.CUTAWAY_K * h_px), "only": ci if two_up else -1}
 	f.cut = false
 	return f

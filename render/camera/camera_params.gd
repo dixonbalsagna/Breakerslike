@@ -124,6 +124,7 @@ const REDUCED_CUT_FADE: float = 0.30
 
 # --- fighters in depth (docs/camera/depth-and-chains.md) ---
 const K_FACTOR: float = 1.8660254      # 1 / (2 tan 15 degrees): the camera's distance to the fighter plane is K_FACTOR * vh / zoom
+const TAN_HALF_FOV: float = 0.2679491924   # tan(15 degrees): the lens is 30 degrees
 const DEPTH_S_MIN: float = 0.2         # perspective scale floor, so the anchor compensation cannot blow up
 const LEAD_FRAC: float = 0.35          # how far toward the aimed building the focus leads
 const LEAD_MAX_X: float = 0.18         # ... at most this fraction of the width, on screen
@@ -134,6 +135,13 @@ const HIT_UP: float = 0.15
 const HIT_HOLD_FIRST: float = 0.35     # the sim's hold on a first hit (buildings-in-depth.md 4b)
 const HIT_HOLD_LATER: float = 0.12
 const HIT_DOWN: float = 0.40
+
+# --- the hybrid launch rule and the cut (camera-v2.md sections 3 and 12) ---
+const HOLD_MAX: float = 1.5            # the camera stays on the attacker at most this long before the impact cut
+const CUT_SHOT: float = 0.5            # the impact cut lasts this long
+const CUT_PUSH: float = 0.10           # ... zoomed in this much past the chase size
+const CUTAWAY_MIN_PX: float = 70.0     # the occlusion hole's radius is at least this, and 1.6 x the fighter's height
+const CUTAWAY_K: float = 1.6
 const SHAKE_FALLOFF: float = 4000.0   # a shake event at this distance from a pane's centre is scaled down to SHAKE_FAR (Controls' shake pass)
 const SHAKE_FAR: float = 0.35         # ... and the pane farther from the event gets this share of it
 const SHAKE_DECAY: float = 0.02       # per second, the fx consumer's decay

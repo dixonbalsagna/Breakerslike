@@ -32,6 +32,8 @@ var held_u: float = 0.0              # the held signed separation slot 0 to slot
 var flash: float = 0.0               # seconds left of the divider's slam flash
 var shake: PackedFloat64Array = PackedFloat64Array([0.0, 0.0])   # each pane's shake amount, px, before the cap and the player's scale
 var fade: float = 0.0                # 0..1: a safety cut's brightness dip, fading in (the compositor darkens by CUT_DIM x this)
+var pitch: float = 0.0               # the cameras' pitch in degrees (0: straight on); Rendering's CameraRig takes it
+var cutaway: Array = [{}, {}]        # per pane: the occlusion hole's request {request, radius_px, only}
 var slam: bool = false               # true on the one frame the slam closes
 var cut: bool = true                 # a hard cut: do not interpolate into this frame
 
@@ -63,6 +65,8 @@ func duplicate() -> SplitFrame:
 	f.held_u = held_u
 	f.flash = flash
 	f.slam = slam
+	f.pitch = pitch
+	f.cutaway = cutaway.duplicate(true)
 	f.fade = fade
 	f.shake = shake.duplicate()
 	f.cut = cut
@@ -86,11 +90,26 @@ func weight1(p: Vector2) -> float:
 ## wz is the fighter's depth (Fighter.z, positive toward the camera): a deep fighter draws at s = d / (d + w) of the way
 ## out from the camera's axis (docs/camera/depth-and-chains.md section 2), d being the camera's distance to the plane.
 func screen_pos(i: int, wx: float, wy: float, wz: float = 0.0) -> Vector2:
-	var p := Vector2(SimWrap.sdx(cam_x[i], wx) * cam_z[i] + vw * 0.5, vh * CamParams.PLANE_Y - (wy - cam_y[i]) * cam_z[i])
-	if wz == 0.0:
-		return p
-	var c0 := Vector2(vw * 0.5, vh * 0.5)
-	return c0 + (p - c0) * depth_scale(i, wz)
+	if pitch == 0.0 and wz == 0.0:
+		return Vector2(SimWrap.sdx(cam_x[i], wx) * cam_z[i] + vw * 0.5, vh * CamParams.PLANE_Y - (wy - cam_y[i]) * cam_z[i])
+	return project(cam_x[i], cam_y[i], cam_z[i], pitch, vw, vh, wx, wy, wz)
+
+
+## The pinhole projection of CameraRig (render/camera/camera_rig.gd): the camera orbits the fighter-plane point at the
+## screen's centre (plane y = cam_y + 0.2 vh / zoom) by `pitch_deg`, at the distance that gives `zoom` pixels per unit there.
+## wz is the point's depth from the plane, positive toward the camera. At pitch 0 and wz 0 it is the closed form above.
+static func project(cx: float, cy: float, zoom: float, pitch_deg: float, vw_: float, vh_: float, wx: float, wy: float, wz: float) -> Vector2:
+	var p: float = deg_to_rad(pitch_deg)
+	var dist: float = vh_ / (2.0 * zoom * CamParams.TAN_HALF_FOV)
+	var yc: float = cy + 0.2 * vh_ / zoom + dist * sin(p)
+	var zc: float = dist * cos(p)
+	var vx: float = SimWrap.sdx(cx, wx)
+	var vy: float = wy - yc
+	var vz: float = wz - zc
+	var dz: float = maxf(-vy * sin(p) - vz * cos(p), 1.0)     # along the view direction (0, -sin p, -cos p)
+	var up: float = vy * cos(p) - vz * sin(p)                  # along the camera's up (0, cos p, -sin p)
+	var f: float = vh_ * 0.5 / CamParams.TAN_HALF_FOV
+	return Vector2(vw_ * 0.5 + vx * f / dz, vh_ * 0.5 - up * f / dz)
 
 
 ## The perspective scale of a fighter at depth wz (positive toward the camera) in pane i.
@@ -105,13 +124,17 @@ func shows(i: int) -> bool:
 
 
 ## The HUD anchor record for a fighter (chest point in its own pane), in the shape Rendering's anchor_fn returns.
+func apparent_height(i: int, wx: float, wy: float, wz: float = 0.0) -> float:
+	return (screen_pos(i, wx, wy, wz) - screen_pos(i, wx, wy + CamParams.BODY_H, wz)).length()
+
+
 func hud_anchor(slot: int, wx: float, wy: float, wz: float = 0.0) -> Dictionary:
 	var p: Vector2 = screen_pos(slot, wx, wy + CamParams.CHEST, wz)
 	var on: bool = shows(slot) and Rect2(Vector2(-200.0, -200.0), Vector2(vw, vh) + Vector2(400.0, 400.0)).has_point(p)
 	if on and feather <= 0.001:
 		var side: float = (p - c).dot(n)
 		on = side <= 0.0 if slot == 0 else side > 0.0
-	return {"pos": p, "h": CamParams.BODY_H * cam_z[slot] * (depth_scale(slot, wz) if wz != 0.0 else 1.0), "visible": on, "pane": slot}
+	return {"pos": p, "h": apparent_height(slot, wx, wy, wz), "visible": on, "pane": slot}
 
 
 ## The width of the world pane i shows at the fighter plane, in radians of planet angle.
@@ -165,6 +188,7 @@ static func lerp_frames(a: SplitFrame, b: SplitFrame, t: float) -> SplitFrame:
 		f.ring[i] = a.ring[i] + angle_difference(a.ring[i], b.ring[i]) * t
 	f.swing = lerpf(a.swing, b.swing, t) if a.swing >= 0.0 and b.swing >= 0.0 else b.swing
 	f.flash = lerpf(a.flash, b.flash, t)
+	f.pitch = lerpf(a.pitch, b.pitch, t)
 	f.held_u = lerpf(a.held_u, b.held_u, t)
 	f.cut = false
 	return f

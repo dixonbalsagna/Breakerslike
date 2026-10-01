@@ -119,6 +119,13 @@ func set_shake_pref(v: float) -> void:
 	shake_pref = clampf(v, 0.0, 10.0)
 
 
+## Who the camera follows on a launch: "auto" (the hybrid: stay with the human who launched, chase the human who was
+## launched, split for two humans), "chase" or "split". Option name for UI: `camera_launch_follow`.
+func set_launch_follow(v: String) -> void:
+	if main != null:
+		main.split_rig.launch_follow = v
+
+
 func set_reduced_motion(on: bool) -> void:
 	reduced_motion = on
 	if main != null:
