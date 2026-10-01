@@ -649,3 +649,32 @@ On Orb's iPhone in portrait the BACK, NEXT and GOT IT buttons and the page dots 
 - The page dots are sized and spaced so they never overlap each other or the buttons (a 3x phone had circles wider than their spacing).
 - Spacing before the "Four stances" heading when the columns stack.
 `hud_check` now runs the card at seven phone sizes in portrait and landscape (1170 by 2532 at 3x, 1080 by 2340 at 2.75x, 1125 by 2436, 828 by 1792, 750 by 1334, 390 by 844, 360 by 640) with a keyboard, a pad and touch, and fails if any page does not fit, any item leaves the card, any button is under 48 dp, or the dots touch anything.
+
+## 24. Touch Simple: the on-screen controls
+
+Controls' bridge (`docs/controls/touch-bridge.md`, `sim/input/touch.gd`) plays a fight with two thumbs from today's intents. UI draws its buttons from `SimTouch.layout()`, the same call with the same inputs as the host's `main.touch_layout()` (viewport, dp, portrait, left-handed, safe margin), so what is drawn is what is hit.
+
+![Touch Simple in landscape, the first seconds (words on every button, the stick's place)](img/touch-simple-ready.png)
+
+![Held: Attack's hold ring is filling, Power charges, the stick shows its base and thumb, Transform has appeared](img/touch-simple-press.png)
+
+![Portrait](img/touch-simple-portrait.png)
+
+**What is drawn** (`ui/widgets/ui_touch_controls.gd`, only in touch mode):
+- **ATTACK** (the largest), **GUARD** and **POWER** as circles. Idle they are dark with a pale edge; held they fill. Attack's ring fills over its 12 ticks (the moment it becomes a heavy); Power shows a ring while it charges; Guard fills while held.
+- **The floating stick**: nothing is drawn in its zone at rest. Where the left thumb lands a base ring and a thumb appear, a heavier ring while sprinting. For the first seconds a faint ring, MOVE and FLICK TO DODGE show where it will be.
+- **Words** for the first 12 seconds of every match and while prompts are on (the same rule as the legend): ATTACK with "TAP  HOLD  SWIPE UP", GUARD and POWER with "HOLD". Portrait is tight, so Power's word goes to its left and only Attack keeps its gesture line.
+- **No context button** in this build. Its slot carries a **TRANSFORM** button when the human's fighter can transform (the HUD names it `transform` in `touch_rects()`; the host hit-tests it as `context` until Controls names it).
+- **The stance ring and the legend are retired on touch**: the prompt row and the hint legend are empty, `touch_rects()` is just pause, feedback and transform. The **YOU marker still shows** on touch.
+- `left_handed` (an option, default off, in the controls group) mirrors the buttons to the left and the stick zone to the right, exactly as `SimTouch.layout` does.
+
+**Making room** (`UiLayout`, touch landscape): the HUD stays clear of the buttons, not the other way round, because their place is Controls'.
+- The **fight** (clear zone and the camera band) ends beside the buttons' bounding box, so a fighter is never under a thumb.
+- The **wound cards** stop above the buttons; one card a side where two do not fit (`cards_one`), none on a screen about 360 dp tall or less, where the plate and the crown carry the wear (`cards_none`; the hub's cap drops to 0). The fit loop first tries a smaller scale.
+- The **bark lanes** become **one lane on the side away from the buttons**, the lines stacking as they do in portrait.
+- The **match-end pill** and the **pause button** keep clear of the cluster, and the pause button and the pill are asked before SimTouch (`touch_target_at` returns pause, feedback or transform; anything else is SimTouch's), so they win.
+- **Portrait**: the touch reserve now starts at the highest button (it used to be a fixed 22%), so the bark lanes and the fight sit above it.
+
+**State from the host.** `UiHud.touch_state_fn` is a `Callable` returning `{attack: {down, hold 0..1}, guard: {down}, power: {down}, stick: {active, base, thumb, sprint}, transform: {down}}`. Without it every button is drawn idle. `SimTouch` already exposes `guard`, `power` and `sprint`; Attack's hold progress and the stick's base and thumb points are in its private touch table, so the host (or a small public accessor on SimTouch) has to pass them.
+
+`hud_check` proves, at eleven sizes in both orientations and both hands (a 2400 by 1080 phone at 2.6x down to a 390 by 844 canvas): the layout comes from SimTouch with the three circles; each button is on screen and at least 48 dp across; no two overlap; none overlaps the plates, the toll, the pause button, the pill, the read slot, the ring map, the strip, the cards, the bark lane or the fight; portrait's reserve holds them; the fight keeps its middle; SimTouch hit-tests each button where it is drawn and the pause button is under none; the layer draws from the host's state, costs no redraws idle and none for a thumb that moves under 2 px; Transform appears only when available; pause, feedback and transform are HUD targets; left-handed mirrors. On a real phone (at least 1.5 dp and 380 dp tall) the buttons always leave room for a wound card a side.

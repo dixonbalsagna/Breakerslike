@@ -22,10 +22,10 @@ static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: fl
 		if b.setpiece:
 			_setpiece(ci, hub, b, lay, s)
 			continue
-		var lane_i: int = 0 if lay.portrait else b.slot
+		var lane_i: int = 0 if (lay.portrait or lay.bark_single) else b.slot
 		var lane: Rect2 = lay.bark[lane_i]
 		var slot_off: float = 0.0
-		if lay.portrait:
+		if lay.portrait or lay.bark_single:
 			slot_off = float(idx) * (lane.size.y + 6.0 * s) * -1.0
 			idx += 1
 		_bark(ci, hub, b, Rect2(lane.position.x, lane.position.y + slot_off, lane.size.x, lane.size.y), s, hub.model(b.slot).left_side)

@@ -41,6 +41,7 @@ func _run() -> void:
 	await _feedback_rules()
 	_toll_rules()
 	await _hints_rules()
+	await _touch_controls_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -1068,20 +1069,7 @@ func _responsive() -> void:
 				var tm: float = lay.touch_min
 				_ok(is_equal_approx(tm, maxf(48.0 * dpv, 44.0)) and lay.pause_btn.size.x >= tm - 0.01 and lay.pause_btn.size.y >= tm - 0.01, "%s: the pause button is a 48 dp target (%d px)" % [tag, int(lay.pause_btn.size.x)])
 				_ok(lay.pause_btn.size.y > 0.0 and not lay.pause_btn.intersects(lay.plate[0]) and not lay.pause_btn.intersects(lay.plate[1]) and not lay.pause_btn.intersects(lay.toll), "%s: the pause button clears the plates and the toll chip" % tag)
-				var hub := _hub()
-				var m: UiFighterModel = hub.model(0)
-				m.ai = false
-				m.left_side = true
-				var o := {"touch": true, "prompts": false, "glyph_style": "neutral", "touch_grid": lay.touch_grid}
-				var chips: Array = UiPrompts.plan(m, lay.prompts[0], lay.s, o)
-				var okc := chips.size() == 4
-				var prev := Rect2()
-				for c in chips:
-					var r: Rect2 = c["rect"]
-					if r.size.x < tm - 0.01 or r.size.y < tm - 0.01 or r.position.x < lay.prompts[0].position.x - 0.5 or r.end.x > lay.prompts[0].end.x + 0.5 or r.intersects(prev):
-						okc = false
-					prev = r
-				_ok(okc, "%s: the stance ring is four targets of at least 48 dp inside the column" % tag)
+				_ok(lay.prompts[0].size.y <= 0.0 and lay.prompts[1].size.y <= 0.0 and lay.hints[0].size.y <= 0.0, "%s: no stance ring or legend on touch (the buttons are the controls)" % tag)
 	# A narrow phone (800 wide at dp 1) still keeps its floor and the fight.
 	var lay2 := UiLayout.new()
 	lay2.compute(Vector2(800, 360), false)
@@ -1099,9 +1087,7 @@ func _responsive() -> void:
 	hud.set_option("touch_ui", true)
 	hud.advance(1.0 / 60.0)
 	var tr: Dictionary = hud.touch_rects()
-	_ok(hud.layout.touch_ui and is_equal_approx(hud.layout.dp, 2.6) and tr.has("pause") and tr.has("stance_0_p0") and tr.has("stance_3_p0") and not tr.has("stance_0_p1"), "responsive: the HUD exposes the pause button and the human fighter's four stance targets (an AI gets none)")
-	var hit: Dictionary = hud.touch_target_at((tr["stance_2_p0"] as Rect2).get_center())
-	_ok(hit.get("name", "") == "stance" and int(hit.get("slot", -2)) == 0 and int(hit.get("stance", -1)) == 2, "responsive: a tap on the third chip is stance 2 for slot 0")
+	_ok(hud.layout.touch_ui and is_equal_approx(hud.layout.dp, 2.6) and tr.has("pause") and not tr.has("stance_0_p0") and tr.size() == 1, "responsive: on touch the HUD owns only the pause button (and the feedback pill after a KO); the stance ring is retired")
 	_ok(hud.touch_target_at((tr["pause"] as Rect2).get_center()).get("name", "") == "pause" and hud.touch_target_at(Vector2(1200, 540)).is_empty(), "responsive: a tap on the pause button is named and a tap on the fight is not a target")
 	hud.set_option("touch_ui", false)
 	_ok(hud.touch_rects().is_empty(), "responsive: with touch off there are no touch targets")
@@ -1660,5 +1646,143 @@ func _hints_rules() -> void:
 	hud.set_option("touch_ui", true)
 	hud.advance(1.0 / 60.0)
 	_ok(hud._l_hints[0].sig == null and hud._l_you.sig != null, "hints: touch mode has no legend (its controls are on screen) but still marks YOU")
+	hud.queue_free()
+	await process_frame
+
+
+## The touch Simple controls, drawn from SimTouch.layout (docs/ui/hud-spec.md section 24): geometry at phone sizes in both orientations and
+## both hands, nothing overlapping the HUD, UI's pause and feedback targets winning, and the HUD's state-driven drawing.
+func _touch_controls_rules() -> void:
+	var sizes: Array = [[Vector2(2400, 1080), 2.6], [Vector2(2340, 1080), 2.75], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(844, 390), 1.0],
+		[Vector2(1170, 2532), 3.0], [Vector2(1080, 2340), 2.75], [Vector2(1125, 2436), 3.0], [Vector2(828, 1792), 2.0], [Vector2(750, 1334), 2.0], [Vector2(390, 844), 1.0]]
+	for cs in sizes:
+		for lh in [false, true]:
+			var sz: Vector2 = cs[0]
+			var dpv: float = cs[1]
+			var lay := UiLayout.new()
+			lay.dp = dpv
+			lay.touch_ui = true
+			lay.left_handed = lh
+			lay.compute(sz, false)
+			var tag := "touch controls %dx%d dp %.2f %s" % [int(sz.x), int(sz.y), dpv, "left" if lh else "right"]
+			_ok(not lay.touch_ctrl.is_empty() and lay.touch_ctrl.has("attack") and lay.touch_ctrl.has("guard") and lay.touch_ctrl.has("power"), "%s: the layout comes from SimTouch.layout with attack, guard and power" % tag)
+			var view := Rect2(Vector2.ZERO, sz)
+			var rects: Dictionary = {}
+			var bad := 0
+			var small := 0
+			for n in ["attack", "guard", "power"]:
+				var c: Dictionary = UiTouchControls.circle(lay, n)
+				var r: Rect2 = UiTouchControls.rect_of(c)
+				rects[n] = r
+				if not view.encloses(r):
+					bad += 1
+				if float(c.r) * 2.0 < 48.0 * dpv - 0.01:
+					small += 1
+			_ok(bad == 0 and small == 0, "%s: every button is on screen and at least 48 dp across (%d off, %d small)" % [tag, bad, small])
+			var clash := 0
+			var names: Array = ["attack", "guard", "power"]
+			for i in range(3):
+				for j in range(i + 1, 3):
+					var a: Dictionary = UiTouchControls.circle(lay, names[i])
+					var b: Dictionary = UiTouchControls.circle(lay, names[j])
+					if Vector2(float(a.x), float(a.y)).distance_to(Vector2(float(b.x), float(b.y))) < float(a.r) + float(b.r):
+						clash += 1
+			_ok(clash == 0, "%s: the buttons do not overlap each other" % tag)
+			var over: PackedStringArray = []
+			var obstacles: Array = [["plate0", lay.plate[0]], ["plate1", lay.plate[1]], ["toll", lay.toll], ["pause", lay.pause_btn], ["pill", lay.feedback_btn], ["read slot", lay.read_slot], ["ring", lay.ring], ["strip", lay.strip], ["clear zone", lay.clear_zone], ["cards0", lay.cards[0]], ["cards1", lay.cards[1]], ["bark", lay.bark[0]]]
+			for n in names:
+				for o in obstacles:
+					if (rects[n] as Rect2).intersects(o[1]) and (o[1] as Rect2).size.y > 0.0:
+						over.append("%s>%s" % [n, o[0]])
+			_ok(over.is_empty(), "%s: nothing in the HUD (plates, toll, pause, pill, ring, strip, cards, barks) or the fight is under a button %s" % [tag, str(over)])
+			if lay.portrait:
+				var inside := true
+				for n in names:
+					if not lay.touch_reserve.encloses(rects[n]):
+						inside = false
+				_ok(inside, "%s: portrait keeps its reserve from the highest button down" % tag)
+				_ok(lay.clear_zone.size.y > sz.y * 0.20, "%s: and the fight keeps its height (%d px)" % [tag, int(lay.clear_zone.size.y)])
+			else:
+				_ok(lay.clear_zone.size.x > sz.x * 0.27 and lay.clear_zone.size.y > sz.y * 0.40, "%s: the fight keeps its middle beside the buttons (%d by %d px)" % [tag, int(lay.clear_zone.size.x), int(lay.clear_zone.size.y)])
+				_ok(lay.bark_single and (lay.bark[0] as Rect2) == (lay.bark[1] as Rect2), "%s: one bark lane, on the other side" % tag)
+				var tall_enough: bool = sz.y / dpv >= 380.0 and dpv >= 1.5   # a real phone; a 390 px canvas at dp 1 is an emulator without a pixel ratio
+				_ok(not tall_enough or not lay.cards_none, "%s: on a screen at least 380 dp tall the buttons leave room for a wound card a side" % tag)
+				_ok(lay.cards_none or (lay.cards[0].size.y >= lay.card_h - 0.5 and lay.cards[1].size.y >= lay.card_h - 0.5), "%s: the cards that remain have their full height" % tag)
+			var touch_h := SimTouch.new()
+			touch_h.dp = dpv
+			var hits := 0
+			for n in names:
+				var c2: Dictionary = UiTouchControls.circle(lay, n)
+				if touch_h.widget_at(float(c2.x), float(c2.y), lay.touch_ctrl) != n:
+					hits += 1
+			var pc: Vector2 = lay.pause_btn.get_center()
+			var pause_hit: String = touch_h.widget_at(pc.x, pc.y, lay.touch_ctrl)
+			_ok(hits == 0 and (lay.pause_btn.size.y <= 0.0 or pause_hit != "attack" and pause_hit != "guard" and pause_hit != "power"), "%s: SimTouch hit-tests each button where it is drawn, and the pause button is not under one" % tag)
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# Without touch there is nothing: the layout does not call SimTouch.
+	var l0 := UiLayout.new()
+	l0.compute(Vector2(1920, 1080), false)
+	_ok(l0.touch_ctrl.is_empty() and not l0.bark_single and not l0.cards_one, "touch controls: none without touch mode")
+	# In the HUD: drawn from the host's state, pause and feedback win, TRANSFORM appears only when available.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(2400, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.anchor_fn = func(slot): return {"pos": Vector2(900.0 + 400.0 * float(slot), 500.0), "h": 150.0, "visible": true}
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.set_density(2.6)
+	hud.set_option("touch_ui", true)
+	var st := {"attack": {"down": false, "hold": 0.0}, "guard": {"down": false}, "power": {"down": false}, "stick": {"active": false}}
+	hud.touch_state_fn = func(): return st
+	for i in range(3):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_touchctl.sig != null and hud._l_touchctl.redraws > 0, "touch controls: the HUD draws them in touch mode")
+	_ok(hud._l_you.sig != null and hud.hub.model(0).you_label == "YOU", "touch controls: and the YOU marker shows on touch")
+	_ok(hud._l_prompts[0].sig == null and hud._l_prompts[1].sig == null and hud._l_hints[0].sig == null, "touch controls: the stance ring and the legend are retired")
+	var r0: int = hud._l_touchctl.redraws
+	for i in range(60):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_touchctl.redraws - r0 <= 2, "touch controls: idle, they cost no redraws (%d in a second)" % (hud._l_touchctl.redraws - r0))
+	st["attack"] = {"down": true, "hold": 0.5}
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	var r1: int = hud._l_touchctl.redraws
+	_ok(r1 > r0, "touch controls: a pressed Attack redraws the layer")
+	st["attack"] = {"down": true, "hold": 1.0}
+	st["guard"] = {"down": true}
+	st["power"] = {"down": true}
+	st["stick"] = {"active": true, "base": Vector2(300, 800), "thumb": Vector2(360, 760), "sprint": false}
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	_ok(hud._l_touchctl.redraws > r1, "touch controls: guard, power, a full hold ring and the stick each show")
+	var rd: int = hud._l_touchctl.redraws
+	st["stick"] = {"active": true, "base": Vector2(300, 800), "thumb": Vector2(361, 761), "sprint": false}
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	_ok(hud._l_touchctl.redraws == rd, "touch controls: a thumb that moves under 2 px does not redraw")
+	var tr: Dictionary = hud.touch_rects()
+	_ok(tr.has("pause") and not tr.has("transform"), "touch controls: the HUD owns the pause button, and no Transform until it is available")
+	hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	tr = hud.touch_rects()
+	var ctx: Rect2 = UiTouchControls.rect_of(UiTouchControls.circle(hud.layout, "context"))
+	_ok(tr.has("transform") and (tr["transform"] as Rect2) == ctx and hud.touch_target_at(ctx.get_center()).get("name", "") == "transform", "touch controls: TRANSFORM takes the context slot when it is available and is a named target")
+	var pc2: Vector2 = (tr["pause"] as Rect2).get_center()
+	_ok(hud.touch_target_at(pc2).get("name", "") == "pause", "touch controls: the pause button is a HUD target, asked before SimTouch's, so it wins")
+	hud.consume({"type": "ko", "winner": 0, "loser": 1})
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	var fbc: Vector2 = hud.layout.feedback_btn.get_center()
+	_ok(hud.touch_target_at(fbc).get("name", "") == "feedback", "touch controls: so does the feedback pill after a KO")
+	hud.set_option("left_handed", true)
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	_ok(float(hud.layout.touch_ctrl["attack"].x) < hud.layout.vp.x * 0.5 and float(hud.layout.touch_ctrl["stick"].x0) > hud.layout.vp.x * 0.5, "touch controls: left-handed mirrors the buttons to the left and the stick zone to the right")
 	hud.queue_free()
 	await process_frame

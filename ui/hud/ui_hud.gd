@@ -48,6 +48,7 @@ var opts: Dictionary = {
 	"control_scheme": "today", # which scheme of ui/data/hints.json the legend shows; Controls' new layouts are more schemes (ADR 0008)
 	"match_end_feedback": true, # the SEND FEEDBACK pill after a KO; the host turns it off if its own results screen has the button
 	"keep_hints": false,       # accessibility: a tutorial hint stays up after its beat is done, until the next hint
+	"left_handed": false,      # touch: the buttons on the left, the stick on the right (SimTouch mirrors its layout)
 	"touch_ui": false,         # touch is the last input device (the host sets it; on by default on a phone): a stance ring, a pause button, 48 dp targets
 	"vfx_quality": "auto",     # auto, high, medium or low; VFX reads it (docs/vfx/plan.md), the HUD only carries it
 	"force_redraw": false,     # bench only: redraw every layer every frame, to measure what the caching saves
@@ -75,6 +76,7 @@ var _dt := 1.0 / 60.0
 var dp := 1.0                  # device pixels per dp (a CSS pixel on the web): set by the host with set_density, else detected
 var _last_dp := 1.0
 var _last_touch := false
+var _last_lh := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
 var _l_fb: UiLayer
@@ -93,6 +95,8 @@ var _fb_issue: Dictionary = {}          # the prefilled GitHub link the review s
 var _fb_opened := false                 # OPEN ISSUE was pressed in this review
 var _fb_text: TextEdit
 var _fb_prev: TextEdit
+var touch_state_fn: Callable = Callable()   # the host's touch state for drawing: {attack: {down, hold}, guard: {down}, power: {down}, stick: {active, base, thumb, sprint}, transform: {down}}
+var _l_touchctl: UiLayer
 var feedback_fn: Callable = Callable()   # the host's report context: {commit, date, seed, setup, time, ended}; any key may be missing
 var _l_tele: UiLayer
 var _l_hint: UiLayer
@@ -139,6 +143,7 @@ func _ready() -> void:
 	for i in range(2):
 		_l_hints.append(_layer(_paint_hints.bind(i)))
 	_l_you = _layer(_paint_you)
+	_l_touchctl = _layer(_paint_touchctl)
 	for i in range(2):
 		_l_plate.append(_layer(_paint_plate.bind(i)))
 	for i in range(2):
@@ -216,7 +221,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -286,7 +291,7 @@ func set_option(key: String, value) -> void:
 		for l in _all_layers():
 			if l != null:
 				l.force = bool(value)
-	if key == "silhouette" or key == "touch_ui":
+	if key == "silhouette" or key == "touch_ui" or key == "left_handed":
 		_last_size = Vector2.ZERO
 	_relayout()
 	for l in _all_layers():
@@ -298,11 +303,13 @@ func _relayout() -> void:
 	var sz: Vector2 = size if size.x > 1.0 else get_viewport_rect().size
 	var sil: bool = bool(opts["silhouette"])
 	var touch: bool = bool(opts["touch_ui"])
-	if sz == _last_size and sil == _last_sil and insets == _last_insets and _swapped == _last_swapped and dp == _last_dp and touch == _last_touch:
+	if sz == _last_size and sil == _last_sil and insets == _last_insets and _swapped == _last_swapped and dp == _last_dp and touch == _last_touch and bool(opts["left_handed"]) == _last_lh:
 		return
 	_last_dp = dp
 	_last_touch = touch
+	_last_lh = bool(opts["left_handed"])
 	layout.dp = dp
+	layout.left_handed = bool(opts["left_handed"])
 	layout.touch_ui = touch
 	_last_size = sz
 	_last_sil = sil
@@ -314,7 +321,7 @@ func _relayout() -> void:
 	for m in hub.models:
 		if m.slot < 2:
 			m.left_side = layout.plate[m.slot].position.x < sz.x * 0.5
-	hub.cap_limit = 1 if layout.portrait else 99
+	hub.cap_limit = 0 if layout.cards_none else (1 if (layout.portrait or layout.cards_one) else 99)
 	for l in _all_layers():
 		if l != null:
 			l.invalidate()
@@ -452,6 +459,12 @@ func _update_layers() -> void:
 				you_sig.append([m.slot, m.you_label, int(ap.x * 0.5), int(ap.y * 0.5), int(float(an.get("h", 0.0)) * 0.5), int(ya * 10.0), bool(an.get("visible", true))])
 			_l_hints[m.slot].update_sig(UiHints.sig(m, ha, str(opts["control_scheme"])) if (ha > 0.01 and layout.hints[m.slot].size.y > 0.0) else null)
 	_l_you.update_sig(you_sig if not you_sig.is_empty() else null)
+	# The touch buttons: drawn from SimTouch.layout (UiLayout.touch_ctrl) with the host's state; redrawn only when something about them changes.
+	if touch_on and not layout.touch_ctrl.is_empty():
+		var tstate: Dictionary = _touch_state()
+		_l_touchctl.update_sig(UiTouchControls.sig(layout, tstate, _touch_intro_alpha(), _transform_avail()))
+	else:
+		_l_touchctl.update_sig(null)
 	for m in hub.models:
 		if m.slot < _l_prompts.size():
 			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
@@ -969,6 +982,33 @@ func _you_alpha(m: UiFighterModel) -> float:
 	return UiHints.visible_alpha(m, str(opts["control_hints"]), bool(opts["show_prompts"]), hub.t_now - float(_hint_t0[m.slot]))
 
 
+func _touch_state() -> Dictionary:
+	if touch_state_fn.is_valid():
+		var v = touch_state_fn.call()
+		if v is Dictionary:
+			return v
+	return {}
+
+
+## The captions on the touch buttons show like the legend does: the first 12 s of a match and while prompts are on.
+func _touch_intro_alpha() -> float:
+	for m in hub.models:
+		if not m.ai:
+			return _you_alpha(m)
+	return 0.0
+
+
+func _transform_avail() -> bool:
+	for m in hub.models:
+		if not m.ai and bool(m.avail["transform"]):
+			return true
+	return false
+
+
+func _paint_touchctl(ci: CanvasItem) -> void:
+	UiTouchControls.draw(ci, layout, layout.s, _touch_state(), _touch_intro_alpha(), _transform_avail())
+
+
 func _hint_alpha(m: UiFighterModel) -> float:
 	if bool(opts["touch_ui"]) or layout.portrait:
 		return 0.0
@@ -1019,29 +1059,22 @@ func touch_rects() -> Dictionary:
 	var out: Dictionary = {}
 	if not bool(opts["touch_ui"]):
 		return out
-	for m in hub.models:
-		if m.slot < 2 and not m.ai:
-			var t: Dictionary = UiPrompts.touch_rects(m, layout.prompts[m.slot], layout.s, _o())
-			for k in t:
-				out["%s_p%d" % [k, m.slot]] = t[k]
 	if layout.pause_btn.size.y > 0.0:
 		out["pause"] = layout.pause_btn
 	if _pill_visible():
 		out["feedback"] = layout.feedback_btn
+	if _transform_avail() and not layout.touch_ctrl.is_empty():
+		out["transform"] = UiTouchControls.rect_of(UiTouchControls.circle(layout, "context"))
 	return out
 
 
-## Which target a screen point is on: {name, slot, stance} (slot -1 for the pause button), or {} if none.
+## Which target of the HUD's own a screen point is on: {name: pause | feedback | transform, slot: -1}, or {}. The attack, guard and power
+## buttons and the stick are Controls' (SimTouch.widget_at, with the same layout); the host asks the HUD first, so pause and feedback win.
 func touch_target_at(p: Vector2) -> Dictionary:
 	var r: Dictionary = touch_rects()
-	for k in r:
-		if (r[k] as Rect2).has_point(p):
-			if k == "pause":
-				return {"name": "pause", "slot": -1}
-			if k == "feedback":
-				return {"name": "feedback", "slot": -1}
-			var parts: PackedStringArray = str(k).split("_p")
-			return {"name": "stance", "slot": int(parts[1]), "stance": int(str(parts[0]).get_slice("_", 1))}
+	for k in ["pause", "feedback", "transform"]:
+		if r.has(k) and (r[k] as Rect2).has_point(p):
+			return {"name": k, "slot": -1}
 	return {}
 
 

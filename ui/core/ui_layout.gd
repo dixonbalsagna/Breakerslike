@@ -30,7 +30,12 @@ var strip := Rect2()                         # the planet strip
 var feed := Rect2()                          # the director feed (debug)
 var clear_zone := Rect2()                    # nothing draws here: the fighters' space
 var frame_rect := Rect2()                    # where the camera may keep fighters: full width, below the columns
-var touch_reserve := Rect2()                 # portrait: kept free for Controls' touch controls
+var touch_reserve := Rect2()                 # portrait: kept free for Controls' touch controls (from the highest button down)
+var left_handed := false                     # the touch buttons on the left, the stick on the right (SimTouch mirrors them)
+var touch_ctrl: Dictionary = {}              # SimTouch.layout(...) for this screen in touch mode: attack, guard, power, context circles and the stick zone
+var bark_single := false                     # touch landscape: one bark lane, on the side away from the buttons, the lines stacking as in portrait
+var cards_one := false                       # touch landscape: the buttons leave room for one wound card a side, not two
+var cards_none := false                      # touch landscape on a very short screen (about 360 dp tall): no room for a card above the buttons; the plate and the crown carry the wear
 var ring := Rect2()                          # the planet ring map (landscape), centred above the strip
 var hints: Array = [Rect2(), Rect2()]        # each column's control-hint legend, under the prompt row; landscape only (UiHints decides who shows one)
 var prompts: Array = [Rect2(), Rect2()]      # each column's prompt row (stance and hold prompts), under the cards; landscape only
@@ -148,8 +153,16 @@ func _pass(insets: Vector4) -> void:
 	read_slot = Rect2()
 	feedback_btn = Rect2()
 	touch_grid = false
+	bark_single = false
+	cards_one = false
+	cards_none = false
 	prompts = [Rect2(), Rect2()]
 	hints = [Rect2(), Rect2()]
+	# The touch controls (Controls' SimTouch): the same call and the same inputs as the host's touch_layout(), so what is drawn is what is hit.
+	touch_ctrl = {}
+	if touch_ui:
+		var tmargin: float = maxf(maxf(vp.x - safe.end.x, vp.y - safe.end.y), 8.0 * dp)
+		touch_ctrl = SimTouch.layout(vp.x, vp.y, dp, portrait, left_handed, tmargin)
 	if portrait:
 		_portrait()
 		var fb_h2: float = maxf(touch_min if touch_ui else 40.0 * s, 34.0)
@@ -162,8 +175,60 @@ func _pass(insets: Vector4) -> void:
 		var gap: float = 12.0 * s
 		ring = Rect2(vp.x * 0.5 - d * 0.5, strip.position.y - gap - d, d, d)
 		var fb_h: float = maxf(touch_min if touch_ui else 40.0 * s, 34.0)
-		var fb_w: float = _pill_fit(bark[1].position.x - gap - (ring.end.x + gap), fb_h)
+		var pill_right: float = bark[1].position.x
+		if touch_ui and not touch_ctrl.is_empty():
+			pill_right = minf(pill_right, _ctrl_box().position.x) if not left_handed else pill_right
+		var fb_w: float = _pill_fit(pill_right - gap - (ring.end.x + gap), fb_h)
 		feedback_btn = Rect2(ring.end.x + gap, strip.position.y - 4.0 * s - fb_h, fb_w, fb_h)
+		if touch_ui and not touch_ctrl.is_empty():
+			_touch_adjust()
+
+
+## The bounding box of the drawn touch buttons (attack, guard, power): what the fight and the columns must stay clear of.
+func _ctrl_box() -> Rect2:
+	var box := Rect2()
+	var first := true
+	for k in ["attack", "guard", "power"]:
+		if not touch_ctrl.has(k):
+			continue
+		var c: Dictionary = touch_ctrl[k]
+		var r := Rect2(float(c.x) - float(c.r), float(c.y) - float(c.r), float(c.r) * 2.0, float(c.r) * 2.0)
+		box = r if first else box.merge(r)
+		first = false
+	return box
+
+
+## Make room for the touch buttons in a landscape layout: the wound cards stop above them, the fight (clear zone and camera band) ends
+## beside them, and the bark lanes become one lane on the other side, the lines stacking as in portrait. No stance ring or control
+## legend on touch: the buttons are the controls.
+func _touch_adjust() -> void:
+	var gap: float = 12.0 * s
+	var box: Rect2 = _ctrl_box()
+	for i in range(2):
+		var c: Rect2 = cards[i]
+		if c.end.x > box.position.x and c.position.x < box.end.x:
+			var room: float = box.position.y - gap - c.position.y
+			var full: float = c.size.y
+			cards[i] = Rect2(c.position.x, c.position.y, c.size.x, clampf(room, 0.0, full))
+			if room < 2.0 * card_h + gap:
+				cards_one = true
+			if room < card_h:
+				cards_none = true
+	if not left_handed:
+		var edge: float = box.position.x - gap
+		clear_zone = Rect2(clear_zone.position, Vector2(maxf(minf(clear_zone.end.x, edge) - clear_zone.position.x, 0.0), clear_zone.size.y))
+		frame_rect = Rect2(frame_rect.position, Vector2(maxf(minf(frame_rect.end.x, edge) - frame_rect.position.x, 0.0), frame_rect.size.y))
+	else:
+		var edge2: float = box.end.x + gap
+		var cx2: float = maxf(clear_zone.position.x, edge2)
+		clear_zone = Rect2(cx2, clear_zone.position.y, maxf(clear_zone.end.x - cx2, 0.0), clear_zone.size.y)
+		var fx2: float = maxf(frame_rect.position.x, edge2)
+		frame_rect = Rect2(fx2, frame_rect.position.y, maxf(frame_rect.end.x - fx2, 0.0), frame_rect.size.y)
+	if cards_none:
+		cards = [Rect2(cards[0].position, Vector2(cards[0].size.x, 0.0)), Rect2(cards[1].position, Vector2(cards[1].size.x, 0.0))]
+	var lane: Rect2 = bark[1] if left_handed else bark[0]
+	bark = [lane, lane]
+	bark_single = true
 
 
 ## The match-end pill's width for `avail` px: the full words at the normal size if they fit, else the same words smaller (to the text
@@ -198,6 +263,8 @@ func _fits() -> bool:
 		return false
 	if touch_ui and pause_btn.size.y <= 0.0:
 		return false
+	if touch_ui and not touch_ctrl.is_empty() and cards_none:
+		return false   # the buttons must leave room for at least one wound card a side (the loop tries a smaller scale first)
 	var view := Rect2(Vector2.ZERO, vp)
 	for i in range(2):
 		if prompts[i].size.y > 0.0 and (prompts[i].intersects(bark[i]) or not view.encloses(prompts[i])):
@@ -225,12 +292,8 @@ func _landscape() -> void:
 			cx0 = p.position.x
 			cx1 = p.end.x
 		cards[i] = Rect2(cx0, col_top, cx1 - cx0, 2.0 * (card_h + gap))
-		# On touch the row is the stance ring: its chips are real targets, so the row is at least a target tall.
-		var prow: float = maxf(40.0 * s, 30.0)
-		if touch_ui:
-			var cg: float = maxf(6.0 * s, 4.0)
-			touch_grid = col_w < 4.0 * (touch_min + 4.0) + 3.0 * cg
-			prow = maxf(prow, (2.0 * (touch_min + 4.0) + cg) if touch_grid else (touch_min + 4.0))
+		# No stance ring on touch any more (Controls' bridge has no stance taps; the buttons are the controls): the row is empty there.
+		var prow: float = 0.0 if touch_ui else maxf(40.0 * s, 30.0)
 		prompts[i] = Rect2(p.position.x, maxf(cards[i].end.y, silhouette[i].end.y) + gap, col_w, prow)
 	var toll_w: float = 380.0 * s
 	# The toll chip grows to hold four-digit counts (the population is whole people, about 1,800) where the plates leave room.
@@ -313,7 +376,12 @@ func _portrait() -> void:
 	world_card = Rect2(vp.x * 0.5 - 180.0 * s, banner_c.y - 22.0 * s, 360.0 * s, 44.0 * s)
 	var rs_y2: float = toll.end.y + gap * 0.5
 	read_slot = Rect2(safe.position.x, rs_y2, safe.size.x, banner_c.y + 30.0 * s - rs_y2)
-	touch_reserve = Rect2(0, vp.y * 0.78, vp.x, vp.y * 0.22)
+	var reserve_top: float = vp.y * 0.78
+	if touch_ui and not touch_ctrl.is_empty():
+		for k in ["attack", "guard", "power"]:
+			if touch_ctrl.has(k):
+				reserve_top = minf(reserve_top, float(touch_ctrl[k].y) - float(touch_ctrl[k].r) - 6.0 * dp)
+	touch_reserve = Rect2(0, reserve_top, vp.x, vp.y - reserve_top)
 	var lane_h: float = bark_height(s)
 	bark[0] = Rect2(safe.position.x, touch_reserve.position.y - lane_h - gap, safe.size.x, lane_h)
 	bark[1] = bark[0]

@@ -4,7 +4,7 @@ extends Control
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
 ## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress|controls   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch --device=xbox --howto[=PAGE] --ko --feedback[=copied|review]
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch[=press|ready] --left --device=xbox --howto[=PAGE] --ko --feedback[=copied|review]
 ## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
@@ -70,8 +70,17 @@ func _ready() -> void:
 		hud.set_option("show_prompts", true)
 	if args.has("dp"):
 		hud.set_density(float(args["dp"]))
+	if args.has("left"):
+		hud.set_option("left_handed", true)
 	if args.has("touch"):
 		hud.set_option("touch_ui", true)
+	if args.has("touch"):
+		# A mock of the host's touch state, for the screenshots: --touch=press shows the buttons held and a stick drag, --touch=ready the idle layout.
+		var tstate := {"attack": {"down": false, "hold": 0.0}, "guard": {"down": false}, "power": {"down": false}, "stick": {"active": false}}
+		if str(args["touch"]) == "press":
+			tstate = {"attack": {"down": true, "hold": 0.6}, "guard": {"down": false}, "power": {"down": true}, "stick": {"active": true, "base": Vector2(size.x * 0.2, size.y * 0.72), "thumb": Vector2(size.x * 0.2 + 90.0, size.y * 0.72 - 40.0), "sprint": false}}
+		hud.touch_state_fn = func(): return tstate
+		hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": str(args["touch"]) == "press"})
 	if args.has("device"):
 		hud.set_device(0, str(args["device"]))
 	if args.has("ko"):
