@@ -726,11 +726,21 @@ func _test_ground() -> void:
 	_expect(af3._gc_hold_t0 >= 0.0 and af3._gc_hold_t1 < 0.0, "ground test: a tumble's landing did not hold the brace")
 	af3.on_ground_event("tumble_end", {"actor": 0, "n": 1, "kind": "recover", "contacts": 2}, 4.0)
 	_expect(af3._gc_hold_t1 >= 0.0 and String(af3._seq.get("id", "")) == "gc.tech_flip", "ground test: a recovery did not release the brace and flip")
+	var af5 := AnimFighter.new(0)
+	af5.on_ground_event("land", {"actor": 0, "kind": "tumble", "surface": "soil", "spd": 250.0}, 1.0)
+	var firm_w: float = af5._gc_hold_w
+	var af6 := AnimFighter.new(0)
+	af6.on_ground_event("land", {"actor": 0, "kind": "tumble", "surface": "soil", "spd": 1800.0}, 1.0)
+	var loose_w: float = af6._gc_hold_w
+	var af7 := AnimFighter.new(0)
+	af7._worn = 1.0
+	af7.on_ground_event("land", {"actor": 0, "kind": "tumble", "surface": "soil", "spd": 250.0}, 1.0)
+	_expect(firm_w > loose_w + 0.2 and af7._gc_hold_w < firm_w - 0.15 and loose_w < 0.5 and firm_w <= 0.85, "ground test: the brace is not firmer when slow and looser when fast or worn (%.2f slow, %.2f fast, %.2f slow and worn)" % [firm_w, loose_w, af7._gc_hold_w])
 	var af4 := AnimFighter.new(0)
 	af4.on_ground_event("land", {"actor": 0, "kind": "tumble", "surface": "soil"}, 1.0)
 	af4.on_ground_event("journey_end", {"actor": 0, "kind": "stop"}, 2.0)
 	_expect(af4._gc_hold_t1 >= 0.0, "ground test: the end of the journey left the brace held")
-	print("ground test: bounce weights %.2f (rock, hard) and %.2f (sand, soft), the lip launch, the tumble brace and its release, the tech flip" % [float(af._seq.wt), float(af2._seq.wt)])
+	print("ground test: bounce weights %.2f (rock, hard) and %.2f (sand, soft), the lip launch, the tumble brace (%.2f slow, %.2f fast, %.2f slow and worn) and its release, the tech flip" % [float(af._seq.wt), float(af2._seq.wt), firm_w, loose_w, af7._gc_hold_w])
 
 
 func _run() -> void:

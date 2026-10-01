@@ -54,6 +54,7 @@ var _last_T: float = -1.0
 var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
 var _gc_hold_t0: float = -1.0           # a held ground-contact pose (the brace of a tumble) from this time ...
+var _gc_hold_w: float = 0.5            # how much of the pose the brace is (set when it starts: firmer when slow and unworn, looser when fast and worn)
 var _gc_hold_t1: float = -1.0           # ... until this one (-1 while it lasts)
 var _stun_prev: int = 0
 var _stun_watch: int = 0           # ticks left to see this fighter staggered after a perfect block or a reversal (a DEFLECT staggers nobody)
@@ -302,6 +303,10 @@ func on_ground_event(kind: String, e: Dictionary, T: float) -> void:
 				if poses_on and (_gc_hold_t0 < 0.0 or _gc_hold_t1 >= 0.0):
 					_gc_hold_t0 = T
 					_gc_hold_t1 = -1.0
+					var H: Dictionary = G.get("hold", {})
+					var spd_k: float = lerpf(float(H.get("slow_k", 1.4)), float(H.get("fast_k", 0.7)), smoothstep(float(H.get("slow_speed", 300.0)), float(H.get("fast_speed", 1500.0)), float(e.get("spd", 800.0))))
+					var wear_k: float = 1.0 - float(H.get("worn_loosen", 0.5)) * smoothstep(float(H.get("worn_from", 0.5)), 1.0, maxf(_worn, _brinkp))
+					_gc_hold_w = clampf(float(H.get("weight", 0.5)) * spd_k * wear_k, 0.0, float(H.get("max", 0.85)))
 					debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
 		"tumble_end":
 			_rd.free = minf(_rd.free, 0.3)
@@ -533,9 +538,9 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 				_gc_hold_t1 = -1.0
 		if hw > 0.001:
 			var bt: AnimPose = AnimData.pose("gc.hold.brace_tumble")
-			AnimPose.mix(q, bt.q, hw * 0.85)
-			hips = hips.lerp(bt.hips, hw * 0.85)
-			curl = curl.lerp(bt.curl, hw * 0.85)
+			AnimPose.mix(q, bt.q, hw * _gc_hold_w)
+			hips = hips.lerp(bt.hips, hw * _gc_hold_w)
+			curl = curl.lerp(bt.curl, hw * _gc_hold_w)
 	if _skim_t0 >= 0.0:
 		var sk_t: float = T - _skim_t0
 		if sk_t > 0.35:
