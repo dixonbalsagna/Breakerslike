@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/vfx-react",
+  "title": "vfx reactions to power (version 1)",
+  "description": "data/vfx/react.json: the aura flickering when the fighter is worn, and from tier 3 the world answering (rubble lifting, cracks spreading, windows blowing out, speed lines on a launch) (docs/vfx/react-plan.md; Legal: docs/legal/rule-of-cool-screen.md). Presentation only: read by render/vfx/react.gd, never by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because react.gd falls back to the same default. Pairs where the minimum must not exceed the maximum are checked by tools/lib/xref.js (vfx-react-range).",
+  "type": "object",
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "flicker": {
+      "type": "object",
+      "description": "The worn-aura flicker (from wear stage min_stage).",
+      "properties": {
+        "min_stage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "amp": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "brink_add": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "density": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "period_ticks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shape_jitter": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "rubble": {
+      "type": "object",
+      "description": "Rubble lifting off the ground from min_tier.",
+      "properties": {
+        "min_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "rate_t3": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rate_t4": {
+          "type": "number",
+          "minimum": 0
+        },
+        "spread_bh_t3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "spread_bh_t4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rise_min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rise_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "accel": {
+          "type": "number",
+          "minimum": 0
+        },
+        "life_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "life_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "size_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "size_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "near_ground_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alive_cap": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "cracks": {
+      "type": "object",
+      "description": "Cracks spreading where the fighter stands still.",
+      "properties": {
+        "min_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "still_ticks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "still_speed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "r_t3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "r_t4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "energy_t3": {
+          "type": "number",
+          "minimum": 0
+        },
+        "energy_t4": {
+          "type": "number",
+          "minimum": 0
+        },
+        "grow_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fade_in_ticks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fade_out_ticks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stay_ticks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "move_radius": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "windows": {
+      "type": "object",
+      "description": "Windows blowing out along a block on a big impact.",
+      "properties": {
+        "min_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "min_energy": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reach_t3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "reach_t4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "min_floors": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "floors_max": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_buildings": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "keep_s": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "speed": {
+      "type": "object",
+      "description": "Speed lines alone on a launch and a landed heavy.",
+      "properties": {
+        "lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ticks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dist_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "len_min_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "len_max_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "spread_bh": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gap_min_bh": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gap_max_bh": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rim_alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "min_gap_ticks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dedupe_ticks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "alive_max": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

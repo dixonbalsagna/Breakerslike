@@ -1,0 +1,409 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/art-damage",
+  "title": "art battle damage (version 1)",
+  "description": "data/art/damage.json: battle damage stages per fighter outfit (docs/ep/vision.md, docs/design/spec-wounds.md). Stages 1 to 3 map onto the wear stages; each stage keeps the layers of the stages below. Version field: version. Policy: closed except keys starting with an underscore. Cross-references (fighter ids are readout profile ids; stage 3 changes the silhouette) are checked by tools/lib/xref.js (damage-*).",
+  "type": "object",
+  "required": [
+    "version",
+    "persist_through_forms",
+    "stages",
+    "fighters"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "persist_through_forms": {
+      "type": "boolean",
+      "description": "The wear is a property of the body, so it stays through a transformation."
+    },
+    "stages": {
+      "type": "object",
+      "required": [
+        "1",
+        "2",
+        "3"
+      ],
+      "properties": {
+        "1": {
+          "type": "object",
+          "required": [
+            "name",
+            "wear_stage",
+            "orb_pick",
+            "body"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "wear_stage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "orb_pick": {
+              "type": "string",
+              "minLength": 1
+            },
+            "body": {
+              "type": "object",
+              "required": [
+                "breathing",
+                "breath_rate",
+                "chest_rise_bh",
+                "stagger",
+                "aura",
+                "limb"
+              ],
+              "properties": {
+                "breathing": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "breath_rate": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "chest_rise_bh": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "stagger": {
+                  "enum": [
+                    "none",
+                    "light",
+                    "heavy"
+                  ]
+                },
+                "aura": {
+                  "enum": [
+                    "steady",
+                    "flicker",
+                    "gaps"
+                  ]
+                },
+                "limb": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "description": "How the body looks and moves at this stage.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "2": {
+          "type": "object",
+          "required": [
+            "name",
+            "wear_stage",
+            "orb_pick",
+            "body"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "wear_stage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "orb_pick": {
+              "type": "string",
+              "minLength": 1
+            },
+            "body": {
+              "type": "object",
+              "required": [
+                "breathing",
+                "breath_rate",
+                "chest_rise_bh",
+                "stagger",
+                "aura",
+                "limb"
+              ],
+              "properties": {
+                "breathing": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "breath_rate": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "chest_rise_bh": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "stagger": {
+                  "enum": [
+                    "none",
+                    "light",
+                    "heavy"
+                  ]
+                },
+                "aura": {
+                  "enum": [
+                    "steady",
+                    "flicker",
+                    "gaps"
+                  ]
+                },
+                "limb": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "description": "How the body looks and moves at this stage.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "3": {
+          "type": "object",
+          "required": [
+            "name",
+            "wear_stage",
+            "orb_pick",
+            "body"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "wear_stage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "orb_pick": {
+              "type": "string",
+              "minLength": 1
+            },
+            "body": {
+              "type": "object",
+              "required": [
+                "breathing",
+                "breath_rate",
+                "chest_rise_bh",
+                "stagger",
+                "aura",
+                "limb"
+              ],
+              "properties": {
+                "breathing": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "breath_rate": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "chest_rise_bh": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "stagger": {
+                  "enum": [
+                    "none",
+                    "light",
+                    "heavy"
+                  ]
+                },
+                "aura": {
+                  "enum": [
+                    "steady",
+                    "flicker",
+                    "gaps"
+                  ]
+                },
+                "limb": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "description": "How the body looks and moves at this stage.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "layers_note": {
+      "type": "string"
+    },
+    "fighters": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "1",
+          "2",
+          "3"
+        ],
+        "properties": {
+          "1": {
+            "type": "object",
+            "required": [
+              "decals",
+              "geometry",
+              "silhouette"
+            ],
+            "properties": {
+              "decals": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              },
+              "geometry": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              },
+              "silhouette": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "2": {
+            "type": "object",
+            "required": [
+              "decals",
+              "geometry",
+              "silhouette"
+            ],
+            "properties": {
+              "decals": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              },
+              "geometry": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              },
+              "silhouette": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "3": {
+            "type": "object",
+            "required": [
+              "decals",
+              "geometry",
+              "silhouette"
+            ],
+            "properties": {
+              "decals": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              },
+              "geometry": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              },
+              "silhouette": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

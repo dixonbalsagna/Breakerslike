@@ -27,6 +27,14 @@
       "schema": "art-effects.schema.json"
     },
     {
+      "match": "data/art/damage.json",
+      "schema": "art-damage.schema.json"
+    },
+    {
+      "match": "data/art/auras.json",
+      "schema": "art-auras.schema.json"
+    },
+    {
       "match": "data/fighters/roster.json",
       "schema": "fighter-roster.schema.json"
     },
@@ -201,6 +209,18 @@
     {
       "match": "data/vfx/aura.json",
       "schema": "vfx-aura.schema.json"
+    },
+    {
+      "match": "data/vfx/react.json",
+      "schema": "vfx-react.schema.json"
+    },
+    {
+      "match": "data/narrative/combat_barks.json",
+      "schema": "narrative-barks.schema.json"
+    },
+    {
+      "match": "data/narrative/hints_fix.json",
+      "schema": "narrative-hints-fix.schema.json"
     }
   ]
 }

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/narrative-hints-fix",
+  "title": "narrative.hints_fix/1",
+  "description": "data/narrative/hints_fix.json: corrected tutorial hint lines for ui/data/reads.json (UI owns that file; Narrative owns the text). Keys are beat.variant. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every key is a hint that exists in reads.json, its beat is one of reads.json beat_ids) and a length warning (about ten words, over twelve warns) are checked by tools/lib/xref.js (hints-fix-key, hints-fix-length).",
+  "type": "object",
+  "required": [
+    "schema",
+    "hints"
+  ],
+  "properties": {
+    "schema": {
+      "const": "narrative.hints_fix/1"
+    },
+    "hints": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|b[1-9][0-9]*\\.[a-z][a-z0-9]*)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

@@ -540,6 +540,16 @@ function xref(docs, root = repoRoot) {
     }
   }
 
+  // ---- vfx: reactions ----
+  const react = get('data/vfx/react.json');
+  if (isObj(react)) {
+    const pairs = [['rubble', 'rise_min', 'rise_max'], ['rubble', 'life_min', 'life_max'], ['rubble', 'size_min', 'size_max'], ['windows', 'min_floors', 'floors_max'], ['speed', 'len_min_bh', 'len_max_bh'], ['speed', 'gap_min_bh', 'gap_max_bh']];
+    for (const [g, lo, hi] of pairs) {
+      const o = react[g];
+      if (isObj(o) && typeof o[lo] === 'number' && typeof o[hi] === 'number' && o[lo] > o[hi]) err('data/vfx/react.json', `/${g}/${lo}`, 'vfx-react-range', `${lo} ${o[lo]} is above ${hi} ${o[hi]}`);
+    }
+  }
+
   // ---- vfx: water ----
   const water = get(WATER);
   if (isObj(water)) {
@@ -584,6 +594,79 @@ function xref(docs, root = repoRoot) {
       if (isObj(ex)) for (const e of Object.keys(ex)) if (!e.startsWith('_')) known(e, `/fighters/${esc(fid)}/${esc(e)}`, `fighter "${fid}" lists expression`);
     }
     if (typeof faces.min_priority === 'number' && typeof faces.always_priority === 'number' && faces.min_priority > faces.always_priority) err(FC, '/min_priority', 'faces-priority', `min_priority ${faces.min_priority} is above always_priority ${faces.always_priority}, so a line that always gets a face would be below the floor`);
+  }
+
+  // ---- art: battle damage ----
+  const damage = get('data/art/damage.json');
+  if (isObj(damage) && isObj(damage.fighters)) {
+    const DM = 'data/art/damage.json';
+    const profs = get(PROFILES);
+    const names = isObj(profs) ? new Set(plainKeys(profs).filter((k) => k !== 'schema' && k !== 'aliases' && k !== 'note')) : new Set();
+    for (const [fid, st] of Object.entries(damage.fighters)) {
+      if (fid.startsWith('_')) continue;
+      if (names.size && !names.has(fid)) err(DM, `/fighters/${esc(fid)}`, 'damage-fighter', `fighter "${fid}" is not a readout profile (${[...names].join(', ')})`);
+      if (isObj(st) && isObj(st['3']) && Array.isArray(st['3'].silhouette) && st['3'].silhouette.length === 0) err(DM, `/fighters/${esc(fid)}/3/silhouette`, 'damage-silhouette', `stage 3 for "${fid}" changes no silhouette piece (the body shape should change by stage 3)`, 'warning');
+    }
+  }
+
+  // ---- art: the Anti-hero's auras (Legal: hue 260 to 320, a tint for the core, never pure white) ----
+  const auras = get('data/art/auras.json');
+  if (isObj(auras)) {
+    const AU = 'data/art/auras.json';
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const lstar = (h) => { const [r, g, b] = rgb(h).map(lin); const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b; return y > 0.008856 ? 116 * Math.cbrt(y) - 16 : 903.3 * y; };
+    const hueOf = (h) => { const [r, g, b] = rgb(h); const mx = Math.max(r, g, b); const mn = Math.min(r, g, b); if (mx - mn < 12) return undefined; const d = mx - mn; let x = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; x *= 60; return x < 0 ? x + 360 : x; };
+    const isHex = (v) => typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v);
+    if (Array.isArray(auras.hue_range) && auras.hue_range.length === 2 && (auras.hue_range[0] < 260 || auras.hue_range[1] > 320)) err(AU, '/hue_range', 'auras-hue', `hue_range ${auras.hue_range[0]} to ${auras.hue_range[1]} is wider than Legal's 260 to 320`);
+    const forms = isObj(auras.anti_hero) && isObj(auras.anti_hero.forms) ? auras.anti_hero.forms : {};
+    for (const [fname, form] of Object.entries(forms)) {
+      if (!isObj(form) || fname.startsWith('_')) continue;
+      const base = `/anti_hero/forms/${esc(fname)}`;
+      if (typeof form.hue === 'number' && (form.hue < 260 || form.hue > 320)) err(AU, `${base}/hue`, 'auras-hue', `${fname} hue ${form.hue} is outside Legal's 260 to 320`);
+      for (const group of ['aura', 'flashes', 'glow']) {
+        if (!isObj(form[group])) continue;
+        for (const [k, v] of Object.entries(form[group])) {
+          if (!isHex(v)) continue;
+          const at = `${base}/${group}/${esc(k)}`;
+          const hue = hueOf(v);
+          if (hue !== undefined && (hue < 260 || hue > 320)) err(AU, at, 'auras-hue', `${fname} ${group}.${k} ${v} has hue ${Math.round(hue)}, outside Legal's 260 to 320`);
+          const L = lstar(v);
+          if (L >= 97) err(AU, at, 'auras-white', `${fname} ${group}.${k} ${v} is pure white (L* ${L.toFixed(0)}); a core is a tint of the hue`);
+          else if ((group === 'aura' && k === 'core') || (group === 'flashes' && k === 'light')) { if (L > 86) err(AU, at, 'auras-white', `${fname} ${group}.${k} ${v} is L* ${L.toFixed(0)}; a core is a tint at most L* 86`); }
+        }
+      }
+    }
+  }
+
+  // ---- narrative: barks (unique line ids) and the corrected tutorial hints ----
+  const barks = get('data/narrative/combat_barks.json');
+  if (isObj(barks)) {
+    const BK = 'data/narrative/combat_barks.json';
+    const seen = new Map();
+    const walk = (v, p) => {
+      if (Array.isArray(v)) { v.forEach((x, i) => walk(x, `${p}/${i}`)); return; }
+      if (!isObj(v)) return;
+      if (typeof v.id === 'string' && typeof v.text === 'string') {
+        if (seen.has(v.id)) err(BK, `${p}/id`, 'barks-id', `line id "${v.id}" is already used at ${seen.get(v.id)}`);
+        else seen.set(v.id, p);
+      }
+      for (const [k, x] of Object.entries(v)) if (!k.startsWith('_')) walk(x, `${p}/${esc(k)}`);
+    };
+    for (const k of ['shouts', 'taunts', 'on_the_chin', 'last_stand']) walk(barks[k], '/' + k);
+  }
+  const hintsFix = get('data/narrative/hints_fix.json');
+  const reads = get('ui/data/reads.json');
+  if (isObj(hintsFix) && isObj(hintsFix.hints)) {
+    const HF = 'data/narrative/hints_fix.json';
+    const have = isObj(reads) && isObj(reads.hints) ? new Set(Object.keys(reads.hints)) : undefined;
+    const beats = isObj(reads) && Array.isArray(reads.beat_ids) ? new Set(reads.beat_ids) : undefined;
+    for (const [k, v] of Object.entries(hintsFix.hints)) {
+      if (k.startsWith('_')) continue;
+      if (have && !have.has(k)) err(HF, `/hints/${esc(k)}`, 'hints-fix-key', `hint "${k}" is not in ui/data/reads.json hints, so the correction has nothing to replace`);
+      else if (beats && !beats.has(k.split('.')[0])) err(HF, `/hints/${esc(k)}`, 'hints-fix-key', `beat "${k.split('.')[0]}" is not in reads.json beat_ids`);
+      if (typeof v === 'string' && v.trim().split(/\s+/).length > 12) err(HF, `/hints/${esc(k)}`, 'hints-fix-length', `${v.trim().split(/\s+/).length} words; a tutorial line is at most about ten`, 'warning');
+    }
   }
 
   // ---- ui: how to play ----

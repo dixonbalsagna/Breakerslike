@@ -1,0 +1,745 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/narrative-barks",
+  "title": "narrative.barks/1",
+  "description": "data/narrative/combat_barks.json: Narrative's rule-of-cool barks (docs/narrative/rule-of-cool-narrative.md, line-system.md section 14): shouts, taunts, On the Chin and the last stand, and the launch-vector labels. Every line has a unique id and text. Version field: schema. Policy: closed except keys starting with an underscore. Line ids are unique across the file (checked by tools/lib/xref.js, barks-id). A shout is one clipped hit (Legal): no_stretch must be true.",
+  "type": "object",
+  "required": [
+    "schema",
+    "house",
+    "event_shape",
+    "shouts",
+    "taunts",
+    "on_the_chin",
+    "last_stand",
+    "labels"
+  ],
+  "properties": {
+    "schema": {
+      "const": "narrative.barks/1"
+    },
+    "house": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_shape": {
+      "type": "object",
+      "description": "What a bark event carries to UI: documentation of the event fields.",
+      "required": [
+        "kind",
+        "speaker",
+        "speaker_role",
+        "priority",
+        "display",
+        "face_rule"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "speaker": {
+          "type": "string",
+          "minLength": 1
+        },
+        "speaker_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display": {
+          "type": "object"
+        },
+        "face_rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "shouts": {
+      "type": "object",
+      "required": [
+        "trigger",
+        "fighters"
+      ],
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fighters": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^(_.*|[A-Z][A-Z0-9_]*)$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "move_name",
+              "lines",
+              "kind",
+              "speaker_role",
+              "priority",
+              "display",
+              "cues",
+              "no_stretch",
+              "max_syllable_s"
+            ],
+            "properties": {
+              "move_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lines": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "text"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_.]*$"
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "legal": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                }
+              },
+              "no_stretch": {
+                "const": true
+              },
+              "max_syllable_s": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "cues": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "at",
+                    "gesture",
+                    "intensity"
+                  ],
+                  "properties": {
+                    "at": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "gesture": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_.]*$"
+                    },
+                    "intensity": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                }
+              },
+              "kind": {
+                "enum": [
+                  "line",
+                  "reply",
+                  "retort",
+                  "callback",
+                  "jewel",
+                  "thought"
+                ]
+              },
+              "speaker_role": {
+                "enum": [
+                  "self",
+                  "opponent",
+                  "crowd",
+                  "narrator"
+                ]
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              },
+              "display": {
+                "type": "object",
+                "required": [
+                  "style",
+                  "dur_s"
+                ],
+                "properties": {
+                  "style": {
+                    "enum": [
+                      "caption",
+                      "thought",
+                      "shout"
+                    ]
+                  },
+                  "dur_s": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^_": true
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "real_fighters_stubs": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^(_.*|[A-Z][A-Z0-9_]*)$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "move_name",
+              "text"
+            ],
+            "properties": {
+              "move_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "taunts": {
+      "type": "object",
+      "required": [
+        "trigger",
+        "fighters",
+        "kind",
+        "speaker_role",
+        "priority",
+        "display"
+      ],
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fighters": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^(_.*|[A-Z][A-Z0-9_]*)$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "meter",
+              "amount",
+              "gesture",
+              "lines",
+              "punished"
+            ],
+            "properties": {
+              "meter": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "amount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "gesture": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lines": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "text"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_.]*$"
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "legal": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                }
+              },
+              "punished": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "text"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_.]*$"
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "legal": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "kind": {
+          "enum": [
+            "line",
+            "reply",
+            "retort",
+            "callback",
+            "jewel",
+            "thought"
+          ]
+        },
+        "speaker_role": {
+          "enum": [
+            "self",
+            "opponent",
+            "crowd",
+            "narrator"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "display": {
+          "type": "object",
+          "required": [
+            "style",
+            "dur_s"
+          ],
+          "properties": {
+            "style": {
+              "enum": [
+                "caption",
+                "thought",
+                "shout"
+              ]
+            },
+            "dur_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "on_the_chin": {
+      "type": "object",
+      "required": [
+        "move_name",
+        "move_name_alternates",
+        "trigger",
+        "lines",
+        "completed_absorb",
+        "kind",
+        "speaker_role",
+        "priority",
+        "display"
+      ],
+      "properties": {
+        "move_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "move_name_alternates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]*$"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "legal": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "completed_absorb": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]*$"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "legal": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "kind": {
+          "enum": [
+            "line",
+            "reply",
+            "retort",
+            "callback",
+            "jewel",
+            "thought"
+          ]
+        },
+        "speaker_role": {
+          "enum": [
+            "self",
+            "opponent",
+            "crowd",
+            "narrator"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "display": {
+          "type": "object",
+          "required": [
+            "style",
+            "dur_s"
+          ],
+          "properties": {
+            "style": {
+              "enum": [
+                "caption",
+                "thought",
+                "shout"
+              ]
+            },
+            "dur_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "last_stand": {
+      "type": "object",
+      "required": [
+        "trigger",
+        "lines",
+        "kind",
+        "speaker_role",
+        "priority",
+        "display"
+      ],
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^(_.*|[A-Z][A-Z0-9_]*)$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "id",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.]*$"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "legal": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "kind": {
+          "enum": [
+            "line",
+            "reply",
+            "retort",
+            "callback",
+            "jewel",
+            "thought"
+          ]
+        },
+        "speaker_role": {
+          "enum": [
+            "self",
+            "opponent",
+            "crowd",
+            "narrator"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "display": {
+          "type": "object",
+          "required": [
+            "style",
+            "dur_s"
+          ],
+          "properties": {
+            "style": {
+              "enum": [
+                "caption",
+                "thought",
+                "shout"
+              ]
+            },
+            "dur_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "labels": {
+      "type": "object",
+      "required": [
+        "straight_down",
+        "slam_down_now_a_drive"
+      ],
+      "properties": {
+        "straight_down": {
+          "type": "object",
+          "required": [
+            "label",
+            "keep"
+          ],
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keep": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "slam_down_now_a_drive": {
+          "type": "object",
+          "required": [
+            "old",
+            "new"
+          ],
+          "properties": {
+            "old": {
+              "type": "string",
+              "minLength": 1
+            },
+            "new": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "others_unchanged": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "glossary_picks_if_adopted": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

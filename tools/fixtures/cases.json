@@ -10352,6 +10352,2040 @@
         "rule": "additionalProperties",
         "pointer": "/fighters/empress/neutral/frame"
       }
+    },
+    {
+      "id": "art-damage-live-valid",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "art-damage-key-required",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "del": [
+            "/stages"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "art-damage-unknown-key",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/gore": true
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/gore"
+      }
+    },
+    {
+      "id": "art-damage-persist-type",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/persist_through_forms": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/persist_through_forms"
+      }
+    },
+    {
+      "id": "art-damage-stage-missing",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "del": [
+            "/stages/3"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/stages"
+      }
+    },
+    {
+      "id": "art-damage-stage-stagger-enum",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/stages/2/body/stagger": "wild"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/stages/2/body/stagger"
+      }
+    },
+    {
+      "id": "art-damage-stage-aura-enum",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/stages/1/body/aura": "blaze"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/stages/1/body/aura"
+      }
+    },
+    {
+      "id": "art-damage-stage-breath-positive",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/stages/1/body/breath_rate": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/stages/1/body/breath_rate"
+      }
+    },
+    {
+      "id": "art-damage-stage-key-required",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "del": [
+            "/stages/1/name"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/stages/1"
+      }
+    },
+    {
+      "id": "art-damage-fighter-new-valid",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/fighters/cyborg": {
+              "1": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "2": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "3": {
+                "decals": [],
+                "geometry": [],
+                "silhouette": [
+                  "arm_near_hang"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "art-damage-fighter-unknown",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/fighters/stranger": {
+              "1": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "2": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "3": {
+                "decals": [],
+                "geometry": [],
+                "silhouette": [
+                  "arm_near_hang"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:damage-fighter",
+        "pointer": "/fighters/stranger"
+      }
+    },
+    {
+      "id": "art-damage-fighter-stage-missing",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/fighters/cyborg": {
+              "1": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "2": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/fighters/cyborg"
+      }
+    },
+    {
+      "id": "art-damage-fighter-layer-missing",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/fighters/cyborg": {
+              "1": {
+                "decals": []
+              },
+              "2": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "3": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/fighters/cyborg/1"
+      }
+    },
+    {
+      "id": "art-damage-item-shape",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/fighters/cyborg": {
+              "1": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "2": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "3": {
+                "decals": [
+                  "Bad Name"
+                ],
+                "geometry": [],
+                "silhouette": [
+                  "x"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/fighters/cyborg/3/decals/0"
+      }
+    },
+    {
+      "id": "art-damage-item-duplicate",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/fighters/cyborg": {
+              "1": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "2": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "3": {
+                "decals": [
+                  "a",
+                  "a"
+                ],
+                "geometry": [],
+                "silhouette": [
+                  "x"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/fighters/cyborg/3/decals/1"
+      }
+    },
+    {
+      "id": "art-damage-stage3-silhouette-warns",
+      "schema": "art-damage.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/damage.json",
+          "set": {
+            "/fighters/cyborg": {
+              "1": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "2": {
+                "decals": [
+                  "scuff_a"
+                ],
+                "geometry": [],
+                "silhouette": []
+              },
+              "3": {
+                "decals": [],
+                "geometry": [],
+                "silhouette": []
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:damage-silhouette",
+        "pointer": "/fighters/cyborg/3/silhouette"
+      }
+    },
+    {
+      "id": "art-auras-live-valid",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "art-auras-key-required",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "del": [
+            "/anti_hero"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "art-auras-unknown-key",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/protagonist": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/protagonist"
+      }
+    },
+    {
+      "id": "art-auras-form-valid",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/regalia": {
+              "name": "Test",
+              "hue": 280,
+              "pieces": "a collar",
+              "aura": {
+                "rim": "#9664d8",
+                "core": "#d3baf2",
+                "shadow": "#52327b",
+                "keyline": "#301a4d"
+              },
+              "flashes": {
+                "mid": "#9664d8",
+                "light": "#d3baf2",
+                "shadow": "#52327b",
+                "info_core": "#eee5fa",
+                "info_line": "#52327b"
+              },
+              "glow": {
+                "sigil": "#d8bff7",
+                "halo": "#9664d8",
+                "halo_alpha": 0.35
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "art-auras-colour-shape",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/regalia": {
+              "name": "Test",
+              "hue": 280,
+              "pieces": "a collar",
+              "aura": {
+                "rim": "purple",
+                "core": "#d3baf2",
+                "shadow": "#52327b",
+                "keyline": "#301a4d"
+              },
+              "flashes": {
+                "mid": "#9664d8",
+                "light": "#d3baf2",
+                "shadow": "#52327b",
+                "info_core": "#eee5fa",
+                "info_line": "#52327b"
+              },
+              "glow": {
+                "sigil": "#d8bff7",
+                "halo": "#9664d8",
+                "halo_alpha": 0.35
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/anti_hero/forms/regalia/aura/rim"
+      }
+    },
+    {
+      "id": "art-auras-colour-missing",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "del": [
+            "/anti_hero/forms/regalia/glow/halo"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/anti_hero/forms/regalia/glow"
+      }
+    },
+    {
+      "id": "art-auras-form-unknown",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/ascended": {
+              "name": "Test",
+              "hue": 280,
+              "pieces": "a collar",
+              "aura": {
+                "rim": "#9664d8",
+                "core": "#d3baf2",
+                "shadow": "#52327b",
+                "keyline": "#301a4d"
+              },
+              "flashes": {
+                "mid": "#9664d8",
+                "light": "#d3baf2",
+                "shadow": "#52327b",
+                "info_core": "#eee5fa",
+                "info_line": "#52327b"
+              },
+              "glow": {
+                "sigil": "#d8bff7",
+                "halo": "#9664d8",
+                "halo_alpha": 0.35
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/anti_hero/forms/ascended"
+      }
+    },
+    {
+      "id": "art-auras-alpha-range",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/regalia/glow/halo_alpha": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/anti_hero/forms/regalia/glow/halo_alpha"
+      }
+    },
+    {
+      "id": "art-auras-hue-range-wide",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/hue_range": [
+              200,
+              320
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-hue",
+        "pointer": "/hue_range"
+      }
+    },
+    {
+      "id": "art-auras-hue-stated-low",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/regalia/hue": 240
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-hue",
+        "pointer": "/anti_hero/forms/regalia/hue"
+      }
+    },
+    {
+      "id": "art-auras-hue-stated-high",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/apex/hue": 330
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-hue",
+        "pointer": "/anti_hero/forms/apex/hue"
+      }
+    },
+    {
+      "id": "art-auras-hue-edge-ok",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/apex/hue": 260
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "art-auras-colour-red",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/regalia/aura/rim": "#d83030"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-hue",
+        "pointer": "/anti_hero/forms/regalia/aura/rim"
+      }
+    },
+    {
+      "id": "art-auras-colour-gold",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/sovereign/flashes/mid": "#e0b020"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-hue",
+        "pointer": "/anti_hero/forms/sovereign/flashes/mid"
+      }
+    },
+    {
+      "id": "art-auras-core-pure-white",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/regalia/aura/core": "#ffffff"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-white",
+        "pointer": "/anti_hero/forms/regalia/aura/core"
+      }
+    },
+    {
+      "id": "art-auras-core-too-light",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/regalia/aura/core": "#f0e6fa"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-white",
+        "pointer": "/anti_hero/forms/regalia/aura/core"
+      }
+    },
+    {
+      "id": "art-auras-flash-light-too-light",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/apex/flashes/light": "#f0e6fa"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-white",
+        "pointer": "/anti_hero/forms/apex/flashes/light"
+      }
+    },
+    {
+      "id": "art-auras-info-core-near-white-ok",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/apex/flashes/info_core": "#f0e7f9"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "art-auras-info-core-pure-white",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/apex/flashes/info_core": "#fdfdfd"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-white",
+        "pointer": "/anti_hero/forms/apex/flashes/info_core"
+      }
+    },
+    {
+      "id": "art-auras-glow-white",
+      "schema": "art-auras.schema.json",
+      "mutate": [
+        {
+          "file": "data/art/auras.json",
+          "set": {
+            "/anti_hero/forms/apex/glow/sigil": "#ffffff"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:auras-white",
+        "pointer": "/anti_hero/forms/apex/glow/sigil"
+      }
+    },
+    {
+      "id": "barks-live-valid",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/house": "v1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "barks-key-required",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "del": [
+            "/last_stand"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "barks-schema-version",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/schema": "narrative.barks/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "barks-unknown-key",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/rants": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/rants"
+      }
+    },
+    {
+      "id": "barks-shout-valid",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "barks-shout-no-stretch",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": false,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/shouts/fighters/TEST/no_stretch"
+      }
+    },
+    {
+      "id": "barks-shout-no-stretch-required",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/shouts/fighters/TEST"
+      }
+    },
+    {
+      "id": "barks-shout-cue-intensity",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 0
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/shouts/fighters/TEST/cues/0/intensity"
+      }
+    },
+    {
+      "id": "barks-shout-priority-range",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 5,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/shouts/fighters/TEST/priority"
+      }
+    },
+    {
+      "id": "barks-shout-kind-enum",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "yell",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/shouts/fighters/TEST/kind"
+      }
+    },
+    {
+      "id": "barks-shout-role-enum",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "ghost",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/shouts/fighters/TEST/speaker_role"
+      }
+    },
+    {
+      "id": "barks-shout-style-enum",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "billboard",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/shouts/fighters/TEST/display/style"
+      }
+    },
+    {
+      "id": "barks-shout-duration",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/shouts/fighters/TEST/display/dur_s"
+      }
+    },
+    {
+      "id": "barks-shout-fighter-name",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/test": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "Test Lance!"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/shouts/fighters/test"
+      }
+    },
+    {
+      "id": "barks-line-text-required",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/shouts/fighters/TEST/lines/0"
+      }
+    },
+    {
+      "id": "barks-line-id-shape",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "Shout 1",
+                  "text": "Hi"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/shouts/fighters/TEST/lines/0/id"
+      }
+    },
+    {
+      "id": "barks-line-empty-text",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": ""
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/shouts/fighters/TEST/lines/0/text"
+      }
+    },
+    {
+      "id": "barks-line-id-duplicate",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/shouts/fighters/TEST": {
+              "move_name": "Test Lance",
+              "lines": [
+                {
+                  "id": "shout.test.1",
+                  "text": "One"
+                },
+                {
+                  "id": "shout.test.1",
+                  "text": "Two"
+                }
+              ],
+              "kind": "line",
+              "speaker_role": "self",
+              "priority": 4,
+              "display": {
+                "style": "shout",
+                "dur_s": 0.8
+              },
+              "cues": [
+                {
+                  "at": 0,
+                  "gesture": "effort.heavy",
+                  "intensity": 2
+                }
+              ],
+              "no_stretch": true,
+              "max_syllable_s": 0.25
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:barks-id",
+        "pointer": "/shouts/fighters/TEST/lines/1/id"
+      }
+    },
+    {
+      "id": "barks-line-id-duplicate-across",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/last_stand/lines/TEST": {
+              "id": "chin.sig.1",
+              "text": "Dup"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:barks-id",
+        "pointer": "/last_stand/lines/TEST/id"
+      }
+    },
+    {
+      "id": "barks-taunt-amount-negative",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/taunts/fighters/TEST": {
+              "meter": "pride",
+              "amount": -1,
+              "gesture": "g",
+              "lines": [
+                {
+                  "id": "t.test.1",
+                  "text": "x"
+                }
+              ],
+              "punished": [
+                {
+                  "id": "t.test.2",
+                  "text": "y"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/taunts/fighters/TEST/amount"
+      }
+    },
+    {
+      "id": "barks-taunt-lines-empty",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/taunts/fighters/TEST": {
+              "meter": "pride",
+              "amount": 6,
+              "gesture": "g",
+              "lines": [],
+              "punished": [
+                {
+                  "id": "t.test.2",
+                  "text": "y"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/taunts/fighters/TEST/lines"
+      }
+    },
+    {
+      "id": "barks-last-stand-line-shape",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/last_stand/lines/TEST": {
+              "id": "last.test.1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/last_stand/lines/TEST"
+      }
+    },
+    {
+      "id": "barks-last-stand-id-duplicate",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/last_stand/lines/TEST": {
+              "id": "last.kai.1",
+              "text": "Dup"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:barks-id",
+        "pointer": "/last_stand/lines/TEST/id"
+      }
+    },
+    {
+      "id": "barks-labels-keep-type",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/labels/straight_down/keep": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/labels/straight_down/keep"
+      }
+    },
+    {
+      "id": "barks-labels-missing",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "del": [
+            "/labels/slam_down_now_a_drive"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/labels"
+      }
+    },
+    {
+      "id": "barks-on-chin-alternates-type",
+      "schema": "narrative-barks.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/combat_barks.json",
+          "set": {
+            "/on_the_chin/move_name_alternates": "Unmoved"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/on_the_chin/move_name_alternates"
+      }
+    },
+    {
+      "id": "hints-fix-live-valid",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/schema": "narrative.hints_fix/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "hints-fix-key-required",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "del": [
+            "/hints"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "hints-fix-unknown-key",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/lines": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/lines"
+      }
+    },
+    {
+      "id": "hints-fix-key-shape",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/hints/B2 hint": "x"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/hints/B2 hint"
+      }
+    },
+    {
+      "id": "hints-fix-key-not-in-reads",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/hints/b2.nowhere": "A line."
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hints-fix-key",
+        "pointer": "/hints/b2.nowhere"
+      }
+    },
+    {
+      "id": "hints-fix-beat-not-in-reads",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/hints/b12.hint": "A line."
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hints-fix-key",
+        "pointer": "/hints/b12.hint"
+      }
+    },
+    {
+      "id": "hints-fix-empty-text",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/hints/b2.hint": ""
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/hints/b2.hint"
+      }
+    },
+    {
+      "id": "hints-fix-too-long-warns",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/hints/b2.hint": "One two three four five six seven eight nine ten eleven twelve thirteen."
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hints-fix-length",
+        "pointer": "/hints/b2.hint"
+      }
+    },
+    {
+      "id": "hints-fix-twelve-words-ok",
+      "schema": "narrative-hints-fix.schema.json",
+      "mutate": [
+        {
+          "file": "data/narrative/hints_fix.json",
+          "set": {
+            "/hints/b2.hint": "One two three four five six seven eight nine ten eleven twelve"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-react-live-valid",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-react-version-required",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "del": [
+            "/version"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "vfx-react-unknown-group",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/embers": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/embers"
+      }
+    },
+    {
+      "id": "vfx-react-unknown-key",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/rubble/dust": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/rubble/dust"
+      }
+    },
+    {
+      "id": "vfx-react-underscore-key-ok",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/speed/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-react-empty-group-ok",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/windows": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-react-tier-range",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/rubble/min_tier": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/rubble/min_tier"
+      }
+    },
+    {
+      "id": "vfx-react-tier-integer",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/cracks/min_tier": 3.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/cracks/min_tier"
+      }
+    },
+    {
+      "id": "vfx-react-stage-zero",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/flicker/min_stage": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/flicker/min_stage"
+      }
+    },
+    {
+      "id": "vfx-react-share-above-one",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/flicker/density": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/flicker/density"
+      }
+    },
+    {
+      "id": "vfx-react-alpha-above-one",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/speed/alpha": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/speed/alpha"
+      }
+    },
+    {
+      "id": "vfx-react-cap-positive",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/rubble/alive_cap": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/rubble/alive_cap"
+      }
+    },
+    {
+      "id": "vfx-react-count-integer",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/windows/max_buildings": 10.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/windows/max_buildings"
+      }
+    },
+    {
+      "id": "vfx-react-length-positive",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/cracks/r_t3": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/cracks/r_t3"
+      }
+    },
+    {
+      "id": "vfx-react-type-string",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/speed/lines": "7"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/speed/lines"
+      }
+    },
+    {
+      "id": "vfx-react-rise-order",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/rubble/rise_min": 90
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-react-range",
+        "pointer": "/rubble/rise_min"
+      }
+    },
+    {
+      "id": "vfx-react-life-order",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/rubble/life_min": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-react-range",
+        "pointer": "/rubble/life_min"
+      }
+    },
+    {
+      "id": "vfx-react-size-order",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/rubble/size_min": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-react-range",
+        "pointer": "/rubble/size_min"
+      }
+    },
+    {
+      "id": "vfx-react-floors-order",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/windows/min_floors": 9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-react-range",
+        "pointer": "/windows/min_floors"
+      }
+    },
+    {
+      "id": "vfx-react-speed-length-order",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/speed/len_min_bh": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-react-range",
+        "pointer": "/speed/len_min_bh"
+      }
+    },
+    {
+      "id": "vfx-react-speed-gap-order",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/speed/gap_min_bh": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-react-range",
+        "pointer": "/speed/gap_min_bh"
+      }
+    },
+    {
+      "id": "vfx-react-equal-range-ok",
+      "schema": "vfx-react.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/react.json",
+          "set": {
+            "/rubble/rise_min": 70
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

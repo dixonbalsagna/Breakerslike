@@ -1,0 +1,462 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/art-auras",
+  "title": "art auras (version 1)",
+  "description": "data/art/auras.json: the Anti-hero's aura, flash and glow colours for his three forms, within Legal's aura rule (docs/legal/rule-of-cool-screen.md): hue 260 to 320 degrees, a lighter tint of the same hue for the core, never pure white, no red, orange, gold or yellow. Version field: version. Policy: closed except keys starting with an underscore. Legal's rule is checked by tools/lib/xref.js (auras-hue, auras-white): every stated hue and every colour's own hue sits in 260 to 320, an aura core or flash light is at most L* 86, and no colour is pure white.",
+  "type": "object",
+  "required": [
+    "version",
+    "hue_range",
+    "rules",
+    "anti_hero"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "hue_range": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 360
+      }
+    },
+    "rules": {
+      "type": "object",
+      "required": [
+        "aura",
+        "flashes",
+        "glow"
+      ],
+      "properties": {
+        "aura": {
+          "type": "string",
+          "minLength": 1
+        },
+        "flashes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "glow": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "anti_hero": {
+      "type": "object",
+      "required": [
+        "forms"
+      ],
+      "properties": {
+        "forms": {
+          "type": "object",
+          "required": [
+            "regalia",
+            "sovereign",
+            "apex"
+          ],
+          "properties": {
+            "regalia": {
+              "type": "object",
+              "required": [
+                "name",
+                "hue",
+                "pieces",
+                "aura",
+                "flashes",
+                "glow"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "hue": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 360,
+                  "description": "Degrees on the colour wheel; Legal: 260 to 320 for the Anti-hero."
+                },
+                "pieces": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "aura": {
+                  "type": "object",
+                  "required": [
+                    "rim",
+                    "core",
+                    "shadow",
+                    "keyline"
+                  ],
+                  "properties": {
+                    "rim": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "core": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "shadow": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "keyline": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                },
+                "flashes": {
+                  "type": "object",
+                  "required": [
+                    "mid",
+                    "light",
+                    "shadow",
+                    "info_core",
+                    "info_line"
+                  ],
+                  "properties": {
+                    "mid": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "light": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "shadow": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "info_core": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "info_line": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                },
+                "glow": {
+                  "type": "object",
+                  "required": [
+                    "sigil",
+                    "halo",
+                    "halo_alpha"
+                  ],
+                  "properties": {
+                    "sigil": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "halo": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "halo_alpha": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "sovereign": {
+              "type": "object",
+              "required": [
+                "name",
+                "hue",
+                "pieces",
+                "aura",
+                "flashes",
+                "glow"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "hue": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 360,
+                  "description": "Degrees on the colour wheel; Legal: 260 to 320 for the Anti-hero."
+                },
+                "pieces": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "aura": {
+                  "type": "object",
+                  "required": [
+                    "rim",
+                    "core",
+                    "shadow",
+                    "keyline"
+                  ],
+                  "properties": {
+                    "rim": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "core": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "shadow": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "keyline": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                },
+                "flashes": {
+                  "type": "object",
+                  "required": [
+                    "mid",
+                    "light",
+                    "shadow",
+                    "info_core",
+                    "info_line"
+                  ],
+                  "properties": {
+                    "mid": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "light": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "shadow": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "info_core": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "info_line": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                },
+                "glow": {
+                  "type": "object",
+                  "required": [
+                    "sigil",
+                    "halo",
+                    "halo_alpha"
+                  ],
+                  "properties": {
+                    "sigil": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "halo": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "halo_alpha": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "apex": {
+              "type": "object",
+              "required": [
+                "name",
+                "hue",
+                "pieces",
+                "aura",
+                "flashes",
+                "glow"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "hue": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 360,
+                  "description": "Degrees on the colour wheel; Legal: 260 to 320 for the Anti-hero."
+                },
+                "pieces": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "aura": {
+                  "type": "object",
+                  "required": [
+                    "rim",
+                    "core",
+                    "shadow",
+                    "keyline"
+                  ],
+                  "properties": {
+                    "rim": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "core": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "shadow": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "keyline": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                },
+                "flashes": {
+                  "type": "object",
+                  "required": [
+                    "mid",
+                    "light",
+                    "shadow",
+                    "info_core",
+                    "info_line"
+                  ],
+                  "properties": {
+                    "mid": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "light": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "shadow": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "info_core": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "info_line": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                },
+                "glow": {
+                  "type": "object",
+                  "required": [
+                    "sigil",
+                    "halo",
+                    "halo_alpha"
+                  ],
+                  "properties": {
+                    "sigil": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "halo": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "halo_alpha": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^_": true
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}
