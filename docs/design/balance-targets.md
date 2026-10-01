@@ -803,7 +803,7 @@ World re-measured on Encounter's landing slice at the 40 degree boundary (`docs/
 | Flights off a crater's lip, seen | 1.75 a minute | 0.5 to 2.5 a minute |
 | Flights off any terrain (lips, crests, cliffs and heaps), seen | 4.7 a minute | 1.5 to 5 a minute |
 | Journeys that reach the 4 s or 8-contact bound | 5.1% | At most 8% |
-| Journeys longer than 4,000 units | About 17% | At most 20%. Camera's chase rule covers them |
+| Ground journeys longer than 4,000 units, **measured from the first ground contact to the stop** (World's measure) | About 17% | At most 20%. Camera's chase rule covers them. This is not the whole launch: from the launch tick, flight included, Camera measures 38 to 57% over 4,000 units, and long launches are wanted (§10: at least 30% travel 9,000 units) |
 
 **One check for World and Simulation.** The mean wear per journey is 0.32 of the single-impact budget. A journey that skids to a halt should pay 80 to 100% of it, because all its speed is lost on the ground. If halted journeys pay much less, the split needs a look. Either way the impact wear per launch has changed, so QA re-tunes k after the model lands.
 

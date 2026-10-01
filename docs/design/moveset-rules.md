@@ -474,3 +474,24 @@ So a match reads as a climb: a place signature, Regalia's, Sovereign's, and then
 Touch adds 2 ticks of tolerance, and a one-armed guard takes 2 ticks off each window (`spec-wounds.md` §1d).
 
 **(g) The AI's perfect blocks.** Encounter's step 3 has the AI landing about 18 perfect blocks per 100 melee exchanges, with RIPOSTE at 15% of them, against a band of 5 to 15. **The band stays, and R5's rates are cut by difficulty:** the easy AI uses ×0.35 of them, the medium AI ×0.6 and the hard AI ×1.0. That puts medium at about 11 per 100. The band of 5 to 15 is for the medium AI and for mid-skill players; easy should land 3 to 8 and hard 12 to 20. A riposte is a large swing, so the default opponent shouldn't land one in every six exchanges.
+
+**(h) The blur exchange's traded lights** do ×0.5 of a light each, as Combat proposed (`docs/combat/pending/wave5-clashes.md`). Both sides land them, so the trade is even and only the pulses decide the clash. They are mid-string hits, with no perfect-block window.
+
+**(i) Blast speeds and ranges** (`wave6-energy.md` §2) are confirmed, with one rule added.
+
+| Shape | Travel | Range |
+| :--- | :--- | :--- |
+| Bolt, volley | 60 units a tick | Any |
+| Shard | 50 units a tick | Up to 1,200 units |
+| Arc | 45 units a tick | Any |
+| Burst | None | Up to 150 units |
+| Lob | A fixed 36-tick arc | 300 to 1,500 units |
+| Charged | 90 units a tick | Any |
+
+- **A blast always arrives within 45 ticks.** The speeds above are minimums: past about 2,700 units a bolt flies faster to keep that time. Otherwise a blast at a far rival would take many seconds, and "energy reaches at any range" (pillar 3) would be true only on paper.
+- When the rival is outside a shape's range, the director picks a shape that reaches. An energy press never whiffs for range.
+- Blasts use the beam's tier factor on structures (`balance-targets.md` §15).
+
+**(j) The poke's count by Pride** is confirmed: 3 shards, then 5 at Regalia, 7 at Sovereign and 9 at Apex, **for the same total damage.** It shows his Pride without changing the balance. Two conditions keep it that way:
+- a volley or a shard spread counts as **one** landed strike for mood, meters and the strike counts, however many pieces it has;
+- its total follows the Heavy Crown like any other attack of his.
