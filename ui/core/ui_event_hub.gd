@@ -421,7 +421,7 @@ func patch(actor: int, d: Dictionary) -> void:
 	if m == null:
 		return
 	var old_stance: int = m.stance
-	for k in ["stance", "tier", "charge", "momentum", "ego", "hidden", "charging", "sig_cost", "name", "title", "ai", "chip_station", "device"]:
+	for k in ["stance", "tier", "charge", "momentum", "ego", "hidden", "charging", "sig_cost", "name", "title", "ai", "chip_station", "device", "form_free", "form_cue_left"]:
 		if d.has(k):
 			# Hiding is removed from the base game (a future fighter); with the flag off the hidden state is ignored.
 			m.set(k, (bool(d[k]) and UiData.feature("hiding")) if k == "hidden" else d[k])

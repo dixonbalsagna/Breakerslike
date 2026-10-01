@@ -41,6 +41,7 @@ var cards_none := false                      # touch landscape on a very short s
 var ring := Rect2()                          # the planet ring map (landscape), centred above the strip
 var hints: Array = [Rect2(), Rect2()]        # each column's control-hint legend, under the prompt row; landscape only (UiHints decides who shows one)
 var prompts: Array = [Rect2(), Rect2()]      # each column's prompt row (stance and hold prompts), under the cards; landscape only
+var form: Array = [Rect2(), Rect2()]         # each column's form-ready chip (UiFormPrompt): top of the legend's space under the prompt row, or empty where it does not fit (portrait, a cramped touch screen)
 var swapped := false                         # slot 0 is on the right: the fighter on the left of the screen is slot 1
 var touch_grid := false                      # touch: the stance ring is a 2 by 2 grid because the column is too narrow for four targets in a row
 var read_slot := Rect2()                     # the telegraph chip and the tutorial hint line: the banner slot, between the plates, above the fight
@@ -142,6 +143,7 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 			arr[0] = arr[1]
 			arr[1] = tmp
 	_place_faces()
+	_place_forms()
 
 
 ## The lowest edge of the nameplates, the toll chip and the pause button, plus a gap: Camera's top panel band should start at or below this (the
@@ -203,6 +205,38 @@ func _place_faces() -> void:
 		if face[i].size.y > 0.0 and hints[i].size.y > 0.0:
 			var hh: float = face[i].position.y - gap - hints[i].position.y
 			hints[i] = Rect2(hints[i].position.x, hints[i].position.y, hints[i].size.x, maxf(hh, 0.0))
+
+
+## The form-ready chip's slot in each column (UiFormPrompt): directly under the prompt row (on touch, under the cards), as wide as the column, as
+## tall as the chip. It takes the top of the legend's space; the legend starts under it while it shows. It must clear the bark lane, the docked face,
+## the toll chip, the strip, the ring map, the pause button, the feedback pill and every touch button; if any of them is in the way the slot stays
+## empty and the prompt row's own Transform chip carries it (and, on touch, the lit button). Portrait has no column room: the touch button carries it.
+func _place_forms() -> void:
+	form = [Rect2(), Rect2()]
+	if portrait:
+		return
+	var gap: float = 12.0 * s
+	var fh: float = UiFormPrompt.height(s)
+	var obstacles: Array = [bark[0], bark[1], toll, strip, ring, read_slot, pause_btn, feedback_btn, face[0], face[1]]
+	if touch_ui and not touch_ctrl.is_empty():
+		for k in touch_keys():
+			var c: Dictionary = touch_ctrl[k]
+			obstacles.append(Rect2(float(c.x) - float(c.r) - 6.0 * dp, float(c.y) - float(c.r) - 6.0 * dp, (float(c.r) + 6.0 * dp) * 2.0, (float(c.r) + 6.0 * dp) * 2.0))
+	for i in range(2):
+		var p: Rect2 = plate[i]
+		var top: float = (prompts[i].end.y if prompts[i].size.y > 0.0 else maxf(cards[i].end.y, silhouette[i].end.y)) + gap
+		# Not into Camera's panel strip (the centre of the screen): the chip's width stops at the strip's edge, on the column's own side.
+		var left: bool = p.get_center().x < vp.x * 0.5
+		var x0: float = p.position.x if left else maxf(p.position.x, vp.x * UiFaces.CENTRE_TO + gap * 0.5)
+		var x1: float = minf(p.end.x, vp.x * UiFaces.CENTRE_FROM - gap * 0.5) if left else p.end.x
+		var r := Rect2(x0, top, maxf(x1 - x0, 0.0), fh)
+		var clash: bool = not Rect2(Vector2.ZERO, vp).encloses(r)
+		for o in obstacles:
+			if (o as Rect2).size.y > 0.0 and r.intersects(o):
+				clash = true
+				break
+		if not clash:
+			form[i] = r
 
 
 ## One layout pass at the current scale `s`.

@@ -41,6 +41,7 @@ func _run() -> void:
 	await _feedback_rules()
 	_toll_rules()
 	await _hints_rules()
+	await _form_prompt_rules()
 	await _touch_controls_rules()
 	await _settings_rules()
 	_touch_full_rules()
@@ -412,6 +413,9 @@ func _bridge() -> void:
 	host.S.fighters[0].act.formReady = false
 	UiSimBridge.patch(hud, host.S)
 	_ok(ready_on and not hud.hub.model(0).avail["transform"], "bridge: the Transform prompt reads f.act.formReady (up while a form is ready, down when it is taken)")
+	var f0s = host.S.fighters[0]
+	var free_expected: bool = host.S.dirS.ex == null and host.S.game.ko == null and (str(f0s.state) == "free" or str(f0s.state) == "charging")
+	_ok(hud.hub.model(0).form_free == free_expected, "bridge: form_free is the sim's own condition for taking a form (no exchange, nobody out, free or charging)")
 	# The greybox balance rarely wears a region past bruised in a minute, so push one through the real S1 code: the stage
 	# events it emits must reach the HUD as they are.
 	var f0 = host.S.fighters[0]
@@ -1737,6 +1741,232 @@ func _toll_rules() -> void:
 
 
 ## The control hints and the YOU labels (docs/ui/hud-spec.md section 22).
+func _frames(hud: UiHud, n: int) -> void:
+	for i in range(n):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+
+
+## The form-ready prompt (docs/ui/hud-spec.md section 31): the chip's slot in the column at every size, its words and glyphs per layout, when it shows,
+## the pulse (and its reduced-motion steady highlight), the legend and the prompt row giving way, the haptic edge, the touch button's pulse.
+func _form_prompt_rules() -> void:
+	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(2560, 1600), 2.0], [Vector2(3840, 2160), 1.0],
+		[Vector2(1170, 2532), 3.0], [Vector2(1080, 2340), 2.75], [Vector2(1125, 2436), 3.0], [Vector2(828, 1792), 2.0], [Vector2(750, 1334), 2.0], [Vector2(390, 844), 1.0], [Vector2(360, 640), 1.0]]
+	var bad_clear := 0
+	var bad_plan := 0
+	var desktop_missing := 0
+	var shown_n := 0
+	for cs in cases:
+		var sz: Vector2 = cs[0]
+		var dpv: float = cs[1]
+		for touch in [false, true]:
+			var lay := UiLayout.new()
+			lay.dp = dpv
+			lay.touch_ui = touch
+			lay.compute(sz, false)
+			var others: Array = [lay.plate[0], lay.plate[1], lay.silhouette[0], lay.silhouette[1], lay.cards[0], lay.cards[1], lay.prompts[0], lay.prompts[1], lay.bark[0], lay.bark[1], lay.face[0], lay.face[1], lay.toll, lay.strip, lay.ring, lay.pause_btn, lay.feedback_btn]
+			if touch and not lay.touch_ctrl.is_empty():
+				for k in lay.touch_keys():
+					var c: Dictionary = lay.touch_ctrl[k]
+					others.append(Rect2(float(c.x) - float(c.r), float(c.y) - float(c.r), float(c.r) * 2.0, float(c.r) * 2.0))
+			for slot in range(2):
+				var fr: Rect2 = lay.form[slot]
+				if fr.size.y <= 0.0:
+					if not touch and not lay.portrait and sz.x >= 1280.0 and dpv <= 1.0:
+						desktop_missing += 1
+					continue
+				shown_n += 1
+				if not Rect2(Vector2.ZERO, sz).encloses(fr):
+					bad_clear += 1
+				var centre: Rect2 = Rect2(sz.x * UiFaces.CENTRE_FROM, 0.0, sz.x * (UiFaces.CENTRE_TO - UiFaces.CENTRE_FROM), sz.y)
+				if fr.intersects(centre):
+					bad_clear += 1
+				for o in others:
+					if (o as Rect2).size.y > 0.0 and fr.intersects(o):
+						bad_clear += 1
+				var mm := UiFighterModel.new()
+				mm.slot = slot
+				mm.left_side = fr.get_center().x < sz.x * 0.5
+				var pl: Dictionary = UiFormPrompt.plan(mm, fr, lay.s, {"touch": touch, "glyph_style": "neutral"})
+				if pl.is_empty() or not fr.grow(0.5).encloses(pl["rect"] as Rect2):
+					bad_plan += 1
+	_ok(bad_clear == 0, "form prompt: the chip's slot clears the plates, cards, silhouette, prompt row, bark lane, face, toll chip, strip, ring map, buttons, touch controls and the centre strip at 15 sizes, touch off and on (%d overlaps)" % bad_clear)
+	_ok(bad_plan == 0 and shown_n > 0, "form prompt: the chip always plans into the slot it was given (%d slots, %d plans failed)" % [shown_n, bad_plan])
+	_ok(desktop_missing == 0, "form prompt: a desktop window has a slot in both columns (%d missing)" % desktop_missing)
+	# The words and the control per layout.
+	var lay1 := UiLayout.new()
+	lay1.compute(Vector2(1920, 1080), false)
+	var mk := UiFighterModel.new()
+	mk.slot = 0
+	mk.left_side = true
+	mk.device = "kbd"
+	var pk: Dictionary = UiFormPrompt.plan(mk, lay1.form[0], lay1.s, {"glyph_style": "neutral", "control_scheme": "kb-solo"})
+	var mp := UiFighterModel.new()
+	mp.slot = 0
+	mp.left_side = true
+	mp.device = "xbox"
+	var pp: Dictionary = UiFormPrompt.plan(mp, lay1.form[0], lay1.s, {"glyph_style": "neutral", "control_scheme": "arena"})
+	var pt: Dictionary = UiFormPrompt.plan(mp, lay1.form[0], lay1.s, {"glyph_style": "neutral", "touch": true})
+	_ok(not pk.is_empty() and float(pk["gw"]) > 0.0 and str(pk["word"]) == "TRANSFORM" and str(pk["tail"]) == "Hold: hit harder until the match ends", "form prompt: a keyboard says TRANSFORM, shows the key and says what holding it does, in plain words (%s, slot %s, chip %s)" % [pk.get("tail"), lay1.form[0], pk.get("rect")])
+	_ok(not pp.is_empty() and float(pp["gw"]) > float(pk["gw"]), "form prompt: a pad shows both triggers (the chord is wider than the keyboard's single key)")
+	_ok(not pt.is_empty() and float(pt["gw"]) == 0.0 and str(pt["tail"]).begins_with("Tap: "), "form prompt: touch says Tap and shows no glyph (the lit button is the control)")
+	var mr := UiFighterModel.new()
+	mr.slot = 1
+	mr.left_side = false
+	mr.device = "kbd"
+	var pr: Dictionary = UiFormPrompt.plan(mr, lay1.form[1], lay1.s, {"glyph_style": "neutral", "control_scheme": "kb-solo"})
+	_ok(not pr.is_empty() and is_equal_approx((pr["rect"] as Rect2).end.x, lay1.form[1].end.x) and is_equal_approx((pk["rect"] as Rect2).position.x, lay1.form[0].position.x), "form prompt: the chip sits at its own column's edge (left column left, right column right)")
+	var narrow := Rect2(lay1.form[0].position, Vector2(190.0, lay1.form[0].size.y))
+	var pn: Dictionary = UiFormPrompt.plan(mk, narrow, lay1.s, {"glyph_style": "neutral", "control_scheme": "kb-solo"})
+	_ok(not pn.is_empty() and str(pn["tail"]) != str(pk["tail"]) and (pn["rect"] as Rect2).size.x <= 190.0 + 0.5, "form prompt: in a narrow slot the sentence gets shorter (or drops to the verb) rather than overflow")
+	_ok(UiFormPrompt.plan(mk, Rect2(lay1.form[0].position, Vector2(40.0, lay1.form[0].size.y)), lay1.s, {}).is_empty() and UiFormPrompt.plan(mk, Rect2(lay1.form[0].position, Vector2(300.0, UiFormPrompt.height(lay1.s) - 5.0)), lay1.s, {}).is_empty(), "form prompt: no chip in a slot too narrow or too short for it")
+	# A prompt row's own Transform chip: gone while the big chip shows, loud (whatever the prompts option says) when there is no room for it.
+	var mrow := UiFighterModel.new()
+	mrow.slot = 0
+	mrow.left_side = true
+	mrow.avail["transform"] = true
+	var rowr := Rect2(lay1.prompts[0])
+	var kinds := func(mm: UiFighterModel, prompts_on: bool) -> Array:
+		var ks: Array = []
+		for c in UiPrompts.plan(mm, rowr, lay1.s, {"prompts": prompts_on, "glyph_style": "neutral"}):
+			ks.append(c["kind"])
+		return ks
+	_ok(not (kinds.call(mrow, false) as Array).has("hold") and (kinds.call(mrow, true) as Array).has("hold"), "form prompt: the prompt row shows its Transform chip only while prompts are on, as before")
+	mrow.form_shown = true
+	_ok(not (kinds.call(mrow, true) as Array).has("hold"), "form prompt: and not at all while the big chip shows (no two chips for one thing)")
+	mrow.form_shown = false
+	mrow.form_loud = true
+	_ok((kinds.call(mrow, false) as Array).has("hold"), "form prompt: with no room for the big chip the row's chip shows whatever the prompts option says")
+	# In the HUD.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.set_option("show_prompts", false)
+	var got: Array = []
+	hud.form_prompt_shown.connect(func(s: int, d: String): got.append([s, d]))
+	await _frames(hud, 4)
+	var m0: UiFighterModel = hud.hub.model(0)
+	_ok(not m0.form_shown and hud._l_form[0].sig == null and got.is_empty(), "form prompt: nothing shows with no form ready")
+	var rows_before: int = UiHints.rows(m0, "kb-solo").size()
+	hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	await _frames(hud, 4)
+	_ok(m0.form_shown and not m0.form_loud and hud._l_form[0].sig != null and (hud._form_holder[0] as Node2D).visible, "form prompt: a ready form with the player free shows the chip, even with prompts off")
+	_ok(got == [[0, "kbd"]], "form prompt: the host is told once, at the rising edge, with the player's device (for a haptic)")
+	_ok(UiHints.rows(m0, "kb-solo").size() == rows_before, "form prompt: the legend drops its own Transform row while the chip shows")
+	var mn := 9.0
+	var mx := 0.0
+	var amin := 9.0
+	for i in range(80):
+		await _frames(hud, 1)
+		var sc: float = (hud._form_holder[0] as Node2D).scale.x
+		mn = minf(mn, sc)
+		mx = maxf(mx, sc)
+		amin = minf(amin, (hud._form_holder[0] as Node2D).modulate.a)
+	_ok(mx > 1.02 and mn < 1.01 and mx <= 1.0 + UiFormPrompt.PULSE_SCALE + 0.001 and amin < 0.95, "form prompt: it pulses (swells and brightens) by scale and alpha, not by redrawing")
+	var rd0: int = hud._l_form[0].redraws
+	await _frames(hud, 30)
+	_ok(hud._l_form[0].redraws == rd0, "form prompt: the pulse costs no redraw")
+	hud.set_option("reduced_motion", true)
+	await _frames(hud, 3)
+	var sig_r: Array = hud._l_form[0].sig
+	_ok((hud._form_holder[0] as Node2D).scale == Vector2.ONE and is_equal_approx((hud._form_holder[0] as Node2D).modulate.a, 1.0) and bool(sig_r[6]), "form prompt: reduced motion has no pulse, a steady thick highlight")
+	hud.set_option("reduced_motion", false)
+	# Free and not free.
+	hud.hub.patch(0, {"form_free": false})
+	await _frames(hud, 3)
+	_ok(not m0.form_shown and hud._l_form[0].sig == null and UiHints.rows(m0, "kb-solo").size() == rows_before + 1, "form prompt: it goes while the fighter is in an exchange (the legend's own Transform row is back)")
+	hud.hub.patch(0, {"form_free": true})
+	await _frames(hud, 3)
+	_ok(m0.form_shown and got.size() == 1, "form prompt: it comes back when the exchange ends, without another haptic")
+	m0.ko = true
+	await _frames(hud, 2)
+	var ko_hidden: bool = not m0.form_shown
+	m0.ko = false
+	m0.cinematic = "transformation"
+	await _frames(hud, 2)
+	var cin_hidden: bool = not m0.form_shown
+	m0.cinematic = ""
+	hud.consume({"type": "pause_start", "kind": "transform", "actor": 1, "version": "full", "dur": 30.0})
+	await _frames(hud, 2)
+	var pause_hidden: bool = not m0.form_shown
+	hud.consume({"type": "pause_end", "kind": "transform"})
+	hud.hub.model(1).avail["transform"] = true
+	await _frames(hud, 2)
+	var ai_hidden: bool = not hud.hub.model(1).form_shown and hud._l_form[1].sig == null
+	hud.hub.model(1).avail["transform"] = false
+	_ok(ko_hidden and cin_hidden and pause_hidden and ai_hidden, "form prompt: it stays away when the fighter is out, in a cinematic, in a sim pause, or an AI (%s %s %s %s)" % [ko_hidden, cin_hidden, pause_hidden, ai_hidden])
+	await _frames(hud, 2)
+	_ok(m0.form_shown, "form prompt: and returns after them")
+	# The prompt row, with prompts on.
+	hud.set_option("show_prompts", true)
+	await _frames(hud, 2)
+	_ok(not (kinds_in_hud(hud, 0) as Array).has("hold"), "form prompt: with prompts on the row shows no second Transform chip")
+	hud.set_option("show_prompts", false)
+	# Taken: it goes; ready again: another haptic.
+	hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": false})
+	await _frames(hud, 3)
+	var gone: bool = not m0.form_shown
+	hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	await _frames(hud, 3)
+	_ok(gone and m0.form_shown and got.size() == 2, "form prompt: taking the form clears it, and the next ready form is announced again")
+	# No room: the row's chip is loud instead.
+	hud.layout.form[0] = Rect2()
+	await _frames(hud, 3)
+	_ok(not m0.form_shown and m0.form_loud and (kinds_in_hud(hud, 0) as Array).has("hold"), "form prompt: with no slot for the chip the prompt row's Transform chip shows, prompts option or not")
+	hud.queue_free()
+	await process_frame
+	# Touch: portrait has no room for the chip, so the lit button carries it, pulsing (steady under reduced motion).
+	root.size = Vector2i(390, 844)
+	var th: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(th)
+	th.setup(["kai", "vorr"], ["KAI", "VORR"])
+	th.hub.model(0).ai = false
+	th.hub.model(1).ai = true
+	th.set_option("touch_ui", true)
+	await _frames(th, 3)
+	var step0: int = th._touch_pulse_step()
+	th.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	await _frames(th, 3)
+	var step1: int = th._touch_pulse_step()
+	_ok(step0 == -1 and step1 >= 0 and step1 <= 7 and not th.hub.model(0).form_shown and th.hub.model(0).form_loud, "form prompt: on a portrait phone the lit Transform button pulses (the chip has no room)")
+	var steps := {}
+	for i in range(40):
+		await _frames(th, 1)
+		steps[th._touch_pulse_step()] = true
+	_ok(steps.size() >= 6, "form prompt: the button's ring steps round the cycle (%d steps seen)" % steps.size())
+	th.set_option("reduced_motion", true)
+	await _frames(th, 2)
+	_ok(th._touch_pulse_step() == 8, "form prompt: reduced motion makes the button's ring steady")
+	th.hub.patch(0, {"form_free": false})
+	await _frames(th, 2)
+	_ok(th._touch_pulse_step() == -1, "form prompt: the button stops pulsing while the fighter is not free")
+	th.queue_free()
+	await process_frame
+	# The words: How to play and the tutorial hint.
+	var howto: Dictionary = UiData.howto()
+	var ht := ""
+	var form_icon := false
+	for pg in howto["pages"]:
+		for it in pg.get("items", []) + pg.get("touch_items", []):
+			ht += " " + str(it.get("text", ""))
+			if str(it.get("icon", "")) == "form":
+				form_icon = true
+	_ok(ht.contains("Transform when the prompt shows: you hit harder for the rest of the match") and ht.contains("the button pulses when a form is ready") and form_icon, "form prompt: the How to play card has it as a beat (the idea page, the controls page and the touch list)")
+	var hints: Dictionary = UiData.reads()["hints"]
+	_ok(hints.has("b7.alt1") and str(hints["b7.alt1"]).contains("prompt") and str(hints["b7.alt1"]).contains("harder"), "form prompt: the tutorial's transform beat has the prompt line (b7.alt1)")
+	root.size = Vector2i(1280, 720)
+
+
+func kinds_in_hud(hud: UiHud, slot: int) -> Array:
+	var ks: Array = []
+	for c in UiPrompts.plan(hud.hub.models[slot], hud.layout.prompts[slot], hud.layout.s, hud._o()):
+		ks.append(c["kind"])
+	return ks
+
+
 func _hints_rules() -> void:
 	var hd: Dictionary = UiData.hints()
 	var acts: Dictionary = UiData.glyphs().get("actions", {})

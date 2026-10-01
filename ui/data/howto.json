@@ -10,7 +10,7 @@
       "id": "idea",
       "title": "What you control",
       "items": [
-        { "icon": "plan", "col": 0, "text": "You are the fighter. Fly, dodge, guard, hit light or heavy, hold power, call your signature, transform." },
+        { "icon": "plan", "col": 0, "text": "You are the fighter. Fly, dodge, guard, hit light or heavy, hold power, call your signature, transform. Transform when the prompt shows: you hit harder for the rest of the match." },
         { "icon": "auto", "col": 0, "text": "No combo inputs to learn. Blows and combos play out on their own." },
         { "icon": "body", "col": 0, "text": "No health bars. Damage shows on the bodies." },
         { "icon": "finisher", "col": 0, "text": "A finisher ends the fight, not a clock." },
@@ -36,7 +36,7 @@
         { "action": "dodge", "col": 1, "text": "Dodge (tap), sprint (hold)" },
         { "action": "power", "col": 1, "text": "Power (hold to charge)" },
         { "action": "specials", "col": 1, "text": "Specials" },
-        { "action": "transform", "col": 1, "text": "Transform (a form is ready)" },
+        { "action": "transform", "col": 1, "text": "Transform (when the prompt shows)" },
         { "action": "pause", "col": 1, "text": "Pause" },
         { "note": "kbd_p2", "col": 1, "text": "Two on one keyboard: P1 has the left keys, P2 the right (I J K L to fly). This page shows yours." }
       ],
@@ -45,7 +45,7 @@
         { "icon": "touch_attack", "col": 0, "text": "Attack: tap light, hold heavy, swipe up for your signature." },
         { "icon": "stance_1", "col": 1, "text": "Guard: hold." },
         { "icon": "touch_hold", "col": 1, "text": "Power: hold to charge." },
-        { "icon": "finisher", "col": 1, "text": "Transform: the button appears when a form is ready." },
+        { "icon": "form", "col": 1, "text": "Transform: the button pulses when a form is ready." },
         { "icon": "touch_pause", "col": 1, "text": "Pause: the top button." }
       ]
     },

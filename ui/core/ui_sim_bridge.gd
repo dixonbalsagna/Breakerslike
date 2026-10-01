@@ -44,6 +44,8 @@ static func patch(hud: UiHud, S) -> void:
 			"ego": ego, "aura": str(f.aura), "wear": wear,
 			# A form is ready while the sim says so (f.act.formReady, I2a): the prompt does not wait for, or depend on, the transform_ready event.
 			"avail_transform": bool(f.act.formReady) if "act" in f else false,
+			# ... and it can be taken only between exchanges, on the ground or charging, with nobody out (SimExchange._transforms' own condition).
+			"form_free": S.dirS.ex == null and S.game.ko == null and (str(f.state) == "free" or str(f.state) == "charging"),
 		})
 	hud.hub.set_move_names(move_names)
 	var w = S.world

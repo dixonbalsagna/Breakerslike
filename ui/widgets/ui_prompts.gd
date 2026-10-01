@@ -29,13 +29,13 @@ static func has_content(m: UiFighterModel, prompts_on: bool, touch: bool = false
 		return false   # an AI fighter has no device: nothing to prompt
 	if touch:
 		return true    # the stance ring is always there
-	return stance_visible(m, prompts_on) or (prompts_on and m.avail["transform"])
+	return stance_visible(m, prompts_on) or ((prompts_on or m.form_loud) and m.avail["transform"] and not m.form_shown)
 
 
 ## The redraw key for the row.
 static func sig(m: UiFighterModel, prompts_on: bool, touch: bool = false, preset: String = "") -> Array:
 	var fade: int = int(clampf((STANCE_SHOW - m.stance_prompt_t) * 4.0, 0.0, 4.0)) if (not prompts_on and not touch) else 4
-	return [m.stance, m.device, prompts_on, touch, stance_visible(m, prompts_on), fade, m.avail["transform"], int(m.hold["transform"] * 30.0), preset]
+	return [m.stance, m.device, prompts_on, touch, stance_visible(m, prompts_on), fade, m.avail["transform"], int(m.hold["transform"] * 30.0), preset, m.form_shown, m.form_loud]
 
 
 ## The chips of the row, in order, as {name, rect, kind, i or act, gw, h, y, gap}: the geometry that both draw and touch_rects
@@ -79,7 +79,7 @@ static func plan(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Arr
 			var wx: float = x if left else x - ww
 			out.append({"name": "weight", "kind": "weight", "gw": 0.0, "h": h, "y": y, "gap": gap, "rect": Rect2(wx, y - h * 0.5 - 2.0, ww, h + 4.0)})
 			x += (ww + gap) if left else -(ww + gap)
-	if prompts_on and not touch:
+	if (prompts_on or m.form_loud) and not touch and not m.form_shown:
 		for act in HOLD_ACTIONS:
 			if not m.avail[act]:
 				continue
@@ -148,7 +148,11 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Di
 			UiReads.weight_mark(ci, r.get_center(), h * 0.66, heavy, Color(UiLook.col(UiLook.INK), fade), heavy and m.weight_fallback_t < 1.5)
 		else:
 			var act: String = c["act"]
-			UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.65), Color(UiLook.col(UiLook.EDGE), 0.5), 1.4)
+			if m.form_loud:
+				# No room for the big chip: this one says it loudly instead (a steady accent edge; the row is cached, so no pulse).
+				UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.85), Color(m.aura, 1.0), maxf(3.0, 3.0 * s))
+			else:
+				UiIcons.rrect(ci, r, h * 0.25, Color(UiLook.col(UiLook.SCRIM), 0.65), Color(UiLook.col(UiLook.EDGE), 0.5), 1.4)
 			var gx: float = r.position.x + gap
 			UiGlyphs.draw(ci, act, m.device, m.slot, Vector2(gx, y), h * 0.8, 1.0, true, style, preset)
 			UiGlyphs.hold_ring(ci, Vector2(gx + float(c["gw"]) * 0.5, y), h * 0.55, float(m.hold[act]), 1.0)

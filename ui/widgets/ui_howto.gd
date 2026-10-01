@@ -291,6 +291,11 @@ static func _icon(ci: CanvasItem, name: String, c: Vector2, sz: float, cs: float
 			# Three chevrons in a row: it plays out on its own.
 			for k in range(3):
 				UiIcons.chevron(ci, c + Vector2((float(k) - 1.0) * sz * 0.26, 0.0), sz * 0.3, 1.0, w, ink)
+		"form":
+			# Three rising chevrons: a form is ready, take it.
+			for k in range(3):
+				var cy: float = c.y + (float(k) - 1.0) * sz * 0.2 + sz * 0.05
+				ci.draw_polyline(PackedVector2Array([Vector2(c.x - sz * 0.22, cy + sz * 0.1), Vector2(c.x, cy - sz * 0.1), Vector2(c.x + sz * 0.22, cy + sz * 0.1)]), Color(ink, 1.0 - 0.25 * float(2 - k)), w, true)
 		"body":
 			var cols: Array = [UiLook.STAGE_FRESH, UiLook.STAGE_BRUISED, UiLook.STAGE_BATTERED, UiLook.STAGE_BROKEN]
 			for k in range(4):

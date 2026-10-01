@@ -29,7 +29,7 @@ static func rect_of(c: Dictionary) -> Rect2:
 
 
 ## The redraw key: the pressed bits, the hold ring in twelfths, the stick (quantised to 2 px), the captions' alpha and Transform's state.
-static func sig(lay: UiLayout, state: Dictionary, intro_a: float, transform_avail: bool) -> Array:
+static func sig(lay: UiLayout, state: Dictionary, intro_a: float, transform_avail: bool, pulse_step: int = -1) -> Array:
 	var bits := 0
 	var i := 0
 	for n in NAMES:
@@ -53,10 +53,12 @@ static func sig(lay: UiLayout, state: Dictionary, intro_a: float, transform_avai
 		var b: Vector2 = st.get("base", Vector2.ZERO)
 		var t: Vector2 = st.get("thumb", Vector2.ZERO)
 		sk = [int(b.x * 0.5), int(b.y * 0.5), int(t.x * 0.5), int(t.y * 0.5), bool(st.get("sprint", false))]
-	return [int(lay.vp.x), int(lay.vp.y), int(lay.dp * 100.0), lay.left_handed, lay.touch_full, bits, int(float((state.get("attack", {}) as Dictionary).get("hold", 0.0)) * HOLD_TICKS), sk, int(intro_a * 10.0), transform_avail]
+	return [int(lay.vp.x), int(lay.vp.y), int(lay.dp * 100.0), lay.left_handed, lay.touch_full, bits, int(float((state.get("attack", {}) as Dictionary).get("hold", 0.0)) * HOLD_TICKS), sk, int(intro_a * 10.0), transform_avail, pulse_step]
 
 
-static func draw(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, intro_a: float, transform_avail: bool) -> void:
+## `pulse_step` is -1 for no pulse, else 0 to 7 round the cycle (the HUD steps it eight times a cycle while a form is ready and the fighter is free); under
+## reduced motion it is 8, a steady bright ring.
+static func draw(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, intro_a: float, transform_avail: bool, pulse_step: int = -1) -> void:
 	if lay.touch_ctrl.is_empty():
 		return
 	var ink := Color(UiLook.col(UiLook.INK))
@@ -88,7 +90,7 @@ static func draw(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, int
 			UiText.draw(ci, UiData.t("prompt.move"), Vector2(zc.x, zc.y - UiText.height(fs0) * 0.5 + UiText.ascent(fs0) - float(fs0) * 0.6), fs0, Color(ink, 0.8 * intro_a), 0)
 			UiText.draw(ci, UiData.t("prompt.move_hint"), Vector2(zc.x, zc.y - UiText.height(fs0) * 0.5 + UiText.ascent(fs0) + float(fs0) * 0.6), fs0, Color(ink, 0.6 * intro_a), 0)
 	if lay.touch_full:
-		_draw_full(ci, lay, s, state, transform_avail, ink, dark, edge, scrim, line)
+		_draw_full(ci, lay, s, state, transform_avail, ink, dark, edge, scrim, line, pulse_step)
 		UiText.no_outline = false
 		return
 	# The three buttons.
@@ -146,15 +148,28 @@ static func draw(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, int
 			ci.draw_arc(tp, tr, 0.0, TAU, 40, Color(edge, 0.9), line, true)
 			ci.draw_arc(tp, tr * 0.72, 0.0, TAU, 32, dark if tdown else Color(ink, 0.8), line, true)
 			UiIcons.star4(ci, tp, tr * 0.8, dark if tdown else ink)
+			if pulse_step >= 0 and not tdown:
+				_form_pulse(ci, tp, tr, line, pulse_step)
 			if intro_a > 0.01:
 				var fs2: int = UiText.px(15.0, s)
 				UiText.draw(ci, UiData.t("prompt.transform"), Vector2(tp.x, tp.y - tr - float(fs2) * 0.4), fs2, Color(ink, 0.95 * intro_a), 0)
 	UiText.no_outline = false
 
 
+## The ready Transform button's pulse: a ring that swells off the button's edge and fades (a steady thick ring when `step` is 8, reduced motion).
+static func _form_pulse(ci: CanvasItem, c: Vector2, r: float, line: float, step: int) -> void:
+	var ink := Color(UiLook.col(UiLook.CHARGE_READY))
+	if step >= 8:
+		ci.draw_arc(c, r * 1.12, 0.0, TAU, 40, Color(ink, 1.0), line * 2.2, true)
+		return
+	var k: float = float(step) / 8.0
+	ci.draw_arc(c, r * (1.06 + 0.22 * k), 0.0, TAU, 40, Color(ink, 1.0 - k), line * (2.4 - 1.2 * k), true)
+	ci.draw_arc(c, r * 1.06, 0.0, TAU, 40, Color(ink, 0.55), line * 1.4, true)
+
+
 ## The Full layout: a diamond of Light, Heavy, Signature and Context, Power and Mode above it, Transform beside it (lit while a form is
 ## ready), Dodge and Guard stacked at the other edge. Each button carries its word; a held one fills.
-static func _draw_full(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, transform_avail: bool, ink: Color, dark: Color, edge: Color, scrim: Color, line: float) -> void:
+static func _draw_full(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, transform_avail: bool, ink: Color, dark: Color, edge: Color, scrim: Color, line: float, pulse_step: int = -1) -> void:
 	var full: Dictionary = state.get("full", {})
 	for n in FULL_NAMES:
 		var c: Dictionary = lay.touch_ctrl.get(n, {})
@@ -168,6 +183,8 @@ static func _draw_full(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionar
 		ci.draw_arc(p, r, 0.0, TAU, 40, Color(edge, 0.9 * dim), line, true)
 		if n == "transform" and transform_avail and not down:
 			ci.draw_arc(p, r * 0.8, 0.0, TAU, 32, Color(UiLook.col(UiLook.CHARGE_READY)), line, true)
+			if pulse_step >= 0:
+				_form_pulse(ci, p, r, line, pulse_step)
 		var word: String = UiData.t("prompt." + n) if (n == "power" or n == "guard") else UiData.t("prompt.full_" + n)
 		var fs: int = UiText.px(14.0, s)
 		while fs > int(UiLook.text_floor) and UiText.width(word, fs) > r * 1.7:

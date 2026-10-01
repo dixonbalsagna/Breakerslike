@@ -18,6 +18,7 @@ extends Control
 ## The demo (ui/demo/hud_demo.tscn) shows all of it driven by the mock feed.
 
 signal layout_changed
+signal form_prompt_shown(slot: int, device: String)   # a human fighter's form became ready (the rising edge): the host gives a 15 ms haptic on that player's pad (Input.start_joy_vibration) or a phone (Input.vibrate_handheld(15)); never the only cue
 signal howto_opened(first_run: bool)   # the How to play card opened: the host pauses the sim and releases held keys
 signal feedback_opened(context: String)   # the feedback panel opened ("pause" or "match_end"): the host pauses the sim and releases held keys
 signal feedback_closed()                  # it closed: the host restores the pause it found
@@ -172,6 +173,11 @@ var _l_ring_base: UiLayer
 var _l_chips: Array = []       # one small node per pane: an edge pointer chip, moved by position
 var _l_ring: UiLayer
 var _l_struggle: UiLayer
+var _l_form: Array = []              # one layer per column: the form-ready chip (UiFormPrompt), inside a Node2D holder whose scale and alpha pulse it (Control scale redraws; Node2D's does not)
+var _form_holder: Array = []
+var _form_plan: Array = [{}, {}]
+var _form_t: Array = [0.0, 0.0]      # seconds the chip has been up
+var _form_ready_prev: Array = [false, false]
 var _l_prompts: Array = []
 var _l_events: UiLayer
 var _l_feed: UiLayer
@@ -196,6 +202,16 @@ func _ready() -> void:
 		_l_prompts.append(_layer(_paint_prompts.bind(i)))
 	for i in range(2):
 		_l_hints.append(_layer(_paint_hints.bind(i)))
+	for i in range(2):
+		var holder := Node2D.new()
+		add_child(holder)
+		holder.visible = false
+		var fl := UiLayer.new()
+		fl.painter = _paint_form.bind(i)
+		holder.add_child(fl)
+		fl.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_form_holder.append(holder)
+		_l_form.append(fl)
 	_l_you = _layer(_paint_you)
 	_l_touchctl = _layer(_paint_touchctl)
 	for i in range(2):
@@ -279,7 +295,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_join, _l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + _l_form + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_join, _l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -550,13 +566,14 @@ func _update_layers() -> void:
 	# The touch buttons: drawn from SimTouch.layout (UiLayout.touch_ctrl) with the host's state; redrawn only when something about them changes.
 	if touch_on and not layout.touch_ctrl.is_empty():
 		var tstate: Dictionary = _touch_state()
-		_l_touchctl.update_sig(UiTouchControls.sig(layout, tstate, _touch_intro_alpha(), _transform_avail()))
+		_l_touchctl.update_sig(UiTouchControls.sig(layout, tstate, _touch_intro_alpha(), _transform_avail(), _touch_pulse_step()))
 	else:
 		_l_touchctl.update_sig(null)
 	for m in hub.models:
 		if m.slot < _l_prompts.size():
 			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on, UiHints.preset_id(m, _o())) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0 and not (m.slot == 1 and not _join_note.is_empty())) else null)
 		_l_pause.update_sig([layout.pause_btn, layout.touch_ui] if layout.pause_btn.size.y > 0.0 else null)
+	_update_form(reduced)
 	_l_fbpill.update_sig([layout.feedback_btn, layout.touch_ui] if _pill_visible() else null)
 	_l_fb.update_sig(UiFeedback.sig(layout.vp, _fb_state, _fb_tags, _fb_status_ok, dp, layout.s, bool(opts["touch_ui"]), "%s|%s" % [_fb_opened, bool(_fb_issue.get("fallback", false))]) if _fb_open else null)
 	_l_tele.update_sig(UiReads.telegraph_sig(hub, bool(opts["show_prompts"]), reduced))
@@ -2303,6 +2320,14 @@ func _touch_intro_alpha() -> float:
 	return 0.0
 
 
+## Where the lit Transform button's pulse is: -1 when no form is ready and free for a human, 0 to 7 round the cycle, 8 (a steady ring) under reduced motion.
+func _touch_pulse_step() -> int:
+	for m in hub.models:
+		if UiFormPrompt.wanted(m) and not hub.sim_paused:
+			return 8 if bool(opts["reduced_motion"]) else int(floor(fposmod(_t * UiFormPrompt.PULSE_HZ, 1.0) * 8.0))
+	return -1
+
+
 func _transform_avail() -> bool:
 	for m in hub.models:
 		if not m.ai and bool(m.avail["transform"]):
@@ -2311,7 +2336,7 @@ func _transform_avail() -> bool:
 
 
 func _paint_touchctl(ci: CanvasItem) -> void:
-	UiTouchControls.draw(ci, layout, layout.s, _touch_state(), _touch_intro_alpha(), _transform_avail())
+	UiTouchControls.draw(ci, layout, layout.s, _touch_state(), _touch_intro_alpha(), _transform_avail(), _touch_pulse_step())
 
 
 func _hint_alpha(m: UiFighterModel) -> float:
@@ -2324,7 +2349,61 @@ func _paint_hints(ci: CanvasItem, slot: int) -> void:
 	if slot >= hub.models.size():
 		return
 	var m: UiFighterModel = hub.models[slot]
-	UiHints.draw(ci, m, layout.hints[slot], layout.s, _o(), _hint_alpha(m))
+	var hr: Rect2 = layout.hints[slot]
+	if m.form_shown and layout.form[slot].size.y > 0.0:
+		# The legend starts under the form-ready chip (and has already dropped its own Transform row).
+		var top: float = layout.form[slot].end.y + 12.0 * layout.s
+		hr = Rect2(hr.position.x, top, hr.size.x, maxf(hr.end.y - top, 0.0))
+	UiHints.draw(ci, m, hr, layout.s, _o(), _hint_alpha(m))
+
+
+## The form-ready chips (UiFormPrompt): shown while a form is ready and the fighter is free, pulsed by the layer's scale and alpha (no redraw), with a
+## steady highlight under reduced motion. Also the rising edge of a ready form, for the host's haptic.
+func _update_form(reduced: bool) -> void:
+	var o: Dictionary = _o()
+	for i in range(2):
+		var chip: UiLayer = _l_form[i]
+		var m: UiFighterModel = hub.models[i] if i < hub.models.size() else null
+		if m == null:
+			chip.update_sig(null)
+			continue
+		var ready: bool = bool(m.avail["transform"]) and not m.ai
+		if ready and not bool(_form_ready_prev[i]):
+			form_prompt_shown.emit(i, m.device)
+		_form_ready_prev[i] = ready
+		var want: bool = UiFormPrompt.wanted(m) and not hub.sim_paused and _lb < 0.5
+		var plan: Dictionary = UiFormPrompt.plan(m, layout.form[i], layout.s, o) if want else {}
+		_form_plan[i] = plan
+		var was_shown: bool = m.form_shown
+		m.form_shown = not plan.is_empty()
+		m.form_loud = want and plan.is_empty()
+		if m.form_shown != was_shown:
+			_l_hints_invalidate()   # the legend moves under the chip, and the prompt row drops or takes back its own Transform chip
+		var holder: Node2D = _form_holder[i]
+		if plan.is_empty():
+			chip.update_sig(null)
+			holder.visible = false
+			_form_t[i] = 0.0
+			continue
+		_form_t[i] += _dt
+		var fade: float = 1.0 if reduced else clampf(float(_form_t[i]) / 0.15, 0.0, 1.0)
+		chip.update_sig(UiFormPrompt.sig(m, plan, reduced))
+		var pu: float = 0.0 if reduced else UiFormPrompt.pulse(_t)
+		var centre: Vector2 = (plan["rect"] as Rect2).get_center()
+		if chip.size != layout.vp:
+			chip.size = layout.vp
+		if chip.position != -centre:
+			chip.position = -centre
+		holder.position = centre
+		holder.visible = true
+		holder.scale = Vector2.ONE * (1.0 + UiFormPrompt.PULSE_SCALE * pu)
+		holder.modulate = Color(1.0, 1.0, 1.0, fade * (1.0 if reduced else lerpf(UiFormPrompt.PULSE_ALPHA_LOW, 1.0, pu)))
+
+
+func _paint_form(ci: CanvasItem, slot: int) -> void:
+	if slot >= hub.models.size() or (_form_plan[slot] as Dictionary).is_empty():
+		return
+	UiFormPrompt.draw(ci, hub.models[slot], _form_plan[slot], layout.s, bool(opts["reduced_motion"]))
 
 
 func _paint_you(ci: CanvasItem) -> void:

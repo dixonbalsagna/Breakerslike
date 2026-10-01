@@ -74,6 +74,8 @@ static func rows(m: UiFighterModel, scheme: String) -> Array:
 			var a: String = str(r.get("action", ""))
 			if not (m.avail.has(a) and bool(m.avail[a])):
 				continue
+			if a == "transform" and m.form_shown:
+				continue   # the form-ready chip above the legend already says it
 		out.append({"acts": acts, "label": str(r.get("label", ""))})
 	return out
 
@@ -141,7 +143,7 @@ static func _widest_label(placed: Array, fs: int) -> float:
 
 
 static func sig(m: UiFighterModel, alpha: float, preset: String) -> Array:
-	return [m.device, m.slot, int(alpha * 10.0), preset, m.avail["transform"], m.left_side]
+	return [m.device, m.slot, int(alpha * 10.0), preset, m.avail["transform"], m.left_side, m.form_shown]
 
 
 static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Dictionary, alpha: float) -> void:

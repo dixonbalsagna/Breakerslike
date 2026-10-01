@@ -73,6 +73,10 @@ var sig_note_t: float = 99.0         # seconds since it ended (a brief mark)
 var stance_flash_t: float = 99.0     # seconds since the stance changed (the stance chip pulses, so a rival's change is seen)
 var avail: Dictionary = {"transform": false, "special": false}   # actions that can be used now (so their prompt shows only then)
 var hold: Dictionary = {"transform": 0.0, "special": 0.0}        # hold progress 0..1 (the hold ring)
+var form_free: bool = true          # the fighter can take a ready form now (no exchange, not out; the sim's own condition, from the bridge). True until told otherwise
+var form_cue_left: float = 0.0      # RESERVED for Controls' parked 45-tick "Transforming" cue (act.formCueLeft, ticks): the ring slot in UiFormPrompt. Not read yet
+var form_shown: bool = false        # the HUD is showing the big form-ready chip for this fighter (the legend and the prompt row then drop their own Transform entry)
+var form_loud: bool = false         # a form is ready and free but the big chip has no room: the prompt row's chip shows whatever the prompts option says
 var stance_prompt_t: float = 99.0   # seconds since the stance changed or the match began (the stance prompt shows for 3 s)
 
 
@@ -126,6 +130,10 @@ func reset_wounds() -> void:
 	stance_flash_t = 99.0
 	avail = {"transform": false, "special": false}
 	hold = {"transform": 0.0, "special": 0.0}
+	form_free = true
+	form_cue_left = 0.0
+	form_shown = false
+	form_loud = false
 
 
 func has_region(r: String) -> bool:
