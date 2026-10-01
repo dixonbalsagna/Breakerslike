@@ -1,0 +1,15 @@
+# Record: A2 defence and clash poses (data/anim/poses.json)
+
+Origin record in the form docs/legal/animation-data-rule.md (RL-038) asks for; the human-authorship requirement was dropped by ADR 0007, the provenance record stays.
+
+| Field | Value |
+| :--- | :--- |
+| Asset | Nine poses: def.parry_ready, def.parry, react.rebuff, def.slip, def.blink_in, def.guard_break, def.guard_hit, clash.push, emote.victory |
+| Date | 2026-10-01 |
+| Tool and model | Claude Code, model claude-sonnet-5-5 (Animation Director session), writing pose sketches as JSON by hand. No image, motion or mesh generator was used. |
+| Brief (the prompt) | Franchise-free, from the exchange beats the sim already runs (wind, slip, dodge, guardBreak, clashWave) and the damage event's guard kind: a defender's read, sweep, slip, blink landing, broken guard and guarded hit; the parried attacker's turn-off; both fighters' clash push; a winner's raised fist. |
+| Inputs | None from outside the repository. No reference footage or images. Each pose carries an `_orig` line. |
+| What a human changed | Nothing yet; Orb has not reviewed them. |
+| Showcase poses | None. emote.victory is the one sensitive family (a raised fist): one arm up, chin lifted, no both-fists scream, no flexing (RL-038). |
+| Originality check | Contact sheet art/animation/a2-vocab-sheet.png, flat-colour silhouettes: nothing reads as a known character's signature stance; the parry is an open-palm sweep across the body, the guard break arms up and apart. |
+| Status | Proposed. Locks when Orb has reviewed it. |

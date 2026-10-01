@@ -88,6 +88,8 @@ func _run() -> void:
 			var flips := 0
 			var gl: Array = []
 			var far := 0
+			var blows := 0
+			var late := 0
 			for id in RenderAnim._fighters:
 				var d: Dictionary = RenderAnim._fighters[id].debug
 				frames += int(d.contact_frames)
@@ -99,6 +101,11 @@ func _run() -> void:
 				gsum += float(d.gap_sum)
 				gn += int(d.gap_n)
 				flips += int(d.face_flips)
+				blows += int(d.blows)
+				late += int(d.late)
+				if mode == "mix":
+					for ln in d.late_notes:
+						print("    late: seed %d %s" % [seed, ln])
 				for gi in range(0, d.gaps.size(), 2):
 					if float(d.gaps[gi + 1]) <= 0.0:
 						gl.append(float(d.gaps[gi]))
@@ -115,6 +122,7 @@ func _run() -> void:
 			_expect(ikf > 0 and gl.size() > 0, "seed %d %s: the contact solve never ran (%d IK frames, %d reachable contacts)" % [seed, mode, ikf, gl.size()])
 			_expect(gworst < 1.0, "seed %d %s: a blow within reach ends %.2f units short of the defender" % [seed, mode, gworst])
 			print("  contact solve: %d IK frames, %d contacts within reach (worst gap %.2f units), %d beyond reach (the sim put the fighters farther apart than the arm, lunge and step-in reach), %d facing flips" % [ikf, gl.size(), gworst, far, flips])
+			print("  blows: %d, announced under 4 ticks ahead (no wind-up possible): %d" % [blows, late])
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])
 		_expect(hashes["off"] == hashes["snappy"] and hashes["off"] == hashes["fluid"] and hashes["off"] == hashes["mix"], "seed %d: the gameplay hash differs with the mannequin (off %s, mix %s, snappy %s, fluid %s)" % [seed, hashes["off"], hashes["mix"], hashes["snappy"], hashes["fluid"]])
 	RenderAnim.enabled = true

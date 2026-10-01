@@ -18,6 +18,7 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/anim_reel.gd`, `tools/gif.mjs` | Raw-frame reels and a dependency-free GIF encoder (one clip or two side by side) |
 | `tools/anim_check.gd` | The checks: hash off, mixed, snappy and fluid, contact-frame accuracy, the contact solve reaching the defender, no NaN, no writes to the sim |
 | `tools/face_scan.gd` | Facing and pass-through scan over seeded matches (`--anim` reads the visual facing) |
+| `tools/pop_scan.gd` | Join scan: bones turning more than a limit in one tick, by what was playing (the evidence for inertialisation) |
 | `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 
 ```

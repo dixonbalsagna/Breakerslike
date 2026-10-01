@@ -116,7 +116,7 @@ static func consume(S: SimState, events: Array) -> void:
 					var front: bool = true
 					if a >= 0 and a < S.fighters.size():
 						front = SimWrap.sdx(vf.x, S.fighters[a].x) * fighter(S, vf).vface > 0.0
-					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0)
+					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0, String(e.kind))
 
 
 ## Which frame a solve belongs to: the engine frame and the sim tick (tools step several ticks in one engine frame).

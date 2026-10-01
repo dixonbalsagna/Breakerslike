@@ -953,6 +953,27 @@ What the check also found (Combat's and Encounter's, not fixable in render): of 
 
 **Cost.** Web bench (`tools/bench-web.mjs`, CPU x4, 5 runs each, alternating, the machine shared with other sessions): mean frame 16.0 ms before and 16.4 ms after (median of the run means; runs scatter between 15.2 and 20.0), draw calls identical (192.9). Native solve cost 34 to 55 us a solve (mix, snappy, fluid). The contact solve runs only in a blow's window.
 
+### 9.4 A2 second pass: inertialisation, defence and clash poses, the mixed reels (2026-10-01)
+
+**Inertialisation** (`AnimFighter._inertialise`). A bone that turns more than 0.5 rad between two solves is a join (a part starting or ending, a cue, a reaction, a mirrored key set). The jump is taken as an offset from what was drawn last solve, and it settles by itself on an eased 0.1 s (snappy) or 0.18 s (fluid) curve, in tick time, so a hit-stop still lets it finish at half speed. A join announced close to a blow settles before the contact tick, so the contact key stays exact. `pop_scan.gd` (4 seeds x 3000 ticks, 18000 fighter-frames, bone turns above 0.6 rad in one tick): 493 before, 230 after, worst 3.12 rad before, 1.40 rad after. The 230 left are eased swings (a 2.8 rad arm settling in six ticks), not jumps. The tuning numbers are constants in code until Tools adds `inertia_s` to the profile schema (proposed; the code already reads it if present).
+**The contact solve's pole** is now the authored pose's own elbow or knee, so the solved limb is its neighbour and the blend does not turn the upper arm through a hinge twist.
+**What it found for Combat.** Blows announced to the animator fewer than 4 ticks before they land cannot be wound up. In seeds 4 and 12345 only TRADE BLOWS does it: 7 or 8 of 78 blows (both fighters' counter strikes appear in the beat list on the tick they land). Those blows still pop to their contact pose (the offset smooths the rest). Asking Combat to schedule each TRADE BLOWS strike at least 6 ticks ahead.
+
+**Vocabulary: nine poses, 57 to 66** (`art/animation/a2-vocab-sheet.png`, record `art/animation/records/A2-poses.md`). Driven by the beats the sim already runs, so no new sim data:
+| Beat or event | Who | Pose | Window |
+| :--- | :--- | :--- | :--- |
+| wind | defender | def.parry_ready | from the beat to the parryable blow, out 0.1 s after |
+| wind, parried (ex.cancel) | defender / attacker | def.parry / react.rebuff | the blow's tick, 0.3 s |
+| slip | defender | def.slip | 0.35 s |
+| dodge (the blink) | defender | def.blink_in | 0.3 s |
+| guardBreak | defender | def.guard_break | 0.5 s |
+| clashWave | both | clash.push | 0.4 s |
+| damage with kind "guard" | victim | def.guard_hit (replaces the flinch and the region wave) | the reaction's own |
+| KO, 0.8 s after, the winner | winner | emote.victory | held |
+The ground-contact poses (braced tumble, bounce, lip launch, tech flip, quick and slow get-ups) and On the Chin are held for World's events (`left_ground`, `bounce`, `land`, `tumble_end`, docs/world/ground-contact.md) and his first moveset.
+
+**Mixed reels for Orb.** `art/animation/reel-mixed.gif` (the 735-tick exchange of seed 4 in Orb's mix) and `art/animation/reel-mixed-vs-snappy.gif` (snappy only on the left, the mix on the right): light blows and rushes keep their snap, heavy blows get the fluid wind-up and overshoot.
+
 ---
 
 ## 10. How we will know it works
