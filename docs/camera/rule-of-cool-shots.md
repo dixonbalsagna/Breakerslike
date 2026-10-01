@@ -117,9 +117,31 @@ All four use the same camera frame, with one change: the clash shot reads `game.
 - **Needs.** Tools: clip selection (3 to 5 clips of 3 to 4 s with 1.0 s of lead-in; the score is theirs), and a seek that calls `rig.cut(S)` and lets the rig run the lead-in so the filters are warm. Simulation: the replay to be exact from the input log. UI: a skip.
 - **Reduced.** Static framing and fades between clips.
 
-### Panel cut-ins and speed lines (row 11): held
+### Row 11: the panel cut-in (built, 2026-10-04; Orb's pick B)
 
-Nothing is planned until Orb picks the pitch (a) in `pitches.md` §8. When he does, a panel is a flat overlay (UI/VFX); the camera's part would be a one-frame hold and a 2% push at the panel's open tick, nothing else.
+A slanted close-up strip over the live view. **The main view is untouched: no cut, nothing pauses.** Speed lines are VFX's.
+
+- **What it shows.** A live close-up of one fighter's upper body in a parallelogram strip (56% of the screen width, 20% of the height, ends slanted 22% of the height), with a border in his lane colour and a wipe that opens it along the slant in 0.08 s and shuts it in 0.12 s. It is the real world drawn by a second camera (Rendering's inset pane), so the pose is the pose on the field: the fighter facing into the strip with room in front.
+- **Who gets one.** The peaks always play. The hits the player earned share one panel per 12 s. A stronger panel replaces a running weaker one and an equal or weaker one is dropped.
+
+| Kind | Rank | Length | Subject | Driven today by |
+| :--- | ---: | ---: | :--- | :--- |
+| KO | 5 | 1.4 s | the winner (the main view is on the loser) | `ko` event |
+| Finisher | 4 | 1.1 s | the attacker | `finisher_start` event |
+| Crippling blow | 3 | 0.8 s | the broken fighter | `region_broken` event |
+| Signature | 2 | 0.9 s | the attacker | a **new beam in `S.beams`** (the fire beat). The `beam_outcome` event only exists in the dynamic profile, and a 5-minute AI match here fired none |
+| Clash won (earned) | 1 | 0.7 s | the winner | `decisive` with kind `clash` or `beam_clash` |
+| Riposte that launches (earned) | 1 | 0.7 s | the riposter | `parry` then `launch` by the same fighter inside 2 s (derived; a `riposte` flag from Combat would be exact) |
+| Ping-pong's ender (earned) | 1 | 0.7 s | the ender | **waits** for the rally events (`rally_end {ender}` is assumed in the rig and untested) |
+
+- **Where it sits.** The top band (19% to 39% of the height, under the clear zone's top edge) unless a fighter's body is in it, then the bottom band (80% to 100%); if both are taken the panel is dropped. The strip is centred, so UI's side face cut-ins (about 22% of the width at each edge) stay clear of it.
+- **Reduced motion, or the setting "still".** The strip opens at once, shows a frozen frame (the inset renders twice and is switched off) and shuts at once; no push, no wipe. The setting `off` plays none.
+- **Who draws it.** Camera's compositor (`SplitView`, `panel_mask.gdshader`), from `SplitFrame.panel` and Rendering's inset pane. Rendering already had the inset (`make_inset`, and `inset_view` called from `main.render_view`); the compositor makes it at attach so main's `inset` exists before the first strip, switches its updates off when no strip is up and drives its camera from the frame. UI and Rendering do not need to draw anything. I judged Camera should draw it because where the strip may sit depends on where both fighters are on the screen this frame, which only the rig knows.
+- **What UI supplies.** The option `camera_panels` (full, still, off; default full), calling `SplitView.set_panel_mode`; the lane colours for the borders (`SplitView.set_panel_colors(a, b)`; the defaults are an orange and a blue); keeping the face cut-ins off the centre 56% of the width; and a check that no HUD plate sits in the strip's bands (the top band is under the plates, the bottom band is over the bark lanes).
+- **What Rendering should check.** The strip costs one extra render of the world at 749 by 144 px for under a second; a still strip costs two frames. Worth measuring on the phone budget. The crown pop of the fighter shows as a small mark at the strip's top edge. The strip's camera follows the same convention as the panes (the plane at 0.7 of the viewport's height) and frames the point 60 units above the fighter's feet, which on the real renderer shows the head and chest.
+- **Legal (§3b, the face cut-in's rule applies in spirit).** The frame is our own: a plain slanted parallelogram with a thin lane-colour border, no static, no radio-screen look, no portrait layout.
+- **Rate today.** In five-minute AI matches the events above give 0.7 to 1.3 panels a minute (mostly clashes won; a few signatures; a crippling blow once). Orb's target of about 2.5 a minute needs the earned hits that have no event yet (the ping-pong's enders) and real play, where the human fires more signatures than the AI demo. The ration and priority are tested; the rate is for QA to tune with the 12 s gap and the lengths.
+- **Tests.** `split_sweep.gd`: "panel signature" (54 ticks, wipe open then shut, the subject's upper body in the strip, band 0, and the main view's cameras identical to a run without the strip), "panel ration and priority", "panel riposte", "panel modes", "panel band dx dy" (six poses, the strip never covers a fighter), and the composite picture (`--render --only=panel`). `panel_shot.gd` draws the strip on the real renderer.
 
 ## 3. What I need, in one list
 
@@ -131,8 +153,10 @@ Nothing is planned until Orb picks the pitch (a) in `pitches.md` §8. When he do
 | Simulation, Encounter | `rally_start`, `rally_bounce` (with the next bounce's place and time), `rally_end`; `clash_*` events or a shared Clash record with `kind`, `beam_answer` | 13 to 16, 20, 21 |
 | World | Entrance craters on open ground at least 900 units apart; the landing crater radius in the orbit event | 7, 19 |
 | Animation | Fall, landing crouch, staredown idle, face close-ups | 7 |
-| Rendering | The cut-away request off keeping a rock whole; terrain LOD at a 3,300 unit wide view | 18, 8 |
+| Rendering | The cut-away request off keeping a rock whole; terrain LOD at a 3,300 unit wide view; the cost of the panel strip's second render on the phone budget | 18, 8, 11 |
 | Tools | Clip scoring and the replay seek | 25 |
+| UI | `camera_panels` option, the lane colours for the strip borders, the face cut-ins off the centre 56% of the width | 11 |
+| Combat | A `riposte` flag on a parry-launch, if the derived one (parry then launch inside 2 s) is not enough; the rally events (`rally_end {ender}`) | 11, 13 |
 
 ## 4. Build order for the camera
 

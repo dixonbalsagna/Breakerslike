@@ -17,6 +17,7 @@ extends Control
 ##   view.detach()              # back to one view from the reference camera
 
 const MASK: Shader = preload("res://render/camera/split_mask.gdshader")
+const PANEL_MASK: Shader = preload("res://render/camera/panel_mask.gdshader")
 
 var main = null            # Rendering's main scene, or a stand-in with the same calls (render/camera/tests/split_test_main.gd)
 var viewports: Array = [null, null]
@@ -29,6 +30,11 @@ var last_frame: SplitFrame = null
 var _rect: ColorRect                  # the mask rect: two panes blended by the divider
 var _solo: TextureRect                # one pane, no shader: what the screen is when only one pane shows
 var _mat: ShaderMaterial
+var panel_colors: Array = [Color(0.95, 0.55, 0.2), Color(0.25, 0.7, 0.95)]   # the strip's border by slot, until UI and Art give the lane colours
+var _panel_vp: SubViewport = null     # the inset pane's viewport, made when the first panel opens
+var _panel_rect: TextureRect          # the strip
+var _panel_mat: ShaderMaterial
+var _panel_frames: int = 0            # frames the current panel has been drawn (a still strip is drawn twice, then frozen)
 var _host_ticks: int = -1
 var _host_seed: int = -1
 var _attached: bool = false
@@ -55,6 +61,15 @@ func _ready() -> void:
 	_solo.stretch_mode = TextureRect.STRETCH_SCALE
 	_solo.visible = false
 	add_child(_solo)
+	_panel_rect = TextureRect.new()
+	_panel_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_panel_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_panel_mat = ShaderMaterial.new()
+	_panel_mat.shader = PANEL_MASK
+	_panel_rect.material = _panel_mat
+	_panel_rect.visible = false
+	add_child(_panel_rect)
 	resized.connect(_on_resized)
 
 
@@ -74,6 +89,7 @@ func attach(m) -> void:
 	if main.host != null and not main.host.ticked.is_connected(_on_ticked):
 		main.host.ticked.connect(_on_ticked)
 	_attached = true
+	_ensure_panel_viewport(_panel_size())   # made now so main's inset exists before the first strip opens
 	if _solo != null:
 		_solo.texture = viewports[0].get_texture()
 		_solo.visible = true
@@ -126,10 +142,83 @@ func set_launch_follow(v: String) -> void:
 		main.split_rig.launch_follow = v
 
 
+## The panel cut-in (Orb's pick B): "full", "still" (a frozen strip) or "off". Reduced motion means still. Option name
+## for UI: `camera_panels`, a choice of full, still and off, default full.
+func set_panel_mode(v: String) -> void:
+	if main != null:
+		main.split_rig.panel_mode = v if v in ["full", "still", "off"] else "full"
+
+
+## The border colours of the two fighters' strips (the lane colours).
+func set_panel_colors(a: Color, b: Color) -> void:
+	panel_colors = [a, b]
+
+
 func set_reduced_motion(on: bool) -> void:
 	reduced_motion = on
 	if main != null:
 		main.split_rig.reduced_motion = on
+
+
+## Main asks for the inset's camera each displayed frame before it draws the inset: {cam_x, cam_y, cam_z (px per world
+## unit in the inset's own viewport), pitch, cutaway}, or {} when there is no panel (or a still strip is already drawn).
+func inset_view(_a: float) -> Dictionary:
+	var fr = main.get("split_frame") if main != null else null
+	if fr == null or fr.panel.is_empty() or not _attached:
+		return {}
+	var p: Dictionary = fr.panel
+	if not _ensure_panel_viewport(p["size"]):
+		return {}
+	if bool(p["still"]) and _panel_frames >= 2:
+		return {}
+	return {"cam_x": p["cam_x"], "cam_y": p["cam_y"], "cam_z": p["cam_z"], "pitch": 0.0,
+		"cutaway": {"request": true, "radius_px": 0.9 * float(p["size"].y), "only": -1}}
+
+
+## The strip's viewport size for this screen: the frame's panel size (SplitRig._panel_frame) from the same numbers.
+func _panel_size() -> Vector2i:
+	var ph: float = maxf(size.y, 2.0) * CamParams.PANEL_H
+	return Vector2i(int(ceil(maxf(size.x, 2.0) * CamParams.PANEL_W + ph * CamParams.PANEL_SLANT)), int(ceil(ph)))
+
+
+## The inset's viewport, made once through main.make_inset and made again when the strip's size changes (a resized window).
+func _ensure_panel_viewport(sz: Vector2i) -> bool:
+	if main == null or not main.has_method("make_inset"):
+		return false
+	if _panel_vp != null and _panel_vp.size == sz:
+		return true
+	if _panel_vp != null:
+		_panel_vp.queue_free()
+	_panel_vp = main.make_inset(sz)
+	_panel_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED   # drawn only while a strip is up
+	add_child(_panel_vp)
+	_panel_rect.texture = _panel_vp.get_texture()
+	_panel_frames = 0
+	return true
+
+
+## The strip: placed from the frame's panel, shown while its wipe is open, and the inset only renders while it is up.
+func _present_panel(fr: SplitFrame) -> void:
+	var p: Dictionary = fr.panel
+	if p.is_empty() or _panel_vp == null or float(p["open"]) <= 0.001:
+		_panel_rect.visible = false
+		if _panel_vp != null:
+			_panel_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		if p.is_empty():
+			_panel_frames = 0
+		return
+	var r: Rect2 = p["rect"]
+	_panel_rect.position = r.position
+	_panel_rect.size = r.size
+	_panel_rect.visible = true
+	_panel_mat.set_shader_parameter("box", r.size)
+	_panel_mat.set_shader_parameter("slant", float(p["slant"]))
+	_panel_mat.set_shader_parameter("open", float(p["open"]))
+	_panel_mat.set_shader_parameter("wipe_dir", 1.0 if int(p["slot"]) == 0 else -1.0)
+	_panel_mat.set_shader_parameter("edge_col", panel_colors[int(p["slot"])])
+	_panel_frames += 1
+	var frozen: bool = bool(p["still"]) and _panel_frames > 2
+	_panel_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED if frozen else SubViewport.UPDATE_ALWAYS
 
 
 ## Once per sim tick (the host's `ticked`): pane 1's shake stream advances, reseeded for a new match.
@@ -160,6 +249,8 @@ func _shake() -> float:
 
 
 func _on_resized() -> void:
+	if _attached:
+		_ensure_panel_viewport(_panel_size())
 	var sz := Vector2i(maxi(2, int(size.x)), maxi(2, int(size.y)))
 	for v in viewports:
 		if v != null and v.size != sz:
@@ -202,3 +293,4 @@ func present(fr: SplitFrame) -> void:
 	_solo.modulate = Color(1.0 - CamParams.CUT_DIM * fr.fade, 1.0 - CamParams.CUT_DIM * fr.fade, 1.0 - CamParams.CUT_DIM * fr.fade)
 	_mat.set_shader_parameter("active0", 1.0 if fr.shows(0) else 0.0)
 	_mat.set_shader_parameter("active1", 1.0 if (fr.shows(1) and v1 != null) else 0.0)
+	_present_panel(fr)

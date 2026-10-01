@@ -6,6 +6,8 @@ extends RefCounted
 
 var pane_a := SplitTestPane.new()
 var pane_b := SplitTestPane.new()
+var pane_i := SplitTestPane.new()
+var split_frame: SplitFrame = null
 var host := _Host.new()
 var compositor: Object = null
 var split_rig := SplitRig.new()
@@ -14,6 +16,11 @@ var split_rig := SplitRig.new()
 func move_pane0(size: Vector2i) -> SubViewport:
 	pane_a.viewport.size = size
 	return pane_a.viewport
+
+
+func make_inset(size: Vector2i) -> SubViewport:
+	pane_i.viewport.size = size
+	return pane_i.viewport
 
 
 func make_pane(size: Vector2i) -> SubViewport:
@@ -30,6 +37,12 @@ func render_frame(fr: SplitFrame, fighters: Array) -> void:
 		if i == 0 or fr.shows(i):
 			var j: Vector2 = compositor.pane_jitter(i) if compositor.has_method("pane_jitter") else Vector2.ZERO
 			panes[i].set_view(fr.cam_x[i], fr.cam_y[i], fr.cam_z[i], j)
+	split_frame = fr
+	if compositor.has_method("inset_view"):
+		var iv: Dictionary = compositor.inset_view(1.0)
+		if not iv.is_empty():
+			pane_i.fighters = fighters
+			pane_i.set_view(float(iv["cam_x"]), float(iv["cam_y"]), float(iv["cam_z"]), Vector2.ZERO)
 	compositor.present(fr)
 
 

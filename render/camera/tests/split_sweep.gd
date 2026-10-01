@@ -26,7 +26,7 @@ const DISPLAY_HZ: float = 144.0
 const GRID_X: int = 32
 const GRID_Y: int = 18
 const TOL: float = 1.03   # slack on the comfort limits (interpolation at 144 Hz between ticks)
-const REPLAYED: Array = ["out and back dy=0", "antipode right", "antipode left", "pass-through", "slam", "slam feint", "launch far 10816", "launch up and down 10816", "transformation"]
+const REPLAYED: Array = ["out and back dy=0", "antipode right", "antipode left", "pass-through", "slam", "slam feint", "launch far 10816", "launch up and down 10816", "transformation", "panel signature", "panel modes"]
 const SPIKE: float = 4.0   # a frame-to-frame picture change this many times its neighbours' is a pop
 
 var vw: float = 1280.0
@@ -64,6 +64,7 @@ var dump_label: String = ""
 var dump_from: int = 0
 var dump_to: int = 0
 var shots_dir: String = ""
+var only: String = ""
 var view: SplitView
 var stand_in: SplitTestMain
 var _queue: Array = []
@@ -85,6 +86,8 @@ func _initialize() -> void:
 			dump_label = dp[0]
 			dump_from = int(dp[1])
 			dump_to = int(dp[2])
+		elif a.begins_with("--only="):
+			only = a.substr(7)
 		elif a.begins_with("--shots="):
 			shots_dir = a.substr(8)
 		elif a.begins_with("--trace="):
@@ -157,6 +160,12 @@ func _run() -> void:
 		for row in [[-600.0, "front street"], [-2025.0, "block row 2"]]:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
+	await _scenario("panel signature", func(): return _panel_basic(), {})
+	await _scenario("panel ration and priority", func(): return _panel_ration(), {})
+	await _scenario("panel riposte", func(): return _panel_riposte(), {})
+	await _scenario("panel modes", func(): return _panel_modes(), {})
+	for pose in [[400.0, 0.0], [400.0, 700.0], [1500.0, 1200.0], [400.0, 2000.0], [6000.0, 0.0], [1500.0, 3500.0]]:
+		await _scenario("panel band dx %d dy %d" % [int(pose[0]), int(pose[1])], func(): return _panel_band_pose(float(pose[0]), float(pose[1])), {})
 	for wk in [["right", 1, false], ["left", -1, false], ["none", 0, false], ["reduced motion", 1, true]]:
 		await _scenario("shot winner in the wreckage, %s" % wk[0], func(): return _shot_wreck(int(wk[1]), bool(wk[2])), {})
 	await _scenario("shot transformation full", func(): return _shot_transform_full(), {})
@@ -198,6 +207,8 @@ func _run() -> void:
 
 ## Run a scenario twice (determinism) and check its expectations. The scenario returns a Dictionary of counts.
 func _scenario(label: String, body: Callable, expect: Dictionary) -> void:
+	if only != "" and not label.contains(only):
+		return
 	_record = render_mode and label in REPLAYED
 	var r1: Dictionary = _run_once(label, body)
 	_record = false
@@ -1026,6 +1037,184 @@ func _shot_clash() -> Dictionary:
 	return {}
 
 
+func _panel_ground() -> void:
+	var ax: float = 20000.0
+	_pose(ax, 0.0, ax + 600.0, 0.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+
+
+## A signature fires: a new beam in the state for the tick.
+func _fire(slot: int) -> void:
+	var b := SimState.Beam.new()
+	b.A = _S.fighters[slot]
+	_S.beams.append(b)
+	_tick_rig()
+	_S.beams.clear()
+
+
+func _panel_now() -> Dictionary:
+	return _rig.current().panel
+
+
+## A signature's fire beat opens a strip for the subject: about 54 ticks, wiped open then shut, in the top band, with
+## the subject's upper body inside it, and the main view exactly as it would have been without it.
+func _panel_basic() -> Dictionary:
+	var ticks: Array = []
+	var cams: Array = []
+	for with_panel in [false, true]:
+		_panel_ground()
+		var cz: Array = []
+		var n: int = 0
+		var opens: Array = []
+		var body_ok: bool = true
+		var cuts: int = 0
+		for k in range(120):
+			if k == 10:
+				if with_panel:
+					_fire(0)
+				else:
+					_tick_rig([_shot_events("decisive", {"winner": 0.0, "loser": 1.0, "kind": "launch"})])
+			else:
+				_tick_rig()
+			var fr: SplitFrame = _rig.current()
+			cz.append([fr.cam_x[0], fr.cam_y[0], fr.cam_z[0]])
+			if not fr.panel.is_empty():
+				n += 1
+				opens.append(float(fr.panel["open"]))
+				if cuts == 0 and fr.cut:
+					cuts += 1
+				var p: Dictionary = fr.panel
+				if n == 25:
+					var f = _S.fighters[int(p["slot"])]
+					var ph: float = float(p["size"].y)
+					var z: float = float(p["cam_z"])
+					var sy_head: float = ph * CamParams.PLANE_Y - ((f.y + 75.0) - float(p["cam_y"])) * z
+					var sy_chest: float = ph * CamParams.PLANE_Y - ((f.y + 32.0) - float(p["cam_y"])) * z
+					var sx: float = (SimWrap.sdx(float(p["cam_x"]), f.x)) * z + float(p["size"].x) * 0.5
+					body_ok = sy_head >= 0.0 and sy_chest <= ph and sx > 0.2 * float(p["size"].x) and sx < 0.8 * float(p["size"].x)
+					_check(p["band"] == 0 and p["kind"] == "signature" and int(p["slot"]) == 0, "%s: panel %s" % [_label, str(p)])
+		ticks.append(n)
+		cams.append(cz)
+		if with_panel:
+			_check(absi(n - 54) <= 2, "%s: the strip lasted %d ticks (want 54)" % [_label, n])
+			_check(body_ok, "%s: the subject's upper body is not in the strip" % _label)
+			_check(float(opens[0]) < 0.5 and float(opens[opens.size() / 2]) > 0.99 and float(opens[-1]) < 0.5, "%s: the wipe is not open, full, shut: %s" % [_label, str([opens[0], opens[opens.size() / 2], opens[-1]])])
+			_check(cuts == 0, "%s: the strip cut the main view" % _label)
+	var same: bool = true
+	for k in range(120):
+		for q in range(3):
+			if absf(float(cams[0][k][q]) - float(cams[1][k][q])) > 1e-9:
+				same = false
+	_check(same, "%s: the main view changed while the strip was up" % _label)
+	return {}
+
+
+## Earned hits share one strip per 12 s; peaks always play; a stronger strip replaces a running weaker one.
+func _panel_ration() -> Dictionary:
+	_panel_ground()
+	var clash := {"winner": 0.0, "loser": 1.0, "kind": "clash"}
+	_tick_rig([_shot_events("decisive", clash)])
+	_check(_rig.panels == 1, "%s: the first earned panel did not play" % _label)
+	for _i in range(5 * 60):
+		_tick_rig()
+	_tick_rig([_shot_events("decisive", clash)])
+	_check(_rig.panels == 1 and _rig.panels_dropped == 1, "%s: a second earned panel inside 12 s played (%d)" % [_label, _rig.panels])
+	for _i in range(8 * 60):
+		_tick_rig()
+	_tick_rig([_shot_events("decisive", clash)])
+	_check(_rig.panels == 2, "%s: the earned panel 13 s later was refused (%d)" % [_label, _rig.panels])
+	# peaks: a signature, then another a second later (the first is shut by then): both play, whatever the ration
+	for _i in range(90):
+		_tick_rig()
+	_fire(1)
+	_check(_rig.panels == 3, "%s: the signature panel was refused" % _label)
+	for _i in range(60):
+		_tick_rig()
+	_fire(0)
+	_check(_rig.panels == 4, "%s: the second signature panel was refused" % _label)
+	# an earned hit during a strip is dropped; a KO replaces the running signature
+	_tick_rig([_shot_events("decisive", clash)])
+	_check(_rig.panels == 4, "%s: an earned panel replaced a running signature" % _label)
+	_tick_rig([_shot_events("ko", {"winner": 1.0, "loser": 0.0})])
+	_check(_rig.panels == 5 and _panel_now()["kind"] == "ko" and int(_panel_now()["slot"]) == 1, "%s: the KO did not replace the signature (%s)" % [_label, str(_panel_now())])
+	_fire(0)
+	_check(_panel_now()["kind"] == "ko", "%s: a signature replaced the running KO strip" % _label)
+	return {}
+
+
+## A launch within 2 s of the launcher's own parry is a riposte (earned); otherwise it is no panel.
+func _panel_riposte() -> Dictionary:
+	_panel_ground()
+	_tick_rig([_shot_events("launch", {"actor": 1.0, "target": 0.0, "amount": 800.0, "face": 1.0})])
+	_check(_rig.panels == 0, "%s: a plain launch made a strip" % _label)
+	for _i in range(180):
+		_tick_rig()
+	_tick_rig([_shot_events("parry", {"actor": 0.0, "target": 1.0})])
+	for _i in range(40):
+		_tick_rig()
+	_tick_rig([_shot_events("launch", {"actor": 1.0, "target": 0.0, "amount": 800.0, "face": 1.0})])
+	_check(_rig.panels == 1 and _panel_now()["kind"] == "riposte" and int(_panel_now()["slot"]) == 0, "%s: no riposte strip (%d, %s)" % [_label, _rig.panels, str(_panel_now())])
+	for _i in range(15 * 60):
+		_tick_rig()
+	_tick_rig([_shot_events("parry", {"actor": 0.0, "target": 1.0})])
+	for _i in range(3 * 60):
+		_tick_rig()
+	_tick_rig([_shot_events("launch", {"actor": 1.0, "target": 0.0, "amount": 800.0, "face": 1.0})])
+	_check(_rig.panels == 1, "%s: a launch 3 s after the parry made a strip" % _label)
+	return {}
+
+
+## Still (reduced motion or the setting): the strip is open at once, with no push; off: nothing.
+func _panel_modes() -> Dictionary:
+	_panel_ground()
+	_rig.reduced_motion = true
+	_fire(0)
+	var p: Dictionary = _panel_now()
+	_check(not p.is_empty() and bool(p["still"]) and float(p["open"]) > 0.99, "%s: reduced motion did not give a still strip at once (%s)" % [_label, str(p)])
+	var z0: float = float(p["cam_z"])
+	for _i in range(30):
+		_tick_rig()
+	_check(absf(float(_panel_now()["cam_z"]) / z0 - 1.0) < 0.01, "%s: a still strip pushed" % _label)
+	_rig.reduced_motion = false
+	_panel_ground()
+	var before: int = _rig.panels
+	_rig.panel_mode = "off"
+	_fire(0)
+	_check(_rig.panels == before and _panel_now().is_empty(), "%s: a strip played with the setting off" % _label)
+	_rig.panel_mode = "still"
+	_fire(0)
+	_check(_rig.panels == before + 1 and bool(_panel_now()["still"]), "%s: the still setting did not give a still strip" % _label)
+	_rig.panel_mode = "full"
+	return {}
+
+
+## At a pose, the strip's band never covers a fighter; when both bands would, there is no strip.
+func _panel_band_pose(dx: float, dy: float) -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 0.0, ax + dx, dy)
+	_seed_rig()
+	for _i in range(240):
+		_tick_rig()
+	_fire(0)
+	var p: Dictionary = _panel_now()
+	var bad: int = 0
+	if not p.is_empty():
+		var fr: SplitFrame = _rig.current()
+		var r: Rect2 = p["rect"]
+		for k in range(2):
+			var f = _S.fighters[k]
+			var pi: int = k if fr.shows(k) else 0
+			var feet: Vector2 = fr.screen_pos(pi, f.x, f.y, float(f.z))
+			var head: Vector2 = fr.screen_pos(pi, f.x, f.y + CamParams.BODY_H, float(f.z))
+			if r.intersects(Rect2(feet.x - 6.0, minf(head.y, feet.y), 12.0, absf(feet.y - head.y))):
+				bad += 1
+	_check(bad == 0, "%s: the strip covered a fighter" % _label)
+	stats["panel band %s" % _label] = "none" if p.is_empty() else ("top" if int(p["band"]) == 0 else "bottom")
+	return {}
+
+
 ## The KO, then the winner small against the damage: the pull-back goes to the side with the most wreckage.
 func _shot_wreck(side: int, reduced: bool) -> Dictionary:
 	var ax: float = 20000.0
@@ -1502,7 +1691,7 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0) -> void:
 	var mods: Array = []
 	for k in modes:
 		mods.append("%s %d" % [k, modes[k]])
-	stats[_label] = "%d ticks: %s; layout changes %d, slams %d, cut-ins %d" % [t, ", ".join(PackedStringArray(mods)), _rig.mode_change_times().size(), slams, _rig.cut_ins]
+	stats[_label] = "%d ticks: %s; layout changes %d, slams %d, cut-ins %d, panels %d (%.1f a minute, %d refused) %s" % [t, ", ".join(PackedStringArray(mods)), _rig.mode_change_times().size(), slams, _rig.cut_ins, _rig.panels, float(_rig.panels) * 3600.0 / float(maxi(t, 1)), _rig.panels_dropped, str(_rig.panel_log.map(func(e): return e[1]))]
 	_check(float(_rig.cut_ins) <= float(CamParams.OV_MAX_PER_MIN) * (float(t) / 3600.0) + 2.0, "%s: %d camera-only cut-ins in %.0f s (cap %d a minute)" % [_label, _rig.cut_ins, float(t) / 60.0, CamParams.OV_MAX_PER_MIN])
 	SimCore.dispose(_S)
 	_S = null
@@ -1541,11 +1730,15 @@ func _replay(label: String) -> void:
 	var prev: PackedFloat32Array = PackedFloat32Array()
 	var shot_at: Dictionary = {}
 	var last_mode: String = ""
+	var panel_shots: int = 0
 	for k in range(_queue.size()):
 		var fr: SplitFrame = _queue[k][0]
 		if fr.mode != last_mode:
 			shot_at[k + 3] = fr.mode
 			last_mode = fr.mode
+		if not fr.panel.is_empty() and float(fr.panel["open"]) > 0.97 and panel_shots < 2 and (panel_shots == 0 or k > int(shot_at.keys().max()) + 20):
+			shot_at[k] = "panel"
+			panel_shots += 1
 	for k in range(_queue.size()):
 		var e: Array = _queue[k]
 		var fr: SplitFrame = e[0]
@@ -1577,6 +1770,9 @@ func _replay(label: String) -> void:
 	for k in range(1, diffs.size() - 1):
 		var ratio: float = diffs[k] / (0.5 * (diffs[k - 1] + diffs[k + 1]) + 0.5)
 		var authored: bool = modes[k] == "slam" or modes[k - 1] == "slam" or modes[k + 1] == "slam" or modes[k] == "swing"
+		for dk in [-1, 0, 1]:
+			if not _queue[clampi(k + dk, 0, _queue.size() - 1)][0].panel.is_empty():
+				authored = true   # a strip wiping open or shut is a new thing on the screen on purpose
 		if not authored:
 			worst = maxf(worst, ratio)
 			if ratio > SPIKE:

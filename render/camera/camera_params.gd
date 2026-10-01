@@ -149,6 +149,31 @@ const R_FINISH: float = 0.16           # a finisher dollies in to this
 const TRANSFORM_R0: float = 0.14       # a transformation: the face, then the body, then the reveal
 const TRANSFORM_R1: float = 0.11
 const TRANSFORM_R2: float = 0.07
+# --- the panel cut-in (pitches.md 8a option B, rule-of-cool.md row 11) ---
+const PANEL_W: float = 0.56            # the strip's visible width, of the screen width
+const PANEL_H: float = 0.20            # its height, of the screen height
+const PANEL_SLANT: float = 0.22        # the slanted ends: this much of its height
+const PANEL_TOP_Y: float = 0.19        # the top band starts here (the clear zone's top edge is 17.9%)
+const PANEL_BOTTOM_Y: float = 0.80     # the bottom band starts here (the clear zone's bottom edge is 80.1%)
+const PANEL_OPEN: float = 0.08         # seconds to wipe open
+const PANEL_CLOSE: float = 0.12        # seconds to wipe shut
+const PANEL_BODY: float = 60.0         # the stretch of the fighter that fills the strip's height, world units
+const PANEL_FOCUS: float = 60.0        # the point of the fighter at the strip's centre, above his feet: the head and chest (the real renderer draws the plane a little low)
+const PANEL_FILL: float = 0.88
+const PANEL_PUSH: float = 0.06         # a slow push over the strip's life
+const PANEL_EARNED_GAP: float = 12.0   # earned hits share one panel in this many seconds; the peaks always play
+const PANEL_RIPOSTE_WINDOW: float = 2.0  # a launch this soon after the launcher's parry is a riposte
+# kind: {prio (a higher one replaces a lower one), dur (seconds), earned (shares the 12 s ration)}
+const PANEL_KINDS: Dictionary = {
+	"ko": {"prio": 5, "dur": 1.4, "earned": false},
+	"finisher": {"prio": 4, "dur": 1.1, "earned": false},
+	"crippling": {"prio": 3, "dur": 0.8, "earned": false},
+	"signature": {"prio": 2, "dur": 0.9, "earned": false},
+	"clash": {"prio": 1, "dur": 0.7, "earned": true},
+	"riposte": {"prio": 1, "dur": 0.7, "earned": true},
+	"rally": {"prio": 1, "dur": 0.7, "earned": true},
+}
+
 # --- the winner in the wreckage (rule-of-cool.md row 8) ---
 const WRECK_AT: float = 1.8            # seconds after the KO: the loser's close-up has played, the sim's slow motion is ending
 const WRECK_T: float = 3.5             # the pull-back from a close-up to the wide shot, eased

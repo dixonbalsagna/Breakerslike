@@ -33,6 +33,7 @@ var flash: float = 0.0               # seconds left of the divider's slam flash
 var shake: PackedFloat64Array = PackedFloat64Array([0.0, 0.0])   # each pane's shake amount, px, before the cap and the player's scale
 var fade: float = 0.0                # 0..1: a safety cut's brightness dip, fading in (the compositor darkens by CUT_DIM x this)
 var pitch: float = 0.0               # the cameras' pitch in degrees (0: straight on); Rendering's CameraRig takes it
+var panel: Dictionary = {}           # the panel cut-in, or {}: kind, slot, open (0..1), still, rect (px), slant (px, signed), size, cam_x, cam_y, cam_z (the inset's own viewport)
 var cutaway: Array = [{}, {}]        # per pane: the occlusion hole's request {request, radius_px, only}
 var slam: bool = false               # true on the one frame the slam closes
 var cut: bool = true                 # a hard cut: do not interpolate into this frame
@@ -58,6 +59,7 @@ func duplicate() -> SplitFrame:
 	f.cam_z = cam_z.duplicate()
 	f.anchor = anchor.duplicate()
 	f.active = active.duplicate()
+	f.panel = panel.duplicate()
 	f.kind = kind.duplicate()
 	f.swing = swing
 	f.sigma = sigma
@@ -190,5 +192,12 @@ static func lerp_frames(a: SplitFrame, b: SplitFrame, t: float) -> SplitFrame:
 	f.flash = lerpf(a.flash, b.flash, t)
 	f.pitch = lerpf(a.pitch, b.pitch, t)
 	f.held_u = lerpf(a.held_u, b.held_u, t)
+	if not a.panel.is_empty() and not b.panel.is_empty() and a.panel["kind"] == b.panel["kind"] and a.panel["slot"] == b.panel["slot"]:
+		var pa: Dictionary = a.panel
+		var pb: Dictionary = f.panel
+		pb["cam_x"] = SimWrap.wrap(float(pa["cam_x"]) + SimWrap.sdx(float(pa["cam_x"]), float(pb["cam_x"])) * t)
+		pb["cam_y"] = lerpf(float(pa["cam_y"]), float(pb["cam_y"]), t)
+		pb["cam_z"] = exp(lerpf(log(float(pa["cam_z"])), log(float(pb["cam_z"])), t))
+		pb["open"] = lerpf(float(pa["open"]), float(pb["open"]), t)
 	f.cut = false
 	return f

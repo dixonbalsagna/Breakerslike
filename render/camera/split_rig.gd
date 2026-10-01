@@ -88,6 +88,14 @@ var _tf_phase: String = ""               # gather, break or settle
 var _tf_g: int = 0                       # the beats in ticks (docs/design/moveset-rules.md 10.8)
 var _tf_b: int = 0
 var _tf_s: int = 0
+var panel_mode: String = "full"          # the player's setting: "full", "still" (a frozen strip) or "off"; reduced motion means still
+var panels: int = 0                      # panel cut-ins started (counted for the tests and QA)
+var panels_dropped: int = 0              # panel requests refused: the ration, a stronger panel running, no free band
+var panel_log: Array = []                # [match time, kind, slot] of each panel started
+var _pn: Dictionary = {}                 # the running panel: kind, slot, prio, dur, t, band
+var _pn_earned_t: float = -1.0e9
+var _beams_seen: Dictionary = {}         # instance ids of the beams already counted (a new one is a signature's fire beat)
+var _parry_t: Array = [-1.0e9, -1.0e9]   # when each fighter last parried, for the riposte
 var wreck_dir: int = 0                   # the winner's shot: +1 wreckage on the right of him, -1 on the left, 0 none to speak of
 var wreck_score: float = 0.0             # the wreckage in view, summed (craters, ruined buildings, slide trenches)
 var _live_punch_at: float = -1.0         # the live version: when the 6-tick punch-in starts (rig time)
@@ -162,6 +170,10 @@ func reset(S: SimState, p_vw: float, p_vh: float) -> void:
 	_slam_slot = -1
 	_flash = 0.0
 	_push = [-1.0, -1.0]
+	_pn = {}
+	_beams_seen = {}
+	_pn_earned_t = -1.0e9
+	_parry_t = [-1.0e9, -1.0e9]
 	_shk = PackedFloat64Array([0.0, 0.0])
 	_aim = [null, null]
 	_hit_t = [-1.0, -1.0]
@@ -203,6 +215,7 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 	_update_orientation(S)
 	r_now = _metric(S)
 	_update_solo(S)
+	_update_panel(S)
 	_impact_evt = [false, false]
 	var clash_now: bool = S.game.clash != null
 	if clash_now and not _clash_prev and not reduced_motion:
@@ -541,12 +554,27 @@ func _update_orientation(S: SimState) -> void:
 func _read_events(S: SimState, events: Array) -> void:
 	for ev in events:
 		match String(_ef(ev, "type", "")):
+			"ko":
+				_panel_request(S, "ko", int(_ef(ev, "winner", -1)))
+			"decisive":
+				var dk: String = String(_ef(ev, "kind", ""))
+				if dk == "clash" or dk == "beam_clash":
+					_panel_request(S, "clash", int(_ef(ev, "winner", -1)))
+			"parry":
+				var pa: int = int(_ef(ev, "actor", -1))
+				if pa >= 0 and pa < 2:
+					_parry_t[pa] = time
+			"rally_end":
+				_panel_request(S, "rally", int(_ef(ev, "ender", -1)))   # the ping-pong's ender (event shape assumed; not in the sim yet)
 			"tier_up":
 				if not reduced_motion:
 					var a: int = int(_ef(ev, "actor", -1))
 					if a >= 0 and a < 2 and not (solo_kind == "transform" and solo_slot == a):
 						_push[a] = 0.0
 			"launch":
+				var lb: int = int(_ef(ev, "target", -1))
+				if lb >= 0 and lb < 2 and time - float(_parry_t[lb]) <= CamParams.PANEL_RIPOSTE_WINDOW:
+					_panel_request(S, "riposte", lb)   # his parry, then his launch: a riposte
 				# Encounter's S2 event (actor = the launched fighter): the follow starts on it. The state poll below stays
 				# as the fallback for callers that pass no events.
 				var la: int = int(_ef(ev, "actor", -1))
@@ -610,6 +638,7 @@ func _read_events(S: SimState, events: Array) -> void:
 			"finisher_start":
 				# A finisher: the fighters are in contact and locked by the sim for `dur`; cut to the loser and dolly in.
 				var ft: int = int(_ef(ev, "target", -1))
+				_panel_request(S, "finisher", int(_ef(ev, "actor", -1)))
 				if ft >= 0 and ft < 2 and not fold_active:
 					_begin_solo("finisher", ft, 4, 0.0, S, true)
 					if solo_kind == "finisher" and solo_slot == ft:
@@ -619,6 +648,7 @@ func _read_events(S: SimState, events: Array) -> void:
 				var ra: int = int(_ef(ev, "actor", -1))
 				if ra >= 0 and ra < 2:
 					_start_overlay("cripple", ra, Vector3.ZERO, CamParams.R_FIGHT, CamParams.R_FINISH, CamParams.OV_CRIPPLE_DUR)
+					_panel_request(S, "crippling", ra)
 			"cinematic_start":
 				var kd: String = String(_ef(ev, "kind", ""))
 				if kd == "transformation" or kd == "revision":
@@ -834,6 +864,111 @@ func _update_solo(S: SimState) -> void:
 				_end_solo(S)
 		"ko", "wreck":
 			pass
+
+
+## A panel cut-in (Orb's pick B): a slanted close-up strip over the live view, drawn by the compositor from an inset
+## pane. The main view is untouched: no cut, nothing pauses. The peaks (a signature's fire beat, a finisher, a crippling
+## blow, the KO) always play; the hits the player earned (a clash won, a riposte that launches, a ping-pong's ender) share
+## one panel per PANEL_EARNED_GAP seconds. A stronger panel replaces a running weaker one; an equal or weaker one is
+## dropped. `slot` is whose close-up it is: the attacker for a signature, a finisher and an earned hit, the broken
+## fighter for a crippling blow, the winner for the KO (the main view is on the loser then).
+func _panel_request(S: SimState, kind: String, slot: int) -> void:
+	if panel_mode == "off" or slot < 0 or slot > 1 or fold_active or solo_kind == "transform":
+		return
+	var k: Dictionary = CamParams.PANEL_KINDS[kind]
+	if bool(k["earned"]) and time - _pn_earned_t < CamParams.PANEL_EARNED_GAP:
+		panels_dropped += 1
+		return
+	if not _pn.is_empty() and int(k["prio"]) <= int(_pn["prio"]):
+		panels_dropped += 1
+		return
+	var band: int = _panel_band(S)
+	if band < 0:
+		panels_dropped += 1
+		return
+	_pn = {"kind": kind, "slot": slot, "prio": int(k["prio"]), "dur": float(k["dur"]), "t": 0.0, "band": band}
+	if bool(k["earned"]):
+		_pn_earned_t = time
+	panels += 1
+	panel_log.append([time, kind, slot])
+
+
+func _update_panel(S: SimState) -> void:
+	# A signature's fire beat is a new beam in the state (the beam_outcome event only exists in the dynamic profile).
+	var live: Dictionary = {}
+	for b in S.beams:
+		var id: int = b.get_instance_id()
+		live[id] = true
+		if not _beams_seen.has(id):
+			_panel_request(S, "signature", S.fighters.find(b.A))
+	_beams_seen = live
+	if _pn.is_empty():
+		return
+	_pn["t"] = float(_pn["t"]) + DT
+	if float(_pn["t"]) >= float(_pn["dur"]):
+		_pn = {}
+
+
+func _panel_rect(band: int) -> Rect2:
+	var pw: float = vw * CamParams.PANEL_W
+	var ph: float = vh * CamParams.PANEL_H
+	var wb: float = pw + ph * CamParams.PANEL_SLANT
+	return Rect2((vw - wb) * 0.5, vh * (CamParams.PANEL_TOP_Y if band == 0 else CamParams.PANEL_BOTTOM_Y), wb, ph)
+
+
+## The band the strip takes: the top one, or the bottom one when a fighter is in the top one; -1 when both are taken.
+## Judged on the last frame's screen positions of both fighters (head to feet, a little wider than the body).
+func _panel_band(S: SimState) -> int:
+	if _cur == null:
+		return 0
+	for band in [0, 1]:
+		var r: Rect2 = _panel_rect(band).grow(8.0)
+		var free: bool = true
+		for k in range(2):
+			var f = S.fighters[k]
+			var pi: int = k if _cur.shows(k) else 0
+			var feet: Vector2 = _cur.screen_pos(pi, f.x, f.y, float(f.z))
+			var head: Vector2 = _cur.screen_pos(pi, f.x, f.y + CamParams.BODY_H, float(f.z))
+			var fh: float = absf(feet.y - head.y)
+			if Rect2(feet.x - fh * 0.4, minf(head.y, feet.y), fh * 0.8, fh).intersects(r):
+				free = false
+		if free:
+			return band
+	return -1
+
+
+## The panel in the frame: where the strip is and the inset's camera, in the inset viewport's own pixels. The camera
+## frames the subject's upper body, with room to look into.
+func _panel_frame(S: SimState) -> Dictionary:
+	if _pn.is_empty():
+		return {}
+	var still: bool = reduced_motion or panel_mode == "still"
+	var t: float = float(_pn["t"])
+	var dur: float = float(_pn["dur"])
+	var open: float = 1.0
+	if not still:
+		open = smoothstep(0.0, CamParams.PANEL_OPEN, t) * (1.0 - smoothstep(dur - CamParams.PANEL_CLOSE, dur, t))
+	var slot: int = int(_pn["slot"])
+	var rect: Rect2 = _panel_rect(int(_pn["band"]))
+	var ph: float = rect.size.y
+	var f = S.fighters[slot]
+	var z: float = CamParams.PANEL_FILL * ph / CamParams.PANEL_BODY
+	if not still:
+		z *= 1.0 + CamParams.PANEL_PUSH * clampf(t / dur, 0.0, 1.0)
+	var w: float = -float(f.z)
+	if absf(w) > 1.0:
+		var den: float = 1.0 / z - w / (CamParams.K_FACTOR * ph)
+		if den > 1e-6:
+			z = 1.0 / den
+	var fx: float = 0.40 if f.face >= 0.0 else 0.60   # room in front of him
+	return {
+		"kind": _pn["kind"], "slot": slot, "open": open, "still": still, "band": int(_pn["band"]),
+		"rect": rect, "slant": (1.0 if slot == 0 else -1.0) * ph * CamParams.PANEL_SLANT,
+		"size": Vector2i(int(ceil(rect.size.x)), int(ceil(ph))),
+		"cam_x": SimWrap.wrap(f.x - (fx - 0.5) * rect.size.x / z),
+		"cam_y": clampf((f.y + CamParams.PANEL_FOCUS) - (ph * CamParams.PLANE_Y - ph * 0.5) / z, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP),
+		"cam_z": z,
+	}
 
 
 ## Which side of the winner holds more wreckage: the craters (area times depth, a signature's double), the buildings
@@ -1516,6 +1651,7 @@ func _make_frame(S: SimState) -> SplitFrame:
 	f.slam = _slam_done
 	f.shake = _shk.duplicate()
 	f.pitch = _pitch_now
+	f.panel = _panel_frame(S)
 	f.fade = clampf(_cut_fade / (CamParams.REDUCED_CUT_FADE if reduced_motion else CamParams.CUT_FADE), 0.0, 1.0) if _cut_fade > 0.0 else 0.0
 	_slam_done = false
 	# Which panes must be rendered.
