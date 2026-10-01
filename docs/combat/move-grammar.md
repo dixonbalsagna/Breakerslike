@@ -4,6 +4,8 @@ Owner: Combat and Choreography. Status: P0 wave 1, a description of the prototyp
 
 **Source.** Every reference `index.html:NNN` is a line of `prototype/index.html` at commit `7233c96`. Numbers are copied from the code; nothing in this document changes it. The prototype stays behaviour-identical until the port proves parity.
 
+**Names from M0.** The canonical vocabulary moves to entry, key strike, a role flag for counters, launch vector, follow-up, situation layers and signature layers; the mapping is in `moveset-system.md` section 7.1. This document keeps the prototype's op names, because it describes the prototype.
+
 **Units.** Distances in world units (u); the planet is 9,600 u around (`index.html:115`). Time in simulation seconds (s) at a fixed step of 1/60 s (`index.html:112`), so one frame is 0.0167 s. Speeds in u/s. "Tier" is the power tier, 1 to 4. A value written `a + b·tier` scales with the attacker's tier unless stated otherwise.
 
 **Roles.** A is the attacker (the fighter who requested the exchange), D the defender. `rt` is the rush time of a melee exchange, `rt = clamp(dist/2600, 0.18, 0.65)` where `dist` is the shortest-arc distance between them at the request (`index.html:420`).
@@ -289,11 +291,11 @@ Recorded for the port, not fixed in the prototype. IDs are this team's; QA's IDs
 | CC-002 | PRESSURE — GUARD HOLDS ends on a chain window, and the chain strike ignores stance | Whenever the guard holds without a counter (always when the defender has 25 ki or less, 60% of the time otherwise), one more press within 0.6 s is a guard bypass: a 66-base strike and a launch | `index.html:479-480, 554` |
 | CC-003 | The 1.35× damage against a charging defender is unreachable | By the time `hit()` runs the defender is `locked`, not `charging`; the intended punish is carried only by CHARGE INTERRUPT's base × 1.4 | `index.html:326, 328, 411` |
 | CC-004 | The signature's HIT chance against ESCAPE falls as the attacker's tier rises | `0.5 - 0.05·(A.tier - D.tier)`; the melee pursuit (`index.html:441`) and the beam dodge (`index.html:588`) both move the other way. Game Design found this independently | `index.html:589` |
-| CC-005 | A dodged signature leaves the defender hanging, frozen and locked, 300 u up for about 0.9 s | Dead time for the defender with no follow-up; reads as a stall | `index.html:616, 620` |
+| CC-005 | A dodged signature leaves the defender hanging, frozen and locked, 300 u up for about 0.9 s | Dead time for the defender with no follow-up; reads as a stall. **Closed in `da5fb09`:** the GDScript sim frees the dodger to drift (`beam.gd` `opBeamDodge`) | `index.html:616, 620` |
 | CC-006 | The rush flies through terrain | Fighters pass through mountains and towers on the way in; only the final frame is clamped | `index.html:751, 748` |
 | CC-007 | Ambush does not affect the signature against ESCAPE | Inconsistent with melee, where an ambush always catches a pursuit | `index.html:589` versus `441` |
 | CC-008 | No cost for a missed or early parry press | Mashing parries every parryable strike; the parry is not a read | `index.html:525, 853` |
-| CC-009 | The DODGE templates open a parry window that can never parry | Every later strike is `noParry`; the AI defender's 12% press does nothing | `index.html:461, 464, 468` |
+| CC-009 | The DODGE templates open a parry window that can never parry | Every later strike is `noParry`; the AI defender's 12% press does nothing. **Resolved:** the dynamic profile drops the dead wind-up; the DODGE templates get a tell, not a window (R5: EVASIVE never parries; `moveset-system.md` section 7.3) | `index.html:461, 464, 468` |
 | CC-010 | Pressing signature never parries or chains | Only light and heavy stamp `lastAtkT` | `index.html:853` |
 | CC-011 | No window is visible | See section 4 | `index.html:424-427, 544-547, 1004` |
 | CC-012 | The signature variant is keyed to the defender's biome but its extras apply along the whole path | A FIRESTORM fired from the forest at a target in the desert burns the desert | `index.html:584, 649-655` |

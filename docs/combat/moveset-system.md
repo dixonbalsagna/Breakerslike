@@ -1,6 +1,6 @@
 # Moveset system
 
-Owner: Combat and Choreography. Implementation: Encounter Systems (the composer), Animation and Rendering (poses and in-betweens), Tools (schemas). Numbers: Game Design. Date: 2026-09-30. Status: plan, system first, content after (Orb, questionnaire 6).
+Owner: Combat and Choreography. Implementation: Encounter Systems (the composer), Animation and Rendering (poses and in-betweens), Tools (schemas). Numbers: Game Design. Date: 2026-09-30. Status: plan, system first, content after (Orb, questionnaire 6). Section 9 revises the grammar for the control scheme in ADR 0008: physical and energy modes, direction-shaped entries, context actions, and the revised counts.
 
 **Orb's ask** (`docs/ep/vision.md`, questionnaire 6), per fighter:
 - hundreds to thousands of basic attacks, dozens to hundreds of specials, and dozens of signatures;
@@ -171,7 +171,7 @@ It also enumerates the valid attack count per fighter, the real figure behind se
 
 | Milestone | Build | Content | Exit |
 | :--- | :--- | :--- | :--- |
-| **M0. Contract** | Schemas (pieces, phrases, moveset, composer); the composer skeleton in `sim/director/` calling keyed draws; the structured event log with fingerprints | none: today's templates as a single fixed "piece" per slot | Bit-identical to the current build on the golden seeds (as S3b was) |
+| **M0. Contract** | Schemas (pieces, phrases, moveset, composer) with the canonical names (section 7.1); the composer skeleton in `sim/director/` calling keyed draws; the part cue and `part_end` events (section 7.4, Simulation); anticipation-minimum validation (section 7.2); the structured event log with fingerprints | none: today's templates as a single fixed "piece" per slot | Bit-identical to the current build on the golden seeds (as S3b was) |
 | **M1. The grammar on greybox** | Slots, joins, anchor fitting, rhythm curves, variety memory, the debug feed ("why this piece") | 12 greybox key strikes and 4 entries for the placeholder KAI, as placeholder key poses | A composed phrase in every melee exchange; no dead air (feel targets hold); T4 with no repeated series in 95% of matches |
 | **M2. Situations and style drift** | Situation layers and gates (air, ground, wall, water); reactions; mood, injury and form weights; the identity core | greybox: 4 situation layers, 12 reactions, 6 favourites | Forced-context scenarios give distinct fingerprints (T1); the drift test passes; the valid count is enumerated |
 | **M3. The hybrid top** | Showcase injection and cooldowns; special skeletons with variant layers and the loadout; signature selection by place, reveal and form; the once-per-match world-changing gate (with World) | 3 greybox showcases, 2 specials and 2 signatures | Showcase share of 12% or less; each selection rule fires in its scenario; the world-changing ability happens at most once |
@@ -188,7 +188,77 @@ At 3 to 5 key poses per piece, and 4 to 10 per showcase, that is **roughly 500 t
 
 ---
 
-## 7. What each team needs
+## 7. The M0 contract (Animation's requests, `docs/animation/clip-list.md` section 5)
+
+### 7.1 Names (the canonical vocabulary from M0 on)
+`move-grammar.md` is the canonical source for names. From M0, the piece schema, the part cue and Animation's key-set ids use the names on the right. Today's op names in `templates.json` and the code stay as they are until the M0 schema replaces them.
+
+| Today (op or prototype term) | From M0 |
+| :--- | :--- |
+| `rush`, `finRush` | **entry** (a pursuit is an entry after a launch) |
+| `strike` | **key strike** |
+| `counter` | a **role** flag on a key strike: `attack`, `counter` or `parry` |
+| `launch`, flight | **launch vector** (SLAM DOWN and the rest are launch-vector classes) |
+| block | none: **guard** is a stance multiplier, shown by guard reactions |
+| chase | **follow-up** (pursue, relay, pin) |
+| slam | the SLAM DOWN **launch vector**, or the ground-slam reaction |
+| beam, clash | **signature layers** (approach, path, material, outcome, follow-up) |
+| KO | **finisher** |
+| air, ground, wall, water postures | **situation layers** |
+
+### 7.2 Anticipation minimums (agreed with Animation; Game Design's readability view)
+Every key strike shows a visible anticipation: the pose run from the striker's last contact, or the entry, to the contact tick. Its minimum is:
+
+| Weight | Anticipation (ticks) | Notes |
+| :--- | ---: | :--- |
+| light | **6** | fits the dynamic profile's 14-tick contact spacing; the recovery overlaps the next load |
+| heavy | **10** | HEAVY CLASH's 20-tick lunge and GUARD BREAK's finishing strike (23 ticks after the last contact) already exceed it |
+| finisher (final blow) | **20** | the authored finishers give 30 to 36 ticks after `last_look` |
+| any pose | at least **4 ticks on screen** | no pose flashes by |
+
+- **Separate from the parry window.** Controls' parry windows (15 light, 20 heavy) are gameplay; these minimums are what the eye needs. A window is never shorter than the anticipation it contains.
+- **Guaranteed by the composer.** Anchor fitting never compresses a piece below its weight's minimum. A piece that cannot fit is not a candidate.
+- **Checked by Tools.** Validation flags any authored beat list, and any fitted part, below the minimum.
+- **Readability targets.** These numbers are the readability floor Game Design's section 10 readability target (a readable wind-up) asks for; Game Design confirms them.
+
+### 7.3 A tell for every attack (CC-009)
+- **The weight tell.** Every exchange shows the attacker's weight (`tell_light` or `tell_heavy`) through the approach, driven by the `attack` event (`variety-pass.md` section 4).
+- **The anticipation.** Every key strike, including the attacker's whiffed strike in the DODGE templates, gets its anticipation pose (7.2) through the part cue.
+- **The DODGE templates get a tell, not a window.** Under R5 an EVASIVE defender never parries (0%): it dodges. The dead wind-up beat stays dropped (CC-009, closed that way in the dynamic profile). The defender reads the attacker's tell and blinks, and that is what the viewer sees.
+- **Signatures and finishers** already telegraph: the charge orb, and `finisher_tell_<kind>`.
+
+### 7.4 The part cue (Simulation lands the event with M0)
+One render-only fx event per composed part, emitted when the exchange schedules it. Render and Animation play the key set against it. It replaces the beat-reading stand-in.
+
+| Field | Meaning |
+| :--- | :--- |
+| `actor` | the fighter performing the part |
+| `part` | the piece id (for example `strike.axe_kick`) |
+| `keyset` | Animation's key-set id for this fighter and piece (the rig's version of it) |
+| `start`, `contact`, `end` | absolute sim ticks; `contact` is -1 for a part with no contact (an entry, a feint) |
+| `stretch` | the fit ratio in per-mille (an integer, so replays stay bit-identical); 1000 is the authored length |
+| `slot` | entry, lead, key strike, reaction, evade, guard, launch vector, follow-up, showcase, special, signature layer |
+| `target` | the other fighter |
+| `region` | the Wounds region hint for a key strike (head, core, arms, legs; the Empress's mantle) |
+| `side` | left or right, relative to the actor's facing (which limb) |
+| `weight` | light, heavy, crushing or finisher |
+| `role` | attack, counter or parry |
+| `n` | the exchange index (D1a), so parts can be grouped per exchange |
+
+**`part_end`** `{actor, part, tick, reason}` fires when a part ends, with `reason` one of:
+- `done`: it played out;
+- `cancel`: a parry, a break chapter, a finisher taking over, or a KO dropped it.
+
+A cancelled part's key set blends out from its current pose, never snaps.
+
+### 7.5 Closed or answered
+- **CC-005, the beam-dodge hang:** closed in `da5fb09`. The dodger is freed at the dodge and drifts up and away (`beam.gd` `opBeamDodge`, no draw), so the evade pose plays over motion. From M0 the dodge is an `evade` part in the part cue.
+- **Animation's open questions for Combat:**
+  - the DODGE templates get a tell, not a window (7.3);
+  - the anticipation minimums are 6, 10 and 20 ticks (7.2; Controls and Game Design confirm);
+  - a dodged or guarded signature's aftermath is the drift (dodge) or the guard reaction and launch (guard), both now in motion.
+
+## 8. What each team needs
 
 | Team | Needs |
 | :--- | :--- |
@@ -201,3 +271,102 @@ At 3 to 5 key poses per piece, and 4 to 10 per showcase, that is **roughly 500 t
 | **Narrative** | Names only for what shows on screen (showcases if named, specials, signatures and finishers, per questionnaire 4). Story-moment hooks for revealed signatures |
 | **Legal** | Screening for special and signature concepts (hidden weapons, ancient knowledge), and the showcase silhouettes (the originality checklist) |
 | **QA** | The fingerprint metrics (T1 to T8), the identity classifier, and the recognisability and drift tests |
+
+---
+
+## 9. The control scheme (ADR 0008): what changes in the grammar
+
+Plan only; no data changes until Orb gives the go. ADR 0008 (`docs/decisions/0008-control-scheme.md`) makes inputs into modifiers:
+- the **mode** (physical or energy) swaps the piece family;
+- the **direction** held (toward, neutral, away) swaps the entry;
+- the **button** sets the weight;
+- the defender's **held state** (Press, Guard, Dodge, Escape) picks the outcome.
+
+The grammar already has those axes. This section adds the families and revises the counts.
+
+### 9.1 Two piece families: physical and energy
+- **Physical** is the family in section 1: 24 key strikes by limb.
+- **Energy reuses the body.** An energy strike is a body pose the fighter already has, plus a **hand variant** and an **emission shape**. Animation authors hands; VFX authors the emissions in the fighter's own energy style.
+
+| Energy piece | What it is | Hand-made per fighter |
+| :--- | :--- | ---: |
+| Emitter pose | a key-strike body pose reused for energy: palm thrust, backhand sweep, overhead chop, low scoop, double palm, point, knee burst, kick arc and others | 0 new: 12 of the 24 poses are flagged as emitters |
+| Hand variant | open palm, two-finger point, clawed palm, crossed forearms, fist glow, flat blade hand | 6 |
+| Energy-only pose | charged-shot brace, channel pose, shove, kiting turn | 4 |
+| Emission shape | bolt, volley, arc slash, burst, lobbed orb, charged shot (VFX, in the fighter's style and colour) | 6 (VFX) |
+
+- **Energy strikes:** 12 emitter poses × 6 emission shapes = 72 pairs. About half make sense (a knee burst does not lob an orb), so **about 36 energy strikes**.
+- **Mixups.** A phrase may lead in one mode and land in the other: a blast into a rush, a feint into a point-blank burst, a scatter and then one heavy shot. The lead-in classes go from 3 to 4: none, feint, same-mode lead, other-mode lead.
+- **Ordinary blasts carry ranged play.** Energy basics are the "more ordinary energy blasts" Orb asked for: light is a bolt or volley; heavy is a charged shot, arc slash or burst. Signature beams become rarer (9.4).
+
+### 9.2 Direction-shaped entries
+The entry axis is now chosen by the player's held direction. The same body entries serve both modes, with the energy hands and emissions on top.
+
+| Direction | Entry class | Physical | Energy | Hand-made entries |
+| :--- | :--- | :--- | :--- | ---: |
+| toward | **rush** | close the gap and strike: dash, arc dive, skid, circle, the fighter's trait (blink, portal) | advancing fire: blasts while closing, a point-blank burst on arrival | 5 |
+| neutral | **stand** | plant and strike: a step-in, a pivot, a sidestep in place | turret: planted volleys and charged shots | 3 |
+| away | **retreat** | a **backstep counter**: give ground, and strike as the opponent follows | **kiting blasts**: fire while backing away | 3 |
+
+That is 11 body entries, where section 1 had 10.
+
+**Pillar 3 is unchanged for the two ranged cases:** energy reaches at any range, and a rush always closes.
+
+**Open for Game Design and Encounter:** a physical *stand* or *retreat* against an opponent who is out of reach. Combat's recommendation:
+- stand takes a short closing step (the minimum approach), so a physical press never whiffs for range;
+- retreat is a counter stance that needs no reach: it pays off only if the opponent comes.
+
+### 9.3 Context actions: a small set per fighter
+The context button's actions are short authored phrases (one or two pieces each), with situation variants like any other piece. The on-screen icon comes from the same priority rule the sim uses.
+
+| Action | When (ADR 0008 priority and modifiers) | Pieces | What it is for |
+| :--- | :--- | :--- | :--- |
+| **Grab and throw** | the opponent within grab range | grab; 2 throw poses (the throw reuses launch vectors) | beats a held Guard; loses to a strike in progress; misses a Dodge |
+| **Pick-up** | a liftable object in reach (boulder, tree, wreckage) | lift; swing or hurl | arms the next attack: an object swing or throw, with World's liftables |
+| **Civilians action** | civilians in reach | 1 or 2, the fighter's own | the fighter's personality made playable: shield or carry clear for a carer, make an example for a villain (Game Design's rules, Legal's screening) |
+| **Provoke or feint** (physical fallback) | nothing else in reach, physical mode | reuses the feints; 1 provoke | a taunt that feeds mood and meters, or a feint that baits a dodge or a block |
+| **Energy shove** (energy fallback) | nothing else in reach, energy mode | reuses the shove pose and a burst emission | pushback with no damage: makes space |
+| **Reversal** | while guarding, close | 1 | after a blocked strike, turns the attacker's momentum into a throw or sweep |
+| **Deflect** | while guarding, at range | reuses the guard pose and an emission | swats a blast or angles a beam away |
+| **Tackle** | while sprinting | 1 | a running grab that carries both fighters (a long-haul launch vector) |
+| **Dive grab** | in the air | 1 | a grab from above into a spike or ground slam |
+
+That is about **12 new pieces per fighter**, several of them reused poses. The outcome table for each action against each held state is template work for Combat with Game Design, once the scheme has Orb's go.
+
+### 9.4 Fewer beams, each fighter's own beam, and beam against beam
+- **A beam style per fighter.** The signature layers (section 3.3) gain a style family that sets the beam's shape. The placeholders: KAI a thin piercing lance, VORR a wide rolling wave. The four real fighters get their own (the precise cut, the barrage-fed beam and so on), named by Narrative and screened by Legal.
+- **Fewer beams.** Signatures stay within Game Design's band (2 to 4 a match). Ordinary energy blasts and mixups fill the ranged game.
+- **The director never fires a beam on its own.** A struggle starts only when a beam is **answered by a beam**: during the attacker's charge (the visible tell), the defender fires their own signature. Then the six clash shapes play (`variety-pass.md` section 2.6).
+- **Without an answering beam,** the defender's held state decides:
+  - held Guard: GUARD;
+  - a perfect block: DEFLECT;
+  - a dodge tap: DODGE (for its energy cost);
+  - sprinting away: the ESCAPE gamble;
+  - anything else: HIT.
+- **AI and the Simple layout.** There the director presses for the player. It may answer a beam with a beam, by Game Design's rule.
+
+### 9.5 What the player can do inside an exchange
+ADR 0008 allows four actions inside an exchange, at defined windows. Every template branch and every composed phrase must expose them, and every part must be cancellable at its boundaries (`part_end`, section 7.4, gains the reasons `dodge`, `burst` and `reversal`).
+
+| Action | Window | Grammar consequence |
+| :--- | :--- | :--- |
+| **Perfect block** | the visible wind-up of a blockable strike. A mistimed tap still blocks | the anticipation minimums (section 7.2) are now gameplay as well as readability: the wind-up is the window. Controls sets the widths |
+| **Dodge cancel** | the gaps between contacts, for an energy cost and a cooldown | phrases mark their cancel points; a cancelled phrase ends cleanly at the next part boundary |
+| **Burst** | while under pressure: pressure strings and chain links | replaces the chain break-out window proposed in `variety-pass.md` |
+| **Reversal** | after a blocked strike, while guarding close | a defender-favoured branch on the templates where the guard holds |
+
+**Combos are queued presses.** Each press is one exchange request, and repeated presses queue a short combo. So the queue sets the chain's length; the director still times the links and plays the ender on the last one. `chainP` (`styles.json`) remains for the AI and the Simple layout.
+
+### 9.6 Revised counts and cost
+| | Section 1 | With ADR 0008 |
+| :--- | ---: | ---: |
+| Hand-made basic pieces | 64 | **about 87**: 64, plus 1 entry, 10 energy hands and poses, and 12 context pieces. VFX adds 6 emission shapes |
+| Physical attacks | 10 × 24 × 4 × 5 = 4,800 raw, about 2,160 valid | 11 × 24 × 4 × 5 = 5,280 raw. About 40% are valid (retreat and stand entries join fewer strikes): **about 2,100** |
+| Energy attacks | none | 11 × 36 × 4 × 5 = 7,920 raw, about 40% valid: **about 3,200** |
+| **Distinct basic attacks** | about 2,160 | **about 5,300** |
+| With lead-ins | ×3: about 6,500 | ×4 (mixups): **about 21,000** |
+| Key poses per fighter at launch | roughly 500 to 900 | **roughly 550 to 1,000** (energy mostly reuses the body poses) |
+
+The energy family more than doubles the fill (about 2,160 to about 5,300) for about a third more hand-made pieces, because it reuses the body poses. The validity factors are estimates until Tools' enumerator runs on real data.
+
+**Milestones.** M0 and M1 are unchanged. M2 adds the mode and direction axes. M3 adds the context actions and the in-exchange windows. The order waits on Orb's go for ADR 0008.

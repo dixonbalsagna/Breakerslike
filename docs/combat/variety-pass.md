@@ -1,6 +1,6 @@
 # Variety pass
 
-Owner: Combat and Choreography. Implementation: Encounter Systems. Numbers: Game Design. Date: 2026-09-30. Status: design, with data in `data/combat/styles.json` (not read by the sim until Encounter's style slice). Folds in Game Design's Q4 redesign (`stance-matrix.md` R4, R5 and R9; `spec-wounds.md` sections 1 and 9) and Encounter's Q4 plan (`docs/director/q4-director-control-plan.md`).
+Owner: Combat and Choreography. Implementation: Encounter Systems. Numbers: Game Design. Date: 2026-09-30. Status: design, with data in `data/combat/styles.json` (not read by the sim until Encounter's style slice). Section 9 lists what the control scheme in ADR 0008 changes. Folds in Game Design's Q4 redesign (`stance-matrix.md` R4, R5 and R9; `spec-wounds.md` sections 1 and 9) and Encounter's Q4 plan (`docs/director/q4-director-control-plan.md`).
 
 **Orb** (`docs/ep/vision.md`, questionnaire 4): "I liked the faster fight pace. Now I want to see cleaner combos, more teleport clashing, stylistic flying combat, heavy ground combat, energy blasts, more varied beam struggles."
 
@@ -203,3 +203,31 @@ QA's feel probe (`qa/godot/feel/`) plus a style census from the structured event
 - **Narrative:** the CHAIN ×N label is theirs; the lines keyed to mood and stance history.
 - **World:** small stomp craters within the new crater rules; ground throws that slide.
 - **Tools:** the schema changes for parked edits 1 to 3 (section 6). `styles.json` already has its schema.
+
+---
+
+## 9. What ADR 0008 changes here
+
+Plan only; no data changes until Orb gives the go on the control scheme (`docs/decisions/0008-control-scheme.md`). The styles, the chain structure and the clash shapes all stay. What changes is who chooses.
+
+| Part of this pass | Before | With ADR 0008 |
+| :--- | :--- | :--- |
+| **Energy blasts** (2.5) | a director style, weighted by a `volley` trait | the player's **energy mode**: a piece family (`moveset-system.md` section 9.1). `volley_barrage` and `volley_opener` become the energy versions of PRESSURE and of the approach. The trait weights apply only where the director picks the mode: the AI and the Simple layout |
+| **Direction** | not an input | the held direction picks the entry (rush, stand, retreat). Styles keep choosing *how* that entry looks: aerial arcs, ground skids, blinks |
+| **Chains** (2.1) | the director draws `chainP` at each window | **queued presses** set the length. The director still times the links on the fixed rhythm and plays the ender on the last one. `chainP` and the blitz chance remain for the AI and the Simple layout. The defender's answer is the **burst**, replacing the break-out window |
+| **Parry** (section 4, R5) | a director roll by state | a **perfect block**: a timed tap during the visible wind-up; a mistimed tap still blocks. The clean-parry reward in the `parry` data block is its reward. The R5 roll remains for the AI and the Simple layout |
+| **Beam struggles** (2.6) | CLASH whenever the defender is AGGRESSIVE with 40 ki or more | a struggle starts only when a beam is **answered by a beam**. The six shapes and the margin rule are unchanged. A perfect block against a beam is a DEFLECT outcome, separate from the *deflect* clash shape |
+| **Telegraphs** (section 4) | weight and finisher kind | unchanged, and more important: the wind-up tell is now the perfect-block window, and the mode shows as a tell too (`tell_energy`: the hands light) |
+| **New in-exchange windows** | parry and chain only | perfect block, dodge cancel, burst and reversal (`moveset-system.md` section 9.5). Each template branch will list them as data |
+| **Context actions** | none | grab and throw, pick-up, the civilians action, provoke or feint, energy shove, reversal, deflect, tackle and dive grab get their own small template family (`moveset-system.md` section 9.3) |
+
+**The parked Q4 batch (section 6) under ADR 0008:**
+
+| # | Edit | Still valid? |
+| :--- | :--- | :--- |
+| 1 | finisher `kind` | **Yes.** The read against the kind moves from stances to held states (Guard, Dodge, Press with a beam in hand) |
+| 2 | `contest.struggle.byState` | **Yes, with two updates on merge:** the base becomes Game Design's current value (0.23 since `6be4c3a`; the parked copy says 0.15), and the stance labels become held states |
+| 3 | PRESSURE's R4 counter as `selectorByProfile.dynamic` | **Hold.** With a perfect block in the player's hands, Game Design needs to re-rule R4. It may become "a perfect block opens the counter; a plain held guard counters only for the AI and the Simple layout" |
+| 4 | the new cue names | **Yes.** More will follow (the mode tell, the context actions) |
+
+**A future edit, not in the batch:** `templates.json` `beam.outcome` drops the automatic CLASH rule in favour of the answered-beam rule. It lands with Encounter's revised Q4 plan.
