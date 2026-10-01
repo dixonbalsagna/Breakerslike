@@ -193,8 +193,8 @@ func _occlusion(S: SimState, cam_x: float, vp: Vector2) -> void:
 	if pair and on and occlusion == OCCL_HOLE and not cand.is_empty() and (occluded[0] or occluded[1]):
 		var mid: bool = planet.occluders(S, cand, eye, cam_x, ((chest[0] as Vector3) + chest[1]) * 0.5, RenderLook.OCCL_MARGIN, -1, {})
 		join = int(occluded[0]) + int(occluded[1]) + int(mid) >= 2
-	var dt: float = clampf(S.T - _join_t, 0.0, 0.1) if _join_t >= 0.0 else 1.0e3
-	_join_t = S.T
+	var dt: float = clampf(PlanetView.tick_time(S) - _join_t, 0.0, 0.1) if _join_t >= 0.0 else 1.0e3
+	_join_t = PlanetView.tick_time(S)
 	_join = move_toward(_join, 1.0 if join else 0.0, dt / RenderLook.HOLE_JOIN_S)
 	if _join > 0.0 and n == 2 and float(holes[0][1]) > 0.0 and float(holes[1][1]) > 0.0:
 		# Each hole reaches toward the other fighter, its radius and its depth easing to his along the way.
@@ -219,7 +219,7 @@ func snap_occlusion() -> void:
 
 
 ## The lane cue (RenderLook.LANE_CUE_*): a stripe on the ground at a fighter's depth, in his colour, while it says
-## something: the two fighters are at different depths, or his own depth is changing. It eases on sim time, from the
+## something: the two fighters are at different depths, or his own depth is changing. It eases on tick time (PlanetView.tick_time), from the
 ## sim's depths tick by tick (the drawn stripe follows his interpolated position).
 func _lane_cues(host: SimHost, a: float) -> void:
 	var S: SimState = host.S
@@ -232,8 +232,8 @@ func _lane_cues(host: SimHost, a: float) -> void:
 		_cue_want.fill(false)
 		_cue_t = -1.0
 	var snap: bool = _cue_t < 0.0
-	var dt: float = 0.0 if snap else clampf(S.T - _cue_t, 0.0, 0.1)
-	_cue_t = S.T
+	var dt: float = 0.0 if snap else clampf(PlanetView.tick_time(S) - _cue_t, 0.0, 0.1)
+	_cue_t = PlanetView.tick_time(S)
 	var apart: bool = n == 2 and absf(S.fighters[0].z - S.fighters[1].z) > RenderLook.LANE_CUE_DZ
 	var cues: Array = []
 	for i in range(n):

@@ -22,7 +22,7 @@ godot --path .
 | :--- | :--- |
 | any key or click | take control of P1 (the demo starts AI vs AI) |
 | the fighters' keys, pad and touch | Controls' layouts (`data/input/layouts.json`; F1 shows them for the device in use) |
-| N / T / Y / P | new match / toggle P2 AI / toggle P1 AI / pause (with a menu to click or tap: Resume, How to play, Settings, Send feedback) |
+| N / T / Y / P | new match / toggle P2 AI / toggle P1 AI / pause (UI's pause menu: Resume, How to play, Settings, Send feedback, New match; keys, pad, mouse and touch) |
 | F1 | UI's How to play card, open or close (it also opens at the first run) |
 | F2 | swap UI's HUD for the greybox HUD (until UI's playtest) |
 | F3 | performance overlay |
@@ -36,10 +36,11 @@ godot --path .
 | Esc | quit (desktop) |
 
 The mapping is Controls': the host hands every key, pad and touch event to `SimInputHub` (`sim/input/hub.gd`), which builds each human slot's intent from its layout. `render/core/key_codes.gd` only turns Godot's physical keys into its code names. The host's part:
-- Start on a pad pauses, as P does.
+- P, Start on a pad and the touch pause button toggle UI's pause menu (`ui_hud.toggle_pause_menu`; `docs/ui/hud-spec.md` section 28). The host only wires its signals: opened, the sim freezes and held keys are let go; closed, it runs again; New match starts one. The greybox menu is gone. With the greybox HUD (F2) UI's HUD is hidden, so P is a plain pause there.
 - A pad that is unplugged lets go of what it held.
 - When a pause ends (P, or an overlay closing) the hub resumes, so nothing pressed during it fires.
-- UI's Settings screen opens from the pause menu and holds the sim, as How to play and the feedback panel do.
+- A pausing set piece (Simulation's Q10: `S.pause.left` frozen ticks, `pause_start` and `pause_end`) is treated the same way by Controls' rule: the host drops what is pressed on each of its frozen ticks and resumes the hub on the last, so holds are read afresh and no pile of presses fires. A hit-stop is different: it lasts a few frames and its presses are kept for the next live tick. On any frozen tick match time stands still, so everything on sim time holds (the crowd's flight and startle, the head flashes, the fighters' turns, the grooves' glow); the particles creep at a tenth of their speed, as the `tick` event's rule says.
+- How to play, Settings and Send feedback open over the menu inside the HUD and hold the sim; closing one restores the pause it found, so the menu comes back.
 - UI's options the host owns go to the hub: `pad_preset` and `touch_preset`, and after a remap (`remap_changed`; UI applies and saves it through Controls) the hub reloads its layouts. The hub's defaults are pushed into the HUD first.
 - The options the player saved there are loaded at start (after those defaults, so the saved choice wins), except in the tools, the bench and scripted runs (`--frames`, `--shot`), which keep the defaults so a saved option never changes a check.
 
@@ -205,7 +206,7 @@ ADR 0009 puts fighters at depth all the time, so a building between the camera a
 Either way a building counts as in front of a fighter when it stands between that pane's camera and his chest (`PlanetView.occluders`: the sight line against each box, with a margin; one bucket query a pane a frame). The building a launched fighter is aimed at stays whole, so its cut floors show him inside.
 
 - **The hole (the default).** A dithered circle around each fighter cuts whatever of a building is nearer the camera than he is. Its radius is Camera's rule, `max(70 px, 1.6 x his drawn height)` (`HOLE_PX`, `HOLE_BODY`). It is always there, so a wall is eaten as he passes behind it and nothing pops. **One hole for two.** When both fighters are in view within 60% of the screen's width (`HOLE_JOIN`) and buildings are in front of at least two of the three points (each fighter and the point between them), each hole stretches to the other fighter over 0.25 s, its radius and its depth easing to his along the way. One opening then shows both fighters and the gap between them. A fighter behind a wall and one out in the open keep two round holes.
-- **The stub.** The buildings within `STUB_MARGIN` (110 units) of a fighter's sight line, and those in front of the stretch between two fighters in view together, sink to stubs `STUB_H` (40 units) tall over 0.2 s, and stand again over 0.35 s when no longer in the way. The shader lowers every vertex above the height in `stub_tex` (a float texel a building, per pane), so the box sinks to a solid stub with its own top, and a house's roof folds flat under it. The easing runs on sim time, so pause and hit-stop hold it.
+- **The stub.** The buildings within `STUB_MARGIN` (110 units) of a fighter's sight line, and those in front of the stretch between two fighters in view together, sink to stubs `STUB_H` (40 units) tall over 0.2 s, and stand again over 0.35 s when no longer in the way. The shader lowers every vertex above the height in `stub_tex` (a float texel a building, per pane), so the box sinks to a solid stub with its own top, and a house's roof folds flat under it. The easing runs on tick time (`PlanetView.tick_time`: the sim's ticks, frozen ones included), as do the joined hole and the lane cue. So the player's pause holds it, and it keeps running through a hit-stop and through a pausing set piece (Q10), when the camera moves and a building newly in the way must still open.
 - **Row 0** no longer fades whole: it opens by the same method as the rows behind.
 - **Camera's request** (`docs/camera/camera-v2.md` section 6). Each pane takes a `cutaway` dictionary each frame, every key optional: `request` (false: no cut-away, for a shot that wants the wall whole), `radius_px` (the hole's radius; absent: the rule above) and `only` (a fighter slot: only his). Main takes it from `split_frame.cutaway[i]` once Camera's frame carries one. Until then, in a split each pane opens the buildings in front of its own fighter only. Each pane also publishes `occluded` (per fighter: a building is in front of him), for Camera.
 
@@ -230,6 +231,16 @@ Camera's plan (`camera-v2.md` section 8) wants two angles: side-on raised 11 deg
 
 The pair behind the block at 11 degrees (the hole), and at 49 degrees (stubs; the fighters are above the frame until Camera's mapping, their shadows at the top): ![pitch 11](img/lanes-pitch11.png) ![pitch 49](img/lanes-pitch49.png)
 
+**A negative pitch (Camera's transformation break, -8 degrees).** The rig takes it as it takes any pitch: the camera drops below the point at the screen's centre and looks up. Checked on the real renderer, in a real match (seed 4, tick 7785: the fighter transforms 1,450 units up) and posed with the fighter standing on the ground, framed as the rig frames him (his chest about 170 px below the centre at 720p), at zooms 0.8 and 1.2, on plains, in the city, on a mountain slope, at the coast, over the sea and in a crater bowl:
+- the sky is behind the fighter and nothing is missing at the horizon;
+- the ground is not below the frame: with a fighter on the ground it fills about the bottom fifth of the screen, seen at a grazing angle;
+- the foreground rule holds, also from inside a bowl 87 units deep, where the near wall is cut to the sight line;
+- the cut-away holds: in the city a foreground house covers most of the frame and the hole opens round both fighters. The silhouette against the sky is lost there; Camera can ask for a wider hole with `cutaway.radius_px`.
+
+The limit is the ground under the fighter. With that anchor the camera is `45 - 16 / zoom` units above his feet at -8 degrees (27 at zoom 0.8), so it stays above the ground down to zoom 0.36. At -12 degrees with the same anchor it is 88 units under the ground: the far ground disappears behind a flat slab, and at the coast the sea shows through the land. So the angle and the anchor have to be chosen together: the chest's offset below the centre, in pixels at 720p, must stay above `1343 sin(pitch) - 45 zoom`.
+
+In the air, on plains, in a bowl and in the city: ![low air](img/pitch-low-air.png) ![low ground](img/pitch-low-ground.png) ![low crater](img/pitch-low-crater.png) ![low city](img/pitch-low-city.png)
+
 ## The inset pane
 
 For Camera's launch following (`camera-v2.md` section 3: stay on the attacker, the launched fighter in an inset). `main.make_inset(size) -> SubViewport` makes a third follower pane at the size given. It is not one of the split's two (`main.panes`); `main.all_panes()` lists all three. Each frame main asks `compositor.inset_view(alpha)` for its camera: `{cam_x, cam_y, cam_z}` (and optionally `jitter`, `pitch`, `cutaway`), or `{}` when the inset is not shown, and draws it from that. The compositor places the viewport's texture and switches its updates on and off. A follower costs nodes and draw submission only while it is shown.
@@ -242,7 +253,7 @@ The depth aids of the fight-lanes plan (`fight-lanes-render.md` section 4), besi
 
 - **The lane table.** World's L1 will put it in state as `S.lanes`, a flat packed array (`docs/world/fight-lanes-world.md` section 10). Until then `render/core/lanes.gd` builds the same array as a stand-in: the plan's band (front street +375 to -300, block row 1 to -900, back street to -1,350, block row 2 to -2,025), its street strips, and a district wherever today's buildings stand in a run along x (a gap over 1,500 units starts a new one). `RenderLanes.table(S)` gives `S.lanes` itself once the state has it. Today's building rows already fall inside the plan's block lanes, so the paint and the buildings agree.
 - **Painted streets.** In a district the ground under the street lanes is painted by strip: sidewalks with slab joints, kerb parking with bay marks, and carriageways with a dashed centre line (`STREET_*`). The paint fades in over 120 units at a district's ends, lies under craters, rubble, cracks and scorch, and its thin lines fade out before they alias at far zoom. The district weight is found in the vertex stage (up to 16 districts); a pixel only walks the 8 strips. `--nostreets` leaves the ground unpainted, for A/B. Avenues (the cross streets) and the districts' own looks are in World's table and not drawn yet.
-- **The lane cue.** A soft stripe on the ground, or on the water, at a fighter's depth, in his colour, 450 units each way along the street (`LANE_CUE_*`). It shows only while it says something: the two fighters are more than 40 units apart in depth, or his own depth is changing faster than 60 units a second. It comes up in 0.15 s and goes in 0.6 s, on sim time. It is never thinner than about a pixel. In today's sim that means during brunt launches only.
+- **The lane cue.** A soft stripe on the ground, or on the water, at a fighter's depth, in his colour, 450 units each way along the street (`LANE_CUE_*`). It shows only while it says something: the two fighters are more than 40 units apart in depth, or his own depth is changing faster than 60 units a second. It comes up in 0.15 s and goes in 0.6 s, on tick time. It is never thinner than about a pixel. In today's sim that means during brunt launches only.
 
 The front street at 11 degrees, both fighters on the plane: ![streets](img/lanes-streets.png)
 

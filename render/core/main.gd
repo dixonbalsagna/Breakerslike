@@ -135,6 +135,9 @@ func _ready() -> void:
 	ui_hud.feedback_fn = _feedback_context
 	ui_hud.settings_opened.connect(_hold_for_overlay)
 	ui_hud.settings_closed.connect(_release_overlay)
+	ui_hud.pause_menu_opened.connect(_on_pause_menu_opened)
+	ui_hud.pause_menu_closed.connect(_on_pause_menu_closed)
+	ui_hud.new_match_requested.connect(func(): start_match(fresh_seed()))
 	ui_hud.option_changed.connect(_on_option_changed)
 	# The hub's defaults go into the HUD first (its legend and prompts show the layouts in use) ...
 	ui_hud.set_option("pad_preset", host.hub.pad_preset)
@@ -491,7 +494,7 @@ func set_legacy_hud(on: bool) -> void:
 
 ## The How to play card, the feedback panel and the Settings screen hold the fight: the sim freezes while one is open (the HUD takes every
 ## key and click), and held and pending keys are let go so no one flies on when it closes. Closing restores the pause
-## it found, so one opened from the pause menu goes back to the menu. (The HUD never opens both at once.)
+## it found, so one opened from the pause menu goes back to the menu.
 func _on_howto_opened(_first_run: bool) -> void:
 	_hold_for_overlay()
 
@@ -526,27 +529,35 @@ func _feedback_context() -> Dictionary:
 	return {"seed": host.seed, "time": host.ticks * SimConst.DT, "ended": host.S.game.ko != null, "setup": setup}
 
 
-## A click (or a tap, which Godot turns into one) on the pause menu's entries (hud.gd pause_items), or on UI's pause
-## button in touch mode: host glue until Controls' touch scheme hit-tests the HUD's targets (the stance ring is theirs).
-func _menu_click(pos: Vector2) -> bool:
+## UI's pause menu (docs/ui/hud-spec.md section 28; P, a pad's Start and the touch pause button toggle it through
+## ui_hud.toggle_pause_menu): open, the sim is frozen and held keys are let go; closed, it runs again ("new" is followed
+## by new_match_requested). How to play, Settings and Send feedback open over the menu inside the HUD; they find the
+## sim paused and leave it paused (_hold_for_overlay), so the menu comes back as it was.
+func _on_pause_menu_opened() -> void:
+	host.paused = true
+	host.release_all()
+
+
+func _on_pause_menu_closed(_reason: String) -> void:
+	host.paused = false
+
+
+## P, a pad's Start and the touch pause button: UI's pause menu. With the greybox HUD (F2) UI's HUD is hidden, its menu
+## with it, so the pause is a plain one there.
+func _toggle_pause() -> void:
+	if legacy_hud:
+		host.paused = not host.paused
+	else:
+		ui_hud.toggle_pause_menu()
+
+
+## A click (or a tap, which Godot turns into one) on UI's pause button in touch mode: host glue until Controls' touch
+## scheme hit-tests the HUD's targets (the stance ring is theirs).
+func _pause_tap(pos: Vector2) -> bool:
 	if ui_hud.is_overlay_open():
 		return false
-	if host.paused:
-		var items: Dictionary = hud.pause_items()
-		if (items["resume"] as Rect2).has_point(pos):
-			host.paused = false
-			return true
-		if (items["howto"] as Rect2).has_point(pos):
-			ui_hud.show_howto()
-			return true
-		if (items["settings"] as Rect2).has_point(pos):
-			ui_hud.show_settings()
-			return true
-		if (items["feedback"] as Rect2).has_point(pos):
-			ui_hud.show_feedback("pause")
-			return true
 	if bool(ui_hud.opts["touch_ui"]) and String(ui_hud.touch_target_at(pos).get("name", "")) == "pause":
-		host.paused = not host.paused
+		_toggle_pause()
 		return true
 	return false
 
@@ -617,7 +628,8 @@ func _pad_event(e: InputEvent) -> void:
 		if e.pressed:
 			take_over()
 			if btn == "start":
-				host.paused = not host.paused
+				_toggle_pause()
+				get_viewport().set_input_as_handled()   # or the HUD, hearing the same press with its menu now open, closes it
 				return
 		host.hub.pad_button(e.device, btn, e.pressed)
 	else:
@@ -748,11 +760,11 @@ func _unhandled_input(e: InputEvent) -> void:
 					host.toggle_ai(0)
 					return
 				"KeyP":
-					host.paused = not host.paused
+					_toggle_pause()
 					return
 			host.key_down(code)
 	elif e is InputEventMouseButton and e.pressed:
-		if e.button_index == MOUSE_BUTTON_LEFT and _menu_click(e.position):
+		if e.button_index == MOUSE_BUTTON_LEFT and _pause_tap(e.position):
 			get_viewport().set_input_as_handled()
 			return
 		take_over()

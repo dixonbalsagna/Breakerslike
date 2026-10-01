@@ -92,9 +92,18 @@ func tick(vw: float, vh: float) -> void:
 	for k in range(2):
 		if S.fighters[k].ai == null:
 			inputs[k] = hub.intent(k)
+	var pausing: bool = S.pause.left > 0   # Q10: this tick is one of a pausing set piece's frozen ticks
 	var t0: int = Time.get_ticks_usec()
 	if SimCore.step(S, inputs):
 		hub.consumed()
+	elif pausing:
+		# A set piece runs for seconds: what is pressed during it is dropped, and on its last frozen tick every hold is
+		# read as if it began now, so no pile of presses fires when the fight resumes (Controls' rule). A hit-stop is a
+		# few frames: its presses are kept for the next live tick, as before.
+		if S.pause.left > 0:
+			hub.drop_edges()
+		else:
+			hub.resume()
 	var t1: int = Time.get_ticks_usec()
 	cam.camStep(S, S.dt, vw, vh)
 	var lines: Array = S.out.feed.duplicate()

@@ -755,12 +755,19 @@ func occluders(S: SimState, cand: Array, eye: Vector3, cam_x: float, p: Vector3,
 	return any
 
 
-## Per frame, per pane: cut the buildings in `want` down to low stubs and let the others stand again, eased on sim
+## The clock the occlusion and the lane cue ease on: the sim's ticks, frozen ones included. It runs through a hit-stop
+## and a pausing set piece (Q10: the camera moves then, so a building newly in the way must still open), and stands
+## still while the player has the game paused.
+static func tick_time(S: SimState) -> float:
+	return float(S.tick) * SimConst.DT
+
+
+## Per frame, per pane: cut the buildings in `want` down to low stubs and let the others stand again, eased on tick
 ## time (RenderLook.STUB_*). building.gdshader lowers every vertex of a cut building to the height in stub_tex, so the
 ## box sinks to a solid stub with its own top.
 func set_stubs(S: SimState, want: Dictionary) -> void:
-	var dt: float = clampf(S.T - _stub_t, 0.0, 0.1) if _stub_t >= 0.0 else 1.0e3
-	_stub_t = S.T
+	var dt: float = clampf(tick_time(S) - _stub_t, 0.0, 0.1) if _stub_t >= 0.0 else 1.0e3
+	_stub_t = tick_time(S)
 	for bi in want:
 		_stub_live[bi] = true
 	if _stub_live.is_empty():
