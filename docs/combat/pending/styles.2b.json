@@ -29,7 +29,8 @@
       "protagonist": ["blink", "aerial"],
       "antihero": ["volley", "aerial"],
       "empress": ["volley", "aerial"],
-      "cyborg": ["brawler", "blink"]
+      "cyborg": ["brawler", "blink"],
+      "_held": "The blink trait has no effect while teleporting is on hold (the blink_clash style has weight 0)."
     }
   },
   "tempo": {
@@ -137,7 +138,7 @@
         ]
       },
       "weight": {
-        "base": 0.6,
+        "base": 0.0,
         "factors": [
           {
             "if": {
@@ -172,7 +173,8 @@
           "beforeEachContact": { "op": "blink", "args": {"w": "both", "rel": "cycle", "cycle": ["meet_high", "meet_left", "meet_right", "meet_low"]}, "leadTicks": 4 },
           "_rule": "each exchanged blow lands at a new blink position, 4 ticks after the pair reappears; the decider stays where the dynamic profile puts it"
         }
-      }
+      },
+      "_held": "Teleporting is on hold (Orb, 2026-10-01): base weight 0 switches this style off. The factors and the overlay are kept for when it returns; it may become one character's signature ability."
     },
     {
       "id": "volley_barrage",

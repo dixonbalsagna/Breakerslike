@@ -1,6 +1,6 @@
 # Speed blitzes: ping-pong, teleport spam, no pass-through, full contact
 
-Owner: Combat and Choreography. Date: 2026-10-01. Status: plan only; no data or code. Game Design sets the blitz rules (when, cost, damage, the defender's answers); Encounter builds it; ADR 0009 gives the choreographer depth.
+Owner: Combat and Choreography. Date: 2026-10-01. Status: plan only; no data or code. **Teleporting is on hold (Orb, 2026-10-01): for now the blitz uses flight paths only.** Section 2 and every blink option are marked held. Game Design sets the blitz rules (when, cost, damage, the defender's answers); Encounter builds it; ADR 0009 gives the choreographer depth.
 
 **Orb** (`docs/ep/vision.md`, questionnaire 10):
 - "I really want the 'ping pong' speed blitzes to look great, 'teleport spam' should definitely be a system."
@@ -17,7 +17,7 @@ A blitz is a fast chain (`styles.json` `chains.blitz`). The **ping-pong** is its
 | Beat of one bounce | What happens |
 | :--- | :--- |
 | **Knock-away** | a strike and a launch: the body flies off at high speed. The first knock is the exchange's own launch |
-| **Intercept** | the attacker leaves at once and reaches a point *ahead of the body*, by a spiral flight (1.2) or a blink (section 2) |
+| **Intercept** | the attacker leaves at once and reaches a point *ahead of the body*, by a spiral flight (1.2). The blink option (section 2) is held |
 | **Return blow** | the attacker is already there, wound up, when the body arrives, and knocks it back |
 
 - **Length:** 2 to 5 bounces, then the **ender**: the last return blow, with the chain ender's 18-tick wind-up, then a long launch or a ground slam.
@@ -61,7 +61,7 @@ path:   P(s) = C + φ^s · Rot(σ · 90° · s) · (S − C),   s from 0 to 1
 3. **The bulge plane is the choreographer's** (ADR 0009). `n` may point up or down, or into a neighbouring depth lane. Prefer a depth-lane bulge when the body's path is level: on screen the attacker swings around behind or in front of the body's line and the two never overlap. Prefer up when within 4 bh of the ground.
 4. **Clearance.** Sample the arc at 8 points. If any sample is under the ground plus 0.5 bh, or inside a structure's footprint, try the other side, then another plane.
 5. **Shallower if needed.** If no quarter turn clears, reduce the turn angle `α` (60°, then 30°): `P(s) = C + φ^(s·α/90°) · Rot(σ·α·s) · (S − C)`, with `C = S − d / (φ^(α/90°) · Rot(σ·α) − 1)`. The division treats vectors in the plane of `d` and `n` as complex numbers; at α = 90° it reduces to the pole formula above.
-6. **Last resort:** a blink intercept (section 2).
+6. **Last resort:** no intercept. The bounce is skipped: the attacker follows with an ordinary pursuit and the blitz ends on its ender when the body is next in reach, or simply ends if it lands first. (The blink intercept that used to be the last resort is held, section 2.)
 
 **Timing: "blasts off even faster".**
 - The attacker leaves 4 ticks after the knock (after the hit-stop).
@@ -72,7 +72,9 @@ path:   P(s) = C + φ^s · Rot(σ · 90° · s) · (S − C),   s from 0 to 1
 
 ---
 
-## 2. The teleport variant, and how the two mix
+## 2. The teleport variant, and how the two mix (held)
+
+**Held (Orb, 2026-10-01).** Teleporting is on hold until there is a good reason to introduce it, and it may become one character's signature ability. Nothing in this section is built or switched on. It is kept as the design to return to.
 
 **Blink intercept.** The attacker vanishes at S with the air-ripple tell and reappears at I, already wound up. There is no travel, so the bounce is quicker: `tᵢ` of 16 ticks instead of 30. Each blink costs ki (Game Design's number).
 
@@ -99,17 +101,17 @@ A typical Tense blitz reads: flight, flight, blink, ender. A Frenzied one from a
 
 **The rule:**
 1. **Each exchange has sides.** At the request, the attacker is on one side of the defender (left or right along the shortest arc). Every approach, footwork and pursuit target keeps that side: offsets are measured from the opponent toward the fighter's own side, not from where the fighter happens to face.
-2. **Changing sides needs an explicit cross-over beat.** There are four authored cross-overs, each a visible move of at least 6 ticks that goes *around* the opponent, never through:
+2. **Changing sides needs an explicit cross-over beat.** There are four authored cross-overs (three while teleporting is held), each a visible move of at least 6 ticks that goes *around* the opponent, never through:
    - a **vault** over (an arc at least 1 bh above the opponent's head);
    - a **slide** under (airborne only);
    - a **step-around** through a neighbouring depth lane (ADR 0009);
-   - a **blink** behind (with the ripple).
+   - a **blink** behind (with the ripple): **held** with the rest of teleporting.
    The cross-over swaps the sides and emits a cue.
 3. **Bodies never overlap.** Each fighter has a body radius of about 0.5 bh. A planned path that would enter the opponent's radius is rejected at plan time and replaced by a cross-over or a shorter move. If two bodies still end up overlapping (a launch, a physics nudge), the sim pushes them apart evenly.
 4. **Facing always follows the opponent.** While a fighter is in an exchange and not launched, its facing is recomputed **every tick** toward the opponent. A cross-over flips it at its midpoint. A launched body faces along its velocity. A flight faces along its path, then turns to the opponent on arrival.
 5. **Contact distance, not overlap.** Entries end at the striking piece's reach from the opponent's contact socket (section 4), never closer than the two body radii.
 
-The EVASIVE dodge (a blink behind the attacker) is already a cross-over. Under rule 4 the attacker's facing follows at once, so "both facing away" cannot persist. The dynamic profile's "circle" becomes a vault or a step-around when the data next changes.
+The EVASIVE dodge today is a blink behind the attacker, which is a teleport. **Open for the EP and Orb:** with teleporting on hold, should the dodge become a vault or a step-around instead? Until that is ruled, it stays as it is, and it counts as a cross-over. Under rule 4 the attacker's facing follows at once, so "both facing away" cannot persist. The dynamic profile's "circle" becomes a vault or a step-around when the data next changes.
 
 ---
 
@@ -141,4 +143,4 @@ Together with section 3 this addresses Orb's list: backwards facing, pass-throug
 | **Tools** | later: schema for the blitz patterns, the intercept settings and the sockets |
 | **QA** | no body overlap in any exchange frame; facing error (a fighter in an exchange facing away) at 0 frames; contact error (limb end to socket) within tolerance on every contact tick; blitz rate in band; the share of flight to blink intercepts |
 
-**Order.** Sections 3 and 4 (no pass-through, facing, contact) fix what Orb sees today and need no new content, so they come first. The ping-pong with spiral flights comes next, then the blink variant and the mix.
+**Order.** Sections 3 and 4 (no pass-through, facing, contact) fix what Orb sees today and need no new content, so they come first. The ping-pong with spiral flights comes next. The blink variant and the mix are held.

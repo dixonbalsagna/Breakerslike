@@ -35,6 +35,8 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 - 36 new cue names, including `backstep`, `perfect_block`, `riposte` and `reversal`.
 
 ## What is in `styles.2b.json`
+**Teleporting is on hold (Orb, 2026-10-01).** The `blink_clash` style is switched off with `weight.base` 0, and the `blink` trait has no effect. The style, its overlay and the three blink cue names stay in the data so the cross-references still resolve. No other parked file uses a blink.
+
 `chains.chainP.heat` (Heated 0.05, Simmering 0.10, Boiling 0.20) replaces `heatBoiling`, and `chains.blitz.chance.cap` is 0.60. The `_heat` and `_cap` notes are gone.
 
 ## Schema changes for Tools (same commit)

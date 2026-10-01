@@ -50,7 +50,9 @@ Each style is the same small set of authored parts, reused across every template
 - **Distinct links.** Each link's strike cycles a shape cue (`link_knee`, `link_elbow`, `link_kick`), so no two consecutive links look alike. Styles can swap the pursuit, for example an aerial *relay* that overtakes the flying body and strikes back.
 - **One ender.** When the draw says stop, or the cap is next, the director plays the ender instead of a link: a heavier strike (`chainStrike` with `ender`), a long-only launch (`breakLaunch`), the `chain_ender` cue and the CHAIN ×N banner (Narrative's label). Links only juggle (a small pop), and only the ender sends the body away. Every chain ends on a clear full stop.
 
-### 2.2 Teleport clashes
+### 2.2 Teleport clashes (held)
+**Held (Orb, 2026-10-01).** Teleporting is on hold until there is a good reason to introduce it, and it may become one character's signature ability. Nothing in this section is built or switched on. It is kept as the design to return to. In the data the `blink_clash` style has weight 0.
+
 **The blink clash:** a style for HEAVY CLASH and aerial TRADE BLOWS.
 - **Heavy clash.** Both fighters vanish from the approach and reappear meeting in mid-air. Fists and forearms meet (`blink_meet`: a spark, no damage), they vanish again and reappear at a new angle (above, behind, below). After three meets, the decisive meet plays the branch's outcome: WON, COUNTERED or SHOCKWAVE.
 - **Trade blows.** Each of the four exchanged blows lands at a new blink position (a vanish-reappear trade), then the fighters meet for the decider.
