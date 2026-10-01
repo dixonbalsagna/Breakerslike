@@ -98,7 +98,7 @@ For a fighter flagged `assist: simple` in the match setup (Simple controller lay
 - **Needs:**
   - Exchange fields for the template and branch ids, two hashed strings (Simulation);
   - QA's parser reading `beam_outcome`;
-  - a fixed precedence for two interrupts in one tick. My proposal: perfect block, reversal, dodge cancel, burst, with the defender before the attacker.
+  - a fixed precedence for two interrupts in one tick. **Adopted** (Game Design, `control-rules.md` §2): perfect block, reversal, dodge cancel, burst, with the defender before the attacker. An interrupt that loses the same-tick tie isn't charged: it costs no ki and starts no cooldown.
 
 ## Part 2: variety, then the rest
 1. **Fewer beams, more ordinary blasts** (ADR item 9):
@@ -159,6 +159,15 @@ The smallest one that works is a **manual tier-up with a short set piece**:
 - there is no cancel field: a `dodge` edge inside an exchange is the cancel.
 
 The slices are I1 (transport, Simulation), then I2: step 1 below, with Controls and Simulation's core lines.
+
+## With I2: the time-cap stand-in (granted)
+
+Long matches run past the tools' 12-minute cut-off because the brink chapter's backstop, the 11:00 time-cap event, isn't built. Until Game Design and Simulation build the full event, the director stands in for it:
+- `DirExchange.dirUpdate` sets `S.game.timeCap = true` once `S.T` reaches `contest.timeCapAt` (660 s). The EP granted that write.
+- `DirData` gets the accessor, and `data/combat/finishers.json` the `timeCapAt` line. The schema key goes to Tools at I2.
+- From then on, every decisive win against a fighter on the brink is a finisher, which `decisive()` already honours.
+
+The tool caps move to sim time or 15:00 separately, with their owners.
 
 ## Order
 1. Intent and state (Simulation and Controls), with the held states feeding today's templates (Part 1 §1), plus the placeholder transform. Playable at once.
