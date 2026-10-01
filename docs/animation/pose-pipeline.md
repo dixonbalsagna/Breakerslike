@@ -1209,6 +1209,26 @@ The checks: `anim_check` has a hunch test (the shoulder moves by what it is told
 - *Checks:* with the cues on by default `anim_check`, `determinism`, `pane_check`, `flash_check`, `cue_check` and `hash_check` pass; `anim_check` passes with the flag off, with `--step3-cues`, and with `--wave1-live --step3-cues`; the gameplay hash is unchanged; real matches play 8, 8 and 12 sequences on seeds 4, 12345 and 7 in 6000 ticks.
 - *Pack* (`art/animation/review/step3/`, 50 s): `cue_lab.gd` plays each cue through the real solver; the reel, a sheet, `timing.md`, three A/B pairs (the deflect swept low from the hip against up and across; the blocked attacker folded forward against thrown back; the burst's arms forward against wide). `art/animation/step3-cues-before-after.gif` is a real seed 4 window, left today, right with the cues on: a perfect block and the stumble of the attacker.
 
+### 9.18 Ground contact: the ragdoll against World's real events, and the held poses (2026-10-01)
+
+**Tested with the switch on** (a scratch copy with `data/biomes/contact.json` `"enabled": true`, HEAD c0bc8a5): every ground event of three 5,400-tick matches was dumped and compared with what my handler read. The sim sends, per event: `bounce` (`k`, `vn`, `vt`, `surface`, `sina`, `slope`, `spd`, `n`, `contacts`), `left_ground` (`cause`: cliff, lip, crest, bounce; `vx`, `vy`, `slope`), `land` (`kind` skid, tumble, slam; `vn`, `vt`, `surface`, `sina`), `tumble_end` (`kind` stop, recover or air), `journey_end` (`kind`, `dur`, `contacts`, `lips`, `nb`).
+**What my stub got wrong, and the fix:**
+- It read `sin_a`, `how`, `t`, which are `sina`, `kind` (on `tumble_end`) and `dur` in the real event; it ignored `spd`, `slope`, `vx`, `vy`, `n`, `lips` and `nb`. It now reads the real fields.
+- It started every reaction at the end of the frame, not at the event's own time (a replay at two ticks a frame would differ); it uses the event's tick now.
+- It never heard `journey_end`; the brace of a tumble is released by it as well as by `tumble_end`.
+- The tangent speed of a bounce (`vt`) did nothing; it whips the spine the way he travels now.
+- The `wound test` in `anim_check` (a scripted match) sampled the stance at the end of 600 frames, and with contact on the match plays differently so he was in a rise or a launch then; it now takes the stance nearest the sagging pose over the frames he stands in it. No tolerance changed.
+All checks pass with the switch on (`anim_check`, `determinism`, `pane_check`, `flash_check`, `cue_check`, `hash_check`; `limb_scan` clean on seeds 4, 12345 and 7) and with it off.
+
+**The held poses and sequences** (`data/anim/waves/ground1.*`, 16 poses, 5 sequences; tuning in `data/anim/ground.json`; ON by default, `--no-ground-poses` switches them off; nothing plays until World's switch is on, because the events do not exist before):
+- *Bounce* (`gc.bounce`: the fold on impact, the rebound with the arms and legs thrown out), at a weight by `vn` (1,800 gives full weight) and the surface (rock 1.15, paving 1.1, soil 1.0, rubble 0.8, sand 0.7, from World's proposed `bounceMul`), so a hard bounce on rock reads and a soft one on sand is light.
+- *Lip launch* (`gc.lip_launch`: the body arching off the crest, then stretched along the arc), at a weight by `spd`; played for a leave by a lip, a crest, a heap, a ridge or a cliff, not for a bounce's own lift.
+- *Braced tumble* (`gc.hold.brace_tumble`: chin tucked, forearms in front of the face, knees up), held from the tumble's landing until `tumble_end` or `journey_end`, with the ragdoll's own motion on top.
+- *Tech flip* (`gc.tech_flip`: tuck, spin, open, land: 21 ticks), played when `tumble_end` says `recover`.
+- *Quick and slow get-ups* (`gc.getup_quick`: push, kip, rise; `gc.getup_slow`: knee, breath on the knee, rise hunched, settle): replace the blend toward `down.getup`, over the same time as before (0.25 to 0.8 s by wear), the slow one above 0.45 wear or brink.
+- `anim_check` has a ground test (each event starts the right thing at the right weight, a soft bounce on sand lighter than a hard one on rock, the brace is held and released, a recovery flips).
+- GIFs, seed 4 fighter 1 with the switch on, left the poses off and right on: `ground-bounce-before-after.gif` (the rock bounce at tick 892), `ground-tumble-before-after.gif` (the tumble and cliff leave that follow) and `ground-lip-launch-before-after.gif` (the launch off a lip at tick 1102); `ground-contact-poses.png` is the 16 poses. The poses are subtle at the lab's zoom because the ragdoll dominates a tumble; the weights follow the speed, so the hard events show most.
+
 ---
 
 ## 10. How we will know it works

@@ -53,6 +53,8 @@ var _tq: Array[Quaternion] = []
 var _last_T: float = -1.0
 var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
+var _gc_hold_t0: float = -1.0           # a held ground-contact pose (the brace of a tumble) from this time ...
+var _gc_hold_t1: float = -1.0           # ... until this one (-1 while it lasts)
 var _stun_prev: int = 0
 var _stun_watch: int = 0           # ticks left to see this fighter staggered after a perfect block or a reversal (a DEFLECT staggers nobody)
 var _stun_seq: String = ""
@@ -267,17 +269,50 @@ func on_skim(T: float, spd: float) -> void:
 func on_ground_event(kind: String, e: Dictionary, T: float) -> void:
 	var amp: float = _rd_amp()
 	debug["ground_events"] += 1
+	var G: Dictionary = AnimData.ground
+	var poses_on: bool = RenderAnim.ground_poses and not G.is_empty() and AnimData.entries.has("gc.bounce")
+	var surf: float = float(G.get("surface", {}).get(String(e.get("surface", "soil")), 1.0))
 	match kind:
 		"bounce":
-			_rd.crumple(clampf(absf(float(e.get("vn", 0.0))) / 2500.0, 0.2, 1.5) * 0.6, amp)
+			var vn: float = absf(float(e.get("vn", 0.0)))
+			_rd.crumple(clampf(vn / 2500.0, 0.2, 1.5) * 0.6 * surf, amp)
+			# the tangent speed whips the body the way it travels
+			_rd.kick(1, clampf(float(e.get("vt", 0.0)) * vface / 220.0, -9.0, 9.0) * amp)
+			if poses_on:
+				var bw: float = clampf(vn / float(G.get("bounce", {}).get("ref", 1800.0)), float(G.get("bounce", {}).get("min", 0.35)), 1.0) * clampf(surf, 0.6, 1.0)
+				_seq = {"id": "gc.bounce", "t0": T, "dur": float(AnimData.entries["gc.bounce"].dur) / 60.0, "wt": bw}
+				debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
+		"left_ground":
+			var cause: String = String(e.get("cause", ""))
+			if poses_on and cause != "bounce" and cause != "":
+				var lw: float = clampf(float(e.get("spd", 1000.0)) / float(G.get("launch", {}).get("ref", 2000.0)), float(G.get("launch", {}).get("min", 0.4)), 1.0)
+				_seq = {"id": "gc.lip_launch", "t0": T, "dur": float(AnimData.entries["gc.lip_launch"].dur) / 60.0, "wt": lw}
+				_gc_hold_t1 = T if _gc_hold_t0 >= 0.0 and _gc_hold_t1 < 0.0 else _gc_hold_t1
+				debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
 		"land":
 			var lk: String = String(e.get("kind", ""))
 			if lk == "slam":
 				_rd.crumple(1.0, amp)
-			elif lk == "skid" or lk == "tumble":
+				if poses_on:
+					_seq = {"id": "gc.bounce", "t0": T, "dur": float(AnimData.entries["gc.bounce"].dur) / 60.0, "wt": 1.0}
+			elif lk == "skid":
 				_rd.crumple(0.5, amp)
+			elif lk == "tumble":
+				_rd.crumple(0.5 * surf, amp)
+				if poses_on and (_gc_hold_t0 < 0.0 or _gc_hold_t1 >= 0.0):
+					_gc_hold_t0 = T
+					_gc_hold_t1 = -1.0
+					debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
 		"tumble_end":
 			_rd.free = minf(_rd.free, 0.3)
+			if _gc_hold_t0 >= 0.0 and _gc_hold_t1 < 0.0:
+				_gc_hold_t1 = T
+			if poses_on and String(e.get("kind", "")) == "recover" and AnimData.entries.has("gc.tech_flip"):
+				_seq = {"id": "gc.tech_flip", "t0": T, "dur": float(AnimData.entries["gc.tech_flip"].dur) / 60.0, "wt": 1.0}
+				debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
+		"journey_end":
+			if _gc_hold_t0 >= 0.0 and _gc_hold_t1 < 0.0:
+				_gc_hold_t1 = T
 
 
 func on_cue(kind: String, T: float, t_event: float = -1.0) -> void:
@@ -486,7 +521,21 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 		if T >= float(_seq.t0) + float(_seq.dur) + 0.05:
 			_seq = {}
 		else:
-			_entry_layer(float(_seq.t0), float(_seq.dur), String(_seq.id), T, 1.0 / float(_prof.get("solve_hz", 60.0)))
+			_entry_layer(float(_seq.t0), float(_seq.dur), String(_seq.id), T, 1.0 / float(_prof.get("solve_hz", 60.0)), float(_seq.get("wt", 1.0)))
+	if _gc_hold_t0 >= 0.0 and AnimData.pose_exists("gc.hold.brace_tumble"):
+		var hin: float = float(AnimData.ground.get("hold", {}).get("in", 0.08))
+		var hout: float = float(AnimData.ground.get("hold", {}).get("out", 0.15))
+		var hw: float = smoothstep(0.0, hin, T - _gc_hold_t0)
+		if _gc_hold_t1 >= 0.0:
+			hw *= 1.0 - smoothstep(0.0, hout, T - _gc_hold_t1)
+			if T - _gc_hold_t1 >= hout:
+				_gc_hold_t0 = -1.0
+				_gc_hold_t1 = -1.0
+		if hw > 0.001:
+			var bt: AnimPose = AnimData.pose("gc.hold.brace_tumble")
+			AnimPose.mix(q, bt.q, hw * 0.85)
+			hips = hips.lerp(bt.hips, hw * 0.85)
+			curl = curl.lerp(bt.curl, hw * 0.85)
 	if _skim_t0 >= 0.0:
 		var sk_t: float = T - _skim_t0
 		if sk_t > 0.35:
@@ -643,6 +692,10 @@ func _target_base(S: SimState, f, T: float) -> void:
 		_was_down = false
 		_rise_t0 = T
 		_rise_dur = 0.25 + 0.55 * maxf(_worn, _brinkp)
+		if RenderAnim.ground_poses and RenderAnim.layer("transitions") and AnimData.entries.has("gc.getup_quick") and _seq.is_empty():
+			var slow: bool = maxf(_worn, _brinkp) > float(AnimData.ground.get("getup", {}).get("slow_above", 0.45))
+			_seq = {"id": "gc.getup_slow" if slow else "gc.getup_quick", "t0": T, "dur": _rise_dur, "wt": 1.0, "getup": true}
+			_rise_t0 = -1.0   # the sequence is the rise; the blend toward down.getup would double it
 	if _rise_t0 >= 0.0 and RenderAnim.layer("transitions"):
 		var rt: float = T - _rise_t0
 		if rt >= _rise_dur:
@@ -865,7 +918,7 @@ func _live_pick(S: SimState, f, ex, ordinal: int, heavy: bool) -> String:
 ## An entry (data/anim/waves/*.entries.json, parked: no live beat names one yet): a sequence of poses over `dur` seconds. A phase with
 ## `ticks` holds that long, the others share the rest by their weight `w`; the poses cross-fade over three ticks at each boundary. The
 ## strike that follows takes over from here by its own load (the join is inertialised).
-func _entry_layer(es: float, dur: float, id: String, T: float, dq: float) -> void:
+func _entry_layer(es: float, dur: float, id: String, T: float, dq: float, wt: float = 1.0) -> void:
 	var en = AnimData.entries.get(id)
 	if en == null or T < es - 0.0001 or T >= es + dur + 0.05:
 		return
@@ -884,11 +937,21 @@ func _entry_layer(es: float, dur: float, id: String, T: float, dq: float) -> voi
 		bounds.append(float(bounds[-1]) + seg)
 	var tt: float = floorf(clampf(T - es, 0.0, dur) / dq + 0.0001) * dq
 	var e: float = 1.5 * DT
+	var base_q: Array[Quaternion] = []
+	var base_h: Vector3 = hips
+	var base_c: Vector2 = curl
+	if wt < 0.999:
+		base_q = q.duplicate()
 	_mix_pose(AnimData.pose(String(ph[0].pose)), 1.0)
 	for i in range(1, ph.size()):
 		var w: float = smoothstep(float(bounds[i]) - e, float(bounds[i]) + e, tt)
 		if w > 0.001:
 			_mix_pose(AnimData.pose(String(ph[i].pose)), w)
+	if wt < 0.999:
+		for i in range(AnimRig.N):
+			q[i] = base_q[i].slerp(q[i], wt)
+		hips = base_h.lerp(hips, wt)
+		curl = base_c.lerp(curl, wt)
 	debug["entries"] = int(debug.get("entries", 0)) + 1
 
 

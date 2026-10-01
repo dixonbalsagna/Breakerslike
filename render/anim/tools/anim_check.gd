@@ -175,8 +175,16 @@ func _test_wounds() -> void:
 	var calm := 0
 	var lo_w := 9.0
 	var hi_w := -9.0
+	var sag0: AnimPose = AnimData.pose("wound.sag")
+	var d_worn_best := 99.0   # the stance of b nearest the sagging pose over the frames he stands in it (a launch or a rise has other targets)
 	for i in range(600):
 		main.frame(DT)
+		if b.state == "free" and afb._part == "" and afb._rise_t0 < 0.0 and afb.version > 0:
+			var dw := 0.0
+			for nm0 in ["spine_1", "spine_2", "head", "pelvis"]:
+				var i0: int = AnimRig.index[nm0]
+				dw += afb._tq[i0].angle_to(sag0.q[i0])
+			d_worn_best = minf(d_worn_best, dw)
 		if afa._part == "" and a.state == "free" and afa.version > 0:
 			calm += 1
 			if afa.q[fo].angle_to(limp.q[fo]) < 0.3:
@@ -188,13 +196,12 @@ func _test_wounds() -> void:
 	_expect(int(afa.debug["wound_bad"]) == 0, "wound test: %d blows used a broken limb (of %d)" % [afa.debug["wound_bad"], afa.debug["wound_strikes"]])
 	var sag: AnimPose = AnimData.pose("wound.sag")
 	var fresh: AnimPose = AnimData.pose("stance.aggressive")
-	var d_worn := 0.0
+	var d_worn: float = d_worn_best
 	var d_fresh := 0.0
 	for nm in ["spine_1", "spine_2", "head", "pelvis"]:
 		var i2: int = AnimRig.index[nm]
-		d_worn += afb._tq[i2].angle_to(sag.q[i2])
 		d_fresh += fresh.q[i2].angle_to(sag.q[i2])
-	_expect(d_worn < d_fresh * 0.9 or b.state != "free", "wound test: the stance did not sag toward the brink (%.3f against %.3f)" % [d_worn, d_fresh])
+	_expect(d_worn < d_fresh * 0.9, "wound test: the stance did not sag toward the brink (%.3f against %.3f)" % [d_worn, d_fresh])
 	b.wear = [0, 0, 0, 0]
 	b.stage = [0, 0, 0, 0]
 	var lo_f := 9.0
@@ -698,6 +705,34 @@ func _test_entry() -> void:
 	print("entry test: the entry's start, middle and end are %s rad from their poses" % str(errs))
 
 
+## World's ground-contact events as the sim sends them (spd, n, k, vn, vt, sina, slope, vx, vy, cause, kind, surface, dur): a bounce starts the bounce
+## sequence at a weight by its speed and its surface, a launch off a lip or a crest the launch sequence, a tumble's landing holds the brace until the
+## tumble ends, a recovery is the tech flip, and the end of the journey lets the brace go.
+func _test_ground() -> void:
+	var af := AnimFighter.new(0)
+	var G: Dictionary = AnimData.ground
+	_expect(not G.is_empty() and AnimData.entries.has("gc.bounce") and AnimData.pose_exists("gc.hold.brace_tumble"), "ground test: the ground data or poses are not loaded")
+	af.on_ground_event("bounce", {"actor": 0, "n": 1, "k": 1, "vn": -1800.0, "vt": 900.0, "surface": "rock", "sina": 0.7, "slope": 0.1, "spd": 1500.0}, 1.0)
+	_expect(String(af._seq.get("id", "")) == "gc.bounce" and float(af._seq.wt) > 0.99, "ground test: a hard bounce on rock did not start gc.bounce at full weight (%s)" % str(af._seq))
+	var af2 := AnimFighter.new(0)
+	af2.on_ground_event("bounce", {"actor": 0, "n": 1, "k": 1, "vn": -900.0, "vt": 100.0, "surface": "sand", "sina": 0.5, "slope": 0.0, "spd": 900.0}, 1.0)
+	_expect(float(af2._seq.wt) < float(af._seq.wt) - 0.2, "ground test: a soft bounce on sand is not lighter than a hard one on rock (%.2f against %.2f)" % [float(af2._seq.wt), float(af._seq.wt)])
+	var af3 := AnimFighter.new(0)
+	af3.on_ground_event("left_ground", {"actor": 0, "n": 1, "cause": "bounce", "vx": 100.0, "vy": 800.0, "spd": 800.0}, 1.0)
+	_expect(af3._seq.is_empty(), "ground test: leaving the ground by a bounce started a launch sequence")
+	af3.on_ground_event("left_ground", {"actor": 0, "n": 1, "cause": "lip", "vx": 900.0, "vy": 500.0, "spd": 1800.0, "slope": -0.7}, 2.0)
+	_expect(String(af3._seq.get("id", "")) == "gc.lip_launch", "ground test: a launch off a lip did not start gc.lip_launch")
+	af3.on_ground_event("land", {"actor": 0, "n": 1, "kind": "tumble", "surface": "soil", "contacts": 2}, 3.0)
+	_expect(af3._gc_hold_t0 >= 0.0 and af3._gc_hold_t1 < 0.0, "ground test: a tumble's landing did not hold the brace")
+	af3.on_ground_event("tumble_end", {"actor": 0, "n": 1, "kind": "recover", "contacts": 2}, 4.0)
+	_expect(af3._gc_hold_t1 >= 0.0 and String(af3._seq.get("id", "")) == "gc.tech_flip", "ground test: a recovery did not release the brace and flip")
+	var af4 := AnimFighter.new(0)
+	af4.on_ground_event("land", {"actor": 0, "kind": "tumble", "surface": "soil"}, 1.0)
+	af4.on_ground_event("journey_end", {"actor": 0, "kind": "stop"}, 2.0)
+	_expect(af4._gc_hold_t1 >= 0.0, "ground test: the end of the journey left the brace held")
+	print("ground test: bounce weights %.2f (rock, hard) and %.2f (sand, soft), the lip launch, the tumble brace and its release, the tech flip" % [float(af._seq.wt), float(af2._seq.wt)])
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -707,6 +742,7 @@ func _run() -> void:
 	_test_hunch()
 	_test_shapes()
 	_test_entry()
+	_test_ground()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}

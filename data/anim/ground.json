@@ -1,0 +1,9 @@
+{
+  "schema": "anim.ground/1",
+  "_about": "How World's ground-contact events (docs/world/ground-contact.md section 4) shape the poses (render/anim/anim_fighter.gd, on_ground_event). surface: a multiplier on the bounce's crumple and pose weight by the surface class (World's proposed bounceMul: paving and rock lively, sand and rubble dead). bounce and launch: the speed (the event's vn, its spd) that gives the pose its full weight, and the least weight it gets. hold: the in and out times (s) of the brace of a tumble. getup: the wear (or brink) above which the get-up is the slow one. Render only, outside the sim's data hash.",
+  "surface": {"paving": 1.1, "rock": 1.15, "soil": 1.0, "sand": 0.7, "rubble": 0.8, "water": 0.6},
+  "bounce": {"ref": 1800, "min": 0.35},
+  "launch": {"ref": 2000, "min": 0.4},
+  "hold": {"in": 0.08, "out": 0.15},
+  "getup": {"slow_above": 0.45}
+}

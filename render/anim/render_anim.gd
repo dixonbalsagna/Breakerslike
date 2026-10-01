@@ -23,6 +23,7 @@ static var debug_checks: bool = false
 ## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
 static var ragdoll_enabled: bool = true
 static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
+static var ground_poses: bool = true       # World's ground-contact events play their poses and sequences (docs 9.18); --no-ground-poses switches them off
 static var step3_cues: bool = true         # Encounter's step 3 cue events (perfect_block, reversal, dodge_cancel, burst, burst_absorbed) play their pose sequences: ON (they are the only feedback for live mechanics); --no-step3-cues switches them off
 static var wave1_live: bool = false        # --wave1-live: wave 1's key sets are in the pick lists (go-live step 1, docs/combat/pending/golive-step1.md); OFF by default
 static var force_target: String = ""      # a lab switch (--target=arm_r): every blow aims at this socket instead of its key set's own
@@ -65,6 +66,8 @@ static func _read_args() -> void:
 			enabled = false
 		elif a == "--noragdoll":
 			ragdoll_enabled = false
+		elif a == "--no-ground-poses":
+			ground_poses = false
 		elif a == "--step3-cues":
 			step3_cues = true
 		elif a == "--no-step3-cues":
@@ -167,16 +170,17 @@ static func consume(S: SimState, events: Array) -> void:
 				for f in S.fighters:
 					if f.state == "launched" and absf(SimWrap.sdx(f.x, float(e.x))) < 120.0:
 						fighter(S, f).on_skim(S.T, float(e.spd))
-			"left_ground", "bounce", "land", "tumble_end":
+			"left_ground", "bounce", "land", "tumble_end", "journey_end":
 				# World's ground-contact events (docs/world/ground-contact.md section 4); none exist until its G3 lands
 				var ga: int = int(_ev(e, "actor", -1))
 				if ga >= 0 and ga < S.fighters.size():
 					var gd: Dictionary = {}
-					for key in ["actor", "k", "vn", "vt", "keep", "surface", "kind", "sin_a", "how", "cause", "contacts", "t"]:
+					for key in ["actor", "n", "k", "vn", "vt", "keep", "surface", "kind", "sina", "cause", "contacts", "dur", "spd", "vx", "vy", "slope", "lips", "nb", "z"]:
 						var gv = e.get(key)
 						if gv != null:
 							gd[key] = gv
-					fighter(S, S.fighters[ga]).on_ground_event(String(e.type), gd, S.T)
+					var t_ev: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)   # the event's own time
+					fighter(S, S.fighters[ga]).on_ground_event(String(e.type), gd, t_ev)
 			"transform":
 				var who2: int = int(e.actor)
 				if who2 >= 0 and who2 < S.fighters.size():
