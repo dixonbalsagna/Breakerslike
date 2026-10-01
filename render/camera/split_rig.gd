@@ -90,6 +90,8 @@ var _ov_r0: float = 0.11
 var _ov_r1: float = 0.11
 var _ov_times: Array = []               # start times of recent cut-ins, for the cooldown and the per-minute cap
 var _clash_prev: bool = false
+var _wide_t: float = -1.0                # a world-change or time-cap pause: the shared view pulls out and returns
+var _wide_dur: float = 0.0
 var cut_ins: int = 0                    # camera-only cut-ins started (counted for the tests)
 var _cut_fade: float = 0.0              # seconds left of a safety cut's fade-in
 var _cut_now: bool = false              # a safety cut happened this tick: the frame is a cut
@@ -562,11 +564,25 @@ func _read_events(S: SimState, events: Array) -> void:
 			"transform":
 				# A transformation (I2b): the shot is a close-up on the face, the body, then a wide reveal over the sim's hold.
 				var ta: int = int(_ef(ev, "actor", -1))
-				if ta >= 0 and ta < 2 and not fold_active:
+				var tdur: float = float(_ef(ev, "dur", 0.0))
+				var tver: String = String(_ef(ev, "version", "full" if tdur >= CamParams.LIVE_STEP_MAX else "live"))
+				# SimPause (q10 plan): full 3 s, short 1.5 s, live 0.8 s with no pause. The live version keeps the tier-up
+				# push and plays no shot: a hard cut for 0.8 s at every step would be noise.
+				if ta >= 0 and ta < 2 and not fold_active and tver != "live":
 					_push[ta] = -1.0   # the tier-up push is part of this shot
 					_begin_solo("transform", ta, 3, CamParams.CINE_SLIVER, S, true)
 					if solo_kind == "transform" and solo_slot == ta:
 						_solo_dur = float(_ef(ev, "dur", 0.0))
+			"pause_start":
+				# A pausing set piece the sim runs (SimPause): the world change, the planet giving way, the time cap. The
+				# transformation's shot comes from its own `transform` event. These get a slow pull-out of the shared view.
+				var pk: String = String(_ef(ev, "kind", ""))
+				if pk != "transform" and not reduced_motion:
+					_wide_t = 0.0
+					_wide_dur = maxf(float(_ef(ev, "dur", 0.0)), 0.5)
+			"pause_end":
+				if _wide_t >= 0.0 and _wide_t < _wide_dur:
+					_wide_dur = _wide_t
 			"finisher_start":
 				# A finisher: the fighters are in contact and locked by the sim for `dur`; cut to the loser and dolly in.
 				var ft: int = int(_ef(ev, "target", -1))
@@ -863,7 +879,19 @@ func _overlay_cam(S: SimState) -> Vector3:
 	return _cam_at(fx, fy, fz, z, Vector2(vw * 0.5, vh * 0.62))
 
 
+func _wide_mult() -> float:
+	if _wide_t < 0.0:
+		return 1.0
+	var a: float = smoothstep(0.0, CamParams.WIDE_IN, _wide_t)
+	var b: float = smoothstep(_wide_dur, _wide_dur + CamParams.WIDE_IN, _wide_t)
+	return lerpf(1.0, CamParams.WIDE_PULL, a - b)
+
+
 func _update_pushes() -> void:
+	if _wide_t >= 0.0:
+		_wide_t += DT
+		if _wide_t > _wide_dur + CamParams.WIDE_IN:
+			_wide_t = -1.0
 	if _ov_kind != "":
 		_ov_t += DT
 		if _ov_t >= _ov_dur:
@@ -960,7 +988,7 @@ func _merged_target(S: SimState) -> Vector3:
 	if solo_kind == "ko":
 		pass
 	var pz: float = 1.0 / cos(deg_to_rad(pitch_deg))
-	z = clampf(z * mult * pz, CamParams.ZOOM_MIN, _zcap() * pz * (1.0 + CamParams.TIER_PUSH))
+	z = clampf(z * mult * pz * _wide_mult(), maxf(CamParams.ZOOM_MIN, CamParams.R_FLOOR * vh / CamParams.BODY_H * pz), _zcap() * pz * (1.0 + CamParams.TIER_PUSH))
 	if pitch_deg != 0.0:
 		# Put the pair's chest midpoint at 0.7 of the height, as the straight-on camera does: a few Newton steps on cam_y.
 		var cwx: float = SimWrap.wrap(mx)

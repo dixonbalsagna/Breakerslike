@@ -158,6 +158,8 @@ func _run() -> void:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
 	await _scenario("shot transformation", func(): return _shot_transform(), {})
+	await _scenario("shot live transformation step", func(): return _shot_live_step(), {})
+	await _scenario("shot world pause pull-out", func(): return _shot_world_pause(), {})
 	await _scenario("shot finisher", func(): return _shot_finisher(), {})
 	await _scenario("shot crippling cut-in and cooldown", func(): return _shot_cripple(), {})
 	await _scenario("shot building smash cut-in", func(): return _shot_smash(), {})
@@ -1043,6 +1045,45 @@ func _shot_clash() -> Dictionary:
 		zmax = maxf(zmax, _rig.current().cam_z[0])
 	_S.game.clash = null
 	_check(zmax > z0 * 1.06, "%s: no push at the clash (z %.3f to %.3f)" % [_label, z0, zmax])
+	return {}
+
+
+## The live version of a transformation step (0.8 s, no pause) plays no shot: no solo, no cut.
+func _shot_live_step() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 600.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var cuts: int = 0
+	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": 0.8})])
+	if _rig.current().cut:
+		cuts += 1
+	for _i in range(120):
+		_tick_rig()
+		if _rig.current().cut:
+			cuts += 1
+	_check(cuts == 0 and _rig.solo_kind == "", "%s: a live step got a shot (cuts %d, solo %s)" % [_label, cuts, _rig.solo_kind])
+	return {}
+
+
+## A world-change pause: the shared view pulls out to 75% of its zoom over half a second and comes back after.
+func _shot_world_pause() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 900.0, 40.0)
+	_seed_rig()
+	for _i in range(240):
+		_tick_rig()
+	var z0: float = _rig.current().cam_z[0]
+	_tick_rig([_shot_events("pause_start", {"kind": "world", "actor": 0.0, "dur": 2.0})])
+	var zmin: float = z0
+	for _i in range(150):
+		_tick_rig()
+		zmin = minf(zmin, _rig.current().cam_z[0])
+	for _i in range(200):
+		_tick_rig()
+	_check(zmin < z0 * 0.85, "%s: no pull-out (z %.3f to %.3f)" % [_label, z0, zmin])
+	_check(absf(_rig.current().cam_z[0] / z0 - 1.0) < 0.03, "%s: the view did not come back" % _label)
 	return {}
 
 

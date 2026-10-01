@@ -222,3 +222,19 @@ Built against events that exist today. Two kinds: **sim-owned shots** (the fight
 
 - **Tumbles, bounces, skips and launches off crater lips** (World and Game Design are planning events `left_ground`, `bounce`, `skip`, `land`). The lag bound and the launch rules already cover the motion. What the camera adds when the events exist: a `bounce` or `skip` is a small impact push (3%, 0.1 s, at the contact point, in the pane that holds it) and no cut; `land` ends a chase's land hold at once instead of waiting for the state change; a launch off a lip is an ordinary launch (the `launch` event's speed gate decides whether it is followed). A tumble slower than 4,000 units a second is not followed; the shared view zooms for it. I need `x`, `y`, `z` and the speed on each event.
 - **"On the Chin" (the rival's signature absorb, pitches.md section 7b): a 1.5 s pause with a camera push.** It is a sim-owned shot like the finisher: on its start event (name and fields to come, I assume `absorb_start {actor, dur}`) the camera cuts to the absorber at fight size and pushes in to 16% over the pause, with a short breath of the pair framing at the end; no cooldown. It is built after his first moveset, with the event.
+
+### Which shots pause the fight (against `docs/architecture/q10-pace-acts-pauses.md`)
+
+Orb's pick: the sim pauses for the transformation, the world change and the planet giving way, about 2 s a minute, as `SimPause` versions: **full** (3 s, up to 4 s for a final-form reveal), **short** (1.5 s) and **live** (0.8 s, no pause). Events: `pause_start {kind, actor, version, dur}` and `pause_end {kind}`; `transform` gains `version`. A paused tick is a frozen tick; the rig is still stepped every tick and its shots run in real time on the fixed step, so they play for the pause's length.
+
+| Shot | Sim-owned? | Pauses the fight? | Camera behaviour |
+| :--- | :--- | :--- | :--- |
+| Transformation, full or short | Yes | **Yes** (3 s or 1.5 s) | The cut, the face-body-reveal dolly over `dur` (the phases are fractions of it, so 1.5 s plays the same shot faster) |
+| Transformation, live step | Yes | No (0.8 s hold) | No shot and no cut: the tier-up push only. A hold under 1.2 s with no `version` is read as live |
+| World change, planet giving way, time cap (`pause_start` kinds other than transform) | Yes | **Yes** | The shared view pulls out to 75% of its zoom over 0.5 s, holds, and comes back over 0.5 s when the pause ends (a wide establishing beat; the fold's own shot, when it has one, takes priority). Tested |
+| Finisher | Yes (the fighters are locked) | Not a `SimPause` in Orb's list | Cut and dolly over `finisher_start.dur`; no cooldown |
+| KO | Yes (slow motion) | No | The dolly over the sim's slow motion |
+| "On the Chin" absorb | Yes | Yes, 1.5 s (when built) | Cut and push over the pause |
+| Impact push, crippling cut-in, building-smash cut-in, beam-struggle push, hybrid impact cut, the chase | **No: camera only** | No | Never touch the sim; cut-ins have the 6 s cooldown and 6 a minute cap |
+
+Over a 3 s pause the host would otherwise release buffered presses all at once (Controls' note in the q10 plan); that is the host's, not the camera's.
