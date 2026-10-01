@@ -46,6 +46,8 @@ var cracks_enabled: bool = VfxLook.CRACKS_DEFAULT   # ground cracks: off in the 
 var destruction_enabled: bool = VfxLook.DESTRUCTION_DEFAULT   # shrapnel, collapse dust and holes: off in the live build until approved
 var embers_enabled: bool = VfxLook.EMBERS_DEFAULT   # scorch embers by beam variant: off until Rendering stops drawing its own
 var water_enabled: bool = VfxLook.WATER_DEFAULT      # dramatic water: skip spray, plunge column, beam spray, wake
+var transform_enabled: bool = VfxLook.TRANSFORM_DEFAULT   # the transformation: gather, break ring, aura swap, settle
+var xform := VfxTransform.new()
 var debris := VfxDebris.new()
 var water := VfxWater.new()
 var holes: Array = []               # Hole
@@ -82,6 +84,7 @@ func reset(S: SimState, p_seed: int) -> void:
 	_rng_trail = SimRng.new(SimRng.deriveSeed(seed, "vfx.trail"))
 	_rng_hole = SimRng.new(SimRng.deriveSeed(seed, "vfx.hole"))
 	debris.reset(seed)
+	xform.reset(seed)
 	water.debris = debris
 	water.reset()
 	debris.water = water
@@ -145,6 +148,11 @@ func _consume(S: SimState, events: Array) -> void:
 		if e.type == "tick":
 			dt = e.dt
 			frozen = e.frozen
+	if transform_enabled:
+		xform.step(frozen)   # the clock runs through a pause: a full or short version is played during the sim's frozen ticks
+		for e in events:
+			if e.type == "transform":
+				xform.begin(int(e.actor), float(e.tier), String(_g(e, "version", "live")), float(_g(e, "dur", 0.0)))
 	_sync_cracks(S)
 	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled:
 		debris.quality = quality

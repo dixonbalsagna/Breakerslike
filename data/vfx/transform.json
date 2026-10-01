@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "_note": "VFX's transformation effects (docs/vfx/transform-plan.md), staged by docs/design/moveset-rules.md section 10.8: the aura and loose dust are drawn inward on the gather, one ring leaves the body on the break while the aura swaps to the new tier's shape in a single frame, then the new aura holds steady. No upward flame, no lightning, no gold or white flash (the flash is the fighter's own colour). Authored by the VFX Director session (Claude, claude-sonnet-5-5), 2026-10-01. Presentation only: read by render/vfx/transform.gd, never by the sim. A missing key falls back to the same default in transform.gd. Beats are whole ticks (60 a second) from section 10.8; when the sim's `transform` event carries a `dur` that differs from their sum (a final-form reveal's longer full version) every beat is scaled to fit it. Lengths are in fighter heights (bh, 75 units), alphas 0..1. Counts are at quality high and are multiplied by 0.7 at medium, 0.35 at low and halved in reduced motion, which also drops the flash.",
+  "beats": {
+    "full": { "gather": 60, "break": 30, "settle": 90 },
+    "short": { "gather": 24, "break": 18, "settle": 48 },
+    "live": { "gather": 10, "break": 14, "settle": 24 }
+  },
+  "gather": {
+    "motes": 40, "dust_motes": 14, "loops_full": 2.0, "loops_short": 1.0, "loops_live": 1.0,
+    "radius_bh": 2.6, "len_bh": 0.55, "width_bh": 0.05, "alpha": 0.85,
+    "dim_radius_bh": 6.0, "dim_alpha": 0.32, "aura_shrink": 0.12
+  },
+  "break": {
+    "ring_r0_bh": 0.7, "ring_r1_bh": 4.2, "ring_ticks": 14, "ring_thick": 0.045, "ring_alpha": 0.95,
+    "flash_radius_bh": 1.7, "flash_alpha": 0.5, "flash_ticks": 5, "aura_alpha": 0.9
+  },
+  "settle": { "aura_alpha": 0.6, "ease_ticks": 10, "fade_ticks": 24 },
+  "aura": {
+    "1": { "w_bh": 1.0, "h_bh": 1.45, "lobes": 0, "fill": 0.24, "mix": 0.08 },
+    "2": { "w_bh": 1.2, "h_bh": 1.6, "lobes": 1, "fill": 0.26, "mix": 0.12 },
+    "3": { "w_bh": 1.45, "h_bh": 1.75, "lobes": 2, "fill": 0.28, "mix": 0.18 },
+    "4": { "w_bh": 1.7, "h_bh": 1.9, "lobes": 3, "fill": 0.3, "mix": 0.25 }
+  }
+}

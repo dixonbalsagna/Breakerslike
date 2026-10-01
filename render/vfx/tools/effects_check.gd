@@ -177,6 +177,7 @@ func _run() -> void:
 		t.step(S, f, SimConst.DT, rng, VfxLook.Q_HIGH, false)
 	_check(t.rings == 1, "one break ring on reaching full speed (%d)" % t.rings)
 	_water(S)
+	_transform(S)
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -294,6 +295,102 @@ func _water(S: SimState) -> void:
 				same = false
 				print("    differs: %s.%s" % [g, k])
 	_check(same, "data/vfx/water.json and the built-in defaults agree")
+
+
+## Transformation effects (docs/vfx/transform-plan.md): beats per version, the clock running through a sim pause, a live
+## version holding on a hit-stop, tier shapes, budgets and the data fallback.
+func _transform(S: SimState) -> void:
+	print("transformation")
+	var ev := func(actor: int, tier: float, version: String, dur: float): return VfxMock.ev("transform", {"actor": actor, "tier": tier, "source": "ai", "dur": dur, "version": version})
+	var frozen_tick := func(h: VfxHub):
+		S.tick += 1
+		var tk := SimState.FxEvent.new()
+		tk.type = "tick"
+		tk.dt = SimConst.DT
+		tk.frozen = true
+		h.consume(S, [tk])
+	# Beat lengths follow the staging table, scaled to the event's duration.
+	for spec in [["full", 3.0, 60, 30, 90], ["short", 1.5, 24, 18, 48], ["live", 0.8, 10, 14, 24]]:
+		var hb := VfxHub.new()
+		hb.reset(S, 4)
+		_tick(S, hb, [ev.call(0, 2.0, spec[0], spec[1])])
+		var fm: VfxTransform.Form = hb.xform.forms[0] if hb.xform.forms.size() == 1 else null
+		_check(fm != null and fm.g == spec[2] and fm.b == spec[3] and fm.s == spec[4], "%s: gather %d, break %d, settle %d ticks as in section 10.8 (%s)" % [spec[0], spec[2], spec[3], spec[4], "no form" if fm == null else "%d/%d/%d" % [fm.g, fm.b, fm.s]])
+	var hs := VfxHub.new()
+	hs.reset(S, 4)
+	_tick(S, hs, [ev.call(1, 4.0, "full", 4.0)])
+	var fz: VfxTransform.Form = hs.xform.forms[0]
+	_check(fz.total() == 240 and fz.g == 80 and fz.b == 40 and fz.s == 120, "a longer full version (a final-form reveal, 4 s) scales every beat (%d/%d/%d)" % [fz.g, fz.b, fz.s])
+	# A full version plays through the sim's frozen ticks: the age advances on each, and the form ends with the pause.
+	var hp := VfxHub.new()
+	hp.reset(S, 4)
+	_tick(S, hp, [ev.call(0, 3.0, "full", 3.0)])
+	var f0: VfxTransform.Form = hp.xform.forms[0]
+	for k in range(100):
+		frozen_tick.call(hp)
+	_check(absf(f0.age - 100.0) < 0.01 and hp.xform.forms.size() == 1, "a full version's clock runs through frozen (paused) ticks (age %.0f after 100)" % f0.age)
+	_check(VfxTransform.beat_of(f0, f0.age) == 2, "tick 100 of a full version is in the settle")
+	for k in range(80):
+		frozen_tick.call(hp)
+	_check(hp.xform.forms.is_empty() and hp.xform.finished == 1, "the form ends after its 180 ticks")
+	# A live version waits out a hit-stop (a frozen tick with no pause) and runs on live ticks.
+	var hl := VfxHub.new()
+	hl.reset(S, 4)
+	_tick(S, hl, [ev.call(0, 2.0, "live", 0.8)])
+	var fl: VfxTransform.Form = hl.xform.forms[0]
+	_tick(S, hl, [])
+	_tick(S, hl, [])
+	frozen_tick.call(hl)
+	frozen_tick.call(hl)
+	_check(absf(fl.age - 2.0) < 0.01, "a live version holds on a hit-stop (age %.0f after 2 live and 2 frozen ticks)" % fl.age)
+	# The look: aura in at the break, nothing outward on the gather, the shape changes with the tier, eases out.
+	var fa := VfxTransform.Form.new()
+	fa.g = 60
+	fa.b = 30
+	fa.s = 90
+	_check(VfxTransform.aura_scale(fa, 0.0) == 1.0 and VfxTransform.aura_scale(fa, 59.0) < 0.2 and VfxTransform.aura_scale(fa, 60.0) == 1.0, "the aura is drawn in over the gather and is full size at the break")
+	_check(VfxTransform.aura_alpha(fa, 61.0) >= VfxTransform.aura_alpha(fa, 140.0) and VfxTransform.aura_alpha(fa, 179.0) < 0.1, "the new aura is strongest at the break, holds, and eases out at the end (%.2f, %.2f)" % [VfxTransform.aura_alpha(fa, 61.0), VfxTransform.aura_alpha(fa, 179.0)])
+	var shapes: Dictionary = {}
+	for t in range(1, 5):
+		shapes[int(VfxTransform.aura(t)["lobes"])] = true
+	_check(shapes.size() == 4, "each tier has its own aura shape (%d distinct)" % shapes.size())
+	# Never more than the budget, whatever the scene.
+	var hq := VfxHub.new()
+	hq.reset(S, 4)
+	_tick(S, hq, [ev.call(0, 2.0, "full", 3.0), ev.call(1, 3.0, "full", 3.0)])
+	_check(hq.xform.forms.size() == 2, "both fighters can transform at once")
+	var hr := VfxHub.new()
+	hr.reset(S, 4)
+	_tick(S, hr, [ev.call(0, 2.0, "full", 3.0), ev.call(0, 3.0, "short", 1.5)])
+	_check(hr.xform.forms.size() == 1 and (hr.xform.forms[0] as VfxTransform.Form).version == "short", "a slot has one form at a time; the newest wins")
+	# Flag off: nothing starts. Data: missing falls back, and the file matches the defaults.
+	var ho := VfxHub.new()
+	ho.transform_enabled = false
+	ho.reset(S, 4)
+	_tick(S, ho, [ev.call(0, 2.0, "full", 3.0)])
+	_check(ho.xform.forms.is_empty(), "transform_enabled off starts nothing")
+	var saved: Dictionary = VfxTransform._data
+	VfxTransform._data = {}
+	var fallback: bool = VfxTransform.p("gather", "motes") == 40.0 and VfxTransform.beats("full") == [60, 30, 90] and int(VfxTransform.aura(4)["lobes"]) == 3
+	VfxTransform._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for g in VfxTransform.DEFAULTS.keys():
+		for k in VfxTransform.DEFAULTS[g].keys():
+			if not saved.has(g) or not saved[g].has(k) or float(saved[g][k]) != float(VfxTransform.DEFAULTS[g][k]):
+				same = false
+				print("    differs: %s.%s" % [g, k])
+	for v in VfxTransform.DEFAULT_BEATS.keys():
+		for i in range(3):
+			if int(saved["beats"][v][["gather", "break", "settle"][i]]) != int(VfxTransform.DEFAULT_BEATS[v][i]):
+				same = false
+				print("    differs: beats.%s.%d" % [v, i])
+	for t in range(1, 5):
+		for k in VfxTransform.DEFAULT_AURA[t].keys():
+			if float(saved["aura"][str(t)][k]) != float(VfxTransform.DEFAULT_AURA[t][k]):
+				same = false
+				print("    differs: aura.%d.%s" % [t, k])
+	_check(same, "data/vfx/transform.json and the built-in defaults agree")
 
 
 func _tick(S: SimState, h: VfxHub, events: Array) -> void:

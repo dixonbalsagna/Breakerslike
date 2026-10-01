@@ -44,3 +44,7 @@ Sea worst case, `worst_case.gd --sea`: a fighter raking the ocean at 9000 u/s wi
 | Low (0) | mean 0.800, p99 1.220 ms | mean 0.365, p99 0.523 ms | 25 / 23 | 0.68 (1.20) ms | 428 of 460 | 260 (run before the quality-scaled cap; now about 175) |
 
 About 0.5 ms a frame over the same scene without VFX, almost all of it the GDScript spawn and step loops. On a machine five times slower that is the lever to watch: the per-tick cap, the spray cap and the automatic quality step. Not measured: the web build and an old laptop (Tools bench with and without `--novfx`).
+
+## Transformation (2026-10-01)
+
+One MultiMesh draw per pane, at most 140 quads (51 for one fighter in the gather's middle, about 100 for both), no pool and no per-frame allocation beyond the buffer. The view's update takes about 80 microseconds a frame for one fighter in its busiest beat (fast desktop, `transform_shots.gd`), the hub's clock under 2. Counts scale with quality (0.7 medium, 0.35 low with no dust, halved in reduced motion, which also drops the flash). Degrade order 3 (before the trail's outer band). Not measured: the web build and an old laptop.
