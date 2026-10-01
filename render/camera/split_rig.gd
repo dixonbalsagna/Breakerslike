@@ -81,6 +81,15 @@ var _chase_land_t: float = 0.0
 var _launch_victim: int = -1            # a launched fighter the hybrid rule may hold on the attacker for
 var _impact_evt: Array = [false, false]
 var _last_pitch: float = 0.0
+var _pitch_now: float = 0.0              # the pitch in use: the player's plus a shot's (the transformation's low break)
+var _shot_pitch: float = 0.0
+var _tf_ver: String = ""                 # the transformation shot's version: full, short ("" for a bare cinematic)
+var _tf_phase: String = ""               # gather, break or settle
+var _tf_g: int = 0                       # the beats in ticks (docs/design/moveset-rules.md 10.8)
+var _tf_b: int = 0
+var _tf_s: int = 0
+var _live_punch_at: float = -1.0         # the live version: when the 6-tick punch-in starts (rig time)
+var _punch_t: float = -1.0
 var _ov_kind: String = ""               # a camera-only cut-in (building smash, crippling moment); "" when none
 var _ov_t: float = 0.0
 var _ov_dur: float = 0.0
@@ -197,8 +206,9 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 	if clash_now and not _clash_prev and not reduced_motion:
 		_push = [0.0, 0.0]   # the beam struggle opens with the tier push's shape: in, hold, out
 	_clash_prev = clash_now
-	if absf(pitch_deg - _last_pitch) > 0.01:
-		_last_pitch = pitch_deg
+	_pitch_now = pitch_deg + _shot_pitch
+	if absf(_pitch_now - _last_pitch) > 0.01:
+		_last_pitch = _pitch_now
 		_cut_now = true
 	_update_trigger(S)
 	_update_layout()
@@ -565,14 +575,26 @@ func _read_events(S: SimState, events: Array) -> void:
 				# A transformation (I2b): the shot is a close-up on the face, the body, then a wide reveal over the sim's hold.
 				var ta: int = int(_ef(ev, "actor", -1))
 				var tdur: float = float(_ef(ev, "dur", 0.0))
-				var tver: String = String(_ef(ev, "version", "full" if tdur >= CamParams.LIVE_STEP_MAX else "live"))
-				# SimPause (q10 plan): full 3 s, short 1.5 s, live 0.8 s with no pause. The live version keeps the tier-up
-				# push and plays no shot: a hard cut for 0.8 s at every step would be noise.
-				if ta >= 0 and ta < 2 and not fold_active and tver != "live":
+				var tver: String = String(_ef(ev, "version", ""))
+				if tver == "":
+					tver = "full" if tdur >= 2.5 else ("short" if tdur >= CamParams.LIVE_STEP_MAX else "live")
+				# SimPause (q10 plan) and Game Design's staging (moveset-rules.md 10.8): beats in ticks, full 60 / 30 / 90,
+				# short 24 / 18 / 48, live 10 / 14 / 24. Full: a push in on the gather, one hard cut to a low wide angle on
+				# the break, a hold on the pose and a pull back to frame both on the settle. Short: half the push, a snap
+				# zoom out on the break (no cut), a straight pull back. Live: no shot; a 6-tick punch-in at the break.
+				if tver == "live":
+					if not reduced_motion:
+						_live_punch_at = time + float(CamParams.LIVE_PUNCH_AT) * DT
+				elif ta >= 0 and ta < 2 and not fold_active:
 					_push[ta] = -1.0   # the tier-up push is part of this shot
-					_begin_solo("transform", ta, 3, CamParams.CINE_SLIVER, S, true)
+					_begin_solo("transform", ta, 3, CamParams.CINE_SLIVER, S, false)
 					if solo_kind == "transform" and solo_slot == ta:
-						_solo_dur = float(_ef(ev, "dur", 0.0))
+						_solo_dur = tdur
+						_tf_ver = tver
+						_tf_phase = "gather"
+						_tf_g = 60 if tver == "full" else 24
+						_tf_b = 30 if tver == "full" else 18
+						_tf_s = 90 if tver == "full" else 48
 			"pause_start":
 				# A pausing set piece the sim runs (SimPause): the world change, the planet giving way, the time cap. The
 				# transformation's shot comes from its own `transform` event. These get a slow pull-out of the shared view.
@@ -667,6 +689,9 @@ func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = nu
 	solo_slot = slot
 	solo_prio = prio
 	solo_t = 0.0
+	_tf_phase = ""
+	_tf_ver = ""
+	_shot_pitch = 0.0
 	solo_phase = "follow"
 	_solo_dur = 0.0
 	solo_target = 1.0
@@ -701,6 +726,9 @@ func _end_solo(S: SimState) -> void:
 		return
 	var solo_kind_ended: String = solo_kind
 	solo_kind = ""
+	_tf_phase = ""
+	_tf_ver = ""
+	_shot_pitch = 0.0
 	solo_prio = 0
 	solo_phase = ""
 	solo_target = 0.0
@@ -788,7 +816,11 @@ func _update_solo(S: SimState) -> void:
 			if solo_t >= CamParams.CUT_SHOT:
 				_launch_victim = -1
 				_end_solo(S)
-		"transform", "finisher":
+		"transform":
+			_transform_beats(S)
+			if solo_kind == "transform" and _solo_dur > 0.0 and solo_t >= _solo_dur + 0.05:
+				_end_solo(S)
+		"finisher":
 			if _solo_dur > 0.0 and solo_t >= _solo_dur + 0.05:
 				_end_solo(S)
 		"ko":
@@ -867,7 +899,7 @@ func _start_overlay(kind: String, slot: int, pt: Vector3, r0: float, r1: float, 
 func _overlay_cam(S: SimState) -> Vector3:
 	var p: float = clampf(_ov_t / maxf(_ov_dur, 0.01), 0.0, 1.0)
 	var r: float = lerpf(_ov_r0, _ov_r1, smoothstep(0.0, 1.0, p)) * _m()
-	var z: float = clampf(r * vh / CamParams.BODY_H / cos(deg_to_rad(pitch_deg)), CamParams.ZOOM_MIN, _zcap() * 1.5)
+	var z: float = clampf(r * vh / CamParams.BODY_H / cos(deg_to_rad(_pitch_now)), CamParams.ZOOM_MIN, _zcap() * 1.5)
 	var fx: float = _ov_pt.x
 	var fy: float = _ov_pt.y
 	var fz: float = _ov_pt.z
@@ -879,6 +911,33 @@ func _overlay_cam(S: SimState) -> Vector3:
 	return _cam_at(fx, fy, fz, z, Vector2(vw * 0.5, vh * 0.62))
 
 
+## The transformation shot's three beats. Full: the break is a hard cut to a low wide angle (the pitch drops, the fighter
+## sits low in the frame against the sky), the settle cuts back to the pose and, halfway through, the shot ends and the
+## camera pulls back to frame both. Short: the break is a snap zoom out, the settle a straight pull back.
+func _transform_beats(S: SimState) -> void:
+	if _tf_phase == "":
+		return
+	var ti: int = int(solo_t / DT + 0.5)
+	var ph: String = "gather" if ti < _tf_g else ("break" if ti < _tf_g + _tf_b else "settle")
+	if ph != _tf_phase:
+		_tf_phase = ph
+		if _tf_ver == "full":
+			_cut_now = true
+			_shot_pitch = CamParams.BREAK_PITCH if ph == "break" else 0.0
+			_snap_focus(S, solo_slot)
+		_zo[solo_slot] = _own_zoom_target(S, solo_slot)
+	if _tf_ver == "full" and ti >= _tf_g + _tf_b + _tf_s / 2:
+		_end_solo(S)
+	elif _tf_ver == "short" and ti >= _tf_g + _tf_b:
+		_end_solo(S)
+
+
+func _punch_mult() -> float:
+	if _punch_t < 0.0:
+		return 1.0
+	return 1.0 + CamParams.LIVE_PUNCH * (1.0 - absf(2.0 * _punch_t / CamParams.LIVE_PUNCH_LEN - 1.0))
+
+
 func _wide_mult() -> float:
 	if _wide_t < 0.0:
 		return 1.0
@@ -888,6 +947,13 @@ func _wide_mult() -> float:
 
 
 func _update_pushes() -> void:
+	if _live_punch_at >= 0.0 and time >= _live_punch_at:
+		_live_punch_at = -1.0
+		_punch_t = 0.0
+	if _punch_t >= 0.0:
+		_punch_t += DT
+		if _punch_t > CamParams.LIVE_PUNCH_LEN:
+			_punch_t = -1.0
 	if _wide_t >= 0.0:
 		_wide_t += DT
 		if _wide_t > _wide_dur + CamParams.WIDE_IN:
@@ -987,17 +1053,17 @@ func _merged_target(S: SimState) -> Vector3:
 	var mult: float = maxf(_push_mult(0), _push_mult(1))
 	if solo_kind == "ko":
 		pass
-	var pz: float = 1.0 / cos(deg_to_rad(pitch_deg))
+	var pz: float = 1.0 / cos(deg_to_rad(_pitch_now))
 	z = clampf(z * mult * pz * _wide_mult(), maxf(CamParams.ZOOM_MIN, CamParams.R_FLOOR * vh / CamParams.BODY_H * pz), _zcap() * pz * (1.0 + CamParams.TIER_PUSH))
-	if pitch_deg != 0.0:
+	if _pitch_now != 0.0:
 		# Put the pair's chest midpoint at 0.7 of the height, as the straight-on camera does: a few Newton steps on cam_y.
 		var cwx: float = SimWrap.wrap(mx)
 		var chest_y: float = (A.y + B.y) * 0.5 + CamParams.CHEST
 		var zmid: float = (float(A.z) + float(B.z)) * 0.5
 		var cy: float = my
 		for it in range(3):
-			var s0: float = SplitFrame.project(cwx, cy, z, pitch_deg, vw, vh, cwx, chest_y, zmid).y
-			var s1: float = SplitFrame.project(cwx, cy + 25.0, z, pitch_deg, vw, vh, cwx, chest_y, zmid).y
+			var s0: float = SplitFrame.project(cwx, cy, z, _pitch_now, vw, vh, cwx, chest_y, zmid).y
+			var s1: float = SplitFrame.project(cwx, cy + 25.0, z, _pitch_now, vw, vh, cwx, chest_y, zmid).y
 			var slope: float = (s1 - s0) / 25.0
 			if absf(slope) < 1e-9:
 				break
@@ -1019,7 +1085,7 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 	var f = S.fighters[i]
 	var m: float = _m()
 	var r: float = CamParams.R_PANE * m
-	var pz: float = 1.0 / cos(deg_to_rad(pitch_deg))   # a pitched camera foreshortens a standing fighter by cos(pitch)
+	var pz: float = 1.0 / cos(deg_to_rad(_pitch_now))   # a pitched camera foreshortens a standing fighter by cos(pitch)
 	if chase_slot == i:
 		r = CamParams.R_LAUNCH * m
 	var tier_f: float = 1.0 - CamParams.REF_TIER * (f.tier - 1.0)
@@ -1036,7 +1102,17 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 				alt_f = 1.0
 			"transform":
 				r = CamParams.R_CINE * m
-				if _solo_dur > 0.0:
+				if _tf_phase != "":
+					match _tf_phase:
+						"gather":
+							var pg: float = clampf(solo_t / (float(_tf_g) * DT), 0.0, 1.0)
+							var close: float = CamParams.TRANSFORM_R0 if _tf_ver == "full" else CamParams.TRANSFORM_R0_SHORT
+							r = lerpf(CamParams.R_FIGHT, close, smoothstep(0.0, 1.0, pg)) * m
+						"break":
+							r = CamParams.TRANSFORM_R2 * m
+						_:
+							r = CamParams.R_FIGHT * m
+				elif _solo_dur > 0.0:
 					var tp: float = clampf(solo_t / _solo_dur, 0.0, 1.0)
 					r = lerpf(CamParams.TRANSFORM_R0, CamParams.TRANSFORM_R1, smoothstep(0.25, 0.45, tp))
 					r = lerpf(r, CamParams.TRANSFORM_R2, smoothstep(0.7, 0.95, tp)) * m
@@ -1093,6 +1169,8 @@ func _anchor(S: SimState, i: int) -> Vector2:
 		_launch_anchor_y += (0.62 - _launch_anchor_y) * (1.0 - exp(-DT / 0.25))
 		solo_pt.x = vw * _launch_anchor_x
 		solo_pt.y = vh * _launch_anchor_y
+	if solo_kind == "transform" and solo_slot == i and _tf_phase == "break" and _tf_ver == "full":
+		solo_pt.y = vh * 0.74   # low in the frame, the sky above him
 	if e_slot >= 0:
 		if i == e_slot:
 			q = maxf(e, solo_w if solo_slot == i else 0.0)
@@ -1125,7 +1203,7 @@ func _cam_at(fx: float, fy: float, fz: float, z: float, p: Vector2) -> Vector3:
 		p = c0 + (p - c0) / s
 	var x: float = SimWrap.wrap(fx - (p.x - vw * 0.5) / z)
 	var y: float = clampf(fy - (vh * CamParams.PLANE_Y - p.y) / z, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
-	if pitch_deg == 0.0:
+	if _pitch_now == 0.0:
 		return Vector3(x, y, z)
 	return _refine_cam(Vector3(x, y, z), fx, fy, fz, target)
 
@@ -1136,12 +1214,12 @@ func _refine_cam(cam: Vector3, fx: float, fy: float, fz: float, target: Vector2)
 	var cx: float = cam.x
 	var cy: float = cam.y
 	for it in range(3):
-		var s0: Vector2 = SplitFrame.project(cx, cy, cam.z, pitch_deg, vw, vh, fx, fy, fz)
+		var s0: Vector2 = SplitFrame.project(cx, cy, cam.z, _pitch_now, vw, vh, fx, fy, fz)
 		var er: Vector2 = target - s0
 		if er.length() < 0.2:
 			break
-		var sx: Vector2 = (SplitFrame.project(cx + 25.0, cy, cam.z, pitch_deg, vw, vh, fx, fy, fz) - s0) / 25.0
-		var sy: Vector2 = (SplitFrame.project(cx, cy + 25.0, cam.z, pitch_deg, vw, vh, fx, fy, fz) - s0) / 25.0
+		var sx: Vector2 = (SplitFrame.project(cx + 25.0, cy, cam.z, _pitch_now, vw, vh, fx, fy, fz) - s0) / 25.0
+		var sy: Vector2 = (SplitFrame.project(cx, cy + 25.0, cam.z, _pitch_now, vw, vh, fx, fy, fz) - s0) / 25.0
 		var det: float = sx.x * sy.y - sy.x * sx.y
 		if absf(det) < 1e-12:
 			break
@@ -1244,6 +1322,8 @@ func _update_cameras(S: SimState) -> void:
 		var tau_z: float = CamParams.TAU_Z
 		if (solo_kind == "ko" or solo_kind == "finisher") and solo_slot == i:
 			tau_z = CamParams.KO_DOLLY / 3.0
+		if solo_kind == "transform" and solo_slot == i and _tf_phase != "":
+			tau_z = 0.12   # the beats are on a clock: the push has to land by the break
 		if stiff:
 			tau_z = CamParams.SLAM_TAU
 		var kz: float = 1.0 - exp(-DT / tau_z)
@@ -1354,7 +1434,7 @@ func _make_frame(S: SimState) -> SplitFrame:
 	for i in range(2):
 		f.cam_x[i] = _outs[i].x
 		f.cam_y[i] = _outs[i].y
-		f.cam_z[i] = _outs[i].z
+		f.cam_z[i] = _outs[i].z * _punch_mult()   # after the filters: a 6-tick punch would be smoothed away
 		f.anchor[i] = _anchors[i]
 		f.ring[i] = SimWrap.wrap(S.fighters[i].x) / SimConst.W * TAU
 		if pane_request_fn.is_valid():
@@ -1367,7 +1447,7 @@ func _make_frame(S: SimState) -> SplitFrame:
 	f.flash = _flash
 	f.slam = _slam_done
 	f.shake = _shk.duplicate()
-	f.pitch = pitch_deg
+	f.pitch = _pitch_now
 	f.fade = clampf(_cut_fade / (CamParams.REDUCED_CUT_FADE if reduced_motion else CamParams.CUT_FADE), 0.0, 1.0) if _cut_fade > 0.0 else 0.0
 	_slam_done = false
 	# Which panes must be rendered.

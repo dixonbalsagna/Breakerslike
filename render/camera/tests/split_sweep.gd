@@ -157,7 +157,8 @@ func _run() -> void:
 		for row in [[-600.0, "front street"], [-2025.0, "block row 2"]]:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
-	await _scenario("shot transformation", func(): return _shot_transform(), {})
+	await _scenario("shot transformation full", func(): return _shot_transform_full(), {})
+	await _scenario("shot transformation short", func(): return _shot_transform_short(), {})
 	await _scenario("shot live transformation step", func(): return _shot_live_step(), {})
 	await _scenario("shot world pause pull-out", func(): return _shot_world_pause(), {})
 	await _scenario("shot finisher", func(): return _shot_finisher(), {})
@@ -905,33 +906,6 @@ func _shot_events(type: String, fields: Dictionary) -> SimState.FxEvent:
 	return ev
 
 
-## A transformation: cut to a close-up of the face, ease to the body, then a wide reveal, over the sim's hold.
-func _shot_transform() -> Dictionary:
-	var ax: float = 20000.0
-	_pose(ax, 40.0, ax + 600.0, 40.0)
-	_seed_rig()
-	for _i in range(200):
-		_tick_rig()
-	var dur: float = 2.4
-	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": dur})])
-	var cut_frames: int = 1 if _rig.current().cut else 0
-	var sizes: Array = []
-	var n: int = int(dur * 60.0)
-	for k in range(n):
-		_tick_rig()
-		if _rig.current().cut:
-			cut_frames += 1
-		if k in [int(0.10 * n), int(0.50 * n), int(0.93 * n)]:
-			sizes.append(_apparent_px(0, _rig.current()))
-	for _i in range(200):
-		_tick_rig()
-	_check(cut_frames == 1, "%s: %d cut frames at the start of a transformation (want one)" % [_label, cut_frames])
-	_check(sizes.size() == 3 and sizes[0] > sizes[1] * 1.05 and sizes[1] > sizes[2] * 1.2, "%s: the shot did not go face, body, reveal: %s" % [_label, str(sizes)])
-	_check(_rig.solo_kind == "", "%s: the shot did not end" % _label)
-	stats["shot transformation sizes (px)"] = str(sizes)
-	return {}
-
-
 ## A finisher: cut to the loser and dolly in over the sim's lock.
 func _shot_finisher() -> Dictionary:
 	var ax: float = 20000.0
@@ -1048,6 +1022,73 @@ func _shot_clash() -> Dictionary:
 	return {}
 
 
+## Full (3 s: gather 60, break 30, settle 90 ticks): a push in, one hard cut to a low wide angle, a cut back, then the pull back.
+func _shot_transform_full() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 600.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": 3.0})])
+	var cut_ticks: Array = []
+	var size_gather_end: float = 0.0
+	var size_break: float = 0.0
+	var size_settle: float = 0.0
+	var pitch_in_break: float = 0.0
+	var ended_at: int = -1
+	var first: float = _apparent_px(0, _rig.current())
+	for k in range(1, 181):
+		_tick_rig()
+		if _rig.current().cut:
+			cut_ticks.append(k)
+		if k == 58:
+			size_gather_end = _apparent_px(0, _rig.current())
+		if k == 80:
+			size_break = _apparent_px(0, _rig.current())
+			pitch_in_break = _rig.current().pitch
+		if k == 128:
+			size_settle = _apparent_px(0, _rig.current())
+		if ended_at < 0 and _rig.solo_kind == "":
+			ended_at = k
+	for _i in range(200):
+		_tick_rig()
+	_check(cut_ticks.size() == 2 and absi(cut_ticks[0] - 60) <= 2 and absi(cut_ticks[1] - 90) <= 2, "%s: cuts at %s (want at the break, tick 60, and the settle, tick 90)" % [_label, str(cut_ticks)])
+	_check(size_gather_end > first * 1.15, "%s: the gather did not push in (%.0f to %.0f px)" % [_label, first, size_gather_end])
+	_check(size_break < size_gather_end * 0.65, "%s: the break is not wide (%.0f px after %.0f)" % [_label, size_break, size_gather_end])
+	_check(pitch_in_break < -5.0, "%s: no low angle at the break (pitch %.1f)" % [_label, pitch_in_break])
+	_check(_rig.current().pitch == 0.0, "%s: the pitch did not return" % _label)
+	_check(size_settle > size_break * 1.3, "%s: the settle is not back to the pose (%.0f px)" % [_label, size_settle])
+	_check(ended_at >= 130 and ended_at <= 140, "%s: the shot ended at tick %d (want about 135)" % [_label, ended_at])
+	stats["shot transformation full"] = "cuts %s, sizes %.0f / %.0f / %.0f / %.0f px, end tick %d" % [str(cut_ticks), first, size_gather_end, size_break, size_settle, ended_at]
+	return {}
+
+
+## Short (1.5 s: 24, 18, 48): half the push, a snap zoom out at the break and no cut, a straight pull back.
+func _shot_transform_short() -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 40.0, ax + 600.0, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": 1.5})])
+	var cuts: int = 0
+	var first: float = _apparent_px(0, _rig.current())
+	var s_break: float = 0.0
+	var ended_at: int = -1
+	for k in range(1, 91):
+		_tick_rig()
+		if _rig.current().cut:
+			cuts += 1
+		if k == 34:
+			s_break = _apparent_px(0, _rig.current())
+		if ended_at < 0 and _rig.solo_kind == "":
+			ended_at = k
+	_check(cuts == 0, "%s: %d cuts in the short version (want none)" % [_label, cuts])
+	_check(s_break < first * 0.8, "%s: no snap zoom out at the break (%.0f px from %.0f)" % [_label, s_break, first])
+	_check(ended_at >= 40 and ended_at <= 44, "%s: the shot ended at tick %d (want about 42)" % [_label, ended_at])
+	return {}
+
+
 ## The live version of a transformation step (0.8 s, no pause) plays no shot: no solo, no cut.
 func _shot_live_step() -> Dictionary:
 	var ax: float = 20000.0
@@ -1056,14 +1097,22 @@ func _shot_live_step() -> Dictionary:
 	for _i in range(200):
 		_tick_rig()
 	var cuts: int = 0
-	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": 0.8})])
+	var z_before: float = _rig.current().cam_z[0]
+	var z_peak: float = z_before
+	var peak_tick: int = -1
+	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": 0.8, "version": "live"})])
 	if _rig.current().cut:
 		cuts += 1
-	for _i in range(120):
+	for k in range(1, 121):
 		_tick_rig()
 		if _rig.current().cut:
 			cuts += 1
+		if _rig.current().cam_z[0] > z_peak:
+			z_peak = _rig.current().cam_z[0]
+			peak_tick = k
+	var punched: bool = z_peak > z_before * 1.03 and peak_tick >= 10 and peak_tick <= 22
 	_check(cuts == 0 and _rig.solo_kind == "", "%s: a live step got a shot (cuts %d, solo %s)" % [_label, cuts, _rig.solo_kind])
+	_check(punched, "%s: no punch-in at the break (z %.3f to %.3f)" % [_label, z_before, z_peak])
 	return {}
 
 

@@ -207,7 +207,7 @@ Built against events that exist today. Two kinds: **sim-owned shots** (the fight
 
 | Shot | Event (fields read) | What the camera does | Length |
 | :--- | :--- | :--- | :--- |
-| **Transformation** | `transform {actor, dur}` (also `cinematic_start`) | One hard cut to the transformer, then a dolly: face (14%), body (11%), wide reveal (7%) at 25%, 45% and 70% to 95% of the hold. The opponent keeps the 14% sliver in a split. The tier-up push is part of the shot | the sim's hold |
+| **Transformation** | `transform {actor, dur, version}` (version inferred from `dur` when absent: 2.5 s or more full, 1.2 s or more short, else live) | Game Design's staging (moveset-rules.md 10.8), beats in ticks. **Full** 60 / 30 / 90: the gather pushes in from fight size to a 14% close-up (eased, no cut); at the break one hard cut to a low, wide angle (pitch -8, 7%, the fighter low in frame, sky above); at the settle one hard cut back to the pose (pitch 0, 11%); the shot ends 45 ticks into the settle and the camera pulls back by the ordinary 0.6 s ease to frame both. **Short** 24 / 18 / 48: half the push (12.5%), a snap zoom out to 7% at the break (no cut), a straight pull back at tick 42. **Live** 10 / 14 / 24: no shot; the fight framing stays and a 6-tick punch-in (+8% zoom) lands at tick 10 | full 135 ticks, short 42, live punch 6 |
 | **Finisher** | `finisher_start {target, dur}` | One hard cut to the loser at fight size, dolly to 16%; the KO takes over at the end (its dolly and the sim's slow motion) | the sim's `dur` |
 | **KO** | `ko` (state) | as before: dolly to a close-up on the loser | the sim's slow motion |
 | **Crippling moment** | `region_broken {actor}` | Cut to a close-up of the broken fighter, 11% to 16%, 0.8 s, cut back | 0.8 s |
@@ -229,8 +229,8 @@ Orb's pick: the sim pauses for the transformation, the world change and the plan
 
 | Shot | Sim-owned? | Pauses the fight? | Camera behaviour |
 | :--- | :--- | :--- | :--- |
-| Transformation, full or short | Yes | **Yes** (3 s or 1.5 s) | The cut, the face-body-reveal dolly over `dur` (the phases are fractions of it, so 1.5 s plays the same shot faster) |
-| Transformation, live step | Yes | No (0.8 s hold) | No shot and no cut: the tier-up push only. A hold under 1.2 s with no `version` is read as live |
+| Transformation, full or short | Yes | **Yes** (3 s or 1.5 s) | Full: push, cut to a low wide angle, cut back, pull back (135 ticks). Short: half push, snap zoom out, pull back (42 ticks). Beats in ticks from the sim's staging |
+| Transformation, live step | Yes | No (0.8 s hold) | No shot and no cut: fight framing plus a 6-tick punch-in at tick 10. A hold under 1.2 s with no `version` is read as live |
 | World change, planet giving way, time cap (`pause_start` kinds other than transform) | Yes | **Yes** | The shared view pulls out to 75% of its zoom over 0.5 s, holds, and comes back over 0.5 s when the pause ends (a wide establishing beat; the fold's own shot, when it has one, takes priority). Tested |
 | Finisher | Yes (the fighters are locked) | Not a `SimPause` in Orb's list | Cut and dolly over `finisher_start.dur`; no cooldown |
 | KO | Yes (slow motion) | No | The dolly over the sim's slow motion |
@@ -238,3 +238,10 @@ Orb's pick: the sim pauses for the transformation, the world change and the plan
 | Impact push, crippling cut-in, building-smash cut-in, beam-struggle push, hybrid impact cut, the chase | **No: camera only** | No | Never touch the sim; cut-ins have the 6 s cooldown and 6 a minute cap |
 
 Over a 3 s pause the host would otherwise release buffered presses all at once (Controls' note in the q10 plan); that is the host's, not the camera's.
+
+### Transformation shot as built (2026-10-04)
+
+- **Versions.** `transform.version` selects the beats; absent, the duration infers it (so an older log still plays). The live version leaves the fight framing alone; the punch-in is added to the output zoom after the filters so it is not smoothed away, and the light shake is the existing impact shake (reduced motion turns the punch off).
+- **Cuts counted.** Full: exactly two cut frames (break at tick 60, settle at tick 90, the pitch change also counts as a cut). Short and live: none.
+- **Low angle.** The break uses `CamParams.BREAK_PITCH` (-8 degrees) through the rig's `_pitch_now`; `frame.pitch` carries it for the compositor, as it does the player's pitch. **Rendering please confirm** that a negative pitch renders (the sky behind the fighter, the ground horizon below the frame) and that the fighter's foreground rule holds at the low angle.
+- **Tests.** Full: cuts at 60 and 90, the gather grows the fighter by more than 15% (86 to 100 px at 720p), the break is under 65% of the gather's end, pitch below -5 in the break and 0 after, the shot ends at tick 135. Short: zero cuts, the break is under 80% of the start, the shot ends at tick 42. Live: zero cuts, no solo, the zoom peaks 3% or more between ticks 10 and 22. Sim hash unchanged with and without the rig.
