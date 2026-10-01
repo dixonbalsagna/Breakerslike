@@ -2241,7 +2241,7 @@ func _settings_rules() -> void:
 	var keys := []
 	for r in UiSettings.rows():
 		keys.append(r["key"])
-	_ok(keys.has("pad_preset") and keys.has("touch_preset") and keys.has("camera_zoom") and keys.has("camera_shake") and keys.has("left_handed") and keys.has("unlock_all") and keys.has("reduced_motion"), "settings: it lists the controller layout, the touch layout, camera zoom and shake, left-handed, unlock all and the accessibility options")
+	_ok(keys.has("pad_preset") and keys.has("touch_preset") and keys.has("camera_zoom") and keys.has("camera_shake") and keys.has("left_handed") and keys.has("unlock_all") and keys.has("reduced_motion") and keys.has("haptics") and bool(UiData.option_defaults()["haptics"]), "settings: it lists the controller layout, the touch layout, camera zoom and shake, left-handed, unlock all and the accessibility options")
 	_ok(od["unlock_all"]["default"] == false and od["touch_preset"]["choices"] == ["touch-simple", "touch-full"], "settings: unlock all is off by default and the touch layout offers Simple and Full")
 	var pads_ok := true
 	for c in od["pad_preset"]["choices"]:
