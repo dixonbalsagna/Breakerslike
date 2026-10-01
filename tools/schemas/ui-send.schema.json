@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-send",
+  "title": "ui feedback send step (schema 1)",
+  "description": "ui/data/send.json: the feedback panel's Send step (docs/ui/hud-spec.md section 20): SEND opens a review of exactly what a prefilled GitHub issue will hold, and OPEN ISSUE opens it. Nothing is sent until the player submits the issue on GitHub; the issue is public and the review says so. Version field: schema. Policy: closed except keys starting with an underscore. issue.repo is the repository's page on github.com; issue.limit is the longest link we open (browsers and proxies cut long ones), and a longer report is copied to the clipboard instead.",
+  "type": "object",
+  "required": [
+    "schema",
+    "issue",
+    "buttons",
+    "review_title",
+    "review",
+    "opened",
+    "too_long"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "issue": {
+      "type": "object",
+      "required": [
+        "repo",
+        "limit",
+        "title_prefix",
+        "title_none",
+        "short_body"
+      ],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 8000
+        },
+        "title_prefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title_none": {
+          "type": "string",
+          "minLength": 1
+        },
+        "short_body": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "buttons": {
+      "type": "object",
+      "required": [
+        "send",
+        "open"
+      ],
+      "properties": {
+        "send": {
+          "type": "string",
+          "minLength": 1
+        },
+        "open": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "review_title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review": {
+      "type": "string",
+      "minLength": 1
+    },
+    "opened": {
+      "type": "string",
+      "minLength": 1
+    },
+    "too_long": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

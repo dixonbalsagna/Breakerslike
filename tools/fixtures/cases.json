@@ -4981,6 +4981,102 @@
         "rule": "xref:hints-action",
         "pointer": "/schemes/today/rows/6/actions/1"
       }
+    },
+    {
+      "id": "send-version",
+      "schema": "ui-send.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/send.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "send-repo-url",
+      "schema": "ui-send.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/send.json",
+          "set": {
+            "/issue/repo": "http://example.org/x"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/issue/repo"
+      }
+    },
+    {
+      "id": "send-limit-range",
+      "schema": "ui-send.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/send.json",
+          "set": {
+            "/issue/limit": 100000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/issue/limit"
+      }
+    },
+    {
+      "id": "send-needs-too-long",
+      "schema": "ui-send.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/send.json",
+          "del": [
+            "/too_long"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "send-needs-open-button",
+      "schema": "ui-send.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/send.json",
+          "del": [
+            "/buttons/open"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buttons"
+      }
+    },
+    {
+      "id": "send-empty-prefix",
+      "schema": "ui-send.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/send.json",
+          "set": {
+            "/issue/title_prefix": ""
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/issue/title_prefix"
+      }
     }
   ],
   "text": [

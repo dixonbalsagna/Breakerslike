@@ -107,6 +107,10 @@
       "schema": "ui-feedback.schema.json"
     },
     {
+      "match": "ui/data/send.json",
+      "schema": "ui-send.schema.json"
+    },
+    {
       "match": "ui/data/reads.json",
       "schema": "ui-reads.schema.json"
     },
