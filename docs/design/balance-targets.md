@@ -79,7 +79,7 @@ Numbers a QA test can check. "Civilians" is the share of the starting population
 | Structures lost at the KO, mean: a **share of row-1 (front-row) structures**. Row 1 is today's 47 buildings, unchanged by buildings in depth (`docs/world/buildings-in-depth.md`) | 20 to 40% of row 1 | 40 to 75% of row 1 | 30% (14.1 of 47) |
 | Structures lost at the KO, all rows (about 110): a watch metric, not a gate | 10 to 35% | 25 to 60% | Not yet measured |
 
-**Mechanisms.** World is proposing tier-scaled caps and a casualty ramp to meet the game bands. Game Design sets only the bands. The low-tier bleed band is the measurable form of the P3 exit criterion "no fight destroys the planet at low tiers". QA needs a per-tier split of casualties to check it. That is requested through the EP.
+**Mechanisms.** World is proposing tier-scaled caps and a casualty ramp to meet the game bands. Game Design sets only the bands. The low-tier bleed band is the measurable form of the P3 exit criterion "no fight destroys the planet at low tiers". QA needs a per-tier split of casualties to check it. That is requested through the EP. Structures have their own tier gate for beams, with per-tier bands, in §15.
 
 ### 4b. The collateral cap and the casualty ramp (numbers for World's wave 1)
 
@@ -522,3 +522,39 @@ Every brink-chapter band passes. The 24 failing rows sort into three groups.
 | §1c lock breaks, 0.85 a match at 0.7 s | 1 to 4 a match, 2 to 3 s | **Waits for living destruction** (LD1 to LD3: smoke, dust and fire clouds). Today only terrain breaks lock, briefly. Re-measure after LD. If it is still short then, re-base the length to 1 to 3 s |
 
 **After World's D1 (districts)** the planet has about 300 to 400 buildings (196 today), and pop0 is about 1,800 whole people, about four per building. Every collateral band is a share, and every per-casualty gain is normalised by `425 / pop0`, so no band number changes. QA re-checks §4 after D1 and re-defines row 1 in the structures rows (today's 47 front-row buildings) from the new layout.
+
+## 15. Beams and structures: the tier gate (2026-10-01)
+
+**The gap** (World's trace, seed 4). A tier-1 signature beam levelled 26 buildings in 6 ticks, 5.5 s into the match. Each beam sample does 110 + 75 × power to structures within about 210 units, and a house has 108 to 216 hp. Casualties were capped by the collateral window, but structures had no tier gate. That breaks pillar 4 and the P3 exit rule that no fight destroys the planet at low tiers.
+
+**The ruling has two layers.** The factor sets how hard a beam bites, and the cap is the guarantee. A factor alone can't promise the result, because a long beam adds up many samples.
+
+| Tier | Structure damage factor (`ladder.json`) | Buildings one beam may level, as a share of all structures | Overshoot past the target |
+| ---: | ---: | :--- | :--- |
+| 1 | ×0.25 | At most 1% (2 of today's 196) | 600 × WS, about 3% of the planet |
+| 2 | ×0.5 | At most 3% (6) | 1,200 × WS, about 6% |
+| 3 | ×1.0 | At most 8% (16) | 2,400 × WS, about 12.5% |
+| 4 | ×1.5 | At most 20% (39) | 4,000 × WS, about 21% |
+
+1. **The factor** is World's suggestion, adopted. It multiplies the structure damage of every beam and energy blast, by the firing fighter's tier. A tier-1 beam wounds houses and doesn't level them.
+2. **The cap.** Past its cap, a beam leaves each further building standing at 25% hp, scorched and burning, so the path still reads. The cap is a share, so it scales when districts raise the building count (§14, D1).
+3. **Length scales too.** Today the overshoot is (2,000 + 400 × tier) × WS, which is almost flat: 12.5% of the planet at tier 1. The new overshoot is in the table. The beam's travel **to** its target is never shortened (pillar 3), and the 4,200 × WS total cap stays.
+4. **Nothing else changes.** The beam's damage to the fighter, terrain carving by power, and the casualty window are as they were. Launches, slides and brunts keep their own budgets (§5b, §5c).
+
+**QA bands** (all sources, measured by the higher fighter's tier at the time):
+
+| Measure | Band |
+| :--- | :--- |
+| Buildings levelled by one beam | At most the cap for its tier (a hard test) |
+| Buildings a tier-1 beam touches that are left standing | At least 70% |
+| Structures levelled per minute at tier 1 | At most 2% of all structures |
+| Structures levelled per minute at tier 2 | At most 4% |
+| Structures levelled per minute at tier 3 | 3 to 10% |
+| Structures levelled per minute at tier 4 | 6 to 20% |
+| Escalation | Each tier's mean rate is at least 1.5 times the tier below it, so destructiveness keeps scaling (Orb) |
+| Before any fighter reaches tier 3 | No match has lost more than 10% of its structures (a hard test) |
+| Structures lost at the KO (§4) | Unchanged: 40 to 75% of row 1, and 25 to 60% of all rows as a watch metric. Re-check after the change, because early losses fall and the tier-4 factor rises |
+
+**If the per-minute bands fail from other sources** (slides, brunts, power-up craters), World adds a rolling structure budget on the collateral window, like the casualty ramp in §4b. It isn't needed for the beam fix.
+
+Encounter implements the factor, the cap and the overshoot in `beam.gd` with its step 2. The factor and the cap are data.
