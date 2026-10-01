@@ -19738,7 +19738,7 @@
         {
           "file": "data/anim/waves/wave1.manifest.json",
           "set": {
-            "/strikes/0/offset": 90
+            "/strikes/0/offset": 500
           }
         }
       ],
@@ -19784,6 +19784,1288 @@
           "file": "data/anim/waves/wave1.manifest.json",
           "set": {
             "/skipped": "tail_jab"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/skipped"
+      }
+    },
+    {
+      "id": "anim-wave-entries-live-valid",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/schema": "anim.wave.entries/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entries-key-required",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "del": [
+            "/entries"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-entries-schema-version",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/schema": "anim.wave.entries/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-wave-entries-unknown-key",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-wave-entries-entry-valid",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entries-entry-key-required",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/entries/w2.test"
+      }
+    },
+    {
+      "id": "anim-wave-entries-entry-unknown-key",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              },
+              "speed": 3
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/entries/w2.test/speed"
+      }
+    },
+    {
+      "id": "anim-wave-entries-direction-enum",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "sideways",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/entries/w2.test/direction"
+      }
+    },
+    {
+      "id": "anim-wave-entries-ground-enum",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "air",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/entries/w2.test/ground"
+      }
+    },
+    {
+      "id": "anim-wave-entries-path-enum",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "zigzag",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/entries/w2.test/path"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phases-empty",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/entries/w2.test/phases"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phase-ticks-integer",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3.5
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/entries/w2.test/phases/0/ticks"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phase-ticks-positive",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 0
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/entries/w2.test/phases/0/ticks"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phase-weight-positive",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.travel",
+                  "w": 0
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/entries/w2.test/phases/0/w"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phase-ticks-and-weight",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.travel",
+                  "ticks": 3,
+                  "w": 2
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "not",
+        "pointer": "/entries/w2.test/phases/0"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phase-pose-shape",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "Dash Start"
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/entries/w2.test/phases/0/pose"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phase-pose-not-in-wave",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.nowhere.start",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-pose",
+        "pointer": "/entries/w2.test/phases/0/pose"
+      }
+    },
+    {
+      "id": "anim-wave-entries-phase-weight-only-ok",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "w": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entries-favours-empty",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/entries/w2.test/favours"
+      }
+    },
+    {
+      "id": "anim-wave-entries-favours-duplicate",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab",
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/entries/w2.test/favours/1"
+      }
+    },
+    {
+      "id": "anim-wave-entries-lab-shape-enum",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "wiggle"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/entries/w2.test/lab/shape"
+      }
+    },
+    {
+      "id": "anim-wave-entries-lab-distance-positive",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 0,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/entries/w2.test/lab/d0"
+      }
+    },
+    {
+      "id": "anim-wave-entries-lab-unknown-key",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight",
+                "depth": 3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/entries/w2.test/lab/depth"
+      }
+    },
+    {
+      "id": "anim-wave-entries-combat-shape",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              },
+              "_combat": "dash"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/entries/w2.test/_combat"
+      }
+    },
+    {
+      "id": "anim-wave-entries-variant-name-ok",
+      "schema": "anim-wave-entries.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entries.json",
+          "set": {
+            "/entries/w2.test~b": {
+              "direction": "rush",
+              "ground": "ok",
+              "path": "straight",
+              "phases": [
+                {
+                  "pose": "w2.dash.start",
+                  "ticks": 3
+                },
+                {
+                  "pose": "w2.dash.travel"
+                },
+                {
+                  "pose": "w2.dash.arrive",
+                  "ticks": 3
+                }
+              ],
+              "favours": [
+                "jab"
+              ],
+              "lab": {
+                "d0": 170,
+                "shape": "straight"
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entrymap-live-valid",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/wave": "wave2"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entrymap-key-required",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "del": [
+            "/skipped"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-kind-const",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/kind": "strikes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/kind"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-unknown-key",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-wave-shape",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/wave": "two"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/wave"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-wave-file-mismatch",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/wave": "wave3"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/wave"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-key-required",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "del": [
+            "/entries/0/when"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/entries/0"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-unknown-key",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/entries/0/extra"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-direction-enum",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/direction": "up"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/entries/0/direction"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-ticks-key-required",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "del": [
+            "/entries/0/ticks/arrive"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/entries/0/ticks"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-ticks-travel-word",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/ticks/travel": "long"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "anyOf",
+        "pointer": "/entries/0/ticks/travel"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-ticks-travel-integer-ok",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/ticks/travel": 9
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entrymap-row-ticks-negative",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/ticks/start": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/entries/0/ticks/start"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-combat-shape",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/combat": "dash"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/entries/0/combat"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-legal-shape",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/legal": [
+              "No Fist"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/entries/0/legal/0"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-legal-new-names-ok",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/legal": [
+              "not_both_arms_back",
+              "no_fist_punched_ahead",
+              "lean_max"
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entrymap-row-alt-null-ok",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/alt": null
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-entrymap-row-phases-shape",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/phases": [
+              "Start",
+              "travel",
+              "arrive"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/entries/0/phases/0"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-id-not-an-entry",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/id": "w2.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/0/id"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-direction-differs",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/direction": "stand"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/0/direction"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-ground-differs",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/ground": "no"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/0/ground"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-path-differs",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/path": "arc"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/0/path"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-pose-not-in-wave",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/poses/0": "w2.nowhere.start"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-pose",
+        "pointer": "/entries/0/poses/0"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-poses-differ-from-entry",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/poses": [
+              "w2.dash.start",
+              "w2.dash.arrive",
+              "w2.dash.travel"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/0/poses"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-phase-count",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/phases": [
+              "start",
+              "travel"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/0/phases"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-start-ticks-differ",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/0/ticks/start": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/0/ticks/start"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-row-id-duplicate",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/entries/1/id": "w2.dash"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-entry",
+        "pointer": "/entries/1/id"
+      }
+    },
+    {
+      "id": "anim-wave-entrymap-skipped-type",
+      "schema": "anim-wave-entrymap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave2.entrymap.json",
+          "set": {
+            "/skipped": "none"
           }
         }
       ],

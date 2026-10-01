@@ -624,6 +624,47 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim waves (parked): entries, their map and the wave's poses agree ----
+  {
+    const waves2 = new Map();
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.(poses|entries|entrymap)\.json$/)) {
+      const m = /^data\/anim\/waves\/([^/.]+)\.(poses|entries|entrymap)\.json$/.exec(rel);
+      if (!m) continue;
+      if (!waves2.has(m[1])) waves2.set(m[1], {});
+      waves2.get(m[1])[m[2]] = rel;
+    }
+    for (const [wname, w] of waves2) {
+      const pd = w.poses ? get(w.poses) : undefined;
+      const poseSet = new Set(isObj(pd) && isObj(pd.poses) ? Object.keys(pd.poses) : []);
+      const ed = w.entries ? get(w.entries) : undefined;
+      const entries = isObj(ed) && isObj(ed.entries) ? ed.entries : {};
+      if (w.entries && isObj(ed.entries)) for (const [name, e] of Object.entries(entries)) {
+        if (name.startsWith('_') || !isObj(e)) continue;
+        (Array.isArray(e.phases) ? e.phases : []).forEach((p, i) => { if (isObj(p) && poseSet.size && typeof p.pose === 'string' && !poseSet.has(p.pose)) err(w.entries, `/entries/${esc(name)}/phases/${i}/pose`, 'wave-pose', `pose "${p.pose}" is not in ${w.poses}`); });
+      }
+      const md = w.entrymap ? get(w.entrymap) : undefined;
+      if (isObj(md) && Array.isArray(md.entries)) {
+        const seen = new Map();
+        if (md.wave !== undefined && md.wave !== wname) err(w.entrymap, '/wave', 'wave-entry', `wave "${md.wave}" does not match the file name "${wname}"`);
+        md.entries.forEach((r, i) => {
+          if (!isObj(r)) return;
+          const at = `/entries/${i}`;
+          if (typeof r.id === 'string') { if (seen.has(r.id)) err(w.entrymap, `${at}/id`, 'wave-entry', `entry id "${r.id}" is already used at /entries/${seen.get(r.id)}`); else seen.set(r.id, i); }
+          if (Array.isArray(r.poses) && poseSet.size) r.poses.forEach((p, j) => { if (typeof p === 'string' && !poseSet.has(p)) err(w.entrymap, `${at}/poses/${j}`, 'wave-pose', `pose "${p}" is not in ${w.poses}`); });
+          if (Array.isArray(r.poses) && Array.isArray(r.phases) && r.poses.length !== r.phases.length) err(w.entrymap, `${at}/phases`, 'wave-entry', `${r.phases.length} phase names for ${r.poses.length} poses`);
+          if (!w.entries || !isObj(ed) || !isObj(ed.entries)) return;
+          const e = entries[r.id];
+          if (!isObj(e)) { err(w.entrymap, `${at}/id`, 'wave-entry', `entry "${r.id}" is not in ${w.entries}`); return; }
+          for (const f2 of ['direction', 'ground', 'path']) if (r[f2] !== undefined && e[f2] !== undefined && r[f2] !== e[f2]) err(w.entrymap, `${at}/${f2}`, 'wave-entry', `${f2} "${r[f2]}" differs from the entry\'s "${e[f2]}"`);
+          const ep = (Array.isArray(e.phases) ? e.phases : []).map((p) => (isObj(p) ? p.pose : undefined));
+          if (Array.isArray(r.poses) && (r.poses.length !== ep.length || r.poses.some((p, j) => p !== ep[j]))) err(w.entrymap, `${at}/poses`, 'wave-entry', `poses differ from the entry\'s phases in ${w.entries}`);
+          if (isObj(r.ticks) && r.ticks.travel === 'c' && Array.isArray(e.phases) && Array.isArray(r.phases)) for (const ph of ['start', 'arrive']) { const j = r.phases.indexOf(ph); const p = j >= 0 ? e.phases[j] : undefined; if (isObj(p) && typeof p.ticks === 'number' && typeof r.ticks[ph] === 'number' && p.ticks !== r.ticks[ph]) err(w.entrymap, `${at}/ticks/${ph}`, 'wave-entry', `${ph} is ${r.ticks[ph]} ticks here but ${p.ticks} in the entry\'s phase`); }
+        });
+        if (w.entries && isObj(ed) && isObj(ed.entries)) for (const name of Object.keys(entries)) if (!name.startsWith('_') && !name.includes('~') && !md.entries.some((r) => isObj(r) && r.id === name)) err(w.entries, `/entries/${esc(name)}`, 'wave-entry', `entry "${name}" has no row in ${w.entrymap}`, 'warning');
+      }
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);
