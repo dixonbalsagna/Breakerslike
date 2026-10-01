@@ -380,3 +380,44 @@ The Empress's joke revisions stay small on purpose, because they are the comedy.
 - No tall, pointed, flame-shaped aura or crest above the head. The Anti-hero's shapes are round-tipped.
 - The Anti-hero's regalia is his own: no shoulder-pad armour with white gloves and boots.
 - Every look goes through Legal's screen before it is final.
+
+### 10.8 What the body does in each version (for Animation)
+
+The sim plays a transformation in one of three versions (`spec-wounds.md` §8b). All three use the same three beats, and the effect in play is the same.
+
+**The staging rule.** The body draws **in**, snaps **once**, and then holds still. The tell is the silhouette, the posture and the aura's shape. There is no scream, no fists at the hips with the feet apart, no flame flaring upward, no crackling lightning, and no hair change.
+
+| Beat | Full (3 s pause) | Short (1.5 s pause) | Live (0.8 s, no pause) |
+| :--- | :--- | :--- | :--- |
+| **The gather** | 60 ticks. He compresses: knees bend, limbs come to the centreline, head down. The aura is pulled in to his sigil, and the sound drops away | 24 ticks. The same compression, faster | 10 ticks. A flinch inward |
+| **The break** | 30 ticks. One snap to full extension. The new parts lock on in this frame, and the silhouette changes here and nowhere else | 18 ticks. The snap and the lock | 14 ticks. The snap, with the burst that pushes the rival back |
+| **The settle** | 90 ticks. He holds the new pose for 45, turns to face the rival, and says his line | 48 ticks. He holds for 30, then turns. A grunt, no line | 24 ticks. The upper body holds the pose while he is already drifting back into the fight |
+
+**What must read at fight distance.**
+1. The silhouette change lands on the break and is visible at 40 px.
+2. The posture after is different from the posture before: he gathers low and settles tall, or the reverse.
+3. The aura changes shape, and the colour mass shifts. That is the read at 12 px, when the body is too small to see.
+
+**Camera and VFX, one line each.**
+
+| Beat | Camera | VFX |
+| :--- | :--- | :--- |
+| Gather | Full: push in to a close-up. Short: half the push. Live: stay on the fight framing | The aura and loose dust are drawn inward to the sigil, and the light around him dims. Nothing flares outward |
+| Break | Full: one hard cut to a low, wide angle with the whole silhouette against the sky. Short: a snap zoom out. Live: a 6-tick punch-in with a light shake | One ring leaves the body, the aura swaps to its new shape in a single frame, and the ground cracks if he is on it. The flash is in his own colour, never gold or white |
+| Settle | Full: hold on the pose, then pull back until both fighters are framed. Short: pull straight back. Live: already there | The new aura holds steady, dust settles, and the form's own trail begins |
+
+**The placeholders now.** KAI and VORR have no new art, so they use what exists:
+- *the gather* is the charge pose, compressed;
+- *the break* is the existing power-up burst and its crater;
+- *the settle* is a taller idle for each tier.
+
+What reads is the 10% size step, the aura's shape for the tier and the crater.
+
+**The Anti-hero's Pride forms later.** His gather is the opposite of a crouch, because the crouch is his normal stance.
+- *The gather:* he rises out of the crouch, lifts his chin and goes still, one hand palm-up as if being dressed.
+- *The break:* one dismissive flick of that hand. The regalia locks on from behind with a single clack: the collar and guards at Regalia, and the crest and floating plates at Sovereign.
+- *The settle:* he checks that the rival saw, then that the camera did.
+- *Apex* inverts it: at the break the guards fall away and the sound cuts out, and the settle is utter stillness.
+- *The live version* is only the flick and the lock.
+
+He is masked, so there is no face to scream with. His sigil brightens instead.
