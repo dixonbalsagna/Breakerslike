@@ -1,5 +1,7 @@
 # Stage A proof checklist (for QA)
 
+> **Superseded in part by ADR 0008 (2026-09-30):** Stage A is unchanged in what it proves (integer hit-stop, shadow float) but no longer adds `special`, `transform`, `stanceStep`; check A7 now fuzzes the new `SimIntent` fields from `input-scheme.md` section 8 as inert, once they exist. See [input-scheme.md](input-scheme.md).
+
 Owner: Controls and Game Feel (draft). Audience: QA and Balance, who run the proof and regenerate nothing in Stage A. Date: 2026-09-30. Status: draft; it is executed when the tree is handed over (after Encounter's dynamic slice and the k retune).
 
 **Stage A content (`stage-c-spec.md` §8):**

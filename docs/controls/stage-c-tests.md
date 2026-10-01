@@ -1,5 +1,7 @@
 # Stage C test scripts (sticky weight and signature intent)
 
+> **Superseded in part by ADR 0008 (2026-09-30):** the weight and signature scripts (C1 to C17) are replaced by the tests in `input-scheme.md` section 10. The holds, the Encore and the acknowledgement scripts (C18 to C22) are adapted there. See [input-scheme.md](input-scheme.md).
+
 Owner: Controls and Game Feel (draft). Audience: QA, Encounter Systems. Date: 2026-09-30. Status: draft skeletons; they run when Stage C exists. Spec: `stage-c-spec.md`. Tests live in `sim/input/test/` (my path) and use the public sim API: `SimCore.createSim`, `SimCore.newMatch(S, seed, ai)`, `SimCore.step(S, inputs)` with `inputs = [SimIntent, SimIntent]`, and `S.fighters[k]`.
 
 ## 1. Harness (shared by every script)

@@ -1,5 +1,7 @@
 # Prompt glyphs per device
 
+> **Superseded in part by ADR 0008 (2026-09-30):** the stance, weight and signature-chip prompts retire; the rules, families and neutral marks stand. New prompts (mode chip, context icon, guard and perfect-block cue, hold rings) are UI's with the triggers in `input-scheme.md`. See [input-scheme.md](input-scheme.md).
+
 Owner: Controls and Game Feel (the binding-to-glyph map and rules). UI/UX draws and places the glyphs (`docs/ui/hud-spec.md` §11 asks for this). Date: 2026-09-29. Bindings are in `input-map.md`. **Legal's verdict RL-037 applies: one neutral glyph set of our own, everywhere.**
 
 ## 1. Rules

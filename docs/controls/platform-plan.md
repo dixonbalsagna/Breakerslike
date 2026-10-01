@@ -1,5 +1,7 @@
 # Plan: gamepad support in the web build and on desktop, and mobile's two schemes
 
+> **Superseded in part by ADR 0008 (2026-09-30):** the touch schemes in section 7 are replaced by `input-scheme.md` section 6; the architecture, devices, web, desktop and rebinding sections stand, with the data model in `input-schema.md`. See [input-scheme.md](input-scheme.md).
+
 Owner: Controls and Game Feel. Date: 2026-09-29. Status: plan. Audience: Rendering (host and input code), Encounter Systems (sim), UI, QA, Accessibility. Bindings are in `input-map.md`, glyphs in `prompt-glyphs.md`, timing in `rulings.md`.
 
 ## 1. Architecture: three layers, and the sim sees only one

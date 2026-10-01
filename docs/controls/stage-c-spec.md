@@ -1,5 +1,7 @@
 # Stage C spec: sticky weight and the signature intent
 
+> **Superseded in part by ADR 0008 (2026-09-30):** the sticky weight and the signature queue are replaced by the combo queue and the held-state scheme. The 600-tick unfunded signature expiry and the heavy fallback are kept. See [input-scheme.md](input-scheme.md).
+
 Owner: Controls and Game Feel. Date: 2026-09-30. Status: **final spec, no sim edits yet.** Source: Game Design's Q4 redesign (`docs/design/stance-matrix.md` §4b R9, R4, R5; `docs/design/spec-wounds.md` §1 and §8 to 9). It supersedes the option space in `intent-queue-plan.md`, which is kept as the record.
 
 ## 1. What the player does, and what the director does

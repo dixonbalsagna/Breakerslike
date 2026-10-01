@@ -1,5 +1,7 @@
 # Input map: keyboard (P1 and P2) and gamepad
 
+> **Superseded in part by ADR 0008 (2026-09-30):** the stance keys and cycle, the weight and signature meanings, the special/transform slots and the keyboard maps are replaced by `input-scheme.md`. Stick handling, parity rules and the device layers still apply. See [input-scheme.md](input-scheme.md).
+
 Owner: Controls and Game Feel. Date: 2026-09-29. Status: design; code follows when the EP hands me `sim/input/`. Orb wants keyboard and gamepad **equally**: every action has a binding on both, and neither device gets a capability the other lacks (section 7 lists the parity rules).
 
 Stance names below are Narrative's proposals (glossary): **PRESS, GUARD, DODGE, ESCAPE**. The sim ids stay AGGRESSIVE, DEFENSIVE, EVASIVE, ESCAPE.

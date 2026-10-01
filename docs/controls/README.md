@@ -4,6 +4,8 @@ Owner: Controls and Game Feel. Date: 2026-09-29. Design first; code in `sim/inpu
 
 | File | What it is |
 | :--- | :--- |
+| [input-scheme.md](input-scheme.md) | **Current (ADR 0008):** actions, the three controller layouts, tap and hold rules, keyboard (solo and shared), touch Simple and Full, the intent record, stage plan, tests |
+| [input-schema.md](input-schema.md) | **Current:** data model, presets and schemas for Tools (`actions`, `layouts`, `timing`, user file) |
 | [rulings.md](rulings.md) | Rulings on Combat's proposals: parry, chain and wind-up widths in ticks, buffering, anti-mash, hit-stop table, finisher struggle, latency budget, draft data, ranked risks with tests |
 | [input-map.md](input-map.md) | Keyboard (P1, P2) and gamepad maps, the intent record, special and transform holds per fighter, parity rules |
 | [shake-pass.md](shake-pass.md) | Per-event shake for Camera, and the split's per-pane rule |
