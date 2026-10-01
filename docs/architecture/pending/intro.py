@@ -52,8 +52,8 @@ class IntroState:
 ## The intro phase: "intro": true plays the entrance before the clock; "intro": "skip" applies its effects at once.'''),
     ('''	S.tick += 1
 	if SimPause.frozenTick(S):''','''	S.tick += 1
-	if SimIntro.tick(S, inputs):   # the intro phase: pre-clock ticks, frozen like a pause; only a skip press is read
-		SimFx.tickMark(S, dt, true)
+	if SimIntro.tick(S, inputs):   # the intro phase: pre-clock ticks; the sim holds as in a pause, and only a skip press is read
+		SimFx.tickMark(S, dt, false)   # ... but effects run at full speed (not a pause's tenth), so the landing's dust and debris settle
 		return false
 	if SimPause.frozenTick(S):'''),
     ])
@@ -130,19 +130,25 @@ func _intro() -> String:
 		return "the intro did not start (state %s, left %d)" % [a.state, S.intro.left]
 	var at := {}
 	var lastY: Array = [a.y, b.y]
+	var cool0: float = S.dirS.cool
+	var marks: int = 0
 	for t in range(SimIntro.clock):
 		S.out.fx.clear()
 		if SimCore.step(S, [quiet, quiet]):
 			return "pre-clock tick %d was live" % t
-		if S.T != 0.0:
-			return "the clock moved during the intro"
+		if S.T != 0.0 or S.mood.t != 0 or S.pause.bank != SimPause.bankStart or S.dirS.cool != cool0:
+			return "the clock, the mood, the pause bank or the director's cooldown moved during the intro"
 		for e in S.out.fx:
+			if e.type == "tick" and not e.frozen:
+				marks += 1   # an intro tick is live for effects (dust settles at full speed), though the sim holds
 			if e.type in ["intro_start", "entrance_fall", "entrance_land", "staredown_start", "clock_start"]:
 				at["%s%s" % [e.type, ("" if e.actor < 0.0 else str(int(e.actor)))]] = t
 		for k in range(2):
 			if S.fighters[k].y > lastY[k]:
 				return "slot %d rose during his fall" % k
 			lastY[k] = S.fighters[k].y
+	if marks != SimIntro.clock:
+		return "%d of the intro's %d ticks were marked live for effects" % [marks, SimIntro.clock]
 	var want := {"intro_start": 0, "entrance_fall0": SimIntro.fall[0], "entrance_land0": SimIntro.land[0], "entrance_fall1": SimIntro.fall[1],
 		"entrance_land1": SimIntro.land[1], "staredown_start": SimIntro.staredown, "clock_start": SimIntro.clock - 1}
 	for k in want:

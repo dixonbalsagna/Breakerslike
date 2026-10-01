@@ -69,3 +69,5 @@ Built and proven in a scratch copy of 3fca9ac and parked in `docs/architecture/p
 
 **The default (EP, 2026-10-02).** A setup without the key gets `"skip"`: the match starts from the intro's end state with no pre-clock tick, so the game, the batches, QA's harness and the goldens share one opening. `"intro": true` plays it (the host passes it once Camera, Animation, Rendering and UI are ready); `"intro": false` is the old flat start. A is the fighter on the left start spot, and the entrance craters have no owner.
 
+**Effects during the intro (Rendering, 2026-10-02).** The `tick` mark on an intro tick says `frozen: false`: effects run at full speed, so the landing's dust settles, while the sim holds exactly as in a pause (no clock, no mood, no cooldowns, no input consumed, `step` returns false). A host tells an intro tick from a live one by the step's return value or by `S.intro.left`.
+
