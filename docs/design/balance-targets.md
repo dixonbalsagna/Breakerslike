@@ -646,6 +646,11 @@ Slams keep their floor, because Orb also asked for craters with rims and ejecta.
 
 Encounter implements steps 2 and 3 with the variety work. World changes the threshold.
 
+**SLAM DOWN's angle and the CRATER SLAM gates** (Combat's `docs/combat/launch-vectors.md`). The split into two vectors is confirmed: SLAM DOWN is the drive, and the straight-down slam is its own gated vector, working label CRATER SLAM.
+- *The angle rule is amended.* Combat proposed 40 degrees within 2 bh of the ground, rising to 55 at 12 bh. Under §20 a contact between 30 and 70 degrees is a bounce, so every drive would bounce and slides would stay a minority. The drive is **25 degrees within 2 bh of the ground, rising evenly to 50 at 12 bh and above**, with no draw. A low drive then skids at once, and a high one bounces and then skids.
+- *The gates are confirmed,* with two limits added. "Directly below" means the rival is within 1 bh sideways and at least 3 bh lower. The crater set piece needs tier 3 and comes at most once every 30 s per fighter. Break and finisher launches may always use it.
+- The slam band stays 8 to 15% of launches (§20).
+
 ## 20. Knocked about: how a launched fighter crosses the ground (Orb, 2026-10-01)
 
 Orb wants fighters to be ragdolled: to skid, tumble and bounce over the course of a fight, the way they already skip across the ocean. A fighter who skids up a crater's side should fly off the lip, not ride down the inside. These are the rules for World and Encounter. Every number is a proposal for data, in the sim's normalised speed units (today a ground hit under 350 is no impact, and 2,000 is a hard one).
