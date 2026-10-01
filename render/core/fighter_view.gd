@@ -273,7 +273,7 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	var stance: int = int(f.stance)
 	var sliding: bool = f.slide > 0.0
 	# Staging: ease the pose angle, turn through the camera when the facing flips, mirror at the front-on moment.
-	_turn = move_toward(_turn, f.face, dt * 2.0 / RenderLook.TURN_TIME)
+	_turn = move_toward(_turn, RenderAnim.face_for(S, f), dt * 2.0 / RenderLook.TURN_TIME)
 	_pose = move_toward(_pose, _pose_angle(f), dt * RenderLook.TURN_RATE_DEG)
 	var m: float = 1.0 if _turn >= 0.0 else -1.0
 	var th: float = deg_to_rad(lerpf(90.0, _pose, absf(_turn)))

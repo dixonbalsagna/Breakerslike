@@ -1,13 +1,13 @@
 {
   "schema": "anim.keysets/1",
-  "_about": "Animation A1: key sets (docs/animation/pose-pipeline.md section 3.1). A key set names the poses a strike plays: load (the chamber), contact, follow. Where each lands in time comes from the exchange's beats (the provisional part cue), not from here. picks lists the key sets the runtime chooses from by attack weight. Render only, outside the sim's data hash.",
+  "_about": "Animation A1: key sets (docs/animation/pose-pipeline.md section 3.1). A key set names the poses a strike plays: load (the chamber), contact, follow. limb and target name the striking hand or foot (of the unmirrored set) and the region of the defender it reaches at the contact tick (A2 contact solve). Where each lands in time comes from the exchange's beats (the provisional part cue), not from here. picks lists the key sets the runtime chooses from by attack weight. Render only, outside the sim's data hash.",
   "keysets": {
-    "strike.jab": {"weight": "light", "keys": [{"role": "load", "pose": "strike.jab.chamber"}, {"role": "contact", "pose": "strike.jab.contact"}, {"role": "follow", "pose": "strike.jab.follow"}]},
-    "strike.cross": {"weight": "light", "keys": [{"role": "load", "pose": "strike.cross.chamber"}, {"role": "contact", "pose": "strike.cross.contact"}, {"role": "follow", "pose": "strike.cross.follow"}]},
-    "strike.hook": {"weight": "any", "keys": [{"role": "load", "pose": "strike.hook.chamber"}, {"role": "contact", "pose": "strike.hook.contact"}, {"role": "follow", "pose": "strike.hook.follow"}]},
-    "strike.upper": {"weight": "heavy", "keys": [{"role": "load", "pose": "strike.upper.chamber"}, {"role": "contact", "pose": "strike.upper.contact"}, {"role": "follow", "pose": "strike.upper.follow"}]},
-    "strike.kick": {"weight": "any", "keys": [{"role": "load", "pose": "strike.kick.chamber"}, {"role": "contact", "pose": "strike.kick.contact"}, {"role": "follow", "pose": "strike.kick.follow"}]},
-    "strike.round": {"weight": "heavy", "keys": [{"role": "load", "pose": "strike.round.chamber"}, {"role": "contact", "pose": "strike.round.contact"}, {"role": "follow", "pose": "strike.round.follow"}]}
+    "strike.jab": {"limb": "hand_r", "target": "head", "weight": "light", "keys": [{"role": "load", "pose": "strike.jab.chamber"}, {"role": "contact", "pose": "strike.jab.contact"}, {"role": "follow", "pose": "strike.jab.follow"}]},
+    "strike.cross": {"limb": "hand_r", "target": "chest", "weight": "light", "keys": [{"role": "load", "pose": "strike.cross.chamber"}, {"role": "contact", "pose": "strike.cross.contact"}, {"role": "follow", "pose": "strike.cross.follow"}]},
+    "strike.hook": {"limb": "hand_r", "target": "head", "weight": "any", "keys": [{"role": "load", "pose": "strike.hook.chamber"}, {"role": "contact", "pose": "strike.hook.contact"}, {"role": "follow", "pose": "strike.hook.follow"}]},
+    "strike.upper": {"limb": "hand_r", "target": "head", "weight": "heavy", "keys": [{"role": "load", "pose": "strike.upper.chamber"}, {"role": "contact", "pose": "strike.upper.contact"}, {"role": "follow", "pose": "strike.upper.follow"}]},
+    "strike.kick": {"limb": "foot_r", "target": "gut", "weight": "any", "keys": [{"role": "load", "pose": "strike.kick.chamber"}, {"role": "contact", "pose": "strike.kick.contact"}, {"role": "follow", "pose": "strike.kick.follow"}]},
+    "strike.round": {"limb": "foot_r", "target": "chest", "weight": "heavy", "keys": [{"role": "load", "pose": "strike.round.chamber"}, {"role": "contact", "pose": "strike.round.contact"}, {"role": "follow", "pose": "strike.round.follow"}]}
   },
   "picks": {
     "light": ["strike.jab", "strike.cross", "strike.hook", "strike.kick"],

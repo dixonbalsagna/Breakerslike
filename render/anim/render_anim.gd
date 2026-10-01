@@ -44,6 +44,20 @@ static func style() -> String:
 	return _style_arg if _style_arg != "" else AnimData.default_profile
 
 
+## True when a style was forced (--anim-style or a tool): then every part uses that profile instead of Orb's per-part mix.
+static func style_forced() -> bool:
+	_read_args()
+	return style_override != "" or _style_arg != ""
+
+
+## The facing a view should draw this fighter with: the opponent's side in an exchange, the travel direction on the run
+## (the sim's own `face` when the mannequin is off).
+static func face_for(S: SimState, f) -> float:
+	if not is_enabled():
+		return f.face
+	return fighter(S, f).update_face(S, f)
+
+
 static func profile() -> Dictionary:
 	return AnimData.profile(style())
 
@@ -101,7 +115,7 @@ static func consume(S: SimState, events: Array) -> void:
 					var a: int = int(e.attacker)
 					var front: bool = true
 					if a >= 0 and a < S.fighters.size():
-						front = SimWrap.sdx(vf.x, S.fighters[a].x) * vf.face > 0.0
+						front = SimWrap.sdx(vf.x, S.fighters[a].x) * fighter(S, vf).vface > 0.0
 					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0)
 
 

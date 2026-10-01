@@ -1,6 +1,6 @@
-# render/anim: the mannequin runtime (slice A1)
+# render/anim: the mannequin runtime (slices A1 and A2 first pass)
 
-Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; results: its section 9.1. Render only: it reads the sim (fighter state, the running exchange's beats, the per-tick events) and never writes it, draws no sim random numbers, and moves no anchor. Data is in `data/anim/`, outside the sim's data hash.
+Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; results: its sections 9.1 and 9.3 (A2: the visual facing `vface`, the hinge bake and limb pass, the contact solve, the per-part profile mix). Render only: it reads the sim (fighter state, the running exchange's beats, the per-tick events) and never writes it, draws no sim random numbers, and moves no anchor. Data is in `data/anim/`, outside the sim's data hash.
 
 `--noanim` keeps the placeholder box figures. `--anim-style=snappy|fluid` picks a timing profile from `data/anim/profiles.json`.
 
@@ -16,7 +16,9 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/pose_sheet.gd` | Contact sheet of poses: cheat-out and profile, optional 38 px |
 | `tools/anim_strip.gd` | Filmstrip of a real exchange (needs a window) |
 | `tools/anim_reel.gd`, `tools/gif.mjs` | Raw-frame reels and a dependency-free GIF encoder (one clip or two side by side) |
-| `tools/anim_check.gd` | The checks: hash on and off, contact-frame accuracy, no NaN, no writes to the sim |
+| `tools/anim_check.gd` | The checks: hash off, mixed, snappy and fluid, contact-frame accuracy, the contact solve reaching the defender, no NaN, no writes to the sim |
+| `tools/face_scan.gd` | Facing and pass-through scan over seeded matches (`--anim` reads the visual facing) |
+| `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 
 ```
 godot --headless --path . --script res://render/anim/tools/anim_check.gd

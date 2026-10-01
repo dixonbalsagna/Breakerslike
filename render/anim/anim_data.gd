@@ -13,6 +13,7 @@ static var keysets: Dictionary = {}
 static var picks: Dictionary = {}
 static var profiles: Dictionary = {}
 static var default_profile: String = "snappy"
+static var by_part: Dictionary = {}          # part kind (light, heavy, chain, rush, launch, power) -> profile name
 static var bone_lag := PackedFloat32Array()
 static var cue_poses: Dictionary = {}   # cue kind -> pose id
 
@@ -41,6 +42,7 @@ static func load_all() -> void:
 	var prj: Dictionary = _read("profiles.json")
 	profiles = prj.get("profiles", {})
 	default_profile = String(prj.get("default", "snappy"))
+	by_part = prj.get("by_part", {})
 	bone_lag.resize(AnimRig.N)
 	var bl: Dictionary = prj.get("bone_lag", {})
 	for i in range(AnimRig.N):

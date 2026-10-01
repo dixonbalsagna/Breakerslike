@@ -2,6 +2,7 @@
   "schema": "anim.profiles/1",
   "_about": "Animation A1: timing-style profiles for the in-betweener (the two motion reels compare them). Times are in 60 Hz ticks unless named otherwise. Render only, outside the sim's data hash; never moves a part's contact tick, only how the motion is spread inside its window.",
   "default": "snappy",
+  "by_part": {"_note": "Orb's mix (2026-10-01 playtest): snappy for light blows, rushes and chains, fluid for heavy and power blows and for launches. A forced style (--anim-style, tools) overrides it for every part.", "light": "snappy", "rush": "snappy", "chain": "snappy", "heavy": "fluid", "power": "fluid", "launch": "fluid"},
   "profiles": {
     "snappy": {"_note": "held poses and hard snaps, animated on twos", "solve_hz": 30, "snap_ticks": 2, "load_ease": 3.0, "load_ticks": {"light": 10, "heavy": 16}, "follow_ticks": 5, "recover_ticks": 8, "overshoot": 0.08, "lag": 0.25, "base_tau": 0.05, "shiver": 0.9, "hold_drift": 0.6},
     "fluid": {"_note": "eased in-betweens, long overlap, animated on ones", "solve_hz": 60, "snap_ticks": 6, "load_ease": 1.5, "load_ticks": {"light": 14, "heavy": 22}, "follow_ticks": 9, "recover_ticks": 14, "overshoot": 0.22, "lag": 0.6, "base_tau": 0.14, "shiver": 0.4, "hold_drift": 0.0}

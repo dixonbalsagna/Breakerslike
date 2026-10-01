@@ -47,7 +47,30 @@ var _spring_bones := PackedInt32Array()
 var _lag := PackedFloat32Array()
 var _prof: Dictionary = {}
 var _part: String = ""                 # the key set playing this frame, "" for none (for tools)
-var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0}
+var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": []}
+
+## The facing the mannequin is drawn with (-1 or 1). The sim's `face` can lag a dodge warp or a swap of sides, so this one
+## is derived from the opponent in an exchange and from the travel direction otherwise (A2, docs/animation section 9.3).
+var vface: float = 1.0
+var _face_key: int = -1
+var _face_init: bool = false
+var _face_want_t: float = -1.0
+const FACE_DEAD := 14.0                # closer than this (on the shortest arc) the opponent gives no side
+const FACE_HOLD := 0.03                # a new side must hold this long (s) before the turn starts
+const TRAVEL_FACE := 250.0             # free of an exchange, faster than this faces the travel direction
+const NEAR_LOOK := 900.0               # an idle fighter this close looks at the opponent
+
+# the blow being thrown this frame, for the contact solve: weight, limb, target region, mirror, the defender
+var _ci_w: float = 0.0
+var _ci_limb: String = "hand_r"
+var _ci_target: String = "chest"
+var _ci_side: bool = false
+var _ci_opp = null
+var _ci_tc: float = 0.0
+var _ci_dmg: float = 0.0
+var _gap_tc: float = -1.0
+var _recoil_x: float = 0.0
+var _step_x: float = 0.0               # the step-in a blow takes toward a defender beyond the arm and the hips' lunge
 
 
 func _init(slot_: int) -> void:
@@ -93,6 +116,50 @@ func head_center() -> Vector3:
 	return gp[h] + gq[h] * Vector3(0, 6, 0) + root_off
 
 
+## The visual facing for this frame (computed once a frame, whichever pane asks first).
+func update_face(S: SimState, f) -> float:
+	var key: int = RenderAnim._frame_key(S)
+	if key == _face_key:
+		return vface
+	_face_key = key
+	if not _face_init:
+		_face_init = true
+		vface = f.face
+		return vface
+	var want: float = _wanted_face(S, f)
+	if want == vface or want == 0.0:
+		_face_want_t = -1.0
+	elif _face_want_t < 0.0:
+		_face_want_t = S.T
+	elif S.T - _face_want_t >= FACE_HOLD:
+		vface = want
+		_face_want_t = -1.0
+		debug["face_flips"] += 1
+	return vface
+
+
+func _wanted_face(S: SimState, f) -> float:
+	var opp = null
+	for o in S.fighters:
+		if o != f:
+			opp = o
+			break
+	var dx: float = SimWrap.sdx(f.x, opp.x) if opp != null else 0.0
+	var ex = S.dirS.ex
+	var engaged: bool = (ex != null and (ex.A == f or ex.D == f)) or f.state == "locked" or f.beamCharge != null
+	if engaged:
+		return signf(dx) if absf(dx) > FACE_DEAD else 0.0
+	if f.state == "free" and absf(f.vx) > TRAVEL_FACE:
+		var travel: float = signf(f.vx)
+		# backing away from a close opponent keeps the face on him (the retreat pose); any other run faces the way it goes
+		if travel != signf(dx) or absf(dx) > NEAR_LOOK or int(f.stance) == 3:
+			return travel
+		return signf(dx)
+	if f.state == "free" and opp != null and absf(dx) > FACE_DEAD and absf(dx) < NEAR_LOOK and int(f.stance) != 3:
+		return signf(dx)
+	return f.face
+
+
 static func _hash(a: int, b: int, c: int) -> int:
 	var h: int = (a * 73856093) ^ (b * 19349663) ^ (c * 83492791)
 	h = ((h ^ (h >> 13)) * 1274126177) & 0xFFFFFFFF
@@ -117,18 +184,17 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 		frame = RenderAnim._frame_key(S)
 		return
 	version += 1
+	update_face(S, f)
 	var T: float = S.T
 	var dt: float = clampf(T - _last_T, 0.0, 0.1) if _last_T >= 0.0 else 0.0
 	var first: bool = _last_T < 0.0
 	_last_T = T
-	var lagk: float = float(prof.get("lag", 0.3))
-	if lagk != _lag_k:
-		_lag_k = lagk
-		for i in range(AnimRig.N):
-			_lag[i] = AnimData.bone_lag[i] * lagk / 0.45
-	# 1. the base pose: what the fighter is doing when no blow, cue or reaction is on
+	_set_lag(float(prof.get("lag", 0.3)))
+	# 1. the base pose: what the fighter is doing when no blow, cue or reaction is on (a launch or a power-up moves on the
+	# fluid profile, the rest on the default)
 	_target_base(S, f, T)
-	var k: float = 1.0 if first else 1.0 - exp(-dt / maxf(float(prof.get("base_tau", 0.08)), 0.001))
+	var bprof: Dictionary = _part_prof("launch") if f.state == "launched" else (_part_prof("power") if f.state == "charging" else prof)
+	var k: float = 1.0 if first else 1.0 - exp(-dt / maxf(float(bprof.get("base_tau", 0.08)), 0.001))
 	if _settle <= 40 or first:
 		for i in range(AnimRig.N):
 			_base[i] = _base[i].slerp(_tq[i], k)
@@ -157,13 +223,19 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			curl = curl.lerp(cp.curl, w * 0.9)
 	# 3. the exchange: approach and strike parts
 	_part = ""
+	_ci_w = 0.0
 	var ex = S.dirS.ex
 	if ex != null and (ex.A == f or ex.D == f):
 		_exchange_layers(S, f, ex, T)
 	# 4. the signature beam
 	_beam_layer(S, f, T)
 	# 5. reactions to blows
+	_recoil_x = 0.0
+	_step_x = 0.0
 	_reaction_layer(T)
+	# 5b. the striking limb reaches the defender (the contact solve)
+	if _ci_w > 0.001:
+		_contact_ik(S, f)
 	# 6. moving hold, hit-stop shiver, spring chains
 	var drift: float = float(prof.get("hold_drift", 0.0))
 	if drift > 0.0:
@@ -174,7 +246,10 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 		root_off = Vector3(_signed(S.tick, slot), _signed(S.tick + 13, slot) * 0.6, 0.0) * shiver
 	else:
 		root_off = root_off * 0.0
+	root_off.x += _recoil_x + _step_x
 	_springs(f)
+	# 6b. the limb pass: elbows and knees stay hinges in human range, arms stay out of the shoulder's blind spot
+	AnimPose.limit_limbs(q)
 	# 7. sockets: only the chains the views read (the head and the near hand); the rest is on demand
 	AnimPose.fk_chain(q, hips, gq, gp, SOCKET_CHAIN)
 	_full_fk = false
@@ -211,8 +286,7 @@ var _tq_curl := Vector2(0.5, 0.5)
 
 func _target_base(S: SimState, f, T: float) -> void:
 	var stance: int = clampi(int(f.stance), 0, 3)
-	var face: float = f.face
-	var vf: float = f.vx * face
+	var vf: float = f.vx * vface
 	var state: String = f.state
 	# The blend weights, quantised to sixteenths: while they and the stance do not change the target is not rebuilt (the
 	# base smoothing hides the steps), and once it has settled the smoothing stops too.
@@ -304,54 +378,63 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 		if b.op == "strike":
 			var who: String = String(b.args.a)
 			if who == role and (b.done or not ex.cancel):
-				strikes.append([t0 + b.t, ordinal, b.args])
+				strikes.append([t0 + b.t, ordinal, b.args, "heavy" if _is_heavy(ex, b.args) else "light"])
 			ordinal += 1
 		elif b.op == "chainStrike":
 			if role == "A" and (b.done or not ex.cancel):
-				strikes.append([t0 + b.t, ordinal, {"o": {"big": true}}])
+				strikes.append([t0 + b.t, ordinal, {"o": {"big": true}}, "chain"])
 			ordinal += 1
 		elif b.op == "rush" and role == "A":
 			rushes.append([t0 + b.t, float(b.args.dur)])
 		elif b.op == "finRush" and String(b.args.w) == role:
 			rushes.append([t0 + b.t, float(b.args.dur)])
-	var prof: Dictionary = _prof
-	var dq: float = 1.0 / float(prof.get("solve_hz", 60.0))
-	# approach: launch-off, flight, arrival
+	# approach: launch-off, flight, arrival (a rush is snappy)
+	var rprof: Dictionary = _part_prof("rush")
+	var rdq: float = 1.0 / float(rprof.get("solve_hz", 60.0))
 	for r in rushes:
 		var rs: float = r[0]
 		var dur: float = maxf(r[1], DT)
 		if T >= rs and T < rs + dur + 0.05:
-			var tq: float = rs + floorf((T - rs) / dq) * dq
+			var tq: float = rs + floorf((T - rs) / rdq) * rdq
 			var p: float = clampf((tq - rs) / dur, 0.0, 1.0)
 			var fly: float = smoothstep(0.0, 0.18, p) * (1.0 - smoothstep(0.78, 1.0, p))
 			_mix_pose(AnimData.pose("move.dash"), fly)
 			var off: float = 1.0 - smoothstep(0.0, minf(4.0 * DT / dur, 0.3), p)
 			_mix_pose(AnimData.pose("approach.launch"), off * 0.9)
-	# strikes: the one whose window (load, snap, follow, recover) holds now, latest start first
-	var Sn: float = float(prof.get("snap_ticks", 3)) * DT
-	var F: float = float(prof.get("follow_ticks", 6)) * DT
-	var R: float = float(prof.get("recover_ticks", 10)) * DT
+	# strikes: the one whose window (load, snap, follow, recover) holds now, latest start first. Each blow keeps the
+	# profile of its own kind: light and chain blows snappy, heavy blows fluid.
 	var best: int = -1
 	var best_start: float = -1.0e9
 	var lens: Array = []
+	var profs: Array = []
 	var prev_tc: float = -1.0e9
 	for n in range(strikes.size()):
 		var tc: float = strikes[n][0]
-		var heavy: bool = _is_heavy(ex, strikes[n][2])
-		var lnom: float = float(prof.get("load_ticks", {}).get("heavy" if heavy else "light", 12)) * DT
+		var sp: Dictionary = _part_prof(String(strikes[n][3]))
+		profs.append(sp)
+		var Fn: float = float(sp.get("follow_ticks", 6)) * DT
+		var Rn: float = float(sp.get("recover_ticks", 10)) * DT
+		var Sn_: float = float(sp.get("snap_ticks", 3)) * DT
+		var lnom: float = float(sp.get("load_ticks", {}).get("heavy" if strikes[n][3] == "heavy" else "light", 12)) * DT
 		var gap: float = tc - prev_tc
-		var L: float = clampf(minf(lnom, gap - 0.5 * F), Sn + 2.0 * DT, lnom)
+		var L: float = clampf(minf(lnom, gap - 0.5 * Fn), Sn_ + 2.0 * DT, lnom)
 		lens.append(L)
 		var start: float = tc - L
-		if T >= start and T < tc + F + R and start > best_start:
+		if T >= start and T < tc + Fn + Rn and start > best_start:
 			best = n
 			best_start = start
 		prev_tc = tc
 	if best < 0:
 		return
+	var prof: Dictionary = profs[best]
+	_set_lag(float(prof.get("lag", 0.3)))
+	var Sn: float = float(prof.get("snap_ticks", 3)) * DT
+	var F: float = float(prof.get("follow_ticks", 6)) * DT
+	var R: float = float(prof.get("recover_ticks", 10)) * DT
+	var dq: float = 1.0 / float(prof.get("solve_hz", 60.0))
 	var tc2: float = strikes[best][0]
 	var L2: float = lens[best]
-	var heavy2: bool = _is_heavy(ex, strikes[best][2])
+	var heavy2: bool = strikes[best][3] == "heavy"
 	var side: bool = (_hash(int(ex.n), int(strikes[best][1]), slot + 1) & 1) == 1
 	var picks: Array = AnimData.picks["heavy" if heavy2 else "light"]
 	var ksid: String = String(picks[_hash(int(ex.n), int(strikes[best][1]), 3 + slot) % picks.size()])
@@ -390,13 +473,137 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 			q[i] = q[i].slerp(_base[i], w4)
 		hips = pf.hips.lerp(_base_hips, w4)
 		curl = pf.curl.lerp(_base_curl, w4)
-	# timing fidelity: on the frame of contact the pose must be the contact key
+	# timing fidelity: on the frame of contact the pose must be the contact key (checked before the contact solve moves it)
 	if absf(T - tc2) < DT * 0.5:
 		var err: float = 0.0
 		for i in range(AnimRig.N):
 			err = maxf(err, q[i].angle_to(pk.q[i]))
 		debug["contact_frames"] += 1
 		debug["contact_err_max"] = maxf(float(debug["contact_err_max"]), err)
+	# the contact solve's weight: in over the snap, full at the contact tick and through the first of the follow-through,
+	# out over the rest of it
+	var cw: float = 0.0
+	if dtc >= -Sn and dtc < F + R * 0.4:
+		if dtc < 0.0:
+			cw = smoothstep(0.0, 1.0, (dtc + Sn) / Sn)
+		elif dtc < F * 0.5:
+			cw = 1.0
+		else:
+			cw = 1.0 - smoothstep(F * 0.5, F + R * 0.4, dtc)
+	if cw > 0.001:
+		_ci_w = cw
+		_ci_limb = String(ks.get("limb", "hand_r"))
+		_ci_target = String(ks.get("target", "chest"))
+		_ci_side = side
+		_ci_opp = ex.D if role == "A" else ex.A
+		_ci_tc = tc2
+		_ci_dmg = float(strikes[best][2].get("dmg", 0.0))
+
+
+# ------------------------------------------------------------------ contact: the striking limb reaches the defender
+
+const BODY_R := {"head": 5.0, "chest": 6.5, "gut": 6.5}   # how far the surface is in front of the point the region names
+const END_LEN := {"hand": 6.0, "foot": 8.0}               # wrist (or ankle) to the face of the fist (or the foot)
+const LUNGE_MAX := {"hand": 11.0, "foot": 7.0}            # how far the hips may carry the reach (model units)
+const STEP_MAX := {"hand": 14.0, "foot": 10.0}            # ... and the whole body's step-in on top of that
+const REACH_Z := {"hand": 5.0, "foot": 9.0}
+
+
+## The defender's body point for a region, in the defender's model space.
+func _region_point(name: String) -> Vector3:
+	match name:
+		"head":
+			return head_center()
+		"gut":
+			var s1: int = AnimRig.index["spine_1"]
+			return gp[s1] + gq[s1] * Vector3(0, 2, 0) + root_off
+		_:
+			var s2: int = AnimRig.index["spine_2"]
+			return gp[s2] + gq[s2] * Vector3(0, 3, 0) + root_off
+
+
+## IK the striking hand or foot onto the defender's body: the wrist (ankle) goes to the region's surface minus the fist, so
+## the fist lands on him on the contact tick, and the hips lunge for what the arm cannot reach. The authored limb blends
+## into the solved one by the contact weight, so the key poses stay the look and the defender's actual position decides
+## where it lands. Nothing happens if the opponent is behind the thrower (the face override turns him first).
+func _contact_ik(S: SimState, f) -> void:
+	var opp = _ci_opp
+	if opp == null or _ci_dmg <= 0.0:
+		return
+	var oaf: AnimFighter = RenderAnim.fighter(S, opp)
+	if oaf.version == 0:
+		return
+	var base_limb: String = _ci_limb
+	var limb: String = base_limb
+	if _ci_side:
+		limb = base_limb.substr(0, base_limb.length() - 1) + ("l" if base_limb.ends_with("r") else "r")
+	var is_hand: bool = limb.begins_with("hand")
+	var kind: String = "hand" if is_hand else "foot"
+	var sfx: String = limb.substr(limb.length() - 1)
+	var zs: float = 1.0 if sfx == "r" else -1.0
+	var dx: float = SimWrap.sdx(f.x, opp.x)
+	var rp: Vector3 = oaf._region_point(_ci_target)
+	var mx: float = (dx + oaf.vface * rp.x) * vface
+	if mx < 4.0:
+		return
+	var my: float = (opp.y - f.y) + rp.y
+	var tgt := Vector3(mx - float(BODY_R.get(_ci_target, 6.5)) - float(END_LEN[kind]), my, float(REACH_Z[kind]) * zs)
+	var ix: Dictionary = AnimRig.index
+	var a: int = ix[("upper_arm_" if is_hand else "thigh_") + sfx]
+	var b: int = ix[("forearm_" if is_hand else "shin_") + sfx]
+	var c: int = ix[limb]
+	AnimPose.fk(q, hips, gq, gp)
+	_full_fk = true
+	var reach: float = (gp[b] - gp[a]).length() + (gp[c] - gp[b]).length() - 0.5
+	# how far forward the shoulder must come (along x, the way the hips and the step move it) for the arm to just reach
+	var d3: Vector3 = tgt - gp[a]
+	var side2: float = d3.y * d3.y + d3.z * d3.z
+	var need: float = d3.x - (sqrt(reach * reach - side2) if side2 < reach * reach else 0.0)
+	need = maxf(need, 0.0)
+	# above or below the arm's reach whatever the lunge (a defender on another level): the excess is what is left over
+	var excess: float = need - float(LUNGE_MAX[kind]) - float(STEP_MAX[kind])
+	if side2 >= reach * reach:
+		excess = sqrt(side2) - reach
+	var lunge: float = minf(need, float(LUNGE_MAX[kind])) * _ci_w
+	var step: float = clampf(need - float(LUNGE_MAX[kind]), 0.0, float(STEP_MAX[kind])) * _ci_w
+	_step_x = step
+	var ik_t: Vector3 = tgt - Vector3(lunge + step, 0.0, 0.0)
+	var qa0: Quaternion = q[a]
+	var qb0: Quaternion = q[b]
+	var pole: Vector3 = gp[a] + (Vector3(-3.0, -8.0, 8.0 * zs) if is_hand else Vector3(10.0, 1.0, 0.0))
+	AnimPose.ik2(q, gq, gp, a, b, c, ik_t, pole)
+	AnimPose.hinge_fix(q, gq, gp, a, b, c, 1.0 if is_hand else -1.0)
+	q[a] = qa0.slerp(q[a], _ci_w)
+	q[b] = qb0.slerp(q[b], _ci_w)
+	hips.x += lunge
+	debug["ik_frames"] += 1
+	if absf(S.T - _ci_tc) < DT * 0.5 and _ci_w > 0.99 and _ci_tc != _gap_tc:
+		_gap_tc = _ci_tc
+		var gap: float = maxf(0.0, (ik_t - gp[c]).length())
+		debug["gap_max"] = maxf(float(debug["gap_max"]), gap)
+		debug["gap_sum"] += gap
+		debug["gap_n"] += 1
+		debug["gaps"].append(snappedf(gap, 0.1))
+		debug["gaps"].append(snappedf(excess, 0.1))
+		if gap > 1.5 and debug["notes"].size() < 40:
+			var ex = S.dirS.ex
+			debug["notes"].append("tick %d %s (%s): target %.0f u ahead, short by %.1f (need %.1f, lunge %.1f, step %.1f), %s %s dmg %.0f" % [S.tick, ex.kind if ex != null else "-", ex.tag if ex != null else "-", mx, gap, need, lunge, step, _ci_target, limb, _ci_dmg])
+
+
+func _set_lag(k: float) -> void:
+	if k == _lag_k:
+		return
+	_lag_k = k
+	for i in range(AnimRig.N):
+		_lag[i] = AnimData.bone_lag[i] * k / 0.45
+
+
+## The timing profile for a kind of part (light, heavy, chain, rush, launch, power): Orb's mix unless a style is forced.
+func _part_prof(kind: String) -> Dictionary:
+	if RenderAnim.style_forced():
+		return _prof
+	var nm: String = String(AnimData.by_part.get(kind, ""))
+	return AnimData.profile(nm) if nm != "" else _prof
 
 
 # ------------------------------------------------------------------ beam, reactions, springs
@@ -422,6 +629,7 @@ func _reaction_layer(T: float) -> void:
 				keep.append(r)
 			continue
 		keep.append(r)
+		_recoil_x += (-1.0 if bool(r.front) else 1.0) * amp * 6.0 * smoothstep(0.0, 0.02, tau) * exp(-tau / 0.07)
 		var w: float = amp * smoothstep(0.0, 0.05, tau) * (1.0 - smoothstep(0.12, 0.12 + 0.3 * amp, tau))
 		if w <= 0.001:
 			continue
@@ -442,7 +650,7 @@ func _reaction_layer(T: float) -> void:
 
 
 func _springs(f) -> void:
-	var vf: float = f.vx * f.face
+	var vf: float = f.vx * vface
 	var target: float = -clampf(vf / 1600.0, -1.0, 1.0) * 0.9
 	var h_all: float = minf(_spring_dt, 0.1)
 	_spring_dt = 0.0

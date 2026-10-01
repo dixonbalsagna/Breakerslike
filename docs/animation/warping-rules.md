@@ -35,7 +35,7 @@ The sim places the attacker 58 u short of the defender (60 u for a chain link, 7
 | Layer | What it does | A1 |
 | :--- | :--- | :--- |
 | Authored lunge | The contact pose puts the pelvis forward and leans, so the striking end lands at about 51 to 59 u from the attacker's root | **Built** (contact poses' hips and hand targets) |
-| IK to the socket | The striking hand or foot is solved to the defender's `hit_*` socket for the part's region, at full weight on the contact tick | A2 |
+| IK to the socket | The striking hand or foot is solved to the defender's `hit_*` socket for the part's region, at full weight on the contact tick | **Built (A2 first pass, pose-pipeline §9.3):** to the defender's last solved chest, gut or head point, with the hips' lunge (11 u) and a step-in (14 u) for what the arm cannot reach |
 | Reach fudge | A target within 15% of the pose's reach is absorbed by pelvis and spine lunge (a cosmetic root offset of at most 0.3 body height, back to zero by the part's end); beyond 15% the validator rejects the pairing at data time | A2 |
 | Runtime fallback | A clamped reach: the hand goes as far as it can and the blow still counts | A2 |
 
@@ -104,6 +104,6 @@ Both poses are original (RL-038): a closed fist along the shoulder line, the rea
 | Rule | Test (`pose-pipeline.md` §10) |
 | :--- | :--- |
 | Contact on the beat, load and recovery in the gaps | A7 timing fidelity (A1: 164 and 128 contact frames a match, worst error 0.0014 rad) |
-| The reach fit | A2 contact accuracy (A2) |
+| The reach fit | A2 contact accuracy: `anim_check` asserts every blow within reach ends within 1 unit of the defender (done, §9.3) |
 | Feet on slopes and across the seam | A3 (A2) |
 | The pose depends on phase and duration only | A8 no pops, and the min and max cases above rendered as filmstrips |

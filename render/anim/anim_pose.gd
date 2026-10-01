@@ -91,6 +91,68 @@ static func ik2(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVector3A
 	gp[c] = T
 
 
+## After ik2: makes the joint a pure human hinge. The upper bone twists about its own axis until the bend plane is the
+## hinge plane (the elbow flexes toward +x of the bone's frame, the knee toward -x: `s` = +1 or -1) and the lower bone's
+## local rotation is that hinge alone, never a sideways or backward bend. The joint position and the end do not move.
+static func hinge_fix(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVector3Array, a: int, b: int, c: int, s: float) -> void:
+	var u1: Vector3 = gp[b] - gp[a]
+	var u2: Vector3 = gp[c] - gp[b]
+	if u1.length() < 0.001 or u2.length() < 0.001:
+		return
+	u1 = u1.normalized()
+	u2 = u2.normalized()
+	var psi: float = acos(clampf(u1.dot(u2), -1.0, 1.0))
+	if psi < 0.02:
+		lq[b] = Quaternion.IDENTITY
+		gq[b] = gq[a]
+		gq[c] = gq[b] * lq[c]
+		return
+	var w: Vector3 = (u2 - u1 * u1.dot(u2)).normalized() * s
+	var xd: Vector3 = gq[a] * Vector3(1, 0, 0)
+	xd = (xd - u1 * xd.dot(u1)).normalized()
+	var phi: float = atan2(u1.dot(xd.cross(w)), xd.dot(w))
+	var qa: Quaternion = Quaternion(u1, phi) * gq[a]
+	lq[a] = gq[AnimRig.parent[a]].inverse() * qa
+	lq[b] = Quaternion(Vector3(0, 0, 1), s * psi)
+	gq[a] = qa
+	gq[b] = qa * lq[b]
+	gq[c] = gq[b] * lq[c]
+
+
+## The runtime limb pass: elbows and knees are hinges within human range (the elbow 0 to 150 degrees, the knee the
+## other way, with 3 degrees of give), and the upper arm may not point straight back along the body (its backward reach is squeezed into 0.8 to 0.9 of the axis).
+## Blends and additive layers can break both; this puts them back.
+const HINGE_MAX := 2.62
+const HINGE_GIVE := 0.05
+const ARM_BACK_SOFT := 0.8
+static var limits_on: bool = true          # tools turn the pass off to measure what it fixes
+
+
+static func limit_limbs(lq: Array[Quaternion]) -> void:
+	if not limits_on:
+		return
+	var ix: Dictionary = AnimRig.index
+	for pair in [["forearm_l", 1.0], ["forearm_r", 1.0], ["shin_l", -1.0], ["shin_r", -1.0]]:
+		var i: int = ix[pair[0]]
+		var s: float = pair[1]
+		var v: Vector3 = lq[i] * Vector3(0, -1, 0)
+		var th: float = atan2(v.x, -v.y) * s
+		var tc: float = clampf(th, -HINGE_GIVE, HINGE_MAX)
+		if tc != th or absf(v.z) > 0.02:
+			lq[i] = Quaternion(Vector3(0, 0, 1), tc * s)
+	for nm in ["upper_arm_l", "upper_arm_r"]:
+		var i2: int = ix[nm]
+		var v2: Vector3 = lq[i2] * Vector3(0, -1, 0)
+		if v2.x < -ARM_BACK_SOFT:
+			# straight behind the body is out of range: squeeze the last of the way back (from 0.8 to 1.0 of the backward axis
+			# into 0.8 to 0.9), keeping the arm's up, down or sideways lean, so the map stays continuous
+			var xn: float = -ARM_BACK_SOFT - (-v2.x - ARM_BACK_SOFT) * 0.5
+			var r0: float = sqrt(maxf(1.0 - v2.x * v2.x, 0.0))
+			if r0 > 0.0001:
+				var k: float = sqrt(1.0 - xn * xn) / r0
+				lq[i2] = Quaternion(v2, Vector3(xn, v2.y * k, v2.z * k).normalized()) * lq[i2]
+
+
 ## Bakes a pose from its sketch dictionary.
 static func bake(pid: String, d: Dictionary) -> AnimPose:
 	AnimRig.setup()
@@ -138,12 +200,14 @@ static func bake(pid: String, d: Dictionary) -> AnimPose:
 		if d.has("hand_" + s):
 			var pole: Vector3 = gp[up] + (_v3(d["pole_hand_" + s]) if d.has("pole_hand_" + s) else Vector3(-3.0, -10.0, 6.0 * zs))
 			ik2(p.q, gq, gp, up, lo, en, _v3(d["hand_" + s]), pole)
+			hinge_fix(p.q, gq, gp, up, lo, en, 1.0)
 		var th: int = ix["thigh_" + s]
 		var sh: int = ix["shin_" + s]
 		var ft: int = ix["foot_" + s]
 		if d.has("foot_" + s):
 			var pole2: Vector3 = gp[th] + (_v3(d["pole_foot_" + s]) if d.has("pole_foot_" + s) else Vector3(10.0, 1.0, 0.0))
 			ik2(p.q, gq, gp, th, sh, ft, _v3(d["foot_" + s]), pole2)
+			hinge_fix(p.q, gq, gp, th, sh, ft, -1.0)
 	var hs: Dictionary = d.get("hands", {})
 	p.curl = Vector2(float(CURL.get(String(hs.get("l", "relaxed")), 0.5)), float(CURL.get(String(hs.get("r", "relaxed")), 0.5)))
 	return p
