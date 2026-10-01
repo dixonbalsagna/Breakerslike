@@ -1,0 +1,25 @@
+; Band prototype (option B: the fighting ground is a band with real depth). Throwaway research project.
+; Standalone: its own project.godot, so the game's project ignores this folder. Never loaded by the game or the sim.
+
+config_version=5
+
+[application]
+
+config/name="Band prototype"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7")
+boot_splash/show_image=false
+boot_splash/bg_color=Color(0.1, 0.12, 0.16, 1)
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.46, 0.62, 0.84, 1)

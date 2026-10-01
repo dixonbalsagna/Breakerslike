@@ -12,6 +12,7 @@ Owner: Research & Prototyping director. Spikes are fast, throwaway experiments t
 | Spike | Question | Status |
 |---|---|---|
 | [engine-spike](engine-spike/) | Godot 4.7.2 or the web stack for the real build (ADR 0001)? | Done 2026-09-29: [RESULT.md](engine-spike/RESULT.md) |
+| [band-proto](band-proto/) | Option B: does a fighting ground with real depth (true collisions) feel and read better than the flat plane? | Built 2026-10-01: playable prototype and [README](band-proto/README.md); waiting for Orb to play it |
 | [info-hiding](info-hiding/) | How can hiding work when both players share one screen: split-screen, fog of war or picture-in-picture? | **Parked** 2026-09-29 (lean-team directive, ADR 0005). See "Where info-hiding stopped" below. |
 
 ### Where info-hiding stopped

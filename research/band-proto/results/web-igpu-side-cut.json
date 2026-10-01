@@ -1,0 +1,93 @@
+{
+  "buildingsStanding": 17,
+  "camera": "side-on, slightly raised",
+  "elapsedMs": 20002.6200009584,
+  "engineVersion": "4.7.2-stable (official)",
+  "fps": 359.152950946215,
+  "frameMs": {
+    "avg": 2.78432906472139,
+    "max": 18.0149993896484,
+    "p50": 2.77500009536743,
+    "p95": 3.39499998092651,
+    "p99": 3.84999990463257
+  },
+  "frames": 7184,
+  "gpu": "WebKit WebGL",
+  "hashMatch": true,
+  "height": 1080,
+  "occlusion": "cut away",
+  "renderer": "gl_compatibility",
+  "stack": "godot band-proto",
+  "width": 1920,
+  "browser": "Chrome/154.0.8037.58",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "driver": "D3D11",
+  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor           ",
+  "os": "Windows 11 Pro 10.0.26200",
+  "gpuRendererUnmasked": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "gpuVendorUnmasked": "Google Inc. (AMD)",
+  "browserGpuDevices": [
+    {
+      "vendorString": "",
+      "deviceString": "AMD Radeon(TM) Graphics",
+      "vendorId": 4098,
+      "deviceId": 5056,
+      "driverVendor": "",
+      "driverVersion": "32.0.21030.2001"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "NVIDIA GeForce RTX 5070 Ti",
+      "vendorId": 4318,
+      "deviceId": 11269,
+      "driverVendor": "AMD",
+      "driverVersion": "32.0.16.1664"
+    },
+    {
+      "vendorString": "",
+      "deviceString": "Microsoft Basic Render Driver",
+      "vendorId": 5140,
+      "deviceId": 140,
+      "driverVendor": "",
+      "driverVersion": "10.0.26100.9278"
+    }
+  ],
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "cssWidth": 1919,
+    "cssHeight": 1079,
+    "devicePixelRatio": 1.0000000149011612,
+    "crossOriginIsolated": true
+  },
+  "benchDriver": {
+    "tool": "research/engine-spike/tools/bench-browser.mjs",
+    "browserName": "chrome",
+    "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "flags": [
+      "--remote-debugging-port=0",
+      "--disable-gpu-vsync",
+      "--disable-frame-rate-limit",
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-extensions",
+      "--disable-sync",
+      "--disable-component-update",
+      "--window-size=1940,1200",
+      "--window-position=0,0",
+      "--force_low_power_gpu"
+    ],
+    "url": "http://127.0.0.1:8641/index.html?bench=1&cam=0&occl=1&measure=20",
+    "viewport": {
+      "width": 1920,
+      "height": 1080,
+      "deviceScaleFactor": 1
+    },
+    "waitFor": "__benchResult",
+    "wallMs": 37039,
+    "pageWarnings": []
+  }
+}
