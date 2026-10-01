@@ -331,12 +331,12 @@ The Empress's joke revisions stay small on purpose, because they are the comedy.
 
 - **The crash** (Pride below 50): the last form's pieces flake off as ash, and his posture drops back one step.
 - **Abdicate** (Drop the Act): every piece bursts off at once, the sigil dims to a thin line, and he fights feral in the crouch. It keeps its own input (`stance-matrix.md` R9).
-- **His revealed signature (Lean slot G4).**
+- **His revealed signature** (slot G4 in the first plan).
   - *The trigger* is the first time he takes Apex. The reveal is the held pose at the end of the Apex cinematic, and its name shows on screen.
   - *Why not Abdicate:* Abdicate already has its own form-tied signature (G3), and a form-tied signature always wins over a revealed one (§2), so a reveal there would never be seen.
-  - Once revealed, it replaces his place signatures for the rest of the match, including after a crash below Apex.
+  - Once revealed, it is his signature for the rest of the match, including after a crash below Apex: it outranks Regalia's and Sovereign's own signatures as well as the place ones (§11).
   - *QA band:* he reveals it in 25 to 50% of his matches. If it falls under 25%, the trigger moves down to Sovereign.
-  - At Lean it is his only revealed signature. A second, from a rivalry thread (§2), can come as his moveset grows.
+  - His first moveset has two revealed signatures planned, this one and a later one from a rivalry thread (§2 and §11).
 
 ### 10.4 The Protagonist: heat, then Open Hand
 
@@ -421,3 +421,33 @@ What reads is the 10% size step, the aura's shape for the tier and the crater.
 - *The live version* is only the flick and the lock.
 
 He is masked, so there is no face to scream with. His sigil brightens instead.
+
+## 11. Rulings for the first real moveset (Combat's `docs/combat/m0-rich.md`, 2026-10-02)
+
+Orb withdrew the Lean choice, and the Anti-hero's first moveset is now planned at the rich end: 38 key strikes, 8 specials, 8 signatures and 16 showcases.
+
+**(a) A revealed signature outranks the forms below it.** The order in §2 becomes:
+1. the signature tied to a top state, where there is one. For him that is the unrestrained state after Abdicate;
+2. a **revealed** signature, once it has been revealed;
+3. the signature of his current form (Regalia or Sovereign);
+4. the place signatures.
+
+So a match reads as a climb: a place signature, Regalia's, Sovereign's, and then the one Apex reveals. Once revealed it is his signature for the rest of the match, even after a crash drops him to Sovereign. Before this ruling a form-tied signature always won, which would have hidden the reveal everywhere below Apex.
+
+**(b) The `return` strike class is confirmed.** It is the ping-pong rally's return blow: a light, at ×0.6 of a light's damage. Its whole 6-tick anticipation is the perfect-block window, with no early tolerance (`control-rules.md` §11). No return blow repeats inside one rally.
+
+**(c) The pulse spacing is confirmed, and the tie rule is amended.**
+- *Spacing:* the fist clash and the blur exchange have pulses at 24, 48 and 72 ticks and resolve at 84. The grapple lock has pulses at 30, 60 and 90 and resolves at 102. The beam struggle uses the grapple lock's spacing unless Encounter and Controls need another.
+- *The tie rule:* Combat proposed a tie when the scores are within 10. One pulse is worth exactly 10, so that would turn a one-pulse lead into a draw. **A clash is a tie only when the scores differ by less than 10.** In a tie both fighters are thrown back, nobody wins the exchange, and the mood still gains its +8.
+
+**The counts against the targets here.**
+
+| Target | M0 | Verdict |
+| :--- | :--- | :--- |
+| A loadout of 3 specials from a pool (§1) | A pool of 8 | Passes. It gives 56 loadouts |
+| Signatures by form, revealed and place, with 1 or 2 revealed (§2) | 3 by place, 3 by form and 2 revealed, one of them later | Passes |
+| The same three-piece series in under 10% of exchanges (§6) | About 3% healthy, and about 8% in the worst broken-limb case | Passes. The margin is thin in the worst case, which is the price a broken limb is meant to carry (`spec-wounds.md` §1d) |
+| 1 to 3 completed taunts a match (`control-rules.md` §4) | 4 taunts | Passes: none repeats in a match |
+| A finisher per form (`spec-wounds.md`) | 3 shapes: base, Abdicate and Apex | Passes |
+
+**Still open from Combat's list:** the turn throw's gates and cost. It waits for Combat's launch-vector note to be briefed.

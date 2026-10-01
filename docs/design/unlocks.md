@@ -4,7 +4,7 @@ Owner: Game Design. Orb wants a vast assortment of cosmetics across the four fig
 
 ## 1. The rules
 
-1. **Only cosmetics unlock.** Everything that changes play is open from the start (Orb, questionnaire 3): fighters, modes, planets, specials, signatures, world-change picks and transformations. When a moveset grows by data (the first fighter starts at Lean: 3 specials, 4 signatures, 6 showcases), the new moves reach everyone at once.
+1. **Only cosmetics unlock.** Everything that changes play is open from the start (Orb, questionnaire 3): fighters, modes, planets, specials, signatures, world-change picks and transformations. When a moveset grows by data, the new moves reach everyone at once. The first fighter's moveset is no longer the Lean one: it starts at 8 specials, 8 signatures and 16 showcases (`docs/combat/m0-rich.md`).
 2. **Earned through play only.**
    - There are no purchases, loot boxes, paid currency or random reward rolls.
    - Every item has a named condition the player can see, except a few secrets, which show a hint.
@@ -35,7 +35,7 @@ Owner: Game Design. Orb wants a vast assortment of cosmetics across the four fig
 - a comeback win;
 - a full 5-link chain;
 - a time-cap ending;
-- **the signature log:** 10%, 25%, 50%, 75% and 100% of that fighter's signature variants seen, by biome, altitude and stance. This rewards pillar 7. The thresholds are shares, so they scale as movesets grow from Lean.
+- **the signature log:** 10%, 25%, 50%, 75% and 100% of that fighter's signature variants seen, by biome, altitude and stance. This rewards pillar 7. The thresholds are shares, so they scale as movesets grow.
 
 **What goals never ask for:**
 - civilian casualties. Pillar 5 is personality, not a scoreboard. Protecting goals are fine;
@@ -81,7 +81,7 @@ UI's roughly 40 titles, frames and nameplates come on top.
 | **The long tail** | Mastery 60 on one fighter comes at about 36 hours, which finishes most of that fighter's pool. 100% takes about 150 hours (about 1,050 matches), set by mastery 60 on every fighter (four today) |
 
 - **Tuning.** The points, costs and allocation are data (`data/unlocks/`). QA checks the pace table from AI-vs-AI batches using the same event log. The target bands are: first item in match 1; 40 to 70 items by 10 hours; 60 to 85% by 100 hours; one fighter's mastery in 30 to 40 hours; 100% in 150 to 200 hours at four fighters (§3b).
-- **Growth.** New items from updates slot into the existing tracks: mastery levels past 60, new feats, new challenges, and a signature log that grows as movesets grow from Lean. Returning players always have something new to earn.
+- **Growth.** New items from updates slot into the existing tracks: mastery levels past 60, new feats, new challenges, and a signature log that grows as movesets grow. Returning players always have something new to earn.
 - **No duplicates.** A reward is never an item the player already owns.
 
 ### 3b. Re-fitting for another roster size

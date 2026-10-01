@@ -30,7 +30,8 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 ## 2. Two rules this plan adds
 
 **Clashes are decided on the pulse** (Orb: timed presses, "hit the pulse to surge"). This covers the beam struggle, the fist clash, the blur exchange and the grapple lock.
-- A clash has **3 pulses.** Each is shown and heard, with an 8-tick window (10 on touch).
+- A clash has **3 pulses.** Each is shown and heard, with an 8-tick window (10 on touch). They come at 24, 48 and 72 ticks for the fist clash and the blur exchange, and at 30, 60 and 90 for the grapple lock and the beam struggle (`moveset-rules.md` §11).
+- **A tie** is a difference of less than 10. Both fighters are thrown back and nobody wins the exchange.
 - A press on the pulse is a **surge:** +10 to that fighter's clash score. A press off the pulse misses that pulse and locks the next press out for 20 ticks, so mashing loses.
 - The score still starts from state (tier, ki and meters), as today. The pulses swing it by up to 30 either way.
 - The AI hits 40%, 65% or 85% of pulses (easy, medium, hard).
