@@ -13,3 +13,5 @@ godot --headless --path <dir> --import
 - `g2_contact.py`: the fields, events, hash lines and hooks of G2 and G3 (switched off by data), plus `contact.gd` and `contact.json`.
 - `probe_g1.txt`, `probe_g2.txt`: the probe sections. `light.gd`: the light per-tick digest used for the neutrality proof. `jstats.gd`: landing classes and journeys.
 - `enable` flips `contact.json` to `"enabled": true`.
+
+**Rebased on Simulation's L0 and L2 (d7d3db3, 2026-10-02):** use `build2.py` and `g2_contact_v2.py` (the fields, events and hash lines are in the tree; v2 adds only `contact.gd`, `contact.json` and the grant lines in `sim.gd`, `fighter.gd`, `brunt.gd`). `g1_reach.py`, `g1_freeze.py` and `g2_contact.py` are history (G1 is committed as 940cf02). `jdist.gd` measures journey distance two ways.

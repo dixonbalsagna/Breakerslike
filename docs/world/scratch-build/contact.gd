@@ -233,6 +233,19 @@ static func spinStep(b: Body, dt: float) -> void:
 		b.spin *= SimDetMath.pow(0.5, dt / K_HALF)
 
 
+## SimFighter.spin hands over here when contact is on (the fighter's rolling outside a journey: in the air, free, stopped). rot is
+## only integrated or eased, never assigned.
+static func spinFighter(f, dt: float, how: int) -> void:
+	if how == 0:       # SimFighter.SPIN_AIR
+		f.rot += f.spin * dt
+		f.spin *= SimDetMath.pow(0.5, dt / K_HALF)
+	elif how == 1:     # SPIN_FREE: ease upright
+		f.rot *= SimDetMath.pow(0.001, dt)
+	else:              # SPIN_STOP: a stop eases it out quickly
+		f.rot *= SimDetMath.pow(0.000001, dt)
+		f.spin = 0.0
+
+
 ## The airborne part of a tick: gravity, drag, the move, the water (entry, skim, sink). Appends events {"k": ...}.
 static func moveAir(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	b.age += dt
@@ -623,8 +636,8 @@ static func _skidEffects(S: SimState, f, by, b: Body, xa: float) -> void:
 	var idx: int = int(floor(f.slideD / WorldSlide.SAMPLE))
 	if idx > int(floor((f.slideD - absf(b.dxStep)) / WorldSlide.SAMPLE)):
 		if idx <= WorldSlide.SAMPLE_MAX:
-			SimFx.slideDust(S, f.x, f.y, b.vN, hw * 2.0, "paved" if pav else "ground", idx)
-		SimFx.debris(S, f.x, f.y + 4.0, 3 if pav else 2, "#8f8b84" if pav else "#6d6a66", 500.0)
+			SimFx.slideDust(S, f.x, f.y, b.vN, hw * 2.0, "paved" if pav else "ground", idx, f.z)
+		SimFx.debris(S, f.x, f.y + 4.0, 3 if pav else 2, "#8f8b84" if pav else "#6d6a66", 500.0, f.z)
 		WorldStructures.damageArea(S, f.x, f.y + 5.0, hw * 2.0, (0.22 + 0.12 * by.tier) * WorldSlide.PATH_AREA * b.vN, by, false, f.slideEvt)
 		if f.slideAcc > 0.0:
 			SimDamage.hurt(S, f, f.slideAcc, by)
@@ -640,11 +653,11 @@ static func _apply(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 	var WS: float = SimConst.WS
 	var k: String = String(e.k)
 	if k == "enter":
-		SimFx.splash(S, e.x, e.y, 12)
-		SimFx.ring(S, e.x, e.y, 500.0, "#bfe6ff", 0.5, 10.0)
+		SimFx.splash(S, e.x, e.y, 12, f.z)
+		SimFx.ring(S, e.x, e.y, 500.0, "#bfe6ff", 0.5, 10.0, f.z)
 	elif k == "skim":
-		SimFx.splash(S, e.x, e.y, 8)
-		SimFx.skim(S, e.x, e.y, e.speed, e.n)
+		SimFx.splash(S, e.x, e.y, 8, f.z)
+		SimFx.skim(S, e.x, e.y, e.speed, e.n, f.z)
 		var ev1 := SimFx.contactEvent(S, "bounce", f, e.x, e.y, e.speed)
 		ev1.k = float(e.n)
 		ev1.surface = "water"
@@ -673,7 +686,7 @@ static func _apply(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 		var E: float = f.slideE
 		WorldCrater.dig(S, f.x, E * WorldSlide.STOP_E, by, "impact", 0.0, 1.0)
 		SimDamage.hurt(S, f, absf(f.vx) / f.launchT * WorldSlide.STOP_DMG, by)
-		SimFx.shake(S, 10.0, f.x)
+		SimFx.shake(S, 10.0, f.x, f.z)
 
 
 ## A contact that is not a leave: the area damage, the dust, the wear, the first-contact set-up, the event.
@@ -699,13 +712,13 @@ static func _contact(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 		if bool(e.get("dig", true)):
 			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial)
 	if sea:
-		SimFx.splash(S, f.x, f.y + 10.0, 14)
+		SimFx.splash(S, f.x, f.y + 10.0, 14, f.z)
 	else:
-		SimFx.debris(S, f.x, f.y + 8.0, 12 if k == "slam" else 6, "#6d6a66", 500.0)
-		SimFx.dust(S, f.x, f.y, 4 if k == "slam" else 2)
-	SimFx.ring(S, f.x, f.y + 10.0, 700.0 + sp * 0.2, "#ffffff", 0.45, 10.0)
+		SimFx.debris(S, f.x, f.y + 8.0, 12 if k == "slam" else 6, "#6d6a66", 500.0, f.z)
+		SimFx.dust(S, f.x, f.y, 4 if k == "slam" else 2, "", f.z)
+	SimFx.ring(S, f.x, f.y + 10.0, 700.0 + sp * 0.2, "#ffffff", 0.45, 10.0, f.z)
 	WorldStructures.damageArea(S, f.x, f.y + 5.0, r * 1.7, sp * (0.22 + 0.12 * tier) * touch, by)
-	SimFx.shake(S, SimMathx.jmin(30.0, sp * 0.01), f.x)
+	SimFx.shake(S, SimMathx.jmin(30.0, sp * 0.01), f.x, f.z)
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.06)
 	# wear: one impact in all. A slam pays all of it; a first touch-down pays its share; each later contact pays by the speed it removes
 	var j: float = f.jV0 * 0.018

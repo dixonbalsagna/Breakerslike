@@ -212,3 +212,19 @@ The shortfall in the halted journeys was real: the 70% share is paid by the spee
 ## 12. G1 landed (2026-10-02)
 
 Rims (lip 0.5 R, crest 0.40 d, footings skipped), heaps (slope 0.6, spill 1.0), the slide-trench freeze, structure reach and its data are in the tree; the golden is regenerated and the gates pass (probe 0 failures with the new section, parity, determinism, seam sweep, `npm test` 5 of 5, the validator, the terrain audit on 8 seeds: steps over 1 bh 0 or 1, no shafts, tilted footings in rows 0 and 1 at most 3). Files: `sim/world/crater.gd` (`RIM_IN`, `RIM_DEPTH_MAX`, the footing skip in `dig`, `relax`'s freeze, `carveSegment`), `sim/world/structures.gd` (`RUBBLE_*`, the taper, `damageArea`'s reach and ring cap), `sim/director/beam.gd` (one token), `sim/core/fighter_data.gd` (the parse), the two `ladder.json` files, `tools/schemas/fighter-ladder.schema.json`, `sim/world/tools/probe.gd`, `sim/core/test/golden.json`.
+
+## 13. Rebased on L0 and L2; journey distance, two measures (2026-10-02)
+
+**Rebase.** G2 to G5 now apply on d7d3db3 as `contact.gd`, `contact.json` and four grant lines (`SimCore.newMatch`: `S.contactOn = WorldContact.enabled()`; the hook at the top of `stepLaunched`; `SimFighter.spin` handing over to `WorldContact.spinFighter` when contact is on, rot only integrated or eased; `WorldBrunt.arm`'s journey reset and the launch event's `n`). The wear budget needs no edit at the impact's call: with contact on the journey pays through `contact.gd` and `impact` is not reached. Proven in scratch on HEAD 72f965c: flag off is neutral (9 seeds over 12,000 ticks, light digests identical, probe 0 failures); flag on is deterministic (two runs identical, render determinism passes); the journey function predicts the played end within 60 units for 100 of 111 launches on open ground (it was 108 of 112 before Encounter's contact slice).
+
+**Journey distance.** Camera's numbers (end to end median 2,500 to 5,100 units, mean 4,500 to 7,900, 38 to 57% over 4,000) and mine (mean 34 bh, one in six over 4,000) differ because they measure different spans of the same journeys. 40 matches, flag on, 2,683 journeys:
+
+| Span | Median | Mean | p90 | Over 4,000 units |
+| :--- | ---: | ---: | ---: | ---: |
+| Launch to the end (Camera's: launched until not launched) | 5,300 | 9,300 | 24,000 | 58% |
+| First ground contact to the end (mine) | 1,450 | 2,600 | 5,400 | 14% |
+| Launch to the first contact (the flight) | 1,900 | 6,700 | 20,000 | |
+
+Launch to the end takes 2.2 s at the median and 4.8 s at the 90th percentile. My launch-to-end figures agree in kind with Camera's (theirs were measured on HEAD with the old slide model; the spread between 2,500 and 5,100 is arms and seeds). The difference is the flight: the planner's SMASH ACROSS and other long hauls cross the map by design (the launch's horizontal traversal factor), and that is where most of the distance is; the ground model decides only what happens after the first contact.
+
+**Which measure for "at most 20% over 4,000 units".** The bound is a bound on the knocked-about part, so it should use **first contact to the end** (14% now, inside the 20% limit); launch to the end is the launch's travel, set by the planner and the traversal factor, and 58% of launches exceed 4,000 by design. Camera's off-screen question is about the whole span: for that, launch to the end (median 5,300, p90 24,000) is the right measure and the follow camera, not the ground model, has to cope with it. I recommend recording both on the closing event (`journey_end` could carry the launch-to-end distance in `x1`: one field, no state, computed from the position at the launch, which the fighter's `aimX0` already holds for brunt flights and which I can keep in `jX0`) if QA wants both bands; for now each consumer can compute it from the `launch` event's position and the closing event's x.
