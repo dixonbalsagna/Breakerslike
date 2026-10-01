@@ -254,6 +254,37 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
     - After Drop the Act, Humbled still stacks. Its Pride cost no longer matters, and its burst still does.
     - *Swallow It* (hold to drain Pride into a proportional surge, interruptible) is kept as the fallback if Orb drops either.
   - **Earlier rulings stand:** *Take a Knee* keeps Spite. *Hat in Hand* and *Full Circle* forfeit Spite for the match, because they accept help.
+  - **The Heavy Crown, with On the Chin** (Orb's pick, 2026-10-01: hybrid 1 of `pitches.md` §7b). Every number is a proposal for data. The mechanic is built after his first moveset (questionnaire 8).
+    - **Three forms,** like a typical fighter: Regalia at Pride 60, Sovereign at 80 and Apex at 95. This folds the five-form ladder in `moveset-rules.md` §9.2 and §10.3.
+    - **Pride.**
+      - *Gains:* an exchange won +3; a perfect block +5; a completed taunt +6; a string of three or more +8; and absorbed damage (below).
+      - *Losses:* a humbling costs 15, and the crash below 50 takes a form away, as before. Under ADR 0008 a humbling is being perfect-blocked, guard-broken, thrown or crippled.
+    - **The Heavy Crown.** Above Pride 50 he loses 4% damage per 10 Pride, so he is at −18% just before Apex. That is his weak middle.
+    - **Apex** ends the debuff for the rest of the match and gives **+36% damage**, plus 3% for each completed absorb, up to **+45%**. A typical fighter's top form is +27%, so this is the largest swing in the roster: 54 to 63 points in one moment.
+    - **Take it on the chin** (working name). He plants his feet and lets the opponent hit him.
+      - *The prompt:* his Pride is 60 or more, he is free and not guarding, he is not on the brink or opened up, and the move is off cooldown. The context icon gains a "hold" mark.
+      - *The input:* hold the context button for 12 ticks. A tap still does the usual context action (`control-rules.md` §4). The stance lasts while held, for 4 s at most.
+      - *What it absorbs:* up to 3 ordinary hits, or 1 signature, which ends it.
+      - *The reduction:* ordinary attacks hurt 17% less (Orb's figure; the tuning range is 15 to 25%), and a signature hurts 70% less. Nothing launches, staggers or moves him.
+      - *Against his body:* only the reduced damage becomes wear. It lands on the head and the core, half each.
+      - *Toward his ego:* the move's full damage counts, at +1 Pride per 12 damage. That is about +2 for a light, +5 for a heavy and +20 for a signature. A completed absorb (3 hits, or a signature) is what adds the 3% to Apex.
+      - *What he gives up:* movement, guard, dodge, attacks and the burst. Releasing early ends it with 20 ticks of recovery.
+      - *Cooldown:* 25 s from the end of the stance.
+      - *A signature absorbed* is a set piece: a 1.5 s pause, a camera push and a line of bravado. It is the short version in the pause budget (§8b) and draws on the bank. When the bank can't cover it, it plays live with a camera cut.
+      - *Absorbed hits are not decisive exchanges.* They can't launch him, can't roll a crippling moment and can't set up a finisher.
+    - **The opponent's counterplay.**
+      - *Throw him:* a grab or tackle beats the stance at full damage and humbles him.
+      - *Don't attack:* he gains nothing, the cooldown starts, and the opponent has up to 4 s to charge untouched.
+      - *Hit him anyway* when ahead on wear, because every hit goes to his head and core.
+    - **The AI.**
+      - *As the rival,* it uses the stance when its core is below battered and it isn't within 15 Pride of a crash. It answers a signature tell on 20%, 45% or 70% of chances (easy, medium, hard), and otherwise uses it when the opponent has a string queued.
+      - *As the opponent,* easy attacks into the stance, medium charges and hard throws him.
+    - **With the rest of his kit.** The Proud front hides the wear he absorbs. Humbled is unchanged. Drop the Act ends the Heavy Crown and gives up Apex for unrestrained power now. His revealed signature still arrives at Apex (`moveset-rules.md` §10.3).
+    - **QA bands** (when it is built):
+      - every pairing 45 to 55%; he wins under 45% of the matches that end before Apex and over 60% of those that reach it;
+      - Apex is reached in 30 to 50% of his matches;
+      - completed absorbs: 1 to 3 a match, and a signature absorbed in 20 to 40% of his matches;
+      - he is thrown out of the stance in 15 to 35% of its uses.
   - **Narrative's round-4 options B1 to B4** stay as notes until Orb picks: Shed Regalia, Credit Where Due, The Code, Loss of Face (`docs/narrative/pitches-q3.md`, Round 4 §2). Each would plug into the same Pride and Proud-front rules.
   - **QA bands**, per Anti-hero match:
     - he wins 45 to 55% of each pairing;
