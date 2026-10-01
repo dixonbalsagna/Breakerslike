@@ -312,9 +312,10 @@
       "type": "object",
       "required": [
         "every",
-        "oncePerMatch"
+        "oncePerMatch",
+        "formSteps"
       ],
-      "description": "Which events raise the act: every occurrence, or once per match.",
+      "description": "Which events raise the act: every occurrence, or once per match; formSteps switches the form track on (Q10).",
       "properties": {
         "every": {
           "type": "array",
@@ -336,6 +337,10 @@
               "coreBattered"
             ]
           }
+        },
+        "formSteps": {
+          "type": "boolean",
+          "description": "Q10: when true the act is 1 + the larger of (form steps, wound beats) + the every beats; when false it is 1 + every beat."
         }
       },
       "additionalProperties": false,

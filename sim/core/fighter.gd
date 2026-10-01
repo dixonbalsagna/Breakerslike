@@ -10,6 +10,7 @@ const WATER_BUOY: float = 1000.0
 
 static func tierUp(S: SimState, f) -> void:
 	S.world.maxTier = maxf(S.world.maxTier, f.tier)
+	SimMood.onForm(S)   # Q10: a form step may raise the act
 	SimFx.banner(S, f.name + " POWERS UP  TIER " + SimMathx.jstr(f.tier), f.aura, 1.4)
 	var g: float = WorldTerrain.groundY(S, f.x)
 	SimFx.ring(S, f.x, f.y + 34.0, 1300.0, f.aura, 0.8, 20.0)
@@ -262,7 +263,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 			f.vx *= 0.85
 			f.vy *= 0.85
 			f.ki = SimMathx.jmin(100.0, f.ki + 30.0 * dt)
-			f.power = SimMathx.jmin(100.0, f.power + 9.0 * dt)
+			f.power = SimMathx.jmin(100.0, f.power + f.ld.charge * dt)   # Q10: ladder.json chargePerSec
 			SimFx.chargeFx(S, f, WorldTerrain.groundY(S, f.x))   # the aura's sparks and dust are cosmetic: the consumer rolls them
 	elif f.state == "down":
 		f.stateT += dt

@@ -1,10 +1,10 @@
 {
   "schema": "fight.style/1",
-  "_about": "M1: Narrative's player-style labels, revision 2 (docs/narrative/style-thresholds.md, signed off by Game Design), loaded by sim/core/mood.gd. Percentages are integers, compared by cross-multiplication (100 x part > pct x whole) on the rolling window. Times are seconds at the 1 Hz evaluation. The measure strings are closed keys the code implements, not formulas it parses. An attack is an exchange the fighter's director started, counted by its weight at the start. minHeldS: a label cannot end or be replaced until held this long. The mixer's leaveMaxStancePct and leaveHoldS make its leaveWhen text a number.",
+  "_about": "M1: Narrative's player-style labels, revision 3 (QA's M1b tuning, docs/qa/tuning-m1b.md) (docs/narrative/style-thresholds.md, signed off by Game Design), loaded by sim/core/mood.gd. Percentages are integers, compared by cross-multiplication (100 x part > pct x whole) on the rolling window. Times are seconds at the 1 Hz evaluation. The measure strings are closed keys the code implements, not formulas it parses. An attack is an exchange the fighter's director started, counted by its weight at the start. minHeldS: a label cannot end or be replaced until held this long. The mixer's leaveMaxStancePct and leaveHoldS make its leaveWhen text a number.",
   "windowS": 60,
   "evalHz": 1,
   "minWindowFillS": 20,
-  "minHeldS": 12,
+  "minHeldS": 30,
   "priority": [
     "turtle",
     "runner",
@@ -14,8 +14,8 @@
     "mixer"
   ],
   "shift": {
-    "minGapS": 20,
-    "refractoryAfterLeaveS": 6,
+    "minGapS": 30,
+    "refractoryAfterLeaveS": 12,
     "startUnlabelled": true
   },
   "labels": {
@@ -23,56 +23,56 @@
       "measure": "stance1 / stanceTotal",
       "enterPct": 52,
       "enterHoldS": 30,
-      "leavePct": 42,
-      "leaveHoldS": 10
+      "leavePct": 40,
+      "leaveHoldS": 15
     },
     "rusher": {
       "measure": "stance0 / stanceTotal",
       "enterPct": 55,
-      "enterHoldS": 15,
-      "leavePct": 45,
-      "leaveHoldS": 10
+      "enterHoldS": 25,
+      "leavePct": 40,
+      "leaveHoldS": 15
     },
     "runner": {
       "measure": "(stance2 + stance3) / stanceTotal",
       "enterPct": 45,
-      "enterHoldS": 15,
-      "leavePct": 35,
-      "leaveHoldS": 10
+      "enterHoldS": 20,
+      "leavePct": 30,
+      "leaveHoldS": 15
     },
     "charger": {
       "measure": "charge / stanceTotal",
       "enterPct": 15,
-      "enterHoldS": 10,
-      "leavePct": 9,
-      "leaveHoldS": 10
+      "enterHoldS": 15,
+      "leavePct": 8,
+      "leaveHoldS": 15
     },
     "sniper": {
       "measure": "sig / (light + heavy + sig)",
       "enterPct": 35,
-      "enterHoldS": 25,
+      "enterHoldS": 30,
       "minAttacksInWindow": 6,
-      "leavePct": 22,
-      "leaveHoldS": 10
+      "leavePct": 20,
+      "leaveHoldS": 15
     },
     "mixer": {
       "definition": "no dominant stance and a spread of attack kinds",
-      "maxStancePct": 50,
+      "maxStancePct": 45,
       "minStancesUsed": 2,
       "stanceUsedPct": 20,
-      "maxAttackKindPct": 75,
+      "maxAttackKindPct": 70,
       "minAttacksInWindow": 6,
-      "enterHoldS": 20,
-      "leaveWhen": "any other label enters, or the largest stance share exceeds 58 percent for 10 s",
-      "leaveMaxStancePct": 58,
-      "leaveHoldS": 10
+      "enterHoldS": 30,
+      "leaveWhen": "any other label enters, or the largest stance share exceeds 55 percent for 15 s",
+      "leaveMaxStancePct": 55,
+      "leaveHoldS": 15
     }
   },
   "qaBands": {
     "judgedOnAI": {
       "labelEntriesPerFighterPerMatchMedian": "at most 3",
       "labelEventsIncludingEndingsMedian": "at most 5",
-      "shortestLabelHeldS": "at least 12 (guaranteed by minHeldS except at the end of a match)",
+      "shortestLabelHeldS": "at least 12 (minHeldS now guarantees 30 except at the end of a match)",
       "unlabelledShareOfMatch": "at most 40 percent"
     },
     "judgedOnHumanOrScriptedPlay": {

@@ -119,7 +119,8 @@ func run_match(seed: int, arm: String) -> Dictionary:
 		"beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0, "bad": "", "koAt": -1.0, "winner": -1,
 		"breaks": 0, "firstBrink": -1.0, "firstBroken": "", "wearIn": [0.0, 0.0, 0.0, 0.0],
 		"rallies": 0, "rallyTwice": 0, "rallyKinds": {}, "batteredIn": 0.0, "breathWear": 0.0, "limbBreaks": 0, "limbRegions": {}, "lastBrink": [-1.0, -1.0], "firstBrinkF": [-1.0, -1.0], "postBrink": -1.0, "postFirstBrink": -1.0, "contests": 0, "survived": 0,
-		"bandTicks": [0, 0, 0], "actBand": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]], "labelEntries": 0, "actAt": [-1.0, -1.0, -1.0], "labelSec": {}, "labelEvents": 0, "heldMin": -1, "labelsSeen": {}}
+		"bandTicks": [0, 0, 0], "actBand": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]], "labelEntries": 0, "actAt": [-1.0, -1.0, -1.0], "labelSec": {}, "labelEvents": 0, "heldMin": -1, "labelsSeen": {},
+		"formAt": [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], "versions": {"full": 0, "short": 0, "live": 0}, "pauseMax": 0.0, "pauseTicks": 0, "capSurvived": 0}
 	var lastT: int = S.mood.t
 	var labelStart: Array = [-1, -1]
 	var rallied := {}
@@ -157,6 +158,15 @@ func run_match(seed: int, arm: String) -> Dictionary:
 			elif e.type == "finisher_contest":
 				rec.contests += 1
 				rec.survived += 1 if e.survived else 0
+				if e.survived and S.game.timeCap:
+					rec.capSurvived += 1   # Q10: must stay 0
+			elif e.type == "transform":
+				var step: int = int(e.tier) - 2
+				if step >= 0 and step < 3 and rec.formAt[int(e.actor)][step] < 0.0:
+					rec.formAt[int(e.actor)][step] = S.T
+				rec.versions[e.version] += 1
+			elif e.type == "pause_start":
+				rec.pauseMax = maxf(rec.pauseMax, e.dur)
 			elif e.type == "limb_break":
 				rec.limbBreaks += 1
 				rec.limbRegions[e.region] = rec.limbRegions.get(e.region, 0) + 1
@@ -208,6 +218,7 @@ func run_match(seed: int, arm: String) -> Dictionary:
 		if rec.bad != "":
 			break
 	rec.ticks = steps
+	rec.pauseTicks = S.pause.total
 	rec.timeout = S.game.ko == null
 	rec.breathWear = float(fs[0].breathWear + fs[1].breathWear) / SimWounds.WEAR_SCALE
 	if rec.koAt < 0.0:
@@ -316,6 +327,13 @@ func aggregate(recs: Array) -> Dictionary:
 	var labelsSeen := {}
 	var postFirstBrink: Array = []
 	var contests: int = 0
+	var formAt: Array = [[], [], []]
+	var versions := {"full": 0, "short": 0, "live": 0}
+	var pauseTicks: int = 0
+	var pauseMax: float = 0.0
+	var pauseOver: int = 0
+	var capSurvived: int = 0
+	var simSec: float = 0.0
 	var survived: int = 0
 	var limbRegions := {}
 	var withLimb: int = 0
@@ -341,6 +359,18 @@ func aggregate(recs: Array) -> Dictionary:
 			postBrink.append(float(r.postBrink))
 			postFirstBrink.append(float(r.postFirstBrink))
 		contests += int(r.contests)
+		for fi in range(2):
+			for si in range(3):
+				if float(r.formAt[fi][si]) >= 0.0:
+					formAt[si].append(float(r.formAt[fi][si]))
+		for k in versions:
+			versions[k] += int(r.versions[k])
+		pauseTicks += int(r.pauseTicks)
+		pauseMax = maxf(pauseMax, float(r.pauseMax))
+		if float(r.pauseTicks) / 60.0 > 2.5 * float(r.koAt) / 60.0:
+			pauseOver += 1
+		capSurvived += int(r.capSurvived)
+		simSec += float(r.koAt)
 		for bi in range(3):
 			bandTicks[bi] += int(r.bandTicks[bi])
 			if float(r.actAt[bi]) >= 0.0:
@@ -420,6 +450,9 @@ func aggregate(recs: Array) -> Dictionary:
 		"labelSec": labelSec, "labelEventsPerFighter": _dist(labelEvents), "labelEntriesPerFighter": _dist(labelEntries), "actBand": actBand,
 		"act4BeforeBrink": float(act4First) / maxf(1.0, float(act4Seen)), "heldMin": _dist(heldMins) if heldMins.size() else {}, "labelsSeen": labelsSeen.keys(),
 		"postBrinkToKO": _dist(postBrink) if postBrink.size() else {}, "firstBrinkToKO": _dist(postFirstBrink) if postFirstBrink.size() else {}, "contests": contests, "contestsSurvived": survived,
+		"formAt": [_dist(formAt[0]) if formAt[0].size() else {}, _dist(formAt[1]) if formAt[1].size() else {}, _dist(formAt[2]) if formAt[2].size() else {}],
+		"formReached": [formAt[0].size(), formAt[1].size(), formAt[2].size()], "versions": versions, "pausedPerMin": float(pauseTicks) / 60.0 / maxf(1.0, simSec / 60.0),
+		"pauseMax": pauseMax, "pauseOver": pauseOver, "capSurvived": capSurvived,
 		"batteredWearIn": batteredIn, "secondBreathWear": breathWear, "secondBreathShare": breathWear / batteredIn if batteredIn > 0.0 else 0.0}
 	return a
 
@@ -476,6 +509,12 @@ func report(a: Dictionary, n: int, base: int, arm: String) -> void:
 	if w.postBrinkToKO.size():
 		print("finish: the loser's first brink to KO median %.0fs p10 %.0f p90 %.0f   last brink to KO median %.0fs p90 %.0f   finisher contests %d, survived %.1f%%" % [w.firstBrinkToKO.p50, w.firstBrinkToKO.p10, w.firstBrinkToKO.p90, w.postBrinkToKO.p50, w.postBrinkToKO.p90, w.contests,
 			100.0 * w.contestsSurvived / maxf(1.0, float(w.contests))])
+	var fa: PackedStringArray = []
+	for si in range(3):
+		fa.append("step %d %s" % [si + 1, ("median %.0fs (%d of %d fighters)" % [w.formAt[si].p50, w.formReached[si], 2 * n]) if w.formReached[si] > 0 else "never"])
+	print("pace: form %s" % "   ".join(fa))
+	print("pauses: %.2f s per minute of match (band: at most 2.5; %d matches over)   longest %.1f s   full %d  short %d  live %d   survived a finisher after the time cap: %d (must be 0)" % [
+		w.pausedPerMin, w.pauseOver, w.pauseMax, w.versions.full, w.versions.short, w.versions.live, w.capSurvived])
 	print("crippling: %.2f limb breaks/match (max %d)   matches with one %d of %d   %s" % [w.limbBreaksPerMatch.mean, int(w.limbBreaksPerMatch.max), w.matchesWithLimbBreak, n,
 		_shares(w.limbRegions) if w.limbRegions.size() else "none"])
 	print("speed: %d matches in %.1f s = %.0f matches per minute (%.0f ticks/s)" % [n, a.seconds, a.matchesPerMinute, a.ticks / a.seconds])

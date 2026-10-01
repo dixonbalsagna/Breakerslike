@@ -1,0 +1,24 @@
+{
+  "_about": "Validator fixture, not game data.",
+  "schema": "fight.pause/1",
+  "bank": {
+    "startS": 3,
+    "gainSPerMin": 2,
+    "maxS": 6
+  },
+  "full": {
+    "lengthS": 3,
+    "finalLengthS": 4,
+    "gapS": 20
+  },
+  "short": {
+    "lengthS": 1.5,
+    "gapS": 8
+  },
+  "live": {
+    "lengthS": 0.8
+  },
+  "timeCap": {
+    "lengthS": 4
+  }
+}

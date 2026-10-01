@@ -29,7 +29,7 @@
   },
   "rates": {
     "bothAggressive": 1,
-    "decay": 4,
+    "decay": 3,
     "bothGuarded": 4,
     "proportional": {
       "on": false,
@@ -41,20 +41,20 @@
   "actFloors": [
     0,
     600,
-    1500,
-    2400
+    1800,
+    2700
   ],
   "actBeats": {
     "every": [
-      "regionBreak",
-      "form"
+      "regionBreak"
     ],
     "oncePerMatch": [
       "limbBattered",
       "coreBruised",
       "coreBattered"
     ],
-    "_note": "every: each region break and each transformation, both fighters. oncePerMatch: the first time either fighter reaches it (a limb is the arms or the legs)"
+    "_note": "Q10 (spec-wounds section 8b): act = 1 + the larger of (form steps, wound beats) + region breaks, capped at act.max. formSteps switches the form track on: the most ladder steps any one fighter has taken. oncePerMatch is the wound track: the first time either fighter reaches each (a limb is the arms or the legs). every lists what adds to the act each time: a region break, either fighter. With formSteps false the act is 1 + every beat.",
+    "formSteps": true
   },
   "bands": {
     "tense": 1800,

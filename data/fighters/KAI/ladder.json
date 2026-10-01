@@ -1,12 +1,12 @@
 {
   "schema": "ladder/1",
   "_about": "D1b: the power ladder, loaded by sim/core/fighter_data.gd into a LadderDef (f.ld). Power fills by fillPerSec up to 100; each threshold starts the next tier (four tiers until forms, F1). Per tier above 1: free-flight speed, damage and launch force x (1 + value x (tier - 1)). A power-up at ground level damages an area of radius (areaR + tier x areaRPerTier) x WS with damage areaDmg + tier x areaDmgPerTier.",
-  "fillPerSec": 0.45,
-  "thresholds": [
-    25.0,
-    50.0,
-    75.0
-  ],
+  "fillPerSec": 0.05,
+  "chargePerSec": 0.5,
+  "_chargePerSec": "power per second while the fighter charges (Q10: it was a constant 9 in the sim; with fillPerSec 0.05 and thresholds 30, 65 and 100 the pace is about three form steps a fighter, the first at about 1:30, spec-wounds section 8b)",
+  "thresholds": [30.0, 65.0, 100.0],
+  "stepKinds": ["pausing", "pausing", "pausing"],
+  "_stepKinds": "one entry per threshold: a pausing step may pause the fight (sim/core/pause.gd; data/fight/pause.json), a live step never does",
   "manualTierUp": true,
   "_manualTierUp": "false: a threshold raises the tier by itself, as before. true: the fighter becomes ready (formReady) and the tier waits for the transform (ADR 0008; the director's placeholder transform switches it on)",
   "tiers": {
@@ -22,7 +22,7 @@
   },
   "beam": {
     "structure": [0.25, 0.5, 1.0, 1.5],
-    "levelCapShare": [0.01, 0.03, 0.08, 0.20],
+    "levelCapShare": [0.01, 0.03, 0.08, 0.2],
     "overshoot": [600.0, 1200.0, 2400.0, 4000.0],
     "_note": "the beam tier gate, per tier 1 to 4 (balance-targets.md section 15): structure multiplies every beam's damage to buildings; levelCapShare is the share of all structures one beam may level (past it they are left at 25% hp); overshoot is the beam's length past its target, in units before WS (the 4,200 x WS total cap stays)"
   }

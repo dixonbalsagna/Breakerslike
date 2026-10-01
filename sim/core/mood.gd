@@ -48,6 +48,7 @@ static var defs: Array = []         # per LABELS index: the label's numbers
 static var priority: Array = []     # label indices, first wins
 static var beatsEvery: Array = []
 static var beatsOnce: Array = []
+static var formSteps: bool = false   # Q10 (actBeats.formSteps): the act takes the larger of the form track and the wound track
 static var windowS: int = 60
 static var minFill: int = 30
 static var minHeld: int = 0
@@ -142,6 +143,11 @@ static func _loadMood(j: Dictionary) -> void:
 			beatsOnce.append(k)
 		else:
 			_err("mood.actBeats.oncePerMatch: unknown beat " + str(k))
+	formSteps = ab.get("formSteps", null) == true
+	if not (ab.get("formSteps", null) is bool):
+		_err("mood.actBeats.formSteps must be true or false")
+	if formSteps and beatsEvery.has("form"):
+		_err("mood.actBeats: with formSteps the form track counts the transformations, so every must not list form")
 	var am: int = _int("mood.act.max", j.get("act", {}).get("max"))
 	mood.actMax = am
 	var fl = j.get("actFloors", [])
@@ -248,7 +254,26 @@ static func _zeros(n: int) -> Array:
 ## The act (1 to act.max): 1 + beats. The one source of truth for acts (wounds.gd's damping and crippling read it).
 static func act(S: SimState) -> int:
 	_ensure()
-	return mini(mood.actMax, 1 + S.mood.beats)
+	if not formSteps:
+		return mini(mood.actMax, 1 + S.mood.beats)
+	# Q10 (spec-wounds.md section 8b): 1 + the larger of (form steps, wound beats) + region breaks. Form steps are the
+	# most ladder steps any one fighter has taken; wound beats are the once-per-match beats reached so far.
+	var steps: int = 0
+	for f in S.fighters:
+		steps = maxi(steps, int(f.tier) - 1)
+	var wounds: int = 0
+	for b in range(ONCE.size()):
+		if (S.mood.onceMask & (1 << b)) != 0:
+			wounds += 1
+	return mini(mood.actMax, 1 + maxi(steps, wounds) + S.mood.breaks)
+
+
+## Q10: a fighter took a form step (SimFighter.tierUp). The step itself is read from the tiers (act()); this names the
+## cause for act_change.
+static func onForm(S: SimState) -> void:
+	_ensure()
+	if formSteps:
+		S.mood.cause = CAUSES.find("form")
 
 
 ## wounds.gd reports each stage change of f's region r (from prev to st). The data decide the beats: a region break
@@ -279,6 +304,8 @@ static func beat(S: SimState, cause: String) -> void:
 	if cause == "form" and not beatsEvery.has("form"):
 		return
 	S.mood.beats += 1
+	if cause == "regionBreak":
+		S.mood.breaks += 1
 	S.mood.cause = CAUSES.find(cause)
 
 
@@ -293,7 +320,14 @@ static func tick(S: SimState) -> void:
 	var fs: Array = S.fighters
 	m.t += 1
 	var add: int = 0
-	for e in S.out.fx:
+	# Only this tick's events: the list is the host's to drain, and the mood must not depend on whether it has (a replay
+	# played back without draining read every earlier event again). Events are in tick order, so they are the list's tail.
+	var fx: Array = S.out.fx
+	var i0: int = fx.size()
+	while i0 > 0 and fx[i0 - 1].tick == S.tick:
+		i0 -= 1
+	for k in range(i0, fx.size()):
+		var e = fx[k]
 		match e.type:
 			"damage":
 				if e.number and (e.kind == "light" or e.kind == "heavy"):

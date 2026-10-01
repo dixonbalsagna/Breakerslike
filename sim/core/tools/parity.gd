@@ -48,6 +48,8 @@ func _init() -> void:
 	check("arm setups", _armSetups())
 	check("intent pack", _intentPack())
 	check("action state", _actState())
+	check("pausing set pieces", _pause())
+	check("act rule and time cap", _actRule())
 	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
@@ -330,7 +332,7 @@ func _actState() -> String:
 	if SimAct.pop(a)[0] != SimAct.HEAVY or not SimAct.pop(a).is_empty() or SimAct.upgrade(a, SimAct.SIG):
 		return "pop or upgrade on an empty queue"
 	# the tier-up gate, on (the data, since I2b): a threshold makes the form ready and the tier waits for the transform
-	a.power = 60.0
+	a.power = a.ld.thresholds[1] + 1.0   # two steps earned, whatever the thresholds are
 	SimFighter.stepFighter(S, a, SimConst.DT)
 	if a.tier != 1.0 or not a.act.formReady:
 		return "with manualTierUp on the tier did not wait (tier %s, ready %s)" % [str(a.tier), str(a.act.formReady)]
@@ -362,7 +364,7 @@ func _actState() -> String:
 		var G := SimCore.createSim()
 		SimCore.newMatch(G, 5)
 		var f = G.fighters[0]
-		f.power = 30.0
+		f.power = f.ld.thresholds[0] + 1.0   # one step earned
 		SimFighter.stepFighter(G, f, SimConst.DT)
 		if f.tier != 2.0 or f.act.formReady or SimFighter.transform(G, f):
 			err = "with manualTierUp off the tier did not rise by itself"
@@ -370,6 +372,218 @@ func _actState() -> String:
 	FighterData.quiet = false
 	FighterData.loadFrom()
 	return err
+
+
+## Q10: pausing set pieces (sim/core/pause.gd), each rule asserted: the bank's start, accrual and cap; the full, short
+## and live versions and what each spends; the final-form length; a live step; the time cap; two requests on one tick; a
+## pause as frozen ticks (no input consumed, the clock and the fighters still, a hit-stop resumed after it); and a replay
+## of an AI match that runs through a pause.
+func _pause() -> String:
+	if not SimPause.errors().is_empty():
+		return "; ".join(SimPause.errors())
+	var fresh := func() -> SimState:
+		var S0 := SimCore.createSim()
+		SimCore.newMatch(S0, 5)
+		return S0
+	var started := func(S0: SimState) -> int:
+		var n: int = 0
+		for e in S0.out.fx:
+			if e.type == "pause_start":
+				n += 1
+		return n
+	# the bank
+	var S: SimState = fresh.call()
+	var p = S.pause
+	if p.bank != SimPause.bankStart or p.left != 0 or p.total != 0:
+		return "a new match's bank is %d ticks, not %d" % [p.bank, SimPause.bankStart]
+	p.bank = 0
+	for t in range(SimPause.TPM):
+		SimPause.liveTick(S)
+	if p.bank != mini(SimPause.bankMax, SimPause.bankGain):
+		return "a minute of match time gave the bank %d ticks, not %d" % [p.bank, SimPause.bankGain]
+	p.bank = SimPause.bankMax - 1
+	for t in range(SimPause.TPM):
+		SimPause.liveTick(S)
+	if p.bank != SimPause.bankMax:
+		return "the bank passed its cap (%d)" % p.bank
+	SimCore.dispose(S)
+	# full, then a second request on the same tick, then the frozen ticks
+	S = fresh.call()
+	p = S.pause
+	var kai = S.fighters[0]
+	p.bank = SimPause.bankMax
+	S.dirS.stop = 0.2
+	var r: Dictionary = SimPause.request(S, SimPause.TRANSFORM, 0)
+	if r.version != SimPause.FULL or r.ticks != SimPause.fullTicks or p.left != SimPause.fullTicks or p.bank != SimPause.bankMax - SimPause.fullTicks or started.call(S) != 1:
+		return "the first set piece was not the full version (%s, bank %d)" % [str(r), p.bank]
+	var r2: Dictionary = SimPause.request(S, SimPause.TRANSFORM, 1)
+	if r2.version != SimPause.LIVE or r2.ticks != SimPause.liveTicks or p.left != SimPause.fullTicks or started.call(S) != 1:
+		return "a second request on the same tick was not live (%s)" % str(r2)
+	var t0: float = S.T
+	var x0: float = kai.x
+	var ki0: float = kai.ki
+	var tick0: int = S.tick
+	var ended: int = 0
+	for t in range(SimPause.fullTicks):
+		S.out.fx.clear()
+		if SimCore.step(S, null):
+			return "a paused tick consumed input (tick %d of the pause)" % t
+		for e in S.out.fx:
+			if e.type == "pause_end":
+				ended += 1
+	if S.T != t0 or kai.x != x0 or kai.ki != ki0 or S.tick != tick0 + SimPause.fullTicks or p.left != 0 or p.total != SimPause.fullTicks or ended != 1:
+		return "the pause did not hold the sim still (T %s to %s, left %d, total %d, ends %d)" % [str(t0), str(S.T), p.left, p.total, ended]
+	if S.dirS.stop != 0.2:
+		return "the pause spent the hit-stop (%s)" % str(S.dirS.stop)
+	var stops: int = 0
+	while not SimCore.step(S, null) and stops < 100:
+		stops += 1
+	var H: SimState = fresh.call()   # the same hit-stop with no pause before it
+	H.dirS.stop = 0.2
+	var plain: int = 0
+	while not SimCore.step(H, null) and plain < 100:
+		plain += 1
+	SimCore.dispose(H)
+	if stops != plain or plain == 0 or S.T == t0:
+		return "the hit-stop after the pause ran %d ticks, not %d" % [stops, plain]
+	# short: a repeat, with the bank and the gap it needs; live below either
+	p.bank = SimPause.shortTicks
+	p.sinceEnd = SimPause.shortGap - 1
+	r = SimPause.request(S, SimPause.TRANSFORM, 0)
+	if r.version != SimPause.LIVE or p.bank != SimPause.shortTicks or p.left != 0:
+		return "a request inside the short gap was not live (%s)" % str(r)
+	p.sinceEnd = SimPause.shortGap
+	r = SimPause.request(S, SimPause.TRANSFORM, 0)
+	if r.version != SimPause.SHORT or r.ticks != SimPause.shortTicks or p.bank != 0 or p.left != SimPause.shortTicks:
+		return "a repeat with the bank and the gap was not short (%s, bank %d)" % [str(r), p.bank]
+	SimCore.dispose(S)
+	# a first set piece inside the full gap, or with a thin bank
+	S = fresh.call()
+	p = S.pause
+	p.bank = SimPause.bankMax
+	p.sinceEnd = SimPause.fullGap - 1
+	r = SimPause.request(S, SimPause.TRANSFORM, 0)
+	if r.version != SimPause.SHORT:
+		return "a first set piece inside the full gap was not short (%s)" % str(r)
+	SimCore.dispose(S)
+	S = fresh.call()
+	p = S.pause
+	p.bank = SimPause.shortTicks - 1
+	r = SimPause.request(S, SimPause.TRANSFORM, 0)
+	if r.version != SimPause.LIVE or p.bank != SimPause.shortTicks - 1 or p.left != 0 or started.call(S) != 0:
+		return "a set piece the bank cannot cover was not live (%s)" % str(r)
+	SimCore.dispose(S)
+	# a final-form reveal takes what the bank covers, up to its own length
+	S = fresh.call()
+	p = S.pause
+	p.bank = SimPause.bankMax
+	r = SimPause.request(S, SimPause.TRANSFORM, 0, true)
+	if r.version != SimPause.FULL or r.ticks != mini(SimPause.finalTicks, SimPause.bankMax):
+		return "a final-form reveal: %s" % str(r)
+	SimCore.dispose(S)
+	# a live step never pauses and leaves the bank and the first-of-kind mark alone
+	S = fresh.call()
+	p = S.pause
+	p.bank = SimPause.bankMax
+	var kinds: Array = S.fighters[0].ld.stepKinds
+	var was: String = kinds[0]
+	kinds[0] = "live"
+	r = SimPause.request(S, SimPause.TRANSFORM, 0)
+	kinds[0] = was
+	if r.version != SimPause.LIVE or p.bank != SimPause.bankMax or p.seen != 0 or p.left != 0:
+		return "a live step: %s, bank %d, seen %d" % [str(r), p.bank, p.seen]
+	# the time cap always pauses, outside the bank
+	p.bank = 0
+	r = SimPause.request(S, SimPause.TIMECAP, -1)
+	if r.ticks != SimPause.capTicks or p.left != SimPause.capTicks or p.bank != 0:
+		return "the time cap: %s, left %d" % [str(r), p.left]
+	SimCore.dispose(S)
+	# an AI match recorded through a pause plays back
+	for seed in [3, 7, 12]:
+		var R := SimCore.createSim()
+		var rec := SimReplay.recorder(R, seed, {})
+		var n: int = 0
+		while n < 14400 and R.pause.total == 0:
+			rec.step(null)
+			R.out.fx.clear()
+			R.out.feed.clear()
+			n += 1
+		var paused: bool = R.pause.total > 0
+		for t in range(600):
+			rec.step(null)
+			R.out.fx.clear()
+			R.out.feed.clear()
+		var rp: Dictionary = rec.finish()
+		SimCore.dispose(R)
+		if not paused:
+			continue
+		var res: Dictionary = SimReplay.play(JSON.parse_string(JSON.stringify(rp)))
+		return "" if res.ok else "a replay through a pause: %s at tick %d" % [res.reason, res.firstBadTick]
+	return "no AI match of seeds 3, 7 and 12 reached a pause in four minutes"
+
+
+## Q10: the act rule under actBeats.formSteps (1 + the larger of form steps and wound beats, + region breaks, capped), a
+## form step announced as an act with cause form, and the finisher contest with no survival from the time cap (both
+## contest paths; before the cap the chance is above 0).
+func _actRule() -> String:
+	if not SimMood.formSteps:
+		return "mood.json actBeats.formSteps is off"
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5)
+	var a = S.fighters[0]
+	var b = S.fighters[1]
+	var m = S.mood
+	var cases: Array = [   # [tier a, tier b, once mask, breaks, act]
+		[1.0, 1.0, 0, 0, 1], [2.0, 1.0, 0, 0, 2], [2.0, 3.0, 0, 0, 3], [1.0, 1.0, 7, 0, 4], [3.0, 1.0, 1, 0, 3],
+		[1.0, 1.0, 3, 0, 3], [2.0, 2.0, 1, 1, 3], [3.0, 1.0, 1, 1, 4], [4.0, 4.0, 7, 5, 4], [1.0, 1.0, 0, 2, 3]]
+	for c in cases:
+		a.tier = c[0]
+		b.tier = c[1]
+		m.onceMask = c[2]
+		m.breaks = c[3]
+		if SimMood.act(S) != c[4]:
+			return "act for tiers %s and %s, wound beats mask %d, breaks %d is %d, not %d" % [str(c[0]), str(c[1]), c[2], c[3], SimMood.act(S), c[4]]
+	a.tier = 1.0
+	b.tier = 1.0
+	m.onceMask = 0
+	m.breaks = 0
+	a.act.formReady = true
+	a.y = 20000.0   # airborne: no crater
+	S.out.fx.clear()
+	if not SimFighter.transform(S, a):
+		return "the forced transform did not run"
+	SimMood.tick(S)
+	var cause: String = ""
+	for e in S.out.fx:
+		if e.type == "act_change":
+			cause = "%d %s" % [int(e.n), e.kind]
+	if cause != "2 form":
+		return "a form step announced '%s', not act 2 with cause form" % cause
+	# the contest: no survival from the time cap
+	for path in ["plain", "branch"]:
+		for capped in [false, true]:
+			S.game.timeCap = capped
+			S.out.fx.clear()
+			var ex := SimState.Exchange.new()
+			ex.A = a
+			ex.D = b
+			if path == "plain":
+				DirExchange._opContest(S, ex, {"w": "A"})
+			else:
+				DirExchange._opContestBranch(S, ex, {"w": "A"})
+			var chance: float = -1.0
+			var lived: bool = false
+			for e in S.out.fx:
+				if e.type == "finisher_contest":
+					chance = e.chance
+					lived = e.survived
+			if capped and (chance != 0.0 or lived):
+				return "from the time cap the %s contest gave chance %s, survived %s" % [path, str(chance), str(lived)]
+			if not capped and chance <= 0.0:
+				return "before the time cap the %s contest's chance was %s" % [path, str(chance)]
+			S.game.ko = null
+	SimCore.dispose(S)
+	return ""
 
 
 ## SimReplay (S4): record a scripted two-human run, play it back and play its JSON round trip; a changed input and a
@@ -574,8 +788,11 @@ func _rosterRejects() -> String:
 func _fightData(g: Dictionary) -> String:
 	if not SimMood.errors().is_empty():
 		return "data/fight: " + "; ".join(SimMood.errors())
-	if SimMood.dataHash() != g.get("fightHash", ""):
-		return "the fight data hash differs (data/fight/ changed): %s vs golden %s; regenerate the goldens if the edit is meant" % [SimMood.dataHash(), g.get("fightHash", "")]
+	if not SimPause.errors().is_empty():
+		return "data/fight/pause.json: " + "; ".join(SimPause.errors())
+	var fh: String = SimMood.dataHash() + SimPause.dataHash()
+	if fh != g.get("fightHash", ""):
+		return "the fight data hash differs (data/fight/ changed): %s vs golden %s; regenerate the goldens if the edit is meant" % [fh, g.get("fightHash", "")]
 	return ""
 
 
@@ -605,6 +822,7 @@ const WIRED: Array = [
 	["VORR/meters.json", ["meters", "menace", "sources", 1, "amount"], 5.0, "evac"],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["fillPerSec"], 2.0, "ladderTick"],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["thresholds"], [10.0, 50.0, 75.0], "ladderTick"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["chargePerSec"], 7.0, "chargeTick"],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "speed"], 0.5, "speed"],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "damage"], 0.5, "tierHit"],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "launch"], 0.8, "launch"],
@@ -616,7 +834,7 @@ const WIRED: Array = [
 	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0, "match"],   # end to end: any of WIRED_SEEDS
 ]
 const WIRED_TICKS: int = 6000
-const WIRED_SEEDS: Array = [3, 7, 12, 16, 18]
+const WIRED_SEEDS: Array = [10, 17, 3, 7, 12]   # Q10: with the slower ladder VORR's menace first rises inside WIRED_TICKS on seeds 10 and 17
 
 
 func _wiredNumbers() -> String:
@@ -735,6 +953,12 @@ func _wiredProbe(kind: String) -> String:
 				out = ["!no evacuees"]
 			else:
 				out = [vorr.menace, S.world.evacuated]
+		"chargeTick":   # Q10: the charge rate
+			kai.power = 15.0
+			kai.state = "charging"
+			kai.input.charge = true
+			SimFighter.stepFighter(S, kai, SimConst.DT)
+			out = [kai.power]
 		"ladderTick":   # the fill and the thresholds
 			kai.power = 15.0
 			SimFighter.stepFighter(S, kai, SimConst.DT)

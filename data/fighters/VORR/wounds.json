@@ -26,10 +26,10 @@
     540000
   ],
   "_stageAt": "bruised 30, battered 60, broken 90 (pinned: sim/director/ai.gd, qa/godot/records.gd)",
-  "wearPerDamage": 270.0,
-  "_wearPerDamage": "k 0.045 x 6000 (QA's 800-match value set within Game Design's fallbacks, spec-wounds section 1b)",
-  "act1Damping": 0.85,
-  "_act1Damping": "wear x this while the act index is 1 (act = 1 + region breaks so far, both fighters; M1 will own the act)",
+  "wearPerDamage": 216.0,
+  "_wearPerDamage": "k 0.036 x 6000 (QA's M1b tuning, docs/qa/tuning-m1b.md; it moves with act1Damping and cripple.base)",
+  "act1Damping": 1.3,
+  "_act1Damping": "wear x this while the act index is 1 (SimMood.act). Below 1 it slows act 1's wear; above 1 it speeds it, so the first wound beats and act 2 come sooner (QA's M1b tuning: 1.3 with k 0.036, docs/qa/tuning-m1b.md)",
   "overtime": {
     "startTicks": 28800,
     "perMin": 0.25,
@@ -103,7 +103,7 @@
       "guard_break",
       "chain"
     ],
-    "base": 0.048,
+    "base": 0.036,
     "tierAhead": 0.03,
     "lateAct": 3,
     "lateBonus": 0.03,

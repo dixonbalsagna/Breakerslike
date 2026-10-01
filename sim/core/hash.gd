@@ -92,7 +92,8 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	var g := S.game
 	out.append(_idx(fs, g.ko))
 	_obj(out, g, ["koT", "ts", "seed", "timeCap"])
-	_obj(out, S.mood, ["t", "sec", "v", "band", "cand", "candT", "act", "beats", "onceMask", "cause", "aggression", "crowd", "casGiven", "lastCombo"])
+	_obj(out, S.mood, ["t", "sec", "v", "band", "cand", "candT", "act", "beats", "onceMask", "cause", "aggression", "crowd", "casGiven", "lastCombo", "breaks"])
+	_obj(out, S.pause, ["left", "kind", "version", "actor", "bank", "acc", "sinceEnd", "seen", "total", "count"])   # Q10
 	if g.clash != null:
 		out.append(_idx(fs, g.clash.A))
 		out.append(_idx(fs, g.clash.D))
@@ -263,7 +264,7 @@ const FX_FIELDS: Dictionary = {
 	"shake": ["k", "x"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "limb_break": ["actor", "victim", "region"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"], "brink_open": ["actor", "target", "kind", "text"], "brink_close": ["actor", "kind"],
 	"mood_band": ["kind", "amount", "n"], "act_change": ["n", "kind"], "style_label": ["actor", "kind", "text"], "crowd_state": ["kind"], "building_hit": ["actor", "x", "n", "b", "y", "z", "amount", "ratio", "outcome", "link", "spd", "keep", "ux", "uy", "kind", "w", "h", "owner", "victim"],
-	"tier_up": ["actor", "tier", "onGround"], "transform_ready": ["actor", "tier", "source"], "transform": ["actor", "tier", "source", "dur"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
+	"tier_up": ["actor", "tier", "onGround"], "transform_ready": ["actor", "tier", "source"], "transform": ["actor", "tier", "source", "dur", "version"], "pause_start": ["kind", "actor", "version", "dur"], "pause_end": ["kind"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target", "dur"], "finisher_contest": ["target", "chance", "survived"],
 	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],
 	"ambush": ["actor", "target"], "lock_lost": ["actor", "target"], "launch_plan": ["actor", "target", "text", "chosen"],

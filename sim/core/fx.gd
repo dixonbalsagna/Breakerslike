@@ -181,9 +181,22 @@ static func transformReady(S: SimState, f, tier: float, source: String) -> void:
 
 ## actor took the transform: tier is its new tier, source the input that took it, dur the hold in seconds. The tier_up
 ## (the power-up burst) comes in the same tick, at the start of the hold.
-static func transform(S: SimState, f, tier: float, source: String, dur: float) -> void:
+static func transform(S: SimState, f, tier: float, source: String, dur: float, version: String = "live") -> void:
 	var e := _ev(S, "transform")
-	e.actor = float(S.fighters.find(f)); e.tier = tier; e.source = source; e.dur = dur
+	e.actor = float(S.fighters.find(f)); e.tier = tier; e.source = source; e.dur = dur; e.version = version
+
+
+## Q10: a pausing set piece starts: the sim is frozen for dur seconds from the next tick. kind: transform, world or
+## timecap; actor: the fighter's slot, -1 for the time cap; version: full or short (a live version does not pause).
+static func pauseStart(S: SimState, kind: String, slot: int, version: String, dur: float) -> void:
+	var e := _ev(S, "pause_start")
+	e.kind = kind; e.actor = float(slot); e.version = version; e.dur = dur
+
+
+## Q10: the pause's last frozen tick: the next tick is live.
+static func pauseEnd(S: SimState, kind: String) -> void:
+	var e := _ev(S, "pause_end")
+	e.kind = kind
 
 
 ## The fighter went to ground (hidden); cover is submerged, canopy or ridge.

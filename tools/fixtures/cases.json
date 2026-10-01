@@ -2652,7 +2652,7 @@
         {
           "file": "data/fighters/FIXTURE_HERO/wounds.json",
           "set": {
-            "/act1Damping": 1.5
+            "/act1Damping": 2.5
           }
         }
       ],
@@ -7293,6 +7293,195 @@
       "expect": {
         "rule": "pattern",
         "pointer": "/remap/chord"
+      }
+    },
+    {
+      "id": "ladder-charge-required",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "del": [
+            "/chargePerSec"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "ladder-charge-negative",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/chargePerSec": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/chargePerSec"
+      }
+    },
+    {
+      "id": "ladder-step-kinds-enum",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/stepKinds/1": "cinematic"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/stepKinds/1"
+      }
+    },
+    {
+      "id": "ladder-step-kinds-count",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/stepKinds": [
+              "pausing",
+              "live"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/stepKinds"
+      }
+    },
+    {
+      "id": "ladder-step-kinds-live-accepted",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/stepKinds/0": "live"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "mood-form-steps-required",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "del": [
+            "/actBeats/formSteps"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/actBeats"
+      }
+    },
+    {
+      "id": "mood-form-steps-type",
+      "schema": "fight-mood.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/mood.json",
+          "set": {
+            "/actBeats/formSteps": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/actBeats/formSteps"
+      }
+    },
+    {
+      "id": "wounds-act1-damping-above-one-accepted",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/act1Damping": 1.3
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "pause-needs-bank",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "del": [
+            "/bank"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "pause-negative-length",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/short/lengthS": -1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/short/lengthS"
+      }
+    },
+    {
+      "id": "pause-unknown-key",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/bank/bonusS": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/bank/bonusS"
+      }
+    },
+    {
+      "id": "pause-length-type",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/timeCap/lengthS": "4 s"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/timeCap/lengthS"
       }
     }
   ],

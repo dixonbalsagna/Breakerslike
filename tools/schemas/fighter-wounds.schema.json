@@ -332,8 +332,8 @@
     "act1Damping": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "maximum": 1,
-      "description": "Wear is multiplied by this while the act index is 1."
+      "maximum": 2,
+      "description": "Wear is multiplied by this while the act index is 1: below 1 it slows act 1, above 1 it speeds it."
     },
     "overtime": {
       "type": "object",

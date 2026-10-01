@@ -1,6 +1,6 @@
 # Q10 slice: the transformation pace, the act rule and pausing set pieces
 
-Owner: Simulation and Engine. Status: plan, docs only (2026-10-01), for my window after Encounter's step 2. It builds Game Design's questionnaire-10 rulings (`docs/design/spec-wounds.md` sections 8, 8b and 9). Four parts land in one slice with one golden regeneration.
+Owner: Simulation and Engine. Status: plan, docs only (2026-10-01), for my window after Encounter's step 2. It builds Game Design's questionnaire-10 rulings (`docs/design/spec-wounds.md` sections 8, 8b and 9). Six parts land in one slice with one golden regeneration (the first four from the brief, the last two added by the EP on 2026-10-01).
 
 ## 1. Charging becomes data
 
@@ -67,6 +67,7 @@ if S.dirS.stop > 0: ...         # the hit-stop, as today
 - **Encounter** (`sim/director/exchange.gd`, its file):
   - in `_transforms`, call `SimPause.request(S, SimPause.TRANSFORM, slot)` where it uses the fixed 0.8 s hold today. On full or short the pause is the cinematic; on live it keeps today's hold. The tier-up, the push-back and the `transform` event happen on the request tick in every version;
   - at the 11:00 event, call `SimPause.request(S, SimPause.TIMECAP, -1)`;
+  - both of those calls are granted to me for this slice, and Encounter reviews. The two survival lines of section 4b are in the same file; I take the EP's brief as their grant and will confirm it when the window opens;
   - keep its own guard that no transformation starts during a finisher;
   - decide whether a short hold follows a pause. I assume none.
 - **World**, later: a world-changing ability calls `request(S, SimPause.WORLD, slot)`.
@@ -88,6 +89,20 @@ Final (`docs/qa/tuning-m1b.md`), data only, applied as the data flip's starting 
 
 None is a pinned constant in `wounds.gd`, and none touches `data/combat`. QA tuned these on today's ladder; this slice slows the ladder and changes the act rule, so QA re-tunes on the slice's commit.
 
+## 4b. Finisher survival is 0 from 11:00
+
+- **Rule (spec-wounds section 5, a hard test):** once the time-cap event has set `S.game.timeCap`, the finisher contest's survival chance is 0.
+- **Where:** both contest paths in `sim/director/exchange.gd` (the legacy contest and the branch-mode contest). They are Encounter's lines (see section 3 for the grant): after the chance is computed, `if S.game.timeCap: chance = 0.0`. The draw from `S.rng` stays, so the stream does not shift.
+- **Rally:** Second Wind fires on a survived contest, so it cannot fire there either. No change in `wounds.gd`.
+- **Test:** a forced parity check: with `timeCap` set, a contest reports chance 0 and the fighter falls, with and without a struggle.
+
+## 4c. Form steps are per-fighter data, each marked pausing or live
+
+- **Data:** `ladder.json` gains `stepKinds`, one entry per threshold: `"pausing"` or `"live"`. The placeholders use three pausing steps.
+- **Sim:** `SimPause.request` takes the step's kind from the fighter's `LadderDef`. A live step always plays the live version and never draws on the bank or sets "first of its kind". A pausing step follows the table in section 3.
+- **The count stays three for now.** The loader requires three thresholds, because the tier tables (the beam block, the tier multipliers, the collateral allowances) are indexed by four tiers. A fighter with another count (the Empress's twelve revisions) needs those tables lifted, which is F1's work with the roster. `stepKinds` is shaped so that F1 only lifts the count.
+- **Schema:** `fighter-ladder.schema.json` gains `stepKinds` (Tools, same commit).
+
 ## 5. Order of work and proof
 
 1. **Neutral code.** `chargePerSec` as data at 9.0, the act rule behind `formSteps: false`, `SimPause` with no caller. Parity passes on the untouched goldens.
@@ -95,7 +110,7 @@ None is a pinned constant in `wounds.gd`, and none touches `data/combat`. QA tun
 3. **The data flip:** the ladder numbers, `formSteps: true`, QA's values. One golden regeneration.
 4. **Batch of 100** for Game Design's targets: form steps at 1:15 to 1:45, 2:45 to 3:45 and 4:30 to 5:30; acts 2, 3 and 4 with them; the mood's band shares.
 
-Pauses appear in matches only when Encounter wires `_transforms`. That is one call in its file: by grant in my window, or in its next one.
+The two `SimPause.request` calls in Encounter's file are granted to me for this slice (EP, 2026-10-01), so pauses appear in matches when it lands.
 
 ## 6. Risks
 
@@ -103,3 +118,40 @@ Pauses appear in matches only when Encounter wires `_transforms`. That is one ca
 - **Everything slows early.** Tiers arrive later, so damage and collateral fall in the first minutes; QA re-baselines length, collateral and the per-tier bands (spec-wounds section 8b, "Knock-on").
 - **Wired-number probe seeds** tied to tier events will move, as with earlier retunes.
 - **A skippable cinematic** (Camera's option) would need an input read on frozen ticks, which the sim does not do today. It is not in this slice.
+
+## 7. As built (2026-10-01)
+
+**Code.** `sim/core/pause.gd` (`SimPause`: the data, `reset`, `liveTick`, `frozenTick`, `request`), `S.pause` (`PauseState`), the frozen-tick check at the top of `SimCore.step`, `LadderDef.charge` and `stepKinds`, `SimMood.act` with the form track and `SimMood.onForm`, `S.mood.breaks`, the events `pause_start` and `pause_end`, and `version` on `transform`. In Encounter's `exchange.gd`, by grant: the request in `_transforms` and at the time cap, and no survival from the time cap in both contest paths (the draw kept).
+
+**Differences from the plan**
+- `request` reads the step's kind from the fighter's ladder itself, so the caller passes only the kind of set piece and the slot. It must be called before the tier rises.
+- On a full or short version the transformer has no hold after the pause; the live version keeps the 0.8 s hold (now `live.lengthS` in the data, the same 48 ticks).
+- A slot's "first set piece of its kind" is used up by its first request, whatever version played.
+- `act1Damping` may now be up to 2 (the loader and Tools' schema allowed at most 1; QA's value is 1.3).
+- Found while building: the mood read every event still in `S.out.fx`, so its state depended on the host draining the list. It now reads only the current tick's events, and `SimReplay.play` drains the list. The goldens did not move (their host drains every tick).
+- `sigCooldown` joined the arm recipes' character keys, so a swap arm carries it with the character.
+
+**Proof**
+1. *Neutral code:* with `chargePerSec` 9, `formSteps` false and pause data under which every version is live (bank 0, time-cap length 0), the wired calls included, parity passed every match and replay on the untouched goldens (9 matches, 183,650 ticks). Only the two data-hash checks failed, as expected with new keys in the data.
+2. *The flip:* the ladder numbers, `formSteps` true, the pause budget and QA's M1b values; the goldens regenerated once (9 matches, 175,124 ticks).
+3. *Gates:* parity (with the new checks "pausing set pieces" and "act rule and time cap", and a wired-number row for `chargePerSec`), determinism, seam sweep, `npm test`, the validator (49 files, 0 errors) and its self-test (831 of 831), the touch test and the loader check all pass.
+
+**100 matches** (default arm, seeds 1 to 100, digest 8df758e150774748):
+
+| | Result | Target or band |
+| :--- | :--- | :--- |
+| Form steps (median, per fighter) | 104 s, 215 s, 320 s; every fighter took all three | 75 to 105, 165 to 225, 270 to 330 |
+| Acts 2, 3, 4 (median) | 101 s, 211 s, 316 s | 90 to 150, 150 to 240, 270 to 345 |
+| Pauses | 0.93 s per minute; no match over 2.5; longest 4 s (the time cap) | at most 2.5 s per minute |
+| Versions | full 105, short 339, live 156 | |
+| Survived a finisher after the time cap | 0 | 0 (hard) |
+| Length | median 601 s (p10 488, p90 671) | 6:00 to 8:00 |
+| First brink | 543 s | 4:30 to 7:00 |
+| KAI wins | 65% | 45 to 55% |
+| Mood | calm 13%, tense 39%, frenzied 47% | 30 to 55, 35 to 60, 5 to 20 |
+| Finisher survival | 13% | 25 to 40% |
+| Rallies | 0.14 a match | 0.3 to 0.7 |
+| Civilians lost | 22% | |
+
+The pace, the acts and the pause budget land in their targets. The rest is out, as Game Design's "Knock-on" predicted and more: the slower ladder cuts damage, so matches run ten minutes, the first brink comes at nine, most finisher contests fall after 8:00 where the tilt has eaten the survival chance, and the long tail in act 4 with a decay of 3 keeps the mood frenzied. QA's M1b values were tuned on the old ladder; QA re-tunes on this commit.
+

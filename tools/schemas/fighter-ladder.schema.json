@@ -9,7 +9,9 @@
     "fillPerSec",
     "thresholds",
     "tiers",
-    "manualTierUp"
+    "manualTierUp",
+    "chargePerSec",
+    "stepKinds"
   ],
   "properties": {
     "schema": {
@@ -94,6 +96,23 @@
       "patternProperties": {
         "^_": true
       }
+    },
+    "chargePerSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Power per second while the fighter charges (Q10)."
+    },
+    "stepKinds": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "pausing",
+          "live"
+        ]
+      },
+      "description": "One entry per threshold: a pausing step may pause the fight (data/fight/pause.json), a live step never does (Q10)."
     }
   },
   "additionalProperties": false,

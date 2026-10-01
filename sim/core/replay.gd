@@ -103,6 +103,8 @@ static func play(rp: Dictionary) -> Dictionary:
 		if checks.has(t + 1) and checks[t + 1] != SimHash.stateHash(S_).gameplay:
 			out = {"ok": false, "firstBadTick": t + 1, "reason": "checkpoint", "final": ""}
 			break
+		S_.out.fx.clear()   # playback is its own host: it drains the event and feed lists
+		S_.out.feed.clear()
 	out.final = SimHash.stateHash(S_).gameplay
 	if out.ok and rp.final != "" and out.final != rp.final:
 		out = {"ok": false, "firstBadTick": int(rp.ticks), "reason": "final", "final": out.final}
@@ -117,4 +119,5 @@ static func dataHash() -> String:
 	h.text(DirData.dataHash())
 	h.text(FighterData.dataHash())
 	h.text(SimMood.dataHash())
+	h.text(SimPause.dataHash())   # Q10: data/fight/pause.json
 	return h.hex()

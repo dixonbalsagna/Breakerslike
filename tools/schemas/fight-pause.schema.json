@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/fight-pause",
+  "title": "fight.pause/1 (Q10, docs/architecture/q10-pace-acts-pauses.md)",
+  "description": "data/fight/pause.json: the pausing set pieces' budget and lengths (sim/core/pause.gd). Seconds; the loader requires each to be a whole number of ticks (60 a second) and checks the orders (bank start at most its cap; short, full and final lengths rising; the short gap at most the full gap). Version field: schema. Policy: closed except keys starting with an underscore.",
+  "type": "object",
+  "required": [
+    "schema",
+    "bank",
+    "full",
+    "short",
+    "live",
+    "timeCap"
+  ],
+  "properties": {
+    "schema": {
+      "const": "fight.pause/1"
+    },
+    "bank": {
+      "type": "object",
+      "required": [
+        "startS",
+        "gainSPerMin",
+        "maxS"
+      ],
+      "description": "The pause budget.",
+      "properties": {
+        "startS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The bank at the start of a match."
+        },
+        "gainSPerMin": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Gained for each minute of match time."
+        },
+        "maxS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The most the bank holds."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "full": {
+      "type": "object",
+      "required": [
+        "lengthS",
+        "finalLengthS",
+        "gapS"
+      ],
+      "description": "The full version: a fighter's first set piece of its kind.",
+      "properties": {
+        "lengthS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The full version's pause."
+        },
+        "finalLengthS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "A final-form reveal may run to this."
+        },
+        "gapS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Live time needed since the last pause."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "short": {
+      "type": "object",
+      "required": [
+        "lengthS",
+        "gapS"
+      ],
+      "description": "The short version.",
+      "properties": {
+        "lengthS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The short version's pause; the bank must hold it."
+        },
+        "gapS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Live time needed since the last pause."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "live": {
+      "type": "object",
+      "required": [
+        "lengthS"
+      ],
+      "description": "The live version.",
+      "properties": {
+        "lengthS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The live version: no pause; the transformer cannot be interrupted for this long."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "timeCap": {
+      "type": "object",
+      "required": [
+        "lengthS"
+      ],
+      "description": "The time-cap event.",
+      "properties": {
+        "lengthS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The pause when the planet gives way; outside the bank."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

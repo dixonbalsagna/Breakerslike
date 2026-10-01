@@ -30,6 +30,7 @@ var buildings: Array = []
 var trees: Array = []
 var beams: Array = []
 var mood := MoodState.new()           # M1 (sim/core/mood.gd): the fight's mood, the act and the outputs
+var pause := PauseState.new()         # Q10 (sim/core/pause.gd): the pausing set pieces' bank and the running pause
 var out := Out.new()
 
 
@@ -56,6 +57,20 @@ class ActState:
 	var burstFired: bool = false  # the burst already fired on this power press
 
 
+## Q10: pausing set pieces (sim/core/pause.gd). Integers; a tick is a real tick, frozen or live.
+class PauseState:
+	var left: int = 0         # frozen ticks left in the running pause (0: none)
+	var kind: int = 0         # SimPause.KINDS index of the running or the last pause
+	var version: int = 0      # SimPause.VERSIONS index of it
+	var actor: int = -1       # its fighter's slot, -1 for the time cap
+	var bank: int = 0         # the bank, in ticks
+	var acc: int = 0          # the bank's accrual remainder (SimPause.liveTick)
+	var sinceEnd: int = 0     # live ticks since the last pause ended (SimPause.LONG_AGO before the first)
+	var seen: int = 0         # bit slot * 4 + kind: the slot has asked for a set piece of the kind (its first may play in full)
+	var total: int = 0        # ticks paused so far this match (QA: at most 2.5 s per minute)
+	var count: int = 0        # pauses so far
+
+
 ## M1: the fight's mood (sim/core/mood.gd). Integers only; the unit is 1/60 of a mood point.
 class MoodState:
 	var t: int = 0            # non-frozen ticks the component has run
@@ -65,7 +80,8 @@ class MoodState:
 	var cand: int = 0         # the band the mood is in, while it differs from band ...
 	var candT: int = 0        # ... and the ticks it has stayed there (the dwell)
 	var act: int = 1          # the act announced so far (act_change); SimMood.act() is the live value
-	var beats: int = 0        # act beats so far (mood.json actBeats): act = 1 + beats
+	var beats: int = 0        # act beats so far (mood.json actBeats): act = 1 + beats, until actBeats.formSteps
+	var breaks: int = 0       # Q10: the region breaks among them (the act's additive part under actBeats.formSteps)
 	var onceMask: int = 0     # the once-per-match beats already counted (SimMood.ONCE bits)
 	var cause: int = 0        # the last beat's cause (SimMood.CAUSES index)
 	var aggression: int = 1000  # output, permille: the director's scale (Encounter's Q4)
@@ -306,6 +322,7 @@ class FxEvent:
 	var template: String = ""    # attack: the exchange's template tag
 	var ambush: bool = false     # attack: an ambush attack
 	var chosen: String = ""      # launch_plan: the chosen launch, NONE for a shove
+	var version: String = ""     # pause_start, transform: full, short or live (SimPause.VERSIONS)
 	var source: String = ""      # hazard_telegraph, danger: what is coming (brunt, windup, ambush; World adds collapse, landslide, lava)
 	var eta: float = 0.0         # hazard_telegraph, danger: seconds until it lands, 0 when unknown
 

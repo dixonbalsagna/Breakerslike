@@ -20,7 +20,7 @@ const CAP: int = 18000
 ## hasMenace, from da5fb09), the kit, the Rally rule, the wound data and the finisher key used to stay with the slot, so a
 ## swapped "VORR" kept KAI's anguish. The parity gate's "arm setups" check holds applyArm equal to newMatch's setup.
 const CHAR_KEYS: Array = ["id", "name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName",
-	"canHide", "rally", "hasAnguish", "hasMenace", "wd", "finisher", "md", "ld"]
+	"canHide", "rally", "hasAnguish", "hasMenace", "wd", "finisher", "md", "ld", "sigCooldown"]
 const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance"]
 
 
@@ -44,7 +44,7 @@ static func build() -> Dictionary:
 	g.rally = rallyHash()
 	g.cripple = crippleHash()
 	g.mood = moodHash()
-	g.fightHash = SimMood.dataHash()
+	g.fightHash = SimMood.dataHash() + SimPause.dataHash()
 	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY
 	g.rosterHash = FighterData.dataHash()

@@ -328,6 +328,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	var cap: float = DirData.timeCapAt()
 	if cap > 0.0 and not S.game.timeCap and S.T >= cap:
 		S.game.timeCap = true
+		SimPause.request(S, SimPause.TIMECAP, -1)   # Q10 (granted): the planet giving way always pauses, outside the bank
 		SimEvents.feed(S, "TIME CAP", "every decisive win on the brink is a finisher")
 	_transforms(S)
 	if S.dirS.cool > 0.0:
@@ -442,13 +443,18 @@ static func _transforms(S: SimState) -> void:
 		if not (i.transform or (not f.act.v2 and f.ai == null and i.charge)):
 			continue
 		var o = SimRoster.opp(S, f)
-		SimFx.transform(S, f, f.tier + 1.0, transformSource(f), TRANSFORM_HOLD)
+		# Q10 (granted): the set piece asks for its version. Full and short pause the sim (the cinematic); live is the
+		# hold below, as before. The tier, the burst and the push happen on this tick in every version.
+		var pz: Dictionary = SimPause.request(S, SimPause.TRANSFORM, S.fighters.find(f))
+		var hold: float = float(pz.ticks) / DirData.TICKS_PER_SEC
+		SimFx.transform(S, f, f.tier + 1.0, transformSource(f), hold, SimPause.VERSIONS[pz.version])
 		SimFighter.transform(S, f)
-		S.dirS.cool = SimMathx.jmax(S.dirS.cool, TRANSFORM_HOLD)
 		f.state = "free"
 		f.vx = 0.0
 		f.vy = 0.0
-		f.stunTicks = maxi(f.stunTicks, int(TRANSFORM_HOLD * DirData.TICKS_PER_SEC + 0.5))
+		if pz.version == SimPause.LIVE:
+			S.dirS.cool = SimMathx.jmax(S.dirS.cool, hold)
+			f.stunTicks = maxi(f.stunTicks, int(pz.ticks))
 		var d: float = SimWrap.sdx(f.x, o.x)
 		if absf(d) < TRANSFORM_PUSH_R and (o.state == "free" or o.state == "charging"):
 			o.vx = (1.0 if d >= 0.0 else -1.0) * TRANSFORM_PUSH
@@ -535,6 +541,8 @@ static func _opContest(S: SimState, ex, a) -> void:
 	var L = ex.D if a.w == "A" else ex.A
 	var late: float = SimMathx.jmax(0.0, (S.T - CONTEST_TILT_AT) / 60.0)
 	var chance: float = SimMathx.jmax(0.0, CONTEST_BASE - CONTEST_TILT * late)
+	if S.game.timeCap:
+		chance = 0.0   # Q10 (granted; spec-wounds.md section 5): no survival from the time cap; the draw is kept
 	var survived: bool = S.rng.next() < chance
 	SimFx.finisherContest(S, L, chance, survived)
 	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")
@@ -642,6 +650,8 @@ static func _opContestBranch(S: SimState, ex, a) -> void:
 	# The Rally tilt (spec-wounds.md §1; contest.rallyPenalty): each Rally the fighter has used costs it 10 points.
 	chance -= float(cs.get("rallyPenalty", 0.0)) * float(L.rallies)
 	chance = SimMathx.jmax(float(cs.floor), chance)
+	if S.game.timeCap:
+		chance = 0.0   # Q10 (granted; spec-wounds.md section 5): no survival from the time cap; the draw is kept
 	var survived: bool = S.rng.next() < chance
 	SimFx.finisherContest(S, L, chance, survived)
 	SimEvents.feed(S, L.name + (" SURVIVES" if survived else " FALLS"), "finisher contest, survival chance " + SimMathx.jstr(SimMathx.jround(chance * 100.0)) + "%")

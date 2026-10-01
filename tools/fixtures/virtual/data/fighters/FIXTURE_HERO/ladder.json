@@ -35,5 +35,11 @@
       0.25,
       0.5
     ]
-  }
+  },
+  "chargePerSec": 0.5,
+  "stepKinds": [
+    "pausing",
+    "pausing",
+    "pausing"
+  ]
 }

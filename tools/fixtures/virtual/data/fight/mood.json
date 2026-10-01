@@ -75,6 +75,7 @@
       "limbBattered",
       "coreBruised",
       "coreBattered"
-    ]
+    ],
+    "formSteps": false
   }
 }

@@ -74,6 +74,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.exN = 0
 	S.dirS.biomeT = PackedFloat64Array()   # location variety (granted line): the director sizes it on the first tick
 	SimAct.setup(S, setup)   # I2a: each fighter's action state
+	SimPause.reset(S)        # Q10: the pause bank
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
 	S.out.feed.clear()
 	S.out.fx.clear()
@@ -88,11 +89,15 @@ static func step(S: SimState, inputs = null) -> bool:
 	var dt: float = dtReal * S.game.ts
 	S.dt = dt
 	S.tick += 1
+	if SimPause.frozenTick(S):   # Q10: a pausing set piece is a run of frozen ticks, ahead of the hit-stop
+		SimFx.tickMark(S, dt, true)
+		return false
 	if S.dirS.stop > 0.0:
 		S.dirS.stop -= dtReal
 		SimFx.tickMark(S, dt, true)
 		return false
 	S.T += dt
+	SimPause.liveTick(S)   # Q10: the pause bank accrues on match time
 	if S.game.ko != null:
 		S.game.koT += dt
 		if S.game.koT > 2.2:

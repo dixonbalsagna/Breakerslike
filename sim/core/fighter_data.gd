@@ -88,6 +88,8 @@ class MetersDef:
 ## One fighter's power ladder (ladder.json, D1b). Read-only after load.
 class LadderDef:
 	var fill: float = 0.0             # power per second
+	var charge: float = 0.0           # Q10: power per second while charging (chargePerSec)
+	var stepKinds: Array = []         # Q10: per threshold, "pausing" or "live" (SimPause): a live step never pauses the fight
 	var thresholds: Array = []        # power at which tiers 2, 3 and 4 begin
 	var manualTierUp: bool = false    # I2a: a threshold makes the fighter ready and the tier waits for the transform
 	var speed: float = 0.0            # per tier above 1: free-flight speed x (1 + this x (tier - 1))
@@ -285,8 +287,8 @@ static func _wounds(id: String, j: Dictionary) -> WoundsDef:
 		w.stageAt.append(_int(where + " stageAt", x))
 	w.wearPerDamage = float(j.get("wearPerDamage", 0.0))
 	w.act1Damping = float(j.get("act1Damping", 0.0))
-	if not (w.act1Damping > 0.0 and w.act1Damping <= 1.0):
-		_err(where + ": act1Damping must be in (0, 1]")
+	if not (w.act1Damping > 0.0 and w.act1Damping <= 2.0):   # above 1 it speeds act 1's wear (QA's M1b tuning: 1.3)
+		_err(where + ": act1Damping must be in (0, 2]")
 	var ot: Dictionary = j.get("overtime", {})
 	for key in ["startTicks", "perMin", "cap"]:
 		if not ot.has(key):
@@ -442,6 +444,18 @@ static func _ladder(id: String, j: Dictionary) -> LadderDef:
 	var where: String = id + "/ladder.json"
 	var l := LadderDef.new()
 	l.fill = float(j.get("fillPerSec", 0.0))
+	if not (j.get("chargePerSec") is float or j.get("chargePerSec") is int) or float(j.get("chargePerSec")) < 0.0:
+		_err(where + ": chargePerSec must be a number of at least 0")
+	else:
+		l.charge = float(j.get("chargePerSec"))
+	var sk = j.get("stepKinds", [])
+	if not (sk is Array and sk.size() == 3):
+		_err(where + ": stepKinds needs one entry per threshold")
+		sk = ["pausing", "pausing", "pausing"]
+	for k in sk:
+		if not ["pausing", "live"].has(k):
+			_err(where + ": stepKinds entries are \"pausing\" or \"live\"")
+		l.stepKinds.append(String(k))
 	l.manualTierUp = j.get("manualTierUp", false) == true
 	var th = j.get("thresholds", [])
 	if not (th is Array and th.size() == 3):

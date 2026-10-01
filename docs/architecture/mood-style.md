@@ -269,6 +269,11 @@ There is no per-second mood event. Readers that want the value read `S.mood` (a 
 1. With the old beat rule kept by a temporary switch, and the mood and style state and the mood events left out of the hash, the M1b code reproduced goldens made the same way from the pre-M1b code. That covered tick-0, the wound, Rally and crippling vectors, all 9 matches (171,959 ticks, every digest and checkpoint) and the replays. So everything except the act beats leaves the match unchanged.
 2. The new beats were then switched on, and the goldens regenerated once.
 
+## 8d. Q10: the act rule and the event list (2026-10-01)
+
+- **The act rule** (Game Design, spec-wounds section 8b; `docs/architecture/q10-pace-acts-pauses.md`): with `actBeats.formSteps` true, `SimMood.act(S)` is `min(act.max, 1 + larger of (form steps, wound beats) + region breaks)`. Form steps are the most ladder steps any one fighter has taken (`tier - 1`), wound beats the once-per-match beats reached (the bits of `onceMask`), region breaks `S.mood.breaks`. `actBeats.every` is now [regionBreak]. With `formSteps` false the rule is M1b's (1 + every beat).
+- **The mood reads only this tick's events.** `SimMood.tick` takes the tail of `S.out.fx` whose `tick` is `S.tick`. Before, it read the whole list, so the mood depended on the host draining the list every tick (a replay played back without draining read old events again). `SimReplay.play` now drains the list as well.
+
 ## 9. Open points
 
 - **Taunts and transformations** have no sim events yet. Their impulses are in the data and dormant until `taunt` (Encounter or Narrative) and `form_change` (F1) exist.
