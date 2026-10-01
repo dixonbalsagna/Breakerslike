@@ -202,17 +202,26 @@ func _test_wounds() -> void:
 		var i2: int = AnimRig.index[nm]
 		d_fresh += fresh.q[i2].angle_to(sag.q[i2])
 	_expect(d_worn < d_fresh * 0.9, "wound test: the stance did not sag toward the brink (%.3f against %.3f)" % [d_worn, d_fresh])
-	b.wear = [0, 0, 0, 0]
-	b.stage = [0, 0, 0, 0]
-	var lo_f := 9.0
-	var hi_f := -9.0
-	for i in range(240):
-		main.frame(DT)
-		var ang2: float = afb.q[s2].angle_to(Quaternion.IDENTITY)
-		lo_f = minf(lo_f, ang2)
-		hi_f = maxf(hi_f, ang2)
-	_expect(hi_w - lo_w > (hi_f - lo_f) * 1.2, "wound test: the worn fighter's chest moves %.3f, the fresh one's %.3f" % [hi_w - lo_w, hi_f - lo_f])
-	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, chest range worn %.3f fresh %.3f" % [hanging, calm, afa.debug["wound_bad"], hi_w - lo_w, hi_f - lo_f])
+	# the breath of a worn fighter against a fresh one, in a controlled setup (the same fighter, the same four seconds, only the wear differs):
+	# a live match plays differently whenever the sim changes, so the chest of whoever happened to be standing in it is not a measure
+	b.state = "free"
+	var ranges: Array = []
+	for wear_b in [[0, int(at * 0.85), 0, 0], [0, 0, 0, 0]]:
+		b.wear = wear_b
+		b.stage = [0, 2, 0, 0] if int(wear_b[1]) > 0 else [0, 0, 0, 0]
+		var afc := AnimFighter.new(1)
+		afc._wound_read(b)
+		var lo_c := 9.0
+		var hi_c := -9.0
+		for tk in range(240):
+			afc.q = AnimPose.identity_q()
+			afc._wear_motion(b, float(tk) * DT)
+			var angc: float = afc.q[s2].angle_to(Quaternion.IDENTITY)
+			lo_c = minf(lo_c, angc)
+			hi_c = maxf(hi_c, angc)
+		ranges.append(hi_c - lo_c)
+	_expect(float(ranges[0]) > float(ranges[1]) * 1.2, "wound test: the worn fighter's chest moves %.3f, the fresh one's %.3f" % [ranges[0], ranges[1]])
+	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, chest range worn %.3f fresh %.3f (controlled)" % [hanging, calm, afa.debug["wound_bad"], ranges[0], ranges[1]])
 	RenderAnim.wave1_live = live_was
 
 
