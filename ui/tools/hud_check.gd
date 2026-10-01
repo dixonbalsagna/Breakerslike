@@ -2284,7 +2284,14 @@ func _remap_rules() -> void:
 		for e in UiRemapModel.entries(SimInputData.preset(id)):
 			out.append(e["id"])
 		return out
-	_ok(ids.call("kb-solo") == ["light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "transform"] and ids.call("arena") == ["light", "heavy", "signature", "guard", "dodge", "power", "mode", "context"] and ids.call("simple-pad") == ["light", "signature", "guard", "dodge", "power", "context", "transform"], "remap: each layout lists its single-control actions (the move keys, the stick, the chords, Pause and Hints stay fixed)")
+	_ok(ids.call("kb-solo") == ["move", "light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "transform"] and ids.call("arena") == ["light", "heavy", "signature", "guard", "dodge", "power", "mode", "context"] and ids.call("simple-pad") == ["light", "signature", "guard", "dodge", "power", "context", "transform"], "remap: a keyboard lists Fly (four keys) and every action, a pad its single-control actions")
+	var fixed_ids := func(id: String) -> Array:
+		var out: Array = []
+		for r in UiRemapModel.rows(SimInputData.preset(id)):
+			if bool(r["fixed"]):
+				out.append(r["id"])
+		return out
+	_ok(fixed_ids.call("arena") == ["move@fixed0", "transform@fixed0", "transform@fixed1"] and fixed_ids.call("kb-solo") == ["transform@fixed0"] and fixed_ids.call("simple-pad") == ["move@fixed0", "transform@fixed0"], "remap: the pad stick and the chords are listed as fixed rows (greyed, no capture); Pause, Hints, gestures and the power layer are not listed")
 	# A free key: the layered special follows Light (Controls' applier), nothing else moves.
 	var r1: Dictionary = UiRemapModel.attempt("kb-solo", "light", "kb:KeyZ")
 	_ok(r1["status"] == "ok" and (r1["overrides"] as Array) == [{"controls": ["kb:KeyZ"], "action": "light"}], "remap: a free key is an override row for Light")
@@ -2306,13 +2313,39 @@ func _remap_rules() -> void:
 	var bad := true
 	for k in ["kb:KeyP", "kb:KeyN", "kb:KeyT", "kb:KeyY", "kb:Escape", "kb:F5"]:
 		bad = bad and UiRemapModel.attempt("kb-solo", "light", k)["status"] == "reserved"
-	_ok(bad and UiRemapModel.attempt("arena", "light", "pad:start")["status"] == "reserved" and UiRemapModel.attempt("arena", "light", "pad:back")["status"] == "reserved" and UiRemapModel.attempt("simple-pad", "light", "pad:back")["status"] == "reserved" and UiRemapModel.attempt("kb-solo", "light", "pad:west")["status"] == "wrong_device" and UiRemapModel.attempt("arena", "light", "kb:KeyZ")["status"] == "wrong_device" and UiRemapModel.attempt("kb-solo", "light", "kb:KeyJ")["status"] == "same" and UiRemapModel.attempt("kb-solo", "light", "kb:Space")["status"] == "chord" and UiRemapModel.attempt("kb-solo", "light", "kb:KeyL")["status"] == "conflict" and UiRemapModel.attempt("arena", "light", "pad:rt")["status"] == "chord" and UiRemapModel.attempt("arena", "light", "pad:l3")["status"] == "chord", "remap: N, T, Y, P, Esc, F-keys, Start and Back are refused; the wrong device is refused; the same control is no change")
+	_ok(bad and UiRemapModel.attempt("arena", "light", "pad:start")["status"] == "reserved" and UiRemapModel.attempt("arena", "light", "pad:back")["status"] == "reserved" and UiRemapModel.attempt("simple-pad", "light", "pad:back")["status"] == "reserved" and UiRemapModel.attempt("kb-solo", "light", "pad:west")["status"] == "wrong_device" and UiRemapModel.attempt("arena", "light", "kb:KeyZ")["status"] == "wrong_device" and UiRemapModel.attempt("kb-solo", "light", "kb:KeyJ")["status"] == "same" and UiRemapModel.attempt("kb-solo", "light", "kb:KeyL")["status"] == "conflict", "remap: N, T, Y, P, Esc, F-keys, Start and Back are refused; the wrong device is refused; the same control is no change")
 	_ok(UiRemapModel.attempt("kb-shared-p1", "light", "kb:KeyH")["status"] == "pair" and UiRemapModel.attempt("kb-shared-p1", "light", "kb:KeyK")["status"] == "pair" and UiRemapModel.attempt("kb-shared-p1", "light", "kb:KeyZ")["status"] == "ok" and UiRemapModel.attempt("kb-solo", "light", "kb:KeyH")["status"] == "ok", "remap: a key the other half of a shared keyboard uses is refused (and not on the solo layout)")
+	# A chord's members are free for single bindings; the chords themselves are never changed.
+	var cm: Dictionary = UiRemapModel.attempt("arena", "light", "pad:l3")
+	var cs2: Dictionary = UiRemapModel.attempt("arena", "light", "pad:rt")
+	var cs3: Dictionary = UiRemapModel.attempt("kb-solo", "light", "kb:Space")
+	_ok(cm["status"] == "ok" and cs2["status"] == "conflict" and cs2["with"] == "power" and cs3["status"] == "conflict" and cs3["with"] == "dodge", "remap: a chord member that is only in the chord (L3) is free; one that is also an action's control (RT, Space) is a conflict with that action")
+	UiRemapModel.commit("arena", UiRemapModel.attempt("arena", "light", "pad:rt", true)["overrides"])
+	var chords_kept := 0
+	for b in SimInputData.preset("arena")["bindings"]:
+		if (b["controls"] as Array).size() > 1 and str(b["action"]) == "transform":
+			chords_kept += 1
+	_ok(_binding_controls(SimInputData.preset("arena"), "light") == ["pad:rt"] and _binding_controls(SimInputData.preset("arena"), "power") == ["pad:west"] and chords_kept == 2, "remap: swapping across a chord member (Light to RT, Power to the west button) leaves both chords as they are")
+	UiRemapModel.commit("arena", [])
+	# Fly: four keys in order, rebound together.
+	var ck: Dictionary = UiRemapModel.check_move_key("kb-solo", [], "kb:Digit1")
+	_ok(ck["status"] == "ok" and UiRemapModel.check_move_key("kb-solo", ["kb:Digit1"], "kb:Digit1")["status"] == "twice" and UiRemapModel.check_move_key("kb-solo", [], "kb:KeyJ")["status"] == "taken" and UiRemapModel.check_move_key("kb-solo", [], "kb:KeyJ")["with"] == "light" and UiRemapModel.check_move_key("kb-solo", [], "kb:KeyW")["status"] == "ok" and UiRemapModel.check_move_key("kb-solo", [], "kb:KeyP")["status"] == "reserved" and UiRemapModel.check_move_key("kb-solo", [], "pad:west")["status"] == "wrong_device" and UiRemapModel.check_move_key("kb-shared-p1", [], "kb:KeyH")["status"] == "pair" and UiRemapModel.check_move_key("kb-shared-p1", [], "kb:KeyI")["status"] == "pair", "remap: each Fly key is checked as it is pressed (a free key, the same key twice, another action's key, one of its own old keys, a reserved key, the wrong device, the other half's keys)")
+	var mk: Array = ["kb:Digit1", "kb:Digit2", "kb:Digit3", "kb:Digit4"]
+	var am: Dictionary = UiRemapModel.attempt_move("kb-solo", mk)
+	_ok(am["status"] == "ok" and (am["overrides"] as Array) == [{"controls": mk, "action": "move"}] and UiRemapModel.attempt_move("kb-solo", ["kb:KeyW", "kb:KeyA", "kb:KeyS", "kb:KeyD"])["status"] == "same" and UiRemapModel.attempt_move("kb-solo", ["kb:KeyJ", "kb:KeyA", "kb:KeyS", "kb:KeyD"])["status"] == "taken" and UiRemapModel.attempt_move("kb-solo", ["kb:KeyJ", "kb:KeyA", "kb:KeyS", "kb:KeyD"])["control"] == "kb:KeyJ" and UiRemapModel.attempt_move("kb-solo", ["kb:Digit1", "kb:Digit1", "kb:Digit3", "kb:Digit4"])["status"] == "twice" and UiRemapModel.attempt("arena", "move", "pad:west")["status"] == "reserved", "remap: Fly rebinds four different keys in one row with no swap (a key that is another action's is named), and the pad stick cannot be remapped")
+	UiRemapModel.commit("kb-solo", am["overrides"])
+	var mvp: Dictionary = SimInputData.preset("kb-solo")
+	var mv_ctrl: Array = []
+	for b in mvp["bindings"]:
+		if b.has("axis"):
+			mv_ctrl = b["controls"]
+	_ok(mv_ctrl == mk and SimInputData.check_bindings(mvp).is_empty(), "remap: the new Fly keys are the layout's and it passes Controls' checks")
+	UiRemapModel.commit("kb-solo", [])
 	# Partners on the pads.
 	var rs: Dictionary = UiRemapModel.attempt("simple-pad", "light", "pad:lt")
 	UiRemapModel.commit("simple-pad", rs["overrides"])
 	var spz: Dictionary = SimInputData.preset("simple-pad")
-	_ok(_binding_controls(spz, "light") == ["pad:lt"] and _binding_controls(spz, "special_auto", "power") == ["pad:lt"] and UiRemapModel.attempt("simple-pad", "heavy_none", "pad:rt")["status"] == "reserved", "remap: on Simple the auto special follows Light")
+	_ok(_binding_controls(spz, "light") == ["pad:lt"] and _binding_controls(spz, "special_auto", "power") == ["pad:lt"] and _binding_controls(spz, "upgrade_heavy", "", "hold") == ["pad:lt"] and UiRemapModel.attempt("simple-pad", "heavy_none", "pad:rt")["status"] == "reserved", "remap: on Simple the hold-for-heavy and the auto special follow Light")
 	UiRemapModel.commit("simple-pad", [])
 	var rb: Dictionary = UiRemapModel.attempt("brawler", "mode", "pad:dpad_up")
 	UiRemapModel.commit("brawler", rb["overrides"])
@@ -2387,6 +2420,30 @@ func _remap_rules() -> void:
 	_ok(hud.remap_mode() == "capture" and str(hud.remap_plan()["status"]) == "P is kept for the game. Pick another.", "remap keys: a reserved key is refused and the screen keeps waiting")
 	hud._unhandled_input(key.call(KEY_ESCAPE))
 	_ok(hud.remap_mode() == "list" and hud.is_remap_open(), "remap keys: Esc cancels the wait, not the screen")
+	# Fly: four keys in order, refusals along the way, then one row emitted.
+	hud._rm_focus = idx.call("move")
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(hud.remap_mode() == "capture" and str(hud.remap_plan()["status"]) == "Press the key for Fly up.  Esc cancels.", "remap keys: Enter on Fly asks for up first")
+	hud._unhandled_input(key.call(KEY_1))
+	_ok(str(hud.remap_plan()["status"]) == "Press the key for Fly left.  Esc cancels.", "remap keys: then left, in order")
+	hud._unhandled_input(key.call(KEY_1))
+	_ok(str(hud.remap_plan()["status"]) == "Pick four different keys." and hud.remap_mode() == "capture", "remap keys: the same key twice is refused and the wait goes on")
+	hud._unhandled_input(key.call(KEY_L))
+	_ok(str(hud.remap_plan()["status"]) == "L is already Signature. Pick another." and (hud.remap_plan()["confirm_labels"] as Array) == ["CANCEL"], "remap keys: another action's key is named, and there is no swap for a Fly key")
+	var before_n: int = got["changes"].size()
+	for k in [KEY_2, KEY_3, KEY_4]:
+		hud._unhandled_input(key.call(k))
+	var fly_now: Dictionary = SimInputData.preset("kb-solo")
+	var fly_keys: Array = []
+	for b in fly_now["bindings"]:
+		if b.has("axis"):
+			fly_keys = b["controls"]
+	_ok(hud.remap_mode() == "list" and fly_keys == ["kb:Digit1", "kb:Digit2", "kb:Digit3", "kb:Digit4"] and got["changes"].size() == before_n + 1 and (got["changes"].back()[1] as Array).has({"controls": fly_keys, "action": "move"}) and str(hud.remap_plan()["status"]) == "Fly is now 1 2 3 4.", "remap keys: four presses rebind Fly as one row and the host is told")
+	_ok(lbl.call("move", "kb-solo") == "1234", "remap keys: and the legend shows the new Fly keys")
+	hud._rm_focus = idx.call("move")
+	hud._unhandled_input(key.call(KEY_ENTER))
+	hud._unhandled_input(key.call(KEY_ESCAPE))
+	_ok(hud.remap_mode() == "list", "remap keys: Esc cancels half-way through Fly")
 	hud._rm_focus = rows_of.call().size() - 1
 	hud._unhandled_input(key.call(KEY_ENTER))
 	_ok(not SimInputData.overrides.has("kb-solo") and got["changes"].back() == ["kb-solo", []] and lbl.call("light", "kb-solo") == "J" and str(hud.remap_plan()["status"]) == "Keyboard is back to its defaults.", "remap keys: Reset puts the layout back, tells the host the empty list and the glyphs return")
@@ -2408,6 +2465,19 @@ func _remap_rules() -> void:
 		e.button_index = btn
 		e.pressed = true
 		return e
+	var fixed_rows := 0
+	var fixed_off := true
+	for r in hud._rm_rows():
+		if r["kind"] == UiSettings.BIND and str(r["key"]).contains("@fixed"):
+			fixed_rows += 1
+			fixed_off = fixed_off and not bool(r["enabled"])
+	var pl_fx: Dictionary = hud.remap_plan()
+	var fx_rec: Dictionary = (pl_fx["rows"] as Array)[hud._rm_row_index("transform@fixed0")]
+	_ok(fixed_rows == 3 and fixed_off and UiSettings.hit(pl_fx, (fx_rec["rect"] as Rect2).get_center()).get("part", "") == "off", "remap pad: the stick and the two chords are greyed rows that cannot be captured")
+	hud._rm_focus = idx.call("context")
+	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_DOWN))
+	_ok(hud.remap_plan()["focus"] == hud._rm_rows().size() - 1, "remap pad: the focus skips the greyed rows (Down from Context goes to Reset)")
+	hud._rm_focus = idx.call("light")
 	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_DOWN))
 	_ok(hud.remap_layout() == "arena" and hud.remap_plan()["focus"] == idx.call("heavy"), "remap pad: the D-pad moves the focus")
 	hud._rm_focus = idx.call("light")
@@ -2429,7 +2499,10 @@ func _remap_rules() -> void:
 	trig.axis = JOY_AXIS_TRIGGER_RIGHT
 	trig.axis_value = 1.0
 	hud._unhandled_input(trig)
-	_ok(hud.remap_mode() == "capture" and str(hud.remap_plan()["status"]) == "RT is part of the Transform buttons, which stay as they are. Pick another.", "remap pad: a trigger pulled past the threshold is a press of that trigger, and one in the transform chord is refused")
+	_ok(hud.remap_mode() == "confirm" and str(hud.remap_plan()["status"]) == "RT is already Power. Swap them?", "remap pad: a trigger pulled past the threshold is a press of that trigger (RT is Power's: a swap is offered)")
+	hud._unhandled_input(pad.call(JOY_BUTTON_B))
+	hud._rm_focus = idx.call("light")
+	hud._unhandled_input(pad.call(JOY_BUTTON_A))
 	hud._unhandled_input(pad.call(JOY_BUTTON_RIGHT_SHOULDER))
 	_ok(hud.remap_mode() == "confirm" and str(hud.remap_plan()["status"]) == "RB is already Mode. Swap them?", "remap pad: a bumper that is Mode's asks")
 	hud._unhandled_input(pad.call(JOY_BUTTON_A))

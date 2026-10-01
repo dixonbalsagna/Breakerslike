@@ -97,6 +97,7 @@ var _rm_focus := 0
 var _rm_scroll := 0.0
 var _rm_mode := "list"                # "list", "capture" (waiting for a key or button) or "confirm" (a swap is offered)
 var _rm_entry := ""                   # the entry being captured (an action id)
+var _rm_keys: Array = []              # Fly's keys taken so far, in order up, left, down, right
 var _rm_pending: Dictionary = {}      # a conflict waiting for an answer: {control, with}
 var _rm_status := ""
 var _rm_drag: Dictionary = {}
@@ -1108,7 +1109,7 @@ func show_remap(layout_id: String = "") -> void:
 				break
 	_rm_open = true
 	_rm_layout = layout_id
-	_rm_focus = 1
+	_rm_focus = _rm_first_focus()
 	_rm_scroll = 0.0
 	_rm_mode = "list"
 	_rm_status = ""
@@ -1181,9 +1182,14 @@ func _rm_rows() -> Array:
 	var p: Dictionary = UiRemapModel.preset(_rm_layout)
 	var fam: String = _rm_fam()
 	var style: String = str(opts["glyph_style"])
-	for e in UiRemapModel.entries(p):
+	for e in UiRemapModel.rows(p):
+		var specs: Array = []
+		for c in e["controls"]:
+			if not specs.is_empty() and str(e["action"]) != "move":
+				specs.append({"kind": "plus", "label": "+"})
+			specs.append(UiGlyphs.spec_control(str(c), fam, style))
 		out.append({"kind": UiSettings.BIND, "key": str(e["id"]), "label": _rm_action_word(str(e["action"])), "help": str((w.get("helps", {}) as Dictionary).get(str(e["action"]), "")),
-			"enabled": true, "specs": [UiGlyphs.spec_control(str(e["control"]), fam, style)]})
+			"enabled": not bool(e["fixed"]), "specs": specs})
 	out.append({"kind": UiSettings.BUTTON, "key": "", "action": "reset", "label": str(w.get("reset", "Reset")), "value": str(w.get("reset_button", "Reset")),
 		"help": str(w.get("reset_help", "")), "enabled": true})
 	return out
@@ -1196,7 +1202,10 @@ func _rm_status_text() -> String:
 			if _rm_status != "":
 				return _rm_status   # a refusal ("kept for the game") stays up until the next press
 			var key: String = "capture_key" if _rm_is_kb() else "capture_pad"
-			return str(w.get(key, "")).replace("{action}", _rm_action_word(_rm_entry))
+			var act: String = _rm_action_word(_rm_entry)
+			if _rm_entry == "move":
+				act += " " + str((w.get("move_steps", {}) as Dictionary).get(UiRemapModel.MOVE_STEPS[mini(_rm_keys.size(), 3)], ""))
+			return str(w.get(key, "")).replace("{action}", act)
 		"confirm":
 			return str(w.get("conflict", "")).replace("{control}", _rm_control_word(str(_rm_pending["control"]))).replace("{other}", _rm_action_word(str(_rm_pending["with"])))
 	return _rm_status
@@ -1232,6 +1241,15 @@ func _paint_remap(ci: CanvasItem) -> void:
 		UiSettings.draw(ci, remap_plan(), {"layout": _rm_layout})
 
 
+## The first row an action can be captured on (the layout chooser is row 0).
+func _rm_first_focus() -> int:
+	var rws: Array = _rm_rows()
+	for i in range(1, rws.size()):
+		if rws[i]["kind"] != UiSettings.HEADING and bool(rws[i]["enabled"]):
+			return i
+	return 0
+
+
 func _rm_focusable() -> Array:
 	return UiSettings.focusable(_rm_rows())
 
@@ -1251,7 +1269,7 @@ func _rm_set_layout(id: String) -> void:
 	_rm_mode = "list"
 	_rm_status = ""
 	_rm_scroll = 0.0
-	_rm_focus = 1
+	_rm_focus = _rm_first_focus()
 	_l_remap.invalidate()
 
 
@@ -1283,6 +1301,7 @@ func _l_hints_invalidate() -> void:
 func _rm_start_capture(id: String) -> void:
 	_rm_mode = "capture"
 	_rm_entry = id
+	_rm_keys = []
 	_rm_status = ""
 	_rm_pending = {}
 	_l_remap.invalidate()
@@ -1298,6 +1317,9 @@ func _rm_cancel() -> void:
 
 ## A key or button was pressed while a control is wanted: bind it, ask about a swap, or say why not.
 func _rm_try(control: String) -> void:
+	if _rm_entry == "move":
+		_rm_try_move(control)
+		return
 	var w: Dictionary = _rm_words()
 	var res: Dictionary = UiRemapModel.attempt(_rm_layout, _rm_entry, control)
 	var word: String = _rm_control_word(control)
@@ -1315,17 +1337,60 @@ func _rm_try(control: String) -> void:
 			_rm_status = str(w.get("reserved", "")).replace("{control}", word)
 		"pair":
 			_rm_status = str(w.get("pair", "")).replace("{control}", word)
-		"chord":
-			_rm_status = str(w.get("chord", "")).replace("{control}", word).replace("{other}", _rm_action_word(str(res["with"])))
 		"wrong_device":
 			_rm_status = str(w.get("wrong_device_kb" if _rm_is_kb() else "wrong_device_pad", ""))
 	_l_remap.invalidate()
 
 
+## One key of Fly's four: checked at once, collected in order, and when the fourth is in all four are rebound together (no swap for a move key).
+func _rm_try_move(control: String) -> void:
+	var w: Dictionary = _rm_words()
+	var word: String = _rm_control_word(control)
+	_rm_status = ""
+	var res: Dictionary = UiRemapModel.check_move_key(_rm_layout, _rm_keys, control)
+	match str(res["status"]):
+		"ok":
+			_rm_keys.append(control)
+			if _rm_keys.size() == 4:
+				var all: Dictionary = UiRemapModel.attempt_move(_rm_layout, _rm_keys)
+				var keys: Array = _rm_keys.duplicate()
+				_rm_keys = []
+				match str(all["status"]):
+					"ok":
+						_rm_commit(all["overrides"])
+						_rm_finish(_rm_keys_word(keys))
+					"same":
+						_rm_finish(_rm_keys_word(keys), true)
+					"taken":
+						_rm_status = str(w.get("_taken", "")).replace("{control}", _rm_control_word(str(all.get("control", control)))).replace("{other}", _rm_action_word(str(all["with"])))
+					"pair":
+						_rm_status = str(w.get("pair", "")).replace("{control}", word)
+					_:
+						_rm_status = str(w.get("reserved", "")).replace("{control}", word)
+		"taken":
+			_rm_status = str(w.get("_taken", "")).replace("{control}", word).replace("{other}", _rm_action_word(str(res["with"])))
+		"twice":
+			_rm_status = str(w.get("_twice", ""))
+		"reserved":
+			_rm_status = str(w.get("reserved", "")).replace("{control}", word)
+		"pair":
+			_rm_status = str(w.get("pair", "")).replace("{control}", word)
+		"wrong_device":
+			_rm_status = str(w.get("wrong_device_kb", ""))
+	_l_remap.invalidate()
+
+
+func _rm_keys_word(keys: Array) -> String:
+	var parts := PackedStringArray()
+	for k in keys:
+		parts.append(_rm_control_word(str(k)))
+	return " ".join(parts)
+
+
 func _rm_finish(control: String, same: bool = false) -> void:
 	var w: Dictionary = _rm_words()
 	_rm_mode = "list"
-	_rm_status = str(w.get("same" if same else "done", "")).replace("{action}", _rm_action_word(_rm_entry)).replace("{control}", _rm_control_word(control))
+	_rm_status = str(w.get("same" if same else "done", "")).replace("{action}", _rm_action_word(_rm_entry)).replace("{control}", control if _rm_entry == "move" else _rm_control_word(control))
 	var at: int = _rm_row_index(_rm_entry)
 	if at >= 0:
 		_rm_focus = at
