@@ -228,3 +228,72 @@ The rival plants his feet, opens his arms and lets the opponent hit him. What he
 **Orb picked 1, On the Chin** (2026-10-01). Its rules now live in `spec-wounds.md` §3, under the Anti-hero's kit, as proposals for data. It is built after his first moveset.
 
 *The recommendation was 1:* It is B at full strength with Orb's move as the engine, and it needs only one new prompt. The piece of A it keeps costs nothing to build: every time he poses, the opponent chooses between feeding his ego and powering up. If playtests show that the talk between the two players is missing, 2's open invitation adds onto it without changing anything in 1. 3 is the fallback if his weak middle feels bad rather than arrogant.
+
+## 8. For Orb: three rule-of-cool pitches (questionnaires 11 and 12)
+
+Each pitch has options, a comparison and a recommendation. The numbers are proposals. The full feature plan is in `rule-of-cool.md`.
+
+### 8a. Which hits earn the big impact treatment
+
+Orb picked speed lines and panel cut-ins, with no impact frames and no slow motion, at a spectacle level of 4 out of 10. The question is which hits get them.
+
+**How often the candidates happen** (QA's Q10 retune, 7:36 a match; the two marked "est." aren't measured yet):
+
+| Candidate | Rate |
+| :--- | :--- |
+| A heavy that lands | About 6 a minute (est.) |
+| A launch | 11.8 a minute |
+| A heavy clash won | About 1.5 a minute (est.) |
+| A signature | 3.0 a match |
+| A finisher | About 1.5 a match |
+| A crippling blow | 0.5 a match |
+
+| | **A. Peaks only** | **B. Two levels** (recommended) | **C. Every big hit** |
+| :--- | :--- | :--- | :--- |
+| **Speed lines alone** | None | Every launch and every heavy that lands: a 6-tick streak with no cut | None |
+| **Panel cut-in with speed lines** | Signatures, finishers, crippling blows and the KO | The peaks in A, plus hits the player earned: a clash won, a riposte that launches, and a ping-pong's ender | Every heavy that lands and every launch |
+| **Rationing** | None needed | Earned hits share one panel every 12 s. Peaks always play | None |
+| **Panels a minute** | About 0.8 | About 2.5 | About 15 |
+| **On Orb's scale** | About 2 of 10 | About 4 of 10 | About 8 of 10 |
+| **Risk** | Long stretches look plain | The ration needs tuning so panels don't cluster | The panel stops meaning anything, and it hides the fight |
+
+**Recommendation: B.** Speed lines are cheap and never cover the screen, so they can ride on every launch. The panel stays rare enough to mean "that one mattered", and it lands at 4 of 10.
+
+### 8b. A last stand at the brink
+
+Orb didn't pick this as a story beat at first, then asked for a pitch. The wounds model already does part of it: a fighter near the brink hits up to 50% harder, the trailing fighter gets small bonuses, and each fighter has a Rally. Comebacks are meant to be common, at 30 to 45% of matches.
+
+| | **A. The stance** | **B. One last signature** (recommended) | **C. Refuse to fall** |
+| :--- | :--- | :--- | :--- |
+| **What he gets** | Presentation only: a camera cut, his face cut-in and a line when he reaches the brink | A, plus his signature becomes free and ready at once, for 20 s, the first time he reaches the brink | A, plus he survives the first finisher automatically |
+| **Fit with the wounds model** | No change. It shows the harder hits he already has | No change to wear. The rival still answers it as any signature: guard, a perfect block, or a beam of their own | It overrides the finisher's survival roll, which is now about 32% |
+| **Fit with the brink chapter and Rally** | None | A signature that lands is a decisive win, so it closes his opening and can start a Rally where the fighter's Rally allows | It repeats what the Protagonist's Rally already does, and it stretches the brink chapter past its 45 to 90 s band |
+| **Comebacks** | Unchanged | Up a little. QA holds them at 30 to 45% | Up a lot, and finishers stop being decisive |
+| **How often** | Once per fighter per match | Once per fighter per match. A second brink after a Rally gives nothing | Once per fighter per match |
+| **Risk** | It may feel like a promise with nothing behind it | One more signature a match, so the band becomes 2 to 5 | It undercuts the finisher, which Orb set at 7 of 10 |
+
+**Recommendation: B.** It gives the fighter on the brink one clear, dramatic thing to do, the player chooses the moment, and the rival can answer it. It needs no new system.
+
+### 8c. What a completed taunt does
+
+Orb picked a mid-fight taunt that can be punished, with an effect that depends on the fighter.
+
+**The same for every fighter.**
+- *The input:* the context button's fallback in physical mode (`control-rules.md` §4).
+- *It takes 1 s.* A dodge-cancel can end it in the first 20 ticks. After that he is committed.
+- *Punished:* any hit that lands during it is a clean hit at ×1.2.
+- *Completed:* mood +3, the face cut-in plays, and the fighter's own effect happens.
+- *Cooldown:* 15 s.
+- *The AI opponent is goaded:* for 4 s it attacks more, by 50% on easy and 25% on medium. The hard AI isn't baited.
+- *Target:* 1 to 3 completed taunts per fighter per match, with 20 to 40% of attempts punished.
+
+| | **A. Meter only** | **B. In character** (recommended) | **C. The dare** |
+| :--- | :--- | :--- | :--- |
+| **The rival** (Anti-hero) | Pride +6 | Pride +6, as already written | A dare, as for everyone |
+| **The Protagonist** | Heat +10 | **A challenge.** If the opponent attacks him within 5 s, it counts as a full commitment: a Respect spark of +10 heat | A dare |
+| **The Empress** | Wrath +8 | **A reprimand.** The opponent is riled for 6 s: they hit 5% harder, but their wind-ups are 2 ticks longer, so they are easier to perfect-block | A dare |
+| **The Cyborg** | Hunger +5 | **Service.** A sandwich pickup appears beside him, worth Hunger +5 when he takes it. The opponent can knock it away | A dare |
+| **How it works** | Every taunt feeds its fighter's own meter | Each taunt does a different kind of thing: meter, goading, angering, and a pickup | A completed taunt arms a dare for 8 s. His next decisive win pays double meter and mood +6. If he loses it, the opponent gets +10 on theirs |
+| **Risk** | All four feel the same | Four small rules to tune. "Riled" must stay readable | High stakes on every taunt may make players stop taunting |
+
+**Recommendation: B.** The taunt becomes a small piece of each fighter's personality, which is what "depends on fighter" asks for, and the rival's version is already built into his Pride.

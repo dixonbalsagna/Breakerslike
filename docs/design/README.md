@@ -11,6 +11,7 @@ Owner: Game Design. These pages define what the game is and why it is fun, and e
 | [living-destruction-numbers.md](living-destruction-numbers.md) | Numbers for fire, smoke and dust cover, landslides, quakes, rifts and lava: tier ladders, rates, hazard wear, frequencies, and the readability and collateral rules |
 | [moveset-rules.md](moveset-rules.md) | Specials, signatures, world-changing abilities, hidden weapons, one transformation mechanic per fighter, and style shifts (questionnaire 6) |
 | [control-rules.md](control-rules.md) | The game rules for the ADR 0008 control scheme: the perfect block, dodge-cancel and burst, the power layer and the transform hold, the context button, the Simple layout, mashing, and the placeholder transform |
+| [rule-of-cool.md](rule-of-cool.md) | Orb's rule-of-cool picks as a rationed feature list: trigger, tier gate, frequency, cost, owners and build order, plus the pulse rule for clashes and the three answers to a beam |
 | [upgrade-plan.md](upgrade-plan.md) | The pre-match upgrade draft Orb picked: three shared rounds of pick-one-of-three, switching on act by act, with the pool, limits and screen flow |
 | [unlocks.md](unlocks.md) | Cosmetics earned through play: what earns them, pacing, the local save and later online, and why cosmetics never touch balance |
 | [tutorial.md](tutorial.md) | The How-to-play card and the guided first match: beats that teach reads, never timing |

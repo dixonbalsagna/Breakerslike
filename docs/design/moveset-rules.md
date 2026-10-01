@@ -33,7 +33,7 @@ A fighter has a small pool of signatures. **Which one fires** follows this prior
    Each fighter has 1 or 2 revealed signatures, and each has its own trigger.
 3. **Place-driven.** The base signature's variants by biome, altitude and the defender's stance (pillar 7).
 
-**Limits.** All of a fighter's signatures share the **120 s cooldown** and the 45 ki cost. The match band stays 2 to 4 beams, so a typical match shows a place variant early, a revealed one mid-fight and a form signature late. Signature names show on screen (Orb: names for specials, signatures and finishers only).
+**Limits.** All of a fighter's signatures share the **120 s cooldown** and the 45 ki cost. The match band stays 2 to 4 beams, so a typical match shows a place variant early, a revealed one mid-fight and a form signature late. The fighter shouts the name of a special, signature or finisher, and there is no name card (Orb, questionnaire 12; `rule-of-cool.md`). This replaces the earlier on-screen names.
 
 ## 3. World-changing abilities
 

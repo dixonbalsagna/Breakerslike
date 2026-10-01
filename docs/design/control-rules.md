@@ -31,6 +31,8 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 - **Beam clash.** The director never fires a beam on its own, so the old "AGGRESSIVE with 40 ki meets the beam" rule goes. A clash now happens only when the defender answers during the incoming beam's tell, with their own signature (45 ki) or a heavy energy attack (40 ki). The selector conditions are in `stance-matrix.md` §7.2.
 - **QA bands:** perfect blocks are 5 to 15 per 100 melee exchanges at mid skill, and at most 2 per 100 for a scripted Guard masher.
 
+> **Two additions from the rule-of-cool plan** (`rule-of-cool.md` §2). Clashes, including the beam struggle, are decided on timed pulses. A perfect block against a signature takes one of three looks by the direction held: swat, split or walk through.
+
 ## 2. Dodge-cancel, burst and reversal
 
 | Action | Cost | Cooldown | When it works | What it does |
