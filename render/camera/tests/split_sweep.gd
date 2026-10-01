@@ -66,6 +66,9 @@ var dump_from: int = 0
 var dump_to: int = 0
 var shots_dir: String = ""
 var only: String = ""
+var _jr: Array = [null, null]            # a launched fighter's journey in progress, by victim slot
+var _jr_done: Array = []                 # the journeys that ended, for the match's summary
+var _jr_lay: UiLayout = null             # UI's layout, to ask whether it would draw an edge pointer
 var _punch_seen_t: float = -9.0
 var view: SplitView
 var stand_in: SplitTestMain
@@ -200,6 +203,7 @@ func _run() -> void:
 		_real_match(int(seeds[seeds.size() - 1]), -1, 0.0, FULL_TICKS)
 		_real_match(int(seeds[0]), -1, 49.0, FULL_TICKS)
 		_real_match(int(seeds[mini(1, seeds.size() - 1)]), 1, 0.0, FULL_TICKS)
+		_real_match(int(seeds[0]), -1, 0.0, FULL_TICKS, 0)
 	_sim_unchanged()
 	print("frames checked  %d, checks %d" % [frames_checked, checks])
 	for k in stats:
@@ -1673,9 +1677,9 @@ func _static_equals_reference() -> void:
 
 # ------------------------------------------------------------------------------------------------ real matches
 
-func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1) -> void:
+func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1, rig_human: int = -1) -> void:
 	var limit: int = ticks if ticks > 0 else match_ticks
-	_begin("real match %d%s%s%s" % [seed, (" human %d" % human) if human >= 0 else "", (" pitch %d" % int(pitch)) if pitch > 0.0 else "", " full" if ticks > 0 else ""])
+	_begin("real match %d%s%s%s%s" % [seed, (" human %d" % human) if human >= 0 else "", (" pitch %d" % int(pitch)) if pitch > 0.0 else "", " full" if ticks > 0 else "", " (rig sees slot %d as the human)" % rig_human if rig_human >= 0 else ""])
 	SimCore.newMatch(_S, seed, {"p1": human != 0, "p2": human != 1})
 	_rig.pitch_deg = pitch
 	_rig.reset(_S, vw, vh)
@@ -1694,16 +1698,27 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 	var last_change_t: float = -9.0
 	var gaps_bad: int = 0
 	var ncm: int = 0
+	_jr = [null, null]
+	_jr_done = []
 	while t < limit and not (_S.game.ko != null and _S.game.koT > 3.0):
 		SimCore.step(_S)
 		var ev: Array = _S.out.fx.duplicate()
 		_S.out.fx.clear()
 		_S.out.feed.clear()
 		t += 1
+		# A test-only trick: the sim is stepped with both fighters on AI, the rig sees one of them without it (a human), so the
+		# hybrid launch rule's hold can be exercised in a long match.
+		var saved_ai = null
+		if rig_human >= 0:
+			saved_ai = _S.fighters[rig_human].ai
+			_S.fighters[rig_human].ai = null
 		_rig.step(_S, vw, vh, ev)
 		_tick += 1
 		_watch()
 		var cur: SplitFrame = _rig.current()
+		_journey_tick(cur, ev)
+		if rig_human >= 0:
+			_S.fighters[rig_human].ai = saved_ai
 		if trace_seed == seed and float(t) / 60.0 >= trace_t0 and float(t) / 60.0 <= trace_t1:
 			var f0 = _S.fighters[0]
 			var f1 = _S.fighters[1]
@@ -1740,8 +1755,126 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 		mods.append("%s %d" % [k, modes[k]])
 	stats[_label] = "%d ticks: %s; layout changes %d, slams %d, cut-ins %d, panels %d (%.1f a minute, %d refused) %s" % [t, ", ".join(PackedStringArray(mods)), _rig.mode_change_times().size(), slams, _rig.cut_ins, _rig.panels, float(_rig.panels) * 3600.0 / float(maxi(t, 1)), _rig.panels_dropped, str(_rig.panel_log.map(func(e): return e[1]))]
 	_check(float(_rig.cut_ins) <= float(CamParams.OV_MAX_PER_MIN) * (float(t) / 3600.0) + 2.0, "%s: %d camera-only cut-ins in %.0f s (cap %d a minute)" % [_label, _rig.cut_ins, float(t) / 60.0, CamParams.OV_MAX_PER_MIN])
+	_journey_summary()
 	SimCore.dispose(_S)
 	_S = null
+
+
+## Whether fighter i is on the screen this tick, in his own pane when two are shown.
+func _on_screen(cur: SplitFrame, i: int) -> bool:
+	var f = _S.fighters[i]
+	var pi: int = i if cur.shows(i) else (0 if cur.shows(0) else 1)
+	var pos: Vector2 = cur.screen_pos(pi, f.x, f.y + CamParams.CHEST, float(f.z))
+	if pos.x < 0.0 or pos.x > vw or pos.y < 0.0 or pos.y > vh:
+		return false
+	if cur.shows(0) and cur.shows(1):
+		var w1: float = cur.weight1(pos)
+		return w1 >= 0.5 if i == 1 else w1 < 0.5
+	return true
+
+
+## Whether UI would draw an edge pointer at fighter `who` this tick (the chip of the other slot points at him).
+func _pointed(cur: SplitFrame, who: int) -> bool:
+	if _jr_lay == null:
+		_jr_lay = UiLayout.new()
+		_jr_lay.compute(Vector2(vw, vh), false)
+	var anchors: Array = []
+	for k in range(2):
+		var f = _S.fighters[k]
+		anchors.append(cur.hud_anchor(k, f.x, f.y, float(f.z)))
+	for ch in UiSplit.pointers(_jr_lay, cur.split_record(), anchors, _jr_lay.s):
+		if int(ch["slot"]) == 1 - who:
+			return true
+	return false
+
+
+## A launched fighter's journey, from the tick he is launched to the tick he is not: its length along the path, and the
+## ticks the launcher and the launched were off the screen, with whether UI would have pointed at them.
+func _journey_tick(cur: SplitFrame, ev: Array) -> void:
+	for v in range(2):
+		var f = _S.fighters[v]
+		if f.state == "launched" and _jr[v] == null:
+			var att: int = 1 - v
+			for e in ev:
+				if String(e.type) == "launch" and int(e.actor) == v and int(e.target) >= 0:
+					att = int(e.target)
+			_jr[v] = {"att": att, "x0": f.x, "px": f.x, "py": f.y, "len": 0.0, "ticks": 0, "att_off": 0, "vic_off": 0, "att_nop": 0, "vic_nop": 0, "mode_chase": 0}
+		var j = _jr[v]
+		if j == null:
+			continue
+		var dx: float = SimWrap.sdx(float(j["px"]), f.x)
+		var dy: float = f.y - float(j["py"])
+		j["len"] = float(j["len"]) + sqrt(dx * dx + dy * dy)
+		j["px"] = f.x
+		j["py"] = f.y
+		j["ticks"] = int(j["ticks"]) + 1
+		if _rig.solo_kind == "launch" or _rig.chase_slot == v:
+			j["mode_chase"] = int(j["mode_chase"]) + 1
+		var a: int = int(j["att"])
+		if not _on_screen(cur, a):
+			j["att_off"] = int(j["att_off"]) + 1
+			if not _pointed(cur, a):
+				j["att_nop"] = int(j["att_nop"]) + 1
+		if not _on_screen(cur, v):
+			j["vic_off"] = int(j["vic_off"]) + 1
+			if not _pointed(cur, v):
+				j["vic_nop"] = int(j["vic_nop"]) + 1
+		if f.state != "launched":
+			j["net"] = absf(SimWrap.sdx(float(j["x0"]), f.x))
+			_jr_done.append(j)
+			_jr[v] = null
+
+
+func _journey_summary() -> void:
+	var n: int = _jr_done.size()
+	if n == 0:
+		return
+	var lens: Array = []
+	var over4k: int = 0
+	var att_any: int = 0
+	var vic_any: int = 0
+	var att_off: int = 0
+	var vic_off: int = 0
+	var att_nop: int = 0
+	var vic_nop: int = 0
+	var ticks: int = 0
+	var worst_att: int = 0
+	var worst_vic: int = 0
+	for j in _jr_done:
+		lens.append(float(j["len"]))
+		if float(j["len"]) > 4000.0:
+			over4k += 1
+		att_off += int(j["att_off"])
+		vic_off += int(j["vic_off"])
+		att_nop += int(j["att_nop"])
+		vic_nop += int(j["vic_nop"])
+		ticks += int(j["ticks"])
+		if int(j["att_off"]) >= 6:
+			att_any += 1
+		if int(j["vic_off"]) >= 6:
+			vic_any += 1
+		worst_att = maxi(worst_att, int(j["att_off"]))
+		worst_vic = maxi(worst_vic, int(j["vic_off"]))
+	var nets: Array = []
+	var net_over: int = 0
+	for j in _jr_done:
+		nets.append(float(j["net"]))
+		if float(j["net"]) > 4000.0:
+			net_over += 1
+	nets.sort()
+	var net_mean: float = 0.0
+	for q in nets:
+		net_mean += float(q)
+	net_mean /= float(n)
+	lens.sort()
+	var mean: float = 0.0
+	for l in lens:
+		mean += float(l)
+	mean /= float(n)
+	var p90: float = float(lens[mini(n - 1, int(0.9 * float(n)))])
+	stats["journeys net " + _label] = "end to end: mean %.0f u (%.0f bh), median %.0f u, 90th %.0f u, %d (%.0f%%) over 4,000 u; %.1f s long on average" % [net_mean, net_mean / CamParams.BODY_H, float(nets[n / 2]), float(nets[mini(n - 1, int(0.9 * float(n)))]), net_over, 100.0 * float(net_over) / float(n), float(ticks) / 60.0 / float(n)]
+	stats["journeys " + _label] = "%d launches, path mean %.0f u (%.0f bh), 90th %.0f u, longest %.0f u, %d (%.0f%%) over 4,000 u; attacker off screen %d of %d ticks (%d journeys over 0.1 s, worst %d ticks), victim off %d ticks (%d journeys, worst %d); no UI pointer on %d attacker and %d victim off ticks" % [
+		n, mean, mean / CamParams.BODY_H, p90, float(lens[n - 1]), over4k, 100.0 * float(over4k) / float(n), att_off, ticks, att_any, worst_att, vic_off, vic_any, worst_vic, att_nop, vic_nop]
 
 
 ## The sim's gameplay hash after a match is the same whether or not the rig ran beside it.
