@@ -121,57 +121,37 @@ function dirC(fk, e, id, P) {   // no mask: a full stylized face
 }
 function dirA(fk, e, id, P) {   // the mask as a face: eyes, brow and mouth are lit shapes that change
   let o = hairBack(fk, P) + poly(HEAD[fk], P.mask, `stroke="${P.line}" stroke-width="6" stroke-linejoin="round"`) + shade(fk, P.maskSh, id);
-  o += rim(fk, P) + brow(fk, -1, e, P, 'mask') + brow(fk, 1, e, P, 'mask') + eye(fk, -1, e, 'lit', P) + eye(fk, 1, e, 'lit', P) + mouth(fk, e, P, 'lit') + (fk === 'E' ? '' : sigil(fk, P)) + hairFront(fk, P) + (fk === 'E' ? sigil('E', P) : '');
+  o += rim(fk, P) + brow(fk, -1, e, P, 'mask') + brow(fk, 1, e, P, 'mask') + eye(fk, -1, e, 'lit', P) + eye(fk, 1, e, 'lit', P) + mouth(fk, e, P, 'lit') + sigil(fk, P) + hairFront(fk, P);
   return o;
 }
-// Direction B: the mask partly off or broken. Each fighter's mask breaks a different way, so the break itself is part of who they are:
-// the Anti-hero's loses its left half (a vertical, lit crack), the Protagonist's a diagonal chunk (the face shows at the lower right), the Empress's is a veil over the lower face
-// (the eyes are free), and the Cyborg's display covers the right half. The damage stages retreat the mask a little more each time.
-const BREAK = {
-  A: { cover: 'left', pts: [[10, -300], [26, -250], [4, -200], [30, -150], [2, -90], [28, -30], [0, 40], [24, 100], [2, 160], [20, 220]], retreat: [-22, 0], maskPt: [-70, 10], skinPt: [74, 50], eye: [62, -36] },
-  P: { cover: 'above', pts: [[300, -130], [150, -112], [110, -82], [60, -98], [10, -60], [-10, -20], [-50, 0], [-80, 50], [-130, 60], [-300, 120]], retreat: [-16, -14], maskPt: [-70, -70], skinPt: [60, 50], eye: [74, -30] },
-  E: { cover: 'jaw', pts: [[-300, -10], [-124, -22], [-80, 8], [-56, 52], [-8, 78], [20, 126], [14, 168], [30, 300]], retreat: [-16, 14], maskPt: [-50, 90], skinPt: [50, 30], eye: [58, -50] },
-  C: { cover: 'right', pts: [[18, -190], [-4, -120], [20, -60], [-8, 0], [18, 60], [-4, 120], [20, 180], [-6, 240], [16, 300]], retreat: [20, 0], maskPt: [90, 10], skinPt: [-80, 40], eye: [-84, -28] },
-};
-function breakPoly(fk, stage) {
-  const B = BREAK[fk], pp = B.pts.map(([x, y]) => [x + B.retreat[0] * stage, y + B.retreat[1] * stage]);
-  if (B.cover === 'left') return { pg: [...pp, [-300, 300], [-300, -300]], edge: pp };
-  if (B.cover === 'right') return { pg: [...pp, [300, 300], [300, -300]], edge: pp };
-  if (B.cover === 'above') return { pg: [[300, -300], ...pp, [-300, -300]], edge: pp };
-  if (B.cover === 'jaw') return { pg: [...pp, [-300, 300]], edge: pp };
-  return { pg: [[-300, 300], ...pp, [300, 300]], edge: pp };
-}
-// the damage on the face: scuffs on the mask and a bruise on the skin, then a crack in the mask, a cut and a loose strand, then a swollen eye and a second crack
-function faceDamage(fk, stage, P) {
-  if (!stage) return '';
-  const B = BREAK[fk], [mx, my] = B.maskPt, [sx, sy] = B.skinPt, [ex, ey] = B.eye, bruise = '#6d3a78'; let o = '';
-  const sc = (x, y, l, a) => line([[x, y], [x + Math.cos(a) * l, y + Math.sin(a) * l]], PALEMASK[fk] ? P.maskSh : P.accL, 4, 'opacity="0.9"');
-  o += sc(mx - 20, my - 30, 36, 0.5) + sc(mx + 10, my + 20, 28, 0.6) + sc(mx - 30, my + 50, 24, 0.4);
-  o += poly(ell(sx, sy, 34, 22, 14), bruise, 'opacity="0.5"');
-  if (stage >= 2) {
-    const c1 = [[mx + 40, my - 70], [mx + 10, my - 30], [mx + 30, my], [mx - 10, my + 40]];
-    o += line(c1, P.line, 7) + line(c1, P.accL, 2.5);
-    o += line([[sx - 20, sy + 6], [sx + 30, sy - 12]], P.line, 5) + line([[sx - 4, sy - 2], [sx - 6, sy + 12]], P.line, 3) + line([[sx + 14, sy - 8], [sx + 12, sy + 6]], P.line, 3);
-    o += line([[ex - 6, -130], [ex - 20, -90], [ex - 10, -58]], PALS[fk].hair, 7);
+function dirB(fk, e, id, P) {   // the mask partly off or broken: a real face framed by the mask
+  const clip = (name, pg) => `<clipPath id="${name}-${id}"><polygon points="${pts(pg)}"/></clipPath>`;
+  let o = hairBack(fk, P) + poly(HEAD[fk], P.skin, `stroke="${P.line}" stroke-width="6" stroke-linejoin="round"`) + shade(fk, P.skinSh, id) + nose(fk, P);
+  if (fk === 'P') {   // the dome pushed up onto the head: a helmet on the brow
+    const cut = [[-260, -300], [260, -300], [260, -98], [120, -86], [0, -104], [-120, -86], [-260, -98]];
+    o += eye(fk, -1, e, 'skin', P) + eye(fk, 1, e, 'skin', P) + brow(fk, -1, e, P) + brow(fk, 1, e, P) + mouth(fk, e, P, 'skin');
+    o += clip('m', cut) + `<g clip-path="url(#m-${id})">${poly(ell(0, -140, 190, 120, 28).map(([x, y]) => [x, y - 30]), P.mask, `stroke="${P.line}" stroke-width="6"`)}${poly([[40, -300], [260, -300], [260, -98], [120, -86]], P.maskSh, 'opacity="0.5"')}</g>`;
+    o += line([[-168, -98], [-120, -86], [0, -104], [120, -86], [168, -98]], P.line, 8) + sigil(fk, P) + hairFront(fk, P).replace(/<polygon[^>]*\/>/, '');
+    return o;
   }
-  if (stage >= 3) {
-    const c2 = [[mx - 50, my - 40], [mx - 20, my - 10], [mx - 40, my + 24], [mx - 8, my + 60]];
-    o += poly(ell(ex, ey + 4, 54, 38, 16), bruise, 'opacity="0.7"') + line([[ex - 44, ey + 6], [ex + 44, ey - 2]], P.line, 8);
-    o += line(c2, P.line, 7) + line(c2, P.accL, 2.5) + line([[sx + 18, sy + 54], [sx + 40, sy + 66]], P.line, 5);
+  if (fk === 'A') {   // the left half broken away: a jagged edge, the lit slash on the half that remains
+    const zig = [[-300, -300], [10, -300], [26, -250], [4, -200], [30, -150], [2, -90], [28, -30], [0, 40], [24, 100], [2, 160], [20, 220], [-300, 300]];
+    o += eye(fk, 1, e, 'skin', P) + brow(fk, 1, e, P) + mouth(fk, e, P, 'skin') + clip('m', zig) + `<g clip-path="url(#m-${id})">${poly(HEAD[fk], P.maskB ?? P.mask, `stroke="${P.line}" stroke-width="7"`)}${brow(fk, -1, e, P, 'mask')}${eye(fk, -1, e, 'lit', P)}${mouth(fk, e, P, 'lit')}${sigil(fk, P)}</g>`;
+    o += `<clipPath id="hc-${id}"><polygon points="${pts(HEAD[fk])}"/></clipPath><g clip-path="url(#hc-${id})">${line([[10, -300], [26, -250], [4, -200], [30, -150], [2, -90], [28, -30], [0, 40], [24, 100], [2, 160], [20, 220]], P.line, 9)}${line([[10, -300], [26, -250], [4, -200], [30, -150], [2, -90], [28, -30], [0, 40], [24, 100], [2, 160], [20, 220]], P.accL, 3)}</g>` + hairFront(fk, P);
+    return o;
   }
-  return o;
-}
-function dirB(fk, e, id, P, stage = 0, blank = false) {
-  const { pg, edge } = breakPoly(fk, stage), mk = P.maskB ?? P.mask;
-  let o = hairBack(fk, P) + poly(HEAD[fk], P.skin, `stroke="${P.line}" stroke-width="7" stroke-linejoin="round"`) + shade(fk, P.skinSh, id) + nose(fk, P);
-  o += (fk === 'C' ? eye(fk, -1, e, 'skin', P) + brow(fk, -1, e, P) : eye(fk, -1, e, 'skin', P) + eye(fk, 1, e, 'skin', P) + brow(fk, -1, e, P) + brow(fk, 1, e, P)) + mouth(fk, e, P, 'skin');
-  const maskFeatures = blank ? sigil(fk, P) : fk === 'C' ? eye(fk, 1, e, 'lit', P) + brow(fk, 1, e, P, 'mask') + mouth(fk, e, P, 'lit') + sigil(fk, P)
-    : fk === 'A' ? eye(fk, -1, e, 'lit', P) + brow(fk, -1, e, P, 'mask') + mouth(fk, e, P, 'lit') + sigil(fk, P)
-      : fk === 'P' ? eye(fk, -1, e, 'lit', P) + brow(fk, -1, e, P, 'mask') + sigil(fk, P)
-        : mouth(fk, e, P, 'lit');
-  o += `<clipPath id="m-${id}"><polygon points="${pts(pg)}"/></clipPath><clipPath id="hc-${id}"><polygon points="${pts(HEAD[fk])}"/></clipPath>` +
-    `<g clip-path="url(#hc-${id})"><g clip-path="url(#m-${id})">${poly(HEAD[fk], mk, `stroke="${P.line}" stroke-width="7"`)}${shade(fk, P.maskSh, id + 'm')}${maskFeatures}</g>${line(edge, P.line, 9)}${line(edge, PALEMASK[fk] ? P.maskSh : P.accL, 3.2)}</g>`;
-  o += faceDamage(fk, stage, P) + hairFront(fk, P) + (fk === 'E' ? sigil('E', P) : '');
+  if (fk === 'E') {   // a bone half-mask over the brow and the eyes, with the eyes looking out through it
+    const cut = [[-260, -300], [260, -300], [260, 6], [70, 30], [0, 62], [-70, 30], [-260, 6]];
+    o += clip('m', cut) + `<g clip-path="url(#m-${id})">${poly(HEAD[fk], P.mask, `stroke="${P.line}" stroke-width="6"`)}${shade(fk, P.maskSh, id + 'b')}</g>`;
+    o += line([[-110, 6], [-70, 30], [0, 62], [70, 30], [110, 6]], P.line, 7);
+    for (const s of [-1, 1]) o += poly(ell(RIG.E.ex * s, RIG.E.ey, 56, 38, 16), P.line) + eye(fk, s, e, 'skin', P);
+    o += brow(fk, -1, e, P, 'mask') + brow(fk, 1, e, P, 'mask') + mouth(fk, e, P, 'skin') + sigil(fk, P) + hairFront(fk, P);
+    return o;
+  }
+  // C: the display half
+  const zig = [[10, -300], [300, -300], [300, 300], [16, 300], [-6, 240], [20, 180], [-4, 120], [18, 60], [-8, 0], [20, -60], [-4, -120], [18, -190]];
+  o += eye(fk, -1, e, 'skin', P) + brow(fk, -1, e, P) + clip('m', zig) + `<g clip-path="url(#m-${id})">${poly(HEAD[fk], P.mask, `stroke="${P.line}" stroke-width="6"`)}${eye(fk, 1, e, 'lit', P)}${brow(fk, 1, e, P, 'mask')}${sigil(fk, P).replace(/translate/g, 'translate')}</g>`;
+  o += mouth(fk, { ...e, mouth: e.mouth }, P, 'skin').replace(/./s, m => m) + hairFront(fk, P);
   return o;
 }
 
@@ -187,7 +167,7 @@ export const IDS = { P: 'protagonist', A: 'anti_hero', E: 'empress', C: 'cyborg'
 export function portrait(dir, fk, expr, id, o = {}) {
   const P = PALS[fk], e = EXPR[expr], cid = `fc-${id}`, framePoly = '30,0 512,0 512,482 482,512 0,512 0,30';
   const draw = { A: dirA, B: dirB, C: dirC }[dir];
-  const face = draw(fk, e, id, P, o.stage ?? 0, !!o.blank);
+  const face = draw(fk, e, id, P);
   const scale = 0.96 * e.k, tx = 256 + (fk === 'A' || fk === 'P' ? 18 : 0), ty = 302 + e.dy;
   return `<defs><clipPath id="${cid}"><polygon points="${framePoly}"/></clipPath></defs><g clip-path="url(#${cid})">` +
     `<rect width="512" height="512" fill="${P.bg}"/>${GROUND[fk](P.bgShape)}<g transform="translate(${f2(tx)} ${f2(ty)}) rotate(${e.head}) scale(${f2(scale)})">${face}</g>${o.damage ? o.damage(P) : ''}</g>` +

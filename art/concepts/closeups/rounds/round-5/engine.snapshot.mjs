@@ -130,7 +130,7 @@ function dirA(fk, e, id, P) {   // the mask as a face: eyes, brow and mouth are 
 const BREAK = {
   A: { cover: 'left', pts: [[10, -300], [26, -250], [4, -200], [30, -150], [2, -90], [28, -30], [0, 40], [24, 100], [2, 160], [20, 220]], retreat: [-22, 0], maskPt: [-70, 10], skinPt: [74, 50], eye: [62, -36] },
   P: { cover: 'above', pts: [[300, -130], [150, -112], [110, -82], [60, -98], [10, -60], [-10, -20], [-50, 0], [-80, 50], [-130, 60], [-300, 120]], retreat: [-16, -14], maskPt: [-70, -70], skinPt: [60, 50], eye: [74, -30] },
-  E: { cover: 'jaw', pts: [[-300, -10], [-124, -22], [-80, 8], [-56, 52], [-8, 78], [20, 126], [14, 168], [30, 300]], retreat: [-16, 14], maskPt: [-50, 90], skinPt: [50, 30], eye: [58, -50] },
+  E: { cover: 'below', pts: [[-300, 50], [-120, 40], [-60, 70], [0, 30], [60, 70], [120, 40], [300, 48]], retreat: [0, 18], maskPt: [0, 110], skinPt: [0, -20], eye: [58, -50] },
   C: { cover: 'right', pts: [[18, -190], [-4, -120], [20, -60], [-8, 0], [18, 60], [-4, 120], [20, 180], [-6, 240], [16, 300]], retreat: [20, 0], maskPt: [90, 10], skinPt: [-80, 40], eye: [-84, -28] },
 };
 function breakPoly(fk, stage) {
@@ -138,7 +138,6 @@ function breakPoly(fk, stage) {
   if (B.cover === 'left') return { pg: [...pp, [-300, 300], [-300, -300]], edge: pp };
   if (B.cover === 'right') return { pg: [...pp, [300, 300], [300, -300]], edge: pp };
   if (B.cover === 'above') return { pg: [[300, -300], ...pp, [-300, -300]], edge: pp };
-  if (B.cover === 'jaw') return { pg: [...pp, [-300, 300]], edge: pp };
   return { pg: [[-300, 300], ...pp, [300, 300]], edge: pp };
 }
 // the damage on the face: scuffs on the mask and a bruise on the skin, then a crack in the mask, a cut and a loose strand, then a swollen eye and a second crack
@@ -161,11 +160,11 @@ function faceDamage(fk, stage, P) {
   }
   return o;
 }
-function dirB(fk, e, id, P, stage = 0, blank = false) {
+function dirB(fk, e, id, P, stage = 0) {
   const { pg, edge } = breakPoly(fk, stage), mk = P.maskB ?? P.mask;
   let o = hairBack(fk, P) + poly(HEAD[fk], P.skin, `stroke="${P.line}" stroke-width="7" stroke-linejoin="round"`) + shade(fk, P.skinSh, id) + nose(fk, P);
   o += (fk === 'C' ? eye(fk, -1, e, 'skin', P) + brow(fk, -1, e, P) : eye(fk, -1, e, 'skin', P) + eye(fk, 1, e, 'skin', P) + brow(fk, -1, e, P) + brow(fk, 1, e, P)) + mouth(fk, e, P, 'skin');
-  const maskFeatures = blank ? sigil(fk, P) : fk === 'C' ? eye(fk, 1, e, 'lit', P) + brow(fk, 1, e, P, 'mask') + mouth(fk, e, P, 'lit') + sigil(fk, P)
+  const maskFeatures = fk === 'C' ? eye(fk, 1, e, 'lit', P) + brow(fk, 1, e, P, 'mask') + mouth(fk, e, P, 'lit') + sigil(fk, P)
     : fk === 'A' ? eye(fk, -1, e, 'lit', P) + brow(fk, -1, e, P, 'mask') + mouth(fk, e, P, 'lit') + sigil(fk, P)
       : fk === 'P' ? eye(fk, -1, e, 'lit', P) + brow(fk, -1, e, P, 'mask') + sigil(fk, P)
         : mouth(fk, e, P, 'lit');
@@ -187,7 +186,7 @@ export const IDS = { P: 'protagonist', A: 'anti_hero', E: 'empress', C: 'cyborg'
 export function portrait(dir, fk, expr, id, o = {}) {
   const P = PALS[fk], e = EXPR[expr], cid = `fc-${id}`, framePoly = '30,0 512,0 512,482 482,512 0,512 0,30';
   const draw = { A: dirA, B: dirB, C: dirC }[dir];
-  const face = draw(fk, e, id, P, o.stage ?? 0, !!o.blank);
+  const face = draw(fk, e, id, P, o.stage ?? 0);
   const scale = 0.96 * e.k, tx = 256 + (fk === 'A' || fk === 'P' ? 18 : 0), ty = 302 + e.dy;
   return `<defs><clipPath id="${cid}"><polygon points="${framePoly}"/></clipPath></defs><g clip-path="url(#${cid})">` +
     `<rect width="512" height="512" fill="${P.bg}"/>${GROUND[fk](P.bgShape)}<g transform="translate(${f2(tx)} ${f2(ty)}) rotate(${e.head}) scale(${f2(scale)})">${face}</g>${o.damage ? o.damage(P) : ''}</g>` +
