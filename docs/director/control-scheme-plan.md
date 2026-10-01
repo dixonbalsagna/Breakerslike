@@ -77,6 +77,19 @@ For a fighter flagged `assist: simple` in the match setup (Simple controller lay
 
 `sim/director/assist.gd` and data. An `assist {actor, kind}` event lets UI show what it chose.
 
+### Game Design's rulings (`stance-matrix.md` §7; `control-rules.md` §7 to §10), folded in
+
+| Topic | Ruling | What it changes above |
+| :--- | :--- | :--- |
+| **Neutral** | It never trades. The outcome is CLEAN HIT ×1.0, or CLIPPED when the defender flies at over half speed across or away: the opener lands, the string ends, and there is no launch. A signature against Neutral is HIT | Replaces my §1 proposal. Two new branches for Combat's data; I supply the defender's speed and heading in the plan context |
+| **`defQueued`** | A request no more than 20 ticks old, or one in the queue. It gates TRADE BLOWS, HEAVY CLASH and DODGE & COUNTER | §2 |
+| **`defPerfect` or a reversal** | Gates PRESSURE's counter and DEFLECT. A perfect block on a signature is DEFLECT | §2 and §5 |
+| **CLASH** | Needs the defender's own signature or heavy energy request during the beam's tell | §2: the request window is the tell, not "pending" |
+| **R4 and R5** | R4's patience roll is withdrawn for humans. The AI keeps R4 and R5 as its skill model and pays the same costs as a human's inputs | §6: the AI's perfect blocks and counters are rolled by R4 and R5, then issued as inputs |
+| **Dodge cancel** | The defender's works only in the gaps between strikes; the burst is the tool while being hit | §5: the cancel window is narrower than "any time". `window_open` kind cancel opens per gap |
+| **AI beam answers** | 15, 35 and 60% by difficulty | §6, in the AI profile |
+| **Simple layout** | A beam shows a prompt and is never answered automatically | §7: the assist does not auto-clash or auto-deflect |
+
 ## Part 2: variety, then the rest
 1. **Fewer beams, more ordinary blasts** (ADR item 9):
    - the 120 s signature cooldown (data, planned);
@@ -92,6 +105,10 @@ The smallest one that works is a **manual tier-up with a short set piece**:
 - The transform input takes it: both triggers held for 0.5 s. The Simple layout uses Power held with nothing else for 0.5 s at full meter. The AI takes it at once.
 - **The set piece (director):** between exchanges only. A 0.8 s hold: `transform {actor, tier, dur}`, the existing power-up burst (aura, ground crater, banner), and the opponent pushed back. No exchange can start during it.
 - Then the tier's existing bonuses apply. No new form art, no surge yet, no per-fighter rules. Those come with F1.
+
+**Events (I2):**
+- `transform_ready {actor, tier, source}`: the fighter's power crossed the threshold for `tier`, and the tier-up is waiting for the input. `source` is the input that will take it: triggers (both held), power (the Simple hold) or ai.
+- `transform {actor, tier, source, dur}`: the transform was taken. `tier` is the new tier, `source` the input that took it and `dur` the hold in seconds. The existing `tier_up` follows when the hold ends.
 
 **Needs:**
 - Simulation: one gate in the tier-up check and a `formReady` flag.
@@ -125,6 +142,13 @@ The smallest one that works is a **manual tier-up with a short set piece**:
 - `mode`;
 - `assist`;
 - `formReady`.
+
+**Agreed record (Simulation, `docs/architecture/intent-v2.md`).** Three differences from the table above:
+- there is no `entry` field: it is derived at the press from the stick and the opponent's side;
+- there is no `burst` field: `powerPress` and `powerTap`, with the sim choosing by "threatened";
+- there is no cancel field: a `dodge` edge inside an exchange is the cancel.
+
+The slices are I1 (transport, Simulation), then I2: step 1 below, with Controls and Simulation's core lines.
 
 ## Order
 1. Intent and state (Simulation and Controls), with the held states feeding today's templates (Part 1 §1), plus the placeholder transform. Playable at once.
