@@ -180,6 +180,38 @@ static func _placeholder(ci: CanvasItem, r: Rect2, aura: Color, expr: String, al
 			ci.draw_rect(mr, Color(0.96, 0.95, 0.92, alpha))
 			ci.draw_rect(mr, dk, false, w)
 			ci.draw_line(Vector2(c.x, mr.position.y), Vector2(c.x, mr.end.y), dk, maxf(1.5, w * 0.6), true)
+		"laugh":
+			ci.draw_arc(Vector2(c.x - ex, ey + ew * 0.5), ew, PI * 1.1, PI * 1.9, 8, dk, w, true)
+			ci.draw_arc(Vector2(c.x + ex, ey + ew * 0.5), ew, PI * 1.1, PI * 1.9, 8, dk, w, true)
+			var mo := PackedVector2Array()
+			for k in range(9):
+				var a: float = PI * float(k) / 8.0
+				mo.append(Vector2(c.x + cos(a) * h * 0.11, c.y + h * 0.1 + sin(a) * h * 0.09))
+			UiIcons.fill_poly(ci, mo, Color(0.45, 0.1, 0.12, alpha))
+			ci.draw_polyline(mo, dk, w, true)
+		"contempt":
+			ci.draw_line(Vector2(c.x - ex - ew, ey), Vector2(c.x - ex + ew, ey), dk, w, true)
+			ci.draw_line(Vector2(c.x + ex - ew, ey), Vector2(c.x + ex + ew, ey), dk, w, true)
+			ci.draw_line(Vector2(c.x - ex - ew, ey - h * 0.09), Vector2(c.x - ex + ew, ey - h * 0.06), dk, w, true)
+			ci.draw_line(Vector2(c.x + ex - ew, ey - h * 0.05), Vector2(c.x + ex + ew, ey - h * 0.075), dk, w, true)
+			ci.draw_polyline(PackedVector2Array([Vector2(c.x - h * 0.09, c.y + h * 0.13), Vector2(c.x + h * 0.05, c.y + h * 0.14), Vector2(c.x + h * 0.1, c.y + h * 0.17)]), dk, w, true)
+		"shock":
+			ci.draw_circle(Vector2(c.x - ex, ey), ew * 0.95, Color(0.97, 0.97, 0.95, alpha))
+			ci.draw_circle(Vector2(c.x + ex, ey), ew * 0.95, Color(0.97, 0.97, 0.95, alpha))
+			ci.draw_arc(Vector2(c.x - ex, ey), ew * 0.95, 0.0, TAU, 14, dk, w, true)
+			ci.draw_arc(Vector2(c.x + ex, ey), ew * 0.95, 0.0, TAU, 14, dk, w, true)
+			ci.draw_circle(Vector2(c.x - ex, ey), ew * 0.3, dk)
+			ci.draw_circle(Vector2(c.x + ex, ey), ew * 0.3, dk)
+			ci.draw_line(Vector2(c.x - ex - ew, ey - h * 0.12), Vector2(c.x - ex + ew, ey - h * 0.12), dk, w * 0.8, true)
+			ci.draw_line(Vector2(c.x + ex - ew, ey - h * 0.12), Vector2(c.x + ex + ew, ey - h * 0.12), dk, w * 0.8, true)
+			ci.draw_arc(Vector2(c.x, c.y + h * 0.14), h * 0.045, 0.0, TAU, 12, dk, w, true)
+		"grief":
+			ci.draw_line(Vector2(c.x - ex - ew, ey), Vector2(c.x - ex + ew, ey + ew * 0.2), dk, w, true)
+			ci.draw_line(Vector2(c.x + ex + ew, ey), Vector2(c.x + ex - ew, ey + ew * 0.2), dk, w, true)
+			ci.draw_line(Vector2(c.x - ex - ew, ey - h * 0.04), Vector2(c.x - ex + ew, ey - h * 0.09), dk, w * 0.9, true)
+			ci.draw_line(Vector2(c.x + ex + ew, ey - h * 0.04), Vector2(c.x + ex - ew, ey - h * 0.09), dk, w * 0.9, true)
+			ci.draw_arc(Vector2(c.x, c.y + h * 0.2), h * 0.08, PI * 1.15, PI * 1.85, 10, dk, w, true)
+			ci.draw_circle(Vector2(c.x - ex - ew * 0.2, ey + h * 0.09), h * 0.025, Color(0.7, 0.9, 1.0, alpha))
 		"hurt":
 			ci.draw_polyline(PackedVector2Array([Vector2(c.x - ex - ew, ey - ew * 0.9), Vector2(c.x - ex + ew * 0.4, ey), Vector2(c.x - ex - ew, ey + ew * 0.9)]), dk, w, true)
 			ci.draw_polyline(PackedVector2Array([Vector2(c.x + ex + ew, ey - ew * 0.9), Vector2(c.x + ex - ew * 0.4, ey), Vector2(c.x + ex + ew, ey + ew * 0.9)]), dk, w, true)

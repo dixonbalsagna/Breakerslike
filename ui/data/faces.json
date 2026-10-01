@@ -6,14 +6,16 @@
   "min_priority": 2,
   "kinds": { "line": "always", "reply": "always", "retort": "always", "callback": "always", "jewel": "always", "thought": "never" },
   "timing": { "slide_in": 0.18, "slide_out": 0.22 },
+  "_eight": "Art has eight expressions per fighter (neutral, smirk, strain, hurt, laugh, contempt, shock, grief). expressions lists all eight and every fighter has a slot for each, but only the four the placeholder uses are mapped. To use all eight, replace gesture_expression with the value of _gesture_expression_eight (laugh.long is a laugh, laugh.cruel and scoff contempt, gasp shock, sigh grief) and fill the art paths: a data change, no code.",
   "default_expression": "neutral",
-  "expressions": ["neutral", "smirk", "strain", "hurt"],
+  "expressions": ["neutral", "smirk", "strain", "hurt", "laugh", "contempt", "shock", "grief"],
+  "_gesture_expression_eight": { "effort.light": "neutral", "laugh.short": "smirk", "laugh.long": "laugh", "laugh.cruel": "contempt", "scoff": "contempt", "sigh": "grief", "wince": "hurt", "pain": "hurt", "gasp": "shock", "roar": "strain", "growl": "strain", "effort": "strain", "munch": "neutral" },
   "gesture_expression": { "effort.light": "neutral", "laugh": "smirk", "scoff": "smirk", "sigh": "neutral", "wince": "hurt", "pain": "hurt", "gasp": "hurt", "roar": "strain", "growl": "strain", "effort": "strain", "munch": "neutral" },
   "fighters": {
-    "default": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
-    "protagonist": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
-    "anti_hero": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
-    "empress": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
-    "cyborg": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } }
+    "default": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" }, "laugh": { "art": "" }, "contempt": { "art": "" }, "shock": { "art": "" }, "grief": { "art": "" } },
+    "protagonist": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" }, "laugh": { "art": "" }, "contempt": { "art": "" }, "shock": { "art": "" }, "grief": { "art": "" } },
+    "anti_hero": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" }, "laugh": { "art": "" }, "contempt": { "art": "" }, "shock": { "art": "" }, "grief": { "art": "" } },
+    "empress": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" }, "laugh": { "art": "" }, "contempt": { "art": "" }, "shock": { "art": "" }, "grief": { "art": "" } },
+    "cyborg": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" }, "laugh": { "art": "" }, "contempt": { "art": "" }, "shock": { "art": "" }, "grief": { "art": "" } }
   }
 }

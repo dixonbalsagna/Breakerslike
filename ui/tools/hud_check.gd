@@ -2937,7 +2937,36 @@ func _faces_rules() -> void:
 	var profile_ids_ok := true
 	for id in ["protagonist", "anti_hero", "empress", "cyborg"]:
 		profile_ids_ok = profile_ids_ok and fd["fighters"].has(id)
-	_ok(slots_ok and profile_ids_ok and fd["expressions"] == ["neutral", "smirk", "strain", "hurt"] and int(fd["rate"]["per_minute"]) == 6, "faces: the data has a texture slot per fighter and expression (neutral, smirk, strain, hurt) and the 6 a minute rate")
+	_ok(slots_ok and profile_ids_ok and fd["expressions"] == ["neutral", "smirk", "strain", "hurt", "laugh", "contempt", "shock", "grief"] and int(fd["rate"]["per_minute"]) == 6, "faces: the data has a texture slot per fighter for all eight expressions (neutral, smirk, strain, hurt, laugh, contempt, shock, grief) and the 6 a minute rate")
+	var used := {}
+	for k in fd["gesture_expression"]:
+		used[fd["gesture_expression"][k]] = true
+	var eight_map: Dictionary = fd["_gesture_expression_eight"]
+	var eight_ok := true
+	var eight_used := {}
+	for k in eight_map:
+		eight_ok = eight_ok and (fd["expressions"] as Array).has(eight_map[k])
+		eight_used[eight_map[k]] = true
+	_ok(used.size() == 4 and eight_ok and eight_used.size() == 8, "faces: four expressions are mapped now, and the ready eight-expression mapping uses all eight")
+	var saved_map: Dictionary = fd["gesture_expression"]
+	fd["gesture_expression"] = eight_map
+	var ex8 := func(g: String) -> String:
+		return UiFaces.expression(_bark_obj(0, 2, "caption", "line", false, true, [{"at": 0, "gesture": g, "intensity": 1}]), UiFighterModel.new())
+	_ok(ex8.call("laugh.long") == "laugh" and ex8.call("laugh.cruel") == "contempt" and ex8.call("scoff") == "contempt" and ex8.call("gasp") == "shock" and ex8.call("sigh") == "grief" and ex8.call("laugh.short") == "smirk" and ex8.call("wince") == "hurt", "faces: swapping in the eight-expression mapping (a data change) gives laugh, contempt, shock and grief to their gestures")
+	fd["gesture_expression"] = saved_map
+	var lay8 := UiLayer.new()
+	lay8.painter = func(ci: CanvasItem) -> void:
+		var x := 10.0
+		for e in fd["expressions"]:
+			UiFaces.draw_portrait(ci, Rect2(x, 10.0, 120.0, 120.0), UiFighterModel.new(), str(e), 1.0, 1.0)
+			x += 130.0
+	lay8.sig = 1
+	root.add_child(lay8)
+	lay8.queue_redraw()
+	await process_frame
+	await process_frame
+	_ok(lay8.redraws >= 1, "faces: all eight placeholder expressions draw")
+	lay8.queue_free()
 	# Which lines get a face.
 	_ok(UiFaces.level(_bark_obj(0)) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "reply")) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "retort")) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "callback")) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "bit")) == "cap", "faces: every quip, reply, retort and callback gets a face (Orb); only a kind the data does not list falls to the rate cap")
 	_ok(UiFaces.level(_bark_obj(0, 2, "caption", "jewel")) == "always" and UiFaces.level(_bark_obj(0, 2, "shout")) == "always" and UiFaces.level(_bark_obj(0, 3, "caption", "line", true)) == "always" and UiFaces.level(_bark_obj(0, 4)) == "always", "faces: a jewel, a shout, a set piece and a line of priority 3 or more always get one")

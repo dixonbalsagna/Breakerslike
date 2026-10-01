@@ -1523,7 +1523,7 @@ func _rm_status_text() -> String:
 		"confirm":
 			return str(w.get("conflict", "")).replace("{control}", _rm_control_word(str(_rm_pending["control"]))).replace("{other}", _rm_action_word(str(_rm_pending["with"])))
 	if _rm_status == "" and _humans() >= 2 and _rm_layout_shared():
-		return str(w.get("_shared", ""))   # both players are on this layout (remaps are per layout): a change is for both
+		return str(w.get("shared", ""))   # both players are on this layout (remaps are per layout): a change is for both
 	return _rm_status
 
 
