@@ -207,3 +207,11 @@ Screens `docs/combat/pending/wave7-first-kit.md` (3 specials, 2 place signatures
 - **Tail whip (held):** hair, cloth or metal tail, never furred or reptilian, and half a turn at most.
 
 Nothing in the kit stacks three of the seven power-up marks once the volley's gather is changed.
+
+## Rendering's dash afterimage (2026-10-01)
+
+Looked at `docs/rendering/README.md` "Afterimages" and `docs/rendering/img/after-t81.png`. **Verdict: GO, confirmed, with three constraints.** The thin lane-colour outline with nothing inside, behind a fighter who is plainly on screen, is a motion trail and not a vanish. A trail of outlines along a rush is a common speed cue.
+
+1. **No vanish.** The fighter is never absent from his own place before he is drawn elsewhere, and there is no flash, pop or cut at the origin. A dodge's standing outline marks where he was while he is visible moving off it.
+2. **No ring of copies.** A trail along the path or one standing outline is fine. Never several outlines arranged around the opponent (the franchise's multiple-copies move).
+3. **Keep it thin and in lane colour.** Half opacity at most, empty inside, never white, gold or red, never filled or glowing, and gone in 0.1 s as built.
