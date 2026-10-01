@@ -2,7 +2,7 @@
 
 Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; results: its sections 9.1 and 9.3 (A2: the visual facing `vface`, the hinge bake and limb pass, the contact solve, the per-part profile mix). Render only: it reads the sim (fighter state, the running exchange's beats, the per-tick events) and never writes it, draws no sim random numbers, and moves no anchor. Data is in `data/anim/`, outside the sim's data hash.
 
-`--noanim` keeps the placeholder box figures. `--noragdoll` switches the overhaul layers off (A/B); `--anim-quality=high|medium|low|minimal` picks a quality level of `data/anim/quality.json`. `--anim-style=snappy|fluid` picks a timing profile from `data/anim/profiles.json`.
+`--wave1-live` puts wave 1's strikes in the Anti-hero's blows (go-live step 1, off by default; docs 9.16). `--noanim` keeps the placeholder box figures. `--noragdoll` switches the overhaul layers off (A/B); `--anim-quality=high|medium|low|minimal` picks a quality level of `data/anim/quality.json`. `--anim-style=snappy|fluid` picks a timing profile from `data/anim/profiles.json`.
 
 | File | What it is |
 | :--- | :--- |

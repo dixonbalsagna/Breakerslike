@@ -1,16 +1,8 @@
 # Review: wave1
 
-Machine pass over 120 poses (w1.): **0 errors, 1 for review, 76 notes.** Errors are fixed by the director before Orb sees anything; the rows under "For review" are what Orb sees (with the sheet); notes are logged and need nobody.
+Machine pass over 120 poses (w1.): **0 errors, 0 for review, 76 notes.** Errors are fixed by the director before Orb sees anything; the rows under "For review" are what Orb sees (with the sheet); notes are logged and need nobody.
 
-Match checks: not run (--no-match). Strike lab: 34 strikes measured at their own distances: 34 reach, 32 clear of the defender (clip 3.5 u or less).
-
-Sheet of the flagged poses: exceptions-sheet.png
-
-## For review (what Orb sees)
-
-| Source | Subject | Finding | Suggested action |
-| :--- | :--- | :--- | :--- |
-| strike_lab | body_ram | a part that is not the striking limb passes 6.4 u into the defender (head into neck) at 34 u | pull the body back in the pose (less lunge or lean) or lengthen the distance |
+Match checks: not run (--no-match). Strike lab: 34 strikes measured at their own distances: 34 reach, 33 clear of the defender (clip 3.5 u or less).
 
 ## Notes (logged, no action needed)
 

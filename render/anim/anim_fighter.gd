@@ -757,6 +757,52 @@ static func _blow_weight(args: Dictionary) -> float:
 	return clampf(d / 70.0, 0.2, 1.4)
 
 
+## Go-live step 1 (docs/combat/pending/golive-step1.md), only with RenderAnim.wave1_live (--wave1-live, OFF by default): the key set of a blow of the
+## Anti-hero's shape from wave 1's lists. The list is walked, not hashed blow by blow: it starts at a hash of the exchange and the fighter and takes
+## every third entry (every fifth when the list has a multiple of three), so nothing repeats inside ten blows; a two-limb key set is skipped when a
+## limb of its kind is drawn as broken; the gated key sets (the sweep with both fighters on the ground, the drop kick with the striker in the air)
+## join the list only while their gate is open. Returns "" when not applicable (the flag is off, another fighter's shape, no data).
+func _live_pick(S: SimState, f, ex, ordinal: int, heavy: bool) -> String:
+	if not RenderAnim.wave1_live:
+		return ""
+	var lv: Dictionary = AnimData.live
+	if lv.is_empty():
+		return ""
+	var sk: String = String(AnimRagdoll.shape_of.get(String(f.id), AnimRagdoll.shape_of.get("default", "")))
+	if not (lv.get("shapes", []) as Array).has(sk):
+		return ""
+	var which: String = "heavy" if heavy else "light"
+	var cand: Array = (lv.picks[which] as Array).duplicate()
+	var opp = ex.D if ex.A == f else ex.A
+	for g in lv.get("gated", []):
+		if String(g.weight) != which:
+			continue
+		var open: bool = false
+		match String(g.gate):
+			"both_ground":
+				open = f.y - WorldTerrain.groundY(S, f.x) < 8.0 and opp != null and opp.y - WorldTerrain.groundY(S, opp.x) < 8.0
+			"striker_air":
+				open = f.y - WorldTerrain.groundY(S, f.x) > 20.0
+		if open:
+			cand.append(String(g.keyset))
+	var n: int = cand.size()
+	if n == 0:
+		return ""
+	var stepw: int = 3 if n % 3 != 0 else 5
+	var h: int = _hash(int(ex.n), slot, 11)
+	for tries in range(n):
+		var id: String = String(cand[(h + stepw * (ordinal + tries)) % n])
+		var ks = AnimData.keysets.get(id)
+		if ks == null:
+			continue
+		var two: String = String(ks.get("limb2", ""))
+		if two != "" and ((_arm_broken and (two.begins_with("hand") or two.begins_with("elbow"))) or (_leg_broken and (two.begins_with("foot") or two.begins_with("knee")))):
+			continue
+		debug["live_picks"] = int(debug.get("live_picks", 0)) + 1
+		return id
+	return ""
+
+
 ## An entry (data/anim/waves/*.entries.json, parked: no live beat names one yet): a sequence of poses over `dur` seconds. A phase with
 ## `ticks` holds that long, the others share the rest by their weight `w`; the poses cross-fade over three ticks at each boundary. The
 ## strike that follows takes over from here by its own load (the join is inertialised).
@@ -878,6 +924,9 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var side: bool = (_hash(int(ex.n), int(strikes[best][1]), slot + 1) & 1) == 1
 	var picks: Array = AnimData.picks["heavy" if heavy2 else "light"]
 	var ksid: String = String(picks[_hash(int(ex.n), int(strikes[best][1]), 3 + slot) % picks.size()])
+	var live_id: String = _live_pick(S, f, ex, int(strikes[best][1]), heavy2)
+	if live_id != "":
+		ksid = live_id
 	if RenderAnim.force_keyset != "" and AnimData.keysets.has(RenderAnim.force_keyset):
 		ksid = RenderAnim.force_keyset
 	var ks: Dictionary = AnimData.keysets[ksid]
@@ -904,6 +953,9 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 		# a blow the sim announced fewer than 4 ticks ahead cannot be wound up (the pose pops to its contact key)
 		_seen_tc = blow_id
 		debug["blows"] += 1
+		var kcount: Dictionary = debug.get("keysets", {})
+		kcount[ksid] = int(kcount.get(ksid, 0)) + 1
+		debug["keysets"] = kcount
 		if T > tc2 - 3.5 * DT:
 			debug["late"] += 1
 			if debug["late_notes"].size() < 30:
@@ -962,7 +1014,7 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 		_ci_limb = String(ks.get("limb", "hand_r"))
 		_ci_step = float(ks.get("step_max", -1.0))
 		_ci_limb2 = String(ks.get("limb2", ""))
-		_ci_target = String(ks.get("target", "chest"))
+		_ci_target = String(ks.get("target", "chest")) if RenderAnim.force_target == "" else RenderAnim.force_target
 		_ci_side = side
 		_ci_opp = ex.D if role == "A" else ex.A
 		_ci_tc = tc2

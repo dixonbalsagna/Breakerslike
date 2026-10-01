@@ -3,20 +3,11 @@
  "poses": 120,
  "counts": {
   "error": 0,
-  "review": 1,
+  "review": 0,
   "note": 76
  },
- "flagged": [
-  "w1.body_ram.contact"
- ],
+ "flagged": [],
  "findings": [
-  {
-   "severity": "review",
-   "source": "strike_lab",
-   "subject": "body_ram",
-   "detail": "a part that is not the striking limb passes 6.4 u into the defender (head into neck) at 34 u",
-   "action": "pull the body back in the pose (less lunge or lean) or lengthen the distance"
-  },
   {
    "severity": "note",
    "source": "pose_lint",

@@ -27,7 +27,7 @@ Measured by `strike_lab.gd --measure --sweep`: each strike played against a dumm
 | low_kick | 50 | 76 | 64 | 76 | 34 | lands on the hips alone |
 | snap_round | 50 | 72 | 58 | 72 | 36 | lands on the hips alone |
 | roundhouse | 50 | 78 | 50 | 78 | 40 | lands on the hips alone |
-| axe_kick | 48 | 66 | 48 | 66 | 26 | lands on the hips alone |
+| axe_kick | 48 | 66 | 48 | 68 | 26 | lands on the hips alone |
 | spinning_heel | 50 | 70 | 50 | 70 | 22 | lands on the hips alone |
 | stomp | 54 | 76 | 58 | 76 | 30 | lands on the hips alone |
 | sweep | 50 | 72 | 52 | 72 | 36 | lands on the hips alone |
@@ -37,4 +37,4 @@ Measured by `strike_lab.gd --measure --sweep`: each strike played against a dumm
 | driving_knee | 28 | 54 | 28 | 54 | 20 | lands on the hips alone |
 | headbutt | 36 | 58 | 38 | 58 | 34 | lands on the hips alone |
 | shoulder_check | 34 | 60 | 42 | 60 | 26 | lands on the hips alone |
-| body_ram | 34 | 68 | 42 | 68 | 24 | lands on the hips alone |
+| body_ram | 34 | 68 | 42 | 66 | 26 | lands on the hips alone |

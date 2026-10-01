@@ -735,6 +735,7 @@ func _run() -> void:
 			var rdu := 0
 			var catches := 0
 			var vars: Dictionary = {}
+			var ksets: Dictionary = {}
 			var late := 0
 			for id in RenderAnim._fighters:
 				var d: Dictionary = RenderAnim._fighters[id].debug
@@ -751,6 +752,8 @@ func _run() -> void:
 				rdt += int(d.rd_ticks)
 				rdu += int(d.rd_usec)
 				catches += int(d.catches)
+				for kk in d.get("keysets", {}):
+					ksets[kk] = int(ksets.get(kk, 0)) + int(d.keysets[kk])
 				for vk in d.variants:
 					vars[vk] = int(vars.get(vk, 0)) + int(d.variants[vk])
 				late += int(d.late)
@@ -775,6 +778,8 @@ func _run() -> void:
 			report.runs.append({"seed": seed, "mode": mode, "contact_err_max": cerr, "contact_gap_worst": gworst, "contacts_within_reach": gl.size(), "contacts_beyond_reach": far, "solve_us": float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), "late_blows": late, "blows": blows, "catches": catches})
 			print("  contact solve: %d IK frames, %d contacts within reach (worst gap %.2f units), %d beyond reach (the sim put the fighters farther apart than the arm, lunge and step-in reach), %d facing flips" % [ikf, gl.size(), gworst, far, flips])
 			print("  base variants played: %s" % [vars])
+			if mode == "mix":
+				print("  key sets played: %s" % [ksets])
 			print("  ragdoll step: %.1f us a tick a fighter (%d ticks), %d contact catches smeared" % [float(rdu) / maxf(1.0, rdt), rdt, catches])
 			print("  blows: %d, announced under 4 ticks ahead (no wind-up possible): %d" % [blows, late])
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])

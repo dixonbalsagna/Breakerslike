@@ -1,0 +1,46 @@
+{
+ "schema": "anim.wave.live/1",
+ "_about": "Go-live step 1 (docs/combat/pending/golive-step1.md), generated from golive-step1.picks.json by wave_gen.mjs: with --wave1-live the Anti-hero's shape (A) draws its blows from these lists (walked, every third entry), the gated key sets join only while their gate is open. Off by default. Render only, outside the sim's data hash.",
+ "shapes": [
+  "A"
+ ],
+ "picks": {
+  "light": [
+   "w1.jab",
+   "w1.cross",
+   "w1.hook",
+   "w1.backfist",
+   "w1.palm_heel",
+   "w1.spear_hand",
+   "w1.twin_spear",
+   "w1.front_kick",
+   "w1.side_kick",
+   "w1.low_kick",
+   "w1.snap_round"
+  ],
+  "heavy": [
+   "w1.uppercut",
+   "w1.hammer",
+   "w1.overhand",
+   "w1.haymaker",
+   "w1.double_palm",
+   "w1.double_hammer",
+   "w1.roundhouse",
+   "w1.axe_kick",
+   "w1.spinning_heel",
+   "w1.stomp"
+  ]
+ },
+ "gated": [
+  {
+   "keyset": "w1.sweep",
+   "weight": "light",
+   "gate": "both_ground"
+  },
+  {
+   "keyset": "w1.drop_kick",
+   "weight": "heavy",
+   "gate": "striker_air"
+  }
+ ]
+}
