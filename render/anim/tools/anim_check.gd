@@ -58,10 +58,48 @@ func _scan_writes() -> void:
 	print("static scan: %d code lines in render/anim/ read the sim and never assign to it" % n)
 
 
+## The defensive and clash beats on a stub exchange (no match needed, so a parry is forced): each layer must pull the
+## pose toward its own key and leave the fighters it is not for alone.
+func _test_beats() -> void:
+	var beats: Array = [
+		{"op": "wind", "t": 0.0, "args": {}},
+		{"op": "strike", "t": 0.3, "args": {"a": "A"}},
+		{"op": "slip", "t": 1.0, "args": {}},
+		{"op": "dodge", "t": 1.5, "args": {}},
+		{"op": "guardBreak", "t": 2.0, "args": {}},
+		{"op": "clashWave", "t": 2.5, "args": {}},
+	]
+	# [role, cancel, time, the pose that must come, true if it must come]
+	var cases: Array = [
+		["D", false, 0.25, "def.parry_ready", true], ["A", false, 0.25, "def.parry_ready", false],
+		["D", true, 0.34, "def.parry", true], ["A", true, 0.34, "react.rebuff", true],
+		["D", false, 1.1, "def.slip", true], ["A", false, 1.1, "def.slip", false],
+		["D", false, 1.6, "def.blink_in", true], ["A", false, 1.6, "def.blink_in", false],
+		["D", false, 2.1, "def.guard_break", true], ["A", false, 2.1, "def.guard_break", false],
+		["D", false, 2.6, "clash.push", true], ["A", false, 2.6, "clash.push", true],
+		["D", false, 3.6, "def.parry_ready", false],
+	]
+	for c in cases:
+		var af := AnimFighter.new(0)
+		af._beat_layers({"beats": beats, "cancel": c[1]}, c[0], 0.0, c[2])
+		var key: AnimPose = AnimData.pose(c[3])
+		var before := 0.0
+		var after := 0.0
+		for i in range(AnimRig.N):
+			before += Quaternion.IDENTITY.angle_to(key.q[i])
+			after += af.q[i].angle_to(key.q[i])
+		if c[4]:
+			_expect(after < before * 0.6, "beat test: %s at %.2f s (cancel %s, role %s) did not pull toward %s (%.2f of %.2f)" % [c[0], c[2], c[1], c[0], c[3], after, before])
+		else:
+			_expect(after > before * 0.99, "beat test: role %s at %.2f s moved toward %s though the beat is not its own" % [c[0], c[2], c[3]])
+	print("beat test: %d cases on a stub exchange (parry forced)" % cases.size())
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
 	AnimData.load_all()
+	_test_beats()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}
@@ -89,6 +127,7 @@ func _run() -> void:
 			var gl: Array = []
 			var far := 0
 			var blows := 0
+			var vars: Dictionary = {}
 			var late := 0
 			for id in RenderAnim._fighters:
 				var d: Dictionary = RenderAnim._fighters[id].debug
@@ -102,6 +141,8 @@ func _run() -> void:
 				gn += int(d.gap_n)
 				flips += int(d.face_flips)
 				blows += int(d.blows)
+				for vk in d.variants:
+					vars[vk] = int(vars.get(vk, 0)) + int(d.variants[vk])
 				late += int(d.late)
 				if mode == "mix":
 					for ln in d.late_notes:
@@ -122,6 +163,7 @@ func _run() -> void:
 			_expect(ikf > 0 and gl.size() > 0, "seed %d %s: the contact solve never ran (%d IK frames, %d reachable contacts)" % [seed, mode, ikf, gl.size()])
 			_expect(gworst < 1.0, "seed %d %s: a blow within reach ends %.2f units short of the defender" % [seed, mode, gworst])
 			print("  contact solve: %d IK frames, %d contacts within reach (worst gap %.2f units), %d beyond reach (the sim put the fighters farther apart than the arm, lunge and step-in reach), %d facing flips" % [ikf, gl.size(), gworst, far, flips])
+			print("  base variants played: %s" % [vars])
 			print("  blows: %d, announced under 4 ticks ahead (no wind-up possible): %d" % [blows, late])
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])
 		_expect(hashes["off"] == hashes["snappy"] and hashes["off"] == hashes["fluid"] and hashes["off"] == hashes["mix"], "seed %d: the gameplay hash differs with the mannequin (off %s, mix %s, snappy %s, fluid %s)" % [seed, hashes["off"], hashes["mix"], hashes["snappy"], hashes["fluid"]])

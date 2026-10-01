@@ -47,7 +47,7 @@ var _spring_bones := PackedInt32Array()
 var _lag := PackedFloat32Array()
 var _prof: Dictionary = {}
 var _part: String = ""                 # the key set playing this frame, "" for none (for tools)
-var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": []}
+var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}}
 
 ## The facing the mannequin is drawn with (-1 or 1). The sim's `face` can lag a dodge warp or a swap of sides, so this one
 ## is derived from the opponent in an exchange and from the travel direction otherwise (A2, docs/animation section 9.3).
@@ -55,6 +55,7 @@ var vface: float = 1.0
 var _face_key: int = -1
 var _face_init: bool = false
 var _face_want_t: float = -1.0
+const IDLE_FAR := 700.0               # an idle fighter farther than this from the opponent relaxes
 const FACE_DEAD := 14.0                # closer than this (on the shortest arc) the opponent gives no side
 const FACE_HOLD := 0.03                # a new side must hold this long (s) before the turn starts
 const TRAVEL_FACE := 250.0             # free of an exchange, faster than this faces the travel direction
@@ -162,12 +163,15 @@ func update_face(S: SimState, f) -> float:
 	return vface
 
 
-func _wanted_face(S: SimState, f) -> float:
-	var opp = null
+func _opponent(S: SimState, f):
 	for o in S.fighters:
 		if o != f:
-			opp = o
-			break
+			return o
+	return null
+
+
+func _wanted_face(S: SimState, f) -> float:
+	var opp = _opponent(S, f)
 	var dx: float = SimWrap.sdx(f.x, opp.x) if opp != null else 0.0
 	var ex = S.dirS.ex
 	var engaged: bool = (ex != null and (ex.A == f or ex.D == f)) or f.state == "locked" or f.beamCharge != null
@@ -324,6 +328,10 @@ func _target_base(S: SimState, f, T: float) -> void:
 	var w1: float = 0.0
 	var w2: float = 0.0
 	var w3: float = 0.0
+	var w4: float = 0.0              # hovering
+	var w5: float = 0.0              # climbing
+	var w6: float = 0.0              # diving
+	var w7: float = 0.0              # winded (1) or relaxed (0.5) idle
 	var mode: int = 0
 	if f.slide > 0.0:
 		mode = 1
@@ -334,7 +342,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 		mode = 2
 	elif state == "down":
 		w1 = smoothstep(0.42, 0.72, f.stateT)
-		mode = 3
+		mode = 7 if S.game.ko == f else 3
 	elif state == "charging":
 		mode = 4
 	elif S.game.ko != null and S.game.ko != f and S.game.koT > 0.8 and state == "free":
@@ -345,12 +353,39 @@ func _target_base(S: SimState, f, T: float) -> void:
 		if w1 > 0.01:
 			w3 = clampf(atan2(f.vy, maxf(absf(f.vx), 60.0)), -0.9, 0.9) * 0.7 * w1
 		mode = 5
-	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15)
+		# the variants: hovering (feet off the ground), climbing, diving; on the ground a winded idle when the ki is spent and
+		# a relaxed one far from the opponent
+		if state == "free" and w1 < 0.05 and w2 < 0.05:
+			var air: float = smoothstep(30.0, 70.0, f.y - WorldTerrain.groundY(S, f.x))
+			if air > 0.0:
+				w4 = air
+				w5 = air * smoothstep(150.0, 600.0, f.vy)
+				w6 = air * smoothstep(150.0, 600.0, -f.vy)
+			elif f.ki < 6.0:
+				w7 = 1.0
+			elif int(f.stance) < 2 and absf(f.vx) < 100.0:
+				var opp = _opponent(S, f)
+				if opp != null and absf(SimWrap.sdx(f.x, opp.x)) > IDLE_FAR:
+					w7 = 0.5
+	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33)
 	if key == _bkey:
 		_settle += 1
 		return
 	_bkey = key
 	_settle = 0
+	var vk: String = ""
+	if mode == 7:
+		vk = "ko"
+	elif mode == 6:
+		vk = "victory"
+	elif w4 > 0.5:
+		vk = "hover" if w5 < 0.5 and w6 < 0.5 else ("climb" if w5 >= w6 else "dive")
+	elif w7 >= 1.0:
+		vk = "winded"
+	elif w7 > 0.0:
+		vk = "relaxed"
+	if vk != "":
+		debug["variants"][vk] = int(debug["variants"].get(vk, 0)) + 1
 	var sp: AnimPose = AnimData.pose("stance." + STANCES[stance])
 	for i in range(AnimRig.N):
 		_tq[i] = sp.q[i]
@@ -370,9 +405,18 @@ func _target_base(S: SimState, f, T: float) -> void:
 			_blend_target("charge.hold", 1.0)
 		6:
 			_blend_target("emote.victory", 1.0)
+		7:
+			_blend_target("down.ko", 1.0)
 		_:
 			_blend_target("move.dash", w1)
 			_blend_target("move.retreat", w2)
+			_blend_target("stance.air", w4)
+			_blend_target("move.ascend", w5)
+			_blend_target("move.descend", w6)
+			if w7 >= 1.0:
+				_blend_target("idle.winded", 1.0)
+			elif w7 > 0.0:
+				_blend_target("idle.relaxed", 0.8)
 			if w3 != 0.0:
 				var pi_: int = AnimRig.index["pelvis"]
 				_tq[pi_] = _tq[pi_] * Quaternion(Vector3(0, 0, 1), w3)
@@ -559,8 +603,6 @@ func _beat_layers(ex, role: String, t0: float, T: float) -> void:
 				continue
 		match b.op:
 			"wind":
-				if role != "D":
-					continue
 				# the wind-up window: from the beat to the parryable blow that follows it
 				var te: float = -1.0
 				for b2 in ex.beats:
@@ -570,7 +612,7 @@ func _beat_layers(ex, role: String, t0: float, T: float) -> void:
 				if te < 0.0 or T < bt or T > te + 0.4:
 					continue
 				var ready: float = smoothstep(bt, bt + 0.1, T) * (1.0 - smoothstep(te - 0.02, te + 0.1, T))
-				if ready > 0.001 and not ex.cancel:
+				if ready > 0.001 and not ex.cancel and role == "D":
 					_mix_pose(AnimData.pose("def.parry_ready"), ready * 0.85)
 				if ex.cancel:
 					# parried: the defender sweeps the blow aside, the attacker is turned off line

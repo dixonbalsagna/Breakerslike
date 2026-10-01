@@ -4,8 +4,8 @@
   "default": "snappy",
   "by_part": {"_note": "Orb's mix (2026-10-01 playtest): snappy for light blows, rushes and chains, fluid for heavy and power blows and for launches. A forced style (--anim-style, tools) overrides it for every part.", "light": "snappy", "rush": "snappy", "chain": "snappy", "heavy": "fluid", "power": "fluid", "launch": "fluid"},
   "profiles": {
-    "snappy": {"_note": "held poses and hard snaps, animated on twos", "solve_hz": 30, "snap_ticks": 2, "load_ease": 3.0, "load_ticks": {"light": 10, "heavy": 16}, "follow_ticks": 5, "recover_ticks": 8, "overshoot": 0.08, "lag": 0.25, "base_tau": 0.05, "shiver": 0.9, "hold_drift": 0.6},
-    "fluid": {"_note": "eased in-betweens, long overlap, animated on ones", "solve_hz": 60, "snap_ticks": 6, "load_ease": 1.5, "load_ticks": {"light": 14, "heavy": 22}, "follow_ticks": 9, "recover_ticks": 14, "overshoot": 0.22, "lag": 0.6, "base_tau": 0.14, "shiver": 0.4, "hold_drift": 0.0}
+    "snappy": {"_note": "held poses and hard snaps, animated on twos", "solve_hz": 30, "inertia_s": 0.1, "snap_ticks": 2, "load_ease": 3.0, "load_ticks": {"light": 10, "heavy": 16}, "follow_ticks": 5, "recover_ticks": 8, "overshoot": 0.08, "lag": 0.25, "base_tau": 0.05, "shiver": 0.9, "hold_drift": 0.6},
+    "fluid": {"_note": "eased in-betweens, long overlap, animated on ones", "solve_hz": 60, "inertia_s": 0.18, "snap_ticks": 6, "load_ease": 1.5, "load_ticks": {"light": 14, "heavy": 22}, "follow_ticks": 9, "recover_ticks": 14, "overshoot": 0.22, "lag": 0.6, "base_tau": 0.14, "shiver": 0.4, "hold_drift": 0.0}
   },
   "bone_lag": {"pelvis": 0.0, "spine_1": 0.05, "spine_2": 0.1, "neck": 0.15, "head": 0.2, "clavicle_l": 0.12, "clavicle_r": 0.12, "upper_arm_l": 0.25, "upper_arm_r": 0.25, "forearm_l": 0.35, "forearm_r": 0.35, "hand_l": 0.45, "hand_r": 0.45, "fingers_l": 0.45, "fingers_r": 0.45, "thigh_l": 0.05, "thigh_r": 0.05, "shin_l": 0.2, "shin_r": 0.2, "foot_l": 0.35, "foot_r": 0.35, "x_pack": 0.5, "x_sash_a1": 0.5, "x_sash_a2": 0.5, "x_sash_b1": 0.5, "x_sash_b2": 0.5}
 }

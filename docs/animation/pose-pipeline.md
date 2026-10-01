@@ -955,7 +955,7 @@ What the check also found (Combat's and Encounter's, not fixable in render): of 
 
 ### 9.4 A2 second pass: inertialisation, defence and clash poses, the mixed reels (2026-10-01)
 
-**Inertialisation** (`AnimFighter._inertialise`). A bone that turns more than 0.5 rad between two solves is a join (a part starting or ending, a cue, a reaction, a mirrored key set). The jump is taken as an offset from what was drawn last solve, and it settles by itself on an eased 0.1 s (snappy) or 0.18 s (fluid) curve, in tick time, so a hit-stop still lets it finish at half speed. A join announced close to a blow settles before the contact tick, so the contact key stays exact. `pop_scan.gd` (4 seeds x 3000 ticks, 18000 fighter-frames, bone turns above 0.6 rad in one tick): 493 before, 230 after, worst 3.12 rad before, 1.40 rad after. The 230 left are eased swings (a 2.8 rad arm settling in six ticks), not jumps. The tuning numbers are constants in code until Tools adds `inertia_s` to the profile schema (proposed; the code already reads it if present).
+**Inertialisation** (`AnimFighter._inertialise`). A bone that turns more than 0.5 rad between two solves is a join (a part starting or ending, a cue, a reaction, a mirrored key set). The jump is taken as an offset from what was drawn last solve, and it settles by itself on an eased 0.1 s (snappy) or 0.18 s (fluid) curve, in tick time, so a hit-stop still lets it finish at half speed. A join announced close to a blow settles before the contact tick, so the contact key stays exact. `pop_scan.gd` (4 seeds x 3000 ticks, 18000 fighter-frames, bone turns above 0.6 rad in one tick): 493 before, 230 after, worst 3.12 rad before, 1.40 rad after. The 230 left are eased swings (a 2.8 rad arm settling in six ticks), not jumps. The settle times are `inertia_s` in `data/anim/profiles.json` (0.1 snappy, 0.18 fluid; the schema field arrived in bf8f941).
 **The contact solve's pole** is now the authored pose's own elbow or knee, so the solved limb is its neighbour and the blend does not turn the upper arm through a hinge twist.
 **What it found for Combat.** Blows announced to the animator fewer than 4 ticks before they land cannot be wound up. In seeds 4 and 12345 only TRADE BLOWS does it: 7 or 8 of 78 blows (both fighters' counter strikes appear in the beat list on the tick they land). Those blows still pop to their contact pose (the offset smooths the rest). Asking Combat to schedule each TRADE BLOWS strike at least 6 ticks ahead.
 
@@ -973,6 +973,22 @@ What the check also found (Combat's and Encounter's, not fixable in render): of 
 The ground-contact poses (braced tumble, bounce, lip launch, tech flip, quick and slow get-ups) and On the Chin are held for World's events (`left_ground`, `bounce`, `land`, `tumble_end`, docs/world/ground-contact.md) and his first moveset.
 
 **Mixed reels for Orb.** `art/animation/reel-mixed.gif` (the 735-tick exchange of seed 4 in Orb's mix) and `art/animation/reel-mixed-vs-snappy.gif` (snappy only on the left, the mix on the right): light blows and rushes keep their snap, heavy blows get the fluid wind-up and overshoot.
+
+### 9.5 A2 third pass: idle and movement variants, KO, the parry test (2026-10-01)
+
+**Six poses, 66 to 72** (`art/animation/a2-vocab2-sheet.png`, record `art/animation/records/A2-poses.md`), all chosen in `_target_base` from state the sim already has, blended through the base smoothing:
+| Pose | When |
+| :--- | :--- |
+| stance.air | free, more than about 50 u above the ground (the feet hang instead of standing on air); 36 to 129 times a match |
+| move.ascend, move.descend | in the air and not dashing, climbing or diving faster than 150 u/s |
+| idle.winded | free on the ground with ki under 6 |
+| idle.relaxed | free on the ground, aggressive or defensive stance, more than 700 u from the opponent and nearly still (blended at 0.8) |
+| down.ko | down and `S.game.ko` is this fighter: flat on the back, never the get-up |
+`emote.victory` (§9.4) is checked too: with the KO forced, the winner reaches it (0.63 rad over 27 bones) and the loser reaches down.ko (0.02). Seeded AI matches rarely reach a KO (HP no longer ends a match), so that check was a one-off with the state set by hand, not part of `anim_check`.
+
+**The forced-parry test.** `anim_check` now runs the defensive and clash beats on a stub exchange (wind, a parryable blow, slip, dodge, guardBreak, clashWave) with the parry forced by setting `cancel`: 13 cases, each layer must pull the pose toward its own key and leave the other fighter alone. It found a real bug in the second pass: the parried attacker never played react.rebuff (the wind branch returned for the attacker). Fixed.
+
+Transformation poses (3 s, 1.5 s, 0.8 s, from the new `version` on the transform event) are not started: they need a design brief and Combat's cue.
 
 ---
 
