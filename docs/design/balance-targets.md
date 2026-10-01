@@ -568,3 +568,25 @@ Encounter's rules are in `docs/director/fight-lanes-director.md`. Three are conf
    - On the testbed both placeholders have care 0 (§9), so both plough, and KAI's anguish pays for it.
 2. **Exchanges may be fought inside a block row** after a targeted smash. A fighter left in a block row steps out to the nearest street when next free. Collateral inside the row counts as usual.
 3. **The deviation sizes:** 0.3 to 1.0 bh for a shove, 0.3 to 1.2 bh for vertical launches, and 0.6 to 2.5 bh for long launches and throws, skewed small and leaning back toward the lane's centre near an edge. They are texture only: a small deviation never leaves the lane, so it never changes an outcome, damage or collateral.
+
+## 17. Questionnaire 10 notes (2026-10-01)
+
+**Harbour and industrial districts** (numbers for World's `worker_share` and `vehicle_share`, `docs/world/districts-plan.md`). They have few civilians, mostly workers who evacuate fast, so they are the places to fight without collateral.
+
+| Field | Harbour | Industrial | For comparison, downtown |
+| :--- | ---: | ---: | ---: |
+| `pop_density` | 0.2 | 0.15 | 1.0 |
+| People per building | 0 to 3 | 0 to 3 | By footprint |
+| `worker_share` | 0.8 | 0.9 | 0 |
+| `vehicle_share` | 0.3 | 0.4 | World's value |
+
+- Workers leave at the fast rate: a quarter of the usual flight time.
+- They start when a beam, a blast or a brunt reaches the district, or when the fight comes within 10 bh of it.
+- *QA band:* a fight in a harbour or industrial district loses at most 10% of that district's people. The hero's lure reads these districts as empty ground.
+
+**The low-end target.** 30 frames a second with reduced effects is acceptable on old laptops and phones (Orb).
+- The sim stays at 60 ticks a second on every device, so no band here changes.
+- Reduced effects never remove a cue: the tells, the ready cues, the wound readout and the hazard warnings stay.
+- At 30 frames an 8-tick perfect-block window is four drawn frames. If input is read once per drawn frame there, the early tolerance gains 2 ticks, as it does on touch (`control-rules.md` §1). Controls decides how input is sampled.
+
+**Set pieces and the transformation pace** are in `spec-wounds.md` §8b. **The upgrade draft** is `upgrade-plan.md`. **Blitzes** are `control-rules.md` §11, and the bounce table there extends §12's blitz numbers.

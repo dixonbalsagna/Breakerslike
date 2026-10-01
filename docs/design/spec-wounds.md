@@ -440,7 +440,7 @@ Orb: "with few exceptions, transformations should be cinematic and uninterruptib
 
 **Every transformation has two phases.** When a fill completes, **the player chooses when to take the transformation** (questionnaire 4), and the AI chooses for itself. The Empress's joke revisions stay automatic.
 1. **A fill** (a gauge, a condition, or an action), which the opponent can stop.
-2. **A cinematic**, which the opponent cannot interrupt. They wait, and may charge while they do, in the genre's tradition.
+2. **A cinematic**, which the opponent cannot interrupt. Since questionnaire 10 it pauses the sim for both players, within a budget (§8b).
 
 The ready tell, the Transform input (hold 0.5 s) and the look of each form are in `moveset-rules.md` §10.
 
@@ -469,19 +469,61 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
 - A respected cinematic never starts while the opponent's finisher is running.
 - Cinematics don't mend or heal. The exceptions are the Empress's refit and an approved Rally.
 - A fighter on the brink may still transform. The form's power arrives, but the fighter stays on the brink.
-- The director cooldown pauses during a cinematic. The waiting fighter may charge or stoke, so the wait is never dead time for them.
+- Everything pauses during a pausing set piece, including the director cooldown (§8b). The wait is short by budget.
 - Caps: 3 s for a form, 6 s for the fold, 4 s for a final-form reveal.
 
 **QA bands:**
-- cinematics take at most 10% of match time;
+- pauses total at most 2.5 s per minute of match (§8b; it was "cinematics take at most 10% of match time");
 - no cinematic starts during a finisher (0 cases);
 - no cinematic runs longer than 6 s;
 - the "no gap over 10 s" band counts a cinematic as action, not as dead air.
 
+### 8b. Pausing set pieces and the transformation pace (Orb, questionnaire 10)
+
+**Only three things pause the fight for both players:** a transformation, a world-changing ability, and the planet giving way at 11:00.
+- During a pause the sim stops: the match clock, every cooldown and both fighters. So the rival no longer charges or stokes during a cinematic, which replaces that rule above.
+- **Everything else runs live, with a camera cut:** finishers, the KO, the crippling moment, the start of a beam struggle, a revealed signature, smash chains and a landmark's fall. They keep their beats, but the sim keeps running.
+
+**The pause budget: about 2 s a minute.** A bank starts at 3 s, gains 2 s for each minute of match time, and holds at most 6 s. Each pausing set piece has three versions with the same gameplay effect:
+
+| Version | Length | It plays when |
+| :--- | :--- | :--- |
+| **Full** | 3 s. A final-form reveal may take up to 4 s | It is that fighter's first set piece of its kind, the bank covers it, and 20 s have passed since the last pause |
+| **Short** | 1.5 s | It is a repeat (a fighter's later forms), or the full version's conditions fail. It needs 1.5 s in the bank and 8 s since the last pause |
+| **Live** | 0.8 s, with no pause | Otherwise. It is the existing power-up burst with a camera cut: the rival is pushed back, and the transformer can't be interrupted |
+
+- A set piece is never refused or delayed. Only its version changes.
+- The planet giving way always pauses, for 4 s, outside the budget.
+- If two requests land on the same tick, the lower slot plays first and the other follows the table.
+- *QA band:* pauses total at most 2.5 s per minute of match (a hard test). This replaces "cinematics take at most 10% of match time".
+
+**The transformation pace: about three per fighter, the first around 1:30.** Orb's answer was "fewer and later, about 3 a match". This reads it as each fighter's three ladder steps; if Orb meant three in total, the EP relays it and the thresholds change.
+
+| Step | Target (median, per fighter) |
+| :--- | :--- |
+| First | 1:15 to 1:45 |
+| Second | 2:45 to 3:45 |
+| Third | 4:30 to 5:30, before the first brink (5:52 at G0) |
+
+**The placeholder ladder** (`data/fighters/*/ladder.json`):
+- *Thresholds:* 30, 65 and 100 (they were 25, 50 and 75).
+- *`fillPerSec`:* 0.05 (it was 0.45).
+- *Power from fighting* is unchanged: +0.006 per damage dealt and +0.010 per damage taken, about 13 a minute at G0's damage rate.
+- *Charging must become data.* Today it adds +9 power a second, hard-coded in `sim/core/fighter.gd`, which fills a whole step in about 4 s. It becomes `chargePerSec` **0.5** (Simulation's line). Without that change the data retune can't hold the pace.
+- *The check:* 3 a minute from the fill, 13 from fighting and about 4 from charging make 20 a minute: 30 at 1:30, 65 at 3:15 and 100 at 5:00.
+- *Against the budget:* six transformations a match are two full (6 s) and four short (6 s), so 12 s. The bank gives 3 s plus 14 s over seven minutes, which leaves about 5 s for world changes.
+
+**How it sits with the acts** (§9). The act index becomes `1 + the larger of (form steps, wound beats) + region breaks`, capped at 4.
+- *Form steps* are the most ladder steps any one fighter has taken, from 0 to 3.
+- *Wound beats* are the three in §9, from 0 to 3.
+- Taking the larger track, not the sum, lands the acts with the transformations: act 2 at about 1:30, act 3 at about 3:15 and act 4 at about 5:00. The wound track keeps the acts moving if nobody transforms. The act timing targets in §9 are unchanged.
+
+**Knock-on.** Slower tiers mean less damage and less collateral early. QA re-baselines after the change: k for length, civilians lost (if the mean falls under 25%, the re-base to 15 to 40% in `balance-targets.md` §4b applies), and the per-tier structure bands in §15 there.
+
 ## 9. Invisible acts and the fight's mood (Orb, questionnaire 4)
 
 **Invisible acts.** The director escalates chapter by chapter, with no act UI.
-- The act index is `1 + act beats`, capped at 4. **The act beats** (M1 retune, 2026-09-30) are:
+- The act index is `1 + the larger of (form steps, wound beats) + region breaks`, capped at 4 (questionnaire 10, §8b). Form steps are the most ladder steps any one fighter has taken. Before that ruling it was `1 + act beats`, with these beats (M1 retune, 2026-09-30):
   - every region break and every transformation, from both fighters, as before;
   - three wound beats, **each counted once per match**, the first time either fighter reaches it: the first limb reaching battered, the first core reaching bruised, and the first core reaching battered.
 

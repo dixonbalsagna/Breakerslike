@@ -150,6 +150,8 @@ The idea, from a friend: during a match, pick one of three upgrades. Most are st
 | **Risk** | The leader may pick first, which can snowball. The trailing-fighter help offsets it, and QA checks | It pauses the fight three times, and it makes the invisible acts visible, which changes your questionnaire 4 pick | You can't adapt to how the fight is going, which is half the fun of a draft |
 | **Phases building to a peak** | Early forms come quickly and the final form is the peak | Acts 2 and 3 are a minute apart, then the long final act | The picks arrive on the same act timing, but they were chosen earlier |
 
-**Recommendation: A.** The cinematic is already a respected pause where the rival waits, so the pick costs no extra downtime, and it gives the Transform hold a second reason to matter. If you want it perfectly even, B is the one. C is the fallback if pausing mid-match tests badly on phones or online.
+**Orb picked C** (questionnaire 10). The design is in `upgrade-plan.md`.
+
+*The recommendation had been A.* The cinematic is already a respected pause where the rival waits, so the pick costs no extra downtime, and it gives the Transform hold a second reason to matter. If you want it perfectly even, B is the one. C is the fallback if pausing mid-match tests badly on phones or online.
 
 **The next build** would not include the draft. The placeholder transform lands first (`control-rules.md` §7), and option A needs it.

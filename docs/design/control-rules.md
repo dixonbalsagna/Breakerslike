@@ -2,6 +2,8 @@
 
 Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-scheme.md` (questionnaire 8). This page sets the game rules it needs: windows, costs, cooldowns, priorities and automatic choices. Controls owns the bindings and layouts, and Encounter owns the director's use of them. Numbers are starting values in ticks (60 a second) and ki (cap 100), and QA tunes them.
 
+**Build order** (Orb, questionnaire 10): the agency fixes first (counters on request, dodge-cancel, burst and the perfect block), then combat variety (blasts, teleports and beam struggles).
+
 **What this replaces.** Stances are now held states, read at exchange start as before:
 
 | Held state | Old stance |
@@ -34,7 +36,7 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 | Action | Cost | Cooldown | When it works | What it does |
 | :--- | ---: | ---: | :--- | :--- |
 | **Dodge-cancel** (Dodge tap mid-exchange) | 15 ki | 3 s | As the attacker: at any time, cancelling your own strike or recovery. As the defender: only in the gaps between strikes, never during hit-stun or a launch. This narrows the "any time, for either fighter" window in Encounter's plan: the burst is the tool for a fighter who is being hit | 12 ticks of invulnerability and a dash in the held direction. The exchange ends with no winner |
-| **Burst** (Power tap) | 30 ki | 8 s | Also while being hit. Not during a launch, a cinematic or a finisher | A 360-degree shove that pushes the rival back about 8 bh and ends the exchange. No damage, and no winner |
+| **Burst** (Power tap) | 30 ki | 8 s | Also while being hit, including between the bounces of a ping-pong blitz (§11). Not during a launch, a cinematic or a finisher | A 360-degree shove that pushes the rival back about 8 bh and ends the exchange. No damage, and no winner |
 | **Reversal** (context button in guard, close up) | 20 ki, or 10 ki after 2 s of continuous guard | 6 s | Only just after a normal block | A guard-cancel counter-strike that starts the defender's own exchange |
 
 - **Burst bait.** If the rival is holding Guard when the burst fires, they absorb it and the burster staggers for 30 ticks. An expert pauses a string and guards to draw the burst out.
@@ -129,6 +131,8 @@ Simple produces the same actions as every layout, at the same costs and windows.
 
 **The follow-up: one form with a surge** (Game Design's version, after the next build).
 
+*Updated by questionnaire 10.* The placeholder keeps all three ladder steps, not one form. Their pace, the retuned ladder data and the full, short and live versions of the set piece are in `spec-wounds.md` §8b. The table below still gives the cues, the input and the surge; its "once per match" and "2 s" rows are replaced by §8b.
+
 | Part | The rule |
 | :--- | :--- |
 | **Fill** | Reaching power tier 3. The rival slows it as now, with CHARGE INTERRUPT |
@@ -182,3 +186,61 @@ In energy mode all three entries reach at any range, as Combat has them.
 - **The AI: yes,** by the same rules as a player (`stance-matrix.md` §7.2). It needs the ki and a ready signature, or 40 ki for a heavy blast. How often it answers when it can is its difficulty: easy 15%, medium 35%, hard 60%.
 - **The Simple layout: never automatically.** No layout fires a beam for a human. The Simple player answers with the same signature input (Power plus Heavy, or a swipe up on touch) during the tell, and an "answer" prompt shows when they have the ki.
 - QA keeps the clash band at 30 to 60% of signatures fired (`balance-targets.md` §8) and reports human and AI answers separately.
+
+## 11. Blitzes: the flurry and the ping-pong (Orb, questionnaire 10)
+
+There are two kinds of blitz. The **flurry** is the fast chain in place. The **ping-pong** is Combat's new choreography (`docs/combat/blitz.md`): the attacker knocks the rival away, outruns them on a spiral flight or a blink, arrives ahead and knocks them back. Combat owns how it looks. These are the rules it asked for.
+
+**When a ping-pong starts.**
+- *The request:* an attack pressed while holding toward, during the flight of a launch the attacker just caused. It works in any mood and at any tier; those only set the length.
+- *For the AI and the Simple layout* the director decides, with the standing blitz chance: 0.25 in Tense, 0.50 in Frenzied, +0.05 per act, capped at 0.60.
+- *Conditions:* the rival is still in flight, the attacker has the ki for one bounce, and the attacker's blitz cooldown is over.
+- A blitz never starts from another blitz's ender, so it can't loop.
+
+**How long it runs.** A ping-pong is 2 to 5 return blows, and the last one is the ender. The cap comes from tier and mood:
+
+| Mood | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+| :--- | ---: | ---: | ---: | ---: |
+| Calm | 2 | 2 | 2 | 2 |
+| Tense | 2 | 3 | 3 | 4 |
+| Frenzied | 3 | 4 | 5 | 5 |
+
+- The request gives the minimum: one bounce and the ender. Each further queued press adds a bounce before the ender, up to the cap. Presses made during the blitz count, so pressing in rhythm extends it.
+- The AI and Simple continue each bounce with a chance of 0.7 in Tense and 0.85 in Frenzied.
+- The intercept takes 30 ticks by flight (24 in Frenzied) and 16 by blink, as Combat proposes.
+
+**Costs and damage.**
+
+| | Flight bounce | Blink bounce | Ender |
+| :--- | ---: | ---: | ---: |
+| **Ki** | 6 (a chain link) | 10 | 4 (a heavy) |
+| **Damage** | ×0.6 of a light | ×0.5 of a light | ×1.0 of a heavy |
+
+- Without the ki for the next bounce, the blitz goes straight to its ender, or ends with the rival tumbling free if even that can't be paid.
+- **A 10 s cooldown** per fighter after a blitz ends.
+- The whole blitz is **one** decisive exchange, decided at the ender. Each bounce counts as a chain link for mood (+3). Its damage counts in the rate that k is tuned against.
+- Bounces stay in the lane and never pass through buildings (ADR 0009). Only the ender may be a targeted smash.
+
+**Flight or blink, per bounce.**
+- *Tiers 1 and 2:* flights only. The exceptions are a fighter with the `blink` trait (the Protagonist), and Combat's last resort when no spiral clears.
+- *From tier 3,* every fighter blinks with Combat's suggested chances, confirmed: 0.2 in Calm, 0.4 in Tense and 0.6 in Frenzied, +0.2 with the `blink` trait. Blinks then read as power, which fits pillar 4.
+- *The whole blink chain* ("teleport spam") is for Frenzied only: a `blink` fighter at any tier, or anyone at tier 4. Its limit is ki: five blinks cost 50.
+
+**How the defender answers.**
+
+| Answer | When | Result |
+| :--- | :--- | :--- |
+| **Burst** (30 ki) | Any time in the ping-pong before the ender lands. Bounces count as hits here, not launches | The escape. The blitz ends and the attacker is pushed away, with no winner |
+| **Perfect block on a return blow** | A middle bounce's 6-tick anticipation is its whole window, with no early tolerance. The ender has the heavy's window: the last 10 ticks of its 18-tick wind-up. Both work in the air | The blitz ends and the attacker staggers. The defender's riposte launches, and the defender may blitz back at once. That reversal is the ping-pong between both fighters |
+| **Teleport clash** | **It needs the defender's request:** an attack pressed during the blitz, with 10 ki | Both blink and meet (Combat's `blink_clash`), decided like a heavy clash by tier and ki. If the defender wins, the blitz reverses. If the attacker wins, it continues |
+| **Dodge-cancel** (15 ki) | In the gap between bounces | The defender slips the next intercept, with no winner |
+| **A held guard** | Any time | Each bounce does guard damage only, but the heavy ender is a GUARD BREAK. Holding guard is not the answer |
+
+The middle window is short on purpose. The bounces land on a steady rhythm, so it is a timing read, and the 20-tick mash lockout (§1) keeps mashing from finding it.
+
+**QA bands.**
+- Blitzes of both kinds: 2 to 6 a minute in Tense and Frenzied (unchanged).
+- Return blows per ping-pong: a mean of 2.5 to 3.5.
+- The defender ends 25 to 45% of ping-pongs early.
+- Blink intercepts: none at tiers 1 and 2 without the trait, and 30 to 60% of intercepts at tiers 3 and 4.
+- Blitzes deal at most 35% of a match's damage.
