@@ -12,6 +12,9 @@ extends Node3D
 ## fighters' anchors), so a second pane costs nodes and draw submission, not memory or logic.
 
 const SHADOW_SHADER: Shader = preload("res://render/shaders/shadow.gdshader")
+## How a building between the camera and a fighter is opened (docs/rendering/README.md, "Occlusion").
+const OCCL_HOLE := 0     # a round hole around him (Orb's pick)
+const OCCL_STUB := 1     # the building cut down to a low stub
 
 var mats := RenderMats.new()
 var cam_rig := CameraRig.new()
@@ -25,6 +28,18 @@ var fighter_views: Array = []
 var shadows: Array = []            # per fighter: the ground shadow under him (render/shaders/shadow.gdshader)
 var source: PaneWorld = null       # a second pane: the first, whose world it draws
 var view_cam_x: float = 0.0        # this frame's camera's wrapped world x
+var occlusion: int = OCCL_HOLE     # main sets it (a debug toggle)
+## Camera's request for this pane's cut-away, each frame (docs/camera/camera-v2.md section 6). Every key is optional:
+## request (false: no cut-away, for a shot that wants the wall whole), radius_px (the hole's radius; 0 or absent:
+## RenderLook's rule), only (a fighter slot: only his; absent or -1: both fighters').
+var cutaway: Dictionary = {}
+var occluded: Array = []           # per fighter: a building stands between this pane's camera and him (for Camera)
+var _join: float = 0.0             # 0 to 1: the two fighters' holes grown into one
+var _join_t: float = -1.0
+var _cue := PackedFloat32Array()   # per fighter: his lane cue, 0 to 1
+var _cue_z := PackedFloat32Array() # ... his depth at the last tick seen,
+var _cue_want: Array = []          # ... and whether the cue was wanted then
+var _cue_t: float = -1.0
 var _sky_mat: ShaderMaterial
 
 
@@ -74,17 +89,16 @@ func build(S: SimState) -> void:
 
 
 ## Draw one frame from a camera: its wrapped world x (float64), cam.y and cam.z (the reference camera's height and
-## zoom, as SimHost.camera gives them) and its screen shake in pixels. The first pane also applies the world's changes.
-func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2) -> void:
+## zoom, as SimHost.camera gives them), its screen shake in pixels and its pitch in degrees (CameraRig). The first pane
+## also applies the world's changes.
+func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2, pitch: float = 0.0) -> void:
 	var S: SimState = host.S
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	view_cam_x = cam_x
-	cam_rig.frame(cam.y, cam.z, jitter, vp.y)
+	cam_rig.frame(cam.y, cam.z, jitter, vp.y, pitch)
 	planet.set_camera(cam_rig.position)
 	_view_cues(cam, vp)
 	planet.update(S, cam_x, host.impact.heat, host.impact.heat_changed)
-	var rects: Array = []
-	var holes: Array = []
 	for i in range(fighter_views.size()):
 		var v: FighterView = fighter_views[i]
 		var pose: Vector3 = host.fighter_pose(i, a)
@@ -93,32 +107,148 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 		v.depth = host.fighter_z(i, a)
 		v.sag = mats.sag(vx, v.depth)
 		v.update(S, S.fighters[i], pose, vx, cam.z)
-		rects.append(_screen_rect(v))
-		holes.append(_hole(S, S.fighters[i], v, rects[i], cam_x))
 		_place_shadow(S, i, wx, vx, pose.y, v.depth)
-	planet.fade_front(S, cam_rig, cam_x, rects)
-	planet.set_holes(holes)
+	_occlusion(S, cam_x, vp)
+	_lane_cues(host, a)
 	vfx_layer.update(host, a, cam_x, cam.z, vp.x)
 	beams.update(S, cam_x, cam.z)
 	particles.update(host.fxv, host.impact, cam_x, cam.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
 
 
-## The porthole that keeps a fighter in the building rows in view (building.gdshader): [his chest as drawn, the radius
-## in pixels (0 on the fighter plane, opening as he goes in), the view distance buildings are cut up to]. It stops
-## short of the front of the building he is aimed at, so that one stays whole and only its cut floors show him inside.
-func _hole(S: SimState, f, v: FighterView, rect: Rect2, cam_x: float) -> Array:
-	if v.depth > -1.0 or rect.size.y <= 0.0:
-		return [Vector3.ZERO, 0.0, 0.0]
-	var chest: Vector3 = v.global_position + Vector3(0.0, FighterView.HEIGHT * 0.5, 0.0)
-	var inv: Transform3D = cam_rig.global_transform.affine_inverse()
-	var near: float = -(inv * chest).z - RenderLook.HOLE_GAP
-	if int(f.aimB) >= 0 and int(f.aimB) < S.buildings.size():
-		var b = S.buildings[int(f.aimB)]
-		if b.d > 0.0:
-			var front := Vector3(SimWrap.sdx(cam_x, b.x), chest.y, b.z + b.d * 0.5)
-			near = minf(near, -(inv * front).z - RenderLook.HOLE_GAP)
-	var r: float = maxf(RenderLook.HOLE_PX, RenderLook.HOLE_BODY * rect.size.y) * clampf(-v.depth / RenderLook.HOLE_IN, 0.0, 1.0)
-	return [chest, r, near]
+## Keep the fighters in view behind buildings, by this pane's method. Either way a building counts as in front of a
+## fighter when it stands between this pane's camera and his chest, and the building a launched fighter is aimed at
+## stays whole (its cut floors show him inside).
+## The hole: a dithered circle around each fighter, cutting whatever of a building is nearer the camera than he is. It
+## is always there, so a wall is eaten as he passes behind it and nothing pops. When both fighters are in view within
+## HOLE_JOIN of the screen's width and buildings are in front of at least two of the three points (each fighter and
+## the point between them), each hole stretches to the other fighter, so one opening shows both and the gap between
+## them. A fighter behind a wall and one out in the open keep two round holes.
+## The stub: the buildings near a fighter's sight line, and those in front of the stretch between two fighters in view
+## together, sink to low stubs and stand again when no longer in the way.
+func _occlusion(S: SimState, cam_x: float, vp: Vector2) -> void:
+	var n: int = fighter_views.size()
+	var eye: Vector3 = cam_rig.position
+	var on: bool = bool(cutaway.get("request", true))
+	var only: int = int(cutaway.get("only", -1))
+	var chest: Array = []
+	var px: Array = []
+	var tall := PackedFloat32Array()
+	var seen: Array = []
+	var aim := PackedInt32Array()
+	var near_view := Rect2(-0.25 * vp, 1.5 * vp)
+	var xa: float = eye.x
+	var xb: float = eye.x
+	var z_min: float = INF
+	for i in range(n):
+		var v: FighterView = fighter_views[i]
+		var c: Vector3 = v.position + Vector3(0.0, FighterView.HEIGHT * 0.5, 0.0)
+		var vis: bool = not cam_rig.is_position_behind(c)
+		var p: Vector2 = cam_rig.unproject_position(c) if vis else Vector2.ZERO
+		vis = vis and near_view.has_point(p)
+		chest.append(c)
+		px.append(p)
+		tall.append(absf(cam_rig.unproject_position(v.position + Vector3(0.0, FighterView.HEIGHT, 0.0)).y - cam_rig.unproject_position(v.position).y) if vis else 0.0)
+		seen.append(vis)
+		var f = S.fighters[i]
+		aim.append(int(f.aimB) if int(f.aimB) >= 0 and int(f.aimB) < S.buildings.size() else -1)
+		if vis:
+			xa = minf(xa, c.x)
+			xb = maxf(xb, c.x)
+			z_min = minf(z_min, c.z)
+	var cand: Array = planet.occluder_candidates(S, cam_x, xa, xb, z_min, RenderLook.STUB_MARGIN) if z_min < INF else []
+	occluded.resize(n)
+	for i in range(n):
+		occluded[i] = seen[i] and not cand.is_empty() and planet.occluders(S, cand, eye, cam_x, chest[i], RenderLook.OCCL_MARGIN, aim[i], {})
+	var pair: bool = n == 2 and only < 0 and seen[0] and seen[1] and (px[0] as Vector2).distance_to(px[1]) < RenderLook.HOLE_JOIN * vp.x
+	# The stubs.
+	var want: Dictionary = {}
+	if on and occlusion == OCCL_STUB and not cand.is_empty():
+		for i in range(n):
+			if seen[i] and (only < 0 or only == i):
+				planet.occluders(S, cand, eye, cam_x, chest[i], RenderLook.STUB_MARGIN, aim[i], want)
+		if pair:
+			var steps: int = clampi(int((chest[0] as Vector3).distance_to(chest[1]) / RenderLook.STUB_SPAN), 1, 8)
+			for k in range(1, steps):
+				planet.occluders(S, cand, eye, cam_x, (chest[0] as Vector3).lerp(chest[1], float(k) / steps), RenderLook.OCCL_MARGIN, -1, want)
+			for bi in aim:
+				want.erase(bi)
+	planet.set_stubs(S, want)
+	# The holes.
+	var holes: Array = []
+	var inv: Transform3D = cam_rig.transform.affine_inverse()
+	for i in range(n):
+		if not on or occlusion != OCCL_HOLE or not seen[i] or (only >= 0 and only != i):
+			holes.append([Vector3.ZERO, 0.0, 0.0, Vector3.ZERO, 0.0, 0.0])
+			continue
+		var r: float = float(cutaway.get("radius_px", 0.0))
+		if r <= 0.0:
+			r = maxf(RenderLook.HOLE_PX, RenderLook.HOLE_BODY * tall[i])
+		var near: float = -(inv * (chest[i] as Vector3)).z - RenderLook.HOLE_GAP
+		if aim[i] >= 0:
+			var b = S.buildings[aim[i]]
+			if b.d > 0.0:
+				near = minf(near, -(inv * Vector3(SimWrap.sdx(cam_x, b.x), (chest[i] as Vector3).y, b.z + b.d * 0.5)).z - RenderLook.HOLE_GAP)
+		holes.append([chest[i], r, near, chest[i], r, near])
+	var join: bool = false
+	if pair and on and occlusion == OCCL_HOLE and not cand.is_empty() and (occluded[0] or occluded[1]):
+		var mid: bool = planet.occluders(S, cand, eye, cam_x, ((chest[0] as Vector3) + chest[1]) * 0.5, RenderLook.OCCL_MARGIN, -1, {})
+		join = int(occluded[0]) + int(occluded[1]) + int(mid) >= 2
+	var dt: float = clampf(S.T - _join_t, 0.0, 0.1) if _join_t >= 0.0 else 1.0e3
+	_join_t = S.T
+	_join = move_toward(_join, 1.0 if join else 0.0, dt / RenderLook.HOLE_JOIN_S)
+	if _join > 0.0 and n == 2 and float(holes[0][1]) > 0.0 and float(holes[1][1]) > 0.0:
+		# Each hole reaches toward the other fighter, its radius and its depth easing to his along the way.
+		var e: float = _join * _join * (3.0 - 2.0 * _join)
+		var r0: Array = [holes[0][1], holes[0][2]]
+		var r1: Array = [holes[1][1], holes[1][2]]
+		holes[0][3] = (chest[0] as Vector3).lerp(chest[1], e)
+		holes[0][4] = lerpf(r0[0], r1[0], e)
+		holes[0][5] = lerpf(r0[1], r1[1], e)
+		holes[1][3] = (chest[1] as Vector3).lerp(chest[0], e)
+		holes[1][4] = lerpf(r1[0], r0[0], e)
+		holes[1][5] = lerpf(r1[1], r0[1], e)
+	planet.set_holes(holes)
+
+
+## The next frame's stubs, joined hole and lane cues jump to their targets instead of easing (for tools that pose a
+## frame).
+func snap_occlusion() -> void:
+	planet.snap_stubs()
+	_join_t = -1.0
+	_cue_t = -1.0
+
+
+## The lane cue (RenderLook.LANE_CUE_*): a stripe on the ground at a fighter's depth, in his colour, while it says
+## something: the two fighters are at different depths, or his own depth is changing. It eases on sim time, from the
+## sim's depths tick by tick (the drawn stripe follows his interpolated position).
+func _lane_cues(host: SimHost, a: float) -> void:
+	var S: SimState = host.S
+	var n: int = fighter_views.size()
+	if _cue.size() != n:
+		_cue.resize(n)
+		_cue.fill(0.0)
+		_cue_z.resize(n)
+		_cue_want.resize(n)
+		_cue_want.fill(false)
+		_cue_t = -1.0
+	var snap: bool = _cue_t < 0.0
+	var dt: float = 0.0 if snap else clampf(S.T - _cue_t, 0.0, 0.1)
+	_cue_t = S.T
+	var apart: bool = n == 2 and absf(S.fighters[0].z - S.fighters[1].z) > RenderLook.LANE_CUE_DZ
+	var cues: Array = []
+	for i in range(n):
+		var z: float = S.fighters[i].z
+		if snap:
+			_cue_want[i] = apart
+			_cue[i] = 1.0 if apart else 0.0
+		elif dt > 0.0:
+			_cue_want[i] = apart or absf(z - _cue_z[i]) / dt > RenderLook.LANE_CUE_VZ
+			_cue[i] = move_toward(_cue[i], 1.0 if _cue_want[i] else 0.0, dt / (RenderLook.LANE_CUE_IN_S if _cue_want[i] else RenderLook.LANE_CUE_OUT_S))
+		if snap or dt > 0.0:
+			_cue_z[i] = z
+		var v: FighterView = fighter_views[i]
+		cues.append([host.fighter_x(i, a), v.depth, _cue[i] * RenderLook.LANE_CUE_ALPHA, v._aura_col])
+	planet.set_lane_cues(cues)
 
 
 static func _shadow_mesh() -> PlaneMesh:
@@ -139,7 +269,8 @@ func _place_shadow(S: SimState, i: int, wx: float, vx: float, y: float, z: float
 	(sh.material_override as ShaderMaterial).set_shader_parameter("strength", RenderLook.SHADOW_ALPHA * lerpf(1.0, 0.25, up))
 
 
-## A fighter's rectangle on this pane's screen (feet to the top of the head, a body's width), a little grown.
+## A fighter's rectangle on this pane's screen (feet to the top of the head, a body's width), a little grown. (For
+## Animation's tools.)
 func _screen_rect(v: FighterView) -> Rect2:
 	var feet: Vector3 = v.global_position
 	var top: Vector3 = feet + Vector3(0.0, FighterView.HEIGHT, 0.0)
@@ -157,10 +288,9 @@ func _view_cues(c: Vector3, vp: Vector2) -> void:
 	var high: float = smoothstep(RenderLook.HIGH_FROM, RenderLook.HIGH_TO, c.y)
 	var d: float = lerpf(RenderLook.CURVE_NEAR, RenderLook.CURVE_WIDE, wide) + RenderLook.CURVE_HIGH * high
 	# Every layer from full depth weight back sags d * vh pixels at its screen edge (bend.gdshaderinc).
-	var dist: float = cam_rig.position.z
-	mats.set_bend(4.0 * d * vp.y * c.z / (vp.x * vp.x), dist)
+	mats.set_bend(4.0 * d * vp.y * c.z / (vp.x * vp.x), cam_rig.dist)
 	# The horizon is the far edge of the ground: its elevation from the camera anchors the sky and the fog.
-	var hz: float = (0.0 - cam_rig.position.y) / (dist + RenderLook.FOG_FAR)
+	var hz: float = (0.0 - cam_rig.position.y) / (cam_rig.position.z + RenderLook.FOG_FAR)
 	for k in [["space", high], ["horizon", hz]]:
 		_sky_mat.set_shader_parameter(k[0], k[1])
 		mats.set_sky(k[0], k[1])

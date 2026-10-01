@@ -8,6 +8,8 @@
 // UV.x: terrain column (NC wraps to 0). UV2.y: 1 on the fighter-plane row, 2 or more a snapping boundary.
 // COLOR: biome colour, alpha 1 in desert. Scorch chars the ground, heat glows, cracked pavement darkens (S.crack),
 // rubble heaps (S.rubble, in depth as ground.gdshaderinc lays them) take the rubble colour, broken up in blocks.
+// In a district the streets of the lane table are painted under all of that (sidewalks, kerb parking, carriageways),
+// and the lane cue lies over it: a stripe at a fighter's depth, in his colour (ground.gdshaderinc).
 shader_type spatial;
 render_mode unshaded, cull_disabled;
 
@@ -46,6 +48,7 @@ varying float v_crack;
 varying float v_rubble;
 varying vec2 v_px;
 varying float v_wz;
+varying float v_street;
 
 void vertex() {
 	int i = int(UV.x + 0.5) % nc;
@@ -75,17 +78,21 @@ void vertex() {
 	v_crack = gf(i, 15) * t;
 	v_rubble = abs(z) <= -z_band_back ? rubble_at(i, z) : 0.0;
 	v_px = vec2(xw, z);
+	v_street = street_n > 0 ? street_weight(xw) : 0.0;
 	v_back = clamp((z_front - z) / (z_front - z_band_back), 0.0, 1.0);
 	vec4 bw = bent_world(MODEL_MATRIX, VERTEX);
-	v_view = (VIEW_MATRIX * bw).xyz;
+	v_view = bw.xyz - INV_VIEW_MATRIX[3].xyz;   // from the camera, in world axes (the camera may be pitched)
 	v_wz = bw.z;
-	POSITION = PROJECTION_MATRIX * vec4(v_view, 1.0);
+	POSITION = PROJECTION_MATRIX * (VIEW_MATRIX * bw);
 }
 
 void fragment() {
 	vec3 c = v_col;
 	if (v_base < sea_base && v_h < sea_base) {
 		c = sea_floor.rgb;
+	} else if (v_street > 0.001) {
+		vec4 st = street_paint(v_px, fwidth(v_px.x));
+		c = mix(c, st.rgb, st.a * v_street);
 	}
 	if (v_dent < -dent_min) {
 		c = v_desert > 0.5 ? crater_desert.rgb : crater.rgb;
@@ -110,6 +117,8 @@ void fragment() {
 	}
 	c = mix(c, char_col.rgb, clamp(v_scorch * 1.1, 0.0, 0.92));
 	c = flat_shade(c, NORMAL, 0.55) * mix(1.2, 0.95, v_back);
+	vec4 cue = lane_cue_at(v_px, fwidth(v_px.y));
+	c = mix(c, cue.rgb, cue.a);
 	float hh = clamp(v_heat, 0.0, 1.6);
 	vec3 glow = mix(heat_lo.rgb, heat_hi.rgb, clamp(hh - 0.6, 0.0, 1.0));
 	c = mix(c, glow, clamp(hh, 0.0, 1.0) * 0.85) + glow * max(0.0, hh - 1.0) * 0.6;

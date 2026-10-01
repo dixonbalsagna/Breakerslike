@@ -36,7 +36,7 @@ vec3 sky_color(float q) {
 	return mix(c, space_col.rgb, space * clamp(d * 1.5, 0.0, 1.0));
 }
 
-// The tan of the elevation of a view-space direction (the camera never rotates, so view space is world-aligned).
+// The tan of the elevation of a direction from the camera, in world axes.
 float elevation(vec3 v) {
 	return v.y / max(0.0001, length(v.xz));
 }

@@ -31,13 +31,14 @@ godot --path .
 | F6 / Shift+F6 / Ctrl+F6 | VFX's ground cracks (on) / its destruction: shards, collapse dust, holes (off until World's B2) / its scorch embers (on) |
 | F7 / F8 | head flashes on and off / their legacy shapes |
 | F9 | Camera's split screen on and off (on by default) |
+| Alt+F9 / Ctrl+F9 | the camera's pitch: straight on, 11 degrees, 49 degrees / the occlusion method: a hole around the fighter, or stubs |
 | F10 / F11 | the split against the AI (UI's `split_solo`) / reduced motion (UI's `reduced_motion`) |
 | Alt+1 to Alt+[ (Shift: P2), Alt+F | fire each head flash in the data's order; cycle a fighter's shape family |
 | Esc | quit (desktop) |
 
 The key mapping is Controls' `sim/input/keyboard.gd`. `render/core/key_codes.gd` only turns Godot's physical keys into its code names.
 
-Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`. Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
+Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`, `--nosplit` (one view), `--pitch=DEG` and `--occl=hole|stub` (the two debug toggles' starting values). Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
 
 ## Scene structure (`render/main.tscn`)
 
@@ -66,7 +67,7 @@ Main            Node3D               core/main.gd         the frame loop, input,
 | `core/crowd_mesh.gd` | The generated civilian figure (see Civilians below). |
 | `core/ground_field.gd` | The ground band's data for the GPU and its CPU mirror: round crater bowls in depth, scorch, water (see Craters, scorch and water below). |
 | `core/impact_fx.gd` | Render-side live effects for World's crater, scorch and splash events: ejecta, rim dust, shock rings, the glow of fresh grooves, embers (sparks, dropped while VFX's embers are on), ripples and skim spray. |
-| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` over `ground.gdshaderinc` (the ground field); `crowd`; `front` (row-0 buildings, faded by dither per pane); `particle` (shapes per instance); `sky` over `skycol.gdshaderinc` (the horizon-anchored gradient the ground also fogs into, space, stars); `bend.gdshaderinc` (horizon curvature). |
+| `shaders/` | `flat` (opaque and alpha) and `glow` (additive) for props and fighters; `terrain` and `water` over `ground.gdshaderinc` (the ground field); `crowd`; `building` (every row's buildings: the hole, the stub and the floor cut, per pane); `particle` (shapes per instance); `sky` over `skycol.gdshaderinc` (the horizon-anchored gradient the ground also fogs into, space, stars); `bend.gdshaderinc` (horizon curvature). |
 | `tools/seam_sweep.gd`, `tools/determinism.gd` | The seam and determinism checks (see below). |
 | `tools/shots.gd` | Posed screenshots for these docs (see below). |
 | `tools/ground_check.gd` | The ground check: the drawn ground against the sim's (see Verification). |
@@ -152,14 +153,14 @@ Poses `coast` and `max` in `tools/shots.gd`. Both columns use the committed sim 
 
 World's B1 (`docs/world/buildings-in-depth.md`, in the sim since 3612ebc) gives every building a depth `z`, a depth size `d` and a row: 0 in front of the fighter plane (about +750 at world scale), then 1, 2 and 3 behind it (about -600, -1,650 and -2,800). The planet view draws them there:
 - **Rows.** Each box spans its own `z ± d/2` and stands on the lowest ground under its footprint (a 3×3 sample of the ground field). Its civilians stand on its street side, `CROWD_GAP` out from the face and up to `CROWD_DEEP` more: behind a row-0 building (towards the plane), in front of the others.
-- **Row 0 fades.** Row 0 stands between the camera and the fight. Its buildings are their own MultiMesh, with their own material of `building.gdshader` (B3 below). While one covers a fighter on a pane's screen it fades by dither to `FRONT_FADE` (0.35), easing over 0.15 s. The fade is per pane, from that pane's camera.
+- **Row 0.** Row 0 stands between the camera and the fight. Its buildings are their own MultiMesh, with their own material of `building.gdshader`. It used to fade whole by dither while it covered a fighter; since 2026-10-01 it opens like every other row, by the occlusion method ("Occlusion" below).
 - **The implode ripple.** A `building_fall` in mode `implode` carries a `delay` (the distance from the blast over World's `IMPLODE_SPEED`, at most 1 s). The building stands until then and sinks straight down into its footprint over `IMPLODE_S` (0.5 s, easing in). A fold (`b = -1`, the falls past World's event cap) gives its buildings the same delay by their own distance. VFX draws the dust skirt.
 - **Rubble heaps.** The sim adds each fallen building's heap to the ground on the fighter plane (`S.rubble`, part of `S.deform`). The ground field carries it in depth as a plateau from the plane back to the fallen building's far face (row 0: forward to its near face), easing off over `RUBBLE_EDGE` beyond (three more rows in the ground texture). The terrain shader tints it `RUBBLE` in a blocky noise, full at `RUBBLE_TINT_H` of heap. The plane's row still reads `S.deform` bit for bit (ground check).
 - **One collapse, not two.** While VFX's destruction is on (Shift+F6), the particles skip a fall's dust and debris, which VFX draws instead (`SimHost._without_fall_debris`, falls in a fold included). While its embers are on (Ctrl+F6), ImpactFx drops its scorch sparks and keeps the groove's glow.
 
 A blast in a city block: the row-0 house in front of the fighter plane stands until its delay, sinks into its footprint and leaves its heap at the crater's front edge. Before, then 0, 0.25, 0.5, 0.8, 1.4 and 2.5 s after: ![implode](img/b1-implode.png)
 
-A wider blast (`--x=2900 --r=4000`): the row-0 house on the right fades while it covers P2, then sinks with the ripple. Before, then 0, 0.25 and 0.5 s after: ![row 0](img/b1-front.png)
+A wider blast (`--x=2900 --r=4000`), as drawn before the occlusion methods replaced the fade: the row-0 house on the right fades while it covers P2, then sinks with the ripple. Before, then 0, 0.25 and 0.5 s after: ![row 0](img/b1-front.png)
 
 Both come from `godot --path . --script res://render/tools/b1_strip.gd -- --out=DIR` (`--x`, `--r` and `--row` pick the blast), which poses the fighters and steps time by hand, sending each tick's events to the planet view and VFX as in the game. VFX's destruction is off in both, so the dust is the particles'.
 
@@ -172,10 +173,10 @@ Orb's top visual complaint was that a launched fighter "bounces off an invisible
 - **The fighter at the sim's depth.** `SimHost.fighter_z` interpolates `Fighter.z` like the pose, and `FighterView` sits at that depth. The hybrid projection already places a fighter's pivot with the world's perspective, so he shrinks by `s = d / (d + w)` and draws `s` of the way out from the camera's axis, as Camera's `depth-and-chains.md` §2 has it, and the buildings sort around him by true depth. The planet's bend lowers the world at depth, so the fighter's node is lowered by the same amount (`RenderMats.sag`, the CPU twin of `bent_world`).
 - **Outline.** `fighter_hull.gdshader` scales its width by the same `s`, down to `OUTLINE_MIN_PX` (0.75 px), so a small far fighter is not all outline.
 - **Ground shadow** (new, `shadow.gdshader`). A soft dark ellipse on the ground as drawn under each fighter at his depth, or on the water over it. It fades to a quarter and widens by half with height (`SHADOW_*`). It is what says where a fighter is over the ground once he leaves the plane. One draw call a fighter a pane.
-- **The porthole.** A fighter two rows back is behind towers. While he is in depth, whatever of a building lies nearer the camera than he does is cut away inside a dithered circle around him on that pane's screen (`building.gdshader`: `hole`, `hole_near`; `HOLE_*`). It opens over the first 250 units of depth and is at least 70 px in radius. It stops short of the front of the building he is aimed at, so that one stays whole.
+- **The porthole.** A fighter two rows back is behind towers. Whatever of a building lies nearer the camera than he does is cut away inside a dithered circle around him on that pane's screen (`building.gdshader`: `hole`, `hole_near`; `HOLE_*`). It stops short of the front of the building he is aimed at, so that one stays whole. As built for B3 it opened over the first 250 units of depth; it is now one of two occlusion methods and always on ("Occlusion" below).
 - **The tunnel, from `fmask`.** A cleared floor with a standing floor above it is a tunnel. Its front and side walls open and the back wall shows its dark inside, so the fighter is seen flying through the tower at his own depth, and the hole stays as the building's state says (a seek or a second pane draws the same). The masks go to the shader as a float texel a building (`cut_tex`). A MultiMesh's own custom data is half floats in the Compatibility renderer, too coarse for a 62-floor mask (the first try showed no cut for that reason). Only cut towers draw their insides: an uncut instance throws its back faces away in the vertex stage.
 - **Footings.** A building's top is `WorldStructures.baseY` (World's T4: the highest ground under the footprint on the plane) plus its height, the same numbers the brunt's geometry uses. The box still runs down to the lowest ground as drawn under it. VFX's building reads use `baseY` too.
-- **Row 0** keeps its per-building dither fade over a fighter on the plane, now in the same shader (`front.gdshader` is gone).
+- **Row 0** shares the shader (`front.gdshader` is gone).
 
 A brunt launch through a row-1 tower and on to a second (seed 24 from tick 7178; the tool's stand-in camera follows the launched fighter): ![brunt](img/b3-brunt.gif)
 
@@ -191,6 +192,44 @@ Another frame of it, with the tunnel: ![tunnel](img/b3-tunnel.png) And the back 
 - **Camera:** the rig does not read `Fighter.z` yet, so in the game the launched fighter drifts toward the screen's centre and shrinks as he goes deep, and in the split the HUD anchors (`SplitFrame.hud_anchor`) stay on the plane position. `depth-and-chains.md` §5 covers it: the depth-aware focus and zoom, and `hud_anchor(slot, x, y, z)` (main will pass `host.fighter_z`).
 - **VFX:** the motion trail is laid on the plane, so its tip does not meet a fighter at depth. The trail history needs his `z`.
 - **Size.** In the back row (2,640 units deep) a fighter is about 20 px tall at best. Camera's note already says so; the fix is World's tuning or Camera's framing, not rendering.
+
+## Occlusion: a hole or stubs
+
+ADR 0009 puts fighters at depth all the time, so a building between the camera and a fighter is the normal case, not a launch's. Orb picked "a circular cut-away around the fighter"; both methods are built so Orb can judge them in the game. Ctrl+F9 swaps them (`--occl=hole|stub`), per pane, render only. Today's sim keeps fighters on the plane except during a brunt launch, and the hero's AI keeps fights out of the city: in two AI matches of 7,200 ticks no fighter was ever behind a building. So the pictures below are posed (`render/tools/lanes_shots.gd`), and in play the methods show mostly during brunts until the fight-lanes slices land.
+
+Either way a building counts as in front of a fighter when it stands between that pane's camera and his chest (`PlanetView.occluders`: the sight line against each box, with a margin; one bucket query a pane a frame). The building a launched fighter is aimed at stays whole, so its cut floors show him inside.
+
+- **The hole (the default).** A dithered circle around each fighter cuts whatever of a building is nearer the camera than he is. Its radius is Camera's rule, `max(70 px, 1.6 x his drawn height)` (`HOLE_PX`, `HOLE_BODY`). It is always there, so a wall is eaten as he passes behind it and nothing pops. **One hole for two.** When both fighters are in view within 60% of the screen's width (`HOLE_JOIN`) and buildings are in front of at least two of the three points (each fighter and the point between them), each hole stretches to the other fighter over 0.25 s, its radius and its depth easing to his along the way. One opening then shows both fighters and the gap between them. A fighter behind a wall and one out in the open keep two round holes.
+- **The stub.** The buildings within `STUB_MARGIN` (110 units) of a fighter's sight line, and those in front of the stretch between two fighters in view together, sink to stubs `STUB_H` (40 units) tall over 0.2 s, and stand again over 0.35 s when no longer in the way. The shader lowers every vertex above the height in `stub_tex` (a float texel a building, per pane), so the box sinks to a solid stub with its own top, and a house's roof folds flat under it. The easing runs on sim time, so pause and hit-stop hold it.
+- **Row 0** no longer fades whole: it opens by the same method as the rows behind.
+- **Camera's request** (`docs/camera/camera-v2.md` section 6). Each pane takes a `cutaway` dictionary each frame, every key optional: `request` (false: no cut-away, for a shot that wants the wall whole), `radius_px` (the hole's radius; absent: the rule above) and `only` (a fighter slot: only his). Main takes it from `split_frame.cutaway[i]` once Camera's frame carries one. Until then, in a split each pane opens the buildings in front of its own fighter only. Each pane also publishes `occluded` (per fighter: a building is in front of him), for Camera.
+
+One fighter behind a block, the other on the plane: the hole, then stubs. ![solo hole](img/lanes-solo-hole.png) ![solo stub](img/lanes-solo-stub.png)
+
+Both behind the block: the joined hole, then stubs. ![pair hole](img/lanes-pair-hole.png) ![pair stub](img/lanes-pair-stub.png)
+
+`godot --path . --script res://render/tools/lanes_shots.gd -- --out=DIR` poses a fresh match's fighters behind a block of row-1 towers (the tool's own state; no ticks run) and saves these, the pitch pictures and the inset picture below.
+
+**What I see in them.** The hole keeps the buildings and shows the fighters with a little of the street. With both behind a block it reads as a slot, tight above their heads. The stubs give a clean view of the whole street, and the skyline behind them is the next row. The hole only opens buildings: trees, rubble heaps and props in front of a fighter are not opened yet.
+
+**Cost.** Desktop, 1280x720, seed 4, 4,800 frames: the gameplay hash and the draw calls are identical with either method, and frame time is inside run-to-run noise (the machine was shared with other sessions: 2.5 to 3.2 ms mean for one view, before and after). On the web (Chrome 154 and Edge 154, WebGL2) the posed scene draws with both methods and at each pitch with no console messages.
+
+## The camera's pitch
+
+Camera's plan (`camera-v2.md` section 8) wants two angles: side-on raised 11 degrees, and three-quarter at 49. `CameraRig.frame` takes a pitch in degrees. The camera orbits the point of the fighter plane at the screen's centre: that point stays at the centre at the same distance, so the zoom across holds there. Heights on the plane draw `cos(pitch)` as tall, and a point `w` behind the plane moves up the screen by about `w sin(pitch) zoom`. Pitch 0 gives the same numbers as before (the closed-form `w2s` mapping), so every existing check is unchanged.
+
+- **Alt+F9** steps main's `cam_pitch` through `RenderLook.PITCH_STEPS` (0, 11, 49); `--pitch=DEG` sets it at start. The default stays 0 until Camera's mapping takes the pitch. Today's view already sees the ground from about 6 degrees through its raised lens.
+- **For Camera.** Main sets `split_rig.pitch_deg` when the rig has that property, and draws every pane at `split_frame.pitch` when the frame has one (else at `cam_pitch`). `SplitFrame.screen_pos` and `hud_anchor` are still the closed form, so with a pitch the framing and the HUD markers are off until Camera maps through the 3D camera: at 49 degrees a fighter deep in the rows is off the top of the screen.
+- **What I changed to hold a pitch.** The ground's and water's fog read the view direction in world axes (they assumed the camera never turns). The horizon, the near plane, the planet's bend and the fore rule take the camera's position and distance (`CameraRig.dist`), not its z.
+- **Known costs of the three-quarter angle.** Flat quads that face the plane are seen from above: the head flashes, the particles and VFX's effects draw 0.66 as tall at 49 degrees. Billboarding them is a small job each (flashes and particles mine, the rest VFX's), not done until Orb picks the angle. VFX reads `cam_rig.position.z` as the camera's distance (`vfx_layer.gd`); under a pitch it should read `cam_rig.dist`.
+
+The pair behind the block at 11 degrees (the hole), and at 49 degrees (stubs; the fighters are above the frame until Camera's mapping, their shadows at the top): ![pitch 11](img/lanes-pitch11.png) ![pitch 49](img/lanes-pitch49.png)
+
+## The inset pane
+
+For Camera's launch following (`camera-v2.md` section 3: stay on the attacker, the launched fighter in an inset). `main.make_inset(size) -> SubViewport` makes a third follower pane at the size given. It is not one of the split's two (`main.panes`); `main.all_panes()` lists all three. Each frame main asks `compositor.inset_view(alpha)` for its camera: `{cam_x, cam_y, cam_z}` (and optionally `jitter`, `pitch`, `cutaway`), or `{}` when the inset is not shown, and draws it from that. The compositor places the viewport's texture and switches its updates on and off. A follower costs nodes and draw submission only while it is shown.
+
+A stand-in compositor in the tool: fighter 0 behind the block in the main view, fighter 1 high and far off in the inset. ![inset](img/lanes-inset.png)
 
 ## Craters, scorch and water
 
@@ -319,10 +358,11 @@ In two AI matches, Hurt fired 37 times, Rage 4 and the surge 4. Frame time with 
 
 Camera's dynamic split screen (`docs/camera/split-screen.md` §11) needs the world drawn twice, from two cameras. The view stack is now one `PaneWorld`: the camera rig, the planet, the fighters, the beams, the particles, the sky, and the per-camera material state (`RenderMats`, now an instance per pane).
 
-**In the game the split is on by default.** `main.gd` makes Camera's `SplitView`, which sits under UI's HUD, and attaches it. F9 toggles it, and `--nosplit` starts with one view from the reference camera. The tools (`manual`) keep one view unless they attach a compositor themselves, so their pictures and checks are unchanged. Each frame main applies UI's options, since UI has no change signal:
+**In the game the split is on by default.** `main.gd` makes Camera's `SplitView`, which sits under UI's HUD, and attaches it. (From 6417062 until 2026-10-01 it attached only on a first run, my mistake when the How to play card went in: every later run, and `--bench`, drew one view from the reference camera.) F9 toggles it, and `--nosplit` starts with one view from the reference camera. Pressing F9 twice used to leave the screen grey (QA's GB-001): attaching again made the panes again. The panes are now made once, by `SplitView.attach` and by `move_pane0` and `make_pane` themselves. The tools (`manual`) keep one view unless they attach a compositor themselves, so their pictures and checks are unchanged. Each frame main applies UI's options, since UI has no change signal:
 - `split_solo`: split against the AI, or follow your own fighter;
 - `reduced_motion`: the rig's quick swap, and a quarter of the shake;
-- `shake_scale`: applied to both panes, and to the single view too, capped like Camera's at 3% of the screen height.
+- `shake_scale`: applied to both panes, and to the single view too, capped like Camera's at 3% of the screen height;
+- `camera_zoom` and `camera_shake` (0 to 10; Camera's defaults 7 and 2 until UI adds the options): `SplitView.set_zoom_pref` and `set_shake_pref`, and the single view's shake.
 
 F10 and F11 flip the first two through UI's `set_option`. Camera's `render/camera/split_main` scene is retired: its lines live in `main.gd`, and `--bench` now also splits frame time by whether two full panes were drawn.
 
@@ -336,18 +376,23 @@ F10 and F11 flip the first two through UI's `set_option`. Camera's `render/camer
 1. calls `main.move_pane0(size) -> SubViewport`, the first pane moved into a SubViewport with its own World3D (it keeps its nodes and state), and `main.make_pane(size) -> SubViewport`, a follower pane in another, built into the current match. It adds both to the tree and samples their textures.
 2. sets `main.compositor` to itself. Main then calls, once per displayed frame, after the ticks:
    - `split_frame = split_rig.frame(alpha)`;
-   - each pane `i` rendered from `split_frame.cam_x[i]`, `cam_y[i]` and `cam_z[i]`: pane 0 always, pane 1 while `split_frame.shows(1)`. The shake comes from `compositor.pane_jitter(i) -> Vector2` if it has one (else the host's for pane 0, none for pane 1);
+   - each pane `i` rendered from `split_frame.cam_x[i]`, `cam_y[i]` and `cam_z[i]`: pane 0 always, pane 1 while `split_frame.shows(1)`. The shake comes from `compositor.pane_jitter(i) -> Vector2` if it has one (else the host's for pane 0, none for pane 1). The pitch is `split_frame.pitch` and the cut-away request `split_frame.cutaway[i]` when the frame has them ("The camera's pitch" and "Occlusion" above);
+   - the inset pane, if `main.make_inset` made one, from `compositor.inset_view(alpha)` ("The inset pane" above);
    - `compositor.present(split_frame)`, to set its mask from the divider.
 3. gets the HUD wired for free. `UiHud.split_fn` returns `split_frame.split_record()`, and `anchor_fn` gives `split_frame.hud_anchor(slot, …)` in the fighter's own pane. Both return the one-camera values while no compositor is attached (`split_fn` gives `{}`).
 
 `main.panes` lists them (pane `i` is fighter slot `i`'s in a split), and `main.split_frame` is this frame's. Setting `main.compositor = null` goes back to one view from the reference camera. The first pane stays in its SubViewport, so the compositor shows it unmasked.
 
-`tools/pane_check.gd` plugs in a stand-in compositor with the fighters posed far apart. It checks (16 checks, passed):
+`tools/pane_check.gd` plugs in a stand-in compositor with the fighters posed far apart. It checks (37 checks, passed):
 - the sharing: same ground, meshes and props; its own materials and material state;
 - each pane's camera puts a fighter's chest exactly where the rig's frame says (within 0.5 px), and its fore rule carries its own camera;
 - a flash fired on the first pane shows in the second, with one Audio cue;
 - `split_fn` gives the rig's record with a compositor and `{}` without;
-- a match played with the compositor attached ends on the same gameplay hash as one without.
+- a match played with the compositor attached ends on the same gameplay hash as one without;
+- a pane's cut-away follows Camera's request (none, one fighter's, a given radius);
+- at each pitch the plane's centre point stays at the screen's centre at the zoom's distance, and a deep point moves up;
+- the inset is a third follower outside the split's two and draws at its own viewport's size;
+- Camera's own compositor attached, detached and attached again keeps the same two panes (GB-001).
 
 The first pane and the second, drawn from the rig's two cameras: ![panes](img/panes.png)
 
@@ -377,7 +422,7 @@ All commands run from the repo root; each exits 0 on success.
 | Ground check | `godot --headless --path . --script res://render/tools/ground_check.gd` | passed (seeds 4, 12345, 7) |
 | Flight check | `godot --headless --path . --script res://render/tools/flight_check.gd` | passed (seeds 4, 12345, 7; World's evacuate events) |
 | Flash check | `godot --headless --path . --script res://render/tools/flash_check.gd` | 185 checks on data version 3: all of the code's pass (the hash is the same on and off at 12345 and 4); 10 keep-out cases fail on the data (see Head flashes) |
-| Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (16 checks; hash with and without a compositor) |
+| Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (37 checks; hash with and without a compositor; the cut-away request, the pitch, the inset, attaching again) |
 | Cue check | `godot --headless --path . --script res://render/tools/cue_check.gd -- --profile=spaced` | passed (46 checks over two full matches; hash with and without the poses) |
 | Outline check | `godot --path . --script res://render/tools/outline_check.gd` (needs a window; under `--headless` it exits with code 2, not run) | passed: 0 crack pixels over 24 poses; the unbaked control 9,024 (`docs/rendering/outline-normals-plan.md`) |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |

@@ -63,7 +63,7 @@ func _prompt(host: SimHost, vw: float, vh: float) -> void:
 		_text("AI vs AI demo. Tap to take control of P1.", Vector2(vw * 0.5, vh - 96.0 * dp), int(round(16.0 * dp)), Color(1, 1, 1, 0.9), 0)
 	elif not main.started and not card:
 		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, vh - 96.0 if not legacy else 104.0), 16, Color(1, 1, 1, 0.9), 0)
-		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F1 how to play, F2 old HUD, F3 perf, F4 feed, F6 cracks (Shift: destruction, Ctrl: embers), F9 split", Vector2(vw * 0.5, vh - 78.0 if not legacy else 124.0), 11, Color(1, 1, 1, 0.7), 0)
+		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F1 how to play, F2 old HUD, F3 perf, F4 feed, F6 cracks (Shift: destruction, Ctrl: embers), F9 split (Alt: camera angle, Ctrl: hole or stubs)", Vector2(vw * 0.5, vh - 78.0 if not legacy else 124.0), 11, Color(1, 1, 1, 0.7), 0)
 		_text(_flash_keys(), Vector2(vw * 0.5, vh - 62.0 if not legacy else 140.0), 11, Color(1, 1, 1, 0.6), 0)
 	_text("seed %d   tick %d%s" % [host.seed, host.ticks, "   PAUSED" if host.paused else ""], Vector2(vw - 10, vh - 30), 10, Color(1, 1, 1, 0.5), 1)
 	if show_perf:

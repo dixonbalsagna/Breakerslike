@@ -8,7 +8,11 @@ extends SceneTree
 ##    each pane's fore rule and curvature carry its own camera;
 ## 3. flashes: a flash fired on the first pane shows in the second, and Audio gets one cue for it;
 ## 4. the HUD: split_fn gives the rig's record while a compositor is attached, and nothing without one;
-## 5. the sim: a match played with the compositor attached ends on the same gameplay hash as one without.
+## 5. the sim: a match played with the compositor attached ends on the same gameplay hash as one without;
+## 6. the cut-away and the pitch: a pane's cut-away follows Camera's request (none, one fighter's, a given radius), and
+##    at every pitch the fighter plane's centre point stays at the screen's centre at the zoom's distance;
+## 7. the inset: a third follower pane outside the split's two, drawn at its own viewport's size;
+## 8. attaching again: Camera's compositor attached, detached and attached again keeps the same two panes.
 ## Needs a window for the picture (--out); the numeric checks also run headless.
 ##   godot --path . --script res://render/tools/pane_check.gd -- [--out=DIR]
 
@@ -130,6 +134,47 @@ func _run() -> void:
 	var hash_split: String = str(SimHash.stateHash(main.host.S).gameplay)
 	_expect(hash_split == hash_plain, "the gameplay hash differs with a compositor attached (%s, %s)" % [hash_split, hash_plain])
 	print("gameplay hash without and with the compositor: %s, %s; frames presented %d" % [hash_plain, hash_split, comp.frames])
+	# 6: the cut-away request and the pitch, pane by pane.
+	S = main.host.S
+	var cam := Vector3(0.0, S.fighters[0].y, 0.8)
+	var cx: float = S.fighters[0].x
+	for req in [[{}, true], [{"request": false}, false], [{"only": 1}, false], [{"only": 0, "radius_px": 123.0}, true]]:
+		p0.cutaway = req[0]
+		p0.render(main.host, 1.0, cx, cam, Vector2.ZERO)
+		var hole: Vector4 = p0.planet._bld_mat.get_shader_parameter("hole")[0]
+		_expect((hole.w > 0.0) == req[1], "cut-away request %s gave fighter 0 a hole of radius %.1f" % [req[0], hole.w])
+		if req[0].has("radius_px"):
+			_expect(absf(hole.w - 123.0) < 0.01, "the cut-away's radius was not Camera's (%.1f)" % hole.w)
+	p0.cutaway = {}
+	for pitch in RenderLook.PITCH_STEPS:
+		p0.render(main.host, 1.0, cx, cam, Vector2.ZERO, pitch)
+		var look := Vector3(0.0, cam.y + 0.2 * vp.y / cam.z, 0.0)
+		var at: Vector2 = p0.cam_rig.unproject_position(look)
+		_expect(at.distance_to(vp * 0.5) <= 0.5, "at pitch %.0f the plane's centre point lands at %s, not the screen's centre" % [pitch, at])
+		_expect(absf(p0.cam_rig.position.distance_to(look) - CameraRig.distance_for(cam.z, vp.y)) < 0.01, "at pitch %.0f the camera is not at the zoom's distance" % pitch)
+		var deep: Vector2 = p0.cam_rig.unproject_position(look + Vector3(0.0, 0.0, -1000.0))
+		_expect((pitch == 0.0 and absf(deep.y - at.y) < 0.5) or (pitch > 0.0 and deep.y < at.y - 10.0), "at pitch %.0f a point 1,000 units deep draws at y %.1f (the centre is %.1f)" % [pitch, deep.y, at.y])
+	# 7: the inset pane is a follower outside the split's panes.
+	var svi: SubViewport = main.make_inset(Vector2i(320, 180))
+	main.add_child(svi)
+	_expect(main.inset != null and main.panes.size() == 2 and main.all_panes().size() == 3, "the inset is not a third pane outside the split's two")
+	_expect(main.inset.planet.ground == p0.planet.ground and main.inset.mats != p0.mats, "the inset does not share the first pane's world with its own materials")
+	main.inset.render(main.host, 1.0, S.fighters[1].x, Vector3(0.0, S.fighters[1].y, 0.48), Vector2.ZERO)
+	_expect(absf(main.inset.cam_rig.view_h - 180.0) < 0.5, "the inset does not draw at its own viewport's size (%.0f)" % main.inset.cam_rig.view_h)
+	# 8: Camera's own compositor attached, detached and attached again (F9 twice; QA's GB-001) keeps the two panes.
+	main.compositor = null
+	main.remove_child(sv0)
+	main.remove_child(sv1)
+	var view := SplitView.new()
+	main.add_child(view)
+	view.attach(main)
+	view.detach()
+	view.attach(main)
+	_expect(main.panes.size() == 2 and view.viewports[0] == sv0 and view.viewports[1] == sv1, "attaching again made new panes (%d panes)" % main.panes.size())
+	_expect(main.panes[0].get_parent() == view.viewports[0] and main.panes[1].get_parent() == view.viewports[1], "after attaching again the panes are not in the compositor's viewports")
+	_expect(main.compositor == view and view.is_attached(), "after attaching again the compositor is not attached")
+	main.render_view(1.0)
+	_expect(view.last_frame != null, "after attaching again no frame was presented")
 	print("Pane check  %d checks" % checks)
 	if fails.is_empty():
 		print("\npane check passed")

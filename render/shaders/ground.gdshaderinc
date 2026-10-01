@@ -304,3 +304,76 @@ vec4 ground_vertex(float col, float flag, float z, float ox) {
 	}
 	return ground4(int(col + 0.5) % nc, col * col_w, z, flag > 0.5, ox);
 }
+
+
+// --- Fight lanes (ADR 0009; render/core/lanes.gd): the streets painted on the ground, and the lane cue. ---
+uniform int street_n = 0;           // street strips in use
+uniform vec4 street_strips[8];      // zTop, zBottom (world z; the top is nearer the camera), kind (0 sidewalk, 1 kerb parking, 2 carriageway), the street's centre z
+uniform int span_n = 0;             // districts in use
+uniform vec4 street_spans[16];      // a district's world x interval (x0, x1); z, w: its lane mask and look (not read yet)
+uniform float span_edge = 120.0;    // RenderLook.STREET_EDGE: the paint fades in over this at a district's ends
+uniform vec4 street_walk : source_color = vec4(0.52, 0.53, 0.56, 1.0);
+uniform vec4 street_road : source_color = vec4(0.25, 0.26, 0.29, 1.0);
+uniform vec4 street_kerb : source_color = vec4(0.36, 0.37, 0.40, 1.0);
+uniform vec4 street_line : source_color = vec4(0.78, 0.76, 0.66, 1.0);
+uniform float street_dash = 120.0;  // RenderLook.STREET_DASH: a centre-line dash and its gap, each
+uniform float street_bay = 190.0;   // RenderLook.STREET_BAY: a kerb parking bay's length
+uniform vec4 lane_cue[2];           // a fighter's world x, his depth, the stripe's half length along x, its strength (0: none)
+uniform vec4 lane_cue_col[2] : source_color;
+uniform float lane_cue_w = 14.0;    // RenderLook.LANE_CUE_W: the stripe's half width in depth
+
+// How much of a district's street paint a world x gets (0 outside every district), for the vertex stage.
+float street_weight(float xw) {
+	float w = 0.0;
+	for (int k = 0; k < span_n; k++) {
+		vec4 sp = street_spans[k];
+		w = max(w, smoothstep(sp.x, sp.x + span_edge, xw) * (1.0 - smoothstep(sp.y - span_edge, sp.y, xw)));
+	}
+	return w;
+}
+
+// The street's colour at world x and depth px.y: rgb, and alpha 0 off the streets. upx: world units a pixel spans along
+// x, so thin lines fade out before they alias.
+vec4 street_paint(vec2 px, float upx) {
+	for (int k = 0; k < street_n; k++) {
+		vec4 st = street_strips[k];
+		if (px.y > st.x || px.y <= st.y) {
+			continue;
+		}
+		float fine = 1.0 - smoothstep(4.0, 12.0, upx);
+		if (st.z < 0.5) {
+			// Sidewalk, with slab joints across it.
+			float joint = 1.0 - smoothstep(0.0, 2.5, abs(fract(px.x / 75.0) - 0.5) * 75.0);
+			return vec4(mix(street_walk.rgb, street_kerb.rgb, 0.5 * joint * fine), 1.0);
+		}
+		if (st.z < 1.5) {
+			// Kerb parking: bays marked across the strip.
+			float bay = 1.0 - smoothstep(0.0, 3.0, abs(fract(px.x / street_bay) - 0.5) * street_bay);
+			return vec4(mix(street_kerb.rgb, street_line.rgb, 0.7 * bay * fine), 1.0);
+		}
+		// Carriageway: a dashed centre line.
+		float on = step(0.5, fract(px.x / (2.0 * street_dash)));
+		float mid = 1.0 - smoothstep(2.0, 5.0, abs(px.y - st.w));
+		return vec4(mix(street_road.rgb, street_line.rgb, 0.85 * on * mid * fine), 1.0);
+	}
+	return vec4(0.0);
+}
+
+// The lane cue at world x and depth px: a soft stripe on the ground at a fighter's depth, in his colour (rgb, alpha).
+// upz: world units a pixel spans in depth, so the stripe is never thinner than a pixel or two.
+vec4 lane_cue_at(vec2 px, float upz) {
+	vec4 c = vec4(0.0);
+	for (int k = 0; k < 2; k++) {
+		if (lane_cue[k].w <= 0.0) {
+			continue;
+		}
+		float dx = px.x - lane_cue[k].x;
+		dx -= world_w * floor(dx / world_w + 0.5);
+		float hw = max(lane_cue_w, 1.2 * upz);
+		float a = lane_cue[k].w * (1.0 - smoothstep(0.5 * hw, hw, abs(px.y - lane_cue[k].y))) * (1.0 - smoothstep(0.25 * lane_cue[k].z, lane_cue[k].z, abs(dx)));
+		if (a > c.a) {
+			c = vec4(lane_cue_col[k].rgb, a);
+		}
+	}
+	return c;
+}

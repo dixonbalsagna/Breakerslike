@@ -17,6 +17,11 @@ extends Node3D
 ## reference camera, and the tools (manual) get one view unless they attach a compositor themselves. The contract is
 ## in docs/rendering/README.md, "Panes and the split screen". SplitView follows UI's options each frame: split_solo,
 ## reduced_motion and shake_scale (F10 and F11 flip the first two).
+## Alt+F9 steps the camera's pitch (RenderLook.PITCH_STEPS: straight on, Camera's raised side view, its three-quarter
+## view; docs/camera/camera-v2.md section 8), and Ctrl+F9 swaps the occlusion method (a hole around the fighter, or the
+## buildings in front cut down to stubs; docs/rendering/README.md, "Occlusion"). Neither takes P1 over (Alt and Ctrl
+## are not game keys; Shift is). --pitch=DEG and --occl=hole|stub set them at start. --nostreets leaves the lane table's
+## streets unpainted (for A/B). Camera's inset pane comes from make_inset and the compositor's inset_view (below).
 ##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
@@ -45,6 +50,9 @@ var split_frame: SplitFrame = null  # this frame's, while a compositor is attach
 ## once per displayed frame after drawing the panes, and its pane_jitter(i) (if it has one) for a pane's shake.
 ## Attaching one resets the rig to the current state; without one the rig costs nothing (about 0.05 ms a tick).
 var split_view: SplitView = null   # Camera's compositor in the game (null in the tools)
+var cam_pitch: float = 0.0          # the cameras' pitch in degrees (Alt+F9), unless the rig's frame carries its own
+var occlusion: int = PaneWorld.OCCL_HOLE   # every pane's occlusion method (Ctrl+F9)
+var inset: PaneWorld = null         # Camera's inset pane (make_inset), or null
 var compositor: Object = null:
 	set(v):
 		compositor = v
@@ -100,6 +108,9 @@ func _ready() -> void:
 	particles = pane.particles
 	fighter_views = pane.fighter_views
 	SimInputData.load_and_apply()   # the input data and SimAct's three numbers, before the host builds its hub
+	cam_pitch = float(args.get("pitch", 0.0))
+	occlusion = PaneWorld.OCCL_STUB if String(args.get("occl", "hole")) == "stub" else PaneWorld.OCCL_HOLE
+	PlanetView.streets = not args.has("nostreets")
 	host = SimHost.new()
 	host.vfx.cracks_enabled = true     # Orb asked for cracked ground; VFX's destruction stays off until B2's events (F6)
 	host.vfx.embers_enabled = true     # VFX's scorch embers, in place of ImpactFx's scorch sparks (Ctrl+F6)
@@ -122,6 +133,8 @@ func _ready() -> void:
 	ui_hud.feedback_opened.connect(func(_context): _hold_for_overlay())
 	ui_hud.feedback_closed.connect(_release_overlay)
 	ui_hud.feedback_fn = _feedback_context
+	ui_hud.option_changed.connect(_on_option_changed)
+	ui_hud.set_option("pad_preset", host.hub.pad_preset)   # UI's legend and prompts show the hub's pad layout
 	_touch_last = bool(ui_hud.opts["touch_ui"])
 	ui_hud.touch_state_fn = host.touch.display_state
 	host.drained.connect(_on_drained)
@@ -138,10 +151,10 @@ func _ready() -> void:
 		split_view = SplitView.new()
 		add_child(split_view)
 		_sync_split_options()
-	if not manual and not args.has("bench") and not args.has("frames") and not args.has("shot") and not ui_hud.howto_seen():
-		ui_hud.show_howto(true)     # the first run's How to play card (docs/ui/hud-spec.md section 17)
 		if not args.has("nosplit"):
 			split_view.attach(self)
+	if not manual and not args.has("bench") and not args.has("frames") and not args.has("shot") and not ui_hud.howto_seen():
+		ui_hud.show_howto(true)     # the first run's How to play card (docs/ui/hud-spec.md section 17)
 	if args.has("bench") or args.has("novsync"):
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
@@ -149,15 +162,20 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	SimCore.dispose(host.S)
-	for p in panes:
+	for p in all_panes():
 		p.mats.clear()
+
+
+## Every pane: the split's, then Camera's inset if there is one.
+func all_panes() -> Array:
+	return panes + [inset] if inset != null else panes
 
 
 func start_match(seed: int, ai: Dictionary = {}) -> void:
 	host.new_match(seed, ai)
 	var fl: Array = UiSimBridge.fighters(host.S)
 	ui_hud.setup(fl[0], fl[1])
-	for p in panes:
+	for p in all_panes():
 		p.vfx_layer.hub = host.vfx
 		p.build(host.S)
 		for v in p.fighter_views:
@@ -172,21 +190,42 @@ func start_match(seed: int, ai: Dictionary = {}) -> void:
 ## For Camera's compositor: a new pane, a follower of the first, in a SubViewport of its own (its own World3D),
 ## built into the current match. It is panes[1], the second fighter's pane in a split.
 func make_pane(size: Vector2i) -> SubViewport:
+	if panes.size() > 1:
+		return panes[1].get_parent() as SubViewport   # made once: a compositor attaching again gets the same pane
 	var sv := _pane_viewport(size)
+	panes.append(_follower(sv))
+	return sv
+
+
+## For Camera's compositor: the inset pane (docs/camera/camera-v2.md section 3), a small follower of the first in a
+## SubViewport of the size given. It is not one of the split's panes. Each frame main asks the compositor's
+## inset_view(a) for its camera: {cam_x (wrapped world x), cam_y, cam_z (pixels per world unit in the inset's own
+## viewport), and optionally jitter, pitch and cutaway}, or {} when the inset is not shown, and draws it from that.
+## The compositor places the viewport's texture and switches its updates on and off.
+func make_inset(size: Vector2i) -> SubViewport:
+	var sv := _pane_viewport(size)
+	inset = _follower(sv)
+	inset.name = "Inset"
+	return sv
+
+
+## A new pane that draws the first pane's world, in sv, built into the current match.
+func _follower(sv: SubViewport) -> PaneWorld:
 	var p := PaneWorld.new()
 	p.source = pane
 	p.vfx_layer.hub = host.vfx
 	sv.add_child(p)
-	panes.append(p)
 	p.build(host.S)
 	for v in p.fighter_views:
 		v.flashes_on = flashes_on
-	return sv
+	return p
 
 
 ## For Camera's compositor: the first pane moved out of this scene's world into a SubViewport of its own, so it can
 ## be composited like the second. It keeps its nodes and state.
 func move_pane0(size: Vector2i) -> SubViewport:
+	if pane.get_parent() is SubViewport:
+		return pane.get_parent() as SubViewport       # already moved
 	var sv := _pane_viewport(size)
 	remove_child(pane)
 	sv.add_child(pane)
@@ -248,7 +287,7 @@ func _cue_events(events: Array) -> void:
 		var kind: String = String(e.kind)
 		var who: int = int(e.actor)
 		var pose: Dictionary = RenderLook.CUE_POSES.get(kind, {})
-		for pw in panes:
+		for pw in all_panes():
 			var views: Array = pw.fighter_views
 			for i in range(views.size()):
 				if who < 0 or i == who:
@@ -319,16 +358,34 @@ func frame(delta: float) -> void:
 func render_view(a: float) -> void:
 	var S: SimState = host.S
 	if compositor != null:
+		if "pitch_deg" in split_rig:
+			split_rig.pitch_deg = cam_pitch
 		split_frame = split_rig.frame(a)
+		# Camera's frame may carry the pitch and each pane's cut-away request; until it does, the debug pitch, and in a
+		# split each pane opens the buildings in front of its own fighter only.
+		var fp = split_frame.get("pitch")
+		var pitch: float = float(fp) if fp != null else cam_pitch
+		var cw = split_frame.get("cutaway")
+		var two: bool = panes.size() > 1 and split_frame.shows(0) and split_frame.shows(1)
 		for i in range(panes.size()):
 			if i == 0 or split_frame.shows(i):
 				var j: Vector2 = compositor.pane_jitter(i) if compositor.has_method("pane_jitter") else (host.jitter if i == 0 else Vector2.ZERO)
-				panes[i].render(host, a, split_frame.cam_x[i], Vector3(0.0, split_frame.cam_y[i], split_frame.cam_z[i]), j)
+				panes[i].occlusion = occlusion
+				panes[i].cutaway = cw[i] if cw is Array and i < cw.size() else ({"only": i} if two else {})
+				panes[i].render(host, a, split_frame.cam_x[i], Vector3(0.0, split_frame.cam_y[i], split_frame.cam_z[i]), j, pitch)
+		if inset != null and compositor.has_method("inset_view"):
+			var iv: Dictionary = compositor.inset_view(a)
+			if not iv.is_empty():
+				inset.occlusion = occlusion
+				inset.cutaway = iv.get("cutaway", {})
+				inset.render(host, a, float(iv["cam_x"]), Vector3(0.0, float(iv["cam_y"]), float(iv["cam_z"])), iv.get("jitter", Vector2.ZERO), float(iv.get("pitch", pitch)))
 		compositor.present(split_frame)
 	else:
 		split_frame = null
 		var vh: float = maxf(get_viewport().get_visible_rect().size.y, 1.0)
-		pane.render(host, a, host.camera_x(a), host.camera(a), PaneShake.capped(host.jitter, vh, _shake()))
+		pane.occlusion = occlusion
+		pane.cutaway = {}
+		pane.render(host, a, host.camera_x(a), host.camera(a), PaneShake.capped(host.jitter, vh, _shake()), cam_pitch)
 	view_cam_x = pane.view_cam_x
 	host.impact.heat_changed = false
 	UiSimBridge.patch(ui_hud, S)
@@ -369,7 +426,8 @@ func _hud_anchor(slot: int) -> Dictionary:
 
 
 ## UI's options for the split screen, applied each frame (UI has no change signal): solo against the AI, reduced
-## motion (the rig's swing, the shake), the shake scale.
+## motion (the rig's swing, the shake), the shake scale, and Camera's zoom and shake settings (0 to 10; UI's options
+## camera_zoom and camera_shake, Camera's defaults until UI adds them).
 func _sync_split_options() -> void:
 	var o: Dictionary = ui_hud.opts
 	split_rig.solo_split = bool(o.get("split_solo", true))
@@ -377,11 +435,21 @@ func _sync_split_options() -> void:
 	if split_view != null:
 		split_view.shake_scale = float(o.get("shake_scale", 1.0))
 		split_view.reduced_motion = split_rig.reduced_motion
+		split_view.set_zoom_pref(float(o.get("camera_zoom", CamParams.ZOOM_PREF_DEFAULT)))
+		split_view.set_shake_pref(float(o.get("camera_shake", CamParams.SHAKE_PREF_DEFAULT)))
 
 
-## The player's shake scale, quartered in reduced motion (as SplitView's).
+## UI's options the host owns: the pad layout goes to Controls' input hub (it takes effect on each pad's next input).
+func _on_option_changed(key: String, value) -> void:
+	if key == "pad_preset":
+		host.hub.set_pad_preset(str(value))
+
+
+## The player's shake for one view: the scale times the shake setting, quartered in reduced motion (as SplitView's).
 func _shake() -> float:
-	return float(ui_hud.opts.get("shake_scale", 1.0)) * (0.25 if bool(ui_hud.opts.get("reduced_motion", false)) else 1.0)
+	var o: Dictionary = ui_hud.opts
+	var pref: float = clampf(float(o.get("camera_shake", CamParams.SHAKE_PREF_DEFAULT)), 0.0, 10.0)
+	return float(o.get("shake_scale", 1.0)) * (pref / 10.0 * CamParams.SHAKE_PREF_TOP) * (0.25 if bool(o.get("reduced_motion", false)) else 1.0)
 
 
 ## UI's split record (UiHud.split_fn): the rig's, while a compositor draws the panes; empty for one view.
@@ -605,11 +673,17 @@ func _unhandled_input(e: InputEvent) -> void:
 				else:
 					host.vfx.cracks_enabled = not host.vfx.cracks_enabled
 				return
-			if code == "F9" and split_view != null:
-				if split_view.is_attached():
-					split_view.detach()
-				else:
-					split_view.attach(self)
+			if code == "F9":
+				if e.alt_pressed:
+					var steps: Array = RenderLook.PITCH_STEPS
+					cam_pitch = float(steps[(steps.find(cam_pitch) + 1) % steps.size()])
+				elif e.ctrl_pressed:
+					occlusion = PaneWorld.OCCL_STUB if occlusion == PaneWorld.OCCL_HOLE else PaneWorld.OCCL_HOLE
+				elif split_view != null:
+					if split_view.is_attached():
+						split_view.detach()
+					else:
+						split_view.attach(self)
 				return
 			if code == "F10":
 				ui_hud.set_option("split_solo", not bool(ui_hud.opts.get("split_solo", true)))
@@ -619,7 +693,7 @@ func _unhandled_input(e: InputEvent) -> void:
 				return
 			if code == "F7":
 				flashes_on = not flashes_on
-				for pw in panes:
+				for pw in all_panes():
 					for v in pw.fighter_views:
 						v.flashes_on = flashes_on
 				return

@@ -64,17 +64,18 @@ func attach(m) -> void:
 	if _attached:
 		return
 	main = m
-	var sz := Vector2i(maxi(2, int(get_viewport().get_visible_rect().size.x)), maxi(2, int(get_viewport().get_visible_rect().size.y)))
-	var v0: SubViewport = main.move_pane0(sz)
-	var v1: SubViewport = main.make_pane(sz)
-	viewports = [v0, v1]
-	add_child(v0)
-	add_child(v1)
+	# The panes are made once. Attaching again after a detach (F9 twice) takes the ones it has: making them again left
+	# two empty viewports on screen (QA's GB-001).
+	if viewports[0] == null:
+		var sz := Vector2i(maxi(2, int(get_viewport().get_visible_rect().size.x)), maxi(2, int(get_viewport().get_visible_rect().size.y)))
+		viewports = [main.move_pane0(sz), main.make_pane(sz)]
+		add_child(viewports[0])
+		add_child(viewports[1])
 	if main.host != null and not main.host.ticked.is_connected(_on_ticked):
 		main.host.ticked.connect(_on_ticked)
 	_attached = true
 	if _solo != null:
-		_solo.texture = v0.get_texture()
+		_solo.texture = viewports[0].get_texture()
 		_solo.visible = true
 	main.compositor = self
 	_on_resized()

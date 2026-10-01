@@ -36,6 +36,7 @@ varying float v_ok;
 varying float v_under;
 varying vec3 v_view;
 varying float v_wz;
+varying vec2 v_px;
 
 void vertex() {
 	int i = int(UV.x + 0.5) % nc;
@@ -97,10 +98,11 @@ void vertex() {
 	v_under = max(clamp((surf0 - fore_cam.y) / fall_body, 0.0, 1.0), smoothstep(0.0, fall_body, surf0 - surf));
 	VERTEX.y = surf;
 	v_depth = surf - ground;
+	v_px = vec2(xw, z);
 	vec4 bw = bent_world(MODEL_MATRIX, VERTEX);
-	v_view = (VIEW_MATRIX * bw).xyz;
+	v_view = bw.xyz - INV_VIEW_MATRIX[3].xyz;   // from the camera, in world axes (the camera may be pitched)
 	v_wz = bw.z;
-	POSITION = PROJECTION_MATRIX * vec4(v_view, 1.0);
+	POSITION = PROJECTION_MATRIX * (VIEW_MATRIX * bw);
 }
 
 void fragment() {
@@ -111,6 +113,9 @@ void fragment() {
 	float a;
 	c = mix(surface.rgb, water.rgb, v_under);
 	a = mix(surface.a, 0.5 + 0.25 * clamp(v_depth / 340.0, 0.0, 1.0), v_under);
+	vec4 cue = lane_cue_at(v_px, fwidth(v_px.y));   // the lane cue lies on the surface
+	c = mix(c, cue.rgb, cue.a);
+	a = max(a, cue.a);
 	float fog = ground_fog(elevation(v_view), -v_wz, fog_near, fog_far);
 	ALBEDO = mix(c, sky_color(elevation(v_view)), fog);
 	ALPHA = mix(a, 1.0, fog);

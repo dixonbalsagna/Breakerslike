@@ -6,6 +6,10 @@ class_name RenderLook
 ## Camera: vertical field of view in degrees. The reference camera's zoom z (pixels per world unit) is honoured
 ## exactly on the fighter plane (depth 0); anything in front of or behind it gets perspective parallax.
 const FOV_DEG: float = 30.0
+## The camera pitches the debug key steps through, in degrees (CameraRig): straight on (today's view, which already
+## sees the ground from about 6 degrees through its raised lens), then Camera's raised side view and its three-quarter
+## view (docs/camera/camera-v2.md section 8). Camera's own constants replace these when its mapping takes the pitch.
+const PITCH_STEPS: Array = [0.0, 11.0, 49.0]
 
 ## World scale. Sizes that belong to the world (buildings, trees, craters, the ground's depth) are written at the
 ## original scale and multiplied by the sim's feature scale WS; mountain heights by MS; lengths along the planet by PS
@@ -38,16 +42,39 @@ const CHUNK_COLS: int = 320              # a multiple of the largest stride
 const Z_BUILDING_FRONT: float = -140.0   # a building with no depth from the sim stands here (B1 gives z and d)
 ## Buildings in depth (World's B1, docs/world/buildings-in-depth.md): each stands at its sim z with footprint depth d,
 ## on the highest ground under its footprint, its footing extended down to the lowest. An implode sinks it straight
-## down over IMPLODE_S from the ripple's delay (VFX draws the dust skirt). Row 0 stands in front of the fighter plane:
-## while one covers a fighter on screen it fades to FRONT_FADE, easing over FRONT_FADE_S. Civilians stand on their
-## building's street side, CROWD_GAP units out from its face and up to CROWD_DEEP more.
+## down over IMPLODE_S from the ripple's delay (VFX draws the dust skirt). Row 0 stands in front of the fighter plane.
+## Civilians stand on their building's street side, CROWD_GAP units out from its face and up to CROWD_DEEP more.
+## A building between a pane's camera and a fighter is opened by one of two methods (docs/rendering/README.md,
+## "Occlusion"): a round hole around him (HOLE_*), or the building cut down to a low stub (STUB_*).
 const IMPLODE_S: float = 0.5
-const FRONT_FADE: float = 0.35
-const FRONT_FADE_S: float = 0.15
-const HOLE_PX: float = 70.0              # the porthole around a fighter in the building rows: its least radius on screen,
-const HOLE_BODY: float = 2.4             # ... or this many of his drawn heights if that is more,
-const HOLE_IN: float = 250.0             # opening over this much depth as he leaves the plane
+const HOLE_PX: float = 70.0              # the hole around a fighter: its least radius on screen,
+const HOLE_BODY: float = 1.6             # ... or this many of his drawn heights if that is more (Camera's rule)
 const HOLE_GAP: float = 30.0             # it cuts up to this far in front of him (and of the building he is aimed at)
+const HOLE_JOIN: float = 0.6             # two fighters behind a block this near on screen (of its width) share one hole,
+const HOLE_JOIN_S: float = 0.25          # ... the two holes growing into one over this long
+const OCCL_MARGIN: float = 40.0          # a building counts as in front of a fighter when it is this near his sight line
+const STUB_H: float = 40.0               # a cut-down building stands this tall
+const STUB_MARGIN: float = 110.0         # buildings this near a fighter's sight line are cut down with the one hiding him
+const STUB_IN_S: float = 0.2             # a building sinks to its stub over this long,
+const STUB_OUT_S: float = 0.35           # ... and stands again over this long
+const STUB_SPAN: float = 150.0           # the stretch between two fighters is kept clear in steps of this
+## Fight lanes (ADR 0009): the streets painted on the ground from the lane table (render/core/lanes.gd), and the lane
+## cue, a stripe on the ground at a fighter's depth in his colour, shown while it says something: the fighters are at
+## different depths, or his depth is changing.
+const STREET_WALK: String = "#84878f"
+const STREET_ROAD: String = "#3f4249"
+const STREET_KERB: String = "#5c5f67"
+const STREET_LINE: String = "#c8c2a8"
+const STREET_EDGE: float = 120.0         # the paint fades in over this at a district's ends
+const STREET_DASH: float = 120.0         # a centre-line dash and its gap, each
+const STREET_BAY: float = 190.0          # a kerb parking bay's length (a car is 2.5 bh)
+const LANE_CUE_W: float = 14.0           # the stripe's half width in depth,
+const LANE_CUE_LEN: float = 450.0        # ... its half length along the street,
+const LANE_CUE_ALPHA: float = 0.5        # ... and its strength at full
+const LANE_CUE_DZ: float = 40.0          # the fighters count as at different depths past this,
+const LANE_CUE_VZ: float = 60.0          # ... and a depth as changing past this many units a second
+const LANE_CUE_IN_S: float = 0.15        # it comes up over this long,
+const LANE_CUE_OUT_S: float = 0.6        # ... and goes over this long
 const BUILDING_INSIDE := "#12131a"       # the inside of a tower seen through its cut floors (a tunnel)
 const CROWD_GAP: float = 20.0
 const CROWD_DEEP: float = 90.0
