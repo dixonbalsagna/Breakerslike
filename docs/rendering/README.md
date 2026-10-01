@@ -85,7 +85,7 @@ Main            Node3D               core/main.gd         the frame loop, input,
 - **Floating origin and the seam.** Everything is placed relative to the camera's wrapped x, so the camera sits at x = 0 and no coordinate grows large. World-anchored content (ground, water, buildings, trees, crowd) is built once per match over x in [0, 9600). It is drawn as identical copies at `k * W - cam.x`, sharing meshes and MultiMeshes: the ground and water for k = -2 to 2 (`PLANET_COPIES`, because the horizon is wide), the props for k = -1 to 1. The seam is therefore invisible by construction, and a view wider than the planet (tiny zoom on an ultra-wide or phone screen) shows everything wherever it appears. Fighters, beams and particles are placed by the shortest arc `sdx(cam.x, x)`. A beam is laid out from its tail along its direction, so one crossing the seam stays in one piece.
 - **Terrain.** The ground is one surface of static meshes: per column, a top face from past the camera back to the horizon. The vertex shader reads heights from a float data texture (layout in `ground_field.gd`). The planet view re-uploads the texture only when `S.deform` changes, so craters never rebuild geometry. Crater, sea-floor and biome colours come from the same data, and water is drawn only where the base terrain is below sea level (the sim's `seaAt` rule).
 - **Props.** Buildings, roofs, trees and civilians are MultiMeshes, one draw call per kind per copy. Only instances whose building, tree or ground changed are updated. The sim has civilians only as counts per building, so the greybox stands `popAlive` figures around each building. Where each one stands, the tree depths, and each civilian's shirt and skin tone come from render-side streams seeded from the fixed world seed, never from the sim stream.
-- **Fighters.** Each fighter is generated from its roster colours and role: boxes, a low-poly head, and hair and cape extruded from 2D outlines. Stance shows as a badge colour and a lean, a held guard as the guard arc ("The guard arc" below), and the HUD labels both. A hit makes the body flash white for 0.12 s after `hurtT`. The aura grows with tier, and aura streaks appear at tier 3 or above and while charging. A hidden fighter fades to 22 % inside a sonar ripple. The beam charge orb grows at the hand. The placeholder hero's hair is a teal, swept-back crest.
+- **Fighters.** Each fighter is generated from its roster colours and role: boxes, a low-poly head, and hair and cape extruded from 2D outlines. Stance shows as a badge colour and a lean, a held guard as the guard arc ("The guard arc" below), and the HUD labels both. A dash or a dodge leaves thin outlines behind him ("Afterimages" below). A hit makes the body flash white for 0.12 s after `hurtT`. The aura grows with tier, and aura streaks appear at tier 3 or above and while charging. A hidden fighter fades to 22 % inside a sonar ripple. The beam charge orb grows at the hand. The placeholder hero's hair is a teal, swept-back crest.
 - **Shading.** All greybox materials are unshaded, with one fixed fake light in the shader. That means no light passes and the same look on every renderer. In 4.7.2 Compatibility, vertex and MultiMesh instance colours reach shaders already linear (checked by sampling rendered pixels), so the shaders use `COLOR` as it is. A MultiMesh without instance colours multiplies `COLOR` by zero there, so the crowd tags its parts in `UV` and takes its colours from custom data.
 - **Interpolation.** After each tick the host snapshots fighter x, y and rotation and the camera. Frames draw at `alpha = acc / DT` between the last two snapshots, with x interpolated along the shortest arc. Beams, particles, terrain and props show the latest tick.
 
@@ -279,6 +279,36 @@ No guard, guard, the flash at its start and half gone, and the reduced version, 
 
 At the fight's own size, and on the web build (Chrome): ![guard fight](img/guard-fight.png) ![guard web](img/guard-web.png)
 
+## Afterimages
+
+The sim's `after` events mark where a fighter was: one for a dodge or an escape, one a tick along a rush. They were drawn as flat blocks in the fighter's colour, in front of him. Since contact closed to 58 units a block sat on the attacker himself (a pale blue block over his hips and legs in a chain), and a row of blocks trailed a dash.
+- **Now:** the thin outline of a figure, a head on a body, in his lane colour. A line and nothing inside it, at half opacity at most.
+- **Never on him.** It is drawn behind the fighter's depth, and it shows only as far as he has moved off the spot: nothing within 24 units, all of it from 60. A fighter who steps in and strikes wears nothing.
+- **Gone in 0.1 s** (six ticks), whatever life the event gives it (0.16 s for a rush tick, 0.45 s for a dodge).
+- **A rush's trail lies head first along the way he went;** a dodge's or an escape's stands as he stands.
+- **Reduced version:** none are drawn. On at VFX's lowest quality.
+- **How.** Still one quad a particle in `ParticleView`'s single draw call; `particle.gdshader` gains shape 4. The pane passes the fighter views, so the particle knows whose it is (the nearest fighter in its colour).
+- **Legal's rules as I read them:** it never hides the fighter, and it is not a vanish, since the fighter is on screen and it marks where he came from. Legal has not seen it.
+
+VFX's two frames (seed 1; a dash at tick 81, a chain at tick 133), before and after: ![dash before](img/after-t81-before.png) ![dash after](img/after-t81.png) ![chain before](img/after-t133-before.png) ![chain after](img/after-t133.png)
+
+The same match on the web build (Chrome; the browser froze it at tick 84 and 133): ![web dash](img/after-web-t84.png) ![web chain](img/after-web-t133.png)
+
+**The other particle kinds, as they show in play** (three AI matches of 90 s, seeds 1, 4 and 12345, VFX on as in the game):
+
+| Kind | Drawn as | Made | At most at once | A placeholder? |
+| :--- | :--- | ---: | ---: | :--- |
+| `after` | the outline above | 6,131 | 14 | Replaced |
+| `spark` | a thin solid streak along its motion | 2,803 | 93 | Reads as a spark; flat colour |
+| `deb` | a small solid square, 3 to 7 units, never turning | 1,598 | 90 from the sim's, 84 from the impact effects | **Yes: flat squares.** Hits, craters and building damage throw them |
+| `dust` | a soft disc | 1,344 | 41 and 117 | Reads as dust |
+| `flame` | a solid disc | 267 | 67 | **Yes: flat discs** on burning buildings |
+| `ring` | a ring line | 179 | 3 | A plain ring; reads as a pulse |
+| `shock` | a ring lying on the ground | 16 | 1 | Reads as a shock ring |
+| `splash`, `ripple` | discs and rings | 0 | 0 | Not drawn while VFX's water is on |
+
+The two that still read as greybox are `deb` and `flame`. Both are small, and neither covers a fighter.
+
 ## Battle damage, the sky and windows (rule of cool, wave 0)
 
 Game Design's list (`docs/design/rule-of-cool.md`) from Orb's picks. All three parts are presentation only: they read the sim and write nothing. The plan-only items (land scars, the mountain tunnel, throwable vehicles) are in `rule-of-cool-render.md`.
@@ -307,12 +337,13 @@ At the fight's own size, both wounded: ![damage in a fight](img/cool-damage-figh
 - **The reaction.** For a fighter at tier 3 or more the clouds part in a tall opening above him, their edges round it lit in his colour, and the sky inside pales toward his colour. Half strength at tier 3, full at tier 4, easing over 1.5 s of tick time. Each pane shows it from its own camera. Nothing happens below tier 3.
 - **It only lightens.** A pixel inside the opening is never darker than the sky was, and there is no lightning (Legal's screen of the list). The stars fade inside the opening.
 - **It stands down** (stacking rule 9) while that fighter charges, charges a beam, breaks into a transformation, is the actor of a set-piece pause, or has VFX's transformation effect on him. It eases out and comes back after.
-- **Reduced version:** no clouds; the opening is then the pale tint alone. On at VFX's lowest quality; `--noclouds` forces it.
+- **The clouds stay at low quality** (EP's ruling, 2026-10-02: they cost nothing measurable, below). `--noclouds` takes them away, for A/B.
+- **Reduced motion gets a calm sky:** the clouds stand still (no wind) and do not part, so the reaction is the pale tint alone behind them. It follows UI's `reduced_motion` option.
 - Rubble floating and cracks spreading under a standing fighter are VFX's and World's parts of the same feature.
 
 Calm, then one fighter at tier 3 and at tier 4: ![calm](img/cool-sky-calm.png) ![tier 3](img/cool-sky-tier3.png) ![tier 4](img/cool-sky-tier4.png)
 
-Both reacting (tier 4 and tier 3), and the reduced version: ![both](img/cool-sky-both.png) ![reduced](img/cool-sky-reduced.png)
+Both reacting (tier 4 and tier 3), the same with `--noclouds`, and with reduced motion on the web build: ![both](img/cool-sky-both.png) ![no clouds](img/cool-sky-reduced.png) ![calm](img/cool-sky-calm-motion.png)
 
 **Windows, and windows blowing out (feature 12).** The buildings had no windows, so VFX's glass came out of blank walls.
 - **Windows.** `building.gdshader` draws them on every wall: a row a floor (the building's height over its floor count), a column every 62 units along the wall (`WINDOW_PITCH`), 30% of them lit by a hash of the building and the cell (`WINDOW_LIT_SHARE`). No textures, no geometry, no draw call. They fade to the wall's tone before they alias at far zoom. `--nowindows` leaves the walls blank, for A/B.
@@ -330,7 +361,7 @@ A block as it stands, and after a blow-out wave from between the fighters: ![win
 - **Web,** Chrome at a 4x CPU slowdown, with the windows in: 16.6 and 13.5 ms on HEAD, 16.0 and 15.8 with all three. Unthrottled: 4.56 and 4.70 against 4.68 and 4.13.
 - Nothing measurable in either. The runs differ from each other by more than the change.
 - **Web look,** Chrome 154 and Edge 154: posed damage, the sky at tier 4 and 3, and a city block with its windows whole and blown all draw with no console messages.
-- **The clouds at a phone's resolution** (2340x1080, the web bench, 300 frames, 2026-10-02). With software rendering (SwiftShader, where every pixel's shader work is CPU time): frame mean 317.7 ms with clouds, 318.4 and 317.0 ms without. On the GPU: p50 4.0 ms with, 4.2 and 4.8 without. The clouds are under about 0.3% of the frame's pixel work, which is below what these runs can resolve. So cost is no reason for the reduced version to drop them; it drops them today only because every effect has a reduced version.
+- **The clouds at a phone's resolution** (2340x1080, the web bench, 300 frames, 2026-10-02). With software rendering (SwiftShader, where every pixel's shader work is CPU time): frame mean 317.7 ms with clouds, 318.4 and 317.0 ms without. On the GPU: p50 4.0 ms with, 4.2 and 4.8 without. The clouds are under about 0.3% of the frame's pixel work, which is below what these runs can resolve. So cost was no reason for the reduced version to drop them, and they now stay.
 - **Not measured:** a real phone. The software floor counts pixel work but is not a phone's GPU.
 
 ## Craters, scorch and water

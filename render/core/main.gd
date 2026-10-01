@@ -381,13 +381,16 @@ func frame(delta: float) -> void:
 	if not manual:
 		RenderAnim.reduced_motion = host.vfx.reduced_motion   # Animation's ragdoll honours it (a tool sets its own)
 	# The reduced versions (docs/design/rule-of-cool.md rule 6) follow VFX's quality: at its lowest, battle damage is a
-	# flat tint and the sky has no clouds (its reaction is then a tint alone).
+	# flat tint, the guard arc is its line alone and there are no afterimages. The clouds stay (they cost nothing
+	# measurable); with reduced motion they stand still and do not part.
 	var low: bool = host.vfx.enabled and host.vfx.quality == VfxLook.Q_LOW
 	if not manual and not args.has("anim-quality") and RenderAnim.quality != ("low" if low else "high"):
 		RenderAnim.set_quality("low" if low else "high")   # Animation's layers follow it (a tool, or --anim-quality, sets its own)
 	FighterView.damage_reduced = low
 	FighterView.guard_reduced = low
-	PaneWorld.clouds_on = not low and not args.has("noclouds")
+	ParticleView.after_on = not low
+	PaneWorld.clouds_on = not args.has("noclouds")
+	PaneWorld.sky_calm = host.vfx.reduced_motion
 	var n: int = host.advance(delta, vp.x, vp.y)
 	if args.has("flash-soak") and frames % 40 == 0 and not FlashSet.ids().is_empty():
 		var ids: Array = FlashSet.ids()

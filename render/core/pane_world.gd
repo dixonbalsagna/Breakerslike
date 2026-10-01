@@ -41,7 +41,8 @@ var _cue := PackedFloat32Array()   # per fighter: his lane cue, 0 to 1
 var _cue_z := PackedFloat32Array() # ... his depth at the last tick seen,
 var _cue_want: Array = []          # ... and whether the cue was wanted then
 var _cue_t: float = -1.0
-static var clouds_on: bool = true          # the sky's clouds (main's --noclouds, and off at VFX's lowest quality)
+static var clouds_on: bool = true          # the sky's clouds (main's --noclouds)
+static var sky_calm: bool = false          # reduced motion: the clouds stand still and do not part (main sets it)
 var _react := PackedFloat32Array()         # per fighter: the sky's reaction to him, 0 to 1 (tier 3 half, tier 4 full)
 var _react_t: float = -1.0
 var _sky_mat: ShaderMaterial
@@ -120,7 +121,7 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 	_sky_react(host, cam_x)
 	vfx_layer.update(host, a, cam_x, cam.z, vp.x)
 	beams.update(S, cam_x, cam.z)
-	particles.update(host.fxv, host.impact, cam_x, cam.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
+	particles.update(host.fxv, host.impact, cam_x, cam.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES), fighter_views)
 
 
 ## Keep the fighters in view behind buildings, by this pane's method. Either way a building counts as in front of a
@@ -263,7 +264,8 @@ func _sky_react(host: SimHost, cam_x: float) -> void:
 	_sky_mat.set_shader_parameter("sky_react", dirs)
 	_sky_mat.set_shader_parameter("sky_react_col", cols)
 	_sky_mat.set_shader_parameter("cloud_on", 1.0 if clouds_on else 0.0)
-	_sky_mat.set_shader_parameter("cloud_shift", SimWrap.wrap(cam_x) / SimConst.W * RenderLook.CLOUD_PERIOD + now * RenderLook.CLOUD_WIND)
+	_sky_mat.set_shader_parameter("cloud_part", 0.0 if sky_calm else 1.0)
+	_sky_mat.set_shader_parameter("cloud_shift", SimWrap.wrap(cam_x) / SimConst.W * RenderLook.CLOUD_PERIOD + (0.0 if sky_calm else now * RenderLook.CLOUD_WIND))
 
 
 ## Whether fighter i is charging or transforming now (VFX's own test, render/vfx/react.gd, plus the sim's state for a

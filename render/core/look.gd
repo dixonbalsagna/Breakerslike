@@ -281,6 +281,15 @@ const ARM := "#e6b995"
 const LEGS := "#1b1f2a"
 const CAPE := "#7a1414"
 const EYE := "#111111"
+## Afterimages (the sim's `after` events: a dodge, an escape, each tick of a rush; ParticleView): the thin outline of
+## a figure where the fighter was, in his lane colour. How long one shows at most (the event's own life may be
+## longer), its quad, its opacity at the start, how far behind the fighter's depth it is drawn, and how far the
+## fighter must have moved off it before it shows (nothing at the first distance, all of it at the second).
+const AFTER_LIFE: float = 0.1
+const AFTER_SIZE := Vector2(48.0, 88.0)
+const AFTER_ALPHA: float = 0.5
+const AFTER_BEHIND: float = 14.0
+const AFTER_CLEAR: Vector2 = Vector2(24.0, 60.0)
 ## The guard arc (guard.gdshader; FighterView): a held guard, drawn in front of the fighter on the side he faces, in
 ## his lane colour. The quad's size and the arc's radius; how far the quad's near edge is from the pivot (behind it,
 ## so the arc wraps the front of the body); its opacity; how fast it comes up and goes; a perfect block's flash.

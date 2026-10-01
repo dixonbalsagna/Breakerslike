@@ -3,12 +3,16 @@ extends MultiMeshInstance3D
 ## The reference fx consumer's particles (sim/core/view/fx.gd parts) and the render-side impact effects (ImpactFx),
 ## drawn as one MultiMesh of quads in a single draw call. Sizes follow the prototype's drawParts, which sets them in
 ## screen pixels, so each is divided by the zoom. Ripples and shock rings lie flat on the water or the ground.
+## An afterimage is the thin outline of a figure, never a fill: it stands behind the fighter's depth, shows only once
+## he has moved off the spot, and is gone in RenderLook.AFTER_LIFE (it used to be a flat block in front of him).
 ## Per frame it rewrites one float buffer: 12 transform, 4 colour and 4 custom floats per particle.
 ## Reads the consumer's particles only.
 
 const CAP := 2401 + ImpactFx.CAP   # the consumer's cap (fx.gd _P lets 2401 in) plus the impact effects'
 const STRIDE := 20
-const SHAPE := {"spark": 0.0, "deb": 0.0, "after": 0.0, "flame": 1.0, "splash": 1.0, "ring": 2.0, "dust": 3.0, "ripple": 2.0, "shock": 2.0}
+const SHAPE := {"spark": 0.0, "deb": 0.0, "after": 4.0, "flame": 1.0, "splash": 1.0, "ring": 2.0, "dust": 3.0, "ripple": 2.0, "shock": 2.0}
+
+static var after_on: bool = true   # afterimages; the reduced version drops them (main sets it from VFX's quality)
 
 var _buf := PackedFloat32Array()
 var count: int = 0
@@ -34,18 +38,19 @@ func _ready() -> void:
 	_buf.resize(CAP * STRIDE)
 
 
-## half_w: half the visible width in world units, for culling.
-func update(V: SimFxView, I: ImpactFx, cam_x: float, z: float, half_w: float) -> void:
-	var n: int = _fill(V.parts, 0, cam_x, z, half_w + 80.0)
+## half_w: half the visible width in world units, for culling. views: the pane's fighter views as placed this frame
+## (an afterimage is drawn behind its fighter, and not while he stands on it).
+func update(V: SimFxView, I: ImpactFx, cam_x: float, z: float, half_w: float, views: Array = []) -> void:
+	var n: int = _fill(V.parts, 0, cam_x, z, half_w + 80.0, views)
 	if I != null:
-		n = _fill(I.parts, n, cam_x, z, half_w + 80.0)
+		n = _fill(I.parts, n, cam_x, z, half_w + 80.0, views)
 	count = n
 	multimesh.visible_instance_count = n
 	if n > 0:
 		multimesh.buffer = _buf
 
 
-func _fill(list: Array, n: int, cam_x: float, z: float, lim: float) -> int:
+func _fill(list: Array, n: int, cam_x: float, z: float, lim: float, views: Array) -> int:
 	var zz: float = RenderLook.Z_PARTICLES
 	for p in list:
 		if n >= CAP:
@@ -62,6 +67,9 @@ func _fill(list: Array, n: int, cam_x: float, z: float, lim: float) -> int:
 		var cy: float = p.y
 		var inner: float = 0.0
 		var flat: bool = false
+		var pz: float = zz
+		var cz: float = 0.0
+		var cw: float = 0.0
 		match p.type:
 			"spark":
 				var v := Vector2(p.vx, p.vy)
@@ -96,10 +104,38 @@ func _fill(list: Array, n: int, cam_x: float, z: float, lim: float) -> int:
 				sy = sx
 				c.a = k
 			"after":
-				sx = 28.0
-				sy = 56.0
-				cy += 26.0
-				c.a = 0.4 * k
+				var shown: float = minf(p.life, RenderLook.AFTER_LIFE)
+				if not after_on or p.age >= shown:
+					continue
+				# Whose it is: the nearest fighter in its colour (any fighter, if none has it). It stands behind him
+				# and shows only as far as he has moved off it, so a fighter who steps in and strikes wears nothing.
+				var away: float = 1.0
+				var best: float = INF
+				var mine: bool = false
+				for v in views:
+					var own: bool = (v._aura_col as Color).is_equal_approx(c)
+					var d: float = Vector2(vx - v.position.x, p.y - v.position.y).length()
+					if (own and not mine) or (own == mine and d < best):
+						best = d
+						mine = own
+						pz = v.position.z - RenderLook.AFTER_BEHIND
+						# A rush's trail (the short-lived ones, one a tick) lies head first along the way he went;
+						# a dodge's or an escape's stands as he stands.
+						if p.life < 0.3 and d > 1.0:
+							rot = atan2(v.position.y - p.y, v.position.x - vx) - PI * 0.5
+						else:
+							rot = v.pivot.rotation.z
+				if best < INF:
+					away = smoothstep(RenderLook.AFTER_CLEAR.x, RenderLook.AFTER_CLEAR.y, best)
+				if away <= 0.0:
+					continue
+				sx = RenderLook.AFTER_SIZE.x
+				sy = RenderLook.AFTER_SIZE.y
+				cy += 38.0
+				c.a = RenderLook.AFTER_ALPHA * (1.0 - p.age / shown) * away
+				inner = 1.0 if p.face == null or float(p.face) >= 0.0 else -1.0
+				cz = sx
+				cw = sy
 			_:
 				continue
 		var o: int = n * STRIDE
@@ -131,14 +167,14 @@ func _fill(list: Array, n: int, cam_x: float, z: float, lim: float) -> int:
 			_buf[o + 8] = 0.0
 			_buf[o + 9] = 0.0
 			_buf[o + 10] = 1.0
-			_buf[o + 11] = zz
+			_buf[o + 11] = pz
 		_buf[o + 12] = c.r
 		_buf[o + 13] = c.g
 		_buf[o + 14] = c.b
 		_buf[o + 15] = c.a
 		_buf[o + 16] = SHAPE[p.type]
 		_buf[o + 17] = inner
-		_buf[o + 18] = 0.0
-		_buf[o + 19] = 0.0
+		_buf[o + 18] = cz
+		_buf[o + 19] = cw
 		n += 1
 	return n

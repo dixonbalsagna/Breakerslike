@@ -5,7 +5,8 @@
 // The clouds are two octaves of value noise over (across, height above the horizon), stretched along the horizon. They
 // move with the camera's place round the planet (cloud_shift, in cells; the pattern repeats every cloud_period cells,
 // so it wraps with the planet) and a slow wind. None at the horizon line, where the ground's haze meets the sky, and
-// none in space. cloud_on 0 is the reduced version: no clouds.
+// none in space. cloud_on 0: no clouds (--noclouds). cloud_part 0 is the calm version for reduced motion: the clouds
+// stand still and do not part, and the reaction is the pale tint alone.
 // From tier 3 the sky reacts to a fighter (docs/design/rule-of-cool.md feature 12): sky_react gives the direction
 // from the camera to him and a strength (tier 3 half, tier 4 full). The clouds part in a tall opening above him, their
 // edge round it lit in his colour, and the sky inside it pales toward his colour. It only ever lightens: the sky never
@@ -15,6 +16,7 @@ shader_type sky;
 #include "res://render/shaders/skycol.gdshaderinc"
 
 uniform float cloud_on = 1.0;
+uniform float cloud_part = 1.0;
 uniform float cloud_shift = 0.0;
 uniform float cloud_period = 32.0;   // RenderLook.CLOUD_PERIOD
 uniform float cloud_cover = 0.52;    // RenderLook.CLOUD_COVER
@@ -74,10 +76,10 @@ void sky() {
 		vec2 cp = vec2(p.x * 2.2 + cloud_shift, h * 5.0);
 		float n = cloud_noise(cp, cloud_period) * 0.65 + cloud_noise(vec2(cp.x * 2.0, cp.y * 2.9 + 11.0), cloud_period * 2.0) * 0.35;
 		float band = smoothstep(0.04, 0.3, h) * (1.0 - smoothstep(1.3, 2.3, h)) * (1.0 - space);
-		float a = smoothstep(1.0 - cloud_cover, 1.0 - cloud_cover + 0.16, n) * band * (1.0 - clear);
+		float a = smoothstep(1.0 - cloud_cover, 1.0 - cloud_cover + 0.16, n) * band * (1.0 - clear * cloud_part);
 		// Lit from the horizon: warm below, the sky's own darker tone above; the edge of an opening takes his colour.
 		vec3 cc = mix(c * 0.7, sky_horizon.rgb, clamp(1.0 - h * 0.8, 0.0, 1.0) * 0.75);
-		cc = mix(cc, max(cc, tint + cc * 0.6), rim * 0.6);
+		cc = mix(cc, max(cc, tint + cc * 0.6), rim * 0.6 * cloud_part);
 		c = mix(c, cc, a * 0.82);
 	}
 	COLOR = c;
