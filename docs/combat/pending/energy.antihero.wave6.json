@@ -1,6 +1,6 @@
 {
   "schema": "combat-energy-specs/0-draft",
-  "_about": "PARKED. The energy family of ../m0-rich.md section 4 (wave 5 in its table; the EP's wave 6). Not loaded, not hashed. Emitters and shapes come from moveset.antihero.m0.json. Travel speeds and ranges are Combat's proposals for Encounter and Game Design. Unless a line says it is Legal's, the Legal lines are Combat's proposals.",
+  "_about": "PARKED. The energy family of ../m0-rich.md section 4 (wave 5 in its table; the EP's wave 6). Not loaded, not hashed. Emitters and shapes come from moveset.antihero.m0.json. Travel speeds and ranges are confirmed by Game Design (moveset-rules.md 11(i)). Legal screened the Legal lines: GO (docs/legal/rule-of-cool-screen.md, the waves 5 and 6 section).",
   "fighter": "antihero",
   "rules": {
     "mode": "energy mode swaps the piece family: the same entries and body poses, with a hand and an emission (ADR 0008)",
@@ -9,23 +9,25 @@
     "damage": "the shape carries the strike's damage and never adds to it; a volley or the shards split it (Game Design's barrage ruling). The volley opener and the poke are 3 at 4 each",
     "sim": "a blast is a scheduled impact: its arrival tick and a strike. The projectile is render-only: an event with the origin, the target, the travel ticks, the shape and the count",
     "miss": "a blast that misses strikes near the target's feet with the ordinary area damage",
+    "reach": "a blast always arrives within 45 ticks: the listed speeds are minimums. When the rival is outside a shape's range the director picks a shape that reaches: an energy press never whiffs for range (moveset-rules.md 11(i))",
+    "poke": "his poke is 3 shards, 5 at Regalia, 7 at Sovereign, 9 at Apex, for the same total damage; a volley or a shard spread counts as one landed strike for mood, meters and counts; its total follows the Heavy Crown (11(j))",
     "aura": "only while charging or attacking: a thin outline or rings in his lane colour; no flame, no lightning, no gold, white or red"
   },
   "shapes": {
     "bolt": {"weight": "light", "count": 1, "range": [0, 100000], "travelPerTick": 60, "look": "one thin dart, blade-shaped"},
-    "volley": {"weight": "light", "count": 3, "range": [0, 100000], "travelPerTick": 60, "look": "three darts in a flat fan", "_legal": "a fan from one sweep of the arm or one flick of the hand: never both palms pumping forward in turn"},
+    "volley": {"weight": "light", "count": 3, "range": [0, 100000], "travelPerTick": 60, "look": "three darts in a flat fan", "_legal": "a fan from one sweep of the arm or one flick of the hand: never both palms pumping forward in turn, and no shouted barrage with an open mouth"},
     "shard": {"weight": "light", "count": 5, "range": [0, 1200], "travelPerTick": 50, "look": "five hexagonal flakes that tumble and spread: his barrage"},
-    "arc": {"weight": "heavy", "count": 1, "range": [0, 100000], "travelPerTick": 45, "look": "a crescent thrown off a limb that is already swinging; it is wide and crosses the lane", "_legal": "it leaves a limb in motion: no held pose before it"},
+    "arc": {"weight": "heavy", "count": 1, "range": [0, 100000], "travelPerTick": 45, "look": "a crescent thrown off a limb that is already swinging; it is wide and crosses the lane", "_legal": "it leaves a limb in motion, with no held pose before it; never a round spinning disc held above the hand"},
     "burst": {"weight": "heavy", "count": 1, "range": [0, 150], "travelPerTick": 0, "look": "a flat hexagonal ring that opens at the point of contact and pushes"},
     "lob": {"weight": "heavy", "count": 1, "range": [300, 1500], "flightTicks": 36, "look": "a hexagonal slab lobbed on a high arc; it lands with an area", "_legal": "a slab, never a sphere; thrown with one hand, never raised overhead in two"},
-    "charged": {"weight": "heavy", "count": 1, "range": [0, 100000], "travelPerTick": 90, "look": "one long lance after a visible charge", "_legal": "the charge is plates stacking along the forearm, never a ball of light growing in a palm; the arm is drawn back at shoulder height, never to the hip"}
+    "charged": {"weight": "heavy", "count": 1, "range": [0, 100000], "travelPerTick": 90, "look": "one long lance after a visible charge", "_legal": "the charge is plates stacking along the forearm, never a ball of light growing in a palm; the arm is drawn back at shoulder height, never to the hip; the lance is a plain straight beam, not a spiral or drilling one"}
   },
   "hands": {
     "open_palm": {"look": "flat, fingers together, the arm out at chest height", "_legal": "never at the hip; no palm-forward charge pose with a scream"},
     "pinch": {"look": "thumb to forefinger; the dart leaves as they part", "_legal": "no pointing finger and no two-finger point"},
     "clawed_palm": {"look": "fingers spread and hooked like tines"},
-    "fist_glow": {"look": "a closed fist with the forearm plates lit along their edges", "_legal": "lit plate edges, not a ball of light round the fist"},
-    "blade_hand": {"look": "a flat knife hand; darts run off its edge"},
+    "fist_glow": {"look": "a closed fist with the forearm plates lit along their edges", "_legal": "lit plate edges, never a ball of light round the fist"},
+    "blade_hand": {"look": "a flat knife hand; darts run off its edge", "_legal": "a flat knife hand, never a pointed finger"},
     "crossed_forearms": {"look": "the two forearm guards brought together, plates outward", "_legal": "in motion, never a held crossed-arms pose"}
   },
   "emitters": [
@@ -45,8 +47,8 @@
     {"emitter": "energy.charged_brace", "hand": "blade_hand", "uses": {"arms": 1}, "ground": "ok", "shapes": ["charged", "bolt"], "poses": ["charge: side-on, the firing arm drawn back at shoulder height, hexagonal plates stacking along the forearm, the other hand open on the firing arm's shoulder", "release: the arm straight at the rival, blade hand, the plates gone"], "look": "One arm, one shot: the plates stack along the forearm and leave as a lance, or a single quick dart with no charge.", "held": false},
     {"emitter": "energy.channel", "hand": "open_palm", "uses": {"arms": 2}, "ground": "ok", "shapes": ["charged"], "poses": ["charge: one forearm high and one low, plates facing each other across a body-length gap, hexagonal plates stacking along the line between them", "release: the arms torn apart, the lance leaving along that line"], "look": "Two arms: the lance forms along the line between a high forearm and a low one, and leaves when he tears them apart.", "held": false, "_legal": "Legal (rule-of-cool-screen.md, wave 2 section): hands at least a shoulder width apart, or one high and one low, never wrists together; never cupped at either hip, never drawn back to one hip and thrust forward; no sphere or glow forming between facing palms, and no hands overhead holding a growing orb; no palms-forward double thrust from the chest as the release; the stacking rule applies while he channels"},
     {"emitter": "energy.kiting_turn", "hand": "pinch", "uses": {"arms": 1}, "ground": "ok", "shapes": ["bolt", "volley", "shard"], "poses": ["the turn: three-quarters away, looking back over the shoulder, the hand flicking behind him"], "look": "He is already leaving; the darts are flicked back over his shoulder without a full turn.", "held": false},
-    {"emitter": "energy.crown_release", "hand": null, "uses": {}, "ground": "ok", "shapes": ["shard", "volley"], "poses": ["the release: upright, chin up, hands open and low, the flat shards leaving their ring one after another"], "look": "The shards that circle him fire on their own: he does not raise a hand.", "held": false, "form": "regalia+", "_legal": "Combat's proposal: flat shards on a slow tilted ring: no halo of light behind the head and no orbiting spheres; the stacking rule applies"},
-    {"emitter": "energy.shove", "hand": "open_palm", "uses": {"arms": 1}, "ground": "ok", "shapes": ["burst"], "poses": ["the shove: a flat palm at chest height, the arm at full length, body side-on behind it"], "look": "A push with no damage: the ring opens off the flat palm and the rival slides back.", "held": false, "_legal": "Combat's proposal: the palm is at chest height on a straight arm, never at the hip", "damage": false}
+    {"emitter": "energy.crown_release", "hand": null, "uses": {}, "ground": "ok", "shapes": ["shard", "volley"], "poses": ["the release: upright, chin up, hands open and low, the flat shards leaving their ring round his shoulders one after another"], "look": "The shards that circle him fire on their own: he does not raise a hand.", "held": false, "form": "regalia+", "_legal": "flat shards on a slow tilted ring round the shoulders or the body, never above or behind the head; no halo of light and no orbiting spheres; the stacking rule applies"},
+    {"emitter": "energy.shove", "hand": "open_palm", "uses": {"arms": 1}, "ground": "ok", "shapes": ["burst"], "poses": ["the shove: a flat palm at chest height, the arm at full length, body side-on behind it"], "look": "A push with no damage: the ring opens off the flat palm and the rival slides back.", "held": false, "_legal": "a flat palm at chest height on a straight arm, never at the hip; no scream", "damage": false}
   ],
   "strikes": [
     {"id": "strike.backfist+arc", "emitter": "strike.backfist", "shape": "arc", "weight": "heavy", "uses": {"arms": 1}, "ground": "ok", "range": [0, 100000]},

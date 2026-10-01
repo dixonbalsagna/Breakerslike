@@ -16,7 +16,7 @@ He knocks the rival away, leaves, arrives ahead on a spiral, and knocks the riva
 
 - **Leaves at 4:** the hit-stop.
 - **30 ticks from leaving to a middle contact** (24 in Frenzied), as Game Design set: 24 (18) of travel and the 6 of anticipation, standing loaded.
-- **The ender's bounce is 12 ticks longer. This is a proposal for Game Design.** It keeps the same travel and adds its whole 18-tick wind-up in place. Squeezing the wind-up into the 30 would leave 12 ticks of travel, and 6 in Frenzied.
+- **The ender's bounce is 12 ticks longer** (confirmed by Game Design, `moveset-rules.md` section 11(e)). It keeps the same travel and adds its whole 18-tick wind-up in place. The longer beat also tells the defender the ender is coming.
 - **Where he arrives.** At the struck body's predicted position on the contact tick, pushed along its direction of travel by the return blow's own contact distance (wave 1). So he waits just beyond where the body arrives, facing it.
 - **Speed.** He covers 1.109 times the chord in 24 ticks while the body covers about the chord in 34: about 1.6 times the body's speed, and 1.7 in Frenzied.
 - **Costs and limits** (Game Design): 6 ki a bounce and 4 for the ender; a 10 s cooldown; one decisive exchange, decided at the ender; bounces stay in the lane and never pass through buildings; only the ender may be a targeted smash; the turning throw is never a return blow or the ender.
@@ -59,7 +59,7 @@ path:  P(s) = C + φ^s · Rot(σ·90°·s) · (S − C)
 - **Animation** banks him by his heading, which the 73° gives without sampling.
 
 ## 3. The `return` class
-A light at ×0.6 of a light's damage. Its whole 6-tick anticipation is the perfect-block window, with no early tolerance, and it works in the air. No return blow repeats inside one rally. In data: `strikeClass.classes` gains `return`, and the perfect-block window becomes per class (6 for a return, 10 for the others).
+A light at ×0.6 of a light's damage. Its whole 6-tick anticipation is the perfect-block window, with no early tolerance, and it works in the air. No return blow repeats inside one rally. In data: `strikeClass.classes` gains `return`, and the perfect-block window is per class, as Game Design ruled (`moveset-rules.md` section 11(f)): 8 ticks for a light opener or a light blast, 10 for a heavy, an ender or a charged shot, 6 for a return, none for a mid-string hit.
 
 ## 4. The pieces
 
@@ -123,6 +123,6 @@ The struck body is the ragdoll throughout: it flails off each knock and is caugh
 | **Camera** | frame the path from the event; hold one frame for the orbit pattern; the panel for a rally's ender (it is an earned hit, sharing one panel every 12 s) |
 | **VFX** | the trail sampled from P(s); no afterimage that hides him |
 | **Animation** | the intercept turn; the bank from his heading; the over-commit after a dodge-cancel |
-| **Game Design** | the ender's longer bounce (section 1); the per-class perfect-block window |
+| **Game Design** | done: the timing and the per-class window are ruled (`moveset-rules.md` section 11(e) and (f)) |
 | **Legal** | done: GO (`docs/legal/rule-of-cool-screen.md`, the waves 3 and 4 section). For the whole rally: he is drawn the whole way: no vanish, no blink cut and no afterimage that hides him; he is on screen at every contact for the 6 anticipation ticks and at least 4 after; no cut to a bystander who cannot follow, and no frozen shock-ring frame between knocks; no shout and no named technique on the rally or on the round-the-world ender |
 | **Tools** | `return` in the strike-class enum; a per-class perfect-block window |

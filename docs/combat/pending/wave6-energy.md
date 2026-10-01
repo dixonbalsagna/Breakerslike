@@ -13,17 +13,17 @@ Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Anima
 - **The aura** shows only while charging or attacking: a thin outline or rings in his violet. No flame, no lightning, no gold, white or red.
 
 ## 2. The seven shapes (VFX)
-His family is blades and hexagons. Travel speeds and ranges are Combat's proposals.
+His family is blades and hexagons. Game Design confirmed the speeds and ranges (`moveset-rules.md` section 11(i)) and added a rule: **a blast always arrives within 45 ticks**, so the speeds below are minimums, and when the rival is outside a shape's range the director picks a shape that reaches. An energy press never whiffs for range.
 
 | Shape | Weight | Count | Range | Travel | Look |
 | :--- | :--- | ---: | :--- | :--- | :--- |
 | **bolt** | light | 1 | any | 60 u a tick | one thin dart, blade-shaped |
-| **volley** | light | 3 | any | 60 u a tick | three darts in a flat fan. **Legal:** a fan from one sweep of the arm or one flick of the hand: never both palms pumping forward in turn. |
+| **volley** | light | 3 | any | 60 u a tick | three darts in a flat fan. **Legal:** a fan from one sweep of the arm or one flick of the hand: never both palms pumping forward in turn, and no shouted barrage with an open mouth. |
 | **shard** | light | 5 | up to 1,200 u | 50 u a tick | five hexagonal flakes that tumble and spread: his barrage |
-| **arc** | heavy | 1 | any | 45 u a tick | a crescent thrown off a limb that is already swinging; it is wide and crosses the lane. **Legal:** it leaves a limb in motion: no held pose before it. |
+| **arc** | heavy | 1 | any | 45 u a tick | a crescent thrown off a limb that is already swinging; it is wide and crosses the lane. **Legal:** it leaves a limb in motion, with no held pose before it; never a round spinning disc held above the hand. |
 | **burst** | heavy | 1 | up to 150 u | none | a flat hexagonal ring that opens at the point of contact and pushes |
 | **lob** | heavy | 1 | 300 to 1,500 u | a fixed 36-tick arc | a hexagonal slab lobbed on a high arc; it lands with an area. **Legal:** a slab, never a sphere; thrown with one hand, never raised overhead in two. |
-| **charged** | heavy | 1 | any | 90 u a tick | one long lance after a visible charge. **Legal:** the charge is plates stacking along the forearm, never a ball of light growing in a palm; the arm is drawn back at shoulder height, never to the hip. |
+| **charged** | heavy | 1 | any | 90 u a tick | one long lance after a visible charge. **Legal:** the charge is plates stacking along the forearm, never a ball of light growing in a palm; the arm is drawn back at shoulder height, never to the hip; the lance is a plain straight beam, not a spiral or drilling one. |
 
 ## 3. The six hands
 | Hand | Look |
@@ -31,8 +31,8 @@ His family is blades and hexagons. Travel speeds and ranges are Combat's proposa
 | `open_palm` | flat, fingers together, the arm out at chest height. **Legal:** never at the hip; no palm-forward charge pose with a scream. |
 | `pinch` | thumb to forefinger; the dart leaves as they part. **Legal:** no pointing finger and no two-finger point. |
 | `clawed_palm` | fingers spread and hooked like tines |
-| `fist_glow` | a closed fist with the forearm plates lit along their edges. **Legal:** lit plate edges, not a ball of light round the fist. |
-| `blade_hand` | a flat knife hand; darts run off its edge |
+| `fist_glow` | a closed fist with the forearm plates lit along their edges. **Legal:** lit plate edges, never a ball of light round the fist. |
+| `blade_hand` | a flat knife hand; darts run off its edge. **Legal:** a flat knife hand, never a pointed finger. |
 | `crossed_forearms` | the two forearm guards brought together, plates outward. **Legal:** in motion, never a held crossed-arms pose. |
 
 Legal's verdict on the hands (`docs/legal/rule-of-cool-screen.md`): the two-finger point is out, and so is any pointing finger; the pinch replaced it.
@@ -64,8 +64,8 @@ The double palm does not emit: Legal made it a melee strike only.
 | `charged_brace` | `blade_hand` | charged, bolt | 1 arm | charge: side-on, the firing arm drawn back at shoulder height, hexagonal plates stacking along the forearm, the other hand open on the firing arm's shoulder; release: the arm straight at the rival, blade hand, the plates gone | One arm, one shot: the plates stack along the forearm and leave as a lance, or a single quick dart with no charge. |
 | `channel` | `open_palm` | charged | 2 arms | charge: one forearm high and one low, plates facing each other across a body-length gap, hexagonal plates stacking along the line between them; release: the arms torn apart, the lance leaving along that line | Two arms: the lance forms along the line between a high forearm and a low one, and leaves when he tears them apart. **Legal:** hands at least a shoulder width apart, or one high and one low, never wrists together; never cupped at either hip, never drawn back to one hip and thrust forward; no sphere or glow forming between facing palms, and no hands overhead holding a growing orb; no palms-forward double thrust from the chest as the release; the stacking rule applies while he channels. |
 | `kiting_turn` | `pinch` | bolt, volley, shard | 1 arm | the turn: three-quarters away, looking back over the shoulder, the hand flicking behind him | He is already leaving; the darts are flicked back over his shoulder without a full turn. |
-| `crown_release` (from Regalia) | none | shard, volley | no limb | the release: upright, chin up, hands open and low, the flat shards leaving their ring one after another | The shards that circle him fire on their own: he does not raise a hand. **Legal:** flat shards on a slow tilted ring: no halo of light behind the head and no orbiting spheres; the stacking rule applies. |
-| `shove` | `open_palm` | burst (no damage) | 1 arm | the shove: a flat palm at chest height, the arm at full length, body side-on behind it | A push with no damage: the ring opens off the flat palm and the rival slides back. **Legal:** the palm is at chest height on a straight arm, never at the hip. |
+| `crown_release` (from Regalia) | none | shard, volley | no limb | the release: upright, chin up, hands open and low, the flat shards leaving their ring round his shoulders one after another | The shards that circle him fire on their own: he does not raise a hand. **Legal:** flat shards on a slow tilted ring round the shoulders or the body, never above or behind the head; no halo of light and no orbiting spheres; the stacking rule applies. |
+| `shove` | `open_palm` | burst (no damage) | 1 arm | the shove: a flat palm at chest height, the arm at full length, body side-on behind it | A push with no damage: the ring opens off the flat palm and the rival slides back. **Legal:** a flat palm at chest height on a straight arm, never at the hip; no scream. |
 
 ## 6. Enough at every range, and with a broken limb
 Lights / heavies on offer, from the parked list. The floor is 8 lights and 4 heavies, as for the physical strikes.
@@ -84,7 +84,7 @@ Lights / heavies on offer, from the parked list. The floor is 8 lights and 4 hea
 
 ## 7. Mixing the two families
 - A phrase may change mode once: a volley into a rush, a false charge into a point-blank ring, a scatter and then one charged shot.
-- **His poke** (`../variety-pass.md` section 2.5): a light at range becomes a volley-only exchange. I propose its count grows with Pride (3, then 5 shards at Regalia, 7 at Sovereign, 9 at Apex) for the same total damage. That is Game Design's to rule.
+- **His poke** (`../variety-pass.md` section 2.5): a light at range becomes a volley-only exchange. Its count grows with Pride (3 shards, then 5 at Regalia, 7 at Sovereign, 9 at Apex) for the same total damage, confirmed by Game Design (section 11(j)). A volley or a shard spread counts as one landed strike for mood, meters and counts, and its total follows the Heavy Crown.
 
 ## 8. What this needs
 | For | What |
@@ -92,6 +92,6 @@ Lights / heavies on offer, from the parked list. The floor is 8 lights and 4 hea
 | **VFX** | the 7 shapes in his violet, as blades and hexagons; the plates stacking for a charge; the shard ring; each shape's reduced version |
 | **Animation** | the 7 poses and 6 hands; the aim layer turning the arm to the target |
 | **Encounter** | the blast as a scheduled impact with the event; the shape's range as a gate on the composer's choice; one mode change in a phrase |
-| **Game Design** | the travel speeds and ranges in section 2; the poke's count by Pride |
-| **Legal** | a screen of the lines marked Legal in sections 2, 3 and 5 that are Combat's proposals: the volley, the arc, the lob, the charged shot, the lit fist, the crown release and the shove. The channel's line and the hands' are Legal's own |
+| **Game Design** | done: speeds, ranges and the poke are ruled (`moveset-rules.md` section 11(i) and (j)) |
+| **Legal** | done: GO (`docs/legal/rule-of-cool-screen.md`, the waves 5 and 6 section), with its lines in the rows |
 | **Tools** | the shape and hand lists in the M0 piece schema; a check that every range band keeps 8 lights and 4 heavies |

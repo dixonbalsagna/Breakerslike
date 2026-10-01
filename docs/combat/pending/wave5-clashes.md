@@ -45,7 +45,7 @@ Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Anima
 | **Composed: resolves** | the winner's ender lands at 84, after a 12-tick wind-up, and launches |
 | **Between pulses** | the alternating lights; on each pulse both strike at once and the press decides whose blow gets through |
 | **On a pulse** | the blow that got through snaps the other's head or body by the computed reaction; no ring |
-| **Damage** | PROPOSAL for Game Design: each traded light does x0.5 of a light, since both sides land them |
+| **Damage** | each traded light does x0.5 of a light (Game Design, moveset-rules.md 11(h)); they are mid-string hits with no perfect-block window |
 | **Legal** | the bodies stay readable: every blow is a drawn contact pose held 4 ticks or more; never invisible fighters with only shock rings; no freeze on locked fists; no cut to an onlooker who cannot follow |
 
 | New pose | Look |
@@ -65,7 +65,7 @@ Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Anima
 | **Composed: resolves** | the winner throws the loser down: the drive down, or the spike with one arm |
 | **Between pulses** | the strain: the pair turns a quarter turn about the grip and sinks about 1 bh over the lock |
 | **On a pulse** | a wrench: the surging fighter turns the other's shoulders a step further |
-| **Legal** | Combat's proposal: a collar-and-elbow tie-up only; never hands locked palm to palm with fingers laced, and never arms raised overhead in a test of strength |
+| **Legal** | a collar-and-elbow tie-up only: no hands locked at all, laced or not, and no arms raised overhead in a test of strength; no sparks, glow or energy at the hands |
 
 | New pose | Look |
 | :--- | :--- |
@@ -81,11 +81,11 @@ A perfect block against a signature is DEFLECT in the live data. The direction h
 
 **Ticks.** In: 6. Hold: as long as the beam lasts. Out: 6.
 
-| Answer (held) | Arms | What the sim does | Poses | Legal (Combat's proposals) |
+| Answer (held) | Arms | What the sim does | Poses | Legal |
 | :--- | :--- | :--- | :--- | :--- |
-| **Swat** (`away`) | one | the beam is turned aside and carves where the game sends it; the damage counts against the beam's tier cap and is credited to him | in: side-on, the plated forearm drawn across his chest; hold: the forearm swept out to full length, the whole body turned with it, the beam bending off the plate; out: the arm still out, the head already turned back to the rival | the forearm guard does it, with the whole body turning: not a casual flick of one hand, and not an open palm held out against the beam |
-| **Split** (`neutral`) | none | the beam parts round him and scars the ground on both sides behind him | in: he turns side-on, the plated shoulder and spine to the beam; hold: leaning into it on the plates, head turned away, hands open at his chest; out: he straightens and turns back, plates smoking in his own violet | no arms crossed in front of him as a block; it parts on the shoulder and spine |
-| **Walk** (`toward`) | none | he advances through the beam and arrives at contact distance in front of the attacker, who is 20 ticks into recovery | in: upright, chin level, hands open and low; stride: one unhurried step, mirrored for the next, the beam breaking round his chest; arrive: stopped at arm's length, weight even, looking at the rival | hands open and low: no palm held out against the beam, no arms crossed, no clenched fists; no line shouted as he walks |
+| **Swat** (`away`) | one | the beam is turned aside and carves where the game sends it; the damage counts against the beam's tier cap and is credited to him | in: side-on, the plated forearm drawn across his chest; hold: the forearm swept out to full length, the whole body turned with it, the beam bending off the plate; out: the arm still out, the head already turned back to the rival | a plated-forearm sweep with the whole body turning: not a casual flick of one hand, and kept away from an open palm |
+| **Split** (`neutral`) | none | the beam parts round him and scars the ground on both sides behind him | in: he turns side-on, the plated shoulder and spine to the beam; hold: leaning into it on the plates, head turned away, hands open at his chest; out: he straightens and turns back, plates smoking in his own violet | it parts on the shoulder and spine, with his hands open at his chest; no crossed arms |
+| **Walk** (`toward`) | none | he advances through the beam and arrives at contact distance in front of the attacker, who is 20 ticks into recovery | in: upright, chin level, hands open and low; stride: one unhurried step, mirrored for the next, the beam breaking round his chest; arrive: stopped at arm's length, weight even, looking at the rival | upright, hands open and low, unhurried: no palm held out against the beam, no arms crossed, no clenched fists; no shouted line |
 
 - **Legal, for all three** (`rule-of-cool.md` section 3b): no named technique and no borrowed hand pose; a swatted beam does not end in a mushroom cloud staged like a known scene.
 - **All three work with a broken arm:** the swat uses the good arm, and the other two use none.
@@ -100,6 +100,6 @@ A perfect block against a signature is DEFLECT in the live data. The direction h
 | **Controls and UI** | the pulse shown and heard (theirs already) |
 | **VFX** | the pulse ring with no cracked sky; the bent, the parted and the breaking beam; afterimages that never hide a body in the blur exchange |
 | **Camera** | the blur exchange's travel (about 18 bh over the three bursts) without a cut to an onlooker |
-| **Game Design** | the traded lights' damage in the blur exchange (I propose x0.5 of a light) |
-| **Legal** | a screen of the grapple lock's line and the three answers' lines, which are Combat's proposals; the fist clash's and the blur exchange's lines are Legal's own from section 3b |
+| **Game Design** | done: the traded lights are x0.5 of a light (`moveset-rules.md` section 11(h)) |
+| **Legal** | done: GO (`docs/legal/rule-of-cool-screen.md`, the waves 5 and 6 section), with its lines in the rows |
 | **Tools** | tempo names `pulseFist` 24, `pulseBlur` 24, `pulseGrapple` 30, `answerIn` 6, `answerOut` 6 |

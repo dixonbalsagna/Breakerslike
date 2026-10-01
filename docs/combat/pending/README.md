@@ -78,6 +78,10 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 - **Encounter's four constants, now data.** The `dodge` beat with `"side": "cross"` carries the step-around's length (`dur`, 8 ticks, `tempo.stepAround`), rise (`rise`, 98 u) and end distance (`off`, 74 u); the contact block carries the placement limit (`placementReaches`, 3). Two more schema keys for `apply-contact.cjs`: `tempo.stepAround` and `contact.placementReaches` (`../contact-spacing.md` section 6, rows 4 and 5).
 - `styles.2b.json` is not affected.
 
+## Start here: `waves-index.md`
+
+One page for Orb: what each of the six waves adds in plain words, its new-pose count, what it needs before it can play, and the order they could go live in.
+
 ## Wave 1: the Anti-hero's strike specs (for Animation; not for applying)
 
 `wave1-strikes.md` and `strikes.antihero.wave1.json` are the 38 key strikes as specs to pose from: base family, limb and target socket, weight, reach and the strike's own contact distance, timing, limb tags and one line on the look. 34 can be posed now (11 derive, 23 need a contact pose); the 4 tail strikes are held until Orb rules on the tail. Section 6 of the sheet notes what a per-strike contact distance changes in the live contact data at M0. Legal screened wave 1: GO, with its conditions now in the rows (`docs/legal/rule-of-cool-screen.md`). The `.2b.json` and `.contact.json` files in this folder are live now and kept for reference.
@@ -96,7 +100,7 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 ## Wave 5: the pulse clashes and the beam answers (for Animation; not for applying)
 
-`wave5-clashes.md` and `clashes.antihero.wave5.json`: the fist clash, the blur exchange and the grapple lock on Game Design's pulse (ticks, what is composed from the strike and grab pools, the strain poses), and the three looks of a perfect block against a signature (swat, split, walk through). 9 new poses for the clashes and 9 for the answers.
+`wave5-clashes.md` and `clashes.antihero.wave5.json`: the fist clash, the blur exchange and the grapple lock on Game Design's pulse (ticks, what is composed from the strike and grab pools, the strain poses), and the three looks of a perfect block against a signature (swat, split, walk through). 9 new poses for the clashes and 9 for the answers. Legal screened waves 5 and 6: GO, with its conditions in the rows; Game Design ruled their open numbers (`moveset-rules.md` section 11(h) to (j)).
 
 ## Wave 6: the energy family (for Animation and VFX; not for applying)
 
