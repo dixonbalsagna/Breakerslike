@@ -2,13 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/director-ai",
   "title": "director.ai/1",
-  "description": "data/director/ai.json: the AI's skill numbers (sim/director/ai.gd). Under ADR 0008 the AI plays by the player's rules and gets an outcome only by an input; these numbers say how often it makes that input. One difficulty for now. Version field: schema. Policy: closed except keys starting with an underscore. Every number is a chance from 0 to 1.",
+  "description": "data/director/ai.json: the AI's skill numbers (sim/director/ai.gd). Under ADR 0008 the AI plays by the player's rules and gets an outcome only by an input; these numbers say how often it makes that input. One difficulty for now. Version field: schema. Policy: closed except keys starting with an underscore. Every chance is from 0 to 1. `level` names one of `levels` (xref ai-level); the levels do not get easier from easy to hard (a warning, ai-levels-order); the old top-level beamAnswer is the medium level's (a warning, ai-level-beam).",
   "type": "object",
   "required": [
     "schema",
     "pressReact",
     "beamAnswer",
-    "sigPick"
+    "sigPick",
+    "perfectBlock",
+    "level",
+    "levels"
   ],
   "properties": {
     "schema": {
@@ -61,6 +64,290 @@
       "type": "number",
       "minimum": 0,
       "maximum": 1
+    },
+    "perfectBlock": {
+      "type": "object",
+      "required": [
+        "guard",
+        "press",
+        "heavyAdd"
+      ],
+      "properties": {
+        "guard": {
+          "description": "The chance the AI perfect-blocks a strike with a window while it holds Guard.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "press": {
+          "description": "The same while it holds Press.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "heavyAdd": {
+          "description": "Added against a heavy or an ender.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "description": "stance-matrix.md R5: the chance the AI perfect-blocks a strike with a window, by the state it holds (none while dodging or escaping). Each level multiplies it by perfectBlockMul.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "level": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "description": "The level a match runs at unless the host sets another."
+    },
+    "levels": {
+      "type": "object",
+      "required": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "properties": {
+        "easy": {
+          "type": "object",
+          "required": [
+            "beamAnswer",
+            "perfectBlockMul",
+            "guardRepeat",
+            "punish",
+            "punishHeavy",
+            "reversal",
+            "breakGuard",
+            "riposte",
+            "burstAtLink"
+          ],
+          "properties": {
+            "beamAnswer": {
+              "description": "The chance the AI answers a beam when it can (control-rules.md section 10).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "perfectBlockMul": {
+              "description": "Its share of the perfectBlock rates above.",
+              "type": "number",
+              "minimum": 0
+            },
+            "guardRepeat": {
+              "description": "Weight added to its Guard choice while the rival repeats one attack.",
+              "type": "number",
+              "minimum": 0
+            },
+            "punish": {
+              "description": "The chance it attacks in the punish window after it blocked a whole string.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "punishHeavy": {
+              "description": "The share of those attacks that are heavies.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "reversal": {
+              "description": "[the chance after 2 s of guard with over 25 ki, otherwise].",
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "breakGuard": {
+              "description": "The share of its attacks that are heavies against a rival it has found guarding twice running.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "riposte": {
+              "description": "The chance it takes its riposte after a perfect block.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "burstAtLink": {
+              "description": "The chain link at which it bursts out (0: never).",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "medium": {
+          "type": "object",
+          "required": [
+            "beamAnswer",
+            "perfectBlockMul",
+            "guardRepeat",
+            "punish",
+            "punishHeavy",
+            "reversal",
+            "breakGuard",
+            "riposte",
+            "burstAtLink"
+          ],
+          "properties": {
+            "beamAnswer": {
+              "description": "The chance the AI answers a beam when it can (control-rules.md section 10).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "perfectBlockMul": {
+              "description": "Its share of the perfectBlock rates above.",
+              "type": "number",
+              "minimum": 0
+            },
+            "guardRepeat": {
+              "description": "Weight added to its Guard choice while the rival repeats one attack.",
+              "type": "number",
+              "minimum": 0
+            },
+            "punish": {
+              "description": "The chance it attacks in the punish window after it blocked a whole string.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "punishHeavy": {
+              "description": "The share of those attacks that are heavies.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "reversal": {
+              "description": "[the chance after 2 s of guard with over 25 ki, otherwise].",
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "breakGuard": {
+              "description": "The share of its attacks that are heavies against a rival it has found guarding twice running.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "riposte": {
+              "description": "The chance it takes its riposte after a perfect block.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "burstAtLink": {
+              "description": "The chain link at which it bursts out (0: never).",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "hard": {
+          "type": "object",
+          "required": [
+            "beamAnswer",
+            "perfectBlockMul",
+            "guardRepeat",
+            "punish",
+            "punishHeavy",
+            "reversal",
+            "breakGuard",
+            "riposte",
+            "burstAtLink"
+          ],
+          "properties": {
+            "beamAnswer": {
+              "description": "The chance the AI answers a beam when it can (control-rules.md section 10).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "perfectBlockMul": {
+              "description": "Its share of the perfectBlock rates above.",
+              "type": "number",
+              "minimum": 0
+            },
+            "guardRepeat": {
+              "description": "Weight added to its Guard choice while the rival repeats one attack.",
+              "type": "number",
+              "minimum": 0
+            },
+            "punish": {
+              "description": "The chance it attacks in the punish window after it blocked a whole string.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "punishHeavy": {
+              "description": "The share of those attacks that are heavies.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "reversal": {
+              "description": "[the chance after 2 s of guard with over 25 ki, otherwise].",
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "breakGuard": {
+              "description": "The share of its attacks that are heavies against a rival it has found guarding twice running.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "riposte": {
+              "description": "The chance it takes its riposte after a perfect block.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "burstAtLink": {
+              "description": "The chain link at which it bursts out (0: never).",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "description": "The three AI levels (easy, medium, hard).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     }
   },
   "additionalProperties": false,

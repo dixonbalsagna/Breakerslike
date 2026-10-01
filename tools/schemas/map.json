@@ -243,6 +243,10 @@
       "schema": "director-ai.schema.json"
     },
     {
+      "match": "data/director/interrupts.json",
+      "schema": "director-interrupts.schema.json"
+    },
+    {
       "match": "data/director/launch.json",
       "schema": "director-launch.schema.json"
     },

@@ -21073,6 +21073,822 @@
         "rule": "type",
         "pointer": "/skipped"
       }
+    },
+    {
+      "id": "director-ai-perfect-block-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/perfectBlock"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-level-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/level"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-levels-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-perfect-block-key-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/perfectBlock/press"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/perfectBlock"
+      }
+    },
+    {
+      "id": "director-ai-perfect-block-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/perfectBlock/guard": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/perfectBlock/guard"
+      }
+    },
+    {
+      "id": "director-ai-perfect-block-unknown-key",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/perfectBlock/mash": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/perfectBlock/mash"
+      }
+    },
+    {
+      "id": "director-ai-level-enum",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/level": "insane"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/level"
+      }
+    },
+    {
+      "id": "director-ai-level-hard-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/level": "hard"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-levels-missing",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels"
+      }
+    },
+    {
+      "id": "director-ai-levels-unknown",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/insane": {
+              "beamAnswer": 0.35,
+              "perfectBlockMul": 0.6,
+              "guardRepeat": 8,
+              "punish": 0.6,
+              "punishHeavy": 1,
+              "reversal": [
+                0.5,
+                0.2
+              ],
+              "breakGuard": 0.6,
+              "riposte": 1,
+              "burstAtLink": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/levels/insane"
+      }
+    },
+    {
+      "id": "director-ai-level-key-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/riposte"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-level-unknown-key",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/taunt": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/levels/easy/taunt"
+      }
+    },
+    {
+      "id": "director-ai-level-chance-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/punish": 1.4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/medium/punish"
+      }
+    },
+    {
+      "id": "director-ai-level-reversal-pair",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/reversal": [
+              0.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/levels/medium/reversal"
+      }
+    },
+    {
+      "id": "director-ai-level-reversal-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/reversal": [
+              0.5,
+              2
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/medium/reversal/1"
+      }
+    },
+    {
+      "id": "director-ai-level-burst-integer",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/burstAtLink": 3.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/burstAtLink"
+      }
+    },
+    {
+      "id": "director-ai-level-burst-zero-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/burstAtLink": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-level-guard-repeat-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/guardRepeat": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/easy/guardRepeat"
+      }
+    },
+    {
+      "id": "director-ai-levels-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/beamAnswer": 0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/beamAnswer"
+      }
+    },
+    {
+      "id": "director-ai-levels-order-mul-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/perfectBlockMul": 0.9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/medium/perfectBlockMul"
+      }
+    },
+    {
+      "id": "director-ai-old-beam-answer-differs-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamAnswer": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-level-beam",
+        "pointer": "/beamAnswer"
+      }
+    },
+    {
+      "id": "director-interrupts-live-valid",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/schema": "director.interrupts/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/burst"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-interrupts-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "director-interrupts-underscore-key-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-schema-version",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/schema": "director.interrupts/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/perfectBlock/early"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/perfectBlock"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-ki-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/ki": 8.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/perfectBlock/ki"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-window-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/heavy": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/perfectBlock/windows/heavy"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-window-class-unknown",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/mid": 4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/perfectBlock/windows/mid"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-window-class-optional",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/perfectBlock/windows/return"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-pb-window-needs-weights",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/opener": {
+              "light": 8
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/perfectBlock/windows/opener"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-window-light-above-heavy",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/opener/light": 14
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/perfectBlock/windows/opener/light"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-window-above-windup-warns",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/ender": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-window",
+        "pointer": "/perfectBlock/windows/ender"
+      }
+    },
+    {
+      "id": "director-interrupts-pb-one-armed-eats-window",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/oneArmedOff": 6
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/perfectBlock/oneArmedOff"
+      }
+    },
+    {
+      "id": "director-interrupts-early-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/perfectBlock/early/return"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/perfectBlock/early"
+      }
+    },
+    {
+      "id": "director-interrupts-dodge-dash-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/dodgeCancel/dash": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/dodgeCancel/dash"
+      }
+    },
+    {
+      "id": "director-interrupts-dodge-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/dodgeCancel/gapTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/dodgeCancel"
+      }
+    },
+    {
+      "id": "director-interrupts-burst-range-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/burst/rangeBh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/burst/rangeBh"
+      }
+    },
+    {
+      "id": "director-interrupts-burst-auto-link",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/burst/autoLink": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/burst/autoLink"
+      }
+    },
+    {
+      "id": "director-interrupts-burst-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/burst/aoe": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/burst/aoe"
+      }
+    },
+    {
+      "id": "director-interrupts-reversal-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/reversal/landTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/reversal"
+      }
+    },
+    {
+      "id": "director-interrupts-reversal-patient-above",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/reversal/kiPatient": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/reversal/kiPatient"
+      }
+    },
+    {
+      "id": "director-interrupts-reversal-patient-equal-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/reversal/kiPatient": 20
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blocked-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blockedString/behindTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blockedString/behindTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-stale-after-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/stale/after": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/stale/after"
+      }
+    },
+    {
+      "id": "director-interrupts-stale-windup-max-below-step",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/stale/windupMax": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/stale/windupMax"
+      }
+    },
+    {
+      "id": "director-interrupts-stale-window-max-below-step",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/stale/windowMax": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/stale/windowMax"
+      }
+    },
+    {
+      "id": "director-ai-level-not-in-levels",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels": {
+              "easy": {
+                "beamAnswer": 0.35,
+                "perfectBlockMul": 0.6,
+                "guardRepeat": 8,
+                "punish": 0.6,
+                "punishHeavy": 1,
+                "reversal": [
+                  0.5,
+                  0.2
+                ],
+                "breakGuard": 0.6,
+                "riposte": 1,
+                "burstAtLink": 4
+              },
+              "medium": {
+                "beamAnswer": 0.35,
+                "perfectBlockMul": 0.6,
+                "guardRepeat": 8,
+                "punish": 0.6,
+                "punishHeavy": 1,
+                "reversal": [
+                  0.5,
+                  0.2
+                ],
+                "breakGuard": 0.6,
+                "riposte": 1,
+                "burstAtLink": 4
+              }
+            },
+            "/level": "hard"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-level",
+        "pointer": "/level"
+      }
     }
   ],
   "text": [

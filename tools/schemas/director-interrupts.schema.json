@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/director-interrupts",
+  "title": "director.interrupts/1",
+  "description": "data/director/interrupts.json: control-scheme step 3 (ADR 0008; control-rules.md sections 1, 2 and 6): the costs, cooldowns and windows of what a fighter does inside an exchange, read by sim/director/interrupt.gd (DirInterrupt). Ticks are sim ticks (60 a second); ki is out of 100. Version field: schema. Policy: closed except keys starting with an underscore; every key required except the window classes (a class not listed has no window). Orders (kiPatient at most ki; the stale maximums are at least one repeat's step; a one-armed blocker keeps a window; light at most heavy; a window not longer than its wind-up, a warning) are checked by tools/lib/xref-fight.js (interrupts-*).",
+  "type": "object",
+  "required": [
+    "schema",
+    "perfectBlock",
+    "dodgeCancel",
+    "burst",
+    "reversal",
+    "blockedString",
+    "stale"
+  ],
+  "properties": {
+    "schema": {
+      "const": "director.interrupts/1"
+    },
+    "perfectBlock": {
+      "type": "object",
+      "required": [
+        "ki",
+        "stopTicks",
+        "windows",
+        "early",
+        "oneArmedOff"
+      ],
+      "properties": {
+        "ki": {
+          "description": "Gained by the blocker.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stopTicks": {
+          "description": "The hit-stop on the block.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "windows": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "opener": {
+              "type": "object",
+              "required": [
+                "light",
+                "heavy"
+              ],
+              "properties": {
+                "light": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "heavy": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "description": "Depends on the exchange's weight.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "heavy": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ender": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "blast": {
+              "type": "object",
+              "required": [
+                "light",
+                "heavy"
+              ],
+              "properties": {
+                "light": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "heavy": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "description": "Depends on the exchange's weight.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "return": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "description": "The last ticks of the wind-up in which a fresh guard press is a perfect block, by strike class (moveset-rules.md section 11(f)); a class not listed has no window.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "early": {
+          "type": "object",
+          "required": [
+            "default",
+            "return"
+          ],
+          "properties": {
+            "default": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "return": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "description": "Ticks before the window opens in which a press still counts, by class.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "oneArmedOff": {
+          "description": "Ticks off every window for a blocker with a broken arm.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "dodgeCancel": {
+      "type": "object",
+      "required": [
+        "ki",
+        "cooldownTicks",
+        "gapTicks",
+        "dash"
+      ],
+      "properties": {
+        "ki": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cooldownTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gapTicks": {
+          "description": "The defender may cancel only this long after it was last struck (a gap between strikes, never hit-stun).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "dash": {
+          "description": "The speed of the dash in the held direction, units a second.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "burst": {
+      "type": "object",
+      "required": [
+        "ki",
+        "cooldownTicks",
+        "rangeBh",
+        "pushSpeed",
+        "baitStaggerTicks",
+        "threatTicks",
+        "autoLink"
+      ],
+      "properties": {
+        "ki": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cooldownTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rangeBh": {
+          "description": "A rival within this many body heights is shoved.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pushSpeed": {
+          "description": "The shove, units a second.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "baitStaggerTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "threatTicks": {
+          "description": "A fighter struck within this long is being hit, so a power press bursts at once.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "autoLink": {
+          "description": "The chain link at which a Simple-layout slot bursts when it pressed nothing.",
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "reversal": {
+      "type": "object",
+      "required": [
+        "ki",
+        "kiPatient",
+        "patientTicks",
+        "cooldownTicks",
+        "afterBlockTicks",
+        "delayTicks",
+        "landTicks"
+      ],
+      "properties": {
+        "ki": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kiPatient": {
+          "description": "The ki after patientTicks of continuous guard.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "patientTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cooldownTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "afterBlockTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "delayTicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "landTicks": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "blockedString": {
+      "type": "object",
+      "required": [
+        "behindTicks"
+      ],
+      "properties": {
+        "behindTicks": {
+          "description": "A string blocked to its end leaves the attacker unable to act for this long.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "stale": {
+      "type": "object",
+      "required": [
+        "after",
+        "windupPerRepeat",
+        "windupMax",
+        "windowPerRepeat",
+        "windowMax"
+      ],
+      "properties": {
+        "after": {
+          "description": "The same weight, mode and direction in this many exchanges running.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "windupPerRepeat": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "windupMax": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "windowPerRepeat": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "windowMax": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

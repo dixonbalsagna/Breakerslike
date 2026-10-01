@@ -665,6 +665,46 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- director ai: the level exists, the levels get harder, the old beamAnswer is the medium level's ----
+  const dai = get('data/director/ai.json');
+  if (isObj(dai)) {
+    const AI = 'data/director/ai.json';
+    const lv = isObj(dai.levels) ? dai.levels : {};
+    if (typeof dai.level === 'string' && isObj(dai.levels) && !(dai.level in lv)) err(AI, '/level', 'ai-level', `level "${dai.level}" is not in levels (${Object.keys(lv).filter((k) => !k.startsWith('_')).join(', ')})`);
+    const order = ['easy', 'medium', 'hard'];
+    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat']) {
+      for (let i = 1; i < order.length; i++) {
+        const a = isObj(lv[order[i - 1]]) ? lv[order[i - 1]][key] : undefined; const b = isObj(lv[order[i]]) ? lv[order[i]][key] : undefined;
+        if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');
+      }
+    }
+    const med = isObj(lv.medium) ? lv.medium.beamAnswer : undefined;
+    if (typeof dai.beamAnswer === 'number' && typeof med === 'number' && dai.beamAnswer !== med) err(AI, '/beamAnswer', 'ai-level-beam', `beamAnswer ${dai.beamAnswer} differs from the medium level's ${med} (it is kept for readers of the old shape)`, 'warning');
+  }
+
+  // ---- director interrupts: orders and the windows against the wind-ups ----
+  const itr = get('data/director/interrupts.json');
+  if (isObj(itr)) {
+    const IT = 'data/director/interrupts.json';
+    const pb = isObj(itr.perfectBlock) ? itr.perfectBlock : {};
+    const w = isObj(pb.windows) ? pb.windows : {};
+    for (const cls of ['opener', 'blast']) if (isObj(w[cls]) && typeof w[cls].light === 'number' && typeof w[cls].heavy === 'number' && w[cls].light > w[cls].heavy) err(IT, `/perfectBlock/windows/${cls}/light`, 'interrupts-order', `${cls} light window ${w[cls].light} is longer than its heavy window ${w[cls].heavy}`);
+    if (typeof pb.oneArmedOff === 'number') {
+      const all = [['opener/light', isObj(w.opener) ? w.opener.light : undefined], ['opener/heavy', isObj(w.opener) ? w.opener.heavy : undefined], ['heavy', w.heavy], ['ender', w.ender], ['blast/light', isObj(w.blast) ? w.blast.light : undefined], ['blast/heavy', isObj(w.blast) ? w.blast.heavy : undefined], ['return', w.return]];
+      for (const [name, v] of all) if (typeof v === 'number' && v > 0 && v <= pb.oneArmedOff) err(IT, `/perfectBlock/oneArmedOff`, 'interrupts-order', `oneArmedOff ${pb.oneArmedOff} leaves no window for ${name} (${v} ticks)`);
+    }
+    const rv = itr.reversal;
+    if (isObj(rv) && typeof rv.kiPatient === 'number' && typeof rv.ki === 'number' && rv.kiPatient > rv.ki) err(IT, '/reversal/kiPatient', 'interrupts-order', `kiPatient ${rv.kiPatient} is above ki ${rv.ki}; patience should be cheaper`);
+    const st = itr.stale;
+    if (isObj(st)) { if (typeof st.windupMax === 'number' && typeof st.windupPerRepeat === 'number' && st.windupMax < st.windupPerRepeat) err(IT, '/stale/windupMax', 'interrupts-order', `windupMax ${st.windupMax} is below one repeat's ${st.windupPerRepeat}`); if (typeof st.windowMax === 'number' && typeof st.windowPerRepeat === 'number' && st.windowMax < st.windowPerRepeat) err(IT, '/stale/windowMax', 'interrupts-order', `windowMax ${st.windowMax} is below one repeat's ${st.windowPerRepeat}`); }
+    const tpl7 = get('data/combat/templates.json');
+    const tmp = isObj(tpl7) && isObj(tpl7.profiles) && isObj(tpl7.profiles.dynamic) && isObj(tpl7.profiles.dynamic.tempo) ? tpl7.profiles.dynamic.tempo : undefined;
+    if (tmp) {
+      const pairs = [['/perfectBlock/windows/opener/light', isObj(w.opener) ? w.opener.light : undefined, 'windup'], ['/perfectBlock/windows/opener/heavy', isObj(w.opener) ? w.opener.heavy : undefined, 'heavyWindup'], ['/perfectBlock/windows/heavy', w.heavy, 'heavyWindup'], ['/perfectBlock/windows/ender', w.ender, 'enderWindup']];
+      for (const [pointer, v, k] of pairs) if (typeof v === 'number' && typeof tmp[k] === 'number' && v > tmp[k]) err(IT, pointer, 'interrupts-window', `window ${v} ticks is longer than the ${k} ${tmp[k]} ticks it is the end of`, 'warning');
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

@@ -1,0 +1,66 @@
+{
+  "schema": "director.interrupts/1",
+  "_about": "Validator fixture, not game data: the shape of the live file, with its numbers.",
+  "perfectBlock": {
+    "ki": 8,
+    "stopTicks": 6,
+    "windows": {
+      "opener": {
+        "light": 8,
+        "heavy": 10
+      },
+      "heavy": 10,
+      "ender": 10,
+      "blast": {
+        "light": 8,
+        "heavy": 10
+      },
+      "return": 6
+    },
+    "early": {
+      "default": 4,
+      "return": 0
+    },
+    "oneArmedOff": 2,
+    "_note": "ki: gained by the blocker. stopTicks: the hit-stop on the block. windows: the last ticks of the wind-up in which a fresh guard press is a perfect block, by strike class (moveset-rules.md section 11(f)); an opener and a blast depend on the exchange's weight; a class not listed has no window. early: ticks before the window opens in which a press still counts, by class. oneArmedOff: ticks off every window for a blocker with a broken arm. The lockout and the assist factor are Controls' (data/input/timing.json perfectBlock antiMashLockout, assistFactor). Touch's 2 extra ticks need the slot's layout in the sim and are not applied yet"
+  },
+  "dodgeCancel": {
+    "ki": 15,
+    "cooldownTicks": 180,
+    "gapTicks": 6,
+    "dash": 1500,
+    "_note": "ki and cooldownTicks: control-rules.md section 2 (15 ki, 3 s). gapTicks: the defender may cancel only this long after it was last struck (a gap between strikes, never hit-stun). dash: the speed of the dash in the held direction, units a second"
+  },
+  "burst": {
+    "ki": 30,
+    "cooldownTicks": 480,
+    "rangeBh": 4,
+    "pushSpeed": 1800,
+    "baitStaggerTicks": 30,
+    "threatTicks": 30,
+    "autoLink": 4,
+    "_note": "ki and cooldownTicks: 30 ki, 8 s. rangeBh: a rival within this many body heights is shoved. pushSpeed: the shove, units a second (about 8 bh of travel). baitStaggerTicks: the burster's stagger when the rival was guarding. threatTicks: a fighter struck within this long is 'being hit', so a power press bursts at once. autoLink: the chain link at which a Simple-layout slot (autoBurst) bursts when it pressed nothing"
+  },
+  "reversal": {
+    "ki": 20,
+    "kiPatient": 10,
+    "patientTicks": 120,
+    "cooldownTicks": 360,
+    "afterBlockTicks": 12,
+    "delayTicks": 8,
+    "landTicks": 12,
+    "_note": "ki, or kiPatient after patientTicks of continuous guard (20, or 10 after 2 s); cooldownTicks 6 s. afterBlockTicks: how long after a normal block the press works. delayTicks: the turn before the defender's own heavy starts. landTicks: how long after the turn that heavy may still start at once"
+  },
+  "blockedString": {
+    "behindTicks": 12,
+    "_note": "a string blocked to its end leaves the attacker unable to act for this long, and the guard may start an attack at once in that time (control-rules.md section 6, point 3)"
+  },
+  "stale": {
+    "after": 3,
+    "windupPerRepeat": 2,
+    "windupMax": 6,
+    "windowPerRepeat": 2,
+    "windowMax": 4,
+    "_note": "the same weight, mode and direction in 'after' exchanges running: each further repeat adds windupPerRepeat ticks to its wind-ups (at most windupMax) and windowPerRepeat ticks to the rival's perfect-block window (at most windowMax). A change of weight, mode or direction clears it"
+  }
+}
