@@ -135,7 +135,7 @@ static func bound(preset: String, action: String) -> bool:
 		return true
 	if action == "specials":
 		action = "special1"
-	var pr: Dictionary = SimInputData.preset(preset)
+	var pr: Dictionary = UiRemapModel.preset(preset)
 	if pr.is_empty():
 		return true   # not a layout id (the "today" scheme, a preview): nothing to filter by
 	var layer: String = "power" if action.begins_with("special") else ""
@@ -149,7 +149,7 @@ static func specs_for(action: String, family: String, slot: int, style: String =
 		var act: String = action
 		if action.begins_with("special") and action != "special":
 			layer = "power"
-		var specs: Array = binding_specs(SimInputData.preset(preset), act, family, style, layer)
+		var specs: Array = binding_specs(UiRemapModel.preset(preset), act, family, style, layer)
 		if not specs.is_empty():
 			return specs
 	var sp: Dictionary = spec(action, family, slot, style)

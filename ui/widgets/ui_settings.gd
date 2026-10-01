@@ -16,6 +16,7 @@ const TOGGLE := "toggle"
 const SLIDER := "slider"
 const CHOICE := "choice"
 const BUTTON := "button"
+const BIND := "bind"        # the Remap screen's row: an action's name and the controls it has now (row["specs"] are glyph specs)
 
 
 static func data() -> Dictionary:
@@ -69,6 +70,13 @@ static func _same(a, b) -> bool:
 	return a == b
 
 
+## A choice row's word for a value: the row's own words (the Remap screen's layouts) or the labels in settings.json, else the value itself.
+static func row_word(row: Dictionary, value) -> String:
+	if row.has("words"):
+		return str((row["words"] as Dictionary).get(str(value), str(value)))
+	return choice_word(str(row["key"]), value)
+
+
 ## A choice's word: the label from settings.json, else the value itself.
 static func choice_word(key: String, value) -> String:
 	var lbl: Dictionary = (data().get("labels", {}) as Dictionary).get(key, {})
@@ -95,9 +103,14 @@ static func value_word(row: Dictionary, opts: Dictionary) -> String:
 		SLIDER:
 			return slider_word(row["o"], value_of(row, opts))
 		CHOICE:
-			return choice_word(row["key"], value_of(row, opts))
+			return row_word(row, value_of(row, opts))
 		BUTTON:
 			return str(row.get("value", ""))
+		BIND:
+			var parts := PackedStringArray()
+			for sp in row.get("specs", []):
+				parts.append(str(sp.get("label", "")))
+			return " ".join(parts)
 	return ""
 
 
@@ -134,11 +147,13 @@ static func slider_at(row: Dictionary, track: Rect2, x: float):
 # --- Geometry -------------------------------------------------------------------------------------------------------------------
 
 ## The layout for a viewport: {card, inner, close, title_pos, body, footer, rows[], content_h, max_scroll, scroll, fits, tm, ...}.
-## `st` is {focus: row index, scroll: pixels}; `opts` the HUD's options. A row is {idx, kind, key, label_lines, label_x, label_y, rect,
+## `st` is {focus: row index, scroll: pixels}; `opts` the HUD's options. The Remap screen uses the same card with its own rows and words: `st` may
+## also carry rows (instead of rows()), title, hint_text, status (shown in the foot instead of the focused row's help), confirm (labels of
+## buttons under the foot), and capture (a row waiting for a control) with capture_word. A row is {idx, kind, key, label_lines, label_x, label_y, rect,
 ## ctl: {part: Rect2}, word, frac, enabled, visible, y (in the content), h}.
 static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary, opts: Dictionary) -> Dictionary:
 	var d: Dictionary = data()
-	var rws: Array = rows()
+	var rws: Array = st["rows"] if st.has("rows") else rows()
 	var tm: float = maxf(48.0 * dp, 44.0)
 	var margin: float = maxf(vp.x * 0.03, 12.0)
 	var my: float = maxf(vp.y * 0.04, 10.0)
@@ -155,7 +170,7 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary, 
 	var inner := Rect2(card.position + Vector2(pad, pad), card.size - Vector2(pad, pad) * 2.0)
 	var close_sz: float = maxf(tm, 40.0 * cs)
 	var close := Rect2(card.end.x - pad - close_sz, card.position.y + pad * 0.6, close_sz, close_sz)
-	var title: String = str(d.get("title", "SETTINGS"))
+	var title: String = str(st.get("title", d.get("title", "SETTINGS")))
 	var header_h: float = maxf(UiText.height(fs_title), close_sz)
 	var fits: bool = inner.position.x + UiText.width(title, fs_title) <= close.position.x - pad * 0.5
 	var gap: float = maxf(pad * 0.4, 5.0)
@@ -167,8 +182,21 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary, 
 	help_lines = clampi(mini(help_lines, int(floor(card.size.y * 0.2 / lh_small))), 1, 2)
 	var hint_key: String = "hint_pad" if (not touch and str(st.get("device", "kbd")) != "kbd") else "hint_keys"
 	var hint_text: String = "" if touch else str(d.get(hint_key, ""))
+	if st.has("hint_text"):
+		hint_text = "" if touch else str(st["hint_text"])
+	var status: String = str(st.get("status", ""))
+	if status != "":
+		help_lines = clampi(maxi(help_lines, UiText.wrap(status, fs_small, inner.size.x).size()), 1, 2)
 	var foot_lines: int = help_lines + (1 if hint_text != "" else 0)
-	var footer := Rect2(inner.position.x, inner.end.y - float(foot_lines) * lh_small - 2.0, inner.size.x, float(foot_lines) * lh_small + 2.0)
+	var confirm: Array = st.get("confirm", [])
+	var conf_h: float = (tm + gap) if not confirm.is_empty() else 0.0
+	var footer := Rect2(inner.position.x, inner.end.y - float(foot_lines) * lh_small - 2.0 - conf_h, inner.size.x, float(foot_lines) * lh_small + 2.0 + conf_h)
+	var conf_rects: Array = []
+	var cx: float = footer.position.x
+	for k in range(confirm.size()):
+		var bw0: float = maxf(tm * 2.2, UiText.width(str(confirm[k]), fs_body) + tm * 0.8)
+		conf_rects.append(Rect2(cx, footer.end.y - tm, bw0, tm))
+		cx += bw0 + gap
 	var body_top: float = inner.position.y + header_h + gap
 	var body := Rect2(inner.position.x, body_top, inner.size.x, footer.position.y - gap - body_top)
 	var sbw: float = maxf(6.0 * cs, 4.0)
@@ -233,7 +261,7 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary, 
 				var o: Dictionary = r2["o"]
 				var vw: float = tm * 1.6
 				for c in o["choices"]:
-					vw = maxf(vw, UiText.width(choice_word(str(r2["key"]), c), fs_body) + gap * 2.0)
+					vw = maxf(vw, UiText.width(row_word(r2, c), fs_body) + gap * 2.0)
 				vw = minf(vw, maxf(area.size.x - tm * 2.0, tm))
 				var rb := Rect2(area.end.x - tm, cy - tm * 0.5, tm, tm)
 				var lb := Rect2(rb.position.x - vw - tm, cy - tm * 0.5, tm, tm)
@@ -254,6 +282,19 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary, 
 			BUTTON:
 				var bw: float = maxf(tm * 2.2, UiText.width(str(rec["word"]), fs_body) + tm * 0.8)
 				ctl["button"] = Rect2(area.end.x - bw, cy - tm * 0.5, bw, tm)
+			BIND:
+				ctl["tap"] = Rect2(area.position.x, cy - tm * 0.5, area.size.x, tm)
+				var gh0: float = tm * 0.6
+				var tw: float = 0.0
+				for sp in r2.get("specs", []):
+					tw += UiGlyphs.width_spec(sp, gh0) + gh0 * 0.08
+				if tw > area.size.x:
+					bad += 1
+				rec["specs"] = r2.get("specs", [])
+				rec["gh"] = gh0
+				rec["capturing"] = i2 == int(st.get("capture", -1))
+				if rec["capturing"]:
+					rec["word"] = str(st.get("capture_word", "..."))
 		rec["ctl"] = ctl
 		# Checks: every control is at least a 48 dp square (the track and the tap area at least that tall), inside its row and the card.
 		for k in ctl:
@@ -266,7 +307,12 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, st: Dictionary, 
 			bad += 1
 	var out := {"card": card, "inner": inner, "close": close, "cs": cs, "pad": pad, "tm": tm, "title": title, "title_pos": Vector2(inner.position.x, inner.position.y + UiText.ascent(fs_title)),
 		"fs_title": fs_title, "fs_body": fs_body, "fs_small": fs_small, "lh": lh, "lh_small": lh_small, "body": body, "footer": footer, "rows": placed, "content_h": content_h,
-		"max_scroll": max_scroll, "scroll": scroll, "stack": stack, "hint": hint_text, "help_lines": help_lines, "sbw": sbw, "bad": bad, "gap": gap, "focus": int(st.get("focus", -1))}
+		"max_scroll": max_scroll, "scroll": scroll, "stack": stack, "hint": hint_text, "help_lines": help_lines, "sbw": sbw, "bad": bad, "gap": gap, "focus": int(st.get("focus", -1)),
+		"status": status, "confirm": conf_rects, "confirm_labels": confirm}
+	for cr2 in conf_rects:
+		if not card.encloses(cr2):
+			bad += 1
+	out["bad"] = bad
 	out["fits"] = fits and bad == 0 and body.size.y >= tm
 	return out
 
@@ -295,6 +341,10 @@ static func scroll_to(p: Dictionary, idx: int, scroll: float) -> float:
 static func hit(p: Dictionary, pos: Vector2) -> Dictionary:
 	if (p["close"] as Rect2).has_point(pos):
 		return {"row": -1, "part": "close"}
+	var cb: Array = p.get("confirm", [])
+	for k in range(cb.size()):
+		if (cb[k] as Rect2).has_point(pos):
+			return {"row": k, "part": "confirm"}
 	var body: Rect2 = p["body"]
 	if not body.has_point(pos):
 		return {}
@@ -316,7 +366,7 @@ static func sig(p: Dictionary, opts: Dictionary, touch: bool) -> Array:
 	var vals: Array = []
 	for rec in p["rows"]:
 		vals.append(rec["word"])
-	return [int((p["card"] as Rect2).size.x), int((p["card"] as Rect2).size.y), int(p["cs"] * 100.0), touch, int(p["focus"]), int(p["scroll"]), vals]
+	return [int((p["card"] as Rect2).size.x), int((p["card"] as Rect2).size.y), int(p["cs"] * 100.0), touch, int(p["focus"]), int(p["scroll"]), vals, p["status"], p["confirm_labels"], str(p["title"]), str(p["hint"])]
 
 
 # --- Drawing --------------------------------------------------------------------------------------------------------------------
@@ -367,7 +417,9 @@ static func draw(ci: CanvasItem, p: Dictionary, opts: Dictionary) -> void:
 		var is_focus: bool = int(rec["idx"]) == focus
 		var rr: Rect2 = r.intersection(body)
 		if rr.size.y > 1.0:
-			if is_focus:
+			if bool(rec.get("capturing", false)):
+				UiIcons.rrect(ci, rr, tm * 0.2, Color(Color(UiLook.col(UiLook.WARN)), 0.12), Color(UiLook.col(UiLook.WARN)), 2.4)
+			elif is_focus:
 				UiIcons.rrect(ci, rr, tm * 0.2, Color(ink, 0.10), Color(ink, 0.75), 1.8)
 			else:
 				ci.draw_line(Vector2(r.position.x, rr.end.y), Vector2(r.end.x, rr.end.y), Color(edge, 0.12), 1.0)
@@ -394,6 +446,8 @@ static func draw(ci: CanvasItem, p: Dictionary, opts: Dictionary) -> void:
 	var rws_p: Array = p["rows"]
 	if focus >= 0 and focus < rws_p.size():
 		help = str(rws_p[focus]["help"])
+	if str(p["status"]) != "":
+		help = str(p["status"])
 	var hl: PackedStringArray = UiText.wrap(help, fs_small, foot.size.x)
 	var nl: int = int(p["help_lines"])
 	for k in range(nl):
@@ -407,6 +461,11 @@ static func draw(ci: CanvasItem, p: Dictionary, opts: Dictionary) -> void:
 		fy += float(p["lh_small"])
 	if str(p["hint"]) != "":
 		UiText.draw(ci, str(p["hint"]), Vector2(foot.position.x, fy), fs_small, dim, -1)
+	var cl: Array = p["confirm_labels"]
+	for k in range(cl.size()):
+		var cr3: Rect2 = p["confirm"][k]
+		UiIcons.rrect(ci, cr3, cr3.size.y * 0.3, Color(ink, 0.92) if k == 0 else Color(scrim, 0.8), Color(UiLook.col(UiLook.EDGE), 0.7), 1.8)
+		UiText.draw(ci, str(cl[k]), Vector2(cr3.get_center().x, cr3.get_center().y + float(fs_body) * 0.35), fs_body, Color(UiLook.col(UiLook.INK_DARK)) if k == 0 else ink, 0)
 	UiText.no_outline = false
 
 
@@ -460,3 +519,15 @@ static func _draw_ctl(ci: CanvasItem, rec: Dictionary, ctl: Dictionary, a: float
 			var br: Rect2 = ctl["button"]
 			UiIcons.rrect(ci, br, br.size.y * 0.3, Color(scrim, 0.8 * a), Color(edge, 0.9 * a), 1.8)
 			UiText.draw(ci, str(rec["word"]), Vector2(br.get_center().x, br.get_center().y + float(fs) * 0.35), fs, Color(ink, a), 0)
+		BIND:
+			var tp: Rect2 = ctl["tap"]
+			if bool(rec.get("capturing", false)):
+				UiText.draw(ci, str(rec["word"]), Vector2(tp.end.x - tm * 0.2, tp.get_center().y + float(fs) * 0.35), fs, Color(UiLook.col(UiLook.WARN)), 1)
+			else:
+				var gh: float = float(rec["gh"])
+				var tw: float = 0.0
+				for sp in rec["specs"]:
+					tw += UiGlyphs.width_spec(sp, gh) + gh * 0.08
+				var gx: float = tp.end.x - tw
+				for sp in rec["specs"]:
+					gx += UiGlyphs.draw_spec(ci, sp, Vector2(gx, tp.get_center().y), gh, a, true) + gh * 0.08

@@ -25,6 +25,7 @@ signal option_changed(key: String, value)   # set_option changed an option's val
 signal settings_opened                     # the Settings screen opened: the host pauses the sim and releases held keys (as for How to play)
 signal settings_closed                     # it closed: the host restores the pause it found
 signal settings_action_requested(action: String)   # a button on the screen was pressed ("remap"): the host opens what it names
+signal remap_changed(layout_id: String, overrides: Array)   # the player changed a layout's controls: the host applies the rows (Controls' applier) and saves
 signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
@@ -87,6 +88,19 @@ var _last_lh := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
 var _l_settings: UiLayer
+var _l_remap: UiLayer
+var _rm_open := false
+var _rm_direct := false               # opened without the Settings screen under it (closing it then closes Settings too)
+var _rm_layout := ""                  # the layout being changed (a preset id)
+var _rm_focus := 0
+var _rm_scroll := 0.0
+var _rm_mode := "list"                # "list", "capture" (waiting for a key or button) or "confirm" (a swap is offered)
+var _rm_entry := ""                   # the entry being captured (an action id)
+var _rm_step := 0                     # which of the four move keys, while capturing them
+var _rm_pending: Dictionary = {}      # a conflict waiting for an answer: {control, with}
+var _rm_status := ""
+var _rm_drag: Dictionary = {}
+var _rm_trig: Dictionary = {}         # trigger axis -> true while it is held past the capture threshold
 var _set_open := false
 var _set_focus := -1                  # the focused row of UiSettings.rows()
 var _set_scroll := 0.0
@@ -176,6 +190,7 @@ func _ready() -> void:
 	_l_fbpill = _layer(_paint_fbpill)
 	_l_howto = _layer(_paint_howto)
 	_l_settings = _layer(_paint_settings)
+	_l_remap = _layer(_paint_remap)
 	_l_fb = _layer(_paint_fb)        # last: over everything
 	_fb_text = TextEdit.new()        # the free-text box and the report preview are real text controls, placed by the panel's plan
 	_fb_text.visible = false
@@ -237,7 +252,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_settings, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_settings, _l_remap, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -497,7 +512,8 @@ func _update_layers() -> void:
 	_l_hint.update_sig(UiReads.hint_sig(hub))
 	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s, _howto_preset() + str(opts["glyph_style"])) if _howto_open else null)
 
-	_l_settings.update_sig(_settings_sig() if _set_open else null)
+	_l_settings.update_sig(_settings_sig() if (_set_open and not _rm_open) else null)
+	_l_remap.update_sig(_remap_sig() if _rm_open else null)
 
 	var events_on: bool = not hub.cards.is_empty() or not hub.barks.is_empty() or not hub.banner.is_empty() or hub.world_card != null
 	_l_events.update_sig(_frame if events_on else null)
@@ -708,6 +724,9 @@ func _paint_howto(ci: CanvasItem) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _rm_open:
+		_remap_input(event)
+		return
 	if _set_open:
 		_settings_input(event)
 		return
@@ -797,6 +816,9 @@ func show_settings() -> void:
 func hide_settings() -> void:
 	if not _set_open:
 		return
+	_rm_open = false
+	_rm_mode = "list"
+	_l_remap.update_sig(null)
 	_set_open = false
 	_set_drag = {}
 	_l_settings.update_sig(null)
@@ -840,6 +862,14 @@ func settings_set(key: String, value) -> void:
 ## Apply the options the player saved on the Settings screen (a new run). The host calls it once at startup, after it has connected
 ## option_changed (so it hears pad_preset and the rest) and after it has pushed its own starting values.
 func load_saved_options() -> void:
+	var rm = UiPrefs.get_value("remap", {})
+	if rm is Dictionary:
+		for id in rm:
+			if SimInputData.preset(str(id)).is_empty() or not (rm[id] is Array):
+				continue
+			UiRemapModel.overrides[str(id)] = rm[id]
+			if not (rm[id] as Array).is_empty():
+				remap_changed.emit(str(id), rm[id])
 	var saved = UiPrefs.get_value("options", {})
 	if not (saved is Dictionary):
 		return
@@ -874,7 +904,10 @@ func _settings_accept(i: int) -> void:
 		UiSettings.CHOICE:
 			_settings_step(i, 1)
 		UiSettings.BUTTON:
-			settings_action_requested.emit(str(r["action"]))
+			if str(r["action"]) == "remap":
+				show_remap()
+			else:
+				settings_action_requested.emit(str(r["action"]))
 
 
 ## One of "up", "down", "left", "right", "accept", "page_up", "page_down", "home", "end", "close" (what a key, a pad button or a stick push does).
@@ -1055,6 +1088,522 @@ func _settings_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion:
 		if (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
 			_settings_motion(event.position)
+	get_viewport().set_input_as_handled()
+
+
+# --- The Remap controls screen (docs/ui/hud-spec.md section 27) ----------------------------------------------------------------
+
+const PAD_NAMES: Dictionary = {JOY_BUTTON_A: "south", JOY_BUTTON_B: "east", JOY_BUTTON_X: "west", JOY_BUTTON_Y: "north", JOY_BUTTON_BACK: "back", JOY_BUTTON_START: "start",
+	JOY_BUTTON_LEFT_STICK: "l3", JOY_BUTTON_RIGHT_STICK: "r3", JOY_BUTTON_LEFT_SHOULDER: "lb", JOY_BUTTON_RIGHT_SHOULDER: "rb",
+	JOY_BUTTON_DPAD_UP: "dpad_up", JOY_BUTTON_DPAD_DOWN: "dpad_down", JOY_BUTTON_DPAD_LEFT: "dpad_left", JOY_BUTTON_DPAD_RIGHT: "dpad_right"}
+
+
+## Open the Remap controls screen (from the Settings entry; the host may also call it). `layout_id` is a keyboard or pad preset; "" picks the
+## first human's own. While it is open the HUD takes every key, pad button and click. Opened without Settings under it, it opens Settings too
+## (the host's pause handling is then the same) and closing it closes both.
+func show_remap(layout_id: String = "") -> void:
+	if _rm_open or _howto_open or _fb_open:
+		return
+	if not _set_open:
+		show_settings()
+		if not _set_open:
+			return
+		_rm_direct = true
+	else:
+		_rm_direct = false
+	var ids: Array = UiRemapModel.layouts()
+	if layout_id == "" or not ids.has(layout_id):
+		layout_id = "kb-solo"
+		for m in hub.models:
+			if not m.ai:
+				var pid: String = UiHints.preset_id(m, _o())
+				layout_id = pid if ids.has(pid) else (str(opts["pad_preset"]) if m.device != "" and m.device != "kbd" and m.device != "touch" else "kb-solo")
+				break
+	_rm_open = true
+	_rm_layout = layout_id
+	_rm_focus = 1
+	_rm_scroll = 0.0
+	_rm_mode = "list"
+	_rm_status = ""
+	_rm_drag = {}
+	_rm_trig = {}
+	_l_settings.update_sig(null)
+	_l_remap.invalidate()
+
+
+func hide_remap() -> void:
+	if not _rm_open:
+		return
+	_rm_open = false
+	_rm_mode = "list"
+	_rm_drag = {}
+	_l_remap.update_sig(null)
+	_l_settings.invalidate()
+	if _rm_direct:
+		_rm_direct = false
+		hide_settings()
+
+
+func is_remap_open() -> bool:
+	return _rm_open
+
+
+func remap_layout() -> String:
+	return _rm_layout
+
+
+func remap_mode() -> String:
+	return _rm_mode
+
+
+func _rm_words() -> Dictionary:
+	return UiData.settings().get("_remap", {})
+
+
+func _rm_fam() -> String:
+	var p: Dictionary = UiRemapModel.preset(_rm_layout)
+	if str(p.get("device", "")) == "kb":
+		return "kbd"
+	var dev: String = _howto_device()
+	return dev if dev != "kbd" and dev != "touch" and dev != "" else "xbox"
+
+
+func _rm_is_kb() -> bool:
+	return str(UiRemapModel.preset(_rm_layout).get("device", "")) == "kb"
+
+
+## What a control is called in a sentence: a key by its name, a pad control by the words in settings.json.
+func _rm_control_word(control: String) -> String:
+	var name: String = control.get_slice(":", 1)
+	if control.begins_with("kb:"):
+		return UiGlyphs.key_label(name)
+	return str((_rm_words().get("controls", {}) as Dictionary).get(name, name))
+
+
+func _rm_action_word(id: String, step: int = -1) -> String:
+	var w: Dictionary = _rm_words()
+	var s: String = str((w.get("actions", {}) as Dictionary).get(id, id))
+	if id == "move" and step >= 0:
+		s = "Fly " + str((w.get("move_steps", {}) as Dictionary).get(UiRemapModel.MOVE_STEPS[step], ""))
+	return s
+
+
+## The screen's rows: the layout chooser, a row per entry with the controls it has now, and Reset.
+func _rm_rows() -> Array:
+	var w: Dictionary = _rm_words()
+	var ids: Array = UiRemapModel.layouts()
+	var out: Array = []
+	out.append({"kind": UiSettings.CHOICE, "key": "layout", "label": str(w.get("layout", "Layout")), "help": str(w.get("layout_help", "")), "enabled": true,
+		"o": {"choices": ids, "default": ids[0] if not ids.is_empty() else ""}, "words": w.get("layouts", {})})
+	var p: Dictionary = UiRemapModel.preset(_rm_layout)
+	var fam: String = _rm_fam()
+	var style: String = str(opts["glyph_style"])
+	for e in UiRemapModel.entries(p):
+		var specs: Array = []
+		for c in UiRemapModel.controls_of(p, e):
+			specs.append(UiGlyphs.spec_control(str(c), fam, style))
+		out.append({"kind": UiSettings.BIND, "key": str(e["id"]), "label": _rm_action_word(str(e["action"])), "help": str((w.get("helps", {}) as Dictionary).get(str(e["action"]), "")),
+			"enabled": true, "specs": specs})
+	out.append({"kind": UiSettings.BUTTON, "key": "", "action": "reset", "label": str(w.get("reset", "Reset")), "value": str(w.get("reset_button", "Reset")),
+		"help": str(w.get("reset_help", "")), "enabled": true})
+	return out
+
+
+func _rm_status_text() -> String:
+	var w: Dictionary = _rm_words()
+	match _rm_mode:
+		"capture":
+			if _rm_status != "":
+				return _rm_status   # a refusal ("kept for the game") stays up until the next press
+			var key: String = "capture_key" if _rm_is_kb() else "capture_pad"
+			return str(w.get(key, "")).replace("{action}", _rm_action_word(_rm_entry, _rm_step if _rm_entry == "move" else -1))
+		"confirm":
+			return str(w.get("conflict", "")).replace("{control}", _rm_control_word(str(_rm_pending["control"]))).replace("{other}", _rm_action_word(str(_rm_pending["with"]), int(_rm_pending["with_idx"]) if str(_rm_pending["with"]) == "move" else -1))
+	return _rm_status
+
+
+func remap_plan() -> Dictionary:
+	var w: Dictionary = _rm_words()
+	var rws: Array = _rm_rows()
+	var cap := -1
+	if _rm_mode == "capture" or _rm_mode == "confirm":
+		for i in range(rws.size()):
+			if rws[i]["kind"] == UiSettings.BIND and str(rws[i]["key"]) == _rm_entry:
+				cap = i
+	var conf: Array = []
+	if _rm_mode == "capture":
+		conf = [str(w.get("cancel", "CANCEL"))]
+	elif _rm_mode == "confirm":
+		conf = [str(w.get("swap", "SWAP")), str(w.get("cancel", "CANCEL"))]
+	var hint: String = str(w.get("hint_pad" if _set_device != "kbd" else "hint_keys", ""))
+	if _rm_mode != "list":
+		hint = ""
+	var st := {"rows": rws, "focus": _rm_focus, "scroll": _rm_scroll, "device": _set_device, "title": str(w.get("title", "REMAP CONTROLS")), "hint_text": hint,
+		"status": _rm_status_text(), "confirm": conf, "capture": cap, "capture_word": str(w.get("capture_word", "..."))}
+	return UiSettings.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), st, {"layout": _rm_layout})
+
+
+func _remap_sig() -> Array:
+	return UiSettings.sig(remap_plan(), opts, bool(opts["touch_ui"])) + [_rm_layout, _rm_mode, _set_device]
+
+
+func _paint_remap(ci: CanvasItem) -> void:
+	if _rm_open:
+		UiSettings.draw(ci, remap_plan(), {"layout": _rm_layout})
+
+
+func _rm_focusable() -> Array:
+	return UiSettings.focusable(_rm_rows())
+
+
+func _rm_row_index(id: String) -> int:
+	var rws: Array = _rm_rows()
+	for i in range(rws.size()):
+		if rws[i]["kind"] == UiSettings.BIND and str(rws[i]["key"]) == id:
+			return i
+	return -1
+
+
+func _rm_set_layout(id: String) -> void:
+	if id == _rm_layout:
+		return
+	_rm_layout = id
+	_rm_mode = "list"
+	_rm_status = ""
+	_rm_scroll = 0.0
+	_rm_focus = 1
+	_l_remap.invalidate()
+
+
+func _rm_cycle_layout(dir: int) -> void:
+	var ids: Array = UiRemapModel.layouts()
+	var at: int = ids.find(_rm_layout)
+	_rm_set_layout(str(ids[posmod(at + dir, ids.size())]))
+
+
+## Commit a changed layout: the overrides it now differs from the data by, held for the glyphs, kept for the next run and announced for the
+## host to apply to the input hub.
+func _rm_commit(newp: Dictionary) -> void:
+	var ovr: Array = UiRemapModel.diff(UiRemapModel.base(_rm_layout), newp)
+	if ovr.is_empty():
+		UiRemapModel.overrides.erase(_rm_layout)
+	else:
+		UiRemapModel.overrides[_rm_layout] = ovr
+	var saved = UiPrefs.get_value("remap", {})
+	var all: Dictionary = saved if saved is Dictionary else {}
+	all[_rm_layout] = ovr
+	UiPrefs.set_value("remap", all)
+	remap_changed.emit(_rm_layout, ovr)
+	_l_remap.invalidate()
+	_l_hints_invalidate()
+
+
+## The legend, the prompt row and the card read the layout's bindings: ask them to redraw.
+func _l_hints_invalidate() -> void:
+	for l in _l_hints:
+		l.invalidate()
+	for l in _l_prompts:
+		l.invalidate()
+	if _l_howto != null:
+		_l_howto.invalidate()
+
+
+func _rm_start_capture(id: String) -> void:
+	_rm_mode = "capture"
+	_rm_entry = id
+	_rm_step = 0
+	_rm_status = ""
+	_rm_pending = {}
+	_rm_trig = {}
+	_l_remap.invalidate()
+
+
+func _rm_cancel() -> void:
+	if _rm_mode == "list":
+		return
+	_rm_mode = "list"
+	_rm_status = str(_rm_words().get("cancelled", ""))
+	_l_remap.invalidate()
+
+
+## A key or button was pressed while a control is wanted: bind it, ask about a swap, or say why not.
+func _rm_try(control: String) -> void:
+	var w: Dictionary = _rm_words()
+	var p: Dictionary = UiRemapModel.preset(_rm_layout)
+	var res: Dictionary = UiRemapModel.check(p, UiRemapModel.pair_of(_rm_layout), _rm_entry, _rm_step, control)
+	var word: String = _rm_control_word(control)
+	_rm_status = ""
+	match str(res["status"]):
+		"ok":
+			_rm_commit(UiRemapModel.rebind(p, _rm_entry, _rm_step, control, false))
+			_rm_advance(control)
+		"same":
+			_rm_advance(control, true)
+		"conflict":
+			_rm_pending = {"control": control, "with": str(res["with"]), "with_idx": int(res["with_idx"])}
+			_rm_mode = "confirm"
+		"reserved":
+			_rm_status = str(w.get("reserved", "")).replace("{control}", word)
+		"pair":
+			_rm_status = str(w.get("pair", "")).replace("{control}", word)
+		"wrong_device":
+			_rm_status = str(w.get("wrong_device_kb" if _rm_is_kb() else "wrong_device_pad", ""))
+	_l_remap.invalidate()
+
+
+func _rm_advance(control: String, same: bool = false) -> void:
+	var w: Dictionary = _rm_words()
+	if _rm_entry == "move" and _rm_step < 3:
+		_rm_step += 1
+		_rm_mode = "capture"
+		_rm_status = ""
+		return
+	_rm_mode = "list"
+	var key: String = "same" if same else "done"
+	_rm_status = str(w.get(key, "")).replace("{action}", _rm_action_word(_rm_entry)).replace("{control}", _rm_control_word(control))
+	var at: int = _rm_row_index(_rm_entry)
+	if at >= 0:
+		_rm_focus = at
+
+
+func _rm_answer_swap() -> void:
+	if _rm_mode != "confirm":
+		return
+	var p: Dictionary = UiRemapModel.preset(_rm_layout)
+	var control: String = str(_rm_pending["control"])
+	var newp: Dictionary = UiRemapModel.rebind(p, _rm_entry, _rm_step, control, true)
+	if not newp.is_empty():
+		_rm_commit(newp)
+	_rm_pending = {}
+	_rm_mode = "capture"
+	_rm_advance(control)
+
+
+func _rm_reset() -> void:
+	var base: Dictionary = UiRemapModel.base(_rm_layout)
+	_rm_commit(base.duplicate(true))
+	_rm_status = str(_rm_words().get("reset_done", "")).replace("{layout}", str((_rm_words().get("layouts", {}) as Dictionary).get(_rm_layout, _rm_layout)))
+	_l_remap.invalidate()
+
+
+func _rm_accept(i: int) -> void:
+	var rws: Array = _rm_rows()
+	if i < 0 or i >= rws.size():
+		return
+	var r: Dictionary = rws[i]
+	match r["kind"]:
+		UiSettings.CHOICE:
+			_rm_cycle_layout(1)
+		UiSettings.BIND:
+			_rm_focus = i
+			_rm_start_capture(str(r["key"]))
+		UiSettings.BUTTON:
+			_rm_reset()
+
+
+## One of "up", "down", "left", "right", "accept", "page_up", "page_down", "home", "end", "close", "swap", "cancel".
+func remap_action(act: String) -> void:
+	if not _rm_open:
+		return
+	if _rm_mode == "capture":
+		if act == "cancel" or act == "close":
+			_rm_cancel()
+		return
+	if _rm_mode == "confirm":
+		if act == "accept" or act == "swap":
+			_rm_answer_swap()
+		elif act == "cancel" or act == "close":
+			_rm_cancel()
+		return
+	var fo: Array = _rm_focusable()
+	var at: int = fo.find(_rm_focus)
+	match act:
+		"close":
+			hide_remap()
+			return
+		"up", "down", "page_up", "page_down", "home", "end":
+			if fo.is_empty():
+				return
+			var n: int = fo.size()
+			var jump: int = 5 if act.begins_with("page") else 1
+			match act:
+				"up", "page_up":
+					at = maxi(at - jump, 0) if at >= 0 else 0
+				"down", "page_down":
+					at = mini(at + jump, n - 1) if at >= 0 else 0
+				"home":
+					at = 0
+				"end":
+					at = n - 1
+			_rm_focus = int(fo[at])
+			_rm_scroll = UiSettings.scroll_to(remap_plan(), _rm_focus, _rm_scroll)
+		"left":
+			_rm_cycle_layout(-1)
+		"right":
+			_rm_cycle_layout(1)
+		"accept":
+			_rm_accept(_rm_focus)
+	_l_remap.invalidate()
+
+
+func _rm_press(pos: Vector2) -> void:
+	var p: Dictionary = remap_plan()
+	var h: Dictionary = UiSettings.hit(p, pos)
+	_rm_drag = {}
+	if h.is_empty():
+		return
+	var part: String = str(h["part"])
+	var i: int = int(h["row"])
+	if part == "close":
+		if _rm_mode != "list":
+			_rm_cancel()
+		hide_remap()
+		return
+	if part == "confirm":
+		var labels: Array = p["confirm_labels"]
+		var swap_word: String = str(_rm_words().get("swap", "SWAP"))
+		if _rm_mode == "confirm" and str(labels[i]) == swap_word:
+			_rm_answer_swap()
+		else:
+			_rm_cancel()
+		return
+	if _rm_mode != "list":
+		return
+	if i >= 0 and part != "off":
+		_rm_focus = i
+	_rm_drag = {"mode": "tap" if (i >= 0 and part != "body") else "scroll", "row": i, "part": part, "y0": pos.y, "scroll0": _rm_scroll, "moved": false}
+	_l_remap.invalidate()
+
+
+func _rm_motion(pos: Vector2) -> void:
+	if _rm_drag.is_empty():
+		return
+	var dy: float = pos.y - float(_rm_drag["y0"])
+	if absf(dy) > maxf(10.0 * dp, 8.0):
+		_rm_drag["moved"] = true
+	if bool(_rm_drag["moved"]):
+		_rm_scroll = clampf(float(_rm_drag["scroll0"]) - dy, 0.0, float(remap_plan()["max_scroll"]))
+		_l_remap.invalidate()
+
+
+func _rm_release() -> void:
+	var d: Dictionary = _rm_drag
+	_rm_drag = {}
+	if d.is_empty() or str(d["mode"]) != "tap" or bool(d["moved"]) or _rm_mode != "list":
+		return
+	var i: int = int(d["row"])
+	match str(d["part"]):
+		"left":
+			_rm_cycle_layout(-1)
+		"right":
+			_rm_cycle_layout(1)
+		"tap", "button", "row":
+			_rm_accept(i)
+	_l_remap.invalidate()
+
+
+func _remap_input(event: InputEvent) -> void:
+	var capturing: bool = _rm_mode == "capture"
+	if event is InputEventKey:
+		_set_device = "kbd"
+		if event.pressed and not event.echo:
+			var code: String = RenderKeys.code(event)
+			if capturing:
+				if code == "Escape":
+					remap_action("cancel")
+				elif _rm_is_kb():
+					_rm_try("kb:" + code)
+			else:
+				var act := ""
+				match event.keycode:
+					KEY_UP, KEY_W:
+						act = "up"
+					KEY_DOWN, KEY_S, KEY_TAB:
+						act = "down"
+					KEY_LEFT, KEY_A:
+						act = "left"
+					KEY_RIGHT, KEY_D:
+						act = "right"
+					KEY_PAGEUP:
+						act = "page_up"
+					KEY_PAGEDOWN:
+						act = "page_down"
+					KEY_HOME:
+						act = "home"
+					KEY_END:
+						act = "end"
+					KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+						act = "accept"
+					KEY_ESCAPE:
+						act = "close"
+				if act != "":
+					remap_action(act)
+	elif event is InputEventJoypadButton:
+		_set_device = "pad"
+		if event.pressed:
+			var name: String = str(PAD_NAMES.get(event.button_index, ""))
+			if capturing:
+				if name == "start":
+					remap_action("cancel")
+				elif name != "" and not _rm_is_kb():
+					_rm_try("pad:" + name)
+			else:
+				match event.button_index:
+					JOY_BUTTON_DPAD_UP:
+						remap_action("up")
+					JOY_BUTTON_DPAD_DOWN:
+						remap_action("down")
+					JOY_BUTTON_DPAD_LEFT:
+						remap_action("left")
+					JOY_BUTTON_DPAD_RIGHT:
+						remap_action("right")
+					JOY_BUTTON_A:
+						remap_action("accept")
+					JOY_BUTTON_LEFT_SHOULDER:
+						remap_action("page_up")
+					JOY_BUTTON_RIGHT_SHOULDER:
+						remap_action("page_down")
+					JOY_BUTTON_B, JOY_BUTTON_START:
+						remap_action("close")
+	elif event is InputEventJoypadMotion:
+		var ax: int = event.axis
+		if capturing and not _rm_is_kb() and (ax == JOY_AXIS_TRIGGER_LEFT or ax == JOY_AXIS_TRIGGER_RIGHT):
+			var held: bool = _rm_trig.get(ax, false)
+			if event.axis_value > 0.7 and not held:
+				_rm_trig[ax] = true
+				_set_device = "pad"
+				_rm_try("pad:lt" if ax == JOY_AXIS_TRIGGER_LEFT else "pad:rt")
+			elif event.axis_value < 0.3:
+				_rm_trig[ax] = false
+		elif not capturing and (ax == JOY_AXIS_LEFT_X or ax == JOY_AXIS_LEFT_Y):
+			var v: float = event.axis_value
+			var was: int = int(_set_axis.get(ax, 0))
+			var now: int = 0
+			if v > 0.6:
+				now = 1
+			elif v < -0.6:
+				now = -1
+			elif absf(v) > 0.3:
+				now = was
+			if now != was:
+				_set_axis[ax] = now
+				if now != 0:
+					_set_device = "pad"
+					remap_action(("right" if now > 0 else "left") if ax == JOY_AXIS_LEFT_X else ("down" if now > 0 else "up"))
+	elif event is InputEventMouseButton:
+		_set_device = "kbd"
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				_rm_press(event.position)
+			else:
+				_rm_release()
+		elif event.pressed and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN) and _rm_mode == "list":
+			var step: float = maxf(48.0 * dp, 44.0) * 1.2
+			_rm_scroll = clampf(_rm_scroll + (step if event.button_index == MOUSE_BUTTON_WHEEL_DOWN else -step), 0.0, float(remap_plan()["max_scroll"]))
+			_l_remap.invalidate()
+	elif event is InputEventMouseMotion:
+		if (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+			_rm_motion(event.position)
 	get_viewport().set_input_as_handled()
 
 

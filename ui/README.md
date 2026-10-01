@@ -69,6 +69,7 @@ Add `--force` to redraw every layer every frame (the cost without caching), or `
 
 - `UiHud.set_density(dp)` (else detected), option `touch_ui`, `touch_rects()` and `touch_target_at(pos)`: see `docs/ui/hud-spec.md` section 16. Text is at least 12 dp on a dense screen, touch targets at least 48 dp. Demo: `--dp=2.6 --touch` with `--resolution 2400x1080`.
 - `show_settings()`, `hide_settings()`, `is_settings_open()`, `is_overlay_open()`, `settings_action(act)`, `load_saved_options()`, signals `settings_opened`, `settings_closed`, `settings_action_requested(action)`; every change fires `option_changed`. The host freezes the sim while it is open and leaves pad and keys to the HUD. Section 26. Demo: `--settings[=N]` (N steps of focus down), `--pad`, `--sscroll=PX`.
+- `show_remap(layout_id)`, `hide_remap()`, `is_remap_open()`, `remap_action(act)`, signal `remap_changed(layout_id, overrides)`; opened from the Settings Remap row. `UiRemapModel` holds the rules. Section 27. Demo: `--remap[=LAYOUT] [--rcapture=ACTION] [--rtry=kb:KeyK] [--rfocus=ACTION]`.
 - `show_howto(first_run, page)`, `hide_howto()`, `is_howto_open()`, `howto_seen()`, signals `howto_opened` and `howto_closed`; F1 toggles it. The host freezes the sim while it is open. Section 17. Demo: `--howto=0|1|2`, `--device=xbox`, `--preset=arena|brawler|simple-pad|kb-solo|kb-shared-p2` (the layout the legend and the card describe), `--ready` (a form is ready), `--stance=N`, `--target=github|mailto|form` (a send target for the feedback shots).
 
 ## Q4 reads (docs/ui/hud-spec.md sections 18 and 19)
