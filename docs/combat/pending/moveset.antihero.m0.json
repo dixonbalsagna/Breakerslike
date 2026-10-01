@@ -71,7 +71,7 @@
     "_handsLegal": "Legal (docs/legal/rule-of-cool-screen.md, wave 1): no two-finger point and no single pointing finger as an energy hand; pinch is thumb to forefinger. open_palm is never at the hip, and there is no palm-forward charge pose with a scream. The double palm strike never emits.",
     "poses": [
       {"id": "energy.charged_brace", "uses": {"arms": 1}, "emits": ["charged", "bolt"]},
-      {"id": "energy.channel", "uses": {"arms": 2}, "emits": ["charged"], "_legal": "Combat's line, for Legal to confirm before wave 5: hands apart at shoulder width, never wrists together and never cupped at one hip"},
+      {"id": "energy.channel", "uses": {"arms": 2}, "emits": ["charged"], "_legal": "Legal (rule-of-cool-screen.md, wave 2 section): hands at least a shoulder width apart, or one high and one low, never wrists together; never cupped at either hip, never drawn back to one hip and thrust forward; no sphere or glow forming between facing palms, and no hands overhead holding a growing orb; no palms-forward double thrust from the chest as the release; the stacking rule applies while he channels"},
       {"id": "energy.kiting_turn", "uses": {"arms": 1}, "emits": ["bolt", "volley", "shard"]},
       {"id": "energy.crown_release", "uses": {}, "emits": ["shard", "volley"], "form": "regalia+", "_note": "fired from the shards that circle him: no hands"},
       {"id": "energy.shove", "uses": {"arms": 1}, "emits": ["burst"], "damage": false, "_note": "the energy context fallback: pushback only"}

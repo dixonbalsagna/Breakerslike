@@ -19,7 +19,9 @@ Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Anima
 - **No franchise poses.** Legal screened these specs and they are GO (`docs/legal/rule-of-cool-screen.md`, the wave 1 section). Its conditions are the Legal lines in the rows: the uppercut, the two spins, the double palm, the double hammer, the palm heel, the cross-arm ram and the tail. Every authored pose keeps its `_orig` line and provenance record.
 
 ## 3. The contact distance is per strike
-Animation's socket table gives each limb its own reach, so one 58 u for every blow no longer fits: an elbow lands at 46 to 50 u at most.
+Animation's socket table gives each limb its own reach, so one 58 u for every blow no longer fits: an elbow lands at 44 to 50 u at most.
+
+**Height limits the joints.** An elbow, a knee or the head is aimed, not reached with: it cannot rise to a head at its own height (Animation's test key sets, `pose-pipeline.md` section 9.13). So elbows go to the chest or the jaw, never the head's centre, and the headbutt goes to the jaw, bending from the waist.
 
 **The rule.** A strike's contact distance is the smaller of 58 and (its reach minus the limb's step). So the blow lands with the hip lunge and no extra step.
 
@@ -30,6 +32,7 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 | Close | 32 to 38 u | 11 | elbows, knees, the headbutt, the shoulder and the forearm ram |
 
 - **A floor of 32 u** (`clinch`, proposed) for a strike's own step-in. Torsos are about 13 u deep, so at 32 u there is still clear air between them.
+- **The headbutt is set by its look, not the rule:** 36 u, so he can hold the rival's arms down. Its reach to the jaw is 56 u.
 - **Estimates to measure:** the two-limb strikes (two arms square the shoulders, so I took 8 u off the hand's reach), and the shoulder, which has no row in the socket table yet.
 
 ## 4. The strikes
@@ -43,8 +46,8 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 | `hook` | hook | hand to head (arm, later) | light; mid, return | 72 / **58** | 6, 4, 6 | 1 arm | A flat, tight arc at head height, the elbow a sharp right angle, the plated forearm leading the hand. |
 | `backfist` | hook, new pose | hand to head (arm, later) | light; mid, return | 72 / **58** | 6, 4, 6 | 1 arm | The arm unfolds backhanded to full length, the back of the hand leading, chest opened away from the rival. |
 | `palm_heel` | jab | hand to chest | light; mid | 74 / **58** | 6, 4, 5 | 1 arm | A clawed open palm pushed straight in from the ribs, fingers spread like tines, the wrist bent back. **Legal:** the hand stays open, flat or clawed, never cupped; never a hand chambered at the hip for an energy release afterwards. |
-| `spear_hand` | cross | hand to gut | light; opener, mid | 66 / **52** | 6, 4, 5 | 1 arm | A low blade-hand thrust from the crouch into the gut, the spine and the arm one long diagonal. |
-| `uppercut` | upper | hand to head | heavy; opener, ender | 72 / **58** | 10, 6, 10 | 1 arm | A closed fist rising under the chin; the rise is in the hip and shoulder, the feet stay where they are, the other arm low across the body. **Legal:** no leap and no spin: not a jumping, turning uppercut; no fist held up after it as a victory pose. |
+| `spear_hand` | cross | hand to gut | light; opener, mid | 68 / **54** | 6, 4, 5 | 1 arm | A low blade-hand thrust from the crouch into the gut, the spine and the arm one long diagonal. |
+| `uppercut` | upper | hand to jaw | heavy; opener, ender | 72 / **58** | 10, 6, 10 | 1 arm | A closed fist rising under the chin; the rise is in the hip and shoulder, the feet stay where they are, the other arm low across the body. **Legal:** no leap and no spin: not a jumping, turning uppercut; no fist held up after it as a victory pose. |
 | `hammer` | new pose | hand to head | heavy; ender | 72 / **58** | 14, 6, 12 | 1 arm | The fist comes straight down from above the head like a dropped blade, the body folding over it. |
 | `overhand` | hook, new pose | hand to head | heavy; opener, ender | 72 / **58** | 10, 6, 10 | 1 arm | A looping blow over the rival's guard, the shoulder rolled high, the head ducked off the line. |
 | `haymaker` | hook | hand to head | heavy; opener, ender | 72 / **58** | 12, 6, 12 | 1 arm | The widest swing he has: the arm nearly straight, the whole torso thrown round behind it. |
@@ -53,9 +56,9 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 
 | Strike | Base | Limb to target | Weight; fills | Reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
-| `short_elbow` | new pose | elbow to head | light; mid | 46 / **34** | 6, 4, 5 | 1 arm | The forearm folded shut and the point of the elbow cut across at face height: a small, sharp triangle. |
-| `rising_elbow` | new pose | elbow to head | light; mid, return | 46 / **34** | 6, 4, 6 | 1 arm | The elbow driven up the centre line, the hand ending behind his own ear, the plate edge leading. |
-| `spinning_elbow` | new pose | elbow to head | heavy; ender | 46 / **34** | 14, 6, 12 | 1 arm; grounded: needs the other leg | One turn with his back shown, the elbow whipping through level at the end of it. **Legal:** a single turn; no travelling or multi-hit spin. |
+| `short_elbow` | new pose | elbow to chest | light; mid | 50 / **38** | 6, 4, 5 | 1 arm | The forearm folded shut and the point of the elbow cut across at collar height: a small, sharp triangle. |
+| `rising_elbow` | new pose | elbow to jaw | light; mid, return | 50 / **38** | 6, 4, 6 | 1 arm | The elbow driven up the centre line under the jaw, the hand ending behind his own ear, the plate edge leading. |
+| `spinning_elbow` | new pose | elbow to chest | heavy; ender | 50 / **38** | 14, 6, 12 | 1 arm; grounded: needs the other leg | One turn with his back shown, the elbow whipping through level at chest height at the end of it. **Legal:** a single turn; no travelling or multi-hit spin. |
 | `dropping_elbow` | new pose | elbow to chest | heavy; ender | 50 / **38** | 12, 6, 10 | 1 arm | From above: the point of the elbow dropped onto the chest, the other hand pinning the rival's guard down. |
 
 ### Two arms
@@ -94,7 +97,7 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 
 | Strike | Base | Limb to target | Weight; fills | Reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
-| `headbutt` | new pose | head to head | heavy; ender | 44 / **34** | 10, 5, 10 | head | The masked brow snapped forward from the neck and waist, hands holding the rival's arms down. |
+| `headbutt` | new pose | head to jaw | heavy; ender | 56 / **36** | 10, 5, 10 | head | The masked brow driven into the jaw from the waist, hands holding the rival's arms down. |
 
 ### Torso (close range)
 

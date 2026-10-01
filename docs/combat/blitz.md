@@ -31,6 +31,8 @@ A blitz is a fast chain (`styles.json` `chains.blitz`). The **ping-pong** is its
 | **Orbit** | each knock turns about 70 degrees, so the body circles a point | over a landmark or a crowd of formations: the camera can hold one frame |
 
 ### 1.2 The intercept flight: a quarter-turn golden spiral
+> The definition that Encounter, Camera and VFX share is now `pending/wave3-pingpong.md` section 2 (the same formula, with the heading angle, the curve's radius, the bounds, the arc and ground shapes and the `path` event). The rally's ticks are in its section 1 and replace the timing paragraph at the end of this section.
+
 The attacker flies from **S** (where it stands after the knock) to **I** (the intercept point) along a logarithmic spiral that turns a quarter turn and grows by the golden ratio φ = 1.618.
 
 **The intercept point.** The planner already predicts a launched body's free flight (`launch.gd`). Call B(t) the body's predicted position t ticks after the knock.

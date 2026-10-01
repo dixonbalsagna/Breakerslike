@@ -84,7 +84,15 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 ## Wave 2: the Anti-hero's entry specs (for Animation; not for applying)
 
-`wave2-entries.md` and `entries.antihero.wave2.json` are the 15 entries (rush 6, stand 5, retreat 4) as specs to pose from: path, when it is offered, timing, where it plays, the new poses and what they derive from, the strikes it favours and one line on the look. 12 new poses. Eleven entries work on today's sim; the arc dive, the skid and the spiral need a path on the `rush` op, and the lane step needs fight lanes.
+`wave2-entries.md` and `entries.antihero.wave2.json` are the 15 entries (rush 6, stand 5, retreat 4) as specs to pose from: path, when it is offered, timing, where it plays, the new poses and what they derive from, the strikes it favours and one line on the look. 12 new poses. Eleven entries work on today's sim; the arc dive, the skid and the spiral need a path on the `rush` op, and the lane step needs fight lanes. Legal screened wave 2: GO, with its conditions in the rows.
+
+## Wave 3: the ping-pong rally and the flight paths (not for applying)
+
+`wave3-pingpong.md` and `pingpong.antihero.wave3.json`: the rally's beats in ticks, the `return` strike class, the 7 return blows and 16 enders as they play in a rally, three knock patterns, the defender's answers, and one new pose (the intercept turn). Section 2 is the one definition of the three flight paths (spiral, arc, ground) and the `path` event, for Encounter, Camera and VFX.
+
+## Wave 4: the grab and throw family (for Animation; not for applying)
+
+`wave4-grabs.md` and `grabs.antihero.wave4.json`: 16 pieces (2 grabs, the hold, 7 throws, the tackle, the dive grab, the reversal) with grip, ticks, limb tags, where each throw sends the rival and one line on the look; the turning throw as Game Design ruled it; the `held` state the sim must carry for the pinned ragdoll. 22 new poses, and 2 for the tail throw, which is held until Orb rules on the tail.
 
 ## The Anti-hero's rich M0 piece list (not for applying)
 
