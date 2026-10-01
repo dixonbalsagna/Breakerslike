@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-quality",
+  "title": "anim.quality/1",
+  "description": "data/anim/quality.json: the animation quality switch (docs/animation/overhaul-plan.md, unit H). Each level lists the overhaul layers it switches off; the web's low setting and old laptops pick a lower level. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Every layer name is one of the ten (ragdoll, feet, look, transitions, cloth, lean, flight, defender, personality, aim; the schema enforces it). Each level switches off at least what the level above it does (checked by tools/lib/xref-fight.js, quality-order).",
+  "type": "object",
+  "required": [
+    "schema",
+    "levels"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.quality/1"
+    },
+    "levels": {
+      "type": "object",
+      "required": [
+        "high",
+        "medium",
+        "low",
+        "minimal"
+      ],
+      "properties": {
+        "high": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ragdoll",
+              "feet",
+              "look",
+              "transitions",
+              "cloth",
+              "lean",
+              "flight",
+              "defender",
+              "personality",
+              "aim"
+            ]
+          }
+        },
+        "medium": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ragdoll",
+              "feet",
+              "look",
+              "transitions",
+              "cloth",
+              "lean",
+              "flight",
+              "defender",
+              "personality",
+              "aim"
+            ]
+          }
+        },
+        "low": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ragdoll",
+              "feet",
+              "look",
+              "transitions",
+              "cloth",
+              "lean",
+              "flight",
+              "defender",
+              "personality",
+              "aim"
+            ]
+          }
+        },
+        "minimal": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ragdoll",
+              "feet",
+              "look",
+              "transitions",
+              "cloth",
+              "lean",
+              "flight",
+              "defender",
+              "personality",
+              "aim"
+            ]
+          }
+        }
+      },
+      "description": "Level name to the layers it switches off: high, medium, low, minimal, in the order of what each layer costs.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

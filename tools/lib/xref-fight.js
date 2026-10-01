@@ -475,6 +475,30 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim quality: each level switches off at least what the level above does ----
+  const quality = get('data/anim/quality.json');
+  if (isObj(quality) && isObj(quality.levels)) {
+    const order = ['high', 'medium', 'low', 'minimal'];
+    for (let i = 1; i < order.length; i++) {
+      const above = quality.levels[order[i - 1]];
+      const here = quality.levels[order[i]];
+      if (!Array.isArray(above) || !Array.isArray(here)) continue;
+      const missing = above.filter((l) => !here.includes(l));
+      if (missing.length) err('data/anim/quality.json', `/levels/${order[i]}`, 'quality-order', `${order[i]} does not switch off ${missing.join(', ')}, which ${order[i - 1]} already does; a lower level must lose at least what the level above loses`);
+    }
+  }
+
+  // ---- anim personality: a higher tier is calmer ----
+  const pers = get('data/anim/personality.json');
+  if (isObj(pers) && Array.isArray(pers.tiers)) {
+    for (const [k, dir] of [['sway', -1], ['hz', -1], ['bounce', -1], ['breath_hz', -1], ['breath_amp', 1]]) {
+      for (let i = 1; i < pers.tiers.length; i++) {
+        const a = pers.tiers[i - 1]; const b = pers.tiers[i];
+        if (isObj(a) && isObj(b) && typeof a[k] === 'number' && typeof b[k] === 'number' && (b[k] - a[k]) * dir < 0) err('data/anim/personality.json', `/tiers/${i}/${k}`, 'personality-tiers', `tier ${i + 1} ${k} ${b[k]} ${dir < 0 ? 'rises above' : 'falls below'} tier ${i} ${a[k]}; higher forms are calmer, slower and deeper`, 'warning');
+      }
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

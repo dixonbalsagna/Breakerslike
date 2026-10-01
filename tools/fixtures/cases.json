@@ -14752,6 +14752,842 @@
         "rule": "xref:pause-gather",
         "pointer": "/full/gatherTicks"
       }
+    },
+    {
+      "id": "anim-quality-live-valid",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/schema": "anim.quality/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-quality-key-required",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "del": [
+            "/levels"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-quality-unknown-key",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-quality-underscore-key-ok",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-quality-level-missing",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "del": [
+            "/levels/minimal"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels"
+      }
+    },
+    {
+      "id": "anim-quality-level-unknown",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels/ultra": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/levels/ultra"
+      }
+    },
+    {
+      "id": "anim-quality-layer-unknown",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels": {
+              "high": [],
+              "medium": [
+                "sparkle"
+              ],
+              "low": [
+                "sparkle"
+              ],
+              "minimal": [
+                "sparkle"
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/levels/medium/0"
+      }
+    },
+    {
+      "id": "anim-quality-layer-duplicate",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels": {
+              "high": [],
+              "medium": [
+                "look",
+                "look"
+              ],
+              "low": [
+                "look"
+              ],
+              "minimal": [
+                "look"
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/levels/medium/1"
+      }
+    },
+    {
+      "id": "anim-quality-layer-type",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels": {
+              "high": [],
+              "medium": [
+                3
+              ],
+              "low": [
+                3
+              ],
+              "minimal": [
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/levels/medium/0"
+      }
+    },
+    {
+      "id": "anim-quality-layers-not-list",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels/high": "none"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/high"
+      }
+    },
+    {
+      "id": "anim-quality-all-ten-ok",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels": {
+              "high": [],
+              "medium": [
+                "ragdoll",
+                "feet",
+                "look",
+                "transitions",
+                "cloth",
+                "lean",
+                "flight",
+                "defender",
+                "personality",
+                "aim"
+              ],
+              "low": [
+                "ragdoll",
+                "feet",
+                "look",
+                "transitions",
+                "cloth",
+                "lean",
+                "flight",
+                "defender",
+                "personality",
+                "aim"
+              ],
+              "minimal": [
+                "ragdoll",
+                "feet",
+                "look",
+                "transitions",
+                "cloth",
+                "lean",
+                "flight",
+                "defender",
+                "personality",
+                "aim"
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-quality-lower-level-regains",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels": {
+              "high": [],
+              "medium": [
+                "look",
+                "feet"
+              ],
+              "low": [
+                "look"
+              ],
+              "minimal": [
+                "look",
+                "feet"
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:quality-order",
+        "pointer": "/levels/low"
+      }
+    },
+    {
+      "id": "anim-quality-high-switches-off-ok",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels": {
+              "high": [
+                "look"
+              ],
+              "medium": [
+                "look",
+                "feet"
+              ],
+              "low": [
+                "look",
+                "feet"
+              ],
+              "minimal": [
+                "look",
+                "feet"
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-quality-minimal-regains",
+      "schema": "anim-quality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/quality.json",
+          "set": {
+            "/levels/minimal": [
+              "ragdoll"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:quality-order",
+        "pointer": "/levels/minimal"
+      }
+    },
+    {
+      "id": "anim-personality-live-valid",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/schema": "anim.personality/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-personality-key-required",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "del": [
+            "/turn"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-personality-unknown-key",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/gait": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/gait"
+      }
+    },
+    {
+      "id": "anim-personality-underscore-key-ok",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-personality-stance-missing",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "del": [
+            "/stances/escape"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/stances"
+      }
+    },
+    {
+      "id": "anim-personality-stance-unknown",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/stances/charging": {
+              "sway": 1,
+              "hz": 1,
+              "bounce": 1,
+              "bounce_hz": 2,
+              "heel": 0.1,
+              "breath": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/stances/charging"
+      }
+    },
+    {
+      "id": "anim-personality-stance-key-required",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "del": [
+            "/stances/aggressive/heel"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/stances/aggressive"
+      }
+    },
+    {
+      "id": "anim-personality-stance-hz-positive",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/stances/evasive/hz": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/stances/evasive/hz"
+      }
+    },
+    {
+      "id": "anim-personality-stance-sway-negative",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/stances/defensive/sway": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/stances/defensive/sway"
+      }
+    },
+    {
+      "id": "anim-personality-stance-type",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/stances/escape/breath": "deep"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/stances/escape/breath"
+      }
+    },
+    {
+      "id": "anim-personality-tiers-count",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/tiers": [
+              {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "breath_hz": 1,
+                "breath_amp": 1
+              },
+              {
+                "sway": 0.9,
+                "hz": 0.9,
+                "bounce": 0.9,
+                "breath_hz": 0.9,
+                "breath_amp": 1.1
+              },
+              {
+                "sway": 0.8,
+                "hz": 0.8,
+                "bounce": 0.8,
+                "breath_hz": 0.8,
+                "breath_amp": 1.2
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/tiers"
+      }
+    },
+    {
+      "id": "anim-personality-tiers-too-many",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/tiers": [
+              {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "breath_hz": 1,
+                "breath_amp": 1
+              },
+              {
+                "sway": 0.9,
+                "hz": 0.9,
+                "bounce": 0.9,
+                "breath_hz": 0.9,
+                "breath_amp": 1.1
+              },
+              {
+                "sway": 0.8,
+                "hz": 0.8,
+                "bounce": 0.8,
+                "breath_hz": 0.8,
+                "breath_amp": 1.2
+              },
+              {
+                "sway": 0.7,
+                "hz": 0.7,
+                "bounce": 0.7,
+                "breath_hz": 0.7,
+                "breath_amp": 1.3
+              },
+              {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "breath_hz": 1,
+                "breath_amp": 1
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maxItems",
+        "pointer": "/tiers"
+      }
+    },
+    {
+      "id": "anim-personality-tier-key-required",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/tiers/0": {
+              "sway": 1,
+              "hz": 1,
+              "bounce": 1,
+              "breath_hz": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/tiers/0"
+      }
+    },
+    {
+      "id": "anim-personality-tier-positive",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/tiers/1/hz": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/tiers/1/hz"
+      }
+    },
+    {
+      "id": "anim-personality-tiers-calmer-ok",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/tiers": [
+              {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "breath_hz": 1,
+                "breath_amp": 1
+              },
+              {
+                "sway": 0.9,
+                "hz": 0.9,
+                "bounce": 0.9,
+                "breath_hz": 0.9,
+                "breath_amp": 1.1
+              },
+              {
+                "sway": 0.8,
+                "hz": 0.8,
+                "bounce": 0.8,
+                "breath_hz": 0.8,
+                "breath_amp": 1.2
+              },
+              {
+                "sway": 0.7,
+                "hz": 0.7,
+                "bounce": 0.7,
+                "breath_hz": 0.7,
+                "breath_amp": 1.3
+              }
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-personality-tier-sway-rises-warns",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/tiers": [
+              {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "breath_hz": 1,
+                "breath_amp": 1
+              },
+              {
+                "sway": 0.9,
+                "hz": 0.9,
+                "bounce": 0.9,
+                "breath_hz": 0.9,
+                "breath_amp": 1.1
+              },
+              {
+                "sway": 1.5,
+                "hz": 0.8,
+                "bounce": 0.8,
+                "breath_hz": 0.8,
+                "breath_amp": 1.2
+              },
+              {
+                "sway": 0.7,
+                "hz": 0.7,
+                "bounce": 0.7,
+                "breath_hz": 0.7,
+                "breath_amp": 1.3
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:personality-tiers",
+        "pointer": "/tiers/2/sway"
+      }
+    },
+    {
+      "id": "anim-personality-tier-breath-amp-falls-warns",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/tiers": [
+              {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "breath_hz": 1,
+                "breath_amp": 1
+              },
+              {
+                "sway": 0.9,
+                "hz": 0.9,
+                "bounce": 0.9,
+                "breath_hz": 0.9,
+                "breath_amp": 1.1
+              },
+              {
+                "sway": 0.8,
+                "hz": 0.8,
+                "bounce": 0.8,
+                "breath_hz": 0.8,
+                "breath_amp": 1.2
+              },
+              {
+                "sway": 0.7,
+                "hz": 0.7,
+                "bounce": 0.7,
+                "breath_hz": 0.7,
+                "breath_amp": 0.5
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:personality-tiers",
+        "pointer": "/tiers/3/breath_amp"
+      }
+    },
+    {
+      "id": "anim-personality-guard-pair",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/guard/up": [
+              6
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/guard/up"
+      }
+    },
+    {
+      "id": "anim-personality-guard-pair-type",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/guard/down": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/guard/down/0"
+      }
+    },
+    {
+      "id": "anim-personality-guard-lag-negative",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/guard/lag": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/guard/lag"
+      }
+    },
+    {
+      "id": "anim-personality-turn-duration-positive",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/turn/dur": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/turn/dur"
+      }
+    },
+    {
+      "id": "anim-personality-turn-key-required",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "del": [
+            "/turn/twist"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/turn"
+      }
+    },
+    {
+      "id": "anim-personality-turn-dip-negative",
+      "schema": "anim-personality.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/personality.json",
+          "set": {
+            "/turn/dip": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/turn/dip"
+      }
     }
   ],
   "text": [

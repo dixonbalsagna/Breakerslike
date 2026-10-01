@@ -1,0 +1,322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-personality",
+  "title": "anim.personality/1",
+  "description": "data/anim/personality.json: idles and transitions with personality (docs/animation/overhaul-plan.md, unit F): the stances' weight shift, bounce and breath, the forms' scales, the guard's arm kicks and the turn-around step. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. A higher tier is calmer (sway, hz, bounce and breath_hz do not rise; breath_amp does not fall): a warning if not (tools/lib/xref-fight.js, personality-tiers).",
+  "type": "object",
+  "required": [
+    "schema",
+    "stances",
+    "tiers",
+    "guard",
+    "turn"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.personality/1"
+    },
+    "stances": {
+      "type": "object",
+      "required": [
+        "aggressive",
+        "defensive",
+        "evasive",
+        "escape"
+      ],
+      "properties": {
+        "aggressive": {
+          "type": "object",
+          "required": [
+            "sway",
+            "hz",
+            "bounce",
+            "bounce_hz",
+            "heel",
+            "breath"
+          ],
+          "properties": {
+            "sway": {
+              "type": "number",
+              "minimum": 0
+            },
+            "hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "bounce": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bounce_hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "heel": {
+              "type": "number",
+              "minimum": 0
+            },
+            "breath": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "description": "The weight shift (sway in units, hz), the knee bounce (bounce in units, bounce_hz), the heel lift (rad) and the breathing scale of a stance.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "defensive": {
+          "type": "object",
+          "required": [
+            "sway",
+            "hz",
+            "bounce",
+            "bounce_hz",
+            "heel",
+            "breath"
+          ],
+          "properties": {
+            "sway": {
+              "type": "number",
+              "minimum": 0
+            },
+            "hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "bounce": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bounce_hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "heel": {
+              "type": "number",
+              "minimum": 0
+            },
+            "breath": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "description": "The weight shift (sway in units, hz), the knee bounce (bounce in units, bounce_hz), the heel lift (rad) and the breathing scale of a stance.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "evasive": {
+          "type": "object",
+          "required": [
+            "sway",
+            "hz",
+            "bounce",
+            "bounce_hz",
+            "heel",
+            "breath"
+          ],
+          "properties": {
+            "sway": {
+              "type": "number",
+              "minimum": 0
+            },
+            "hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "bounce": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bounce_hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "heel": {
+              "type": "number",
+              "minimum": 0
+            },
+            "breath": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "description": "The weight shift (sway in units, hz), the knee bounce (bounce in units, bounce_hz), the heel lift (rad) and the breathing scale of a stance.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "escape": {
+          "type": "object",
+          "required": [
+            "sway",
+            "hz",
+            "bounce",
+            "bounce_hz",
+            "heel",
+            "breath"
+          ],
+          "properties": {
+            "sway": {
+              "type": "number",
+              "minimum": 0
+            },
+            "hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "bounce": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bounce_hz": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "heel": {
+              "type": "number",
+              "minimum": 0
+            },
+            "breath": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "description": "The weight shift (sway in units, hz), the knee bounce (bounce in units, bounce_hz), the heel lift (rad) and the breathing scale of a stance.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "tiers": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "sway",
+          "hz",
+          "bounce",
+          "breath_hz",
+          "breath_amp"
+        ],
+        "properties": {
+          "sway": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "hz": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "bounce": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "breath_hz": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "breath_amp": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "description": "Scales for a form: higher forms are calmer, slower and deeper.",
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "description": "Index 0 is tier 1."
+    },
+    "guard": {
+      "type": "object",
+      "required": [
+        "up",
+        "down",
+        "lag"
+      ],
+      "properties": {
+        "up": {
+          "description": "The arm kicks (rad/s, upper arm then forearm) when the guard comes up.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "down": {
+          "description": "The arm kicks (rad/s, upper arm then forearm) when the guard goes down.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "lag": {
+          "description": "How much later the arms follow the torso while the base pose changes.",
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "turn": {
+      "type": "object",
+      "required": [
+        "dur",
+        "dip",
+        "swing",
+        "twist"
+      ],
+      "properties": {
+        "dur": {
+          "description": "Seconds.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dip": {
+          "description": "Units.",
+          "type": "number",
+          "minimum": 0
+        },
+        "swing": {
+          "description": "Radians.",
+          "type": "number",
+          "minimum": 0
+        },
+        "twist": {
+          "description": "Radians.",
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "description": "A turn-around is a step, not a flip.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

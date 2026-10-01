@@ -175,6 +175,14 @@
       "schema": "anim-ragdoll-motion.schema.json"
     },
     {
+      "match": "data/anim/personality.json",
+      "schema": "anim-personality.schema.json"
+    },
+    {
+      "match": "data/anim/quality.json",
+      "schema": "anim-quality.schema.json"
+    },
+    {
       "match": "data/anim/profiles.json",
       "schema": "anim-profiles.schema.json"
     },
