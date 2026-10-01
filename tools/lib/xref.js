@@ -25,6 +25,8 @@ const GLYPHS = 'ui/data/glyphs.json';
 const BABBLE = 'audio/data/babble.json';
 const BABBLE_CAPTIONS = 'audio/data/babble_captions.json';
 const OPTIONS = 'ui/data/options.json';
+const SETTINGS = 'ui/data/settings.json';
+const FEATURES = 'ui/data/features.json';
 const SKETCH_COMMON = 'audio/data/sketch_common.json';
 
 const esc = (t) => String(t).replace(/~/g, '~0').replace(/\//g, '~1');
@@ -469,6 +471,49 @@ function xref(docs, root = repoRoot) {
         });
       }
     }
+  }
+
+  // ---- ui: the settings screen ----
+  const settings = get(SETTINGS);
+  if (isObj(settings) && isObj(options) && isObj(options.options)) {
+    const opts = options.options;
+    const feats = get(FEATURES);
+    const flags = new Set(isObj(feats) && isObj(feats.features) ? Object.keys(feats.features) : []);
+    const checkNeeds = (pointer, flag) => { if (flags.size && !flags.has(flag)) err(SETTINGS, pointer, 'settings-needs', `needs feature "${flag}", which is not in features.json (${[...flags].join(', ')})`); };
+    const listed = new Map();
+    const secIds = new Set();
+    (Array.isArray(settings.sections) ? settings.sections : []).forEach((s, si) => {
+      if (!isObj(s)) return;
+      if (secIds.has(s.id)) err(SETTINGS, `/sections/${si}/id`, 'settings-section', `section id "${s.id}" is used twice`);
+      secIds.add(s.id);
+      (Array.isArray(s.items) ? s.items : []).forEach((it, ii) => {
+        const at = `/sections/${si}/items/${ii}`;
+        if (typeof it === 'string') {
+          if (!(it in opts)) err(SETTINGS, at, 'settings-option', `item "${it}" is not in options.json`);
+          else if (listed.has(it)) err(SETTINGS, at, 'settings-duplicate', `option "${it}" is already listed at ${listed.get(it)}`);
+          else listed.set(it, at);
+        } else if (isObj(it) && typeof it.needs === 'string') checkNeeds(`${at}/needs`, it.needs);
+      });
+    });
+    if (isObj(settings.needs)) for (const [o, flag] of Object.entries(settings.needs)) {
+      if (o.startsWith('_')) continue;
+      if (!(o in opts)) err(SETTINGS, `/needs/${esc(o)}`, 'settings-option', `needs names option "${o}", which is not in options.json`);
+      if (typeof flag === 'string') checkNeeds(`/needs/${esc(o)}`, flag);
+    }
+    const hidden = Array.isArray(settings.hidden) ? settings.hidden : [];
+    hidden.forEach((o, i) => {
+      if (!(o in opts)) err(SETTINGS, `/hidden/${i}`, 'settings-option', `hidden names option "${o}", which is not in options.json`);
+      else if (listed.has(o)) err(SETTINGS, `/hidden/${i}`, 'settings-duplicate', `option "${o}" is both hidden and listed at ${listed.get(o)}`);
+    });
+    if (isObj(settings.labels)) for (const [o, words] of Object.entries(settings.labels)) {
+      if (o.startsWith('_') || !isObj(words)) continue;
+      const at = `/labels/${esc(o)}`;
+      if (!(o in opts)) { err(SETTINGS, at, 'settings-option', `labels names option "${o}", which is not in options.json`); continue; }
+      const ch = opts[o] && opts[o].choices;
+      if (!Array.isArray(ch)) { err(SETTINGS, at, 'settings-labels', `labels for "${o}", which has no choices in options.json`); continue; }
+      for (const k of Object.keys(words)) if (!k.startsWith('_') && !ch.some((c) => String(c) === k || (typeof c === 'number' && Number(k) === c))) err(SETTINGS, `${at}/${esc(k)}`, 'settings-labels', `label for "${k}", which is not a choice of "${o}" (${ch.join(', ')})`);
+    }
+    for (const o of Object.keys(opts)) if (!listed.has(o) && !hidden.includes(o)) err(SETTINGS, '/hidden', 'settings-unlisted', `option "${o}" is neither on a screen section nor in hidden, so no player can reach it`, 'warning');
   }
 
   // ---- ui: how to play ----

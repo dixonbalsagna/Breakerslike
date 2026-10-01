@@ -191,7 +191,7 @@ function run() {
         return record('data', c.id, errors.length === 0, `unexpected errors: ${errors.slice(0, 3).map((f) => `${f.file} ${JSON.stringify(f.pointer)} [${f.rule}]`).join('; ')}`);
       }
       const file = c.expect.file || mutations[0].file;
-      const hit = got.find((f) => f.file === file && f.rule === c.expect.rule && (c.expect.pointer === undefined || f.pointer === c.expect.pointer));
+      const hit = got.find((f) => f.file === file && f.rule === c.expect.rule && (c.expect.pointer === undefined || f.pointer === c.expect.pointer) && (c.expect.pointerEndsWith === undefined || f.pointer.endsWith(c.expect.pointerEndsWith)));
       record('data', c.id, Boolean(hit), `expected [${c.expect.rule}] in ${file}${c.expect.pointer !== undefined ? ` at ${JSON.stringify(c.expect.pointer)}` : ''}; new findings: ${got.slice(0, 4).map((f) => `${f.file} ${JSON.stringify(f.pointer)} [${f.rule}]`).join('; ') || 'none'}`);
     });
   }

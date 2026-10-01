@@ -99,6 +99,10 @@
       "schema": "ui-options.schema.json"
     },
     {
+      "match": "ui/data/settings.json",
+      "schema": "ui-settings.schema.json"
+    },
+    {
       "match": "ui/data/hints.json",
       "schema": "ui-hints.schema.json"
     },

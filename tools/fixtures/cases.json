@@ -1888,13 +1888,21 @@
         {
           "file": "ui/data/options.json",
           "set": {
-            "/options/shake_scale/default": 5
+            "/options/test_range": {
+              "default": 50,
+              "group": "display",
+              "label": "Test",
+              "help": "Test",
+              "min": 0,
+              "max": 10,
+              "step": 1
+            }
           }
         }
       ],
       "expect": {
         "rule": "xref:option-default",
-        "pointer": "/options/shake_scale/default"
+        "pointer": "/options/test_range/default"
       }
     },
     {
@@ -1904,13 +1912,21 @@
         {
           "file": "ui/data/options.json",
           "set": {
-            "/options/shake_scale/step": 0
+            "/options/test_range": {
+              "default": 5,
+              "group": "display",
+              "label": "Test",
+              "help": "Test",
+              "min": 0,
+              "max": 10,
+              "step": 0
+            }
           }
         }
       ],
       "expect": {
         "rule": "exclusiveMinimum",
-        "pointer": "/options/shake_scale/step"
+        "pointer": "/options/test_range/step"
       }
     },
     {
@@ -5708,6 +5724,399 @@
       "expect": {
         "rule": "xref:howto-action",
         "pointerEndsWith": "/action"
+      }
+    },
+    {
+      "id": "settings-live-valid",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/title": "SETTINGS"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-title-required",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "del": [
+            "/title"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "settings-unknown-key",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "settings-underscore-key-ok",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-item-shape",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/sections": [
+              {
+                "id": "s0",
+                "title": "S0",
+                "items": [
+                  5
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/sections/0/items/0"
+      }
+    },
+    {
+      "id": "settings-action-needs-label",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/sections": [
+              {
+                "id": "s0",
+                "title": "S0",
+                "items": [
+                  {
+                    "action": "remap"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/sections/0/items/0"
+      }
+    },
+    {
+      "id": "settings-unknown-option-item",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/sections": [
+              {
+                "id": "s0",
+                "title": "S0",
+                "items": [
+                  "no_such_option"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-option",
+        "pointer": "/sections/0/items/0"
+      }
+    },
+    {
+      "id": "settings-option-listed-twice",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/sections": [
+              {
+                "id": "s0",
+                "title": "S0",
+                "items": [
+                  "camera_zoom"
+                ]
+              },
+              {
+                "id": "s1",
+                "title": "S1",
+                "items": [
+                  "camera_zoom"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-duplicate",
+        "pointer": "/sections/1/items/0"
+      }
+    },
+    {
+      "id": "settings-action-needs-unknown-flag",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/sections": [
+              {
+                "id": "s0",
+                "title": "S0",
+                "items": [
+                  {
+                    "action": "remap",
+                    "label": "Remap",
+                    "needs": "nowhere"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-needs",
+        "pointer": "/sections/0/items/0/needs"
+      }
+    },
+    {
+      "id": "settings-needs-unknown-flag",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/needs/touch_preset": "nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-needs",
+        "pointer": "/needs/touch_preset"
+      }
+    },
+    {
+      "id": "settings-needs-unknown-option",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/needs/no_such_option": "remap"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-option",
+        "pointer": "/needs/no_such_option"
+      }
+    },
+    {
+      "id": "settings-hidden-unknown-option",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/hidden": [
+              "no_such_option"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-option",
+        "pointer": "/hidden/0"
+      }
+    },
+    {
+      "id": "settings-hidden-and-listed",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/sections": [
+              {
+                "id": "s0",
+                "title": "S0",
+                "items": [
+                  "camera_zoom"
+                ]
+              }
+            ],
+            "/hidden": [
+              "camera_zoom"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-duplicate",
+        "pointer": "/hidden/0"
+      }
+    },
+    {
+      "id": "settings-labels-unknown-option",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/labels/no_such_option": {
+              "a": "A"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-option",
+        "pointer": "/labels/no_such_option"
+      }
+    },
+    {
+      "id": "settings-labels-option-without-choices",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/labels/camera_zoom": {
+              "a": "A"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-labels",
+        "pointer": "/labels/camera_zoom"
+      }
+    },
+    {
+      "id": "settings-labels-unknown-choice",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/labels/vfx_quality/ultra": "Ultra"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-labels",
+        "pointer": "/labels/vfx_quality/ultra"
+      }
+    },
+    {
+      "id": "settings-labels-numeric-choice-ok",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/labels/thickness": {
+              "1": "Normal",
+              "0.75": "Thin",
+              "1.5": "Thick"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-duplicate-section-id",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/sections": [
+              {
+                "id": "a",
+                "title": "A",
+                "items": [
+                  "camera_zoom"
+                ]
+              },
+              {
+                "id": "a",
+                "title": "B",
+                "items": [
+                  "camera_shake"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-section",
+        "pointer": "/sections/1/id"
+      }
+    },
+    {
+      "id": "settings-unlisted-option-warns",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/options.json",
+          "set": {
+            "/options/test_range": {
+              "default": 5,
+              "group": "display",
+              "label": "Test",
+              "help": "Test",
+              "min": 0,
+              "max": 10,
+              "step": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:settings-unlisted",
+        "pointer": "/hidden",
+        "file": "ui/data/settings.json"
       }
     }
   ],
