@@ -97,6 +97,20 @@ func _pad_slot(dev: int) -> int:
 	return 0
 
 
+## A pad was unplugged (Input.joy_connection_changed): its layout is dropped with every control it held, and the slot it
+## drove is free again. The slot goes back to the keyboard unless a touch holds it, so a stick held at the moment of
+## the disconnect does not keep flying the fighter.
+func pad_disconnected(dev: int) -> void:
+	if pads.has(dev):
+		pads[dev].release_all()
+		pads.erase(dev)
+	for s in range(2):
+		if slot_pad[s] == dev:
+			slot_pad[s] = -1
+			if slot_device[s] == "pad":
+				slot_device[s] = "kb"
+
+
 ## A pad button by position name: south, east, west, north, lb, rb, l3, r3, start, back, dpad_up, ...
 func pad_button(dev: int, name: String, down: bool) -> void:
 	var l: SimLayout = _pad(dev)

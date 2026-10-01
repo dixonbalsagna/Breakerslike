@@ -1,0 +1,89 @@
+--- a/render/core/sim_host.gd	2026-10-01 02:03:36.385080300 -0700
++++ b/render/core/sim_host.gd	2026-10-01 02:03:36.436254200 -0700
+@@ -26,10 +26,8 @@
+ var acc: float = 0.0
+ var ticks: int = 0
+ var paused: bool = false
+-var held: Dictionary = {}       # key code -> true while down
+ var hub := SimInputHub.new()    # every device's input and the intent v2 per human slot (sim/input/hub.gd)
+ var touch: SimTouch = hub.touch  # the hub's touch layer, for the host's hit tests and UI's button state
+-var edges: Dictionary = {}      # key codes pressed since the last tick that consumed input
+ var feed: Array = []            # recent SimState.FeedLine, oldest first
+ var jitter := Vector2.ZERO      # screen shake offset in pixels for the current tick
+ var tick_usec: int = 0          # cost of the last SimCore.step
+@@ -56,7 +54,6 @@
+ 	acc = 0.0
+ 	ticks = 0
+ 	feed.clear()
+-	edges.clear()
+ 	hub.release_all()
+ 	jitter = Vector2.ZERO
+ 	_cur = _capture()
+@@ -90,7 +87,6 @@
+ 			inputs[k] = hub.intent(k)
+ 	var t0: int = Time.get_ticks_usec()
+ 	if SimCore.step(S, inputs):
+-		edges.clear()
+ 		hub.consumed()
+ 	var t1: int = Time.get_ticks_usec()
+ 	cam.camStep(S, S.dt, vw, vh)
+@@ -150,18 +146,14 @@
+ 
+ 
+ func key_down(code: String) -> void:
+-	held[code] = true
+-	edges[code] = true
+ 	hub.key(code, true)
+ 
+ 
+ func key_up(code: String) -> void:
+-	held.erase(code)
+ 	hub.key(code, false)
+ 
+ 
+ func release_all() -> void:
+-	held.clear()
+ 	hub.release_all()
+ 
+ 
+--- a/render/core/main.gd	2026-10-01 02:03:36.356352200 -0700
++++ b/render/core/main.gd	2026-10-01 02:03:36.446785500 -0700
+@@ -138,6 +138,7 @@
+ 	_touch_last = bool(ui_hud.opts["touch_ui"])
+ 	ui_hud.touch_state_fn = host.touch.display_state
+ 	host.drained.connect(_on_drained)
++	Input.joy_connection_changed.connect(_on_joy_connection)
+ 	audio = AudioVoices.new(host.audio_cues.bank)
+ 	add_child(audio)
+ 	if DisplayServer.get_name() != "headless":
+@@ -484,7 +485,6 @@
+ 	_overlay_resume = host.paused
+ 	host.paused = true
+ 	host.release_all()
+-	host.edges.clear()
+ 
+ 
+ func _release_overlay() -> void:
+@@ -624,6 +624,13 @@
+ 				host.hub.pad_trigger(e.device, "rt", e.axis_value)
+ 
+ 
++## A pad plugged in or out: one that goes takes its held stick and buttons with it, so the fighter does not fly on.
++func _on_joy_connection(device: int, connected: bool) -> void:
++	if not connected:
++		_pad_stick.erase(device)
++		host.hub.pad_disconnected(device)
++
++
+ func take_over() -> void:
+ 	if started:
+ 		return
+@@ -726,8 +733,6 @@
+ 					host.paused = not host.paused
+ 					return
+ 			host.key_down(code)
+-		elif not fkey:
+-			host.held[code] = true
+ 	elif e is InputEventMouseButton and e.pressed:
+ 		if e.button_index == MOUSE_BUTTON_LEFT and _menu_click(e.position):
+ 			get_viewport().set_input_as_handled()
