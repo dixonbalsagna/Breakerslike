@@ -183,6 +183,11 @@
       "patternProperties": {
         "^_": true
       }
+    },
+    "sigCooldown": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Seconds before this fighter may fire a signature again (the attack clock); 120 by default."
     }
   },
   "additionalProperties": false,

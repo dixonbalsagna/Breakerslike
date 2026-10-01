@@ -13,9 +13,7 @@ Schema changes for the batch described in `docs/combat/pending/README.md` and `d
 4. **`chainP.heat`** in `combat-styles.schema.json`: a required stage table `{Heated, Simmering, Boiling}` of numbers, replacing `heatBoiling` (which the script removes from the schema, so the data must drop it in the same commit).
 5. **`blitz.chance.cap`** in the same schema: a required number 0 to 1. A new warning, `style-blitz-cap` in `tools/lib/xref-fight.js`, fires when the Tense or Frenzied chance is above the cap (it would always be clipped).
 
-6. **`sigCooldown`** in `fighter.schema.json` (Encounter's Q4 attack clock): a required number greater than 0, seconds, 120 by default. The script also adds it to the two virtual fighter fixtures and 4 cases. It needs `data/fighters/*/fighter.json` to carry it in the same commit (until then KAI and VORR fail as "missing sigCooldown", which is the point).
-
-Items 4 and 5 need `data/combat/styles.json` to carry the new fields (Combat moves them out of the `_heat` and `_cap` notes in the same batch). It also makes `tools/lib/xref.js` check that a `selectorByProfile` selector points at branches of its own template (rule `selector-branch`), and adds 20 cases to `tools/fixtures/cases.json`.
+Items 4 and 5 need `data/combat/styles.json` to carry the new fields (Combat moves them out of the `_heat` and `_cap` notes in the same batch). It also makes `tools/lib/xref.js` check that a `selectorByProfile` selector points at branches of its own template (rule `selector-branch`), and adds 16 cases to `tools/fixtures/cases.json`.
 
 ### How to run
 
@@ -26,7 +24,7 @@ Items 4 and 5 need `data/combat/styles.json` to carry the new fields (Combat mov
 
 ### What was checked
 
-In a scratch copy, before the changes the parked copies (with a `styles.json` carrying `heat` and `cap`) fail with exactly eight errors (`byState`, four `kind`, `selectorByProfile`, `heat`, `cap`). After them only the two expected `sigCooldown` errors remain (KAI and VORR), and the self-test passes 586 of 586 (20 new cases). The script adds cases by parsing `cases.json`, so it does not depend on its layout. Cases assume the parked shapes: template 3 is `pressure`; finishers 0 to 3 are `generic.placeholder`, `generic`, `kai`, `vorr`.
+In a scratch copy, before the changes the parked copies (with a `styles.json` carrying `heat` and `cap`) fail with exactly eight errors (`byState`, four `kind`, `selectorByProfile`, `heat`, `cap`). After them the data validates and the self-test passes (16 new cases). `sigCooldown` was moved into the fighter schema directly (step 2a), so this script no longer touches it. The script adds cases by parsing `cases.json`, so it does not depend on its layout. Cases assume the parked shapes: template 3 is `pressure`; finishers 0 to 3 are `generic.placeholder`, `generic`, `kai`, `vorr`.
 
 Re-check after the run: if `data/combat/` has moved on (for example new templates before `pressure`), the case pointers `/templates/3/...` and `/finishers/2/...` need updating; the self-test says "fixture path missing" if so.
 

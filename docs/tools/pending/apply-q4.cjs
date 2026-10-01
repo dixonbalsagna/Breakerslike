@@ -138,29 +138,3 @@ const cases = [
 for (const k of cases) if (!casesDoc.cases.some((x) => x.id === k.id)) casesDoc.cases.push(k);
 fs.writeFileSync(cf, JSON.stringify(casesDoc, null, 2) + '\n');
 console.log('Q4 schema changes applied');
-
-// ---- fighter.json gains sigCooldown (Encounter's Q4 attack clock: seconds before a signature may fire again, 120 by default) ----
-{
-  const sf2 = 'tools/schemas/fighter.schema.json';
-  const s2 = JSON.parse(fs.readFileSync(sf2, 'utf8'));
-  s2.properties.sigCooldown = { type: 'number', exclusiveMinimum: 0, description: 'Seconds before this fighter may fire a signature again (the Q4 attack clock); 120 by default.' };
-  if (!s2.required.includes('sigCooldown')) s2.required.push('sigCooldown');
-  fs.writeFileSync(sf2, JSON.stringify(s2, null, 2) + '\n');
-  for (const dir of ['FIXTURE_HERO', 'FIXTURE_VILLAIN']) {
-    const ff = 'tools/fixtures/virtual/data/fighters/' + dir + '/fighter.json';
-    const d = JSON.parse(fs.readFileSync(ff, 'utf8'));
-    d.sigCooldown = 120;
-    fs.writeFileSync(ff, JSON.stringify(d, null, 2) + '\n');
-  }
-  const cf2 = 'tools/fixtures/cases.json';
-  const c2 = JSON.parse(fs.readFileSync(cf2, 'utf8'));
-  const FH = 'data/fighters/FIXTURE_HERO/fighter.json';
-  for (const k of [
-    { id: 'fighter-sigcooldown-required', schema: 'fighter.schema.json', mutate: [{ file: FH, del: ['/sigCooldown'] }], expect: { rule: 'required', pointer: '' } },
-    { id: 'fighter-sigcooldown-positive', schema: 'fighter.schema.json', mutate: [{ file: FH, set: { '/sigCooldown': 0 } }], expect: { rule: 'exclusiveMinimum', pointer: '/sigCooldown' } },
-    { id: 'fighter-sigcooldown-type', schema: 'fighter.schema.json', mutate: [{ file: FH, set: { '/sigCooldown': '120 s' } }], expect: { rule: 'type', pointer: '/sigCooldown' } },
-    { id: 'fighter-sigcooldown-accepted', schema: 'fighter.schema.json', mutate: [{ file: FH, set: { '/sigCooldown': 90.5 } }], expect: null },
-  ]) if (!c2.cases.some((x) => x.id === k.id)) c2.cases.push(k);
-  fs.writeFileSync(cf2, JSON.stringify(c2, null, 2) + '\n');
-  console.log('sigCooldown added to the fighter schema');
-}

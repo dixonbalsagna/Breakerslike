@@ -51,6 +51,49 @@
     "manualTierUp": {
       "type": "boolean",
       "description": "When true, crossing a power threshold sets formReady instead of raising the tier (the transformation is then chosen by the player)."
+    },
+    "beam": {
+      "type": "object",
+      "required": [
+        "structure",
+        "levelCapShare",
+        "overshoot"
+      ],
+      "description": "The beam's per-tier numbers (Encounter's step 2a): one entry for each of the four power tiers. levelCapShare and overshoot never decrease with the tier (checked by tools/lib/xref-fight.js).",
+      "properties": {
+        "structure": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "levelCapShare": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "overshoot": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     }
   },
   "additionalProperties": false,

@@ -4957,13 +4957,13 @@
         {
           "file": "ui/data/hints.json",
           "set": {
-            "/schemes/today/rows/6/actions/1": "stance_nowhere"
+            "/schemes/today/rows/9/actions/1": "stance_nowhere"
           }
         }
       ],
       "expect": {
         "rule": "xref:hints-action",
-        "pointer": "/schemes/today/rows/6/actions/1"
+        "pointer": "/schemes/today/rows/9/actions/1"
       }
     },
     {
@@ -5337,6 +5337,182 @@
           "set": {
             "/dodge/lungeTicks": 12,
             "/stick/fullAt": 0.9
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "fighter-sigcooldown-positive",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/sigCooldown": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/sigCooldown"
+      }
+    },
+    {
+      "id": "fighter-sigcooldown-type",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/sigCooldown": "120 s"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/sigCooldown"
+      }
+    },
+    {
+      "id": "fighter-sigcooldown-accepted",
+      "schema": "fighter.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/fighter.json",
+          "set": {
+            "/sigCooldown": 90.5
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "ladder-beam-count",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/beam/structure": [
+              4,
+              6,
+              9
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/beam/structure"
+      }
+    },
+    {
+      "id": "ladder-beam-structure-negative",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/beam/structure/0": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beam/structure/0"
+      }
+    },
+    {
+      "id": "ladder-beam-share-range",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/beam/levelCapShare/3": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/beam/levelCapShare/3"
+      }
+    },
+    {
+      "id": "ladder-beam-share-order",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/beam/levelCapShare/2": 0.3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ladder-beam-order",
+        "pointer": "/beam/levelCapShare/2"
+      }
+    },
+    {
+      "id": "ladder-beam-overshoot-order",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/beam/overshoot/3": 0.05
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ladder-beam-order",
+        "pointer": "/beam/overshoot/3"
+      }
+    },
+    {
+      "id": "ladder-beam-needs-overshoot",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "del": [
+            "/beam/overshoot"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beam"
+      }
+    },
+    {
+      "id": "ladder-beam-equal-tiers-ok",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/beam/overshoot": [
+              0,
+              0,
+              0.25,
+              0.25
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "hints-input-action-accepted",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "set": {
+            "/schemes/today/rows/0/action": "upgrade_heavy"
           }
         }
       ],

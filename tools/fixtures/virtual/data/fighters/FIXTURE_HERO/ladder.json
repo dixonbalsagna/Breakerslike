@@ -15,5 +15,25 @@
   "powerUp": {
     "craterScale": 1
   },
-  "manualTierUp": false
+  "manualTierUp": false,
+  "beam": {
+    "structure": [
+      4,
+      6,
+      9,
+      14
+    ],
+    "levelCapShare": [
+      0.25,
+      0.4,
+      0.6,
+      0.85
+    ],
+    "overshoot": [
+      0,
+      0.1,
+      0.25,
+      0.5
+    ]
+  }
 }

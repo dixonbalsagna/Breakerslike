@@ -151,7 +151,10 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
   const hints = get('ui/data/hints.json');
   if (isObj(hints) && isObj(hints.schemes)) {
     const glyphsDoc = get('ui/data/glyphs.json');
+    // Hint rows name either a glyph action (today's scheme) or an input action (ADR 0008 layouts): both are valid.
     const glyphActions = new Set(isObj(glyphsDoc) && isObj(glyphsDoc.actions) ? Object.keys(glyphsDoc.actions) : []);
+    const inputActionsDoc = get('data/input/actions.json');
+    if (isObj(inputActionsDoc) && Array.isArray(inputActionsDoc.actions)) for (const x of inputActionsDoc.actions) if (isObj(x) && typeof x.id === 'string') glyphActions.add(x.id);
     for (const [name, sc] of Object.entries(hints.schemes)) {
       if (!isObj(sc) || !Array.isArray(sc.rows)) continue;
       sc.rows.forEach((row, ri) => {
@@ -159,7 +162,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
         const ids = [];
         if (typeof row.action === 'string') ids.push([`/schemes/${esc(name)}/rows/${ri}/action`, row.action]);
         if (Array.isArray(row.actions)) row.actions.forEach((a, ai) => ids.push([`/schemes/${esc(name)}/rows/${ri}/actions/${ai}`, a]));
-        if (glyphActions.size) for (const [pointer, a] of ids) if (!glyphActions.has(a)) err('ui/data/hints.json', pointer, 'hints-action', 'action "' + a + '" is not in glyphs.json actions');
+        if (glyphActions.size) for (const [pointer, a] of ids) if (!glyphActions.has(a)) err('ui/data/hints.json', pointer, 'hints-action', 'action "' + a + '" is in neither glyphs.json actions nor data/input/actions.json');
       });
     }
     const opts = get('ui/data/options.json');
@@ -316,6 +319,20 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       if (Array.isArray(s.districts) && s.districts.length && Math.abs(shareSum - 1) > eps) err(F, at + '/districts', 'settle-share', 'district shares sum to ' + shareSum.toFixed(3) + ', not 1');
     });
     if (Array.isArray(st.settlements) && st.settlements.length && Math.abs(popTotal - 1) > eps) err(F, '/settlements', 'settle-share', 'pop_share sums to ' + popTotal.toFixed(3) + ', not 1');
+  }
+
+  // ---- fighter ladder: the beam tables never decrease with the tier ----
+  for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
+    const lad = get(rel);
+    const bm = isObj(lad) ? lad.beam : undefined;
+    if (!isObj(bm)) continue;
+    for (const key of ['levelCapShare', 'overshoot']) {
+      const arr = bm[key];
+      if (!Array.isArray(arr)) continue;
+      for (let i = 1; i < arr.length; i++) {
+        if (typeof arr[i] === 'number' && typeof arr[i - 1] === 'number' && arr[i] < arr[i - 1]) err(rel, '/beam/' + key + '/' + i, 'ladder-beam-order', key + ' falls from ' + arr[i - 1] + ' to ' + arr[i] + ' at tier ' + (i + 1) + '; it must not decrease with the tier');
+      }
+    }
   }
 
   // ---- fighter meters ----

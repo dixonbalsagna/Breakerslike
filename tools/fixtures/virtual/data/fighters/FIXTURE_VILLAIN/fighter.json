@@ -11,8 +11,20 @@
     "aura": "#d99694",
     "hair": "#5b3a8a"
   },
-  "stats": { "care": -0.8, "dmgMul": 1.05, "spd": 0.95, "maxhp": 1700 },
-  "kit": { "canHide": false },
-  "rally": { "rule": "spite" },
-  "finishers": { "base": "generic" }
+  "stats": {
+    "care": -0.8,
+    "dmgMul": 1.05,
+    "spd": 0.95,
+    "maxhp": 1700
+  },
+  "kit": {
+    "canHide": false
+  },
+  "rally": {
+    "rule": "spite"
+  },
+  "finishers": {
+    "base": "generic"
+  },
+  "sigCooldown": 120
 }
