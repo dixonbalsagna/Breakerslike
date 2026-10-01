@@ -21,7 +21,7 @@ const CAP: int = 18000
 ## swapped "VORR" kept KAI's anguish. The parity gate's "arm setups" check holds applyArm equal to newMatch's setup.
 const CHAR_KEYS: Array = ["id", "name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName",
 	"canHide", "rally", "hasAnguish", "hasMenace", "wd", "finisher", "md", "ld"]
-const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
+const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance"]
 
 
 ## Every golden vector, as the JSON the generator writes.
@@ -444,6 +444,11 @@ static func _intent(d):
 	var i := SimIntent.new()
 	i.mx = d.mx; i.my = d.my; i.dash = d.dash; i.charge = d.charge
 	i.light = d.light; i.heavy = d.heavy; i.sig = d.sig; i.stance = d.stance
+	for k in ["guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "context", "transform"]:
+		i.set(k, bool(d.get(k, false)))
+	i.mode = int(d.get("mode", -1))
+	i.upgrade = int(d.get("upgrade", 0))
+	i.special = int(d.get("special", 0))
 	return i
 
 
@@ -501,8 +506,12 @@ static func goldenRun(arm: String, seed: int, replay, cap: int = CAP) -> Diction
 
 
 ## A scripted human (P1, and P2 when both) as a replay: moves, dashes, charges, switches stance and presses attacks.
+## I1: it also drives every intent v2 field, from a second stream (r2), so today's fields keep their tick-for-tick values
+## and the match is the one it was; the new fields only travel (nothing reads them until I2).
 static func scriptedReplay(seed: int, ticks: int, both: bool, toggleAt: Array) -> Dictionary:
 	var r := SimRng.new(seed ^ 0x51ed)
+	var r2 := SimRng.new(seed ^ 0x2b7e)
+	var held2: Array = [{"guard": false, "sprint": false, "power": false, "mode": -1}, {"guard": false, "sprint": false, "power": false, "mode": -1}]
 	var held: Array = [{"mx": 0.0, "my": 0.0, "dash": false, "charge": false}, {"mx": 0.0, "my": 0.0, "dash": false, "charge": false}]
 	var rp := {"seed": seed, "ai": {"p1": false, "p2": not both}, "ticks": ticks, "inputs": [], "toggles": toggleAt.map(func(t): return [t, 1])}
 	var last: Array = [null, null]
@@ -523,6 +532,24 @@ static func scriptedReplay(seed: int, ticks: int, both: bool, toggleAt: Array) -
 			i.heavy = r.next() < 0.015
 			i.sig = r.next() < 0.008
 			i.stance = floor(r.next() * 4.0) if r.next() < 0.004 else -1.0
+			var h2: Dictionary = held2[k]
+			for q in ["guard", "sprint", "power"]:
+				if r2.next() < 0.02:
+					h2[q] = not h2[q]
+			if r2.next() < 0.01:
+				h2.mode = int(floor(r2.next() * 3.0)) - 1
+			i.guard = h2.guard
+			i.sprint = h2.sprint
+			i.power = h2.power
+			i.mode = h2.mode
+			i.guardPress = r2.next() < 0.02
+			i.dodge = r2.next() < 0.02
+			i.powerPress = r2.next() < 0.01
+			i.powerTap = r2.next() < 0.01
+			i.upgrade = (1 + int(floor(r2.next() * 2.0))) if r2.next() < 0.01 else 0
+			i.special = (1 + int(floor(r2.next() * 7.0))) if r2.next() < 0.005 else 0
+			i.context = r2.next() < 0.01
+			i.transform = r2.next() < 0.002
 			var changed: bool = last[k] == null
 			if not changed:
 				for q in INTENT:

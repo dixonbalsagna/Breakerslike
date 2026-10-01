@@ -46,6 +46,7 @@ func _init() -> void:
 	check("wired numbers change a match", _wiredNumbers())
 	check("keyed draws", _keyedDraws(g))
 	check("arm setups", _armSetups())
+	check("intent pack", _intentPack())
 	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
@@ -166,6 +167,64 @@ func _replays(g: Dictionary) -> String:
 	return ""
 
 
+## I1 (intent v2): pack and unpack are inverse on every field's range, canon() puts the stick on its 1 / 127 grid, and
+## unpack refuses integers that are not packed intents.
+func _intentPack() -> String:
+	var bools: Array = ["guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "light", "heavy", "sig", "context", "transform", "dash", "charge"]
+	var fields: Array = ["mx", "my", "mode", "upgrade", "special", "stance"] + bools
+	var same := func(x: SimIntent, y: SimIntent) -> bool:
+		for k in fields:
+			if x.get(k) != y.get(k):
+				return false
+		return true
+	var cases: Array = []
+	var neutral := SimIntent.new()
+	if SimIntent.unpack(SimIntent.pack(neutral)) == null or not same.call(neutral, SimIntent.unpack(SimIntent.pack(neutral))):
+		return "the neutral intent does not round-trip"
+	for b in bools:
+		var i := SimIntent.new()
+		i.set(b, true)
+		cases.append(i)
+	for v in [[-1, 0, 0, -1.0], [0, 1, 1, 0.0], [1, 2, 4, 1.0], [1, 2, 7, 2.0], [0, 0, 3, 3.0]]:
+		var i2 := SimIntent.new()
+		i2.mode = v[0]; i2.upgrade = v[1]; i2.special = v[2]; i2.stance = v[3]
+		cases.append(i2)
+	for k in range(-127, 128):
+		var i3 := SimIntent.new()
+		i3.mx = float(k) / 127.0
+		i3.my = float(-k) / 127.0
+		cases.append(i3)
+	var r := SimRng.new(2024)
+	for n in range(4000):
+		var i4 := SimIntent.new()
+		i4.mx = float(int(floor(r.next() * 255.0)) - 127) / 127.0
+		i4.my = float(int(floor(r.next() * 255.0)) - 127) / 127.0
+		i4.mode = int(floor(r.next() * 3.0)) - 1
+		i4.upgrade = int(floor(r.next() * 3.0))
+		i4.special = int(floor(r.next() * 8.0))
+		i4.stance = float(int(floor(r.next() * 5.0)) - 1)
+		for b in bools:
+			i4.set(b, r.next() < 0.5)
+		cases.append(i4)
+	for i in cases:
+		var p: int = SimIntent.pack(i)
+		var u: SimIntent = SimIntent.unpack(p)
+		if u == null or not same.call(i, u):
+			return "unpack(pack(i)) differs for packed %d" % p
+		if SimIntent.pack(u) != p:
+			return "pack(unpack(p)) differs for %d" % p
+	var off := SimIntent.new()
+	off.mx = 0.5
+	off.my = -0.3333
+	var c: SimIntent = SimIntent.canon(off)
+	if c.mx != 64.0 / 127.0 or c.my != -42.0 / 127.0 or SimIntent.pack(c) != SimIntent.pack(off):
+		return "canon() does not put the stick on its 1 / 127 grid"
+	for badp in [-1, 1 << 40, 255, 255 << 8, 3 << 16, 3 << 18, 5 << 35, 7 << 35]:
+		if SimIntent.unpack(badp) != null:
+			return "unpack accepted %d, which is not a packed intent" % badp
+	return ""
+
+
 ## SimReplay (S4): record a scripted two-human run, play it back and play its JSON round trip; a changed input and a
 ## replay from other combat data must both fail.
 func _replayModule() -> String:
@@ -196,11 +255,27 @@ func _replayModule() -> String:
 	if SimReplay.play(bad).reason != "data":
 		return "a replay from other combat data was not refused"
 	bad = rp.duplicate(true)
-	var mid: Dictionary = bad.inputs[int(floor(bad.inputs.size() / 2.0))][2]
-	mid.mx = -1.0 if mid.mx > 0.0 else 1.0
-	mid.light = not mid.light
+	# From the middle on, every record steers the other way: one altered record can fall on ticks where the fighter cannot
+	# act, so the change is made to last.
+	var at: int = int(floor(bad.inputs.size() / 2.0))
+	for q in range(at, bad.inputs.size()):
+		if bad.inputs[q][2] == null:
+			continue
+		var alt: SimIntent = SimIntent.unpack(int(bad.inputs[q][2]))
+		alt.mx = -1.0 if alt.mx > 0.0 else 1.0
+		bad.inputs[q][2] = SimIntent.pack(alt)
 	if SimReplay.play(bad).ok:
 		return "a changed input was not caught"
+	# I1: format v3 refuses an older file, another intent schema, and an input that is not a packed intent.
+	for edit in [["v", 2], ["intent", SimIntent.VERSION + 1], ["intent", 1]]:
+		bad = rp.duplicate(true)
+		bad[edit[0]] = edit[1]
+		if SimReplay.play(bad).reason != "format":
+			return "a replay with %s %s was not refused" % [edit[0], str(edit[1])]
+	bad = rp.duplicate(true)
+	bad.inputs[at][2] = 1 << 45
+	if SimReplay.play(bad).reason != "format":
+		return "an invalid packed intent was not refused"
 	# D1a: a replay of a mirror setup plays back from its header alone.
 	var S2 := SimCore.createSim()
 	var rec2 := SimReplay.recorder(S2, 21, {}, SimGolden.armSetup("mirror-hero-flip"))
@@ -337,40 +412,44 @@ func _fightData(g: Dictionary) -> String:
 	return ""
 
 
-## D1b: every wired number in meters.json, ladder.json and guardWearSplit changes a match when edited (QA found the meters
-## were documentation only). Each case copies data/fighters/ to user://, sets one value (ladder edits in both fighters'
-## files), and plays seed 3 for WIRED_TICKS: by then it has a beam clash, both meters rising, evacuees and a power-up at
-## ground beside buildings (a fourth element picks another seed: 12 has menace up, VORR's evacuees and
-## guard hits early). The run's per-tick digest of both fighters' numbers, and its end state, must differ from the
-## unedited run's. composure.below is left out: it only matters while composure's cap is not 0.
-const WIRED_TICKS: int = 6000
+## D1b, made robust in I1: every wired number in meters.json, ladder.json and guardWearSplit changes what the sim does
+## when edited (QA found the meters were documentation only). Each row copies data/fighters/ to user://, sets one value
+## (ladder and guard edits in both fighters' files) and runs a forced probe: a fresh match, the state that number needs,
+## one call into the code that reads it, and the values that call produced. The probe's result with the edited data must
+## differ from its result with the real data. No probe plays a match, so a changed opening cannot break a row (the old
+## check played seeds and needed new ones after B2 and after the terrain fixes). One end-to-end row still plays matches,
+## over a list of seeds, and passes if any seed's digest differs. composure.below is left out: it only matters while
+## composure's cap is not 0.
 const WIRED: Array = [
-	["KAI/meters.json", ["meters", "anguish", "effects", 0, "perPoint"], 0.2],
-	["KAI/meters.json", ["meters", "anguish", "effects", 0, "cap"], 0.05],
-	["KAI/meters.json", ["meters", "anguish", "effects", 1, "cap"], 0.3],
-	["KAI/meters.json", ["meters", "anguish", "effects", 2, "cap"], 2.0],
-	["KAI/meters.json", ["meters", "anguish", "decay", "rate"], 3.0],
-	["KAI/meters.json", ["meters", "anguish", "sources", 0, "amount"], 5.0],
-	["KAI/meters.json", ["meters", "anguish", "sources", 1, "amount"], 5.0],
-	["VORR/meters.json", ["meters", "menace", "effects", 0, "perPoint"], 0.3],
-	["VORR/meters.json", ["meters", "menace", "effects", 0, "cap"], 0.01],
-	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0],
-	["VORR/meters.json", ["meters", "menace", "effects", 2, "perPoint"], 50.0, 18],
-	["VORR/meters.json", ["meters", "menace", "decay", "rate"], 3.0],
-	["VORR/meters.json", ["meters", "menace", "decay", "delayTicks"], 30],
-	["VORR/meters.json", ["meters", "menace", "sources", 0, "amount"], 5.0],
-	["VORR/meters.json", ["meters", "menace", "sources", 1, "amount"], 5.0, 12],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["fillPerSec"], 2.0],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["thresholds"], [10.0, 50.0, 75.0]],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "speed"], 0.5],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "damage"], 0.5],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "launch"], 0.8],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaR"], 600.0, 7],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaRPerTier"], 300.0, 7],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmg"], 900.0, 7],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmgPerTier"], 900.0, 7],
-	[["KAI/wounds.json", "VORR/wounds.json"], ["guardWearSplit"], {"arms": 0.6, "legs": 0.4}, 16],   # the data is 0.4 / 0.6 (QA's value set); any other split
+	["KAI/meters.json", ["meters", "anguish", "effects", 0, "perPoint"], 0.2, "kaiTick"],
+	["KAI/meters.json", ["meters", "anguish", "effects", 0, "cap"], 0.05, "kaiTick"],
+	["KAI/meters.json", ["meters", "anguish", "effects", 1, "cap"], 0.3, "kaiHit"],
+	["KAI/meters.json", ["meters", "anguish", "effects", 2, "cap"], 2.0, "kaiHit"],
+	["KAI/meters.json", ["meters", "anguish", "decay", "rate"], 3.0, "kaiTick"],
+	["KAI/meters.json", ["meters", "anguish", "sources", 0, "amount"], 5.0, "feedSelf"],
+	["KAI/meters.json", ["meters", "anguish", "sources", 1, "amount"], 5.0, "feedOther"],
+	["VORR/meters.json", ["meters", "menace", "effects", 0, "perPoint"], 0.3, "vorrTick"],
+	["VORR/meters.json", ["meters", "menace", "effects", 0, "cap"], 0.01, "vorrTick"],
+	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0, "vorrHit"],
+	["VORR/meters.json", ["meters", "menace", "effects", 2, "perPoint"], 50.0, "beam"],
+	["VORR/meters.json", ["meters", "menace", "decay", "rate"], 3.0, "vorrTick"],
+	["VORR/meters.json", ["meters", "menace", "decay", "delayTicks"], 30, "vorrQuiet"],
+	["VORR/meters.json", ["meters", "menace", "sources", 0, "amount"], 5.0, "feedOther"],
+	["VORR/meters.json", ["meters", "menace", "sources", 1, "amount"], 5.0, "evac"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["fillPerSec"], 2.0, "ladderTick"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["thresholds"], [10.0, 50.0, 75.0], "ladderTick"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "speed"], 0.5, "speed"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "damage"], 0.5, "tierHit"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "launch"], 0.8, "launch"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaR"], 600.0, "powerUp"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaRPerTier"], 300.0, "powerUp"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmg"], 900.0, "powerUp"],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmgPerTier"], 900.0, "powerUp"],
+	[["KAI/wounds.json", "VORR/wounds.json"], ["guardWearSplit"], {"arms": 0.75, "legs": 0.25}, "guard"],
+	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0, "match"],   # end to end: any of WIRED_SEEDS
 ]
+const WIRED_TICKS: int = 6000
+const WIRED_SEEDS: Array = [3, 7, 12, 16, 18]
 
 
 func _wiredNumbers() -> String:
@@ -378,7 +457,12 @@ func _wiredNumbers() -> String:
 	for id in FighterData.order():
 		for fname in ["fighter.json", "wounds.json", "meters.json", "ladder.json"]:
 			files[id + "/" + fname] = FileAccess.get_file_as_string(FighterData.ROOT + id + "/" + fname)
-	var base := {3: _wiredRun(3), 7: _wiredRun(7), 12: _wiredRun(12), 16: _wiredRun(16), 18: _wiredRun(18)}
+	var base := {}
+	for c in WIRED:
+		if c[3] != "match" and not base.has(c[3]):
+			base[c[3]] = _wiredProbe(c[3])
+			if base[c[3]].begins_with("!"):
+				return "probe %s cannot run on the real data: %s" % [c[3], base[c[3]]]
 	var bad: Array = []
 	FighterData.quiet = true
 	for i in range(WIRED.size()):
@@ -402,14 +486,135 @@ func _wiredNumbers() -> String:
 			var fw := FileAccess.open(dir + key, FileAccess.WRITE)
 			fw.store_string(text)
 			fw.close()
+		if c[3] == "match":
+			var differs: bool = false
+			for seed in WIRED_SEEDS:
+				FighterData.loadFrom()
+				var plain: String = _wiredRun(seed)
+				FighterData.loadFrom(dir)
+				if FighterData.errors().is_empty() and _wiredRun(seed) != plain:
+					differs = true
+					break
+			if not differs:
+				bad.append("%s %s: no effect in a match on seeds %s" % [str(c[0]), str(c[1]), str(WIRED_SEEDS)])
+			continue
 		FighterData.loadFrom(dir)
 		if not FighterData.errors().is_empty():
 			bad.append("%s %s: %s" % [str(c[0]), str(c[1]), "; ".join(FighterData.errors())])
-		elif _wiredRun(c[3] if c.size() > 3 else 3) == base[c[3] if c.size() > 3 else 3]:
-			bad.append("%s %s: no effect" % [str(c[0]), str(c[1])])
+		elif _wiredProbe(c[3]) == base[c[3]]:
+			bad.append("%s %s: no effect on probe %s" % [str(c[0]), str(c[1]), c[3]])
 	FighterData.quiet = false
 	FighterData.loadFrom()
 	return "" if bad.is_empty() else "; ".join(bad)
+
+
+## One forced probe on the loaded data: a fresh match (seed 3), the state its number needs, one call into the reader, and
+## the values it produced as text. A result starting with "!" means the probe could not set its scenario up.
+func _wiredProbe(kind: String) -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 3)
+	var kai = S.fighters[0]
+	var vorr = S.fighters[1]
+	var out: Array = []
+	match kind:
+		"kaiTick":      # anguish: the regen penalty, its cap and the decay
+			kai.anguish = 50.0
+			kai.ki = 10.0
+			SimFighter.stepFighter(S, kai, SimConst.DT)
+			out = [kai.ki, kai.anguish]
+		"vorrTick":     # menace: the regen bonus, its cap and the decay (long unfed)
+			vorr.menace = 50.0
+			vorr.menaceSeen = 50.0
+			vorr.menaceQuiet = 1000
+			vorr.casSeen = S.world.casualties
+			vorr.ki = 10.0
+			SimFighter.stepFighter(S, vorr, SimConst.DT)
+			out = [vorr.ki, vorr.menace]
+		"vorrQuiet":    # menace: the decay's delay (unfed for 100 ticks: under the real delay, over the edited one)
+			vorr.menace = 50.0
+			vorr.menaceSeen = 50.0
+			vorr.menaceQuiet = 100
+			vorr.casSeen = S.world.casualties
+			SimFighter.stepFighter(S, vorr, SimConst.DT)
+			out = [vorr.menace]
+		"kaiHit", "vorrHit", "tierHit":   # damage: composure and the comeback; menace's damage_mul; the tier's damage step
+			var A = vorr if kind == "vorrHit" else kai
+			var D = kai if kind == "vorrHit" else vorr
+			if kind == "kaiHit":
+				A.wear[SimWounds.CORE] = 300000
+				SimWounds.updateStages(S, A)
+			elif kind == "vorrHit":
+				A.menace = 50.0
+			else:
+				A.tier = 3.0
+			var ex := SimState.Exchange.new()
+			ex.A = A
+			ex.D = D
+			ex.kind = "light"
+			out = [SimDamage.hit(S, ex, A, D, 20.0, {})]
+		"beam":         # menace's beam power
+			vorr.menace = 50.0
+			out = [DirBeam._clashScore(S, vorr)]
+		"feedSelf", "feedOther":   # the casualty sources: caused by KAI, or by VORR
+			WorldCollateral._feed(S, 10.0, kai if kind == "feedSelf" else vorr)
+			out = [kai.anguish, vorr.menace]
+		"evac":         # the evacuee source: VORR's blows empty buildings until someone flees
+			for b in S.buildings:
+				if b.alive and b.popAlive > 0.0:
+					WorldCollateral.kill(S, b.idx, b.popAlive, vorr, 0.0, b.x)
+					if S.world.evacuated > 0.0:
+						break
+			if S.world.evacuated <= 0.0:
+				out = ["!no evacuees"]
+			else:
+				out = [vorr.menace, S.world.evacuated]
+		"ladderTick":   # the fill and the thresholds
+			kai.power = 15.0
+			SimFighter.stepFighter(S, kai, SimConst.DT)
+			out = [kai.power, kai.tier]
+		"speed":        # the tier's speed step
+			kai.tier = 3.0
+			kai.power = 60.0
+			kai.input.mx = 1.0
+			SimFighter.stepFighter(S, kai, SimConst.DT)
+			out = [kai.vx]
+		"launch":       # the tier's launch step
+			kai.tier = 3.0
+			DirLaunch.doLaunch(S, kai, vorr, {"ux": 1.0, "uy": 0.2}, 1500.0)
+			out = [vorr.vx, vorr.vy]
+		"powerUp":      # the power-up's area and damage, on the ground beside the building with the most neighbours
+			var best = null
+			var most: int = -1
+			for b in S.buildings:
+				if not b.alive:
+					continue
+				var near: int = WorldStructures.near(S, b.x, 6000.0).size()
+				if near > most:
+					most = near
+					best = b
+			if best == null:
+				out = ["!no buildings"]
+			else:
+				kai.x = best.x
+				kai.y = WorldTerrain.groundY(S, kai.x)
+				kai.tier = 2.0
+				SimFighter.tierUp(S, kai)
+				var hp: float = 0.0
+				var alive: int = 0
+				for b in S.buildings:
+					hp += b.hp
+					alive += 1 if b.alive else 0
+				out = [hp, alive]
+		"guard":        # the guard wear split
+			SimWounds.addGuardWear(S, kai, 100.0)
+			out = [kai.wear[SimWounds.ARMS], kai.wear[SimWounds.LEGS]]
+		_:
+			out = ["!unknown probe " + kind]
+	SimCore.dispose(S)
+	var parts: PackedStringArray = []
+	for v in out:
+		parts.append(SimMathx.bits(v) if v is float else str(v))
+	return ",".join(parts)
 
 
 func _wiredRun(seed: int) -> String:

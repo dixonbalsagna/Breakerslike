@@ -61,6 +61,8 @@ Current state: implemented in both cores (QA-002, done). The reference consumer 
 
 `play(replay)` re-runs from the seed and reports the first checkpoint that disagrees. Replays store intents, not keys, so they don't depend on the key mapping. Planned additions: a `sim` version field (the package version or git revision) and a `setup` block (roster and spawns) once there are more than two fighters.
 
+**GDScript replays, format v3 (I1, `docs/architecture/intent-v2.md`).** Inputs are `[tick, slot, packed]`, where packed is `SimIntent.pack()` (one integer for the whole intent). The header carries `intent`, the intent schema version, and `play()` refuses another version. The recorder steps the sim with each intent's canonical form. The v2 notes below describe the rest of the format.
+
 **GDScript replays (`core/replay.gd`, S4), format v2.** The same shape as v1, with `data` (`SimReplay.dataHash()`: the combat data and, from D1a, the roster data it ran on) in place of `sim` (the GDScript sim has one mode), and from D1a a `setup` block (`{"slots", "names", "flip"}`, `{}` for the default match). `SimReplay.recorder(S, seed, ai, setup)` records; `SimReplay.play(rp)` returns `{ok, firstBadTick, reason, final}` and refuses a replay recorded on other combat data (`reason` `data`) without running it. The parity gate records, plays back, round-trips through JSON and checks both negative controls.
 
 **Snapshot (proposed v1, not implemented).** A plain object built from `S`:

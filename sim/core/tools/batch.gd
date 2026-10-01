@@ -8,7 +8,11 @@ extends SceneTree
 ## mirror-hero, and each with -flip. Statistics come from the feed lines, as in QA's match runner.
 ## Exit code 1 on a NaN or a fighter outside [0, W).
 
-const MAX_STEPS: int = 43200   # 12 sim-minutes (wounds-plan S2: spec-wounds §5 test 3, p99)
+## A match is cut off at MAX_T of match time (S.T: 15:00, the S4 ruling), not at a count of steps: hit-stop steps do not
+## advance S.T, and a step cap cut about 1 match in 100 just before its KO and called it a timeout. MAX_STEPS is only a
+## safety stop.
+const MAX_T: float = 900.0
+const MAX_STEPS: int = 120000
 const KO_TAIL: float = 3.0
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
 
@@ -122,7 +126,7 @@ func run_match(seed: int, arm: String) -> Dictionary:
 	var prevWear: Array = [fs[0].wear.duplicate(), fs[1].wear.duplicate()]
 	var prev: Array = [fs[0].x, fs[1].x]
 	var steps: int = 0
-	while steps < MAX_STEPS and not (S.game.ko != null and S.game.koT > KO_TAIL):
+	while S.T < MAX_T and steps < MAX_STEPS and not (S.game.ko != null and S.game.koT > KO_TAIL):
 		SimCore.step(S)
 		steps += 1
 		for e in S.out.fx:

@@ -58,7 +58,7 @@ Encounter's fighter state is derived from the record and the fight, and lands in
 - the last dodge tick;
 - `dodgeCool` and `burstCool`;
 - `formReady`;
-- the burst (from the power edges).
+- the burst (from the power edges), with one flag, "burst already fired on this press" (Controls): when a threatened `powerPress` fires the burst, the `powerTap` that follows on release doesn't fire a second one. The flag clears on the next `powerPress`.
 
 `f.stance` is then derived each tick, and the director snapshots it at exchange start as now:
 - Guard: `guard` held;
@@ -115,11 +115,58 @@ The per-slot assists (`autoBurst`, `specialPick`, `perfectBlockAssist`) go in th
 | **I3, removal** | Simulation | `stance`, `dash` and `charge` leave the record. The intent version goes to 3; replays from I1 and I2 are refused | Regenerated (the hash list) |
 | Encounter's steps 2 to 5 | Encounter, Controls, Combat | Counters by request; the queue; interrupt windows; entry and mode through the style applier | Each its own checkpoint |
 
+**Also in the I1 window (tools only):** `sim/core/tools/batch.gd` caps a match at `MAX_STEPS` 43,200 ticks, which counts hit-stop ticks. About 1 match in 100 is cut off just before its KO and reported as a timeout. The cap becomes match time: `S.T` reaching 900 s (the S4 ruling's 15:00). `sim/director/tools/tempo.gd` has the same cap; it is Encounter's file, so the same change there is theirs or a granted line.
+
+**Also in the I1 window: the "wired numbers change a match" check, made robust.** It has needed seed edits twice (World's B2 and the terrain fixes): a changed opening stops a seed reaching a beam clash, a power-up beside buildings or VORR's evacuees inside 6,000 ticks. The fix has two parts:
+1. **A forced probe per wired number,** like the forced wound vectors. Each case builds the state its number needs and calls the code that reads it, then compares one result between the real data and the edited copy:
+   - menace and anguish regen and decay through one `stepFighter` tick with the meter set;
+   - `damage_mul`, the comeback, composure and the tier's damage step through `SimDamage.hit`;
+   - the casualty and evacuee sources through World's collateral call, with a named cause;
+   - beam power through the director's power function;
+   - the ladder's fill, thresholds and speed through `stepFighter`;
+   - the power-up area through `tierUp` beside a placed building;
+   - the launch step through `doLaunch`;
+   - the guard split through `addGuardWear`.
+
+   No seed is involved, so a new opening can't break it.
+2. **A seed list as the fallback** for any number that can't be forced cleanly: the case passes if any of a short list of seeds shows an effect, and it reports which seeds it tried.
+
+The match-based digest stays as one end-to-end case (a single number over one seed list), so the check still proves that data reaches a real match.
+
 **I1 tests:**
 - pack round trip over every field's range, and rejection of out-of-range values;
 - replay v3 record, play and JSON round trip;
 - a changed bit is caught;
 - a v2 file is refused.
+
+## 6b. I1 as built (2026-10-01)
+
+**The record.** `sim/input/intent.gd` holds the v2 fields next to `stance`, `dash` and `charge`.
+- `SimIntent.VERSION` is 2.
+- `pack()` gives one 40-bit integer: the 35 bits of §5, then today's stance (3 bits), dash and charge.
+- `unpack()` returns null for anything that isn't a packed intent.
+- `canon()` puts the stick on its 1/127 grid.
+- Nothing reads the new fields. `SimTouch.build()` and the keyboard still write today's fields and are untouched.
+
+**Hash.** `hash.gd`'s intent list is the 20 fields.
+
+**Replay v3** (`sim/core/replay.gd`).
+- Inputs are `[tick, slot, packed]`, and the header carries `intent`.
+- The recorder steps the sim with each intent's canonical form, so what is recorded is what was played.
+- `play()` refuses, with reason `format`, another format, version or intent schema, or an input that isn't a packed intent.
+
+**The proof, as run.**
+1. With the hash list and the golden generator untouched, parity passed against the untouched goldens: every vector, 9 matches (164,457 ticks) and the replays.
+2. The new fields were then hashed, and the scripted replays extended to drive every v2 field from a second random stream. One regeneration followed.
+3. Afterwards, the per-tick digests of all 9 matches and both replays are identical to the set before I1. The match is the one it was; only the hashed input fields changed.
+
+**Parity checks:**
+- "intent pack": the round trip over every field's range and 4,000 random records, canon, and 8 rejected integers;
+- "replay module": record, play and JSON round trip, a changed input, a v2 file, two other intent versions, an invalid packed input, other data, and a setup replay.
+
+**Also in the window:**
+- `batch.gd` and `tempo.gd` cut a match off at 900 s of match time (`S.T`), not at 43,200 steps. Hit-stop steps don't count, and `MAX_STEPS` (120,000) is only a safety stop.
+- The wired-number check runs a forced probe per number (`_wiredProbe`: a fresh match, the state that number needs, one call into its reader), with no seed to maintain. One end-to-end row still plays matches and passes on any of five seeds.
 
 ## 7. Open points
 

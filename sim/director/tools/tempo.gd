@@ -12,7 +12,8 @@ extends SceneTree
 ## Wounds (spec-wounds.md §5, read from the fx events): time to the first region break and the first brink, breaks per
 ## match, finishers, contests survived, KOs that came through a finisher, and each region's share of the damage.
 
-const MAX_STEPS: int = 43200
+const MAX_T: float = 900.0     # match time (15:00), as batch.gd: hit-stop steps do not count (I1, Simulation's granted line)
+const MAX_STEPS: int = 120000  # a safety stop only
 const LONG_HAUL: float = 1500.0 * SimConst.TRAV_LAUNCH   # units of horizontal travel; a launch reaches TRAV_LAUNCH times as far since the world scale (SC)
 
 var re_atk := RegEx.create_from_string("^([A-Z][A-Z0-9-]*) (LIGHT|HEAVY|SIG) vs (\\w+)$")
@@ -66,7 +67,7 @@ func run_match(seed: int, arm: String, agg: Dictionary) -> void:
 	var breaks: int = 0
 	var lastContestLost: bool = false
 	var gap10: bool = false
-	while steps < MAX_STEPS and S.game.ko == null:
+	while S.T < MAX_T and steps < MAX_STEPS and S.game.ko == null:
 		var T0: float = S.T
 		SimCore.step(S)
 		steps += 1

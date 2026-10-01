@@ -1,25 +1,28 @@
 class_name SimReplay
 extends RefCounted
 ## Replays: a seed, the AI flags and the intents the host passed to step() reproduce a match bit for bit. The GDScript
-## twin of replay.js, format v2. A replay is plain JSON-able data:
-##   {format, v, data, seed, ai, ticks, inputs, toggles, checkpoints, final}
+## twin of replay.js, format v3 (I1, intent v2). A replay is plain JSON-able data:
+##   {format, v, intent, data, seed, setup, ai, ticks, inputs, toggles, checkpoints, final}
+##   intent       SimIntent.VERSION: the intent schema the inputs are packed in. Another version is refused.
 ##   data         dataHash(): the combat data and the roster data the match ran on (S4, D1a). It plays back only on the
 ##                same data.
-##   setup        newMatch's setup (D1a): {"slots", "names", "flip"}, {} for the default match; absent in older files.
-##   inputs       [tick, slot, intent dictionary or null], only where a slot's intent changed from its previous one
+##   setup        newMatch's setup (D1a): {"slots", "names", "flip"}, {} for the default match.
+##   inputs       [tick, slot, packed intent or null], only where a slot's intent changed from its previous one. Packed is
+##                SimIntent.pack(): one integer for the whole record.
 ##   toggles      [tick, slot]: toggleAI before that tick
 ##   checkpoints  [tick, gameplay hash] every CHECK_EVERY ticks; final: the gameplay hash at the end
-## Intents, not raw keys, are recorded, so a replay does not depend on the key mapping. v1 (replay.js) had a `sim`
-## modes field instead of `data`; the GDScript sim has one mode.
+## Intents, not raw keys, are recorded, so a replay does not depend on the key mapping or the layout. The recorder steps
+## the sim with the canonical form of each intent (SimIntent.canon: the stick on its 1 / 127 grid), so what it records
+## is exactly what was played.
+## v1 (replay.js) had a `sim` modes field; v2 stored each intent as a dictionary of eight fields.
 
 const FORMAT: String = "meridian-replay"
-const V: int = 2
+const V: int = 3
 const CHECK_EVERY: int = 60
-const INTENT: Array = ["mx", "my", "dash", "charge", "light", "heavy", "sig", "stance"]
 
 var S: SimState
 var replay: Dictionary
-var _last: Array = [null, null]
+var _last: Array = [-1, -1]   # the last packed intent per slot; -1 for none (null)
 
 
 ## Start recording a match: runs newMatch(S, seed, ai). Use rec.step and rec.toggle instead of SimCore.step and toggleAI.
@@ -27,20 +30,25 @@ static func recorder(S_: SimState, seed: int, ai: Dictionary = {}, setup: Dictio
 	SimCore.newMatch(S_, seed, ai, setup)
 	var rec := SimReplay.new()
 	rec.S = S_
-	rec.replay = {"format": FORMAT, "v": V, "data": dataHash(), "seed": seed, "setup": setup.duplicate(true),
+	rec.replay = {"format": FORMAT, "v": V, "intent": SimIntent.VERSION, "data": dataHash(), "seed": seed, "setup": setup.duplicate(true),
 		"ai": {"p1": S_.fighters[0].ai != null, "p2": S_.fighters[1].ai != null},
 		"ticks": 0, "inputs": [], "toggles": [], "checkpoints": [], "final": ""}
 	return rec
 
 
-## One recorded step. inputs: [SimIntent or null, SimIntent or null], or null, as for SimCore.step.
+## One recorded step. inputs: [SimIntent or null, SimIntent or null], or null, as for SimCore.step. The sim is stepped
+## with each intent's canonical form.
 func step(inputs = null) -> bool:
+	var cur: Array = [null, null]
 	for k in range(2):
-		var d = _dict(inputs[k] if inputs != null else null)
-		if not _same(d, _last[k]):
-			_last[k] = d
-			replay.inputs.append([replay.ticks, k, d.duplicate() if d != null else null])
-	var r: bool = SimCore.step(S, inputs)
+		var i = inputs[k] if inputs != null else null
+		var p: int = SimIntent.pack(i) if i != null else -1
+		if i != null:
+			cur[k] = SimIntent.unpack(p)
+		if p != _last[k]:
+			_last[k] = p
+			replay.inputs.append([replay.ticks, k, p if p >= 0 else null])
+	var r: bool = SimCore.step(S, cur if inputs != null else null)
 	replay.ticks += 1
 	if replay.ticks % CHECK_EVERY == 0:
 		replay.checkpoints.append([replay.ticks, SimHash.stateHash(S).gameplay])
@@ -57,11 +65,22 @@ func finish() -> Dictionary:
 	return replay
 
 
-## Re-run a replay and verify it. Returns {ok, firstBadTick (-1 if ok), reason, final}. reason is "" when ok, "data" when
-## the replay was recorded on other combat data (it is not run), "checkpoint" or "final" otherwise.
+## Re-run a replay and verify it. Returns {ok, firstBadTick (-1 if ok), reason, final}. reason is "" when ok; "format" for
+## another format, version or intent schema, or an input that is not a valid packed intent (it is not run); "data" when it
+## was recorded on other data (not run); "checkpoint" or "final" otherwise.
 static func play(rp: Dictionary) -> Dictionary:
-	if rp.get("format", "") != FORMAT or int(rp.get("v", 0)) != V:
-		return {"ok": false, "firstBadTick": -1, "reason": "format", "final": ""}
+	var refuse := {"ok": false, "firstBadTick": -1, "reason": "format", "final": ""}
+	if rp.get("format", "") != FORMAT or int(rp.get("v", 0)) != V or int(rp.get("intent", 0)) != SimIntent.VERSION:
+		return refuse
+	var packed: Array = []
+	for inp in rp.get("inputs", []):
+		var it = null
+		if inp[2] != null:
+			var f: float = float(inp[2])
+			it = SimIntent.unpack(int(f)) if f == floor(f) else null
+			if it == null:
+				return refuse
+		packed.append(it)
 	if rp.get("data", "") != dataHash():
 		return {"ok": false, "firstBadTick": -1, "reason": "data", "final": ""}
 	var S_ := SimCore.createSim()
@@ -78,7 +97,7 @@ static func play(rp: Dictionary) -> Dictionary:
 			SimCore.toggleAI(S_, int(rp.toggles[ti][1]))
 			ti += 1
 		while ii < rp.inputs.size() and int(rp.inputs[ii][0]) == t:
-			cur[int(rp.inputs[ii][1])] = _intent(rp.inputs[ii][2])
+			cur[int(rp.inputs[ii][1])] = packed[ii]
 			ii += 1
 		SimCore.step(S_, cur)
 		if checks.has(t + 1) and checks[t + 1] != SimHash.stateHash(S_).gameplay:
@@ -99,30 +118,3 @@ static func dataHash() -> String:
 	h.text(FighterData.dataHash())
 	h.text(SimMood.dataHash())
 	return h.hex()
-
-
-static func _dict(i):
-	if i == null:
-		return null
-	var d := {}
-	for k in INTENT:
-		d[k] = i.get(k)
-	return d
-
-
-static func _same(a, b) -> bool:
-	if a == null or b == null:
-		return a == b
-	for k in INTENT:
-		if a[k] != b[k]:
-			return false
-	return true
-
-
-static func _intent(d):
-	if d == null:
-		return null
-	var i := SimIntent.new()
-	i.mx = float(d.mx); i.my = float(d.my); i.dash = bool(d.dash); i.charge = bool(d.charge)
-	i.light = bool(d.light); i.heavy = bool(d.heavy); i.sig = bool(d.sig); i.stance = float(d.stance)
-	return i
