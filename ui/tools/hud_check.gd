@@ -2928,7 +2928,7 @@ func _faces_rules() -> void:
 		profile_ids_ok = profile_ids_ok and fd["fighters"].has(id)
 	_ok(slots_ok and profile_ids_ok and fd["expressions"] == ["neutral", "smirk", "strain", "hurt"] and int(fd["rate"]["per_minute"]) == 6, "faces: the data has a texture slot per fighter and expression (neutral, smirk, strain, hurt) and the 6 a minute rate")
 	# Which lines get a face.
-	_ok(UiFaces.level(_bark_obj(0)) == "cap" and UiFaces.level(_bark_obj(0, 2, "caption", "reply")) == "cap" and UiFaces.level(_bark_obj(0, 2, "caption", "retort")) == "cap" and UiFaces.level(_bark_obj(0, 2, "caption", "callback")) == "cap", "faces: quips, replies, retorts and callbacks are ordinary lines (the rate cap applies)")
+	_ok(UiFaces.level(_bark_obj(0)) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "reply")) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "retort")) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "callback")) == "always" and UiFaces.level(_bark_obj(0, 2, "caption", "bit")) == "cap", "faces: every quip, reply, retort and callback gets a face (Orb); only a kind the data does not list falls to the rate cap")
 	_ok(UiFaces.level(_bark_obj(0, 2, "caption", "jewel")) == "always" and UiFaces.level(_bark_obj(0, 2, "shout")) == "always" and UiFaces.level(_bark_obj(0, 3, "caption", "line", true)) == "always" and UiFaces.level(_bark_obj(0, 4)) == "always", "faces: a jewel, a shout, a set piece and a line of priority 3 or more always get one")
 	_ok(UiFaces.level(_bark_obj(0, 2, "thought")) == "never" and UiFaces.level(_bark_obj(0, 2, "caption", "thought")) == "never" and UiFaces.level(_bark_obj(0, 1)) == "never" and UiFaces.level(_bark_obj(0, 2, "caption", "line", false, false)) == "never", "faces: a thought, an ambient line and a crowd or narrator line get none")
 	# The expression.
@@ -2944,7 +2944,8 @@ func _faces_rules() -> void:
 	hub.consume({"type": "bark", "speaker": 0, "text": "Thinking.", "kind": "thought", "priority": 2})
 	var both: bool = hub.barks.size() == 2 and hub.barks[0].face and hub.barks[1].face and hub.barks[0].face_expr == "smirk" and hub.barks[1].face_expr == "hurt"
 	_ok(both and hub.bark_wait.size() == 1 and not hub.bark_wait[0].face, "faces: two speakers at once each get a face (one a side); a queued thought gets none")
-	# The rate cap: 6 in a minute of fight time; a set piece still gets one; a minute later it opens again.
+	# The rate cap, which the data keeps for if it is wanted again: a kind set to cap gets 6 in a minute of fight time; a set piece still gets one; a minute later it opens again.
+	UiData.faces()["kinds"]["line"] = "cap"
 	var h2 := _hub()
 	var sides_ok := true
 	var granted := 0
@@ -2978,6 +2979,14 @@ func _faces_rules() -> void:
 		h3.advance(1.0 / 60.0)
 	h3.consume({"type": "bark", "speaker": 0, "text": "Late.", "priority": 2, "dur": 0.1})
 	_ok(h3.barks.size() == 0 or not h3.barks[0].face, "faces: the cap's minute is fight time, so a long sim pause does not reopen it")
+	UiData.faces()["kinds"]["line"] = "always"
+	# With every kind always, nothing is capped: nine lines in nine seconds all get a face.
+	var h5 := _hub()
+	for i in range(9):
+		h5.consume({"type": "bark", "speaker": i % 2, "text": "Line %d." % i, "priority": 2, "dur": 0.2, "kind": ["line", "reply", "retort", "callback", "jewel"][i % 5]})
+		for k in range(60):
+			h5.advance(1.0 / 60.0)
+	_ok(int(h5.stats["faces_shown"]) == 9 and int(h5.stats["faces_capped"]) == 0, "faces: as shipped (every kind always) nothing is capped: every line a fighter speaks gets a face (%d of 9)" % int(h5.stats["faces_shown"]))
 	# No move-name card.
 	var h4 := _hub()
 	h4.set_move_names(["Horizon Cleave"])
