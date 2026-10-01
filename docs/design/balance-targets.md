@@ -221,7 +221,7 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
 | Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
-| **How launches end** | By how the journey ends (§20, the landing ruling): skids or tumbles to a halt 55 to 75%; slam 8 to 18%; caught in the air 10 to 25%; water 2 to 10%; brunt 4 to 10%. Bounces are an event rate: 15 to 30% of launches |
+| **How launches end** | By how the journey ends (§20, the second landing ruling): skids or tumbles to a halt 40 to 60% and the largest class; wall 5 to 15%; slam 8 to 18%; caught in the air 15 to 30%; water 2 to 10%; brunt 4 to 10%. Bounces are an event rate: 15 to 30% of launches |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -773,6 +773,39 @@ World's plan is accepted, including these points: contact angles are measured ag
 - flights off a lip per minute;
 - the wear paid per journey against the single-impact budget, and the collateral per journey;
 - how often the journey carries him off screen, for Camera.
+
+### Second landing ruling, after World's re-measure (2026-10-02)
+
+World re-measured on Encounter's landing slice at the 40 degree boundary (`docs/world/ground-contact.md` §10). The bounce share now passes (27.9%). Four rows needed a ruling.
+
+1. **Wall stops are their own class.** A launch that ends embedded in a slope steeper than 0.8 is what MOUNTAINSIDE is for, and it reads differently from a skid to a halt. It is 17% today. It will fall when the highland flanks soften to 0.6 (the answers table above), so its band is 5 to 15%.
+2. **Slams are Encounter's to bring down; the caught band widens.**
+   - *Slam* is 25% against 8 to 18%, and the band stays. The lever is the planner's mix: give UPPERCUT more forward carry so its fall lands under 70 degrees, and hold CRATER SLAM to its gates (§19).
+   - *Caught in the air* is 27% against 10 to 25%. Orb wants the ping-pong rally, so the band becomes 15 to 30%.
+3. **Bounces per bounced journey:** the band's floor drops to 1.2, so 1.28 passes. The vertical keep stays at 45%, 35% and 25%. Higher arcs would lengthen journeys that already leave the frame one time in six.
+4. **Flights off the terrain:** the band widens, because Orb asked for them. It counts only flights that are seen, which means at least 10 ticks in the air.
+
+**The ending classes now** (this replaces the table in the first landing ruling):
+
+| The journey ends | Measured | Band (share of all launches) |
+| :--- | ---: | :--- |
+| **Skidding or tumbling to a halt,** with or without bounces first | 29% | **40 to 60%, and the largest class.** Among journeys that end on the ground (halt, wall or slam) it is at least 55% |
+| Against a wall (a slope steeper than 0.8) | 17% | 5 to 15% |
+| In a slam | 25% | 8 to 18% |
+| Caught in the air | 27% | 15 to 30% |
+| In water | 3% | 2 to 10% |
+| In a brunt | Not in World's run | 4 to 10% |
+
+| Event | Measured | Band |
+| :--- | ---: | :--- |
+| Launches with at least one bounce | 27.9% | 15 to 30% |
+| Bounces per bounced journey | 1.28 | 1.2 to 2.0 |
+| Flights off a crater's lip, seen | 1.75 a minute | 0.5 to 2.5 a minute |
+| Flights off any terrain (lips, crests, cliffs and heaps), seen | 4.7 a minute | 1.5 to 5 a minute |
+| Journeys that reach the 4 s or 8-contact bound | 5.1% | At most 8% |
+| Journeys longer than 4,000 units | About 17% | At most 20%. Camera's chase rule covers them |
+
+**One check for World and Simulation.** The mean wear per journey is 0.32 of the single-impact budget. A journey that skids to a halt should pay 80 to 100% of it, because all its speed is lost on the ground. If halted journeys pay much less, the split needs a look. Either way the impact wear per launch has changed, so QA re-tunes k after the model lands.
 
 ## 21. Rulings after the Q10 retune (QA's `docs/qa/retune-q10.md`, 2026-10-02)
 
