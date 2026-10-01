@@ -227,7 +227,7 @@ Plan only; no data changes until Orb gives the go on the control scheme (`docs/d
 | :--- | :--- | :--- |
 | 1 | finisher `kind` | **Yes.** The read against the kind moves from stances to held states (Guard, Dodge, Press with a beam in hand) |
 | 2 | `contest.struggle.byState` | **Yes, with two updates on merge:** the base becomes Game Design's current value (0.23 since `6be4c3a`; the parked copy says 0.15), and the stance labels become held states |
-| 3 | PRESSURE's R4 counter as `selectorByProfile.dynamic` | **Hold.** With a perfect block in the player's hands, Game Design needs to re-rule R4. It may become "a perfect block opens the counter; a plain held guard counters only for the AI and the Simple layout" |
+| 3 | PRESSURE's R4 counter as `selectorByProfile.dynamic` | **Replaced.** Game Design re-ruled R4 (`stance-matrix.md` section 7.3): a held guard never counters by itself, for humans or the AI. The counter comes from a perfect block (the riposte) or a reversal, as interrupts on GUARD HOLDS (`control-scheme-data.md`) |
 | 4 | the new cue names | **Yes.** More will follow (the mode tell, the context actions) |
 
 **Launch vectors.** MOUNTAINSIDE is retired in favour of brunts on World's natural formations (mesa, rock, spire, big tree): `moveset-system.md` section 9.8. The ground and aerial styles' launch hints are unaffected.

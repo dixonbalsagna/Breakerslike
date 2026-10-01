@@ -28,7 +28,9 @@ Nothing here lands until Orb gives the go on ADR 0008 and Encounter revises its 
 | :--- | :--- |
 | 1. finisher `kind` | still valid |
 | 2. `contest.struggle.byState` | still valid. On merge, set the base to Game Design's current value (0.23 since `6be4c3a`; this copy says 0.15) and rename the stance labels to held states |
-| 3. PRESSURE's R4 counter (`selectorByProfile.dynamic`) | **on hold** until Game Design re-rules R4 with the perfect block |
+| 3. PRESSURE's R4 counter (`selectorByProfile.dynamic`) | **replaced.** Game Design re-ruled R4 (`stance-matrix.md` section 7.3): a held guard never counters by itself. Do **not** land the parked `defHeld` selector. PRESSURE's branch becomes GUARD HOLDS with two interrupts, the perfect block (`defPerfect`, then the riposte) and the reversal: `control-scheme-data.md` sections 3 and 4 |
 | 4. cue names | still valid |
+
+**Also at the merge:** the clean-parry fields leave the `parry` block (Game Design withdrew the clean parry), and the rest of the step-2 data lands in the same commit (`control-scheme-data.md`).
 
 **Drift since the copies were cut** (`b3eaf4b`): `finishers.json` gained `contest.brinkSetups` and the struggle scoring base moved to 0.23; `templates.json` is on `"profile": "dynamic"`. Merge by field, never overwrite.
