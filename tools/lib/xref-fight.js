@@ -341,7 +341,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     for (const g of ['bank', 'full', 'short', 'live', 'timeCap']) {
       if (!isObj(pause[g])) continue;
       for (const [k, v] of Object.entries(pause[g])) {
-        if (!k.startsWith('_') && typeof v === 'number' && Math.abs(v * 60 - Math.round(v * 60)) > 1e-6) err(PF, `/${g}/${k}`, 'pause-ticks', `${v} s is not a whole number of ticks (60 a second)`);
+        if (!k.startsWith('_') && !k.endsWith('Ticks') && typeof v === 'number' && Math.abs(v * 60 - Math.round(v * 60)) > 1e-6) err(PF, `/${g}/${k}`, 'pause-ticks', `${v} s is not a whole number of ticks (60 a second)`);
       }
     }
     const lt = (ga, ka, gb, kb, strict) => { const x = n(ga, ka); const y = n(gb, kb); if (x !== undefined && y !== undefined && (strict ? x >= y : x > y)) err(PF, `/${ga}/${ka}`, 'pause-order', `${ga}.${ka} ${x} must be ${strict ? 'below' : 'at most'} ${gb}.${kb} ${y}`); };
@@ -420,6 +420,59 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (isObj(dr) && typeof dr.a0 === 'number' && typeof dr.a_max === 'number' && dr.a0 > dr.a_max) err(RG, '/drive/a0', 'ragdoll-limits', `a0 ${dr.a0} is above a_max ${dr.a_max}`);
     const rg = rag.regimes;
     if (isObj(rg)) for (const k of ['tuck_spin', 'brace_time']) if (Array.isArray(rg[k]) && rg[k].length === 2 && rg[k][0] > rg[k][1]) err(RG, `/regimes/${k}`, 'ragdoll-limits', `${k} runs from ${rg[k][0]} down to ${rg[k][1]}; it must rise`);
+  }
+
+  // ---- director launch: the drive angle and height orders, CRATER SLAM goes down ----
+  const launch = get('data/director/launch.json');
+  if (isObj(launch)) {
+    const LF = 'data/director/launch.json';
+    const d = launch.drive;
+    if (isObj(d) && typeof d.lowDeg === 'number' && typeof d.highDeg === 'number' && d.lowDeg > d.highDeg) err(LF, '/drive/lowDeg', 'launch-order', `lowDeg ${d.lowDeg} is above highDeg ${d.highDeg}`);
+    if (isObj(d) && typeof d.lowBh === 'number' && typeof d.highBh === 'number' && d.lowBh >= d.highBh) err(LF, '/drive/lowBh', 'launch-order', `lowBh ${d.lowBh} is not below highBh ${d.highBh}, so the angle has no range to rise over`);
+    const cs = launch.craterSlam;
+    if (isObj(cs) && typeof cs.uy === 'number' && cs.uy >= 0) err(LF, '/craterSlam/uy', 'launch-direction', `uy ${cs.uy} is not downward (negative is down), so CRATER SLAM would not slam`, 'warning');
+  }
+
+  // ---- fight pause: the gather ends before the pause does, and it matches the figure's gather beat ----
+  const pzg = get('data/fight/pause.json');
+  const fmg = get('data/anim/forms.json');
+  if (isObj(pzg)) {
+    for (const g of ['full', 'short', 'live']) {
+      const o = pzg[g];
+      if (!isObj(o) || typeof o.gatherTicks !== 'number') continue;
+      if (typeof o.lengthS === 'number' && o.gatherTicks >= Math.round(o.lengthS * 60)) err('data/fight/pause.json', `/${g}/gatherTicks`, 'pause-gather', `${g} gatherTicks ${o.gatherTicks} is not under the length ${Math.round(o.lengthS * 60)} ticks, so the tier-up would land after the pause`);
+      const fg = isObj(fmg) && isObj(fmg.versions) && isObj(fmg.versions[g]) ? fmg.versions[g].gather : undefined;
+      if (typeof fg === 'number' && fg !== o.gatherTicks) err('data/fight/pause.json', `/${g}/gatherTicks`, 'pause-gather', `${g} gatherTicks ${o.gatherTicks} differs from the gather beat ${fg} in data/anim/forms.json; the tier-up would not land on the break`, 'warning');
+    }
+  }
+
+  // ---- anim ragdoll motion: arrays follow ragdoll.json, fighters name shapes ----
+  const motion = get('data/anim/ragdoll_motion.json');
+  const rgd = get('data/anim/ragdoll.json');
+  if (isObj(motion)) {
+    const MO = 'data/anim/ragdoll_motion.json';
+    const dofs = isObj(rgd) && Array.isArray(rgd.dofs) ? rgd.dofs.filter(isObj) : [];
+    const n = dofs.length;
+    const len = (arr, pointer, what) => { if (n && Array.isArray(arr) && arr.length !== n) err(MO, pointer, 'ragdoll-motion-dofs', `${what} has ${arr.length} numbers but ragdoll.json has ${n} dofs`); };
+    if (isObj(motion.shapes)) for (const [sk, sh] of Object.entries(motion.shapes)) {
+      if (sk.startsWith('_') || !isObj(sh)) continue;
+      for (const set of ['tuck', 'brace', 'skid', 'crumple']) {
+        len(sh[set], `/shapes/${esc(sk)}/${set}`, `shape ${sk} ${set}`);
+        if (n && Array.isArray(sh[set]) && sh[set].length === n) sh[set].forEach((a, i) => { const d = dofs[i]; if (typeof a === 'number' && typeof d.lo === 'number' && typeof d.hi === 'number' && (a < d.lo - 1e-9 || a > d.hi + 1e-9)) err(MO, `/shapes/${esc(sk)}/${set}/${i}`, 'ragdoll-motion-limits', `shape ${sk} ${set} for ${d.id} is ${a}, outside its limits ${d.lo} to ${d.hi}`, 'warning'); });
+      }
+    }
+    if (isObj(motion.flail)) { len(motion.flail.amp, '/flail/amp', 'flail amp'); len(motion.flail.hz, '/flail/hz', 'flail hz'); }
+    if (isObj(motion.fighters)) {
+      for (const [fid, key] of Object.entries(motion.fighters)) {
+        if (fid.startsWith('_')) continue;
+        if (isObj(motion.shapes) && typeof key === 'string' && !(key in motion.shapes)) err(MO, `/fighters/${esc(fid)}`, 'ragdoll-motion-shape', `fighter "${fid}" uses shape "${key}", which is not in shapes (${Object.keys(motion.shapes).filter((k) => !k.startsWith('_')).join(', ')})`);
+      }
+    }
+    const hd = isObj(motion.hit) && Array.isArray(motion.hit.dofs) ? motion.hit.dofs : undefined;
+    if (hd && n) {
+      if (hd.length !== n) err(MO, '/hit/dofs', 'ragdoll-motion-dofs', `hit.dofs has ${hd.length} entries but ragdoll.json has ${n} dofs`);
+      hd.forEach((h, i) => { if (isObj(h) && i < n && h.id !== dofs[i].id) err(MO, `/hit/dofs/${i}/id`, 'ragdoll-motion-dofs', `hit dof ${i} is "${h.id}" but ragdoll.json dof ${i} is "${dofs[i].id}" (same order)`); });
+    }
   }
 
   // ---- fighter ladder: the beam tables never decrease with the tier ----

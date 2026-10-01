@@ -6,7 +6,7 @@ class_name DirLaunch
 ##  - a distance term favours long hauls across the map and a new-biome term favours landing somewhere new, both only
 ##    when the landing is open ground (empty land, not a town); a water term steers away from launches that end in the
 ##    sea (a fighter who hits water stops dead and the fight sinks);
-##  - SLAM DOWN no longer gets a bonus over the ocean or the city;
+##  - DRIVE DOWN (SLAM DOWN until the landing mix) gets no bonus over the ocean or the city;
 ##  - SMASH ACROSS is the long haul or nothing: a rising arc whose force is raised (up to HAUL_FM_MAX) so the predicted
 ##    flight reaches HAUL_TARGET, and it drops out when it still cannot carry the target HAUL_MIN;
 ##  - the predictor stops a flight or a slide at the first standing building, so a throw into a town is scored as the
@@ -15,6 +15,9 @@ class_name DirLaunch
 ##  - "NONE" competes too: when no launch beats it, the strike knocks the target back instead of launching it, which
 ##    keeps launches to a few a minute and makes each one count. Holding back is scored with the personality term at
 ##    the target's position, so the hero throws the villain out of a town rather than leaving the fight there.
+##  - the landing mix (balance-targets.md section 19): DRIVE DOWN (the old SLAM DOWN) sends the target down and forward
+##    at 25 to 50 degrees by its height, which ploughs in and slides; the straight-down slam is its own candidate, CRATER SLAM, offered
+##    only for a rival directly below the launcher and as the tier-3 crater set piece (data/director/launch.json).
 ## Candidate order fixes the order of the noise draws.
 
 const NOISE: float = 8.0            # uniform noise added to every candidate
@@ -52,6 +55,51 @@ const BRUNT_RAMP: float = 5.0        # per planner launch that had a building in
 const BRUNT_OVER_BUDGET: float = 40.0
 const PREDICT_REACH: float = 40000.0  # buildings farther than this from the launch point are not checked
 const PREDICT_STEPS: int = 240      # flight predictor horizon: 4 s at the fixed step
+const BH: float = 75.0              # a body height, in units
+const DATA_PATH: String = "res://data/director/launch.json"
+static var _data = null
+static var _dataText: String = ""
+
+
+## data/director/launch.json: the drive's angle rule and the CRATER SLAM's gates and score.
+static func data() -> Dictionary:
+	if _data == null:
+		_dataText = FileAccess.get_file_as_string(DATA_PATH)
+		_data = JSON.parse_string(_dataText)
+		if _data == null:
+			push_error("DirLaunch: could not parse " + DATA_PATH)
+			_data = {}
+	return _data
+
+
+## The data file's text, for DirData.dataHash() (the replay header).
+static func dataText() -> String:
+	data()
+	return _dataText
+
+
+## DRIVE DOWN's direction for a target alt units above the ground: [along the facing, up]. No draw.
+static func driveDir(alt: float) -> Array:
+	var d: Dictionary = data().drive
+	var t: float = SimMathx.jclamp((alt / BH - float(d.lowBh)) / (float(d.highBh) - float(d.lowBh)), 0.0, 1.0)
+	var a: float = (float(d.lowDeg) + (float(d.highDeg) - float(d.lowDeg)) * t) * PI / 180.0
+	return [SimDetMath.cos(a), -SimDetMath.sin(a)]
+
+
+## S.dirS.craterT holds the match time of each slot's last CRATER SLAM; it is sized here on first use.
+static func _sizeCraterT(S: SimState) -> void:
+	if S.dirS.craterT.size() < S.fighters.size():
+		S.dirS.craterT.resize(S.fighters.size())
+
+
+## Whether CRATER SLAM is offered: the rival is directly below the launcher, or the launcher is at the set piece's tier
+## and has not thrown one in the last everySec seconds. (Break and finisher launches keep their authored vectors.)
+static func craterOffered(S: SimState, A, D) -> bool:
+	var cs: Dictionary = data().craterSlam
+	if absf(SimWrap.sdx(A.x, D.x)) <= float(cs.below.sideBh) * BH and A.y - D.y >= float(cs.below.dropBh) * BH:
+		return true
+	_sizeCraterT(S)
+	return A.tier >= float(cs.setPiece.minTier) and S.T - S.dirS.craterT[S.fighters.find(A)] >= float(cs.setPiece.everySec)
 
 
 ## force is the template's launch force; the prediction uses it with the tier scaling doLaunch applies.
@@ -66,7 +114,11 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 	if not longOnly:
 		c.append({"name": "UPPERCUT", "ux": 0.25 * f, "uy": 1.0, "s": 10.0 + (12.0 if alt < 120.0 else 0.0)})
 	if not longOnly:
-		c.append({"name": "SLAM DOWN", "ux": 0.2 * f, "uy": -1.25, "s": (18.0 if alt > 140.0 else 0.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})
+		var dv: Array = driveDir(alt)
+		c.append({"name": "DRIVE DOWN", "ux": dv[0] * f, "uy": dv[1], "s": (18.0 if alt > 140.0 else 0.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})
+		if craterOffered(S, A, D):
+			var cs: Dictionary = data().craterSlam
+			c.append({"name": "CRATER SLAM", "ux": float(cs.ux) * f, "uy": float(cs.uy), "s": float(cs.score.base) + float(cs.score.perTier) * A.tier + (float(cs.score.high) if alt > float(cs.score.highAlt) else 0.0)})
 	c.append({"name": "SMASH ACROSS", "ux": f, "uy": ACROSS_UY, "fm": ACROSS_FORCE, "s": 8.0})
 	var tierF: float = 1.0 + A.ld.launch * (A.tier - 1.0)   # D1b: ladder.json
 	# BUILDING SMASH (B2, docs/world/b2-plan.md section 4): one candidate per building the launch can be aimed at, in any row,
@@ -242,6 +294,9 @@ static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, spec
 	tgt.vx = plan.ux * f * tgt.launchT
 	tgt.vy = plan.uy * f
 	tgt.spin = (1.0 if plan.ux >= 0.0 else -1.0) * S.rng.range_(8.0, 16.0)
+	if plan.get("name", "") == "CRATER SLAM":
+		_sizeCraterT(S)
+		S.dirS.craterT[S.fighters.find(att)] = S.T
 	SimFx.launch(S, tgt, att, SimDetMath.hypot(tgt.vx, tgt.vy), 1.0 if tgt.vx >= 0.0 else -1.0)
 	WorldBrunt.arm(S, tgt, att, plan)   # B2: the aimed building, the depth waypoints and the chain's token
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 600.0, "#ffffff", 0.3, 20.0)

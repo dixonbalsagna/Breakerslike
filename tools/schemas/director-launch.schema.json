@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/director-launch",
+  "title": "director.launch/1",
+  "description": "data/director/launch.json: the launch planner's landing-mix numbers (sim/director/launch.gd; docs/director/landing-mix.md). SLAM DOWN is a drive (down and forward, at an angle set by the target's height); the straight-down slam is its own gated candidate, CRATER SLAM. Heights are in body heights (_bh, 1 bh is 75 units) unless a key says units. Version field: schema. Policy: every key required, objects closed except keys starting with an underscore. Orders (lowDeg at most highDeg, lowBh below highBh) and the downward direction of CRATER SLAM are checked by tools/lib/xref-fight.js (launch-order, launch-direction).",
+  "type": "object",
+  "required": [
+    "schema",
+    "drive",
+    "craterSlam"
+  ],
+  "properties": {
+    "schema": {
+      "const": "director.launch/1"
+    },
+    "drive": {
+      "type": "object",
+      "description": "The SLAM DOWN drive: the angle below level is lowDeg at lowBh or lower, rising evenly to highDeg at highBh and above.",
+      "required": [
+        "lowDeg",
+        "highDeg",
+        "lowBh",
+        "highBh"
+      ],
+      "properties": {
+        "lowDeg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "highDeg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "lowBh": {
+          "type": "number",
+          "minimum": 0
+        },
+        "highBh": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "craterSlam": {
+      "type": "object",
+      "description": "The gated CRATER SLAM candidate: the old straight-down vector (ux, uy) and the two gates that offer it.",
+      "required": [
+        "ux",
+        "uy",
+        "below",
+        "setPiece",
+        "score"
+      ],
+      "properties": {
+        "ux": {
+          "description": "Along the launcher's facing; 0 or more.",
+          "type": "number",
+          "minimum": 0
+        },
+        "uy": {
+          "type": "number",
+          "description": "Up; negative is down."
+        },
+        "below": {
+          "type": "object",
+          "description": "Gate 1, a rival directly below: the target is within sideBh sideways of the launcher and at least dropBh lower.",
+          "required": [
+            "sideBh",
+            "dropBh"
+          ],
+          "properties": {
+            "sideBh": {
+              "type": "number",
+              "minimum": 0
+            },
+            "dropBh": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "setPiece": {
+          "type": "object",
+          "description": "Gate 2, the crater set piece: the launcher is at minTier or above, and throws at most one CRATER SLAM in everySec seconds of match time.",
+          "required": [
+            "minTier",
+            "everySec"
+          ],
+          "properties": {
+            "minTier": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            },
+            "everySec": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "score": {
+          "type": "object",
+          "description": "Planner score points: base + perTier x tier, + high when the target is over highAlt up.",
+          "required": [
+            "base",
+            "perTier",
+            "high",
+            "highAlt"
+          ],
+          "properties": {
+            "base": {
+              "type": "number"
+            },
+            "perTier": {
+              "type": "number"
+            },
+            "high": {
+              "type": "number"
+            },
+            "highAlt": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The target's height above the ground in units (not body heights)."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

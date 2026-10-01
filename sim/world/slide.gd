@@ -9,7 +9,7 @@ class_name WorldSlide
 
 const WS: float = SimConst.WS
 # ---- classification ----
-const SLAM_VERT: float = 0.85         # vertical share of the velocity at or above which a ground hit is a slam
+const SLAM_VERT: float = 0.94         # vertical share of the velocity at or above which a ground hit is a slam (about 70 degrees; balance-targets.md section 19, it was 0.85)
 const HOP_SPEED: float = 2000.0       # a slam or a hard slide at this normalised speed may make one small hop ...
 const HOP_LIFT: float = 0.25          # ... with the vertical speed scaled by this
 const MIN_IMPACT: float = 350.0       # normalised speed at or below which a ground hit is neither slam nor slide

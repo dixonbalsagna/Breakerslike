@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-ragdoll-motion",
+  "title": "anim.ragdoll_motion/1",
+  "description": "data/anim/ragdoll_motion.json: what the ragdoll does beyond its springs (docs/animation/overhaul-plan.md, unit D): each fighter's tuck, brace, skid and crumple targets, the flail, the regimes and the hit response. Every array of per-dof numbers is in the order of data/anim/ragdoll.json dofs. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (the per-dof arrays and hit.dofs match ragdoll.json in length and order; every fighter names a shape that exists; shape angles inside each dof's lo..hi as a warning) are checked by tools/lib/xref-fight.js (ragdoll-motion-*).",
+  "type": "object",
+  "required": [
+    "schema",
+    "fighters",
+    "shapes",
+    "flail",
+    "regimes",
+    "hit"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.ragdoll_motion/1"
+    },
+    "fighters": {
+      "type": "object",
+      "description": "A roster id to a key in shapes; `default` is used for any fighter not listed.",
+      "required": [
+        "default"
+      ],
+      "propertyNames": {
+        "pattern": "^(_.*|default|[A-Z][A-Z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "shapes": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "A shape key to the four target sets, one angle (rad) per dof.",
+      "propertyNames": {
+        "pattern": "^(_.*|[A-Za-z][A-Za-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "tuck",
+          "brace",
+          "skid",
+          "crumple"
+        ],
+        "properties": {
+          "tuck": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "number"
+            }
+          },
+          "brace": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "number"
+            }
+          },
+          "skid": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "number"
+            }
+          },
+          "crumple": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "flail": {
+      "type": "object",
+      "description": "The flail before a tuck: amplitude (rad) and frequency (Hz) per dof, and the fade range (s).",
+      "required": [
+        "amp",
+        "hz",
+        "fade"
+      ],
+      "properties": {
+        "amp": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "hz": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "fade": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "regimes": {
+      "type": "object",
+      "required": [
+        "tuck_max",
+        "tuck_after",
+        "skid_w",
+        "crumple_down_w"
+      ],
+      "properties": {
+        "tuck_max": {
+          "description": "The most the tuck takes over (0 to 1).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "tuck_after": {
+          "description": "Seconds in the air before a tuck, low then high.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "skid_w": {
+          "description": "How far a skid takes over (0 to 1).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "crumple_down_w": {
+          "description": "How far a crumple takes over when down (0 to 1).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "hit": {
+      "type": "object",
+      "description": "The hit response: a gain and, per dof, the kicks by blow class.",
+      "required": [
+        "gain",
+        "dofs"
+      ],
+      "properties": {
+        "gain": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dofs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "kx",
+              "ky",
+              "kc",
+              "vx",
+              "vx_var",
+              "kc_var"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "kx": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "ky": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "kc": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "vx": {
+                "type": "number"
+              },
+              "vx_var": {
+                "enum": [
+                  "one",
+                  "u",
+                  "u2"
+                ]
+              },
+              "kc_var": {
+                "enum": [
+                  "one",
+                  "u",
+                  "u2"
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

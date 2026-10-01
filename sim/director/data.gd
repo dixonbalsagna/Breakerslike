@@ -32,6 +32,7 @@ static func _ensure() -> void:
 	h.text(ft)
 	h.text(DirLocation.dataText())   # data/director/location.json (location variety)
 	h.text(DirAI.skillText())   # data/director/ai.json (the AI's skill numbers)
+	h.text(DirLaunch.dataText())   # data/director/launch.json (the landing mix)
 	_hash = h.hex()
 
 

@@ -12767,25 +12767,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -12798,24 +12796,22 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5
+            }
           }
         }
       ],
@@ -12831,26 +12827,24 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1,
-                "gravity": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1,
+              "gravity": 1
+            }
           }
         }
       ],
@@ -12866,25 +12860,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "y",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "y",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -12900,25 +12892,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 0,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 0,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -12934,25 +12924,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": -1,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": -1,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -12968,25 +12956,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": "up",
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": "up",
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -13002,42 +12988,40 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              },
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            },
+            "/dofs/1": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -13053,25 +13037,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "tail",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "tail",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -13087,27 +13069,25 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1,
-                "bone2": "tail",
-                "share": 0.5
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1,
+              "bone2": "tail",
+              "share": 0.5
+            }
           }
         }
       ],
@@ -13123,26 +13103,24 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1,
-                "share": 0.5
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1,
+              "share": 0.5
+            }
           }
         }
       ],
@@ -13158,26 +13136,24 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1,
-                "bone2": "spine_1"
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1,
+              "bone2": "spine_1"
+            }
           }
         }
       ],
@@ -13193,27 +13169,25 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1,
-                "bone2": "spine_1",
-                "share": 1.5
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1,
+              "bone2": "spine_1",
+              "share": 1.5
+            }
           }
         }
       ],
@@ -13229,27 +13203,25 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "spine_2",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1,
-                "bone2": "spine_1",
-                "share": 0.6
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "spine_2",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1,
+              "bone2": "spine_1",
+              "share": 0.6
+            }
           }
         }
       ],
@@ -13262,25 +13234,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": 1,
-                "hi": -1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": 1,
+              "hi": -1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -13296,25 +13266,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 200,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 200,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -13330,25 +13298,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 3,
-                "brace": 0.5,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 3,
+              "brace": 0.5,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -13364,25 +13330,23 @@
         {
           "file": "data/anim/ragdoll.json",
           "set": {
-            "/dofs": [
-              {
-                "id": "test",
-                "bone": "head",
-                "axis": "z",
-                "beta": 0,
-                "k_stiff": 100,
-                "k_loose": 20,
-                "c": 5,
-                "drag": 10,
-                "inertia": 10,
-                "lo": -1,
-                "hi": 1,
-                "tsg": 0,
-                "tuck": 0.5,
-                "brace": -3,
-                "crumple": 1
-              }
-            ]
+            "/dofs/0": {
+              "id": "head",
+              "bone": "head",
+              "axis": "z",
+              "beta": 0,
+              "k_stiff": 100,
+              "k_loose": 20,
+              "c": 5,
+              "drag": 10,
+              "inertia": 10,
+              "lo": -1,
+              "hi": 1,
+              "tsg": 0,
+              "tuck": 0.5,
+              "brace": -3,
+              "crumple": 1
+            }
           }
         }
       ],
@@ -13577,6 +13541,1217 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "director-launch-valid",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/lowDeg": 25
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/craterSlam"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-launch-unknown-key",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "director-launch-underscore-key-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-schema-version",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/schema": "director.launch/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "director-launch-drive-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/drive/highBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/drive"
+      }
+    },
+    {
+      "id": "director-launch-drive-degrees-range",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/highDeg": 120
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/drive/highDeg"
+      }
+    },
+    {
+      "id": "director-launch-drive-degrees-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/lowDeg": -5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/drive/lowDeg"
+      }
+    },
+    {
+      "id": "director-launch-drive-degrees-order",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/lowDeg": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:launch-order",
+        "pointer": "/drive/lowDeg"
+      }
+    },
+    {
+      "id": "director-launch-drive-degrees-equal-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/lowDeg": 50
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-drive-height-order",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/lowBh": 12
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:launch-order",
+        "pointer": "/drive/lowBh"
+      }
+    },
+    {
+      "id": "director-launch-drive-height-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/drive/lowBh": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/drive/lowBh"
+      }
+    },
+    {
+      "id": "director-launch-crater-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/craterSlam/uy"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/craterSlam"
+      }
+    },
+    {
+      "id": "director-launch-crater-unknown-key",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/gate": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/craterSlam/gate"
+      }
+    },
+    {
+      "id": "director-launch-crater-ux-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/ux": -0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/craterSlam/ux"
+      }
+    },
+    {
+      "id": "director-launch-crater-uy-up-warns",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/uy": 1.25
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:launch-direction",
+        "pointer": "/craterSlam/uy"
+      }
+    },
+    {
+      "id": "director-launch-crater-uy-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/uy": "down"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/craterSlam/uy"
+      }
+    },
+    {
+      "id": "director-launch-below-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/below/dropBh": -3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/craterSlam/below/dropBh"
+      }
+    },
+    {
+      "id": "director-launch-below-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/craterSlam/below/sideBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/craterSlam/below"
+      }
+    },
+    {
+      "id": "director-launch-tier-range",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/setPiece/minTier": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/craterSlam/setPiece/minTier"
+      }
+    },
+    {
+      "id": "director-launch-tier-integer",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/setPiece/minTier": 2.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/craterSlam/setPiece/minTier"
+      }
+    },
+    {
+      "id": "director-launch-tier-zero",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/setPiece/minTier": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/craterSlam/setPiece/minTier"
+      }
+    },
+    {
+      "id": "director-launch-every-sec-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/setPiece/everySec": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/craterSlam/setPiece/everySec"
+      }
+    },
+    {
+      "id": "director-launch-every-sec-zero-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/setPiece/everySec": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-score-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/craterSlam/score/highAlt"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/craterSlam/score"
+      }
+    },
+    {
+      "id": "director-launch-score-alt-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/score/highAlt": -10
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/craterSlam/score/highAlt"
+      }
+    },
+    {
+      "id": "director-launch-score-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/craterSlam/score/base": "12"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/craterSlam/score/base"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-live-valid",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/schema": "anim.ragdoll_motion/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-ragdoll-motion-key-required",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "del": [
+            "/flail"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-unknown-key",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/wind": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/wind"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-underscore-key-ok",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-ragdoll-motion-default-fighter-required",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/fighters": {
+              "KAI": "P"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/fighters"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-fighter-name-shape",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/fighters/kai": "P"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/fighters/kai"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-fighter-unknown-shape",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/fighters/KAI": "Z"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ragdoll-motion-shape",
+        "pointer": "/fighters/KAI"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-shape-set-missing",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/shapes/P": {
+              "tuck": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "brace": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "skid": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/shapes/P"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-shape-unknown-set",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/shapes/P": {
+              "tuck": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "brace": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "skid": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "crumple": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "roll": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/shapes/P/roll"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-shape-number-type",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/shapes/P": {
+              "tuck": [
+                "a"
+              ],
+              "brace": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "skid": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "crumple": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/shapes/P/tuck/0"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-shape-length",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/shapes/P": {
+              "tuck": [
+                0,
+                0,
+                0
+              ],
+              "brace": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "skid": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "crumple": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ragdoll-motion-dofs",
+        "pointer": "/shapes/P/tuck"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-shape-outside-limits-warns",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/shapes/P": {
+              "tuck": [
+                5,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "brace": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "skid": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "crumple": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ragdoll-motion-limits",
+        "pointer": "/shapes/P/tuck/0"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-flail-amp-negative",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/flail/amp/0": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/flail/amp/0"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-flail-hz-positive",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/flail/hz/0": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/flail/hz/0"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-flail-length",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/flail/amp": [
+              0.1,
+              0.2
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ragdoll-motion-dofs",
+        "pointer": "/flail/amp"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-flail-fade-pair",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/flail/fade": [
+              0.35
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/flail/fade"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-regime-range",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/regimes/tuck_max": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/regimes/tuck_max"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-regime-pair",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/regimes/tuck_after": [
+              0.25
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/regimes/tuck_after"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-hit-gain-positive",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/hit/gain": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/hit/gain"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-hit-dof-key-required",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/hit/dofs/0": {
+              "id": "head",
+              "kx": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "ky": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "vx": 0,
+              "vx_var": "u",
+              "kc_var": "u2"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/hit/dofs/0"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-hit-kx-length",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/hit/dofs/0/kx": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/hit/dofs/0/kx"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-hit-var-enum",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/hit/dofs/0/vx_var": "u3"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/hit/dofs/0/vx_var"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-hit-dof-order",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/hit/dofs/0/id": "spine"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ragdoll-motion-dofs",
+        "pointer": "/hit/dofs/0/id"
+      }
+    },
+    {
+      "id": "anim-ragdoll-motion-hit-dof-count",
+      "schema": "anim-ragdoll-motion.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/ragdoll_motion.json",
+          "set": {
+            "/hit/dofs": [
+              {
+                "id": "head",
+                "kx": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "ky": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "kc": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "vx": 0,
+                "vx_var": "u",
+                "kc_var": "u2"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ragdoll-motion-dofs",
+        "pointer": "/hit/dofs"
+      }
+    },
+    {
+      "id": "pause-gather-live-valid",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/full/gatherTicks": 60
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "pause-gather-full-not-under-length",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/full/gatherTicks": 180
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-gather",
+        "pointer": "/full/gatherTicks"
+      }
+    },
+    {
+      "id": "pause-gather-short-not-under-length",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/short/gatherTicks": 90
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-gather",
+        "pointer": "/short/gatherTicks"
+      }
+    },
+    {
+      "id": "pause-gather-live-not-under-length",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/live/gatherTicks": 48
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-gather",
+        "pointer": "/live/gatherTicks"
+      }
+    },
+    {
+      "id": "pause-gather-differs-from-forms-warns",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/full/gatherTicks": 50
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-gather",
+        "pointer": "/full/gatherTicks"
+      }
+    },
+    {
+      "id": "pause-gather-gather-ticks-not-seconds",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/full/gatherTicks": 61
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-gather",
+        "pointer": "/full/gatherTicks"
+      }
     }
   ],
   "text": [

@@ -1,11 +1,11 @@
 {
+  "_about": "Validator fixture, not game data: the shape docs/director/landing-mix.md describes, with the numbers of Encounter's draft.",
   "schema": "director.launch/1",
-  "_about": "The launch planner's landing-mix numbers (sim/director/launch.gd, DirLaunch; balance-targets.md section 19; docs/combat/launch-vectors.md). DRIVE DOWN (the old SLAM DOWN) sends the target down and forward, at an angle set by its height above the ground, with no draw. The straight-down slam is its own gated candidate, CRATER SLAM. Heights are in body heights (1 bh is 75 units).",
   "drive": {
-    "lowDeg": 25.0,
-    "highDeg": 50.0,
-    "lowBh": 2.0,
-    "highBh": 12.0,
+    "lowDeg": 25,
+    "highDeg": 50,
+    "lowBh": 2,
+    "highBh": 12,
     "_note": "lowDeg and highDeg: degrees below level, 0 to 90, lowDeg at most highDeg. lowBh and highBh: the target's height above the ground in body heights, lowBh less than highBh. The angle is lowDeg at lowBh or lower, rising evenly to highDeg at highBh and above"
   },
   "craterSlam": {
@@ -13,20 +13,20 @@
     "uy": -1.25,
     "_dir": "a direction, no unit: ux along the launcher's facing (0 or more), uy up (negative is down). The direction SLAM DOWN had before it became DRIVE DOWN",
     "below": {
-      "sideBh": 1.0,
-      "dropBh": 3.0,
+      "sideBh": 1,
+      "dropBh": 3,
       "_note": "gate 1, a rival directly below. Both in body heights, 0 or more: the target is within sideBh sideways of the launcher and at least dropBh lower"
     },
     "setPiece": {
       "minTier": 3,
-      "everySec": 30.0,
+      "everySec": 30,
       "_note": "gate 2, the crater set piece. minTier: the launcher's power tier, an integer 1 to 4. everySec: seconds of match time, 0 or more; at most one CRATER SLAM per fighter in that time"
     },
     "score": {
-      "base": 12.0,
-      "perTier": 4.0,
-      "high": 18.0,
-      "highAlt": 140.0,
+      "base": 12,
+      "perTier": 4,
+      "high": 18,
+      "highAlt": 140,
       "_note": "planner score points (no unit), except highAlt, which is the target's height above the ground in units. The base score is base + perTier x tier, + high when the target is over highAlt up. The planner's shared terms (personality, repeats, water, noise) are added as for any launch"
     }
   }

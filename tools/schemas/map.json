@@ -171,6 +171,10 @@
       "schema": "anim-ragdoll.schema.json"
     },
     {
+      "match": "data/anim/ragdoll_motion.json",
+      "schema": "anim-ragdoll-motion.schema.json"
+    },
+    {
       "match": "data/anim/profiles.json",
       "schema": "anim-profiles.schema.json"
     },
@@ -185,6 +189,10 @@
     {
       "match": "data/director/ai.json",
       "schema": "director-ai.schema.json"
+    },
+    {
+      "match": "data/director/launch.json",
+      "schema": "director-launch.schema.json"
     },
     {
       "match": "data/biomes/settlements.json",
