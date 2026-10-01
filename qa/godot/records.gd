@@ -63,7 +63,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "caught": 0, "other": 0}, "slideShort": 0, "slideShortPl": 0, "journeys": {"n": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"n": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
@@ -166,20 +166,34 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				for fl in open_fl:
 					if fl.v == v0 and fl.cls == "":
 						fl.cls = "other"   # launched again before any contact
-				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false}
+				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false, "kc": ""}
 				open_fl.append(nf)
 				last_fl[v0] = nf
 				new_fl.append(nf)
-			elif e.type == "bounce":   # balance-targets 20 (World G1 to G5): the first contact was a bounce (a new class); every bounce counts toward its journey
-				_land(open_fl, int(e.actor), "bounce")
-				if last_fl[int(e.actor)] != null:
-					last_fl[int(e.actor)].bn += 1
-			elif e.type == "lip":
-				if last_fl[int(e.actor)] != null:
-					last_fl[int(e.actor)].lip += 1
-			elif e.type == "tumble":
-				if last_fl[int(e.actor)] != null:
-					last_fl[int(e.actor)].tum = true
+			# World's ground-contact events (docs/world/ground-contact.md section 4; G3 to G5): bounce {actor, n, surface}, land {actor, kind: skid | tumble | slam | stop, surface}, left_ground {actor, cause: lip | crest | heap | cliff | ridge | bounce}, tumble_end {actor, how: stop | recover | air}
+			# The first contact's kind decides the class (a skid or tumble is a slide, a crater a slam, a bounce a bounce); a water skim also emits `bounce` with surface water, which is the water class and not a bounce.
+			elif e.type == "bounce":
+				var bv: int = int(e.actor)
+				if str(e.get("surface")) == "water":
+					_land(open_fl, bv, "water")
+				else:
+					_kind(open_fl, bv, "bounce")
+					if last_fl[bv] != null:
+						last_fl[bv].bn += 1
+			elif e.type == "land":
+				var lk: String = str(e.get("kind"))
+				if str(e.get("surface")) == "water":
+					_land(open_fl, int(e.actor), "water")
+				else:
+					_kind(open_fl, int(e.actor), "slam" if lk == "slam" else ("stop" if lk == "stop" else "slide"))
+			elif e.type == "left_ground":
+				if str(e.get("cause")) != "bounce":
+					rec.lips += 1
+					if last_fl[int(e.actor)] != null:
+						last_fl[int(e.actor)].lip += 1
+			elif e.type == "tumble_end":
+				if str(e.get("how")) != "air" and last_fl[int(e.actor)] != null:
+					last_fl[int(e.actor)].tum = true   # the journey ended from a tumble (it stopped or he recovered early)
 			elif e.type == "building_hit":
 				_land(open_fl, int(e.actor), "brunt")
 			elif e.type == "skim" or e.type == "splash":
@@ -265,6 +279,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	rec.anguish = [fs[0].anguish, fs[1].anguish]
 	for fl in open_fl:
 		var c: String = "other" if fl.cls == "" else String(fl.cls)   # a launch that never made contact (KO or the cap first) is "other"
+		if fl.kc != "" and (fl.cls == "" or fl.cls == "slide" or fl.cls == "slam" or fl.cls == "slideShort"):
+			c = String(fl.kc)   # World's events name the first contact: the kind rule replaces the 2 bh distance test
 		if c == "slideShort":
 			c = "slam"
 			rec.slideShort += 1
@@ -291,6 +307,14 @@ func _land(open_fl: Array, v: int, cls: String) -> void:
 	for fl in open_fl:
 		if fl.v == v and fl.cls == "":
 			fl.cls = cls
+			return
+
+
+## The first ground contact's kind from World's events: kept apart from the class the older events gave (crater, slide), which it overrides for a ground class.
+func _kind(open_fl: Array, v: int, cls: String) -> void:
+	for fl in open_fl:
+		if fl.v == v and fl.kc == "" and (fl.cls == "" or fl.cls == "slide" or fl.cls == "slam" or fl.cls == "slideShort"):
+			fl.kc = cls
 			return
 
 

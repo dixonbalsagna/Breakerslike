@@ -114,7 +114,7 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     assert.ok(rows.find(r => r.id === '4.struct.row2'), 'no per-row line');
     assert.ok(!rows.find(r => r.id === '4.struct.rows'), 'the pending row should be gone once rows exist');
   });
-  await t('landing rows: the 19 bands judge slide, slam, caught, water, brunt; the 20 rows (bounce class, lips, bounces, tumbles) stay PENDING until bounce, lip or tumble events exist, then judge', async () => {
+  await t('landing rows: the 19 bands judge slide, slam, caught, water, brunt; the 20 rows (bounce class, lips, bounces, tumbles) stay PENDING until the bounce, land, left_ground or tumble_end events exist, then judge', async () => {
     const lm = (landings, fx = {}, extra = {}) => rec({ koAt: 360, fxCounts: { slide: 4, ...fx }, slides: [], impactCraters: 0, skims: 0, launches: { 'SLAM DOWN': 40, 'UPPERCUT': 30, 'BUILDING SMASH': 7, 'SMASH ACROSS': 23 }, landings, landingsAll: landings, slideShort: 0, slideShortPl: 0, journeys: { n: 0, bounced: 0, bounces: 0, tumbled: 0, lips: 0 }, ...extra });
     const good = { slide: 50, slam: 15, caught: 15, water: 10, brunt: 7, bounce: 0, other: 3 };
     const rows = evaluate({ default: Array.from({ length: 40 }, () => lm(good)) }), id = k => rows.find(r => r.id === k);
@@ -124,7 +124,7 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const slammy = evaluate({ default: Array.from({ length: 40 }, () => lm({ slide: 25, slam: 55, caught: 10, water: 4, brunt: 4, bounce: 0, other: 2 })) });
     assert.strictEqual(slammy.find(r => r.id === '5c.mix.slide').status, 'FAIL'); assert.strictEqual(slammy.find(r => r.id === '5c.slideOfGround').status, 'FAIL');
     const g5 = { slide: 45, bounce: 10, slam: 10, caught: 15, water: 10, brunt: 7, other: 3 };
-    const r5 = evaluate({ default: Array.from({ length: 40 }, () => lm(g5, { bounce: 4, lip: 3, tumble: 8 }, { journeys: { n: 40, bounced: 5, bounces: 8, tumbled: 18, lips: 3 } })) }), id5 = k => r5.find(r => r.id === k);
+    const r5 = evaluate({ default: Array.from({ length: 40 }, () => lm(g5, { bounce: 4, left_ground: 3, land: 8, tumble_end: 8 }, { journeys: { n: 40, bounced: 5, bounces: 8, tumbled: 18, lips: 3 }, lips: 3 })) }), id5 = k => r5.find(r => r.id === k);
     assert.strictEqual(id5('5c.mix.bounce').status, 'PASS'); assert.strictEqual(id5('5c.largest').status, 'PASS'); assert.strictEqual(id5('5c.lip').status, 'PASS');
     assert.strictEqual(id5('5c.bounces').status, 'PASS'); assert.strictEqual(id5('5c.tumble').status, 'PASS'); assert.strictEqual(id5('5c.tech').status, 'PENDING');
   });

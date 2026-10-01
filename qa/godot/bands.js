@@ -194,8 +194,8 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     const mixOf = (name, kFn, lo, hi, den) => { const c = S.clusterShare(D, kFn, den || (r => total(r.launches))); R.rate('5c.mix.' + name.split(' ')[0], '§5c', 'How launches end: ' + name + ' (per launch)', { v: c.p, ci: c.ci, lo, hi }); };
     if (D.every(r => r.landings)) {
       // balance-targets 19 and 20: one landing class per planner launch, by first contact: brunt (a building first), water (a skim or splash), bounce (G5), caught in the air (the follow-up reached the victim before any contact),
-      // then the ground: a slam digs the crater; before G5 a ground contact is a slide only if it carries on 2 bh = 150 units or more (the distance test), and from G5 (bounce, lip or tumble events) by the first contact's kind, so every skid or tumble is a slide.
-      const g5 = hasEvent(A, 'bounce') || hasEvent(A, 'lip') || hasEvent(A, 'tumble');
+      // then the ground: a slam digs the crater; before G5 a ground contact is a slide only if it carries on 2 bh = 150 units or more (the distance test), and from G5 (World's `bounce`, `land`, `left_ground` and `tumble_end` events) by the first contact's kind, so every skid or tumble is a slide.
+      const g5 = hasEvent(A, 'bounce') || hasEvent(A, 'land') || hasEvent(A, 'left_ground') || hasEvent(A, 'tumble_end');
       const L = r => sum(Object.values(r.landings)), shortPl = r => (g5 ? (r.slideShortPl || 0) : 0);
       const slideC = r => r.landings.slide + shortPl(r), slamC = r => r.landings.slam - shortPl(r);
       const how = g5 ? 'by the first contact kind' : '2 bh distance test';
@@ -216,16 +216,17 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
       mixOf('water (skim or splash first; 5 to 15%)', r => r.landings.water, 0.05, 0.15, L);
       mixOf('brunt (a building first; 4 to 10%)', r => r.landings.brunt, 0.04, 0.10, L);
       R.info('5c.other', '§5c', 'Planner launches with no contact and not caught (KO, the cap, launched again first), share of launches', fmt.pct(sum(D.map(r => r.landings.other)) / Math.max(1, sum(D.map(L)))), 'a class of its own so the classes add up to 100%');
+      if (g5) R.info('5c.stop', '§5c', 'Planner launches that landed at a stop (a contact under 350, no skid or tumble), share of launches', fmt.pct(sum(D.map(r => r.landings.stop || 0)) / Math.max(1, sum(D.map(L)))), 'a class of its own; not banded');
       if (!g5) { const sh = sum(D.map(r => r.slideShortPl || 0)) / Math.max(1, sum(D.map(L))); R.info('5c.nothreshold', '§5c', 'Planner slide share if any slide counts as a slide (the kind rule that replaces the 2 bh test at G5)', `slide ${fmt.pct(sum(D.map(slideC)) / Math.max(1, sum(D.map(L))) + sh)}`, 'for comparison with the 40 to 60% band'); }
       if (D.every(r => r.landingsAll)) { const LA = r => sum(Object.values(r.landingsAll)); const t = k => sum(D.map(r => r.landingsAll[k])) / Math.max(1, sum(D.map(LA))); R.info('5c.all', '§5c', 'Landing mix over every launch event, beam and finisher launches included (not banded)', `slide ${fmt.pct(t('slide'))}, slam ${fmt.pct(t('slam'))}, caught ${fmt.pct(t('caught'))}, bounce ${fmt.pct(t('bounce'))}, water ${fmt.pct(t('water'))}, brunt ${fmt.pct(t('brunt'))}, none ${fmt.pct(t('other'))}`, ''); }
-      // balance-targets 20: the events of the knocked-about rules (World G1 to G5): `bounce {actor}` per bounce, `lip {actor}` per flight off a lip, `tumble {actor}` when a journey enters a tumble, `tech_offer {actor}` and `tech {actor}` for an early recovery
+      // balance-targets 20 and docs/world/ground-contact.md section 4: `left_ground {actor, cause}` (a flight off a rim, crest, heap, cliff or ridge when the cause is not `bounce`), `bounce {actor, n, surface}` (a water skim also emits one, with surface water), `land {actor, kind}`, `tumble_end {actor, how}`; the early-recovery events (`tech_offer`, `tech`) are not fixed yet, so those names are my assumption
       const J = f => sum(D.map(r => r.journeys[f])), minutes = sum(D.map(r => r.koAt)) / 60;
-      if (hasEvent(A, 'lip')) R.point('5c.lip', '§5c', 'Flights off a lip a minute (0.3 to 1.5; they rise through the match)', { v: sum(D.map(r => r.fxCounts.lip || 0)) / minutes, lo: 0.3, hi: 1.5, unit: 'num' });
-      else R.pending('5c.lip', '§5c', 'Flights off a lip a minute (0.3 to 1.5)', 'switches on with World G5 (a `lip` event per flight off a rim, ridge or heap)');
+      if (hasEvent(A, 'left_ground')) R.point('5c.lip', '§5c', 'Flights off a lip a minute (left_ground, cause other than bounce; 0.3 to 1.5; they rise through the match)', { v: sum(D.map(r => r.lips || 0)) / minutes, lo: 0.3, hi: 1.5, unit: 'num' });
+      else R.pending('5c.lip', '§5c', 'Flights off a lip a minute (0.3 to 1.5)', 'switches on with World G5 (a `left_ground` event per flight off a rim, ridge, heap or cliff)');
       if (hasEvent(A, 'bounce') && J('bounced') > 0) R.point('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', { v: J('bounces') / J('bounced'), lo: 1.3, hi: 2.2, unit: 'num' });
       else R.pending('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', 'switches on with World G5 (a `bounce` event per bounce)');
-      if (hasEvent(A, 'tumble') && J('n') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (30 to 60%)', { v: J('tumbled') / J('n'), ci: wl(J('tumbled'), J('n')), lo: 0.30, hi: 0.60 });
-      else R.pending('5c.tumble', '§5c', 'Journeys that end in a tumble (30 to 60%)', 'switches on with World G5 (a `tumble` event when a journey enters a tumble)');
+      if (hasEvent(A, 'tumble_end') && J('n') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (a tumble_end that stops him or he recovers from; 30 to 60%)', { v: J('tumbled') / J('n'), ci: wl(J('tumbled'), J('n')), lo: 0.30, hi: 0.60 });
+      else R.pending('5c.tumble', '§5c', 'Journeys that end in a tumble (30 to 60%)', 'switches on with World G5 (a `tumble_end` event with how stop, recover or air)');
       if (hasEvent(A, 'tech_offer') && hasEvent(A, 'tech')) { const o = sum(D.map(r => r.fxCounts.tech_offer || 0)), k = sum(D.map(r => r.fxCounts.tech || 0)); R.rate('5c.tech', '§5c', 'Early recoveries as a share of the chances, medium AI (20 to 40%)', { v: k / o, ci: wl(k, o), lo: 0.20, hi: 0.40 }); }
       else R.pending('5c.tech', '§5c', 'Early recoveries as a share of the chances, medium AI (20 to 40%)', 'switches on with World G5 (`tech_offer` when the chance opens, `tech` when taken)');
     } else {

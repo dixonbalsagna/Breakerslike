@@ -91,11 +91,11 @@ const tests = [
     } },
   { id: 'H4', spec: '§11', title: 'Effects are credited to the fighter whose event started them; knock-on effects keep the cause; no hazard starts during a finisher or a cinematic', slice: 'LD1 and Wounds S2', needs: ['hazard*', 'finisher_start'], run: null },
   // ---------------------------------------------------------------- knocked about (balance-targets 20; World G1 to G5)
-  // Event contract assumed (change here and in records.gd if World names them differently): bounce {actor}, lip {actor}, tumble {actor}, tech_offer {actor}, tech {actor}; per-contact events carry the journey's contact count in n.
-  { id: 'G1', spec: 'balance-targets §20 hard test', title: 'One journey has at most 8 contacts of all kinds and lasts at most 4 s from the first contact to the stop', slice: 'World G5', needs: ['bounce'], run: null },
-  { id: 'G2', spec: 'balance-targets §20 hard test', title: 'Bounces allowed by the launcher tier: at most 1 at tier 1, 2 at tier 2, 3 at tiers 3 and 4; a journey never costs more wear than one impact', slice: 'World G5', needs: ['bounce'], run: null },
+  // Events: World's ground-contact plan (docs/world/ground-contact.md section 4): left_ground {actor, cause}, bounce {actor, n, surface}, land {actor, kind}, tumble_end {actor, how}. Not fixed yet (assumed): tech_offer {actor}, tech {actor}.
+  { id: 'G1', spec: 'balance-targets §20 hard test', title: 'One journey has at most 8 contacts of all kinds and lasts at most 4 s from the first contact to the stop', slice: 'World G5', needs: ['bounce', 'land'], run: null },
+  { id: 'G2', spec: 'balance-targets §20 hard test', title: 'Bounces allowed by the launcher tier: at most 1 at tier 1, 2 at tier 2, 3 at tiers 3 and 4; a journey never costs more wear than one impact', slice: 'World G5', needs: ['bounce', 'land'], run: null },
   // ---------------------------------------------------------------- the rival's On the Chin (spec-wounds §3; built after his first moveset)
-  // Contract assumed: form {actor, name} with name 'apex' at the third form; chin_start {actor}; chin_end {actor, kind: complete | thrown | released | expired}; absorb {actor, n}.
+  // Not fixed yet (assumed): form {actor, name} with name 'apex' at the third form; chin_start {actor}; chin_end {actor, kind: complete | thrown | released | expired}; absorb {actor, n}.
   { id: 'OC1', spec: 'spec-wounds §3 QA bands', title: 'The rival reaches Apex in 30 to 50% of his matches', soft: true, slice: 'the rival mechanic (after his moveset)', needs: ['chin_start'], run: null },
   { id: 'OC2', spec: 'spec-wounds §3 QA bands', title: 'The rival completes 1 to 3 absorbs a match (3 hits, or a signature)', soft: true, slice: 'the rival mechanic (after his moveset)', needs: ['chin_start'], run: null },
   { id: 'OC3', spec: 'spec-wounds §3 QA bands', title: 'The rival is thrown out of On the Chin in 15 to 35% of its uses', soft: true, slice: 'the rival mechanic (after his moveset)', needs: ['chin_start'], run: null },
