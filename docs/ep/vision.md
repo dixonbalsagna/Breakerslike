@@ -351,3 +351,31 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Release: free prototype builds for friends, for now.
 - Friends' playtests: yes to an in-game feedback button that copies a report with the match seed.
 - Orb asked where the project stands legally when a transformation or motif comes close to existing works, and how far public-domain folklore can be used. Orb wants originality, as a love letter to the genre, not a copy of any series.
+
+## Questionnaire 8 (2026-09-30 evening): answering friends' playtest feedback
+- Auto defence: counters only when the defender's stance calls for it, and never automatic beams.
+- Manual defence: a block button, a dodge button, and parrying while keeping momentum, with a risk of being stopped.
+- Cancel: yes, into a dash or stance change, for an energy cost.
+- Beams: fewer beams, more ordinary energy blasts.
+- Mashing: fine for beginners; experts should beat it.
+- Transform: a working transform in the next build, even a placeholder.
+- Ego mechanic (the Anti-hero): later, after his first moveset.
+- In-match upgrade draft (pick one of three): pitch options first.
+- Mobile touch controls: next build, top priority.
+- Onboarding: on-screen control hints during play; shorter How to play cards, fixed for phones.
+- Controller support: after the agency fixes.
+- Feedback form: Send opens a prefilled GitHub issue.
+- Orb's notes:
+  - terrain deformation shows weird unexpected behaviour;
+  - motion trails curve behind a fighter even when flying straight;
+  - large mountains should be background decoration, and fighters should careen through small hills, mesas, rock formations, large trees and other natural formations;
+  - idea: one big ocean with small islands and small villages, with locals on bikes and in cars if the scale allows;
+  - a proposed Xbox-layout control scheme: four shoulder buttons and four face buttons.
+    - LT: tap for an emergency dodge or lunge; hold to sprint, or take off in high-speed flight.
+    - LB: hold for the defensive stance; a well-timed tap is a perfect block.
+    - RB: tap to toggle between energy and physical combat.
+    - RT: tap for a 360-degree energy burst; hold to channel qi or power, depending on the fighter.
+    - LT and RT held together: the most powerful specials and signatures.
+    - X light attack, Y heavy attack, B signature, A situational (protect, extract from or make an example of civilians; pick up a boulder, tree or makeshift weapon; grab and throw).
+    - Every input combination should feed the director for intelligent, dynamic, fast-paced combat.
+    - Orb asked for an analysis of the complications, the effect on the procedural move ceiling, and simplifications.
