@@ -207,7 +207,7 @@ Orb wants the director to "often" choose one building to take the brunt of a lau
 ### 5c. Knockback slides (ground impacts)
 
 This is Orb's trope: a fighter who hits the ground skids to a stop in one trench, rather than bouncing. The design is World's (`docs/world/knockback-slide.md`). Game Design confirms the physics as World wrote it:
-- a slam (a crater) when at least 85% of the velocity is vertical, otherwise a slide;
+- a slam (a crater) when at least **94%** of the velocity is vertical, otherwise a slide. It was 85% until §19;
 - braking of `v' = v - (1200 + 1.2 v) dt`, about 2.5 bh from 900 units per second and about 15 bh from 2,500;
 - a trench half-width of `14 + 6√E`, and a depth of at most 0.5 bh;
 - damage split as 30% at touch-down and 70% over the speed lost, with the total unchanged;
@@ -221,7 +221,7 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
 | Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
-| **How launches end** | One landing class per launch (§18): slide 45 to 70%; slam 15 to 35%; water 5 to 15%; brunt 4 to 10% |
+| **How launches end** | One landing class per launch (§19): slide 40 to 60%; slam 12 to 25%; caught in the air 10 to 25%; water 5 to 15%; brunt 4 to 10% |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -617,4 +617,31 @@ QA's final M1b set passes every mood, style and wound row (`docs/qa/tuning-m1b.m
 | Water | 5 to 15% |
 | Brunt | 4 to 10% |
 
-This replaces the "How launches end" row in §5c. The water band rises because the location slice put fights back over the sea, which is what the §6 floors asked for.
+This replaces the "How launches end" row in §5c. **§19 replaces the table above** and adds a fifth class. The water band rises because the location slice put fights back over the sea, which is what the §6 floors asked for.
+
+## 19. Landings: slides stay the majority (2026-10-01)
+
+**What QA measured** with one class per launch (HEAD after `69d9be7`): slide 24.7%, slam 54.0%, water 3.6%, brunt 3.8%, and 13.9% with no ground contact because the follow-up caught the victim in the air. The old 81% slide figure counted slides after a slam's hop. Launches are slam-first today: the angles are steep, and a contact slams when 85% of its velocity is vertical.
+
+**The ruling: don't re-band to fit.** Orb asked for landings "weighted towards skidding to a halt", so slides stay the majority and the game changes to get there.
+
+**A fifth class: caught in the air.** The follow-up reaches the victim before any contact. It is its own class, because it is the ping-pong and the air catch Orb wants.
+
+| Class | Band (share of all launches) |
+| :--- | :--- |
+| Slide | **40 to 60%**, and at least 65% of ground landings (slides plus slams) |
+| Slam | 12 to 25%, so craters still read (pillar 4) |
+| Caught in the air | 10 to 25% |
+| Water | 5 to 15% |
+| Brunt | 4 to 10% |
+
+This replaces the table in §18.
+
+**How to get there,** in this order, re-measuring after each step:
+1. **The slam threshold** (World, one value): a contact slams only when **94%** of its velocity is vertical, up from 85%. That is steeper than about 70 degrees, against 58 today. Impacts between the two keep enough sideways speed to skid 2 bh or more, so they become slides.
+2. **SLAM DOWN becomes a drive** (Encounter, launch vectors): by default it sends the rival down and forward at 40 to 55 degrees below level, which ploughs into a slide. The straight-down slam is kept for three cases: a break or finisher launch, a rival directly below, and the planner's crater set piece from tier 3.
+3. **The planner's vector mix** (Encounter, data): if slides are still under 40%, raise the weight of shallow launches, and give UPPERCUT more forward carry so its fall lands shallower.
+
+Slams keep their floor, because Orb also asked for craters with rims and ejecta. The intent is that a slam is an event and a slide is the norm.
+
+Encounter implements steps 2 and 3 with the variety work. World changes the threshold.
