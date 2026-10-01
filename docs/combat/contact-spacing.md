@@ -95,6 +95,7 @@ Animation's key sets (`data/anim/keysets.json`, render-only) name a striking `li
 5. **A reach check for QA.** On every damaging strike, emit or assert the centre-to-centre distance and the height difference. Target: 100% within 68 u and the same height.
 6. **A parry ends the string.** Pending beats are dropped when the parry lands, so no strike or step-in runs after it (section 7).
 7. **No launch goes back through the launcher** (Encounter's rule 8). A target behind the launcher is no longer offered; the turn throw that brings it back is in `launch-vectors.md` section 5.
+8. **The contact distance becomes per strike at M0.** Elbows, knees and the head reach 50 u or less, so each strike piece carries its own distance (32 to 58 u) and a `clinch` floor of 32 u joins the contact block: `pending/wave1-strikes.md` sections 3 and 6.
 
 ## 6. Schema changes for Tools (with the contact files)
 Found by validating the parked files against the 2b schemas in a scratch copy:

@@ -1,6 +1,6 @@
 # M0 at the rich end: the Anti-hero's first real moveset
 
-Owner: Combat and Choreography. Date: 2026-10-01. Status: plan, with a parked piece list (`pending/moveset.antihero.m0.json`). No live data and no code. It replaces the Lean target for the first real fighter and revises the counts in `moveset-system.md` sections 6 and 9.6 for him. The grammar in that document is unchanged.
+Owner: Combat and Choreography. Date: 2026-10-01. Status: plan, with a parked piece list (`pending/moveset.antihero.m0.json`). Wave 1's strike specs are in `pending/wave1-strikes.md`. Animation's review plan (`docs/animation/review-plan.md`) has since cut section 10's pose estimate to about 295 and section 11's review to about 3 hours. No live data and no code. It replaces the Lean target for the first real fighter and revises the counts in `moveset-system.md` sections 6 and 9.6 for him. The grammar in that document is unchanged.
 
 **Why.** Orb withdrew the Lean choice (`docs/ep/vision.md`, last section): "work towards an optimistic overhaul of the current animation system: try to maximize the dynamic animations". Lean was 3 specials, 4 signatures and 6 showcases on the basic set. This plan sizes every piece family so that he does not repeat himself, including with a broken arm or leg (`docs/design/spec-wounds.md` section 1d).
 
@@ -120,11 +120,11 @@ All three work one-armed. `moveset-system.md` section 9.7 said a signature canno
 
 ## 7. Pulse clashes
 
-Game Design's rule: 3 pulses, each with an 8-tick window (10 on touch); a press on the pulse is +10; a press off it misses and locks the next press out for 20 ticks. At most one big set piece every 20 s; inside that, the clash plays as its ordinary version. The pulse spacing, the resolve tick and the tie rule below are Combat's proposals.
+Game Design's rule: 3 pulses, each with an 8-tick window (10 on touch); a press on the pulse is +10; a press off it misses and locks the next press out for 20 ticks. At most one big set piece every 20 s; inside that, the clash plays as its ordinary version. Game Design confirmed the spacing and the resolve ticks, and amended the tie rule to a difference under 10 (`docs/design/moveset-rules.md` section 11).
 
 | Clash | Trigger | Pulses at (ticks) | Resolves at | What plays | New poses |
 | :--- | :--- | :--- | ---: | :--- | ---: |
-| **Fist clash** | a heavy meets a heavy | 24, 48, 72 | 84 | each fighter's own heavy piece meets; the lock; the winner's blow goes through as an ender and launches. Scores within 10: both are thrown back | 3 (meet, pressing, giving) |
+| **Fist clash** | a heavy meets a heavy | 24, 48, 72 | 84 | each fighter's own heavy piece meets; the lock; the winner's blow goes through as an ender and launches. Scores that differ by less than 10: both are thrown back | 3 (meet, pressing, giving) |
 | **Blur exchange** | both attacking with strings queued, Tense or Frenzied, tier 2 and up | 24, 48, 72 | 84 | three bursts. Each is three alternating lights at 6-tick spacing while the pair travels, then the pulse blow. The winner's ender launches | 2 (the break apart, both sides) |
 | **Grapple lock** | two grabs meet in the air, or a dive grab meets a grab | 30, 60, 90 | 102 | both holds connect; three strains; the winner throws the loser down | 4 (three strains, a one-arm lock) |
 
@@ -248,7 +248,7 @@ Each wave ends with something Orb can see in play. Review is Animation's format:
 | **Simulation** | the broken limb's side in the wounds state, hashed |
 | **Animation** | section 10's asks; confirm the pose estimates; effectors and sockets |
 | **VFX** | 7 emission shapes in his style; the parted and the deflected beam; the shard crown |
-| **Game Design** | (0) The pulse spacing per clash (24, 24 and 30 ticks) and the tie rule (scores within 10). (1) with Regalia and Sovereign getting their own signatures, does his revealed signature still outrank them once revealed? Today a form-tied signature always wins, which would hide it below Apex. (2) The `return` class's window. (3) The turn throw's gates and cost (`launch-vectors.md` section 5) |
+| **Game Design** | All ruled in `moveset-rules.md` section 11: a revealed signature outranks the forms below it; the `return` class; the pulse spacing and the tie rule; the turn throw's gates, at no ki cost. The questions were: (1) with Regalia and Sovereign getting their own signatures, does his revealed signature still outrank them once revealed? Today a form-tied signature always wins, which would hide it below Apex. (2) The `return` class's window. (3) The turn throw's gates and cost (`launch-vectors.md` section 5) |
 | **Tools** | the `combat-moveset` schema; checks: every row of section 2's table meets the minimums; each direction keeps an entry and two throws after a break; a static count of valid series |
 | **QA** | no blow uses a broken limb (a hard test); no key strike twice in a string; series repeats under 10% in forced broken-limb matches; showcase plays per match |
 | **Narrative** | names for 8 specials, 8 signatures, 3 finishers; the taunt and last-stand lines; the On the Chin line |

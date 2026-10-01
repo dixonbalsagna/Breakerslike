@@ -78,6 +78,10 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 - **Encounter's four constants, now data.** The `dodge` beat with `"side": "cross"` carries the step-around's length (`dur`, 8 ticks, `tempo.stepAround`), rise (`rise`, 98 u) and end distance (`off`, 74 u); the contact block carries the placement limit (`placementReaches`, 3). Two more schema keys for `apply-contact.cjs`: `tempo.stepAround` and `contact.placementReaches` (`../contact-spacing.md` section 6, rows 4 and 5).
 - `styles.2b.json` is not affected.
 
+## Wave 1: the Anti-hero's strike specs (for Animation; not for applying)
+
+`wave1-strikes.md` and `strikes.antihero.wave1.json` are the 38 key strikes as specs to pose from: base family, limb and target socket, weight, reach and the strike's own contact distance, timing, limb tags and one line on the look. 34 can be posed now (11 derive, 23 need a contact pose); the 4 tail strikes are held until Orb rules on the tail. Section 6 of the sheet notes what a per-strike contact distance changes in the live contact data at M0. The `.2b.json` and `.contact.json` files in this folder are live now and kept for reference.
+
 ## The Anti-hero's rich M0 piece list (not for applying)
 
 `moveset.antihero.m0.json` is the piece list behind `../m0-rich.md`: 38 key strikes with limb tags, the energy shapes and emitters, 15 entries, 6 feints, the 16-piece grab family, 4 taunts, the set pieces' ticks, 3 finisher shapes, and the lists of 8 specials, 8 signatures and 16 showcases. It has no schema and no loader. It becomes `data/fighters/<id>/moveset.json` at M0, when Tools writes the `combat-moveset` schema and Encounter's composer reads it. The counts in `../m0-rich.md` section 2 are computed from it.
