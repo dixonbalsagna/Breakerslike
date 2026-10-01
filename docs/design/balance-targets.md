@@ -807,6 +807,25 @@ World re-measured on Encounter's landing slice at the 40 degree boundary (`docs/
 
 **One check for World and Simulation.** The mean wear per journey is 0.32 of the single-impact budget. A journey that skids to a halt should pay 80 to 100% of it, because all its speed is lost on the ground. If halted journeys pay much less, the split needs a look. Either way the impact wear per launch has changed, so QA re-tunes k after the model lands.
 
+### Clarifications after World switched ground contact on (2026-10-02)
+
+World's numbers with the model on in the tree are in `docs/world/ground-contact.md` §14. Three points are settled here.
+
+1. **"Halted" does not include wall stops.** The two are separate classes, so the number World should hit is the one without walls.
+
+| Class | Measured | Band |
+| :--- | ---: | :--- |
+| Halted (a skid or tumble to a stop) | 30.2% | 40 to 60% |
+| Halted as a share of ground endings (halt, wall and slam) | 42.2% | At least 55% |
+| Wall | 13.7% | 5 to 15%: passes |
+
+   Halted is still short. The gap is the slam share, which is the next point.
+2. **Slams at 25.4% still wait for Encounter's UPPERCUT lever** (more forward carry, so the fall lands under 70 degrees), with CRATER SLAM held to its gates. That is still the plan, and the 8 to 18% band stays. Those launches should move into halts and bounces.
+3. **A journey's wear is capped at 1.0 of the single-impact budget,** as a hard test. World measured a mean of 0.91, which is right, but 22% of journeys went over, with slams at 1.1. A slam pays the whole budget at once, so its hop must cost nothing more.
+4. **The same cap holds for collateral.** A journey's area damage to structures and people stays within what its first impact would have done alone: each later contact's damage scales with the speed that contact removes. Later contacts were levelling structures, which took structures lost from 47 to 82 of 196. The planner still declines a journey whose prediction goes over the tier's budget.
+
+World tunes to these before any push, and match length should come back to within about 3% of the model-off length. If it doesn't, QA re-tunes k.
+
 ## 21. Rulings after the Q10 retune (QA's `docs/qa/retune-q10.md`, 2026-10-02)
 
 QA's recommended data set is accepted: k 0.052, the mood and location values, and the two placeholder `dmgMul` values. It gives matches of 7:36, KAI at 48.5%, and 73 bands passing. Five fail, and three items were deferred from Encounter's 2a.
