@@ -113,7 +113,8 @@
         "offset": 58,
         "minSeparation": 45,
         "sameHeight": true,
-        "_note": "units (u), centre to centre. Animation measured that a hand, the hips' lunge and a step-in reach about 68 u at the same height (pose-pipeline.md section 9.3). Every damaging strike must find the two fighters within 'reach' and at the same height on its contact tick: the approach, lunge or step-in before it ends at 'offset'. minSeparation is the least distance two bodies may come (no overlap). Sides: an offset is measured on the mover's own side of its target, never from its facing; only a beat with args.side 'cross' may change sides, and each branch states where the pair ends in 'endSides'."
+        "_note": "units (u), centre to centre. Animation measured that a hand, the hips' lunge and a step-in reach about 68 u at the same height (pose-pipeline.md section 9.3). Every damaging strike must find the two fighters within 'reach' and at the same height on its contact tick: the approach, lunge or step-in before it ends at 'offset'. minSeparation is the least distance two bodies may come (no overlap). Sides: an offset is measured on the mover's own side of its target, never from its facing; only a beat with args.side 'cross' may change sides, and each branch states where the pair ends in 'endSides'.",
+        "_lead": "Announce rule (Animation needs 6 ticks to wind a blow up): every strike beat is scheduled when its exchange, chain link or finisher is planned, never on the tick it lands. The shortest lead in this file is 12 ticks (the chain link: tempo.chainClose); an exchange's first strike comes at least approach.min (15 ticks) after the plan. Keep tempo.chainClose and approach.min at 6 ticks or more. A strike beat that comes due after a parry deals nothing (the exchange is cancelled) and must not be drawn as a blow: contact-spacing.md section 7."
       }
     }
   },

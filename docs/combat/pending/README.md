@@ -74,5 +74,6 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 - **Apply after 2b**, in its own commit, with the schema additions listed in `../contact-spacing.md` section 6 (a branch's `endSides`; `tempo.stepIn` and `tempo.chainClose`; `profiles.dynamic.contact`).
 - **Measured** on the live sim with a read-only probe (12 matches): strikes beyond 68 u fall from 52% to 2%. The remainder needs Encounter's sim-side rules.
+- **Strike lead (Animation's ask).** Every strike beat is already in the list 12 ticks or more before it lands, so no beat moved. The rule is the `_lead` note in `profiles.dynamic.contact`. The blows Animation saw arrive late are the leftover strike beats of parried exchanges (`../contact-spacing.md` section 7): a sim and render fix, which should land with the contact data or before it.
 - `styles.2b.json` is not affected.
 - If the 2b files change before they are applied, rebuild these two from them.

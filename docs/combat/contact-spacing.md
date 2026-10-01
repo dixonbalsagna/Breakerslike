@@ -92,6 +92,7 @@ Animation's key sets (`data/anim/keysets.json`, render-only) name a striking `li
 3. **No overlap.** Bodies never come closer than `minSeparation`.
 4. **Facing follows the opponent every tick** while in an exchange (`blitz.md` section 3).
 5. **A reach check for QA.** On every damaging strike, emit or assert the centre-to-centre distance and the height difference. Target: 100% within 68 u and the same height.
+6. **A parry ends the string.** Pending beats are dropped when the parry lands, so no strike or step-in runs after it (section 7).
 
 ## 6. Schema changes for Tools (with the contact files)
 Found by validating the parked files against the 2b schemas in a scratch copy:
@@ -102,4 +103,42 @@ Found by validating the parked files against the 2b schemas in a scratch copy:
 | 2 | `profiles.dynamic.tempo.stepIn` and `tempo.chainClose` |
 | 3 | `profiles.dynamic.contact` (`reach`, `offset`, `minSeparation`, `sameHeight`) |
 
-The `side` argument on `rush`, `finRush` and `dodge` already passes, because beat arguments are open. `finishers.contact.json` passes as it is.
+The `side` argument on `rush`, `finRush` and `dodge` already passes, because beat arguments are open. `finishers.contact.json` passes as it is. The `_lead` note in the contact block (section 7) needs no schema change: keys that start with `_` are notes.
+
+## 7. Blows "announced late": the cause is the parry, not the schedule
+Animation asked for every TRADE BLOWS strike to be scheduled at least 6 ticks before it lands: its check counts blows that first reach the animator under 4 ticks ahead and pop to their contact pose (7 or 8 of 78 in `docs/animation/pose-pipeline.md` section 9.4; 10 of 41 in seed 4 at HEAD `5923c29`).
+
+**The schedule already meets it.** Every strike beat is put in the exchange's list when the exchange, chain link or finisher is planned.
+
+| Measured on a clean copy of HEAD `5923c29` (12 AI matches, seeds 1 to 12, read-only probe) | Live data | Parked contact data |
+| :--- | ---: | ---: |
+| Strike beats in the list under 6 ticks before they land | 0 of 4,776 | 0 of 4,604 |
+| Chain strikes in the list under 6 ticks before they land | 0 of 660 | 0 of 544 |
+| Shortest lead, template and finisher strikes | 15 ticks | 15 ticks |
+| Shortest lead, chain strikes | 12 ticks | 12 ticks |
+
+A static check of the parked files agrees: 34 strike beats, the shortest lead 12 ticks (the chain link), every exchange's first strike at `approach.min` (15 ticks) or later. So **no beat moves**. The rule is recorded in the contact file (`profiles.dynamic.contact._lead`).
+
+**What Animation is seeing.** The 10 blows its check flags in seed 4 are, tick for tick, the 10 strike beats left over in three parried exchanges (parries at ticks 871, 3,182 and 4,027). Traced on the first:
+
+1. Tick 871: the defender parries the TRADE BLOWS opener. The sim sets `ex.cancel`.
+2. The other four strike beats stay in the list. Each comes due on its own tick (895, 908, 922, 939), is marked done, and does nothing: no damage, no event.
+3. The animator hides a cancelled exchange's strikes until they are done, then shows them. So each one appears on its "contact" tick, with no wind-up, for a blow that never happened.
+
+They are **phantom blows**, not late ones. Scheduling them earlier cannot help: they are already 13 to 58 ticks ahead when the parry lands. The two in HEAVY CLASH are chain strikes after a parried deciding blow (defect CC-001, `move-grammar.md`: a parried exchange still opens its chain window).
+
+**How much.** On live data, 167 of 2,163 exchanges are parried (8%).
+
+| After a parry (live data) | Count |
+| :--- | ---: |
+| Strike beats that come due and do nothing | 536 (9% of all strike beats that come due) |
+| Moves that still run (backstep, lunge, pursuit) | 344 |
+| Time the exchange stays open after the parry | 56 to 101 ticks on average by template (about 1 to 1.7 s) |
+
+That last row is also part of Orb's "they lock together and do nothing": for over a second after a parry the pair is held in an exchange in which nothing can land.
+
+**The fix is in two places, neither in the data.**
+- **Render (Animation), now:** a strike beat of a cancelled exchange is drawn only if it had already landed when the parry came. Remember the exchange time at which `ex.cancel` was first seen, and skip strike beats timed after it.
+- **Sim (Encounter):** a parry ends the string. Drop the pending beats when the parry lands (as the finisher takeover already does) and end the exchange, or play a short parry takeover (`control-scheme-data.md`, interrupts as branch takeovers). Gate it to the profiles that have a `parry` block, as the parry rewards already are, so `parity` stays bit-identical. It changes the goldens for `dynamic`.
+
+**Order matters for the contact data.** The contact file adds step-ins before the second, third and fourth blows. Step-ins are moves, and moves still run after a parry. With today's sim, a parried TRADE BLOWS on the contact data would show three step-ins, a backstep and a lunge with no blows between them. Measured with today's sim: 2.5 moves run after each parried TRADE BLOWS on live data, 5.4 on the contact data. So the sim fix should land with the contact data or before it.
