@@ -415,7 +415,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
   if (D) {
     const mins = sum(D.map(r => r.koAt)) / 60;
     const ex = sum(D.map(r => melee(r) + r.beams.length));
-    R.point('10.exPerMin', '§10', 'Exchanges started per minute (15 to 24)', { v: ex / mins, lo: 15, hi: 24 });
+    R.point('10.exPerMin', '§10', 'Exchanges started per minute (15 to 26, widened at §22)', { v: ex / mins, lo: 15, hi: 26 });
     const lens = D.flatMap(r => r.exLens), gaps = D.flatMap(r => r.exGaps);
     R.info('10.exLen', '§10', 'Exchange length, request to release, median', 'retired', 'retired by the dynamic feel (G0 triage); the feel rows replace it. Measured: ' + median(lens).toFixed(2) + ' s');
     R.info('10.gap', '§10', 'Breathing room, release to the next request, median', 'retired', 'replaced by the feel row release to next request at most 1.0 s. Measured: ' + median(gaps).toFixed(2) + ' s');
