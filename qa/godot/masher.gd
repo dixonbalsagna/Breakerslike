@@ -1,0 +1,60 @@
+extends SceneTree
+## The scripted masher (docs/design/control-rules.md section 6, QA bands): a human slot pressing light every `gap` ticks and
+## nothing else, against the AI at one level. It plays seeded matches on the live sim through the real input path (a v2 human
+## slot) and prints one JSON line: how many the masher won, lost, timed out, and the median match length.
+##   godot --headless --path . --script res://qa/godot/masher.gd -- <matches> <baseSeed> --level=easy|medium|hard [--gap=8] [--capsec=900]
+## The masher takes slot 0 in odd seeds and slot 1 in even ones, so the spawn side and the slot cancel. Read-only with respect to sim/.
+
+func _init() -> void:
+	var pos: Array = []
+	var level: String = ""
+	var gap: int = 8
+	var capsec: float = 900.0
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--level="):
+			level = a.substr(8)
+		elif a.begins_with("--gap="):
+			gap = int(a.substr(6))
+		elif a.begins_with("--capsec="):
+			capsec = float(a.substr(9))
+		else:
+			pos.append(a)
+	var n: int = int(pos[0]) if pos.size() > 0 else 20
+	var base: int = int(pos[1]) if pos.size() > 1 else 1
+	if not (level in ["easy", "medium", "hard", ""]):
+		print("usage: godot --headless --path . --script res://qa/godot/masher.gd -- <matches> <baseSeed> --level=easy|medium|hard [--gap=8] [--capsec=900]")
+		quit(2)
+		return
+	SimInputData.load_and_apply()
+	var dai = load("res://sim/director/ai.gd")   # loaded as a resource: a typed class reference would not parse on a sim before step 3 (no level)
+	dai.set("level", level)
+	var wins: int = 0
+	var losses: int = 0
+	var timeouts: int = 0
+	var lens: Array = []
+	for i in range(n):
+		var seed: int = base + i
+		var slot: int = 0 if seed % 2 == 1 else 1
+		var S: SimState = SimCore.createSim()
+		SimCore.newMatch(S, seed, {"p1": slot != 0, "p2": slot != 1}, {"v2": [slot == 0, slot == 1]})
+		var ticks: int = 0
+		var k: int = 0
+		while S.T < capsec and not (S.game.ko != null and S.game.koT > 3.0) and ticks < 400000:
+			var it := SimIntent.new()
+			ticks += 1
+			if ticks % gap == 0:
+				it.light = true
+			var ins: Array = [null, null]
+			ins[slot] = it
+			SimCore.step(S, ins)
+		lens.append(S.T)
+		if S.game.ko == null:
+			timeouts += 1
+		elif S.game.ko == S.fighters[slot]:
+			losses += 1
+		else:
+			wins += 1
+		SimCore.dispose(S)
+	lens.sort()
+	print(JSON.stringify({"masher": true, "level": level if level != "" else "data", "gap": gap, "n": n, "wins": wins, "losses": losses, "timeouts": timeouts, "medianSec": snappedf(lens[lens.size() >> 1], 0.1)}))
+	quit(0)

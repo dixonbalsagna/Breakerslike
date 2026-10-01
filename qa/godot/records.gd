@@ -26,6 +26,7 @@ func _init() -> void:
 	var out: String = ""
 	var cap: int = 200000        # tick safety only; the match cap is in sim seconds (hit-stop ticks do not advance S.T)
 	var capsec: float = 900.0     # the S4 ruling: 15:00 of sim time
+	var level: String = ""        # the AI level for the run (DirAI.level): easy, medium or hard; "" follows data/director/ai.json
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--arm="):
 			arm = a.substr(6)
@@ -33,6 +34,8 @@ func _init() -> void:
 			out = a.substr(6)
 		elif a.begins_with("--capsec="):
 			capsec = float(a.substr(9))
+		elif a.begins_with("--level="):
+			level = a.substr(8)
 		elif a.begins_with("--cap="):
 			cap = int(a.substr(6))
 		else:
@@ -43,6 +46,9 @@ func _init() -> void:
 		print("usage: godot --headless --path . --script res://qa/godot/records.gd -- <matches> <baseSeed> --arm=<arm> --out=<file> [--capsec=<sim seconds>] [--cap=<ticks>]")
 		quit(2)
 		return
+	if level != "":
+		var dai = load("res://sim/director/ai.gd")   # loaded as a resource: a typed class reference would not parse on a sim before step 3 (no level)
+		dai.set("level", level)
 	var recs: Array = []
 	for i in range(n):
 		recs.append(run_match(base + i, arm, cap, capsec))
@@ -63,7 +69,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "firstContact": {}, "liftsSeen": {}, "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "cues": {}, "firstContact": {}, "liftsSeen": {}, "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
@@ -232,6 +238,9 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				rec.impactCraters += 1
 			elif e.type == "skim":
 				rec.skims += 1
+			if e.type == "cue":   # the director's cues by kind: perfect_block, dodge_cancel, burst (step 3)
+				var cq: String = str(e.get("kind"))
+				rec.cues[cq] = rec.cues.get(cq, 0) + 1
 			# reach (Encounter's contact slice): every damaging strike of a light or heavy melee exchange (a light, a heavy or a guarded hit; signatures and their guarded hits are beams, not strikes) is measured from the attacker to the victim at the damage event: the horizontal distance must stay within 68 units, and a height difference beyond 68 is allowed only on sloped ground
 			var rex = S.dirS.ex
 			if e.type == "damage" and e.number and e.amount > 0.0 and rex != null and (str(rex.kind) == "light" or str(rex.kind) == "heavy") and (str(e.get("kind")) == "light" or str(e.get("kind")) == "heavy" or str(e.get("kind")) == "guard") and int(e.attacker) >= 0 and int(e.attacker) < 2 and int(e.victim) >= 0 and int(e.victim) < 2:

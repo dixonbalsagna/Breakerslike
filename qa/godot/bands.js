@@ -298,6 +298,8 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
   if (D) {
     const m = sum(D.map(melee));
     R.point('7.parry', '§7', 'Parries per 100 melee exchanges', { v: sum(D.map(r => sum(r.parries))) / m * 100, lo: 5, hi: 15 });
+    // control-rules 6 / moveset-rules 11: perfect blocks per 100 melee exchanges by AI level (the main run is the data's level, medium)
+    if (D.every(r => r.cues)) R.point('7.pb.medium', '§7', 'Perfect blocks per 100 melee exchanges, medium AI (5 to 15)', { v: sum(D.map(r => r.cues.perfect_block || 0)) / m * 100, lo: 5, hi: 15, unit: 'num' });
     R.point('7.chain', '§7', 'Chains per 100 melee exchanges', { v: sum(D.map(r => r.chains.length)) / m * 100, lo: 15, hi: 35 });
     const slip = sum(D.map(r => r.melee['PURSUIT — TARGET SLIPS AWAY'] || 0)), caught = sum(D.map(r => r.melee['PURSUIT — CAUGHT'] || 0));
     R.rate('7.slip', '§7', 'Pursuit slip rate (escape gamble)', { v: slip / (slip + caught), ci: wl(slip, slip + caught), lo: 0.35, hi: 0.65 });
@@ -436,4 +438,14 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
   return R.rows;
 }
 
-module.exports = { evaluate, hasEvent, kaiRate, mirrorEffects, median, q, fmt, SCALES, PLANET };
+// Perfect blocks per 100 melee exchanges at the easy and hard AI levels (control-rules 6: easy 3 to 8, hard 12 to 20), from default-arm records played at that level.
+function levelRows(byLevel) {
+  const BAND = { easy: [3, 8], hard: [12, 20] }, rows = [];
+  for (const [level, recs] of Object.entries(byLevel)) {
+    const m = recs.reduce((a, r) => a + Object.values(r.melee).reduce((x, y) => x + y, 0), 0), pb = recs.reduce((a, r) => a + ((r.cues || {}).perfect_block || 0), 0), [lo, hi] = BAND[level], v = m ? pb / m * 100 : NaN;
+    rows.push({ id: '7.pb.' + level, ref: '§7', what: `Perfect blocks per 100 melee exchanges, ${level} AI (${lo} to ${hi})`, status: Number.isFinite(v) ? (v >= lo && v <= hi ? 'PASS' : 'FAIL') : 'PENDING', value: Number.isFinite(v) ? v.toFixed(2) : 'no data', band: `${lo} to ${hi}`, note: `${recs.length} default-arm matches at ${level}; point estimate` });
+  }
+  return rows;
+}
+
+module.exports = { levelRows, evaluate, hasEvent, kaiRate, mirrorEffects, median, q, fmt, SCALES, PLANET };

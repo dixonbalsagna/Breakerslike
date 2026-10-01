@@ -26,6 +26,8 @@ const CAP = parseFloat(val('capsec', '900'));            // sim seconds: 15:00 (
 const BASE = parseInt(val('seed', '1'), 10);
 const ARMS = (val('arms', quick ? 'default,swap' : 'default,swap,mirror-villain,mirror-hero,default-flip,swap-flip,mirror-villain-flip,mirror-hero-flip')).split(',');
 const ONLY = val('only', null);
+const MASHER = parseInt(val('masher', '40'), 10);          // matches per level for the scripted masher (0 skips it)
+const LEVELRUNS = parseInt(val('levelruns', '100'), 10);     // default-arm matches at the easy and hard AI levels for the perfect-block rates (0 skips them)
 const FEEL = parseInt(val('feel', '40'), 10);            // matches for Combat's dynamic-feel probe (0 skips it)
 const ROOT = path.join(__dirname, '..');
 
@@ -54,6 +56,12 @@ async function main() {
     const rows = evaluate(A, { scale: SCALE, cap: CAP });
     if (FEEL > 0) {
       try { const feel = require('./godot/feel'); rows.push(...feel.feelRows(await feel.runFeel({ matches: FEEL, base: BASE }), FEEL)); } catch (e) { console.log('feel probe skipped: ' + String(e.message).split(String.fromCharCode(10))[0]); }
+    }
+    if (LEVELRUNS > 0 && !load) {
+      try { const { levelRows } = require('./godot/bands'); const byLevel = {}; for (const lv of ['easy', 'hard']) byLevel[lv] = await runRecords({ arm: 'default', base: BASE, count: LEVELRUNS, jobs: JOBS, capSec: CAP, level: lv }); rows.push(...levelRows(byLevel)); } catch (e) { console.log('level runs skipped: ' + String(e.message).split(String.fromCharCode(10))[0]); }
+    }
+    if (MASHER > 0 && !load) {
+      try { const m = require('./godot/masher'); rows.push(...m.masherRows(await m.runMasher({ n: MASHER, base: BASE }))); } catch (e) { console.log('masher skipped: ' + String(e.message).split(String.fromCharCode(10))[0]); }
     }
     result.bands = rows; printBands(rows);
   }

@@ -31,7 +31,7 @@ let cached;
 const godot = () => (cached === undefined ? (cached = findGodot()) : cached);
 
 // Run `count` matches of `arm` from `base` over `jobs` Godot processes. Resolves to the records in seed order.
-function runRecords({ arm = 'default', base = 1, count = 100, jobs = Math.max(1, Math.min(6, os.cpus().length - 1)), capSec = 900, quiet = false }) {
+function runRecords({ arm = 'default', base = 1, count = 100, jobs = Math.max(1, Math.min(6, os.cpus().length - 1)), capSec = 900, quiet = false, level = '' }) {
   const g = godot();
   if (!g) return Promise.reject(new Error('Godot 4.7 not found. Set GODOT to the console executable, e.g. C:\\...\\Godot_v4.7.2-stable_win64_console.exe'));
   jobs = Math.max(1, Math.min(jobs, count));
@@ -41,7 +41,7 @@ function runRecords({ arm = 'default', base = 1, count = 100, jobs = Math.max(1,
   for (let j = 0; j < jobs; j++) { const n = Math.floor(count / jobs) + (j < count % jobs ? 1 : 0); blocks.push({ n, start, out: path.join(dir, `rec_${j}.json`) }); start += n; }
   const t0 = Date.now();
   return Promise.all(blocks.map(b => new Promise((resolve, reject) => {
-    const args = ['--headless', '--path', ROOT, '--script', 'res://qa/godot/records.gd', '--', String(b.n), String(b.start), `--arm=${arm}`, `--out=${b.out.replace(/\\/g, '/')}`, `--capsec=${capSec}`];
+    const args = ['--headless', '--path', ROOT, '--script', 'res://qa/godot/records.gd', '--', String(b.n), String(b.start), `--arm=${arm}`, `--out=${b.out.replace(/\\/g, '/')}`, `--capsec=${capSec}`].concat(level ? [`--level=${level}`] : []);
     const p = spawn(g.exe, args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let err = '';
     p.stdout.on('data', d => { err += d; }); p.stderr.on('data', d => { err += d; });
