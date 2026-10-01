@@ -95,7 +95,7 @@ Animation's key sets (`data/anim/keysets.json`, render-only) name a striking `li
 5. **A reach check for QA.** On every damaging strike, emit or assert the centre-to-centre distance and the height difference. Target: 100% within 68 u and the same height.
 6. **A parry ends the string.** Pending beats are dropped when the parry lands, so no strike or step-in runs after it (section 7).
 7. **No launch goes back through the launcher** (Encounter's rule 8). A target behind the launcher is no longer offered; the turn throw that brings it back is in `launch-vectors.md` section 5.
-8. **The contact distance becomes per strike at M0.** Elbows, knees and the head reach 50 u or less, so each strike piece carries its own distance (28 to 58 u, from Animation's measurements of the posed strikes) and a `clinch` floor of 28 u joins the contact block: `pending/wave1-strikes.md` sections 3 and 6.
+8. **The contact distance becomes per strike at M0** (section 8).
 
 ## 6. Schema changes for Tools (with the contact files)
 Found by validating the parked files against the 2b schemas in a scratch copy:
@@ -149,3 +149,12 @@ That last row is also part of Orb's "they lock together and do nothing": for ove
 - **Sim (Encounter):** a parry ends the string. Drop the pending beats when the parry lands (as the finisher takeover already does) and end the exchange, or play a short parry takeover (`control-scheme-data.md`, interrupts as branch takeovers). Gate it to the profiles that have a `parry` block, as the parry rewards already are, so `parity` stays bit-identical. It changes the goldens for `dynamic`.
 
 **Order matters for the contact data.** The contact file adds step-ins before the second, third and fourth blows. Step-ins are moves, and moves still run after a parry. With today's sim, a parried TRADE BLOWS on the contact data would show three step-ins, a backstep and a lunge with no blows between them. Measured with today's sim: 2.5 moves run after each parried TRADE BLOWS on live data, 5.4 on the contact data. So the sim fix should land with the contact data or before it.
+
+## 8. The per-strike contact rule (canonical)
+This is the rule the other documents point to (Game Design: `docs/design/moveset-rules.md` section 11(l)). It takes effect at M0, when a strike beat names a slot and the director fills it with a piece. Until then every strike uses the one distance in section 3.
+
+1. **Each strike piece carries three measured distances** (Animation's pack, `art/animation/review/wave1/reach-table.md`): *clear*, the nearest at which nothing but the striking limb touches the rival; *lunge*, the farthest it lands at on the hips' lunge alone; *reach*, the farthest with a whole-body step-in as well.
+2. **Its contact distance is the smaller of 58 u and its lunge, and never under its clear distance.** So every blow lands on the lunge alone and nothing else passes into the rival. The posed strikes run from 28 u (the short knee) to 58 u.
+3. **The clinch floor is 28 u.** A strike's own step-in, and a grab's hold (36 u), may end that close. Every other move keeps `minSeparation` 45, and after a close blow two resting bodies are moved back apart.
+4. **The step before a strike is a range step:** it ends at the strike's own distance, on the striker's own side, and may open the distance as well as close it.
+5. **The data:** `profiles.dynamic.contact.clinch` 28; `contact.offset` 58 and `contact.reach` 68 stay as the defaults for a strike with no piece; each piece carries `range.clear`, `range.lunge`, `range.reach` and `range.offset`. The pieces are in `pending/strikes.antihero.wave1.json`.

@@ -29,7 +29,7 @@ Under all of it sits one more piece of work: the director picking pieces from th
 
 ## The order they could go live in
 
-1. **Wave 1's long and mid-range blows** (23 of the 34 that can be posed). They land at today's fighting distance (six of the kicks with a small step in), so they can show up as soon as they are posed, with no change to the sim. Which blow plays is still the animator's pick at this point, so the no-repeat and broken-limb rules are not yet enforced.
+1. **Wave 1's long and mid-range blows** (23 of the 34 that can be posed). They land at today's fighting distance (six of the kicks with a small step in), so they can show up as soon as they are posed, with no change to the sim. The change is written and parked: `golive-step1.md`, to be switched on after your review of the wave 1 pack. Which blow plays is still the animator's pick at this point, so the no-repeat and broken-limb rules are not yet enforced.
 2. **The rest of wave 1**, once the director picks the blows and brings the fighters in for the close ones.
 3. **Wave 2's eleven straight entries and wave 6's energy attacks.** Both arrive with the same step of the control scheme: the held direction and the mode.
 4. **Wave 5's beam answers, fist clash and travelling flurry**, with the perfect block and the pulse.

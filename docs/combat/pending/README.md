@@ -82,6 +82,10 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 One page for Orb: what each of the six waves adds in plain words, its new-pose count, what it needs before it can play, and the order they could go live in.
 
+## Go-live step 1 (for Animation to apply after Orb's review of the wave 1 pack)
+
+`golive-step1.md` and `golive-step1.picks.json`: the render-only change that lets wave 1's 23 long and mid-range strikes play in today's game. Two new pick lists for `data/anim/keysets.json` (11 light, 10 heavy), 2 gated strikes, the 7 that need a small step in at today's 58 u, which templates use which list, and three optional render-side rules. No sim file, no combat data and no data hash change.
+
 ## Wave 1: the Anti-hero's strike specs (for Animation; not for applying)
 
 `wave1-strikes.md` and `strikes.antihero.wave1.json` are the 38 key strikes as specs to pose from: base family, limb and target socket, weight, reach and the strike's own contact distance, timing, limb tags and one line on the look. Animation has posed the 34 that do not need the tail (23 authored contact sketches, 11 derived; `art/animation/review/wave1/`), and the sheet carries its measured reaches; the 4 tail strikes are held until Orb rules on the tail. Section 6 of the sheet notes what a per-strike contact distance changes in the live contact data at M0. Legal screened wave 1: GO, with its conditions now in the rows (`docs/legal/rule-of-cool-screen.md`). The `.2b.json` and `.contact.json` files in this folder are live now and kept for reference.
@@ -108,7 +112,7 @@ One page for Orb: what each of the six waves adds in plain words, its new-pose c
 
 ## Wave 7: the first kit (for Animation; not for applying)
 
-`wave7-first-kit.md` and `kit.antihero.wave7.json`: 3 specials (barrage volley, cutting step, grip and drag), 2 place signatures (the sweeping line, the ground shatter) and 6 showcases, each with its phases in ticks, variants by range, place and form, what it builds on from waves 1 to 6, and its sketches. 24 authored sketches, and 2 for the tail whip showcase, which is held.
+`wave7-first-kit.md` and `kit.antihero.wave7.json`: 3 specials (barrage volley, cutting step, grip and drag), 2 place signatures (the sweeping line, the ground shatter) and 6 showcases, each with its phases in ticks, variants by range, place and form, what it builds on from waves 1 to 6, and its sketches. 24 authored sketches, and 2 for the tail whip showcase, which is held. Legal screened it: GO, with the barrage volley's gather changed; Game Design ruled its numbers (`moveset-rules.md` section 11(k)).
 
 ## The Anti-hero's rich M0 piece list (not for applying)
 

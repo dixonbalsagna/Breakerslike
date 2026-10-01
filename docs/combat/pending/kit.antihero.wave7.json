@@ -1,6 +1,6 @@
 {
   "schema": "combat-kit-specs/0-draft",
-  "_about": "PARKED. The first kit of ../m0-rich.md (wave 6 in its table; the EP's wave 7): 3 specials, 2 place signatures and 6 showcases. Not loaded, not hashed. Working labels throughout. The Legal lines are Combat's proposals until Legal screens them, except where they quote an earlier verdict.",
+  "_about": "PARKED. The first kit of ../m0-rich.md (wave 6 in its table; the EP's wave 7): 3 specials, 2 place signatures and 6 showcases. Not loaded, not hashed. Working labels throughout. Legal screened it: GO, with the barrage volley's gather changed (docs/legal/rule-of-cool-screen.md, the wave 7 section). Game Design ruled its numbers (moveset-rules.md 11(k)).",
   "fighter": "antihero",
   "rules": {"specials": "moveset-rules.md section 1: a loadout of 3; the power trigger and a face button; a funded press fires at the next exchange boundary; 15 to 30 ki; a 25 s cooldown each; the director picks the variant", "signatures": "moveset-rules.md sections 2 and 11(a): 45 ki, a shared 120 s cooldown, a 48-tick charge; the order is the unrestrained state, a revealed signature, the current form's, then these place signatures", "showcases": "moveset-system.md section 2: at most 12 in 100 exchanges; not the same one twice within about 2 minutes; never two running; fitted to the template's contact tick"},
   "items": [
@@ -8,31 +8,31 @@
       "id": "special.barrage_volley",
       "kind": "special",
       "what": "Both arms open through a half turn of the body and a fan of shards leaves along the sweep.",
-      "facts": {"mode": "energy", "ki": "20 (proposal)", "answers": "a heavy blast: a perfect block in the last 10 of its 20-tick gather deflects the whole fan; a guard takes it at the guard's rate; a dodge slips it", "uses": "2 arms; with one arm: a one-arm sweep, 5 shards, x0.8"},
-      "phases": [{"phase": "gather", "ticks": "20", "what": "the wind-up: both arms drawn to one side at shoulder height, the body coiled away, the forearm plates lit"}, {"phase": "sweep", "ticks": "18", "what": "the arms open through the half turn; a shard leaves every 2 ticks: 9 in all"}, {"phase": "hold", "ticks": "6", "what": "side-on, both arms in one line"}, {"phase": "recover", "ticks": "12", "what": ""}],
+      "facts": {"mode": "energy", "ki": "20", "answers": "a heavy blast: a perfect block in the last 10 of its 20-tick gather deflects the whole fan; a guard takes it at the guard's rate; a dodge slips it", "uses": "2 arms; with one arm: a one-arm sweep, 5 shards, x0.8"},
+      "phases": [{"phase": "gather", "ticks": "20", "what": "the wind-up: the arms apart, one forearm high and one low with a forearm's length between them, the body turned a quarter away, the forearm plates lit"}, {"phase": "sweep", "ticks": "18", "what": "the arms open through the half turn; a shard leaves every 2 ticks: 9 in all"}, {"phase": "hold", "ticks": "6", "what": "side-on, both arms in one line"}, {"phase": "recover", "ticks": "12", "what": ""}],
       "variants": {"range": ["under 300 u: a tight fan that ends in the ring", "300 to 1,200 u: the full fan of shards", "over 1,200 u: darts in place of shards, in a narrower fan"], "situation": ["air: the fan's plane tilts to the rival's height", "ground: the fan skims the ground", "wall: one arm, braced off the surface", "water: the fan cuts a line of spray"], "form": ["Regalia: two fans, one behind the other", "Sovereign and Apex: the shards that circle him join it, and his arms sweep half as far"], "direction": ["toward: fired on the advance", "neutral: planted", "away: backing off"]},
       "buildsOn": ["shape.shard", "shape.volley", "shape.burst"],
-      "sketches": ["gather: coiled away, both hands at shoulder height on one side", "mid-sweep: arms wide, chest open, head following the leading hand", "end: side-on, one line through both arms"],
-      "_legal": "the volley's rules: one sweep, never both palms pumping forward in turn, no shouted barrage with an open mouth; the hands are never wrists together and never drawn to a hip; the name is shouted once, before the sweep",
-      "proposals": ["the count grows with Pride like the poke: 9, 11, 13, 15, for the same total, counted as one landed strike"]
+      "sketches": ["gather: a quarter turned away, one forearm high and one low, a forearm's length apart", "mid-sweep: arms wide, chest open, head following the leading hand", "end: side-on, one line through both arms"],
+      "_legal": "Legal changed the gather: the arms stay apart, one high and one low with a forearm's length between them, and are never both together at one side. One sweep, never both palms pumping forward in turn; the name is shouted once, with no open-mouth barrage",
+      "proposals": ["RULED (moveset-rules.md 11(k)): the count grows with Pride: 9, 11, 13, 15, for the same total, counted as one landed strike and following the Heavy Crown"]
     },
     {
       "id": "special.cutting_step",
       "kind": "special",
       "what": "A sudden change of level, up or down, and a wide cutting blow as he arrives.",
-      "facts": {"mode": "physical", "ki": "15 (proposal)", "answers": "a heavy opener: a perfect block in the last 10 ticks before contact; a guard blocks it; a dodge avoids it", "uses": "the cut's own limbs; on the ground the step needs both legs, so with a broken leg he takes off first"},
+      "facts": {"mode": "physical", "ki": "20", "answers": "it beats an attack in progress: the rival's strike misses and his cut lands clean, with no trade roll. A held guard blocks it, with no GUARD BREAK. A dodge avoids it. A perfect block in its last 10 ticks beats it", "uses": "the cut's own limbs; on the ground the step needs both legs, so with a broken leg he takes off first"},
       "phases": [{"phase": "tell", "ticks": "15", "what": "the heavy tell; he sinks or lifts a fraction"}, {"phase": "step", "ticks": "6", "what": "about 1 bh up or down, drawn the whole way, ending at the cut's contact distance on his own side"}, {"phase": "cut", "ticks": "contact at 21", "what": "an across heavy he can still throw: haymaker, roundhouse, spinning heel, spinning elbow or the tail whip"}, {"phase": "launch", "ticks": "3 after", "what": "across"}, {"phase": "recover", "ticks": "12", "what": ""}],
       "variants": {"range": ["in reach: tell, step, cut", "out of reach: a dash, with the step in its last 6 ticks", "over 1,200 u: an arc or a spiral first, once the rush has paths"], "situation": ["air: up or down, whichever side has more room", "ground: a hop over a low line or a drop under a high one", "wall: he kicks off the surface, so the step is out from the wall", "water: he breaks the surface upward"], "form": ["Regalia: the cut is the edge of the forearm plate", "Sovereign and Apex: upright, and the step is a glide"]},
       "buildsOn": ["strike.haymaker", "strike.roundhouse", "strike.spinning_heel", "strike.spinning_elbow", "strike.tail_whip", "entry.dash"],
       "sketches": ["the fold: mid-step, the body compact, knees drawn up, arms tight to the chest", "the arrival: a low wide base, the cutting limb loaded behind him"],
       "_legal": "he is drawn the whole way: no vanish and no afterimage that hides him; a spinning cut is a single turn",
-      "proposals": ["what makes it a special: the step takes him off the line, so a strike already coming at him misses. It beats an attack in progress, where an ordinary heavy trades"]
+      "proposals": ["RULED (11(k)): the step takes him off the line, so it beats an attack in progress; it costs 20 ki, more than a dodge-cancel, and has the 25 s cooldown of every special"]
     },
     {
       "id": "special.grip_and_drag",
       "kind": "special",
       "what": "A grab at speed, a drag along the ground on the rival's back, and a throw.",
-      "facts": {"mode": "physical (a grab)", "ki": "25 (proposal)", "answers": "the grab rule: it beats Guard, Neutral and Power; an attack in progress stuffs it; a dodge makes it whiff, with 30 ticks of recovery", "uses": "1 arm; with a broken arm it still works, at x0.8"},
+      "facts": {"mode": "physical (a grab)", "ki": "25", "answers": "the grab rule: it beats Guard, Neutral and Power; an attack in progress stuffs it; a dodge makes it whiff, with 30 ticks of recovery", "uses": "1 arm; with a broken arm it still works, at x0.8"},
       "phases": [{"phase": "lunge", "ticks": "10", "what": "the reach, inside the last 10 ticks of the rush"}, {"phase": "hold", "ticks": "4", "what": "the grip sets"}, {"phase": "pull-down", "ticks": "12", "what": "he hauls the rival down to the ground, from up to 4 bh"}, {"phase": "drag", "ticks": "30 to 48", "what": "along the ground, the rival on their back: World's slide, and a trench by tier"}, {"phase": "throw", "ticks": "1", "what": "the sling or the spike; a launch at x0.8 of a heavy"}, {"phase": "recover", "ticks": "12", "what": ""}],
       "variants": {"range": ["in reach: straight to the reach", "out of reach: a dash, or a skid on the ground"], "situation": ["ground: as above", "air, the ground within 4 bh: the pull-down, then the drag", "air, higher: no drag: a 20-tick dive carrying the rival, then the spike", "wall: the drag runs along the wall's face, then he throws off it", "water: along the surface, skipping"], "form": ["Regalia: upright, one-handed, not looking back", "Sovereign and Apex: he glides above the ground while the rival trails on it"]},
       "buildsOn": ["grab.lunge", "grab.hold", "grab.sling", "grab.spike", "grab.dive_spike", "entry.dash", "entry.skid"],
@@ -46,7 +46,7 @@
       "what": "His beam is a thin flat blade of light swept across the rival like a stroke, not a column he holds.",
       "facts": {"mode": "energy", "ki": "45, on the shared 120 s cooldown", "answers": "every beam answer: a beam for a struggle on the pulse, a heavy blast at -10, a perfect block (swat, split or walk), guard, dodge, the escape gamble", "uses": "1 arm; with a broken arm, x0.8"},
       "phases": [{"phase": "charge", "ticks": "48", "what": "the tell: side-on, the firing arm drawn back at shoulder height, plates stacking along the forearm and lit down the spine; the name once, short"}, {"phase": "stroke", "ticks": "the beam's life", "what": "the line starts off the rival and sweeps through about 35 degrees across them"}, {"phase": "after", "ticks": "12", "what": "he holds the end of the stroke while the line fades from his hand outward"}],
-      "variants": {"place": ["ocean (HORIZON CLEAVE): a level stroke along the sea; the water closes", "city (BOULEVARD RAZE): the stroke runs down a street", "forest (FIRESTORM): a low stroke, the canopy burning behind it", "mountains (RIDGE BORE): an upward stroke that bores the ridge", "desert (GLASS TRENCH): a downward stroke that leaves glass", "elsewhere (MERIDIAN SCAR): a level stroke"], "altitude": ["high: the stroke comes down onto the ground", "low: level", "on the ground: it starts along the ground and rises"], "outcome": ["hit: it carries the rival along the stroke and launches them at its end", "guard: the line splits on the guard and pushes back", "dodge: it carves on behind"]},
+      "variants": {"place": ["ocean, TIDE CLEAVE (the old label: HORIZON CLEAVE): a level stroke along the sea; the water closes", "city, BOULEVARD RAZE: the stroke runs down a street", "village, LANE SWEEP: a short stroke along one lane", "forest, CANOPY BURN (the old label: FIRESTORM): a low stroke, the canopy burning behind it", "mountains, RIDGE BORE: an upward stroke that bores the ridge", "desert, GLASS TRENCH: a downward stroke that leaves glass", "plains and elsewhere, FURROW SCAR (the old label: MERIDIAN SCAR): a level stroke"], "altitude": ["high: the stroke comes down onto the ground", "low: level", "on the ground: it starts along the ground and rises"], "outcome": ["hit: it carries the rival along the stroke and launches them at its end", "guard: the line splits on the guard and pushes back", "dodge: it carves on behind"]},
       "buildsOn": ["energy.charged_brace"],
       "sketches": ["stroke start: the arm forward and low, blade hand, the body still coiled", "stroke end: the arm swept through, the whole body turned after it", "after: the arm half lowered, his head still on the rival"],
       "_legal": "one blade hand at shoulder height: never cupped hands, never at a hip, no ball of light in a palm; the name is never drawn out over the charge; the aura is a thin outline in his violet, with no flame and no lightning; no more than two marks in the charge"
@@ -55,12 +55,12 @@
       "id": "signature.ground_shatter",
       "kind": "signature",
       "what": "He drives the plated forearm into the ground and a line of shards erupts along it to the rival.",
-      "facts": {"mode": "energy", "ki": "45, on the shared 120 s cooldown", "answers": "as any signature. A perfect block here plays the split, since there is no beam to swat or walk through (a question for Game Design)", "uses": "1 arm; with a broken arm, x0.8", "offered": "only when the rival is within 4 bh of the ground and he is within 12 bh of it; otherwise the sweeping line"},
+      "facts": {"mode": "energy", "ki": "45, on the shared 120 s cooldown", "answers": "as any signature. A perfect block always plays the split, whatever direction is held: there is no beam to swat or walk through (moveset-rules.md 11(k))", "uses": "1 arm; with a broken arm, x0.8", "offered": "only when the rival is within 4 bh of the ground and he is within 12 bh of it; otherwise the sweeping line"},
       "phases": [{"phase": "charge", "ticks": "48", "what": "the tell: he rises a body length, or dives to the ground from the air, the forearm plate lit along its edge"}, {"phase": "slam", "ticks": "at 48", "what": "the edge of the forearm driven into the ground: the hammer's blow, one arm"}, {"phase": "wave", "ticks": "45 at most", "what": "shards erupt in a line along the ground toward the rival and come up under them"}, {"phase": "after", "ticks": "12", "what": "he stays over the blow, then straightens"}],
       "variants": {"place": ["the shared material table: rock splits, sand fountains, a street lifts its paving, water throws a line of spouts"], "altitude": ["he is on the ground: the slam where he stands", "he is up to 4 bh up: a drop and the slam", "he is 4 to 12 bh up: a dive during the charge, then the slam"], "outcome": ["the rival in the air: the eruption lofts them", "the rival on the ground: it throws them across"]},
       "buildsOn": ["strike.hammer", "shape.shard", "entry.arc_dive"],
       "sketches": ["charge: risen, side-on, the forearm raised with its lit edge down", "slam: the forearm's edge in the ground, both feet planted wide, the other arm a straight line behind him", "after: still bent over the blow, head up toward the rival"],
-      "_legal": "not a landing on one knee and one fist with the head bowed; the cracks run away from him in a line: no ring of rubble rising round him, no lightning, no scream held over the charge",
+      "_legal": "no landing on one knee and one fist with the head bowed; the cracks run away from him in a line: no ring of rubble rising round him, no lightning and no scream",
       "needs": ["World: the crack line and the eruptions by material", "the arc on the rush, for the dive"]
     },
     {
@@ -140,7 +140,7 @@
       "variants": {"form": ["Sovereign and Apex: he lowers himself into it from the float, which reads as a choice"]},
       "buildsOn": ["entry.coil_spring", "strike.spear_hand", "strike.shoulder_check"],
       "sketches": ["the arrival: one line from the back foot to the fingertips"],
-      "_legal": "the crouch keeps one hand on the ground and the other open: never clenched fists at his sides; no scream, ground-crack or rising rubble"
+      "_legal": "the crouch keeps one hand on the ground and the other open: never clenched fists at his sides; after a transformation there is no ground crack, rubble, aura or scream with the crouch"
     }
   ]
 }

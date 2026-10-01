@@ -9,7 +9,8 @@ Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Anima
 - **Signatures** (sections 2 and 11(a)). 45 ki, a shared 120 s cooldown, a 48-tick charge that is the tell. Which one fires: the unrestrained state's, then a revealed one, then his current form's, then these two place signatures.
 - **Showcases** (`../moveset-system.md` section 2). At most 12 in 100 exchanges, not the same one twice within about 2 minutes, never two running. Each is fitted to its template's contact tick, so a showcase never moves a hit.
 - **Names.** He shouts a special's or a signature's name once, short; there is no name card. Every label here is a working label for Narrative and Legal.
-- **Legal.** The lines below are Combat's proposals, except where they repeat an earlier verdict. The stacking rule applies to every charge and every crouch.
+- **Legal** screened this sheet: GO, with one change, the barrage volley's gather (`docs/legal/rule-of-cool-screen.md`, the wave 7 section). The stacking rule applies to every charge and every crouch.
+- **Game Design** ruled its numbers (`docs/design/moveset-rules.md` section 11(k)): the ki costs, the barrage's count by Pride, what the cutting step beats, and the split against the ground shatter.
 
 ## 2. The three specials
 
@@ -20,13 +21,13 @@ Both arms open through a half turn of the body and a fan of shards leaves along 
 | | |
 | :--- | :--- |
 | **Mode** | energy |
-| **Ki** | 20 (proposal) |
+| **Ki** | 20 |
 | **The rival's answers** | a heavy blast: a perfect block in the last 10 of its 20-tick gather deflects the whole fan; a guard takes it at the guard's rate; a dodge slips it |
 | **Limbs** | 2 arms; with one arm: a one-arm sweep, 5 shards, x0.8 |
 
 | Phase | Ticks | What happens |
 | :--- | :--- | :--- |
-| Gather | 20 | the wind-up: both arms drawn to one side at shoulder height, the body coiled away, the forearm plates lit |
+| Gather | 20 | the wind-up: the arms apart, one forearm high and one low with a forearm's length between them, the body turned a quarter away, the forearm plates lit |
 | Sweep | 18 | the arms open through the half turn; a shard leaves every 2 ticks: 9 in all |
 | Hold | 6 | side-on, both arms in one line |
 | Recover | 12 |  |
@@ -36,9 +37,9 @@ Both arms open through a half turn of the body and a fan of shards leaves along 
 - **By form:** Regalia: two fans, one behind the other; Sovereign and Apex: the shards that circle him join it, and his arms sweep half as far.
 - **By direction:** toward: fired on the advance; neutral: planted; away: backing off.
 - **Builds on:** the shard shape, the volley shape, the burst shape.
-- **Sketches (3):** gather: coiled away, both hands at shoulder height on one side; mid-sweep: arms wide, chest open, head following the leading hand; end: side-on, one line through both arms.
-- **Legal:** the volley's rules: one sweep, never both palms pumping forward in turn, no shouted barrage with an open mouth; the hands are never wrists together and never drawn to a hip; the name is shouted once, before the sweep.
-- **Proposal for Game Design:** the count grows with Pride like the poke: 9, 11, 13, 15, for the same total, counted as one landed strike.
+- **Sketches (3):** gather: a quarter turned away, one forearm high and one low, a forearm's length apart; mid-sweep: arms wide, chest open, head following the leading hand; end: side-on, one line through both arms.
+- **Legal:** Legal changed the gather: the arms stay apart, one high and one low with a forearm's length between them, and are never both together at one side. One sweep, never both palms pumping forward in turn; the name is shouted once, with no open-mouth barrage.
+- **Game Design:** RULED (moveset-rules.md 11(k)): the count grows with Pride: 9, 11, 13, 15, for the same total, counted as one landed strike and following the Heavy Crown.
 
 ### Cutting step
 
@@ -47,8 +48,8 @@ A sudden change of level, up or down, and a wide cutting blow as he arrives.
 | | |
 | :--- | :--- |
 | **Mode** | physical |
-| **Ki** | 15 (proposal) |
-| **The rival's answers** | a heavy opener: a perfect block in the last 10 ticks before contact; a guard blocks it; a dodge avoids it |
+| **Ki** | 20 |
+| **The rival's answers** | it beats an attack in progress: the rival's strike misses and his cut lands clean, with no trade roll. A held guard blocks it, with no GUARD BREAK. A dodge avoids it. A perfect block in its last 10 ticks beats it |
 | **Limbs** | the cut's own limbs; on the ground the step needs both legs, so with a broken leg he takes off first |
 
 | Phase | Ticks | What happens |
@@ -65,7 +66,7 @@ A sudden change of level, up or down, and a wide cutting blow as he arrives.
 - **Builds on:** `haymaker`, `roundhouse`, `spinning_heel`, `spinning_elbow`, `tail_whip`, `dash`.
 - **Sketches (2):** the fold: mid-step, the body compact, knees drawn up, arms tight to the chest; the arrival: a low wide base, the cutting limb loaded behind him.
 - **Legal:** he is drawn the whole way: no vanish and no afterimage that hides him; a spinning cut is a single turn.
-- **Proposal for Game Design:** what makes it a special: the step takes him off the line, so a strike already coming at him misses. It beats an attack in progress, where an ordinary heavy trades.
+- **Game Design:** RULED (11(k)): the step takes him off the line, so it beats an attack in progress; it costs 20 ki, more than a dodge-cancel, and has the 25 s cooldown of every special.
 
 ### Grip and drag
 
@@ -74,7 +75,7 @@ A grab at speed, a drag along the ground on the rival's back, and a throw.
 | | |
 | :--- | :--- |
 | **Mode** | physical (a grab) |
-| **Ki** | 25 (proposal) |
+| **Ki** | 25 |
 | **The rival's answers** | the grab rule: it beats Guard, Neutral and Power; an attack in progress stuffs it; a dodge makes it whiff, with 30 ticks of recovery |
 | **Limbs** | 1 arm; with a broken arm it still works, at x0.8 |
 
@@ -114,7 +115,7 @@ His beam is a thin flat blade of light swept across the rival like a stroke, not
 | Stroke | the beam's life | the line starts off the rival and sweeps through about 35 degrees across them |
 | After | 12 | he holds the end of the stroke while the line fades from his hand outward |
 
-- **By place:** ocean (HORIZON CLEAVE): a level stroke along the sea; the water closes; city (BOULEVARD RAZE): the stroke runs down a street; forest (FIRESTORM): a low stroke, the canopy burning behind it; mountains (RIDGE BORE): an upward stroke that bores the ridge; desert (GLASS TRENCH): a downward stroke that leaves glass; elsewhere (MERIDIAN SCAR): a level stroke.
+- **By place:** ocean, TIDE CLEAVE (the old label: HORIZON CLEAVE): a level stroke along the sea; the water closes; city, BOULEVARD RAZE: the stroke runs down a street; village, LANE SWEEP: a short stroke along one lane; forest, CANOPY BURN (the old label: FIRESTORM): a low stroke, the canopy burning behind it; mountains, RIDGE BORE: an upward stroke that bores the ridge; desert, GLASS TRENCH: a downward stroke that leaves glass; plains and elsewhere, FURROW SCAR (the old label: MERIDIAN SCAR): a level stroke.
 - **By altitude:** high: the stroke comes down onto the ground; low: level; on the ground: it starts along the ground and rises.
 - **By outcome:** hit: it carries the rival along the stroke and launches them at its end; guard: the line splits on the guard and pushes back; dodge: it carves on behind.
 - **Builds on:** `charged_brace`.
@@ -129,7 +130,7 @@ He drives the plated forearm into the ground and a line of shards erupts along i
 | :--- | :--- |
 | **Mode** | energy |
 | **Ki** | 45, on the shared 120 s cooldown |
-| **The rival's answers** | as any signature. A perfect block here plays the split, since there is no beam to swat or walk through (a question for Game Design) |
+| **The rival's answers** | as any signature. A perfect block always plays the split, whatever direction is held: there is no beam to swat or walk through (moveset-rules.md 11(k)) |
 | **Limbs** | 1 arm; with a broken arm, x0.8 |
 | **Offered** | only when the rival is within 4 bh of the ground and he is within 12 bh of it; otherwise the sweeping line |
 
@@ -145,7 +146,7 @@ He drives the plated forearm into the ground and a line of shards erupts along i
 - **By outcome:** the rival in the air: the eruption lofts them; the rival on the ground: it throws them across.
 - **Builds on:** `hammer`, the shard shape, `arc_dive`.
 - **Sketches (3):** charge: risen, side-on, the forearm raised with its lit edge down; slam: the forearm's edge in the ground, both feet planted wide, the other arm a straight line behind him; after: still bent over the blow, head up toward the rival.
-- **Legal:** not a landing on one knee and one fist with the head bowed; the cracks run away from him in a line: no ring of rubble rising round him, no lightning, no scream held over the charge.
+- **Legal:** no landing on one knee and one fist with the head bowed; the cracks run away from him in a line: no ring of rubble rising round him, no lightning and no scream.
 - **Needs:** World: the crack line and the eruptions by material; the arc on the rush, for the dive.
 
 ## 4. The six showcases, and the one that is held
@@ -305,7 +306,7 @@ The deepest crouch, a beat of perfect stillness, then one uncoiling blow.
 - **By form:** Sovereign and Apex: he lowers himself into it from the float, which reads as a choice.
 - **Builds on:** `coil_spring`, `spear_hand`, `shoulder_check`.
 - **Sketches (1):** the arrival: one line from the back foot to the fingertips.
-- **Legal:** the crouch keeps one hand on the ground and the other open: never clenched fists at his sides; no scream, ground-crack or rising rubble.
+- **Legal:** the crouch keeps one hand on the ground and the other open: never clenched fists at his sides; after a transformation there is no ground crack, rubble, aura or scream with the crouch.
 
 ## 5. Broken limbs
 - **A broken arm:** the barrage becomes a one-arm sweep of 5; the cutting step and the hand finish pick a blow he can still throw; the grip and drag and both signatures are one-armed already, at x0.8. The dismissive backhand, the overhead hammer and the rising spear play on the good arm.
@@ -317,8 +318,8 @@ The deepest crouch, a beat of perfect stillness, then one uncoiling blow.
 | **Animation** | the 24 sketches; a head turned away on cue (the dismissive backhand); the wear layers switched on at a beat (the seal break) |
 | **Encounter** | the special queue firing a phrase at the exchange boundary; variant choice by range, place and form; showcases fitted to the contact tick with their gates; a carried pair for the rising spear |
 | **Simulation and World** | the held state; the slide and trench under the drag; the crack line and eruptions for the ground shatter |
-| **Game Design** | the three ki costs (20, 15, 25); the barrage's count by Pride; whether the cutting step beats an attack in progress; the perfect block's look against the ground shatter |
+| **Game Design** | done: ruled in `moveset-rules.md` section 11(k) |
 | **VFX** | the swept line and its fade; the erupting shard line by material; the dimming sigil |
-| **Narrative** | names for the three specials and two signatures |
-| **Legal** | a screen of this sheet's lines |
+| **Narrative** | names for the three specials and two signatures; the sweeping line's place names are the glossary's |
+| **Legal** | done: GO, with the barrage volley's gather changed |
 | **Orb, through Art** | the tail (the tail whip showcase and one of the cutting step's cuts) |
