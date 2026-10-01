@@ -6,13 +6,17 @@
     "jaw": {"bone": "head", "offset": [0, -1, 0], "surface": 5.0},
     "chest": {"bone": "spine_2", "offset": [0, 3, 0], "surface": 6.5},
     "gut": {"bone": "spine_1", "offset": [0, 2, 0], "surface": 6.5},
-    "legs": {"bone": "pelvis", "offset": [0, -14, 0], "surface": 6.0}
+    "legs": {"bone": "pelvis", "offset": [0, -14, 0], "surface": 6.0},
+    "shins": {"bone": "pelvis", "offset": [0, -28, 0], "surface": 5.0},
+    "arm_r": {"bone": "forearm_r", "offset": [0, -6, 0], "surface": 4.5},
+    "arm_l": {"bone": "forearm_l", "offset": [0, -6, 0], "surface": 4.5}
   },
   "limbs": {
     "hand": {"mode": "ik", "chain": ["upper_arm", "forearm", "hand"], "end_len": 6.0, "lunge_max": 11.0, "step_max": 14.0, "reach_z": 5.0, "hunch_max": 2.5},
     "foot": {"mode": "ik", "chain": ["thigh", "shin", "foot"], "end_len": 8.0, "lunge_max": 7.0, "step_max": 10.0, "reach_z": 9.0, "hunch_max": 0.0},
     "elbow": {"mode": "aim", "bone": "upper_arm", "tip": "forearm", "tip_offset": [0, 0, 0], "end_len": 3.0, "lunge_max": 9.0, "step_max": 12.0, "reach_z": 5.0, "hunch_max": 2.5},
     "knee": {"mode": "aim", "bone": "thigh", "tip": "shin", "tip_offset": [0, 0, 0], "end_len": 4.0, "lunge_max": 7.0, "step_max": 10.0, "reach_z": 7.0, "hunch_max": 0.0},
+    "shoulder": {"mode": "aim", "bone": "spine_1", "tip": "upper_arm", "tip_offset": [0, 0, 0], "end_len": 4.0, "lunge_max": 12.0, "step_max": 14.0, "reach_z": 6.0, "hunch_max": 0.0},
     "head": {"mode": "aim", "bone": "spine_1", "tip": "head", "tip_offset": [0, 6, 0], "end_len": 5.0, "lunge_max": 8.0, "step_max": 10.0, "reach_z": 0.0, "hunch_max": 0.0}
   }
 }

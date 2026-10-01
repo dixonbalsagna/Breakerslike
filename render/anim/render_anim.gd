@@ -22,6 +22,7 @@ static var debug_checks: bool = false
 ## The active ragdoll (docs/animation/overhaul-plan.md): tools turn it off for the A/B; the host sets reduced_motion from the
 ## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
 static var ragdoll_enabled: bool = true
+static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
 static var force_keyset: String = ""      # a lab switch (--keyset=strike.elbow): every blow plays this key set, to test a limb that no pick uses yet
 static var reduced_motion: bool = false
 ## Feet planted on the slope under a standing fighter, and a skid pitched to the ground (overhaul unit D); tools turn it off for the A/B.
@@ -61,6 +62,8 @@ static func _read_args() -> void:
 			enabled = false
 		elif a == "--noragdoll":
 			ragdoll_enabled = false
+		elif a == "--blowjoin":
+			blow_join = true
 		elif a.begins_with("--keyset="):
 			force_keyset = a.substr(9)
 		elif a.begins_with("--anim-quality="):

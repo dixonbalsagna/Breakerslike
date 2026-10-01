@@ -42,7 +42,8 @@ static func mark_one(d: Dictionary) -> bool:
 
 
 func _run() -> void:
-	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/anim/poses.json")).get("poses", {})
+	AnimData.load_all()
+	var raw: Dictionary = AnimData.raw
 	var one_pose: Array = []
 	var declared: Dictionary = {}
 	for id in raw:

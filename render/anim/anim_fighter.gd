@@ -103,6 +103,7 @@ var _rd_prev_speed: float = 0.0
 var _skim_t0: float = -1.0
 var _shape_set: bool = false
 var _skip_inertia: bool = false
+var _blow_snap: bool = false             # this solve is the snap of a blow into its contact key: the authored jump, not a join to settle
 var _lean_id: int = -1                  # the dodge already leaned away from
 var _over_id: int = -1                  # the whiff already over-committed on
 var _lean_t0: float = -10.0             # sim time of the lean-away, the over-commit and the blocked recoil
@@ -165,6 +166,7 @@ var _ci_w: float = 0.0
 var _ci_limb: String = "hand_r"
 var _ci_target: String = "chest"
 var _ci_side: bool = false
+var _ci_limb2: String = ""             # a second striking limb of a two-limb blow (a key set's limb2), or ""
 var _ci_step: float = -1.0              # the key set's own step-in limit (model units), or -1 for the limb's default in sockets.json
 var _ci_opp = null
 var _ci_tc: float = 0.0
@@ -431,6 +433,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	# 3. the exchange: approach and strike parts
 	_part = ""
 	_skip_inertia = false
+	_blow_snap = false
 	_ci_w = 0.0
 	_rushing = false
 	_contact_now = false
@@ -895,6 +898,9 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 			q[i] = q[i].slerp(_base[i], w4)
 		hips = pf.hips.lerp(_base_hips, w4)
 		curl = pf.curl.lerp(_base_curl, w4)
+	# the step from the wind-up into the contact key is the blow itself (on twos it is one step): inertialisation must not take it for a join
+	# and smooth it over the next 0.1 s, or the fist reaches the defender late (--blowjoin restores the old behaviour for an A/B)
+	_blow_snap = dtc >= -(Sn + dq) - 0.0001 and dtc <= 0.0001
 	# timing fidelity: on the frame of contact the pose must be the contact key (checked before the contact solve moves it)
 	if absf(T - tc2) < DT * 0.5:
 		var err: float = 0.0
@@ -917,6 +923,7 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 		_ci_w = cw
 		_ci_limb = String(ks.get("limb", "hand_r"))
 		_ci_step = float(ks.get("step_max", -1.0))
+		_ci_limb2 = String(ks.get("limb2", ""))
 		_ci_target = String(ks.get("target", "chest"))
 		_ci_side = side
 		_ci_opp = ex.D if role == "A" else ex.A
@@ -1018,13 +1025,20 @@ func _strike_reach(sk: Dictionary, a: int, b: int, c: int) -> float:
 ## into the solved one by the contact weight, so the key poses stay the look and the defender's actual position decides
 ## where it lands. Nothing happens if the opponent is behind the thrower (the face override turns him first).
 func _contact_ik(S: SimState, f) -> void:
+	_contact_one(S, f, _ci_limb, false)
+	if _ci_limb2 != "":
+		_contact_one(S, f, _ci_limb2, true)
+
+
+## One striking limb onto the defender. A second limb of the same blow (second = true) reaches from where the first left the body:
+## the hips' lunge is already in the pose and the step-in in `_step_x`, so it only asks for what is still missing.
+func _contact_one(S: SimState, f, base_limb: String, second: bool) -> void:
 	var opp = _ci_opp
 	if opp == null or _ci_dmg <= 0.0:
 		return
 	var oaf: AnimFighter = RenderAnim.fighter(S, opp)
 	if oaf.version == 0:
 		return
-	var base_limb: String = _ci_limb
 	var limb: String = base_limb
 	var sided: bool = base_limb.contains("_")
 	if _ci_side and sided:
@@ -1046,13 +1060,14 @@ func _contact_ik(S: SimState, f) -> void:
 		return
 	var my: float = (opp.y - f.y) + rp.y
 	var surf: float = float(AnimData.sockets.get("regions", {}).get(_ci_target, {}).get("surface", 6.5))
-	var tgt := Vector3(mx - surf - end_len - _smear_now(S.T), my, float(sk.get("reach_z", 5.0)) * zs)
+	var tgt := Vector3(mx - surf - end_len - _smear_now(S.T) - (_step_x if second else 0.0), my, float(sk.get("reach_z", 5.0)) * zs)
 	var ix: Dictionary = AnimRig.index
 	var a: int
 	var b: int
 	var c: int
 	if aim:
-		a = ix[String(sk["bone"]) + ("_" + sfx if sided else "")]
+		var abn: String = String(sk["bone"])
+		a = ix[abn + "_" + sfx] if (sided and ix.has(abn + "_" + sfx)) else ix[abn]   # a bone with a side (upper_arm) or one without (spine_1)
 		b = a
 		c = ix[String(sk["tip"]) + ("_" + sfx if sided else "")]
 	else:
@@ -1085,7 +1100,7 @@ func _contact_ik(S: SimState, f) -> void:
 		excess = d3.length() - reach   # the target is behind the shoulder (the fighters overlap): no step forward helps
 	var lunge: float = minf(need, lunge_max) * _ci_w
 	var step: float = clampf(need - lunge_max, 0.0, step_max) * _ci_w
-	_step_x = step
+	_step_x = (_step_x + step) if second else step
 	var ik_t: Vector3 = tgt - Vector3(lunge + step, 0.0, 0.0)
 	var qa0: Quaternion = q[a]
 	var qb0: Quaternion = q[b]
@@ -1108,7 +1123,11 @@ func _contact_ik(S: SimState, f) -> void:
 		gap = maxf(0.0, (ik_t - gp[c]).length())
 	hips.x += lunge
 	debug["ik_frames"] += 1
-	if absf(S.T - _ci_tc) < DT * 0.5 and _ci_w > 0.99 and _ci_tc != _gap_tc:
+	if second:
+		if absf(S.T - _ci_tc) < DT * 0.5 and _ci_w > 0.99:
+			debug["gap2_max"] = maxf(float(debug.get("gap2_max", 0.0)), gap)
+			debug["gap2_n"] = int(debug.get("gap2_n", 0)) + 1
+	elif absf(S.T - _ci_tc) < DT * 0.5 and _ci_w > 0.99 and _ci_tc != _gap_tc:
 		_gap_tc = _ci_tc
 		debug["gap_max"] = maxf(float(debug["gap_max"]), gap)
 		debug["gap_sum"] += gap
@@ -1148,6 +1167,8 @@ func _inertialise(dt: float, prof: Dictionary) -> void:
 		if absf(q[i].dot(_ip_raw[i])) < _ip_cos:
 			jump = true
 			break
+	if jump and _blow_snap and not RenderAnim.blow_join:
+		jump = false
 	if jump:
 		# continuity: what was drawn last solve (the old pose with the offset it carried) minus the new raw pose
 		for i in range(n):

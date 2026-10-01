@@ -25,6 +25,8 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/pose_lint.gd`, `tools/silhouette_lint.gd`, `tools/stacking_lint.gd` | The review pipeline's lints (unreachable targets and joint range; silhouette overlap; Legal's seven marks per moment). `data/anim/lint_allow.json`, `data/anim/moments.json` |
 | `tools/review.mjs` | The exceptions collector: `wave` (one sheet of exceptions per wave), `reel`, `ab`, `fix-reach`. Output in `art/animation/review/<wave>/` |
 | `tools/window_scan.gd`, `tools/rgb2png.mjs` | Finds reel windows (launches, both fighters framed); one reel frame as a PNG |
+| `tools/wave_gen.mjs`, `tools/waves/waveN.mjs` | The wave generator: a strike spec (one contact pose each) to the wave's pose, key-set and manifest files in `data/anim/waves/` (parked: baked only with `--waves`) |
+| `tools/strike_lab.gd` | The strike lab: each strike of a wave against a dummy defender at its own distance, as a captioned reel, a contact sheet, or (`--measure`, `--sweep`) the reach, the step-in and the clipping |
 | `tools/socket_check.gd` | The reach envelope of every striking limb against every region (`data/anim/sockets.json`) |
 | `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 

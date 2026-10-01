@@ -21,9 +21,65 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 
+## Legal's lines for a pose that carries a `_legal` list (docs/legal/rule-of-cool-screen.md, wave 1): geometry the sketch can show. Rules:
+## hands_open_or_claw (no fist, no cupped state), wrists_apart (two hands at least 7 u apart), no_clasp (two fists not together), not_at_hip
+## (no open hand chambered at the hip), no_held_raise (no hand above 80 u in a follow-through: no victory pose), no_leap (both feet
+## within 6 u of the floor), single_turn (hip and spine twist together under 140 degrees), no_cross_hold (arms not crossed in a wind-up or
+## a follow-through; only the blow itself may cross them).
+static func legal_issues(id: String, d: Dictionary) -> Array:
+	var out: Array = []
+	var rules: Array = d.get("_legal", [])
+	if rules.is_empty():
+		return out
+	var part: String = id.get_slice(".", id.get_slice_count(".") - 1)
+	var hs: Dictionary = d.get("hands", {})
+	var hr = d.get("hand_r")
+	var hl = d.get("hand_l")
+	var both: bool = hr != null and hl != null
+	var dist: float = 999.0
+	if both:
+		dist = Vector3(float(hr[0]) - float(hl[0]), float(hr[1]) - float(hl[1]), float(hr[2]) - float(hl[2])).length()
+	for rule in rules:
+		match String(rule):
+			"hands_open_or_claw":
+				for sd in ["r", "l"]:
+					var hv: String = String(hs.get(sd, "relaxed"))
+					if hv != "open" and hv != "claw":
+						out.append("hands_open_or_claw: the %s hand is %s" % [sd, hv])
+			"wrists_apart":
+				if both and dist < 7.0:
+					out.append("wrists_apart: the wrists are %.1f u apart" % dist)
+			"no_clasp":
+				if both and dist < 6.0 and String(hs.get("r", "")) == "fist" and String(hs.get("l", "")) == "fist":
+					out.append("no_clasp: two fists %.1f u apart" % dist)
+			"not_at_hip":
+				for hv2 in [["r", hr], ["l", hl]]:
+					var tg = hv2[1]
+					if tg != null and absf(float(tg[0])) <= 14.0 and float(tg[1]) >= 24.0 and float(tg[1]) <= 44.0:
+						out.append("not_at_hip: the %s hand is at the hip [%.0f, %.0f]" % [hv2[0], float(tg[0]), float(tg[1])])
+			"no_held_raise":
+				if part == "follow":
+					for hv3 in [["r", hr], ["l", hl]]:
+						var tg3 = hv3[1]
+						if tg3 != null and float(tg3[1]) > 80.0:
+							out.append("no_held_raise: the %s hand ends at height %.0f" % [hv3[0], float(tg3[1])])
+			"no_leap":
+				for fk in ["foot_r", "foot_l"]:
+					if d.has(fk) and float(d[fk][1]) > 6.0:
+						out.append("no_leap: %s at height %.0f" % [fk, float(d[fk][1])])
+			"single_turn":
+				var tw: float = absf(float(d.get("hip_twist", 0.0))) + absf(float(d.get("spine", {}).get("twist", 0.0)))
+				if tw > 140.0:
+					out.append("single_turn: %.0f degrees of twist" % tw)
+			"no_cross_hold":
+				if part != "contact" and both and float(hr[2]) < 0.0 and float(hl[2]) > 0.0:
+					out.append("no_cross_hold: the arms are crossed in the %s" % part)
+	return out
+
+
 func _run() -> void:
 	AnimData.load_all()
-	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/anim/poses.json")).get("poses", {})
+	var raw: Dictionary = AnimData.raw
 	var gq: Array[Quaternion] = []
 	gq.resize(AnimRig.N)
 	var gp := PackedVector3Array()
@@ -41,6 +97,8 @@ func _run() -> void:
 				continue
 		n += 1
 		var d: Dictionary = raw[id]
+		for lm in legal_issues(String(id), d):
+			issues.append({"id": id, "kind": "legal", "detail": lm})
 		var p: AnimPose = AnimData.pose(id)
 		var nan := false
 		for i in range(AnimRig.N):
@@ -67,9 +125,10 @@ func _run() -> void:
 			var th: float = atan2(v.x, -v.y) * float(pair[1])
 			if th < -0.06 or th > 2.65:
 				issues.append({"id": id, "kind": "joint range", "detail": "%s at %.0f degrees" % [pair[2], rad_to_deg(th)], "value": snappedf(rad_to_deg(th), 1.0)})
+		var spin: float = absf(float(d.get("hip_twist", 0.0))) + absf(float(d.get("spine", {}).get("twist", 0.0)))
 		for nm2 in ["upper_arm_l", "upper_arm_r"]:
 			var v2: Vector3 = p.q[ix[nm2]] * Vector3(0, -1, 0)
-			if v2.x < -0.93:
+			if v2.x < -0.93 and spin <= 90.0:   # in a spin the chest faces away, so a forward arm is back in the chest frame
 				issues.append({"id": id, "kind": "arm straight back", "detail": "%s points straight back along the body" % nm2})
 		var fam: String = String(d.get("family", "upright"))
 		var stand: bool = fam in ["upright", "upright_lunge", "crouched", "kneel"]
