@@ -169,6 +169,9 @@ func _burst(outcome: String, tag: String) -> void:
 		var evs: Array = []
 		var x: float = x0 + v * DT * float(t) if t <= hit_tick else b.x + b.w * 0.5 + 300.0 * DT * float(t - hit_tick)
 		_fly(S, f, x, y0, v if t <= hit_tick else 3000.0, 0.0)
+		# B3: the launched fighter eases into the building's row by his x progress (Fighter.z).
+		var pz: float = clampf(float(t) / float(hit_tick), 0.0, 1.0)
+		f.z = b.z * pz * pz * (3.0 - 2.0 * pz)
 		if t == hit_tick:
 			evs.append(VfxMock.building_hit(S, bi, 1.0, 0.0, v, 1, 1, outcome, 0))
 			if outcome == "collapse":

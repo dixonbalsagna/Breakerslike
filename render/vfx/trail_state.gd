@@ -17,6 +17,7 @@ class Mark:
 
 var hx := PackedFloat64Array()     # history, oldest first: one point per unfrozen tick (wrapped x)
 var hy := PackedFloat64Array()       # (at chest height)
+var hz := PackedFloat64Array()       # the fighter's depth (B3: a launched fighter flies into the building rows), so the ribbon meets it
 var k: float = 0.0                 # eased intensity 0..1
 var speed: float = 0.0             # world units a second over the last unfrozen tick
 var speed_bh: float = 0.0
@@ -37,6 +38,7 @@ var _py: float = 0.0
 func reset() -> void:
 	hx.clear()
 	hy.clear()
+	hz.clear()
 	marks.clear()
 	k = 0.0
 	speed = 0.0
@@ -64,6 +66,7 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 		# A teleport (a new match, a snapped position), not a flight: start again.
 		hx.clear()
 		hy.clear()
+		hz.clear()
 		marks.clear()
 		k = 0.0
 		sspeed = 0.0
@@ -94,9 +97,11 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 	max_k = maxf(max_k, k)
 	hx.append(f.x)
 	hy.append(f.y + VfxLook.CHEST_Y)   # chest height, like the ribbon's head, so a straight flight is a straight ribbon
+	hz.append(f.z)
 	if hx.size() > VfxLook.HIST_MAX:
 		hx.remove_at(0)
 		hy.remove_at(0)
+		hz.remove_at(0)
 	# Wind marks: age, then maybe spawn. The draws are fixed per tick whenever a mark could appear, whatever the
 	# quality, so the stream does not depend on the frame rate or on the level.
 	for i in range(marks.size() - 1, -1, -1):
@@ -124,7 +129,7 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 			m.len = clampf(speed * VfxLook.MARK_LEN_S, VfxLook.MARK_LEN_MIN_BH * VfxLook.BH, VfxLook.MARK_LEN_MAX_BH * VfxLook.BH)
 			# Lives until the fighter has passed it and gone on out of the frame, at about this speed.
 			m.life = clampf((ahead + VfxLook.MARK_BEHIND_BH * VfxLook.BH) / maxf(speed, 1.0) * lerpf(0.85, 1.15, r4), VfxLook.MARK_LIFE_MIN, VfxLook.MARK_LIFE_MAX)
-			m.z = lerpf(VfxLook.Z_MARK_MIN, VfxLook.Z_MARK_MAX, r5)
+			m.z = f.z + lerpf(VfxLook.Z_MARK_MIN, VfxLook.Z_MARK_MAX, r5)
 			if m.y > WorldTerrain.groundY(S, m.x) + 10.0:
 				marks.append(m)
 				spawned += 1
@@ -134,14 +139,14 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 ## The ribbon's polyline from the head back along the path, resampled into `segs` equal-length straight segments
 ## (segs + 1 points). Points are (offset in x from the head along the shortest arc, world y). The head is the given
 ## interpolated position, which lies between the last two history points. Returns fewer points if there is no path yet.
-func ribbon(head_x: float, head_y: float, length: float, segs: int) -> PackedVector2Array:
-	var pts := PackedVector2Array()
-	pts.append(Vector2(0.0, head_y))
+func ribbon(head_x: float, head_y: float, head_z: float, length: float, segs: int) -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	pts.append(Vector3(0.0, head_y, head_z))
 	var acc: float = 0.0
-	var prev := Vector2(0.0, head_y)
+	var prev := Vector3(0.0, head_y, head_z)
 	var i: int = hx.size() - 2       # the newest point is this tick's position, ahead of the interpolated head
 	while i >= 0 and acc < length:
-		var p := Vector2(SimWrap.sdx(head_x, hx[i]), hy[i])
+		var p := Vector3(SimWrap.sdx(head_x, hx[i]), hy[i], hz[i])
 		var seg: float = prev.distance_to(p)
 		if seg > 1e-6:
 			if acc + seg >= length:
@@ -153,14 +158,14 @@ func ribbon(head_x: float, head_y: float, length: float, segs: int) -> PackedVec
 			prev = p
 		i -= 1
 	if pts.size() < 2:
-		return PackedVector2Array()
+		return PackedVector3Array()
 	# Resample by arc length into equal segments.
 	var cum := PackedFloat32Array()
 	cum.append(0.0)
 	for j in range(1, pts.size()):
 		cum.append(cum[j - 1] + pts[j - 1].distance_to(pts[j]))
 	var total: float = cum[cum.size() - 1]
-	var out := PackedVector2Array()
+	var out := PackedVector3Array()
 	var j: int = 0
 	for s in range(segs + 1):
 		var target: float = total * float(s) / float(segs)

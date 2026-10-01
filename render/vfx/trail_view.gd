@@ -12,6 +12,7 @@ var _buf := PackedFloat32Array()
 var count: int = 0
 var ribbons: int = 0      # for the tests: ribbon segments written last frame
 var mark_count: int = 0   # ... and marks
+var cam_dist: float = 3000.0   # the pane camera's distance to the fighter plane (set by the layer), for the perspective scale at depth
 
 
 func _ready() -> void:
@@ -79,7 +80,7 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 			var rr: float = lerpf(VfxLook.RING_R0_BH, VfxLook.RING_R1_BH, 1.0 - pow(1.0 - f, 2.0)) * VfxLook.BH
 			var rc: Color = VfxPalette.trail_core().lerp(hub.accents[i], 0.2)
 			rc.a = 0.85 * (1.0 - f)
-			_put(n, fpos + tr.dir * rr * 0.35, tr.dir, rr * 2.0, rr * 2.0, VfxLook.Z_TRAIL + 1.0, rc, 1.0, 0.0, 2.0)
+			_put(n, fpos + tr.dir * rr * 0.35, tr.dir, rr * 2.0, rr * 2.0, host.fighter_z(i, a) + VfxLook.Z_TRAIL + 1.0, rc, 1.0, 0.0, 2.0)
 			n += 1
 	# Ribbons.
 	for i in range(mini(2, hub.trails.size())):
@@ -93,7 +94,9 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 			continue
 		var span: float = lerpf(VfxLook.SPAN_MIN, VfxLook.SPAN_MAX, ts.k)
 		var length: float = minf(ts.sspeed * span, VfxLook.LEN_MAX_BH * VfxLook.BH) * (0.4 + 0.6 * ts.k)
-		var pts: PackedVector2Array = ts.ribbon(fx, pose.y + VfxLook.CHEST_Y, length, VfxLook.SEGS)
+		var fz: float = host.fighter_z(i, a)
+		var ds: float = cam_dist / maxf(cam_dist - fz, 1.0)   # perspective scale at the fighter's depth, against the plane
+		var pts: PackedVector3Array = ts.ribbon(fx, pose.y + VfxLook.CHEST_Y, fz, length, VfxLook.SEGS)
 		if pts.size() < VfxLook.SEGS + 1:
 			continue
 		var acc: Color = hub.accents[i]
@@ -105,12 +108,13 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 		if hub.reduced_motion:
 			kk *= 0.5
 		for ly in layers:
-			var w0: float = maxf(ly[0] * VfxLook.BH * (0.5 + 0.5 * ts.k), ly[4])
+			var w0: float = maxf(ly[0] * VfxLook.BH * (0.5 + 0.5 * ts.k), ly[4] / ds)
 			for j in range(VfxLook.SEGS):
 				if n >= CAP:
 					break
-				var pa: Vector2 = pts[j]              # nearer the head
-				var pb: Vector2 = pts[j + 1]
+				var pa: Vector2 = Vector2(pts[j].x, pts[j].y)              # nearer the head
+				var pb: Vector2 = Vector2(pts[j + 1].x, pts[j + 1].y)
+				var zmid: float = (pts[j].z + pts[j + 1].z) * 0.5
 				var wa: float = w0 * (1.0 - float(j) / float(VfxLook.SEGS))
 				var wb: float = w0 * (1.0 - float(j + 1) / float(VfxLook.SEGS))
 				var wq: float = maxf(wa, 1.0)
@@ -121,7 +125,7 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 				var mid: Vector2 = (pa + pb) * 0.5
 				var c: Color = ly[2]
 				c.a = ly[1] * VfxLook.SEG_ALPHA[j] * kk
-				_put(n, Vector2(head_rel + mid.x, mid.y), d / l, l, wq, ly[3], c, wa / wq, wb / wq, 0.0)
+				_put(n, Vector2(head_rel + mid.x, mid.y), d / l, l, wq, zmid + ly[3], c, wa / wq, wb / wq, 0.0)
 				n += 1
 				ribbons += 1
 	count = n

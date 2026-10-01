@@ -140,12 +140,28 @@ func _run() -> void:
 			ts.step(S, ff, SimConst.DT, rg, VfxLook.Q_HIGH, true)
 		var head_x: float = ff.x - 70.0                     # a frame part-way between the last two ticks
 		var head_y: float = ff.y - 70.0 * slope + VfxLook.CHEST_Y
-		var pts: PackedVector2Array = ts.ribbon(head_x, head_y, 900.0, VfxLook.SEGS)
+		var pts: PackedVector3Array = ts.ribbon(head_x, head_y, 0.0, 900.0, VfxLook.SEGS)
 		var worst: float = 0.0
 		for p in pts:
 			var line_y: float = head_y + p.x * slope
 			worst = maxf(worst, absf(p.y - line_y))
 		_check(pts.size() == VfxLook.SEGS + 1 and worst < 0.01, "slope %.1f: ribbon points lie on the flight line (worst off-line %.3f units)" % [slope, worst])
+	# A ribbon follows the fighter in depth: head at the fighter's z, history points at the z they were at.
+	print("ribbon depth")
+	var tz := VfxTrailState.new()
+	var rz := SimRng.new(3)
+	var fz = S.fighters[0]
+	fz.state = "launched"
+	fz.hidden = false
+	fz.rush = null
+	fz.x = 30000.0
+	fz.y = 900.0
+	for k in range(40):
+		fz.x += 150.0
+		fz.z = -20.0 * float(k)
+		tz.step(S, fz, SimConst.DT, rz, VfxLook.Q_HIGH, true)
+	var zp: PackedVector3Array = tz.ribbon(fz.x - 75.0, fz.y + VfxLook.CHEST_Y, fz.z + 10.0, 900.0, VfxLook.SEGS)
+	_check(zp.size() == VfxLook.SEGS + 1 and absf(zp[0].z - (fz.z + 10.0)) < 0.01 and zp[VfxLook.SEGS].z > zp[0].z, "the ribbon starts at the head's depth and runs back through the depths it came from (%.0f to %.0f)" % [zp[0].z, zp[VfxLook.SEGS].z])
 	# The break ring: a fighter accelerating from rest to 130 bh/s fires it once.
 	print("break ring")
 	var t := VfxTrailState.new()
