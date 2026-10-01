@@ -9841,6 +9841,517 @@
         "rule": "type",
         "pointer": "/standing/min_tier"
       }
+    },
+    {
+      "id": "faces-live-valid",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/schema": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "faces-key-required",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "del": [
+            "/timing"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "faces-unknown-key",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/portraits": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/portraits"
+      }
+    },
+    {
+      "id": "faces-underscore-key-ok",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "faces-rate-integer",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/rate/per_minute": 6.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/rate/per_minute"
+      }
+    },
+    {
+      "id": "faces-rate-positive",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/rate/per_minute": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/rate/per_minute"
+      }
+    },
+    {
+      "id": "faces-window-positive",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/rate/window_s": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/rate/window_s"
+      }
+    },
+    {
+      "id": "faces-rate-key-required",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "del": [
+            "/rate/window_s"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/rate"
+      }
+    },
+    {
+      "id": "faces-priority-negative",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/always_priority": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/always_priority"
+      }
+    },
+    {
+      "id": "faces-priority-order",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/min_priority": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:faces-priority",
+        "pointer": "/min_priority"
+      }
+    },
+    {
+      "id": "faces-priority-equal-ok",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/min_priority": 3
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "faces-kind-level-enum",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/kinds/jewel": "sometimes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/kinds/jewel"
+      }
+    },
+    {
+      "id": "faces-kind-missing",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "del": [
+            "/kinds/thought"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/kinds"
+      }
+    },
+    {
+      "id": "faces-kind-unknown",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/kinds/shout": "cap"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/kinds/shout"
+      }
+    },
+    {
+      "id": "faces-timing-negative",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/timing/slide_in": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/timing/slide_in"
+      }
+    },
+    {
+      "id": "faces-timing-type",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/timing/slide_out": "fast"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/timing/slide_out"
+      }
+    },
+    {
+      "id": "faces-expressions-empty",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/expressions": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/expressions"
+      }
+    },
+    {
+      "id": "faces-expressions-duplicate",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/expressions": [
+              "neutral",
+              "neutral"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/expressions/1"
+      }
+    },
+    {
+      "id": "faces-expression-shape",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/expressions": [
+              "Smirk!",
+              "neutral"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/expressions/0"
+      }
+    },
+    {
+      "id": "faces-default-expression-unknown",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/default_expression": "calm"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:faces-expression",
+        "pointer": "/default_expression"
+      }
+    },
+    {
+      "id": "faces-gesture-expression-unknown",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/gesture_expression/laugh": "grin"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:faces-expression",
+        "pointer": "/gesture_expression/laugh"
+      }
+    },
+    {
+      "id": "faces-gesture-new-ok",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/gesture_expression/cheer": "smirk"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "faces-gesture-name-shape",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/gesture_expression/Cheer!": "smirk"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/gesture_expression/Cheer!"
+      }
+    },
+    {
+      "id": "faces-fighter-unknown-id",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/fighters/stranger": {
+              "neutral": {
+                "art": ""
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:faces-fighter",
+        "pointer": "/fighters/stranger"
+      }
+    },
+    {
+      "id": "faces-fighter-alias-ok",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/fighters/kai": {
+              "neutral": {
+                "art": ""
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "faces-fighter-unknown-expression",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/fighters/empress/grin": {
+              "art": ""
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:faces-expression",
+        "pointer": "/fighters/empress/grin"
+      }
+    },
+    {
+      "id": "faces-fighter-default-required",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "del": [
+            "/fighters/default"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/fighters"
+      }
+    },
+    {
+      "id": "faces-fighter-partial-ok",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/fighters/cyborg": {
+              "neutral": {
+                "art": ""
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "faces-art-path",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/fighters/empress/neutral/art": "art/faces/empress.png"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/fighters/empress/neutral/art"
+      }
+    },
+    {
+      "id": "faces-art-res-path-ok",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/fighters/empress/neutral/art": "res://art/faces/empress_neutral.png"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "faces-art-required",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "del": [
+            "/fighters/empress/neutral/art"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/fighters/empress/neutral"
+      }
+    },
+    {
+      "id": "faces-art-unknown-key",
+      "schema": "ui-faces.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/faces.json",
+          "set": {
+            "/fighters/empress/neutral/frame": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/fighters/empress/neutral/frame"
+      }
     }
   ],
   "text": [

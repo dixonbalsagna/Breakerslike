@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/ui-faces",
+  "title": "ui face cut-ins (schema 1)",
+  "description": "ui/data/faces.json: the face cut-in (docs/ui/hud-spec.md section 29): when a fighter speaks, a small portrait of the speaker slides in at that fighter's side of the screen, holds for the line and leaves. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (default_expression, every gesture_expression value and every fighter's expressions are in expressions; every fighter id is a readout profile or alias; min_priority is at most always_priority) are checked by tools/lib/xref.js (faces-*).",
+  "type": "object",
+  "required": [
+    "schema",
+    "rate",
+    "always_priority",
+    "min_priority",
+    "kinds",
+    "timing",
+    "default_expression",
+    "expressions",
+    "gesture_expression",
+    "fighters"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "rate": {
+      "type": "object",
+      "description": "Ordinary lines (level cap) get a face at most per_minute times in any window_s seconds of fight time.",
+      "required": [
+        "per_minute",
+        "window_s"
+      ],
+      "properties": {
+        "per_minute": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "window_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "always_priority": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "A line of this priority or more gets a face without counting against the rate."
+    },
+    "min_priority": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "A line below this priority gets none."
+    },
+    "kinds": {
+      "type": "object",
+      "description": "The level of each line kind in Narrative's data: always (no count), cap (counts against the rate) or never.",
+      "required": [
+        "line",
+        "reply",
+        "retort",
+        "callback",
+        "jewel",
+        "thought"
+      ],
+      "properties": {
+        "line": {
+          "enum": [
+            "always",
+            "cap",
+            "never"
+          ]
+        },
+        "reply": {
+          "enum": [
+            "always",
+            "cap",
+            "never"
+          ]
+        },
+        "retort": {
+          "enum": [
+            "always",
+            "cap",
+            "never"
+          ]
+        },
+        "callback": {
+          "enum": [
+            "always",
+            "cap",
+            "never"
+          ]
+        },
+        "jewel": {
+          "enum": [
+            "always",
+            "cap",
+            "never"
+          ]
+        },
+        "thought": {
+          "enum": [
+            "always",
+            "cap",
+            "never"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "timing": {
+      "type": "object",
+      "description": "The slide in and out, in seconds (reduced motion fades instead).",
+      "required": [
+        "slide_in",
+        "slide_out"
+      ],
+      "properties": {
+        "slide_in": {
+          "type": "number",
+          "minimum": 0
+        },
+        "slide_out": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "default_expression": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "expressions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      }
+    },
+    "gesture_expression": {
+      "type": "object",
+      "description": "The expression for a line's first cue, by the whole gesture or its family (effort.light, laugh, ...).",
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_.]*)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "fighters": {
+      "type": "object",
+      "description": "A slot per fighter id (the readout profile ids, plus default for a fighter with no entry): expression to {art}.",
+      "required": [
+        "default"
+      ],
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "required": [
+            "art"
+          ],
+          "properties": {
+            "art": {
+              "type": "string",
+              "pattern": "^$|^res://art/.+",
+              "description": "The path of a texture (res://art/...) for Art to fill; empty draws the placeholder from the fighter's aura colour."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

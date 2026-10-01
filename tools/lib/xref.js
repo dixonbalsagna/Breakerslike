@@ -568,6 +568,24 @@ function xref(docs, root = repoRoot) {
     }
   }
 
+  // ---- ui: face cut-ins ----
+  const faces = get('ui/data/faces.json');
+  if (isObj(faces)) {
+    const FC = 'ui/data/faces.json';
+    const exprs = new Set(Array.isArray(faces.expressions) ? faces.expressions : []);
+    const known = (name, pointer, what) => { if (exprs.size && typeof name === 'string' && !exprs.has(name)) err(FC, pointer, 'faces-expression', `${what} "${name}" is not in expressions (${[...exprs].join(', ')})`); };
+    known(faces.default_expression, '/default_expression', 'default_expression');
+    if (isObj(faces.gesture_expression)) for (const [g, e] of Object.entries(faces.gesture_expression)) if (!g.startsWith('_')) known(e, `/gesture_expression/${esc(g)}`, `gesture "${g}" uses expression`);
+    const prof = get(PROFILES);
+    const ids = new Set(['default', ...(isObj(prof) ? plainKeys(prof).filter((k) => k !== 'schema' && k !== 'aliases' && k !== 'note') : []), ...(isObj(prof) && isObj(prof.aliases) ? plainKeys(prof.aliases) : [])]);
+    if (isObj(faces.fighters)) for (const [fid, ex] of Object.entries(faces.fighters)) {
+      if (fid.startsWith('_')) continue;
+      if (isObj(prof) && !ids.has(fid)) err(FC, `/fighters/${esc(fid)}`, 'faces-fighter', `fighter "${fid}" is not a readout profile or alias (${[...ids].join(', ')})`);
+      if (isObj(ex)) for (const e of Object.keys(ex)) if (!e.startsWith('_')) known(e, `/fighters/${esc(fid)}/${esc(e)}`, `fighter "${fid}" lists expression`);
+    }
+    if (typeof faces.min_priority === 'number' && typeof faces.always_priority === 'number' && faces.min_priority > faces.always_priority) err(FC, '/min_priority', 'faces-priority', `min_priority ${faces.min_priority} is above always_priority ${faces.always_priority}, so a line that always gets a face would be below the floor`);
+  }
+
   // ---- ui: how to play ----
   const howto = get(HOWTO);
   if (isObj(howto) && Array.isArray(howto.pages)) {

@@ -87,6 +87,10 @@
       "schema": "ui-features.schema.json"
     },
     {
+      "match": "ui/data/faces.json",
+      "schema": "ui-faces.schema.json"
+    },
+    {
       "match": "ui/data/glyphs.json",
       "schema": "ui-glyphs.schema.json"
     },
