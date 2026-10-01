@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-sockets",
+  "title": "anim.sockets/1",
+  "description": "data/anim/sockets.json: the socket table: where a blow lands and what lands it (render/anim/anim_fighter.gd). regions: the defender's body points a key set's `target` names. limbs: the striking part a key set's `limb` names (hand, foot, elbow, knee, head; the suffix is the side). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every bone is in profiles.json bone_lag, with the side suffix for a sided limb; every key set target is a region and every key set limb is a limb; lunge_max is at most step_max) are checked by tools/lib/xref-fight.js (sockets-*, anim-target, anim-limb).",
+  "type": "object",
+  "required": [
+    "schema",
+    "regions",
+    "limbs"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.sockets/1"
+    },
+    "regions": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "bone",
+          "offset",
+          "surface"
+        ],
+        "properties": {
+          "bone": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "offset": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "surface": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "description": "A body point: a bone and an offset in its frame (model units); surface is how far the skin is in front of it.",
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "limbs": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z_]*)$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "mode",
+              "chain",
+              "end_len",
+              "lunge_max",
+              "step_max",
+              "reach_z",
+              "hunch_max"
+            ],
+            "properties": {
+              "mode": {
+                "const": "ik"
+              },
+              "chain": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "description": "Upper, lower, end (the side suffix is added)."
+              },
+              "end_len": {
+                "type": "number",
+                "minimum": 0
+              },
+              "lunge_max": {
+                "type": "number",
+                "minimum": 0
+              },
+              "step_max": {
+                "type": "number",
+                "minimum": 0
+              },
+              "reach_z": {
+                "type": "number",
+                "minimum": 0
+              },
+              "hunch_max": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "description": "A two-bone chain solved onto the target.",
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "mode",
+              "bone",
+              "tip",
+              "tip_offset",
+              "end_len",
+              "lunge_max",
+              "step_max",
+              "reach_z",
+              "hunch_max"
+            ],
+            "properties": {
+              "mode": {
+                "const": "aim"
+              },
+              "bone": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "tip": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "tip_offset": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "end_len": {
+                "type": "number",
+                "minimum": 0
+              },
+              "lunge_max": {
+                "type": "number",
+                "minimum": 0
+              },
+              "step_max": {
+                "type": "number",
+                "minimum": 0
+              },
+              "reach_z": {
+                "type": "number",
+                "minimum": 0
+              },
+              "hunch_max": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "description": "One bone turned so the tip points at the target.",
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        ]
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

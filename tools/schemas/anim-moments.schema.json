@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-moments",
+  "title": "anim.moments/1",
+  "description": "data/anim/moments.json: the moments the stacking lint checks (Legal's rule, docs/design/rule-of-cool.md section 1 rule 9: no single moment may show more than two of the seven marks). Each moment lists the poses it plays and the marks the other systems show during it. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references and Legal's limit (ids unique; every pose is in poses.json; a moment with three or more marks is an error, with two a warning: no room left) are checked by tools/lib/xref-fight.js (moments-*).",
+  "type": "object",
+  "required": [
+    "schema",
+    "moments"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.moments/1"
+    },
+    "moments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "poses",
+          "marks",
+          "owners"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "poses": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.]*$"
+            }
+          },
+          "marks": {
+            "type": "object",
+            "description": "Mark number (1 to 7) to what another system shows during the moment, with its source.",
+            "propertyNames": {
+              "pattern": "^(_.*|[1-7])$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            },
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "owners": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z ]*$"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

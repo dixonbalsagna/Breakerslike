@@ -68,9 +68,14 @@
               "hand_r",
               "hand_l",
               "foot_r",
-              "foot_l"
+              "foot_l",
+              "elbow_r",
+              "elbow_l",
+              "knee_r",
+              "knee_l",
+              "head"
             ],
-            "description": "The limb that strikes (a pose hand or foot field)."
+            "description": "The limb that strikes: a part of sockets.json limbs, with its side (hand_r, foot_l, elbow_r, knee_l) or head (no side)."
           }
         },
         "additionalProperties": false,

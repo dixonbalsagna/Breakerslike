@@ -510,9 +510,63 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim: moments, lint exceptions, effectors, sockets (poses and bones exist; Legal's stacking limit) ----
+  const poseDoc = get('data/anim/poses.json');
+  const poseSet = new Set(isObj(poseDoc) && isObj(poseDoc.poses) ? Object.keys(poseDoc.poses) : []);
+  const boneDoc = get('data/anim/profiles.json');
+  const boneSet = new Set(isObj(boneDoc) && isObj(boneDoc.bone_lag) ? Object.keys(boneDoc.bone_lag) : []);
+  const moments = get('data/anim/moments.json');
+  if (isObj(moments) && Array.isArray(moments.moments)) {
+    const MM = 'data/anim/moments.json';
+    const seenM = new Map();
+    moments.moments.forEach((m, i) => {
+      if (!isObj(m)) return;
+      const at = `/moments/${i}`;
+      if (typeof m.id === 'string') { if (seenM.has(m.id)) err(MM, `${at}/id`, 'moments-id', `moment id "${m.id}" is already used at /moments/${seenM.get(m.id)}`); else seenM.set(m.id, i); }
+      if (poseSet.size && Array.isArray(m.poses)) m.poses.forEach((p, j) => { if (typeof p === 'string' && !poseSet.has(p)) err(MM, `${at}/poses/${j}`, 'moments-pose', `pose "${p}" is not in poses.json`); });
+      const marks = isObj(m.marks) ? Object.keys(m.marks).filter((k) => !k.startsWith('_')).length : 0;
+      if (marks > 2) err(MM, `${at}/marks`, 'moments-marks', `moment "${m.id}" shows ${marks} of the seven marks; Legal's rule allows at most two`);
+      else if (marks === 2) err(MM, `${at}/marks`, 'moments-marks', `moment "${m.id}" is at two of the seven marks: no room left for another`, 'warning');
+    });
+  }
+  const allow = get('data/anim/lint_allow.json');
+  if (isObj(allow)) {
+    const LA = 'data/anim/lint_allow.json';
+    if (poseSet.size && Array.isArray(allow.pairs)) allow.pairs.forEach((p, i) => { if (Array.isArray(p)) for (const j of [0, 1]) if (typeof p[j] === 'string' && !poseSet.has(p[j])) err(LA, `/pairs/${i}/${j}`, 'lint-allow-pose', `pose "${p[j]}" is not in poses.json`); });
+    if (poseSet.size && Array.isArray(allow.overlay)) allow.overlay.forEach((pre, i) => { if (typeof pre === 'string' && ![...poseSet].some((p) => p.startsWith(pre))) err(LA, `/overlay/${i}`, 'lint-allow-pose', `overlay prefix "${pre}" matches no pose in poses.json`, 'warning'); });
+  }
+  const eff = get('data/anim/effectors.json');
+  if (isObj(eff) && isObj(eff.poses) && poseSet.size) for (const p of Object.keys(eff.poses)) if (!p.startsWith('_') && !poseSet.has(p)) err('data/anim/effectors.json', `/poses/${esc(p)}`, 'effector-pose', `pose "${p}" is not in poses.json`);
+  const sockets = get('data/anim/sockets.json');
+  if (isObj(sockets)) {
+    const SK = 'data/anim/sockets.json';
+    const hasBone = (b) => boneSet.has(b) || boneSet.has(b + '_l') || boneSet.has(b + '_r');
+    const needBone = (b, pointer) => { if (boneSet.size && typeof b === 'string' && !hasBone(b)) err(SK, pointer, 'sockets-bone', `bone "${b}" is not in profiles.json bone_lag (nor with an _l or _r suffix)`); };
+    if (isObj(sockets.regions)) for (const [k, r] of Object.entries(sockets.regions)) if (!k.startsWith('_') && isObj(r)) needBone(r.bone, `/regions/${esc(k)}/bone`);
+    if (isObj(sockets.limbs)) for (const [k, l] of Object.entries(sockets.limbs)) {
+      if (k.startsWith('_') || !isObj(l)) continue;
+      const at = `/limbs/${esc(k)}`;
+      if (Array.isArray(l.chain)) l.chain.forEach((b, i) => needBone(b, `${at}/chain/${i}`));
+      needBone(l.bone, `${at}/bone`); needBone(l.tip, `${at}/tip`);
+      if (typeof l.lunge_max === 'number' && typeof l.step_max === 'number' && l.lunge_max > l.step_max) err(SK, `${at}/lunge_max`, 'sockets-reach', `lunge_max ${l.lunge_max} is above step_max ${l.step_max}; the hips carry the reach first, then the whole body`);
+    }
+    const ks = get('data/anim/keysets.json');
+    if (isObj(ks) && isObj(ks.keysets)) {
+      const regs = isObj(sockets.regions) ? Object.keys(sockets.regions).filter((k) => !k.startsWith('_')) : [];
+      const lims = isObj(sockets.limbs) ? Object.keys(sockets.limbs).filter((k) => !k.startsWith('_')) : [];
+      for (const [name, k] of Object.entries(ks.keysets)) {
+        if (name.startsWith('_') || !isObj(k)) continue;
+        if (typeof k.target === 'string' && regs.length && !regs.includes(k.target)) err('data/anim/keysets.json', `/keysets/${esc(name)}/target`, 'anim-target', `target "${k.target}" is not a region in sockets.json (${regs.join(', ')})`);
+        if (typeof k.limb === 'string' && lims.length && !lims.includes(k.limb.replace(/_[lr]$/, ''))) err('data/anim/keysets.json', `/keysets/${esc(name)}/limb`, 'anim-limb', `limb "${k.limb}" is not a limb in sockets.json (${lims.join(', ')}, with a side suffix)`);
+      }
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);
+    const rs = isObj(lad) && isObj(lad.reach) ? lad.reach.structure : undefined;
+    if (Array.isArray(rs)) for (let i = 1; i < rs.length; i++) if (typeof rs[i] === 'number' && typeof rs[i - 1] === 'number' && rs[i] < rs[i - 1]) err(rel, '/reach/structure/' + i, 'ladder-reach-order', 'structure reach falls from ' + rs[i - 1] + ' to ' + rs[i] + ' at tier ' + (i + 1) + '; it must not fall with the tier', 'warning');
     const bm = isObj(lad) ? lad.beam : undefined;
     if (!isObj(bm)) continue;
     for (const key of ['levelCapShare', 'overshoot']) {

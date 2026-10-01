@@ -6,7 +6,8 @@
 //   --cpu-throttle 4,6     CPU slowdown factors to run, each in a fresh browser (default 4,6; 1 is the baseline, always run first)
 //   --floor                also run once with software rendering (SwiftShader): a GPU-free floor, not a laptop
 //   --no-baseline          skip the unthrottled run
-//   --query "nosplit&novfx"  page query string (the /bench/ page reads nosplit, novfx and frames=N)
+//   --query "nosplit&novfx"  page query string (the /bench/ page reads nosplit, novfx, noragdoll, noclouds,
+//                          anim-quality=high|medium|low|minimal and frames=N)
 //   --frames N             shorthand for frames=N in the query
 //   --width 1366 --height 768   viewport (default: a common laptop screen)
 //   --path /bench/         page path when --dir is used

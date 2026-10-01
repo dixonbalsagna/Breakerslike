@@ -16245,6 +16245,1669 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "ladder-reach-valid",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6,
+                2.8
+              ],
+              "ringCap": -1
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "ladder-reach-structure-required",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "ringCap": -1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/reach"
+      }
+    },
+    {
+      "id": "ladder-reach-ring-cap-required",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6,
+                2.8
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/reach"
+      }
+    },
+    {
+      "id": "ladder-reach-unknown-key",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6,
+                2.8
+              ],
+              "ringCap": -1,
+              "extra": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/reach/extra"
+      }
+    },
+    {
+      "id": "ladder-reach-structure-length",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6
+              ],
+              "ringCap": -1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/reach/structure"
+      }
+    },
+    {
+      "id": "ladder-reach-structure-below-one",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                0.5,
+                1,
+                1.6,
+                2.8
+              ],
+              "ringCap": -1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/reach/structure/0"
+      }
+    },
+    {
+      "id": "ladder-reach-structure-above-six",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6,
+                7
+              ],
+              "ringCap": -1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/reach/structure/3"
+      }
+    },
+    {
+      "id": "ladder-reach-structure-falls-warns",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                2,
+                1.6,
+                2.8
+              ],
+              "ringCap": -1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ladder-reach-order",
+        "pointer": "/reach/structure/2"
+      }
+    },
+    {
+      "id": "ladder-reach-ring-cap-minus-one-ok",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6,
+                2.8
+              ],
+              "ringCap": -1
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "ladder-reach-ring-cap-below-minus-one",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6,
+                2.8
+              ],
+              "ringCap": -2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/reach/ringCap"
+      }
+    },
+    {
+      "id": "ladder-reach-ring-cap-integer",
+      "schema": "fighter-ladder.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/ladder.json",
+          "set": {
+            "/reach": {
+              "structure": [
+                1,
+                1,
+                1.6,
+                2.8
+              ],
+              "ringCap": 3.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/reach/ringCap"
+      }
+    },
+    {
+      "id": "anim-moments-live-valid",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/schema": "anim.moments/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-moments-key-required",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "del": [
+            "/moments"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-moments-unknown-key",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-moments-moment-valid",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {},
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-moments-moment-key-required",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {}
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/moments/0"
+      }
+    },
+    {
+      "id": "anim-moments-moment-unknown-key",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {},
+                "owners": [
+                  "VFX"
+                ],
+                "extra": 1
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/moments/0/extra"
+      }
+    },
+    {
+      "id": "anim-moments-moment-id-shape",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "Test Moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {},
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/moments/0/id"
+      }
+    },
+    {
+      "id": "anim-moments-moment-id-duplicate",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {},
+                "owners": [
+                  "VFX"
+                ]
+              },
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {},
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:moments-id",
+        "pointer": "/moments/1/id"
+      }
+    },
+    {
+      "id": "anim-moments-moment-poses-empty",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [],
+                "marks": {},
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/moments/0/poses"
+      }
+    },
+    {
+      "id": "anim-moments-moment-pose-unknown",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.nowhere"
+                ],
+                "marks": {},
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:moments-pose",
+        "pointer": "/moments/0/poses/0"
+      }
+    },
+    {
+      "id": "anim-moments-moment-mark-number",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {
+                  "8": "x"
+                },
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/moments/0/marks/8"
+      }
+    },
+    {
+      "id": "anim-moments-moment-mark-text",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {
+                  "4": ""
+                },
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/moments/0/marks/4"
+      }
+    },
+    {
+      "id": "anim-moments-moment-one-mark-ok",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {
+                  "4": "rubble rising"
+                },
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-moments-moment-two-marks-warns",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {
+                  "4": "rubble rising",
+                  "5": "lightning"
+                },
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:moments-marks",
+        "pointer": "/moments/0/marks"
+      }
+    },
+    {
+      "id": "anim-moments-moment-three-marks",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {
+                  "3": "flame",
+                  "4": "rubble",
+                  "5": "lightning"
+                },
+                "owners": [
+                  "VFX"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:moments-marks",
+        "pointer": "/moments/0/marks"
+      }
+    },
+    {
+      "id": "anim-moments-moment-owner-shape",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {},
+                "owners": [
+                  "vfx"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/moments/0/owners/0"
+      }
+    },
+    {
+      "id": "anim-moments-moment-owners-empty",
+      "schema": "anim-moments.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/moments.json",
+          "set": {
+            "/moments": [
+              {
+                "id": "test_moment",
+                "label": "A test",
+                "poses": [
+                  "form.gather"
+                ],
+                "marks": {},
+                "owners": []
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/moments/0/owners"
+      }
+    },
+    {
+      "id": "anim-lint-allow-live-valid",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/schema": "anim.lint_allow/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-lint-allow-key-required",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "del": [
+            "/pairs"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-lint-allow-unknown-key",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-lint-allow-overlay-prefix-dot",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/overlay": [
+              "wound"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/overlay/0"
+      }
+    },
+    {
+      "id": "anim-lint-allow-overlay-duplicate",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/overlay": [
+              "wound.",
+              "wound."
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/overlay/1"
+      }
+    },
+    {
+      "id": "anim-lint-allow-overlay-no-pose-warns",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/overlay": [
+              "nowhere."
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:lint-allow-pose",
+        "pointer": "/overlay/0"
+      }
+    },
+    {
+      "id": "anim-lint-allow-pair-length",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/pairs": [
+              [
+                "brace",
+                "cue.brace"
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/pairs/0"
+      }
+    },
+    {
+      "id": "anim-lint-allow-pair-too-long",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/pairs": [
+              [
+                "brace",
+                "cue.brace",
+                "reason",
+                "extra"
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maxItems",
+        "pointer": "/pairs/0"
+      }
+    },
+    {
+      "id": "anim-lint-allow-pair-reason-empty",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/pairs": [
+              [
+                "brace",
+                "cue.brace",
+                ""
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/pairs/0/2"
+      }
+    },
+    {
+      "id": "anim-lint-allow-pair-pose-unknown",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/pairs": [
+              [
+                "brace",
+                "cue.nowhere",
+                "reason"
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:lint-allow-pose",
+        "pointer": "/pairs/0/1"
+      }
+    },
+    {
+      "id": "anim-lint-allow-pairs-empty-ok",
+      "schema": "anim-lint-allow.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/lint_allow.json",
+          "set": {
+            "/pairs": []
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-effectors-live-valid",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/schema": "anim.effectors/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-effectors-key-required",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "del": [
+            "/hunch"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-effectors-unknown-key",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-effectors-hunch-key-required",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "del": [
+            "/hunch/auto"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/hunch"
+      }
+    },
+    {
+      "id": "anim-effectors-hunch-auto-type",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/hunch/auto": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/hunch/auto"
+      }
+    },
+    {
+      "id": "anim-effectors-hunch-max-negative",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/hunch/fwd_max": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/hunch/fwd_max"
+      }
+    },
+    {
+      "id": "anim-effectors-pose-pair-length",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/poses/brace/r": [
+              1.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/poses/brace/r"
+      }
+    },
+    {
+      "id": "anim-effectors-pose-pair-type",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/poses/brace/l": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/poses/brace/l/0"
+      }
+    },
+    {
+      "id": "anim-effectors-pose-one-side-ok",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/poses/brace": {
+              "r": [
+                1,
+                1
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-effectors-pose-side-unknown",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/poses/brace/x": [
+              1,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/poses/brace/x"
+      }
+    },
+    {
+      "id": "anim-effectors-pose-slump-ok",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/poses/win.stand/r": [
+              0,
+              -2.5
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-effectors-pose-unknown",
+      "schema": "anim-effectors.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/effectors.json",
+          "set": {
+            "/poses/form.nowhere": {
+              "r": [
+                0,
+                0
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:effector-pose",
+        "pointer": "/poses/form.nowhere"
+      }
+    },
+    {
+      "id": "anim-sockets-live-valid",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/schema": "anim.sockets/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-sockets-key-required",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "del": [
+            "/limbs"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-sockets-unknown-key",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-sockets-region-key-required",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "del": [
+            "/regions/head/surface"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/regions/head"
+      }
+    },
+    {
+      "id": "anim-sockets-region-offset-length",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/regions/head/offset": [
+              0,
+              6
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/regions/head/offset"
+      }
+    },
+    {
+      "id": "anim-sockets-region-surface-positive",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/regions/head/surface": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/regions/head/surface"
+      }
+    },
+    {
+      "id": "anim-sockets-region-bone-unknown",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/regions/head/bone": "tail"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:sockets-bone",
+        "pointer": "/regions/head/bone"
+      }
+    },
+    {
+      "id": "anim-sockets-region-name-shape",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/regions/Head!": {
+              "bone": "head",
+              "offset": [
+                0,
+                0,
+                0
+              ],
+              "surface": 5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/regions/Head!"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-valid",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/hand": {
+              "mode": "ik",
+              "chain": [
+                "upper_arm",
+                "forearm",
+                "hand"
+              ],
+              "end_len": 6,
+              "lunge_max": 11,
+              "step_max": 14,
+              "reach_z": 5,
+              "hunch_max": 2.5
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-sockets-limb-mode-unknown",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/hand": {
+              "mode": "fk",
+              "chain": [
+                "upper_arm",
+                "forearm",
+                "hand"
+              ],
+              "end_len": 6,
+              "lunge_max": 11,
+              "step_max": 14,
+              "reach_z": 5,
+              "hunch_max": 2.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/limbs/hand"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-ik-needs-chain",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/hand": {
+              "mode": "ik",
+              "end_len": 6,
+              "lunge_max": 11,
+              "step_max": 14,
+              "reach_z": 5,
+              "hunch_max": 2.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/limbs/hand"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-chain-length",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/hand/chain": [
+              "upper_arm",
+              "forearm"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/limbs/hand"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-aim-needs-tip",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "del": [
+            "/limbs/elbow/tip"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/limbs/elbow"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-number-negative",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/hand/step_max": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/limbs/hand"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-chain-bone-unknown",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/hand/chain": [
+              "upper_arm",
+              "tentacle",
+              "hand"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:sockets-bone",
+        "pointer": "/limbs/hand/chain/1"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-tip-bone-unknown",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/elbow/tip": "tentacle"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:sockets-bone",
+        "pointer": "/limbs/elbow/tip"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-lunge-above-step",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/limbs/hand/lunge_max": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:sockets-reach",
+        "pointer": "/limbs/hand/lunge_max"
+      }
+    },
+    {
+      "id": "anim-sockets-target-not-a-region",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "set": {
+            "/regions": {
+              "head": {
+                "bone": "head",
+                "offset": [
+                  0,
+                  6,
+                  0
+                ],
+                "surface": 5
+              },
+              "chest": {
+                "bone": "spine_2",
+                "offset": [
+                  0,
+                  3,
+                  0
+                ],
+                "surface": 6.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-target",
+        "file": "data/anim/keysets.json"
+      }
+    },
+    {
+      "id": "anim-sockets-limb-not-a-limb",
+      "schema": "anim-sockets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/sockets.json",
+          "del": [
+            "/limbs/foot"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-limb",
+        "file": "data/anim/keysets.json"
+      }
+    },
+    {
+      "id": "anim-keysets-limb-elbow-accepted",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "elbow_r",
+              "target": "head",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-keysets-limb-head-accepted",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "head",
+              "target": "head",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-keysets-limb-knee-left-accepted",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "knee_l",
+              "target": "gut",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-keysets-limb-still-closed",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "tail_r",
+              "target": "head",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/keysets/strike.test/limb"
+      }
+    },
+    {
+      "id": "anim-keysets-target-not-a-region",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "hand_r",
+              "target": "tail",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-target",
+        "pointer": "/keysets/strike.test/target"
+      }
+    },
+    {
+      "id": "anim-keysets-limb-no-socket-limb",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "foot_l",
+              "target": "head",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

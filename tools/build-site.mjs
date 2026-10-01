@@ -63,14 +63,19 @@ bench = replaceOnce(bench, '"args":[]', '"args":benchArgs()');
 bench = replaceOnce(bench, '<title>Orb Combat EX</title>', '<title>Orb Combat EX bench</title>\n\t\t<meta name="robots" content="noindex">');
 bench = replaceOnce(bench, '<script src="../play/index.js"></script>', `<script src="../play/index.js"></script>
 		<script>
-// Bench arguments: fixed 60 Hz steps, seed 4, 2400 frames, vsync off. Add ?nosplit and/or ?novfx to the URL to
-// switch the split screen or the VFX off, and ?frames=N to change the length.
+// Bench arguments: fixed 60 Hz steps, seed 4, 2400 frames, vsync off. Add ?nosplit, ?novfx, ?noragdoll (the animation
+// overhaul off), ?noclouds (the sky bare) to the URL to switch those off, ?anim-quality=high|medium|low|minimal to pick an
+// animation quality level, and ?frames=N to change the length.
 function benchArgs() {
   const q = new URLSearchParams(location.search);
   const frames = Math.max(300, Math.min(20000, parseInt(q.get('frames') || '2400', 10) || 2400));
   const args = ['--fixed-fps', '60', '--', '--seed=4', '--frames=' + frames, '--bench'];
   if (q.has('nosplit')) args.push('--nosplit');
   if (q.has('novfx')) args.push('--novfx');
+  if (q.has('noragdoll')) args.push('--noragdoll');
+  if (q.has('noclouds')) args.push('--noclouds');
+  const aq = q.get('anim-quality');
+  if (aq && /^(high|medium|low|minimal)$/.test(aq)) args.push('--anim-quality=' + aq);
   return args;
 }
 </script>`);

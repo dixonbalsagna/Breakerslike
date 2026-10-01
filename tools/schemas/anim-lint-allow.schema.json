@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-lint-allow",
+  "title": "anim.lint_allow/1",
+  "description": "data/anim/lint_allow.json: pairs the silhouette lint does not flag and the poses it does not compare. overlay: pose-id prefixes layered over another pose and never shown alone. pairs: two poses meant to look alike, with the reason. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every pair pose is in poses.json; an overlay prefix that matches no pose is a warning) are checked by tools/lib/xref-fight.js (lint-allow-pose).",
+  "type": "object",
+  "required": [
+    "schema",
+    "overlay",
+    "pairs"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.lint_allow/1"
+    },
+    "overlay": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_.]*\\.$",
+        "description": "A pose-id prefix ending in a dot."
+      }
+    },
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": "[pose, pose, reason]."
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

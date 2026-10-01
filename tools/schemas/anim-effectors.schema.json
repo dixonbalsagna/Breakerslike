@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-effectors",
+  "title": "anim.effectors/1",
+  "description": "data/anim/effectors.json: the clavicle hunch effector (render/anim/anim_pose.gd): the shoulder is carried by turning the clavicle, so a punch rolls the shoulder into the blow and a guard shrugs it up. hunch: auto bakes it for any hand target past the arm's reach (up to fwd_max and up_max model units). poses: an authored hunch per pose id and side, [forward, up] in model units (negative up is a slump). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-reference: every pose is in poses.json (checked by tools/lib/xref-fight.js, effector-pose).",
+  "type": "object",
+  "required": [
+    "schema",
+    "hunch",
+    "poses"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.effectors/1"
+    },
+    "hunch": {
+      "type": "object",
+      "required": [
+        "auto",
+        "fwd_max",
+        "up_max"
+      ],
+      "properties": {
+        "auto": {
+          "type": "boolean"
+        },
+        "fwd_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "up_max": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "poses": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_.]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "r": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "l": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

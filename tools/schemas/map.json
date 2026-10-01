@@ -183,6 +183,22 @@
       "schema": "anim-winner.schema.json"
     },
     {
+      "match": "data/anim/moments.json",
+      "schema": "anim-moments.schema.json"
+    },
+    {
+      "match": "data/anim/lint_allow.json",
+      "schema": "anim-lint-allow.schema.json"
+    },
+    {
+      "match": "data/anim/effectors.json",
+      "schema": "anim-effectors.schema.json"
+    },
+    {
+      "match": "data/anim/sockets.json",
+      "schema": "anim-sockets.schema.json"
+    },
+    {
       "match": "data/anim/quality.json",
       "schema": "anim-quality.schema.json"
     },
