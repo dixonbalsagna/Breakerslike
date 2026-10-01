@@ -73,3 +73,26 @@ Screens `docs/narrative/rule-of-cool-narrative.md` and `data/narrative/combat_ba
 **Is "Wave" for a beam too close to the franchise's hip-fired wave name?** No. The franchise's signature is an invented compound name ending in the word for "wave", paired with a hip-fired pose. "Wave" is an ordinary English word used for beams across fighting games. Our pattern is a plain noun plus a shape word (Calamity Wave, Meridian Lance), and neither the compound nor the pose is used. Keep it that way: no coined "-ha" word, no drawn-out syllable chant across the charge, and no hip pose.
 
 Limits: the searches were grouped and US-only, so a quiet result means no obvious owner, not proof of none. Re-run any line whose wording changes.
+
+## Combat wave 1 strikes and the energy hands (2026-10-01)
+
+Screens `docs/combat/pending/wave1-strikes.md` (38 Anti-hero strikes) and the `hands` list in `moveset.antihero.m0.json`. From the written specs.
+
+| Item | Verdict |
+|---|---|
+| The five Legal-line rows (uppercut, two spins, double palm, double hammer) | **Confirmed**, with the tightening below |
+| The other 33 one-line looks | **GO**, with two small notes |
+| The four tail strikes (held) | **GO** if the tail is hair, cloth or metal |
+| `two_finger_point` as an energy hand | **NO-GO** |
+
+**The five rows.**
+- **Uppercut:** confirmed. Also no fist held up after it as a victory pose.
+- **Spinning elbow and spinning heel:** confirmed. A single turn. No travelling or multi-hit spin (the tornado-kick look).
+- **Double palm:** confirmed, and tightened. A melee strike only: no light, glow or beam leaves the hands, no shout of a name, and no pause with the palms forward after it. Never wrists together or cupped at one hip.
+- **Double hammer:** confirmed. Forearm guards side by side, hands apart, not a clasped two-fisted smash.
+
+**The other 33.** All ordinary martial-arts strikes in our own blade language. Two notes. (1) `palm_heel` is pushed from the hip line, so keep the hand open and flat or clawed, never cupped, and never a hand chambered at the hip for an energy release afterwards. (2) `cross_arm_ram`'s crossed forearms are a common guard. Keep it a strike, not a held crossed-arms power pose. Nothing in the 33 stacks toward a known signature. The chambers keep the hands open and forward, as the stacking rule needs.
+
+**Tail strikes.** Fine as a hair, cloth or metal tail, not a furred or reptilian animal tail.
+
+**`two_finger_point`: NO-GO as an energy hand.** Two extended fingers aimed to emit energy is the franchise's best-known beam signature (and two fingers to the forehead is its teleport pose). Replace it. Safe alternatives that are not a pointing finger: a **pinch** (thumb to forefinger), a **snap** (thumb against the middle finger), or the existing **blade hand**. No single pointing finger either, which is another franchise villain's death beam. The other hands (`open_palm`, `clawed_palm`, `fist_glow`, `blade_hand`, `crossed_forearms`) are fine. `open_palm` follows the stacking rule: never at the hip, and no palm-forward charge pose with a scream.
