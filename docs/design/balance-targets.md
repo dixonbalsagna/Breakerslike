@@ -558,3 +558,13 @@ Every brink-chapter band passes. The 24 failing rows sort into three groups.
 **If the per-minute bands fail from other sources** (slides, brunts, power-up craters), World adds a rolling structure budget on the collateral window, like the casualty ramp in §4b. It isn't needed for the beam fix.
 
 Encounter implements the factor, the cap and the overshoot in `beam.gd` with its step 2. The factor and the cap are data.
+
+## 16. Fight lanes and depth (ADR 0009): Game Design's confirmations (2026-10-01)
+
+Encounter's rules are in `docs/director/fight-lanes-director.md`. Three are confirmed here.
+
+1. **A rush ploughs through a building in its way,** as a brunt paid from the collateral budget. A protector (care above 0) arcs over a roof within 6 bh instead, at no ki cost.
+   - *One condition:* a plough obeys the chain limits in §5b. It crosses at most the rusher's tier cap of buildings (2 at tiers 1 and 2, 3 at tier 3, 4 at tier 4) and stays inside the casualty budget for one chain. Past either limit, any fighter arcs over the rest.
+   - On the testbed both placeholders have care 0 (§9), so both plough, and KAI's anguish pays for it.
+2. **Exchanges may be fought inside a block row** after a targeted smash. A fighter left in a block row steps out to the nearest street when next free. Collateral inside the row counts as usual.
+3. **The deviation sizes:** 0.3 to 1.0 bh for a shove, 0.3 to 1.2 bh for vertical launches, and 0.6 to 2.5 bh for long launches and throws, skewed small and leaning back toward the lane's centre near an edge. They are texture only: a small deviation never leaves the lane, so it never changes an outcome, damage or collateral.
