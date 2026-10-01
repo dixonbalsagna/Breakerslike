@@ -461,3 +461,12 @@ Orb's picks.
 - **Last stand at the brink:** option B, one last signature: free and ready at once for 20 s, the first time a fighter reaches the brink, once per fighter per match.
 - **Taunts:** "taunts should just feed meters" (option A, meter only), with the shared rules (punishable, the face cut-in).
 - **Legal's stacking rule:** accepted. No single moment shows more than two of the seven power-up marks; the charging aura is a thin outline in our own shapes.
+
+## Orb's direction, 2026-10-01 (before a four to five hour absence)
+
+- **Top priority:** controller support and local two-player versus, testable on the live build when Orb returns.
+- **Animation is no longer "lean".** Orb: "When we selected the 'lean' minimal options for character animations and movesets I was beset by some doubts that have since been rectified. I want you to work towards an optimistic overhaul of the current animation system: try to maximize the dynamic animations, overhaul our ragdolls, fine tune the physics model." Extra polish work goes to animation.
+- **Faces:** "loop on the art style to create stylized closeups of the fighters' faces so the on-screen closeups can be memorable and recognizable."
+- **Voice:** "get the voice line packet ready for me to edit so we can start working on the tone and style standards for our characters going forward."
+- Orb asked for an ETA on the depth axis (fight lanes) work.
+- The EP is to keep working through the absence with the permissions it has.
