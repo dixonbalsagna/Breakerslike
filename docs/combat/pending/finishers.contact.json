@@ -1,0 +1,228 @@
+{
+  "schema": "combat.finishers/1",
+  "_about": "Finisher templates as data (Combat). A finisher replaces the rest of a decisive exchange when the loser is on the brink (spec-wounds.md section 1; exchange.gd startFinisher). Roles are W (the winner, who performs it) and L (the loser on the brink); the loader maps them to 'A'/'D' exactly as startFinisher does. Beat times are relative to the finisher's start (t0 = ex.t when startFinisher runs). 'generic.placeholder' reproduces today's placeholder set piece bit for bit (profile 'parity'); the authored finishers use integer ticks (60 per second). Contract and verification: docs/combat/data-fields.md section 10 and docs/combat/s3b-loader-note.md.",
+  "profile": "authored",
+  "select": {
+    "_rule": "parity profile: always 'generic.placeholder'. authored profile: the winner's own finisher by fighter name (e.g. 'KAI'), else 'generic'. Later: by fighter and form tier (damage-model.md section 5).",
+    "byFighter": { "KAI": "kai", "VORR": "vorr" },
+    "fallback": "generic"
+  },
+
+  "contest": {
+    "base": 0.30, "tiltAfter": 480, "tiltPerMinute": 0.10, "floor": 0.0,
+    "rallyPenalty": 0.10,
+    "brinkSetups": 2,
+    "timeCapAt": 660,
+    "_timeCapAt": "seconds (11:00): the director's stand-in for the time-cap event. From then on every decisive win against a fighter on the brink is a finisher, with no set-up needed. 0 or absent is off. The full event (both on the brink, no Rallies, the 60 s winner rule) is Game Design's and Simulation's",
+    "_brinkSetups": "the brink chapter (spec-wounds.md section 1b): decisive wins the rival needs against a fighter on the brink before it is open to a finisher. The exchange that causes the brink is never one. Game Design: 2 if brink to KO stays under a 45 s median",
+    "_note": "survival chance = max(floor, base - tiltPerMinute * max(0, (T - tiltAfter) / 60)) - rallyPenalty per Rally used (Rally is S4; the parity profile ignores rallyPenalty). One S.rng.next() when the contest resolves: survived if draw < chance. Numbers are Game Design's (spec-wounds.md section 1); constants match exchange.gd lines 261-263.",
+    "input": "struggle",
+    "struggle": {
+      "resolveTick": 66, "beatTicks": [18, 36, 54], "countInTicks": [-18, 0],
+      "halfWidthTicks": 4, "assistHalfWidthTicks": 8, "debounceTicks": 4, "inputs": ["light", "heavy"],
+      "scoring": { "base": 0.23, "perHit": 0.10, "perMiss": -0.05, "perStray": -0.05, "floor": 0.0,
+                   "tilts": "the contest's rallyPenalty per Rally used and tiltPerMinute past tiltAfter, as above" },
+      "aiHitChance": 0.60,
+      "byState": { "base": 0.23, "stanceRead": { "match": 0.15, "other": 0.05, "matches": { "launch": "DEFENSIVE", "melee": "EVASIVE", "beam": "AGGRESSIVE_40KI" } }, "kiBonus": { "atLeast": 50, "add": 0.05 }, "rallyPenalty": 0.10, "tiltPerMinute": 0.10, "tiltAfter": 480, "floor": 0.0, "fighterState": "hooks keyed by roster data: Protagonist Simmering or Boiling +0.10, Anti-hero Pride 50+ +0.10, Empress any guard standing +0.05, Cyborg hatch closed +0.10", "pulses": "at beatTicks (18, 36, 54): struggle_pulse holding or slipping, revealing the drawn result with no further draw", "_note": "spec-wounds.md section 1: the struggle is resolved by state and drawn once at contestOpen. The stance names are the sim's; under ADR 0008 they are the held states Guard, Dodge and Press. The press fields above (halfWidthTicks, assistHalfWidthTicks, debounceTicks, inputs, aiHitChance) and the press scoring retire when Encounter switches the struggle to this block" },
+      "_note": "Used by the authored profile. Ticks are counted from contestOpen, which sits 66 ticks before contest in every authored finisher; the cue just before contestOpen (final_windup, ascend_charge, lift_and_display) is the count-in. Widths and rhythm: Controls (rulings section 8). Scoring: Game Design (spec-wounds.md section 1). aiHitChance: Encounter maps difficulty to it (0.44 to 0.78 fits QA's 20 to 35% survival band). The contest still draws once, so the RNG sequence does not depend on the number of presses. Parity ignores this block (base 0.30, no input)."
+    }
+  },
+
+  "cues": {
+    "_about": "render-only cue vocabulary used by the 'cue' op here and in templates.json. The simulation only emits the event (no state change, no RNG). Looks are for VFX, Camera, Audio and UI.",
+    "finisher_open": "freeze-frame and zoom on the winner; the FINISHER banner; the start of a short set-piece pause (Orb: short pauses at set pieces)",
+    "catch": "the winner halts or seizes the flying loser",
+    "grab_throat": "a brutal one-handed seize",
+    "ascend_charge": "the winner rises above the loser, charging; wide upward framing",
+    "lift_and_display": "the winner hoists the loser and turns toward the nearest settlement; a bark",
+    "final_windup": "the final blow's anticipation pose",
+    "_bark": "a cue's bark arg is a line-system trigger id (finisher_landed, finisher_survived), or true for a bark pause with no trigger assigned yet",
+    "struggle": "the contest window: the loser's last-ditch struggle, with the survival chance on the HUD",
+    "last_look": "camera push-in and a bark pause before the final blow",
+    "breaks_hold": "the loser bursts free: aura flare, afterimage",
+    "holds_on": "the loser, battered, squares up again; HOLDS ON banner",
+    "tell": "a readable warning pose on the named fighter", "pursue": "pursuit pose", "glance_back": "the escaper looks back",
+    "whiff_recover": "the attacker's swing cuts empty air", "turn_read": "the attacker pivots, reading the dodge", "exposed": "the attacker is caught off balance",
+    "overextend": "the attacker stumbles through", "recover": "the named fighter recovers its stance", "guard_set": "the guard holds and shoves back",
+    "reset": "both fighters square up", "bind": "forearms lock for a beat before the deciding blow", "backstep": "the attacker gives ground before lunging back in for the deciding blow (same side, no pass-through)", "perfect_block": "a perfect block: a sharp deflect flash on the guard, the attacker staggers", "riposte": "the riposte after a perfect block: an unblockable answer", "reversal": "a guard-cancel turn into the defender's own attack", "tell_light": "the attacker's light-weight tell through the approach (driven by the attack event's kind)", "tell_heavy": "the attacker's heavy-weight tell through the approach: a coil, a glowing fist", "finisher_tell_launch": "the finisher's wind-up shows a launch finisher (read: Guard)", "finisher_tell_melee": "the finisher's wind-up shows a melee finisher (read: Dodge)", "finisher_tell_beam": "the finisher's wind-up shows a beam finisher (read: answer with a beam)", "struggle_hold": "a struggle pulse: holding", "struggle_slip": "a struggle pulse: slipping", "blink_out": "air ripple at departure", "blink_in": "air ripple at arrival", "blink_meet": "a mid-air meet: fist and forearm spark", "chain_ender": "the chain's full stop: heavier flash, CHAIN xN", "blitz": "a fast chain: speed lines, rhythm accent", "link_knee": "chain link: knee", "link_elbow": "chain link: elbow", "link_kick": "chain link: kick", "relay": "aerial chain: overtake and strike back", "dive": "head-down dive", "swoop": "banking swoop with a trail", "skid": "dust skid along the ground", "stomp": "stamping foot, ground dent", "ground_slam": "two-handed slam into the ground", "ground_throw": "hip throw along the ground", "volley_fire": "small energy bolts leave the hand", "barrage": "sustained volley stance", "blast_hit": "bolt impact puff", "blast_guard": "bolt swatted off the guard", "blast_evade": "sidestep afterimage past a bolt", "clash_seesaw": "beam push swings back and forth", "clash_split": "beams bend apart and carve twin trenches", "clash_deflect": "one beam angles the other away", "clash_mutual": "the meeting point detonates", "clash_breakthrough": "the weaker beam fails fast", "circle": "the attacker swings around to the far side before the deciding blow", "glance": "a feel-out contact, no damage",
+    "brace": "both fighters load their heavies", "recoil": "both fighters thrown back by the clash", "pull_up": "the pursuer pulls up", "scan": "the pursuer searches"
+  },
+
+  "finishers": [
+    {
+      "id": "generic.placeholder",
+      "kind": "launch",
+      "fighter": "*",
+      "profile": "parity",
+      "_about": "Today's placeholder, exchange.gd lines 283-298, in the same scheduling order. The contest here resolves with a KO at the draw (mode 'ko_now'), as _opContest does.",
+      "timeUnit": "s",
+      "beats": [
+        { "t": 0, "op": "finisher", "args": { "w": "W" } },
+        { "t": 0, "op": "finRush", "args": { "w": "W", "off": 60, "dur": 0.35 } },
+        { "t": 0.4, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 40, "o": { "noParry": true, "ignoreStance": true, "big": true } } },
+        { "t": 0.75, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 55, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12, "shake": 14 } } },
+        { "t": 0.8, "op": "breakLaunch", "args": { "w": "W", "force": 2600 } },
+        { "t": 1.6, "op": "contest", "args": { "w": "W", "mode": "ko_now" } },
+        { "t": 2.1, "op": "nop" }
+      ],
+      "outcomes": { "landed": "KO at the contest draw", "survived": "HOLDS ON banner; the exchange ends at 2.1 s" }
+    },
+
+    {
+      "id": "generic",
+      "kind": "launch",
+      "fighter": "*",
+      "profile": "authored",
+      "name": { "text": "Finishing Blow", "placeholder": true, "source": "docs/narrative/finishers.md" },
+      "barks": { "bark_landed": "finisher_landed", "bark_survived": "finisher_survived", "_note": "line-system trigger ids (docs/narrative/line-system.md section 13): bark_landed fires at the last_look cue, bark_survived at the holds_on cue" },
+      "timeUnit": "tick",
+      "_about": "For any fighter without its own finisher (and later the minions). About 3.1 s to the final blow: catch, two blows, a wind-up, the contest, then the final blow or the escape.",
+      "beats": [
+        { "tick": 0, "op": "finisher", "args": { "w": "W" } },
+        { "tick": 0, "op": "cue", "args": { "cue": "finisher_open", "who": "W", "cam": "freeze_zoom" } },
+        { "tick": 0, "op": "finRush", "args": { "w": "W", "off": 60, "dur": 0.40 } },
+        { "tick": 24, "op": "cue", "args": { "cue": "catch", "who": "W", "cam": "tight" } },
+        { "tick": 39, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+        { "tick": 45, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 35, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
+        { "tick": 60, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+        { "tick": 66, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 45, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 12 } } },
+        { "tick": 87, "op": "cue", "args": { "cue": "final_windup", "who": "W", "cam": "low_hero" } },
+        { "tick": 108, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
+        { "tick": 174, "op": "contest", "args": { "w": "W", "mode": "branch" } }
+      ],
+      "outcomes": {
+        "landed": [
+          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
+          { "tick": 24, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+          { "tick": 30, "op": "finalBlow", "args": { "w": "W", "dmg": 55, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.30, "shake": 20 }, "launch": { "mode": "planner_long", "force": 2600 } } }
+        ],
+        "survived": [
+          { "tick": 0, "op": "cue", "args": { "cue": "breaks_hold", "who": "L" } },
+          { "tick": 3, "op": "separate", "args": { "w": "W", "speed": 900 } },
+          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L", "bark": "finisher_survived" } },
+          { "tick": 45, "op": "nop" }
+        ]
+      },
+      "hitstopFloorCheck": "final blow 0.30 s, the section 10 finisher floor"
+    },
+
+    {
+      "id": "kai",
+      "kind": "beam",
+      "fighter": "KAI",
+      "profile": "authored",
+      "name": { "text": "Skyward Lance", "placeholder": true, "source": "docs/narrative/finishers.md" },
+      "barks": { "bark_landed": "finisher_landed", "bark_survived": "finisher_survived", "_note": "line-system trigger ids (docs/narrative/line-system.md section 13): bark_landed fires at the last_look cue, bark_survived at the holds_on cue" },
+      "timeUnit": "tick",
+      "character": "Hero (care 1.0). Clean and athletic: catches the foe in flight, a three-blow flurry, then rises and drives a point-blank lance skyward. The last blow goes up, away from the ground and the people on it.",
+      "beats": [
+        { "tick": 0, "op": "finisher", "args": { "w": "W" } },
+        { "tick": 0, "op": "cue", "args": { "cue": "finisher_open", "who": "W", "cam": "freeze_zoom" } },
+        { "tick": 0, "op": "finRush", "args": { "w": "W", "off": 60, "dur": 0.45 } },
+        { "tick": 27, "op": "cue", "args": { "cue": "catch", "who": "W", "cam": "tight" } },
+        { "tick": 42, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+        { "tick": 48, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 30, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
+        { "tick": 63, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+        { "tick": 69, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 30, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
+        { "tick": 84, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+        { "tick": 90, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 40, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 12 } } },
+        { "tick": 111, "op": "cue", "args": { "cue": "ascend_charge", "who": "W", "cam": "wide_up" } },
+        { "tick": 141, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
+        { "tick": 207, "op": "contest", "args": { "w": "W", "mode": "branch" } }
+      ],
+      "outcomes": {
+        "landed": [
+          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
+          { "tick": 30, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+          { "tick": 36, "op": "finalBlow", "args": { "w": "W", "dmg": 60, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 20 }, "launch": { "mode": "fixed", "ux": 0.15, "uy": 1.0, "force": 2800, "faceRelative": true } } }
+        ],
+        "survived": [
+          { "tick": 0, "op": "cue", "args": { "cue": "breaks_hold", "who": "L" } },
+          { "tick": 3, "op": "separate", "args": { "w": "W", "speed": 900 } },
+          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L", "bark": "finisher_survived" } },
+          { "tick": 45, "op": "nop" }
+        ]
+      },
+      "bends": {
+        "_status": "documented, not active in S3b (procedural-moves.md stage 4)",
+        "defenderGrounded": "replace 'catch' with a lift: the foe is hauled off the ground first",
+        "populationBelow": "always skyward (the hero's care); no ground carve"
+      }
+    },
+
+    {
+      "id": "vorr",
+      "kind": "launch",
+      "fighter": "VORR",
+      "profile": "authored",
+      "name": { "text": "The Display", "placeholder": true, "source": "docs/narrative/finishers.md" },
+      "barks": { "bark_landed": "finisher_landed", "bark_survived": "finisher_survived", "_note": "line-system trigger ids (docs/narrative/line-system.md section 13): bark_landed fires at the last_look cue, bark_survived at the holds_on cue" },
+      "timeUnit": "tick",
+      "character": "Villain (care -0.8, feeds on collateral). Brutal: seizes by the throat, headbutts, slams the foe into the ground, stomps, then hoists them toward the nearest settlement. The last blow hurls them along the planner's long-haul candidates, where the villain's personality term seeks population.",
+      "beats": [
+        { "tick": 0, "op": "finisher", "args": { "w": "W" } },
+        { "tick": 0, "op": "cue", "args": { "cue": "finisher_open", "who": "W", "cam": "freeze_low" } },
+        { "tick": 0, "op": "finRush", "args": { "w": "W", "off": 48, "dur": 0.40, "side": "own" } },
+        { "tick": 24, "op": "cue", "args": { "cue": "grab_throat", "who": "W", "cam": "tight" } },
+        { "tick": 39, "op": "finRush", "args": { "w": "W", "off": 48, "dur": 0.1, "side": "own" } },
+        { "tick": 45, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 35, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
+        { "tick": 66, "op": "fixedLaunch", "args": { "w": "W", "ux": 0.2, "uy": -1.25, "force": 1400, "faceRelative": true } },
+        { "tick": 96, "op": "finRush", "args": { "w": "W", "off": 48, "dur": 0.35, "side": "own" } },
+        { "tick": 117, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 40, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 16 } } },
+        { "tick": 138, "op": "cue", "args": { "cue": "lift_and_display", "who": "W", "cam": "wide_settlement", "bark": true } },
+        { "tick": 159, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
+        { "tick": 225, "op": "contest", "args": { "w": "W", "mode": "branch" } }
+      ],
+      "outcomes": {
+        "landed": [
+          { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
+          { "tick": 30, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
+          { "tick": 36, "op": "finalBlow", "args": { "w": "W", "dmg": 60, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 22 }, "launch": { "mode": "planner_long", "force": 3000 } } }
+        ],
+        "survived": [
+          { "tick": 0, "op": "cue", "args": { "cue": "breaks_hold", "who": "L" } },
+          { "tick": 3, "op": "separate", "args": { "w": "W", "speed": 900 } },
+          { "tick": 24, "op": "cue", "args": { "cue": "holds_on", "who": "L", "bark": "finisher_survived" } },
+          { "tick": 45, "op": "nop" }
+        ]
+      },
+      "bends": {
+        "_status": "documented, not active in S3b",
+        "noSettlementInReach": "'lift_and_display' turns toward the largest structure instead",
+        "submerged": "the slam becomes a drive into the seabed with a geyser cue"
+      }
+    }
+  ],
+
+  "shapes": {
+    "_about": "Shapes for the four real fighters' finishers, to be authored when their parts and forms exist. Each is a skeleton with fixed slots (what makes it that fighter's finisher) and generative slots (filled by the procedural composer, procedural-moves.md sections 4.2 and 7). Every one keeps the same contest and the same two outcomes. Budget: 3 to 8 s to the final blow (section 10 set pieces). Variants by form tier are expected (damage-model.md section 5). Names are Narrative's, screened by Legal.",
+    "protagonist": {
+      "placeholderName": "Everything",
+      "kind": "energy finisher",
+      "fixed": ["catch", "ripple-step flurry: 3 to 5 teleport strikes, each with the air-ripple tell", "rise and gather", "contest", "landed: a point-blank all-out energy blast"],
+      "generative": ["teleport angles from terrain and the loser's position", "strike shapes from his vocabulary", "blast path from the signature layers (skyward by default; into the proving ground after the fold, spec-wounds.md section 7)"],
+      "formVariants": "one per transformation stage (6 or more); later stages add flurry steps and blast scale"
+    },
+    "antihero": {
+      "placeholderName": "The Verdict",
+      "kind": "finish by hand",
+      "fixed": ["energy barrage until the loser submits (volley count scales with Pride)", "closes in", "contest", "landed: a brutal hand finisher, no beam"],
+      "generative": ["barrage pattern and angles", "the hand finisher's strike shapes", "the fusion form's variant (Tandem, if accepted)"],
+      "formVariants": "per form; Pride drives the taunt pause before the last blow"
+    },
+    "empress": {
+      "placeholderName": "Clean Cut",
+      "kind": "precise cutting finisher",
+      "fixed": ["cutting beams pin the loser", "mantle and tail strikes (the bladed mantle is her fifth region)", "contest", "landed: one exact cutting beam"],
+      "generative": ["cut paths from terrain", "which appendage strikes", "revision-stage flourishes"],
+      "formVariants": "per 'revision': joke revisions get comedic flourishes, real forms get the full cut"
+    },
+    "cyborg": {
+      "placeholderName": "Last Orders",
+      "kind": "portal blitz and devour",
+      "fixed": ["blitz from several portals", "seize", "contest", "landed: the devour finisher (graphic, Mature rating; Game Design's food mechanic)"],
+      "generative": ["portal positions from terrain", "blitz order", "what the portals spew (the sandwich parody, per Orb)"],
+      "formVariants": "per molt; the final form is the fastest blitz"
+    }
+  }
+}

@@ -107,7 +107,7 @@ A typical Tense blitz reads: flight, flight, blink, ender. A Frenzied one from a
    - a **step-around** through a neighbouring depth lane (ADR 0009);
    - a **blink** behind (with the ripple): **held** with the rest of teleporting.
    The cross-over swaps the sides and emits a cue.
-3. **Bodies never overlap.** Each fighter has a body radius of about 0.5 bh. A planned path that would enter the opponent's radius is rejected at plan time and replaced by a cross-over or a shorter move. If two bodies still end up overlapping (a launch, a physics nudge), the sim pushes them apart evenly.
+3. **Bodies never overlap.** Each fighter has a body radius of about 0.3 bh, so two bodies never come closer than about 45 u (`contact-spacing.md`: contact is at 58 u, inside Animation's 68 u reach). A planned path that would enter the opponent's radius is rejected at plan time and replaced by a cross-over or a shorter move. If two bodies still end up overlapping (a launch, a physics nudge), the sim pushes them apart evenly.
 4. **Facing always follows the opponent.** While a fighter is in an exchange and not launched, its facing is recomputed **every tick** toward the opponent. A cross-over flips it at its midpoint. A launched body faces along its velocity. A flight faces along its path, then turns to the opponent on arrival.
 5. **Contact distance, not overlap.** Entries end at the striking piece's reach from the opponent's contact socket (section 4), never closer than the two body radii.
 

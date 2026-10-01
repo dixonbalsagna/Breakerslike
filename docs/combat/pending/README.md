@@ -67,3 +67,12 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 1. The loader regression on the untouched frozen parity copy.
 2. `node tools/validate.js` with Tools' schema changes: 0 errors.
 3. QA's feel probe: the wind-ups add about 0.1 to 0.2 s to GUARD BREAK, DODGE reads and TRADE BLOWS.
+
+## The contact change (applies after 2b)
+
+`templates.contact.json` and `finishers.contact.json` are the 2b files plus the contact-spacing change (`../contact-spacing.md`): a step-in before every strike that needs one, the chain catch ending on its strike, the sides (`side`, `endSides`) and the `contact` block. Only the `dynamic` profile and the authored finishers change.
+
+- **Apply after 2b**, in its own commit, with the schema additions listed in `../contact-spacing.md` section 6 (a branch's `endSides`; `tempo.stepIn` and `tempo.chainClose`; `profiles.dynamic.contact`).
+- **Measured** on the live sim with a read-only probe (12 matches): strikes beyond 68 u fall from 52% to 2%. The remainder needs Encounter's sim-side rules.
+- `styles.2b.json` is not affected.
+- If the 2b files change before they are applied, rebuild these two from them.
