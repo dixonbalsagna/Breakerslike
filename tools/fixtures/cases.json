@@ -25588,6 +25588,115 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "intro-needs-ticks",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "del": [
+            "/ticks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "intro-fractional-tick",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks/landA": 36.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/ticks/landA"
+      }
+    },
+    {
+      "id": "intro-unknown-key",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks/bow": 200
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/ticks/bow"
+      }
+    },
+    {
+      "id": "intro-fall-height",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/fallHeight": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/fallHeight"
+      }
+    },
+    {
+      "id": "wounds-last-stand-required",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "del": [
+            "/lastStand"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "wounds-last-stand-negative",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/lastStand/windowS": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/lastStand/windowS"
+      }
+    },
+    {
+      "id": "wounds-last-stand-off-accepted",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/lastStand/windowS": 0
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

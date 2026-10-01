@@ -1,0 +1,15 @@
+{
+  "schema": "fight.intro/1",
+  "_about": "The intro phase (sim/core/intro.gd; docs/architecture/intro-phase.md; Camera's rule-of-cool row 7): pre-clock ticks at the start of a match that asks for it (the setup's intro). Ticks are sim ticks, 60 a second, from the first step. Fighter A is slot 0. fallA and fallB: a fall starts; landA and landB: the touchdown, where the entrance crater is dug; staredown: both stand; clock: the fight starts (the intro's length). skipFrom: a press on a human slot skips from this tick on. fallHeight: units above the ground a fall starts from. craterEnergy: the entrance crater's energy (World's crater scale; 0 digs none).",
+  "ticks": {
+    "fallA": 0,
+    "landA": 36,
+    "fallB": 84,
+    "landB": 114,
+    "staredown": 144,
+    "clock": 300,
+    "skipFrom": 30
+  },
+  "fallHeight": 6000.0,
+  "craterEnergy": 1.5
+}

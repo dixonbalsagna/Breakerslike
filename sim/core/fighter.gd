@@ -10,7 +10,7 @@ const WATER_BUOY: float = 1000.0
 
 static func tierUp(S: SimState, f) -> void:
 	S.world.maxTier = maxf(S.world.maxTier, f.tier)
-	SimMood.onForm(S)   # Q10: a form step may raise the act
+	SimMood.onForm(S, f)   # a form step may raise the act, and it adds the mood's form impulse
 	SimFx.banner(S, f.name + " POWERS UP  TIER " + SimMathx.jstr(f.tier), f.aura, 1.4)
 	var g: float = WorldTerrain.groundY(S, f.x)
 	SimFx.ring(S, f.x, f.y + 34.0, 1300.0, f.aura, 0.8, 20.0, f.z)
@@ -198,6 +198,28 @@ static func spin(S: SimState, f, dt: float, how: int) -> void:
 		f.rot = 0.0
 
 
+## The last stand (spec-wounds.md section 1b, point 7; docs/architecture/last-stand.md). The first time a fighter reaches
+## the brink in a match, one signature is free and off cooldown for his window (wounds.json lastStand.windowS). The window
+## counts live ticks in which he is free or charging and not stunned, so it starts when he is next free; it closes when he
+## fires (lastStandUse) or runs out. A second brink gives nothing. The director's signature gates read sigFree().
+static func lastStandOpen(S: SimState, f) -> void:
+	if f.lastStandUsed or f.wd.lastStandTicks <= 0:
+		return
+	f.lastStandUsed = true
+	f.lastStandLeft = f.wd.lastStandTicks
+	SimFx.lastStandReady(S, f, float(f.wd.lastStandTicks) / 60.0)
+
+
+static func sigFree(f) -> bool:
+	return f.lastStandLeft > 0
+
+
+static func lastStandUse(S: SimState, f) -> void:
+	if f.lastStandLeft > 0:
+		f.lastStandLeft = 0
+		SimFx.lastStandEnd(S, f, "used")
+
+
 ## The tier a fighter's power has earned: 1, plus one per threshold reached.
 static func tierByPower(f) -> float:
 	var nt: float = 1.0
@@ -250,6 +272,10 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 		else:
 			f.tier = nt
 			tierUp(S, f)
+	if f.lastStandLeft > 0 and (f.state == "free" or f.state == "charging") and f.stunTicks == 0 and S.game.ko == null:
+		f.lastStandLeft -= 1   # the last stand's window
+		if f.lastStandLeft == 0:
+			SimFx.lastStandEnd(S, f, "expired")
 	var regen: float = 5.0 + (25.0 if f.hidden and f.canHide else 0.0)
 	if f.hasMenace:
 		var bonus: float = f.menace * f.md.menaceRegen

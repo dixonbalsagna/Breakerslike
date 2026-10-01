@@ -198,6 +198,47 @@ static func transform(S: SimState, f, tier: float, source: String, dur: float, v
 	e.gather = float(SimPause.gatherOf(version)) / float(SimPause.TPS)
 
 
+## The last stand: actor reached the brink for the first time this match; one signature is free and off cooldown for dur
+## seconds of his free time. last_stand_end: the window closed; kind is used (he fired) or expired.
+static func lastStandReady(S: SimState, f, dur: float) -> void:
+	var e := _ev(S, "last_stand_ready")
+	e.actor = float(S.fighters.find(f)); e.dur = dur
+
+
+static func lastStandEnd(S: SimState, f, kind: String) -> void:
+	var e := _ev(S, "last_stand_end")
+	e.actor = float(S.fighters.find(f)); e.kind = kind
+
+
+## The intro phase (sim/core/intro.gd). intro_start: the pre-clock window opens, dur seconds long; a press skips it after
+## delay seconds. entrance_fall: actor starts to fall toward x, y (the ground), from height y1, for dur seconds.
+## entrance_land: he touches down; r is the crater's bowl radius (0 if none was dug). staredown_start: both stand, for
+## dur seconds. clock_start: the fight starts with the next tick; kind is full, or skip when a press ended the intro.
+static func introStart(S: SimState, dur: float, skipAfter: float) -> void:
+	var e := _ev(S, "intro_start")
+	e.dur = dur; e.delay = skipAfter
+
+
+static func entranceFall(S: SimState, f, ground: float, top: float, dur: float) -> void:
+	var e := _ev(S, "entrance_fall")
+	e.actor = float(S.fighters.find(f)); e.x = f.x; e.y = ground; e.z = f.z; e.y1 = top; e.dur = dur
+
+
+static func entranceLand(S: SimState, f, top: float, r: float) -> void:
+	var e := _ev(S, "entrance_land")
+	e.actor = float(S.fighters.find(f)); e.x = f.x; e.y = f.y; e.z = f.z; e.y1 = top; e.r = r
+
+
+static func staredownStart(S: SimState, dur: float) -> void:
+	var e := _ev(S, "staredown_start")
+	e.dur = dur
+
+
+static func clockStart(S: SimState, kind: String) -> void:
+	var e := _ev(S, "clock_start")
+	e.kind = kind
+
+
 ## Q10: a pausing set piece starts: the sim is frozen for dur seconds from the next tick. kind: transform, world or
 ## timecap; actor: the fighter's slot, -1 for the time cap; version: full or short (a live version does not pause).
 static func pauseStart(S: SimState, kind: String, slot: int, version: String, dur: float) -> void:

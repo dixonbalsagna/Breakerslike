@@ -24,6 +24,25 @@ const CHAR_KEYS: Array = ["id", "name", "title", "role", "col", "aura", "hair", 
 const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance"]
 
 
+## The intro phase: an AI match that plays the intro (seed 7), every tick's clock, fighters and events through the
+## pre-clock ticks and the first ten seconds of the fight.
+static func introHash() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 7, {}, {"intro": true})
+	var h := SimHash.Hasher.new()
+	for t in range(SimIntro.clock + 600):
+		SimCore.step(S)
+		h.num(S.T)
+		for f in S.fighters:
+			h.num(f.x); h.num(f.y); h.num(f.hp); h.text(f.state)
+		SimHash.hashFx(h, S.out.fx)
+		S.out.fx.clear()
+		S.out.feed.clear()
+	h.text(SimHash.stateHash(S).gameplay)
+	SimCore.dispose(S)
+	return h.hex()
+
+
 ## Every golden vector, as the JSON the generator writes.
 static func build() -> Dictionary:
 	var g := {"format": "orb-golden", "v": 2, "generatedBy": "sim/core/tools/golden.gd (GDScript sim, the source of truth since ADR 0006)", "godot": Engine.get_version_info().string}
@@ -44,7 +63,8 @@ static func build() -> Dictionary:
 	g.rally = rallyHash()
 	g.cripple = crippleHash()
 	g.mood = moodHash()
-	g.fightHash = SimMood.dataHash() + SimPause.dataHash()
+	g.fightHash = SimMood.dataHash() + SimPause.dataHash() + SimIntro.dataHash()
+	g.intro = introHash()
 	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY
 	g.rosterHash = FighterData.dataHash()
@@ -421,6 +441,9 @@ static func applyArm(arm: String, fs: Array) -> void:
 	if arm.ends_with("-flip"):
 		fs[0].x = SimConst.START_X + SimConst.START_GAP   # S4: was 2900 and 2150, the pre-scale spawns
 		fs[1].x = SimConst.START_X
+		var y0: float = fs[0].y   # each stands on the other's spot (the entrance craters are there already)
+		fs[0].y = fs[1].y
+		fs[1].y = y0
 		fs[0].face = -1.0
 		fs[1].face = 1.0
 

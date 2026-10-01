@@ -170,7 +170,7 @@ static func aiInput(S: SimState, f) -> void:
 		if r < pa:
 			var q: float = r / pa
 			var sigPick: float = skill().sigPick
-			if f.ki >= 50.0 and q < sigPick and S.T >= f.sigReadyT:   # the signature cooldown (fighter.json sigCooldown)
+			if SimFighter.sigFree(f) or (f.ki >= 50.0 and q < sigPick and S.T >= f.sigReadyT):   # the signature cooldown (fighter.json sigCooldown); the AI takes its last stand
 				i.sig = true
 			elif q < sigPick + (1.0 - sigPick) * (maxf(HEAVY_SHARE, float(lv().breakGuard)) if DirInterrupt.on() and DirInterrupt.gi(o, DirInterrupt.GUARDED) >= 2 else HEAVY_SHARE):
 				i.heavy = true   # step 3: a rival that only guards gets the guard-breaker (a heavy) at the level's rate

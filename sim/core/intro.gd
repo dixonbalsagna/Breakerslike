@@ -4,8 +4,8 @@ class_name SimIntro
 ## Inside it a fixed timeline plays: each fighter falls from the sky and lands in a crater, they stare, the clock starts.
 ##
 ## It is a match setting, in newMatch's setup and so in the replay header: "intro": true plays it; "intro": "skip" applies
-## its effects at once (both craters, both fighters on the ground) with no pre-clock tick, for batches and probes; without
-## the key a match starts as it always did. A press on a human slot skips it (after intro.json's skipFrom ticks): the
+## its effects at once (both craters, both fighters on the ground) with no pre-clock tick, and is what a setup without the
+## key gets, so the game, the batches and the goldens share one opening; "intro": false is the old flat start. A press on a human slot skips it (after intro.json's skipFrom ticks): the
 ## landings left are applied at once, in order, so the state at the clock is the same whether it ran or was skipped.
 ## The fall is a closed-form path, not flight physics, and nothing here draws a random number.
 ##
@@ -88,7 +88,7 @@ static func _tick(where: String, x) -> int:
 static func setup(S: SimState, su: Dictionary) -> void:
 	_ensure()
 	S.intro = SimState.IntroState.new()
-	var mode = su.get("intro", false)
+	var mode = su.get("intro", "skip")   # a match that does not say starts from the intro's end state, as the game does
 	if mode is String and mode == "skip":
 		for k in _order(S):
 			_land(S, k)

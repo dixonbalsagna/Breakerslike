@@ -18,7 +18,8 @@
     "rally",
     "act1Damping",
     "overtime",
-    "guardWearSplit"
+    "guardWearSplit",
+    "lastStand"
   ],
   "properties": {
     "schema": {
@@ -379,6 +380,24 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "lastStand": {
+      "type": "object",
+      "required": [
+        "windowS"
+      ],
+      "description": "The last stand (spec-wounds section 1b, point 7): one free signature at the fighter's first brink of a match.",
+      "properties": {
+        "windowS": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The window in seconds of his free time; 0 switches it off. The loader requires a whole number of ticks."
         }
       },
       "additionalProperties": false,

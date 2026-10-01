@@ -22,8 +22,8 @@ const COL: float = 32.0        # terrain column width (0.43 fighter heights)
 const NC: int = 4800           # number of terrain columns (W / COL)
 const HALF: float = W / 2.0    # the largest shortest-arc separation
 const CEILING: float = 24000.0 # flight ceiling (was 2,600): above the tallest building
-const START_X: float = 5600.0 * PS   # where the first fighter starts: open ground at the desert's west edge, clear of every town (balance-targets.md §4b ruling 3; was 2150 x PS, the plains by the city); the second is 750 units on
-const START_GAP: float = 750.0
+const START_X: float = 5600.0 * PS   # where the first fighter starts: open ground at the desert's west edge, clear of every town (balance-targets.md §4b ruling 3; was 2150 x PS, the plains by the city); the second is START_GAP units on
+const START_GAP: float = 900.0   # was 750: Camera's entrance needs the two landing spots this far apart (EP, 2026-10-02)
 ## Fight lanes (ADR 0009, docs/architecture/fight-lanes.md): the band of depth fighters, props and beams live in. z is
 ## positive toward the camera and the fighter plane is z = 0. Placeholders for World's lane table (S.lanes, L1).
 const Z_FRONT: float = 375.0     # +5 fighter heights: the front street's near kerb

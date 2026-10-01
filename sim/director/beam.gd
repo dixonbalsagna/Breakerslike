@@ -32,7 +32,7 @@ static func opBeamCharge(S: SimState, ex, args) -> void:
 	# Step 2b: an AI defender may answer the beam, by the same rule as a player: its own signature (45 ki and the cooldown
 	# over), or else a heavy blast (40 ki). How often is its difficulty (control-rules.md §10); the press comes in the tell.
 	if DirData.beamAtFire() and D.ai != null:
-		var canSig: bool = D.ki >= 45.0 and S.T >= D.sigReadyT
+		var canSig: bool = (D.ki >= 45.0 and S.T >= D.sigReadyT) or SimFighter.sigFree(D)   # the last stand answers free
 		if (canSig or D.ki >= 40.0) and S.rng.next() < float(DirAI.lv().beamAnswer):
 			DirExchange.schedule(ex, ex.t + S.rng.range_(0.15, 0.6), "press", {"who": "D", "sig": canSig, "blast": not canSig})
 
@@ -100,9 +100,12 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 static func _answer(S: SimState, D) -> String:
 	var q: Array = D.act.queue
 	for k in range(q.size()):
-		if int(q[k][0]) == SimAct.SIG and D.ki >= 45.0 and S.T >= D.sigReadyT:
+		if int(q[k][0]) == SimAct.SIG and ((D.ki >= 45.0 and S.T >= D.sigReadyT) or SimFighter.sigFree(D)):
 			q.remove_at(k)
-			D.ki -= 45.0
+			if SimFighter.sigFree(D):
+				SimFighter.lastStandUse(S, D)   # the last stand: no cost, and the window closes
+			else:
+				D.ki -= 45.0
 			D.sigReadyT = S.T + D.sigCooldown
 			return "signature"
 	for k in range(q.size()):

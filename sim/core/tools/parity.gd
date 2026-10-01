@@ -51,7 +51,11 @@ func _init() -> void:
 	check("pausing set pieces", _pause())
 	check("act rule and time cap", _actRule())
 	check("the break", _formBreak())
+	check("the form impulse", _formImpulse())
 	check("depth in the core", _depth())
+	check("the intro phase", _intro())
+	check("the last stand", _lastStand())
+	check("the intro phase (golden)", "" if SimGolden.introHash() == g.get("intro", "") else "differs")
 	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
@@ -524,6 +528,219 @@ func _pause() -> String:
 	return "no AI match of seeds 3, 7 and 12 reached a pause in four minutes"
 
 
+## The last stand (sim/core/fighter.gd): the window opens at a fighter's first brink and not at a second; it counts only
+## while he is free and not stunned; it runs out with last_stand_end expired; a use closes it; with the data's window at
+## 0 nothing opens. When the director's gates are in (they read sigFree), a free signature starts with no ki and inside
+## the cooldown, costs nothing and closes the window.
+func _lastStand() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5, {"p1": false, "p2": false})
+	var a = S.fighters[0]
+	var n: int = a.wd.lastStandTicks
+	var core: int = SimWounds.CORE
+	var toBrink := func() -> void:
+		a.wear[core] = SimWounds.STAGE_AT[2]
+		SimWounds.updateStages(S, a)
+	var count := func(type: String, kind: String) -> int:
+		var c: int = 0
+		for e in S.out.fx:
+			if e.type == type and (kind == "" or e.kind == kind) and int(e.actor) == 0:
+				c += 1
+		return c
+	toBrink.call()
+	if not a.brink:
+		return "the forced brink did not take"
+	if n <= 0:
+		SimCore.dispose(S)
+		return "" if (a.lastStandLeft == 0 and count.call("last_stand_ready", "") == 0) else "with the window at 0 a last stand opened"
+	if not a.lastStandUsed or a.lastStandLeft != n or count.call("last_stand_ready", "") != 1 or not SimFighter.sigFree(a):
+		return "the first brink did not open the last stand (left %d of %d)" % [a.lastStandLeft, n]
+	# it counts only while he is free and not stunned
+	a.state = "locked"
+	for t in range(10):
+		SimFighter.stepFighter(S, a, SimConst.DT)
+	a.state = "free"
+	a.stunTicks = 100
+	for t in range(10):
+		SimFighter.stepFighter(S, a, SimConst.DT)
+	if a.lastStandLeft != n:
+		return "the window ran while he was locked or stunned (%d of %d)" % [a.lastStandLeft, n]
+	a.stunTicks = 0
+	for t in range(10):
+		SimFighter.stepFighter(S, a, SimConst.DT)
+	if a.lastStandLeft != n - 10:
+		return "the window did not count his free ticks (%d, wants %d)" % [a.lastStandLeft, n - 10]
+	# a use closes it
+	S.out.fx.clear()
+	SimFighter.lastStandUse(S, a)
+	if a.lastStandLeft != 0 or SimFighter.sigFree(a) or count.call("last_stand_end", "used") != 1:
+		return "a use did not close the window"
+	# a second brink gives nothing
+	a.wear[core] = 0
+	SimWounds.updateStages(S, a)
+	S.out.fx.clear()
+	toBrink.call()
+	if a.lastStandLeft != 0 or count.call("last_stand_ready", "") != 0:
+		return "a second brink opened a second last stand"
+	# it runs out
+	var b = S.fighters[1]
+	b.wear[core] = SimWounds.STAGE_AT[2]
+	SimWounds.updateStages(S, b)
+	b.lastStandLeft = 2
+	b.state = "free"
+	b.stunTicks = 0
+	S.out.fx.clear()
+	SimFighter.stepFighter(S, b, SimConst.DT)
+	SimFighter.stepFighter(S, b, SimConst.DT)
+	var expired: int = 0
+	for e in S.out.fx:
+		if e.type == "last_stand_end" and e.kind == "expired" and int(e.actor) == 1:
+			expired += 1
+	if b.lastStandLeft != 0 or expired != 1:
+		return "the window did not run out with one last_stand_end (left %d, %d events)" % [b.lastStandLeft, expired]
+	SimCore.dispose(S)
+	return _lastStandGates()
+
+
+## The director's side of the last stand; "" until its gates are in.
+func _lastStandGates() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5, {"p1": false, "p2": false})
+	var a = S.fighters[0]
+	if a.wd.lastStandTicks <= 0:
+		SimCore.dispose(S)
+		return ""
+	S.dirS.cool = 0.0
+	a.ki = 0.0
+	a.sigReadyT = S.T + 100.0
+	DirExchange.requestAttack(S, a, "sig")
+	if S.dirS.ex != null:
+		return "a signature with no ki, inside the cooldown, started without a last stand"
+	a.lastStandUsed = true
+	a.lastStandLeft = 600
+	S.out.fx.clear()
+	DirExchange.requestAttack(S, a, "sig")
+	var used: int = 0
+	for e in S.out.fx:
+		if e.type == "last_stand_end" and e.kind == "used":
+			used += 1
+	if S.dirS.ex == null or S.dirS.ex.kind != "sig" or a.ki != 0.0 or a.lastStandLeft != 0 or used != 1:
+		return "the free signature: exchange %s, ki %s, window %d, %d used events" % [str(S.dirS.ex != null), str(a.ki), a.lastStandLeft, used]
+	if a.sigReadyT <= S.T:
+		return "the free signature did not start the ordinary cooldown"
+	SimCore.dispose(S)
+	return ""
+
+
+## The intro phase (sim/core/intro.gd): off unless the setup asks; with it, the timeline's events on their ticks, every
+## tick pre-clock (step false, S.T at 0), the falls going down, both craters dug, both fighters free on the ground at the
+## clock; a press before skipFrom ignored and one after it skipping; the state at the clock the same whether the intro
+## ran, was skipped at any tick, or was applied by the setup's "skip"; AI slots never skipping; a replay through a skip.
+func _intro() -> String:
+	if not SimIntro.errors().is_empty():
+		return "; ".join(SimIntro.errors())
+	var D := SimCore.createSim()
+	SimCore.newMatch(D, 5)
+	if D.intro.left != 0 or D.craters.size() != 2 or not SimCore.step(D, null):
+		return "a match whose setup does not say did not start from the intro's end state"
+	SimCore.newMatch(D, 5, {}, {"intro": false})
+	if D.intro.left != 0 or D.craters.size() != 0 or D.fighters[0].y != 60.0:
+		return "intro false did not give the flat start"
+	SimCore.dispose(D)
+	var quiet := SimIntent.new()
+	var press := SimIntent.new()
+	press.light = true
+	var clockState := func(S0: SimState) -> String:   # the state at the clock, without the tick counters
+		S0.tick = 0
+		S0.intro.t = 0
+		return SimHash.stateHash(S0).gameplay
+	# the full intro, two human slots that press nothing
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5, {"p1": false, "p2": false}, {"intro": true})
+	var a = S.fighters[0]
+	var b = S.fighters[1]
+	if a.state != "intro" or S.intro.left != SimIntro.clock or a.y != WorldTerrain.groundY(S, a.x) + SimIntro.fallHeight:
+		return "the intro did not start (state %s, left %d)" % [a.state, S.intro.left]
+	var at := {}
+	var lastY: Array = [a.y, b.y]
+	var cool0: float = S.dirS.cool
+	var marks: int = 0
+	for t in range(SimIntro.clock):
+		S.out.fx.clear()
+		if SimCore.step(S, [quiet, quiet]):
+			return "pre-clock tick %d was live" % t
+		if S.T != 0.0 or S.mood.t != 0 or S.pause.bank != SimPause.bankStart or S.dirS.cool != cool0:
+			return "the clock, the mood, the pause bank or the director's cooldown moved during the intro"
+		for e in S.out.fx:
+			if e.type == "tick" and not e.frozen:
+				marks += 1   # an intro tick is live for effects (dust settles at full speed), though the sim holds
+			if e.type in ["intro_start", "entrance_fall", "entrance_land", "staredown_start", "clock_start"]:
+				at["%s%s" % [e.type, ("" if e.actor < 0.0 else str(int(e.actor)))]] = t
+		for k in range(2):
+			if S.fighters[k].y > lastY[k]:
+				return "slot %d rose during his fall" % k
+			lastY[k] = S.fighters[k].y
+	if marks != SimIntro.clock:
+		return "%d of the intro's %d ticks were marked live for effects" % [marks, SimIntro.clock]
+	var want := {"intro_start": 0, "entrance_fall0": SimIntro.fall[0], "entrance_land0": SimIntro.land[0], "entrance_fall1": SimIntro.fall[1],
+		"entrance_land1": SimIntro.land[1], "staredown_start": SimIntro.staredown, "clock_start": SimIntro.clock - 1}
+	for k in want:
+		if at.get(k, -1) != want[k]:
+			return "%s came at tick %s, not %d" % [k, str(at.get(k, "never")), want[k]]
+	if a.state != "free" or b.state != "free" or a.y != WorldTerrain.groundY(S, a.x) or S.craters.size() != 2 or S.intro.left != 0:
+		return "at the clock: states %s and %s, %d craters" % [a.state, b.state, S.craters.size()]
+	var full: String = clockState.call(S)
+	if not SimCore.step(S, [quiet, quiet]) or S.T <= 0.0:
+		return "the tick after the clock was not live"
+	SimCore.dispose(S)
+	# a press too early is ignored; a press later skips, from any point, to the same state
+	for at_tick in [SimIntro.skipFrom, SimIntro.land[0] + 3, SimIntro.land[1] + 3, SimIntro.clock - 1]:
+		var K := SimCore.createSim()
+		SimCore.newMatch(K, 5, {"p1": false, "p2": false}, {"intro": true})
+		for t in range(at_tick):
+			SimCore.step(K, [press if t < SimIntro.skipFrom else quiet, quiet])
+		if K.intro.left != SimIntro.clock - at_tick:
+			return "a press before skipFrom skipped the intro"
+		K.out.fx.clear()
+		if SimCore.step(K, [quiet, press]) or K.intro.left != 0:
+			return "a press at tick %d did not skip" % at_tick
+		var kind: String = ""
+		for e in K.out.fx:
+			if e.type == "clock_start":
+				kind = e.kind
+		if kind != "skip":
+			return "a skip's clock_start kind is '%s'" % kind
+		if clockState.call(K) != full:
+			return "a skip at tick %d left another state at the clock than the full intro" % at_tick
+		SimCore.dispose(K)
+	var Q := SimCore.createSim()
+	SimCore.newMatch(Q, 5, {"p1": false, "p2": false}, {"intro": "skip"})
+	if Q.intro.left != 0 or not Q.out.fx.is_empty() or clockState.call(Q) != full:
+		return "the setup's skip did not give the state at the clock"
+	SimCore.dispose(Q)
+	# AI slots never skip
+	var A := SimCore.createSim()
+	SimCore.newMatch(A, 5, {}, {"intro": true})
+	for t in range(SimIntro.clock - 1):
+		SimCore.step(A, [press, press])
+	if A.intro.left != 1:
+		return "an AI slot's intent skipped the intro"
+	SimCore.dispose(A)
+	# a replay through a skip
+	var R := SimCore.createSim()
+	var rec := SimReplay.recorder(R, 9, {"p1": false, "p2": true}, {"intro": true})
+	for t in range(400):
+		rec.step([press if t == SimIntro.skipFrom + 5 else quiet, null])
+		R.out.fx.clear()
+		R.out.feed.clear()
+	if R.intro.t != SimIntro.skipFrom + 6:
+		return "the recorded match did not skip where it pressed (%d)" % R.intro.t
+	var rp: Dictionary = rec.finish()
+	SimCore.dispose(R)
+	var res: Dictionary = SimReplay.play(JSON.parse_string(JSON.stringify(rp)))
+	return "" if res.ok else "a replay through a skipped intro: %s at tick %d" % [res.reason, res.firstBadTick]
+
+
 ## Fight lanes, L0 and L2 (docs/architecture/fight-lanes.md). The player never steers depth: the intent has no depth field
 ## and nothing in sim/input writes a depth. Depth is off unless the setup or the director's switch asks for it, and a
 ## default match keeps every home depth at 0. With it on (a forced setup): a free fighter eases to his home depth; a rush
@@ -633,6 +850,35 @@ func _depth() -> String:
 	SimFighter.stepDepth(S, a, dt)
 	if a.zT != -1200.0 or a.z != -1200.0:
 		return "a flight's end did not become the home depth (z %s, home %s)" % [str(a.z), str(a.zT)]
+	SimCore.dispose(S)
+	return ""
+
+
+## The mood's form impulse: a transformation's break adds impulses.form to the mood, by a call (SimMood.onForm) and not
+## from the tier_up event, so it is also given when the break lands on a frozen tick inside a full pause.
+func _formImpulse() -> String:
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5)
+	var a = S.fighters[0]
+	a.stance = 1.0   # not AGGRESSIVE: the plain impulse
+	var want: int = SimMood.imp["form"][0]
+	if want <= 0:
+		return "mood.json impulses.form is 0"
+	a.power = a.ld.thresholds[0] + 1.0
+	a.act.formReady = true
+	a.y = 20000.0
+	S.pause.bank = SimPause.bankMax
+	var r: Dictionary = SimPause.request(S, SimPause.TRANSFORM, 0)
+	SimFighter.transform(S, a)
+	if r.version != SimPause.FULL:
+		return "the set-up did not give a full pause"
+	var v0: int = S.mood.v
+	var g: int = SimPause.gather[SimPause.FULL]
+	for t in range(1, g + 1):
+		if SimCore.step(S, null):
+			return "tick %d of the pause was live" % t
+		if S.mood.v != (v0 + want if t == g else v0):
+			return "at paused tick %d the mood is %d (it was %d; the impulse is %d and the gather %d)" % [t, S.mood.v, v0, want, g]
 	SimCore.dispose(S)
 	return ""
 
@@ -1001,7 +1247,9 @@ func _fightData(g: Dictionary) -> String:
 		return "data/fight: " + "; ".join(SimMood.errors())
 	if not SimPause.errors().is_empty():
 		return "data/fight/pause.json: " + "; ".join(SimPause.errors())
-	var fh: String = SimMood.dataHash() + SimPause.dataHash()
+	if not SimIntro.errors().is_empty():
+		return "data/fight/intro.json: " + "; ".join(SimIntro.errors())
+	var fh: String = SimMood.dataHash() + SimPause.dataHash() + SimIntro.dataHash()
 	if fh != g.get("fightHash", ""):
 		return "the fight data hash differs (data/fight/ changed): %s vs golden %s; regenerate the goldens if the edit is meant" % [fh, g.get("fightHash", "")]
 	return ""

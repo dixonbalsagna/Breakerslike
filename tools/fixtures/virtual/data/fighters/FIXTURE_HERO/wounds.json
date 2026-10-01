@@ -120,5 +120,8 @@
     "rallyWear": 534000,
     "coolTicks": 900,
     "_note": "a mended region returns battered at 89; 15 s between Rallies"
+  },
+  "lastStand": {
+    "windowS": 20
   }
 }

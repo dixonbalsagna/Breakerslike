@@ -1,0 +1,15 @@
+{
+  "_about": "Validator fixture, not game data.",
+  "schema": "fight.intro/1",
+  "ticks": {
+    "fallA": 0,
+    "landA": 36,
+    "fallB": 84,
+    "landB": 114,
+    "staredown": 144,
+    "clock": 300,
+    "skipFrom": 30
+  },
+  "fallHeight": 6000,
+  "craterEnergy": 1.5
+}

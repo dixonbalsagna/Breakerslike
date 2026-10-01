@@ -92,6 +92,10 @@
     "legsSlip": 0.1,
     "_note": "S3a and S3b stage penalties; pitch A's post-break modifiers: a broken arm deals lights x1.15 (heavies and signatures x0.8), broken legs scale the DEFENSIVE multiplier by 0.8 (a stronger guard; the dash is gone). headParryNarrow (sim/director/melee.gd), headDefence and legsSlip (sim/director/data.gd) are pinned"
   },
+  "lastStand": {
+    "windowS": 20,
+    "_note": "the last stand (spec-wounds section 1b, point 7): the first time this fighter reaches the brink in a match, one signature is free and off cooldown for windowS seconds, counted while he is free. 0 switches it off"
+  },
   "cripple": {
     "regions": [
       "arms",

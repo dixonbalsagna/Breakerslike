@@ -151,6 +151,10 @@
       "schema": "fight-pause.schema.json"
     },
     {
+      "match": "data/fight/intro.json",
+      "schema": "fight-intro.schema.json"
+    },
+    {
       "match": "data/input/feel.json",
       "schema": "input-feel.schema.json"
     },

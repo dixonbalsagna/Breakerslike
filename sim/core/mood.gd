@@ -270,10 +270,13 @@ static func act(S: SimState) -> int:
 
 ## Q10: a fighter took a form step (SimFighter.tierUp). The step itself is read from the tiers (act()); this names the
 ## cause for act_change.
-static func onForm(S: SimState) -> void:
+static func onForm(S: SimState, f = null) -> void:
 	_ensure()
 	if formSteps:
 		S.mood.cause = CAUSES.find("form")
+	# The form impulse (spec-wounds.md section 9), given here and not from the tier_up event: the break of a full or short
+	# transformation lands on a frozen tick, where tick() does not run and so reads no event.
+	S.mood.v = clampi(S.mood.v + _imp(S.fighters, "form", S.fighters.find(f)), 0, mood.range)
 
 
 ## wounds.gd reports each stage change of f's region r (from prev to st). The data decide the beats: a region break

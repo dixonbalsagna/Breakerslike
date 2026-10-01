@@ -186,6 +186,7 @@ static func updateStages(S: SimState, f) -> void:
 		f.brinkSetups = 0
 		if brink:
 			SimFx.brinkEnter(S, f)
+			SimFighter.lastStandOpen(S, f)   # the last stand: the first brink of the match
 		else:
 			SimFx.brinkExit(S, f)
 

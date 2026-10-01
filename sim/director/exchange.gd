@@ -120,12 +120,12 @@ static func _start(S: SimState, A, kind: String) -> int:
 		return WAIT
 	if D.state == "launched" or D.state == "locked":
 		return WAIT
-	if kind == "sig" and A.ki < 45.0:
+	if kind == "sig" and A.ki < 45.0 and not SimFighter.sigFree(A):   # the last stand's signature is free
 		if A.ai == null:
 			SimFx.banner(S, "NEED 45 KI", "#9fb4ff", 0.6)
 		return DROPPED
 	# The signature cooldown (questionnaire 5; fighter.json sigCooldown): 2 to 4 signatures a match, each an event.
-	if kind == "sig" and S.T < A.sigReadyT:
+	if kind == "sig" and S.T < A.sigReadyT and not SimFighter.sigFree(A):   # ... and off cooldown
 		if A.ai == null:
 			SimFx.banner(S, "SIGNATURE RECHARGING", "#9fb4ff", 0.6)
 		return DROPPED
@@ -155,7 +155,10 @@ static func _start(S: SimState, A, kind: String) -> int:
 	if kind == "heavy":
 		A.ki -= 4.0
 	if kind == "sig":
-		A.ki -= 45.0
+		if SimFighter.sigFree(A):
+			SimFighter.lastStandUse(S, A)   # the last stand: no cost, and the window closes
+		else:
+			A.ki -= 45.0
 		A.sigReadyT = S.T + A.sigCooldown
 	var ex := newEx(A, D, kind)
 	A.exT = S.T

@@ -120,5 +120,6 @@ static func dataHash() -> String:
 	h.text(FighterData.dataHash())
 	h.text(SimMood.dataHash())
 	h.text(SimPause.dataHash())   # Q10: data/fight/pause.json
+	h.text(SimIntro.dataHash())   # the intro phase: data/fight/intro.json
 	h.text(WorldContact.dataHash())   # World's ground contact: data/biomes/contact.json
 	return h.hex()

@@ -36,6 +36,8 @@ static func dispose(S: SimState) -> void:
 ## setup (D1a; the replay header's `setup`): {"slots": [id, id]} picks the fighters (default: the roster's first two),
 ## "names": [name, name] renames them (the mirror arms), "flip": true swaps the spawn sides. {} is the default match.
 ## Fight lanes: "depth": true makes depth physical for this match (S.depthOn).
+## The intro phase: "intro": true plays the entrance before the clock; "intro": "skip" (the default) applies its effects at
+## once; "intro": false starts flat, as matches did before.
 ## I2a: "v2": [bool, bool] marks the slots whose intents are v2 (the stance follows the held fields), and "assists":
 ## [[names], [names]] the Simple layout's assists per slot (SimAct.ASSISTS).
 static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> void:
@@ -79,6 +81,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	SimAct.setup(S, setup)   # I2a: each fighter's action state
 	S.depthOn = setup.get("depth", false) == true   # fight lanes: off until the director's switch-on (L4); a setup may force it for probes
 	SimPause.reset(S)        # Q10: the pause bank
+	SimIntro.setup(S, setup) # the intro phase, when the setup asks for it
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
 	S.out.feed.clear()
 	S.out.fx.clear()
@@ -93,6 +96,9 @@ static func step(S: SimState, inputs = null) -> bool:
 	var dt: float = dtReal * S.game.ts
 	S.dt = dt
 	S.tick += 1
+	if SimIntro.tick(S, inputs):   # the intro phase: pre-clock ticks; the sim holds as in a pause, and only a skip press is read
+		SimFx.tickMark(S, dt, false)   # ... but effects run at full speed (not a pause's tenth), so the landing's dust and debris settle
+		return false
 	if SimPause.frozenTick(S):   # Q10: a pausing set piece is a run of frozen ticks, ahead of the hit-stop
 		SimFx.tickMark(S, dt, true)
 		return false

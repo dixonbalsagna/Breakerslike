@@ -71,3 +71,9 @@ Built and proven in a scratch copy of 3fca9ac and parked in `docs/architecture/p
 
 **Effects during the intro (Rendering, 2026-10-02).** The `tick` mark on an intro tick says `frozen: false`: effects run at full speed, so the landing's dust settles, while the sim holds exactly as in a pause (no clock, no mood, no cooldowns, no input consumed, `step` returns false). A host tells an intro tick from a live one by the step's return value or by `S.intro.left`.
 
+## 9. As built (2026-10-02, on 15be796, with World's ground contact on)
+
+`sim/core/intro.gd` (`SimIntro`), `S.intro`, the check at the top of `SimCore.step`, `data/fight/intro.json` with Tools' schema, the five events, `START_GAP` 900. The setup's `"intro"`: absent or `"skip"` starts from the intro's end state, `true` plays it, `false` is the old flat start. The entrance craters are World's dig (kind impact, full vertical, energy 1.5, no owner: radius 196 units; World's `ground-contact.md` section 16 confirms both spots are open ground). A is the fighter on the left start spot.
+
+**Proofs, in the tree:** the code passes parity on the untouched goldens (9 matches, 173,141 ticks); with `S.intro` and the events hashed, every light digest and tick count is identical; then the gap and the default change the opening and the goldens are regenerated. The parity check "the intro phase" holds the timeline's ticks, the sim standing still through it, the skip rules, the same state at the clock by every path, and a replay through a skip.
+

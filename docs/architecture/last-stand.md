@@ -51,3 +51,12 @@ Camera's cut, the face cut-in and the line read `last_stand_ready`. Narrative as
 ## 6. Prepared (2026-10-02)
 
 Built and proven in a scratch copy of 3fca9ac and parked in `docs/architecture/pending/` (`laststand.py`; the README has the steps and the proofs). The AI takes its last stand at its first attack beat inside the window (Encounter's line to tune). In 100 matches: 1.45 last stands a match, 141 of 145 used, 3.38 signatures a match.
+
+## 7. As built (2026-10-02, on 15be796)
+
+`Fighter.lastStandUsed` and `lastStandLeft` (hashed), `SimFighter.lastStandOpen`, `sigFree` and `lastStandUse`, the count in `stepFighter`, `lastStand.windowS` 20 in both fighters' `wounds.json` with Tools' schema, the two events. Encounter's gates, by grant: `exchange.gd` (the ki gate, the cooldown gate, the cost), `beam.gd` (the AI's answer and the queued answer), `ai.gd` (the AI takes its last stand at its first attack beat in the window).
+
+**Proofs, in the tree:** with the window at 0 and the gates in, parity matches every match on the goldens before it (only the roster data hash differs); hashed, the light digests are identical; then the window goes to 20 s. The parity check "the last stand" runs the rules and one free signature end to end through the director.
+
+**100 matches** (default arm, with the whole slice): 1.45 last stands a match, 142 of 145 used; 3.66 signatures a match (band 2 to 5).
+

@@ -31,6 +31,7 @@ class WoundsDef:
 	var cripLateBonus: float = 0.0
 	var cripDefensive: float = 0.0
 	var cripMax: int = 0
+	var lastStandTicks: int = 0      # the last stand: the free signature's window at the first brink, in ticks (lastStand.windowS; 0 is off)
 	var cripSurgePower: float = 0.0
 	var cripLegWeight: float = 1.0   # the crippling pick: the legs' weight against the arms' 1 when both are eligible
 	var armsBrokenLightMul: float = 1.0
@@ -361,6 +362,11 @@ static func _wounds(id: String, j: Dictionary) -> WoundsDef:
 	w.cripLegWeight = float(cr.get("legWeight", 1.0))
 	if not (w.cripLegWeight > 0.0):
 		_err(where + ": cripple.legWeight must be above 0")
+	var lsS = j.get("lastStand", {}).get("windowS")
+	if not (lsS is float or lsS is int) or float(lsS) < 0.0 or float(lsS) * 60.0 != floor(float(lsS) * 60.0):
+		_err(where + ": lastStand.windowS must be a number of seconds, at least 0, that is a whole number of ticks")
+	else:
+		w.lastStandTicks = int(float(lsS) * 60.0)
 	w.profile = String(j.get("profile", {}).get("type", ""))
 	if not PROFILES.has(w.profile):
 		_err(where + ": unknown profile type '" + w.profile + "'")

@@ -32,6 +32,7 @@ var trees: Array = []
 var beams: Array = []
 var mood := MoodState.new()           # M1 (sim/core/mood.gd): the fight's mood, the act and the outputs
 var pause := PauseState.new()         # Q10 (sim/core/pause.gd): the pausing set pieces' bank and the running pause
+var intro := IntroState.new()         # the intro phase (sim/core/intro.gd): the pre-clock ticks of a match that asks for it
 var depthOn: bool = false             # fight lanes: depth is physical (the director's depth.json switch, or the setup's "depth"); off until L4
 var out := Out.new()
 
@@ -59,6 +60,13 @@ class ActState:
 	var burstFired: bool = false  # the burst already fired on this power press
 	var breakIn: int = -1         # the break: ticks until a transformation's tier-up lands (SimPause gather), -1 for none
 	var dirI: PackedInt32Array = PackedInt32Array()   # the director's per-fighter integers (DirInterrupt: lockouts, openings, staleness); it sizes and owns them
+
+
+## The intro phase (sim/core/intro.gd). Integers.
+class IntroState:
+	var left: int = 0         # pre-clock ticks left (0: no intro, or it is over)
+	var t: int = 0            # pre-clock ticks played
+	var landed: int = 0       # a bit per slot: he has touched down
 
 
 ## Q10: pausing set pieces (sim/core/pause.gd). Integers; a tick is a real tick, frozen or live.
@@ -392,6 +400,8 @@ class Fighter:
 	var breathWear: int = 0          # S4 (QA): wear units recovered by second breath so far
 	var id: String = ""              # S4: stable roster id (the roster entry's key); arms may rename, never re-id
 	var limbBreaks: int = 0          # pitch A: limbs broken in crippling moments this match
+	var lastStandUsed: bool = false  # the last stand: this fighter has had his (the first brink of the match)
+	var lastStandLeft: int = 0       # ... and the ticks left in its window, counted while he is free (0: closed)
 	var brinkSetups: int = 0         # the brink chapter: set-up wins the rival has against this fighter while it is on the brink
 	var brinkOpen: bool = false      # ... it is open: the rival's next decisive win, in a later exchange, is the finisher
 	var brinkEx: int = -1            # ... the exchange index (ex.n) of the last set-up win: a set-up and a finisher never share one

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/fight-intro",
+  "title": "fight.intro/1 (docs/architecture/intro-phase.md)",
+  "description": "data/fight/intro.json: the intro phase's timeline (sim/core/intro.gd), in sim ticks (60 a second) from the first step. Fighter A is slot 0. The loader checks the order: each fall before its landing, A's landing not after B's, then the staredown, then the clock; skipFrom before the clock. Version field: schema. Policy: closed except keys starting with an underscore.",
+  "type": "object",
+  "required": [
+    "schema",
+    "ticks",
+    "fallHeight",
+    "craterEnergy"
+  ],
+  "properties": {
+    "schema": {
+      "const": "fight.intro/1"
+    },
+    "ticks": {
+      "type": "object",
+      "required": [
+        "fallA",
+        "landA",
+        "fallB",
+        "landB",
+        "staredown",
+        "clock",
+        "skipFrom"
+      ],
+      "description": "The timeline.",
+      "properties": {
+        "fallA": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "A's fall starts."
+        },
+        "landA": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "A touches down; the entrance crater is dug."
+        },
+        "fallB": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "B's fall starts."
+        },
+        "landB": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "B touches down."
+        },
+        "staredown": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Both stand."
+        },
+        "clock": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The fight starts: the intro's length."
+        },
+        "skipFrom": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "A press on a human slot skips from this tick on."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "fallHeight": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Units above the ground a fall starts from."
+    },
+    "craterEnergy": {
+      "type": "number",
+      "minimum": 0,
+      "description": "The entrance crater's energy (World's crater scale); 0 digs none."
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

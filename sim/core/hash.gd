@@ -5,7 +5,7 @@ class_name SimHash
 const MASK: int = 0xFFFFFFFF
 const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName", "hp", "x", "y", "vx", "vy", "face", "ki", "power", "tier", "stance", "state", "stateT",
 	"hidden", "hideT", "hiddenFor", "menace", "anguish", "ambush", "rot", "spin", "bounces", "lastAtkT", "hurtT", "keys", "beamCharge", "wet", "ambushUntil", "dPrev",
-	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "hasMenace", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped", "aimB", "aimX0", "aimZ0", "aimZ1", "aimD", "chainEvt", "z", "zT", "zWay", "jContacts", "jT", "jV0", "tumbleT", "contactT", "launchN", "jLips",
+	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "hasMenace", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped", "aimB", "aimX0", "aimZ0", "aimZ1", "aimD", "chainEvt", "z", "zT", "zWay", "jContacts", "jT", "jV0", "tumbleT", "contactT", "launchN", "jLips", "lastStandUsed", "lastStandLeft",
 	"canHide", "lockBackT", "exT"]
 ## Intent v2 (I1): the v2 fields in the record's order, then today's dash, charge and stance until I3.
 const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance"]
@@ -95,6 +95,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	_obj(out, S.mood, ["t", "sec", "v", "band", "cand", "candT", "act", "beats", "onceMask", "cause", "aggression", "crowd", "casGiven", "lastCombo", "breaks"])
 	_obj(out, S.pause, ["left", "kind", "version", "actor", "bank", "acc", "sinceEnd", "seen", "total", "count"])   # Q10
 	out.append(S.depthOn)   # fight lanes (L0)
+	_obj(out, S.intro, ["left", "t", "landed"])   # the intro phase
 	if g.clash != null:
 		out.append(_idx(fs, g.clash.A))
 		out.append(_idx(fs, g.clash.D))
@@ -268,7 +269,7 @@ const FX_FIELDS: Dictionary = {
 	"shake": ["k", "x", "z"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "limb_break": ["actor", "victim", "region"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"], "brink_open": ["actor", "target", "kind", "text"], "brink_close": ["actor", "kind"],
 	"mood_band": ["kind", "amount", "n"], "act_change": ["n", "kind"], "style_label": ["actor", "kind", "text"], "crowd_state": ["kind"], "building_hit": ["actor", "x", "n", "b", "y", "z", "amount", "ratio", "outcome", "link", "spd", "keep", "ux", "uy", "kind", "w", "h", "owner", "victim"],
-	"tier_up": ["actor", "tier", "onGround"], "transform_ready": ["actor", "tier", "source"], "transform": ["actor", "tier", "source", "dur", "version", "gather"], "beam_outcome": ["actor", "target", "kind"], "pause_start": ["kind", "actor", "version", "dur"], "pause_end": ["kind"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
+	"tier_up": ["actor", "tier", "onGround"], "transform_ready": ["actor", "tier", "source"], "transform": ["actor", "tier", "source", "dur", "version", "gather"], "beam_outcome": ["actor", "target", "kind"], "pause_start": ["kind", "actor", "version", "dur"], "pause_end": ["kind"], "last_stand_ready": ["actor", "dur"], "last_stand_end": ["actor", "kind"], "intro_start": ["dur", "delay"], "entrance_fall": ["actor", "x", "y", "z", "y1", "dur"], "entrance_land": ["actor", "x", "y", "z", "y1", "r"], "staredown_start": ["dur"], "clock_start": ["kind"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target", "dur"], "finisher_contest": ["target", "chance", "survived"],
 	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],
 	"ambush": ["actor", "target"], "lock_lost": ["actor", "target"], "launch_plan": ["actor", "target", "text", "chosen"],

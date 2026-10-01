@@ -154,3 +154,18 @@ The prototype's `draw*` functions show how each one was drawn.
 Every positioned effect event carries `z`, the depth it happens at (0 is the fighter plane, positive toward the camera): `spark`, `ring`, `debris`, `dust`, `splash`, `fire`, `after`, `charge`, `beamSplash`, `damage`, `scorch`, `slide` (with `z1` for its far end), `slide_dust`, `skim` and `shake`. An emitter that takes a fighter reads his depth; one that takes a position takes `z` last and sends 0 when the caller gives none. The core's own calls pass the fighter's depth; World's and the director's pass theirs in their depth slices. Until the depth switch-on a fighter's `z` is 0 except during a flight aimed at a building.
 
 Reserved for World's ground contact (G3), in the hash table and the reference consumer but not sent yet: `left_ground`, `bounce`, `land`, `tumble_end`, `journey_end` (their rows come with G3).
+
+## The intro phase and the last stand
+
+| Event | Fields | When | Who reads it |
+| :--- | :--- | :--- | :--- |
+| `intro_start` | dur, delay | the first tick of a match whose setup says `"intro": true`: the pre-clock window opens, `dur` seconds long; a press on a human slot skips it after `delay` seconds | Camera, UI (the HUD stays hidden; the skip prompt) |
+| `entrance_fall` | actor, x, y, z, y1, dur | a fighter starts to fall toward `x`, `y` (the ground), from height `y1`, for `dur` seconds. A, on the left start spot, falls first | Camera (it frames the sky before the landing), Animation |
+| `entrance_land` | actor, x, y, z, y1, r | he touches down; the entrance crater is dug this tick (`r` its bowl radius, 0 if none). On a skip the landings left over come at once, in order | Camera, VFX, Animation, Audio |
+| `staredown_start` | dur | both stand, for `dur` seconds, until the clock | Camera, Animation |
+| `clock_start` | kind | the intro's last tick: the fight starts with the next tick. `kind` is `full`, or `skip` when a press ended it | Camera, UI (the HUD appears), Audio |
+| `last_stand_ready` | actor, dur | `actor` reached the brink for the first time this match: one signature is free and off cooldown for `dur` seconds of his free time | Camera (the cut and the face cut-in), Narrative, UI |
+| `last_stand_end` | actor, kind | the window closed: `used` (he fired) or `expired` | UI, Narrative |
+
+An intro tick is a pre-clock tick: `SimCore.step` returns false and consumes no input, and the clock, the mood and every cooldown stand still. Its `tick` mark says `frozen: false`, so effects run at full speed and the landing's dust settles. A host tells an intro tick from a live one by the step's return value or `S.intro.left`. A match whose setup has no `"intro"` key starts from the intro's end state (the two craters dug, both fighters on the ground) and sends none of the intro's events.
+

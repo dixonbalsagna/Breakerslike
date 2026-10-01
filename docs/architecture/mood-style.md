@@ -274,6 +274,10 @@ There is no per-second mood event. Readers that want the value read `S.mood` (a 
 - **The act rule** (Game Design, spec-wounds section 8b; `docs/architecture/q10-pace-acts-pauses.md`): with `actBeats.formSteps` true, `SimMood.act(S)` is `min(act.max, 1 + larger of (form steps, wound beats) + region breaks)`. Form steps are the most ladder steps any one fighter has taken (`tier - 1`), wound beats the once-per-match beats reached (the bits of `onceMask`), region breaks `S.mood.breaks`. `actBeats.every` is now [regionBreak]. With `formSteps` false the rule is M1b's (1 + every beat).
 - **The mood reads only this tick's events.** `SimMood.tick` takes the tail of `S.out.fx` whose `tick` is `S.tick`. Before, it read the whole list, so the mood depended on the host draining the list every tick (a replay played back without draining read old events again). `SimReplay.play` now drains the list as well.
 
+## 8e. The form impulse (2026-10-02)
+
+A transformation's break adds `impulses.form` to the mood (900 units, 15 points; `rates.decay` is 3: QA's values). It is given by a call, `SimMood.onForm(S, f)` from `SimFighter.tierUp`, and not read from the `tier_up` event: on a full or short version the break lands on a frozen tick inside the pause, where `tick()` does not run. The parity check "the form impulse" holds it on such a tick.
+
 ## 9. Open points
 
 - **Taunts and transformations** have no sim events yet. Their impulses are in the data and dormant until `taunt` (Encounter or Narrative) and `form_change` (F1) exist.

@@ -6,8 +6,6 @@ Owner: Simulation and Engine. A list of what is asked of `sim/core` and not yet 
 
 | Item | Plan | Waits for |
 | :--- | :--- | :--- |
-| The intro phase | `intro-phase.md` | World's ground-contact switch-on and Encounter's two small slices |
-| The last stand | `last-stand.md` | the intro phase |
 | Fight lanes, the rest (World's lane table, true collisions, terrain rows, the switch-on, beams) | `fight-lanes.md` | the ragdoll physics (Orb's ruling) |
 
 ## At M0 (Combat's moveset milestone), asked through the EP on 2026-10-02
@@ -22,9 +20,9 @@ Owner: Simulation and Engine. A list of what is asked of `sim/core` and not yet 
 
 ## Smaller, approved or noted
 
+- **Done 2026-10-02:** the intro phase, the last stand, the mood's form impulse.
 - **Rename `act1Damping` to `act1WearMul`** (EP approved): the data, the loader and Tools' schema together.
 - **I3:** remove the legacy `stance`, `dash` and `charge` intent fields and the `act.v2` flag; move `transformSource` into `SimAct`.
-- **The mood's form impulse** (`impulses.form`): no code gives it. One line at the break; QA measures it first.
 - **`Rush.arc`** for a rush over a roof (Encounter's fight-lanes section) and for Combat's curved rushes: the same field as the `path` event's source.
 - **World's data in the replay's data hash:** `contact.json` is in (below). `settlements.json` and the lane table join when World has a `dataHash()` for them.
 
