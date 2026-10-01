@@ -223,6 +223,10 @@
       "schema": "anim-wave-entrymap.schema.json"
     },
     {
+      "match": "data/anim/waves/*.live.json",
+      "schema": "anim-wave-live.schema.json"
+    },
+    {
       "match": "data/anim/quality.json",
       "schema": "anim-quality.schema.json"
     },

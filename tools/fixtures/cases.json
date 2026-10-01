@@ -22593,6 +22593,410 @@
         "rule": "minimum",
         "pointer": "/rubbleMin"
       }
+    },
+    {
+      "id": "anim-wave-live-live-valid",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/schema": "anim.wave.live/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-live-key-required",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "del": [
+            "/gated"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-live-schema-version",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/schema": "anim.wave.live/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-wave-live-unknown-key",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-wave-live-underscore-key-ok",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-live-shapes-empty",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/shapes": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/shapes"
+      }
+    },
+    {
+      "id": "anim-wave-live-shapes-duplicate",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/shapes": [
+              "A",
+              "A"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/shapes/1"
+      }
+    },
+    {
+      "id": "anim-wave-live-shape-unknown",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/shapes": [
+              "A",
+              "Z"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-live-shape",
+        "pointer": "/shapes/1"
+      }
+    },
+    {
+      "id": "anim-wave-live-picks-key-required",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "del": [
+            "/picks/heavy"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/picks"
+      }
+    },
+    {
+      "id": "anim-wave-live-picks-unknown-list",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/any": [
+              "w1.jab"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/picks/any"
+      }
+    },
+    {
+      "id": "anim-wave-live-picks-empty",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/light": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/picks/light"
+      }
+    },
+    {
+      "id": "anim-wave-live-picks-duplicate",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/light": [
+              "w1.jab",
+              "w1.jab"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/picks/light/1"
+      }
+    },
+    {
+      "id": "anim-wave-live-picks-name-shape",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/light": [
+              "W1 Jab"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/picks/light/0"
+      }
+    },
+    {
+      "id": "anim-wave-live-pick-not-a-keyset",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/light/0": "w1.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-live-keyset",
+        "pointer": "/picks/light/0"
+      }
+    },
+    {
+      "id": "anim-wave-live-pick-wrong-weight",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/light/0": "w1.uppercut"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-live-weight",
+        "pointer": "/picks/light/0"
+      }
+    },
+    {
+      "id": "anim-wave-live-pick-heavy-wrong-weight",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/heavy/0": "w1.jab"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-live-weight",
+        "pointer": "/picks/heavy/0"
+      }
+    },
+    {
+      "id": "anim-wave-live-pick-also-gated-warns",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/picks/light/0": "w1.sweep"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-live-weight",
+        "pointer": "/picks/light/0"
+      }
+    },
+    {
+      "id": "anim-wave-live-gated-key-required",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "del": [
+            "/gated/0/gate"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/gated/0"
+      }
+    },
+    {
+      "id": "anim-wave-live-gated-gate-enum",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/gated/0/gate": "always"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/gated/0/gate"
+      }
+    },
+    {
+      "id": "anim-wave-live-gated-weight-enum",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/gated/0/weight": "any"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/gated/0/weight"
+      }
+    },
+    {
+      "id": "anim-wave-live-gated-unknown-key",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/gated/0/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/gated/0/extra"
+      }
+    },
+    {
+      "id": "anim-wave-live-gated-not-a-keyset",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/gated/0/keyset": "w1.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-live-keyset",
+        "pointer": "/gated/0/keyset"
+      }
+    },
+    {
+      "id": "anim-wave-live-gated-wrong-weight",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/gated/0/weight": "heavy"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-live-weight",
+        "pointer": "/gated/0/weight"
+      }
+    },
+    {
+      "id": "anim-wave-live-gated-empty-ok",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/gated": []
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-live-gated-type",
+      "schema": "anim-wave-live.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.live.json",
+          "set": {
+            "/gated": "none"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/gated"
+      }
     }
   ],
   "text": [

@@ -724,6 +724,32 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (isObj(gc.paving) && Array.isArray(gc.paving.biomes)) gc.paving.biomes.forEach((bn, i) => { if (typeof bn === 'string' && !(bn in bs)) err(GC, `/paving/biomes/${i}`, 'contact-surface', `paving biome "${bn}" has no entry in biomeSurface`); });
   }
 
+  // ---- anim waves (parked): the go-live lists name key sets of the wave ----
+  for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.live\.json$/)) {
+    const lv = get(rel);
+    const wn = /^data\/anim\/waves\/([^/.]+)\.live\.json$/.exec(rel);
+    if (!isObj(lv) || !wn) continue;
+    const kdoc = get(`data/anim/waves/${wn[1]}.keysets.json`);
+    const sets = isObj(kdoc) && isObj(kdoc.keysets) ? kdoc.keysets : undefined;
+    const mot2 = get('data/anim/ragdoll_motion.json');
+    if (Array.isArray(lv.shapes) && isObj(mot2) && isObj(mot2.shapes)) lv.shapes.forEach((s, i) => { if (typeof s === 'string' && !(s in mot2.shapes)) err(rel, `/shapes/${i}`, 'wave-live-shape', `shape "${s}" is not in ragdoll_motion.json shapes (${Object.keys(mot2.shapes).filter((k) => !k.startsWith('_')).join(', ')})`); });
+    if (!sets) continue;
+    const fits = (name, weight) => { const k = sets[name]; return isObj(k) && (k.weight === weight || k.weight === 'any'); };
+    const gatedNames = new Set((Array.isArray(lv.gated) ? lv.gated : []).filter(isObj).map((g) => g.keyset));
+    if (isObj(lv.picks)) for (const weight of ['light', 'heavy']) (Array.isArray(lv.picks[weight]) ? lv.picks[weight] : []).forEach((name, i) => {
+      if (typeof name !== 'string') return;
+      const at = `/picks/${weight}/${i}`;
+      if (!(name in sets)) err(rel, at, 'wave-live-keyset', `key set "${name}" is not in data/anim/waves/${wn[1]}.keysets.json`);
+      else if (!fits(name, weight)) err(rel, at, 'wave-live-weight', `key set "${name}" is ${sets[name].weight}, but it is in the ${weight} list`);
+      if (gatedNames.has(name)) err(rel, at, 'wave-live-weight', `key set "${name}" is both picked and gated; a gated key set joins only while its gate is open`, 'warning');
+    });
+    (Array.isArray(lv.gated) ? lv.gated : []).forEach((g, i) => {
+      if (!isObj(g)) return;
+      if (typeof g.keyset === 'string' && !(g.keyset in sets)) err(rel, `/gated/${i}/keyset`, 'wave-live-keyset', `key set "${g.keyset}" is not in data/anim/waves/${wn[1]}.keysets.json`);
+      else if (typeof g.keyset === 'string' && typeof g.weight === 'string' && !fits(g.keyset, g.weight)) err(rel, `/gated/${i}/weight`, 'wave-live-weight', `key set "${g.keyset}" is ${sets[g.keyset].weight}, but it is gated into the ${g.weight} list`);
+    });
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);
