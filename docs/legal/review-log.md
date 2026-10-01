@@ -67,6 +67,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-045 | Close-ups round 8 (capsule eyes, seam, Cyborg split and display cluster, diadem) | Art | Low to Medium | GO; Cyborg display cluster CONDITIONAL (remove scan bars and pips, paler peach) | Open until Art revises |
 | RL-046 | Guard arc (Rendering) and round 9 Cyborg A mask | Rendering, Art | Low | GO | Closed |
 | RL-047 | Combat wave 1 strikes (38) and energy hands | Combat | Medium (two_finger_point) | GO; two_finger_point NO-GO as an energy hand | Open until it is replaced |
+| RL-048 | Combat wave 2 entries (15) and the two-hand channel pose | Combat | Low | GO; seven Legal lines confirmed; channel pose tightened | Closed |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 

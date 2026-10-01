@@ -96,3 +96,27 @@ Screens `docs/combat/pending/wave1-strikes.md` (38 Anti-hero strikes) and the `h
 **Tail strikes.** Fine as a hair, cloth or metal tail, not a furred or reptilian animal tail.
 
 **`two_finger_point`: NO-GO as an energy hand.** Two extended fingers aimed to emit energy is the franchise's best-known beam signature (and two fingers to the forehead is its teleport pose). Replace it. Safe alternatives that are not a pointing finger: a **pinch** (thumb to forefinger), a **snap** (thumb against the middle finger), or the existing **blade hand**. No single pointing finger either, which is another franchise villain's death beam. The other hands (`open_palm`, `clawed_palm`, `fist_glow`, `blade_hand`, `crossed_forearms`) are fine. `open_palm` follows the stacking rule: never at the hip, and no palm-forward charge pose with a scream.
+
+## Combat wave 2: the Anti-hero's 15 entries (2026-10-01)
+
+Screens `docs/combat/pending/wave2-entries.md`. From the written specs.
+
+| Item | Verdict |
+|---|---|
+| The seven Legal lines (dash, spiral, three crouch entries, rooted, fade) | **Confirmed** |
+| The other eight entries | **GO** |
+| The two-hand energy channel pose | **Tightened** (below) |
+
+- **Dash:** confirmed. A narrow blade with one arm folded to the chest. Not both arms trailed straight back (the arms-back flying run) and not one fist punched ahead (the classic flying pose). Keep both out.
+- **Spiral:** confirmed. Flight only, drawn the whole way, no vanish, and no afterimage that hides him. That also keeps it clear of the franchise's vanishing teleport.
+- **Crouch entries (`coil_spring`, `plant_coil`, `drop_back`):** confirmed. Hands open and forward, or one on the ground, never clenched fists at his sides. Add one thing: no scream and no ground-crack or rising-rubble effect on the crouch, so the stacking rule's crouch mark is never joined by two more.
+- **Rooted:** confirmed. Hands low and open, no beckoning. Also no arms-crossed or "come at me" pose.
+- **Fade:** confirmed. A lean of about 30 degrees at most with the feet planted. It is not a backbend (the famous film dodge).
+- **The rest** (`arc_dive`, `rising`, `skid`, `step_in`, `pivot`, `lane_step`, `backstep_counter`, `hop_back`): ordinary movement in our blade language. Nothing stacks toward a known signature.
+
+**The two-hand energy channel pose (ahead of wave 5).** Combat's line, "hands apart, never wrists together or cupped at a hip", is right. Tighten it into design terms:
+1. Hands at least a shoulder width apart, or one high and one low. Never wrists together.
+2. Never cupped at either hip, and never drawn back to one hip and then thrust forward.
+3. No sphere or glow forming between the palms while they face each other, and no hands raised overhead holding a growing orb.
+4. No palms-forward double thrust from the chest as the release. The release is an ordinary beam from our own emitter, with no hand pose copied.
+5. The stacking rule still applies: no scream, no flame-shaped aura, no rubble ring while he channels.
