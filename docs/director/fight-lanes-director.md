@@ -128,6 +128,10 @@ Target: under 1 ms on Orb's PC, typically 0.7 ms, so about 5 to 10 ms on the slo
 4. **Combat:** the `rush` `arc` argument (variety pass, row 2) before L4, for the protector's rush over a roof.
 5. **Game Design:** all three choices are confirmed (`balance-targets.md` §16): the protector goes over and the feeder ploughs, exchanges may be fought inside a block row, and the sizes in section 1 stand. The one condition, the chain limits on a ploughing rush, is in section 3.
 
+## Beams at L4
+
+Until L5 a beam has no depth, so its groove would cross the whole band. **L4 sets the start depth:** every beam gets `oz` = the firing fighter's depth when it fires, with `zs` = 0, a level ray. By then the two fighters are aligned at `ex.z`, so a level ray at that depth is right for almost every beam, and the groove stays in the fight's row. L5 adds the slope (`zs`, for a defender at another depth) and makes hits, scorch and the strike crater follow a tilted ray.
+
 ## Order (Simulation's merged plan, `fight-lanes.md` §5)
 
-I2c (Controls), then my control-scheme step 2 in its own window, then L1 with D1 (World), L0 and L2 (Simulation), L3 (World), **L4 (mine, the switch-on)** and L5.
+I2c (Controls), then L1 with D1 (World), L0 and L2 (Simulation), L3 and the terrain rows T (World), **L4 (mine, the switch-on, with the beam's start depth)** and L5. My control-scheme step 2 takes its own window when the EP opens it.
