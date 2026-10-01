@@ -17908,6 +17908,703 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-shapes-live-valid",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/schema": "anim.shapes/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-shapes-key-required",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "del": [
+            "/shapes"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-shapes-unknown-key",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-shapes-underscore-key-ok",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-shapes-shape-valid",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-shapes-shape-part-missing",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/shapes/P"
+      }
+    },
+    {
+      "id": "anim-shapes-shape-unknown-part",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              },
+              "walk": {}
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/shapes/P/walk"
+      }
+    },
+    {
+      "id": "anim-shapes-idle-key-missing",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/shapes/P/idle"
+      }
+    },
+    {
+      "id": "anim-shapes-idle-unknown-key",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0,
+                "wobble": 1
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/shapes/P/idle/wobble"
+      }
+    },
+    {
+      "id": "anim-shapes-idle-negative",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": -1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/shapes/P/idle/sway"
+      }
+    },
+    {
+      "id": "anim-shapes-idle-hz-positive",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 0,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/shapes/P/idle/hz"
+      }
+    },
+    {
+      "id": "anim-shapes-idle-breath-positive",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 0,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/shapes/P/idle/breath"
+      }
+    },
+    {
+      "id": "anim-shapes-idle-type",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": "high",
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/shapes/P/idle/bounce"
+      }
+    },
+    {
+      "id": "anim-shapes-idle-zero-sweep-ok",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-shapes-hit-key-missing",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/shapes/P/hit"
+      }
+    },
+    {
+      "id": "anim-shapes-hit-negative",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/P": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": -0.5,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/shapes/P/hit/gain"
+      }
+    },
+    {
+      "id": "anim-shapes-shape-name-shape",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/Bad key": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/shapes/Bad key"
+      }
+    },
+    {
+      "id": "anim-shapes-shape-not-in-motion",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "set": {
+            "/shapes/Z": {
+              "idle": {
+                "sway": 1,
+                "hz": 1,
+                "bounce": 1,
+                "heel": 1,
+                "breath": 1,
+                "sweep": 0,
+                "servo": 0
+              },
+              "hit": {
+                "gain": 1,
+                "head": 1,
+                "spine": 1,
+                "arms": 1,
+                "legs": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shapes-key",
+        "pointer": "/shapes/Z"
+      }
+    },
+    {
+      "id": "anim-shapes-motion-shape-without-tuning-warns",
+      "schema": "anim-shapes.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/shapes.json",
+          "del": [
+            "/shapes/C"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:shapes-key",
+        "pointer": "/shapes"
+      }
+    },
+    {
+      "id": "anim-keysets-step-max-valid",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "heavy",
+              "limb": "elbow_r",
+              "target": "chest",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ],
+              "step_max": 20
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-keysets-step-max-optional",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "heavy",
+              "limb": "elbow_r",
+              "target": "chest",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-keysets-step-max-positive",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "heavy",
+              "limb": "elbow_r",
+              "target": "chest",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ],
+              "step_max": 0
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/keysets/strike.test/step_max"
+      }
+    },
+    {
+      "id": "anim-keysets-step-max-type",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "heavy",
+              "limb": "elbow_r",
+              "target": "chest",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ],
+              "step_max": "far"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/keysets/strike.test/step_max"
+      }
+    },
+    {
+      "id": "anim-poses-pole-foot-accepted",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/strike.knee.chamber/pole_foot_l": [
+              10,
+              1,
+              0
+            ],
+            "/poses/strike.knee.chamber/pole_hand_l": [
+              1,
+              2,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-poses-pole-foot-length",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/strike.knee.chamber/pole_foot_r": [
+              10,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/poses/strike.knee.chamber"
+      }
     }
   ],
   "text": [

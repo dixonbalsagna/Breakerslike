@@ -76,6 +76,11 @@
               "head"
             ],
             "description": "The limb that strikes: a part of sockets.json limbs, with its side (hand_r, foot_l, elbow_r, knee_l) or head (no side)."
+          },
+          "step_max": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "How far (model units) the whole body may step to reach the target, overriding the limb's step_max in sockets.json."
           }
         },
         "additionalProperties": false,

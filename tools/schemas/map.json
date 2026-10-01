@@ -199,6 +199,10 @@
       "schema": "anim-sockets.schema.json"
     },
     {
+      "match": "data/anim/shapes.json",
+      "schema": "anim-shapes.schema.json"
+    },
+    {
       "match": "data/anim/quality.json",
       "schema": "anim-quality.schema.json"
     },

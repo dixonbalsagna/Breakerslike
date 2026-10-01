@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-shapes",
+  "title": "anim.shapes/1",
+  "description": "data/anim/shapes.json: per-fighter tuning against the four shape languages (docs/art/directions.md; pose-pipeline.md section 9.13). The shape key of a roster id is ragdoll_motion.json fighters. idle: multipliers on the stance's idle (personality.json) plus sweep and servo (rad). hit: multipliers on the hit-reaction kicks (ragdoll_motion.json hit). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every shape key is in ragdoll_motion.json shapes; a shape there with no entry here is a warning) are checked by tools/lib/xref-fight.js (shapes-key).",
+  "type": "object",
+  "required": [
+    "schema",
+    "shapes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.shapes/1"
+    },
+    "shapes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[A-Za-z][A-Za-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "idle",
+          "hit"
+        ],
+        "properties": {
+          "idle": {
+            "type": "object",
+            "required": [
+              "sway",
+              "hz",
+              "bounce",
+              "heel",
+              "breath",
+              "sweep",
+              "servo"
+            ],
+            "properties": {
+              "sway": {
+                "type": "number",
+                "minimum": 0
+              },
+              "hz": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "bounce": {
+                "type": "number",
+                "minimum": 0
+              },
+              "heel": {
+                "type": "number",
+                "minimum": 0
+              },
+              "breath": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "sweep": {
+                "description": "Radians the arms drift out and in over a slow cycle.",
+                "type": "number",
+                "minimum": 0
+              },
+              "servo": {
+                "description": "Radians of a quick head glance that holds and returns every few seconds.",
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "hit": {
+            "type": "object",
+            "required": [
+              "gain",
+              "head",
+              "spine",
+              "arms",
+              "legs"
+            ],
+            "properties": {
+              "gain": {
+                "type": "number",
+                "minimum": 0
+              },
+              "head": {
+                "type": "number",
+                "minimum": 0
+              },
+              "spine": {
+                "type": "number",
+                "minimum": 0
+              },
+              "arms": {
+                "type": "number",
+                "minimum": 0
+              },
+              "legs": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

@@ -562,6 +562,15 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim shapes: keys are ragdoll shape keys ----
+  const shp = get('data/anim/shapes.json');
+  const mot = get('data/anim/ragdoll_motion.json');
+  if (isObj(shp) && isObj(shp.shapes) && isObj(mot) && isObj(mot.shapes)) {
+    const have = Object.keys(mot.shapes).filter((k) => !k.startsWith('_'));
+    for (const k of Object.keys(shp.shapes)) if (!k.startsWith('_') && !have.includes(k)) err('data/anim/shapes.json', `/shapes/${esc(k)}`, 'shapes-key', `shape "${k}" is not in ragdoll_motion.json shapes (${have.join(', ')})`);
+    for (const k of have) if (!(k in shp.shapes)) err('data/anim/shapes.json', '/shapes', 'shapes-key', `ragdoll_motion.json has shape "${k}" but shapes.json has no idle and hit tuning for it`, 'warning');
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

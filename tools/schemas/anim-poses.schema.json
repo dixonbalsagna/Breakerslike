@@ -166,6 +166,30 @@
                 }
               },
               "additionalProperties": false
+            },
+            "pole_hand_l": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "pole_foot_r": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "pole_foot_l": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
             }
           },
           "additionalProperties": false,
