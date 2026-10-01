@@ -88,6 +88,8 @@ var _tf_phase: String = ""               # gather, break or settle
 var _tf_g: int = 0                       # the beats in ticks (docs/design/moveset-rules.md 10.8)
 var _tf_b: int = 0
 var _tf_s: int = 0
+var wreck_dir: int = 0                   # the winner's shot: +1 wreckage on the right of him, -1 on the left, 0 none to speak of
+var wreck_score: float = 0.0             # the wreckage in view, summed (craters, ruined buildings, slide trenches)
 var _live_punch_at: float = -1.0         # the live version: when the 6-tick punch-in starts (rig time)
 var _punch_t: float = -1.0
 var _ov_kind: String = ""               # a camera-only cut-in (building smash, crippling moment); "" when none
@@ -780,9 +782,16 @@ func _update_solo(S: SimState) -> void:
 	for ai in range(2):
 		if _aim[ai] != null and S.fighters[ai].state != "launched":
 			_aim[ai] = null
-	if S.game.ko != null and solo_kind != "ko" and not fold_active:
+	if S.game.ko != null and solo_kind != "ko" and solo_kind != "wreck" and not fold_active:
 		var loser: int = 0 if S.fighters[0] == S.game.ko else 1
 		_begin_solo("ko", loser, 4, 0.0)
+	if solo_kind == "ko" and S.game.ko != null and S.game.koT >= CamParams.WRECK_AT:
+		# After the loser's close-up: the winner, small, with the match's damage round him.
+		var winner: int = 1 if S.fighters[0] == S.game.ko else 0
+		_wreck_scan(S, winner)
+		_begin_solo("wreck", winner, 4, 0.0, S, not reduced_motion)
+	if (solo_kind == "ko" or solo_kind == "wreck") and S.game.ko == null:
+		_end_solo(S)
 	if solo_kind == "":
 		return
 	solo_t += DT
@@ -823,8 +832,44 @@ func _update_solo(S: SimState) -> void:
 		"finisher":
 			if _solo_dur > 0.0 and solo_t >= _solo_dur + 0.05:
 				_end_solo(S)
-		"ko":
+		"ko", "wreck":
 			pass
+
+
+## Which side of the winner holds more wreckage: the craters (area times depth, a signature's double), the buildings
+## lost (their face area, scaled by how much is gone) and the knockback trenches, inside the part of the screen that side
+## will have, nearer counting more. Sets wreck_dir (+1 right, -1 left, 0 when little is in view) and wreck_score.
+func _wreck_scan(S: SimState, w: int) -> void:
+	var wf = S.fighters[w]
+	var zf: float = CamParams.R_WRECK * _m() * vh / CamParams.BODY_H
+	var reach: float = CamParams.WRECK_REACH * vw / maxf(zf, 0.01)
+	var side: Array = [0.0, 0.0]   # [left, right]
+	for c in S.craters:
+		var d: float = SimWrap.sdx(wf.x, c.x)
+		if absf(d) > reach + c.r:
+			continue
+		var wt: float = c.r * c.depth * (1.0 + c.special) * (1.0 - 0.5 * minf(1.0, absf(d) / reach))
+		side[1 if d >= 0.0 else 0] += wt
+	for b in S.buildings:
+		if b.maxhp <= 0.0:
+			continue
+		var lost: float = 1.0 if not b.alive else 1.0 - clampf(b.hp / b.maxhp, 0.0, 1.0)
+		if lost < 0.2:
+			continue
+		var d: float = SimWrap.sdx(wf.x, b.x)
+		if absf(d) > reach:
+			continue
+		side[1 if d >= 0.0 else 0] += lost * b.w * b.h * CamParams.WRECK_BUILDING_W * (1.0 - 0.5 * absf(d) / reach)
+	for sl in S.slides:
+		var mid: float = SimWrap.wrap((sl.x0 + sl.x1) * 0.5)
+		var d: float = SimWrap.sdx(wf.x, mid)
+		if absf(d) > reach:
+			continue
+		side[1 if d >= 0.0 else 0] += sl.depth * absf(sl.x1 - sl.x0) * 0.5
+	wreck_score = side[0] + side[1]
+	wreck_dir = 0
+	if wreck_score >= CamParams.WRECK_MIN and absf(side[1] - side[0]) >= 0.15 * wreck_score:
+		wreck_dir = 1 if side[1] > side[0] else -1
 
 
 ## Who follows a launched fighter i: "chase" (a solo shot on him), "hold" (stay with the human attacker, then the impact
@@ -1138,12 +1183,16 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 			"ko":
 				r = CamParams.R_KO * m
 				alt_f = 1.0
+			"wreck":
+				var wp: float = 1.0 if reduced_motion else clampf(solo_t / CamParams.WRECK_T, 0.0, 1.0)
+				r = lerpf(CamParams.R_WRECK_0, CamParams.R_WRECK, smoothstep(0.0, 1.0, wp)) * m
+				alt_f = 1.0
 	var z: float = r * vh / CamParams.BODY_H * tier_f * alt_f
 	z *= _push_mult(i) * _hit_mult(i)
 	if solo_kind == "launch" and solo_slot == i and solo_phase == "land":
 		z *= 1.0 + CamParams.LAND_PUSH * sin(PI * clampf(_land_t / 0.3, 0.0, 1.0))
 	var zmax: float = _zcap() * (1.0 + CamParams.TIER_PUSH)
-	if solo_kind == "transform" or solo_kind == "ko" or solo_kind == "finisher":
+	if solo_kind == "transform" or solo_kind == "ko" or solo_kind == "finisher" or solo_kind == "wreck":
 		zmax = maxf(zmax, CamParams.R_CLOSE * m * vh / CamParams.BODY_H)   # a close-up may go past the cap
 	# A fighter in depth (Fighter.z, positive toward the camera) draws at s = d / (d + w) of his plane size, d = K / zoom.
 	# The zoom that gives the apparent height the plane zoom z would have is 1 / (1/z - w / K); where that cannot be
@@ -1183,6 +1232,9 @@ func _anchor(S: SimState, i: int) -> Vector2:
 		_launch_anchor_y += (0.62 - _launch_anchor_y) * (1.0 - exp(-DT / 0.25))
 		solo_pt.x = vw * _launch_anchor_x
 		solo_pt.y = vh * _launch_anchor_y
+	if solo_kind == "wreck" and solo_slot == i:
+		var ap: float = 1.0 if reduced_motion else smoothstep(0.0, 1.0, clampf(solo_t / CamParams.WRECK_T, 0.0, 1.0))
+		solo_pt = Vector2(vw * (0.5 - CamParams.WRECK_ANCHOR_X * float(wreck_dir) * ap), vh * 0.70)
 	if solo_kind == "transform" and solo_slot == i and _tf_phase == "break" and _tf_ver == "full":
 		solo_pt.y = vh * 0.74   # low in the frame, the sky above him
 	if e_slot >= 0:
@@ -1336,6 +1388,8 @@ func _update_cameras(S: SimState) -> void:
 		var tau_z: float = CamParams.TAU_Z
 		if (solo_kind == "ko" or solo_kind == "finisher") and solo_slot == i:
 			tau_z = CamParams.KO_DOLLY / 3.0
+		if solo_kind == "wreck" and solo_slot == i:
+			tau_z = 0.2 if reduced_motion else CamParams.WRECK_TAU
 		if solo_kind == "transform" and solo_slot == i and _tf_phase != "":
 			tau_z = 0.12   # the beats are on a clock: the push has to land by the break
 		if stiff:

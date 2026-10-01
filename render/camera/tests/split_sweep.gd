@@ -157,6 +157,8 @@ func _run() -> void:
 		for row in [[-600.0, "front street"], [-2025.0, "block row 2"]]:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
+	for wk in [["right", 1, false], ["left", -1, false], ["none", 0, false], ["reduced motion", 1, true]]:
+		await _scenario("shot winner in the wreckage, %s" % wk[0], func(): return _shot_wreck(int(wk[1]), bool(wk[2])), {})
 	await _scenario("shot transformation full", func(): return _shot_transform_full(), {})
 	for pref in [0.0, 3.0, 10.0]:
 		await _scenario("shot transformation low angle, zoom setting %d" % int(pref), func(): return _shot_transform_limit(pref), {})
@@ -1021,6 +1023,72 @@ func _shot_clash() -> Dictionary:
 		zmax = maxf(zmax, _rig.current().cam_z[0])
 	_S.game.clash = null
 	_check(zmax > z0 * 1.06, "%s: no push at the clash (z %.3f to %.3f)" % [_label, z0, zmax])
+	return {}
+
+
+## The KO, then the winner small against the damage: the pull-back goes to the side with the most wreckage.
+func _shot_wreck(side: int, reduced: bool) -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 0.0, ax + 500.0, 0.0)
+	_S.craters.clear()
+	_S.buildings.clear()
+	_S.slides.clear()
+	if side != 0:
+		var big := SimState.Crater.new()
+		big.x = ax - 300.0 + 1500.0 * side
+		big.r = 260.0
+		big.depth = 90.0
+		big.special = 1.0
+		_S.craters.append(big)
+		var small := SimState.Crater.new()
+		small.x = ax - 300.0 - 900.0 * side
+		small.r = 60.0
+		small.depth = 15.0
+		_S.craters.append(small)
+	_rig.reduced_motion = reduced
+	_seed_rig()
+	for _i in range(120):
+		_tick_rig()
+	# the winner is slot 0 (the loser, slot 1, was knocked out), standing at ax
+	_S.game.ko = _S.fighters[1]
+	_S.game.koT = 0.0
+	var cut_frames: int = 0
+	var size_first: float = 0.0
+	var size_mid: float = 0.0
+	var sizes_end: float = 0.0
+	var x_end: float = 0.0
+	var on_wreck: int = 0
+	for k in range(1, 541):
+		_S.game.koT += SplitRig.DT
+		_tick_rig()
+		if _rig.solo_kind == "wreck":
+			on_wreck += 1
+			if _rig.current().cut:
+				cut_frames += 1
+			if on_wreck == 3:
+				size_first = _apparent_px(0, _rig.current())
+			if on_wreck == 100:
+				size_mid = _apparent_px(0, _rig.current())
+			if on_wreck == 400:
+				sizes_end = _apparent_px(0, _rig.current())
+				var fr: SplitFrame = _rig.current()
+				x_end = fr.screen_pos(0, _S.fighters[0].x, _S.fighters[0].y + CamParams.CHEST, 0.0).x
+	_check(_rig.wreck_dir == side, "%s: the wreckage side is %d (want %d, score %.0f)" % [_label, _rig.wreck_dir, side, _rig.wreck_score])
+	_check(on_wreck > 400, "%s: the wreck shot ran %d ticks" % [_label, on_wreck])
+	_check(cut_frames == (0 if reduced else 1), "%s: %d cut frames (want %d)" % [_label, cut_frames, 0 if reduced else 1])
+	_check(absf(sizes_end - CamParams.R_WRECK * vh) < 0.2 * CamParams.R_WRECK * vh, "%s: the winner is %.0f px at the end (want about %.0f)" % [_label, sizes_end, CamParams.R_WRECK * vh])
+	if not reduced:
+		_check(size_first > sizes_end * 2.2, "%s: no pull-back (%.0f px to %.0f px)" % [_label, size_first, sizes_end])
+		_check(size_mid < size_first and size_mid > sizes_end, "%s: the pull-back is not smooth (%.0f, %.0f, %.0f)" % [_label, size_first, size_mid, sizes_end])
+	var want_x: float = vw * (0.5 - CamParams.WRECK_ANCHOR_X * float(side))
+	_check(absf(x_end - want_x) < 0.03 * vw, "%s: the winner is at x %.0f (want %.0f)" % [_label, x_end, want_x])
+	stats["shot wreck %s" % _label] = "dir %d, score %.0f, sizes %.0f / %.0f / %.0f px, x %.0f" % [_rig.wreck_dir, _rig.wreck_score, size_first, size_mid, sizes_end, x_end]
+	# a new match ends the shot
+	_S.game.ko = null
+	for _i in range(5):
+		_tick_rig()
+	_check(_rig.solo_kind == "", "%s: the shot did not end with the match" % _label)
+	_rig.reduced_motion = false
 	return {}
 
 

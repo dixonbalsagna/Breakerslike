@@ -149,6 +149,16 @@ const R_FINISH: float = 0.16           # a finisher dollies in to this
 const TRANSFORM_R0: float = 0.14       # a transformation: the face, then the body, then the reveal
 const TRANSFORM_R1: float = 0.11
 const TRANSFORM_R2: float = 0.07
+# --- the winner in the wreckage (rule-of-cool.md row 8) ---
+const WRECK_AT: float = 1.8            # seconds after the KO: the loser's close-up has played, the sim's slow motion is ending
+const WRECK_T: float = 3.5             # the pull-back from a close-up to the wide shot, eased
+const R_WRECK_0: float = 0.13          # it starts on the winner at this size ...
+const R_WRECK: float = 0.04            # ... and ends with him this small (29 px at 720p)
+const WRECK_ANCHOR_X: float = 0.20     # he ends this far (of the width) off centre, away from the most wreckage
+const WRECK_REACH: float = 0.70        # the wreckage counted: this much of the screen width on the wreckage's side
+const WRECK_BUILDING_W: float = 0.05   # a ruined building's weight against a crater's (area x depth)
+const WRECK_MIN: float = 4000.0        # less than this much scar in view and he stays centred
+const WRECK_TAU: float = 0.5           # the zoom filter during the pull-back
 const BREAK_PITCH: float = -8.0        # the transformation's break: a low angle, the silhouette against the sky (full version)
 const BREAK_CAM_MIN_H: float = 15.0   # the low angle keeps the camera at least this far above the fighter's feet (units)
 const CUTAWAY_BREAK_R: float = 0.5      # the break asks for an occlusion hole this wide: half the screen height, the sky round him
