@@ -650,6 +650,7 @@ Encounter implements steps 2 and 3 with the variety work. World changes the thre
 - *The angle rule is amended.* Combat proposed 40 degrees within 2 bh of the ground, rising to 55 at 12 bh. Under §20 a contact between 30 and 70 degrees is a bounce, so every drive would bounce and slides would stay a minority. The drive is **25 degrees within 2 bh of the ground, rising evenly to 50 at 12 bh and above**, with no draw. A low drive then skids at once, and a high one bounces and then skids.
 - *The gates are confirmed,* with two limits added. "Directly below" means the rival is within 1 bh sideways and at least 3 bh lower. The crater set piece needs tier 3 and comes at most once every 30 s per fighter. Break and finisher launches may always use it.
 - The slam band stays 8 to 15% of launches (§20).
+- *The label:* the drive is called **DRIVE DOWN**, Narrative's proposal, pending Legal's search. "Slam" now means only the straight-down event, CRATER SLAM. Older sections and the data still say SLAM DOWN until Combat and Encounter rename it.
 
 ## 20. Knocked about: how a launched fighter crosses the ground (Orb, 2026-10-01)
 
