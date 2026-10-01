@@ -153,3 +153,16 @@ Orb: (a) large mountains become background decoration, and fighters careen throu
 | V1 props and fast evacuees | Combat and Controls (the button), Art, Audio | after D2 |
 
 Open questions: (1) does Orb want the tall ranges as a pure backdrop (my reading) or as a visible but unreachable far row; (2) should MOUNTAINSIDE stay as a launch candidate (landing on highland rock) or be replaced by the formation brunts (Encounter); (3) V1's context-button choreography is Combat's call.
+
+## 13. Revision for fight lanes (ADR 0009, 2026-10-01)
+
+`fight-lanes-world.md` is the lane plan. It changes this plan as follows; sections 2 to 4 and 11 above are superseded where they disagree.
+
+- **Blocks on real footprints (section 3).** A district is laid in the four lanes of the band, not on today's four row centres: block row 1 (z -4 to -12 bh, flush to the front street), block row 2 (z -18 to -27, flush to the back street), the foreground and background rows as scenery (z +10 and -38). A building's `z` is its footprint centre inside its lane (no random jitter), its `d` is `lane width x depth_fill`, and its footprint always lies inside its lane, so **the two streets (z +5 to -4 and -12 to -18) are free of footprints along the whole district**. Avenues are the same x intervals in both block rows and are the cross streets. Data: `depth_aspect` becomes `depth_fill`; `frontage` (front, back, free) is new; `rows` name lanes. `row_h` stays.
+- **State (section 4):** no new field. `z`, `d` and `row` carry the lane; the building's lane is derived from `z`. The lane table is derived data (`S.lanes`), not hashed. **Brunt candidates are limited to rows 1 and 2** (the band); rows 0 and 3 are scenery that blasts and beams still damage.
+- **Planner (section 4):** unchanged beyond the candidate filter; the `LANDMARK_W` term stands.
+- **Traffic (section 12c and `cities.md` section 4) is cosmetic and lives in the streets:** vehicles drive in the carriageways (front street 4.6 bh wide, back street 4 bh), foot traffic on the sidewalks (1 bh at each street edge), both placed by Rendering from the lane table, scattering on `evacuate`, `crater`, `building_fall` and `launch_depth`, and never in the sim or the hash. Data per district: `traffic`, `vehicle_density`, `vehicle_share`.
+- **Props (V1)** have footprints and `z`: **parked cars and bikes stand in the kerb strips** (1.2 bh wide on each side of the front street, z centres +3.4 and -2.4), clear of the fighters' corridor and of the buildings, and are blockers the director can target and the context button can throw. Debris props land wherever they fall in the band. Formations (N1) stand anywhere in the band outside settlements and are blockers like buildings.
+- **Terrain rows** are a separate track (T1 storage, T2 local writes); D1 and D2 do not wait for them. The heap rule (only row 1 leaves a sim heap) stands until T2.
+- **Cost to D1:** the generator rules, the lane data and the probe checks; no new state; one regeneration (D1's own). L1 therefore rides with D1.
+- **Scratch generator:** `WorldSettle.generate` and `skyline.gd` still lay the old four rows; they move to lanes in the D1 window.
