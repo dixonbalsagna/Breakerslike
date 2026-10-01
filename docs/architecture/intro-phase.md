@@ -66,3 +66,6 @@ Order: after World's ground-contact slices (G2 to G5), before the last stand.
 ## 8. Prepared (2026-10-02)
 
 Built and proven in a scratch copy of 3fca9ac and parked in `docs/architecture/pending/` (`intro.gd`, `intro.py`; the README has the steps and the proofs). As built: the module is `SimIntro`; the setup's `"intro"` is `true` (play it) or `"skip"` (apply its effects at once, with no pre-clock tick: for batches and probes); a fighter in the intro has the state `intro`; the crater is World's `WorldCrater.dig` with the data's `craterEnergy` (1.5 for now: World's number to tune). The state at the clock is identical whether the intro ran, was skipped at any tick, or was applied by the setup's skip (a parity check).
+
+**The default (EP, 2026-10-02).** A setup without the key gets `"skip"`: the match starts from the intro's end state with no pre-clock tick, so the game, the batches, QA's harness and the goldens share one opening. `"intro": true` plays it (the host passes it once Camera, Animation, Rendering and UI are ready); `"intro": false` is the old flat start. A is the fighter on the left start spot, and the entrance craters have no owner.
+

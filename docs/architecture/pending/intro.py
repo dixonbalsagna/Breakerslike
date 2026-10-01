@@ -3,7 +3,8 @@
 #         match asks for the intro, so parity must pass on the untouched goldens.
 #   hash  S.intro and the events join the hash; intro.json joins the fight data hash and the replay header; a golden
 #         vector for a match with the intro. Regenerate: the light digests must not move (sim/core/tools/golden_cmp.py).
-#   flip  START_GAP 750 to 900 for every match (EP's ruling), and the batch runs the intro skipped. Regenerate.
+#   flip  START_GAP 750 to 900 for every match (EP's ruling), and a match whose setup does not say starts from the intro's
+#         end state ("skip" is the default; "intro": false is the old flat start). Regenerate.
 import os, sys, shutil, json, collections
 HERE=os.path.dirname(os.path.abspath(__file__))
 os.chdir(sys.argv[1])
@@ -259,9 +260,38 @@ else:
     s=open('sim/core/constants.gd',encoding='utf-8').read()
     s=s.replace("the second is 750 units on","the second is START_GAP units on")
     open('sim/core/constants.gd','w',encoding='utf-8',newline='\n').write(s)
-    edit('sim/core/tools/batch.gd', [
-    ('''	SimCore.newMatch(S, seed)
-	SimGolden.applyArm(arm, S.fighters)''','''	SimCore.newMatch(S, seed, {}, {"intro": "skip"})   # the shipped game plays the intro: batches start from its state at the clock
-	SimGolden.applyArm(arm, S.fighters)'''),
+    edit('sim/core/intro.gd', [
+    ('''	var mode = su.get("intro", false)''','''	var mode = su.get("intro", "skip")   # a match that does not say starts from the intro's end state, as the game does'''),
+    ('''## its effects at once (both craters, both fighters on the ground) with no pre-clock tick, for batches and probes; without
+## the key a match starts as it always did.''','''## its effects at once (both craters, both fighters on the ground) with no pre-clock tick, and is what a setup without the
+## key gets, so the game, the batches and the goldens share one opening; "intro": false is the old flat start.'''),
+    ])
+    edit('sim/core/sim.gd', [
+    ('''## The intro phase: "intro": true plays the entrance before the clock; "intro": "skip" applies its effects at once.''','''## The intro phase: "intro": true plays the entrance before the clock; "intro": "skip" (the default) applies its effects at
+## once; "intro": false starts flat, as matches did before.'''),
+    ])
+    edit('sim/core/tools/golden_recipes.gd', [
+    ('''		fs[1].x = SimConst.START_X
+''','''		fs[1].x = SimConst.START_X
+		var y0: float = fs[0].y   # each stands on the other's spot (the entrance craters are there already)
+		fs[0].y = fs[1].y
+		fs[1].y = y0
+'''),
+    ])
+    edit('sim/core/tools/parity.gd', [
+    ('''	var D := SimCore.createSim()
+	SimCore.newMatch(D, 5)
+	if D.intro.left != 0 or not SimCore.step(D, null):
+		return "a match that did not ask for the intro got one"
+	SimCore.dispose(D)
+''','''	var D := SimCore.createSim()
+	SimCore.newMatch(D, 5)
+	if D.intro.left != 0 or D.craters.size() != 2 or not SimCore.step(D, null):
+		return "a match whose setup does not say did not start from the intro's end state"
+	SimCore.newMatch(D, 5, {}, {"intro": false})
+	if D.intro.left != 0 or D.craters.size() != 0 or D.fighters[0].y != 60.0:
+		return "intro false did not give the flat start"
+	SimCore.dispose(D)
+'''),
     ])
 print("intro applied:", part)

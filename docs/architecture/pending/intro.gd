@@ -8,6 +8,10 @@ class_name SimIntro
 ## the key a match starts as it always did. A press on a human slot skips it (after intro.json's skipFrom ticks): the
 ## landings left are applied at once, in order, so the state at the clock is the same whether it ran or was skipped.
 ## The fall is a closed-form path, not flight physics, and nothing here draws a random number.
+##
+## "A" is the fighter on the left start spot and lands first; "B" is the other. In a normal match that is slot 0, then
+## slot 1. Going by the spot and not the slot keeps the craters' order the same when a QA arm exchanges the spawn sides.
+## The entrance craters are nobody's (no owner): they are not blows.
 
 const PATH: String = "res://data/fight/intro.json"
 const TPS: int = 60
@@ -15,8 +19,8 @@ const TPS: int = 60
 static var _loaded: bool = false
 static var _hash: String = ""
 static var _errors: Array = []
-static var fall: Array = [0, 0]      # per slot: the tick its fall starts ...
-static var land: Array = [0, 0]      # ... and the tick it lands
+static var fall: Array = [0, 0]      # A's and B's: the tick the fall starts ...
+static var land: Array = [0, 0]      # ... and the tick he lands
 static var staredown: int = 0
 static var clock: int = 0            # the tick the clock starts: the intro's length
 static var skipFrom: int = 0         # a press skips from this tick on
@@ -86,7 +90,7 @@ static func setup(S: SimState, su: Dictionary) -> void:
 	S.intro = SimState.IntroState.new()
 	var mode = su.get("intro", false)
 	if mode is String and mode == "skip":
-		for k in range(S.fighters.size()):
+		for k in _order(S):
 			_land(S, k)
 		_stand(S)
 	elif mode is bool and mode == true:
@@ -107,8 +111,9 @@ static func tick(S: SimState, inputs) -> bool:
 	var t: int = it.t
 	if t == 0:
 		SimFx.introStart(S, float(clock) / float(TPS), float(skipFrom) / float(TPS))
+	var order: Array = _order(S)
 	if t >= skipFrom and _pressed(S, inputs):
-		for k in range(S.fighters.size()):
+		for k in order:
 			if (it.landed & (1 << k)) == 0:
 				_land(S, k)
 		it.left = 0
@@ -116,17 +121,18 @@ static func tick(S: SimState, inputs) -> bool:
 		_stand(S)
 		SimFx.clockStart(S, "skip")
 		return true
-	for k in range(S.fighters.size()):
+	for j in range(order.size()):   # j: 0 is A, 1 is B
+		var k: int = order[j]
 		var f = S.fighters[k]
 		if (it.landed & (1 << k)) != 0:
 			continue
 		var g: float = WorldTerrain.groundY(S, f.x)
-		if t == fall[k]:
-			SimFx.entranceFall(S, f, g, g + fallHeight, float(land[k] - fall[k]) / float(TPS))
-		if t >= land[k]:
+		if t == fall[j]:
+			SimFx.entranceFall(S, f, g, g + fallHeight, float(land[j] - fall[j]) / float(TPS))
+		if t >= land[j]:
 			_land(S, k)
-		elif t >= fall[k]:
-			var p: float = float(t - fall[k] + 1) / float(land[k] - fall[k])
+		elif t >= fall[j]:
+			var p: float = float(t - fall[j] + 1) / float(land[j] - fall[j])
 			f.y = g + fallHeight * (1.0 - p * p)   # he accelerates down: a closed-form fall, no flight physics
 	if t == staredown:
 		SimFx.staredownStart(S, float(clock - staredown) / float(TPS))
@@ -145,7 +151,7 @@ static func _land(S: SimState, k: int) -> void:
 	var top: float = WorldTerrain.groundY(S, f.x) + fallHeight
 	var r: float = 0.0
 	if craterE > 0.0:
-		var rec = WorldCrater.dig(S, f.x, craterE, f, "impact", 0.0, 1.0)
+		var rec = WorldCrater.dig(S, f.x, craterE, null, "impact", 0.0, 1.0)
 		if rec != null:
 			r = rec.r
 	f.y = WorldTerrain.groundY(S, f.x)
@@ -160,6 +166,13 @@ static func _stand(S: SimState) -> void:
 		f.vx = 0.0
 		f.vy = 0.0
 		f.y = WorldTerrain.groundY(S, f.x)
+
+
+## The slots in landing order: the left start spot first (A), then the other (B).
+static func _order(S: SimState) -> Array:
+	if S.fighters.size() == 2 and S.fighters[1].x < S.fighters[0].x:
+		return [1, 0]
+	return range(S.fighters.size())
 
 
 static func _pressed(S: SimState, inputs) -> bool:
