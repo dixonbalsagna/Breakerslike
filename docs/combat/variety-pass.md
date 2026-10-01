@@ -230,4 +230,8 @@ Plan only; no data changes until Orb gives the go on the control scheme (`docs/d
 | 3 | PRESSURE's R4 counter as `selectorByProfile.dynamic` | **Hold.** With a perfect block in the player's hands, Game Design needs to re-rule R4. It may become "a perfect block opens the counter; a plain held guard counters only for the AI and the Simple layout" |
 | 4 | the new cue names | **Yes.** More will follow (the mode tell, the context actions) |
 
+**Launch vectors.** MOUNTAINSIDE is retired in favour of brunts on World's natural formations (mesa, rock, spire, big tree): `moveset-system.md` section 9.8. The ground and aerial styles' launch hints are unaffected.
+
+**Wind-ups.** Strikes that can be perfect-blocked need wind-ups of 15 ticks (light) and 20 (heavy), and the chain ender 18, so the dynamic profile's timings and the `chains.ender` beats will move when the scheme lands (`moveset-system.md` section 9.7).
+
 **A future edit, not in the batch:** `templates.json` `beam.outcome` drops the automatic CLASH rule in favour of the answered-beam rule. It lands with Encounter's revised Q4 plan.

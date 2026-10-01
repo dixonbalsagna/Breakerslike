@@ -216,7 +216,7 @@ Every key strike shows a visible anticipation: the pose run from the striker's l
 | finisher (final blow) | **20** | the authored finishers give 30 to 36 ticks after `last_look` |
 | any pose | at least **4 ticks on screen** | no pose flashes by |
 
-- **Separate from the parry window.** Controls' parry windows (15 light, 20 heavy) are gameplay; these minimums are what the eye needs. A window is never shorter than the anticipation it contains.
+- **Separate from the parry window.** Controls' parry windows (15 light, 20 heavy) are gameplay; these minimums are what the eye needs. A window is never shorter than the anticipation it contains. Under ADR 0008, strikes that can be perfect-blocked need the longer wind-ups in section 9.7; these minimums remain the floor for the rest.
 - **Guaranteed by the composer.** Anchor fitting never compresses a piece below its weight's minimum. A piece that cannot fit is not a candidate.
 - **Checked by Tools.** Validation flags any authored beat list, and any fitted part, below the minimum.
 - **Readability targets.** These numbers are the readability floor Game Design's section 10 readability target (a readable wind-up) asks for; Game Design confirms them.
@@ -370,3 +370,65 @@ ADR 0008 allows four actions inside an exchange, at defined windows. Every templ
 The energy family more than doubles the fill (about 2,160 to about 5,300) for about a third more hand-made pieces, because it reuses the body poses. The validity factors are estimates until Tools' enumerator runs on real data.
 
 **Milestones.** M0 and M1 are unchanged. M2 adds the mode and direction axes. M3 adds the context actions and the in-exchange windows. The order waits on Orb's go for ADR 0008.
+
+### 9.7 Wind-up tells and which strikes can be perfect-blocked
+Controls and Game Design need a visible wind-up of at least **15 ticks for a light and 20 for a heavy**, with the perfect-block window in its **last 8 to 10 ticks** (`docs/design/control-rules.md` section 1 sets 10). The anticipation minimums in section 7.2 (6 and 10 ticks) remain the floor for strikes that have **no** window.
+
+| Strike class | Wind-up | Perfect block? | In today's templates |
+| :--- | ---: | :--- | :--- |
+| **Opener** (the attacker's first strike of an exchange) | 15 light, 20 heavy | yes | TRADE BLOWS, PRESSURE and GUARD BREAK's first strikes; a DODGE read's strike; a caught pursuit's strike |
+| **Heavy** (any heavy-weight strike) | 20 | yes | HEAVY CLASH's deciding blow (either side), GUARD BREAK's breaking strike, heavy counters |
+| **Ender** (the last blow of a string or chain) | 18 (Game Design), at least 15 | yes | TRADE BLOWS' deciding blow, the chain ender |
+| **Ordinary energy blast** | 15 light, 20 charged | yes: a perfect block deflects it | the energy family (9.1) |
+| **Mid-string hit** | 6 (the section 7.2 floor) | no: a held guard still blocks it normally | PRESSURE's second and third strikes, TRADE BLOWS' exchanged blows, chain links |
+| **Signature** | the charge (0.8 s) | no: it can be guarded, dodged, escaped, or answered with a beam | all signatures |
+| **Grab, tackle, dive grab** | 10 | no: a grab beats Guard, loses to an attack and misses a dodge | context actions (9.3) |
+| **Strikes on a fighter who cannot guard** | as its weight | none to give | CHARGE INTERRUPT (the channel drops the guard), strikes on a launched or downed body |
+
+What this changes in the data, when it lands:
+- **Each strike carries its class** in place of today's `noParry` flag: opener, heavy, ender, blast, mid or none.
+- **The dynamic profile's timings move.**
+  - Heavy exchanges need an approach of at least 20 ticks (15 today), so the heavy opener's wind-up fits inside the flight.
+  - The chain ender's wind-up grows from 12 to 18 ticks.
+  - TRADE BLOWS' deciding blow gets a 15-tick wind-up after the circle.
+- **The window is data per strike:** its start and end ticks, the last 10 ticks of the wind-up. Controls owns the width.
+
+### 9.8 MOUNTAINSIDE: replaced by formation brunts
+World is moving the mountains to a backdrop and adding natural formations as brunt targets: mesa, rock, spire and bigtree (`docs/world/districts-plan.md` section 12).
+
+**Decision: MOUNTAINSIDE is retired as a launch vector, and formation brunts take its place.**
+- **Why.** With the relief capped at about 8 bh, a "mountainside" is just a hillside, which SMASH ACROSS already lands on. The thing MOUNTAINSIDE was for, a hard natural surface to be driven into, is exactly what a formation is, and there will be 150 to 300 of them across every wild biome instead of one range.
+- **The launch-vector vocabulary becomes:** UPPERCUT, SLAM DOWN, SMASH ACROSS, and **BRUNT**, with a target kind. BUILDING SMASH is a brunt on a structure. The new kinds are a brunt on a mesa, a rock, a spire or a big tree, each with its own reaction cue from World's fall kinds: strata burst, rock burst, snap, tree snap.
+- **Personality comes for free.** Formations hold no people. The hero's care term makes them his preferred brunt targets, and the villain still prefers a populated tower. The hero finally gets brunts of his own.
+- **Staging.** MOUNTAINSIDE stays in the data until World's D2 lands (it keeps working, landing on hills and rock). The brunt-by-kind vectors replace it in the same slice. Scoring stays Encounter's.
+- **RIDGE BORE** (the signature variant) keeps its key, on the highlands' rock.
+- **Names.** Narrative's proposed INTO THE MOUNTAIN no longer applies; a label for formation brunts is Narrative's to propose.
+
+### 9.9 Grab, throw and props (with Controls' context button)
+This is the choreography for the context actions that seize something. The rules, costs and priorities are Game Design's (`docs/design/control-rules.md` section 4); the prop state, flight and damage are World's (`WorldProps`, V1).
+
+**Grab and throw (the rival within 1.5 bh):**
+| Beat | Ticks | What happens |
+| :--- | ---: | :--- |
+| Reach | 10 | the grab's wind-up. An attack in progress beats it; a dodge makes it whiff (a 1.5 s cooldown); a held Guard does not stop it |
+| Hold | 8 | the grab connects: both fighters lock, with a grab cue |
+| Throw | on the next tick | the held direction picks the vector. Toward: a hurl across (the planner's long-haul candidates, brunts included). Neutral: a slam down. Away: a back throw, over the shoulder |
+
+**Tackle (while sprinting).** A running grab with a 12-tick reach that carries the rival along the ground for 30 to 60 ticks (World's knockback slide), then releases them into whatever lies ahead: a brunt target if one is in the path.
+
+**Dive grab (airborne, the rival below within 3 bh).** A 10-tick reach from above, then a slam straight down: a ground slam with World's crater rules.
+
+**Reversal (Guard held, close, just after a normal block).** An 8-tick turn and counter-strike that starts the defender's own exchange with the roles swapped. It has no perfect-block window: its wind-up is under 10 ticks.
+
+**Props (a liftable object within 2 bh: parked cars, bikes, boulders, trunks, lamps).**
+| Step | Ticks | What happens |
+| :--- | ---: | :--- |
+| Lift | 12 (reach 4, hoist 8) | the fighter is committed and can be hit. The prop becomes held (`S.props`). The power tier caps the size: tier 1 a bike, a lamp or a small boulder; tier 2 a car or a trunk; tier 3 and up, wreckage and large boulders |
+| Carry | while held | a carry posture layer over normal movement. A Guard press, a dodge or taking a hit drops the prop. The mode is ignored while a prop is held |
+| **Light press: throw** | wind-up 15, release | an opener, so it can be perfect-blocked (the prop is batted aside) or normally blocked. The direction shapes it: toward is a running hurl, neutral a standing throw, away a retreating lob. Then World's ballistic flight takes over, with damage by mass and speed |
+| **Heavy press: slam** | wind-up 20 | within 2 bh, the prop is swung down on the rival as a crushing key strike. It breaks, and the ground dents by World's rules. Beyond 2 bh, an overhead hurl: slower and heavier |
+
+- **What a hit does.** A prop that hits the rival launches them along its path, and World's `prop_hit` event tells the director. Whether that counts as a decisive exchange is Game Design's call. A prop that hits a structure or formation is a brunt on it; among people, World's collateral rules apply.
+- **Events Combat needs from Simulation and World:** `prop_grab`, `prop_throw` (with the vector and force class) and `prop_slam` out; `prop_hit` in.
+- **Pieces per fighter:** lift, carry layer, two throws (one hand and two hands, by size) and the slam, plus grab, two throw poses, tackle, dive grab and reversal. With the civilians action, the provoke and the shove, the context set is about **14 pieces** (9.3 estimated 12; the basic total becomes about 89).
+- **Cues for Rendering:** `grab`, `grab_throw`, `tackle`, `dive_grab`, `reversal`, `lift`, `carry`, `prop_throw`, `prop_slam`.
