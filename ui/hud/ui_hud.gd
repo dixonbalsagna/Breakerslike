@@ -1316,7 +1316,7 @@ func _rm_try(control: String) -> void:
 		"pair":
 			_rm_status = str(w.get("pair", "")).replace("{control}", word)
 		"chord":
-			_rm_status = str(w.get("_chord", "")).replace("{control}", word).replace("{other}", _rm_action_word(str(res["with"])))
+			_rm_status = str(w.get("chord", "")).replace("{control}", word).replace("{other}", _rm_action_word(str(res["with"])))
 		"wrong_device":
 			_rm_status = str(w.get("wrong_device_kb" if _rm_is_kb() else "wrong_device_pad", ""))
 	_l_remap.invalidate()
