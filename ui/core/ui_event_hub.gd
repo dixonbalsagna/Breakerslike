@@ -55,6 +55,10 @@ class Bark:
 	var fired: int = 0           # how many cues have fired
 	var wait: float = 0.0
 	var style: String = "caption"   # caption, thought (an inner line: smaller, leaning, softer) or shout
+	var kind: String = "line"       # Narrative's kind: line, reply, retort, callback, jewel or thought (dialogue-director.md section 5)
+	var fighter: bool = true        # a fighter speaks it (false for a crowd or narrator line, which gets no face)
+	var face: bool = false          # this line has a face cut-in (decided when it becomes visible)
+	var face_expr: String = "neutral"
 
 
 var models: Array = []           # UiFighterModel
@@ -82,6 +86,8 @@ var t_now: float = 0.0             # the match clock the HUD keeps: it stands st
 var sim_paused: bool = false       # a pausing set piece froze the sim (pause_start .. pause_end): fight-time timers and prompts hold, presentation runs on
 var sim_pause_kind: String = ""    # transform, world or timecap
 var sim_pause_left: float = 0.0    # real seconds the pause may still last (pause_start's dur): the safety if its pause_end is lost
+var face_times: Array = []         # fight-time starts of the cut-ins the rate cap counts (UiFaces, faces.json rate)
+var move_names: Dictionary = {}    # upper-case move names (a fighter's signature): a banner that is only a move name is dropped (Orb: the fighter shouts it, there is no name card)
 var toll_age: float = 99.0       # seconds since the world toll last changed (the chip dims at rest)
 var stats: Dictionary = {}       # counters for the readability tests and the demo's status line
 var captions_on: bool = true
@@ -118,9 +124,10 @@ func reset() -> void:
 	sim_paused = false
 	sim_pause_kind = ""
 	sim_pause_left = 0.0
+	face_times = []
 	stats = {"cards_shown": 0, "cards_merged": 0, "cards_dropped": 0, "cards_evicted": 0, "cards_withheld": 0,
 		"barks_shown": 0, "barks_cut": 0, "barks_suppressed": 0, "toasts_skipped": 0, "max_cards_visible": 0,
-		"max_barks_visible": 0, "events": 0}
+		"max_barks_visible": 0, "events": 0, "faces_shown": 0, "faces_capped": 0, "banners_move_name": 0}
 	for m in models:
 		m.reset_wounds()
 
@@ -133,6 +140,14 @@ func setup_fighters(ids: Array, names: Array) -> void:
 		m.setup(i, str(ids[i]), str(names[i]) if i < names.size() else "")
 		models.append(m)
 	reset()
+
+
+## The names of the fighters' moves that must never be carded as a banner (Orb: no move-name card). The bridge passes each fighter's signature name.
+func set_move_names(names: Array) -> void:
+	for n in names:
+		var k: String = str(n).strip_edges().to_upper()
+		if k != "":
+			move_names[k] = true
 
 
 func model(slot: int) -> UiFighterModel:
@@ -374,6 +389,9 @@ func consume(e) -> void:
 			if cn >= 2:
 				banner = {"text": UiData.fmt("state.chain", {"n": cn}), "col": UiLook.WARN, "dur": 1.2, "age": 0.0}
 		"banner":
+			if move_names.has(str(d.get("text", "")).strip_edges().to_upper()):
+				stats["banners_move_name"] += 1   # a move's name is shouted by the fighter, not carded
+				return
 			banner = {"text": UiData.banner(str(d.get("text", ""))), "col": str(d.get("col", UiLook.INK)), "dur": float(d.get("dur", 1.4)), "age": 0.0}
 		"shake":
 			if float(d.get("k", 0.0)) >= UiLook.HAZARD_SHAKE_K:
@@ -765,7 +783,10 @@ func _cinematic(slot: int, kind: String, dur: float) -> void:
 
 func _on_bark(d: Dictionary) -> void:
 	var b := Bark.new()
-	b.slot = clampi(int(d.get("speaker", 0)), 0, maxi(0, models.size() - 1))
+	var spk = d.get("speaker", 0)
+	b.fighter = not (spk is String and not (spk as String).is_valid_int())   # "crowd" or "narrator" is not a fighter
+	b.slot = clampi(int(spk) if b.fighter else 0, 0, maxi(0, models.size() - 1))
+	b.kind = str(d.get("kind", "line"))
 	b.text = str(d.get("text", ""))
 	b.cues = d.get("cues", []) if d.get("cues", []) is Array else []
 	b.setpiece = bool(d.get("setpiece", false))
@@ -807,7 +828,32 @@ func _on_bark(d: Dictionary) -> void:
 				return
 	barks.append(b)
 	stats["barks_shown"] += 1
+	_decide_face(b)
 	_trim_barks()
+
+
+## Whether a bark that has just become visible gets a face cut-in: by its level (UiFaces.level) and, for an ordinary line, the rate cap in
+## fight time. The expression comes from its first cue.
+func _decide_face(b: Bark) -> void:
+	b.face = false
+	var lv: String = UiFaces.level(b)
+	if lv == "never":
+		return
+	if lv == "cap":
+		var rate: Dictionary = UiFaces.data().get("rate", {})
+		var win: float = float(rate.get("window_s", 60.0))
+		var keep: Array = []
+		for t in face_times:
+			if float(t) > t_now - win:
+				keep.append(t)
+		face_times = keep
+		if face_times.size() >= int(rate.get("per_minute", 6)):
+			stats["faces_capped"] += 1
+			return
+		face_times.append(t_now)
+	b.face = true
+	b.face_expr = UiFaces.expression(b, model(b.slot))
+	stats["faces_shown"] += 1
 
 
 func _intensity_of(b: Bark) -> int:
@@ -1009,6 +1055,7 @@ func _age_barks(dt: float) -> void:
 		if not taken and barks.size() < UiLook.CAP_BARK_LINES[mode] and not (mode == Mode.CINEMATIC and w.priority < 3):
 			barks.append(w)
 			stats["barks_shown"] += 1
+			_decide_face(w)
 		elif w.wait < 1.5:
 			still.append(w)
 	bark_wait = still

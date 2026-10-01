@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "note": "The face cut-in (docs/ui/hud-spec.md section 29): when a fighter speaks, a small portrait of the speaker slides in at that fighter's side of the screen, holds for the line and leaves. rate: ordinary lines (level cap) get a face at most per_minute times in any window_s seconds of fight time (Game Design's rule-of-cool row 2: 6 a minute); a jewel, a shout, a set piece and any line of always_priority or more get one without counting. A thought, a line below min_priority, a crowd or narrator line and any line with no fighter speaking get none. kinds: the level of each line kind in Narrative's data (always, cap or never). timing: the slide in and out, in seconds (reduced motion fades instead). gesture_expression: the expression for a line's first cue, by the whole gesture or its family (laugh, scoff, wince, ...). fighters: the slot for each fighter id (the readout profile ids) and expression: art is the path of a texture (res://art/...) for Art to fill; empty draws the placeholder from the fighter's aura colour. default is used for a fighter with no entry.",
+  "rate": { "per_minute": 6, "window_s": 60.0 },
+  "always_priority": 3,
+  "min_priority": 2,
+  "kinds": { "line": "cap", "reply": "cap", "retort": "cap", "callback": "cap", "jewel": "always", "thought": "never" },
+  "timing": { "slide_in": 0.18, "slide_out": 0.22 },
+  "default_expression": "neutral",
+  "expressions": ["neutral", "smirk", "strain", "hurt"],
+  "gesture_expression": { "effort.light": "neutral", "laugh": "smirk", "scoff": "smirk", "sigh": "neutral", "wince": "hurt", "pain": "hurt", "gasp": "hurt", "roar": "strain", "growl": "strain", "effort": "strain", "munch": "neutral" },
+  "fighters": {
+    "default": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
+    "protagonist": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
+    "anti_hero": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
+    "empress": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } },
+    "cyborg": { "neutral": { "art": "" }, "smirk": { "art": "" }, "strain": { "art": "" }, "hurt": { "art": "" } }
+  }
+}

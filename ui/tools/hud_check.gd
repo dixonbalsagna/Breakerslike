@@ -46,6 +46,7 @@ func _run() -> void:
 	_touch_full_rules()
 	await _remap_rules()
 	await _pause_menu_rules()
+	await _faces_rules()
 	await _sim_pause_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
@@ -396,6 +397,8 @@ func _bridge() -> void:
 	events = int(hud.hub.stats["events"])
 	var m0: UiFighterModel = hud.hub.model(0)
 	_ok(m0.name == "KAI" and m0.tier >= 1 and m0.charge >= 0.0, "bridge: reads name, tier and charge from the sim")
+	var sig_name0: String = str(host.S.fighters[0].sigName).strip_edges().to_upper()
+	_ok(sig_name0 != "" and hud.hub.move_names.has(sig_name0), "bridge: the fighters' signature names are known to the hub (a banner that is only a move name is dropped)")
 	_ok(hud.hub.toll["pop0"] > 0, "bridge: reads the world counters")
 	var sd: Dictionary = UiSimBridge.strip_data(host.S, host.cam.x, 2000.0)
 	_ok((sd["segs"] as Array).size() == 11 and (sd["fighters"] as Array).size() == 2, "bridge: builds the planet strip's data")
@@ -2894,5 +2897,180 @@ func _sim_pause_rules() -> void:
 	for i in range(60 * 13):
 		hud.advance(1.0 / 60.0)
 	_ok(hud._l_hints[0].sig == null, "sim pause: and goes after its 12 s of fight time once the pause ends")
+	hud.queue_free()
+	await process_frame
+
+
+# --- The face cut-in (docs/ui/hud-spec.md section 29) -----------------------------------------------------------------------------------
+
+func _bark_obj(slot: int, prio: int = 2, style: String = "caption", kind: String = "line", setpiece: bool = false, fighter: bool = true, cues: Array = []) -> UiEventHub.Bark:
+	var b := UiEventHub.Bark.new()
+	b.slot = slot
+	b.text = "A line."
+	b.priority = prio
+	b.style = style
+	b.kind = kind
+	b.setpiece = setpiece
+	b.fighter = fighter
+	b.cues = cues
+	return b
+
+
+func _faces_rules() -> void:
+	UiData.reload()
+	var fd: Dictionary = UiData.faces()
+	var slots_ok := true
+	for id in ["default", "protagonist", "anti_hero", "empress", "cyborg"]:
+		for e in fd["expressions"]:
+			slots_ok = slots_ok and (fd["fighters"][id][e] as Dictionary).has("art")
+	var profile_ids_ok := true
+	for id in ["protagonist", "anti_hero", "empress", "cyborg"]:
+		profile_ids_ok = profile_ids_ok and fd["fighters"].has(id)
+	_ok(slots_ok and profile_ids_ok and fd["expressions"] == ["neutral", "smirk", "strain", "hurt"] and int(fd["rate"]["per_minute"]) == 6, "faces: the data has a texture slot per fighter and expression (neutral, smirk, strain, hurt) and the 6 a minute rate")
+	# Which lines get a face.
+	_ok(UiFaces.level(_bark_obj(0)) == "cap" and UiFaces.level(_bark_obj(0, 2, "caption", "reply")) == "cap" and UiFaces.level(_bark_obj(0, 2, "caption", "retort")) == "cap" and UiFaces.level(_bark_obj(0, 2, "caption", "callback")) == "cap", "faces: quips, replies, retorts and callbacks are ordinary lines (the rate cap applies)")
+	_ok(UiFaces.level(_bark_obj(0, 2, "caption", "jewel")) == "always" and UiFaces.level(_bark_obj(0, 2, "shout")) == "always" and UiFaces.level(_bark_obj(0, 3, "caption", "line", true)) == "always" and UiFaces.level(_bark_obj(0, 4)) == "always", "faces: a jewel, a shout, a set piece and a line of priority 3 or more always get one")
+	_ok(UiFaces.level(_bark_obj(0, 2, "thought")) == "never" and UiFaces.level(_bark_obj(0, 2, "caption", "thought")) == "never" and UiFaces.level(_bark_obj(0, 1)) == "never" and UiFaces.level(_bark_obj(0, 2, "caption", "line", false, false)) == "never", "faces: a thought, an ambient line and a crowd or narrator line get none")
+	# The expression.
+	var mm := UiFighterModel.new()
+	var ex := func(g: String, brink: bool) -> String:
+		mm.brink = brink
+		return UiFaces.expression(_bark_obj(0, 2, "caption", "line", false, true, [{"at": 0, "gesture": g, "intensity": 1}] if g != "" else []), mm)
+	_ok(ex.call("laugh.cruel", false) == "smirk" and ex.call("scoff", false) == "smirk" and ex.call("wince", false) == "hurt" and ex.call("pain.head", false) == "hurt" and ex.call("roar", false) == "strain" and ex.call("growl", false) == "strain" and ex.call("effort.light", false) == "neutral" and ex.call("effort.heavy", false) == "strain" and ex.call("", true) == "hurt" and ex.call("", false) == "neutral", "faces: the expression follows the first cue's gesture (laugh and scoff smirk, wince and pain hurt, roar and growl strain), else hurt on the brink, else neutral")
+	# The hub: faces, the rate cap, one a side, move names.
+	var hub := _hub()
+	hub.consume({"type": "bark", "speaker": 0, "text": "Quip one.", "cues": [{"at": 0, "gesture": "laugh.short", "intensity": 1}], "priority": 2, "dur": 0.4})
+	hub.consume({"type": "bark", "speaker": 1, "text": "Reply.", "cues": [{"at": 0, "gesture": "wince", "intensity": 1}], "priority": 2, "dur": 0.4, "kind": "reply"})
+	hub.consume({"type": "bark", "speaker": 0, "text": "Thinking.", "kind": "thought", "priority": 2})
+	var both: bool = hub.barks.size() == 2 and hub.barks[0].face and hub.barks[1].face and hub.barks[0].face_expr == "smirk" and hub.barks[1].face_expr == "hurt"
+	_ok(both and hub.bark_wait.size() == 1 and not hub.bark_wait[0].face, "faces: two speakers at once each get a face (one a side); a queued thought gets none")
+	# The rate cap: 6 in a minute of fight time; a set piece still gets one; a minute later it opens again.
+	var h2 := _hub()
+	var sides_ok := true
+	var granted := 0
+	for i in range(9):
+		h2.consume({"type": "bark", "speaker": 0, "text": "Line %d." % i, "priority": 2, "dur": 0.2})
+		for k in range(60):
+			h2.advance(1.0 / 60.0)
+			var per := [0, 0]
+			for b in h2.barks:
+				if b.face:
+					per[b.slot] += 1
+			sides_ok = sides_ok and per[0] <= 1 and per[1] <= 1
+		if i < 6:
+			pass
+	granted = int(h2.stats["faces_shown"])
+	_ok(granted == 6 and int(h2.stats["faces_capped"]) == 3 and sides_ok, "faces: at most 6 an ordinary line in a minute (the rest play without), and never two on one side (%d shown, %d capped)" % [granted, int(h2.stats["faces_capped"])])
+	h2.consume({"type": "bark", "speaker": 0, "text": "Set piece.", "priority": 3, "setpiece": true, "dur": 3.0})
+	_ok(h2.barks.size() > 0 and h2.barks[h2.barks.size() - 1].face, "faces: a set-piece line gets one over the cap")
+	for k in range(60 * 70):
+		h2.advance(1.0 / 60.0)
+	h2.consume({"type": "bark", "speaker": 1, "text": "Fresh minute.", "priority": 2, "dur": 0.3})
+	_ok(h2.barks.size() > 0 and h2.barks[h2.barks.size() - 1].face, "faces: a minute later the cap has room again")
+	# A sim pause holds the cap's clock (it is fight time): the window does not roll while the sim is frozen.
+	var h3 := _hub()
+	for i in range(6):
+		h3.consume({"type": "bark", "speaker": 0, "text": "L%d" % i, "priority": 2, "dur": 0.1})
+		for k in range(60):
+			h3.advance(1.0 / 60.0)
+	h3.consume({"type": "pause_start", "kind": "transform", "actor": 0, "version": "full", "dur": 200.0})
+	for k in range(60 * 70):
+		h3.advance(1.0 / 60.0)
+	h3.consume({"type": "bark", "speaker": 0, "text": "Late.", "priority": 2, "dur": 0.1})
+	_ok(h3.barks.size() == 0 or not h3.barks[0].face, "faces: the cap's minute is fight time, so a long sim pause does not reopen it")
+	# No move-name card.
+	var h4 := _hub()
+	h4.set_move_names(["Horizon Cleave"])
+	h4.consume({"type": "banner", "text": "HORIZON CLEAVE", "col": "#ffffff", "dur": 1.1})
+	var dropped: bool = h4.banner.is_empty() and int(h4.stats["banners_move_name"]) == 1
+	h4.consume({"type": "banner", "text": "PARRY", "col": "#9fe0ff", "dur": 0.8})
+	_ok(dropped and h4.banner.get("text", "") == "PARRY", "faces: a banner that is only a fighter's move name is dropped (the fighter shouts it, no name card) and other banners show")
+	# The slide.
+	var sb := _bark_obj(0)
+	sb.reveal_time = 0.5
+	sb.dur = 1.0
+	sb.age = 0.0
+	var m0: Dictionary = UiFaces.motion(sb, false)
+	sb.age = 0.3
+	var m1: Dictionary = UiFaces.motion(sb, false)
+	sb.age = 1.4
+	var m2: Dictionary = UiFaces.motion(sb, false)
+	sb.age = 1.45
+	var m3: Dictionary = UiFaces.motion(sb, true)
+	sb.age = 0.0
+	var m4: Dictionary = UiFaces.motion(sb, true)
+	_ok(float(m0["off"]) == 1.0 and float(m1["off"]) == 0.0 and float(m1["a"]) == 1.0 and float(m2["off"]) > 0.0 and float(m3["off"]) == 0.0 and float(m3["a"]) < 1.0 and float(m4["a"]) == 0.0, "faces: it slides in from the edge, holds, and slides out at the end of the line; in reduced motion it fades and does not move")
+	# Where it goes: every size, touch off and on, both hands, both ways round.
+	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(3840, 2160), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0],
+		[Vector2(844, 390), 1.0], [Vector2(1170, 2532), 3.0], [Vector2(1080, 2340), 2.75], [Vector2(828, 1792), 2.0], [Vector2(750, 1334), 2.0], [Vector2(390, 844), 1.0], [Vector2(360, 640), 1.0]]
+	var docked_desktop := 0
+	for cs in cases:
+		var sz: Vector2 = cs[0]
+		var dpv: float = cs[1]
+		for touch in [false, true]:
+			for lh in ([false, true] if touch else [false]):
+				for swapped in [false, true]:
+					var lay := UiLayout.new()
+					lay.dp = dpv
+					lay.touch_ui = touch
+					lay.left_handed = lh
+					lay.compute(sz, false, Vector4.ZERO, swapped)
+					var tag := "faces %dx%d dp %.1f touch=%s %s%s" % [int(sz.x), int(sz.y), dpv, str(touch), "left-handed " if lh else "", "swapped" if swapped else "normal"]
+					var view := Rect2(Vector2.ZERO, sz)
+					var fixed: Array = [["plate0", lay.plate[0]], ["plate1", lay.plate[1]], ["toll", lay.toll], ["strip", lay.strip], ["ring", lay.ring], ["read", lay.read_slot], ["pause", lay.pause_btn], ["pill", lay.feedback_btn],
+						["cards0", lay.cards[0]], ["cards1", lay.cards[1]], ["sil0", lay.silhouette[0]], ["sil1", lay.silhouette[1]], ["prompts0", lay.prompts[0]], ["prompts1", lay.prompts[1]], ["bark0", lay.bark[0]], ["bark1", lay.bark[1]]]
+					if touch:
+						for k in lay.touch_keys():
+							fixed.append([k, UiTouchControls.rect_of(lay.touch_ctrl[k])])
+					var bad: PackedStringArray = []
+					var docked := 0
+					for i in range(2):
+						var r: Rect2 = lay.face[i]
+						if r.size.y <= 0.0:
+							continue
+						docked += 1
+						if not view.encloses(r) or r.size.y < 55.9 or absf(r.size.x - r.size.y) > 0.5:
+							bad.append("face%d off screen or small" % i)
+						for o in fixed:
+							if (o[1] as Rect2).size.y > 0.0 and r.intersects(o[1]):
+								bad.append("face%d>%s" % [i, o[0]])
+						if (r.get_center().x < sz.x * 0.5) != (lay.plate[i].get_center().x < sz.x * 0.5):
+							bad.append("face%d on the wrong side" % i)
+						if lay.hints[i].size.y > 0.0 and (r.intersects(lay.hints[i]) or r.position.y < lay.hints[i].end.y):
+							bad.append("face%d>legend" % i)
+					if lay.face[0].size.y > 0.0 and lay.face[1].size.y > 0.0 and (lay.face[0] as Rect2).intersects(lay.face[1]):
+						bad.append("the two faces meet")
+					_ok(bad.is_empty(), "%s: the face squares are on screen, 56 px or more, on their side and clear of every HUD part and touch button %s" % [tag, str(bad)])
+					if lay.portrait or lay.bark_single:
+						_ok(docked == 0, "%s: a portrait or one-lane screen embeds the face in the bark panel" % tag)
+					if not touch and dpv == 1.0 and sz.x >= 1024.0 and lay.hints[0].size.y > 0.0:
+						var pl: Dictionary = UiHints.plan(UiFighterModel.new(), lay.hints[0], lay.s, {"glyph_style": "neutral", "control_scheme": "kb-solo"})
+						_ok((pl["rows"] as Array).size() >= 3, "%s: the legend still has its three rows with the face docked" % tag)
+					if cs == cases[0] and not touch and not swapped:
+						docked_desktop += docked
+	_ok(docked_desktop == 2, "faces: at 1920 by 1080 on a keyboard both faces are docked in their columns")
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	# In the HUD: a docked face and an embedded one are drawn, and a swap carries the face to the new side.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.consume({"type": "bark", "speaker": 1, "text": "You were something once.", "cues": [{"at": 0, "gesture": "scoff", "intensity": 1}], "priority": 2})
+	for i in range(30):
+		hud.advance(1.0 / 60.0)
+	await process_frame
+	await process_frame
+	var b0: UiEventHub.Bark = hud.hub.barks[0]
+	_ok(b0.face and b0.face_expr == "smirk" and not UiFaces.embedded(hud.layout, 1) and hud.layout.face[1].size.y > 0.0, "faces: in the HUD a scoffed line has a smirking face docked on its fighter's side")
+	hud.set_option("touch_ui", true)
+	hud.set_density(2.6)
+	hud.size = Vector2(1170, 2532)
+	hud.advance(1.0 / 60.0)
+	await process_frame
+	_ok(UiFaces.embedded(hud.layout, 1), "faces: on a portrait phone the same line's face is embedded in its panel")
 	hud.queue_free()
 	await process_frame

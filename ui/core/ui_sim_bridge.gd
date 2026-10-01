@@ -22,8 +22,11 @@ static func fighters(S) -> Array:
 
 ## Copy per-fighter state into the HUD. Call once per tick or per frame; it writes only to the HUD's models.
 static func patch(hud: UiHud, S) -> void:
+	var move_names: Array = []
 	for i in range(S.fighters.size()):
 		var f = S.fighters[i]
+		if "sigName" in f:
+			move_names.append(str(f.sigName))
 		var tier: int = int(f.tier)
 		var into: float = 0.0
 		if tier < 4:
@@ -42,6 +45,7 @@ static func patch(hud: UiHud, S) -> void:
 			# A form is ready while the sim says so (f.act.formReady, I2a): the prompt does not wait for, or depend on, the transform_ready event.
 			"avail_transform": bool(f.act.formReady) if "act" in f else false,
 		})
+	hud.hub.set_move_names(move_names)
 	var w = S.world
 	hud.hub.consume({"type": "world", "civilians": int(round(float(w.casualties))), "pop0": int(w.pop0), "structures": int(w.structuresLost), "craters": int(w.craters)})
 

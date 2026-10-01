@@ -32,6 +32,7 @@ var clear_zone := Rect2()                    # nothing draws here: the fighters'
 var frame_rect := Rect2()                    # where the camera may keep fighters: full width, below the columns
 var touch_reserve := Rect2()                 # portrait: kept free for Controls' touch controls (from the highest button down)
 var left_handed := false                     # the touch buttons on the left, the stick on the right (SimTouch mirrors them)
+var face: Array = [Rect2(), Rect2()]        # per slot: the square for the speaker's face cut-in, in its column above the bark lane (empty: the face is embedded in the bark panel)
 var touch_full := false                      # the Full touch layout (nine buttons, SimTouch.layout with full = true) instead of Simple's three
 var touch_ctrl: Dictionary = {}              # SimTouch.layout(...) for this screen in touch mode: attack, guard, power, context circles and the stick zone
 var bark_single := false                     # touch landscape: one bark lane, on the side away from the buttons, the lines stacking as in portrait
@@ -140,6 +141,57 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 			var tmp = arr[0]
 			arr[0] = arr[1]
 			arr[1] = tmp
+	_place_faces()
+
+
+## The docked face squares (UiFaces): each in its speaker's column, bottom on the bark lane's top, as large as `desired` allows without touching a
+## nameplate, a card row, the silhouette, the prompt row, the legend's three rows, the toll chip, the pause button, the match-end pill, the ring map,
+## the strip, the read slot or a touch button. None fits (a portrait phone, the one-lane touch landscape, a tiny window): the rect stays empty and the
+## face is embedded in the bark panel instead. The legend then ends where the face begins.
+func _place_faces() -> void:
+	face = [Rect2(), Rect2()]
+	if portrait or bark_single:
+		return
+	var gap: float = 12.0 * s
+	var desired: float = clampf(vp.y * 0.2, 72.0, 240.0)
+	var min_side: float = maxf(56.0, 48.0 * minf(dp, 1.5))
+	var gh: float = maxf(24.0 * s, 20.0)
+	var row_h: float = maxf(gh, float(UiText.px(18.0, s)) * 1.4) + 4.0 * s
+	var legend_min: float = 3.0 * row_h + 2.0 * maxf(8.0 * s, 5.0)
+	var legend_full: float = 11.0 * row_h + 2.0 * maxf(8.0 * s, 5.0)
+	var fixed: Array = [plate[0], plate[1], toll, strip, ring, read_slot, pause_btn, feedback_btn, cards[0], cards[1], silhouette[0], silhouette[1], prompts[0], prompts[1]]
+	if touch_ui and not touch_ctrl.is_empty():
+		for k in touch_keys():
+			var c: Dictionary = touch_ctrl[k]
+			fixed.append(Rect2(float(c.x) - float(c.r) - 6.0 * dp, float(c.y) - float(c.r) - 6.0 * dp, (float(c.r) + 6.0 * dp) * 2.0, (float(c.r) + 6.0 * dp) * 2.0))
+	for i in range(2):
+		var p: Rect2 = plate[i]
+		var left: bool = p.get_center().x < vp.x * 0.5
+		var top: float = (prompts[i].end.y if prompts[i].size.y > 0.0 else maxf(cards[i].end.y, silhouette[i].end.y)) + gap
+		# The legend keeps every row if a face at least two thirds of the wanted size still fits; if not, the face wins down to the legend's three rows.
+		var tries: Array = [[legend_full, desired * 0.66], [legend_min, min_side]] if not touch_ui else [[0.0, min_side]]
+		for tr in tries:
+			var obstacles: Array = fixed.duplicate()
+			if not touch_ui:
+				obstacles.append(Rect2(p.position.x, top, p.size.x, float(tr[0]) + gap))
+			var side: float = minf(desired, p.size.x * 0.85)
+			while side >= maxf(float(tr[1]), min_side):
+				var x: float = p.position.x if left else p.end.x - side
+				var r := Rect2(x, bark[i].position.y - gap - side, side, side)
+				var clash := not Rect2(Vector2.ZERO, vp).encloses(r)
+				for o in obstacles:
+					if (o as Rect2).size.y > 0.0 and r.intersects(o):
+						clash = true
+						break
+				if not clash:
+					face[i] = r
+					break
+				side *= 0.93
+			if face[i].size.y > 0.0:
+				break
+		if face[i].size.y > 0.0 and hints[i].size.y > 0.0:
+			var hh: float = face[i].position.y - gap - hints[i].position.y
+			hints[i] = Rect2(hints[i].position.x, hints[i].position.y, hints[i].size.x, maxf(hh, 0.0))
 
 
 ## One layout pass at the current scale `s`.

@@ -226,6 +226,17 @@ static func howto() -> Dictionary:
 	return _howto
 
 
+const FACES_PATH := "res://ui/data/faces.json"
+static var _faces: Dictionary = {}
+
+
+## The face cut-in's rules and portrait slots (ui/data/faces.json).
+static func faces() -> Dictionary:
+	if _faces.is_empty():
+		_faces = _read(FACES_PATH)
+	return _faces
+
+
 const SETTINGS_PATH := "res://ui/data/settings.json"
 static var _settings: Dictionary = {}
 

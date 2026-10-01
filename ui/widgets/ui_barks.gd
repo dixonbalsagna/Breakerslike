@@ -16,6 +16,7 @@ static func draw_letterbox(ci: CanvasItem, lay: UiLayout, k: float) -> void:
 
 
 static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: float, o: Dictionary) -> void:
+	UiFaces.draw_docked(ci, hub, lay, s, o)
 	var stack: Array = [0, 0]
 	var idx := 0
 	for b in hub.barks:
@@ -28,7 +29,7 @@ static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: fl
 		if lay.portrait or lay.bark_single:
 			slot_off = float(idx) * (lane.size.y + 6.0 * s) * -1.0
 			idx += 1
-		_bark(ci, hub, b, Rect2(lane.position.x, lane.position.y + slot_off, lane.size.x, lane.size.y), s, hub.model(b.slot).left_side)
+		_bark(ci, hub, b, Rect2(lane.position.x, lane.position.y + slot_off, lane.size.x, lane.size.y), s, hub.model(b.slot).left_side, b.face and UiFaces.embedded(lay, b.slot), o)
 
 
 ## Text that leans: an italic stand-in (the web build has one font), drawn with a shear about the baseline.
@@ -81,13 +82,22 @@ static func _thought(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: 
 
 
 ## A shout: large, heavy, no panel (the line is the event).
-static func _shout(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool) -> void:
+static func _shout(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool, embed: bool = false, o: Dictionary = {}) -> void:
 	var inten: int = int((b.cues[0] as Dictionary).get("intensity", 2)) if not b.cues.is_empty() else 2
 	var fs: int = UiText.px(38.0, s)
+	# An embedded face is a square at the lane's outer end, as high as two lines of the shout; the shout takes the rest.
+	var fe: float = 2.6 * float(fs) if embed else 0.0
+	var lane_full: Rect2 = lane
+	if embed:
+		lane = Rect2(lane.position.x + (fe + 8.0 * s if left else 0.0), lane.position.y, lane.size.x - fe - 8.0 * s, lane.size.y)
 	var lines: PackedStringArray = UiText.wrap(b.text, fs, lane.size.x)
 	var shown: int = UiBarkTiming.reveal_count(b.text, b.age, inten)
 	var fade: float = minf(clampf(b.age / 0.06, 0.0, 1.0), clampf((b.reveal_time + b.dur - b.age) / 0.25, 0.0, 1.0))
 	var yy: float = lane.end.y - float(lines.size() - 1) * (float(fs) + 4.0) - 6.0 * s
+	if embed:
+		var m0: UiFighterModel = hub.model(b.slot)
+		var fr := Rect2(lane_full.position.x if left else lane_full.end.x - fe, lane_full.end.y - fe, fe, fe)
+		UiFaces.draw_portrait(ci, fr, m0, b.face_expr, fade * float(o.get("swap_fade", 1.0)), s)
 	var remaining: int = shown
 	for l in lines:
 		var part: String = l.substr(0, remaining) if remaining < l.length() else l
@@ -99,21 +109,28 @@ static func _shout(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Re
 		yy += float(fs) + 4.0
 
 
-static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool) -> void:
+static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rect2, s: float, left: bool, embed: bool = false, o: Dictionary = {}) -> void:
 	if b.style == "thought":
 		_thought(ci, hub, b, lane, s, left)
 		return
 	if b.style == "shout":
-		_shout(ci, hub, b, lane, s, left)
+		_shout(ci, hub, b, lane, s, left, embed, o)
 		return
 	var m: UiFighterModel = hub.model(b.slot)
 	var inten: int = int((b.cues[0] as Dictionary).get("intensity", 1)) if not b.cues.is_empty() else 1
 	var fs: int = UiText.px(28.0, s)
 	var tfs: int = UiText.px(20.0, s)
 	var pad: float = 10.0 * s
-	var lines: PackedStringArray = UiText.wrap(b.text, fs, lane.size.x - pad * 2.0)
+	# An embedded face is a square the height of the panel at its outer end; the text takes the rest of the lane.
+	var fe: float = 2.8 * float(fs) if embed else 0.0
+	var lines: PackedStringArray = UiText.wrap(b.text, fs, lane.size.x - pad * 2.0 - fe)
 	var shown: int = UiBarkTiming.reveal_count(b.text, b.age, inten)
 	var total_h: float = pad * 2.0 + float(tfs) + 4.0 + float(lines.size()) * (float(fs) + 4.0)
+	if embed and total_h > fe:
+		fe = total_h
+		lines = UiText.wrap(b.text, fs, lane.size.x - pad * 2.0 - fe)
+		total_h = pad * 2.0 + float(tfs) + 4.0 + float(lines.size()) * (float(fs) + 4.0)
+	fe = total_h if embed else 0.0
 	var fade: float = 1.0
 	var left_t: float = b.reveal_time + b.dur - b.age
 	if left_t < 0.25:
@@ -123,12 +140,20 @@ static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rec
 	var w: float = 0.0
 	for l in lines:
 		w = maxf(w, UiText.width(l, fs))
-	w = maxf(w, UiText.width(m.name if m != null else "", tfs) + 60.0 * s) + pad * 2.0
+	var cap_w: float = 0.0
+	if hub.captions_on and not b.cues.is_empty():
+		cap_w = UiText.width("[" + UiData.caption_for(str((b.cues[b.cues.size() - 1] as Dictionary).get("gesture", ""))) + "]", tfs)
+	w = maxf(w, UiText.width(m.name if m != null else "", tfs) + maxf(60.0 * s, cap_w + 24.0 * s)) + pad * 2.0 + fe
 	var x: float = lane.position.x if left else lane.end.x - w
 	var panel := Rect2(x, lane.end.y - total_h, w, total_h)
+	var tx0: float = panel.position.x + fe   # the text area's left edge, and its right edge below, inside the face
+	var tx1: float = panel.end.x - fe
 	UiIcons.rrect(ci, panel, 8.0 * s, Color(UiLook.col(UiLook.SCRIM), 0.55 * fade), Color(m.aura if m != null else Color.WHITE, 0.55 * fade), maxf(1.5, 2.0 * s))
+	if embed and m != null:
+		var fr := Rect2(panel.position.x if left else panel.end.x - fe, panel.position.y, fe, fe)
+		UiFaces.draw_portrait(ci, fr.grow(-2.0 * s), m, b.face_expr, fade * float(o.get("swap_fade", 1.0)), s)
 	var ty: float = panel.position.y + pad + UiText.ascent(tfs)
-	var name_x: float = panel.position.x + pad if left else panel.end.x - pad
+	var name_x: float = tx0 + pad if left else tx1 - pad
 	var nw: float = UiText.draw(ci, m.name if m != null else "", Vector2(name_x, ty), tfs, Color(m.aura if m != null else Color.WHITE, fade), -1 if left else 1, 1.5)
 	# The grunt burst pulses beside the name when a cue fires; the caption tag names the gesture for players who cannot hear.
 	if m != null and m.cue < UiLook.CUE_PULSE * 1.6 and b.fired > 0:
@@ -138,7 +163,7 @@ static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rec
 	if hub.captions_on and b.fired > 0:
 		var last: Dictionary = b.cues[b.fired - 1]
 		var cap: String = "[" + UiData.caption_for(str(last.get("gesture", ""))) + "]"
-		var cx: float = (panel.end.x - pad) if left else (panel.position.x + pad)
+		var cx: float = (tx1 - pad) if left else (tx0 + pad)
 		UiText.draw(ci, cap, Vector2(cx, ty), tfs, Color(UiLook.col(UiLook.INK_DIM), fade), 1 if left else -1, 1.5)
 	# The revealed text, character by character across the wrapped lines.
 	var yy: float = ty + 6.0 + float(fs)
@@ -146,7 +171,7 @@ static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rec
 	for l in lines:
 		var part: String = l.substr(0, remaining) if remaining < l.length() else l
 		if part != "":
-			UiText.draw(ci, part, Vector2(panel.position.x + pad if left else panel.end.x - pad, yy), fs, Color(UiLook.col(UiLook.INK), fade), -1 if left else 1, 2.0)
+			UiText.draw(ci, part, Vector2(tx0 + pad if left else tx1 - pad, yy), fs, Color(UiLook.col(UiLook.INK), fade), -1 if left else 1, 2.0)
 		remaining -= l.length() + 1
 		if remaining < 0:
 			break

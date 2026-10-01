@@ -388,6 +388,7 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"thickness": float(opts["thickness"]),
 		"region_label": bool(opts["region_label"]),
 		"plate_alpha": plate_alpha,
+		"swap_fade": _swap_fade,
 		"crown_always": bool(opts["crown_always"]),
 		"brink_cue": bool(opts["brink_cue"]),
 		"crown_locked": hub.crown_locked(),
