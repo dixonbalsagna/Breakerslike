@@ -4268,6 +4268,54 @@
         "rule": "type",
         "pointer": "/impulses/landmarkFall"
       }
+    },
+    {
+      "id": "director-location-min-record-is-code",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/minRecord": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/minRecord"
+      }
+    },
+    {
+      "id": "director-location-signed-weight-negative",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/varietyW": -400000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/varietyW"
+      }
+    },
+    {
+      "id": "director-location-village-destination-ok",
+      "schema": "director-location.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/location.json",
+          "set": {
+            "/destinations/villain": [
+              "village",
+              "city"
+            ]
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

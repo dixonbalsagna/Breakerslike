@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/director-location",
-  "title": "director.location/1 (draft, from docs/director/location-variety-plan.md)",
-  "description": "data/director/location.json: where the fight roams (Encounter's location variety slice): the hero's variety trigger, the destination scoring weights, whether the sea is a destination, the villain's prowl, and which biomes can be destinations per role. DRAFT: the field types are read from the plan before the data exists, and the version string `director.location/1` is a guess that follows the other files' naming; Encounter's commit tightens it. Planet shares come from WorldBiomes.SEG at load, not from data. The file is hashed (DirData.dataHash). Version field: schema. Policy: closed except keys starting with an underscore.",
+  "title": "director.location/1 (docs/director/location-variety-plan.md, as built)",
+  "description": "data/director/location.json: where the fight roams between exchanges (sim/director/location.gd, DirLocation.roam): the hero's variety trigger, the destination scoring weights, whether the sea is a destination, the villain's prowl, and which biomes can be destinations per role. As built: the variety term is SIGNED (a destination biome over its planet share costs varietyW times the excess, one under it draws by varietyW times the deficit); prowlAfter is the fight's total seconds away from towns (the prowl also runs only while towns hold less than their planet share); the 20 s of recorded fight before shares count (MIN_RECORD) is a code constant, so there is deliberately no key for it and the closed schema rejects one. Planet shares come from WorldBiomes.SEG at load, not from data. The file is hashed (DirData.dataHash). Version field: schema. Policy: closed except keys starting with an underscore.",
   "type": "object",
   "required": [
     "schema",
@@ -28,7 +28,7 @@
     "varietyW": {
       "type": "number",
       "minimum": 0,
-      "description": "The weight on a destination biome's excess share."
+      "description": "Signed weight on a destination biome's share against its planet share: cost = varietyW x excess over the share, draw = varietyW x deficit under it."
     },
     "popW": {
       "type": "number",
@@ -53,7 +53,7 @@
     "prowlAfter": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "description": "Seconds away from towns before the villain prowls."
+      "description": "The fight's total seconds away from towns before the villain prowls (the prowl also needs towns below their planet share)."
     },
     "destinations": {
       "type": "object",
