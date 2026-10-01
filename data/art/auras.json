@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "note": "The Anti-hero's aura, flash and glow colours for his three forms (Regalia, Sovereign, Apex), within Legal's aura rule: hue 260 to 320 degrees, a lighter tint of the same hue for the core, never pure white, no red, orange, gold or yellow (docs/legal/rule-of-cool-screen.md). Written by art/concepts/forms/gen.mjs (Art owns data/art/). Proposals pending Orb's preference and Legal.",
+  "hue_range": [
+    260,
+    320
+  ],
+  "rules": {
+    "aura": "Only while charging or attacking, never at rest. A thin outline of the silhouette and rings in the form's rim colour; never a flame, never streaming upward, no lightning. Core is the tint, never white (L* at most 86).",
+    "flashes": "Emotion flashes use rim (mid) and core (light) of the current form; info flashes use info_core with the shadow as the keyline. The shapes, pulses and keep-out zone never change with the form.",
+    "glow": "The sigil's emissive colour. It is brightest at Apex."
+  },
+  "anti_hero": {
+    "forms": {
+      "regalia": {
+        "name": "Regalia",
+        "hue": 266,
+        "pieces": "a high collar and two forearm guards",
+        "aura": {
+          "rim": "#9664d8",
+          "core": "#d3baf2",
+          "shadow": "#52327b",
+          "keyline": "#301a4d"
+        },
+        "flashes": {
+          "mid": "#9664d8",
+          "light": "#d3baf2",
+          "shadow": "#52327b",
+          "info_core": "#eee5fa",
+          "info_line": "#52327b"
+        },
+        "glow": {
+          "sigil": "#d8bff7",
+          "halo": "#9664d8",
+          "halo_alpha": 0.35
+        }
+      },
+      "sovereign": {
+        "name": "Sovereign",
+        "hue": 290,
+        "pieces": "the collar and guards, a low faceted crest on the mask, and three floating plates behind the shoulders",
+        "aura": {
+          "rim": "#bf60d2",
+          "core": "#e7bdef",
+          "shadow": "#6b3276",
+          "keyline": "#431b4b"
+        },
+        "flashes": {
+          "mid": "#bf60d2",
+          "light": "#e7bdef",
+          "shadow": "#6b3276",
+          "info_core": "#f6e6fa",
+          "info_line": "#6b3276"
+        },
+        "glow": {
+          "sigil": "#edc1f6",
+          "halo": "#bf60d2",
+          "halo_alpha": 0.35
+        }
+      },
+      "apex": {
+        "name": "Apex",
+        "hue": 272,
+        "pieces": "the guards fall away and the sound cuts out; the collar, the crest and the plates stay, hanging still",
+        "aura": {
+          "rim": "#8d51c2",
+          "core": "#ceb1e7",
+          "shadow": "#4e2f6a",
+          "keyline": "#2f1943"
+        },
+        "flashes": {
+          "mid": "#8d51c2",
+          "light": "#ceb1e7",
+          "shadow": "#4e2f6a",
+          "info_core": "#f0e7f9",
+          "info_line": "#4e2f6a"
+        },
+        "glow": {
+          "sigil": "#ddc2f4",
+          "halo": "#8d51c2",
+          "halo_alpha": 0.35
+        }
+      }
+    }
+  }
+}

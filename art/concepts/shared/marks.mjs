@@ -100,7 +100,7 @@ export function sigilMarks(fk, pal, state, mask, yaw = 0) {
   if (dark || glow) for (const part of parts) if (part.fill === 'acc') out.push({ poly: scl(place(part.pts), 1.5, cc), fill: pal.accent.light, op: dark ? 0.26 : 0.34, line: false });
   for (const part of parts) out.push({ poly: place(part.pts), fill: part.fill === 'mask' ? mask.fill : col, line: false });
   if (yaw >= 85) { const f = FRONT[fk]; return out.map(q => ({ ...q, poly: q.poly.map(([x, y]) => [f.cx + (x - cc[0]) * f.k, y]) })); }
-  if (yaw > 0) { const m = yawMap(fk, yaw), ex = ([x, y]) => [cc[0] + (x - cc[0]) * (yaw >= 60 ? 0.7 : EXP[fk]), y]; return out.map(q => ({ ...q, poly: q.poly.map(ex).map(m) })); }
+  if (yaw > 0) { const m = yawMap(fk, yaw), ex = ([x, y]) => [cc[0] + (x - cc[0]) * (yaw >= 45 ? 0.7 : EXP[fk]), y]; return out.map(q => ({ ...q, poly: q.poly.map(ex).map(m) })); }
   return out;
 }
 

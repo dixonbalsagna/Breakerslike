@@ -251,7 +251,8 @@ function poseFor(fk, s) {
   if (s === 'brink') return { lean: 34, head: 26, nearArm: [20, -100], farArm: [14, 10], nearLeg: [40, -30], farLeg: [-10, -50], handNear: 'open', handFar: 'fist' };
   if (s === 'rage') return { ...POSES.dropped };
   if (s === 'clash') return { lean: 22, head: 6, nearArm: [84, 90], farArm: [-40, -90], nearLeg: [42, 14], farLeg: [-36, -12], handNear: 'fist', handFar: 'fist' };
-  if (s === 'surge') return { lean: -6, head: -20, nearArm: [98, 122], farArm: [-98, -122], nearLeg: [20, 6], farLeg: [-20, -6], handNear: 'open', handFar: 'open' };
+  // moveset-rules.md 10.8: the surge is the settled, composed pose, never arms thrown wide with the head back. Chin lifted, still, one hand palm-up.
+  if (s === 'surge') return { lean: -3, head: -8, nearArm: [44, 150], farArm: [-6, -10], nearLeg: [4, 1], farLeg: [-4, -1], handNear: 'open', handFar: 'fist' };
   if (s === 'winded') return { ...b, lean: b.lean + 16, head: b.head + 10, nearArm: [30, 50], farArm: [-20, -40], handNear: 'open' };
   if (s === 'smug') return { ...b, lean: b.lean - 6, head: b.head - 10, nearArm: [20, 130], farArm: [-10, -60], handNear: 'fist' };
   if (s === 'respect') return { ...b, lean: b.lean + 14, head: b.head + 8, nearArm: [10, 20], farArm: [-6, -12], handNear: 'fist' };

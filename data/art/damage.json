@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "note": "Battle damage stages per fighter outfit (Orb, docs/ep/vision.md questionnaires 11 and 12). Written by art/concepts/damage/gen.mjs (Art owns data/art/). Stages map onto the existing wear stages (docs/design/spec-wounds.md). Each stage keeps the layers of the stages below. The wear is a property of the body, so it stays and keeps building through a transformation: a new form adds regalia above the damage.",
+  "persist_through_forms": true,
+  "stages": {
+    "1": {
+      "name": "scuffed",
+      "wear_stage": "bruised, 30 to 59",
+      "orb_pick": "scuffs and bruises",
+      "body": {
+        "breathing": "quick",
+        "breath_rate": 1.3,
+        "chest_rise_bh": 0.01,
+        "stagger": "none",
+        "aura": "steady",
+        "limb": "none"
+      }
+    },
+    "2": {
+      "name": "torn",
+      "wear_stage": "battered, 60 to 89",
+      "orb_pick": "torn clothing",
+      "body": {
+        "breathing": "heavy",
+        "breath_rate": 1.7,
+        "chest_rise_bh": 0.02,
+        "stagger": "light",
+        "aura": "flicker",
+        "limb": "none"
+      }
+    },
+    "3": {
+      "name": "ruined",
+      "wear_stage": "broken, 90 and above",
+      "orb_pick": "a broken limb that hangs, stagger",
+      "body": {
+        "breathing": "ragged",
+        "breath_rate": 2.2,
+        "chest_rise_bh": 0.03,
+        "stagger": "heavy",
+        "aura": "gaps",
+        "limb": "near arm hangs, near leg drags"
+      }
+    }
+  },
+  "layers_note": "decals: shader layers keyed by wear. geometry: small mesh swaps merged at equip (docs/animation/pose-pipeline.md 2.8). silhouette: body shape changes (poses, a missing or hanging part), at least 10 percent of a body height by stage 3. Blood decals are separate and stay behind the graphic dial.",
+  "fighters": {
+    "protagonist": {
+      "1": {
+        "decals": [
+          "scuff_tunic",
+          "scuff_wrap",
+          "bruise_arm",
+          "bruise_neck"
+        ],
+        "geometry": [],
+        "silhouette": []
+      },
+      "2": {
+        "decals": [
+          "bruise_arm_large"
+        ],
+        "geometry": [
+          "tunic_torn_shoulder",
+          "apron_frayed",
+          "wrap_trailing",
+          "mask_chip"
+        ],
+        "silhouette": []
+      },
+      "3": {
+        "decals": [],
+        "geometry": [
+          "tunic_torn_open",
+          "knot_loose"
+        ],
+        "silhouette": [
+          "arm_near_hang",
+          "leg_near_drag",
+          "mask_crack"
+        ]
+      }
+    },
+    "anti_hero": {
+      "1": {
+        "decals": [
+          "scuff_jacket",
+          "scuff_guard",
+          "bruise_arm",
+          "bruise_neck"
+        ],
+        "geometry": [],
+        "silhouette": []
+      },
+      "2": {
+        "decals": [
+          "bruise_arm_large"
+        ],
+        "geometry": [
+          "skirt_torn_hem",
+          "plate_2_cracked",
+          "plate_3_cracked",
+          "mask_chip"
+        ],
+        "silhouette": []
+      },
+      "3": {
+        "decals": [],
+        "geometry": [
+          "jacket_torn_open",
+          "guard_gone"
+        ],
+        "silhouette": [
+          "arm_near_hang",
+          "leg_near_drag",
+          "plate_4_missing",
+          "plate_6_missing",
+          "mask_crack"
+        ]
+      }
+    },
+    "empress": {
+      "1": {
+        "decals": [
+          "scuff_tabard",
+          "scuff_mantle",
+          "bruise_arm",
+          "bruise_neck"
+        ],
+        "geometry": [],
+        "silhouette": []
+      },
+      "2": {
+        "decals": [
+          "bruise_arm_large"
+        ],
+        "geometry": [
+          "mantle_torn_notch",
+          "tabard_torn_hem",
+          "blades_chipped_3",
+          "mask_chip"
+        ],
+        "silhouette": []
+      },
+      "3": {
+        "decals": [],
+        "geometry": [
+          "mantle_torn_wide",
+          "tunic_torn_open",
+          "bracer_gone"
+        ],
+        "silhouette": [
+          "arm_near_hang",
+          "leg_near_drag",
+          "mantle_strip_hanging",
+          "blades_missing_5",
+          "mask_crack"
+        ]
+      }
+    },
+    "cyborg": {
+      "1": {
+        "decals": [
+          "scuff_plating",
+          "dent_chest",
+          "scuff_mail",
+          "bruise_arm"
+        ],
+        "geometry": [],
+        "silhouette": []
+      },
+      "2": {
+        "decals": [],
+        "geometry": [
+          "mail_holes_2",
+          "hatch_dented",
+          "cable_loose",
+          "mask_chip"
+        ],
+        "silhouette": []
+      },
+      "3": {
+        "decals": [],
+        "geometry": [
+          "mail_holes_5",
+          "plating_torn_open",
+          "vent_cracked"
+        ],
+        "silhouette": [
+          "arm_near_hang",
+          "leg_near_drag",
+          "cable_hanging",
+          "mask_crack"
+        ]
+      }
+    }
+  }
+}
