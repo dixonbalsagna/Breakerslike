@@ -63,11 +63,12 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "caught": 0, "other": 0}, "firstContact": {}, "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"n": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "firstContact": {}, "liftsSeen": {}, "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
 	var new_fl: Array = []   # launch events of this tick
+	var lift: Array = [null, null]   # the open flight off terrain of each fighter: {tick, cause}; counted as seen once it has been in the air 10 ticks (balance-targets 20, second landing ruling)
 	var last_fl: Array = [null, null]   # the latest launch of each fighter, for the bounce, lip and tumble counts of its journey
 	var open_fl: Array = []   # launches whose first contact has not been seen: {"v": victim index, "cls": ""}; balance-targets 18 (one landing class per launch)
 	var launch_x: Array = [0.0, 0.0]
@@ -169,7 +170,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				for fl in open_fl:
 					if fl.v == v0 and fl.cls == "":
 						fl.cls = "other"   # launched again before any contact
-				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false, "kc": "", "endk": ""}
+				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false, "kc": "", "endk": "", "n": (int(e.n) if e.get("n") != null else -1), "je": null, "x0": 0.0, "hx0": false}
 				open_fl.append(nf)
 				last_fl[v0] = nf
 				new_fl.append(nf)
@@ -177,6 +178,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 			# The first contact's kind decides the class (a skid or tumble is a slide, a crater a slam, a bounce a bounce); a water skim also emits `bounce` with surface water, which is the water class and not a bounce.
 			elif e.type == "bounce":
 				var bv: int = int(e.actor)
+				_contact(rec, lift, last_fl, bv, e)
 				if str(e.get("surface")) == "water":
 					_land(open_fl, bv, "water")
 				else:
@@ -185,6 +187,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 						last_fl[bv].bn += 1
 			elif e.type == "land":
 				var lk: String = str(e.get("kind"))
+				_contact(rec, lift, last_fl, int(e.actor), e)
 				if str(e.get("surface")) == "water":
 					_land(open_fl, int(e.actor), "water")
 				else:
@@ -194,8 +197,17 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 			elif e.type == "left_ground":
 				if str(e.get("cause")) != "bounce":
 					rec.lips += 1
+					lift[int(e.actor)] = {"tick": int(e.tick), "cause": str(e.get("cause"))}
 					if last_fl[int(e.actor)] != null:
 						last_fl[int(e.actor)].lip += 1
+			elif e.type == "journey_end":   # World's closing event, once per journey: end (stop, tumble, slam, wall, water, recover, capped), contacts, lips, bounces, t; n is the launch number
+				var jv: int = int(e.actor)
+				for fl in open_fl:
+					if fl.v == jv and fl.je == null and (fl.n < 0 or int(e.n) < 0 or fl.n == int(e.n)):
+						var jend: String = str(e.get("end")) if e.get("end") != null else str(e.get("kind"))
+						fl.je = {"end": jend, "bounces": int(_f(e, "bounces", "nb")), "len": (absf(SimWrap.sdx(fl.x0, e.x)) if fl.hx0 else 0.0), "t": _f(e, "t", "dur")}
+						break
+				lift[jv] = null
 			elif e.type == "tumble_end":
 				if str(e.get("how")) != "air" and last_fl[int(e.actor)] != null:
 					last_fl[int(e.actor)].tum = true   # the journey ended from a tumble (it stopped or he recovered early)
@@ -321,6 +333,20 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				c = "slide" if (fl.endk == "stop" and fl.bn > 0) else String(fl.endk)
 			elif c == "bounce":
 				c = "slide"
+		if fl.je != null and fl.cls != "brunt":   # World's closing event names how the journey ended, whatever the first contact was
+			var jc: String = str(fl.je.end)
+			c = "slam" if jc == "slam" else ("water" if jc == "water" else ("wall" if jc == "wall" else "slide"))   # stop, tumble, recover and capped are all a halt
+			if fl.pl:
+				rec.journeys.jn += 1
+				if jc == "capped":
+					rec.journeys.capped += 1
+				if float(fl.je.len) > 4000.0:
+					rec.journeys.long += 1
+				if jc == "tumble":
+					rec.journeys.tumbledEnd += 1
+				if int(fl.je.bounces) > 0:
+					rec.journeys.jbounced += 1
+					rec.journeys.jbounces += int(fl.je.bounces)
 		if c == "slideShort":
 			c = "slam"
 			rec.slideShort += 1
@@ -350,6 +376,26 @@ func _land(open_fl: Array, v: int, cls: String) -> void:
 		if fl.v == v and fl.cls == "":
 			fl.cls = cls
 			return
+
+
+## A numeric event field under either of two names (World's doc and the EP's note differ: bounces or nb, t or dur), 0 when neither exists.
+func _f(e, a: String, b: String) -> float:
+	var v = e.get(a)
+	if v == null:
+		v = e.get(b)
+	return float(v) if v != null else 0.0
+
+
+## A contact (bounce or land) of fighter v's journey: the flight off terrain before it counts as seen if it lasted 10 ticks, and the first contact's x starts the journey's distance.
+func _contact(rec: Dictionary, lift: Array, last_fl: Array, v: int, e) -> void:
+	if lift[v] != null:
+		if int(e.tick) - int(lift[v].tick) >= 10:
+			rec.liftsSeen[str(lift[v].cause)] = rec.liftsSeen.get(str(lift[v].cause), 0) + 1
+		lift[v] = null
+	var fl = last_fl[v]
+	if fl != null and not fl.hx0:
+		fl.hx0 = true
+		fl.x0 = float(e.x)
 
 
 ## The first ground contact's kind from World's events: kept apart from the class the older events gave (crater, slide), which it overrides for a ground class.

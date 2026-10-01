@@ -195,7 +195,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     if (D.every(r => r.landings)) {
       // balance-targets 19 and 20: one landing class per planner launch, by first contact: brunt (a building first), water (a skim or splash), bounce (G5), caught in the air (the follow-up reached the victim before any contact),
       // then the ground, by the first contact's kind (docs/director/landing-mix.md): a slide of any length is a slide, even one that ends against a rise; a crater at first contact is a slam; a landing at 350 or slower is a stop. Records take it from the slide state until World's `land` events (G5) name the kind directly.
-      const g5 = hasEvent(A, 'bounce') || hasEvent(A, 'land') || hasEvent(A, 'left_ground') || hasEvent(A, 'tumble_end');
+      const g6 = hasEvent(A, 'journey_end'), g5 = g6 || hasEvent(A, 'bounce') || hasEvent(A, 'land') || hasEvent(A, 'left_ground') || hasEvent(A, 'tumble_end');
       const L = r => sum(Object.values(r.landings)), shortPl = r => (g5 ? (r.slideShortPl || 0) : 0);
       const slideC = r => r.landings.slide + shortPl(r), slamC = r => r.landings.slam - shortPl(r);
       const how = g5 ? 'World events name the kind' : 'the slide state at first contact';
@@ -206,10 +206,20 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
         R.rate('5c.slideOfGround', '§5c', 'Slides as a share of ground landings (slides plus slams; at least 65%)', { v: gs.p, ci: gs.ci, lo: 0.65, hi: 1 });
         mixOf('caught in the air (the follow-up before any contact; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
       } else {
-        // balance-targets 20 (the landing ruling after World's build): a launch is classed by how its journey ends; a bounce that ends in a skid, a tumble or a halt counts toward the skidding majority
+        // balance-targets 20 (second landing ruling, 2026-10-02): a launch is classed by how its journey ends (World's journey_end); a bounce that ends in a skid, a tumble or a halt counts toward the halted class
+        if (g6) {
+          mixOf('halted: the journey ends skidding or tumbling to a stop, with or without bounces first (40 to 60%, the largest class)', slideC, 0.40, 0.60, L);
+          mixOf('against a wall (a slope steeper than 0.8; 5 to 15%)', r => r.landings.wall || 0, 0.05, 0.15, L);
+          mixOf('slam: the journey ends in a crater (8 to 18%)', slamC, 0.08, 0.18, L);
+          mixOf('caught in the air (the follow-up before the journey ends; 15 to 30%)', r => r.landings.caught, 0.15, 0.30, L);
+          { const gr = S.clusterShare(D, slideC, r => slideC(r) + (r.landings.wall || 0) + slamC(r)); R.rate('5c.haltOfGround', '§5c', 'Halted as a share of journeys that end on the ground (halt, wall or slam; at least 55%)', { v: gr.p, ci: gr.ci, lo: 0.55, hi: 1 }); }
+          { const classes = ['halt', 'wall', 'slam', 'caught', 'water', 'brunt'], sh = k => sum(D.map(k === 'halt' ? slideC : k === 'slam' ? slamC : r => r.landings[k] || 0)) / Math.max(1, sum(D.map(L)));
+            R.add({ id: '5c.largest', ref: '§5c', what: 'Halted is the largest class (balance-targets 20)', status: classes.every(k => k === 'halt' || sh(k) < sh('halt')) ? 'PASS' : 'FAIL', value: classes.map(k => `${k} ${fmt.pct(sh(k))}`).join(', '), band: 'halted largest', note: '' }); }
+        } else {
         mixOf('halt: the journey ends skidding or tumbling to a stop, with or without bounces first (55 to 75%)', slideC, 0.55, 0.75, L);
         mixOf('slam: the journey ends in a crater (8 to 18%)', slamC, 0.08, 0.18, L);
         mixOf('caught in the air (the follow-up before the journey ends; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
+        }
         { const c = S.clusterShare(D, r => r.journeys.anyBounce || 0, L); R.rate('5c.bounced', '§5c', 'Launches with at least one bounce (15 to 30%; the boundary is 40 degrees)', { v: c.p, ci: c.ci, lo: 0.15, hi: 0.30 }); }
         { const fc = k => sum(D.map(r => (r.firstContact || {})[k] || 0)); R.add({ id: '5c.firstContacts', ref: '§5c', what: 'First contacts: skids at least as common as bounces', status: fc('slide') >= fc('bounce') ? 'PASS' : 'FAIL', value: `skid or tumble ${fc('slide')}, bounce ${fc('bounce')}, slam ${fc('slam')}, stop ${fc('stop')}`, band: 'skids at least bounces', note: '' }); }
       }
@@ -220,11 +230,21 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
       if (D.every(r => r.landingsAll)) { const LA = r => sum(Object.values(r.landingsAll)); const t = k => sum(D.map(r => r.landingsAll[k])) / Math.max(1, sum(D.map(LA))); R.info('5c.all', '§5c', 'Landing mix over every launch event, beam and finisher launches included (not banded)', `slide ${fmt.pct(t('slide'))}, slam ${fmt.pct(t('slam'))}, caught ${fmt.pct(t('caught'))}, bounce ${fmt.pct(t('bounce'))}, water ${fmt.pct(t('water'))}, brunt ${fmt.pct(t('brunt'))}, none ${fmt.pct(t('other'))}`, ''); }
       // balance-targets 20 and docs/world/ground-contact.md section 4: `left_ground {actor, cause}` (a flight off a rim, crest, heap, cliff or ridge when the cause is not `bounce`), `bounce {actor, n, surface}` (a water skim also emits one, with surface water), `land {actor, kind}`, `tumble_end {actor, how}`; the early-recovery events (`tech_offer`, `tech`) are not fixed yet, so those names are my assumption
       const J = f => sum(D.map(r => r.journeys[f])), minutes = sum(D.map(r => r.koAt)) / 60;
-      if (hasEvent(A, 'left_ground')) R.point('5c.lip', '§5c', 'Flights off a lip a minute (left_ground, cause other than bounce; 0.3 to 1.5; they rise through the match)', { v: sum(D.map(r => r.lips || 0)) / minutes, lo: 0.3, hi: 1.5, unit: 'num' });
+      if (g6) {
+        const seen = (r, causes) => causes.reduce((a, k) => a + ((r.liftsSeen || {})[k] || 0), 0), allC = ['lip', 'crest', 'heap', 'cliff', 'ridge'];
+        R.point('5c.lip', '§5c', 'Flights off a crater lip a minute, seen (in the air at least 10 ticks; 0.5 to 2.5)', { v: sum(D.map(r => seen(r, ['lip']))) / minutes, lo: 0.5, hi: 2.5, unit: 'num' });
+        R.point('5c.terrain', '§5c', 'Flights off any terrain a minute, seen (lips, crests, cliffs, heaps; 1.5 to 5)', { v: sum(D.map(r => seen(r, allC))) / minutes, lo: 1.5, hi: 5, unit: 'num' });
+        if (J('jn') > 0) {
+          R.point('5c.capped', '§5c', 'Journeys that reach the 4 s or 8-contact bound (at most 8%)', { v: J('capped') / J('jn'), hi: 0.08, unit: 'pct' });
+          R.point('5c.long', '§5c', 'Journeys longer than 4,000 units (at most 20%; Camera chase rule covers them)', { v: J('long') / J('jn'), hi: 0.20, unit: 'pct' });
+        }
+      } else if (hasEvent(A, 'left_ground')) R.point('5c.lip', '§5c', 'Flights off a lip a minute (left_ground, cause other than bounce; 0.3 to 1.5; they rise through the match)', { v: sum(D.map(r => r.lips || 0)) / minutes, lo: 0.3, hi: 1.5, unit: 'num' });
       else R.pending('5c.lip', '§5c', 'Flights off a lip a minute (0.3 to 1.5)', 'switches on with World G5 (a `left_ground` event per flight off a rim, ridge, heap or cliff)');
-      if (hasEvent(A, 'bounce') && J('bounced') > 0) R.point('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', { v: J('bounces') / J('bounced'), lo: 1.3, hi: 2.2, unit: 'num' });
+      if (g6 && J('jbounced') > 0) R.point('5c.bounces', '§5c', 'Bounces per bounced journey, mean (1.2 to 2.0)', { v: J('jbounces') / J('jbounced'), lo: 1.2, hi: 2.0, unit: 'num' });
+      else if (hasEvent(A, 'bounce') && J('bounced') > 0) R.point('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', { v: J('bounces') / J('bounced'), lo: 1.3, hi: 2.2, unit: 'num' });
       else R.pending('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', 'switches on with World G5 (a `bounce` event per bounce)');
-      if (hasEvent(A, 'tumble_end') && J('n') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (a tumble_end that stops him or he recovers from; 30 to 60%)', { v: J('tumbled') / J('n'), ci: wl(J('tumbled'), J('n')), lo: 0.30, hi: 0.60 });
+      if (g6 && J('jn') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (journey_end end tumble; 30 to 60%)', { v: J('tumbledEnd') / J('jn'), ci: wl(J('tumbledEnd'), J('jn')), lo: 0.30, hi: 0.60 });
+      else if (hasEvent(A, 'tumble_end') && J('n') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (a tumble_end that stops him or he recovers from; 30 to 60%)', { v: J('tumbled') / J('n'), ci: wl(J('tumbled'), J('n')), lo: 0.30, hi: 0.60 });
       else R.pending('5c.tumble', '§5c', 'Journeys that end in a tumble (30 to 60%)', 'switches on with World G5 (a `tumble_end` event with how stop, recover or air)');
       if (hasEvent(A, 'tech_offer') && hasEvent(A, 'tech')) { const o = sum(D.map(r => r.fxCounts.tech_offer || 0)), k = sum(D.map(r => r.fxCounts.tech || 0)); R.rate('5c.tech', '§5c', 'Early recoveries as a share of the chances, medium AI (20 to 40%)', { v: k / o, ci: wl(k, o), lo: 0.20, hi: 0.40 }); }
       else R.pending('5c.tech', '§5c', 'Early recoveries as a share of the chances, medium AI (20 to 40%)', 'switches on with World G5 (`tech_offer` when the chance opens, `tech` when taken)');

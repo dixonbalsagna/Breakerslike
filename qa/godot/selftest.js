@@ -130,6 +130,14 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const bad = evaluate({ default: Array.from({ length: 40 }, () => lm({ ...g5, slide: 40, slam: 25 }, { bounce: 4, land: 8 }, { journeys: { n: 40, anyBounce: 40, bounced: 5, bounces: 8, tumbled: 18, lips: 0 }, firstContact: { slide: 10, bounce: 30 } })) });
     assert.strictEqual(bad.find(r => r.id === '5c.bounced').status, 'FAIL'); assert.strictEqual(bad.find(r => r.id === '5c.firstContacts').status, 'FAIL'); assert.strictEqual(bad.find(r => r.id === '5c.mix.halt:').status, 'FAIL');
   });
+  await t('journey_end rows (second landing ruling): halted, wall, slam, caught, bounced launches, bounces per journey, seen flights, capped and long journeys judge good and bad mixes', async () => {
+    const jm = (landings, jr, extra = {}) => rec({ koAt: 360, fxCounts: { slide: 4, journey_end: 8, bounce: 2, land: 8, left_ground: 3 }, slides: [], impactCraters: 0, skims: 0, launches: { 'DRIVE DOWN': 40, 'CRATER SLAM': 10, 'UPPERCUT': 30, 'BUILDING SMASH': 7, 'SMASH ACROSS': 13 }, landings, landingsAll: landings, slideShort: 0, slideShortPl: 0, firstContact: { slide: 50, bounce: 20 }, lips: 3, liftsSeen: { lip: 6, crest: 12 }, journeys: { n: 0, anyBounce: 20, bounced: 0, bounces: 0, tumbled: 0, lips: 0, jn: 40, jbounced: 10, jbounces: 15, capped: 2, long: 5, tumbledEnd: 16, ...jr }, ...extra });
+    const good = { slide: 45, wall: 10, slam: 12, caught: 20, water: 6, brunt: 7, bounce: 0, other: 0 };
+    const rows = evaluate({ default: Array.from({ length: 40 }, () => jm(good, {})) }), id = k => rows.find(r => r.id === k);
+    for (const k of ['5c.mix.halted:', '5c.mix.against', '5c.mix.slam:', '5c.mix.caught', '5c.haltOfGround', '5c.largest', '5c.bounced', '5c.bounces', '5c.lip', '5c.terrain', '5c.capped', '5c.long', '5c.tumble']) assert.strictEqual(id(k).status, 'PASS', k + ' ' + (id(k) && id(k).value));
+    const bad = evaluate({ default: Array.from({ length: 40 }, () => jm({ slide: 30, wall: 30, slam: 12, caught: 17, water: 6, brunt: 5, bounce: 0, other: 0 }, { capped: 10, long: 20 })) }), idb = k => bad.find(r => r.id === k);
+    assert.strictEqual(idb('5c.mix.halted:').status, 'FAIL'); assert.strictEqual(idb('5c.largest').status, 'FAIL'); assert.strictEqual(idb('5c.capped').status, 'FAIL'); assert.strictEqual(idb('5c.long').status, 'FAIL');
+  });
   console.log(`godot qa selftest: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
