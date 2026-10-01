@@ -70,10 +70,10 @@ const SCALES = {
   game: { len: { median: [360, 480], p10: 300, p90: 600 }, tier3: 0.70, tier4: 0.60, civ: [25, 50], worst: 85, civ90: 0.10, bleed: 4, structRow1: [40, 75] },
 };
 
-function evaluate(A, { scale = 'testbed', cap = 18000 } = {}) {
+function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the match cap in sim seconds
   const R = new Rows(), sc = SCALES[scale];
   const arms = Object.keys(A), D = A.default, have = (...n) => n.every(x => A[x] && A[x].length);
-  const capSec = cap / 60;
+  const capSec = cap;
 
   // ---- 1. win rate
   if (have('default', 'swap')) {

@@ -3,7 +3,7 @@ extends SceneTree
 ## to a JSON file: outcome, collateral, tiers, time by biome, tempo (exchange lengths and gaps), director events read from the
 ## feed, every fx event type counted, and the wounds/hazard events kept in order. qa/godot/bands.js turns the records into
 ## band checks. Read-only with respect to sim/: it only calls the sim's public functions.
-##   godot --headless --path . --script res://qa/godot/records.gd -- <matches> <baseSeed> --arm=default --out=<abs path> [--cap=18000]
+##   godot --headless --path . --script res://qa/godot/records.gd -- <matches> <baseSeed> --arm=default --out=<abs path> [--capsec=900] [--cap=<tick safety>]
 ## Match i uses seed baseSeed+i. Arms are the sim's own (SimGolden.applyArm): default, swap, mirror-villain, mirror-hero, each with -flip.
 
 const STANCES: Array = ["AGGRESSIVE", "DEFENSIVE", "EVASIVE", "ESCAPE"]
@@ -24,12 +24,15 @@ func _init() -> void:
 	var pos: Array = []
 	var arm: String = "default"
 	var out: String = ""
-	var cap: int = 18000
+	var cap: int = 200000        # tick safety only; the match cap is in sim seconds (hit-stop ticks do not advance S.T)
+	var capsec: float = 900.0     # the S4 ruling: 15:00 of sim time
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--arm="):
 			arm = a.substr(6)
 		elif a.begins_with("--out="):
 			out = a.substr(6)
+		elif a.begins_with("--capsec="):
+			capsec = float(a.substr(9))
 		elif a.begins_with("--cap="):
 			cap = int(a.substr(6))
 		else:
@@ -37,19 +40,19 @@ func _init() -> void:
 	var n: int = int(pos[0]) if pos.size() > 0 else 10
 	var base: int = int(pos[1]) if pos.size() > 1 else 1
 	if out == "" or not (arm.trim_suffix("-flip") in ["default", "swap", "mirror-villain", "mirror-hero"]):
-		print("usage: godot --headless --path . --script res://qa/godot/records.gd -- <matches> <baseSeed> --arm=<arm> --out=<file> [--cap=<ticks>]")
+		print("usage: godot --headless --path . --script res://qa/godot/records.gd -- <matches> <baseSeed> --arm=<arm> --out=<file> [--capsec=<sim seconds>] [--cap=<ticks>]")
 		quit(2)
 		return
 	var recs: Array = []
 	for i in range(n):
-		recs.append(run_match(base + i, arm, cap))
+		recs.append(run_match(base + i, arm, cap, capsec))
 	var f := FileAccess.open(out, FileAccess.WRITE)
 	f.store_string(JSON.stringify(recs))
 	f.close()
 	quit(0)
 
 
-func run_match(seed: int, arm: String, cap: int) -> Dictionary:
+func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var S := SimCore.createSim()
 	SimCore.newMatch(S, seed)
 	SimGolden.applyArm(arm, S.fighters)
@@ -72,7 +75,7 @@ func run_match(seed: int, arm: String, cap: int) -> Dictionary:
 	var ex_start: float = 0.0
 	var last_release: float = -1.0
 	var ticks: int = 0
-	while ticks < cap and not (S.game.ko != null and S.game.koT > 3.0):
+	while ticks < cap and (S.T < capsec or S.game.ko != null) and not (S.game.ko != null and S.game.koT > 3.0):
 		SimCore.step(S)
 		ticks += 1
 		var dT: float = S.T - prev_t

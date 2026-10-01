@@ -140,6 +140,21 @@ None of the six moves win rate, length or collateral beyond sampling noise. KB-0
 
 ---
 
+## Godot game bugs (found in play)
+
+Separate from the prototype register above (and from its test). IDs are `GB-nnn`.
+
+### GB-001: F9 pressed twice leaves the game grey (split screen re-attach)
+
+**Reported by:** Orb, playing the Godot game, 2026-09-30 (screenshot: the diagonal split divider still draws, both halves flat grey, action carries on underneath, pause menu works).
+**Verdict:** confirmed by reading the code; not yet reproduced in Godot.
+**Cause.** `render/core/main.gd` (F9) calls `split_view.detach()` then, on the next press, `split_view.attach(self)`. `detach()` leaves pane 0 inside its old SubViewport, but `attach()` has no re-entry guard beyond `_attached`: it calls `main.move_pane0()` again (`remove_child(pane)` on a node that is no longer main's child, then `add_child` on a node that already has a parent, so both fail and the new SubViewport is empty) and `main.make_pane()` again (a third pane is appended to `panes`). The compositor then masks two empty viewports: flat grey with the divider. Owner of the fix: Camera (`render/camera/split_view.gd`), with Rendering for `move_pane0` / `make_pane`.
+**Suggested fix.** Make `attach()` re-use `viewports` when they exist (set `main.compositor = self`, `_attached = true`, restore the update modes) instead of creating new panes; or make F9 toggle only the mask and keep the panes.
+**Effect.** Any session where F9 is pressed an even number of times after the first press (detach, attach) ends grey for good; restart is the only way out. Not a sim bug: determinism and the baseline are unaffected.
+**Test to add once fixed.** A Godot scene test: attach, detach, attach, then assert `panes.size() == 2` and that pane 0's parent is `viewports[0]`.
+
+---
+
 ## Not checked yet
 
 Combat's CC-007 to CC-013 and Game Design's other notes were not in this brief. CC-009 (a dodge parry window that can never parry) and CC-010 (signature never parries) would be quick to confirm. Add entries here as KB-007 onward and add a matching check to `qa/tests/known-bugs.test.js`; the last check in that file fails until you do.

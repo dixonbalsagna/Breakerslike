@@ -14,7 +14,7 @@ Owner: QA and Balance. Since ADR 0006 the GDScript sim is the source of truth. Q
 
 The run also executes Combat's dynamic-feel probe (`qa/godot/feel/feel_probe.gd`, 40 default-arm matches, one Godot process; `--feel=N`, `--feel=0` skips) and reports the §10 dynamic-feel targets: melee idle share, still stretches, first strike, strike gaps, strikes per minute, release to next request, standoffs, time inside exchanges, hit-stop share. `qa/godot/feel/proto_probe.js` is the same probe on the prototype. `--save-records=file` / `--load-records=file` keep the records so bands can be re-evaluated without replaying.
 
-Options: `--matches=N --jobs=N --arms=a,b --scale=testbed|game --cap=TICKS --seed=BASE --fail --json=file --only=bands|tests|s0`. Godot is found through `$GODOT`, then `godot` on the PATH, then the Windows install folder. `QA_GODOT_ROOT=<dir>` points the run at another checkout, for example a `git archive <commit> | tar -x -C <dir>` export of an earlier or a clean commit (copy `qa/godot/` in and run `godot --headless --path <dir> --import` once). That is how a run is made against committed code while the working tree is in flux, and how before-and-after comparisons are made.
+Options: `--matches=N --jobs=N --arms=a,b --scale=testbed|game --capsec=900 (sim seconds, S.T) --seed=BASE --fail --json=file --only=bands|tests|s0`. Godot is found through `$GODOT`, then `godot` on the PATH, then the Windows install folder. `QA_GODOT_ROOT=<dir>` points the run at another checkout, for example a `git archive <commit> | tar -x -C <dir>` export of an earlier or a clean commit (copy `qa/godot/` in and run `godot --headless --path <dir> --import` once). That is how a run is made against committed code while the working tree is in flux, and how before-and-after comparisons are made.
 
 **Exit code.** 0, unless the run itself broke (no Godot, NaN, a fighter outside the world) or a hard acceptance test failed. Band FAILs are what a baseline is for, so they fail the run only with `--fail`.
 
@@ -29,7 +29,7 @@ Pass rules are the ones in `balance-targets.md` ("How to measure"): a rate passe
 | `balance-targets.md` | Checked now | Pending, and what unblocks it |
 | :--- | :--- | :--- |
 | §1 win rate | KAI over both slots; slot and spawn effects of both mirrors | |
-| §2 length | mean, p90, timeouts (testbed); median and percentiles with `--scale=game` | game-scale length needs S2 finishers and `--cap=43200` |
+| §2 length | mean, p90, timeouts (testbed); median and percentiles with `--scale=game` | game-scale length needs S2 finishers and the 900 s cap |
 | §3 escalation | tier 3 and tier 4 reach | transformations, finisher in the last 60 s: roster and S2 |
 | §4 collateral | civilians mean, worst pairing, 90% wipe-outs, low-tier bleed, **structures as a share of row 1** | **the split by row** appears by itself once buildings carry a `row` (the records already group by it, and the report adds the all-rows watch metric and one line per row); civilians left at 4:00 needs game-length matches |
 | §5 launch variety | cap and clustered upper bound in every arm, the 4-types-at-5% floor | |
@@ -49,7 +49,7 @@ The event contract the skeletons assume is written at the top of that file (spec
 
 | Test | Unblocked by |
 | :--- | :--- |
-| W2 no KO without a finisher; W3 length and chapters | S2 (W3 with `--cap=43200`) |
+| W2 no KO without a finisher; W3 length and chapters | S2 (W3 with the 900 s cap) |
 | W4 no loops | S4 |
 | W5 spread | S1 and S3a (wear and first-broken region) |
 | W6 profiles, W7 heat-track bands | F1 (roster fighters) |
