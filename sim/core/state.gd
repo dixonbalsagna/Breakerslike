@@ -415,6 +415,7 @@ class AiState:
 	var atk: float = 1.2
 	var sT: float = 0.0
 	var sOff: float = 0.0
+	var st: float = 0.0   # I2b: the AI's chosen stance (a v2 slot's f.stance is derived from its held states every tick)
 
 
 class LastSeen:

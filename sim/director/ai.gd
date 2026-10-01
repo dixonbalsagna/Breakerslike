@@ -22,6 +22,11 @@ static func aiInput(S: SimState, f) -> void:
 	var o = SimRoster.opp(S, f)
 	var i: SimIntent = f.input
 	var a = f.ai
+	# I2b: the AI writes the v2 record. Its stance choice lives in a.st, and the held states below stand for it, so the
+	# director reads the AI's stance through the same path as a player's (SimAct.stance). A ready form is taken at once.
+	f.act.v2 = true
+	if f.act.formReady:
+		i.transform = true
 	var d: float = SimWrap.sdx(f.x, o.x)
 	var dist: float = absf(d)
 	# Since S2 the AI reads its wounds, not an HP bar: 1 fresh, 0 on the brink (SimWounds.vitality).
@@ -37,7 +42,7 @@ static func aiInput(S: SimState, f) -> void:
 		if S.T - SimMathx.jmax(f.exT, o.exT) > GAP_URGE and a.atk > GAP_SOON:
 			a.atk = GAP_SOON
 	else:
-		a.atk = SimMathx.jmax(a.atk, CAD_MIN[int(f.stance)])
+		a.atk = SimMathx.jmax(a.atk, CAD_MIN[int(a.st)])
 	if a.t <= 0.0:
 		a.t = S.rng.range_(0.7, 1.6)
 		var w: Array = [2.4 if hpF > 0.35 else 1.0, 1.6 if hpF < 0.55 else 0.7, 1.2, 3.2 if hpF < 0.3 else (1.2 if f.ki < 25.0 else 0.25)]
@@ -47,11 +52,19 @@ static func aiInput(S: SimState, f) -> void:
 		if f.hidden and f.canHide and (f.ki < 85.0 or _healing(f)):
 			w = [0.0, 0.0, 0.0, 1.0]
 		if f.state == "free":
-			f.stance = float(pickW(S, w))
+			a.st = float(pickW(S, w))
+	var st: float = a.st
+	# The held states for the chosen stance: Guard holds guard; Dodge re-taps the dodge before its window lapses; Escape
+	# sprints (and moves away, below); Press holds nothing. They are written in every state, so a downed AI keeps its guard.
+	if st == 1.0:
+		i.guard = true
+	elif st == 2.0:
+		i.dodge = S.dirS.ex == null and S.tick - f.act.dodgeTick >= SimAct.dodgeWindow - 1   # never inside an exchange: there a dodge is the cancel (step 3)
+	elif st == 3.0:
+		i.sprint = true
 	var free: bool = f.state == "free" or f.state == "charging"
 	if not free:
 		return
-	var st: float = f.stance
 	# Location (DirLocation.roam): the hero leads fights away from people and on from a biome it has overstayed; the villain
 	# prowls toward towns at high tiers. A DEFENSIVE fighter low on ki charges first (the lure used to starve it of ki).
 	var wantsCharge: bool = st == 1.0 and f.ki < 55.0 and dist > 350.0
@@ -119,6 +132,12 @@ static func aiInput(S: SimState, f) -> void:
 				i.my = -1.0 if f.y > -110.0 else 0.0
 			else:
 				i.my = -1.0 if f.y > g + 20.0 else 0.0
+		# Escape is sprinting away from the opponent (ADR 0008). A cover run that stands still or heads toward the opponent
+		# would read as Press, so the AI backs away instead: without the dash, which sent it so far that attacks became
+		# long pursuits and matches ran about 40 s longer.
+		if not f.canHide and i.mx * SimMathx.jsign(d) > -SimAct.awayDead:
+			i.mx = -SimMathx.jsign(d) if d != 0.0 else 1.0
+			i.dash = false
 	# Underwater and not hiding there: dash for the surface (underwater is a hiding state, not a place to fight).
 	if sea and f.y < 0.0 and i.my > 0.0:
 		i.dash = true

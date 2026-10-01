@@ -38,7 +38,8 @@ static func opWind(S: SimState, ex, _args) -> void:
 	if width >= 0.0:
 		SimFx.windowOpen(S, D, "parry", width)
 		SimFx.danger(S, D, "windup", width)
-	if D.ai != null and S.rng.next() < (0.5 if D.stance == 1.0 else (0.3 if D.stance == 0.0 else 0.12)):
+	# The stance is the exchange's snapshot (R8): a v2 slot's live stance follows its held states, and a dodge lapses mid-exchange.
+	if D.ai != null and S.rng.next() < (0.5 if ex.sD == 1.0 else (0.3 if ex.sD == 0.0 else 0.12)):
 		var pd: Array = DirData.aiParryDelay()
 		DirExchange.schedule(ex, ex.t + S.rng.range_(float(pd[0]), float(pd[1])), "press", {"who": "D"})
 

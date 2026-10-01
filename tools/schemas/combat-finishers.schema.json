@@ -189,6 +189,11 @@
           "type": "integer",
           "minimum": 1,
           "description": "Encounter's brink chapter: how many setups the brink takes (an integer of at least 1)."
+        },
+        "timeCapAt": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Encounter's I2b time cap, in seconds of match time: from then on every decisive win against a fighter on the brink is a finisher."
         }
       },
       "additionalProperties": false,

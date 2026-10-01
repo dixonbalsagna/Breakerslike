@@ -254,6 +254,13 @@ static func cooldownAfter(ex) -> float:
 
 static func dirUpdate(S: SimState, dt: float) -> void:
 	DirLocation.record(S, dt)   # location variety: the fight's time per biome
+	# The time-cap stand-in (granted write): past contest.timeCapAt every decisive win against a fighter on the brink is a
+	# finisher (decisive()). The full 11:00 event is Game Design's and Simulation's.
+	var cap: float = DirData.timeCapAt()
+	if cap > 0.0 and not S.game.timeCap and S.T >= cap:
+		S.game.timeCap = true
+		SimEvents.feed(S, "TIME CAP", "every decisive win on the brink is a finisher")
+	_transforms(S)
 	if S.dirS.cool > 0.0:
 		S.dirS.cool -= dt
 	var ex = S.dirS.ex
@@ -326,6 +333,51 @@ static func decisive(S: SimState, ex, W, L, why: String) -> void:
 		L.brinkEx = ex.n
 		if L.brinkSetups >= DirData.brinkSetups():
 			_openBrink(S, W, L)
+
+
+# ---------------------------------------------------------------- the placeholder transform (ADR 0008, I2b)
+
+const TRANSFORM_HOLD: float = 0.8      # seconds: no exchange starts and the transformer holds still
+const TRANSFORM_PUSH: float = 900.0    # the burst pushes an opponent within TRANSFORM_PUSH_R back at this speed
+const TRANSFORM_PUSH_R: float = 700.0
+
+
+## The input that takes a ready form: ai, power (the power hold: the Simple layout's assist, and today's keyboard and touch
+## bridge, where it is the charge control) or triggers (the two-trigger chord of the v2 layouts).
+static func transformSource(f) -> String:
+	if f.ai != null:
+		return "ai"
+	if not f.act.v2 or f.act.assist != 0:
+		return "power"
+	return "triggers"
+
+
+## Between exchanges, a fighter with a form ready takes it on the transform request: the transform edge, or, on a slot
+## that has no v2 inputs yet (today's keyboard and touch bridge), the charge control held. The tier rises at once with
+## today's power-up burst (SimFighter.transform), the opponent in reach is pushed back, and for TRANSFORM_HOLD no exchange
+## starts and the transformer holds still (its stun gate). One transform a tick.
+static func _transforms(S: SimState) -> void:
+	if S.dirS.ex != null or S.game.ko != null:
+		return
+	for f in S.fighters:
+		if not f.act.formReady or (f.state != "free" and f.state != "charging"):
+			continue
+		var i: SimIntent = f.input
+		if not (i.transform or (not f.act.v2 and f.ai == null and i.charge)):
+			continue
+		var o = SimRoster.opp(S, f)
+		SimFx.transform(S, f, f.tier + 1.0, transformSource(f), TRANSFORM_HOLD)
+		SimFighter.transform(S, f)
+		S.dirS.cool = SimMathx.jmax(S.dirS.cool, TRANSFORM_HOLD)
+		f.state = "free"
+		f.vx = 0.0
+		f.vy = 0.0
+		f.stunTicks = maxi(f.stunTicks, int(TRANSFORM_HOLD * DirData.TICKS_PER_SEC + 0.5))
+		var d: float = SimWrap.sdx(f.x, o.x)
+		if absf(d) < TRANSFORM_PUSH_R and (o.state == "free" or o.state == "charging"):
+			o.vx = (1.0 if d >= 0.0 else -1.0) * TRANSFORM_PUSH
+		SimEvents.feed(S, f.name + " TRANSFORMS", "tier " + SimMathx.jstr(f.tier))
+		return
 
 
 ## The set-up is won: L, on the brink, is open to W's finisher. A stagger (the fighter's own stagger length) and a

@@ -177,3 +177,41 @@ The tool caps move to sim time or 15:00 separately, with their owners.
 5. Part 2.
 
 Each step is a checkpoint with goldens, the feel probe, tempo and QA's bands.
+
+## I2b as built (step 1)
+
+**Status.** In the tree. Goldens regenerated.
+
+**What runs**
+
+| Part | What the director does | Where |
+| :--- | :--- | :--- |
+| **Held states feed today's templates** | The AI is a v2 slot (`f.act.v2`). Its stance choice lives in `f.ai.st`, and it writes the held states that stand for it: guard held (Guard), a dodge re-tapped before its window lapses and never inside an exchange (Dodge), sprint while moving away (Escape), nothing (Press). The director reads `f.stance` exactly as before | `ai.gd` |
+| **Escape is sprinting away** | When the AI's cover run would stand still or head toward the opponent, it backs away instead, without the dash. With the dash it got so far that attacks became long pursuits and matches ran about 40 s longer | `ai.gd` |
+| **Template and branch ids** | `ex.tpl` and `ex.branch` are set at planning: the template and branch for melee, the beam template and its outcome for a signature, and `finisher` with the finisher's id | `data.gd` |
+| **The placeholder transform** | `manualTierUp` is on in both ladders. Between exchanges, a fighter with a form ready takes it on the transform edge; the AI asks at once. The tier rises with today's power-up burst, an opponent within 700 u is pushed back at 900 u/s, and for 0.8 s no exchange starts and the transformer holds still (48 stun ticks) | `exchange.gd` `_transforms` |
+| **Legacy inputs** | The keyboard and the touch bridge have no transform control yet. Until Controls' I2c, holding the charge control while a form is ready takes it on those slots | `exchange.gd` |
+| **The time-cap stand-in** | `S.game.timeCap` goes on once `S.T` reaches `contest.timeCapAt` (660 s) | `exchange.gd`, `data.gd`, `finishers.json` |
+| **The parry chance reads the snapshot** | The AI's parry-press chance uses `ex.sD`, not the live stance. No change in results today; it is the R8 rule | `melee.gd` |
+
+**Events** (shapes for `fx-events.md`, Simulation)
+- `transform_ready {actor, tier, source}`: `actor`'s power crossed a threshold and `tier` waits for the input. `source` is the input that takes it: `triggers` (the two-trigger chord), `power` (the power hold: the Simple layout, and today's keyboard and touch through the charge control) or `ai`. Emitted once, on the rising edge, from `stepFighter`.
+- `transform {actor, tier, source, dur}`: `actor` took it. `tier` is the new tier and `dur` the hold in seconds (0.8). `tier_up` follows in the same tick, at the start of the hold.
+
+**Results** (seeds 1 to 100, default and swap arms, capped at 15:00; before is HEAD 3bf908c)
+
+| Measure | Before | After |
+| :--- | ---: | ---: |
+| Match median, default / swap | 6:42 / 7:04 | 6:56 / 7:08 |
+| p10 and p90, default | 5:03, 9:07 | 5:15, 8:53 |
+| First brink, default / swap | 5:44 / 5:57 | 5:50 / 6:03 |
+| KAI, both arms (200) | 44% | 47% |
+| Transforms per match | 0 (automatic tier-ups) | 6.0, the first at about 0:35 |
+| No KO by 15:00 | 0 | 0 |
+| Matches where the time cap came on | | 3 of 200 |
+| Attacks per minute | 17.3 | 16.8 |
+| Defender stance at the request: Press, Guard, Dodge, Escape | 43, 19, 23, 15% | 46, 19, 23, 12% |
+
+**Notes**
+- The transform constants (hold 0.8 s, push 900 u/s within 700 u) are code constants for the placeholder. They move to data with F1's transformations.
+- A stunned AI's held states end at the stun gate, so it reads as Press while staggered. That is the scheme's rule for any player.

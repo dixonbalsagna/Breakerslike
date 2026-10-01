@@ -178,6 +178,7 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 	var nt: float = tierByPower(f)
 	if nt > f.tier:
 		if f.ld.manualTierUp:
+			if not f.act.formReady: SimFx.transformReady(S, f, f.tier + 1.0, DirExchange.transformSource(f))   # I2b: the rising edge
 			f.act.formReady = true   # I2a: the tier waits for the transform (transform())
 		else:
 			f.tier = nt

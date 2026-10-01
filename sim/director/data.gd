@@ -100,6 +100,8 @@ static func planMelee(S: SimState, ex) -> String:
 	var bid: String = _select(S, tp.selector, ctx)
 	var br: Dictionary = _branch(tp, bid)
 	ex.tag = br.tag
+	ex.tpl = String(tp.id)   # I2b: the template and branch ids, for the interrupts of step 3
+	ex.branch = String(br.id)
 	var key: String = tplProfile()
 	if tp.has("shared"):
 		_scheduleList(ex, tp.shared[key], ctx, 0.0, "")
@@ -422,6 +424,8 @@ static func planBeam(S: SimState, ex) -> String:
 				out = rule.ifBelow if r < p else rule["else"]
 		break
 	ex.tag = A.sigName + " over " + bio + " (" + variant + ") → " + out
+	ex.tpl = String(bm.id)   # I2b: the beam template, and its outcome as the branch
+	ex.branch = out
 	ctx.out = out
 	ctx.variant = variant
 	_scheduleList(ex, bm.parity, ctx, 0.0, "")
@@ -434,6 +438,8 @@ static func planFinisher(ex, W) -> Dictionary:
 	_ensure()
 	var fin: Dictionary = _finisherFor(W)
 	var w: String = "A" if W == ex.A else "D"
+	ex.tpl = "finisher"   # I2b: a finisher takes the exchange over; its id is the branch
+	ex.branch = String(fin.id)
 	_scheduleList(ex, fin.beats, {"heavy": false}, ex.t, w)
 	return fin
 
@@ -490,6 +496,12 @@ static func parryBlock() -> Dictionary:
 static func contest() -> Dictionary:
 	_ensure()
 	return _fin.contest
+
+
+## The time-cap stand-in (finishers.json contest.timeCapAt, seconds; 0 or absent is off): from then on every decisive win
+## against a fighter on the brink is a finisher. The full 11:00 event is Game Design's and Simulation's.
+static func timeCapAt() -> float:
+	return float(contest().get("timeCapAt", 0.0))
 
 
 ## The brink chapter: decisive wins the rival needs against a fighter on the brink before it is open to a finisher

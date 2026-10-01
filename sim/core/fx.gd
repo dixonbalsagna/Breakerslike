@@ -171,6 +171,21 @@ static func tierUp(S: SimState, f, onGround: bool) -> void:
 	e.actor = float(S.fighters.find(f)); e.tier = f.tier; e.onGround = onGround
 
 
+## I2b, the placeholder transform (ADR 0008): actor's power crossed a threshold and tier waits for the transform input.
+## source is the input that takes it: triggers (the two-trigger chord), power (the power hold of the Simple layout and of
+## today's keyboard and touch) or ai.
+static func transformReady(S: SimState, f, tier: float, source: String) -> void:
+	var e := _ev(S, "transform_ready")
+	e.actor = float(S.fighters.find(f)); e.tier = tier; e.source = source
+
+
+## actor took the transform: tier is its new tier, source the input that took it, dur the hold in seconds. The tier_up
+## (the power-up burst) comes in the same tick, at the start of the hold.
+static func transform(S: SimState, f, tier: float, source: String, dur: float) -> void:
+	var e := _ev(S, "transform")
+	e.actor = float(S.fighters.find(f)); e.tier = tier; e.source = source; e.dur = dur
+
+
 ## The fighter went to ground (hidden); cover is submerged, canopy or ridge.
 static func hideStart(S: SimState, f, cover: String) -> void:
 	var e := _ev(S, "hide_start")

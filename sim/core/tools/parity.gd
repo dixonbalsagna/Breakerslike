@@ -329,13 +329,17 @@ func _actState() -> String:
 		return "expiry left %d requests" % a.act.queue.size()
 	if SimAct.pop(a)[0] != SimAct.HEAVY or not SimAct.pop(a).is_empty() or SimAct.upgrade(a, SimAct.SIG):
 		return "pop or upgrade on an empty queue"
-	# the tier-up gate, off (the data): the tier rises by itself
-	a.power = 30.0
+	# the tier-up gate, on (the data, since I2b): a threshold makes the form ready and the tier waits for the transform
+	a.power = 60.0
 	SimFighter.stepFighter(S, a, SimConst.DT)
-	if a.tier != 2.0 or a.act.formReady or SimFighter.transform(S, a):
-		return "with manualTierUp off the tier did not rise by itself"
+	if a.tier != 1.0 or not a.act.formReady:
+		return "with manualTierUp on the tier did not wait (tier %s, ready %s)" % [str(a.tier), str(a.act.formReady)]
+	if not SimFighter.transform(S, a) or a.tier != 2.0 or not a.act.formReady:
+		return "the first transform: tier %s, ready %s" % [str(a.tier), str(a.act.formReady)]
+	if not SimFighter.transform(S, a) or a.tier != 3.0 or a.act.formReady or SimFighter.transform(S, a):
+		return "the second transform: tier %s, ready %s" % [str(a.tier), str(a.act.formReady)]
 	SimCore.dispose(S)
-	# ... and on, from a copy of the data
+	# ... and off, from a copy of the data: the tier rises by itself
 	var dir := "user://i2a_gate/"
 	for id in ["KAI", "VORR"]:
 		DirAccess.make_dir_recursive_absolute(dir + id)
@@ -343,7 +347,7 @@ func _actState() -> String:
 			var text: String = FileAccess.get_file_as_string(FighterData.ROOT + id + "/" + fname)
 			if fname == "ladder.json":
 				var d = JSON.parse_string(text)
-				d.manualTierUp = true
+				d.manualTierUp = false
 				text = JSON.stringify(d, "  ")
 			var fw := FileAccess.open(dir + id + "/" + fname, FileAccess.WRITE)
 			fw.store_string(text)
@@ -358,14 +362,10 @@ func _actState() -> String:
 		var G := SimCore.createSim()
 		SimCore.newMatch(G, 5)
 		var f = G.fighters[0]
-		f.power = 60.0
+		f.power = 30.0
 		SimFighter.stepFighter(G, f, SimConst.DT)
-		if f.tier != 1.0 or not f.act.formReady:
-			err = "with manualTierUp on the tier did not wait (tier %s, ready %s)" % [str(f.tier), str(f.act.formReady)]
-		elif not SimFighter.transform(G, f) or f.tier != 2.0 or not f.act.formReady:
-			err = "the first transform: tier %s, ready %s" % [str(f.tier), str(f.act.formReady)]
-		elif not SimFighter.transform(G, f) or f.tier != 3.0 or f.act.formReady or SimFighter.transform(G, f):
-			err = "the second transform: tier %s, ready %s" % [str(f.tier), str(f.act.formReady)]
+		if f.tier != 2.0 or f.act.formReady or SimFighter.transform(G, f):
+			err = "with manualTierUp off the tier did not rise by itself"
 		SimCore.dispose(G)
 	FighterData.quiet = false
 	FighterData.loadFrom()
@@ -738,7 +738,7 @@ func _wiredProbe(kind: String) -> String:
 		"ladderTick":   # the fill and the thresholds
 			kai.power = 15.0
 			SimFighter.stepFighter(S, kai, SimConst.DT)
-			out = [kai.power, kai.tier]
+			out = [kai.power, kai.tier, kai.act.formReady]   # I2b: the tier waits for the transform, so the thresholds show in formReady
 		"speed":        # the tier's speed step
 			kai.tier = 3.0
 			kai.power = 60.0

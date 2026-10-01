@@ -5122,6 +5122,51 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "finishers-time-cap-positive",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/timeCapAt": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/contest/timeCapAt"
+      }
+    },
+    {
+      "id": "finishers-time-cap-type",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/timeCapAt": "11:00"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/contest/timeCapAt"
+      }
+    },
+    {
+      "id": "finishers-time-cap-accepted",
+      "schema": "combat-finishers.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/finishers.json",
+          "set": {
+            "/contest/timeCapAt": 660
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [
