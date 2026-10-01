@@ -55,7 +55,7 @@ Camera's beat: a low wide angle on the empty landing spot (pitch -6 degrees, the
 ### 2.2 What needs building
 
 - **No speck is needed.** I planned a small bright point for a fighter too far up to see. At Camera's framing (the fighter 7% of the screen's height) he is 50 pixels tall the moment he enters the frame, and he is never small: he is simply above the frame until the last ticks of the fall (6,000 units up, 36 ticks). What he needs is to read at speed, over 100 pixels a frame at the end, and that is a trail or a smear: VFX's and Animation's. A far point would matter for orbit launches (row 19) and is left for then.
-- **The sky answers the fall.** The clouds part round the falling fighter with the opening the sky already has for tier 3 (`sky_react`), at half strength, from `entrance_fall` until 0.6 s after `entrance_land`. It only lightens and there is no lightning, as Legal asked. This is a world reaction before the clock and below tier 3, so **Game Design must allow it**; without it the fighter falls through clouds that do not move.
+- **The sky stays plain for the entrance** (EP's ruling, 2026-10-02). I had proposed that the clouds part round the falling fighter with the tier-3 opening. It is not built and will not be: Legal's stacking rule keeps the opening's sky plain, and the tier-3 reaction is its own thing.
 - **Clouds at the low angle.** At -6 degrees the top of the frame looks higher than the fight ever does, where the cloud band has faded out. I will check the frame and, if the top is bare, lift the band's upper edge for the shot.
 - **No head badges before the clock (built).** The badge is a HUD-space marker. Each pane switches its fighters' markers off while the intro runs, as UI hides the HUD.
 - **A clock for easing (nothing to build).** The sky's opening and the lane cue ease on tick time. `S.tick` advances on pre-clock ticks in Simulation's code, so they run through the intro as they are.
@@ -80,7 +80,7 @@ Tick 200 with the parked code, and with intro ticks marked live: ![hanging](img/
 
 ### 2.4 Cost and the reduced version
 
-- The sky's opening is the shader that already runs. Nothing else is added.
+- Nothing is added: no speck, and the sky does not react to the fall.
 - **Reduced:** with reduced motion the sky is calm (the clouds stand still and do not part), as in a fight.
 
 ## 3. What I need, in one list
@@ -90,13 +90,13 @@ Tick 200 with the parked code, and with intro ticks marked live: ![hanging](img/
 | World | Whether a bounce tick ends on the contact point; if not, `u` on `bounce` and `land`. The rim profile as a shared pure function. Whether a tumble's scuffs are recorded |
 | VFX | Agreement on who draws scuffs |
 | Animation | The pose's extent along the ground, for the shadow |
-| Game Design | Whether the sky may part for the entrance, before the clock and below tier 3 |
+| Game Design | Nothing: the sky stays plain for the entrance (ruled) |
 | Simulation | Intro ticks marked live for effects (section 2.3b). The tick count and the events are fine as parked |
-| Controls | Agreement that the take-over press also skips the intro in the demo (built that way) |
+| Controls | Nothing: the take-over press also skips the intro in the demo (EP's ruling: it matches "any press skips") |
 | UI | Nothing new (the HUD hides itself) |
 
 ## 4. Build order
 
 1. With World's G3 (the contact events): the contact point in the blend, the shadow's extent, the pane check for a body over a rim.
 2. With World's G1 (rims): the rim term in the bowl function.
-3. With Simulation's intro slice: the host's side is built (section 2.3). Left: the sky's opening on the fall if Game Design allows it, the cloud band's top at the low angle, and switching the game's default from "skip" to the intro when the others are ready.
+3. With Simulation's intro slice: the host's side is built (section 2.3). Left: the cloud band's top at the low angle, and passing `"intro": true` by default when the others are ready.
