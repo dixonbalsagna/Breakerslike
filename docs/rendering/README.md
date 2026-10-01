@@ -45,7 +45,7 @@ The mapping is Controls': the host hands every key, pad and touch event to `SimI
 - UI's options the host owns go to the hub: `pad_preset` (player one's pad layout), `pad_preset_p2` (player two's) and `touch_preset`. After a player's remap (`remap_slot_changed`; UI applies and saves it through Controls) the hub reloads its layouts. UI's `pad_slot_fn` is told which player a pad drives, so the Remap screen opens on the player whose pad pressed. The hub's defaults are pushed into the HUD first.
 - The options the player saved there are loaded at start (after those defaults, so the saved choice wins), except in the tools, the bench and scripted runs (`--frames`, `--shot`), which keep the defaults so a saved option never changes a check.
 
-Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`, `--nosplit` (one view), `--pitch=DEG` and `--occl=hole|stub` (the two debug toggles' starting values), `--nostreets` (no street paint), `--nodamage` (no battle damage on the fighters), `--noclouds` (a bare sky), `--nowindows` (blank walls). Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
+Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`, `--nosplit` (one view), `--pitch=DEG` and `--occl=hole|stub` (the two debug toggles' starting values), `--nostreets` (no street paint), `--nodamage` (no battle damage on the fighters), `--noclouds` (a bare sky), `--nowindows` (blank walls), `--intro` (play the intro phase, once the sim has it). Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
 
 ## Scene structure (`render/main.tscn`)
 
@@ -307,7 +307,7 @@ The same match on the web build (Chrome; the browser froze it at tick 84 and 133
 | `shock` | a ring lying on the ground | 16 | 1 | Reads as a shock ring |
 | `splash`, `ripple` | discs and rings | 0 | 0 | Not drawn while VFX's water is on |
 
-The two that still read as greybox are `deb` and `flame`. Both are small, and neither covers a fighter.
+The two that still read as greybox are `deb` and `flame`. Both are small, and neither covers a fighter. **VFX has since taken them over** ("VFX's earth effects" under "Hosting UI's HUD and Audio"): while its earth effects are on, `deb`, `flame` and `dust` are not drawn here, from the sim's events or from the impact effects.
 
 ## Battle damage, the sky and windows (rule of cool, wave 0)
 
@@ -556,6 +556,13 @@ The first pane and the second, drawn from the rig's two cameras: ![panes](img/pa
 A scratch test drives real pad events for three devices through the full scene (61 checks): join, a third pad ignored, the menu from each pad, the hand-back, rejoin, unplug, a pad beside the keyboard, T, a new match. On the web (Chrome 154 and Edge 154) the same run with two scripted gamepads passes, 33 steps each, with no console messages. No real controller has been used yet.
 
 One pad playing, the join prompt on the AI's side; two on the keyboard; the menu with two players: ![prompt](img/join-prompt.png) ![two players](img/join-keyboard-two.png) ![menu](img/join-menu.png)
+
+**The intro phase** (`docs/architecture/intro-phase.md`; my side in `tumble-intro-render.md` section 2.3). The host is ready for Simulation's pre-clock ticks and inert without them. `--intro` plays it; without the flag the host adds nothing to the setup and the sim's default stands (the match starts from the intro's end state). A tool-driven match never adds anything. On a pre-clock tick the host passes intents (a press skips), drops the edges after, and puts no head badge on the fighters. In the demo the take-over also skips. Tested against Simulation's parked code in a scratch copy, 25 checks.
+
+**VFX's earth effects** (`docs/vfx/earth-plan.md`): material chunks for debris, cel flames, dust, and the ground-contact effects. While they are on, the host keeps the `debris`, `fire` and `dust` events from the reference consumer (`VfxHub.reference_events`) and switches off `ImpactFx`'s own ejecta, rim dust and slide dust (`ejecta_marks`), so nothing is drawn twice. A crater's shock ring and a beam's heat in the ground stay here. With the effects off, the old squares and discs are back.
+- **Checked** in a real match (seed 1, 3,600 ticks, ground contact on): with the effects on, the particle view made no `deb`, `dust` or `flame` from either source (afterimages, sparks, rings and shock rings only); with them off it made 160 `deb`, 150 `dust` and 42 `flame`.
+
+A slam on the web build (Chrome, seed 1, tick 219): VFX's chunks and flames, none of the old squares. ![earth web](img/earth-web-t219.png)
 
 **Animation's quality and reduced motion.** Each frame main passes Animation UI's reduced motion (`RenderAnim.reduced_motion`) and a quality level: `RenderAnim.set_quality("low")` while VFX's quality is at its lowest, else `"high"`, set only when it changes. A tool that drives the scene itself (`manual`) and `--anim-quality=NAME` keep their own value. On the web the four levels were switched in a running match in Chrome 154 and Edge 154: each level's layers went off as `data/anim/quality.json` lists them, the fight ran on, and nothing was logged.
 

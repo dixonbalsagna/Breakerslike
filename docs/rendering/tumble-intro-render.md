@@ -1,6 +1,6 @@
 # The tumble and the intro's sky shot: Rendering's plan
 
-Owner: Rendering and Technical Art. Status: plan only, 2026-10-02. Nothing on this page is built. It covers Rendering's part of two things other directors have planned:
+Owner: Rendering and Technical Art. Status: plan, 2026-10-02. Section 2.3 (the host's side of the intro) is built and tested against Simulation's parked intro code; the rest is not built. It covers Rendering's part of two things other directors have planned:
 - the tumble (World's `docs/world/ground-contact.md`: skid, bounce, tumble, rims; Animation's active ragdoll);
 - the entrance (Camera's `docs/camera/rule-of-cool-shots.md` row 7; Simulation's `docs/architecture/intro-phase.md`).
 
@@ -54,24 +54,34 @@ Camera's beat: a low wide angle on the empty landing spot (pitch -6 degrees, the
 
 ### 2.2 What needs building
 
-- **The speck.** A fighter far up is a few pixels tall and can vanish between pixels. Below about 6 pixels of drawn height the view adds a small bright point in his aura colour at his chest, so he reads as a falling light and grows into a body. It is a marker, so the inset and the reduced version follow the same rule as the head badge.
+- **No speck is needed.** I planned a small bright point for a fighter too far up to see. At Camera's framing (the fighter 7% of the screen's height) he is 50 pixels tall the moment he enters the frame, and he is never small: he is simply above the frame until the last ticks of the fall (6,000 units up, 36 ticks). What he needs is to read at speed, over 100 pixels a frame at the end, and that is a trail or a smear: VFX's and Animation's. A far point would matter for orbit launches (row 19) and is left for then.
 - **The sky answers the fall.** The clouds part round the falling fighter with the opening the sky already has for tier 3 (`sky_react`), at half strength, from `entrance_fall` until 0.6 s after `entrance_land`. It only lightens and there is no lightning, as Legal asked. This is a world reaction before the clock and below tier 3, so **Game Design must allow it**; without it the fighter falls through clouds that do not move.
 - **Clouds at the low angle.** At -6 degrees the top of the frame looks higher than the fight ever does, where the cloud band has faded out. I will check the frame and, if the top is bare, lift the band's upper edge for the shot.
-- **No head badges before the clock.** The badge is a HUD-space marker. The host switches markers off while the intro runs, as UI hides the HUD.
-- **A clock for easing.** The sky's opening and the lane cue ease on tick time, and `S.T` stays 0 before the clock. They need a tick count that runs through the intro (`S.intro.t`, or `S.tick` if it advances).
+- **No head badges before the clock (built).** The badge is a HUD-space marker. Each pane switches its fighters' markers off while the intro runs, as UI hides the HUD.
+- **A clock for easing (nothing to build).** The sky's opening and the lane cue ease on tick time. `S.tick` advances on pre-clock ticks in Simulation's code, so they run through the intro as they are.
 
-### 2.3 The host (`sim_host.gd`, `main.gd`)
+### 2.3 The host (`sim_host.gd`, `main.gd`): built
 
-- **Pre-clock ticks pass intents.** The host drops input edges on a set-piece pause's ticks. On intro ticks it must pass them, because any press skips.
-- **The demo.** The first key or button takes player one over. With an intro running, that same press also skips it. I propose that it does both.
-- **Overlays.** The first-run How to play card freezes the sim, so the intro waits behind it and plays when it closes.
-- **Who gets an intro.** The game's own matches ask for it (`"intro": true`). The tools, the bench, `--frames` and `--shot` do not, so every check and measurement keeps today's opening.
-- **Events on pre-clock ticks** must still reach the host's drain (VFX, Audio, Camera and the crowd read them there). Simulation should confirm that `step` returning false still leaves the tick's events in `S.out`.
+Built on 2026-10-02 and tested through the real main scene against Simulation's parked `SimIntro` (`docs/architecture/pending/intro.py . code`, applied to a scratch copy; 25 checks). On a sim without the phase all of it is inert.
+
+- **Who gets an intro.** `--intro` plays it: `main._match_setup()` adds `"intro": true` to the match setup. Without the flag nothing is added and the sim's own default stands (it starts from the intro's end state: both entrance craters dug, no pre-clock tick), until Camera, Animation and UI have their sides. A tool that drives the scene itself never adds anything, so its matches are the ones its own reference sim plays. `start_match(seed, ai, setup)` takes a setup of its own for tests.
+- **Pre-clock ticks.** `SimHost.intro_running()` says whether the intro runs. On a pre-clock tick the host passes the intents as on any tick (the sim reads them only to skip), then drops the input edges, and on the intro's last tick reads every hold as if it began then. So a press is seen on its own tick, and the press that skipped fires nothing at the clock.
+- **Events** reach the host's drain on pre-clock ticks as on any tick: the test saw `intro_start`, both `entrance_fall` and `entrance_land`, `staredown_start` and `clock_start` on their ticks.
+- **The demo.** The key, click or button that takes player one over also skips a running intro (`SimHost.skip_intro()`): an AI's intent never skips, so the host puts a press into the new player's intent on the following pre-clock ticks until the intro ends. A take-over before the sim's `skipFrom` tick waits for it.
+- **Overlays.** The host's pause (the first-run card, the pause menu) holds the intro; it runs on when the pause ends.
+- **Markers.** No head badge while the intro runs.
+- **What it looks like today** (`--intro`, before the others' sides): the reference camera follows the midpoint of the two fighters, so it sits in the sky while one is still 6,000 units up; UI's plates show; the fighters stand in their fight pose. That is why it ships as "skip".
+
+### 2.3b Found against Simulation's parked code
+
+- **The landing's dust and debris hang in the air until the clock.** The parked `sim.gd` marks an intro tick as frozen for effects (`SimFx.tickMark(S, dt, true)`), and every effects consumer steps frozen ticks at a tenth speed (the hit-stop's slow motion). Fighter A lands at tick 36; at tick 200 his crater's debris is still airborne. Marked live (`false`) in my scratch copy, the dust and debris settle as they should, and my host test still passes. **Ask for Simulation:** mark intro ticks live for effects. The fight's clock is stopped, but the entrance is a live presentation.
+
+Tick 200 with the parked code, and with intro ticks marked live: ![hanging](img/intro-t200-frozen.png) ![settled](img/intro-t200-live.png)
 
 ### 2.4 Cost and the reduced version
 
-- The speck is one small quad a fighter. The sky's opening is the shader that already runs.
-- **Reduced:** no opening in the sky and no clouds at low quality (as today); the speck stays, since it is the only thing that shows him.
+- The sky's opening is the shader that already runs. Nothing else is added.
+- **Reduced:** with reduced motion the sky is calm (the clouds stand still and do not part), as in a fight.
 
 ## 3. What I need, in one list
 
@@ -81,12 +91,12 @@ Camera's beat: a low wide angle on the empty landing spot (pitch -6 degrees, the
 | VFX | Agreement on who draws scuffs |
 | Animation | The pose's extent along the ground, for the shadow |
 | Game Design | Whether the sky may part for the entrance, before the clock and below tier 3 |
-| Simulation | A tick count that runs through the intro; events still drained on pre-clock ticks |
-| Controls | Agreement that the take-over press also skips the intro in the demo |
+| Simulation | Intro ticks marked live for effects (section 2.3b). The tick count and the events are fine as parked |
+| Controls | Agreement that the take-over press also skips the intro in the demo (built that way) |
 | UI | Nothing new (the HUD hides itself) |
 
 ## 4. Build order
 
 1. With World's G3 (the contact events): the contact point in the blend, the shadow's extent, the pane check for a body over a rim.
 2. With World's G1 (rims): the rim term in the bowl function.
-3. With Simulation's intro slice: the host's pre-clock ticks, markers off, the easing clock, the speck, and the sky's opening if Game Design allows it.
+3. With Simulation's intro slice: the host's side is built (section 2.3). Left: the sky's opening on the fall if Game Design allows it, the cloud band's top at the low angle, and switching the game's default from "skip" to the intro when the others are ready.

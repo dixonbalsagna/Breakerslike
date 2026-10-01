@@ -22,6 +22,7 @@ var heat_changed: bool = false   # set when heat moves; the renderer clears it a
 var _hot: bool = false
 var scorch_sparks: bool = true   # false while VFX's scorch embers are on (SimHost): the groove's glow stays either way
 var water_marks: bool = true     # false while VFX's dramatic water is on (SimHost): it draws the ripples, spray and wake
+var ejecta_marks: bool = true    # false while VFX's earth effects are on (SimHost): it throws the chunks and the dust of a crater and a slide; the shock ring stays here
 var _ticks: int = 0
 var _re: SimRng
 var _rm: SimRng
@@ -76,6 +77,9 @@ func consume(S: SimState, events: Array) -> void:
 
 func _crater(e) -> void:
 	var E: float = e.energy
+	if not ejecta_marks:
+		_crater_ring(e, E)
+		return
 	var col: String = RenderLook.CRATER_DESERT if WorldBiomes.biomeAt(e.x) == "desert" else "#6e5c46"
 	var sp: float = (260.0 + 90.0 * sqrt(E)) * SWS
 	for k in range(clampi(int(3.0 + E * 2.0), 3, 30)):
@@ -94,6 +98,11 @@ func _crater(e) -> void:
 		p.life = _re.range_(1.0, 2.2)
 		p.size = _re.range_(18.0, 36.0) * SWS
 		p.drag = 0.02
+	_crater_ring(e, E)
+
+
+## A crater's shock ring on the ground, and the heat a beam leaves in it. These stay when VFX throws the ejecta.
+func _crater_ring(e, E: float) -> void:
 	var s := _part("shock", e.x, e.y + 2.0, "#f2e6c9")
 	s.r = 0.3 * e.r
 	s.gr = 3.2 * e.r
@@ -120,6 +129,8 @@ func _scorch(e) -> void:
 
 ## Along a knockback slide: dust from the trench and rubble chips thrown back, more at speed; grey on pavement.
 func _slide_dust(e) -> void:
+	if not ejecta_marks:
+		return
 	var paved: bool = e.variant == "paved"
 	var hw: float = e.w * 0.5
 	for k in range(clampi(int(2.0 + e.spd / 400.0), 2, 8)):
@@ -140,6 +151,8 @@ func _slide_dust(e) -> void:
 
 ## Where a slide stops: a heavier burst of dust off the end berm.
 func _slide_end(S: SimState, e) -> void:
+	if not ejecta_marks:
+		return
 	var y: float = WorldTerrain.groundY(S, e.x1)
 	for k in range(clampi(int(4.0 + e.energy), 4, 14)):
 		var p := _part("dust", e.x1 + _re.range_(-0.5, 0.5) * e.w, y, "#8f8a84" if e.variant == "paved" else "#9b8f7e")

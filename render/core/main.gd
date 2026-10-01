@@ -26,6 +26,9 @@ extends Node3D
 ## join turns the split screen on if it was off; T makes P2 human or hands the slot back; the pause menu's entry hands
 ## it back at once. UI's HUD is told each player's device and layout every frame (_sync_players).
 ##
+## The intro phase (docs/architecture/intro-phase.md): --intro plays it (_match_setup); without it the sim starts from
+## its end state. SimHost passes intents on pre-clock ticks, and a take-over skips it.
+##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
 ## full panes were drawn; VFX at a fixed quality), --novsync, --nosplit, --novfx (VFX off, for A/B runs),
@@ -206,8 +209,9 @@ func all_panes() -> Array:
 	return panes + [inset] if inset != null else panes
 
 
-func start_match(seed: int, ai: Dictionary = {}) -> void:
-	host.new_match(seed, ai)
+## A new match. setup: additions to the match setup; left out, the game's own (_match_setup).
+func start_match(seed: int, ai: Dictionary = {}, setup = null) -> void:
+	host.new_match(seed, ai, setup if setup is Dictionary else _match_setup())
 	var fl: Array = UiSimBridge.fighters(host.S)
 	ui_hud.setup(fl[0], fl[1])
 	for p in all_panes():
@@ -220,6 +224,14 @@ func start_match(seed: int, ai: Dictionary = {}) -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	split_rig.reset(host.S, vp.x, vp.y)
 	render_view(host.alpha())
+
+
+## What the game adds to a match's setup. The intro phase (docs/architecture/intro-phase.md): --intro plays it.
+## Without it nothing is added and the sim's own default stands: the match starts from the intro's end state (both
+## entrance craters dug, no pre-clock tick), until the camera, the animation and the HUD have their sides. A tool that
+## drives the scene itself never adds anything, so its matches are the ones its own reference sim plays.
+func _match_setup() -> Dictionary:
+	return {"intro": true} if args.has("intro") and not manual else {}
 
 
 ## For Camera's compositor: a new pane, a follower of the first, in a SubViewport of its own (its own World3D),
@@ -780,6 +792,9 @@ func take_over() -> void:
 	started = true
 	if host.S.fighters[0].ai != null:
 		host.toggle_ai(0)
+	# In the demo the key or click that takes player one over also skips a running intro: an AI's intent never
+	# skips, and the player has just said they want to play. (A playing human skips with any press of their own.)
+	host.skip_intro()
 
 
 ## Alt plus a flash key fires that flash (Shift: on P2); Alt+F cycles the fighter's shape family.

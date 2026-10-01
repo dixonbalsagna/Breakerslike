@@ -114,6 +114,7 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 		var vx: float = SimWrap.sdx(cam_x, wx)
 		v.depth = host.fighter_z(i, a)
 		v.sag = mats.sag(vx, v.depth)
+		v.markers = markers and not host.intro_running()   # no head badge before the clock: UI's HUD is hidden too
 		v.update(S, S.fighters[i], pose, vx, cam.z)
 		_place_shadow(S, i, wx, vx, pose.y, v.depth)
 	_occlusion(S, cam_x, vp)

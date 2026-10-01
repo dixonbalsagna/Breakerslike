@@ -37,16 +37,21 @@ var tick_usec: int = 0          # cost of the last SimCore.step
 var fx_usec: int = 0            # cost of the last fx consume and camera step
 var _prev := PackedFloat64Array()
 var _cur := PackedFloat64Array()
+var _skip_intro: bool = false   # skip_intro() was asked for and the intro has not ended yet
 
 
 func _init() -> void:
 	S = SimCore.createSim()
 
 
-## A new match. ai is {"p1": bool, "p2": bool}; missing entries keep the current setting (both AI at first).
-func new_match(p_seed: int, ai: Dictionary = {}) -> void:
+## A new match. ai is {"p1": bool, "p2": bool}; missing entries keep the current setting (both AI at first). setup adds
+## to the match setup: the intro phase's "intro" (true plays it, "skip" starts from its state at the clock).
+func new_match(p_seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> void:
 	seed = p_seed & 0xFFFFFFFF
-	SimCore.newMatch(S, seed, ai, hub.setup())   # both slots are v2; a Simple layout sets its assists
+	var su: Dictionary = hub.setup()   # both slots are v2; a Simple layout sets its assists
+	su.merge(setup, true)
+	_skip_intro = false
+	SimCore.newMatch(S, seed, ai, su)
 	cam.reset()
 	fxv.reset(seed)
 	impact.reset(seed)
@@ -87,6 +92,19 @@ func alpha() -> float:
 	return clampf(acc / SimConst.DT, 0.0, 1.0)
 
 
+## Whether the intro phase is running (docs/architecture/intro-phase.md): the match's pre-clock ticks, in which the
+## fighters fall in and stare. False on a sim without the phase.
+func intro_running() -> bool:
+	return "intro" in S and S.intro != null and int(S.intro.left) > 0
+
+
+## Ask for the intro to be skipped. The sim skips on a press from a human slot, so the next pre-clock ticks carry one
+## in the first human slot's intent until the intro ends (a press before the sim's skipFrom tick is ignored). Outside
+## the intro, and with no human slot, it does nothing.
+func skip_intro() -> void:
+	_skip_intro = intro_running()
+
+
 ## One fixed tick: intents for human slots, step, camera, then drain the feed and the fx events.
 func tick(vw: float, vh: float) -> void:
 	var inputs: Array = [null, null]
@@ -96,14 +114,23 @@ func tick(vw: float, vh: float) -> void:
 		if S.fighters[k].ai == null:
 			inputs[k] = hub.intent(k)
 	var pausing: bool = S.pause.left > 0   # Q10: this tick is one of a pausing set piece's frozen ticks
+	var pre: bool = intro_running()        # the intro phase: this tick is a pre-clock tick
+	if pre and _skip_intro:
+		for k in range(2):
+			if inputs[k] != null:
+				inputs[k].dash = true      # read only as "skip": nothing else runs on a pre-clock tick
+				break
+	elif not pre:
+		_skip_intro = false
 	var t0: int = Time.get_ticks_usec()
 	if SimCore.step(S, inputs):
 		hub.consumed()
-	elif pausing:
+	elif pausing or pre:
 		# A set piece runs for seconds: what is pressed during it is dropped, and on its last frozen tick every hold is
 		# read as if it began now, so no pile of presses fires when the fight resumes (Controls' rule). A hit-stop is a
-		# few frames: its presses are kept for the next live tick, as before.
-		if S.pause.left > 0:
+		# few frames: its presses are kept for the next live tick, as before. The intro's pre-clock ticks are the
+		# same: a press is read on its own tick (it skips), and the press that skipped fires nothing at the clock.
+		if S.pause.left > 0 or intro_running():
 			hub.drop_edges()
 		else:
 			hub.resume()
@@ -115,9 +142,13 @@ func tick(vw: float, vh: float) -> void:
 	while feed.size() > FEED_KEEP:
 		feed.pop_front()
 	S.out.feed.clear()
-	fxv.consume(S, _without_fall_debris(S, S.out.fx) if vfx.enabled and vfx.destruction_enabled else S.out.fx)
+	# VFX draws some of the reference consumer's effects itself; those events are kept from the consumer so nothing
+	# is drawn twice: a fall's debris while its collapses are on, and debris, fire and dust while its earth effects
+	# are on (VfxHub.reference_events).
+	fxv.consume(S, vfx.reference_events(_without_fall_debris(S, S.out.fx) if vfx.enabled and vfx.destruction_enabled else S.out.fx))
 	impact.scorch_sparks = not (vfx.enabled and vfx.embers_enabled)
 	impact.water_marks = not (vfx.enabled and vfx.water_enabled)
+	impact.ejecta_marks = not (vfx.enabled and vfx.earth_enabled)
 	impact.consume(S, S.out.fx)
 	pending_cues.append_array(audio_cues.consume(S, S.out.fx))
 	drained.emit(S.out.fx, lines)
