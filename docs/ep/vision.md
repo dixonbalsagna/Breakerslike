@@ -402,3 +402,18 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 ## Camera picks (2026-10-01)
 - Cinematic moments: short ones run live; long set pieces pause the fight for both players. Orb wants ideas for the set pieces and the conditions that trigger a pause.
 - Following a launch: the hybrid. The camera stays with the player's fighter when they launch the opponent, cuts briefly to the impact and returns; it chases when the player is the one launched; two players on one screen use the split.
+
+## Questionnaire 10 (2026-10-01): remaining issues
+- Set pieces that pause the fight for both players: transformation, a world-changing ability, and the planet giving way at 11:00. The others (finisher, knockout, crippling moment, beam struggle start, revealed signature, smash chains, landmarks) run live.
+- Pause budget: about 2 seconds a minute.
+- Transformation pace: fewer and later, about 3 a match, the first around 1:30.
+- Upgrade draft: C, a pre-match plan that switches on by stage.
+- Second city: 12% of the planet.
+- Harbour and industrial districts: few civilians, mostly workers who evacuate fast.
+- Mountains: a visible far row that beams can scar but fighters can't reach.
+- Old laptops and phones: 30 frames a second with reduced effects is fine.
+- Feedback reports: prefer a private route (email or a private form), not public issues.
+- Babble voices: close, needs tweaks (Orb to say which).
+- Priorities after the controls work: the agency fixes (counters on request, dodge-cancel, burst, perfect block), then combat variety (blasts, teleports, beam struggles).
+- Speed blitzes: Orb wants "ping pong" blitzes to look great and "teleport spam" as a system, with efficient but non-direct flight paths. Example: a fighter knocks the opponent away at high speed, then blasts off even faster to arrive ahead and knock them back; the path there arcs like a golden-ratio spiral, not a straight line that would clip through the other fighter.
+- Animation problems Orb saw: fighters sometimes face backwards; elbows bend the wrong way or arms stick straight out behind the body; in close exchanges one fighter passes through the other and both face opposite directions for a while. Orb wants more precision in selling punches: full contact on every hit.
