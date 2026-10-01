@@ -178,6 +178,7 @@ func _run() -> void:
 	_check(t.rings == 1, "one break ring on reaching full speed (%d)" % t.rings)
 	_water(S)
 	_transform(S)
+	_aura()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -391,6 +392,123 @@ func _transform(S: SimState) -> void:
 				same = false
 				print("    differs: aura.%d.%s" % [t, k])
 	_check(same, "data/vfx/transform.json and the built-in defaults agree")
+
+
+## The standing aura (docs/vfx/aura-plan.md): on while charging or attacking, eased, off otherwise.
+func _aura() -> void:
+	print("standing aura")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var h := VfxHub.new()
+	h.reset(S, 6)
+	var f = S.fighters[0]
+	f.state = "free"
+	f.tier = 2.0
+	for k in range(30):
+		_tick(S, h, [])
+	_check(h.aura.level[0] == 0.0 and h.aura.level[1] == 0.0, "free fighters have no standing aura after 30 ticks")
+	f.state = "charging"
+	var rise: Array = []
+	for k in range(12):
+		_tick(S, h, [])
+		rise.append(h.aura.level[0])
+	_check(rise[0] > 0.0 and rise[0] < 0.5 and rise[11] == 1.0 and rise[3] > rise[1], "charging eases the aura in over %d ticks (%.2f, %.2f, %.2f ... %.2f)" % [int(VfxAura.p("standing", "ease_in_ticks")), rise[0], rise[1], rise[2], rise[11]])
+	_check(h.aura.level[1] == 0.0, "only the charging fighter has it")
+	f.state = "free"
+	var hold: int = int(VfxAura.p("standing", "hold_ticks"))
+	for k in range(hold):
+		_tick(S, h, [])
+	_check(h.aura.level[0] == 1.0, "it holds %d ticks after the charge ends, so it does not blink between beats" % hold)
+	var fell: Array = []
+	for k in range(30):
+		_tick(S, h, [])
+		fell.append(h.aura.level[0])
+	_check(fell[0] < 1.0 and fell[29] == 0.0 and fell[10] > fell[20], "then it eases out to zero (%.2f ... %.2f)" % [fell[0], fell[29]])
+	# Each attack signal turns it on.
+	var ex := SimState.Exchange.new()
+	ex.A = f
+	ex.D = S.fighters[1]
+	S.dirS.ex = ex
+	for k in range(4):
+		_tick(S, h, [])
+	_check(h.aura.level[0] > 0.0 and h.aura.level[1] == 0.0, "being the attacker of the running exchange turns it on, being the defender does not")
+	S.dirS.ex = null
+	for k in range(60):
+		_tick(S, h, [])
+	f.beamCharge = 1.0
+	for k in range(4):
+		_tick(S, h, [])
+	_check(h.aura.level[0] > 0.0, "a beam charge turns it on")
+	f.beamCharge = null
+	for k in range(60):
+		_tick(S, h, [])
+	var bm := SimState.Beam.new()
+	bm.A = f
+	S.beams.append(bm)
+	for k in range(4):
+		_tick(S, h, [])
+	_check(h.aura.level[0] > 0.0, "a beam of its own turns it on")
+	S.beams.clear()
+	for k in range(60):
+		_tick(S, h, [])
+	f.state = "charging"
+	f.hidden = true
+	for k in range(6):
+		_tick(S, h, [])
+	_check(h.aura.level[0] == 0.0, "a hidden fighter has none")
+	f.hidden = false
+	# Frozen ticks hold the level; a transformation of that slot cuts it.
+	for k in range(4):
+		_tick(S, h, [])
+	var before: float = h.aura.level[0]
+	f.state = "free"
+	for k in range(5):
+		S.tick += 1
+		var tk := SimState.FxEvent.new()
+		tk.type = "tick"
+		tk.dt = SimConst.DT
+		tk.frozen = true
+		h.consume(S, [tk])
+	_check(h.aura.level[0] == before and before > 0.0, "a frozen tick holds the level (%.2f)" % before)
+	f.state = "charging"
+	_tick(S, h, [VfxMock.ev("transform", {"actor": 0, "tier": 3.0, "source": "ai", "dur": 3.0, "version": "full"})])
+	_check(h.aura.level[0] == 0.0, "the slot's own transformation cuts it (that effect draws the aura)")
+	# The real sim: over a minute of AI play the aura comes and goes, it is not constant.
+	var S2 := SimCore.createSim()
+	SimCore.newMatch(S2, 12345)
+	var h2 := VfxHub.new()
+	h2.reset(S2, 12345)
+	var on_ticks: int = 0
+	var off_ticks: int = 0
+	var switches: int = 0
+	var last_on: bool = false
+	for k in range(3600):
+		SimCore.step(S2)
+		h2.consume(S2, S2.out.fx)
+		S2.out.fx.clear()
+		S2.out.feed.clear()
+		var on: bool = h2.aura.level[0] > 0.5
+		if on:
+			on_ticks += 1
+		else:
+			off_ticks += 1
+		if on != last_on:
+			switches += 1
+		last_on = on
+	SimCore.dispose(S2)
+	_check(on_ticks > 60 and off_ticks > 600 and switches >= 4, "in a real minute the aura is on for %d ticks and off for %d, switching %d times" % [on_ticks, off_ticks, switches])
+	SimCore.dispose(S)
+	var saved: Dictionary = VfxAura._data
+	VfxAura._data = {}
+	var fallback: bool = VfxAura.p("standing", "hold_ticks") == 18.0 and VfxAura.p("standing", "alpha") == 0.4
+	VfxAura._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for k in VfxAura.DEFAULTS["standing"].keys():
+		if not saved.has("standing") or not saved["standing"].has(k) or float(saved["standing"][k]) != float(VfxAura.DEFAULTS["standing"][k]):
+			same = false
+			print("    differs: standing.%s" % k)
+	_check(same, "data/vfx/aura.json and the built-in defaults agree")
 
 
 func _tick(S: SimState, h: VfxHub, events: Array) -> void:

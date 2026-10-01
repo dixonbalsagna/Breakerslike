@@ -48,6 +48,8 @@ var embers_enabled: bool = VfxLook.EMBERS_DEFAULT   # scorch embers by beam vari
 var water_enabled: bool = VfxLook.WATER_DEFAULT      # dramatic water: skip spray, plunge column, beam spray, wake
 var transform_enabled: bool = VfxLook.TRANSFORM_DEFAULT   # the transformation: gather, break ring, aura swap, settle
 var xform := VfxTransform.new()
+var standing_aura_enabled: bool = VfxLook.STANDING_AURA_DEFAULT   # the aura while charging or attacking (needs transform_enabled)
+var aura := VfxAura.new()
 var debris := VfxDebris.new()
 var water := VfxWater.new()
 var holes: Array = []               # Hole
@@ -85,6 +87,7 @@ func reset(S: SimState, p_seed: int) -> void:
 	_rng_hole = SimRng.new(SimRng.deriveSeed(seed, "vfx.hole"))
 	debris.reset(seed)
 	xform.reset(seed)
+	aura.reset()
 	water.debris = debris
 	water.reset()
 	debris.water = water
@@ -153,6 +156,8 @@ func _consume(S: SimState, events: Array) -> void:
 		for e in events:
 			if e.type == "transform":
 				xform.begin(int(e.actor), float(e.tier), String(_g(e, "version", "live")), float(_g(e, "dur", 0.0)))
+	if transform_enabled and standing_aura_enabled:
+		aura.step(S, frozen, xform.forms)
 	_sync_cracks(S)
 	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled:
 		debris.quality = quality

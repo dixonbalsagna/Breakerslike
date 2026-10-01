@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "_note": "VFX's standing aura (docs/vfx/aura-plan.md): the current tier's aura shape and colour shows while a fighter charges or attacks, eased in and out, weaker than the transformation's own (data/vfx/transform.json, whose per-tier shapes it reuses). Orb's rule (2026-10-01): on only when charging or attacking, not a constant standing aura and not gone. Authored by the VFX Director session (Claude, claude-sonnet-5-5), 2026-10-01. Presentation only: read by render/vfx/aura.gd, never by the sim. A missing key falls back to the same default in aura.gd. Ticks are whole ticks (60 a second), alphas 0..1. At quality low the fill is dropped (the outline stays); at medium and high it is drawn; reduced motion drops the breathing pulse.",
+  "standing": {
+    "ease_in_ticks": 8, "ease_out_ticks": 24, "hold_ticks": 18,
+    "alpha": 0.4, "fill_scale": 0.7, "pulse": 0.03, "pulse_ticks": 50, "min_tier": 1
+  }
+}

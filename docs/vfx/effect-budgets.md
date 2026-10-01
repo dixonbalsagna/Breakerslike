@@ -48,3 +48,7 @@ About 0.5 ms a frame over the same scene without VFX, almost all of it the GDScr
 ## Transformation (2026-10-01)
 
 One MultiMesh draw per pane, at most 140 quads (51 for one fighter in the gather's middle, about 100 for both), no pool and no per-frame allocation beyond the buffer. The view's update takes about 80 microseconds a frame for one fighter in its busiest beat (fast desktop, `transform_shots.gd`), the hub's clock under 2. Counts scale with quality (0.7 medium, 0.35 low with no dust, halved in reduced motion, which also drops the flash). Degrade order 3 (before the trail's outer band). Not measured: the web build and an old laptop.
+
+## Standing aura (2026-10-01)
+
+One quad a fighter, in the transformation's one draw call (it adds none), no pool. The fill is dropped at quality low. Cost is under the transformation's 80 microseconds a frame and not separately measured.

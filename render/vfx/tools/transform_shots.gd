@@ -5,7 +5,8 @@ extends SceneTree
 ## set. Needs a window.
 ##   godot --path . --script res://render/vfx/tools/transform_shots.gd -- --out=DIR [--off] [--version=full|short|live]
 ##       [--tier=2..4] [--fighter=0|1] [--zoom=0.9] [--size=1280x720] [--ticks=0,30,58,62,70,100,150,175] [--ground]
-## --ground stands him on the terrain; the default floats him a little above it.
+## --ground stands him on the terrain; the default floats him a little above it. --aura=charge or --aura=attack shows the
+## standing aura instead (he charges, or holds a beam charge, until --release=TICK), --noaura turns it off for the "before" set.
 
 var main: Node
 var out: String = "."
@@ -17,6 +18,9 @@ var tier: float = 2.0
 var slot: int = 0
 var ground: bool = false
 var wx: float = 2250.0
+var aura_mode: String = ""        # "", "charge" or "attack": the standing aura instead of a transformation
+var release: int = 60            # the tick the charge or attack ends, for the standing aura
+var noaura: bool = false
 var ticks: Array = [0, 30, 58, 62, 70, 100, 150, 175]
 
 
@@ -28,6 +32,12 @@ func _initialize() -> void:
 			off = true
 		elif a.begins_with("--x="):
 			wx = float(a.substr(4))
+		elif a.begins_with("--aura="):
+			aura_mode = a.substr(7)
+		elif a.begins_with("--release="):
+			release = int(a.substr(10))
+		elif a == "--noaura":
+			noaura = true
 		elif a == "--ground":
 			ground = true
 		elif a.begins_with("--version="):
@@ -60,7 +70,7 @@ func _tick(S: SimState, evs: Array) -> void:
 	var tk := SimState.FxEvent.new()
 	tk.type = "tick"
 	tk.dt = SimConst.DT
-	tk.frozen = version != "live"   # a full or short version is played during the sim's frozen (paused) ticks; a live one runs on live ticks
+	tk.frozen = version != "live" and aura_mode == ""   # a full or short version is played during the sim's frozen (paused) ticks; a live one, and the standing aura, run on live ticks
 	var all: Array = evs.duplicate()
 	all.append(tk)
 	main.host.vfx.consume(S, all)
@@ -75,6 +85,7 @@ func _run() -> void:
 	var h = main.host.vfx
 	h.auto_quality = false
 	h.transform_enabled = not off
+	h.standing_aura_enabled = not noaura
 	main.start_match(3, {"p1": true, "p2": true})
 	var S: SimState = main.host.S
 	var f = S.fighters[slot]
@@ -97,7 +108,10 @@ func _run() -> void:
 	ev.version = version
 	var last: int = ticks.max()
 	for t in range(last + 1):
-		_tick(S, [ev] if t == 0 else [])
+		if aura_mode != "":
+			f.state = "charging" if (aura_mode == "charge" and t < release) else "free"
+			f.beamCharge = 1.0 if (aura_mode == "attack" and t < release) else null
+		_tick(S, [] if aura_mode != "" else ([ev] if t == 0 else []))
 		if t in ticks:
 			main.host.cam.x = SimWrap.wrap(f.x + 100.0)
 			main.host.cam.y = f.y + 40.0 + 0.1 * vp.y / zoom
@@ -108,7 +122,7 @@ func _run() -> void:
 			await RenderingServer.frame_post_draw
 			main.render_view(1.0)
 			await RenderingServer.frame_post_draw
-			var path: String = "%s/xform_%s_t%d_%s_%d.png" % [out, version, int(tier), "off" if off else "on", t]
+			var path: String = "%s/xform_%s_t%d_%s_%d.png" % [out, version if aura_mode == "" else "aura_" + aura_mode, int(tier), "off" if (off or noaura) else "on", t]
 			main.get_viewport().get_texture().get_image().save_png(path)
 			print("saved %s (forms %d, drawn %d, instances %d)" % [path, h.xform.forms.size(), main.panes[0].vfx_layer.transform_view.forms_drawn, main.panes[0].vfx_layer.transform_view.count])
 	# The cost of drawing it: the view's update with the form in its busiest beat (the gather's middle), and the hub's step.

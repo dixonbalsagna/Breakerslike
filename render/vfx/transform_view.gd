@@ -51,6 +51,33 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 	var qshare: float = VfxLook.QUALITY_SHARDS[q] * (0.5 if hub.reduced_motion else 1.0)
 	var bh: float = VfxLook.BH
 	var minpx: float = 1.6 / maxf(zoom, 1e-6)
+	# The standing aura (aura.gd): the current tier's shape and colour while a fighter charges or attacks, weaker than the
+	# transformation's own, with a slow breathing pulse (not with reduced motion) and no fill at quality low.
+	if hub.standing_aura_enabled:
+		for i in range(mini(2, host.S.fighters.size())):
+			var lvl: float = lerpf(hub.aura.prev[i], hub.aura.level[i], a)
+			var in_form: bool = false
+			for fm: VfxTransform.Form in xf.forms:
+				if fm.slot == i:
+					in_form = true
+			if lvl < 0.01 or in_form or n >= CAP - 8:
+				continue
+			var fxs: float = host.fighter_x(i, a)
+			var rels: float = SimWrap.sdx(cam_x, fxs)
+			if absf(rels) > half_w + 8.0 * bh:
+				continue
+			var ps: Vector3 = host.fighter_pose(i, a)
+			var fzs: float = host.fighter_z(i, a)
+			var fs = host.S.fighters[i]
+			var ads: Dictionary = VfxTransform.aura(clampi(int(floor(float(fs.tier) + 0.001)), 1, 4))
+			var ahs: float = float(ads["h_bh"]) * bh
+			var pulse: float = 1.0
+			if not hub.reduced_motion:
+				pulse = 1.0 + VfxAura.p("standing", "pulse") * sin(TAU * (float(hub.aura.clock) + a) / maxf(VfxAura.p("standing", "pulse_ticks"), 1.0) + float(i) * 2.0)
+			var colr: Color = RenderLook.col(String(fs.aura)).lerp(Color.WHITE, float(ads["mix"]))
+			var fill: float = 0.0 if q == VfxLook.Q_LOW else float(ads["fill"]) * VfxAura.p("standing", "fill_scale")
+			colr.a = VfxAura.p("standing", "alpha") * smoothstep(0.0, 1.0, lvl)
+			n = _put(n, Vector2(rels, ps.y + ahs * 0.5 - 0.1 * bh), Vector2(1.0, 0.0), float(ads["w_bh"]) * bh * pulse, ahs * pulse, fzs + Z_AURA, colr, float(ads["lobes"]), fill, SHAPE_AURA)
 	for f: VfxTransform.Form in xf.forms:
 		if f.slot >= host.S.fighters.size() or n >= CAP - 8:
 			continue
