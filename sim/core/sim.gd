@@ -68,6 +68,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.lastLaunch = ""
 	S.dirS.lastLaunch2 = ""
 	S.dirS.exN = 0
+	S.dirS.biomeT = PackedFloat64Array()   # location variety (granted line): the director sizes it on the first tick
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
 	S.out.feed.clear()
 	S.out.fx.clear()

@@ -51,3 +51,54 @@ The cause is the open-ground spawn (desert edge) plus a hero lure that only acts
 - **Q4:** `Fighter.sigReadyT` and its hash line, granted in that window. `sigCooldown` lives in `fighter.json` (per fighter), and Game Design has been told.
 - **No edits until the EP opens the window.**
 - **Tools' schema is committed** (`director.location/1`). It matches this plan key for key: `excessStart`, `varietyW`, `popW`, `keepW`, `oceanSurface`, `prowlTier`, `prowlAfter`, and `destinations` per role (hero, villain) from the 7 sim biomes. There are no differences to route. Future roster fighters map onto the two roles by `role` until Game Design adds more.
+
+## As built (the slice)
+
+**Status.** In the tree. Goldens regenerated.
+
+**Code**
+- `sim/director/location.gd` (new, `DirLocation`) replaces `ai.gd`'s `heroLure`.
+  - `record` runs every tick from `dirUpdate`.
+  - `roam` is called from `aiInput` for any fighter not in ESCAPE.
+- Roles come from roster data: an anguish meter makes the hero and a menace meter the villain.
+- `DirData.dataHash()` covers `data/director/location.json`, so the replay header names it.
+
+**State**
+- `S.dirS.biomeT` in `state.gd`, with its hash line (granted).
+- `S.dirS.biomeT = PackedFloat64Array()` in `sim.gd` `newMatch` (granted).
+
+**Differences from the plan**, for Tools:
+1. **The variety term is signed.** A destination under its planet share draws by `varietyW` × the deficit. Penalising the excess alone left plains at 2%, because the nearest over-visited biomes stayed cheaper than the far plains and sea.
+2. **`MIN_RECORD`** (20 s of recorded fight before shares count) is a code constant; the schema has no key for it.
+3. **`prowlAfter`** reads as the fight's total seconds away from towns. The prowl also runs only while towns hold less than their planet share, so it needs no timer state.
+4. **Destination tests.** Where the hero leaves a crowd, a destination bucket must be empty and so must its ±2 window, as the old lure had it. Where it only moves on, the bucket alone must be empty and in another biome. The villain takes the nearest bucket with people in each direction.
+
+**Data:** `varietyW` 400,000; `excessStart` 0.10; `popW` 2.0; `keepW` 12,800; `oceanSurface` true; `prowlTier` 3; `prowlAfter` 60.
+
+## Results (today's HEAD, after M1b; tempo.gd)
+
+The biome, beam and other rows are default and swap arms, seeds 1 to 200 each. KAI and the match median add seeds 201 to 400, for 800 matches.
+
+| Row | Floor or band | Before | After |
+| :--- | :--- | ---: | ---: |
+| Fight time: ocean | at least 3% | 1.7% | **10.3%** |
+| Plains | at least 3% | 1.8% | **3.9%** |
+| City | at least 3% | 4.9% | 4.8% |
+| Village | at least 3% | 10.3% | 14.4% |
+| Forest | at least 3% | 29.8% | 19.5% |
+| Desert | at least 3% | 29.1% | 21.3% |
+| Mountains | at least 3% | 22.5% | 25.9% |
+| HORIZON CLEAVE (ocean beams) | at least 3% | 1.4% | **9.8%** |
+| MERIDIAN SCAR (plains beams) | at least 3% | 1.8% | **3.5%** |
+| Underwater | at most 10% | 0.7% | 3.1% |
+| Civilians lost | 25 to 50% | 30.4% | 28.1% |
+| KAI (800 matches) | 45 to 55%, and at least 42% | 47.6% [44.2, 51.1] | 46.6% [43.2, 50.1] |
+| Match median, mean of 8 blocks of 100 | 6:00 to 8:00 | 6:35 | 6:53 |
+| Exchanges per minute | 15 to 24 | 17.6 | 17.3 |
+| No gap over 10 s | at least 95% | 99.8% | 99.3% |
+| Feel: release to request; standoff p90; strikes per minute | at most 1.0 s; at most 0.6 s; at least 80 | 0.93; 0.15; 119 | 0.95; 0.10; 110 |
+
+**Notes on the results**
+- KAI and the feel rows are unchanged within noise.
+- The match median rises about 18 s, and the rise is consistent across all 8 blocks: roaming adds travel between exchanges. It stays inside its band.
+- QA's §6 floor is half the planet share or 3%, whichever is lower. That is 3% for every biome here, and every biome clears it.

@@ -30,6 +30,7 @@ static func _ensure() -> void:
 	var h := SimHash.Hasher.new()
 	h.text(tt)
 	h.text(ft)
+	h.text(DirLocation.dataText())   # data/director/location.json (location variety)
 	_hash = h.hex()
 
 
@@ -46,7 +47,7 @@ static func swap(tpl, fin) -> Array:
 	return old
 
 
-## The combat data's content hash (both files), for the replay header.
+## The combat data's content hash (templates, finishers and data/director/location.json), for the replay header.
 static func dataHash() -> String:
 	_ensure()
 	return _hash

@@ -52,10 +52,10 @@ static func aiInput(S: SimState, f) -> void:
 	if not free:
 		return
 	var st: float = f.stance
-	# The hero leads fights away from people and out of the water, toward the nearest empty land.
-	# A DEFENSIVE hero low on ki charges first (the lure used to starve it of ki).
+	# Location (DirLocation.roam): the hero leads fights away from people and on from a biome it has overstayed; the villain
+	# prowls toward towns at high tiers. A DEFENSIVE fighter low on ki charges first (the lure used to starve it of ki).
 	var wantsCharge: bool = st == 1.0 and f.ki < 55.0 and dist > 350.0
-	var lure: float = heroLure(S, f) if f.hasAnguish and st != 3.0 and not wantsCharge else 0.0
+	var lure: float = DirLocation.roam(S, f) if st != 3.0 and not wantsCharge else 0.0
 	var sea: bool = WorldTerrain.seaAt(S, f.x)
 	if lure != 0.0:
 		i.mx = lure
@@ -170,71 +170,12 @@ const SWAY_RATE: float = 5.0                    # DEFENSIVE sway, radians per se
 
 # Fight location (balance-targets.md section 10). Underwater is a hiding state, not a place to fight.
 const SURFACE_Y: float = 150.0         # over the sea, fighters who are not hiding hold at or above this height
-const LURE_EMPTY: float = 0.1          # popNear(x, 900) at or below this, on land, is empty ground the hero leads to
-const LURE_START: float = 0.2          # the hero lures while over the sea or while popNear(f.x, 900) is above this
-const LURE_STEP: float = 200.0 * SimConst.PS
-const LURE_POP_W: float = 2.0          # route cost: distance + this x the population crossed (popNear x step)
-const LURE_KEEP: float = 800.0 * SimConst.PS         # route cost discount for the way the hero is already moving (no dithering)
 const COVER_OCEAN: float = 1500.0 * SimConst.PS      # cover cost: water counts as this much farther than forest or ridge
 const COVER_PAST_OPP: float = 1200.0 * SimConst.PS   # cover cost: running toward and past the opponent
 ## Where ESCAPE heads: forest canopy and mountain ridges break line of sight (spec-wounds.md §1c). The sea does not.
 const COVER_KINDS: Array = ["forest", "mountains"]
 const COVER_REACH: float = 4000.0 * SimConst.PS   # cover farther than this is not considered
 const COVER_EDGE: float = 100.0                  # stepping just inside a biome entered from its far end
-const LURE_BUCKETS: int = 48           # SimConst.W / LURE_STEP
-const LURE_WINDOW: int = 2             # +-2 buckets (of LURE_STEP) approximate popNear(x, 900 * WS): round(900 * WS / LURE_STEP)
-
-
-## The hero's lure: +1 or -1 to head for the nearest empty land (not sea, population at most LURE_EMPTY), by the
-## cheaper route (distance plus population crossed), or 0 when the hero already stands on empty-enough land. Population
-## comes from a histogram of the planet in LURE_STEP buckets; a bucket's window of +-LURE_WINDOW buckets estimates
-## popNear(x, 900 x WS). One pass over the buildings and one over the biome table per call, so it is cheap every tick.
-static func heroLure(S: SimState, f) -> float:
-	# Hot path (every tick while the hero is off empty land): plain arithmetic, no helper calls inside the loops.
-	var hist := PackedFloat64Array()
-	hist.resize(LURE_BUCKETS)
-	for k in range(LURE_BUCKETS):
-		hist[k] = S.popHist[k]   # kept up to date by WorldCollateral (kill and the district flight)
-	var i0: int = mini(int(SimWrap.wrap(f.x) / LURE_STEP), LURE_BUCKETS - 1)
-	if not WorldTerrain.seaAt(S, f.x) and WorldBiomes.biomeAt(f.x) != "ocean" and _window(hist, i0) <= LURE_START:
-		return 0.0
-	var seg: Array = WorldBiomes.SEG
-	var best: float = 0.0
-	var bestCost: float = 1e9
-	for s in [1, -1]:
-		var popCost: float = 0.0
-		var idx: int = i0
-		for n in range(1, LURE_BUCKETS):
-			idx += s
-			if idx < 0:
-				idx += LURE_BUCKETS
-			elif idx >= LURE_BUCKETS:
-				idx -= LURE_BUCKETS
-			var p: float = _window(hist, idx)
-			if p <= LURE_EMPTY:
-				# Land at the bucket's centre: not the ocean biome and not below the sea line.
-				var x: float = idx * LURE_STEP + LURE_STEP / 2.0
-				var ocean: bool = true
-				for sg in seg:
-					if x >= sg[0] and x < sg[1]:
-						ocean = sg[2] == "ocean"
-						break
-				if not ocean and not S.base[int(x / SimConst.COL)] < WorldWater.RESERVOIR_BASE:
-					var cost: float = n * LURE_STEP + LURE_POP_W * popCost - (LURE_KEEP if SimMathx.jsign(f.vx) == float(s) else 0.0)
-					if cost < bestCost:
-						bestCost = cost
-						best = float(s)
-					break
-			popCost += p * LURE_STEP
-	return best
-
-
-## Population within +-LURE_WINDOW buckets of bucket i, as popNear reads it (70 or more is 1).
-static func _window(hist: PackedFloat64Array, i: int) -> float:
-	var sum: float = 0.0
-	for k in range(i - LURE_WINDOW, i + LURE_WINDOW + 1):
-		sum += hist[k + LURE_BUCKETS if k < 0 else (k - LURE_BUCKETS if k >= LURE_BUCKETS else k)]
-	return minf(sum / WorldStructures.POP_NEAR_REF, 1.0)
 
 
 ## Escape cover: the nearest way into ocean, forest or mountains in each direction, out to COVER_REACH, costed by

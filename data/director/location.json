@@ -1,0 +1,21 @@
+{
+  "schema": "director.location/1",
+  "_about": "Location variety (docs/director/location-variety-plan.md; balance-targets.md section 14 C). Read by sim/director/location.gd (DirLocation.roam): where the AI leads the fight between exchanges. Costs are in world units: distance, plus popW x the population crossed (the hero's care makes it a cost, the villain's a draw), plus varietyW x the destination biome's excess time share over its planet share, less keepW for the way the fighter already moves. The planet shares come from WorldBiomes.SEG, not from here.",
+  "excessStart": 0.10,
+  "_excessStart": "the hero moves on once the fight's time share in its biome exceeds that biome's planet share by this much",
+  "varietyW": 400000.0,
+  "_varietyW": "signed: a destination biome over its planet share costs this x the excess, one under it draws by this x the deficit (0.1 of share is 40,000 units, about 12 histogram buckets)",
+  "popW": 2.0,
+  "_popW": "was ai.gd LURE_POP_W",
+  "keepW": 12800.0,
+  "_keepW": "was ai.gd LURE_KEEP (800 x PS): the route discount for the way the fighter is already moving (no dithering)",
+  "oceanSurface": true,
+  "_oceanSurface": "the sea is a destination at its surface (ai.gd SURFACE_Y keeps fighters up), so underwater time stays under section 10's cap",
+  "prowlTier": 3,
+  "prowlAfter": 60.0,
+  "_prowl": "the villain leads toward towns at this tier or above once the fight has spent prowlAfter seconds away from towns in all, and only while towns hold less than their planet share of the fight",
+  "destinations": {
+    "hero": ["ocean", "plains", "forest", "desert", "mountains"],
+    "villain": ["village", "city"]
+  }
+}

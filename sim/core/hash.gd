@@ -102,6 +102,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	_obj(out, d, ["cool", "stop", "lastLaunch", "sinceBrunt", "lastBrunt"])
 	out.append(d.lastLaunch2)
 	out.append(float(d.exN))
+	out.append(float(d.biomeT.size())); for v in d.biomeT: out.append(v)   # location variety
 	var ex = d.ex
 	if ex != null:
 		out.append(_idx(fs, ex.A))

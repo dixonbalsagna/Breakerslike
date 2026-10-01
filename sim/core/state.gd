@@ -97,6 +97,7 @@ class DirS:
 	var sinceBrunt: float = 0.0       # B2: planner launches with a building in reach that chose something else since the last brunt
 	var lastBrunt: float = -1.0       # B2: the building index of the last brunt
 	var exN: int = 0          # D1a: exchanges started this match (the exchange index for keyed draws, SimRng.keyed)
+	var biomeT: PackedFloat64Array = PackedFloat64Array()   # location variety: seconds of fight per biome (DirLocation.BIOMES order), sized by the director
 
 
 class World:

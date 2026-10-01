@@ -253,6 +253,7 @@ static func cooldownAfter(ex) -> float:
 
 
 static func dirUpdate(S: SimState, dt: float) -> void:
+	DirLocation.record(S, dt)   # location variety: the fight's time per biome
 	if S.dirS.cool > 0.0:
 		S.dirS.cool -= dt
 	var ex = S.dirS.ex
