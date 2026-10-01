@@ -53,3 +53,23 @@ Clear = go as written. Constraint = go with the condition. Change = alter it fir
 - **Last stand, option B "one last signature": Clear.** At the first brink the fighter's signature is free and ready for 20 s, once per fighter per match. A comeback beat is a trope, and the mechanism (a free signature the rival can still answer) is ours. Constraint: the brink moment stays inside the stacking rule. No glowing-blood power-up, no final speech with a body aura, no lightning. The camera cut, face cut-in and line are fine. The signature then plays as an ordinary signature.
 - **The rival's line "Was that supposed to hurt?": Clear.** One exact-phrase web search (US-only) found no character or work that owns it. It is a common taunt, close to the stock phrase "that's gotta hurt". No change needed. Re-run the search if the wording changes.
 - **Anti-hero aura colour. Red-orange is out. Use his art lane.** The aura rule bars gold, white and red because red and orange flame is the franchise's rage-form and multiplier look. The Anti-hero's art lane is orchid violet. **Safe range:** orchid or violet, shifting toward magenta or blue-violet (roughly hue 260 to 320 degrees), with a lighter tint of the same hue for the core, never pure white. **Not safe:** red, red-orange (hue 0 to 40), gold or yellow (40 to 65), and a white-hot core. The Cyborg's brick coral lane is separate and stays as it is. The fighter data for the Anti-hero's aura should change from red-orange to the orchid lane. The same rule covers his flashes and any power-stage glow.
+
+## Narrative placeholders: names and lines (2026-10-01)
+
+Screens `docs/narrative/rule-of-cool-narrative.md` and `data/narrative/combat_barks.json`. Exact-phrase web searches (US-only, grouped) plus Steam games search for the move labels. A screen, not a clearance.
+
+**Verdict: all GO.** Nothing found that ties a name or line to a franchise or an owner.
+
+| Item | Verdict | Note |
+|---|---|---|
+| "Meridian Lance", "Calamity Wave" (shouted signatures) | GO | See the wave question below. "Meridian" is the internal codename, so Narrative's glossary picks (Keeper's Lance, Last Look) are the cleaner player-facing names. |
+| "Chin Up", "The Open Stance", "Unmoved" | GO | No move or game of that name found. Steam has no title named Chin Up. Ordinary words. |
+| "Again. I was looking elsewhere.", "That was your best? Noted.", "Three. Is that all?", "You may stop whenever you are ready." | GO | No source found. Common in tone only. |
+| Taunt lines (all four fighters) | GO | No source found for "Petitioner, you are boring us", "We have seen better. We have commissioned better.", "Do carry on. It is nearly amusing.", "Would sir like a menu?", "Is that all? I hope not.", "I'm just getting warm.", "Look at me. I have not moved." Generic taunts and a waiter's patter. |
+| Last-stand lines ("One more.", "I am not finished.", "We are not amused.", "Please hold. I am not done.", "Not yet!", "Not like this.") | GO | No owner for any. "We are not amused" is a famous phrase attributed to Queen Victoria, a story historians doubt, and long in the public domain. Fine for a royal "we" Empress. |
+| DRIVE DOWN (replacing SLAM DOWN) | GO | Steam has no title of that name. "Drive" is also a mechanic name in a current fighting game, so keep DRIVE DOWN a launch label and never a system or meter name. |
+| CRATER SLAM | GO | No title of that name on Steam. |
+
+**Is "Wave" for a beam too close to the franchise's hip-fired wave name?** No. The franchise's signature is an invented compound name ending in the word for "wave", paired with a hip-fired pose. "Wave" is an ordinary English word used for beams across fighting games. Our pattern is a plain noun plus a shape word (Calamity Wave, Meridian Lance), and neither the compound nor the pose is used. Keep it that way: no coined "-ha" word, no drawn-out syllable chant across the charge, and no hip pose.
+
+Limits: the searches were grouped and US-only, so a quiet result means no obvious owner, not proof of none. Re-run any line whose wording changes.
