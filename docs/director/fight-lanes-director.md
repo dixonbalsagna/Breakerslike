@@ -37,6 +37,8 @@ So a fight wanders across the street and comes back, and doesn't hug a kerb.
 
 **Hero and villain.** No difference in the small deviation: it is texture. Personality shows in the targeted ones.
 
+**Texture only** (Game Design, §16). A small deviation never changes an outcome: no damage, no branch, no draw on `S.rng` depends on it.
+
 **Targeted deviations.** Only a BUILDING SMASH (B2's aim, any row), or a throw or launch aimed at a formation or a prop (P1), leaves the lane. The launch planner scores them as today. The depth is the target's footprint, from `WorldBrunt.aim`.
 
 ## 2. Alignment before an exchange
@@ -50,6 +52,8 @@ So a fight wanders across the street and comes back, and doesn't hug a kerb.
 
 - **Default: plough through** (the prototype Orb liked; the EP's ruling 2). The rush takes its straight line, and each footprint it crosses takes a brunt hit (`WorldBrunt.hit`) at the attacker's tier, paid from the collateral budget like any brunt.
 - **The protector goes over when it can.** A fighter with care above 0 arcs the rush over a building whose roof is within `overMaxBh` (6 bh) of the path. It uses the `rush` `arc` argument Combat's variety pass already asks for. Otherwise it ploughs, and its anguish pays.
+- **The chain limits apply** (Game Design, `balance-targets.md` §16 and §5b). A ploughing rush crosses at most the rusher's tier cap of buildings (2, 2, 3 and 4 for tiers 1 to 4), and stays inside one chain's casualty budget. Past either limit, any fighter arcs over the rest.
+- **A protector's arc costs no ki.**
 - **Cost:** one swept test along the rush line at the request. In a city the streets are clear, so this only happens when the defender rests inside a block row.
 
 ## 4. Where a fighter stays after a flight
@@ -64,7 +68,7 @@ So a fight wanders across the street and comes back, and doesn't hug a kerb.
 
 | Key | Value | Meaning |
 | :--- | :--- | :--- |
-| `enabled` | false until L4 | The switch: with it off the director passes zero everywhere |
+| `enabled` | false until L4 | The one switch. `SimCore.newMatch` copies it into `S.depthOn` (hashed); World and the core read only `S.depthOn`. With it off the director passes zero everywhere |
 | `deviation.shove`, `.vertical`, `.long` | [min, max] in bh | Section 1's table |
 | `deviation.power` | 2 | The exponent on the draw |
 | `deviation.centrePull` | 0.4 | The lean back toward the centre |
@@ -72,7 +76,7 @@ So a fight wanders across the street and comes back, and doesn't hug a kerb.
 | `rush.plough` | true | Section 3's default |
 | `rush.overMaxBh` | 6 | The protector's arc limit |
 | `rest.blockExit`, `rest.exitMarginBh` | true, 1 | Section 4 |
-| `predictor.maxFlights`, `.maxAims`, `.maxSteps` | 12, 16, 3000 | Section 6 |
+| `predictor.maxFlights`, `.maxAims`, `.maxSteps` | 8, 8, 1100 | Section 6 |
 
 **Feed lines** (the debug overlay; one per decision):
 - `DEPTH small -1.4 bh (toward centre, lane front street)`
@@ -85,14 +89,19 @@ So a fight wanders across the street and comes back, and doesn't hug a kerb.
 
 ## 6. The predictor's cost budget
 
+Simulation measured a predictor step at 0.87 µs on Orb's PC, so my first budget (3,000 steps, 1 ms) did not fit: 3,000 steps is 2.6 ms. Old laptops and phones are 5 to 10 times slower. The budget is restated around a smaller cap.
+
 Per launch decision:
-- at most **12** predicted flights and **16** aim solves (B2's brunt candidates);
-- at most **3,000** predictor steps in all;
-- **one** gather of the footprints near the launch point, sorted along the flight and reused by every candidate (the pointer walk the predictor had before B2).
+- at most **1,100** predictor steps in all, about 1 ms on Orb's PC. That is roughly what a decision costs today: five flights of up to 240 steps;
+- at most **8** predicted flights and **8** aim solves (B2's brunt candidates);
+- **one** gather of the footprints near the launch point, sorted along the flight and reused by every candidate.
 
-Target: 0.3 ms typical and 1 ms worst on the reference laptop. Today's sim tick is about 0.08 ms on average and 0.3 ms at p99, and a decision comes about ten times a minute.
+**Early exits**
+- A flight's prediction stops at its landing. Most end well before the 240-step horizon.
+- Flights are predicted in order of their base score. Once the cap is reached, the rest are scored on their travel so far, and the lowest-scoring brunt candidates are dropped. The drop is written to the feed, not silent.
+- A small deviation stays in its street, and World guarantees streets are clear. So a non-targeted flight in a city needs no footprint test and no extra steps: depth doesn't change its flight in x and y. The swept test runs only for targeted candidates, and in open country where formations or props stand.
 
-**What keeps it cheap.** A small deviation stays in its street, and World guarantees streets are clear. So a non-targeted flight in a city needs no footprint test at all. The swept test runs only for targeted candidates, and in open country where formations or props stand. If a decision would exceed the budget, the lowest-scoring brunt candidates are dropped first. That is logged, not silent.
+Target: under 1 ms on Orb's PC, typically 0.7 ms, so about 5 to 10 ms on the slowest target. A decision comes about ten times a minute and never twice in one tick.
 
 ## 7. What changes in the control-scheme steps 2 to 5
 
@@ -117,7 +126,8 @@ Target: 0.3 ms typical and 1 ms worst on the reference laptop. Today's sim tick 
    - the swept test for the rush line and the predictor.
 3. **Tools:** `director-depth.schema.json`.
 4. **Combat:** the `rush` `arc` argument (variety pass, row 2) before L4, for the protector's rush over a roof.
-5. **Game Design:** confirm three choices:
-   - the protector going over and the feeder ploughing (section 3);
-   - exchanges fought inside a block row (section 2);
-   - the sizes in section 1.
+5. **Game Design:** all three choices are confirmed (`balance-targets.md` §16): the protector goes over and the feeder ploughs, exchanges may be fought inside a block row, and the sizes in section 1 stand. The one condition, the chain limits on a ploughing rush, is in section 3.
+
+## Order (Simulation's merged plan, `fight-lanes.md` §5)
+
+I2c (Controls), then my control-scheme step 2 in its own window, then L1 with D1 (World), L0 and L2 (Simulation), L3 (World), **L4 (mine, the switch-on)** and L5.
