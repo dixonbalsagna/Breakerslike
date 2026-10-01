@@ -84,7 +84,7 @@ One page for Orb: what each of the six waves adds in plain words, its new-pose c
 
 ## Wave 1: the Anti-hero's strike specs (for Animation; not for applying)
 
-`wave1-strikes.md` and `strikes.antihero.wave1.json` are the 38 key strikes as specs to pose from: base family, limb and target socket, weight, reach and the strike's own contact distance, timing, limb tags and one line on the look. 34 can be posed now (11 derive, 23 need a contact pose); the 4 tail strikes are held until Orb rules on the tail. Section 6 of the sheet notes what a per-strike contact distance changes in the live contact data at M0. Legal screened wave 1: GO, with its conditions now in the rows (`docs/legal/rule-of-cool-screen.md`). The `.2b.json` and `.contact.json` files in this folder are live now and kept for reference.
+`wave1-strikes.md` and `strikes.antihero.wave1.json` are the 38 key strikes as specs to pose from: base family, limb and target socket, weight, reach and the strike's own contact distance, timing, limb tags and one line on the look. Animation has posed the 34 that do not need the tail (23 authored contact sketches, 11 derived; `art/animation/review/wave1/`), and the sheet carries its measured reaches; the 4 tail strikes are held until Orb rules on the tail. Section 6 of the sheet notes what a per-strike contact distance changes in the live contact data at M0. Legal screened wave 1: GO, with its conditions now in the rows (`docs/legal/rule-of-cool-screen.md`). The `.2b.json` and `.contact.json` files in this folder are live now and kept for reference.
 
 ## Wave 2: the Anti-hero's entry specs (for Animation; not for applying)
 
@@ -105,6 +105,10 @@ One page for Orb: what each of the six waves adds in plain words, its new-pose c
 ## Wave 6: the energy family (for Animation and VFX; not for applying)
 
 `wave6-energy.md` and `energy.antihero.wave6.json`: 7 emission shapes with range and travel, 6 hands, the 13 strikes that also emit, 5 energy poses, and all 31 energy strikes as emitter and shape. 7 new body poses. Every range band keeps at least 8 lights and 4 heavies, with a broken limb too.
+
+## Wave 7: the first kit (for Animation; not for applying)
+
+`wave7-first-kit.md` and `kit.antihero.wave7.json`: 3 specials (barrage volley, cutting step, grip and drag), 2 place signatures (the sweeping line, the ground shatter) and 6 showcases, each with its phases in ticks, variants by range, place and form, what it builds on from waves 1 to 6, and its sketches. 24 authored sketches, and 2 for the tail whip showcase, which is held.
 
 ## The Anti-hero's rich M0 piece list (not for applying)
 

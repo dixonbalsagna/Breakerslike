@@ -2,7 +2,7 @@
 
 Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs. Nothing here is loaded or hashed, and no live data changed. The data is `pingpong.antihero.wave3.json` in this folder. Plan: `../m0-rich.md` (wave 3 of ten). Rules: `docs/design/control-rules.md` section 11 and `moveset-rules.md` section 11(b). Choreography: `../blitz.md`.
 
-**What is here.** The rally's beats in ticks; one definition of the three flight paths, for Encounter, Camera and VFX; the `return` strike class; the 7 return blows and 16 enders as they play in a rally; three knock patterns; what the defender's answers look like. One new pose: the intercept turn.
+**What is here.** The rally's beats in ticks; one definition of the three flight paths, for Encounter, Camera and VFX; the `return` strike class; the 7 return blows and 16 enders as they play in a rally; three knock patterns; what the defender's answers look like. One new pose: the intercept turn. Counts are authored sketches: Animation generates the wind-ups, follow-throughs and derived poses (wave 1: 23 authored, 117 in the pack).
 
 ## 1. The rally in ticks
 He knocks the rival away, leaves, arrives ahead on a spiral, and knocks the rival back. That repeats 1 to 4 times, and the last return blow is the ender.

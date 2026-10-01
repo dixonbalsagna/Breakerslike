@@ -2,7 +2,7 @@
 
 Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Animation and VFX. Nothing here is loaded or hashed, and no live data changed. The data is `energy.antihero.wave6.json` in this folder. Plan: `../m0-rich.md` section 4 (wave 5 in its table).
 
-**What is here.** 7 emission shapes, 6 hands, 13 strikes that also emit, and 5 energy poses. Together they make 31 energy strikes (16 light, 15 heavy), each an emitter and a shape. They need 7 new body poses and the 6 hands; the 13 emitting strikes reuse their wave 1 poses.
+**What is here.** 7 emission shapes, 6 hands, 13 strikes that also emit, and 5 energy poses. Together they make 31 energy strikes (16 light, 15 heavy), each an emitter and a shape. They need 7 new body poses and the 6 hands; the 13 emitting strikes reuse their wave 1 poses. Counts are authored sketches: Animation generates the wind-ups, follow-throughs and derived poses (wave 1: 23 authored, 117 in the pack).
 
 ## 1. The rules they follow
 - **Energy mode swaps the piece family** (ADR 0008): the same entries and body poses, with a hand and an emission on top. The entries' fire is in `wave2-entries.md`.

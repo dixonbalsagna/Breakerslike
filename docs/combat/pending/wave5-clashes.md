@@ -2,7 +2,7 @@
 
 Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Animation. Nothing here is loaded or hashed, and no live data changed. The data is `clashes.antihero.wave5.json` in this folder. Plan: `../m0-rich.md` sections 6 and 7 (waves 4 and 7 in its table). Rules: `docs/design/rule-of-cool.md` section 2 and `moveset-rules.md` section 11(c).
 
-**What is here.** Three clashes decided on the pulse (the fist clash, the blur exchange, the grapple lock) and the three looks of a perfect block against a signature (swat, split, walk through). 9 new poses for the clashes and 9 for the answers. The clashes are composed from the wave 1 strikes and the wave 4 grabs, so two of them rarely look alike.
+**What is here.** Three clashes decided on the pulse (the fist clash, the blur exchange, the grapple lock) and the three looks of a perfect block against a signature (swat, split, walk through). 9 new poses for the clashes and 9 for the answers. The clashes are composed from the wave 1 strikes and the wave 4 grabs, so two of them rarely look alike. Counts are authored sketches: Animation generates the wind-ups, follow-throughs and derived poses (wave 1: 23 authored, 117 in the pack).
 
 ## 1. The pulse (Game Design's rule)
 - **3 pulses.** Each has an 8-tick window (10 on touch). A press on the pulse is a surge, +10. A press off it misses that pulse and locks the next press out for 20 ticks.

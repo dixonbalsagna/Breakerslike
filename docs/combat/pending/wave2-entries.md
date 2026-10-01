@@ -2,7 +2,7 @@
 
 Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Animation. Nothing here is loaded or hashed, and no live data changed. The data is `entries.antihero.wave2.json` in this folder; this sheet is the same content for reading. Plan: `../m0-rich.md` (wave 2 of ten). Wave 1 is `wave1-strikes.md`.
 
-**What is here.** 15 entries: how he gets to the blow, by the direction held. Rush 6, stand 5, retreat 4. They need 12 new poses; the rest derive from poses Animation has. Eleven work on today's sim. Four wait: three need a path on the rush (the arc dive, the skid, the spiral) and one needs fight lanes (the lane step).
+**What is here.** 15 entries: how he gets to the blow, by the direction held. Rush 6, stand 5, retreat 4. They need 12 new poses; the rest derive from poses Animation has. Counts are authored sketches: Animation generates the wind-ups, follow-throughs and derived poses (wave 1: 23 authored, 117 in the pack). Eleven work on today's sim. Four wait: three need a path on the rush (the arc dive, the skid, the spiral) and one needs fight lanes (the lane step).
 
 ## 1. How to read a row
 - **Path.** The line he travels. The sim owns his position, so a path that is not straight needs Encounter (section 4).

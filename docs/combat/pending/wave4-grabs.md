@@ -2,7 +2,7 @@
 
 Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Animation. Nothing here is loaded or hashed, and no live data changed. The data is `grabs.antihero.wave4.json` in this folder. Plan: `../m0-rich.md` (the grab family is wave 7 in its table; the EP brought it forward). Rules: `docs/design/control-rules.md` sections 4 and 9, `moveset-rules.md` section 11(d), `spec-wounds.md` section 1d.
 
-**What is here.** 16 pieces: 2 grabs, the hold, 7 throws, the tackle (2), the dive grab (2) and the reversal (2). They need 22 new poses, plus 2 for the tail throw, which is held until Orb rules on the tail. The thrown fighter needs none: he is Animation's ragdoll, pinned at the grip.
+**What is here.** 16 pieces: 2 grabs, the hold, 7 throws, the tackle (2), the dive grab (2) and the reversal (2). They need 22 new poses, plus 2 for the tail throw, which is held until Orb rules on the tail. The thrown fighter needs none: he is Animation's ragdoll, pinned at the grip. Counts are authored sketches: Animation generates the wind-ups, follow-throughs and derived poses (wave 1: 23 authored, 117 in the pack).
 
 ## 1. The grab in ticks
 | Beat | Ticks | What happens |
