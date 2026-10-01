@@ -45,24 +45,23 @@ func _devices() -> void:
 	ok(i.light, "hub: the keyboard drives slot 0 with one human")
 	hub.consumed()
 	hub.key("KeyJ", false)
-	# A pad takes the slot; the held key is let go.
+	# A pad button with player one on the keyboard joins as player two (docs/controls/local-two-player.md); player one is
+	# not disturbed.
 	hub.key("Shift", true)
 	hub.pad_button(0, "west", true)
-	ok(hub.device_of(0) == "pad", "hub: a pad button takes the slot")
+	ok(hub.device_of(1) == "pad" and hub.device_of(0) == "kb" and hub.take_joins() == [1], "hub: a pad button joins as player two and asks the host for slot 1")
+	hub.set_humans(true, true)
+	var p2: SimIntent = hub.intent(1)
 	i = hub.intent(0)
-	ok(i.light and not i.guard, "hub: the pad's light, and the keyboard's held guard was let go")
+	ok(p2.light and i.guard, "hub: the pad's light for player two, and player one's keyboard guard is still held")
 	hub.consumed()
 	hub.pad_button(0, "west", false)
-	hub.key("KeyD", true)
-	ok(hub.device_of(0) == "kb", "hub: a key takes it back")
-	i = hub.intent(0)
-	ok(i.mx == 1.0, "hub: and the keyboard moves")
-	hub.consumed()
-	hub.key("KeyD", false)
 	hub.key("Shift", false)
-	# Touch takes slot 0 and everything else is let go.
+	# Touch takes slot 0 when nobody plays, and everything else is let go.
+	hub = SimInputHub.new()
+	hub.set_humans(true, false)
 	hub.touch_down(1, 700.0, 300.0, "guard")
-	ok(hub.device_of(0) == "touch", "hub: a touch takes slot 0")
+	ok(hub.device_of(0) == "touch", "hub: a touch takes slot 0 when nobody is playing")
 	ok(hub.intent(0).guard, "hub: touch guard")
 	hub.touch_up(1)
 	hub.consumed()
@@ -183,6 +182,7 @@ func _sim() -> void:
 	_step(S, hub, 14)
 	hub.key("Space", false)
 	hub.key("KeyQ", false)
+	_step(S, hub, 400)   # the transformation gathers in a pause (SimPause) before the tier rises
 	ok(f.tier > tier0 and not f.act.formReady, "sim: the chord's transform raises the tier (the charge-hold fallback is no longer needed)")
 	# Holding charge alone no longer transforms a v2 slot.
 	S = _match(hub)
@@ -204,6 +204,9 @@ func _sim() -> void:
 		if SimCore.step(S, [hub.intent(0), null]):
 			hub.consumed()
 	hub.key("KeyR", false)
+	for k in range(400):
+		if SimCore.step(S, [hub.intent(0), null]):
+			hub.consumed()
 	ok(f.tier == 2.0, "sim: the R key (solo) held 30 ticks takes the form")
 
 
@@ -262,6 +265,8 @@ func _preset_and_hold() -> void:
 	_tick(hub, 0, 15)
 	ok(absf(hub.transform_hold(0) - 0.5) < 0.04, "hold: the hub reports the transform key's progress")
 	hub.key("KeyR", false)
+	hub = SimInputHub.new()
+	hub.set_humans(true, false)
 	hub.touch_down(1, 400.0, 300.0, "context")
 	_tick(hub, 0, 15)
 	ok(absf(hub.transform_hold(0) - 0.5) < 0.04, "hold: and a touch Transform button's")

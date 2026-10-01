@@ -31,7 +31,7 @@ func _init() -> void:
 func _fresh() -> void:
 	main.start_match(5, {"p1": false, "p2": false})   # an idle opponent, so nothing else starts an exchange
 	host = main.host
-	host.hub.release_all()
+	host.hub.reset_claims()
 	main._touch_last = false   # the next touch flips the device, as a first touch does
 	main.ui_hud.dp = 2.75
 	main.ui_hud.set_option("touch_ui", true)
