@@ -450,4 +450,10 @@ So a match reads as a climb: a place signature, Regalia's, Sovereign's, and then
 | 1 to 3 completed taunts a match (`control-rules.md` §4) | 4 taunts | Passes: none repeats in a match |
 | A finisher per form (`spec-wounds.md`) | 3 shapes: base, Abdicate and Apex | Passes |
 
-**Still open from Combat's list:** the turn throw's gates and cost. It waits for Combat's launch-vector note to be briefed.
+**(d) The turning throw** (Combat's `docs/combat/launch-vectors.md` §5). The launcher carries the body round himself and releases it toward a target behind him, never through him. Combat's gates are confirmed:
+- there is a brunt target behind the launcher, and the planner scores it above every target in front, after the turn's score penalty;
+- it follows only a heavy, an ender, a guard break or a finisher strike;
+- the body is held, not flying, so it can't be the return blow or the ender of a ping-pong;
+- it takes 10 ticks, during which the held fighter can't act.
+
+**It costs no ki.** The 10 ticks and the score penalty are the price, and the strike that set it up has already been paid for. The smash it leads to is a brunt like any other, inside the collateral budgets (`balance-targets.md` §5b).
