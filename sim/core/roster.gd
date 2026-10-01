@@ -26,6 +26,7 @@ static func createFighter(def: Dictionary, x: float, keys: String, ai: bool) -> 
 	f.md = def.md
 	f.ld = def.ld
 	f.finisher = def.get("finisher", "")
+	f.sigCooldown = float(def.get("sigCooldown", 0.0))
 	f.hp = def.maxhp
 	f.x = x
 	f.keys = keys

@@ -37,7 +37,7 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	A.beamCharge = null
 	if S.game.ko != null:
 		return
-	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, dist + (2000.0 + A.tier * 400.0) * SimConst.WS)
+	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, dist + float(A.ld.beamOvershoot[_tierIx(A)]) * SimConst.WS)   # the tier gate: was 2000 + 400 x tier
 	var ox: float = A.x
 	var oy: float = A.y + 38.0
 	var aimY: float = D.y + 36.0
@@ -71,7 +71,7 @@ static func opBeamImpact(S: SimState, ex, args) -> void:
 	if D.state == "locked":
 		D.state = "free"
 	SimDamage.hit(S, ex, A, D, 200.0 if out == "GUARD" else 230.0, {"ignoreStance": out != "GUARD", "stop": 0.14, "shake": 16.0, "big": true})
-	WorldStructures.explode(S, D.x, D.y + 30.0, 60.0 + A.tier * 30.0, A)
+	_blast(S, A, D.x, D.y + 30.0, 60.0 + A.tier * 30.0)
 	if S.game.ko == null:
 		D.state = "locked"
 		DirLaunch.doLaunch(S, A, D, {"ux": args.ux, "uy": args.uy * 0.6 + 0.12}, 1300.0 if out == "GUARD" else 2600.0, true)
@@ -141,14 +141,35 @@ static func opClashResolve(S: SimState, ex, args) -> void:
 	var L: float = SimDamage.jor(SimDetMath.hypot(dxs, dyy), 1.0)
 	var ux: float = dxs / L
 	var uy: float = dyy / L
-	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, L + (2000.0 + Wn.tier * 400.0) * SimConst.WS)
+	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, L + float(Wn.ld.beamOvershoot[_tierIx(Wn)]) * SimConst.WS)
 	fireBeam(S, Wn, Wn.x, Wn.y + 38.0, ux, uy, len, variant)
 	Ls.state = "locked"
 	SimDamage.hit(S, ex, Wn, Ls, 260.0, {"ignoreStance": true, "stop": 0.16, "shake": 18.0, "big": true})
-	WorldStructures.explode(S, Ls.x, Ls.y + 30.0, (70.0 + Wn.tier * 32.0) * SimConst.WS, Wn)
+	_blast(S, Wn, Ls.x, Ls.y + 30.0, (70.0 + Wn.tier * 32.0) * SimConst.WS)
 	if S.game.ko == null:
 		DirLaunch.doLaunch(S, Wn, Ls, {"ux": ux, "uy": uy * 0.6 + 0.12}, 2600.0, true)
 		DirExchange.decisive(S, ex, Wn, Ls, "beam_clash")
+
+
+## Past its cap a beam leaves each further building standing at this share of its hp, scorched, so the path still reads.
+const BEAM_KEEP: float = 0.25
+
+
+static func _tierIx(f) -> int:
+	return clampi(int(f.tier) - 1, 0, 3)
+
+
+## A blast that belongs to A's beam (its impact, or a clash's end): the beam's structure factor and what is left of its
+## cap apply, and the buildings it levels count against the beam. With no live beam of A, the gate is taken from A's tier.
+static func _blast(S: SimState, A, x: float, y: float, r: float) -> void:
+	var bm = null
+	for b in S.beams:
+		if b.A == A:
+			bm = b
+	if bm == null:
+		WorldStructures.explode(S, x, y, r, A, float(A.ld.beamStructure[_tierIx(A)]), maxi(1, int(SimMathx.jround(float(A.ld.beamLevelCapShare[_tierIx(A)]) * S.buildings.size()))), BEAM_KEEP)
+		return
+	bm.levelled += WorldStructures.explode(S, x, y, r, A, bm.sf, maxi(0, bm.cap - bm.levelled), BEAM_KEEP)
 
 
 static func fireBeam(S: SimState, A, ox: float, oy: float, ux: float, uy: float, len: float, variant: String) -> void:
@@ -156,6 +177,10 @@ static func fireBeam(S: SimState, A, ox: float, oy: float, ux: float, uy: float,
 	b.A = A; b.ox = ox; b.oy = oy; b.ux = ux; b.uy = uy; b.len = len
 	b.p = 0.0; b.t = 0.0; b.life = 0.95; b.w = 24.0 + A.tier * 9.0; b.variant = variant; b.col = A.aura
 	b.pw = WorldCrater.beamPower(A)
+	# The tier gate (balance-targets.md §15), fixed at fire time from the firer's ladder: how hard the beam bites
+	# structures, and how many buildings it may level (a share of all of them, at least one).
+	b.sf = float(A.ld.beamStructure[_tierIx(A)])
+	b.cap = maxi(1, int(SimMathx.jround(float(A.ld.beamLevelCapShare[_tierIx(A)]) * S.buildings.size())))
 	S.beams.append(b)
 	SimFx.shake(S, 14.0, ox)
 
@@ -175,7 +200,7 @@ static func sampleBeam(S: SimState, b, s: float) -> void:
 		SimFx.dust(S, x, g + 8.0, 1, "#e6c47a" if b.variant == "GLASS TRENCH" else "#9b8f7e")
 		if b.variant == "GLASS TRENCH":
 			SimFx.spark(S, x, g + 6.0, 2, "#ffd98a", 300.0)
-	WorldStructures.damageArea(S, x, y, (26.0 + P * 8.0) * SimConst.WS, 110.0 + P * 75.0, A)
+	b.levelled += WorldStructures.damageArea(S, x, y, (26.0 + P * 8.0) * SimConst.WS, (110.0 + P * 75.0) * b.sf, A, false, 0.0, maxi(0, b.cap - b.levelled), BEAM_KEEP)
 	if y < 30.0 and WorldTerrain.seaAt(S, x):
 		SimFx.beamSplash(S, x)   # the consumer rolls the prototype's 60% splash
 	if b.variant == "FIRESTORM" and y < g + 140.0 * SimConst.WS:

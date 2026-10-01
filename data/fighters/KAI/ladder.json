@@ -19,5 +19,11 @@
     "areaRPerTier": 60.0,
     "areaDmg": 90.0,
     "areaDmgPerTier": 100.0
+  },
+  "beam": {
+    "structure": [0.25, 0.5, 1.0, 1.5],
+    "levelCapShare": [0.01, 0.03, 0.08, 0.20],
+    "overshoot": [600.0, 1200.0, 2400.0, 4000.0],
+    "_note": "the beam tier gate, per tier 1 to 4 (balance-targets.md section 15): structure multiplies every beam's damage to buildings; levelCapShare is the share of all structures one beam may level (past it they are left at 25% hp); overshoot is the beam's length past its target, in units before WS (the 4,200 x WS total cap stays)"
   }
 }

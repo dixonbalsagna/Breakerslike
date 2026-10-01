@@ -27,18 +27,82 @@ static func schedule(ex, t: float, op: String, args = null) -> void:
 	ex.beats.insert(i, b)
 
 
+const QUEUE_LIFE: int = 36   # ticks a queued request waits to start (control-rules.md §6); the attacker's links wait through its own exchange
+const KIND: Array = ["light", "heavy", "sig"]   # SimAct.LIGHT, HEAVY, SIG
+const STARTED: int = 0
+const DROPPED: int = 1
+const WAIT: int = 2
+
+
+## An attack press. For a v2 slot it is one request (ADR 0008): it joins the fighter's queue (SimAct, depth queueMax), and
+## the director starts the oldest request as soon as it can (_drain: here, and every tick). A press the queue has no room
+## for is ignored. A slot that is not v2 starts its attack directly, as before.
 static func requestAttack(S: SimState, A, kind: String) -> void:
+	if not A.act.v2:
+		_start(S, A, kind)
+		return
+	var m: float = A.input.mx * SimMathx.jsign(SimWrap.sdx(A.x, SimRoster.opp(S, A).x))
+	var entry: int = 1 if m > SimAct.awayDead else (-1 if m < -SimAct.awayDead else 0)   # toward, neutral or away (step 4 reads it)
+	SimAct.push(A, KIND.find(kind), A.act.mode, entry, S.tick)
+	_drain(S)
+
+
+## Starts the oldest queued request the director can take: the older one first, the slots alternating on a tie. A request
+## that cannot start yet (the cooldown, an exchange running, a target in the air) waits in its queue until it expires.
+static func _drain(S: SimState) -> void:
 	if S.dirS.ex != null or S.dirS.cool > 0.0 or S.game.ko != null:
 		return
+	var q0: Array = SimAct.peek(S.fighters[0])
+	var q1: Array = SimAct.peek(S.fighters[1])
+	if q0.is_empty() and q1.is_empty():
+		return
+	var order: Array = [0, 1]
+	if q0.is_empty() or (not q1.is_empty() and (q1[3] < q0[3] or (q1[3] == q0[3] and S.tick % 2 == 1))):
+		order = [1, 0]
+	for k in order:
+		var f = S.fighters[k]
+		while not SimAct.peek(f).is_empty():
+			var r: int = _start(S, f, KIND[int(SimAct.peek(f)[0])])
+			if r == WAIT:
+				break
+			SimAct.pop(f)
+			if r == STARTED:
+				return
+
+
+## Once per live tick, from dirUpdate: the layout's upgrade edge (a hold or a swipe makes the newest request heavier, or
+## queues a new one if it has already started), the expiry of waiting requests, and the drain.
+static func _queues(S: SimState) -> void:
+	for f in S.fighters:
+		if not f.act.v2:
+			continue
+		var up: int = f.input.upgrade
+		if up > 0 and not SimAct.upgrade(f, SimAct.HEAVY if up == 1 else SimAct.SIG):
+			SimAct.push(f, SimAct.HEAVY if up == 1 else SimAct.SIG, f.act.mode, 0, S.tick)
+		if not (S.dirS.ex != null and S.dirS.ex.A == f):
+			SimAct.expire(f, S.tick, QUEUE_LIFE)
+	_drain(S)
+
+
+## Starts A's attack if the director can take it now. STARTED: an exchange began. DROPPED: the request was spent without
+## one (no ki for a signature, the signature still recharging, lock lost). WAIT: not yet (a queued request keeps waiting).
+static func _start(S: SimState, A, kind: String) -> int:
+	if S.dirS.ex != null or S.dirS.cool > 0.0 or S.game.ko != null:
+		return WAIT
 	var D = SimRoster.opp(S, A)
 	if A.state != "free" and A.state != "charging":
-		return
+		return WAIT
 	if D.state == "launched" or D.state == "locked":
-		return
+		return WAIT
 	if kind == "sig" and A.ki < 45.0:
 		if A.ai == null:
 			SimFx.banner(S, "NEED 45 KI", "#9fb4ff", 0.6)
-		return
+		return DROPPED
+	# The signature cooldown (questionnaire 5; fighter.json sigCooldown): 2 to 4 signatures a match, each an event.
+	if kind == "sig" and S.T < A.sigReadyT:
+		if A.ai == null:
+			SimFx.banner(S, "SIGNATURE RECHARGING", "#9fb4ff", 0.6)
+		return DROPPED
 	if kind == "heavy" and A.ki < 4.0:
 		kind = "light"
 	if D.hidden:
@@ -48,7 +112,7 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 			SimFx.banner(S, "LOCK LOST — TARGET HIDDEN", "#9fb4ff", 0.9)
 		SimFx.lockLost(S, A, D)
 		SimFx.searching(S, A, D, D.lastSeen.x if D.lastSeen != null else D.x)
-		return
+		return DROPPED
 	if A.hidden:
 		if A.canHide:
 			A.hidden = false
@@ -66,6 +130,7 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 		A.ki -= 4.0
 	if kind == "sig":
 		A.ki -= 45.0
+		A.sigReadyT = S.T + A.sigCooldown
 	var ex := newEx(A, D, kind)
 	A.exT = S.T
 	D.exT = S.T
@@ -100,6 +165,7 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	if A.ambush:
 		SimFx.ambush(S, A, D)
 		SimFx.danger(S, D, "ambush", 0.0)
+	return STARTED
 
 
 ## Runs one beat (module-spec section 4). Fighters are read from ex when the beat runs.
@@ -119,7 +185,10 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirMelee.opWind(S, ex, a)
 		"press":
 			var who = A if a.who == "A" else D
-			who.lastAtkT = S.T
+			if a.get("queue", false):
+				SimAct.push(who, SimAct.LIGHT, who.act.mode, 0, S.tick)   # the AI's chain press is a queued request, as a player's is
+			else:
+				who.lastAtkT = S.T
 		"strike":
 			DirMelee.strike(S, ex, A if a.a == "A" else D, A if a.d == "A" else D, a.dmg, a.o)
 		"launch":
@@ -200,7 +269,7 @@ static func openWindow(S: SimState, ex) -> void:
 	ex.ext = e
 	SimFx.windowOpen(S, ex.A, "chain", 0.6, int(ex.combo))
 	if ex.A.ai != null and S.rng.next() < SimMathx.jclamp(0.62 - 0.14 * ex.combo, 0.05, 0.6):
-		schedule(ex, ex.t + S.rng.range_(0.12, 0.35), "press", {"who": "A"})
+		schedule(ex, ex.t + S.rng.range_(0.12, 0.35), "press", {"who": "A", "queue": ex.A.act.v2})
 
 
 static func chain(S: SimState, ex) -> void:
@@ -263,6 +332,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	_transforms(S)
 	if S.dirS.cool > 0.0:
 		S.dirS.cool -= dt
+	_queues(S)   # step 2: upgrades, expiry, and the next queued request once the director can take it
 	var ex = S.dirS.ex
 	if ex == null:
 		return
@@ -280,7 +350,13 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	if ex.ext != null and S.T < ex.ext.until:
 		var A = ex.A
 		var inReach: bool = not (ex.D.state == "launched" and absf(SimWrap.sdx(A.x, ex.D.x)) > CHAIN_REACH)
-		if A.lastAtkT >= ex.ext.start and ex.combo < 5.0 and A.ki >= 6.0 and inReach:
+		# The link: a v2 slot's next queued light or heavy request (pressed before or during the window: repeats queue a short
+		# combo, with no timed press); otherwise a press inside the window, as before.
+		var head: Array = SimAct.peek(A)
+		var pressed: bool = (not head.is_empty() and int(head[0]) != SimAct.SIG) if A.act.v2 else A.lastAtkT >= ex.ext.start
+		if pressed and ex.combo < 5.0 and A.ki >= 6.0 and inReach:
+			if A.act.v2:
+				SimAct.pop(A)
 			chain(S, ex)
 	var pending: bool = false
 	for b in ex.beats:
@@ -563,6 +639,8 @@ static func _opContestBranch(S: SimState, ex, a) -> void:
 		chance = float(sc.base) + float(sc.perHit) * float(a.sHits) + float(sc.perMiss) * misses + float(sc.perStray) * float(a.sStrays) - float(cs.tiltPerMinute) * late
 	else:
 		chance = float(cs.base) - float(cs.tiltPerMinute) * late
+	# The Rally tilt (spec-wounds.md §1; contest.rallyPenalty): each Rally the fighter has used costs it 10 points.
+	chance -= float(cs.get("rallyPenalty", 0.0)) * float(L.rallies)
 	chance = SimMathx.jmax(float(cs.floor), chance)
 	var survived: bool = S.rng.next() < chance
 	SimFx.finisherContest(S, L, chance, survived)

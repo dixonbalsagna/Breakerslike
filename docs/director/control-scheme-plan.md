@@ -215,3 +215,56 @@ Each step is a checkpoint with goldens, the feel probe, tempo and QA's bands.
 **Notes**
 - The transform constants (hold 0.8 s, push 900 u/s within 700 u) are code constants for the placeholder. They move to data with F1's transformations.
 - A stunned AI's held states end at the stun gate, so it reads as Press while staggered. That is the scheme's rule for any player.
+
+## Step 2a as built (the queue, the signature cooldown, the beam tier gate)
+
+**Status.** In the tree. Goldens regenerated. Step 2b (the Neutral column, request-only counters, the fire-beat beam outcome) follows with Combat's data and Tools' `apply-q4`.
+
+**What runs**
+
+| Part | What the director does | Where |
+| :--- | :--- | :--- |
+| **One press, one request** | For a v2 slot, `requestAttack` pushes `[weight, mode, entry, tick]` to SimAct's queue (depth 3). `_drain` starts the oldest request the director can take, the older first and the slots alternating on a tie. It runs at the press and once per live tick. A request that can't start yet waits; it expires after 36 ticks, except the attacker's own links during its exchange | `exchange.gd` `requestAttack`, `_drain`, `_queues`, `_start` |
+| **Chain links from the queue** | At a chain window the attacker's next queued light or heavy request becomes the link, whether it was pressed before or during the window. The timed press is gone for v2 slots. The AI's chain press is a queued request too | `exchange.gd` `dirUpdate`, `openWindow`, the `press` op |
+| **The upgrade edge** | A hold or a swipe makes the newest queued request heavier, or queues a new one if the first has already started (the Simple layout's attack on press) | `exchange.gd` `_queues` |
+| **The signature cooldown** | `sigCooldown` (120 s, `fighter.json`). A signature sets `sigReadyT`; a request before it is dropped with a banner | `exchange.gd` `_start` |
+| **The AI's signature pick** | 0.025 per attack with 50 ki and the cooldown over (it was 0.2), which gives about 3 signatures a match. The heavy share of the other attacks is unchanged | `ai.gd` `SIG_PICK`, `HEAVY_SHARE` |
+| **The beam tier gate** (`balance-targets.md` §15) | Fixed at fire time from the firer's ladder: the structure factor (×0.25, 0.5, 1.0, 1.5), the level cap (1, 3, 8 and 20% of all structures, at least one), and the overshoot past the target (600, 1,200, 2,400 and 4,000 × WS). Past its cap a beam leaves buildings at 25% hp. The beam's impact explosion and a clash's blast count against the same beam | `beam.gd`; `ladder.json` `beam`; `WorldStructures.damageArea`, `damageBuilding`, `explode` (granted) |
+| **The roam yields to the hunt** | A fighter doesn't lead the fight away while its opponent is out of lock; it sweeps for it. QA's report: the roam was tested before the hunt | `ai.gd` |
+| **The Rally tilt** | Finisher survival loses `contest.rallyPenalty` (10 points) per Rally the fighter has used. It was missing since S4 | `exchange.gd` `_opContestBranch` |
+
+**Results** (seeds 1 to 100 per arm, capped at 15:00; before is HEAD 723cc47)
+
+| Measure | Band | Before | After |
+| :--- | :--- | ---: | ---: |
+| Signatures per match, median | 2 to 4 | 21 to 23 | **3** |
+| Beam outcomes: CLASH | 30 to 60% of signatures | 44 to 47% | 50 to 51% |
+| Structures levelled per minute at tier 1 | at most 2% | 5.3 to 5.8% | **0.08%** |
+| ... at tier 2 | at most 4% | 7.5 to 7.8% | **0.95%** |
+| ... at tier 3 | 3 to 10% | 8.3 to 11.5% | 1.2 to 3.0% |
+| ... at tier 4 | 6 to 20% | 7.4 to 7.8% | **3.4%** |
+| Matches losing over 10% of structures before tier 3 | none | 73 of 200 | 1 of 200 |
+| A beam's own levelled count against its cap | never over | often over | never over (2, 6, 16 and 39 reached exactly) |
+| Structures lost at the KO | 25 to 60% of all rows | 52 to 57% | 25 to 26% |
+| Match median, default / swap | 6:00 to 8:00 | 6:56 / 7:08 | **8:31 / 8:42** |
+| KAI, both arms | 45 to 55% | 47% | 55.5% |
+| Chain links per match | | 33 | 49 to 52 |
+| No KO by 15:00 | | 0 | 0 |
+
+**A scripted masher** (a v2 human slot pressing light every 8 ticks) beats today's AI 100 times in 100, in about 2:30. It also wins 60 of 60 on HEAD, so the queue did not cause it: constant attacks with every chain taken already beat this AI. Game Design's bands (35 to 50% against a medium AI) need the perfect block and staleness of step 3 and the AI profile of step 4.
+
+**Notes for Game Design and QA**
+- **Length.** Matches run about 90 s longer, because each signature removed was 230 to 260 damage. k needs QA's damage-rate retune.
+- **Top-tier destruction** is under its bands with 3 signatures a match (tier 4 at 3.4% a minute against 6 to 20%).
+- **The one match over 10% before tier 3** lost its structures to launches and slides, not beams. World's rolling structure budget is the ruled fallback.
+- **Old parry rule.** A defender's attack press during the wind-up still parries, until the perfect block replaces it in step 3. For a v2 slot that press now also queues an attack, so a parry is followed by the defender's own attack.
+
+## Queued after step 2a (EP notes)
+
+- **Teleporting is on hold** (Orb). Blinks and the teleport clash drop out of the variety steps. The ping-pong blitz uses flight paths only (`docs/combat/blitz.md`).
+- **The landing mix** (`balance-targets.md` §19), in my next slice, with QA re-measuring after each step:
+  1. `SLAM_VERT` goes from 0.85 to 0.94 (World's constant, granted; to data if cheap).
+  2. SLAM DOWN becomes a drive by default, 40 to 55 degrees below level. The straight-down slam stays for break and finisher launches, a rival directly below, and the tier-3 crater set piece.
+  3. Only if slides are still under 40%: more planner weight for shallow launches, and more forward carry on UPPERCUT.
+- **Fights in the city** (Rendering). In two AI matches no fighter was ever behind a building, so occlusion can't be judged in play yet. Keep it in mind for variety and L4.
+- **Knocked-about rules** (`balance-targets.md` §20) replace §19's band table. The new bands, as shares of launches: slide 40 to 55%, bounce 8 to 15%, slam 8 to 15%, caught in the air 10 to 25%, water 5 to 15%, brunt 4 to 10%. §19's steps (`SLAM_VERT` 0.94, the drive) still stand. World plans the physics and a journey prediction. My part, later: the launch planner's budget check on the predicted journey, and the AI's tech on the dodge tap.

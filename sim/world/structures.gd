@@ -116,7 +116,10 @@ static func dz(b) -> float:
 
 
 ## local: the damage is a brunt's local floor damage (its people are handled by the floors), so only the collapse below applies.
-static func damageBuilding(S: SimState, b, d: float, cause, mode: String = "burst", cx: float = 0.0, evt: float = 0.0, local: bool = false) -> void:
+static func damageBuilding(S: SimState, b, d: float, cause, mode: String = "burst", cx: float = 0.0, evt: float = 0.0, local: bool = false, keep: float = 0.0) -> void:
+	# keep (the beam tier gate, balance-targets.md §15): the blow leaves the building standing at keep x maxhp at least.
+	if keep > 0.0:
+		d = SimMathx.jmin(d, b.hp - keep * b.maxhp)
 	if not b.alive or d <= 0.0:
 		return
 	var before: float = b.hp
@@ -203,7 +206,10 @@ static func _heap(S: SimState, b) -> float:
 ## within 0.7 r burn when y is less than r above their ground. A hit, impact or blast reaches only buildings within
 ## Z_REACH in depth of the plane; a beam (beam = true) ignores depth. The buildings levelled by it implode. evt is the
 ## caller's set-piece token for the collateral allowance (0 for none).
-static func damageArea(S: SimState, x: float, y: float, r: float, dmg: float, cause, beam: bool = false, evt: float = 0.0) -> void:
+## capLeft and keep (the beam tier gate): once this call has levelled capLeft buildings, each further one is left standing
+## at keep x maxhp. capLeft -1 is no cap. Returns the number of buildings the call levelled.
+static func damageArea(S: SimState, x: float, y: float, r: float, dmg: float, cause, beam: bool = false, evt: float = 0.0, capLeft: int = -1, keep: float = 0.0) -> int:
+	var levelled: int = 0
 	S.world.fallTick = -1.0
 	for bi in near(S, x, r):
 		var b = S.buildings[bi]
@@ -217,7 +223,10 @@ static func damageArea(S: SimState, x: float, y: float, r: float, dmg: float, ca
 		var top: float = baseY(S, b) + curH(b)
 		if y - r * 0.6 > top:
 			continue
-		damageBuilding(S, b, dmg * (1.0 - SimMathx.jclamp(d / r, 0.0, 1.0) * 0.7), cause, "implode", x, evt)
+		var lost0: float = S.world.structuresLost
+		damageBuilding(S, b, dmg * (1.0 - SimMathx.jclamp(d / r, 0.0, 1.0) * 0.7), cause, "implode", x, evt, false, keep if (capLeft >= 0 and levelled >= capLeft) else 0.0)
+		if S.world.structuresLost > lost0:
+			levelled += 1
 	if S.world.fallFold > 0.0:
 		SimFx.buildingFall(S, -1, x, 0.0, 0.0, 0.0, "implode", 0.0, x, 0.0, S.world.fallFold)
 		S.world.fallFold = 0.0
@@ -225,9 +234,12 @@ static func damageArea(S: SimState, x: float, y: float, r: float, dmg: float, ca
 		if t.alive and absf(SimWrap.sdx(x, t.x)) < r * 0.7 and y < WorldTerrain.groundY(S, t.x) + r:
 			t.alive = false
 			SimFx.fire(S, t.x, WorldTerrain.groundY(S, t.x), 2)
+	return levelled
 
 
-static func explode(S: SimState, x: float, y: float, r: float, cause) -> void:
+## sf, capLeft and keep (the beam tier gate): the structure-damage factor and the cap of the beam this blast belongs to,
+## passed to damageArea. Returns the number of buildings levelled.
+static func explode(S: SimState, x: float, y: float, r: float, cause, sf: float = 1.0, capLeft: int = -1, keep: float = 0.0) -> int:
 	SimFx.spark(S, x, y, 26, "#fff1b5", 900.0)
 	SimFx.ring(S, x, y, r * 2.6, "#ffe2a0", 0.5, 20.0)
 	SimFx.ring(S, x, y, r * 1.5, "#ff8a3d", 0.7, 10.0)
@@ -236,9 +248,10 @@ static func explode(S: SimState, x: float, y: float, r: float, cause) -> void:
 	# The crater digs first, then the buildings it reaches are levelled and their heaps added.
 	if y < WorldTerrain.groundY(S, x) + r:
 		WorldCrater.dig(S, x, WorldCrater.explodeEnergy(cause.tier), cause, "beam", 0.0, 1.0, true)
-	damageArea(S, x, y, r * 1.8, 130.0 + cause.tier * 110.0, cause)
+	var levelled: int = damageArea(S, x, y, r * 1.8, (130.0 + cause.tier * 110.0) * sf, cause, false, 0.0, capLeft, keep)
 	SimFx.shake(S, 16.0, x)
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.08)
+	return levelled
 
 
 ## Living civilians in standing buildings centred within r of x, scaled so POP_NEAR_REF or more reads 1.

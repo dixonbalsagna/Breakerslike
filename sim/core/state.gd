@@ -213,6 +213,9 @@ class Beam:
 	var col: String = ""
 	var pw: float = 1.0          # beam-power scalar, fixed at fire time (WorldCrater.beamPower)
 	var struck: bool = false     # has this beam already dug its ground-strike crater?
+	var sf: float = 1.0          # step 2, the tier gate (balance-targets.md §15): the structure-damage factor at fire time
+	var cap: int = -1            # ... buildings this beam may level (-1: no cap); past it they are left at 25% hp
+	var levelled: int = 0        # ... and how many it has levelled so far
 
 
 class FeedLine:
@@ -362,6 +365,8 @@ class Fighter:
 	var md = null                    # D1b: its FighterData.MetersDef (the same)
 	var ld = null                    # D1b: its FighterData.LadderDef (the same)
 	var finisher: String = ""        # D1a: fighter.json finishers.base (data; data.gd still selects by byFighter until F1)
+	var sigCooldown: float = 0.0     # step 2: fighter.json sigCooldown, seconds (a copy of the data, not hashed)
+	var sigReadyT: float = 0.0       # step 2: the match time from which the signature can fire again (the director sets it)
 	var ambush: bool = false
 	var rush = null          # Rush or null
 	var rot: float = 0.0

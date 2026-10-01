@@ -68,7 +68,9 @@ static func aiInput(S: SimState, f) -> void:
 	# Location (DirLocation.roam): the hero leads fights away from people and on from a biome it has overstayed; the villain
 	# prowls toward towns at high tiers. A DEFENSIVE fighter low on ki charges first (the lure used to starve it of ki).
 	var wantsCharge: bool = st == 1.0 and f.ki < 55.0 and dist > 350.0
-	var lure: float = DirLocation.roam(S, f) if st != 3.0 and not wantsCharge else 0.0
+	# The roam yields while the opponent is out of lock: a hunter sweeps for it (below) and never leads the fight away from
+	# a target it has lost (QA: the roam ran before the hunt, so a roaming hunter did not search).
+	var lure: float = DirLocation.roam(S, f) if st != 3.0 and not wantsCharge and not o.hidden else 0.0
 	var sea: bool = WorldTerrain.seaAt(S, f.x)
 	if lure != 0.0:
 		i.mx = lure
@@ -154,9 +156,9 @@ static func aiInput(S: SimState, f) -> void:
 			pa = 1.0
 		if r < pa:
 			var q: float = r / pa
-			if f.ki >= 50.0 and q < 0.2:
+			if f.ki >= 50.0 and q < SIG_PICK and S.T >= f.sigReadyT:   # the signature cooldown (fighter.json sigCooldown)
 				i.sig = true
-			elif q < 0.5:
+			elif q < SIG_PICK + (1.0 - SIG_PICK) * HEAVY_SHARE:
 				i.heavy = true
 			else:
 				i.light = true
@@ -176,6 +178,8 @@ static func _healing(f) -> bool:
 
 
 # Tempo (balance-targets.md section 10).
+const SIG_PICK: float = 0.025                    # chance an attack is the signature, with 50 ki and the cooldown over: about 3 a match (band 2 to 4); 0.2 gave 7
+const HEAVY_SHARE: float = 0.375                # of the other attacks, the share that are heavies (it was 0.3 of all)
 const P_ATTACK: Array = [0.9, 0.8, 0.85, 0.5]    # chance an attack beat attacks, per stance (ESCAPE never attacks); S3b 0.43 to 0.52
 const BLIND_SWING: float = 0.25                  # chance a hunting AGGRESSIVE attack beat swings at a target out of lock
 const GAP_URGE: float = 6.0                      # seconds since the last exchange (either fighter's exT)

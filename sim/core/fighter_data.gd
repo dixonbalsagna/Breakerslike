@@ -97,6 +97,9 @@ class LadderDef:
 	var areaRPerTier: float = 0.0
 	var areaDmg: float = 0.0          # ... and damage areaDmg + tier x areaDmgPerTier
 	var areaDmgPerTier: float = 0.0
+	var beamStructure: Array = []     # step 2, the beam tier gate (balance-targets.md §15), per tier 1 to 4: the structure-damage factor ...
+	var beamLevelCapShare: Array = [] # ... the share of all structures one beam may level ...
+	var beamOvershoot: Array = []     # ... and the beam's length past its target, in units before WS
 
 
 static var root: String = ROOT   # tests only: loadFrom() points the loader at a fixture folder
@@ -249,7 +252,10 @@ static func _fighter(id: String, j: Dictionary) -> Dictionary:
 		"col": String(idn.get("col", "#ffffff")), "aura": String(idn.get("aura", "#ffffff")), "hair": String(idn.get("hair", "#000000")),
 		"sigName": String(idn.get("sigName", "")), "care": float(st.get("care", 0.0)), "dmgMul": float(st.get("dmgMul", 1.0)),
 		"spd": float(st.get("spd", 1.0)), "maxhp": float(st.get("maxhp", 1.0)), "canHide": bool(j.get("kit", {}).get("canHide", false)),
-		"rally": "" if rule == "none" else rule, "finisher": String(j.get("finishers", {}).get("base", ""))}
+		"rally": "" if rule == "none" else rule, "finisher": String(j.get("finishers", {}).get("base", "")),
+		"sigCooldown": float(j.get("sigCooldown", 0.0))}
+	if not (d.sigCooldown > 0.0):
+		_err(where + ": sigCooldown must be a positive number of seconds")
 	if not ["hero", "villain", "rival"].has(d.role):
 		_err(where + ": unknown role '" + d.role + "'")
 	return d
@@ -463,6 +469,16 @@ static func _ladder(id: String, j: Dictionary) -> LadderDef:
 	l.areaRPerTier = float(pu.get("areaRPerTier", 0.0))
 	l.areaDmg = float(pu.get("areaDmg", 0.0))
 	l.areaDmgPerTier = float(pu.get("areaDmgPerTier", 0.0))
+	var bm: Dictionary = j.get("beam", {})
+	for k in ["structure", "levelCapShare", "overshoot"]:
+		var arr = bm.get(k, [])
+		if not (arr is Array and arr.size() == 4):
+			_err(where + ": beam." + k + " needs four values (one per tier)")
+			arr = [1.0, 1.0, 1.0, 1.0]
+		for v in arr:
+			if not (float(v) >= 0.0):
+				_err(where + ": beam." + k + " must not be negative")
+			[l.beamStructure, l.beamLevelCapShare, l.beamOvershoot][["structure", "levelCapShare", "overshoot"].find(k)].append(float(v))
 	return l
 
 

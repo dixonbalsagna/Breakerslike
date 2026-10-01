@@ -9,5 +9,7 @@
   "stats": { "care": 0.0, "dmgMul": 1.0, "spd": 1.0, "maxhp": 1600.0 },
   "kit": { "canHide": false },
   "rally": { "rule": "second_wind", "_note": "the prototype fighters' placeholder rule (wounds-plan.md S4)" },
-  "finishers": { "base": "kai" }
+  "finishers": { "base": "kai" },
+  "sigCooldown": 120,
+  "_sigCooldown": "seconds before this fighter's signature can fire again (questionnaire 5: 2 to 4 signatures a match, each an event)"
 }
