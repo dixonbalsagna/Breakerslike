@@ -90,6 +90,16 @@ For a fighter flagged `assist: simple` in the match setup (Simple controller lay
 | **AI beam answers** | 15, 35 and 60% by difficulty | §6, in the AI profile |
 | **Simple layout** | A beam shows a prompt and is never answered automatically | §7: the assist does not auto-clash or auto-deflect |
 
+### Combat's step-2 data (`docs/combat/control-scheme-data.md`): how it runs
+
+- **Interrupts are branch takeovers.** A perfect block, a reversal, a dodge cancel and a burst arrive mid-exchange. Each branch carries an `interrupts` block. The director drops the branch's pending beats and schedules the interrupt's beats from that tick, as the finisher takeover does today.
+- **The beam is decided at the fire beat,** from what the defender did during the tell: no answer, a signature, or a heavy blast. The beam's draws, its loser and its outcome move to that tick. A new `beam_outcome {actor, target, kind}` event carries the result, since the `attack` event at the request no longer can.
+- **Plan-time flags I supply:** `defQueued`, `defMode`, `defPerfect`, `defClipped`, both fighters' entries, the queue length, the reversal request, and the defender's answer at the fire beat.
+- **Needs:**
+  - Exchange fields for the template and branch ids, two hashed strings (Simulation);
+  - QA's parser reading `beam_outcome`;
+  - a fixed precedence for two interrupts in one tick. My proposal: perfect block, reversal, dodge cancel, burst, with the defender before the attacker.
+
 ## Part 2: variety, then the rest
 1. **Fewer beams, more ordinary blasts** (ADR item 9):
    - the 120 s signature cooldown (data, planned);

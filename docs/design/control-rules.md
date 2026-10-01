@@ -43,6 +43,7 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
   - a dash or a **lunge** outside an exchange, in any direction, including toward the rival. A lunge is only movement: it doesn't start an exchange until an attack is pressed;
   - a lunge that runs on into a sprint;
   - the Dodge state read at exchange start. It is the old EVASIVE stance, and the director resolves it with the dodge templates as before.
+- **Two interrupts on the same tick** (Encounter's proposal, ruled by the EP). The order is perfect block, then reversal, then dodge-cancel, then burst, and the defender's interrupt goes before the attacker's. An interrupt that loses this way isn't charged: it costs no ki and starts no cooldown.
 - **For scale:** a signature costs 45 ki, a clash 40 and a chain link 6. A burst therefore delays a signature, which is the trade.
 
 ## 3. The power layer and the transform hold
