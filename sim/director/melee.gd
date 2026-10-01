@@ -42,6 +42,8 @@ static func opWind(S: SimState, ex, _args) -> void:
 		SimFx.windowOpen(S, D, "parry", width)
 		SimFx.danger(S, D, "windup", width)
 	# The stance is the exchange's snapshot (R8): a v2 slot's live stance follows its held states, and a dodge lapses mid-exchange.
+	if DirInterrupt.on():
+		return   # step 3: the perfect block replaces the parry; the AI presses by DirInterrupt, in the strike's window
 	if D.ai != null and S.rng.next() < (0.5 if ex.sD == 1.0 else (0.3 if ex.sD == 0.0 else 0.12)):
 		var pd: Array = DirData.aiParryDelay()
 		DirExchange.schedule(ex, ex.t + S.rng.range_(float(pd[0]), float(pd[1])), "press", {"who": "D"})
@@ -214,7 +216,10 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 	var winStart: float = ex.windowStart
 	if a == ex.A and o.has("class"):
 		ex.windowStart = -1.0   # step 2b: the window serves the attacker's first strike after a wind beat, and no later one
-	if a == ex.A and not o.get("noParry", false) and armed and d.lastAtkT >= winStart - early:
+	if o.get("perfect", false):
+		DirInterrupt.perfectBlock(S, ex, a, d, o)   # step 3: the timed guard press landed in this strike's window
+		return
+	if a == ex.A and not o.get("noParry", false) and armed and d.lastAtkT >= winStart - early and not DirInterrupt.on():
 		ex.cancel = true
 		ex.loser = S.fighters.find(a)
 		if pb.is_empty():
@@ -247,7 +252,11 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 		d.vx *= 0.1
 		d.vy *= 0.1
 	var brokenBefore: int = _broken(d)
+	if dmg > 0.0:
+		DirInterrupt.si(d, DirInterrupt.HIT_AT, S.tick)
 	SimDamage.hit(S, ex, a, d, dmg, o)
+	if dmg > 0.0 and not o.get("ignoreStance", false) and (ex.sD if d == ex.D else ex.sA) == 1.0:
+		DirInterrupt.onBlock(S, ex, d)   # a normal block: the reversal's window
 	d.vx += a.face * SimDamage.jor(o.get("kb", 0.0), 220.0)
 	if _broken(d) > brokenBefore and not DirExchange.finisherPlanned(ex):
 		_breakChapter(S, ex, a, d)

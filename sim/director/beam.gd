@@ -33,8 +33,14 @@ static func opBeamCharge(S: SimState, ex, args) -> void:
 	# over), or else a heavy blast (40 ki). How often is its difficulty (control-rules.md §10); the press comes in the tell.
 	if DirData.beamAtFire() and D.ai != null:
 		var canSig: bool = D.ki >= 45.0 and S.T >= D.sigReadyT
-		if (canSig or D.ki >= 40.0) and S.rng.next() < DirAI.skill().beamAnswer:
+		if (canSig or D.ki >= 40.0) and S.rng.next() < float(DirAI.lv().beamAnswer):
 			DirExchange.schedule(ex, ex.t + S.rng.range_(0.15, 0.6), "press", {"who": "D", "sig": canSig, "blast": not canSig})
+
+
+## True while f is one of the two fighters of a live clash (the beam struggle). The host and the input layer read it
+## (docs/controls/tech-and-pulse-input.md): clash presses are the clash's, and the Simple layout fires on press.
+static func inClash(S: SimState, f) -> bool:
+	return S.game.clash != null and (S.game.clash.A == f or S.game.clash.D == f)
 
 
 ## Beat "beamFire": fire, or start a beam clash; the outcome was decided when the beam was planned.
@@ -52,7 +58,7 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	if out == "":
 		# Step 2b: the outcome is decided now, from what the defender did during the tell (DirData.beamOutcome).
 		var answer: String = _answer(S, D)
-		var res: Dictionary = DirData.beamOutcome(S, ex, dist, answer)
+		var res: Dictionary = DirData.beamOutcome(S, ex, dist, answer, args.get("perfect", false))
 		out = res.out
 		dAdd = res.dAdd
 		answered = true
@@ -77,7 +83,9 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	var uy: float = dyy / L
 	fireBeam(S, A, ox, oy, ux, uy, len, variant)
 	var reach: float = SimMathx.jmin(0.2, dist / len * 0.22)
-	if out == "HIT" or out == "GUARD":
+	if out == "DEFLECT":
+		DirInterrupt.deflect(S, D)   # step 3: a perfect block of the fire beat; the beam is turned aside
+	elif out == "HIT" or out == "GUARD":
 		DirExchange.schedule(ex, ex.t + reach, "beamImpact", {"out": out, "ux": ux, "uy": uy})
 	elif out == "DODGE":
 		DirExchange.schedule(ex, ex.t + 0.02, "beamDodge")

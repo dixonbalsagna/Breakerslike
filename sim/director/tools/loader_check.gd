@@ -6,7 +6,8 @@ extends SceneTree
 ## time bits, deep-equal args with the same key types, the same tag and the same RNG state. It also counts which template
 ## branches were exercised.
 ##   godot --headless --path . --script res://sim/director/tools/loader_check.gd -- [matches=200] [baseSeed=1] [--arm=NAME]
-## Exit code 1 on any difference or on an unexercised branch.
+## Exit code 1 on any difference, and on an unexercised branch in a full run (200 matches or more: a rare branch such as
+## CHARGE INTERRUPT may not come up in a short one, where it is only noted).
 
 var diffs: Array = []
 var plans: int = 0
@@ -49,10 +50,12 @@ func _init() -> void:
 	var missing: Array = want.filter(func(k): return not seen.has(k))
 	for d in diffs:
 		print("DIFF " + d)
+	var full: bool = n >= 200   # coverage is a rule only for a full run
 	if not missing.is_empty():
-		print("NOT EXERCISED: " + ", ".join(missing))
-	print("loader check " + ("passed" if diffs.is_empty() and missing.is_empty() else "FAILED"))
-	quit(0 if diffs.is_empty() and missing.is_empty() else 1)
+		print(("NOT EXERCISED: " if full else "not exercised in this short run (a note under 200 matches): ") + ", ".join(missing))
+	var okRun: bool = diffs.is_empty() and (missing.is_empty() or not full)
+	print("loader check " + ("passed" if okRun else "FAILED"))
+	quit(0 if okRun else 1)
 
 
 func _check(chk: Dictionary, ex, rngAfter: int, what: String) -> void:

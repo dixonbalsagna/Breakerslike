@@ -38,6 +38,10 @@ const WAIT: int = 2
 ## the director starts the oldest request as soon as it can (_drain: here, and every tick). A press the queue has no room
 ## for is ignored. A slot that is not v2 starts its attack directly, as before.
 static func requestAttack(S: SimState, A, kind: String) -> void:
+	# A press during a live clash belongs to the clash (docs/controls/tech-and-pulse-input.md section 2): it is spent,
+	# never queued, so mashed clash presses do not fire as attacks after it.
+	if DirBeam.inClash(S, A):
+		return
 	if not A.act.v2:
 		_start(S, A, kind)
 		return
@@ -49,12 +53,20 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 
 ## The entry of the request being started (+1 toward, 0, -1 away); 0 outside _drain. Not state: it lives for one call.
 static var planEntry: int = 0
+## Step 3, for the plan of the exchange being started (not state; each lives for one _start): the context template to
+## plan from ("riposte"), whether that riposte launches, and the ticks staleness adds to the wind-up.
+static var planContext: String = ""
+static var planLaunch: bool = false
+static var planStale: int = 0
 
 
 ## Starts the oldest queued request the director can take: the older one first, the slots alternating on a tie. A request
 ## that cannot start yet (the cooldown, an exchange running, a target in the air) waits in its queue until it expires.
 static func _drain(S: SimState) -> void:
-	if S.dirS.ex != null or S.dirS.cool > 0.0 or S.game.ko != null:
+	if S.dirS.ex != null or S.game.ko != null:
+		return
+	# Step 3: a fighter with an opening (a riposte, a reversal, a punish) starts through the cooldown.
+	if S.dirS.cool > 0.0 and DirInterrupt.opening(S, S.fighters[0]) == 0 and DirInterrupt.opening(S, S.fighters[1]) == 0:
 		return
 	var q0: Array = SimAct.peek(S.fighters[0])
 	var q1: Array = SimAct.peek(S.fighters[1])
@@ -96,8 +108,13 @@ static func _queues(S: SimState) -> void:
 ## Starts A's attack if the director can take it now. STARTED: an exchange began. DROPPED: the request was spent without
 ## one (no ki for a signature, the signature still recharging, lock lost). WAIT: not yet (a queued request keeps waiting).
 static func _start(S: SimState, A, kind: String) -> int:
-	if S.dirS.ex != null or S.dirS.cool > 0.0 or S.game.ko != null:
+	if S.dirS.ex != null or S.game.ko != null:
 		return WAIT
+	var opn: int = DirInterrupt.opening(S, A) if kind != "sig" else 0
+	if S.dirS.cool > 0.0 and opn == 0:
+		return WAIT
+	if A.stunTicks > 0 and DirInterrupt.on():
+		return WAIT   # step 3: a staggered fighter's requests wait
 	var D = SimRoster.opp(S, A)
 	if A.state != "free" and A.state != "charging":
 		return WAIT
@@ -158,8 +175,14 @@ static func _start(S: SimState, A, kind: String) -> int:
 	for s in range(S.fighters.size()):
 		if S.fighters[s].brink:
 			ex.startBrink |= 1 << s
-	if kind != "sig" and DirData.hasNeutral():
+	if kind != "sig" and DirData.hasNeutral() and opn == 0:
 		DirAI.react(S, D, dState)   # step 2b: the AI defender's press, before the plan reads defQueued (dState: its state before the lock)
+	# Step 3: staleness, and an opening spent on this attack (the riposte plans from its own template).
+	planStale = DirInterrupt.onStart(S, ex, KIND.find(kind), A.act.mode, planEntry)
+	planContext = "riposte" if (opn == DirInterrupt.OPEN_RIPOSTE or opn == DirInterrupt.OPEN_RIPOSTE_LAUNCH) else ""
+	planLaunch = opn == DirInterrupt.OPEN_RIPOSTE_LAUNCH
+	if opn != 0:
+		DirInterrupt.si(A, DirInterrupt.OPEN_UNTIL, 0)
 	var chk = null
 	if planCheck.is_valid():
 		chk = _planByCode(S, ex, "sig" if kind == "sig" else "melee")
@@ -168,6 +191,9 @@ static func _start(S: SimState, A, kind: String) -> int:
 	else:
 		var fav: String = DirMelee.planMelee(S, ex)
 		ex.loser = S.fighters.find(D) if fav == "attacker" else (S.fighters.find(A) if fav == "defender" else -1)
+	planContext = ""
+	planLaunch = false
+	planStale = 0
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "sig" if kind == "sig" else "melee")
 	var stanceLabel: String = DirData.defLabel if DirData.defLabel != "" else ("CHARGING" if dState == "charging" else STN[int(D.stance)])   # step 2b: NEUTRAL too
@@ -280,6 +306,8 @@ const CHAIN_REACH: float = 2500.0
 static func openWindow(S: SimState, ex) -> void:
 	if ex.D.state == "launched" and absf(SimWrap.sdx(ex.A.x, ex.D.x)) > CHAIN_REACH:
 		return
+	if DirInterrupt.lastBlowBlocked(S, ex):
+		return   # step 3: a blocked string opens no chain window; its attacker is left behind (DirInterrupt.onEnd)
 	var e := SimState.Ext.new()
 	e.start = S.T
 	e.until = S.T + 0.6
@@ -302,6 +330,7 @@ static func chain(S: SimState, ex) -> void:
 	DirData.planChain(ex)
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "chain")
+	DirInterrupt.onChainLink(S, ex)   # step 3: the defender's burst at its link (the AI, the Simple layout's autoBurst)
 
 
 static func endEx(S: SimState, ex) -> void:
@@ -325,6 +354,7 @@ static func endEx(S: SimState, ex) -> void:
 		SimWounds.daze(S, S.fighters[ex.loser])
 	S.dirS.ex = null
 	S.dirS.cool = cooldownAfter(ex)
+	DirInterrupt.onEnd(S, ex)   # step 3: a fully blocked string leaves its attacker behind
 
 
 ## Breathing room after an exchange (balance-targets.md section 10): 0.8 s after a quick exchange, rising with its
@@ -353,8 +383,10 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	_queues(S)   # step 2: upgrades, expiry, and the next queued request once the director can take it
 	var ex = S.dirS.ex
 	if ex == null:
+		DirInterrupt.tick(S)   # step 3: a burst, or a guard press outside any window (the lockout), between exchanges
 		return
 	ex.t += dt
+	DirInterrupt.tick(S)   # step 3: this tick's inputs inside the exchange (perfect block, reversal, dodge-cancel, burst)
 	DirMelee.contactTick(S, ex)   # contact: facing follows the opponent, and resting bodies never overlap
 	var i: int = 0
 	while i < ex.beats.size():

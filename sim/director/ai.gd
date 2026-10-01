@@ -52,6 +52,10 @@ static func aiInput(S: SimState, f) -> void:
 	if a.t <= 0.0:
 		a.t = S.rng.range_(0.7, 1.6)
 		var w: Array = [2.4 if hpF > 0.35 else 1.0, 1.6 if hpF < 0.55 else 0.7, 1.2, 3.2 if hpF < 0.3 else (1.2 if f.ki < 25.0 else 0.25)]
+		# Step 3: against a rival that has opened three exchanges running with one weight, the AI guards more (its level's weight): the guard, the perfect
+		# block and the punish window are the answers to a masher.
+		if DirInterrupt.on() and DirInterrupt.gi(o, DirInterrupt.WEIGHT_RUN) >= 3:
+			w[1] += float(lv().guardRepeat)
 		if o.hidden:
 			w = [3.0, 0.3, 0.3, 0.1]
 		# Stay in cover only while cover still heals: ki, or a battered region still fading (broken ones never do).
@@ -168,8 +172,8 @@ static func aiInput(S: SimState, f) -> void:
 			var sigPick: float = skill().sigPick
 			if f.ki >= 50.0 and q < sigPick and S.T >= f.sigReadyT:   # the signature cooldown (fighter.json sigCooldown)
 				i.sig = true
-			elif q < sigPick + (1.0 - sigPick) * HEAVY_SHARE:
-				i.heavy = true
+			elif q < sigPick + (1.0 - sigPick) * (maxf(HEAVY_SHARE, float(lv().breakGuard)) if DirInterrupt.on() and DirInterrupt.gi(o, DirInterrupt.GUARDED) >= 2 else HEAVY_SHARE):
+				i.heavy = true   # step 3: a rival that only guards gets the guard-breaker (a heavy) at the level's rate
 			else:
 				i.light = true
 		# Attack cadence (dynamic feel): AGGRESSIVE every 0.5 to 1.2 s, DEFENSIVE 1.0 to 2.0 s, the others 0.8 to 1.6 s.
@@ -217,14 +221,26 @@ static func skill() -> Dictionary:
 		var pr: Array = []
 		for name in DirExchange.STN:
 			pr.append(float(j.pressReact.get(name, 0.0)))
-		_skill = {"pressReact": pr, "beamAnswer": float(j.beamAnswer), "sigPick": float(j.sigPick)}
+		_skill = {"pressReact": pr, "beamAnswer": float(j.beamAnswer), "sigPick": float(j.sigPick), "level": String(j.get("level", "medium")), "levels": j.get("levels", {}), "perfectBlock": j.get("perfectBlock", {})}
 	return _skill
+
+
+## The AI's level for this run: "" follows ai.json's "level". A host or a test sets it before the match (step 4 makes it
+## a per-slot setup key). It is part of the data hash, so a replay made at another level has another header.
+static var level: String = ""
+
+
+## The level's numbers (ai.json levels): beamAnswer, perfectBlockMul, guardRepeat, punish, reversal, breakGuard, riposte,
+## burstAtLink.
+static func lv() -> Dictionary:
+	var sk: Dictionary = skill()
+	return sk.levels[level if level != "" else sk.level]
 
 
 ## The data file's text, for DirData.dataHash() (the replay header).
 static func skillText() -> String:
 	skill()
-	return _skillText
+	return _skillText + level
 
 
 const HEAVY_SHARE: float = 0.375                # of the other attacks, the share that are heavies (it was 0.3 of all)

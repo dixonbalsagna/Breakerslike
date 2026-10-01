@@ -306,6 +306,79 @@ Each step is a checkpoint with goldens, the feel probe, tempo and QA's bands.
 - **The old parry rule** stays until step 3: a defender's press in the wind-up parries, and for a v2 slot that press also queues an attack.
 - **VORR's menace is rarely fed early.** It rises inside the first 100 s in 14 of seeds 1 to 240. The parity tool's end-to-end row needed new seeds for that reason.
 
+## Step 3 as built (the interrupts, staleness and the AI's defences)
+
+**Status.** In the tree on HEAD `4fe8052` (after Simulation's `d7d3db3`, which added `ActState.dirI` and its hash line). Goldens regenerated. It was built and tuned on scratch copies first; the apply script and the data drafts are in `docs/director/pending/step3/`.
+
+**What it does**
+
+| Part | Rule | Where |
+| :--- | :--- | :--- |
+| **The perfect block** | A fresh guard press in the last ticks of a strike's wind-up. The window is per strike class, as data: 8 ticks for a light opener, 10 for a heavy or an ender, 6 for a return, none for a mid-string hit; 4 ticks of early tolerance (none for a return); 2 off for a broken arm. No damage, +8 ki, the attacker's string ends and it staggers 24 ticks. It replaces the old parry in `dynamic` | `interrupt.gd` `guardPress`, `perfectBlock`; `interrupts.json` `perfectBlock.windows` |
+| **The lockout** | A guard press outside a window locks the perfect block out for 20 ticks (Controls' number), and each further press restarts it. The guard itself still works | `guardPress` |
+| **The riposte** | The blocker's next attack within 30 ticks starts at once, through the cooldown, from the `riposte` template. It launches when the blocked strike was a heavy or an ender | `exchange.gd` `_start`; `data.gd` `_contextTemplate` |
+| **DEFLECT** | A perfect block of a signature's fire beat: no damage, +8 ki, no stagger, no riposte | `beam.gd`; `interrupt.gd` `deflect` |
+| **The dodge-cancel** | 15 ki, 3 s. The attacker at any time; the defender only 6 ticks or more after it was last struck. The exchange ends with no winner and the canceller dashes in the held direction | `dodgeCancel` |
+| **The burst** | 30 ki, 8 s. A rival in 4 bh is shoved away and an exchange ends with no winner. A rival holding guard absorbs it and the burster staggers 30 ticks. Not during a signature, a launch or a finisher | `burst` |
+| **The reversal** | The context button in guard, within 12 ticks of a normal block: 20 ki (10 after 2 s of guard), 6 s. The attacker's string ends, and after an 8-tick turn the defender's own heavy starts at once | `reversal` |
+| **A blocked string** | A string blocked to its end opens **no chain window**, leaves its attacker unable to act for 12 ticks, and gives the guard those 12 ticks to start an attack at once | `exchange.gd` `openWindow`; `interrupt.gd` `lastBlowBlocked`, `onEnd` |
+| **Staleness** | The same weight, mode and direction in three exchanges running: each further repeat adds 2 ticks to the wind-up (at most 6) and 2 to the rival's perfect-block window (at most 4) | `onStart`, `_staleWindow` |
+| **A staggered fighter** | Its queued requests wait, it has no press of its own, and it is not "clipped" | `exchange.gd` `_start`; `data.gd` `_flags` |
+| **Clash presses** | An attack press by a fighter in a live clash is spent, not queued. `DirBeam.inClash(S, f)` is the flag Controls asked for | `exchange.gd` `requestAttack`; `beam.gd` |
+| **The same-tick order** | Perfect block, reversal, dodge-cancel, burst, the defender before the attacker. An input after a takeover on the same tick is not charged | `interrupt.gd` `tick` |
+
+**The AI, by level** (`data/director/ai.json`, `levels`; a level is chosen by `DirAI.level` for now)
+
+| Number | Easy | Medium | Hard | What it is |
+| :--- | ---: | ---: | ---: | :--- |
+| `perfectBlockMul` | 0.35 | 0.6 | 1.0 | Its share of R5's rates (25% in guard, 15% in press, +10 against a heavy or an ender), per strike with a window |
+| `guardRepeat` | 2 | 8.75 | 20 | Weight added to its Guard choice once the rival has opened three exchanges running with one weight |
+| `punish`, `punishHeavy` | 0.25, 0 | 0.6, 1 | 0.9, 1 | The chance it attacks in the 12-tick punish window, and the share of those that are heavies |
+| `reversal` | 0.2, 0.08 | 0.5, 0.2 | 0.8, 0.4 | After 2 s of guard with over 25 ki, and otherwise (R4 at medium) |
+| `breakGuard` | 0.375 | 0.6 | 0.9 | Its heavy share against a rival it found guarding twice running. The grab waits for Combat's context templates |
+| `riposte` | 0.5 | 1 | 1 | The chance it takes its riposte |
+| `burstAtLink` | never | 4 | 3 | The chain link at which it bursts out |
+| `beamAnswer` | 0.15 | 0.35 | 0.6 | As before |
+
+**Results** (in the tree; before is HEAD `4fe8052`)
+
+| The scripted masher (light every 8 ticks) | Band | Before | After |
+| :--- | :--- | ---: | ---: |
+| Against the easy AI | At least 60% | | 20 of 20 |
+| Against the medium AI | 35 to 50% | 20 of 20 | **33 of 80 (41%)** |
+| Against the hard AI | | | 2 of 20 |
+| Against an expert script (guards, punishes with a heavy, perfect-blocks heavies and enders) | At most 15% | | 0 of 20 (on a scratch build of this slice) |
+
+| AI against AI (200 matches, seeds 1 to 100 per arm) | Band | Before | After |
+| :--- | :--- | ---: | ---: |
+| Perfect blocks per 100 melee exchanges, medium | 5 to 15 | | about 11 (RIPOSTE is 10.0% of melee exchanges) |
+| Match median, default / swap | 6:00 to 8:00 | 7:09 / 7:02 | 6:58 / 7:16 |
+| KAI, default / swap arm | 45 to 55% | 50% / 47% | 54% / 63% |
+| Melee exchanges per minute | | 20.3 | 24.3 |
+| Chain links per match | | 57 | 48 |
+| TRADE BLOWS, share of melee exchanges | | 12.0% | 7.1% |
+| CLEAN HIT | | 18.7% | 25.3% |
+| PRESSURE — GUARD HOLDS / GUARD BREAK | | 12.1% / 7.5% | 13.0% / 9.5% |
+| Structures lost at the KO | | 24 to 28% | 24 to 27% |
+
+**What made the difference.** With every other rule in, the masher still won 20 of 20 at all three levels. A fully blocked string still opened a chain window, and chain blows ignore the guard, so guarding did nothing. Closing that window after a blocked string is what brings the masher into band; the medium AI's guard weight then sets the win rate, and steeply: in the tree 8.5 gave 49%, 8.75 gave 41% and 9 gave 33%, over 80 matches each.
+
+**Open points**
+- **KAI rose** from 48.5% to 58.5% over both arms on this base. On the scratch base the same slice read 51%. QA should re-measure and re-centre.
+- **The schemas.** `ai.json` has three new keys (`perfectBlock`, `level`, `levels`) and `interrupts.json` is new, so the validator fails until Tools updates `director-ai.schema.json` and adds a schema for `interrupts.json`.
+- **An expert who only ripostes light openers can never finish.** A riposte to a light does not launch, so it is never decisive; my first expert script won no match in 20. It has to punish a blocked string with a heavy, or perfect-block a heavy or an ender. For Game Design.
+- **Touch's 2 extra ticks** need the slot's layout in the sim. Not applied.
+- **Chain links have no window** (they strike a launched body), so the burst is the only out during a chain. Combat's chain phrase (small links, one ender with a tell) is not wired; the styles data is still marked as suggestions.
+- **The grab** ("throw a fighter who only guards") needs Combat's context templates. Until then the AI answers a guard with heavies.
+- **Feedback events.** The perfect block, the reversal, the dodge-cancel and the burst send `cue` events (`perfect_block`, `reversal`, `dodge_cancel`, `burst`, `burst_absorbed`) and the perfect block also sends `parry`. Controls' `press_ack` event would be Simulation's lines. `dodge_cancel`, `burst` and `burst_absorbed` are not in Combat's cue list yet.
+- **Two mashing humans** used to parry each other on every opener (the old parry read any attack press in the wind-up). With the perfect block they play full exchanges: 8 exchanges in 40 s where there were 53 cut short.
+
+**The loader check** (`sim/director/tools/loader_check.gd`) now treats an unexercised branch as a failure only in a full run of 200 matches or more. A short run notes it and passes: CHARGE INTERRUPT is too rare to come up in 50 matches.
+
+**After step 3, in the same folder**
+- **The slam lever** (`apply-slam.cjs`): UPPERCUT's direction moves to `launch.json`, with a forward carry of 0.85 (it was 0.25). Its craters fall from 58% to 22% of its launches, and slams overall from 15.0% to 11.2% (30 matches). At 0.6 it still cratered 42%. UPPERCUT's share of launches doubles to 22%, because it now carries far.
+- **The queue tie-break** (`apply-tiebreak.cjs`): on a tie of age the fighter who did not start the last exchange goes first. Controls' probe shows no phase-lock after step 3 with or without it (longest run 4 to 5 at fixed gaps of 4, 7 and 12 ticks; it was 19 and 54 before step 3, when the old parry cut every exchange short).
+
 ## Queued after step 2a (EP notes)
 
 - **Teleporting is on hold** (Orb). Blinks and the teleport clash drop out of the variety steps. The ping-pong blitz uses flight paths only (`docs/combat/blitz.md`).

@@ -33,6 +33,7 @@ static func _ensure() -> void:
 	h.text(DirLocation.dataText())   # data/director/location.json (location variety)
 	h.text(DirAI.skillText())   # data/director/ai.json (the AI's skill numbers)
 	h.text(DirLaunch.dataText())   # data/director/launch.json (the landing mix)
+	h.text(DirInterrupt.dataText())   # data/director/interrupts.json, and Controls' perfect-block timing
 	_hash = h.hex()
 
 
@@ -98,11 +99,12 @@ static func planMelee(S: SimState, ex) -> String:
 	defLabel = defState
 	var sp: bool = ticked()
 	if sp:
-		ctx.c = _approachTicks(dist, heavy)
+		ctx.c = _approachTicks(dist, heavy) + float(DirExchange.planStale)   # step 3: a stale attack winds up slower
 	else:
 		var ap: Dictionary = _prof().approach
 		ctx.rt = SimMathx.jclamp(dist / float(ap.divisor), float(ap.min), float(ap.max))
-	var tp: Dictionary = _template(ex.kind, defState)
+	var tp: Dictionary = _contextTemplate(DirExchange.planContext) if DirExchange.planContext != "" else _template(ex.kind, defState)
+	ctx.riposteLaunch = DirExchange.planLaunch
 	_penalties(ctx, D)
 	ctx.tpl = tp
 	var bid: String = _select(S, _selector(tp), ctx)
@@ -131,6 +133,15 @@ static func _matches(tp: Dictionary, kind: String, defState: String) -> bool:
 	if tp.has("only") and not tp.only.has(tplProfile()):
 		return false
 	return kind in tp.trigger.kinds and String(tp.trigger.get("defender", "")) == defState
+
+
+## A context template (trigger.context: the riposte), for the active profile.
+static func _contextTemplate(context: String) -> Dictionary:
+	for tp in _tpl.templates:
+		if String(tp.trigger.get("context", "")) == context and not (tp.has("only") and not tp.only.has(tplProfile())):
+			return tp
+	push_error("DirData: no context template " + context)
+	return {}
 
 
 static func _hasTemplate(kind: String, defState: String) -> bool:
@@ -164,10 +175,14 @@ static var defLabel: String = ""
 static func _flags(S: SimState, ctx: Dictionary, A, D) -> void:
 	var dq: Array = SimAct.peek(D)
 	ctx.defQueued = not dq.is_empty() or (S.T - D.lastAtkT) * TICKS_PER_SEC <= DEF_QUEUED_TICKS
+	if D.stunTicks > 0 and DirInterrupt.on():
+		ctx.defQueued = false   # step 3: a staggered fighter is not pressing, whatever waits in its queue
 	var sp: float = SimDetMath.hypot(D.vx, D.vy)
 	var top: float = 430.0 * D.spd * (1.0 + D.ld.speed * (D.tier - 1.0))
 	var away: bool = D.vx * SimMathx.jsign(SimWrap.sdx(A.x, D.x)) > 0.0
 	ctx.defClipped = sp > 0.5 * top and (away or absf(D.vy) > absf(D.vx))
+	if D.stunTicks > 0 and DirInterrupt.on():
+		ctx.defClipped = false   # step 3: a staggered fighter is recoiling, not slipping away
 	ctx.atkEntry = float(DirExchange.planEntry)
 	ctx.defEntry = float(dq[2]) if not dq.is_empty() else 0.0
 	ctx.defPerfect = false
@@ -380,6 +395,8 @@ static func _scheduleList(ex, beats: Array, ctx: Dictionary, t0: float, w: Strin
 	for b in beats:
 		if b.has("when") and b.when == "heavy" and not ctx.heavy:
 			continue
+		if b.has("when") and b.when == "riposteLaunch" and not ctx.get("riposteLaunch", false):
+			continue
 		DirExchange.schedule(ex, _time(b, ctx, t0), String(b.op), _args(b, ctx, w))
 
 
@@ -535,7 +552,7 @@ static func beamAtFire() -> bool:
 ## The beam's outcome at the fire beat, from what the defender did during the tell: the first rule that matches wins.
 ## answer is the defender's answering request (signature, heavy_blast or none); the held state is the live one. The
 ## draws (the dodge, the escape gamble) happen here. Returns {"out", "dAdd"}: dAdd is added to the defender's clash score.
-static func beamOutcome(S: SimState, ex, dist: float, answer: String) -> Dictionary:
+static func beamOutcome(S: SimState, ex, dist: float, answer: String, perfect: bool = false) -> Dictionary:
 	var A = ex.A
 	var D = ex.D
 	var defState: String = DirExchange.STN[int(D.stance)]
@@ -543,6 +560,7 @@ static func beamOutcome(S: SimState, ex, dist: float, answer: String) -> Diction
 	_penalties(ctx, D)
 	_flags(S, ctx, A, D)
 	ctx.defAnswer = answer
+	ctx.defPerfect = perfect
 	for rule in _tpl.beam.outcomeByProfile[tplProfile()].rules:
 		if rule.has("defender") and rule.defender != defState:
 			continue
@@ -617,6 +635,29 @@ static func struggle() -> Dictionary:
 static func parryBlock() -> Dictionary:
 	_ensure()
 	return _prof().get("parry", {})
+
+
+## Step 3: the active profile's perfect-block numbers (Combat's: staggerTicks, riposteTicks). Empty in the old profiles.
+static func perfectBlock() -> Dictionary:
+	_ensure()
+	return _prof().get("perfectBlock", {})
+
+
+## An interrupt's block (templates.json interrupts).
+static func interrupt(name: String) -> Dictionary:
+	_ensure()
+	return _tpl.interrupts[name]
+
+
+## Whether the exchange's branch allows the named interrupt (its "interrupts" list).
+static func allows(ex, name: String) -> bool:
+	_ensure()
+	for tp in _tpl.templates:
+		if String(tp.id) == ex.tpl:
+			for br in tp.branches:
+				if String(br.id) == ex.branch:
+					return br.get("interrupts", []).has(name)
+	return false
 
 
 ## The contact block of the active profile (contact-spacing.md): reach, offset, minSeparation, sameHeight. Empty in the
