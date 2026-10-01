@@ -172,7 +172,7 @@ The one exception is the Empress's **Encore**, which is a choice to spend. The p
 **Why a finale still can't loop:**
 1. Each Rally spends something finite: a region's one Rally, a refit, the drive or nearby civilians, the rival's finisher attempt, or refused help.
 2. The mended region sits one hit from breaking again.
-3. The finisher contest tilts 10 points against the fighter for every Rally and every minute past 8:00. By the third Rally, or by about 11:00, survival is at 0.
+3. The finisher contest tilts 10 points against the fighter for every Rally and every minute past 8:00. The tilt lowers survival but need not reach 0: at today's base of 23% with the stance and state bonuses, a fighter can still survive after a third Rally. **Survival is 0 only in the time-cap event from 11:00,** which the sim enforces (M1b ruling).
 
 ## 3. Per-fighter damage, and how the readout shows it
 
@@ -350,7 +350,7 @@ Orb picked **the aura crown with wound cards, plus the silhouette, varied per fi
 4. **No loops.**
    - Rallies per match average 0.2 to 0.5 for contest-gated Rallies, or 0.3 to 1.0 with the roster's other Rallies (S4 ruling, §2).
    - No fighter rallies the same region twice.
-   - The finisher survival chance reaches 0 after a fighter's third Rally, or once the tilt past 8:00 has taken it to 0.
+   - The finisher survival chance is 0 from 11:00, in the time-cap event (a hard test: the sim enforces it). Before that, the tilts of −10 per Rally and −10 per minute past 8:00 apply, with no requirement to reach 0. Loops are bounded by one Rally per region and by the event.
 5. **Spread.** No region takes more than 45% of all wear across a batch. Each of head, arms and legs is the first region broken in at least 10% of matches.
 6. **Profiles.**
    - The Cyborg's chip takes 0 damage while the hatch is closed.
@@ -497,7 +497,12 @@ Heat stages, Humbled bursts and boil-overs are power states with no cinematic. T
 - If two requests land on the same tick, the lower slot plays first and the other follows the table.
 - *QA band:* pauses total at most 2.5 s per minute of match (a hard test). This replaces "cinematics take at most 10% of match time".
 
-**The transformation pace: about three per fighter, the first around 1:30.** Orb's answer was "fewer and later, about 3 a match". This reads it as each fighter's three ladder steps; if Orb meant three in total, the EP relays it and the thresholds change.
+**The transformation pace: about three per fighter, the first around 1:30.** Orb confirmed that three per fighter is right for a typical fighter (2026-10-01).
+
+**The count is per-fighter data.** Each fighter's list of transformations sits in their data, with a kind for each: a pausing step, or a live one.
+- *A typical fighter* has three pausing steps. The Anti-hero's Pride ladder folds to three (`pitches.md` §7).
+- *The Empress is the outlier,* and her count is her identity: twelve revisions. Her eight joke revisions are always live, under 1 s, and never draw on the bank. Her four real revisions are pausing steps: the first plays full, the middle two play short, and Final Approved plays full, up to 4 s, when the bank covers it.
+- *The budget copes without a special rule.* Her four pausing steps ask for at most 10 s against a typical fighter's 6 to 8.5 s. When the bank runs low, her later revisions drop to the short or live version like anyone's. She transforms more often than anyone, and pauses the fight barely more.
 
 | Step | Target (median, per fighter) |
 | :--- | :--- |

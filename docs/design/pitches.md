@@ -155,3 +155,35 @@ The idea, from a friend: during a match, pick one of three upgrades. Most are st
 *The recommendation had been A.* The cinematic is already a respected pause where the rival waits, so the pick costs no extra downtime, and it gives the Transform hold a second reason to matter. If you want it perfectly even, B is the one. C is the fallback if pausing mid-match tests badly on phones or online.
 
 **The next build** would not include the draft. The placeholder transform lands first (`control-rules.md` §7), and option A needs it.
+
+## 7. For Orb: the rival's ego and the roster's biggest swing (2026-10-01)
+
+Orb's picture: the Protagonist and the rival (the Anti-hero) are both solid all-rounders. The rival's final transformation is the largest swing in power in the roster, but his ego may cost him heavily, or hand the opponent a large buff, in the mid to late game.
+
+**The same in every version.**
+- **Three forms,** like a typical fighter. His five-form Pride ladder folds into three: Regalia at Pride 60, Sovereign at 80 and Apex at 95.
+- **For scale,** a typical fighter gains +9% damage a step, so +27% at the top.
+- **Pride** runs from 0 to 100 and is visible. Humblings (being perfect-blocked, guard-broken, thrown or crippled) cost 15 each, and the crash below 50 still takes a form away.
+- **Even overall.** His win rate stays inside 45 to 55%. He wins under 45% of the matches that end before Apex and over 60% of those that reach it, which is the "situational" rule from questionnaire 5.
+- **Abdicate** (Drop the Act) stays as his way out: he gives up the climb for unrestrained power now.
+
+| | **A. The Indulgence** (the opponent's buff) | **B. The Heavy Crown** (his own debuff) | **C. The Wager** (a handicap he chooses) |
+| :--- | :--- | :--- | :--- |
+| **The idea** | The opponent talks him into letting them power up | His damage drops as his ego grows, because he toys with them | He takes each form by declaring a handicap, and must back it up |
+| **What feeds the ego** | Winning exchanges (+3), completed taunts (+6), and granting a request (+20) | Styling: an exchange won (+3), a perfect block (+5), a taunt (+6), a string of three or more (+8) | A wager won (+25), plus exchanges won (+3) |
+| **The cost** | At Pride 60 or more the opponent may **ask**, once a minute and twice a match. If he grants it, the opponent gains a whole ladder step at once and full ki, which is about +9% damage and +10% speed for the rest of the match | Above Pride 50 he loses 4% damage per 10 Pride, so he is at −18% just before Apex. That is his weak mid-game | Each wager is one of two handicaps for 20 s: no heavies, no guard, or the opponent charges untouched for 6 s |
+| **If he refuses or fails** | Refusing costs 10 Pride: he looks afraid | A humbling drops his Pride and the climb, but his damage comes back | A lost wager costs 30 Pride and the form |
+| **The payoff** | Each grant brings Apex a form closer and adds +6% to Apex's damage | Reaching Apex ends the restraint for good | Each wager won adds +8% damage for the match |
+| **The final form's swing** | +25% damage, up to **+37%** with two grants | From −18% to **+40%**: a 58-point swing in one moment | +20%, up to **+44%** with three wagers won |
+| **Fit with his Pride ladder** | The forms stay as they are. The ask is a new beat at Regalia and Sovereign | The ladder is the debuff: every form before Apex makes him showier and weaker | The wager is how each form is entered |
+| **What it needs** | A prompt for both players (ask, then grant or refuse), and AI for both sides | Data only | A two-option prompt at each form, and rules for three handicaps |
+| **Risk** | Both players may always say yes, so both just get stronger and the choice goes flat. A player-controlled rival may never grant | His mid-game may feel weak to play. If Apex comes in under a quarter of his matches, he is simply weak | The most rules and the most swing. One lost wager can decide the match |
+
+**Recommendation: B first, then A on top.**
+- B is your "damage drops as his ego grows" as written. It needs no new input, it tunes by data, and its one moment at Apex is the largest swing in the roster.
+- A adds the talk, which is the part only he has. It stacks cleanly on B once B is proven: granting a request would be the fastest way through the weak middle.
+- C is the showiest, and it is the fallback if B's mid-game reads as weakness rather than arrogance.
+
+**"Playing along" pays** in every version: the player who leans into his ego (taunting, toying, granting, wagering) reaches a bigger Apex sooner, and the player who fights plainly gets an ordinary all-rounder.
+
+The ego mechanic is scheduled after his first moveset (questionnaire 8), so nothing here is in the next build.

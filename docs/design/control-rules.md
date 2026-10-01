@@ -2,7 +2,7 @@
 
 Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-scheme.md` (questionnaire 8). This page sets the game rules it needs: windows, costs, cooldowns, priorities and automatic choices. Controls owns the bindings and layouts, and Encounter owns the director's use of them. Numbers are starting values in ticks (60 a second) and ki (cap 100), and QA tunes them.
 
-**Build order** (Orb, questionnaire 10): the agency fixes first (counters on request, dodge-cancel, burst and the perfect block), then combat variety (blasts, teleports and beam struggles).
+**Build order** (Orb, questionnaire 10): the agency fixes first (counters on request, dodge-cancel, burst and the perfect block), then combat variety (blasts and beam struggles; teleports are on hold, §11).
 
 **What this replaces.** Stances are now held states, read at exchange start as before:
 
@@ -189,7 +189,9 @@ In energy mode all three entries reach at any range, as Combat has them.
 
 ## 11. Blitzes: the flurry and the ping-pong (Orb, questionnaire 10)
 
-There are two kinds of blitz. The **flurry** is the fast chain in place. The **ping-pong** is Combat's new choreography (`docs/combat/blitz.md`): the attacker knocks the rival away, outruns them on a spiral flight or a blink, arrives ahead and knocks them back. Combat owns how it looks. These are the rules it asked for.
+There are two kinds of blitz. The **flurry** is the fast chain in place. The **ping-pong** is Combat's new choreography (`docs/combat/blitz.md`): the attacker knocks the rival away, outruns them on a spiral flight, arrives ahead and knocks them back. Combat owns how it looks. These are the rules it asked for.
+
+> **Teleporting is on hold** (Orb, 2026-10-01). Blitzes use flight paths only. There are no blink intercepts, no blink chain and no teleport clash until Orb decides whether teleporting belongs to one fighter as a signature ability. The rules that were written for it are kept at the end of this section as a held option.
 
 **When a ping-pong starts.**
 - *The request:* an attack pressed while holding toward, during the flight of a launch the attacker just caused. It works in any mood and at any tier; those only set the length.
@@ -207,24 +209,20 @@ There are two kinds of blitz. The **flurry** is the fast chain in place. The **p
 
 - The request gives the minimum: one bounce and the ender. Each further queued press adds a bounce before the ender, up to the cap. Presses made during the blitz count, so pressing in rhythm extends it.
 - The AI and Simple continue each bounce with a chance of 0.7 in Tense and 0.85 in Frenzied.
-- The intercept takes 30 ticks by flight (24 in Frenzied) and 16 by blink, as Combat proposes.
+- The intercept flight takes 30 ticks, or 24 in Frenzied.
 
 **Costs and damage.**
 
-| | Flight bounce | Blink bounce | Ender |
-| :--- | ---: | ---: | ---: |
-| **Ki** | 6 (a chain link) | 10 | 4 (a heavy) |
-| **Damage** | ×0.6 of a light | ×0.5 of a light | ×1.0 of a heavy |
+| | A bounce | The ender |
+| :--- | ---: | ---: |
+| **Ki** | 6 (a chain link) | 4 (a heavy) |
+| **Damage** | ×0.6 of a light | ×1.0 of a heavy |
 
 - Without the ki for the next bounce, the blitz goes straight to its ender, or ends with the rival tumbling free if even that can't be paid.
 - **A 10 s cooldown** per fighter after a blitz ends.
 - The whole blitz is **one** decisive exchange, decided at the ender. Each bounce counts as a chain link for mood (+3). Its damage counts in the rate that k is tuned against.
 - Bounces stay in the lane and never pass through buildings (ADR 0009). Only the ender may be a targeted smash.
-
-**Flight or blink, per bounce.**
-- *Tiers 1 and 2:* flights only. The exceptions are a fighter with the `blink` trait (the Protagonist), and Combat's last resort when no spiral clears.
-- *From tier 3,* every fighter blinks with Combat's suggested chances, confirmed: 0.2 in Calm, 0.4 in Tense and 0.6 in Frenzied, +0.2 with the `blink` trait. Blinks then read as power, which fits pillar 4.
-- *The whole blink chain* ("teleport spam") is for Frenzied only: a `blink` fighter at any tier, or anyone at tier 4. Its limit is ki: five blinks cost 50.
+- Where no spiral path clears the rival, the director shortens the bounce or plays the ender. It doesn't blink.
 
 **How the defender answers.**
 
@@ -232,7 +230,6 @@ There are two kinds of blitz. The **flurry** is the fast chain in place. The **p
 | :--- | :--- | :--- |
 | **Burst** (30 ki) | Any time in the ping-pong before the ender lands. Bounces count as hits here, not launches | The escape. The blitz ends and the attacker is pushed away, with no winner |
 | **Perfect block on a return blow** | A middle bounce's 6-tick anticipation is its whole window, with no early tolerance. The ender has the heavy's window: the last 10 ticks of its 18-tick wind-up. Both work in the air | The blitz ends and the attacker staggers. The defender's riposte launches, and the defender may blitz back at once. That reversal is the ping-pong between both fighters |
-| **Teleport clash** | **It needs the defender's request:** an attack pressed during the blitz, with 10 ki | Both blink and meet (Combat's `blink_clash`), decided like a heavy clash by tier and ki. If the defender wins, the blitz reverses. If the attacker wins, it continues |
 | **Dodge-cancel** (15 ki) | In the gap between bounces | The defender slips the next intercept, with no winner |
 | **A held guard** | Any time | Each bounce does guard damage only, but the heavy ender is a GUARD BREAK. Holding guard is not the answer |
 
@@ -242,5 +239,11 @@ The middle window is short on purpose. The bounces land on a steady rhythm, so i
 - Blitzes of both kinds: 2 to 6 a minute in Tense and Frenzied (unchanged).
 - Return blows per ping-pong: a mean of 2.5 to 3.5.
 - The defender ends 25 to 45% of ping-pongs early.
-- Blink intercepts: none at tiers 1 and 2 without the trait, and 30 to 60% of intercepts at tiers 3 and 4.
 - Blitzes deal at most 35% of a match's damage.
+
+**Held option: teleports** (not in the game until Orb decides).
+- *A blink intercept* would take 16 ticks, cost 10 ki and hit at ×0.5 of a light.
+- *Shares:* flights only at tiers 1 and 2, except for a fighter with a `blink` trait. From tier 3, a blink chance of 0.2 in Calm, 0.4 in Tense and 0.6 in Frenzied, +0.2 with the trait.
+- *The blink chain* ("teleport spam") only in Frenzied, for a `blink` fighter or anyone at tier 4, limited by ki: five blinks cost 50.
+- *The teleport clash* as a defender's answer, needing the defender's own attack press and 10 ki, decided like a heavy clash.
+- The Protagonist's blink-strike trait is on hold with the rest.

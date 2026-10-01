@@ -155,7 +155,7 @@ At the ceiling, the rest are sheltered and survive. This is the P3 exit criterio
 
 ## 5. Launch variety
 
-- **Cap.** In every QA arm, no launch type is above **40%** of all launches. The match-clustered 95% upper bound must be at most 42%.
+- **Cap.** In every QA arm, no launch type is above **45%** of all launches, and the match-clustered 95% upper bound must be at most 47%. It was 40% and 42% until the M1b re-banding (§18).
 - **Floor.** At least **4** launch types are each at or above **5%** in the default arm.
 - **Today.** SLAM DOWN is 46.4% (95% CI 45.6 to 47.2), and only three types are above 5% (QA §5).
 - **Owner.** Encounter Systems owns the fix. QA re-tests any proposal.
@@ -167,8 +167,8 @@ Orb wants the director to "often" choose one building to take the brunt of a lau
 | Measure | Band | Notes |
 | :--- | :--- | :--- |
 | Launches that pick a building, out of those with a candidate in reach | 35 to 60% pooled | By personality: fighters who feed on collateral 40 to 60%; the protector 20 to 35%. Today that is the villain and the hero |
-| Share of all planner launches that are brunts | 8 to 20% | This moves with fight time spent in settlements (Encounter's location work) |
-| Brunts per minute (all arms) | Default arm 0.1 to 0.35 per minute. Villain mirror above the default; **hero mirror at most 0.15 per minute** (S3b: 0.81 in 7:06, about 0.11 per minute, which passes). 0 in matches that never come near a settlement |
+| Share of all planner launches that are brunts | **4 to 10%** (§18; it was 8 to 20%) | This moves with fight time spent in settlements (Encounter's location work) |
+| Brunts per minute (all arms) | **Retired for the testbed** (§18): use the game-scale row below, and the mirror rows wait for the roster. It was: default arm 0.1 to 0.35 per minute. Villain mirror above the default; **hero mirror at most 0.15 per minute** (S3b: 0.81 in 7:06, about 0.11 per minute, which passes). 0 in matches that never come near a settlement |
 | Brunts per minute, game scale | 0.3 to 1.0 | About 2 to 7 in a 7-minute match. A region-break launch may end in a brunt, at the same personality rates |
 | **S3b ruling** | The default share of 7.9% sits at the 8% floor and is within noise. **Do not raise `CARE_W`**: it would add collateral at a time when civilians lost are already 56%. Re-check the share after World's ramp and cap and Encounter's location work |
 | Launch cap | Unchanged | No launch type above 40% (§5). Brunts help the "four types at 5% or more" floor |
@@ -221,7 +221,7 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
 | Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
-| **How launches end** (G0 re-base) | Slide 45 to 75%; slam 15 to 35%; brunt 8 to 20% (§5b); water skim or splash 3 to 10% |
+| **How launches end** | One landing class per launch (§18): slide 45 to 70%; slam 15 to 35%; water 5 to 15%; brunt 4 to 10% |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -368,7 +368,7 @@ Orb played the Godot greybox and found it too fast (`docs/ep/vision.md`, questio
 | Launches | **Re-based at G0:** 40 to 65% of exchanges started end in a launch. The old 4 to 6 a minute came from the 8 to 12 exchange tempo, and Orb asked for more launches across the map | 10.65 a minute, 60% of 17.6 exchanges (G0) |
 | Long launches: at least 1,500 units of horizontal travel before landing | At least 30% of launches; every region-break launch is long | About 5% (SMASH ACROSS) |
 | Launches that land in a different biome from their start | At least 25% | Not measured |
-| Gap close over 2,500 units | A visible pursuit flight of 0.8 to 2.0 s. Blink-strikes stay a Protagonist trait, with the ripple tell | 0.65 s at most |
+| Gap close over 2,500 units | A visible pursuit flight of 0.8 to 2.0 s. Blink-strikes were a Protagonist trait; all teleporting is on hold (Orb, 2026-10-01; `control-rules.md` §11) | 0.65 s at most |
 | Fight time underwater | At most 10% (the ocean-share cap in §6 also applies) | Not measured; 64.6% of time over the ocean |
 
 **Orb's feel overrides this section** (playtest, `docs/ep/vision.md`): "combat now feels slower than the prototype". The dynamic targets above replace the earlier exchange-length (2.5 to 4 s), spacing and breathing-room (1.5 to 4 s) bands. The readable wind-up and hit-stop floors stay.
@@ -590,3 +590,31 @@ Encounter's rules are in `docs/director/fight-lanes-director.md`. Three are conf
 - At 30 frames an 8-tick perfect-block window is four drawn frames. If input is read once per drawn frame there, the early tolerance gains 2 ticks, as it does on touch (`control-rules.md` §1). Controls decides how input is sampled.
 
 **Set pieces and the transformation pace** are in `spec-wounds.md` §8b. **The upgrade draft** is `upgrade-plan.md`. **Blitzes** are `control-rules.md` §11, and the bounce table there extends §12's blitz numbers.
+
+## 18. Re-banding after B2 and the location slice (QA's M1b set, 2026-10-01)
+
+QA's final M1b set passes every mood, style and wound row (`docs/qa/tuning-m1b.md`). These rows moved, and are re-based.
+
+| Row | M1b | Ruling |
+| :--- | :--- | :--- |
+| Brunts per minute | 0.49 against 0.10 to 0.35 | **Use the game-scale band, 0.3 to 1.0** (§5b), and retire the testbed row. Orb wanted more building smashes, and 0.49 passes |
+| Brunts as a share of launches | 5.0% against 8 to 20% | **4 to 10%.** The old share assumed 4 to 6 launches a minute. At today's 10 or so, 4 to 10% is the same 0.4 to 1.0 a minute |
+| Hero mirror brunts | 0.45 a minute against at most 0.15 | **Retired on the testbed,** with the villain-mirror row. Both placeholders run at planner care 0 (§9), so the mirrors can't differ. The personality rows return with the roster's per-fighter care |
+| SMASH ACROSS | 40.8% against a 40% cap | **The cap moves to 45%,** with the clustered bound at 47%. Orb asked for more launches across the map, and the floor of four types at 5% or more still protects variety |
+| How launches end | Slide 81% and slam 63% overlap; water 13% against 3 to 10% | **One landing class per launch** (below) |
+| Finisher survival above 0 after a third Rally, or after 11:00 | A few seeds | **Both.** The spec relaxes for the third Rally, and the sim enforces 0 from 11:00 (`spec-wounds.md` §2 and §5) |
+
+**One landing class per launch.** A launch is classed by the first thing that ends its flight, so the classes add up to 100%:
+- **brunt:** it hits a building first;
+- **water:** its first contact is water, as a skim or a splash;
+- **slide:** its first ground contact carries on for 2 bh or more;
+- **slam:** its first ground contact stops within 2 bh.
+
+| Class | Band |
+| :--- | :--- |
+| Slide | 45 to 70% |
+| Slam | 15 to 35% |
+| Water | 5 to 15% |
+| Brunt | 4 to 10% |
+
+This replaces the "How launches end" row in §5c. The water band rises because the location slice put fights back over the sea, which is what the §6 floors asked for.
