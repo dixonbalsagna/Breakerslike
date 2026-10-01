@@ -70,6 +70,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-048 | Combat wave 2 entries (15) and the two-hand channel pose | Combat | Low | GO; seven Legal lines confirmed; channel pose tightened | Closed |
 | RL-049 | Combat wave 3 (ping-pong rally) and wave 4 (grabs and throws) | Combat | Low | GO; Legal lines confirmed and tightened | Closed |
 | RL-050 | Combat wave 5 (clashes, beam answers) and wave 6 (energy shapes and hands) | Combat | Low | GO; Legal lines confirmed, additions noted | Closed |
+| RL-051 | Combat wave 7: the Anti-hero first kit (specials, signatures, showcases) | Combat | Medium (barrage gather) | GO; barrage volley gather CONDITIONAL change | Open until the gather changes |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 

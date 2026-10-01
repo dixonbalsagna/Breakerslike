@@ -181,3 +181,29 @@ Screens `docs/combat/pending/wave5-clashes.md` and `wave6-energy.md` against the
 - **`channel`:** the high and low forearms with plates facing each other across a body-length gap meet the channel rules (hands apart, nothing between the palms, no hip, no overhead).
 
 Nothing in either wave stacks three of the seven power-up marks.
+
+## Combat wave 7: the Anti-hero's first kit (2026-10-01)
+
+Screens `docs/combat/pending/wave7-first-kit.md` (3 specials, 2 place signatures, the showcases) for stacking and for named-technique resemblance. From the written specs.
+
+| Item | Verdict |
+|---|---|
+| Barrage volley | **CONDITIONAL: change the gather** |
+| Cutting step | **GO**, line confirmed |
+| Grip and drag | **GO**, line confirmed |
+| Sweeping line | **GO**, line confirmed |
+| Ground shatter | **GO**, line confirmed |
+| Showcases: dismissive backhand, seal break, overhead hammer, rising spear, hand finish | **GO**, lines confirmed |
+| Coil and strike | **GO**, with one addition |
+| Tail whip (held) | **GO** if hair, cloth or metal |
+
+- **Barrage volley, the gather.** "Both arms drawn to one side at shoulder height, the body coiled away" is close to the franchise's best-known wind-up (both hands drawn to one side, body coiled, then thrust). Shoulder height is not enough on its own. Change it: the arms start **crossed over the chest** and open through the half turn, or the arms stay **apart, one high and one low, a forearm-length gap**, as in the channel rules. Never both hands together at one side. The sweep itself (a fan of shards across the half turn) is original. Keep the name shouted once and no open-mouth barrage.
+- **Cutting step:** a change of level on his own side, drawn the whole way, never passing through the rival, and a single-turn spin only. Clear.
+- **Grip and drag:** collar or arm grip, never throat, face, hair or tail, and the rival dragged on their back. Clear.
+- **Sweeping line:** a thin flat blade swept across, from one blade hand at shoulder height, with plates stacked on the forearm and no ball in a palm. A swept beam is a trope, and the plated charge keeps it ours. The place names inside the entry (HORIZON CLEAVE and the rest) are old working labels. Use Narrative's glossary picks in the data, and keep FIRESTORM-style words as labels only.
+- **Ground shatter:** a line of shards along the ground from a forearm slam. Clear, provided the landing is not one knee and one fist with the head bowed, no ring of rubble rises round him, and there is no lightning or scream.
+- **Showcases:** the backhand (no beckoning, no arms crossed, no finger flick), the seal break (no glowing blood, no scream, the sigil dims), the overhead hammer (one fist, never clasped, no fist held up), the rising spear (a blade hand and a straight rise, no spin, no leap with a fist, arm lowered at once) and the hand finish (an unhurried walk, no speech with a body aura, no fist held up, not arms crossed) are all clear as written.
+- **Coil and strike:** the deepest crouch is clear with one hand on the ground. After a transformation, no ground crack, rubble, aura or scream with it, so the stacking rule's crouch mark stands alone.
+- **Tail whip (held):** hair, cloth or metal tail, never furred or reptilian, and half a turn at most.
+
+Nothing in the kit stacks three of the seven power-up marks once the volley's gather is changed.
