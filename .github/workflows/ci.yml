@@ -123,8 +123,15 @@ jobs:
         run: |
           mkdir -p "${RUNNER_TEMP}/web"
           "$GODOT" --headless --path . --export-release "Web" "${RUNNER_TEMP}/web/index.html"
-      - name: Assemble the site (/, /prototype/, /play/, /bench/)
-        run: node tools/build-site.mjs --web "${RUNNER_TEMP}/web" --out "${RUNNER_TEMP}/site" --commit "${GITHUB_SHA}"
+      # Research's band prototype (a standalone project, research/band-proto), hosted at /band/. Throwaway: it is not
+      # validated or tested, and build-site shares /play/'s engine files when they are identical.
+      - name: Export the band prototype (Web)
+        run: |
+          "$GODOT" --headless --path research/band-proto --import
+          mkdir -p "${RUNNER_TEMP}/band"
+          "$GODOT" --headless --path research/band-proto --export-release "Web" "${RUNNER_TEMP}/band/index.html"
+      - name: Assemble the site (/, /prototype/, /play/, /bench/, /band/)
+        run: node tools/build-site.mjs --web "${RUNNER_TEMP}/web" --out "${RUNNER_TEMP}/site" --commit "${GITHUB_SHA}" --band "${RUNNER_TEMP}/band"
       - name: Upload the Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

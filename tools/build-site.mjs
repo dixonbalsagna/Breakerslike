@@ -1,12 +1,17 @@
 // Assembles the GitHub Pages site. Node built-ins only; deterministic (no clock, no random).
-//   node tools/build-site.mjs --web <dir with the Godot web export> --out <site dir> [--commit <sha>]
+//   node tools/build-site.mjs --web <dir with the Godot web export> --out <site dir> [--commit <sha>] [--band <dir>]
 // Layout of <site dir>:
 //   index.html               landing page linking to the two builds
 //   prototype/index.html     the single-file browser prototype (a stable URL Orb shares)
 //   play/                    the Godot web export (index.html, .js, .wasm, .pck, ...)
 //   bench/index.html         a one-click benchmark: the same export (loaded from ../play/) with the bench arguments
 //                            baked in, a results panel and a "copy result" button. Not linked from the landing page.
+//   band/                    (only with --band <dir>) the research band prototype's web export. When its engine files are
+//                            byte-identical to /play/'s (the same Godot version and templates) only its index.html and
+//                            index.pck are shipped and the engine is loaded from ../play/ (no second 39 MB wasm); otherwise
+//                            the whole export is copied. Not linked from the landing page.
 // Docs: docs/tools/README.md
+import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -126,6 +131,32 @@ bench = replaceOnce(bench, '</body>', `		<div id="bench-panel" style="position:f
 	</body>`);
 writeFileSync(join(outDir, 'bench', 'index.html'), bench);
 
+// ---- /band/: Research's band prototype, reusing /play/'s engine files when they are identical ----
+const bandArg = opt('--band');
+let bandMode = '';
+if (bandArg) {
+  const bandDir = resolve(bandArg);
+  if (!existsSync(join(bandDir, 'index.html')) || !existsSync(join(bandDir, 'index.pck'))) {
+    console.error(`error: ${bandDir} does not look like a Godot web export (needs index.html and index.pck)`);
+    process.exit(1);
+  }
+  const sha = (file) => (existsSync(file) ? createHash('sha256').update(readFileSync(file)).digest('hex') : null);
+  const sameEngine = ['index.wasm', 'index.js'].every((f) => sha(join(bandDir, f)) !== null && sha(join(bandDir, f)) === sha(join(webDir, f)));
+  if (sameEngine) {
+    mkdirSync(join(outDir, 'band'), { recursive: true });
+    let band = readFileSync(join(bandDir, 'index.html'), 'utf8');
+    for (const file of ['index.icon.png', 'index.apple-touch-icon.png', 'index.png', 'index.js']) band = replaceOnce(band, `"${file}"`, `"../play/${file}"`);
+    // engine files (wasm, audio worklets) load from ../play/index.*; the pack stays the band's own
+    band = replaceOnce(band, '"executable":"index"', '"executable":"../play/index","mainPack":"index.pck"');
+    writeFileSync(join(outDir, 'band', 'index.html'), band);
+    cpSync(join(bandDir, 'index.pck'), join(outDir, 'band', 'index.pck'));
+    bandMode = 'engine shared with /play/';
+  } else {
+    cpSync(bandDir, join(outDir, 'band'), { recursive: true });
+    bandMode = 'full copy (its engine files differ from /play/)';
+  }
+}
+
 writeFileSync(
   join(outDir, 'index.html'),
   `<!doctype html>
@@ -153,4 +184,4 @@ writeFileSync(
 );
 
 const files = readdirSync(outDir, { recursive: true }).length;
-console.log(`site built in ${outDir}: /, /prototype/, /play/, /bench/ (${files} entries)`);
+console.log(`site built in ${outDir}: /, /prototype/, /play/, /bench/${bandMode ? `, /band/ (${bandMode})` : ''} (${files} entries)`);
