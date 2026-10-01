@@ -22,7 +22,7 @@ godot --path .
 | :--- | :--- |
 | any key or click | take control of P1 (the demo starts AI vs AI) |
 | the fighters' keys, pad and touch | Controls' layouts (`data/input/layouts.json`; F1 shows them for the device in use) |
-| N / T / Y / P | new match / toggle P2 AI / toggle P1 AI / pause (UI's pause menu: Resume, How to play, Settings, Send feedback, New match; keys, pad, mouse and touch) |
+| N / T / Y / P | new match / P2 joins on the keyboard, or is handed back to the AI / toggle P1 AI / pause (UI's pause menu: Resume, How to play, Settings, Send feedback, New match; keys, pad, mouse and touch) |
 | F1 | UI's How to play card, open or close (it also opens at the first run) |
 | F2 | swap UI's HUD for the greybox HUD (until UI's playtest) |
 | F3 | performance overlay |
@@ -44,7 +44,7 @@ The mapping is Controls': the host hands every key, pad and touch event to `SimI
 - UI's options the host owns go to the hub: `pad_preset` and `touch_preset`, and after a remap (`remap_changed`; UI applies and saves it through Controls) the hub reloads its layouts. The hub's defaults are pushed into the HUD first.
 - The options the player saved there are loaded at start (after those defaults, so the saved choice wins), except in the tools, the bench and scripted runs (`--frames`, `--shot`), which keep the defaults so a saved option never changes a check.
 
-Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`, `--nosplit` (one view), `--pitch=DEG` and `--occl=hole|stub` (the two debug toggles' starting values), `--nostreets` (no street paint). Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
+Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`, `--nosplit` (one view), `--pitch=DEG` and `--occl=hole|stub` (the two debug toggles' starting values), `--nostreets` (no street paint), `--nodamage` (no battle damage on the fighters), `--noclouds` (a bare sky), `--nowindows` (blank walls). Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
 
 ## Scene structure (`render/main.tscn`)
 
@@ -243,7 +243,7 @@ In the air, on plains, in a bowl and in the city: ![low air](img/pitch-low-air.p
 
 ## The inset pane
 
-For Camera's launch following (`camera-v2.md` section 3: stay on the attacker, the launched fighter in an inset). `main.make_inset(size) -> SubViewport` makes a third follower pane at the size given. It is not one of the split's two (`main.panes`); `main.all_panes()` lists all three. Each frame main asks `compositor.inset_view(alpha)` for its camera: `{cam_x, cam_y, cam_z}` (and optionally `jitter`, `pitch`, `cutaway`), or `{}` when the inset is not shown, and draws it from that. The compositor places the viewport's texture and switches its updates on and off. A follower costs nodes and draw submission only while it is shown.
+For Camera's launch following (`camera-v2.md` section 3: stay on the attacker, the launched fighter in an inset). `main.make_inset(size) -> SubViewport` makes a third follower pane at the size given. It is not one of the split's two (`main.panes`); `main.all_panes()` lists all three. Each frame main asks `compositor.inset_view(alpha)` for its camera: `{cam_x, cam_y, cam_z}` (and optionally `jitter`, `pitch`, `cutaway`), or `{}` when the inset is not shown, and draws it from that. The compositor places the viewport's texture and switches its updates on and off. A follower costs nodes and draw submission only while it is shown. The inset's fighters draw without their head badges (`PaneWorld.markers` off, which `FighterView.markers` follows): a badge is a HUD-space marker, and in Camera's panel strip it showed as a red wedge at the strip's top edge.
 
 A stand-in compositor in the tool: fighter 0 behind the block in the main view, fighter 1 high and far off in the inset. ![inset](img/lanes-inset.png)
 
@@ -260,6 +260,59 @@ The front street at 11 degrees, both fighters on the plane: ![streets](img/lanes
 One fighter in the street behind the block, the other on the plane, at 11 and at 49 degrees (stubs): each has his stripe. ![cue](img/lanes-cue.png) ![cue 49](img/lanes-cue49.png)
 
 **Checks and cost.** Every check passes with them (determinism and `--live`, pane, ground, flash, flight, cue, both seam sweeps, VFX's hash check, Camera's split sweep). Desktop, 1280x720, seed 4, 4,800 frames, with and without the paint, two runs each: 2.83 and 2.89 ms mean with, 2.93 and 2.69 without; GPU 0.28 and 0.29 ms with, 0.30 and 0.25 without. Nothing measurable. On the web (Chrome 154 and Edge 154) the posed street scene draws at each pitch with no console messages.
+
+## Battle damage, the sky and windows (rule of cool, wave 0)
+
+Game Design's list (`docs/design/rule-of-cool.md`) from Orb's picks. All three parts are presentation only: they read the sim and write nothing. The plan-only items (land scars, the mountain tunnel, throwable vehicles) are in `rule-of-cool-render.md`.
+
+**Battle damage on the mannequin (feature 1, Rendering's part).** Marks that stay and build, by wound region, from the wounds state the sim already has (`Fighter.stage`: head, core, arms, legs; 1 bruised, 2 battered, 3 broken).
+- **Three kinds of mark.** Scuffs on clothing and gear, bruises on skin, and tears: patches of cloth open to the skin under them, with a dark frayed edge. Tears are not drawn on the head or on gear (plates, boots, the pack), which only scuff.
+- **How much of each comes from Art's data.** `RenderDamage` (`render/core/damage_look.gd`) reads `data/art/damage.json` and counts each outfit's layer ids at each stage:
+  - decals named `scuff_` or `dent_`, and hard damage in the geometry list (chip, cracked, dented, holes, gone), count as scuffs, 7% of the surface each;
+  - decals named `bruise_` count as bruises, 6% each (a `_large` one counts twice);
+  - geometry named torn, frayed, trailing or loose counts as tears, 5% each (`torn_open` and `torn_wide` count twice).
+  - Each kind is capped at 55%. For the protagonist's outfit that gives scuffs 14%, 21%, 21%, bruises 12%, 24%, 24% and tears 0%, 15%, 30% at stages 1 to 3.
+  - Blood decals are not drawn; they wait for the graphic dial.
+  - The mannequin has no outfit meshes, so no id has a place of its own yet. The ids set the amounts; a noise places the marks. The mesh swaps and silhouette changes in the data are Animation's.
+- **Which outfit.** `RenderLook.DAMAGE_OUTFIT` maps KAI to `protagonist` and VORR to `empress`, placeholders until the roster names each fighter's outfit. An outfit the data does not list gets `RenderDamage.FALLBACK`.
+- **They stay.** A region shows the worst stage it has reached this match, whatever the wear does after, and through transformations. A new stage's marks grow in over 0.6 s. The view remembers the worst stage itself, so after a replay seek it shows the stages as they are at that point.
+- **How.** `fighter_body.gdshader` draws them from a noise in the mesh's rest space, so a mark stays on its spot of the body in every pose. `OutlineBake` now also leaves each vertex's bone (which gives its region) and its rest position in the mesh. Nothing is added to the rig, there are no textures, and the draw calls are unchanged. Two fighters are marked differently (a seed from the name).
+- **Reduced version:** a flat tint by stage, no pattern. It is on at VFX's lowest quality. `--nodamage` switches the marks off, for A/B.
+- Not in this: the hanging limb (Animation), the flickering aura (VFX), heavy breathing and the stagger (Animation).
+
+Each fighter at stages 0 to 3, then the first again in the reduced version: ![damage sheet](img/cool-damage-sheet.png)
+
+At the fight's own size, both wounded: ![damage in a fight](img/cool-damage-fight.png)
+
+**The sky reacts from tier 3 (feature 12, Rendering's part).**
+- **Clouds.** The sky had none, so nothing could part. It now has a band of long clouds above the horizon: two octaves of noise in the sky shader, lit warm from the horizon. They move with the camera's place round the planet (the pattern wraps with the planet) and a slow wind. There are none at the horizon line, where the ground's haze meets the sky, and none in space.
+- **The reaction.** For a fighter at tier 3 or more the clouds part in a tall opening above him, their edges round it lit in his colour, and the sky inside pales toward his colour. Half strength at tier 3, full at tier 4, easing over 1.5 s of tick time. Each pane shows it from its own camera. Nothing happens below tier 3.
+- **It only lightens.** A pixel inside the opening is never darker than the sky was, and there is no lightning (Legal's screen of the list). The stars fade inside the opening.
+- **It stands down** (stacking rule 9) while that fighter charges, charges a beam, breaks into a transformation, is the actor of a set-piece pause, or has VFX's transformation effect on him. It eases out and comes back after.
+- **Reduced version:** no clouds; the opening is then the pale tint alone. On at VFX's lowest quality; `--noclouds` forces it.
+- Rubble floating and cracks spreading under a standing fighter are VFX's and World's parts of the same feature.
+
+Calm, then one fighter at tier 3 and at tier 4: ![calm](img/cool-sky-calm.png) ![tier 3](img/cool-sky-tier3.png) ![tier 4](img/cool-sky-tier4.png)
+
+Both reacting (tier 4 and tier 3), and the reduced version: ![both](img/cool-sky-both.png) ![reduced](img/cool-sky-reduced.png)
+
+**Windows, and windows blowing out (feature 12).** The buildings had no windows, so VFX's glass came out of blank walls.
+- **Windows.** `building.gdshader` draws them on every wall: a row a floor (the building's height over its floor count), a column every 62 units along the wall (`WINDOW_PITCH`), 30% of them lit by a hash of the building and the cell (`WINDOW_LIT_SHARE`). No textures, no geometry, no draw call. They fade to the wall's tone before they alias at far zoom. `--nowindows` leaves the walls blank, for A/B.
+- **Blow-outs.** VFX throws the glass and lists each blow-out in `host.vfx.react.blowouts` as `{b, at, strength, lo, hi}`. Each frame the first pane passes the list to `PlanetView.blow_windows`. From `at` the facade's windows on VFX's rows of floors draw as dark openings: `round(floors x strength x 0.6)` rows, at most VFX's `floors_max`, spread up the building. I apply VFX's row rule to the building and do not read `lo` and `hi`.
+- **They stay out** for the match, and a new match clears them. One bit a floor a building, in a small data texture the panes share (62 floors at most).
+- **Limit.** VFX prunes its list after six seconds, so a replay seek does not bring back blow-outs older than that. A sim record of them would fix it.
+- **Not built:** windows going out from the sim's own building damage. Today a damaged building gets shorter, and the windows of the floors that are gone go with them.
+
+A block as it stands, and after a blow-out wave from between the fighters: ![windows](img/cool-windows-before.png) ![blown](img/cool-windows-after.png)
+
+`godot --path . --script res://render/tools/cool_shots.gd -- --out=DIR` poses a fresh match's fighters, sets their wound stages and tiers by hand (the tool's own state), blows a block's windows through `blow_windows`, and saves these pictures.
+
+**Checks and cost.** On an exported HEAD (5fe078a) plus these files, all pass: determinism and `--live`, pane, ground, flash, flight, cue, both seam sweeps, the outline check (the bake's new attributes do not disturb the outline), VFX's hash and effects checks, Camera's split sweep, Animation's anim check and UI's HUD check.
+- **Desktop,** 1280x720, seed 4, 4,800 frames, two runs each, before the windows went in: frame mean 2.38 and 2.41 ms on HEAD, 2.28 and 2.21 with damage and sky.
+- **Web,** Chrome at a 4x CPU slowdown, with the windows in: 16.6 and 13.5 ms on HEAD, 16.0 and 15.8 with all three. Unthrottled: 4.56 and 4.70 against 4.68 and 4.13.
+- Nothing measurable in either. The runs differ from each other by more than the change.
+- **Web look,** Chrome 154 and Edge 154: posed damage, the sky at tier 4 and 3, and a city block with its windows whole and blown all draw with no console messages.
+- **Not measured:** a phone. The sky shader runs on every sky pixel, so that is where the clouds would cost, and it is why the reduced version drops them.
 
 ## Craters, scorch and water
 
@@ -392,7 +445,18 @@ Camera's dynamic split screen (`docs/camera/split-screen.md` §11) needs the wor
 - `split_solo`: split against the AI, or follow your own fighter;
 - `reduced_motion`: the rig's quick swap, and a quarter of the shake;
 - `camera_zoom` and `camera_shake` (0 to 10, defaults 7 and 2): `SplitView.set_zoom_pref` and `set_shake_pref`, and the single view's shake. `camera_shake` alone is the shake setting now (`shake_scale` is no longer read);
-- `camera_launch_follow` (`auto` until UI has the option): `SplitView.set_launch_follow`.
+- `camera_launch_follow`: `SplitView.set_launch_follow`;
+- `camera_panels` (full, still or off): `SplitView.set_panel_mode`, for Camera's panel cut-ins. While VFX's quality is at its lowest, main passes "still" in place of "full"; the player's own "still" or "off" stands;
+- UI's `panel_floor_y()`: `SplitView.set_panel_floor`, so the strip's top band starts below the plates.
+
+UI's `lane_colors_changed(a, b)` goes to `SplitView.set_panel_colors` when it fires.
+
+**What the panel strip costs.** The strip is a second world render (the inset pane) for as long as it is up. Held up for a whole run:
+- desktop: frame mean 2.21 ms without, 2.61 to 2.70 ms live (28 more draw calls), 2.28 ms still;
+- web, unthrottled: 4.56 to 4.90 ms without, 5.21 to 5.41 ms live;
+- web at a 4x CPU slowdown: about 16.3 to 18.9 ms without, 19.4 to 19.6 ms live, 16.2 ms still.
+
+A still strip costs nothing measurable, and a live one costs about 3 ms where the frame is already at its budget. That is why low quality gets the still one.
 
 F10 and F11 flip the first two through UI's `set_option`. Camera's `render/camera/split_main` scene is retired: its lines live in `main.gd`, and `--bench` now also splits frame time by whether two full panes were drawn.
 
@@ -428,7 +492,20 @@ The first pane and the second, drawn from the rig's two cameras: ![panes](img/pa
 
 ## Hosting UI's HUD and Audio
 
-**How to play and touch** (`docs/ui/hud-spec.md` §16 and §17). At the first run, main opens UI's How to play card (`show_howto(true)` unless `howto_seen()`). The card doesn't open under the tools (`manual`), `--bench`, `--frames` or `--shot`. F1 opens and closes it anywhere, and the HUD handles that key. P pauses and shows a small pause menu drawn by the greybox overlay (`hud.gd`, host glue until UI draws one), with Resume and How to play entries, each at least 48 dp. While the card is open the sim is frozen, and held and pending keys are released. Closing it restores the pause state it found, so a card opened from the menu goes back to the menu. The last input device sets UI's `touch_ui` option: a touch turns it on, a key or a pad turns it off, and a mouse leaves it. In touch mode a tap on UI's pause button pauses and resumes. That is glue until Controls' touch scheme hit-tests the HUD; the stance ring is left to them. The demo prompt becomes one tap line at 16 dp. The pause menu also has **Send feedback**, which opens UI's feedback panel (`show_feedback("pause")`, §20). The panel freezes the fight like the card and restores the pause it found. `feedback_fn` gives the report the seed, the match time from sim ticks, whether the match has ended, and the setup: the fighters as the HUD names them, plus the view and effects this build runs. Keys typed into the panel don't switch touch mode off, since a phone's on-screen keyboard sends key events. `set_density` isn't called, since UI's own detection (`devicePixelRatio` on the web) is right. A scratch check drives real key, click and touch events through the full scene with the prefs in a scratch file, 24 checks.
+**How to play and touch** (`docs/ui/hud-spec.md` §16 and §17). At the first run, main opens UI's How to play card (`show_howto(true)` unless `howto_seen()`). The card doesn't open under the tools (`manual`), `--bench`, `--frames` or `--shot`. F1 opens and closes it anywhere, and the HUD handles that key. P opens UI's pause menu ("Run it" above). While the card is open the sim is frozen, and held and pending keys are released. Closing it restores the pause state it found, so a card opened from the menu goes back to the menu. The last input device sets UI's `touch_ui` option: a touch turns it on, a key or a pad turns it off, and a mouse leaves it. In touch mode a tap on UI's pause button pauses and resumes. That is glue until Controls' touch scheme hit-tests the HUD; the stance ring is left to them. The demo prompt becomes one tap line at 16 dp. The pause menu also has **Send feedback**, which opens UI's feedback panel (`show_feedback("pause")`, §20). The panel freezes the fight like the card and restores the pause it found. `feedback_fn` gives the report the seed, the match time from sim ticks, whether the match has ended, and the setup: the fighters as the HUD names them, plus the view and effects this build runs. Keys typed into the panel don't switch touch mode off, since a phone's on-screen keyboard sends key events. `set_density` isn't called, since UI's own detection (`devicePixelRatio` on the web) is right. A scratch check drives real key, click and touch events through the full scene with the prefs in a scratch file, 24 checks.
+
+**Local two-player** (`docs/controls/local-two-player.md`, `docs/ui/hud-spec.md` section 30). Controls' input hub decides who plays on what; the host carries it out and tells UI.
+- **Joining and leaving.** Every tick `SimHost.take_players()` takes the hub's joins and leaves, turns the slot's AI off or on, and emits `input_note` for each `{kind, slot, device}`. Pad events already carry their device id, so a second pad's first button reaches the hub as a new device and joins as player two.
+- **Start does not join.** A pad's Start opens the pause menu before the hub sees it. Any other button joins.
+- **T** makes P2 human (two on the keyboard's halves) when P2 is the AI, and hands the slot back through `hub.leave(1)` when P2 is a person.
+- **The pause menu** takes any pad: Start opens it, the d-pad moves, A chooses, B goes back. That is UI's HUD; main only marks Start as handled so the same press does not close the menu again. Its "Player two: hand back to the AI" entry (`player_two_leave_requested`) calls `hub.leave(1)` and then `take_players()`, so the slot changes hands at once, with the sim still frozen, and the entry leaves the open menu.
+- **What UI is told each frame** (`_sync_players`): `set_join_available(hub.joinable(), no pad is connected)`, and for each human slot `set_device(slot, family)` and `set_slot_layout(slot, hub.layout_of(slot))`. A pad's family (xbox, ps, switch, deck, generic) comes from the name the system gives it. A touch player's layout is left to UI's touch mode. `input_note` for slot 1 also calls `show_join_note`.
+- **Each player's own pad layout.** UI's `pad_preset` goes to slot 0 and `pad_preset_p2` to slot 1 (`hub.set_pad_preset(id, slot)`), at start and on every change. The hub's default for both slots is never used: changing between the default and a slot's own at the moment of a join drops player one's pad layout, and whatever they hold with it.
+- **The split.** Camera's rig reads who is human: with two people it splits, each pane on its own player, and follows a launch in the split. A join attaches the split if F9 had turned it off.
+
+A scratch test drives real pad events for three devices through the full scene (61 checks): join, a third pad ignored, the menu from each pad, the hand-back, rejoin, unplug, a pad beside the keyboard, T, a new match. On the web (Chrome 154 and Edge 154) the same run with two scripted gamepads passes, 33 steps each, with no console messages. No real controller has been used yet.
+
+One pad playing, the join prompt on the AI's side; two on the keyboard; the menu with two players: ![prompt](img/join-prompt.png) ![two players](img/join-keyboard-two.png) ![menu](img/join-menu.png)
 
 **VFX** (`docs/vfx/plan.md` §5). `SimHost` owns VFX's `VfxHub`: it resets on each match and consumes each tick's events just before they are cleared. Each pane has a `VfxLayer` ("Vfx"), drawn after the fighters, sharing the one hub. Each frame main passes the hub the frame time (for its automatic quality) and UI's reduced motion. `--novfx` turns it off for A/B runs, and `--vfx-quality=0|1|2` fixes the quality (the bench fixes it too). `planet.ground` stays public for VFX's cracks. Desktop cost with VFX on against off: frame p50 1.44 against 1.43 ms.
 
