@@ -23,6 +23,7 @@ static var debug_checks: bool = false
 ## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
 static var ragdoll_enabled: bool = true
 static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
+static var intro_poses: bool = true        # the opening's fall, landing and staredown (docs 9.19); --no-intro-poses switches them off
 static var ground_poses: bool = true       # World's ground-contact events play their poses and sequences (docs 9.18); --no-ground-poses switches them off
 static var step3_cues: bool = true         # Encounter's step 3 cue events (perfect_block, reversal, dodge_cancel, burst, burst_absorbed) play their pose sequences: ON (they are the only feedback for live mechanics); --no-step3-cues switches them off
 static var wave1_live: bool = false        # --wave1-live: wave 1's key sets are in the pick lists (go-live step 1, docs/combat/pending/golive-step1.md); OFF by default
@@ -66,6 +67,8 @@ static func _read_args() -> void:
 			enabled = false
 		elif a == "--noragdoll":
 			ragdoll_enabled = false
+		elif a == "--no-intro-poses":
+			intro_poses = false
 		elif a == "--no-ground-poses":
 			ground_poses = false
 		elif a == "--step3-cues":
@@ -181,6 +184,15 @@ static func consume(S: SimState, events: Array) -> void:
 							gd[key] = gv
 					var t_ev: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)   # the event's own time
 					fighter(S, S.fighters[ga]).on_ground_event(String(e.type), gd, t_ev)
+			"intro_start", "entrance_fall", "entrance_land", "staredown_start", "clock_start":
+				# the opening, on the sim's tick (the match clock is frozen until clock_start)
+				var te: float = float(int(e.tick)) / 60.0
+				var ga2: int = int(_ev(e, "actor", -1))
+				if String(e.type) == "intro_start" or String(e.type) == "staredown_start" or String(e.type) == "clock_start":
+					for f2 in S.fighters:
+						fighter(S, f2).on_intro(String(e.type), te, float(_ev(e, "dur", 0.0)), String(e.kind))
+				elif ga2 >= 0 and ga2 < S.fighters.size():
+					fighter(S, S.fighters[ga2]).on_intro(String(e.type), te, float(_ev(e, "dur", 0.0)), "")
 			"transform":
 				var who2: int = int(e.actor)
 				if who2 >= 0 and who2 < S.fighters.size():

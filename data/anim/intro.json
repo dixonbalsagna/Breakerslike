@@ -1,0 +1,16 @@
+{
+  "schema": "anim.intro/1",
+  "_about": "The opening's tuning (render/anim/anim_fighter.gd, _intro_layer; docs/architecture/intro-phase.md). tense_lead and tense_ramp: the tension pose comes in over tense_ramp seconds, finishing tense_lead seconds before the end of the staredown (so the face cuts at ticks 240 to 288 hold it). beats: for a shape key (P circles, A the crouched wedge, E, C), the staredown's one small beat: the sequence (data/anim/waves/intro1.sequences.json) and when it starts, in seconds after the staredown starts. Render only, outside the sim's data hash.",
+  "tense_lead": 1.8,
+  "tense_ramp": 0.8,
+  "beats": {
+    "A": {
+      "seq": "in.cuff",
+      "at": 0.9
+    },
+    "P": {
+      "seq": "in.roll",
+      "at": 1.1
+    }
+  }
+}

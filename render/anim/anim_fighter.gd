@@ -54,6 +54,7 @@ var _last_T: float = -1.0
 var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
 var _gc_hold_t0: float = -1.0           # a held ground-contact pose (the brace of a tumble) from this time ...
+var _intro: Dictionary = {}           # the opening, from the sim's events: {on, fall_t, fall_dur, land_t, stare_t, stare_dur} (seconds on the sim's tick)
 var _gc_hold_w: float = 0.5            # how much of the pose the brace is (set when it starts: firmer when slow and unworn, looser when fast and worn)
 var _gc_hold_t1: float = -1.0           # ... until this one (-1 while it lasts)
 var _stun_prev: int = 0
@@ -267,6 +268,77 @@ func on_skim(T: float, spd: float) -> void:
 
 ## World's ground-contact events (left_ground, bounce, land, tumble_end; docs/world/ground-contact.md section 4). They plug
 ## into the same body: a bounce whips it by the normal speed, a slam or a skid folds it, the end of a tumble lets it go.
+## The opening's pose from the sim's tick: waiting or falling (the body one narrow line, head first), the landing (a deep compression with one open hand on
+## the ground and the head up, held, then up through a half crouch), the staredown (upright and loose, one small beat of character for his shape, then the
+## tension in the last stretch before the clock). Reduced motion: no fall and no landing: he drops into frame and stands.
+func _intro_layer(S: SimState, f) -> void:
+	var I: Dictionary = AnimData.intro
+	var tk: float = float(S.tick) / 60.0
+	var reduced: bool = RenderAnim.reduced_motion
+	var dq: float = 1.0 / 60.0
+	var set_p: AnimPose = AnimData.pose("in.hold.set")
+	var landed: bool = float(_intro.land_t) >= 0.0 and tk >= float(_intro.land_t)
+	var pose_in: AnimPose = AnimData.pose("in.hold.fall") if not reduced else set_p
+	if not landed:
+		AnimPose.mix(q, pose_in.q, 1.0)
+		hips = pose_in.hips
+		curl = pose_in.curl
+		return
+	var tl: float = tk - float(_intro.land_t)
+	var land_dur: float = float(AnimData.entries["in.land"].dur) / 60.0 if AnimData.entries.has("in.land") else 1.0
+	if tl < land_dur and not reduced and AnimData.entries.has("in.land"):
+		if tl < 0.12:
+			_skip_inertia = true   # the touchdown snaps (the join from the fall is the blow of the landing, not something to ease)
+		_entry_layer(float(_intro.land_t), land_dur, "in.land", tk, dq)
+		return
+	AnimPose.mix(q, set_p.q, 1.0)
+	hips = set_p.hips
+	curl = set_p.curl
+	var st: float = float(_intro.stare_t)
+	if st < 0.0:
+		return
+	# the tension in the last stretch of the staredown
+	var tense_p: AnimPose = AnimData.pose("in.hold.tense")
+	var lead: float = float(I.get("tense_lead", 1.8))
+	var ramp: float = float(I.get("tense_ramp", 0.8))
+	var t_end: float = st + float(_intro.stare_dur)
+	var tw: float = smoothstep(t_end - lead, t_end - lead + ramp, tk) if not reduced else 0.0
+	if tw > 0.001:
+		AnimPose.mix(q, tense_p.q, tw)
+		hips = hips.lerp(tense_p.hips, tw)
+		curl = curl.lerp(tense_p.curl, tw)
+	# one small beat of character for his shape, early in the staredown
+	var sk: String = String(AnimRagdoll.shape_of.get(String(f.id), AnimRagdoll.shape_of.get("default", "")))
+	var beat: Dictionary = I.get("beats", {}).get(sk, {})
+	if not beat.is_empty() and not reduced and AnimData.entries.has(String(beat.get("seq", ""))):
+		var b0: float = st + float(beat.get("at", 1.0))
+		var bd: float = float(AnimData.entries[String(beat.seq)].dur) / 60.0
+		if tk >= b0 and tk < b0 + bd + 0.05:
+			_entry_layer(b0, bd, String(beat.seq), tk, dq)
+
+
+## The opening's events (docs/architecture/intro-phase.md), at their own tick in seconds: the match clock is frozen, so this is the only time there is.
+func on_intro(kind: String, t: float, dur: float, clock_kind: String) -> void:
+	if not RenderAnim.intro_poses or AnimData.intro.is_empty():
+		return
+	match kind:
+		"intro_start":
+			_intro = {"on": true, "fall_t": -1.0, "fall_dur": 0.6, "land_t": -1.0, "stare_t": -1.0, "stare_dur": 2.6}
+		"entrance_fall":
+			if not _intro.is_empty():
+				_intro["fall_t"] = t
+				_intro["fall_dur"] = maxf(dur, 0.1)
+		"entrance_land":
+			if not _intro.is_empty():
+				_intro["land_t"] = t
+		"staredown_start":
+			if not _intro.is_empty():
+				_intro["stare_t"] = t
+				_intro["stare_dur"] = maxf(dur, 0.5)
+		"clock_start":
+			_intro = {}
+
+
 func on_ground_event(kind: String, e: Dictionary, T: float) -> void:
 	var amp: float = _rd_amp()
 	debug["ground_events"] += 1
@@ -281,13 +353,13 @@ func on_ground_event(kind: String, e: Dictionary, T: float) -> void:
 			_rd.kick(1, clampf(float(e.get("vt", 0.0)) * vface / 220.0, -9.0, 9.0) * amp)
 			if poses_on:
 				var bw: float = clampf(vn / float(G.get("bounce", {}).get("ref", 1800.0)), float(G.get("bounce", {}).get("min", 0.35)), 1.0) * clampf(surf, 0.6, 1.0)
-				_seq = {"id": "gc.bounce", "t0": T, "dur": float(AnimData.entries["gc.bounce"].dur) / 60.0, "wt": bw}
+				_seq = {"id": "gc.bounce", "t0": T, "dur": float(AnimData.entries["gc.bounce"].dur) / 60.0, "wt": bw * (0.6 if RenderAnim.reduced_motion else 1.0)}
 				debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
 		"left_ground":
 			var cause: String = String(e.get("cause", ""))
 			if poses_on and cause != "bounce" and cause != "":
 				var lw: float = clampf(float(e.get("spd", 1000.0)) / float(G.get("launch", {}).get("ref", 2000.0)), float(G.get("launch", {}).get("min", 0.4)), 1.0)
-				_seq = {"id": "gc.lip_launch", "t0": T, "dur": float(AnimData.entries["gc.lip_launch"].dur) / 60.0, "wt": lw}
+				_seq = {"id": "gc.lip_launch", "t0": T, "dur": float(AnimData.entries["gc.lip_launch"].dur) / 60.0, "wt": lw * (0.6 if RenderAnim.reduced_motion else 1.0)}
 				_gc_hold_t1 = T if _gc_hold_t0 >= 0.0 and _gc_hold_t1 < 0.0 else _gc_hold_t1
 				debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
 		"land":
@@ -307,6 +379,8 @@ func on_ground_event(kind: String, e: Dictionary, T: float) -> void:
 					var spd_k: float = lerpf(float(H.get("slow_k", 1.4)), float(H.get("fast_k", 0.7)), smoothstep(float(H.get("slow_speed", 300.0)), float(H.get("fast_speed", 1500.0)), float(e.get("spd", 800.0))))
 					var wear_k: float = 1.0 - float(H.get("worn_loosen", 0.5)) * smoothstep(float(H.get("worn_from", 0.5)), 1.0, maxf(_worn, _brinkp))
 					_gc_hold_w = clampf(float(H.get("weight", 0.5)) * spd_k * wear_k, 0.0, float(H.get("max", 0.85)))
+					if RenderAnim.reduced_motion:
+						_gc_hold_w *= 0.6
 					debug["gc_poses"] = int(debug.get("gc_poses", 0)) + 1
 		"tumble_end":
 			_rd.free = minf(_rd.free, 0.3)
@@ -527,6 +601,8 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			_seq = {}
 		else:
 			_entry_layer(float(_seq.t0), float(_seq.dur), String(_seq.id), T, 1.0 / float(_prof.get("solve_hz", 60.0)), float(_seq.get("wt", 1.0)))
+	if not _intro.is_empty() and f.state == "intro":
+		_intro_layer(S, f)
 	if _gc_hold_t0 >= 0.0 and AnimData.pose_exists("gc.hold.brace_tumble"):
 		var hin: float = float(AnimData.ground.get("hold", {}).get("in", 0.08))
 		var hout: float = float(AnimData.ground.get("hold", {}).get("out", 0.15))
@@ -1453,6 +1529,8 @@ func _rd_amp() -> float:
 ## taken in the body frame: the body is rotated by the sim's rot, mirrored by the visual facing. A launch, a slam, a skid, a
 ## brace before the ground and a tuck in a spin are all this one controller.
 func _rd_tick(S: SimState, f, dt: float) -> void:
+	if f.state == "intro" and RenderAnim.intro_poses:
+		return   # the fall is scripted: nothing in the ragdoll should answer its speed
 	if not RenderAnim.layer("ragdoll"):
 		if _rd.out_w > 0.0 or _rd.energy() > 0.0:
 			_rd.reset()
@@ -2217,7 +2295,7 @@ func _reaction_layer(T: float) -> void:
 ## the way he faces, the acceleration, and a flutter at speed (overhaul unit D); frozen ticks run at a tenth.
 func _spring_tick(S: SimState, f, dt: float, frozen: bool) -> void:
 	var m: float = vface
-	var vw := Vector2(f.vx * m, f.vy)
+	var vw := Vector2(f.vx * m, f.vy) if not (f.state == "intro" and RenderAnim.intro_poses) else Vector2.ZERO   # no wind in the opening
 	var aw := Vector2.ZERO
 	if _sp_have:
 		aw = (vw - _sp_vw) / maxf(dt, 0.0001)

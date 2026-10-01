@@ -14,7 +14,7 @@ const wave = argv[0] || 'wave1';
 const opt = (n, d) => { const i = argv.indexOf('--' + n); return i >= 0 ? argv[i + 1] : d; };
 const project = resolve(opt('project', '.'));
 const outDir = resolve(opt('out', join(project, 'data/anim/waves')));
-const prefix = wave === 'ground1' ? 'gc' : wave.startsWith('step') ? 's' + wave.slice(4) : wave.replace('wave', 'w');   // w1, s3
+const prefix = wave === 'ground1' ? 'gc' : wave === 'intro1' ? 'in' : wave.startsWith('step') ? 's' + wave.slice(4) : wave.replace('wave', 'w');   // w1, s3
 
 const poses = JSON.parse(readFileSync(join(project, 'data/anim/poses.json'), 'utf8')).poses;
 const mod = await import(pathToFileURL(resolve(project, 'render/anim/tools/waves/' + wave + '.mjs')).href);

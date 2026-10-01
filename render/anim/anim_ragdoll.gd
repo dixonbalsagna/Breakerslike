@@ -33,6 +33,7 @@ static var flail_hz := PackedFloat32Array()
 static var flail_fade := Vector2(0.35, 1.2)
 var shape_key: String = ""
 var hit_k := PackedFloat32Array()               # per degree of freedom: the flinch multiplier of this fighter's shape (data/anim/shapes.json)
+const REDUCED_LIMIT := 0.5               # reduced motion: every joint may turn only this share of its range
 static var shapes: Dictionary = {}              # shape key -> {tuck, brace, skid, crumple: PackedFloat32Array}
 static var shape_of: Dictionary = {}            # roster id -> shape key
 static var hit_gain: float = 1.6
@@ -217,6 +218,8 @@ func reset() -> void:
 ## forward, y up the body); free_t the looseness the regime asks for; the w_ weights (set by the controller) mix the tuck, brace,
 ## skid and crumple shapes and the flail in; tt the sim time (the flail's clock); amp scales the drive (reduced motion).
 func step(dt: float, v: Vector2, a: Vector2, free_t: float, amp: float, tt: float) -> void:
+	# reduced motion also narrows every joint's range (a hard tumble saturates the limits at any amplitude, so the drive alone does not calm it)
+	var lk: float = REDUCED_LIMIT if amp < 0.999 else 1.0
 	free = move_toward(free, free_t, dt * free_rate)
 	var sp: float = clampf(v.length() / v0, 0.0, 2.0)
 	var h: float = dt * 0.5
@@ -242,11 +245,11 @@ func step(dt: float, v: Vector2, a: Vector2, free_t: float, amp: float, tt: floa
 			var al: float = -kk * (th[i] - target) - damp[i] * om[i] + drive
 			om[i] += al * h
 			th[i] += om[i] * h
-			if th[i] < lo[i]:
-				th[i] = lo[i]
+			if th[i] < lo[i] * lk:
+				th[i] = lo[i] * lk
 				om[i] = maxf(om[i], 0.0)
-			elif th[i] > hi[i]:
-				th[i] = hi[i]
+			elif th[i] > hi[i] * lk:
+				th[i] = hi[i] * lk
 				om[i] = minf(om[i], 0.0)
 
 

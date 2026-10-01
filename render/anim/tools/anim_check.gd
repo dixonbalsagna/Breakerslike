@@ -262,8 +262,8 @@ func _test_ragdoll() -> void:
 	_expect(di < 0, "ragdoll test: the ragdoll state differs between one tick a frame and two at entry %d of %d (%s against %s; per fighter: 12 joints, out_w, 5 cloth, look)" % [di, a.th.size(), str(a.th[di] if di >= 0 else 0), str(b.th[di] if di >= 0 else 0)])
 	_expect(a.active > 20, "ragdoll test: the ragdoll was never active (%d frames)" % a.active)
 	var r: Dictionary = _rd_run(1, 1200, true)
-	# a whole match saturates the joint limits in a hard tumble, so the match-level ratio is only a sanity bound; the controlled one is the proof
-	_expect(r.maxe < a.maxe * 0.85, "ragdoll test: reduced motion moves %.2f against %.2f" % [r.maxe, a.maxe])
+	# reduced motion narrows every joint to half its range as well as shrinking the drive, so even a whole match with hard tumbles is calmer by a good margin
+	_expect(r.maxe < a.maxe * 0.6, "ragdoll test: reduced motion moves %.2f against %.2f" % [r.maxe, a.maxe])
 	var kick_e: Array = []
 	for amp_k in [1.0, 0.35]:
 		var rdk := AnimRagdoll.new()
@@ -754,6 +754,58 @@ func _test_ground() -> void:
 	print("ground test: bounce weights %.2f (rock, hard) and %.2f (sand, soft), the lip launch, the tumble brace (%.2f slow, %.2f fast, %.2f slow and worn) and its release, the tech flip" % [float(af._seq.wt), float(af2._seq.wt), firm_w, loose_w, af7._gc_hold_w])
 
 
+## The opening (docs/architecture/intro-phase.md): the sim's events on the sim's tick (the match clock is frozen) drive the pose: the fall until the landing, the
+## landing sequence, the staredown set and its tension near the clock, reduced motion standing from the start, and clock_start handing the body back.
+func _test_intro() -> void:
+	AnimData.load_all()
+	if AnimData.intro.is_empty() or not AnimData.entries.has("in.land"):
+		_expect(false, "intro test: the opening's data is not loaded")
+		return
+	main.start_match(4, {"p1": false, "p2": false})
+	var S: SimState = main.host.S
+	var f = S.fighters[0]
+	f.state = "intro"
+	var ix: Dictionary = AnimRig.index
+	var af := AnimFighter.new(0)
+	var evs: Array = []
+	for spec in [["intro_start", 0, 0.0], ["entrance_fall", 0, 0.6], ["entrance_land", 36, 0.0], ["staredown_start", 144, 2.6]]:
+		var e := SimState.FxEvent.new()
+		e.type = String(spec[0])
+		e.tick = int(spec[1])
+		e.dur = float(spec[2])
+		evs.append(e)
+		af.on_intro(e.type, float(e.tick) / 60.0, e.dur, "")
+	_expect(not af._intro.is_empty() and float(af._intro.land_t) > 0.0, "intro test: the events did not set the opening")
+	var errs: Array = []
+	for pair in [[20, "in.hold.fall"], [200, "in.hold.set"]]:
+		af.q = AnimPose.identity_q()
+		S.tick = int(pair[0])
+		af._intro_layer(S, f)
+		var pz: AnimPose = AnimData.pose(String(pair[1]))
+		var worst: float = 0.0
+		for bn in ["spine_2", "upper_arm_r", "thigh_l"]:
+			worst = maxf(worst, af.q[ix[bn]].angle_to(pz.q[ix[bn]]))
+		errs.append(snappedf(worst, 0.001))
+		_expect(worst < 0.4, "intro test: at tick %d the pose is %.2f rad from %s" % [int(pair[0]), worst, String(pair[1])])
+	# the tension near the clock is the tense pose, and reduced motion stands from the start
+	af.q = AnimPose.identity_q()
+	S.tick = 285
+	af._intro_layer(S, f)
+	var tp: AnimPose = AnimData.pose("in.hold.tense")
+	_expect(af.q[ix["spine_2"]].angle_to(tp.q[ix["spine_2"]]) < 0.15, "intro test: the pose near the clock is not the tension")
+	RenderAnim.reduced_motion = true
+	af.q = AnimPose.identity_q()
+	S.tick = 20
+	af._intro_layer(S, f)
+	var sp: AnimPose = AnimData.pose("in.hold.set")
+	_expect(af.q[ix["spine_2"]].angle_to(sp.q[ix["spine_2"]]) < 0.05, "intro test: reduced motion did not stand while falling")
+	RenderAnim.reduced_motion = false
+	af.on_intro("clock_start", 5.0, 0.0, "full")
+	_expect(af._intro.is_empty(), "intro test: clock_start did not hand the body back")
+	f.state = "free"
+	print("intro test: the fall, the set and the tension are %s rad from their poses; reduced motion stands; the clock ends it" % str(errs))
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -764,6 +816,7 @@ func _run() -> void:
 	_test_shapes()
 	_test_entry()
 	_test_ground()
+	_test_intro()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}
