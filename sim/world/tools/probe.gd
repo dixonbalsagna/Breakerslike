@@ -308,7 +308,8 @@ func _init() -> void:
 			check(expect == (S11.rng.state_i32() & 0xFFFFFFFF), "the only S.rng draws in a slide are the %d wear hits (speed %.0f, travel %.0f)" % [draws, spN, tv])
 			check(S11.craters.size() == craters0 or spN >= WorldSlide.HOP_SPEED, "a slide digs no crater unless it ends at a wall (speed %.0f, travel %.0f)" % [spN, tv])
 		print(line)
-	check(flat_ok, "the closed-form slide distance predicts the stepped slide on flat ground (15%% plus a margin)")
+	# the closed form describes the old slide; with the ground contact model on (data/biomes/contact.json) the journey function and the G2 section below take its place
+	check(flat_ok or WorldContact.enabled(), "the closed-form slide distance predicts the stepped slide on flat ground (15%% plus a margin; not applicable with ground contact on)")
 
 	print("== one crater per launch on ground: 300 random launches ==")
 	var multi: int = 0

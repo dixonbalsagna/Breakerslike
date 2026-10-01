@@ -228,3 +228,35 @@ Rims (lip 0.5 R, crest 0.40 d, footings skipped), heaps (slope 0.6, spill 1.0), 
 Launch to the end takes 2.2 s at the median and 4.8 s at the 90th percentile. My launch-to-end figures agree in kind with Camera's (theirs were measured on HEAD with the old slide model; the spread between 2,500 and 5,100 is arms and seeds). The difference is the flight: the planner's SMASH ACROSS and other long hauls cross the map by design (the launch's horizontal traversal factor), and that is where most of the distance is; the ground model decides only what happens after the first contact.
 
 **Which measure for "at most 20% over 4,000 units".** The bound is a bound on the knocked-about part, so it should use **first contact to the end** (14% now, inside the 20% limit); launch to the end is the launch's travel, set by the planner and the traversal factor, and 58% of launches exceed 4,000 by design. Camera's off-screen question is about the whole span: for that, launch to the end (median 5,300, p90 24,000) is the right measure and the follow camera, not the ground model, has to cope with it. I recommend recording both on the closing event (`journey_end` could carry the launch-to-end distance in `x1`: one field, no state, computed from the position at the launch, which the fighter's `aimX0` already holds for brunt flights and which I can keep in `jX0`) if QA wants both bands; for now each consumer can compute it from the `launch` event's position and the closing event's x.
+
+## 14. Switched on (unit 2, 2026-10-03, on HEAD afcdb0c)
+
+`data/biomes/contact.json` has `"enabled": true`; goldens regenerated; every gate green (npm test 5 of 5, render determinism, seam sweep, probe 0 failures). Two follow-ups from Simulation's review are in `contact.gd`: `spinFighter` takes `rot` to the nearest whole turn of zero before it eases (SPIN_FREE and SPIN_STOP), so a body that stops after many turns does not unwind them; and `dataHash()` hashes the parsed data without the "_" notes (FighterData._canon), like the other loaders. The probe's closed-form slide check describes the old slide and is skipped when ground contact is on.
+
+Measured on a clean export of HEAD with the flag on, 80 default-arm matches for journeys (seeds 1 to 80, 7,831 launches), 100 for the match figures (seeds 1 to 100), and 12 to 30 for the collateral split.
+
+| Ruling (Game Design's second landing ruling) | Band | Measured | |
+| :--- | :--- | ---: | :--- |
+| Halted (stop, tumble, wall stop-impact) of launches | 40 to 60% | 43.8% (stop and tumble alone: 30.2%) | in, counting the wall |
+| Halted of ground endings | at least 55% | 61.3% (alone: 42.2%) | in, counting the wall |
+| Wall stop-impact | 5 to 15% | 13.7% | in |
+| Slam | 8 to 18% | 25.4% | over |
+| Caught in the air (no journey) | 15 to 30% | 28.5% | in, near the top |
+| Water | 2 to 10% | 2.3% | in, near the bottom |
+| Brunt (BUILDING SMASH share of launches) | 4 to 10% | 5% | in |
+| Bounced launches | 15 to 30% | 29.4% | in, near the top |
+| Bounces per bounced journey | 1.2 to 2.0 | 1.22 to 1.23 | in, at the bottom |
+| Crater-lip flights a minute | 0.5 to 2.5 | 1.6 to 1.8 (lip cause only) | in |
+| All terrain flights a minute (lip, crest, heap, cliff) | 1.5 to 5 | 4.2 to 4.6 | in |
+| Journeys reaching the 4 s or 8-contact bound | at most 8% | 3.8 to 5.2% (a `capped` ending 0.0%) | in |
+| Over 4,000 units from first contact | at most 20% | 14 to 15% | in |
+
+Wear against the single-impact budget: mean 0.91 to 0.92, 90th percentile 1.26 to 1.27, over budget in 21.5 to 22.4% (slam 1.09 to 1.12, stop 0.80 to 0.82, wall 0.84, tumble 1.4 to 1.7, water 0.35 to 0.36). Slams and the later landings pay in full, and the speed removed by every contact is paid, so a journey costs about one single impact.
+
+**Slam is the one ruling band that is over (25.4%).** The first-contact mix is bounce 29%, skid 23%, tumble 5%, slam 22%, skim 3%. The slam ending also takes the journeys that end in a steep landing after a bounce. The boundary is Game Design's (70 degrees, `slamSin2` 0.883); the planner's mix (DRIVE DOWN, CRATER SLAM) decides how many near-vertical hits there are.
+
+**The match-level cost, 100 matches, default arm, flag off to on:** KAI 54 to 53 wins; length to KO mean 424 to 495 s (median 417 to 502, p90 547 to 635); civilians lost 17 to 25%; structures levelled 47 to 82 of 196; craters 37 to 47 a match; launches 8,908 to 9,449; the share of fight time with a fighter launched 28 to 36%. **This is the main finding of the switch-on.** Where it comes from (12 matches, structures levelled a match): the slam contacts, 12 to 58 (the calls of the slam kind rise from 18.6 to 41 a match, and each levels more: 0.66 to 1.41); the touch contacts (skids, tumbles, bounces), 20 to 24; the flight and brunt part is unchanged at about 10. Of the 41 slam contacts a match, 23 are first contacts, 12 are second contacts (about half of them the hop after a hard slam, which the old model had too) and 6 are third or later. The levers are all data in `contact.json` and none is needed for the bands above: the slam boundary, the area damage of a non-first contact (`TOUCH_AREA` 0.5 at touch-down is the old model's number), and the bounce keep. QA re-baselines the collateral and length bands from this commit.
+
+**Tick cost:** the same 20 matches, one process, alternating: flag off 7,064 and 7,062 ticks a second, on 7,015 and 6,719: 1 to 5% a tick; the matches are about 17% longer, so a match costs about 15 to 20% more wall time.
+
+**The journey function against the played journey** (240 seeded launches): on open ground 100 of 111 within 60 units (90%), near a town 87 of 129 (the collapse of a building raises heaps ahead of a skid).

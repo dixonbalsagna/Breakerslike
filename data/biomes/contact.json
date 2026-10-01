@@ -1,7 +1,7 @@
 {
   "schema": "biomes.contact/1",
   "_about": "How a launched body meets and leaves the ground (docs/world/ground-contact.md, balance-targets.md section 20). Speeds are the sim's normalised units (a launch's horizontal traversal factor divided out). Read by sim/world/contact.gd. enabled=false keeps today's slide model bit for bit.",
-  "enabled": false,
+  "enabled": true,
   "bands": {
     "nothingBelow": 350,
     "tumbleBelow": 900,

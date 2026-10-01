@@ -21,7 +21,7 @@ const SURFACES: Array = ["paving", "rock", "soil", "sand", "rubble"]
 static var _d: Dictionary = {}
 static var _errors: Array = []
 static var _loaded: bool = false
-static var _text: String = ""
+static var _parsed: Dictionary = {}
 const SURF_NAMES: Array = ["soil", "sand", "rock", "paving"]
 static var _colSurf := PackedByteArray()      # per terrain column: the biome's surface (0 soil, 1 sand, 2 rock) | 4 if the biome is paved
 static var K_HALF: float = 0.5
@@ -112,7 +112,8 @@ static func dataHash() -> String:
 	if not _loaded:
 		_load()
 	var h := SimHash.Hasher.new()
-	h.text(_text)
+	h.text("biomes.contact")
+	FighterData._canon(h, _parsed)   # the parsed data without the "_" notes, like the other loaders: a changed note keeps old replays
 	return h.hex()
 
 
@@ -124,8 +125,8 @@ static func _load() -> void:
 	if f == null:
 		_errors.append("contact.json: cannot open " + PATH)
 		return
-	_text = f.get_as_text()
-	var j = JSON.parse_string(_text)
+	var j = JSON.parse_string(f.get_as_text())
+	_parsed = j if j is Dictionary else {}
 	if not (j is Dictionary) or j.get("schema", "") != SCHEMA:
 		_errors.append("contact.json: not a %s object" % SCHEMA)
 		return
@@ -240,10 +241,16 @@ static func spinFighter(f, dt: float, how: int) -> void:
 		f.rot += f.spin * dt
 		f.spin *= SimDetMath.pow(0.5, dt / K_HALF)
 	elif how == 1:     # SPIN_FREE: ease upright
-		f.rot *= SimDetMath.pow(0.001, dt)
+		f.rot = _wrapRot(f.rot) * SimDetMath.pow(0.001, dt)
 	else:              # SPIN_STOP: a stop eases it out quickly
-		f.rot *= SimDetMath.pow(0.000001, dt)
+		f.rot = _wrapRot(f.rot) * SimDetMath.pow(0.000001, dt)
 		f.spin = 0.0
+
+
+## rot taken to the nearest whole turn of zero (not a jump, the same pose): the ease upright then goes the short way instead of
+## unwinding every turn the body had made.
+static func _wrapRot(r: float) -> float:
+	return r - TAU * floorf(r / TAU + 0.5)
 
 
 ## The airborne part of a tick: gravity, drag, the move, the water (entry, skim, sink). Appends events {"k": ...}.
