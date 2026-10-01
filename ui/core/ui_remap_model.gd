@@ -1,26 +1,22 @@
 class_name UiRemapModel
 extends RefCounted
-## The Remap controls screen's rules (docs/ui/hud-spec.md section 27, docs/controls/input-schema.md section 6), with no drawing in it so
-## hud_check can prove them. A layout (a preset of data/input/layouts.json, keyboard or pad) is a list of bindings; the player rebinds
-## ENTRIES: the single-control, base-layer binding of an action (Light, Guard, ...) and, on a keyboard, the four Move keys as one entry.
+## The Remap controls screen's model (docs/ui/hud-spec.md section 27): what the screen lists for a layout and what happens when a control
+## is given to an action. The rules themselves are Controls' (docs/controls/remap.md): SimInputRemap lists, rebinds and swaps bindings,
+## SimInputData.check_bindings is the one rule check (reserved keys, required actions, conflicts, devices, the shared keyboard's pair),
+## SimInputData.apply_overrides makes the layout as it is played (the layered partners follow their base action) and
+## SimInputData.preset(id) is that layout from then on, so the screen, the legend and the sim all read the same one. The player's file is
+## user://input.json, written by SimInputData.save_overrides and read at startup by SimInputData.load_and_apply.
 ##
-##  - A control already on another entry is a CONFLICT: the screen offers a swap (the other entry takes this entry's old control).
-##  - A reserved control (the keyboard's N, T, Y, P, Esc and F-keys; a pad's Start and Back) is refused, and a control belonging to the
-##    other half of a shared keyboard (the `pair` preset) is refused. So a required action is never left empty.
-##  - A binding on the same control as an entry that is not itself an entry (the power layer's special1 on Light's control, the Simple
-##    layouts' hold gesture, signature on the power layer) FOLLOWS that entry: rebinding Light also moves them.
-##  - Chords (LT + RT, Space + E, L3 + R3), the pad stick for move, Pause and Hints are fixed.
-##
-## What the screen produces is a list of OVERRIDES per layout: one {controls, action, layer?, gesture?, axis?} row for each binding whose
-## controls differ from the layout's data. `apply(base, overrides)` puts them back on a preset (idempotent, so it is safe on a preset that
-## already has them), and `preset(id)` is the layout as it is played: the data plus the player's overrides held in `overrides`.
+## An ENTRY is a single-control, base-layer binding the player can change: Light, Heavy, Signature, Guard, Dodge, Power, Mode, Context and
+## Transform where a layout has a single control for it. Fixed (not listed): the keyboard's move keys, the pad stick, the chords, gesture
+## bindings, the power layer (its partners follow), Pause and Hints.
 
-static var overrides: Dictionary = {}   # layout id -> Array of override rows (what the player changed)
+const ORDER: Array = ["light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "transform"]
+const FIXED: Array = ["pause", "hints"]
+const PAD_RESERVED: Array = ["pad:start", "pad:back"]
 
-const RESERVED_KB: Array = ["KeyN", "KeyT", "KeyY", "KeyP", "Escape"]
-const PAD_BINDABLE: Array = ["west", "north", "east", "south", "lb", "rb", "lt", "rt", "l3", "r3", "dpad_up", "dpad_down", "dpad_left", "dpad_right"]
-const ORDER: Array = ["move", "light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "transform"]
-const MOVE_STEPS: Array = ["up", "left", "down", "right"]
+## Where the screen saves (a test points it elsewhere so it never touches the player's file).
+static var save_path: String = SimInputRemap.USER_PATH
 
 
 ## The layouts a player can remap: keyboard and pad presets, in the data's order.
@@ -34,87 +30,24 @@ static func layouts() -> Array:
 	return out
 
 
-static var _pristine: Dictionary = {}
-
-
-## A layout as the data wrote it (no overrides): Controls' `SimInputData.base_preset(id)` when it exists, else a copy this class took of
-## `SimInputData.preset(id)` the first time it was asked, which is the data as long as nothing has applied overrides yet.
-static func base(id: String) -> Dictionary:
-	var s: GDScript = SimInputData
-	if s.has_method("base_preset"):
-		return s.call("base_preset", id)
-	if not _pristine.has(id):
-		_pristine[id] = SimInputData.preset(id).duplicate(true)
-	return _pristine[id]
-
-
-## A layout as it is played: its data with the player's overrides on it.
+## A layout as it is played (the data plus the player's overrides).
 static func preset(id: String) -> Dictionary:
-	var base: Dictionary = SimInputData.preset(id)
-	if base.is_empty() or not overrides.has(id):
-		return base
-	return apply(base, overrides[id])
+	return SimInputData.preset(id)
 
 
-static func _type(b: Dictionary) -> String:
-	if b.has("axis"):
-		return "axis"
-	return "chord" if (b["controls"] as Array).size() > 1 else "single"
-
-
-static func _key(b: Dictionary) -> String:
-	return "%s|%s|%s|%s" % [str(b.get("action", "")), str(b.get("layer", "")), str(b.get("gesture", "")), _type(b)]
-
-
-## The preset with override rows put on it: each row replaces the controls of the binding with the same action, layer, gesture and kind.
-static func apply(base: Dictionary, ovr: Array) -> Dictionary:
-	var out: Dictionary = base.duplicate(true)
-	var bs: Array = out.get("bindings", [])
-	for o in ovr:
-		var k: String = _key(o)
-		for b in bs:
-			if _key(b) == k:
-				b["controls"] = (o["controls"] as Array).duplicate()
-				break
-	return out
-
-
-## The override rows that take `base` to `current` (same bindings, some with other controls).
-static func diff(base: Dictionary, current: Dictionary) -> Array:
-	var out: Array = []
-	var a: Array = base.get("bindings", [])
-	var b: Array = current.get("bindings", [])
-	for i in range(mini(a.size(), b.size())):
-		if a[i]["controls"] != b[i]["controls"]:
-			out.append((b[i] as Dictionary).duplicate(true))
-	return out
-
-
-## The rebindable entries of a preset, in screen order: {id, action, bi (the binding's index), count (1, or 4 for the move keys)}.
+## The entries of a preset, in screen order: {id, action, index (among the action's base bindings, chords included), control}.
 static func entries(p: Dictionary) -> Array:
 	var out: Array = []
-	var bs: Array = p.get("bindings", [])
-	var dev: String = str(p.get("device", ""))
-	for i in range(bs.size()):
-		var b: Dictionary = bs[i]
-		var a: String = str(b.get("action", ""))
-		if a == "pause" or a == "hints" or b.has("layer") or b.has("gesture"):
+	var seen := {}
+	for row in SimInputRemap.listing(p):
+		var a: String = str(row["action"])
+		if row["layer"] != null or bool(row["fixed"]) or FIXED.has(a) or (row["controls"] as Array).size() != 1 or not ORDER.has(a):
 			continue
-		var cs: Array = b["controls"]
-		if b.has("axis"):
-			if dev == "kb" and cs.size() == 4:
-				out.append({"id": a, "action": a, "bi": i, "count": 4})
-			continue
-		if cs.size() != 1 or a == "move":
-			continue
-		out.append({"id": a, "action": a, "bi": i, "count": 1})
-	out.sort_custom(func(x, y): return _rank(str(x["action"])) < _rank(str(y["action"])))
+		var id: String = a if not seen.has(a) else "%s#%d" % [a, int(row["index"])]
+		seen[a] = true
+		out.append({"id": id, "action": a, "index": int(row["index"]), "control": str(row["controls"][0])})
+	out.sort_custom(func(x, y): return ORDER.find(str(x["action"])) < ORDER.find(str(y["action"])))
 	return out
-
-
-static func _rank(a: String) -> int:
-	var i: int = ORDER.find(a)
-	return i if i >= 0 else ORDER.size()
 
 
 static func entry(p: Dictionary, id: String) -> Dictionary:
@@ -124,127 +57,48 @@ static func entry(p: Dictionary, id: String) -> Dictionary:
 	return {}
 
 
-## The controls an entry has now.
-static func controls_of(p: Dictionary, e: Dictionary) -> Array:
-	return (p["bindings"][int(e["bi"])]["controls"] as Array).duplicate()
-
-
-## The entry and place that hold a control: {id, idx}, or {}.
-static func owner_of(p: Dictionary, control: String) -> Dictionary:
-	for e in entries(p):
-		var cs: Array = controls_of(p, e)
-		var at: int = cs.find(control)
-		if at >= 0:
-			return {"id": e["id"], "idx": at}
-	return {}
-
-
-## Whether any binding of a preset (a chord too) uses a control.
-static func uses(p: Dictionary, control: String) -> bool:
-	for b in p.get("bindings", []):
-		if (b["controls"] as Array).has(control):
-			return true
-	return false
-
-
-## Bindings that follow an entry: single-control bindings on `control` that are not entries themselves.
-static func _followers(p: Dictionary, ents: Array, control: String) -> Array:
-	var skip := {}
-	for e in ents:
-		skip[int(e["bi"])] = true
-	var out: Array = []
-	var bs: Array = p["bindings"]
-	for i in range(bs.size()):
-		if skip.has(i) or bs[i].has("axis"):
-			continue
-		if bs[i]["controls"] == [control]:
-			out.append(i)
-	return out
-
-
-## What happens if `control` is given to place `idx` of entry `id`: {status, with (the other entry's id, for a conflict)}. status is
-## "ok", "same" (it already has it), "conflict" (another entry has it: offer a swap), "reserved", "wrong_device" or "pair" (the other
-## half of a shared keyboard has it). `pair_p` is the paired preset ({} if none).
-static func check(p: Dictionary, pair_p: Dictionary, id: String, idx: int, control: String) -> Dictionary:
-	var dev: String = str(p.get("device", ""))
-	var prefix: String = "kb:" if dev == "kb" else "pad:"
-	if not control.begins_with(prefix):
-		return {"status": "wrong_device"}
-	var name: String = control.substr(prefix.length())
-	if dev == "kb":
-		var fkey: bool = name.length() <= 3 and name.begins_with("F") and name.substr(1).is_valid_int()
-		if RESERVED_KB.has(name) or fkey:
-			return {"status": "reserved"}
-	elif not PAD_BINDABLE.has(name):
-		return {"status": "reserved"}
-	if not pair_p.is_empty() and uses(pair_p, control):
-		return {"status": "pair"}
+## What happens if `control` is given to entry `id` of preset `layout_id` (as played): {status, with, overrides}. status is "ok" (overrides
+## are what to apply), "same" (it already has it), "conflict" (another action has it: `with` names it; call again with swap true to take it
+## and hand over the old control), "reserved" (the keyboard's N, T, Y, P, Esc and F-keys, Start and Back, or a control of Pause or Hints),
+## "pair" (the other half of a shared keyboard has it), "chord" (it is part of a chord, which stays as it is; `with` names the chord's action)
+## or "wrong_device".
+static func attempt(layout_id: String, id: String, control: String, swap: bool = false) -> Dictionary:
+	var p: Dictionary = preset(layout_id)
 	var e: Dictionary = entry(p, id)
 	if e.is_empty():
 		return {"status": "reserved"}
-	var cs: Array = controls_of(p, e)
-	if idx < 0 or idx >= cs.size():
-		return {"status": "reserved"}
-	if cs[idx] == control:
+	if str(e["control"]) == control:
 		return {"status": "same"}
-	var o: Dictionary = owner_of(p, control)
-	if not o.is_empty():
-		return {"status": "conflict", "with": str(o["id"]), "with_idx": int(o["idx"])}
-	return {"status": "ok"}
+	if PAD_RESERVED.has(control):
+		return {"status": "reserved"}
+	# A control that is part of a chord (LT + RT, L3 + R3, Space + E) stays with it: the chords are fixed.
+	for b in p.get("bindings", []):
+		if (b["controls"] as Array).size() > 1 and not b.has("axis") and (b["controls"] as Array).has(control):
+			return {"status": "chord", "with": str(b["action"])}
+	var r: Dictionary = SimInputRemap.swap(p, e["action"], null, int(e["index"]), control) if swap else SimInputRemap.rebind(p, e["action"], null, int(e["index"]), [control])
+	if not bool(r["ok"]):
+		var c: Dictionary = r["conflict"]
+		if not c.is_empty():
+			if FIXED.has(str(c["action"])):
+				return {"status": "reserved"}
+			return {"status": "conflict", "with": str(c["action"])}
+		return {"status": "wrong_device" if str(r["error"]).contains("control") else "reserved"}
+	var ovr: Array = SimInputRemap.diff(SimInputData.original(layout_id), r["preset"])
+	var eff: Dictionary = SimInputRemap.apply_overrides(SimInputData.original(layout_id), ovr)
+	for prob in SimInputData.check_bindings(eff):
+		match str(prob["rule"]):
+			"layout-reserved":
+				return {"status": "reserved"}
+			"layout-pair":
+				return {"status": "pair"}
+			"layout-device":
+				return {"status": "wrong_device"}
+			"layout-conflict", "layout-required":
+				return {"status": "reserved"}
+	return {"status": "ok", "overrides": ovr}
 
 
-## The preset after giving `control` to place `idx` of entry `id`, with what follows it; `swap` hands the old control to the entry that
-## had `control`. Returns {} if the control is taken and `swap` is false.
-static func rebind(p: Dictionary, id: String, idx: int, control: String, swap: bool) -> Dictionary:
-	var out: Dictionary = p.duplicate(true)
-	var ents: Array = entries(out)
-	var e: Dictionary = {}
-	for x in ents:
-		if x["id"] == id:
-			e = x
-	if e.is_empty():
-		return {}
-	var cs: Array = controls_of(out, e)
-	var old: String = str(cs[idx])
-	var o: Dictionary = owner_of(out, control)
-	if not o.is_empty() and not swap:
-		return {}
-	var fe: Array = _followers(out, ents, old)
-	var fo: Array = _followers(out, ents, control) if not o.is_empty() else []
-	cs[idx] = control
-	out["bindings"][int(e["bi"])]["controls"] = cs
-	for i in fe:
-		out["bindings"][i]["controls"] = [control]
-	if not o.is_empty():
-		var oe: Dictionary = {}
-		for x in ents:
-			if x["id"] == str(o["id"]):
-				oe = x
-		var ocs: Array = (out["bindings"][int(oe["bi"])]["controls"] as Array).duplicate()
-		ocs[int(o["idx"])] = old
-		# The same entry can hold both places (two move keys swapped): read its controls again.
-		if str(oe["id"]) == id:
-			ocs = (out["bindings"][int(e["bi"])]["controls"] as Array).duplicate()
-			ocs[int(o["idx"])] = old
-		out["bindings"][int(oe["bi"])]["controls"] = ocs
-		for i in fo:
-			out["bindings"][i]["controls"] = [old]
-	return out
-
-
-## Every entry holds a control and no control is held twice on one layer: what a remapped layout must satisfy.
-static func valid(p: Dictionary) -> bool:
-	var seen := {}
-	for e in entries(p):
-		for c in controls_of(p, e):
-			if str(c) == "" or seen.has(c):
-				return false
-			seen[c] = true
-	return true
-
-
-## The paired preset of a layout ("pair" in the data: the other half of a shared keyboard), as it is played, or {}.
-static func pair_of(id: String) -> Dictionary:
-	var base: Dictionary = SimInputData.preset(id)
-	var pid: String = str(base.get("pair", ""))
-	return preset(pid) if pid != "" else {}
+## Make `overrides` the layout's: applied to the data (so every reader of SimInputData.preset follows) and saved to the player's file.
+static func commit(layout_id: String, overrides: Array) -> void:
+	SimInputData.apply_overrides(layout_id, overrides)
+	SimInputData.save_overrides(save_path)

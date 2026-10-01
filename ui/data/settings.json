@@ -34,7 +34,7 @@
     "camera_launch_follow": { "auto": "Auto", "chase": "Chase", "split": "Split" },
     "thickness": { "0.75": "Thin", "1.0": "Normal", "1.5": "Thick" }
   },
-  "_remap": {
+  "remap": {
     "title": "REMAP CONTROLS",
     "layout": "Layout",
     "layout_help": "Pick the layout to change. Each layout keeps its own keys or buttons.",
@@ -49,20 +49,21 @@
     "conflict": "{control} is already {other}. Swap them?",
     "reserved": "{control} is kept for the game. Pick another.",
     "pair": "{control} belongs to the other player's keys. Pick another.",
+    "_chord": "{control} is part of the {other} buttons, which stay as they are. Pick another.",
     "wrong_device_kb": "That was not a key. Press a key.",
     "wrong_device_pad": "That was not a controller button. Press a button.",
     "done": "{action} is now {control}.",
     "same": "{action} already uses {control}.",
     "cancelled": "Cancelled.",
     "reset_done": "{layout} is back to its defaults.",
-    "swap": "SWAP",
-    "cancel": "CANCEL",
     "move_steps": {
       "up": "up",
       "left": "left",
       "down": "down",
       "right": "right"
     },
+    "swap": "SWAP",
+    "cancel": "CANCEL",
     "layouts": {
       "arena": "Arena (controller)",
       "brawler": "Brawler (controller)",
@@ -72,7 +73,6 @@
       "kb-shared-p2": "Keyboard, player 2"
     },
     "actions": {
-      "move": "Fly (four keys)",
       "light": "Light",
       "heavy": "Heavy",
       "signature": "Signature",
@@ -84,8 +84,7 @@
       "transform": "Transform"
     },
     "helps": {
-      "move": "The four keys that fly you: up, left, down and right, one after the other.",
-      "light": "A quick blow. Also the first special while Power is held.",
+        "light": "A quick blow. Also the first special while Power is held.",
       "heavy": "A slow, hard blow. Also the second special while Power is held.",
       "signature": "Your signature move, when you have the Charge for it.",
       "guard": "Hold to guard.",

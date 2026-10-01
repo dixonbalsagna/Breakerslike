@@ -74,11 +74,15 @@ func _ready() -> void:
 		hud.set_option("left_handed", true)
 	if args.has("touch"):
 		hud.set_option("touch_ui", true)
+	if args.has("full"):
+		hud.set_option("touch_preset", "touch-full")
 	if args.has("touch"):
 		# A mock of the host's touch state, for the screenshots: --touch=press shows the buttons held and a stick drag, --touch=ready the idle layout.
 		var tstate := {"attack": {"down": false, "hold": 0.0}, "guard": {"down": false}, "power": {"down": false}, "stick": {"active": false}}
 		if str(args["touch"]) == "press":
 			tstate = {"attack": {"down": true, "hold": 0.6}, "guard": {"down": false}, "power": {"down": true}, "stick": {"active": true, "base": Vector2(size.x * 0.2, size.y * 0.72), "thumb": Vector2(size.x * 0.2 + 90.0, size.y * 0.72 - 40.0), "sprint": false}}
+		if args.has("full"):
+			tstate["full"] = {"light": {"down": str(args["touch"]) == "press"}, "guard": {"down": str(args["touch"]) == "press"}}
 		hud.touch_state_fn = func(): return tstate
 		hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": str(args["touch"]) == "press"})
 	if args.has("device"):

@@ -32,6 +32,7 @@ var clear_zone := Rect2()                    # nothing draws here: the fighters'
 var frame_rect := Rect2()                    # where the camera may keep fighters: full width, below the columns
 var touch_reserve := Rect2()                 # portrait: kept free for Controls' touch controls (from the highest button down)
 var left_handed := false                     # the touch buttons on the left, the stick on the right (SimTouch mirrors them)
+var touch_full := false                      # the Full touch layout (nine buttons, SimTouch.layout with full = true) instead of Simple's three
 var touch_ctrl: Dictionary = {}              # SimTouch.layout(...) for this screen in touch mode: attack, guard, power, context circles and the stick zone
 var bark_single := false                     # touch landscape: one bark lane, on the side away from the buttons, the lines stacking as in portrait
 var cards_one := false                       # touch landscape: the buttons leave room for one wound card a side, not two
@@ -162,7 +163,7 @@ func _pass(insets: Vector4) -> void:
 	touch_ctrl = {}
 	if touch_ui:
 		var tmargin: float = maxf(maxf(vp.x - safe.end.x, vp.y - safe.end.y), 8.0 * dp)
-		touch_ctrl = SimTouch.layout(vp.x, vp.y, dp, portrait, left_handed, tmargin)
+		touch_ctrl = SimTouch.layout(vp.x, vp.y, dp, portrait, left_handed, tmargin, touch_full)
 	if portrait:
 		_portrait()
 		var fb_h2: float = maxf(touch_min if touch_ui else 40.0 * s, 34.0)
@@ -184,11 +185,22 @@ func _pass(insets: Vector4) -> void:
 			_touch_adjust()
 
 
-## The bounding box of the drawn touch buttons (attack, guard, power): what the fight and the columns must stay clear of.
+## The buttons the HUD keeps clear: Simple's attack, guard and power, or every Full button (the stick's zone is not a button).
+func touch_keys() -> Array:
+	if touch_full:
+		var out: Array = []
+		for k in touch_ctrl:
+			if k != "stick":
+				out.append(k)
+		return out
+	return ["attack", "guard", "power"]
+
+
+## The bounding box of the drawn touch buttons: what the fight and the columns must stay clear of.
 func _ctrl_box() -> Rect2:
 	var box := Rect2()
 	var first := true
-	for k in ["attack", "guard", "power"]:
+	for k in touch_keys():
 		if not touch_ctrl.has(k):
 			continue
 		var c: Dictionary = touch_ctrl[k]
@@ -378,7 +390,7 @@ func _portrait() -> void:
 	read_slot = Rect2(safe.position.x, rs_y2, safe.size.x, banner_c.y + 30.0 * s - rs_y2)
 	var reserve_top: float = vp.y * 0.78
 	if touch_ui and not touch_ctrl.is_empty():
-		for k in ["attack", "guard", "power"]:
+		for k in touch_keys():
 			if touch_ctrl.has(k):
 				reserve_top = minf(reserve_top, float(touch_ctrl[k].y) - float(touch_ctrl[k].r) - 6.0 * dp)
 	touch_reserve = Rect2(0, reserve_top, vp.x, vp.y - reserve_top)

@@ -13,6 +13,8 @@ extends RefCounted
 
 const HOLD_TICKS := 12.0
 const NAMES: Array = ["attack", "guard", "power"]
+## The Full layout's buttons (Controls' SimTouch.layout with full = true), in the order they are drawn.
+const FULL_NAMES: Array = ["light", "heavy", "signature", "context", "power", "mode", "transform", "dodge", "guard"]
 
 
 ## The circle {x, y, r} of a control, or {} (attack, guard, power, context).
@@ -36,13 +38,22 @@ static func sig(lay: UiLayout, state: Dictionary, intro_a: float, transform_avai
 		i += 1
 	if bool((state.get("transform", {}) as Dictionary).get("down", false)):
 		bits |= (1 << 3)
+	if lay.touch_full:
+		var fb := 0
+		var fi := 0
+		var full: Dictionary = state.get("full", {})
+		for n in FULL_NAMES:
+			if bool((full.get(n, {}) as Dictionary).get("down", false)):
+				fb |= (1 << fi)
+			fi += 1
+		bits |= fb << 4
 	var st: Dictionary = state.get("stick", {})
 	var sk: Array = []
 	if bool(st.get("active", false)):
 		var b: Vector2 = st.get("base", Vector2.ZERO)
 		var t: Vector2 = st.get("thumb", Vector2.ZERO)
 		sk = [int(b.x * 0.5), int(b.y * 0.5), int(t.x * 0.5), int(t.y * 0.5), bool(st.get("sprint", false))]
-	return [int(lay.vp.x), int(lay.vp.y), int(lay.dp * 100.0), lay.left_handed, bits, int(float((state.get("attack", {}) as Dictionary).get("hold", 0.0)) * HOLD_TICKS), sk, int(intro_a * 10.0), transform_avail]
+	return [int(lay.vp.x), int(lay.vp.y), int(lay.dp * 100.0), lay.left_handed, lay.touch_full, bits, int(float((state.get("attack", {}) as Dictionary).get("hold", 0.0)) * HOLD_TICKS), sk, int(intro_a * 10.0), transform_avail]
 
 
 static func draw(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, intro_a: float, transform_avail: bool) -> void:
@@ -76,6 +87,10 @@ static func draw(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, int
 			var fs0: int = UiText.px(16.0, s)
 			UiText.draw(ci, UiData.t("prompt.move"), Vector2(zc.x, zc.y - UiText.height(fs0) * 0.5 + UiText.ascent(fs0) - float(fs0) * 0.6), fs0, Color(ink, 0.8 * intro_a), 0)
 			UiText.draw(ci, UiData.t("prompt.move_hint"), Vector2(zc.x, zc.y - UiText.height(fs0) * 0.5 + UiText.ascent(fs0) + float(fs0) * 0.6), fs0, Color(ink, 0.6 * intro_a), 0)
+	if lay.touch_full:
+		_draw_full(ci, lay, s, state, transform_avail, ink, dark, edge, scrim, line)
+		UiText.no_outline = false
+		return
 	# The three buttons.
 	for n in NAMES:
 		var c: Dictionary = lay.touch_ctrl.get(n, {})
@@ -135,3 +150,26 @@ static func draw(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, int
 				var fs2: int = UiText.px(15.0, s)
 				UiText.draw(ci, UiData.t("prompt.transform"), Vector2(tp.x, tp.y - tr - float(fs2) * 0.4), fs2, Color(ink, 0.95 * intro_a), 0)
 	UiText.no_outline = false
+
+
+## The Full layout: a diamond of Light, Heavy, Signature and Context, Power and Mode above it, Transform beside it (lit while a form is
+## ready), Dodge and Guard stacked at the other edge. Each button carries its word; a held one fills.
+static func _draw_full(ci: CanvasItem, lay: UiLayout, s: float, state: Dictionary, transform_avail: bool, ink: Color, dark: Color, edge: Color, scrim: Color, line: float) -> void:
+	var full: Dictionary = state.get("full", {})
+	for n in FULL_NAMES:
+		var c: Dictionary = lay.touch_ctrl.get(n, {})
+		if c.is_empty():
+			continue
+		var down: bool = bool((full.get(n, {}) as Dictionary).get("down", false))
+		var p := Vector2(float(c.x), float(c.y))
+		var r: float = float(c.r)
+		var dim: float = 0.55 if (n == "transform" and not transform_avail and not down) else 1.0
+		ci.draw_circle(p, r, Color(ink, 0.88) if down else Color(scrim, 0.58 * dim))
+		ci.draw_arc(p, r, 0.0, TAU, 40, Color(edge, 0.9 * dim), line, true)
+		if n == "transform" and transform_avail and not down:
+			ci.draw_arc(p, r * 0.8, 0.0, TAU, 32, Color(UiLook.col(UiLook.CHARGE_READY)), line, true)
+		var word: String = UiData.t("prompt." + n) if (n == "power" or n == "guard") else UiData.t("prompt.full_" + n)
+		var fs: int = UiText.px(14.0, s)
+		while fs > int(UiLook.text_floor) and UiText.width(word, fs) > r * 1.7:
+			fs -= 1
+		UiText.draw(ci, word, Vector2(p.x, p.y + UiText.ascent(fs) - UiText.height(fs) * 0.5), fs, Color(dark if down else ink, dim), 0)
