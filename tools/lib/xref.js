@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const repoRoot = path.resolve(__dirname, '..', '..');
 const { xrefFight } = require('./xref-fight');
+const { xrefInput } = require('./xref-input');
 // Cross-reference rules between data files. Each rule runs only when the files it reads are
 // present and parsed; problems inside a single file are the schema's job, not this file's.
 // Findings are {level, file, line, pointer, rule, message} with rule "xref:<name>".
@@ -591,6 +592,7 @@ function xref(docs, root = repoRoot) {
   };
   if (docs.size > 1) scanSim(path.join(root, 'sim'));
 
+  xrefInput({ get, err, esc, isObj });
   xrefFight({ get, err, esc, isObj, plainKeys, docsFor: (re) => [...docs.keys()].filter((k) => re.test(k)).sort() });
   return findings;
 }

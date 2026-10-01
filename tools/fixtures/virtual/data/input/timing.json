@@ -1,0 +1,65 @@
+{
+  "_about": "Validator fixture, not game data: the timing.json sample from docs/controls/input-schema.md.",
+  "schema": 1,
+  "ticksPerSecond": 60,
+  "tapHold": {
+    "holdStart": 12,
+    "transformConfirm": 30,
+    "encoreConfirm": 18,
+    "encoreOffer": 180
+  },
+  "perfectBlock": {
+    "lightWindow": 8,
+    "heavyWindow": 10,
+    "buffer": 4,
+    "touchBufferBonus": 2,
+    "antiMashLockout": 18,
+    "assistFactor": 2
+  },
+  "dodge": {
+    "buffer": 4
+  },
+  "attackQueue": {
+    "max": 3,
+    "expiry": 36,
+    "upgradeWindow": 24,
+    "heavyKi": 4,
+    "signatureKi": 45,
+    "signatureUnfundedExpiry": 600
+  },
+  "mode": {
+    "toggleCooldown": 12
+  },
+  "touch": {
+    "flickToDodgeTicks": 4,
+    "flickThreshold": 0.7,
+    "outerRingScale": 1.3,
+    "outerRingHold": 6,
+    "fullDeflectionSprint": 30,
+    "swipeUpPx": 48,
+    "swipeUpTicks": 24,
+    "edgeIgnoreDp": 8
+  },
+  "stick": {
+    "deadzone": 0.2,
+    "quant": 16,
+    "triggerOn": 0.35,
+    "triggerOff": 0.25
+  },
+  "hitstopTicks": {
+    "light": 4,
+    "chain": 5,
+    "tradeFinal": 6,
+    "heavy": 7,
+    "guardBreak": 8,
+    "parry": 9,
+    "clashWave": 7,
+    "impact": 4,
+    "explosion": 5,
+    "beamConnect": 9,
+    "beamClash": 10,
+    "finisherHit1": 4,
+    "finisherHit2": 7,
+    "finalBlow": 18
+  }
+}

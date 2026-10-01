@@ -149,6 +149,18 @@
     {
       "match": "data/biomes/settlements.json",
       "schema": "biomes-settlements.schema.json"
+    },
+    {
+      "match": "data/input/actions.json",
+      "schema": "input-actions.schema.json"
+    },
+    {
+      "match": "data/input/layouts.json",
+      "schema": "input-layouts.schema.json"
+    },
+    {
+      "match": "data/input/timing.json",
+      "schema": "input-timing.schema.json"
     }
   ]
 }

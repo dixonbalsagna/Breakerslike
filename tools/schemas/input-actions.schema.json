@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/input-actions",
+  "title": "input actions (schema 1)",
+  "description": "data/input/actions.json: the action list (docs/controls/input-schema.md section 3, ADR 0008): id, kind, which intent fields it writes, and which layer and value it takes. `burst` has no entry: the sim derives it from the power tap rules. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (action ids are unique, layer and gesture actions carry their value and layer) are checked by tools/lib/xref-input.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "actions"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "kind": {
+            "enum": [
+              "axis",
+              "press",
+              "hold",
+              "layer",
+              "chord",
+              "gesture",
+              "system"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "mx",
+                "my",
+                "light",
+                "heavy",
+                "sig",
+                "upgrade",
+                "guard",
+                "guardPress",
+                "dodge",
+                "dodgePress",
+                "power",
+                "powerPress",
+                "special",
+                "context",
+                "mode",
+                "transform"
+              ]
+            }
+          },
+          "layer": {
+            "enum": [
+              "power"
+            ]
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

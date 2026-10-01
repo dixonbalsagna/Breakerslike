@@ -4316,6 +4316,557 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "input-actions-version",
+      "schema": "input-actions.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/actions.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "input-actions-kind",
+      "schema": "input-actions.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/actions.json",
+          "set": {
+            "/actions/1/kind": "tap"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/actions/1/kind"
+      }
+    },
+    {
+      "id": "input-actions-field",
+      "schema": "input-actions.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/actions.json",
+          "set": {
+            "/actions/1/fields/0": "punch"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/actions/1/fields/0"
+      }
+    },
+    {
+      "id": "input-actions-duplicate-id",
+      "schema": "input-actions.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/actions.json",
+          "set": {
+            "/actions/2/id": "light"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:actions-id",
+        "pointer": "/actions/2/id"
+      }
+    },
+    {
+      "id": "input-actions-layer-needs-value",
+      "schema": "input-actions.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/actions.json",
+          "del": [
+            "/actions/7/value"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:actions-value",
+        "pointer": "/actions/7"
+      }
+    },
+    {
+      "id": "input-actions-underscore-ok",
+      "schema": "input-actions.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/actions.json",
+          "set": {
+            "/actions/0/_note": "a comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-layouts-version",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "input-layouts-device",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/0/device": "phone"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/presets/0/device"
+      }
+    },
+    {
+      "id": "input-layouts-control-id",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/0/bindings/0/controls/0": "stick-left"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/presets/0/bindings/0/controls/0"
+      }
+    },
+    {
+      "id": "input-layouts-gesture",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/2/bindings/2/gesture": "wiggle"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/presets/2/bindings/2/gesture"
+      }
+    },
+    {
+      "id": "input-layouts-slot-underscore-ok",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/2/slot/_note": "a comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-layouts-unknown-action",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/0/bindings/5/action": "teleport"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-action",
+        "pointer": "/presets/0/bindings/5/action"
+      }
+    },
+    {
+      "id": "input-layouts-pad-control-in-keyboard",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/3/bindings/1/controls/0": "pad:south"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-device",
+        "pointer": "/presets/3/bindings/1/controls/0"
+      }
+    },
+    {
+      "id": "input-layouts-missing-guard",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "del": [
+            "/presets/0/bindings/2"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-required",
+        "pointer": "/presets/0"
+      }
+    },
+    {
+      "id": "input-layouts-simple-reaches-heavy-by-upgrade",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/2/bindings/2/action": "upgrade_sig"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-required",
+        "pointer": "/presets/2"
+      }
+    },
+    {
+      "id": "input-layouts-control-bound-twice",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/0/bindings/6/controls/0": "pad:west"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-conflict",
+        "pointer": "/presets/0/bindings/6"
+      }
+    },
+    {
+      "id": "input-layouts-layer-without-power",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/0/bindings/4/action": "mode"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-layer",
+        "pointer": "/presets/0"
+      }
+    },
+    {
+      "id": "input-layouts-unlayerable-action",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/0/bindings/9/action": "guard"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-layer",
+        "pointer": "/presets/0/bindings/9/action"
+      }
+    },
+    {
+      "id": "input-layouts-pair-points-away",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/5/pair": "kb-solo"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-pair",
+        "pointer": "/presets/5/pair"
+      }
+    },
+    {
+      "id": "input-layouts-pair-shares-key",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/5/bindings/1/controls/0": "kb:KeyF"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-pair",
+        "pointer": "/presets/4/pair"
+      }
+    },
+    {
+      "id": "input-layouts-reserved-key",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/3/bindings/1/controls/0": "kb:KeyP"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-reserved",
+        "pointer": "/presets/3/bindings/1/controls/0"
+      }
+    },
+    {
+      "id": "input-layouts-keyboard-move-needs-axis",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "del": [
+            "/presets/3/bindings/0/axis"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-axis",
+        "pointer": "/presets/3/bindings/0"
+      }
+    },
+    {
+      "id": "input-layouts-two-defaults",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/1/default": true
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-default",
+        "pointer": "/presets/0"
+      }
+    },
+    {
+      "id": "input-layouts-duplicate-preset-id",
+      "schema": "input-layouts.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/layouts.json",
+          "set": {
+            "/presets/1/id": "arena"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:layout-id",
+        "pointer": "/presets/1/id"
+      }
+    },
+    {
+      "id": "input-timing-version",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "input-timing-missing-block",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "del": [
+            "/touch"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "input-timing-fractional-ticks",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/tapHold/holdStart": 12.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/tapHold/holdStart"
+      }
+    },
+    {
+      "id": "input-timing-unknown-key",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/dodge/cooldown": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/dodge/cooldown"
+      }
+    },
+    {
+      "id": "input-timing-hitstop-underscore-ok",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/hitstopTicks/_note": "a comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-trigger-order",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/stick/triggerOff": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-order",
+        "pointer": "/stick/triggerOff"
+      }
+    },
+    {
+      "id": "input-timing-perfect-window",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/perfectBlock/lightWindow": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-perfect",
+        "pointer": "/perfectBlock/lightWindow"
+      }
+    },
+    {
+      "id": "input-timing-hold-order",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/tapHold/encoreConfirm": 40
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-hold",
+        "pointer": "/tapHold/encoreConfirm"
+      }
+    },
+    {
+      "id": "input-timing-queue-expiry",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/attackQueue/signatureUnfundedExpiry": 90
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-queue",
+        "pointer": "/attackQueue/signatureUnfundedExpiry"
+      }
+    },
+    {
+      "id": "input-timing-hitstop-order",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/hitstopTicks/light": 12
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-hitstop-order",
+        "pointer": "/hitstopTicks/light"
+      }
+    },
+    {
+      "id": "input-timing-hitstop-budget",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/hitstopTicks/finalBlow": 45
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-hitstop-budget",
+        "pointer": "/hitstopTicks/finalBlow"
+      }
     }
   ],
   "text": [

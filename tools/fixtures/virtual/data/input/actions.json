@@ -1,0 +1,141 @@
+{
+  "_about": "Validator fixture, not game data: the actions.json sample from docs/controls/input-schema.md.",
+  "schema": 1,
+  "actions": [
+    {
+      "id": "move",
+      "kind": "axis",
+      "fields": [
+        "mx",
+        "my"
+      ]
+    },
+    {
+      "id": "light",
+      "kind": "press",
+      "fields": [
+        "light"
+      ]
+    },
+    {
+      "id": "heavy",
+      "kind": "press",
+      "fields": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "signature",
+      "kind": "press",
+      "fields": [
+        "sig"
+      ]
+    },
+    {
+      "id": "guard",
+      "kind": "hold",
+      "fields": [
+        "guard",
+        "guardPress"
+      ]
+    },
+    {
+      "id": "dodge",
+      "kind": "hold",
+      "fields": [
+        "dodge",
+        "dodgePress"
+      ]
+    },
+    {
+      "id": "power",
+      "kind": "hold",
+      "fields": [
+        "power",
+        "powerPress"
+      ],
+      "layer": "power"
+    },
+    {
+      "id": "special1",
+      "kind": "layer",
+      "layer": "power",
+      "fields": [
+        "special"
+      ],
+      "value": 1
+    },
+    {
+      "id": "special2",
+      "kind": "layer",
+      "layer": "power",
+      "fields": [
+        "special"
+      ],
+      "value": 2
+    },
+    {
+      "id": "special3",
+      "kind": "layer",
+      "layer": "power",
+      "fields": [
+        "special"
+      ],
+      "value": 3
+    },
+    {
+      "id": "special_auto",
+      "kind": "layer",
+      "layer": "power",
+      "fields": [
+        "special"
+      ],
+      "value": 4
+    },
+    {
+      "id": "context",
+      "kind": "press",
+      "fields": [
+        "context"
+      ]
+    },
+    {
+      "id": "mode",
+      "kind": "press",
+      "fields": [
+        "mode"
+      ]
+    },
+    {
+      "id": "transform",
+      "kind": "chord",
+      "fields": [
+        "transform"
+      ]
+    },
+    {
+      "id": "upgrade_heavy",
+      "kind": "gesture",
+      "fields": [
+        "upgrade"
+      ],
+      "value": 1
+    },
+    {
+      "id": "upgrade_sig",
+      "kind": "gesture",
+      "fields": [
+        "upgrade"
+      ],
+      "value": 2
+    },
+    {
+      "id": "pause",
+      "kind": "system"
+    },
+    {
+      "id": "hints",
+      "kind": "system"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/input-layouts",
+  "title": "input layouts (schema 1)",
+  "description": "data/input/layouts.json: the layout presets (three pads, three or four keyboards, two touch) as control-to-action bindings (docs/controls/input-schema.md section 4, ADR 0008). A binding is {controls, action, layer?, gesture?, axis?}: one control for a normal binding, two or more for a chord, four plus an axis for a keyboard move. layer \"power\" makes it active only while `power` is held. Version field: schema. Policy: closed except keys starting with an underscore (also inside `slot`, which the proposal left without it). Cross-references (layout-action, layout-device, layout-required, layout-conflict, layout-layer, layout-pair, layout-reserved, layout-default, layout-axis, layout-id) are checked by tools/lib/xref-input.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "presets"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "presets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "device",
+          "players",
+          "bindings"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "device": {
+            "enum": [
+              "pad",
+              "kb",
+              "touch"
+            ]
+          },
+          "players": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "default": {
+            "type": "boolean"
+          },
+          "pair": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "slot": {
+            "type": "object",
+            "properties": {
+              "autoMode": {
+                "type": "boolean"
+              },
+              "autoBurst": {
+                "type": "boolean"
+              },
+              "specialPick": {
+                "enum": [
+                  "chosen",
+                  "auto"
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "bindings": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "controls",
+                "action"
+              ],
+              "properties": {
+                "controls": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(kb|pad|touch):[A-Za-z0-9_]+$"
+                  }
+                },
+                "action": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "layer": {
+                  "enum": [
+                    "power"
+                  ]
+                },
+                "gesture": {
+                  "enum": [
+                    "hold",
+                    "swipe_up",
+                    "flick",
+                    "outer_ring_hold"
+                  ]
+                },
+                "axis": {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "items": {
+                    "enum": [
+                      "up",
+                      "left",
+                      "down",
+                      "right"
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

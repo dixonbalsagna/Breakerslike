@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/input-timing",
+  "title": "input timing (schema 1)",
+  "description": "data/input/timing.json: every tick value of the input scheme: hold thresholds, the perfect-block windows, buffers and lockouts, the attack queue, the mode toggle, touch gestures, stick and trigger settings, and the hit-stop table (docs/controls/input-schema.md section 5; it carries over feel-schema.md's hit-stop, hold and stick values). Times are whole ticks at 60 per second unless a key says otherwise (px, dp, ki, fractions). Version field: schema. Policy: closed except keys starting with an underscore; hitstopTicks takes underscore comment keys. Cross-references (timing-order, timing-perfect, timing-hold, timing-queue, timing-hitstop-order, timing-hitstop-budget) are checked by tools/lib/xref-input.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "ticksPerSecond",
+    "tapHold",
+    "perfectBlock",
+    "dodge",
+    "attackQueue",
+    "mode",
+    "touch",
+    "stick",
+    "hitstopTicks"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "ticksPerSecond": {
+      "const": 60
+    },
+    "tapHold": {
+      "type": "object",
+      "required": [
+        "holdStart",
+        "transformConfirm",
+        "encoreConfirm",
+        "encoreOffer"
+      ],
+      "properties": {
+        "holdStart": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transformConfirm": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "encoreConfirm": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "encoreOffer": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "perfectBlock": {
+      "type": "object",
+      "required": [
+        "lightWindow",
+        "heavyWindow",
+        "buffer",
+        "touchBufferBonus",
+        "antiMashLockout",
+        "assistFactor"
+      ],
+      "properties": {
+        "lightWindow": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "heavyWindow": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "buffer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "touchBufferBonus": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "antiMashLockout": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "assistFactor": {
+          "type": "number",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "dodge": {
+      "type": "object",
+      "required": [
+        "buffer"
+      ],
+      "properties": {
+        "buffer": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "attackQueue": {
+      "type": "object",
+      "required": [
+        "max",
+        "expiry",
+        "upgradeWindow",
+        "heavyKi",
+        "signatureKi",
+        "signatureUnfundedExpiry"
+      ],
+      "properties": {
+        "max": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expiry": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "upgradeWindow": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "heavyKi": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "signatureKi": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "signatureUnfundedExpiry": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "mode": {
+      "type": "object",
+      "required": [
+        "toggleCooldown"
+      ],
+      "properties": {
+        "toggleCooldown": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "touch": {
+      "type": "object",
+      "required": [
+        "flickToDodgeTicks",
+        "flickThreshold",
+        "outerRingScale",
+        "outerRingHold",
+        "fullDeflectionSprint",
+        "swipeUpPx",
+        "swipeUpTicks",
+        "edgeIgnoreDp"
+      ],
+      "properties": {
+        "flickToDodgeTicks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "flickThreshold": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "outerRingScale": {
+          "type": "number",
+          "minimum": 1
+        },
+        "outerRingHold": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fullDeflectionSprint": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "swipeUpPx": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "swipeUpTicks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "edgeIgnoreDp": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "stick": {
+      "type": "object",
+      "required": [
+        "deadzone",
+        "quant",
+        "triggerOn",
+        "triggerOff"
+      ],
+      "properties": {
+        "deadzone": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 0.5
+        },
+        "quant": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 127
+        },
+        "triggerOn": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "triggerOff": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "hitstopTicks": {
+      "type": "object",
+      "required": [
+        "light",
+        "chain",
+        "tradeFinal",
+        "heavy",
+        "guardBreak",
+        "parry",
+        "clashWave",
+        "impact",
+        "explosion",
+        "beamConnect",
+        "beamClash",
+        "finisherHit1",
+        "finisherHit2",
+        "finalBlow"
+      ],
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][A-Za-z0-9]*)$"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 60
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}
