@@ -31,7 +31,7 @@ func _match(seed: int, every: int) -> void:
 	var base0 := S.base.duplicate()
 	var steps: int = 0
 	var worst := {}
-	while S.game.ko == null and steps < 43200:
+	while S.game.ko == null and steps < 54000:
 		SimCore.step(S, null)
 		S.out.fx.clear()
 		S.out.feed.clear()
@@ -61,6 +61,7 @@ func _scan(S: SimState, base0: PackedFloat32Array, tick: int, seed: int, worst: 
 	var pit_ex: Array = []
 	var pit_idx: int = -1
 	var spike_idx: int = -1
+	var step_idx: int = -1
 	var newstep_ex: Array = []
 	for i in range(NC):
 		var j: int = (i + 1) % NC
@@ -71,6 +72,8 @@ func _scan(S: SimState, base0: PackedFloat32Array, tick: int, seed: int, worst: 
 			steep += 1
 		if d > STEP_NEW and d - d0 > STEP_NEW:
 			newstep += 1
+			if step_idx < 0:
+				step_idx = i
 			if newstep_ex.size() < 3:
 				newstep_ex.append("x %.0f step %.0f (base %.0f)" % [float(i) * COL, d, d0])
 		if d > maxstep:
@@ -127,6 +130,7 @@ func _scan(S: SimState, base0: PackedFloat32Array, tick: int, seed: int, worst: 
 					hole_ex.append("x %.0f ground %.0f beside surfaces %.0f / %.0f" % [float(i) * COL, G[i], G[l] + S.water[l], G[j] + S.water[j]])
 	# buildings on the ground
 	var tilted: int = 0
+	var tilted_deep: int = 0
 	var tilt_ex: Array = []
 	var alive: int = 0
 	for b in S.buildings:
@@ -142,17 +146,20 @@ func _scan(S: SimState, base0: PackedFloat32Array, tick: int, seed: int, worst: 
 			lo = minf(lo, g)
 			hi = maxf(hi, g)
 		if hi - lo > TILT:
-			tilted += 1
-			if tilt_ex.size() < 3:
-				tilt_ex.append("b%d x %.0f varies %.0f over w %.0f" % [b.idx, b.x, hi - lo, b.w])
+			if b.row > 1.0:
+				tilted_deep += 1   # a deep row's ground is the renderer's own per-row ground, not this heightfield
+			else:
+				tilted += 1
+				if tilt_ex.size() < 3:
+					tilt_ex.append("b%d row %d x %.0f varies %.0f over w %.0f" % [b.idx, int(b.row), b.x, hi - lo, b.w])
 	# fighters in the ground
 	var buried: int = 0
 	for f in S.fighters:
 		if f.state != "launched" and f.y < WorldTerrain.groundY(S, f.x) - 20.0 and f.y > WorldTerrain.groundY(S, f.x) - 1.0e6 and not (S.water[int(f.x / COL) % NC] > 0.0):
 			buried += 1
-	print("AUD seed %d tick %5d%s craters %d | steps>1bh %d new-steps %d (max %.0f at x %.0f) spikes %d pits %d clamp up %d low %d | wet %d (max depth %.0f, windows %d) water cliffs %d holes %d perched %d | bldgs alive %d tilted %d | fighters in ground %d" % [seed, tick, " FINAL" if final else "", S.craters.size(), steep, newstep, maxstep, maxstep_x, spikes, pits, clampU, clampL, wet, maxdepth, S.waterWin.size(), cliffs, holes, perched, alive, tilted, buried])
+	print("AUD seed %d tick %5d%s craters %d | steps>1bh %d new-steps %d (max %.0f at x %.0f) spikes %d pits %d clamp up %d low %d | wet %d (max depth %.0f, windows %d) water cliffs %d holes %d perched %d | bldgs alive %d tilted (rows 0-1) %d, deep rows %d | fighters in ground %d" % [seed, tick, " FINAL" if final else "", S.craters.size(), steep, newstep, maxstep, maxstep_x, spikes, pits, clampU, clampL, wet, maxdepth, S.waterWin.size(), cliffs, holes, perched, alive, tilted, tilted_deep, buried])
 	if final:
-		for pi in [pit_idx, spike_idx]:
+		for pi in [pit_idx, spike_idx, step_idx]:
 			if pi >= 0:
 				var line: String = "    profile at column %d (x %.0f): " % [pi, float(pi) * COL]
 				for k in range(-5, 6):

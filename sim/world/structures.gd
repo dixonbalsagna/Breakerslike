@@ -25,10 +25,13 @@ const IMPLODE_SPEED: float = 1000.0 * WS   # the ripple's speed, units per secon
 const IMPLODE_MAX_DELAY: float = 1.0
 const IMPLODE_EVENT_CAP: int = 24          # building_fall events per blast; the rest fold into one summary
 const BH: float = 75.0
-const RUBBLE_H_FRAC: float = 0.10          # heap height as a share of the building's standing height
+const RUBBLE_H_FRAC: float = 0.06          # heap height as a share of the building's standing height
 const RUBBLE_MIN: float = 0.5 * BH
-const RUBBLE_MAX: float = 6.0 * BH
-const RUBBLE_SPILL: float = 0.6            # the heap is 2 * this * w wide (a mound 1.2 w across the footprint)
+const RUBBLE_MAX: float = 4.0 * BH
+const RUBBLE_SPILL: float = 0.8            # the heap is 2 * this * w wide (a mound 1.6 w across the footprint)
+const RUBBLE_SLOPE: float = 1.0            # the heap's steepest slope (crest height is capped to it): at most 45 degrees
+const RUBBLE_CREST_K: float = 1.54         # the steepest slope of the (1 - u^2)^2 profile is this times crest over half width
+const RUBBLE_ROW_MAX: float = 1.0          # only buildings in rows up to this leave a heap on the ground (the fighter plane's); deeper rows' heaps are the event's cosmetic ones
 const RUBBLE_BOWL_CAP: float = 0.3         # inside a fresh bowl the heap is at most this share of the local depth
 
 
@@ -40,6 +43,43 @@ static func curH(b) -> float:
 		# a skyscraper with floors gone stands as tall as its top standing floor
 		return float(WorldBrunt.topFloor(b) + 1) * WorldBrunt.floorH(b)
 	return b.h * (0.3 + 0.7 * b.hp / b.maxhp)
+
+
+## The ground a building stands on: the highest ground over its footprint (T4; Rendering draws footings the same way), so a
+## heap or a rim beside it never leaves it floating at one edge or half buried.
+static func baseY(S: SimState, b) -> float:
+	var NC: int = SimConst.NC
+	var COL: float = SimConst.COL
+	var c0: int = int(floor((b.x - b.w * 0.5) / COL))
+	var c1: int = int(floor((b.x + b.w * 0.5) / COL)) + 1
+	var m: float = -1.0e9
+	for c in range(c0, c1 + 1):
+		var i: int = posmod(c, NC)
+		m = maxf(m, S.base[i] + S.deform[i])
+	return m
+
+
+## Which of the columns c0 - half .. c0 + half lie under a standing building's footing (its footprint and the one column each side
+## that baseY reads)? 1 for those, 0 for the rest. The terrain relaxation leaves them alone and a heap never lands on them.
+static func pinned(S: SimState, c0: int, half: int) -> PackedByteArray:
+	var NC: int = SimConst.NC
+	var COL: float = SimConst.COL
+	var cnt: int = mini(2 * half + 1, NC)
+	var out := PackedByteArray()
+	out.resize(cnt)
+	out.fill(0)
+	var xc: float = float(c0) * COL
+	for bi in near(S, xc, float(half) * COL + COL):
+		var b = S.buildings[bi]
+		if not b.alive:
+			continue
+		var k0: int = int(floor((b.x - b.w * 0.5) / COL)) - 1
+		var k1: int = int(floor((b.x + b.w * 0.5) / COL)) + 2
+		for c in range(k0, k1 + 1):
+			var k: int = posmod(c - (c0 - half), NC)
+			if k < cnt:
+				out[k] = 1
+	return out
 
 
 ## Build the spatial index (once per world; the buildings never move).
@@ -85,7 +125,7 @@ static func damageBuilding(S: SimState, b, d: float, cause, mode: String = "burs
 	var dead: float = SimMathx.jmin(b.popAlive, b.pop * frac * 1.3)
 	if dead > 0.0 and not local:
 		WorldCollateral.kill(S, b.idx, dead, cause, evt, cx)
-	var gy: float = WorldTerrain.groundY(S, b.x)
+	var gy: float = baseY(S, b)
 	if b.hp <= 0.0:
 		b.alive = false
 		S.world.structuresLost += 1.0
@@ -120,30 +160,42 @@ static func collapse(S: SimState, b, cause, mode: String, cx: float, evt: float)
 
 
 ## The heap a fallen building leaves: a smooth mound over its footprint, added to the ground (S.deform) and recorded in
-## S.rubble. Inside a fresh bowl it is capped so it never quietly rebuilds the crater. Returns the crest height.
+## S.rubble. Only buildings in the fighter plane's rows (RUBBLE_ROW_MAX) add to the ground: the planet has one heightfield,
+## and a heap from a building 38 fighter heights behind the plane used to stack with the front rows' on the plane itself
+## (docs/world/terrain-audit.md). The mound is gentle (crest capped to RUBBLE_SLOPE), skips columns under standing buildings,
+## and is relaxed to the angle of repose. Inside a fresh bowl it is capped so it never quietly rebuilds the crater. Returns the
+## crest height (the cosmetic heap for a deeper row).
 static func _heap(S: SimState, b) -> float:
 	var NC: int = SimConst.NC
 	var COL: float = SimConst.COL
-	var H: float = clampf(RUBBLE_H_FRAC * b.h, RUBBLE_MIN, RUBBLE_MAX)
+	var half: float = RUBBLE_SPILL * b.w
+	var H: float = minf(clampf(RUBBLE_H_FRAC * b.h, RUBBLE_MIN, RUBBLE_MAX), RUBBLE_SLOPE * half / RUBBLE_CREST_K)
 	var c0: int = int(floor(SimWrap.wrap(b.x) / COL))
 	var here: float = S.deform[c0]
 	if here < -0.5 * H:
 		H = minf(H, RUBBLE_BOWL_CAP * (-here))
-	if H <= 0.0:
-		return 0.0
-	var half: float = RUBBLE_SPILL * b.w
+	if H <= 0.0 or b.row > RUBBLE_ROW_MAX:
+		return maxf(H, 0.0)
 	var n: int = int(ceil(half / COL))
+	var pin: PackedByteArray = pinned(S, c0, n)
+	var lim: float = WorldCrater.REPOSE_SLOPE * COL
 	for k in range(-n, n + 1):
 		var i: int = (c0 + k + NC) % NC
 		var u: float = absf(float(k) * COL) / half
-		if u >= 1.0:
+		if u >= 1.0 or pin[k + n] == 1:
 			continue
+		# the mound tapers toward a standing building's footing, so it never leaves a wall against it
+		var gap: int = 1000
+		for q in range(-n, n + 1):
+			if pin[q + n] == 1:
+				gap = mini(gap, absi(q - k))
 		var t: float = 1.0 - u * u
-		var add: float = H * t * t
+		var add: float = minf(H * t * t, float(gap) * lim * 0.9)
 		var v: float = minf(WorldCrater.DEFORM_CEIL, S.deform[i] + add)
 		var got: float = v - S.deform[i]
 		S.deform[i] = v
 		S.rubble[i] += got
+	WorldCrater.relax(S, c0, n + WorldCrater.REPOSE_PAD)
 	return H
 
 
@@ -162,7 +214,7 @@ static func damageArea(S: SimState, x: float, y: float, r: float, dmg: float, ca
 			continue
 		if not beam and dz(b) > Z_REACH:
 			continue
-		var top: float = WorldTerrain.groundY(S, b.x) + curH(b)
+		var top: float = baseY(S, b) + curH(b)
 		if y - r * 0.6 > top:
 			continue
 		damageBuilding(S, b, dmg * (1.0 - SimMathx.jclamp(d / r, 0.0, 1.0) * 0.7), cause, "implode", x, evt)
@@ -209,7 +261,7 @@ static func nearestBuilding(S: SimState, x: float, sign: float, maxD: float, y: 
 		if not b.alive or b.row != PLANE_ROW:
 			continue
 		var d: float = SimWrap.sdx(x, b.x) * sign
-		if d > NEAR_MIN and d < maxD and d < bd and y < WorldTerrain.groundY(S, b.x) + curH(b) + 40.0:
+		if d > NEAR_MIN and d < maxD and d < bd and y < baseY(S, b) + curH(b) + 40.0:
 			bd = d
 			best = b
 	return {"b": best, "d": bd} if best != null else null

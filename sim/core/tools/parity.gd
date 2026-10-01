@@ -355,7 +355,7 @@ const WIRED: Array = [
 	["VORR/meters.json", ["meters", "menace", "effects", 0, "perPoint"], 0.3],
 	["VORR/meters.json", ["meters", "menace", "effects", 0, "cap"], 0.01],
 	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0],
-	["VORR/meters.json", ["meters", "menace", "effects", 2, "perPoint"], 50.0, 12],
+	["VORR/meters.json", ["meters", "menace", "effects", 2, "perPoint"], 50.0, 18],
 	["VORR/meters.json", ["meters", "menace", "decay", "rate"], 3.0],
 	["VORR/meters.json", ["meters", "menace", "decay", "delayTicks"], 30],
 	["VORR/meters.json", ["meters", "menace", "sources", 0, "amount"], 5.0],
@@ -365,10 +365,10 @@ const WIRED: Array = [
 	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "speed"], 0.5],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "damage"], 0.5],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["tiers", "launch"], 0.8],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaR"], 600.0],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaRPerTier"], 300.0],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmg"], 900.0],
-	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmgPerTier"], 900.0],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaR"], 600.0, 7],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaRPerTier"], 300.0, 7],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmg"], 900.0, 7],
+	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmgPerTier"], 900.0, 7],
 	[["KAI/wounds.json", "VORR/wounds.json"], ["guardWearSplit"], {"arms": 0.6, "legs": 0.4}, 16],   # the data is 0.4 / 0.6 (QA's value set); any other split
 ]
 
@@ -378,7 +378,7 @@ func _wiredNumbers() -> String:
 	for id in FighterData.order():
 		for fname in ["fighter.json", "wounds.json", "meters.json", "ladder.json"]:
 			files[id + "/" + fname] = FileAccess.get_file_as_string(FighterData.ROOT + id + "/" + fname)
-	var base := {3: _wiredRun(3), 12: _wiredRun(12), 16: _wiredRun(16)}
+	var base := {3: _wiredRun(3), 7: _wiredRun(7), 12: _wiredRun(12), 16: _wiredRun(16), 18: _wiredRun(18)}
 	var bad: Array = []
 	FighterData.quiet = true
 	for i in range(WIRED.size()):

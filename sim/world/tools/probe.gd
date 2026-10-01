@@ -758,6 +758,102 @@ func _init() -> void:
 		WorldStructures.damageArea(Sh, tall3.x, 0.0, 600.0, 1.0e8, Sh.fighters[1])
 		check(not tall3.alive, "an area blast still levels a skyscraper whole")
 
+	print("== terrain fixes T1 to T4 (docs/world/terrain-audit.md) ==")
+	var lim_t: float = WorldCrater.REPOSE_SLOPE * SimConst.COL
+	# T2: a wall on flat plains relaxes to the angle of repose, conserving volume
+	var St_t := fresh()
+	var cw: int = int(X(2100.0) / SimConst.COL)
+	var vol0_t: float = _sum(St_t.deform)
+	for k in range(-3, 4):
+		St_t.deform[cw + k] = 450.0
+		St_t.rubble[cw + k] = 450.0
+	var vol1_t: float = _sum(St_t.deform)
+	var mg_t: float = WorldCrater.relax(St_t, cw, 40)
+	var worst_step: float = 0.0
+	for k in range(-60, 60):
+		worst_step = maxf(worst_step, absf((St_t.base[cw + k + 1] + St_t.deform[cw + k + 1]) - (St_t.base[cw + k] + St_t.deform[cw + k])))
+	print("  a 7-column wall of 450: largest step %.1f after relaxing (limit %.0f), volume %.0f -> %.0f, rubble %.0f" % [worst_step, lim_t, vol1_t, _sum(St_t.deform), _sum(St_t.rubble)])
+	check(worst_step <= lim_t + WorldCrater.REPOSE_EPS + 0.5, "a wall relaxes to the angle of repose")
+	check(absf(_sum(St_t.deform) - vol1_t) < 2.0, "the relaxation conserves volume")
+	check(absf(_sum(St_t.rubble) - 7.0 * 450.0) < 2.0, "and its rubble")
+	# craters stay as dug: relaxing a fresh crater of any size changes nothing
+	var moved_by_relax: float = 0.0
+	for E in [0.5, 2.0, 8.0, 30.0]:
+		var Sc_t := fresh()
+		var rc = WorldCrater.dig(Sc_t, X(2050.0), E, Sc_t.fighters[1], "impact", 0.0, 1.0, E > 20.0)
+		var before := Sc_t.deform.duplicate()
+		WorldCrater.relax(Sc_t, int(X(2050.0) / SimConst.COL), int(rc.r * 3.0 / SimConst.COL) + 20)
+		for i in range(SimConst.NC):
+			moved_by_relax += absf(Sc_t.deform[i] - before[i])
+	check(moved_by_relax < 0.5, "a crater's bowl and rim are already inside the angle of repose (relaxing moves %.2f units in all)" % moved_by_relax)
+	# T3: a slide over a heap does not cut a slot_t; over flat ground it still carves
+	var Sh_t := fresh()
+	var ch_t: int = int(X(2100.0) / SimConst.COL)
+	for k in range(-4, 5):
+		Sh_t.deform[ch_t + k] = 200.0
+		Sh_t.rubble[ch_t + k] = 200.0
+	WorldCrater.carveSegment(Sh_t, float(ch_t - 2) * SimConst.COL, float(ch_t + 2) * SimConst.COL, 30.0, true, 0.5)
+	var slot_t: float = 1.0e9
+	for k in range(-2, 2):
+		slot_t = minf(slot_t, Sh_t.deform[ch_t + k])
+	WorldCrater.carveSegment(Sh_t, X(2300.0), X(2300.0) + 4.0 * SimConst.COL, 30.0, false, 0.0)
+	var flat_cut: float = Sh_t.deform[int(X(2300.0) / SimConst.COL) + 1]
+	print("  a slide over a 200 heap: lowest column %.0f; over flat ground: %.0f" % [slot_t, flat_cut])
+	check(slot_t > 150.0, "a slide never cuts a slot through a heap")
+	check(flat_cut < -20.0, "and still carves a trench in open ground")
+	# T3: a beam groove across a heap leaves no step over the limit
+	var Sg_t := fresh()
+	var cg_t: int = int(X(2100.0) / SimConst.COL)
+	for k in range(-10, 11):
+		Sg_t.deform[cg_t + k] = 400.0 * (1.0 - absf(float(k)) / 11.0)
+		Sg_t.rubble[cg_t + k] = Sg_t.deform[cg_t + k]
+	for i in range(30):
+		WorldCrater.scorch(Sg_t, X(2100.0) + float(i - 15) * 20.0, 2.0, "HORIZON CLEAVE", Sg_t.fighters[1])
+	var gstep: float = 0.0
+	for k in range(-80, 80):
+		gstep = maxf(gstep, absf((Sg_t.base[cg_t + k + 1] + Sg_t.deform[cg_t + k + 1]) - (Sg_t.base[cg_t + k] + Sg_t.deform[cg_t + k])))
+	check(gstep <= lim_t + WorldCrater.REPOSE_EPS + 0.5, "a beam groove across a heap leaves no step over the limit (largest %.1f)" % gstep)
+	# T1: heaps. A front-row building leaves a gentle heap; a back-row one leaves none on the ground
+	var Sr_t := fresh()
+	var f1_t = null
+	var f2_t = null
+	for b in Sr_t.buildings:
+		if b.row == 1.0 and f1_t == null and b.h > 2000.0:
+			f1_t = b
+		if b.row == 3.0 and f2_t == null and b.h > 2000.0:
+			f2_t = b
+	var d0_t := Sr_t.deform.duplicate()
+	WorldStructures.damageBuilding(Sr_t, f2_t, 1.0e9, Sr_t.fighters[1], "implode", f2_t.x, 0.0)
+	var changed2: float = 0.0
+	for i in range(SimConst.NC):
+		changed2 += absf(Sr_t.deform[i] - d0_t[i])
+	var d1_t := Sr_t.deform.duplicate()
+	WorldStructures.damageBuilding(Sr_t, f1_t, 1.0e9, Sr_t.fighters[1], "implode", f1_t.x, 0.0)
+	var heap_max: float = 0.0
+	var heap_step: float = 0.0
+	var under_t: float = 0.0
+	var cf_t: int = int(f1_t.x / SimConst.COL)
+	for k in range(-80, 80):
+		var i2: int = cf_t + k
+		heap_max = maxf(heap_max, Sr_t.deform[i2] - d1_t[i2])
+		heap_step = maxf(heap_step, absf((Sr_t.base[i2 + 1] + Sr_t.deform[i2 + 1]) - (Sr_t.base[i2] + Sr_t.deform[i2])))
+	for b in Sr_t.buildings:
+		if b.alive and b != f1_t:
+			var c0f: int = int(floor((b.x - b.w * 0.5) / SimConst.COL)) - 1
+			var c1f: int = int(floor((b.x + b.w * 0.5) / SimConst.COL)) + 1
+			for c in range(c0f, c1f + 1):
+				under_t += absf(Sr_t.deform[c] - d1_t[c])
+	print("  a tower of %.0f units in row 3 leaves %.0f of heap on the ground; one in row 1 leaves a crest of %.0f, largest step %.1f, change under standing footings %.1f" % [f2_t.h, changed2, heap_max, heap_step, under_t])
+	check(changed2 == 0.0, "a back-row building leaves no heap on the fighter plane's ground")
+	check(heap_max > 0.0 and heap_step <= lim_t + WorldCrater.REPOSE_EPS + 0.5, "a front-row building leaves a heap no steeper than the angle of repose")
+	check(under_t == 0.0, "a heap never lands on a standing building's footing")
+	# T4: a building stands on the highest ground under its footprint
+	var Sf2_t := fresh()
+	var tb_t = Sf2_t.buildings[40]
+	var cc_t: int = int(floor((tb_t.x + tb_t.w * 0.5) / SimConst.COL))
+	Sf2_t.deform[cc_t] = 150.0
+	check(WorldStructures.baseY(Sf2_t, tb_t) >= Sf2_t.base[cc_t] + 150.0 - 0.01, "a building's footing is the highest ground under its footprint (%.0f)" % WorldStructures.baseY(Sf2_t, tb_t))
+
 	print("")
 	print("probe: %d check(s) failed" % fails)
 	quit(1 if fails > 0 else 0)

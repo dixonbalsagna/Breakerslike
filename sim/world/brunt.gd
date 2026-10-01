@@ -125,7 +125,7 @@ static func flightTo(S: SimState, x0: float, y0: float, vx0: float, vy0: float, 
 	var ahead: float = SimWrap.sdx(x0, edge) * dir
 	if ahead < 0.0 or ahead > FLIGHT_X_MAX:
 		return {"ok": false}
-	var gy: float = WorldTerrain.groundY(S, b.x)
+	var gy: float = WorldStructures.baseY(S, b)
 	var top: float = gy + WorldStructures.curH(b)
 	if y0 < WorldWater.surfaceAt(S, x0):
 		return {"ok": false}
@@ -165,7 +165,7 @@ static func flightTo(S: SimState, x0: float, y0: float, vx0: float, vy0: float, 
 static func outcomeOf(S: SimState, b, y: float, spN: float, tier: float) -> Dictionary:
 	var dmg: float = spN * (0.55 + 0.25 * tier) * BRUNT_MUL
 	if b.floors >= FLOORS_MIN:
-		var gy: float = WorldTerrain.groundY(S, b.x)
+		var gy: float = WorldStructures.baseY(S, b)
 		var fh: float = floorH(b)
 		var pos: float = (y - gy) / fh
 		var k: int = clampi(int(floor(pos)), 0, b.floors - 1)
@@ -284,7 +284,7 @@ static func candidates(S: SimState, D) -> Array:
 		var d: float = absf(dx) - b.w * 0.5
 		if d < BR_MIN or d > BR_MAX:
 			continue
-		if D.y > WorldTerrain.groundY(S, b.x) + WorldStructures.curH(b) + 40.0:
+		if D.y > WorldStructures.baseY(S, b) + WorldStructures.curH(b) + 40.0:
 			continue
 		sides[0 if dx < 0.0 else 1].append([_cheap(b), bi])
 	var out: Array = []
@@ -372,7 +372,7 @@ static func checkHit(S: SimState, f, ox: float, oy: float) -> bool:
 			f.aimB = -1   # flew past without touching it
 		return false
 	var yc: float = oy + (f.y - oy) * fr
-	var gy: float = WorldTerrain.groundY(S, b.x)
+	var gy: float = WorldStructures.baseY(S, b)
 	if yc < gy - 10.0 or yc > gy + WorldStructures.curH(b):
 		f.aimB = -1
 		return false

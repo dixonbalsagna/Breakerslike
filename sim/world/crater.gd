@@ -35,6 +35,13 @@ const RIM_H_PER_VOL: float = 0.5 / 0.6
 const DEFORM_FLOOR: float = -260.0 * WS   # deform never goes below this (the prototype's floor, scaled)
 const DEFORM_CEIL: float = 120.0 * WS     # nor above this: rims, aprons and rubble stack up to here
 const TREE_FELL_K: float = 1.05       # trees within this many R of the centre fall
+## The angle of repose (docs/world/terrain-audit.md, T2): no step between neighbouring columns may exceed REPOSE_SLOPE times the
+## column width, unless the original ground already had a steeper step there. A crater's bowl and rim are well inside it, so
+## they stay as dug; heaps, grooves and trenches that are steeper than loose material would lie are relaxed, conserving volume.
+const REPOSE_SLOPE: float = 1.25
+const REPOSE_PASSES: int = 64       # a forward and a backward sweep each; a quiet pass ends the loop early
+const REPOSE_PAD: int = 12          # columns past a change the relaxation may reach
+const REPOSE_EPS: float = 2.0       # a step this much over the limit is left (a tenth of a column): the sweeps end when a pass moves less than this in all
 const LIST_MAX: int = 400             # persistent crater records; the oldest is dropped when full
 # ---- glancing impacts: the bowl gets shallower, and a diagonal one skids a furrow into it ----
 const GRAZE_MIN: float = 0.6          # bowl depth factor for a fully horizontal hit (1 for straight down)
@@ -217,7 +224,9 @@ static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx:
 	if S.craters.size() > LIST_MAX:
 		S.craters.remove_at(0)
 	SimFx.crater(S, rec)
-	WorldWater.touched(S, c0, n + int(ceil(absf(skid) / COL)), minG)
+	var cols: int = n + int(ceil(absf(skid) / COL)) + REPOSE_PAD
+	minG = minf(minG, relax(S, c0, cols))
+	WorldWater.touched(S, c0, cols, minG)
 	return rec
 
 
@@ -234,6 +243,7 @@ static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> v
 	var c0: int = _col(x)
 	var n: int = int(ceil(hw / COL))
 	var minG: float = 1e9
+	var carved: bool = false
 	var base: PackedFloat32Array = S.base
 	var dfm: PackedFloat32Array = S.deform   # local copies are written back below (packed arrays copy on write)
 	var scm: PackedFloat32Array = S.scorch
@@ -249,6 +259,7 @@ static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> v
 			if S.rubble[i] > 0.0:
 				S.rubble[i] = maxf(0.0, S.rubble[i] - (dfm[i] - target))
 			dfm[i] = target
+			carved = true
 		var sc: float = inten * t
 		if sc > scm[i]:
 			scm[i] = sc
@@ -256,7 +267,72 @@ static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> v
 	S.deform = dfm
 	S.scorch = scm
 	SimFx.scorchEvent(S, x, y0, hw * 2.0, P, variant, _slot(S, cause))
-	WorldWater.touched(S, c0, n, minG)
+	if carved:
+		minG = minf(minG, relax(S, c0, n + REPOSE_PAD))
+	WorldWater.touched(S, c0, n + REPOSE_PAD, minG)
+
+
+## Relax the ground around column c0 (half columns each side) to the angle of repose: forward and backward sweeps move half
+## of any excess step from the high column to the low one (volume conserved, rubble moves with the material, the clamps hold),
+## until a sweep moves nothing or REPOSE_PASSES is reached. A step the original ground already had is allowed, and the columns
+## under a standing building's footing (WorldStructures.pinned) may be lowered but never raised. Returns the lowest
+## ground in the window. Deterministic (fixed order, no draws); the cost is one pass over the window per call.
+static func relax(S: SimState, c0: int, half: int) -> float:
+	var NC: int = SimConst.NC
+	var limit: float = REPOSE_SLOPE * SimConst.COL
+	var base: PackedFloat32Array = S.base
+	var dfm: PackedFloat32Array = S.deform
+	var rub: PackedFloat32Array = S.rubble
+	var cnt: int = mini(2 * half + 1, NC)
+	var lo: int = c0 - half
+	# Most calls find nothing to do: look first, before the footing mask is built.
+	var need: bool = false
+	for k in range(cnt - 1):
+		var i0: int = posmod(lo + k, NC)
+		var j0: int = posmod(lo + k + 1, NC)
+		var d0: float = (base[j0] + dfm[j0]) - (base[i0] + dfm[i0])
+		if absf(d0) - maxf(limit, absf(base[j0] - base[i0])) > REPOSE_EPS:
+			need = true
+			break
+	if not need:
+		var m0: float = 1.0e9
+		for k in range(cnt):
+			var c0m: int = posmod(lo + k, NC)
+			m0 = minf(m0, base[c0m] + dfm[c0m])
+		return m0
+	var pin: PackedByteArray = WorldStructures.pinned(S, c0, half)   # a standing building's footing is never moved
+	for pass_n in range(REPOSE_PASSES):
+		var moved: float = 0.0
+		for sweep in range(2):
+			for k in range(cnt - 1):
+				var kk: int = k if sweep == 0 else cnt - 2 - k
+				var i: int = posmod(lo + kk, NC)
+				var j: int = posmod(lo + kk + 1, NC)
+				var d: float = (base[j] + dfm[j]) - (base[i] + dfm[i])
+				var ex: float = absf(d) - maxf(limit, absf(base[j] - base[i]))
+				if ex <= REPOSE_EPS:
+					continue
+				var e: float = ex * 0.5
+				var hi: int = j if d > 0.0 else i
+				var lw: int = i if d > 0.0 else j
+				if pin[kk + 1 if lw == j else kk] == 1:
+					continue   # a footing may be lowered but never raised
+				dfm[hi] = maxf(DEFORM_FLOOR, dfm[hi] - e)
+				dfm[lw] = minf(DEFORM_CEIL, dfm[lw] + e)
+				var rm: float = minf(rub[hi], e)
+				if rm > 0.0:
+					rub[hi] -= rm
+					rub[lw] += rm
+				moved += e
+		if moved < REPOSE_EPS:
+			break
+	S.deform = dfm
+	S.rubble = rub
+	var minG: float = 1.0e9
+	for k in range(cnt):
+		var c: int = posmod(lo + k, NC)
+		minG = minf(minG, base[c] + dfm[c])
+	return minG
 
 
 ## Carve the trench of a slide along the path from xa to xb (the columns the fighter has just passed over) to the given
@@ -279,18 +355,23 @@ static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved:
 	var crk: PackedFloat32Array = S.crack
 	var target: float = maxf(-depth, DEFORM_FLOOR)
 	var minG: float = 1e9
+	var carved: bool = false
 	for k in range(n):
 		var i: int = (ca + dir * k + NC) % NC
-		if target < dfm[i]:
-			if S.rubble[i] > 0.0:
-				S.rubble[i] = maxf(0.0, S.rubble[i] - (dfm[i] - target))
-			dfm[i] = target
 		if paved and crack > crk[i]:
 			crk[i] = crack
+		# A slide rides over a heap of rubble: it cracks it but never cuts a slot through it (T3).
+		if S.rubble[i] <= 0.0 and target < dfm[i]:
+			dfm[i] = target
+			carved = true
 		minG = minf(minG, base[i] + dfm[i])
 	S.deform = dfm
 	S.crack = crk
-	WorldWater.touched(S, ca, n, minG)
+	var mid: int = posmod(ca + dir * (n / 2), NC)
+	var half: int = n / 2 + REPOSE_PAD
+	if carved:
+		minG = minf(minG, relax(S, mid, half))
+	WorldWater.touched(S, mid, half, minG)
 
 
 ## A small raised lip where a slide ends: two columns ahead in the direction of travel.

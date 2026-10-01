@@ -67,6 +67,8 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.stop = 0.0
 	S.dirS.lastLaunch = ""
 	S.dirS.lastLaunch2 = ""
+	S.dirS.sinceBrunt = 0.0   # B2: the pity counter and the last brunt belong to a match
+	S.dirS.lastBrunt = -1.0
 	S.dirS.exN = 0
 	S.dirS.biomeT = PackedFloat64Array()   # location variety (granted line): the director sizes it on the first tick
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
