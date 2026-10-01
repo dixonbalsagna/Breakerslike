@@ -626,6 +626,13 @@ func _layer_rules() -> void:
 	var od: Dictionary = UiData.option_defaults()
 	_ok(od.get("split_solo") == true and hud.opts["split_solo"] == true and not od.has("shake_scale") and not hud.opts.has("shake_scale") and float(hud.opts["camera_shake"]) == 2.0, "options: split_solo defaults on, shake is camera_shake alone (shake_scale is gone; Camera reads them through the options)")
 	_ok(UiData.options()["camera_shake"].get("accessibility", false) and UiData.options()["reduced_motion"].get("accessibility", false) and not UiData.options()["split_solo"].get("accessibility", false), "options: camera_shake and reduced_motion are accessibility options, split_solo is a display option")
+	var cpn: Dictionary = UiData.options()["camera_panels"]
+	_ok(cpn["default"] == "full" and cpn["choices"] == ["full", "still", "off"] and cpn["group"] == "display" and hud.opts["camera_panels"] == "full" and UiData.settings()["labels"]["camera_panels"]["still"] == "Still", "options: camera_panels offers full, still and off, default full, in the Camera section")
+	var in_camera := false
+	for sec in UiData.settings()["sections"]:
+		if sec["id"] == "camera" and (sec["items"] as Array).has("camera_panels"):
+			in_camera = true
+	_ok(in_camera, "options: camera_panels is on the Settings screen's Camera section")
 	var clf: Dictionary = UiData.options()["camera_launch_follow"]
 	_ok(clf["default"] == "auto" and clf["choices"] == ["auto", "chase", "split"] and clf["group"] == "display" and hud.opts["camera_launch_follow"] == "auto", "options: camera_launch_follow offers auto, chase and split, default auto")
 	hud.set_option("force_redraw", true)
@@ -3058,6 +3065,40 @@ func _faces_rules() -> void:
 					if cs == cases[0] and not touch and not swapped:
 						docked_desktop += docked
 	_ok(docked_desktop == 2, "faces: at 1920 by 1080 on a keyboard both faces are docked in their columns")
+	# Camera's panel strip owns the centre 56% of the width, in a top band (19% to 39% of the height) or a bottom band (80% to 100%).
+	var centre_bad: PackedStringArray = []
+	var plate_bottom_bad: PackedStringArray = []
+	var plate_top_sliver := 0.0
+	var floor_bad: PackedStringArray = []
+	for cs in cases:
+		var sz2: Vector2 = cs[0]
+		for touch in [false, true]:
+			var lay2 := UiLayout.new()
+			lay2.dp = cs[1]
+			lay2.touch_ui = touch
+			lay2.compute(sz2, false)
+			var centre := Rect2(sz2.x * UiFaces.CENTRE_FROM, 0.0, sz2.x * (UiFaces.CENTRE_TO - UiFaces.CENTRE_FROM), sz2.y)
+			var top_band := Rect2(centre.position.x, sz2.y * 0.19, centre.size.x, sz2.y * 0.20)
+			var bottom_band := Rect2(centre.position.x, sz2.y * 0.80, centre.size.x, sz2.y * 0.20)
+			for i in range(2):
+				if lay2.face[i].size.y > 0.0 and (lay2.face[i] as Rect2).intersects(centre):
+					centre_bad.append("docked %dx%d" % [int(sz2.x), int(sz2.y)])
+				var left: bool = lay2.plate[i].get_center().x < sz2.x * 0.5
+				var side: float = UiFaces.embed_side(400.0, lay2.bark[i], left, sz2.x)
+				if side > 0.0:
+					var fr := Rect2(lay2.bark[i].position.x if left else lay2.bark[i].end.x - side, lay2.bark[i].position.y, side, side)
+					if fr.grow(-0.5).intersects(centre):
+						centre_bad.append("embedded %dx%d" % [int(sz2.x), int(sz2.y)])
+				# The plates: never in the bottom band; in the top band at most a few pixels, and panel_floor() says where the band may start.
+				if (lay2.plate[i] as Rect2).intersects(bottom_band):
+					plate_bottom_bad.append("%dx%d" % [int(sz2.x), int(sz2.y)])
+				var inter: Rect2 = (lay2.plate[i] as Rect2).intersection(top_band)
+				if inter.size.x > 0.0 and inter.size.y > 0.0:
+					plate_top_sliver = maxf(plate_top_sliver, inter.size.y)
+				if lay2.panel_floor() < (lay2.plate[i] as Rect2).end.y or lay2.panel_floor() < lay2.toll.end.y:
+					floor_bad.append("%dx%d" % [int(sz2.x), int(sz2.y)])
+	_ok(centre_bad.is_empty(), "faces: no face, docked or embedded, is in the centre 56 percent of the width at any of the 14 sizes %s" % str(centre_bad))
+	_ok(plate_bottom_bad.is_empty() and plate_top_sliver <= 50.0 and floor_bad.is_empty(), "faces: no nameplate is in the panel strip's bottom band, the plates reach at most %d px into the top band, and panel_floor() clears every plate and the toll chip %s" % [int(plate_top_sliver), str(plate_bottom_bad)])
 	UiLook.text_floor = UiLook.MIN_TEXT_PX
 	# In the HUD: a docked face and an embedded one are drawn, and a swap carries the face to the new side.
 	root.size = Vector2i(1920, 1080)
@@ -3081,5 +3122,15 @@ func _faces_rules() -> void:
 	hud.advance(1.0 / 60.0)
 	await process_frame
 	_ok(UiFaces.embedded(hud.layout, 1), "faces: on a portrait phone the same line's face is embedded in its panel")
+	# The lane colours Camera's strip borders take: each fighter's aura, announced when it changes.
+	var seen: Array = []
+	hud.lane_colors_changed.connect(func(a, b): seen.append([a, b]))
+	hud.hub.model(0).aura = Color("#ff8800")
+	hud.hub.model(1).aura = Color("#2299ff")
+	hud.advance(1.0 / 60.0)
+	hud.advance(1.0 / 60.0)
+	var lc: Array = hud.lane_colors()
+	_ok(lc[0] == Color("#ff8800") and lc[1] == Color("#2299ff") and seen.size() == 1 and seen[0] == [Color("#ff8800"), Color("#2299ff")], "faces: lane_colors() is each fighter's aura and lane_colors_changed fires once when they change (for SplitView.set_panel_colors)")
+	_ok(hud.panel_floor_y() == hud.layout.panel_floor() and hud.panel_floor_y() > hud.layout.plate[0].end.y, "faces: panel_floor_y() is where the strip's top band may start")
 	hud.queue_free()
 	await process_frame

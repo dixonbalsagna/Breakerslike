@@ -46,6 +46,20 @@ static func expression(b: UiEventHub.Bark, m: UiFighterModel) -> String:
 	return str(d.get("default_expression", "neutral"))
 
 
+## The centre of the screen belongs to Camera's panel strip (56% of the width, rule-of-cool row 11): no face goes there.
+const CENTRE_FROM := 0.22
+const CENTRE_TO := 0.78
+const MIN_EMBED := 36.0
+
+
+## The width an embedded face may have at the outer end of a bark lane: `want`, but not past the edge of the centre band; 0 if there is not
+## room for a face of at least MIN_EMBED px.
+static func embed_side(want: float, lane: Rect2, left: bool, vp_w: float) -> float:
+	var cap: float = (vp_w * CENTRE_FROM - lane.position.x) if left else (lane.end.x - vp_w * CENTRE_TO)
+	var w: float = minf(want, cap)
+	return w if w >= MIN_EMBED else 0.0
+
+
 ## The texture for a fighter's expression, or null (the placeholder is drawn). Art fills the paths in faces.json.
 static var _tex: Dictionary = {}
 
@@ -97,11 +111,12 @@ static func draw_docked(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float
 		var mo: Dictionary = motion(b, reduced)
 		var shift: float = (r.end.x + 4.0) if left else (lay.vp.x - r.position.x + 4.0)
 		var rr := Rect2(r.position + Vector2((-shift if left else shift) * float(mo["off"]), 0.0), r.size)
-		draw_portrait(ci, rr, m, b.face_expr, float(mo["a"]) * swap, s)
+		draw_portrait(ci, rr, m, b.face_expr, float(mo["a"]) * swap, s, not left)
 
 
 ## One face panel in `rect`: the texture if Art has made one for this fighter and expression, else the placeholder.
-static func draw_portrait(ci: CanvasItem, rect: Rect2, m: UiFighterModel, expr: String, alpha: float, s: float) -> void:
+## `flip` mirrors a texture (Art's portraits face right: the speaker on the right of the screen is mirrored to face left).
+static func draw_portrait(ci: CanvasItem, rect: Rect2, m: UiFighterModel, expr: String, alpha: float, s: float, flip: bool = false) -> void:
 	if alpha <= 0.01:
 		return
 	var aura: Color = m.aura if m != null else Color.WHITE
@@ -115,7 +130,8 @@ static func draw_portrait(ci: CanvasItem, rect: Rect2, m: UiFighterModel, expr: 
 		var ts: Vector2 = tex.get_size()
 		var k: float = maxf(inner.size.x / ts.x, inner.size.y / ts.y)
 		var src := Rect2((ts - inner.size / k) * 0.5, inner.size / k)
-		ci.draw_texture_rect_region(tex, inner, src, Color(1, 1, 1, alpha))
+		var dst: Rect2 = Rect2(inner.end.x, inner.position.y, -inner.size.x, inner.size.y) if flip else inner
+		ci.draw_texture_rect_region(tex, dst, src, Color(1, 1, 1, alpha))
 	else:
 		_placeholder(ci, inner, aura, expr, alpha, ink)
 	UiIcons.rrect(ci, rect, rect.size.y * 0.08, Color(0, 0, 0, 0), Color(aura, 0.9 * alpha), edge_w)

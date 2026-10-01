@@ -15,7 +15,9 @@ static func draw_letterbox(ci: CanvasItem, lay: UiLayout, k: float) -> void:
 	ci.draw_rect(Rect2(lay.letterbox_bottom.position.x, lay.letterbox_bottom.end.y - bh, lay.letterbox_bottom.size.x, bh), col)
 
 
-static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: float, o: Dictionary) -> void:
+static func draw(ci: CanvasItem, hub: UiEventHub, lay: UiLayout, s: float, t: float, o0: Dictionary) -> void:
+	var o: Dictionary = o0.duplicate()
+	o["vp_w"] = lay.vp.x
 	UiFaces.draw_docked(ci, hub, lay, s, o)
 	var stack: Array = [0, 0]
 	var idx := 0
@@ -86,7 +88,8 @@ static func _shout(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Re
 	var inten: int = int((b.cues[0] as Dictionary).get("intensity", 2)) if not b.cues.is_empty() else 2
 	var fs: int = UiText.px(38.0, s)
 	# An embedded face is a square at the lane's outer end, as high as two lines of the shout; the shout takes the rest.
-	var fe: float = 2.6 * float(fs) if embed else 0.0
+	var fe: float = UiFaces.embed_side(2.6 * float(fs), lane, left, float(o.get("vp_w", 1.0e9))) if embed else 0.0
+	embed = embed and fe > 0.0
 	var lane_full: Rect2 = lane
 	if embed:
 		lane = Rect2(lane.position.x + (fe + 8.0 * s if left else 0.0), lane.position.y, lane.size.x - fe - 8.0 * s, lane.size.y)
@@ -97,7 +100,7 @@ static func _shout(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Re
 	if embed:
 		var m0: UiFighterModel = hub.model(b.slot)
 		var fr := Rect2(lane_full.position.x if left else lane_full.end.x - fe, lane_full.end.y - fe, fe, fe)
-		UiFaces.draw_portrait(ci, fr, m0, b.face_expr, fade * float(o.get("swap_fade", 1.0)), s)
+		UiFaces.draw_portrait(ci, fr, m0, b.face_expr, fade * float(o.get("swap_fade", 1.0)), s, not left)
 	var remaining: int = shown
 	for l in lines:
 		var part: String = l.substr(0, remaining) if remaining < l.length() else l
@@ -121,16 +124,19 @@ static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rec
 	var fs: int = UiText.px(28.0, s)
 	var tfs: int = UiText.px(20.0, s)
 	var pad: float = 10.0 * s
-	# An embedded face is a square the height of the panel at its outer end; the text takes the rest of the lane.
-	var fe: float = 2.8 * float(fs) if embed else 0.0
+	# An embedded face is a square the height of the panel at its outer end; the text takes the rest of the lane. It never goes into the centre
+	# band Camera's panel strip owns (UiFaces.embed_side), and a lane with no room for one has none.
+	var vp_w: float = float(o.get("vp_w", 1.0e9))
+	var fe: float = UiFaces.embed_side(2.8 * float(fs), lane, left, vp_w) if embed else 0.0
+	embed = embed and fe > 0.0
 	var lines: PackedStringArray = UiText.wrap(b.text, fs, lane.size.x - pad * 2.0 - fe)
 	var shown: int = UiBarkTiming.reveal_count(b.text, b.age, inten)
 	var total_h: float = pad * 2.0 + float(tfs) + 4.0 + float(lines.size()) * (float(fs) + 4.0)
 	if embed and total_h > fe:
-		fe = total_h
+		fe = UiFaces.embed_side(total_h, lane, left, vp_w)
 		lines = UiText.wrap(b.text, fs, lane.size.x - pad * 2.0 - fe)
 		total_h = pad * 2.0 + float(tfs) + 4.0 + float(lines.size()) * (float(fs) + 4.0)
-	fe = total_h if embed else 0.0
+	fe = minf(total_h, fe) if embed else 0.0
 	var fade: float = 1.0
 	var left_t: float = b.reveal_time + b.dur - b.age
 	if left_t < 0.25:
@@ -151,7 +157,7 @@ static func _bark(ci: CanvasItem, hub: UiEventHub, b: UiEventHub.Bark, lane: Rec
 	UiIcons.rrect(ci, panel, 8.0 * s, Color(UiLook.col(UiLook.SCRIM), 0.55 * fade), Color(m.aura if m != null else Color.WHITE, 0.55 * fade), maxf(1.5, 2.0 * s))
 	if embed and m != null:
 		var fr := Rect2(panel.position.x if left else panel.end.x - fe, panel.position.y, fe, fe)
-		UiFaces.draw_portrait(ci, fr.grow(-2.0 * s), m, b.face_expr, fade * float(o.get("swap_fade", 1.0)), s)
+		UiFaces.draw_portrait(ci, fr.grow(-2.0 * s), m, b.face_expr, fade * float(o.get("swap_fade", 1.0)), s, not left)
 	var ty: float = panel.position.y + pad + UiText.ascent(tfs)
 	var name_x: float = tx0 + pad if left else tx1 - pad
 	var nw: float = UiText.draw(ci, m.name if m != null else "", Vector2(name_x, ty), tfs, Color(m.aura if m != null else Color.WHITE, fade), -1 if left else 1, 1.5)

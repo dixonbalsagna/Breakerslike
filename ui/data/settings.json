@@ -18,7 +18,7 @@
       "show_prompts",
       { "action": "remap", "label": "Remap controls", "value": "Open", "help": "Change which button or key does what, for the layout you are using.", "needs": "remap" }
     ] },
-    { "id": "camera", "title": "Camera", "items": ["camera_zoom", "camera_shake", "camera_launch_follow", "split_solo"] },
+    { "id": "camera", "title": "Camera", "items": ["camera_zoom", "camera_shake", "camera_launch_follow", "camera_panels", "split_solo"] },
     { "id": "display", "title": "Display", "items": ["vfx_quality", "info_flashes", "brink_cue", "silhouette", "region_label"] },
     { "id": "access", "title": "Accessibility", "items": ["reduced_motion", "captions", "crown_always", "thickness", "hitstop_scale", "keep_hints"] },
     { "id": "cosmetics", "title": "Cosmetics", "items": ["unlock_all"] }
@@ -32,6 +32,7 @@
     "vfx_quality": { "auto": "Auto", "high": "High", "medium": "Medium", "low": "Low" },
     "control_hints": { "auto": "Auto", "always": "Always", "off": "Off" },
     "camera_launch_follow": { "auto": "Auto", "chase": "Chase", "split": "Split" },
+    "camera_panels": { "full": "Full", "still": "Still", "off": "Off" },
     "thickness": { "0.75": "Thin", "1.0": "Normal", "1.5": "Thick" }
   },
   "remap": {

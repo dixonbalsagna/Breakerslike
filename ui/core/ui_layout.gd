@@ -144,6 +144,16 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 	_place_faces()
 
 
+## The lowest edge of the nameplates, the toll chip and the pause button, plus a gap: Camera's top panel band should start at or below this (the
+## band is 19% to 39% of the height; on a short or small screen the plates reach into its first few pixels).
+func panel_floor() -> float:
+	var y: float = maxf(plate[0].end.y, plate[1].end.y)
+	y = maxf(y, toll.end.y)
+	if pause_btn.size.y > 0.0:
+		y = maxf(y, pause_btn.end.y)
+	return y + 6.0 * s
+
+
 ## The docked face squares (UiFaces): each in its speaker's column, bottom on the bark lane's top, as large as `desired` allows without touching a
 ## nameplate, a card row, the silhouette, the prompt row, the legend's three rows, the toll chip, the pause button, the match-end pill, the ring map,
 ## the strip, the read slot or a touch button. None fits (a portrait phone, the one-lane touch landscape, a tiny window): the rect stays empty and the
@@ -160,6 +170,7 @@ func _place_faces() -> void:
 	var legend_min: float = 3.0 * row_h + 2.0 * maxf(8.0 * s, 5.0)
 	var legend_full: float = 11.0 * row_h + 2.0 * maxf(8.0 * s, 5.0)
 	var fixed: Array = [plate[0], plate[1], toll, strip, ring, read_slot, pause_btn, feedback_btn, cards[0], cards[1], silhouette[0], silhouette[1], prompts[0], prompts[1]]
+	fixed.append(Rect2(vp.x * UiFaces.CENTRE_FROM, 0.0, vp.x * (UiFaces.CENTRE_TO - UiFaces.CENTRE_FROM), vp.y))   # Camera's panel strip owns the centre 56% of the width
 	if touch_ui and not touch_ctrl.is_empty():
 		for k in touch_keys():
 			var c: Dictionary = touch_ctrl[k]

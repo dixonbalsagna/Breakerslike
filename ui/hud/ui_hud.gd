@@ -30,6 +30,7 @@ signal pause_menu_opened                   # the pause menu opened: the host fre
 signal pause_menu_closed(reason: String)   # it closed: "resume" (the host unfreezes) or "new" (the host unfreezes and starts a match)
 signal pause_entry(entry: String)          # an entry was chosen: resume, howto, settings, feedback, new (then new_yes or new_no)
 signal new_match_requested                 # New match was confirmed
+signal lane_colors_changed(a: Color, b: Color)   # a fighter's lane colour (its aura, used for its plate, bark and face borders) changed: the host passes them to SplitView.set_panel_colors
 signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
@@ -55,6 +56,7 @@ var opts: Dictionary = {
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
 	"control_hints": "auto",   # the legend of the player's controls: auto (match start and first matches), always, off
 	"control_scheme": "",      # "" = the scheme of the player's own layout (ui/data/hints.json); a layout id forces one (a preview or a test)
+	"camera_panels": "full",   # Camera's panel cut-ins (rule-of-cool row 11): full, still or off; the host calls SplitView.set_panel_mode on option_changed
 	"camera_zoom": 7,          # Camera's framing, 0 to 10 (render/camera reads it from these opts); the HUD only carries it
 	"camera_shake": 2,         # Camera's shake, 0 to 10 (an accessibility option); the HUD only carries it
 	"pad_preset": "arena",     # the pad layout in use (arena, brawler or simple-pad); the host keeps it equal to SimInputHub.pad_preset
@@ -93,6 +95,7 @@ var _last_lh := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
 var _l_settings: UiLayer
+var _lane_sent: Array = [Color(0, 0, 0, 0), Color(0, 0, 0, 0)]
 var _l_pmenu: UiLayer
 var _pm_open := false
 var _pm_confirm := false              # New match is asking "Start a new match?"
@@ -290,6 +293,7 @@ func consume_all(events: Array) -> void:
 
 
 func advance(dt: float) -> void:
+	_sync_lane_colors()
 	hub.keep_hints = bool(opts["keep_hints"])
 	_t += dt
 	_dt = dt
@@ -2068,6 +2072,29 @@ func _paint_fb(ci: CanvasItem) -> void:
 
 func _paint_fbpill(ci: CanvasItem) -> void:
 	UiFeedback.draw_pill(ci, layout.feedback_btn, layout.s, layout.feedback_label, layout.feedback_fs)
+
+
+## The two fighters' lane colours: each one's aura colour, the colour of its plate, its bark panel and its face cut-in border. Camera's panel strip
+## takes them for its borders (SplitView.set_panel_colors(a, b)); `lane_colors_changed` fires when either changes (and at the first advance).
+func lane_colors() -> Array:
+	var out: Array = []
+	for i in range(2):
+		out.append((hub.models[i] as UiFighterModel).aura if i < hub.models.size() else Color(0.7, 0.7, 0.7))
+	return out
+
+
+func _sync_lane_colors() -> void:
+	if hub.models.size() < 2:
+		return
+	var c: Array = lane_colors()
+	if c[0] != _lane_sent[0] or c[1] != _lane_sent[1]:
+		_lane_sent = c
+		lane_colors_changed.emit(c[0], c[1])
+
+
+## Where Camera's panel strip may start at the top: the lowest edge of the plates, the toll chip and the pause button, in pixels from the top.
+func panel_floor_y() -> float:
+	return layout.panel_floor()
 
 
 func _humans() -> int:
