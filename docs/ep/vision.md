@@ -379,3 +379,9 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
     - X light attack, Y heavy attack, B signature, A situational (protect, extract from or make an example of civilians; pick up a boulder, tree or makeshift weapon; grab and throw).
     - Every input combination should feed the director for intelligent, dynamic, fast-paced combat.
     - Orb asked for an analysis of the complications, the effect on the procedural move ceiling, and simplifications.
+
+## Fight lanes and the camera (2026-10-01)
+- Depth is handled entirely by the choreographer (ADR 0009). No depth nudge in the control scheme.
+- Smashes, launches and throws all get a slight variation of angle, so back-and-forth fights zigzag slightly. Bigger deviations from the lane happen only when a building or another dynamic blocker is targeted.
+- Orb on the prototypes: "it looked fantastic". Believable city blocks, cars, bikes and foot traffic follow from this; even the bare prototype looked more organic.
+- Camera: "I really want the camera and cinematography to sell the impacts." Fighters seem a little too small, especially in the faster parts of a fight where the zoom extends out. Character cosmetics will look much better up close.
