@@ -1,0 +1,19 @@
+{
+  "schema": "narrative.hints_fix/1",
+  "_about": "Corrected tutorial hint lines for ui/data/reads.json (UI owns that file; Narrative owns the text). The stance keys are gone since ADR 0008: stances are held states. Attack is Press, hold Guard is Guard, tap Dodge is Dodge, and hold Dodge and move is Escape. Each line is a choice or a read, never timing, and the player is the fighter. Only beats 2, 3, 5, 6 and 8 changed; the other beats' lines stay as they are in reads.json.",
+  "hints": {
+    "b2.hint": "Attack, hold Guard, or tap Dodge. The blows follow.",
+    "b2.alt0": "Hold Guard, then attack. Feel how the exchange changes.",
+    "b2.alt1": "Try Dodge, then Attack. Your blows follow what you do.",
+    "b2.nudge": "Hold Guard or tap Dodge. Watch the blows change.",
+    "b2.done": "What you do decides the blows.",
+    "b3.nudge": "Use your heavy attack while they guard.",
+    "b5.alt0": "A heavy is winding up. Tap Dodge, or hold Guard and wait.",
+    "b5.alt1": "See the wind-up? Tap Dodge or hold Guard.",
+    "b5.nudge": "When they wind up big, tap Dodge or hold Guard.",
+    "b6.alt0": "Charge until you have enough, then call your signature.",
+    "b6.nudge": "Your signature needs a full 45 Charge.",
+    "b8.alt0": "A finisher is coming. Guard, dodge or attack to answer it.",
+    "b8.nudge": "Answer their finisher: Guard, Dodge or Attack."
+  }
+}

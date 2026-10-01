@@ -265,3 +265,13 @@ World's `docs/world/collateral-caps.md` adds an `evacuate` event: once a tier's 
 ## 13. Finisher barks (added 2026-09-29)
 
 Two triggers tied to Combat's finisher data (`data/combat/finishers.json`): `finisher_landed` (the `last_look` cue, the winner's bark) and `finisher_survived` (the `holds_on` cue: the winner's reaction and the survivor's own line). Both select by fighter, matchup register and outcome. The placeholder finisher names and the lines are in `finishers.md`.
+
+## 14. The bark event shape: `kind` and `speaker` (added 2026-10-01)
+
+Orb wants a face cut-in for every quip, one-liner, banter line and taunt (`hud-spec.md` section 29, `ui/data/faces.json`). A bark event must carry:
+
+- **`kind`**: `line`, `reply`, `retort`, `callback`, `jewel` or `thought` (the kinds in `dialogue-director.md` section 5). UI gives every kind a face except `thought`.
+- **`speaker`**: a **numeric fighter slot** (0, 1, ...), or the string `"crowd"` or `"narrator"`. A crowd or narrator line (evacuation barks, tutorial hints) gets no face.
+- **`priority`** (1 ambient, 2 ordinary, 3 important, 4 set piece or shout) and **`display`** (`caption`, `thought` or `shout`, with `dur_s`).
+
+In data a line cannot know the slot, so each line declares **`speaker_role`** (`self`, `opponent`, `crowd` or `narrator`), and the dialogue director resolves it to `speaker` when it emits the event. The shape and examples are in `data/narrative/combat_barks.json`, and the rule-of-cool lines (shouts, taunts, On the Chin, the last stand) are in `docs/narrative/rule-of-cool-narrative.md`.

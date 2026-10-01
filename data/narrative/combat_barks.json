@@ -1,0 +1,156 @@
+{
+  "schema": "narrative.barks/1",
+  "_about": "Narrative's rule-of-cool barks (docs/narrative/rule-of-cool-narrative.md). Working labels; every name and line is a placeholder in the current house style and is easy to re-style: replace a line's text by id. Orb is hand-editing the voice lab batch (docs/narrative/voice-lab/), so none of this is final. Unsearched by Legal.",
+  "house": "v1",
+  "event_shape": {
+    "_about": "What a bark event carries to UI (faces.json, hud-spec section 29). A line in this file declares speaker_role; the dialogue director resolves it to the numeric fighter slot when it emits the event.",
+    "kind": "line | reply | retort | callback | jewel | thought",
+    "speaker": "a numeric fighter slot (0, 1, ...), or the string crowd, or the string narrator",
+    "speaker_role": "self | opponent | crowd | narrator (data only; resolved to speaker at emit time)",
+    "priority": "1 ambient, 2 ordinary, 3 important, 4 set piece or shout",
+    "display": { "style": "caption | thought | shout", "dur_s": "seconds" },
+    "face_rule": "UI shows a face for a numeric speaker unless kind is thought, priority is below 2, or the speaker is crowd or narrator"
+  },
+  "shouts": {
+    "_about": "A fighter shouts the name of a signature, special or finisher, with no name card (Orb). Legal: the name is ours, and it is never stretched into drawn-out syllables across a charge. So each shout is one short burst, fired at the start of the move, and no_stretch tells Audio to render it as a single clipped hit.",
+    "trigger": "signature_start",
+    "fighters": {
+      "KAI": {
+        "move_name": "Meridian Lance",
+        "lines": [
+          { "id": "shout.kai.sig.1", "text": "Meridian Lance!" },
+          { "id": "shout.kai.sig.2", "text": "Lance!" },
+          { "id": "shout.kai.sig.3", "text": "Here. Meridian Lance!" }
+        ],
+        "kind": "line", "speaker_role": "self", "priority": 4,
+        "display": { "style": "shout", "dur_s": 0.8 },
+        "cues": [{ "at": 0, "gesture": "effort.heavy", "intensity": 3 }],
+        "no_stretch": true, "max_syllable_s": 0.25,
+        "tags": ["move_name", "signature"]
+      },
+      "VORR": {
+        "move_name": "Calamity Wave",
+        "lines": [
+          { "id": "shout.vorr.sig.1", "text": "Calamity Wave." },
+          { "id": "shout.vorr.sig.2", "text": "Wave." },
+          { "id": "shout.vorr.sig.3", "text": "Look. Calamity Wave." }
+        ],
+        "kind": "line", "speaker_role": "self", "priority": 4,
+        "display": { "style": "shout", "dur_s": 0.8 },
+        "cues": [{ "at": 0, "gesture": "effort.heavy", "intensity": 2 }],
+        "no_stretch": true, "max_syllable_s": 0.25,
+        "tags": ["move_name", "signature"],
+        "_note": "VORR is calm: a low, flat shout. The display style is shout so UI sizes it the same; Audio carries the calm."
+      }
+    },
+    "real_fighters_stubs": {
+      "_about": "The same shape for the four real fighters' placeholder signature names (identity.md). Specials and finishers use the pattern '{move_name}!' with trigger special_start or finisher_start.",
+      "PROTAGONIST": { "move_name": "Keeper's Lance", "text": "Keeper's Lance!" },
+      "ANTIHERO": { "move_name": "The Barrage", "text": "The Barrage." },
+      "EMPRESS": { "move_name": "Decree Line", "text": "Decree Line!" },
+      "CYBORG": { "move_name": "Portal Blitz", "text": "Portal Blitz. Please stand clear." }
+    }
+  },
+  "taunts": {
+    "_about": "A taunt feeds a meter only (Pride +6, heat +10, Wrath +8, Hunger +5), takes 1 s, can be punished, and shows the face cut-in. No beckoning gesture (Legal). The line is said during the second.",
+    "trigger": "taunt_start",
+    "kind": "line", "speaker_role": "self", "priority": 3,
+    "display": { "style": "caption", "dur_s": 1.6 },
+    "fighters": {
+      "PROTAGONIST": {
+        "meter": "heat", "amount": 10,
+        "gesture": "a boxer's shuffle: rolls his shoulders and bounces on his toes, grinning",
+        "lines": [
+          { "id": "taunt.prot.1", "text": "Is that all? I hope not." },
+          { "id": "taunt.prot.2", "text": "I'm just getting warm." },
+          { "id": "taunt.prot.3", "text": "Go on. Show me more." },
+          { "id": "taunt.prot.4", "text": "Again. That one was fun." }
+        ],
+        "punished": [
+          { "id": "taunt.prot.hit.1", "text": "Ow! Fair." },
+          { "id": "taunt.prot.hit.2", "text": "Ha! I asked for that." }
+        ]
+      },
+      "ANTIHERO": {
+        "meter": "pride", "amount": 6,
+        "gesture": "adjusts a cuff of his regalia without looking at the opponent",
+        "lines": [
+          { "id": "taunt.anti.1", "text": "You were adequate." },
+          { "id": "taunt.anti.2", "text": "Fifth. Behind the goons." },
+          { "id": "taunt.anti.3", "text": "Is that what you call a fight?" },
+          { "id": "taunt.anti.4", "text": "Look at me. I have not moved." }
+        ],
+        "punished": [
+          { "id": "taunt.anti.hit.1", "text": "...Noted." },
+          { "id": "taunt.anti.hit.2", "text": "That was a mistake. Mine." }
+        ]
+      },
+      "EMPRESS": {
+        "meter": "wrath", "amount": 8,
+        "gesture": "smooths her train over one arm and tilts her chin",
+        "lines": [
+          { "id": "taunt.emp.1", "text": "Petitioner, you are boring us." },
+          { "id": "taunt.emp.2", "text": "We have seen better. We have commissioned better." },
+          { "id": "taunt.emp.3", "text": "How quaint." },
+          { "id": "taunt.emp.4", "text": "Do carry on. It is nearly amusing." }
+        ],
+        "punished": [
+          { "id": "taunt.emp.hit.1", "text": "You struck us mid-sentence!" },
+          { "id": "taunt.emp.hit.2", "text": "How DARE you. ...We dare." }
+        ]
+      },
+      "CYBORG": {
+        "meter": "hunger", "amount": 5,
+        "gesture": "wipes a plate on his sleeve and holds out a menu",
+        "lines": [
+          { "id": "taunt.cyb.1", "text": "Would sir like a menu?" },
+          { "id": "taunt.cyb.2", "text": "You look delicious." },
+          { "id": "taunt.cyb.3", "text": "Your table is ready. Whenever you are." },
+          { "id": "taunt.cyb.4", "text": "Take your time. I am not going anywhere. I am also hungry." }
+        ],
+        "punished": [
+          { "id": "taunt.cyb.hit.1", "text": "Rude. I was mid-service." },
+          { "id": "taunt.cyb.hit.2", "text": "Please do not interrupt the waiter." }
+        ]
+      }
+    }
+  },
+  "on_the_chin": {
+    "_about": "The rival's held absorb stance (spec-wounds.md section 3). Working label for the move: Chin Up. The bravado line plays when a signature is absorbed. 'Was that supposed to hurt?' passed Legal's exact-phrase search; the two alternates still need one.",
+    "move_name": "Chin Up",
+    "move_name_alternates": ["The Open Stance", "Unmoved"],
+    "trigger": "absorb_signature",
+    "kind": "line", "speaker_role": "self", "priority": 4,
+    "display": { "style": "caption", "dur_s": 1.5 },
+    "lines": [
+      { "id": "chin.sig.1", "text": "Was that supposed to hurt?", "legal": "exact phrase passed" },
+      { "id": "chin.sig.2", "text": "Again. I was looking elsewhere.", "legal": "pending" },
+      { "id": "chin.sig.3", "text": "That was your best? Noted.", "legal": "pending" }
+    ],
+    "completed_absorb": [
+      { "id": "chin.done.1", "text": "Three. Is that all?", "legal": "pending" },
+      { "id": "chin.done.2", "text": "You may stop whenever you are ready.", "legal": "pending" }
+    ]
+  },
+  "last_stand": {
+    "_about": "The free last signature is ready at the brink (spec-wounds 1b). One line each, short, no final speech (Legal).",
+    "trigger": "last_stand_ready",
+    "kind": "line", "speaker_role": "self", "priority": 4,
+    "display": { "style": "caption", "dur_s": 1.4 },
+    "lines": {
+      "PROTAGONIST": { "id": "last.prot.1", "text": "One more." },
+      "ANTIHERO": { "id": "last.anti.1", "text": "I am not finished." },
+      "EMPRESS": { "id": "last.emp.1", "text": "We are not amused." },
+      "CYBORG": { "id": "last.cyb.1", "text": "Please hold. I am not done." },
+      "KAI": { "id": "last.kai.1", "text": "Not yet!" },
+      "VORR": { "id": "last.vorr.1", "text": "Not like this." }
+    }
+  },
+  "labels": {
+    "_about": "Launch-vector labels (docs/combat/launch-vectors.md). A slam is an event and a drive is the norm.",
+    "straight_down": { "label": "CRATER SLAM", "keep": true },
+    "slam_down_now_a_drive": { "old": "SLAM DOWN", "new": "DRIVE DOWN" },
+    "others_unchanged": ["UPPERCUT"],
+    "glossary_picks_if_adopted": { "SMASH ACROSS": "HURL ACROSS", "BUILDING SMASH": "THROUGH THE WALL", "MOUNTAINSIDE": "INTO THE MOUNTAIN" }
+  }
+}
