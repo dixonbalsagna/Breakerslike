@@ -14,6 +14,8 @@ const DT := 1.0 / 60.0
 var seeds: Array = [4, 12345]
 var max_ticks: int = 4200
 var main: Node
+var report_out: String = ""
+var report: Dictionary = {"runs": []}
 var fails: Array = []
 var checks: int = 0
 
@@ -24,6 +26,8 @@ func _initialize() -> void:
 			seeds = Array(a.substr(8).split(",")).map(func(s): return int(s))
 		elif a.begins_with("--ticks="):
 			max_ticks = int(a.substr(8))
+		elif a.begins_with("--report="):
+			report_out = a.substr(9)
 	DirData.templatesProfile = "dynamic"
 	var vpn := SubViewport.new()
 	vpn.size = Vector2i(1280, 720)
@@ -597,12 +601,59 @@ func _test_win_ko() -> void:
 	print("win test: the winner's beats %s, a KO falls %s" % [str(got), str(fall)])
 
 
+## The clavicle hunch effector and the socket table: the shoulder goes where it is told on both sides, a baked pose with a hand
+## target past the arm's reach carries its shoulder toward it, an authored hunch moves the shoulder of its pose, and the table
+## names every limb and region a key set may use.
+func _test_hunch() -> void:
+	var ix: Dictionary = AnimRig.index
+	var gq: Array[Quaternion] = []
+	gq.resize(AnimRig.N)
+	var gp := PackedVector3Array()
+	gp.resize(AnimRig.N)
+	var q0: Array[Quaternion] = AnimPose.identity_q()
+	AnimPose.fk(q0, Vector3.ZERO, gq, gp)
+	var rest: Dictionary = {"r": gp[ix["upper_arm_r"]], "l": gp[ix["upper_arm_l"]]}
+	var moved: Array = []
+	for sd in ["r", "l"]:
+		var lq: Array[Quaternion] = AnimPose.identity_q()
+		AnimPose.hunch(lq, sd, 3.0, 2.0)
+		AnimPose.fk(lq, Vector3.ZERO, gq, gp)
+		var dlt: Vector3 = gp[ix["upper_arm_" + sd]] - rest[sd]
+		moved.append(snappedf(dlt.x, 0.1))
+		moved.append(snappedf(dlt.y, 0.1))
+		_expect(absf(dlt.x - 3.0) < 0.15 and absf(dlt.y - 2.0) < 0.3, "hunch test: the %s shoulder moved by %s, not (3, 2)" % [sd, str(dlt)])
+	# a hand target past the arm's reach: the baked shoulder comes toward it, and nothing moves with the hunch off
+	var d: Dictionary = {"family": "upright", "hand_r": [45, 60, 5], "hand_l": [0, 30, -10]}
+	var on: AnimPose = AnimPose.bake("t_on", d)
+	var was: bool = AnimPose.hunch_auto
+	AnimPose.hunch_auto = false
+	var off: AnimPose = AnimPose.bake("t_off", d)
+	AnimPose.hunch_auto = was
+	var shx: Array = []
+	for pz in [on, off]:
+		AnimPose.fk(pz.q, pz.hips, gq, gp)
+		shx.append(gp[ix["upper_arm_r"]].x)
+	_expect(float(shx[0]) > float(shx[1]) + 1.0, "hunch test: the shoulder reached %.1f with the hunch, %.1f without" % [shx[0], shx[1]])
+	# the table names every limb and region the key sets use
+	var limbs: Dictionary = AnimData.sockets.get("limbs", {})
+	var regs: Dictionary = AnimData.sockets.get("regions", {})
+	for k in AnimData.keysets:
+		var ks = AnimData.keysets[k]
+		if typeof(ks) != TYPE_DICTIONARY or not ks.has("limb"):
+			continue
+		var lb: String = String(ks.get("limb", "hand_r"))
+		_expect(limbs.has(lb.get_slice("_", 0)), "hunch test: key set %s names the limb %s, not in sockets.json" % [k, lb])
+		_expect(regs.has(String(ks.get("target", "chest"))), "hunch test: key set %s names the region %s, not in sockets.json" % [k, ks.get("target", "chest")])
+	print("hunch test: shoulder moved by %s, the reach hunch brought it %.1f units forward, %d limbs and %d regions in the socket table" % [str(moved), float(shx[0]) - float(shx[1]), limbs.size(), regs.size()])
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
 	AnimData.load_all()
 	_test_beats()
 	_test_form()
+	_test_hunch()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}
@@ -671,6 +722,7 @@ func _run() -> void:
 			var gworst: float = gl.back() if gl.size() > 0 else 0.0
 			_expect(ikf > 0 and gl.size() > 0, "seed %d %s: the contact solve never ran (%d IK frames, %d reachable contacts)" % [seed, mode, ikf, gl.size()])
 			_expect(gworst < 1.0, "seed %d %s: a blow within reach ends %.2f units short of the defender" % [seed, mode, gworst])
+			report.runs.append({"seed": seed, "mode": mode, "contact_err_max": cerr, "contact_gap_worst": gworst, "contacts_within_reach": gl.size(), "contacts_beyond_reach": far, "solve_us": float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), "late_blows": late, "blows": blows, "catches": catches})
 			print("  contact solve: %d IK frames, %d contacts within reach (worst gap %.2f units), %d beyond reach (the sim put the fighters farther apart than the arm, lunge and step-in reach), %d facing flips" % [ikf, gl.size(), gworst, far, flips])
 			print("  base variants played: %s" % [vars])
 			print("  ragdoll step: %.1f us a tick a fighter (%d ticks), %d contact catches smeared" % [float(rdu) / maxf(1.0, rdt), rdt, catches])
@@ -691,6 +743,12 @@ func _run() -> void:
 	RenderAnim.style_override = ""
 	RenderAnim.debug_checks = false
 	print("Anim check  %d checks" % checks)
+	if report_out != "":
+		report["checks"] = checks
+		report["failures"] = fails
+		var rf := FileAccess.open(report_out, FileAccess.WRITE)
+		rf.store_string(JSON.stringify(report))
+		rf.close()
 	if fails.is_empty():
 		print("\nanim check passed")
 	else:

@@ -12,6 +12,7 @@ var seeds: Array = [4, 12345, 7, 99]
 var max_ticks: int = 3000
 var style: String = ""
 var nolimit: bool = false
+var json_out: String = ""
 var main: Node
 
 
@@ -21,6 +22,8 @@ func _initialize() -> void:
 			seeds = Array(a.substr(8).split(",")).map(func(s): return int(s))
 		elif a.begins_with("--ticks="):
 			max_ticks = int(a.substr(8))
+		elif a.begins_with("--json="):
+			json_out = a.substr(7)
 		elif a == "--nolimit":
 			nolimit = true
 		elif a.begins_with("--style="):
@@ -72,6 +75,10 @@ func _run() -> void:
 		print("  %-22s %6d frames, worst %.1f" % [k, int(counts.get(k, 0)), float(worst.get(k, 0.0))])
 	for e in examples.slice(0, 16):
 		print("  " + e)
+	if json_out != "":
+		var jf := FileAccess.open(json_out, FileAccess.WRITE)
+		jf.store_string(JSON.stringify({"tool": "limb_scan", "frames": frames, "counts": counts, "worst": worst, "examples": examples.slice(0, 16)}))
+		jf.close()
 	quit(0)
 
 

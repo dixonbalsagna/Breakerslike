@@ -59,3 +59,7 @@ The risk to watch: taste can drift in the poses no check flags. The mitigation i
 | A pinned ragdoll for throws | Yes: the victim's ragdoll loose with the root pinned to the grabber's hand socket, released on the throw. The sim owns the position, so it needs a `held` state on the victim (who holds him, which socket, the release tick) and the victim placed at the hand each tick; the animator then builds the pinned mode (about one unit) |
 | A reaction-strength input | The reaction already scales by force (damage over 60). To let Combat set it per atom, add a `react` field (0 to 1.6) to the damage event, or `o.react` on the strike beat; until then force from damage is used |
 | The broken side read from the sim | Yes please: a side per limb region in the wounds state (arms: left, right or none; legs likewise). Today the animator picks the side by a hash of the slot |
+
+## 4. Status (2026-10-01)
+
+The pipeline of section 2 is built: the silhouette lint, the stacking lint (with `data/anim/moments.json`), the pose lint, the exceptions collector, the wave reel and the A/B pair maker (`render/anim/tools/review.mjs`; details and the proof run on the 94 poses in pose-pipeline.md section 9.12). The effectors Combat asked for are in too: elbow and knee as aim-only strike limbs, head likewise, a clavicle hunch, and a socket table (`data/anim/sockets.json`) with a new `legs` region; `socket_check.gd` prints the reach envelope of each. The three sim-side asks (the `held` state, the `react` field, the broken side) stay with Simulation and Encounter for M0.

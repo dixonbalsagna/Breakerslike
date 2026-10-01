@@ -1,0 +1,12 @@
+{
+  "schema": "anim.effectors/1",
+  "_about": "The clavicle hunch effector (render/anim/anim_pose.gd, hunch). The shoulder is carried by turning the clavicle, so a punch rolls the shoulder into the blow and a guard shrugs it up. hunch: auto bakes it for any hand target past the arm's reach (the shoulder goes forward and up by what is missing, up to fwd_max and up_max model units), --nohunch turns every hunch off. poses: an authored hunch per pose id and side, [forward, up] in model units (negative up is a slump). The contact solve adds its own (sockets.json hunch_max). Render only, outside the sim's data hash.",
+  "hunch": {"auto": true, "fwd_max": 2.5, "up_max": 2.0},
+  "poses": {
+    "brace": {"r": [1.5, 3.0], "l": [1.5, 3.0]},
+    "cue.brace": {"r": [1.5, 3.0], "l": [1.5, 3.0]},
+    "hurt.hold": {"r": [-1.0, 2.5], "l": [-1.0, 2.5]},
+    "win.stand": {"r": [0.0, -2.5], "l": [0.0, -2.5]},
+    "emote.victory": {"r": [0.0, 3.0], "l": [0.0, 1.5]}
+  }
+}

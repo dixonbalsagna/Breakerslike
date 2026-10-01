@@ -1,0 +1,466 @@
+{
+ "wave": "poses-first-run",
+ "poses": 94,
+ "counts": {
+  "error": 0,
+  "review": 16,
+  "note": 47
+ },
+ "flagged": [
+  "down.getup",
+  "slide.brake",
+  "def.guard_break",
+  "emote.victory",
+  "move.descend",
+  "move.sprint",
+  "skid.back",
+  "skid.front",
+  "move.burst",
+  "move.brake",
+  "cue.overextend",
+  "cue.pursue"
+ ],
+ "findings": [
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "down.getup",
+   "detail": "hand_r target [16, 3, 12] is 8.5 units out of reach (the limb is clamped to [16.7, 11.5, 11.6])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "slide.brake",
+   "detail": "hand_r target [-6, 4, 16] is 17.4 units out of reach (the limb is clamped to [-0.6, 20.4, 13.8])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "slide.brake",
+   "detail": "hand_l target [-2, 6, -14] is 14.2 units out of reach (the limb is clamped to [1.5, 19.7, -12.7])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "def.guard_break",
+   "detail": "hand_r target [10, 84, 18] is 10.0 units out of reach (the limb is clamped to [2.6, 77.6, 16.1])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "emote.victory",
+   "detail": "hand_r target [14, 98, 10] is 7.7 units out of reach (the limb is clamped to [10.7, 91.0, 10.0])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "move.descend",
+   "detail": "hand_r target [30, 92, 6] is 6.6 units out of reach (the limb is clamped to [27.7, 85.9, 6.7])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "move.sprint",
+   "detail": "hand_r target [-14, 44, 12] is 7.9 units out of reach (the limb is clamped to [-6.1, 44.5, 11.6])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "move.sprint",
+   "detail": "hand_l target [-16, 42, -12] is 10.1 units out of reach (the limb is clamped to [-6.0, 43.1, -11.5])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "skid.back",
+   "detail": "hand_r target [18, 4, 14] is 16.2 units out of reach (the limb is clamped to [1.9, 5.0, 12.6])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "skid.front",
+   "detail": "hand_r target [-12, 5, 14] is 8.2 units out of reach (the limb is clamped to [-3.8, 5.2, 13.2])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "move.burst",
+   "detail": "hand_l target [-10, 46, -10] is 6.2 units out of reach (the limb is clamped to [-3.8, 45.8, -10.0])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "move.brake",
+   "detail": "hand_r target [34, 56, 16] is 22.9 units out of reach (the limb is clamped to [11.3, 54.9, 13.5])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "move.brake",
+   "detail": "hand_l target [30, 52, -14] is 18.7 units out of reach (the limb is clamped to [11.4, 52.5, -12.5])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "move.brake",
+   "detail": "foot_l target [26, 3, -7] is 6.4 units out of reach (the limb is clamped to [21.1, 6.6, -6.7])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "cue.overextend",
+   "detail": "hand_l target [-24, 36, -14] is 20.2 units out of reach (the limb is clamped to [-5.8, 44.8, -12.4])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "cue.pursue",
+   "detail": "hand_l target [-26, 42, -12] is 13.6 units out of reach (the limb is clamped to [-13.1, 46.3, -11.4])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "charge.hold",
+   "detail": "right elbow at 154 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "down.prone",
+   "detail": "left elbow at 173 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "down.prone",
+   "detail": "right elbow at 167 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "hurt.hold",
+   "detail": "right elbow at 155 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.jab.chamber",
+   "detail": "right elbow at 164 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.jab.contact",
+   "detail": "foot_r target [-8, 3, 9] is 5.0 units out of reach (the limb is clamped to [-4.6, 6.2, 8.5])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.jab.follow",
+   "detail": "left elbow at 165 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.cross.chamber",
+   "detail": "right elbow at 164 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.cross.contact",
+   "detail": "foot_r target [-6, 3, 9] is 4.3 units out of reach (the limb is clamped to [-3.1, 5.6, 8.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.cross.follow",
+   "detail": "left elbow at 171 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.hook.contact",
+   "detail": "foot_r target [-6, 3, 9] is 3.6 units out of reach (the limb is clamped to [-3.6, 5.2, 8.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.hook.follow",
+   "detail": "left elbow at 170 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.contact",
+   "detail": "hand_r target [55, 78, 8] is 2.0 units out of reach (the limb is clamped to [53.3, 76.9, 8.1])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.contact",
+   "detail": "foot_r target [-6, 3, 9] is 4.0 units out of reach (the limb is clamped to [-3.5, 5.6, 8.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.contact",
+   "detail": "left elbow at 156 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.follow",
+   "detail": "hand_r target [38, 88, 8] is 4.8 units out of reach (the limb is clamped to [34.8, 84.5, 8.2])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.kick.contact",
+   "detail": "left elbow at 163 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.round.follow",
+   "detail": "right elbow at 152 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "def.slip",
+   "detail": "hand_l target [16, 46, -8] is 2.4 units out of reach (the limb is clamped to [13.7, 46.6, -8.1])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "def.guard_break",
+   "detail": "hand_l target [4, 80, -16] is 4.7 units out of reach (the limb is clamped to [0.6, 77.0, -15.2])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "move.descend",
+   "detail": "hand_l target [28, 90, -4] is 4.3 units out of reach (the limb is clamped to [26.6, 85.9, -4.7])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "move.sprint",
+   "detail": "foot_l target [-36, 24, -5] is 2.0 units out of reach (the limb is clamped to [-34.1, 24.6, -5.0])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "form.gather",
+   "detail": "left elbow at 153 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "form.gather",
+   "detail": "right elbow at 154 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "skid.front",
+   "detail": "left elbow at 173 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "move.burst",
+   "detail": "hand_r target [-8, 48, 12] is 4.4 units out of reach (the limb is clamped to [-3.6, 47.6, 11.8])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.turn_read",
+   "detail": "right elbow at 158 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.guard_set",
+   "detail": "foot_r target [-8, 3, 8] is 1.3 units out of reach (the limb is clamped to [-7.4, 3.7, 7.9])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.last_look",
+   "detail": "right elbow at 153 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.breaks_hold",
+   "detail": "hand_r target [26, 64, 14] is 3.1 units out of reach (the limb is clamped to [22.9, 64.0, 13.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.holds_on",
+   "detail": "foot_r target [-8, 3, 8] is 1.6 units out of reach (the limb is clamped to [-7.7, 4.0, 7.9])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.holds_on",
+   "detail": "foot_l target [8, 3, -7] is 1.5 units out of reach (the limb is clamped to [7.7, 3.9, -6.9])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.catch",
+   "detail": "foot_r target [-8, 3, 8] is 1.3 units out of reach (the limb is clamped to [-7.4, 3.7, 7.9])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.reset",
+   "detail": "hand_r target [22, 34, 12] is 1.6 units out of reach (the limb is clamped to [20.9, 35.2, 11.9])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.reset",
+   "detail": "hand_l target [-20, 30, -12] is 3.5 units out of reach (the limb is clamped to [-18.0, 32.8, -11.8])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "down.prone / skid.front",
+   "detail": "overlap 0.844 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "strike.kick.chamber / strike.round.chamber",
+   "detail": "overlap 0.842 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "stance.aggressive / strike.cross.chamber",
+   "detail": "overlap 0.832 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "move.step_f / strike.hook.chamber",
+   "detail": "overlap 0.828 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "strike.cross.chamber / strike.hook.chamber",
+   "detail": "overlap 0.82 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "def.parry_ready / strike.hook.chamber",
+   "detail": "overlap 0.817 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "hurt.hold / idle.winded",
+   "detail": "overlap 0.813 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "cue.last_look / emote.taunt",
+   "detail": "overlap 0.811 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "down.ko / skid.back",
+   "detail": "overlap 0.808 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "def.parry_ready / move.step_f",
+   "detail": "overlap 0.8 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "cue.brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  }
+ ]
+}

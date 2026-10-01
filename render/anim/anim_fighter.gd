@@ -981,24 +981,32 @@ func _window_pose(id: String, t: float, rise: float, hold: float, end: float) ->
 
 # ------------------------------------------------------------------ contact: the striking limb reaches the defender
 
-const BODY_R := {"head": 5.0, "chest": 6.5, "gut": 6.5}   # how far the surface is in front of the point the region names
-const END_LEN := {"hand": 6.0, "foot": 8.0}               # wrist (or ankle) to the face of the fist (or the foot)
-const LUNGE_MAX := {"hand": 11.0, "foot": 7.0}            # how far the hips may carry the reach (model units)
-const STEP_MAX := {"hand": 14.0, "foot": 10.0}            # ... and the whole body's step-in on top of that
-const REACH_Z := {"hand": 5.0, "foot": 9.0}
-
-
-## The defender's body point for a region, in the defender's model space.
+## The defender's body point for a region (data/anim/sockets.json regions), in the defender's model space.
 func _region_point(name: String) -> Vector3:
-	match name:
-		"head":
-			return head_center()
-		"gut":
-			var s1: int = AnimRig.index["spine_1"]
-			return gp[s1] + gq[s1] * Vector3(0, 2, 0) + root_off
-		_:
-			var s2: int = AnimRig.index["spine_2"]
-			return gp[s2] + gq[s2] * Vector3(0, 3, 0) + root_off
+	var regs: Dictionary = AnimData.sockets.get("regions", {})
+	var r: Dictionary = regs.get(name, regs.get("chest", {}))
+	var bn: String = String(r.get("bone", "spine_2"))
+	var off: Array = r.get("offset", [0, 3, 0])
+	var bi: int = AnimRig.index[bn]
+	if not _full_fk and not SOCKET_SET.has(bn):
+		AnimPose.fk(q, hips, gq, gp)
+		_full_fk = true
+	return gp[bi] + gq[bi] * Vector3(float(off[0]), float(off[1]), float(off[2])) + root_off
+
+
+## How far the striking part can reach from its root (the shoulder, the hip, the spine): the length of the chain for a two-bone
+## limb, the distance to the tip for an aimed one. The tip is where the blow lands from (the wrist, the elbow, the head).
+func _strike_tip(sk: Dictionary, a: int, b: int, c: int) -> Vector3:
+	if String(sk.get("mode", "ik")) == "ik":
+		return gp[c]
+	var off: Array = sk.get("tip_offset", [0, 0, 0])
+	return gp[c] + gq[c] * Vector3(float(off[0]), float(off[1]), float(off[2]))
+
+
+func _strike_reach(sk: Dictionary, a: int, b: int, c: int) -> float:
+	if String(sk.get("mode", "ik")) == "ik":
+		return (gp[b] - gp[a]).length() + (gp[c] - gp[b]).length() - 0.5
+	return (_strike_tip(sk, a, b, c) - gp[a]).length()
 
 
 ## IK the striking hand or foot onto the defender's body: the wrist (ankle) goes to the region's surface minus the fist, so
@@ -1014,53 +1022,90 @@ func _contact_ik(S: SimState, f) -> void:
 		return
 	var base_limb: String = _ci_limb
 	var limb: String = base_limb
-	if _ci_side:
+	var sided: bool = base_limb.contains("_")
+	if _ci_side and sided:
 		limb = base_limb.substr(0, base_limb.length() - 1) + ("l" if base_limb.ends_with("r") else "r")
-	var is_hand: bool = limb.begins_with("hand")
-	var kind: String = "hand" if is_hand else "foot"
-	var sfx: String = limb.substr(limb.length() - 1)
-	var zs: float = 1.0 if sfx == "r" else -1.0
+	var kind: String = limb.get_slice("_", 0)
+	var sk: Dictionary = AnimData.sockets.get("limbs", {}).get(kind, {})
+	if sk.is_empty():
+		return
+	var aim: bool = String(sk.get("mode", "ik")) == "aim"
+	var sfx: String = limb.substr(limb.length() - 1) if sided else "r"
+	var zs: float = (1.0 if sfx == "r" else -1.0) if sided else 0.0
+	var end_len: float = float(sk.get("end_len", 6.0))
+	var lunge_max: float = float(sk.get("lunge_max", 8.0))
+	var step_max: float = float(sk.get("step_max", 10.0))
 	var dx: float = SimWrap.sdx(f.x, opp.x)
 	var rp: Vector3 = oaf._region_point(_ci_target)
 	var mx: float = (dx + oaf.vface * rp.x) * vface
 	if mx < 4.0:
 		return
 	var my: float = (opp.y - f.y) + rp.y
-	var tgt := Vector3(mx - float(BODY_R.get(_ci_target, 6.5)) - float(END_LEN[kind]) - _smear_now(S.T), my, float(REACH_Z[kind]) * zs)
+	var surf: float = float(AnimData.sockets.get("regions", {}).get(_ci_target, {}).get("surface", 6.5))
+	var tgt := Vector3(mx - surf - end_len - _smear_now(S.T), my, float(sk.get("reach_z", 5.0)) * zs)
 	var ix: Dictionary = AnimRig.index
-	var a: int = ix[("upper_arm_" if is_hand else "thigh_") + sfx]
-	var b: int = ix[("forearm_" if is_hand else "shin_") + sfx]
-	var c: int = ix[limb]
+	var a: int
+	var b: int
+	var c: int
+	if aim:
+		a = ix[String(sk["bone"]) + ("_" + sfx if sided else "")]
+		b = a
+		c = ix[String(sk["tip"]) + ("_" + sfx if sided else "")]
+	else:
+		var ch: Array = sk["chain"]
+		a = ix[String(ch[0]) + "_" + sfx]
+		b = ix[String(ch[1]) + "_" + sfx]
+		c = ix[limb]
 	AnimPose.fk(q, hips, gq, gp)
 	_full_fk = true
-	var reach: float = (gp[b] - gp[a]).length() + (gp[c] - gp[b]).length() - 0.5
+	var reach: float = _strike_reach(sk, a, b, c)
 	# how far forward the shoulder must come (along x, the way the hips and the step move it) for the arm to just reach
 	var d3: Vector3 = tgt - gp[a]
 	var side2: float = d3.y * d3.y + d3.z * d3.z
 	var need: float = d3.x - (sqrt(reach * reach - side2) if side2 < reach * reach else 0.0)
 	need = maxf(need, 0.0)
+	# the clavicle hunch brings the shoulder to meet it first (an arm blow; the legs and the head have no shoulder to give)
+	var hm: float = float(sk.get("hunch_max", 0.0))
+	if hm > 0.0 and need > 0.0 and AnimPose.hunch_auto and sided:
+		AnimPose.hunch(q, sfx, minf(need, hm) * _ci_w, 0.0)
+		AnimPose.fk(q, hips, gq, gp)
+		reach = _strike_reach(sk, a, b, c)
+		d3 = tgt - gp[a]
+		side2 = d3.y * d3.y + d3.z * d3.z
+		need = maxf(d3.x - (sqrt(reach * reach - side2) if side2 < reach * reach else 0.0), 0.0)
 	# above or below the arm's reach whatever the lunge (a defender on another level): the excess is what is left over
-	var excess: float = need - float(LUNGE_MAX[kind]) - float(STEP_MAX[kind])
+	var excess: float = need - lunge_max - step_max
 	if side2 >= reach * reach:
 		excess = sqrt(side2) - reach
 	elif need <= 0.0 and d3.length() > reach:
 		excess = d3.length() - reach   # the target is behind the shoulder (the fighters overlap): no step forward helps
-	var lunge: float = minf(need, float(LUNGE_MAX[kind])) * _ci_w
-	var step: float = clampf(need - float(LUNGE_MAX[kind]), 0.0, float(STEP_MAX[kind])) * _ci_w
+	var lunge: float = minf(need, lunge_max) * _ci_w
+	var step: float = clampf(need - lunge_max, 0.0, step_max) * _ci_w
 	_step_x = step
 	var ik_t: Vector3 = tgt - Vector3(lunge + step, 0.0, 0.0)
 	var qa0: Quaternion = q[a]
 	var qb0: Quaternion = q[b]
-	var pole: Vector3 = gp[b]   # the elbow (knee) stays on the side the authored pose has it, so the solved limb is its neighbour
-	AnimPose.ik2(q, gq, gp, a, b, c, ik_t, pole)
-	AnimPose.hinge_fix(q, gq, gp, a, b, c, 1.0 if is_hand else -1.0)
-	q[a] = qa0.slerp(q[a], _ci_w)
-	q[b] = qb0.slerp(q[b], _ci_w)
+	var gap: float
+	if aim:
+		# one bone turned so the tip points at the target: what the joint cannot reach is the gap, what is nearer is overshoot
+		var tip: Vector3 = _strike_tip(sk, a, b, c)
+		var dir_now: Vector3 = (tip - gp[a]).normalized()
+		var dir_to: Vector3 = (ik_t - gp[a]).normalized()
+		var qa_new: Quaternion = Quaternion(dir_now, dir_to) * gq[a]
+		q[a] = gq[AnimRig.parent[a]].inverse() * qa_new
+		q[a] = qa0.slerp(q[a], _ci_w)
+		gap = maxf(0.0, (ik_t - gp[a]).length() - reach)
+	else:
+		var pole: Vector3 = gp[b]   # the elbow (knee) stays on the side the authored pose has it, so the solved limb is its neighbour
+		AnimPose.ik2(q, gq, gp, a, b, c, ik_t, pole)
+		AnimPose.hinge_fix(q, gq, gp, a, b, c, 1.0 if kind == "hand" else -1.0)
+		q[a] = qa0.slerp(q[a], _ci_w)
+		q[b] = qb0.slerp(q[b], _ci_w)
+		gap = maxf(0.0, (ik_t - gp[c]).length())
 	hips.x += lunge
 	debug["ik_frames"] += 1
 	if absf(S.T - _ci_tc) < DT * 0.5 and _ci_w > 0.99 and _ci_tc != _gap_tc:
 		_gap_tc = _ci_tc
-		var gap: float = maxf(0.0, (ik_t - gp[c]).length())
 		debug["gap_max"] = maxf(float(debug["gap_max"]), gap)
 		debug["gap_sum"] += gap
 		debug["gap_n"] += 1

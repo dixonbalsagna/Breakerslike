@@ -1126,6 +1126,34 @@ Levels, mean us a solve: high 86, medium 75 (drops look, feet, personality), low
 
 **L. The showcase reel** (`art/animation/overhaul-L-showcase-reel.gif`): 16 seconds of seed 4 from tick 1800, the match camera cropped close on both fighters, before the overhaul on the left (`--noragdoll`) and after on the right. The same seed and sim: the left and right are the same fight, frame for frame. It shows hits, a launch, blocks and a dodge in one cut; the fighters' reactions, idle motion, brace and flight differ throughout. (A 20 second cut ran to a stretch where the match camera had gone with a launched fighter, so it stops at 16.)
 
+### 9.12 Units M to P: the review pipeline, the clavicle hunch and the socket table (2026-10-01)
+
+Built to make the rich moveset affordable (docs/animation/review-plan.md): the machines do the first pass, Orb sees the exceptions.
+
+**M. The silhouette lint** (`render/anim/tools/silhouette_lint.gd`, headless). Each pose is rebuilt by forward kinematics and its limbs rasterised as thick segments in the side view on a 160 x 140 unit grid (feet on the floor, centred on the pelvis); every pair is compared by overlap (intersection over union). Two poses that read alike are flagged: across families at 0.85, inside a family at 0.95 (a chamber that is the contact pose is a key that does nothing). Per pose it also gives area, width and height. `data/anim/lint_allow.json` lists the pairs that are meant to look alike (with the reason) and the overlay prefixes (`wound.`, `react.`: layered over another pose, never shown alone). On the 82 poses there are now: 0 pairs over the defaults, so the review wave uses a lower line (0.80 / 0.92) to show candidates.
+
+**N. The stacking lint** (`stacking_lint.gd`, from Legal's seven marks in rule-of-cool.md section 1 rule 9). Mark 1 (a crouch with the fists at the sides) is read from the pose itself; the other six are about effects and voice, so each system that makes a moment declares its marks in `data/anim/moments.json` (8 moments now: the transformation's three beats, the power-up burst, the signature charge, the tier-3 world reaction, the winner's survey, the last stand). A moment with more than two marks is a FAIL, two is a warning (no room left). Today: 0 over, and the lint found a real one: `move.burst` had fists at its sides in a low lean, so its hands are open now.
+
+**O. The exceptions collector** (`render/anim/tools/review.mjs`, Node, no dependencies). `wave` runs `pose_lint` (new: hand or foot targets the IK cannot reach, with the clamped position; elbows and knees out of human range; an arm straight back; a foot below the floor; pelvis height; NaN), the two lints, and (unless `--no-match`) `limb_scan`, `pop_scan` and `anim_check` (now with `--json=` / `--report=`, so the contact error, gap and solve cost come out as data). It merges them into `art/animation/review/<wave>/`: `exceptions.md` (errors the director fixes first, rows for Orb, logged notes; each with a suggested action), `summary.json`, `exceptions-sheet.png` (a contact sheet of the flagged poses) and the raw tool output. `reel` makes the wave's reel (a seeded match window, before the overhaul left, after right) and `ab` an A/B pair (the same window under two argument sets), both as GIFs; `fix-reach` rewrites unreachable targets to where the limb ends up. `window_scan.gd` finds the reel windows (launches, and the share of frames the camera holds both fighters).
+*Proved on the 94 poses in the file:* first run 16 for review and 47 notes (the sheet is `review/poses-first-run/`); 28 unreachable targets moved to the limb's real end by `fix-reach` (strike poses left alone, the contact slice reads their reach; the silhouette of 15 poses changes by under 25 cells of a few thousand); second run 0 errors, 0 for review, 36 notes (`review/poses/`). The elbows and knees that author a fold past 150 degrees (the runtime limb pass trims them) are logged as notes. A whole wave pass is about 40 s for the poses and 2 minutes with the matches.
+
+**P. The clavicle hunch and the socket table.**
+- *Hunch* (`AnimPose.hunch`, `data/anim/effectors.json`): the shoulder is carried by turning the clavicle (forward and up, in model units), so a punch rolls the shoulder into the blow and a guard shrugs it. Automatic at bake for any hand target past the arm's reach (up to 2.5 forward, 2 up); authored per pose and side in effectors.json (brace, hurt.hold, win.stand, emote.victory so far); the contact solve adds up to 2.5 more (the hand's reach on the chest goes from 72 to 74 u). `--nohunch` turns all of it off for an A/B.
+- *Sockets* (`data/anim/sockets.json`): the table the contact solve reads instead of constants. Regions (head, chest, gut and a new `legs`): the bone, an offset and the skin's distance. Limbs: hand and foot (two-bone IK as before) and three new aim-only ones: elbow, knee and head, where one bone is turned so a joint points at the target. Key sets name them as `limb: "elbow_r"`, `"knee_l"`, `"head"` and `target: "legs"`. `socket_check.gd` prints each blow's reach envelope (the farthest centre distance it lands at, within 1 unit):
+
+| blow | head | chest | gut | legs |
+| :--- | ---: | ---: | ---: | ---: |
+| hand | 72 | 74 | 66 | none |
+| foot | none | 60 | 64 | 60 |
+| elbow | 46 | 50 | none | none |
+| knee | none | none | 42 | 36 |
+| head | 44 | 58 | 54 | none |
+
+"None" is a height the part cannot reach from a neutral stance (a hand at the legs, a knee at the chest): the pose has to bring the part there (a crouch for a low hand, a rise for a high knee). The elbow, knee and head blows are close-range: the sim has to bring the fighters inside about 50 u for them, where the hand and the foot work at the contact slice's 58.
+The checks: `anim_check` has a hunch test (the shoulder moves by what it is told on both sides; a reach hunch brings it 2.4 u forward; every limb and region a key set names is in the table). Contact error is still 0.0014 rad, 0 contacts beyond reach, and the gameplay hash is the same (`fa69ecb9c62ecfaf` at tick 600).
+
+**The second showcase reel** (`art/animation/review/showcase2/showcase2-reel.gif`): 20 seconds of seed 12345 from tick 1845 with a launch at 2085, the camera holding both fighters for 84% of the window (`window_scan.gd`: of 4 seeds the two best windows were 83% and 84%); before the overhaul on the left, after on the right. 3.7 MB: a real wide window at game scale. `overhaul-P-clavicle-hunch-before-after.gif` shows the hunch off (left) and on (right).
+
 ---
 
 ## 10. How we will know it works

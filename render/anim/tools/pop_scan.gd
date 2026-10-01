@@ -10,6 +10,7 @@ const DT := 1.0 / 60.0
 var seeds: Array = [4, 12345, 7]
 var max_ticks: int = 3000
 var limit: float = 0.6
+var json_out: String = ""
 var main: Node
 
 
@@ -19,6 +20,8 @@ func _initialize() -> void:
 			seeds = Array(a.substr(8).split(",")).map(func(s): return int(s))
 		elif a.begins_with("--ticks="):
 			max_ticks = int(a.substr(8))
+		elif a.begins_with("--json="):
+			json_out = a.substr(7)
 		elif a.begins_with("--limit="):
 			limit = float(a.substr(8))
 	DirData.templatesProfile = "dynamic"
@@ -87,4 +90,11 @@ func _run() -> void:
 	examples.sort_custom(func(a, b): return a[0] > b[0])
 	for e in examples.slice(0, 14):
 		print("  " + e[1])
+	if json_out != "":
+		var jf := FileAccess.open(json_out, FileAccess.WRITE)
+		var ex_out: Array = []
+		for e in examples.slice(0, 14):
+			ex_out.append({"mag": e[0], "text": e[1]})
+		jf.store_string(JSON.stringify({"tool": "pop_scan", "frames": frames, "joins": pops, "worst": worst, "limit": limit, "examples": ex_out}))
+		jf.close()
 	quit(0)

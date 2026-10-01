@@ -23,6 +23,8 @@ static var personality: Dictionary = {}
 static var ragdoll_motion: Dictionary = {}
 static var ragdoll: Dictionary = {}      # data/anim/ragdoll.json (read by AnimRagdoll.setup)
 static var form_poses: Dictionary = {}  # beat -> pose id
+static var sockets: Dictionary = {}     # data/anim/sockets.json (regions a blow lands on, limbs that land it)
+static var effector_poses: Dictionary = {}   # data/anim/effectors.json: pose id -> authored clavicle hunch
 
 
 static func _read(name: String) -> Dictionary:
@@ -39,10 +41,23 @@ static func load_all() -> void:
 		return
 	loaded = true
 	AnimRig.setup()
+	var ej: Dictionary = _read("effectors.json")
+	var hj: Dictionary = ej.get("hunch", {})
+	AnimPose.hunch_auto = bool(hj.get("auto", true)) and not OS.get_cmdline_user_args().has("--nohunch")
+	AnimPose.hunch_fwd_max = float(hj.get("fwd_max", 2.5))
+	AnimPose.hunch_up_max = float(hj.get("up_max", 2.0))
+	effector_poses = ej.get("poses", {})
+	sockets = _read("sockets.json")
 	var pj: Dictionary = _read("poses.json")
 	var src: Dictionary = pj.get("poses", {})
 	for id in src:
-		poses[id] = AnimPose.bake(id, src[id])
+		var sk: Dictionary = src[id]
+		if effector_poses.has(id) and AnimPose.hunch_auto:
+			sk = sk.duplicate()
+			for sd in ["r", "l"]:
+				if effector_poses[id].has(sd):
+					sk["hunch_" + sd] = effector_poses[id][sd]
+		poses[id] = AnimPose.bake(id, sk)
 	var kj: Dictionary = _read("keysets.json")
 	keysets = kj.get("keysets", {})
 	picks = kj.get("picks", {})

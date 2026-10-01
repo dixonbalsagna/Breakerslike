@@ -1,0 +1,17 @@
+{
+  "schema": "anim.sockets/1",
+  "_about": "The socket table: where a blow lands and what lands it (render/anim/anim_fighter.gd, _contact_ik and _region_point). regions: the defender's body points a key set's \"target\" names (bone and offset in the bone's frame, model units; surface is how far the skin is in front of that point). limbs: the striking part a key set's \"limb\" names (hand_r, foot_l, elbow_r, knee_l, head; the suffix is the side). mode ik: a two-bone chain solved onto the target. mode aim: one bone turned so the tip (a joint, offset in its frame) points at it, for a blow that is a joint rather than an end (elbow, knee, head). end_len: the tip to the skin of the striking part. lunge_max / step_max: how far the hips, then the whole body, may carry the reach. reach_z: the lateral offset of the contact line (times the side). hunch_max: how far the clavicle hunch may bring the shoulder (data/anim/effectors.json). Render only, outside the sim's data hash.",
+  "regions": {
+    "head": {"bone": "head", "offset": [0, 6, 0], "surface": 5.0},
+    "chest": {"bone": "spine_2", "offset": [0, 3, 0], "surface": 6.5},
+    "gut": {"bone": "spine_1", "offset": [0, 2, 0], "surface": 6.5},
+    "legs": {"bone": "pelvis", "offset": [0, -14, 0], "surface": 6.0}
+  },
+  "limbs": {
+    "hand": {"mode": "ik", "chain": ["upper_arm", "forearm", "hand"], "end_len": 6.0, "lunge_max": 11.0, "step_max": 14.0, "reach_z": 5.0, "hunch_max": 2.5},
+    "foot": {"mode": "ik", "chain": ["thigh", "shin", "foot"], "end_len": 8.0, "lunge_max": 7.0, "step_max": 10.0, "reach_z": 9.0, "hunch_max": 0.0},
+    "elbow": {"mode": "aim", "bone": "upper_arm", "tip": "forearm", "tip_offset": [0, 0, 0], "end_len": 3.0, "lunge_max": 9.0, "step_max": 12.0, "reach_z": 5.0, "hunch_max": 2.5},
+    "knee": {"mode": "aim", "bone": "thigh", "tip": "shin", "tip_offset": [0, 0, 0], "end_len": 4.0, "lunge_max": 7.0, "step_max": 10.0, "reach_z": 7.0, "hunch_max": 0.0},
+    "head": {"mode": "aim", "bone": "spine_2", "tip": "head", "tip_offset": [0, 6, 0], "end_len": 5.0, "lunge_max": 8.0, "step_max": 10.0, "reach_z": 0.0, "hunch_max": 0.0}
+  }
+}

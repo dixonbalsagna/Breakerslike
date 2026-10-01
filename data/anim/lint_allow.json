@@ -1,0 +1,8 @@
+{
+  "schema": "anim.lint_allow/1",
+  "_about": "Pairs the silhouette lint (render/anim/tools/silhouette_lint.gd) does not flag, and the poses it does not compare. overlay: pose-id prefixes that are layered over another pose and never shown alone (only some bones are used), so their silhouette is not a look of its own. pairs: two poses that are meant to look alike (the same idea in two systems), with the reason. Render only, outside the sim's data hash.",
+  "overlay": ["wound.", "react."],
+  "pairs": [
+    ["brace", "cue.brace", "the same bracing idea: the cue pose is the brace the director calls for, the other the base state's"]
+  ]
+}

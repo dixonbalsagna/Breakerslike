@@ -22,6 +22,10 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/pop_scan.gd` | Join scan: bones turning more than a limit in one tick, by what was playing (the evidence for inertialisation) |
 | `tools/solve_bench.gd` | The solve cost of every overhaul layer and quality level, alternating rounds (the order to drop layers in) |
 | `tools/ragdoll_lab.gd` | A close fixed view of one fighter in a real match for judging launches, skids and hits; `--noragdoll` for the before |
+| `tools/pose_lint.gd`, `tools/silhouette_lint.gd`, `tools/stacking_lint.gd` | The review pipeline's lints (unreachable targets and joint range; silhouette overlap; Legal's seven marks per moment). `data/anim/lint_allow.json`, `data/anim/moments.json` |
+| `tools/review.mjs` | The exceptions collector: `wave` (one sheet of exceptions per wave), `reel`, `ab`, `fix-reach`. Output in `art/animation/review/<wave>/` |
+| `tools/window_scan.gd`, `tools/rgb2png.mjs` | Finds reel windows (launches, both fighters framed); one reel frame as a PNG |
+| `tools/socket_check.gd` | The reach envelope of every striking limb against every region (`data/anim/sockets.json`) |
 | `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 
 ```

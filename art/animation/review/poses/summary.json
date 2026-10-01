@@ -1,0 +1,264 @@
+{
+ "wave": "poses",
+ "poses": 94,
+ "counts": {
+  "error": 0,
+  "review": 0,
+  "note": 36
+ },
+ "flagged": [],
+ "findings": [
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "charge.hold",
+   "detail": "right elbow at 154 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "down.prone",
+   "detail": "left elbow at 173 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "down.prone",
+   "detail": "right elbow at 167 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "hurt.hold",
+   "detail": "right elbow at 155 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.jab.chamber",
+   "detail": "right elbow at 164 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.jab.contact",
+   "detail": "foot_r target [-8, 3, 9] is 5.0 units out of reach (the limb is clamped to [-4.6, 6.2, 8.5])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.jab.follow",
+   "detail": "left elbow at 165 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.cross.chamber",
+   "detail": "right elbow at 164 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.cross.contact",
+   "detail": "foot_r target [-6, 3, 9] is 4.3 units out of reach (the limb is clamped to [-3.1, 5.6, 8.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.cross.follow",
+   "detail": "left elbow at 171 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.hook.contact",
+   "detail": "foot_r target [-6, 3, 9] is 3.6 units out of reach (the limb is clamped to [-3.6, 5.2, 8.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.hook.follow",
+   "detail": "left elbow at 170 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.contact",
+   "detail": "hand_r target [55, 78, 8] is 2.0 units out of reach (the limb is clamped to [53.3, 76.9, 8.1])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.contact",
+   "detail": "foot_r target [-6, 3, 9] is 4.0 units out of reach (the limb is clamped to [-3.5, 5.6, 8.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.contact",
+   "detail": "left elbow at 156 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.upper.follow",
+   "detail": "hand_r target [38, 88, 8] is 4.8 units out of reach (the limb is clamped to [34.8, 84.5, 8.2])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.kick.contact",
+   "detail": "left elbow at 163 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "strike.round.follow",
+   "detail": "right elbow at 152 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "form.gather",
+   "detail": "left elbow at 153 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "form.gather",
+   "detail": "right elbow at 154 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "skid.front",
+   "detail": "left elbow at 173 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.turn_read",
+   "detail": "right elbow at 158 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "cue.last_look",
+   "detail": "right elbow at 153 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "down.prone / skid.front",
+   "detail": "overlap 0.842 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "strike.kick.chamber / strike.round.chamber",
+   "detail": "overlap 0.842 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "stance.aggressive / strike.cross.chamber",
+   "detail": "overlap 0.832 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "move.step_f / strike.hook.chamber",
+   "detail": "overlap 0.828 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "strike.cross.chamber / strike.hook.chamber",
+   "detail": "overlap 0.82 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "def.parry_ready / strike.hook.chamber",
+   "detail": "overlap 0.817 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "hurt.hold / idle.winded",
+   "detail": "overlap 0.813 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "cue.last_look / emote.taunt",
+   "detail": "overlap 0.811 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "down.ko / skid.back",
+   "detail": "overlap 0.808 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "def.parry_ready / move.step_f",
+   "detail": "overlap 0.8 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "cue.brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  },
+  {
+   "severity": "note",
+   "source": "pop_scan",
+   "subject": "joins",
+   "detail": "248 eased swings over 0.6 rad in 12000 fighter-frames, worst 2.67 rad (fighter 0: 2.67 rad on shin_l, (base) -> (base) [react launched], state launched ip true t 0.033)",
+   "action": "none: the offset settles on its curve; raw/pop_scan.json lists the worst ticks"
+  }
+ ]
+}

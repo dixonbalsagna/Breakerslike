@@ -20,6 +20,13 @@ var curl := Vector2.ZERO
 var additive: bool = false
 var note: String = ""
 
+## The clavicle hunch effector (data/anim/effectors.json): how far the shoulder may be carried toward a hand target the arm
+## cannot reach alone, in model units (forward, up), and whether baking does it by itself. Set by AnimData.
+static var hunch_auto: bool = true
+static var hunch_fwd_max: float = 2.5
+static var hunch_up_max: float = 2.0
+const CLAVICLE_ARM := 6.0   # the clavicle bone's length to the shoulder joint (the rig's upper_arm offset)
+
 
 static func identity_q() -> Array[Quaternion]:
 	var a: Array[Quaternion] = []
@@ -197,6 +204,24 @@ static func bake(pid: String, d: Dictionary) -> AnimPose:
 		var up: int = ix["upper_arm_" + s]
 		var lo: int = ix["forearm_" + s]
 		var en: int = ix["hand_" + s]
+		# the clavicle hunch: an authored one (hunch_r / hunch_l: [forward, up]), then what a target past the arm's reach asks for
+		var hf: float = 0.0
+		var hu: float = 0.0
+		if d.has("hunch_" + s):
+			hf = float(d["hunch_" + s][0])
+			hu = float(d["hunch_" + s][1])
+		if d.has("hand_" + s) and hunch_auto:
+			var reach_a: float = (gp[lo] - gp[up]).length() + (gp[en] - gp[lo]).length() - 0.5
+			var sh: Vector3 = gp[up] + hunch_shift(hf, hu, zs)
+			var to_t: Vector3 = _v3(d["hand_" + s]) - sh
+			var excess: float = to_t.length() - reach_a
+			if excess > 0.0:
+				var dir: Vector3 = to_t.normalized()
+				hf += clampf(excess * maxf(dir.x, 0.0), 0.0, hunch_fwd_max)
+				hu += clampf(excess * dir.y, -hunch_up_max, hunch_up_max)
+		if hf != 0.0 or hu != 0.0:
+			hunch(p.q, s, hf, hu)
+			fk(p.q, p.hips, gq, gp)
 		if d.has("hand_" + s):
 			var pole: Vector3 = gp[up] + (_v3(d["pole_hand_" + s]) if d.has("pole_hand_" + s) else Vector3(-3.0, -10.0, 6.0 * zs))
 			ik2(p.q, gq, gp, up, lo, en, _v3(d["hand_" + s]), pole)
@@ -211,6 +236,24 @@ static func bake(pid: String, d: Dictionary) -> AnimPose:
 	var hs: Dictionary = d.get("hands", {})
 	p.curl = Vector2(float(CURL.get(String(hs.get("l", "relaxed")), 0.5)), float(CURL.get(String(hs.get("r", "relaxed")), 0.5)))
 	return p
+
+
+## Where a shoulder goes for a given hunch (displacement of the joint from its rest place, small angles), used to estimate
+## the reach before the clavicle is turned.
+static func hunch_shift(fwd: float, up: float, _zs: float) -> Vector3:
+	return Vector3(fwd, up, 0.0)
+
+
+## The clavicle hunch effector: carries the shoulder joint `fwd` units forward (positive is toward the target side the body
+## faces, a shoulder rolled into a blow) and `up` units up (a shrug, negative is a slump) by turning the clavicle about its
+## base. `side` is "r" or "l". The arm bones keep their local rotations, so IK or the contact solve goes on from the new
+## shoulder. Returns nothing; call fk after.
+static func hunch(lq: Array[Quaternion], side: String, fwd: float, up: float) -> void:
+	var c: int = AnimRig.index["clavicle_" + side]
+	var zs: float = 1.0 if side == "r" else -1.0
+	var yaw: float = zs * asin(clampf(fwd / CLAVICLE_ARM, -0.98, 0.98))
+	var pitch: float = -zs * asin(clampf(up / CLAVICLE_ARM, -0.98, 0.98))
+	lq[c] = lq[c] * Quaternion(Vector3(0, 1, 0), yaw) * Quaternion(Vector3(1, 0, 0), pitch)
 
 
 ## The mirror image across the body plane (z to -z): the near and far limbs swap. Used for the far-side variants.
