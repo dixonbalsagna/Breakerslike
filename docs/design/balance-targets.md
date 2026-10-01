@@ -711,3 +711,23 @@ A launch is still classed by its first contact. A bounce is a new class. A fligh
 - **Every contact has weight:** a mark on the ground, dust or debris, a hit-stop, and shake scaled by speed.
 - **A tumble is short** (1.2 s at most) and ends in a hard stop, not a long floppy roll. Animation keeps the body braced, not limp.
 - **Nothing happens under a speed of 350:** he lands.
+
+### Answers to World's plan (`docs/world/ground-contact.md`)
+
+World's plan is accepted, including these points: contact angles are measured against the surface and not the horizontal; the tumble is a mode of the skid; and the leave test keeps its small tolerance (`LEAVE_CLEAR`, about 1.5 units).
+
+| World's question | Ruling |
+| :--- | :--- |
+| **A trench dug in paving** | It becomes **soil** for braking. Broken ground stops a skid sooner (×1.3), so streets get slower as they are wrecked, and the cracks show why |
+| **The rim** | The slope limit of **0.6** is confirmed, so a rim is always a ramp and never trips the 0.8 wall-stop. Inside that limit, **make the lip wider and taller** so it reads: lip width 0.5 R (today 0.3 R) and a crest of up to 0.5 of the depth, as long as the inner slope stays at 0.6 or less and the rim and apron hold no more than the bowl's volume. If that can't hold, fall back to World's cap of 0.33 of the depth. Rendering may strengthen the rim's shading, but never its shape |
+| **Heaps** | A slope of at most **0.6** is confirmed, with the wider spill |
+| **The highlands** | Flank slopes of 0.35 to 0.6, never steeper, with a crest tight enough to launch a fast skid |
+| **Spin** | World's formula at a bounce is accepted. It halves every 0.5 s in the air. It is capped at 3 turns a second, or 1.5 at tier 1, so he never pinwheels |
+| **The tumble's look** | No trench. One scuff and one dust puff per contact with the ground, at most 3 a second. He rolls about once per 2.5 bh travelled |
+| **How wear splits** | The journey's budget is the single-impact wear at its first contact speed. A slam pays all of it at once. Otherwise the first contact pays **30%** at touch-down, whatever its kind, and the other **70%** is paid in proportion to the speed each contact or stretch of braking removes. A flight off a lip pays nothing. If the journey ends early (an early recovery, or a catch in the air), the unpaid part is forgiven |
+| **The leave direction** | **Normalised,** World's default. At a speed of 2,000 off a 0.6 ramp he rises about 9 bh, which reads well. The raw tangent would throw him hundreds of bh up. If playtests find the leave too flat, a "lip lift" factor of at most 2 on the vertical rate is the lever, as data |
+| **Tier and personality** | By tier only: the bounce count (1, 2, 3, 3). The physics is the same for every fighter. Personality stays in where launches are aimed |
+
+**Two consequences to expect.**
+- Today's slow slide, from a speed of 350 down to 60, becomes a tumble. Slides at low power get shorter, with fewer and shorter trenches. That is intended: it is the "rolls to a hard stop" look.
+- For the landing classes, a first contact that is a skid or a tumble counts as a **slide**, and a slam is a first contact that makes a crater. This replaces the 2 bh distance test in §18.
