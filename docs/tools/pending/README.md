@@ -28,3 +28,15 @@ Run from the repo root in the same commit that lands the M1b data: `node docs/to
 - **fight.mood/1:** `rates.proportional` {on boolean, base integer at least 0, perMille integer at least 0}, required; and a new required `actBeats` {every: array of `regionBreak` or `form`; oncePerMatch: array of `limbBattered`, `coreBruised` or `coreBattered`}.
 - **fight.style/1:** a new required top-level `minHeldS` (integer at least 0). The mixer keeps `leaveMaxStancePct` and `leaveHoldS`. `qaBands` stays an open object, so Narrative's nested form (`judgedOnAI`, `judgedOnHumanOrScriptedPlay`) and the flat form both pass.
 - 9 cases. Tested in a scratch copy: with today's live M1 data the only errors after the script are the missing new keys (`minHeldS`, `actBeats`, `rates.proportional`), and the self-test passes 560 of 560.
+
+## `apply-contact.cjs`: Combat's contact spacing data
+
+Schema changes for `docs/combat/pending/templates.contact.json` and `finishers.contact.json` (`docs/combat/contact-spacing.md` section 6). Run **after `apply-2b.cjs`** (it refuses to run before it), once from the repo root, in the commit that lands the data: `node docs/tools/pending/apply-contact.cjs`. It adds the schema keys, copies the two parked files over `data/combat/templates.json` and `finishers.json`, and adds 17 cases. Re-runnable (a second run changes nothing). It edits `combat-templates.schema.json`, `tools/lib/xref.js` and `tools/fixtures/cases.json`, and replaces the two data files.
+
+| # | Change |
+| ---: | :--- |
+| 1 | a branch's `endSides` (`same` or `swapped`). New `xref:branch-end-sides`: a branch with `dynamic` beats must state it, and it is `swapped` exactly when a beat has `args.side` `cross`. New `xref:beat-side`: a beat's `args.side` is `own` or `cross` |
+| 2 | `profiles.dynamic.tempo.stepIn` and `tempo.chainClose` (ticks, required in the dynamic profile) |
+| 3 | `profiles.dynamic.contact` (`reach`, `offset`, `minSeparation`, `sameHeight`; required, closed). New `xref:contact-range`: reach is not below offset, and offset is not below minSeparation |
+
+`finishers.contact.json` needs no schema change. Tested on a fresh `git archive HEAD` with the 2b files swapped in and `apply-2b.cjs` run, then this script: 0 errors and 0 warnings, self-test 866 of 866 (849 after 2b alone). Run in the wrong order it stops with a message and changes nothing.
