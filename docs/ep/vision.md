@@ -439,3 +439,18 @@ Orb's picks.
 - **How often the big spectacle happens:** 4 of 10 (1 rare and earned, 10 constant fireworks).
 - **The aura after a transformation:** on only when charging or attacking.
 - **Orb's note:** "quips, one liners, banter, taunts should all include a cut-in of the talking character's face on the side of the screen."
+
+## Questionnaire 12: rule of cool, follow-up (2026-10-01)
+
+- **Round-the-world hit:** yes after all, at the top power tiers only.
+- **Orbit launch:** the game picks the most dramatic landing spot.
+- **Scars:** land scars stay all match; water closes in seconds.
+- **Clash input:** timed presses (hit the pulse to surge).
+- **Answering a beam (swat, walk through, split):** costs tight timing only.
+- **Battle damage on a transformation:** it stays and keeps building.
+- **Move names:** the fighter shouts it; no name card.
+- **Sound:** silence just before a huge hit; a fighter's theme kicks in on transformation; a delayed boom from far-off impacts.
+- **Match end:** a highlight reel of the best moments.
+- **The world reacts from:** tier 3.
+- **Bystander tone:** 6 of 10 (1 grim, 10 comic relief).
+- **Pitches requested:** which hits earn the big impact treatment; what a last stand at the brink gives the fighter; what a completed taunt does ("depends on fighter").
