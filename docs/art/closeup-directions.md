@@ -2,7 +2,7 @@
 
 Owner: Art Director. 2026-10-02. Orb: "loop on the art style to create stylized closeups of the fighters' faces so the on-screen closeups can be memorable and recognizable." Concept art, working labels, **pending Legal review**. Orb picks. This replaces the faceless portraits as the thing to choose from (`rule-of-cool-art.md` section 1 still holds the frame, the sizes and the zero-budget texture note).
 
-**The one page for Orb:** `art/concepts/closeups/closeups-comparison.svg`. The path (six rounds, the rejected ones kept): `art/concepts/closeups/rounds/NOTES.md` and `rounds/round-1/` to `round-6/`.
+**The one page for Orb:** `art/concepts/closeups/closeups-comparison.svg`. The path (seven rounds, the rejected ones kept): `art/concepts/closeups/rounds/NOTES.md` and `rounds/round-1/` to `round-7/`.
 
 ## The three directions
 
@@ -31,3 +31,15 @@ Every sheet shows the four expressions (neutral, smirk, strain, hurt) at 420 or 
 ## Files
 
 `art/concepts/closeups/`: `engine.mjs` (the face engine), `gen.mjs` (`node art/concepts/closeups/gen.mjs <round> [--final]`), the final sheets, `rounds/`. The prompt record is `art/prompts/ART-0011-closeup-directions.md`.
+
+## Round 7: B as the lead (iterating while Orb is away)
+
+Sheets in `art/concepts/closeups/`: `expressions-B.svg`, `anti-hero-transition.svg`, `crops-sheet.svg`, and the regenerated direction sheets, comparison and damage ladder. Files: `crops/square/` and `crops/strip/`.
+
+- **Eight expressions** (neutral, smirk, strain, hurt, plus laugh, contempt, shock, grief) for all four fighters. Laugh squeezes the eyes into arches and opens the mouth; contempt has one brow high, heavy lids, a sneer and a head tipped back; shock opens the eyes wide with small pupils and a round mouth; grief pulls the brows up in the middle, drops the eyes, adds one tear and a quivering mouth. `ui/data/faces.json` has four expression slots per fighter; UI and Tools need four more (laugh, contempt, shock, grief), and Narrative's lines decide which are used.
+- **Finer faces.** The Anti-hero: a longer tail with a second strand and a fatter lit cheek slash with a halo. The Protagonist: a longer, hooked tuft and a bolder temple arc. The Empress: the diadem with two hanging blades and larger chevrons (the first try, wings running out sideways, read as a hat brim and was dropped). The Cyborg: a lit eye with scan bars, a halo and a three-pip readout.
+- **The Anti-hero's Proud front breaks** (`anti-hero-transition.svg`): composed mask and smirk (direction A), a hairline crack, the split, the far half letting go and falling, broken (direction B), ruined (stage 3). One number, t from 0 to 1, drives the crack and the fall; the engine does the same for the other three along their own break lines (shown under the Anti-hero's row). It can be driven from the facade value or stepped (0, 0.28, 0.5, 0.74, 1).
+- **Two crops per portrait.** The square is the 512 portrait in our frame, checked at 200 px and at the 72 px floor (it reads in colour and in greyscale). The strip is 500 by 100 (5 to 1, which is 56 percent by 20 percent of a 16 by 9 screen), the ends slanted 22 percent of the height, cropped to the brows and eyes with the fighter's own feature in it. **Camera's panel is a live second-camera render (`rule-of-cool-shots.md` row 11), so the strip art is an option, not a need:** it fits the "still" panel mode, a KO or finisher freeze, or the face over the live strip. Camera decides.
+- **Silhouettes for Animation:** `art/concepts/silhouettes/ragdoll-silhouettes.svg` (ART-0012).
+
+Regenerate: `node art/concepts/closeups/gen.mjs 7 --final` (the crops are written only with `--final`).

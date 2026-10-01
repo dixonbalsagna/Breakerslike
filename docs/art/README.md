@@ -19,7 +19,7 @@ Owner: Art Director. 2026-09-29. Art owns `art/` and `docs/art/`.
 | `cosmetics-plan.md` | The plan for a vast unlockable cosmetic set by data: categories, what keeps each fighter readable, counts per fighter, and what the fighter mesh needs from day one | v0 draft |
 | `ai-prompt-policy.md` | How AI-assisted art is made, recorded and reviewed | v0 draft, for Legal and Orb to review |
 | `../../art/concepts/anti-hero/` | The SVG sheets and the deterministic generator that writes them | v0 |
-| `../../art/prompts/` | Prompt records (`TEMPLATE.md`, `ART-0001` to `ART-0011`) | v0 |
+| `../../art/prompts/` | Prompt records (`TEMPLATE.md`, `ART-0001` to `ART-0012`) | v0 |
 
 **Superseded.** The wave-1 art brief (three whole-game directions, `docs/art-bible/`) is replaced by Orb's answers: 2.5D side-on, cel-shaded plus low-poly. Nothing under `docs/art-bible/` was written. The parts that still fit are in the style guide: biome look notes and destruction states (section 8), the silhouette test (3.1) and the palette rules (3).
 

@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pathToFileURL } from 'node:url';
 const engineArg = process.argv.find(a => a.startsWith('--engine='))?.slice(9);
-const { portrait, PALS, IDS } = await import(engineArg ? pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), engineArg)).href : './engine.mjs');
+const { portrait, PALS, IDS, strip: stripArt } = await import(engineArg ? pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), engineArg)).href : './engine.mjs');
 
 const OUT = dirname(fileURLToPath(import.meta.url));
 const round = process.argv[2] ?? '1', FINAL = process.argv.includes('--final');
@@ -28,6 +28,10 @@ let uid = 0, BLANK = false;
 const place = (dir, fk, expr, x, y, size, extra = '', stage = 0) => `<svg x="${F(x)}" y="${F(y)}" width="${size}" height="${size}" viewBox="0 0 512 512" overflow="hidden" ${extra}>${portrait(dir, fk, expr, `u${uid++}`, { stage, blank: BLANK })}</svg>`;
 // Camera's panel: a slanted strip, 56% of the width by 20% of the height (about 5.2 to 1), the ends slanted. The face is cropped to the band of the eyes and the brow.
 function strip(dir, fk, expr, x, y, w) {
+  if (!stripArt) return strip0(dir, fk, expr, x, y, w);
+  return `<svg x="${F(x)}" y="${F(y)}" width="${w}" height="${F(w / 5)}" viewBox="0 0 500 100" overflow="hidden">${stripArt(dir, fk, expr, `u${uid++}`, { blank: BLANK })}</svg>`;
+}
+function strip0(dir, fk, expr, x, y, w) {
   const h = w / 5.2, s = w / 512, slant = h * 0.22, id = `u${uid++}`;
   return `<clipPath id="sp-${id}"><polygon points="${F(slant)},0 ${F(w)},0 ${F(w - slant)},${F(h)} 0,${F(h)}"/></clipPath><g transform="translate(${F(x)} ${F(y)})"><g clip-path="url(#sp-${id})"><g transform="translate(0 ${F(h / 2 - 232 * s)}) scale(${F(s)})">${portrait(dir, fk, expr, id, { blank: BLANK })}</g></g><polygon points="${F(slant)},0 ${F(w)},0 ${F(w - slant)},${F(h)} 0,${F(h)}" fill="none" stroke="${PALS[fk].frame}" stroke-width="3"/></g>`;
 }
@@ -43,7 +47,7 @@ function sheetOne(dir, fk) {
   EXPR.forEach((e, i) => { b += place(dir, fk, e, 24 + i * 214, 628, 200) + place(dir, fk, e, 24 + i * 214 + 4 * 214 + 20, 628, 200, 'filter="url(#grey)"'); });
   b += text(24, 852, '120 px', { size: 14, weight: 700 }) + text(24 + 4 * 130 + 40, 852, 'greyscale', { size: 14, weight: 700 });
   EXPR.forEach((e, i) => { b += place(dir, fk, e, 24 + i * 130, 862, 120) + place(dir, fk, e, 24 + 4 * 130 + 40 + i * 130, 862, 120, 'filter="url(#grey)"'); });
-  b += text(24 + 8 * 130 + 80, 852, 'in Camera\'s slanted panel (56 percent by 20 percent)', { size: 14, weight: 700 });
+  b += text(24 + 8 * 130 + 80, 852, 'Camera\'s strip crop (56 percent by 20 percent)', { size: 14, weight: 700 });
   EXPR.forEach((e, i) => { b += strip(dir, fk, e, 24 + 8 * 130 + 80 + (i % 2) * 330, 866 + Math.floor(i / 2) * 80, 320); });
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${GREY}${b}</svg>`;
 }
@@ -63,7 +67,7 @@ function sheetOthers(dir) {
 // ---------------------------------------------------------------------------------------------------------- the one-page comparison for Orb
 function comparison() {
   const W = 1800, cs = 188;
-  let b = rect(0, 0, W, 1500, '#dcd8e6') + header('Close-ups: three directions, one page', 'A the mask as a face, B the mask partly off or broken, C no mask. Neutral and hurt for each fighter, at the size of the 200 px cut-in. Round 6. Working labels, pending Legal review.', W);
+  let b = rect(0, 0, W, 1500, '#dcd8e6') + header('Close-ups: three directions, one page', 'A the mask as a face, B the mask partly off or broken, C no mask. Neutral and hurt for each fighter, at the size of the 200 px cut-in. Round 7. Working labels, pending Legal review.', W);
   ['A', 'B', 'C'].forEach((d, i) => { b += text(190 + i * 2 * (cs + 6) + cs, 134, DIRS[d], { size: 14, weight: 700, anchor: 'middle' }); });
   [['A', 'Anti-hero'], ['P', 'Protagonist'], ['E', 'Empress'], ['C', 'Cyborg']].forEach(([fk, nm], r) => {
     const y0 = 146 + r * (cs + 8);
@@ -108,6 +112,77 @@ function ladder(dir) {
   });
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${GREY}${b}</svg>`;
 }
+
+// ---------------------------------------------------------------------------------------------------------- round 7: more expressions, the transition, the two crops
+const ALLX = ['neutral', 'smirk', 'strain', 'hurt', 'laugh', 'contempt', 'shock', 'grief'];
+const placeX = (dir, fk, expr, x, y, size, o = {}, extra = '') => `<svg x="${F(x)}" y="${F(y)}" width="${size}" height="${size}" viewBox="0 0 512 512" overflow="hidden" ${extra}>${portrait(dir, fk, expr, `u${uid++}`, o)}</svg>`;
+function expressions() {
+  const W = 1800, ps = 205, rowH = ps + 14 + 120 + 52, H = 130 + 4 * rowH;
+  let b = rect(0, 0, W, H, '#dcd8e6') + header(`Eight expressions, direction B (round ${round})`, 'The four before plus laugh, contempt, shock and grief. Each at 205 px in colour and 120 px in greyscale. Working labels, pending Legal review.', W);
+  [['A', 'Anti-hero'], ['P', 'Protagonist'], ['E', 'Empress'], ['C', 'Cyborg']].forEach(([fk, nm], r) => {
+    const y0 = 124 + r * rowH;
+    b += text(24, y0 + 14, nm, { size: 16, weight: 700 });
+    ALLX.forEach((e, i) => {
+      const x = 24 + i * 221;
+      b += placeX('B', fk, e, x, y0 + 22, ps) + placeX('B', fk, e, x + 42, y0 + 22 + ps + 8, 120, {}, 'filter="url(#grey)"') + text(x + 4, y0 + 22 + ps + 146, e, { size: 12, weight: 600, op: 0.8 });
+    });
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${GREY}${b}</svg>`;
+}
+const STEPS = [
+  ['smirk', 'A', 0, 0, 'Proud front: the mask whole and composed, a smirk (direction A)'],
+  ['neutral', 'T', 0.28, 0, 'A hairline crack runs down from the brow; the face goes still'],
+  ['strain', 'T', 0.5, 0, 'The split opens; he strains to hold it together'],
+  ['shock', 'T', 0.74, 0, 'The far half lets go and falls; shock'],
+  ['grief', 'T', 1, 0, 'Broken (direction B): the face under the mask, grief'],
+  ['hurt', 'B', 0, 3, 'Ruined (damage stage 3): the damage stays'],
+];
+function transition() {
+  const W = 1800, ps = 268, ps2 = 200, H = 150 + ps + 300 + 3 * (ps2 + 56) + 70;
+  let b = rect(0, 0, W, H, '#dcd8e6') + header(`The Anti-hero's Proud front breaks, A to B (round ${round})`, 'Composed, a hairline crack, the split, the half that falls, broken, ruined. One number, t from 0 to 1, drives the crack and the fall. The same engine breaks the other three the way their own mask breaks. Working labels, pending Legal review.', W);
+  STEPS.forEach(([e, d, t, st, label], i) => {
+    const x = 24 + i * (ps + 12);
+    b += placeX(d, 'A', e, x, 146, ps, { t, stage: st }) + text(x + 4, 146 + ps + 18, `${i + 1}  ${e}`, { size: 14, weight: 700 }) + paras(x + 4, 146 + ps + 38, label, 36, 12, 15, { op: 0.85 });
+    b += `<svg x="${F(x)}" y="${F(146 + ps + 80)}" width="${ps}" height="${F(ps / 5)}" viewBox="0 0 500 100" overflow="hidden">${stripArt(d, 'A', e, `u${uid++}`, { t, stage: st })}</svg>`;
+    b += placeX(d, 'A', e, x, 146 + ps + 80 + ps / 5 + 12, 100, { t, stage: st }, 'filter="url(#grey)"');
+  });
+  const y1 = 146 + ps + 80 + ps / 5 + 12 + 100 + 30;
+  b += text(24, y1 + 20, 'The other three, the same six steps (each breaks along its own mask line)', { size: 15, weight: 700 });
+  [['P', 'Protagonist'], ['E', 'Empress'], ['C', 'Cyborg']].forEach(([fk, nm], r) => {
+    const y0 = y1 + 34 + r * (ps2 + 56);
+    b += text(24, y0 + 14, nm, { size: 14, weight: 700 });
+    STEPS.forEach(([e, d, t, st], i) => { b += placeX(d === 'A' ? 'A' : d, fk, e, 24 + i * (ps2 + 10), y0 + 22, ps2, { t, stage: st }); });
+  });
+  b += paras(24 + 6 * (ps2 + 10) + 20, y1 + 70, 'How it ties to the game: the Proud front is the Anti-hero\'s composed state (Pride). As the facade cracks, t rises; the crack lights first, then the far half comes away, and at t = 1 the broken face (direction B) stays for the rest of the fight, with the damage stages on top. Animation or UI can drive t from the facade value, or step it (0, 0.28, 0.5, 0.74, 1).', 50, 13, 17);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${GREY}${b}</svg>`;
+}
+function cropsSheet() {
+  const W = 1800, ps = 200, H = 130 + 4 * 470 + 360;
+  let b = rect(0, 0, W, H, '#dcd8e6') + header(`Each portrait cropped for both homes (round ${round})`, 'UI\'s square face cut-in (docks at 200 px; clamp 72 to 240) and Camera\'s slanted strip (56 percent of the width by 20 percent of the height, ends slanted 22 percent of the height, 5 to 1). The strip is a deliberate crop of the brows and eyes with the fighter\'s own feature. Direction B, eight expressions.', W);
+  [['A', 'Anti-hero'], ['P', 'Protagonist'], ['E', 'Empress'], ['C', 'Cyborg']].forEach(([fk, nm], r) => {
+    const y0 = 124 + r * 470;
+    b += text(24, y0 + 14, `${nm}: the square at 200 px, then the strip`, { size: 15, weight: 700 });
+    ALLX.forEach((e, i) => { b += placeX('B', fk, e, 24 + i * 221, y0 + 22, ps) + text(24 + i * 221 + 4, y0 + 22 + ps + 14, e, { size: 11, weight: 600, op: 0.8 }); });
+    ALLX.forEach((e, i) => { b += strip('B', fk, e, 24 + (i % 4) * 444, y0 + 22 + ps + 28 + Math.floor(i / 4) * 100, 430); });
+  });
+  const y1 = 124 + 4 * 470 + 4;
+  b += text(24, y1 + 14, 'The 72 px floor of the cut-in (colour, then greyscale)', { size: 15, weight: 700 });
+  [['A'], ['P'], ['E'], ['C']].forEach(([fk], r) => ALLX.forEach((e, i) => { b += placeX('B', fk, e, 24 + i * 82, y1 + 28 + r * 80, 72) + placeX('B', fk, e, 24 + 8 * 82 + 30 + i * 82, y1 + 28 + r * 80, 72, {}, 'filter="url(#grey)"'); }));
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${GREY}${b}</svg>`;
+}
+// the files UI and Camera can take: crops/square/<fighter>-<expression>.svg (512 square, our frame) and crops/strip/<fighter>-<expression>.svg (500 by 100, slanted)
+function writeCrops() {
+  const sq = join(OUT, 'crops', 'square'), st = join(OUT, 'crops', 'strip');
+  mkdirSync(sq, { recursive: true }); mkdirSync(st, { recursive: true });
+  const O = '<!-- Origin: procedural close-up crop written by art/concepts/closeups/gen.mjs (deterministic, no external images or fonts), Art Director session (Claude, claude-sonnet-5-5), 2026-10-02; prompt record art/prompts/ART-0011-closeup-directions.md -->' + String.fromCharCode(10);
+  let n = 0;
+  for (const fk of ['A', 'P', 'E', 'C']) for (const e of ALLX) {
+    writeFileSync(join(sq, `${IDS[fk]}-${e}.svg`), O + `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 512 512">${portrait('B', fk, e, 'q' + n)}</svg>`);
+    writeFileSync(join(st, `${IDS[fk]}-${e}.svg`), O + `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="100" viewBox="0 0 500 100">${stripArt('B', fk, e, 's' + n)}</svg>`);
+    n++;
+  }
+  return n;
+}
 const ORIGIN = '<!-- Origin: procedural close-up sheet written by art/concepts/closeups/gen.mjs (deterministic, no external images or fonts), Art Director session (Claude, claude-sonnet-5-5), 2026-10-02; prompt record art/prompts/ART-0011-closeup-directions.md -->' + String.fromCharCode(10);
 const dir0 = join(OUT, 'rounds', `round-${round}`);
 mkdirSync(dir0, { recursive: true });
@@ -119,5 +194,8 @@ for (const d of ['A', 'B', 'C']) {
 if (!only || only === 'ladder' || only === 'all') { const s = ORIGIN + ladder('B'); writeFileSync(join(dir0, 'damage-ladder-B.svg'), s); if (FINAL) writeFileSync(join(OUT, 'damage-ladder-B.svg'), s); }
 if (!only || only === 'compare' || only === 'all') { const s = ORIGIN + comparison(); writeFileSync(join(dir0, 'comparison.svg'), s); if (FINAL) writeFileSync(join(OUT, 'closeups-comparison.svg'), s); }
 if (!only || only === 'blank' || only === 'all') { BLANK = true; const s = ORIGIN + sheetOne('B', 'A'); writeFileSync(join(dir0, 'anti-hero-B-blank.svg'), s); if (FINAL) writeFileSync(join(OUT, 'anti-hero-B-blank.svg'), s); const s2 = ORIGIN + sheetOthers('B'); writeFileSync(join(dir0, 'others-B-blank.svg'), s2); if (FINAL) writeFileSync(join(OUT, 'others-B-blank.svg'), s2); BLANK = false; }
+if (stripArt && (!only || only === 'expr' || only === 'all')) { const s = ORIGIN + expressions(); writeFileSync(join(dir0, 'expressions-B.svg'), s); if (FINAL) writeFileSync(join(OUT, 'expressions-B.svg'), s); }
+if (stripArt && (!only || only === 'transition' || only === 'all')) { const s = ORIGIN + transition(); writeFileSync(join(dir0, 'anti-hero-transition.svg'), s); if (FINAL) writeFileSync(join(OUT, 'anti-hero-transition.svg'), s); }
+if (stripArt && (!only || only === 'crops' || only === 'all')) { const s = ORIGIN + cropsSheet(); writeFileSync(join(dir0, 'crops-sheet.svg'), s); if (FINAL) { writeFileSync(join(OUT, 'crops-sheet.svg'), s); console.log('wrote ' + writeCrops() + ' crop pairs'); } }
 if (!engineArg) copyFileSync(join(OUT, 'engine.mjs'), join(dir0, 'engine.snapshot.mjs'));
 console.log(`wrote round ${round}${FINAL ? ' (and final)' : ''}`);
