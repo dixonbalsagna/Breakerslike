@@ -130,12 +130,12 @@ static func binding_specs(preset: Dictionary, action: String, family: String, st
 
 
 ## Whether a preset binds an action (the power layer's specials are special1 to special3). An empty preset id means "do not ask".
-static func bound(preset: String, action: String) -> bool:
+static func bound(preset: String, action: String, slot: int = 0) -> bool:
 	if preset == "":
 		return true
 	if action == "specials":
 		action = "special1"
-	var pr: Dictionary = UiRemapModel.preset(preset)
+	var pr: Dictionary = UiRemapModel.preset(preset, slot)
 	if pr.is_empty():
 		return true   # not a layout id (the "today" scheme, a preview): nothing to filter by
 	var layer: String = "power" if action.begins_with("special") else ""
@@ -149,7 +149,7 @@ static func specs_for(action: String, family: String, slot: int, style: String =
 		var act: String = action
 		if action.begins_with("special") and action != "special":
 			layer = "power"
-		var specs: Array = binding_specs(UiRemapModel.preset(preset), act, family, style, layer)
+		var specs: Array = binding_specs(UiRemapModel.preset(preset, slot), act, family, style, layer)
 		if not specs.is_empty():
 			return specs
 	var sp: Dictionary = spec(action, family, slot, style)

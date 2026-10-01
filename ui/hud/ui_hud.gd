@@ -25,6 +25,7 @@ signal option_changed(key: String, value)   # set_option changed an option's val
 signal settings_opened                     # the Settings screen opened: the host pauses the sim and releases held keys (as for How to play)
 signal settings_closed                     # it closed: the host restores the pause it found
 signal settings_action_requested(action: String)   # a button on the screen was pressed ("remap"): the host opens what it names
+signal remap_slot_changed(layout_id: String, overrides: Array, slot: int)   # the same, with whose layout it is (0 player one, 1 player two): UI has applied and saved it; the host calls reload_layouts
 signal remap_changed(layout_id: String, overrides: Array)   # the player changed a layout's controls: the host applies the rows (Controls' applier) and saves
 signal pause_menu_opened                   # the pause menu opened: the host freezes the sim and lets go of held keys
 signal pause_menu_closed(reason: String)   # it closed: "resume" (the host unfreezes) or "new" (the host unfreezes and starts a match)
@@ -117,6 +118,8 @@ var _rm_layout := ""                  # the layout being changed (a preset id)
 var _rm_focus := 0
 var _rm_scroll := 0.0
 var _rm_mode := "list"                # "list", "capture" (waiting for a key or button) or "confirm" (a swap is offered)
+var _rm_slot := 0                     # whose layout the screen edits: 0 player one, 1 player two (Controls' per-player remaps)
+var pad_slot_fn: Callable = Callable()   # (device id) -> slot: the host says which player a pad drives, so the Remap screen opens on the player who pressed
 var _rm_entry := ""                   # the entry being captured (an action id)
 var _rm_keys: Array = []              # Fly's keys taken so far, in order up, left, down, right
 var _rm_pending: Dictionary = {}      # a conflict waiting for an answer: {control, with}
@@ -1413,6 +1416,7 @@ func show_remap(layout_id: String = "", player: int = 0) -> void:
 				layout_id = pid if ids.has(pid) else (str(opts["pad_preset"]) if m.device != "" and m.device != "kbd" and m.device != "touch" else "kb-solo")
 				break
 	_rm_open = true
+	_rm_slot = clampi(player, 0, 1) if _humans() >= 2 else 0
 	_rm_layout = layout_id
 	_rm_focus = _rm_first_focus()
 	_rm_scroll = 0.0
@@ -1453,7 +1457,7 @@ func _rm_words() -> Dictionary:
 
 
 func _rm_fam() -> String:
-	var p: Dictionary = UiRemapModel.preset(_rm_layout)
+	var p: Dictionary = UiRemapModel.preset(_rm_layout, _rm_slot)
 	if str(p.get("device", "")) == "kb":
 		return "kbd"
 	var dev: String = _howto_device()
@@ -1461,7 +1465,7 @@ func _rm_fam() -> String:
 
 
 func _rm_is_kb() -> bool:
-	return str(UiRemapModel.preset(_rm_layout).get("device", "")) == "kb"
+	return str(UiRemapModel.preset(_rm_layout, _rm_slot).get("device", "")) == "kb"
 
 
 ## What a control is called in a sentence: a key by its name, a pad control by the words in settings.json.
@@ -1484,7 +1488,10 @@ func _rm_rows() -> Array:
 	var out: Array = []
 	out.append({"kind": UiSettings.CHOICE, "key": "layout", "label": str(w.get("layout", "Layout")), "help": str(w.get("layout_help", "")), "enabled": true,
 		"o": {"choices": ids, "default": ids[0] if not ids.is_empty() else ""}, "words": w.get("layouts", {})})
-	var p: Dictionary = UiRemapModel.preset(_rm_layout)
+	if _humans() >= 2:
+		out.append({"kind": UiSettings.CHOICE, "key": "slot", "label": UiData.t("prompt.remap_player"), "help": "", "enabled": true,
+			"o": {"choices": [0, 1], "default": 0}, "words": {"0": UiData.t("prompt.remap_p1"), "1": UiData.t("prompt.remap_p2")}})
+	var p: Dictionary = UiRemapModel.preset(_rm_layout, _rm_slot)
 	var fam: String = _rm_fam()
 	var style: String = str(opts["glyph_style"])
 	for e in UiRemapModel.rows(p):
@@ -1500,15 +1507,6 @@ func _rm_rows() -> Array:
 	return out
 
 
-## Whether both humans play on the layout being changed (Controls keeps remaps per layout for now, so a change is for both).
-func _rm_layout_shared() -> bool:
-	var n := 0
-	for m in hub.models:
-		if not m.ai and UiHints.preset_id(m, _o()) == _rm_layout:
-			n += 1
-	return n >= 2
-
-
 func _rm_status_text() -> String:
 	var w: Dictionary = _rm_words()
 	match _rm_mode:
@@ -1522,8 +1520,6 @@ func _rm_status_text() -> String:
 			return str(w.get(key, "")).replace("{action}", act)
 		"confirm":
 			return str(w.get("conflict", "")).replace("{control}", _rm_control_word(str(_rm_pending["control"]))).replace("{other}", _rm_action_word(str(_rm_pending["with"])))
-	if _rm_status == "" and _humans() >= 2 and _rm_layout_shared():
-		return str(w.get("shared", ""))   # both players are on this layout (remaps are per layout): a change is for both
 	return _rm_status
 
 
@@ -1545,7 +1541,7 @@ func remap_plan() -> Dictionary:
 		hint = ""
 	var st := {"rows": rws, "focus": _rm_focus, "scroll": _rm_scroll, "device": _set_device, "title": str(w.get("title", "REMAP CONTROLS")), "hint_text": hint,
 		"status": _rm_status_text(), "confirm": conf, "capture": cap, "capture_word": str(w.get("capture_word", "..."))}
-	return UiSettings.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), st, {"layout": _rm_layout})
+	return UiSettings.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), st, {"layout": _rm_layout, "slot": _rm_slot})
 
 
 func _remap_sig() -> Array:
@@ -1554,14 +1550,14 @@ func _remap_sig() -> Array:
 
 func _paint_remap(ci: CanvasItem) -> void:
 	if _rm_open:
-		UiSettings.draw(ci, remap_plan(), {"layout": _rm_layout})
+		UiSettings.draw(ci, remap_plan(), {"layout": _rm_layout, "slot": _rm_slot})
 
 
 ## The first row an action can be captured on (the layout chooser is row 0).
 func _rm_first_focus() -> int:
 	var rws: Array = _rm_rows()
 	for i in range(1, rws.size()):
-		if rws[i]["kind"] != UiSettings.HEADING and bool(rws[i]["enabled"]):
+		if rws[i]["kind"] == UiSettings.BIND and bool(rws[i]["enabled"]):
 			return i
 	return 0
 
@@ -1589,6 +1585,28 @@ func _rm_set_layout(id: String) -> void:
 	_l_remap.invalidate()
 
 
+## Whose layout the screen edits: switch player, and show that player's own layout (what their device and options say).
+func _rm_set_slot(slot: int) -> void:
+	slot = clampi(slot, 0, 1)
+	if slot == _rm_slot:
+		return
+	_rm_slot = slot
+	var ids: Array = UiRemapModel.layouts()
+	if slot < hub.models.size():
+		var pid: String = UiHints.preset_id(hub.models[slot], _o())
+		if ids.has(pid):
+			_rm_layout = pid
+	_rm_mode = "list"
+	_rm_status = ""
+	_rm_scroll = 0.0
+	_rm_focus = _rm_first_focus()
+	_l_remap.invalidate()
+
+
+func _rm_cycle_slot(dir: int) -> void:
+	_rm_set_slot(posmod(_rm_slot + dir, 2))
+
+
 func _rm_cycle_layout(dir: int) -> void:
 	var ids: Array = UiRemapModel.layouts()
 	var at: int = ids.find(_rm_layout)
@@ -1598,8 +1616,9 @@ func _rm_cycle_layout(dir: int) -> void:
 ## Commit a changed layout: applied to the data and saved to the player's file (UiRemapModel.commit), so every reader of the effective
 ## preset follows, and announced for the host to rebuild the hub's layouts (SimInputHub.reload_layouts).
 func _rm_commit(ovr: Array) -> void:
-	UiRemapModel.commit(_rm_layout, ovr)
+	UiRemapModel.commit(_rm_layout, ovr, _rm_slot)
 	remap_changed.emit(_rm_layout, ovr)
+	remap_slot_changed.emit(_rm_layout, ovr, _rm_slot)
 	_l_remap.invalidate()
 	_l_hints_invalidate()
 
@@ -1637,7 +1656,7 @@ func _rm_try(control: String) -> void:
 		_rm_try_move(control)
 		return
 	var w: Dictionary = _rm_words()
-	var res: Dictionary = UiRemapModel.attempt(_rm_layout, _rm_entry, control)
+	var res: Dictionary = UiRemapModel.attempt(_rm_layout, _rm_entry, control, false, _rm_slot)
 	var word: String = _rm_control_word(control)
 	_rm_status = ""
 	match str(res["status"]):
@@ -1663,12 +1682,12 @@ func _rm_try_move(control: String) -> void:
 	var w: Dictionary = _rm_words()
 	var word: String = _rm_control_word(control)
 	_rm_status = ""
-	var res: Dictionary = UiRemapModel.check_move_key(_rm_layout, _rm_keys, control)
+	var res: Dictionary = UiRemapModel.check_move_key(_rm_layout, _rm_keys, control, _rm_slot)
 	match str(res["status"]):
 		"ok":
 			_rm_keys.append(control)
 			if _rm_keys.size() == 4:
-				var all: Dictionary = UiRemapModel.attempt_move(_rm_layout, _rm_keys)
+				var all: Dictionary = UiRemapModel.attempt_move(_rm_layout, _rm_keys, _rm_slot)
 				var keys: Array = _rm_keys.duplicate()
 				_rm_keys = []
 				match str(all["status"]):
@@ -1716,7 +1735,7 @@ func _rm_answer_swap() -> void:
 	if _rm_mode != "confirm":
 		return
 	var control: String = str(_rm_pending["control"])
-	var res: Dictionary = UiRemapModel.attempt(_rm_layout, _rm_entry, control, true)
+	var res: Dictionary = UiRemapModel.attempt(_rm_layout, _rm_entry, control, true, _rm_slot)
 	_rm_pending = {}
 	if str(res["status"]) == "ok":
 		_rm_commit(res["overrides"])
@@ -1740,7 +1759,10 @@ func _rm_accept(i: int) -> void:
 	var r: Dictionary = rws[i]
 	match r["kind"]:
 		UiSettings.CHOICE:
-			_rm_cycle_layout(1)
+			if str(r["key"]) == "slot":
+				_rm_cycle_slot(1)
+			else:
+				_rm_cycle_layout(1)
 		UiSettings.BIND:
 			_rm_focus = i
 			_rm_start_capture(str(r["key"]))
@@ -1784,10 +1806,13 @@ func remap_action(act: String) -> void:
 					at = n - 1
 			_rm_focus = int(fo[at])
 			_rm_scroll = UiSettings.scroll_to(remap_plan(), _rm_focus, _rm_scroll)
-		"left":
-			_rm_cycle_layout(-1)
-		"right":
-			_rm_cycle_layout(1)
+		"left", "right":
+			var step: int = -1 if act == "left" else 1
+			var rws0: Array = _rm_rows()
+			if _rm_focus >= 0 and _rm_focus < rws0.size() and str(rws0[_rm_focus]["key"]) == "slot":
+				_rm_cycle_slot(step)
+			else:
+				_rm_cycle_layout(step)
 		"accept":
 			_rm_accept(_rm_focus)
 	_l_remap.invalidate()
@@ -1839,11 +1864,18 @@ func _rm_release() -> void:
 	if d.is_empty() or str(d["mode"]) != "tap" or bool(d["moved"]) or _rm_mode != "list":
 		return
 	var i: int = int(d["row"])
+	var is_slot: bool = str((_rm_rows()[i] as Dictionary).get("key", "")) == "slot" if i >= 0 and i < _rm_rows().size() else false
 	match str(d["part"]):
 		"left":
-			_rm_cycle_layout(-1)
+			if is_slot:
+				_rm_cycle_slot(-1)
+			else:
+				_rm_cycle_layout(-1)
 		"right":
-			_rm_cycle_layout(1)
+			if is_slot:
+				_rm_cycle_slot(1)
+			else:
+				_rm_cycle_layout(1)
 		"tap", "button", "row":
 			_rm_accept(i)
 	_l_remap.invalidate()
@@ -1887,6 +1919,10 @@ func _remap_input(event: InputEvent) -> void:
 					remap_action(act)
 	elif event is InputEventJoypadButton:
 		_set_device = "pad"
+		if event.pressed and not capturing and pad_slot_fn.is_valid() and _humans() >= 2:
+			var who: int = int(pad_slot_fn.call(event.device))
+			if who == 0 or who == 1:
+				_rm_set_slot(who)
 		if event.pressed:
 			if capturing:
 				var ctl: String = SimInputNames.pad_control_from_event(event)

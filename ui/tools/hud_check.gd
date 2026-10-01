@@ -2324,7 +2324,7 @@ func _remap_rules() -> void:
 	var s2: Dictionary = SimInputData.preset("kb-solo")
 	_ok(sw["status"] == "ok" and _binding_controls(s2, "heavy") == ["kb:KeyZ"] and _binding_controls(s2, "light") == ["kb:KeyK"] and _binding_controls(s2, "special1", "power") == ["kb:KeyK"] and _binding_controls(s2, "special2", "power") == ["kb:KeyZ"] and SimInputData.check_bindings(s2).is_empty(), "remap: the swap hands the old control to the other action and the specials follow both")
 	UiRemapModel.commit("kb-solo", [])
-	_ok(_binding_controls(SimInputData.preset("kb-solo"), "light") == ["kb:KeyJ"] and not SimInputData.overrides.has("kb-solo"), "remap: an empty list puts the layout back")
+	_ok(_binding_controls(SimInputData.preset("kb-solo"), "light") == ["kb:KeyJ"] and not SimInputData.overrides[0].has("kb-solo"), "remap: an empty list puts the layout back")
 	# Refusals.
 	var bad := true
 	for k in ["kb:KeyP", "kb:KeyN", "kb:KeyT", "kb:KeyY", "kb:Escape", "kb:F5"]:
@@ -2462,7 +2462,7 @@ func _remap_rules() -> void:
 	_ok(hud.remap_mode() == "list", "remap keys: Esc cancels half-way through Fly")
 	hud._rm_focus = rows_of.call().size() - 1
 	hud._unhandled_input(key.call(KEY_ENTER))
-	_ok(not SimInputData.overrides.has("kb-solo") and got["changes"].back() == ["kb-solo", []] and lbl.call("light", "kb-solo") == "J" and str(hud.remap_plan()["status"]) == "Keyboard is back to its defaults.", "remap keys: Reset puts the layout back, tells the host the empty list and the glyphs return")
+	_ok(not SimInputData.overrides[0].has("kb-solo") and got["changes"].back() == ["kb-solo", []] and lbl.call("light", "kb-solo") == "J" and str(hud.remap_plan()["status"]) == "Keyboard is back to its defaults.", "remap keys: Reset puts the layout back, tells the host the empty list and the glyphs return")
 	hud._unhandled_input(key.call(KEY_RIGHT))
 	_ok(hud.remap_layout() == "kb-shared-p1", "remap keys: Right goes to the next layout")
 	hud._unhandled_input(key.call(KEY_LEFT))
@@ -2527,7 +2527,7 @@ func _remap_rules() -> void:
 	_ok(str(UiGlyphs.specs_for("light", "xbox", 0, "neutral", "arena")[0].get("label", "")) == "RB", "remap pad: and the pad glyphs follow (Light reads RB)")
 	hud._rm_focus = rows_of.call().size() - 1
 	hud._unhandled_input(pad.call(JOY_BUTTON_A))
-	_ok(not SimInputData.overrides.has("arena") and _binding_controls(SimInputData.preset("arena"), "light") == ["pad:west"], "remap pad: Reset on a pad layout puts it back")
+	_ok(not SimInputData.overrides[0].has("arena") and _binding_controls(SimInputData.preset("arena"), "light") == ["pad:west"], "remap pad: Reset on a pad layout puts it back")
 	# The mouse and a finger.
 	var mouse := func(pos: Vector2, pressed: bool) -> InputEventMouseButton:
 		var e := InputEventMouseButton.new()
@@ -2559,7 +2559,7 @@ func _remap_rules() -> void:
 	hud._rm_set_layout("kb-solo")
 	var res_r: Rect2 = (hud.remap_plan()["rows"] as Array)[rows_of.call().size() - 1]["ctl"]["button"]
 	tap.call(res_r.get_center())
-	_ok(not SimInputData.overrides.has("kb-solo"), "remap touch: the Reset button resets")
+	_ok(not SimInputData.overrides[0].has("kb-solo"), "remap touch: the Reset button resets")
 	tap.call((hud.remap_plan()["close"] as Rect2).get_center())
 	_ok(not hud.is_remap_open() and hud.is_settings_open() == false and got["closed"] == 3, "remap touch: the close cross leaves the screen (and, opened on its own, Settings with it)")
 	# Remembered: Controls loads the player's file at startup; the screen then reads the effective layout.
@@ -3171,6 +3171,14 @@ func _faces_rules() -> void:
 
 # --- Local two-player: the join prompt, the notes, each player's own legend, the pause menu and Settings (docs/ui/hud-spec.md section 30) ----------
 
+func key_event_for(code: int) -> InputEventKey:
+	var e := InputEventKey.new()
+	e.keycode = code
+	e.physical_keycode = code
+	e.pressed = true
+	return e
+
+
 func _two_player_rules() -> void:
 	UiData.reload()
 	for id in ["join", "join_short", "join_key", "join_key_short", "joined", "left", "pause_p2_leave", "pause_p2_join"]:
@@ -3324,8 +3332,61 @@ func _two_player_rules() -> void:
 	hud.set_option("pad_preset", "arena")
 	hud.set_option("pad_preset_p2", "arena")
 	hud.show_remap("arena", 0)
-	_ok(str(hud.remap_plan()["status"]) == "Both players use this layout: a remap here is for both.", "two players: two people on one layout are told a remap is for both")
+	var rows_sel: Array = hud._rm_rows()
+	_ok(str(rows_sel[1]["key"]) == "slot" and str(hud.remap_plan()["status"]) == "" and UiSettings.row_word(rows_sel[1], 0) == "Player 1" and UiSettings.row_word(rows_sel[1], 1) == "Player 2", "two players: the Remap screen has a Player 1 / Player 2 selector, and no shared-remap note any more")
 	hud.hide_remap()
+	# Each player's own remap of a layout (Controls' per-player remaps).
+	SimInputData.clear_overrides()
+	UiRemapModel.save_path = "user://input_test_p2.json"
+	if FileAccess.file_exists(UiRemapModel.save_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(UiRemapModel.save_path))
+	var a2: Dictionary = UiRemapModel.attempt("kb-solo", "light", "kb:KeyZ", false, 1)
+	UiRemapModel.commit("kb-solo", a2["overrides"], 1)
+	var lbl2 := func(slot: int) -> String:
+		var parts := PackedStringArray()
+		for sp3 in UiGlyphs.specs_for("light", "kbd", slot, "neutral", "kb-solo"):
+			parts.append(str(sp3.get("label", "")))
+		return " ".join(parts)
+	_ok(a2["status"] == "ok" and _binding_controls(SimInputData.preset("kb-solo", 1), "light") == ["kb:KeyZ"] and _binding_controls(SimInputData.preset("kb-solo", 0), "light") == ["kb:KeyJ"] and lbl2.call(1) == "Z" and lbl2.call(0) == "J" and UiGlyphs.bound("kb-solo", "light", 1) and UiGlyphs.bound("kb-solo", "special1", 0), "per-player remaps: player two's Light on Z leaves player one's on J, and each prompt shows its own player's key")
+	UiRemapModel.commit("kb-solo", [], 1)
+	UiRemapModel.commit("kb-shared-p2", UiRemapModel.attempt("kb-shared-p2", "light", "kb:KeyZ", false, 1)["overrides"], 1)
+	var cross0: Dictionary = UiRemapModel.attempt("kb-shared-p1", "light", "kb:KeyZ", false, 0)
+	var cross1: Dictionary = UiRemapModel.attempt("kb-shared-p1", "light", "kb:KeyH", false, 0)
+	_ok(cross0["status"] == "pair" and cross1["status"] == "ok", "per-player remaps: the pair rule compares across players (player one cannot take the key player two has remapped to, and can take the one player two gave up)")
+	UiRemapModel.commit("kb-shared-p2", [], 1)
+	var got2 := {"slot": []}
+	hud.remap_slot_changed.connect(func(id, o, sl): got2["slot"].append([id, sl]))
+	hud.show_remap("kb-solo", 1)
+	_ok(hud.remap_layout() == "kb-solo" and hud._rm_slot == 1 and str(hud._rm_rows()[1]["key"]) == "slot", "per-player remaps: the Remap screen opens on player two when asked")
+	hud._rm_focus = hud._rm_row_index("light")
+	hud._rm_start_capture("light")
+	var kz := InputEventKey.new()
+	kz.keycode = KEY_Z
+	kz.physical_keycode = KEY_Z
+	kz.pressed = true
+	hud._unhandled_input(kz)
+	var file2: Dictionary = SimInputRemap.load_file(UiRemapModel.save_path)
+	_ok(got2["slot"].size() == 1 and got2["slot"][0] == ["kb-solo", 1] and _binding_controls(SimInputData.preset("kb-solo", 1), "light") == ["kb:KeyZ"] and _binding_controls(SimInputData.preset("kb-solo", 0), "light") == ["kb:KeyJ"] and file2.has("presets_p2") and (file2["presets_p2"] as Dictionary).has("kb-solo"), "per-player remaps: a capture on player two's page changes player two's copy, announces the slot and is saved under presets_p2")
+	hud._rm_focus = 1
+	hud._unhandled_input(key_event_for(KEY_LEFT))
+	_ok(hud._rm_slot == 0, "per-player remaps: Left on the selector goes to player one")
+	hud._rm_focus = 1
+	hud._unhandled_input(key_event_for(KEY_RIGHT))
+	_ok(hud._rm_slot == 1, "per-player remaps: and Right back to player two")
+	hud._rm_set_slot(0)
+	hud.pad_slot_fn = func(dev: int) -> int: return 1 if dev == 7 else 0
+	var pb := InputEventJoypadButton.new()
+	pb.device = 7
+	pb.button_index = JOY_BUTTON_DPAD_DOWN
+	pb.pressed = true
+	hud._unhandled_input(pb)
+	_ok(hud._rm_slot == 1, "per-player remaps: a pad pressed in the screen switches it to the player that pad drives")
+	hud.pad_slot_fn = Callable()
+	hud.hide_remap()
+	SimInputData.clear_overrides()
+	UiRemapModel.save_path = SimInputRemap.USER_PATH
+	if FileAccess.file_exists("user://input_test_p2.json"):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://input_test_p2.json"))
 	UiData.set_feature("remap", null)
 	# The pause menu's geometry with the hand-back entry and the join line.
 	for cs in cases:

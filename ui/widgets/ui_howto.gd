@@ -104,7 +104,7 @@ static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictio
 		if (it.has("action") or it.has("actions")) and not touch:
 			# A row for an action the player's layout does not bind is left out.
 			var first: String = str((it["actions"] as Array)[0]) if it.has("actions") else str(it["action"])
-			if not UiGlyphs.bound(preset, first):
+			if not UiGlyphs.bound(preset, first, slot):
 				continue
 		var x: float = body.position.x + float(col) * (colw + gap)
 		var y: float = body.position.y + float(heights[col])

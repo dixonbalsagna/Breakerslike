@@ -68,7 +68,7 @@ static func rows(m: UiFighterModel, scheme: String) -> Array:
 	var out: Array = []
 	for r in sc.get("rows", []):
 		var acts: Array = r["actions"] if r.has("actions") else [r.get("action", "")]
-		if not UiGlyphs.bound(scheme, str(acts[0])):
+		if not UiGlyphs.bound(scheme, str(acts[0]), m.slot):
 			continue
 		if bool(r.get("only_when_avail", false)):
 			var a: String = str(r.get("action", ""))

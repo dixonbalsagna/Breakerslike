@@ -61,7 +61,6 @@
     "done": "{action} is now {control}.",
     "same": "{action} already uses {control}.",
     "cancelled": "Cancelled.",
-    "shared": "Both players use this layout: a remap here is for both.",
     "reset_done": "{layout} is back to its defaults.",
     "move_steps": {
       "up": "up",

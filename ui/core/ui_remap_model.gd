@@ -35,8 +35,9 @@ static func layouts() -> Array:
 
 
 ## A layout as it is played (the data plus the player's overrides).
-static func preset(id: String) -> Dictionary:
-	return SimInputData.preset(id)
+## `slot` is the player: 0 is player one, 1 is player two (each can remap the same layout separately, Controls' per-player remaps).
+static func preset(id: String, slot: int = 0) -> Dictionary:
+	return SimInputData.preset(id, slot)
 
 
 ## The rows of a preset, in screen order (an action's entries, then its fixed rows): {id, action, index, controls, fixed}.
@@ -88,9 +89,9 @@ static func entry(p: Dictionary, id: String) -> Dictionary:
 	return {}
 
 
-static func _verdict(layout_id: String, ovr: Array) -> String:
+static func _verdict(layout_id: String, ovr: Array, slot: int = 0) -> String:
 	var eff: Dictionary = SimInputRemap.apply_overrides(SimInputData.original(layout_id), ovr)
-	for prob in SimInputData.check_bindings(eff):
+	for prob in SimInputData.check_bindings(eff, slot):
 		match str(prob["rule"]):
 			"layout-reserved":
 				return "reserved"
@@ -107,8 +108,8 @@ static func _verdict(layout_id: String, ovr: Array) -> String:
 ## (overrides are what to apply), "same" (it already has it), "conflict" (another action has it: `with` names it; call again with swap true
 ## to take it and hand over the old control), "reserved" (the keyboard's N, T, Y, P, Esc and F-keys, Start and Back, or a control of Pause or
 ## Hints), "pair" (the other half of a shared keyboard has it) or "wrong_device". A chord's members are free: chords are never touched.
-static func attempt(layout_id: String, id: String, control: String, swap: bool = false) -> Dictionary:
-	var p: Dictionary = preset(layout_id)
+static func attempt(layout_id: String, id: String, control: String, swap: bool = false, slot: int = 0) -> Dictionary:
+	var p: Dictionary = preset(layout_id, slot)
 	var e: Dictionary = entry(p, id)
 	if e.is_empty() or str(e["action"]) == "move":
 		return {"status": "reserved"}
@@ -125,7 +126,7 @@ static func attempt(layout_id: String, id: String, control: String, swap: bool =
 			return {"status": "conflict", "with": str(c["action"])}
 		return {"status": "wrong_device" if str(r["error"]).contains("control") else "reserved"}
 	var ovr: Array = SimInputRemap.diff(SimInputData.original(layout_id), r["preset"])
-	var verdict: String = _verdict(layout_id, ovr)
+	var verdict: String = _verdict(layout_id, ovr, slot)
 	if verdict != "ok":
 		return {"status": verdict}
 	return {"status": "ok", "overrides": ovr}
@@ -133,8 +134,8 @@ static func attempt(layout_id: String, id: String, control: String, swap: bool =
 
 ## One key offered for Fly's next place, `keys_so_far` being the ones already taken: {status, with}. status is "ok", "wrong_device", "reserved",
 ## "twice" (it is one of the keys already taken), "taken" (another action has it: `with` names it, and there is no swap for a move key) or "pair".
-static func check_move_key(layout_id: String, keys_so_far: Array, control: String) -> Dictionary:
-	var p: Dictionary = preset(layout_id)
+static func check_move_key(layout_id: String, keys_so_far: Array, control: String, slot: int = 0) -> Dictionary:
+	var p: Dictionary = preset(layout_id, slot)
 	if not control.begins_with("kb:"):
 		return {"status": "wrong_device"}
 	var name: String = control.substr(3)
@@ -147,7 +148,7 @@ static func check_move_key(layout_id: String, keys_so_far: Array, control: Strin
 	if used.has(control) and str(used[control]) != "move":
 		return {"status": "taken", "with": str(used[control])}
 	if p.has("pair"):
-		var pp: Dictionary = SimInputData.preset(str(p["pair"]))
+		var pp: Dictionary = SimInputData.preset(str(p["pair"]), 1 - slot)   # the other player's half, as that player has it
 		for b in pp.get("bindings", []):
 			if (b["controls"] as Array).has(control):
 				return {"status": "pair"}
@@ -155,8 +156,8 @@ static func check_move_key(layout_id: String, keys_so_far: Array, control: Strin
 
 
 ## All four of Fly's keys, in order up, left, down, right: {status, with, control, overrides}, the statuses of check_move_key plus "same".
-static func attempt_move(layout_id: String, keys: Array) -> Dictionary:
-	var p: Dictionary = preset(layout_id)
+static func attempt_move(layout_id: String, keys: Array, slot: int = 0) -> Dictionary:
+	var p: Dictionary = preset(layout_id, slot)
 	var e: Dictionary = entry(p, "move")
 	if e.is_empty() or keys.size() != 4:
 		return {"status": "reserved"}
@@ -169,13 +170,13 @@ static func attempt_move(layout_id: String, keys: Array) -> Dictionary:
 			return {"status": "taken", "with": str(c["action"]), "control": str(c["control"])}
 		return {"status": "twice" if str(r["error"]).contains("differ") else "reserved"}
 	var ovr: Array = SimInputRemap.diff(SimInputData.original(layout_id), r["preset"])
-	var verdict: String = _verdict(layout_id, ovr)
+	var verdict: String = _verdict(layout_id, ovr, slot)
 	if verdict != "ok":
 		return {"status": verdict}
 	return {"status": "ok", "overrides": ovr}
 
 
 ## Make `overrides` the layout's: applied to the data (so every reader of SimInputData.preset follows) and saved to the player's file.
-static func commit(layout_id: String, overrides: Array) -> void:
-	SimInputData.apply_overrides(layout_id, overrides)
+static func commit(layout_id: String, overrides: Array, slot: int = 0) -> void:
+	SimInputData.apply_overrides(layout_id, overrides, slot)
 	SimInputData.save_overrides(save_path)
