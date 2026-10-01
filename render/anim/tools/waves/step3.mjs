@@ -29,6 +29,17 @@ export const sequences = {
         foot_r: [-10, 2.5, 9], foot_l: [10, 2.5, -7], ...OPEN },
       orig: 'finding the feet: the guard coming half back up' },
   ] },
+  stagger_short: { dur: 12, legal: LEGAL, phases: [
+    { id: 'recoil', ticks: 4, sketch: { family: 'upright', lean: -12, hips: [-6, -2, 0], spine: { lean: -6, twist: 14 }, head: { pitch: -4, yaw: 10 }, hand_r: [2, 60, 18], hand_l: [8, 56, -14],
+        foot_r: [-16, 2.5, 8], foot_l: [4, 2.5, -7], ...OPEN },
+      orig: 'a short stagger with no blow of its own: the weight rocked back, the arms swinging a little wide' },
+    { id: 'stumble', sketch: { family: 'upright', lean: -6, hips: [-4, -4, 0], spine: { lean: -2, twist: 8 }, head: { pitch: 4, yaw: 8 }, hand_r: [8, 56, 18], hand_l: [12, 54, -14],
+        foot_r: [-12, 6, 8], foot_l: [6, 2.5, -7], ...OPEN },
+      orig: 'a step to catch the weight' },
+    { id: 'regain', ticks: 4, sketch: { family: 'upright', lean: 4, hips: [0, -4, 0], spine: { lean: 2, twist: 4 }, head: { pitch: 4, yaw: 6 }, hand_r: [14, 56, 12], hand_l: [18, 54, -8],
+        foot_r: [-10, 2.5, 9], foot_l: [10, 2.5, -7], ...OPEN },
+      orig: 'the guard coming back up' },
+  ] },
   reversal: { dur: 8, legal: LEGAL, phases: [
     { id: 'break', ticks: 3, sketch: { family: 'upright', lean: -6, hips: [-4, -4, 0], spine: { lean: -4, twist: 8 }, head: { pitch: -8, yaw: 6 }, hand_r: [10, 66, 24], hand_l: [10, 66, -24],
         foot_r: [-12, 2.5, 9], foot_l: [8, 2.5, -7], ...OPEN },

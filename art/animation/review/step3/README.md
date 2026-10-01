@@ -1,6 +1,6 @@
 # step3: the pack for Orb
 
-Machine pass first (see exceptions.md): **0 errors, 0 for review, 9 notes** over 29 poses of 9 sequences. Then what Orb sees:
+Machine pass first (see exceptions.md): **0 errors, 0 for review, 12 notes** over 32 poses of 10 sequences. Then what Orb sees:
 
 1. **The reel** `step3-reel.gif`: each of Encounter's step 3 cue events in turn (perfect block, reversal, dodge-cancel, burst, burst absorbed), sent through the real solver; the fighter who does it is on the right, the one it happens to on the left.
 2. **The sheet** `step3-sheet.png`: three frames of each.

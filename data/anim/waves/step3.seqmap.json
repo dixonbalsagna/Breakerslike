@@ -35,6 +35,22 @@
    ]
   },
   {
+   "id": "s3.stagger_short",
+   "name": "stagger_short",
+   "dur": 12,
+   "alt": null,
+   "poses": [
+    "s3.stagger_short.recoil",
+    "s3.stagger_short.stumble",
+    "s3.stagger_short.regain"
+   ],
+   "phases": [
+    "recoil",
+    "stumble",
+    "regain"
+   ]
+  },
+  {
    "id": "s3.reversal",
    "name": "reversal",
    "dur": 8,

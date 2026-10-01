@@ -53,6 +53,7 @@ var _tq: Array[Quaternion] = []
 var _last_T: float = -1.0
 var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
+var _stun_prev: int = 0
 var _stun_watch: int = 0           # ticks left to see this fighter staggered after a perfect block or a reversal (a DEFLECT staggers nobody)
 var _stun_seq: String = ""
 var _stun_t0: float = 0.0
@@ -204,6 +205,12 @@ func on_tick(dt: float, frozen: bool, S: SimState = null, f = null) -> void:
 	_ip_acc += dt * (0.5 if frozen else 1.0)
 	if S != null and f != null:
 		update_face(S, f)   # the facing is decided once per sim tick too, so everything keyed on it replays
+		# a stagger with no cue of its own (the 12 ticks a blocked string leaves its attacker, the loser of a finisher's set-up): a short one
+		var sn: int = int(f.stunTicks)
+		if sn > 0 and _stun_prev == 0 and RenderAnim.step3_cues and _seq.is_empty() and _stun_watch == 0 and f.state == "free" and AnimData.entries.has("s3.stagger_short"):
+			_seq = {"id": "s3.stagger_short", "t0": S.T, "dur": clampf(float(sn), 8.0, 30.0) / 60.0}
+			debug["step3"] = int(debug.get("step3", 0)) + 1
+		_stun_prev = sn
 		if _stun_watch > 0:
 			_stun_watch -= 1
 			if int(f.stunTicks) > 0 and AnimData.entries.has(_stun_seq):

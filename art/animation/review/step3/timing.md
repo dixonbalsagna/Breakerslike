@@ -6,6 +6,7 @@ Each sequence is as long as the sim's own state it dresses (data/combat/template
 | :--- | ---: | ---: | :--- |
 | perfect_block | 30 | 0.50 | riposteTicks 30 (the riposte window the defender holds loaded) |
 | stagger_blocked | 24 | 0.40 | staggerTicks 24 (the blocked attacker) |
+| stagger_short | 12 | 0.20 |  |
 | reversal | 8 | 0.13 | the counter-delay beat, 8 ticks |
 | stagger_countered | 16 | 0.27 | the delay and land of the reversal (about 16) |
 | dodge_cancel | 10 | 0.17 | the dash out, about 10 ticks |

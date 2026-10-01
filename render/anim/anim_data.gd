@@ -73,7 +73,7 @@ static func load_all() -> void:
 	keysets = kj.get("keysets", {})
 	picks = kj.get("picks", {})
 	var live_flag: bool = OS.get_cmdline_user_args().has("--wave1-live")
-	var s3_flag: bool = OS.get_cmdline_user_args().has("--step3-cues") or RenderAnim.step3_cues
+	var s3_flag: bool = (OS.get_cmdline_user_args().has("--step3-cues") or RenderAnim.step3_cues) and not OS.get_cmdline_user_args().has("--no-step3-cues")
 	if load_waves or live_flag or s3_flag or OS.get_cmdline_user_args().has("--waves"):
 		var da := DirAccess.open(DIR + "waves")
 		if da != null:

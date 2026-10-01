@@ -75,7 +75,7 @@ function wave() {
   const sl = readJson(join(rawDir, 'silhouette.json'));
   const fromOf = id => isEntries ? null : manifest?.strikes?.find(m => id.startsWith(m.id + '.') || id.startsWith(m.id + '~'))?.from ?? null;
   for (const pr of sl?.pairs ?? []) if (waveName && fromOf(pr.a) && fromOf(pr.a) === fromOf(pr.b)) add('note', 'silhouette_lint', `${pr.a} / ${pr.b}`, `overlap ${pr.iou}: two strikes derived from the same family (they differ by the hands or the target)`, 'by design (Combat\'s derive rows); the hands and the target tell them apart');
-  for (const pr of (sl?.pairs ?? []).filter(p => !(waveName && fromOf(p.a) && fromOf(p.a) === fromOf(p.b)))) add(pr.iou >= (pr.kind === 'same family' ? 0.95 : 0.85) ? 'review' : 'note', 'silhouette_lint', `${pr.a} / ${pr.b}`, `overlap ${pr.iou} (${pr.kind})`, pr.kind === 'same family' ? 'a key that barely moves: make the poses differ or drop one' : 'two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)');
+  for (const pr of (sl?.pairs ?? []).filter(p => !(waveName && fromOf(p.a) && fromOf(p.a) === fromOf(p.b)))) add(!isSeq && pr.iou >= (pr.kind === 'same family' ? 0.95 : 0.85) ? 'review' : 'note', 'silhouette_lint', `${pr.a} / ${pr.b}`, `overlap ${pr.iou} (${pr.kind})`, pr.kind === 'same family' ? 'a key that barely moves: make the poses differ or drop one' : 'two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)');
   // stacking lint
   runGodot('stacking_lint', [`--json=${join(rawDir, 'stacking.json')}`]);
   const st = readJson(join(rawDir, 'stacking.json'));

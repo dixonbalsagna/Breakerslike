@@ -1,10 +1,10 @@
 {
  "wave": "step3",
- "poses": 29,
+ "poses": 32,
  "counts": {
   "error": 0,
   "review": 0,
-  "note": 9
+  "note": 12
  },
  "flagged": [],
  "findings": [
@@ -42,6 +42,27 @@
    "subject": "s3.shoved.shove",
    "detail": "hand_l target [16, 64, -13] is 2.1 units out of reach (the limb is clamped to [13.9, 63.8, -12.8])",
    "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "s3.stagger_blocked.regain / s3.stagger_short.regain",
+   "detail": "overlap 0.914 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "s3.stagger_blocked~b.regain / s3.stagger_short.regain",
+   "detail": "overlap 0.914 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "s3.stagger_bait.straighten / s3.stagger_short.regain",
+   "detail": "overlap 0.852 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
   },
   {
    "severity": "note",
