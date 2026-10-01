@@ -16,6 +16,6 @@
   },
   "speed": {
     "lines": 7, "ticks": 6, "dist_bh": 3.6, "len_min_bh": 1.4, "len_max_bh": 3.0, "spread_bh": 1.15, "gap_min_bh": 0.35, "gap_max_bh": 0.8,
-    "width_bh": 0.04, "alpha": 0.7, "rim_alpha": 0.4, "min_gap_ticks": 6, "dedupe_ticks": 24, "alive_max": 4
+    "width_bh": 0.04, "alpha": 0.7, "rim_alpha": 0.4, "min_gap_ticks": 6, "dedupe_ticks": 0, "alive_max": 4
   }
 }

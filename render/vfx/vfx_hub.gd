@@ -178,10 +178,17 @@ func _consume(S: SimState, events: Array) -> void:
 				trails[ta].cut()
 	if speedlines_enabled:
 		speed.step()
+		speed.observe(S)
+		# One streak an exchange (VfxSpeed): the hits that get a panel first, then the launch, then the heavies.
+		for e in events:
+			var tp: String = e.type
+			if tp == "limb_break" or tp == "ko" or tp == "finisher_start" or (tp == "decisive" and (e.kind == "clash" or e.kind == "beam" or e.kind == "beam_clash")):
+				speed.panel()
 		for e in events:
 			if e.type == "launch":
 				_speed_launch(S, e)
-			elif e.type == "damage" and e.kind == "heavy" and e.number:
+		for e in events:
+			if e.type == "damage" and e.kind == "heavy" and e.number:
 				_speed_heavy(S, e)
 	_sync_cracks(S)
 	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled:
@@ -585,7 +592,7 @@ func _speed_launch(S: SimState, e) -> void:
 	if absf(dx) + absf(dy) < 1.0:
 		dx = float(_g(e, "face", 1.0))
 		dy = 0.0
-	speed.add(f.x, f.y + VfxLook.CHEST_Y, dx, dy, a, f.z)
+	speed.offer_launch(f.x, f.y + VfxLook.CHEST_Y, dx, dy, a, f.z)
 
 
 ## A heavy that landed (a `damage` event of kind heavy with a number): a streak from the attacker toward the hit.
@@ -598,7 +605,7 @@ func _speed_heavy(S: SimState, e) -> void:
 		dx = SimWrap.sdx(S.fighters[at].x, float(e.x))
 		dy = float(e.y) - (S.fighters[at].y + VfxLook.CHEST_Y)
 	var z: float = S.fighters[v].z if v >= 0 and v < S.fighters.size() else 0.0
-	speed.add(float(e.x), float(e.y), dx, dy, v, z)
+	speed.offer_heavy(float(e.x), float(e.y), dx, dy, v, z)
 
 
 ## The events the reference particle consumer (render/core/particle_view.gd's source, `SimFxView`) should be given: the tick's

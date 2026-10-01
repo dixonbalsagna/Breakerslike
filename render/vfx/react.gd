@@ -15,7 +15,7 @@ const DEFAULTS: Dictionary = {
 	"rubble": {"min_tier": 3, "rate_t3": 4.0, "rate_t4": 9.0, "spread_bh_t3": 1.6, "spread_bh_t4": 2.6, "rise_min": 25, "rise_max": 70, "accel": 16, "life_min": 1.8, "life_max": 3.0, "size_min": 8, "size_max": 20, "near_ground_bh": 3.0, "alive_cap": 36},
 	"cracks": {"min_tier": 3, "still_ticks": 30, "still_speed": 300, "r_t3": 150, "r_t4": 230, "energy_t3": 8, "energy_t4": 18, "grow_s": 2.5, "fade_in_ticks": 20, "fade_out_ticks": 60, "stay_ticks": 90, "move_radius": 220},
 	"windows": {"min_tier": 3, "min_energy": 8, "reach_t3": 1800, "reach_t4": 3200, "speed": 2600, "min_floors": 3, "floors_max": 6, "max_buildings": 10, "scale": 0.8, "keep_s": 6},
-	"speed": {"lines": 7, "ticks": 6, "dist_bh": 3.6, "len_min_bh": 1.4, "len_max_bh": 3.0, "spread_bh": 1.15, "gap_min_bh": 0.35, "gap_max_bh": 0.8, "width_bh": 0.04, "alpha": 0.7, "rim_alpha": 0.4, "min_gap_ticks": 6, "dedupe_ticks": 24, "alive_max": 4},
+	"speed": {"lines": 7, "ticks": 6, "dist_bh": 3.6, "len_min_bh": 1.4, "len_max_bh": 3.0, "spread_bh": 1.15, "gap_min_bh": 0.35, "gap_max_bh": 0.8, "width_bh": 0.04, "alpha": 0.7, "rim_alpha": 0.4, "min_gap_ticks": 6, "dedupe_ticks": 0, "alive_max": 4},
 }
 
 static var _data: Dictionary = {}

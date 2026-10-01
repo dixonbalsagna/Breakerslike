@@ -767,6 +767,87 @@ func _speed() -> void:
 		_tick(S, hr, [])
 	_tick(S, hr, [heavy.call(1.0, 0.0)])
 	_check(hr.speed.made == 2, "and the next after the gap gives another")
+	# One streak an exchange: on its launch, else its last landed heavy; none on a hit that gets a panel.
+	var new_ex := func(n: int, kind: String, tag: String):
+		var ex := SimState.Exchange.new()
+		ex.n = n
+		ex.kind = kind
+		ex.tag = tag
+		ex.A = S.fighters[1]
+		ex.D = S.fighters[0]
+		return ex
+	var wait := func(hx: VfxHub, k: int):
+		for i in range(k):
+			_tick(S, hx, [])
+	var he := VfxHub.new()
+	he.reset(S, 6)
+	S.dirS.ex = new_ex.call(7, "heavy", "")
+	_tick(S, he, [heavy.call(0.0, 1.0)])
+	wait.call(he, 3)
+	f.x = 20050.0
+	_tick(S, he, [VfxMock.ev("damage", {"x": f.x, "y": f.y + 40.0, "amount": 40.0, "col": "#ffffff", "attacker": 1.0, "victim": 0.0, "region": "core", "kind": "heavy", "number": true})])
+	wait.call(he, 3)
+	_check(he.speed.made == 0, "a heavy waits for the end of its exchange (nothing yet)")
+	S.dirS.ex = null
+	wait.call(he, 2)
+	_check(he.speed.made == 1 and absf(he.speed.streaks[0].x - 20050.0) < 1.0, "the exchange's last landed heavy gets the one streak when it ends (x %.0f)" % (he.speed.streaks[0].x if he.speed.streaks.size() > 0 else -1.0))
+	f.x = 20000.0
+	var hl2 := VfxHub.new()
+	hl2.reset(S, 6)
+	S.dirS.ex = new_ex.call(8, "heavy", "")
+	_tick(S, hl2, [heavy.call(0.0, 1.0)])
+	f.vx = 3000.0
+	f.vy = 500.0
+	_tick(S, hl2, [VfxMock.ev("launch", {"actor": 0.0, "target": 1.0, "amount": 3100.0, "face": 1.0}), heavy.call(0.0, 1.0)])
+	S.dirS.ex = null
+	wait.call(hl2, 60)
+	_check(hl2.speed.made == 1, "an exchange with a launch has the launch's streak and nothing else (%d)" % hl2.speed.made)
+	for kind_tag in [["sig", ""], ["heavy", "RIPOSTE"]]:
+		var hp := VfxHub.new()
+		hp.reset(S, 6)
+		S.dirS.ex = new_ex.call(9, kind_tag[0], kind_tag[1])
+		_tick(S, hp, [heavy.call(0.0, 1.0)])
+		_tick(S, hp, [VfxMock.ev("launch", {"actor": 0.0, "target": 1.0, "amount": 3100.0, "face": 1.0})])
+		S.dirS.ex = null
+		wait.call(hp, 60)
+		_check(hp.speed.made == 0 and hp.speed.suppressed >= 1, "a %s exchange tagged '%s' gets a panel, so no streak (%d suppressed)" % [kind_tag[0], kind_tag[1], hp.speed.suppressed])
+	for panel_ev in ["limb_break", "ko", "finisher_start"]:
+		var hq2 := VfxHub.new()
+		hq2.reset(S, 6)
+		S.dirS.ex = new_ex.call(10, "heavy", "")
+		_tick(S, hq2, [heavy.call(0.0, 1.0), VfxMock.ev(panel_ev, {"actor": 1.0, "victim": 0.0, "region": "arms", "winner": 1.0, "loser": 0.0, "target": 0.0, "dur": 2.0})])
+		S.dirS.ex = null
+		wait.call(hq2, 60)
+		_check(hq2.speed.made == 0, "a hit with a %s event gets a panel, so no streak" % panel_ev)
+	var hdc := VfxHub.new()
+	hdc.reset(S, 6)
+	S.dirS.ex = new_ex.call(11, "heavy", "")
+	_tick(S, hdc, [heavy.call(0.0, 1.0), VfxMock.ev("decisive", {"winner": 1.0, "loser": 0.0, "kind": "clash"})])
+	S.dirS.ex = null
+	wait.call(hdc, 60)
+	_check(hdc.speed.made == 0, "a won clash (decisive) gets a panel too")
+	var hlong := VfxHub.new()
+	hlong.reset(S, 6)
+	S.dirS.ex = new_ex.call(12, "heavy", "")
+	_tick(S, hlong, [heavy.call(0.0, 1.0)])
+	wait.call(hlong, 50)
+	_check(hlong.speed.made == 1, "a long exchange does not hold its heavy's streak for more than 45 ticks")
+	S.dirS.ex = null
+	# A riposte without a launch, and a clash that is not won, still have their heavy's streak.
+	var hrp := VfxHub.new()
+	hrp.reset(S, 6)
+	S.dirS.ex = new_ex.call(13, "heavy", "RIPOSTE")
+	_tick(S, hrp, [heavy.call(0.0, 1.0)])
+	S.dirS.ex = null
+	wait.call(hrp, 6)
+	_check(hrp.speed.made == 1, "a riposte that does not launch has its last heavy's streak")
+	var hcl := VfxHub.new()
+	hcl.reset(S, 6)
+	S.dirS.ex = new_ex.call(14, "heavy", "HEAVY CLASH — COUNTERED")
+	_tick(S, hcl, [heavy.call(0.0, 1.0)])
+	S.dirS.ex = null
+	wait.call(hcl, 6)
+	_check(hcl.speed.made == 1, "a clash that is not won (no decisive event) has its heavy's streak")
 	# The count in a real minute of AI play against the 20 a minute Orb's treatment B was sized on.
 	var S2 := SimCore.createSim()
 	SimCore.newMatch(S2, 12345)
@@ -778,7 +859,7 @@ func _speed() -> void:
 		S2.out.fx.clear()
 		S2.out.feed.clear()
 	var per_min: int = h2.speed.made
-	_check(per_min >= 6 and per_min <= 30, "in a real minute %d streaks (%d skipped by the dedupe and the gap), about the 20 a minute it was sized for" % [per_min, h2.speed.skipped])
+	_check(per_min >= 8 and per_min <= 24, "in a real minute %d streaks (%d hits had a panel, %d were the same exchange's second), about the 17 a minute Game Design sized the one-per-exchange rule on" % [per_min, h2.speed.suppressed, h2.speed.capped])
 	SimCore.dispose(S2)
 	# Off, and the drawing budget.
 	var ho := VfxHub.new()

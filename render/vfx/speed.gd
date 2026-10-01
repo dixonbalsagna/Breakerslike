@@ -40,6 +40,14 @@ func reset(seed: int) -> void:
 	_last_tick = -1000
 	_last_hit = PackedInt32Array([-1000, -1000])
 	_rng = SimRng.new(SimRng.deriveSeed(seed, "vfx.speed"))
+	cur_n = -1
+	ended_tick = -1
+	excl = false
+	streaked = false
+	pend = {}
+	suppressed = 0
+	capped = 0
+	cur_tag = ""
 	VfxReact.warm()
 
 
@@ -92,3 +100,99 @@ func add(x: float, y: float, dx: float, dy: float, slot: int, z: float) -> void:
 	_last_tick = _tick
 	if slot >= 0 and slot < 2:
 		_last_hit[slot] = _tick
+
+
+# ------------------------------------------------------------------------------------------------ one streak an exchange
+## Game Design's rule (rule-of-cool.md row 11, balance-targets.md section 22): at most one streak per exchange, on its launch if it
+## has one, otherwise on its last landed heavy, and never on a hit that gets a panel (a signature, a finisher, a crippling blow, the
+## KO, a clash won, a riposte that launches). The exchange is read from `S.dirS.ex` (its index `n`, its `kind` and `tag`); a heavy waits for the end
+## of its exchange to learn whether it was the last (a launch cancels it), and fires after 45 ticks at the latest.
+const PENDING_TICKS: int = 45
+const CONTEXT_GRACE: int = 2     # an exchange that has just ended still owns the events of its last ticks
+
+var cur_n: int = -1              # the exchange index last seen
+var ended_tick: int = -1         # the tick it was seen ending, -1 while it runs
+var excl: bool = false           # this exchange's hit gets a panel
+var cur_tag: String = ""         # the running exchange's tag (RIPOSTE, HEAVY CLASH, ...)
+var streaked: bool = false       # this exchange has had its streak
+var pend: Dictionary = {}        # the last landed heavy, waiting: x, y, dx, dy, slot, z, tick
+var suppressed: int = 0          # hits left without a streak because they get a panel (the tests)
+var capped: int = 0              # hits left without one because the exchange already had its streak
+
+
+func _in_exchange() -> bool:
+	return cur_n >= 0 and (ended_tick < 0 or _tick - ended_tick <= CONTEXT_GRACE)
+
+
+func _begin(n: int) -> void:
+	_flush()
+	cur_n = n
+	ended_tick = -1
+	excl = false
+	streaked = false
+	cur_tag = ""
+	pend = {}
+
+
+func _flush() -> void:
+	if not pend.is_empty() and not excl and not streaked:
+		add(pend.x, pend.y, pend.dx, pend.dy, pend.slot, pend.z)
+		streaked = true
+	pend = {}
+
+
+## Once a tick, after step(): follow the running exchange (a new one, an end, a panel kind) and fire a waiting heavy that is due.
+func observe(S: SimState) -> void:
+	var ex = S.dirS.ex
+	if ex != null:
+		if int(ex.n) != cur_n or ended_tick >= 0:
+			_begin(int(ex.n))
+		var tag: String = String(ex.tag)
+		cur_tag = tag
+		# A signature gets a panel whole; a riposte only if it launches (offer_launch), a clash only if it is won (a decisive event).
+		if ex.kind == "sig":
+			excl = true
+			pend = {}
+	elif cur_n >= 0 and ended_tick < 0:
+		ended_tick = _tick
+		_flush()
+	if not pend.is_empty() and _tick - int(pend.tick) >= PENDING_TICKS:
+		_flush()
+
+
+## A hit that gets a panel (limb_break, ko, finisher_start, a decisive clash or beam): no streak for this exchange.
+func panel() -> void:
+	if _in_exchange():
+		excl = true
+		pend = {}
+
+
+## A launch: it is the exchange's streak, and cancels a waiting heavy.
+func offer_launch(x: float, y: float, dx: float, dy: float, slot: int, z: float) -> void:
+	if _in_exchange():
+		if cur_tag.begins_with("RIPOSTE") and not excl:
+			excl = true          # a riposte that launches gets a panel
+			pend = {}
+		if excl:
+			suppressed += 1
+			return
+		if streaked:
+			capped += 1
+			return
+		pend = {}
+		streaked = true
+	add(x, y, dx, dy, slot, z)
+
+
+## A landed heavy: it waits for the exchange's end (the last one of an exchange without a launch gets the streak).
+func offer_heavy(x: float, y: float, dx: float, dy: float, slot: int, z: float) -> void:
+	if _in_exchange():
+		if excl:
+			suppressed += 1
+			return
+		if streaked:
+			capped += 1
+			return
+		pend = {"x": x, "y": y, "dx": dx, "dy": dy, "slot": slot, "z": z, "tick": _tick}
+		return
+	add(x, y, dx, dy, slot, z)
