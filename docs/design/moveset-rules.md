@@ -385,7 +385,7 @@ The Empress's joke revisions stay small on purpose, because they are the comedy.
 
 The sim plays a transformation in one of three versions (`spec-wounds.md` §8b). All three use the same three beats, and the effect in play is the same.
 
-**The staging rule.** The body draws **in**, snaps **once**, and then holds still. The tell is the silhouette, the posture and the aura's shape. There is no scream, no fists at the hips with the feet apart, no flame flaring upward, no crackling lightning, and no hair change.
+**The staging rule.** The body draws **in**, snaps **once**, and then holds still. The tell is the silhouette, the posture and the aura's shape. There is no scream or shriek, no fists at the hips with the feet apart, no flame flaring upward, no crackling lightning, and no hair change. At the break, the snap is never arms thrown wide with the head back, and the flash is never gold, white or red (Legal's screen; the stacking rule is in `rule-of-cool.md` §1).
 
 | Beat | Full (3 s pause) | Short (1.5 s pause) | Live (0.8 s, no pause) |
 | :--- | :--- | :--- | :--- |

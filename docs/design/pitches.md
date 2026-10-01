@@ -280,6 +280,7 @@ Orb picked a mid-fight taunt that can be punished, with an effect that depends o
 
 **The same for every fighter.**
 - *The input:* the context button's fallback in physical mode (`control-rules.md` §4).
+- *The gesture* is each fighter's own, and never beckoning fingers (Legal).
 - *It takes 1 s.* A dodge-cancel can end it in the first 20 ticks. After that he is committed.
 - *Punished:* any hit that lands during it is a clean hit at ×1.2.
 - *Completed:* mood +3, the face cut-in plays, and the fighter's own effect happens.

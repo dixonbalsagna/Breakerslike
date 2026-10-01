@@ -1,6 +1,6 @@
 # Rule of cool: the rationed feature list
 
-Owner: Game Design. This turns Orb's picks from questionnaires 11 and 12 (`docs/ep/vision.md`) into a list the directors can build from: one row per feature, with its trigger, tier gate, frequency, cost in play, owners and build order. Legal screens the list after this page. Every name is a working label, and every number is a proposal for data.
+Owner: Game Design. This turns Orb's picks from questionnaires 11 and 12 (`docs/ep/vision.md`) into a list the directors can build from: one row per feature, with its trigger, tier gate, frequency, cost in play, owners and build order. Legal has screened the list: its constraints are in §3b, and its stacking rule is in §1. Every name is a working label, and every number is a proposal for data.
 
 Three items wait on Orb's picks in `pitches.md` §8: which hits get the panel cut-in, the last stand, and the taunt.
 
@@ -16,6 +16,16 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 6. **Nothing here is the only cue for a gameplay event.** On old laptops and phones every effect has a reduced version, and the sim is the same on every device.
 7. **Everything is deterministic.** Where "the game picks", it scores candidates with no random draw beyond the sim's seeded keys.
 8. **No teleports.** They stay on hold.
+9. **The stacking rule** (Legal). A known franchise's power-up scene is a stack of seven marks. **No single moment in our game may show more than two of them:**
+   1. a crouch with fists clenched at the sides;
+   2. a scream, or a drawn-out chant;
+   3. a flame-shaped body aura streaming upward;
+   4. rubble rising in a ring, with the ground cracking and wind under a changing sky;
+   5. crackling lightning on the body;
+   6. hair rising or changing colour;
+   7. a gold, white or red flash with a form name shouted.
+
+   VFX, Animation, Camera and Audio review their work against it.
 
 ## 2. Two rules this plan adds
 
@@ -53,7 +63,7 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 | 9 | **Land scars stay; water closes** | Any crater, trench or beam scar | Any | Always | None. Water closes within seconds by the existing flow | Already in the sim | World |
 | 10 | **Crowds watch, then flee** | The mood bands and the evacuation rules | Any | Always | None | Already in the sim | World, Rendering, Narrative |
 | 11 | **Speed lines and panel cut-ins** | Orb's pick in `pitches.md` §8a | Any | About 2.5 panels a minute if option B | None | Presentation | Camera, VFX, UI |
-| 12 | **The world reacts** (clouds part, rubble floats, cracks spread under a standing fighter, windows blow out for blocks) | A fighter reaches tier 3; stronger at tier 4 | 3 and up | Continuous while at that tier. Windows blow out as the visible form of the wider structure reach in `balance-targets.md` §21 | None beyond that reach | Presentation, on a sim value | VFX, Rendering, World |
+| 12 | **The world reacts** (the sky pales or parts, rubble lifts gently, cracks spread under a standing fighter, windows blow out for blocks; changed by Legal, §3b) | A fighter reaches tier 3; stronger at tier 4 | 3 and up | Continuous while at that tier. Windows blow out as the visible form of the wider structure reach in `balance-targets.md` §21 | None beyond that reach | Presentation, on a sim value | VFX, Rendering, World |
 | 13 | **The ping-pong rally** | `control-rules.md` §11 | Any; longer with tier | 2 to 6 blitzes a minute in Tense and Frenzied | 6 ki a bounce | Sim | Combat, Encounter, Animation |
 | 14 | **Beam struggle on the pulse** | A beam answered by a beam | Any | 30 to 60% of signatures | The answer's ki, as today | Sim | Encounter, Controls, UI, Audio |
 | 15 | **Fist clash shockwave** | A heavy meets a heavy, on the pulse | Any. The shockwave damages structures from tier 3 | About 1.5 a minute; the big version under rule 2 | A heavy's ki. The shockwave's damage counts against the collateral budgets | Sim | Combat, Encounter, World, VFX |
@@ -77,6 +87,29 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 
 **The aura after a transformation** shows only while charging or attacking (Orb). So at a distance a form reads by its silhouette and colour mass, not by a standing aura (`moveset-rules.md` §10.2).
 
+## 3b. Legal's constraints, by feature
+
+From Legal's screen (`docs/legal/rule-of-cool-screen.md`). A feature not listed here is clear as written. The stacking rule in §1 applies to all of them.
+
+| # | Feature | What the build must keep |
+| ---: | :--- | :--- |
+| 2 | Face cut-in | Our own frame and type. It must not look like a static-filled radio screen or copy a known game's portrait layout |
+| 3 | Shouted move names | The names are ours. A name is never broken into drawn-out syllables across a charge |
+| 5 | The theme on transformation | Original themes only, with no sound-alike |
+| 7 | Entrance and staredown | Our own staging. No wind-blown cape and no silhouette reveal |
+| 12 | The world reacts | **Changed.** Rubble lifts gently and with weight, never as a ring of rocks around the fighter. No lightning. The sky pales or parts and never darkens. It never plays together with a crouch, a scream and a body aura |
+| 15 | Fist clash shockwave | No cracked-sky or shattered-space effect |
+| 16 | Swat, split or walk through | No named technique and no borrowed hand pose. A swatted beam doesn't end in a mushroom cloud staged like a known scene |
+| 20 | Blur exchange | The bodies stay readable. It is not invisible fighters with only shock rings, a freeze on locked fists, or a cut to an onlooker who can't follow |
+| 22 | Round-the-world hit | Our own name for it, and no shouted name or borrowed pose |
+| 23 | The last stand | Screened again when Orb picks. No glowing-blood look and no final speech |
+| 24 | The taunt | No beckoning fingers |
+| | On the Chin (`spec-wounds.md` §3) | Clear. Its bravado line gets an exact-phrase search before it is locked, like any line |
+| | The transformation's break (`moveset-rules.md` §10.8) | The snap is not arms thrown wide with the head back, and there is no shrieking sound. The flash is never gold, white or red |
+| | The aura | Only while charging or attacking, never at rest. A thin outline or rings in the fighter's lane colour: not a flame streaming upward, with no gold, white or red and no lightning. Never together with a crouching, fists-at-the-sides charge pose and a scream |
+
+Legal re-screens features 12, 20 and 22 and the aura when Art's and VFX's first versions exist, and reviews the first transformation cinematic.
+
 ## 4. The build order
 
 | Wave | What | Why now, or what it waits for |
@@ -89,7 +122,7 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 
 ## 5. What each director should know
 
-- **Legal:** screen every row. The staging must be ours: no franchise shots, poses or names.
+- **Legal:** the screen is done, and its constraints are in §3b and rule 9 of §1. The staging must be ours: no franchise shots, poses or names.
 - **QA:** new counts to measure are panels a minute, planet-scale launches a match (at most 3), big set pieces (at most one per 20 s), and the pulse hit rate by AI difficulty.
 - **Controls:** the pulse window and its lockout match the perfect block's.
 - **Rendering and VFX:** every effect needs a reduced version for 30 frames a second.
