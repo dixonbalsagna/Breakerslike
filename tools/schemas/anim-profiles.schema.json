@@ -98,6 +98,12 @@
           "hold_drift": {
             "type": "number",
             "minimum": 0
+          },
+          "inertia_s": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 0.4,
+            "description": "Seconds a joined bone takes to settle (AnimFighter._inertialise). Optional: code defaults to 0.1 for a snappy profile and 0.18 for a fluid one."
           }
         },
         "additionalProperties": false,

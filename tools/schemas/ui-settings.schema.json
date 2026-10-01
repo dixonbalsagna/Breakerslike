@@ -414,6 +414,22 @@
               "pattern": "\\{other\\}"
             }
           ]
+        },
+        "taken": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            },
+            {
+              "pattern": "\\{other\\}"
+            }
+          ]
+        },
+        "twice": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false,
@@ -676,6 +692,22 @@
               "pattern": "\\{other\\}"
             }
           ]
+        },
+        "taken": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            },
+            {
+              "pattern": "\\{other\\}"
+            }
+          ]
+        },
+        "twice": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false,

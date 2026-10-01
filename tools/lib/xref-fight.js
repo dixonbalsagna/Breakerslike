@@ -326,6 +326,26 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (Array.isArray(st.settlements) && st.settlements.length && Math.abs(popTotal - 1) > eps) err(F, '/settlements', 'settle-share', 'pop_share sums to ' + popTotal.toFixed(3) + ', not 1');
   }
 
+  // ---- fight pause: orders and whole ticks (the loader checks both) ----
+  const pause = get('data/fight/pause.json');
+  if (isObj(pause)) {
+    const PF = 'data/fight/pause.json';
+    const n = (g, k) => (isObj(pause[g]) && typeof pause[g][k] === 'number' ? pause[g][k] : undefined);
+    for (const g of ['bank', 'full', 'short', 'live', 'timeCap']) {
+      if (!isObj(pause[g])) continue;
+      for (const [k, v] of Object.entries(pause[g])) {
+        if (!k.startsWith('_') && typeof v === 'number' && Math.abs(v * 60 - Math.round(v * 60)) > 1e-6) err(PF, `/${g}/${k}`, 'pause-ticks', `${v} s is not a whole number of ticks (60 a second)`);
+      }
+    }
+    const lt = (ga, ka, gb, kb, strict) => { const x = n(ga, ka); const y = n(gb, kb); if (x !== undefined && y !== undefined && (strict ? x >= y : x > y)) err(PF, `/${ga}/${ka}`, 'pause-order', `${ga}.${ka} ${x} must be ${strict ? 'below' : 'at most'} ${gb}.${kb} ${y}`); };
+    lt('bank', 'startS', 'bank', 'maxS', false);
+    lt('short', 'lengthS', 'full', 'lengthS', true);
+    lt('full', 'lengthS', 'full', 'finalLengthS', false);
+    lt('short', 'gapS', 'full', 'gapS', false);
+    const cap = n('bank', 'maxS');
+    if (cap !== undefined) for (const [g, k] of [['short', 'lengthS'], ['full', 'lengthS']]) { const v = n(g, k); if (v !== undefined && v > cap) err(PF, `/${g}/${k}`, 'pause-order', `${g}.${k} ${v} is above the bank's maxS ${cap}, so the bank can never cover it`, 'warning'); }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

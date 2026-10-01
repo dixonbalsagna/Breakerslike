@@ -7483,6 +7483,552 @@
         "rule": "type",
         "pointer": "/timeCap/lengthS"
       }
+    },
+    {
+      "id": "settings-remap-taken-valid",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "taken": "{control} is already {other}. Pick another.",
+              "twice": "That is already set for two actions."
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "settings-remap-taken-token-control",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "taken": "That is already taken. {other}"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/remap/taken"
+      }
+    },
+    {
+      "id": "settings-remap-taken-token-other",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "taken": "{control} is already taken."
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/remap/taken"
+      }
+    },
+    {
+      "id": "settings-remap-twice-type",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              },
+              "twice": 3
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/remap/twice"
+      }
+    },
+    {
+      "id": "settings-remap-chord-optional",
+      "schema": "ui-settings.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/settings.json",
+          "set": {
+            "/remap": {
+              "title": "REMAP",
+              "layout": "Layout",
+              "layout_help": "Pick.",
+              "reset": "Reset this layout",
+              "reset_button": "Reset",
+              "reset_help": "Put it back.",
+              "hint_keys": "Keys.",
+              "hint_pad": "Pad.",
+              "capture_key": "Press the key for {action}.",
+              "capture_pad": "Press the button for {action}.",
+              "capture_word": "Press...",
+              "conflict": "{control} is already {other}.",
+              "reserved": "{control} is kept.",
+              "pair": "{control} is the other player's.",
+              "wrong_device_kb": "Not a key.",
+              "wrong_device_pad": "Not a button.",
+              "done": "{action} is now {control}.",
+              "same": "{action} already uses {control}.",
+              "cancelled": "Cancelled.",
+              "reset_done": "{layout} is back.",
+              "swap": "SWAP",
+              "cancel": "CANCEL",
+              "move_steps": {
+                "up": "up",
+                "left": "left",
+                "down": "down",
+                "right": "right"
+              },
+              "layouts": {
+                "arena": "Arena"
+              },
+              "actions": {
+                "light": "Light"
+              },
+              "helps": {
+                "light": "A quick blow."
+              },
+              "controls": {
+                "west": "the west button"
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-profiles-inertia-valid",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/profiles/test_profile": {
+              "solve_hz": 60,
+              "snap_ticks": 2,
+              "load_ease": 1,
+              "load_ticks": {
+                "light": 4,
+                "heavy": 8
+              },
+              "follow_ticks": 3,
+              "recover_ticks": 6,
+              "overshoot": 0,
+              "lag": 0,
+              "base_tau": 0,
+              "shiver": 0,
+              "hold_drift": 0,
+              "inertia_s": 0.18
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-profiles-inertia-omitted-valid",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/profiles/test_profile": {
+              "solve_hz": 60,
+              "snap_ticks": 2,
+              "load_ease": 1,
+              "load_ticks": {
+                "light": 4,
+                "heavy": 8
+              },
+              "follow_ticks": 3,
+              "recover_ticks": 6,
+              "overshoot": 0,
+              "lag": 0,
+              "base_tau": 0,
+              "shiver": 0,
+              "hold_drift": 0
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-profiles-inertia-below-range",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/profiles/test_profile": {
+              "solve_hz": 60,
+              "snap_ticks": 2,
+              "load_ease": 1,
+              "load_ticks": {
+                "light": 4,
+                "heavy": 8
+              },
+              "follow_ticks": 3,
+              "recover_ticks": 6,
+              "overshoot": 0,
+              "lag": 0,
+              "base_tau": 0,
+              "shiver": 0,
+              "hold_drift": 0,
+              "inertia_s": 0.01
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/profiles/test_profile/inertia_s"
+      }
+    },
+    {
+      "id": "anim-profiles-inertia-above-range",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/profiles/test_profile": {
+              "solve_hz": 60,
+              "snap_ticks": 2,
+              "load_ease": 1,
+              "load_ticks": {
+                "light": 4,
+                "heavy": 8
+              },
+              "follow_ticks": 3,
+              "recover_ticks": 6,
+              "overshoot": 0,
+              "lag": 0,
+              "base_tau": 0,
+              "shiver": 0,
+              "hold_drift": 0,
+              "inertia_s": 0.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/profiles/test_profile/inertia_s"
+      }
+    },
+    {
+      "id": "anim-profiles-inertia-type",
+      "schema": "anim-profiles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/profiles.json",
+          "set": {
+            "/profiles/test_profile": {
+              "solve_hz": 60,
+              "snap_ticks": 2,
+              "load_ease": 1,
+              "load_ticks": {
+                "light": 4,
+                "heavy": 8
+              },
+              "follow_ticks": 3,
+              "recover_ticks": 6,
+              "overshoot": 0,
+              "lag": 0,
+              "base_tau": 0,
+              "shiver": 0,
+              "hold_drift": 0,
+              "inertia_s": "slow"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/profiles/test_profile/inertia_s"
+      }
+    },
+    {
+      "id": "pause-start-above-cap",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/bank/startS": 7
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-order",
+        "pointer": "/bank/startS"
+      }
+    },
+    {
+      "id": "pause-short-not-below-full",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/short/lengthS": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-order",
+        "pointer": "/short/lengthS"
+      }
+    },
+    {
+      "id": "pause-final-below-full",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/full/finalLengthS": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-order",
+        "pointer": "/full/lengthS"
+      }
+    },
+    {
+      "id": "pause-short-gap-above-full",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/short/gapS": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-order",
+        "pointer": "/short/gapS"
+      }
+    },
+    {
+      "id": "pause-fraction-of-tick",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/short/lengthS": 1.51
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-ticks",
+        "pointer": "/short/lengthS"
+      }
+    },
+    {
+      "id": "pause-full-above-bank-warns",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/bank/maxS": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pause-order",
+        "pointer": "/full/lengthS"
+      }
+    },
+    {
+      "id": "pause-equal-gap-ok",
+      "schema": "fight-pause.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/pause.json",
+          "set": {
+            "/short/gapS": 20
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [
