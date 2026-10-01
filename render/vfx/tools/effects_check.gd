@@ -182,6 +182,7 @@ func _run() -> void:
 	_react()
 	_speed()
 	_earth()
+	_trails()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -1046,6 +1047,91 @@ func _earth() -> void:
 				same = false
 				print("    differs: %s.%s" % [gk, k])
 	_check(same, "data/vfx/earth.json and the built-in defaults agree")
+	SimCore.dispose(S)
+
+
+## Trails across contacts (the sim's land, bounce and journey_end): the path breaks at each contact, a trail on the ground fades fast,
+## and a ribbon is thin and pale enough to read as a trail.
+func _trails() -> void:
+	print("trails across contacts")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var f = S.fighters[0]
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	_check(VfxLook.W_OUTER_BH <= 0.4 and VfxLook.A_OUTER <= 0.4, "the outer band is thin and pale (width %.2f bh, alpha %.2f), so a ribbon reads as a trail and not a solid shape" % [VfxLook.W_OUTER_BH, VfxLook.A_OUTER])
+	# A dive and a landing: a ribbon with the whole dive in its history, then the contact cuts it.
+	var rg := SimRng.new(5)
+	var ts := VfxTrailState.new()
+	f.state = "launched"
+	f.hidden = false
+	f.rush = null
+	f.slide = 0.0
+	f.z = 0.0
+	for k in range(16):
+		f.x = SimWrap.wrap(plains - 1500.0 + 150.0 * float(k))
+		f.y = g + 1500.0 - 90.0 * float(k)
+		ts.step(S, f, SimConst.DT, rg, VfxLook.Q_HIGH, true)
+	_check(ts.hx.size() == 16 and ts.k > 0.5, "a fast dive has a long history and a strong trail (%d points, k %.2f)" % [ts.hx.size(), ts.k])
+	var before: PackedVector3Array = ts.ribbon(f.x, f.y + VfxLook.CHEST_Y, 0.0, 1500.0, VfxLook.SEGS)
+	var span_before: float = before[before.size() - 1].distance_to(before[0])
+	ts.cut()
+	_check(ts.hx.size() == 1 and ts.cuts == 1, "a contact keeps one point of the path")
+	f.y = g + 10.0
+	f.state = "launched"
+	f.slide = 3000.0
+	for k in range(4):
+		ts.step(S, f, SimConst.DT, rg, VfxLook.Q_HIGH, true)
+	var after: PackedVector3Array = ts.ribbon(f.x, f.y + VfxLook.CHEST_Y, 0.0, 1500.0, VfxLook.SEGS)
+	var span_after: float = 0.0
+	if after.size() > 1:
+		span_after = after[after.size() - 1].distance_to(after[0])
+	_check(span_after < 0.2 * span_before, "the ribbon after the landing starts at the contact and is a short taper to the fighter, not the dive's arc (%.0f against %.0f units)" % [span_after, span_before])
+	var all_near: bool = true
+	for p in after:
+		if absf(p.x) > 200.0:
+			all_near = false
+	_check(all_near, "and it ends at the fighter: every point of it is within 200 units of the head")
+	# On the ground the trail fades fast; in the air it does not.
+	var tg := VfxTrailState.new()
+	var ta := VfxTrailState.new()
+	var rg2 := SimRng.new(6)
+	f.slide = 0.0
+	for k in range(20):
+		f.x = SimWrap.wrap(plains + 160.0 * float(k))
+		f.y = g + 2000.0
+		ta.step(S, f, SimConst.DT, rg2, VfxLook.Q_HIGH, true)
+	for k in range(20):
+		f.x = SimWrap.wrap(plains + 160.0 * float(k))
+		f.y = g + 8.0
+		f.slide = 6000.0
+		tg.step(S, f, SimConst.DT, rg2, VfxLook.Q_HIGH, true)
+	var k_air_start: float = ta.k
+	var k_gnd_start: float = tg.k
+	f.slide = 300.0
+	for k in range(8):
+		f.x = SimWrap.wrap(plains + 3200.0 + 4.0 * float(k))
+		f.y = g + 8.0
+		tg.step(S, f, SimConst.DT, rg2, VfxLook.Q_HIGH, true)
+	for k in range(8):
+		f.x = SimWrap.wrap(plains + 3200.0 + 4.0 * float(k))
+		f.y = g + 2000.0
+		f.slide = 0.0
+		ta.step(S, f, SimConst.DT, rg2, VfxLook.Q_HIGH, true)
+	_check(tg.grounded and tg.k < 0.35 * maxf(k_gnd_start, 0.01) and ta.k > 0.4 * maxf(k_air_start, 0.01), "after eight ticks of slowing, a trail on the ground has faded (k %.2f from %.2f) and one in the air has not (%.2f from %.2f)" % [tg.k, k_gnd_start, ta.k, k_air_start])
+	# The hub cuts a fighter's trail on land, bounce and journey_end, and on nothing else.
+	var h := VfxHub.new()
+	h.reset(S, 6)
+	_tick(S, h, [])
+	_tick(S, h, [])
+	_tick(S, h, [])
+	var c0: int = h.trails[0].cuts
+	_tick(S, h, [VfxMock.ev("land", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 3000.0, "surface": "soil", "kind": "slam"})])
+	_tick(S, h, [VfxMock.ev("bounce", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 3000.0, "surface": "soil", "k": 1.0, "vn": -2000.0})])
+	_tick(S, h, [VfxMock.ev("journey_end", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 100.0, "kind": "stop"})])
+	_check(h.trails[0].cuts == c0 + 3 and h.trails[1].cuts == 0, "land, bounce and journey_end each break the landing fighter's trail, and only his (%d)" % (h.trails[0].cuts - c0))
+	_tick(S, h, [VfxMock.ev("left_ground", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 3000.0, "cause": "lip", "vx": 2000.0, "vy": 900.0})])
+	_check(h.trails[0].cuts == c0 + 3, "leaving the ground does not (the flight after it is the new trail)")
 	SimCore.dispose(S)
 
 

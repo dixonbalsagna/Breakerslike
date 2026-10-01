@@ -30,6 +30,8 @@ var max_k: float = 0.0
 var ring_age: float = 99.0          # seconds since the break ring began (it lasts VfxLook.RING_S)
 var rings: int = 0                 # for the tests
 var _was_full: bool = false
+var grounded: bool = false         # on the ground this tick (the trail fades fast)
+var cuts: int = 0                  # contacts that broke the path (the tests)
 var _has_prev: bool = false
 var _px: float = 0.0
 var _py: float = 0.0
@@ -49,6 +51,8 @@ func reset() -> void:
 	ring_age = 99.0
 	rings = 0
 	_was_full = false
+	grounded = false
+	cuts = 0
 	spawned = 0
 	max_marks_seen = 0
 	max_k = 0.0
@@ -78,7 +82,10 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 	_has_prev = true
 	speed = d / dt
 	speed_bh = speed / VfxLook.BH
-	sspeed = maxf(speed, sspeed * exp(-dt / VfxLook.K_DOWN_TAU))
+	# On the ground (landed, sliding, down) the trail fades fast: it is for flight, and a ribbon left behind by a slam must not stand beside it.
+	grounded = f.y - WorldTerrain.groundY(S, f.x) <= VfxLook.GROUND_H and (f.state == "down" or float(f.slide) > 0.0 or (f.state == "launched" and speed_bh < VfxLook.V_FULL))
+	var down_tau: float = VfxLook.K_GROUND_TAU if grounded else VfxLook.K_DOWN_TAU
+	sspeed = maxf(speed, sspeed * exp(-dt / down_tau))
 	if d > 1e-6:
 		dir = Vector2(dx / d, dy / d)
 	var target: float = smoothstep(VfxLook.V_ON, VfxLook.V_FULL, speed_bh)
@@ -86,7 +93,7 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 		target = 0.0
 	elif VfxLook.RUSH_GATE and f.rush != null and speed_bh < VfxLook.V_FULL:
 		target = 0.0
-	var tau: float = VfxLook.K_UP_TAU if target > k else VfxLook.K_DOWN_TAU
+	var tau: float = VfxLook.K_UP_TAU if target > k else down_tau
 	k += (target - k) * (1.0 - exp(-dt / tau))
 	# The break ring: once, each time it crosses the top of the scale from below (not during a rush, not again within a second and a half).
 	ring_age += dt
@@ -175,3 +182,20 @@ func ribbon(head_x: float, head_y: float, head_z: float, length: float, segs: in
 		var t: float = 0.0 if span < 1e-9 else clampf((target - cum[j]) / span, 0.0, 1.0)
 		out.append(pts[j].lerp(pts[j + 1], t))
 	return out
+
+
+## A contact (the sim's land, bounce or journey_end for this fighter): the flight before it ends here. The history keeps only its
+## last point, so the ribbon after a bounce, a landing or a stop starts from the contact and tapers to the fighter, and the path
+## before it, an arc that would stand beside the slam, is gone.
+func cut() -> void:
+	cuts += 1
+	if hx.size() > 1:
+		var lx: float = hx[hx.size() - 1]
+		var ly: float = hy[hy.size() - 1]
+		var lz: float = hz[hz.size() - 1]
+		hx.clear()
+		hy.clear()
+		hz.clear()
+		hx.append(lx)
+		hy.append(ly)
+		hz.append(lz)

@@ -185,7 +185,7 @@ func _run() -> void:
 		quit()
 		return
 	# The ground contact cases, in the real sim.
-	var spec: Dictionary = {"slam": [1500.0, -3600.0, 1200.0, "land"], "skid": [5200.0, -650.0, 300.0, "land"], "bounce": [3200.0, -2600.0, 800.0, "bounce"]}
+	var spec: Dictionary = {"slam": [1500.0, -3600.0, 1200.0, "land"], "skid": [5200.0, -650.0, 300.0, "land"], "bounce": [3200.0, -2600.0, 800.0, "bounce"], "trail": [2600.0, -4800.0, 1400.0, "bounce"], "trailskid": [9000.0, -900.0, 500.0, "land"]}
 	var sp: Array = spec[which]
 	var f = S.fighters[0]
 	var o = S.fighters[1]
@@ -214,7 +214,10 @@ func _run() -> void:
 		for d in due.duplicate():
 			if t >= d[0]:
 				due.erase(d)
-				await _shot(d[1], float(d[2]) + 200.0, float(d[3]) + 70.0)
+				if which.begins_with("trail"):
+					await _shot(d[1], f.x - 600.0, f.y + 250.0)
+				else:
+					await _shot(d[1], float(d[2]) + 200.0, float(d[3]) + 70.0)
 		if got and due.is_empty():
 			break
 		await process_frame

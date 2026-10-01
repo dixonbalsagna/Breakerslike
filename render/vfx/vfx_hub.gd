@@ -171,6 +171,11 @@ func _consume(S: SimState, events: Array) -> void:
 				xform.begin(int(e.actor), float(e.tier), String(_g(e, "version", "live")), float(_g(e, "dur", 0.0)))
 	if transform_enabled and standing_aura_enabled:
 		aura.step(S, frozen, xform.forms)
+	for e in events:
+		if e.type == "land" or e.type == "bounce" or e.type == "journey_end":
+			var ta: int = int(e.actor)
+			if ta >= 0 and ta < trails.size():
+				trails[ta].cut()
 	if speedlines_enabled:
 		speed.step()
 		for e in events:

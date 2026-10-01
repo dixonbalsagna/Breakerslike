@@ -14,6 +14,8 @@ const V_ON: float = 40.0                # bh/s: nothing below this (melee dash t
 const V_FULL: float = 110.0             # bh/s: full trail
 const K_UP_TAU: float = 0.06            # seconds: intensity eases up ...
 const K_DOWN_TAU: float = 0.25          # ... and down slower, so a trail never flickers at the threshold
+const K_GROUND_TAU: float = 0.07        # ... but fast once he is on the ground (a landing, a skid, a stop): the trail is for flight, and what is left of it must not stand beside a slam
+const GROUND_H: float = 50.0            # within this of the ground, sliding, down or landed, a fighter counts as on the ground
 const HIST_MAX: int = 16                # one point per unfrozen tick: 0.27 s of path
 const SPAN_MIN: float = 0.07            # seconds of path the ribbon covers at k = 0 ...
 const SPAN_MAX: float = 0.20            # ... and at k = 1
@@ -23,10 +25,10 @@ const RING_S: float = 0.25              # the break ring: one thin arc at the fr
 const RING_GAP_S: float = 1.5
 const RING_R0_BH: float = 1.5
 const RING_R1_BH: float = 4.5
-const W_OUTER_BH: float = 0.50          # head width of the outer band
+const W_OUTER_BH: float = 0.34          # head width of the outer band (it was 0.50: at full speed that read as a solid pale shape, not a trail)
 const W_CORE_BH: float = 0.22           # head width of the core
 const MIN_CORE_PX: float = 2.0          # the core is never thinner than this on screen
-const A_OUTER: float = 0.55
+const A_OUTER: float = 0.36
 const A_CORE: float = 0.90
 const SEG_ALPHA: Array = [1.0, 1.0, 0.65, 0.35]   # hard steps along the length, not a smooth fade
 const Z_TRAIL: float = -12.0            # behind the fighter plane: a trail never covers a fighter
