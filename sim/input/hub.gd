@@ -12,6 +12,7 @@ extends RefCounted
 
 var touch: SimTouch
 var pad_preset: String = ""
+var touch_preset: String = "touch-simple"
 var slot_device: Array = ["kb", "kb"]
 var slot_pad: Array = [-1, -1]
 var humans: Array = [false, false]
@@ -23,6 +24,7 @@ func _init() -> void:
 	SimInputData.ensure()
 	touch = SimTouch.new()
 	pad_preset = SimInputData.default_preset("pad")
+	touch_preset = SimInputData.default_preset("touch")
 	layouts["solo"] = SimLayout.new(SimInputData.preset("kb-solo"))
 	layouts["p1"] = SimLayout.new(SimInputData.preset("kb-shared-p1"))
 	layouts["p2"] = SimLayout.new(SimInputData.preset("kb-shared-p2"))
@@ -194,7 +196,7 @@ func setup() -> Dictionary:
 			"pad":
 				flags = SimInputData.preset(pad_preset).get("slot", {})
 			"touch":
-				flags = SimInputData.preset(SimInputData.default_preset("touch")).get("slot", {})
+				flags = SimInputData.preset(touch_preset).get("slot", {})
 		if flags.get("autoBurst", false):
 			assists[s].append("autoBurst")
 		if str(flags.get("specialPick", "chosen")) == "auto":
@@ -211,6 +213,25 @@ func set_pad_preset(id: String) -> void:
 		l.release_all()
 	pads.clear()
 	pad_preset = id
+
+
+## The presets changed (the player remapped, or reset): every layout is rebuilt from SimInputData, with its holds let go.
+## Safe in the middle of a match; slot claims are kept, so a pad stays on its slot.
+func reload_layouts() -> void:
+	release_all()
+	layouts["solo"].set_preset(SimInputData.preset("kb-solo"))
+	layouts["p1"].set_preset(SimInputData.preset("kb-shared-p1"))
+	layouts["p2"].set_preset(SimInputData.preset("kb-shared-p2"))
+	pads.clear()
+	touch.set_preset(touch_preset)
+
+
+## Choose the touch layout ("touch-simple" or "touch-full"): what is held is let go, and the touch layer's buttons change.
+func set_touch_preset(id: String) -> void:
+	if id == touch_preset or SimInputData.preset(id).is_empty():
+		return
+	touch_preset = id
+	touch.set_preset(id)
 
 
 ## A pausing set piece (Simulation's SimPause) froze the sim: call this each frozen tick to drop what was pressed, and

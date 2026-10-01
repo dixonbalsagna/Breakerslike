@@ -46,6 +46,19 @@ const PORT: Dictionary = {
 	"power": [-92.0, -136.0, 28.0],
 	"context": [-168.0, -116.0, 24.0],
 }
+## The Full touch preset (tablets): a diamond on the right (light west, heavy north, signature east, context south),
+## Mode and Power above it, Transform beside it, and Dodge and Guard stacked on the left edge. [dx, dy, r, side]:
+## offsets from the bottom-right corner (side R) or the bottom-left corner (side L), in dp.
+const FULL_LAND: Dictionary = {
+	"light": [-172.0, -112.0, 30.0, "R"], "heavy": [-112.0, -170.0, 30.0, "R"], "signature": [-54.0, -112.0, 30.0, "R"],
+	"context": [-112.0, -54.0, 30.0, "R"], "power": [-54.0, -236.0, 34.0, "R"], "mode": [-130.0, -240.0, 28.0, "R"],
+	"transform": [-232.0, -170.0, 30.0, "R"], "dodge": [48.0, -240.0, 32.0, "L"], "guard": [48.0, -160.0, 32.0, "L"],
+}
+const FULL_PORT: Dictionary = {
+	"light": [-134.0, -90.0, 24.0, "R"], "heavy": [-88.0, -136.0, 24.0, "R"], "signature": [-42.0, -90.0, 24.0, "R"],
+	"context": [-88.0, -44.0, 24.0, "R"], "power": [-42.0, -186.0, 26.0, "R"], "mode": [-104.0, -190.0, 24.0, "R"],
+	"transform": [-182.0, -136.0, 24.0, "R"], "dodge": [40.0, -186.0, 26.0, "L"], "guard": [40.0, -122.0, 26.0, "L"],
+}
 
 var cfg: Dictionary
 var dp: float = 1.0               # pixels per dp; the host sets it from the screen
@@ -74,6 +87,11 @@ var _tf_t0: int = -1              # the Transform button's press tick, or -1
 var _tf_sent: bool = false
 var _transform_edge: bool = false
 
+# The Full touch preset: the same widgets go through a SimLayout (touch-full), the stick stays here.
+var full_mode: bool = false
+var preset_id: String = "touch-simple"
+var _full: SimLayout = null
+
 var _touches: Dictionary = {}     # pointer id -> {w, x0, y0, x, y, t0, fired, flicked, beyond}
 var _owner: Dictionary = {}       # widget -> pointer id, so a button has one finger
 var _dodge_until: int = -1
@@ -101,17 +119,27 @@ func _init(overrides: Dictionary = {}) -> void:
 		cfg[k] = overrides[k]
 
 
+## Choose the touch preset: "touch-simple" (the default) or "touch-full". Everything held is let go.
+func set_preset(id: String) -> void:
+	release_all()
+	preset_id = id
+	full_mode = id == "touch-full"
+	_full = SimLayout.new(SimInputData.preset(id)) if full_mode else null
+
+
 ## Where the buttons are, in pixels: {name: {x, y, r}} for the circles (r is the visual radius) and
 ## {"stick": {x0, x1, y0, y1}} for the zone where a left-thumb touch starts the floating stick. margin is the safe
 ## margin in pixels from the screen edge (UI's safe area).
-static func layout(vw: float, vh: float, dp_: float, portrait: bool, left_handed: bool = false, margin: float = 8.0) -> Dictionary:
-	var src: Dictionary = PORT if portrait else LAND
+static func layout(vw: float, vh: float, dp_: float, portrait: bool, left_handed: bool = false, margin: float = 8.0, full: bool = false) -> Dictionary:
+	var src: Dictionary = (FULL_PORT if portrait else FULL_LAND) if full else (PORT if portrait else LAND)
 	var out: Dictionary = {}
 	var cx: float = vw - margin
 	var cy: float = vh - margin
 	for k in src:
 		var a: Array = src[k]
 		var x: float = cx + float(a[0]) * dp_
+		if a.size() > 3 and a[3] == "L":
+			x = margin + float(a[0]) * dp_
 		if left_handed:
 			x = vw - x
 		out[k] = {"x": x, "y": cy + float(a[1]) * dp_, "r": float(a[2]) * dp_}
@@ -129,8 +157,8 @@ static func layout(vw: float, vh: float, dp_: float, portrait: bool, left_handed
 func widget_at(x: float, y: float, lay: Dictionary) -> String:
 	var best: String = ""
 	var best_d: float = INF
-	for k in ["attack", "guard", "power", "context"]:
-		if not lay.has(k):
+	for k in lay:
+		if k == "stick":
 			continue
 		var c: Dictionary = lay[k]
 		var hit_r: float = maxf(float(c.r) + float(cfg.hitPadDp) * dp, float(cfg.minHitDp) * dp)
@@ -153,6 +181,9 @@ func touch_down(id: int, x: float, y: float, widget: String) -> void:
 		return   # one finger per control; the second is ignored
 	_owner[widget] = id
 	_touches[id] = {"w": widget, "x0": x, "y0": y, "x": x, "y": y, "t0": tick, "fired": false, "flicked": false, "beyond": 0, "layer": false}
+	if full_mode and widget != "stick":
+		_full.press("touch:" + widget)
+		return
 	match widget:
 		"stick":
 			_check_flick(_touches[id])
@@ -191,6 +222,11 @@ func touch_up(id: int) -> void:
 	if not _touches.has(id):
 		return
 	var t: Dictionary = _touches[id]
+	if full_mode and t.w != "stick":
+		_full.release("touch:" + str(t.w))
+		_owner.erase(t.w)
+		_touches.erase(id)
+		return
 	if t.w == "attack" and not t.fired:
 		req_light = true   # a tap: released before holdTicks (the bridge fires it on release; see touch-bridge.md)
 	if t.w == "power" and not _power_voided and (tick - _power_t0) < int(cfg.holdTicks):
@@ -203,6 +239,9 @@ func touch_up(id: int) -> void:
 
 ## Let go of everything (focus lost, an overlay opened, the device changed): no stuck guard or charge.
 func release_all() -> void:
+	if _full != null:
+		_full.release_all()
+		_full.sprint_override = false
 	_touches.clear()
 	_owner.clear()
 	_sprinting = false
@@ -246,6 +285,9 @@ func _check_flick(t: Dictionary) -> void:
 	_dodge_until = tick + int(cfg.dodgeStanceTicks)
 	_dash_until = tick + int(cfg.dashTicks)
 	_dodge_edge = true
+	if full_mode:
+		_full.press("touch:dodge")
+		_full.release("touch:dodge")
 
 
 func _axis(a: float) -> float:
@@ -261,6 +303,8 @@ func _axis(a: float) -> float:
 
 ## One fixed tick: advance the clock, resolve the held states and any timed gestures, and return the intent.
 func build() -> SimIntent:
+	if full_mode:
+		return _build_full()
 	tick += 1
 	mx = 0.0
 	my = 0.0
@@ -327,6 +371,21 @@ func build() -> SimIntent:
 func display_state() -> Dictionary:
 	var out: Dictionary = {"attack": {"down": false, "hold": 0.0}, "guard": {"down": false}, "power": {"down": false},
 			"stick": {"active": false, "base": Vector2.ZERO, "thumb": Vector2.ZERO, "sprint": false}, "transform": {"down": false}}
+	if full_mode:
+		out["full"] = {}
+		for id in _touches:
+			var f: Dictionary = _touches[id]
+			if f.w == "stick":
+				out.stick = {"active": true, "base": Vector2(float(f.x0), float(f.y0)), "thumb": Vector2(float(f.x), float(f.y)), "sprint": _sprinting}
+			else:
+				out["full"][f.w] = {"down": true}
+				if f.w == "guard":
+					out.guard = {"down": true}
+				elif f.w == "power":
+					out.power = {"down": true}
+				elif f.w == "transform":
+					out.transform = {"down": true}
+		return out
 	for id in _touches:
 		var t: Dictionary = _touches[id]
 		match t.w:
@@ -343,8 +402,40 @@ func display_state() -> Dictionary:
 	return out
 
 
+## The Full preset's tick: the widgets resolved in the SimLayout, the floating stick and its flick and sprint here.
+func _build_full() -> SimIntent:
+	tick += 1
+	var radius: float = float(cfg.stickRadiusDp) * dp
+	var sprint_now: bool = false
+	var vx: float = 0.0
+	var vy: float = 0.0
+	for id in _touches:
+		var t: Dictionary = _touches[id]
+		if t.w == "stick":
+			var dx: float = float(t.x) - float(t.x0)
+			var dy: float = float(t.y) - float(t.y0)
+			vx = clampf(dx / radius, -1.0, 1.0)
+			vy = clampf(-dy / radius, -1.0, 1.0)
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var limit: float = (float(cfg.outerRelease) if _sprinting else float(cfg.outerRing)) * radius
+			t.beyond = int(t.beyond) + 1 if dist > limit else 0
+			sprint_now = int(t.beyond) >= int(cfg.sprintTicks)
+	_sprinting = sprint_now
+	sprint = sprint_now
+	_full.axis("touch:stick", vx, vy)
+	_full.sprint_override = sprint_now
+	var i: SimIntent = _full.build()
+	if tick <= _dash_until:
+		i.mx = _dash_mx
+		i.my = _dash_my
+		i.dash = true
+	return i
+
+
 ## The Transform button's hold progress, 0 to 1 (UI's ring). 0 when it is not held.
 func transform_hold() -> float:
+	if full_mode:
+		return _full.transform_hold()
 	if _tf_t0 < 0:
 		return 0.0
 	return clampf(float(tick - _tf_t0) / float(cfg.transformTicks), 0.0, 1.0)
@@ -358,6 +449,8 @@ func drop_edges() -> void:
 ## The pause ended: edges dropped, and every hold read again as if it began now.
 func resume() -> void:
 	drop_edges()
+	if full_mode:
+		_full.resume()
 	for id in _touches:
 		_touches[id].t0 = tick
 		_touches[id].beyond = 0
@@ -368,6 +461,8 @@ func resume() -> void:
 
 ## SimCore.step consumed the intent (it did not freeze for hit-stop): the requests are spent.
 func consumed() -> void:
+	if _full != null:
+		_full.consumed()
 	req_light = false
 	req_heavy = false
 	req_sig = false

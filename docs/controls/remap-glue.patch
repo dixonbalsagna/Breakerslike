@@ -1,0 +1,58 @@
+--- a/render/core/main.gd	2026-10-01 02:24:54.812573700 -0700
++++ b/render/core/main.gd	2026-10-01 02:24:54.852751400 -0700
+@@ -135,6 +135,9 @@
+ 	ui_hud.feedback_fn = _feedback_context
+ 	ui_hud.option_changed.connect(_on_option_changed)
+ 	ui_hud.set_option("pad_preset", host.hub.pad_preset)   # UI's legend and prompts show the hub's pad layout
++	ui_hud.set_option("touch_preset", host.hub.touch_preset)
++	if ui_hud.has_signal("remap_changed"):
++		ui_hud.remap_changed.connect(_on_remap_changed)
+ 	_touch_last = bool(ui_hud.opts["touch_ui"])
+ 	ui_hud.touch_state_fn = host.touch.display_state
+ 	host.drained.connect(_on_drained)
+@@ -443,6 +446,16 @@
+ func _on_option_changed(key: String, value) -> void:
+ 	if key == "pad_preset":
+ 		host.hub.set_pad_preset(str(value))
++	elif key == "touch_preset":
++		host.hub.set_touch_preset(str(value))
++
++
++## The Remap screen changed a layout's bindings (UI's remap_changed): the effective preset is replaced, saved to
++## user://input.json and the hub rebuilds its layouts, so the new keys play at once, mid-match. An empty list resets.
++func _on_remap_changed(preset_id: String, overrides: Array) -> void:
++	SimInputData.apply_overrides(preset_id, overrides)
++	SimInputData.save_overrides()
++	host.hub.reload_layouts()
+ 
+ 
+ ## The player's shake for one view: the scale times the shake setting, quartered in reduced motion (as SplitView's).
+@@ -555,7 +568,7 @@
+ 	var vp: Vector2 = get_viewport().get_visible_rect().size
+ 	var safe: Rect2 = ui_hud.layout.safe
+ 	var margin: float = maxf(maxf(vp.x - safe.end.x, vp.y - safe.end.y), 8.0 * ui_hud.dp)
+-	return SimTouch.layout(vp.x, vp.y, ui_hud.dp, ui_hud.layout.portrait, bool(ui_hud.opts.get("left_handed", false)), margin)
++	return SimTouch.layout(vp.x, vp.y, ui_hud.dp, ui_hud.layout.portrait, bool(ui_hud.opts.get("left_handed", false)), margin, host.hub.touch.full_mode)
+ 
+ 
+ ## A finger on the screen: UI's own targets (pause, feedback) and any open overlay come first; the rest is the
+@@ -582,10 +595,6 @@
+ 
+ ## A gamepad, by position (docs/controls/input-scheme.md): buttons, the left stick and the analog triggers go to the
+ ## input hub, which maps them through the pad preset. Start pauses, as P does. Overlays take the pad as they take keys.
+-const PAD_BUTTONS: Dictionary = {JOY_BUTTON_A: "south", JOY_BUTTON_B: "east", JOY_BUTTON_X: "west", JOY_BUTTON_Y: "north",
+-		JOY_BUTTON_BACK: "back", JOY_BUTTON_START: "start", JOY_BUTTON_LEFT_STICK: "l3", JOY_BUTTON_RIGHT_STICK: "r3",
+-		JOY_BUTTON_LEFT_SHOULDER: "lb", JOY_BUTTON_RIGHT_SHOULDER: "rb", JOY_BUTTON_DPAD_UP: "dpad_up",
+-		JOY_BUTTON_DPAD_DOWN: "dpad_down", JOY_BUTTON_DPAD_LEFT: "dpad_left", JOY_BUTTON_DPAD_RIGHT: "dpad_right"}
+ var _pad_stick: Dictionary = {}   # device -> the left stick, x right and y up
+ 
+ 
+@@ -593,7 +602,7 @@
+ 	if ui_hud.is_howto_open() or ui_hud.is_feedback_open():
+ 		return
+ 	if e is InputEventJoypadButton:
+-		var btn: String = PAD_BUTTONS.get(e.button_index, "")
++		var btn: String = SimInputNames.PAD_BUTTONS.get(e.button_index, "")
+ 		if btn == "":
+ 			return
+ 		if e.pressed:

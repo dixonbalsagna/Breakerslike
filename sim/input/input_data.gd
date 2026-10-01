@@ -34,6 +34,8 @@ static var timing: Dictionary = {}
 static var presets: Dictionary = {}
 static var actions: Dictionary = {}
 static var loaded: bool = false
+static var overrides: Dictionary = {}     # preset id -> the player's override entries (SimInputRemap)
+static var _merged: Dictionary = {}
 
 
 ## Read the three files. True if they were found; the defaults stand in otherwise. Safe to call more than once.
@@ -104,10 +106,60 @@ static func tf(path: Array, fallback: float = 0.0) -> float:
 	return float(t(path, fallback))
 
 
-## A preset by id, or an empty dictionary.
+## A preset by id with the player's overrides applied, or an empty dictionary.
 static func preset(id: String) -> Dictionary:
 	ensure()
+	if overrides.has(id) and presets.has(id):
+		if not _merged.has(id):
+			_merged[id] = SimInputRemap.apply_overrides(presets[id], overrides[id])
+		return _merged[id]
 	return presets.get(id, {})
+
+
+## The shipped preset, without the player's changes (what Reset goes back to).
+static func original(id: String) -> Dictionary:
+	ensure()
+	return presets.get(id, {})
+
+
+## Apply the player's overrides for a preset: the shipped bindings stay, the effective preset is those plus the overrides
+## (SimInputRemap.apply_overrides). Idempotent; an empty list restores the shipped preset. Returns the effective preset,
+## which preset(id) returns from now on. Not for touch presets (they are not remapped).
+static func apply_overrides(id: String, entries: Array) -> Dictionary:
+	ensure()
+	set_overrides(id, entries)
+	return preset(id)
+
+
+## Problems in a preset (the effective one by default): [{rule, action, control}], one source of truth for the screen.
+static func check_bindings(p: Dictionary) -> Array:
+	ensure()
+	var pair: Dictionary = {}
+	if p.has("pair"):
+		pair = preset(str(p["pair"]))
+	return SimInputRemap.check_bindings(p, pair)
+
+
+## Write the current overrides to the player's file (user://input.json), keeping what else it holds.
+static func save_overrides(path: String = SimInputRemap.USER_PATH) -> bool:
+	var d: Dictionary = SimInputRemap.load_file(path)
+	d["presets"] = {}
+	for id in overrides:
+		d["presets"][id] = {"overrides": overrides[id]}
+	return SimInputRemap.save_file(d, path)
+
+
+static func set_overrides(id: String, entries: Array) -> void:
+	if entries.is_empty():
+		overrides.erase(id)
+	else:
+		overrides[id] = entries
+	_merged.erase(id)
+
+
+static func clear_overrides() -> void:
+	overrides.clear()
+	_merged.clear()
 
 
 ## The default preset id for a device ("kb", "pad" or "touch").
@@ -124,6 +176,7 @@ static func default_preset(device: String) -> String:
 ## dead zone. Called once by the host at startup.
 static func load_and_apply() -> void:
 	load_data()
+	SimInputRemap.apply_file(SimInputRemap.load_file())   # the player's remaps, if there is a file
 	SimAct.queueMax = ti(["attackQueue", "max"], SimAct.queueMax)
 	SimAct.dodgeWindow = ti(["dodge", "stateTicks"], SimAct.dodgeWindow)
 	SimAct.awayDead = tf(["stick", "awayDead"], SimAct.awayDead)

@@ -55,6 +55,7 @@ var _lunge_seen: bool = false
 var _tf_t0: Dictionary = {}         # single transform control -> press tick
 var _tf_sent: Dictionary = {}
 var _atk: Dictionary = {}           # hold-attack control -> {t0, fired}
+var sprint_override: bool = false   # a host-side gesture held a sprint (the touch stick's outer ring)
 var _mode: int = 0
 var _mode_t: int = -1000
 var _auto_mode: bool = false
@@ -365,7 +366,7 @@ func build() -> SimIntent:
 	if i.dodge and not _lunge_seen:
 		_lunge_seen = true
 		_lunge_until = tick + lunge_ticks
-	var sprinting: bool = _is_down("dodge") and tick - _dodge_t0 >= hold_start and not chord_dodge
+	var sprinting: bool = (_is_down("dodge") and tick - _dodge_t0 >= hold_start and not chord_dodge) or sprint_override
 	i.sprint = sprinting
 	# Power: held, its press, the tap on release, and the channel once held holdStart ticks.
 	var chord_power: bool = _chord_active_on("power")

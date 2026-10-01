@@ -4,6 +4,7 @@ Owner: Controls and Game Feel. Date: 2026-09-29. Design first; code in `sim/inpu
 
 | File | What it is |
 | :--- | :--- |
+| [remap.md](remap.md) | The Full touch preset and what UI's Remap screen calls (overrides, checks, persistence, shared names) |
 | [i2c.md](i2c.md) | **I2c as built:** the layout layer produces intent v2 for keyboard, pad and touch; files, glue, proof, gaps |
 | [phone-test-checklist.md](phone-test-checklist.md) | A 15-minute real-phone test for Orb: landscape, several fingers, left-handed, portrait, latency, browser interference |
 | [touch-bridge.md](touch-bridge.md) | The touch Simple bridge to today's intents: mapping, files, host patch, tests, what UI builds |
