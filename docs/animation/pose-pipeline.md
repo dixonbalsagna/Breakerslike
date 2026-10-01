@@ -245,6 +245,7 @@ Counts follow Combat's first-fighter vocabulary (`procedural-moves.md` §1 and �
 | **Follow-up** | 8 | Pursue, relay overtake, pin, taunt pause, disengage, beam follow-up and two more | 10 |
 | **Out-state families** | | The families other poses recover into (§3.3) | 8 |
 | | | **Total** | **170** |
+| **Control-scheme poses (ADR 0008, §3.9)** | | Energy mode, guard and perfect block, dodge, sprint, burst, power hold, the context actions | **+87** |
 
 Range 130 to 210. Fewer strike shapes or more derived chambers pull it toward 130. Mirroring is free, so left and right hands are one pose.
 
@@ -325,7 +326,7 @@ Orb confirmed Lean for the first fighter: 3 specials, 4 signatures, 6 showcases,
 | G1 | Signature | Sweeping line | The place-variant beam signature: charge (`beam.charge`) and release (`beam.fire`) with a biome-specific follow-up | 14 |
 | G2 | Signature | Ground-shatter barrage | A slam that sends a wave of bolts along the ground; altitude variants | 14 |
 | G3 | Signature | The unrestrained state | The form-tied signature of Drop the Act: a respected cinematic, then the attack | 14 |
-| G4 | Signature | Revealed technique | Story-moment reveal (Game Design withdrew the Anti-hero's secret technique; this slot may become the Dais's world change, to settle with Game Design) | 14 |
+| G4 | Signature | Revealed signature | An ordinary story-revealed signature (not a secret weapon), settled by Game Design (`moveset-rules.md` §10): revealed the first time he takes Apex, on the cinematic's held pose with its name on screen, and it replaces his place signatures for the rest of the match. Not Abdicate (G3 is Abdicate's form-tied signature). Planned as a signature skeleton | 14 |
 | W1 | Showcase | Dismissive backhand | A toying strike with a taunt pause (`emote.taunt` family) | 7 |
 | W2 | Showcase | Seal break | The Proud front collapsing in one beat: posture drops, breath shows | 7 |
 | W3 | Showcase | Overhead hammer | The SLAM DOWN send-off: a hammer follow key with a crater embed | 7 |
@@ -336,6 +337,29 @@ Orb confirmed Lean for the first fighter: 3 specials, 4 signatures, 6 showcases,
 | | | **Total showcase-grade poses** | | **214** |
 
 Review format (confirmed by Orb, 2026-09-30): **contact sheets of 12 poses plus one motion reel per showcase** (§6.5). A showcase's reel is cut at the part's real timing and in the profile its weight class picks (§9.2).
+
+### 3.9 The control scheme's delta (ADR 0008, 2026-09-30)
+
+ADR 0008 turns stances into held states (Guard, Dodge, sprint), adds a mode (physical or energy), a power layer and a context button. **The delta is about 87 new poses on top of the 170-pose basic set (257 in all), plus a mode layer in the modifier stack that costs no poses.** Almost all of it is shared basic-set work that every fighter reuses; the Anti-hero's own part is about 10 poses. It is a plan: nothing is drafted until Combat's grammar and the part cue exist, and the grab, lift and tackle poses also need A2's IK to a socket (a hand must follow the other fighter or an object).
+
+| Group | What it needs from Animation | New poses |
+| :--- | :--- | ---: |
+| **Energy mode** (the mode swaps the piece family; "mostly hand, aura and effect changes on shared poses") | A **mode layer**: an additive pose set over the shared poses (open or claw hands, palms forward, a lifted guard, a floating stance), weighted by the fighter's mode, with no new key set per piece. The aura and effects are VFX's. Plus the energy piece family Combat adds: light and heavy blast, palm shove, point-blank volley, charged blast (no pose with the arms raised over the head, §3.7) | 10 mode deltas, 14 blast poses: **24** |
+| **Guard and perfect block** | Guard high and low (the held state; `stance.defensive` stays the base), a perfect-block deflect (high, mid, low) with the attacker's recoil, guard-hit absorb (light, heavy), the brace | **10** |
+| **Dodge and sprint, burst, power hold** | Dodge by direction (back, up, down, side), sprint (forward, away), the burst (coil, push-out, recover), the power-hold channel with the specials ready, the two-trigger transform start | **14** |
+| **Context actions** | Grab and throw (reach, hold, three throws, the grabbed fighter's three poses: 13), lift an object (reach, lift, hold, throw: 4), reversal with the afterimage backstep (the reversal strike, the step: 5), tackle (3 plus the victim's 2), dive grab (carry in the air: 5), the civilians action (2), provoke or feint (2), the ranged deflect (3) | **39** |
+| **Total** | | **87** |
+
+How each fits the plan:
+- **Held states keep the stance poses.** `stance.aggressive`, `.defensive`, `.evasive` and `.escape` map to Press, Guard, Dodge and sprint; the runtime reads the held state instead of the stance number. The base-pose smoothing already covers the switch.
+- **A perfect block is a window the sim opens during a visible wind-up** (ADR 0008 §2). The deflect pose lands on the block's tick like any contact key; a mistimed tap still blocks, so it shows the guard-hit pose.
+- **A dodge or burst cancels anything mid-exchange.** That is an interrupt (§4.7): the running part drops and the dodge's first key is inertialised in within 6 ticks. The afterimage is VFX's.
+- **Grab, lift and tackle bind two bodies.** The sim moves the grabbed fighter; animation attaches the hand to the other's socket (IK, A2) and plays the victim's pose. Both fighters' sockets must be readable each frame.
+- **The mode layer joins the style modifier stack** (§5) as one more modifier, weighted by mode, so energy mode costs one record and no key sets.
+
+**What it costs.** Director usage about 0.4 to 0.8 M tokens and Orb's review about 4 to 5 hours (3 minutes a pose with the second look), once, for the shared set. The scope table below includes it.
+
+**Needs from the sim and Combat (to add to §12):** the fighter's mode and held state (guard, sprint) as render-readable state; events for a perfect block, a dodge, a burst and a context action (kind and target slot); the grab's hold state; and the liftable object's position and attach point.
 
 ---
 
@@ -612,12 +636,12 @@ At a hobby pace of 10 hours a week that is a long road, and the honest levers ar
 | Showcase poses | 42 | 84 | 140 |
 | Finisher, transformations, break beats | 68 | 68 | 68 |
 | **Showcase-grade poses** | **214** | **360** | **536** |
-| Basic set (shared) | 170 | 170 | 170 |
-| **Poses, first fighter** | **384** | **530** | **706** |
-| Director usage, first fighter (tokens, with rework) | about 1.7 to 3.5 M | about 2.4 to 4.8 M | about 3.2 to 6.3 M |
-| **Orb's review, first fighter** | **about 19 hours** | **about 27 hours** | **about 35 hours** |
-| Director usage, four fighters (tokens) | about 6 to 12 M | about 8 to 17 M | about 11 to 22 M |
-| Orb's review, four fighters | about 58 hours | about 89 hours | about 122 hours |
+| Basic set (shared), with the ADR 0008 delta | 257 | 257 | 257 |
+| **Poses, first fighter** | **471** | **617** | **793** |
+| Director usage, first fighter (tokens, with rework) | about 2.1 to 4.3 M | about 2.8 to 5.6 M | about 3.6 to 7.1 M |
+| **Orb's review, first fighter** | **about 24 hours** | **about 31 hours** | **about 40 hours** |
+| Director usage, four fighters (tokens) | about 6.5 to 13 M | about 8.5 to 18 M | about 11.5 to 23 M |
+| Orb's review, four fighters | about 64 hours | about 95 hours | about 128 hours |
 
 The four-fighter rows charge every fighter in full, without sharing, so they are the pessimistic case. Tokens are spread over usage windows (ADR 0005); the window limit, not the tooling, sets how fast a fighter finishes.
 
@@ -627,7 +651,7 @@ What moves the numbers, in order of size:
 3. **Transformations as profile deltas.** Only each stage's cinematic moment is authored; the Empress's ten or more "revisions" cost about a dozen numbers each, not poses.
 4. **Review load.** Orb's time scales with poses and with how often a batch comes back. Reviewing by motion reel per part, not per pose, and approving in batches, cuts it.
 
-**Orb's pick is effectively lean first, grow by data** (system first, content after): about 1.7 to 3.5 M tokens and 19 hours of review for the first fighter, and every added special, signature or showcase is a data drop after that. I recommend exactly that.
+**Orb's pick is effectively lean first, grow by data** (system first, content after): about 2.1 to 4.3 M tokens and 24 hours of review for the first fighter (with the ADR 0008 delta of §3.9), and every added special, signature or showcase is a data drop after that. I recommend exactly that.
 
 **Tokens are the budget for a Claude author** (ADR 0005): batch 12 poses to one sheet, lint by numbers before looking at any picture, keep pose files short, and use images only for the final review of a batch.
 
