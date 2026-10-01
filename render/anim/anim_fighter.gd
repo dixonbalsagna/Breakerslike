@@ -198,6 +198,13 @@ func on_tick(dt: float, frozen: bool, S: SimState = null, f = null) -> void:
 	_ip_acc += dt * (0.5 if frozen else 1.0)
 	if S != null and f != null:
 		update_face(S, f)   # the facing is decided once per sim tick too, so everything keyed on it replays
+		# a change of stance kicks the arms toward the new guard on the tick it happens (it was read at solve time, so a change on an odd tick
+		# came a tick late at two ticks a frame and the ragdoll state differed)
+		var st_now: int = clampi(int(f.stance), 0, 3)
+		if _stance_prev != st_now:
+			if _stance_prev >= 0 and RenderAnim.layer("transitions"):
+				_stance_kick(_stance_prev, st_now)
+			_stance_prev = st_now
 		_spring_tick(S, f, dt, frozen)
 		if not frozen:
 			_rd_tick(S, f, dt)
@@ -553,10 +560,6 @@ var _tq_curl := Vector2(0.5, 0.5)
 
 func _target_base(S: SimState, f, T: float) -> void:
 	var stance: int = clampi(int(f.stance), 0, 3)
-	if _stance_prev != stance:
-		if _stance_prev >= 0 and RenderAnim.layer("transitions"):
-			_stance_kick(_stance_prev, stance)
-		_stance_prev = stance
 	var vf: float = f.vx * vface
 	var state: String = f.state
 	# The blend weights, quantised to sixteenths: while they and the stance do not change the target is not rebuilt (the

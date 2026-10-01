@@ -150,6 +150,8 @@ func _test_form() -> void:
 ## both arms and both legs broken, fighter 1 is worn and then fresh. The broken arm must hang when no blow is being thrown, no
 ## blow may use the broken limb, the stance must sag toward the brink and the worn fighter must breathe harder than the fresh one.
 func _test_wounds() -> void:
+	var live_was: bool = RenderAnim.wave1_live
+	RenderAnim.wave1_live = false   # this test is about wound motion: which blows are drawn must not decide it
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	main.start_match(4, {"p1": true, "p2": true})
@@ -204,6 +206,7 @@ func _test_wounds() -> void:
 		hi_f = maxf(hi_f, ang2)
 	_expect(hi_w - lo_w > (hi_f - lo_f) * 1.2, "wound test: the worn fighter's chest moves %.3f, the fresh one's %.3f" % [hi_w - lo_w, hi_f - lo_f])
 	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, chest range worn %.3f fresh %.3f" % [hanging, calm, afa.debug["wound_bad"], hi_w - lo_w, hi_f - lo_f])
+	RenderAnim.wave1_live = live_was
 
 
 ## The active ragdoll (overhaul unit A): the same match at one tick a frame and at two ticks a frame ends with the same ragdoll state
