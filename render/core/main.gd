@@ -355,7 +355,7 @@ func _hud_anchor(slot: int) -> Dictionary:
 		return {"pos": Vector2.ZERO, "h": 0.0, "visible": false}
 	if split_frame != null:
 		var a: float = host.alpha()
-		return split_frame.hud_anchor(slot, host.fighter_x(slot, a), host.fighter_pose(slot, a).y)
+		return split_frame.hud_anchor(slot, host.fighter_x(slot, a), host.fighter_pose(slot, a).y, host.fighter_z(slot, a))
 	var torso: Vector3 = fighter_views[slot].global_position + Vector3(0.0, FighterView.PIVOT_Y, 0.0)
 	if cam_rig.is_position_behind(torso):
 		return {"pos": Vector2.ZERO, "h": 0.0, "visible": false}
