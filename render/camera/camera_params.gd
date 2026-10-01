@@ -4,10 +4,18 @@ class_name CamParams
 ## Defaults marked "Orb decides" in the design doc are the ones a playtest will change.
 
 # --- the trigger (section 2) ---
-const R_SPLIT: float = 0.030           # split when a fighter's height falls under this fraction of vh (Orb decides)
-const R_MERGE: float = 0.040           # merge when it stays above this (Orb decides)
-const R_BEAM_MIN: float = 0.020        # a beam struggle keeps the merged wide shot down to this
+const R_SPLIT: float = 0.035           # split when a fighter's height falls under this fraction of vh (Orb decides)
+const R_MERGE: float = 0.047           # merge when it stays above this (Orb decides)
+const R_BEAM_MIN: float = 0.032        # a beam struggle keeps the merged wide shot down to this
 const MIN_PX: float = 18.0             # under 600 px of screen height the split line is at least this many pixels
+const R_FLOOR: float = 0.032          # camera v2: no fighter is shown smaller than this anywhere (23 px at 720p)
+const R_MAX: float = 0.14              # camera v2: the largest the one view zooms in (101 px at 720p), times the zoom setting
+const R_CLOSE: float = 0.20            # a close-up shot (transformation, KO) may go this close, times the zoom setting
+const FIT_MARGIN_X: float = 450.0      # camera v2: the one view's margin round two fighters, so melee is 11% of the height
+const ZOOM_PREF_DEFAULT: float = 7.0   # the zoom setting, 0 to 10
+const ZOOM_PREF_K: float = 0.08        # every size target is multiplied by exp(K (pref - 7))
+const SHAKE_PREF_DEFAULT: float = 2.0  # the shake setting, 0 to 10; effective scale = pref / 10 * SHAKE_PREF_TOP
+const SHAKE_PREF_TOP: float = 1.4      # 10 of 10 is the old prototype's strength (cap 4.2% of the height)
 const SPLIT_DWELL: float = 0.25
 const WIDE_HOLD: float = 1.0          # extra dwell while the fighters are still moving apart: the shared zoom-out ("flying around the world") lasts this much longer
 const MERGE_DWELL: float = 0.40
@@ -23,7 +31,7 @@ const REF_MARGIN_Y: float = 500.0
 const REF_TIER: float = 0.06
 const ZONE_W: float = 0.0  # 0 = off. Was 0.51 (UI's clear-zone width) to keep fighters out from under UI's edge chips; Orb preferred the longer shared zoom-out, and the chips dodge the fighters instead             # UI's fighter-clear zone is 51% of the width (docs/ui/hud-spec.md 2.1): both fighters fit inside it
 const ZOOM_MIN: float = 0.006
-const ZOOM_MAX: float = 1.15
+const ZOOM_MAX: float = 1.15          # the reference camera's cap, kept for the parity docs; v2 uses R_MAX
 
 # --- divider geometry (section 3) ---
 const PHI_MAX: float = 0.5235988       # 30 degrees
@@ -40,7 +48,7 @@ const GAP_MIN_PX: float = 3.0
 const FEATHER_FRAC: float = 0.05       # dissolve feather at its widest, fraction of vw
 
 # --- pane cameras (section 4) ---
-const R_PANE: float = 0.065
+const R_PANE: float = 0.085
 const ALT_START: float = 3.0           # body heights above the ground where the altitude zoom-out begins
 const ALT_SCALE: float = 40.0
 const ALT_FLOOR: float = 0.69
@@ -74,7 +82,7 @@ const INSTANT_SWAP_E: float = 0.9      # a pane expanded this far hides the swap
 
 # --- launch follow (section 8) ---
 const LAUNCH_MIN_SPEED: float = 4000.0
-const R_LAUNCH: float = 0.06
+const R_LAUNCH: float = 0.08
 const LAUNCH_TAU: float = 0.02
 const LAUNCH_LEAD: float = 0.05        # s of velocity added to the follow point
 const LAUNCH_TRAIL: float = 0.35       # the fighter sits this far from the trailing edge, times vw
@@ -104,6 +112,15 @@ const ANCHOR_STEP_TRANS: float = 0.05
 const DIVIDER_STEP: float = 0.06       # divider centre motion per tick, times vw, outside the slam
 const SHAKE_CAP: float = 0.03          # times vh
 const SHAKE_HIT_STEP: float = 1.0
+
+# --- the lag bound (camera v2 section 2) ---
+const LAG_SOFT: float = 0.06           # a tracked fighter this far from his anchor (screen widths): ordinary filter
+const LAG_HARD: float = 0.20           # ... this far: the focus is held to it (a whip)
+const LAG_GAIN: float = 6.0            # the filters speed up by 1 + LAG_GAIN * (e - SOFT) / (HARD - SOFT)
+const LAG_CUT: float = 1.5             # farther than this in one tick: a cut (a counted safety net)
+const CUT_FADE: float = 0.08           # the cut's fade-in from 70% brightness, seconds
+const CUT_DIM: float = 0.30
+const REDUCED_CUT_FADE: float = 0.30
 
 # --- fighters in depth (docs/camera/depth-and-chains.md) ---
 const K_FACTOR: float = 1.8660254      # 1 / (2 tan 15 degrees): the camera's distance to the fighter plane is K_FACTOR * vh / zoom

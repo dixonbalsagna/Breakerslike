@@ -140,6 +140,8 @@ func _run() -> void:
 	# 6. Launches.
 	for sp in [1677.0, 10816.0, 26718.0, 45606.0]:
 		await _scenario("launch far %d" % int(sp), func(): return _launch(sp, 20000.0), {"end_mode": "split"})
+	for sp2 in [26718.0, 45606.0]:
+		await _scenario("launch split %d" % int(sp2), func(): return _launch(sp2, 20000.0, false, 9000.0), {})
 	await _scenario("launch up and down 10816", func(): return _launch(10816.0, 0.0, true), {"end_mode": "merged"})
 	# 7. Cinematics and options.
 	await _scenario("transformation", func(): return _transformation(), {})
@@ -224,6 +226,7 @@ func _begin(label: String) -> void:
 	digest_acc = 0
 	_allow_cut_frames = 0
 	_last_trans_t = -9.0
+	_probe_max = 0.0
 	_offscreen_t = [0.0, 0.0]
 
 
@@ -372,7 +375,7 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 		else:
 			_offscreen_t[i] += 1.0 / DISPLAY_HZ
 			_note("fighter_off_pane_s", _offscreen_t[i])
-			if _offscreen_t[i] > 0.30:
+			if _offscreen_t[i] > (0.60 if _label == "fold" else 0.30):   # the fold's wide shot is an authored transition
 				_fail_once("offscreen", "%s: fighter %d has been out of its pane for %.2f s (mode %s) at t=%.2f pos %s sep %.3f e %.2f solo %s/%.2f slam %d u %.0f sigma %d/%d n %s" % [_label, i, _offscreen_t[i], fr.mode, float(_tick) / 60.0, pp, fr.sep, fr.e, _rig.solo_kind, _rig.solo_w, _rig._slam_slot, fr.held_u, fr.sigma, _rig.sigma_u, fr.n])
 	# 2. the fighter sits in its pane at rest, and in UI's clear zone
 	if fr.mode == "split" and fr.swing < 0.0 and fr.e < 0.001:
@@ -451,6 +454,7 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 
 var _prev_g_valid: Array = [false, false]
 var _prev_fpos: Array = [Vector2.ZERO, Vector2.ZERO]
+var _probe_max: float = 0.0
 var _fz_prev: Array = [0.0, 0.0]
 var _fz_cur: Array = [0.0, 0.0]
 var _ft_prev: Array = [Vector2.ZERO, Vector2.ZERO]
@@ -612,7 +616,7 @@ func _line_jitter(lo: float, hi: float, r_line: float) -> Dictionary:
 	var ax: float = 30000.0
 	# the separation at which r = r_line (level, tier 1)
 	var z: float = r_line * vh / CamParams.BODY_H
-	var d_line: float = vw / z - CamParams.REF_MARGIN_X
+	var d_line: float = vw / z - CamParams.FIT_MARGIN_X
 	_pose(ax, 40.0, ax + d_line * 0.5, 40.0)
 	_seed_rig()
 	for _i in range(120):
@@ -666,9 +670,18 @@ func _slam(feint: bool) -> Dictionary:
 	return {}
 
 
-func _launch(speed: float, dist: float, vertical: bool = false) -> Dictionary:
+## The launched fighter's offset from where the camera means him to be, in screen widths (the lag bound's number).
+func _probe(slot: int) -> void:
+	var cur: SplitFrame = _rig.current()
+	var f = _S.fighters[slot]
+	var pi: int = 1 if cur.shows(1) else 0
+	var off: float = (cur.screen_pos(pi, f.x, f.y + CamParams.CHEST, float(f.z)) - cur.anchor[slot]).length() / vw
+	_probe_max = maxf(_probe_max, off)
+
+
+func _launch(speed: float, dist: float, vertical: bool = false, gap: float = 500.0) -> Dictionary:
 	var ax: float = 60000.0
-	_pose(ax, 40.0, ax + 500.0, 40.0)
+	_pose(ax, 40.0, ax + gap, 40.0)
 	_seed_rig()
 	for _i in range(120):
 		_tick_rig()
@@ -692,10 +705,15 @@ func _launch(speed: float, dist: float, vertical: bool = false) -> Dictionary:
 		for k in range(n2):
 			B.x = SimWrap.wrap(B.x + B.vx * SplitRig.DT)
 			_tick_rig()
+			_probe(1)
 	B.state = "down"
 	B.vx = 0.0
 	for _i in range(360):
 		_tick_rig()
+	if not vertical and speed >= CamParams.LAUNCH_MIN_SPEED:
+		_check(_probe_max <= CamParams.LAG_HARD + 0.01, "%s: the launched fighter was %.3f of the width from his anchor (bound %.2f)" % [_label, _probe_max, CamParams.LAG_HARD])
+		_check(_rig.lag_cuts == 0, "%s: %d safety cuts in a launch" % [_label, _rig.lag_cuts])
+		stats["lag bound " + _label] = "worst %.3f of the width, whips %d, cuts %d" % [_probe_max, _rig.lag_whips, _rig.lag_cuts]
 	return {}
 
 

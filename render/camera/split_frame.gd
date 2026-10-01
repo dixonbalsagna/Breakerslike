@@ -31,6 +31,7 @@ var ring: PackedFloat64Array = PackedFloat64Array([0.0, 0.0])   # both fighters'
 var held_u: float = 0.0              # the held signed separation slot 0 to slot 1, units
 var flash: float = 0.0               # seconds left of the divider's slam flash
 var shake: PackedFloat64Array = PackedFloat64Array([0.0, 0.0])   # each pane's shake amount, px, before the cap and the player's scale
+var fade: float = 0.0                # 0..1: a safety cut's brightness dip, fading in (the compositor darkens by CUT_DIM x this)
 var slam: bool = false               # true on the one frame the slam closes
 var cut: bool = true                 # a hard cut: do not interpolate into this frame
 
@@ -62,6 +63,7 @@ func duplicate() -> SplitFrame:
 	f.held_u = held_u
 	f.flash = flash
 	f.slam = slam
+	f.fade = fade
 	f.shake = shake.duplicate()
 	f.cut = cut
 	return f

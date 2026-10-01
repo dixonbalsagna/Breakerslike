@@ -20,6 +20,7 @@ const MASK: Shader = preload("res://render/camera/split_mask.gdshader")
 
 var main = null            # Rendering's main scene, or a stand-in with the same calls (render/camera/tests/split_test_main.gd)
 var viewports: Array = [null, null]
+var shake_pref: float = CamParams.SHAKE_PREF_DEFAULT   # the player's shake setting, 0 to 10 (default 2)
 var shake_scale: float = 1.0          # the player's shake scale, 0 to 1 (default 1)
 var reduced_motion: bool = false      # the player's reduced-motion setting: shake at a quarter of the scale
 var shake_a := PaneShake.new()        # pane 0's cosmetic shake stream ("camera", the host's name for it)
@@ -105,6 +106,18 @@ func set_solo_split(on: bool) -> void:
 		main.split_rig.solo_split = on
 
 
+## The player's zoom setting, 0 to 10 (default 7): every size target is multiplied by exp(0.08 (pref - 7)). The floor is
+## not scaled. Option name for UI: `camera_zoom`, an integer slider 0 to 10, default 7.
+func set_zoom_pref(v: float) -> void:
+	if main != null:
+		main.split_rig.zoom_pref = clampf(v, 0.0, 10.0)
+
+
+## The player's shake setting, 0 to 10 (default 2). Option name for UI: `camera_shake`, an integer slider 0 to 10, default 2.
+func set_shake_pref(v: float) -> void:
+	shake_pref = clampf(v, 0.0, 10.0)
+
+
 func set_reduced_motion(on: bool) -> void:
 	reduced_motion = on
 	if main != null:
@@ -133,7 +146,9 @@ func pane_jitter(i: int) -> Vector2:
 
 
 func _shake() -> float:
-	return shake_scale * (0.25 if reduced_motion else 1.0)
+	# shake_scale is the legacy 0 to 1 multiplier (1 by default); the setting is the strength: 10 of 10 is the old
+	# prototype's, so 2 of 10 (the default) is 0.28 of Controls' table, and reduced motion takes a quarter of that.
+	return shake_scale * (shake_pref / 10.0 * CamParams.SHAKE_PREF_TOP) * (0.25 if reduced_motion else 1.0)
 
 
 func _on_resized() -> void:
@@ -174,5 +189,8 @@ func present(fr: SplitFrame) -> void:
 	_mat.set_shader_parameter("feather", fr.feather)
 	_mat.set_shader_parameter("gap", fr.gap)
 	_mat.set_shader_parameter("gap_alpha", fr.line_alpha)
+	_mat.set_shader_parameter("dim0", CamParams.CUT_DIM * fr.fade)
+	_mat.set_shader_parameter("dim1", CamParams.CUT_DIM * fr.fade)
+	_solo.modulate = Color(1.0 - CamParams.CUT_DIM * fr.fade, 1.0 - CamParams.CUT_DIM * fr.fade, 1.0 - CamParams.CUT_DIM * fr.fade)
 	_mat.set_shader_parameter("active0", 1.0 if fr.shows(0) else 0.0)
 	_mat.set_shader_parameter("active1", 1.0 if (fr.shows(1) and v1 != null) else 0.0)

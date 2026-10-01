@@ -1,6 +1,6 @@
 # Camera v2: bigger fighters, a lag bound, launch following, cuts and lanes
 
-Owner: Camera and Cinematography. Status: plan only, 2026-10-01. It answers Orb's camera questionnaire (`docs/ep/vision.md`, "Questionnaire 9"), ADR 0009 (fight lanes) and `docs/architecture/fight-lanes.md`, and extends `split-screen.md` and `depth-and-chains.md`. Nothing here is built.
+Owner: Camera and Cinematography. Status: plan, 2026-10-01; sections 12 (Orb's picks) and 13 (what is built) added 2026-10-02. It answers Orb's camera questionnaire (`docs/ep/vision.md`, "Questionnaire 9"), ADR 0009 (fight lanes) and `docs/architecture/fight-lanes.md`, and extends `split-screen.md` and `depth-and-chains.md`. Nothing here is built.
 
 **Summary**
 1. **Bigger.** The default fighter is 11% of the screen height in a fight (79 px at 720p, from about 9% today) and 8.5% in a split pane (61 px, from 6.5%). The shared zoom-out never goes below 3.2% (23 px); the split line moves to 3.5% and the merge line to 4.7%. A zoom setting (0 to 10, default 7) scales all of it.
@@ -100,18 +100,17 @@ I recommend 1, with 3 for repeated cinematics later. Slow motion at 2 of 10: the
 
 ## 6. The lanes: the deepest readable depth
 
-Simulation's band is 32 fighter heights (2,400 units) with the front street at 0. The camera's answer to "the deepest `z` at which a fighter stays readable": **all of it**, with these sizes (a fighter's apparent height at 720p, `75 K / (K / zoom + w)`, `K` = 1,343):
+Simulation's band is 32 fighter heights (2,400 units) deep but starts at +5 heights, so its back edge is -27 heights (-2,025 units), not -32. The camera's answer to "the deepest `z` at which a fighter stays readable": **all of it**, with these sizes (a fighter's apparent height at 720p, `75 K / (K / zoom + w)`, `K` = 1,343):
 
 | Depth | w (units) | zoom 0.6 (shared, wide) | zoom 1.0 (fight default) | zoom 1.34 (cap) |
 | :--- | ---: | ---: | ---: | ---: |
 | Block row 1, -12 bh | 900 | 32 px | 45 px | 53 px |
 | Back street, -18 bh | 1,350 | 28 px | 37 px | 43 px |
-| Block row 2, -27 bh | 2,025 | 24 px | 30 px | 33 px |
-| The band's back edge, -32 bh | 2,400 | 22 px | 27 px | 30 px |
-| Scenery row 3, -38 bh | 2,850 | 20 px | 24 px | 26 px |
+| **Block row 2, -27 bh: the band's back edge** | 2,025 | 24 px | 30 px | 33 px |
+| Scenery row 3, -38 bh (no fighter goes there) | 2,850 | 20 px | 24 px | 26 px |
 
-- Against the 23 px floor: the whole 32-bh band reads at the fight zoom (27 px at the back edge) and at the cap (30). At the wide shared zoom (0.6) the back edge is 22 px, one pixel under the floor: the shared zoom adds a rule, **size for the deeper fighter** (zoom up until the smaller fighter's apparent height reaches the floor), so the wide shot never shows a fighter under 23 px.
-- **My recommendation: keep the band at 32 bh. If Orb wants fighters clearly larger at depth, shrink it to 27 bh (the end of block row 2 at -2,025): 30 px at the fight zoom.** It is a World data number.
+- Against the 23 px floor: the whole band reads at the fight zoom (30 px at its back edge, -27 heights) and at the cap (33). At the wide shared zoom (0.6) the back edge is 24 px, just above the floor; the shared zoom still adds a rule, **size for the deeper fighter** (zoom up until the smaller fighter's apparent height reaches the floor), so the wide shot never shows a fighter under 23 px.
+- **The band stays as planned (Simulation's correction: it ends at -27 heights, which is the worst case above; option 8 is answered).**
 - **Two fighters in different lanes in one view.** The camera frames the pair by their screen positions, not their world positions: with perspective scales `s_i` the screen midpoint is zero when `cam.x = (x_i s_i + x_j s_j) / (s_i + s_j)`, and the vertical likewise from `y` and the depth shift. The zoom for the pair is the larger of the separation zoom and the deeper fighter's floor zoom. In a split each pane already frames one fighter with `depth-and-chains.md` section 2.
 - **Reads per tick.** I need `z`, `zT` and `ex.z` (fight-lanes.md section 8, Camera 2) and `launch_depth` for every launch (the end depth and the time to it); everything else is in the events I already read. The camera keeps reading only state and events.
 
@@ -148,7 +147,7 @@ Orb: not sure; show both. The prototype's side-on view is raised about 11 degree
 5. **Shake default:** 2 of 10 = about 0.28 of what is on screen today. Slow motion at 2 of 10 (about a quarter of the KO's current slow motion).
 6. **The cut cap:** 6 camera cuts a minute with a 6 s cooldown; the sim-owned cinematics do not count.
 7. **Angle:** side-on by default with the three-quarter view on F6, until Orb picks.
-8. **The band:** keep 32 bh, or shrink to 27 for bigger fighters at depth.
+8. **The band:** answered; it stays (back edge -27 heights, 30 px at the fight zoom).
 
 ## 11. Build order (when Orb answers)
 
@@ -157,3 +156,33 @@ Orb: not sure; show both. The prototype's side-on view is raised about 11 degree
 3. The shot list: impact push, chase, then the cuts in order of how often they fire (building smash, beam struggle, crippling), then the sim-owned shots when their events exist.
 4. The inset and the launch-following options.
 5. Pitch and the second angle (needs Rendering).
+
+## 12. Orb's picks (2026-10-02)
+
+- **Cinematic moments.** Short ones run live (push-ins, shake, the chase, the quick impact cut); long set pieces pause the fight for both players. Game Design owns the rules and the list of set pieces. For the camera this means: the shots of section 4 that are camera-only stay camera-only and never touch the sim; a set piece that pauses the fight is a sim-owned cinematic (`cinematic_start {dur}`), and the camera shots inside it are timed to its `dur`. The camera does not decide what pauses.
+- **Launch following: the hybrid.** When the human launches the opponent, the camera stays with the human's fighter and **cuts to the impact for about half a second** (a push-in and shake), then returns with the opponent framed. When the human is launched, the camera chases. Two humans on one screen use the split. Orb preferred the impact cut to a standing inset, so **the inset (option A) is dropped from the build.**
+  - **The impact cut** (`launch_follow = "auto"`): on the `launch` event with the human as the launcher, the shared camera holds the attacker; at the `building_hit` or the landing (whichever comes first, at most 1.5 s after the launch) it cuts to the contact point for 0.5 s (zoom +10% on the push, the shake of Controls' table), then eases back to a framing of the attacker and the opponent (the shared zoom-out, down to the floor, or the split if they are too far apart). A launch that ends inside the widest shared view is not followed at all, as before.
+  - **The human is launched:** the chase (section 3), as today but at the new size.
+  - **Two humans:** the split opens at the launch (not the solo expansion), each pane on its own fighter; the launched pane chases.
+- **Build order** after the lag bound and the size work: (3) the impact cut and the hybrid rule; (4) the shot list in the order of how often each fires, with the sim-owned set pieces as Game Design's list lands; (5) the angle toggle (needs Rendering's pitch).
+
+## 13. What is built (2026-10-02): the lag bound, the size and floor, the settings
+
+In `render/camera/` (`camera_params.gd`, `split_rig.gd`, `split_frame.gd`, `split_view.gd`, tests):
+
+- **Sizes.** The one view's margin is `|d| + 450 / m` (it was 700), so melee is 11%; a split pane is 8.5%; the launch chase 8%; the zoom-in cap 14% (16% at the top of the setting); a close-up (transformation, KO) may go to 20%. The floor is 3.2% and the one view never zooms out past it. The split line is 3.5% and the merge line 4.7%, judged on the size the fight would like, independent of the setting.
+- **The zoom setting.** `m = exp(0.08 (pref - 7))`. Option for UI: **`camera_zoom`, an integer slider 0 to 10, default 7**, applied with `SplitView.set_zoom_pref(v)`. The rig's default is 7, so nothing is needed in `main.gd` until UI adds the option; when it does, main's `_sync_split_options` needs `split_view.set_zoom_pref(float(o.get("camera_zoom", 7)))`.
+- **Shake.** The strength setting is `camera_shake`, **an integer slider 0 to 10, default 2** (`SplitView.set_shake_pref(v)`); the effective scale is `pref / 10 x 1.4` (10 is the old prototype's strength, cap 4.2% of the height), times the legacy `shake_scale` (1.0), times a quarter in reduced motion. The default is therefore 0.28 of what Controls' table gave before. Likewise main would add `split_view.set_shake_pref(float(o.get("camera_shake", 2)))`. Slow motion is a sim header scale and is not touched.
+- **The lag bound** (section 2): between 6% and 20% of the width off his anchor the focus filters speed up to 7x; beyond 20% the focus is held to the bound; beyond 1.5 screens in a tick it cuts, with a 0.08 s fade from 70% brightness (0.3 s in reduced motion, where the whip is also off). The counters `lag_whips` and `lag_cuts` are on the rig.
+- **Launch rigidity.** A launch out of the one view takes the screen on the event: the pane's zoom is seeded from the one view's and the anchor from the fighter's screen position, so the take-over is continuous and nothing is lost in a ramp.
+- **Measured** (a fighter launched 20,000 units from a merged start 500 units apart, and from a split 9,000 units apart; old rig = commit 9ed784a, new = this work; 1280 by 720):
+
+| Launch speed (units a second) | Old rig: worst offset from anchor; ticks off screen | New rig |
+| :--- | :--- | :--- |
+| 10,816 (median) | 0.29 of the width; 0 | 0.00; 0 |
+| 26,718 (90th percentile) | 0.69; 11 of 104 | 0.00; 0 |
+| 45,606 (maximum) | 1.17; 13 of 86 | 0.00; 0 |
+
+  The smallest the chased fighter got was 43 to 44 px in the old rig and 58 to 61 px in the new. The new rig holds the fighter on his anchor exactly because the speed-up zone makes the filter near-instant at launch (the whip and the cut never fire: `lag_whips` 0, `lag_cuts` 0 in the launch tests). A real-game strip of a 26,000-unit launch (seed 4, tick 8152, a melee start), old above and new below, is in `img/fast-launch-before-strip.png`, `img/fast-launch-after-strip.png` and `img/fast-launch.gif` (old left, new right); the fighters are small in both because that launch is a chain inside a rubble field; the table above is the clearer evidence.
+- **Share of the run in two panes** (the rig's `split` mode, five AI matches of 4,000 ticks): 4%, 6%, 7%, 6% and 10% (mean about 7%), with the new 3.5% line and the floor. Opening, closing and slam add a few percent more.
+- **Checks** on a clean copy of HEAD with these files and a fresh import: `split_sweep` (the earlier scenarios, five new lag-bound launches, seven real matches), the composite picture check (worst frame-to-frame spike 2.9 against a limit of 4), `pane_check`, and `determinism` pass; the sim's gameplay hash is identical with and without the rig.

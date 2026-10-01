@@ -12,6 +12,7 @@ const DT: float = 1.0 / 60.0
 # --- settings (the player's) ---
 var solo_split: bool = true            # against the AI: split like two players (false: follow the human fighter alone when far)
 var reduced_motion: bool = false
+var zoom_pref: float = CamParams.ZOOM_PREF_DEFAULT   # the player's zoom setting, 0 to 10 (default 7)
 var pane_request_fn: Callable = Callable()   # (slot) -> {"kind": "normal" | "search", ...}: the hiding hook, unused
 
 # --- view ---
@@ -72,6 +73,11 @@ var _aim: Array = [null, null]          # per fighter: the (x, y) of the buildin
 var _hit_t: Array = [-1.0, -1.0]        # seconds since this fighter's last building_hit, or -1
 var _hit_amp: Array = [0.0, 0.0]
 var _hit_hold: Array = [0.0, 0.0]
+var _launch_anchor_y: float = 0.62
+var _cut_fade: float = 0.0              # seconds left of a safety cut's fade-in
+var _cut_now: bool = false              # a safety cut happened this tick: the frame is a cut
+var lag_whips: int = 0                  # ticks the hard bound had to pull a focus (counted for the tests)
+var lag_cuts: int = 0                   # safety cuts (a fighter more than 1.5 screens off in one tick)
 var _launch_evt: Array = [false, false]   # a `launch` event arrived for this fighter this tick
 var fold_active: bool = false
 var _fold: Vector3 = Vector3.ZERO
@@ -173,9 +179,11 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 	_update_cameras(S)
 	if cut:
 		_snap_cameras(S)
+	_cut_fade = maxf(0.0, _cut_fade - DT)
 	_prev = _cur
 	_cur = _make_frame(S)
-	_cur.cut = cut
+	_cur.cut = cut or _cut_now
+	_cut_now = false
 	for i in range(2):
 		_prev_state[i] = S.fighters[i].state
 
@@ -211,17 +219,30 @@ func cut(S: SimState) -> void:
 
 # ---------------------------------------------------------------------------------------------------- trigger
 
-static func zoom_u(vw_: float, vh_: float, ad: float, dy: float, tier: float) -> float:
-	var span_x: float = ad + CamParams.REF_MARGIN_X
+## The one view's zoom for two fighters ad apart in x and dy in height (pixels per unit). m is the zoom setting's
+## multiplier; with `floored` the camera never zooms out past the floor (the size it is aiming at), without it the
+## number is the size the fight would like, which is what the split trigger judges.
+static func zoom_u(vw_: float, vh_: float, ad: float, dy: float, tier: float, m: float = 1.0, floored: bool = false) -> float:
+	var span_x: float = ad + CamParams.FIT_MARGIN_X / m
 	var span_y: float = dy + CamParams.REF_MARGIN_Y
-	# The reference framing puts fighters up to 44% of the width from the centre, outside UI's clear zone (where its edge
-	# pointer chip then sits on top of them). The zone term keeps both inside it, and the split line follows.
+	var zcap: float = CamParams.R_MAX * m * vh_ / CamParams.BODY_H
 	var z: float = minf(vw_ / span_x, vh_ * 0.8 / span_y)
 	if CamParams.ZONE_W > 0.0:
 		z = minf(z, CamParams.ZONE_W * vw_ / maxf(ad, 1.0))
-	z = minf(z, CamParams.ZOOM_MAX)
+	z = minf(z, zcap)
 	z *= 1.0 - CamParams.REF_TIER * (tier - 1.0)
-	return clampf(z, CamParams.ZOOM_MIN, CamParams.ZOOM_MAX)
+	if floored:
+		z = maxf(z, CamParams.R_FLOOR * vh_ / CamParams.BODY_H)
+	return clampf(z, CamParams.ZOOM_MIN, zcap)
+
+
+## The zoom setting's multiplier on every size target.
+func _m() -> float:
+	return exp(CamParams.ZOOM_PREF_K * (zoom_pref - CamParams.ZOOM_PREF_DEFAULT))
+
+
+func _zcap() -> float:
+	return CamParams.R_MAX * _m() * vh / CamParams.BODY_H
 
 
 ## r: a fighter's height as a fraction of the screen height in the one-view (reference) framing.
@@ -272,7 +293,11 @@ func _update_trigger(S: SimState) -> void:
 		# A fighter already lost off the edge of the one view does not wait out the dwell or the full merged age.
 		var age_ok: bool = _layout_age >= CamParams.MIN_MERGED_AGE or (out_of_frame and _layout_age >= CamParams.MIN_OUT_OF_FRAME_AGE)
 		# While they are still moving apart the shared zoom-out holds a little longer (a wide "flying around the world" beat).
-		var dwell: float = CamParams.SPLIT_DWELL + (CamParams.WIDE_HOLD if _sep_rate > 500.0 else 0.0)
+		# It runs only between the split line and the floor: below the floor the shared view cannot zoom out any more.
+		var floor_r: float = maxf(CamParams.R_FLOOR, CamParams.MIN_PX / vh)
+		var dwell: float = CamParams.SPLIT_DWELL + (CamParams.WIDE_HOLD if _sep_rate > 500.0 and r_now > floor_r else 0.0)
+		if r_now <= floor_r:
+			dwell = 0.0
 		if (_below_t >= dwell or out_of_frame) and age_ok and (guard_ok or out_of_frame):
 			_set_split(true, "out of frame" if _below_t < dwell or _layout_age < CamParams.MIN_MERGED_AGE else "trigger")
 	else:
@@ -560,7 +585,7 @@ func _begin_solo_clear() -> void:
 	_slam_slot = -1
 
 
-func _begin_solo(kind: String, slot: int, prio: int, sl: float) -> void:
+func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = null) -> void:
 	if slot < 0 or slot > 1 or fold_active:
 		return
 	if solo_kind != "" and prio < solo_prio:
@@ -578,6 +603,15 @@ func _begin_solo(kind: String, slot: int, prio: int, sl: float) -> void:
 	e_hold = false
 	_slam_slot = -1
 	_launch_anchor_x = 0.5
+	_launch_anchor_y = 0.62
+	# A launch out of the one view takes the screen at once, from where the fighter is in that view: the same zoom, the
+	# same screen position, then it eases to the chase size and the trailing anchor. No ramp in which he can be lost.
+	if kind == "launch" and S != null and sep < 0.5:
+		var lf = S.fighters[slot]
+		_zo[slot] = _mz
+		solo_w = 1.0
+		_launch_anchor_x = clampf(0.5 + SimWrap.sdx(_mx, lf.x) * _mz / vw, 0.2, 0.8)
+		_launch_anchor_y = clampf(CamParams.PLANE_Y - (lf.y + CamParams.CHEST - _my) * _mz / vh, 0.2, 0.85)
 
 
 ## The shot's end: the layout the fighters need now, chosen at once (no dwell).
@@ -618,7 +652,7 @@ func _update_solo(S: SimState) -> void:
 					solo_phase = "follow"
 					solo_t = 0.0
 				elif solo_kind == "":
-					_begin_solo("launch", i, 2, 0.0)
+					_begin_solo("launch", i, 2, 0.0, S)
 	_launch_evt = [false, false]
 	for ai in range(2):
 		if _aim[ai] != null and S.fighters[ai].state != "launched":
@@ -734,18 +768,18 @@ func _snap_cameras(S: SimState) -> void:
 func _merged_target(S: SimState) -> Vector3:
 	if fold_active:
 		var fit: float = minf(vw, vh) / (CamParams.FOLD_FIT * maxf(_fold.z, 1.0))
-		return Vector3(_fold.x, _fold.y, clampf(fit, CamParams.ZOOM_MIN, CamParams.ZOOM_MAX))
+		return Vector3(_fold.x, _fold.y, clampf(fit, CamParams.ZOOM_MIN, _zcap()))
 	var A = S.fighters[0]
 	var B = S.fighters[1]
 	var d: float = SimWrap.sdx(A.x, B.x)
 	var mx: float = A.x + d * 0.5
 	var my: float = clampf((A.y + B.y) * 0.5 + 40.0, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
 	var ahead: float = minf(SimConst.HALF, absf(d) + maxf(0.0, _sep_rate) * CamParams.ZOOM_OUT_LOOKAHEAD)
-	var z: float = zoom_u(vw, vh, ahead, absf(A.y - B.y), maxf(A.tier, B.tier))
+	var z: float = zoom_u(vw, vh, ahead, absf(A.y - B.y), maxf(A.tier, B.tier), _m(), true)
 	var mult: float = maxf(_push_mult(0), _push_mult(1))
 	if solo_kind == "ko":
 		pass
-	return Vector3(SimWrap.wrap(mx), my, clampf(z * mult, CamParams.ZOOM_MIN, CamParams.ZOOM_MAX * (1.0 + CamParams.TIER_PUSH)))
+	return Vector3(SimWrap.wrap(mx), my, clampf(z * mult, CamParams.ZOOM_MIN, _zcap() * (1.0 + CamParams.TIER_PUSH)))
 
 
 func _snap_merged(S: SimState) -> void:
@@ -759,7 +793,8 @@ func _snap_merged(S: SimState) -> void:
 
 func _own_zoom_target(S: SimState, i: int) -> float:
 	var f = S.fighters[i]
-	var r: float = CamParams.R_PANE
+	var m: float = _m()
+	var r: float = CamParams.R_PANE * m
 	var tier_f: float = 1.0 - CamParams.REF_TIER * (f.tier - 1.0)
 	var alt_f: float = 1.0
 	var h: float = (f.y - WorldTerrain.groundY(S, f.x)) / CamParams.BODY_H
@@ -767,19 +802,21 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 	if solo_kind != "" and solo_slot == i:
 		match solo_kind:
 			"launch":
-				r = CamParams.R_LAUNCH
+				r = CamParams.R_LAUNCH * m
 				alt_f = 1.0
 			"transform":
-				r = CamParams.R_CINE
+				r = CamParams.R_CINE * m
 				alt_f = 1.0
 			"ko":
-				r = CamParams.R_KO
+				r = CamParams.R_KO * m
 				alt_f = 1.0
 	var z: float = r * vh / CamParams.BODY_H * tier_f * alt_f
 	z *= _push_mult(i) * _hit_mult(i)
 	if solo_kind == "launch" and solo_slot == i and solo_phase == "land":
 		z *= 1.0 + CamParams.LAND_PUSH * sin(PI * clampf(_land_t / 0.3, 0.0, 1.0))
-	var zmax: float = CamParams.ZOOM_MAX * (1.0 + CamParams.TIER_PUSH)
+	var zmax: float = _zcap() * (1.0 + CamParams.TIER_PUSH)
+	if solo_kind == "transform" or solo_kind == "ko":
+		zmax = maxf(zmax, CamParams.R_CLOSE * m * vh / CamParams.BODY_H)   # a close-up may go past the cap
 	# A fighter in depth (Fighter.z, positive toward the camera) draws at s = d / (d + w) of his plane size, d = K / zoom.
 	# The zoom that gives the apparent height the plane zoom z would have is 1 / (1/z - w / K); where that cannot be
 	# reached (the back row) the cap is used, the biggest he can be.
@@ -811,7 +848,9 @@ func _anchor(S: SimState, i: int) -> Vector2:
 		var f = S.fighters[i]
 		var want: float = CamParams.LAUNCH_TRAIL if f.vx >= 0.0 else 1.0 - CamParams.LAUNCH_TRAIL
 		_launch_anchor_x += (want - _launch_anchor_x) * (1.0 - exp(-DT / 0.25))
+		_launch_anchor_y += (0.62 - _launch_anchor_y) * (1.0 - exp(-DT / 0.25))
 		solo_pt.x = vw * _launch_anchor_x
+		solo_pt.y = vh * _launch_anchor_y
 	if e_slot >= 0:
 		if i == e_slot:
 			q = maxf(e, solo_w if solo_slot == i else 0.0)
@@ -887,7 +926,26 @@ func _update_cameras(S: SimState) -> void:
 		var vym: float = (f.y - _ppy[i]) / DT
 		_ppx[i] = f.x
 		_ppy[i] = f.y
+		var zc: float = maxf(_zo[i], 0.001)
 		if not freeze:
+			# The lag bound (camera-v2.md section 2). e is the fighter's offset from where the camera is aiming, in screen
+			# widths: ordinary up to LAG_SOFT, the filters speed up to 7x by LAG_HARD, the focus is held to LAG_HARD beyond
+			# it (a whip), and farther than LAG_CUT it jumps (a counted safety cut with a short fade).
+			var rx: float = SimWrap.sdx(_fx[i], f.x) * zc
+			var ry: float = (f.y + CamParams.CHEST - _fy[i]) * zc
+			var e_w: float = sqrt(rx * rx + ry * ry) / vw
+			if e_w > CamParams.LAG_SOFT:
+				var gain: float = 1.0 + CamParams.LAG_GAIN * (minf(e_w, CamParams.LAG_HARD) - CamParams.LAG_SOFT) / (CamParams.LAG_HARD - CamParams.LAG_SOFT)
+				if reduced_motion:
+					gain = minf(gain, 3.0)
+				tau_x /= gain
+				tau_y /= gain
+			if e_w > CamParams.LAG_CUT:
+				_fx[i] = f.x
+				_fy[i] = f.y + CamParams.CHEST
+				lag_cuts += 1
+				_cut_now = true
+				_cut_fade = CamParams.REDUCED_CUT_FADE if reduced_motion else CamParams.CUT_FADE
 			var kx: float = 1.0 - exp(-DT / tau_x)
 			var ky: float = 1.0 - exp(-DT / tau_y)
 			# The lead that makes the discrete filter track a constant speed exactly: DT (1 - k) / k, about tau - DT / 2.
@@ -900,6 +958,15 @@ func _update_cameras(S: SimState) -> void:
 				ty += clampf(CamParams.LEAD_FRAC * (_aim[i].y - f.y), -CamParams.LEAD_MAX_Y * vh / zz, CamParams.LEAD_MAX_Y * vh / zz)
 			_fx[i] = SimWrap.wrap(_fx[i] + SimWrap.sdx(_fx[i], tx) * kx)
 			_fy[i] += (ty - _fy[i]) * ky
+			if not reduced_motion:
+				var qx: float = SimWrap.sdx(_fx[i], f.x) * zc
+				var qy: float = (f.y + CamParams.CHEST - _fy[i]) * zc
+				var q_w: float = sqrt(qx * qx + qy * qy) / vw
+				if q_w > CamParams.LAG_HARD:
+					var back: float = (q_w - CamParams.LAG_HARD) / q_w   # hold him at the bound: move the focus the excess toward him
+					_fx[i] = SimWrap.wrap(_fx[i] + SimWrap.sdx(_fx[i], f.x) * back)
+					_fy[i] += (f.y + CamParams.CHEST - _fy[i]) * back
+					lag_whips += 1
 		# own zoom: first-order filter, then the rate cap
 		var zt: float = _own_zoom_target(S, i)
 		var tau_z: float = CamParams.TAU_Z
@@ -921,6 +988,11 @@ func _update_cameras(S: SimState) -> void:
 		_mz = mt.z
 	else:
 		var tau_m: float = CamParams.SLAM_TAU if stiff else CamParams.MERGED_TAU
+		var edge: float = 0.0
+		for fi in range(2):
+			edge = maxf(edge, absf(SimWrap.sdx(_mx, S.fighters[fi].x)) * _mz / vw)
+		if edge > 0.30:
+			tau_m /= 1.0 + CamParams.LAG_GAIN * (minf(edge, 0.46) - 0.30) / 0.16
 		var km: float = 1.0 - exp(-DT / tau_m)
 		var vmx: float = SimWrap.sdx(_pmx, mt.x) / DT
 		var vmy: float = (mt.y - _pmy) / DT
@@ -1017,6 +1089,7 @@ func _make_frame(S: SimState) -> SplitFrame:
 	f.flash = _flash
 	f.slam = _slam_done
 	f.shake = _shk.duplicate()
+	f.fade = clampf(_cut_fade / (CamParams.REDUCED_CUT_FADE if reduced_motion else CamParams.CUT_FADE), 0.0, 1.0) if _cut_fade > 0.0 else 0.0
 	_slam_done = false
 	# Which panes must be rendered.
 	var show0: bool = true
