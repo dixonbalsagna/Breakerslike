@@ -54,6 +54,12 @@ static var K_CAPTURNS: Array = [1.5, 3.0, 3.0, 3.0]
 static var K_BODYR: float = 60.0
 static var K_WPS: float = 0.0126
 static var K_WTOUCH: float = 0.3
+static var K_WCAP: float = 1.0           # the most wear a journey pays, as a share of the single-impact budget
+static var K_AREA_LATER: float = 0.5     # a later contact pays this share of the area damage of the speed it removes
+static var K_AREA_SLAM: float = 1.0      # the first contact pays this share of the impact's area damage when it is a slam ...
+static var K_AREA_TOUCH: float = 0.5     # ... and this share when it is anything else (the old slide's touch-down)
+static var K_AIRDRAG: float = 0.55      # the horizontal drag base per second after a journey's first contact (0.55 is the launch's own flight)
+static var K_GMUL: float = 1.0           # gravity after a journey's first contact, times 1000
 static var K_RUBBLE_MIN: float = 8.0
 static var K_PAVE_DUG: float = -3.0
 static var K_BRAKE: Dictionary = {}
@@ -172,6 +178,12 @@ static func _cache() -> void:
 	K_BODYR = float(D.spin.bodyR)
 	K_WPS = float(D.wear.perSpeed)
 	K_WTOUCH = float(D.wear.touch)
+	K_WCAP = float(D.wear.get("cap", 1.0))
+	K_AREA_LATER = float(D.get("area", {}).get("laterShare", 0.5))
+	K_AREA_SLAM = float(D.get("area", {}).get("slam", 1.0))
+	K_AREA_TOUCH = float(D.get("area", {}).get("touch", 0.5))
+	K_GMUL = float(D.bounce.get("gravityMul", 1.0))
+	K_AIRDRAG = float(D.bounce.get("airDrag", 0.55))
 	K_RUBBLE_MIN = float(D.get("rubbleMin", 8.0))
 	K_PAVE_DUG = float(D.paving.dugBelow)
 	K_BRAKE = {}
@@ -258,8 +270,9 @@ static func moveAir(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	b.age += dt
 	if b.contacts > 0:
 		b.t += 1
-	b.vy -= 1000.0 * dt
-	b.vx *= SimDetMath.pow(0.55, dt)
+	var grav: float = 1000.0 * dt * (K_GMUL if b.contacts > 0 else 1.0)
+	b.vy -= grav
+	b.vx *= SimDetMath.pow(K_AIRDRAG if b.contacts > 0 else 0.55, dt)
 	b.x = SimWrap.wrap(b.x + b.vx * dt)
 	b.y += b.vy * dt
 	spinStep(b, dt)
@@ -283,7 +296,7 @@ static func moveAir(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	if not inW and b.wet and b.y > wsurf:
 		b.wet = false
 	if inW:
-		b.vy += 1000.0 * dt
+		b.vy += grav   # water holds him up: it cancels the gravity of this tick, whatever it is
 		b.vx *= SimDetMath.pow(0.05, dt)
 		b.vy *= SimDetMath.pow(0.1, dt)
 		if SimDetMath.hypot(b.vx, b.vy) < K_SINK and b.age > 0.3:
@@ -340,8 +353,10 @@ static func _land(S: SimState, b: Body, g: float, ev: Array) -> void:
 		b.done = true
 		b.end = "stop"
 		return
-	var slam: bool = sea or sin2 >= K_SLAM2
 	var wasHopped: bool = b.hopped
+	# a steep landing is a slam at the first contact, and the landing after a hard slam's hop; a later steep landing after a bounce or a
+	# lip launch is a bounce or a skid by the usual rules (a journey makes one mark)
+	var slam: bool = sea or (sin2 >= K_SLAM2 and (first or wasHopped))
 	var forceTumble: bool = b.contacts >= K_MAXC or b.t >= K_MAXT
 	if slam:
 		var hop: bool = (not sea) and sp >= K_HOPSPEED and not b.hopped
@@ -647,8 +662,18 @@ static func _skidEffects(S: SimState, f, by, b: Body, xa: float) -> void:
 		SimFx.debris(S, f.x, f.y + 4.0, 3 if pav else 2, "#8f8b84" if pav else "#6d6a66", 500.0, f.z)
 		WorldStructures.damageArea(S, f.x, f.y + 5.0, hw * 2.0, (0.22 + 0.12 * by.tier) * WorldSlide.PATH_AREA * b.vN, by, false, f.slideEvt)
 		if f.slideAcc > 0.0:
-			SimDamage.hurt(S, f, f.slideAcc, by)
+			_pay(S, f, by, f.slideAcc)
 			f.slideAcc = 0.0
+
+
+## Wear is paid through here: a journey takes at most K_WCAP of its single-impact budget (the first contact's speed times 0.018) in all.
+static func _pay(S: SimState, f, by, amount: float) -> void:
+	if amount <= 0.0:
+		return
+	var a: float = minf(amount, maxf(f.jV0 * 0.018 * K_WCAP - f.slideDmg, 0.0))
+	if a > 0.0:
+		f.slideDmg += a
+		SimDamage.hurt(S, f, a, by)
 
 
 static func _launchN(f) -> int:
@@ -692,7 +717,7 @@ static func _apply(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 	elif k == "wall":
 		var E: float = f.slideE
 		WorldCrater.dig(S, f.x, E * WorldSlide.STOP_E, by, "impact", 0.0, 1.0)
-		SimDamage.hurt(S, f, absf(f.vx) / f.launchT * WorldSlide.STOP_DMG, by)
+		_pay(S, f, by, absf(f.vx) / f.launchT * WorldSlide.STOP_DMG)
 		SimFx.shake(S, 10.0, f.x, f.z)
 
 
@@ -712,8 +737,19 @@ static func _contact(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 		f.slideD = 0.0
 		f.slideAcc = 0.0
 		f.slideEvt = 0.0
+		f.slideDmg = 0.0   # the wear this journey has paid (SimFighter.slideDmg is the old slide's and unused here)
 	var r: float = (28.0 + sp * 0.05 + tier * 12.0) * WS
-	var touch: float = 1.0 if k == "slam" else WorldSlide.TOUCH_AREA
+	var cArea: float = 0.22 + 0.12 * tier
+	var area: float = 0.0
+	if first:
+		area = sp * cArea * (K_AREA_SLAM if k == "slam" else K_AREA_TOUCH)
+	elif not f.hopped:   # after a hard slam's hop the slam has paid the whole budget; otherwise a later contact pays by the speed it removes
+		var removed: float = sp
+		if k == "bounce":
+			removed = sp * (1.0 - float(e.get("keep", 0.0)))
+		elif k == "skid" or k == "tumble":
+			removed = maxf(0.0, sp - b.vN)
+		area = K_AREA_LATER * cArea * removed
 	if k == "slam":
 		var vert: float = absf(f.vy) / maxf(SimDetMath.hypot(f.vx, f.vy), 0.000001)
 		if bool(e.get("dig", true)):
@@ -724,17 +760,18 @@ static func _contact(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 		SimFx.debris(S, f.x, f.y + 8.0, 12 if k == "slam" else 6, "#6d6a66", 500.0, f.z)
 		SimFx.dust(S, f.x, f.y, 4 if k == "slam" else 2, "", f.z)
 	SimFx.ring(S, f.x, f.y + 10.0, 700.0 + sp * 0.2, "#ffffff", 0.45, 10.0, f.z)
-	WorldStructures.damageArea(S, f.x, f.y + 5.0, r * 1.7, sp * (0.22 + 0.12 * tier) * touch, by)
+	if area > 0.0:
+		WorldStructures.damageArea(S, f.x, f.y + 5.0, r * 1.7, area, by)
 	SimFx.shake(S, SimMathx.jmin(30.0, sp * 0.01), f.x, f.z)
 	S.dirS.stop = SimMathx.jmax(S.dirS.stop, 0.06)
 	# wear: one impact in all. A slam pays all of it; a first touch-down pays its share; each later contact pays by the speed it removes
 	var j: float = f.jV0 * 0.018
 	if k == "slam":
-		SimDamage.hurt(S, f, sp * 0.018, by)
+		_pay(S, f, by, sp * 0.018)
 	elif first:
-		SimDamage.hurt(S, f, j * K_WTOUCH, by)
+		_pay(S, f, by, j * K_WTOUCH)
 	elif k == "bounce":
-		SimDamage.hurt(S, f, K_WPS * maxf(0.0, sp * (1.0 - float(e.get("keep", 1.0)))), by)
+		_pay(S, f, by, K_WPS * maxf(0.0, sp * (1.0 - float(e.get("keep", 1.0)))))
 	if k == "skid" or k == "tumble":
 		# the speed the landing removes (the normal part and the slope's share) is paid like any speed lost: with the skid's own braking a
 		# journey that halts pays the whole single-impact budget (first touch 30%, the rest by speed removed)
@@ -770,7 +807,7 @@ static func _finish(S: SimState, f, by, b: Body) -> void:
 		var hw: float = WorldSlide.HW0 + WorldSlide.HW_E * sqrt(E)
 		WorldCrater.berm(S, f.x, f.vx if f.vx != 0.0 else 1.0, hw, minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * f.jV0 * 0.25) * WorldSlide.BERM)
 	if f.slideAcc > 0.0:
-		SimDamage.hurt(S, f, f.slideAcc, by)
+		_pay(S, f, by, f.slideAcc)
 		f.slideAcc = 0.0
 	var slid: bool = f.slideEvt != 0.0
 	if slid:

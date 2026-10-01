@@ -330,6 +330,7 @@ static func arm(S: SimState, f, att, plan: Dictionary) -> void:
 	f.tumbleT = -1
 	f.contactT = 0
 	f.jLips = 0
+	f.slideDmg = 0.0
 	f.launchN += 1
 	var slot: float = float(S.fighters.find(f))
 	for i in range(S.out.fx.size() - 1, -1, -1):
