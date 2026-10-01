@@ -67,7 +67,7 @@ function hasEvent(A, pattern) {
 
 const SCALES = {
   testbed: { len: { mean: [40, 70], p90: 100 }, tier3: 0.70, tier4: 0.25, civ: [25, 50], worst: 65, civ90: 0.07, bleed: 40, structRow1: [20, 40] },
-  game: { len: { median: [360, 480], p10: 300, p90: 600 }, tier3: 0.70, tier4: 0.60, civ: [25, 50], worst: 85, civ90: 0.10, bleed: 4, structRow1: [40, 75] },
+  game: { len: { median: [360, 480], p10: 300, p90: 600 }, tier3: 0.70, tier4: 0.60, civ: [12, 30], worst: 55, civ90: 0.10, bleed: 4, structRow1: [25, 50] },
 };
 
 function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the match cap in sim seconds
@@ -128,7 +128,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     const rowKeys = new Set(D.flatMap(r => Object.keys(r.rows || {})));
     if (rowKeys.size > 1) {
       const all = D.map(r => sum(Object.values(r.rows).map(x => x.lost)) / sum(Object.values(r.rows).map(x => x.n)));
-      R.info('4.struct.all', '§4', 'Structures lost, all rows (watch metric, not a gate)', (mean(all) * 100).toFixed(1) + '%', `rows ${[...rowKeys].sort().join(', ')}`);
+      R.info('4.struct.all', '§4', 'Structures lost, all rows (watch metric, not a gate; §21 band 15 to 40%)', (mean(all) * 100).toFixed(1) + '%', `rows ${[...rowKeys].sort().join(', ')}`);
       for (const k of [...rowKeys].sort()) R.info(`4.struct.row${k}`, '§4', `Structures lost, row ${k}`, (mean(D.map(r => (r.rows[k] ? r.rows[k].lost / r.rows[k].n : NaN)).filter(Number.isFinite)) * 100).toFixed(1) + '%');
     } else R.pending('4.struct.rows', '§4', 'Structures lost split by row, all-rows watch metric', 'the sim has one row of buildings (docs/world/buildings-in-depth.md); the split appears once buildings carry a row');
     R.pending('4.cyborg', '§4', 'Civilians left at 4:00: at least 25% alive in at least 80% of matches', 'game scale: needs 7-minute matches (Wounds S2)');
@@ -213,7 +213,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
         const classes = ['slide', 'bounce', 'slam', 'caught', 'water', 'brunt'], share = k => sum(D.map(k === 'slide' ? slideC : k === 'slam' ? slamC : r => r.landings[k])) / Math.max(1, sum(D.map(L)));
         R.add({ id: '5c.largest', ref: '§5c', what: 'Slide is still the largest class (balance-targets 20)', status: classes.every(k => k === 'slide' || share(k) < share('slide')) ? 'PASS' : 'FAIL', value: classes.map(k => `${k} ${fmt.pct(share(k))}`).join(', '), band: 'slide largest', note: '' });
       }
-      mixOf('water (skim or splash first; 5 to 15%)', r => r.landings.water, 0.05, 0.15, L);
+      mixOf('water (skim or splash first; 2 to 10%, re-based at §21)', r => r.landings.water, 0.02, 0.10, L);
       mixOf('brunt (a building first; 4 to 10%)', r => r.landings.brunt, 0.04, 0.10, L);
       R.info('5c.other', '§5c', 'Planner launches with no contact and not caught (KO, the cap, launched again first), share of launches', fmt.pct(sum(D.map(r => r.landings.other)) / Math.max(1, sum(D.map(L)))), 'a class of its own so the classes add up to 100%');
       R.info('5c.stop', '§5c', 'Planner launches that landed at a stop (a contact under 350, no skid or tumble), share of launches', fmt.pct(sum(D.map(r => r.landings.stop || 0)) / Math.max(1, sum(D.map(L)))), 'a class of its own; not banded');
@@ -237,6 +237,14 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     R.pending('5c.budget', '§5c', 'Casualties from one slide at most 2% (tier 2 or below), 5% (tier 3), 10% (tier 4); 0 in open country; the planner declines launches over budget (hard tests)', 'needs casualties attributed per slide (a slide event with the population lost, or the predicted slide of the planner) and the predicted-vs-actual landing test from Encounter');
   } else if (D) R.pending('5c.slides', '§5c', 'Knockback slide bands', 'no slide events in this sim (World SC slide)');
 
+  // Game Design's pitch measures (balance-targets 21): heavy blows that landed and heavy clashes won, per minute of match, both fighters pooled and per arm
+  if (D && D.every(r => r.heavyLanded)) {
+    for (const a of arms.filter(x => !x.endsWith('-flip'))) {
+      const recs = A[a], min = sum(recs.map(r => r.koAt)) / 60;
+      R.info(`10.heavy.${a}`, '§10', `Heavies landed and heavy clashes won per minute of match, both fighters (${a}; Game Design's estimates about 6 and 1.5)`, `${(sum(recs.map(r => r.heavyLanded[0] + r.heavyLanded[1])) / min).toFixed(2)} and ${(sum(recs.map(r => r.heavyClashWins[0] + r.heavyClashWins[1])) / min).toFixed(2)}`, `per fighter ${recs[0].names[0]}/${recs[0].names[1]}: ${(sum(recs.map(r => r.heavyLanded[0])) / min).toFixed(2)}/${(sum(recs.map(r => r.heavyLanded[1])) / min).toFixed(2)} landed; ${(sum(recs.map(r => r.heavyClashWins[0])) / min).toFixed(2)}/${(sum(recs.map(r => r.heavyClashWins[1])) / min).toFixed(2)} clash wins (slot order)`);
+    }
+  }
+
   // ---- 6. location and signature variety
   for (const a of arms.filter(x => !x.endsWith('-flip'))) {
     const secs = {}; for (const r of A[a]) for (const [b, v] of Object.entries(r.fightSec)) secs[b] = (secs[b] || 0) + v;
@@ -252,8 +260,8 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     const top = Object.entries(vars).sort((x, y) => y[1] - x[1])[0] || ['none', 0];
     R.point('6.variant.cap', '§6', `No beam variant above 40% of beams: largest is ${top[0]}`, { v: top[1] / nb, hi: 0.40, unit: 'pct' });
     const allVariants = ['HORIZON CLEAVE', 'BOULEVARD RAZE', 'FIRESTORM', 'RIDGE BORE', 'GLASS TRENCH', 'MERIDIAN SCAR'];
-    const missing = allVariants.filter(v => (vars[v] || 0) / nb < 0.03);
-    R.add({ id: '6.variant.floor', ref: '§6', what: 'Every beam variant at least 3% of beams (one planet)', status: missing.length ? 'FAIL' : 'PASS', value: allVariants.map(v => `${v} ${(((vars[v] || 0) / nb) * 100).toFixed(1)}%`).join(', '), band: 'at least 3.0% each', note: missing.length ? 'below the floor: ' + missing.join(', ') + '. The bands are meant to hold over 20 seeded planets; QA has one planet' : '' });
+    const floorOf = v => (v === 'MERIDIAN SCAR' ? 0.02 : 0.03), missing = allVariants.filter(v => (vars[v] || 0) / nb < floorOf(v));
+    R.add({ id: '6.variant.floor', ref: '§6', what: 'Every beam variant at least 3% of beams (one planet; MERIDIAN SCAR at least 2%, §21)', status: missing.length ? 'FAIL' : 'PASS', value: allVariants.map(v => `${v} ${(((vars[v] || 0) / nb) * 100).toFixed(1)}%`).join(', '), band: 'at least 3.0% each (SCAR 2.0%)', note: missing.length ? 'below the floor: ' + missing.join(', ') + '. The bands are meant to hold over 20 seeded planets; QA has one planet' : '' });
     R.pending('6.planets', '§6', 'Location and variant bands over a fixed set of at least 20 seeded planets', 'the sim has one planet (W1: variable circumference / procedural planets)');
   }
 
