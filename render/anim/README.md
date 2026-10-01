@@ -9,6 +9,7 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `anim_rig.gd` | Rig R1: 27 bones and a faceted rigid-skinned body built from a palette |
 | `anim_pose.gd` | A baked pose, the sketch-to-pose bake (FK, two-bone IK), mirroring and the blend helpers |
 | `anim_data.gd` | Loads and bakes `data/anim/*.json` |
+| `anim_ragdoll.gd` | The active ragdoll: 12 spring degrees of freedom stepped once per sim tick (data/anim/ragdoll.json) |
 | `anim_fighter.gd` | One fighter's solver: base pose, cue, approach and strike parts, beam, reactions, springs |
 | `render_anim.gd` | The hub: one solver per fighter, per-tick events in, one solve a frame |
 | `anim_body.gd` | The skinned figure with Rendering's baked body and outline pass (`RenderMats.fighter_body`, `OutlineBake`) |
@@ -19,6 +20,7 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/anim_check.gd` | The checks: hash off, mixed, snappy and fluid, contact-frame accuracy, the contact solve reaching the defender, no NaN, no writes to the sim |
 | `tools/face_scan.gd` | Facing and pass-through scan over seeded matches (`--anim` reads the visual facing) |
 | `tools/pop_scan.gd` | Join scan: bones turning more than a limit in one tick, by what was playing (the evidence for inertialisation) |
+| `tools/ragdoll_lab.gd` | A close fixed view of one fighter in a real match for judging launches, skids and hits; `--noragdoll` for the before |
 | `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 
 ```

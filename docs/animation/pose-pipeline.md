@@ -1029,6 +1029,28 @@ The hanging arm and the favoured leg are chosen by a hash of the fighter's slot 
 
 **Set pieces, planned not built:** `docs/animation/set-pieces-plan.md` (the crater-landing entrance, the staredown, the winner in the wreckage: 6 new poses, about 0.5 reviewer-hour, and the events each waits for).
 
+### 9.8 The overhaul, units A to C (2026-10-01): the active ragdoll, blow-driven reactions, polish
+
+Plan and the wishes for World and Simulation: `docs/animation/overhaul-plan.md`. Four new poses: skid.back, skid.front, skip.water, getup.push (`art/animation/records/A2-poses.md`).
+
+**A. The active ragdoll** (`render/anim/anim_ragdoll.gd`, `data/anim/ragdoll.json`). Twelve degrees of freedom (head, spine, each upper arm in two axes, each forearm, each thigh and shin) on springs around the solved pose. Stepped once per sim tick in `AnimFighter._rd_tick` from the fighter's own state (the sim's velocity, the acceleration from its change, `rot`, `spin`, `slide`, `state`), in the body frame (rotated by `rot`, mirrored by the visual facing), so the picture is the same at any frame rate. What it does:
+| Move | Source | Effect |
+| :--- | :--- | :--- |
+| Flop and trail | launched | limbs stream opposite the velocity (drag) and whip with acceleration (inertia); the looseness ramps to 85% in about 0.05 s |
+| Tuck | spin above 4 rad/s (the sim's launches spin at 8 to 16) | the body tucks, breathing between a ball and open limbs with the spin angle (up to 70%) |
+| Brace | descending, the ground within 0.3 s (from the predicted contact time) | arms up and forward, chin down, knees soft; not for a building hit |
+| Crumple | flight to down, or flight to skid | an impulse folds the spine, snaps the head, flings the limbs, scaled by the speed it came in at |
+| Skid | the slide: on the back if he moves away from the way he faces, face down otherwise | skid.back / skid.front, the near arm trailing and dragging, the ragdoll loose at 55% |
+| Water skip | the `skim` event (no actor: matched to the launched fighter at that x) | an arch (skip.water, 0.35 s) and a kick |
+| Ground events | `left_ground`, `bounce`, `land`, `tumble_end` (World's plan, a stub in the planned shape until they exist) | a bounce whips by the normal speed, a slam folds, a skid whips, the end of a tumble lets go |
+Determinism: one step per tick, no random draw; `anim_check` runs the same match at one and at two ticks a frame and requires the same ragdoll state (it does). Reduced motion (`RenderAnim.reduced_motion`) scales the drive, the targets and the impulses to 35% and turns the catch smear off (tested: 10.9 against 17.1). `--noragdoll` switches every overhaul layer off for A/B. Cost: 7 to 12 us a tick a fighter (most ticks a standing fighter returns at once), 12 quaternion writes a solve while active.
+
+**B. Hit reactions from the blow** (`AnimFighter.on_hit`). The direction is the blow's push in the body frame (attacker to victim, mirrored by the facing), the force the damage over 60. Head snap (toward the push, with an uppercut lifting it), a torso fold from the front for a gut blow and an arch for a head blow, arms and legs thrown by the push with an asymmetry, a root push that decays in 0.07 s plus a vertical lift for an uppercut, and a stagger sway for a heavy blow. All scaled by wear and the brink (a worn fighter reacts about 1.9 times as much: 42.7 against 22.5) and by a deterministic per-hit variant (a hash of the tick, the slot and the hit count): two identical hits in a row differ, the same hit at the same tick is the same. The flinch pose stays at 55% so the silhouette holds. Guarded blows are 40%. `anim_check` tests direction, force scaling (0.3 to 1.2 gives 8 to 27), wear, variant, replay equality and reduced motion.
+
+**C. Polish.** (1) The get-up is three stages (prone, the push-up, the kneel) and, when worn or on the brink, the rise out of the kneel takes up to 0.8 s after the sim says he is free (a slow get-up). (2) The lean into acceleration while free (a start leans forward, a stop back: up to 20 degrees), and a hover bob in the air. (3) The contact catch: a striker carried more than 160 u in one tick and more than 1.5 times the last tick's jump is drawn up to 24 u behind the anchor and caught up in 3 ticks; the contact solve reaches that far, so the contact tick stays exact. Today's sim has no such jump in the seeds (the rush is a smooth run of 120 to 850 u ticks), so it is built and unit-tested but unseen in play until Encounter's contact slice lands.
+
+**Cost, on the exported HEAD plus these files.** Native: 7 to 12 us a tick a fighter for the ragdoll, solve 50 to 56 us each (A2 end: 41 to 51). The web bench is in the report.
+
 ---
 
 ## 10. How we will know it works

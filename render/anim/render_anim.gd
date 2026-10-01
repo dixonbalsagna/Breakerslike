@@ -4,6 +4,7 @@ extends RefCounted
 ## per-tick fx events and solved once a frame however many panes draw it. FighterView asks for its pose here. Render only:
 ## it reads S and the events, never writes them.
 ##   --noanim              keep the placeholder box figures (A/B runs, tools)
+##   --noragdoll           switch the active ragdoll and the overhaul layers off (A/B runs)
 ##   --anim-style=NAME     a timing profile from data/anim/profiles.json (snappy or fluid)
 ## Tools set `enabled` and `style_override` directly.
 
@@ -17,6 +18,10 @@ static var _last_tick: int = -1
 ## Cost counters for tools: microseconds spent in AnimFighter.solve, and how many solves.
 ## Tools set this to scan every bone for NaN each solve (the game checks two).
 static var debug_checks: bool = false
+## The active ragdoll (docs/animation/overhaul-plan.md): tools turn it off for the A/B; the host sets reduced_motion from the
+## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
+static var ragdoll_enabled: bool = true
+static var reduced_motion: bool = false
 static var solve_usec: int = 0
 static var solve_count: int = 0
 
@@ -28,6 +33,8 @@ static func _read_args() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a == "--noanim":
 			enabled = false
+		elif a == "--noragdoll":
+			ragdoll_enabled = false
 		elif a.begins_with("--anim-style="):
 			_style_arg = a.substr(13)
 
@@ -102,7 +109,17 @@ static func consume(S: SimState, events: Array) -> void:
 		match e.type:
 			"tick":
 				for f in S.fighters:
-					fighter(S, f).on_tick(float(e.dt), bool(e.frozen))
+					fighter(S, f).on_tick(float(e.dt), bool(e.frozen), S, f)
+			"skim":
+				# a launched fighter skipped off water: the event carries no actor, so it is the launched one at that x
+				for f in S.fighters:
+					if f.state == "launched" and absf(SimWrap.sdx(f.x, float(e.x))) < 120.0:
+						fighter(S, f).on_skim(S.T, float(e.spd))
+			"left_ground", "bounce", "land", "tumble_end":
+				# World's ground-contact events (docs/world/ground-contact.md section 4); none exist until its G3 lands
+				var ga: int = int(e.get("actor", -1))
+				if ga >= 0 and ga < S.fighters.size():
+					fighter(S, S.fighters[ga]).on_ground_event(String(e.type), e, S.T)
 			"transform":
 				var who2: int = int(e.actor)
 				if who2 >= 0 and who2 < S.fighters.size():
@@ -120,7 +137,13 @@ static func consume(S: SimState, events: Array) -> void:
 					var front: bool = true
 					if a >= 0 and a < S.fighters.size():
 						front = SimWrap.sdx(vf.x, S.fighters[a].x) * fighter(S, vf).vface > 0.0
-					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0, String(e.kind))
+					var dm := Vector2.ZERO
+					if a >= 0 and a < S.fighters.size():
+						var atk = S.fighters[a]
+						var dw := Vector2(SimWrap.sdx(atk.x, vf.x), vf.y - atk.y)
+						if dw.length() > 1.0:
+							dm = Vector2(dw.x * fighter(S, vf).vface, dw.y).normalized()
+					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0, String(e.kind), dm, float(e.amount) / 60.0, S.tick)
 
 
 ## Which frame a solve belongs to: the engine frame and the sim tick (tools step several ticks in one engine frame).

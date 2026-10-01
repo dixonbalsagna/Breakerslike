@@ -200,6 +200,109 @@ func _test_wounds() -> void:
 	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, chest range worn %.3f fresh %.3f" % [hanging, calm, afa.debug["wound_bad"], hi_w - lo_w, hi_f - lo_f])
 
 
+## The active ragdoll (overhaul unit A): the same match at one tick a frame and at two ticks a frame ends with the same ragdoll state
+## (it is stepped per sim tick, never per frame); reduced motion shrinks the motion; the overhaul can be switched off; the ground
+## events of World's plan (a stub shaped like docs/world/ground-contact.md) move the body. The gameplay hash is compared in the main loop.
+func _rd_run(per_frame: int, until: int, reduced: bool, enabled: bool = true) -> Dictionary:
+	RenderAnim.enabled = true
+	RenderAnim.ragdoll_enabled = enabled
+	RenderAnim.reduced_motion = reduced
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	var maxe := 0.0
+	var active := 0
+	while main.host.ticks < until:
+		main.frame(DT * per_frame)
+		for f in S.fighters:
+			var rd: AnimRagdoll = RenderAnim.fighter(S, f)._rd
+			maxe = maxf(maxe, rd.energy())
+			if rd.out_w > 0.5:
+				active += 1
+	var th: Array = []
+	for f in S.fighters:
+		var rd2: AnimRagdoll = RenderAnim.fighter(S, f)._rd
+		for i in range(AnimRagdoll.N):
+			th.append(snappedf(rd2.th[i], 0.0001))
+		th.append(snappedf(rd2.out_w, 0.0001))
+	RenderAnim.reduced_motion = false
+	return {"th": th, "maxe": maxe, "active": active, "ticks": main.host.ticks}
+
+
+func _test_ragdoll() -> void:
+	var a: Dictionary = _rd_run(1, 1200, false)
+	var b: Dictionary = _rd_run(2, 1200, false)
+	_expect(a.ticks == b.ticks, "ragdoll test: the runs ended on different ticks (%d, %d)" % [a.ticks, b.ticks])
+	_expect(a.th == b.th, "ragdoll test: the ragdoll differs between one tick a frame and two (%s against %s)" % [str(a.th.slice(0, 6)), str(b.th.slice(0, 6))])
+	_expect(a.active > 20, "ragdoll test: the ragdoll was never active (%d frames)" % a.active)
+	var r: Dictionary = _rd_run(1, 1200, true)
+	_expect(r.maxe < a.maxe * 0.7, "ragdoll test: reduced motion moves %.2f against %.2f" % [r.maxe, a.maxe])
+	var off: Dictionary = _rd_run(1, 600, false, false)
+	_expect(off.maxe == 0.0, "ragdoll test: the switch left the ragdoll moving (%.3f)" % off.maxe)
+	RenderAnim.ragdoll_enabled = true
+	# World's ground events, a stub in the planned shape
+	var S: SimState = main.host.S
+	var af := AnimFighter.new(0)
+	af.on_ground_event("bounce", {"actor": 0, "k": 1, "vn": -2400.0, "vt": 900.0, "keep": 0.5, "surface": "soil"}, 1.0)
+	var e1: float = af._rd.energy() + af._rd.om[0] * 0.0
+	var w1 := 0.0
+	for i in range(AnimRagdoll.N):
+		w1 += absf(af._rd.om[i])
+	af.on_ground_event("land", {"actor": 0, "kind": "slam", "sin_a": 0.96, "surface": "soil"}, 1.1)
+	var w2 := 0.0
+	for i in range(AnimRagdoll.N):
+		w2 += absf(af._rd.om[i])
+	_expect(w1 > 1.0 and w2 > w1, "ragdoll test: the ground events did not move the body (%.2f, %.2f)" % [w1, w2])
+	var sk := AnimFighter.new(0)
+	sk.on_skim(2.0, 3000.0)
+	_expect(sk._skim_t0 == 2.0 and absf(sk._rd.om[1]) > 1.0, "ragdoll test: a water skim did not start the arch")
+	print("ragdoll test: same state at one and two ticks a frame, %d active frames, reduced %.2f of %.2f, ground-event stub %.1f then %.1f rad/s" % [a.active, r.maxe, a.maxe, w1, w2])
+
+
+## Hit reactions computed from the blow (overhaul unit B): the direction decides which way the head snaps, the force and the
+## victim's wear scale it, two hits in a row differ, the same hit at the same tick is the same (a replay), reduced motion shrinks it.
+func _hit(af: AnimFighter, d: Vector2, force: float, tick: int, region: String = "head") -> Array:
+	af._rd.reset()
+	af.on_hit(1.0, region, d.x < 0.0, 0.5, "", d, force, tick)
+	return [af._rd.om[0], af._rd.om[1], af._rd.om[2], af._rd.om[5]]
+
+
+func _test_hits() -> void:
+	RenderAnim.ragdoll_enabled = true
+	RenderAnim.reduced_motion = false
+	var af := AnimFighter.new(0)
+	var front: Array = _hit(af, Vector2(-1, 0), 0.8, 100)
+	var back: Array = _hit(af, Vector2(1, 0), 0.8, 100)
+	_expect(front[0] > 1.0 and back[0] < -1.0, "hit test: the head snaps %.2f from the front and %.2f from behind" % [front[0], back[0]])
+	var gut: Array = _hit(af, Vector2(-1, 0), 0.8, 100, "core")
+	_expect(gut[1] < -1.0, "hit test: a blow to the gut from the front should fold the spine forward (%.2f)" % gut[1])
+	var small: Array = _hit(af, Vector2(-1, 0), 0.3, 100)
+	var big: Array = _hit(af, Vector2(-1, 0), 1.2, 100)
+	_expect(absf(big[0]) > absf(small[0]) * 2.5, "hit test: force 1.2 gives %.2f, force 0.3 gives %.2f" % [big[0], small[0]])
+	af._worn = 0.9
+	var worn: Array = _hit(af, Vector2(-1, 0), 0.8, 100)
+	af._worn = 0.0
+	var fresh: Array = _hit(af, Vector2(-1, 0), 0.8, 100)
+	_expect(absf(worn[0]) > absf(fresh[0]) * 1.3, "hit test: a worn fighter's head snaps %.2f against %.2f fresh" % [worn[0], fresh[0]])
+	var first: Array = _hit(af, Vector2(-1, 0), 0.8, 200)
+	var second: Array = _hit(af, Vector2(-1, 0), 0.8, 200)
+	_expect(first != second, "hit test: two identical hits in a row came out identical")
+	var a1 := AnimFighter.new(1)
+	var a2 := AnimFighter.new(1)
+	var r1: Array = _hit(a1, Vector2(-1, 0), 0.8, 300)
+	var r2: Array = _hit(a2, Vector2(-1, 0), 0.8, 300)
+	_expect(r1 == r2, "hit test: the same hit at the same tick differs between two bodies (a replay would differ)")
+	RenderAnim.reduced_motion = true
+	var red: Array = _hit(AnimFighter.new(1), Vector2(-1, 0), 0.8, 300)
+	RenderAnim.reduced_motion = false
+	_expect(absf(red[0]) < absf(r1[0]) * 0.5, "hit test: reduced motion head snap %.2f against %.2f" % [red[0], r1[0]])
+	# the contact catch's smear: the body lags the anchor and catches up in 3 ticks; the contact solve reaches that far
+	var cs := AnimFighter.new(0)
+	cs._smear = -20.0
+	cs._smear_t0 = 1.0
+	_expect(cs._smear_now(1.0) == -20.0 and cs._smear_now(1.025) < -2.0 and cs._smear_now(1.025) > -18.0 and cs._smear_now(1.06) == 0.0, "hit test: the catch smear does not ease out")
+	print("hit test: head snap front %.1f behind %.1f, force 0.3 gives %.1f and 1.2 gives %.1f, worn %.1f fresh %.1f, two in a row %.1f then %.1f" % [front[0], back[0], small[0], big[0], worn[0], fresh[0], first[0], second[0]])
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -233,6 +336,9 @@ func _run() -> void:
 			var gl: Array = []
 			var far := 0
 			var blows := 0
+			var rdt := 0
+			var rdu := 0
+			var catches := 0
 			var vars: Dictionary = {}
 			var late := 0
 			for id in RenderAnim._fighters:
@@ -247,6 +353,9 @@ func _run() -> void:
 				gn += int(d.gap_n)
 				flips += int(d.face_flips)
 				blows += int(d.blows)
+				rdt += int(d.rd_ticks)
+				rdu += int(d.rd_usec)
+				catches += int(d.catches)
 				for vk in d.variants:
 					vars[vk] = int(vars.get(vk, 0)) + int(d.variants[vk])
 				late += int(d.late)
@@ -270,10 +379,13 @@ func _run() -> void:
 			_expect(gworst < 1.0, "seed %d %s: a blow within reach ends %.2f units short of the defender" % [seed, mode, gworst])
 			print("  contact solve: %d IK frames, %d contacts within reach (worst gap %.2f units), %d beyond reach (the sim put the fighters farther apart than the arm, lunge and step-in reach), %d facing flips" % [ikf, gl.size(), gworst, far, flips])
 			print("  base variants played: %s" % [vars])
+			print("  ragdoll step: %.1f us a tick a fighter (%d ticks), %d contact catches smeared" % [float(rdu) / maxf(1.0, rdt), rdt, catches])
 			print("  blows: %d, announced under 4 ticks ahead (no wind-up possible): %d" % [blows, late])
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])
 		_expect(hashes["off"] == hashes["snappy"] and hashes["off"] == hashes["fluid"] and hashes["off"] == hashes["mix"], "seed %d: the gameplay hash differs with the mannequin (off %s, mix %s, snappy %s, fluid %s)" % [seed, hashes["off"], hashes["mix"], hashes["snappy"], hashes["fluid"]])
 	await _test_wounds()
+	await _test_ragdoll()
+	_test_hits()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	RenderAnim.debug_checks = false

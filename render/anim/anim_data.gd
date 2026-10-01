@@ -17,6 +17,7 @@ static var by_part: Dictionary = {}          # part kind (light, heavy, chain, r
 static var bone_lag := PackedFloat32Array()
 static var cue_poses: Dictionary = {}   # cue kind -> pose id
 static var forms: Dictionary = {}       # transformation: version -> {gather, break, settle, hold} in ticks
+static var ragdoll: Dictionary = {}      # data/anim/ragdoll.json (read by AnimRagdoll.setup)
 static var form_poses: Dictionary = {}  # beat -> pose id
 
 
@@ -53,6 +54,7 @@ static func load_all() -> void:
 	var fj: Dictionary = _read("forms.json")
 	forms = fj.get("versions", {})
 	form_poses = fj.get("poses", {})
+	ragdoll = _read("ragdoll.json")
 
 
 static func pose(id: String, mirror: bool = false) -> AnimPose:

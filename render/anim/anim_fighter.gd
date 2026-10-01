@@ -29,6 +29,17 @@ var version: int = 0                   # bumped by every real solve; a body skip
 var _lag_k: float = -1.0
 var _settle: int = 0
 var _bkey: int = -1
+var _bkey2: int = -1
+var _was_down: bool = false              # polish: a get-up after a fall (the rise out of the crouch is slower when worn)
+var _rise_t0: float = -1.0
+var _rise_dur: float = 0.3
+var _air_w: float = 0.0                  # hovering, for the bob
+var _lean: float = 0.0                  # the lean into acceleration, smoothed (rad)
+var _prev_x: float = 0.0
+var _have_x: bool = false
+var _prev_cx: float = 0.0
+var _smear: float = 0.0                 # the contact catch: how far behind the anchor the body is drawn (model units), decaying
+var _smear_t0: float = -10.0
 var _full_fk: bool = false
 const SOCKET_CHAIN := [0, 1, 2, 3, 4, 5, 11, 12, 13, 14]   # root, pelvis, spines, neck, head, near clavicle, arm, forearm, hand
 const SOCKET_SET := ["root", "pelvis", "spine_1", "spine_2", "neck", "head", "clavicle_r", "upper_arm_r", "forearm_r", "hand_r"]
@@ -47,7 +58,7 @@ var _spring_bones := PackedInt32Array()
 var _lag := PackedFloat32Array()
 var _prof: Dictionary = {}
 var _part: String = ""                 # the key set playing this frame, "" for none (for tools)
-var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0}
+var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0, "skims": 0, "ground_events": 0, "rd_ticks": 0, "rd_usec": 0, "catches": 0}
 
 ## The facing the mannequin is drawn with (-1 or 1). The sim's `face` can lag a dodge warp or a swap of sides, so this one
 ## is derived from the opponent in an exchange and from the travel direction otherwise (A2, docs/animation section 9.3).
@@ -80,6 +91,16 @@ var _ip_dur: float = 0.1
 var _ip_active: bool = false
 var _ip_have: bool = false
 var _ip_cos: float = cos(INERTIA_JUMP * 0.5)
+# The active ragdoll (overhaul unit A): stepped once per sim tick from the fighter's own state, shown at out_w.
+var _rd := AnimRagdoll.new()
+var _rd_have: bool = false
+var _rd_vw := Vector2.ZERO              # last tick's world velocity (for the acceleration)
+var _rd_prev_state: String = ""
+var _rd_prev_slide: bool = false
+var _rd_prev_speed: float = 0.0
+var _skim_t0: float = -1.0
+var _hit_n: int = 0                     # hits taken (the variant hash)
+var _hit_free: float = 0.0              # how loose a hit leaves the limbs; decays, slower with wear
 var layers: String = ""                # tools: which layers shaped this frame (set only with debug_checks)
 var _rushing: bool = false
 var _contact_now: bool = false
@@ -105,6 +126,7 @@ var _ci_opp = null
 var _ci_tc: float = 0.0
 var _ci_dmg: float = 0.0
 var _gap_tc: float = -1.0
+var _recoil_y: float = 0.0
 var _recoil_x: float = 0.0
 var _step_x: float = 0.0               # the step-in a blow takes toward a defender beyond the arm and the hips' lunge
 
@@ -125,9 +147,40 @@ func _init(slot_: int) -> void:
 
 # ------------------------------------------------------------------ events (called once a tick by RenderAnim)
 
-func on_tick(dt: float, frozen: bool) -> void:
+func on_tick(dt: float, frozen: bool, S: SimState = null, f = null) -> void:
 	_spring_dt += dt * (0.1 if frozen else 1.0)
 	_ip_acc += dt * (0.5 if frozen else 1.0)
+	if S != null and f != null and not frozen:
+		_rd_tick(S, f, dt)
+
+
+## A launched fighter skipped off water (the sim's skim event): the body arches and flares for an instant.
+func on_skim(T: float, spd: float) -> void:
+	_skim_t0 = T
+	var amp: float = _rd_amp()
+	_rd.kick(0, 5.0 * amp)
+	_rd.kick(1, 6.0 * amp)
+	_rd.kick(2, -4.0 * amp)
+	_rd.kick(5, -4.0 * amp)
+	debug["skims"] += 1
+
+
+## World's ground-contact events (left_ground, bounce, land, tumble_end; docs/world/ground-contact.md section 4). They plug
+## into the same body: a bounce whips it by the normal speed, a slam or a skid folds it, the end of a tumble lets it go.
+func on_ground_event(kind: String, e: Dictionary, T: float) -> void:
+	var amp: float = _rd_amp()
+	debug["ground_events"] += 1
+	match kind:
+		"bounce":
+			_rd.crumple(clampf(absf(float(e.get("vn", 0.0))) / 2500.0, 0.2, 1.5) * 0.6, amp)
+		"land":
+			var lk: String = String(e.get("kind", ""))
+			if lk == "slam":
+				_rd.crumple(1.0, amp)
+			elif lk == "skid" or lk == "tumble":
+				_rd.crumple(0.5, amp)
+		"tumble_end":
+			_rd.free = minf(_rd.free, 0.3)
 
 
 func on_cue(kind: String, T: float) -> void:
@@ -136,10 +189,49 @@ func on_cue(kind: String, T: float) -> void:
 
 
 ## `front`: the blow came from the side the victim faces. amp 0 to 1 from the hit's strength.
-func on_hit(T: float, region: String, front: bool, amp: float, kind: String = "") -> void:
-	_reacts.append({"t0": T, "region": region, "front": front, "amp": clampf(amp, 0.2, 1.0), "kind": kind})
+## `d` is the way the blow pushes, in the body frame (x forward: a blow from the front pushes him toward -x); `force` the
+## damage over 60 (0.15 to 1.6). The reaction is the pose (a flinch) plus the ragdoll's own motion along d: a head snap, a torso
+## fold or arch, limbs thrown by the push, a step; scaled by the blow's force and by the victim's wear, with a deterministic
+## variant per hit (a hash of the tick, the slot and the hit count: no random stream, so a replay shows the same).
+func on_hit(T: float, region: String, front: bool, amp: float, kind: String = "", d: Vector2 = Vector2.ZERO, force: float = -1.0, tick: int = 0) -> void:
+	if d == Vector2.ZERO:
+		d = Vector2(-1.0 if front else 1.0, 0.0)
+	if force < 0.0:
+		force = amp * 70.0 / 60.0
+	_hit_n += 1
+	var h: int = _hash(tick, slot, _hit_n)
+	var u: float = float(h & 1023) / 511.5 - 1.0
+	var u2: float = float((h >> 10) & 1023) / 511.5 - 1.0
+	_reacts.append({"t0": T, "region": region, "front": front, "amp": clampf(amp, 0.2, 1.0), "kind": kind, "dx": d.x, "dy": d.y, "f": clampf(force, 0.15, 1.6), "u": u})
 	if _reacts.size() > 4:
 		_reacts.pop_front()
+	if not RenderAnim.ragdoll_enabled:
+		return
+	var ra: float = _rd_amp()
+	var wear_k: float = 1.0 + 0.7 * _worn + 0.5 * _brinkp
+	var F: float = clampf(force, 0.15, 1.6) * wear_k * (1.0 + 0.25 * u) * ra * 1.6
+	if kind == "guard":
+		F *= 0.4
+	var head_k: float = 1.0 if region == "head" else 0.45
+	var core_k: float = 1.0 if region == "core" else 0.4
+	var legs_k: float = 1.0 if region == "legs" else 0.5
+	var arms_k: float = 1.0 if region == "arms" else 0.7
+	var dx: float = d.x
+	var dy: float = d.y
+	_rd.kick(0, (-dx + 0.6 * dy) * 18.0 * F * head_k)
+	_rd.kick(1, dx * 14.0 * F * core_k + (-dx * 8.0 * F if region == "head" else 0.0))
+	_rd.kick(2, -dx * 11.0 * F * arms_k * (1.0 + 0.3 * u))
+	_rd.kick(5, -dx * 11.0 * F * arms_k * (1.0 - 0.3 * u))
+	_rd.kick(4, -dx * 8.0 * F * arms_k)
+	_rd.kick(7, -dx * 8.0 * F * arms_k)
+	_rd.kick(3, 3.0 * F * u2)
+	_rd.kick(6, -3.0 * F * u2)
+	_rd.kick(8, -dx * 8.0 * F * (0.6 + 0.4 * u2))
+	_rd.kick(10, -dx * 8.0 * F * (0.6 - 0.4 * u2))
+	_rd.kick(9, -3.0 * F * legs_k)
+	_rd.kick(11, -3.0 * F * legs_k)
+	_hit_free = minf(1.0, _hit_free + 0.5 * F + 0.3 * _worn)
+	_rd.out_w = 1.0
 
 
 ## A transformation took place (the sim's `transform` event). Its three beats (data/anim/forms.json) play over the pause's
@@ -272,6 +364,12 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			AnimPose.mix(q, cp.q, w * 0.9)
 			hips = hips.lerp(cp.hips, w * 0.9)
 			curl = curl.lerp(cp.curl, w * 0.9)
+	if _skim_t0 >= 0.0:
+		var sk_t: float = T - _skim_t0
+		if sk_t > 0.35:
+			_skim_t0 = -1.0
+		elif sk_t >= 0.0:
+			_mix_pose(AnimData.pose("skip.water"), smoothstep(0.0, 0.04, sk_t) * (1.0 - smoothstep(0.12, 0.35, sk_t)) * 0.85)
 	# 3. the exchange: approach and strike parts
 	_part = ""
 	_ci_w = 0.0
@@ -290,11 +388,23 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 		_wound_limbs(f, T)
 	# 5. reactions to blows
 	_recoil_x = 0.0
+	_recoil_y = 0.0
 	_step_x = 0.0
 	_reaction_layer(T)
 	# 5b. the striking limb reaches the defender (the contact solve)
 	if _ci_w > 0.001:
 		_contact_ik(S, f)
+	# 5c. the active ragdoll: the body's own motion on top of the pose (the pose is in charge while a blow is thrown)
+	if _rd.out_w > 0.001:
+		_rd.apply(q, _rd.out_w * (0.3 if (_part != "" or _ci_w > 0.001) else 1.0))
+	# 5d. polish: lean into acceleration (free flight and movement), the hover bob
+	if RenderAnim.ragdoll_enabled:
+		if absf(_lean) > 0.002:
+			q[AnimRig.index["pelvis"]] = q[AnimRig.index["pelvis"]] * Quaternion(Vector3(0, 0, 1), -_lean * 0.6)
+			q[AnimRig.index["spine_2"]] = q[AnimRig.index["spine_2"]] * Quaternion(Vector3(0, 0, 1), -_lean * 0.4)
+		if _air_w > 0.3:
+			hips.y += sin(T * TAU * 0.7 + slot * 1.3) * 1.4 * _air_w * _rd_amp()
+			q[AnimRig.index["spine_2"]] = q[AnimRig.index["spine_2"]] * Quaternion(Vector3(0, 0, 1), sin(T * TAU * 0.5 + slot) * 0.03 * _air_w * _rd_amp())
 	# 6. moving hold, hit-stop shiver, spring chains
 	var drift: float = float(prof.get("hold_drift", 0.0))
 	if drift > 0.0:
@@ -308,6 +418,11 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	else:
 		root_off = root_off * 0.0
 	root_off.x += _recoil_x + _step_x
+	root_off.y += _recoil_y
+	if _smear != 0.0:
+		root_off.x += _smear_now(T)
+		if T - _smear_t0 >= 0.05:
+			_smear = 0.0
 	_springs(f)
 	# 6a. inertialisation: a join in the solved pose decays instead of popping
 	_inertialise(dt, prof)
@@ -332,7 +447,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 ## Nothing is asking for a precise pose this tick.
 func _idle(S: SimState, f) -> bool:
 	var ex = S.dirS.ex
-	return (ex == null or (ex.A != f and ex.D != f)) and _cue.is_empty() and _reacts.is_empty() and f.beamCharge == null and S.beams.is_empty() and S.dirS.stop <= 0.0 and _form.is_empty()
+	return (ex == null or (ex.A != f and ex.D != f)) and _cue.is_empty() and _reacts.is_empty() and f.beamCharge == null and S.beams.is_empty() and S.dirS.stop <= 0.0 and _form.is_empty() and _rd.out_w <= 0.001
 
 
 ## A blow counts as heavy from the exchange kind, the strike's own weight (o.big) or its damage.
@@ -366,16 +481,42 @@ func _target_base(S: SimState, f, T: float) -> void:
 	var w9: float = 0.0              # a guarded step forward
 	var w10: float = 0.0             # a guarded step back
 	var w11: float = 0.0             # the stance sagging toward the brink
+	var w12: float = 0.0             # skidding on the back (moving away from the way he faces)
+	var w13: float = 0.0             # skidding face down
+	var w15: float = 0.0             # the push-up stage of a get-up
+	var w14: float = 0.0             # the rise out of the crouch after it (slower when worn)
+	if state == "down":
+		_was_down = true
+	elif _was_down:
+		_was_down = false
+		_rise_t0 = T
+		_rise_dur = 0.25 + 0.55 * maxf(_worn, _brinkp)
+	if _rise_t0 >= 0.0 and RenderAnim.ragdoll_enabled:
+		var rt: float = T - _rise_t0
+		if rt >= _rise_dur:
+			_rise_t0 = -1.0
+		elif state == "free":
+			w14 = 1.0 - smoothstep(0.0, _rise_dur, rt)
+	_air_w = 0.0
 	var mode: int = 0
 	if f.slide > 0.0:
 		mode = 1
+		var sk: float = smoothstep(250.0, 600.0, absf(f.vx))
+		if vf < 0.0:
+			w12 = sk
+		else:
+			w13 = sk
 	elif state == "launched":
 		var speed: float = Vector2(f.vx, f.vy).length()
 		w1 = smoothstep(700.0, 2200.0, speed)
 		w2 = (1.0 - smoothstep(150.0, 600.0, speed)) * 0.7
 		mode = 2
 	elif state == "down":
-		w1 = smoothstep(0.42, 0.72, f.stateT)
+		if RenderAnim.ragdoll_enabled:
+			w1 = smoothstep(0.5, 0.72, f.stateT)
+			w15 = smoothstep(0.28, 0.5, f.stateT)
+		else:
+			w1 = smoothstep(0.42, 0.72, f.stateT)
 		mode = 7 if S.game.ko == f else 3
 	elif state == "charging":
 		mode = 4
@@ -398,6 +539,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 			var air: float = smoothstep(30.0, 70.0, f.y - WorldTerrain.groundY(S, f.x))
 			if air > 0.0:
 				w4 = air
+				_air_w = air
 				w5 = air * smoothstep(150.0, 600.0, f.vy)
 				w6 = air * smoothstep(150.0, 600.0, -f.vy)
 			elif f.ki < 6.0:
@@ -406,11 +548,13 @@ func _target_base(S: SimState, f, T: float) -> void:
 				var opp = _opponent(S, f)
 				if opp != null and absf(SimWrap.sdx(f.x, opp.x)) > IDLE_FAR:
 					w7 = 0.5
-	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33) | (int(w8 * 8.0) << 35) | (int(w9 * 8.0) << 39) | (int(w10 * 8.0) << 43) | (int(w11 * 8.0) << 47)
-	if key == _bkey:
+	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33) | (int(w8 * 8.0) << 35) | (int(w9 * 8.0) << 39) | (int(w10 * 8.0) << 43) | (int(w11 * 8.0) << 47) | (int(w12 * 8.0) << 50) | (int(w13 * 8.0) << 54)
+	var key2: int = int(w15 * 8.0) | (int(w14 * 8.0) << 4)
+	if key == _bkey and key2 == _bkey2:
 		_settle += 1
 		return
 	_bkey = key
+	_bkey2 = key2
 	_settle = 0
 	var vk: String = ""
 	if mode == 7:
@@ -437,12 +581,15 @@ func _target_base(S: SimState, f, T: float) -> void:
 	match mode:
 		1:
 			_blend_target("slide.brake", 1.0)
+			_blend_target("skid.back", w12)
+			_blend_target("skid.front", w13)
 		2:
 			_blend_target("launch.spread", 1.0)
 			_blend_target("launch.stream", w1)
 			_blend_target("launch.tuck", w2)
 		3:
 			_blend_target("down.prone", 1.0)
+			_blend_target("getup.push", w15)
 			_blend_target("down.getup", w1)
 		4:
 			_blend_target("charge.hold", 1.0)
@@ -457,6 +604,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 			_blend_target("move.step_f", w9)
 			_blend_target("move.step_b", w10)
 			_blend_target("wound.sag", w11)
+			_blend_target("down.getup", w14 * 0.75)
 			_blend_target("stance.air", w4)
 			_blend_target("move.ascend", w5)
 			_blend_target("move.descend", w6)
@@ -753,7 +901,7 @@ func _contact_ik(S: SimState, f) -> void:
 	if mx < 4.0:
 		return
 	var my: float = (opp.y - f.y) + rp.y
-	var tgt := Vector3(mx - float(BODY_R.get(_ci_target, 6.5)) - float(END_LEN[kind]), my, float(REACH_Z[kind]) * zs)
+	var tgt := Vector3(mx - float(BODY_R.get(_ci_target, 6.5)) - float(END_LEN[kind]) - _smear_now(S.T), my, float(REACH_Z[kind]) * zs)
 	var ix: Dictionary = AnimRig.index
 	var a: int = ix[("upper_arm_" if is_hand else "thigh_") + sfx]
 	var b: int = ix[("forearm_" if is_hand else "shin_") + sfx]
@@ -859,6 +1007,14 @@ func _inertialise(dt: float, prof: Dictionary) -> void:
 		_ip_hcur = Vector3.ZERO
 
 
+## How far behind the anchor the body is drawn now (the contact catch's smear); the contact solve reaches that much further.
+func _smear_now(T: float) -> float:
+	if _smear == 0.0:
+		return 0.0
+	var sp: float = (T - _smear_t0) / 0.05
+	return 0.0 if sp >= 1.0 else _smear * (1.0 - smoothstep(0.0, 1.0, sp))
+
+
 func _set_lag(k: float) -> void:
 	if k == _lag_k:
 		return
@@ -876,6 +1032,93 @@ func _part_prof(kind: String) -> Dictionary:
 
 
 # ------------------------------------------------------------------ beam, reactions, springs
+
+func _rd_amp() -> float:
+	return 0.35 if RenderAnim.reduced_motion else 1.0
+
+
+## One sim tick of the ragdoll, from the fighter's own state (never random, never written back). Velocity and acceleration are
+## taken in the body frame: the body is rotated by the sim's rot, mirrored by the visual facing. A launch, a slam, a skid, a
+## brace before the ground and a tuck in a spin are all this one controller.
+func _rd_tick(S: SimState, f, dt: float) -> void:
+	if not RenderAnim.ragdoll_enabled:
+		if _rd.out_w > 0.0 or _rd.energy() > 0.0:
+			_rd.reset()
+		_rd_have = false
+		return
+	var t0: int = Time.get_ticks_usec() if RenderAnim.debug_checks else 0
+	var amp: float = _rd_amp()
+	var vw := Vector2(f.vx, f.vy)
+	var aw := Vector2.ZERO
+	if _rd_have:
+		aw = (vw - _rd_vw) / maxf(dt, 0.0001) + Vector2(0.0, 1000.0)
+		if aw.length() > AnimRagdoll.a_max:
+			aw = aw.normalized() * AnimRagdoll.a_max
+	_rd_vw = vw
+	var m: float = vface
+	var c: float = cos(f.rot)
+	var sn: float = sin(f.rot)
+	var vo := Vector2(vw.x * m, vw.y)
+	var ao := Vector2(aw.x * m, aw.y)
+	var vl := Vector2(vo.x * c - vo.y * sn, vo.x * sn + vo.y * c)
+	var al := Vector2(ao.x * c - ao.y * sn, ao.x * sn + ao.y * c)
+	var st: String = f.state
+	var sliding: bool = f.slide > 0.0
+	var flying: bool = st == "launched" and not sliding
+	var speed: float = vw.length()
+	if _rd_have:
+		# a slam (flight to down) folds the body; a skid starting from a flight whips it
+		if st == "down" and _rd_prev_state == "launched":
+			_rd.crumple(clampf(_rd_prev_speed / 3000.0, 0.3, 1.5), amp)
+		elif sliding and not _rd_prev_slide and _rd_prev_state == "launched":
+			_rd.crumple(clampf(_rd_prev_speed / 4000.0, 0.2, 0.9), amp)
+	var free_t: float = 0.0
+	var tuck: float = 0.0
+	var brace: float = 0.0
+	if flying:
+		free_t = 0.85
+		tuck = 0.7 * smoothstep(4.0, 9.0, absf(f.spin)) * (0.65 + 0.35 * cos(f.rot * 0.5))
+		if f.vy < -200.0 and f.aimB < 0:
+			var h: float = f.y - WorldTerrain.groundY(S, f.x)
+			if h > 0.0:
+				var tc: float = (f.vy + sqrt(f.vy * f.vy + 2000.0 * h)) / 1000.0
+				brace = 1.0 - smoothstep(0.08, 0.3, tc)
+				brace *= 1.0 - tuck * 0.5
+	elif sliding:
+		free_t = 0.55
+	elif st == "down":
+		free_t = 0.25 if f.stateT < 0.6 else 0.0
+	# polish: the lean into acceleration while he is free, and the contact catch (a striker carried far in one tick is drawn
+	# travelling to his place, not popping to it)
+	var lean_t: float = 0.0
+	if st == "free" or st == "locked":
+		lean_t = clampf(ao.x / 9000.0, -1.0, 1.0) * 0.35 * amp
+	_lean += (lean_t - _lean) * (1.0 - exp(-dt / 0.12))
+	var cx: float = SimWrap.sdx(_prev_x, f.x) if _have_x else 0.0
+	_prev_x = f.x
+	_prev_cx = cx
+	_have_x = true
+	var ex = S.dirS.ex
+	if absf(cx) > 160.0 and absf(cx) > 1.5 * absf(_prev_cx) and ex != null and ex.A == f and not flying and not sliding and amp > 0.5:
+		_smear = clampf(-cx * m * 0.15, -24.0, 24.0)
+		_smear_t0 = S.T
+		debug["catches"] += 1
+	_hit_free = maxf(0.0, _hit_free - dt * (1.6 - 0.8 * _worn))
+	free_t = maxf(free_t, _hit_free)
+	_rd_prev_state = st
+	_rd_prev_slide = sliding
+	_rd_prev_speed = speed if st == "launched" else _rd_prev_speed
+	_rd_have = true
+	var active: bool = st == "launched" or st == "down" or _rd.free > 0.02 or _rd.energy() > 0.03
+	if active:
+		_rd.step(dt, vl, al, free_t, tuck * amp, brace * amp, amp)
+	_rd.out_w = move_toward(_rd.out_w, 1.0 if active else 0.0, dt * 8.0)
+	if not active and _rd.out_w <= 0.0 and _rd.energy() > 0.0:
+		_rd.reset()
+	if RenderAnim.debug_checks:
+		debug["rd_ticks"] += 1
+		debug["rd_usec"] += Time.get_ticks_usec() - t0
+
 
 func _wound_read(f) -> void:
 	if f.wd == null:
@@ -1019,7 +1262,15 @@ func _reaction_layer(T: float) -> void:
 				keep.append(r)
 			continue
 		keep.append(r)
-		_recoil_x += (-1.0 if bool(r.front) else 1.0) * amp * 6.0 * smoothstep(0.0, 0.02, tau) * exp(-tau / 0.07)
+		var rf: float = float(r.get("f", amp))
+		var rdx: float = float(r.get("dx", -1.0 if bool(r.front) else 1.0))
+		var rdy: float = float(r.get("dy", 0.0))
+		var wk: float = 1.0 + 0.5 * _worn
+		_recoil_x += rdx * rf * 7.0 * wk * smoothstep(0.0, 0.02, tau) * exp(-tau / 0.07)
+		_recoil_y += rdy * rf * 4.0 * smoothstep(0.0, 0.02, tau) * exp(-tau / 0.08)
+		if rf > 0.8:
+			# a heavy blow staggers him: a quick sway after the push
+			_recoil_x += rdx * rf * 2.5 * sin(tau * TAU * 3.0) * exp(-tau / 0.25)
 		var w: float = amp * smoothstep(0.0, 0.05, tau) * (1.0 - smoothstep(0.12, 0.12 + 0.3 * amp, tau))
 		if w <= 0.001:
 			continue
@@ -1030,7 +1281,7 @@ func _reaction_layer(T: float) -> void:
 		var pose_id: String = "react.flinch_f" if bool(r.front) else "react.flinch_b"
 		if String(r.region) == "core":
 			pose_id = "react.fold" if amp > 0.7 else pose_id
-		_mix_pose(AnimData.pose(pose_id), w * 0.7)
+		_mix_pose(AnimData.pose(pose_id), w * (0.55 if RenderAnim.ragdoll_enabled else 0.7))
 		var add_id: String = "react." + String(r.region)
 		if AnimData.poses.has(add_id):
 			AnimPose.add(q, AnimData.pose(add_id).q, w)
