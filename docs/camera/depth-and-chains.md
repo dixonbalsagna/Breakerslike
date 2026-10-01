@@ -1,6 +1,6 @@
 # Camera: fighters in depth, building hits and chains
 
-Owner: Camera and Cinematography. Status: design note, 2026-09-29, for World's B2 (`docs/world/b2-plan.md`, `buildings-in-depth.md` §4b). Nothing is built; it builds when B2's events and the fighter's `z` land. It extends `split-screen.md`.
+Owner: Camera and Cinematography. Status: built, 2026-10-01 (section 7), for World's B2 (`docs/world/b2-plan.md`, `buildings-in-depth.md` §4b). It extends `split-screen.md`.
 
 **Summary**
 1. A fighter at depth is smaller and nearer the screen centre (perspective), so the pane and launch cameras must compensate: zoom in and offset the focus so the fighter still lands on its anchor at a readable size.
@@ -61,3 +61,14 @@ The lead and the chain re-aim become cuts to the hit point at each `building_hit
 - **World:** `z` on the fighter in `hash` order and as a plain float in the fx `state` the views read. Sign and `dur` units are confirmed (above).
 - **Rendering (B3):** the fighter's pivot uses the same perspective factor `s` as above; the ground band must reach `w` = 2,850 behind the plane for the back row to show ground under a building; near-plane clamp when the camera distance `d` falls below the foreground row's +750 (at the zoom cap `d` is 1,168, which clears it).
 - **Risk:** at the back row a fighter is 25 px at best, under the 32 px the split line assumes elsewhere, for a second or two. If Orb finds that too small, the answer is to shorten the flight or slow it in the last row (World's tuning), not to move the camera plane.
+
+## 7. As built (2026-10-01)
+
+Built in `render/camera/` against B2's events and Rendering's B3 (commit 63ba157):
+- `SplitRig` reads `Fighter.z` per pane. The zoom target uses the compensation of section 2, capped at the zoom ceiling; the focus is aimed at `P' = C + (P - C) / s`. The state is read, not hashed or written.
+- `launch_depth` and `chain_link` {victim, x1, y1} aim the lead: the focus moves toward the building by 35% of the distance, at most 18% of the width and 12% of the height on screen. It clears on `building_hit` and when the fighter stops being `launched`.
+- `building_hit` {victim, link} pushes the zoom +6% (+3% for later links) over 0.15 s, inside the sim's hold (0.35 s the first time, 0.12 s after), and eases back over 0.4 s. Off in reduced motion.
+- `SplitFrame.screen_pos(i, x, y, z)`, `depth_scale(i, z)` and `hud_anchor(slot, x, y, z)` take the depth. **Rendering's one line:** `render/core/main.gd` `_hud_anchor` calls `split_frame.hud_anchor(slot, host.fighter_x(slot, a), host.fighter_pose(slot, a).y)`; add `, host.fighter_z(slot, a)` so the HUD markers follow the drawn position.
+- Not built: the chain's building-height framing (section 3), because `chain_link` does not carry the next building's height (`building_hit` does, for the one just hit). If World adds `h` to `chain_link`, the rest is a few lines.
+
+Measured (`split_sweep`, 720p, a launched fighter flying 6,000 units into each row and back, alone and with the opponent 9,000 units away): the fighter's smallest apparent height is 37 px at the foreground row, 39 at the front street, 33 in the mid row and 24 in the back row, and he is never off the screen. Without the compensation the same fighters would draw at about 67 (and pushed outward), 34, 24 and 18 px at the launch zoom of 0.576. In the real game (`render/camera/tests/depth_strip.gd`, 960 by 540, seeds 12 and 3 with the game's own brunts): the back row (z -2,665) gives 20.7 px smallest with the rig, against 8.9 px and 68 px outside the screen with the reference camera; a two-building chain (z -1,494) gives 23.3 px against 7.4 px and 440 px outside the screen. Side by side (reference camera left, rig right): ![back row](img/depth-back.gif) ![chain](img/depth-chain.gif) Strips: ![back](img/depth-back-strip-new.png) ![chain](img/depth-chain-strip-new.png)

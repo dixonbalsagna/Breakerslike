@@ -81,8 +81,20 @@ func weight1(p: Vector2) -> float:
 
 
 ## The screen point of a world point as pane i draws it: the reference camera's mapping (docs/rendering/README.md).
-func screen_pos(i: int, wx: float, wy: float) -> Vector2:
-	return Vector2(SimWrap.sdx(cam_x[i], wx) * cam_z[i] + vw * 0.5, vh * CamParams.PLANE_Y - (wy - cam_y[i]) * cam_z[i])
+## wz is the fighter's depth (Fighter.z, positive toward the camera): a deep fighter draws at s = d / (d + w) of the way
+## out from the camera's axis (docs/camera/depth-and-chains.md section 2), d being the camera's distance to the plane.
+func screen_pos(i: int, wx: float, wy: float, wz: float = 0.0) -> Vector2:
+	var p := Vector2(SimWrap.sdx(cam_x[i], wx) * cam_z[i] + vw * 0.5, vh * CamParams.PLANE_Y - (wy - cam_y[i]) * cam_z[i])
+	if wz == 0.0:
+		return p
+	var c0 := Vector2(vw * 0.5, vh * 0.5)
+	return c0 + (p - c0) * depth_scale(i, wz)
+
+
+## The perspective scale of a fighter at depth wz (positive toward the camera) in pane i.
+func depth_scale(i: int, wz: float) -> float:
+	var d: float = CamParams.K_FACTOR * vh / cam_z[i]
+	return maxf(d / maxf(d - wz, 1.0), CamParams.DEPTH_S_MIN)
 
 
 ## Whether pane i shows any of the screen.
@@ -91,13 +103,13 @@ func shows(i: int) -> bool:
 
 
 ## The HUD anchor record for a fighter (chest point in its own pane), in the shape Rendering's anchor_fn returns.
-func hud_anchor(slot: int, wx: float, wy: float) -> Dictionary:
-	var p: Vector2 = screen_pos(slot, wx, wy + CamParams.CHEST)
+func hud_anchor(slot: int, wx: float, wy: float, wz: float = 0.0) -> Dictionary:
+	var p: Vector2 = screen_pos(slot, wx, wy + CamParams.CHEST, wz)
 	var on: bool = shows(slot) and Rect2(Vector2(-200.0, -200.0), Vector2(vw, vh) + Vector2(400.0, 400.0)).has_point(p)
 	if on and feather <= 0.001:
 		var side: float = (p - c).dot(n)
 		on = side <= 0.0 if slot == 0 else side > 0.0
-	return {"pos": p, "h": CamParams.BODY_H * cam_z[slot], "visible": on, "pane": slot}
+	return {"pos": p, "h": CamParams.BODY_H * cam_z[slot] * (depth_scale(slot, wz) if wz != 0.0 else 1.0), "visible": on, "pane": slot}
 
 
 ## The width of the world pane i shows at the fighter plane, in radians of planet angle.

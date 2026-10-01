@@ -148,6 +148,9 @@ func _run() -> void:
 	await _scenario("solo follow", func(): return _solo_follow(), {})
 	await _scenario("hard cut", func(): return _hard_cut(), {})
 	await _scenario("shake per pane", func(): return _shake_panes(), {})
+	for row in [[750.0, "foreground"], [-600.0, "front street"], [-1650.0, "mid row"], [-2850.0, "back row"]]:
+		await _scenario("depth %s one view" % row[1], func(): return _depth(float(row[0]), 600.0), {})
+		await _scenario("depth %s split" % row[1], func(): return _depth(float(row[0]), 9000.0), {})
 	_static_equals_reference()
 	# 8. Real AI matches, then the determinism of the sim.
 	for seed in seeds:
@@ -288,10 +291,13 @@ func _tick_rig(events: Array = []) -> void:
 
 func _watch() -> void:
 	_ft_prev = _ft_cur.duplicate()
+	_fz_prev = _fz_cur.duplicate()
 	for i in range(2):
 		_ft_cur[i] = Vector2(_S.fighters[i].x, _S.fighters[i].y)
+		_fz_cur[i] = float(_S.fighters[i].z)
 	if _tick <= 1:
 		_ft_prev = _ft_cur.duplicate()
+		_fz_prev = _fz_cur.duplicate()
 	var t_prev: float = float(_tick - 1) * SplitRig.DT
 	var t_cur: float = float(_tick) * SplitRig.DT
 	while _disp_t <= t_cur - 1e-9:
@@ -325,6 +331,10 @@ func _fold_digest(acc: int, f: SplitFrame) -> int:
 # ------------------------------------------------------------------------------------------------ per-frame checks
 
 ## A fighter as the host draws it: interpolated between the last two ticks, x along the shortest arc.
+func _fz(i: int, alpha: float) -> float:
+	return lerpf(_fz_prev[i], _fz_cur[i], alpha)
+
+
 func _fpos(i: int, alpha: float) -> Vector2:
 	var a: Vector2 = _ft_prev[i]
 	var b: Vector2 = _ft_cur[i]
@@ -354,7 +364,7 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 			_offscreen_t[i] = 0.0
 			continue
 		var fpp: Vector2 = _fpos(i, alpha)
-		var pp: Vector2 = fr.screen_pos(i, fpp.x, fpp.y + CamParams.CHEST)
+		var pp: Vector2 = fr.screen_pos(i, fpp.x, fpp.y + CamParams.CHEST, _fz(i, alpha))
 		var w1i: float = fr.weight1(pp)
 		var inside: bool = pp.x >= 0.0 and pp.x <= vw and pp.y >= 0.0 and pp.y <= vh and (w1i >= 0.5 if i == 1 else w1i < 0.5)
 		if inside:
@@ -417,7 +427,7 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 			if not bool(fr.active[i]) or not bool(_prev_disp.active[i]) or fr.mode == "merged":
 				continue
 			var fp: Vector2 = _fpos(i, alpha)
-			var g: Vector2 = fr.screen_pos(i, fp.x, fp.y + CamParams.CHEST) - fr.anchor[i]
+			var g: Vector2 = fr.screen_pos(i, fp.x, fp.y + CamParams.CHEST, _fz(i, alpha)) - fr.anchor[i]
 			if _prev_g_valid[i]:
 				var step_px: float = (g - _prev_g[i]).length() / vw * (60.0 / DISPLAY_HZ)
 				# A pop is a camera step the fighter did not make: judge frames where the fighter itself hardly moved.
@@ -435,12 +445,14 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 	for i in range(2):
 		var fp2: Vector2 = _fpos(i, alpha)
 		_prev_fpos[i] = fp2
-		_prev_g[i] = fr.screen_pos(i, fp2.x, fp2.y + CamParams.CHEST) - fr.anchor[i]
+		_prev_g[i] = fr.screen_pos(i, fp2.x, fp2.y + CamParams.CHEST, _fz(i, alpha)) - fr.anchor[i]
 		_prev_g_valid[i] = bool(fr.active[i])
 
 
 var _prev_g_valid: Array = [false, false]
 var _prev_fpos: Array = [Vector2.ZERO, Vector2.ZERO]
+var _fz_prev: Array = [0.0, 0.0]
+var _fz_cur: Array = [0.0, 0.0]
 var _ft_prev: Array = [Vector2.ZERO, Vector2.ZERO]
 var _ft_cur: Array = [Vector2.ZERO, Vector2.ZERO]
 var _failed_once: Dictionary = {}
@@ -684,6 +696,70 @@ func _launch(speed: float, dist: float, vertical: bool = false) -> Dictionary:
 	B.vx = 0.0
 	for _i in range(360):
 		_tick_rig()
+	return {}
+
+
+## A brunt: B is launched toward a building 6,000 units away in the row at depth z, its z eases there, it hits (a
+## building_hit event) and eases back. The camera has to keep B on screen at a readable size the whole way.
+func _depth(zrow: float, gap: float) -> Dictionary:
+	var ax: float = 70000.0
+	_pose(ax, 40.0, ax + gap, 40.0)
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	var A = _S.fighters[0]
+	var B = _S.fighters[1]
+	var ld := SimState.FxEvent.new()
+	ld.type = "launch_depth"
+	ld.victim = 1.0
+	ld.owner = 0.0
+	ld.x1 = B.x + 6000.0
+	ld.y1 = 300.0
+	ld.z = zrow
+	ld.dur = 1.0
+	var le := SimState.FxEvent.new()
+	le.type = "launch"
+	le.actor = 1.0
+	B.state = "launched"
+	B.vx = 5000.0
+	var min_px: float = 1e9
+	var max_off: float = 0.0
+	var total: int = 90
+	for k in range(total):
+		var t: float = float(k) * SplitRig.DT
+		B.x = SimWrap.wrap(B.x + B.vx * SplitRig.DT)
+		B.y = 40.0 + 260.0 * smoothstep(0.0, 0.8, t)
+		B.z = zrow * smoothstep(0.0, 0.7, t)
+		var evs: Array = []
+		if k == 0:
+			evs = [le, ld]
+		if k == 60:
+			var bh := SimState.FxEvent.new()
+			bh.type = "building_hit"
+			bh.victim = 1.0
+			bh.link = 1
+			evs = [bh]
+		if k > 60:
+			B.z = zrow * (1.0 - smoothstep(0.0, 0.3, t - 1.0))
+		_tick_rig(evs)
+		var cur: SplitFrame = _rig.current()
+		# The pane that has B: his own while two panes or his expanded pane are up, else the one view (pane 0).
+		var pi: int = 1 if cur.shows(1) else 0
+		var p: Vector2 = cur.screen_pos(pi, B.x, B.y + CamParams.CHEST, B.z)
+		var px: float = CamParams.BODY_H * cur.cam_z[pi] * cur.depth_scale(pi, B.z)
+		if cur.mode == "solo" or cur.mode == "split":
+			min_px = minf(min_px, px)
+			max_off = maxf(max_off, maxf(maxf(-p.x, p.x - vw), maxf(-p.y, p.y - vh)))
+	B.state = "down"
+	B.vx = 0.0
+	B.z = 0.0
+	for _i in range(300):
+		_tick_rig()
+	# The back row can reach about 25 px at the zoom cap (depth-and-chains.md); the others keep their 40 px or so.
+	var want: float = 20.0 if zrow < -2000.0 else 28.0
+	_check(min_px >= want * vh / 720.0, "%s: the deep fighter shrank to %.1f px (want at least %.0f)" % [_label, min_px, want * vh / 720.0])
+	_check(max_off <= 0.0, "%s: the deep fighter left the screen by %.0f px" % [_label, max_off])
+	stats["depth min px " + _label] = "%.1f px, worst off-screen %.0f px" % [min_px, max_off]
 	return {}
 
 

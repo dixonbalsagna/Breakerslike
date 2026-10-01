@@ -68,6 +68,10 @@ var _launch_anchor_x: float = 0.5
 var _prev_state: Array = ["free", "free"]
 var _push: Array = [-1.0, -1.0]
 var _shk: PackedFloat64Array = PackedFloat64Array([0.0, 0.0])   # per-pane shake from the shake events {k, x}
+var _aim: Array = [null, null]          # per fighter: the (x, y) of the building a brunt is aimed at (launch_depth, chain_link)
+var _hit_t: Array = [-1.0, -1.0]        # seconds since this fighter's last building_hit, or -1
+var _hit_amp: Array = [0.0, 0.0]
+var _hit_hold: Array = [0.0, 0.0]
 var _launch_evt: Array = [false, false]   # a `launch` event arrived for this fighter this tick
 var fold_active: bool = false
 var _fold: Vector3 = Vector3.ZERO
@@ -123,6 +127,8 @@ func reset(S: SimState, p_vw: float, p_vh: float) -> void:
 	_flash = 0.0
 	_push = [-1.0, -1.0]
 	_shk = PackedFloat64Array([0.0, 0.0])
+	_aim = [null, null]
+	_hit_t = [-1.0, -1.0]
 	fold_active = false
 	_below_t = 0.0
 	_above_t = 0.0
@@ -477,6 +483,20 @@ func _read_events(S: SimState, events: Array) -> void:
 				var la: int = int(_ef(ev, "actor", -1))
 				if la >= 0 and la < 2:
 					_launch_evt[la] = true
+			"launch_depth", "chain_link":
+				# B2: the launched fighter (victim) is aimed at a building at (x1, y1): the focus leads toward it.
+				var v: int = int(_ef(ev, "victim", -1))
+				if v >= 0 and v < 2:
+					_aim[v] = Vector2(float(_ef(ev, "x1", 0.0)), float(_ef(ev, "y1", 0.0)))
+			"building_hit":
+				# B2: an impact push, inside the sim's hold (0.35 s on the first hit, 0.12 s on each further one).
+				var hv: int = int(_ef(ev, "victim", -1))
+				if hv >= 0 and hv < 2 and not reduced_motion:
+					var link: int = int(_ef(ev, "link", 1))
+					_hit_t[hv] = 0.0
+					_hit_amp[hv] = CamParams.HIT_PUSH if link <= 1 else CamParams.HIT_PUSH_LATER
+					_hit_hold[hv] = CamParams.HIT_HOLD_FIRST if link <= 1 else CamParams.HIT_HOLD_LATER
+					_aim[hv] = null
 			"cinematic_start":
 				var kd: String = String(_ef(ev, "kind", ""))
 				if kd == "transformation" or kd == "revision":
@@ -600,6 +620,9 @@ func _update_solo(S: SimState) -> void:
 				elif solo_kind == "":
 					_begin_solo("launch", i, 2, 0.0)
 	_launch_evt = [false, false]
+	for ai in range(2):
+		if _aim[ai] != null and S.fighters[ai].state != "launched":
+			_aim[ai] = null
 	if S.game.ko != null and solo_kind != "ko" and not fold_active:
 		var loser: int = 0 if S.fighters[0] == S.game.ko else 1
 		_begin_solo("ko", loser, 4, 0.0)
@@ -633,10 +656,22 @@ func _update_solo(S: SimState) -> void:
 
 func _update_pushes() -> void:
 	for i in range(2):
+		if _hit_t[i] >= 0.0:
+			_hit_t[i] += DT
+			if _hit_t[i] > maxf(CamParams.HIT_UP, _hit_hold[i]) + CamParams.HIT_DOWN:
+				_hit_t[i] = -1.0
 		if _push[i] >= 0.0:
 			_push[i] += DT
 			if _push[i] > CamParams.TIER_PUSH_IN + CamParams.TIER_PUSH_HOLD + CamParams.TIER_PUSH_OUT:
 				_push[i] = -1.0
+
+
+func _hit_mult(i: int) -> float:
+	var t: float = _hit_t[i]
+	if t < 0.0:
+		return 1.0
+	var end: float = maxf(CamParams.HIT_UP, _hit_hold[i])
+	return 1.0 + _hit_amp[i] * (smoothstep(0.0, CamParams.HIT_UP, t) - smoothstep(end, end + CamParams.HIT_DOWN, t))
 
 
 func _push_mult(i: int) -> float:
@@ -741,10 +776,19 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 				r = CamParams.R_KO
 				alt_f = 1.0
 	var z: float = r * vh / CamParams.BODY_H * tier_f * alt_f
-	z *= _push_mult(i)
+	z *= _push_mult(i) * _hit_mult(i)
 	if solo_kind == "launch" and solo_slot == i and solo_phase == "land":
 		z *= 1.0 + CamParams.LAND_PUSH * sin(PI * clampf(_land_t / 0.3, 0.0, 1.0))
-	return clampf(z, CamParams.ZOOM_MIN, CamParams.ZOOM_MAX * (1.0 + CamParams.TIER_PUSH))
+	var zmax: float = CamParams.ZOOM_MAX * (1.0 + CamParams.TIER_PUSH)
+	# A fighter in depth (Fighter.z, positive toward the camera) draws at s = d / (d + w) of his plane size, d = K / zoom.
+	# The zoom that gives the apparent height the plane zoom z would have is 1 / (1/z - w / K); where that cannot be
+	# reached (the back row) the cap is used, the biggest he can be.
+	var w: float = -float(f.z)
+	if absf(w) > 1.0:
+		var k: float = CamParams.K_FACTOR * vh
+		var den: float = 1.0 / z - w / k
+		z = zmax if den <= 1.0 / zmax else 1.0 / den
+	return clampf(z, CamParams.ZOOM_MIN, zmax)
 
 
 func _anchor_rest(i: int) -> Vector2:
@@ -785,10 +829,23 @@ func _anchor(S: SimState, i: int) -> Vector2:
 	return rest.lerp(target, smoothstep(0.0, 1.0, q))
 
 
-func _cam_from_focus(i: int, z: float, p: Vector2) -> Vector3:
+func _cam_from_focus(i: int, z: float, p: Vector2, s: float = 1.0) -> Vector3:
+	# A deep fighter lands at C + (plane point - C) * s, so aim the plane mapping at C + (p - C) / s.
+	if s != 1.0:
+		var c0 := Vector2(vw * 0.5, vh * 0.5)
+		p = c0 + (p - c0) / s
 	var x: float = SimWrap.wrap(_fx[i] - (p.x - vw * 0.5) / z)
 	var y: float = clampf(_fy[i] - (vh * CamParams.PLANE_Y - p.y) / z, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
 	return Vector3(x, y, z)
+
+
+## The perspective scale of fighter i at the depth he has now, for the pane's current zoom.
+func _depth_s(S: SimState, i: int, z: float) -> float:
+	var zz: float = float(S.fighters[i].z)
+	if zz == 0.0:
+		return 1.0
+	var d: float = CamParams.K_FACTOR * vh / z
+	return maxf(d / maxf(d - zz, 1.0), CamParams.DEPTH_S_MIN)
 
 
 static func _blend_cam(a: Vector3, b: Vector3, w: float) -> Vector3:
@@ -836,6 +893,11 @@ func _update_cameras(S: SimState) -> void:
 			# The lead that makes the discrete filter track a constant speed exactly: DT (1 - k) / k, about tau - DT / 2.
 			var tx: float = f.x + vxm * DT * (1.0 - kx) / kx
 			var ty: float = f.y + CamParams.CHEST + vym * DT * (1.0 - ky) / ky
+			# Aimed at a building (B2): the focus leads toward it, a bounded distance on screen, so it is in frame.
+			if _aim[i] != null and f.state == "launched":
+				var zz: float = maxf(_zo[i], 0.001)
+				tx += clampf(CamParams.LEAD_FRAC * SimWrap.sdx(f.x, _aim[i].x), -CamParams.LEAD_MAX_X * vw / zz, CamParams.LEAD_MAX_X * vw / zz)
+				ty += clampf(CamParams.LEAD_FRAC * (_aim[i].y - f.y), -CamParams.LEAD_MAX_Y * vh / zz, CamParams.LEAD_MAX_Y * vh / zz)
 			_fx[i] = SimWrap.wrap(_fx[i] + SimWrap.sdx(_fx[i], tx) * kx)
 			_fy[i] += (ty - _fy[i]) * ky
 		# own zoom: first-order filter, then the rate cap
@@ -879,7 +941,7 @@ func _update_cameras(S: SimState) -> void:
 func _outputs(S: SimState) -> void:
 	for i in range(2):
 		_anchors[i] = _anchor(S, i)
-		_owns[i] = _cam_from_focus(i, _zo[i], _anchors[i])
+		_owns[i] = _cam_from_focus(i, _zo[i], _anchors[i], _depth_s(S, i, _zo[i]))
 	var shared: Vector3 = Vector3(_mx, _my, _mz)
 	if solo_slot >= 0 and solo_w > 0.0:
 		shared = _blend_cam(shared, _owns[solo_slot], smoothstep(0.0, 1.0, solo_w))

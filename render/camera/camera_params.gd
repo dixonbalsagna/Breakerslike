@@ -104,6 +104,19 @@ const ANCHOR_STEP_TRANS: float = 0.05
 const DIVIDER_STEP: float = 0.06       # divider centre motion per tick, times vw, outside the slam
 const SHAKE_CAP: float = 0.03          # times vh
 const SHAKE_HIT_STEP: float = 1.0
+
+# --- fighters in depth (docs/camera/depth-and-chains.md) ---
+const K_FACTOR: float = 1.8660254      # 1 / (2 tan 15 degrees): the camera's distance to the fighter plane is K_FACTOR * vh / zoom
+const DEPTH_S_MIN: float = 0.2         # perspective scale floor, so the anchor compensation cannot blow up
+const LEAD_FRAC: float = 0.35          # how far toward the aimed building the focus leads
+const LEAD_MAX_X: float = 0.18         # ... at most this fraction of the width, on screen
+const LEAD_MAX_Y: float = 0.12         # ... and of the height
+const HIT_PUSH: float = 0.06           # zoom push on the first building hit; later links push less
+const HIT_PUSH_LATER: float = 0.03
+const HIT_UP: float = 0.15
+const HIT_HOLD_FIRST: float = 0.35     # the sim's hold on a first hit (buildings-in-depth.md 4b)
+const HIT_HOLD_LATER: float = 0.12
+const HIT_DOWN: float = 0.40
 const SHAKE_FALLOFF: float = 4000.0   # a shake event at this distance from a pane's centre is scaled down to SHAKE_FAR (Controls' shake pass)
 const SHAKE_FAR: float = 0.35         # ... and the pane farther from the event gets this share of it
 const SHAKE_DECAY: float = 0.02       # per second, the fx consumer's decay
