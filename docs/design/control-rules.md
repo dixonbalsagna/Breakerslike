@@ -15,9 +15,9 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 
 ## 1. The perfect block
 
-- **The window.** A Guard press that lands in the **last 10 ticks (0.17 s) of a visible wind-up** is a perfect block.
+- **The window is Controls'** (`docs/controls/input-scheme.md` §4.1). A fresh Guard press is a perfect block in the **last 8 ticks of a light wind-up, or the last 10 of a heavy one**. A press up to 4 ticks before the window opens also counts, and touch gets 2 more. The assist setting doubles the window and turns the lockout off.
 - **A mistimed tap still blocks.** A press earlier in the wind-up, or a guard already held, is a normal block. Only a press after the strike lands is a hit.
-- **Which strikes have a window.** Every strike with a wind-up of 10 ticks or more: an exchange's opening strike, every heavy, every ender, and ordinary energy blasts (a perfect block deflects them). Mid-string follow-ups have no fresh wind-up and no window. Signatures can be guarded but not perfect-blocked.
+- **Which strikes have a window.** Every strike with Combat's visible tell (15 ticks for a light, 20 for a heavy): an exchange's opening strike, every heavy, every ender, and ordinary energy blasts (a perfect block deflects them). Mid-string follow-ups have no fresh tell and no window. Signatures can be guarded but not perfect-blocked.
 - **The reward:**
   - no damage, no guard wear and no ki loss;
   - +8 ki;
@@ -25,7 +25,7 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
   - the defender keeps their momentum: an attack pressed within 30 ticks is a **riposte** that can't be blocked or dodged. Against a heavy or an ender, the riposte launches;
   - it counts as a parry for mood (+4) and as a humbling for Pride.
 - **The risk.** Tapping without holding guard is the "moving parry": it works the same, but a late tap takes the full hit with no guard up.
-- **Mashing Guard gives normal blocks only.** A Guard press outside a window locks the perfect block out for 20 ticks, and each further press restarts the lockout. The guard itself still works.
+- **Mashing Guard gives normal blocks only.** A Guard press outside a window locks the perfect block out for **20 ticks**, and each further press restarts the lockout. The guard itself still works. This value replaces the 18 ticks in Controls' spec.
 - **Beam clash.** The director never fires a beam on its own, so the old "AGGRESSIVE with 40 ki meets the beam" rule goes. A clash now happens only when the defender fires their own signature or power-layer blast during the incoming beam's wind-up. It costs 40 ki, as before.
 - **QA bands:** perfect blocks are 5 to 15 per 100 melee exchanges at mid skill, and at most 2 per 100 for a scripted Guard masher.
 
@@ -39,7 +39,10 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 
 - **Burst bait.** If the rival is holding Guard when the burst fires, they absorb it and the burster staggers for 30 ticks. An expert pauses a string and guards to draw the burst out.
 - **No fallback.** Without the ki, or on cooldown, the press does nothing except its acknowledgement. Two small pips by the ki bar show the dodge-cancel and burst cooldowns.
-- A plain dodge outside an exchange is free, with a 0.5 s cooldown.
+- **Dodges that cost nothing** (Controls' open point). The 15 ki is paid only for a dodge inside an exchange. These are free, with a 0.5 s cooldown between dodges:
+  - a dash or a **lunge** outside an exchange, in any direction, including toward the rival. A lunge is only movement: it doesn't start an exchange until an attack is pressed;
+  - a lunge that runs on into a sprint;
+  - the Dodge state read at exchange start. It is the old EVASIVE stance, and the director resolves it with the dodge templates as before.
 - **For scale:** a signature costs 45 ki, a clash 40 and a chain link 6. A burst therefore delays a signature, which is the trade.
 
 ## 3. The power layer and the transform hold
@@ -47,7 +50,7 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 - **Power tap** (released within 12 ticks with no face button): a burst.
 - **Power held** (12 ticks or more with no face button): the channel. It charges at +30 ki a second, and runs the fighter's own channel where they have one (the Protagonist's stoke). Guard is down while channelling, and CHARGE INTERRUPT applies as now.
 - **Power plus a face button:** one of the three loadout specials, or the signature. Costs and cooldowns are unchanged: specials cost 15 to 30 ki with a 25 s cooldown, and the signature costs 45 ki with a 120 s cooldown per fighter. A special or signature fired this way never also bursts or charges.
-- **Requests, not queues.** A funded press fires at the next exchange boundary. An unfunded press is refused with the "need ki" cue and doesn't wait: the same trigger, held, is how the player charges. This replaces the 180-tick and 600-tick queue rules.
+- **Requests, not queues.** A funded press fires at the next exchange boundary. An unfunded press is refused with the "need ki" cue and doesn't wait: the same trigger, held, is how the player charges. This replaces the 180-tick and 600-tick queue rules, including the 600-tick wait that Controls' spec still keeps for an unfunded signature (§4 there). A beam that fires up to 10 s after the press would feel like the automatic beams Orb's friends objected to.
 - **Transform: hold both triggers for 30 ticks (0.5 s).** This replaces the single Transform button in `moveset-rules.md` §10.1; the ready cues there are unchanged.
   - *The chord.* When the second trigger goes down within 6 ticks of the first, the two are read as the chord: no dodge, sprint, burst or charge fires, and releasing a chord never fires a tap.
   - *The fill.* A ring fills around the fighter over the 30 ticks. The fighter can move but can't attack. Taking a hit cancels the hold, and releasing early costs nothing.
@@ -88,12 +91,13 @@ Simple produces the same actions as every layout, at the same costs and windows.
 | :--- | :--- |
 | **Mode** (physical or energy) | Energy when the rival is beyond rush range or the player holds away; physical when close or holding toward. It switches only between exchanges, and holds for at least 1 s |
 | **Burst** | A Guard or Dodge press during hit-stun counts as a burst request. If the player presses nothing, the director bursts for them at the fourth link of a chain. Both need the 30 ki and the cooldown |
-| **Which special** | Power plus Attack fires one of the three loadout specials, picked by range, by the rival's state (guarding, airborne) and by a variety penalty against repeating the last one |
+| **Which special** (`special_auto`) | Power plus Attack fires one of the three loadout specials. Only specials that are funded and off cooldown are eligible. The director scores them by range fit, then by the rival's state (the guard-breaker against a guard, the anti-air against an airborne rival), minus a variety penalty for the last one used. Ties go to loadout slot order, so the pick is deterministic. If none is eligible, the press is refused with the "need ki" cue |
 | **Signature** | Never automatic. Power plus Heavy on a controller, or a swipe up on Attack on touch |
 | **Weight** | On touch, a tap is a light and a hold is a heavy |
 
 - The automatic picks are sound but plain: mode follows range alone, and specials follow the obvious context. The full layouts add choice, such as picking the exact special, mixing modes at will, and timing or baiting a burst.
-- The perfect-block window is the same 10 ticks on every layout. Touch may get +2 ticks if device tests show screen latency needs it.
+- The perfect-block window is the same on every layout (§1). Touch gets Controls' 2 extra ticks of early tolerance for screen latency.
+- On touch, a Power tap does nothing, and the burst comes from the two rules above (Controls' `autoBurst` flag).
 
 ## 6. Mashing: fine for beginners, beatable by experts
 
@@ -102,7 +106,7 @@ Simple produces the same actions as every layout, at the same costs and windows.
 - The director composes real strings from those presses, so a masher sees good-looking combat and beats the easy AI.
 
 **Why an expert beats it.**
-1. **A queue is a commitment.** Three queued presses commit about 1.5 to 2 s, and the string's ender has an 18-tick wind-up with a perfect-block window. A perfect block gives the riposte.
+1. **A queue is a commitment.** Three queued presses commit about 1.5 to 2 s, and the string's ender has the 20-tick heavy tell with a perfect-block window. A perfect block gives the riposte.
 2. **Repeats go stale.** The same weight in three exchanges running adds 2 ticks to its wind-ups for each further repeat (at most +6) and widens the rival's perfect-block window by 2 ticks (at most +4). Changing weight, mode or direction clears it.
 3. **A blocked string is punishable.** A fully blocked string leaves the attacker 12 ticks behind, which is the guard's punish window.
 4. **The triangle.** Attacks lose to guard and dodge, and a masher never grabs, so guarding a masher is safe.
