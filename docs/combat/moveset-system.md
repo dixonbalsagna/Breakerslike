@@ -1,6 +1,6 @@
 # Moveset system
 
-Owner: Combat and Choreography. Implementation: Encounter Systems (the composer), Animation and Rendering (poses and in-betweens), Tools (schemas). Numbers: Game Design. Date: 2026-09-30. Status: plan, system first, content after (Orb, questionnaire 6). Section 9 revises the grammar for the control scheme in ADR 0008: physical and energy modes, direction-shaped entries, context actions, and the revised counts.
+Owner: Combat and Choreography. Implementation: Encounter Systems (the composer), Animation and Rendering (poses and in-betweens), Tools (schemas). Numbers: Game Design. Date: 2026-09-30. Status: plan, system first, content after (Orb, questionnaire 6). Section 9 revises the grammar for the control scheme in ADR 0008: physical and energy modes, direction-shaped entries, context actions, and the revised counts. **The first real fighter's moveset is now planned at the rich end in `m0-rich.md`** (Orb, 2026-10-01): its counts replace sections 6 and 9.6 for the Anti-hero, and its pose costs follow Animation's overhaul.
 
 **Orb's ask** (`docs/ep/vision.md`, questionnaire 6), per fighter:
 - hundreds to thousands of basic attacks, dozens to hundreds of specials, and dozens of signatures;
@@ -381,7 +381,7 @@ Controls and Game Design need a visible wind-up of at least **15 ticks for a lig
 | **Ender** (the last blow of a string or chain) | 18 (Game Design), at least 15 | yes | TRADE BLOWS' deciding blow, the chain ender |
 | **Ordinary energy blast** | 15 light, 20 charged | yes: a perfect block deflects it | the energy family (9.1) |
 | **Mid-string hit** | 6 (the section 7.2 floor) | no: a held guard still blocks it normally | PRESSURE's second and third strikes, TRADE BLOWS' exchanged blows, chain links |
-| **Signature** | the charge (0.8 s) | no: it can be guarded, dodged, escaped, or answered with a beam | all signatures |
+| **Signature** | the charge (0.8 s) | yes: a perfect block deflects it (Game Design, `control-rules.md` section 1), with three looks by the direction held (`m0-rich.md` section 6). It can also be guarded, dodged, escaped, or answered with a beam | all signatures |
 | **Grab, tackle, dive grab** | 10 | no: a grab beats Guard, loses to an attack and misses a dodge | context actions (9.3) |
 | **Strikes on a fighter who cannot guard** | as its weight | none to give | CHARGE INTERRUPT (the channel drops the guard), strikes on a launched or downed body |
 

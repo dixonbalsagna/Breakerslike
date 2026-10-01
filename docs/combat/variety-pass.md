@@ -1,6 +1,6 @@
 # Variety pass
 
-Owner: Combat and Choreography. Implementation: Encounter Systems. Numbers: Game Design. Date: 2026-09-30. Status: design, with data in `data/combat/styles.json` (not read by the sim until Encounter's style slice). Section 9 lists what the control scheme in ADR 0008 changes. Folds in Game Design's Q4 redesign (`stance-matrix.md` R4, R5 and R9; `spec-wounds.md` sections 1 and 9) and Encounter's Q4 plan (`docs/director/q4-director-control-plan.md`).
+Owner: Combat and Choreography. Implementation: Encounter Systems. Numbers: Game Design. Date: 2026-09-30. Status: design, with data in `data/combat/styles.json` (not read by the sim until Encounter's style slice). Section 9 lists what the control scheme in ADR 0008 changes. The pulse clashes (fist clash, blur exchange, grapple lock), the ping-pong's pieces and the three beam answers are in `m0-rich.md` sections 6 to 8. Folds in Game Design's Q4 redesign (`stance-matrix.md` R4, R5 and R9; `spec-wounds.md` sections 1 and 9) and Encounter's Q4 plan (`docs/director/q4-director-control-plan.md`).
 
 **Orb** (`docs/ep/vision.md`, questionnaire 4): "I liked the faster fight pace. Now I want to see cleaner combos, more teleport clashing, stylistic flying combat, heavy ground combat, energy blasts, more varied beam struggles."
 
