@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/vfx-transform",
+  "title": "vfx transformation effects (version 1)",
+  "description": "data/vfx/transform.json: the transformation's effects on the gather, break and settle beats (docs/vfx/transform-plan.md, staged by docs/design/moveset-rules.md section 10.8). Presentation only: read by render/vfx/transform.gd, never by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because transform.gd falls back to the same default. Lengths are in fighter heights (_bh), alphas 0 to 1, beats and ticks are whole ticks (60 a second). The ring radii order and the agreement of the beats with data/anim/forms.json are checked by tools/lib/xref-fight.js (vfx-transform-range, vfx-transform-beats).",
+  "type": "object",
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "beats": {
+      "type": "object",
+      "description": "The beats per version. They should match data/anim/forms.json, which the camera and the figure follow (a mismatch is a warning).",
+      "properties": {
+        "full": {
+          "type": "object",
+          "description": "Ticks of each beat.",
+          "properties": {
+            "gather": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "break": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "settle": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "short": {
+          "type": "object",
+          "description": "Ticks of each beat.",
+          "properties": {
+            "gather": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "break": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "settle": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "live": {
+          "type": "object",
+          "description": "Ticks of each beat.",
+          "properties": {
+            "gather": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "break": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "settle": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "gather": {
+      "type": "object",
+      "description": "The gather: the aura and loose dust drawn inward, the light around the fighter dimmed.",
+      "properties": {
+        "motes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dust_motes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "loops_full": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "loops_short": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "loops_live": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "len_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "width_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "dim_radius_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dim_alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "aura_shrink": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "break": {
+      "type": "object",
+      "description": "The break: one ring leaves the body and the aura swaps in a single frame.",
+      "properties": {
+        "ring_r0_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ring_r1_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ring_ticks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ring_thick": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ring_alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "flash_radius_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "flash_alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "flash_ticks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "aura_alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "settle": {
+      "type": "object",
+      "description": "The settle: the new aura holds, then eases out.",
+      "properties": {
+        "aura_alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "ease_ticks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fade_ticks": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "aura": {
+      "type": "object",
+      "description": "The aura shape per tier (1 to 4).",
+      "propertyNames": {
+        "pattern": "^(_.*|[1-4])$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "description": "One tier's aura.",
+        "properties": {
+          "w_bh": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "h_bh": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "lobes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fill": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "mix": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

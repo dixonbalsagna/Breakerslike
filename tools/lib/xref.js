@@ -517,6 +517,21 @@ function xref(docs, root = repoRoot) {
     for (const o of Object.keys(opts)) if (!listed.has(o) && !hidden.includes(o)) err(SETTINGS, '/hidden', 'settings-unlisted', `option "${o}" is neither on a screen section nor in hidden, so no player can reach it`, 'warning');
   }
 
+  // ---- vfx: transformation ----
+  const xf = get('data/vfx/transform.json');
+  if (isObj(xf)) {
+    const XF = 'data/vfx/transform.json';
+    if (isObj(xf.break) && typeof xf.break.ring_r0_bh === 'number' && typeof xf.break.ring_r1_bh === 'number' && xf.break.ring_r0_bh >= xf.break.ring_r1_bh) err(XF, '/break/ring_r0_bh', 'vfx-transform-range', `ring_r0_bh ${xf.break.ring_r0_bh} is not below ring_r1_bh ${xf.break.ring_r1_bh}, so the ring would not expand`);
+    const fm = get('data/anim/forms.json');
+    if (isObj(xf.beats) && isObj(fm) && isObj(fm.versions)) {
+      for (const [ver, b] of Object.entries(xf.beats)) {
+        const v = fm.versions[ver];
+        if (ver.startsWith('_') || !isObj(b) || !isObj(v)) continue;
+        for (const k of ['gather', 'break', 'settle']) if (typeof b[k] === 'number' && typeof v[k] === 'number' && b[k] !== v[k]) err(XF, `/beats/${esc(ver)}/${k}`, 'vfx-transform-beats', `${ver} ${k} is ${b[k]} ticks here but ${v[k]} in data/anim/forms.json; the effect and the figure would drift apart`, 'warning');
+      }
+    }
+  }
+
   // ---- vfx: water ----
   const water = get(WATER);
   if (isObj(water)) {

@@ -8029,6 +8029,720 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-forms-live-valid",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/schema": "anim.forms/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-forms-version-missing",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "del": [
+            "/versions/live"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/versions"
+      }
+    },
+    {
+      "id": "anim-forms-unknown-version",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/long": {
+              "gather": 1,
+              "break": 1,
+              "settle": 1,
+              "hold": 0
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/versions/long"
+      }
+    },
+    {
+      "id": "anim-forms-beat-missing",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "del": [
+            "/versions/full/break"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/versions/full"
+      }
+    },
+    {
+      "id": "anim-forms-beat-integer",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/full/gather": 60.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/versions/full/gather"
+      }
+    },
+    {
+      "id": "anim-forms-beat-positive",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/live/gather": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/versions/live/gather"
+      }
+    },
+    {
+      "id": "anim-forms-hold-zero-ok",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/full/hold": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-forms-hold-negative",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/full/hold": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/versions/full/hold"
+      }
+    },
+    {
+      "id": "anim-forms-hold-above-settle",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/short/hold": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:forms-hold",
+        "pointer": "/versions/short/hold"
+      }
+    },
+    {
+      "id": "anim-forms-pose-missing",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "del": [
+            "/poses/break"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/poses"
+      }
+    },
+    {
+      "id": "anim-forms-unknown-beat",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/poses/rest": "form.settle"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/poses/rest"
+      }
+    },
+    {
+      "id": "anim-forms-pose-shape",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/poses/gather": "Form Gather"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/poses/gather"
+      }
+    },
+    {
+      "id": "anim-forms-pose-unknown",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/poses/gather": "form.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:forms-pose",
+        "pointer": "/poses/gather"
+      }
+    },
+    {
+      "id": "anim-forms-full-sum",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/full/settle": 91
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:forms-pause-sum",
+        "pointer": "/versions/full"
+      }
+    },
+    {
+      "id": "anim-forms-short-sum",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/short/gather": 25
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:forms-pause-sum",
+        "pointer": "/versions/short"
+      }
+    },
+    {
+      "id": "anim-forms-live-sum-free",
+      "schema": "anim-forms.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/forms.json",
+          "set": {
+            "/versions/live/settle": 40
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "strike-lead-integer-too-early",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/dynamic": [
+              {
+                "tick": 3,
+                "op": "strike",
+                "args": {
+                  "a": "A",
+                  "d": "D",
+                  "dmg": 10
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:strike-lead",
+        "pointer": "/templates/0/branches/0/dynamic/0/tick"
+      }
+    },
+    {
+      "id": "strike-lead-start-zero",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/dynamic": [
+              {
+                "tick": {
+                  "at": "start",
+                  "step": 0
+                },
+                "op": "strike",
+                "args": {
+                  "a": "A",
+                  "d": "D",
+                  "dmg": 10
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:strike-lead",
+        "pointer": "/templates/0/branches/0/dynamic/0/tick"
+      }
+    },
+    {
+      "id": "strike-lead-start-wind-up-ok",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/dynamic": [
+              {
+                "tick": {
+                  "at": "start",
+                  "add": [
+                    "windup"
+                  ]
+                },
+                "op": "strike",
+                "args": {
+                  "a": "A",
+                  "d": "D",
+                  "dmg": 10
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "strike-lead-approach-anchored-ok",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/dynamic": [
+              {
+                "tick": {
+                  "at": "c",
+                  "step": 0
+                },
+                "op": "strike",
+                "args": {
+                  "a": "A",
+                  "d": "D",
+                  "dmg": 10
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "strike-lead-sub-pulls-below",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/0/branches/0/dynamic": [
+              {
+                "tick": {
+                  "at": "start",
+                  "add": [
+                    "windup"
+                  ],
+                  "sub": [
+                    "windup",
+                    "follow"
+                  ]
+                },
+                "op": "strike",
+                "args": {
+                  "a": "A",
+                  "d": "D",
+                  "dmg": 10
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:strike-lead",
+        "pointer": "/templates/0/branches/0/dynamic/0/tick"
+      }
+    },
+    {
+      "id": "vfx-transform-live-valid",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-transform-version-required",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "del": [
+            "/version"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "vfx-transform-unknown-group",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/sparks": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/sparks"
+      }
+    },
+    {
+      "id": "vfx-transform-unknown-key",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/gather/embers": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/gather/embers"
+      }
+    },
+    {
+      "id": "vfx-transform-underscore-key-ok",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/break/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-transform-empty-group-ok",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/settle": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-transform-unknown-version",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/beats/long": {
+              "gather": 1,
+              "break": 1,
+              "settle": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/beats/long"
+      }
+    },
+    {
+      "id": "vfx-transform-beat-integer",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/beats/live/gather": 10.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/beats/live/gather"
+      }
+    },
+    {
+      "id": "vfx-transform-beat-positive",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/beats/short/break": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beats/short/break"
+      }
+    },
+    {
+      "id": "vfx-transform-count-negative",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/gather/motes": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/gather/motes"
+      }
+    },
+    {
+      "id": "vfx-transform-alpha-above-one",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/break/ring_alpha": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/break/ring_alpha"
+      }
+    },
+    {
+      "id": "vfx-transform-length-positive",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/gather/radius_bh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/gather/radius_bh"
+      }
+    },
+    {
+      "id": "vfx-transform-type-string",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/break/flash_ticks": "5"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/break/flash_ticks"
+      }
+    },
+    {
+      "id": "vfx-transform-aura-tier-name",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/aura/5": {
+              "w_bh": 1,
+              "h_bh": 1,
+              "lobes": 0,
+              "fill": 0.2,
+              "mix": 0.1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/aura/5"
+      }
+    },
+    {
+      "id": "vfx-transform-aura-underscore-key-ok",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/aura/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-transform-aura-unknown-key",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/aura/1/glow": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/aura/1/glow"
+      }
+    },
+    {
+      "id": "vfx-transform-aura-fill-range",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/aura/2/fill": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/aura/2/fill"
+      }
+    },
+    {
+      "id": "vfx-transform-ring-not-expanding",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/break/ring_r0_bh": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-transform-range",
+        "pointer": "/break/ring_r0_bh"
+      }
+    },
+    {
+      "id": "vfx-transform-ring-equal",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/break/ring_r0_bh": 4.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-transform-range",
+        "pointer": "/break/ring_r0_bh"
+      }
+    },
+    {
+      "id": "vfx-transform-beats-drift-warns",
+      "schema": "vfx-transform.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/transform.json",
+          "set": {
+            "/beats/full/settle": 95
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-transform-beats",
+        "pointer": "/beats/full/settle"
+      }
     }
   ],
   "text": [

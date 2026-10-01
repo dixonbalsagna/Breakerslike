@@ -346,6 +346,51 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (cap !== undefined) for (const [g, k] of [['short', 'lengthS'], ['full', 'lengthS']]) { const v = n(g, k); if (v !== undefined && v > cap) err(PF, `/${g}/${k}`, 'pause-order', `${g}.${k} ${v} is above the bank's maxS ${cap}, so the bank can never cover it`, 'warning'); }
   }
 
+  // ---- anim forms: poses exist, hold fits the settle, full and short add up to the pause ----
+  const forms = get('data/anim/forms.json');
+  if (isObj(forms)) {
+    const FF = 'data/anim/forms.json';
+    const posesDoc = get('data/anim/poses.json');
+    const poseNames = new Set(isObj(posesDoc) && isObj(posesDoc.poses) ? Object.keys(posesDoc.poses) : []);
+    if (isObj(forms.poses) && poseNames.size) for (const [beat, id] of Object.entries(forms.poses)) if (!beat.startsWith('_') && typeof id === 'string' && !poseNames.has(id)) err(FF, `/poses/${esc(beat)}`, 'forms-pose', `beat "${beat}" uses pose "${id}", which is not in poses.json`);
+    const vs = isObj(forms.versions) ? forms.versions : {};
+    for (const [name, v] of Object.entries(vs)) if (isObj(v) && typeof v.hold === 'number' && typeof v.settle === 'number' && v.hold > v.settle) err(FF, `/versions/${esc(name)}/hold`, 'forms-hold', `${name} hold ${v.hold} is longer than its settle ${v.settle}`);
+    const pz = get('data/fight/pause.json');
+    if (isObj(pz)) for (const [name, len] of [['full', isObj(pz.full) ? pz.full.lengthS : undefined], ['short', isObj(pz.short) ? pz.short.lengthS : undefined]]) {
+      const v = vs[name];
+      if (isObj(v) && typeof len === 'number' && [v.gather, v.break, v.settle].every((n) => typeof n === 'number')) {
+        const sum = v.gather + v.break + v.settle;
+        if (sum !== Math.round(len * 60)) err(FF, `/versions/${name}`, 'forms-pause-sum', `${name}: gather + break + settle is ${sum} ticks, but the pause is ${len} s (${Math.round(len * 60)} ticks) in data/fight/pause.json`);
+      }
+    }
+  }
+
+  // ---- dynamic strikes: each is scheduled at least 6 ticks after its list starts (Animation needs the lead to blend into the contact pose) ----
+  const tpl6 = get('data/combat/templates.json');
+  if (isObj(tpl6) && Array.isArray(tpl6.templates) && isObj(tpl6.profiles) && isObj(tpl6.profiles.dynamic) && isObj(tpl6.profiles.dynamic.tempo)) {
+    const tp = tpl6.profiles.dynamic.tempo;
+    const ap = tpl6.profiles.dynamic.approach;
+    // c is the approach in ticks: at least approach.min seconds (the sim rounds it to whole ticks)
+    const cMin = isObj(ap) && typeof ap.min === 'number' ? Math.round(ap.min * 60) : 0;
+    tpl6.templates.forEach((tm, ti) => {
+      if (!isObj(tm) || !Array.isArray(tm.branches)) return;
+      tm.branches.forEach((br, bi) => {
+        if (!isObj(br) || !Array.isArray(br.dynamic)) return;
+        br.dynamic.forEach((be, bei) => {
+          if (!isObj(be) || be.op !== 'strike' || be.tick === undefined) return;
+          let v;
+          if (typeof be.tick === 'number') v = be.tick;
+          else if (isObj(be.tick)) {
+            v = (be.tick.at === 'c' ? cMin * (typeof be.tick.times === 'number' ? be.tick.times : 1) : 0) + (typeof be.tick.step === 'number' && typeof tp.step === 'number' ? be.tick.step * tp.step : 0);
+            for (const n of Array.isArray(be.tick.add) ? be.tick.add : []) if (typeof tp[n] === 'number') v += tp[n];
+            for (const n of Array.isArray(be.tick.sub) ? be.tick.sub : []) if (typeof tp[n] === 'number') v -= tp[n];
+          }
+          if (typeof v === 'number' && v < 6) err('data/combat/templates.json', `/templates/${ti}/branches/${bi}/dynamic/${bei}/tick`, 'strike-lead', `strike in ${tm.id}/${br.id} is scheduled ${v} ticks after its list starts (at the shortest approach); it needs at least 6`);
+        });
+      });
+    });
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-forms",
+  "title": "anim.forms/1",
+  "description": "data/anim/forms.json: the transformation's three beats per version, in 60 Hz ticks (docs/design/moveset-rules.md section 10.8). Render only. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every pose id exists in poses.json; the full and short versions add up to the pause lengths in data/fight/pause.json; hold is at most settle) are checked by tools/lib/xref-fight.js.",
+  "type": "object",
+  "required": [
+    "schema",
+    "versions",
+    "poses"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.forms/1"
+    },
+    "versions": {
+      "type": "object",
+      "required": [
+        "full",
+        "short",
+        "live"
+      ],
+      "properties": {
+        "full": {
+          "type": "object",
+          "required": [
+            "gather",
+            "break",
+            "settle",
+            "hold"
+          ],
+          "properties": {
+            "gather": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks the body compresses."
+            },
+            "break": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks of the one snap to the new pose."
+            },
+            "settle": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks the new pose is on screen after the break, including the hold."
+            },
+            "hold": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Ticks of the settle the new pose holds before it eases back into the fight (at most settle)."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "short": {
+          "type": "object",
+          "required": [
+            "gather",
+            "break",
+            "settle",
+            "hold"
+          ],
+          "properties": {
+            "gather": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks the body compresses."
+            },
+            "break": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks of the one snap to the new pose."
+            },
+            "settle": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks the new pose is on screen after the break, including the hold."
+            },
+            "hold": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Ticks of the settle the new pose holds before it eases back into the fight (at most settle)."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "live": {
+          "type": "object",
+          "required": [
+            "gather",
+            "break",
+            "settle",
+            "hold"
+          ],
+          "properties": {
+            "gather": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks the body compresses."
+            },
+            "break": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks of the one snap to the new pose."
+            },
+            "settle": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Ticks the new pose is on screen after the break, including the hold."
+            },
+            "hold": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Ticks of the settle the new pose holds before it eases back into the fight (at most settle)."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "poses": {
+      "type": "object",
+      "description": "Beat to pose id (a pose in data/anim/poses.json).",
+      "required": [
+        "gather",
+        "break",
+        "settle"
+      ],
+      "properties": {
+        "gather": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]*$"
+        },
+        "break": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]*$"
+        },
+        "settle": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]*$"
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}
