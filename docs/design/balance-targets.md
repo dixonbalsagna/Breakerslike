@@ -684,7 +684,7 @@ Orb wants fighters to be ragdolled: to skid, tumble and bounce over the course o
 ### Recovering early (the tech)
 
 - **A dodge tap** recovers him: he flips to his feet with no recovery time, and the rest of the journey's wear isn't paid.
-- **When it works:** within 8 ticks of a bounce's contact, or at any time in a tumble.
+- **When it works:** a fresh dodge tap from 4 ticks before a bounce's contact to 8 ticks after it (10 on touch), or at any time in a tumble (Controls' window, `docs/controls/tech-and-pulse-input.md`). A press that misses the window costs nothing.
 - **When it doesn't:** in a skid over 900 (he must shed speed first), in a slam, on water, and on a break or finisher launch, which are set pieces.
 - **Cost:** 15 ki, and it shares the dodge-cancel's 3 s cooldown (`control-rules.md` §2).
 - The AI recovers on 20%, 50% or 80% of chances (easy, medium, hard).

@@ -32,7 +32,8 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 **Clashes are decided on the pulse** (Orb: timed presses, "hit the pulse to surge"). This covers the beam struggle, the fist clash, the blur exchange and the grapple lock.
 - A clash has **3 pulses.** Each is shown and heard, with an 8-tick window (10 on touch). They come at 24, 48 and 72 ticks for the fist clash and the blur exchange, and at 30, 60 and 90 for the grapple lock and the beam struggle (`moveset-rules.md` §11).
 - **A tie** is a difference of less than 10. Both fighters are thrown back and nobody wins the exchange.
-- A press on the pulse is a **surge:** +10 to that fighter's clash score. A press off the pulse misses that pulse and locks the next press out for 20 ticks, so mashing loses.
+- A press on the pulse is a **surge:** +10 to that fighter's clash score. A press off the pulse misses that pulse and locks the next press out for 20 ticks, so mashing loses. A press during the lockout restarts it, as with the perfect block.
+- **Pulses are always at least 24 ticks apart,** so one honest early press costs one surge and never two.
 - The score still starts from state (tier, ki and meters), as today. The pulses swing it by up to 30 either way.
 - The AI hits 40%, 65% or 85% of pulses (easy, medium, hard).
 
@@ -44,6 +45,7 @@ Orb set spectacle at **4 of 10** and the top-tier finisher at **7 of 10**.
 | Neutral | **Split it around the body** | The beam parts and scars the ground on both sides behind him |
 | Toward | **Walk through it** | He advances through the beam and arrives in front of the attacker, who is 20 ticks into recovery |
 
+- The direction is read on the tick the beam reaches him, not on the press (Controls' proposal, confirmed).
 - All three cost no ki and take no damage, as a perfect block does.
 - **This is different from the rival's On the Chin.** That is a held stance with no timing, in which he takes 30% of a signature's damage and builds Pride. A perfect block is tight timing, takes nothing and builds nothing.
 
