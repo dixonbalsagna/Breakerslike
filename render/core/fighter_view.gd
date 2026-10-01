@@ -3,7 +3,8 @@ extends Node3D
 ## One fighter as a greybox figure of flat-coloured primitives, generated from its roster colours and role (no
 ## hand-made assets). The layout follows the prototype's drawFighter, in its units: the body pivot sits 34 units above
 ## f.y and rotates by f.rot (launch spin) and the stance lean. Readability cues:
-## - stance: a badge above the head in the stance colour, a lean (aggressive forward, evasive back) and a guard glow
+## - stance: a badge above the head in the stance colour, a lean (aggressive forward, evasive back) and the guard arc
+##   (a held guard: an arc in front of the fighter in his lane colour, which flashes on a perfect block);
 ##   in front in defensive; the HUD labels it too;
 ## - hit: the body flashes white for RenderLook.HIT_FLASH_S after f.hurtT;
 ## - tier: the aura grows with tier, and at tier 3+ (or while charging) aura streaks rise from the feet;
@@ -63,6 +64,11 @@ var sag: float = 0.0           # ... and how far the planet's bend lowers that s
 var flashes_on: bool = true    # F7: the head flashes instead of the placeholder aura, streaks and charge orb
 var markers: bool = true       # the stance badge over the head; off in Camera's inset pane, a close-up strip it would poke into
 var _badge_mat: ShaderMaterial
+## The guard arc (guard.gdshader): up while the guard is held, and through a perfect block's flash.
+static var guard_reduced: bool = false   # the reduced version, the line alone (main sets it from VFX's quality)
+var _guard_mat: ShaderMaterial
+var _guard_a: float = 0.0          # how far up it is, 0 to 1
+var _guard_flash_t0: float = -1.0  # the sim time of the last perfect block
 var _faded: bool = false
 var _flash: bool = false
 var _stance: int = -1
@@ -129,10 +135,21 @@ func build(f) -> void:
 	_badge_mat = RenderMats.fighter_flat(Color.WHITE, 1.0, 0.2)
 	badge.material_override = _badge_mat
 	add_child(badge)
-	guard = _glow(_sphere(), RenderLook.col(RenderLook.STANCE_COL[1]), 0.4, 0.6)
-	guard.position = Vector3(30.0, 0.0, 0.0)
-	guard.scale = Vector3(12.0, 84.0, 60.0)
-	body.add_child(guard)
+	# On the pivot, not the body: the body turns through the camera when he changes side, and the arc stays flat.
+	var gq := QuadMesh.new()
+	gq.size = RenderLook.GUARD_SIZE
+	guard = MeshInstance3D.new()
+	guard.mesh = gq
+	_guard_mat = ShaderMaterial.new()
+	_guard_mat.shader = preload("res://render/shaders/guard.gdshader")
+	_guard_mat.set_shader_parameter("ortho", 1.0)
+	_guard_mat.set_shader_parameter("size", RenderLook.GUARD_SIZE)
+	_guard_mat.set_shader_parameter("radius", RenderLook.GUARD_RADIUS)
+	guard.material_override = _guard_mat
+	guard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	guard.visible = false
+	glows.append(_guard_mat)
+	pivot.add_child(guard)
 	flash_view = FlashView.new()
 	add_child(flash_view)
 	flash_view.set_head(hs.radius)
@@ -246,6 +263,11 @@ func cue(kind: String, T: float) -> void:
 	_cue["t0"] = T
 	_cue["kind"] = kind
 	cues_started[kind] = int(cues_started.get(kind, 0)) + 1
+
+
+## A perfect block (the sim's parry event, for the one who blocked): the guard arc flashes.
+func guard_flash(T: float) -> void:
+	_guard_flash_t0 = T
 
 
 ## A ring around this fighter (the other one circles it), at alpha a.
@@ -416,7 +438,22 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	if stance != _stance:
 		_stance = stance
 		_badge_mat.set_shader_parameter("albedo", RenderLook.col(RenderLook.STANCE_COL[stance]))
-	guard.visible = (stance == 1 and (f.state == "free" or f.state == "locked") or _cue_part("guard", T) > 0.3) and not f.hidden
+	# The guard arc: up while the guard is held (or the defensive stance stands, or a cue shows it), and through a
+	# perfect block's flash even if the guard is already down.
+	var able: bool = f.state == "free" or f.state == "locked"
+	var guarding: bool = ((int(f.act.guardSince) >= 0 or stance == 1) and able or _cue_part("guard", T) > 0.3) and not f.hidden
+	_guard_a = move_toward(_guard_a, 1.0 if guarding else 0.0, dt / (RenderLook.GUARD_UP_S if guarding else RenderLook.GUARD_DOWN_S))
+	var gf: float = 0.0
+	if _guard_flash_t0 >= 0.0 and T >= _guard_flash_t0 and not f.hidden:
+		gf = clampf(1.0 - (T - _guard_flash_t0) / RenderLook.GUARD_FLASH_S, 0.0, 1.0)
+	var ga: float = maxf(_guard_a, gf)
+	guard.visible = ga > 0.01
+	if guard.visible:
+		guard.position = Vector3(m * (RenderLook.GUARD_NEAR + RenderLook.GUARD_SIZE.x * 0.5), 4.0, 12.0)
+		guard.scale = Vector3(m, 1.0, 1.0)
+		_guard_mat.set_shader_parameter("albedo", Color(_aura_col, RenderLook.GUARD_ALPHA * ga))
+		_guard_mat.set_shader_parameter("flash", gf)
+		_guard_mat.set_shader_parameter("fill", 0.0 if guard_reduced else 1.0)
 	ripple.visible = f.hidden
 	if f.hidden:
 		var rp: float = fmod(T * 1.2, 1.0)

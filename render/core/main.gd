@@ -154,8 +154,13 @@ func _ready() -> void:
 	ui_hud.set_option("pad_preset", host.hub.pad_preset)
 	ui_hud.set_option("pad_preset_p2", host.hub.pad_preset)
 	ui_hud.set_option("touch_preset", host.hub.touch_preset)
-	if ui_hud.has_signal("remap_changed"):
-		ui_hud.remap_changed.connect(_on_remap_changed)
+	ui_hud.remap_slot_changed.connect(_on_remap_changed)
+	# Which player a pad drives, so UI's Remap screen opens on the player whose pad pressed.
+	ui_hud.pad_slot_fn = func(device: int) -> int:
+		for s in range(2):
+			if int(host.hub.slot_pad[s]) == device and bool(host.hub.claimed[s]):
+				return s
+		return -1
 	if not manual and not args.has("bench") and not args.has("frames") and not args.has("shot"):
 		# ... then what the player saved on the Settings screen, so the saved choice wins (the order matters). The
 		# tools, the bench and scripted runs keep the defaults, so a saved option never changes a check or a measurement.
@@ -328,6 +333,16 @@ func _cue_events(events: Array) -> void:
 				views[1 - who].ring(T, float(pose.ring_other))
 
 
+## A perfect block (the sim's parry event) flashes the blocker's guard arc, in every pane.
+func _guard_events(events: Array) -> void:
+	for e in events:
+		if e.type == "parry":
+			for pw in all_panes():
+				var who: int = int(e.actor)
+				if who >= 0 and who < pw.fighter_views.size():
+					pw.fighter_views[who].guard_flash(host.S.T)
+
+
 ## The flashes today's events can drive (spec section 6); the rest wait for Encounter's events and have debug keys.
 func _flash_events(events: Array) -> void:
 	for e in events:
@@ -368,7 +383,10 @@ func frame(delta: float) -> void:
 	# The reduced versions (docs/design/rule-of-cool.md rule 6) follow VFX's quality: at its lowest, battle damage is a
 	# flat tint and the sky has no clouds (its reaction is then a tint alone).
 	var low: bool = host.vfx.enabled and host.vfx.quality == VfxLook.Q_LOW
+	if not manual and not args.has("anim-quality") and RenderAnim.quality != ("low" if low else "high"):
+		RenderAnim.set_quality("low" if low else "high")   # Animation's layers follow it (a tool, or --anim-quality, sets its own)
 	FighterView.damage_reduced = low
+	FighterView.guard_reduced = low
 	PaneWorld.clouds_on = not low and not args.has("noclouds")
 	var n: int = host.advance(delta, vp.x, vp.y)
 	if args.has("flash-soak") and frames % 40 == 0 and not FlashSet.ids().is_empty():
@@ -441,6 +459,7 @@ func _on_drained(events: Array, lines: Array) -> void:
 	planet.consume(events, host.S.T)
 	_flash_events(events)
 	_cue_events(events)
+	_guard_events(events)
 	RenderAnim.consume(host.S, events)
 	ui_hud.consume_all(events)
 	UiSimBridge.feed(ui_hud, lines)
@@ -550,9 +569,10 @@ func _on_option_changed(key: String, value) -> void:
 		host.hub.set_touch_preset(str(value))
 
 
-## The Remap screen changed a layout's bindings (UI's remap_changed). UI has already applied and saved the overrides
-## through Controls' SimInputData; the hub rebuilds its layouts, so the new keys play at once, mid-match.
-func _on_remap_changed(_preset_id: String, _overrides: Array) -> void:
+## The Remap screen changed a player's layout (UI's remap_slot_changed: the layout, its rows and whose it is). UI has
+## already applied and saved the overrides through Controls' SimInputData; the hub rebuilds its layouts, so the new
+## keys play at once, mid-match.
+func _on_remap_changed(_preset_id: String, _overrides: Array, _slot: int) -> void:
 	host.hub.reload_layouts()
 
 
@@ -715,7 +735,9 @@ func _pad_event(e: InputEvent) -> void:
 			return
 		if e.pressed:
 			take_over()
-			if btn == "start":
+			# Start pauses, except on a pad that is not playing while a second player could join: there it is the new
+			# player's first button, and joins like any other (docs/controls/local-two-player.md).
+			if btn == "start" and not host.hub.start_joins(e.device):
 				_toggle_pause()
 				get_viewport().set_input_as_handled()   # or the HUD, hearing the same press with its menu now open, closes it
 				return

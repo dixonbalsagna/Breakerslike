@@ -21,7 +21,7 @@
 //    standing. A floor's windows go out with VFX's blow-outs (planet_view.gd blow_windows) and show as dark holes, so
 //    the facade matches the glass VFX throws. Thin windows fade into the wall before they alias.
 // An instance with nothing to cut keeps back-face culling (its back faces are thrown away in the vertex stage), so
-// only the cut towers pay for their insides.
+// only the cut towers pay for their insides. tools/cull_check.gd compares that with the rasterizer's own culling.
 shader_type spatial;
 render_mode unshaded, cull_disabled;
 
@@ -40,6 +40,7 @@ uniform vec4 hole[2];          // xyz: a hidden fighter's chest (world, as drawn
 uniform vec4 hole_to[2];       // xyz: the hole's other end (the chest again for a round hole); w: the radius there
 uniform vec2 hole_near[2];     // cut what is nearer the camera than this (view distance): at the chest, at the other end
 uniform vec4 inside : source_color = vec4(0.07, 0.07, 0.09, 1.0);   // RenderLook.BUILDING_INSIDE
+uniform float ref_cull = 0.0;        // 1: leave the back faces to the rasterizer (tools/cull_check.gd's reference picture)
 
 varying flat vec4 v_cut;      // x, y, z: the mask's three parts; w: floor height
 varying flat vec2 v_base;     // x: the base's world y; y: the top standing floor
@@ -77,11 +78,19 @@ void vertex() {
 	v_winb = vec3(wb.x, wb.y, float(INSTANCE_ID) + (zface ? 0.0 : 0.5));
 	v_face = vec3(zface ? VERTEX.x * sx : VERTEX.z * sz, zface ? sx : sz, (abs(NORMAL.y) < 0.5 && COLOR.a > 0.5) ? 1.0 : 0.0);
 	POSITION = PROJECTION_MATRIX * (VIEW_MATRIX * bent_world(mat4(1.0), w.xyz));
-	if (c.w <= 0.0) {
-		// Nothing to cut: cull this face if it looks away from the camera, as cull_back would.
-		vec3 n = normalize((VIEW_MATRIX * (MODEL_MATRIX * vec4(NORMAL, 0.0))).xyz);
-		vec3 p = (VIEW_MATRIX * w).xyz;
-		if (dot(n, p) > 0.0) {
+	if (c.w <= 0.0 && ref_cull < 0.5) {
+		// Nothing to cut: cull this face if it looks away from the camera, as cull_back would. Every corner of a face
+		// must decide the same, or a face thrown away at some corners only is drawn stretched to the screen's corner
+		// (a dark stripe from a roof). So the test uses the face's plane and nothing of the corner itself: the true
+		// normal (an instance is scaled unevenly, so the normal takes the inverse scale; a roof's slopes need it) and
+		// one point of the plane, the same from every corner (the foot of the model's origin on it, rounded so the
+		// corners agree to the bit; lowered with the stub).
+		vec3 s2 = max(vec3(dot(MODEL_MATRIX[0].xyz, MODEL_MATRIX[0].xyz), dot(MODEL_MATRIX[1].xyz, MODEL_MATRIX[1].xyz), dot(MODEL_MATRIX[2].xyz, MODEL_MATRIX[2].xyz)), vec3(1e-12));
+		vec3 n = (VIEW_MATRIX * (MODEL_MATRIX * vec4(NORMAL / s2, 0.0))).xyz;
+		float pd = floor(dot(NORMAL, VERTEX) * 4096.0 + 0.5) / 4096.0;
+		vec4 fp = MODEL_MATRIX * vec4(NORMAL * pd, 1.0);
+		fp.y = min(fp.y, COLOR.a < 0.5 ? stub - 1.0 : stub);
+		if (dot(n, (VIEW_MATRIX * fp).xyz) > 0.0) {
 			POSITION = vec4(2.0, 2.0, 2.0, 1.0);
 		}
 	}
@@ -114,6 +123,9 @@ float win_hash(vec3 p) {
 }
 
 void fragment() {
+	if (ref_cull > 0.5 && v_cut.w <= 0.0 && !FRONT_FACING) {
+		discard;
+	}
 	float dith = fract(dot(FRAGCOORD.xy, vec2(0.7548777, 0.5698403)));
 	for (int i = 0; i < 2; i++) {
 		if (hole[i].w > 0.0) {

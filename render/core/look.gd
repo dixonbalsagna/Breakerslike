@@ -281,6 +281,16 @@ const ARM := "#e6b995"
 const LEGS := "#1b1f2a"
 const CAPE := "#7a1414"
 const EYE := "#111111"
+## The guard arc (guard.gdshader; FighterView): a held guard, drawn in front of the fighter on the side he faces, in
+## his lane colour. The quad's size and the arc's radius; how far the quad's near edge is from the pivot (behind it,
+## so the arc wraps the front of the body); its opacity; how fast it comes up and goes; a perfect block's flash.
+const GUARD_SIZE := Vector2(52.0, 88.0)
+const GUARD_RADIUS: float = 46.0
+const GUARD_NEAR: float = -8.0
+const GUARD_ALPHA: float = 0.9
+const GUARD_UP_S: float = 0.08
+const GUARD_DOWN_S: float = 0.15
+const GUARD_FLASH_S: float = 0.3
 ## Stance colours for the badge above each fighter: aggressive, defensive, evasive, escape.
 const STANCE_COL: Array = ["#ff5a4a", "#4aa8ff", "#5ed17a", "#b58cff"]
 const STANCE_SHORT: Array = ["ATK", "DEF", "EVA", "ESC"]

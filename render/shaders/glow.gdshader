@@ -1,4 +1,4 @@
-// Additive glow (auras, beams, charge orbs, guard, hidden ripple). Alpha falls off toward silhouette edges, so
+// Additive glow (auras, beams, charge orbs, hidden ripple). Alpha falls off toward silhouette edges, so
 // a sphere reads as a radial gradient and a cylinder as a soft-edged beam. Only back faces draw, so a glow around a
 // fighter sits behind the body instead of washing over it.
 shader_type spatial;
