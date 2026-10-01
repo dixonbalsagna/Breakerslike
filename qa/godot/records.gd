@@ -114,6 +114,9 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 			elif was_launched[i] and not now_launched:
 				ended[i] = true
 				rec.flights.append({"travel": snappedf(absf(SimWrap.sdx(launch_x[i], f.x)), 0.1), "newBiome": WorldBiomes.biomeAt(launch_x[i]) != WorldBiomes.biomeAt(f.x)})
+			# first contact by kind (docs/director/landing-mix.md): a launched fighter whose slide has begun took a slide at his first ground contact, however short it runs and even if it ends against a rise (the stop dent digs a crater before the `slide` event, which is why the event order cannot name the class)
+			if now_launched and f.slide > 0.0:
+				_land(open_fl, i, "slide")
 			was_launched[i] = now_launched
 		for tt in range(2, 5):
 			if top >= tt and rec.tierT[tt] < 0.0:
@@ -227,11 +230,11 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				var fe = fs[i]
 				for fl in open_fl:
 					if fl.v == i and fl.cls == "":
-						# the flight ended with no named contact: a hit too weak to slam or slide (350 units a second or less) counts as a slam, in the sea as water; a flight that ends in the air stays "other"
+						# the flight ended with no named contact: a hit too weak to slam or slide (350 units a second or less) is a stop, in the sea water; a flight that ends in the air was caught by the follow-up
 						if fe.y <= 0.0 and WorldTerrain.seaAt(S, fe.x):
 							_land(open_fl, i, "water")
 						elif fe.y <= WorldTerrain.groundY(S, fe.x) + 5.0:
-							_land(open_fl, i, "slam")
+							_land(open_fl, i, "stop")   # a weak landing (350 or slower): no slam, no slide
 						else:
 							_land(open_fl, i, "caught")   # still in the air when the flight ended: the follow-up caught him (balance-targets 19)
 		var fr = S.get("frontsInFrame")   # hazard fronts inside the camera framing, once living destruction lands; null before

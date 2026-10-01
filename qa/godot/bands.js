@@ -194,14 +194,14 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     const mixOf = (name, kFn, lo, hi, den) => { const c = S.clusterShare(D, kFn, den || (r => total(r.launches))); R.rate('5c.mix.' + name.split(' ')[0], '§5c', 'How launches end: ' + name + ' (per launch)', { v: c.p, ci: c.ci, lo, hi }); };
     if (D.every(r => r.landings)) {
       // balance-targets 19 and 20: one landing class per planner launch, by first contact: brunt (a building first), water (a skim or splash), bounce (G5), caught in the air (the follow-up reached the victim before any contact),
-      // then the ground: a slam digs the crater; before G5 a ground contact is a slide only if it carries on 2 bh = 150 units or more (the distance test), and from G5 (World's `bounce`, `land`, `left_ground` and `tumble_end` events) by the first contact's kind, so every skid or tumble is a slide.
+      // then the ground, by the first contact's kind (docs/director/landing-mix.md): a slide of any length is a slide, even one that ends against a rise; a crater at first contact is a slam; a landing at 350 or slower is a stop. Records take it from the slide state until World's `land` events (G5) name the kind directly.
       const g5 = hasEvent(A, 'bounce') || hasEvent(A, 'land') || hasEvent(A, 'left_ground') || hasEvent(A, 'tumble_end');
       const L = r => sum(Object.values(r.landings)), shortPl = r => (g5 ? (r.slideShortPl || 0) : 0);
       const slideC = r => r.landings.slide + shortPl(r), slamC = r => r.landings.slam - shortPl(r);
-      const how = g5 ? 'by the first contact kind' : '2 bh distance test';
+      const how = g5 ? 'World events name the kind' : 'the slide state at first contact';
       if (!g5) {
-        mixOf(`slide (first ground contact, ${how}; 40 to 60%)`, slideC, 0.40, 0.60, L);
-        mixOf('slam (the first contact digs a crater; 12 to 25%)', slamC, 0.12, 0.25, L);
+        mixOf(`slide (the first contact starts a slide, any length, ${how}; 40 to 60%)`, slideC, 0.40, 0.60, L);
+        mixOf('slam (a crater at the first contact; 12 to 25%)', slamC, 0.12, 0.25, L);
         const gs = S.clusterShare(D, slideC, r => slideC(r) + slamC(r));
         R.rate('5c.slideOfGround', '§5c', 'Slides as a share of ground landings (slides plus slams; at least 65%)', { v: gs.p, ci: gs.ci, lo: 0.65, hi: 1 });
         mixOf('caught in the air (the follow-up before any contact; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
@@ -216,8 +216,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
       mixOf('water (skim or splash first; 5 to 15%)', r => r.landings.water, 0.05, 0.15, L);
       mixOf('brunt (a building first; 4 to 10%)', r => r.landings.brunt, 0.04, 0.10, L);
       R.info('5c.other', '§5c', 'Planner launches with no contact and not caught (KO, the cap, launched again first), share of launches', fmt.pct(sum(D.map(r => r.landings.other)) / Math.max(1, sum(D.map(L)))), 'a class of its own so the classes add up to 100%');
-      if (g5) R.info('5c.stop', '§5c', 'Planner launches that landed at a stop (a contact under 350, no skid or tumble), share of launches', fmt.pct(sum(D.map(r => r.landings.stop || 0)) / Math.max(1, sum(D.map(L)))), 'a class of its own; not banded');
-      if (!g5) { const sh = sum(D.map(r => r.slideShortPl || 0)) / Math.max(1, sum(D.map(L))); R.info('5c.nothreshold', '§5c', 'Planner slide share if any slide counts as a slide (the kind rule that replaces the 2 bh test at G5)', `slide ${fmt.pct(sum(D.map(slideC)) / Math.max(1, sum(D.map(L))) + sh)}`, 'for comparison with the 40 to 60% band'); }
+      R.info('5c.stop', '§5c', 'Planner launches that landed at a stop (a contact under 350, no skid or tumble), share of launches', fmt.pct(sum(D.map(r => r.landings.stop || 0)) / Math.max(1, sum(D.map(L)))), 'a class of its own; not banded');
       if (D.every(r => r.landingsAll)) { const LA = r => sum(Object.values(r.landingsAll)); const t = k => sum(D.map(r => r.landingsAll[k])) / Math.max(1, sum(D.map(LA))); R.info('5c.all', '§5c', 'Landing mix over every launch event, beam and finisher launches included (not banded)', `slide ${fmt.pct(t('slide'))}, slam ${fmt.pct(t('slam'))}, caught ${fmt.pct(t('caught'))}, bounce ${fmt.pct(t('bounce'))}, water ${fmt.pct(t('water'))}, brunt ${fmt.pct(t('brunt'))}, none ${fmt.pct(t('other'))}`, ''); }
       // balance-targets 20 and docs/world/ground-contact.md section 4: `left_ground {actor, cause}` (a flight off a rim, crest, heap, cliff or ridge when the cause is not `bounce`), `bounce {actor, n, surface}` (a water skim also emits one, with surface water), `land {actor, kind}`, `tumble_end {actor, how}`; the early-recovery events (`tech_offer`, `tech`) are not fixed yet, so those names are my assumption
       const J = f => sum(D.map(r => r.journeys[f])), minutes = sum(D.map(r => r.koAt)) / 60;
