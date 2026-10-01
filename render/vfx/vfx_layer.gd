@@ -71,5 +71,5 @@ func _update(host: SimHost, a: float, cam_x: float, zoom: float, vw: float) -> v
 		shard_view.update(hub, cam_x, zoom, half_w)
 	var pw = get_parent()
 	if pw != null and pw.get("cam_rig") != null:
-		trail_view.cam_dist = pw.cam_rig.position.z
+		trail_view.cam_dist = pw.cam_rig.dist   # the camera's distance to the fighter plane (position.z is not once the camera pitches)
 	trail_view.update(hub, host, a, cam_x, zoom, half_w)
