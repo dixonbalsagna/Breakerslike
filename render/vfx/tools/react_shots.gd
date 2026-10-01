@@ -19,6 +19,8 @@ var wx: float = 1500.0
 var ticks: Array = [20, 60, 120, 200]
 var stage: int = 2
 var brink: bool = false
+var stance: int = -1             # set the fighter's stance (0 aggressive, 1 defensive, 2 evasive, 3 escape); -1 leaves it
+var nofx: bool = false           # every VFX flag of this work off (to tell VFX from Rendering)
 var slot: int = 0                # which fighter the case is about (1: VORR, to see the Anti-hero's lane colour)
 
 
@@ -30,6 +32,10 @@ func _initialize() -> void:
 			off = true
 		elif a.begins_with("--slot="):
 			slot = int(a.substr(7))
+		elif a.begins_with("--stance="):
+			stance = int(a.substr(9))
+		elif a == "--nofx":
+			nofx = true
 		elif a == "--brink":
 			brink = true
 		elif a.begins_with("--case="):
@@ -98,7 +104,11 @@ func _run() -> void:
 	h.auto_quality = false
 	h.react_enabled = not off
 	h.speedlines_enabled = not off
-	h.standing_aura_enabled = true
+	h.standing_aura_enabled = not nofx
+	h.transform_enabled = not nofx
+	h.flicker_enabled = not nofx
+	h.speedlines_enabled = not (off or nofx)
+	h.react_enabled = not (off or nofx)
 	main.start_match(3, {"p1": true, "p2": true})
 	var S: SimState = main.host.S
 	var f = S.fighters[slot]
@@ -231,6 +241,8 @@ func _run() -> void:
 		f.state = "free"
 		o.x = SimWrap.wrap(f.x + 2600.0)
 		o.y = WorldTerrain.groundY(S, o.x) + 80.0
+		if stance >= 0:
+			f.stance = float(stance)
 		if which == "flicker":
 			f.state = "charging"
 			f.stage[1] = stage
