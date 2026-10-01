@@ -585,6 +585,16 @@ For friends' playtests (Orb said yes): a small panel that turns a tester's thoug
 
 ![The report as a DOM textarea over the box, with the listener's copy (a page test with a mock canvas; see the note in the report)](img/feedback-web-dom.png)
 
+**SEND: a prefilled GitHub issue.** The write state has a third button, SEND. It does not send anything: it opens a **review** of exactly what will go in the issue (the same report, in the read-only box, with "OPEN ISSUE opens a public GitHub issue with the text below. Nothing is sent until you submit it there. Please leave out anything personal."). Its buttons are OPEN ISSUE, COPY REPORT and BACK.
+
+![The review before sending](img/feedback-review.png)
+
+- **The link** is `https://github.com/dixonbalsagna/orb-combat-ex/issues/new?title=...&body=...` with every character of the title and body percent-encoded (`ui/data/send.json` holds the repo, the limit and the words). The title is "Playtest: Bug, Confusing - the first words of your note", at most 80 characters; the body is the report.
+- **Length.** Browsers and proxies cut long links, so the limit is 3,000 characters. If the full report does not fit, the link carries the report without its Settings and Engine lines. If it still does not fit (a long note), the link opens with a short body ("Playtest report copied to the clipboard. Paste it here:"), the full report is on the clipboard, and the review says so. This is the copy-and-paste fallback.
+- **The report is copied every time OPEN ISSUE is pressed**, so a page that ignores the prefill, or a link that had to fall back, costs one paste.
+- **Opening:** on the web the page's own listener (`ui_web_clip.gd`) opens the link with `window.open(url, '_blank', 'noopener')` in the real tap (Safari and popup blockers need the user gesture; Godot handles the tap a frame late), and Godot's click path opens it only if the listener did not (it checks `__fb.openedAt`). Elsewhere `OS.shell_open`. A test sets `UiFeedback.opener` to catch the open.
+- **Privacy is unchanged:** the issue is public, the review says so, the player sees the exact text, and the report holds nothing personal beyond what the player types.
+
 **The report** (plain text, one fact a line; every label is data in `ui/data/feedback.json`):
 ```
 ORB COMBAT EX - PLAYTEST FEEDBACK
@@ -617,3 +627,25 @@ World's districts slice (D1) raises the planet's population from 390 to about 1,
 - **The chip grows.** In landscape the toll chip is 380 design px wide, or as wide as four-digit counts need (measured with `9999` in every slot at the current type size) where the plates leave room, never into the plates or, on touch, the pause button. At 1920 by 1080 nothing changes; on 1024 by 576 and 800 by 480 it widens.
 - **The type shrinks.** `UiCenter.toll_fs` shrinks the toll's type from 20 design px toward the text floor until the longest line fits, with an 8 px margin. Portrait prints the civilians line only, which fits at 360 px wide.
 `hud_check` (`_toll_rules`) proves, at nine sizes from 360 by 640 to 2400 by 1080 (dp 2.6), that `1799 / 1800`, `1234` structures and `1999` craters fit the chip and the type stays at or above the floor. The wound-card and silhouette text carry no counts. Nothing else in the HUD prints a civilian number: the planet strip marks fallen buildings as ticks, not digits.
+
+## 22. Control hints and the YOU label
+
+Friends could not tell which fighter was theirs, and could not find the controls. Two small additions, for today's controls and ready for the new layouts (ADR 0008):
+
+![The legend and the YOU marker, at the start of a match](img/hints-desktop.png)
+
+- **Which fighter is you.** The human's plate carries a bright **YOU** tag after the name (an AI keeps its dim `AI` tag; with two humans the tags are **P1** and **P2**). For the first 12 seconds of a match, and while prompts are on, a YOU pill with a pointer rides over the human's fighter (kept inside the safe area, on every screen, touch included).
+- **Control hints.** A small legend in the human's column under the prompt row: the glyph of each action on their own device and one word: `[WASD] Fly`, `[Space] Dash`, `[F] Light`, `[G] Heavy`, `[R] Signature`, `[Q] Charge`, `[1][2][3][4] Stances`, and Special and Transform only while available. It shows for the first 12 seconds of every match (the last two fade), and always while prompts are on (training and the first matches). The option **Control hints** (`control_hints`: auto, always, off; default auto) changes that. It is for a keyboard or a pad: not on touch (the on-screen controls are the hint) and not in portrait. Only as many rows as fit the column are drawn, in order.
+- **Ready for the new layouts.** The rows are a scheme in `ui/data/hints.json` (`schemes.today`), and the option `control_scheme` names the scheme the legend shows (falling back to `today`). When Controls' layouts land (arena, brawler, simple, and the touch presets), each is one more scheme there with no code change; the glyphs come from `glyphs.json`, so remapping shows the player's own keys.
+- A fighter that becomes human mid-match (a take-over) gets its own 12 seconds.
+
+`hud_check` covers the labels (YOU, P1 and P2, none), the 12-second timing, the three option values, the rows (Special and Transform only when available), the legend's room at five sizes (inside the column, clear of the fight, the prompt row, the cards and the bark lane, at least three rows), mirroring when the columns swap, none on touch or in portrait, the layers' signatures in the HUD, and that a new match shows them again.
+
+## 23. Shorter How to play card, and the phone bug
+
+On Orb's iPhone in portrait the BACK, NEXT and GOT IT buttons and the page dots overlapped the card text. The cause: the card's height was capped at `900 * scale`, and on a tall phone the type is at least 12 dp (36 px at 3x), so a page needed more height than the card had and its items ran down over the footer. Fixes:
+- The card may use the whole screen height (it still takes only what its tallest page needs).
+- The copy is much shorter (about half): every line is a short sentence, the stance lines are two or three words, the reads page is seven short lines.
+- The page dots are sized and spaced so they never overlap each other or the buttons (a 3x phone had circles wider than their spacing).
+- Spacing before the "Four stances" heading when the columns stack.
+`hud_check` now runs the card at seven phone sizes in portrait and landscape (1170 by 2532 at 3x, 1080 by 2340 at 2.75x, 1125 by 2436, 828 by 1792, 750 by 1334, 390 by 844, 360 by 640) with a keyboard, a pad and touch, and fails if any page does not fit, any item leaves the card, any button is under 48 dp, or the dots touch anything.

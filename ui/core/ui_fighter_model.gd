@@ -62,6 +62,7 @@ var device: String = "kbd"          # the family of the device that last sent in
 var ack_result: String = ""         # the last press-acknowledged result (a small mark for a moment)
 var ack_t: float = 99.0
 var parry_clean: float = 0.0        # retired (timing presses are gone): always 0
+var you_label: String = ""           # YOU (or P1 and P2) for a human fighter, "" for an AI: set by the HUD, shown on the plate
 var weight: String = "light"         # the sticky attack weight, "light" or "heavy" (Game Design R9); the plate and the stance ring show it
 var weight_fallback_t: float = 99.0  # seconds since a heavy fell back to light for lack of Charge (a mark shows for 1.5 s)
 var sig_queued: bool = false         # a signature is queued as an intent: the director fires it at its next opening

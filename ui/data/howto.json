@@ -4,21 +4,21 @@
   "title": "HOW TO PLAY",
   "buttons": { "next": "NEXT", "back": "BACK", "done": "GOT IT", "close": "CLOSE" },
   "hint": "Enter: next   Esc: close",
-  "reopen": "Open this again any time from the pause menu, or press F1.",
+  "reopen": "Open this again from the pause menu or F1.",
   "pages": [
     {
       "id": "idea",
       "title": "What you control",
       "items": [
-        { "icon": "plan", "col": 0, "text": "You are the fighter. You fly, dash, pick a stance, choose light or heavy, charge, call your signature and specials, and transform." },
-        { "icon": "auto", "col": 0, "text": "There are no combo inputs to learn. Blows and combos play out on their own from those choices." },
-        { "icon": "body", "col": 0, "text": "There are no health bars. Damage shows on the bodies: bruised, battered, broken." },
-        { "icon": "finisher", "col": 0, "text": "A fight ends with a finisher, not a clock." },
+        { "icon": "plan", "col": 0, "text": "You are the fighter. Fly, dash, pick a stance, choose light or heavy, charge, use specials, call your signature, transform." },
+        { "icon": "auto", "col": 0, "text": "No combo inputs to learn. Blows and combos play out on their own." },
+        { "icon": "body", "col": 0, "text": "No health bars. Damage shows on the bodies." },
+        { "icon": "finisher", "col": 0, "text": "A finisher ends the fight, not a clock." },
         { "heading": "Four stances", "col": 1 },
-        { "icon": "stance_0", "col": 1, "text": "Push the attack and close the gap.", "stance": "press" },
-        { "icon": "stance_1", "col": 1, "text": "Hold firm and punish the opening.", "stance": "guard" },
-        { "icon": "stance_2", "col": 1, "text": "Slip away, then counter.", "stance": "dodge" },
-        { "icon": "stance_3", "col": 1, "text": "Break away. A gamble, not a guarantee.", "stance": "escape" }
+        { "icon": "stance_0", "col": 1, "text": "Push the attack.", "stance": "press" },
+        { "icon": "stance_1", "col": 1, "text": "Hold firm, punish.", "stance": "guard" },
+        { "icon": "stance_2", "col": 1, "text": "Slip away, counter.", "stance": "dodge" },
+        { "icon": "stance_3", "col": 1, "text": "Break away. A gamble.", "stance": "escape" }
       ]
     },
     {
@@ -27,36 +27,36 @@
       "device_label": { "kbd": "Keyboard", "xbox": "Controller", "ps": "Controller", "switch": "Controller", "deck": "Controller", "generic": "Controller", "touch": "Touch" },
       "items": [
         { "action": "move", "col": 0, "text": "Fly" },
-        { "action": "dash", "col": 0, "text": "Dash (hold)" },
-        { "action": "light", "col": 0, "text": "Light attacks (sticky)" },
-        { "action": "heavy", "col": 0, "text": "Heavy attacks (sticky)" },
-        { "action": "signature", "col": 0, "text": "Signature (queued, needs 45 Charge)" },
-        { "action": "charge", "col": 1, "text": "Charge (hold)" },
-        { "action": "special", "col": 1, "text": "Special (hold)" },
-        { "action": "transform", "col": 1, "text": "Transform (hold)" },
+        { "action": "dash", "col": 0, "text": "Dash" },
+        { "action": "light", "col": 0, "text": "Light" },
+        { "action": "heavy", "col": 0, "text": "Heavy" },
+        { "action": "signature", "col": 0, "text": "Signature (45 Charge)" },
+        { "action": "charge", "col": 1, "text": "Charge" },
+        { "action": "special", "col": 1, "text": "Special" },
+        { "action": "transform", "col": 1, "text": "Transform" },
         { "actions": ["stance_press", "stance_guard", "stance_dodge", "stance_escape"], "col": 1, "text": "Stances" },
         { "action": "pause", "col": 1, "text": "Pause" },
-        { "note": "kbd_p2", "col": 1, "text": "Player 2 on the same keyboard: arrows, Enter, comma, period, slash, semicolon, and 7 8 9 0 for stances." }
+        { "note": "kbd_p2", "col": 1, "text": "Player 2: arrows, Enter, comma, period, slash, and 7 8 9 0." }
       ],
       "touch_items": [
-        { "icon": "touch_move", "col": 0, "text": "Left thumb: fly. The stick appears where you touch." },
-        { "icon": "touch_attack", "col": 0, "text": "Right thumb: choose light or heavy attacks, and queue your signature at 45 Charge." },
-        { "icon": "touch_hold", "col": 1, "text": "Left edge: hold Charge or Special. Transform appears when it is ready." },
-        { "icon": "stance_0", "col": 1, "text": "Stance ring under your nameplate: tap a stance." },
-        { "icon": "touch_pause", "col": 1, "text": "Pause button at the top." }
+        { "icon": "touch_move", "col": 0, "text": "Left thumb: fly." },
+        { "icon": "touch_attack", "col": 0, "text": "Right thumb: light, heavy, signature." },
+        { "icon": "touch_hold", "col": 1, "text": "Left edge: Charge and Special." },
+        { "icon": "stance_0", "col": 1, "text": "Stance ring: tap a stance." },
+        { "icon": "touch_pause", "col": 1, "text": "Pause: the top button." }
       ]
     },
     {
       "id": "reads",
       "title": "Reading the fight",
       "items": [
-        { "icon": "crown", "col": 0, "text": "A ring flashes round a fighter when a body part gets worse." },
-        { "icon": "card", "col": 0, "text": "Cards name what changed, like ARMS: BROKEN." },
-        { "icon": "brink", "col": 0, "text": "A faint ring marks a fighter on the brink. A finisher can end the fight." },
-        { "icon": "reads", "col": 0, "text": "Read your rival: their stance, how hard they hit, and the kind of finisher they wind up." },
-        { "icon": "struggle", "col": 1, "text": "In a finisher, rings pulse and show whether you hold or slip. Your stance decides it: GUARD a launch, DODGE a melee, PRESS a beam." },
-        { "icon": "toll", "col": 1, "text": "The top chip counts what your fight costs the world." },
-        { "icon": "strip", "col": 1, "text": "The strip is the whole planet with both of you on it. It wraps." },
+        { "icon": "crown", "col": 0, "text": "A ring flashes when a body part gets worse." },
+        { "icon": "card", "col": 0, "text": "Cards name what changed." },
+        { "icon": "brink", "col": 0, "text": "A faint ring: on the brink. A finisher can end it." },
+        { "icon": "reads", "col": 0, "text": "Read your rival: stance, weight, finisher kind." },
+        { "icon": "struggle", "col": 1, "text": "Finisher rings show hold or slip. GUARD a launch, DODGE a melee, PRESS a beam." },
+        { "icon": "toll", "col": 1, "text": "The top chip counts what the fight costs the world." },
+        { "icon": "strip", "col": 1, "text": "The strip is the whole planet. It wraps." },
         { "note": "reopen", "col": 1, "text": "" }
       ]
     }

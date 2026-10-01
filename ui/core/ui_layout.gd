@@ -32,6 +32,7 @@ var clear_zone := Rect2()                    # nothing draws here: the fighters'
 var frame_rect := Rect2()                    # where the camera may keep fighters: full width, below the columns
 var touch_reserve := Rect2()                 # portrait: kept free for Controls' touch controls
 var ring := Rect2()                          # the planet ring map (landscape), centred above the strip
+var hints: Array = [Rect2(), Rect2()]        # each column's control-hint legend, under the prompt row; landscape only (UiHints decides who shows one)
 var prompts: Array = [Rect2(), Rect2()]      # each column's prompt row (stance and hold prompts), under the cards; landscape only
 var swapped := false                         # slot 0 is on the right: the fighter on the left of the screen is slot 1
 var touch_grid := false                      # touch: the stance ring is a 2 by 2 grid because the column is too narrow for four targets in a row
@@ -129,7 +130,7 @@ func compute(p_vp: Vector2, p_silhouette: bool = true, insets: Vector4 = Vector4
 		pause_btn = Rect2(vp.x * 0.5 - bs * 0.5, toll.end.y + 4.0, bs, bs)
 	if swapped:
 		# Slot 0 is on the right of the screen (the shortest way puts the rival to its left): mirror every per-slot column.
-		for arr in [plate, silhouette, cards, bark, prompts]:
+		for arr in [plate, silhouette, cards, bark, prompts, hints]:
 			var tmp = arr[0]
 			arr[0] = arr[1]
 			arr[1] = tmp
@@ -148,6 +149,7 @@ func _pass(insets: Vector4) -> void:
 	feedback_btn = Rect2()
 	touch_grid = false
 	prompts = [Rect2(), Rect2()]
+	hints = [Rect2(), Rect2()]
 	if portrait:
 		_portrait()
 		var fb_h2: float = maxf(touch_min if touch_ui else 40.0 * s, 34.0)
@@ -264,6 +266,13 @@ func _landscape() -> void:
 	var lane_bottom: float = strip.position.y - gap * 1.2
 	bark[0] = Rect2(safe.position.x, lane_bottom - lane_h, lane_w, lane_h)
 	bark[1] = Rect2(safe.end.x - lane_w, lane_bottom - lane_h, lane_w, lane_h)
+	# The control-hint legend: the rest of the column under the prompt row, down to the bark lane. Not on touch (its controls are on screen).
+	if not touch_ui:
+		for i in range(2):
+			var hy: float = prompts[i].end.y + gap
+			var hh: float = bark[i].position.y - gap - hy
+			if hh > 0.0:
+				hints[i] = Rect2(prompts[i].position.x, hy, col_w, hh)
 	var lb_h: float = vp.y * 0.09
 	letterbox_top = Rect2(0, 0, vp.x, lb_h)
 	letterbox_bottom = Rect2(0, vp.y - lb_h, vp.x, lb_h)

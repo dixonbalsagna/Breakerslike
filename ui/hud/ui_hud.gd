@@ -44,6 +44,8 @@ var opts: Dictionary = {
 	"glyph_style": "neutral",  # the neutral position-diamond set; "family" (each device family's own letters) stays off until Legal answers
 	"hitstop_scale": 1.0,      # Controls' accessibility option, 0.5 to 1.0; the HUD only carries it (see ui/data/options.json)
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
+	"control_hints": "auto",   # the legend of the player's controls: auto (match start and first matches), always, off
+	"control_scheme": "today", # which scheme of ui/data/hints.json the legend shows; Controls' new layouts are more schemes (ADR 0008)
 	"match_end_feedback": true, # the SEND FEEDBACK pill after a KO; the host turns it off if its own results screen has the button
 	"keep_hints": false,       # accessibility: a tutorial hint stays up after its beat is done, until the next hint
 	"touch_ui": false,         # touch is the last input device (the host sets it; on by default on a phone): a stance ring, a pause button, 48 dp targets
@@ -76,12 +78,19 @@ var _last_touch := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
 var _l_fb: UiLayer
+var _l_hints: Array = []
+var _l_you: UiLayer
+var _hint_t0: Array = [0.0, 0.0]       # when each fighter became a human (the legend shows for 12 s from then)
+var _prev_ai: Array = [true, true]
+var _prev_clock := 0.0
 var _l_fbpill: UiLayer
 var _fb_open := false
 var _fb_state := "write"
 var _fb_context := "pause"
 var _fb_tags: Dictionary = {}
 var _fb_status_ok := false
+var _fb_issue: Dictionary = {}          # the prefilled GitHub link the review state offers: {url, fallback, body}
+var _fb_opened := false                 # OPEN ISSUE was pressed in this review
 var _fb_text: TextEdit
 var _fb_prev: TextEdit
 var feedback_fn: Callable = Callable()   # the host's report context: {commit, date, seed, setup, time, ended}; any key may be missing
@@ -127,6 +136,9 @@ func _ready() -> void:
 	_l_struggle = _layer(_paint_struggle)
 	for i in range(2):
 		_l_prompts.append(_layer(_paint_prompts.bind(i)))
+	for i in range(2):
+		_l_hints.append(_layer(_paint_hints.bind(i)))
+	_l_you = _layer(_paint_you)
 	for i in range(2):
 		_l_plate.append(_layer(_paint_plate.bind(i)))
 	for i in range(2):
@@ -204,7 +216,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -330,6 +342,7 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"glyph_style": str(opts["glyph_style"]),
 		"touch": bool(opts["touch_ui"]),
 		"touch_grid": layout.touch_grid,
+		"scheme": str(opts["control_scheme"]),
 	}
 
 
@@ -358,7 +371,7 @@ func _update_layers() -> void:
 		var full: bool = m.charge >= m.sig_cost
 		var pulse: int = int(_t * 8.0) if (not reduced and m.brink) else 0
 		_l_plate[m.slot].update_sig([m.name, m.ai, m.stance, m.tier, int(m.momentum), int(m.charge), int(m.ego), m.hidden, m.lost_trail,
-			m.charging, m.chain_n if m.chain_t >= 0.0 else 0, m.brink, m.shame, full, _plate_alpha(m), pulse,
+			m.charging, m.chain_n if m.chain_t >= 0.0 else 0, m.brink, m.shame, full, _plate_alpha(m), pulse, m.you_label,
 			m.weight, m.weight_fallback_t < 1.5, m.sig_queued, m.sig_funded, int(m.sig_cap_t * 6.0) if m.sig_funded else 0, m.sig_note if m.sig_note_t < 1.4 else "",
 			0 if reduced else int(clampf(1.0 - m.stance_flash_t / 0.8, 0.0, 1.0) * 5.0)])
 		_l_sil[m.slot].update_sig(_sil_sig(m, reduced) if layout.silhouette_on else null)
@@ -420,12 +433,31 @@ func _update_layers() -> void:
 	_l_struggle.update_sig(UiStruggle.sig(hub, _frame) if (anchor_fn.is_valid() and not layout.portrait) else null)
 	var prompts_on: bool = bool(opts["show_prompts"])
 	var touch_on: bool = bool(opts["touch_ui"])
+	# Who is the player (YOU), and the control legend: it shows for 12 s from the match start, or from the moment a fighter became human.
+	if hub.t_now < _prev_clock:
+		_hint_t0 = [0.0, 0.0]
+	_prev_clock = hub.t_now
+	var you_sig: Array = []
+	for m in hub.models:
+		if m.slot < 2:
+			m.you_label = UiHints.you_label(hub.models, m)
+			if _prev_ai[m.slot] and not m.ai:
+				_hint_t0[m.slot] = hub.t_now
+			_prev_ai[m.slot] = m.ai
+			var ya: float = UiHints.visible_alpha(m, str(opts["control_hints"]), prompts_on, hub.t_now - float(_hint_t0[m.slot]))
+			var ha: float = 0.0 if (touch_on or layout.portrait) else ya   # the legend is for a keyboard or a pad; the YOU marker is for every screen
+			if ya > 0.01 and m.you_label != "" and anchor_fn.is_valid():
+				var an: Dictionary = anchor_fn.call(m.slot)
+				var ap: Vector2 = an.get("pos", Vector2.ZERO)
+				you_sig.append([m.slot, m.you_label, int(ap.x * 0.5), int(ap.y * 0.5), int(float(an.get("h", 0.0)) * 0.5), int(ya * 10.0), bool(an.get("visible", true))])
+			_l_hints[m.slot].update_sig(UiHints.sig(m, ha, str(opts["control_scheme"])) if (ha > 0.01 and layout.hints[m.slot].size.y > 0.0) else null)
+	_l_you.update_sig(you_sig if not you_sig.is_empty() else null)
 	for m in hub.models:
 		if m.slot < _l_prompts.size():
 			_l_prompts[m.slot].update_sig(UiPrompts.sig(m, prompts_on, touch_on) if (UiPrompts.has_content(m, prompts_on, touch_on) and layout.prompts[m.slot].size.y > 0.0) else null)
 		_l_pause.update_sig([layout.pause_btn, layout.touch_ui] if layout.pause_btn.size.y > 0.0 else null)
 	_l_fbpill.update_sig([layout.feedback_btn, layout.touch_ui] if _pill_visible() else null)
-	_l_fb.update_sig(UiFeedback.sig(layout.vp, _fb_state, _fb_tags, _fb_status_ok, dp, layout.s, bool(opts["touch_ui"])) if _fb_open else null)
+	_l_fb.update_sig(UiFeedback.sig(layout.vp, _fb_state, _fb_tags, _fb_status_ok, dp, layout.s, bool(opts["touch_ui"]), "%s|%s" % [_fb_opened, bool(_fb_issue.get("fallback", false))]) if _fb_open else null)
 	_l_tele.update_sig(UiReads.telegraph_sig(hub, bool(opts["show_prompts"]), reduced))
 	_l_hint.update_sig(UiReads.hint_sig(hub))
 	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s) if _howto_open else null)
@@ -706,6 +738,8 @@ func show_feedback(context: String = "pause") -> void:
 	_fb_context = context
 	_fb_state = UiFeedback.STATE_WRITE
 	_fb_status_ok = false
+	_fb_issue = {}
+	_fb_opened = false
 	_fb_tags = {}
 	_fb_text.text = ""
 	UiWebClip.install(hide_feedback)
@@ -777,11 +811,41 @@ func copy_feedback() -> String:
 	DisplayServer.clipboard_set(text)
 	UiWebClip.copy(text)   # on the web also from the page itself (see UiWebClip); a no-op elsewhere
 	_fb_prev.text = text
-	_fb_state = UiFeedback.STATE_COPIED
+	if _fb_state != UiFeedback.STATE_REVIEW:
+		_fb_state = UiFeedback.STATE_COPIED
 	_fb_status_ok = true
 	_fb_place()
 	_l_fb.invalidate()
 	return text
+
+
+## SEND: the review of exactly what OPEN ISSUE will put in a prefilled GitHub issue. Nothing leaves the game until the player submits the
+## issue on GitHub; the review says the issue is public. Returns {url, fallback, body}.
+func send_feedback() -> Dictionary:
+	var text: String = feedback_report()
+	_fb_prev.text = text
+	_fb_issue = UiFeedback.issue_url(text, UiFeedback.issue_title(feedback_selected_tags(), _fb_text.text))
+	_fb_state = UiFeedback.STATE_REVIEW
+	_fb_status_ok = false
+	_fb_opened = false
+	UiWebClip.set_report(text)
+	_fb_place()
+	_l_fb.invalidate()
+	return _fb_issue
+
+
+## OPEN ISSUE: copy the report (so a link too long to prefill, or a page that ignores it, costs one paste) and open the link. On the web
+## the page's own listener normally opens it inside the real click; this is the fallback and the desktop route.
+func open_issue() -> String:
+	if not _fb_open or _fb_state != UiFeedback.STATE_REVIEW or _fb_issue.is_empty():
+		return ""
+	var text: String = feedback_report()
+	DisplayServer.clipboard_set(text)
+	UiWebClip.copy(text)
+	UiFeedback.open_url(str(_fb_issue["url"]))
+	_fb_opened = true
+	_l_fb.invalidate()
+	return str(_fb_issue["url"])
 
 
 func feedback_action(act: String) -> void:
@@ -790,17 +854,39 @@ func feedback_action(act: String) -> void:
 	match act:
 		"copy", "again":
 			copy_feedback()
+		"send":
+			send_feedback()
+		"issue":
+			open_issue()
 		"back":
 			_fb_state = UiFeedback.STATE_WRITE
 			_fb_status_ok = false
+			_fb_opened = false
 			_fb_place()
 			_l_fb.invalidate()
 		"close":
 			hide_feedback()
 
 
+## The status line and small print the review state shows, over the plan's defaults.
+func _fb_texts() -> Array:
+	var d: Dictionary = UiData.feedback()
+	var sd: Dictionary = UiData.send()
+	var status := ""
+	var note := ""
+	if _fb_state == UiFeedback.STATE_REVIEW:
+		if _fb_status_ok:
+			status = str(d.get("copied", ""))
+		if _fb_opened:
+			note = str(sd.get("opened", ""))
+		elif bool(_fb_issue.get("fallback", false)):
+			note = str(sd.get("review", "")) + " " + str(sd.get("too_long", ""))
+	return [status, note]
+
+
 func feedback_plan() -> Dictionary:
-	return UiFeedback.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), _fb_state)
+	var t: Array = _fb_texts()
+	return UiFeedback.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), _fb_state, str(t[0]), str(t[1]))
 
 
 ## Keep the web page's copy of the report current, so its pointer listener can copy it inside the user's gesture.
@@ -820,6 +906,7 @@ func _fb_place() -> void:
 	if web:
 		UiWebClip.hide_textarea()
 		UiWebClip.set_copy_rect((p["copy"] if write else p["again"]) if _fb_open else Rect2())
+		UiWebClip.set_open(p["issue"] if (_fb_open and _fb_state == UiFeedback.STATE_REVIEW) else Rect2(), str(_fb_issue.get("url", "")))
 		if _fb_open and not write:
 			UiWebClip.show_textarea(p["preview_rect"], float(p["fs_body"]), _fb_prev.text)
 	var fs: int = int(p["fs_body"])
@@ -849,8 +936,17 @@ func _fb_click(pos: Vector2) -> void:
 				return
 		if (p["copy"] as Rect2).has_point(pos):
 			copy_feedback()
+		elif (p["send"] as Rect2).has_point(pos):
+			send_feedback()
 		elif (p["done"] as Rect2).has_point(pos):
 			hide_feedback()
+	elif _fb_state == UiFeedback.STATE_REVIEW:
+		if (p["issue"] as Rect2).has_point(pos):
+			open_issue()
+		elif (p["again"] as Rect2).has_point(pos):
+			copy_feedback()
+		elif (p["back"] as Rect2).has_point(pos):
+			feedback_action("back")
 	else:
 		if (p["back"] as Rect2).has_point(pos):
 			feedback_action("back")
@@ -867,6 +963,32 @@ func _paint_fb(ci: CanvasItem) -> void:
 
 func _paint_fbpill(ci: CanvasItem) -> void:
 	UiFeedback.draw_pill(ci, layout.feedback_btn, layout.s, layout.feedback_label, layout.feedback_fs)
+
+
+func _you_alpha(m: UiFighterModel) -> float:
+	return UiHints.visible_alpha(m, str(opts["control_hints"]), bool(opts["show_prompts"]), hub.t_now - float(_hint_t0[m.slot]))
+
+
+func _hint_alpha(m: UiFighterModel) -> float:
+	if bool(opts["touch_ui"]) or layout.portrait:
+		return 0.0
+	return _you_alpha(m)
+
+
+func _paint_hints(ci: CanvasItem, slot: int) -> void:
+	if slot >= hub.models.size():
+		return
+	var m: UiFighterModel = hub.models[slot]
+	UiHints.draw(ci, m, layout.hints[slot], layout.s, _o(), _hint_alpha(m))
+
+
+func _paint_you(ci: CanvasItem) -> void:
+	if not anchor_fn.is_valid():
+		return
+	for m in hub.models:
+		var a: float = _you_alpha(m)
+		if a > 0.01 and m.you_label != "":
+			UiHints.draw_you(ci, m.you_label, anchor_fn.call(m.slot), layout.s, a, layout.safe)
 
 
 func _paint_tele(ci: CanvasItem) -> void:

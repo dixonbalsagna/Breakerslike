@@ -182,6 +182,28 @@ static func feedback() -> Dictionary:
 	return _feedback
 
 
+const HINTS_PATH := "res://ui/data/hints.json"
+static var _hints: Dictionary = {}
+
+
+## The control hints' schemes and the YOU labels (ui/data/hints.json).
+static func hints() -> Dictionary:
+	if _hints.is_empty():
+		_hints = _read(HINTS_PATH)
+	return _hints
+
+
+const SEND_PATH := "res://ui/data/send.json"
+static var _send: Dictionary = {}
+
+
+## The feedback panel's Send step: the GitHub issue's address and limits and the review words (ui/data/send.json).
+static func send() -> Dictionary:
+	if _send.is_empty():
+		_send = _read(SEND_PATH)
+	return _send
+
+
 const HOWTO_PATH := "res://ui/data/howto.json"
 static var _howto: Dictionary = {}
 

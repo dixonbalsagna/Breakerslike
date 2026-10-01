@@ -41,18 +41,24 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	var rh: float = float(pm["name_h"])
 	var nb: float = _base(ry, rh, fs)
 	var nw: float = UiText.draw(ci, m.name, Vector2(x0 if left else x1, nb), fs, ink, -1 if left else 1, 2.0)
-	if m.ai:
+	# The tag after the name: AI for an AI fighter, and a bright YOU (P1 and P2 for two players) for a human one, so it is never in doubt.
+	var tag_text: String = UiData.t("state.ai") if m.ai else m.you_label
+	if tag_text != "":
 		var afs: int = int(pm["fs_state"])
-		var tag: String = UiData.t("state.ai")
+		var tag: String = tag_text
 		var tw: float = UiText.width(tag, afs)
 		var tx: float = (x0 + nw + 10.0 * s) if left else (x1 - nw - 10.0 * s - tw - 12.0 * s)
-		UiIcons.rrect(ci, Rect2(tx, ry + 1.0, tw + 12.0 * s, rh - 2.0), 5.0 * s, _c(Color(1, 1, 1, 0.12)), _c(UiLook.alpha(UiLook.EDGE, 0.5)), 1.0)
-		UiText.draw(ci, tag, Vector2(tx + 6.0 * s, _base(ry, rh, afs)), afs, dim, -1)
+		if m.ai:
+			UiIcons.rrect(ci, Rect2(tx, ry + 1.0, tw + 12.0 * s, rh - 2.0), 5.0 * s, _c(Color(1, 1, 1, 0.12)), _c(UiLook.alpha(UiLook.EDGE, 0.5)), 1.0)
+			UiText.draw(ci, tag, Vector2(tx + 6.0 * s, _base(ry, rh, afs)), afs, dim, -1)
+		else:
+			UiIcons.rrect(ci, Rect2(tx, ry + 1.0, tw + 12.0 * s, rh - 2.0), 5.0 * s, _c(Color(UiLook.col(UiLook.INK), 0.92)), _c(UiLook.alpha(UiLook.INK, 1.0)), 1.0)
+			UiText.draw(ci, tag, Vector2(tx + 6.0 * s, _base(ry, rh, afs)), afs, _c(UiLook.col(UiLook.INK_DARK)), -1)
 	if m.brink and combined:
 		# Icon only, right after the name (the crown ring, the card and the silhouette say the rest).
 		var bcol2: Color = _c(Color(UiLook.col(UiLook.STAGE_BROKEN), 1.0 if reduced else (0.6 + 0.4 * (0.5 + 0.5 * sin(t * UiLook.HZ_BRINK * TAU)))))
 		var isz2: float = rh * 0.8
-		var ai_w: float = (UiText.width(UiData.t("state.ai"), int(pm["fs_state"])) + 22.0 * s) if m.ai else 0.0
+		var ai_w: float = (UiText.width(tag_text, int(pm["fs_state"])) + 22.0 * s) if tag_text != "" else 0.0
 		var bx2: float = (x0 + nw + 10.0 * s + ai_w) if left else (x1 - nw - 10.0 * s - ai_w - isz2)
 		UiIcons.brink(ci, Vector2(bx2 + isz2 * 0.5, ry + rh * 0.5), isz2, bcol2)
 	if m.brink and not combined:
@@ -64,7 +70,7 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		var isz: float = rh * 0.86
 		# It never crowds the name: the full chip if it fits, the icon alone if not, nothing on the narrowest plates
 		# (the crown, the silhouette and the card still say it).
-		var used: float = nw + (UiText.width(UiData.t("state.ai"), int(pm["fs_state"])) + 22.0 * s if m.ai else 0.0)
+		var used: float = nw + (UiText.width(tag_text, int(pm["fs_state"])) + 22.0 * s if tag_text != "" else 0.0)
 		var avail: float = inner_w - used - 10.0 * s
 		var full_w: float = isz + 8.0 * s + bw
 		var show_text: bool = full_w <= avail

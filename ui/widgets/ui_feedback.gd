@@ -11,6 +11,10 @@ extends RefCounted
 
 const STATE_WRITE := "write"
 const STATE_COPIED := "copied"
+const STATE_REVIEW := "review"   # what SEND will put in the GitHub issue, for the player to read first
+
+## Tests set this to catch the open instead of launching a browser; empty means the real thing.
+static var opener: Callable = Callable()
 
 
 static func data() -> Dictionary:
@@ -155,10 +159,64 @@ static func build_report(ctx: Dictionary, tags: Array, notes: String, env: Dicti
 	return "\n".join(lines)
 
 
+# --- The GitHub issue ------------------------------------------------------------------------------------------------------------
+
+static func send_data() -> Dictionary:
+	return UiData.send()
+
+
+## The issue's title: "Playtest: Bug, Confusing - the first words of the note" (at most 80 characters).
+static func issue_title(tags: Array, notes: String) -> String:
+	var sd: Dictionary = send_data().get("issue", {})
+	var names: PackedStringArray = []
+	for id in tags:
+		for t in tag_list():
+			if str(t["id"]) == str(id):
+				names.append(str(t["label"]))
+	var first: String = notes.strip_edges().get_slice("\n", 0).strip_edges()
+	var head: String = ", ".join(names) if not names.is_empty() else str(sd.get("title_none", "feedback"))
+	var title: String = "%s: %s" % [sd.get("title_prefix", "Playtest"), head]
+	if first != "":
+		title += " - " + first
+	return title.substr(0, 80).strip_edges()
+
+
+## The prefilled link: {url, fallback, body}. The whole report if the link stays under the limit; else the report without its
+## Settings and Engine lines; else (too long even then) a short body that asks the player to paste the clipboard, with fallback true
+## (the caller copies the full report). The repository's issues page and every character of the title and body are percent-encoded.
+static func issue_url(report: String, title: String) -> Dictionary:
+	var sd: Dictionary = send_data().get("issue", {})
+	var base: String = str(sd.get("repo", "")) + "/issues/new"
+	var limit: int = int(sd.get("limit", 2000))
+	var compact: PackedStringArray = []
+	for ln in report.split("\n"):
+		if not (ln.begins_with(word("settings") + ":") or ln.begins_with(word("engine") + ":")):
+			compact.append(ln)
+	for body in [report, "\n".join(compact)]:
+		var url: String = "%s?title=%s&body=%s" % [base, title.uri_encode(), str(body).uri_encode()]
+		if url.length() <= limit:
+			return {"url": url, "fallback": false, "body": body}
+	var short_body: String = str(sd.get("short_body", ""))
+	return {"url": "%s?title=%s&body=%s" % [base, title.uri_encode(), short_body.uri_encode()], "fallback": true, "body": short_body}
+
+
+## Open a link in the player's browser: a new tab on the web (the page-side listener normally does it inside the click; this is the
+## fallback), the system browser elsewhere. A test's `opener` replaces it.
+static func open_url(url: String) -> void:
+	if opener.is_valid():
+		opener.call(url)
+	elif OS.has_feature("web"):
+		UiWebClip.open_url(url)
+	else:
+		OS.shell_open(url)
+
+
 # --- The panel's geometry ---------------------------------------------------------------------------------------------------------
 
-## Rectangles for a viewport. `state` is write or copied. Every control is at least 48 dp; the card is only as tall as it needs.
-static func plan(vp: Vector2, s: float, dp: float, touch: bool, state: String) -> Dictionary:
+## Rectangles for a viewport. `state` is write, copied or review; `status` and `note` override the second line and the small print of
+## the copied and review states (the HUD passes the opened and too-long variants). Every control is at least 48 dp; the card is only as
+## tall as it needs. The buttons flow left to right and wrap, so a phone's narrow card never overlaps them.
+static func plan(vp: Vector2, s: float, dp: float, touch: bool, state: String, status: String = "", note: String = "") -> Dictionary:
 	var tm: float = maxf(48.0 * dp, 44.0)
 	var margin: float = maxf(vp.x * 0.03, 12.0)
 	var my: float = maxf(vp.y * 0.04, 10.0)
@@ -170,7 +228,7 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, state: String) -
 	for rows in ([5, 3] if state == STATE_WRITE else [9, 6, 4, 3]):
 		cs = maxf(s, 0.3)
 		while true:
-			out = _layout(Rect2((vp.x - cw) * 0.5, my, cw, ch_max), cs, tm, state, rows)
+			out = _layout(Rect2((vp.x - cw) * 0.5, my, cw, ch_max), cs, tm, state, rows, status, note)
 			if out["fits"] or cs <= cs_min + 0.001:
 				break
 			cs = maxf(cs_min, cs - 0.04)
@@ -178,14 +236,27 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, state: String) -
 			break
 	# Centre the card vertically at the height it needs.
 	var h2: float = minf(ch_max, float(out["need_h"]))
-	var dy: float = (vp.y - h2) * 0.5 - float((out["card"] as Rect2).position.y)
-	out = _layout(Rect2((vp.x - cw) * 0.5, (vp.y - h2) * 0.5, cw, h2), cs, tm, state, int(out["rows"]))
+	out = _layout(Rect2((vp.x - cw) * 0.5, (vp.y - h2) * 0.5, cw, h2), cs, tm, state, int(out["rows"]), status, note)
 	out["state"] = state
 	out["tm"] = tm
 	return out
 
 
-static func _layout(card: Rect2, cs: float, tm: float, state: String, rows: int) -> Dictionary:
+## Lay buttons left to right from (x, y), wrapping at `right`; fills `out[key]` and returns the y of the last row.
+static func _flow(out: Dictionary, pairs: Array, x0: float, y: float, right: float, tm: float, gap: float, fs: int, pad: float) -> float:
+	var bx: float = x0
+	var by: float = y
+	for pair in pairs:
+		var bw: float = maxf(tm * 1.8, UiText.width(pair[1], fs) + pad * 1.6)
+		if bx + bw > right and bx > x0:
+			bx = x0
+			by += tm + gap
+		out[pair[0]] = Rect2(bx, by, bw, tm)
+		bx += bw + gap * 2.0
+	return by
+
+
+static func _layout(card: Rect2, cs: float, tm: float, state: String, rows: int, status: String, note: String) -> Dictionary:
 	var pad: float = maxf(24.0 * cs, 10.0)
 	var fs_title: int = UiText.px(34.0, cs)
 	var fs_body: int = UiText.px(22.0, cs)
@@ -193,12 +264,16 @@ static func _layout(card: Rect2, cs: float, tm: float, state: String, rows: int)
 	var lh: float = UiText.height(fs_body) * 1.15
 	var inner := Rect2(card.position + Vector2(pad, pad), card.size - Vector2(pad, pad) * 2.0)
 	var d: Dictionary = data()
+	var sd: Dictionary = send_data()
+	var btns: Dictionary = d.get("buttons", {})
+	var sbtn: Dictionary = sd.get("buttons", {})
 	var close_sz: float = maxf(tm, 40.0 * cs)
 	var close := Rect2(card.end.x - pad - close_sz, card.position.y + pad * 0.6, close_sz, close_sz)
 	var title_w: float = UiText.width(str(d.get("title", "")), fs_title)
 	var fits: bool = inner.position.x + title_w <= close.position.x - pad * 0.5
 	var y: float = inner.position.y + maxf(UiText.height(fs_title), close_sz) + pad * 0.5
-	var out: Dictionary = {"card": card, "inner": inner, "close": close, "cs": cs, "fs_title": fs_title, "fs_body": fs_body, "fs_small": fs_small, "lh": lh, "pad": pad, "rows": rows}
+	var out: Dictionary = {"card": card, "inner": inner, "close": close, "cs": cs, "fs_title": fs_title, "fs_body": fs_body, "fs_small": fs_small, "lh": lh, "pad": pad, "rows": rows,
+		"copy": Rect2(), "send": Rect2(), "back": Rect2(), "again": Rect2(), "done": Rect2(), "issue": Rect2()}
 	var gap: float = maxf(pad * 0.5, 6.0)
 	if state == STATE_WRITE:
 		var hint_lines: PackedStringArray = UiText.wrap(str(d.get("hint", "")), fs_small, inner.size.x)
@@ -211,47 +286,37 @@ static func _layout(card: Rect2, cs: float, tm: float, state: String, rows: int)
 		var row_y: float = y
 		var chip_gap: float = maxf(8.0 * cs, 6.0)
 		for t in tag_list():
-			var w: float = UiText.width(str(t["label"]), fs_body) + tm * 0.5 + pad * 1.2
+			var off: float = tm * 0.8   # where the label starts: the tick or ring first, then the word
+			var w: float = UiText.width(str(t["label"]), fs_body) + off + pad * 0.8
 			if x + w > inner.end.x and x > inner.position.x:
 				x = inner.position.x
 				row_y += tm + chip_gap
-			chips.append({"id": str(t["id"]), "label": str(t["label"]), "rect": Rect2(x, row_y, w, tm)})
+			chips.append({"id": str(t["id"]), "label": str(t["label"]), "off": off, "rect": Rect2(x, row_y, w, tm)})
 			x += w + chip_gap
 		y = row_y + tm + gap * 1.4
 		out["tags"] = chips
 		var box_h: float = lh * float(rows) + pad
 		out["text_rect"] = Rect2(inner.position.x, y, inner.size.x, box_h)
 		y += box_h + gap * 1.4
-		var btn_w: float = maxf(tm * 2.6, 170.0 * cs)
-		out["copy"] = Rect2(inner.end.x - btn_w, y, btn_w, tm)
-		out["back"] = Rect2()
-		out["again"] = Rect2()
-		out["done"] = Rect2(inner.position.x, y, maxf(tm * 2.0, 130.0 * cs), tm)
+		y = _flow(out, [["copy", str(btns.get("copy", "COPY REPORT"))], ["send", str(sbtn.get("send", "SEND"))], ["done", str(btns.get("close", "CLOSE"))]], inner.position.x, y, inner.end.x, tm, gap, fs_body, pad)
 	else:
-		var status: String = str(d.get("copied", ""))
+		var review: bool = state == STATE_REVIEW
+		var st: String = status if status != "" else (str(sd.get("review_title", "")) if review else str(d.get("copied", "")))
+		var nt: String = note if note != "" else (str(sd.get("review", "")) if review else str(d.get("copied_fallback", "")))
+		out["status"] = st
+		out["note"] = nt
 		out["status_pos"] = Vector2(inner.position.x, y)
 		y += UiText.height(fs_body) * 1.15
-		var fb_lines: PackedStringArray = UiText.wrap(str(d.get("copied_fallback", "")), fs_small, inner.size.x)
+		var fb_lines: PackedStringArray = UiText.wrap(nt, fs_small, inner.size.x)
 		out["fallback_pos"] = Vector2(inner.position.x, y)
 		out["fallback_lines"] = fb_lines
 		y += float(fb_lines.size()) * UiText.height(fs_small) * 1.15 + gap
 		var box_h2: float = lh * float(rows) + pad
 		out["preview_rect"] = Rect2(inner.position.x, y, inner.size.x, box_h2)
 		y += box_h2 + gap * 1.4
-		# The buttons flow left to right and wrap on a narrow screen.
-		var bx: float = inner.position.x
-		var by: float = y
-		var btns: Dictionary = d.get("buttons", {})
-		for pair in [["again", str(btns.get("copy_again", "COPY AGAIN"))], ["back", str(btns.get("back", "BACK"))], ["done", str(btns.get("close", "CLOSE"))]]:
-			var bw: float = maxf(tm * 1.8, UiText.width(pair[1], fs_body) + pad * 1.6)
-			if bx + bw > inner.end.x and bx > inner.position.x:
-				bx = inner.position.x
-				by += tm + gap
-			out[pair[0]] = Rect2(bx, by, bw, tm)
-			bx += bw + gap * 2.0
-		y = by
-		out["copy"] = Rect2()
-		if status == "":
+		var pairs: Array = [["issue", str(sbtn.get("open", "OPEN ISSUE"))], ["again", str(btns.get("copy", "COPY REPORT"))], ["back", str(btns.get("back", "BACK"))]] if review else [["again", str(btns.get("copy_again", "COPY AGAIN"))], ["back", str(btns.get("back", "BACK"))], ["done", str(btns.get("close", "CLOSE"))]]
+		y = _flow(out, pairs, inner.position.x, y, inner.end.x, tm, gap, fs_body, pad)
+		if st == "":
 			fits = false
 	var need_h: float = y + tm + pad - card.position.y
 	out["need_h"] = need_h
@@ -261,14 +326,14 @@ static func _layout(card: Rect2, cs: float, tm: float, state: String, rows: int)
 
 # --- Drawing --------------------------------------------------------------------------------------------------------------------
 
-static func sig(vp: Vector2, state: String, selected: Dictionary, status_ok: bool, dp: float, s: float, touch: bool) -> Array:
+static func sig(vp: Vector2, state: String, selected: Dictionary, status_ok: bool, dp: float, s: float, touch: bool, extra: String = "") -> Array:
 	var bits := 0
 	var i := 0
 	for t in tag_list():
 		if selected.get(str(t["id"]), false):
 			bits |= (1 << i)
 		i += 1
-	return [int(vp.x), int(vp.y), state, bits, status_ok, int(dp * 100.0), int(s * 100.0), touch]
+	return [int(vp.x), int(vp.y), state, bits, status_ok, int(dp * 100.0), int(s * 100.0), touch, extra]
 
 
 static func draw(ci: CanvasItem, p: Dictionary, selected: Dictionary) -> void:
@@ -293,6 +358,7 @@ static func draw(ci: CanvasItem, p: Dictionary, selected: Dictionary) -> void:
 	UiIcons.line(ci, cc + Vector2(-cr, -cr), cc + Vector2(cr, cr), maxf(2.0, close.size.x * 0.06), ink)
 	UiIcons.line(ci, cc + Vector2(-cr, cr), cc + Vector2(cr, -cr), maxf(2.0, close.size.x * 0.06), ink)
 	var btns: Dictionary = d.get("buttons", {})
+	var sbtn: Dictionary = send_data().get("buttons", {})
 	if p["state"] == STATE_WRITE:
 		var hp: Vector2 = p["hint_pos"]
 		for ln in p["hint_lines"]:
@@ -310,19 +376,25 @@ static func draw(ci: CanvasItem, p: Dictionary, selected: Dictionary) -> void:
 				ci.draw_polyline(PackedVector2Array([Vector2(bx - k, cy), Vector2(bx - k * 0.2, cy + k * 0.9), Vector2(bx + k * 1.1, cy - k * 0.8)]), tcol, maxf(2.0, r.size.y * 0.07), true)
 			else:
 				ci.draw_arc(Vector2(bx, r.get_center().y), r.size.y * 0.16, 0.0, TAU, 14, Color(ink, 0.6), maxf(1.5, r.size.y * 0.05), true)
-			UiText.draw(ci, str(chip["label"]), Vector2(r.position.x + r.size.y * 0.5 + r.size.y * 0.3, r.get_center().y - UiText.height(fs_body) * 0.5 + UiText.ascent(fs_body)), fs_body, tcol, -1)
+			UiText.draw(ci, str(chip["label"]), Vector2(r.position.x + float(chip["off"]), r.get_center().y - UiText.height(fs_body) * 0.5 + UiText.ascent(fs_body)), fs_body, tcol, -1)
 		_button(ci, p["copy"], str(btns.get("copy", "COPY REPORT")), fs_body, true)
+		_button(ci, p["send"], str(sbtn.get("send", "SEND")), fs_body, false)
 		_button(ci, p["done"], str(btns.get("close", "CLOSE")), fs_body, false)
 	else:
 		var sp: Vector2 = p["status_pos"]
-		UiText.draw(ci, str(d.get("copied", "")), Vector2(sp.x, sp.y + UiText.ascent(fs_body)), fs_body, ink, -1)
+		UiText.draw(ci, str(p["status"]), Vector2(sp.x, sp.y + UiText.ascent(fs_body)), fs_body, ink, -1)
 		var fp: Vector2 = p["fallback_pos"]
 		for ln in p["fallback_lines"]:
 			UiText.draw(ci, ln, Vector2(fp.x, fp.y + UiText.ascent(fs_small)), fs_small, dim, -1)
 			fp.y += UiText.height(fs_small) * 1.15
-		_button(ci, p["back"], str(btns.get("back", "BACK")), fs_body, false)
-		_button(ci, p["again"], str(btns.get("copy_again", "COPY AGAIN")), fs_body, false)
-		_button(ci, p["done"], str(btns.get("close", "CLOSE")), fs_body, true)
+		if p["state"] == STATE_REVIEW:
+			_button(ci, p["issue"], str(sbtn.get("open", "OPEN ISSUE")), fs_body, true)
+			_button(ci, p["again"], str(btns.get("copy", "COPY REPORT")), fs_body, false)
+			_button(ci, p["back"], str(btns.get("back", "BACK")), fs_body, false)
+		else:
+			_button(ci, p["again"], str(btns.get("copy_again", "COPY AGAIN")), fs_body, false)
+			_button(ci, p["back"], str(btns.get("back", "BACK")), fs_body, false)
+			_button(ci, p["done"], str(btns.get("close", "CLOSE")), fs_body, true)
 	UiText.no_outline = false
 
 

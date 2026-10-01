@@ -13,7 +13,7 @@ extends RefCounted
 const JS_INSTALL := """
 (function () {
   if (window.__fb) { return; }
-  var fb = window.__fb = { report: '', rect: null, ta: null, ok: false, last: 0 };
+  var fb = window.__fb = { report: '', rect: null, openRect: null, url: '', openedAt: 0, ta: null, ok: false, last: 0 };
   fb.canvas = function () { return document.querySelector('canvas'); };
   fb.scale = function () {
     var c = fb.canvas(), r = c.getBoundingClientRect();
@@ -40,11 +40,19 @@ const JS_INSTALL := """
     } catch (e) { asked = false; }
     if (!asked) { fb.legacy(text); }
   };
-  fb.onup = function (ev) {
-    var r = fb.rect; if (!r) { return; }
-    var now = Date.now(); if (now - fb.last < 250) { return; }
+  fb.open = function (url) {
+    fb.openedAt = Date.now();
+    try { window.open(url, '_blank', 'noopener'); } catch (e) { }
+  };
+  fb.inside = function (r, ev) {
+    if (!r) { return false; }
     var s = fb.scale(), x = (ev.clientX - s.left) / s.sx, y = (ev.clientY - s.top) / s.sy;
-    if (x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3]) { fb.last = now; fb.copy(fb.report); }
+    return x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3];
+  };
+  fb.onup = function (ev) {
+    var now = Date.now(); if (now - fb.last < 250) { return; }
+    if (fb.inside(fb.rect, ev)) { fb.last = now; fb.copy(fb.report); }
+    else if (fb.inside(fb.openRect, ev)) { fb.last = now; fb.copy(fb.report); fb.open(fb.url); }
   };
   var c0 = fb.canvas();
   if (c0) { c0.addEventListener('pointerup', fb.onup, true); c0.addEventListener('click', fb.onup, true); }
@@ -97,6 +105,22 @@ static func set_copy_rect(r: Rect2) -> void:
 		JavaScriptBridge.eval("window.__fb && (window.__fb.rect = [%f, %f, %f, %f]);" % [r.position.x, r.position.y, r.size.x, r.size.y], true)
 
 
+## The OPEN ISSUE button the listener watches, and the link it opens (with the report copied in the same gesture); an empty rect stops it.
+static func set_open(r: Rect2, url: String) -> void:
+	if not available():
+		return
+	if r.size.x <= 0.0:
+		JavaScriptBridge.eval("window.__fb && (window.__fb.openRect = null, window.__fb.url = '');", true)
+	else:
+		JavaScriptBridge.eval("window.__fb && (window.__fb.openRect = [%f, %f, %f, %f], window.__fb.url = %s);" % [r.position.x, r.position.y, r.size.x, r.size.y, JSON.stringify(url)], true)
+
+
+## Open a link from Godot's own click path, unless the page's listener just opened it in the real gesture (it sets openedAt).
+static func open_url(url: String) -> void:
+	if available():
+		JavaScriptBridge.eval("(function () { var f = window.__fb; if (f && Date.now() - f.openedAt < 1500) { return; } if (f) { f.open(%s); } else { window.open(%s, '_blank', 'noopener'); } })();" % [JSON.stringify(url), JSON.stringify(url)], true)
+
+
 ## Copy from Godot's own click path too (it works where the page still counts the tap as a gesture).
 static func copy(text: String) -> void:
 	if available():
@@ -118,3 +142,4 @@ static func hide_textarea() -> void:
 static func clear() -> void:
 	hide_textarea()
 	set_copy_rect(Rect2())
+	set_open(Rect2(), "")

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "note": "The feedback panel's Send step (docs/ui/hud-spec.md section 20): SEND opens a review of exactly what will go into a prefilled GitHub issue, and OPEN ISSUE opens it. Nothing is sent until the player submits the issue on GitHub. The issue is public, and the review says so. issue.repo is the repository's issues page; issue.limit is the longest link we open (browsers and proxies cut long ones); a report too long for it is copied to the clipboard instead and the issue opens with a short body that asks to paste it.",
+  "issue": {
+    "repo": "https://github.com/dixonbalsagna/orb-combat-ex",
+    "limit": 3000,
+    "title_prefix": "Playtest",
+    "title_none": "feedback",
+    "short_body": "Playtest report copied to the clipboard. Paste it here:"
+  },
+  "buttons": { "send": "SEND", "open": "OPEN ISSUE" },
+  "review_title": "Review before sending",
+  "review": "OPEN ISSUE opens a public GitHub issue with the text below. Nothing is sent until you submit it there. Please leave out anything personal.",
+  "opened": "GitHub opened in a new tab. The report is also copied: paste it if the page is empty.",
+  "too_long": "This report is too long for a link, so it is copied. Paste it into the issue that opens."
+}

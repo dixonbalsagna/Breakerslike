@@ -147,6 +147,28 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     walk(feel, '');
   }
 
+  // ---- ui control hints ----
+  const hints = get('ui/data/hints.json');
+  if (isObj(hints) && isObj(hints.schemes)) {
+    const glyphsDoc = get('ui/data/glyphs.json');
+    const glyphActions = new Set(isObj(glyphsDoc) && isObj(glyphsDoc.actions) ? Object.keys(glyphsDoc.actions) : []);
+    for (const [name, sc] of Object.entries(hints.schemes)) {
+      if (!isObj(sc) || !Array.isArray(sc.rows)) continue;
+      sc.rows.forEach((row, ri) => {
+        if (!isObj(row)) return;
+        const ids = [];
+        if (typeof row.action === 'string') ids.push([`/schemes/${esc(name)}/rows/${ri}/action`, row.action]);
+        if (Array.isArray(row.actions)) row.actions.forEach((a, ai) => ids.push([`/schemes/${esc(name)}/rows/${ri}/actions/${ai}`, a]));
+        if (glyphActions.size) for (const [pointer, a] of ids) if (!glyphActions.has(a)) err('ui/data/hints.json', pointer, 'hints-action', 'action "' + a + '" is not in glyphs.json actions');
+      });
+    }
+    const opts = get('ui/data/options.json');
+    const cs = isObj(opts) && isObj(opts.options) ? opts.options.control_scheme : undefined;
+    if (isObj(cs) && Array.isArray(cs.choices)) {
+      cs.choices.forEach((ch, i) => { if (!(ch in hints.schemes)) err('ui/data/options.json', '/options/control_scheme/choices/' + i, 'hints-scheme', 'control_scheme choice "' + ch + '" has no scheme in hints.json'); });
+    }
+  }
+
   // ---- ui feedback panel ----
   const fb = get('ui/data/feedback.json');
   if (isObj(fb) && Array.isArray(fb.tags)) {

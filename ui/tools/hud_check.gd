@@ -40,6 +40,7 @@ func _run() -> void:
 	await _reads_hud()
 	await _feedback_rules()
 	_toll_rules()
+	await _hints_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -554,6 +555,7 @@ func _layer_rules() -> void:
 	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
 	root.add_child(hud)
 	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	hud.set_option("control_hints", "off")   # the control legend fades over seconds 10 to 12 of a match; this test is about the base layers
 	hud.anchor_fn = func(slot): return {"pos": Vector2(400.0 + 400.0 * float(slot), 400.0), "h": 120.0, "visible": true}
 	hud.strip_fn = func(): return {"W": 9600.0, "segs": [[0.0, 4800.0, "ocean"], [4800.0, 9600.0, "city"]], "cam_x": 100.0, "cam_w": 2000.0, "dead": [], "fighters": [{"x": 50.0, "slot": 0, "hidden": false, "aura": Color.WHITE, "seen_x": 50.0}, {"x": 900.0, "slot": 1, "hidden": false, "aura": Color.WHITE, "seen_x": 900.0}]}
 	for i in range(260):
@@ -971,6 +973,8 @@ func _split_cost() -> void:
 	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
 	root.add_child(hud)
 	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	hud.hub.model(0).ai = true   # two AI fighters, as in the demo: no YOU marker follows them, so this measures the split layers alone
+	hud.hub.model(1).ai = true
 	var st := {"t": 0.0}
 	hud.split_fn = func():
 		var phi: float = 0.3 * sin(st["t"] * 0.7)
@@ -1117,7 +1121,7 @@ func _howto_rules() -> void:
 			all_text += " " + str(it.get("text", "")) + " " + str(it.get("heading", ""))
 	_ok(not all_text.contains("Press Light") and not all_text.contains("parry") and not all_text.contains("timing"), "howto: no copy asks for a timed press (the director times every blow)")
 	var page0: String = str((UiData.howto()["pages"] as Array)[0]["title"])
-	_ok(page0 == "What you control" and all_text.contains("You are the fighter") and all_text.contains("no combo inputs") and all_text.contains("play out on their own") and all_text.contains("no health bars") and all_text.contains("finisher"), "howto: the first page is What you control: you are the fighter, there are no combo inputs, the blows play out on their own, no health bars, a finisher ends it")
+	_ok(page0 == "What you control" and all_text.contains("You are the fighter") and all_text.to_lower().contains("no combo inputs") and all_text.contains("play out on their own") and all_text.to_lower().contains("no health bars") and all_text.contains("finisher"), "howto: the first page is What you control: you are the fighter, there are no combo inputs, the blows play out on their own, no health bars, a finisher ends it")
 	var p0text := ""
 	for it in (UiData.howto()["pages"] as Array)[0]["items"]:
 		p0text += " " + str(it.get("text", ""))
@@ -1129,7 +1133,8 @@ func _howto_rules() -> void:
 	var player_copy: String = (all_text + all_hints).to_lower()
 	_ok(not player_copy.contains("strategist") and not player_copy.contains("director") and not player_copy.contains("intent") and not player_copy.contains("the fight follows") and not player_copy.contains("follow from"), "howto: no player-facing copy says strategist, director, intent or the fight follows (those are internal words)")
 	# Geometry at desktop, tablet, phone and a small window, with every device family and touch on or off.
-	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(2560, 1600), 2.0], [Vector2(3840, 2160), 1.0]]
+	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0], [Vector2(2560, 1600), 2.0], [Vector2(3840, 2160), 1.0],
+		[Vector2(1170, 2532), 3.0], [Vector2(1080, 2340), 2.75], [Vector2(1125, 2436), 3.0], [Vector2(828, 1792), 2.0], [Vector2(750, 1334), 2.0], [Vector2(390, 844), 1.0], [Vector2(360, 640), 1.0]]
 	for cs in cases:
 		var sz: Vector2 = cs[0]
 		var dpv: float = cs[1]
@@ -1159,6 +1164,10 @@ func _howto_rules() -> void:
 							bad += 1
 					_ok(bad == 0, "%s: the card is on screen, every button is at least 48 dp and inside it, and every item is inside (%d bad)" % [tag, bad])
 					_ok(float(p["fs_small"]) >= UiLook.text_floor - 0.5 and float(p["fs_body"]) >= UiLook.text_floor - 0.5, "%s: type is at or above the text floor" % tag)
+					var dots: Array = p["dots"]
+					var dr: float = float(p["dot_r"]) * 1.3
+					var dbox := Rect2((dots[0] as Vector2) - Vector2(dr, dr), Vector2((dots[dots.size() - 1] as Vector2).x - (dots[0] as Vector2).x + 2.0 * dr, 2.0 * dr))
+					_ok(dots.size() == n and ((dots[1] as Vector2).x - (dots[0] as Vector2).x) >= 2.0 * dr + 1.0 and not dbox.intersects(p["next"]) and (pg == 0 or not dbox.intersects(p["back"])) and card.encloses(dbox), "%s: the page dots do not overlap each other or the buttons" % tag)
 	UiLook.text_floor = UiLook.MIN_TEXT_PX
 	# Keyboard pages show the second player's keys; pads do not.
 	var pk: Dictionary = UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "kbd", 0)
@@ -1358,19 +1367,21 @@ func _feedback_rules() -> void:
 		var lay := UiLayout.new()
 		lay.dp = cs[1]
 		lay.compute(sz, false)
-		for st in [UiFeedback.STATE_WRITE, UiFeedback.STATE_COPIED]:
+		for st in [UiFeedback.STATE_WRITE, UiFeedback.STATE_COPIED, UiFeedback.STATE_REVIEW]:
 			var p: Dictionary = UiFeedback.plan(sz, lay.s, cs[1], cs[1] > 1.5, st)
 			var tag := "feedback %dx%d dp %.1f %s" % [int(sz.x), int(sz.y), cs[1], st]
 			var card: Rect2 = p["card"]
 			var tm: float = float(p["tm"])
 			_ok(bool(p["fits"]) and Rect2(Vector2.ZERO, sz).encloses(card), "%s: the panel fits on screen (type scale %.2f)" % [tag, float(p["cs"])])
-			var ctrl: Array = [p["close"], p["done"]]
+			var ctrl: Array = [p["close"]]
 			if st == UiFeedback.STATE_WRITE:
-				ctrl.append(p["copy"])
+				ctrl.append_array([p["copy"], p["send"], p["done"]])
 				for chip in p["tags"]:
 					ctrl.append(chip["rect"])
+			elif st == UiFeedback.STATE_REVIEW:
+				ctrl.append_array([p["issue"], p["again"], p["back"]])
 			else:
-				ctrl.append_array([p["back"], p["again"]])
+				ctrl.append_array([p["back"], p["again"], p["done"]])
 			var bad := 0
 			for i in range(ctrl.size()):
 				var r: Rect2 = ctrl[i]
@@ -1380,6 +1391,12 @@ func _feedback_rules() -> void:
 					if r.intersects(ctrl[j]):
 						bad += 1
 			_ok(bad == 0, "%s: every control is at least 48 dp, inside the card, and none overlap (%d bad)" % [tag, bad])
+			if st == UiFeedback.STATE_WRITE:
+				var clipped := 0
+				for chip in p["tags"]:
+					if UiText.width(str(chip["label"]), int(p["fs_body"])) + float(chip["off"]) > (chip["rect"] as Rect2).size.x - 2.0:
+						clipped += 1
+				_ok(clipped == 0, "%s: every tag's word fits inside its chip (%d clipped)" % [tag, clipped])
 			var box: Rect2 = p["text_rect"] if st == UiFeedback.STATE_WRITE else p["preview_rect"]
 			_ok(card.encloses(box) and box.size.y >= float(p["lh"]) * 2.9, "%s: the text box is inside the card and at least three lines tall" % tag)
 	UiLook.text_floor = UiLook.MIN_TEXT_PX
@@ -1465,7 +1482,7 @@ func _feedback_rules() -> void:
 	_ok(hud.is_feedback_open(), "feedback: a game key does nothing to the open panel")
 	hud.hide_feedback()
 	# The web's clipboard bridge: the page-side code is there, and off the web every call is a harmless no-op.
-	for must in ["navigator.clipboard.writeText", "execCommand('copy')", "readonly", "pointerup", "createElement('textarea')", "__fbClose"]:
+	for must in ["navigator.clipboard.writeText", "execCommand('copy')", "readonly", "pointerup", "createElement('textarea')", "__fbClose", "window.open(url, '_blank', 'noopener')", "openRect"]:
 		_ok(UiWebClip.JS_INSTALL.contains(must), "feedback web: the page-side code has %s" % must)
 	_ok(not UiWebClip.available(), "feedback web: this headless run is not the web, so the bridge stays out of the way")
 	UiWebClip.install(func(): pass)
@@ -1480,6 +1497,45 @@ func _feedback_rules() -> void:
 	_ok(hud._fb_prev.visible and hud._fb_prev.text.contains("Notes:"), "feedback web: off the web the read-only Godot box shows the report")
 	hud.hide_feedback()
 	# Touch: the pill is a target, the panel works by tap, and the boxes stay inside the card.
+	# SEND: a review of exactly what a prefilled GitHub issue will hold, then OPEN ISSUE (the test catches the open).
+	var opened: Array = []
+	UiFeedback.opener = func(url: String): opened.append(url)
+	hud.show_feedback("pause")
+	pl = hud.feedback_plan()
+	hud._unhandled_input(click.call((pl["tags"][0]["rect"] as Rect2).get_center()))
+	hud._fb_text.text = "The beam froze. Two lines & a symbol?\nSecond line."
+	hud.feedback_fn = func(): return {"commit": "abc1234", "seed": 42, "setup": "ONE vs TWO", "time": 222.0}
+	hud._unhandled_input(click.call((pl["send"] as Rect2).get_center()))
+	_ok(hud._fb_state == "review" and hud._fb_prev.visible and hud._fb_prev.text == hud.feedback_report() and not hud._fb_issue.is_empty() and opened.is_empty(), "feedback send: SEND shows the review (the exact report) and opens nothing yet")
+	var url: String = str(hud._fb_issue["url"])
+	_ok(url.begins_with("https://github.com/dixonbalsagna/orb-combat-ex/issues/new?title=") and url.contains("&body=") and url.length() <= 3000 and not bool(hud._fb_issue["fallback"]), "feedback send: the link is the repo's new-issue page with a title and body, under the 3000-character limit")
+	var body_enc: String = url.get_slice("&body=", 1)
+	var title_enc: String = url.get_slice("&body=", 0).get_slice("?title=", 1)
+	_ok(not body_enc.contains(" ") and not body_enc.contains("\n") and not body_enc.contains("&") and not title_enc.contains(" "), "feedback send: the title and body are percent-encoded (no raw space, newline or ampersand)")
+	_ok(body_enc.uri_decode() == hud.feedback_report() and title_enc.uri_decode().begins_with("Playtest: Bug - The beam froze."), "feedback send: the body decodes to the report and the title to Playtest, the tag and the first words of the note")
+	pl = hud.feedback_plan()
+	_ok(hud._fb_texts()[1] == "" and str(pl["status"]) == "Review before sending" and str(pl["note"]).contains("public GitHub issue") and str(pl["note"]).contains("Nothing is sent until you submit it there"), "feedback send: the review says it is a public issue and that nothing is sent until the player submits it")
+	hud._unhandled_input(click.call((pl["issue"] as Rect2).get_center()))
+	_ok(opened == [url] and hud._fb_opened and str(hud.feedback_plan()["note"]).contains("GitHub opened"), "feedback send: OPEN ISSUE opens the link once and says so")
+	hud._unhandled_input(click.call((hud.feedback_plan()["again"] as Rect2).get_center()))
+	_ok(hud._fb_state == "review" and str(hud.feedback_plan()["status"]).begins_with("Copied"), "feedback send: COPY REPORT in the review copies and stays in the review")
+	hud._unhandled_input(click.call((hud.feedback_plan()["back"] as Rect2).get_center()))
+	_ok(hud._fb_state == "write" and hud._fb_text.text.begins_with("The beam froze.") and hud.feedback_selected_tags() == ["bug"], "feedback send: BACK returns to writing with the note and tags kept")
+	# A report too long for a link: the full report is copied and the issue opens with a short body.
+	hud._fb_text.text = "x".repeat(4000)
+	hud.send_feedback()
+	var long_issue: Dictionary = hud._fb_issue
+	_ok(bool(long_issue["fallback"]) and str(long_issue["url"]).length() <= 3000 and str(long_issue["url"]).get_slice("&body=", 1).uri_decode().contains("copied to the clipboard") and not str(long_issue["url"]).get_slice("&body=", 1).contains("xxxxxxxx"), "feedback send: a report too long for the limit opens with a short body asking to paste")
+	_ok(str(hud.feedback_plan()["note"]).contains("too long for a link"), "feedback send: and the review says the full report is copied")
+	hud.hide_feedback()
+	UiFeedback.opener = Callable()
+	# The title and link helpers on their own.
+	_ok(UiFeedback.issue_title([], "") == "Playtest: feedback" and UiFeedback.issue_title(["bug", "loved"], "").begins_with("Playtest: Bug, Loved it") and UiFeedback.issue_title(["bug"], "y".repeat(300)).length() <= 80, "feedback send: the title falls back to Playtest: feedback, lists the tags and stays under 80 characters")
+	var shorter: Dictionary = UiFeedback.issue_url("A\nSettings: a=on\nEngine: 4\nB", "T")
+	_ok(not bool(shorter["fallback"]) and str(shorter["url"]).uri_decode().contains("Settings:"), "feedback send: a short report keeps its settings line in the link")
+	var trimmed: String = "Build: x\nSettings: " + "s".repeat(3400) + "\nEngine: 1\nNotes:\nhi"
+	var tr_issue: Dictionary = UiFeedback.issue_url(trimmed, "T")
+	_ok(not bool(tr_issue["fallback"]) and not str(tr_issue["url"]).uri_decode().contains("Settings:") and str(tr_issue["url"]).uri_decode().contains("hi"), "feedback send: a report only too long for its settings line drops that line and keeps the rest")
 	hud.set_density(2.6)
 	hud.set_option("touch_ui", true)
 	hud.advance(1.0 / 60.0)
@@ -1509,3 +1565,100 @@ func _toll_rules() -> void:
 		_ok(wide <= lay.toll.size.x - 8.0 + 0.5, "%s: four-digit counts fit the chip (%d px in %d, type %d)" % [tag, int(wide), int(lay.toll.size.x), fs])
 		_ok(fs >= int(UiLook.text_floor), "%s: and the type stays at or above the floor" % tag)
 	UiLook.text_floor = UiLook.MIN_TEXT_PX
+
+
+## The control hints and the YOU labels (docs/ui/hud-spec.md section 22).
+func _hints_rules() -> void:
+	var hd: Dictionary = UiData.hints()
+	var acts: Dictionary = UiData.glyphs().get("actions", {})
+	var bad := 0
+	for sname in hd["schemes"]:
+		for r in hd["schemes"][sname]["rows"]:
+			for a in (r["actions"] if r.has("actions") else [r["action"]]):
+				if not acts.has(a):
+					bad += 1
+			if str(r.get("label", "")) == "":
+				bad += 1
+	_ok(bad == 0 and hd["schemes"].has("today"), "hints: every row names a real glyph action and has a word, and the 'today' scheme exists (%d bad)" % bad)
+	var hub := _hub()
+	hub.model(0).ai = false
+	hub.model(1).ai = true
+	_ok(UiHints.you_label(hub.models, hub.model(0)) == "YOU" and UiHints.you_label(hub.models, hub.model(1)) == "", "hints: one human is YOU and the AI has no label")
+	hub.model(1).ai = false
+	_ok(UiHints.you_label(hub.models, hub.model(0)) == "P1" and UiHints.you_label(hub.models, hub.model(1)) == "P2", "hints: two humans are P1 and P2")
+	hub.model(0).ai = true
+	hub.model(1).ai = true
+	_ok(UiHints.you_label(hub.models, hub.model(0)) == "", "hints: nobody is labelled in an AI against AI demo")
+	var m: UiFighterModel = hub.model(0)
+	m.ai = false
+	_ok(UiHints.visible_alpha(m, "auto", false, 0.0) == 1.0 and UiHints.visible_alpha(m, "auto", false, 9.0) == 1.0 and is_equal_approx(UiHints.visible_alpha(m, "auto", false, 11.0), 0.5) and UiHints.visible_alpha(m, "auto", false, 12.5) == 0.0, "hints: auto shows for the first 12 s of a match and fades over the last two")
+	_ok(UiHints.visible_alpha(m, "auto", true, 60.0) == 1.0 and UiHints.visible_alpha(m, "always", false, 60.0) == 1.0 and UiHints.visible_alpha(m, "off", true, 0.0) == 0.0, "hints: prompts on or 'always' keep them up, 'off' hides them")
+	m.ai = true
+	_ok(UiHints.visible_alpha(m, "always", true, 0.0) == 0.0, "hints: an AI fighter never gets a legend")
+	m.ai = false
+	var rows0: Array = UiHints.rows(m, "today")
+	_ok(rows0.size() == 7, "hints: seven rows at first (fly, dash, light, heavy, signature, charge, stances)")
+	hub.consume({"type": "availability", "actor": 0, "action": "special", "available": true})
+	hub.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	_ok(UiHints.rows(m, "today").size() == 9, "hints: Special and Transform join the legend only while they are available")
+	_ok(UiHints.rows(m, "no_such_scheme").size() == 9, "hints: an unknown scheme falls back to today")
+	# Geometry: the legend sits in the column under the prompt row, clear of the fight, and not on touch or in portrait.
+	for cs in [[Vector2(1920, 1080), 1.0], [Vector2(1366, 768), 1.0], [Vector2(1280, 720), 1.0], [Vector2(2560, 1080), 1.0], [Vector2(1024, 576), 1.0]]:
+		var lay := UiLayout.new()
+		lay.dp = cs[1]
+		lay.compute(cs[0], false)
+		var tag := "hints %dx%d" % [int(cs[0].x), int(cs[0].y)]
+		var r0: Rect2 = lay.hints[0]
+		var view := Rect2(Vector2.ZERO, cs[0])
+		_ok(r0.size.y > 0.0 and view.encloses(r0) and not r0.intersects(lay.clear_zone) and not r0.intersects(lay.prompts[0]) and not r0.intersects(lay.bark[0]) and not r0.intersects(lay.cards[0]), "%s: the legend's room is in the column, clear of the fight, the prompt row, the cards and the bark lane" % tag)
+		var pl: Dictionary = UiHints.plan(m, r0, lay.s, {"glyph_style": "neutral", "scheme": "today"})
+		var placed: Array = pl["rows"]
+		_ok(placed.size() >= 3 and (pl["box"] as Rect2).size.y <= r0.size.y + 0.5 and r0.encloses(pl["box"]), "%s: at least three rows fit and the legend stays inside its room (%d rows)" % [tag, placed.size()])
+		var lw := UiLayout.new()
+		lw.compute(cs[0], false, Vector4.ZERO, true)
+		_ok(lw.hints[1].position.x < cs[0].x * 0.5 and lw.hints[0].position.x > cs[0].x * 0.5, "%s: swapped, the legends follow their columns" % tag)
+	var lt := UiLayout.new()
+	lt.touch_ui = true
+	lt.dp = 2.6
+	lt.compute(Vector2(2400, 1080), false)
+	var lp := UiLayout.new()
+	lp.compute(Vector2(390, 844), false)
+	_ok(lt.hints[0].size.y <= 0.0 and lp.hints[0].size.y <= 0.0, "hints: none on touch (its controls are on screen) or in portrait")
+	# In the HUD: a legend for the human only, for 12 s, and a YOU marker with it.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.anchor_fn = func(slot): return {"pos": Vector2(700.0 + 500.0 * float(slot), 500.0), "h": 120.0, "visible": true}
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	for i in range(3):
+		hud.advance(1.0 / 60.0)
+		await process_frame
+	_ok(hud._l_hints[0].sig != null and hud._l_hints[1].sig == null and hud._l_you.sig != null, "hints: the human gets a legend and a YOU marker at the start, the AI neither")
+	_ok(hud.hub.model(0).you_label == "YOU" and hud.hub.model(1).you_label == "", "hints: the plate labels follow (YOU, none)")
+	var steps := 0
+	while steps < 900 and hud._l_hints[0].sig != null:
+		hud.advance(1.0 / 30.0)
+		steps += 1
+	_ok(steps > 300 and hud._l_hints[0].sig == null and hud._l_you.sig == null, "hints: they are gone after the first 12 s (%d half-frames)" % steps)
+	hud.set_option("control_hints", "always")
+	hud.advance(1.0 / 60.0)
+	_ok(hud._l_hints[0].sig != null and hud._l_you.sig != null, "hints: 'always' brings them back")
+	hud.set_option("control_hints", "off")
+	hud.advance(1.0 / 60.0)
+	_ok(hud._l_hints[0].sig == null and hud._l_you.sig == null, "hints: 'off' hides them")
+	hud.set_option("control_hints", "auto")
+	hud.consume({"type": "match_start"})
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.advance(1.0 / 60.0)
+	_ok(hud._l_hints[0].sig != null, "hints: a new match shows them again")
+	hud.set_density(2.6)
+	hud.set_option("touch_ui", true)
+	hud.advance(1.0 / 60.0)
+	_ok(hud._l_hints[0].sig == null and hud._l_you.sig != null, "hints: touch mode has no legend (its controls are on screen) but still marks YOU")
+	hud.queue_free()
+	await process_frame

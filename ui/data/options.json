@@ -16,6 +16,7 @@
     "hotseat_alt_layout": { "default": false, "group": "controls", "label": "Alternate hot-seat keyboard layout", "help": "A second keyboard layout for two players on one keyboard. Off keeps the default layout." },
     "vfx_quality": { "default": "auto", "group": "display", "label": "Effects quality", "help": "How much debris, dust and cracking the effects draw. Auto picks by how fast the game is running; the others fix it. Fewer effects never hide a cue.", "choices": ["auto", "high", "medium", "low"] },
     "keep_hints": { "default": false, "group": "accessibility", "label": "Keep tutorial hints up", "help": "In the guided first match, a hint stays on screen after you have done what it asks, until the next hint replaces it.", "accessibility": true },
+    "control_hints": { "default": "auto", "group": "display", "label": "Control hints", "help": "A small legend of your controls in your corner. Auto shows it at the start of every match and in your first matches, always keeps it up, off hides it.", "choices": ["auto", "always", "off"] },
     "thickness": { "default": 1.0, "group": "accessibility", "label": "Crown thickness", "help": "Arc thickness of the wear crown: 0.75, 1, 1.5.", "accessibility": true, "choices": [0.75, 1.0, 1.5] },
     "region_label": { "default": false, "group": "display", "label": "Place names", "help": "The place under the camera on the planet strip." }
   }

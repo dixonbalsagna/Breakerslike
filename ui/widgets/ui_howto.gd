@@ -28,7 +28,7 @@ static func plan(vp: Vector2, s: float, dp: float, touch: bool, page_i: int, dev
 	var margin: float = maxf(vp.x * 0.03, 12.0)
 	var my: float = maxf(vp.y * 0.04, 10.0)
 	var cw: float = minf(vp.x - 2.0 * margin, maxf(1500.0 * s, 560.0))
-	var ch: float = minf(vp.y - 2.0 * my, maxf(900.0 * s, 360.0))
+	var ch: float = vp.y - 2.0 * my   # as tall as the screen allows: the card then takes only the height its tallest page needs
 	var card := Rect2((vp.x - cw) * 0.5, (vp.y - ch) * 0.5, cw, ch)
 	var cs: float = maxf(s, 0.3)
 	var cs_min: float = UiLook.text_floor / 24.0
@@ -76,7 +76,8 @@ static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictio
 	var back := Rect2(footer.position.x, footer.position.y, back_w, btn_h)
 	var nxt := Rect2(footer.end.x - next_w, footer.position.y, next_w, btn_h)
 	var dots: Array = []
-	var dot_gap: float = maxf(22.0 * cs, 14.0)
+	var dot_r: float = clampf(btn_h * 0.08, 4.0, 14.0)
+	var dot_gap: float = dot_r * 3.4
 	for i in range(n):
 		dots.append(Vector2(footer.position.x + footer.size.x * 0.5 + (float(i) - float(n - 1) * 0.5) * dot_gap, footer.position.y + btn_h * 0.5))
 	# The items, in columns. Two columns when the body is wide; items carry their own column in the data (col 0 or 1).
@@ -105,6 +106,9 @@ static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictio
 		var rec: Dictionary = {"item": it, "col": col, "fs": fs_body, "fs_small": fs_small}
 		var text: String = str(it.get("text", ""))
 		if it.has("heading"):
+			if float(heights[col]) > 0.0:
+				heights[col] = float(heights[col]) + item_gap * 1.5
+				y = body.position.y + float(heights[col])
 			var hh: float = UiText.height(fs_body) * 1.25
 			rec["rect"] = Rect2(x, y, colw, hh)
 			rec["kind"] = "heading"
@@ -162,7 +166,7 @@ static func _layout(card: Rect2, cs: float, tm: float, touch: bool, page: Dictio
 		fits = false
 	# What the card needs in height for this page: the header, the tallest column, the footer and the paddings.
 	var need_h: float = (body_top - card.position.y) + tallest - item_gap + pad * 0.6 + btn_h + pad
-	return {"need_h": need_h, "card": card, "inner": inner, "body": body, "close": close, "back": back, "next": nxt, "dots": dots, "items": placed, "cs": cs, "fits": fits,
+	return {"need_h": need_h, "card": card, "inner": inner, "body": body, "close": close, "back": back, "next": nxt, "dots": dots, "dot_r": dot_r, "items": placed, "cs": cs, "fits": fits,
 		"fs_title": fs_title, "fs_body": fs_body, "fs_small": fs_small, "lh": lh, "btn_h": btn_h, "pad": pad, "title_text": title_text, "kicker": kicker,
 		"title_h": title_h, "tallest": tallest, "is_last": pi >= n - 1, "is_first": pi <= 0, "cols": cols}
 
@@ -248,7 +252,7 @@ static func draw(ci: CanvasItem, p: Dictionary, device: String, slot: int, style
 	var dots: Array = p["dots"]
 	for i in range(dots.size()):
 		var on: bool = i == int(p["page"])
-		ci.draw_circle(dots[i], maxf(5.0, float(p["btn_h"]) * 0.12) * (1.25 if on else 1.0), ink if on else Color(dim, 0.5))
+		ci.draw_circle(dots[i], float(p["dot_r"]) * (1.3 if on else 1.0), ink if on else Color(dim, 0.5))
 	UiText.no_outline = false
 
 

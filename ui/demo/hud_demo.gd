@@ -4,7 +4,7 @@ extends Control
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
 ## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress|controls   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch --device=xbox --howto[=PAGE] --ko --feedback[=copied]
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch --device=xbox --howto[=PAGE] --ko --feedback[=copied|review]
 ## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
@@ -83,6 +83,9 @@ func _ready() -> void:
 		hud.toggle_feedback_tag("bug")
 		hud.toggle_feedback_tag("confusing")
 		hud._fb_text.text = "The beam froze after the second pulse."
+		if str(args["feedback"]) == "review":
+			hud.feedback_fn = func(): return {"commit": "02c8fd3", "date": "2026-09-30", "seed": 123456, "time": 222.0}
+			hud.send_feedback()
 		if str(args["feedback"]) == "copied":
 			hud.feedback_fn = func(): return {"commit": "02c8fd3", "date": "2026-09-30", "seed": 123456, "time": 222.0}
 			hud.copy_feedback()

@@ -4867,6 +4867,120 @@
         "rule": "xref:timing-hitstop-budget",
         "pointer": "/hitstopTicks/finalBlow"
       }
+    },
+    {
+      "id": "hints-version",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "set": {
+            "/schema": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "hints-needs-today",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "del": [
+            "/schemes/today"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/schemes"
+      }
+    },
+    {
+      "id": "hints-row-needs-action",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "del": [
+            "/schemes/today/rows/0/action"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/schemes/today/rows/0"
+      }
+    },
+    {
+      "id": "hints-pair-count",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "set": {
+            "/you/pair": [
+              "P1"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/you/pair"
+      }
+    },
+    {
+      "id": "hints-intro-seconds",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "set": {
+            "/intro_seconds": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/intro_seconds"
+      }
+    },
+    {
+      "id": "hints-unknown-action",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "set": {
+            "/schemes/today/rows/0/action": "teleport"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hints-action",
+        "pointer": "/schemes/today/rows/0/action"
+      }
+    },
+    {
+      "id": "hints-unknown-group-action",
+      "schema": "ui-hints.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/hints.json",
+          "set": {
+            "/schemes/today/rows/6/actions/1": "stance_nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:hints-action",
+        "pointer": "/schemes/today/rows/6/actions/1"
+      }
     }
   ],
   "text": [

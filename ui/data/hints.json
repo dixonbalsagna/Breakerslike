@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "note": "The on-screen control hints shown during play (docs/ui/hud-spec.md section 22) and the YOU labels. A scheme is a list of rows (an action or a group of actions, and a short word); the HUD shows the scheme named by its control_scheme option and falls back to 'today'. When Controls' new layouts land (ADR 0008: arena, brawler, simple, and the touch presets) each is one more scheme here, with no code change. A row with only_when_avail shows only while that action can be used. intro_seconds: how long the hints show at the start of every match (the last two seconds fade) unless prompts are on or the control_hints option is always.",
+  "you": { "single": "YOU", "pair": ["P1", "P2"] },
+  "intro_seconds": 12,
+  "schemes": {
+    "today": {
+      "rows": [
+        { "action": "move", "label": "Fly" },
+        { "action": "dash", "label": "Dash" },
+        { "action": "light", "label": "Light" },
+        { "action": "heavy", "label": "Heavy" },
+        { "action": "signature", "label": "Signature" },
+        { "action": "charge", "label": "Charge" },
+        { "actions": ["stance_press", "stance_guard", "stance_dodge", "stance_escape"], "label": "Stances" },
+        { "action": "special", "label": "Special", "only_when_avail": true },
+        { "action": "transform", "label": "Transform", "only_when_avail": true }
+      ]
+    }
+  }
+}
