@@ -757,7 +757,9 @@ QA's recommended data set is accepted: k 0.052, the mood and location values, an
 | All rows (a watch metric) | 25 to 60% | 15 to 40% |
 
 2. **The per-tier rates are not re-based.** They are the pillar-4 test: damage escalates with tier. After 2a, structures levelled per minute were 1.2 to 3.0% at tier 3 and 3.4% at tier 4, against bands of 3 to 10% and 6 to 20% (§15). The top tiers are too gentle, and no data lever moves them, because the fight is rarely inside a town. **World adds a code-side lever: high-tier impacts reach further.**
-   - The area in which impacts, power-ups, clashes and blasts damage **structures** grows by tier: ×1.0 at tiers 1 and 2, **×1.6 at tier 3** and **×2.4 at tier 4**. The factors are data.
+   - The area in which impacts, power-ups, clashes and blasts damage **structures** grows by tier: ×1.0 at tiers 1 and 2, **×1.6 at tier 3** and **×2.8 at tier 4**. The factors are data, and they scale the whole blast, falloff included: scaling only the outer radius barely moved the rates.
+   - *Measured by World* over 40 matches (`docs/world/structure-reach.md`): ×1.6 puts tier 3's front row at 3.90% a minute. ×2.4 left tier 4 at 5.83%, just under its band, so the EP set the start at ×2.8, which is about 6.5% a minute and about 43% of the front row at the KO. QA tunes the tier-4 factor.
+   - An optional per-event cap in the extended ring exists as data and is off by default.
    - Casualties are unchanged. They stay under the collateral window and its ramp (§4b), and by tier 3 most of a threatened district has already fled.
    - Tiers 1 and 2 are untouched, so the low-tier rules hold: at most 2% and 4% a minute, and no more than 10% lost before tier 3.
 
@@ -766,7 +768,7 @@ QA's recommended data set is accepted: k 0.052, the mood and location values, an
 - *No fight destroys the planet at low tiers:* nothing changes below tier 3.
 - *The hero is pressured by collateral:* he keeps his lure. At tier 4 leading the fight away is no longer enough by itself to save a town's edge, which is the pressure the pillar asks for.
 
-**Expected result:** with the tier rates in band, front-row structures at the KO should land at 35 to 45%. QA re-measures, and the new totals above are the gate.
+**Expected result:** with the tier rates in band, front-row structures at the KO land at about 43% (World's measurement at ×1.6 and ×2.8). QA re-measures, and the new totals above are the gate.
 
 ### The other failing rows
 
