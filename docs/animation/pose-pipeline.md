@@ -1008,6 +1008,27 @@ The clock is the pause's own ticks (`S.pause.left` counts them down, and the bea
 
 **A parried string.** Combat traced the 'late' blows (the 7 or 8 of 78) to the leftover strike beats of parried exchanges: the sim keeps listing them and fires them later, and the animator drew each one when it was done. In a parried exchange only the blows timed before the parry are drawn now (the exchange time at the first sight of `cancel` is remembered). Blows announced under 4 ticks ahead, 4 seeds: 7 or 8 of 78 before, 0 after. Encounter will end the string in the sim later.
 
+### 9.7 A2 fifth pass: battle damage (rule-of-cool feature 1) (2026-10-01)
+
+All read from the wounds state the sim already has (`f.wear`, `f.stage`, `SimWounds.brinkProgress`), render only, on sim time only (so it replays). Three poses (78 to 81): wound.arm_limp, wound.leg_favour, wound.sag (`art/animation/records/A2-poses.md`).
+| What | Source | Effect |
+| :--- | :--- | :--- |
+| Heavy breathing | average wear of the four regions (about 60% of the broken threshold on average is the maximum) | the chest rocks and the shoulders heave, faster (0.8 to 2.2 Hz) and deeper as wear rises; the head gets heavy. Idle and movement, not in the air |
+| Stagger | brink progress from 0.45 | a slow irregular sway of the pelvis (about 4 degrees at the brink) and a little give in the hips |
+| The stance sags | brink progress from 0.35, up to 70% | wound.sag blended into the free base pose: hunched, head heavy, knees soft |
+| A broken arm hangs | arms stage 3 | the arm's bones go to wound.arm_limp at 92% (50% in the air), the hand slack; blows use the other arm: where a key set strikes with a hand the animator picks the mirror side |
+| A broken leg is favoured | legs stage 3 | the leg's bones and half the pelvis go to wound.leg_favour (85%; 50% in a blow), the weight on the good leg and a dip on each step; kicks use the other leg |
+
+The hanging arm and the favoured leg are chosen by a hash of the fighter's slot (the sim has one arms region and one legs region, so no side). It stays through transformations (the layers run after the form pose). `anim_check` tests it on a match with the wear set by hand: the arm hung on 216 of 216 calm frames, no blow used a broken limb, the stance sagged toward the brink and the worn chest moved 0.52 against 0.36 for the fresh one. `anim_reel.gd --wound=0:arms+legs,1:brink` shows it (`art/animation/a2-wounds-fresh-vs-hurt.gif`).
+
+**What the sim would need for a broken arm to stop being used in strikes** (Encounter's and Combat's). Today the broken arm still throws every arm blow at `armsBrokenMul` damage, and the director does not know a side.
+1. A side per limb region (which arm is broken) in the wounds state, so the presentation and the rules agree instead of the animator picking by hash.
+2. The strike atoms for an arm blow with a broken arm pick the other arm, or a kick, a headbutt or an energy blast: the director's template choice excludes the broken limb's atoms.
+3. Guard and perfect-block windows lose the broken arm's side (a one-handed guard: a narrower window, which `armsGuardMul` approximates).
+4. For legs: kicks by the other leg only, and a stance that cannot kick off a broken leg, matching the animator's choice.
+
+**Set pieces, planned not built:** `docs/animation/set-pieces-plan.md` (the crater-landing entrance, the staredown, the winner in the wreckage: 6 new poses, about 0.5 reviewer-hour, and the events each waits for).
+
 ---
 
 ## 10. How we will know it works

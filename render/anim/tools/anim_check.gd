@@ -140,6 +140,66 @@ func _test_form() -> void:
 	print("form test: %d checks (full, short, live: gather, break, settle, end)" % n)
 
 
+## Battle damage on a real match, the wear set by hand on a fresh one (a test: this match's hash is not compared): fighter 0 has
+## both arms and both legs broken, fighter 1 is worn and then fresh. The broken arm must hang when no blow is being thrown, no
+## blow may use the broken limb, the stance must sag toward the brink and the worn fighter must breathe harder than the fresh one.
+func _test_wounds() -> void:
+	RenderAnim.enabled = true
+	RenderAnim.style_override = ""
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	for i in range(90):
+		main.frame(DT)
+	var a = S.fighters[0]
+	var b = S.fighters[1]
+	var at: int = int(a.wd.stageAt[2])
+	a.wear = [0, 0, at, at]
+	a.stage = [0, 0, 3, 3]
+	b.wear = [0, int(at * 0.85), 0, 0]
+	b.stage = [0, 2, 0, 0]
+	var afa: AnimFighter = RenderAnim.fighter(S, a)
+	var afb: AnimFighter = RenderAnim.fighter(S, b)
+	var s2: int = AnimRig.index["spine_2"]
+	var limp: AnimPose = AnimData.pose("wound.arm_limp", not afa._hang_right)
+	var sfx: String = "r" if afa._hang_right else "l"
+	var fo: int = AnimRig.index["forearm_" + sfx]
+	var hanging := 0
+	var calm := 0
+	var lo_w := 9.0
+	var hi_w := -9.0
+	for i in range(600):
+		main.frame(DT)
+		if afa._part == "" and a.state == "free" and afa.version > 0:
+			calm += 1
+			if afa.q[fo].angle_to(limp.q[fo]) < 0.3:
+				hanging += 1
+		var ang: float = afb.q[s2].angle_to(Quaternion.IDENTITY)
+		lo_w = minf(lo_w, ang)
+		hi_w = maxf(hi_w, ang)
+	_expect(calm > 30 and hanging > calm * 0.9, "wound test: the broken arm hung on %d of %d calm frames" % [hanging, calm])
+	_expect(int(afa.debug["wound_bad"]) == 0, "wound test: %d blows used a broken limb (of %d)" % [afa.debug["wound_bad"], afa.debug["wound_strikes"]])
+	var sag: AnimPose = AnimData.pose("wound.sag")
+	var fresh: AnimPose = AnimData.pose("stance.aggressive")
+	var d_worn := 0.0
+	var d_fresh := 0.0
+	for nm in ["spine_1", "spine_2", "head", "pelvis"]:
+		var i2: int = AnimRig.index[nm]
+		d_worn += afb._tq[i2].angle_to(sag.q[i2])
+		d_fresh += fresh.q[i2].angle_to(sag.q[i2])
+	_expect(d_worn < d_fresh * 0.9 or b.state != "free", "wound test: the stance did not sag toward the brink (%.3f against %.3f)" % [d_worn, d_fresh])
+	b.wear = [0, 0, 0, 0]
+	b.stage = [0, 0, 0, 0]
+	var lo_f := 9.0
+	var hi_f := -9.0
+	for i in range(240):
+		main.frame(DT)
+		var ang2: float = afb.q[s2].angle_to(Quaternion.IDENTITY)
+		lo_f = minf(lo_f, ang2)
+		hi_f = maxf(hi_f, ang2)
+	_expect(hi_w - lo_w > (hi_f - lo_f) * 1.2, "wound test: the worn fighter's chest moves %.3f, the fresh one's %.3f" % [hi_w - lo_w, hi_f - lo_f])
+	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, chest range worn %.3f fresh %.3f" % [hanging, calm, afa.debug["wound_bad"], hi_w - lo_w, hi_f - lo_f])
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -213,6 +273,7 @@ func _run() -> void:
 			print("  blows: %d, announced under 4 ticks ahead (no wind-up possible): %d" % [blows, late])
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])
 		_expect(hashes["off"] == hashes["snappy"] and hashes["off"] == hashes["fluid"] and hashes["off"] == hashes["mix"], "seed %d: the gameplay hash differs with the mannequin (off %s, mix %s, snappy %s, fluid %s)" % [seed, hashes["off"], hashes["mix"], hashes["snappy"], hashes["fluid"]])
+	await _test_wounds()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	RenderAnim.debug_checks = false

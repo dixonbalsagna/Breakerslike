@@ -17,6 +17,7 @@ var step: int = 2
 var style: String = ""
 var crop := Vector2i(220, 140)
 var scale: int = 2
+var wound: String = ""      # e.g. 0:arms+legs,1:brink: sets the wear of a fighter by hand after the start (a look test; the match then differs)
 var main: Node
 
 
@@ -32,6 +33,8 @@ func _initialize() -> void:
 			count = int(a.substr(8))
 		elif a.begins_with("--step="):
 			step = int(a.substr(7))
+		elif a.begins_with("--wound="):
+			wound = a.substr(8)
 		elif a.begins_with("--style="):
 			style = a.substr(8)
 		elif a.begins_with("--scale="):
@@ -56,6 +59,27 @@ func _run() -> void:
 	main.start_match(seed_, {"p1": true, "p2": true})
 	while main.host.ticks < from_tick:
 		main.frame(DT)
+	if wound != "":
+		for spec in wound.split(","):
+			var kv: PackedStringArray = spec.split(":")
+			var f = main.host.S.fighters[int(kv[0])]
+			var at: int = int(f.wd.stageAt[2])
+			for what in kv[1].split("+"):
+				match what:
+					"arms":
+						f.wear[2] = at
+						f.stage[2] = 3
+					"legs":
+						f.wear[3] = at
+						f.stage[3] = 3
+					"brink":
+						f.wear[1] = int(at * 0.9)
+						f.stage[1] = 2
+					"worn":
+						f.wear[0] = int(at * 0.5)
+						f.wear[1] = int(at * 0.5)
+						f.stage[0] = 1
+						f.stage[1] = 1
 	var fa := FileAccess.open(out, FileAccess.WRITE)
 	fa.store_32(crop.x * scale)
 	fa.store_32(crop.y * scale)

@@ -47,7 +47,7 @@ var _spring_bones := PackedInt32Array()
 var _lag := PackedFloat32Array()
 var _prof: Dictionary = {}
 var _part: String = ""                 # the key set playing this frame, "" for none (for tools)
-var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}}
+var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0}
 
 ## The facing the mannequin is drawn with (-1 or 1). The sim's `face` can lag a dodge warp or a swap of sides, so this one
 ## is derived from the opponent in an exchange and from the travel direction otherwise (A2, docs/animation section 9.3).
@@ -83,6 +83,15 @@ var _ip_cos: float = cos(INERTIA_JUMP * 0.5)
 var layers: String = ""                # tools: which layers shaped this frame (set only with debug_checks)
 var _rushing: bool = false
 var _contact_now: bool = false
+# Battle damage (rule-of-cool feature 1), read from the wounds state the sim already has: how worn the fighter is (breathing),
+# how close to the brink (the stagger and the sagging stance), and whether the arms or the legs are broken (one arm hangs, one
+# leg is favoured; which one is a hash of the fighter's slot, since the sim keeps no side).
+var _worn: float = 0.0
+var _brinkp: float = 0.0
+var _arm_broken: bool = false
+var _leg_broken: bool = false
+var _hang_right: bool = false
+var _leg_right: bool = false
 var _form: Dictionary = {}           # the running transformation: {t0, version}
 var _seen_tc: int = -1
 var _cx_n: int = -1                  # the parried exchange whose parry time is remembered
@@ -102,6 +111,8 @@ var _step_x: float = 0.0               # the step-in a blow takes toward a defen
 
 func _init(slot_: int) -> void:
 	slot = slot_
+	_hang_right = (_hash(slot_, 11, 3) & 1) == 0
+	_leg_right = (_hash(slot_, 12, 5) & 1) == 0
 	q = AnimPose.identity_q()
 	_base = AnimPose.identity_q()
 	_tq = AnimPose.identity_q()
@@ -224,6 +235,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 		return
 	version += 1
 	update_face(S, f)
+	_wound_read(f)
 	var T: float = S.T
 	var dt: float = clampf(T - _last_T, 0.0, 0.1) if _last_T >= 0.0 else 0.0
 	var first: bool = _last_T < 0.0
@@ -273,6 +285,9 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	_beam_layer(S, f, T)
 	if not _form.is_empty():
 		_transform_layer(S, T)
+	# 4b. a broken arm hangs, a broken leg is favoured
+	if _arm_broken or _leg_broken:
+		_wound_limbs(f, T)
 	# 5. reactions to blows
 	_recoil_x = 0.0
 	_step_x = 0.0
@@ -285,6 +300,8 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	if drift > 0.0:
 		q[AnimRig.index["spine_2"]] = q[AnimRig.index["spine_2"]] * Quaternion(Vector3(0, 0, 1), sin(T * 2.3 + slot * 1.7) * 0.014 * drift)
 		q[AnimRig.index["head"]] = q[AnimRig.index["head"]] * Quaternion(Vector3(0, 0, 1), sin(T * 1.7 + slot) * 0.02 * drift)
+	if _worn > 0.04 or _brinkp > 0.4:
+		_wear_motion(f, T)
 	var shiver: float = float(prof.get("shiver", 0.0))
 	if S.dirS.stop > 0.0 and shiver > 0.0:
 		root_off = Vector3(_signed(S.tick, slot), _signed(S.tick + 13, slot) * 0.6, 0.0) * shiver
@@ -348,6 +365,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 	var w8: float = 0.0              # sprint, on top of the dash
 	var w9: float = 0.0              # a guarded step forward
 	var w10: float = 0.0             # a guarded step back
+	var w11: float = 0.0             # the stance sagging toward the brink
 	var mode: int = 0
 	if f.slide > 0.0:
 		mode = 1
@@ -372,6 +390,8 @@ func _target_base(S: SimState, f, T: float) -> void:
 		w9 = smoothstep(50.0, 180.0, vf) * (1.0 - smoothstep(300.0, 600.0, vf))
 		w10 = smoothstep(50.0, 160.0, -vf) * (1.0 - smoothstep(260.0, 480.0, -vf))
 		mode = 5
+		if state == "free":
+			w11 = smoothstep(0.35, 1.0, _brinkp) * 0.7
 		# the variants: hovering (feet off the ground), climbing, diving; on the ground a winded idle when the ki is spent and
 		# a relaxed one far from the opponent
 		if state == "free" and w1 < 0.05 and w2 < 0.05:
@@ -386,7 +406,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 				var opp = _opponent(S, f)
 				if opp != null and absf(SimWrap.sdx(f.x, opp.x)) > IDLE_FAR:
 					w7 = 0.5
-	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33) | (int(w8 * 8.0) << 35) | (int(w9 * 8.0) << 39) | (int(w10 * 8.0) << 43)
+	var key: int = mode | (stance << 3) | (int(w1 * 16.0) << 5) | (int(w2 * 16.0) << 10) | (int((w3 + 1.0) * 24.0) << 15) | (int(w4 * 8.0) << 21) | (int(w5 * 8.0) << 25) | (int(w6 * 8.0) << 29) | (int(w7 * 2.0) << 33) | (int(w8 * 8.0) << 35) | (int(w9 * 8.0) << 39) | (int(w10 * 8.0) << 43) | (int(w11 * 8.0) << 47)
 	if key == _bkey:
 		_settle += 1
 		return
@@ -436,6 +456,7 @@ func _target_base(S: SimState, f, T: float) -> void:
 			_blend_target("move.sprint", w8)
 			_blend_target("move.step_f", w9)
 			_blend_target("move.step_b", w10)
+			_blend_target("wound.sag", w11)
 			_blend_target("stance.air", w4)
 			_blend_target("move.ascend", w5)
 			_blend_target("move.descend", w6)
@@ -554,6 +575,16 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var picks: Array = AnimData.picks["heavy" if heavy2 else "light"]
 	var ksid: String = String(picks[_hash(int(ex.n), int(strikes[best][1]), 3 + slot) % picks.size()])
 	var ks: Dictionary = AnimData.keysets[ksid]
+	# a broken arm does not strike and a broken leg does not kick: the blow uses the other limb (the sim keeps no side)
+	var lb: String = String(ks.get("limb", "hand_r"))
+	if lb.begins_with("hand") and _arm_broken:
+		side = _hang_right
+	elif lb.begins_with("foot") and _leg_broken:
+		side = _leg_right
+	if _arm_broken or _leg_broken:
+		debug["wound_strikes"] += 1
+		if (lb.begins_with("hand") and _arm_broken and (side == _hang_right) == false) or (lb.begins_with("foot") and _leg_broken and (side == _leg_right) == false):
+			debug["wound_bad"] += 1
 	_part = ksid
 	var pc: AnimPose = AnimData.pose(String(ks["keys"][0]["pose"]), side)
 	var pk: AnimPose = AnimData.pose(String(ks["keys"][1]["pose"]), side)
@@ -845,6 +876,75 @@ func _part_prof(kind: String) -> Dictionary:
 
 
 # ------------------------------------------------------------------ beam, reactions, springs
+
+func _wound_read(f) -> void:
+	if f.wd == null:
+		return
+	var at: float = float(f.wd.stageAt[2])
+	var tot: float = 0.0
+	for r in range(4):
+		tot += float(f.wear[r])
+	_worn = clampf(tot / (4.0 * at) * 1.6, 0.0, 1.0)
+	_brinkp = SimWounds.brinkProgress(f)
+	_arm_broken = int(f.stage[2]) == 3
+	_leg_broken = int(f.stage[3]) == 3
+
+
+## Heavy breathing from the average wear (faster and deeper as it rises, the shoulders heaving, the head heavy) and a
+## stagger from the brink (a slow irregular sway of the pelvis and a little give in the hips). Sim time only, so it replays.
+func _wear_motion(f, T: float) -> void:
+	if f.state == "launched" or f.state == "down":
+		return
+	var ix: Dictionary = AnimRig.index
+	var br: float = sin(T * TAU * (0.8 + 1.4 * _worn) + slot * 1.9)
+	var amp: float = 0.02 + 0.08 * _worn
+	var s2: int = ix["spine_2"]
+	var hd: int = ix["head"]
+	q[s2] = q[s2] * Quaternion(Vector3(0, 0, 1), br * amp)
+	q[hd] = q[hd] * Quaternion(Vector3(0, 0, 1), -br * amp * 0.5 + 0.05 * _worn)
+	var heave: float = br * 0.06 * _worn
+	var cr: int = ix["clavicle_r"]
+	var cl: int = ix["clavicle_l"]
+	q[cr] = q[cr] * Quaternion(Vector3(1, 0, 0), -heave)
+	q[cl] = q[cl] * Quaternion(Vector3(1, 0, 0), heave)
+	var ps: float = smoothstep(0.45, 1.0, _brinkp)
+	if ps > 0.0:
+		var sw: float = 0.6 * sin(T * 1.7 + slot * 2.3) + 0.4 * sin(T * 2.9 + slot)
+		var sw2: float = sin(T * 2.3 + slot * 1.1 + 1.0)
+		var pe: int = ix["pelvis"]
+		q[pe] = q[pe] * Quaternion(Vector3(1, 0, 0), ps * 0.07 * sw) * Quaternion(Vector3(0, 0, 1), ps * 0.04 * sw2)
+		hips.x += ps * 2.0 * sw
+
+
+## A broken arm hangs (the arm's bones go to wound.arm_limp, the hand slack) and a broken leg is favoured (the leg's bones and
+## part of the pelvis go to wound.leg_favour, with a dip on each step when moving). Light in the air, strong on the ground.
+func _wound_limbs(f, T: float) -> void:
+	var ix: Dictionary = AnimRig.index
+	var calm: bool = f.state != "launched" and f.state != "down"
+	if _arm_broken:
+		var lw: float = 0.92 if calm else 0.5
+		var sfx: String = "r" if _hang_right else "l"
+		var lp: AnimPose = AnimData.pose("wound.arm_limp", not _hang_right)
+		for nm in ["upper_arm_", "forearm_", "hand_", "fingers_"]:
+			var i: int = ix[nm + sfx]
+			q[i] = q[i].slerp(lp.q[i], lw)
+		if _hang_right:
+			curl.y = lerpf(curl.y, lp.curl.y, lw)
+		else:
+			curl.x = lerpf(curl.x, lp.curl.x, lw)
+	if _leg_broken:
+		var lf: float = (0.85 if _part == "" else 0.5) if calm else 0.3
+		var sf2: String = "r" if _leg_right else "l"
+		var fp: AnimPose = AnimData.pose("wound.leg_favour", not _leg_right)
+		for nm2 in ["thigh_", "shin_", "foot_"]:
+			var i2: int = ix[nm2 + sf2]
+			q[i2] = q[i2].slerp(fp.q[i2], lf)
+		var pe: int = ix["pelvis"]
+		q[pe] = q[pe].slerp(fp.q[pe], lf * 0.5)
+		hips.z += fp.hips.z * lf * 0.7
+		if calm and absf(f.vx) > 60.0 and _part == "":
+			hips.y -= 2.0 * lf * maxf(0.0, sin(T * TAU * 1.6 + slot))
+
 
 ## The elapsed ticks of the running transformation, or -1 when it is over. full and short play inside the sim's pause, whose
 ## own ticks are the clock (S.pause.left counts them down); live has none and runs on sim time.
