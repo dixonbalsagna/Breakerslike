@@ -75,6 +75,9 @@ var _aim: Array = [null, null]          # per fighter: the (x, y) of the buildin
 var _hit_t: Array = [-1.0, -1.0]        # seconds since this fighter's last building_hit, or -1
 var _hit_amp: Array = [0.0, 0.0]
 var _hit_hold: Array = [0.0, 0.0]
+var _bounce_t: Array = [-1.0e9, -1.0e9]
+var _journey_end_evt: Array = [false, false]   # World's journey_end this tick: the chase's follow is over (the state follows it the same tick)
+var bounce_pushes: int = 0
 var _launch_anchor_y: float = 0.62
 var chase_slot: int = -1                # a split pane that chases a launched fighter (no solo shot)
 var _chase_land_t: float = 0.0
@@ -236,6 +239,7 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 	_update_panel(S)
 	_update_intro(S)
 	_impact_evt = [false, false]
+	_journey_end_evt = [false, false]
 	var clash_now: bool = S.game.clash != null
 	if clash_now and not _clash_prev and not reduced_motion:
 		_push = [0.0, 0.0]   # the beam struggle opens with the tier push's shape: in, hold, out
@@ -316,11 +320,22 @@ func _zcap() -> float:
 	return CamParams.R_MAX * _m() * vh / CamParams.BODY_H
 
 
+## The vertical extent of the pair on the screen, in world units: their height difference, and at a pitch their depth
+## difference too (a fighter 1,000 units farther back stands higher on the screen by 1,000 sin(pitch); the sweep found a
+## pair 1,098 units apart in depth at 49 degrees, one in view and one below the screen, in a merged view that fitted them
+## by height alone).
+func _pair_dy(A, B) -> float:
+	var pr: float = pitch_deg + _shot_pitch
+	if pr == 0.0:
+		return absf(A.y - B.y)
+	return absf((A.y - B.y) * cos(deg_to_rad(pr)) - (float(A.z) - float(B.z)) * sin(deg_to_rad(pr)))
+
+
 ## r: a fighter's height as a fraction of the screen height in the one-view (reference) framing.
 func _metric(S: SimState) -> float:
 	var A = S.fighters[0]
 	var B = S.fighters[1]
-	var z: float = zoom_u(vw, vh, minf(absf(u), SimConst.HALF), absf(A.y - B.y), maxf(A.tier, B.tier))
+	var z: float = zoom_u(vw, vh, minf(absf(u), SimConst.HALF), _pair_dy(A, B), maxf(A.tier, B.tier))
 	return CamParams.BODY_H * z / vh
 
 
@@ -346,7 +361,7 @@ func _update_trigger(S: SimState) -> void:
 	_sep_rate = -closing
 	var guard_ok: bool = true
 	if closing > 0.0:
-		var z_pred: float = zoom_u(vw, vh, maxf(0.0, ad - closing * CamParams.CLOSING_LOOKAHEAD), absf(A.y - B.y), maxf(A.tier, B.tier))
+		var z_pred: float = zoom_u(vw, vh, maxf(0.0, ad - closing * CamParams.CLOSING_LOOKAHEAD), _pair_dy(A, B), maxf(A.tier, B.tier))
 		guard_ok = CamParams.BODY_H * z_pred / vh < rs
 	_prev_ad = ad
 	if fold_active:
@@ -615,6 +630,22 @@ func _read_events(S: SimState, events: Array) -> void:
 					var a: int = int(_ef(ev, "actor", -1))
 					if a >= 0 and a < 2 and not (solo_kind == "transform" and solo_slot == a):
 						_push[a] = 0.0
+			"bounce", "land":
+				# World's ground contact (docs/world/ground-contact.md section 4). The first contact of a journey is the
+				# impact the human-attacker hold waits for; every bounce gets a small impact push on the pane that has him.
+				var ca: int = int(_ef(ev, "actor", -1))
+				if ca >= 0 and ca < 2:
+					_impact_evt[ca] = true
+					if String(_ef(ev, "type", "")) == "bounce" and not reduced_motion and (_hit_t[ca] < 0.0 or _hit_amp[ca] < CamParams.BOUNCE_PUSH):
+						_hit_t[ca] = 0.0
+						_hit_amp[ca] = CamParams.BOUNCE_PUSH
+						_hit_hold[ca] = CamParams.BOUNCE_HOLD
+						_bounce_t[ca] = time
+						bounce_pushes += 1
+			"journey_end":
+				var ja: int = int(_ef(ev, "actor", -1))
+				if ja >= 0 and ja < 2:
+					_journey_end_evt[ja] = true
 			"launch":
 				var lb: int = int(_ef(ev, "target", -1))
 				if lb >= 0 and lb < 2 and time - float(_parry_t[lb]) <= CamParams.PANEL_RIPOSTE_WINDOW:
@@ -792,10 +823,18 @@ func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = nu
 		_cut_now = true
 	elif (kind == "launch" or kind == "hold") and S != null and sep < 0.5:
 		var lf = S.fighters[slot]
-		_zo[slot] = _mz
 		solo_w = 1.0
-		_launch_anchor_x = clampf(0.5 + SimWrap.sdx(_mx, lf.x) * _mz / vw, 0.2, 0.8)
-		_launch_anchor_y = clampf(CamParams.PLANE_Y - (lf.y + CamParams.CHEST - _my) * _mz / vh, 0.2, 0.85)
+		if sep > 0.02 and _cur != null and _cur.shows(slot):
+			# A split that is part open (the sweep found a launch at a separation of 0.48 at 49 degrees): what is on the
+			# screen is the pane's own view, not the merged one, so the shot starts from where the pane has him.
+			_zo[slot] = _cur.cam_z[slot]
+			var sp: Vector2 = _cur.screen_pos(slot, lf.x, lf.y + CamParams.CHEST, float(lf.z))
+			_launch_anchor_x = clampf(sp.x / vw, 0.2, 0.8)
+			_launch_anchor_y = clampf(sp.y / vh, 0.2, 0.85)
+		else:
+			_zo[slot] = _mz
+			_launch_anchor_x = clampf(0.5 + SimWrap.sdx(_mx, lf.x) * _mz / vw, 0.2, 0.8)
+			_launch_anchor_y = clampf(CamParams.PLANE_Y - (lf.y + CamParams.CHEST - _my) * _mz / vh, 0.2, 0.85)
 
 
 ## The shot's end: the layout the fighters need now, chosen at once (no dwell).
@@ -876,7 +915,7 @@ func _update_solo(S: SimState) -> void:
 	match solo_kind:
 		"launch":
 			if solo_phase == "follow":
-				if f.state != "launched":
+				if f.state != "launched" or _journey_end_evt[solo_slot]:
 					solo_phase = "land"
 					_land_t = 0.0
 					if reduced_motion:
@@ -1451,7 +1490,7 @@ func _merged_target(S: SimState) -> Vector3:
 	var mx: float = A.x + d * 0.5
 	var my: float = clampf((A.y + B.y) * 0.5 + 40.0, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
 	var ahead: float = minf(SimConst.HALF, absf(d) + maxf(0.0, _sep_rate) * CamParams.ZOOM_OUT_LOOKAHEAD)
-	var z: float = zoom_u(vw, vh, ahead, absf(A.y - B.y), maxf(A.tier, B.tier), _m(), true)
+	var z: float = zoom_u(vw, vh, ahead, _pair_dy(A, B), maxf(A.tier, B.tier), _m(), true)
 	var mult: float = maxf(_push_mult(0), _push_mult(1)) * _intro_mult()
 	if solo_kind == "ko":
 		pass

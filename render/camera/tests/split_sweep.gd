@@ -66,6 +66,7 @@ var dump_from: int = 0
 var dump_to: int = 0
 var shots_dir: String = ""
 var only: String = ""
+var _contact: Dictionary = {}
 var _intro_ref: Array = []
 var _jr: Array = [null, null]            # a launched fighter's journey in progress, by victim slot
 var _jr_done: Array = []                 # the journeys that ended, for the match's summary
@@ -419,7 +420,7 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 		var excluded: bool = (_rig.solo_kind != "" and _rig.solo_slot != i) or (_rig._ov_kind != "" and _rig._ov_slot != i) or _rig.solo_w > 0.001 or fr.e > 0.001
 		# A pair that has just passed each other and whose split opens before the flip can happen (the flip waits for the
 		# dwell, for them to stop being merge-close and for the panes to be one view or full apart) opens with the old sides.
-		excluded = excluded or (fr.mode == "opening" and _rig.orientation_pending())
+		excluded = excluded or ((fr.mode == "opening" or fr.mode == "closing") and _rig.orientation_pending())
 		if share < 0.15 or not bool(fr.active[i]) or excluded:
 			_offscreen_t[i] = 0.0
 			continue
@@ -1836,6 +1837,7 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 	var ncm: int = 0
 	_jr = [null, null]
 	_jr_done = []
+	_contact = {}
 	while t < limit and not (_S.game.ko != null and _S.game.koT > 3.0):
 		SimCore.step(_S)
 		var ev: Array = _S.out.fx.duplicate()
@@ -1853,14 +1855,18 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 		_watch()
 		var cur: SplitFrame = _rig.current()
 		_journey_tick(cur, ev)
+		for e in ev:
+			var et: String = String(e.type)
+			if et in ["bounce", "left_ground", "land", "tumble_end", "journey_end"]:
+				_contact[et] = int(_contact.get(et, 0)) + 1
 		if rig_human >= 0:
 			_S.fighters[rig_human].ai = saved_ai
 		if trace_seed == seed and float(t) / 60.0 >= trace_t0 and float(t) / 60.0 <= trace_t1:
 			var f0 = _S.fighters[0]
 			var f1 = _S.fighters[1]
-			var p0: Vector2 = cur.screen_pos(0, f0.x, f0.y + CamParams.CHEST)
-			var p1: Vector2 = cur.screen_pos(1, f1.x, f1.y + CamParams.CHEST)
-			print("  [%s] T %.3f th %.3f sig %d/%d u %.0f solo %s/%d chase %d anc %.3f/%.3f/%.3f/%.3f c %.0f/%.0f cut %s fa %.2f sw %s r %.4f/%.4f %s sep %.2f e %.2f slam %d rush0 %s rush1 %s p0 (%.0f,%.0f) p1 (%.0f,%.0f) x0 %.0f x1 %.0f vx0 %.0f cam0 %.0f/%.0f/%.3f cam1 %.0f/%.0f/%.3f" % [_label, float(t) / 60.0, cur.theta, _rig.sigma_shown, _rig.sigma_u, _rig.u, _rig.solo_kind, _rig.solo_slot, _rig.chase_slot, cur.anchor[0].x, cur.anchor[0].y, cur.anchor[1].x, cur.anchor[1].y, cur.c.x, cur.c.y, cur.cut, _rig._flip_age, _rig.split_wanted, _rig.r_now, _rig._r_merge(), cur.mode, cur.sep, cur.e, _rig._slam_slot, f0.rush != null, f1.rush != null, p0.x, p0.y, p1.x, p1.y, f0.x, f1.x, f0.vx, cur.cam_x[0], cur.cam_y[0], cur.cam_z[0], cur.cam_x[1], cur.cam_y[1], cur.cam_z[1]])
+			var p0: Vector2 = cur.screen_pos(0, f0.x, f0.y + CamParams.CHEST, float(f0.z))
+			var p1: Vector2 = cur.screen_pos(1, f1.x, f1.y + CamParams.CHEST, float(f1.z))
+			print("  [%s] T %.3f th %.3f sig %d/%d u %.0f solo %s/%d chase %d anc %.3f/%.3f/%.3f/%.3f c %.0f/%.0f cut %s fa %.2f sw %s r %.4f/%.4f %s sep %.2f e %.2f slam %d rush0 %s rush1 %s p0 (%.0f,%.0f) p1 (%.0f,%.0f) x0 %.0f x1 %.0f y0 %.0f y1 %.0f z0 %.0f z1 %.0f st %s/%s vx0 %.0f cam0 %.0f/%.0f/%.3f cam1 %.0f/%.0f/%.3f" % [_label, float(t) / 60.0, cur.theta, _rig.sigma_shown, _rig.sigma_u, _rig.u, _rig.solo_kind, _rig.solo_slot, _rig.chase_slot, cur.anchor[0].x, cur.anchor[0].y, cur.anchor[1].x, cur.anchor[1].y, cur.c.x, cur.c.y, cur.cut, _rig._flip_age, _rig.split_wanted, _rig.r_now, _rig._r_merge(), cur.mode, cur.sep, cur.e, _rig._slam_slot, f0.rush != null, f1.rush != null, p0.x, p0.y, p1.x, p1.y, f0.x, f1.x, f0.y, f1.y, float(f0.z), float(f1.z), f0.state, f1.state, f0.vx, cur.cam_x[0], cur.cam_y[0], cur.cam_z[0], cur.cam_x[1], cur.cam_y[1], cur.cam_z[1]])
 		modes[cur.mode] = int(modes.get(cur.mode, 0)) + 1
 		if cur.slam:
 			slams += 1
@@ -1892,6 +1898,9 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 	stats[_label] = "%d ticks: %s; layout changes %d, slams %d, cut-ins %d, panels %d (%.1f a minute, %d refused) %s" % [t, ", ".join(PackedStringArray(mods)), _rig.mode_change_times().size(), slams, _rig.cut_ins, _rig.panels, float(_rig.panels) * 3600.0 / float(maxi(t, 1)), _rig.panels_dropped, str(_rig.panel_log.map(func(e): return e[1]))]
 	_check(float(_rig.cut_ins) <= float(CamParams.OV_MAX_PER_MIN) * (float(t) / 3600.0) + 2.0, "%s: %d camera-only cut-ins in %.0f s (cap %d a minute)" % [_label, _rig.cut_ins, float(t) / 60.0, CamParams.OV_MAX_PER_MIN])
 	_journey_summary()
+	stats["contact " + _label] = "%s; %d bounce pushes" % [str(_contact), _rig.bounce_pushes]
+	if ticks > 0 and human < 0 and rig_human < 0:
+		_check(int(_contact.get("bounce", 0)) > 0 and _rig.bounce_pushes > 0, "%s: no bounce in a full-length match (%s)" % [_label, str(_contact)])
 	SimCore.dispose(_S)
 	_S = null
 
@@ -1934,7 +1943,7 @@ func _journey_tick(cur: SplitFrame, ev: Array) -> void:
 			for e in ev:
 				if String(e.type) == "launch" and int(e.actor) == v and int(e.target) >= 0:
 					att = int(e.target)
-			_jr[v] = {"att": att, "x0": f.x, "px": f.x, "py": f.y, "len": 0.0, "ticks": 0, "att_off": 0, "vic_off": 0, "att_nop": 0, "vic_nop": 0, "mode_chase": 0}
+			_jr[v] = {"t0": float(_tick) / 60.0, "v": v, "att": att, "x0": f.x, "px": f.x, "py": f.y, "len": 0.0, "ticks": 0, "att_off": 0, "vic_off": 0, "att_nop": 0, "vic_nop": 0, "mode_chase": 0}
 		var j = _jr[v]
 		if j == null:
 			continue
@@ -1952,7 +1961,15 @@ func _journey_tick(cur: SplitFrame, ev: Array) -> void:
 			if not _pointed(cur, a):
 				j["att_nop"] = int(j["att_nop"]) + 1
 		if not _on_screen(cur, v):
-			j["vic_off"] = int(j["vic_off"]) + 1
+			var settling: bool = not _rig._solo_decisions.is_empty() and _rig.time - float(_rig._solo_decisions[-1]) < 0.8   # the ease back after a shot
+			if settling or _rig.solo_kind in ["hold", "cut", "transform", "finisher", "ko", "wreck", "intro"] or _rig._ov_kind != "" or ((cur.mode == "opening" or cur.mode == "closing") and _rig.orientation_pending()):
+				j["vic_design"] = int(j.get("vic_design", 0)) + 1   # a shot that is not on him by design (the hold, a set piece)
+			else:
+				j["vic_off"] = int(j["vic_off"]) + 1
+				if not j.has("vic_first"):
+					j["vic_first"] = float(_tick) / 60.0
+				j["vic_last"] = float(_tick) / 60.0
+				j["vic_info"] = "%s/%d %s sep %.2f e %.2f chase %d" % [_rig.solo_kind, _rig.solo_slot, cur.mode, cur.sep, cur.e, _rig.chase_slot]
 			if not _pointed(cur, v):
 				j["vic_nop"] = int(j["vic_nop"]) + 1
 		if f.state != "launched":
@@ -1976,6 +1993,7 @@ func _journey_summary() -> void:
 	var ticks: int = 0
 	var worst_att: int = 0
 	var worst_vic: int = 0
+	var vic_design: int = 0
 	for j in _jr_done:
 		lens.append(float(j["len"]))
 		if float(j["len"]) > 4000.0:
@@ -1989,8 +2007,10 @@ func _journey_summary() -> void:
 			att_any += 1
 		if int(j["vic_off"]) >= 6:
 			vic_any += 1
+			print("  victim lost: %s journey from t=%.2f s, victim slot %d, %d ticks off the screen of %d, path %.0f u, off from t=%.2f to %.2f (%s)" % [_label, float(j["t0"]), int(j["v"]), int(j["vic_off"]), int(j["ticks"]), float(j["len"]), float(j.get("vic_first", 0.0)), float(j.get("vic_last", 0.0)), str(j.get("vic_info", ""))])
 		worst_att = maxi(worst_att, int(j["att_off"]))
 		worst_vic = maxi(worst_vic, int(j["vic_off"]))
+		vic_design += int(j.get("vic_design", 0))
 	var nets: Array = []
 	var net_over: int = 0
 	for j in _jr_done:
@@ -2009,8 +2029,8 @@ func _journey_summary() -> void:
 	mean /= float(n)
 	var p90: float = float(lens[mini(n - 1, int(0.9 * float(n)))])
 	stats["journeys net " + _label] = "end to end: mean %.0f u (%.0f bh), median %.0f u, 90th %.0f u, %d (%.0f%%) over 4,000 u; %.1f s long on average" % [net_mean, net_mean / CamParams.BODY_H, float(nets[n / 2]), float(nets[mini(n - 1, int(0.9 * float(n)))]), net_over, 100.0 * float(net_over) / float(n), float(ticks) / 60.0 / float(n)]
-	stats["journeys " + _label] = "%d launches, path mean %.0f u (%.0f bh), 90th %.0f u, longest %.0f u, %d (%.0f%%) over 4,000 u; attacker off screen %d of %d ticks (%d journeys over 0.1 s, worst %d ticks), victim off %d ticks (%d journeys, worst %d); no UI pointer on %d attacker and %d victim off ticks" % [
-		n, mean, mean / CamParams.BODY_H, p90, float(lens[n - 1]), over4k, 100.0 * float(over4k) / float(n), att_off, ticks, att_any, worst_att, vic_off, vic_any, worst_vic, att_nop, vic_nop]
+	stats["journeys " + _label] = "%d launches, path mean %.0f u (%.0f bh), 90th %.0f u, longest %.0f u, %d (%.0f%%) over 4,000 u; attacker off screen %d of %d ticks (%d journeys over 0.1 s, worst %d ticks), victim lost %d ticks (%d journeys, worst %d) and %d off by design (the hold, set pieces); no UI pointer on %d attacker and %d victim off ticks" % [
+		n, mean, mean / CamParams.BODY_H, p90, float(lens[n - 1]), over4k, 100.0 * float(over4k) / float(n), att_off, ticks, att_any, worst_att, vic_off, vic_any, worst_vic, vic_design, att_nop, vic_nop]
 
 
 ## The sim's gameplay hash after a match is the same whether or not the rig ran beside it.
