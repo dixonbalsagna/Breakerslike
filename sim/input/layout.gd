@@ -391,6 +391,43 @@ func build() -> SimIntent:
 	return i
 
 
+## The transform's hold progress, 0 to 1: the chord counted from when both triggers went down, or a single transform
+## control held, whichever is further along. 0 when none is held. Read-only, for UI's Transform ring.
+func transform_hold() -> float:
+	var best: float = 0.0
+	for ch in _chords:
+		if ch["action"] == "transform" and ch["active"]:
+			best = maxf(best, clampf(float(tick - int(ch["since"])) / float(transform_confirm), 0.0, 1.0))
+	for c in _tf_t0:
+		if _down.get(c, false):
+			best = maxf(best, clampf(float(tick - int(_tf_t0[c])) / float(transform_confirm), 0.0, 1.0))
+	return best
+
+
+## A pausing set piece froze the sim: whatever was pressed meanwhile is dropped (call each frozen tick, or once when it
+## ends) so a pile of presses is not released at once.
+func drop_edges() -> void:
+	consumed()
+
+
+## The pause ended: edges are dropped and every hold is read again as if it began now, so a sprint, a channel or the
+## transform count starts fresh from what is still held, and nothing that was only pressed during the pause fires.
+func resume() -> void:
+	drop_edges()
+	for c in _down:
+		if _down[c]:
+			_press_tick[c] = tick
+	_dodge_t0 = tick
+	_power_t0 = tick
+	for c in _tf_t0:
+		_tf_t0[c] = tick
+	for ch in _chords:
+		if ch["active"]:
+			ch["since"] = tick
+	for c in _atk:
+		_atk[c]["t0"] = tick
+
+
 ## SimCore.step took the intent (it does not on a hit-stop tick): the edges are spent.
 func consumed() -> void:
 	_aedge.clear()

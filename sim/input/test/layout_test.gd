@@ -23,6 +23,7 @@ func _init() -> void:
 	_keyboard()
 	_pad()
 	_simple_pad()
+	_hold_and_pause()
 	print("layout_test: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
 
@@ -387,3 +388,50 @@ func _simple_pad() -> void:
 		l.consumed()
 		got = got or i.transform
 	ok(got, "simple: RB held 30 ticks is the transform")
+
+
+func _hold_and_pause() -> void:
+	var l: SimLayout = _mk("kb-solo")
+	ok(l.transform_hold() == 0.0, "hold: no progress when nothing is held")
+	l.press("kb:KeyR")
+	_run(l, 15)
+	ok(absf(l.transform_hold() - 0.5) < 0.04, "hold: the transform key is half way at 15 of 30 ticks")
+	_run(l, 20)
+	ok(l.transform_hold() == 1.0, "hold: full at 30")
+	l.release("kb:KeyR")
+	ok(l.transform_hold() == 0.0, "hold: back to 0 on release")
+	# The chord's progress.
+	l.press("kb:Space")
+	l.press("kb:KeyE")
+	_run(l, 9)
+	ok(absf(l.transform_hold() - 0.3) < 0.04, "hold: the chord counts from when both are down")
+	l.release("kb:Space")
+	l.release("kb:KeyE")
+	_run(l, 2)
+	# A pause: presses made meanwhile are dropped, and a hold is read again from the end of it.
+	l.press("kb:KeyJ")
+	l.drop_edges()
+	ok(not l.build().light, "pause: a press made during a pause is dropped")
+	l.consumed()
+	l.release("kb:KeyJ")
+	l.press("kb:Space")
+	_run(l, 11)
+	l.resume()
+	ok(not _run(l, 5).sprint, "pause: a held dodge counts again from the end of the pause (no sprint yet)")
+	ok(_run(l, 8).sprint, "pause: and is a sprint 12 ticks after it")
+	l.release("kb:Space")
+	_run(l, 2)
+	l.press("kb:KeyR")
+	_run(l, 25)
+	l.resume()
+	var got: bool = false
+	for k in range(10):
+		var i: SimIntent = l.build()
+		l.consumed()
+		got = got or i.transform
+	ok(not got, "pause: the transform count restarted, so 10 ticks after it is not 30")
+	for k in range(25):
+		var i2: SimIntent = l.build()
+		l.consumed()
+		got = got or i2.transform
+	ok(got, "pause: and it completes 30 ticks after the pause ended")

@@ -188,6 +188,47 @@ func setup() -> Dictionary:
 	return {"v2": [true, true], "assists": assists}
 
 
+## Change the pad preset in the middle of a match: the cached pad layouts are dropped (their holds let go), and each
+## pad takes the new preset on its next input. Slot claims are kept.
+func set_pad_preset(id: String) -> void:
+	if id == pad_preset or SimInputData.preset(id).is_empty():
+		return
+	for l in pads.values():
+		l.release_all()
+	pads.clear()
+	pad_preset = id
+
+
+## A pausing set piece (Simulation's SimPause) froze the sim: call this each frozen tick to drop what was pressed, and
+## resume() when it ends to read every hold again, so a pile of presses is not released at once.
+func drop_edges() -> void:
+	for l in layouts.values():
+		l.drop_edges()
+	for l in pads.values():
+		l.drop_edges()
+	touch.drop_edges()
+
+
+func resume() -> void:
+	for l in layouts.values():
+		l.resume()
+	for l in pads.values():
+		l.resume()
+	touch.resume()
+
+
+## The transform hold's progress for a slot, 0 to 1, from whichever device holds it (UI's Transform ring).
+func transform_hold(slot: int) -> float:
+	match slot_device[slot]:
+		"pad":
+			var d: int = slot_pad[slot]
+			return pads[d].transform_hold() if pads.has(d) else 0.0
+		"touch":
+			return touch.transform_hold()
+		_:
+			return _kb_layout(slot).transform_hold()
+
+
 ## Which device a slot is on, for UI's prompt glyphs ("kb", "pad", "touch").
 func device_of(slot: int) -> String:
 	return str(slot_device[slot])

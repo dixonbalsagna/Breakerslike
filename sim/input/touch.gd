@@ -343,6 +343,29 @@ func display_state() -> Dictionary:
 	return out
 
 
+## The Transform button's hold progress, 0 to 1 (UI's ring). 0 when it is not held.
+func transform_hold() -> float:
+	if _tf_t0 < 0:
+		return 0.0
+	return clampf(float(tick - _tf_t0) / float(cfg.transformTicks), 0.0, 1.0)
+
+
+## A pausing set piece froze the sim: presses made meanwhile are dropped.
+func drop_edges() -> void:
+	consumed()
+
+
+## The pause ended: edges dropped, and every hold read again as if it began now.
+func resume() -> void:
+	drop_edges()
+	for id in _touches:
+		_touches[id].t0 = tick
+		_touches[id].beyond = 0
+	_power_t0 = tick
+	if _tf_t0 >= 0 and not _tf_sent:
+		_tf_t0 = tick
+
+
 ## SimCore.step consumed the intent (it did not freeze for hit-stop): the requests are spent.
 func consumed() -> void:
 	req_light = false
