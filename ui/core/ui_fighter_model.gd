@@ -163,7 +163,10 @@ func mark_hit(region: String) -> void:
 		region_dir[region] = 1
 
 
-func advance(dt: float) -> void:
+## `dt` is real time (what is only drawn: the crown, the wear rings, the brink and facade clocks); `sim_dt` is fight time (the windows, the
+## prompts' clocks and the signature's cap), which is 0 while the sim is paused. -1 means the same as dt.
+func advance(dt: float, sim_dt: float = -1.0) -> void:
+	var sdt: float = dt if sim_dt < 0.0 else sim_dt
 	if crown_hold > 0.0:
 		crown_a = move_toward(crown_a, 1.0, dt / UiLook.CROWN_ATTACK)
 		crown_hold = maxf(0.0, crown_hold - dt)
@@ -173,23 +176,23 @@ func advance(dt: float) -> void:
 		region_age[r] = float(region_age[r]) + dt
 	brink_age += dt
 	facade_age += dt
-	ack_t += dt
-	stance_prompt_t += dt
-	weight_fallback_t += dt
-	sig_note_t += dt
-	stance_flash_t += dt
+	ack_t += sdt
+	stance_prompt_t += sdt
+	weight_fallback_t += sdt
+	sig_note_t += sdt
+	stance_flash_t += sdt
 	# The signature's cap (180 ticks, 3 s) runs while the intent is funded and the director's clock is running.
 	if sig_queued and sig_funded and not charging and cinematic == "":
-		sig_cap_t = minf(3.0, sig_cap_t + dt)
+		sig_cap_t = minf(3.0, sig_cap_t + sdt)
 	boil_flash = maxf(0.0, boil_flash - dt)
 	cue += dt
 	if parry_t >= 0.0:
-		parry_t += dt
+		parry_t += sdt
 		if parry_t > maxf(parry_dur, UiLook.WINDOW_MIN_SHOWN):
 			parry_t = -1.0
 	if chain_t >= 0.0:
-		chain_t += dt
+		chain_t += sdt
 		if chain_t > maxf(chain_dur, UiLook.WINDOW_MIN_SHOWN):
 			chain_t = -1.0
 	if hatch_open:
-		hatch_t += dt
+		hatch_t += sdt

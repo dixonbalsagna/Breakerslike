@@ -45,6 +45,8 @@ func _run() -> void:
 	await _settings_rules()
 	_touch_full_rules()
 	await _remap_rules()
+	await _pause_menu_rules()
+	await _sim_pause_rules()
 	await _bridge()
 	print("hud_check: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -2661,3 +2663,236 @@ func _touch_full_rules() -> void:
 	lay2.touch_ui = true
 	lay2.compute(Vector2(2400, 1080), false)
 	_ok(lay2.touch_keys() == ["attack", "guard", "power"], "touch full: Simple still keeps its three buttons clear")
+
+
+# --- The pause menu (docs/ui/hud-spec.md section 28) ----------------------------------------------------------------------------------
+
+func _pause_menu_rules() -> void:
+	for id in ["title", "resume", "howto", "settings", "feedback", "new", "new_ask", "new_yes", "new_no", "resume_key", "howto_key", "new_key"]:
+		_ok(UiData.t("prompt.pause_" + id) != "prompt.pause_" + id, "pause menu: the word pause_%s exists" % id)
+	# Geometry at every size, touch on and off, with and without the new-match question.
+	var cases: Array = [[Vector2(1920, 1080), 1.0], [Vector2(1280, 720), 1.0], [Vector2(1024, 576), 1.0], [Vector2(3840, 2160), 1.0], [Vector2(2400, 1080), 2.6], [Vector2(2532, 1170), 3.0], [Vector2(1560, 720), 2.0],
+		[Vector2(844, 390), 1.0], [Vector2(1170, 2532), 3.0], [Vector2(1080, 2340), 2.75], [Vector2(828, 1792), 2.0], [Vector2(750, 1334), 2.0], [Vector2(390, 844), 1.0], [Vector2(360, 640), 1.0]]
+	for cs in cases:
+		var sz: Vector2 = cs[0]
+		var dpv: float = cs[1]
+		var lay := UiLayout.new()
+		lay.dp = dpv
+		lay.compute(sz, false)
+		for touch in [false, true]:
+			for confirm in [false, true]:
+				var tag := "pause menu %dx%d dp %.1f touch=%s confirm=%s" % [int(sz.x), int(sz.y), dpv, str(touch), str(confirm)]
+				var p: Dictionary = UiPause.plan(sz, lay.s, dpv, touch, {"focus": 0, "confirm": confirm})
+				var hits_ok := true
+				for it in p["items"]:
+					if UiPause.hit(p, (it["rect"] as Rect2).get_center()) != it["id"] or (it["rect"] as Rect2).size.y < float(p["tm"]) - 0.01:
+						hits_ok = false
+				var distinct := true
+				var its: Array = p["items"]
+				for i in range(its.size()):
+					for j in range(i + 1, its.size()):
+						if (its[i]["rect"] as Rect2).intersects(its[j]["rect"]):
+							distinct = false
+				_ok(bool(p["fits"]) and hits_ok and distinct and its.size() == (2 if confirm else 5), "%s: every button is a 48 dp target inside a card that is on screen, none overlap (%d column%s)" % [tag, int(p["cols"]), "" if int(p["cols"]) == 1 else "s"])
+	UiLook.text_floor = UiLook.MIN_TEXT_PX
+	var pw: Dictionary = UiPause.plan(Vector2(1920, 1080), 1.0, 1.0, false, {"focus": 0, "confirm": false})
+	var pn: Dictionary = UiPause.plan(Vector2(1280, 540), 0.5, 2.0, true, {"focus": 0, "confirm": false})
+	_ok(int(pw["cols"]) == 1 and int(pn["cols"]) == 2, "pause menu: one column where the height allows, two on a very short screen")
+	_ok(UiPause.moved(pw, 0, 0, 1) == 1 and UiPause.moved(pw, 4, 0, 1) == 4 and UiPause.moved(pw, 0, 0, -1) == 0 and UiPause.moved(pn, 0, 1, 0) == 1 and UiPause.moved(pn, 0, 0, 1) == 2 and UiPause.moved(pn, 1, 1, 0) == 1 and UiPause.moved(pn, 4, 0, -1) == 2, "pause menu: the focus moves down a column or across a grid and stops at the edges")
+	# The flow in the HUD.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.advance(1.0 / 60.0)
+	var got := {"opened": 0, "closed": [], "entries": [], "new": 0, "howto": 0, "settings": 0}
+	hud.pause_menu_opened.connect(func(): got["opened"] += 1)
+	hud.pause_menu_closed.connect(func(r): got["closed"].append(r))
+	hud.pause_entry.connect(func(e): got["entries"].append(e))
+	hud.new_match_requested.connect(func(): got["new"] += 1)
+	hud.howto_opened.connect(func(_f): got["howto"] += 1)
+	hud.settings_opened.connect(func(): got["settings"] += 1)
+	var key := func(code: int) -> InputEventKey:
+		var e := InputEventKey.new()
+		e.keycode = code
+		e.physical_keycode = code
+		e.pressed = true
+		return e
+	hud.toggle_pause_menu()
+	_ok(hud.is_pause_menu_open() and hud.is_overlay_open() and got["opened"] == 1 and hud.pause_menu_focus() == 0, "pause menu: the host's pause key opens it on Resume and the host is told")
+	hud.toggle_pause_menu()
+	_ok(not hud.is_pause_menu_open() and got["closed"] == ["resume"], "pause menu: and the same key resumes")
+	hud.show_pause_menu()
+	hud._unhandled_input(key.call(KEY_DOWN))
+	hud._unhandled_input(key.call(KEY_DOWN))
+	_ok(hud.pause_menu_focus() == 2, "pause keys: Down twice reaches Settings")
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(hud.is_settings_open() and hud.is_pause_menu_open() and got["settings"] == 1 and got["entries"].back() == "settings", "pause keys: Enter opens Settings over the menu")
+	hud._unhandled_input(key.call(KEY_DOWN))
+	_ok(hud.pause_menu_focus() == 2, "pause keys: while Settings is open the keys are Settings' (the menu's focus does not move)")
+	hud._unhandled_input(key.call(KEY_ESCAPE))
+	_ok(not hud.is_settings_open() and hud.is_pause_menu_open() and hud.pause_menu_focus() == 2, "pause keys: Esc closes Settings and gives the menu back where it was")
+	hud._unhandled_input(key.call(KEY_UP))
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(hud.is_howto_open() and got["howto"] == 1, "pause keys: Up and Enter open How to play")
+	hud.hide_howto()
+	hud._unhandled_input(key.call(KEY_F1))
+	_ok(hud.is_howto_open(), "pause keys: F1 opens How to play from the menu too")
+	hud.hide_howto()
+	hud._unhandled_input(key.call(KEY_DOWN))
+	hud._unhandled_input(key.call(KEY_DOWN))
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(hud.is_feedback_open() and got["entries"].back() == "feedback", "pause keys: Send feedback opens the feedback panel")
+	hud.hide_feedback()
+	_ok(hud.is_pause_menu_open(), "pause keys: and closing it returns to the menu")
+	# New match asks first, with Keep playing under the focus.
+	hud._unhandled_input(key.call(KEY_DOWN))
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(hud.pause_menu_plan()["confirm"] and hud.pause_menu_focus() == 1 and str(hud.pause_menu_plan()["title"]) == "Start a new match?" and got["new"] == 0, "pause keys: New match asks \"Start a new match?\" and the focus starts on Keep playing")
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(not hud.pause_menu_plan()["confirm"] and got["new"] == 0 and hud.pause_menu_focus() == 4 and hud.is_pause_menu_open(), "pause keys: Enter on Keep playing goes back with nothing lost")
+	hud._unhandled_input(key.call(KEY_ENTER))
+	hud._unhandled_input(key.call(KEY_ESCAPE))
+	_ok(not hud.pause_menu_plan()["confirm"] and got["new"] == 0, "pause keys: Esc answers the question with no")
+	hud._unhandled_input(key.call(KEY_N))
+	hud._unhandled_input(key.call(KEY_UP))
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(not hud.is_pause_menu_open() and got["new"] == 1 and got["closed"].back() == "new", "pause keys: N, then the first button, starts a new match and closes the menu (closed with reason new)")
+	# Resume by Enter, by Esc and by P.
+	for k in [KEY_ESCAPE, KEY_P]:
+		hud.show_pause_menu()
+		hud._unhandled_input(key.call(k))
+		_ok(not hud.is_pause_menu_open() and got["closed"].back() == "resume", "pause keys: %s resumes" % ("Esc" if k == KEY_ESCAPE else "P"))
+	hud.show_pause_menu()
+	hud._unhandled_input(key.call(KEY_ENTER))
+	_ok(not hud.is_pause_menu_open() and got["closed"].back() == "resume" and got["entries"].has("resume"), "pause keys: Enter on Resume resumes")
+	# The pad.
+	var pad := func(btn: int) -> InputEventJoypadButton:
+		var e := InputEventJoypadButton.new()
+		e.button_index = btn
+		e.pressed = true
+		return e
+	hud.show_pause_menu()
+	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_DOWN))
+	hud._unhandled_input(pad.call(JOY_BUTTON_A))
+	_ok(hud.is_howto_open(), "pause pad: D-pad down and A open How to play")
+	hud._unhandled_input(pad.call(JOY_BUTTON_B))
+	_ok(not hud.is_howto_open() and hud.is_pause_menu_open(), "pause pad: B closes it and gives the menu back")
+	var jm := InputEventJoypadMotion.new()
+	jm.axis = JOY_AXIS_LEFT_Y
+	jm.axis_value = 0.9
+	hud._unhandled_input(jm)
+	hud._unhandled_input(jm)
+	var f_after: int = hud.pause_menu_focus()
+	var jr := InputEventJoypadMotion.new()
+	jr.axis = JOY_AXIS_LEFT_Y
+	jr.axis_value = 0.0
+	hud._unhandled_input(jr)
+	_ok(f_after == 2, "pause pad: a stick push is one step")
+	hud._unhandled_input(pad.call(JOY_BUTTON_START))
+	_ok(not hud.is_pause_menu_open() and got["closed"].back() == "resume", "pause pad: Start resumes")
+	# The mouse and a finger.
+	var mouse := func(pos: Vector2, pressed: bool) -> InputEventMouseButton:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = pressed
+		e.position = pos
+		return e
+	var tap := func(pos: Vector2) -> void:
+		hud._unhandled_input(mouse.call(pos, true))
+		hud._unhandled_input(mouse.call(pos, false))
+	hud.show_pause_menu()
+	var pl: Dictionary = hud.pause_menu_plan()
+	var rect_of := func(id: String) -> Rect2:
+		for it in hud.pause_menu_plan()["items"]:
+			if it["id"] == id:
+				return it["rect"]
+		return Rect2()
+	tap.call((rect_of.call("settings") as Rect2).get_center())
+	_ok(hud.is_settings_open(), "pause mouse: a click on Settings opens it")
+	hud.hide_settings()
+	hud._unhandled_input(mouse.call((rect_of.call("feedback") as Rect2).get_center(), true))
+	hud._unhandled_input(mouse.call((rect_of.call("howto") as Rect2).get_center(), false))
+	_ok(not hud.is_feedback_open() and not hud.is_howto_open() and hud.is_pause_menu_open(), "pause mouse: a press that slides off its button chooses nothing")
+	tap.call(Vector2(5, 5))
+	_ok(hud.is_pause_menu_open(), "pause mouse: a click outside the card does nothing")
+	tap.call((rect_of.call("new") as Rect2).get_center())
+	var yes_r: Rect2 = rect_of.call("new_yes")
+	_ok(hud.pause_menu_plan()["confirm"] and yes_r.size.y > 0.0, "pause mouse: a click on New match shows the question")
+	tap.call((rect_of.call("new_no") as Rect2).get_center())
+	tap.call((rect_of.call("resume") as Rect2).get_center())
+	_ok(not hud.is_pause_menu_open() and got["closed"].back() == "resume", "pause mouse: Keep playing, then Resume, close the menu")
+	# On a phone: two columns, the cross-grid moves.
+	hud.set_density(2.0)
+	hud.set_option("touch_ui", true)
+	hud.size = Vector2(1280, 540)
+	hud.advance(1.0 / 60.0)
+	hud.show_pause_menu()
+	var pp: Dictionary = hud.pause_menu_plan()
+	hud.pause_menu_action("right")
+	hud.pause_menu_action("down")
+	_ok(int(pp["cols"]) == 2 and hud.pause_menu_focus() == 3, "pause touch: on a short phone screen the menu has two columns and Right then Down moves across and down")
+	tap.call(((hud.pause_menu_plan()["items"] as Array)[4]["rect"] as Rect2).get_center())
+	_ok(hud.pause_menu_plan()["confirm"], "pause touch: a tap on New match asks first")
+	hud.pause_menu_action("back")
+	hud.pause_menu_action("back")
+	_ok(not hud.is_pause_menu_open(), "pause touch: and back, back resumes")
+	hud.queue_free()
+	await process_frame
+
+
+# --- A sim pause freezes the fight's timers, not the drawing (docs/architecture/fx-events.md: pause_start, pause_end) ------------------
+
+func _sim_pause_rules() -> void:
+	var hub := _hub()
+	var m: UiFighterModel = hub.model(0)
+	m.stance_prompt_t = 0.0
+	hub.consume({"type": "window_open", "actor": 0, "kind": "parry", "dur": 0.4})
+	hub.consume({"type": "cinematic_start", "actor": 0, "kind": "transformation", "dur": 3.0})
+	var t0: float = hub.t_now
+	var pt0: float = m.parry_t
+	hub.consume({"type": "pause_start", "kind": "transform", "actor": 0, "version": "full", "dur": 2.0})
+	_ok(hub.sim_paused and hub.sim_pause_kind == "transform", "sim pause: pause_start marks the HUD paused with its kind")
+	for i in range(60):
+		hub.advance(1.0 / 60.0)
+	_ok(is_equal_approx(hub.t_now, t0) and is_equal_approx(m.stance_prompt_t, 0.0) and is_equal_approx(m.parry_t, pt0), "sim pause: the match clock, the stance prompt and the parry window stand still for a second of it")
+	_ok(hub.cinematic_left < 2.1 and hub.cinematic_left > 1.9 and hub.toll_age > 90.0, "sim pause: what is only drawn (the cinematic mode) runs on in real time")
+	hub.consume({"type": "pause_end", "kind": "transform"})
+	for i in range(30):
+		hub.advance(1.0 / 60.0)
+	_ok(not hub.sim_paused and hub.t_now > t0 + 0.4 and m.stance_prompt_t > 0.4, "sim pause: pause_end lets them run again")
+	# A pause_end that never comes does not freeze the HUD for good.
+	var hub2 := _hub()
+	hub2.consume({"type": "pause_start", "kind": "world", "actor": 1, "version": "short", "dur": 1.0})
+	for i in range(120):
+		hub2.advance(1.0 / 60.0)
+	_ok(not hub2.sim_paused and hub2.t_now > 0.4, "sim pause: after its duration with no pause_end the HUD carries on")
+	# A new match clears it.
+	var hub3 := _hub()
+	hub3.consume({"type": "pause_start", "kind": "timecap", "actor": -1, "version": "full", "dur": 5.0})
+	hub3.reset()
+	_ok(not hub3.sim_paused, "sim pause: a new match clears it")
+	# The real HUD: the legend's 12 seconds do not burn during a pause.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	hud.size = Vector2(1920, 1080)
+	root.add_child(hud)
+	await process_frame
+	hud.setup(["protagonist", "anti_hero"], ["ONE", "TWO"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	hud.advance(1.0 / 60.0)
+	hud.consume({"type": "pause_start", "kind": "transform", "actor": 0, "version": "full", "dur": 30.0})
+	for i in range(60 * 14):
+		hud.advance(1.0 / 60.0)
+	_ok(hud._l_hints[0].sig != null, "sim pause: the control legend is still up after 14 s of a sim pause (it counts fight time)")
+	hud.consume({"type": "pause_end", "kind": "transform"})
+	for i in range(60 * 13):
+		hud.advance(1.0 / 60.0)
+	_ok(hud._l_hints[0].sig == null, "sim pause: and goes after its 12 s of fight time once the pause ends")
+	hud.queue_free()
+	await process_frame

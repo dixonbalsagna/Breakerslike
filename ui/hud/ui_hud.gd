@@ -26,6 +26,10 @@ signal settings_opened                     # the Settings screen opened: the hos
 signal settings_closed                     # it closed: the host restores the pause it found
 signal settings_action_requested(action: String)   # a button on the screen was pressed ("remap"): the host opens what it names
 signal remap_changed(layout_id: String, overrides: Array)   # the player changed a layout's controls: the host applies the rows (Controls' applier) and saves
+signal pause_menu_opened                   # the pause menu opened: the host freezes the sim and lets go of held keys
+signal pause_menu_closed(reason: String)   # it closed: "resume" (the host unfreezes) or "new" (the host unfreezes and starts a match)
+signal pause_entry(entry: String)          # an entry was chosen: resume, howto, settings, feedback, new (then new_yes or new_no)
+signal new_match_requested                 # New match was confirmed
 signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
@@ -89,6 +93,11 @@ var _last_lh := false
 var _l_pause: UiLayer
 var _l_howto: UiLayer
 var _l_settings: UiLayer
+var _l_pmenu: UiLayer
+var _pm_open := false
+var _pm_confirm := false              # New match is asking "Start a new match?"
+var _pm_focus := 0                    # index into UiPause.ids(_pm_confirm)
+var _pm_down := ""                    # the button a press started on (a release over the same one chooses it)
 var _l_remap: UiLayer
 var _rm_open := false
 var _rm_direct := false               # opened without the Settings screen under it (closing it then closes Settings too)
@@ -188,6 +197,7 @@ func _ready() -> void:
 	_l_tele = _layer(_paint_tele)     # the finisher telegraph and the tutorial hint share the banner slot (telegraph first)
 	_l_hint = _layer(_paint_hint)
 	_l_fbpill = _layer(_paint_fbpill)
+	_l_pmenu = _layer(_paint_pmenu)
 	_l_howto = _layer(_paint_howto)
 	_l_settings = _layer(_paint_settings)
 	_l_remap = _layer(_paint_remap)
@@ -252,7 +262,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_howto, _l_settings, _l_remap, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -513,6 +523,7 @@ func _update_layers() -> void:
 	_l_hint.update_sig(UiReads.hint_sig(hub))
 	_l_howto.update_sig(UiHowto.sig(layout.vp, _howto_page, _howto_device(), _howto_slot(), bool(opts["touch_ui"]), dp, layout.s, _howto_preset() + str(opts["glyph_style"])) if _howto_open else null)
 
+	_l_pmenu.update_sig(UiPause.sig(pause_menu_plan()) if _pm_open else null)
 	_l_settings.update_sig(_settings_sig() if (_set_open and not _rm_open) else null)
 	_l_remap.update_sig(_remap_sig() if _rm_open else null)
 
@@ -725,6 +736,9 @@ func _paint_howto(ci: CanvasItem) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _pm_open and not (_rm_open or _set_open or _fb_open or _howto_open):
+		_pause_input(event)
+		return
 	if _rm_open:
 		_remap_input(event)
 		return
@@ -794,6 +808,184 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+# --- The pause menu (docs/ui/hud-spec.md section 28) ---------------------------------------------------------------------------------
+
+## Open or close the pause menu: the host's pause key, pause button and Start call this. Opening emits pause_menu_opened (the host freezes the
+## sim and lets go of held keys); closing it is a Resume. While the menu is open the HUD takes every key, pad button and click, and the
+## How to play card, Settings and Send feedback open over it and give it back when they close. Does nothing while one of those is open.
+func toggle_pause_menu() -> void:
+	if _pm_open:
+		if not (_rm_open or _set_open or _fb_open or _howto_open):
+			_pm_close("resume")
+	else:
+		show_pause_menu()
+
+
+func show_pause_menu() -> void:
+	if _pm_open or _howto_open or _fb_open or _set_open:
+		return
+	_pm_open = true
+	_pm_confirm = false
+	_pm_focus = 0
+	_pm_down = ""
+	_l_pmenu.invalidate()
+	pause_menu_opened.emit()
+
+
+func _pm_close(reason: String) -> void:
+	if not _pm_open:
+		return
+	_pm_open = false
+	_pm_confirm = false
+	_pm_down = ""
+	_l_pmenu.update_sig(null)
+	pause_menu_closed.emit(reason)
+
+
+func is_pause_menu_open() -> bool:
+	return _pm_open
+
+
+func pause_menu_focus() -> int:
+	return _pm_focus
+
+
+func pause_menu_plan() -> Dictionary:
+	return UiPause.plan(layout.vp, layout.s, dp, bool(opts["touch_ui"]), {"focus": _pm_focus, "confirm": _pm_confirm})
+
+
+func _paint_pmenu(ci: CanvasItem) -> void:
+	if _pm_open:
+		UiPause.draw(ci, pause_menu_plan())
+
+
+## Choose an entry by id (what a press, a tap or Enter on the focused button does).
+func pause_menu_choose(id: String) -> void:
+	if not _pm_open:
+		return
+	pause_entry.emit(id)
+	match id:
+		"resume":
+			_pm_close("resume")
+		"howto":
+			show_howto(false)
+		"settings":
+			show_settings()
+		"feedback":
+			show_feedback("pause")
+		"new":
+			_pm_confirm = true
+			_pm_focus = 1   # Keep playing is where the focus starts: the match is not lost by a stray Enter
+		"new_yes":
+			_pm_close("new")
+			new_match_requested.emit()
+		"new_no":
+			_pm_confirm = false
+			_pm_focus = UiPause.ENTRIES.find("new")
+	_l_pmenu.invalidate()
+
+
+## One of "up", "down", "left", "right", "accept", "back" (what a key, a pad button or a stick push does).
+func pause_menu_action(act: String) -> void:
+	if not _pm_open:
+		return
+	var p: Dictionary = pause_menu_plan()
+	var list: Array = UiPause.ids(_pm_confirm)
+	match act:
+		"up":
+			_pm_focus = UiPause.moved(p, _pm_focus, 0, -1)
+		"down":
+			_pm_focus = UiPause.moved(p, _pm_focus, 0, 1)
+		"left":
+			_pm_focus = UiPause.moved(p, _pm_focus, -1, 0)
+		"right":
+			_pm_focus = UiPause.moved(p, _pm_focus, 1, 0)
+		"accept":
+			pause_menu_choose(str(list[clampi(_pm_focus, 0, list.size() - 1)]))
+		"back":
+			if _pm_confirm:
+				pause_menu_choose("new_no")
+			else:
+				_pm_close("resume")
+	_l_pmenu.invalidate()
+
+
+func _pause_input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		_set_device = "kbd"
+		if event.pressed and not event.echo or (event.pressed and event.echo and event.keycode in [KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]):
+			var act := ""
+			match event.keycode:
+				KEY_UP, KEY_W:
+					act = "up"
+				KEY_DOWN, KEY_S, KEY_TAB:
+					act = "down"
+				KEY_LEFT, KEY_A:
+					act = "left"
+				KEY_RIGHT, KEY_D:
+					act = "right"
+				KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+					act = "accept"
+				KEY_ESCAPE, KEY_P:
+					act = "back"
+				KEY_F1:
+					pause_menu_choose("howto")
+				KEY_N:
+					if not _pm_confirm:
+						pause_menu_choose("new")
+			if act != "":
+				pause_menu_action(act)
+	elif event is InputEventJoypadButton:
+		_set_device = "pad"
+		if event.pressed:
+			match event.button_index:
+				JOY_BUTTON_DPAD_UP:
+					pause_menu_action("up")
+				JOY_BUTTON_DPAD_DOWN:
+					pause_menu_action("down")
+				JOY_BUTTON_DPAD_LEFT:
+					pause_menu_action("left")
+				JOY_BUTTON_DPAD_RIGHT:
+					pause_menu_action("right")
+				JOY_BUTTON_A:
+					pause_menu_action("accept")
+				JOY_BUTTON_B, JOY_BUTTON_START:
+					pause_menu_action("back")
+	elif event is InputEventJoypadMotion:
+		var ax: int = event.axis
+		if ax == JOY_AXIS_LEFT_X or ax == JOY_AXIS_LEFT_Y:
+			var v: float = event.axis_value
+			var was: int = int(_set_axis.get(ax, 0))
+			var now: int = 0
+			if v > 0.6:
+				now = 1
+			elif v < -0.6:
+				now = -1
+			elif absf(v) > 0.3:
+				now = was
+			if now != was:
+				_set_axis[ax] = now
+				if now != 0:
+					_set_device = "pad"
+					pause_menu_action(("right" if now > 0 else "left") if ax == JOY_AXIS_LEFT_X else ("down" if now > 0 else "up"))
+	elif event is InputEventMouseButton:
+		_set_device = "kbd"
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			var id: String = UiPause.hit(pause_menu_plan(), event.position)
+			if event.pressed:
+				_pm_down = id
+				var list: Array = UiPause.ids(_pm_confirm)
+				if id != "" and list.has(id):
+					_pm_focus = list.find(id)
+					_l_pmenu.invalidate()
+			else:
+				var started: String = _pm_down
+				_pm_down = ""
+				if id != "" and id == started:
+					pause_menu_choose(id)
+	get_viewport().set_input_as_handled()
+
+
 # --- The Settings screen (docs/ui/hud-spec.md section 26) ---------------------------------------------------------------------
 
 ## Open the Settings screen (the host's pause menu entry). While it is open the HUD takes every key, pad button and click (so no fighter
@@ -832,7 +1024,7 @@ func is_settings_open() -> bool:
 
 ## Any of the three overlays (How to play, feedback, Settings) is open: the host leaves keys, pad and touch to the HUD.
 func is_overlay_open() -> bool:
-	return _howto_open or _fb_open or _set_open
+	return _howto_open or _fb_open or _set_open or _pm_open
 
 
 func settings_focus() -> int:
@@ -1362,15 +1554,15 @@ func _rm_try_move(control: String) -> void:
 					"same":
 						_rm_finish(_rm_keys_word(keys), true)
 					"taken":
-						_rm_status = str(w.get("_taken", "")).replace("{control}", _rm_control_word(str(all.get("control", control)))).replace("{other}", _rm_action_word(str(all["with"])))
+						_rm_status = str(w.get("taken", "")).replace("{control}", _rm_control_word(str(all.get("control", control)))).replace("{other}", _rm_action_word(str(all["with"])))
 					"pair":
 						_rm_status = str(w.get("pair", "")).replace("{control}", word)
 					_:
 						_rm_status = str(w.get("reserved", "")).replace("{control}", word)
 		"taken":
-			_rm_status = str(w.get("_taken", "")).replace("{control}", word).replace("{other}", _rm_action_word(str(res["with"])))
+			_rm_status = str(w.get("taken", "")).replace("{control}", word).replace("{other}", _rm_action_word(str(res["with"])))
 		"twice":
-			_rm_status = str(w.get("_twice", ""))
+			_rm_status = str(w.get("twice", ""))
 		"reserved":
 			_rm_status = str(w.get("reserved", "")).replace("{control}", word)
 		"pair":
@@ -1833,7 +2025,7 @@ func _fb_place() -> void:
 
 
 func _pill_visible() -> bool:
-	return hub.match_over and bool(opts["match_end_feedback"]) and not _fb_open and not _howto_open and not _set_open and layout.feedback_btn.size.y > 0.0
+	return hub.match_over and bool(opts["match_end_feedback"]) and not _fb_open and not _howto_open and not _set_open and not _pm_open and layout.feedback_btn.size.y > 0.0
 
 
 func _fb_click(pos: Vector2) -> void:

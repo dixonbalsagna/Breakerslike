@@ -78,7 +78,10 @@ var mode: int = Mode.NORMAL
 var cinematic_left: float = 0.0
 var cinematic_kind: String = ""
 var hazard_left: float = 0.0
-var t_now: float = 0.0
+var t_now: float = 0.0             # the match clock the HUD keeps: it stands still while the sim is paused (sim_paused)
+var sim_paused: bool = false       # a pausing set piece froze the sim (pause_start .. pause_end): fight-time timers and prompts hold, presentation runs on
+var sim_pause_kind: String = ""    # transform, world or timecap
+var sim_pause_left: float = 0.0    # real seconds the pause may still last (pause_start's dur): the safety if its pause_end is lost
 var toll_age: float = 99.0       # seconds since the world toll last changed (the chip dims at rest)
 var stats: Dictionary = {}       # counters for the readability tests and the demo's status line
 var captions_on: bool = true
@@ -112,6 +115,9 @@ func reset() -> void:
 	cinematic_kind = ""
 	hazard_left = 0.0
 	t_now = 0.0
+	sim_paused = false
+	sim_pause_kind = ""
+	sim_pause_left = 0.0
 	stats = {"cards_shown": 0, "cards_merged": 0, "cards_dropped": 0, "cards_evicted": 0, "cards_withheld": 0,
 		"barks_shown": 0, "barks_cut": 0, "barks_suppressed": 0, "toasts_skipped": 0, "max_cards_visible": 0,
 		"max_barks_visible": 0, "events": 0}
@@ -138,7 +144,7 @@ func model(slot: int) -> UiFighterModel:
 # --- Event intake -------------------------------------------------------------------------------------------------
 
 const _FIELDS: Array = ["type", "actor", "target", "region", "stage", "internal", "n", "text", "dur", "k", "col", "kind",
-	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived", "attacker", "victim", "tier", "cover", "beats", "half_width", "resolve", "lead", "result", "action", "available", "dur_ticks", "clean_ticks", "weight", "state", "stance", "act", "band", "id", "text_key", "display"]
+	"station", "revision", "speaker", "cues", "priority", "setpiece", "winner", "loser", "chance", "survived", "attacker", "victim", "tier", "version", "cover", "beats", "half_width", "resolve", "lead", "result", "action", "available", "dur_ticks", "clean_ticks", "weight", "state", "stance", "act", "band", "id", "text_key", "display"]
 
 
 ## Any event (a Dictionary, or an object with these properties such as the sim's FxEvent) as a Dictionary.
@@ -291,6 +297,15 @@ func consume(e) -> void:
 			if lo != null:
 				lo.ko = true
 			_cinematic(int(d.get("winner", -1)), "ko", _dur(d, 3.0))
+		"pause_start":
+			# Q10: the sim is frozen for dur seconds. The HUD's fight-time windows, prompts and timers hold until pause_end.
+			sim_paused = true
+			sim_pause_kind = str(d.get("kind", ""))
+			sim_pause_left = float(d.get("dur", 0.0)) + 0.5
+		"pause_end":
+			sim_paused = false
+			sim_pause_kind = ""
+			sim_pause_left = 0.0
 		"cinematic_start":
 			_cinematic(actor, _kind(d, "transformation"), _dur(d, 2.5))
 		"cinematic_end":
@@ -901,21 +916,32 @@ func card_alpha(c: Card) -> float:
 # --- Time ---------------------------------------------------------------------------------------------------------
 
 func advance(dt: float) -> void:
-	t_now += dt
+	# A sim pause (a transformation, a world set piece, the time cap) freezes the fight: the match clock, the struggle's rings, the
+	# finisher telegraph, the tutorial hint's clock, the parry and chain windows and the prompts' timers hold for it (sdt is 0), while
+	# what is only drawn (cards, barks, banners, the crown's fades, the cinematic mode) keeps its real time.
+	var sdt: float = dt
+	if sim_paused:
+		sdt = 0.0
+		sim_pause_left -= dt
+		if sim_pause_left <= 0.0:
+			sim_paused = false   # its pause_end never came: do not freeze the HUD for good
+			sim_pause_kind = ""
+			sdt = dt
+	t_now += sdt
 	toll_age += dt
-	_step_struggle(dt)
+	_step_struggle(sdt)
 	if not telegraph.is_empty():
-		telegraph["age"] = float(telegraph["age"]) + dt
+		telegraph["age"] = float(telegraph["age"]) + sdt
 		if float(telegraph["age"]) > 8.0 or (float(telegraph["end"]) >= 0.0 and float(telegraph["age"]) - float(telegraph["end"]) > 0.4):
 			telegraph = {}
 	if not hint.is_empty():
-		hint["age"] = float(hint["age"]) + dt
+		hint["age"] = float(hint["age"]) + sdt
 		if str(hint["kind"]) == "done" and not keep_hints and float(hint["age"]) > 2.6:
 			hint = {}
 	for m in models:
-		m.advance(dt)
+		m.advance(dt, sdt)
 		if _lost_trail_left.has(m.slot):
-			_lost_trail_left[m.slot] -= dt
+			_lost_trail_left[m.slot] -= sdt
 			if _lost_trail_left[m.slot] <= 0.0:
 				_lost_trail_left.erase(m.slot)
 				m.lost_trail = false

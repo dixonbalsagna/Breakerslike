@@ -4,7 +4,7 @@ extends Control
 ##
 ## Run:  godot --path . res://ui/demo/hud_demo.tscn
 ## Options after "--": --scenario=hero_vs_proud|empress_vs_cyborg|placeholders|stress|controls   --shot=file.png (save a frame)
-##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch[=press|ready] --left --device=xbox --preset=arena|brawler|simple-pad|kb-solo|kb-shared-p2 --ready --stance=N --target=github|mailto|form --remap[=LAYOUT] [--rcapture=ACTION] [--rtry=kb:KeyK] [--rfocus=ACTION] --settings[=FOCUS_STEPS] [--pad] [--sscroll=PX] --howto[=PAGE] --ko --feedback[=copied|review]
+##   --at=SECONDS (fast-forward the feed to that time before the shot)   --frames=N   --portrait (start portrait-shaped)   --sil --crown --clear --nofeed --nolegend --reduced --split --flip --prompts --dp=2.6 --touch[=press|ready] --left --device=xbox --preset=arena|brawler|simple-pad|kb-solo|kb-shared-p2 --ready --stance=N --target=github|mailto|form --pause[=N] [--pconfirm] --remap[=LAYOUT] [--rcapture=ACTION] [--rtry=kb:KeyK] [--rfocus=ACTION] --settings[=FOCUS_STEPS] [--pad] [--sscroll=PX] --howto[=PAGE] --ko --feedback[=copied|review]
 ## Keys: Tab scenario | Space pause | R restart | S silhouette | F4 feed | C captions | M reduced motion | K crown always on | B brink ring | T arc thickness
 ##       Z clear zones | L region label | V viewport size | +/- fighter size | H hide this legend
 
@@ -127,6 +127,12 @@ func _ready() -> void:
 			hud._set_device = "pad"
 		if args.has("sscroll"):
 			hud._set_scroll = float(args["sscroll"])
+	if args.has("pause"):
+		hud.show_pause_menu()
+		for _i in range(int(args["pause"]) if str(args["pause"]).is_valid_int() else 0):
+			hud.pause_menu_action("down")
+		if args.has("pconfirm"):
+			hud.pause_menu_choose("new")
 	if args.has("remap"):
 		UiData.set_feature("remap", true)
 		hud.show_remap("" if str(args["remap"]) == "1" else str(args["remap"]))
