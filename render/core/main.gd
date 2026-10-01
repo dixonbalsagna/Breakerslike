@@ -149,6 +149,7 @@ func _ready() -> void:
 			split_view.set_panel_colors(a, b))
 	# The pause menu's "hand player two back to the AI" entry.
 	ui_hud.player_two_leave_requested.connect(_on_player_two_leave)
+	ui_hud.form_prompt_shown.connect(_on_form_prompt)
 	ui_hud.pause_menu_opened.connect(_on_pause_menu_opened)
 	ui_hud.pause_menu_closed.connect(_on_pause_menu_closed)
 	ui_hud.new_match_requested.connect(func(): start_match(fresh_seed()))
@@ -492,6 +493,18 @@ func _on_input_note(note: Dictionary) -> void:
 	started = true
 	if host.S.fighters[0].ai == null and host.S.fighters[1].ai == null and split_view != null and not split_view.is_attached():
 		split_view.attach(self)
+
+
+## UI's form-ready prompt came up for a human fighter (once, at the rising edge; docs/ui/hud-spec.md section 31): a
+## 15 ms haptic on that player's own device, a pad's rumble or a phone's vibration, and nothing on a keyboard. Never
+## the only cue: the chip says the same. A "haptics" option set to false switches it off (UI has no such option yet).
+func _on_form_prompt(slot: int, device: String) -> void:
+	if device == "" or device == "kbd" or not bool(ui_hud.opts.get("haptics", true)):
+		return
+	if device == "touch":
+		Input.vibrate_handheld(15)
+	elif slot >= 0 and slot < 2 and host.hub.device_of(slot) == "pad" and bool(host.hub.claimed[slot]):
+		Input.start_joy_vibration(int(host.hub.slot_pad[slot]), 0.3, 0.3, 0.015)
 
 
 ## The pause menu handed player two back to the AI: the hub frees their device (it can join again), and the slot
