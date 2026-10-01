@@ -149,6 +149,25 @@ const R_FINISH: float = 0.16           # a finisher dollies in to this
 const TRANSFORM_R0: float = 0.14       # a transformation: the face, then the body, then the reveal
 const TRANSFORM_R1: float = 0.11
 const TRANSFORM_R2: float = 0.07
+# --- the opening: the crater-landing entrance and the staredown (rule-of-cool row 7, docs/architecture/intro-phase.md) ---
+const INTRO_R_FALL: float = 0.10       # the descent: the faller at this fraction of the screen height, the camera falling with him
+const INTRO_FALL_ANCHOR_Y: float = 0.38  # ... high in the frame, so the ground that comes up is below him
+const INTRO_R_LAND_MIN: float = 0.07   # the landing: low and wide, the crater's diameter filling INTRO_LAND_FIT of the width,
+const INTRO_R_LAND_MAX: float = 0.12   # ... his height between these
+const INTRO_LAND_FIT: float = 0.55
+const INTRO_LAND_PITCH: float = -6.0   # the low angle (limited by the ground rule, as the transformation's break)
+const INTRO_LAND_ANCHOR_Y: float = 0.74
+const INTRO_LAND_PUSH: float = 0.06     # the touchdown's impact push, 0.1 s
+const INTRO_SHAKE: float = 10.0         # the touchdown's shake, px before the cap and the player's scale
+const INTRO_STARE_PUSH: float = 0.10    # the two-shot pushes in this much over the staredown
+const INTRO_FACES: bool = true          # two face cuts before the clock, if the animation has a face to show
+const INTRO_FACE_R: float = 0.20
+const INTRO_FACE_TICKS: int = 24        # each face lasts this many ticks ...
+const INTRO_FACE_LEAD: int = 60         # ... and the first starts this many ticks before the clock; the last 12 are the two-shot again
+const INTRO_BELL: float = 0.05          # the clock: a punch-in this big for 3 ticks
+const INTRO_BELL_LEN: float = 0.05
+const INTRO_EASE_OUT: float = 0.6       # the staredown push eases out over this after the clock
+
 # --- the panel cut-in (pitches.md 8a option B, rule-of-cool.md row 11) ---
 const PANEL_W: float = 0.56            # the strip's visible width, of the screen width
 const PANEL_H: float = 0.20            # its height, of the screen height

@@ -27,30 +27,34 @@ Nothing in this list pauses the fight, so the fighters move through every shot. 
 
 ## 2. Planned, with the shot plan and what it needs
 
-### Row 7: the crater-landing entrance and the staredown (planned; needs a sim intro)
+### Row 7: the crater-landing entrance and the staredown (built 2026-10-04, against Simulation's intro events; the sim side is parked)
 
-**Today.** A match starts at `S.T = 0` with both fighters standing at y = 60, 600 units apart. There is no pre-clock phase and no entrance state, so the camera has nothing to cut to. The camera can build this the moment the sim gives it a time window and four events.
+The shot plays on the events of `docs/architecture/intro-phase.md`: `intro_start {dur, delay}`, `entrance_fall {actor, x, y (ground), z, y1 (top), dur}`, `entrance_land {actor, x, y, z, y1, r}`, `staredown_start {dur}`, `clock_start {kind: full | skip}`. The timeline is the sim's (ticks at 60 a second): A falls at 0 and lands at 36, B falls at 84 and lands at 114, the staredown starts at 144, the clock at 300; the fall is from 6,000 units. Both fighters are in the sky from tick 0 (B waits there until his fall).
 
-**The shot (about 6 s, skippable).**
+**What changed from my first plan.** The plan was a fixed low frame on the landing spot with the faller streaking into it. A fall of 6,000 units in 0.6 s peaks near 20,000 units a second, so a fixed frame would show the faller for about 5 ticks and 0.5 s of empty sky before it. The shot is now the camera falling with him (the lag bound holds him at that speed), then a cut to the low frame at touchdown. The staredown two-shot cannot reach 14%: with the fighters 900 units apart it fits at about 10%, so it pushes from the fit by 10%.
 
-| Beat | Time | Camera |
+| Beat | Ticks | Camera |
 | :--- | ---: | :--- |
-| Sky | 0.0 to 0.6 s | A low wide angle on the empty spot where fighter A will land (pitch -6, 7%, the same low angle as the transformation's break), the sky above. A speck falls into frame |
-| A lands | 0.6 s | The touchdown tick: a 6% impact push for 0.1 s, a medium shake (the scale of a tier 2 landing), the crater bowl digs under him. Hold 0.5 s on the crouch |
-| B lands | 1.4 to 2.4 s | A hard cut to the same low angle on B's spot, mirrored, the same landing, 0.9 s |
-| Staredown | 2.4 to 5.0 s | One cut to a two-shot at fight size (11%) with both craters in frame, then a slow push to 14% over 2.6 s. In a split, no divider: it is one view. Two quick cuts to each face (16%, 0.5 s each) at 3.6 s and 4.3 s if the animation has a face to show |
-| Clock | 5.0 s | A 3-tick punch-in (the bell), then the ordinary fight framing with the usual 0.6 s ease. The clock starts at this tick |
+| A's descent | 0 to 36 | A hard cut to A in the sky (10% of the screen height, high in the frame), level, falling with him; the ground comes up below |
+| A lands | 36 to 84 | A hard cut at the touchdown to a low, wide frame (pitch -6, limited by the ground rule; his height 7% to 12%, the crater's diameter filling 55% of the width from the event's `r`; his chest low at 74% of the height, sky above). A 6% impact push over 0.1 s and a shake of 10 px (half of it on the other pane) |
+| B's descent and landing | 84 to 144 | The same two shots on B |
+| The staredown | 144 to 300 | A hard cut to the level two-shot at the fit (both fighters on screen with the margin) and a push of 10% over the staredown, eased |
+| The faces | 240 to 288 | Two hard cuts to A's face and B's (20% of the screen height, 24 ticks each, the fighter looking into the frame), then a cut back to the two-shot 12 ticks before the clock (`INTRO_FACES`, off if the animation has no face to show) |
+| The clock | 300 | A 3-tick punch-in of 5% (the bell) with no cut; the two-shot's push eases out over 0.6 s into the ordinary fight framing |
 
-**Skip.** Any key (the fight's own start key) jumps to the clock tick: a 0.08 s fade to fight framing, the craters already dug.
-**Reduced.** No fall: begin at the landing (a fade), no shake, no push; the staredown is a static two-shot for 1.5 s.
-**Players.** The entrance is a presentation of both fighters at once, so it takes the merged single view; the panes appear at the clock.
+That is eight hard cuts in five seconds, each on an event of the sim; the only two with no event are the face cuts, which are keyed to the staredown's length.
 
-**What I need.**
-- **Simulation.** An intro phase before the clock (`S.T < 0` or a flag), with input locked, skippable, deterministic: events `intro_start {dur, skip_ok}`, `entrance_land {actor, x, y, z, fall_from_y, r}` at the touchdown tick (the crater is dug then: World), `staredown_start {dur}`, `clock_start`. The fall's start height and duration should be in the event so I can frame the sky before the landing, not chase it.
-- **World.** The landing spots chosen on open ground (the plan says no collateral), and the two craters real. I want the spots at least 900 units apart so the two-shot fits at 11%.
-- **Animation.** A falling pose, a landing crouch (ours: no franchise pose), an idle staredown with the head turned toward the opponent, and a close-up-capable face on both.
-- **Rendering.** Nothing new (the -8 degree angle is checked).
-- **UI.** The HUD hidden until `clock_start`; a skip prompt.
+- **Skip.** `clock_start` with `kind: skip` while the intro is running ends the shot at once: one cut with the 0.08 s fade (the safety cut's) to the ordinary framing of the fighters where they landed (the sim has landed both at once). No bell. With the setup's `"intro": "skip"` there are no intro events and the camera does nothing.
+- **Reduced motion.** The camera does not fall: it waits, level and still, on the spot where the faller will land, and he drops into the frame; the landing is a level frame with no pitch, push or shake; no faces, no bell and no push in the staredown; every cut is the 0.3 s dissolve. Five cuts (A's spot, A's landing, B's spot, B's landing, the staredown).
+- **Panels** are off for the whole intro. The HUD is hidden by UI until `clock_start`.
+- **Two humans and the split.** The shots are solo frames and a merged two-shot, so the layout is the same with two humans (the test checks the two cameras are identical to the AI run, tick by tick); after the clock the ordinary rules apply (the 900-unit gap is a merged view).
+- **Legal.** Our own staging: a fall with the camera, a low landing frame, a plain two-shot, two plain face cuts and a bell. No wind-blown cape, no silhouette reveal, no power-up crouch with a scream. The stacking rule (at most two of the seven marks in one moment): the landing has the crouch and the shaken ground, not the aura, the lightning or the scream.
+- **Tests** (`split_sweep.gd`, "intro full / humans / reduced / skip"): the cut ticks [0, 36, 84, 114, 144, 239, 263, 287]; the faller is never off the screen; the pitch is low at both landings and level in the fall and the staredown; the shake and the push at the touchdown; the two-shot pushes in 20% (58 to 75 px at 720p); the bell is 3.9%; the push eases out; no panel during the intro; two humans get the same cameras; reduced motion has the five cuts, no pitch, shake or punch; a skip at tick 20 is one cut with the fade at 0.79 and the fighters on the screen after it. `render/camera/tests/intro_shots.gd` draws the frames on the real renderer.
+- **What I still need.**
+  - *Animation*: a falling pose, a landing crouch, the staredown idle with the head turned to the rival, and a face that reads at 20% of the screen height.
+  - *Rendering*: the descent has the ground far below; please check the sky and the planet's curve look right from 6,000 units, and the low landing frame at pitch -6 on the entrance craters.
+  - *World*: the crater's `r` in `entrance_land` is used to size the landing frame (150 units is a stand-in); the frame is clamped to 7%..12% of the screen height.
+  - *Simulation*: nothing; the camera's reading of `delay` (skip allowed after) is not used.
 
 ### Row 19: orbit and re-entry (planned; wave 2)
 

@@ -66,6 +66,7 @@ var dump_from: int = 0
 var dump_to: int = 0
 var shots_dir: String = ""
 var only: String = ""
+var _intro_ref: Array = []
 var _jr: Array = [null, null]            # a launched fighter's journey in progress, by victim slot
 var _jr_done: Array = []                 # the journeys that ended, for the match's summary
 var _jr_lay: UiLayout = null             # UI's layout, to ask whether it would draw an edge pointer
@@ -165,6 +166,8 @@ func _run() -> void:
 		for row in [[-600.0, "front street"], [-2025.0, "block row 2"]]:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
+	for iv in ["full", "humans", "reduced", "skip"]:
+		await _scenario("intro %s" % iv, func(): return _intro_run(iv), {})
 	await _scenario("panel signature", func(): return _panel_basic(), {})
 	await _scenario("panel ration and priority", func(): return _panel_ration(), {})
 	await _scenario("panel event and beam are one", func(): return _panel_dedupe(), {})
@@ -1262,6 +1265,139 @@ func _panel_band_pose(dx: float, dy: float) -> Dictionary:
 				bad += 1
 	_check(bad == 0, "%s: the strip covered a fighter" % _label)
 	stats["panel band %s" % _label] = "none" if p.is_empty() else ("top" if int(p["band"]) == 0 else "bottom")
+	return {}
+
+
+## The opening, against the sim's timeline (data/fight/intro.json: A falls at 0 and lands at 36, B falls at 84 and lands at
+## 114, the staredown at 144, the clock at 300; the fall is 6,000 units): injected intro events, the fighters moved as the
+## sim moves them. Variants: the full shot; two humans (the same cameras); reduced motion; a skip at tick 20.
+func _intro_run(mode: String) -> Dictionary:
+	var ax: float = 20000.0
+	var top: float = 6000.0
+	_pose(ax, top, ax + 900.0, top)
+	_S.fighters[0].face = 1.0
+	_S.fighters[1].face = -1.0
+	for f in _S.fighters:
+		f.state = "intro"
+		if mode == "humans":
+			f.ai = null
+	_rig.reduced_motion = mode == "reduced"
+	_seed_rig()
+	var fall: Array = [0, 84]
+	var land: Array = [36, 114]
+	var landed: Array = [false, false]
+	var cuts: Array = []
+	var cam_log: Array = []
+	var off: Array = [0, 0]
+	var sizes: Dictionary = {}
+	var pitch_at: Dictionary = {}
+	var max_pitch_dev: float = 0.0
+	var shake_max: float = 0.0
+	var zbump: float = 0.0
+	var skipped: bool = false
+	var fade_at_cut: float = 0.0
+	for t in range(0, 360):
+		var evs: Array = []
+		if t == 0:
+			evs.append(_shot_events("intro_start", {"dur": 5.0, "delay": 0.5}))
+		if mode == "skip" and t == 20:
+			for k in range(2):
+				if not landed[k]:
+					landed[k] = true
+					evs.append(_shot_events("entrance_land", {"actor": float(k), "x": _S.fighters[k].x, "y": 0.0, "z": 0.0, "y1": top, "r": 150.0}))
+			evs.append(_shot_events("clock_start", {"kind": "skip"}))
+			skipped = true
+		if not skipped:
+			for k in range(2):
+				if t == fall[k]:
+					evs.append(_shot_events("entrance_fall", {"actor": float(k), "x": _S.fighters[k].x, "y": 0.0, "y1": top, "dur": float(land[k] - fall[k]) / 60.0}))
+				if t == land[k]:
+					landed[k] = true
+					evs.append(_shot_events("entrance_land", {"actor": float(k), "x": _S.fighters[k].x, "y": 0.0, "z": 0.0, "y1": top, "r": 150.0}))
+			if t == 144:
+				evs.append(_shot_events("staredown_start", {"dur": 156.0 / 60.0}))
+			if t == 300:
+				evs.append(_shot_events("clock_start", {"kind": "full"}))
+		# the fighters, as the sim moves them: B waits in the sky until his fall; a fall is a closed-form path
+		for k in range(2):
+			var f = _S.fighters[k]
+			if landed[k]:
+				f.y = 0.0
+			elif t >= fall[k]:
+				var q: float = float(t - fall[k] + 1) / float(land[k] - fall[k])
+				f.y = top * (1.0 - q * q)
+		if skipped or t >= 300:
+			for f in _S.fighters:
+				f.state = "free"
+		_tick_rig(evs)
+		var cur: SplitFrame = _rig.current()
+		cam_log.append([cur.cam_x[0], cur.cam_y[0], cur.cam_z[0]])
+		if cur.cut:
+			cuts.append(t)
+			if t == 20:
+				fade_at_cut = cur.fade
+		max_pitch_dev = maxf(max_pitch_dev, absf(cur.pitch))
+		pitch_at[t] = cur.pitch
+		shake_max = maxf(shake_max, maxf(_rig._shk[0], _rig._shk[1]))
+		if t == 40:
+			zbump = cur.cam_z[0]
+		# the fighter the shot is on stays on the screen
+		if mode == "full" or mode == "humans":
+			var who: int = -1
+			if t > 0 and t < 144:
+				who = 0 if t < 84 else 1
+			if who >= 0 and not _on_screen(cur, who):
+				off[who] += 1
+		if t in [30, 100, 110, 150, 235, 299, 301, 302, 303, 304, 306, 359]:
+			sizes[t] = [_apparent_px(0, cur), cur.cam_z[0], cur.cam_x[0], cur.mode, _rig.solo_kind]
+	var stat: String = "cuts %s" % str(cuts)
+	match mode:
+		"full", "humans":
+			var want: Array = [0, 36, 84, 114, 144, 240, 264, 288]
+			var ok: bool = cuts.size() == want.size()
+			if ok:
+				for q in range(want.size()):
+					ok = ok and absi(int(cuts[q]) - int(want[q])) <= 1
+			_check(ok, "%s: cuts at %s (want %s)" % [_label, str(cuts), str(want)])
+			_check(off[0] == 0 and off[1] == 0, "%s: the faller left the screen for %d and %d ticks" % [_label, off[0], off[1]])
+			_check(float(pitch_at[40]) < -3.0 and float(pitch_at[120]) < -3.0, "%s: no low angle at the landings (%.1f, %.1f)" % [_label, pitch_at[40], pitch_at[120]])
+			_check(float(pitch_at[30]) == 0.0 and float(pitch_at[150]) == 0.0 and float(pitch_at[235]) == 0.0, "%s: the fall and the staredown are not level" % _label)
+			_check(shake_max >= CamParams.INTRO_SHAKE * 0.5, "%s: no shake at the touchdown (%.1f)" % [_label, shake_max])
+			_check(sizes[235][0] > sizes[150][0] * 1.05, "%s: the two-shot did not push in (%.0f px to %.0f px)" % [_label, sizes[150][0], sizes[235][0]])
+			_check(_rig.solo_kind == "" and not _rig.intro_active, "%s: the intro did not end" % _label)
+			var punch: float = float(sizes[302][1]) / float(sizes[299][1])
+			_check(punch > 1.02, "%s: no bell punch at the clock (%.3f)" % [_label, punch])
+			_check(absf(float(sizes[359][1]) / float(sizes[306][1]) - 1.0) < 0.12, "%s: the push does not ease out after the clock" % _label)
+			_check(_rig.panels == 0, "%s: a panel played during the intro" % _label)
+			stat += ", sizes %.0f / %.0f / %.0f px, bell x%.3f, shake %.1f" % [sizes[150][0], sizes[235][0], sizes[359][0], punch, shake_max]
+			if mode == "full":
+				_intro_ref = cam_log
+			else:
+				var same: bool = _intro_ref.size() == cam_log.size()
+				if same:
+					for q in range(cam_log.size()):
+						for c in range(3):
+							if absf(float(cam_log[q][c]) - float(_intro_ref[q][c])) > 1e-9:
+								same = false
+				_check(same, "%s: two humans got other cameras than the AI" % _label)
+		"reduced":
+			var want_r: Array = [0, 36, 84, 114, 144]
+			var ok_r: bool = cuts.size() == want_r.size()
+			if ok_r:
+				for q in range(want_r.size()):
+					ok_r = ok_r and absi(int(cuts[q]) - int(want_r[q])) <= 1
+			_check(ok_r, "%s: cuts at %s (want %s)" % [_label, str(cuts), str(want_r)])
+			_check(max_pitch_dev == 0.0 and shake_max == 0.0, "%s: pitch %.1f or shake %.1f in reduced motion" % [_label, max_pitch_dev, shake_max])
+			_check(float(sizes[302][1]) / float(sizes[299][1]) < 1.01, "%s: a bell punch in reduced motion" % _label)
+			_check(_rig.intro_cuts == 5, "%s: %d intro cuts" % [_label, _rig.intro_cuts])
+		"skip":
+			_check(cuts.size() == 2 and absi(int(cuts[0]) - 0) <= 1 and int(cuts[1]) == 20, "%s: cuts at %s (want 0 and 20)" % [_label, str(cuts)])
+			_check(fade_at_cut > 0.7, "%s: no fade at the skip (%.2f)" % [_label, fade_at_cut])
+			_check(_rig.solo_kind == "" and not _rig.intro_active, "%s: the intro did not end at the skip" % _label)
+			_check(_on_screen(_rig.current(), 0) and _on_screen(_rig.current(), 1), "%s: a fighter is off the screen after the skip" % _label)
+			stat += ", fade %.2f" % fade_at_cut
+	stats["intro shots " + mode] = stat
+	_rig.reduced_motion = false
 	return {}
 
 

@@ -88,6 +88,17 @@ var _tf_phase: String = ""               # gather, break or settle
 var _tf_g: int = 0                       # the beats in ticks (docs/design/moveset-rules.md 10.8)
 var _tf_b: int = 0
 var _tf_s: int = 0
+var intro_active: bool = false           # between intro_start and clock_start (docs/architecture/intro-phase.md)
+var intro_cuts: int = 0                  # the intro's hard cuts (counted for the tests)
+var _in_phase: String = ""               # fall, land, stare or face
+var _in_slot: int = -1
+var _in_t: int = 0                       # rig ticks since intro_start
+var _in_crater_r: float = 0.0
+var _in_stare_t: int = -1                # ticks since the staredown began, -1 before it
+var _in_stare_dur: int = 0
+var _in_clock_t: float = -1.0            # seconds since the clock started (the push eases out), -1 when not
+var _punch_amp: float = CamParams.LIVE_PUNCH
+var _punch_len: float = CamParams.LIVE_PUNCH_LEN
 var panel_mode: String = "full"          # the player's setting: "full", "still" (a frozen strip) or "off"; reduced motion means still
 var panels: int = 0                      # panel cut-ins started (counted for the tests and QA)
 var panels_dropped: int = 0              # panel requests refused: the ration, a stronger panel running, no free band
@@ -173,6 +184,10 @@ func reset(S: SimState, p_vw: float, p_vh: float) -> void:
 	_flash = 0.0
 	_push = [-1.0, -1.0]
 	_pn = {}
+	intro_active = false
+	_in_phase = ""
+	_in_stare_t = -1
+	_in_clock_t = -1.0
 	_beams_seen = {}
 	_sig_t = [-1.0e9, -1.0e9]
 	_pn_earned_t = -1.0e9
@@ -219,6 +234,7 @@ func step(S: SimState, p_vw: float, p_vh: float, events: Array = []) -> void:
 	r_now = _metric(S)
 	_update_solo(S)
 	_update_panel(S)
+	_update_intro(S)
 	_impact_evt = [false, false]
 	var clash_now: bool = S.game.clash != null
 	if clash_now and not _clash_prev and not reduced_motion:
@@ -565,6 +581,21 @@ func _update_orientation(S: SimState) -> void:
 func _read_events(S: SimState, events: Array) -> void:
 	for ev in events:
 		match String(_ef(ev, "type", "")):
+			"intro_start":
+				intro_active = true
+				_in_t = 0
+				_in_phase = ""
+				_in_stare_t = -1
+				_in_clock_t = -1.0
+				_pn = {}
+			"entrance_fall":
+				_intro_fall(S, int(_ef(ev, "actor", -1)), float(_ef(ev, "y", 0.0)))
+			"entrance_land":
+				_intro_land(S, int(_ef(ev, "actor", -1)), float(_ef(ev, "r", 0.0)))
+			"staredown_start":
+				_intro_stare(S, int(float(_ef(ev, "dur", 2.5)) * 60.0 + 0.5))
+			"clock_start":
+				_intro_clock(S, String(_ef(ev, "kind", "full")))
 			"beam_outcome":
 				_panel_request(S, "signature", int(_ef(ev, "actor", -1)))   # the signature's fire beat (the dynamic profile, the live one)
 			"ko":
@@ -627,6 +658,8 @@ func _read_events(S: SimState, events: Array) -> void:
 				# zoom out on the break (no cut), a straight pull back. Live: no shot; a 6-tick punch-in at the break.
 				if tver == "live":
 					if not reduced_motion:
+						_punch_amp = CamParams.LIVE_PUNCH
+						_punch_len = CamParams.LIVE_PUNCH_LEN
 						_live_punch_at = time + float(CamParams.LIVE_PUNCH_AT) * DT
 				elif ta >= 0 and ta < 2 and not fold_active:
 					_push[ta] = -1.0   # the tier-up push is part of this shot
@@ -887,7 +920,7 @@ func _update_solo(S: SimState) -> void:
 ## dropped. `slot` is whose close-up it is: the attacker for a signature, a finisher and an earned hit, the broken
 ## fighter for a crippling blow, the winner for the KO (the main view is on the loser then).
 func _panel_request(S: SimState, kind: String, slot: int) -> void:
-	if panel_mode == "off" or slot < 0 or slot > 1 or fold_active or solo_kind == "transform":
+	if panel_mode == "off" or slot < 0 or slot > 1 or fold_active or solo_kind == "transform" or intro_active:
 		return
 	var k: Dictionary = CamParams.PANEL_KINDS[kind]
 	if kind == "signature":
@@ -1147,17 +1180,164 @@ func _transform_beats(S: SimState) -> void:
 ## CHEST + (off + K vh sin(pitch)) / zoom units above his feet (Rendering's rule, docs/rendering/README.md). The anchor
 ## is fixed (0.74 vh), so a low zoom setting, which makes `zoom` small, is what pulls the angle back toward 0.
 func _break_pitch() -> float:
+	return _low_pitch(CamParams.BREAK_PITCH, 0.74)
+
+
+## The low angle `deg` (negative), limited so the camera stays above the ground at the fighter's feet when his chest is
+## at `anchor_y` of the screen height (the rule above).
+func _low_pitch(deg: float, anchor_y: float) -> float:
 	var z: float = maxf(_zo[solo_slot], 0.01)
-	var off: float = vh * (0.74 - 0.5)
+	var off: float = vh * (anchor_y - 0.5)
 	var lim: float = ((CamParams.BREAK_CAM_MIN_H - CamParams.CHEST) * z - off) / (CamParams.K_FACTOR * vh)
 	var total_min: float = rad_to_deg(asin(clampf(lim, -1.0, 1.0)))
-	return minf(0.0, maxf(CamParams.BREAK_PITCH, total_min - pitch_deg))
+	return minf(0.0, maxf(deg, total_min - pitch_deg))
+
+
+# ---------------------------------------------------------------------------------------------------- the opening
+
+## The sim's intro (docs/architecture/intro-phase.md) in the camera's shots: each fighter falls from the sky (the camera
+## falls with him), lands in a crater (a cut to a low, wide angle, a push and a shake), then the staredown (a two-shot
+## pushing in, two face cuts before the clock) and the clock (a 3-tick punch-in, then the ordinary framing). A press that
+## skips it ends the shot in a 0.08 s fade. Reduced motion: no fall and no faces, no pitch, shake or punch, and each cut
+## is a 0.3 s dissolve.
+func _intro_cut(S: SimState, slot: int) -> void:
+	_cut_now = true
+	intro_cuts += 1
+	if reduced_motion:
+		_cut_fade = CamParams.REDUCED_CUT_FADE
+	if slot >= 0:
+		_snap_focus(S, slot)
+		_zo[slot] = _own_zoom_target(S, slot)
+
+
+func _intro_fall(S: SimState, a: int, ground_y: float) -> void:
+	if a < 0 or a > 1:
+		return
+	intro_active = true
+	if reduced_motion:
+		# The camera does not fall with him: it waits, level and still, on the spot he will land on, and he drops into frame.
+		var f = S.fighters[a]
+		_ov_kind = "intro"
+		_ov_t = 0.0
+		_ov_dur = 5.0
+		_ov_slot = -1
+		_ov_pt = Vector3(f.x, ground_y + 45.0, float(f.z))
+		_ov_r0 = CamParams.INTRO_R_LAND_MIN
+		_ov_r1 = CamParams.INTRO_R_LAND_MIN
+		_intro_cut(S, -1)
+		return
+	_in_phase = "fall"
+	_in_slot = a
+	_begin_solo("intro", a, 5, 0.0, S, true)
+	_shot_pitch = 0.0
+	_intro_cut(S, a)
+
+
+func _intro_land(S: SimState, a: int, crater_r: float) -> void:
+	if a < 0 or a > 1:
+		return
+	intro_active = true
+	_in_phase = "land"
+	_in_slot = a
+	_in_crater_r = crater_r
+	if _ov_kind == "intro":
+		_ov_kind = ""
+	_begin_solo("intro", a, 5, 0.0, S, true)
+	_shot_pitch = 0.0
+	_zo[a] = _own_zoom_target(S, a)
+	_shot_pitch = 0.0 if reduced_motion else _low_pitch(CamParams.INTRO_LAND_PITCH, CamParams.INTRO_LAND_ANCHOR_Y)
+	_intro_cut(S, a)
+	if not reduced_motion:
+		_hit_t[a] = 0.0
+		_hit_amp[a] = CamParams.INTRO_LAND_PUSH
+		_hit_hold[a] = 0.1
+		_shk[a] = maxf(_shk[a], CamParams.INTRO_SHAKE)
+		_shk[1 - a] = maxf(_shk[1 - a], CamParams.INTRO_SHAKE * 0.5)
+
+
+func _intro_to_two_shot(S: SimState) -> void:
+	r_now = _metric(S)
+	_end_solo(S)
+	_shot_pitch = 0.0
+	_in_phase = "stare"
+	_snap_merged(S)
+	_intro_cut(S, -1)
+	_snap_cameras(S)
+
+
+func _intro_stare(S: SimState, dur_ticks: int) -> void:
+	intro_active = true
+	_in_stare_t = 0
+	_in_stare_dur = dur_ticks
+	_intro_to_two_shot(S)
+
+
+func _intro_clock(S: SimState, kind: String) -> void:
+	if not intro_active:
+		return
+	intro_active = false
+	var was_solo: bool = solo_kind == "intro"
+	if was_solo or kind == "skip" or _in_phase != "stare":
+		r_now = _metric(S)
+		_end_solo(S)
+		_shot_pitch = 0.0
+		_snap_merged(S)
+		_snap_cameras(S)
+		_cut_now = true
+		_cut_fade = CamParams.REDUCED_CUT_FADE if reduced_motion else CamParams.CUT_FADE
+	_in_phase = ""
+	if kind == "skip":
+		_in_stare_t = -1
+		_in_clock_t = -1.0
+		return
+	_in_clock_t = 0.0
+	if not reduced_motion:
+		_punch_amp = CamParams.INTRO_BELL
+		_punch_len = CamParams.INTRO_BELL_LEN
+		_live_punch_at = time
+
+
+## The two-shot's push, easing out after the clock.
+func _intro_mult() -> float:
+	if _in_stare_t < 0 or reduced_motion:
+		return 1.0
+	var p: float = smoothstep(0.0, 1.0, clampf(float(_in_stare_t) / maxf(float(_in_stare_dur), 1.0), 0.0, 1.0))
+	var out: float = 1.0 if _in_clock_t < 0.0 else 1.0 - smoothstep(0.0, CamParams.INTRO_EASE_OUT, _in_clock_t)
+	return 1.0 + CamParams.INTRO_STARE_PUSH * p * out
+
+
+func _update_intro(S: SimState) -> void:
+	if intro_active:
+		_in_t += 1
+	if _in_clock_t >= 0.0:
+		_in_clock_t += DT
+		if _in_clock_t > CamParams.INTRO_EASE_OUT:
+			_in_clock_t = -1.0
+			_in_stare_t = -1
+	if not intro_active or _in_stare_t < 0:
+		return
+	_in_stare_t += 1
+	if not CamParams.INTRO_FACES or reduced_motion:
+		return
+	var left: int = _in_stare_dur - _in_stare_t
+	if _in_phase == "stare" and left == CamParams.INTRO_FACE_LEAD:
+		_in_phase = "face"
+		_in_slot = 0
+		_begin_solo("intro", 0, 5, 0.0, S, true)
+		_shot_pitch = 0.0
+		_intro_cut(S, 0)
+	elif _in_phase == "face" and _in_slot == 0 and left == CamParams.INTRO_FACE_LEAD - CamParams.INTRO_FACE_TICKS:
+		_in_slot = 1
+		_begin_solo("intro", 1, 5, 0.0, S, true)
+		_intro_cut(S, 1)
+	elif _in_phase == "face" and _in_slot == 1 and left == CamParams.INTRO_FACE_LEAD - 2 * CamParams.INTRO_FACE_TICKS:
+		_intro_to_two_shot(S)
 
 
 func _punch_mult() -> float:
 	if _punch_t < 0.0:
 		return 1.0
-	return 1.0 + CamParams.LIVE_PUNCH * (1.0 - absf(2.0 * _punch_t / CamParams.LIVE_PUNCH_LEN - 1.0))
+	return 1.0 + _punch_amp * (1.0 - absf(2.0 * _punch_t / _punch_len - 1.0))
 
 
 func _wide_mult() -> float:
@@ -1174,7 +1354,7 @@ func _update_pushes() -> void:
 		_punch_t = 0.0
 	if _punch_t >= 0.0:
 		_punch_t += DT
-		if _punch_t > CamParams.LIVE_PUNCH_LEN:
+		if _punch_t > _punch_len:
 			_punch_t = -1.0
 	if _wide_t >= 0.0:
 		_wide_t += DT
@@ -1272,7 +1452,7 @@ func _merged_target(S: SimState) -> Vector3:
 	var my: float = clampf((A.y + B.y) * 0.5 + 40.0, CamParams.CAM_Y_MIN, SimConst.CEILING - CamParams.CAM_Y_TOP)
 	var ahead: float = minf(SimConst.HALF, absf(d) + maxf(0.0, _sep_rate) * CamParams.ZOOM_OUT_LOOKAHEAD)
 	var z: float = zoom_u(vw, vh, ahead, absf(A.y - B.y), maxf(A.tier, B.tier), _m(), true)
-	var mult: float = maxf(_push_mult(0), _push_mult(1))
+	var mult: float = maxf(_push_mult(0), _push_mult(1)) * _intro_mult()
 	if solo_kind == "ko":
 		pass
 	var pz: float = 1.0 / cos(deg_to_rad(_pitch_now))
@@ -1346,6 +1526,16 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 			"ko":
 				r = CamParams.R_KO * m
 				alt_f = 1.0
+			"intro":
+				alt_f = 1.0
+				match _in_phase:
+					"fall":
+						r = CamParams.INTRO_R_FALL * m
+					"face":
+						r = CamParams.INTRO_FACE_R * m
+					_:
+						var zf: float = CamParams.INTRO_LAND_FIT * vw / (2.0 * maxf(_in_crater_r, 60.0))
+						r = clampf(zf * CamParams.BODY_H / vh, CamParams.INTRO_R_LAND_MIN, CamParams.INTRO_R_LAND_MAX) * m
 			"wreck":
 				var wp: float = 1.0 if reduced_motion else clampf(solo_t / CamParams.WRECK_T, 0.0, 1.0)
 				r = lerpf(CamParams.R_WRECK_0, CamParams.R_WRECK, smoothstep(0.0, 1.0, wp)) * m
@@ -1355,7 +1545,7 @@ func _own_zoom_target(S: SimState, i: int) -> float:
 	if solo_kind == "launch" and solo_slot == i and solo_phase == "land":
 		z *= 1.0 + CamParams.LAND_PUSH * sin(PI * clampf(_land_t / 0.3, 0.0, 1.0))
 	var zmax: float = _zcap() * (1.0 + CamParams.TIER_PUSH)
-	if solo_kind == "transform" or solo_kind == "ko" or solo_kind == "finisher" or solo_kind == "wreck":
+	if solo_kind == "transform" or solo_kind == "ko" or solo_kind == "finisher" or solo_kind == "wreck" or solo_kind == "intro":
 		zmax = maxf(zmax, CamParams.R_CLOSE * m * vh / CamParams.BODY_H)   # a close-up may go past the cap
 	# A fighter in depth (Fighter.z, positive toward the camera) draws at s = d / (d + w) of his plane size, d = K / zoom.
 	# The zoom that gives the apparent height the plane zoom z would have is 1 / (1/z - w / K); where that cannot be
@@ -1395,6 +1585,14 @@ func _anchor(S: SimState, i: int) -> Vector2:
 		_launch_anchor_y += (0.62 - _launch_anchor_y) * (1.0 - exp(-DT / 0.25))
 		solo_pt.x = vw * _launch_anchor_x
 		solo_pt.y = vh * _launch_anchor_y
+	if solo_kind == "intro" and solo_slot == i:
+		match _in_phase:
+			"fall":
+				solo_pt = Vector2(vw * 0.5, vh * CamParams.INTRO_FALL_ANCHOR_Y)
+			"face":
+				solo_pt = Vector2(vw * (0.42 if S.fighters[i].face >= 0.0 else 0.58), vh * 0.66)
+			_:
+				solo_pt = Vector2(vw * 0.5, vh * (CamParams.INTRO_LAND_ANCHOR_Y if not reduced_motion else 0.62))
 	if solo_kind == "wreck" and solo_slot == i:
 		var ap: float = 1.0 if reduced_motion else smoothstep(0.0, 1.0, clampf(solo_t / CamParams.WRECK_T, 0.0, 1.0))
 		solo_pt = Vector2(vw * (0.5 - CamParams.WRECK_ANCHOR_X * float(wreck_dir) * ap), vh * 0.70)
@@ -1553,6 +1751,8 @@ func _update_cameras(S: SimState) -> void:
 			tau_z = CamParams.KO_DOLLY / 3.0
 		if solo_kind == "wreck" and solo_slot == i:
 			tau_z = 0.2 if reduced_motion else CamParams.WRECK_TAU
+		if solo_kind == "intro" and solo_slot == i:
+			tau_z = 0.12
 		if solo_kind == "transform" and solo_slot == i and _tf_phase != "":
 			tau_z = 0.12   # the beats are on a clock: the push has to land by the break
 		if stiff:
