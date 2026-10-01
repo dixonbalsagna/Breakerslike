@@ -176,10 +176,7 @@ One sim editor at a time. Mechanisms land behaviour-neutral, switched off by dat
 
 **World:** answered (section 11).
 
-**Camera**
-1. The deepest `z` at which a fighter stays readable, and whether the lens changes. This sets the band.
-2. What it reads each tick: I offer `z`, `zT`, `ex.z` and `launch_depth` for every launch (the end depth and the time to it).
-3. Framing two fighters in different streets, in one view and in split-screen.
+**Camera:** answered (section 13).
 
 **Rendering:** answered (section 12).
 
@@ -189,7 +186,7 @@ Also: Tools for the schemas of the new data files (in the same commit as each fi
 
 1. **The band.** Two streets and two block rows, 32 bh deep, with rows 0 and 3 as scenery. Camera may shrink it for readability.
 2. **A free fighter meets a footprint.** It is stopped, as in the prototype Orb liked: it slides along the wall or lands on the roof, and an attack ploughs through. The sim does not side-step it. Streets are kept clear, so in a city this happens only after a flight ends inside a block.
-3. **Terrain rows come after the switch-on** (T1 and T2 as their own track), so a playable depth build arrives sooner. *Reopened by the EP after Rendering's finding. My recommendation is the reverse, with a smaller terrain slice (section 12); the EP rules.*
+3. **Terrain rows land before the switch-on, as slice T** (revised after Rendering's finding; section 12). The order is I2c, L1 with D1 (World), L0 and L2 (Simulation), L3 and T (World), L4 (Encounter), L5.
 
 ## 10. Encounter's section (folded from `docs/director/fight-lanes-director.md`)
 
@@ -207,7 +204,7 @@ That file is the plan for L4 and L5 and holds the detail. What it decides, and w
 
 **The rush (my proposal for L3 and L4).** The director finds the crossings once, at the request, with World's swept test along the rush line, and schedules each hit as a beat at its crossing time. `SimFighter.stepRush` stays a tween with no collision test, so the plan and the outcome cannot differ. Going over a roof needs an arc on the rush: a `Rush.arc` field (core, hashed), which Combat's variety pass also asks for.
 
-**The budget does not fit its step cap.** I measured the predictor today on Orb's PC (400 flights, 190 steps each on average): 0.87 µs a step.
+**The budget did not fit its step cap** (Encounter has since taken the smaller cap: 1,100 steps, 8 flights, 8 aim solves, with early exits). I measured the predictor today on Orb's PC (400 flights, 190 steps each on average): 0.87 µs a step.
 - 3,000 steps is 2.6 ms today, not 1 ms.
 - A typical decision (4 to 6 flights) is 0.7 to 1.0 ms, not 0.3 ms.
 - With the depth waypoint, and the two-row ground after T, a step is about 1.3 to 1.5 µs: up to 4.5 ms for 3,000 steps.
@@ -270,4 +267,17 @@ Folded from `docs/rendering/fight-lanes-render.md`, which holds the detail (occl
 | Water between rows | Level by construction (above). |
 | 8 rows or 16 | 8. Rendering can draw 16; the sim's dig cost doubles with them. The count is data, so 16 rows of 150 can be tried if the camera is raised. |
 | Occlusion, depth aids, close-ups | No new sim state: Rendering reads `z`, the footprints, `ex.z`, the waypoint and the beam's `oz` and `zs`. The picks are Orb's and Camera's. |
+
+## 13. Camera's section (folded from `docs/camera/camera-v2.md`, section 6)
+
+| Ask | Camera's answer | Effect on this plan |
+| :--- | :--- | :--- |
+| The deepest readable depth | All of the band. The floor is 23 px at 720p. At -27 bh a fighter is 30 px at the fight zoom and 24 px at the wide shared zoom. The lens does not change for the side view. | The band stays as it is. |
+| What it reads | `z`, `zT` and `ex.z` each tick, and `launch_depth` for every launch (the end depth and the time to it). Otherwise only the events it already reads. | All four are in L0. They are plain state fields and one event; the camera writes nothing. |
+| Two fighters in different streets | Framed by their screen positions, with the zoom sized for the deeper fighter. In a split each pane frames its own fighter. | None. |
+| The cut-away | Rendering's porthole, with the radius from the fighter's apparent height. | No sim state. |
+
+**A correction to pass on.** Camera's table takes the band's back edge as -32 bh (2,400 units behind the plane). The band is 32 bh deep but starts at +5 bh, so its back edge is -27 bh (2,025 units). Camera's row for -27 bh is therefore the true worst case: 30 px at the fight zoom and 24 px at the wide zoom, both above the floor. Its option for Orb, "keep 32 bh or shrink to 27", is already answered by the band as planned, and the rule "size for the deeper fighter" is a safeguard, not a need.
+
+**Outside this plan.** Camera also asks the sim for a slow-motion scale in the match header, a recorded skip intent if Orb picks skippable cinematics, and an intro hold at tick 0. None of them concerns depth. Each needs its own brief once Orb has answered Camera's options. One constraint to state now: anything that changes sim time has to be a match setting in the replay header, the same for both players, and never a per-player preference.
 
