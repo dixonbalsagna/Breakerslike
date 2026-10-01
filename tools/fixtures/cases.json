@@ -5565,10 +5565,25 @@
       "mutate": [
         {
           "file": "data/anim/keysets.json",
-          "del": [
-            "/keysets/strike.jab/target",
-            "/keysets/strike.jab/limb"
-          ]
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
         }
       ],
       "expect": null
@@ -5580,7 +5595,9 @@
         {
           "file": "data/anim/profiles.json",
           "set": {
-            "/by_part/idle": "snappy"
+            "/by_part": {
+              "idle": "snappy"
+            }
           }
         }
       ],
@@ -5596,7 +5613,9 @@
         {
           "file": "data/anim/profiles.json",
           "set": {
-            "/by_part/heavy": "jerky"
+            "/by_part": {
+              "heavy": "jerky"
+            }
           }
         }
       ],
@@ -5612,13 +5631,83 @@
         {
           "file": "data/anim/profiles.json",
           "set": {
-            "/by_part/light": "Snappy"
+            "/by_part": {
+              "light": "Snappy"
+            }
           }
         }
       ],
       "expect": {
         "rule": "pattern",
         "pointer": "/by_part/light"
+      }
+    },
+    {
+      "id": "anim-keysets-target-limb-accepted",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "target": "head",
+              "limb": "hand_r",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "howto-action-digits-accepted",
+      "schema": "ui-howto.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/howto.json",
+          "set": {
+            "/pages/0/items/-": {
+              "action": "special1",
+              "col": 0,
+              "text": "Test"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "howto-action-digits-unknown",
+      "schema": "ui-howto.schema.json",
+      "mutate": [
+        {
+          "file": "ui/data/howto.json",
+          "set": {
+            "/pages/0/items/-": {
+              "action": "special9",
+              "col": 0,
+              "text": "Test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:howto-action",
+        "pointerEndsWith": "/action"
       }
     }
   ],
