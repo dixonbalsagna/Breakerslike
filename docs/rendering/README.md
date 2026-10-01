@@ -330,7 +330,8 @@ A block as it stands, and after a blow-out wave from between the fighters: ![win
 - **Web,** Chrome at a 4x CPU slowdown, with the windows in: 16.6 and 13.5 ms on HEAD, 16.0 and 15.8 with all three. Unthrottled: 4.56 and 4.70 against 4.68 and 4.13.
 - Nothing measurable in either. The runs differ from each other by more than the change.
 - **Web look,** Chrome 154 and Edge 154: posed damage, the sky at tier 4 and 3, and a city block with its windows whole and blown all draw with no console messages.
-- **Not measured:** a phone. The sky shader runs on every sky pixel, so that is where the clouds would cost, and it is why the reduced version drops them.
+- **The clouds at a phone's resolution** (2340x1080, the web bench, 300 frames, 2026-10-02). With software rendering (SwiftShader, where every pixel's shader work is CPU time): frame mean 317.7 ms with clouds, 318.4 and 317.0 ms without. On the GPU: p50 4.0 ms with, 4.2 and 4.8 without. The clouds are under about 0.3% of the frame's pixel work, which is below what these runs can resolve. So cost is no reason for the reduced version to drop them; it drops them today only because every effect has a reduced version.
+- **Not measured:** a real phone. The software floor counts pixel work but is not a phone's GPU.
 
 ## Craters, scorch and water
 
@@ -526,6 +527,21 @@ A scratch test drives real pad events for three devices through the full scene (
 One pad playing, the join prompt on the AI's side; two on the keyboard; the menu with two players: ![prompt](img/join-prompt.png) ![two players](img/join-keyboard-two.png) ![menu](img/join-menu.png)
 
 **Animation's quality and reduced motion.** Each frame main passes Animation UI's reduced motion (`RenderAnim.reduced_motion`) and a quality level: `RenderAnim.set_quality("low")` while VFX's quality is at its lowest, else `"high"`, set only when it changes. A tool that drives the scene itself (`manual`) and `--anim-quality=NAME` keep their own value. On the web the four levels were switched in a running match in Chrome 154 and Edge 154: each level's layers went off as `data/anim/quality.json` lists them, the fight ran on, and nothing was logged.
+
+**What the animation overhaul costs on the web** (Chrome 154, the web bench, 1366x768, 2,400 frames, 2026-10-02). The machine was busy with other sessions' runs, and the same build's frame time moved between 15 and 25 ms at a 4x CPU slowdown from run to run, so frame time cannot settle it. Each run also reports its own sections, and the view update and the per-tick effects step divided by the sim tick of the same run hold steady:
+
+| Build (runs) | View update / sim tick, no slowdown | at 4x | Effects step / sim tick, no slowdown | at 4x |
+| :--- | :--- | :--- | :--- | :--- |
+| Overhaul on, high (3) | 6.22, 5.99, 6.03 | 7.01, 7.03, 6.98 | 2.04, 1.94, 1.94 | 2.04, 2.06, 2.02 |
+| `--noragdoll` (3) | 5.98, 5.84, 5.82 | 6.59, 6.74, 6.77 | 1.80, 1.77, 1.72 | 1.76, 1.81, 1.83 |
+| medium (1) | 6.15 | 6.91 | 2.02 | 2.07 |
+| low (1) | 6.02 | 6.72 | 2.01 | 2.00 |
+| minimal (1) | 5.79 | 6.72 | 1.73 | 1.84 |
+
+- **The overhaul adds about 3 to 5% to the view update and about 13% to the per-tick effects step** (where the ragdoll is stepped).
+- **In milliseconds,** scaled to the quietest run (sim tick 0.785 ms at 4x, 0.175 ms without): about 0.43 ms a frame at a 4x slowdown, of a 15.1 ms frame, and about 0.07 ms without a slowdown.
+- **By level** (one run each, so within the spread above): low takes the view update close to the `--noragdoll` level and keeps the ragdoll's per-tick cost; minimal takes both back.
+- The runs were interleaved (on, off, off, on, on, off). Every run ended on the same gameplay hash.
 
 **Keys on the web.** The export's own key handler calls `preventDefault` on every key press and release while the canvas has the focus, and the page focuses the canvas at start. So a game key does not reach the browser (Firefox's Quick Find on `/`, the space bar's scroll). If the canvas loses the focus the game gets no keys at all and the browser gets them; a page-level handler in the web shell would close that, and the shell is Tools'. Firefox is not installed on this machine, so this is read from the export's code, not tested there.
 
