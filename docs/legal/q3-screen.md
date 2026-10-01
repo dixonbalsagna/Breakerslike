@@ -304,3 +304,15 @@ I rendered and looked at: Protagonist and Empress A, the others' B and C, the da
 - **Cyborg display cluster.** A lit lens over one eye with scan bars and a row of readout pips is a scanner device on the eye, which is the "scouter" idea the rules exclude. **Remove the scan bars and the pips from the eye.** Keep a plain lit rectangle. If a readout is wanted, put it on the jaw or temple plate, away from the eye.
 - **Peach.** Go paler. At 120 px the peach and the coral brow read as a red glowing eye on a metal half. Make the lit eye a pale cream-peach (high lightness, low colour), and make the brow dark steel or the same pale tone, never saturated coral. Check the 120 px greyscale view: it should read as light, not red.
 - **Small notes.** The swollen-eye bruise on the Protagonist's ruined stage shows a concentric ring like a target. Make it a plain swollen shape. The shortened diadem tabs do not read as horns.
+
+### Guard arc and the round 9 Cyborg A mask (2026-10-01)
+
+I looked at `docs/rendering/img/guard-sheet.png` and the round 9 `others-A.svg`.
+
+| Item | Verdict |
+|---|---|
+| Rendering's guard arc (thin arc, lane colour, faint fill, flash on a perfect block) | **GO** |
+| Round 9 Cyborg A mask (pale rectangle pair, stair of squares, brow bars) | **GO** |
+
+- **Guard arc.** A thin arc in front of the fighter in his own lane colour is a generic shield cue. It is not an energy dome or a franchise barrier effect. Keep it a thin arc, never closed into a full bubble around the body, and keep to no white, gold or red (as built). The red role markers above the heads are plain UI markers and are fine.
+- **Cyborg A.** A dark box face with pale rectangle eyes is a common screen-face robot look, and no single known robot face is copied. The off-set stair of squares at one eye keeps it from being a plain matched pair. Keep that asymmetry, and keep the flat mouth bar thin, so it does not read as a stock emoticon face.
