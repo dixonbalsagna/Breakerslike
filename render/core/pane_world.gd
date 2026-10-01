@@ -11,6 +11,8 @@ extends Node3D
 ## materials carry its camera (the floating origin, the curvature, the sky, the fore rule, the crowd's boost, the
 ## fighters' anchors), so a second pane costs nodes and draw submission, not memory or logic.
 
+const SHADOW_SHADER: Shader = preload("res://render/shaders/shadow.gdshader")
+
 var mats := RenderMats.new()
 var cam_rig := CameraRig.new()
 var env := WorldEnvironment.new()
@@ -20,6 +22,7 @@ var beams := BeamView.new()
 var particles := ParticleView.new()
 var vfx_layer := VfxLayer.new()    # VFX's drawing for this pane (render/vfx/); main sets its hub, which every pane shares
 var fighter_views: Array = []
+var shadows: Array = []            # per fighter: the ground shadow under him (render/shaders/shadow.gdshader)
 var source: PaneWorld = null       # a second pane: the first, whose world it draws
 var view_cam_x: float = 0.0        # this frame's camera's wrapped world x
 var _sky_mat: ShaderMaterial
@@ -55,6 +58,18 @@ func build(S: SimState) -> void:
 		if source != null and i < source.fighter_views.size():
 			v.flash_view.set_leader(source.fighter_views[i].flash_view)
 		fighter_views.append(v)
+		if i >= shadows.size():
+			# kept across matches (its material is tracked for the pane's bend once)
+			var sh := MeshInstance3D.new()
+			sh.name = "Shadow%d" % i
+			sh.mesh = _shadow_mesh()
+			var sm := ShaderMaterial.new()
+			sm.shader = SHADOW_SHADER
+			mats.track(sm)
+			sh.material_override = sm
+			sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			fighters_root.add_child(sh)
+			shadows.append(sh)
 	vfx_layer.build(S)
 
 
@@ -69,13 +84,59 @@ func render(host: SimHost, a: float, cam_x: float, cam: Vector3, jitter: Vector2
 	_view_cues(cam, vp)
 	planet.update(S, cam_x, host.impact.heat, host.impact.heat_changed)
 	var rects: Array = []
+	var holes: Array = []
 	for i in range(fighter_views.size()):
-		fighter_views[i].update(S, S.fighters[i], host.fighter_pose(i, a), SimWrap.sdx(cam_x, host.fighter_x(i, a)), cam.z)
-		rects.append(_screen_rect(fighter_views[i]))
+		var v: FighterView = fighter_views[i]
+		var pose: Vector3 = host.fighter_pose(i, a)
+		var wx: float = host.fighter_x(i, a)
+		var vx: float = SimWrap.sdx(cam_x, wx)
+		v.depth = host.fighter_z(i, a)
+		v.sag = mats.sag(vx, v.depth)
+		v.update(S, S.fighters[i], pose, vx, cam.z)
+		rects.append(_screen_rect(v))
+		holes.append(_hole(S, S.fighters[i], v, rects[i], cam_x))
+		_place_shadow(S, i, wx, vx, pose.y, v.depth)
 	planet.fade_front(S, cam_rig, cam_x, rects)
+	planet.set_holes(holes)
 	vfx_layer.update(host, a, cam_x, cam.z, vp.x)
 	beams.update(S, cam_x, cam.z)
 	particles.update(host.fxv, host.impact, cam_x, cam.z, cam_rig.half_width(vp.x, RenderLook.Z_PARTICLES))
+
+
+## The porthole that keeps a fighter in the building rows in view (building.gdshader): [his chest as drawn, the radius
+## in pixels (0 on the fighter plane, opening as he goes in), the view distance buildings are cut up to]. It stops
+## short of the front of the building he is aimed at, so that one stays whole and only its cut floors show him inside.
+func _hole(S: SimState, f, v: FighterView, rect: Rect2, cam_x: float) -> Array:
+	if v.depth > -1.0 or rect.size.y <= 0.0:
+		return [Vector3.ZERO, 0.0, 0.0]
+	var chest: Vector3 = v.global_position + Vector3(0.0, FighterView.HEIGHT * 0.5, 0.0)
+	var inv: Transform3D = cam_rig.global_transform.affine_inverse()
+	var near: float = -(inv * chest).z - RenderLook.HOLE_GAP
+	if int(f.aimB) >= 0 and int(f.aimB) < S.buildings.size():
+		var b = S.buildings[int(f.aimB)]
+		if b.d > 0.0:
+			var front := Vector3(SimWrap.sdx(cam_x, b.x), chest.y, b.z + b.d * 0.5)
+			near = minf(near, -(inv * front).z - RenderLook.HOLE_GAP)
+	var r: float = maxf(RenderLook.HOLE_PX, RenderLook.HOLE_BODY * rect.size.y) * clampf(-v.depth / RenderLook.HOLE_IN, 0.0, 1.0)
+	return [chest, r, near]
+
+
+static func _shadow_mesh() -> PlaneMesh:
+	var m := PlaneMesh.new()
+	m.size = Vector2.ONE
+	return m
+
+
+## A fighter's ground shadow: on the ground as drawn under him at his depth (or the water over it), fainter and wider
+## the higher he flies. It is what shows where he is over the ground when a launch carries him into the rows.
+func _place_shadow(S: SimState, i: int, wx: float, vx: float, y: float, z: float) -> void:
+	var sh: MeshInstance3D = shadows[i]
+	var g: float = maxf(planet.ground.ground_at(S, wx, z), WorldWater.surfaceAt(S, wx))
+	var up: float = clampf((y - g) / RenderLook.SHADOW_FADE_H, 0.0, 1.0)
+	sh.visible = y >= g - 1.0
+	sh.position = Vector3(vx, g + RenderLook.SHADOW_LIFT, z)
+	sh.scale = Vector3(RenderLook.SHADOW_W * (1.0 + 0.5 * up), 1.0, RenderLook.SHADOW_D * (1.0 + 0.5 * up))
+	(sh.material_override as ShaderMaterial).set_shader_parameter("strength", RenderLook.SHADOW_ALPHA * lerpf(1.0, 0.25, up))
 
 
 ## A fighter's rectangle on this pane's screen (feet to the top of the head, a body's width), a little grown.

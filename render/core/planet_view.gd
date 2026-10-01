@@ -19,7 +19,7 @@ extends Node3D
 const TERRAIN_SHADER: Shader = preload("res://render/shaders/terrain.gdshader")
 const WATER_SHADER: Shader = preload("res://render/shaders/water.gdshader")
 const CROWD_SHADER: Shader = preload("res://render/shaders/crowd.gdshader")
-const FRONT_SHADER: Shader = preload("res://render/shaders/front.gdshader")
+const BUILDING_SHADER: Shader = preload("res://render/shaders/building.gdshader")
 
 var ground := GroundField.new()
 var mats: RenderMats = RenderMats.new()   # this pane's material state (PaneWorld sets it)
@@ -37,14 +37,19 @@ var _bld0: MultiMesh                 # row 0, in front of the fighter plane: its
 var _roof0: MultiMesh
 var _row0 := PackedInt32Array()      # per building: its index in _bld0, or -1
 var _row0_b := PackedInt32Array()    # per row-0 index: the building
-var _front_mat: ShaderMaterial       # this pane's material for row 0 (its fade)
+var _front_mat: ShaderMaterial       # this pane's material for row 0 (its fade, by row-0 index)
+var _bld_mat: ShaderMaterial         # ... and for the other rows (never faded: a one-texel fade)
+var _front_fade: Array = []          # [Image, ImageTexture] behind the row-0 material's fade_tex
+var _cut: Array = []                 # [Image, ImageTexture, dirty]: each building's cut floors (building.gdshader), shared by panes
+var _cut0: Array = []                # ... and the row-0 buildings', by row-0 index
 var _fade := PackedFloat32Array()    # this pane's row-0 fade, per row-0 index (1 solid)
 var _fade_t: float = -1.0
+var _holes_on: bool = false          # a porthole is open in this pane's building materials
 var _foot: Array = []                # per building: the lowest and highest ground under its footprint (shared by panes)
 var _falls: Dictionary = {}          # building -> [sim time its sink starts, standing height]: implodes in progress
 var _fold: Array = []                # [cx, sim time]: a district of implodes folded into one event this tick
 var _copies: Array = []
-var _bld_seen: Array = []          # per building: [curH, alive, popAlive]
+var _bld_seen: Array = []          # per building: [curH, alive, popAlive, fmask]
 var _tree_seen: Array = []         # per tree: alive
 var _tree_z := PackedFloat64Array()
 var _crowd_first := PackedInt32Array()
@@ -98,12 +103,17 @@ func build(S: SimState) -> void:
 		_row0_b = source._row0_b
 		_foot = source._foot
 		_falls = source._falls
-	if _front_mat == null:
-		_front_mat = ShaderMaterial.new()
-		_front_mat.shader = FRONT_SHADER
-	_fade.resize(64)
+		_cut = source._cut
+		_cut0 = source._cut0
+	_fade.resize(maxi(1, _row0_b.size()))
 	_fade.fill(1.0)
-	_front_mat.set_shader_parameter("fade", _fade)
+	if _front_mat == null:
+		_front_mat = _building_mat()
+		_bld_mat = _building_mat()
+	_front_fade = _fade_texture(_front_mat, _fade)
+	_fade_texture(_bld_mat, PackedFloat32Array([1.0]))
+	_bld_mat.set_shader_parameter("cut_tex", _cut[1])
+	_front_mat.set_shader_parameter("cut_tex", _cut0[1])
 	for k in range(-RenderLook.PLANET_COPIES, RenderLook.PLANET_COPIES + 1):
 		var n := Node3D.new()
 		n.name = "Copy%d" % (k + RenderLook.PLANET_COPIES)
@@ -113,8 +123,8 @@ func build(S: SimState) -> void:
 			_mesh_child(n, "Terrain%d" % m, _terrain_meshes[m], _terrain_mat)
 			_mesh_child(n, "Water%d" % m, _water_meshes[m], _water_mat)
 		if absi(k) <= 1:
-			_mm_child(n, "Buildings", _bld)
-			_mm_child(n, "Roofs", _roof)
+			_mm_child(n, "Buildings", _bld, _bld_mat)
+			_mm_child(n, "Roofs", _roof, _bld_mat)
 			_mm_child(n, "Buildings0", _bld0, _front_mat)
 			_mm_child(n, "Roofs0", _roof0, _front_mat)
 			_mm_child(n, "Trees", _tree)
@@ -220,7 +230,7 @@ func refresh(S: SimState, force: bool) -> void:
 		var b = S.buildings[bi]
 		var h: float = WorldStructures.curH(b)
 		var seen: Array = _bld_seen[bi]
-		var moved: bool = dchg and (force or dirty[_col(b.x)] == 1)
+		var moved: bool = dchg and (force or _foot_dirty(dirty, b))
 		var pa: float = b.popAlive - float(flight.incoming[bi])
 		if b.alive != seen[1] and not b.alive and seen[1] == true:
 			# Levelled: an implode sinks from the height it last stood at (a folded one from its distance to the blast).
@@ -231,9 +241,9 @@ func refresh(S: SimState, force: bool) -> void:
 				_falls[bi] = [float(_fold[1]) + delay, seen[0]]
 		if moved or force:
 			_foot[bi] = _footing(S, b)
-		if moved or h != seen[0] or b.alive != seen[1] or pa != seen[2] or _falls.has(bi):
+		if moved or h != seen[0] or b.alive != seen[1] or pa != seen[2] or b.fmask != seen[3] or _falls.has(bi):
 			_set_building(S, bi, b, h, pa, moved or pa != seen[2])
-			_bld_seen[bi] = [h if b.alive else seen[0], b.alive, pa]
+			_bld_seen[bi] = [h if b.alive else seen[0], b.alive, pa, b.fmask]
 	for ti in range(S.trees.size()):
 		var t = S.trees[ti]
 		if (dchg and (force or dirty[_col(t.x)] == 1)) or t.alive != _tree_seen[ti]:
@@ -243,6 +253,10 @@ func refresh(S: SimState, force: bool) -> void:
 				_tree.set_instance_transform(ti, Transform3D(Basis.from_scale(Vector3(RenderLook.TREE_W, t.h, RenderLook.TREE_W)), Vector3(t.x, g + t.h * 0.5, _tree_z[ti])))
 			else:
 				_tree.set_instance_transform(ti, _hidden(t.x))
+	for ct in [_cut, _cut0]:
+		if ct[2]:
+			(ct[1] as ImageTexture).update(ct[0])
+			ct[2] = false
 	if dchg:
 		ground.dirty.fill(0)
 		ground.any_dirty = false
@@ -250,6 +264,17 @@ func refresh(S: SimState, force: bool) -> void:
 
 static func _col(x: float) -> int:
 	return int(floor(SimWrap.wrap(x) / SimConst.COL))
+
+
+## Whether the ground changed anywhere under a building's footprint (the columns WorldStructures.baseY reads).
+static func _foot_dirty(dirty: PackedByteArray, b) -> bool:
+	var nc: int = SimConst.NC
+	var c0: int = int(floor((b.x - b.w * 0.5) / SimConst.COL))
+	var c1: int = int(floor((b.x + b.w * 0.5) / SimConst.COL)) + 1
+	for c in range(c0, c1 + 1):
+		if dirty[posmod(c, nc)] == 1:
+			return true
+	return false
 
 
 ## pa: the people the building's crowd shows (popAlive, less the mock's own evacuations).
@@ -295,16 +320,23 @@ func _set_building(S: SimState, bi: int, b, h: float, pa: float, crowd: bool) ->
 	var mm: MultiMesh = _bld0 if _row0[bi] >= 0 else _bld
 	var roof: MultiMesh = _roof0 if _row0[bi] >= 0 else _roof
 	var k: int = _row0[bi] if _row0[bi] >= 0 else bi
+	var ct: Array = _cut0 if _row0[bi] >= 0 else _cut
+	var cut: Color = floor_cut(b) if b.alive else Color(0, 0, 0, 0)
+	if (ct[0] as Image).get_pixel(k, 0) != cut:
+		(ct[0] as Image).set_pixel(k, 0, cut)
+		ct[2] = true
+	# The sim's footing (World's T4): the highest ground under the footprint on the fighter plane. The fighter's brunt
+	# geometry uses it, so the drawn top is base + height; the box runs down to the lowest ground as drawn under it.
+	var base: float = WorldStructures.baseY(S, b)
 	if standing:
-		# On the highest ground under it, the footing extended down to the lowest; sinking into the ground as it implodes.
-		var top: float = foot.y + h - sink
-		var bottom: float = foot.x - sink
+		var top: float = base + h - sink
+		var bottom: float = minf(foot.x, base) - sink
 		mm.set_instance_transform(k, Transform3D(Basis.from_scale(Vector3(b.w, top - bottom, d)), Vector3(b.x, (top + bottom) * 0.5, zc)))
 		mm.set_instance_color(k, RenderLook.col(RenderLook.TOWER if tower else RenderLook.HOUSE))
 	else:
 		mm.set_instance_transform(k, _hidden(b.x))
 	if not tower and standing:
-		roof.set_instance_transform(k, Transform3D(Basis.from_scale(Vector3(b.w * 1.2, RenderLook.ROOF_H, d * 1.1)), Vector3(b.x, foot.y + h - sink + RenderLook.ROOF_H * 0.5, zc)))
+		roof.set_instance_transform(k, Transform3D(Basis.from_scale(Vector3(b.w * 1.2, RenderLook.ROOF_H, d * 1.1)), Vector3(b.x, base + h - sink + RenderLook.ROOF_H * 0.5, zc)))
 	else:
 		roof.set_instance_transform(k, _hidden(b.x))
 	if crowd:
@@ -325,6 +357,19 @@ func _set_building(S: SimState, bi: int, b, h: float, pa: float, crowd: bool) ->
 				_crowd.set_instance_transform(ci, Transform3D(Basis.from_scale(Vector3.ONE * RenderLook.CROWD_SCALE), Vector3(x, ground.ground_at(S, x, _crowd_z[ci]), _crowd_z[ci])))
 			elif gone_now.has(ci) or not flight.running(ci):
 				_crowd.set_instance_transform(ci, _hidden(x))
+
+
+## A skyscraper's cleared floors for building.gdshader (a texel of cut_tex): r and g the floors 0 to 47 (24 bits each),
+## b the floors 48 to 61 plus 16,384 times the top standing floor, a the height of a floor. All zero when there is no
+## tunnel: no floors (World's FLOORS_MIN), or every floor under the top one stands.
+static func floor_cut(b) -> Color:
+	if int(b.floors) < WorldBrunt.FLOORS_MIN:
+		return Color(0, 0, 0, 0)
+	var top: int = WorldBrunt.topFloor(b)
+	var m: int = int(b.fmask)
+	if top < 1 or (m & ((1 << (top + 1)) - 1)) == (1 << (top + 1)) - 1:
+		return Color(0, 0, 0, 0)
+	return Color(float(m & 0xFFFFFF), float((m >> 24) & 0xFFFFFF), float((m >> 48) & 0x3FFF) + 16384.0 * float(top), WorldBrunt.floorH(b))
 
 
 static func _hidden(x: float) -> Transform3D:
@@ -580,42 +625,101 @@ static func _multimesh(mesh: Mesh, count: int, y1: float, custom: bool = false, 
 ## Per frame, per pane: fade each row-0 building that covers a fighter on this pane's screen. cam: the pane's camera;
 ## cam_x its wrapped world x; rects: the fighters' screen rectangles.
 func fade_front(S: SimState, cam: Camera3D, cam_x: float, rects: Array) -> void:
-	var n: int = mini(_row0_b.size(), 64)
-	if n == 0:
-		return
 	var step: float = clampf(S.T - _fade_t, 0.0, 0.1) / RenderLook.FRONT_FADE_S if _fade_t >= 0.0 else 1.0
 	_fade_t = S.T
+	var d: float = step * (1.0 - RenderLook.FRONT_FADE)
 	var changed: bool = false
-	for j in range(n):
+	for j in range(_row0_b.size()):
 		var bi: int = _row0_b[j]
-		var b = S.buildings[bi]
-		var zd: Vector2 = _depth(b)
-		var foot: Vector2 = _foot[bi]
 		var cover: bool = false
-		if b.alive or _falls.has(bi):
-			var bx: float = SimWrap.sdx(cam_x, b.x)
-			var box := Rect2()
-			var first: bool = true
-			for cx in [bx - b.w * 0.5, bx + b.w * 0.5]:
-				for cy in [foot.x, foot.y + WorldStructures.curH(b)]:
-					for cz in [zd.x - zd.y * 0.5, zd.x + zd.y * 0.5]:
-						var p := Vector3(cx, cy, cz)
-						if cam.is_position_behind(p):
-							continue
-						var s: Vector2 = cam.unproject_position(p)
-						box = Rect2(s, Vector2.ZERO) if first else box.expand(s)
-						first = false
-			if not first:
-				for r in rects:
-					if box.intersects(r):
-						cover = true
-		var want: float = RenderLook.FRONT_FADE if cover else 1.0
-		var v: float = move_toward(_fade[j], want, step * (1.0 - RenderLook.FRONT_FADE))
+		if S.buildings[bi].alive or _falls.has(bi):
+			var box: Rect2 = _screen_box(S, bi, cam, cam_x)
+			for r in rects:
+				if box.size.x > 0.0 and box.intersects(r):
+					cover = true
+		var v: float = move_toward(_fade[j], RenderLook.FRONT_FADE if cover else 1.0, d)
 		if v != _fade[j]:
 			_fade[j] = v
 			changed = true
 	if changed:
-		_front_mat.set_shader_parameter("fade", _fade)
+		_set_fade(_front_fade, _fade)
+
+
+## Per frame, per pane: the portholes that keep a fighter in the building rows in view (building.gdshader). holes: per
+## fighter [his chest as drawn (camera-relative world space), the radius in pixels (0: none), the view distance up to
+## which buildings are cut].
+func set_holes(holes: Array) -> void:
+	var hv: Array = []
+	var hn := PackedFloat32Array()
+	var any: bool = false
+	for i in range(2):
+		if i < holes.size() and float(holes[i][1]) > 0.0:
+			var p: Vector3 = holes[i][0]
+			hv.append(Vector4(p.x, p.y, p.z, float(holes[i][1])))
+			hn.append(float(holes[i][2]))
+			any = true
+		else:
+			hv.append(Vector4.ZERO)
+			hn.append(0.0)
+	if not any and not _holes_on:
+		return
+	_holes_on = any
+	for m in [_bld_mat, _front_mat]:
+		m.set_shader_parameter("hole", hv)
+		m.set_shader_parameter("hole_near", hn)
+
+
+## A building's box on a camera's screen (empty if it is all behind the camera).
+func _screen_box(S: SimState, bi: int, cam: Camera3D, cam_x: float) -> Rect2:
+	var b = S.buildings[bi]
+	var zd: Vector2 = _depth(b)
+	var foot: Vector2 = _foot[bi]
+	var bx: float = SimWrap.sdx(cam_x, b.x)
+	var box := Rect2()
+	var first: bool = true
+	for cx in [bx - b.w * 0.5, bx + b.w * 0.5]:
+		for cy in [foot.x, foot.y + WorldStructures.curH(b)]:
+			for cz in [zd.x - zd.y * 0.5, zd.x + zd.y * 0.5]:
+				var p := Vector3(cx, cy, cz)
+				if cam.is_position_behind(p):
+					continue
+				var s: Vector2 = cam.unproject_position(p)
+				box = Rect2(s, Vector2.ZERO) if first else box.expand(s)
+				first = false
+	return box
+
+
+func _building_mat() -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = BUILDING_SHADER
+	m.set_shader_parameter("inside", RenderLook.col(RenderLook.BUILDING_INSIDE))
+	mats.track(m)
+	return m
+
+
+## A one-row float texture of floor cuts, one texel an instance: [image, texture, dirty].
+static func _cut_texture(n: int) -> Array:
+	var img := Image.create_empty(maxi(1, n), 1, false, Image.FORMAT_RGBAF)
+	img.fill(Color(0, 0, 0, 0))
+	return [img, ImageTexture.create_from_image(img), false]
+
+
+## A one-row R8 texture of a material's fades, one texel an instance: [image, texture].
+static func _fade_texture(m: ShaderMaterial, fades: PackedFloat32Array) -> Array:
+	var img := Image.create_empty(fades.size(), 1, false, Image.FORMAT_R8)
+	img.fill(Color(1, 0, 0))
+	var tex := ImageTexture.create_from_image(img)
+	m.set_shader_parameter("fade_tex", tex)
+	return [img, tex]
+
+
+static func _set_fade(ft: Array, fades: PackedFloat32Array) -> void:
+	var bytes := PackedByteArray()
+	bytes.resize(fades.size())
+	for i in range(fades.size()):
+		bytes[i] = int(round(clampf(fades[i], 0.0, 1.0) * 255.0))
+	(ft[0] as Image).set_data(fades.size(), 1, false, Image.FORMAT_R8, bytes)
+	(ft[1] as ImageTexture).update(ft[0])
 
 
 ## Buildings, roofs, trees and the crowd. Placement that the sim doesn't define (tree depth, where each civilian
@@ -648,6 +752,8 @@ func _make_props(S: SimState) -> void:
 	_bld = _multimesh(box, nb, 1400.0, false, false, z0, z1)
 	_roof = _multimesh(prism, nb, 1400.0, false, false, z0, z1)
 	_bld0 = _multimesh(box, maxi(1, _row0_b.size()), 1400.0, false, false, z0, z1)
+	_cut = _cut_texture(nb)
+	_cut0 = _cut_texture(maxi(1, _row0_b.size()))
 	_roof0 = _multimesh(prism, maxi(1, _row0_b.size()), 1400.0, false, false, z0, z1)
 	_tree = _multimesh(cone, S.trees.size(), 400.0)
 	_bld_seen.clear()
@@ -656,7 +762,7 @@ func _make_props(S: SimState) -> void:
 	_falls.clear()
 	_fold = []
 	for bi in range(nb):
-		_bld_seen.append([-1.0, false, -1.0])
+		_bld_seen.append([-1.0, false, -1.0, -1])
 		_roof.set_instance_color(bi, RenderLook.col(RenderLook.ROOF))
 		if _row0[bi] >= 0:
 			_bld.set_instance_transform(bi, _hidden(S.buildings[bi].x))

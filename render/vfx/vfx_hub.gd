@@ -219,7 +219,7 @@ func _on_building_hit(S: SimState, e, floored: Dictionary) -> void:
 	var sp: float = _real_speed(float(_g(e, "spd", 0.0)), dir.x, dir.y)
 	if sp <= 1.0:
 		sp = 4000.0
-	var g: float = WorldTerrain.groundY(S, b.x)
+	var g: float = WorldStructures.baseY(S, b)
 	var top: float = g + b.h
 	var sgn: float = 1.0 if dir.x >= 0.0 else -1.0
 	var yi: float = clampf(float(_g(e, "y", g + b.h * 0.4)), g + 40.0, top - 40.0)
@@ -247,7 +247,7 @@ func _on_floor_hit(S: SimState, e) -> void:
 	var b = S.buildings[bi]
 	var F: int = maxi(int(b.floors), 1)
 	var fh: float = b.h / float(F)
-	var g: float = WorldTerrain.groundY(S, b.x)
+	var g: float = WorldStructures.baseY(S, b)
 	var k: int = clampi(int(_g(e, "floor", 0)), 0, F - 1)
 	var span: int = maxi(int(_g(e, "n", 0)), WorldBrunt.HIT_FLOORS)
 	var y0: float = g + float(k) * fh
@@ -276,7 +276,7 @@ func _on_floors_fall(S: SimState, e) -> void:
 		return
 	var b = S.buildings[bi]
 	var F: int = maxi(int(b.floors), 1)
-	debris.pancake(S, float(_g(e, "x", b.x)), float(_g(e, "w", b.w)), b.h / float(F), WorldTerrain.groundY(S, b.x), int(_g(e, "from", 0)), int(_g(e, "to", 0)), front_z(b))
+	debris.pancake(S, float(_g(e, "x", b.x)), float(_g(e, "w", b.w)), b.h / float(F), WorldStructures.baseY(S, b), int(_g(e, "from", 0)), int(_g(e, "to", 0)), front_z(b))
 
 
 func _on_chain_link(S: SimState, e) -> void:

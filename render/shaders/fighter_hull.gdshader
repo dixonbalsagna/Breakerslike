@@ -3,7 +3,8 @@
 // follows the pose) by its reach in UV2.x times outline_px pixels, then takes the same projection as the body: the
 // hybrid projection (ortho.gdshaderinc) or, with ortho 0, the bent perspective. Under the hybrid projection a fighter
 // is orthographic at its anchor's scale, so one world-per-pixel factor holds for the whole fighter and the outline is
-// as thick at the screen's edge as at its centre, at any zoom. Back faces only: the body's front always wins the depth.
+// as thick at the screen's edge as at its centre, at any zoom. A fighter at depth (B3) draws smaller, and his outline
+// thins by the same perspective scale, down to min_px. Back faces only: the body's front always wins the depth.
 shader_type spatial;
 render_mode unshaded, cull_front;
 
@@ -11,6 +12,7 @@ render_mode unshaded, cull_front;
 #include "res://render/shaders/ortho.gdshaderinc"
 
 uniform float outline_px = 1.5;   // RenderLook.OUTLINE_PX
+uniform float min_px = 0.75;      // RenderLook.OUTLINE_MIN_PX
 uniform vec4 col : source_color = vec4(0.04, 0.05, 0.08, 1.0);
 uniform bool face_normals = false;   // an unbaked mesh: push along its faceted NORMAL (the outline check's failing control)
 
@@ -20,8 +22,11 @@ void vertex() {
 	// abs: drawing into a SubViewport (the panes), the Compatibility renderer flips the projection's y.
 	float world_per_px = 2.0 * w / (abs(PROJECTION_MATRIX[1][1]) * VIEWPORT_SIZE.y);
 	float s = max(length(MODEL_MATRIX[0].xyz), 1e-6);
+	// The fighter's size at his depth against his size on the fighter plane: w there over w here.
+	float w0 = (PROJECTION_MATRIX * (VIEW_MATRIX * vec4(anchor.xy, 0.0, 1.0))).w;
+	float px = ortho > 0.5 ? max(outline_px * clamp(w0 / max(w, 1e-6), 0.0, 2.0), min(outline_px, min_px)) : outline_px;
 	vec3 d = face_normals ? NORMAL : NORMAL * UV2.x;
-	vec3 v = VERTEX + d * (outline_px * world_per_px / s);
+	vec3 v = VERTEX + d * (px * world_per_px / s);
 	POSITION = ortho > 0.5 ? ortho_clip(MODEL_MATRIX, VIEW_MATRIX, PROJECTION_MATRIX, v) : bent_clip(MODEL_MATRIX, VIEW_MATRIX, PROJECTION_MATRIX, v);
 }
 

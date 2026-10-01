@@ -108,6 +108,14 @@ func track(m: ShaderMaterial) -> void:
 
 ## This pane's planet curvature for the frame (render/shaders/bend.gdshaderinc): bend and the camera's distance to the
 ## fighter plane, pushed to every bending material when they change.
+## How far the planet's bend lowers a point at camera-relative x and depth z this frame: the CPU twin of bent_world()
+## in render/shaders/bend.gdshaderinc, for what is placed rather than bent in a shader (a fighter at depth).
+func sag(x: float, z: float) -> float:
+	var back: float = maxf(-z, 0.0)
+	var k: float = clampf((back - 60.0) / 1200.0, 0.0, 1.0) * _dist / (_dist + back)
+	return _bend * x * x * k
+
+
 func set_bend(b: float, dist: float) -> void:
 	if absf(b - _bend) <= 1e-4 * absf(_bend) + 1e-12 and absf(dist - _dist) <= 1e-4 * _dist:
 		return

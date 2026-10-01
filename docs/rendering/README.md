@@ -151,7 +151,7 @@ Poses `coast` and `max` in `tools/shots.gd`. Both columns use the committed sim 
 
 World's B1 (`docs/world/buildings-in-depth.md`, in the sim since 3612ebc) gives every building a depth `z`, a depth size `d` and a row: 0 in front of the fighter plane (about +750 at world scale), then 1, 2 and 3 behind it (about -600, -1,650 and -2,800). The planet view draws them there:
 - **Rows.** Each box spans its own `z ± d/2` and stands on the lowest ground under its footprint (a 3×3 sample of the ground field). Its civilians stand on its street side, `CROWD_GAP` out from the face and up to `CROWD_DEEP` more: behind a row-0 building (towards the plane), in front of the others.
-- **Row 0 fades.** Row 0 stands between the camera and the fight. Its buildings are their own MultiMesh with `front.gdshader`. While one covers a fighter on a pane's screen it fades by dither to `FRONT_FADE` (0.35), easing over 0.15 s. The fade is per pane, from that pane's camera.
+- **Row 0 fades.** Row 0 stands between the camera and the fight. Its buildings are their own MultiMesh, with their own material of `building.gdshader` (B3 below). While one covers a fighter on a pane's screen it fades by dither to `FRONT_FADE` (0.35), easing over 0.15 s. The fade is per pane, from that pane's camera.
 - **The implode ripple.** A `building_fall` in mode `implode` carries a `delay` (the distance from the blast over World's `IMPLODE_SPEED`, at most 1 s). The building stands until then and sinks straight down into its footprint over `IMPLODE_S` (0.5 s, easing in). A fold (`b = -1`, the falls past World's event cap) gives its buildings the same delay by their own distance. VFX draws the dust skirt.
 - **Rubble heaps.** The sim adds each fallen building's heap to the ground on the fighter plane (`S.rubble`, part of `S.deform`). The ground field carries it in depth as a plateau from the plane back to the fallen building's far face (row 0: forward to its near face), easing off over `RUBBLE_EDGE` beyond (three more rows in the ground texture). The terrain shader tints it `RUBBLE` in a blocky noise, full at `RUBBLE_TINT_H` of heap. The plane's row still reads `S.deform` bit for bit (ground check).
 - **One collapse, not two.** While VFX's destruction is on (Shift+F6), the particles skip a fall's dust and debris, which VFX draws instead (`SimHost._without_fall_debris`, falls in a fold included). While its embers are on (Ctrl+F6), ImpactFx drops its scorch sparks and keeps the groove's glow.
@@ -163,6 +163,33 @@ A wider blast (`--x=2900 --r=4000`): the row-0 house on the right fades while it
 Both come from `godot --path . --script res://render/tools/b1_strip.gd -- --out=DIR` (`--x`, `--r` and `--row` pick the blast), which poses the fighters and steps time by hand, sending each tick's events to the planet view and VFX as in the game. VFX's destruction is off in both, so the dust is the particles'.
 
 Cost on desktop (seed 4, 4,800 frames, split on, against HEAD 254ec59): frame p50 1.58 → 1.72 ms, p99 3.65 → 4.0 ms. Turning VFX's cracks and embers on by default adds nothing measurable (1.73 against 1.73 ms p50).
+
+## The fighter in depth (B3)
+
+Orb's top visual complaint was that a launched fighter "bounces off an invisible wall" when the building it hit stands in the background. World's B2 (`docs/world/b2-plan.md` §10) gives a launched fighter a real depth: `Fighter.z` eases toward the aimed building as he flies, he punches through its floors (`Building.fmask`), may chain to the next, and `z` returns to 0 when the flight ends. B3 draws that. It is render only: it reads `Fighter.z`, the aim and the buildings' floors, and writes nothing.
+
+- **The fighter at the sim's depth.** `SimHost.fighter_z` interpolates `Fighter.z` like the pose, and `FighterView` sits at that depth. The hybrid projection already places a fighter's pivot with the world's perspective, so he shrinks by `s = d / (d + w)` and draws `s` of the way out from the camera's axis, as Camera's `depth-and-chains.md` §2 has it, and the buildings sort around him by true depth. The planet's bend lowers the world at depth, so the fighter's node is lowered by the same amount (`RenderMats.sag`, the CPU twin of `bent_world`).
+- **Outline.** `fighter_hull.gdshader` scales its width by the same `s`, down to `OUTLINE_MIN_PX` (0.75 px), so a small far fighter is not all outline.
+- **Ground shadow** (new, `shadow.gdshader`). A soft dark ellipse on the ground as drawn under each fighter at his depth, or on the water over it. It fades to a quarter and widens by half with height (`SHADOW_*`). It is what says where a fighter is over the ground once he leaves the plane. One draw call a fighter a pane.
+- **The porthole.** A fighter two rows back is behind towers. While he is in depth, whatever of a building lies nearer the camera than he does is cut away inside a dithered circle around him on that pane's screen (`building.gdshader`: `hole`, `hole_near`; `HOLE_*`). It opens over the first 250 units of depth and is at least 70 px in radius. It stops short of the front of the building he is aimed at, so that one stays whole.
+- **The tunnel, from `fmask`.** A cleared floor with a standing floor above it is a tunnel. Its front and side walls open and the back wall shows its dark inside, so the fighter is seen flying through the tower at his own depth, and the hole stays as the building's state says (a seek or a second pane draws the same). The masks go to the shader as a float texel a building (`cut_tex`). A MultiMesh's own custom data is half floats in the Compatibility renderer, too coarse for a 62-floor mask (the first try showed no cut for that reason). Only cut towers draw their insides: an uncut instance throws its back faces away in the vertex stage.
+- **Footings.** A building's top is `WorldStructures.baseY` (World's T4: the highest ground under the footprint on the plane) plus its height, the same numbers the brunt's geometry uses. The box still runs down to the lowest ground as drawn under it. VFX's building reads use `baseY` too.
+- **Row 0** keeps its per-building dither fade over a fighter on the plane, now in the same shader (`front.gdshader` is gone).
+
+A brunt launch through a row-1 tower and on to a second (seed 24 from tick 7178; the tool's stand-in camera follows the launched fighter): ![brunt](img/b3-brunt.gif)
+
+![strip](img/b3-strip.png)
+
+`godot --path . --script res://render/tools/b3_strip.gd -- --out=DIR [--seed=24 --tick=7178 --count=56 --every=3]` runs the AI match to that tick through the full scene and saves the frames, a strip and raw frames for `render/anim/tools/gif.mjs`. `--ref` draws the game's own camera.
+
+Another frame of it, with the tunnel: ![tunnel](img/b3-tunnel.png) And the back row (seed 4, tick 6948), where the porthole opens the towers in front of a fighter 2,640 units deep: ![porthole](img/b3-porthole.png)
+
+**Checks and cost.** determinism (and `--live`), pane, ground, flash, cue, the seam sweep at both sizes, the outline check and VFX's hash check pass. Desktop frame time (1280×720, seed 4, 4,800 frames, two runs each): p50 2.47 and 2.67 ms before, 2.51 and 2.64 ms after: nothing measurable.
+
+**Still open, for others (through the EP):**
+- **Camera:** the rig does not read `Fighter.z` yet, so in the game the launched fighter drifts toward the screen's centre and shrinks as he goes deep, and in the split the HUD anchors (`SplitFrame.hud_anchor`) stay on the plane position. `depth-and-chains.md` §5 covers it: the depth-aware focus and zoom, and `hud_anchor(slot, x, y, z)` (main will pass `host.fighter_z`).
+- **VFX:** the motion trail is laid on the plane, so its tip does not meet a fighter at depth. The trail history needs his `z`.
+- **Size.** In the back row (2,640 units deep) a fighter is about 20 px tall at best. Camera's note already says so; the fix is World's tuning or Camera's framing, not rendering.
 
 ## Craters, scorch and water
 

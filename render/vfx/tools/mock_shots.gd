@@ -157,7 +157,7 @@ func _burst(outcome: String, tag: String) -> void:
 	var S: SimState = _fresh()
 	var bi: int = _pick(S, 1)[0]
 	var b = S.buildings[bi]
-	var g: float = WorldTerrain.groundY(S, b.x)
+	var g: float = WorldStructures.baseY(S, b)
 	var y0: float = g + b.h * 0.42
 	var v: float = 9000.0
 	var x0: float = b.x - b.w * 0.5 - 4200.0

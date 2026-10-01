@@ -58,6 +58,8 @@ var streaks: Array = []
 var glows: Array = []          # every glow material, for the projection anchor
 var flash_view: FlashView      # head flashes (render/core/flash_view.gd)
 var anim_body: AnimBody        # the A1 mannequin (render/anim/), null with --noanim
+var depth: float = 0.0         # B3: the sim's depth of this fighter this frame (Fighter.z; the pane sets it before update)
+var sag: float = 0.0           # ... and how far the planet's bend lowers that spot (RenderMats.sag), as it does the world there
 var flashes_on: bool = true    # F7: the head flashes instead of the placeholder aura, streaks and charge orb
 var _badge_mat: ShaderMaterial
 var _faded: bool = false
@@ -265,7 +267,9 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 	var T: float = S.T
 	var dt: float = clampf(T - _last_t, 0.0, 0.1) if _last_t >= 0.0 else 0.0
 	_last_t = T
-	position = Vector3(vx, pose.y, 0.0)
+	# At the sim's depth: the hybrid projection places the pivot with the world's perspective, so the fighter shrinks and
+	# draws toward the camera's axis as he goes into the rows, and the buildings sort around him by true depth.
+	position = Vector3(vx, pose.y - sag, depth)
 	var stance: int = int(f.stance)
 	var sliding: bool = f.slide > 0.0
 	# Staging: ease the pose angle, turn through the camera when the facing flips, mirror at the front-on moment.
@@ -364,7 +368,7 @@ func update(S: SimState, f, pose: Vector3, vx: float, z: float) -> void:
 		g.set_shader_parameter("anchor", anchor)
 	_badge_mat.set_shader_parameter("anchor", anchor)
 	if flashes_on:
-		flash_view.step(T, f.hidden, to_local(head.global_position), m, anchor, WorldTerrain.groundY(S, f.x) - position.y)
+		flash_view.step(T, f.hidden, to_local(head.global_position), m, anchor, WorldTerrain.groundY(S, f.x) - pose.y)
 	else:
 		flash_view.visible = false
 

@@ -40,7 +40,7 @@ static func towers_near(S: SimState, x: float, span: float) -> Array:
 ## B2's building_hit for a launched fighter arriving at building bi travelling along (dx, dy) at speed sp.
 static func building_hit(S: SimState, bi: int, dx: float, dy: float, sp: float, link: int, n: int, outcome: String, victim: int) -> Ev:
 	var b = S.buildings[bi]
-	var g: float = WorldTerrain.groundY(S, b.x)
+	var g: float = WorldStructures.baseY(S, b)
 	var sgn: float = 1.0 if dx >= 0.0 else -1.0
 	return ev("building_hit", {
 		"b": bi, "x": b.x - sgn * b.w * 0.5, "y": g + b.h * 0.42, "z": b.z, "damage": sp * 1.8, "ratio": 1.4 if outcome == "collapse" else 0.7,
@@ -52,8 +52,8 @@ static func building_hit(S: SimState, bi: int, dx: float, dy: float, sp: float, 
 static func chain_link(S: SimState, from: int, to: int, sp: float, link: int) -> Ev:
 	var a = S.buildings[from]
 	var b = S.buildings[to]
-	var ga: float = WorldTerrain.groundY(S, a.x)
-	var gb: float = WorldTerrain.groundY(S, b.x)
+	var ga: float = WorldStructures.baseY(S, a)
+	var gb: float = WorldStructures.baseY(S, b)
 	var sgn: float = signf(SimWrap.sdx(a.x, b.x))
 	return ev("chain_link", {
 		"from": from, "to": to, "x": a.x + sgn * a.w * 0.5, "y": ga + a.h * 0.42, "z": a.z, "x1": b.x - sgn * b.w * 0.5, "y1": gb + b.h * 0.42, "z1": b.z, "owner": 1, "victim": 0,

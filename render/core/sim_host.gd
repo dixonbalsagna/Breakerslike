@@ -192,6 +192,13 @@ func fighter_x(i: int, a: float) -> float:
 	return _wlerp(_prev[i * 3], _cur[i * 3], a)
 
 
+## Interpolated depth of a fighter (World's B2: a brunt launch carries him into the building rows; 0 on the plane,
+## positive toward the camera).
+func fighter_z(i: int, a: float) -> float:
+	var o: int = S.fighters.size() * 3 + 3 + i
+	return lerpf(_prev[o], _cur[o], a) if o < _prev.size() and o < _cur.size() else 0.0
+
+
 func _capture() -> PackedFloat64Array:
 	var v := PackedFloat64Array()
 	for f in S.fighters:
@@ -201,6 +208,8 @@ func _capture() -> PackedFloat64Array:
 	v.append(cam.x)
 	v.append(cam.y)
 	v.append(cam.z)
+	for f in S.fighters:
+		v.append(f.z)
 	return v
 
 

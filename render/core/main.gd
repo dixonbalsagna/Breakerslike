@@ -362,7 +362,10 @@ func _hud_anchor(slot: int) -> Dictionary:
 	var p: Vector2 = cam_rig.unproject_position(torso)
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var vis: bool = Rect2(Vector2(-200.0, -200.0), vp + Vector2(400.0, 400.0)).has_point(p)
-	return {"pos": p, "h": FighterView.HEIGHT * cam_rig.zoom, "visible": vis}
+	# The drawn height: smaller than the plane's when a launch has carried him into the building rows (B3).
+	var feet: Vector3 = fighter_views[slot].global_position
+	var h: float = absf(cam_rig.unproject_position(feet + Vector3(0.0, FighterView.HEIGHT, 0.0)).y - cam_rig.unproject_position(feet).y)
+	return {"pos": p, "h": h, "visible": vis}
 
 
 ## UI's options for the split screen, applied each frame (UI has no change signal): solo against the AI, reduced
