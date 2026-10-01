@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-wave-cues",
+  "title": "anim.wave.cues/1",
+  "description": "data/anim/waves/<wave>.cues.json: which sequences play on each of Encounter's step 3 cue events: perfect_block, reversal, dodge_cancel, burst and burst_absorbed (a new kind needs a line here). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-reference: every sequence id is in the wave's sequences file (checked by tools/lib/xref-fight.js, wave-cue-seq).",
+  "type": "object",
+  "required": [
+    "schema",
+    "cues"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.wave.cues/1"
+    },
+    "cues": {
+      "type": "object",
+      "required": [
+        "perfect_block",
+        "reversal",
+        "dodge_cancel",
+        "burst",
+        "burst_absorbed"
+      ],
+      "properties": {
+        "perfect_block": {
+          "type": "object",
+          "required": [
+            "actor"
+          ],
+          "properties": {
+            "actor": {
+              "description": "The sequence the fighter who did it plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other": {
+              "description": "The sequence the other fighter plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_stunned": {
+              "description": "The other fighter's sequence when it was stunned by it.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_shoved": {
+              "description": "The other fighter's sequence when it was shoved.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "reversal": {
+          "type": "object",
+          "required": [
+            "actor"
+          ],
+          "properties": {
+            "actor": {
+              "description": "The sequence the fighter who did it plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other": {
+              "description": "The sequence the other fighter plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_stunned": {
+              "description": "The other fighter's sequence when it was stunned by it.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_shoved": {
+              "description": "The other fighter's sequence when it was shoved.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "dodge_cancel": {
+          "type": "object",
+          "required": [
+            "actor"
+          ],
+          "properties": {
+            "actor": {
+              "description": "The sequence the fighter who did it plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other": {
+              "description": "The sequence the other fighter plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_stunned": {
+              "description": "The other fighter's sequence when it was stunned by it.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_shoved": {
+              "description": "The other fighter's sequence when it was shoved.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "burst": {
+          "type": "object",
+          "required": [
+            "actor"
+          ],
+          "properties": {
+            "actor": {
+              "description": "The sequence the fighter who did it plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other": {
+              "description": "The sequence the other fighter plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_stunned": {
+              "description": "The other fighter's sequence when it was stunned by it.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_shoved": {
+              "description": "The other fighter's sequence when it was shoved.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "burst_absorbed": {
+          "type": "object",
+          "required": [
+            "actor"
+          ],
+          "properties": {
+            "actor": {
+              "description": "The sequence the fighter who did it plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other": {
+              "description": "The sequence the other fighter plays.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_stunned": {
+              "description": "The other fighter's sequence when it was stunned by it.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            },
+            "other_if_shoved": {
+              "description": "The other fighter's sequence when it was shoved.",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "description": "Event kind to the sequences it plays.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

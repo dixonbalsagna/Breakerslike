@@ -750,6 +750,56 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     });
   }
 
+  // ---- anim waves (parked): sequences, cues and their map agree ----
+  {
+    const waves3 = new Map();
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.(poses|sequences|cues|seqmap)\.json$/)) {
+      const m = /^data\/anim\/waves\/([^/.]+)\.(poses|sequences|cues|seqmap)\.json$/.exec(rel);
+      if (!m) continue;
+      if (!waves3.has(m[1])) waves3.set(m[1], {});
+      waves3.get(m[1])[m[2]] = rel;
+    }
+    for (const [wname, w] of waves3) {
+      const pd = w.poses ? get(w.poses) : undefined;
+      const poseSet = new Set(isObj(pd) && isObj(pd.poses) ? Object.keys(pd.poses) : []);
+      const sd = w.sequences ? get(w.sequences) : undefined;
+      const seqs = isObj(sd) && isObj(sd.sequences) ? sd.sequences : undefined;
+      if (seqs) for (const [name, s] of Object.entries(seqs)) {
+        if (name.startsWith('_') || !isObj(s)) continue;
+        const at = `/sequences/${esc(name)}`;
+        const phases = Array.isArray(s.phases) ? s.phases : [];
+        phases.forEach((p, i) => { if (isObj(p) && poseSet.size && typeof p.pose === 'string' && !poseSet.has(p.pose)) err(w.sequences, `${at}/phases/${i}/pose`, 'wave-pose', `pose "${p.pose}" is not in ${w.poses}`); });
+        const fixed = phases.reduce((a, p) => a + (isObj(p) && typeof p.ticks === 'number' ? p.ticks : 0), 0);
+        if (typeof s.dur === 'number' && fixed > s.dur) err(w.sequences, `${at}/dur`, 'wave-seq-dur', `the phases' fixed ticks add up to ${fixed}, more than dur ${s.dur}`);
+      }
+      const cd = w.cues ? get(w.cues) : undefined;
+      if (seqs && isObj(cd) && isObj(cd.cues)) for (const [kind, c] of Object.entries(cd.cues)) {
+        if (kind.startsWith('_') || !isObj(c)) continue;
+        for (const [slot, id] of Object.entries(c)) if (!slot.startsWith('_') && typeof id === 'string' && !(id in seqs)) err(w.cues, `/cues/${esc(kind)}/${esc(slot)}`, 'wave-cue-seq', `sequence "${id}" is not in ${w.sequences}`);
+      }
+      const md = w.seqmap ? get(w.seqmap) : undefined;
+      if (isObj(md)) {
+        if (md.wave !== undefined && md.wave !== wname) err(w.seqmap, '/wave', 'wave-seq-map', `wave "${md.wave}" does not match the file name "${wname}"`);
+        if (isObj(cd) && isObj(md.cues) && JSON.stringify(md.cues) !== JSON.stringify(cd.cues)) err(w.seqmap, '/cues', 'wave-seq-map', `the cues differ from ${w.cues}`);
+        const seen = new Map();
+        (Array.isArray(md.sequences) ? md.sequences : []).forEach((r, i) => {
+          if (!isObj(r)) return;
+          const at = `/sequences/${i}`;
+          if (typeof r.id === 'string') { if (seen.has(r.id)) err(w.seqmap, `${at}/id`, 'wave-seq-map', `sequence id "${r.id}" is already used at /sequences/${seen.get(r.id)}`); else seen.set(r.id, i); }
+          if (Array.isArray(r.poses) && poseSet.size) r.poses.forEach((p, j) => { if (typeof p === 'string' && !poseSet.has(p)) err(w.seqmap, `${at}/poses/${j}`, 'wave-pose', `pose "${p}" is not in ${w.poses}`); });
+          if (Array.isArray(r.poses) && Array.isArray(r.phases) && (r.poses.length !== r.phases.length || r.poses.some((p, j) => typeof p === 'string' && p.split('.').pop() !== r.phases[j]))) err(w.seqmap, `${at}/phases`, 'wave-seq-map', 'the phase names do not match the last part of each pose id');
+          if (!seqs) return;
+          const s = seqs[r.id];
+          if (!isObj(s)) { err(w.seqmap, `${at}/id`, 'wave-seq-map', `sequence "${r.id}" is not in ${w.sequences}`); return; }
+          if (typeof r.dur === 'number' && typeof s.dur === 'number' && r.dur !== s.dur) err(w.seqmap, `${at}/dur`, 'wave-seq-map', `dur ${r.dur} differs from the sequence's ${s.dur}`);
+          const sp = (Array.isArray(s.phases) ? s.phases : []).map((p) => (isObj(p) ? p.pose : undefined));
+          if (Array.isArray(r.poses) && (r.poses.length !== sp.length || r.poses.some((p, j) => p !== sp[j]))) err(w.seqmap, `${at}/poses`, 'wave-seq-map', `poses differ from the sequence's phases in ${w.sequences}`);
+        });
+        if (seqs) for (const name of Object.keys(seqs)) if (!name.startsWith('_') && !name.includes('~') && !(Array.isArray(md.sequences) && md.sequences.some((r) => isObj(r) && r.id === name))) err(w.sequences, `/sequences/${esc(name)}`, 'wave-seq-map', `sequence "${name}" has no row in ${w.seqmap}`, 'warning');
+      }
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

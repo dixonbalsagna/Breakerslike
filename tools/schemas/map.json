@@ -227,6 +227,18 @@
       "schema": "anim-wave-live.schema.json"
     },
     {
+      "match": "data/anim/waves/*.sequences.json",
+      "schema": "anim-wave-sequences.schema.json"
+    },
+    {
+      "match": "data/anim/waves/*.cues.json",
+      "schema": "anim-wave-cues.schema.json"
+    },
+    {
+      "match": "data/anim/waves/*.seqmap.json",
+      "schema": "anim-wave-seqmap.schema.json"
+    },
+    {
       "match": "data/anim/quality.json",
       "schema": "anim-quality.schema.json"
     },

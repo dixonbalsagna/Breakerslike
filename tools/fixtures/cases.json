@@ -22997,6 +22997,953 @@
         "rule": "type",
         "pointer": "/gated"
       }
+    },
+    {
+      "id": "anim-wave-sequences-live-valid",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/schema": "anim.wave.sequences/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-sequences-key-required",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "del": [
+            "/sequences"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-sequences-schema-version",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/schema": "anim.wave.sequences/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-unknown-key",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-sequence-valid",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-sequences-sequence-key-required",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/sequences/s3.test"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-sequence-unknown-key",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test",
+              "loop": true
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/sequences/s3.test/loop"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-dur-integer",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20.5,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/sequences/s3.test/dur"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-dur-positive",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 0,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/sequences/s3.test/dur"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-phases-empty",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/sequences/s3.test/phases"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-phase-ticks-and-weight",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3,
+                  "w": 2
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "not",
+        "pointer": "/sequences/s3.test/phases/0"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-phase-ticks-positive",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 0
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/sequences/s3.test/phases/0/ticks"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-phase-pose-shape",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "Break"
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/sequences/s3.test/phases/0/pose"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-phase-pose-not-in-wave",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.nowhere.break",
+                  "ticks": 3
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-pose",
+        "pointer": "/sequences/s3.test/phases/0/pose"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-phases-exceed-dur",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 5,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil",
+                  "ticks": 4
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-dur",
+        "pointer": "/sequences/s3.test/dur"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-phases-fill-dur-ok",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 7,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil",
+                  "ticks": 4
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-sequences-name-shape",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "Test Name"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/sequences/s3.test/name"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-alt-null-ok",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test",
+              "alt": null
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-sequences-wave-shape",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test",
+              "_wave": "three"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/sequences/s3.test/_wave"
+      }
+    },
+    {
+      "id": "anim-wave-sequences-variant-name-ok",
+      "schema": "anim-wave-sequences.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.sequences.json",
+          "set": {
+            "/sequences/s3.test~b": {
+              "dur": 20,
+              "phases": [
+                {
+                  "pose": "s3.reversal.break",
+                  "ticks": 3
+                },
+                {
+                  "pose": "s3.reversal.coil"
+                }
+              ],
+              "name": "test"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-cues-live-valid",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/schema": "anim.wave.cues/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-cues-key-required",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "del": [
+            "/cues"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-cues-schema-version",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/schema": "anim.wave.cues/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-wave-cues-kind-missing",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "del": [
+            "/cues/burst_absorbed"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/cues"
+      }
+    },
+    {
+      "id": "anim-wave-cues-kind-unknown",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/cues/taunt": {
+              "actor": "s3.burst"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/cues/taunt"
+      }
+    },
+    {
+      "id": "anim-wave-cues-actor-required",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "del": [
+            "/cues/burst/actor"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/cues/burst"
+      }
+    },
+    {
+      "id": "anim-wave-cues-slot-unknown",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/cues/burst/third": "s3.shoved"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/cues/burst/third"
+      }
+    },
+    {
+      "id": "anim-wave-cues-id-shape",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/cues/burst/actor": "S3 Burst"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/cues/burst/actor"
+      }
+    },
+    {
+      "id": "anim-wave-cues-actor-not-a-sequence",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/cues/burst/actor": "s3.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-cue-seq",
+        "pointer": "/cues/burst/actor"
+      }
+    },
+    {
+      "id": "anim-wave-cues-other-not-a-sequence",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/cues/burst/other_if_shoved": "s3.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-cue-seq",
+        "pointer": "/cues/burst/other_if_shoved"
+      }
+    },
+    {
+      "id": "anim-wave-cues-cues-differ-from-map",
+      "schema": "anim-wave-cues.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.cues.json",
+          "set": {
+            "/cues/dodge_cancel/other": "s3.shoved"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/cues",
+        "file": "data/anim/waves/step3.seqmap.json"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-live-valid",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/wave": "step3"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-seqmap-key-required",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "del": [
+            "/cues"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-kind-const",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/kind": "entries"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/kind"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-unknown-key",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-wave-shape",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/wave": "third"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/wave"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-wave-file-mismatch",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/wave": "step4"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/wave"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-key-required",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "del": [
+            "/sequences/0/dur"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/sequences/0"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-unknown-key",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/loop": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/sequences/0/loop"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-dur-integer",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/dur": 30.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/sequences/0/dur"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-alt-null-ok",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/alt": null
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-seqmap-row-id-not-a-sequence",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/id": "s3.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/sequences/0/id"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-dur-differs",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/dur": 99
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/sequences/0/dur"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-poses-differ",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/poses": [
+              "s3.perfect_block.set",
+              "s3.perfect_block.deflect",
+              "s3.perfect_block.ready"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/sequences/0/poses"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-phase-names-differ",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/phases": [
+              "deflect",
+              "ready",
+              "set"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/sequences/0/phases"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-pose-not-in-wave",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/0/poses/0": "s3.nowhere.deflect"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-pose",
+        "pointer": "/sequences/0/poses/0"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-row-id-duplicate",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/sequences/1/id": "s3.perfect_block"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/sequences/1/id"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-cues-differ",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "set": {
+            "/cues/burst/actor": "s3.shoved"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-seq-map",
+        "pointer": "/cues"
+      }
+    },
+    {
+      "id": "anim-wave-seqmap-cues-kind-missing",
+      "schema": "anim-wave-seqmap.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/step3.seqmap.json",
+          "del": [
+            "/cues/burst"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/cues"
+      }
     }
   ],
   "text": [
