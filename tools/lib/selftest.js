@@ -14,6 +14,8 @@ const { validate, checkSchema } = require('./schema');
 
 const fixtures = path.join(core.repoRoot, 'tools', 'fixtures');
 // Folders whose data does not exist yet: the self-test uses tools/fixtures/virtual in their place and ignores real files.
+// Schemas for generated files that carry no version field (the wave manifest is written by render/anim/tools/wave_gen.mjs).
+const NO_VERSION = new Set(['anim-wave-manifest.schema.json']);
 const VIRTUAL_DIRS = ['data/fighters/', 'data/fight/', 'data/input/', 'data/director/'];
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
@@ -166,7 +168,7 @@ function run() {
   for (const name of onDisk) {
     const s = core.loadSchema(name);
     guard('schemas', `${name} declares a version field`, () => {
-      const req = (s.required || []).includes('schema') || (s.required || []).includes('version') || s.type === 'array' || Array.isArray(s.oneOf);
+      const req = (s.required || []).includes('schema') || (s.required || []).includes('version') || s.type === 'array' || Array.isArray(s.oneOf) || NO_VERSION.has(name);
       record('schemas', `${name} requires a version field (schema or version), or is a bare array`, req);
     });
     record('schemas', `${name} states its additionalProperties policy`, typeof s.description === 'string' && /policy/i.test(s.description), 'add "Policy: ..." to the description');

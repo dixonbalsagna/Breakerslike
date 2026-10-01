@@ -571,6 +571,59 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     for (const k of have) if (!(k in shp.shapes)) err('data/anim/shapes.json', '/shapes', 'shapes-key', `ragdoll_motion.json has shape "${k}" but shapes.json has no idle and hit tuning for it`, 'warning');
   }
 
+  // ---- anim waves (parked): key sets, poses and the manifest agree with each other and with sockets.json ----
+  {
+    const sockWave = get('data/anim/sockets.json');
+    const regs = isObj(sockWave) && isObj(sockWave.regions) ? Object.keys(sockWave.regions).filter((k) => !k.startsWith('_')) : [];
+    const lims = isObj(sockWave) && isObj(sockWave.limbs) ? Object.keys(sockWave.limbs).filter((k) => !k.startsWith('_')) : [];
+    const waves = new Map();
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.(poses|keysets|manifest)\.json$/)) {
+      const m = /^data\/anim\/waves\/([^/.]+)\.(poses|keysets|manifest)\.json$/.exec(rel);
+      if (!m) continue;
+      if (!waves.has(m[1])) waves.set(m[1], {});
+      waves.get(m[1])[m[2]] = rel;
+    }
+    for (const [wname, w] of waves) {
+      const pd = w.poses ? get(w.poses) : undefined;
+      const poseSet = new Set(isObj(pd) && isObj(pd.poses) ? Object.keys(pd.poses) : []);
+      const kd = w.keysets ? get(w.keysets) : undefined;
+      const sets = isObj(kd) && isObj(kd.keysets) ? kd.keysets : {};
+      const side = (l) => l.replace(/_[lr]$/, '');
+      if (isObj(kd) && isObj(kd.keysets)) for (const [name, k] of Object.entries(kd.keysets)) {
+        if (name.startsWith('_') || !isObj(k)) continue;
+        const at = `/keysets/${esc(name)}`;
+        const roles = new Set();
+        (Array.isArray(k.keys) ? k.keys : []).forEach((key, i) => {
+          if (!isObj(key)) return;
+          if (poseSet.size && typeof key.pose === 'string' && !poseSet.has(key.pose)) err(w.keysets, `${at}/keys/${i}/pose`, 'wave-pose', `pose "${key.pose}" is not in ${w.poses}`);
+          if (roles.has(key.role)) err(w.keysets, `${at}/keys/${i}/role`, 'wave-pose', `role "${key.role}" appears twice in key set "${name}"`); else roles.add(key.role);
+        });
+        if (typeof k.target === 'string' && regs.length && !regs.includes(k.target)) err(w.keysets, `${at}/target`, 'anim-target', `target "${k.target}" is not a region in sockets.json (${regs.join(', ')})`);
+        for (const lk of ['limb', 'limb2']) if (typeof k[lk] === 'string' && lims.length && !lims.includes(side(k[lk]))) err(w.keysets, `${at}/${lk}`, 'anim-limb', `${lk} "${k[lk]}" is not a limb in sockets.json (${lims.join(', ')}, with a side suffix)`);
+      }
+      const md = w.manifest ? get(w.manifest) : undefined;
+      if (isObj(md) && Array.isArray(md.strikes)) {
+        const seen = new Map();
+        md.strikes.forEach((s, i) => {
+          if (!isObj(s)) return;
+          const at = `/strikes/${i}`;
+          if (typeof s.id === 'string') { if (seen.has(s.id)) err(w.manifest, `${at}/id`, 'wave-manifest', `strike id "${s.id}" is already used at /strikes/${seen.get(s.id)}`); else seen.set(s.id, i); }
+          if (md.wave !== undefined && md.wave !== wname) err(w.manifest, '/wave', 'wave-manifest', `wave "${md.wave}" does not match the file name "${wname}"`);
+          if (w.keysets && isObj(kd)) {
+            const k = sets[s.id];
+            if (!isObj(k)) err(w.manifest, `${at}/id`, 'wave-keyset', `strike "${s.id}" is not a key set in ${w.keysets}`);
+            else {
+              for (const f2 of ['limb', 'target', 'weight']) if (s[f2] !== undefined && k[f2] !== undefined && s[f2] !== k[f2]) err(w.manifest, `${at}/${f2}`, 'wave-manifest', `${f2} "${s[f2]}" differs from the key set\'s "${k[f2]}"`);
+              if ((s.limb2 || undefined) !== (k.limb2 || undefined)) err(w.manifest, `${at}/limb2`, 'wave-manifest', `limb2 "${s.limb2}" differs from the key set\'s "${k.limb2}"`);
+            }
+          }
+          if (poseSet.size && Array.isArray(s.poses)) s.poses.forEach((p, j) => { if (typeof p === 'string' && !poseSet.has(p)) err(w.manifest, `${at}/poses/${j}`, 'wave-pose', `pose "${p}" is not in ${w.poses}`); });
+          if (typeof s.offset === 'number' && typeof s.reach === 'number' && s.offset > s.reach) err(w.manifest, `${at}/offset`, 'wave-reach', `offset ${s.offset} is above reach ${s.reach}`);
+        });
+      }
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

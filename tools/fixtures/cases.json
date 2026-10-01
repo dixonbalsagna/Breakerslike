@@ -18605,6 +18605,1192 @@
         "rule": "oneOf",
         "pointer": "/poses/strike.knee.chamber"
       }
+    },
+    {
+      "id": "anim-poses-hand-claw-accepted",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/strike.knee.chamber/hands": {
+              "l": "claw",
+              "r": "fist"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-poses-hand-unknown",
+      "schema": "anim-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/poses.json",
+          "set": {
+            "/poses/strike.knee.chamber/hands": {
+              "l": "talon",
+              "r": "fist"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/poses/strike.knee.chamber"
+      }
+    },
+    {
+      "id": "anim-keysets-limb-shoulder-accepted",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "shoulder_r",
+              "target": "chest",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-keysets-limb2-accepted",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "hand_r",
+              "limb2": "hand_l",
+              "target": "chest",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-keysets-limb2-enum",
+      "schema": "anim-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/keysets.json",
+          "set": {
+            "/keysets/strike.test": {
+              "weight": "light",
+              "limb": "hand_r",
+              "limb2": "tail_l",
+              "target": "chest",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "strike.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "strike.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "strike.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/keysets/strike.test/limb2"
+      }
+    },
+    {
+      "id": "anim-wave-poses-live-valid",
+      "schema": "anim-wave-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.poses.json",
+          "set": {
+            "/schema": "anim.wave.poses/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-poses-key-required",
+      "schema": "anim-wave-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.poses.json",
+          "del": [
+            "/poses"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-poses-schema-version",
+      "schema": "anim-wave-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.poses.json",
+          "set": {
+            "/schema": "anim.wave.poses/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-wave-poses-unknown-key",
+      "schema": "anim-wave-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.poses.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-wave-poses-variant-name-ok",
+      "schema": "anim-wave-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.poses.json",
+          "set": {
+            "/poses/w1.jab.chamber/_legal": [
+              "not_at_hip"
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-poses-hip-twist-type",
+      "schema": "anim-wave-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.poses.json",
+          "set": {
+            "/poses/w1.jab.chamber/hip_twist": "left"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/poses/w1.jab.chamber"
+      }
+    },
+    {
+      "id": "anim-wave-poses-legal-type",
+      "schema": "anim-wave-poses.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.poses.json",
+          "set": {
+            "/poses/w1.jab.chamber/_legal": "no_leap"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "oneOf",
+        "pointer": "/poses/w1.jab.chamber"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-live-valid",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/schema": "anim.wave.keysets/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-keysets-key-required",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "del": [
+            "/keysets"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-keysets-schema-version",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/schema": "anim.wave.keysets/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-picks-not-here",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/picks": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/picks"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-keyset-valid",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-keysets-variant-name-ok",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test~b": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.uppercut~b.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.uppercut~b.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.uppercut~b.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-keysets-limb-enum",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "tail_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/keysets/w1.test/limb"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-limb2-enum",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ],
+              "limb2": "tail_l"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/keysets/w1.test/limb2"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-limb2-accepted",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ],
+              "limb2": "hand_l"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-keysets-step-max-positive",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ],
+              "step_max": 0
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/keysets/w1.test/step_max"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-combat-shape",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ],
+              "_combat": "Strike Jab"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/keysets/w1.test/_combat"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-variant-type",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ],
+              "_variant": 3
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/keysets/w1.test/_variant"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-weight-enum",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "medium",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/keysets/w1.test/weight"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-pose-not-in-wave",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.nowhere.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.nowhere.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.nowhere.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-pose",
+        "pointer": "/keysets/w1.test/keys/0/pose"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-role-twice",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "load",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-pose",
+        "pointer": "/keysets/w1.test/keys/1/role"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-target-not-a-region",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "hand_r",
+              "target": "tail",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:anim-target",
+        "pointer": "/keysets/w1.test/target"
+      }
+    },
+    {
+      "id": "anim-wave-keysets-limb-not-a-socket-limb",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.test": {
+              "limb": "foot_r",
+              "target": "head",
+              "weight": "light",
+              "keys": [
+                {
+                  "role": "load",
+                  "pose": "w1.jab.chamber"
+                },
+                {
+                  "role": "contact",
+                  "pose": "w1.jab.contact"
+                },
+                {
+                  "role": "follow",
+                  "pose": "w1.jab.follow"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-manifest-live-valid",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/wave": "wave1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-manifest-key-required",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "del": [
+            "/skipped"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-wave-manifest-unknown-key",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-wave-shape",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/wave": "one"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/wave"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-wave-file-mismatch",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/wave": "wave2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-manifest"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-key-required",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "del": [
+            "/strikes/0/reach"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/strikes/0"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-unknown-key",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/strikes/0/extra"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-band-enum",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/band": "far"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/strikes/0/band"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-ground-enum",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/ground": "air"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/strikes/0/ground"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-weight-enum",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/weight": "medium"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/strikes/0/weight"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-ticks-integer",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/ticks/load": 6.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/strikes/0/ticks/load"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-ticks-positive",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/ticks/follow": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/strikes/0/ticks/follow"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-uses-count",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/uses": {
+              "arms": 3
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/strikes/0/uses/arms"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-uses-unknown",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/uses": {
+              "tail": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/strikes/0/uses/tail"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-legal-duplicate",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/legal": [
+              "no_leap",
+              "no_leap"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/strikes/0/legal/1"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-legal-shape",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/legal": [
+              "No Leap"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/strikes/0/legal/0"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-poses-length",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/poses": [
+              "w1.jab.chamber"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/strikes/0/poses"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-poses-unknown",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/poses/1": "w1.nowhere.contact"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-pose",
+        "pointer": "/strikes/0/poses/1"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-combat-shape",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/combat": "jab"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/strikes/0/combat"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-limb2-null-ok",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/limb2": null
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-manifest-strike-limb2-differs",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/limb2": "hand_l"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-manifest",
+        "pointer": "/strikes/0/limb2"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-limb-differs",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/limb": "foot_r"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-manifest",
+        "pointer": "/strikes/0/limb"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-target-differs",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/target": "gut"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-manifest",
+        "pointer": "/strikes/0/target"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-id-not-a-keyset",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/id": "w1.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-keyset",
+        "pointer": "/strikes/0/id"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-offset-above-reach",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/offset": 90
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-reach",
+        "pointer": "/strikes/0/offset"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-id-duplicate",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/1/id": "w1.jab"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-manifest",
+        "pointer": "/strikes/1/id"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-strike-alt-null-ok",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/strikes/0/alt": null
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-manifest-skipped-type",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/skipped": "tail_jab"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/skipped"
+      }
     }
   ],
   "text": [

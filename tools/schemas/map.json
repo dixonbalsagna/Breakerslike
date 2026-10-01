@@ -203,6 +203,18 @@
       "schema": "anim-shapes.schema.json"
     },
     {
+      "match": "data/anim/waves/*.poses.json",
+      "schema": "anim-wave-poses.schema.json"
+    },
+    {
+      "match": "data/anim/waves/*.keysets.json",
+      "schema": "anim-wave-keysets.schema.json"
+    },
+    {
+      "match": "data/anim/waves/*.manifest.json",
+      "schema": "anim-wave-manifest.schema.json"
+    },
+    {
       "match": "data/anim/quality.json",
       "schema": "anim-quality.schema.json"
     },
