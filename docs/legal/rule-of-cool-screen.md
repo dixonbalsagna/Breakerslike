@@ -120,3 +120,32 @@ Screens `docs/combat/pending/wave2-entries.md`. From the written specs.
 3. No sphere or glow forming between the palms while they face each other, and no hands raised overhead holding a growing orb.
 4. No palms-forward double thrust from the chest as the release. The release is an ordinary beam from our own emitter, with no hand pose copied.
 5. The stacking rule still applies: no scream, no flame-shaped aura, no rubble ring while he channels.
+
+## Combat wave 3 (ping-pong rally) and wave 4 (grabs and throws) (2026-10-01)
+
+Screens `docs/combat/pending/wave3-pingpong.md` and `wave4-grabs.md`, from the written specs.
+
+| Item | Verdict |
+|---|---|
+| Wave 3: the intercept turn's Legal line | **Confirmed**, tightened |
+| Wave 3: the three knock patterns (rally, ladder, orbit) and the intercept | **GO** |
+| Wave 4: the eight Legal lines | **Confirmed** |
+| Wave 4: the 16 grab pieces | **GO** |
+
+**The rally against the franchise's back-and-forth blitz.** The franchise's version has the receiver vanish, reappear ahead of the victim, and hit them back, with shock rings and cuts to onlookers. Ours is a flight along a visible path, so the trope is clear. Keep it that way. Tighten the Legal line into four conditions:
+1. **He is drawn the whole way.** No vanish, no blink cut, no afterimage that hides him (as specced).
+2. **On screen at every contact:** the 6 anticipation ticks and at least 4 after, so a rally is never shock rings with no fighter in them (as specced).
+3. **No cut to a bystander who cannot follow** and no frozen shock-ring frame between knocks.
+4. **No shout and no named technique** on the rally or the round-the-world ender. The ender keeps our own name.
+
+The three patterns are our own geometry (a line, a climbing zigzag, a circle) and add nothing to the stacking rule. The intercept turn (a brake, side-on, weight on the back leg) is generic.
+
+**The grab Legal lines, confirmed:**
+- Grips on the collar or an arm, **never the throat, face or hair.** No lift by the throat or the face.
+- **No rival held up at arm's length** (the one-handed choke lift).
+- **Half a turn at most** on any throw, so no multi-turn giant swing.
+- **No press held overhead** and **no body broken across a knee or shoulder.** The second one is a famous scene, so it also stays out of key art and cinematics.
+- The rival is **let go in the air** on the back throw. No held drop.
+- The tail throw stays hair, cloth or metal, never furred or reptilian, and no more than half a turn.
+
+**The other grab pieces** (tackle, carry, dive catch and spike, reversal throw and sweep, hold) are ordinary wrestling and judo in our blade language. Nothing stacks toward a franchise signature. Keep the `hold`'s forearm across the collar and never the throat.
