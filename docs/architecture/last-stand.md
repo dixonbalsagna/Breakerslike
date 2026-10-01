@@ -47,3 +47,7 @@ Camera's cut, the face cut-in and the line read `last_stand_ready`. Narrative as
 1. **One free signature.** The window closes when he fires (section 2 as written).
 2. **The 20 s start when he is next free.** If he reaches the brink launched, stunned or locked in an exchange, the count waits: `lastStandLeft` is set at the brink, and it counts down only on live ticks in which he is free or charging.
 3. **Legal has cleared it** (`docs/legal/rule-of-cool-screen.md`, the follow-ups), so it lands when its turn comes: after World's ground-contact slices and the intro phase.
+
+## 6. Prepared (2026-10-02)
+
+Built and proven in a scratch copy of 3fca9ac and parked in `docs/architecture/pending/` (`laststand.py`; the README has the steps and the proofs). The AI takes its last stand at its first attack beat inside the window (Encounter's line to tune). In 100 matches: 1.45 last stands a match, 141 of 145 used, 3.38 signatures a match.

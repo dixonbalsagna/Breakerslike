@@ -62,3 +62,7 @@ Camera's shot is about 5 s. Its beats become the data's defaults:
 3. **Either player's press skips for both** (Camera's plan).
 
 Order: after World's ground-contact slices (G2 to G5), before the last stand.
+
+## 8. Prepared (2026-10-02)
+
+Built and proven in a scratch copy of 3fca9ac and parked in `docs/architecture/pending/` (`intro.gd`, `intro.py`; the README has the steps and the proofs). As built: the module is `SimIntro`; the setup's `"intro"` is `true` (play it) or `"skip"` (apply its effects at once, with no pre-clock tick: for batches and probes); a fighter in the intro has the state `intro`; the crater is World's `WorldCrater.dig` with the data's `craterEnergy` (1.5 for now: World's number to tune). The state at the clock is identical whether the intro ran, was skipped at any tick, or was applied by the setup's skip (a parity check).
