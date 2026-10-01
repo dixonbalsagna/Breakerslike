@@ -27,6 +27,8 @@ var acc: float = 0.0
 var ticks: int = 0
 var paused: bool = false
 var held: Dictionary = {}       # key code -> true while down
+var touch := SimTouch.new()     # touch Simple (sim/input/touch.gd): pointer events in, an intent per tick out
+var touch_on: bool = false      # touch is the last input device, so it drives the human fighter in slot 0
 var edges: Dictionary = {}      # key codes pressed since the last tick that consumed input
 var feed: Array = []            # recent SimState.FeedLine, oldest first
 var jitter := Vector2.ZERO      # screen shake offset in pixels for the current tick
@@ -55,6 +57,7 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	ticks = 0
 	feed.clear()
 	edges.clear()
+	touch.release_all()
 	jitter = Vector2.ZERO
 	_cur = _capture()
 	_prev = _cur
@@ -84,10 +87,14 @@ func tick(vw: float, vh: float) -> void:
 	for k in range(2):
 		var f = S.fighters[k]
 		if f.ai == null:
-			inputs[k] = SimKeyboard.intentFromKeys(SimKeyboard.KEYS[f.keys], held, edges)
+			if touch_on and k == 0:
+				inputs[k] = touch.build()
+			else:
+				inputs[k] = SimKeyboard.intentFromKeys(SimKeyboard.KEYS[f.keys], held, edges)
 	var t0: int = Time.get_ticks_usec()
 	if SimCore.step(S, inputs):
 		edges.clear()
+		touch.consumed()
 	var t1: int = Time.get_ticks_usec()
 	cam.camStep(S, S.dt, vw, vh)
 	var lines: Array = S.out.feed.duplicate()
@@ -156,6 +163,7 @@ func key_up(code: String) -> void:
 
 func release_all() -> void:
 	held.clear()
+	touch.release_all()
 
 
 func toggle_ai(idx: int) -> void:

@@ -1,0 +1,94 @@
+--- a/render/core/sim_host.gd	2026-09-30 20:36:34.659309500 -0700
++++ b/render/core/sim_host.gd	2026-09-30 20:36:34.694590700 -0700
+@@ -27,6 +27,8 @@
+ var ticks: int = 0
+ var paused: bool = false
+ var held: Dictionary = {}       # key code -> true while down
++var touch := SimTouch.new()     # touch Simple (sim/input/touch.gd): pointer events in, an intent per tick out
++var touch_on: bool = false      # touch is the last input device, so it drives the human fighter in slot 0
+ var edges: Dictionary = {}      # key codes pressed since the last tick that consumed input
+ var feed: Array = []            # recent SimState.FeedLine, oldest first
+ var jitter := Vector2.ZERO      # screen shake offset in pixels for the current tick
+@@ -55,6 +57,7 @@
+ 	ticks = 0
+ 	feed.clear()
+ 	edges.clear()
++	touch.release_all()
+ 	jitter = Vector2.ZERO
+ 	_cur = _capture()
+ 	_prev = _cur
+@@ -84,10 +87,14 @@
+ 	for k in range(2):
+ 		var f = S.fighters[k]
+ 		if f.ai == null:
+-			inputs[k] = SimKeyboard.intentFromKeys(SimKeyboard.KEYS[f.keys], held, edges)
++			if touch_on and k == 0:
++				inputs[k] = touch.build()
++			else:
++				inputs[k] = SimKeyboard.intentFromKeys(SimKeyboard.KEYS[f.keys], held, edges)
+ 	var t0: int = Time.get_ticks_usec()
+ 	if SimCore.step(S, inputs):
+ 		edges.clear()
++		touch.consumed()
+ 	var t1: int = Time.get_ticks_usec()
+ 	cam.camStep(S, S.dt, vw, vh)
+ 	var lines: Array = S.out.feed.duplicate()
+@@ -156,6 +163,7 @@
+ 
+ func release_all() -> void:
+ 	held.clear()
++	touch.release_all()
+ 
+ 
+ func toggle_ai(idx: int) -> void:
+--- a/render/core/main.gd	2026-09-30 20:36:34.661309800 -0700
++++ b/render/core/main.gd	2026-09-30 20:36:34.728262100 -0700
+@@ -122,6 +122,7 @@
+ 	ui_hud.feedback_closed.connect(_release_overlay)
+ 	ui_hud.feedback_fn = _feedback_context
+ 	_touch_last = bool(ui_hud.opts["touch_ui"])
++	host.touch_on = _touch_last
+ 	host.drained.connect(_on_drained)
+ 	audio = AudioVoices.new(host.audio_cues.bank)
+ 	add_child(audio)
+@@ -469,7 +470,40 @@
+ 		touch = false
+ 	if touch != _touch_last:
+ 		_touch_last = touch
++		host.touch_on = touch
++		host.touch.release_all()
+ 		ui_hud.set_option("touch_ui", touch)
++	if e is InputEventScreenTouch or e is InputEventScreenDrag:
++		_touch_event(e)
++
++
++## The touch controls' geometry for the current screen (sim/input/touch.gd): UI draws the buttons from the same
++## call, with the same inputs, so what is drawn is what is hit.
++func touch_layout() -> Dictionary:
++	var vp: Vector2 = get_viewport().get_visible_rect().size
++	var safe: Rect2 = ui_hud.layout.safe
++	var margin: float = maxf(maxf(vp.x - safe.end.x, vp.y - safe.end.y), 8.0 * ui_hud.dp)
++	return SimTouch.layout(vp.x, vp.y, ui_hud.dp, ui_hud.layout.portrait, bool(ui_hud.opts.get("left_handed", false)), margin)
++
++
++## A finger on the screen: UI's own targets (pause, feedback) and any open overlay come first; the rest is the
++## touch controls' (docs/controls/touch-bridge.md). A touch also takes the match over from the demo, like a key.
++func _touch_event(e: InputEvent) -> void:
++	var p: Vector2 = e.position
++	if e is InputEventScreenDrag:
++		host.touch.touch_move(e.index, p.x, p.y)
++		return
++	if not e.pressed:
++		host.touch.touch_up(e.index)
++		return
++	if ui_hud.is_howto_open() or ui_hud.is_feedback_open() or host.paused:
++		return
++	take_over()
++	var hud_target: String = String(ui_hud.touch_target_at(p).get("name", ""))
++	if hud_target == "pause" or hud_target == "feedback":
++		return
++	host.touch.dp = ui_hud.dp
++	host.touch.touch_down(e.index, p.x, p.y, host.touch.widget_at(p.x, p.y, touch_layout()))
+ 
+ 
+ func take_over() -> void:

@@ -1,6 +1,6 @@
 # Input scheme (ADR 0008): actions, layouts, tap and hold rules, keyboard, touch, intent
 
-Owner: Controls and Game Feel. Date: 2026-09-30. Status: **spec, no sim edits; work is on hold until Orb gives the go** (ADR 0008). Sources: `docs/decisions/0008-control-scheme.md`, `docs/ep/vision.md` questionnaire 8, the EP's brief. Data model and schemas for Tools are in [input-schema.md](input-schema.md).
+Owner: Controls and Game Feel. Date: 2026-09-30. Status: **spec, no sim edits; work is on hold until Orb gives the go** (ADR 0008). Sources: `docs/decisions/0008-control-scheme.md`, `docs/ep/vision.md` questionnaire 8, the EP's brief. Data model and schemas for Tools are in [input-schema.md](input-schema.md). The intent record is Simulation's (`docs/architecture/intent-v2.md`); section 8 follows it. The bridge that plays today (touch Simple on today's intents) is [touch-bridge.md](touch-bridge.md).
 
 **What this replaces.** The 1 to 4 stance keys, the stance cycle, the sticky light/heavy weight and the one-shot signature queue (`stage-c-spec.md`), the special/transform slot design of `input-map.md` §4, and Stage A's `SimIntent` additions. **What stands:** the hit-stop table and its integer-tick counter (`rulings.md` §5), the shake pass, the latency budget, stick quantisation, device layers and rebinding (`platform-plan.md`), diagonal normalisation (Stage B), the Encore as a transform-chord prompt.
 
@@ -17,10 +17,10 @@ A layout only decides **which control produces which action**. Every layout prod
 | `dodge` | press, plus a hold | the press is a dodge (cancels anything mid-exchange for an energy cost and a cooldown; a free lunge outside one); **holding** it is sprint, and sprinting away is Escape |
 | `burst` | tap | the 360-degree energy burst, everyone's answer to pressure, with an energy cost and a cooldown |
 | `power` | hold | channel or charge; **while it is held, a face button fires a special or the signature** |
-| `special1..3`, `special_auto` | press in the power layer | one of the 3 loadout specials; `special_auto` lets the director pick (Simple) |
+| `special1..3`, `special_auto` | press in the power layer | one of the 3 loadout specials; `special_auto` (record value 7) lets the director pick (Simple) |
 | `mode` | tap | toggles physical and energy, which swaps the piece family |
 | `context` | press | grab and throw, pick up, the fighter's civilian action, else provoke or feint (physical) or energy shove (energy). While guarding: reversal close up, deflect at range. While sprinting: tackle. In the air: dive grab |
-| `transform` | hold 0.5 s | when a transformation is available; also the Encore call (18 ticks) |
+| `transform` | chord held 0.5 s | the layout counts the hold; the sim ignores the result unless a transformation is available. Also the Encore call (18 ticks) |
 | `pause` | system | |
 
 **Held states drive the director.** Press (the default), Guard (`guard` held), Dodge (a `dodge` tap) and Escape (`dodge` held and moving away) are read **at exchange start**, as the stance was. Mid-exchange, only `dodge`, the perfect block, `burst` and the reversal act, at defined windows (Encounter and Combat define the windows; I define the input rules). This also removes the old exploit of flicking stance after the template is fixed.
@@ -98,6 +98,8 @@ That is six action buttons plus the stick. **Match setup flags for the slot** (r
 
 ## 3. Tap and hold rules (no latency on taps)
 
+**Rule 0: the layout layer resolves tap against hold and counts the hold ticks** (Simulation's ruling, `intent-v2.md`). The sim receives resolved requests and held states: `sprint` (held) once a dodge hold passes 12 ticks, `powerTap` when a power tap completes, `upgrade` when a hold or swipe upgrades a request, `transform` when the chord completes. The perfect block is judged in the sim from the rising edge of `guardPress`.
+
 **Rule 1: the tap fires on press.** Nothing is delayed to see whether a press becomes a hold. The hold adds behaviour on top.
 
 **Rule 2: an action is designed so its press is harmless to a hold-minded player.**
@@ -110,11 +112,11 @@ That is six action buttons plus the stick. **Match setup flags for the slot** (r
 | face button with `power` held | the special (or signature) fires now, and voids the pending burst-on-release | | |
 | `light`, `heavy`, `signature`, `context`, `mode` | the request or action, now | | |
 | `light` on touch or Simple (`X` / Attack) | the light request, now | upgrade to heavy (4.4) | |
-| `transform` chord | the first trigger's own press action as above | the count runs from when **both** are down and a transformation is **available**; at 30 ticks the transformation starts | releasing early resets the count to 0 |
+| `transform` chord | the first trigger's own press action as above, unless the second trigger follows within **6 ticks** (then it is the chord: no dodge, sprint, burst or charge fires, and releasing a chord never fires a tap, Game Design) | the layout counts 30 ticks with both down; at 30 it sends the `transform` edge, and the sim starts the transformation only if one is available (otherwise a short not-ready cue) | releasing early resets the count and costs nothing |
 
 **Why the burst has one exception.** A burst costs energy, and a player who wants to channel would burst every time if it always fired on press. The only moment the burst must not wait is under pressure, so there it fires on press; elsewhere a tap fires it on release (at most 11 ticks later, 183 ms, and inside a tap the player controls). If you can think of a rule that is simpler and keeps both, tell me. This is the one place the "no latency" rule cannot hold in full, and it is flagged to Orb.
 
-**Rule 3: the transform chord only counts when a transformation is available.** If not, `LT + RT` simply does both (sprint and channel). The prompt appears when it is available, with a hold ring; the count runs only then. Holding `power` and `dodge` is therefore never a hidden transform.
+**Rule 3: a chord is a chord.** Two triggers down within 6 ticks are read as the transform chord whether or not a form is ready (Game Design, `control-rules.md` §3): no dodge, sprint, burst or charge fires from them, and if nothing is available the chord does nothing but show a short not-ready cue. Two triggers pressed more than 6 ticks apart are two separate actions, so a sprint with a channel is still possible. The prompt and the hold ring appear when a transformation is available.
 
 **Rule 4: the power layer is entered when `power` goes down.** A face press at any time while it is down is a special, with no 12-tick wait. Releasing power ends the layer.
 
@@ -125,17 +127,17 @@ That is six action buttons plus the stick. **Match setup flags for the slot** (r
 - **Needs a fresh `guardPress`.** A hold that is already down is an ordinary block (the player can release and re-tap).
 - **Mistimed tap still blocks** (ADR): outside the window a press raises Guard as normal.
 - **Buffer:** a press up to **4 ticks before** the window opens counts.
-- **Anti-mash:** after any `guardPress`, another press within **18 ticks** cannot be perfect (it still blocks). Mashing beats nothing; a read beats a mash (Orb: experts beat mashers).
+- **Anti-mash:** a `guardPress` outside a window locks the perfect block out for **20 ticks**, and each further press restarts the lockout (Game Design). The guard itself still works. A mash beats nothing; a read beats a mash (Orb: experts beat mashers).
 - **No late grace**: a press after the contact tick cannot cancel it (contact frames are fixed). The tick of contact itself counts, because `control()` runs before the director in a tick.
 - Assist (accessibility): window ×2 and the anti-mash lockout off.
-- Reward, costs and cooldown: Game Design.
+- Reward and costs: Game Design (`control-rules.md` §1): no damage, +8 ki, the attacker staggers 24 ticks, a 30-tick riposte. Touch adds **+2 ticks** to the early tolerance (6).
 
 ### 4.2 Dodge
 - Accepted any time. Inside an exchange it must fall in the cancel window Encounter defines; buffer **4 ticks** before the window opens; no buffer after. Direction is the stick at the press tick.
-- Cost and cooldown: Game Design. During the cooldown a press is acknowledged with a "cooling" mark (no cost).
+- **There is no separate cancel input.** A dodge request inside an exchange is the cancel (Simulation). Cost 15 ki and a 3 s cooldown inside an exchange; a plain dodge or lunge outside one is free with a 0.5 s cooldown (Game Design). During a cooldown a press is acknowledged with a "cooling" mark and costs nothing.
 
 ### 4.3 Burst
-- Fires per section 3. Cooldown and cost: Game Design. Acknowledged on the same tick.
+- Fires per section 3 (the sim reads `powerPress` when threatened and `powerTap` otherwise, and keeps one flag so a tap does not fire a second burst). 30 ki, an 8 s cooldown, no fallback (Game Design). Acknowledged on the same tick.
 
 ### 4.4 Upgrade (hold adds on top of a tap)
 `light` is requested on press. If the same button is **still down at tick 12** (touch and Simple Attack), the host sends `upgrade = 1` (heavy). If the swipe-up gesture completes within 24 ticks, it sends `upgrade = 2` (signature). Rule: an `upgrade` **replaces the most recent attack request from this button if the director has not started it** (within 24 ticks); otherwise it is queued as a new request. The player never gets a light followed by an accidental heavy.
@@ -143,7 +145,7 @@ That is six action buttons plus the stick. **Match setup flags for the slot** (r
 ### 4.5 Attack requests and the combo queue
 - Every `light`, `heavy` or `signature` press is an exchange request; the director decides when it fires.
 - **Repeated presses queue a short combo:** the queue holds up to **3** requests (data), each expiring **36 ticks** (0.6 s) after the last press. Order is kept (light, light, heavy is a different phrase from light, heavy, heavy). Presses beyond 3 are ignored, with a "queue full" mark and no penalty: **mashing is fine for beginners**.
-- `signature` needs 45 ki when the director fires it; unfunded, it waits in the queue up to **600 ticks** and shows NEED 45 CHARGE (Game Design's confirmation, kept).
+- `signature` needs 45 ki. **An unfunded press is refused at once** with a clear NEED 45 CHARGE cue and does not wait (EP ruling: a beam firing seconds after the press would feel like the automatic beams Orb's friends objected to). A funded press fires at the next exchange boundary.
 - Clearing: KO, being launched by a decisive exchange, and a `guard`/`dodge` that cancels the exchange.
 - Heavy under 4 ki falls back to light for that request, with a mark.
 
@@ -198,7 +200,7 @@ Each player has **one hand**, so the sets are compact and the layout is a fallba
 | `transform` | `Space` + `Q` held 0.5 s | `Period` + `Slash` held 0.5 s |
 
 Notes:
-- The prototype's old P2 keys (arrows, Enter, `,` `.` `/` `;`, `7` to `0`) are retired. A legacy preset keeps arrows for move if wanted (data: `kb-p2-arrows`).
+- The prototype's old P2 keys (arrows, Enter, `,` `.` `/` `;`, `7` to `0`) are retired. There is no legacy arrows preset: players who want arrows rebind `move`.
 - `Space` is P1's alone. `Shift` is read as one key (Rendering's `RenderKeys` maps both Shift keys to "Shift"), so P2 must not use Shift.
 - `Quote`, `BracketLeft`, `Backquote`, `Minus` are no longer needed. `Comma`, `Period`, `Slash`, `Semicolon` are already named in `RenderKeys`.
 - A hot-seat ergonomics test is part of the plan (section 9).
@@ -221,7 +223,7 @@ Two thumbs only. Slot flags: `autoMode`, `autoBurst`, `specialPick: "auto"`.
 | **Transform** | appears where Context sits, with a hold ring, only when a transformation or the Encore is available | hold 30 ticks (Encore 18) |
 | Pause | top corner, UI's | tap |
 
-**Layout anchors (dp, from the bottom-right safe corner, mirrored for left-handed):** Attack (−100, −100); Guard (−204, −78); Power (−108, −204); Context and Transform (−204, −178). Minimum hit radius = visual radius + 8 dp, never under 48 dp. The finished layout is UI's, hit-tested with `UiHud.touch_target_at`; I own the gesture rules, UI owns the pixels.
+**The code for this table is `sim/input/touch.gd`** (`SimTouch.layout()` is the single source of the geometry below, and `touch-bridge.md` says what plays today). **Layout anchors (dp, from the bottom-right safe corner, mirrored for left-handed):** Attack (−100, −100); Guard (−204, −78); Power (−108, −204); Context and Transform (−204, −178). Minimum hit radius = visual radius + 8 dp, never under 48 dp. The finished layout is UI's, hit-tested with `UiHud.touch_target_at`; I own the gesture rules, UI owns the pixels.
 
 **Gesture arbitration:**
 - A touch belongs to the first control it lands on and never moves between controls.
@@ -251,44 +253,52 @@ Needs at least 5 simultaneous touches. A layout editor lets the player move and 
 
 Hints are contextual and fade after the player has done the action three times: "Hold to guard" the first time an attack comes in, "Tap just before the hit" at the perfect-block window, "Flick to dodge", "Hold to sprint", "Hold Power, then Attack for a special". A hint toggle (View on a pad, `H` on a keyboard, a corner button on touch) shows or hides them. Content is UI's and Narrative's; the triggers are the sim's availability and press-ack events.
 
-## 8. The intent record (for Simulation's `SimIntent`)
+## 8. The intent record (Simulation's, `intent-v2.md`)
 
-Replaces the eight-field intent. Types are `int`, `bool` or a float that is a multiple of 1/16, so every value is exact in float64. The host builds one per slot per tick; it is the only thing a replay or a network peer carries. The sim counts holds and decides tap versus hold from the `*Press` edges and the held bools.
+Simulation owns the record, its packing and its hashing; this section is what the **layout layer** sends and guarantees. It replaces the eight-field intent. The host builds one per slot per tick; it is the only thing a replay or a network peer carries.
 
-| Field | Type | Meaning |
+| Field | Type | Sent by the layout when |
 | :--- | :--- | :--- |
-| `mx`, `my` | float, −1 to 1, step 1/16 | move, after deadzone and gate (stick) or ±1 (keys) |
-| `light`, `heavy`, `sig` | bool edge | attack requests |
-| `upgrade` | int edge, 0, 1 or 2 | 1 = heavy, 2 = signature, replacing an unconsumed request (4.4) |
-| `guard` | bool held | |
-| `guardPress` | bool edge | a fresh press this tick (even if released again within the tick) |
-| `dodge` | bool held | |
-| `dodgePress` | bool edge | |
-| `power` | bool held | |
-| `powerPress` | bool edge | |
-| `special` | int edge, 0 to 4 | 1 to 3 = `special1..3`; 4 = `special_auto`; set only while `power` is held |
-| `context` | bool edge | |
-| `mode` | bool edge | |
-| `transform` | bool held | the layout's chord; the sim counts the 30 ticks, and only when available |
+| `mx`, `my` | int, -127 to 127 | every tick: the stick after dead zone and gate (or 0 / +-127 for keys); the sim uses `/ 127.0`. Quantisation is the layout's |
+| `guard` | bool, held | the guard control is down |
+| `guardPress` | bool, edge | a fresh press this tick (a release and re-press between two ticks gives one edge) |
+| `dodge` | bool, edge | a dodge press (a flick on touch). Inside an exchange it is the cancel |
+| `sprint` | bool, held | the dodge control has been held past 12 ticks (or the touch outer ring); away from the opponent the sim reads it as Escape |
+| `power` | bool, held | the power control is down |
+| `powerPress` | bool, edge | the power control went down this tick |
+| `powerTap` | bool, edge | a power tap completed: released before 12 ticks with no face button fired. Not sent when a special fired on that press |
+| `mode` | int, -1 auto, 0 physical, 1 energy | every tick; -1 in Simple. The toggle and its 12-tick cooldown are the layout's |
+| `light`, `heavy`, `sig` | bool, edge | an attack request (the layout, not the sim, decides tap against hold) |
+| `upgrade` | int, edge, 0 to 2 | 1 when a hold passes 12 ticks, 2 on a swipe up: the sim replaces this button's last request if the director has not started it |
+| `special` | int, edge, 0 to 7 | a face press while `power` is held: 1 to 3 for `special1..3`, 7 for the Simple layout's auto pick (4 is reserved) |
+| `context` | bool, edge | the context button |
+| `transform` | bool, edge | the chord (or the layout's single button) completed its 30 ticks; the sim ignores it unless a transformation is available |
 
-Removed: `stance`, `dash`, `charge`, and Stage A's `special`, `transform` (as slots), `stanceStep`.
+**Removed:** `stance`, `dash`, `charge`. **Not in the record** (the sim reads them from the fight): the direction class (toward, neutral, away), whether the fighter is threatened, whether a transformation is available, the perfect block's timing, and the burst itself.
 
-**Host guarantees:** a press shorter than one tick is stretched to one tick of held with its edge; a release then re-press between two ticks yields one edge. When `special` is set, `light`, `heavy`, `context` and `sig` for that same press are cleared (the layer swallows the face press). Layouts decide the mapping; the sim never sees a device.
+**Host guarantees (the layout layer's):**
+- A press shorter than a tick is stretched to one tick with its edge.
+- A release and re-press between two ticks gives one edge.
+- A face press inside the power layer sets `special` or `sig` and clears `light`, `heavy` and `context` for that press. `power` held plus a request on one tick fires on that tick; the sim adds no latency rule.
+- Presses made during a hit-stop freeze are kept by the layout and sent on the first live tick (`SimCore.step` consumes no input on a frozen tick).
+- No device reaches the sim; layouts can change without invalidating a replay.
 
-**Match-setup flags per slot (replay header):** `autoMode`, `autoBurst`, `specialPick` ("chosen" or "auto"), and the accessibility assists (`perfectBlockAssist`, `holdToggle` is host-only). They do not change what a press means; they let the sim act where the input is absent.
+**Slot flags** (the replay header's `setup`, per Simulation): `autoBurst`, `specialPick`, `perfectBlockAssist`. `autoMode` is not needed: `mode` -1 says it.
 
-**Suggested state derivation for Encounter (their call):** `guard` held at exchange start reads Guard (DEFENSIVE); `dodge` held 12 ticks or more while moving away reads Escape; a `dodge` tap in the last 12 ticks reads Dodge (EVASIVE); `power` held 12 ticks or more reads charging (exposed, CHARGE INTERRUPT); otherwise Press (AGGRESSIVE). Held states are sampled once, at exchange start.
+**Derived fighter state** (Encounter reads it, Controls writes the rules in `sim/input`, Simulation owns the fields): Guard when `guard` is held; Escape when `sprint` and moving away; Dodge for a `dodge` within its window; Press when an attack is pending or just pressed; neutral otherwise, which reads as AGGRESSIVE until Combat and Game Design give it a column. The director snapshots it at exchange start.
 
-**Hashes and replays:** the intent field lists in `hash.gd`, `golden_recipes.gd` and `replay.gd` change with this record, so the replay `v` bumps. That is a golden regeneration, and so a Stage C-type commit (section 9).
+**Packing and replays:** Simulation's `pack()` and `unpack()` carry the record in one integer; replay format v3 carries `intent: 2` in the header. Those lists and the golden regeneration are Simulation's slices I1 to I3.
 
 ## 9. Stage plan, revised
 
+Simulation's slices I1 (transport), I2 (consumption) and I3 (removal) carry the record (`intent-v2.md` §6); my stages sit alongside them.
+
 | Stage | Content | Behaviour | When |
 | :--- | :--- | :--- | :--- |
-| **A** | Integer hit-stop counter with the shadow float; **no** intent changes (the new fields are added when the director reads them) | bit-identical goldens (`stage-a-proof.md`, its A7 now covers the new fields as inert) | still after D1a; unchanged |
+| **A** | Integer hit-stop counter with the shadow float (`stage-a-proof.md`); no intent changes | bit-identical goldens | after D1a; unchanged |
 | **B** | Hit-stop values, shake decay hold, diagonal normalisation | goldens regenerate | unchanged |
-| **C** | `SimIntent` v2, the host's layout layer, tap/hold rules, perfect block, dodge cancel, burst, power layer, combo queue, context availability | behaviour change; needs Encounter's defender-state reads and Combat's energy-mode families | after Orb's go and Encounter's revision of the Q4 plan |
-| **Touch first** | Simple touch and the host's touch layer can land **before** Stage C by mapping to today's intent (attack = `light`/`heavy`/`sig`, guard and dodge as today's DEFENSIVE and EVASIVE held stances, power as charge) | a bridge so the friends' main blocker is fixed first | Orb's go; to be agreed with Encounter and Rendering |
+| **Touch bridge** | `SimTouch` on today's intents, host glue, UI buttons (`touch-bridge.md`) | no sim change | **now** (Orb's top priority) |
+| **C = I2 for `sim/input`** | The layout layer for pads and keyboards, `SimTouch`'s last step moved to the v2 record, the derived stance and the perfect-block edge in `sim/input`, the combo queue state | behaviour change; needs Encounter's reads and Combat's energy-mode families | after Orb's go and Encounter's revision |
 
 ## 10. Tests and risks
 
@@ -297,11 +307,11 @@ Removed: `stance`, `dash`, `charge`, and Stage A's `special`, `transform` (as sl
 | T1 | **Tap latency:** for dodge, guard, light, heavy, signature, context, mode, special, and burst under threat, the sim reaction is on the **same tick** as the press | 0 ticks |
 | T2 | **Burst exception:** unthreatened tap fires on release at most 11 ticks after the press; a hold of 12 ticks or more never bursts | scripted |
 | T3 | **Power layer:** a face press 1 tick after `powerPress` fires the special and no burst follows the release | scripted |
-| T4 | **Perfect block:** a fresh press on each tick of a 15-tick wind-up | perfect only in the last 8 (10 for heavy); the press at tick 6 is blocked normally; a second press within 18 ticks never perfect |
-| T5 | **Mash resistance:** a bot pressing guard every 4 ticks | perfect rate at most one per 18 ticks; a rhythm bot beats it |
+| T4 | **Perfect block:** a fresh press on each tick of a 15-tick wind-up | perfect only in the last 8 (10 for heavy); the press at tick 6 is blocked normally; a press within 20 ticks of an unmatched press never perfect |
+| T5 | **Mash resistance:** a bot pressing guard every 4 ticks | perfect blocks at most 2 per 100 melee exchanges (Game Design's band); a rhythm bot beats it |
 | T6 | **Upgrade:** a light, then `upgrade 1` at tick 12 with the request unconsumed | one heavy request, no light; if the light was consumed, light then heavy |
 | T7 | **Combo queue:** 6 presses in 20 ticks | 3 queued, 3 ignored, order kept, no penalty |
-| T8 | **Transform chord:** `dodge` and `power` held 40 ticks with no transformation available | sprint and channel, no transform; available: transform at 30 ticks; release at 29 resets |
+| T8 | **Transform chord:** `dodge` and `power` pressed within 6 ticks and held 40 ticks, nothing available | no dodge, sprint, burst or charge, and a not-ready cue; available: the `transform` edge at 30 ticks and the transformation; release at 29 resets; the same two controls pressed 8 ticks apart |
 | T9 | **Held state sampling:** change guard to dodge after the exchange starts | the running exchange keeps its read; only `dodge`/burst act in their windows |
 | T10 | **Device parity:** the same scripted fight through keyboard, Arena, Brawler and touch Simple events | identical `SimIntent` streams for equivalent actions |
 | T11 | **Touch arbitration:** swipe at 47 px and 49 px; a swipe slower than 24 ticks; flick at 3, 4 and 5 ticks; palm touch at 6 dp from an edge | as specified |
@@ -320,10 +330,10 @@ Removed: `stance`, `dash`, `charge`, and Stage A's `special`, `transform` (as sl
 ## 11. Needs
 
 - **Orb (through the EP):** the burst exception (section 3); whether a two-hand shared keyboard layout is worth designing; handedness defaults; the go.
-- **Game Design:** costs and cooldowns for dodge, burst, perfect block reward and cancel; whether a lunge outside an exchange is free; what `special_auto` picks.
+- **Game Design:** settled in `control-rules.md` (costs, cooldowns, the perfect-block reward, the free lunge); open: what the Simple layout's `special` 7 picks.
 - **Encounter:** defender states read at exchange start, the dodge cancel window, the burst window, the combo queue consumption, the context priorities; the AI's use of the new inputs.
 - **Combat:** energy-mode piece families, the context actions, wind-up tells that match the 15/20-tick lengths, availability kinds.
-- **Simulation:** `SimIntent` v2 (section 8), hash and replay lists, the `press_ack` and `availability` events.
+- **Simulation:** the record and its packing (`intent-v2.md`), hash and replay lists, the `press_ack` and `availability` events.
 - **UI:** the mode chip, the context icon and hold rings, the touch layout in section 6 (replacing the stance ring), glyph updates (stance glyphs retire), the hints.
 - **Rendering:** the host layout layer, the touch layer, `RenderKeys` unchanged for the new keys.
 - **Tools:** the schemas in `input-schema.md`.

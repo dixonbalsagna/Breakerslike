@@ -122,6 +122,7 @@ func _ready() -> void:
 	ui_hud.feedback_closed.connect(_release_overlay)
 	ui_hud.feedback_fn = _feedback_context
 	_touch_last = bool(ui_hud.opts["touch_ui"])
+	host.touch_on = _touch_last
 	host.drained.connect(_on_drained)
 	audio = AudioVoices.new(host.audio_cues.bank)
 	add_child(audio)
@@ -469,7 +470,40 @@ func _input(e: InputEvent) -> void:
 		touch = false
 	if touch != _touch_last:
 		_touch_last = touch
+		host.touch_on = touch
+		host.touch.release_all()
 		ui_hud.set_option("touch_ui", touch)
+	if e is InputEventScreenTouch or e is InputEventScreenDrag:
+		_touch_event(e)
+
+
+## The touch controls' geometry for the current screen (sim/input/touch.gd): UI draws the buttons from the same
+## call, with the same inputs, so what is drawn is what is hit.
+func touch_layout() -> Dictionary:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var safe: Rect2 = ui_hud.layout.safe
+	var margin: float = maxf(maxf(vp.x - safe.end.x, vp.y - safe.end.y), 8.0 * ui_hud.dp)
+	return SimTouch.layout(vp.x, vp.y, ui_hud.dp, ui_hud.layout.portrait, bool(ui_hud.opts.get("left_handed", false)), margin)
+
+
+## A finger on the screen: UI's own targets (pause, feedback) and any open overlay come first; the rest is the
+## touch controls' (docs/controls/touch-bridge.md). A touch also takes the match over from the demo, like a key.
+func _touch_event(e: InputEvent) -> void:
+	var p: Vector2 = e.position
+	if e is InputEventScreenDrag:
+		host.touch.touch_move(e.index, p.x, p.y)
+		return
+	if not e.pressed:
+		host.touch.touch_up(e.index)
+		return
+	if ui_hud.is_howto_open() or ui_hud.is_feedback_open() or host.paused:
+		return
+	take_over()
+	var hud_target: String = String(ui_hud.touch_target_at(p).get("name", ""))
+	if hud_target == "pause" or hud_target == "feedback":
+		return
+	host.touch.dp = ui_hud.dp
+	host.touch.touch_down(e.index, p.x, p.y, host.touch.widget_at(p.x, p.y, touch_layout()))
 
 
 func take_over() -> void:

@@ -41,7 +41,7 @@ A control id names one physical control, never an action.
     { "id": "special1",    "kind": "layer", "layer": "power", "fields": ["special"], "value": 1 },
     { "id": "special2",    "kind": "layer", "layer": "power", "fields": ["special"], "value": 2 },
     { "id": "special3",    "kind": "layer", "layer": "power", "fields": ["special"], "value": 3 },
-    { "id": "special_auto","kind": "layer", "layer": "power", "fields": ["special"], "value": 4 },
+    { "id": "special_auto","kind": "layer", "layer": "power", "fields": ["special"], "value": 7 },
     { "id": "context",     "kind": "press", "fields": ["context"] },
     { "id": "mode",        "kind": "press", "fields": ["mode"] },
     { "id": "transform",   "kind": "chord", "fields": ["transform"] },
@@ -76,7 +76,7 @@ A control id names one physical control, never an action.
           "kind": { "enum": ["axis", "press", "hold", "layer", "chord", "gesture", "system"] },
           "fields": { "type": "array", "items": { "enum": ["mx","my","light","heavy","sig","upgrade","guard","guardPress","dodge","dodgePress","power","powerPress","special","context","mode","transform"] }, "uniqueItems": true },
           "layer": { "enum": ["power"] },
-          "value": { "type": "integer", "minimum": 1, "maximum": 4 }
+          "value": { "type": "integer", "minimum": 1, "maximum": 7 }
         },
         "additionalProperties": false, "patternProperties": { "^_": {} }
       }
@@ -241,7 +241,7 @@ A preset is a list of bindings. A binding is `{controls: [...], action, layer?}`
 }
 ```
 
-One more preset, `kb-p2-arrows` (the legacy arrow keys for `move` with the other `kb-shared-p2` keys), is mechanical and omitted here. Left-handed touch is a setting that mirrors the anchors, not a preset.
+There are **eight presets** and all are shown above (`arena`, `brawler`, `simple-pad`, `kb-solo`, `kb-shared-p1`, `kb-shared-p2`, `touch-simple`, `touch-full`). The legacy arrows preset is dropped: players who want arrows rebind `move`. Left-handed touch is a setting that mirrors the anchors, not a preset. `touch-simple` is the default touch preset (Tools' call, confirmed).
 
 ### Schema (summary)
 
@@ -321,12 +321,12 @@ All values are **whole ticks at 60 per second** unless noted. It carries over `f
 {
   "schema": 1,
   "ticksPerSecond": 60,
-  "tapHold": { "holdStart": 12, "transformConfirm": 30, "encoreConfirm": 18, "encoreOffer": 180 },
+  "tapHold": { "holdStart": 12, "chordWindow": 6, "transformConfirm": 30, "encoreConfirm": 18, "encoreOffer": 180 },
   "perfectBlock": { "lightWindow": 8, "heavyWindow": 10, "buffer": 4, "touchBufferBonus": 2,
-                    "antiMashLockout": 18, "assistFactor": 2 },
+                    "antiMashLockout": 20, "assistFactor": 2 },
   "dodge": { "buffer": 4 },
   "attackQueue": { "max": 3, "expiry": 36, "upgradeWindow": 24, "heavyKi": 4,
-                   "signatureKi": 45, "signatureUnfundedExpiry": 600 },
+                   "signatureKi": 45 },
   "mode": { "toggleCooldown": 12 },
   "touch": { "flickToDodgeTicks": 4, "flickThreshold": 0.7, "outerRingScale": 1.3, "outerRingHold": 6,
              "fullDeflectionSprint": 30, "swipeUpPx": 48, "swipeUpTicks": 24, "edgeIgnoreDp": 8 },
@@ -337,7 +337,7 @@ All values are **whole ticks at 60 per second** unless noted. It carries over `f
 }
 ```
 
-Cross-reference rules: `timing-order` (`triggerOff < triggerOn`), `timing-perfect` (`lightWindow <= 15` and `heavyWindow <= 20`, the authored tells), `timing-hold` (`encoreConfirm <= transformConfirm < encoreOffer`), `timing-queue` (`signatureUnfundedExpiry >= 180`), `timing-hitstop-order` (as `feel-schema.md`, a warning). The schema is the obvious object-of-integers form with the key set above required; I will send the full JSON when Tools wants it, in the same style as section 3.
+Cross-reference rules: `timing-order` (`triggerOff < triggerOn`), `timing-perfect` (`lightWindow <= 15` and `heavyWindow <= 20`, the authored tells), `timing-hold` (`encoreConfirm <= transformConfirm < encoreOffer`), `timing-hitstop-order` (as `feel-schema.md`, a warning). The schema is the obvious object-of-integers form with the key set above required; I will send the full JSON when Tools wants it, in the same style as section 3.
 
 Costs, cooldowns and the perfect-block reward are **not** here: they belong to Game Design's economy data.
 
@@ -364,3 +364,83 @@ Costs, cooldowns and the perfect-block reward are **not** here: they belong to G
 
 - **valid:** the full `layouts.json` above; `timing.json` above; `actions.json` above.
 - **invalid, one each:** an unknown action id; a pad control in a keyboard preset; a missing `guard`; the same control bound to two actions on one layer; a `power` layer without `power`; a `pair` that does not point back; a preset binding `kb:KeyP`; a `kb` move binding without an `axis`; two defaults for one device; `triggerOff` above `triggerOn`; an underscore key (must be accepted).
+
+## 8. Changes since Tools adopted these schemas (2026-10-01)
+
+For Tools to apply to `tools/schemas/` when the files appear; none of the three data files exists yet.
+
+| Where | Change | Why |
+| :--- | :--- | :--- |
+| `actions.json` | `special_auto` has `value` 7 (the schema's `value` maximum is 7) | Simulation's record: `special` 0 to 7, 4 reserved, 7 the Simple auto pick |
+| `timing.json` `perfectBlock.antiMashLockout` | 20 (was 18) | Game Design's `control-rules.md` |
+| `timing.json` `attackQueue` | remove `signatureUnfundedExpiry`; the xref `timing-queue` goes | An unfunded signature is refused at once (EP ruling) |
+| `timing.json` `tapHold` | add `chordWindow` (6) | Game Design: two triggers within 6 ticks are the chord |
+| presets | eight, not nine; no `kb-p2-arrows` | dropped |
+| `layouts.json` | `touch-simple` is the default touch preset; `pause` is required for pad and touch only | Tools' calls, confirmed |
+| Simple presets | `upgrade_heavy` and `upgrade_sig` gestures count as binding `heavy` and `signature` | Tools' call, confirmed |
+
+## 9. The user file's schema (`user://input.json`)
+
+Not in the repo (it is the player's), but validated on load and by a fixture; `tools/schemas/input-user.schema.json` is proposed. Policy: closed except underscore keys; an unknown preset or action is dropped with a warning, never fatal, so an old file survives an update.
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/input-user",
+  "title": "input user settings (schema 1)",
+  "type": "object",
+  "required": ["schema", "slots"],
+  "properties": {
+    "schema": { "const": 1 },
+    "slots": {
+      "type": "array", "minItems": 1, "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["device", "preset"],
+        "properties": {
+          "device": { "enum": ["pad", "kb", "touch"] },
+          "preset": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "overrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["controls", "action"],
+              "properties": {
+                "controls": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^(kb|pad|touch):[A-Za-z0-9_]+$" } },
+                "action": { "type": "string" },
+                "layer": { "enum": ["power"] }
+              },
+              "additionalProperties": false
+            }
+          },
+          "deadzone": { "type": "number", "minimum": 0, "maximum": 0.45 },
+          "toggles": {
+            "type": "object",
+            "properties": { "dodge": { "type": "boolean" }, "guard": { "type": "boolean" }, "power": { "type": "boolean" } },
+            "additionalProperties": false
+          },
+          "assist": {
+            "type": "object",
+            "properties": { "perfectBlock": { "type": "boolean" } },
+            "additionalProperties": false
+          },
+          "touch": {
+            "type": "object",
+            "properties": {
+              "leftHanded": { "type": "boolean" },
+              "sprintStyle": { "enum": ["outer_ring", "full_deflection"] }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false, "patternProperties": { "^_": {} }
+      }
+    }
+  },
+  "additionalProperties": false, "patternProperties": { "^_": {} }
+}
+```
+
+Cross-reference rules on load (warnings, not errors): `user-preset` (the preset id exists in `layouts.json` for the slot's device), `user-override-action` (the action exists), `user-override-conflict` (an override control is not already bound to another action in the same layer; the settings screen offers a swap), `user-required` (every required action still has a control; the loader restores the preset's binding if a required action is left empty).
+
+Fixtures: the sample in section 6 (valid); an unknown device; a slot count of 3; a deadzone of 0.9; an override without `controls`; an underscore key (accepted).
