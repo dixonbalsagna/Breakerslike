@@ -19,7 +19,7 @@ Numbers are **starting values**, which QA tunes against `balance-targets.md` (§
 | **Regions** | Head, core, arms and legs, for every fighter. The Empress (formerly the Tyrant) adds a fifth, the **bladed mantle**, which never counts toward the brink |
 | **Wear** | 0 to 100 per region, stored as fixed-point. A hit adds `wear = damage × k` to the region the director picks. `damage` is today's `hit()` value with all its multipliers (`index.html:L319-338`). k = **0.045** after the brink-chapter slice (§1b). History: 0.06 at S2, 0.065 at S3b, 0.06 by the S4 ruling, 0.034 after the dynamic slice, 0.038 as the interim value with the stricter brink, and 0.041 at D1b. It is set by the length target. QA tunes it within 0.05 to 0.07 (§1b) |
 | **Stages** | Fresh below 30; bruised 30 to 59; battered 60 to 89; broken at 90 or more |
-| **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time needed to break lock through line of sight (1.8 s) |
+| **Stage penalties** | *Head:* battered narrows the parry window by 20% and adds a 0.2 s stagger after heavies; broken dazes for 0.4 s after each exchange lost and gives −0.08 on defence rolls. *Core:* battered cuts ki regen by 30%; broken puts the fighter on the brink, and his transformation fills stop filling (§8). *Arms:* battered raises the DEFENSIVE multiplier from 0.38 to 0.55; broken cuts heavies and signatures to ×0.8 and removes BRACE. *Legs:* battered sets speed ×0.85 and −0.10 on the ESCAPE slip chance; broken removes the dash and doubles the time needed to break lock through line of sight (1.8 s). *From the first real moveset a broken limb has a side, and these penalties change as in §1d* |
 | **Recovery** | Out of exchanges, a region below 60 fades 1 wear per second (0.25 from S2, §1b). A battered region fades 1 per second, down to 59, after 4 s without an exchange ("second breath", §1c). Broken regions never fade (only a Rally mends them). Hidden recovery is removed with hiding |
 | **Region choice** | Each atom lists the regions it may hit, with weights. The director multiplies each weight by (1 + wear/50), or (1 + wear/30) from S2 (§1b), which is "go for the wound", then draws with the seeded sim RNG. Attack kind sets the family: lights go to the head and arms, heavies to the core and legs, guard hits to the arms, and beams and impacts spread |
 | **Brink** | The core breaks, or any two of head, arms and legs break. The Cyborg is the exception (§3) |
@@ -133,6 +133,34 @@ Orb removed hiding from the base game and kept it for a future stealth-specialis
 - The opponent denies it simply by attacking, since every attack closes the gap. Breaking lock through ESCAPE, or a long break launch, is how a fighter earns it.
 - Broken regions still mend only through Rally.
 - *Tuning.* Second breath is weaker than the old hidden fade. If S2 matches run short, lower k first (§1b).
+
+### 1d. A broken limb has a side (proposals for the first real moveset, M0)
+
+Animation's battle-damage pass shows a broken arm hanging and the good arm striking (`docs/animation/pose-pipeline.md` §9.7). The sim has one arms region and one legs region with no side, so the picture and the rules disagree. These rules close that gap. **They are not for now:** they land with the first real moveset. A broken limb stays rare and dramatic: the rate (0.3 to 0.5 a match) and the limit of one per fighter don't change.
+
+1. **A side per broken limb.**
+   - Wear stays pooled: one number for the arms and one for the legs, as today. A side exists only once a limb breaks.
+   - The side is set at the crippling moment and never changes. It is the side the breaking blow lands on, taken from the strike's own target. If the strike has none, it is the limb nearer the attacker. There is no random draw.
+   - It is stored as a side of the fighter's body, not of the screen, so it survives the mirroring when he turns.
+   - The crippling moment shows the blow landing on that limb.
+2. **Strikes never use the broken limb.**
+   - Each strike piece is tagged with the limbs it uses. The director drops every piece that uses the broken one.
+   - With a broken arm he strikes with the other arm, a kick, a headbutt, or a one-handed energy blast. Two-handed pieces are out. A grab still works one-handed, and its throw does ×0.8.
+   - The numbers stay as they are: heavies and signatures at ×0.8 (now because they are one-handed), and lights 15% harder with more chains, which is the feral turn in `pitches.md` §5. Only the choice of piece changes, so the limb-break bands hold.
+   - The price is variety: with fewer pieces his strings repeat sooner, so they go stale and are easier to read (`control-rules.md` §6).
+3. **A one-armed guard.**
+   - A held guard takes 0.60 of the damage, where a battered pair takes 0.55 today.
+   - The perfect-block window is 2 ticks narrower: 6 for a light and 8 for a heavy.
+   - BRACE stays removed, and the deflect at range goes too, because it needs both hands. The reversal stays, as a sweep.
+   - There is no per-blow side. The fight is side-on, so every blow comes from the front.
+4. **A broken leg.**
+   - *Kicks* use the good leg only. Pieces that plant on or push off the broken leg are dropped.
+   - *On the ground* he limps: ground speed ×0.7, the ground dodge covers half its distance, and a sprint take-off takes 20 ticks longer.
+   - *In the air* he flies and dodges as before, because flight doesn't use the legs. This replaces "broken removes the dash", which under ADR 0008 would have taken away the dodge everywhere.
+   - *After a skid or tumble* he can't recover early, and his recovery is 0.25 s longer (`balance-targets.md` §20).
+   - *Kept from today:* the planted guard is stronger (×0.8), and breaking lock through line of sight takes twice as long.
+
+**What it needs.** Simulation: the side in the wounds state, hashed. Combat: the limb tags on strike pieces. Encounter: the filter in the director's choice. Animation: read the sim's side, not the slot hash. QA: no blow uses a broken limb (a hard test), and the limb-break bands are unchanged.
 
 ## 2. Rally (approved per fighter, with looser limits)
 
