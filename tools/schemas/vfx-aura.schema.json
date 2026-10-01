@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/vfx-aura",
+  "title": "vfx standing aura (version 1)",
+  "description": "data/vfx/aura.json: the current tier's aura shape and colour shown while a fighter charges or attacks, eased in and out (docs/vfx/aura-plan.md; per-tier shapes come from data/vfx/transform.json). Presentation only: read by render/vfx/aura.gd, never by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because aura.gd falls back to the same default. Ticks are whole ticks (60 a second), alphas 0 to 1.",
+  "type": "object",
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "standing": {
+      "type": "object",
+      "description": "The aura shown while charging or attacking.",
+      "properties": {
+        "ease_in_ticks": {
+          "description": "Ticks to fade in.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "ease_out_ticks": {
+          "description": "Ticks to fade out.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "hold_ticks": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ticks it stays up after the last charge or attack."
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "fill_scale": {
+          "description": "The fill, as a share of the transformation aura's fill.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pulse": {
+          "description": "The breathing pulse's size (0 is none).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pulse_ticks": {
+          "description": "The pulse's period in ticks.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "min_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "The lowest power tier that shows it."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

@@ -9552,6 +9552,295 @@
         "rule": "const",
         "pointer": "/schema"
       }
+    },
+    {
+      "id": "vfx-aura-live-valid",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-aura-version-required",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "del": [
+            "/version"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "vfx-aura-version-value",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/version": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/version"
+      }
+    },
+    {
+      "id": "vfx-aura-unknown-group",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/sparks": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/sparks"
+      }
+    },
+    {
+      "id": "vfx-aura-unknown-key",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/glow": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/standing/glow"
+      }
+    },
+    {
+      "id": "vfx-aura-underscore-key-ok",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-aura-empty-group-ok",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-aura-ease-integer",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/ease_in_ticks": 8.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/standing/ease_in_ticks"
+      }
+    },
+    {
+      "id": "vfx-aura-ease-positive",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/ease_out_ticks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/standing/ease_out_ticks"
+      }
+    },
+    {
+      "id": "vfx-aura-hold-zero-ok",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/hold_ticks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-aura-hold-negative",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/hold_ticks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/standing/hold_ticks"
+      }
+    },
+    {
+      "id": "vfx-aura-alpha-above-one",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/alpha": 1.4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/standing/alpha"
+      }
+    },
+    {
+      "id": "vfx-aura-fill-scale-negative",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/fill_scale": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/standing/fill_scale"
+      }
+    },
+    {
+      "id": "vfx-aura-pulse-zero-ok",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/pulse": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-aura-pulse-type",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/pulse": "soft"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/standing/pulse"
+      }
+    },
+    {
+      "id": "vfx-aura-pulse-period-positive",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/pulse_ticks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/standing/pulse_ticks"
+      }
+    },
+    {
+      "id": "vfx-aura-tier-range",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/min_tier": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/standing/min_tier"
+      }
+    },
+    {
+      "id": "vfx-aura-tier-zero",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/min_tier": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/standing/min_tier"
+      }
+    },
+    {
+      "id": "vfx-aura-tier-integer",
+      "schema": "vfx-aura.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/aura.json",
+          "set": {
+            "/standing/min_tier": 2.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/standing/min_tier"
+      }
     }
   ],
   "text": [

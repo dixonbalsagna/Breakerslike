@@ -193,6 +193,10 @@
     {
       "match": "data/vfx/transform.json",
       "schema": "vfx-transform.schema.json"
+    },
+    {
+      "match": "data/vfx/aura.json",
+      "schema": "vfx-aura.schema.json"
     }
   ]
 }
