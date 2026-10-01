@@ -57,6 +57,8 @@ func _run() -> void:
 			last_tick = S.tick
 			for i in range(2):
 				var st: String = String(S.fighters[i].state)
+				if state_name == "stun":
+					st = "stun" if int(S.fighters[i].stunTicks) > 0 else ""   # a staggered fighter (Encounter step 3: a perfect block, a burst absorbed, a reversal)
 				if st == state_name and prev[i] != state_name:
 					launches.append([S.tick, i])
 				prev[i] = st

@@ -1,0 +1,75 @@
+{
+ "wave": "step3",
+ "poses": 29,
+ "counts": {
+  "error": 0,
+  "review": 0,
+  "note": 9
+ },
+ "flagged": [],
+ "findings": [
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "s3.burst.gather",
+   "detail": "left elbow at 157 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "s3.burst.gather",
+   "detail": "right elbow at 157 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "s3.burst~b.gather",
+   "detail": "left elbow at 157 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "s3.burst~b.gather",
+   "detail": "right elbow at 157 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "s3.shoved.shove",
+   "detail": "hand_l target [16, 64, -13] is 2.1 units out of reach (the limb is clamped to [13.9, 63.8, -12.8])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "s3.stagger_bait.straighten / s3.stagger_blocked.regain",
+   "detail": "overlap 0.828 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "s3.stagger_bait.straighten / s3.stagger_blocked~b.regain",
+   "detail": "overlap 0.828 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "cue.brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  }
+ ]
+}

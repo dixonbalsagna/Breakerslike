@@ -25,6 +25,7 @@ static var ragdoll: Dictionary = {}      # data/anim/ragdoll.json (read by AnimR
 static var form_poses: Dictionary = {}  # beat -> pose id
 static var load_waves: bool = false      # --waves: also bake the parked pose waves of data/anim/waves/ (tools only; no live match plays them)
 static var raw: Dictionary = {}         # id -> the sketch each pose was baked from (poses.json, and the waves when loaded)
+static var cue_map: Dictionary = {}      # data/anim/waves/step3.cues.json: cue kind -> {actor, other, other_if_shoved} sequence ids (only with --step3-cues)
 static var live: Dictionary = {}         # data/anim/waves/wave1.live.json: the go-live step 1 pick lists, gates and shapes (used only with --wave1-live)
 static var entries: Dictionary = {}      # parked entry sequences (data/anim/waves/*.entries.json): id -> {phases: [{pose, ticks}]}; played by an `entry` beat
 static var wave_of: Dictionary = {}     # pose id -> the wave file it came from
@@ -72,14 +73,15 @@ static func load_all() -> void:
 	keysets = kj.get("keysets", {})
 	picks = kj.get("picks", {})
 	var live_flag: bool = OS.get_cmdline_user_args().has("--wave1-live")
-	if load_waves or live_flag or OS.get_cmdline_user_args().has("--waves"):
+	var s3_flag: bool = OS.get_cmdline_user_args().has("--step3-cues") or RenderAnim.step3_cues
+	if load_waves or live_flag or s3_flag or OS.get_cmdline_user_args().has("--waves"):
 		var da := DirAccess.open(DIR + "waves")
 		if da != null:
 			var names: Array = []
 			for fn in da.get_files():
 				if fn.ends_with(".poses.json"):
 					var wn0: String = fn.trim_suffix(".poses.json")
-					if load_waves or OS.get_cmdline_user_args().has("--waves") or wn0 == "wave1":   # the live flag loads wave 1 only
+					if load_waves or OS.get_cmdline_user_args().has("--waves") or (live_flag and wn0 == "wave1") or (s3_flag and wn0 == "step3"):   # the live flag loads wave 1 only, the step 3 flag its own cues
 						names.append(wn0)
 			names.sort()
 			for wn in names:
@@ -92,6 +94,12 @@ static func load_all() -> void:
 					var wk: Dictionary = _read("waves/" + wn + ".keysets.json").get("keysets", {})
 					for kid in wk:
 						keysets[kid] = wk[kid]
+				if FileAccess.file_exists(DIR + "waves/" + wn + ".sequences.json"):
+					var wsq: Dictionary = _read("waves/" + wn + ".sequences.json").get("sequences", {})
+					for sid in wsq:
+						entries[sid] = wsq[sid]
+				if FileAccess.file_exists(DIR + "waves/" + wn + ".cues.json"):
+					cue_map.merge(_read("waves/" + wn + ".cues.json").get("cues", {}), true)
 				if FileAccess.file_exists(DIR + "waves/" + wn + ".entries.json"):
 					var we: Dictionary = _read("waves/" + wn + ".entries.json").get("entries", {})
 					for eid in we:

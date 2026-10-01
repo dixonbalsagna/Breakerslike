@@ -23,6 +23,7 @@ static var debug_checks: bool = false
 ## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
 static var ragdoll_enabled: bool = true
 static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
+static var step3_cues: bool = false        # --step3-cues: Encounter's step 3 cue events (perfect_block, reversal, dodge_cancel, burst, burst_absorbed) play their pose sequences; OFF by default
 static var wave1_live: bool = false        # --wave1-live: wave 1's key sets are in the pick lists (go-live step 1, docs/combat/pending/golive-step1.md); OFF by default
 static var force_target: String = ""      # a lab switch (--target=arm_r): every blow aims at this socket instead of its key set's own
 static var force_keyset: String = ""      # a lab switch (--keyset=strike.elbow): every blow plays this key set, to test a limb that no pick uses yet
@@ -64,6 +65,8 @@ static func _read_args() -> void:
 			enabled = false
 		elif a == "--noragdoll":
 			ragdoll_enabled = false
+		elif a == "--step3-cues":
+			step3_cues = true
 		elif a == "--wave1-live":
 			wave1_live = true
 		elif a.begins_with("--target="):
@@ -178,9 +181,12 @@ static func consume(S: SimState, events: Array) -> void:
 					fighter(S, S.fighters[who2]).on_transform(S.T, String(e.version))
 			"cue":
 				var who: int = int(e.actor)
+				var t_cue: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)   # the event's own time, not the end of the frame's
 				for i in range(S.fighters.size()):
 					if who < 0 or i == who:
-						fighter(S, S.fighters[i]).on_cue(String(e.kind), S.T)
+						fighter(S, S.fighters[i]).on_cue(String(e.kind), S.T, t_cue)
+					elif who >= 0 and step3_cues:
+						fighter(S, S.fighters[i]).on_cue_other(String(e.kind), t_cue)
 			"damage":
 				var v: int = int(e.victim)
 				if v >= 0 and v < S.fighters.size() and String(e.kind) != "impact":

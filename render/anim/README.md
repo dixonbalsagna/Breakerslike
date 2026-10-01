@@ -2,7 +2,7 @@
 
 Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; results: its sections 9.1 and 9.3 (A2: the visual facing `vface`, the hinge bake and limb pass, the contact solve, the per-part profile mix). Render only: it reads the sim (fighter state, the running exchange's beats, the per-tick events) and never writes it, draws no sim random numbers, and moves no anchor. Data is in `data/anim/`, outside the sim's data hash.
 
-`--wave1-live` puts wave 1's strikes in the Anti-hero's blows (go-live step 1, off by default; docs 9.16). `--noanim` keeps the placeholder box figures. `--noragdoll` switches the overhaul layers off (A/B); `--anim-quality=high|medium|low|minimal` picks a quality level of `data/anim/quality.json`. `--anim-style=snappy|fluid` picks a timing profile from `data/anim/profiles.json`.
+`--step3-cues` plays Encounter's step 3 cue events as pose sequences (off by default; docs 9.17). `--wave1-live` puts wave 1's strikes in the Anti-hero's blows (go-live step 1, off by default; docs 9.16). `--noanim` keeps the placeholder box figures. `--noragdoll` switches the overhaul layers off (A/B); `--anim-quality=high|medium|low|minimal` picks a quality level of `data/anim/quality.json`. `--anim-style=snappy|fluid` picks a timing profile from `data/anim/profiles.json`.
 
 | File | What it is |
 | :--- | :--- |
@@ -26,6 +26,7 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/review.mjs` | The exceptions collector: `wave` (one sheet of exceptions per wave), `reel`, `ab`, `fix-reach`. Output in `art/animation/review/<wave>/` |
 | `tools/window_scan.gd`, `tools/rgb2png.mjs` | Finds reel windows (launches, both fighters framed); one reel frame as a PNG |
 | `tools/wave_gen.mjs`, `tools/waves/waveN.mjs` | The wave generator: a strike spec (one contact pose each) to the wave's pose, key-set and manifest files in `data/anim/waves/` (parked: baked only with `--waves`) |
+| `tools/cue_lab.gd` | The cue lab: each step 3 cue event (perfect block, reversal, dodge-cancel, burst, burst absorbed) through the real solver, the actor and the one it happens to |
 | `tools/entry_lab.gd` | The entry lab: each entry of a wave played into the strike it favours (a path, a dummy defender), as a reel, a three-frame sheet, or the flow of its arrival into the wind-ups (`--measure`) |
 | `tools/strike_lab.gd` | The strike lab: each strike of a wave against a dummy defender at its own distance, as a captioned reel, a contact sheet, or (`--measure`, `--sweep`) the reach, the step-in and the clipping |
 | `tools/socket_check.gd` | The reach envelope of every striking limb against every region (`data/anim/sockets.json`) |

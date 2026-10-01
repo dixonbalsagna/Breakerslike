@@ -739,6 +739,7 @@ func _run() -> void:
 			var catches := 0
 			var vars: Dictionary = {}
 			var ksets: Dictionary = {}
+			var s3n: int = 0
 			var late := 0
 			for id in RenderAnim._fighters:
 				var d: Dictionary = RenderAnim._fighters[id].debug
@@ -755,6 +756,7 @@ func _run() -> void:
 				rdt += int(d.rd_ticks)
 				rdu += int(d.rd_usec)
 				catches += int(d.catches)
+				s3n += int(d.get("step3", 0))
 				for kk in d.get("keysets", {}):
 					ksets[kk] = int(ksets.get(kk, 0)) + int(d.keysets[kk])
 				for vk in d.variants:
@@ -783,6 +785,8 @@ func _run() -> void:
 			print("  base variants played: %s" % [vars])
 			if mode == "mix":
 				print("  key sets played: %s" % [ksets])
+				if RenderAnim.step3_cues:
+					print("  step 3 cue sequences played: %d" % s3n)
 			print("  ragdoll step: %.1f us a tick a fighter (%d ticks), %d contact catches smeared" % [float(rdu) / maxf(1.0, rdt), rdt, catches])
 			print("  blows: %d, announced under 4 ticks ahead (no wind-up possible): %d" % [blows, late])
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])

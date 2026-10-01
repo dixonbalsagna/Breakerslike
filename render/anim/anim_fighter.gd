@@ -52,6 +52,12 @@ var _base_curl := Vector2(0.5, 0.5)
 var _tq: Array[Quaternion] = []
 var _last_T: float = -1.0
 var _cue: Dictionary = {}
+var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
+var _stun_watch: int = 0           # ticks left to see this fighter staggered after a perfect block or a reversal (a DEFLECT staggers nobody)
+var _stun_seq: String = ""
+var _stun_t0: float = 0.0
+var _shove_watch: int = 0          # ticks left to see the burst shove this fighter (a jump in his own speed)
+var _shove_vx: float = 0.0
 var _reacts: Array = []
 var _sx := PackedFloat32Array([0.0, 0.0, 0.0, 0.0, 0.0])
 var _sv := PackedFloat32Array([0.0, 0.0, 0.0, 0.0, 0.0])
@@ -198,6 +204,18 @@ func on_tick(dt: float, frozen: bool, S: SimState = null, f = null) -> void:
 	_ip_acc += dt * (0.5 if frozen else 1.0)
 	if S != null and f != null:
 		update_face(S, f)   # the facing is decided once per sim tick too, so everything keyed on it replays
+		if _stun_watch > 0:
+			_stun_watch -= 1
+			if int(f.stunTicks) > 0 and AnimData.entries.has(_stun_seq):
+				_seq = {"id": _stun_seq, "t0": _stun_t0, "dur": float(AnimData.entries[_stun_seq].dur) / 60.0}
+				debug["step3"] = int(debug.get("step3", 0)) + 1
+				_stun_watch = 0
+		if _shove_watch > 0:
+			_shove_watch -= 1
+			if absf(f.vx - _shove_vx) > 250.0 and AnimData.cue_map.has("burst") and AnimData.entries.has(String(AnimData.cue_map.burst.get("other_if_shoved", ""))):
+				var sid2: String = String(AnimData.cue_map.burst.other_if_shoved)
+				_seq = {"id": sid2, "t0": S.T, "dur": float(AnimData.entries[sid2].dur) / 60.0}
+				_shove_watch = 0
 		# a change of stance kicks the arms toward the new guard on the tick it happens (it was read at solve time, so a change on an odd tick
 		# came a tick late at two ticks a frame and the ragdoll state differed)
 		var st_now: int = clampi(int(f.stance), 0, 3)
@@ -255,9 +273,35 @@ func on_ground_event(kind: String, e: Dictionary, T: float) -> void:
 			_rd.free = minf(_rd.free, 0.3)
 
 
-func on_cue(kind: String, T: float) -> void:
+func on_cue(kind: String, T: float, t_event: float = -1.0) -> void:
+	if RenderAnim.step3_cues and AnimData.cue_map.has(kind):
+		var sid: String = String(AnimData.cue_map[kind].get("actor", ""))
+		if AnimData.entries.has(sid):
+			_seq = {"id": sid, "t0": t_event if t_event >= 0.0 else T, "dur": float(AnimData.entries[sid].dur) / 60.0}
+			debug["step3"] = int(debug.get("step3", 0)) + 1
+		return
 	if AnimData.cue_poses.has(kind) and RenderLook.CUE_POSES.has(kind):
 		_cue = {"kind": kind, "t0": T, "dur": float(RenderLook.CUE_POSES[kind].dur)}
+
+
+## The other fighter of a step 3 cue (the one who staggers after a perfect block or a reversal, the one who absorbs a burst); a burst shoves him
+## only if his own speed jumps in the next ticks (the sim decides the range), so that one waits for the shove.
+func on_cue_other(kind: String, t_event: float) -> void:
+	if not RenderAnim.step3_cues or not AnimData.cue_map.has(kind):
+		return
+	var m: Dictionary = AnimData.cue_map[kind]
+	if m.has("other_if_stunned"):
+		_stun_watch = 3
+		_stun_seq = String(m.other_if_stunned)
+		_stun_t0 = t_event
+	elif m.has("other"):
+		var sid: String = String(m.other)
+		if AnimData.entries.has(sid):
+			_seq = {"id": sid, "t0": t_event, "dur": float(AnimData.entries[sid].dur) / 60.0}
+			debug["step3"] = int(debug.get("step3", 0)) + 1
+	elif m.has("other_if_shoved"):
+		_shove_watch = 4
+		_shove_vx = _rd_vw.x if _rd_have else 0.0
 
 
 ## `front`: the blow came from the side the victim faces. amp 0 to 1 from the hit's strength.
@@ -431,6 +475,11 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			AnimPose.mix(q, cp.q, w * 0.9)
 			hips = hips.lerp(cp.hips, w * 0.9)
 			curl = curl.lerp(cp.curl, w * 0.9)
+	if not _seq.is_empty():
+		if T >= float(_seq.t0) + float(_seq.dur) + 0.05:
+			_seq = {}
+		else:
+			_entry_layer(float(_seq.t0), float(_seq.dur), String(_seq.id), T, 1.0 / float(_prof.get("solve_hz", 60.0)))
 	if _skim_t0 >= 0.0:
 		var sk_t: float = T - _skim_t0
 		if sk_t > 0.35:
@@ -541,7 +590,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 ## Nothing is asking for a precise pose this tick.
 func _idle(S: SimState, f) -> bool:
 	var ex = S.dirS.ex
-	return (ex == null or (ex.A != f and ex.D != f)) and _cue.is_empty() and _reacts.is_empty() and f.beamCharge == null and S.beams.is_empty() and S.dirS.stop <= 0.0 and _form.is_empty() and _rd.out_w <= 0.001
+	return (ex == null or (ex.A != f and ex.D != f)) and _cue.is_empty() and _seq.is_empty() and _shove_watch == 0 and _stun_watch == 0 and _reacts.is_empty() and f.beamCharge == null and S.beams.is_empty() and S.dirS.stop <= 0.0 and _form.is_empty() and _rd.out_w <= 0.001
 
 
 ## A blow counts as heavy from the exchange kind, the strike's own weight (o.big) or its damage.

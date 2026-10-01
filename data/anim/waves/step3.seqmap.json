@@ -1,0 +1,157 @@
+{
+ "wave": "step3",
+ "kind": "sequences",
+ "sequences": [
+  {
+   "id": "s3.perfect_block",
+   "name": "perfect_block",
+   "dur": 30,
+   "alt": "the deflect swept low, from the hip up",
+   "poses": [
+    "s3.perfect_block.deflect",
+    "s3.perfect_block.set",
+    "s3.perfect_block.ready"
+   ],
+   "phases": [
+    "deflect",
+    "set",
+    "ready"
+   ]
+  },
+  {
+   "id": "s3.stagger_blocked",
+   "name": "stagger_blocked",
+   "dur": 24,
+   "alt": "folded forward over the blow instead of thrown back",
+   "poses": [
+    "s3.stagger_blocked.recoil",
+    "s3.stagger_blocked.stumble",
+    "s3.stagger_blocked.regain"
+   ],
+   "phases": [
+    "recoil",
+    "stumble",
+    "regain"
+   ]
+  },
+  {
+   "id": "s3.reversal",
+   "name": "reversal",
+   "dur": 8,
+   "alt": null,
+   "poses": [
+    "s3.reversal.break",
+    "s3.reversal.coil"
+   ],
+   "phases": [
+    "break",
+    "coil"
+   ]
+  },
+  {
+   "id": "s3.stagger_countered",
+   "name": "stagger_countered",
+   "dur": 16,
+   "alt": null,
+   "poses": [
+    "s3.stagger_countered.open",
+    "s3.stagger_countered.hold"
+   ],
+   "phases": [
+    "open",
+    "hold"
+   ]
+  },
+  {
+   "id": "s3.dodge_cancel",
+   "name": "dodge_cancel",
+   "dur": 10,
+   "alt": null,
+   "poses": [
+    "s3.dodge_cancel.snap",
+    "s3.dodge_cancel.slide"
+   ],
+   "phases": [
+    "snap",
+    "slide"
+   ]
+  },
+  {
+   "id": "s3.burst",
+   "name": "burst",
+   "dur": 14,
+   "alt": "the arms thrown forward instead of wide",
+   "poses": [
+    "s3.burst.gather",
+    "s3.burst.release",
+    "s3.burst.hold"
+   ],
+   "phases": [
+    "gather",
+    "release",
+    "hold"
+   ]
+  },
+  {
+   "id": "s3.shoved",
+   "name": "shoved",
+   "dur": 12,
+   "alt": null,
+   "poses": [
+    "s3.shoved.shove"
+   ],
+   "phases": [
+    "shove"
+   ]
+  },
+  {
+   "id": "s3.stagger_bait",
+   "name": "stagger_bait",
+   "dur": 30,
+   "alt": null,
+   "poses": [
+    "s3.stagger_bait.rebound",
+    "s3.stagger_bait.hunch",
+    "s3.stagger_bait.straighten"
+   ],
+   "phases": [
+    "rebound",
+    "hunch",
+    "straighten"
+   ]
+  },
+  {
+   "id": "s3.absorb",
+   "name": "absorb",
+   "dur": 12,
+   "alt": null,
+   "poses": [
+    "s3.absorb.brace"
+   ],
+   "phases": [
+    "brace"
+   ]
+  }
+ ],
+ "cues": {
+  "perfect_block": {
+   "actor": "s3.perfect_block",
+   "other_if_stunned": "s3.stagger_blocked"
+  },
+  "reversal": {
+   "actor": "s3.reversal",
+   "other_if_stunned": "s3.stagger_countered"
+  },
+  "dodge_cancel": {
+   "actor": "s3.dodge_cancel"
+  },
+  "burst": {
+   "actor": "s3.burst",
+   "other_if_shoved": "s3.shoved"
+  },
+  "burst_absorbed": {
+   "actor": "s3.stagger_bait",
+   "other": "s3.absorb"
+  }
+ }
+}
