@@ -117,3 +117,52 @@ G1 can land first and alone (terrain only). G2 to G4 follow the lanes order (the
 - **Slide length:** tumbles replace slow slides, so trenches and dust at low power shorten; Art and VFX want to see it.
 - **Collateral:** longer flights and bounces move where launches end; slides near towns are watched by QA.
 - **Replays:** `contact.json` joins the replay data hash (`dataHash()`).
+
+## 8. Scratch build: status and measurements (2026-10-02)
+
+Built against local HEAD 08f5cd0 in a scratch copy, so each slice is ready to apply the moment its slot opens. Everything is in `docs/world/scratch-build/` (a `build.py` that applies it to a fresh export; its README says how). The tree's sim files are untouched.
+
+**G1 and reach** (`g1_reach.py`, `g1_freeze.py`): lip 0.5 R and crest 0.40 d with footings skipped; heaps at slope 0.6 (spill 1.0: above about 1.1 a low chain flight lands on the heap and plan and outcome differ); structure reach by tier with the scaled falloff, data in each `ladder.json` (`reach.structure` [1, 1, 1.6, 2.8], `reach.ringCap` -1) with the schema, `fighter_data.gd`'s parse and `beam.gd`'s explicit 1.0; and a slide's trench no longer relaxes the ground he stands on or the ground ahead (it dropped away beneath him and read as a lip of his own making). Probe: 0 failures, with the new section (rim slope at most 0.6 at every energy, largest 0.56; crest at most 0.40 d; rim and apron area at most the bowl's; heap slope at most 0.6; reach out to exactly the tier's factor and no further; the beam's path sample not widened). 100 default-arm matches, HEAD against G1 and reach:
+
+| | HEAD | G1 and reach |
+| :--- | ---: | ---: |
+| Civilians lost at the KO | 17% | 20% |
+| Structures lost | 45.8 | 55.1 |
+| Craters | 48 | 46 |
+| Length | 468 s | 475 s |
+| KAI | 45 | 52 |
+| BUILDING SMASH | 7% | 6% |
+| Structures per minute at tier 3 (all rows / front row) | 4.15 / 5.53 | 3.91 / 5.49 |
+| at tier 4 | 4.41 / 5.57 | **7.68 / 9.81** (band 6 to 20) |
+| KO structures, all rows / front row | 24.9 / 32.4 | 31.2 / 41.0 (bands 15 to 40 and 25 to 50) |
+| 60 second tier-4 windows over 20% of the front row | 7 of 40 matches | 13 of 40 (worst 47.5 to 61.3%) |
+
+Tier 4 is now in its band; tier 3 was already in band on the retuned HEAD. The sim runs at 55 matches a minute against 58.
+
+**G2 and G3** (`g2_contact.py`, `contact.gd`, `contact.json`; the model switched off by `enabled` in the data, copied into `S.contactOn` by `newMatch`): the pure `moveAir`, `groundPhase`, `stepContact` shared by the runtime (`stepFighter`) and the predictor; surface classes (`surfaceAt`, a column table built once); the landing table; bounces, skids, tumbles; the leave test; the 8-contact and 4 s bounds (past them he tumbles to a stop and cannot leave the ground again); one impact of wear per journey; spin and rot through `spinStep` (one function, only integrated or eased, never assigned); six hashed fighter fields (`jContacts`, `jV0`, `launchN` and, as integer ticks per Simulation's conditions, `jT`, `tumbleT`, `contactT` saturating at 8); the events `left_ground`, `bounce`, `land`, `tumble_end` and `journey_end`, with x, y, z, speed, the launch number, contacts and t, the slope, and `vx`, `vy` on `left_ground`; `launch` gains `ux`, `uy` and `n` (set in `WorldBrunt.arm` in the scratch; Simulation adds them in L0). Proofs:
+- **Off is neutral:** per-tick light digests of 9 seeds over 12,000 ticks are identical to HEAD with the slice applied and the flag off.
+- **On is deterministic:** two runs of the same 9 seeds give identical digests, and the render determinism check passes with the flag on.
+- **Journey function:** over 240 seeded launches, on open ground the predicted end is within 60 units of the played one in 108 of 112 (96%); near a town it is 99 of 128, because a skid's own area damage collapses buildings and their heaps rise ahead of him, which a pre-computed journey cannot know. No NaN, no journey over 8 contacts, the same contact count in 212 of 240.
+- **With the golden regenerated in the scratch (flag off):** parity passes (hash only); the validator reports only the missing `contact.json` schema (Tools).
+
+**Flag on: what the model does** (100 default-arm matches; 20 matches for the landing classes): length 511 s (475), collateral 24% (20), structures lost 70.6 (55.1), craters 47 (46), KAI 48. Journeys per launch about 0.75; bounces per bounced journey 1.5 (band 1.3 to 2.2); the journey's end: stop 33%, wall 33% (the MOUNTAINSIDE launches landing on steep slopes), slam 31%, water 4%. **First-contact class of all launches against section 20's bands:** skid 19% and tumble 5% (slide band 40 to 55%), bounce 36% (8 to 15%), slam 21% (8 to 15%), water 3% (5 to 15%), caught in the air 16% (10 to 25%). The old model's slides were 56% of launches; the 30 to 70 degree landings it counted as slides are now bounces, and the planner's mix puts about a fifth of launches steeper than 70 degrees. Moving the skid/bounce boundary to 40 or 45 degrees gives skid 27% and bounce 27 or 22%. The bands are Game Design's call to re-base, or the angle bands' to move; the physics and the planner mix are what produce the numbers. **Cost:** about 17% more sim time per tick with the flag on (24,300 ticks a second against 28,600 in G1 and reach alone); trims: precomputed drag factors, fewer ground reads per tick.
+
+**Order, per the EP and Simulation:** G1 and reach, then Simulation's L0 and L2 (both rewrite the launched branch), then G2 to G5 rebased onto them.
+
+## 9. Physics constants for feel (proposed as data), for Animation's active ragdoll
+
+Animation relies on: gravity 1000 u/s2 (unchanged), a spin cap of about 18 rad/s (mine is 3 turns a second, 18.85, and 1.5 at tier 1; halving every 0.5 s in the air, which is new: launch spin used to be constant), flights of 0.3 to 2 s. What the data gives, with the effect on a body:
+
+| Constant | Value | Effect |
+| :--- | :--- | :--- |
+| Bounce keep (normal) | 0.45, 0.35, 0.25 | A 1,500 u/s landing rebounds 675 up (228 units, about 3 bh) for 1.35 s; a 900 landing 405 (82 units) for 0.8 s; the second bounce about a third of the first. Flights past 2 s only above about 2,200 into the ground: I propose `bounce.vyMax` 1,600 (a cap on the rebound's vertical speed, so a flight never exceeds 1.6 s) |
+| Bounce keep (along the ground) | 0.8 | He keeps most of his run, so bounces travel |
+| By surface (proposed, not built) | normal x paving 1.1, rock 1.15, soil 1.0, sand 0.75, rubble 0.8; along x paving 0.9, rock 0.9, soil 0.8, sand 0.65 | Streets and rock are lively, sand and rubble deaden: two extra data maps `bounceMul` and `tangentMul`, a few lines |
+| Spin at a bounce | `vt / bodyR` (bodyR 60), capped 1.5 (tier 1) or 3 turns a second | A 1,000 u/s tangent gives 17 rad/s: a fast tumble; slower bounces roll gently |
+| Tumble braking | double the skid's (section 20) for at most 1.2 s | At the tumble's entry speed (600) it stops in 0.13 to 0.3 s and 40 to 250 units: a short roll, as section 20 wants. If Animation wants a visible roll of 0.5 s or more, `tumble.brakeMul` 0.6 gives about 0.5 s; it is one number |
+| Skid braking | 1,200 x surface + 1.2 v | Paving and rock 0.8, soil and sand 1.3: a 1,500 skid goes 700 units (times the launch's travel factor) on paving, 450 on soil |
+| Water | skim at over 500 and under about 31 degrees, up to 6 skips, keep 0.85, lift 0.65 | Unchanged from today (the look Orb likes) |
+| Slope | a skid gains or loses speed by `GRAV` x slope; a leave test per tick | Uphill a ramp slows him; a lip lets him go along the ramp; a straight downhill slope never lets go. I propose a `skid.vMax` (twice his entering speed) so a steep downhill cannot accelerate him without limit (not built) |
+| `LEAVE_CLEAR`, `LIP_LIFT` | 1.5 units, 1.0 | A small tolerance; a lift above 1 raises the arc off a lip (data, at most 2) |
+
+Animation's asks, from the EP's message: (1) the event fields are in (left_ground: vx, vy, cause, slope; bounce: k, vn, vt, keep, surface, slope; land: kind, sin_a, surface, slope; tumble_end: kind; plus z, n, contacts and t). (2) The ground slope is on each event as rise over run; the normal is `(-slope, 1)` over its length. (3) rot and spin are one function's, integrated or eased, never assigned (a skid eases upright with a 0.2 s time constant, so nothing snaps). (4) the launch event's `ux`, `uy`, `n` are Simulation's L0 line (my scratch sets them in `arm`, which I drop when L0 lands). (5) the constants above: gravity, the spin cap and the flight times are as Animation assumed, with the spin decay noted.

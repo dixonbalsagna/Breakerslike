@@ -14,7 +14,7 @@ The first time a fighter reaches the brink in a match, his signature is free and
 
 **Where it opens:** `wounds.gd`, where the brink is entered (the `brink_enter` event). If `lastStandUsed` is false: set it, set `lastStandLeft` to the window, and send `last_stand_ready {actor, dur}`.
 
-**Where it counts down:** `stepFighter`, one a live tick. It does not run during a pause or a hit-stop. At 0: `last_stand_end {actor, kind: "expired"}`.
+**Where it counts down:** `stepFighter`, one a live tick in which he is free or charging (ruling 2). It does not run during a pause or a hit-stop. At 0: `last_stand_end {actor, kind: "expired"}`.
 
 **One reader:** `SimFighter.sigFree(f) -> bool` (`lastStandLeft > 0`).
 
@@ -42,8 +42,8 @@ Camera's cut, the face cut-in and the line read `last_stand_ready`. Narrative as
 - **Then the flip** to 20: a behaviour change, one golden regeneration. QA's signature band becomes 2 to 5 a match (Game Design), and brink-to-KO and finisher survival will move.
 - **Checks:** the window opens once per fighter per match, not on a second brink; it counts live ticks only; a free signature costs no ki and ignores the cooldown; it closes on use.
 
-## 5. Open points
+## 5. Rulings (EP, 2026-10-02)
 
-1. One free signature or the whole window (above). I assume one.
-2. A fighter who reaches the brink during his own exchange, stunned or launched, loses part of the window. Game Design may want the count to start when he is next free.
-3. Legal's re-screen is pending; nothing lands before it clears.
+1. **One free signature.** The window closes when he fires (section 2 as written).
+2. **The 20 s start when he is next free.** If he reaches the brink launched, stunned or locked in an exchange, the count waits: `lastStandLeft` is set at the brink, and it counts down only on live ticks in which he is free or charging.
+3. **Legal has cleared it** (`docs/legal/rule-of-cool-screen.md`, the follow-ups), so it lands when its turn comes: after World's ground-contact slices and the intro phase.

@@ -55,8 +55,10 @@ Camera's shot is about 5 s. Its beats become the data's defaults:
 - With no `"intro"` in the setup nothing changes: parity on the untouched goldens.
 - One golden match and one replay with the intro are added (new vectors; the existing ones do not move), plus forced checks: the timeline's ticks, a skip at several ticks giving the same state at the clock, no input consumed, `S.T` at 0 until the clock.
 
-## 7. Open points
+## 7. Rulings (EP, 2026-10-02)
 
-1. **The gap.** Camera wants the spots 900 units apart; `START_GAP` is 750. Raising it changes every match's opening (one golden regeneration, a small QA shift). Or the intro lands them 900 apart only when it plays, and matches with and without it open differently. I recommend raising `START_GAP` for everyone.
-2. **QA's matches.** With the intro, a match starts with two small craters under the fighters; without it, on flat ground. If the shipped game always plays the intro, QA's batches should too (skipped at once), or they measure a slightly different opening. A decision for QA and the EP once the crater's size is known.
-3. **Two players, one skip.** Either player's press skips for both. Camera's plan assumes that.
+1. **`START_GAP` goes to 900 for every match,** in the intro slice, with one golden regeneration.
+2. **QA's batches run the intro, skipped at once,** when the intro ships, so they measure the same opening as the game.
+3. **Either player's press skips for both** (Camera's plan).
+
+Order: after World's ground-contact slices (G2 to G5), before the last stand.

@@ -281,3 +281,23 @@ Folded from `docs/rendering/fight-lanes-render.md`, which holds the detail (occl
 
 **Outside this plan.** Camera also asks the sim for a slow-motion scale in the match header, a recorded skip intent if Orb picks skippable cinematics, and an intro hold at tick 0. None of them concerns depth. Each needs its own brief once Orb has answered Camera's options. One constraint to state now: anything that changes sim time has to be a match setting in the replay header, the same for both players, and never a per-player preference.
 
+## 14. L0 and L2 prepared, and the new order (2026-10-02)
+
+**Prepared.** L0 and L2 are built and proven in a scratch copy of 5fe078a and parked as scripts in `docs/architecture/pending/` (its README has the steps and the proofs). They touch only `sim/core`.
+
+**Scope, corrected while building** (section 5's table said more than the core can do alone):
+
+| Item | Was in | Now |
+| :--- | :--- | :--- |
+| The depth waypoint for every flight and slide | L2 | World's L3: the waypoint is stepped by `WorldBrunt.stepZ`, which its predictor shares. L0 gives it the field `zWay` |
+| Ground height at `z` | L0 and L2 | With the terrain rows (T): `groundY(S, x, z)` is World's signature, and until the rows exist it would ignore `z` |
+| `launch_depth` for every launch | L0 | Encounter's L4: only the planner knows an unaimed launch's end depth and time |
+| World's data hash in the replay header | L0 | When World has a `dataHash()` (D1 with L1); the line in `replay.gd` is mine |
+| The director's data switch | L0 | L4: `S.depthOn` reads the setup's `"depth"` now, and `data/director/depth.json` when Encounter's file exists |
+
+Added to L0 from the ground-contact review: `launch` carries `ux`, `uy` and `n`.
+
+**A quirk found:** `WorldBrunt.stepZ` runs only while a fighter is launched, so a fighter who ends a brunt flight away from the plane keeps that depth until his next launch (it eases to 0 only during a flight). With depth on, L2's `stepDepth` owns the depth outside flights; with it off, today's behaviour is unchanged. World should know for L3.
+
+**Order (EP, with Orb's ruling that depth stays behind the ragdoll physics):** Encounter's landing and contact slices; World's G1 and structure reach; **L0 and L2** (neutral, accepted ahead of G2 because both rewrite the launched branch); World's G2 to G5; the intro phase; the last stand; then the rest of the lanes (L1 with D1, L3 and T, L4, L5).
+
