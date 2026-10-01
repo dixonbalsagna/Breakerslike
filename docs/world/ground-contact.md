@@ -166,3 +166,31 @@ Animation relies on: gravity 1000 u/s2 (unchanged), a spin cap of about 18 rad/s
 | `LEAVE_CLEAR`, `LIP_LIFT` | 1.5 units, 1.0 | A small tolerance; a lift above 1 raises the arc off a lip (data, at most 2) |
 
 Animation's asks, from the EP's message: (1) the event fields are in (left_ground: vx, vy, cause, slope; bounce: k, vn, vt, keep, surface, slope; land: kind, sin_a, surface, slope; tumble_end: kind; plus z, n, contacts and t). (2) The ground slope is on each event as rise over run; the normal is `(-slope, 1)` over its length. (3) rot and spin are one function's, integrated or eased, never assigned (a skid eases upright with a 0.2 s time constant, so nothing snaps). (4) the launch event's `ux`, `uy`, `n` are Simulation's L0 line (my scratch sets them in `arm`, which I drop when L0 lands). (5) the constants above: gravity, the spin cap and the flight times are as Animation assumed, with the spin decay noted.
+
+## 10. Re-measure on HEAD 607edce for Game Design's ruling (2026-10-02)
+
+Scratch build (G1 and reach, G2 to G5 with the flag on) on top of Encounter's landing slice (93d5e0d), 40 default-arm matches (seeds 1 to 40) per boundary, 3,600 launches each. A journey is classed by how it ends (the closing `journey_end` event's `kind`: `stop`, `tumble`, `capped`, `wall`, `slam`, `water`); a launch with no journey was caught in the air.
+
+| Boundary between skid and bounce | 30 degrees | **40 degrees (the ruling)** | 45 degrees |
+| :--- | ---: | ---: | ---: |
+| Launches with at least one bounce (band 15 to 30%) | 34.8% | **27.9%** | 24.6% |
+| Bounces per bounced journey (band 1.3 to 2.2) | 1.27 | **1.28** | 1.25 |
+| First contacts: skid + tumble / bounce (skids at least as common as bounces) | 26% / 35% | **32% / 29%** | 35% / 25% |
+| Ending: halted (stop or tumble) | 31% | 29% | 29% |
+| Ending: wall stop-impact | 15% | 17% | 17% |
+| Ending: slam (band 8 to 18%) | 25% | 25% | 25% |
+| Ending: water (band 2 to 10%) | 2% | 3% | 2% |
+| Caught in the air, no journey (band 10 to 25%) | 27% | 27% | 28% |
+
+Reading: **40 degrees puts bounced launches at 27.9%, inside 15 to 30**, so 45 is not needed. Halted plus wall is 46% of launches against the 55 to 75% band; slam (25%) and caught in the air (27%) are over theirs: the planner's mix, not the boundary, decides those (the boundary moves nothing in them). Bounces per bounced journey are just under 1.3: a bounce loses most of its height (45% then 35%), so the third is rare; raising the vertical keep to 0.5 and 0.4 would lift it, at the price of higher arcs. The wall endings (17%) are the MOUNTAINSIDE launches landing on slopes over 0.8; they count as halts in my reading (a stop-impact), which is Game Design's to confirm.
+
+Other measures at 40 degrees:
+- **Journey time** (first contact to the end, air time included): mean 1.08 s, 90th percentile 2.58 s. The 4 s bound is reached by 5.1% of journeys; the 8-contact bound by 0.5%; a `capped` end 0.0% (journeys reaching a bound end in a stop or a slam first). The bound applies at contacts, so a long flight after a bounce can carry past 4 s.
+- **Distance** (first contact to the end): mean 2,530 units (34 bh), 90th percentile 5,638; over 2,000 units in 38% of journeys, over 4,000 in 16%, over 8,000 in 6%. For Camera: a journey leaves a normal framing (about 4,000 units) in roughly one in six.
+- **Flights off the ground per minute of play** (both fighters): crater lips 1.75, natural crests 2.26 (hills and ridge flanks), cliffs 0.31, rubble heaps 0.37, bounce lift-offs 5.9. The band for lips (0.3 to 1.5 once craters have rims) is met by craters alone at the high end, and natural terrain adds more; if the band means all terrain flights the total is 4.7. (`journey_end.lips` needed a seventh hashed fighter field, `jLips`, to count them across ticks; the alternative is to drop `lips` from the event and count `left_ground` events with a terrain cause.)
+- **Wear against the single-impact budget** (impact damage taken in the journey over 0.018 times the first-contact speed): mean 0.32, 90th percentile 0.60, over budget in 3.6% (slams and wall stops, which pay in full).
+- **Collateral per journey:** 0.06% of the population (mean) and 0.33 structures levelled.
+
+The closing event carries the last state: `kind` (the ending), `contacts`, `lips`, `nb` (bounces), `dur` (seconds), plus x, y, z, speed and the launch number `n`.
+
+Notes picked up for the plan: `WorldBrunt.stepZ` runs only while a fighter is launched, so a fighter who ends a brunt flight away from the plane keeps that depth until his next launch (Simulation, for L3: the ease to the home depth has to run in every state). Rendering asks for a **sim record of window blow-outs** so a replay seek keeps them (VFX's list is pruned after 6 s): a hashed per-building bit mask of blown windows per floor, set by `floor_hit` and `building_hit` events and by the area damage, readable by Rendering; to be planned with the floors (a sized estimate follows in the next plan note).

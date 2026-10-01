@@ -411,9 +411,11 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	# past the journey's caps (8 contacts or 4 s) he tumbles to a stop: no more leaving the ground
 	var capNow: bool = b.contacts >= K_MAXC or b.t >= K_MAXT
 	if not capNow and vN2 > 0.0 and yb - WorldTerrain.groundY(S, xa) > K_CLEAR:
-		var cause: String = "lip"
+		var cause: String = "crest"   # natural ground: a hill's or ridge's crest
 		if S.rubble[int(floor(SimWrap.wrap(b.x) / SimConst.COL)) % SimConst.NC] > 0.0:
 			cause = "heap"
+		elif _nearRim(S, b.x):
+			cause = "lip"             # a crater's lip
 		elif -rise > 1.0:
 			cause = "cliff"
 		b.mode = AIR
@@ -449,6 +451,15 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 		b.capped = true
 		b.mode = TUMBLE
 		b.tumbleT = maxi(maxi(b.tumbleT, 0), K_TUMT - K_TAILT)
+
+
+## Is x within a crater's lip zone (from 0.5 R to 1.3 R of a crater's centre)? Only for naming a leave's cause.
+static func _nearRim(S: SimState, x: float) -> bool:
+	for c in S.craters:
+		var d: float = absf(SimWrap.sdx(x, c.x))
+		if d > 0.5 * c.r and d < 1.3 * c.r:
+			return true
+	return false
 
 
 ## The whole step for the predictor: the air, then the ground, or the contact.
@@ -521,7 +532,6 @@ static func toBody(S: SimState, f) -> Body:
 	b.capped = false
 	b.vLost = 0.0
 	b.dxStep = 0.0
-	b.lips = 0
 	b.x = f.x
 	b.y = f.y
 	b.vx = f.vx
@@ -542,6 +552,7 @@ static func toBody(S: SimState, f) -> Body:
 	var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
 	b.tier = by.tier
 	b.slideD = f.slideD
+	b.lips = f.jLips
 	b.mode = AIR
 	if f.slide > 0.0:
 		b.mode = TUMBLE if f.tumbleT >= 0 else SKID
@@ -564,6 +575,7 @@ static func fromBody(f, b: Body) -> void:
 	f.wet = b.wet
 	f.hopped = b.hopped
 	f.slideD = b.slideD
+	f.jLips = b.lips
 
 
 ## Called from SimFighter.stepLaunched when S.contactOn: one tick of a launched fighter's flight, skid or tumble, with every
@@ -747,7 +759,7 @@ static func _finish(S: SimState, f, by, b: Body) -> void:
 		te.n = _launchN(f)
 	var je := SimFx.contactEvent(S, "journey_end", f, f.x, f.y, b.vN)
 	je.contacts = f.jContacts
-	je.lips = b.lips
+	je.lips = f.jLips
 	je.nb = int(f.bounces)
 	je.dur = float(f.jT) * SimConst.DT
 	je.kind = "capped" if (b.capped and how in ["tumble", "stop"]) else how

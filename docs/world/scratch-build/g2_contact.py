@@ -26,7 +26,7 @@ shutil.copy(G + 'contact.json', R + 'data/biomes/contact.json')
 
 # ---------------------------------------------------------------- state.gd
 def state(s):
-    s = rep(s, "	var hopped: bool = false ", "	var jContacts: int = 0           # ground contact: contacts of this journey so far (world/contact.gd)\n	var jT: int = 0                  # ticks since the journey's first contact (cap 240)\n	var jV0: float = 0.0             # the journey's first-contact normalised speed (the wear budget)\n	var tumbleT: int = -1            # ticks rolled in a tumble, -1 when not tumbling (cap 72)\n	var contactT: int = 0            # ticks since the last contact, saturating at 8 (the early-recovery window)\n	var launchN: int = 0             # this fighter's launch number: every contact event carries it\n	var hopped: bool = false ")
+    s = rep(s, "	var hopped: bool = false ", "	var jContacts: int = 0           # ground contact: contacts of this journey so far (world/contact.gd)\n	var jT: int = 0                  # ticks since the journey's first contact (cap 240)\n	var jV0: float = 0.0             # the journey's first-contact normalised speed (the wear budget)\n	var tumbleT: int = -1            # ticks rolled in a tumble, -1 when not tumbling (cap 72)\n	var contactT: int = 0            # ticks since the last contact, saturating at 8 (the early-recovery window)\n	var launchN: int = 0             # this fighter's launch number: every contact event carries it\n	var jLips: int = 0               # flights off a lip so far in this journey (journey_end carries it)\n	var hopped: bool = false ")
     s = rep(s, "var game := Game.new()\n", "var game := Game.new()\nvar contactOn: bool = false           # ground contact on (a copy of data/biomes/contact.json enabled, taken by newMatch)\n")
     s = rep(s, "	var z: float = 0.0           # launch_depth", "	var surface: String = \"\"     # bounce, land: the surface class (paving, rock, soil, sand, rubble, water)\n	var vn: float = 0.0          # bounce, land: the speed into the surface (negative into the ground)\n	var vt: float = 0.0          # bounce, land: the speed along the surface\n	var sina: float = 0.0        # land, bounce: the sine of the contact angle to the surface\n	var vx: float = 0.0          # left_ground: the velocity he leaves with\n	var vy: float = 0.0\n	var slope: float = 0.0       # left_ground, bounce, land: the ground slope (rise over run) at the contact\n	var contacts: int = 0        # left_ground, land, bounce, tumble_end, journey_end: contacts so far\n	var lips: int = 0            # journey_end: flights off a lip\n	var nb: int = 0              # journey_end: bounces\n	var z: float = 0.0           # launch_depth")
     return s
@@ -37,7 +37,7 @@ rw('sim/core/state.gd', state)
 
 # ---------------------------------------------------------------- hash.gd
 def hsh(s):
-    s = rep(s, '"chainEvt", "z",\n', '"chainEvt", "z", "jContacts", "jT", "jV0", "tumbleT", "contactT", "launchN",\n')
+    s = rep(s, '"chainEvt", "z",\n', '"chainEvt", "z", "jContacts", "jT", "jV0", "tumbleT", "contactT", "launchN", "jLips",\n')
     s = rep(s, "	out.append(float(S.trees.size()))", "	out.append(1.0 if S.contactOn else 0.0)\n	out.append(float(S.trees.size()))")
     s = rep(s, '"launch": ["actor", "target", "amount", "face"],', '"launch": ["actor", "target", "amount", "face", "n", "ux", "uy"],')
     s = rep(s, '	"cue": ["actor", "kind", "text", "source"],',
@@ -97,6 +97,7 @@ def brunt(s):
 	f.jV0 = 0.0
 	f.tumbleT = -1
 	f.contactT = 0
+	f.jLips = 0
 	f.launchN += 1
 	var slot: float = float(S.fighters.find(f))
 	for i in range(S.out.fx.size() - 1, -1, -1):
