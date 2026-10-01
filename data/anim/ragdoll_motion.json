@@ -1,0 +1,27 @@
+{
+  "schema": "anim.ragdoll_motion/1",
+  "_about": "Animation overhaul, unit D (docs/animation/overhaul-plan.md): what the ragdoll does beyond its springs. shapes: each fighter's tuck, brace, skid and crumple targets, one angle (rad) per degree of freedom of ragdoll.json in its order, converted from Art's silhouette reference (art/concepts/silhouettes/gen.mjs; P circles, A blades, E wedges, C steps); fighters maps a roster id to a shape key (a placeholder map until the four fighters have theirs). flail: the early-launch limb flail (amp in rad and hz per degree of freedom, and the stateT window over which it fades out). regimes: tuck_max the most a tumble tucks, tuck_spin the spin (rad/s) over which it tucks, tuck_after the stateT window before which it does not, skid_w and crumple_down_w the weight of the skid and crumple shapes. hit: the hit-reaction kicks: for each degree of freedom and each region hit (head, core, arms, legs) the kick in rad/s is gain x force x (kx x dx x (1 + vx x v) + ky x dy + kc x w), dx and dy the blow's push in the body frame (x forward), v and w the deterministic variants of the hit in -1 to 1 (vx_var and kc_var name them: u, u2, or one for a constant 1). Render only, outside the sim's data hash.",
+  "fighters": {"default":"P","KAI":"P","VORR":"A"},
+  "shapes": {
+    "P": {"tuck":[-0.297,-0.223,0.445,0,1.484,0.89,0,1.335,1.409,-2,1.558,-1.854],"brace":[-0.415,-0.408,0.816,0,0.816,1.038,0,0.742,0.89,-1.558,1.157,-1.602],"skid":[0.119,0,0.445,0,1.335,0.593,0,1.038,0.816,-1.706,1.038,-1.632],"crumple":[-0.534,-0.631,0.148,0,-0.148,0.371,0,-0.148,0.445,-2,0.297,-2]},
+    "A": {"tuck":[0.178,-0.074,-1.6,0,0.148,2.299,0,0.074,-0.816,-0.074,0.593,-0.148],"brace":[0.059,-0.46,-0.445,0,0.074,1.662,0,-0.059,-0.742,-0.178,1.306,-0.415],"skid":[-0.059,0,2.4,0,0.074,-0.297,0,0.148,-0.089,0,0.119,-0.119],"crumple":[-0.38,-0.356,-0.119,0,-0.089,1.113,0,0.148,-0.445,-0.415,1.365,-1.602]},
+    "E": {"tuck":[0.095,-0.059,-0.386,0,-0.059,-0.267,0,-0.059,0.089,-0.03,-0.059,-0.03],"brace":[0.166,-0.208,-0.593,0,-0.2,-0.712,0,-0.178,-0.86,-0.119,0.949,-0.89],"skid":[0.071,0,-0.297,0,-0.148,-0.415,0,-0.089,0.267,0,0.356,0],"crumple":[-0.475,-0.49,-0.475,0,-0.178,-0.208,0,-0.119,-0.148,-1.365,1.306,-1.335]},
+    "C": {"tuck":[0,0,1.335,0,-0.2,1.335,0,-0.2,1.335,-1.335,1.335,-1.335],"brace":[0.237,-0.334,1.335,0,0,1.335,0,0,1.335,-1.335,1.335,-1.335],"skid":[0,0,-0.148,0,0,1.335,0,-0.2,0,0,1.335,-1.335],"crumple":[0,-0.668,0,0,0,0,0,0,0,-1.335,0,-1.335]}
+  },
+  "flail": {"amp":[0.18,0.12,0.7,0.3,0.55,0.7,0.3,0.55,0.5,0.45,0.5,0.45],"hz":[2.6,1.9,2.3,3.1,3.4,2.7,3.3,3.1,2.1,2.8,2.4,3],"fade":[0.35,1.2]},
+  "regimes": {"tuck_max":0.7,"tuck_after":[0.25,0.6],"skid_w":0.6,"crumple_down_w":0.6},
+  "hit": {"gain": 1.6, "dofs": [
+    {"id":"head","kx":[-18,-8.1,-8.1,-8.1],"ky":[10.8,4.86,4.86,4.86],"kc":[0,0,0,0],"vx":0,"vx_var":"u","kc_var":"u2"},
+    {"id":"spine","kx":[-2.4,14,5.6,5.6],"ky":[0,0,0,0],"kc":[0,0,0,0],"vx":0,"vx_var":"u","kc_var":"u2"},
+    {"id":"ua_l","kx":[-7.7,-7.7,-11,-7.7],"ky":[0,0,0,0],"kc":[0,0,0,0],"vx":0.3,"vx_var":"u","kc_var":"u2"},
+    {"id":"ua_l_x","kx":[0,0,0,0],"ky":[0,0,0,0],"kc":[3,3,3,3],"vx":0,"vx_var":"u","kc_var":"u2"},
+    {"id":"fa_l","kx":[-5.6,-5.6,-8,-5.6],"ky":[0,0,0,0],"kc":[0,0,0,0],"vx":0,"vx_var":"u","kc_var":"u2"},
+    {"id":"ua_r","kx":[-7.7,-7.7,-11,-7.7],"ky":[0,0,0,0],"kc":[0,0,0,0],"vx":-0.3,"vx_var":"u","kc_var":"u2"},
+    {"id":"ua_r_x","kx":[0,0,0,0],"ky":[0,0,0,0],"kc":[-3,-3,-3,-3],"vx":0,"vx_var":"u","kc_var":"u2"},
+    {"id":"fa_r","kx":[-5.6,-5.6,-8,-5.6],"ky":[0,0,0,0],"kc":[0,0,0,0],"vx":0,"vx_var":"u","kc_var":"u2"},
+    {"id":"th_l","kx":[-4.8,-4.8,-4.8,-4.8],"ky":[0,0,0,0],"kc":[0,0,0,0],"vx":0.667,"vx_var":"u2","kc_var":"u2"},
+    {"id":"sh_l","kx":[0,0,0,0],"ky":[0,0,0,0],"kc":[-1.5,-1.5,-1.5,-3],"vx":0,"vx_var":"u","kc_var":"one"},
+    {"id":"th_r","kx":[-4.8,-4.8,-4.8,-4.8],"ky":[0,0,0,0],"kc":[0,0,0,0],"vx":-0.667,"vx_var":"u2","kc_var":"u2"},
+    {"id":"sh_r","kx":[0,0,0,0],"ky":[0,0,0,0],"kc":[-1.5,-1.5,-1.5,-3],"vx":0,"vx_var":"u","kc_var":"one"}
+  ]}
+}

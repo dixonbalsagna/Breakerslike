@@ -58,7 +58,7 @@ var _spring_bones := PackedInt32Array()
 var _lag := PackedFloat32Array()
 var _prof: Dictionary = {}
 var _part: String = ""                 # the key set playing this frame, "" for none (for tools)
-var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0, "skims": 0, "ground_events": 0, "rd_ticks": 0, "rd_usec": 0, "catches": 0}
+var debug := {"contact_frames": 0, "contact_err_max": 0.0, "parts": 0, "nan": 0, "ik_frames": 0, "gap_max": 0.0, "gap_sum": 0.0, "gap_n": 0, "face_flips": 0, "gaps": [], "notes": [], "blows": 0, "late": 0, "late_notes": [], "variants": {}, "wound_strikes": 0, "wound_bad": 0, "skims": 0, "ground_events": 0, "rd_ticks": 0, "rd_usec": 0, "catches": 0, "slope_frames": 0, "aims": 0}
 
 ## The facing the mannequin is drawn with (-1 or 1). The sim's `face` can lag a dodge warp or a swap of sides, so this one
 ## is derived from the opponent in an exchange and from the travel direction otherwise (A2, docs/animation section 9.3).
@@ -99,6 +99,22 @@ var _rd_prev_state: String = ""
 var _rd_prev_slide: bool = false
 var _rd_prev_speed: float = 0.0
 var _skim_t0: float = -1.0
+var _shape_set: bool = false
+var _sp_vw := Vector2.ZERO
+var _sp_have: bool = false
+var _look: float = 0.0                 # the head's pitch toward the opponent, smoothed
+var _gf_x_valid: bool = false
+var _gf_x: float = 0.0
+var _gf_face: float = 1.0
+var _gf_tick: int = -100
+var _gf_g0: float = 0.0
+var _gf_dF: float = 0.0
+var _gf_dB: float = 0.0
+var _gf_sl: float = 0.0
+var _foot_w: float = 0.0               # how much the feet are placed on a slope now (eases in and out)
+var _foot_shift: float = 0.0           # the pelvis shift of the last placement (for tools)
+var _foot_dh := Vector2.ZERO           # the ground under each foot relative to under him (for tools)
+var _skid_pitch: float = 0.0
 var _hit_n: int = 0                     # hits taken (the variant hash)
 var _hit_free: float = 0.0              # how loose a hit leaves the limbs; decays, slower with wear
 var layers: String = ""                # tools: which layers shaped this frame (set only with debug_checks)
@@ -150,8 +166,10 @@ func _init(slot_: int) -> void:
 func on_tick(dt: float, frozen: bool, S: SimState = null, f = null) -> void:
 	_spring_dt += dt * (0.1 if frozen else 1.0)
 	_ip_acc += dt * (0.5 if frozen else 1.0)
-	if S != null and f != null and not frozen:
-		_rd_tick(S, f, dt)
+	if S != null and f != null:
+		_spring_tick(S, f, dt, frozen)
+		if not frozen:
+			_rd_tick(S, f, dt)
 
 
 ## A launched fighter skipped off water (the sim's skim event): the body arches and flares for an instant.
@@ -209,27 +227,10 @@ func on_hit(T: float, region: String, front: bool, amp: float, kind: String = ""
 		return
 	var ra: float = _rd_amp()
 	var wear_k: float = 1.0 + 0.7 * _worn + 0.5 * _brinkp
-	var F: float = clampf(force, 0.15, 1.6) * wear_k * (1.0 + 0.25 * u) * ra * 1.6
+	var F: float = clampf(force, 0.15, 1.6) * wear_k * (1.0 + 0.25 * u) * ra
 	if kind == "guard":
 		F *= 0.4
-	var head_k: float = 1.0 if region == "head" else 0.45
-	var core_k: float = 1.0 if region == "core" else 0.4
-	var legs_k: float = 1.0 if region == "legs" else 0.5
-	var arms_k: float = 1.0 if region == "arms" else 0.7
-	var dx: float = d.x
-	var dy: float = d.y
-	_rd.kick(0, (-dx + 0.6 * dy) * 18.0 * F * head_k)
-	_rd.kick(1, dx * 14.0 * F * core_k + (-dx * 8.0 * F if region == "head" else 0.0))
-	_rd.kick(2, -dx * 11.0 * F * arms_k * (1.0 + 0.3 * u))
-	_rd.kick(5, -dx * 11.0 * F * arms_k * (1.0 - 0.3 * u))
-	_rd.kick(4, -dx * 8.0 * F * arms_k)
-	_rd.kick(7, -dx * 8.0 * F * arms_k)
-	_rd.kick(3, 3.0 * F * u2)
-	_rd.kick(6, -3.0 * F * u2)
-	_rd.kick(8, -dx * 8.0 * F * (0.6 + 0.4 * u2))
-	_rd.kick(10, -dx * 8.0 * F * (0.6 - 0.4 * u2))
-	_rd.kick(9, -3.0 * F * legs_k)
-	_rd.kick(11, -3.0 * F * legs_k)
+	_rd.hit(d.x, d.y, F, int(AnimRagdoll.REGIONS.get(region, 1)), u, u2)
 	_hit_free = minf(1.0, _hit_free + 0.5 * F + 0.3 * _worn)
 	_rd.out_w = 1.0
 
@@ -383,6 +384,9 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	_beam_layer(S, f, T)
 	if not _form.is_empty():
 		_transform_layer(S, T)
+	# 4a. the head looks at the opponent
+	if RenderAnim.ragdoll_enabled:
+		_look_at(S, f, dt)
 	# 4b. a broken arm hangs, a broken leg is favoured
 	if _arm_broken or _leg_broken:
 		_wound_limbs(f, T)
@@ -391,6 +395,9 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	_recoil_y = 0.0
 	_step_x = 0.0
 	_reaction_layer(T)
+	# 5a. feet on the slope under him, a skid pitched to the ground (before the contact solve, so a blow reaches from the new stance)
+	if RenderAnim.ground_feet and RenderAnim.ragdoll_enabled:
+		_ground_feet(S, f, dt)
 	# 5b. the striking limb reaches the defender (the contact solve)
 	if _ci_w > 0.001:
 		_contact_ik(S, f)
@@ -642,6 +649,18 @@ func _set_pose(p: AnimPose) -> void:
 
 # ------------------------------------------------------------------ the exchange
 
+## How heavy a blow is, continuously: the damage over 70 (a chain link, which carries no damage, counts as 1). It stretches the
+## load, the follow-through and the recovery and deepens the overshoot (overhaul unit D); the contact tick never moves.
+static func _blow_weight(args: Dictionary) -> float:
+	if not RenderAnim.ragdoll_enabled:
+		return 0.7   # neutral: the A/B off switch leaves the blow's timing as it was
+	var d: float = float(args.get("dmg", -1.0))
+	if d < 0.0:
+		var o = args.get("o")
+		return 1.0 if (o != null and bool(o.get("big", false))) else 0.6
+	return clampf(d / 70.0, 0.2, 1.4)
+
+
 func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var role: String = "A" if ex.A == f else "D"
 	var t0: float = T - ex.t
@@ -696,10 +715,11 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 		var tc: float = strikes[n][0]
 		var sp: Dictionary = _part_prof(String(strikes[n][3]))
 		profs.append(sp)
-		var Fn: float = float(sp.get("follow_ticks", 6)) * DT
+		var Fn: float = float(sp.get("follow_ticks", 6)) * DT * (0.85 + 0.25 * _blow_weight(strikes[n][2]))
 		var Rn: float = float(sp.get("recover_ticks", 10)) * DT
 		var Sn_: float = float(sp.get("snap_ticks", 3)) * DT
-		var lnom: float = float(sp.get("load_ticks", {}).get("heavy" if strikes[n][3] == "heavy" else "light", 12)) * DT
+		var bw: float = _blow_weight(strikes[n][2])
+		var lnom: float = float(sp.get("load_ticks", {}).get("heavy" if strikes[n][3] == "heavy" else "light", 12)) * DT * (0.75 + 0.35 * bw)
 		var gap: float = tc - prev_tc
 		var L: float = clampf(minf(lnom, gap - 0.5 * Fn), Sn_ + 2.0 * DT, lnom)
 		lens.append(L)
@@ -713,8 +733,9 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var prof: Dictionary = profs[best]
 	_set_lag(float(prof.get("lag", 0.3)))
 	var Sn: float = float(prof.get("snap_ticks", 3)) * DT
-	var F: float = float(prof.get("follow_ticks", 6)) * DT
-	var R: float = float(prof.get("recover_ticks", 10)) * DT
+	var bw2: float = _blow_weight(strikes[best][2])
+	var F: float = float(prof.get("follow_ticks", 6)) * DT * (0.85 + 0.25 * bw2)
+	var R: float = float(prof.get("recover_ticks", 10)) * DT * (0.9 + 0.2 * bw2)
 	var dq: float = 1.0 / float(prof.get("solve_hz", 60.0))
 	var tc2: float = strikes[best][0]
 	var L2: float = lens[best]
@@ -766,7 +787,7 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	elif dtc < F:
 		_set_pose(pk)
 		var u3: float = clampf(dtc / F, 0.0, 1.0)
-		var w3: float = _ease_out_back(u3, float(prof.get("overshoot", 0.1)))
+		var w3: float = _ease_out_back(u3, float(prof.get("overshoot", 0.1)) * (0.6 + 0.8 * bw2))
 		AnimPose.mix(q, pf.q, w3)
 		hips = pk.hips.lerp(pf.hips, w3)
 		curl = pk.curl.lerp(pf.curl, w3)
@@ -1072,22 +1093,39 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 			_rd.crumple(clampf(_rd_prev_speed / 3000.0, 0.3, 1.5), amp)
 		elif sliding and not _rd_prev_slide and _rd_prev_state == "launched":
 			_rd.crumple(clampf(_rd_prev_speed / 4000.0, 0.2, 0.9), amp)
+	if not _shape_set:
+		_shape_set = true
+		_rd.set_shape(String(f.id))
+		_rd.phase = float(slot) * 0.9
 	var free_t: float = 0.0
 	var tuck: float = 0.0
 	var brace: float = 0.0
+	var skid: float = 0.0
+	var crum: float = 0.0
+	var flail: float = 0.0
 	if flying:
+		# the early launch is a flail (limbs thrown about); the body tucks only at a high spin and only after the first moments
 		free_t = 0.85
-		tuck = 0.7 * smoothstep(4.0, 9.0, absf(f.spin)) * (0.65 + 0.35 * cos(f.rot * 0.5))
+		tuck = AnimRagdoll.tuck_max * smoothstep(AnimRagdoll.tuck_spin.x, AnimRagdoll.tuck_spin.y, absf(f.spin)) * smoothstep(AnimRagdoll.tuck_after.x, AnimRagdoll.tuck_after.y, f.stateT) * (0.65 + 0.35 * cos(f.rot * 0.5))
+		flail = (1.0 - smoothstep(AnimRagdoll.flail_fade.x, AnimRagdoll.flail_fade.y, f.stateT)) * (1.0 - tuck)
 		if f.vy < -200.0 and f.aimB < 0:
 			var h: float = f.y - WorldTerrain.groundY(S, f.x)
 			if h > 0.0:
 				var tc: float = (f.vy + sqrt(f.vy * f.vy + 2000.0 * h)) / 1000.0
-				brace = 1.0 - smoothstep(0.08, 0.3, tc)
+				brace = 1.0 - smoothstep(AnimRagdoll.brace_time.x, AnimRagdoll.brace_time.y, tc)
 				brace *= 1.0 - tuck * 0.5
+				flail *= 1.0 - brace
 	elif sliding:
 		free_t = 0.55
+		skid = AnimRagdoll.skid_w
 	elif st == "down":
 		free_t = 0.25 if f.stateT < 0.6 else 0.0
+		crum = AnimRagdoll.crumple_down_w if f.stateT < 0.7 else 0.0
+	_rd.w_tuck = tuck
+	_rd.w_brace = brace
+	_rd.w_skid = skid
+	_rd.w_crumple = crum
+	_rd.w_flail = flail
 	# polish: the lean into acceleration while he is free, and the contact catch (a striker carried far in one tick is drawn
 	# travelling to his place, not popping to it)
 	var lean_t: float = 0.0
@@ -1095,11 +1133,12 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 		lean_t = clampf(ao.x / 9000.0, -1.0, 1.0) * 0.35 * amp
 	_lean += (lean_t - _lean) * (1.0 - exp(-dt / 0.12))
 	var cx: float = SimWrap.sdx(_prev_x, f.x) if _have_x else 0.0
+	var pcx: float = _prev_cx
 	_prev_x = f.x
 	_prev_cx = cx
 	_have_x = true
 	var ex = S.dirS.ex
-	if absf(cx) > 160.0 and absf(cx) > 1.5 * absf(_prev_cx) and ex != null and ex.A == f and not flying and not sliding and amp > 0.5:
+	if absf(cx) > 160.0 and absf(cx) > 1.5 * absf(pcx) and ex != null and ex.A == f and not flying and not sliding and amp > 0.5:
 		_smear = clampf(-cx * m * 0.15, -24.0, 24.0)
 		_smear_t0 = S.T
 		debug["catches"] += 1
@@ -1111,13 +1150,78 @@ func _rd_tick(S: SimState, f, dt: float) -> void:
 	_rd_have = true
 	var active: bool = st == "launched" or st == "down" or _rd.free > 0.02 or _rd.energy() > 0.03
 	if active:
-		_rd.step(dt, vl, al, free_t, tuck * amp, brace * amp, amp)
+		_rd.step(dt, vl, al, free_t, amp, S.T)
 	_rd.out_w = move_toward(_rd.out_w, 1.0 if active else 0.0, dt * 8.0)
 	if not active and _rd.out_w <= 0.0 and _rd.energy() > 0.0:
 		_rd.reset()
 	if RenderAnim.debug_checks:
 		debug["rd_ticks"] += 1
 		debug["rd_usec"] += Time.get_ticks_usec() - t0
+
+
+## Feet on the ground under them. A standing fighter on a slope (a crater wall, a rim, a heap) has one foot higher than the other:
+## the pelvis follows the mean and each leg is solved to its own foot's ground (two-bone IK, the knee staying where the pose has
+## it). A skid is pitched to the slope along its way. Reads the terrain only (WorldTerrain.groundY); cheap when the ground is flat
+## (three reads, no solve).
+func _ground_feet(S: SimState, f, dt: float) -> void:
+	var st: String = f.state
+	var sliding: bool = f.slide > 0.0
+	# one ground read a solve; the slope reads only while he stands or slides, and cached while he stays within 3 units
+	var g0: float = WorldTerrain.groundY(S, f.x)
+	var stand: bool = (st == "free" or st == "locked" or st == "charging") and not sliding and absf(f.y - g0) < 8.0
+	var target_w: float = 0.0
+	var pitch_t: float = 0.0
+	if stand or sliding:
+		if not (_gf_x_valid and absf(SimWrap.sdx(_gf_x, f.x)) < 3.0 and vface == _gf_face and S.tick - _gf_tick < 20):
+			_gf_x_valid = true
+			_gf_x = f.x
+			_gf_face = vface
+			_gf_tick = S.tick
+			_gf_dF = WorldTerrain.groundY(S, f.x + vface * 10.0) - g0
+			_gf_dB = WorldTerrain.groundY(S, f.x - vface * 10.0) - g0
+			_gf_sl = (WorldTerrain.groundY(S, f.x + vface * 12.0) - WorldTerrain.groundY(S, f.x - vface * 12.0)) / 24.0
+		if sliding:
+			pitch_t = atan(_gf_sl) * 0.9
+		elif absf(_gf_dF) > 1.5 or absf(_gf_dB) > 1.5:
+			target_w = 1.0
+	if absf(target_w - _foot_w) < 0.001 and absf(pitch_t - _skid_pitch) < 0.001 and _foot_w < 0.02:
+		_foot_shift = 0.0
+		_foot_dh = Vector2.ZERO
+		return
+	var k: float = 1.0 - exp(-dt / 0.1)
+	_foot_w += (target_w - _foot_w) * k
+	_skid_pitch += (pitch_t - _skid_pitch) * (1.0 - exp(-dt / 0.08))
+	if absf(_skid_pitch) > 0.01:
+		var pe: int = AnimRig.index["pelvis"]
+		q[pe] = q[pe] * Quaternion(Vector3(0, 0, 1), _skid_pitch)
+	if _foot_w < 0.02:
+		_foot_shift = 0.0
+		_foot_dh = Vector2.ZERO
+		return
+	var ix: Dictionary = AnimRig.index
+	AnimPose.fk(q, hips, gq, gp)
+	_full_fk = true
+	var fl: int = ix["foot_l"]
+	var fr: int = ix["foot_r"]
+	var dhl: float = WorldTerrain.groundY(S, f.x + vface * gp[fl].x) - g0
+	var dhr: float = WorldTerrain.groundY(S, f.x + vface * gp[fr].x) - g0
+	_foot_dh = Vector2(dhl, dhr)
+	var shift: float = clampf((dhl + dhr) * 0.5, -10.0, 10.0) * _foot_w
+	_foot_shift = shift
+	hips.y += shift
+	for i in range(1, AnimRig.N):
+		gp[i].y += shift
+	debug["slope_frames"] += 1
+	for leg in [["thigh_l", "shin_l", "foot_l", dhl], ["thigh_r", "shin_r", "foot_r", dhr]]:
+		var a: int = ix[leg[0]]
+		var b: int = ix[leg[1]]
+		var c: int = ix[leg[2]]
+		var qa0: Quaternion = q[a]
+		var qb0: Quaternion = q[b]
+		var tgt := Vector3(gp[c].x, gp[c].y - shift + float(leg[3]) * _foot_w, gp[c].z)
+		var pole: Vector3 = gp[b]
+		AnimPose.ik2(q, gq, gp, a, b, c, tgt, pole)
+		AnimPose.hinge_fix(q, gq, gp, a, b, c, -1.0)
 
 
 func _wound_read(f) -> void:
@@ -1245,11 +1349,56 @@ func _beam_layer(S: SimState, f, T: float) -> void:
 	if f.beamCharge != null:
 		var p: float = clampf((T - float(f.beamCharge)) / 0.8, 0.0, 1.0)
 		_mix_pose(AnimData.pose("beam.charge"), smoothstep(0.0, 0.35, p))
+		_aim_arms(_aim_angle(S, f, null), smoothstep(0.2, 0.6, p))
 		return
 	for b in S.beams:
 		if b.A == f and b.t < b.life:
-			_mix_pose(AnimData.pose("beam.fire"), 1.0 - smoothstep(0.55, 0.95, b.t))
+			var bwt: float = 1.0 - smoothstep(0.55, 0.95, b.t)
+			_mix_pose(AnimData.pose("beam.fire"), bwt)
+			_aim_arms(_aim_angle(S, f, b), bwt)
 			return
+
+
+## The angle the signature is aimed at, in the body frame (0 forward, positive up): the beam's own direction once it is fired, the
+## opponent's direction while it charges.
+func _aim_angle(S: SimState, f, b) -> float:
+	if b != null:
+		return clampf(atan2(float(b.uy), float(b.ux) * vface), -1.2, 1.2)
+	var opp = _opponent(S, f)
+	if opp == null:
+		return 0.0
+	var dx: float = absf(SimWrap.sdx(f.x, opp.x))
+	return clampf(atan2((opp.y + 55.0) - (f.y + 55.0), maxf(dx, 40.0)), -1.2, 1.2)
+
+
+## Both arms (and a little of the chest) turn to the aim: a beam is thrown along its line, not along the pose's fixed forward.
+func _aim_arms(alpha: float, w: float) -> void:
+	if not RenderAnim.ragdoll_enabled or w <= 0.001:
+		return
+	var a: float = alpha * w * _rd_amp()
+	var ix: Dictionary = AnimRig.index
+	for nm in ["upper_arm_l", "upper_arm_r"]:
+		q[ix[nm]] = q[ix[nm]] * Quaternion(Vector3(0, 0, 1), a)
+	q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(0, 0, 1), a * 0.25)
+	debug["aims"] += 1
+
+
+## The head looks at the opponent: up or down by where his head is, smoothed, in an exchange or when he is near (overhaul unit D).
+func _look_at(S: SimState, f, dt: float) -> void:
+	var opp = _opponent(S, f)
+	var t: float = 0.0
+	var st: String = f.state
+	if opp != null and st != "launched" and st != "down" and not (f.beamCharge != null):
+		var dxo: float = SimWrap.sdx(f.x, opp.x) * vface
+		if dxo > 10.0 and dxo < 1200.0:
+			t = clampf(atan2((opp.y + 60.0) - (f.y + 60.0), maxf(dxo, 40.0)), -0.7, 0.7) * 0.8
+	_look += (t - _look) * (1.0 - exp(-dt / 0.12))
+	if absf(_look) > 0.004:
+		var a: float = _look * _rd_amp()
+		var ix: Dictionary = AnimRig.index
+		q[ix["head"]] = q[ix["head"]] * Quaternion(Vector3(0, 0, 1), a * 0.55)
+		q[ix["neck"]] = q[ix["neck"]] * Quaternion(Vector3(0, 0, 1), a * 0.3)
+		q[ix["spine_2"]] = q[ix["spine_2"]] * Quaternion(Vector3(0, 0, 1), a * 0.1)
 
 
 func _reaction_layer(T: float) -> void:
@@ -1294,22 +1443,34 @@ func _reaction_layer(T: float) -> void:
 	_reacts = keep
 
 
+## The sash and pack chains, one step per sim tick (never per frame, so a replay shows the same cloth): driven by the velocity along
+## the way he faces, the acceleration, and a flutter at speed (overhaul unit D); frozen ticks run at a tenth.
+func _spring_tick(S: SimState, f, dt: float, frozen: bool) -> void:
+	var m: float = vface
+	var vw := Vector2(f.vx * m, f.vy)
+	var aw := Vector2.ZERO
+	if _sp_have:
+		aw = (vw - _sp_vw) / maxf(dt, 0.0001)
+	_sp_vw = vw
+	_sp_have = true
+	var h_all: float = dt * (0.1 if frozen else 1.0)
+	var sp_n: float = clampf(vw.length() / 1600.0, 0.0, 1.0)
+	var flutter: float = 0.12 * sp_n * (0.35 if RenderAnim.reduced_motion else 1.0) * (1.0 if RenderAnim.ragdoll_enabled else 0.0)
+	var ov: float = 1.0 if RenderAnim.ragdoll_enabled else 0.0
+	var target: float = -clampf(vw.x / 1600.0, -1.0, 1.0) * 0.9 - clampf(aw.x / 12000.0, -1.0, 1.0) * 0.5 * ov
+	var n: int = 2
+	var h: float = h_all / float(n)
+	for _s in range(n):
+		for kx in range(5):
+			var stiff: float = [40.0, 60.0, 90.0, 60.0, 90.0][kx]
+			var damp: float = 5.0
+			var goal: float = target * [0.5, 1.0, 0.8, 1.0, 0.8][kx] + flutter * sin(S.T * TAU * 4.5 + float(kx) * 1.3 + float(slot))
+			var a: float = -stiff * (_sx[kx] - goal) - damp * _sv[kx]
+			_sv[kx] += a * h
+			_sx[kx] += _sv[kx] * h
+
+
 func _springs(f) -> void:
-	var vf: float = f.vx * vface
-	var target: float = -clampf(vf / 1600.0, -1.0, 1.0) * 0.9
-	var h_all: float = minf(_spring_dt, 0.1)
-	_spring_dt = 0.0
-	if h_all > 0.0:
-		var n: int = clampi(int(ceil(h_all / (1.0 / 120.0))), 1, 8)
-		var h: float = h_all / n
-		for _s in range(n):
-			for kx in range(5):
-				var stiff: float = [40.0, 60.0, 90.0, 60.0, 90.0][kx]
-				var damp: float = 5.0
-				var goal: float = target * [0.5, 1.0, 0.8, 1.0, 0.8][kx]
-				var a: float = -stiff * (_sx[kx] - goal) - damp * _sv[kx]
-				_sv[kx] += a * h
-				_sx[kx] += _sv[kx] * h
 	for kx in range(5):
 		var bi: int = _spring_bones[kx]
 		q[bi] = q[bi] * Quaternion(Vector3(0, 0, 1), clampf(_sx[kx], -0.9, 0.9))

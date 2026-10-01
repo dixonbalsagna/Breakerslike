@@ -2,23 +2,19 @@
   "schema": "anim.ragdoll/1",
   "_about": "Animation overhaul, unit A: the active ragdoll (docs/animation/overhaul-plan.md). Twelve angular degrees of freedom on springs around the posed target, stepped once per sim tick from the body's own velocity and acceleration. Angles in radians about the bone's local z (the sagittal plane) unless axis is x (an arm lifting out sideways). beta is the limb's rest direction in the body plane (0 hangs down, 3.14159 points up). k_stiff and k_loose are the spring (1/s^2) when the pose is in charge and when the body is loose; c the damping (1/s); drag and inertia scale the streamer drag (per 1500 u/s) and the inertial whip (per 6000 u/s^2); lo and hi limit the angle; tsg is the angle an arm or leg opens to at full speed; tuck and brace are the target angles of those moves and crumple the impulse (rad/s) of a slam. Render only, outside the sim's data hash.",
   "dofs": [
-    {"id": "head",   "bone": "head", "axis": "z", "beta": 3.14159, "k_stiff": 140, "k_loose": 30, "c": 7, "drag": 22, "inertia": 18, "lo": -1.2, "hi": 1.0, "tsg": 0.0, "tuck": -0.6, "brace": -0.5, "crumple": -9.0},
-    {"id": "spine",  "bone": "spine_2", "bone2": "spine_1", "share": 0.6, "axis": "z", "beta": 3.14159, "k_stiff": 120, "k_loose": 18, "c": 6, "drag": 12, "inertia": 12, "lo": -0.9, "hi": 1.2, "tsg": 0.0, "tuck": -0.8, "brace": -0.15, "crumple": -7.0},
-    {"id": "ua_l",   "bone": "upper_arm_l", "axis": "z", "beta": 0.0, "k_stiff": 90, "k_loose": 14, "c": 4, "drag": 30, "inertia": 26, "lo": -1.6, "hi": 2.4, "tsg": 0.0, "tuck": 0.6, "brace": 1.6, "crumple": 3.0},
-    {"id": "ua_l_x", "bone": "upper_arm_l", "axis": "x", "beta": 0.0, "k_stiff": 80, "k_loose": 16, "c": 4, "drag": 0, "inertia": 0, "lo": -0.9, "hi": 0.9, "tsg": 0.45, "tuck": 0.0, "brace": 0.0, "crumple": 2.0},
-    {"id": "fa_l",   "bone": "forearm_l", "axis": "z", "beta": 0.0, "k_stiff": 100, "k_loose": 20, "c": 4, "drag": 26, "inertia": 22, "lo": -0.2, "hi": 1.6, "tsg": 0.0, "tuck": 1.7, "brace": 0.3, "crumple": 4.0},
-    {"id": "ua_r",   "bone": "upper_arm_r", "axis": "z", "beta": 0.0, "k_stiff": 90, "k_loose": 14, "c": 4, "drag": 30, "inertia": 26, "lo": -1.6, "hi": 2.4, "tsg": 0.0, "tuck": 0.6, "brace": 1.6, "crumple": 3.0},
-    {"id": "ua_r_x", "bone": "upper_arm_r", "axis": "x", "beta": 0.0, "k_stiff": 80, "k_loose": 16, "c": 4, "drag": 0, "inertia": 0, "lo": -0.9, "hi": 0.9, "tsg": -0.45, "tuck": 0.0, "brace": 0.0, "crumple": -2.0},
-    {"id": "fa_r",   "bone": "forearm_r", "axis": "z", "beta": 0.0, "k_stiff": 100, "k_loose": 20, "c": 4, "drag": 26, "inertia": 22, "lo": -0.2, "hi": 1.6, "tsg": 0.0, "tuck": 1.7, "brace": 0.3, "crumple": 4.0},
-    {"id": "th_l",   "bone": "thigh_l", "axis": "z", "beta": 0.0, "k_stiff": 110, "k_loose": 18, "c": 5, "drag": 24, "inertia": 20, "lo": -1.2, "hi": 1.6, "tsg": 0.0, "tuck": 1.5, "brace": 0.2, "crumple": 2.0},
-    {"id": "sh_l",   "bone": "shin_l", "axis": "z", "beta": 0.0, "k_stiff": 120, "k_loose": 22, "c": 5, "drag": 24, "inertia": 20, "lo": -2.0, "hi": 0.0, "tsg": 0.0, "tuck": -1.9, "brace": -0.3, "crumple": -3.0},
-    {"id": "th_r",   "bone": "thigh_r", "axis": "z", "beta": 0.0, "k_stiff": 110, "k_loose": 18, "c": 5, "drag": 24, "inertia": 20, "lo": -1.2, "hi": 1.6, "tsg": 0.0, "tuck": 1.5, "brace": 0.2, "crumple": 2.0},
-    {"id": "sh_r",   "bone": "shin_r", "axis": "z", "beta": 0.0, "k_stiff": 120, "k_loose": 22, "c": 5, "drag": 24, "inertia": 20, "lo": -2.0, "hi": 0.0, "tsg": 0.0, "tuck": -1.9, "brace": -0.3, "crumple": -3.0}
+    {"id":"head","bone":"head","axis":"z","beta":3.14159,"k_stiff":140,"k_loose":30,"c":7,"drag":22,"inertia":18,"lo":-1.2,"hi":1,"tsg":0,"tuck":-0.6,"brace":-0.5,"crumple":-9},
+    {"id":"spine","bone":"spine_2","bone2":"spine_1","share":0.6,"axis":"z","beta":3.14159,"k_stiff":120,"k_loose":18,"c":6,"drag":12,"inertia":12,"lo":-0.9,"hi":1.2,"tsg":0,"tuck":-0.8,"brace":-0.15,"crumple":-7},
+    {"id":"ua_l","bone":"upper_arm_l","axis":"z","beta":0,"k_stiff":90,"k_loose":14,"c":4,"drag":30,"inertia":26,"lo":-1.6,"hi":2.4,"tsg":0,"tuck":0.6,"brace":1.6,"crumple":3},
+    {"id":"ua_l_x","bone":"upper_arm_l","axis":"x","beta":0,"k_stiff":80,"k_loose":16,"c":4,"drag":0,"inertia":0,"lo":-0.9,"hi":0.9,"tsg":0.45,"tuck":0,"brace":0,"crumple":2},
+    {"id":"fa_l","bone":"forearm_l","axis":"z","beta":0,"k_stiff":100,"k_loose":20,"c":4,"drag":26,"inertia":22,"lo":-0.2,"hi":1.8,"tsg":0,"tuck":1.7,"brace":0.3,"crumple":4},
+    {"id":"ua_r","bone":"upper_arm_r","axis":"z","beta":0,"k_stiff":90,"k_loose":14,"c":4,"drag":30,"inertia":26,"lo":-1.6,"hi":2.4,"tsg":0,"tuck":0.6,"brace":1.6,"crumple":3},
+    {"id":"ua_r_x","bone":"upper_arm_r","axis":"x","beta":0,"k_stiff":80,"k_loose":16,"c":4,"drag":0,"inertia":0,"lo":-0.9,"hi":0.9,"tsg":-0.45,"tuck":0,"brace":0,"crumple":-2},
+    {"id":"fa_r","bone":"forearm_r","axis":"z","beta":0,"k_stiff":100,"k_loose":20,"c":4,"drag":26,"inertia":22,"lo":-0.2,"hi":1.8,"tsg":0,"tuck":1.7,"brace":0.3,"crumple":4},
+    {"id":"th_l","bone":"thigh_l","axis":"z","beta":0,"k_stiff":110,"k_loose":18,"c":5,"drag":24,"inertia":20,"lo":-1.2,"hi":1.6,"tsg":0,"tuck":1.5,"brace":0.2,"crumple":2},
+    {"id":"sh_l","bone":"shin_l","axis":"z","beta":0,"k_stiff":120,"k_loose":22,"c":5,"drag":24,"inertia":20,"lo":-2,"hi":0,"tsg":0,"tuck":-1.9,"brace":-0.3,"crumple":-3},
+    {"id":"th_r","bone":"thigh_r","axis":"z","beta":0,"k_stiff":110,"k_loose":18,"c":5,"drag":24,"inertia":20,"lo":-1.2,"hi":1.6,"tsg":0,"tuck":1.5,"brace":0.2,"crumple":2},
+    {"id":"sh_r","bone":"shin_r","axis":"z","beta":0,"k_stiff":120,"k_loose":22,"c":5,"drag":24,"inertia":20,"lo":-2,"hi":0,"tsg":0,"tuck":-1.9,"brace":-0.3,"crumple":-3}
   ],
-  "drive": {"v0": 1500.0, "a0": 6000.0, "a_max": 40000.0, "gate": 0.25, "free_rate": 18.0},
-  "regimes": {
-    "free": {"launched": 0.85, "slide": 0.55, "down": 0.25},
-    "tuck_spin": [4.0, 9.0],
-    "brace_time": [0.08, 0.3]
-  }
+  "drive": {"v0":1500,"a0":6000,"a_max":40000,"gate":0.25,"free_rate":18},
+  "regimes": {"free":{"launched":0.85,"slide":0.55,"down":0.25},"tuck_spin":[10,15],"brace_time":[0.08,0.3]}
 }

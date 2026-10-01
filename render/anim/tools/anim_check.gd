@@ -210,12 +210,14 @@ func _rd_run(per_frame: int, until: int, reduced: bool, enabled: bool = true) ->
 	main.start_match(4, {"p1": true, "p2": true})
 	var S: SimState = main.host.S
 	var maxe := 0.0
+	var maxlook := 0.0
 	var active := 0
 	while main.host.ticks < until:
 		main.frame(DT * per_frame)
 		for f in S.fighters:
 			var rd: AnimRagdoll = RenderAnim.fighter(S, f)._rd
 			maxe = maxf(maxe, rd.energy())
+			maxlook = maxf(maxlook, absf(RenderAnim.fighter(S, f)._look))
 			if rd.out_w > 0.5:
 				active += 1
 	var th: Array = []
@@ -224,8 +226,12 @@ func _rd_run(per_frame: int, until: int, reduced: bool, enabled: bool = true) ->
 		for i in range(AnimRagdoll.N):
 			th.append(snappedf(rd2.th[i], 0.0001))
 		th.append(snappedf(rd2.out_w, 0.0001))
+		var afx: AnimFighter = RenderAnim.fighter(S, f)
+		for i in range(5):
+			th.append(snappedf(afx._sx[i], 0.0001))
+		th.append(snappedf(afx._look, 0.0001))
 	RenderAnim.reduced_motion = false
-	return {"th": th, "maxe": maxe, "active": active, "ticks": main.host.ticks}
+	return {"th": th, "maxe": maxe, "active": active, "ticks": main.host.ticks, "look": maxlook}
 
 
 func _test_ragdoll() -> void:
@@ -252,6 +258,7 @@ func _test_ragdoll() -> void:
 	for i in range(AnimRagdoll.N):
 		w2 += absf(af._rd.om[i])
 	_expect(w1 > 1.0 and w2 > w1, "ragdoll test: the ground events did not move the body (%.2f, %.2f)" % [w1, w2])
+	_expect(a.look > 0.03, "ragdoll test: the head never looked at the opponent (%.3f)" % a.look)
 	var sk := AnimFighter.new(0)
 	sk.on_skim(2.0, 3000.0)
 	_expect(sk._skim_t0 == 2.0 and absf(sk._rd.om[1]) > 1.0, "ragdoll test: a water skim did not start the arch")
@@ -301,6 +308,94 @@ func _test_hits() -> void:
 	cs._smear_t0 = 1.0
 	_expect(cs._smear_now(1.0) == -20.0 and cs._smear_now(1.025) < -2.0 and cs._smear_now(1.025) > -18.0 and cs._smear_now(1.06) == 0.0, "hit test: the catch smear does not ease out")
 	print("hit test: head snap front %.1f behind %.1f, force 0.3 gives %.1f and 1.2 gives %.1f, worn %.1f fresh %.1f, two in a row %.1f then %.1f" % [front[0], back[0], small[0], big[0], worn[0], fresh[0], first[0], second[0]])
+
+
+## Feet on a slope (overhaul unit D): a crater is dug beside a stand on open ground; with the feet placed the ankles must sit on the
+## ground under each foot (the pose's own ankle height, 2.5 u), without they float or sink. The fighter is a stub (position and
+## state only) on a real terrain, so the check does not depend on where an AI match happens to fight.
+func _slope_run(on: bool, S: SimState, X: float) -> Dictionary:
+	var f := {"x": X, "y": WorldTerrain.groundY(S, X), "state": "free", "slide": 0.0, "vx": 0.0, "vy": 0.0}
+	var af := AnimFighter.new(0)
+	af.vface = 1.0
+	var base: AnimPose = AnimData.pose("stance.aggressive")
+	for i in range(AnimRig.N):
+		af.q[i] = base.q[i]
+	af.hips = base.hips
+	var gq: Array[Quaternion] = []
+	gq.resize(AnimRig.N)
+	var gp := PackedVector3Array()
+	gp.resize(AnimRig.N)
+	var err := 0.0
+	var n := 0
+	var worst := 0.0
+	var g0: float = WorldTerrain.groundY(S, X)
+	for k in range(-20, 40):
+		# stand at a series of places across the crater wall
+		var x: float = X + float(k) * 10.0
+		f.x = x
+		f.y = WorldTerrain.groundY(S, x)
+		for i in range(AnimRig.N):
+			af.q[i] = base.q[i]
+		af.hips = base.hips
+		if on:
+			for rep in range(40):
+				for i in range(AnimRig.N):
+					af.q[i] = base.q[i]
+				af.hips = base.hips
+				af._ground_feet(S, f, 0.05)
+		AnimPose.fk(af.q, af.hips, gq, gp)
+		for nm in ["foot_l", "foot_r"]:
+			var gpf: Vector3 = gp[AnimRig.index[nm]]
+			var fx: float = x + gpf.x
+			var gd: float = WorldTerrain.groundY(S, fx) - WorldTerrain.groundY(S, x)
+			if absf(gd) > 3.0:
+				var e: float = absf(gpf.y - gd - 2.5)
+				err += e
+				worst = maxf(worst, e)
+				n += 1
+	return {"n": n, "mean": err / maxf(1.0, n), "worst": worst}
+
+
+func _test_slope() -> void:
+	RenderAnim.enabled = true
+	RenderAnim.ragdoll_enabled = true
+	RenderAnim.ground_feet = true
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	for i in range(5):
+		main.frame(DT)
+	var X: float = -1.0
+	var xs: float = 0.0
+	while xs < 100000.0:
+		var g: float = WorldTerrain.groundY(S, xs)
+		if g > 40.0 and absf(WorldTerrain.groundY(S, xs + 120.0) - g) < 1.0 and absf(WorldTerrain.groundY(S, xs - 120.0) - g) < 1.0:
+			X = xs
+			break
+		xs += 100.0
+	_expect(X >= 0.0, "slope test: found no flat land for the test crater")
+	if X < 0.0:
+		return
+	WorldCrater.dig(S, SimWrap.wrap(X + 150.0), 1.0, S.fighters[1], "impact", 0.0, 1.0, false)
+	var off: Dictionary = _slope_run(false, S, X)
+	var on: Dictionary = _slope_run(true, S, X)
+	_expect(on.n > 5, "slope test: the stand was never on a slope (%d foot samples)" % on.n)
+	_expect(on.mean < 1.5 and on.mean < off.mean * 0.5, "slope test: the ankle is %.2f u off the ground with the feet placed and %.2f without" % [on.mean, off.mean])
+	print("slope test: %d foot samples on a crater wall, ankle height error %.2f u with the feet placed (worst %.1f), %.2f without" % [on.n, on.mean, on.worst, off.mean])
+
+
+## Anticipation and follow-through by the blow's weight, and the beam's aim (overhaul unit D).
+func _test_weight_aim() -> void:
+	var w20: float = AnimFighter._blow_weight({"dmg": 20.0})
+	var w50: float = AnimFighter._blow_weight({"dmg": 50.0})
+	var w90: float = AnimFighter._blow_weight({"dmg": 90.0})
+	_expect(w20 < w50 and w50 < w90 and w90 <= 1.4, "weight test: the blow weights are %.2f, %.2f, %.2f" % [w20, w50, w90])
+	_expect(AnimFighter._blow_weight({"o": {"big": true}}) == 1.0 and AnimFighter._blow_weight({}) < 1.0, "weight test: a chain link or a blow without damage reads wrong")
+	var af := AnimFighter.new(0)
+	var before: Quaternion = af.q[AnimRig.index["upper_arm_r"]]
+	af._aim_arms(0.5, 1.0)
+	var turned: float = af.q[AnimRig.index["upper_arm_r"]].angle_to(before)
+	_expect(absf(turned - 0.5) < 0.02, "aim test: the arm turned %.3f rad for an aim of 0.5" % turned)
+	print("weight test: blow weights %.2f %.2f %.2f for 20 50 90 damage; aim turns the arms %.2f rad for 0.5" % [w20, w50, w90, turned])
 
 
 func _run() -> void:
@@ -385,7 +480,9 @@ func _run() -> void:
 		_expect(hashes["off"] == hashes["snappy"] and hashes["off"] == hashes["fluid"] and hashes["off"] == hashes["mix"], "seed %d: the gameplay hash differs with the mannequin (off %s, mix %s, snappy %s, fluid %s)" % [seed, hashes["off"], hashes["mix"], hashes["snappy"], hashes["fluid"]])
 	await _test_wounds()
 	await _test_ragdoll()
+	_test_slope()
 	_test_hits()
+	_test_weight_aim()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	RenderAnim.debug_checks = false

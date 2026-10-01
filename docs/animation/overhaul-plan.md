@@ -1,6 +1,6 @@
 # Animation overhaul plan: maximally dynamic on the 27-bone mannequin
 
-Status: plan, with units A to C built (results in pose-pipeline.md §9.8), 2026-10-01, from Orb's direction ("an optimistic overhaul: maximise the dynamic animations, overhaul the ragdolls, fine tune the physics model"). Render only. The sim owns every position and velocity; animation owns how the body moves along that path. Parent plan: `pose-pipeline.md`.
+Status: plan, with units A to D built (results in pose-pipeline.md §9.8 and §9.9), 2026-10-02, from Orb's direction ("an optimistic overhaul: maximise the dynamic animations, overhaul the ragdolls, fine tune the physics model"). Render only. The sim owns every position and velocity; animation owns how the body moves along that path. Parent plan: `pose-pipeline.md`.
 
 ## 1. What "maximally dynamic" means here
 

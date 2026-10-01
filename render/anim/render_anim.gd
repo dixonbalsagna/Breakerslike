@@ -22,6 +22,8 @@ static var debug_checks: bool = false
 ## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
 static var ragdoll_enabled: bool = true
 static var reduced_motion: bool = false
+## Feet planted on the slope under a standing fighter, and a skid pitched to the ground (overhaul unit D); tools turn it off for the A/B.
+static var ground_feet: bool = true
 static var solve_usec: int = 0
 static var solve_count: int = 0
 

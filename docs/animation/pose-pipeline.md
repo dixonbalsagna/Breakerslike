@@ -1051,6 +1051,23 @@ Determinism: one step per tick, no random draw; `anim_check` runs the same match
 
 **Cost, on the exported HEAD plus these files.** Native: 7 to 12 us a tick a fighter for the ragdoll, solve 50 to 56 us each (A2 end: 41 to 51). The web bench is in the report.
 
+### 9.9 The overhaul, unit D: Orb's tuning, per-fighter shapes, slopes, aim, weight and cloth (2026-10-02)
+
+**D1. Flail, then tuck, per fighter; the hit kicks as data.** Orb: "ragdolled: favour limbs flailing early in a launch, tucking only at high spin". A launch now flails first: every limb follows its own slow oscillation (a phase per joint, a clock from sim time, nothing random) for the first 0.35 to 1.2 s (`flail` in `data/anim/ragdoll_motion.json`), and the body tucks only at a spin of 10 to 15 rad/s (the sim's launches spin at 8 to 16) and not before 0.25 to 0.6 s, at most 70%. The shapes the body tucks, braces, skids and crumples into are each fighter's own, converted from Art's silhouette reference (`art/concepts/silhouettes/gen.mjs`): P circles (a rolled ball), A blades (long limbs thrown out), E wedges, C steps (square quarter-turns), one angle per degree of freedom. Until the four fighters exist the roster ids map to shapes by a placeholder table (`fighters`: KAI to P, VORR to A; the default is P). The hit-reaction kicks are now data: `hit` in the same file gives, per degree of freedom and region hit, the kick as gain x force x (kx x dx x (1 + vx x v) + ky x dy + kc x w); the numbers of unit B are in it unchanged (the tests give the same values). A forearm's `hi` limit was lifted from 1.6 to 1.8 so its tuck target is not clipped (Tools' limit check).
+
+**D2. Feet and hands on the ground.** A standing fighter on a slope has one foot higher than the other: `_ground_feet` reads the ground under him (one terrain read a solve, the slope reads only while he stands or slides, cached within 3 units), moves the pelvis to the mean and solves each leg to its own foot's ground (two-bone IK, the knee where the pose has it) before the contact solve, so a blow reaches from the new stance. A skid is pitched to the slope along its way (the body tilted by the ground's slope, eased). On a crater wall the ankle height error was 4.2 u without it and 0.03 u with it (`anim_check`, 26 foot samples; `ragdoll_lab.gd --slope` shows it). Not done: foot pitch (the toes following the slope) and hands reaching the wall of a crater in a skid; both need the contact points, which wait for World's `land`/`bounce` events.
+
+**D3. Look, aim, weight, cloth.**
+| Layer | What it does |
+| :--- | :--- |
+| Look-at | the head (55%), the neck (30%) and the chest (10%) pitch toward the opponent's head, up or down, eased over 0.12 s, in an exchange or when he is within 1200 u ahead; not when launched, down or charging a beam |
+| Aim | a beam is thrown along its own line: the arms (and a quarter of that on the chest) turn to the beam's direction once it is fired, and to the opponent's direction while it charges (the fire pose's forward is fixed) |
+| Weight | every blow is weighed continuously, damage over 70 (a chain link counts as 1): the load stretches (x0.82 to 1.24), the follow-through (x0.9 to 1.2), the recovery (x0.94 to 1.18) and the overshoot (x0.76 to 1.72) with it; a heavy blow winds up longer and swings through further, a light one is quick. The contact tick never moves (anim_check: contact error 0.0014 rad, as before) |
+| Cloth | the sash and pack chains are stepped once per sim tick now, never per frame (a replay shows the same cloth), driven by the velocity, the acceleration (a start flings them back, a stop forward) and a flutter at speed (4.5 Hz, at most 7 degrees) |
+`anim_check` tests: the same match at one and at two ticks a frame ends with the same ragdoll, cloth and look state; the blow weights rise with the damage; the aim turns the arms by the aim; the feet; the head looks at the opponent in play. `--noragdoll` switches D1 to D3 and A to C off together for the before.
+
+**Cost.** `render/anim/tools/solve_bench.gd` (the same seeded match, alternating configurations): the whole overhaul is about 14 us more a solve than with it off (66 against 56), of which the ground feet about 2. Reading it: 14 us x 2 fighters x 60 a second is under 2 ms a second of native CPU; the web number is in the report.
+
 ---
 
 ## 10. How we will know it works
