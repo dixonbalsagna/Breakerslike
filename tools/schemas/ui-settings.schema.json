@@ -161,7 +161,7 @@
     },
     "remap": {
       "type": "object",
-      "description": "The Remap controls screen (docs/ui/hud-spec.md): its words. {action}, {control}, {other} and {layout} are filled in by the screen, and each sentence that needs one must keep it. layouts keys are preset ids in data/input/layouts.json, actions and helps keys are action ids in data/input/actions.json, controls keys are pad control names (the part after \"pad:\"). Cross-checks in tools/lib/xref.js (settings-remap).",
+      "description": "The Remap controls screen (docs/ui/hud-spec.md): its words. {action}, {control}, {other} and {layout} are filled in by the screen, and each sentence that needs one must keep it. layouts keys are preset ids in data/input/layouts.json, actions and helps keys are action ids in data/input/actions.json, controls keys are pad control names (the part after \"pad:\"). move_steps is optional (the move keys may be rebindable). Cross-checks in tools/lib/xref.js (settings-remap).",
       "required": [
         "title",
         "layout",
@@ -185,7 +185,6 @@
         "reset_done",
         "swap",
         "cancel",
-        "move_steps",
         "layouts",
         "actions",
         "helps",
@@ -403,6 +402,18 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "chord": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            },
+            {
+              "pattern": "\\{other\\}"
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -412,7 +423,7 @@
     },
     "_remap": {
       "type": "object",
-      "description": "The Remap controls screen (docs/ui/hud-spec.md): its words. {action}, {control}, {other} and {layout} are filled in by the screen, and each sentence that needs one must keep it. layouts keys are preset ids in data/input/layouts.json, actions and helps keys are action ids in data/input/actions.json, controls keys are pad control names (the part after \"pad:\"). Cross-checks in tools/lib/xref.js (settings-remap).",
+      "description": "The Remap controls screen (docs/ui/hud-spec.md): its words. {action}, {control}, {other} and {layout} are filled in by the screen, and each sentence that needs one must keep it. layouts keys are preset ids in data/input/layouts.json, actions and helps keys are action ids in data/input/actions.json, controls keys are pad control names (the part after \"pad:\"). move_steps is optional (the move keys may be rebindable). Cross-checks in tools/lib/xref.js (settings-remap).",
       "required": [
         "title",
         "layout",
@@ -436,7 +447,6 @@
         "reset_done",
         "swap",
         "cancel",
-        "move_steps",
         "layouts",
         "actions",
         "helps",
@@ -654,6 +664,18 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "chord": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "\\{control\\}"
+            },
+            {
+              "pattern": "\\{other\\}"
+            }
+          ]
         }
       },
       "additionalProperties": false,
