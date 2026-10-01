@@ -1743,12 +1743,21 @@ func _update_cameras(S: SimState) -> void:
 		_ppx[i] = f.x
 		_ppy[i] = f.y
 		var zc: float = maxf(_zo[i], 0.001)
+		# A body low over the ground (a bounce, a lip flight, a tumble) is not followed up: the focus stays at the ground
+		# level until he is above LOW_AIR_DEAD, so a half-body-height bounce moves on the screen as it does in the world
+		# (the chase otherwise follows each rise and the bounce nearly vanishes: 5 to 20 px for 1 to 2 body heights).
+		var fy_ref: float = f.y + CamParams.CHEST
+		var lead_w: float = 1.0
+		if f.state == "launched" and not stiff and CamParams.LOW_AIR_DEAD > 0.0:
+			var gnd: float = WorldTerrain.groundY(S, f.x)
+			lead_w = smoothstep(CamParams.LOW_AIR_DEAD * 0.5, CamParams.LOW_AIR_DEAD * 1.5, f.y - gnd)
+			fy_ref = lerpf(gnd + CamParams.CHEST, f.y + CamParams.CHEST, lead_w)
 		if not freeze:
 			# The lag bound (camera-v2.md section 2). e is the fighter's offset from where the camera is aiming, in screen
 			# widths: ordinary up to LAG_SOFT, the filters speed up to 7x by LAG_HARD, the focus is held to LAG_HARD beyond
 			# it (a whip), and farther than LAG_CUT it jumps (a counted safety cut with a short fade).
 			var rx: float = SimWrap.sdx(_fx[i], f.x) * zc
-			var ry: float = (f.y + CamParams.CHEST - _fy[i]) * zc
+			var ry: float = (fy_ref - _fy[i]) * zc
 			var e_w: float = sqrt(rx * rx + ry * ry) / vw
 			if e_w > CamParams.LAG_SOFT:
 				var gain: float = 1.0 + CamParams.LAG_GAIN * (minf(e_w, CamParams.LAG_HARD) - CamParams.LAG_SOFT) / (CamParams.LAG_HARD - CamParams.LAG_SOFT)
@@ -1766,7 +1775,7 @@ func _update_cameras(S: SimState) -> void:
 			var ky: float = 1.0 - exp(-DT / tau_y)
 			# The lead that makes the discrete filter track a constant speed exactly: DT (1 - k) / k, about tau - DT / 2.
 			var tx: float = f.x + vxm * DT * (1.0 - kx) / kx
-			var ty: float = f.y + CamParams.CHEST + vym * DT * (1.0 - ky) / ky
+			var ty: float = fy_ref + vym * lead_w * DT * (1.0 - ky) / ky
 			# Aimed at a building (B2): the focus leads toward it, a bounded distance on screen, so it is in frame.
 			if _aim[i] != null and f.state == "launched":
 				var zz: float = maxf(_zo[i], 0.001)

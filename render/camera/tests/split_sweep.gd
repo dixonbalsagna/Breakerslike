@@ -67,6 +67,8 @@ var dump_to: int = 0
 var shots_dir: String = ""
 var only: String = ""
 var _contact: Dictionary = {}
+var _bn: Array = []             # bounces being watched: how far the fighter moves in the world and on the screen after one
+var _bn_done: Array = []
 var _intro_ref: Array = []
 var _jr: Array = [null, null]            # a launched fighter's journey in progress, by victim slot
 var _jr_done: Array = []                 # the journeys that ended, for the match's summary
@@ -1838,6 +1840,8 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 	_jr = [null, null]
 	_jr_done = []
 	_contact = {}
+	_bn = []
+	_bn_done = []
 	while t < limit and not (_S.game.ko != null and _S.game.koT > 3.0):
 		SimCore.step(_S)
 		var ev: Array = _S.out.fx.duplicate()
@@ -1859,6 +1863,25 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 			var et: String = String(e.type)
 			if et in ["bounce", "left_ground", "land", "tumble_end", "journey_end"]:
 				_contact[et] = int(_contact.get(et, 0)) + 1
+			if et == "bounce" and int(e.actor) >= 0 and int(e.actor) < 2:
+				var bf = _S.fighters[int(e.actor)]
+				_bn.append({"a": int(e.actor), "n": 0, "wy0": 1.0e9, "wy1": -1.0e9, "sy0": 1.0e9, "sy1": -1.0e9, "mode": cur.mode, "solo": _rig.solo_kind, "z0": cur.cam_z[0]})
+		var bi: int = 0
+		while bi < _bn.size():
+			var b = _bn[bi]
+			var bf2 = _S.fighters[int(b["a"])]
+			var pi2: int = int(b["a"]) if cur.shows(int(b["a"])) else (0 if cur.shows(0) else 1)
+			var sp2: Vector2 = cur.screen_pos(pi2, bf2.x, bf2.y + CamParams.CHEST, float(bf2.z))
+			b["wy0"] = minf(float(b["wy0"]), bf2.y)
+			b["wy1"] = maxf(float(b["wy1"]), bf2.y)
+			b["sy0"] = minf(float(b["sy0"]), sp2.y)
+			b["sy1"] = maxf(float(b["sy1"]), sp2.y)
+			b["n"] = int(b["n"]) + 1
+			if int(b["n"]) >= 40:
+				_bn_done.append(b)
+				_bn.remove_at(bi)
+			else:
+				bi += 1
 		if rig_human >= 0:
 			_S.fighters[rig_human].ai = saved_ai
 		if trace_seed == seed and float(t) / 60.0 >= trace_t0 and float(t) / 60.0 <= trace_t1:
@@ -1898,6 +1921,26 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 	stats[_label] = "%d ticks: %s; layout changes %d, slams %d, cut-ins %d, panels %d (%.1f a minute, %d refused) %s" % [t, ", ".join(PackedStringArray(mods)), _rig.mode_change_times().size(), slams, _rig.cut_ins, _rig.panels, float(_rig.panels) * 3600.0 / float(maxi(t, 1)), _rig.panels_dropped, str(_rig.panel_log.map(func(e): return e[1]))]
 	_check(float(_rig.cut_ins) <= float(CamParams.OV_MAX_PER_MIN) * (float(t) / 3600.0) + 2.0, "%s: %d camera-only cut-ins in %.0f s (cap %d a minute)" % [_label, _rig.cut_ins, float(t) / 60.0, CamParams.OV_MAX_PER_MIN])
 	_journey_summary()
+	if not _bn_done.is_empty():
+		var rise: float = 0.0
+		var scr: float = 0.0
+		var big: int = 0
+		var seen: int = 0
+		for b in _bn_done:
+			var wr: float = float(b["wy1"]) - float(b["wy0"])
+			var sr: float = float(b["sy1"]) - float(b["sy0"])
+			rise += wr
+			scr += sr
+			if wr >= 0.4 * CamParams.BODY_H:
+				big += 1
+				if sr >= 0.5 * wr * float(b["z0"]):
+					seen += 1
+		stats["bounce reading " + _label] = "%d bounces watched for 40 ticks: world rise mean %.0f u (%.2f bh), screen excursion mean %.0f px (%.2f of the screen height); of %d with a rise over 0.4 bh, %d moved on the screen at least half as much as the world did" % [_bn_done.size(), rise / float(_bn_done.size()), rise / float(_bn_done.size()) / CamParams.BODY_H, scr / float(_bn_done.size()), scr / float(_bn_done.size()) / vh, big, seen]
+	if ticks > 0 and human < 0 and rig_human < 0 and _bn_done.size() >= 10:
+		var sc: float = 0.0
+		for b in _bn_done:
+			sc += float(b["sy1"]) - float(b["sy0"])
+		_check(sc / float(_bn_done.size()) >= 30.0, "%s: bounces move %.0f px on the screen on average (want at least 30)" % [_label, sc / float(_bn_done.size())])
 	stats["contact " + _label] = "%s; %d bounce pushes" % [str(_contact), _rig.bounce_pushes]
 	if ticks > 0 and human < 0 and rig_human < 0:
 		_check(int(_contact.get("bounce", 0)) > 0 and _rig.bounce_pushes > 0, "%s: no bounce in a full-length match (%s)" % [_label, str(_contact)])

@@ -131,6 +131,7 @@ const LEAD_MAX_X: float = 0.18         # ... at most this fraction of the width,
 const LEAD_MAX_Y: float = 0.12         # ... and of the height
 const HIT_PUSH: float = 0.06           # zoom push on the first building hit; later links push less
 const HIT_PUSH_LATER: float = 0.03
+const LOW_AIR_DEAD: float = 112.0       # a launched body this near the ground (1.5 body heights) is not followed up; 0 turns it off
 const BOUNCE_PUSH: float = 0.03        # a ground bounce: a small impact push on the pane that has him ...
 const BOUNCE_HOLD: float = 0.05        # ... held this long
 const HIT_UP: float = 0.15
