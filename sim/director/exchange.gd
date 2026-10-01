@@ -188,7 +188,7 @@ static func runBeat(S: SimState, ex, b) -> void:
 		"rush":
 			var r := SimState.Rush.new()
 			r.tgt = D
-			r.off = -A.face * a.off
+			r.off = DirMelee.sideOff(A, D, a.off, String(a.get("side", "own")))
 			r.end = S.T + a.dur
 			A.rush = r
 			SimFx.rush(S, A, D, S.tick + int(a.dur / SimConst.DT))
@@ -216,6 +216,8 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirMelee.opSlip(S, ex, a)
 		"dodge":
 			DirMelee.opDodge(S, ex, a)
+		"dodgeLand":
+			DirMelee.opDodgeLand(S, ex, a)
 		"guardBreak":
 			DirMelee.opGuardBreak(S, ex, a)
 		"clashWave":
@@ -255,7 +257,7 @@ static func runBeat(S: SimState, ex, b) -> void:
 			var fw = A if a.w == "A" else D
 			var fr := SimState.Rush.new()
 			fr.tgt = D if a.w == "A" else A
-			fr.off = -fw.face * a.off
+			fr.off = DirMelee.sideOff(fw, fr.tgt, a.off, String(a.get("side", "own")))
 			fr.end = S.T + a.dur
 			fw.rush = fr
 			SimFx.rush(S, fw, fr.tgt, S.tick + int(a.dur / SimConst.DT))
@@ -353,6 +355,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	if ex == null:
 		return
 	ex.t += dt
+	DirMelee.contactTick(S, ex)   # contact: facing follows the opponent, and resting bodies never overlap
 	var i: int = 0
 	while i < ex.beats.size():
 		var b = ex.beats[i]
@@ -445,9 +448,10 @@ static func transformSource(f) -> String:
 
 
 ## Between exchanges, a fighter with a form ready takes it on the transform request: the transform edge, or, on a slot
-## that has no v2 inputs yet (today's keyboard and touch bridge), the charge control held. The tier rises at once with
-## today's power-up burst (SimFighter.transform), the opponent in reach is pushed back, and for TRANSFORM_HOLD no exchange
-## starts and the transformer holds still (its stun gate). One transform a tick.
+## that has no v2 inputs yet (today's keyboard and touch bridge), the charge control held. The tier, the power-up burst
+## and the push on a rival in reach come at the break, after the version's gather (SimFighter.formBreak, which calls
+## formBreak below). For TRANSFORM_HOLD no exchange starts and the transformer holds still (its stun gate). One
+## transform a tick.
 static func _transforms(S: SimState) -> void:
 	if S.dirS.ex != null or S.game.ko != null:
 		return
@@ -457,9 +461,8 @@ static func _transforms(S: SimState) -> void:
 		var i: SimIntent = f.input
 		if not (i.transform or (not f.act.v2 and f.ai == null and i.charge)):
 			continue
-		var o = SimRoster.opp(S, f)
 		# Q10 (granted): the set piece asks for its version. Full and short pause the sim (the cinematic); live is the
-		# hold below, as before. The tier, the burst and the push happen on this tick in every version.
+		# hold below, as before. The tier, the burst and the push come at the break in every version.
 		var pz: Dictionary = SimPause.request(S, SimPause.TRANSFORM, S.fighters.find(f))
 		var hold: float = float(pz.ticks) / DirData.TICKS_PER_SEC
 		SimFx.transform(S, f, f.tier + 1.0, transformSource(f), hold, SimPause.VERSIONS[pz.version])
@@ -470,11 +473,17 @@ static func _transforms(S: SimState) -> void:
 		if pz.version == SimPause.LIVE:
 			S.dirS.cool = SimMathx.jmax(S.dirS.cool, hold)
 			f.stunTicks = maxi(f.stunTicks, int(pz.ticks))
-		var d: float = SimWrap.sdx(f.x, o.x)
-		if absf(d) < TRANSFORM_PUSH_R and (o.state == "free" or o.state == "charging"):
-			o.vx = (1.0 if d >= 0.0 else -1.0) * TRANSFORM_PUSH
 		SimEvents.feed(S, f.name + " TRANSFORMS", "tier " + SimMathx.jstr(f.tier))
 		return
+
+
+## The break of f's transformation (SimFighter.formBreak calls it, on a live tick or on a frozen tick inside the pause):
+## the burst pushes a rival in reach back. It draws nothing and starts nothing; it only sets the rival's velocity.
+static func formBreak(S: SimState, f) -> void:
+	var o = SimRoster.opp(S, f)
+	var d: float = SimWrap.sdx(f.x, o.x)
+	if absf(d) < TRANSFORM_PUSH_R and (o.state == "free" or o.state == "charging"):
+		o.vx = (1.0 if d >= 0.0 else -1.0) * TRANSFORM_PUSH
 
 
 ## The set-up is won: L, on the brink, is open to W's finisher. A stagger (the fighter's own stagger length) and a

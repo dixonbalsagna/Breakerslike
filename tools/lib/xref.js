@@ -63,6 +63,12 @@ function xref(docs, root = repoRoot) {
   const fin = get(FIN);
   const vocab = new Set(isObj(fin) && isObj(fin.cues) ? plainKeys(fin.cues) : []);
   const beatLists = []; // [{file, pointer, beats}]
+  // contact spacing: reach is at least the offset, and the offset at least the least separation
+  const contact = isObj(tpl) && isObj(tpl.profiles) && isObj(tpl.profiles.dynamic) ? tpl.profiles.dynamic.contact : undefined;
+  if (isObj(contact) && [contact.reach, contact.offset, contact.minSeparation].every((n) => typeof n === 'number')) {
+    if (contact.reach < contact.offset) err(TPL, '/profiles/dynamic/contact/reach', 'contact-range', `reach ${contact.reach} is below offset ${contact.offset}, so a strike that ends at the offset would be out of reach`);
+    if (contact.offset < contact.minSeparation) err(TPL, '/profiles/dynamic/contact/offset', 'contact-range', `offset ${contact.offset} is below minSeparation ${contact.minSeparation}, so an approach would end inside the other body`);
+  }
   if (isObj(tpl) && Array.isArray(tpl.templates)) {
     dupes(TPL, tpl.templates.map((t, i) => ({ id: t && t.id, pointer: `/templates/${i}/id` })), '', 'template-id', 'template id');
     tpl.templates.forEach((t, ti) => {
@@ -74,6 +80,27 @@ function xref(docs, root = repoRoot) {
         if (!isObj(b) || t.only !== undefined || b.only !== undefined) return;
         for (const k of ['parity', 'spaced', 'spacedTiming']) if (b[k] === undefined) err(TPL, `/templates/${ti}/branches/${bi}`, 'branch-profiles', `branch "${b.id}" has no ${k}; a branch without "only" carries parity and spaced beats`);
         if (b.dynamic !== undefined && b.dynamicTiming === undefined) err(TPL, `/templates/${ti}/branches/${bi}`, 'branch-profiles', `branch "${b.id}" has dynamic beats but no dynamicTiming`);
+      });
+      // sides: a beat with args.side is "own" or "cross"; a branch with dynamic beats states endSides, and it is swapped exactly when a beat crosses
+      t.branches.forEach((b, bi) => {
+        if (!isObj(b) || !Array.isArray(b.dynamic)) return;
+        let cross = false;
+        b.dynamic.forEach((be, bei) => {
+          const side = isObj(be) && isObj(be.args) ? be.args.side : undefined;
+          if (side === undefined) return;
+          if (side !== 'own' && side !== 'cross') err(TPL, `/templates/${ti}/branches/${bi}/dynamic/${bei}/args/side`, 'beat-side', `side "${side}" is not own or cross`);
+          if (side === 'cross') cross = true;
+          if (be.op === 'dodge' && side === 'cross') {
+            const a = be.args;
+            const where = `/templates/${ti}/branches/${bi}/dynamic/${bei}/args`;
+            for (const k of ['dur', 'rise', 'off']) if (a[k] === undefined) err(TPL, where, 'dodge-cross', `a crossing dodge in branch "${b.id}" has no ${k}`);
+            if (typeof a.rise === 'number' && a.rise <= 0) err(TPL, `${where}/rise`, 'dodge-cross', `rise ${a.rise} must be above 0`);
+            if (typeof a.off === 'number' && isObj(contact) && typeof contact.minSeparation === 'number' && a.off < contact.minSeparation) err(TPL, `${where}/off`, 'dodge-cross', `off ${a.off} is below minSeparation ${contact.minSeparation}, so the dodge would land inside the other body`);
+          }
+        });
+        const at = `/templates/${ti}/branches/${bi}`;
+        if (b.endSides === undefined) err(TPL, at, 'branch-end-sides', `branch "${b.id}" has dynamic beats but no endSides`);
+        else if ((b.endSides === 'swapped') !== cross) err(TPL, `${at}/endSides`, 'branch-end-sides', cross ? `branch "${b.id}" has a beat that crosses (side "cross") but endSides is "${b.endSides}"` : `branch "${b.id}" has endSides "swapped" but no beat crosses (args.side "cross")`);
       });
       const selectors = [['selector', t.selector], ...Object.entries(isObj(t.selectorByProfile) ? t.selectorByProfile : {}).map(([p, sel]) => [`selectorByProfile/${p}`, sel])];
       for (const [where, s] of selectors) {

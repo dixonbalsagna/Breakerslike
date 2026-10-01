@@ -82,7 +82,9 @@
         { "tick": 0, "op": "cue", "args": { "cue": "finisher_open", "who": "W", "cam": "freeze_zoom" } },
         { "tick": 0, "op": "finRush", "args": { "w": "W", "off": 60, "dur": 0.40 } },
         { "tick": 24, "op": "cue", "args": { "cue": "catch", "who": "W", "cam": "tight" } },
+        { "tick": 39, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
         { "tick": 45, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 35, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
+        { "tick": 60, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
         { "tick": 66, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 45, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 12 } } },
         { "tick": 87, "op": "cue", "args": { "cue": "final_windup", "who": "W", "cam": "low_hero" } },
         { "tick": 108, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
@@ -91,6 +93,7 @@
       "outcomes": {
         "landed": [
           { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
+          { "tick": 24, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
           { "tick": 30, "op": "finalBlow", "args": { "w": "W", "dmg": 55, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.30, "shake": 20 }, "launch": { "mode": "planner_long", "force": 2600 } } }
         ],
         "survived": [
@@ -117,8 +120,11 @@
         { "tick": 0, "op": "cue", "args": { "cue": "finisher_open", "who": "W", "cam": "freeze_zoom" } },
         { "tick": 0, "op": "finRush", "args": { "w": "W", "off": 60, "dur": 0.45 } },
         { "tick": 27, "op": "cue", "args": { "cue": "catch", "who": "W", "cam": "tight" } },
+        { "tick": 42, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
         { "tick": 48, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 30, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
+        { "tick": 63, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
         { "tick": 69, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 30, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
+        { "tick": 84, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
         { "tick": 90, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 40, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 12 } } },
         { "tick": 111, "op": "cue", "args": { "cue": "ascend_charge", "who": "W", "cam": "wide_up" } },
         { "tick": 141, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
@@ -127,6 +133,7 @@
       "outcomes": {
         "landed": [
           { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
+          { "tick": 30, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
           { "tick": 36, "op": "finalBlow", "args": { "w": "W", "dmg": 60, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 20 }, "launch": { "mode": "fixed", "ux": 0.15, "uy": 1.0, "force": 2800, "faceRelative": true } } }
         ],
         "survived": [
@@ -155,11 +162,12 @@
       "beats": [
         { "tick": 0, "op": "finisher", "args": { "w": "W" } },
         { "tick": 0, "op": "cue", "args": { "cue": "finisher_open", "who": "W", "cam": "freeze_low" } },
-        { "tick": 0, "op": "finRush", "args": { "w": "W", "off": 40, "dur": 0.40 } },
+        { "tick": 0, "op": "finRush", "args": { "w": "W", "off": 48, "dur": 0.40, "side": "own" } },
         { "tick": 24, "op": "cue", "args": { "cue": "grab_throat", "who": "W", "cam": "tight" } },
+        { "tick": 39, "op": "finRush", "args": { "w": "W", "off": 48, "dur": 0.1, "side": "own" } },
         { "tick": 45, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 35, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.12 } } },
         { "tick": 66, "op": "fixedLaunch", "args": { "w": "W", "ux": 0.2, "uy": -1.25, "force": 1400, "faceRelative": true } },
-        { "tick": 96, "op": "finRush", "args": { "w": "W", "off": 30, "dur": 0.30 } },
+        { "tick": 96, "op": "finRush", "args": { "w": "W", "off": 48, "dur": 0.35, "side": "own" } },
         { "tick": 117, "op": "strike", "args": { "a": "W", "d": "L", "dmg": 40, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 16 } } },
         { "tick": 138, "op": "cue", "args": { "cue": "lift_and_display", "who": "W", "cam": "wide_settlement", "bark": true } },
         { "tick": 159, "op": "contestOpen", "args": { "w": "W", "cue": "struggle", "struggle": "contest.struggle" } },
@@ -168,6 +176,7 @@
       "outcomes": {
         "landed": [
           { "tick": 0, "op": "cue", "args": { "cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed" } },
+          { "tick": 30, "op": "finRush", "args": { "w": "W", "off": 58, "dur": 0.1, "side": "own" } },
           { "tick": 36, "op": "finalBlow", "args": { "w": "W", "dmg": 60, "o": { "noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 22 }, "launch": { "mode": "planner_long", "force": 3000 } } }
         ],
         "survived": [

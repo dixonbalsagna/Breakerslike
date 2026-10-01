@@ -59,16 +59,112 @@ static func opSlip(S: SimState, ex, _args) -> void:
 	A.ki = SimMathx.jmax(0.0, A.ki - 3.0)
 
 
-## Beat "dodge": the evasive defender blinks behind the attacker.
+const DODGE_OFF: float = 74.0         # the blink ends this far behind the attacker (the old profiles; the step-around reads the beat)
+const DODGE_PAST: float = 10.0        # the step-around's pass point is this far past the attacker's centre, on the far side
+const BODY_H: float = 75.0
+const HEIGHT_TOL: float = 17.0        # contact: "the same height" is within this (a quarter of the reach)
+const PLACE_FLIGHT_TICKS: float = 2.0  # contact: the placement limit is the block's placementReaches plus this many ticks of the target's flight
+
+
+## Contact (contact-spacing.md section 5.1): a move's offset from its target is measured on the mover's own side of it,
+## along the shortest arc, never from its facing; only side "cross" changes sides. A target in a move of its own is
+## read at that move's end, so a re-close during a dodge takes the side the pair will end on. Never inside
+## minSeparation. The old profiles (no contact block) keep the facing-based offset.
+static func sideOff(mover, tgt, off: float, side: String) -> float:
+	var ct: Dictionary = DirData.contact()
+	if ct.is_empty():
+		return -mover.face * off
+	var tx: float = tgt.x
+	if tgt.rush != null:
+		tx = SimWrap.wrap(tgt.rush.tgt.x + tgt.rush.off) if tgt.rush.tgt != null else tgt.rush.px
+	var s: float = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(tx, mover.x)), -mover.face)
+	return (-s if side == "cross" else s) * SimMathx.jmax(off, float(ct.minSeparation))
+
+
+## Contact, once per tick of an exchange: each fighter faces the other (section 5.4), and two bodies at rest never
+## overlap (5.3): closer than minSeparation at the same height, they are moved apart evenly, each on its own side. A
+## body in an authored move or in flight is left alone: a move's end already respects the separation.
+static func contactTick(S: SimState, ex) -> void:
+	var ct: Dictionary = DirData.contact()
+	if ct.is_empty() or ex.kind == "sig":
+		return
+	var A = ex.A
+	var D = ex.D
+	var dx: float = SimWrap.sdx(A.x, D.x)
+	var s: float = SimDamage.jor(SimMathx.jsign(dx), A.face)
+	A.face = s
+	D.face = -s
+	var minS: float = float(ct.minSeparation)
+	if absf(dx) >= minS or absf(A.y - D.y) >= BODY_H or A.rush != null or D.rush != null or A.state == "launched" or D.state == "launched":
+		return
+	var push: float = (minS - absf(dx)) * 0.5
+	A.x = SimWrap.wrap(A.x - s * push)
+	D.x = SimWrap.wrap(D.x + s * push)
+
+
+## Contact, on a damaging strike (section 5.2): the striker is at the contact offset, on its own side and at its
+## target's height, on the contact tick. The closing move before it usually put it there; when the target moved on in
+## the same tick, the strike itself places the striker. Farther than placementReaches (the contact block) plus two ticks of the
+## target's own flight it is left alone and the feed says so (5.5, the reach check).
+static func _contact(S: SimState, a, d) -> void:
+	var ct: Dictionary = DirData.contact()
+	if ct.is_empty():
+		return
+	var dx: float = SimWrap.sdx(d.x, a.x)
+	var dy: float = a.y - d.y
+	var reach: float = float(ct.reach)
+	if absf(dx) <= reach and absf(dx) >= float(ct.minSeparation) and absf(dy) <= HEIGHT_TOL:
+		return
+	var lim: float = reach * float(ct.placementReaches) + SimDetMath.hypot(d.vx, d.vy) * SimConst.DT * PLACE_FLIGHT_TICKS
+	if absf(dx) > lim or absf(dy) > lim:
+		SimEvents.feed(S, "OUT OF REACH", a.name + " strikes from " + SimMathx.jstr(SimMathx.jround(absf(dx))) + " u, " + SimMathx.jstr(SimMathx.jround(absf(dy))) + " u off level")
+		return
+	var s: float = SimDamage.jor(SimMathx.jsign(dx), -a.face)
+	a.x = SimWrap.wrap(d.x + s * float(ct.offset))
+	a.y = SimMathx.jmax(d.y, WorldTerrain.groundY(S, a.x))
+	a.rush = null
+	a.vx = 0.0
+	a.vy = 0.0
+
+
+## Beat "dodge": the evasive defender gets behind the attacker. With a contact block and side "cross" it is a physical
+## step-around (teleporting is on hold): two short moves, over the attacker (under it at the ceiling) and down behind
+## it at its height. The beat gives its length (dur), how far over it passes (rise) and where it ends (off). Otherwise
+## it is the old blink.
 static func opDodge(S: SimState, ex, _args) -> void:
 	var A = ex.A
 	var D = ex.D
 	SimFx.afterimage(S, D)
-	D.x = SimWrap.wrap(A.x - A.face * 74.0)
+	if _args != null and String(_args.get("side", "")) == "cross" and not DirData.contact().is_empty():
+		var far: float = -SimDamage.jor(SimMathx.jsign(SimWrap.sdx(A.x, D.x)), A.face)   # the side D ends on, from A
+		var leg: float = float(_args.dur) * 0.5
+		var rise: float = float(_args.rise)
+		var over: bool = A.y + rise <= SimConst.CEILING or A.y - rise < WorldTerrain.groundY(S, A.x) + BODY_H
+		var r := SimState.Rush.new()
+		r.px = SimWrap.wrap(A.x + far * DODGE_PAST)
+		r.py = A.y + (rise if over else -rise)
+		r.end = S.T + leg
+		D.rush = r
+		D.vx = 0.0
+		D.vy = 0.0
+		DirExchange.schedule(ex, ex.t + leg, "dodgeLand", {"far": far, "dur": leg, "off": float(_args.off)})
+		SimFx.rush(S, D, A, S.tick + int(leg * 2.0 / SimConst.DT))
+		return
+	D.x = SimWrap.wrap(A.x - A.face * DODGE_OFF)
 	D.y = SimMathx.jmax(WorldTerrain.groundY(S, D.x), A.y + S.rng.range_(-30.0, 70.0))
 	D.vx = 0.0
 	D.vy = 0.0
 	SimFx.ring(S, D.x, D.y + 34.0, 500.0, "#9fe0ff", 0.3, 8.0)
+
+
+## The step-around's second move: down behind the attacker, at its height.
+static func opDodgeLand(S: SimState, ex, args) -> void:
+	var r := SimState.Rush.new()
+	r.tgt = ex.A
+	r.off = float(args.far) * float(args.off)
+	r.end = S.T + float(args.dur)
+	ex.D.rush = r
+	SimFx.ring(S, ex.D.x, ex.D.y + 34.0, 500.0, "#9fe0ff", 0.3, 8.0)
 
 
 ## Beat "guardBreak": the defensive guard shatters.
@@ -134,11 +230,18 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 			a.vx = -a.face * float(rw.pushback)
 			d.ki = SimMathx.jmin(100.0, d.ki + float(rw.ki))
 			SimFx.cue(S, d, String(rw.cue), "", "")
+			# A parry ends the string (contact-spacing.md section 7): no strike, step-in or chain window runs after it,
+			# and the exchange closes this tick. Only in the profiles with a parry block, so parity is unchanged.
+			for b in ex.beats:
+				b.done = true
+			ex.ext = null
 		SimFx.ring(S, a.x + a.face * 30.0, a.y + 34.0, 700.0, "#9fe0ff", 0.4, 10.0)
 		SimFx.banner(S, "PARRY", "#9fe0ff", 0.8)
 		SimEvents.feed(S, d.name + " PARRIES", "Timed the wind-up. Rest of the exchange cancelled.")
 		SimFx.parry(S, d, a)
 		return
+	if dmg > 0.0:
+		_contact(S, a, d)
 	if d.state == "launched" or d.state == "down":
 		d.state = "locked"
 		d.vx *= 0.1

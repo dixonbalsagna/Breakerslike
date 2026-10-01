@@ -124,13 +124,20 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 	# BUILDING SMASH (B2, docs/world/b2-plan.md section 4): one candidate per building the launch can be aimed at, in any row,
 	# scored by personality first and drama on top; a chain through several buildings is part of the candidate.
 	var hadBrunt: bool = false
+	# Contact (contact-spacing.md section 5.1): no launch goes back through the launcher. With a contact block only the
+	# targets on the far side of the rival are offered.
+	var fwdOnly: bool = not DirData.contact().is_empty()
 	for bi in WorldBrunt.candidates(S, D):
 		var plan = WorldBrunt.aim(S, A, D, S.buildings[bi], force, tierF, longOnly)
+		if plan != null and fwdOnly and float(plan.ux) * f < 0.0:
+			plan = null
 		if plan != null:
 			hadBrunt = true
 			plan.s = bruntScore(S, A, plan)
 			c.append(plan)
 	for sign in [-1.0, 1.0]:
+		if fwdOnly and sign * f < 0.0:
+			continue
 		# The nearest mountainside ahead, out to MOUNTAIN_REACH: near slopes give a short throw, far ones a long haul.
 		var md: float = MOUNTAIN_STEP
 		while md <= MOUNTAIN_REACH:

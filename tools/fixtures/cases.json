@@ -15588,6 +15588,433 @@
         "rule": "minimum",
         "pointer": "/turn/dip"
       }
+    },
+    {
+      "id": "contact-end-sides-enum",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/5/branches/0/endSides": "both"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/templates/5/branches/0/endSides"
+      }
+    },
+    {
+      "id": "contact-end-sides-required",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/5/branches/0/endSides"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:branch-end-sides",
+        "pointer": "/templates/5/branches/0"
+      }
+    },
+    {
+      "id": "contact-swapped-without-cross",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/5/branches/0/endSides": "swapped"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:branch-end-sides",
+        "pointer": "/templates/5/branches/0/endSides"
+      }
+    },
+    {
+      "id": "contact-cross-needs-swapped",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/2/branches/0/endSides": "same"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:branch-end-sides",
+        "pointer": "/templates/2/branches/0/endSides"
+      }
+    },
+    {
+      "id": "contact-side-name",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/4/branches/0/dynamic/3/args/side": "left"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:beat-side",
+        "pointer": "/templates/4/branches/0/dynamic/3/args/side"
+      }
+    },
+    {
+      "id": "contact-cross-side-name",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/2/branches/0/dynamic/2/args/side": "behind"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:beat-side",
+        "pointer": "/templates/2/branches/0/dynamic/2/args/side"
+      }
+    },
+    {
+      "id": "contact-step-in-required",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/tempo/stepIn"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic/tempo"
+      }
+    },
+    {
+      "id": "contact-chain-close-required",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/tempo/chainClose"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic/tempo"
+      }
+    },
+    {
+      "id": "contact-step-in-type",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/tempo/stepIn": "short"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/profiles/dynamic/tempo/stepIn"
+      }
+    },
+    {
+      "id": "contact-contact-required",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/contact"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic"
+      }
+    },
+    {
+      "id": "contact-contact-key-required",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/contact/offset"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic/contact"
+      }
+    },
+    {
+      "id": "contact-contact-unknown-key",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/contact/gap": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/profiles/dynamic/contact/gap"
+      }
+    },
+    {
+      "id": "contact-contact-positive",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/contact/minSeparation": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/profiles/dynamic/contact/minSeparation"
+      }
+    },
+    {
+      "id": "contact-same-height-type",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/contact/sameHeight": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/profiles/dynamic/contact/sameHeight"
+      }
+    },
+    {
+      "id": "contact-reach-below-offset",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/contact/reach": 50
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-range",
+        "pointer": "/profiles/dynamic/contact/reach"
+      }
+    },
+    {
+      "id": "contact-offset-below-separation",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/contact/minSeparation": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:contact-range",
+        "pointer": "/profiles/dynamic/contact/offset"
+      }
+    },
+    {
+      "id": "contact-step-around-required",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/tempo/stepAround"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic/tempo"
+      }
+    },
+    {
+      "id": "contact-step-around-type",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/tempo/stepAround": "short"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/profiles/dynamic/tempo/stepAround"
+      }
+    },
+    {
+      "id": "contact-placement-reaches-required",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/profiles/dynamic/contact/placementReaches"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/profiles/dynamic/contact"
+      }
+    },
+    {
+      "id": "contact-placement-reaches-positive",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/contact/placementReaches": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/profiles/dynamic/contact/placementReaches"
+      }
+    },
+    {
+      "id": "contact-dodge-cross-needs-dur",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/2/branches/0/dynamic/2/args/dur"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:dodge-cross",
+        "pointer": "/templates/2/branches/0/dynamic/2/args"
+      }
+    },
+    {
+      "id": "contact-dodge-cross-needs-rise",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/2/branches/0/dynamic/2/args/rise"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:dodge-cross",
+        "pointer": "/templates/2/branches/0/dynamic/2/args"
+      }
+    },
+    {
+      "id": "contact-dodge-cross-needs-off",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "del": [
+            "/templates/2/branches/0/dynamic/2/args/off"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:dodge-cross",
+        "pointer": "/templates/2/branches/0/dynamic/2/args"
+      }
+    },
+    {
+      "id": "contact-dodge-cross-rise-positive",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/2/branches/0/dynamic/2/args/rise": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:dodge-cross",
+        "pointer": "/templates/2/branches/0/dynamic/2/args/rise"
+      }
+    },
+    {
+      "id": "contact-dodge-cross-off-inside-body",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/2/branches/0/dynamic/2/args/off": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:dodge-cross",
+        "pointer": "/templates/2/branches/0/dynamic/2/args/off"
+      }
+    },
+    {
+      "id": "contact-dodge-cross-off-at-separation-ok",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/templates/2/branches/0/dynamic/2/args/off": 45
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "contact-contact-equal-ok",
+      "schema": "combat-templates.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/templates.json",
+          "set": {
+            "/profiles/dynamic/contact/reach": 58,
+            "/profiles/dynamic/contact/minSeparation": 58
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

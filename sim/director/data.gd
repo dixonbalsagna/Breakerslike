@@ -619,6 +619,13 @@ static func parryBlock() -> Dictionary:
 	return _prof().get("parry", {})
 
 
+## The contact block of the active profile (contact-spacing.md): reach, offset, minSeparation, sameHeight. Empty in the
+## old profiles, which keep facing-based offsets and the blink dodge.
+static func contact() -> Dictionary:
+	_ensure()
+	return _prof().get("contact", {})
+
+
 ## The contest settings (Combat's data; Game Design's numbers).
 static func contest() -> Dictionary:
 	_ensure()

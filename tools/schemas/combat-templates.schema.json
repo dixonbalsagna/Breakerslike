@@ -821,6 +821,13 @@
             ]
           },
           "description": "The interrupts this branch allows (the data is read from Encounter's step 3)."
+        },
+        "endSides": {
+          "enum": [
+            "same",
+            "swapped"
+          ],
+          "description": "Where the pair ends relative to where it began: the same side of each other, or swapped (a dodge crossed over). A branch with dynamic beats must state it, and it must agree with the beats: swapped exactly when a beat has args.side \"cross\" (checked by tools/lib/xref.js, branch-end-sides)."
         }
       },
       "dependentRequired": {
@@ -2301,7 +2308,8 @@
         "parry",
         "windups",
         "perfectBlock",
-        "strikeClass"
+        "strikeClass",
+        "contact"
       ],
       "properties": {
         "timeUnit": {
@@ -2318,7 +2326,10 @@
             "heavyWindup",
             "follow",
             "tell",
-            "enderWindup"
+            "enderWindup",
+            "stepIn",
+            "chainClose",
+            "stepAround"
           ],
           "properties": {
             "step": {
@@ -2343,6 +2354,15 @@
               "$ref": "#/$defs/ticks"
             },
             "enderWindup": {
+              "$ref": "#/$defs/ticks"
+            },
+            "stepIn": {
+              "$ref": "#/$defs/ticks"
+            },
+            "chainClose": {
+              "$ref": "#/$defs/ticks"
+            },
+            "stepAround": {
               "$ref": "#/$defs/ticks"
             }
           },
@@ -2575,6 +2595,43 @@
                   "none"
                 ]
               }
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "contact": {
+          "type": "object",
+          "description": "Contact spacing (docs/combat/contact-spacing.md): on every damaging strike's contact tick the two fighters are within reach (centre to centre, world units) and at the same height. offset is where an approach, lunge or step-in ends; minSeparation is the least distance two bodies may come. reach not below offset and offset not below minSeparation are checked by tools/lib/xref.js (contact-range).",
+          "required": [
+            "reach",
+            "offset",
+            "minSeparation",
+            "sameHeight",
+            "placementReaches"
+          ],
+          "properties": {
+            "reach": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "offset": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "minSeparation": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "sameHeight": {
+              "type": "boolean"
+            },
+            "placementReaches": {
+              "description": "How many reaches a placement (the dodge's landing, a re-close) may be from the contact point.",
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           },
           "additionalProperties": false,

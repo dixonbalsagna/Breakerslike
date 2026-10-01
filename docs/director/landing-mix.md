@@ -57,7 +57,7 @@ The planner adds CRATER SLAM after DRIVE DOWN in its candidate list, so the nois
 ## Notes for QA, World and Game Design
 
 - **KAI rose** from 49% to 57% over both arms. One arm moved 19 points and the other fell 3, so part of it is noise at 100 matches an arm. On the old base the same slice moved it 1.5 points. QA should re-measure.
-- **QA's landing rule counts three kinds of slide as slams.** In `qa/godot/records.gd` a launch is a slam if a crater comes first. A slide that ends against a rise digs its stop dent before its `slide` event, so it is counted as a slam: 21 to 23% of all launches. Short slides and weak landings are counted as slams too. World's `land` events (kind skid, tumble, slam or stop) will class the first contact directly.
+- **QA's landing rule is fixed** (`6ed0181`). It used to count a slide that ended against a rise as a slam, because the stop dent's crater came before the `slide` event: 21 to 23% of all launches. `qa/godot/records.gd` now classes a launch as a slide once its slide has begun, so QA's numbers and this table agree on the classes.
 - **Half of the wall stops are short.** 12.1% of launches slide under 2 bh into a rise, mostly MOUNTAINSIDE (25% of its launches). They read as a stop, not a skid. That is terrain, not the vector.
 - **Brunt and water are under their bands** (3.8% and 2.6%). The drive takes launches that went to buildings before. The B2 pity counter is unchanged.
 - **Launches rose** from 11.3 to 13.1 a minute. A slide's recovery is 0.35 s against a slam's 0.75 s, so the fight restarts sooner.

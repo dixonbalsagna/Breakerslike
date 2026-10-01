@@ -181,6 +181,7 @@ static func formBreak(S: SimState, f) -> void:
 	if tierByPower(f) > f.tier:
 		f.act.formReady = true
 		SimFx.transformReady(S, f, f.tier + 1.0, DirExchange.transformSource(f))
+	DirExchange.formBreak(S, f)   # the rival in reach is pushed back at the break
 
 
 static func stepFighter(S: SimState, f, dt: float) -> void:
