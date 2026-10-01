@@ -6,7 +6,7 @@
     "nothingBelow": 350,
     "tumbleBelow": 900,
     "skidToTumble": 600,
-    "skidSin2": 0.413,
+    "skidSin2": 0.25,
     "slamSin2": 0.883
   },
   "leave": {

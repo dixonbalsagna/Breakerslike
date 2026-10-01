@@ -715,8 +715,12 @@ static func _contact(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 		SimDamage.hurt(S, f, j * K_WTOUCH, by)
 	elif k == "bounce":
 		SimDamage.hurt(S, f, K_WPS * maxf(0.0, sp * (1.0 - float(e.get("keep", 1.0)))), by)
-	if (k == "skid" or k == "tumble") and f.slideEvt == 0.0:
-		f.slideEvt = WorldCollateral.beginEvent(S, "slide", by)
+	if k == "skid" or k == "tumble":
+		# the speed the landing removes (the normal part and the slope's share) is paid like any speed lost: with the skid's own braking a
+		# journey that halts pays the whole single-impact budget (first touch 30%, the rest by speed removed)
+		f.slideAcc += K_WPS * maxf(0.0, sp - b.vN)
+		if f.slideEvt == 0.0:
+			f.slideEvt = WorldCollateral.beginEvent(S, "slide", by)
 	# the events
 	var ce := SimFx.contactEvent(S, "bounce" if k == "bounce" else "land", f, f.x, f.y, sp)
 	ce.surface = String(e.surface)

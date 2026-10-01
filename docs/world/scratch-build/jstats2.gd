@@ -22,6 +22,9 @@ func _init() -> void:
 	var open := {}
 	var firstcls := {}
 	var lg_causes := {}
+	var dbg_n: int = 0
+	var wear_by := {}
+	var firstwear_by := {}
 	for sd in range(int(a[0]), int(a[1])):
 		var S := SimCore.createSim()
 		SimCore.newMatch(S, sd)
@@ -35,15 +38,117 @@ func _init() -> void:
 				if e.type == "launch":
 					launches += 1
 				elif e.type in ["land", "bounce", "skim"]:
+					if open.has(key):
+						open[key].seq.append("%s%s@%.0f" % [e.type, (":" + e.kind) if e.type == "land" else "", e.spd])
 					if not open.has(key):
-						open[key] = {"x": e.x, "spd": e.spd, "dmg": 0.0, "cas": S.world.casualties, "st": S.world.structuresLost}
+						open[key] = {"seq": [], "x": e.x, "spd": e.spd, "dmg": 0.0, "cas": S.world.casualties, "st": S.world.structuresLost}
 						var cls: String = e.type
 						if e.type == "land":
 							cls = e.kind
 						firstcls[cls] = firstcls.get(cls, 0) + 1
 				elif e.type == "left_ground":
 					lg_causes[e.cause] = lg_causes.get(e.cause, 0) + 1
+				elif false:
+					for k2 in open:
+						if k2.begins_with("%d_%d_" % [sd, int(e.victim)]):
+							open[k2].dmg += e.amount
+				elif false:
+					journeys += 1
+					ends[e.kind] = ends.get(e.kind, 0) + 1
+					if e.nb > 0:
+						with_bounce += 1
+						bounces_total += e.nb
+					lips_total += e.lips
+					times.append(e.dur)
+					if e.dur >= 3.95:
+						hit_cap_t += 1
+					if e.contacts >= 8:
+						hit_cap_c += 1
+					if e.kind == "capped":
+						capped_kind += 1
+					if open.has(key):
+						var o: Dictionary = open[key]
+						dists.append(absf(SimWrap.sdx(o.x, e.x)))
+						var budget: float = o.spd * 0.018
+						if e.kind == "stop" and o.dmg < 0.4 * budget and dbg_n < 14:
+							dbg_n += 1
+							print("DBG stop low: spd %.0f dmg %.2f budget %.2f seq %s contacts %d" % [o.spd, o.dmg, budget, str(o.seq), e.contacts])
+						if budget > 0.0:
+							wear_ratio.append(o.dmg / budget)
+							if not wear_by.has(e.kind):
+								wear_by[e.kind] = []
+							wear_by[e.kind].append(o.dmg / budget)
+							if o.dmg > budget * 1.05:
+								wear_over += 1
+						cas_pct.append((S.world.casualties - o.cas) / maxf(pop0, 1.0) * 100.0)
+						struct_lost.append(S.world.structuresLost - o.st)
+						open.erase(key)
+			for e in S.out.fx:
+				var key: String = "%d_%d_%d" % [sd, int(e.actor), int(e.n)]
+				if false:
+					launches += 1
+				elif false:
+					if open.has(key):
+						open[key].seq.append("%s%s@%.0f" % [e.type, (":" + e.kind) if e.type == "land" else "", e.spd])
+					if not open.has(key):
+						open[key] = {"seq": [], "x": e.x, "spd": e.spd, "dmg": 0.0, "cas": S.world.casualties, "st": S.world.structuresLost}
+						var cls: String = e.type
+						if e.type == "land":
+							cls = e.kind
+						firstcls[cls] = firstcls.get(cls, 0) + 1
+				elif false:
+					lg_causes[e.cause] = lg_causes.get(e.cause, 0) + 1
 				elif e.type == "damage" and e.kind == "impact":
+					for k2 in open:
+						if k2.begins_with("%d_%d_" % [sd, int(e.victim)]):
+							open[k2].dmg += e.amount
+				elif false:
+					journeys += 1
+					ends[e.kind] = ends.get(e.kind, 0) + 1
+					if e.nb > 0:
+						with_bounce += 1
+						bounces_total += e.nb
+					lips_total += e.lips
+					times.append(e.dur)
+					if e.dur >= 3.95:
+						hit_cap_t += 1
+					if e.contacts >= 8:
+						hit_cap_c += 1
+					if e.kind == "capped":
+						capped_kind += 1
+					if open.has(key):
+						var o: Dictionary = open[key]
+						dists.append(absf(SimWrap.sdx(o.x, e.x)))
+						var budget: float = o.spd * 0.018
+						if e.kind == "stop" and o.dmg < 0.4 * budget and dbg_n < 14:
+							dbg_n += 1
+							print("DBG stop low: spd %.0f dmg %.2f budget %.2f seq %s contacts %d" % [o.spd, o.dmg, budget, str(o.seq), e.contacts])
+						if budget > 0.0:
+							wear_ratio.append(o.dmg / budget)
+							if not wear_by.has(e.kind):
+								wear_by[e.kind] = []
+							wear_by[e.kind].append(o.dmg / budget)
+							if o.dmg > budget * 1.05:
+								wear_over += 1
+						cas_pct.append((S.world.casualties - o.cas) / maxf(pop0, 1.0) * 100.0)
+						struct_lost.append(S.world.structuresLost - o.st)
+						open.erase(key)
+			for e in S.out.fx:
+				var key: String = "%d_%d_%d" % [sd, int(e.actor), int(e.n)]
+				if false:
+					launches += 1
+				elif false:
+					if open.has(key):
+						open[key].seq.append("%s%s@%.0f" % [e.type, (":" + e.kind) if e.type == "land" else "", e.spd])
+					if not open.has(key):
+						open[key] = {"seq": [], "x": e.x, "spd": e.spd, "dmg": 0.0, "cas": S.world.casualties, "st": S.world.structuresLost}
+						var cls: String = e.type
+						if e.type == "land":
+							cls = e.kind
+						firstcls[cls] = firstcls.get(cls, 0) + 1
+				elif false:
+					lg_causes[e.cause] = lg_causes.get(e.cause, 0) + 1
+				elif false:
 					for k2 in open:
 						if k2.begins_with("%d_%d_" % [sd, int(e.victim)]):
 							open[k2].dmg += e.amount
@@ -65,8 +170,14 @@ func _init() -> void:
 						var o: Dictionary = open[key]
 						dists.append(absf(SimWrap.sdx(o.x, e.x)))
 						var budget: float = o.spd * 0.018
+						if e.kind == "stop" and o.dmg < 0.4 * budget and dbg_n < 14:
+							dbg_n += 1
+							print("DBG stop low: spd %.0f dmg %.2f budget %.2f seq %s contacts %d" % [o.spd, o.dmg, budget, str(o.seq), e.contacts])
 						if budget > 0.0:
 							wear_ratio.append(o.dmg / budget)
+							if not wear_by.has(e.kind):
+								wear_by[e.kind] = []
+							wear_by[e.kind].append(o.dmg / budget)
 							if o.dmg > budget * 1.05:
 								wear_over += 1
 						cas_pct.append((S.world.casualties - o.cas) / maxf(pop0, 1.0) * 100.0)
@@ -90,8 +201,14 @@ func _init() -> void:
 	var lgl: String = "J2 left_ground per minute:"
 	for k in lg_causes:
 		lgl += " %s %.2f" % [k, lg_causes[k] / maxf(minutes, 0.01)]
+	var wl: String = "J2 wear per ending (mean / p10 / p90 of the single-impact budget):"
+	for k in wear_by:
+		var arr: Array = wear_by[k]
+		arr.sort()
+		wl += " %s %.2f / %.2f / %.2f (n %d)" % [k, _mean(arr), _pct(arr, 0.1), _pct(arr, 0.9), arr.size()]
 	print(line)
 	print(lgl)
+	print(wl)
 	quit(0)
 
 

@@ -194,3 +194,17 @@ Other measures at 40 degrees:
 The closing event carries the last state: `kind` (the ending), `contacts`, `lips`, `nb` (bounces), `dur` (seconds), plus x, y, z, speed and the launch number `n`.
 
 Notes picked up for the plan: `WorldBrunt.stepZ` runs only while a fighter is launched, so a fighter who ends a brunt flight away from the plane keeps that depth until his next launch (Simulation, for L3: the ease to the home depth has to run in every state). Rendering asks for a **sim record of window blow-outs** so a replay seek keeps them (VFX's list is pruned after 6 s): a hashed per-building bit mask of blown windows per floor, set by `floor_hit` and `building_hit` events and by the area damage, readable by Rendering; to be planned with the floors (a sized estimate follows in the next plan note).
+
+## 11. Wear per journey (Game Design's check, 2026-10-02)
+
+The 0.32 mean in section 10 was partly a measuring error: the first-touch damage event is emitted before the contact event of the same tick, so the script had not yet opened the journey and dropped it. Counted properly (three passes over a tick's events), 40 matches, 40 degree boundary, as a share of the single-impact budget (0.018 times the first-contact speed):
+
+| Ending | Before the landing fix | After |
+| :--- | :--- | :--- |
+| Halted (stop) | 0.67 (p10 0.40, p90 1.03) | **0.87** (p10 0.54, p90 1.17), n 1,027 |
+| Wall stop-impact | 0.63 | 0.83 |
+| Tumble to a stop | 0.82 | 1.19 (n 29) |
+| Slam | 1.09 | 1.12 (pays all, plus its area damage) |
+| Water | 0.40 | 0.36 |
+
+The shortfall in the halted journeys was real: the 70% share is paid by the speed each contact removes, but the landing itself removes the normal part of the velocity (the speed into the ground) and the skid only starts with the tangential part, so that part was never paid. The fix is in `_contact`: a skid or tumble that starts pays `perSpeed` times (the contact's speed minus the horizontal speed it starts with) into the same accumulator the skid's braking fills, so first touch 30%, landing removal and braking add up to the budget. A halted journey now pays 87% on average (80 to 100% is the target; the 10th to 90th percentile spread, 0.54 to 1.17, comes from journeys that end on a wall, a lip or in the water before the speed is gone, and from the stop at speed 60 leaving a little unpaid). The split needs no further change; if Game Design wants the mean nearer 0.95, `wear.perSpeed` 0.0126 can rise by about a tenth.
