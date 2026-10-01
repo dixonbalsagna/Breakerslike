@@ -50,6 +50,7 @@ func _init() -> void:
 	check("action state", _actState())
 	check("pausing set pieces", _pause())
 	check("act rule and time cap", _actRule())
+	check("the break", _formBreak())
 	check("replay module", _replayModule())
 	var tm: int = Time.get_ticks_usec()
 	check("matches", _matches(g))
@@ -522,6 +523,102 @@ func _pause() -> String:
 	return "no AI match of seeds 3, 7 and 12 reached a pause in four minutes"
 
 
+## The break (moveset-rules.md section 10.8): a transformation's tier-up lands at the end of the version's gather, not on
+## the request tick. Full and short: on a frozen tick inside the pause, exactly the gather after the request, with its
+## tier_up there. Live: after the gather in live ticks. A second fighter's live gather starts when the first one's pause
+## ends. A taken step cannot be taken again during its gather. No break once the match is over. A further step already
+## earned is ready at the break, with its transform_ready.
+func _formBreak() -> String:
+	var ready := func(f) -> void:
+		f.power = f.ld.thresholds[0] + 1.0
+		f.act.formReady = true
+		f.y = 20000.0   # airborne: no crater
+	var take := func(S0: SimState, slot: int, bank: int) -> Dictionary:
+		S0.pause.bank = bank
+		var r0: Dictionary = SimPause.request(S0, SimPause.TRANSFORM, slot)
+		SimFighter.transform(S0, S0.fighters[slot])
+		return r0
+	var tierUps := func(S0: SimState) -> int:
+		var n: int = 0
+		for e in S0.out.fx:
+			if e.type == "tier_up":
+				n += 1
+		return n
+	for version in [SimPause.FULL, SimPause.SHORT]:
+		var S := SimCore.createSim()
+		SimCore.newMatch(S, 5)
+		var a = S.fighters[0]
+		ready.call(a)
+		if version == SimPause.SHORT:
+			S.pause.seen = 1   # a repeat
+		var r: Dictionary = take.call(S, 0, SimPause.bankMax)
+		var g: int = SimPause.gather[version]
+		if r.version != version or a.tier != 1.0 or a.act.breakIn != g or a.act.formReady or SimFighter.transform(S, a):
+			return "%s: after the request tier %s, breakIn %d, ready %s" % [SimPause.VERSIONS[version], str(a.tier), a.act.breakIn, str(a.act.formReady)]
+		for t in range(1, int(r.ticks) + 1):
+			S.out.fx.clear()
+			if SimCore.step(S, null):
+				return "%s: tick %d of the pause was live" % [SimPause.VERSIONS[version], t]
+			var want: float = 2.0 if t >= g else 1.0
+			if a.tier != want or tierUps.call(S) != (1 if t == g else 0):
+				return "%s: at paused tick %d the tier is %s and %d tier_up events (the gather is %d)" % [SimPause.VERSIONS[version], t, str(a.tier), tierUps.call(S), g]
+		if a.act.breakIn != -1:
+			return "%s: breakIn %d after the pause" % [SimPause.VERSIONS[version], a.act.breakIn]
+		SimCore.dispose(S)
+	# live, and a second fighter whose gather waits for the first one's pause
+	var L := SimCore.createSim()
+	SimCore.newMatch(L, 5)
+	var k = L.fighters[0]
+	var v = L.fighters[1]
+	ready.call(k)
+	ready.call(v)
+	var r1: Dictionary = take.call(L, 0, SimPause.bankMax)
+	var r2: Dictionary = take.call(L, 1, L.pause.bank)
+	if r1.version != SimPause.FULL or r2.version != SimPause.LIVE or v.act.breakIn != SimPause.gather[SimPause.LIVE]:
+		return "two requests on one tick: %s then %s" % [str(r1), str(r2)]
+	for t in range(int(r1.ticks)):
+		SimCore.step(L, null)
+	if k.tier != 2.0 or v.tier != 1.0 or v.act.breakIn != SimPause.gather[SimPause.LIVE]:
+		return "the second fighter's gather ran during the first one's pause (tier %s, breakIn %d)" % [str(v.tier), v.act.breakIn]
+	var live: int = 0
+	while v.tier == 1.0 and live < 200:
+		if SimCore.step(L, null):
+			live += 1
+	if live != SimPause.gather[SimPause.LIVE]:
+		return "a live break came after %d live ticks, not %d" % [live, SimPause.gather[SimPause.LIVE]]
+	# a further step already earned is ready at the break
+	k.power = k.ld.thresholds[2] + 0.0
+	k.act.formReady = true
+	L.pause.sinceEnd = 0
+	take.call(L, 0, 0)
+	L.out.fx.clear()
+	var again: int = 0
+	live = 0
+	while k.tier == 2.0 and live < 200:
+		L.out.fx.clear()
+		if SimCore.step(L, null):
+			live += 1
+	for e in L.out.fx:
+		if e.type == "transform_ready" and int(e.actor) == 0 and e.tier == 4.0:
+			again += 1
+	if k.tier != 3.0 or not k.act.formReady or again != 1:
+		return "a further earned step at the break: tier %s, ready %s, %d transform_ready events" % [str(k.tier), str(k.act.formReady), again]
+	SimCore.dispose(L)
+	# no break once the match is over
+	var E := SimCore.createSim()
+	SimCore.newMatch(E, 5)
+	var e0 = E.fighters[0]
+	ready.call(e0)
+	take.call(E, 0, 0)
+	E.game.ko = E.fighters[1]
+	for t in range(60):
+		SimCore.step(E, null)
+	if e0.tier != 1.0:
+		return "the break landed after the KO"
+	SimCore.dispose(E)
+	return ""
+
+
 ## Q10: the act rule under actBeats.formSteps (1 + the larger of form steps and wound beats, + region breaks, capped), a
 ## form step announced as an act with cause form, and the finisher contest with no survival from the time cap (both
 ## contest paths; before the cap the chance is above 0).
@@ -801,9 +898,9 @@ func _fightData(g: Dictionary) -> String:
 ## (ladder and guard edits in both fighters' files) and runs a forced probe: a fresh match, the state that number needs,
 ## one call into the code that reads it, and the values that call produced. The probe's result with the edited data must
 ## differ from its result with the real data. No probe plays a match, so a changed opening cannot break a row (the old
-## check played seeds and needed new ones after B2 and after the terrain fixes). One end-to-end row still plays matches,
-## over a list of seeds, and passes if any seed's digest differs. composure.below is left out: it only matters while
-## composure's cap is not 0.
+## check played seeds and needed new ones after B2 and after the terrain fixes). The end-to-end row is forced as well: VORR,
+## with menace set, attacks KAI through the director, and what KAI took must differ (it played seeds until they needed
+## replacing three times). composure.below is left out: it only matters while composure's cap is not 0.
 const WIRED: Array = [
 	["KAI/meters.json", ["meters", "anguish", "effects", 0, "perPoint"], 0.2, "kaiTick"],
 	["KAI/meters.json", ["meters", "anguish", "effects", 0, "cap"], 0.05, "kaiTick"],
@@ -831,10 +928,8 @@ const WIRED: Array = [
 	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmg"], 900.0, "powerUp"],
 	[["KAI/ladder.json", "VORR/ladder.json"], ["powerUp", "areaDmgPerTier"], 900.0, "powerUp"],
 	[["KAI/wounds.json", "VORR/wounds.json"], ["guardWearSplit"], {"arms": 0.75, "legs": 0.25}, "guard"],
-	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0, "match"],   # end to end: any of WIRED_SEEDS
+	["VORR/meters.json", ["meters", "menace", "effects", 1, "cap"], 1.0, "vorrExchange"],   # end to end, forced: through the director
 ]
-const WIRED_TICKS: int = 6000
-const WIRED_SEEDS: Array = [45, 47, 77, 92, 99]   # step 2b (EP, QA): the seeds on which VORR's menace rises inside WIRED_TICKS after 2b
 
 
 func _wiredNumbers() -> String:
@@ -844,7 +939,7 @@ func _wiredNumbers() -> String:
 			files[id + "/" + fname] = FileAccess.get_file_as_string(FighterData.ROOT + id + "/" + fname)
 	var base := {}
 	for c in WIRED:
-		if c[3] != "match" and not base.has(c[3]):
+		if not base.has(c[3]):
 			base[c[3]] = _wiredProbe(c[3])
 			if base[c[3]].begins_with("!"):
 				return "probe %s cannot run on the real data: %s" % [c[3], base[c[3]]]
@@ -871,18 +966,6 @@ func _wiredNumbers() -> String:
 			var fw := FileAccess.open(dir + key, FileAccess.WRITE)
 			fw.store_string(text)
 			fw.close()
-		if c[3] == "match":
-			var differs: bool = false
-			for seed in WIRED_SEEDS:
-				FighterData.loadFrom()
-				var plain: String = _wiredRun(seed)
-				FighterData.loadFrom(dir)
-				if FighterData.errors().is_empty() and _wiredRun(seed) != plain:
-					differs = true
-					break
-			if not differs:
-				bad.append("%s %s: no effect in a match on seeds %s" % [str(c[0]), str(c[1]), str(WIRED_SEEDS)])
-			continue
 		FighterData.loadFrom(dir)
 		if not FighterData.errors().is_empty():
 			bad.append("%s %s: %s" % [str(c[0]), str(c[1]), "; ".join(FighterData.errors())])
@@ -953,6 +1036,27 @@ func _wiredProbe(kind: String) -> String:
 				out = ["!no evacuees"]
 			else:
 				out = [vorr.menace, S.world.evacuated]
+		"vorrExchange":   # end to end, forced: VORR, with menace, attacks KAI through the director; what KAI took
+			kai.ai = null
+			vorr.ai = null
+			var hp0: float = kai.hp
+			var asked: int = 0
+			for t in range(600):
+				vorr.menace = 50.0
+				vorr.menaceSeen = 50.0
+				vorr.menaceQuiet = 0
+				if S.dirS.ex == null and kai.hp == hp0 and t >= 60:
+					DirExchange.requestAttack(S, vorr, "heavy")
+					asked += 1
+				SimCore.step(S)
+				S.out.fx.clear()
+				S.out.feed.clear()
+				if kai.hp != hp0 and S.dirS.ex == null:
+					break
+			if kai.hp == hp0:
+				out = ["!VORR's attack never hurt KAI (%d requests)" % asked]
+			else:
+				out = [kai.hp, kai.wear[0], kai.wear[1], kai.wear[2], kai.wear[3]]
 		"chargeTick":   # Q10: the charge rate
 			kai.power = 15.0
 			kai.state = "charging"
@@ -1006,23 +1110,6 @@ func _wiredProbe(kind: String) -> String:
 	for v in out:
 		parts.append(SimMathx.bits(v) if v is float else str(v))
 	return ",".join(parts)
-
-
-func _wiredRun(seed: int) -> String:
-	var S := SimCore.createSim()
-	SimCore.newMatch(S, seed)
-	var h := SimHash.Hasher.new()
-	for t in range(WIRED_TICKS):
-		SimCore.step(S)
-		S.out.fx.clear()
-		S.out.feed.clear()
-		for f in S.fighters:
-			h.num(f.x); h.num(f.y); h.num(f.ki); h.num(f.power); h.num(f.menace); h.num(f.anguish)
-			for r in range(4):
-				h.num(float(f.wear[r]))
-	var got: String = h.hex() + ":" + SimHash.stateHash(S).gameplay
-	SimCore.dispose(S)
-	return got
 
 
 ## D1a: SimRng.keyed is stateless (same inputs, same value; no stream moves), spread over keys and indices, in [0, 1), and

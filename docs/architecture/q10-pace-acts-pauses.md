@@ -196,3 +196,42 @@ Plan only, for my next turn in the sim slot, with QA's re-tuned values. It build
 2. Tools: `gatherTicks` in the fight-pause schema, and the cross-check with `forms.json`.
 3. The mood's form impulse (+10 for a transformation, spec-wounds section 9) is in the data but no code gives it, today or before. It could be given at the break. It would raise a mood that is already too frenzied, so I would add it only if QA includes it in its re-tune.
 
+## 9. The break and QA's re-tune, as built (2026-10-02, on 0886750)
+
+One slice: QA's re-tune values, the tier-up at the break (section 8), a forced probe in place of the wired-number check's seeds, and Encounter's three `craterT` lines. Added by the EP while it was open: the mixer label's `maxStancePct` 45 to 50 in `data/fight/style.json` (Game Design, spec-wounds section 9: the AI sits at 45 to 55% press and almost never reached the label); the mixer was 0.1% of labelled time before and is 1.0% after.
+
+**The break.** `Fighter.act.breakIn` (hashed). `SimPause.request` sets it to the version's gather; `SimFighter.transform` now only takes the ready form; `SimFighter.formBreak` raises the tier and runs today's `tierUp`. Full and short count on the pause's frozen ticks (`SimPause.frozenTick`), live counts on live ticks (`stepFighter`). The gather is `gatherTicks` in `data/fight/pause.json` (60, 24, 10), and the `transform` event carries it as `gather` seconds.
+
+**Differences from the plan**
+- Nothing in `sim/director` changed. The rival's push stays at the request; the hook `DirExchange.formBreak` was not added. Moving the push to the break is Encounter's to do.
+- `SimFx.transform` looks the gather up itself from the version, so Encounter's call is unchanged.
+- A direct call to `SimFighter.transform` with no request before it (the tests) breaks at once.
+- While a taken step waits for its break, the fighter cannot become ready again; a further step already earned becomes ready at the break, with its `transform_ready`.
+- The mood's form impulse is still not given by any code. QA's value (300) is applied, and it changes nothing until the impulse is wired.
+
+**Proof**
+1. *Neutral:* with every `gatherTicks` at 0 the break lands on the request tick as before, and parity passed all 9 matches (184,536 ticks) on the untouched goldens of 0886750. Only the fight-data hash failed, as expected with new keys.
+2. *The flip:* the gather at 60, 24 and 10, and QA's values; the goldens regenerated once (9 matches, 177,656 ticks).
+3. *Gates:* parity (with the new check "the break" and the forced end-to-end probe), determinism, seam sweep, `npm test` (5 stages), the validator (0 errors) and its self-test (965 of 965), the touch test and the loader check pass.
+
+**The wired-number check** no longer plays matches. Its end-to-end row sets VORR's menace, has VORR attack KAI through the director, and compares what KAI took. `WIRED_SEEDS`, `WIRED_TICKS` and `_wiredRun` are gone.
+
+**100 matches** (default arm, seeds 1 to 100, digest c41bcef3de76d062 with the mixer value; the fight rows are the same with and without it):
+
+| | Result | Band or target |
+| :--- | :--- | :--- |
+| KAI wins | 45% [36, 55] | 45 to 55% |
+| Length | median 450 s, p10 369, p90 589 | 360 to 480; p10 at least 300; p90 at most 600 |
+| First brink | 391 s | 270 to 420 |
+| Finisher survival | 25.4% | 25 to 40% |
+| Rallies | 0.28 a match | 0.3 to 0.7 |
+| Region breaks, limb breaks | 2.00, 0.48 (arms 56%) | 1.5 to 2.5, 0.3 to 0.5 |
+| Mood calm, tense, frenzied | 41%, 53%, 6% | 30 to 55, 35 to 60, 5 to 20 |
+| Frenzied in act 4 | 13.3% | at least 15% |
+| Acts 2, 3, 4 | 103 s, 218 s, 322 s | 90 to 150, 150 to 240, 270 to 345 |
+| Form steps | 106 s, 225 s, 339 s; the third taken by 188 of 200 fighters | 75 to 105, 165 to 225, 270 to 330 |
+| Pauses | 1.08 s a minute; none over 2.5 | at most 2.5 |
+| Civilians lost | 17% | QA's open question |
+
+QA measured its values on 21390f6, before step 2b and before the break; it re-centres on this commit. What I see: the form steps sit at or just past the late edge of their targets, rallies and the frenzied share of act 4 are just under their bands, and collateral is low as QA's note says.
+

@@ -73,6 +73,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.lastBrunt = -1.0
 	S.dirS.exN = 0
 	S.dirS.biomeT = PackedFloat64Array()   # location variety (granted line): the director sizes it on the first tick
+	S.dirS.craterT = PackedFloat64Array()   # Encounter's slice (a) (granted line)
 	SimAct.setup(S, setup)   # I2a: each fighter's action state
 	SimPause.reset(S)        # Q10: the pause bank
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style

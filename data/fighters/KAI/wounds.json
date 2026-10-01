@@ -26,9 +26,9 @@
     540000
   ],
   "_stageAt": "bruised 30, battered 60, broken 90 (pinned: sim/director/ai.gd, qa/godot/records.gd)",
-  "wearPerDamage": 216.0,
-  "_wearPerDamage": "k 0.036 x 6000 (QA's M1b tuning, docs/qa/tuning-m1b.md; it moves with act1Damping and cripple.base)",
-  "act1Damping": 1.3,
+  "wearPerDamage": 312.0,
+  "_wearPerDamage": "k 0.052 x 6000 (QA's Q10 re-tune for the slower ladder, docs/qa/retune-q10.md)",
+  "act1Damping": 1.0,
   "_act1Damping": "wear x this while the act index is 1 (SimMood.act). Below 1 it slows act 1's wear; above 1 it speeds it, so the first wound beats and act 2 come sooner (QA's M1b tuning: 1.3 with k 0.036, docs/qa/tuning-m1b.md)",
   "overtime": {
     "startTicks": 28800,
@@ -103,13 +103,13 @@
       "guard_break",
       "chain"
     ],
-    "base": 0.036,
+    "base": 0.032,
     "tierAhead": 0.03,
     "lateAct": 3,
     "lateBonus": 0.03,
     "defensive": -0.03,
     "maxPerFighter": 1,
-    "legWeight": 1.5,
+    "legWeight": 1.8,
     "surgePower": 10.0,
     "_note": "a heavy-class blow (a heavy, a signature, a guard break or a chain strike) that lands on a battered limb in a decisive exchange breaks it on a keyed roll: base, + tierAhead if the attacker is a tier ahead, + lateBonus from act lateAct, + defensive (negative) if the victim holds DEFENSIVE. At most maxPerFighter limbs a match; the breaker's power rises by surgePower. The pick: among the victim's eligible limbs (cripple regions, battered at the exchange's start and still battered), the legs weigh legWeight against the arms' 1"
   },

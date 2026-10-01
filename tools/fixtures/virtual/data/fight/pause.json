@@ -9,14 +9,17 @@
   "full": {
     "lengthS": 3,
     "finalLengthS": 4,
-    "gapS": 20
+    "gapS": 20,
+    "gatherTicks": 60
   },
   "short": {
     "lengthS": 1.5,
-    "gapS": 8
+    "gapS": 8,
+    "gatherTicks": 24
   },
   "live": {
-    "lengthS": 0.8
+    "lengthS": 0.8,
+    "gatherTicks": 10
   },
   "timeCap": {
     "lengthS": 4

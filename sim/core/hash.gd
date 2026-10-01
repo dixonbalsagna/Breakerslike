@@ -105,6 +105,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 	out.append(d.lastLaunch2)
 	out.append(float(d.exN))
 	out.append(float(d.biomeT.size())); for v in d.biomeT: out.append(v)   # location variety
+	out.append(float(d.craterT.size())); for v in d.craterT: out.append(v)   # Encounter's slice (a) (granted line)
 	var ex = d.ex
 	if ex != null:
 		out.append(_idx(fs, ex.A))
@@ -148,7 +149,7 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		out.append(float(f.brinkSetups)); out.append(f.brinkOpen); out.append(float(f.brinkEx))
 		out.append(float(f.flightHits))
 		var act = f.act
-		_obj(out, act, ["v2", "guardSince", "dodgeTick", "dodgeCool", "burstCool", "mode", "assist", "formReady", "burstFired"])
+		_obj(out, act, ["v2", "guardSince", "dodgeTick", "dodgeCool", "burstCool", "mode", "assist", "formReady", "burstFired", "breakIn"])
 		out.append(float(act.queue.size()))
 		for rq in act.queue:
 			for x in rq:
@@ -264,7 +265,7 @@ const FX_FIELDS: Dictionary = {
 	"shake": ["k", "x"], "tick": ["dt", "frozen"],
 	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "limb_break": ["actor", "victim", "region"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"], "brink_open": ["actor", "target", "kind", "text"], "brink_close": ["actor", "kind"],
 	"mood_band": ["kind", "amount", "n"], "act_change": ["n", "kind"], "style_label": ["actor", "kind", "text"], "crowd_state": ["kind"], "building_hit": ["actor", "x", "n", "b", "y", "z", "amount", "ratio", "outcome", "link", "spd", "keep", "ux", "uy", "kind", "w", "h", "owner", "victim"],
-	"tier_up": ["actor", "tier", "onGround"], "transform_ready": ["actor", "tier", "source"], "transform": ["actor", "tier", "source", "dur", "version"], "beam_outcome": ["actor", "target", "kind"], "pause_start": ["kind", "actor", "version", "dur"], "pause_end": ["kind"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
+	"tier_up": ["actor", "tier", "onGround"], "transform_ready": ["actor", "tier", "source"], "transform": ["actor", "tier", "source", "dur", "version", "gather"], "beam_outcome": ["actor", "target", "kind"], "pause_start": ["kind", "actor", "version", "dur"], "pause_end": ["kind"], "hide_start": ["actor", "cover"], "found": ["actor"], "ko": ["winner", "loser"],
 	"decisive": ["winner", "loser", "kind"], "finisher_start": ["actor", "target", "dur"], "finisher_contest": ["target", "chance", "survived"],
 	"attack": ["actor", "target", "kind", "defStance", "template", "ambush"], "parry": ["actor", "target"], "chain_end": ["actor", "n"],
 	"ambush": ["actor", "target"], "lock_lost": ["actor", "target"], "launch_plan": ["actor", "target", "text", "chosen"],

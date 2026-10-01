@@ -4,9 +4,9 @@
   "id": "VORR",
   "identity": {
     "name": "VORR", "title": "Calamity Sovereign", "role": "villain", "sigName": "Calamity Wave",
-    "col": "#a52a2a", "aura": "#ff5a3c", "hair": "#181818"
+    "col": "#a52a2a", "aura": "#9a80d8", "hair": "#181818"
   },
-  "stats": { "care": 0.0, "dmgMul": 1.0, "spd": 0.95, "maxhp": 1600.0 },
+  "stats": { "care": 0.0, "dmgMul": 1.02, "spd": 0.95, "maxhp": 1600.0 },
   "kit": { "canHide": false },
   "rally": { "rule": "second_wind", "_note": "the prototype fighters' placeholder rule (wounds-plan.md S4)" },
   "finishers": { "base": "vorr" },

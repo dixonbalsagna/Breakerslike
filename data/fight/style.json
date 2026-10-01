@@ -57,7 +57,7 @@
     },
     "mixer": {
       "definition": "no dominant stance and a spread of attack kinds",
-      "maxStancePct": 45,
+      "maxStancePct": 50,
       "minStancesUsed": 2,
       "stanceUsedPct": 20,
       "maxAttackKindPct": 70,

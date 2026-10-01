@@ -164,10 +164,23 @@ static func tierByPower(f) -> float:
 static func transform(S: SimState, f) -> bool:
 	if not f.act.formReady:
 		return false
+	f.act.formReady = false
+	if f.act.breakIn <= 0:   # no gather was asked for (SimPause.request sets it), or it is 0: the break is now
+		formBreak(S, f)
+	return true
+
+
+## The break of a transformation (moveset-rules.md section 10.8): the tier rises with today's power-up (the burst, the
+## crater and area damage near the ground, tier_up). It comes at the end of the version's gather: on a frozen tick inside
+## a full or short pause (SimPause.frozenTick), on a live tick otherwise (stepFighter). A further step already earned is
+## ready at once.
+static func formBreak(S: SimState, f) -> void:
+	f.act.breakIn = -1
 	f.tier += 1.0
 	tierUp(S, f)
-	f.act.formReady = tierByPower(f) > f.tier
-	return true
+	if tierByPower(f) > f.tier:
+		f.act.formReady = true
+		SimFx.transformReady(S, f, f.tier + 1.0, DirExchange.transformSource(f))
 
 
 static func stepFighter(S: SimState, f, dt: float) -> void:
@@ -177,7 +190,11 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 	var i: SimIntent = f.input
 	f.power = SimMathx.jmin(100.0, f.power + f.ld.fill * dt)
 	var nt: float = tierByPower(f)
-	if nt > f.tier:
+	if f.act.breakIn > 0 and S.game.ko == null:   # a live transformation's gather: the break lands here
+		f.act.breakIn -= 1
+		if f.act.breakIn == 0:
+			formBreak(S, f)
+	if nt > f.tier and f.act.breakIn < 0:   # (not while a taken step waits for its break)
 		if f.ld.manualTierUp:
 			if not f.act.formReady: SimFx.transformReady(S, f, f.tier + 1.0, DirExchange.transformSource(f))   # I2b: the rising edge
 			f.act.formReady = true   # I2a: the tier waits for the transform (transform())

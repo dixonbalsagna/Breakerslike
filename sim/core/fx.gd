@@ -191,6 +191,7 @@ static func transformReady(S: SimState, f, tier: float, source: String) -> void:
 static func transform(S: SimState, f, tier: float, source: String, dur: float, version: String = "live") -> void:
 	var e := _ev(S, "transform")
 	e.actor = float(S.fighters.find(f)); e.tier = tier; e.source = source; e.dur = dur; e.version = version
+	e.gather = float(SimPause.gatherOf(version)) / float(SimPause.TPS)
 
 
 ## Q10: a pausing set piece starts: the sim is frozen for dur seconds from the next tick. kind: transform, world or

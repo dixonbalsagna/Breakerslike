@@ -12,7 +12,11 @@ class_name SimPause
 ##   live   otherwise: no pause, nothing spent; the caller plays its uninterruptible live version for live.lengthS
 ## A step marked "live" in the fighter's ladder (stepKinds) always plays live and leaves the bank and the first-of-kind
 ## mark alone. The time-cap kind always pauses, for timeCap.lengthS, outside the bank.
-## The numbers are data/fight/pause.json (seconds there, whole ticks here).
+## The break: a transformation's tier-up (the burst, the crater, the power and size step, tier_up) lands at the end of
+## the version's gather, not on the request tick (moveset-rules.md section 10.8). request() sets the fighter's act.breakIn
+## to the gather. On a full or short version the count runs on the pause's own frozen ticks (frozenTick), so the world
+## changes inside the pause; on a live version it runs on live ticks (SimFighter.stepFighter).
+## The numbers are data/fight/pause.json (seconds there, whole ticks here; the gather is in ticks).
 
 const TRANSFORM: int = 0
 const WORLD: int = 1
@@ -40,6 +44,7 @@ static var shortTicks: int = 0
 static var shortGap: int = 0
 static var liveTicks: int = 0
 static var capTicks: int = 0
+static var gather: Array = [0, 0, 0]   # per VERSIONS index: ticks from the request to the break
 
 
 # ---------------------------------------------------------------- data
@@ -70,6 +75,14 @@ static func _ensure() -> void:
 	shortGap = _ticks("short.gapS", s.get("gapS"))
 	liveTicks = _ticks("live.lengthS", j.get("live", {}).get("lengthS"))
 	capTicks = _ticks("timeCap.lengthS", j.get("timeCap", {}).get("lengthS"))
+	gather = [0, 0, 0]
+	for v in range(VERSIONS.size()):
+		var g = j.get(VERSIONS[v], {}).get("gatherTicks")
+		var len: int = [liveTicks, shortTicks, fullTicks][v]
+		if not (g is float or g is int) or float(g) != floor(float(g)) or float(g) < 0.0 or (int(g) >= len and len > 0):
+			_err(VERSIONS[v] + ".gatherTicks: must be a whole number of ticks, at least 0 and under the version's length, got " + str(g))
+		else:
+			gather[v] = int(g)
 	if bankStart > bankMax:
 		_err("bank.startS is above bank.maxS")
 	if shortTicks > fullTicks or fullTicks > finalTicks:
@@ -132,6 +145,12 @@ static func frozenTick(S: SimState) -> bool:
 		return false
 	p.left -= 1
 	p.total += 1
+	if p.kind == TRANSFORM and p.actor >= 0:   # the break lands inside the pause
+		var f = S.fighters[p.actor]
+		if f.act.breakIn > 0:
+			f.act.breakIn -= 1
+			if f.act.breakIn == 0:
+				SimFighter.formBreak(S, f)
 	if p.left == 0:
 		SimFx.pauseEnd(S, KINDS[p.kind])
 	return true
@@ -152,6 +171,7 @@ static func request(S: SimState, kind: int, slot: int, final: bool = false) -> D
 		var f = S.fighters[slot]
 		var step: int = int(f.tier) - 1   # the step being taken: called before the tier rises
 		if step >= 0 and step < f.ld.stepKinds.size() and f.ld.stepKinds[step] == "live":
+			f.act.breakIn = gather[LIVE]
 			return {"version": LIVE, "ticks": liveTicks}
 	var bit: int = 1 << (maxi(slot, 0) * 4 + kind)
 	var first: bool = (p.seen & bit) == 0
@@ -159,11 +179,27 @@ static func request(S: SimState, kind: int, slot: int, final: bool = false) -> D
 	if first and p.left == 0 and p.bank >= fullTicks and fullTicks > 0 and p.sinceEnd >= fullGap:
 		var n: int = mini(finalTicks, p.bank) if final else fullTicks
 		_start(S, kind, slot, FULL, n, n)
+		_gather(S, kind, slot, FULL)
 		return {"version": FULL, "ticks": n}
 	if p.left == 0 and p.bank >= shortTicks and shortTicks > 0 and p.sinceEnd >= shortGap:
 		_start(S, kind, slot, SHORT, shortTicks, shortTicks)
+		_gather(S, kind, slot, SHORT)
 		return {"version": SHORT, "ticks": shortTicks}
+	_gather(S, kind, slot, LIVE)
 	return {"version": LIVE, "ticks": liveTicks}
+
+
+## A transformation's pending break: the version's gather, counted from this tick.
+static func _gather(S: SimState, kind: int, slot: int, version: int) -> void:
+	if kind == TRANSFORM and slot >= 0:
+		S.fighters[slot].act.breakIn = gather[version]
+
+
+## The gather of a version by its name, in ticks (the transform event's gather).
+static func gatherOf(version: String) -> int:
+	_ensure()
+	var v: int = VERSIONS.find(version)
+	return gather[v] if v >= 0 else 0
 
 
 static func _start(S: SimState, kind: int, slot: int, version: int, ticks: int, cost: int) -> void:

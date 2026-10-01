@@ -13,7 +13,7 @@
     "regionBroken": 720,
     "buildingLaunch": 360,
     "buildingChain": 600,
-    "form": 600,
+    "form": 300,
     "finisherStart": 900,
     "taunt": 180,
     "landmarkFall": 600
@@ -29,7 +29,7 @@
   },
   "rates": {
     "bothAggressive": 1,
-    "decay": 3,
+    "decay": 4,
     "bothGuarded": 4,
     "proportional": {
       "on": false,

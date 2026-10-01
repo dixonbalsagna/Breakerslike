@@ -1,6 +1,6 @@
 {
   "schema": "fight.pause/1",
-  "_about": "Q10: pausing set pieces (sim/core/pause.gd; docs/design/spec-wounds.md section 8b). A transformation, a world-changing ability and the planet giving way at 11:00 freeze the sim for both players. Seconds here, whole ticks in the sim (60 a second). The bank starts at startS, gains gainSPerMin for each minute of match time and holds at most maxS. full: the fighter's first set piece of its kind, when the bank covers lengthS (a final-form reveal: up to finalLengthS) and gapS of live time have passed since the last pause. short: otherwise, when the bank holds lengthS and gapS have passed. live: otherwise; no pause, the transformer cannot be interrupted for lengthS. timeCap: always pauses, outside the bank.",
+  "_about": "Q10: pausing set pieces (sim/core/pause.gd; docs/design/spec-wounds.md section 8b). A transformation, a world-changing ability and the planet giving way at 11:00 freeze the sim for both players. Seconds here, whole ticks in the sim (60 a second). The bank starts at startS, gains gainSPerMin for each minute of match time and holds at most maxS. full: the fighter's first set piece of its kind, when the bank covers lengthS (a final-form reveal: up to finalLengthS) and gapS of live time have passed since the last pause. short: otherwise, when the bank holds lengthS and gapS have passed. live: otherwise; no pause, the transformer cannot be interrupted for lengthS. timeCap: always pauses, outside the bank. gatherTicks: ticks from the request to the break, where the tier-up lands (the burst, the crater, the size step, tier_up): inside the pause for full and short, on sim time for live (moveset-rules.md section 10.8; Animation's break and settle lengths stay in data/anim/forms.json).",
   "bank": {
     "startS": 3,
     "gainSPerMin": 2,
@@ -9,14 +9,17 @@
   "full": {
     "lengthS": 3,
     "finalLengthS": 4,
-    "gapS": 20
+    "gapS": 20,
+    "gatherTicks": 60
   },
   "short": {
     "lengthS": 1.5,
-    "gapS": 8
+    "gapS": 8,
+    "gatherTicks": 24
   },
   "live": {
-    "lengthS": 0.8
+    "lengthS": 0.8,
+    "gatherTicks": 10
   },
   "timeCap": {
     "lengthS": 4

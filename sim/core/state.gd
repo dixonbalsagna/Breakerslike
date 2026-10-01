@@ -55,6 +55,7 @@ class ActState:
 	var assist: int = 0           # SimAct.ASSISTS bit flags, from the setup
 	var formReady: bool = false   # a tier is ready and waits for the transform (ladder.json manualTierUp)
 	var burstFired: bool = false  # the burst already fired on this power press
+	var breakIn: int = -1         # the break: ticks until a transformation's tier-up lands (SimPause gather), -1 for none
 
 
 ## Q10: pausing set pieces (sim/core/pause.gd). Integers; a tick is a real tick, frozen or live.
@@ -128,6 +129,7 @@ class DirS:
 	var lastBrunt: float = -1.0       # B2: the building index of the last brunt
 	var exN: int = 0          # D1a: exchanges started this match (the exchange index for keyed draws, SimRng.keyed)
 	var biomeT: PackedFloat64Array = PackedFloat64Array()   # location variety: seconds of fight per biome (DirLocation.BIOMES order), sized by the director
+	var craterT: PackedFloat64Array = PackedFloat64Array()   # Encounter's slice (a) (granted line): the director owns it
 
 
 class World:
@@ -323,6 +325,7 @@ class FxEvent:
 	var ambush: bool = false     # attack: an ambush attack
 	var chosen: String = ""      # launch_plan: the chosen launch, NONE for a shove
 	var version: String = ""     # pause_start, transform: full, short or live (SimPause.VERSIONS)
+	var gather: float = 0.0      # transform: seconds from this event to the break, where the tier_up comes
 	var source: String = ""      # hazard_telegraph, danger: what is coming (brunt, windup, ambush; World adds collapse, landslide, lava)
 	var eta: float = 0.0         # hazard_telegraph, danger: seconds until it lands, 0 when unknown
 
