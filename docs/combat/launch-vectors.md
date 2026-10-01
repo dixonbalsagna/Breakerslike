@@ -24,8 +24,8 @@ Two of the three open-ground vectors are steep, which is why slams dominate.
 
 | # | Piece | Change | Why |
 | ---: | :--- | :--- | :--- |
-| 1 | **SLAM DOWN becomes a drive, by default** | Down and forward at **40 to 55 degrees below level**. Combat's rule for the angle, with no draw: 40 degrees when the rival is within 2 bh of the ground, rising evenly to 55 degrees at 12 bh or more. As a direction: (0.77, −0.64) at 40 degrees to (0.57, −0.82) at 55 | Section 19, step 2. A 40 to 55 degree contact bounces once and then skids (section 20), which is the "ploughs in and skids to a halt" Orb asked for |
-| 2 | **The straight-down slam is kept as its own, gated vector** (working label CRATER SLAM; Narrative names it) | Direction (0.2, −1.25) as today. Offered only for: a break or finisher launch; a rival directly below the attacker (within 1 bh sideways); and the planner's crater set piece from tier 3 | Section 19: "a slam is an event and a slide is the norm". Craters keep their weight (pillar 4) |
+| 1 | **SLAM DOWN becomes a drive, by default** | Down and forward at **25 to 50 degrees below level** (Game Design's ruling, section 19). The angle has no draw: 25 degrees when the rival is within 2 bh of the ground, rising evenly to 50 degrees at 12 bh and above. As a direction: (0.91, −0.42) at 25 degrees to (0.64, −0.77) at 50 | Section 19, step 2. Section 20 treats a 30 to 70 degree contact as a bounce, so Combat's first proposal of 40 to 55 would have made every drive a bounce. With 25 to 50, a low drive (under 30 degrees) skids at once, and a drive from height bounces once and then skids: "ploughs in and skids to a halt" |
+| 2 | **The straight-down slam is kept as its own, gated vector** (working label CRATER SLAM; Narrative names it) | Direction (0.2, −1.25) as today. Offered only for: a break or finisher launch; a rival **directly below** the attacker, meaning within 1 bh sideways and at least 3 bh lower; and the planner's crater set piece, at tier 3 or above, at most once every 30 s per fighter (Game Design's gates) | Section 19: "a slam is an event and a slide is the norm". Craters keep their weight (pillar 4) |
 | 3 | **UPPERCUT gets more forward carry** | From (0.25, 1.0) to about (0.45, 1.0), so its fall meets the ground at under 70 degrees. Only if slides are still under 40% after changes 1 and 2 | Section 19, step 3 |
 | 4 | **Each vector declares its angle band and intent** | New fields on the vector vocabulary: the angle range, the intent (`drive`, `loft`, `across`, `crater`, `brunt`) and its gates. The planner can then predict the landing class and hold the bands | Encounter scores; Combat owns the vocabulary |
 | 5 | **Reaction pieces for the journey** | The fighter's own reaction set (`moveset-system.md` section 1.1) grows from 12 to 15. It already has skid, bounce, splash, embed, knock-away and crumple. It adds: **tumble** (a roll, up to 1.2 s), **lip launch** (thrown clear off a rim, back to airborne), and **tech flip** (the dodge-tap recovery). It also needs two get-ups: quick (0.35 s, after a skid or tumble) and slow (0.75 s, after a slam) | Section 20's states: airborne, skid, bounce, slam, tumble, skip, down |
@@ -37,7 +37,7 @@ Two of the three open-ground vectors are steep, which is why slams dominate.
 | Piece | Fits because |
 | :--- | :--- |
 | KAI's finisher (final blow skyward) and VORR's finisher (a slam, then the planner's long launch) | finisher launches keep the straight slam and their own vectors |
-| The dive grab ("a slam straight down") | it is the "rival directly below" case |
+| The dive grab ("a slam straight down") | it is the "rival directly below" case when the rival is at least 3 bh lower and within 1 bh sideways. Otherwise it ends in the drive |
 | The ground-brawl style's launch hints | `ground_throw` is a low throw (a skid). `ground_slam` becomes the drive by default, and the straight slam only under the gates in change 2 |
 | Throws from a grab (`moveset-system.md` section 9.9) | toward: across (a skid); neutral: "a slam down" becomes the drive unless the rival is directly below; away: a back throw |
 | SMASH ACROSS and brunts | unchanged |
@@ -46,6 +46,6 @@ Two of the three open-ground vectors are steep, which is why slams dominate.
 - **Encounter:** the drive and the gated crater slam as candidates; the angle rule; the vector fields in change 4 when the vocabulary moves to data; the journey prediction in the intercept planner.
 - **World:** the 94% slam threshold and the section 20 states. Combat's reaction pieces follow World's state names.
 - **Animation:** the three new reactions and the two get-ups.
-- **Game Design:** confirm the angle rule (40 to 55 degrees by altitude) and the crater slam's gates.
+- **Game Design:** done. The two-vector split is confirmed, the drive's angle is set at 25 to 50 degrees by altitude, and the crater slam's gates are as written in change 2.
 - **QA:** the landing mix per vector, so each vector's class is checked against its intent.
 - **Narrative:** a label for the gated straight slam, and whether SLAM DOWN keeps its name now that it is a drive.
