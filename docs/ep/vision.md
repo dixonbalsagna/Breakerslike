@@ -422,3 +422,20 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Teleporting is on hold until there is a good reason to introduce it. Rule of cool may be reason enough, but Orb hasn't decided whether teleport should belong to one specific character as their signature ability. Blitzes use flight paths only for now.
 - Transformations: about three per fighter is reasonable for a typical fighter. The Empress is the outlier: her excessive transformations are what make her unique and appealing.
 - Balance picture, subject to a balance pitch and revisions: the Protagonist and the rival (the Anti-hero) are both solid all-rounders. The rival is skewed: his final transformation is the largest swing in power in the roster, but his unique ego mechanic may give him massive debuffs, or grant the opponent massive buffs, in the mid to late game.
+
+## Questionnaire 11: rule of cool (2026-10-01)
+
+Orb's picks.
+
+- **Planet-scale launches:** orbit and re-entry; through the mountain; the ping-pong rally. Not picked: the round-the-world hit, the sea parted to the floor, dragged across the city.
+- **Clashes beyond the beam struggle:** a fist clash shockwave; a blur exchange across the sky; a grapple lock in mid-air. Not picked: an aura standoff, catching a punch.
+- **Answers to an incoming beam or blast:** swat it into the scenery; walk through it; split it around the body. Not picked: catch and throw it back, fly up the beam.
+- **The world reacting as power rises:** clouds part and the sky changes; rubble floats upward; ground cracks spread when standing; windows blow out for blocks. Not picked: the sea pulling back, a storm.
+- **Impacts at the biggest moments:** speed lines and panel cut-ins. Not picked: impact frames, slow motion.
+- **Battle damage on fighters:** all five (torn clothing, scuffs and bruises, a broken limb hangs or drags, the aura flickers when worn, heavy breathing and stagger).
+- **Story beats:** a crater-landing entrance; a staredown before the first blow; a mid-fight taunt that can be punished; the winner stands in the wreckage. Not picked: a last stand at the brink, a double knockout.
+- **Bystanders and the world:** crowds watch and flee; throwable vehicles and ships. Not picked: a news helicopter, a useless military, the hero catching debris.
+- **Top-tier finisher scale:** 7 of 10 (1 wrecks a block, 10 scars the planet).
+- **How often the big spectacle happens:** 4 of 10 (1 rare and earned, 10 constant fireworks).
+- **The aura after a transformation:** on only when charging or attacking.
+- **Orb's note:** "quips, one liners, banter, taunts should all include a cut-in of the talking character's face on the side of the screen."
