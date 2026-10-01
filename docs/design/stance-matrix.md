@@ -133,7 +133,7 @@ The director implements these rules through Encounter Systems. Combat authors th
   - *CHARGING, light or heavy:* INTERRUPT if the charge has run under 1.0 s. After that, BURST: the aura throws both fighters apart, with no damage to the charger.
   - *CHARGING against a signature:* an OVERCHARGE CLASH after 1.0 s of charge with 40 ki or more, otherwise HIT.
   - *AGGRESSIVE against a light:* the feed names the winner.
-- **R4. The counter against a light is earned by patience** (questionnaire 4: no timing presses). PRESSURE's counter is decided by state: **50%** if the defender has held DEFENSIVE for 2 s or more before the attack and has more than 25 ki, **20%** otherwise. Holding a guard is the read; the director times the counter.
+- **R4. The counter against a light is earned by patience** (questionnaire 4: no timing presses). *Re-ruled by ADR 0008: see §7.3. The roll below is now only the AI's skill model.* PRESSURE's counter is decided by state: **50%** if the defender has held DEFENSIVE for 2 s or more before the attack and has more than 25 ki, **20%** otherwise. Holding a guard is the read; the director times the counter.
 - **R5. The parry is a director outcome, resolved by state** (questionnaire 4). There is no parry button.
   - *Base chance,* in the four parryable templates: DEFENSIVE **25%**, AGGRESSIVE **15%**, EVASIVE and ESCAPE 0% (they dodge or leave instead).
   - *Modifiers:*
@@ -168,3 +168,48 @@ These rules are starting values. QA re-tests them in the probe below before they
 3. **The escape gamble.** Pursuit slip rate and beam escape rate stay inside the bands in `balance-targets.md`.
 4. **Comprehension.** After two matches, a new player can say what each stance is for (charter).
 5. **Multi-fighter.** In 2v2 and free-for-all, a third fighter attacking someone who is already in an exchange produces an authored CUT-IN, never a silent overlap (`modes.md`, `team-2v2`).
+
+## 7. Held states under ADR 0008 (the Neutral column, request-only counters, R4)
+
+The stance columns in §2 stay. Their source is now what the fighter is doing when the attack request arrives (`control-rules.md`, Encounter's `docs/director/control-scheme-plan.md`): Press is AGGRESSIVE, Guard is DEFENSIVE, Dodge is EVASIVE, sprinting away is ESCAPE, and Power held alone is CHARGING.
+
+### 7.1 The Neutral column (holding nothing when attacked)
+
+Encounter proposed the AGGRESSIVE templates with every defender-favoured branch removed. **Adjusted: Neutral never trades either.** A trade needs the defender's own attack request, which is Press. In Neutral you get hit, and nothing fires for you.
+
+| Attack | Outcome | Second outcome, from a state the player can see |
+| :--- | :--- | :--- |
+| Light | **CLEAN HIT:** the whole queued string lands at ×1.0, with no parry roll, no counter and no trade | **CLIPPED:** the defender was flying at more than half speed across or away. The opening strike lands, the string ends there, and there is no launch |
+| Heavy | **CLEAN HIT:** the heavy lands and launches | **CLIPPED:** as above. The heavy lands with a short knockback and no launch |
+| Signature | **HIT** | None from the state. The defender's own inputs give DEFLECT or CLASH (§7.2) |
+
+- Neutral is never safe and never rewarded. Moving only softens the hit.
+- The defender's outs are all inputs: a Guard press in the tell (a perfect block, or a normal block if mistimed), a dodge-cancel in a gap between strikes, or a burst.
+- A Guard press during the opening wind-up, outside the perfect window, moves the cell to the Guard column's first outcome: GUARD HOLDS against a light and GUARD BREAK against a heavy.
+
+### 7.2 Counters and clashes need the defender's request
+
+The director never counters or fires for a fighter who didn't ask. The selector conditions, using Encounter's plan flags (`defQueued`, `defMode`, `defPerfect`):
+
+| Branch | Fires only when | Otherwise |
+| :--- | :--- | :--- |
+| TRADE BLOWS (won or lost), and every HEAVY CLASH ending | The defender is in Press: `defQueued` holds an attack request made no more than 20 ticks before the exchange started, or one waiting in the queue | The Neutral column |
+| DODGE & COUNTER | The defender is in Dodge **and** `defQueued` is set | DODGE & READ: a clean dodge with no counter. The attacker's read roll is unchanged |
+| PRESSURE's counter | `defPerfect` (the riposte in `control-rules.md` §1), or a reversal press after a normal block | GUARD HOLDS |
+| BRACE, and DEFLECT of a signature | Unchanged for BRACE, which is state: guard held with the ki to spare. DEFLECT needs `defPerfect` | GUARD BREAK; GUARD |
+| **CLASH** | During the attacker's beam tell, the defender has an energy request (`defMode` is energy) that is either its own **signature**, funded with 45 ki and off cooldown, or a **heavy energy attack** with 40 ki or more | The defender's held state decides: GUARD, DODGE, the ESCAPE gamble, or HIT |
+
+- **Answering with a signature** spends the 45 ki and starts its cooldown. It is a full struggle with the six shapes.
+- **Answering with a heavy blast** costs 40 ki and takes −10 on the clash score, because a blast is less than a beam.
+- A light blast, or any physical attack, doesn't clash: the beam goes through it, and the outcome is HIT.
+- **The retreat entry** (an attack pressed while holding away) puts the fighter in Press with a backstep. Against a rush it gets +15 on the trade roll, or +10 against a heavy rush, because the rusher overreaches (`control-rules.md` §8).
+
+### 7.3 R4, re-ruled: the counter is the player's input
+
+R4's patience roll (50% after 2 s of held guard, 20% otherwise) is **withdrawn for human players on every layout**, including Simple. A held guard never counters by itself.
+
+- **A light against Guard** is GUARD HOLDS unless the defender acts: a perfect block gives the riposte, and a reversal gives the counter-strike.
+- **Patience still pays.** After 2 s of continuous guard, the reversal costs **10 ki instead of 20**. Guard fatigue starts at 3 s (`balance-targets.md` §13), so the 2 to 3 s sweet spot stays.
+- **The clean parry goes.** It was decided by state. The perfect block's riposte, which launches against a heavy or an ender, replaces it.
+- **The AI plays by the same rules.** The old numbers become its skill model: R5's chances are how often it lands a perfect block, R4's are how often it uses the reversal, and it pays the same ki and cooldowns as a player.
+- Combat's parked edit 3 (PRESSURE's `selectorByProfile.dynamic`) changes accordingly: the counter branch reads `defPerfect` or the reversal, not `defHeld`.

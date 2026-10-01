@@ -17,7 +17,7 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
 
 - **The window is Controls'** (`docs/controls/input-scheme.md` §4.1). A fresh Guard press is a perfect block in the **last 8 ticks of a light wind-up, or the last 10 of a heavy one**. A press up to 4 ticks before the window opens also counts, and touch gets 2 more. The assist setting doubles the window and turns the lockout off.
 - **A mistimed tap still blocks.** A press earlier in the wind-up, or a guard already held, is a normal block. Only a press after the strike lands is a hit.
-- **Which strikes have a window.** Every strike with Combat's visible tell (15 ticks for a light, 20 for a heavy): an exchange's opening strike, every heavy, every ender, and ordinary energy blasts (a perfect block deflects them). Mid-string follow-ups have no fresh tell and no window. Signatures can be guarded but not perfect-blocked.
+- **Which strikes have a window.** Every strike with Combat's visible tell (15 ticks for a light, 20 for a heavy): an exchange's opening strike, every heavy, every ender, and ordinary energy blasts (a perfect block deflects them). Mid-string follow-ups have no fresh tell and no window. A perfect block against a signature beam is a **DEFLECT**: no damage and +8 ki, but no stagger and no riposte.
 - **The reward:**
   - no damage, no guard wear and no ki loss;
   - +8 ki;
@@ -26,16 +26,16 @@ Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-schem
   - it counts as a parry for mood (+4) and as a humbling for Pride.
 - **The risk.** Tapping without holding guard is the "moving parry": it works the same, but a late tap takes the full hit with no guard up.
 - **Mashing Guard gives normal blocks only.** A Guard press outside a window locks the perfect block out for **20 ticks**, and each further press restarts the lockout. The guard itself still works. This value replaces the 18 ticks in Controls' spec.
-- **Beam clash.** The director never fires a beam on its own, so the old "AGGRESSIVE with 40 ki meets the beam" rule goes. A clash now happens only when the defender fires their own signature or power-layer blast during the incoming beam's wind-up. It costs 40 ki, as before.
+- **Beam clash.** The director never fires a beam on its own, so the old "AGGRESSIVE with 40 ki meets the beam" rule goes. A clash now happens only when the defender answers during the incoming beam's tell, with their own signature (45 ki) or a heavy energy attack (40 ki). The selector conditions are in `stance-matrix.md` §7.2.
 - **QA bands:** perfect blocks are 5 to 15 per 100 melee exchanges at mid skill, and at most 2 per 100 for a scripted Guard masher.
 
 ## 2. Dodge-cancel, burst and reversal
 
 | Action | Cost | Cooldown | When it works | What it does |
 | :--- | ---: | ---: | :--- | :--- |
-| **Dodge-cancel** (Dodge tap mid-exchange) | 15 ki | 3 s | As the attacker: at any time, cancelling your own strike or recovery. As the defender: only in the gaps between strikes, never during hit-stun or a launch | 12 ticks of invulnerability and a dash in the held direction. The exchange ends with no winner |
+| **Dodge-cancel** (Dodge tap mid-exchange) | 15 ki | 3 s | As the attacker: at any time, cancelling your own strike or recovery. As the defender: only in the gaps between strikes, never during hit-stun or a launch. This narrows the "any time, for either fighter" window in Encounter's plan: the burst is the tool for a fighter who is being hit | 12 ticks of invulnerability and a dash in the held direction. The exchange ends with no winner |
 | **Burst** (Power tap) | 30 ki | 8 s | Also while being hit. Not during a launch, a cinematic or a finisher | A 360-degree shove that pushes the rival back about 8 bh and ends the exchange. No damage, and no winner |
-| **Reversal** (context button in guard, close up) | 20 ki | 6 s | Only just after a normal block | A guard-cancel counter-strike that starts the defender's own exchange |
+| **Reversal** (context button in guard, close up) | 20 ki, or 10 ki after 2 s of continuous guard | 6 s | Only just after a normal block | A guard-cancel counter-strike that starts the defender's own exchange |
 
 - **Burst bait.** If the rival is holding Guard when the burst fires, they absorb it and the burster staggers for 30 ticks. An expert pauses a string and guards to draw the burst out.
 - **No fallback.** Without the ki, or on cooldown, the press does nothing except its acknowledgement. Two small pips by the ki bar show the dodge-cancel and burst cooldowns.
@@ -117,9 +117,16 @@ Simple produces the same actions as every layout, at the same costs and windows.
 - against the medium AI it wins 35 to 50%;
 - against a script that perfect-blocks enders and ripostes it wins at most 15%.
 
-## 7. The smallest placeholder transform (next build)
+## 7. The placeholder transform
 
-One form, the same for both placeholders, built from what exists.
+**The next build: Encounter's smaller version** (the EP's pick; `docs/director/control-scheme-plan.md`). It is a manual tier-up with a short set piece.
+- The automatic tier-up waits at its threshold, and the fighter shows "ready".
+- The transform input takes it, between exchanges only: both triggers for 0.5 s, or on the Simple layout Power held alone for 0.5 s.
+- A 0.8 s hold plays on the existing power-up burst (the aura, the ground crater and the banner), and the rival is pushed back. No exchange can start during it.
+- The tier's existing bonuses then apply. It works at every tier-up, with no surge, no new art and no per-fighter rules.
+- The AI takes it at once.
+
+**The follow-up: one form with a surge** (Game Design's version, after the next build).
 
 | Part | The rule |
 | :--- | :--- |
@@ -133,3 +140,44 @@ One form, the same for both placeholders, built from what exists.
 | **AI** | Takes it 5 to 10 s after it becomes ready |
 
 It needs one data flag per fighter and no new art. The real forms replace it fighter by fighter.
+
+## 8. Entries out of reach: physical stand and retreat
+
+Combat's recommendation is confirmed (`docs/combat/moveset-system.md` §9.2). A physical press never whiffs for range, which keeps pillar 3.
+
+| Entry | In reach | Out of reach |
+| :--- | :--- | :--- |
+| **Rush** (toward) | Closes and strikes | The same: the fastest close |
+| **Stand** (neutral) | Plants and strikes | **The minimum approach.** The fighter closes by plain flight, arrives about 12 ticks later than a rush, plants and strikes. It gets no rush momentum, and a backstep counter doesn't trigger against it. Beyond 2,500 units it is the pursuit flight (`balance-targets.md` §10) |
+| **Retreat** (away) | A backstep strike | **A counter stance that needs no reach.** The fighter gives ground and holds the backstep for 45 ticks. If the rival's rush arrives in that time, the backstep strike meets it with the trade bonus in `stance-matrix.md` §7.2. If nobody comes, it ends as a plain backstep with a 10-tick recovery |
+
+In energy mode all three entries reach at any range, as Combat has them.
+
+## 9. Context actions against each held state
+
+**The grab rule covers three actions.** Grab, tackle and dive grab all beat Guard, Neutral and Power, lose to an attack in progress, and whiff against a dodge. A throw is a launch, so it counts as a decisive exchange.
+
+| Action | Neutral | Press (attacking) | Guard | Dodge | Sprint | Power (channelling) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Grab and throw** | Thrown: a launch at ×0.8 of a heavy | **Stuffed:** the rival's strike lands first | **Thrown:** the grab beats the guard | **Whiff:** 20 ticks open, and the 1.5 s cooldown | Whiff: the rival has gone | Thrown, and the charge is interrupted |
+| **Tackle** | Carried: a long-haul launch | Stuffed, and the tackler takes the opening strike at ×1.2 for running onto it | Carried | Whiff: the tackler overshoots, with 30 ticks of recovery | The chase: the ESCAPE gamble with +0.10 for the tackler | Carried, and the charge is interrupted |
+| **Dive grab** | Slammed | Stuffed | Slammed | Whiff: lands with 30 ticks of recovery | Whiff | Slammed, and the charge is interrupted |
+| **Thrown object** (after a pick-up) | Hit, with damage by the object's size | A trade: the object hits, and the rival's attack continues | Blocked at the guard's rate. An object of tier 3 or above also staggers | Dodged | Misses beyond 4 bh, otherwise hit | Hit, and the charge is interrupted |
+| **Energy shove** | Pushed back about 6 bh, with no damage | Pushed if the rival's tell hasn't started; otherwise the attack lands | Stopped | Avoided | No effect: out of reach | Pushed, and the charge is interrupted |
+
+**The two guard actions** are used by the defender, so they read the attacker's situation, not a held state.
+
+| Action | Against | Outcome |
+| :--- | :--- | :--- |
+| **Reversal** (after a normal block, close) | An attacker with links still queued | It lands. The string ends and the defender's own exchange starts with a throw or a sweep |
+| | An attacker who dodge-cancels | Whiff, and the ki is spent |
+| | An attacker who stopped and guards (a bait) | Blocked, and the reverser is 12 ticks behind |
+| **Deflect** (guarding at range, 10 ki) | A light blast or a volley | Turned aside, with no damage |
+| | A heavy charged shot | Turned aside, and the defender is pushed back |
+| | A signature beam | No effect: the outcome is GUARD. Only a perfect block deflects a beam |
+
+## 10. Answering a beam with a beam: the AI and the Simple layout
+
+- **The AI: yes,** by the same rules as a player (`stance-matrix.md` §7.2). It needs the ki and a ready signature, or 40 ki for a heavy blast. How often it answers when it can is its difficulty: easy 15%, medium 35%, hard 60%.
+- **The Simple layout: never automatically.** No layout fires a beam for a human. The Simple player answers with the same signature input (Power plus Heavy, or a swipe up on touch) during the tell, and an "answer" prompt shows when they have the ki.
+- QA keeps the clash band at 30 to 60% of signatures fired (`balance-targets.md` §8) and reports human and AI answers separately.
