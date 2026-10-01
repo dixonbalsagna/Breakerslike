@@ -398,3 +398,7 @@ Orb also referenced 'downstage' stage power: being nearer the camera reads as co
 - Close-ups: the match intro, transformations, finishers and the knockout.
 - Orb's notes: the camera sometimes doesn't catch up to the fighter; fighters are often launched out of the visible area faster than the camera follows; the camera often follows the launched fighter, so after knocking the opponent away Orb can't tell what their own character is doing.
 - Not answered (options to pitch): what happens to control during a cinematic moment.
+
+## Camera picks (2026-10-01)
+- Cinematic moments: short ones run live; long set pieces pause the fight for both players. Orb wants ideas for the set pieces and the conditions that trigger a pause.
+- Following a launch: the hybrid. The camera stays with the player's fighter when they launch the opponent, cuts briefly to the impact and returns; it chases when the player is the one launched; two players on one screen use the split.
