@@ -923,13 +923,27 @@ func _transform_beats(S: SimState) -> void:
 		_tf_phase = ph
 		if _tf_ver == "full":
 			_cut_now = true
-			_shot_pitch = CamParams.BREAK_PITCH if ph == "break" else 0.0
 			_snap_focus(S, solo_slot)
-		_zo[solo_slot] = _own_zoom_target(S, solo_slot)
+			_zo[solo_slot] = _own_zoom_target(S, solo_slot)
+			_shot_pitch = _break_pitch() if ph == "break" else 0.0
+		else:
+			_zo[solo_slot] = _own_zoom_target(S, solo_slot)
 	if _tf_ver == "full" and ti >= _tf_g + _tf_b + _tf_s / 2:
 		_end_solo(S)
 	elif _tf_ver == "short" and ti >= _tf_g + _tf_b:
 		_end_solo(S)
+
+
+## The break's pitch: BREAK_PITCH, limited so the camera stays above the ground at the fighter's feet. The camera orbits
+## the plane point at the screen's centre at distance K vh / zoom, so with the chest `off` pixels below the centre it is
+## CHEST + (off + K vh sin(pitch)) / zoom units above his feet (Rendering's rule, docs/rendering/README.md). The anchor
+## is fixed (0.74 vh), so a low zoom setting, which makes `zoom` small, is what pulls the angle back toward 0.
+func _break_pitch() -> float:
+	var z: float = maxf(_zo[solo_slot], 0.01)
+	var off: float = vh * (0.74 - 0.5)
+	var lim: float = ((CamParams.BREAK_CAM_MIN_H - CamParams.CHEST) * z - off) / (CamParams.K_FACTOR * vh)
+	var total_min: float = rad_to_deg(asin(clampf(lim, -1.0, 1.0)))
+	return minf(0.0, maxf(CamParams.BREAK_PITCH, total_min - pitch_deg))
 
 
 func _punch_mult() -> float:
@@ -1463,6 +1477,9 @@ func _make_frame(S: SimState) -> SplitFrame:
 	for ci in range(2):
 		var cf = S.fighters[ci]
 		var h_px: float = f.apparent_height(ci, cf.x, cf.y, float(cf.z))
-		f.cutaway[ci] = {"request": _ov_kind != "smash", "radius_px": maxf(CamParams.CUTAWAY_MIN_PX, CamParams.CUTAWAY_K * h_px), "only": ci if two_up else -1}
+		var rad: float = maxf(CamParams.CUTAWAY_MIN_PX, CamParams.CUTAWAY_K * h_px)
+		if solo_kind == "transform" and _tf_phase == "break" and _tf_ver == "full":
+			rad = maxf(rad, CamParams.CUTAWAY_BREAK_R * vh)   # keep the silhouette against the sky clear of a house in front
+		f.cutaway[ci] = {"request": _ov_kind != "smash", "radius_px": rad, "only": ci if two_up else -1}
 	f.cut = false
 	return f

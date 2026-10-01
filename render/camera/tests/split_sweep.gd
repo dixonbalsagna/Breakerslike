@@ -158,6 +158,8 @@ func _run() -> void:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
 	await _scenario("shot transformation full", func(): return _shot_transform_full(), {})
+	for pref in [0.0, 3.0, 10.0]:
+		await _scenario("shot transformation low angle, zoom setting %d" % int(pref), func(): return _shot_transform_limit(pref), {})
 	await _scenario("shot transformation short", func(): return _shot_transform_short(), {})
 	await _scenario("shot live transformation step", func(): return _shot_live_step(), {})
 	await _scenario("shot world pause pull-out", func(): return _shot_world_pause(), {})
@@ -1060,6 +1062,32 @@ func _shot_transform_full() -> Dictionary:
 	_check(size_settle > size_break * 1.3, "%s: the settle is not back to the pose (%.0f px)" % [_label, size_settle])
 	_check(ended_at >= 130 and ended_at <= 140, "%s: the shot ended at tick %d (want about 135)" % [_label, ended_at])
 	stats["shot transformation full"] = "cuts %s, sizes %.0f / %.0f / %.0f / %.0f px, end tick %d" % [str(cut_ticks), first, size_gather_end, size_break, size_settle, ended_at]
+	return {}
+
+
+## The break's low angle keeps the camera above the ground at every zoom setting (Rendering's rule), and the cut-away
+## hole opens wide during the break.
+func _shot_transform_limit(pref: float) -> Dictionary:
+	var ax: float = 20000.0
+	_pose(ax, 0.0, ax + 600.0, 0.0)
+	_rig.zoom_pref = pref
+	_seed_rig()
+	for _i in range(200):
+		_tick_rig()
+	_tick_rig([_shot_events("transform", {"actor": 0.0, "tier": 2.0, "source": "x", "dur": 3.0, "version": "full"})])
+	for k in range(1, 100):
+		_tick_rig()
+		if k == 75:
+			var fr: SplitFrame = _rig.current()
+			var f = _S.fighters[0]
+			var z: float = fr.cam_z[0]
+			var pt: Vector2 = fr.screen_pos(0, f.x, f.y + CamParams.CHEST, 0.0)
+			var off: float = pt.y - vh * 0.5
+			var height: float = CamParams.CHEST + (off + CamParams.K_FACTOR * vh * sin(deg_to_rad(fr.pitch))) / z
+			_check(float(fr.cutaway[0]["radius_px"]) >= CamParams.CUTAWAY_BREAK_R * vh - 0.5, "%s: the hole is %.0f px in the break" % [_label, float(fr.cutaway[0]["radius_px"])])
+			_check(height >= CamParams.BREAK_CAM_MIN_H - 3.0, "%s: the camera is %.1f units above his feet (pitch %.1f)" % [_label, height, fr.pitch])
+			stats["shot low angle, setting %d" % int(pref)] = "pitch %.1f, zoom %.2f, camera %.1f units above his feet" % [fr.pitch, z, height]
+	_rig.zoom_pref = CamParams.ZOOM_PREF_DEFAULT
 	return {}
 
 
