@@ -2,7 +2,7 @@
 // NOT run by CI, the validator or the sim. Run AFTER apply-2b.cjs (and the 2b data), once from the repo root, in the same commit that lands the data:
 //     node docs/tools/pending/apply-contact.cjs
 // It adds the schema keys, copies docs/combat/pending/templates.contact.json and finishers.contact.json over data/combat/templates.json and
-// finishers.json, and adds the cases. Then: node tools/validate.js (0 errors) and node tools/validate.js --self-test (all pass).
+// finishers.json, and adds the cases (also: tempo.stepAround, contact.placementReaches and the crossing dodge's dur, rise and off). Then: node tools/validate.js (0 errors) and node tools/validate.js --self-test (all pass).
 // Re-runnable: every edit sets a value or checks first, cases are added by id, and the file copy is idempotent. See README.md next to this file.
 const fs = require('fs');
 const rj = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
@@ -26,15 +26,16 @@ if (!s.$defs.profileDynamic || !s.$defs.beam || !(JSON.stringify(s).includes('ou
   // (2) tempo.stepIn and tempo.chainClose: required in the dynamic profile, because the beats that use them (rush before a strike, the chain catch) read them
   tempo.properties.stepIn = ticks;
   tempo.properties.chainClose = ticks;
-  for (const k of ['stepIn', 'chainClose']) if (!tempo.required.includes(k)) tempo.required.push(k);
+  tempo.properties.stepAround = ticks;   // the dodge's cross-over (dur: {ticks: stepAround})
+  for (const k of ['stepIn', 'chainClose', 'stepAround']) if (!tempo.required.includes(k)) tempo.required.push(k);
 
   // (3) profiles.dynamic.contact
   const len = { type: 'number', exclusiveMinimum: 0 };
   pd.properties.contact = Object.assign({
     type: 'object',
     description: 'Contact spacing (docs/combat/contact-spacing.md): on every damaging strike\'s contact tick the two fighters are within reach (centre to centre, world units) and at the same height. offset is where an approach, lunge or step-in ends; minSeparation is the least distance two bodies may come. reach not below offset and offset not below minSeparation are checked by tools/lib/xref.js (contact-range).',
-    required: ['reach', 'offset', 'minSeparation', 'sameHeight'],
-    properties: { reach: len, offset: len, minSeparation: len, sameHeight: { type: 'boolean' } },
+    required: ['reach', 'offset', 'minSeparation', 'sameHeight', 'placementReaches'],
+    properties: { reach: len, offset: len, minSeparation: len, sameHeight: { type: 'boolean' }, placementReaches: Object.assign({ description: 'How many reaches a placement (the dodge\'s landing, a re-close) may be from the contact point.' }, len) },
   }, closed);
   if (!pd.required.includes('contact')) pd.required.push('contact');
 
@@ -74,6 +75,13 @@ if (!s.$defs.profileDynamic || !s.$defs.beam || !(JSON.stringify(s).includes('ou
       "          if (side === undefined) return;",
       "          if (side !== 'own' && side !== 'cross') err(TPL, `/templates/${ti}/branches/${bi}/dynamic/${bei}/args/side`, 'beat-side', `side \"${side}\" is not own or cross`);",
       "          if (side === 'cross') cross = true;",
+      "          if (be.op === 'dodge' && side === 'cross') {",
+      "            const a = be.args;",
+      "            const where = `/templates/${ti}/branches/${bi}/dynamic/${bei}/args`;",
+      "            for (const k of ['dur', 'rise', 'off']) if (a[k] === undefined) err(TPL, where, 'dodge-cross', `a crossing dodge in branch \"${b.id}\" has no ${k}`);",
+      "            if (typeof a.rise === 'number' && a.rise <= 0) err(TPL, `${where}/rise`, 'dodge-cross', `rise ${a.rise} must be above 0`);",
+      "            if (typeof a.off === 'number' && isObj(contact) && typeof contact.minSeparation === 'number' && a.off < contact.minSeparation) err(TPL, `${where}/off`, 'dodge-cross', `off ${a.off} is below minSeparation ${contact.minSeparation}, so the dodge would land inside the other body`);",
+      "          }",
       '        });',
       '        const at = `/templates/${ti}/branches/${bi}`;',
       "        if (b.endSides === undefined) err(TPL, at, 'branch-end-sides', `branch \"${b.id}\" has dynamic beats but no endSides`);",
@@ -125,6 +133,16 @@ fs.copyFileSync('docs/combat/pending/finishers.contact.json', FIN);
     k('same-height-type', { set: { '/profiles/dynamic/contact/sameHeight': 'yes' } }, { rule: 'type', pointer: '/profiles/dynamic/contact/sameHeight' }),
     k('reach-below-offset', { set: { '/profiles/dynamic/contact/reach': 50 } }, { rule: 'xref:contact-range', pointer: '/profiles/dynamic/contact/reach' }),
     k('offset-below-separation', { set: { '/profiles/dynamic/contact/minSeparation': 60 } }, { rule: 'xref:contact-range', pointer: '/profiles/dynamic/contact/offset' }),
+    k('step-around-required', { del: ['/profiles/dynamic/tempo/stepAround'] }, { rule: 'required', pointer: '/profiles/dynamic/tempo' }),
+    k('step-around-type', { set: { '/profiles/dynamic/tempo/stepAround': 'short' } }, { rule: 'type', pointer: '/profiles/dynamic/tempo/stepAround' }),
+    k('placement-reaches-required', { del: ['/profiles/dynamic/contact/placementReaches'] }, { rule: 'required', pointer: '/profiles/dynamic/contact' }),
+    k('placement-reaches-positive', { set: { '/profiles/dynamic/contact/placementReaches': 0 } }, { rule: 'exclusiveMinimum', pointer: '/profiles/dynamic/contact/placementReaches' }),
+    k('dodge-cross-needs-dur', { del: [b(dodge, dRead) + `/dynamic/${crossAt}/args/dur`] }, { rule: 'xref:dodge-cross', pointer: b(dodge, dRead) + `/dynamic/${crossAt}/args` }),
+    k('dodge-cross-needs-rise', { del: [b(dodge, dRead) + `/dynamic/${crossAt}/args/rise`] }, { rule: 'xref:dodge-cross', pointer: b(dodge, dRead) + `/dynamic/${crossAt}/args` }),
+    k('dodge-cross-needs-off', { del: [b(dodge, dRead) + `/dynamic/${crossAt}/args/off`] }, { rule: 'xref:dodge-cross', pointer: b(dodge, dRead) + `/dynamic/${crossAt}/args` }),
+    k('dodge-cross-rise-positive', { set: { [b(dodge, dRead) + `/dynamic/${crossAt}/args/rise`]: 0 } }, { rule: 'xref:dodge-cross', pointer: b(dodge, dRead) + `/dynamic/${crossAt}/args/rise` }),
+    k('dodge-cross-off-inside-body', { set: { [b(dodge, dRead) + `/dynamic/${crossAt}/args/off`]: 30 } }, { rule: 'xref:dodge-cross', pointer: b(dodge, dRead) + `/dynamic/${crossAt}/args/off` }),
+    k('dodge-cross-off-at-separation-ok', { set: { [b(dodge, dRead) + `/dynamic/${crossAt}/args/off`]: 45 } }, null),
     k('contact-equal-ok', { set: { '/profiles/dynamic/contact/reach': 58, '/profiles/dynamic/contact/minSeparation': 58 } }, null),
   ];
   let n = 0;

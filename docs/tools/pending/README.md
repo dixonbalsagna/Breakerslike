@@ -31,12 +31,17 @@ Run from the repo root in the same commit that lands the M1b data: `node docs/to
 
 ## `apply-contact.cjs`: Combat's contact spacing data
 
-Schema changes for `docs/combat/pending/templates.contact.json` and `finishers.contact.json` (`docs/combat/contact-spacing.md` section 6). Run **after `apply-2b.cjs`** (it refuses to run before it), once from the repo root, in the commit that lands the data: `node docs/tools/pending/apply-contact.cjs`. It adds the schema keys, copies the two parked files over `data/combat/templates.json` and `finishers.json`, and adds 17 cases. Re-runnable (a second run changes nothing). It edits `combat-templates.schema.json`, `tools/lib/xref.js` and `tools/fixtures/cases.json`, and replaces the two data files.
+Schema changes for `docs/combat/pending/templates.contact.json` and `finishers.contact.json` (`docs/combat/contact-spacing.md` section 6). Run **after `apply-2b.cjs`** (it refuses to run before it), once from the repo root, in the commit that lands the data: `node docs/tools/pending/apply-contact.cjs`. It adds the schema keys, copies the two parked files over `data/combat/templates.json` and `finishers.json`, and adds 27 cases. Re-runnable (a second run changes nothing). It edits `combat-templates.schema.json`, `tools/lib/xref.js` and `tools/fixtures/cases.json`, and replaces the two data files.
 
 | # | Change |
 | ---: | :--- |
 | 1 | a branch's `endSides` (`same` or `swapped`). New `xref:branch-end-sides`: a branch with `dynamic` beats must state it, and it is `swapped` exactly when a beat has `args.side` `cross`. New `xref:beat-side`: a beat's `args.side` is `own` or `cross` |
 | 2 | `profiles.dynamic.tempo.stepIn` and `tempo.chainClose` (ticks, required in the dynamic profile) |
-| 3 | `profiles.dynamic.contact` (`reach`, `offset`, `minSeparation`, `sameHeight`; required, closed). New `xref:contact-range`: reach is not below offset, and offset is not below minSeparation |
+| 3 | `profiles.dynamic.contact` (`reach`, `offset`, `minSeparation`, `sameHeight`, `placementReaches` (above 0); all required, closed). New `xref:contact-range`: reach is not below offset, and offset is not below minSeparation |
+| 4 | `tempo.stepAround` (ticks, required). New `xref:dodge-cross` (an error): a `dodge` beat with `args.side` `cross` has `dur`, `rise` and `off`, `rise` is above 0 and `off` is not below `contact.minSeparation` (Encounter reads all three without fallbacks) |
 
-`finishers.contact.json` needs no schema change. Tested on a fresh `git archive HEAD` with the 2b files swapped in and `apply-2b.cjs` run, then this script: 0 errors and 0 warnings, self-test 866 of 866 (849 after 2b alone). Run in the wrong order it stops with a message and changes nothing.
+`finishers.contact.json` needs no schema change. Tested on a fresh `git archive HEAD` (2b already live there), then this script and apply-launch.cjs, with the draft launch data copied: 0 errors and 0 warnings, self-test 1026 of 1026. Run in the wrong order it stops with a message and changes nothing.
+
+## `apply-launch.cjs`: Encounter's landing-mix data
+
+Schema for `data/director/launch.json` (`docs/director/landing-mix.md`; the draft is `docs/director/pending/launch.json`, `schema` "director.launch/1"). Run once from the repo root, in the commit where Encounter copies the draft to `data/director/launch.json`: `node docs/tools/pending/apply-launch.cjs`. It does **not** copy the data. It adds `director-launch.schema.json` (all keys required, objects closed except underscore keys), the map entry, a validator fixture (`tools/fixtures/virtual/data/director/launch.json`, from the live file if present, else the draft), 27 cases and the rules `launch-order` (`drive.lowDeg` at most `highDeg`; `lowBh` below `highBh`) and `launch-direction` (a warning if `craterSlam.uy` is not negative). Re-runnable. Independent of the other two scripts. Tested on a fresh `git archive HEAD` with the draft copied to `data/director/launch.json`: 0 errors and 0 warnings.
