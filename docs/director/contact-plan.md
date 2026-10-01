@@ -54,7 +54,7 @@ The melee mix is unchanged (every branch within 0.6 points).
 
 ## What this needs from others
 
-- **Combat:** three numbers are code constants for now and belong in its contact block or on the `dodge` beat: the step-around's length (8 ticks), its rise (98 u) and its end distance (74 u). Also the placement limit (3 reaches).
+- **Combat:** done. The step-around's length, rise and end distance are on the `dodge` beat (`dur` from `tempo.stepAround` 8, `rise` 98, `off` 74), and the placement limit is `contact.placementReaches` (3). The director reads all four from the data. `stepAround` must stay at 9 ticks or under, because DODGE & COUNTER's step-in starts 9 ticks after the dodge. The two ticks of the target's flight added to the placement limit stay in code.
 - **Combat and Game Design:** with forward-only launches a building or a slope behind the launcher needs a throw that turns first. Until then brunt launches are rarer.
 - **Animation:** the step-around is a `rush` event for the defender over the attacker, then a second move down. The parried string now ends on the parry's tick, so no phantom blows remain.
 - **QA:** the reach check as a band: 100% within 68 u; another height only on sloped ground.
