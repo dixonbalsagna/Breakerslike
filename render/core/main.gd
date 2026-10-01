@@ -16,7 +16,7 @@ extends Node3D
 ## cameras and UI's HUD gets the rig's record (split_fn). F9 toggles it, --nosplit starts with one view from the
 ## reference camera, and the tools (manual) get one view unless they attach a compositor themselves. The contract is
 ## in docs/rendering/README.md, "Panes and the split screen". SplitView follows UI's options each frame: split_solo,
-## reduced_motion and shake_scale (F10 and F11 flip the first two).
+## reduced_motion, and Camera's zoom, shake and launch-follow settings (F10 and F11 flip the first two).
 ## Alt+F9 steps the camera's pitch (RenderLook.PITCH_STEPS: straight on, Camera's raised side view, its three-quarter
 ## view; docs/camera/camera-v2.md section 8), and Ctrl+F9 swaps the occlusion method (a hole around the fighter, or the
 ## buildings in front cut down to stubs; docs/rendering/README.md, "Occlusion"). Neither takes P1 over (Alt and Ctrl
@@ -83,7 +83,7 @@ var _last_usec: int = 0
 var _bench_two := PackedFloat64Array()     # wall-clock frame ms while two full panes are drawn
 var _bench_other := PackedFloat64Array()   # ... and otherwise
 var ui_hud: UiHud                 # UI's HUD
-var _overlay_resume: bool = false  # the pause state the How to play card or the feedback panel found when it opened
+var _overlay_resume: bool = false  # the pause state the How to play card, the feedback panel or the Settings screen found when it opened
 var _touch_last: bool = false     # touch was the last input device (UI's touch_ui option)
 var audio: AudioVoices            # Audio's voice pool
 var legacy_hud: bool = false      # F2: the greybox HUD instead of UI's
@@ -133,11 +133,22 @@ func _ready() -> void:
 	ui_hud.feedback_opened.connect(func(_context): _hold_for_overlay())
 	ui_hud.feedback_closed.connect(_release_overlay)
 	ui_hud.feedback_fn = _feedback_context
+	ui_hud.settings_opened.connect(_hold_for_overlay)
+	ui_hud.settings_closed.connect(_release_overlay)
 	ui_hud.option_changed.connect(_on_option_changed)
-	ui_hud.set_option("pad_preset", host.hub.pad_preset)   # UI's legend and prompts show the hub's pad layout
+	# The hub's defaults go into the HUD first (its legend and prompts show the layouts in use) ...
+	ui_hud.set_option("pad_preset", host.hub.pad_preset)
+	ui_hud.set_option("touch_preset", host.hub.touch_preset)
+	if ui_hud.has_signal("remap_changed"):
+		ui_hud.remap_changed.connect(_on_remap_changed)
+	if not manual and not args.has("bench") and not args.has("frames") and not args.has("shot"):
+		# ... then what the player saved on the Settings screen, so the saved choice wins (the order matters). The
+		# tools, the bench and scripted runs keep the defaults, so a saved option never changes a check or a measurement.
+		ui_hud.load_saved_options()
 	_touch_last = bool(ui_hud.opts["touch_ui"])
 	ui_hud.touch_state_fn = host.touch.display_state
 	host.drained.connect(_on_drained)
+	Input.joy_connection_changed.connect(_on_joy_connection)
 	audio = AudioVoices.new(host.audio_cues.bank)
 	add_child(audio)
 	if DisplayServer.get_name() != "headless":
@@ -426,30 +437,39 @@ func _hud_anchor(slot: int) -> Dictionary:
 
 
 ## UI's options for the split screen, applied each frame (UI has no change signal): solo against the AI, reduced
-## motion (the rig's swing, the shake), the shake scale, and Camera's zoom and shake settings (0 to 10; UI's options
-## camera_zoom and camera_shake, Camera's defaults until UI adds them).
+## motion (the rig's swing, the shake), Camera's zoom and shake settings (0 to 10; UI's options camera_zoom and
+## camera_shake) and who the camera follows on a launch (camera_launch_follow; "auto" until UI has it).
 func _sync_split_options() -> void:
 	var o: Dictionary = ui_hud.opts
 	split_rig.solo_split = bool(o.get("split_solo", true))
 	split_rig.reduced_motion = bool(o.get("reduced_motion", false))
 	if split_view != null:
-		split_view.shake_scale = float(o.get("shake_scale", 1.0))
 		split_view.reduced_motion = split_rig.reduced_motion
 		split_view.set_zoom_pref(float(o.get("camera_zoom", CamParams.ZOOM_PREF_DEFAULT)))
 		split_view.set_shake_pref(float(o.get("camera_shake", CamParams.SHAKE_PREF_DEFAULT)))
+		split_view.set_launch_follow(String(o.get("camera_launch_follow", "auto")))
 
 
-## UI's options the host owns: the pad layout goes to Controls' input hub (it takes effect on each pad's next input).
+## UI's options the host owns: the pad and touch layouts go to Controls' input hub (a pad's takes effect on its next
+## input).
 func _on_option_changed(key: String, value) -> void:
 	if key == "pad_preset":
 		host.hub.set_pad_preset(str(value))
+	elif key == "touch_preset":
+		host.hub.set_touch_preset(str(value))
 
 
-## The player's shake for one view: the scale times the shake setting, quartered in reduced motion (as SplitView's).
+## The Remap screen changed a layout's bindings (UI's remap_changed). UI has already applied and saved the overrides
+## through Controls' SimInputData; the hub rebuilds its layouts, so the new keys play at once, mid-match.
+func _on_remap_changed(_preset_id: String, _overrides: Array) -> void:
+	host.hub.reload_layouts()
+
+
+## The player's shake for one view: the shake setting, quartered in reduced motion (as SplitView's).
 func _shake() -> float:
 	var o: Dictionary = ui_hud.opts
 	var pref: float = clampf(float(o.get("camera_shake", CamParams.SHAKE_PREF_DEFAULT)), 0.0, 10.0)
-	return float(o.get("shake_scale", 1.0)) * (pref / 10.0 * CamParams.SHAKE_PREF_TOP) * (0.25 if bool(o.get("reduced_motion", false)) else 1.0)
+	return pref / 10.0 * CamParams.SHAKE_PREF_TOP * (0.25 if bool(o.get("reduced_motion", false)) else 1.0)
 
 
 ## UI's split record (UiHud.split_fn): the rig's, while a compositor draws the panes; empty for one view.
@@ -469,7 +489,7 @@ func set_legacy_hud(on: bool) -> void:
 	ui_hud.visible = not on
 
 
-## The How to play card and the feedback panel hold the fight: the sim freezes while one is open (the HUD takes every
+## The How to play card, the feedback panel and the Settings screen hold the fight: the sim freezes while one is open (the HUD takes every
 ## key and click), and held and pending keys are let go so no one flies on when it closes. Closing restores the pause
 ## it found, so one opened from the pause menu goes back to the menu. (The HUD never opens both at once.)
 func _on_howto_opened(_first_run: bool) -> void:
@@ -484,7 +504,6 @@ func _hold_for_overlay() -> void:
 	_overlay_resume = host.paused
 	host.paused = true
 	host.release_all()
-	host.edges.clear()
 
 
 func _release_overlay() -> void:
@@ -510,7 +529,7 @@ func _feedback_context() -> Dictionary:
 ## A click (or a tap, which Godot turns into one) on the pause menu's entries (hud.gd pause_items), or on UI's pause
 ## button in touch mode: host glue until Controls' touch scheme hit-tests the HUD's targets (the stance ring is theirs).
 func _menu_click(pos: Vector2) -> bool:
-	if ui_hud.is_howto_open() or ui_hud.is_feedback_open():
+	if ui_hud.is_overlay_open():
 		return false
 	if host.paused:
 		var items: Dictionary = hud.pause_items()
@@ -519,6 +538,9 @@ func _menu_click(pos: Vector2) -> bool:
 			return true
 		if (items["howto"] as Rect2).has_point(pos):
 			ui_hud.show_howto()
+			return true
+		if (items["settings"] as Rect2).has_point(pos):
+			ui_hud.show_settings()
 			return true
 		if (items["feedback"] as Rect2).has_point(pos):
 			ui_hud.show_feedback("pause")
@@ -555,7 +577,7 @@ func touch_layout() -> Dictionary:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var safe: Rect2 = ui_hud.layout.safe
 	var margin: float = maxf(maxf(vp.x - safe.end.x, vp.y - safe.end.y), 8.0 * ui_hud.dp)
-	return SimTouch.layout(vp.x, vp.y, ui_hud.dp, ui_hud.layout.portrait, bool(ui_hud.opts.get("left_handed", false)), margin)
+	return SimTouch.layout(vp.x, vp.y, ui_hud.dp, ui_hud.layout.portrait, bool(ui_hud.opts.get("left_handed", false)), margin, host.hub.touch.full_mode)
 
 
 ## A finger on the screen: UI's own targets (pause, feedback) and any open overlay come first; the rest is the
@@ -568,7 +590,7 @@ func _touch_event(e: InputEvent) -> void:
 	if not e.pressed:
 		host.hub.touch_up(e.index)
 		return
-	if ui_hud.is_howto_open() or ui_hud.is_feedback_open() or host.paused:
+	if ui_hud.is_overlay_open() or host.paused:
 		return
 	take_over()
 	# UI's own targets are asked first: pause and feedback are the HUD's. Transform shares the context slot, so its
@@ -582,18 +604,14 @@ func _touch_event(e: InputEvent) -> void:
 
 ## A gamepad, by position (docs/controls/input-scheme.md): buttons, the left stick and the analog triggers go to the
 ## input hub, which maps them through the pad preset. Start pauses, as P does. Overlays take the pad as they take keys.
-const PAD_BUTTONS: Dictionary = {JOY_BUTTON_A: "south", JOY_BUTTON_B: "east", JOY_BUTTON_X: "west", JOY_BUTTON_Y: "north",
-		JOY_BUTTON_BACK: "back", JOY_BUTTON_START: "start", JOY_BUTTON_LEFT_STICK: "l3", JOY_BUTTON_RIGHT_STICK: "r3",
-		JOY_BUTTON_LEFT_SHOULDER: "lb", JOY_BUTTON_RIGHT_SHOULDER: "rb", JOY_BUTTON_DPAD_UP: "dpad_up",
-		JOY_BUTTON_DPAD_DOWN: "dpad_down", JOY_BUTTON_DPAD_LEFT: "dpad_left", JOY_BUTTON_DPAD_RIGHT: "dpad_right"}
 var _pad_stick: Dictionary = {}   # device -> the left stick, x right and y up
 
 
 func _pad_event(e: InputEvent) -> void:
-	if ui_hud.is_howto_open() or ui_hud.is_feedback_open():
+	if ui_hud.is_overlay_open():
 		return
 	if e is InputEventJoypadButton:
-		var btn: String = PAD_BUTTONS.get(e.button_index, "")
+		var btn: String = SimInputNames.PAD_BUTTONS.get(e.button_index, "")
 		if btn == "":
 			return
 		if e.pressed:
@@ -622,6 +640,13 @@ func _pad_event(e: InputEvent) -> void:
 				if e.axis_value > 0.5:
 					take_over()
 				host.hub.pad_trigger(e.device, "rt", e.axis_value)
+
+
+## A pad plugged in or out: one that goes takes its held stick and buttons with it, so the fighter does not fly on.
+func _on_joy_connection(device: int, connected: bool) -> void:
+	if not connected:
+		_pad_stick.erase(device)
+		host.hub.pad_disconnected(device)
 
 
 func take_over() -> void:
@@ -726,8 +751,6 @@ func _unhandled_input(e: InputEvent) -> void:
 					host.paused = not host.paused
 					return
 			host.key_down(code)
-		elif not fkey:
-			host.held[code] = true
 	elif e is InputEventMouseButton and e.pressed:
 		if e.button_index == MOUSE_BUTTON_LEFT and _menu_click(e.position):
 			get_viewport().set_input_as_handled()

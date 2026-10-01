@@ -6,7 +6,8 @@ extends RefCounted
 ## embers instead (scorch_sparks, set by SimHost). A knockback slide
 ## throws dust and rubble chips along its trench (grey on pavement, earth elsewhere) and a burst where it stops. A skim
 ## (each skip off the water) leaves ripple rings, a spray burst and a spreading wake; a splash on a water surface leaves
-## ripples, and a fighter flying fast just over water throws spray. World sizes scale with the sim's WS. Cosmetic only: its random numbers come from its own streams seeded from the match seed. Nothing here is
+## ripples, and a fighter flying fast just over water throws spray; all three stand down while VFX's dramatic water
+## draws them (water_marks, set by SimHost). World sizes scale with the sim's WS. Cosmetic only: its random numbers come from its own streams seeded from the match seed. Nothing here is
 ## needed to rebuild the world: the persistent marks (bowls, char, water) come from state (ground_field.gd).
 ## Reads the sim only; never writes it.
 
@@ -20,6 +21,7 @@ var heat := PackedFloat32Array()
 var heat_changed: bool = false   # set when heat moves; the renderer clears it after uploading
 var _hot: bool = false
 var scorch_sparks: bool = true   # false while VFX's scorch embers are on (SimHost): the groove's glow stays either way
+var water_marks: bool = true     # false while VFX's dramatic water is on (SimHost): it draws the ripples, spray and wake
 var _ticks: int = 0
 var _re: SimRng
 var _rm: SimRng
@@ -53,18 +55,21 @@ func consume(S: SimState, events: Array) -> void:
 			"scorch":
 				_scorch(e)
 			"splash":
-				_splash(S, e)
+				if water_marks:
+					_splash(S, e)
 			"slide_dust":
 				_slide_dust(e)
 			"slide":
 				_slide_end(S, e)
 			"skim":
-				_skim(e)
+				if water_marks:
+					_skim(e)
 			"tick":
 				dt = e.dt
 				frozen = e.frozen
 	if not frozen:
-		_wake(S)
+		if water_marks:
+			_wake(S)
 		_cool(dt)
 	_step(S, dt * 0.1 if frozen else dt)
 

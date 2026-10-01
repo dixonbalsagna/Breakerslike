@@ -5,7 +5,8 @@ extends SceneTree
 ## fighters posed far apart so the rig splits, it checks:
 ## 1. sharing: the second pane draws the first pane's ground data, meshes and props, with its own materials;
 ## 2. cameras: each pane's camera puts a fighter's chest exactly where the rig's SplitFrame says (within 0.5 px), and
-##    each pane's fore rule and curvature carry its own camera;
+##    each pane's fore rule and curvature carry its own camera; Camera's frame carries the pitch and each pane's
+##    cut-away request, both reach the panes, and with a pitch a chest at depth still lands where the frame says;
 ## 3. flashes: a flash fired on the first pane shows in the second, and Audio gets one cue for it;
 ## 4. the HUD: split_fn gives the rig's record while a compositor is attached, and nothing without one;
 ## 5. the sim: a match played with the compositor attached ends on the same gameplay hash as one without;
@@ -104,6 +105,30 @@ func _run() -> void:
 		_expect(got.distance_to(want) <= 0.5, "pane %d puts fighter %d's chest at %s, the rig says %s" % [i, i, got, want])
 		_expect(pw.planet._terrain_mat.get_shader_parameter("fore_cam") == pw.cam_rig.position, "pane %d's fore rule does not carry its camera" % i)
 	_expect(absf(p0.view_cam_x - p1.view_cam_x) > 1000.0, "the panes' cameras did not part (%.0f and %.0f)" % [p0.view_cam_x, p1.view_cam_x])
+	# 2b: Camera's frame carries the pitch and each pane's cut-away request, and both reach the panes. With a pitch the
+	# rig's mapping is the 3D camera's: a fighter's chest, at depth too, lands where the frame says.
+	for pitch in [11.0, 49.0, 0.0]:
+		main.cam_pitch = pitch
+		main.split_rig.pitch_deg = pitch     # main sets it each frame it draws; the rig takes it at its next step
+		for i in range(2):
+			S.fighters[i].z = -600.0 if (i == 0 and pitch > 0.0) else 0.0
+		for k in range(300):
+			main.host.follow(vp.x, vp.y)
+			main.split_rig.step(S, vp.x, vp.y, [])
+		main.render_view(1.0)
+		fr = comp.last
+		_expect(absf(fr.pitch - pitch) < 0.001, "the frame's pitch is %.1f with the host's at %.1f" % [fr.pitch, pitch])
+		for i in range(2):
+			var pw: PaneWorld = main.panes[i]
+			var f = S.fighters[i]
+			_expect(absf(pw.cam_rig.pitch_deg - pitch) < 0.001, "pane %d draws at pitch %.1f, not %.1f" % [i, pw.cam_rig.pitch_deg, pitch])
+			_expect(pw.cutaway == fr.cutaway[i], "pane %d's cut-away request is not the frame's (%s, %s)" % [i, pw.cutaway, fr.cutaway[i]])
+			var chest := Vector3(SimWrap.sdx(pw.view_cam_x, f.x), f.y + CamParams.CHEST, f.z)
+			var got: Vector2 = pw.cam_rig.unproject_position(chest)
+			var want: Vector2 = fr.screen_pos(i, f.x, f.y + CamParams.CHEST, f.z)
+			_expect(got.distance_to(want) <= 0.5, "at pitch %.0f pane %d puts fighter %d's chest (depth %.0f) at %s, the rig says %s" % [pitch, i, i, f.z, got, want])
+	main.cam_pitch = 0.0
+	main.split_rig.pitch_deg = 0.0
 	# 4: the HUD record.
 	var rec: Dictionary = main._split_record()
 	_expect(not rec.is_empty() and absf(float(rec.get("sep", 0.0)) - fr.sep) < 1e-6, "split_fn did not give the rig's record")

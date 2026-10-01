@@ -4,10 +4,17 @@ extends Control
 ## ki, power, tier, stance, menace or anguish), world counters, the chain counter, the banner, fighter labels, damage
 ## numbers, the director's feed and the planet strip, shown only when `legacy` is on (F2) now that UI's HUD is hosted;
 ## and always the take-over prompt, the seed and tick, the F3 performance readout and the pause menu (Resume, How to
-## play, Send feedback: host glue until UI draws a menu; main hit-tests pause_items()).
+## play, Settings, Send feedback: host glue until UI draws a menu; main hit-tests pause_items()).
 ## Reads the sim and the fx consumer only; world positions go to the screen through the 3D camera.
 
 const FEED_LINES := 8
+const HELP_STEP: float = 15.0   # the help lines' spacing
+## The demo's help: the system and debug keys. The fighters' controls are UI's (its legend, hints and How to play).
+const SYSTEM_KEYS: Array = [
+	"N new match", "T/Y toggle AI", "P pause", "F1 how to play", "F2 old HUD", "F3 perf", "F4 feed",
+	"F6 cracks (Shift: destruction, Ctrl: embers)", "F7 flashes", "F8 legacy shapes",
+	"F9 split (Alt: camera angle, Ctrl: hole or stubs)", "F10 split vs AI", "F11 reduced motion",
+]
 
 var main: Node       # the Main node (render/core/main.gd)
 var show_perf: bool = false
@@ -55,16 +62,21 @@ func _draw() -> void:
 
 
 func _prompt(host: SimHost, vw: float, vh: float) -> void:
-	var card: bool = main.ui_hud != null and (main.ui_hud.is_howto_open() or main.ui_hud.is_feedback_open())
+	var card: bool = main.ui_hud != null and main.ui_hud.is_overlay_open()
 	var dp: float = _dp()
 	var touch: bool = main.ui_hud != null and bool(main.ui_hud.opts.get("touch_ui", false))
 	if not main.started and not card and touch:
 		# A touch screen has no keys to list: one line, at least 12 dp like UI's text floor.
 		_text("AI vs AI demo. Tap to take control of P1.", Vector2(vw * 0.5, vh - 96.0 * dp), int(round(16.0 * dp)), Color(1, 1, 1, 0.9), 0)
 	elif not main.started and not card:
-		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, vh - 96.0 if not legacy else 104.0), 16, Color(1, 1, 1, 0.9), 0)
-		_text("P1: WASD move, Space dash, F light, G heavy, R signature, Q charge, 1-4 stances.   N new match, T/Y toggle AI, P pause, F1 how to play, F2 old HUD, F3 perf, F4 feed, F6 cracks (Shift: destruction, Ctrl: embers), F9 split (Alt: camera angle, Ctrl: hole or stubs)", Vector2(vw * 0.5, vh - 78.0 if not legacy else 124.0), 11, Color(1, 1, 1, 0.7), 0)
-		_text(_flash_keys(), Vector2(vw * 0.5, vh - 62.0 if not legacy else 140.0), 11, Color(1, 1, 1, 0.6), 0)
+		# The system and debug keys only (UI's legend and hints own the fighters' controls), wrapped to the screen's width.
+		var lines: Array = _wrap(SYSTEM_KEYS, ",  ", 11, vw - 24.0)
+		var n_sys: int = lines.size()
+		lines.append_array(_wrap(_flash_items(), "   ", 11, vw - 24.0))
+		var y0: float = vh - 62.0 - HELP_STEP * float(lines.size() - 1) if not legacy else 124.0
+		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, y0 - 18.0), 16, Color(1, 1, 1, 0.9), 0)
+		for k in range(lines.size()):
+			_text(lines[k], Vector2(vw * 0.5, y0 + HELP_STEP * float(k)), 11, Color(1, 1, 1, 0.7 if k < n_sys else 0.6), 0)
 	_text("seed %d   tick %d%s" % [host.seed, host.ticks, "   PAUSED" if host.paused else ""], Vector2(vw - 10, vh - 30), 10, Color(1, 1, 1, 0.5), 1)
 	if show_perf:
 		_perf(vw)
@@ -79,8 +91,12 @@ func pause_items() -> Dictionary:
 	var w: float = minf(maxf(280.0 * dp, size.x * 0.28), size.x - 32.0)
 	var c: Vector2 = size * 0.5
 	var gap: float = 12.0 * dp
-	var y0: float = c.y - h * 1.5 - gap
-	return {"resume": Rect2(c.x - w * 0.5, y0, w, h), "howto": Rect2(c.x - w * 0.5, y0 + h + gap, w, h), "feedback": Rect2(c.x - w * 0.5, y0 + 2.0 * (h + gap), w, h)}
+	var y0: float = c.y - h * 2.0 - gap * 1.5
+	var out: Dictionary = {}
+	var names: Array = ["resume", "howto", "settings", "feedback"]
+	for k in range(names.size()):
+		out[names[k]] = Rect2(c.x - w * 0.5, y0 + float(k) * (h + gap), w, h)
+	return out
 
 
 func _dp() -> float:
@@ -94,7 +110,7 @@ func _pause_menu(vw: float) -> void:
 	var keys: bool = not bool(main.ui_hud.opts.get("touch_ui", false))
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.35))
 	_text("PAUSED", Vector2(vw * 0.5, (it["resume"] as Rect2).position.y - 18.0 * dp), fs + int(6 * dp), Color(1, 1, 1, 0.95), 0)
-	for e in [["resume", "Resume", "  (P)"], ["howto", "How to play", "  (F1)"], ["feedback", "Send feedback", ""]]:
+	for e in [["resume", "Resume", "  (P)"], ["howto", "How to play", "  (F1)"], ["settings", "Settings", ""], ["feedback", "Send feedback", ""]]:
 		var r: Rect2 = it[e[0]]
 		draw_rect(r, Color(0.08, 0.09, 0.14, 0.85))
 		draw_rect(r, Color(1, 1, 1, 0.5), false, 1.5)
@@ -102,12 +118,31 @@ func _pause_menu(vw: float) -> void:
 
 
 ## The head flashes' debug keys, in the data's order (main.gd FLASH_KEYS).
-static func _flash_keys() -> String:
+## The head flashes' debug keys, an item each (for _wrap).
+static func _flash_items() -> Array:
 	var ids: Array = FlashSet.ids()
-	var parts: PackedStringArray = []
+	var parts: Array = ["Head flashes, Alt+:"]
 	for i in range(mini(ids.size(), main_keys().size())):
 		parts.append("%s %s" % [main_keys()[i], ids[i]])
-	return "Head flashes, Alt+: " + "  ".join(parts) + "  (Shift: P2).  Alt+F family, F7 flashes on/off, F8 legacy shapes"
+	parts.append("(Shift: P2)")
+	parts.append("Alt+F family")
+	return parts
+
+
+## Lines of at most max_w pixels from items joined by sep; an item is never split.
+func _wrap(items: Array, sep: String, fs: int, max_w: float) -> Array:
+	var lines: Array = []
+	var cur: String = ""
+	for it in items:
+		var next: String = str(it) if cur == "" else cur + sep + str(it)
+		if cur != "" and font.get_string_size(next, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > max_w:
+			lines.append(cur)
+			cur = str(it)
+		else:
+			cur = next
+	if cur != "":
+		lines.append(cur)
+	return lines
 
 
 static func main_keys() -> Array:

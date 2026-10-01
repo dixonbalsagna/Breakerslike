@@ -26,10 +26,9 @@ var seed: int = 1
 var acc: float = 0.0
 var ticks: int = 0
 var paused: bool = false
-var held: Dictionary = {}       # key code -> true while down
+var _was_paused: bool = false   # the last advance() found the sim paused
 var hub := SimInputHub.new()    # every device's input and the intent v2 per human slot (sim/input/hub.gd)
 var touch: SimTouch = hub.touch  # the hub's touch layer, for the host's hit tests and UI's button state
-var edges: Dictionary = {}      # key codes pressed since the last tick that consumed input
 var feed: Array = []            # recent SimState.FeedLine, oldest first
 var jitter := Vector2.ZERO      # screen shake offset in pixels for the current tick
 var tick_usec: int = 0          # cost of the last SimCore.step
@@ -56,7 +55,6 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 	acc = 0.0
 	ticks = 0
 	feed.clear()
-	edges.clear()
 	hub.release_all()
 	jitter = Vector2.ZERO
 	_cur = _capture()
@@ -66,7 +64,13 @@ func new_match(p_seed: int, ai: Dictionary = {}) -> void:
 ## Run as many fixed ticks as the frame time allows (overview.md: acc += min(0.1, frame)). Returns the tick count.
 func advance(frame_dt: float, vw: float, vh: float) -> int:
 	if paused:
+		_was_paused = true
 		return 0
+	if _was_paused:
+		# The pause (P, or an overlay) ended: nothing pressed during it fires, and every hold is read as if it began now
+		# (Controls' SimInputHub.resume).
+		_was_paused = false
+		hub.resume()
 	acc += minf(0.1, maxf(0.0, frame_dt))
 	var n: int = 0
 	while acc >= SimConst.DT:
@@ -90,7 +94,6 @@ func tick(vw: float, vh: float) -> void:
 			inputs[k] = hub.intent(k)
 	var t0: int = Time.get_ticks_usec()
 	if SimCore.step(S, inputs):
-		edges.clear()
 		hub.consumed()
 	var t1: int = Time.get_ticks_usec()
 	cam.camStep(S, S.dt, vw, vh)
@@ -102,6 +105,7 @@ func tick(vw: float, vh: float) -> void:
 	S.out.feed.clear()
 	fxv.consume(S, _without_fall_debris(S, S.out.fx) if vfx.enabled and vfx.destruction_enabled else S.out.fx)
 	impact.scorch_sparks = not (vfx.enabled and vfx.embers_enabled)
+	impact.water_marks = not (vfx.enabled and vfx.water_enabled)
 	impact.consume(S, S.out.fx)
 	pending_cues.append_array(audio_cues.consume(S, S.out.fx))
 	drained.emit(S.out.fx, lines)
@@ -150,18 +154,14 @@ func follow(vw: float, vh: float) -> void:
 
 
 func key_down(code: String) -> void:
-	held[code] = true
-	edges[code] = true
 	hub.key(code, true)
 
 
 func key_up(code: String) -> void:
-	held.erase(code)
 	hub.key(code, false)
 
 
 func release_all() -> void:
-	held.clear()
 	hub.release_all()
 
 
