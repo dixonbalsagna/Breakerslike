@@ -46,7 +46,12 @@ var _yspread: float = 60.0      # how far above and below the spawn height a sha
 var _ember_tick: int = 0        # embers spawned this tick (budget VfxLook.EMBER_PER_TICK)
 var _ember_alive: int = 0       # embers in the pool (cap VfxLook.EMBER_CAP)
 var _spray_alive: int = 0       # water streaks in the pool (cap data/vfx/water.json caps.spray_alive)
-var water: VfxWater             # the water effects (set by the hub); a plunge's second jet comes back through it
+var _water_ref: WeakRef = null     # weak: VfxWater holds this pool, so a strong link back would be a reference cycle (the exit warning)
+var water: VfxWater:             # the water effects (set by the hub); a plunge's second jet comes back through it
+	set(v):
+		_water_ref = weakref(v) if v != null else null
+	get:
+		return _water_ref.get_ref() if _water_ref != null else null
 var _tone: int = 0              # 0 mid, 1 shadow (a back layer), 2 light (a front layer)
 var jobs: Array = []          # Job, waiting
 var spawned: int = 0          # counters for the tests
