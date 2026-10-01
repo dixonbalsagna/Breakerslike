@@ -49,3 +49,23 @@ Two of the three open-ground vectors are steep, which is why slams dominate.
 - **Game Design:** done. The two-vector split is confirmed, the drive's angle is set at 25 to 50 degrees by altitude, and the crater slam's gates are as written in change 2.
 - **QA:** the landing mix per vector, so each vector's class is checked against its intent.
 - **Narrative:** a label for the gated straight slam, and whether SLAM DOWN keeps its name now that it is a drive.
+
+## 5. A target behind the launcher: the turn throw
+**Why.** Since the contact slice no launch goes back through the launcher (`docs/director/contact-plan.md`, rule 8), so a building or a slope behind the launcher is no longer offered. MOUNTAINSIDE fell from 24.3% to 14.6% of launches.
+
+**Answer: yes, a turning throw should exist.** It is an entry to a launch, not a new vector, and it is not urgent.
+
+| | |
+| :--- | :--- |
+| **What it is** | The launcher takes hold of the body at contact distance, turns half way round carrying it (the pair swaps sides), and releases it along the planned vector. The body goes round the launcher, never through it |
+| **The piece** | The back throw already planned for the grab (`moveset-system.md` section 9.9: "away: a back throw, over the shoulder"). The same poses; here the director picks it. No extra piece for Animation |
+| **What it costs** | 10 ticks before the release: hold 2, turn 8 (the step-around's length). The launch and every beat after it move back by that much |
+| **When a rear target may be offered** | All three: (a) it is a brunt target (a structure, a formation, MOUNTAINSIDE until World's D2); (b) the launch follows a heavy, an ender, a guard break or a finisher strike, never a light string's launch or a chain link's pop; (c) the body is held at contact, not already flying |
+| **Scoring** | The candidate's usual score less a turn cost, so a forward target of equal worth wins. The variety and personality terms apply as usual: VORR turns for a populated tower, KAI for an empty formation |
+| **Sides** | The one cross-over outside the dodge. The planner picks it at launch time, so it is not a `"side": "cross"` beat: the launch event says it turned, for the animator and the camera. A branch's `endSides` keeps describing the authored beats up to the launch |
+
+**Why it is not urgent.** The landing band for brunts is 4 to 10% of launches. After the contact slice brunt landings are 4.0% (up from 2.9%, probably because a forward launch now reaches its target). So the band holds without it. What the turn throw buys is variety and personality: the rear MOUNTAINSIDE targets alone were about 10 points of launches, and the villain's pull toward a tower works in both directions again.
+
+**Staging.** Build it with the grab and throw family at M0, when the back throw's poses exist. No data now. Until then forward-only stands.
+
+**Needs.** Game Design: the gates in the table, and whether the turn costs ki. Encounter: the rear candidates, the turn cost in the score, the turn move. Animation: nothing beyond the back throw.

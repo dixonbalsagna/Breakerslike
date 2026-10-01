@@ -47,7 +47,7 @@ The current loader ignores the 2b selector changes in the parked file, so the se
 
 Built on the parked 2b files, so it applies after 2b. Only the `dynamic` profile and the authored finishers change.
 
-**The contact block** (`profiles.dynamic.contact`): `reach` 68 u, `offset` 58 u (where an approach, lunge or step-in ends), `minSeparation` 45 u (no overlap), `sameHeight` true, and the sides rule in words.
+**The contact block** (`profiles.dynamic.contact`): `reach` 68 u, `offset` 58 u (where an approach, lunge or step-in ends), `minSeparation` 45 u (no overlap), `sameHeight` true, `placementReaches` 3, and the sides rule in words. `placementReaches` is Encounter's placement limit (`docs/director/contact-plan.md`, rule 2): a damaging strike places its striker at the offset when the target is within 3 reaches (204 u).
 
 **The step-in.** A 6-tick move (`tempo.stepIn`) that closes the striker to 58 u on its own side, at the target's height, **ending on the strike's contact tick**. It is a `rush` for the attacker and a `finRush` for the defender, both with `"side": "own"`. It is the strike's anticipation: the step is the tell.
 
@@ -59,17 +59,18 @@ Built on the parked 2b files, so it applies after 2b. Only the `dynamic` profile
 | HEAVY CLASH | none | the 20-tick lunge already ends on the deciding blow |
 | DODGE & COUNTER | a step-in by the defender before its counter | closes the 74 u and the height difference |
 | DODGE & READ, DODGE — CLEAN | the attacker's turn is marked `"side": "own"` | it closes on its new side, never through the defender |
+| All three DODGE branches | the `dodge` beat is a step-around, with its numbers on the beat: `dur` 8 ticks (`tempo.stepAround`), `rise` 98 u over the attacker, `off` 74 u behind it | they were Encounter's code constants. 74 u is outside reach on purpose: the next strike has its own step-in or turn |
 | PURSUIT — CAUGHT, CHARGE INTERRUPT, CLEAN HIT, RIPOSTE | none | the approach ends on the strike |
 | Chain link | the catch (`tempo.chainClose`, 12 ticks) now ends on the chain strike, at 58 u | was 60 u, ending 3 ticks early |
 | Finishers (generic, KAI, VORR) | a 6-tick step-in before every strike and before the final blow. VORR's grab and drop close to 48 u (was 40 and 30, inside the bodies), and the drop ends on the stomp | the loser is often still moving when a finisher strike lands |
 
 **Sides.**
 - **Default:** every move keeps the mover on its own side.
-- **The one cross-over in the data** is the `dodge` beat, marked `"side": "cross"` (the defender goes behind the attacker). Whether the dodge stays a blink while teleporting is on hold is still open with the EP and Orb.
+- **The one cross-over in the data** is the `dodge` beat, marked `"side": "cross"` (the defender goes behind the attacker). While teleporting is on hold it is a step-around, not a blink: over the attacker and down behind it (Encounter's contact plan, rule 7).
 - **Each branch states where the pair ends** in `endSides`: `swapped` for the three DODGE branches, `same` for every other.
 - TRADE BLOWS' "circle", which crossed through the opponent, is already gone in 2b.
 
-**Timing.** No contact tick moves. The step-ins sit inside existing gaps, and VORR's drop onto the foe now lasts 21 ticks so that it ends on the stomp.
+**Timing.** No contact tick moves. The step-ins sit inside existing gaps, and VORR's drop onto the foe now lasts 21 ticks so that it ends on the stomp. The step-around takes 8 ticks where the blink took none, and it fits: DODGE & COUNTER's step-in starts 9 ticks after the dodge beat, and in the other two branches the attacker's turn ends 12 ticks after it. Keep `tempo.stepAround` at 9 ticks or under.
 
 ## 4. Animation's key sets: limb and target
 Animation's key sets (`data/anim/keysets.json`, render-only) name a striking `limb` (`hand_r`, `foot_r`, mirrored for the left) and a `target` (head, chest, gut). Checked against Combat's pieces (`moveset-system.md` section 1.1 and the part cue, section 7.4):
@@ -93,6 +94,7 @@ Animation's key sets (`data/anim/keysets.json`, render-only) name a striking `li
 4. **Facing follows the opponent every tick** while in an exchange (`blitz.md` section 3).
 5. **A reach check for QA.** On every damaging strike, emit or assert the centre-to-centre distance and the height difference. Target: 100% within 68 u and the same height.
 6. **A parry ends the string.** Pending beats are dropped when the parry lands, so no strike or step-in runs after it (section 7).
+7. **No launch goes back through the launcher** (Encounter's rule 8). A target behind the launcher is no longer offered; the turn throw that brings it back is in `launch-vectors.md` section 5.
 
 ## 6. Schema changes for Tools (with the contact files)
 Found by validating the parked files against the 2b schemas in a scratch copy:
@@ -102,6 +104,10 @@ Found by validating the parked files against the 2b schemas in a scratch copy:
 | 1 | a branch's `endSides`: `same` or `swapped` |
 | 2 | `profiles.dynamic.tempo.stepIn` and `tempo.chainClose` |
 | 3 | `profiles.dynamic.contact` (`reach`, `offset`, `minSeparation`, `sameHeight`) |
+| 4 | `profiles.dynamic.tempo.stepAround`: ticks, required |
+| 5 | `profiles.dynamic.contact.placementReaches`: a number above 0, required |
+
+Rows 4 and 5 came after Tools' `apply-contact.cjs` (`32e0271`), which needs them added. Checked in a scratch copy: with those two keys the parked files give 0 errors and self-test 903 of 903; without them, exactly those two errors. The dodge beat's `dur`, `rise` and `off` pass as they are. A check worth adding: a dynamic `dodge` beat with `side` `cross` gives all three, with `rise` above 0 and `off` not below `minSeparation`.
 
 The `side` argument on `rush`, `finRush` and `dodge` already passes, because beat arguments are open. `finishers.contact.json` passes as it is. The `_lead` note in the contact block (section 7) needs no schema change: keys that start with `_` are notes.
 
