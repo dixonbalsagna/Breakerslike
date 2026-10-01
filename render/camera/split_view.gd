@@ -149,6 +149,13 @@ func set_panel_mode(v: String) -> void:
 		main.split_rig.panel_mode = v if v in ["full", "still", "off"] else "full"
 
 
+## UI's lowest HUD edge at the top, in pixels (UiHud.panel_floor_y()): the strip's top band starts below it, and falls to
+## the bottom band where it no longer fits. Call it when the layout changes.
+func set_panel_floor(y: float) -> void:
+	if main != null:
+		main.split_rig.panel_floor = maxf(y, 0.0)
+
+
 ## The border colours of the two fighters' strips (the lane colours).
 func set_panel_colors(a: Color, b: Color) -> void:
 	panel_colors = [a, b]

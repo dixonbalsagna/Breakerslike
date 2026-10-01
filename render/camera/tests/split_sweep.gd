@@ -33,6 +33,7 @@ var vw: float = 1280.0
 var vh: float = 720.0
 var seeds: Array = [3, 10, 17]
 var match_ticks: int = 3600
+const FULL_TICKS: int = 36000   # ten minutes
 var fails: Array = []
 var checks: int = 0
 var frames_checked: int = 0
@@ -65,6 +66,7 @@ var dump_from: int = 0
 var dump_to: int = 0
 var shots_dir: String = ""
 var only: String = ""
+var _punch_seen_t: float = -9.0
 var view: SplitView
 var stand_in: SplitTestMain
 var _queue: Array = []
@@ -162,7 +164,10 @@ func _run() -> void:
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
 	await _scenario("panel signature", func(): return _panel_basic(), {})
 	await _scenario("panel ration and priority", func(): return _panel_ration(), {})
+	await _scenario("panel event and beam are one", func(): return _panel_dedupe(), {})
 	await _scenario("panel riposte", func(): return _panel_riposte(), {})
+	for fl in [[0.156, 0], [0.19, 0], [0.209, 1], [0.269, 1]]:
+		await _scenario("panel floor %.3f" % float(fl[0]), func(): return _panel_floor(float(fl[0]), int(fl[1])), {})
 	await _scenario("panel modes", func(): return _panel_modes(), {})
 	for pose in [[400.0, 0.0], [400.0, 700.0], [1500.0, 1200.0], [400.0, 2000.0], [6000.0, 0.0], [1500.0, 3500.0]]:
 		await _scenario("panel band dx %d dy %d" % [int(pose[0]), int(pose[1])], func(): return _panel_band_pose(float(pose[0]), float(pose[1])), {})
@@ -190,6 +195,11 @@ func _run() -> void:
 		_real_match(int(seeds[k]), 1 - (k % 2), 0.0)
 	if not seeds.is_empty():
 		_real_match(int(seeds[0]), -1, 49.0)
+		# Matches now run 7 to 10 minutes: one full-length match flat and one raised, and one with a human slot, to the KO
+		# or ten minutes (QA found three defects only after 230 s).
+		_real_match(int(seeds[seeds.size() - 1]), -1, 0.0, FULL_TICKS)
+		_real_match(int(seeds[0]), -1, 49.0, FULL_TICKS)
+		_real_match(int(seeds[mini(1, seeds.size() - 1)]), 1, 0.0, FULL_TICKS)
 	_sim_unchanged()
 	print("frames checked  %d, checks %d" % [frames_checked, checks])
 	for k in stats:
@@ -400,6 +410,9 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 		# A shot on one fighter (a launch, a cut-in), its ease back to the pair (solo_w), and an expanded pane (e) leave the
 		# other fighter out of the picture by design.
 		var excluded: bool = (_rig.solo_kind != "" and _rig.solo_slot != i) or (_rig._ov_kind != "" and _rig._ov_slot != i) or _rig.solo_w > 0.001 or fr.e > 0.001
+		# A pair that has just passed each other and whose split opens before the flip can happen (the flip waits for the
+		# dwell, for them to stop being merge-close and for the panes to be one view or full apart) opens with the old sides.
+		excluded = excluded or (fr.mode == "opening" and _rig.orientation_pending())
 		if share < 0.15 or not bool(fr.active[i]) or excluded:
 			_offscreen_t[i] = 0.0
 			continue
@@ -443,25 +456,28 @@ func _frame_checks(fr: SplitFrame, cur: SplitFrame, alpha: float = 1.0) -> void:
 			var dz: float = absf(log(fr.cam_z[i]) - log(_prev_disp.cam_z[i])) / dt
 			var zlim: float = CamParams.ZOOM_RATE_TRANS if (trans or fr.mode == "merged") else CamParams.ZOOM_RATE
 			_note("zoom_rate", dz)
-			if not slam_now and not moved_cut and dz > zlim * TOL + 0.3 * (CamParams.TIER_PUSH if _push_active() else 0.0):
+			if _rig._punch_t >= 0.0:
+				_punch_seen_t = _disp_t
+			var punching: bool = _disp_t - _punch_seen_t < 0.2
+			if not slam_now and not moved_cut and dz > zlim * TOL + 0.3 * (CamParams.TIER_PUSH if _push_active() else 0.0) + (2.0 * CamParams.LIVE_PUNCH / CamParams.LIVE_PUNCH_LEN if punching else 0.0):
 				_fail_once("zoom", "%s: pane %d zoom rate %.2f e-folds a second (limit %.2f) at t=%.2f mode %s sep %.3f e %.2f solo_w %.2f" % [_label, i, dz, zlim, float(_tick) / 60.0, fr.mode, fr.sep, fr.e, _rig.solo_w])
 			var da: float = (fr.anchor[i] - _prev_disp.anchor[i]).length() / vw * (60.0 / DISPLAY_HZ)
 			var seen: bool = fr.sep > 0.02 and _prev_disp.sep > 0.02
 			if seen:
 				_note("anchor_step", da)
 			if seen and not slam_now and not moved_cut and da > CamParams.ANCHOR_STEP_TRANS * TOL:
-				_fail_once("anchor_move", "%s: pane %d anchor moved %.3f of the width in a tick" % [_label, i, da])
+				_fail_once("anchor_move", "%s: pane %d anchor moved %.3f of the width in a tick at t=%.2f mode %s/%s sep %.3f solo %s" % [_label, i, da, float(_tick) / 60.0, _prev_disp.mode, fr.mode, fr.sep, _rig.solo_kind])
 		var dc: float = (fr.c - _prev_disp.c).length() / vw * (60.0 / DISPLAY_HZ)
-		var divider_seen: bool = bool(fr.active[1]) and bool(_prev_disp.active[1]) and fr.line_alpha > 0.0
+		var divider_seen: bool = bool(fr.active[1]) and bool(_prev_disp.active[1]) and fr.line_alpha > 0.0 and _prev_disp.line_alpha > 0.0
 		if divider_seen:
 			_note("divider_step", dc)
 		if divider_seen and not slam_now and not moved_cut and dc > CamParams.DIVIDER_STEP * TOL:
-			_fail_once("divider", "%s: the divider moved %.3f of the width in a tick" % [_label, dc])
+			_fail_once("divider", "%s: the divider moved %.3f of the width in a tick at t=%.2f mode %s/%s sep %.3f c %s -> %s" % [_label, dc, float(_tick) / 60.0, _prev_disp.mode, fr.mode, fr.sep, str(_prev_disp.c), str(fr.c)])
 		var dth: float = absf(angle_difference(_prev_disp.theta, fr.theta)) / dt
 		if divider_seen:
 			_note("divider_deg_per_s_outside_swing", rad_to_deg(dth) if (fr.swing < 0.0 and _prev_disp.swing < 0.0) else 0.0)
 		if divider_seen and fr.swing < 0.0 and _prev_disp.swing < 0.0 and not slam_now and not moved_cut and dth > CamParams.TILT_RATE_MAX * TOL * 1.5:
-			_fail_once("tilt", "%s: the divider turned %.0f degrees a second outside a swing" % [_label, rad_to_deg(dth)])
+			_fail_once("tilt", "%s: the divider turned %.0f degrees a second outside a swing at t=%.2f mode %s/%s sep %.3f theta %.3f -> %.3f" % [_label, rad_to_deg(dth), float(_tick) / 60.0, _prev_disp.mode, fr.mode, fr.sep, _prev_disp.theta, fr.theta])
 		# the fighter's offset from its anchor must not jump
 		for i in range(2):
 			if not bool(fr.active[i]) or not bool(_prev_disp.active[i]) or fr.mode == "merged":
@@ -1144,6 +1160,22 @@ func _panel_ration() -> Dictionary:
 	return {}
 
 
+## A signature's `beam_outcome` event and its beam in the same tick make one panel.
+func _panel_dedupe() -> Dictionary:
+	_panel_ground()
+	var b := SimState.Beam.new()
+	b.A = _S.fighters[0]
+	_S.beams.append(b)
+	_tick_rig([_shot_events("beam_outcome", {"actor": 0.0, "target": 1.0, "kind": "HIT"})])
+	_S.beams.clear()
+	_check(_rig.panels == 1 and _rig.panels_dropped == 0, "%s: %d panels, %d refused" % [_label, _rig.panels, _rig.panels_dropped])
+	_panel_ground()
+	var before: int = _rig.panels
+	_tick_rig([_shot_events("beam_outcome", {"actor": 1.0, "target": 0.0, "kind": "HIT"})])
+	_check(_rig.panels == before + 1 and int(_panel_now()["slot"]) == 1, "%s: the event alone made no panel" % _label)
+	return {}
+
+
 ## A launch within 2 s of the launcher's own parry is a riposte (earned); otherwise it is no panel.
 func _panel_riposte() -> Dictionary:
 	_panel_ground()
@@ -1163,6 +1195,20 @@ func _panel_riposte() -> Dictionary:
 		_tick_rig()
 	_tick_rig([_shot_events("launch", {"actor": 1.0, "target": 0.0, "amount": 800.0, "face": 1.0})])
 	_check(_rig.panels == 1, "%s: a launch 3 s after the parry made a strip" % _label)
+	return {}
+
+
+## UI's floor decides the band: on the top where the strip fits under the HUD, else on the bottom.
+func _panel_floor(frac: float, band: int) -> Dictionary:
+	_panel_ground()
+	_rig.panel_floor = frac * vh
+	_fire(0)
+	var p: Dictionary = _panel_now()
+	_check(not p.is_empty() and int(p["band"]) == band, "%s: band %s (want %d)" % [_label, str(p.get("band", "none")), band])
+	if not p.is_empty() and band == 0:
+		var r: Rect2 = p["rect"]
+		_check(r.position.y >= frac * vh - 0.5, "%s: the strip starts at %.0f, over the HUD (floor %.0f)" % [_label, r.position.y, frac * vh])
+	_rig.panel_floor = 0.0
 	return {}
 
 
@@ -1627,8 +1673,9 @@ func _static_equals_reference() -> void:
 
 # ------------------------------------------------------------------------------------------------ real matches
 
-func _real_match(seed: int, human: int = -1, pitch: float = 0.0) -> void:
-	_begin("real match %d%s%s" % [seed, (" human %d" % human) if human >= 0 else "", (" pitch %d" % int(pitch)) if pitch > 0.0 else ""])
+func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1) -> void:
+	var limit: int = ticks if ticks > 0 else match_ticks
+	_begin("real match %d%s%s%s" % [seed, (" human %d" % human) if human >= 0 else "", (" pitch %d" % int(pitch)) if pitch > 0.0 else "", " full" if ticks > 0 else ""])
 	SimCore.newMatch(_S, seed, {"p1": human != 0, "p2": human != 1})
 	_rig.pitch_deg = pitch
 	_rig.reset(_S, vw, vh)
@@ -1647,7 +1694,7 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0) -> void:
 	var last_change_t: float = -9.0
 	var gaps_bad: int = 0
 	var ncm: int = 0
-	while t < match_ticks and not (_S.game.ko != null and _S.game.koT > 3.0):
+	while t < limit and not (_S.game.ko != null and _S.game.koT > 3.0):
 		SimCore.step(_S)
 		var ev: Array = _S.out.fx.duplicate()
 		_S.out.fx.clear()
@@ -1662,7 +1709,7 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0) -> void:
 			var f1 = _S.fighters[1]
 			var p0: Vector2 = cur.screen_pos(0, f0.x, f0.y + CamParams.CHEST)
 			var p1: Vector2 = cur.screen_pos(1, f1.x, f1.y + CamParams.CHEST)
-			print("  T %.3f %s sep %.2f e %.2f slam %d rush0 %s rush1 %s p0 (%.0f,%.0f) p1 (%.0f,%.0f) x0 %.0f x1 %.0f vx0 %.0f cam0 %.0f/%.0f/%.3f cam1 %.0f/%.0f/%.3f" % [float(t) / 60.0, cur.mode, cur.sep, cur.e, _rig._slam_slot, f0.rush != null, f1.rush != null, p0.x, p0.y, p1.x, p1.y, f0.x, f1.x, f0.vx, cur.cam_x[0], cur.cam_y[0], cur.cam_z[0], cur.cam_x[1], cur.cam_y[1], cur.cam_z[1]])
+			print("  [%s] T %.3f th %.3f sig %d/%d u %.0f solo %s/%d chase %d anc %.3f/%.3f/%.3f/%.3f c %.0f/%.0f cut %s fa %.2f sw %s r %.4f/%.4f %s sep %.2f e %.2f slam %d rush0 %s rush1 %s p0 (%.0f,%.0f) p1 (%.0f,%.0f) x0 %.0f x1 %.0f vx0 %.0f cam0 %.0f/%.0f/%.3f cam1 %.0f/%.0f/%.3f" % [_label, float(t) / 60.0, cur.theta, _rig.sigma_shown, _rig.sigma_u, _rig.u, _rig.solo_kind, _rig.solo_slot, _rig.chase_slot, cur.anchor[0].x, cur.anchor[0].y, cur.anchor[1].x, cur.anchor[1].y, cur.c.x, cur.c.y, cur.cut, _rig._flip_age, _rig.split_wanted, _rig.r_now, _rig._r_merge(), cur.mode, cur.sep, cur.e, _rig._slam_slot, f0.rush != null, f1.rush != null, p0.x, p0.y, p1.x, p1.y, f0.x, f1.x, f0.vx, cur.cam_x[0], cur.cam_y[0], cur.cam_z[0], cur.cam_x[1], cur.cam_y[1], cur.cam_z[1]])
 		modes[cur.mode] = int(modes.get(cur.mode, 0)) + 1
 		if cur.slam:
 			slams += 1

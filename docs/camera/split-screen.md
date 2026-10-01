@@ -321,3 +321,16 @@ Still for Orb, on a pad: whether 50 bh feels right for the split, whether the wi
 - Hidden information: the hook is `SplitRig.pane_request_fn` and nothing else; hiding is out of the base game.
 - Portrait: landscape only.
 - The fold and the cinematic events are read from `fold_start`, `unfold`, `cinematic_start`, `cinematic_end` and `relocate`; Encounter and World add them (S2, W1). Until then the launch follow polls the fighters' state, and a transformation is not yet a shot.
+
+
+## 19. Long matches: three defects found at full length (2026-10-04)
+
+Matches now run 7 to 10 minutes; the old sweep ran 60 s each. Runs of 30,000 ticks (8 minutes) on four seeds, flat, with a human slot and raised to 49 degrees, found three things that only show late. The standard sweep now plays three full-length matches (36,000 ticks or to the KO): one flat, one at 49 degrees, one with a human slot. The whole sweep runs in about 2.6 minutes.
+
+1. **A transformation that takes over from another fighter's shot (a real bug, fixed).** At 244 s of one match a launch chase on fighter A was running when fighter B transformed. My new transformation shot began with an ease instead of a cut, so the pane's owner changed in a single tick: the anchor moved 0.06 of the width and the divider 0.15 of the width with no cut flagged. The transformation now takes over with a cut when another fighter's shot is running (`_begin_solo(..., cut_in = solo_kind != "" and solo_slot != ta)`).
+2. **The live transformation's punch-in (a test gap).** The 8% punch-in in 6 ticks (1.6 e-folds a second) is authored, but the zoom-rate check only allowed the tier push. The check now allows the punch and the 0.2 s after it.
+3. **A pair that passes each other while the split is opening (two parts).**
+   - *The flip is instant and invisible but was interpolated.* When the layout flips sides at a separation of 0.02 or less, the frame was blended with the one before it, so the divider swept 73 degrees in a tick while it was nearly invisible. The flip now marks the frame as a cut (no blending). That removed the divider turn (10,500 degrees a second) and the anchor jump at 345 s.
+   - *The opening before the flip is by design.* If the pair crosses while the layout is merging and the split opens again before it was one view (a fighter was about to leave the merged frame), the flip cannot happen: it waits for the dwell, for them to stop being merge-close, and for the panes to be one view or full apart. The split opens with the fighters on their old sides for about 0.3 s and swings when it can. I tried flipping at once when the split opens below a separation of 0.15; it works but makes the divider turn and the anchors jump where they can be seen (up to 10,600 degrees a second and 0.097 of the width), so I took it out. The off-pane check now excludes an "opening" with a flip pending (`SplitRig.orientation_pending()`), and the exclusion is the only place the pass is allowed to show.
+
+Also added: the trace line (`--trace=seed:t0:t1`) now prints the orientation, the flip age, the metric and the cut flag, and the failure messages carry the time and the mode on both sides of the jump.

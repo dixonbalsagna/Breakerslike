@@ -94,6 +94,8 @@ var panels_dropped: int = 0              # panel requests refused: the ration, a
 var panel_log: Array = []                # [match time, kind, slot] of each panel started
 var _pn: Dictionary = {}                 # the running panel: kind, slot, prio, dur, t, band
 var _pn_earned_t: float = -1.0e9
+var _sig_t: Array = [-1.0e9, -1.0e9]    # when each fighter's last signature fire beat asked for a panel
+var panel_floor: float = 0.0              # UI's lowest HUD edge at the top, px (UiHud.panel_floor_y()); the top band starts below it
 var _beams_seen: Dictionary = {}         # instance ids of the beams already counted (a new one is a signature's fire beat)
 var _parry_t: Array = [-1.0e9, -1.0e9]   # when each fighter last parried, for the riposte
 var wreck_dir: int = 0                   # the winner's shot: +1 wreckage on the right of him, -1 on the left, 0 none to speak of
@@ -172,6 +174,7 @@ func reset(S: SimState, p_vw: float, p_vh: float) -> void:
 	_push = [-1.0, -1.0]
 	_pn = {}
 	_beams_seen = {}
+	_sig_t = [-1.0e9, -1.0e9]
 	_pn_earned_t = -1.0e9
 	_parry_t = [-1.0e9, -1.0e9]
 	_shk = PackedFloat64Array([0.0, 0.0])
@@ -487,6 +490,13 @@ static func _theta_of(sigma: int, ph: float) -> float:
 	return -ph if sigma > 0 else PI + ph
 
 
+## Whether the pair has passed each other since the layout was set: the held separation says the sides are the other way
+## round. The flip waits (for the dwell, for the pair to stop being merge-close, and for the panes to be one view or full
+## apart), so a split that opens meanwhile opens with the fighters on the old sides and swings when it can.
+func orientation_pending() -> bool:
+	return (sigma_u > 0 and u < -CamParams.HYST_M0) or (sigma_u < 0 and u > CamParams.HYST_M0)
+
+
 func _update_orientation(S: SimState) -> void:
 	var A = S.fighters[0]
 	var B = S.fighters[1]
@@ -536,6 +546,7 @@ func _update_orientation(S: SimState) -> void:
 			sigma_shown = cand
 			_flip_age = 0.0
 			theta = _theta_of(sigma_shown, phi)
+			_cut_now = true   # the divider is all but invisible here: the frame is not interpolated into the new sides
 		elif full:
 			sigma_u = cand
 			_flip_age = 0.0
@@ -554,6 +565,8 @@ func _update_orientation(S: SimState) -> void:
 func _read_events(S: SimState, events: Array) -> void:
 	for ev in events:
 		match String(_ef(ev, "type", "")):
+			"beam_outcome":
+				_panel_request(S, "signature", int(_ef(ev, "actor", -1)))   # the signature's fire beat (the dynamic profile, the live one)
 			"ko":
 				_panel_request(S, "ko", int(_ef(ev, "winner", -1)))
 			"decisive":
@@ -617,7 +630,8 @@ func _read_events(S: SimState, events: Array) -> void:
 						_live_punch_at = time + float(CamParams.LIVE_PUNCH_AT) * DT
 				elif ta >= 0 and ta < 2 and not fold_active:
 					_push[ta] = -1.0   # the tier-up push is part of this shot
-					_begin_solo("transform", ta, 3, CamParams.CINE_SLIVER, S, false)
+					# A shot already running on the other fighter (a launch chase) hands over with a cut: no ease between the two.
+					_begin_solo("transform", ta, 3, CamParams.CINE_SLIVER, S, solo_kind != "" and solo_slot != ta)
 					if solo_kind == "transform" and solo_slot == ta:
 						_solo_dur = tdur
 						_tf_ver = tver
@@ -876,6 +890,11 @@ func _panel_request(S: SimState, kind: String, slot: int) -> void:
 	if panel_mode == "off" or slot < 0 or slot > 1 or fold_active or solo_kind == "transform":
 		return
 	var k: Dictionary = CamParams.PANEL_KINDS[kind]
+	if kind == "signature":
+		# The event and the new beam are the same fire beat: one request from either.
+		if time - float(_sig_t[slot]) < 0.5:
+			return
+		_sig_t[slot] = time
 	if bool(k["earned"]) and time - _pn_earned_t < CamParams.PANEL_EARNED_GAP:
 		panels_dropped += 1
 		return
@@ -913,7 +932,14 @@ func _panel_rect(band: int) -> Rect2:
 	var pw: float = vw * CamParams.PANEL_W
 	var ph: float = vh * CamParams.PANEL_H
 	var wb: float = pw + ph * CamParams.PANEL_SLANT
-	return Rect2((vw - wb) * 0.5, vh * (CamParams.PANEL_TOP_Y if band == 0 else CamParams.PANEL_BOTTOM_Y), wb, ph)
+	var y0: float = maxf(vh * CamParams.PANEL_TOP_Y, panel_floor) if band == 0 else vh * CamParams.PANEL_BOTTOM_Y
+	return Rect2((vw - wb) * 0.5, y0, wb, ph)
+
+
+## The top band holds the strip only where UI's HUD leaves it the whole band (the plates, the toll chip and the pause
+## button end above it); on phones and small windows they reach into it and the bottom band is the usual one.
+func _top_band_fits() -> bool:
+	return maxf(vh * CamParams.PANEL_TOP_Y, panel_floor) + vh * CamParams.PANEL_H <= vh * (CamParams.PANEL_TOP_Y + CamParams.PANEL_H) + 0.5
 
 
 ## The band the strip takes: the top one, or the bottom one when a fighter is in the top one; -1 when both are taken.
@@ -922,6 +948,8 @@ func _panel_band(S: SimState) -> int:
 	if _cur == null:
 		return 0
 	for band in [0, 1]:
+		if band == 0 and not _top_band_fits():
+			continue
 		var r: Rect2 = _panel_rect(band).grow(8.0)
 		var free: bool = true
 		for k in range(2):
