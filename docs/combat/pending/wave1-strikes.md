@@ -16,7 +16,7 @@ Owner: Combat and Choreography. Date: 2026-10-01. Status: parked specs for Anima
 - **Blades.** At contact the striking limb and the opposite limb make one long straight line through the body. Joints are sharp angles. The torso stays narrow and side-on. Hands are open blades or claws unless the look says a fist. One dominant diagonal per pose, readable at 40 px.
 - **Posture.** From the crouch he strikes upward and outward. From Regalia he stands taller and the lines lengthen.
 - **Legal's stacking rule** (`docs/design/rule-of-cool.md` section 1, rule 9): no chamber holds clenched fists at his sides in the crouch. Chambers keep the hands open and forward, or one arm drawn back at shoulder height. Animation's stacking lint reads this from the pose.
-- **No franchise poses.** Five rows carry a Legal line of their own (the uppercut, the two spins, the double palm, the double hammer). Every authored pose keeps its `_orig` line and provenance record.
+- **No franchise poses.** Legal screened these specs and they are GO (`docs/legal/rule-of-cool-screen.md`, the wave 1 section). Its conditions are the Legal lines in the rows: the uppercut, the two spins, the double palm, the double hammer, the palm heel, the cross-arm ram and the tail. Every authored pose keeps its `_orig` line and provenance record.
 
 ## 3. The contact distance is per strike
 Animation's socket table gives each limb its own reach, so one 58 u for every blow no longer fits: an elbow lands at 46 to 50 u at most.
@@ -42,9 +42,9 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 | `cross` | cross | hand to chest | light; opener, mid | 74 / **58** | 6, 4, 5 | 1 arm | The rear hand driven straight through the chest, hips turned full, the lead forearm guard folded across the ribs. |
 | `hook` | hook | hand to head (arm, later) | light; mid, return | 72 / **58** | 6, 4, 6 | 1 arm | A flat, tight arc at head height, the elbow a sharp right angle, the plated forearm leading the hand. |
 | `backfist` | hook, new pose | hand to head (arm, later) | light; mid, return | 72 / **58** | 6, 4, 6 | 1 arm | The arm unfolds backhanded to full length, the back of the hand leading, chest opened away from the rival. |
-| `palm_heel` | jab | hand to chest | light; mid | 74 / **58** | 6, 4, 5 | 1 arm | A clawed open palm pushed in from the hip line, fingers spread like tines, the wrist bent back. |
+| `palm_heel` | jab | hand to chest | light; mid | 74 / **58** | 6, 4, 5 | 1 arm | A clawed open palm pushed straight in from the ribs, fingers spread like tines, the wrist bent back. **Legal:** the hand stays open, flat or clawed, never cupped; never a hand chambered at the hip for an energy release afterwards. |
 | `spear_hand` | cross | hand to gut | light; opener, mid | 66 / **52** | 6, 4, 5 | 1 arm | A low blade-hand thrust from the crouch into the gut, the spine and the arm one long diagonal. |
-| `uppercut` | upper | hand to head | heavy; opener, ender | 72 / **58** | 10, 6, 10 | 1 arm | A closed fist rising under the chin; the rise is in the hip and shoulder, the feet stay where they are, the other arm low across the body. **Legal:** no leap and no spin: not a jumping, turning uppercut. |
+| `uppercut` | upper | hand to head | heavy; opener, ender | 72 / **58** | 10, 6, 10 | 1 arm | A closed fist rising under the chin; the rise is in the hip and shoulder, the feet stay where they are, the other arm low across the body. **Legal:** no leap and no spin: not a jumping, turning uppercut; no fist held up after it as a victory pose. |
 | `hammer` | new pose | hand to head | heavy; ender | 72 / **58** | 14, 6, 12 | 1 arm | The fist comes straight down from above the head like a dropped blade, the body folding over it. |
 | `overhand` | hook, new pose | hand to head | heavy; opener, ender | 72 / **58** | 10, 6, 10 | 1 arm | A looping blow over the rival's guard, the shoulder rolled high, the head ducked off the line. |
 | `haymaker` | hook | hand to head | heavy; opener, ender | 72 / **58** | 12, 6, 12 | 1 arm | The widest swing he has: the arm nearly straight, the whole torso thrown round behind it. |
@@ -55,7 +55,7 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
 | `short_elbow` | new pose | elbow to head | light; mid | 46 / **34** | 6, 4, 5 | 1 arm | The forearm folded shut and the point of the elbow cut across at face height: a small, sharp triangle. |
 | `rising_elbow` | new pose | elbow to head | light; mid, return | 46 / **34** | 6, 4, 6 | 1 arm | The elbow driven up the centre line, the hand ending behind his own ear, the plate edge leading. |
-| `spinning_elbow` | new pose | elbow to head | heavy; ender | 46 / **34** | 14, 6, 12 | 1 arm; grounded: needs the other leg | One turn with his back shown, the elbow whipping through level at the end of it. **Legal:** a single turn; no travelling multi-spin. |
+| `spinning_elbow` | new pose | elbow to head | heavy; ender | 46 / **34** | 14, 6, 12 | 1 arm; grounded: needs the other leg | One turn with his back shown, the elbow whipping through level at the end of it. **Legal:** a single turn; no travelling or multi-hit spin. |
 | `dropping_elbow` | new pose | elbow to chest | heavy; ender | 50 / **38** | 12, 6, 10 | 1 arm | From above: the point of the elbow dropped onto the chest, the other hand pinning the rival's guard down. |
 
 ### Two arms
@@ -63,9 +63,9 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 | Strike | Base | Limb to target | Weight; fills | Reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
 | `twin_spear` | new pose | both hands to chest | light; mid | 66 / **52** (est.) | 8, 4, 6 | 2 arms | Both blade hands thrust side by side, a hand apart, elbows locked: two parallel lines. |
-| `double_palm` | new pose | both hands to chest | heavy; opener, ender | 66 / **52** (est.) | 10, 6, 10 | 2 arms | Both clawed palms shoved in at shoulder width, fingers up, elbows flared wide. **Legal:** never wrists together, and never chambered as cupped hands at one hip. |
+| `double_palm` | new pose | both hands to chest | heavy; opener, ender | 66 / **52** (est.) | 10, 6, 10 | 2 arms | Both clawed palms shoved in at shoulder width, fingers up, elbows flared wide. **Legal:** a melee strike only: no light, glow or beam leaves the hands, no shouted name, no pause with the palms forward after it; never wrists together, and never chambered as cupped hands at one hip. |
 | `double_hammer` | new pose | both hands to head | heavy; ender | 64 / **50** (est.) | 14, 6, 12 | 2 arms | Both forearm guards brought down side by side like a dropped bar; the hands are apart and open. **Legal:** not a two-fisted clasped overhead smash. |
-| `cross_arm_ram` | new pose | both elbows to chest | heavy; opener | 50 / **38** (est.) | 10, 5, 12 | 2 arms; grounded: needs the other leg | The forearm guards crossed into a wedge and driven in behind the shoulders, head tucked behind the plates. |
+| `cross_arm_ram` | new pose | both elbows to chest | heavy; opener | 50 / **38** (est.) | 10, 5, 12 | 2 arms; grounded: needs the other leg | The forearm guards crossed into a wedge and driven in behind the shoulders, head tucked behind the plates. **Legal:** a strike in motion, never a held crossed-arms power pose. |
 
 ### Foot
 
@@ -77,7 +77,7 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 | `snap_round` | round | foot to chest | light; mid, return | 60 / **50** | 6, 4, 6 | 1 leg; grounded: needs the other leg | A quick whip from the knee, the hips barely turned, the foot back before the rival moves. |
 | `roundhouse` | round | foot to chest | heavy; opener, ender | 60 / **50** | 12, 6, 12 | 1 leg; grounded: needs the other leg | The full turn of the hips, the leg a long blade through the ribs, the arms thrown back the other way. |
 | `axe_kick` | new pose | foot to chest | heavy; ender | 60 / **50** | 14, 6, 12 | 1 leg; grounded: needs the other leg | The leg lifted straight and brought down heel first onto the collar, his body a vertical line beside it. |
-| `spinning_heel` | new pose | foot to chest | heavy; ender | 60 / **50** | 14, 6, 12 | 1 leg; grounded: needs the other leg | One turn with his back shown, the heel coming round at the end of a straight leg. **Legal:** a single turn; no travelling multi-spin. |
+| `spinning_heel` | new pose | foot to chest | heavy; ender | 60 / **50** | 14, 6, 12 | 1 leg; grounded: needs the other leg | One turn with his back shown, the heel coming round at the end of a straight leg. **Legal:** a single turn; no travelling or multi-hit spin. |
 | `stomp` | new pose | foot to gut | heavy; ender | 64 / **54** | 12, 6, 12 | 1 leg; grounded: needs the other leg | The knee drawn to his chest and the sole driven straight down; his arms spread for balance. |
 | `sweep` | new pose | foot to legs | light; mid | 60 / **50** | 8, 4, 8 | 1 leg; ground only | Dropped onto one hand, the other leg scything flat along the ground. |
 | `drop_kick` | new pose | both foots to chest | heavy; opener | 60 / **50** (est.) | 12, 5, 14 | 2 legs; air only | Both feet together with the body laid flat behind them, arms back along his sides. |
@@ -107,10 +107,10 @@ Animation's socket table gives each limb its own reach, so one 58 u for every bl
 
 | Strike | Base | Limb to target | Weight; fills | Reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
-| `tail_jab` | held | own to chest | light; mid, return | 90 / **70** (est.) | 6, 4, 5 | own limb | The tail whips straight past his hip like a thrown line; his hands never move. |
-| `tail_sweep` | held | own to legs | light; mid | 90 / **70** (est.) | 8, 4, 6 | own limb | A low flat arc of the tail under the rival's legs while he stands upright. |
-| `tail_whip` | held | own to chest | heavy; opener, ender | 90 / **70** (est.) | 12, 6, 12 | own limb | He turns his back and the tail comes round as one driven lash at chest height. |
-| `tail_spike` | held | own to head | heavy; ender | 90 / **70** (est.) | 14, 6, 12 | own limb | The tail rises over his shoulder and stabs down from above. |
+| `tail_jab` | held | own to chest | light; mid, return | 90 / **70** (est.) | 6, 4, 5 | own limb | The tail whips straight past his hip like a thrown line; his hands never move. **Legal:** a hair, cloth or metal tail, never a furred or reptilian one. |
+| `tail_sweep` | held | own to legs | light; mid | 90 / **70** (est.) | 8, 4, 6 | own limb | A low flat arc of the tail under the rival's legs while he stands upright. **Legal:** a hair, cloth or metal tail, never a furred or reptilian one. |
+| `tail_whip` | held | own to chest | heavy; opener, ender | 90 / **70** (est.) | 12, 6, 12 | own limb | He turns his back and the tail comes round as one driven lash at chest height. **Legal:** a hair, cloth or metal tail, never a furred or reptilian one. |
+| `tail_spike` | held | own to head | heavy; ender | 90 / **70** (est.) | 14, 6, 12 | own limb | The tail rises over his shoulder and stabs down from above. **Legal:** a hair, cloth or metal tail, never a furred or reptilian one. |
 
 ## 5. The broken-limb filter
 From `docs/design/spec-wounds.md` section 1d, as rules on the `uses` and `ground` tags:
@@ -138,5 +138,5 @@ The contact slice is live with one distance: `profiles.dynamic.contact.offset` 5
 | :--- | :--- |
 | **Animation** | a `shoulder` limb in the socket table (the shoulder check and the body ram); the two-limb envelopes (four two-arm strikes and the drop kick); an arm socket, so the hook and the backfist can land on an arm for arm wounds |
 | **Orb, through Art** | the tail. Four strikes are held. Without an own limb the worst case falls from 12 lights and 10 heavies to 10 and 8: no strike repeats in a string, but three-strike series would repeat in about 15% of strings there, over Game Design's 10% |
-| **Legal** | the five rows with a Legal line |
+| **Legal** | done: GO, with the lines now in the rows |
 | **Encounter** | section 6, items 1 to 5, with the composer at M0 |

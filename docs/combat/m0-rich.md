@@ -1,6 +1,6 @@
 # M0 at the rich end: the Anti-hero's first real moveset
 
-Owner: Combat and Choreography. Date: 2026-10-01. Status: plan, with a parked piece list (`pending/moveset.antihero.m0.json`). Wave 1's strike specs are in `pending/wave1-strikes.md`. Animation's review plan (`docs/animation/review-plan.md`) has since cut section 10's pose estimate to about 295 and section 11's review to about 3 hours. No live data and no code. It replaces the Lean target for the first real fighter and revises the counts in `moveset-system.md` sections 6 and 9.6 for him. The grammar in that document is unchanged.
+Owner: Combat and Choreography. Date: 2026-10-01. Status: plan, with a parked piece list (`pending/moveset.antihero.m0.json`). Wave 1's strike specs are in `pending/wave1-strikes.md` and wave 2's entry specs in `pending/wave2-entries.md`. Animation's review plan (`docs/animation/review-plan.md`) has since cut section 10's pose estimate to about 295 and section 11's review to about 3 hours. No live data and no code. It replaces the Lean target for the first real fighter and revises the counts in `moveset-system.md` sections 6 and 9.6 for him. The grammar in that document is unchanged.
 
 **Why.** Orb withdrew the Lean choice (`docs/ep/vision.md`, last section): "work towards an optimistic overhaul of the current animation system: try to maximize the dynamic animations". Lean was 3 specials, 4 signatures and 6 showcases on the basic set. This plan sizes every piece family so that he does not repeat himself, including with a broken arm or leg (`docs/design/spec-wounds.md` section 1d).
 
@@ -57,8 +57,8 @@ Not in M0: props (lift, carry, two throws, a slam: 5 pieces, with World's liftab
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Healthy, in the air | 17 | 20 | 16 | 7 | 16 / 15 | |
 | Healthy, on the ground | 18 | 19 | 16 | 7 | 16 / 15 | |
-| Broken arm, in the air | 16 | 17 | 14 | 7 | 14 / 11 | 8 |
-| Broken arm, on the ground | 17 | 16 | 14 | 7 | 14 / 11 | 9 |
+| Broken arm, in the air | 16 | 17 | 14 | 7 | 14 / 13 | 8 |
+| Broken arm, on the ground | 17 | 16 | 14 | 7 | 14 / 13 | 9 |
 | Broken leg, in the air | 17 | 19 | 16 | 7 | 16 / 15 | 12 |
 | **Broken leg, on the ground** (the worst case) | **12** | **10** | 10 | 5 | 16 / 12 | 12 |
 
@@ -86,9 +86,10 @@ The same 15 body entries serve both modes. In energy mode Animation's aim layer 
 ## 4. The energy family
 
 - **Shapes (7, VFX):** bolt, volley, shard (his own barrage shards) are lights; arc, burst, lobbed orb, charged shot are heavies.
-- **Emitters:** 13 of the 38 strikes also emit (palm heel, spear hand, backfist, uppercut, hammer, twin spear, double palm, double hammer, roundhouse, axe kick, rising knee, tail jab, tail whip), plus four energy poses: charged brace, channel (two hands), kiting turn, crown release (from the shards that circle him, no hands, from Regalia). The shove is the context fallback and does no damage.
-- **Hand variants (6):** open palm, two-finger point, clawed palm, fist glow, blade hand, crossed forearms.
-- **31 energy strikes** in all, each listed as an emitter and a shape. A broken arm removes the two-hand emitters and leaves 14 lights and 11 heavies.
+- **Emitters:** 13 of the 38 strikes also emit (palm heel, spear hand, backfist, uppercut, hammer, overhand, twin spear, double hammer, roundhouse, axe kick, rising knee, tail jab, tail whip), plus four energy poses: charged brace, channel (two hands), kiting turn, crown release (from the shards that circle him, no hands, from Regalia). The shove is the context fallback and does no damage.
+- **Hand variants (6):** open palm, pinch (thumb to forefinger), clawed palm, fist glow, blade hand, crossed forearms.
+- **Legal's verdict** (`docs/legal/rule-of-cool-screen.md`, the wave 1 section): no two-finger point and no single pointing finger as an energy hand, so the pinch replaced it. The double palm is a melee strike only and no longer emits; the overhand took its two shapes, so the count stays 31. The open palm is never at the hip, and there is no palm-forward charge pose with a scream.
+- **31 energy strikes** in all, each listed as an emitter and a shape. A broken arm removes the two-hand emitters and leaves 14 lights and 13 heavies.
 
 ## 5. Grab and throw, with the turning throw
 

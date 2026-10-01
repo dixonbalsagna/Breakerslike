@@ -80,7 +80,11 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 ## Wave 1: the Anti-hero's strike specs (for Animation; not for applying)
 
-`wave1-strikes.md` and `strikes.antihero.wave1.json` are the 38 key strikes as specs to pose from: base family, limb and target socket, weight, reach and the strike's own contact distance, timing, limb tags and one line on the look. 34 can be posed now (11 derive, 23 need a contact pose); the 4 tail strikes are held until Orb rules on the tail. Section 6 of the sheet notes what a per-strike contact distance changes in the live contact data at M0. The `.2b.json` and `.contact.json` files in this folder are live now and kept for reference.
+`wave1-strikes.md` and `strikes.antihero.wave1.json` are the 38 key strikes as specs to pose from: base family, limb and target socket, weight, reach and the strike's own contact distance, timing, limb tags and one line on the look. 34 can be posed now (11 derive, 23 need a contact pose); the 4 tail strikes are held until Orb rules on the tail. Section 6 of the sheet notes what a per-strike contact distance changes in the live contact data at M0. Legal screened wave 1: GO, with its conditions now in the rows (`docs/legal/rule-of-cool-screen.md`). The `.2b.json` and `.contact.json` files in this folder are live now and kept for reference.
+
+## Wave 2: the Anti-hero's entry specs (for Animation; not for applying)
+
+`wave2-entries.md` and `entries.antihero.wave2.json` are the 15 entries (rush 6, stand 5, retreat 4) as specs to pose from: path, when it is offered, timing, where it plays, the new poses and what they derive from, the strikes it favours and one line on the look. 12 new poses. Eleven entries work on today's sim; the arc dive, the skid and the spiral need a path on the `rush` op, and the lane step needs fight lanes.
 
 ## The Anti-hero's rich M0 piece list (not for applying)
 

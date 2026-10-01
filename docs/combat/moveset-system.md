@@ -290,8 +290,8 @@ The grammar already has those axes. This section adds the families and revises t
 
 | Energy piece | What it is | Hand-made per fighter |
 | :--- | :--- | ---: |
-| Emitter pose | a key-strike body pose reused for energy: palm thrust, backhand sweep, overhead chop, low scoop, double palm, point, knee burst, kick arc and others | 0 new: 12 of the 24 poses are flagged as emitters |
-| Hand variant | open palm, two-finger point, clawed palm, crossed forearms, fist glow, flat blade hand | 6 |
+| Emitter pose | a key-strike body pose reused for energy: palm thrust, backhand sweep, overhead chop, low scoop, blade thrust, knee burst, kick arc and others | 0 new: 12 of the 24 poses are flagged as emitters |
+| Hand variant | open palm, pinch (thumb to forefinger), clawed palm, crossed forearms, fist glow, flat blade hand. Legal: no pointing finger or two-finger point as an energy hand, and a double palm never emits (`docs/legal/rule-of-cool-screen.md`) | 6 |
 | Energy-only pose | charged-shot brace, channel pose, shove, kiting turn | 4 |
 | Emission shape | bolt, volley, arc slash, burst, lobbed orb, charged shot (VFX, in the fighter's style and colour) | 6 (VFX) |
 
