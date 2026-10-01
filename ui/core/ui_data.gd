@@ -198,6 +198,17 @@ static var _send: Dictionary = {}
 
 
 ## The feedback panel's Send step: the GitHub issue's address and limits and the review words (ui/data/send.json).
+## An option's value held to its data: a number clamped to min..max and snapped to step. Keys without a range pass through.
+static func clamp_option(key: String, value):
+	var o: Dictionary = options().get(key, {})
+	if o.has("min") and (value is int or value is float):
+		var step: float = float(o.get("step", 1.0))
+		var v: float = clampf(float(value), float(o["min"]), float(o["max"]))
+		v = float(o["min"]) + roundf((v - float(o["min"])) / step) * step
+		return v
+	return value
+
+
 static func send() -> Dictionary:
 	if _send.is_empty():
 		_send = _read(SEND_PATH)

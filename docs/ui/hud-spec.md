@@ -719,3 +719,13 @@ All targets share the same fallback: a report over the limit drops its Settings 
 ![The email review](img/feedback-review-mailto.png)
 
 `hud_check` covers the glyph bindings per layout (kb-solo, kb-shared-p2, arena, brawler, simple-pad), the legend rows and the layout picked, the Controls page rows per layout, the shared-keyboard note, SEND hidden with no target, and the mailto, form and GitHub links and reviews.
+
+### 25.5 Settings: camera, controller layout and the Transform prompt
+- **New options** in `ui/data/options.json` (the data a Settings screen is built from; the HUD carries them in `UiHud.opts`):
+  - `camera_zoom`: slider 0 to 10, step 1, default 7, group display. Camera's framing (`render/core/main.gd` already reads it from `ui_hud.opts`).
+  - `camera_shake`: slider 0 to 10, step 1, default 2, an accessibility option. Camera reads it too; reduced motion still caps it at a quarter.
+  - `pad_preset`: choices `arena`, `brawler`, `simple-pad`, default `arena`, group controls. Each choice is a pad layout in `data/input/layouts.json`; the layout's own `name` (Arena, Brawler, Simple) is the label to show. Left-handed already existed.
+- **The host's hook.** `UiHud.set_option` now clamps a numeric option to its data range and step, and emits `option_changed(key, value)` when the value actually changed. The host connects it and applies what it owns: `hud.option_changed.connect(func(k, v): if k == "pad_preset": input_hub.pad_preset = v)`. The legend, the prompt row and the card follow the option at once. `SimInputHub` builds its pad layouts on first use (`pads` cache), so a change in a running match should also clear that cache: Controls'. At start the host does the reverse once: `hud.set_option("pad_preset", SimInputHub.pad_preset)`.
+- **The Transform prompt** reads the sim: `UiSimBridge.patch` sets `avail_transform` from `f.act.formReady` every call, so the prompt is up exactly while a form is ready and down when it is taken, with or without events. The `transform_ready` event raises it at once and the `transform` event lowers it. The hold chip shows the layout's own control (R on the solo keyboard, LT + RT on Arena, RB on Simple) and appears while prompts are on; a ring fills from `hold_transform` if the host patches it (see below).
+
+`hud_check` covers the three options' ranges and defaults, that every `pad_preset` choice is a pad layout, the clamp, the change signal (once per change), the bridge reading `f.act.formReady` in both directions, and the Transform chip carrying the layout's control only while a form is ready.

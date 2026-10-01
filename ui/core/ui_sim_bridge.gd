@@ -39,6 +39,8 @@ static func patch(hud: UiHud, S) -> void:
 			"name": str(f.name), "ai": f.ai != null, "stance": int(f.stance), "tier": tier, "momentum": into,
 			"charge": float(f.ki), "hidden": bool(f.hidden), "charging": str(f.state) == "charging",
 			"ego": ego, "aura": str(f.aura), "wear": wear,
+			# A form is ready while the sim says so (f.act.formReady, I2a): the prompt does not wait for, or depend on, the transform_ready event.
+			"avail_transform": bool(f.act.formReady) if "act" in f else false,
 		})
 	var w = S.world
 	hud.hub.consume({"type": "world", "civilians": int(round(float(w.casualties))), "pop0": int(w.pop0), "structures": int(w.structuresLost), "craters": int(w.craters)})

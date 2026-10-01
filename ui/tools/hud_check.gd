@@ -396,6 +396,13 @@ func _bridge() -> void:
 	_ok((sd["segs"] as Array).size() == 11 and (sd["fighters"] as Array).size() == 2, "bridge: builds the planet strip's data")
 	_ok(bool(seen["damage"]), "bridge: the live sim emits damage events (S1): " + str(seen))
 	_ok(float(m0.wear["core"]) >= 0.0, "bridge: reads wear from the sim state")
+	# A ready form is the sim's own f.act.formReady, read every patch (the transform_ready event is only the fast path).
+	host.S.fighters[0].act.formReady = true
+	UiSimBridge.patch(hud, host.S)
+	var ready_on: bool = hud.hub.model(0).avail["transform"]
+	host.S.fighters[0].act.formReady = false
+	UiSimBridge.patch(hud, host.S)
+	_ok(ready_on and not hud.hub.model(0).avail["transform"], "bridge: the Transform prompt reads f.act.formReady (up while a form is ready, down when it is taken)")
 	# The greybox balance rarely wears a region past bruised in a minute, so push one through the real S1 code: the stage
 	# events it emits must reach the HUD as they are.
 	var f0 = host.S.fighters[0]
@@ -792,6 +799,42 @@ func _controls_rules() -> void:
 	var od: Dictionary = UiData.option_defaults()
 	_ok(is_equal_approx(float(od.get("hitstop_scale", -1.0)), 1.0) and od.get("hotseat_alt_layout") == false and od.get("show_prompts") == false, "options: hitstop_scale defaults to 1.0, the hot-seat layout to off, prompts to off")
 	var o: Dictionary = UiData.options()
+	# Settings: Camera's zoom and shake (0 to 10), the pad layout, and a change signal the host applies from.
+	_ok(float(od.get("camera_zoom", -1.0)) == 7.0 and float(od.get("camera_shake", -1.0)) == 2.0 and float(o["camera_zoom"]["min"]) == 0.0 and float(o["camera_zoom"]["max"]) == 10.0 and float(o["camera_shake"]["max"]) == 10.0 and float(o["camera_zoom"]["step"]) == 1.0 and o["camera_shake"].get("accessibility", false), "options: camera_zoom (0 to 10, default 7) and camera_shake (0 to 10, default 2, accessibility) are in the data")
+	_ok(od.get("pad_preset") == "arena" and (o["pad_preset"]["choices"] as Array) == ["arena", "brawler", "simple-pad"] and o["pad_preset"]["group"] == "controls", "options: pad_preset offers arena, brawler and simple-pad, default arena")
+	var pad_ids_ok := true
+	for pid0 in o["pad_preset"]["choices"]:
+		if SimInputData.preset(str(pid0)).is_empty() or str(SimInputData.preset(str(pid0)).get("device", "")) != "pad":
+			pad_ids_ok = false
+	_ok(pad_ids_ok and SimInputData.preset("arena").get("name", "") == "Arena" and SimInputData.preset("simple-pad").get("name", "") == "Simple", "options: every pad_preset choice is a pad layout in data/input/layouts.json (named Arena, Brawler, Simple)")
+	_ok(UiData.clamp_option("camera_zoom", 15) == 10.0 and UiData.clamp_option("camera_zoom", -3) == 0.0 and UiData.clamp_option("camera_zoom", 6.4) == 6.0 and UiData.clamp_option("camera_shake", 4) == 4.0 and UiData.clamp_option("glyph_style", "family") == "family" and UiData.clamp_option("no_such_option", 99) == 99, "options: a slider is held to 0..10 in whole steps, other keys pass through")
+	var oh: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(oh)
+	await process_frame
+	var got: Array = []
+	oh.option_changed.connect(func(k, v): got.append([k, v]))
+	oh.set_option("pad_preset", "brawler")
+	oh.set_option("pad_preset", "brawler")
+	oh.set_option("camera_zoom", 99)
+	_ok(got == [["pad_preset", "brawler"], ["camera_zoom", 10.0]] and oh.opts["pad_preset"] == "brawler" and oh.opts["camera_zoom"] == 10.0 and oh.opts["camera_shake"] == 2, "options: set_option announces a change once (so the host can set SimInputHub.pad_preset) and clamps the sliders")
+	# The Transform prompt: the layout's own control, while a form is ready and prompts are on.
+	var tm := UiFighterModel.new()
+	tm.ai = false
+	tm.slot = 0
+	tm.device = "kbd"
+	tm.avail["transform"] = true
+	var tchip := func(o2: Dictionary) -> Dictionary:
+		for c in UiPrompts.plan(tm, Rect2(0, 0, 900, 40), 1.0, o2):
+			if c["name"] == "transform":
+				return c
+		return {}
+	var tc_kb: Dictionary = tchip.call({"prompts": true, "control_scheme": "kb-solo"})
+	var tc_pad: Dictionary = tchip.call({"prompts": true, "control_scheme": "arena"})
+	_ok(not tc_kb.is_empty() and not tc_pad.is_empty() and float(tc_pad["gw"]) > float(tc_kb["gw"]) and tchip.call({"prompts": false}).is_empty(), "options: the Transform chip is the layout's control (R on the solo keyboard, LT + RT on Arena), only while prompts are on")
+	tm.avail["transform"] = false
+	_ok(tchip.call({"prompts": true, "control_scheme": "kb-solo"}).is_empty(), "options: and it goes when no form is ready")
+	oh.queue_free()
+	await process_frame
 	_ok(float(o["hitstop_scale"].get("min", 0.0)) == 0.5 and float(o["hitstop_scale"].get("max", 0.0)) == 1.0 and o["hitstop_scale"].get("accessibility", false), "options: hitstop_scale runs 0.5 to 1.0 and is an accessibility option")
 	# The struggle (Q4: resolved by state). Beats at -18 and 0 (count-in), 18, 36, 54; three pulses reveal holding or slipping; no press.
 	var hub := _hub()

@@ -21,6 +21,7 @@ signal layout_changed
 signal howto_opened(first_run: bool)   # the How to play card opened: the host pauses the sim and releases held keys
 signal feedback_opened(context: String)   # the feedback panel opened ("pause" or "match_end"): the host pauses the sim and releases held keys
 signal feedback_closed()                  # it closed: the host restores the pause it found
+signal option_changed(key: String, value)   # set_option changed an option's value: the host applies the ones it owns (pad_preset to SimInputHub.pad_preset)
 signal howto_closed(first_run: bool)   # it closed (from a first run it has then been marked seen)
 
 var hub := UiEventHub.new()
@@ -46,6 +47,8 @@ var opts: Dictionary = {
 	"hotseat_alt_layout": false,  # Controls' alternate hot-seat keyboard layout; the HUD only carries it
 	"control_hints": "auto",   # the legend of the player's controls: auto (match start and first matches), always, off
 	"control_scheme": "",      # "" = the scheme of the player's own layout (ui/data/hints.json); a layout id forces one (a preview or a test)
+	"camera_zoom": 7,          # Camera's framing, 0 to 10 (render/camera reads it from these opts); the HUD only carries it
+	"camera_shake": 2,         # Camera's shake, 0 to 10 (an accessibility option); the HUD only carries it
 	"pad_preset": "arena",     # the pad layout in use (arena, brawler or simple-pad); the host keeps it equal to SimInputHub.pad_preset
 	"match_end_feedback": true, # the SEND FEEDBACK pill after a KO; the host turns it off if its own results screen has the button
 	"keep_hints": false,       # accessibility: a tutorial hint stays up after its beat is done, until the next hint
@@ -287,7 +290,11 @@ func _step_swap(dt: float) -> void:
 
 
 func set_option(key: String, value) -> void:
+	value = UiData.clamp_option(key, value)
+	var changed: bool = not opts.has(key) or opts[key] != value
 	opts[key] = value
+	if changed:
+		option_changed.emit(key, value)
 	if key == "force_redraw":
 		for l in _all_layers():
 			if l != null:

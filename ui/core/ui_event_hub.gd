@@ -339,6 +339,13 @@ func consume(e) -> void:
 		"mood_band":
 			mood_band = str(d.get("band", ""))
 			feed_line(t_now, "MOOD", mood_band.to_upper())
+		"transform_ready":
+			if m != null:
+				m.avail["transform"] = true   # the rising edge; the bridge keeps it true while f.act.formReady is
+		"transform":
+			if m != null:
+				m.avail["transform"] = false   # the form was taken
+				m.hold["transform"] = 0.0
 		"availability":
 			if m != null:
 				var act: String = str(d.get("action", ""))
