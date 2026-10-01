@@ -149,3 +149,35 @@ The three patterns are our own geometry (a line, a climbing zigzag, a circle) an
 - The tail throw stays hair, cloth or metal, never furred or reptilian, and no more than half a turn.
 
 **The other grab pieces** (tackle, carry, dive catch and spike, reversal throw and sweep, hold) are ordinary wrestling and judo in our blade language. Nothing stacks toward a franchise signature. Keep the `hold`'s forearm across the collar and never the throat.
+
+## Combat wave 5 (clashes, beam answers) and wave 6 (energy shapes and hands) (2026-10-01)
+
+Screens `docs/combat/pending/wave5-clashes.md` and `wave6-energy.md` against the stacking rule and the channel-pose rules, from the written specs.
+
+| Item | Verdict |
+|---|---|
+| Fist clash, blur exchange | **Confirmed** |
+| Grapple lock (collar-and-elbow tie-up) | **Confirmed** |
+| Swat, split, walk through | **GO** |
+| Volley, arc, lob, charged, lit fist, crown release, shove | **Confirmed**, with the additions below |
+| The six hands, the 13 emitting strikes, the five energy poses (including `channel`) | **GO** |
+
+**Wave 5.**
+- **Fist clash and blur exchange:** confirmed as written. The lock is a strain in motion, and every blow in the blur is a drawn pose held 4 ticks or more.
+- **Grapple lock:** confirmed. Add: no sparks, glow or energy at the hands in the lock, and no hands locked at all (laced or not), so the franchise's test-of-strength image never forms.
+- **Swat:** a plated-forearm sweep with the whole body turning is clear of the casual backhand flick. Keep it away from an open palm.
+- **Split:** on the shoulder and spine, hands open at the chest, no crossed arms. Clear.
+- **Walk through:** upright, hands open and low, an unhurried stride, no shouted line. Clear.
+- **All three:** no named technique, no borrowed hand pose, and no mushroom cloud staged like a known scene.
+
+**Wave 6.**
+- **Volley:** a fan from one sweep or flick, never both palms pumping forward in turn. Add: no shouted barrage with an open mouth.
+- **Arc:** a crescent from a limb already in motion. Add: never a round spinning disc held above the hand.
+- **Lob:** a hexagonal slab, one hand, never a sphere, never raised overhead in two hands.
+- **Charged:** plates stack along the forearm, the arm at shoulder height, never a ball in a palm. Add: the lance is a plain straight beam, not a spiral or drilling beam, and the blade hand is a flat knife hand, never a pointed finger.
+- **Lit fist:** lit plate edges, never a ball of light round the fist.
+- **Crown release:** flat shards on a slow tilted ring. Add: the ring sits round the shoulders or body, never above or behind the head (that would be a halo).
+- **Shove:** a flat palm at chest height on a straight arm, never at the hip, and no scream.
+- **`channel`:** the high and low forearms with plates facing each other across a body-length gap meet the channel rules (hands apart, nothing between the palms, no hip, no overhead).
+
+Nothing in either wave stacks three of the seven power-up marks.
