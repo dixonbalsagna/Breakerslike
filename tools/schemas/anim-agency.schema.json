@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/anim-agency",
   "title": "anim.agency/1",
-  "description": "data/anim/agency.json: the agency slice's events as poses (render/anim/anim_fighter.gd, on_agency; docs/animation/pose-pipeline.md section 9.22; wave agency1). knockback: a rival sent back on his feet, by the kind of the sim's `knockback` event (slideShort, slideLong, drift, bump): the held pose mixed in for as long as the event says, eased in and out. embed: World's `embed` event: a sequence over the held-down ticks. taunt: the cue taunt_start plays a sequence over the flight, cut by the listed kinds. charge: the cues charge_light and charge_heavy hold the flight pose until the exchange starts (a fall or max_ticks ends it), and a feinted charge peels for `ticks`. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every held pose is in a pose file; every sequence is in a wave's sequences file) are checked by tools/lib/xref-fight.js (agency-pose, agency-seq).",
+  "description": "data/anim/agency.json: the agency slice's events as poses (render/anim/anim_fighter.gd, on_agency; docs/animation/pose-pipeline.md section 9.22; wave agency1). knockback: a rival sent back on his feet, by the kind of the sim's `knockback` event (slideShort, slideLong, drift, bump): the held pose mixed in for as long as the event says, eased in and out. embed: World's `embed` event: a sequence over the held-down ticks. taunt: the cue taunt_start plays a sequence over the flight, cut by the listed kinds. charge: the cues charge_light and charge_heavy hold the flight pose until the exchange starts (a fall or max_ticks ends it), and a feinted charge peels for `ticks`; end_kinds lists the cue kinds that end a charge pose. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every held pose is in a pose file; every sequence is in a wave's sequences file) are checked by tools/lib/xref-fight.js (agency-pose, agency-seq).",
   "type": "object",
   "required": [
     "schema",
@@ -237,7 +237,8 @@
       "required": [
         "light",
         "heavy",
-        "feint"
+        "feint",
+        "end_kinds"
       ],
       "properties": {
         "light": {
@@ -364,6 +365,15 @@
           "patternProperties": {
             "^_": true
           }
+        },
+        "end_kinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "description": "The cue kinds that end a charge pose (a dodge cancel, a challenge answered ...): the same shape as taunt.cut_kinds."
         }
       },
       "additionalProperties": false,

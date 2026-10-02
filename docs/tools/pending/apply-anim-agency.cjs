@@ -35,6 +35,7 @@ const KB = ['slideShort', 'slideLong', 'drift', 'bump'];
         light: held({ max_ticks: { type: 'integer', minimum: 1, description: 'The most ticks the held flight pose lasts.' } }),
         heavy: held({ max_ticks: { type: 'integer', minimum: 1 } }),
         feint: held({ ticks: { type: 'integer', minimum: 1, description: 'The ticks the peel lasts.' } }),
+        end_kinds: { type: 'array', uniqueItems: true, items: { type: 'string', pattern: '^[a-z][a-z0-9_]*$' }, description: 'The cue kinds that end a charge pose (the same shape as taunt.cut_kinds).' },
       }),
     },
     additionalProperties: false,

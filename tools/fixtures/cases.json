@@ -35456,6 +35456,208 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-agency-end-kinds-required",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "del": [
+            "/charge/end_kinds"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/charge"
+      }
+    },
+    {
+      "id": "anim-agency-end-kinds-valid",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/end_kinds": [
+              "dodge_cancel",
+              "challenge_answered"
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-agency-end-kinds-empty-ok",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/end_kinds": []
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-agency-end-kinds-duplicate",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/end_kinds": [
+              "dodge_cancel",
+              "dodge_cancel"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/charge/end_kinds/1"
+      }
+    },
+    {
+      "id": "anim-agency-end-kinds-shape",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/end_kinds": [
+              "Dodge Cancel"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/charge/end_kinds/0"
+      }
+    },
+    {
+      "id": "anim-agency-end-kinds-empty-string",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/end_kinds": [
+              ""
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/charge/end_kinds/0"
+      }
+    },
+    {
+      "id": "anim-agency-end-kinds-type",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/end_kinds": "dodge_cancel"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/charge/end_kinds"
+      }
+    },
+    {
+      "id": "anim-agency-end-kinds-item-type",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/end_kinds": [
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/charge/end_kinds/0"
+      }
+    },
+    {
+      "id": "anim-agency-cut-kinds-empty-string",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/cut_kinds": [
+              ""
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/taunt/cut_kinds/0"
+      }
+    },
+    {
+      "id": "anim-agency-cut-kinds-type",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/cut_kinds": "taunt_end_cut"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/taunt/cut_kinds"
+      }
+    },
+    {
+      "id": "anim-agency-cut-kinds-item-type",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/cut_kinds": [
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/taunt/cut_kinds/0"
+      }
+    },
+    {
+      "id": "anim-agency-cut-kinds-several-ok",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/cut_kinds": [
+              "taunt_end_cut",
+              "taunt_end_accepted"
+            ]
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [
