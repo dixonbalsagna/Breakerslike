@@ -45,7 +45,7 @@ The mapping is Controls': the host hands every key, pad and touch event to `SimI
 - UI's options the host owns go to the hub: `pad_preset` (player one's pad layout), `pad_preset_p2` (player two's) and `touch_preset`. After a player's remap (`remap_slot_changed`; UI applies and saves it through Controls) the hub reloads its layouts. UI's `pad_slot_fn` is told which player a pad drives, so the Remap screen opens on the player whose pad pressed. The hub's defaults are pushed into the HUD first.
 - The options the player saved there are loaded at start (after those defaults, so the saved choice wins), except in the tools, the bench and scripted runs (`--frames`, `--shot`), which keep the defaults so a saved option never changes a check.
 
-Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`, `--nosplit` (one view), `--pitch=DEG` and `--occl=hole|stub` (the two debug toggles' starting values), `--nostreets` (no street paint), `--nodamage` (no battle damage on the fighters), `--noclouds` (a bare sky), `--nowindows` (blank walls), `--intro` (play the intro phase; on the web, `/play/?intro=1`). Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
+Command-line options go after `--`: `--seed=N`, `--human` (take P1 at start), `--frames=N` (quit after N frames), `--shot=file.png` (save the last frame), `--bench` (vsync off; print frame-time statistics at quit), `--novsync`, `--nosplit` (one view), `--pitch=DEG` and `--occl=hole|stub` (the two debug toggles' starting values), `--nostreets` (no street paint), `--nodamage` (no battle damage on the fighters), `--noclouds` (a bare sky), `--skyreact` (the clouds part for a fighter at tier 3 and 4; off by default; on the web, `/play/?skyreact=1`), `--nowindows` (blank walls), `--intro` (play the intro phase; on the web, `/play/?intro=1`). Add Godot's own `--fixed-fps 60` to get exactly one tick per frame, for screenshots at a known tick.
 
 ## Scene structure (`render/main.tscn`)
 
@@ -332,17 +332,23 @@ Each fighter at stages 0 to 3, then the first again in the reduced version: ![da
 
 At the fight's own size, both wounded: ![damage in a fight](img/cool-damage-fight.png)
 
-**The clouds part from tier 3 (feature 12, Rendering's part).**
+**Clouds, and the reaction that is off by default (feature 12, Rendering's part).**
 - **Clouds.** The sky has a band of long clouds above the horizon: two octaves of noise in the sky shader, lit warm from the horizon. They move with the camera's place round the planet (the pattern wraps with the planet) and a slow wind. There are none at the horizon line, where the ground's haze meets the sky, and none in space.
-- **The reaction.** For a fighter at tier 3 or more, a gap opens in the cloud band above him, wider than tall, and the clouds round the gap are lit in his colour. Half strength at tier 3, full at tier 4, easing over 1.5 s of tick time. Nothing happens below tier 3.
-- **Only clouds.** That is all of it. No cloud is made, nothing is drawn where there is no cloud, and the sky inside the gap is the sky as it was. Under a clear patch of sky a tier 4 fighter shows nothing.
+- **A camera move only slides them.** The pattern is read at the plain height above the horizon. Only the band's limits and its lighting thin with altitude, so the band still narrows to a rim near space (see "The shimmer" below).
+- **The clouds stay at low quality** (EP's ruling, 2026-10-02: they cost nothing measurable, below). `--noclouds` takes them away.
+- **With reduced motion** the clouds stand still (no wind). It follows UI's `reduced_motion` option.
+- **The reaction to tier 3 and 4 is off** (EP's brief, 2026-10-02, after GB-002 came back). The game shows plain clouds at every tier. The code stays behind `PaneWorld.sky_react_on`: `--skyreact` turns it on, and on the web `/play/?skyreact=1`. With reduced motion it is off whatever the switch says. `docs/rendering/sky-gap-anchored.md` describes a version that would not follow a fighter; it is not built.
+
+**The reaction, when it is switched on.**
+- For a fighter at tier 3 or more, a gap opens in the cloud band above him, wider than tall, and the clouds round the gap are lit in his colour. Half strength at tier 3, full at tier 4, easing over 1.5 s of tick time. Nothing happens below tier 3.
+- **Only clouds.** No cloud is made, nothing is drawn where there is no cloud, and the sky inside the gap is the sky as it was. Under a clear patch of sky a tier 4 fighter shows nothing.
 - **It stays in the cloud band.** The gap's middle sits 0.45 above the fighter and between 0.46 and 1.0 above the horizon (in half screen heights); nothing parts in the last 0.14 above the horizon.
-- **Only for a fighter the pane shows.** It fades out as he leaves that pane's screen, over 15% of the screen's width, so no gap hangs in the sky for someone the player cannot see. In a split each pane parts the clouds for its own fighter.
+- **Only for a fighter the pane shows.** It fades out as he leaves that pane's screen, over 15% of the screen's width. In a split each pane parts the clouds for its own fighter.
 - **It only lightens a cloud, and never to white.** Nothing darkens and there is no lightning (Legal's screen of the list). Where two fighters' gaps meet, their colours blend by weight.
-- **It stands down** (stacking rule 9) while that fighter charges, charges a beam, breaks into a transformation, is the actor of a set-piece pause, or has VFX's transformation effect on him. It eases out and comes back after.
-- **The clouds stay at low quality** (EP's ruling, 2026-10-02: they cost nothing measurable, below). `--noclouds` takes them away, and the reaction with them.
-- **With reduced motion** the clouds stand still (no wind) and nothing parts. It follows UI's `reduced_motion` option.
-- Rubble floating and cracks spreading under a standing fighter are VFX's and World's parts of the same feature.
+- **It stands down** (stacking rule 9) while that fighter charges, charges a beam, breaks into a transformation, is the actor of a set-piece pause, or has VFX's transformation effect on him.
+- Rubble floating and cracks spreading under a standing fighter are VFX's and World's parts of the same feature. They are not switched off.
+
+The pictures below are of the reaction switched on (`tools/cool_shots.gd` turns it on for them).
 
 Calm, then one fighter at tier 3 and at tier 4: ![calm](img/cool-sky-calm.png) ![tier 3](img/cool-sky-tier3.png) ![tier 4](img/cool-sky-tier4.png)
 
@@ -356,7 +362,32 @@ The low camera, before and after: ![before](img/sky-gb002-low-before.png) ![afte
 
 The split view, before and after (each pane now parts the clouds for its own fighter only): ![before](img/sky-gb002-split-before.png) ![after](img/sky-gb002-split-after.png)
 
-`tools/sky_check.gd` guards it (needs a window): with the clouds off, tier 4 changes no pixel of the sky; with them on, the last of the band above the horizon is unchanged; a tier 4 fighter off the screen changes nothing; with reduced motion nothing parts; and the clouds do part somewhere round the planet. Low and high camera, 8 places each. The old shader fails six of the ten.
+**GB-002 came back (2026-10-02), and the reaction was switched off.** On the live web build, with both fighters at tier 4 and high up, Orb saw the gap and its lit edge as a big glowing texture over each fighter, and the clouds shimmering as a fighter moved left and right. Two faults were found.
+- **The reaction follows the fighter.** The gap and the lit edge keep their place over him while the clouds slide under them, so the edge lights whichever cloud is passing. That is the glow, and most of the shimmer. It is off now.
+- **The shimmer that was the clouds' own.** The pattern was read at the height thinned with altitude. The thinning grows as the camera climbs (from 4,800 units up), so each frame the camera rose or fell the pattern was squeezed toward the horizon by a different amount, and near space it was squeezed into streaks a few pixels tall. The pattern is now read at the plain height, so a camera move only slides it. Below 4,800 units up the picture is the same as before.
+
+Measured on the web build in headless Chrome (1280×720, seed 1, fighters and effects hidden). Each frame is drawn with and without clouds, and their difference is the cloud layer. Between the two frames of a 300 unit camera move, the best whole-pixel slide is taken out; what is left is the share of the cloud that changed shape.
+
+| The camera's move | Before (42cd4dd) | Now |
+| :--- | ---: | ---: |
+| Sideways at 3,000 up, both at tier 4 | 11% | 5% |
+| Sideways at 9,000 up | 5% | 3% |
+| Up at 9,000 | 23% | 13% |
+| Across the planet's seam at 9,000 up | 5% | 4% |
+| Up at 600 (no thinning there: the control) | 7% | 7% |
+
+- **What is left on a climb** (13%) is the band's upper limit coming down as the air thins: its top clouds fade. That is meant.
+- **The planet's wrap** is clean: across the seam is the same as anywhere else.
+- **The web build's precision** is not a cause. These are web frames, and a sideways move leaves 3%. The numbers the shader works with are small (the pattern's place stays under 35 cells).
+- **The split panes** were checked by reading the code, not in pictures. Each pane's sky has its own material, fed from that pane's camera, and nothing in it knows about the split. A pane's sky is as steady as its camera.
+
+Both at tier 4, 3,000 up, before and now (the pale streaks to the right are the lit edge): ![before](img/sky-gb002b-tier4-before.png) ![now](img/sky-gb002b-tier4-now.png)
+
+At 9,000 up, the camera then 300 higher, before: ![before](img/sky-gb002b-high-before.png) ![before, 300 higher](img/sky-gb002b-high-before-up.png)
+
+The same two frames now: ![now](img/sky-gb002b-high-now.png) ![now, 300 higher](img/sky-gb002b-high-now-up.png)
+
+`tools/sky_check.gd` guards it in two halves. The numbers run always, and are all of it under `--headless` (20 checks): by default nothing parts at tier 4, from a camera on the ground, 3,000 and 9,000 up; `--skyreact` turns it on and the web page's URL may name it; switched on it is full at tier 4, half at tier 3, nothing for a fighter off the screen and nothing with reduced motion; the pattern's place steps the same across the planet's seam and stands still with reduced motion. The pictures need a window and test the reaction switched on: with the clouds off, tier 4 changes no pixel of the sky; with them on, the last of the band above the horizon is unchanged; a tier 4 fighter off the screen changes nothing; with reduced motion nothing parts; and the clouds do part somewhere round the planet. Low and high camera, 8 places each. The pictures were last run on 8fd6aba, before this change.
 
 **Windows, and windows blowing out (feature 12).** The buildings had no windows, so VFX's glass came out of blank walls.
 - **Windows.** `building.gdshader` draws them on every wall: a row a floor (the building's height over its floor count), a column every 62 units along the wall (`WINDOW_PITCH`), 30% of them lit by a hash of the building and the cell (`WINDOW_LIT_SHARE`). No textures, no geometry, no draw call. They fade to the wall's tone before they alias at far zoom. `--nowindows` leaves the walls blank, for A/B.
@@ -625,7 +656,7 @@ All commands run from the repo root; each exits 0 on success.
 | Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (37 checks; hash with and without a compositor; the cut-away request, the pitch, the inset, attaching again) |
 | Cue check | `godot --headless --path . --script res://render/tools/cue_check.gd -- --profile=spaced` | passed (46 checks over two full matches; hash with and without the poses) |
 | Outline check | `godot --path . --script res://render/tools/outline_check.gd` (needs a window; under `--headless` it exits with code 2, not run) | passed: 0 crack pixels over 24 poses; the unbaked control 9,024 (`docs/rendering/outline-normals-plan.md`) |
-| Sky check | `godot --path . --script res://render/tools/sky_check.gd` (needs a window; under `--headless` it exits with code 2, not run) | passed: 10 checks (the clouds part and nothing else; the pre-fix shader fails 6) |
+| Sky check | `godot --headless --path . --script res://render/tools/sky_check.gd` (with a window it also compares pictures of the reaction switched on) | passed headless: 20 checks (the reaction is off by default; `--skyreact`; the pattern's place across the seam). The 10 picture checks were last run on 8fd6aba |
 | Cull check | `godot --path . --script res://render/tools/cull_check.gd` (needs a window; under `--headless` it exits with code 2, not run) | passed: 7 buildings, 504 views, the game's picture and the rasterizer-culled reference at most 30 of 255 apart (tolerance 64); the control with the old fault put back fails 52 of 72 views, up to 229 apart |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
 

@@ -21,7 +21,7 @@ extends Node3D
 ## view; docs/camera/camera-v2.md section 8), and Ctrl+F9 swaps the occlusion method (a hole around the fighter, or the
 ## buildings in front cut down to stubs; docs/rendering/README.md, "Occlusion"). Neither takes P1 over (Alt and Ctrl
 ## are not game keys; Shift is). --pitch=DEG and --occl=hole|stub set them at start. --nostreets leaves the lane table's
-## streets unpainted, --nodamage the fighters unmarked, --noclouds the sky bare and --nowindows the buildings' walls blank (for A/B). Camera's inset pane comes from make_inset and the compositor's inset_view (below).
+## streets unpainted, --nodamage the fighters unmarked, --noclouds the sky bare, --skyreact the clouds parting at tier 3 and 4 (off by default) and --nowindows the buildings' walls blank (for A/B). Camera's inset pane comes from make_inset and the compositor's inset_view (below).
 ## Local two-player (docs/controls/local-two-player.md): SimHost takes the input hub's joins and leaves each tick. A
 ## join turns the split screen on if it was off; T makes P2 human or hands the slot back; the pause menu's entry hands
 ## it back at once. UI's HUD is told each player's device and layout every frame (_sync_players).
@@ -405,6 +405,7 @@ func frame(delta: float) -> void:
 	FighterView.guard_reduced = low
 	ParticleView.after_on = not low
 	PaneWorld.clouds_on = not args.has("noclouds")
+	PaneWorld.sky_react_on = args.has("skyreact")   # the clouds parting at tier 3 and 4: off unless asked for (QA's GB-002)
 	PaneWorld.sky_calm = host.vfx.reduced_motion
 	var n: int = host.advance(delta, vp.x, vp.y)
 	if args.has("flash-soak") and frames % 40 == 0 and not FlashSet.ids().is_empty():
@@ -930,7 +931,7 @@ func _notification(what: int) -> void:
 
 
 ## The options a web page's URL may set (parse_args): off unless the URL names them.
-const URL_ARGS: Array = ["intro"]
+const URL_ARGS: Array = ["intro", "skyreact"]
 
 
 static func fresh_seed() -> int:
@@ -944,7 +945,8 @@ static func parse_args() -> Dictionary:
 			var kv: PackedStringArray = a.substr(2).split("=", true, 1)
 			out[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	# On the web the page's own URL can set the options named in URL_ARGS (the page passes the game no arguments):
-	# /play/?intro=1 plays the intro phase. A value of 0, or none of these keys, changes nothing.
+	# /play/?intro=1 plays the intro phase, /play/?skyreact=1 lets the clouds part at tier 3 and 4. A value of 0, or
+	# none of these keys, changes nothing.
 	if OS.has_feature("web"):
 		for pair in str(JavaScriptBridge.eval("location.search", true)).trim_prefix("?").split("&", false):
 			var kv: PackedStringArray = pair.split("=", true, 1)

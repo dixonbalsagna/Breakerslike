@@ -5,9 +5,16 @@
 // The clouds are two octaves of value noise over (across, height above the horizon), stretched along the horizon. They
 // move with the camera's place round the planet (cloud_shift, in cells; the pattern repeats every cloud_period cells,
 // so it wraps with the planet) and a slow wind. None at the horizon line, where the ground's haze meets the sky, and
-// none in space. cloud_on 0: no clouds (--noclouds). cloud_part 0 is the calm version for reduced motion: the clouds
-// stand still and do not part.
-// From tier 3 the clouds part for a fighter (docs/design/rule-of-cool.md feature 12): sky_react gives the direction
+// none in space. cloud_on 0: no clouds (--noclouds).
+// The pattern is read at the plain height above the horizon, not the height thinned with altitude: the thinning grows
+// as the camera climbs, so a pattern read through it was squeezed toward the horizon by a different amount each frame
+// the camera rose or fell, which crawled, and near space it was squeezed to streaks a few pixels tall, which
+// flickered (QA's GB-002, the shimmer). Only the band's
+// own limits and its lighting thin with altitude, so the band still narrows to the rim. A camera move now only slides
+// the clouds.
+// cloud_part 0: the clouds do not part. That is the default (pane_world.gd's sky_react_on, main's --skyreact), and
+// always so with reduced motion, where they also stand still.
+// With it on, from tier 3 the clouds part for a fighter (docs/design/rule-of-cool.md feature 12): sky_react gives the direction
 // from the camera to him and a strength (tier 3 half, tier 4 full; 0 when he is off this pane's screen). A gap opens
 // in the cloud band above him, wider than tall, and the clouds round it are lit in his colour. That is all of it:
 // no cloud is made and nothing is drawn where there is none, the sky inside the gap is the sky as it was, and the
@@ -81,7 +88,7 @@ void sky() {
 			}
 			tint /= max(tw, 0.0001);   // where two gaps meet, their colours blend by weight: never their sum
 		}
-		vec2 cp = vec2(p.x * 2.2 + cloud_shift, h * 5.0);
+		vec2 cp = vec2(p.x * 2.2 + cloud_shift, (q - horizon) / sky_tan * 5.0);   // the plain height: see the header
 		float n = cloud_noise(cp, cloud_period) * 0.65 + cloud_noise(vec2(cp.x * 2.0, cp.y * 2.9 + 11.0), cloud_period * 2.0) * 0.35;
 		float band = smoothstep(0.04, 0.3, h) * (1.0 - smoothstep(1.3, 2.3, h)) * (1.0 - space);
 		// The clouds that are there open: none inside the gap. No cloud is made, so a clear sky shows nothing.

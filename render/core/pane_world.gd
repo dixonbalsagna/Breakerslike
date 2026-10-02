@@ -43,6 +43,7 @@ var _cue_want: Array = []          # ... and whether the cue was wanted then
 var _cue_t: float = -1.0
 static var clouds_on: bool = true          # the sky's clouds (main's --noclouds)
 static var sky_calm: bool = false          # reduced motion: the clouds stand still and nothing parts (main sets it)
+static var sky_react_on: bool = false      # the clouds part for a fighter at tier 3 or more: off unless asked for (main's --skyreact; QA's GB-002)
 var _react := PackedFloat32Array()         # per fighter: the sky's reaction to him, 0 to 1 (tier 3 half, tier 4 full)
 var _react_t: float = -1.0
 var _sky_mat: ShaderMaterial
@@ -231,8 +232,10 @@ func snap_occlusion() -> void:
 		v.snap_damage()
 
 
-## The sky (render/shaders/sky.gdshader): its clouds drift with the camera's place round the planet and a slow wind,
-## and from tier 3 the clouds part for a fighter (docs/design/rule-of-cool.md feature 12; nothing below tier 3): a gap
+## The sky (render/shaders/sky.gdshader): its clouds drift with the camera's place round the planet and a slow wind.
+## That is all of it unless sky_react_on is set (off by default since QA's GB-002 came back: a gap that follows a
+## fighter read as a glowing patch over him; docs/rendering/sky-gap-anchored.md is the version that would not follow).
+## With it on, from tier 3 the clouds part for a fighter (docs/design/rule-of-cool.md feature 12; nothing below tier 3): a gap
 ## in the cloud band above him with its edge lit in his colour, half at tier 3 and full at tier 4, easing over
 ## SKY_REACT_S of tick time. Only for a fighter this pane shows: it fades out as he leaves the screen, so no gap hangs
 ## in the sky for someone the player cannot see (QA's GB-002). It never darkens the sky (Legal). It stands down while
@@ -256,7 +259,7 @@ func _sky_react(host: SimHost, cam_x: float) -> void:
 		var c := Color.BLACK
 		if i < n:
 			var f = S.fighters[i]
-			var want: float = 0.0 if _busy(host, i) else clampf((float(f.tier) - 2.0) / 2.0, 0.0, 1.0)
+			var want: float = 0.0 if not sky_react_on or _busy(host, i) else clampf((float(f.tier) - 2.0) / 2.0, 0.0, 1.0)
 			_react[i] = want if snap else move_toward(_react[i], want, dt / RenderLook.SKY_REACT_S)
 			var v: FighterView = fighter_views[i]
 			var chest: Vector3 = v.position + Vector3(0.0, FighterView.HEIGHT * 0.5, 0.0)
@@ -268,7 +271,7 @@ func _sky_react(host: SimHost, cam_x: float) -> void:
 	_sky_mat.set_shader_parameter("sky_react", dirs)
 	_sky_mat.set_shader_parameter("sky_react_col", cols)
 	_sky_mat.set_shader_parameter("cloud_on", 1.0 if clouds_on else 0.0)
-	_sky_mat.set_shader_parameter("cloud_part", 0.0 if sky_calm else 1.0)
+	_sky_mat.set_shader_parameter("cloud_part", 1.0 if sky_react_on and not sky_calm else 0.0)
 	_sky_mat.set_shader_parameter("cloud_shift", SimWrap.wrap(cam_x) / SimConst.W * RenderLook.CLOUD_PERIOD + (0.0 if sky_calm else now * RenderLook.CLOUD_WIND))
 
 

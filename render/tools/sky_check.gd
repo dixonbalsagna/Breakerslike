@@ -1,16 +1,21 @@
 extends SceneTree
-## Sky check: at tier 3 and 4 the clouds part for a fighter, and that is all the sky does (QA's GB-002: the reaction
-## once paled the sky in a tall opening down to the horizon, which read as a pale pillar from a high camera and hung
-## in the sky for a fighter nobody could see). The tool poses a fresh match's fighters by hand on open plains (its own
-## state; no tick runs), draws the sky with both at tier 1 and again with both at tier 4, from a low and a high
-## camera, and compares the two pictures above the horizon:
+## Sky check, in two halves (QA's GB-002). The tool poses a fresh match's fighters by hand on open plains (its own
+## state; no tick runs).
+## The numbers (always, and all of it under --headless): what the pane hands the sky shader.
+## - by default nothing parts: at tier 4, on the screen, the reaction's weight is 0 and the shader's parting is off;
+## - main turns it on only for --skyreact, and the web page's URL may name it;
+## - with it on: full at tier 4, half at tier 3, nothing for a fighter off the screen, nothing with reduced motion;
+## - the cloud pattern's place wraps with the planet, and stands still with reduced motion.
+## The pictures (with a window only): with the reaction on, the clouds part and that is all the sky does (it once
+## paled the sky in a tall opening down to the horizon, which read as a pale pillar from a high camera and hung in the
+## sky for a fighter nobody could see). The sky is drawn with both at tier 1 and again with both at tier 4, from a low
+## and a high camera, and the two pictures are compared above the horizon:
 ## - with the clouds off, nothing differs: the reaction draws nothing where there is no cloud;
 ## - with the clouds on, the last of the cloud band above the horizon does not differ: no pillar to the horizon;
 ## - with the clouds on, something does differ in at least one place round the planet: the check is not blind;
 ## - a tier 4 fighter off the screen changes nothing;
 ## - with reduced motion (PaneWorld.sky_calm) nothing differs.
-## Needs a window: the pictures are rendered, so under --headless it says so and exits with code 2 (1 is a failure).
-##   godot --path . --script res://render/tools/sky_check.gd -- [--out=DIR] [--s=4]
+##   godot --headless --path . --script res://render/tools/sky_check.gd -- [--out=DIR] [--s=4]
 
 const SAME := 3.0      # the largest difference of a channel (of 255) between two draws of the same sky
 const SEEN := 12.0     # ... and the least that counts as the clouds having parted
@@ -22,10 +27,6 @@ var fails: int = 0
 
 
 func _initialize() -> void:
-	if DisplayServer.get_name() == "headless":
-		printerr("sky check: needs a window (it renders its pictures); not run under --headless")
-		quit(2)
-		return
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out = a.substr(6)
@@ -59,6 +60,84 @@ func _run() -> void:
 		main.pane.get_node(name).visible = false
 	var S: SimState = main.host.S
 	var vp: Vector2 = main.get_viewport().get_visible_rect().size
+	_numbers(S, vp)
+	if DisplayServer.get_name() == "headless":
+		print("(the pictures need a window: not drawn under --headless)")
+	else:
+		PaneWorld.sky_react_on = true
+		await _pictures(S, vp)
+		PaneWorld.sky_react_on = false
+	print("sky check %s" % ("passed" if fails == 0 else "FAILED (%d)" % fails))
+	quit(0 if fails == 0 else 1)
+
+
+## What the pane hands the sky shader for the two fighters at tiers ta and tb: the reaction's two weights, then the
+## shader's cloud_part and cloud_shift. look 0 frames the point between them, 1 frames fighter A.
+func _handed(S: SimState, ta: float, tb: float, vp: Vector2, look: int) -> Array:
+	S.fighters[0].tier = ta
+	S.fighters[1].tier = tb
+	var zoom: float = 0.6
+	var cam_x: float = S.fighters[0].x if look == 1 else SimWrap.wrap(S.fighters[0].x + SimWrap.sdx(S.fighters[0].x, S.fighters[1].x) * 0.5)
+	main.pane._react_t = -1.0   # the reaction snaps to its value: no tick runs here
+	main.pane.render(main.host, 1.0, cam_x, Vector3(0.0, S.fighters[0].y + 45.0 + 150.0 / zoom - 0.2 * vp.y / zoom, zoom), Vector2.ZERO)
+	var m: ShaderMaterial = main.pane._sky_mat
+	var r: Array = m.get_shader_parameter("sky_react")
+	return [float(r[0].w), float(r[1].w), float(m.get_shader_parameter("cloud_part")), float(m.get_shader_parameter("cloud_shift"))]
+
+
+func _numbers(S: SimState, vp: Vector2) -> void:
+	var x0: float = 0.0
+	for c in range(0, SimConst.NC, SimConst.NC / 12):
+		x0 = float(c) * SimConst.COL
+		if c > 0 and WorldWater.surfaceAt(S, x0) <= WorldTerrain.groundY(S, x0) + 0.5:
+			break
+	# main's switch: off unless --skyreact is given (the tool's own main has no such argument).
+	main.frame(0.0)
+	_expect(not PaneWorld.sky_react_on, "by default the reaction is off (main, with no --skyreact)")
+	main.args["skyreact"] = "1"
+	main.frame(0.0)
+	_expect(PaneWorld.sky_react_on, "--skyreact turns it on")
+	main.args.erase("skyreact")
+	main.frame(0.0)
+	_expect(not PaneWorld.sky_react_on and main.URL_ARGS.has("skyreact"), "... and off again without it; the web page's URL may name it")
+	for lift in [0.0, 3000.0, 9000.0]:
+		var cam_name: String = "camera %d up" % int(lift)
+		_pose(S, x0, 260.0, lift, vp)
+		PaneWorld.sky_react_on = false
+		var off: Array = _handed(S, 4.0, 4.0, vp, 0)
+		_expect(off[0] == 0.0 and off[1] == 0.0 and off[2] == 0.0, "%s, default: nothing parts at tier 4 (weights %.2f %.2f, parting %.0f)" % [cam_name, off[0], off[1], off[2]])
+		PaneWorld.sky_react_on = true
+		var on4: Array = _handed(S, 4.0, 4.0, vp, 0)
+		_expect(on4[0] > 0.99 and on4[1] > 0.99 and on4[2] == 1.0, "%s, reaction on: full at tier 4 (%.2f %.2f)" % [cam_name, on4[0], on4[1]])
+		var on3: Array = _handed(S, 3.0, 1.0, vp, 0)
+		_expect(absf(on3[0] - 0.5) < 0.01 and on3[1] == 0.0, "%s, reaction on: half at tier 3, nothing at tier 1 (%.2f %.2f)" % [cam_name, on3[0], on3[1]])
+		PaneWorld.sky_calm = true
+		var calm: Array = _handed(S, 4.0, 4.0, vp, 0)
+		PaneWorld.sky_calm = false
+		_expect(calm[2] == 0.0, "%s, reaction on: with reduced motion the shader's parting is off" % cam_name)
+		_pose(S, x0, 1500.0, lift, vp)
+		var far: Array = _handed(S, 1.0, 4.0, vp, 1)
+		_expect(far[0] == 0.0 and far[1] == 0.0, "%s, reaction on: nothing for a tier 4 fighter off the screen (%.2f %.2f)" % [cam_name, far[0], far[1]])
+		PaneWorld.sky_react_on = false
+	# The pattern's place: the same camera travel is the same step everywhere, across the planet's seam too.
+	var step: float = RenderLook.CLOUD_PERIOD / SimConst.W
+	var worst: float = 0.0
+	for x in [1.0, 2400.0, SimConst.W - 1.0, SimConst.W - 0.001]:
+		_pose(S, x, 0.0, 3000.0, vp)
+		var a: float = float(_handed(S, 1.0, 1.0, vp, 1)[3])
+		_pose(S, SimWrap.wrap(x + 2.0), 0.0, 3000.0, vp)
+		var b: float = float(_handed(S, 1.0, 1.0, vp, 1)[3])
+		worst = maxf(worst, absf(fposmod(b - a + 0.5 * RenderLook.CLOUD_PERIOD, RenderLook.CLOUD_PERIOD) - 0.5 * RenderLook.CLOUD_PERIOD - 2.0 * step))
+	_expect(worst < 1e-5, "the cloud pattern moves the same for the same camera travel, across the planet's seam too (worst error %.7f cells)" % worst)
+	_pose(S, x0, 260.0, 3000.0, vp)
+	PaneWorld.sky_calm = true
+	var still: float = float(_handed(S, 1.0, 1.0, vp, 1)[3])
+	PaneWorld.sky_calm = false
+	_expect(absf(still - SimWrap.wrap(S.fighters[0].x) * step) < 1e-5, "with reduced motion the clouds stand still (no wind in the pattern's place)")
+
+
+## The pictures, with the reaction on (see the header).
+func _pictures(S: SimState, vp: Vector2) -> void:
 	var seen: float = 0.0
 	# Places round the planet with dry ground under both fighters, so the clouds differ from place to place.
 	var places: Array = []
@@ -108,8 +187,6 @@ func _run() -> void:
 		_expect(worst_far <= SAME, "%s camera: a tier 4 fighter off the screen changes nothing (%.0f)" % [cam_name, worst_far])
 		_expect(worst_calm <= SAME, "%s camera: with reduced motion nothing parts (%.0f)" % [cam_name, worst_calm])
 		_expect(most >= SEEN, "%s camera: the clouds do part somewhere (%.0f of 255 at the most changed place)" % [cam_name, most])
-	print("sky check %s" % ("passed" if fails == 0 else "FAILED (%d)" % fails))
-	quit(0 if fails == 0 else 1)
 
 
 ## Both fighters at a place, `half` either side of it, `lift` above the ground.

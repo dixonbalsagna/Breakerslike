@@ -71,6 +71,7 @@ func _run() -> void:
 	# Each: the picture's name, the two tiers, clouds on, and how high above the ground both fly (the high camera: the
 	# gap must stay a gap in the clouds and never a pillar against the horizon, QA's GB-002).
 	var skies: Array = [["sky-calm", 1.0, 1.0, true, 0.0], ["sky-tier3", 3.0, 1.0, true, 0.0], ["sky-tier4", 4.0, 1.0, true, 0.0], ["sky-both", 4.0, 4.0, true, 0.0], ["sky-reduced", 4.0, 1.0, false, 0.0], ["sky-high-calm", 1.0, 1.0, true, 3000.0], ["sky-high-both", 4.0, 4.0, true, 3000.0]]
+	PaneWorld.sky_react_on = true   # off in the game unless --skyreact is given: these are the pictures of it
 	for sk in skies:
 		for i in range(2):
 			var f = S.fighters[i]
@@ -83,6 +84,7 @@ func _run() -> void:
 	for i in range(2):
 		S.fighters[i].y = WorldTerrain.groundY(S, S.fighters[i].x) + 2.0
 	PaneWorld.clouds_on = true
+	PaneWorld.sky_react_on = false
 	S.fighters[0].tier = 1.0
 	S.fighters[1].tier = 1.0
 	# 4: windows. A city block as it stands, then after a blow-out wave from between the fighters, as VFX lists one
