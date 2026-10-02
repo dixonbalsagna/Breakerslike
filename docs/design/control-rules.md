@@ -2,6 +2,8 @@
 
 Owner: Game Design. Orb decided the scheme in `docs/decisions/0008-control-scheme.md` (questionnaire 8). This page sets the game rules it needs: windows, costs, cooldowns, priorities and automatic choices. Controls owns the bindings and layouts, and Encounter owns the director's use of them. Numbers are starting values in ticks (60 a second) and ki (cap 100), and QA tunes them.
 
+> **The agency pass changes several rules on this page** (`agency-pass.md`, from Orb's first two-player playtest): the press queue (§6), the taunt (§4), the escape, the signature's cooldown and the RB toggle. Where the two disagree, the agency pass is the newer rule. This page is updated slice by slice as each lands.
+
 **Build order** (Orb, questionnaire 10): the agency fixes first (counters on request, dodge-cancel, burst and the perfect block), then combat variety (blasts and beam struggles; teleports are on hold, §11).
 
 **What this replaces.** Stances are now held states, read at exchange start as before:

@@ -1,99 +1,98 @@
 # The agency pass: rules from Orb's first two-player playtest
 
-Owner: Game Design. Orb played two local matches with a second player on 2026-10-02 and then answered questionnaire 14 (`docs/ep/vision.md`, last section). This page turns those answers into rules. Two items are still pitches, because Orb asked for them: the ranged press (§1) and how the alchemist reads timing (§2). Every number is a proposal for data.
+Owner: Game Design. Orb played two local matches with a second player on 2026-10-02, answered questionnaire 14, and then picked from the pitches (`docs/ep/vision.md`, "Orb's picks after the pitches"). This page is the rules that follow. Three parts are **provisional** because Orb wants to feel them in play first: the signature limit (§5), the escape (§6) and top-tier speed (§8). Every number is a starting value for data.
 
 **Where the pillars bend.**
-- *Pillar 2 (stances, not combos)* bends toward the player. The director still choreographs, but the player sets the recipe (§2).
+- *Pillar 2 (stances, not combos)* bends toward the player. The director still choreographs, but the player sets the recipe and earns the ending (§2).
 - *Pillar 3 (never out of range)* holds, with one change of meaning: an attack always **arrives**, but the defender is no longer frozen while it comes (§1).
 
-## 1. The ranged press (a pitch: Orb picks)
+## 1. The ranged press: three bands
 
 **The problem, in Orb's words:** "pressing a single attack key at any distance essentially locks both fighters from performing actions as the attacker flies in and performs the attack."
 
-**Orb's brief for the fix:** give control to the players, but never allow "two fighters standing in opposite corners whiffing jabs in the air with zero purpose". Standing far apart and trading taunts is the acceptable floor, especially with reactive lines that stay fresh.
+**Two rules under everything here.**
+1. **A strike never exists at range.** No strike is thrown at a rival who is out of reach. QA tests it as a hard rule.
+2. **The exchange starts at the wind-up.** Nothing is decided until the first blow's wind-up, in every band. Until then the defender is free.
 
-### Two rules under every option
+### The bands
 
-1. **A physical press at range never throws a strike at nothing.** Beyond about 6 bh it is either a call or a way of closing in. That rules out whiffed jabs by construction.
-2. **The exchange starts at contact.** Nothing is decided until the first blow's wind-up, at any range. The defender moves, guards, dodges, fires or leaves until then.
+An icon by the fighter shows which band he is in, so a press never surprises.
 
-### The call (Orb's pick for the ranged taunt)
+| Band | Distance | A physical press does |
+| :--- | :--- | :--- |
+| **Close** | Within 3 bh | Strikes at once, as today |
+| **Mid** | 3 to 12 bh | **A short lunge:** about a third of a second of travel (20 ticks at most), then the wind-up. The stick picks the entry, as it does up close: toward rushes, level steps in, away backsteps |
+| **Far** | Beyond 12 bh | **Tap to taunt, hold to charge** |
 
-- A call is a **voice line with a face cut-in,** and nothing else. Orb picked only that.
-- **It does not feed meters.** The earlier ruling, "taunts should just feed meters", stays for the close taunt, which takes a second and can be hit (`control-rules.md` §4). A call is safe and free, so if it paid meter, two players at range would farm it. Meter comes from the taunt that carries a risk.
-- It can't be punished and it doesn't root him. He keeps flying while he talks.
-- **Keeping it fresh** (Narrative's dialogue director picks the line):
-  - it reads the fight: the last exchange, who is ahead, wounds, forms, the place and the distance;
-  - a call made within 4 s of the rival's call is a **reply** to it, so two players calling make a conversation;
-  - no line repeats inside a match, and the pool rotates from day to day;
-  - after three calls in 10 s he stops talking and only gestures, until 10 s pass. That keeps the cut-ins rare (at most 6 a minute, `rule-of-cool.md`).
+With RB held, a press fires a blast in any band (§5).
 
-### Three hybrids for getting from the call to the attack
+### The far taunt is a challenge
 
-| | **A. Call, then charge** | **B. The stick decides** (recommended) | **C. Mark and close** |
-| :--- | :--- | :--- | :--- |
-| **A press with no direction** | The call. Holding the button through it launches him at top speed | The call | The call, and it marks the rival for 2 s |
-| **A press with the stick toward** | The same as above | **A charge:** he rushes at once, with no call first | While the mark lasts, flying toward the rival is boosted for free, and the attack fires when he is in reach |
-| **A press with the stick away** | The call | A backstep, or a retreating blast with RB held | The call |
-| **Who flies the approach** | The director, in a straight line | The director, in a straight line | The player, steering all the way |
-| **Speed into the fight** | About a second for the call, then the charge | Immediate | As fast as the player flies |
-| **Control** | Commit or don't | Direction is the intent, as it already is up close (ADR 0008) | The most: he can peel off at any moment |
-| **Risk** | Every attack from range starts a second late | A player who never touches the stick only ever talks | The most to build, and a charge with no clear start for the defender to read |
+- A tap plays his taunt: a voice line with a face cut-in, over 45 ticks. He keeps flying while he talks.
+- **If the opponent presses attack during it, the challenge is answered.** Both rush and meet in the middle: a fist clash if either pressed heavy, and otherwise a blur exchange, decided on the pulse.
+- **If it is ignored, the taunter keeps the line:** he gets the taunt's credit (§3).
+- It can't be punished. That is why its meter is rationed (§3).
 
-**Recommendation: B.** It needs no new input, it is instant, and it uses the rule players already learn up close: the stick is the intent. A press alone is banter, and a press toward is an attack. Option A's held launch can be added on top as a second way to charge without changing B.
+### The button picks the charge
 
-**Energy needs none of this.** With RB held, a press fires a blast at any range (§5), which is the purposeful thing to do from far away.
+Holding the attack button in the far band charges.
 
-## 2. The fight alchemist
+| | **A held light** | **A held heavy** |
+| :--- | :--- | :--- |
+| **Before he goes** | 12 ticks | 24 ticks |
+| **The flight** | Fast: about 0.5 to 1.5 s by distance | Slower: about 0.8 to 2.0 s |
+| **Changing his mind** | Releasing the button stops the charge at no cost. That is the feint | Committed once he goes. Only a dodge-cancel (15 ki) stops it |
+| **Blasts on the way** | Any blast that lands stops him | He shrugs off light blasts and volleys, taking half their damage. A charged shot or a beam still stops him |
+| **On arrival** | A light opener, into a brawl | A charged heavy. If it lands clean it **earns a launch** (§3) |
+| **Cost** | None | 4 ki, a heavy's cost |
+
+**The defender is free during any charge.** He can guard, dodge, press attack to meet it (a trade or a clash at contact), fire, or boost away (§6).
+
+**Pillar 3 holds:** a charge always reaches a rival who doesn't answer.
+
+## 2. Reading presses: the fight alchemist
 
 Presses are ingredients in the ongoing string, not a queue.
 
-### Rules Orb has set
+### The frame
 
 - **The window is each fighter's last 5 presses.** A press expires after 90 ticks.
-- **The recipe display is a setting.** When it is on, a small strip shows the current recipe's name.
-- **The stick picks the launch's direction, and the director snaps it to the most dramatic nearby target.** The tilt at the moment of the blow sets the direction on the screen. The director then picks the best target within about 45 degrees of it (a building, water, a crater), inside the collateral budgets. With no tilt the director picks freely. In a juggle each return blow reads the tilt again. Depth stays the choreographer's (ADR 0009).
+- **The recipe display is a setting.** When on, a small strip names the current recipe and shows the flow count.
+- **The stick picks the launch's direction, and the director snaps it to the most dramatic nearby target** within about 45 degrees: a building, water or a crater, inside the collateral budgets. With no tilt the director picks freely. In a juggle each return blow reads the tilt again. Depth stays the choreographer's (ADR 0009).
 
-### What a press carries
+### The three styles
 
-| Property | Values | Set by |
+The number of heavies in the last five presses sets the style, and the last press sets the ending.
+
+| Heavies in the last five | Style | What plays |
 | :--- | :--- | :--- |
-| Weight | Light or heavy | The button |
-| Family | Physical or energy | Whether RB is held (§5) |
-| Direction | Toward, level or away, and the stick's tilt | The stick |
-| Rhythm | Held, mashed or timed | How it was pressed |
+| None | **Blur** | A rapid run of light strikes |
+| One to three | **Combo** | Lights with heavy accents that crack a guard and push the rival back |
+| Four or five | **Power** | Big, slow blows, charged by holding |
 
-### The recipes
-
-The number of heavies in the last five sets the kind of string, and the last press sets how it ends.
-
-| Heavies in the last five | What plays | Feels like |
-| :--- | :--- | :--- |
-| None | **A flurry:** a rapid run of small strikes | Speed |
-| One or two | **A blur combo:** the rapid blur Orb describes, with heavy accents that crack a guard | The standard combo |
-| Three or four | **A bruiser string:** fewer, harder blows that push the rival back | Pressure |
-| Five | **A power blow:** one big, slow strike | Commitment |
-
-| The last press | The string's end |
+| The last press | The ending |
 | :--- | :--- |
 | A light | It stays a brawl |
 | A heavy | A knock-back, or a launch when one was earned (§3) |
 
-**Direction.** Toward presses forward, and it prefers the close strikes: elbows, knees, the headbutt and the shoulder, so it reads as getting inside (Combat's proposal, confirmed). Level stands and trades. Away gives ground: dodges, a heavy to knock the rival off, and blasts from range.
+**Direction.** Toward presses forward and prefers the close strikes: elbows, knees, the headbutt and the shoulder. Level stands and trades. Away gives ground: dodges, a heavy to knock the rival off, and blasts.
 
-### How timing is read (a pitch: Orb picks)
+### Timing upgrades each style (Orb's pick)
 
-Orb asked for hybrids between "three clear styles" and "timing is the skill". In all three, a **held** press (12 ticks or more) charges the blow, and **mashing** (three presses inside 20 ticks, off the beat) gives speed, less damage and no launch.
+Each style works by feel at its base level. Timing lifts it.
 
-| | **A. Styles first** | **B. Timing tops each style** (recommended) | **C. Timing wins trades** |
+| Style | Base | With timing | The upgrade |
 | :--- | :--- | :--- | :--- |
-| **What picks the style** | The mix and the rhythm | The mix and the rhythm | The mix and the rhythm |
-| **What a timed press does** (within 4 ticks of a blow landing) | A clean hit, for 10% more. Nothing else | It lifts the style to its top level: a timed flurry becomes more strikes, a timed blur combo earns its ender, and a charge released on the flash is a full charge | It does nothing in a string of your own. When both fighters attack, the timed press wins that beat |
-| **For a beginner** | Everything is available by feel | The three styles work by feel, at their base level | The same as A until someone trades with him |
-| **For an expert** | A small edge | A real ceiling in every style | The edge shows only in trades |
-| **Risk** | Timing barely matters | Two levels per style to teach and to show | Solo strings have no skill in them |
+| **Blur** | Mashing: more strikes, less damage each, no ender | A **steady** mash, with presses evenly spaced within 3 ticks of the beat | **A perfect blur:** every strike lands clean, and it closes with its own ender, a burst that knocks the rival back |
+| **Power** | A held blow: more damage and a longer wind-up | **Released on the flash,** within 6 ticks of the flash at full charge | **A guard-breaking blow.** Against a guard it breaks it. Unguarded, it earns a launch |
+| **Combo** | Presses in any rhythm | **Taps in time,** each within 4 ticks of a blow landing | **Clean and hard:** each timed strike does 15% more |
 
-**Recommendation: B, with C's rule added.** The styles stay clear and standard, timing is what lifts each one, and Combat's proposal that **a timed press wins its trade beat** is confirmed, so timing also shows when both fighters attack.
+### Timing earns the ending: the flow count
+
+- Each timed press adds 1 to the fighter's **flow,** up to 5.
+- A press off the beat sets it back to 0, and so do 90 ticks without a press.
+- **A heavy ender launches only at flow 3 or more.** Below that it is a knock-back.
+- At flow 5 the launch also gets the panel and 20% more impact wear.
 
 ### The running mix
 
@@ -103,23 +102,57 @@ The game keeps each player's mix over their last 20 presses and compares it with
 
 ### When both fighters attack
 
-| | He plays a flurry or a blur | He plays a bruiser string or a power blow |
+| | He plays blur or combo | He plays power |
 | :--- | :--- | :--- |
-| **I play a flurry or a blur** | A blur exchange: traded strikes, decided on the pulse | My lights land first. Three clean ones before his blow lands stop it; otherwise it comes through |
-| **I play a bruiser string or a power blow** | The mirror of that | A fist clash, decided on the pulse |
+| **I play blur or combo** | A blur exchange: traded strikes, decided on the pulse | My lights land first. Three clean ones before his blow lands stop it; otherwise it comes through |
+| **I play power** | The mirror of that | A fist clash on the pulse, or **Blow for Blow** when both are in time (below) |
 
-**A cross-counter on the last beat is a double slide** (Combat's proposal, confirmed). Both blows land on the same tick, both fighters slide apart for half the knock-back distance each, and nobody wins the exchange.
+- **A timed press wins its trade beat** (Combat's proposal, confirmed).
+- **A cross-counter on the last beat is a double slide:** both blows land together, both fighters slide apart for half the knock-back distance, and nobody wins the exchange.
+
+### Blow for Blow (the named set piece Orb asked for)
+
+Two fighters plant their feet and trade heavy body blows in turn, neither giving way, until one misses the beat. "Blow for Blow" is a working name for Narrative.
+
+| Part | Rule |
+| :--- | :--- |
+| **Trigger** | Both fighters release a power blow on the flash in the same exchange |
+| **The turns** | They take turns. On his turn a fighter presses heavy on the beat, inside an 8-tick window |
+| **A blow on the beat** | A heavy body blow at ×0.7 of a heavy, to the core. The other fighter takes it and stays standing. Then it is his turn |
+| **The beat** | 40 ticks between blows at first, 4 ticks shorter each turn, and never under 24 |
+| **The end** | The first to miss the beat, or to guard or dodge, gives way. The other lands the last blow as an earned launch, with the panel and 25% more impact wear |
+| **Limits** | At most 8 turns, then both slide apart with no winner. It counts as a big set piece, so at most one per 20 s (`rule-of-cool.md` §1) |
+| **The brink** | If a blow breaks a core, that blow ends it: he is on the brink and the other fighter has won the exchange |
+| **Mood** | +8 at the start and +3 for each blow |
+| **The AI** | It hits 40%, 65% or 85% of beats by difficulty |
+
+Legal screens the staging before it is built. It must be ours and not a known scene's.
 
 ### What a player can always predict
 
 1. The weight of my next blow is the weight I pressed.
 2. More presses give more strikes.
 3. Ending on a heavy sends him away. Ending on a light keeps him close.
-4. Holding is bigger and slower. Mashing is faster and weaker. Timing is cleaner.
-5. The stick decides which way he flies.
-6. What I don't choose is the limb, the exact strike and the camera.
+4. Holding is bigger and slower. Mashing is faster and weaker. Timing makes each of them better.
+5. Staying in time earns the big ending.
+6. The stick decides which way he flies.
+7. What I don't choose is the limb, the exact strike and the camera.
 
-## 3. Brawls against launches
+### What QA measures: "consistent timing should give the fighter a substantial edge"
+
+Scripted players in a mirror match, with everything else equal.
+
+| Match | Target |
+| :--- | :--- |
+| A timed player (hits 80% of beats) against a masher | The timed player wins **72 to 82%** |
+| A timed player against a style-only player (holds and mixes sensibly, never on the beat) | The timed player wins **62 to 70%** |
+| A style-only player against a masher | The style-only player wins 55 to 62% |
+
+The masher bands against the AI stay as they are (`control-rules.md` §6).
+
+## 3. Brawls, launches and taunts
+
+### Launches
 
 **Orb's rule: 30% of brawls end in a launch.** The band is 25 to 35% of exchanges, against 64.6% today.
 
@@ -129,13 +162,13 @@ The game keeps each player's mix over their last 20 presses and compares it with
 | A knock-back | 20 to 30% |
 | A launch | 25 to 35% |
 
-**A launch is earned by four things only** (Orb):
-1. a charged, held heavy that lands;
-2. the ender of a full string, which is a heavy after four or more of the string's strikes landed;
+**A launch is earned by four things only:**
+1. a charged, held heavy that lands, including a heavy charge from the far band (§1);
+2. the ender of a full string, which is a heavy ender at flow 3 or more (§2);
 3. a heavy pressed with a stick direction, landing clean;
-4. winning a clash.
+4. winning a clash, Blow for Blow included.
 
-- **Not a guard break and not a riposte.** Both now end in a knock-back. Meter never buys a launch.
+- A guard break and a riposte now end in a knock-back. Meter never buys a launch.
 - Signatures, finishers, crippling blows and throws are set pieces with their own rules, and still launch.
 - If the share misses the band, QA tunes the third earner first, by how clean the heavy has to land.
 
@@ -146,62 +179,68 @@ The game keeps each player's mix over their last 20 presses and compares it with
 
 **Launches pay more.** With about half as many, each launch's impact wear rises so launches keep their share of the damage. QA sizes the factor, at about ×1.6, and re-tunes match length.
 
-**Slide and tumble destruction: 4 of 5** (Orb). Terrain destruction from slides and tumbles is a central feature.
+**Slide and tumble destruction: 4 of 5** (Orb). It is a central feature.
 - Every long slide cuts a trench, and World widens trenches by about a third.
 - A tumble leaves a line of divots, where it left only scuffs before.
 - Both damage what they cross, inside the tier's budget and the journey's one-impact cap (`balance-targets.md` §20).
 
+### Taunts feed meters, with a guard against farming
+
+Orb leans yes, and will revisit it in play.
+
+| Taunt | What it pays |
+| :--- | :--- |
+| **The close taunt** (1 s, and it can be hit) | In full, as ruled: Pride +6, heat +10, Wrath +8 or Hunger +5, once per 15 s (`control-rules.md` §4) |
+| **A far taunt that is answered** | The same full value, to the taunter, whoever wins the clash |
+| **A far taunt that is ignored** | Half the value for the first, a quarter for the second and an eighth for the third. **Nothing after the third,** until the two fighters have traded blows |
+
+The line and the face cut-in always play, whatever the meter does. Narrative's dialogue director keeps them fresh: a call within 4 s of the rival's is a reply to it, no line repeats inside a match, and after three calls in 10 s he only gestures for a while.
+
 ## 4. Air recovery: hold to brake
 
-**Orb's rule:** hold to brake, it costs ki, and harder hits take longer. It is not a dodge tap.
+**Orb's rule:** hold to brake, it costs ki, and harder hits take longer.
 
-- **The input:** hold LT during a launch flight. It is the boost (§6) turned against his own flight.
+- **The input:** hold the boost (§6) during a launch flight. It is the boost turned against his own flight.
 - **The cost:** 20 ki for each second it is held.
 - **Harder hits take longer.** The brake slows him at a fixed rate, so the time and the ki follow the launch's speed: about 0.35 s and 7 ki for a light launch, and about 1 s and 20 ki for a hard one.
 - **He has control again** when his speed drops under a third of the launch's speed. He can also let go early and fly on.
 - **An earned launch can't be braked for its first 12 ticks,** so the hit reads.
 - **It never works** on a crippling blow's launch, a finisher's launch or a hard impact (§7).
 - **With no ki he can't brake.**
-- **Counterplay:** the brake shows as a flare against his direction of flight, so the attacker sees it. A follow-up can arrive before he stops, and he stops in a place the attacker can read.
+- **Counterplay:** the brake shows as a flare against his direction of flight. A follow-up can arrive before he stops, and he stops in a place the attacker can read.
 - A small steer is free: the stick bends his path by up to 15 degrees.
-- The ground recovery stays as it is: a dodge tap on a bounce or in a tumble, for 15 ki (`balance-targets.md` §20).
+- The ground recovery stays: a dodge tap on a bounce or in a tumble, for 15 ki (`balance-targets.md` §20).
 - The AI brakes on 20%, 50% or 80% of chances by difficulty.
 
-## 5. Energy play
+## 5. Energy: the first slice
 
-### Hold RB (Orb's rule)
+Orb will make no final calls on beams until the energy system can be played: "I want to personally experience how the expansion of ranged blasts change the gameplay." So this section specifies the first slice to build, and marks what is provisional.
 
-While RB is held, the attack buttons are blasts and beams. Released, they are physical. This replaces the toggle. The Simple layout and touch keep choosing by range.
+### What the first slice contains
 
-### Signatures: 45 ki and 15 s (Orb's number)
+| Input | What it does |
+| :--- | :--- |
+| **Hold RB** | The attack buttons become energy. Released, they are physical. This replaces the toggle |
+| **RB and light** | **Blast volleys.** A tap is a bolt, and repeated taps are a volley. Volleys that cross **trade:** they cancel in pairs, and what is left of the bigger one lands |
+| **RB and heavy** | **A charged blast.** Holding charges it for up to 30 ticks. Held on past the full charge, it becomes **a short beam** of about half a second, for 20 ki |
+| **The signature** | As now: the power trigger and its button, for 45 ki |
 
-- **A signature costs 45 ki and has a 15 s cooldown per fighter,** down from 120 s. Orb left the kind of limit open, so this reads the answer as the ki cost plus the shorter cooldown.
-- **What that means in numbers.** Ki returns at 5 a second without charging, which is 75 ki every 15 s. So the cooldown is the real limit, not the ki. A fighter who wants to can fire about every 15 to 20 s: **12 to 20 signatures a match, against 2 to 5 today.**
-- **Two things have to follow,** or beams decide every match:
-  - a signature's damage drops by about 40%, and QA re-tunes it against match length;
-  - the pause budget doesn't grow. The rival's absorbed signature and other beam set pieces play live once the bank is spent (`spec-wounds.md` §8b).
-- **What a gauge would add.** A gauge filled by fighting (blows landed and taken, clashes, perfect blocks) ties beams to the brawl. It would give about one signature per 45 to 60 s of real fighting, which is 4 to 7 a match, and a fighter who only stands back and charges would get none. If the 15 s rule makes fights too beam-heavy, the gauge is the fix that keeps beams frequent without making them free.
+Blast speeds and ranges are in `moveset-rules.md` §11, and blasts use the tier factor on structures (`balance-targets.md` §15).
 
-### All eight beam plays (Orb wants every one)
+### Which beam plays come first
 
-| # | Play | How |
-| ---: | :--- | :--- |
-| 1 | Both fire at once | A signature answered by a signature in its wind-up: a full struggle on the pulse |
-| 2 | Fire late into an incoming beam | An answer in the first 20 ticks after the beam fires: the struggle starts at −10 for the late fighter |
-| 3 | Block, then push back | While a held guard is taking a beam, a heavy energy press turns it into a struggle that starts at −15 |
-| 4 | Walk through on guard | Holding guard and the stick toward wades through the beam at guard damage. With a perfect block it is clean |
-| 5 | Split the beam | A perfect block with the stick level |
-| 6 | Swat it away | A perfect block with the stick away. The director picks where it lands |
-| 7 | Blast volleys that trade | Light blasts that cross cancel each other in pairs, and what is left of the bigger volley lands |
-| 8 | Feed a struggle with a second charge | Once per struggle, holding Power between pulses pours in 10 ki for +5. His beam visibly swells |
-
-A sustained **stream** (the heavy button held with RB, about 15 ki a second) is a lesser beam. It can struggle with another stream, or with a signature at −10.
-
-Plays 4, 5 and 6 are the answers in `rule-of-cool.md` §2, and they move to the first energy slice.
+| Order | Play | How |
+| :--- | :--- | :--- |
+| **First slice** | Blast volleys that trade | As above |
+| | Both fire at once | A signature or short beam answered by one in its wind-up: a struggle on the pulse |
+| | Walk through on guard | Guard held with the stick toward wades through at guard damage. With a perfect block it is clean |
+| | Split the beam | A perfect block with the stick level |
+| | Swat it away | A perfect block with the stick away. The director picks where it lands |
+| **Second slice** | Fire late into an incoming beam | An answer in the first 20 ticks after the beam fires. The struggle starts at −10 for the late fighter |
+| **Later** | Block, then push back | A heavy energy press while a held guard is taking a beam: a struggle that starts at −15 |
+| | Feed a struggle with a second charge | Once per struggle, 10 ki between pulses for +5 |
 
 ### Beam defence: 3 of 5
-
-Orb set the forgiveness in the middle, not generous.
 
 | Answer | Today | Now |
 | :--- | :--- | :--- |
@@ -209,30 +248,44 @@ Orb set the forgiveness in the middle, not generous.
 | **Perfect block** | The last 10 ticks of the wind-up | The last **12** ticks, for beams only |
 | **Held guard** | Reduced damage | Unchanged |
 
-## 6. The left trigger and flight
+### The signature limit (provisional: Orb's to revisit)
 
-**Orb's rule:** hold LT to boost in any direction, draining ki.
+Orb disliked the 120 s cooldown and set the slider to 15 s. The mildest limit that should still keep fights from being led by beams is:
 
-- **A tap is the dodge. A hold is the boost,** at about 2.2 times normal flight, in any direction.
-- **It drains 12 ki a second,** and ki doesn't return while boosting. There is no separate gauge.
+- **45 ki and a 15 s cooldown per fighter;**
+- **a signature's damage cut by about 40%,** because there will be several times as many;
+- **one band for QA to watch:** signatures deal at most 30% of a match's damage.
+
+Ki is now spent on much more than beams (the boost, the brake, bursts, specials and short beams), so the true rate should sit well under the ceiling of one every 15 s. QA reports signatures per match from the first slice.
+
+**If fights still become beam-led,** the next lever is a rising cost and not a longer timer: each signature fired in the last 45 s adds 15 ki to the next. A gauge filled by fighting is the stronger alternative, and it stays on the table for when Orb has played the slice.
+
+The pause budget doesn't grow: beam set pieces play live once the bank is spent (`spec-wounds.md` §8b).
+
+## 6. Flight and escape (provisional)
+
+Orb: "I need to feel how this works in game... lets get something that works now and then work on it when we have more combat systems in place." This is the simple version to build now. Every number sits in one data block so it can change.
+
+- **One dedicated control boosts,** as Controls proposes. Held, he flies at about 2.2 times normal speed in any direction. The dodge stays a separate tap.
+- **It drains 12 ki a second,** and ki doesn't return while boosting.
 - He can't guard, charge or fire while boosting.
 - **Empty ki leaves him exhausted** for 2 s: no boost, no dodge, and three quarters speed.
-- "Escape" isn't a stance any more. It is what happens when an attack arrives while he is boosting away, and the pursuit roll is retired.
+- "Escape" isn't a stance any more, and the pursuit roll is switched off.
 
-**The four ways to stop an escape** (Orb's picks):
+**Two ways to stop an escape, in this version:**
 
 | Tool | How | Result |
 | :--- | :--- | :--- |
 | **Chase and catch** | Boost after him and attack when in reach | The strike lands. A catch is decided by reach, not by a roll |
 | **A blast from behind** | A blast that hits a boosting fighter | It knocks him out of the boost and down |
-| **The intercept** | A fast, curved flight that arrives ahead of him. It costs 20 ki, and can be used once every 5 s. It is a flight, not a teleport | He meets the rival coming |
-| **Exhaustion** | Outlast him | He runs dry first and is stuck |
 
-**Not in the rules,** because Orb didn't pick them: extra damage for a hit from behind, and a new price to break out of a brawl. A fighter who is free simply boosts away. The burst and the dodge-cancel stay as the answers to being hit.
+Exhaustion is the third, and it comes free with the drain. **The intercept** (a fast curved flight that arrives ahead of him, for 20 ki) waits for a later slice.
+
+A charge from the far band (§1) catches a fighter who isn't boosting. Against one who is, it becomes the chase.
 
 ## 7. Hard impacts: buried in the crater
 
-**Orb's rule:** yes, the fighter is buried, and the attacker gets a free follow-up.
+**Orb's rule:** the fighter is buried, and the attacker gets a free follow-up.
 
 | Question | Rule |
 | :--- | :--- |
@@ -245,33 +298,58 @@ Orb set the forgiveness in the middle, not generous.
 
 This replaces the single small hop after a very hard slam (`balance-targets.md` §20).
 
-## 8. Speed at the top tier (a proposal)
+## 8. Showing power without more speed
 
-**Orb's note:** "fighters almost get a little too fast when max transformation is reached".
+Orb noted that fighters "almost get a little too fast when max transformation is reached", and gave no yes or no on a speed curve. **The curve is held: nothing changes in the speed numbers for now.** Orb asked instead for more ways to show power: "rocks levitating around a powered-up individual look cool". VFX leads that list. This is the rules-side view of what each tier should read as.
 
-Today each tier adds 10% speed, so tier 4 is +30%, and the surge and other bonuses stack on top.
+**The principle:** each tier adds a new **kind** of evidence, not more of the same. Power is weight (pillar 4).
 
-| | Today | Proposal |
+| Tier | What it should read as | What the rules already give it |
 | :--- | :--- | :--- |
-| Speed at tiers 2, 3 and 4 | +10%, +20%, +30% | **+8%, +14%, +18%:** each step adds less |
-| The most any stack of bonuses can reach | No cap | **×1.25** of base speed, for flight and for strike cadence |
-| Damage and launch force by tier | +9% and +16% a tier | Unchanged |
+| **1** | A strong fighter. The world doesn't react to him | Knock-backs of 3.5 bh; small craters; a beam that wounds a house and doesn't level it |
+| **2** | The ground notices | Knock-backs of 5 bh; the first trenches; two bounces; small formations can be broken through |
+| **3** | The surroundings move | The world reacts: rubble lifts when he charges, windows blow out, clouds part. Impacts reach 1.6 times as far. Burying impacts begin. Orbit launches |
+| **4** | The sky and the horizon answer | Reach 2.8 times as far; the sky pales; cracks spread under him when he stands; the round-the-world hit; a finisher that wrecks a district |
 
-Power should read as weight, which is pillar 4: bigger craters and longer launches, with the fight still readable. The boost (§6) is a multiple of this capped speed, so it is bounded too.
+**More rules-side signals that cost no speed,** for VFX and Camera to draw from:
+- a longer hit-stop on his heavy blows, by a tick or two a tier;
+- a guarding rival slides further back from each blocked blow;
+- his charge lifts rubble over a wider radius. Legal's rule holds: a gentle lift with weight, never a ring of rocks;
+- a wider camera at tiers 3 and 4, so the scale shows;
+- deeper sound, with delayed booms from far impacts.
 
-## 9. What this changes elsewhere
+If the top tier still reads as too fast once these are in, the curve is ready: +8%, +14% and +18% by tier in place of +10%, +20% and +30%, with a ×1.25 cap.
+
+## 9. The build order
+
+Each slice is playable by itself. Energy comes early, as Orb asked.
+
+| # | Slice | What the player gets | Who builds it |
+| ---: | :--- | :--- | :--- |
+| 1 | **The free approach** | The exchange starts at the wind-up. Three bands with the icon, the mid lunge, tap to taunt and hold to charge, and the answered challenge | Encounter (the director's read, bands and charges); Controls (tap and hold at range); Simulation (the charge state); Combat (lunge, charge and taunt pieces) |
+| 2 | **Energy, first slice** | Hold RB, volleys that trade, the charged blast and short beam, the provisional signature limit, the first five beam plays and the new defence windows | Controls (RB held); Combat (the energy pieces); Encounter (blast exchanges and the struggle on the pulse); Simulation (blasts in flight, ki); World (blast damage to structures) |
+| 3 | **Boost, escape and the brake** | The boost control with its ki drain and exhaustion, the two ways to stop an escape, and hold to brake | Controls; Simulation; Encounter (the AI's use of them) |
+| 4 | **The alchemist** | The window of 5, the three styles, the timing upgrades, the flow count, the endings and the four earners, the stick's launch direction, and the recipe display | Encounter (the reader and composer); Combat (endings and trade beats); Controls (reading rhythm); Simulation (state); World (the slide on the feet and its trench) |
+| 5 | **Clashes and Blow for Blow** | The fist clash and blur exchange on the pulse, and the named set piece | Combat; Encounter; Simulation |
+| 6 | **Buried, and destruction at 4 of 5** | Burying impacts with the free follow-up, wider trenches and tumble divots | World; Simulation; Encounter |
+| 7 | **Energy, second slice** | The late answer, block then push back, feeding a struggle, and the intercept | Encounter; Combat; Controls |
+
+QA baselines after each slice. The timing bands in §2 are measured from slice 4.
+
+## 10. What this changes elsewhere
 
 | Rule today | Becomes |
 | :--- | :--- |
 | The exchange is fixed at the press (`stance-matrix.md` R8) | It is fixed at the first blow's wind-up (§1) |
-| A queue of up to 3 presses (`control-rules.md` §6) | The alchemist's window of 5 and its recipes (§2) |
+| A press at any range rushes | Three bands; a strike never exists at range (§1) |
+| A queue of up to 3 presses (`control-rules.md` §6) | The window of 5, three styles, timing upgrades and the flow count (§2) |
 | 40 to 65% of exchanges end in a launch, and a guard break or riposte launches (`balance-targets.md` §10) | 25 to 35%, earned four ways (§3) |
+| Taunts feed meters, close only (`control-rules.md` §4) | The far taunt feeds too, rationed (§3) |
 | Recovery only on the ground (`balance-targets.md` §20) | Hold to brake in the air as well (§4) |
-| A 120 s signature cooldown, and 2 to 5 signatures a match (`balance-targets.md` §13) | 15 s, and about 12 to 20 a match, with damage re-tuned (§5) |
+| A 120 s signature cooldown (`balance-targets.md` §13) | 45 ki and 15 s, provisional (§5) |
 | RB toggles energy (ADR 0008) | RB is held (§5) |
 | A dodge against a beam is a roll | A timed dodge always works (§5) |
-| The escape stance and its slip roll (`balance-targets.md` §13) | Boost on ki, and four ways to stop it (§6) |
+| The escape stance and its slip roll (`balance-targets.md` §13) | A boost on ki, provisional (§6) |
 | One hop after a hard slam | Buried, with a free follow-up (§7) |
-| +10% speed a tier, uncapped (`ladder.json`) | A flattening curve and a ×1.25 cap, if Orb agrees (§8) |
 
 **Not in this page:** a glancing bounce on a mountain gaining too much momentum is World's to tune (a bounce must never add speed), and the split-screen camera is Camera's.
