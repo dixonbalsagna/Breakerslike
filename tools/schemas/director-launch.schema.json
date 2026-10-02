@@ -2,11 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/director-launch",
   "title": "director.launch/1",
-  "description": "data/director/launch.json: the launch planner's landing-mix numbers (sim/director/launch.gd; docs/director/landing-mix.md). SLAM DOWN is a drive (down and forward, at an angle set by the target's height); the straight-down slam is its own gated candidate, CRATER SLAM. Heights are in body heights (_bh, 1 bh is 75 units) unless a key says units. Version field: schema. Policy: every key required, objects closed except keys starting with an underscore. Orders (lowDeg at most highDeg, lowBh below highBh) and the downward direction of CRATER SLAM are checked by tools/lib/xref-fight.js (launch-order, launch-direction).",
+  "description": "data/director/launch.json: the launch planner's landing-mix numbers (sim/director/launch.gd; docs/director/landing-mix.md). SLAM DOWN is a drive (down and forward, at an angle set by the target's height); the straight-down slam is its own gated candidate, CRATER SLAM. Heights are in body heights (_bh, 1 bh is 75 units) unless a key says units. Version field: schema. Policy: every key required, objects closed except keys starting with an underscore. Orders (lowDeg at most highDeg, lowBh below highBh) and the downward direction of CRATER SLAM and the upward direction of UPPERCUT are checked by tools/lib/xref-fight.js (launch-order, launch-direction).",
   "type": "object",
   "required": [
     "schema",
     "drive",
+    "uppercut",
     "craterSlam"
   ],
   "properties": {
@@ -40,6 +41,30 @@
         "highBh": {
           "type": "number",
           "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "uppercut": {
+      "type": "object",
+      "description": "The UPPERCUT launch direction: ux along the launcher's facing (0 or more), uy up (above 0). The slam lever: the direction was in the planner's code before.",
+      "required": [
+        "ux",
+        "uy"
+      ],
+      "properties": {
+        "ux": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Along the launcher's facing; 0 or more."
+        },
+        "uy": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Up; above 0 (an uppercut goes up)."
         }
       },
       "additionalProperties": false,

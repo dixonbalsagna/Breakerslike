@@ -25978,6 +25978,192 @@
         "rule": "xref:intro-staredown",
         "pointer": "/beats/A/at"
       }
+    },
+    {
+      "id": "director-launch-uppercut-valid",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut": {
+              "ux": 0.85,
+              "uy": 1
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-uppercut-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/uppercut"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-launch-uppercut-note-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-uppercut-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/uppercut/uy"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/uppercut"
+      }
+    },
+    {
+      "id": "director-launch-uppercut-ux-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/uppercut/ux"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/uppercut"
+      }
+    },
+    {
+      "id": "director-launch-uppercut-unknown-key",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/uz": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/uppercut/uz"
+      }
+    },
+    {
+      "id": "director-launch-uppercut-ux-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/ux": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/uppercut/ux"
+      }
+    },
+    {
+      "id": "director-launch-uppercut-ux-zero-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/ux": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-uppercut-uy-zero",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/uy": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/uppercut/uy"
+      }
+    },
+    {
+      "id": "director-launch-uppercut-uy-down",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/uy": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:launch-direction",
+        "pointer": "/uppercut/uy"
+      }
+    },
+    {
+      "id": "director-launch-uppercut-uy-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/uy": "up"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/uppercut/uy"
+      }
+    },
+    {
+      "id": "director-launch-uppercut-ux-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/uppercut/ux": "forward"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/uppercut/ux"
+      }
     }
   ],
   "text": [

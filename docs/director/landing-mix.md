@@ -64,3 +64,19 @@ The planner adds CRATER SLAM after DRIVE DOWN in its candidate list, so the nois
 - **UPPERCUT is still a slam** when nobody catches the fall (59%). That is step 3.
 - **The crater set piece** comes at most once per 30 s per fighter from tier 3. In play CRATER SLAM is 7.0% of launches.
 - **Names.** QA's lists and Narrative's glossary still say SLAM DOWN; the planner, the feed and the `launch_plan` event now say DRIVE DOWN.
+
+## The slam lever, tested on the ground-contact model (2026-10-02)
+
+Game Design's second landing ruling (`balance-targets.md` §20) asked for UPPERCUT with more forward carry, so its fall lands under 70 degrees. Measured on HEAD `74ede76`, with World's contact model on, 100 matches each, by how each journey ends (World's `journey_end` event):
+
+| UPPERCUT's direction | Its share of launches | Its journeys ending in a slam | Slams, all launches |
+| :--- | ---: | ---: | ---: |
+| (0.25, 1.0), as it was | 10.7% | 46% | **15.9%** |
+| (0.85, 1.0), the lever | 23.6% | 44% | 20.1% |
+| (0.5, 0.6), flatter | 17.3% | 48% | 18.0% |
+
+**The carry does not help, so it is not applied.** UPPERCUT ends in a slam 44 to 48% of the time whatever its direction: at the top tiers the launch is strong enough that the flight lasts seconds, the air drag eats the forward speed, and the body comes down steeply. Meanwhile a UPPERCUT that carries far scores better in the planner (the distance term), so it is picked about twice as often and slams rise. Without the lever slams are 15.9%, inside the 8 to 18% band.
+
+**What changed in the tree:** UPPERCUT's direction is data (`launch.json` `uppercut.ux`, `uppercut.uy`), at the old (0.25, 1.0). If slams need to come down later, the lever that works is UPPERCUT's score in the planner (it is 10.7% of launches and 4.9 points of the 15.9), not its direction.
+
+Ending classes on this build, all launches: halt 42.0%, wall 13.5%, slam 15.8%, caught 24.9%, water 1.5%, brunt 2.3%.

@@ -2,7 +2,7 @@
 
 Owner: Encounter Systems Director. Nothing here is loaded by the sim (`docs/` is ignored by Godot).
 
-**Step 3 is applied** (in the tree on `4fe8052`); `apply-step3.cjs`, `interrupt.gd`, `interrupts.json` and `ai.json` stay here as the record and as Tools' drafts for the schemas. **The slam lever and the tie-break are still parked**; they follow as their own small slices, in that order, each with its own goldens.
+**Step 3 is applied** (in the tree on `4fe8052`); `apply-step3.cjs`, `interrupt.gd`, `interrupts.json` and `ai.json` stay here as the record and as Tools' drafts for the schemas. **The tie-break and the reach fix are applied too** (on `74ede76`). **The slam lever is not:** `apply-slam.cjs` was run to make UPPERCUT's direction data, and the value was then set back to 0.25, because the forward carry raised slams on the ground-contact model (`docs/director/landing-mix.md`, last section).
 
 | File | What it is |
 | :--- | :--- |
@@ -12,6 +12,7 @@ Owner: Encounter Systems Director. Nothing here is loaded by the sim (`docs/` is
 | `ai.json` | The AI's skill numbers with three levels. It replaces `data/director/ai.json`: new keys `perfectBlock`, `level` and `levels`, so Tools' `director-ai.schema.json` needs them |
 | `apply-slam.cjs` | The slam lever: UPPERCUT's direction moves to `data/director/launch.json` (`uppercut.ux`, `uppercut.uy`). New key: Tools' launch schema needs it |
 | `apply-tiebreak.cjs` | The queue's tie-break in `exchange.gd` `_drain`. Needs step 3 (it reads `DirInterrupt.LAST_START`) |
+| `apply-reach.cjs` | The reach fix in `melee.gd` and `exchange.gd`: a catch always places the striker, a break drops every pending beat, a fighter in flight or down makes no move and throws no blow |
 
 ```
 node docs/director/pending/step3/apply-step3.cjs .

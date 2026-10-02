@@ -112,7 +112,8 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 	var f: float = A.face
 	var c: Array = []
 	if not longOnly:
-		c.append({"name": "UPPERCUT", "ux": 0.25 * f, "uy": 1.0, "s": 10.0 + (12.0 if alt < 120.0 else 0.0)})
+		var up: Dictionary = data().uppercut   # the slam lever: more forward carry, so the fall lands under 70 degrees
+		c.append({"name": "UPPERCUT", "ux": float(up.ux) * f, "uy": float(up.uy), "s": 10.0 + (12.0 if alt < 120.0 else 0.0)})
 	if not longOnly:
 		var dv: Array = driveDir(alt)
 		c.append({"name": "DRIVE DOWN", "ux": dv[0] * f, "uy": dv[1], "s": (18.0 if alt > 140.0 else 0.0) + A.tier * 4.0 + (8.0 if bio == "forest" else 0.0)})

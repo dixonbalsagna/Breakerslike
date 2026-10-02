@@ -375,9 +375,10 @@ Each step is a checkpoint with goldens, the feel probe, tempo and QA's bands.
 
 **The loader check** (`sim/director/tools/loader_check.gd`) now treats an unexercised branch as a failure only in a full run of 200 matches or more. A short run notes it and passes: CHARGE INTERRUPT is too rare to come up in 50 matches.
 
-**After step 3, in the same folder**
-- **The slam lever** (`apply-slam.cjs`): UPPERCUT's direction moves to `launch.json`, with a forward carry of 0.85 (it was 0.25). Its craters fall from 58% to 22% of its launches, and slams overall from 15.0% to 11.2% (30 matches). At 0.6 it still cratered 42%. UPPERCUT's share of launches doubles to 22%, because it now carries far.
-- **The queue tie-break** (`apply-tiebreak.cjs`): on a tie of age the fighter who did not start the last exchange goes first. Controls' probe shows no phase-lock after step 3 with or without it (longest run 4 to 5 at fixed gaps of 4, 7 and 12 ticks; it was 19 and 54 before step 3, when the old parry cut every exchange short).
+**After step 3** (in the tree on `74ede76`, one slice)
+- **The queue tie-break:** on a tie of age the fighter who did not start the last exchange goes first (`exchange.gd` `_drain`, `DirInterrupt.LAST_START`). Controls' probe shows no phase-lock before or after it on this build (longest run 4 to 8 at fixed gaps of 4, 7 and 12 ticks). The runs of 19 and 54 it found came from the old parry cutting every exchange short, which step 3 ended.
+- **The slam lever:** tested and not applied; UPPERCUT's direction is now data at its old value (`landing-mix.md`, last section).
+- **The reach fix:** `contact-plan.md`, "The reach fix".
 
 ## Queued after step 2a (EP notes)
 

@@ -56,6 +56,23 @@ Everything below runs only in a profile with a `contact` block (`dynamic`). The 
 
 The melee mix is unchanged (every branch within 1.0 point).
 
+## The reach fix (2026-10-02)
+
+QA found about one strike in 20,000 landing beyond 68 u (longest 688 and 660), and a few far off level on flat ground. I scanned 300 matches on HEAD `74ede76` and traced every case: 4 far strikes and 1 off level. Three causes, all the director's:
+
+| Cause | What happened | Fix |
+| :--- | :--- | :--- |
+| **A catch a tick apart.** The closing move and the strike beat keep time on two clocks, and rounding can put them one tick apart either way | The strike fired with the catch still one tick from landing (570 u away), or one tick after it landed, with the body 2 ticks further on | A catch always places the striker: when the target is a body in flight, or the striker's closing move on it is still running |
+| **The body's speed changed on the strike's tick.** The placement limit was 3 reaches plus two ticks at the target's current speed | A body that bounced that tick had lost most of its speed, so the limit shrank under the gap it had already opened (302 u against a limit of 276) | The same rule: no limit on a catch. The 3-reach limit stays for a standing target with no closing move |
+| **Leftover beats after a break launch.** A blow that breaks a limb ends the exchange with a long launch, but only the pending launches and the chain window were dropped | The launched fighter's own step-in still ran and dragged him back 2,000 u through the air, and the rival's next blow hit him as he dropped to the ground: 448 u off level | A break drops every pending beat. A fighter in flight or down makes no closing move and throws no blow |
+
+All of it is gated to profiles with a contact block.
+
+| 81,340 strikes in 300 matches before; 40,236 in 150 after | Before | After |
+| :--- | ---: | ---: |
+| Beyond 68 u | 4 | 0 |
+| Over 68 u off level on flat ground | 1 | 0 |
+
 ## What this needs from others
 
 - **Combat:** done. The step-around's length, rise and end distance are on the `dodge` beat (`dur` from `tempo.stepAround` 8, `rise` 98, `off` 74), and the placement limit is `contact.placementReaches` (3). The director reads all four from the data. `stepAround` must stay at 9 ticks or under, because DODGE & COUNTER's step-in starts 9 ticks after the dodge. The two ticks of the target's flight added to the placement limit stay in code.

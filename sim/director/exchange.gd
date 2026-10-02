@@ -60,7 +60,8 @@ static var planLaunch: bool = false
 static var planStale: int = 0
 
 
-## Starts the oldest queued request the director can take: the older one first, the slots alternating on a tie. A request
+## Starts the oldest queued request the director can take: the older one first; on a tie of age the fighter who did not
+## start the last exchange (two players pressing at one fixed gap could phase-lock the queue), then the slots alternating. A request
 ## that cannot start yet (the cooldown, an exchange running, a target in the air) waits in its queue until it expires.
 static func _drain(S: SimState) -> void:
 	if S.dirS.ex != null or S.game.ko != null:
@@ -73,7 +74,9 @@ static func _drain(S: SimState) -> void:
 	if q0.is_empty() and q1.is_empty():
 		return
 	var order: Array = [0, 1]
-	if q0.is_empty() or (not q1.is_empty() and (q1[3] < q0[3] or (q1[3] == q0[3] and S.tick % 2 == 1))):
+	var l0: int = DirInterrupt.gi(S.fighters[0], DirInterrupt.LAST_START)
+	var l1: int = DirInterrupt.gi(S.fighters[1], DirInterrupt.LAST_START)
+	if q0.is_empty() or (not q1.is_empty() and (q1[3] < q0[3] or (q1[3] == q0[3] and (l1 < l0 or (l1 == l0 and S.tick % 2 == 1))))):
 		order = [1, 0]
 	for k in order:
 		var f = S.fighters[k]
@@ -215,6 +218,8 @@ static func runBeat(S: SimState, ex, b) -> void:
 	var a = b.args
 	match b.op:
 		"rush":
+			if (A.state == "launched" or A.state == "down") and not DirData.contact().is_empty():
+				return   # a fighter in flight or down makes no closing move
 			var r := SimState.Rush.new()
 			r.tgt = D
 			r.off = DirMelee.sideOff(A, D, a.off, String(a.get("side", "own")))
@@ -284,6 +289,8 @@ static func runBeat(S: SimState, ex, b) -> void:
 			sl.vx = sw.face * a.speed
 		"finRush":
 			var fw = A if a.w == "A" else D
+			if (fw.state == "launched" or fw.state == "down") and not DirData.contact().is_empty():
+				return   # a fighter in flight or down makes no closing move
 			var fr := SimState.Rush.new()
 			fr.tgt = D if a.w == "A" else A
 			fr.off = DirMelee.sideOff(fw, fr.tgt, a.off, String(a.get("side", "own")))

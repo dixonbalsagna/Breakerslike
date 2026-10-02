@@ -431,6 +431,8 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const d = launch.drive;
     if (isObj(d) && typeof d.lowDeg === 'number' && typeof d.highDeg === 'number' && d.lowDeg > d.highDeg) err(LF, '/drive/lowDeg', 'launch-order', `lowDeg ${d.lowDeg} is above highDeg ${d.highDeg}`);
     if (isObj(d) && typeof d.lowBh === 'number' && typeof d.highBh === 'number' && d.lowBh >= d.highBh) err(LF, '/drive/lowBh', 'launch-order', `lowBh ${d.lowBh} is not below highBh ${d.highBh}, so the angle has no range to rise over`);
+    const up = launch.uppercut;
+    if (isObj(up) && typeof up.uy === 'number' && up.uy <= 0) err(LF, '/uppercut/uy', 'launch-direction', `uppercut.uy ${up.uy} is not upward (positive is up), so UPPERCUT would not lift`);
     const cs = launch.craterSlam;
     if (isObj(cs) && typeof cs.uy === 'number' && cs.uy >= 0) err(LF, '/craterSlam/uy', 'launch-direction', `uy ${cs.uy} is not downward (negative is down), so CRATER SLAM would not slam`, 'warning');
   }

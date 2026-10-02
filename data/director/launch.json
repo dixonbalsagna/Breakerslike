@@ -8,6 +8,11 @@
     "highBh": 12.0,
     "_note": "lowDeg and highDeg: degrees below level, 0 to 90, lowDeg at most highDeg. lowBh and highBh: the target's height above the ground in body heights, lowBh less than highBh. The angle is lowDeg at lowBh or lower, rising evenly to highDeg at highBh and above"
   },
+  "uppercut": {
+    "ux": 0.25,
+    "uy": 1.0,
+    "_note": "UPPERCUT's direction, no unit: ux along the launcher's facing, uy up. Kept at the old 0.25: with the ground-contact model on, a forward carry of 0.85 did not make its fall shallower (it still ended in a slam 44% of the time, against 46%) and the planner picked it twice as often, so slams rose from 15.9% to 20.1% of launches (docs/director/landing-mix.md)"
+  },
   "craterSlam": {
     "ux": 0.2,
     "uy": -1.25,

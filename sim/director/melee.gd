@@ -106,8 +106,10 @@ static func contactTick(S: SimState, ex) -> void:
 
 ## Contact, on a damaging strike (section 5.2): the striker is at the contact offset, on its own side and at its
 ## target's height, on the contact tick. The closing move before it usually put it there; when the target moved on in
-## the same tick, the strike itself places the striker. Farther than placementReaches (the contact block) plus two ticks of the
-## target's own flight it is left alone and the feed says so (5.5, the reach check).
+## the same tick, the strike itself places the striker. A catch always does: when the target is a body in flight, or the
+## striker's closing move on it is still running (the move and the strike beat can land a tick apart). Otherwise, farther
+## than placementReaches (the contact block) plus two ticks of the target's speed, it is left alone and the feed says so
+## (5.5, the reach check).
 static func _contact(S: SimState, a, d) -> void:
 	var ct: Dictionary = DirData.contact()
 	if ct.is_empty():
@@ -118,7 +120,8 @@ static func _contact(S: SimState, a, d) -> void:
 	if absf(dx) <= reach and absf(dx) >= float(ct.minSeparation) and absf(dy) <= HEIGHT_TOL:
 		return
 	var lim: float = reach * float(ct.placementReaches) + SimDetMath.hypot(d.vx, d.vy) * SimConst.DT * PLACE_FLIGHT_TICKS
-	if absf(dx) > lim or absf(dy) > lim:
+	var catching: bool = d.state == "launched" or (a.rush != null and a.rush.tgt == d)
+	if not catching and (absf(dx) > lim or absf(dy) > lim):
 		SimEvents.feed(S, "OUT OF REACH", a.name + " strikes from " + SimMathx.jstr(SimMathx.jround(absf(dx))) + " u, " + SimMathx.jstr(SimMathx.jround(absf(dy))) + " u off level")
 		return
 	var s: float = SimDamage.jor(SimMathx.jsign(dx), -a.face)
@@ -245,6 +248,8 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 		SimEvents.feed(S, d.name + " PARRIES", "Timed the wind-up. Rest of the exchange cancelled.")
 		SimFx.parry(S, d, a)
 		return
+	if (a.state == "launched" or a.state == "down") and not DirData.contact().is_empty():
+		return   # a fighter in flight or down throws no blow (a blow scheduled before it was launched)
 	if dmg > 0.0:
 		_contact(S, a, d)
 	if d.state == "launched" or d.state == "down":
@@ -274,8 +279,11 @@ static func _broken(f) -> int:
 ## Breaks are chapters (spec-wounds.md §1): the strike that breaks a region ends the exchange with a break launch, long
 ## by rule (the planner's long-haul candidates only). The exchange's own pending launches and chain window are dropped.
 static func _breakChapter(S: SimState, ex, a, d) -> void:
+	# With a contact block the break ends the string: every pending beat is dropped, not only the launches and the
+	# window. A leftover step-in used to drag the launched fighter back, and a leftover blow hit it from far off.
+	var all: bool = not DirData.contact().is_empty()
 	for b in ex.beats:
-		if not b.done and (b.op == "launch" or b.op == "window"):
+		if not b.done and (all or b.op == "launch" or b.op == "window"):
 			b.done = true
 	ex.ext = null
 	DirExchange.schedule(ex, ex.t + BREAK_LAUNCH_AT, "breakLaunch", {"w": "A" if a == ex.A else "D", "force": BREAK_FORCE})
