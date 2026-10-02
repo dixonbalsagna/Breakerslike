@@ -229,7 +229,8 @@
       "required": [
         "touch",
         "perSpeed",
-        "cap"
+        "cap",
+        "feetShare"
       ],
       "properties": {
         "touch": {
@@ -244,6 +245,12 @@
           "type": "number",
           "minimum": 0,
           "description": "The most wear a journey pays, as a share of its single-impact budget."
+        },
+        "feetShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of a journey's wear a body that slides on its feet takes (a knock-back skid; docs/world/ground-contact.md)."
         }
       },
       "additionalProperties": false,

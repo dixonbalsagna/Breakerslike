@@ -46,7 +46,8 @@
   "wear": {
     "touch": 0.3,
     "perSpeed": 0.0126,
-    "cap": 1
+    "cap": 1,
+    "feetShare": 0.5
   },
   "area": {
     "slam": 0.9,

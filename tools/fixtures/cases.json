@@ -38168,6 +38168,109 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "biomes-contact-wear-feet-share-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/wear/feetShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/wear"
+      }
+    },
+    {
+      "id": "biomes-contact-wear-feet-share-valid",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/feetShare": 0.5
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-wear-feet-share-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/feetShare": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/wear/feetShare"
+      }
+    },
+    {
+      "id": "biomes-contact-wear-feet-share-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/feetShare": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/wear/feetShare"
+      }
+    },
+    {
+      "id": "biomes-contact-wear-feet-share-edges-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/feetShare": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-wear-feet-share-one-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/feetShare": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-wear-feet-share-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/wear/feetShare": "half"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/wear/feetShare"
+      }
     }
   ],
   "text": [
