@@ -95,6 +95,12 @@ func _ready() -> void:
 			hud.set_option("control_scheme", str(args["preset"]))
 	if args.has("ready"):
 		hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	if args.has("laststand"):
+		# The last stand's free signature on a fighter (--laststand=SLOT): the card and the plate's chip.
+		hud.consume({"type": "last_stand_ready", "actor": int(args["laststand"]), "dur": 20.0})
+	if args.has("intro"):
+		# The intro phase: the HUD hidden with the skip hint over it (--intro; --introdone shows the fade-in).
+		hud.consume({"type": "intro_start", "dur": 5.0, "delay": 0.0})
 	if args.has("stance"):
 		hud.consume({"type": "stance_set", "actor": 0, "stance": int(args["stance"])})
 	if args.has("target"):

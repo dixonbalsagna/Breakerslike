@@ -73,6 +73,8 @@ var sig_note_t: float = 99.0         # seconds since it ended (a brief mark)
 var stance_flash_t: float = 99.0     # seconds since the stance changed (the stance chip pulses, so a rival's change is seen)
 var avail: Dictionary = {"transform": false, "special": false}   # actions that can be used now (so their prompt shows only then)
 var hold: Dictionary = {"transform": 0.0, "special": 0.0}        # hold progress 0..1 (the hold ring)
+var last_stand_left: float = 0.0    # seconds of the last stand's free signature still open (0 when none): from last_stand_ready, and the sim's own count when the bridge patches it
+var last_stand_dur: float = 20.0    # the window's full length, for the ring
 var form_free: bool = true          # the fighter can take a ready form now (no exchange, not out; the sim's own condition, from the bridge). True until told otherwise
 var form_cue_left: float = 0.0      # RESERVED for Controls' parked 45-tick "Transforming" cue (act.formCueLeft, ticks): the ring slot in UiFormPrompt. Not read yet
 var form_shown: bool = false        # the HUD is showing the big form-ready chip for this fighter (the legend and the prompt row then drop their own Transform entry)
@@ -130,6 +132,7 @@ func reset_wounds() -> void:
 	stance_flash_t = 99.0
 	avail = {"transform": false, "special": false}
 	hold = {"transform": 0.0, "special": 0.0}
+	last_stand_left = 0.0
 	form_free = true
 	form_cue_left = 0.0
 	form_shown = false
@@ -189,6 +192,8 @@ func advance(dt: float, sim_dt: float = -1.0) -> void:
 	weight_fallback_t += sdt
 	sig_note_t += sdt
 	stance_flash_t += sdt
+	if last_stand_left > 0.0:
+		last_stand_left = maxf(0.0, last_stand_left - sdt)   # a host that patches the sim's own count (the bridge) overwrites this every tick
 	# The signature's cap (180 ticks, 3 s) runs while the intent is funded and the director's clock is running.
 	if sig_queued and sig_funded and not charging and cinematic == "":
 		sig_cap_t = minf(3.0, sig_cap_t + sdt)

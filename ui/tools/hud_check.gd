@@ -42,6 +42,7 @@ func _run() -> void:
 	_toll_rules()
 	await _hints_rules()
 	await _form_prompt_rules()
+	await _intro_laststand_rules()
 	await _touch_controls_rules()
 	await _settings_rules()
 	_touch_full_rules()
@@ -415,6 +416,8 @@ func _bridge() -> void:
 	_ok(ready_on and not hud.hub.model(0).avail["transform"], "bridge: the Transform prompt reads f.act.formReady (up while a form is ready, down when it is taken)")
 	var f0s = host.S.fighters[0]
 	var free_expected: bool = host.S.dirS.ex == null and host.S.game.ko == null and (str(f0s.state) == "free" or str(f0s.state) == "charging")
+	var ls_ok: bool = not ("lastStandLeft" in f0s) or absf(hud.hub.model(0).last_stand_left - float(f0s.lastStandLeft) / 60.0) < 0.02
+	_ok(ls_ok, "bridge: the last stand's count is the sim's own lastStandLeft in seconds")
 	_ok(hud.hub.model(0).form_free == free_expected, "bridge: form_free is the sim's own condition for taking a form (no exchange, nobody out, free or charging)")
 	# The greybox balance rarely wears a region past bruised in a minute, so push one through the real S1 code: the stage
 	# events it emits must reach the HUD as they are.
@@ -1957,6 +1960,98 @@ func _form_prompt_rules() -> void:
 	_ok(ht.contains("Transform when the prompt shows: you hit harder for the rest of the match") and ht.contains("the button pulses when a form is ready") and form_icon, "form prompt: the How to play card has it as a beat (the idea page, the controls page and the touch list)")
 	var hints: Dictionary = UiData.reads()["hints"]
 	_ok(hints.has("b7.alt1") and str(hints["b7.alt1"]).contains("prompt") and str(hints["b7.alt1"]).contains("harder"), "form prompt: the tutorial's transform beat has the prompt line (b7.alt1)")
+	root.size = Vector2i(1280, 720)
+
+
+## The intro phase (the HUD hidden until clock_start, with a skip hint) and the last stand (a card and the plate's signature chip counting down).
+func _intro_laststand_rules() -> void:
+	# The hub: the intro is pre-clock, so fight-time holds; clock_start (or the safety) ends it.
+	var hub := _hub()
+	hub.advance(1.0)
+	var t0: float = hub.t_now
+	hub.consume({"type": "intro_start", "dur": 5.0, "delay": 0.5})
+	hub.advance(1.0)
+	_ok(hub.intro_active and is_equal_approx(hub.t_now, t0) and is_equal_approx(hub.intro_t, 1.0) and is_equal_approx(hub.intro_delay, 0.5), "intro: intro_start hides the fight (it is on) and the match clock waits for clock_start")
+	hub.consume({"type": "clock_start", "kind": "skip"})
+	hub.advance(0.5)
+	_ok(not hub.intro_active and hub.intro_kind == "skip" and hub.t_now > t0 + 0.4 and hub.intro_since >= 0.5, "intro: clock_start ends it (how it ended is kept) and the clock runs")
+	hub.consume({"type": "intro_start", "dur": 1.0, "delay": 0.0})
+	hub.advance(1.0)
+	hub.advance(1.0)
+	hub.advance(1.0)
+	_ok(not hub.intro_active, "intro: a clock_start that never comes does not hide the HUD for good")
+	hub.consume({"type": "intro_start", "dur": 5.0, "delay": 0.0})
+	hub.reset()
+	_ok(not hub.intro_active, "intro: a new match clears it")
+	# The HUD.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	await _frames(hud, 3)
+	_ok(is_equal_approx(hud._l_plate[0].modulate.a, 1.0) and hud.intro_skip_text() == "", "intro: with no intro the HUD shows as always and there is no skip hint")
+	var sp0: float = hud.hub.model(0).stance_prompt_t
+	hud.consume({"type": "intro_start", "dur": 5.0, "delay": 0.5})
+	await _frames(hud, 3)
+	var hidden_ok := true
+	for l in [hud._l_plate[0], hud._l_plate[1], hud._l_toll, hud._l_events, hud._l_strip_base, hud._l_crown, hud._l_hints[0], hud._l_prompts[0], hud._l_you, hud._l_touchctl]:
+		hidden_ok = hidden_ok and is_equal_approx((l as Control).modulate.a, 0.0)
+	_ok(hidden_ok and is_equal_approx(hud._l_pmenu.modulate.a, 1.0) and is_equal_approx(hud._l_fb.modulate.a, 1.0), "intro: the fight's HUD is hidden through the intro (the menus are not)")
+	_ok(hud.intro_skip_text() == "" and hud._l_intro.sig == null, "intro: no skip hint until a press can skip (the data's delay)")
+	await _frames(hud, 40)
+	_ok(hud.intro_skip_text() == "Press any key to skip" and hud._l_intro.sig != null, "intro: the skip hint shows once a press can skip, in a keyboard player's words")
+	hud.set_device(0, "xbox")
+	_ok(hud.intro_skip_text() == "Press any button to skip", "intro: a pad player's words say button")
+	hud.set_option("touch_ui", true)
+	_ok(hud.intro_skip_text() == "Tap to skip", "intro: a touch player's words say tap")
+	hud.set_option("touch_ui", false)
+	hud.hub.model(0).ai = true
+	_ok(hud.intro_skip_text() == "", "intro: with no human to press there is no hint (a demo skips by the host's own intent)")
+	hud.hub.model(0).ai = false
+	hud.set_device(0, "kbd")
+	_ok(is_equal_approx(hud.hub.model(0).stance_prompt_t, sp0), "intro: the prompts' three seconds and the legend's twelve wait for the clock")
+	hud.consume({"type": "clock_start", "kind": "full"})
+	await _frames(hud, 6)
+	var mid: float = hud._l_plate[0].modulate.a
+	_ok(mid > 0.05 and mid < 0.95 and hud.intro_skip_text() == "" and hud._l_intro.sig == null, "intro: at clock_start the HUD fades in and the hint goes (%.2f after 0.1 s)" % mid)
+	await _frames(hud, 40)
+	_ok(is_equal_approx(hud._l_plate[0].modulate.a, 1.0) and is_equal_approx(hud._div_light.modulate.a, 1.0), "intro: and is whole in half a second")
+	hud.set_option("reduced_motion", true)
+	hud.consume({"type": "intro_start", "dur": 5.0, "delay": 0.0})
+	await _frames(hud, 2)
+	var r_hidden: bool = is_equal_approx(hud._l_plate[0].modulate.a, 0.0)
+	hud.consume({"type": "clock_start", "kind": "skip"})
+	await _frames(hud, 2)
+	_ok(r_hidden and is_equal_approx(hud._l_plate[0].modulate.a, 1.0), "intro: reduced motion has no fade, the HUD is there at once")
+	hud.set_option("reduced_motion", false)
+	# The last stand: a card, then the plate's signature chip counting down, on the fighter's own side.
+	var m1: UiFighterModel = hud.hub.model(1)
+	var r0: int = hud._l_plate[1].redraws
+	hud.consume({"type": "last_stand_ready", "actor": 1, "dur": 20.0})
+	await _frames(hud, 3)
+	var card_found := false
+	for c in hud.hub.cards + hud.hub.waiting:
+		if c.slot == 1 and c.key == "last_stand" and c.title == "LAST STAND" and c.sub == "Free signature, 20 s":
+			card_found = true
+	_ok(is_equal_approx(m1.last_stand_left, 20.0 - 3.0 / 60.0) and is_equal_approx(m1.last_stand_dur, 20.0) and card_found, "last stand: last_stand_ready opens the window and names it on a card in that fighter's column (the AI's too)")
+	_ok(hud._l_plate[1].redraws > r0 and UiData.fmt("state.last_stand", {"n": 14}) == "LAST STAND 14", "last stand: the plate's signature chip redraws as the free signature, with the count in its words")
+	await _frames(hud, 60)
+	_ok(absf(m1.last_stand_left - 19.0) < 0.1, "last stand: the count runs down by itself between patches")
+	hud.hub.patch(1, {"last_stand_left": 7.5})
+	_ok(is_equal_approx(m1.last_stand_left, 7.5), "last stand: the sim's own count (the bridge's patch) wins")
+	var r1: int = hud._l_plate[1].redraws
+	await _frames(hud, 30)
+	_ok(hud._l_plate[1].redraws > r1, "last stand: the ring round the star redraws as the seconds go (about six times a second)")
+	hud.consume({"type": "last_stand_end", "actor": 1, "kind": "used"})
+	await _frames(hud, 2)
+	_ok(is_equal_approx(m1.last_stand_left, 0.0), "last stand: last_stand_end closes the window and the chip goes back to the usual signature chip")
+	hud.consume({"type": "last_stand_ready", "actor": 0, "dur": 20.0})
+	hud.consume({"type": "last_stand_end", "actor": 0, "kind": "expired"})
+	_ok(is_equal_approx(hud.hub.model(0).last_stand_left, 0.0), "last stand: an expired window closes the same way")
+	hud.queue_free()
+	await process_frame
 	root.size = Vector2i(1280, 720)
 
 

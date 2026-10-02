@@ -173,6 +173,9 @@ var _l_ring_base: UiLayer
 var _l_chips: Array = []       # one small node per pane: an edge pointer chip, moved by position
 var _l_ring: UiLayer
 var _l_struggle: UiLayer
+var _l_intro: UiLayer                # the skip hint, shown over the hidden HUD while the intro runs and a press can skip it
+var _intro_a := 1.0                  # how much of the HUD shows: 0 through the intro, 0 to 1 over half a second from clock_start (instant under reduced motion)
+var _intro_a_applied := -1.0
 var _l_form: Array = []              # one layer per column: the form-ready chip (UiFormPrompt), inside a Node2D holder whose scale and alpha pulse it (Control scale redraws; Node2D's does not)
 var _form_holder: Array = []
 var _form_plan: Array = [{}, {}]
@@ -213,6 +216,7 @@ func _ready() -> void:
 		_form_holder.append(holder)
 		_l_form.append(fl)
 	_l_you = _layer(_paint_you)
+	_l_intro = _layer(_paint_intro)
 	_l_touchctl = _layer(_paint_touchctl)
 	for i in range(2):
 		_l_plate.append(_layer(_paint_plate.bind(i)))
@@ -295,7 +299,7 @@ func _chip_layer(slot: int) -> UiLayer:
 
 
 func _all_layers() -> Array:
-	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + _l_form + [_l_you, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_join, _l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb]
+	return [_l_letter, _l_strip_base, _l_crown, _l_struggle, _l_toll, _l_strip_marks, _l_ring_base, _l_ring, _l_events, _l_feed, _l_debug] + _l_plate + _l_sil + _l_prompts + _l_hints + _l_form + [_l_you, _l_intro, _l_touchctl] + _l_chips + [_l_pause, _l_tele, _l_hint, _l_fbpill, _l_join, _l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb]
 
 
 ## Total redraws of every layer so far, for the perf counters.
@@ -447,6 +451,7 @@ func _update_layers() -> void:
 	_relayout()
 	var reduced: bool = bool(opts["reduced_motion"])
 	var cin: bool = hub.mode == UiEventHub.Mode.CINEMATIC
+	_update_intro(reduced)
 	_l_letter.update_sig(int(_lb * 40.0) if _lb > 0.01 else null)
 
 	# The crown layer draws only while something is up: a pop, the brink ring, a window, or the accessibility option.
@@ -466,7 +471,7 @@ func _update_layers() -> void:
 		_l_plate[m.slot].update_sig([m.name, m.ai, m.stance, m.tier, int(m.momentum), int(m.charge), int(m.ego), m.hidden, m.lost_trail,
 			m.charging, m.chain_n if m.chain_t >= 0.0 else 0, m.brink, m.shame, full, _plate_alpha(m), pulse, m.you_label,
 			m.weight, m.weight_fallback_t < 1.5, m.sig_queued, m.sig_funded, int(m.sig_cap_t * 6.0) if m.sig_funded else 0, m.sig_note if m.sig_note_t < 1.4 else "",
-			0 if reduced else int(clampf(1.0 - m.stance_flash_t / 0.8, 0.0, 1.0) * 5.0)])
+			0 if reduced else int(clampf(1.0 - m.stance_flash_t / 0.8, 0.0, 1.0) * 5.0), int(m.last_stand_left * 6.0), int(m.last_stand_dur)])
 		_l_sil[m.slot].update_sig(_sil_sig(m, reduced) if layout.silhouette_on else null)
 
 	var a_toll: float = lerpf(UiLook.TOLL_REST_ALPHA, 1.0, clampf(1.0 - hub.toll_age / UiLook.TOLL_SHOW, 0.0, 1.0)) * (0.45 if cin else 1.0)
@@ -2320,6 +2325,75 @@ func _touch_intro_alpha() -> float:
 	return 0.0
 
 
+## The layers that are the fight's HUD (every one but the menus and cards over it and the skip hint): hidden through the intro phase.
+func _play_layers() -> Array:
+	var skip: Array = [_l_pmenu, _l_howto, _l_settings, _l_remap, _l_fb, _l_intro]
+	skip.append_array(_l_form)   # the chips fold the intro alpha into their holders
+	var out: Array = []
+	for l in _all_layers():
+		if l != null and not skip.has(l):
+			out.append(l)
+	return out
+
+
+## The intro phase (docs/architecture/intro-phase.md): the HUD is hidden from intro_start until clock_start, then fades in over half a second (at
+## once under reduced motion); the skip hint shows while a press can skip. The fade is the layers' alpha: no redraw.
+func _update_intro(reduced: bool) -> void:
+	var target: float = 0.0 if hub.intro_active else 1.0
+	if hub.intro_active or reduced:
+		_intro_a = target
+	else:
+		_intro_a = clampf(hub.intro_since / 0.5, 0.0, 1.0) if hub.intro_since < 90.0 else 1.0
+	if not is_equal_approx(_intro_a, _intro_a_applied):
+		_intro_a_applied = _intro_a
+		for l in _play_layers():
+			l.modulate.a = _intro_a
+		for b in [_div_dark, _div_light]:
+			if b != null:
+				b.modulate.a = _intro_a
+	_l_intro.update_sig(_intro_sig())
+
+
+## The words of the skip hint for the player's device (the first human), or "" when there is no human to press (a demo skips by the host's own intent).
+func intro_skip_text() -> String:
+	if not hub.intro_active or hub.intro_t < hub.intro_delay:
+		return ""
+	for m in hub.models:
+		if not m.ai:
+			if bool(opts["touch_ui"]):
+				return UiData.t("prompt.intro_skip_touch")
+			return UiData.t("prompt.intro_skip_kbd") if (m.device == "" or m.device == "kbd") else UiData.t("prompt.intro_skip_pad")
+	return ""
+
+
+func _intro_alpha() -> float:
+	return clampf((hub.intro_t - hub.intro_delay) / 0.4, 0.0, 1.0)
+
+
+func _intro_sig():
+	var txt: String = intro_skip_text()
+	if txt == "":
+		return null
+	return [txt, int(_intro_alpha() * 10.0), layout.vp, layout.s]
+
+
+func _paint_intro(ci: CanvasItem) -> void:
+	var txt: String = intro_skip_text()
+	if txt == "":
+		return
+	var a: float = _intro_alpha()
+	var s: float = layout.s
+	var fs: int = UiText.px(22.0, s)
+	var tw: float = UiText.width(txt, fs)
+	var w: float = tw + 40.0 * s
+	var h: float = float(fs) + 18.0 * s
+	var r := Rect2(layout.vp.x * 0.5 - w * 0.5, layout.safe.end.y - h - 24.0 * s, w, h)
+	UiText.no_outline = true
+	UiIcons.rrect(ci, r, h * 0.5, Color(UiLook.col(UiLook.SCRIM), 0.7 * a), Color(UiLook.col(UiLook.EDGE), 0.5 * a), maxf(1.2, 1.4 * s))
+	UiText.draw(ci, txt, Vector2(r.get_center().x, r.get_center().y + float(fs) * 0.35), fs, Color(UiLook.col(UiLook.INK), a), 0)
+	UiText.no_outline = false
+
+
 ## Where the lit Transform button's pulse is: -1 when no form is ready and free for a human, 0 to 7 round the cycle, 8 (a steady ring) under reduced motion.
 func _touch_pulse_step() -> int:
 	for m in hub.models:
@@ -2397,7 +2471,7 @@ func _update_form(reduced: bool) -> void:
 		holder.position = centre
 		holder.visible = true
 		holder.scale = Vector2.ONE * (1.0 + UiFormPrompt.PULSE_SCALE * pu)
-		holder.modulate = Color(1.0, 1.0, 1.0, fade * (1.0 if reduced else lerpf(UiFormPrompt.PULSE_ALPHA_LOW, 1.0, pu)))
+		holder.modulate = Color(1.0, 1.0, 1.0, _intro_a * fade * (1.0 if reduced else lerpf(UiFormPrompt.PULSE_ALPHA_LOW, 1.0, pu)))
 
 
 func _paint_form(ci: CanvasItem, slot: int) -> void:

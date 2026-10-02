@@ -85,6 +85,12 @@ var hazard_left: float = 0.0
 var t_now: float = 0.0             # the match clock the HUD keeps: it stands still while the sim is paused (sim_paused)
 var sim_paused: bool = false       # a pausing set piece froze the sim (pause_start .. pause_end): fight-time timers and prompts hold, presentation runs on
 var sim_pause_kind: String = ""    # transform, world or timecap
+var intro_active: bool = false     # the intro phase (intro_start .. clock_start): the HUD is hidden and the fight-time timers hold, as for a sim pause
+var intro_kind: String = ""        # how it ended: "full" or "skip" ("" while it runs or before any)
+var intro_t: float = 0.0           # real seconds since intro_start (the skip hint appears after intro_delay)
+var intro_delay: float = 0.0       # seconds before a press can skip (intro_start's delay)
+var intro_left: float = 0.0        # real seconds it may still last (intro_start's dur): the safety if its clock_start is lost
+var intro_since: float = 99.0      # real seconds since clock_start (the HUD fades in over the first half second)
 var sim_pause_left: float = 0.0    # real seconds the pause may still last (pause_start's dur): the safety if its pause_end is lost
 var face_times: Array = []         # fight-time starts of the cut-ins the rate cap counts (UiFaces, faces.json rate)
 var move_names: Dictionary = {}    # upper-case move names (a fighter's signature): a banner that is only a move name is dropped (Orb: the fighter shouts it, there is no name card)
@@ -124,6 +130,12 @@ func reset() -> void:
 	sim_paused = false
 	sim_pause_kind = ""
 	sim_pause_left = 0.0
+	intro_active = false
+	intro_kind = ""
+	intro_t = 0.0
+	intro_delay = 0.0
+	intro_left = 0.0
+	intro_since = 99.0
 	face_times = []
 	stats = {"cards_shown": 0, "cards_merged": 0, "cards_dropped": 0, "cards_evicted": 0, "cards_withheld": 0,
 		"barks_shown": 0, "barks_cut": 0, "barks_suppressed": 0, "toasts_skipped": 0, "max_cards_visible": 0,
@@ -231,6 +243,27 @@ func consume(e) -> void:
 				m.brink_age = 0.0
 				_pop(m, UiLook.CROWN_HOLD_MAJOR)
 				_card(m.slot, "brink", UiData.t("card.brink"), "", "", -1, "state", PRIO_BREAK)
+		"intro_start":
+			intro_active = true
+			intro_kind = ""
+			intro_t = 0.0
+			intro_delay = float(d.get("delay", 0.0))
+			intro_left = float(d.get("dur", 6.0)) + 1.5
+			intro_since = 99.0
+		"clock_start":
+			if intro_active:
+				intro_active = false
+				intro_kind = str(d.get("kind", "full"))
+				intro_since = 0.0
+		"last_stand_ready":
+			if m != null:
+				var dur: float = float(d.get("dur", 20.0))
+				m.last_stand_left = dur
+				m.last_stand_dur = maxf(dur, 1.0)
+				_card(m.slot, "last_stand", UiData.t("card.last_stand"), UiData.fmt("card.last_stand_sub", {"n": int(round(dur))}), "", -1, "state", PRIO_BREAK)
+		"last_stand_end":
+			if m != null:
+				m.last_stand_left = 0.0
 		"brink_exit":
 			if m != null:
 				m.brink = false
@@ -421,7 +454,7 @@ func patch(actor: int, d: Dictionary) -> void:
 	if m == null:
 		return
 	var old_stance: int = m.stance
-	for k in ["stance", "tier", "charge", "momentum", "ego", "hidden", "charging", "sig_cost", "name", "title", "ai", "chip_station", "device", "form_free", "form_cue_left"]:
+	for k in ["stance", "tier", "charge", "momentum", "ego", "hidden", "charging", "sig_cost", "name", "title", "ai", "chip_station", "device", "form_free", "form_cue_left", "last_stand_left"]:
 		if d.has(k):
 			# Hiding is removed from the base game (a future fighter); with the flag off the hidden state is ignored.
 			m.set(k, (bool(d[k]) and UiData.feature("hiding")) if k == "hidden" else d[k])
@@ -966,6 +999,18 @@ func advance(dt: float) -> void:
 	# finisher telegraph, the tutorial hint's clock, the parry and chain windows and the prompts' timers hold for it (sdt is 0), while
 	# what is only drawn (cards, barks, banners, the crown's fades, the cinematic mode) keeps its real time.
 	var sdt: float = dt
+	if intro_active:
+		# The intro is pre-clock: fight-time timers (the match clock, the prompts' three seconds, the legend's twelve) wait for the clock.
+		sdt = 0.0
+		intro_t += dt
+		intro_left -= dt
+		if intro_left <= 0.0:
+			intro_active = false   # its clock_start never came: do not hide the HUD for good
+			intro_kind = "full"
+			intro_since = 0.0
+			sdt = dt
+	else:
+		intro_since += dt
 	if sim_paused:
 		sdt = 0.0
 		sim_pause_left -= dt

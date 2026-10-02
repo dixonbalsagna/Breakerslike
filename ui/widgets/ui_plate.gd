@@ -91,7 +91,11 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	# the 180-tick cap ring once funded), need (queued and short of Charge: a fill toward 45), or a brief note of how an intent ended.
 	var sig_mode: String = ""
 	var sig_label: String = UiData.t("state.signature")
-	if m.sig_queued:
+	if m.last_stand_left > 0.0:
+		# The last stand: a free signature while the window is open (the card said so). Same chip, a count in its words and a ring running down round the star.
+		sig_mode = "free"
+		sig_label = UiData.fmt("state.last_stand", {"n": int(ceil(m.last_stand_left))})
+	elif m.sig_queued:
 		sig_mode = "queued" if (m.sig_funded or sig_ready) else "need"
 		sig_label = UiData.t("state.queued") if sig_mode == "queued" else UiData.fmt("state.signature_need", {"n": int(m.sig_cost)})
 	elif m.sig_note != "" and m.sig_note_t < 1.4:
@@ -195,12 +199,15 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		if sw <= avail:
 			var sx: float = (x1 - sw) if left else x0
 			var full_chip: bool = sw == sig_w
-			var bright: bool = sig_mode == "ready" or sig_mode == "queued"
+			var bright: bool = sig_mode == "ready" or sig_mode == "queued" or sig_mode == "free"
 			var dark_ink: Color = _c(UiLook.col(UiLook.INK_DARK))
 			var star_col: Color = dark_ink if bright else (ink if sig_mode == "need" else dim)
 			var chip_fill: Color = _c(Color(UiLook.col(UiLook.CHARGE_READY), 0.92)) if bright else _c(UiLook.alpha(UiLook.SCRIM, 0.85))
 			var chip_edge: Color = _c(Color(1, 1, 1, 1.0)) if bright else (_c(UiLook.col(UiLook.CHARGE)) if sig_mode == "need" else _c(UiLook.alpha(UiLook.EDGE, 0.5)))
 			UiIcons.rrect(ci, Rect2(sx, ry, sw, chh), 6.0 * s, chip_fill, chip_edge, 2.0)
+			if sig_mode == "free":
+				# A second edge, so it is told from READY by shape: the chip is doubly framed while the window is open.
+				UiIcons.rrect(ci, Rect2(sx - 3.0 * s, ry - 3.0 * s, sw + 6.0 * s, chh + 6.0 * s), 8.0 * s, Color(0, 0, 0, 0), chip_edge, maxf(1.2, 1.4 * s))
 			if sig_mode == "need":
 				# The fill toward 45 Charge, from the chip's near side.
 				var frac: float = clampf(m.charge / maxf(m.sig_cost, 1.0), 0.0, 1.0)
@@ -209,6 +216,9 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 				ci.draw_rect(Rect2(fx, ry + 2.0, fw, chh - 4.0), _c(Color(UiLook.col(UiLook.CHARGE), 0.5)))
 			var scx: float = sx + (chh * 0.55 if full_chip else sw * 0.5)
 			UiIcons.star4(ci, Vector2(scx, ry + chh * 0.5), chh * 0.62, star_col)
+			if sig_mode == "free":
+				var left_f: float = clampf(m.last_stand_left / maxf(m.last_stand_dur, 1.0), 0.0, 1.0)
+				ci.draw_arc(Vector2(scx, ry + chh * 0.5), chh * 0.47, -PI * 0.5, -PI * 0.5 + TAU * left_f, 24, dark_ink, maxf(2.0, chh * 0.09), true)
 			if sig_mode == "queued" and m.sig_funded:
 				# The 180-tick cap: a ring round the star that runs down over 3 s (it pauses while the fighter charges).
 				var remain: float = clampf(1.0 - m.sig_cap_t / 3.0, 0.0, 1.0)
