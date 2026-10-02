@@ -476,3 +476,20 @@ Orb's picks.
 - **Art direction.** "the mask aesthetic, broken masks should be part of an upcoming character, not the game's overall art style." The masks are parked as a seed for a future fighter. Orb likes the fighters' faces, and the silhouettes "kind of grew on me"; both are to be refined. The Cyborg is "the least compelling of the launch fighters", so the refinement starts with him. Orb wants to dig into this on return.
 - **Animation and rigging.** "in many of the stills and gifs of the fighters, I see lots of limbs bent unnaturally, knees bending the wrong way during kicks, elbows turning inward." If it would carry over to the launch fighters "it needs to be quashed immediately". Animation's brief: joint limits enforced at the root, a lint over every pose and live matches, and a rule for new rigs (docs/animation/joint-limits.md).
 - **Pause.** Orb is reviewing the backlog; work is brought to a resting place. The list of everything waiting for Orb is docs/ep/orb-review-list.md. Orb wants to revisit the sound profiles.
+
+## Orb's first two-player playtest, 2026-10-02
+
+Two local matches with a second player. "good first impressions". Direction, in Orb's words where quoted:
+
+1. **Control against the director.** "lets continue to tune the amount of control the director grants the player. the worst is how pressing a single attack key at any distance essentially locks both fighters from performing actions as the attacker flies in and performs the attack." Orb wants a list of solutions. Orb's own idea: attack buttons act as taunts from range; one press plays a taunt, holding the attack through the taunt ends it by taking off at max speed to attack.
+2. **Brawls against launches.** Only one knockback slide in two fights; "every brawl seems to end in a launch". Combo trading should be more represented and flashy; air juggling and pinballing slightly less common but with higher payoff and spectacle.
+3. **Air recovery.** "Players need a way to air recover from knockbacks."
+4. **Craters and terrain destruction from slides and tumbling** are to be "a central feature of the game". Craters and bounce-and-crater impacts "look great". To consult on: an impact hard enough for an extremely large crater should leave the fighter in it, with no bounce out.
+5. **Mountain tumbles** were "kind of funny but also just a little off": too much momentum gained from a seemingly low-impact glancing bounce.
+6. **RB.** Perhaps hold RB to fire energy attacks, in place of the toggle.
+7. **Beams.** The cooldown "felt too restrictive, feels like a relic from the prototype". Bring energy combat into fights, more ways to beam struggle, more forgiving timing to dodge and block beams. Looking forward to walking through beams and beams splitting.
+8. **The combo system: a "fight alchemist".** Orb likes the choreographer but does not want agency removed. Tilting the stick during a fight or a juggle controls the relative screen direction the opponent is launched. Button presses are ingredients in the ongoing string, not a queue: the alchemist reads the last few presses of both fighters (three, as an example), compares each player's running mix of attack types with their latest presses, and builds a choreographed sequence the player would expect. It must be "clear and standardized": light-heavy play gives a rapid blur of strikes; kiting is dodges, a few heavy blows to knock away, and energy blasts from range. Holding, mashing and tapping in time with the blows on screen should each give different results.
+9. **LT and escape.** Escape tied to a direction and holding the trigger "was a little strange". Players should fly at high speed at will, with a mechanic to stop the other escaping and a way for the escaper to exit any situation at some risk.
+10. **Split-screen camera.** It jolted left and right in some cases, such as when a player was knocked away. A pass on the camera.
+
+Orb asked for all directors to be briefed, iteration to start, and a questionnaire to nail down direction (questionnaire 14).
