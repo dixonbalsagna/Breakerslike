@@ -43,6 +43,7 @@ func _run() -> void:
 	await _hints_rules()
 	await _form_prompt_rules()
 	await _intro_laststand_rules()
+	await _energy_rules()
 	await _touch_controls_rules()
 	await _settings_rules()
 	_touch_full_rules()
@@ -1314,7 +1315,7 @@ func _howto_rules() -> void:
 		return out
 	var rt_solo: Array = row_texts.call(UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "kbd", 0, "kb-solo"))
 	var rt_simple: Array = row_texts.call(UiHowto.plan(Vector2(1920, 1080), 1.0, 1.0, false, 1, "xbox", 0, "simple-pad"))
-	_ok(rt_solo.has("Heavy") and rt_solo.has("Mode") and rt_solo.has("Specials") and not rt_simple.has("Heavy") and not rt_simple.has("Mode") and not rt_simple.has("Specials") and rt_simple.has("Guard (hold)"), "howto: the controls page lists the actions the layout binds (Simple has no heavy, mode or specials row)")
+	_ok(rt_solo.has("Heavy") and rt_solo.has("Energy (hold; Settings can make it a toggle)") and rt_solo.has("Specials") and not rt_simple.has("Heavy") and not rt_simple.has("Energy (hold; Settings can make it a toggle)") and not rt_simple.has("Specials") and rt_simple.has("Guard (hold)"), "howto: the controls page lists the actions the layout binds (Simple has no heavy, mode or specials row)")
 	_ok(rt_solo.size() >= 10 and rt_simple.size() >= 6, "howto: the controls page keeps its rows (%d keyboard, %d Simple)" % [rt_solo.size(), rt_simple.size()])
 	# The flow in the HUD.
 	UiPrefs.path = "user://ui_prefs_test.json"
@@ -2053,6 +2054,108 @@ func _intro_laststand_rules() -> void:
 	hud.queue_free()
 	await process_frame
 	root.size = Vector2i(1280, 720)
+
+
+## Energy is hold, not toggle (docs/controls/agency-input.md): the two per-player options, the words on every layout, the plate's blast variants and
+## mark while the energy mode is on, and the Show recipe stub.
+func _energy_rules() -> void:
+	var od: Dictionary = UiData.options()
+	_ok(od["energy_style"]["default"] == "hold" and od["energy_style_p2"]["default"] == "hold" and od["energy_style"]["choices"] == ["hold", "toggle"] and od["energy_style_p2"]["choices"] == ["hold", "toggle"] and str(od["energy_style"]["label"]) == "Energy: hold or toggle" and od["energy_style"].get("accessibility", false), "energy: two per-player options, hold or toggle, hold by default, worded 'Energy: hold or toggle', and an accessibility option")
+	_ok(od["show_recipe"]["default"] == false, "energy: Show recipe is off by default")
+	var sd: Dictionary = UiData.settings()
+	_ok(sd["labels"]["energy_style"]["hold"] == "Hold" and sd["labels"]["energy_style"]["toggle"] == "Toggle" and sd["labels"]["energy_style_p2"].size() == 2, "energy: the choices have their words")
+	UiSettings.two_humans = false
+	var keys1 := []
+	for r in UiSettings.rows():
+		keys1.append(r["key"])
+	UiSettings.two_humans = true
+	var keys2 := []
+	for r in UiSettings.rows():
+		keys2.append(r["key"])
+	UiSettings.two_humans = false
+	_ok(keys1.has("energy_style") and keys1.has("show_recipe") and not keys1.has("energy_style_p2") and keys2.has("energy_style_p2"), "energy: Settings lists player one's style and Show recipe, and player two's style only while two people play")
+	var hub := _hub()
+	var m: UiFighterModel = hub.model(0)
+	m.ai = false
+	var lab := func(preset: String, energy: String) -> String:
+		for r in UiHints.rows(m, preset, energy):
+			if str(r["acts"][0]) == "mode":
+				return str(r["label"])
+		return ""
+	var all_hold := true
+	for preset in ["arena", "brawler", "kb-solo", "kb-shared-p1", "kb-shared-p2"]:
+		all_hold = all_hold and lab.call(preset, "hold") == "Energy (hold)" and lab.call(preset, "toggle") == "Energy (toggle)"
+	_ok(all_hold and lab.call("simple-pad", "hold") == "", "energy: the legend says Energy (hold) on Arena, Brawler and every keyboard layout, (toggle) for a player who set it, and Simple (the game picks) has no energy row")
+	var po := {"energy_style": "hold", "energy_style_p2": "toggle"}
+	var m1 := UiFighterModel.new()
+	m1.slot = 1
+	_ok(UiHints.energy_style(m, po) == "hold" and UiHints.energy_style(m1, po) == "toggle", "energy: each player's own style picks their words")
+	var how := ""
+	for pg in UiData.howto()["pages"]:
+		for it in pg.get("items", []):
+			how += " " + str(it.get("text", ""))
+	_ok(how.contains("Energy (hold") and not how.contains(" Mode"), "energy: How to play says hold for the mode control")
+	_ok(UiData.t("prompt.full_mode") == "ENERGY" and UiData.settings()["remap"]["actions"]["mode"] == "Energy" and str(UiData.settings()["remap"]["helps"]["mode"]).begins_with("Hold for energy"), "energy: Full touch's button and the Remap row say Energy, and the help says hold")
+	# The plate.
+	var layer := UiLayer.new()
+	root.add_child(layer)
+	var lay := UiLayout.new()
+	lay.compute(Vector2(1920, 1080), false)
+	var count_marks := func(energy: bool, weight: String) -> int:
+		var mm := UiFighterModel.new()
+		mm.setup(0, "protagonist", "KAI")
+		mm.energy = energy
+		mm.weight = weight
+		var rec := {"n": 0}
+		layer.painter = func(ci: CanvasItem) -> void:
+			UiPlate.draw(ci, mm, lay.plate[0], lay.pm, lay.s, 0.0, {})
+			rec["n"] += 1
+		layer.sig = [energy, weight]
+		layer.queue_redraw()
+		await process_frame
+		await process_frame
+		return int(rec["n"])
+	var d1: int = await count_marks.call(false, "light")
+	var d2: int = await count_marks.call(true, "heavy")
+	_ok(d1 > 0 and d2 > 0, "energy: the plate draws in both modes with no error")
+	_ok(UiData.t("state.weight_light_energy") == "BLAST" and UiData.t("state.weight_heavy_energy") == "BIG BLAST" and UiData.t("state.weight_light") == "LIGHT", "energy: the plate's weight chip says BLAST or BIG BLAST while the mode is on, LIGHT or HEAVY otherwise")
+	layer.queue_free()
+	# The HUD: the mode state and the plate's redraw, and the bridge.
+	root.size = Vector2i(1920, 1080)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	hud.hub.model(0).ai = false
+	await _frames(hud, 3)
+	var r0: int = hud._l_plate[0].redraws
+	hud.hub.patch(0, {"energy": true})
+	await _frames(hud, 2)
+	var r1: int = hud._l_plate[0].redraws
+	hud.hub.patch(0, {"energy": false})
+	await _frames(hud, 2)
+	_ok(hud.hub.model(0).energy == false and r1 > r0 and hud._l_plate[0].redraws > r1, "energy: the plate redraws when the mode control is pressed and when it is let go")
+	# Show recipe: a stub. The words are built, the HUD keeps the model's mix while the option is on, nothing is drawn.
+	_ok(UiRecipe.text({"light": 2, "heavy": 1, "sig": 0, "energy": 2}) == "2 light, 1 heavy, 2 energy" and UiRecipe.text({}) == "", "recipe: the mix reads as words, and an empty mix as nothing")
+	hud.recipe_fn = func(slot: int) -> Dictionary: return {"light": 3, "heavy": 1, "sig": 0, "energy": 1} if slot == 0 else {}
+	await _frames(hud, 2)
+	var off_empty: bool = hud.hub.model(0).recipe.is_empty()
+	hud.set_option("show_recipe", true)
+	await _frames(hud, 2)
+	_ok(off_empty and hud.hub.model(0).recipe.get("light", 0) == 3 and hud.hub.model(1).recipe.is_empty(), "recipe: the HUD reads the host's mix only while Show recipe is on")
+	hud.set_option("show_recipe", false)
+	hud.queue_free()
+	await process_frame
+	_ok(UiSimBridge.recipe(_FakeState.new(), 0).is_empty() and UiSimBridge.recipe(_FakeState.new(), 5).is_empty(), "recipe: the bridge's stub gives nothing while the sim has no press log")
+	root.size = Vector2i(1280, 720)
+
+
+class _FakeFighter:
+	var x := 0
+
+
+class _FakeState:
+	var fighters: Array = [_FakeFighter.new(), _FakeFighter.new()]
+	var tick: int = 0
 
 
 func kinds_in_hud(hud: UiHud, slot: int) -> Array:
@@ -2900,7 +3003,7 @@ func _remap_rules() -> void:
 	hud._rm_focus = idx.call("light")
 	hud._unhandled_input(pad.call(JOY_BUTTON_A))
 	hud._unhandled_input(pad.call(JOY_BUTTON_RIGHT_SHOULDER))
-	_ok(hud.remap_mode() == "confirm" and str(hud.remap_plan()["status"]) == "RB is already Mode. Swap them?", "remap pad: a bumper that is Mode's asks")
+	_ok(hud.remap_mode() == "confirm" and str(hud.remap_plan()["status"]) == "RB is already Energy. Swap them?", "remap pad: a bumper that is Mode's asks")
 	hud._unhandled_input(pad.call(JOY_BUTTON_A))
 	var arena_now: Dictionary = SimInputData.preset("arena")
 	_ok(hud.remap_mode() == "list" and _binding_controls(arena_now, "light") == ["pad:rb"] and _binding_controls(arena_now, "mode") == ["pad:west"] and _binding_controls(arena_now, "special1", "power") == ["pad:rb"], "remap pad: A swaps (Light on RB, Mode on the west button, the first special with Light)")

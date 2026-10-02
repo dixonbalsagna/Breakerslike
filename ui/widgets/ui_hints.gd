@@ -62,7 +62,7 @@ static func preset_id(m: UiFighterModel, o: Dictionary) -> String:
 
 ## The rows to show now, from the layout's scheme (falling back to "today"): an action or group and a word. A row for an action the
 ## layout does not bind is skipped, and a row marked only_when_avail appears only while the fighter can use that action.
-static func rows(m: UiFighterModel, scheme: String) -> Array:
+static func rows(m: UiFighterModel, scheme: String, energy: String = "hold") -> Array:
 	var schemes: Dictionary = data().get("schemes", {})
 	var sc: Dictionary = schemes.get(scheme, schemes.get("today", {}))
 	var out: Array = []
@@ -76,8 +76,16 @@ static func rows(m: UiFighterModel, scheme: String) -> Array:
 				continue
 			if a == "transform" and m.form_shown:
 				continue   # the form-ready chip above the legend already says it
-		out.append({"acts": acts, "label": str(r.get("label", ""))})
+		var label: String = str(r.get("label", ""))
+		if str(acts[0]) == "mode":
+			label = UiData.t("prompt.mode_toggle" if energy == "toggle" else "prompt.mode_hold")   # Energy (hold), or (toggle) for a player who set it
+		out.append({"acts": acts, "label": label})
 	return out
+
+
+## The player's own energy style ("hold" or "toggle"): player one's option, or player two's.
+static func energy_style(m: UiFighterModel, o: Dictionary) -> String:
+	return str(o.get("energy_style_p2" if m.slot == 1 else "energy_style", "hold"))
 
 
 ## The glyph specs of one row, flat: each action's binding in the layout, a power group (Power then its face buttons) joined by a plus.
@@ -105,7 +113,7 @@ static func plan(m: UiFighterModel, rect: Rect2, s: float, o: Dictionary) -> Dic
 	var row_h: float = maxf(gh, float(fs) * 1.4) + 4.0 * s
 	var pad: float = maxf(8.0 * s, 5.0)
 	var cap: int = int(floor((rect.size.y - pad * 2.0) / row_h))
-	var all: Array = rows(m, preset)
+	var all: Array = rows(m, preset, energy_style(m, o))
 	var shown: Array = all.slice(0, maxi(cap, 0))
 	if shown.is_empty():
 		return out
@@ -142,8 +150,8 @@ static func _widest_label(placed: Array, fs: int) -> float:
 	return w
 
 
-static func sig(m: UiFighterModel, alpha: float, preset: String) -> Array:
-	return [m.device, m.slot, int(alpha * 10.0), preset, m.avail["transform"], m.left_side, m.form_shown]
+static func sig(m: UiFighterModel, alpha: float, preset: String, energy: String = "hold") -> Array:
+	return [m.device, m.slot, int(alpha * 10.0), preset, m.avail["transform"], m.left_side, m.form_shown, energy]
 
 
 static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, s: float, o: Dictionary, alpha: float) -> void:

@@ -48,7 +48,7 @@ static func rows() -> Array:
 				continue
 			var key: String = str(it)
 			var o: Dictionary = od.get(key, {})
-			if o.is_empty() or (key == "pad_preset_p2" and not two_humans):
+			if o.is_empty() or ((key == "pad_preset_p2" or key == "energy_style_p2") and not two_humans):
 				continue
 			var kind: String = TOGGLE if o["default"] is bool else (SLIDER if o.has("min") else CHOICE)
 			var need2: String = str(needs.get(key, ""))

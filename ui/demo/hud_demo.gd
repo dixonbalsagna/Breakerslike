@@ -95,6 +95,9 @@ func _ready() -> void:
 			hud.set_option("control_scheme", str(args["preset"]))
 	if args.has("ready"):
 		hud.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
+	if args.has("energy"):
+		# The energy mode on (the mode control held): the plate's blast variants and mark (--energy=SLOT, with --heavy for the big blast).
+		hud.hub.patch(int(args["energy"]) if str(args["energy"]) != "" else 0, {"energy": true})
 	if args.has("laststand"):
 		# The last stand's free signature on a fighter (--laststand=SLOT): the card and the plate's chip.
 		hud.consume({"type": "last_stand_ready", "actor": int(args["laststand"]), "dur": 20.0})

@@ -173,6 +173,7 @@ var _l_ring_base: UiLayer
 var _l_chips: Array = []       # one small node per pane: an edge pointer chip, moved by position
 var _l_ring: UiLayer
 var _l_struggle: UiLayer
+var recipe_fn: Callable = Callable()   # (slot) -> Dictionary: the mix of the last presses {light, heavy, sig, energy} (SimPressRead.classify's mix_long) when the host has the press reader; read only while the Show recipe option is on
 var _l_intro: UiLayer                # the skip hint, shown over the hidden HUD while the intro runs and a press can skip it
 var _intro_a := 1.0                  # how much of the HUD shows: 0 through the intro, 0 to 1 over half a second from clock_start (instant under reduced motion)
 var _intro_a_applied := -1.0
@@ -440,6 +441,8 @@ func _o(plate_alpha: float = 1.0) -> Dictionary:
 		"kbd_humans": _kbd_humans(),
 		"slot_presets": _slot_presets,
 		"pad_preset_p2": str(opts["pad_preset_p2"]),
+		"energy_style": str(opts["energy_style"]),
+		"energy_style_p2": str(opts["energy_style_p2"]),
 	}
 
 
@@ -452,6 +455,10 @@ func _update_layers() -> void:
 	var reduced: bool = bool(opts["reduced_motion"])
 	var cin: bool = hub.mode == UiEventHub.Mode.CINEMATIC
 	_update_intro(reduced)
+	if bool(opts["show_recipe"]) and recipe_fn.is_valid():
+		for rm in hub.models:
+			var mix = recipe_fn.call(rm.slot)
+			rm.recipe = mix if mix is Dictionary else {}
 	_l_letter.update_sig(int(_lb * 40.0) if _lb > 0.01 else null)
 
 	# The crown layer draws only while something is up: a pop, the brink ring, a window, or the accessibility option.
@@ -471,7 +478,7 @@ func _update_layers() -> void:
 		_l_plate[m.slot].update_sig([m.name, m.ai, m.stance, m.tier, int(m.momentum), int(m.charge), int(m.ego), m.hidden, m.lost_trail,
 			m.charging, m.chain_n if m.chain_t >= 0.0 else 0, m.brink, m.shame, full, _plate_alpha(m), pulse, m.you_label,
 			m.weight, m.weight_fallback_t < 1.5, m.sig_queued, m.sig_funded, int(m.sig_cap_t * 6.0) if m.sig_funded else 0, m.sig_note if m.sig_note_t < 1.4 else "",
-			0 if reduced else int(clampf(1.0 - m.stance_flash_t / 0.8, 0.0, 1.0) * 5.0), int(m.last_stand_left * 6.0), int(m.last_stand_dur)])
+			0 if reduced else int(clampf(1.0 - m.stance_flash_t / 0.8, 0.0, 1.0) * 5.0), int(m.last_stand_left * 6.0), int(m.last_stand_dur), m.energy])
 		_l_sil[m.slot].update_sig(_sil_sig(m, reduced) if layout.silhouette_on else null)
 
 	var a_toll: float = lerpf(UiLook.TOLL_REST_ALPHA, 1.0, clampf(1.0 - hub.toll_age / UiLook.TOLL_SHOW, 0.0, 1.0)) * (0.45 if cin else 1.0)
@@ -562,7 +569,7 @@ func _update_layers() -> void:
 				var an: Dictionary = anchor_fn.call(m.slot)
 				var ap: Vector2 = an.get("pos", Vector2.ZERO)
 				you_sig.append([m.slot, m.you_label, int(ap.x * 0.5), int(ap.y * 0.5), int(float(an.get("h", 0.0)) * 0.5), int(ya * 10.0), bool(an.get("visible", true))])
-			_l_hints[m.slot].update_sig(UiHints.sig(m, ha, UiHints.preset_id(m, _o())) if (ha > 0.01 and layout.hints[m.slot].size.y > 0.0) else null)
+			_l_hints[m.slot].update_sig(UiHints.sig(m, ha, UiHints.preset_id(m, _o()), UiHints.energy_style(m, _o())) if (ha > 0.01 and layout.hints[m.slot].size.y > 0.0) else null)
 	_l_you.update_sig(you_sig if not you_sig.is_empty() else null)
 	_join_step(hub.t_now - _join_prev_t, _dt)
 	_join_prev_t = hub.t_now

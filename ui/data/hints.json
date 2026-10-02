@@ -13,7 +13,7 @@
         { "action": "guard", "label": "Guard (hold)" },
         { "action": "dodge", "label": "Dodge, sprint" },
         { "action": "power", "label": "Power (hold)" },
-        { "action": "mode", "label": "Mode" },
+        { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
@@ -28,7 +28,7 @@
         { "action": "guard", "label": "Guard (hold)" },
         { "action": "dodge", "label": "Dodge, sprint" },
         { "action": "power", "label": "Power (hold)" },
-        { "action": "mode", "label": "Mode" },
+        { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
@@ -43,7 +43,7 @@
         { "action": "guard", "label": "Guard (hold)" },
         { "action": "dodge", "label": "Dodge, sprint" },
         { "action": "power", "label": "Power (hold)" },
-        { "action": "mode", "label": "Mode" },
+        { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
@@ -58,7 +58,7 @@
         { "action": "guard", "label": "Guard (hold)" },
         { "action": "dodge", "label": "Dodge, sprint" },
         { "action": "power", "label": "Power (hold)" },
-        { "action": "mode", "label": "Mode" },
+        { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
@@ -73,7 +73,7 @@
         { "action": "guard", "label": "Guard (hold)" },
         { "action": "dodge", "label": "Dodge, sprint" },
         { "action": "power", "label": "Power (hold)" },
-        { "action": "mode", "label": "Mode" },
+        { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
@@ -88,7 +88,7 @@
         { "action": "guard", "label": "Guard (hold)" },
         { "action": "dodge", "label": "Dodge, sprint" },
         { "action": "power", "label": "Power (hold)" },
-        { "action": "mode", "label": "Mode" },
+        { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }

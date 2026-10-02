@@ -136,7 +136,7 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 	# The weight (the sticky light or heavy) comes first: the rival's weight is a read the player must always have. A heavy that fell
 	# back to light for lack of Charge shows LOW CHARGE and the mark struck through for a moment.
 	var fallback: bool = m.weight == "heavy" and m.weight_fallback_t < 1.5
-	chips.append(["weight", UiData.t("state.weight_fallback") if fallback else UiData.t("state.weight_" + m.weight), UiLook.col(UiLook.WARN) if fallback else UiLook.col(UiLook.INK if m.weight == "heavy" else UiLook.INK_DIM)])
+	chips.append(["weight", UiData.t("state.weight_fallback") if fallback else UiData.t("state.weight_" + m.weight + ("_energy" if m.energy else "")), UiLook.col(UiLook.WARN) if fallback else UiLook.col(UiLook.INK if m.weight == "heavy" else UiLook.INK_DIM)])
 	if m.hidden:
 		chips.append(["hidden", UiData.t("state.hidden"), UiLook.col(UiLook.HIDDEN)])
 	if m.lost_trail:
@@ -159,7 +159,14 @@ static func draw(ci: CanvasItem, m: UiFighterModel, rect: Rect2, pm: Dictionary,
 		var icp := Vector2(icx, chip_y + chip_h * 0.5)
 		match ch[0]:
 			"weight":
-				UiReads.weight_mark(ci, icp, chip_h * 0.62, m.weight == "heavy", _c(ch[2]), fallback)
+				if m.energy and not fallback:
+					# The energy mark: a blast leaving a point (a dot and a short line). Plain shapes, no flame or crackle.
+					var er: float = chip_h * 0.16
+					var d: float = 1.0 if left else -1.0
+					ci.draw_circle(icp + Vector2(-d * er * 1.3, 0.0), er * (1.4 if m.weight == "heavy" else 1.0), _c(ch[2]))
+					ci.draw_line(icp + Vector2(-d * er * 0.2, 0.0), icp + Vector2(d * er * 1.9, 0.0), _c(ch[2]), maxf(2.0, er * 0.9), true)
+				else:
+					UiReads.weight_mark(ci, icp, chip_h * 0.62, m.weight == "heavy", _c(ch[2]), fallback)
 			"hidden":
 				UiIcons.eye_slash(ci, icp, chip_h * 0.75, _c(ch[2]))
 			"lost":

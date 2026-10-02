@@ -17,6 +17,9 @@
       "hotseat_alt_layout",
       "control_hints",
       "show_prompts",
+      "energy_style",
+      "energy_style_p2",
+      "show_recipe",
       "join_prompt",
       { "action": "remap", "label": "Remap controls", "value": "Open", "help": "Change which button or key does what, for the layout you are using.", "needs": "remap" },
       { "action": "remap_two", "label": "Remap player 2's controls", "value": "Open", "help": "Change which button or key does what for player two, when two people play.", "needs": "remap" }
@@ -31,6 +34,8 @@
   "hidden_note": "glyph_style has one choice.",
   "labels": {
     "pad_preset": { "arena": "Arena", "brawler": "Brawler", "simple-pad": "Simple" },
+    "energy_style": { "hold": "Hold", "toggle": "Toggle" },
+    "energy_style_p2": { "hold": "Hold", "toggle": "Toggle" },
     "pad_preset_p2": { "arena": "Arena", "brawler": "Brawler", "simple-pad": "Simple" },
     "touch_preset": { "touch-simple": "Simple", "touch-full": "Full" },
     "vfx_quality": { "auto": "Auto", "high": "High", "medium": "Medium", "low": "Low" },
@@ -86,7 +91,7 @@
       "guard": "Guard",
       "dodge": "Dodge",
       "power": "Power",
-      "mode": "Mode",
+      "mode": "Energy",
       "context": "Context",
       "transform": "Transform"
     },
@@ -98,7 +103,7 @@
       "guard": "Hold to guard.",
       "dodge": "Tap to dodge, hold to sprint.",
       "power": "Hold to charge. Held with a face button it calls a special.",
-      "mode": "Switches your mode of attack.",
+      "mode": "Hold for energy attacks: blasts instead of blows. Let go for physical. Settings can make it a toggle.",
       "context": "The move that fits the moment. The third special while Power is held.",
       "transform": "Takes a form that is ready. Some layouts also have a two-button way, which stays as it is."
     },

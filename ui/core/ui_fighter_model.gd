@@ -73,6 +73,8 @@ var sig_note_t: float = 99.0         # seconds since it ended (a brief mark)
 var stance_flash_t: float = 99.0     # seconds since the stance changed (the stance chip pulses, so a rival's change is seen)
 var avail: Dictionary = {"transform": false, "special": false}   # actions that can be used now (so their prompt shows only then)
 var hold: Dictionary = {"transform": 0.0, "special": 0.0}        # hold progress 0..1 (the hold ring)
+var energy: bool = false            # the energy mode is on now (the mode control is held, or latched on a toggle): the plate shows the blast variants and a mark
+var recipe: Dictionary = {}         # the mix of the last presses {light, heavy, sig, energy} (SimPressRead.classify's mix_long) when the host provides it; nothing draws it yet
 var last_stand_left: float = 0.0    # seconds of the last stand's free signature still open (0 when none): from last_stand_ready, and the sim's own count when the bridge patches it
 var last_stand_dur: float = 20.0    # the window's full length, for the ring
 var form_free: bool = true          # the fighter can take a ready form now (no exchange, not out; the sim's own condition, from the bridge). True until told otherwise
@@ -133,6 +135,8 @@ func reset_wounds() -> void:
 	avail = {"transform": false, "special": false}
 	hold = {"transform": 0.0, "special": 0.0}
 	last_stand_left = 0.0
+	energy = false
+	recipe = {}
 	form_free = true
 	form_cue_left = 0.0
 	form_shown = false

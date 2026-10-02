@@ -46,11 +46,23 @@ static func patch(hud: UiHud, S) -> void:
 			"avail_transform": bool(f.act.formReady) if "act" in f else false,
 			# ... and it can be taken only between exchanges, on the ground or charging, with nobody out (SimExchange._transforms' own condition).
 			"last_stand_left": float(f.lastStandLeft) / 60.0 if "lastStandLeft" in f else 0.0,   # the sim's own count of live ticks left (SimFighter.sigFree), 60 to the second
+			"energy": int(f.act.mode) == 1 if "act" in f else false,   # the intent's mode: 1 while the mode control is held (or latched on a toggle)
 			"form_free": S.dirS.ex == null and S.game.ko == null and (str(f.state) == "free" or str(f.state) == "charging"),
 		})
 	hud.hub.set_move_names(move_names)
 	var w = S.world
 	hud.hub.consume({"type": "world", "civilians": int(round(float(w.casualties))), "pop0": int(w.pop0), "structures": int(w.structuresLost), "craters": int(w.craters)})
+
+
+## The mix of a fighter's last presses for the Show recipe option (the host's `hud.recipe_fn`): SimPressRead.classify's mix_long, or {} while the
+## sim has no press log for him (it has not been added to the fighter yet). A stub until the alchemist exists.
+static func recipe(S, slot: int) -> Dictionary:
+	if slot < 0 or slot >= S.fighters.size():
+		return {}
+	var f = S.fighters[slot]
+	if "pressLog" in f and f.pressLog is Array:
+		return SimPressRead.classify(f.pressLog, int(S.tick)).get("mix_long", {})
+	return {}
 
 
 ## Feed lines drained from S.out.feed by the host. Pass each line as the host appends it to its own list.

@@ -31,7 +31,7 @@
         { "action": "heavy", "col": 0, "text": "Heavy" },
         { "action": "signature", "col": 0, "text": "Signature (45 Charge)" },
         { "action": "context", "col": 0, "text": "Context" },
-        { "action": "mode", "col": 0, "text": "Mode" },
+        { "action": "mode", "col": 0, "text": "Energy (hold; Settings can make it a toggle)" },
         { "action": "guard", "col": 1, "text": "Guard (hold)" },
         { "action": "dodge", "col": 1, "text": "Dodge (tap), sprint (hold)" },
         { "action": "power", "col": 1, "text": "Power (hold to charge)" },
