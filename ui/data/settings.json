@@ -93,6 +93,7 @@
       "power": "Power",
       "mode": "Energy",
       "context": "Context",
+      "escape": "Escape",
       "transform": "Transform"
     },
     "helps": {
@@ -105,7 +106,8 @@
       "power": "Hold to charge. Held with a face button it calls a special.",
       "mode": "Hold for energy attacks: blasts instead of blows. Let go for physical. Settings can make it a toggle.",
       "context": "The move that fits the moment. The third special while Power is held.",
-      "transform": "Takes a form that is ready. Some layouts also have a two-button way, which stays as it is."
+      "escape": "A way out of a fight.",
+      "transform": "Takes a form that is ready: hold it for half a second."
     },
     "controls": {
       "west": "the west button",

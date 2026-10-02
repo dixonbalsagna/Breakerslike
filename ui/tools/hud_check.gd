@@ -48,6 +48,7 @@ func _run() -> void:
 	await _settings_rules()
 	_touch_full_rules()
 	await _remap_rules()
+	await _remap_every_layout()
 	await _pause_menu_rules()
 	await _faces_rules()
 	await _two_player_rules()
@@ -2158,6 +2159,69 @@ class _FakeState:
 	var tick: int = 0
 
 
+## The Remap screen itself, not only its model: every layout opens, lists Escape, starts a capture on every row it can change and cancels, with no script error
+## (the layouts moved under it once: Controls' Escape, the dropped L3 + R3 chord, the Brawler's D-pad transform), and Escape is on the controls the data says.
+func _remap_every_layout() -> void:
+	UiRemapModel.save_path = "user://input_test_smoke.json"
+	root.size = Vector2i(1280, 720)
+	var hud: UiHud = load("res://ui/hud/ui_hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.setup(["kai", "vorr"], ["KAI", "VORR"])
+	hud.hub.model(0).ai = false
+	hud.hub.model(1).ai = true
+	var opened := 0
+	var no_escape: Array = []
+	var captures := 0
+	for id in UiRemapModel.layouts():
+		hud.show_remap(id)
+		await _frames(hud, 2)
+		var rws: Array = hud._rm_rows()
+		var has_escape := false
+		for r in rws:
+			if str(r["key"]) == "escape":
+				has_escape = true
+		if not has_escape:
+			no_escape.append(id)
+		_ok(hud.remap_plan() is Dictionary and not (hud.remap_plan() as Dictionary).is_empty(), "remap every layout: %s draws its screen" % id)
+		for r in rws:
+			if r["kind"] == UiSettings.BIND and bool(r["enabled"]):
+				hud._rm_start_capture(str(r["key"]))
+				await _frames(hud, 1)
+				hud._rm_cancel()
+				captures += 1
+		opened += 1
+		hud.hide_remap()
+	_ok(opened == 6 and no_escape.is_empty() and captures >= 40, "remap every layout: all %d layouts open, list Escape (%s without) and start a capture on every row they can change (%d)" % [opened, no_escape, captures])
+	var esc := {"arena": ["pad:r3"], "brawler": ["pad:r3"], "simple-pad": ["pad:r3"], "kb-solo": ["kb:KeyC"], "kb-shared-p1": ["kb:KeyX"], "kb-shared-p2": ["kb:Quote"]}
+	var esc_ok := true
+	for id in esc:
+		esc_ok = esc_ok and _binding_controls(SimInputData.preset(id), "escape") == esc[id]
+	_ok(esc_ok, "remap every layout: Escape is R3 on the pads and C, X and Quote on the keyboards")
+	var tf := {"brawler": ["pad:dpad_up"], "simple-pad": ["pad:rb"]}
+	var tf_ok := true
+	for id in tf:
+		tf_ok = tf_ok and _binding_controls(SimInputData.preset(id), "transform") == tf[id]
+	var arena_chords: Array = []
+	for b in SimInputData.preset("arena")["bindings"]:
+		if str(b["action"]) == "transform":
+			arena_chords.append(b["controls"])
+	tf_ok = tf_ok and arena_chords == [["pad:lt", "pad:rt"]]
+	_ok(tf_ok, "remap every layout: Transform is both triggers on Arena, D-pad up on Brawler (a hold) and RB on Simple; the L3 + R3 chord is gone")
+	var lbl := func(action: String, preset: String) -> String:
+		var parts := PackedStringArray()
+		for sp in UiGlyphs.specs_for(action, "xbox", 0, "neutral", preset):
+			parts.append(str(sp.get("label", "")))
+		return " ".join(parts)
+	_ok(lbl.call("escape", "arena") == "R3" and lbl.call("transform", "arena") == "LT + RT" and lbl.call("transform", "simple-pad") == "RB", "remap every layout: the glyphs say R3 for Escape, LT + RT and RB for Transform")
+	var bg: Array = UiGlyphs.specs_for("transform", "xbox", 0, "neutral", "brawler")
+	_ok(bg.size() >= 1 and str(bg[0].get("kind", "")) != "", "remap every layout: the Brawler's Transform draws a glyph (the D-pad's up)")
+	hud.queue_free()
+	await process_frame
+	UiRemapModel.save_path = SimInputRemap.USER_PATH
+	if FileAccess.file_exists("user://input_test_smoke.json"):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://input_test_smoke.json"))
+
+
 func kinds_in_hud(hud: UiHud, slot: int) -> Array:
 	var ks: Array = []
 	for c in UiPrompts.plan(hud.hub.models[slot], hud.layout.prompts[slot], hud.layout.s, hud._o()):
@@ -2194,11 +2258,11 @@ func _hints_rules() -> void:
 	_ok(UiHints.visible_alpha(m, "always", true, 0.0) == 0.0, "hints: an AI fighter never gets a legend")
 	m.ai = false
 	var rows0: Array = UiHints.rows(m, "kb-solo")
-	_ok(rows0.size() == 10, "hints: ten rows at first on a keyboard (fly, light, heavy, signature, guard, dodge, power, mode, context, specials)")
+	_ok(rows0.size() == 11, "hints: eleven rows at first on a keyboard (fly, light, heavy, signature, guard, dodge, power, mode, context, specials, escape)")
 	hub.consume({"type": "availability", "actor": 0, "action": "transform", "available": true})
-	_ok(UiHints.rows(m, "kb-solo").size() == 11, "hints: Transform joins the legend only while a form is ready")
-	_ok(UiHints.rows(m, "no_such_scheme").size() == UiHints.rows(m, "today").size() and UiHints.rows(m, "today").size() == 11, "hints: an unknown scheme falls back to today (a layout is looked up by its own id)")
-	_ok(UiHints.rows(m, "simple-pad").size() == 8 and UiHints.rows(m, "arena").size() == 11 and UiHints.rows(m, "brawler").size() == 11, "hints: Simple's legend is shorter (no heavy, mode or specials) and Arena and Brawler show every row")
+	_ok(UiHints.rows(m, "kb-solo").size() == 12, "hints: Transform joins the legend only while a form is ready")
+	_ok(UiHints.rows(m, "no_such_scheme").size() == UiHints.rows(m, "today").size() and UiHints.rows(m, "today").size() == 12, "hints: an unknown scheme falls back to today (a layout is looked up by its own id)")
+	_ok(UiHints.rows(m, "simple-pad").size() == 9 and UiHints.rows(m, "arena").size() == 12 and UiHints.rows(m, "brawler").size() == 12, "hints: Simple's legend is shorter (no heavy, mode or specials) and Arena and Brawler show every row")
 	hub.consume({"type": "availability", "actor": 0, "action": "transform", "available": false})
 	var pid := func(dev: String, slot: int, o: Dictionary) -> String:
 		var mm := UiFighterModel.new()
@@ -2783,14 +2847,14 @@ func _remap_rules() -> void:
 		for e in UiRemapModel.entries(SimInputData.preset(id)):
 			out.append(e["id"])
 		return out
-	_ok(ids.call("kb-solo") == ["move", "light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "transform"] and ids.call("arena") == ["light", "heavy", "signature", "guard", "dodge", "power", "mode", "context"] and ids.call("simple-pad") == ["light", "signature", "guard", "dodge", "power", "context", "transform"], "remap: a keyboard lists Fly (four keys) and every action, a pad its single-control actions")
+	_ok(ids.call("kb-solo") == ["move", "light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "escape", "transform"] and ids.call("arena") == ["light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "escape"] and ids.call("simple-pad") == ["light", "signature", "guard", "dodge", "power", "context", "escape", "transform"] and ids.call("brawler") == ["light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "escape", "transform"], "remap: a keyboard lists Fly (four keys) and every action, a pad its single-control actions")
 	var fixed_ids := func(id: String) -> Array:
 		var out: Array = []
 		for r in UiRemapModel.rows(SimInputData.preset(id)):
 			if bool(r["fixed"]):
 				out.append(r["id"])
 		return out
-	_ok(fixed_ids.call("arena") == ["move@fixed0", "transform@fixed0", "transform@fixed1"] and fixed_ids.call("kb-solo") == ["transform@fixed0"] and fixed_ids.call("simple-pad") == ["move@fixed0", "transform@fixed0"], "remap: the pad stick and the chords are listed as fixed rows (greyed, no capture); Pause, Hints, gestures and the power layer are not listed")
+	_ok(fixed_ids.call("arena") == ["move@fixed0", "transform@fixed0"] and fixed_ids.call("kb-solo") == ["transform@fixed0"] and fixed_ids.call("simple-pad") == ["move@fixed0"] and fixed_ids.call("brawler") == ["move@fixed0"], "remap: the pad stick and the chords are listed as fixed rows (greyed, no capture); Pause, Hints, gestures and the power layer are not listed")
 	# A free key: the layered special follows Light (Controls' applier), nothing else moves.
 	var r1: Dictionary = UiRemapModel.attempt("kb-solo", "light", "kb:KeyZ")
 	_ok(r1["status"] == "ok" and (r1["overrides"] as Array) == [{"controls": ["kb:KeyZ"], "action": "light"}], "remap: a free key is an override row for Light")
@@ -2818,13 +2882,13 @@ func _remap_rules() -> void:
 	var cm: Dictionary = UiRemapModel.attempt("arena", "light", "pad:l3")
 	var cs2: Dictionary = UiRemapModel.attempt("arena", "light", "pad:rt")
 	var cs3: Dictionary = UiRemapModel.attempt("kb-solo", "light", "kb:Space")
-	_ok(cm["status"] == "ok" and cs2["status"] == "conflict" and cs2["with"] == "power" and cs3["status"] == "conflict" and cs3["with"] == "dodge", "remap: a chord member that is only in the chord (L3) is free; one that is also an action's control (RT, Space) is a conflict with that action")
+	_ok(cm["status"] == "ok" and cs2["status"] == "conflict" and cs2["with"] == "power" and cs3["status"] == "conflict" and cs3["with"] == "dodge", "remap: a control nothing uses (L3, since the L3 + R3 chord was dropped) is free; one that is also an action's control (RT, Space) is a conflict with that action")
 	UiRemapModel.commit("arena", UiRemapModel.attempt("arena", "light", "pad:rt", true)["overrides"])
 	var chords_kept := 0
 	for b in SimInputData.preset("arena")["bindings"]:
 		if (b["controls"] as Array).size() > 1 and str(b["action"]) == "transform":
 			chords_kept += 1
-	_ok(_binding_controls(SimInputData.preset("arena"), "light") == ["pad:rt"] and _binding_controls(SimInputData.preset("arena"), "power") == ["pad:west"] and chords_kept == 2, "remap: swapping across a chord member (Light to RT, Power to the west button) leaves both chords as they are")
+	_ok(_binding_controls(SimInputData.preset("arena"), "light") == ["pad:rt"] and _binding_controls(SimInputData.preset("arena"), "power") == ["pad:west"] and chords_kept == 1, "remap: swapping across a chord member (Light to RT, Power to the west button) leaves the chord as it is")
 	UiRemapModel.commit("arena", [])
 	# Fly: four keys in order, rebound together.
 	var ck: Dictionary = UiRemapModel.check_move_key("kb-solo", [], "kb:Digit1")
@@ -2846,9 +2910,10 @@ func _remap_rules() -> void:
 	var spz: Dictionary = SimInputData.preset("simple-pad")
 	_ok(_binding_controls(spz, "light") == ["pad:lt"] and _binding_controls(spz, "special_auto", "power") == ["pad:lt"] and _binding_controls(spz, "upgrade_heavy", "", "hold") == ["pad:lt"] and UiRemapModel.attempt("simple-pad", "heavy_none", "pad:rt")["status"] == "reserved", "remap: on Simple the hold-for-heavy and the auto special follow Light")
 	UiRemapModel.commit("simple-pad", [])
-	var rb: Dictionary = UiRemapModel.attempt("brawler", "mode", "pad:dpad_up")
+	var rb_taken: Dictionary = UiRemapModel.attempt("brawler", "mode", "pad:dpad_up")
+	var rb: Dictionary = UiRemapModel.attempt("brawler", "mode", "pad:dpad_left")
 	UiRemapModel.commit("brawler", rb["overrides"])
-	_ok(_binding_controls(SimInputData.preset("brawler"), "special3", "power") == ["pad:dpad_up"], "remap: on Brawler the third special follows Mode")
+	_ok(rb_taken["status"] == "conflict" and rb_taken["with"] == "transform" and _binding_controls(SimInputData.preset("brawler"), "special3", "power") == ["pad:dpad_left"], "remap: on Brawler the third special follows Mode, and D-pad up is Transform's now")
 	UiRemapModel.commit("brawler", [])
 	# The glyphs everywhere follow the player's layout.
 	var lbl := func(action: String, layer_preset: String) -> String:
@@ -2972,10 +3037,10 @@ func _remap_rules() -> void:
 			fixed_off = fixed_off and not bool(r["enabled"])
 	var pl_fx: Dictionary = hud.remap_plan()
 	var fx_rec: Dictionary = (pl_fx["rows"] as Array)[hud._rm_row_index("transform@fixed0")]
-	_ok(fixed_rows == 3 and fixed_off and UiSettings.hit(pl_fx, (fx_rec["rect"] as Rect2).get_center()).get("part", "") == "off", "remap pad: the stick and the two chords are greyed rows that cannot be captured")
-	hud._rm_focus = idx.call("context")
+	_ok(fixed_rows == 2 and fixed_off and UiSettings.hit(pl_fx, (fx_rec["rect"] as Rect2).get_center()).get("part", "") == "off", "remap pad: the stick and the trigger chord are greyed rows that cannot be captured")
+	hud._rm_focus = idx.call("escape")
 	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_DOWN))
-	_ok(hud.remap_plan()["focus"] == hud._rm_rows().size() - 1, "remap pad: the focus skips the greyed rows (Down from Context goes to Reset)")
+	_ok(hud.remap_plan()["focus"] == hud._rm_rows().size() - 1, "remap pad: the focus skips the greyed rows (Down from Escape goes to Reset)")
 	hud._rm_focus = idx.call("light")
 	hud._unhandled_input(pad.call(JOY_BUTTON_DPAD_DOWN))
 	_ok(hud.remap_layout() == "arena" and hud.remap_plan()["focus"] == idx.call("heavy"), "remap pad: the D-pad moves the focus")

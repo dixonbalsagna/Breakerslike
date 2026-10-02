@@ -16,6 +16,7 @@
         { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
+        { "action": "escape", "label": "Escape" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
       ]
     },
@@ -31,6 +32,7 @@
         { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
+        { "action": "escape", "label": "Escape" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
       ]
     },
@@ -46,6 +48,7 @@
         { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
+        { "action": "escape", "label": "Escape" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
       ]
     },
@@ -61,6 +64,7 @@
         { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
+        { "action": "escape", "label": "Escape" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
       ]
     },
@@ -76,6 +80,7 @@
         { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
+        { "action": "escape", "label": "Escape" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
       ]
     },
@@ -91,6 +96,7 @@
         { "action": "mode", "label": "Energy (hold)" },
         { "action": "context", "label": "Context" },
         { "actions": ["power", "special1", "special2", "special3"], "label": "Specials" },
+        { "action": "escape", "label": "Escape" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
       ]
     },
@@ -103,6 +109,7 @@
         { "action": "dodge", "label": "Dodge, sprint" },
         { "action": "power", "label": "Power (hold)" },
         { "action": "context", "label": "Context" },
+        { "action": "escape", "label": "Escape" },
         { "action": "transform", "label": "Transform", "only_when_avail": true }
       ]
     }

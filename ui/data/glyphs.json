@@ -203,9 +203,17 @@
         "H"
       ]
     },
-    "transform": {
+    "escape": {
       "kind": "pad",
       "pad": "R3",
+      "kbd": [
+        "C",
+        "'"
+      ]
+    },
+    "transform": {
+      "kind": "pad",
+      "pad": "RB",
       "kbd": [
         "R",
         ". + /"

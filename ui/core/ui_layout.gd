@@ -170,7 +170,7 @@ func _place_faces() -> void:
 	var gh: float = maxf(24.0 * s, 20.0)
 	var row_h: float = maxf(gh, float(UiText.px(18.0, s)) * 1.4) + 4.0 * s
 	var legend_min: float = 3.0 * row_h + 2.0 * maxf(8.0 * s, 5.0)
-	var legend_full: float = 11.0 * row_h + 2.0 * maxf(8.0 * s, 5.0)
+	var legend_full: float = 12.0 * row_h + 2.0 * maxf(8.0 * s, 5.0)
 	var fixed: Array = [plate[0], plate[1], toll, strip, ring, read_slot, pause_btn, feedback_btn, cards[0], cards[1], silhouette[0], silhouette[1], prompts[0], prompts[1]]
 	fixed.append(Rect2(vp.x * UiFaces.CENTRE_FROM, 0.0, vp.x * (UiFaces.CENTRE_TO - UiFaces.CENTRE_FROM), vp.y))   # Camera's panel strip owns the centre 56% of the width
 	if touch_ui and not touch_ctrl.is_empty():
@@ -193,7 +193,7 @@ func _place_faces() -> void:
 				var r := Rect2(x, bark[i].position.y - gap - side, side, side)
 				var clash := not Rect2(Vector2.ZERO, vp).encloses(r)
 				for o in obstacles:
-					if (o as Rect2).size.y > 0.0 and r.intersects(o):
+					if (o as Rect2).size.y > 0.0 and (o as Rect2).size.x > 0.0 and r.intersects(o):
 						clash = true
 						break
 				if not clash:
@@ -232,7 +232,7 @@ func _place_forms() -> void:
 		var r := Rect2(x0, top, maxf(x1 - x0, 0.0), fh)
 		var clash: bool = not Rect2(Vector2.ZERO, vp).encloses(r)
 		for o in obstacles:
-			if (o as Rect2).size.y > 0.0 and r.intersects(o):
+			if (o as Rect2).size.y > 0.0 and (o as Rect2).size.x > 0.0 and r.intersects(o):
 				clash = true
 				break
 		if not clash:

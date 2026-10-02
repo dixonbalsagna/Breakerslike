@@ -8,12 +8,12 @@ extends RefCounted
 ## user://input.json, written by SimInputData.save_overrides and read at startup by SimInputData.load_and_apply.
 ##
 ## A ROW of the screen is a base-layer binding. An ENTRY is one the player can change: a single-control action (Light, Heavy, Signature,
-## Guard, Dodge, Power, Mode, Context, Transform where a layout has a single control for it) and, on a keyboard, Fly: four keys in order
+## Guard, Dodge, Power, Mode, Context, Escape, Transform where a layout has a single control for it) and, on a keyboard, Fly: four keys in order
 ## (up, left, down, right), captured one after the other and rebound together. A FIXED row is shown greyed and cannot be captured: a chord
-## (LT + RT, L3 + R3, Space + E; its members are free to be bound as single controls) and the pad stick. Not listed: gesture bindings and
+## (Arena's LT + RT, a keyboard's two keys; its members are free to be bound as single controls) and the pad stick. Not listed: gesture bindings and
 ## the power layer (they follow their action), Pause and Hints.
 
-const ORDER: Array = ["move", "light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "transform"]
+const ORDER: Array = ["move", "light", "heavy", "signature", "guard", "dodge", "power", "mode", "context", "escape", "transform"]
 const MOVE_STEPS: Array = ["up", "left", "down", "right"]
 const FIXED: Array = ["pause", "hints"]
 const PAD_RESERVED: Array = ["pad:start", "pad:back"]
