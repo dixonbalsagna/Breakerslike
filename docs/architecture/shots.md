@@ -111,4 +111,4 @@ About 3.2 µs a shot a tick, and 0.3 µs a pair of opposing shots. The whole tic
 | World's embed | World (`ground-contact.md`) | `Fighter.embedT` (ticks) and `embedCool`, hashed; the `embed` event (actor, x, y, z, depth, r, energy, dur, n) | Small, about 12 lines. Neutral |
 | `autoCharge` | Controls | One more name in `SimAct.ASSISTS` | One line. Neutral |
 
-All but the press log and the intent hash fit one neutral slice of about 50 lines with one hash-only regeneration, and it can ride with the shots.
+All but the press log and the intent hash are prepared as one neutral slice (`pending/agency.py`), proven with the shots on b8ea622, and ride with them (EP, 2026-10-02). The press log stays in Encounter's state; the intent hash goes with Encounter's charge slice. As built: `knockback {victim, attacker, kind, amount, dur, n, x, y, z}` (`amount` the distance, `n` the end tick), `exchange_end {actor, kind: continue, knockback or launch}`, `flow {actor, n}` sent by `SimAct.setFlow` when the count changes, `embed` as World listed it, `Fighter.embedT` and `embedCool`, `autoCharge` as the fourth assist.
