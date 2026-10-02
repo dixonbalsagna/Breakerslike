@@ -290,7 +290,7 @@ A charge from the far band (§1) catches a fighter who isn't boosting. Against o
 
 | Question | Rule |
 | :--- | :--- |
-| **The threshold** | By the crater. An impact that digs a crater at least 1.5 bh deep buries him: a slam at about tier 3 or above, or any CRATER SLAM. Smaller impacts keep the bounce, the skid and the tumble |
+| **The threshold** | By the crater. An impact that digs a crater at least **1.75 bh** deep buries him, or 1.5 bh for a special's impact (World's build: about two burials a match). Smaller impacts keep the bounce, the skid and the tumble |
 | **What happens** | No hop, no bounce and no skid. He stops at the bottom |
 | **The free follow-up** | The attacker gets **one blow that can't be answered,** if he strikes within 40 ticks: a heavy or a blast into the crater. It lands clean, deepens the crater and doesn't launch |
 | **How long he is down** | 60 ticks. After the follow-up, or from tick 40 without one, he can guard |
@@ -354,3 +354,35 @@ QA baselines after each slice. The timing bands in §2 are measured from slice 4
 | One hop after a hard slam | Buried, with a free follow-up (§7) |
 
 **Not in this page:** a glancing bounce on a mountain gaining too much momentum is World's to tune (a bounce must never add speed), and the split-screen camera is Camera's.
+
+## 11. Rulings on the first live build (`654acff`, 2026-10-02)
+
+The build has earned launches at ×1.6 force (about 28% of decided exchanges), knock-backs, the exchange starting at the wind-up with the range bands, a slope speed cap of 1.25, and World's skid fix: skids run twice as long and cut deeper furrows.
+
+| # | Question | Ruling |
+| ---: | :--- | :--- |
+| 1 | **Walls end 21.5% of launches,** against a band of 5 to 15%. Longer skids reach more walls | **The band stays, and World pulls two levers.** The wall slope rises from 0.8 to **1.0**, so a skid rides up slopes of up to 45 degrees and can fly off the crest. And a skid that meets a wall at a speed under **600** just halts, with no stop-impact: it counts as halted, not as a wall. World re-measures. If walls are still over 15% after both, the band moves to 8 to 18% |
+| 2 | **Speed lines** fell from 17 to 7.8 a minute with the new rhythm. The EP let a follow-up heavy after a launch keep its own streak, which gives 10.9 | **Confirmed.** The rule is one streak per exchange, plus one for a follow-up heavy after a launch. The band is 8 to 14 a minute |
+| 3a | **The interim far tap** flies in at about the old speed until the taunt and the held charges exist | **Confirmed as interim.** It is the old rush with the exchange starting at the wind-up. Slice 1's taunt and charges replace it (§1) |
+| 3b | **A guard press during a rival's approach** starts the 20-tick perfect-block lockout today | **It shouldn't.** Raising a guard as someone flies in is the natural thing to do, and it must not cost the perfect block. The lockout starts only when a guard press lands during a visible wind-up and misses the window, or when two guard presses come within 20 ticks of each other. A single press with no wind-up showing starts nothing |
+| 4 | **A patient player starts 22 to 30% of exchanges** against a fast masher, down from 33 to 42% | **A small floor until the alchemist lands.** When both fighters have a press waiting at an exchange boundary, the one who didn't start the last exchange starts this one. Controls' measure should return to 35 to 50% for a patient player who has pressed. The alchemist's trades replace this rule, because there both presses play |
+| 5 | **The embed threshold** | **Recorded as World built it:** a crater 1.75 bh deep, or 1.5 bh for a special's impact. That is about two burials a match. It replaces the single 1.5 bh in §7 |
+| 6a | **A seeking shot is not stopped by ground** between the fighters | **Confirmed.** It keeps "energy reaches at any range" true on a planet with hills. VFX arcs it over the terrain. A shot that is dodged or loses its target carries on as a straight shot, and that one does hit the ground and structures, with the tier factor |
+
+**6b. The first numbers for shots** (`data/fight/shots.json`), with Combat's rule that a shape carries its strike's damage and never adds to it.
+
+| Kind | Speed (units a tick) | Trade power | Damage | Ki |
+| :--- | ---: | ---: | :--- | ---: |
+| Bolt | 60 | 1 | A third of a light strike | 1 |
+| Volley (3 bolts) | 60 | 1 each | A light strike, split in three | 3 |
+| Shard spread (5) | 50, up to 1,200 units | 1 each | A light strike, split in five | 3 |
+| Arc | 45 | 2 | ×0.8 of a heavy | 8 |
+| Burst | None, within 150 units | 3 | ×0.8 of a heavy | 8 |
+| Lob | A fixed 36-tick arc | 3 | A heavy, over an area | 8 |
+| Charged shot | 90 | 3 | ×0.6 of a heavy on a tap, rising to a full heavy at 30 ticks of charge | 8 |
+
+- Every seeking shot arrives within 45 ticks.
+- **Trades:** shots of opposing fighters cancel power for power. Bolts cancel in pairs, and a charged shot eats three bolts and ends.
+- A held guard takes a blast at the guard's rate, like a strike.
+- A heavy charge from the far band (§1) shrugs off shots of power 1 at half damage. Power 2 and above stop it.
+- These are first values. QA reports blast damage as a share of match damage from the first energy slice, and the band to start from is 15 to 30%.
