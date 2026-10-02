@@ -8,6 +8,11 @@ Owner: Simulation and Engine. A list of what is asked of `sim/core` and not yet 
 | :--- | :--- | :--- |
 | Fight lanes, the rest (World's lane table, true collisions, terrain rows, the switch-on, beams) | `fight-lanes.md` | the ragdoll physics (Orb's ruling) |
 
+## For the agency pass (EP, 2026-10-02)
+
+- **Shots** (energy blasts in flight): designed and parked, `shots.md` and `pending/`. Encounter's slice 3a waits for it.
+- The other asks, each small, are sized in `shots.md` section 10: the `knockback` and `exchange_end` events, a flow value per fighter, the press log if it moves to core, Controls' `intent-hash.patch`, World's embed fields and event, `autoCharge` in `SimAct.ASSISTS`.
+
 ## At M0 (Combat's moveset milestone), asked through the EP on 2026-10-02
 
 | Item | Who needs it | What the core would add |
