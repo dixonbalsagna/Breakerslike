@@ -43,7 +43,9 @@ func _run() -> void:
 	S.out.fx.clear()
 	_check(rec != null, "a crater of energy 14 was dug")
 	_tick(S, h, [])
-	_check(h.crack_sets.size() == 1, "one crack set from the record (%d)" % h.crack_sets.size())
+	# newMatch now starts every default match with two entrance craters (docs/architecture/intro-phase.md), each a crack set of its own:
+	# one set a record, and only the dug crater (energy 14) has fissures to vent.
+	_check(h.crack_sets.size() == S.craters.size() and S.craters.size() == 3, "one crack set a record: the two entrance craters and the dug one (%d sets, %d records)" % [h.crack_sets.size(), S.craters.size()])
 	_check(h.debris.jobs.size() > 0, "fissure vents are scheduled (%d jobs)" % h.debris.jobs.size())
 	var puffs0: int = h.debris.bits.size()
 	for k in range(60):
@@ -55,7 +57,7 @@ func _run() -> void:
 	h2.reset(S, 4)
 	S.T += 5.0
 	_tick(S, h2, [])
-	_check(h2.crack_sets.size() == 1 and h2.debris.jobs.is_empty(), "a set rebuilt long after its record has no vents")
+	_check(h2.crack_sets.size() == S.craters.size() and h2.debris.jobs.is_empty(), "sets rebuilt long after their records have no vents")
 	# Embers by variant.
 	print("embers")
 	for v in ["GLASS TRENCH", "FIRESTORM", "HORIZON CLEAVE", "MERIDIAN SCAR"]:
@@ -183,6 +185,7 @@ func _run() -> void:
 	_speed()
 	_earth()
 	_trails()
+	_intro()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -1214,6 +1217,120 @@ func _trails() -> void:
 	_tick(S, h, [VfxMock.ev("left_ground", {"actor": 0.0, "x": plains, "y": g, "z": 0.0, "spd": 3000.0, "cause": "lip", "vx": 2000.0, "vy": 900.0})])
 	_check(h.trails[0].cuts == c0 + 3, "leaving the ground does not (the flight after it is the new trail)")
 	SimCore.dispose(S)
+
+
+## The intro (docs/architecture/intro-phase.md): the entrance craters, the effects clock through the pre-clock ticks, the landing's dust and
+## the last stand's mark.
+func _intro() -> void:
+	print("intro and last stand")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	# The default match starts from the intro's end state: two entrance craters, drawn grown from the first frame (they spread at
+	# a landing, not at the clock).
+	var h := VfxHub.new()
+	h.cracks_enabled = true
+	h.reset(S, 6)
+	_tick(S, h, [])
+	_check(S.craters.size() == 2 and h.crack_sets.size() == 2, "a default match has two entrance craters and a crack set for each (%d, %d)" % [S.craters.size(), h.crack_sets.size()])
+	var grown: bool = true
+	for cs in h.crack_sets:
+		if h.fx_now(S) - cs.born < 5.0:
+			grown = false
+	_check(grown and h.debris.jobs.is_empty(), "they are drawn grown at tick 0, with no vents (their energy is 1.5)")
+	# The effects clock runs through the intro's pre-clock ticks while the sim clock stands still.
+	S.intro.t = 90
+	_check(absf(h.fx_now(S) - (S.T + 1.5)) < 1e-6, "the effects clock is the sim's time plus the intro's ticks (%.2f s at 90 ticks)" % h.fx_now(S))
+	S.intro.t = 0
+	# A played intro: the landing's dust, only when the fall was seen (a skipped intro throws nothing).
+	var land := func(actor: float): return VfxMock.ev("entrance_land", {"actor": actor, "x": plains, "y": WorldTerrain.groundY(S, plains), "z": 0.0, "y1": WorldTerrain.groundY(S, plains) + 6000.0, "r": 196.0})
+	var hf := VfxHub.new()
+	hf.reset(S, 6)
+	_tick(S, hf, [VfxMock.ev("entrance_fall", {"actor": 0.0, "x": plains, "y": 0.0, "z": 0.0, "y1": 6000.0, "dur": 0.6})])
+	_tick(S, hf, [land.call(0.0)])
+	var chunks: int = hf.debris.bits.filter(func(b): return b.kind == VfxDebris.CHUNK).size()
+	var puffs: int = hf.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF).size()
+	var rings: int = hf.debris.bits.filter(func(b): return b.kind == VfxDebris.RING).size()
+	_check(chunks >= 8 and puffs >= 10 and rings == 1, "an entrance landing throws clods, a skirt and column of dust and one ring (%d chunks, %d puffs, %d ring)" % [chunks, puffs, rings])
+	var hs := VfxHub.new()
+	hs.reset(S, 6)
+	_tick(S, hs, [land.call(0.0)])
+	_check(hs.earth.contact_events == 0 and hs.debris.bits.size() == 0, "a landing with no fall before it (the skipped intro) throws nothing")
+	var hr := VfxHub.new()
+	hr.reduced_motion = true
+	hr.reset(S, 6)
+	hr.reduced_motion = true
+	_tick(S, hr, [VfxMock.ev("entrance_fall", {"actor": 0.0, "x": plains, "y": 0.0, "z": 0.0, "y1": 6000.0, "dur": 0.6})])
+	_tick(S, hr, [land.call(0.0)])
+	_check(hr.debris.bits.filter(func(b): return b.kind == VfxDebris.RING).size() == 0 and hr.earth.contact_made < hf.earth.contact_made, "reduced motion: fewer pieces and no ring (%d against %d)" % [hr.earth.contact_made, hf.earth.contact_made])
+	# A crater dug during a played intro spreads from the landing, on the effects clock.
+	var hc := VfxHub.new()
+	hc.cracks_enabled = true
+	hc.reset(S, 6)
+	S.intro.t = 36
+	_tick(S, hc, [VfxMock.ev("entrance_fall", {"actor": 0.0, "x": plains, "y": 0.0, "z": 0.0, "y1": 6000.0, "dur": 0.6})])
+	var born_ok: bool = false
+	for cs in hc.crack_sets:
+		if absf(cs.born - 0.6) < 0.05:
+			born_ok = true
+	S.intro.t = 0
+	_check(born_ok, "an entrance crater of a played intro is born at its landing, not grown at tick 0")
+	# Jobs run through the intro: the sim clock stands still, the effects clock does not.
+	var hj := VfxHub.new()
+	hj.reset(S, 6)
+	S.T = 0.0
+	hj.debris.vent(hj.fx_now(S) + 0.1, plains, 0.0, 100.0)
+	for k in range(10):
+		S.intro.t += 1
+		_tick_still(S, hj)
+	_check(hj.debris.jobs.is_empty() and hj.debris.spawned > 0, "a job scheduled in the intro runs while S.T stands still (%d bits)" % hj.debris.spawned)
+	S.intro.t = 0
+	# The last stand's mark.
+	var hm := VfxHub.new()
+	hm.reset(S, 6)
+	_tick(S, hm, [VfxMock.ev("last_stand_ready", {"actor": 1.0, "dur": 0.5})])
+	for k in range(12):
+		_tick(S, hm, [])
+	_check(hm.aura.mark_lvl[1] > 0.99 and hm.aura.mark_lvl[0] == 0.0, "the ring comes up on the fighter who reached the brink (%.2f), and only on him" % hm.aura.mark_lvl[1])
+	var lvl_now: float = hm.aura.mark_lvl[1]
+	var left_now: int = hm.aura.mark_left[1]
+	for k in range(5):
+		S.tick += 1
+		var tk := SimState.FxEvent.new()
+		tk.type = "tick"
+		tk.dt = SimConst.DT
+		tk.frozen = true
+		hm.consume(S, [tk])
+	_check(hm.aura.mark_left[1] == left_now and hm.aura.mark_lvl[1] == lvl_now, "the window counts his free time: it holds on frozen ticks")
+	for k in range(40):
+		_tick(S, hm, [])
+	_check(hm.aura.mark_left[1] == 0 and hm.aura.mark_lvl[1] < 0.5, "it fades when the window expires on its own (%.2f)" % hm.aura.mark_lvl[1])
+	var hu := VfxHub.new()
+	hu.reset(S, 6)
+	_tick(S, hu, [VfxMock.ev("last_stand_ready", {"actor": 0.0, "dur": 20.0})])
+	for k in range(12):
+		_tick(S, hu, [])
+	_tick(S, hu, [VfxMock.ev("last_stand_end", {"actor": 0.0, "kind": "used"})])
+	_check(hu.aura.mark_burst[0] > 0 and hu.aura.mark_left[0] == 0, "when it is used, one ring leaves him (%d ticks)" % hu.aura.mark_burst[0])
+	var hx := VfxHub.new()
+	hx.reset(S, 6)
+	_tick(S, hx, [VfxMock.ev("last_stand_ready", {"actor": 5.0, "dur": 1.0}), VfxMock.ev("last_stand_end", {"actor": -1.0, "kind": "used"})])
+	_check(hx.aura.marks_made == 0, "an actor out of range is ignored")
+	var hz := VfxHub.new()
+	hz.standing_aura_enabled = false
+	hz.reset(S, 6)
+	_tick(S, hz, [VfxMock.ev("last_stand_ready", {"actor": 0.0, "dur": 2.0})])
+	_check(hz.aura.marks_made == 0, "with the aura effects off there is no mark")
+	SimCore.dispose(S)
+
+
+## A tick of the hub with nothing in it that the sim clock does not advance for (an intro tick): effects run, S.T stays.
+func _tick_still(S: SimState, h: VfxHub) -> void:
+	var tk := SimState.FxEvent.new()
+	tk.type = "tick"
+	tk.dt = SimConst.DT
+	tk.frozen = false
+	h.consume(S, [tk])
 
 
 func _tick(S: SimState, h: VfxHub, events: Array) -> void:

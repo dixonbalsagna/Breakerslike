@@ -44,9 +44,9 @@ func attach(p_mats: RenderMats, p_ground: GroundField) -> void:
 func update(hub: VfxHub, S: SimState, cam_x: float, half_w: float, zoom: float) -> void:
 	visible_count = 0
 	built_now = 0
-	mat.set_shader_parameter("now", S.T)
+	mat.set_shader_parameter("now", hub.fx_now(S))
 	for i in range(stand_mats.size()):
-		stand_mats[i].set_shader_parameter("now", S.T)
+		stand_mats[i].set_shader_parameter("now", hub.fx_now(S))
 		stand_mats[i].set_shader_parameter("fade", hub.react.level[i])
 		stand_mats[i].set_shader_parameter("grow_t", 0.45 if hub.reduced_motion else VfxReact.p("cracks", "grow_s"))
 	# Build what the hub has queued (any pane may; the mesh is shared). A build needs the ground field.

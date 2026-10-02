@@ -58,6 +58,7 @@ var water: VfxWater:             # the water effects (set by the hub); a plunge'
 var _tone: int = 0              # 0 mid, 1 shadow (a back layer), 2 light (a front layer)
 var _tint: Color = Color(0.0, 0.0, 0.0, 0.0)   # a puff's own colour instead of the biome's, while set (dust_puff)
 var jobs: Array = []          # Job, waiting
+var now: float = 0.0           # the effects clock (hub.fx_now): sim time plus the intro's pre-clock ticks, so a landing's jobs run during the intro, when the sim clock stands still
 var spawned: int = 0          # counters for the tests
 var dropped: int = 0
 var max_live: int = 0
@@ -95,7 +96,7 @@ func step(S: SimState, dt: float) -> void:
 		var i: int = 0
 		while i < jobs.size():
 			var j: Job = jobs[i]
-			if S.T >= j.at:
+			if now >= j.at:
 				jobs.remove_at(i)
 				_run_job(S, j)
 			else:
@@ -229,12 +230,12 @@ func chain_tunnel(x0: float, y0: float, x1: float, y1: float, z: float, link: in
 func building_fall(S: SimState, bx: float, w: float, h: float, front_z: float, mode: String, delay: float, cx: float) -> void:
 	var a: Dictionary = {"x": bx, "w": w, "h": h, "z": front_z, "mode": mode, "cx": cx}
 	var j := Job.new()
-	j.at = S.T + delay
+	j.at = now + delay
 	j.kind = "skirt"
 	j.a = a
 	jobs.append(j)
 	var j2 := Job.new()
-	j2.at = S.T + delay + 0.05
+	j2.at = now + delay + 0.05
 	j2.kind = "chips"
 	j2.a = a
 	jobs.append(j2)
@@ -292,7 +293,7 @@ func _skirt(S: SimState, a: Dictionary) -> void:
 		var pz: float = _rd.range_(8.0, 40.0)
 		if kp < q:
 			var j := Job.new()
-			j.at = S.T + 0.5 * (1.0 - fr)
+			j.at = now + 0.5 * (1.0 - fr)
 			j.kind = "colpuff"
 			j.a = {"x": px, "y": g + h * (0.05 + 0.85 * fr), "z": a.z + pz, "vx": vx, "vy": vy, "s0": s * 0.6, "s1": s * 1.4, "life": pl, "tone": k % 3}
 			jobs.append(j)
@@ -554,12 +555,12 @@ func pancake(S: SimState, x: float, w: float, fh: float, g: float, from: int, to
 	for i in range(m):
 		var f: int = to - int(floor(float(i) * float(n) / float(m)))
 		var j := Job.new()
-		j.at = S.T + 0.4 * float(i) / float(m)
+		j.at = now + 0.4 * float(i) / float(m)
 		j.kind = "pflr"
 		j.a = {"x": x, "w": w, "y": g + (float(f) + 0.5) * fh, "fh": fh, "z": front_z, "g": g}
 		jobs.append(j)
 	var r := Job.new()
-	r.at = S.T + 0.45
+	r.at = now + 0.45
 	r.kind = "pring"
 	r.a = {"x": x, "w": w, "y": g + 6.0, "z": front_z}
 	jobs.append(r)

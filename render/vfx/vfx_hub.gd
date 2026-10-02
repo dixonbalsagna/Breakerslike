@@ -80,6 +80,8 @@ var _hold: float = 0.0              # no step up for this long after a step down
 var _last_crater = null             # the newest crater record already turned into a set
 var _last_slide = null
 var _next_id: int = 1
+var _fell := [false, false]        # an `entrance_fall` was seen for the slot: the intro is being played (not skipped)
+var _intro_seen: bool = false
 
 const AUTO_DOWN_FPS: float = 42.0
 const AUTO_DOWN_S: float = 2.0
@@ -116,6 +118,8 @@ func reset(S: SimState, p_seed: int) -> void:
 	crack_build_usec = 0
 	_last_crater = null
 	_last_slide = null
+	_fell = [false, false]
+	_intro_seen = false
 
 
 ## Once per displayed frame with its wall-clock time: the automatic quality step. Below 42 fps for 2 s drops a level;
@@ -190,6 +194,26 @@ func _consume(S: SimState, events: Array) -> void:
 		for e in events:
 			if e.type == "damage" and e.kind == "heavy" and e.number:
 				_speed_heavy(S, e)
+	debris.now = fx_now(S)
+	if transform_enabled and standing_aura_enabled:
+		aura.step_mark(frozen)
+		for e in events:
+			if e.type == "last_stand_ready":
+				aura.mark_ready(int(e.actor), float(e.dur))
+			elif e.type == "last_stand_end":
+				aura.mark_end(int(e.actor), String(e.kind))
+	for e in events:
+		if e.type == "entrance_fall":
+			_intro_seen = true
+			var fa: int = int(e.actor)
+			if fa >= 0 and fa < 2:
+				_fell[fa] = true
+		elif e.type == "entrance_land" and earth_enabled:
+			var la: int = int(e.actor)
+			if la >= 0 and la < 2 and _fell[la]:
+				debris.quality = quality
+				debris.reduced = reduced_motion
+				earth.on_entrance_land(S, e)
 	_sync_cracks(S)
 	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled:
 		debris.quality = quality
@@ -200,7 +224,7 @@ func _consume(S: SimState, events: Array) -> void:
 		if react_enabled and not frozen:
 			react.step(S, self, xform.forms)
 		if react_enabled:
-			react.prune(S)
+			react.prune(fx_now(S))
 		var fall_xs: Dictionary = {}          # the dust and debris of a building that fell in this tick are the fall's (building_fall), not the `debris` events'
 		if destruction_enabled and earth_enabled:
 			var any_fall: bool = false
@@ -479,7 +503,11 @@ func _queue_crater(S: SimState, c) -> void:
 	cs.kind = 0
 	cs.key = key
 	cs.x = SimWrap.wrap(c.x)
-	cs.born = c.t
+	cs.born = c.t + float(S.intro.t) * SimConst.DT   # on the effects clock (fx_now)
+	# An entrance crater of a match that starts from the intro's end state (the default skip) is there from the first frame: drawn grown,
+	# not spreading at the clock. A played intro digs it at the landing, and it spreads then.
+	if float(c.owner) < 0.0 and c.t == 0.0 and not _intro_seen:
+		cs.born -= 10.0
 	cs.biome = biome
 	cs.lines = lines
 	_add(cs)
@@ -538,7 +566,7 @@ func build_next_crack(S: SimState, ground: GroundField) -> void:
 ## Dust jets along a fresh fissure, one where the crack's front reaches each few points, so the split breathes as it opens.
 ## Only for a set that is fresh (a rebuild after a seek draws none), and only if the debris pool is running.
 func _add_vents(S: SimState, cs: CrackSet) -> void:
-	if S.T - cs.born > 0.5:
+	if fx_now(S) - cs.born > 0.5:
 		return
 	var reach: float = 1.0
 	for ln in cs.lines:
@@ -619,3 +647,10 @@ func reference_events(events: Array) -> Array:
 		if e.type == "debris" or e.type == "fire" or e.type == "dust":
 			return events.filter(func(ev): return ev.type != "debris" and ev.type != "fire" and ev.type != "dust")
 	return events
+
+
+## The effects clock: the sim's time plus the pre-clock ticks of an intro (docs/architecture/intro-phase.md). The sim clock stands
+## still through the intro, but effects run at full speed there (the `tick` mark says frozen: false), so jobs, crack growth and the
+## blow-out list run on this instead. After the intro it is the sim's time plus a constant.
+func fx_now(S: SimState) -> float:
+	return S.T + float(S.intro.t) * SimConst.DT

@@ -356,3 +356,32 @@ func on_slide_end(S: SimState, e) -> void:
 		if debris._rd.next() < _q():
 			debris.chunk(x + debris._rd.range_(-0.5, 0.5) * float(e.w), y + 6.0, z + 6.0, debris._rd.range_(-1.0, 1.0) * 420.0 * sqrt(SimConst.WS), debris._rd.range_(200.0, 600.0) * sqrt(SimConst.WS), debris._rd.range_(8.0, 15.0), debris._rd.range_(1.0, 1.8), tones, 2, 11.0)
 			contact_made += 1
+
+
+## The entrance landing (the sim's `entrance_land`, played intro only): a fighter comes down out of the sky into a crater, so it
+## is a slam with more drama than the crater's own 1.5-energy ejecta: clods thrown both ways, a low skirt of dust spreading along
+## the ground in two layers, a short column of dust rising off the impact, and one thin ring on the ground. Scaled by the height
+## he fell from (`y1` less `y`). The crater and its cracks are the sim's record, drawn by the crack sets.
+func on_entrance_land(S: SimState, e) -> void:
+	var x: float = float(e.x)
+	var y: float = float(e.y)
+	var z: float = float(e.get("z") if e.get("z") != null else 0.0)
+	var s: float = clampf(sqrt(maxf(float(e.y1) - y, 0.0) / 3000.0), 0.7, 2.0)
+	var biome: String = VfxPalette.biome_key(x)
+	var tones: Array = tones_for_surface("soil", x)
+	contact_events += 1
+	_chunks(x, y, z, _count(p("land", "chunks_slam") * 1.4 * s), tones, 0.0, 0.0, 300.0 * s, 1000.0 * s, 700.0 * s, 0.8 + 0.4 * s)
+	# The skirt: puffs along the ground out to both sides, darker behind, lighter in front.
+	var n: int = _count(10.0 * s)
+	for k in range(n):
+		var side: float = 1.0 if k % 2 == 0 else -1.0
+		var sz: float = debris._rd.range_(50.0, 100.0) * (0.7 + 0.4 * s)
+		debris.dust_puff(biome, x + side * debris._rd.range_(20.0, 160.0), y + debris._rd.range_(0.0, 30.0), z + debris._rd.range_(4.0, 36.0), side * debris._rd.range_(200.0, 700.0) * s, debris._rd.range_(30.0, 150.0), sz * 0.6, sz * 1.6, debris._rd.range_(1.6, 2.8), k % 3)
+		contact_made += 1
+	# The column: a few puffs rising off the impact.
+	for k in range(_count(4.0 * s)):
+		var sz2: float = debris._rd.range_(60.0, 110.0) * (0.7 + 0.4 * s)
+		debris.dust_puff(biome, x + debris._rd.range_(-50.0, 50.0), y + debris._rd.range_(10.0, 80.0), z + debris._rd.range_(4.0, 30.0), debris._rd.range_(-60.0, 60.0), debris._rd.range_(150.0, 420.0) * s, sz2 * 0.6, sz2 * 1.5, debris._rd.range_(1.8, 3.0), 2)
+		contact_made += 1
+	if not debris.reduced:
+		debris._ring(x, y + 6.0, z + 8.0, 60.0, 1100.0 * s, 0.55)

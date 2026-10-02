@@ -150,3 +150,25 @@ Rendering traced a thick pale arc standing beside a slam to the launched fighter
 ## Speed lines: one streak an exchange (2026-10-02)
 
 Game Design's rule (rule-of-cool.md row 11, balance-targets §22): one streak per exchange, on its launch if it has one, otherwise on its last landed heavy, and none on a hit that gets a panel. Done in `VfxSpeed` from the events already read plus `S.dirS.ex` (its `n`, `kind` and `tag`; no exchange id on the events was needed): a landed heavy waits for the end of its exchange (45 ticks at most) so that a launch can take its place; a signature exchange, a riposte that launches, a clash that is won (`decisive` clash, beam or beam_clash), and a hit with a `limb_break`, `ko` or `finisher_start` get none. The old per-victim 24-tick dedupe is off (the exchange is the cap now); the 6-tick gap and four alive stay. In eight AI-against-AI seeds over their first two minutes: 8.9 streaks a minute from 10.4 exchanges a minute that had a heavy or a launch (19 hits left to panels, 63 were an exchange's second hit); the 17 a minute in §22 is the full-length figure. `effects_check.gd` has the cases (last heavy, launch replaces heavy, signature, riposte with and without a launch, clash won and not, limb_break, ko, finisher_start, the 45-tick limit); `hash_check.gd` and `determinism.gd` pass.
+
+## The intro: entrance craters, the effects clock, the landing's dust and the last stand's mark (2026-10-02)
+
+**Why effects_check failed, and what the player sees.** `SimCore.newMatch` now starts every default match from the intro's end state: two entrance craters (energy 1.5, no owner, radius about 196 units) are in `S.craters` at tick 0, so the hub builds a crack set for each, and the "cracks and vents" checks (which dug one crater and expected one set) saw three. The checks now count one set a record. **At tick 0 the player sees two shallow bowls with fine dark cracks at the fighters' feet, drawn grown** (`img/intro-skip-tick0.png`): I decided they should draw, because they are real craters in the sim's record and a scar stays; they have no vents, because 1.5 is under the fissure energy. Before this change they would have spread over the first half second of the clock, so the cracks now start grown for a match that skips the intro.
+
+**The effects clock.** The intro's ticks are pre-clock: `S.T` stands still while effects run at full speed (the `tick` mark says `frozen: false`). Anything keyed to `S.T` stood still with it: the landing's jobs, the cracks' growth, the blow-out list. They now run on `VfxHub.fx_now(S)`: `S.T` plus the intro's played ticks times the tick length (a constant after the intro, so craters and rebuilds agree). A played intro digs its crater at the landing and the crack set spreads then; a landing's dust jobs run.
+
+**What I give the seven new events.**
+
+| Event | Effect | Status |
+| :--- | :--- | :--- |
+| `intro_start` | none (Camera, UI); I only note that the intro is played, so a landing with no fall before it (the skipped intro) throws nothing | built (the flag) |
+| `entrance_fall` | none here: the falling fighter's own trail, which the intro's ticks already feed, is the effect. A speed streak into the landing is possible but he is not launched, so I leave it | none, on purpose |
+| `entrance_land` | clods thrown both ways, a low two-layer skirt of dust, a short dust column and one ring on the ground, scaled by the height he fell from, with the crater's cracks spreading from the landing | built (`earth.gd on_entrance_land`; before and after `img/intro-landing-*.png`) |
+| `staredown_start` | none: stillness is the effect, and the landing's dust settles on its own | none |
+| `clock_start` | none (UI, Camera, Audio) | none |
+| `last_stand_ready` (actor, dur) | a thin steady ring at the chest in his lane colour (breathing a little; steady in reduced motion) while the free signature is his, counting his free time, easing in over 10 ticks | built (`aura.gd`, `transform_view.gd`; `img/laststand-*.png`) |
+| `last_stand_end` (actor, kind) | `used`: one ring leaves him, expanding, over 12 ticks; `expired`: the ring fades over 30 | built |
+
+The mark follows Legal's aura rule (a thin ring in the fighter's lane colour: no flame, no flash, no gold, white or red; the colour goes through `VfxAura.lane_color`) and is one quad (two for the leaving ring) in the transformation's draw call. It is on while `standing_aura_enabled` is.
+
+Checks: `effects_check.gd` has the intro cases (two entrance craters and a set each, drawn grown with no vents, the effects clock, the landing's dust and none without a fall, reduced motion, a crater of a played intro born at its landing, a job running while `S.T` stands still, the mark's ease, hold on frozen ticks, fade, leaving ring, out-of-range actor, the flag); `hash_check.gd` and `determinism.gd` pass.

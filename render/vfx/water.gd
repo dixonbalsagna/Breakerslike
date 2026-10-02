@@ -139,7 +139,7 @@ func plunge(S: SimState, x: float, y: float, n: int) -> void:
 	var H: float = clampf(speed * p("plunge", "height_per_speed") * (0.7 + 0.3 * s), p("plunge", "height_min"), p("plunge", "height_max"))
 	_column(x, y, s, H, q, 1.0)
 	var j := VfxDebris.Job.new()
-	j.at = S.T + p("plunge", "rebound_delay")
+	j.at = debris.now + p("plunge", "rebound_delay")
 	j.kind = "plunge2"
 	j.a = {"x": x, "y": y, "s": s, "H": H * p("plunge", "rebound_share")}
 	debris.jobs.append(j)

@@ -203,7 +203,7 @@ func _stand(S: SimState, hub, i: int, f, _g: float, standing: bool) -> void:
 	var lines: Array = VfxCrackGen.crater_lines(hub.seed, key, r, E, false, "powerup", hub.quality)
 	if lines.is_empty():
 		return
-	var ns = hub.make_set(2, key, SimWrap.wrap(f.x), S.T, biome, lines)
+	var ns = hub.make_set(2, key, SimWrap.wrap(f.x), hub.fx_now(S), biome, lines)
 	ns.slot = i
 	_set[i] = ns
 	_away[i] = 0
@@ -249,7 +249,7 @@ func on_crater(S: SimState, e, hub) -> void:
 		var floors: Array = []
 		for r in range(rows):
 			floors.append(mini(int(floor((float(r) + 0.5) / float(rows) * float(F))), F - 1))
-		var at: float = S.T + d / maxf(p("windows", "speed"), 1.0)
+		var at: float = hub.fx_now(S) + d / maxf(p("windows", "speed"), 1.0)
 		var j := VfxDebris.Job.new()
 		j.at = at
 		j.kind = "blow"
@@ -262,6 +262,6 @@ func on_crater(S: SimState, e, hub) -> void:
 
 
 ## Drop blow-outs whose time is long past (Rendering reads them while the windows are out).
-func prune(S: SimState) -> void:
+func prune(now: float) -> void:
 	var keep: float = p("windows", "keep_s")
-	blowouts = blowouts.filter(func(w): return S.T - float(w["at"]) < keep)
+	blowouts = blowouts.filter(func(w): return now - float(w["at"]) < keep)

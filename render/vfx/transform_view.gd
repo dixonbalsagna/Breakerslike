@@ -82,6 +82,34 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, hal
 				colr.a *= VfxReact.flicker(fs, hub.aura.clock, i, hub.reduced_motion)
 				pulse *= VfxReact.jitter(fs, hub.aura.clock, i, hub.reduced_motion)
 			n = _put(n, Vector2(rels, ps.y + ahs * 0.5 - 0.1 * bh), Vector2(1.0, 0.0), float(ads["w_bh"]) * bh * pulse, ahs * pulse, fzs + Z_AURA, colr, float(ads["lobes"]), fill, SHAPE_AURA)
+	# The last stand's mark (aura.gd): a thin ring at the chest in his lane colour while the free signature is his, and one ring
+	# leaving him when it is used.
+	if hub.standing_aura_enabled:
+		for i in range(mini(2, host.S.fighters.size())):
+			var ml: float = lerpf(hub.aura.mark_prev[i], hub.aura.mark_lvl[i], a)
+			var burst: int = hub.aura.mark_burst[i]
+			if (ml < 0.01 and burst <= 0) or n >= CAP - 8:
+				continue
+			var fxm: float = host.fighter_x(i, a)
+			var relm: float = SimWrap.sdx(cam_x, fxm)
+			if absf(relm) > half_w + 8.0 * bh:
+				continue
+			var pm: Vector3 = host.fighter_pose(i, a)
+			var fzm: float = host.fighter_z(i, a)
+			var cm: Color = VfxAura.lane_color(String(host.S.fighters[i].aura))
+			var chest: Vector2 = Vector2(relm, pm.y + VfxLook.CHEST_Y)
+			if ml >= 0.01:
+				var breathe: float = 1.0 if hub.reduced_motion else 1.0 + 0.06 * sin(TAU * (float(hub.aura.clock) + a) / 70.0)
+				var rr: float = 0.95 * bh * breathe
+				var cc: Color = cm
+				cc.a = 0.55 * smoothstep(0.0, 1.0, ml)
+				n = _put(n, chest, Vector2(1.0, 0.0), rr * 2.0, rr * 2.0, fzm + Z_RING - 1.0, cc, maxf(0.045, 1.6 * minpx / rr), 0.0, SHAPE_RING)
+			if burst > 0:
+				var ub: float = 1.0 - float(burst) / 12.0
+				var rb: float = lerpf(0.95, 2.4, 1.0 - pow(1.0 - ub, 2.0)) * bh
+				var cb: Color = cm
+				cb.a = 0.7 * (1.0 - ub)
+				n = _put(n, chest, Vector2(1.0, 0.0), rb * 2.0, rb * 2.0, fzm + Z_RING, cb, maxf(0.04, 1.6 * minpx / rb), 0.0, SHAPE_RING)
 	# Speed lines alone (speed.gd): thin lines running toward the hit for six ticks, behind the fighters, quiet.
 	if hub.speedlines_enabled:
 		var nl: int = int(round(VfxReact.p("speed", "lines") * (0.5 if (hub.reduced_motion or q == VfxLook.Q_LOW) else 1.0)))

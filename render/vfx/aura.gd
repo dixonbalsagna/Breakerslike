@@ -47,6 +47,11 @@ func reset() -> void:
 	level = PackedFloat32Array([0.0, 0.0])
 	prev = PackedFloat32Array([0.0, 0.0])
 	_hold = PackedInt32Array([1000, 1000])
+	mark_left = PackedInt32Array([0, 0])
+	mark_lvl = PackedFloat32Array([0.0, 0.0])
+	mark_prev = PackedFloat32Array([0.0, 0.0])
+	mark_burst = PackedInt32Array([0, 0])
+	marks_made = 0
 	clock = 0
 	started = 0
 	warm()
@@ -130,3 +135,43 @@ static func _lane_sub() -> Color:
 				col = Color(m)
 	_sub = col
 	return _sub
+
+
+# ------------------------------------------------------------------------------------------------------ the last stand's mark
+## While a fighter's last stand is open (`last_stand_ready`, `dur` seconds of his free time, closed by `last_stand_end`) he wears a
+## thin steady ring at the chest in his own lane colour, breathing a little: the signature in his hands is free. When it is used
+## the ring leaves him once, expanding; when it expires it fades. No flame, no flash, never gold, white or red (Legal's aura rule,
+## docs/legal/rule-of-cool-screen.md: a thin outline or ring in the fighter's lane colour).
+var mark_left := PackedInt32Array([0, 0])      # ticks of the window left (counts unfrozen ticks)
+var mark_lvl := PackedFloat32Array([0.0, 0.0])  # eased 0..1
+var mark_prev := PackedFloat32Array([0.0, 0.0])
+var mark_burst := PackedInt32Array([0, 0])     # ticks of the leaving ring left (it was used)
+var marks_made: int = 0                        # for the tests
+
+
+func mark_ready(actor: int, dur: float) -> void:
+	if actor >= 0 and actor < 2:
+		mark_left[actor] = maxi(int(round(dur * 60.0)), 1)
+		marks_made += 1
+
+
+func mark_end(actor: int, kind: String) -> void:
+	if actor >= 0 and actor < 2:
+		mark_left[actor] = 0
+		if kind == "used":
+			mark_burst[actor] = 12
+
+
+## Once per consume().
+func step_mark(frozen: bool) -> void:
+	for i in range(2):
+		mark_prev[i] = mark_lvl[i]
+		if frozen:
+			continue
+		if mark_left[i] > 0:
+			mark_left[i] -= 1
+			mark_lvl[i] = minf(mark_lvl[i] + 1.0 / 10.0, 1.0)
+		else:
+			mark_lvl[i] = maxf(mark_lvl[i] - 1.0 / 30.0, 0.0)
+		if mark_burst[i] > 0:
+			mark_burst[i] -= 1

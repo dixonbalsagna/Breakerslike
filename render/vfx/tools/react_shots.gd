@@ -211,6 +211,26 @@ func _run() -> void:
 			dmean += v
 		dmean /= maxf(float(draws.size()), 1.0)
 		print("BENCH reactions %s: frame CPU mean %.3f p99 %.3f max %.3f ms, draw calls mean %.1f, peak bits %d, consume mean %.3f max %.3f ms, update (layer) mean %.3f max %.3f ms" % ["off" if off else "on", mean, srt[int(srt.size() * 0.99)], srt[srt.size() - 1], dmean, peak, h.stat_consume_usec / 1000.0 / maxf(1.0, float(h.stat_consume_n)), h.stat_consume_max / 1000.0, main.panes[0].vfx_layer.stat_update_usec / 1000.0 / maxf(1.0, float(main.panes[0].vfx_layer.stat_update_n)), main.panes[0].vfx_layer.stat_update_max / 1000.0])
+	elif which == "laststand":
+		f.x = SimWrap.wrap(wx * SimConst.PS)
+		f.y = WorldTerrain.groundY(S, f.x)
+		f.vx = 0.0
+		f.vy = 0.0
+		f.state = "free"
+		o.x = SimWrap.wrap(f.x + 2600.0)
+		o.y = WorldTerrain.groundY(S, o.x)
+		var rd := SimState.FxEvent.new()
+		rd.type = "last_stand_ready"
+		rd.actor = float(slot)
+		rd.dur = 6.0
+		var used := SimState.FxEvent.new()
+		used.type = "last_stand_end"
+		used.actor = float(slot)
+		used.kind = "used"
+		for t in range(last + 1):
+			_tick(S, [rd] if t == 0 else ([used] if t == 80 else []))
+			if t in ticks:
+				await _shot(S, "t%d" % t, f.x + 100.0, f.y + 40.0 + 0.1 * vp.y / zoom)
 	elif which == "speed":
 		f.x = SimWrap.wrap(wx * SimConst.PS)
 		f.y = maxf(WorldTerrain.groundY(S, f.x), 0.0) + 700.0
