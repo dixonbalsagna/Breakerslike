@@ -82,6 +82,10 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 One page for Orb: what each of the six waves adds in plain words, its new-pose count, what it needs before it can play, and the order they could go live in.
 
+## Brawls without a launch, and trade beats (parked; waits for Game Design's recipe table)
+
+`brawl-endings-and-trades.md` and `templates.brawl.json`: the knock-back launch vector, eight endings that are not a launch (3 level, 4 knock-back, 1 double slide), six trade beats and the lights-against-a-heavy pair, as beat lists in the live tick form. The `ends` and `sends` tags they rely on are on every strike and throw in `moveset.antihero.m0.json`. Which one plays when is left to Game Design, after Orb's questionnaire 14.
+
 ## Go-live step 1 (for Animation to apply after Orb's review of the wave 1 pack)
 
 `golive-step1.md` and `golive-step1.picks.json`: the render-only change that lets wave 1's 23 long and mid-range strikes play in today's game. Two new pick lists for `data/anim/keysets.json` (11 light, 10 heavy), 2 gated strikes, the 7 that need a small step in at today's 58 u, which templates use which list, and three optional render-side rules. No sim file, no combat data and no data hash change.

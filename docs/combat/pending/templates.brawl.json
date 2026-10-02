@@ -1,0 +1,212 @@
+{
+  "schema": "combat-brawl/0-draft",
+  "_about": "PARKED. Endings that are not a launch, the knock-back vector, six trade beats and the lights-against-a-heavy pair (../alchemist-content.md sections 3 and 4). Not loaded, not hashed, no schema. Beat lists use the live tick form, relative to their own start: an ending starts on the string's last contact tick, a trade beat on its own beat. `slot` names the pool a strike is filled from at M0. Which one plays when is Game Design's, after Orb's questionnaire 14.",
+  "tempo": {"_live": "step, follow, foot, stepIn, heavyWindup are the live profiles.dynamic.tempo names", "new": {"linkLoad": 6, "tradeHalf": 7, "checkHold": 4, "recoil": 6, "bind": 12, "shove": 6, "breakOff": 9, "advantage": 6, "slideShort": 18, "slideLong": 30, "drift": 20}, "_new": "ticks; proposals"},
+  "launchVectors": {"knockBack": {"label": "KNOCK BACK", "what": "a flat, short send: the body slides on the ground or drifts in the air and stops on its feet. Not a launch: no planner candidates, no bounce, no journey", "direction": {"ground": "along the ground, away from the striker; the piece must send across", "air": "the piece's first direction: across is level, up is 20 degrees above level, down is 20 degrees below"}, "distanceBh": {"tier1": 3.5, "tier2": 5, "tier3": 6.5, "tier4": 8, "_note": "PROPOSAL for Game Design, inside its 'under about 8 bh'. A double slide gives each fighter half"}, "kinds": {"slideShort": "under 4 bh: he stays upright on both feet", "slideLong": "4 bh and over: he drops to the low brace, one hand on the ground; World cuts a trench by tier", "bump": "an obstacle inside the slide's length stops it: a wall, a formation, a crater's edge; a light brunt inside the collateral budgets", "drift": "in the air: he is carried back and rights himself"}, "ticks": {"slideShort": 18, "slideLong": 30, "drift": 20}, "after": "the sent fighter is free when the slide or drift ends; the striker is free `advantage` ticks before that", "stick": "the tilt cannot turn a ground slide; in the air it picks among the piece's directions", "limits": ["never through the striker", "never a launch's wear: it is a knock, counted apart from launches by QA", "it does not start a chain window by itself"], "event": {"name": "knockback", "fields": ["actor (the one sent)", "by", "kind (slideShort, slideLong, bump, drift)", "distance", "startTick", "endTick"]}}},
+  "endings": [
+    {
+      "id": "level.shove_off",
+      "kind": "level",
+      "after": "a string that ended on a light",
+      "_look": "The last light is a push: a palm heel or a shoulder check that sets the rival back a step, and both settle at fighting distance.",
+      "pieces": ["strike.palm_heel", "strike.shoulder_check"],
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start"}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid", "push": true}}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "rush", "args": {"off": 150, "dur": {"ticks": "breakOff"}, "side": "own"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "reset", "who": "both"}}
+      ]
+    },
+    {
+      "id": "level.hop_back",
+      "kind": "level",
+      "after": "a string that ended on a light",
+      "_look": "Both hop back a step at the same moment and land facing, still in reach.",
+      "pieces": ["entry.hop_back"],
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "rush", "args": {"off": 150, "dur": {"ticks": "breakOff"}, "side": "own"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "finRush", "args": {"off": 150, "dur": {"ticks": "breakOff"}, "w": "D", "side": "own"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "reset", "who": "both"}}
+      ]
+    },
+    {
+      "id": "level.break_and_circle",
+      "kind": "level",
+      "after": "a string that ended on a light",
+      "_look": "Both give a half step and drift a quarter step round each other, eyes locked: the brawl is still on.",
+      "pieces": [],
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "rush", "args": {"off": 110, "dur": {"ticks": "breakOff"}, "side": "own"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "finRush", "args": {"off": 110, "dur": {"ticks": "breakOff"}, "w": "D", "side": "own"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "circle", "who": "both"}}
+      ]
+    },
+    {
+      "id": "knock.slide_short",
+      "kind": "knock-back",
+      "after": "a string that ended on a heavy, with no launch earned; on the ground; under 4 bh",
+      "_look": "The loser is driven straight back on both feet, leaning into it; the winner holds the end of the blow.",
+      "pieces": ["any heavy that sends across"],
+      "poses": ["slide.feet_high"],
+      "beats": [
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "slideShort"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "D"}},
+        {"tick": {"at": "start", "add": ["follow", "slideShort"], "sub": ["advantage"]}, "op": "nop"}
+      ]
+    },
+    {
+      "id": "knock.slide_long",
+      "kind": "knock-back",
+      "after": "the same, 4 bh and over",
+      "_look": "The loser slides a long way, drops low and brakes with a hand on the ground, cutting a furrow.",
+      "pieces": ["any heavy that sends across"],
+      "poses": ["slide.feet_high", "slide.feet_low"],
+      "beats": [
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "slideLong"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "D"}},
+        {"tick": {"at": "start", "add": ["follow", "slideLong"], "sub": ["advantage"]}, "op": "nop"}
+      ]
+    },
+    {
+      "id": "knock.bump",
+      "kind": "knock-back",
+      "after": "the same, with an obstacle inside the slide's length",
+      "_look": "The slide ends early against a wall, a formation or a crater's edge: a bump, not a smash.",
+      "pieces": ["any heavy that sends across"],
+      "poses": ["slide.feet_high"],
+      "beats": [
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "bump"}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "D"}},
+        {"tick": {"at": "start", "add": ["follow", "slideShort"], "sub": ["advantage"]}, "op": "nop"}
+      ]
+    },
+    {
+      "id": "knock.drift",
+      "kind": "knock-back",
+      "after": "a string that ended on a heavy, with no launch earned; in the air",
+      "_look": "The loser is carried back a few body heights, arms out, and rights himself; nobody falls.",
+      "pieces": ["any heavy"],
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "drift"}},
+        {"tick": {"at": "start", "add": ["follow", "drift"], "sub": ["advantage"]}, "op": "nop"}
+      ]
+    },
+    {
+      "id": "knock.double_slide",
+      "kind": "double slide",
+      "after": "a cross-counter on a string's last beat (PROPOSAL for Game Design)",
+      "_look": "Both blows land and both fighters slide apart, each braking the same way.",
+      "pieces": ["the cross-counter's two blows"],
+      "poses": ["slide.feet_high"],
+      "beats": [
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "slideShort", "half": true}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "A", "kind": "slideShort", "half": true}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "both"}},
+        {"tick": {"at": "start", "add": ["follow", "slideShort"]}, "op": "nop"}
+      ]
+    }
+  ],
+  "tradeBeats": [
+    {
+      "id": "trade.exchange",
+      "_look": "One lands, and the other lands back half a beat later.",
+      "needs": "both in reach",
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base", "times": 0.5}, "o": {"class": "mid"}}},
+        {"tick": {"at": "start", "add": ["linkLoad", "tradeHalf"]}, "op": "strike", "args": {"a": "D", "d": "A", "slot": "link", "dmg": {"ref": "base", "times": 0.5}, "o": {"class": "mid"}}}
+      ],
+      "ticks": 16
+    },
+    {
+      "id": "trade.cross_counter",
+      "_look": "Both blows land on the same tick and both heads snap.",
+      "needs": "both in reach; two strikes may land on one tick",
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base", "times": 0.5}, "o": {"class": "mid", "trade": "cross"}}},
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "D", "d": "A", "slot": "link", "dmg": {"ref": "base", "times": 0.5}, "o": {"class": "mid", "trade": "cross"}}}
+      ],
+      "ticks": 14
+    },
+    {
+      "id": "trade.check_and_reply",
+      "_look": "The blow is stopped on a forearm or a shin, and the checker answers at once.",
+      "needs": "the checked blow is an arm or a leg strike: an arm strike is checked on the forearm, a leg strike on the shin",
+      "poses": ["check.forearm", "check.shin"],
+      "beats": [
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base", "times": 0.0}, "o": {"class": "mid", "checked": true}}},
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "cue", "args": {"cue": "check", "who": "D"}},
+        {"tick": {"at": "start", "add": ["linkLoad", "checkHold", "follow"]}, "op": "strike", "args": {"a": "D", "d": "A", "slot": "link", "dmg": {"ref": "base", "times": 0.5}, "o": {"class": "mid"}}}
+      ],
+      "ticks": 16
+    },
+    {
+      "id": "trade.light_clash",
+      "_look": "The two limbs meet between them and both recoil.",
+      "needs": "both blows from the same limb family (two hands, or two feet); each limb is solved onto the other",
+      "poses": ["clash.recoil"],
+      "beats": [
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base", "times": 0.0}, "o": {"class": "mid", "clash": true}}},
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "D", "d": "A", "slot": "link", "dmg": {"ref": "base", "times": 0.0}, "o": {"class": "mid", "clash": true}}},
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "cue", "args": {"cue": "clash_light", "who": "both"}}
+      ],
+      "ticks": 14
+    },
+    {
+      "id": "trade.slip_and_miss",
+      "_look": "One sways off the line; the other hits air and leans too far.",
+      "needs": "the slipper is not staggered",
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base", "times": 0.0}, "o": {"class": "mid", "whiff": true}}},
+        {"tick": {"at": "start", "add": ["linkLoad"], "sub": ["follow"]}, "op": "cue", "args": {"cue": "slip", "who": "D"}},
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "cue", "args": {"cue": "over_commit", "who": "A"}}
+      ],
+      "ticks": 14
+    },
+    {
+      "id": "trade.bind_and_shove",
+      "_look": "A short tie-up, collar and elbow, then one shoves the other off.",
+      "needs": "both in reach; uses the tie-up of wave 5 and the hold of wave 4",
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start"}, "op": "hold", "args": {"both": true, "dur": {"ticks": "bind"}}},
+        {"tick": {"at": "start", "add": ["bind"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base", "times": 0.0}, "o": {"class": "mid", "push": true}}},
+        {"tick": {"at": "start", "add": ["bind", "follow"]}, "op": "finRush", "args": {"off": 150, "dur": {"ticks": "shove"}, "w": "D", "side": "own"}}
+      ],
+      "ticks": 24
+    }
+  ],
+  "lightsAgainstAHeavy": [
+    {
+      "id": "lights_vs_heavy.stuffed",
+      "rule": "Game Design (agency-pass.md section 2): three clean lights before the heavy lands stop it",
+      "_look": "The third clean light lands on the wind-up, and the heavy collapses into a stagger.",
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid"}}},
+        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid"}}},
+        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad", "linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid"}}},
+        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad", "linkLoad"]}, "op": "drop", "args": {"who": "D", "what": "its pending heavy"}},
+        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad", "linkLoad"]}, "op": "stagger", "args": {"who": "D"}}
+      ]
+    },
+    {
+      "id": "lights_vs_heavy.comes_through",
+      "rule": "the same rule's other side: fewer than three clean lights, and the heavy comes through",
+      "_look": "The lights land on a fighter who keeps winding up, and the heavy lands through them.",
+      "poses": [],
+      "beats": [
+        {"tick": {"at": "start", "add": ["linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid", "react": 0.4}}},
+        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid", "react": 0.4}}},
+        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad"]}, "op": "drop", "args": {"who": "A", "what": "its third light"}},
+        {"tick": {"at": "start", "add": ["heavyWindup"]}, "op": "strike", "args": {"a": "D", "d": "A", "slot": "heavy", "dmg": {"ref": "base"}, "o": {"class": "heavy"}}}
+      ]
+    }
+  ],
+  "newForEncounter": {"ops": {"knockBack": "send a fighter by the knock-back vector", "hold": "both locked, as wave 4's hold", "stagger": "the live stagger of a perfect block (24 ticks)", "drop": "remove a fighter's pending strike"}, "strikeArgs": {"slot": "link, heavy or ender: the pool the composer fills it from", "o.trade": "cross: both strikes of the tick land", "o.checked": "the blow is stopped on a limb: no damage, the defender plays a check", "o.clash": "limb onto limb: no damage to either", "o.whiff": "the blow misses a fighter who slipped it", "o.react": "the strength of the computed reaction, 0 to 1.6", "o.push": "a shove: no launch, the rival set back to fighting distance"}, "cues": ["reset (live)", "circle", "slide_brace", "check", "clash_light", "slip", "over_commit"]}
+}

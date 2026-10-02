@@ -40,7 +40,9 @@ A press carries a weight, a family, a direction and a rhythm. The window is each
 So each piece carries three tags the alchemist reads:
 - **`weight`** (it has this already) and **`classes`**: opener, mid, ender, return;
 - **`ends`**: how a string may end on it: level, knock-back or launch;
-- **`sends`**: the direction it sends the rival: up, down, across or back.
+- **`sends`**: the direction it sends the rival, relative to the striker: across, up, down or turned (and behind, for the two throws that turn). A return blow that sends the body back along its path is across.
+
+The tags, the eight endings and the trade beats are now parked data: `pending/brawl-endings-and-trades.md`.
 
 ## 2. The shelf: what exists and what is missing
 
