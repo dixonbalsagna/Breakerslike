@@ -1,0 +1,43 @@
+--- a/sim/core/tools/parity.gd	2026-10-02 03:15:34.742041600 -0700
++++ b/sim/core/tools/parity.gd	2026-10-02 03:15:34.900375600 -0700
+@@ -179,7 +179,7 @@
+ ## I1 (intent v2): pack and unpack are inverse on every field's range, canon() puts the stick on its 1 / 127 grid, and
+ ## unpack refuses integers that are not packed intents.
+ func _intentPack() -> String:
+-	var bools: Array = ["guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "light", "heavy", "sig", "context", "transform", "dash", "charge"]
++	var bools: Array = ["guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "light", "heavy", "sig", "context", "transform", "dash", "charge", "lightHeld", "heavyHeld", "escape"]
+ 	var fields: Array = ["mx", "my", "mode", "upgrade", "special", "stance"] + bools
+ 	var same := func(x: SimIntent, y: SimIntent) -> bool:
+ 		for k in fields:
+@@ -228,7 +228,7 @@
+ 	var c: SimIntent = SimIntent.canon(off)
+ 	if c.mx != 64.0 / 127.0 or c.my != -42.0 / 127.0 or SimIntent.pack(c) != SimIntent.pack(off):
+ 		return "canon() does not put the stick on its 1 / 127 grid"
+-	for badp in [-1, 1 << 40, 255, 255 << 8, 3 << 16, 3 << 18, 5 << 35, 7 << 35]:
++	for badp in [-1, 1 << 43, 255, 255 << 8, 3 << 16, 3 << 18, 5 << 35, 7 << 35]:
+ 		if SimIntent.unpack(badp) != null:
+ 			return "unpack accepted %d, which is not a packed intent" % badp
+ 	return ""
+--- a/sim/core/wounds.gd	2026-10-02 03:15:34.777453100 -0700
++++ b/sim/core/wounds.gd	2026-10-02 03:15:34.907887300 -0700
+@@ -251,6 +251,10 @@
+ 		i.special = 0
+ 		i.context = false
+ 		i.transform = false
++		# Agency pass: the held attack levels end with the rest. `escape` is deliberately NOT dropped: the provisional Escape is
++		# "a way out of any situation", so it passes a stun (drop it here if Game Design rules otherwise).
++		i.lightHeld = false
++		i.heavyHeld = false
+ 	if broken(f, LEGS):
+ 		i.dash = false
+ 		i.sprint = false
+--- a/sim/core/intro.gd	2026-10-02 03:15:34.806702500 -0700
++++ b/sim/core/intro.gd	2026-10-02 03:15:34.908888500 -0700
+@@ -182,6 +182,6 @@
+ 		var i = inputs[k]
+ 		if i == null or S.fighters[k].ai != null:
+ 			continue
+-		if i.light or i.heavy or i.sig or i.guardPress or i.dodge or i.powerPress or i.transform or i.context or i.dash:
++		if i.light or i.heavy or i.sig or i.guardPress or i.dodge or i.powerPress or i.transform or i.context or i.dash or i.escape:
+ 			return true
+ 	return false

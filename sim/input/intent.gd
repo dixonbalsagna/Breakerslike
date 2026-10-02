@@ -12,7 +12,7 @@ extends RefCounted
 ## The intent schema version (the replay header's `intent`). 3 when stance, dash and charge leave (I3).
 const VERSION: int = 2
 ## pack(): bit widths, least significant first.
-const BITS: int = 40
+const BITS: int = 43
 
 var mx: float = 0.0          # the stick, -1 to 1; canonical values are k / 127 (canon())
 var my: float = 0.0
@@ -31,6 +31,10 @@ var upgrade: int = 0         # edge: 1 heavy, 2 signature, replacing this button
 var special: int = 0         # edge: 0 none, 1 to 3 the loadout, 4 reserved, 7 the layout's auto pick
 var context: bool = false    # edge: the context action
 var transform: bool = false  # edge: the layout's transform chord completed
+## Agency pass (docs/controls/agency-input.md), additive: bits 40 to 42, so every older packed intent is still valid.
+var lightHeld: bool = false  # held: a light attack button is down (a hold gesture reads as light until holdStart, then heavy)
+var heavyHeld: bool = false  # held: a heavy attack button is down
+var escape: bool = false     # edge: the Escape control (provisional: R3, a key, a swipe up on Guard)
 # Today's fields, until I3:
 var dash: bool = false
 var charge: bool = false
@@ -56,6 +60,9 @@ static func clearIntent(i: SimIntent) -> void:
 	i.special = 0
 	i.context = false
 	i.transform = false
+	i.lightHeld = false
+	i.heavyHeld = false
+	i.escape = false
 	i.dash = false
 	i.charge = false
 	i.stance = -1.0
@@ -80,13 +87,17 @@ static func applyIntent(dst: SimIntent, src: SimIntent) -> void:
 	dst.special = src.special
 	dst.context = src.context
 	dst.transform = src.transform
+	dst.lightHeld = src.lightHeld
+	dst.heavyHeld = src.heavyHeld
+	dst.escape = src.escape
 	dst.dash = src.dash
 	dst.charge = src.charge
 	dst.stance = src.stance
 
 
-## The whole record as one integer (40 bits, exact in JSON): mx and my as 8 bits each (k + 127 for k / 127), mode + 1 in
-## 2 bits, upgrade in 2, special in 3, twelve single bits, then today's stance + 1 in 3 bits, dash and charge. Replays
+## The whole record as one integer (43 bits, exact in JSON): mx and my as 8 bits each (k + 127 for k / 127), mode + 1 in
+## 2 bits, upgrade in 2, special in 3, twelve single bits, then today's stance + 1 in 3 bits, dash and charge, then the
+## agency fields lightHeld, heavyHeld and escape in bits 40 to 42. Replays
 ## and, later, rollback carry this integer; equal canonical intents are equal integers.
 static func pack(i: SimIntent) -> int:
 	var p: int = _q(i.mx) | (_q(i.my) << 8) | ((clampi(i.mode, -1, 1) + 1) << 16) | (clampi(i.upgrade, 0, 2) << 18) | (clampi(i.special, 0, 7) << 20)
@@ -100,6 +111,12 @@ static func pack(i: SimIntent) -> int:
 		p |= 1 << 38
 	if i.charge:
 		p |= 1 << 39
+	if i.lightHeld:
+		p |= 1 << 40
+	if i.heavyHeld:
+		p |= 1 << 41
+	if i.escape:
+		p |= 1 << 42
 	return p
 
 
@@ -141,6 +158,9 @@ static func unpack(p: int) -> SimIntent:
 	i.stance = float(st - 1)
 	i.dash = ((p >> 38) & 1) == 1
 	i.charge = ((p >> 39) & 1) == 1
+	i.lightHeld = ((p >> 40) & 1) == 1
+	i.heavyHeld = ((p >> 41) & 1) == 1
+	i.escape = ((p >> 42) & 1) == 1
 	return i
 
 

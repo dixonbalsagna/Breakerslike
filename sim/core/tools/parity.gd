@@ -179,7 +179,7 @@ func _replays(g: Dictionary) -> String:
 ## I1 (intent v2): pack and unpack are inverse on every field's range, canon() puts the stick on its 1 / 127 grid, and
 ## unpack refuses integers that are not packed intents.
 func _intentPack() -> String:
-	var bools: Array = ["guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "light", "heavy", "sig", "context", "transform", "dash", "charge"]
+	var bools: Array = ["guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "light", "heavy", "sig", "context", "transform", "dash", "charge", "lightHeld", "heavyHeld", "escape"]
 	var fields: Array = ["mx", "my", "mode", "upgrade", "special", "stance"] + bools
 	var same := func(x: SimIntent, y: SimIntent) -> bool:
 		for k in fields:
@@ -228,7 +228,7 @@ func _intentPack() -> String:
 	var c: SimIntent = SimIntent.canon(off)
 	if c.mx != 64.0 / 127.0 or c.my != -42.0 / 127.0 or SimIntent.pack(c) != SimIntent.pack(off):
 		return "canon() does not put the stick on its 1 / 127 grid"
-	for badp in [-1, 1 << 40, 255, 255 << 8, 3 << 16, 3 << 18, 5 << 35, 7 << 35]:
+	for badp in [-1, 1 << 43, 255, 255 << 8, 3 << 16, 3 << 18, 5 << 35, 7 << 35]:
 		if SimIntent.unpack(badp) != null:
 			return "unpack accepted %d, which is not a packed intent" % badp
 	return ""

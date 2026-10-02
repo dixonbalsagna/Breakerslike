@@ -123,8 +123,8 @@ func _diff_and_apply() -> void:
 	ok(SimInputRemap.apply_overrides(tc, [{"controls": ["touch:power"], "action": "guard"}]) == tc, "apply: touch presets are not remapped")
 	# The Brawler's special3 sits on the mode button: it follows mode.
 	var bw: Dictionary = SimInputData.original("brawler")
-	var bw2: Dictionary = SimInputRemap.apply_overrides(bw, [{"controls": ["pad:dpad_up"], "action": "mode"}])
-	ok(_used(bw2).get("pad:dpad_up", "") == "mode" and _used(bw2, "power").get("pad:dpad_up", "") == "special3", "apply: on the Brawler special3 follows mode")
+	var bw2: Dictionary = SimInputRemap.apply_overrides(bw, [{"controls": ["pad:dpad_down"], "action": "mode"}])
+	ok(_used(bw2).get("pad:dpad_down", "") == "mode" and _used(bw2, "power").get("pad:dpad_down", "") == "special3", "apply: on the Brawler special3 follows mode")
 	# Everything the shipped presets say still validates after an identity apply.
 	for id in SimInputData.presets:
 		var pr: Dictionary = SimInputData.presets[id]
@@ -229,7 +229,7 @@ func _names() -> void:
 func _chords() -> void:
 	var ar: Dictionary = SimInputData.original("arena")
 	var used: Dictionary = _used(ar)
-	ok(not used.has("pad:l3") and not used.has("pad:r3") and used.get("pad:lt", "") == "dodge" and used.get("pad:rt", "") == "power", "chords: L3 and R3 (chord-only) are free; LT and RT are dodge and power's own")
+	ok(not used.has("pad:l3") and used.get("pad:r3", "") == "escape" and used.get("pad:lt", "") == "dodge" and used.get("pad:rt", "") == "power", "chords: L3 is free, R3 is Escape; LT and RT are dodge and power's own")
 	var chords_before: int = 0
 	for b in ar["bindings"]:
 		if b["controls"].size() > 1:
@@ -239,7 +239,7 @@ func _chords() -> void:
 	for b in r["preset"]["bindings"]:
 		if b["controls"].size() > 1:
 			chords_after += 1
-	ok(r["ok"] and chords_before == 2 and chords_after == 2, "chords: light can take L3 and both chords are untouched")
+	ok(r["ok"] and chords_before == 1 and chords_after == 1, "chords: light can take L3 and the chord is untouched")
 	r = SimInputRemap.swap(ar, "dodge", null, 0, "pad:lb")
 	var u: Dictionary = _used(r["preset"])
 	var kept: bool = false
@@ -258,7 +258,7 @@ func _chords() -> void:
 	for row in SimInputRemap.listing(ar):
 		if row["controls"].size() > 1 and row["fixed"]:
 			chord_rows += 1
-	ok(chord_rows == 2, "chords: listing marks both Arena chords fixed")
+	ok(chord_rows == 1, "chords: listing marks the Arena chord fixed")
 
 
 func _gestures() -> void:

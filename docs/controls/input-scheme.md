@@ -4,6 +4,8 @@ Owner: Controls and Game Feel. Date: 2026-09-30. Status: **spec, no sim edits; w
 
 **What this replaces.** The 1 to 4 stance keys, the stance cycle, the sticky light/heavy weight and the one-shot signature queue (`stage-c-spec.md`), the special/transform slot design of `input-map.md` §4, and Stage A's `SimIntent` additions. **What stands:** the hit-stop table and its integer-tick counter (`rulings.md` §5), the shake pass, the latency budget, stick quantisation, device layers and rebinding (`platform-plan.md`), diagonal normalisation (Stage B), the Encore as a transform-chord prompt.
 
+> **Amendments, 2026-10-02 (agency pass, `agency-input.md`):** `mode` is **momentary** (hold RB, or the layout's mode control, for energy; the toggle is a setting). A new **Escape** control (R3 on pad, C, X and Quote on the keyboards, a swipe up on Guard on touch) sends an `escape` edge; because R3 is taken, the L3 + R3 transform alternative is dropped and **the Brawler's transform is D-pad up held 30 ticks**. The intent gains `lightHeld`, `heavyHeld` and `escape`. Escape as a stance (dodge held and moving away) in the table below is superseded. Ranged presses, charges and timing grades are in agency-input.md, Revision 2.
+
 ## 1. The actions (the same in every layout)
 
 A layout only decides **which control produces which action**. Every layout produces the same intent (section 8). Terms follow ADR 0008; stance names are Press, Guard, Dodge, Escape.

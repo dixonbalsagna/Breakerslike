@@ -1,0 +1,33 @@
+--- a/tools/schemas/input-timing.schema.json	2026-10-02 03:02:13.156086500 -0700
++++ b/tools/schemas/input-timing.schema.json	2026-10-02 03:02:13.273545200 -0700
+@@ -253,6 +253,16 @@
+           "minimum": 1,
+           "description": "Accessibility: the beat window is multiplied by this."
+         },
++        "steadyJitter": {
++          "type": "integer",
++          "minimum": 0,
++          "description": "A mash is steady when its gaps differ by this many ticks or fewer."
++        },
++        "perfectStreak": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "This many perfect presses in a row make a timed string."
++        },
+         "debounce": {
+           "type": "integer",
+           "minimum": 0,
+--- a/tools/schemas/input-actions.schema.json	2026-10-02 03:02:13.194779000 -0700
++++ b/tools/schemas/input-actions.schema.json	2026-10-02 03:02:13.279569400 -0700
+@@ -57,7 +57,10 @@
+                 "special",
+                 "context",
+                 "mode",
+-                "transform"
++                "transform",
++                "lightHeld",
++                "heavyHeld",
++                "escape"
+               ]
+             }
+           },

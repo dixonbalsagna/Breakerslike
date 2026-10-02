@@ -86,6 +86,7 @@ var _special_edge: int = 0
 var _tf_t0: int = -1              # the Transform button's press tick, or -1
 var _tf_sent: bool = false
 var _transform_edge: bool = false
+var _escape_edge: bool = false    # a swipe up on Guard (provisional Escape, docs/controls/agency-input.md)
 
 # The Full touch preset: the same widgets go through a SimLayout (touch-full), the stick stays here.
 var full_mode: bool = false
@@ -107,6 +108,7 @@ func _init(overrides: Dictionary = {}) -> void:
 	cfg.holdTicks = SimInputData.ti(["tapHold", "holdStart"], int(cfg.holdTicks))
 	cfg.transformTicks = SimInputData.ti(["tapHold", "transformConfirm"], 30)
 	cfg.swipeDp = SimInputData.tf(["touch", "swipeUpPx"], float(cfg.swipeDp))
+	cfg.swipeTicks = SimInputData.ti(["touch", "swipeUpTicks"], 24)
 	cfg.flickTicks = SimInputData.ti(["touch", "flickToDodgeTicks"], int(cfg.flickTicks))
 	cfg.flickFrac = SimInputData.tf(["touch", "flickThreshold"], float(cfg.flickFrac))
 	cfg.outerRing = SimInputData.tf(["touch", "outerRingScale"], float(cfg.outerRing))
@@ -223,6 +225,8 @@ func touch_move(id: int, x: float, y: float) -> void:
 	match t.w:
 		"attack":
 			_check_swipe(t)
+		"guard":
+			_check_escape_swipe(t)
 		"stick":
 			_check_flick(t)
 
@@ -267,6 +271,17 @@ func release_all() -> void:
 	_special_edge = 0
 	_tf_t0 = -1
 	_transform_edge = false
+	_escape_edge = false
+
+
+## Escape on touch: a swipe up on the Guard button within swipeUpTicks of touching it (Guard stays down). Provisional, like the
+## pad's R3; the finger is already on the button, so it costs no new control and cannot be hit by a stray tap.
+func _check_escape_swipe(t: Dictionary) -> void:
+	if t.fired:
+		return
+	if (tick - int(t.t0)) <= int(cfg.swipeTicks) and (float(t.y0) - float(t.y)) >= float(cfg.swipeDp) * dp:
+		t.fired = true
+		_escape_edge = true
 
 
 func _check_swipe(t: Dictionary) -> void:
@@ -367,6 +382,15 @@ func build() -> SimIntent:
 	i.sig = req_sig
 	i.special = _special_edge
 	i.transform = _transform_edge
+	i.escape = _escape_edge
+	# The attack level: a finger on Attack is light until holdTicks and heavy from then on (the Simple upgrade).
+	for id in _touches:
+		var at: Dictionary = _touches[id]
+		if at.w == "attack" and not at.layer:
+			if tick - int(at.t0) >= int(cfg.holdTicks):
+				i.heavyHeld = true
+			else:
+				i.lightHeld = true
 	# Today's fields, until I3: a flick's dash or a sprint is the dash; Power held past holdTicks is the channel.
 	i.dash = dashing or sprint
 	i.charge = power and not _power_voided and (tick - _power_t0) >= int(cfg.holdTicks)
@@ -434,6 +458,7 @@ func _build_full() -> SimIntent:
 	_full.axis("touch:stick", vx, vy)
 	_full.sprint_override = sprint_now
 	var i: SimIntent = _full.build()
+	i.escape = _escape_edge
 	if tick <= _dash_until:
 		i.mx = _dash_mx
 		i.my = _dash_my
@@ -481,3 +506,4 @@ func consumed() -> void:
 	_power_tap = false
 	_special_edge = 0
 	_transform_edge = false
+	_escape_edge = false

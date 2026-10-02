@@ -251,6 +251,10 @@ static func gateIntent(f, i: SimIntent) -> void:
 		i.special = 0
 		i.context = false
 		i.transform = false
+		# Agency pass: the held attack levels end with the rest. `escape` is deliberately NOT dropped: the provisional Escape is
+		# "a way out of any situation", so it passes a stun (drop it here if Game Design rules otherwise).
+		i.lightHeld = false
+		i.heavyHeld = false
 	if broken(f, LEGS):
 		i.dash = false
 		i.sprint = false

@@ -182,6 +182,6 @@ static func _pressed(S: SimState, inputs) -> bool:
 		var i = inputs[k]
 		if i == null or S.fighters[k].ai != null:
 			continue
-		if i.light or i.heavy or i.sig or i.guardPress or i.dodge or i.powerPress or i.transform or i.context or i.dash:
+		if i.light or i.heavy or i.sig or i.guardPress or i.dodge or i.powerPress or i.transform or i.context or i.dash or i.escape:
 			return true
 	return false

@@ -297,11 +297,14 @@ func _pad() -> void:
 	l.press("pad:l3")
 	l.press("pad:r3")
 	got = false
+	var esc: bool = false
 	for k in range(33):
 		i = l.build()
 		l.consumed()
 		got = got or i.transform
-	ok(got, "pad: L3 and R3 held 30 ticks send transform")
+		esc = esc or i.escape
+	ok(not got, "pad: L3 and R3 are no longer a transform (R3 is Escape)")
+	ok(esc, "pad: R3 is the Escape edge")
 	l.release("pad:l3")
 	l.release("pad:r3")
 	_run(l, 2)

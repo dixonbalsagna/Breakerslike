@@ -27,6 +27,9 @@ func _init() -> void:
 	_taps_and_stale()
 	_windows()
 	_mix()
+	_grades()
+	_timing()
+	_release()
 	_determinism()
 	print("press_read_test: %d checks, %d failed" % [checks, fails])
 	quit(1 if fails > 0 else 0)
@@ -172,3 +175,68 @@ func _determinism() -> void:
 	var before: String = str(a)
 	SimPressRead.classify(a, 127)
 	ok(str(a) == before, "classify does not change the log")
+
+
+func _grades() -> void:
+	ok(SimPressRead.grade_of(0) == "perfect" and SimPressRead.grade_of(4) == "perfect" and SimPressRead.grade_of(-4) == "perfect", "grade: within 4 ticks is perfect")
+	ok(SimPressRead.grade_of(5) == "good" and SimPressRead.grade_of(-8) == "good", "grade: within 8 is good")
+	ok(SimPressRead.grade_of(9) == "off", "grade: past 8 is off")
+	ok(SimPressRead.grade_of(5, {"touch": true}) == "perfect" and SimPressRead.grade_of(11, {"touch": true}) == "off", "grade: touch widens the perfect window to 5")
+	ok(SimPressRead.grade_of(8, {"assist": true}) == "perfect" and SimPressRead.grade_of(16, {"assist": true}) == "good", "grade: assist doubles both windows")
+	ok(SimPressRead.grade_of(7, {"offset": 6}) == "perfect", "grade: the player's offset shifts the mark")
+
+
+func _timing() -> void:
+	# A steady mash is perfect; a ragged one is not.
+	var steady: Dictionary = SimPressRead.classify(_mk([100, 108, 116, 124]), 127)
+	ok(steady["style"] == "mash" and steady["steady"] and steady["timing"] == "perfect", "timing: a steady mash is a perfect blur")
+	var ragged: Dictionary = SimPressRead.classify(_mk([100, 106, 116, 123]), 126)
+	ok(ragged["style"] == "mash" and not ragged["steady"] and ragged["timing"] == "none", "timing: a ragged mash is a mash, not a perfect one")
+	ok(SimPressRead.classify(_mk([100, 108, 117, 125]), 128)["steady"], "timing: gaps of 8, 9, 8 are steady (within 3)")
+	ok(not SimPressRead.classify(_mk([100, 108, 120, 128]), 131)["steady"], "timing: gaps of 8, 12, 8 are not")
+	# Taps in time: perfect after three in a row, good before.
+	var three: Dictionary = SimPressRead.classify(_mk([100, 115, 130], [0, 2, -3]), 133)
+	ok(three["style"] == "rhythm" and three["streak"] == 3 and three["timing"] == "perfect", "timing: three perfect taps in a row land clean (perfect)")
+	var two: Dictionary = SimPressRead.classify(_mk([100, 115], [0, 2]), 118)
+	ok(two["style"] == "rhythm" and two["streak"] == 2 and two["timing"] == "good", "timing: two perfect taps are good, not yet perfect")
+	var broken: Dictionary = SimPressRead.classify(_mk([100, 115, 130], [0, 9, 1]), 133)
+	ok(broken["streak"] == 1 and broken["timing"] == "good", "timing: an off press breaks the streak (rhythm, but only good)")
+	var plain: Dictionary = SimPressRead.classify(_mk([100, 125, 150]), 153)
+	ok(plain["style"] == "taps" and plain["timing"] == "none", "timing: taps off the beat have no timing")
+	ok(SimPressRead.classify(_mk([100, 125, 150], [0, 30, 30]), 153)["timing"] == "good", "timing: taps with one perfect press are good")
+
+
+func _release() -> void:
+	var log: Array = []
+	SimPressRead.push(log, SimPressRead.HEAVY, 0, 100)
+	ok(SimPressRead.release_grade(log[0]) == "none", "release: no flash, no grade")
+	SimPressRead.set_flash(log, SimPressRead.HEAVY, 136)
+	ok(int(log[0]["flash"]) == 136 and SimPressRead.release_grade(log[0]) == "held", "release: still held, flashed at 136")
+	var c: Dictionary = SimPressRead.classify(log, 140)
+	ok(c["style"] == "hold" and c["timing"] == "none" and c["release"] == "none", "release: a held charge is a hold with no grade yet")
+	SimPressRead.release(log, SimPressRead.HEAVY, 138)
+	ok(SimPressRead.release_grade(log[0]) == "perfect", "release: let go 2 ticks after the flash is perfect (a hold released on the flash)")
+	c = SimPressRead.classify(log, 139)
+	ok(c["release"] == "perfect", "release: classify reports it")
+	var cases: Array = [[132, "perfect"], [140, "perfect"], [143, "good"], [128, "good"], [120, "early"], [150, "late"]]
+	for k in cases:
+		var l2: Array = []
+		SimPressRead.push(l2, SimPressRead.LIGHT, 0, 100)
+		SimPressRead.set_flash(l2, SimPressRead.LIGHT, 136)
+		SimPressRead.release(l2, SimPressRead.LIGHT, int(k[0]))
+		ok(SimPressRead.release_grade(l2[0]) == k[1], "release: let go at %d with the flash at 136 is %s" % [k[0], k[1]])
+	# Touch, assist and the offset apply to a release as to a press.
+	var l3: Array = []
+	SimPressRead.push(l3, SimPressRead.LIGHT, 0, 100)
+	SimPressRead.set_flash(l3, SimPressRead.LIGHT, 136)
+	SimPressRead.release(l3, SimPressRead.LIGHT, 141)
+	ok(SimPressRead.release_grade(l3[0]) == "good" and SimPressRead.release_grade(l3[0], {"touch": true}) == "perfect", "release: touch widens the flash window")
+	SimPressRead.release(l3, SimPressRead.LIGHT, 141)
+	# A release on the flash lifts a hold; the next press is read fresh.
+	var l4: Array = []
+	SimPressRead.push(l4, SimPressRead.HEAVY, 0, 100)
+	SimPressRead.set_flash(l4, SimPressRead.HEAVY, 136)
+	SimPressRead.release(l4, SimPressRead.HEAVY, 136)
+	SimPressRead.push(l4, SimPressRead.LIGHT, 0, 150)
+	var c4: Dictionary = SimPressRead.classify(l4, 153)
+	ok(c4["release"] == "perfect" and c4["style"] == "taps", "release: the latest release grade stays available after the next press")

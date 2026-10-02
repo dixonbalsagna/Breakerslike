@@ -13,14 +13,16 @@
       "id": "light",
       "kind": "press",
       "fields": [
-        "light"
+        "light",
+        "lightHeld"
       ]
     },
     {
       "id": "heavy",
       "kind": "press",
       "fields": [
-        "heavy"
+        "heavy",
+        "heavyHeld"
       ]
     },
     {
@@ -96,6 +98,13 @@
       "kind": "press",
       "fields": [
         "context"
+      ]
+    },
+    {
+      "id": "escape",
+      "kind": "press",
+      "fields": [
+        "escape"
       ]
     },
     {

@@ -21,6 +21,9 @@ extends RefCounted
 ##    transform is sent once they have been held transformConfirm ticks. A single transform control does the same alone;
 ##  - mode is momentary by default (docs/controls/agency-input.md): held, the attacks are the energy ones; the mode style
 ##    "toggle" keeps the old latch (an accessibility setting) and "hybrid" (touch) latches on a tap and is momentary on a hold;
+##  - lightHeld and heavyHeld are levels: true while a light or a heavy button is down (a Simple attack control with a hold
+##    gesture reads as light until holdStart, then as heavy), so the sim can tell a tap from a hold and see its release;
+##  - escape is an edge from its own control (provisional: R3, a key, a swipe up on Guard on touch);
 ##  - a press of an attack button within debounce ticks of its own release is the same press (worn pad contacts);
 ##  - a preset whose attack control has a hold gesture (the Simple layouts) fires its light on release and a heavy at
 ##    holdStart, because today's director cannot upgrade a request it has already started (touch-bridge.md).
@@ -221,6 +224,9 @@ func press(c: String) -> bool:
 	if debounce_ticks > 0 and tick - int(_up_tick.get(c, -1000)) <= debounce_ticks and _last_as.get(c, "") == "base" and not _is_down("power") and _is_attack(c):
 		_down[c] = true   # contact bounce: the same press, no new edge
 		_as[c] = "base"
+		for b in _single[c]:
+			if b["layer"] == null and b["gesture"] == null and (str(b["action"]) == "light" or str(b["action"]) == "heavy"):
+				_hold_add(str(b["action"]), c)   # the level goes on without a gap
 		return true
 	_down[c] = true
 	_press_tick[c] = tick
@@ -321,13 +327,18 @@ func _base_press(action: String, c: String) -> void:
 			_hold_add("mode", c)
 			_aedge["mode"] = true
 			_mode_t0 = tick
-		"light", "heavy", "signature", "context":
+		"light", "heavy":
+			_hold_add(action, c)
+			_aedge[action] = true
+		"signature", "context", "escape":
 			_aedge[action] = true
 
 
 func _base_release(action: String, c: String) -> void:
 	match action:
 		"guard", "dodge":
+			_hold_del(action, c)
+		"light", "heavy":
 			_hold_del(action, c)
 		"mode":
 			_hold_del("mode", c)
@@ -429,7 +440,20 @@ func build() -> SimIntent:
 	i.heavy = _aedge.has("heavy")
 	i.sig = _aedge.has("signature")
 	i.context = _aedge.has("context")
+	i.escape = _aedge.has("escape")
 	i.special = _special_edge
+	# The attack levels: a press shorter than a tick still counts for its tick; a hold-gesture control reads as light until
+	# holdStart and as heavy from then on (the upgrade).
+	var l_held: bool = _is_down("light") or _aedge.has("light")
+	var h_held: bool = _is_down("heavy") or _aedge.has("heavy")
+	for c in _atk:
+		if tick - int(_atk[c]["t0"]) >= hold_start:
+			h_held = true
+			l_held = false
+		else:
+			l_held = true
+	i.lightHeld = l_held
+	i.heavyHeld = h_held
 	# Mode, sent every tick; -1 when the layout leaves it to the director. Momentary by default: energy while the control is
 	# down (a press shorter than a tick still counts for its tick); "toggle" latches with a cooldown; "hybrid" latches on a tap.
 	if _auto_mode:

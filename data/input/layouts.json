@@ -99,13 +99,6 @@
         },
         {
           "controls": [
-            "pad:l3",
-            "pad:r3"
-          ],
-          "action": "transform"
-        },
-        {
-          "controls": [
             "pad:start"
           ],
           "action": "pause"
@@ -115,6 +108,12 @@
             "pad:back"
           ],
           "action": "hints"
+        },
+        {
+          "controls": [
+            "pad:r3"
+          ],
+          "action": "escape"
         }
       ]
     },
@@ -208,13 +207,6 @@
         },
         {
           "controls": [
-            "pad:l3",
-            "pad:r3"
-          ],
-          "action": "transform"
-        },
-        {
-          "controls": [
             "pad:start"
           ],
           "action": "pause"
@@ -224,6 +216,18 @@
             "pad:back"
           ],
           "action": "hints"
+        },
+        {
+          "controls": [
+            "pad:r3"
+          ],
+          "action": "escape"
+        },
+        {
+          "controls": [
+            "pad:dpad_up"
+          ],
+          "action": "transform"
         }
       ]
     },
@@ -309,16 +313,15 @@
         },
         {
           "controls": [
-            "pad:l3",
-            "pad:r3"
-          ],
-          "action": "transform"
-        },
-        {
-          "controls": [
             "pad:start"
           ],
           "action": "pause"
+        },
+        {
+          "controls": [
+            "pad:r3"
+          ],
+          "action": "escape"
         }
       ]
     },
@@ -432,6 +435,12 @@
             "kb:KeyR"
           ],
           "action": "transform"
+        },
+        {
+          "controls": [
+            "kb:KeyC"
+          ],
+          "action": "escape"
         }
       ]
     },
@@ -539,6 +548,12 @@
             "kb:KeyQ"
           ],
           "action": "transform"
+        },
+        {
+          "controls": [
+            "kb:KeyX"
+          ],
+          "action": "escape"
         }
       ]
     },
@@ -646,6 +661,12 @@
             "kb:Slash"
           ],
           "action": "transform"
+        },
+        {
+          "controls": [
+            "kb:Quote"
+          ],
+          "action": "escape"
         }
       ]
     },

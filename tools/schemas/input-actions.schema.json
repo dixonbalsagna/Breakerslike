@@ -57,7 +57,10 @@
                 "special",
                 "context",
                 "mode",
-                "transform"
+                "transform",
+                "lightHeld",
+                "heavyHeld",
+                "escape"
               ]
             }
           },

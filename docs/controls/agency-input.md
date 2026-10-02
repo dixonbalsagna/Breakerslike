@@ -4,6 +4,75 @@ Owner: Controls and Game Feel. Date: 2026-10-02. Answers the EP's brief from Orb
 
 **Revised 2026-10-02 for Orb's questionnaire 14.** Confirmed: hold RB for energy; hold LT to boost in any direction, draining ki; the alchemist reads **5 presses** (the log is sized for it); the recipe display is a setting. **Changed: air recovery is hold to brake at a ki cost, on the Guard button, not the dodge tap** (4a). Escape: Orb picked the counters (chase and catch, blasts clip the escaper, intercept ahead at a ki cost, exhaustion at empty ki) and **not** paying to break out of a brawl, so the R3 Escape control is an **open question** for Orb (3). The ranged press and hold, mash and timed results stay open for hybrid pitches. **Built (no grant needed):** `sim/input/press_read.gd`, momentary mode with the hold-or-toggle setting, the attack debounce; see the last section.
 
+## Revision 2: Orb's picks after the pitches (2026-10-02)
+
+Orb picked the EP's mix for the ranged press, wants timing to upgrade every reading style, and wants a provisional Escape now. This section **replaces 4b (the taunt) and the Escape recommendation**; the rest stands. **Built and tested:** `lightHeld`, `heavyHeld` and `escape` in the intent; Escape on every layout; the release timing in the classifier. **Patches for grants:** `intent-fields-sim.patch`, `intent-hash.patch`, `agency-schema.patch` (end of this section).
+
+### R1. Escape, provisional (mapping A, built)
+
+Orb: "something that works now", to revisit with more combat in place. A deliberate, remappable control, an **`escape` edge** in the intent (the sim reads it; the interrupt, its ki cost and the contest are Encounter's and Game Design's):
+
+| Layout | Escape | Notes |
+| :--- | :--- | :--- |
+| Arena, Brawler, Simple pad | **R3** (click the right stick) | the old L3 + R3 transform alternative is dropped; **Brawler's transform moves to D-pad up held 30 ticks** (its only transform was that chord). Arena keeps LT + RT, Simple keeps RB held |
+| Keyboard solo, shared P1, shared P2 | **C**, **X**, **Quote** (') | N stays reserved for a new match; all remappable |
+| Touch Simple and Full | a **swipe up on Guard** (40 dp or more within 24 ticks of touching it; Guard stays down) | no new widget, so UI draws nothing new; a long-held Guard is never an Escape. UI may add a visible Escape button to Full later |
+
+It is a normal binding (not a required action), so the Remap screen lists it; UI adds the row text. `escape` passes a stun in the proposed patch: it is "a way out of any situation".
+
+### R2. Ranged press: three bands, and what the input sees
+
+Orb: close strikes; **mid is a short lunge decided at the wind-up; far is tap to taunt and hold to charge**. The taunt is a challenge the opponent can answer by pressing attack, so both rush and meet in a clash or blur. The button picks the charge: **a held light is fast and can be feinted; a held heavy is slower, shrugs off blasts and can earn a launch.** A strike never exists at range. The bands and their distances are Game Design's and Encounter's; the input rules are the same in every band, which is the point:
+
+1. **A press fires on the tick** (Rule 1) and the sim classes the band from the distance: close and mid start the exchange as now; **far plays the taunt on that tick.** No delay, no hold needed to see anything.
+2. **A hold adds behaviour on top.** Far: `lightHeld` or `heavyHeld` for **12 ticks** starts the **charge** of that weight (light fast, heavy slow and armoured). Close and mid: the held press charges the blow, as the alchemist's "held" reading.
+3. **Release launches.** The fighter takes off at max speed when the button comes up. **Release timing is graded against the charge's flash** (R3). Releasing before the flash is an early, weaker rush; on it is the full one.
+4. **Feint a light charge: tap Dodge** while holding it. The fighter slips aside (the free dodge outside an exchange, its 0.5 s cooldown), the charge is cancelled, nothing is spent. A heavy charge **cannot be feinted** (armoured, committed). Why Dodge and not Guard: a fresh Guard press is also a perfect-block attempt and would feed the 20-tick lockout; Dodge says "slip away" and is free here.
+5. **Answering a taunt: any attack press (light or heavy) while the opponent's taunt plays.** The sim reads the opponent's state; no new input. Both fighters rush and meet in a clash or a blur (Encounter's), decided on the pulse where it applies. A mash at range is a taunt then an answer or a launch, never endless posing.
+6. **Nobody is locked.** The taunt and the charge are not exchanges: the taunter or charger can **Guard or Dodge out at once**, and the opponent is free throughout. Orb's complaint was the lock; the contact starts the exchange (agency-pass.md, rule 2).
+7. **Taunts feed meters, with a guard against farming** (Orb's working ruling; the guard is Game Design's and the dialogue director's). Nothing for the input beyond the press.
+
+### R2a. What the Simple layouts do at range
+
+A strike never exists at range, so Simple's tap cannot attack there either. Simple's job is to own the engagement for a player who does not want to time or hold things, so:
+
+- **Tap X at range: the answer or the rush.** Against an opponent's taunt, a tap answers (R2.5). Otherwise a tap launches a **fast light rush with no charge**, base grade: the assist takes the commitment so a tap never ends in a taunt and a standoff. (The taunt on Simple is **LB, the context button**: `context` is "provoke" when nothing else applies; the sim decides.)
+- **Hold X at range: the heavy charge with an assisted release.** X held 12 ticks is the heavy charge (the existing hold gesture is the upgrade). The sim **releases it automatically a few ticks after the flash** (`autoCharge`, an assist flag beside `autoBurst`, grade "good", never "perfect"). A Simple player who releases **on the flash by hand** gets "perfect", so the ceiling is the same as every other layout and the floor is a safe release. A held X is never stuck.
+- **Close and mid:** the same, with the hold gesture a heavy as today. The press log runs for Simple players too.
+- **Feint:** Simple has A (Dodge): tap it while holding X on a light charge; but since Simple's hold is already the heavy, a Simple charge is never a light, so Simple has **no feint**. That is the assist's trade.
+- **Touch Simple:** the same through its Attack button (light level to 12 ticks, heavy level after, now sent as `lightHeld` and `heavyHeld`).
+- **Needs:** an `autoCharge` assist name beside the others in `SimAct.ASSISTS` (Simulation, appended), `"autoCharge": true` in the Simple presets' `slot` (mine, with Tools' schema line), and the sim's auto-release.
+
+### R3. Reading presses: timing grades and the flash release
+
+Orb: timing upgrades each style (a steady mash becomes a perfect blur, a hold released on the flash breaks guard, taps in time land clean) and earns the ending; "consistent timing should give the fighter a substantial edge". The classifier now returns the grade; **what each grade is worth is Game Design's number.**
+
+| Style | The timing that tops it | The classifier says | Reading (ticks, data) |
+| :--- | :--- | :--- | :--- |
+| **Mash** | a **steady** mash: the gaps of the last 4 presses differ by 3 ticks or fewer | `timing: "perfect"`, `steady: true` | a perfect blur; a ragged mash stays `timing: "none"` |
+| **Taps** | **three perfect taps in a row**, each within 4 ticks of a blow (10-tick window on touch, doubled with assist, the player's offset applies) | `style: "rhythm"`, `streak: 3`, `timing: "perfect"` (two: `"good"`) | taps in time land clean; one off press breaks the streak |
+| **Hold** | **released on the flash** of the charge | `release: "perfect"` (within 4 ticks), `"good"` (within 8), `"early"`, `"late"` | a hold released on the flash breaks guard; early is the weak rush, late is "good" at best |
+
+Rules the sim follows when it reads them:
+- **The flash is the sim's.** It stamps the charge's flash tick on the log entry (`SimPressRead.set_flash`), the release closes it (`release`), and `release_grade(entry, opts)` or `classify().release` says how it was let go. The level fields (`lightHeld`, `heavyHeld`) are what make the release visible: the release tick is the tick the level falls.
+- **The grades are per press.** `grade_of(distance, opts)` grades any press or release: perfect within the window's half (4), good within 8, off beyond. Touch widens the perfect window to 5, assist doubles both, the optional per-player timing offset (-6 to 6, in the match header) shifts the mark.
+- **Timing earns the ending** (a perfect streak or a perfect release makes the string's last blow the clean ender): the sim reads `timing` when the string closes. When both fighters have timing, the **timed press wins the trade beat** (agency-pass.md, B with C's rule).
+- **A flash must be seen and heard** (Animation, VFX, Audio): the window is 8 ticks, 133 ms, a readable cue, not a guess. Flash times per weight are Combat's data (light fast, heavy slow).
+
+**Balance tests (Orb: run them on the recommendation).** They need the alchemist in the sim, which is Encounter's, so here is the recipe for QA's bots: three press bots on the same fighter and seed, one **mash** (steady 8-tick gaps), one **timed** (presses within 0 to 4 ticks of the blows) and one **ragged** (gaps jittered by 6 ticks); hold bots **released on the flash**, **early** and **late**; every pairing, 100 seeds. Pass: the consistent timer beats the mash by a clear margin (Game Design's "substantial": I propose 60 to 65% and up), the ragged player sits between, and a perfect hold-release beats an early one. `SimPressRead.classify` already labels what each bot did, so the report can count styles and timings next to the win rate.
+
+### R4. What changed in the intent and who must apply what
+
+Three additive fields, bits 40 to 42 of the packed intent, so **every older replay still unpacks** (the new bits are zero) and the intent version stays 2: `lightHeld`, `heavyHeld` (levels) and `escape` (edge). They live in `sim/input/intent.gd` (mine, applied) and the layout and touch layers fill them (applied, tested: `agency_input_test.gd`, 79 checks). The lines outside my paths are patches, to apply in this order:
+
+| Patch | Files | What | Effect |
+| :--- | :--- | :--- | :--- |
+| `agency-schema.patch` | `tools/schemas/input-actions.schema.json`, `input-timing.schema.json` | the three action fields; `read.steadyJitter` and `read.perfectStreak` | the validator accepts my data (95 files, 0 errors) |
+| `intent-fields-sim.patch` | `sim/core/tools/parity.gd`, `wounds.gd`, `intro.gd` | the pack test covers the new fields (and refuses `1 << 43`, not `1 << 40`, as the first invalid integer); a stun clears the held levels and leaves `escape` through; `escape` skips the intro | **golden unchanged**: parity, the golden check and `npm test` pass (5 of 5) |
+| `intent-hash.patch` | `sim/core/hash.gd` | the three fields in the hashed intent record | **moves every state hash: regenerate `golden.json` in the same commit** (`sim/core/tools/golden.gd`), best done when Encounter's code first reads them |
+
+Until `intent-hash.patch` lands the new fields are in the record and the replay but not in the state hash; that is harmless while nothing reads them.
+
 ## Recommendations at a glance
 
 | # | Item | Recommendation |
@@ -80,7 +149,7 @@ Owner: Controls and Game Feel. Date: 2026-10-02. Answers the EP's brief from Orb
 
 **Boost, in every mapping** (confirmed by Orb, with a ki drain per tick, Game Design's rate). Holding LT (or Space, A on Simple, the touch Dodge button) **is high-speed flight in the stick direction, in any direction, any time.** The dodge tap fires on press and the lunge flows into the boost if the button stays down (a lunge into a sprint is already free); the 12-tick threshold only decides tap against hold, not whether you are fast. **Boosting never means Escape by itself.** It keeps the tackle (context while boosting) as the pursuer's "stop him escaping" tool, which exists today.
 
-**Escape's counters need no new control** (Orb's picks): *chase and catch* is boost toward the escaper plus the tackle (context while boosting), which exist; *blasts clip the escaper* is the energy hold (RB) and light or heavy; *intercept ahead at a ki cost* is a boost whose aim leads the escaper, the director's, on the same LT hold; *exhaustion at empty ki* is the sim's. Orb did **not** pick paying to break out of a brawl, so the question below is **open**: does Escape need a deliberate control at all, or does the old stance (boost away) stay the only escape? Until Orb answers, nothing in the layouts is built for it.
+**Escape's counters need no new control** (Orb's picks): *chase and catch* is boost toward the escaper plus the tackle (context while boosting), which exist; *blasts clip the escaper* is the energy hold (RB) and light or heavy; *intercept ahead at a ki cost* is a boost whose aim leads the escaper, the director's, on the same LT hold; *exhaustion at empty ki* is the sim's. Orb did **not** pick paying to break out of a brawl, so the question below was open (now a provisional build, R1): does Escape need a deliberate control at all, or does the old stance (boost away) stay the only escape? Orb has since asked for a provisional Escape to feel in play: **built as mapping A**, see Revision 2, R1.
 
 **If Escape gets a control, three mappings:**
 
@@ -109,7 +178,7 @@ Owner: Controls and Game Feel. Date: 2026-10-02. Answers the EP's brief from Orb
 - **The tech stays.** The dodge tap at a bounce (4 ticks before to 8 after) or in a tumble (`tech-and-pulse-input.md`, balance-targets section 20) is the ground-contact recovery; air recovery is the brake. Game Design may fold them. Escape (if Orb picks a control) still works in a juggle.
 - **Touch:** the Guard button held. **Simple:** B held.
 
-## 4b. Taunt, then hold to launch
+## 4b. Taunt, then hold to launch (superseded by Revision 2, R2: bands, charges, answering the taunt)
 
 Orb's idea: at range, a press plays a taunt; holding the attack through the taunt ends it by taking off at max speed to attack. The input fits the scheme without a new control because it is the **tap-fires-on-press, hold-adds-behaviour** rule (Rule 1) applied to attack.
 

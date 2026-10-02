@@ -44,6 +44,8 @@
     "staleTicks": 60,
     "mixShort": 3,
     "assistFactor": 2,
+    "steadyJitter": 3,
+    "perfectStreak": 3,
     "debounce": 2
   },
   "touch": {
