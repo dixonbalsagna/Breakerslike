@@ -1,0 +1,245 @@
+--- a/sim/world/blast.gd
++++ b/sim/world/blast.gd
+@@ -56,7 +56,7 @@
+ 
+ ## A shot of the given kind, fired by slot, ended at (x, y, z) moving at (vx, vy) units a second, against the ground (cause "ground") or the
+ ## water (cause "water"). Returns {"crater": the record or null, "levelled": buildings levelled}.
+-static func shotHit(S: SimState, slot: int, kind: String, x: float, y: float, z: float, vx: float, vy: float, cause: String) -> Dictionary:
++static func shotHit(S: SimState, slot: int, kind: String, x: float, y: float, z: float, vx: float, vy: float, cause: String, charge: float = 1.0, capLeft: int = 1) -> Dictionary:
+ 	var res := {"crater": null, "levelled": 0}
+ 	var D: Dictionary = data()
+ 	if D.is_empty() or not D.kinds.has(kind) or slot < 0 or slot >= S.fighters.size():
+@@ -70,7 +70,7 @@
+ 		return res
+ 	var g: float = WorldTerrain.groundY(S, x, z)
+ 	var sp: float = maxf(SimDetMath.hypot(vx, vy), 0.000001)
+-	var E: float = float(k.craterE) * float(D.tierEnergy[ti])
++	var E: float = lerpf(float(k.get("craterETap", k.craterE)), float(k.craterE), charge) * float(D.tierEnergy[ti])
+ 	var air: float = maxf(0.0, y - g)   # a burst above the ground (a mine in the air, a shot that ran out of life): the bowl fades with the height
+ 	if air > 0.0:
+ 		E *= maxf(0.0, 1.0 - air / (float(k.get("airReach", 6.0)) * 75.0))
+@@ -80,10 +80,24 @@
+ 	SimFx.dust(S, x, g, int(k.dust), "", z)
+ 	SimFx.ring(S, x, g + 10.0, float(k.ringR), "#ffffff", 0.35, 8.0, z)
+ 	SimFx.shake(S, float(k.shake), x, z)
+-	res.levelled = WorldStructures.damageArea(S, x, g + 5.0, float(k.radius), float(k.damage) * float(D.tierDamage[ti]), f)
++	res.levelled = _area(S, f, k, D, ti, charge, x, g + 5.0, capLeft)
+ 	return res
+ 
+ 
++## Structure damage of a direct hit by kind and charge, before the tier factor (agency-pass 15.3): a charged shot runs from `damage` (a tap)
++## to `fullDamage`.
++static func structDamage(k: Dictionary, charge: float) -> float:
++	return lerpf(float(k.damage), float(k.get("fullDamage", k.damage)), charge)
++
++
++## The blast on the buildings around a point: half of a direct hit (areaShare) over the kind's radius (a charged shot's grows with its charge,
++## every kind's with the shooter's tier), the tier factor on the damage. At most capLeft buildings fall; the rest are left at a quarter of their hp.
++static func _area(S: SimState, f, k: Dictionary, D: Dictionary, ti: int, charge: float, x: float, y: float, capLeft: int) -> int:
++	var rad: float = lerpf(float(k.radius), float(k.get("fullRadius", k.radius)), charge) * float(D.tierRadius[ti])
++	var dmg: float = structDamage(k, charge) * float(k.get("areaShare", D.areaShare)) * float(D.tierDamage[ti])
++	return WorldStructures.damageArea(S, x, y, rad, dmg, f, false, 0.0, capLeft, 0.25, 1.0)
++
++
+ const STEP: float = 24.0   # the sample spacing along a shot's path this tick (the narrowest building is wider)
+ 
+ 
+@@ -91,7 +105,7 @@
+ ## the shot's direct hit here (it reaches a building whose nearest face is within Z_REACH of its plane, as every blast does) and the call returns true (the caller ends the shot). A shot that meets a fighter first never gets here.
+ static func shotMeetsBuilding(S: SimState, sh, dx: float, dy: float, r: float) -> bool:
+ 	var D: Dictionary = data()
+-	if D.is_empty() or not D.get("direct", {}).has(sh.kind):
++	if D.is_empty() or not D.kinds.has(sh.kind) or sh.kind == "mine":
+ 		return false
+ 	var len: float = SimDetMath.hypot(dx, dy)
+ 	var x0: float = sh.x - dx
+@@ -127,7 +141,7 @@
+ 	if hit != null:
+ 		var px2: float = SimWrap.wrap(x0 + dx * hitS)
+ 		var py2: float = y0 + dy * hitS
+-		shotBuilding(S, sh.owner, sh.kind, sh.power, hit, px2, py2, sh.z, sh.vx, sh.vy)
++		shotBuilding(S, sh.owner, sh.kind, sh.power, hit, px2, py2, sh.z, sh.vx, sh.vy, chargeOf(sh))
+ 		sh.x = px2
+ 		sh.y = py2
+ 		return true
+@@ -138,25 +152,24 @@
+ ## floors: dent, crack or punch, and a punched span pancakes what stands above it) or its hit points (a house). A light shot (chip in the data)
+ ## first piles into the building's wear pool (nothing shows); at chip.threshold of maxhp the pool is paid in one blow. Returns {"outcome",
+ ## "dmg", "levelled"}: outcome chip (nothing shown), or what the floors did, or hit/collapse for a plain building.
+-static func shotBuilding(S: SimState, slot: int, kind: String, power: float, b, x: float, y: float, z: float, vx: float, vy: float) -> Dictionary:
++static func shotBuilding(S: SimState, slot: int, kind: String, power: float, b, x: float, y: float, z: float, vx: float, vy: float, charge: float = 1.0) -> Dictionary:
+ 	var D: Dictionary = data()
+-	var h: Dictionary = D.direct[kind]
++	var k: Dictionary = D.kinds[kind]
+ 	var f = S.fighters[slot]
+ 	var ti: int = clampi(int(f.tier), 1, 4) - 1
+-	var dmg: float = float(h.damage) * float(D.tierDamage[ti])
++	var dmg: float = structDamage(k, charge) * float(D.tierDamage[ti])
+ 	var res := {"outcome": "hit", "dmg": dmg, "levelled": false}
+-	var k: Dictionary = D.kinds[kind]
+ 	var sp: float = maxf(SimDetMath.hypot(vx, vy), 0.000001)
+-	SimFx.ring(S, x, y, float(k.ringR) * 0.5, "#ffffff", 0.3, 8.0, z)
+ 	SimFx.shake(S, float(k.shake) * 0.5, x, z)
+-	if bool(h.get("chip", false)):
++	if b.wear >= 0.0:   # nothing has shown yet: the damage piles into the pool (scorch marks only) until a quarter of the hit points
+ 		b.wear += dmg
+ 		if b.wear < float(D.chip.threshold) * b.maxhp:
+ 			res.outcome = "chip"
+ 			SimFx.debris(S, x, y, 2, "#77808f", 300.0, z)
++			SimFx.ring(S, x, y, float(k.ringR) * 0.5, "#ffffff", 0.3, 8.0, z)
+ 			return res
+-		dmg = b.wear   # it shows: the pool is paid in one blow
+-		b.wear = 0.0
++		dmg = b.wear   # it shows: the pool is paid in one blow, and from now on every hit counts at once (wear -1)
++		b.wear = -1.0
+ 		res.dmg = dmg
+ 		res.outcome = "wound"
+ 	var by = f
+@@ -172,9 +185,17 @@
+ 			res.outcome = "collapse"
+ 	SimFx.debris(S, x, y, int(k.debris), "#77808f", 500.0, z)
+ 	SimFx.dust(S, x, y, int(k.dust), "", z)
++	_area(S, f, k, D, ti, charge, x, y, 1 - (1 if res.levelled else 0))   # the blast on its neighbours: one shot levels at most one building
+ 	return res
+ 
+ 
++## The charge of a charged shot from the damage the director gave it at the fire (a tap is 0.6 of the kind's damage, a full charge all of it): 0 to 1.
++static func chargeOf(sh) -> float:
++	if sh.kind != "charged" or not SimShots.kinds.has("charged"):
++		return 1.0
++	return clampf((sh.dmg / maxf(float(SimShots.kinds["charged"].dmg), 0.000001) - 0.6) / 0.4, 0.0, 1.0)
++
++
+ ## WorldBrunt.applyFloors for a shot: the same rules (punch clears the floors it covers, crack and dent keep damage on them, the core wears by
+ ## CORE_SHARE, a punched span pancakes the floors above), with no fighter in the event.
+ static func _floors(S: SimState, b, oc: Dictionary, by, cx: float, y: float, slot: int, ux: float, uy: float) -> Dictionary:
+--- a/data/biomes/blast.json
++++ b/data/biomes/blast.json
+@@ -4,8 +4,8 @@
+   "kinds": {
+     "bolt": {
+       "craterE": 0.12,
+-      "radius": 70,
+-      "damage": 40,
++      "radius": 38,
++      "damage": 12,
+       "debris": 3,
+       "dust": 1,
+       "ringR": 160,
+@@ -15,8 +15,8 @@
+     },
+     "shard": {
+       "craterE": 0.07,
+-      "radius": 55,
+-      "damage": 24,
++      "radius": 38,
++      "damage": 12,
+       "debris": 2,
+       "dust": 1,
+       "ringR": 120,
+@@ -25,9 +25,9 @@
+       "airReach": 4.0
+     },
+     "arc": {
+-      "craterE": 0.64,
+-      "radius": 128,
+-      "damage": 128,
++      "craterE": 0.25,
++      "radius": 75,
++      "damage": 40,
+       "debris": 6,
+       "dust": 3,
+       "ringR": 336,
+@@ -37,19 +37,22 @@
+     },
+     "charged": {
+       "craterE": 0.8,
+-      "radius": 160,
+-      "damage": 160,
++      "radius": 112,
++      "damage": 60,
+       "debris": 8,
+       "dust": 3,
+       "ringR": 420,
+       "shake": 6.0,
+       "splash": 10,
+-      "airReach": 4.0
++      "airReach": 4.0,
++      "fullDamage": 140,
++      "fullRadius": 150,
++      "craterETap": 0.5
+     },
+     "lob": {
+       "craterE": 0.5,
+-      "radius": 120,
+-      "damage": 100,
++      "radius": 112,
++      "damage": 80,
+       "debris": 6,
+       "dust": 2,
+       "ringR": 320,
+@@ -58,15 +61,16 @@
+       "airReach": 4.0
+     },
+     "mine": {
+-      "craterE": 0.6,
+-      "radius": 130,
+-      "damage": 130,
++      "craterE": 0.8,
++      "radius": 150,
++      "damage": 140,
+       "debris": 8,
+       "dust": 3,
+       "ringR": 340,
+       "shake": 5.0,
+       "splash": 8,
+-      "airReach": 6.0
++      "airReach": 6.0,
++      "areaShare": 1.0
+     }
+   },
+   "tierEnergy": [
+@@ -76,31 +80,19 @@
+     2.2
+   ],
+   "tierDamage": [
++    0.25,
++    0.5,
+     1.0,
+-    1.4,
+-    2.0,
+-    2.8
++    1.5
+   ],
+-  "direct": {
+-    "bolt": {
+-      "damage": 24,
+-      "chip": true
+-    },
+-    "shard": {
+-      "damage": 14,
+-      "chip": true
+-    },
+-    "arc": {
+-      "damage": 150
+-    },
+-    "charged": {
+-      "damage": 300
+-    },
+-    "lob": {
+-      "damage": 220
+-    }
+-  },
+   "chip": {
+-    "threshold": 0.12
+-  }
++    "threshold": 0.25
++  },
++  "tierRadius": [
++    1.0,
++    1.0,
++    1.25,
++    1.5
++  ],
++  "areaShare": 0.5
+ }

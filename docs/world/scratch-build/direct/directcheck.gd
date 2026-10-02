@@ -102,7 +102,7 @@ func _init() -> void:
 	var c1: String = shoot(S2, bb, "charged", WorldStructures.baseY(S2, bb) + bb.h + 400.0, 1)
 	ok(bb.hp == bb.maxhp, "a charged shot flying over a house's roof does nothing to it")
 	var c2: String = shoot(S2, bb, "charged", WorldStructures.baseY(S2, bb) + bb.h * 0.4, 1)
-	ok(bb.hp < bb.maxhp or not bb.alive, "and one at its wall does (hp %.0f of %.0f)" % [bb.hp, bb.maxhp])
+	ok(bb.hp < bb.maxhp or not bb.alive or bb.wear > 0.0, "and one at its wall does (hp %.0f of %.0f, wear pool %.0f)" % [bb.hp, bb.maxhp, bb.wear])
 	var ends := ""
 	for e in S2.out.fx:
 		if e.type == "shot_end":
