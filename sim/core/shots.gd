@@ -197,8 +197,8 @@ static func hitFighter(S: SimState, sh, f) -> bool:
 
 ## A shot has met the world (cause: ground or water) at its position. Nothing happens here beyond its end; World adds
 ## what a blast does to the ground, the water and the structures around it.
-static func hitWorld(_S: SimState, _sh, _cause: String) -> void:
-	pass
+static func hitWorld(S: SimState, sh, cause: String) -> void:
+	WorldBlast.shotHit(S, sh.owner, sh.kind, sh.x, sh.y, sh.z, sh.vx, sh.vy, cause)   # World's blast on the ground, the structures and the water
 
 
 # ---------------------------------------------------------------- the step

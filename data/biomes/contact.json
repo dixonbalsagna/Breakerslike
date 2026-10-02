@@ -12,7 +12,8 @@
   "leave": {
     "clear": 1.5,
     "lipLift": 1.0,
-    "wall": 0.8,
+    "wall": 1.0,
+    "wallHaltBelow": 600,
     "stop": 60
   },
   "bounce": {
@@ -53,6 +54,12 @@
     "tierMul": 0.15,
     "bermMul": 2.0,
     "pathMul": 1.0
+  },
+  "embed": {
+    "minDepthBh": 1.75,
+    "specialMinDepthBh": 1.5,
+    "ticks": 60,
+    "cooldown": 5.0
   },
   "spin": {
     "capTurns": [1.5, 3.0, 3.0, 3.0],

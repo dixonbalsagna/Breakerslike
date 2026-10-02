@@ -61,6 +61,11 @@ static var K_AREA_TOUCH: float = 0.5     # ... and this share when it is anythin
 static var K_AIRDRAG: float = 0.55      # the horizontal drag base per second after a journey's first contact (0.55 is the launch's own flight)
 static var K_GAINCAP: float = 0.0        # a journey never goes faster than this times its first-contact speed, on the ground or after a contact (0 off)
 static var K_FUR: Array = [1.0, 0.0, 1.0, 0.0, 1.0, 1.0]
+static var K_EMB_MIN: float = 1.75        # an impact digging a bowl this deep (body heights) embeds the fighter ...
+static var K_EMB_SPECIAL: float = 1.5    # ... or this deep when it is a special blow
+static var K_EMB_TICKS: int = 60         # ticks he stays driven in (Fighter.embedT)
+static var K_EMB_COOL: float = 5.0       # seconds before the same fighter can be embedded again
+static var K_WALLHALT: float = 0.0       # a skid meeting a wall under this speed just halts: no stop-impact (counted as halted)
 static var K_GMUL: float = 1.0           # gravity after a journey's first contact, times 1000
 static var K_RUBBLE_MIN: float = 8.0
 static var K_PAVE_DUG: float = -3.0
@@ -95,6 +100,8 @@ class Body:
 	var vLost: float = 0.0        # speed removed this tick (the wear)
 	var dxStep: float = 0.0       # signed x moved this tick in contact
 	var lips: int = 0
+	var special: bool = false     # the launch is a special blow (a signature, a finisher, a break launch)
+	var embedOK: bool = true      # the launched fighter is out of the embed cool-down
 	var z: float = 0.0            # depth (T: the row the ground is read on when depth is on)
 
 
@@ -186,6 +193,12 @@ static func _cache() -> void:
 	K_AREA_SLAM = float(D.get("area", {}).get("slam", 1.0))
 	K_AREA_TOUCH = float(D.get("area", {}).get("touch", 0.5))
 	K_GMUL = float(D.bounce.get("gravityMul", 1.0))
+	var em: Dictionary = D.get("embed", {})
+	K_EMB_MIN = float(em.get("minDepthBh", 1.75))
+	K_EMB_SPECIAL = float(em.get("specialMinDepthBh", 1.5))
+	K_EMB_TICKS = int(em.get("ticks", 60))
+	K_EMB_COOL = float(em.get("cooldown", 5.0))
+	K_WALLHALT = float(D.leave.get("wallHaltBelow", 0.0))
 	var fu: Dictionary = D.get("furrow", {})
 	K_FUR = [float(fu.get("depthMul", 1.0)), float(fu.get("tumble", 0.0)), float(fu.get("dMaxMul", 1.0)), float(fu.get("tierMul", 0.0)), float(fu.get("bermMul", 1.0)), float(fu.get("pathMul", 1.0))]
 	K_GAINCAP = float(D.get("slope", {}).get("speedCap", 0.0))
@@ -366,12 +379,19 @@ static func _land(S: SimState, b: Body, g: float, ev: Array) -> void:
 		b.end = "stop"
 		return
 	var wasHopped: bool = b.hopped
+	var vertL: float = absf(b.vy) / maxf(SimDetMath.hypot(b.vx, b.vy), 0.000001)   # the vertical share of the landing, before a hop changes the velocity
+	info["vert"] = vertL
 	# a steep landing is a slam at the first contact, and the landing after a hard slam's hop; a later steep landing after a bounce or a
 	# lip launch is a bounce or a skid by the usual rules (a journey makes one mark)
 	var slam: bool = sea or (sin2 >= K_SLAM2 and (first or wasHopped))
 	var forceTumble: bool = b.contacts >= K_MAXC or b.t >= K_MAXT
 	if slam:
 		var hop: bool = (not sea) and sp >= K_HOPSPEED and not b.hopped
+		if hop and first and b.embedOK:   # a blow that will embed him digs in and stays there: no hop
+			var Ee: float = WorldCrater.impactEnergy(sp, b.tier) * (WorldCrater.SPECIAL_E_MULT if b.special else 1.0)
+			var dEst: float = WorldCrater.radiusOf(Ee, b.special) * WorldCrater.DEPTH_RATIO * (WorldCrater.GRAZE_MIN + (1.0 - WorldCrater.GRAZE_MIN) * vertL) / 75.0
+			if dEst >= K_EMB_MIN or (b.special and dEst >= K_EMB_SPECIAL):
+				hop = false
 		info["k"] = "slam"
 		info["hop"] = hop
 		info["dig"] = not wasHopped
@@ -449,6 +469,9 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	# ground that rises like a wall stops him with a stop-impact
 	if rise > K_WALL and vN2 > K_STOP:
 		b.done = true
+		if vN2 < K_WALLHALT:
+			b.end = "stop"   # a slow skid against a wall just halts: no stop-impact
+			return
 		b.end = "wall"
 		ev.append({"k": "wall", "x": b.x, "y": b.y, "speed": vN2})
 		return
@@ -600,6 +623,8 @@ static func toBody(S: SimState, f) -> Body:
 	b.rot = f.rot
 	b.wet = f.wet
 	b.hopped = f.hopped
+	b.special = f.launchSpecial
+	b.embedOK = S.T - f.embedCool >= K_EMB_COOL
 	var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
 	b.tier = by.tier
 	b.slideD = f.slideD
@@ -770,9 +795,15 @@ static func _contact(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 			removed = maxf(0.0, sp - b.vN)
 		area = K_AREA_LATER * cArea * removed
 	if k == "slam":
-		var vert: float = absf(f.vy) / maxf(SimDetMath.hypot(f.vx, f.vy), 0.000001)
+		var vert: float = float(e.get("vert", absf(f.vy) / maxf(SimDetMath.hypot(f.vx, f.vy), 0.000001)))
 		if bool(e.get("dig", true)):
-			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial, f.z)
+			var rc = WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial, f.z)
+			if rc != null and first and S.T - f.embedCool >= K_EMB_COOL:
+				var dbh: float = rc.depth / 75.0
+				if dbh >= K_EMB_MIN or (f.launchSpecial and dbh >= K_EMB_SPECIAL):
+					f.embedT = K_EMB_TICKS   # driven into the bowl: the down state holds him for these ticks (the guard and the burst out are the director's)
+					f.embedCool = S.T
+					SimFx.embed(S, f, f.x, rc.y - rc.depth, rc.depth, rc.r, rc.energy, float(K_EMB_TICKS), _launchN(f))
 	if sea:
 		SimFx.splash(S, f.x, f.y + 10.0, 14, f.z)
 	else:

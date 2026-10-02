@@ -358,7 +358,11 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 			f.power = SimMathx.jmin(100.0, f.power + f.ld.charge * dt)   # Q10: ladder.json chargePerSec
 			SimFx.chargeFx(S, f, WorldTerrain.groundY(S, f.x))   # the aura's sparks and dust are cosmetic: the consumer rolls them
 	elif f.state == "down":
-		f.stateT += dt
+		if f.embedT > 0:   # embedded (World, ground-contact.md section 19): held down for these ticks; the guard from tick 20 and the burst out belong to the director
+			f.embedT -= 1
+			f.stateT = 0.4 if f.embedT == 0 else 0.0   # then the usual short get-up
+		else:
+			f.stateT += dt
 		f.y = WorldTerrain.groundY(S, f.x)
 		if f.stateT > 0.75:
 			f.state = "free"
