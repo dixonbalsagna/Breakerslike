@@ -37,7 +37,7 @@ var tick_usec: int = 0          # cost of the last SimCore.step
 var fx_usec: int = 0            # cost of the last fx consume and camera step
 var _prev := PackedFloat64Array()
 var _cur := PackedFloat64Array()
-var _skip_intro: bool = false   # skip_intro() was asked for and the intro has not ended yet
+var _skip_intro: int = 0        # skip_intro(): 0 not asked, 1 for the next pre-clock tick, 2 until the intro ends
 
 
 func _init() -> void:
@@ -50,7 +50,7 @@ func new_match(p_seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> void
 	seed = p_seed & 0xFFFFFFFF
 	var su: Dictionary = hub.setup()   # both slots are v2; a Simple layout sets its assists
 	su.merge(setup, true)
-	_skip_intro = false
+	_skip_intro = 0
 	SimCore.newMatch(S, seed, ai, su)
 	cam.reset()
 	fxv.reset(seed)
@@ -72,6 +72,8 @@ func new_match(p_seed: int, ai: Dictionary = {}, setup: Dictionary = {}) -> void
 func advance(frame_dt: float, vw: float, vh: float) -> int:
 	if paused:
 		_was_paused = true
+		if _skip_intro == 1:
+			_skip_intro = 0   # the press that opened the pause menu or an overlay is not a skip
 		return 0
 	if _was_paused:
 		# The pause (P, or an overlay) ended: nothing pressed during it fires, and every hold is read as if it began now
@@ -98,11 +100,13 @@ func intro_running() -> bool:
 	return "intro" in S and S.intro != null and int(S.intro.left) > 0
 
 
-## Ask for the intro to be skipped. The sim skips on a press from a human slot, so the next pre-clock ticks carry one
-## in the first human slot's intent until the intro ends (a press before the sim's skipFrom tick is ignored). Outside
-## the intro, and with no human slot, it does nothing.
-func skip_intro() -> void:
-	_skip_intro = intro_running()
+## Ask for the intro to be skipped. The sim skips on a press from a human slot, so the next pre-clock tick carries one
+## in the first human slot's intent. The sim ignores a press before its skipFrom tick (a button still held from the
+## menu must not skip): a plain request shares that fate, and `hold` keeps asking until the intro ends (the demo's
+## take-over: the player has just said they want to play). Outside the intro, and with no human slot, nothing happens.
+func skip_intro(hold: bool = false) -> void:
+	if intro_running():
+		_skip_intro = maxi(_skip_intro, 2 if hold else 1)
 
 
 ## One fixed tick: intents for human slots, step, camera, then drain the feed and the fx events.
@@ -115,13 +119,15 @@ func tick(vw: float, vh: float) -> void:
 			inputs[k] = hub.intent(k)
 	var pausing: bool = S.pause.left > 0   # Q10: this tick is one of a pausing set piece's frozen ticks
 	var pre: bool = intro_running()        # the intro phase: this tick is a pre-clock tick
-	if pre and _skip_intro:
+	if pre and _skip_intro > 0:
 		for k in range(2):
 			if inputs[k] != null:
 				inputs[k].dash = true      # read only as "skip": nothing else runs on a pre-clock tick
 				break
+		if _skip_intro == 1:
+			_skip_intro = 0
 	elif not pre:
-		_skip_intro = false
+		_skip_intro = 0
 	var t0: int = Time.get_ticks_usec()
 	if SimCore.step(S, inputs):
 		hub.consumed()

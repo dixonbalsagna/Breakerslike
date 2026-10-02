@@ -1,6 +1,6 @@
 # The tumble and the intro's sky shot: Rendering's plan
 
-Owner: Rendering and Technical Art. Status: plan, 2026-10-02. Section 2.3 (the host's side of the intro) is built and tested against Simulation's parked intro code; the rest is not built. It covers Rendering's part of two things other directors have planned:
+Owner: Rendering and Technical Art. Status: plan, 2026-10-02. Section 2.3 (the host's side of the intro) is built and tested on the committed sim (74ede76); the rest is not built. It covers Rendering's part of two things other directors have planned:
 - the tumble (World's `docs/world/ground-contact.md`: skid, bounce, tumble, rims; Animation's active ragdoll);
 - the entrance (Camera's `docs/camera/rule-of-cool-shots.md` row 7; Simulation's `docs/architecture/intro-phase.md`).
 
@@ -62,19 +62,26 @@ Camera's beat: a low wide angle on the empty landing spot (pitch -6 degrees, the
 
 ### 2.3 The host (`sim_host.gd`, `main.gd`): built
 
-Built on 2026-10-02 and tested through the real main scene against Simulation's parked `SimIntro` (`docs/architecture/pending/intro.py . code`, applied to a scratch copy; 25 checks). On a sim without the phase all of it is inert.
+Built on 2026-10-02 and tested through the real main scene on the committed sim (`SimIntro`, 74ede76; 34 checks of my own, with real key, mouse and pad events). It is behind `--intro`; without the flag nothing below runs, because the sim skips the intro by default.
 
 - **Who gets an intro.** `--intro` plays it: `main._match_setup()` adds `"intro": true` to the match setup. Without the flag nothing is added and the sim's own default stands (it starts from the intro's end state: both entrance craters dug, no pre-clock tick), until Camera, Animation and UI have their sides. A tool that drives the scene itself never adds anything, so its matches are the ones its own reference sim plays. `start_match(seed, ai, setup)` takes a setup of its own for tests.
 - **Pre-clock ticks.** `SimHost.intro_running()` says whether the intro runs. On a pre-clock tick the host passes the intents as on any tick (the sim reads them only to skip), then drops the input edges, and on the intro's last tick reads every hold as if it began then. So a press is seen on its own tick, and the press that skipped fires nothing at the clock.
 - **Events** reach the host's drain on pre-clock ticks as on any tick: the test saw `intro_start`, both `entrance_fall` and `entrance_land`, `staredown_start` and `clock_start` on their ticks.
-- **The demo.** The key, click or button that takes player one over also skips a running intro (`SimHost.skip_intro()`): an AI's intent never skips, so the host puts a press into the new player's intent on the following pre-clock ticks until the intro ends. A take-over before the sim's `skipFrom` tick waits for it.
+- **Any button skips.** The sim reads only the fight's own buttons as a skip. The host asks for the skip itself on any key, pad button, click or touch from a player (`SimHost.skip_intro()`: it puts a press into the first human slot's intent on the next pre-clock tick). A stick or a trigger pushed is not a press. A press before the sim's `skipFrom` tick is ignored and not remembered, as the sim ignores a button still held from the menu. The press that opens the pause menu does not skip.
+- **The demo.** The key, click or button that takes player one over also skips a running intro (EP's ruling). An AI's intent never skips, so this request is kept until `skipFrom` lets it through.
 - **Overlays.** The host's pause (the first-run card, the pause menu) holds the intro; it runs on when the pause ends.
 - **Markers.** No head badge while the intro runs.
-- **What it looks like today** (`--intro`, before the others' sides): the reference camera follows the midpoint of the two fighters, so it sits in the sky while one is still 6,000 units up; UI's plates show; the fighters stand in their fight pose. That is why it ships as "skip".
+- **Effects run at full speed.** The sim marks intro ticks live for effects (my finding below, taken into 74ede76), so the host has nothing to do: the landing's dust and debris settle during the staredown.
+- **The falling fighter draws as he is.** Nothing was needed in the fighter view. He is drawn at the sim's place each tick, blended between ticks; Animation poses him head first, VFX draws his trail, and the view from altitude and the ground shadow hold at 6,000 units up.
+- **What it looks like today** (`--intro`, the game's own cameras, 2026-10-02): Camera's rig chases each fighter down in a solo shot and then holds a two-shot for the staredown. UI's plates still show before the clock. The first tick shows fighter A upright in his fight pose before the fall pose takes over.
 
-### 2.3b Found against Simulation's parked code
+Fighter A falling (tick 20), just landed (tick 40), and the staredown (tick 200): ![fall](img/intro-fall-t20.png) ![landed](img/intro-landed-t40.png) ![staredown](img/intro-staredown-t200.png)
 
-- **The landing's dust and debris hang in the air until the clock.** The parked `sim.gd` marks an intro tick as frozen for effects (`SimFx.tickMark(S, dt, true)`), and every effects consumer steps frozen ticks at a tenth speed (the hit-stop's slow motion). Fighter A lands at tick 36; at tick 200 his crater's debris is still airborne. Marked live (`false`) in my scratch copy, the dust and debris settle as they should, and my host test still passes. **Ask for Simulation:** mark intro ticks live for effects. The fight's clock is stopped, but the entrance is a live presentation.
+- **The default, on the live page** (74ede76, checked 2026-10-02 in Chrome): the match starts from the intro's end state. At tick 0 the toll chip reads "craters 2", and both fighters stand in their entrance craters, 900 units apart. ![live start](img/intro-live-start.png)
+
+### 2.3b Found against Simulation's parked code (fixed in 74ede76)
+
+- **The landing's dust and debris hang in the air until the clock.** The parked `sim.gd` marks an intro tick as frozen for effects (`SimFx.tickMark(S, dt, true)`), and every effects consumer steps frozen ticks at a tenth speed (the hit-stop's slow motion). Fighter A lands at tick 36; at tick 200 his crater's debris is still airborne. Marked live (`false`) in my scratch copy, the dust and debris settle as they should, and my host test still passes. **Ask for Simulation:** mark intro ticks live for effects. The fight's clock is stopped, but the entrance is a live presentation. Simulation did so in 74ede76.
 
 Tick 200 with the parked code, and with intro ticks marked live: ![hanging](img/intro-t200-frozen.png) ![settled](img/intro-t200-live.png)
 

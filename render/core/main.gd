@@ -780,15 +780,15 @@ func _pad_event(e: InputEvent) -> void:
 					st.y = -e.axis_value
 				_pad_stick[e.device] = st
 				if absf(e.axis_value) > 0.5:
-					take_over()
+					take_over(false)
 				host.hub.pad_stick(e.device, st.x, st.y)
 			JOY_AXIS_TRIGGER_LEFT:
 				if e.axis_value > 0.5:
-					take_over()
+					take_over(false)
 				host.hub.pad_trigger(e.device, "lt", e.axis_value)
 			JOY_AXIS_TRIGGER_RIGHT:
 				if e.axis_value > 0.5:
-					take_over()
+					take_over(false)
 				host.hub.pad_trigger(e.device, "rt", e.axis_value)
 
 
@@ -799,15 +799,19 @@ func _on_joy_connection(device: int, connected: bool) -> void:
 		host.hub.pad_disconnected(device)
 
 
-func take_over() -> void:
-	if started:
-		return
-	started = true
-	if host.S.fighters[0].ai != null:
-		host.toggle_ai(0)
-	# In the demo the key or click that takes player one over also skips a running intro: an AI's intent never
-	# skips, and the player has just said they want to play. (A playing human skips with any press of their own.)
-	host.skip_intro()
+## A key, a button, a click or a touch from a player (press), or a stick or a trigger pushed (press false). The first
+## one takes player one over from the demo. While the intro runs, any press skips it (docs/architecture/intro-phase.md):
+## the sim reads only the fight's own buttons, so the host asks for the skip itself. The take-over skips whatever
+## made it and keeps asking until the sim's skipFrom tick lets it through; a press from someone already playing is
+## ignored before that tick, as the sim ignores a button still held from the menu.
+func take_over(press: bool = true) -> void:
+	if not started:
+		started = true
+		if host.S.fighters[0].ai != null:
+			host.toggle_ai(0)
+		host.skip_intro(true)
+	elif press:
+		host.skip_intro()
 
 
 ## Alt plus a flash key fires that flash (Shift: on P2); Alt+F cycles the fighter's shape family.
