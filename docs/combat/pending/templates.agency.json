@@ -1,0 +1,276 @@
+{
+ "schema": "combat-agency/0-draft",
+ "_about": "PARKED. The traded-blows set piece and the two charges at range, with the meeting in the middle. Not loaded, not hashed. Times in ticks. Rules quoted are Game Design's (docs/design/agency-pass.md sections 1 and 2); the staging follows Legal's twelve rules (docs/legal/agency-pass-screen.md). Our own staging throughout.",
+ "blowForBlow": {
+  "label": "Blow for Blow: an in-house label only, never a title, tag or logo; Narrative picks the player-facing name",
+  "rules": {
+   "_source": "Game Design",
+   "trigger": "both fighters release a power blow on the flash in the same exchange",
+   "turn": "a heavy press on the beat, inside an 8-tick window",
+   "blow": "x0.7 of a heavy; the other takes it and stays up; then it is his turn",
+   "beatTicks": [
+    40,
+    36,
+    32,
+    28,
+    24,
+    24,
+    24,
+    24
+   ],
+   "maxTurns": 8,
+   "afterMax": "both slide apart with no winner: the double slide",
+   "end": "the first to miss the beat, or to guard or dodge, gives way; the other lands the last blow as an earned launch, with the panel and 25% more impact wear",
+   "brink": "a blow that breaks a region ends it",
+   "mood": "+8 at the start, +3 a blow",
+   "ai": "40, 65 or 85 beats in 100",
+   "budget": "one big set piece per 20 s"
+  },
+  "locations": [
+   {
+    "location": "ribs",
+    "region": "core",
+    "strikes": [
+     "strike.body_hook"
+    ]
+   },
+   {
+    "location": "flank",
+    "region": "core",
+    "strikes": [
+     "strike.roundhouse"
+    ]
+   },
+   {
+    "location": "shoulder plate",
+    "region": "arms",
+    "strikes": [
+     "strike.dropping_elbow",
+     "strike.hammer"
+    ]
+   },
+   {
+    "location": "chest",
+    "region": "core",
+    "strikes": [
+     "strike.rib_shot",
+     "strike.double_palm"
+    ]
+   },
+   {
+    "location": "hip",
+    "region": "legs",
+    "strikes": [
+     "strike.rising_knee",
+     "strike.spinning_heel"
+    ]
+   },
+   {
+    "location": "thigh",
+    "region": "legs",
+    "strikes": [
+     "strike.stomp"
+    ]
+   }
+  ],
+  "locationRule": [
+   "each turn uses a different strike and a different location from the turn before",
+   "no fighter repeats a strike in one set piece",
+   "never two hand blows to the ribs or flank running: limb families alternate",
+   "the wear goes to the location's region, not always to the core (a change to Game Design's 'to the core')"
+  ],
+  "travel": {
+   "driveU": [
+    40,
+    48,
+    56,
+    64,
+    72,
+    80,
+    88,
+    96
+   ],
+   "what": "they never stand still: each blow drives both along the ground. The taker gives the distance on his feet, the striker follows through it, and the answer drives them back the other way, further each time",
+   "ground": "the pair ploughs one lengthening furrow, there and back; World cuts it by tier",
+   "air": "the same drive through the air, with a ring leaving each blow"
+  },
+  "turnBeats": [
+   "0: the striker's blow lands, on the beat",
+   "0 to 10: both travel the turn's drive; the taker is in his brace, on his feet",
+   "by 14: the taker is set again and the roles swap",
+   "the last 10 ticks of the beat: the wind-up of his answer",
+   "the next beat: his answer lands"
+  ],
+  "pieces": [
+   "strike.body_hook",
+   "strike.rib_shot",
+   "bfb.brace",
+   "slide.feet_high",
+   "knock.double_slide"
+  ],
+  "poses": [
+   {
+    "id": "bfb.brace",
+    "look": "His own brace: both forearm plates drawn tight against his ribs, the lead shoulder rolled forward and the chin behind it, the spine upright. He gives ground on his heels and does not fold.",
+    "limits": "elbows bent inside 160 degrees; the rear thigh at most 45 degrees behind the hip; no arm straight back"
+   },
+   {
+    "id": "strike.body_hook",
+    "look": "A heavy hook dug in along the ribs: the elbow at a right angle, the hip turned through, the other forearm plate across his own chest.",
+    "limb": "hand",
+    "location": "ribs",
+    "limits": "the upper arm's twist inside 100 degrees with the elbow bent"
+   },
+   {
+    "id": "strike.rib_shot",
+    "look": "A straight heavy blow to the chest from a low shoulder: arm, spine and rear leg one line.",
+    "limb": "hand",
+    "location": "chest",
+    "limits": "the elbow short of 160 degrees; the rear thigh at most 45 back"
+   }
+  ],
+  "reused": [
+   "the slide on the feet (the taker's travel)",
+   "the over-commit, for a blow that missed its beat",
+   "the computed reaction at low strength over the brace",
+   "the wear layers, for the one who gives way",
+   "wave 1's heavies, aimed at the turn's location"
+  ],
+  "camera": [
+   "the director's wide shot: both bodies, their feet and the furrow in frame",
+   "it tracks the pair as they travel; it does not cut back and forth between them",
+   "one push-in after the third blow and one after the sixth, no more",
+   "no freeze on a hit and no close-up of a straining face",
+   "on the last blow it widens along the launch"
+  ],
+  "legal": [
+   "it starts from the exchange: nobody lowers a guard or invites a blow",
+   "each fighter takes it in his own brace; the On the Chin stance is not used here",
+   "a different strike and location each turn",
+   "no fixed alternating camera and no freeze",
+   "at most one short line per fighter, from his own bank",
+   "the world answers by biome: a crack or a furrow, no rising ring of rubble, no lightning",
+   "the one who gives way shows his own wear stage and reaction",
+   "original sound",
+   "no folding over, clutching or gasping",
+   "they travel",
+   "no strain close-ups",
+   "the stacking rule"
+  ]
+ },
+ "ranged": {
+  "_source": "Game Design, agency-pass.md section 1 (Orb's pick). A strike never exists at range",
+  "bands": {
+   "close": "within 3 bh: strikes at once",
+   "mid": "3 to 12 bh: a short lunge of 20 ticks at most, then the wind-up; the stick picks the entry",
+   "far": "beyond 12 bh: tap to taunt, hold to charge"
+  },
+  "midLunge": {
+   "toward": [
+    "entry.dash",
+    "entry.rising",
+    "entry.coil_spring"
+   ],
+   "level": [
+    "entry.step_in",
+    "entry.pivot",
+    "entry.rooted"
+   ],
+   "away": [
+    "entry.backstep_counter",
+    "entry.hop_back"
+   ]
+  },
+  "farTaunt": {
+   "ticks": 45,
+   "pieces": [
+    "taunt.head_tilt",
+    "taunt.back_turned",
+    "taunt.dust_plate",
+    "taunt.stillness"
+   ],
+   "_note": "his taunt gestures at three quarters of their close length, played while he keeps flying; no beckoning"
+  },
+  "lightCharge": {
+   "rules": {
+    "beforeHeGoes": 12,
+    "flightTicks": [
+     30,
+     90
+    ],
+    "feint": "releasing the button stops the charge at no cost",
+    "blasts": "any blast that lands stops him",
+    "arrival": "a light opener, into a brawl",
+    "ki": 0
+   },
+   "gather": "12 ticks: he drops a shoulder toward the rival; derives from the dash's launch-off",
+   "entries": [
+    "entry.dash",
+    "entry.rising",
+    "entry.arc_dive",
+    "entry.spiral"
+   ],
+   "arrivalPool": [
+    "strike.jab",
+    "strike.cross",
+    "strike.spear_hand",
+    "strike.front_kick",
+    "strike.shoulder_check"
+   ],
+   "feintPiece": {
+    "id": "charge.peel",
+    "look": "The stop of a feint: he turns side-on to the line and brakes, the leading arm swung wide, one knee up.",
+    "limits": "the raised thigh inside the hip's 170 degrees forward",
+    "uses": [
+     "feint.false_start"
+    ]
+   }
+  },
+  "heavyCharge": {
+   "rules": {
+    "beforeHeGoes": 24,
+    "flightTicks": [
+     48,
+     120
+    ],
+    "committed": "only a dodge-cancel (15 ki) stops it",
+    "blasts": "light blasts and volleys do half damage and do not stop him; a charged shot or a beam does",
+    "arrival": "a charged heavy; landing clean, it earns a launch",
+    "ki": 4
+   },
+   "gather": "24 ticks: the charge pose, the forearm plates lighting",
+   "flightPose": {
+    "id": "charge.heavy_lead",
+    "look": "Both forearm plates side by side ahead of him, never crossed, head tucked behind them, the body one low line.",
+    "limits": "both shoulders inside their cone with the elbows bent; no arm straight back"
+   },
+   "arrivalPool": [
+    "strike.cross_arm_ram",
+    "strike.driving_knee",
+    "strike.body_ram",
+    "strike.drop_kick",
+    "strike.haymaker",
+    "strike.double_palm",
+    "strike.roundhouse"
+   ],
+   "shrug": "the computed reaction at low strength over the flight pose"
+  },
+  "meeting": {
+   "rule": "the far taunt answered by an attack press: both rush and meet in the middle; a fist clash if either pressed heavy, otherwise a blur exchange, on the pulse",
+   "how": "each covers half the distance on a straight dash and they arrive on the same tick, at the midpoint, at contact distance",
+   "pieces": [
+    "entry.dash",
+    "trade.cross_counter",
+    "clash.fist",
+    "clash.blur"
+   ],
+   "newPoses": 0,
+   "camera": [
+    "from the taunt's face cut-in to a wide shot that holds both",
+    "it tightens evenly as they close, with the meeting at the centre of the frame",
+    "no cut at the meeting"
+   ]
+  },
+  "legal": "the charges follow the dash rule: not both arms trailed straight back, not one fist punched ahead, and he is drawn the whole way with no vanish"
+ }
+}

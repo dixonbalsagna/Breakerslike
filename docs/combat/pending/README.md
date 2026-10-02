@@ -86,6 +86,10 @@ One page for Orb: what each of the six waves adds in plain words, its new-pose c
 
 `brawl-endings-and-trades.md` and `templates.brawl.json`: the knock-back launch vector, eight endings that are not a launch (3 level, 4 knock-back, 1 double slide), six trade beats and the lights-against-a-heavy pair, as beat lists in the live tick form. The `ends` and `sends` tags they rely on are on every strike and throw in `moveset.antihero.m0.json`. Which one plays when is left to Game Design, after Orb's questionnaire 14.
 
+## The alchemist's recipes, the traded-blows set piece and the charges (parked; the rules are Game Design's)
+
+`recipes.alchemist.json`: the pieces each of Game Design's three styles calls (blur, combo, power), at its base and with timing, the flow count's endings, and six blur patterns. `templates.agency.json`: the traded-blows set piece (in-house label Blow for Blow: turns, a different strike and place each turn, the travel, 3 poses, camera notes, Legal's twelve rules), the light and heavy charges at range, and the meeting when a taunt is answered. Read them with `../alchemist-recipes.md`.
+
 ## Go-live step 1 (for Animation to apply after Orb's review of the wave 1 pack)
 
 `golive-step1.md` and `golive-step1.picks.json`: the render-only change that lets wave 1's 23 long and mid-range strikes play in today's game. Two new pick lists for `data/anim/keysets.json` (11 light, 10 heavy), 2 gated strikes, the 7 that need a small step in at today's 58 u, which templates use which list, and three optional render-side rules. No sim file, no combat data and no data hash change.

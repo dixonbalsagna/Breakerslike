@@ -1,0 +1,269 @@
+{
+ "schema": "combat-recipes/0-draft",
+ "_about": "PARKED. The pieces each of Game Design's recipes calls (docs/design/agency-pass.md section 2): three styles by the heavies among the last five presses, each with a base and a timed version, and the flow count. Not loaded, not hashed. The rules and numbers quoted are Game Design's; spacings and pools are Combat's.",
+ "window": {
+  "presses": 5,
+  "expiryTicks": 90
+ },
+ "styles": [
+  {
+   "id": "blur",
+   "heaviesInFive": [
+    0,
+    0
+   ],
+   "what": "a rapid run of light strikes",
+   "base": {
+    "read": "mashing",
+    "plays": "a ragged run: one small strike a press, at the presses' own uneven spacing, with no ender",
+    "pool": [
+     "strike.jab",
+     "strike.cross",
+     "strike.hook",
+     "strike.backfist",
+     "strike.palm_heel",
+     "strike.spear_hand",
+     "strike.twin_spear",
+     "strike.front_kick",
+     "strike.side_kick",
+     "strike.low_kick",
+     "strike.snap_round",
+     "strike.sweep"
+    ],
+    "towardPool": [
+     "strike.short_elbow",
+     "strike.rising_elbow",
+     "strike.short_knee",
+     "strike.shoulder_check"
+    ],
+    "limits": [
+     "no ender, no launch, no showcase",
+     "it goes stale by the repeat rule"
+    ]
+   },
+   "timed": {
+    "read": "a steady mash: presses evenly spaced, within 3 ticks of the beat",
+    "plays": "a perfect blur: one blur pattern of five lights at exactly 6 ticks, every strike clean, then its own ender",
+    "ender": {
+     "what": "a burst that knocks the rival back: he did not have to press it",
+     "physical": [
+      "strike.overhand",
+      "strike.haymaker",
+      "strike.spinning_elbow",
+      "strike.double_palm",
+      "strike.roundhouse",
+      "strike.spinning_heel",
+      "strike.headbutt",
+      "strike.tail_whip"
+     ],
+     "energy": "the burst shape, from the palm heel, the double hammer or the rising knee",
+     "result": "a knock-back"
+    }
+   }
+  },
+  {
+   "id": "combo",
+   "heaviesInFive": [
+    1,
+    3
+   ],
+   "what": "lights with heavy accents that crack a guard and push the rival back",
+   "base": {
+    "read": "presses in any rhythm",
+    "plays": "one link a light press and one accent a heavy press, at least 10 ticks apart",
+    "linkPool": "the 18 lights",
+    "accentPool": "heavies that send across first: they push"
+   },
+   "timed": {
+    "read": "taps in time: each within 4 ticks of a blow landing",
+    "plays": "clean and hard: each timed strike does 15% more, at full blow weight; the showcase gates open",
+    "flow": "each timed press adds 1"
+   }
+  },
+  {
+   "id": "power",
+   "heaviesInFive": [
+    4,
+    5
+   ],
+   "what": "big, slow blows, charged by holding",
+   "base": {
+    "read": "a held press (12 ticks or more)",
+    "plays": "the charge pose, then the blow with more damage and a longer wind-up",
+    "pool": "the 20 heavies; the 16 enders as the last blow"
+   },
+   "timed": {
+    "read": "released on the flash: within 6 ticks of the flash at full charge",
+    "plays": "a guard-breaking blow: against a guard it breaks it; unguarded it earns a launch",
+    "vfx": "the flash is his forearm plates lighting along their edges, in his violet: never gold, white or red, never a ball of light"
+   }
+  }
+ ],
+ "flow": {
+  "_source": "Game Design",
+  "timedPress": "+1, up to 5",
+  "reset": "a press off the beat, or 90 ticks without one",
+  "enderLaunchesAt": 3,
+  "at5": "the launch gets the panel and 20% more impact wear",
+  "pieces": {
+   "under3": "a heavy ender is a knock-back: templates.brawl.json",
+   "from3": "one of the 16 enders as a launch, picked by the stick through `sends`",
+   "at5": "a showcase ender when its gates pass: the overhead hammer down, the rising spear up"
+  }
+ },
+ "direction": {
+  "toward": "the close strikes first: elbows, knees, the headbutt, the shoulder (confirmed by Game Design)",
+  "level": "the long and mid bands",
+  "away": "a retreat entry, an across heavy at knock-back force, blasts"
+ },
+ "blurPatterns": {
+  "_about": "the order of limbs and targets in a perfect blur's five lights; the composer fills each step from the lights that fit, with no key strike twice",
+  "ladder": [
+   [
+    "hand",
+    "gut"
+   ],
+   [
+    "hand",
+    "chest"
+   ],
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "foot",
+    "chest"
+   ],
+   [
+    "hand",
+    "head"
+   ]
+  ],
+  "pendulum": [
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "foot",
+    "chest"
+   ],
+   [
+    "foot",
+    "chest"
+   ],
+   [
+    "hand",
+    "chest"
+   ]
+  ],
+  "drill": [
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "hand",
+    "chest"
+   ],
+   [
+    "hand",
+    "gut"
+   ],
+   [
+    "hand",
+    "chest"
+   ],
+   [
+    "hand",
+    "head"
+   ]
+  ],
+  "weave": [
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "foot",
+    "gut"
+   ],
+   [
+    "hand",
+    "chest"
+   ],
+   [
+    "foot",
+    "legs"
+   ],
+   [
+    "hand",
+    "head"
+   ]
+  ],
+  "undercut": [
+   [
+    "foot",
+    "legs"
+   ],
+   [
+    "foot",
+    "gut"
+   ],
+   [
+    "hand",
+    "gut"
+   ],
+   [
+    "hand",
+    "chest"
+   ],
+   [
+    "hand",
+    "head"
+   ]
+  ],
+  "inside": [
+   [
+    "elbow",
+    "jaw"
+   ],
+   [
+    "knee",
+    "gut"
+   ],
+   [
+    "elbow",
+    "jaw"
+   ],
+   [
+    "shoulder",
+    "chest"
+   ],
+   [
+    "hand",
+    "chest"
+   ]
+  ],
+  "_inside": "the close band: offered when toward is held"
+ },
+ "lastPress": {
+  "light": [
+   "level.shove_off",
+   "level.hop_back",
+   "level.break_and_circle"
+  ],
+  "heavy": [
+   "knock.slide_short",
+   "knock.slide_long",
+   "knock.bump",
+   "knock.drift"
+  ],
+  "_endings": "templates.brawl.json"
+ }
+}

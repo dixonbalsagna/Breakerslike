@@ -42,7 +42,7 @@ So each piece carries three tags the alchemist reads:
 - **`ends`**: how a string may end on it: level, knock-back or launch;
 - **`sends`**: the direction it sends the rival, relative to the striker: across, up, down or turned (and behind, for the two throws that turn). A return blow that sends the body back along its path is across.
 
-The tags, the eight endings and the trade beats are now parked data: `pending/brawl-endings-and-trades.md`.
+The tags, the eight endings and the trade beats are now parked data: `pending/brawl-endings-and-trades.md`. After Orb's picks, the recipe mapping for five presses with a base and a timed version of each style, the traded-blows set piece and the charges at range are in `alchemist-recipes.md`; where it differs from the table above, it is the current one.
 
 ## 2. The shelf: what exists and what is missing
 
