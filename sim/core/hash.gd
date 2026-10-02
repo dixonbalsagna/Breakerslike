@@ -10,7 +10,7 @@ const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", 
 ## Intent v2 (I1): the v2 fields in the record's order, then today's dash, charge and stance until I3.
 const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance"]
 const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled", "floors", "fmask"]
-const SHOT: Array = ["id", "owner", "kind", "mode", "x", "y", "z", "vx", "vy", "tgt", "left", "total", "x0", "y0", "px", "py", "power", "dmg", "group", "deflected", "fresh", "dead"]
+const SHOT: Array = ["id", "owner", "kind", "mode", "x", "y", "z", "vx", "vy", "tgt", "left", "total", "x0", "y0", "px", "py", "power", "dmg", "group", "deflected", "fresh", "dead", "passed"]
 const TREE: Array = ["x", "h", "alive", "burn"]
 const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col", "pw", "struck", "sf", "cap", "levelled", "oz", "zs"]
 const SLIDE: Array = ["x0", "x1", "hw", "depth", "energy", "t", "owner", "surface", "pop", "z0", "z1"]

@@ -279,6 +279,7 @@ class Shot:
 	var dmg: float = 0.0      # what a plain hit does
 	var group: int = 0        # shared by the shots of one volley (0: none), so a volley counts once
 	var deflected: int = 0    # times it was sent back
+	var passed: int = 0       # a bit per slot it has passed without stopping (a dodge): it is not offered to him again
 	var fresh: bool = true    # fired this tick: it moves from the next
 	var dead: bool = false    # ended this tick: removed at the end of the shots' step
 

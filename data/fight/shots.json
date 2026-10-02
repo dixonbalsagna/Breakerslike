@@ -1,6 +1,7 @@
 {
   "schema": "fight.shots/1",
   "_about": "Shots: energy blasts in flight (sim/core/shots.gd; docs/architecture/shots.md). cap: live shots at once (a press past it fires nothing). arriveTicks: a seeking shot arrives within this many ticks however far its target is (moveset-rules section 11 i). chest and bodyR: a fighter's centre above his feet and his radius, for a shot's contact. Per kind: speed in units a tick (a minimum for a seeking shot), r its radius (contact and trades), power what it trades with (opposing shots that meet each lose the other's power), dmg what a plain hit does (a placeholder: the director's blasts set their own), lifeTicks how long a straight shot flies, lobTicks and lobArc a lobbed one's flight time and height.",
+  "_numbers": "Game Design's first values (agency-pass.md section 11, item 6b). Speeds and trade powers are as ruled. dmg is the plain rule's stand-in for 'a shape carries its strike's damage': a bolt a third of a light (26 / 3), a shard a fifth, an arc 0.8 of a heavy (66), a charged shot a full heavy (its value at 30 ticks of charge; the director passes 0.6 of it for a tap), a lob a heavy. The director's blasts pass their own damage at the fire. A shard flies 1,200 units (24 ticks at 50). Not here, because they are the director's: the ki costs (bolt 1, a volley of 3 bolts 3, a spread of 5 shards 3, arc, lob and charged 8 each), the counts, and the burst (no travel, within 150 units, power 3: an area hit, not a shot). The radii and the lob's height are Simulation's placeholders.",
   "cap": 32,
   "arriveTicks": 45,
   "chest": 40.0,
@@ -10,21 +11,35 @@
       "speed": 60.0,
       "r": 14.0,
       "power": 1.0,
-      "dmg": 6.0,
+      "dmg": 8.67,
+      "lifeTicks": 120
+    },
+    "shard": {
+      "speed": 50.0,
+      "r": 10.0,
+      "power": 1.0,
+      "dmg": 5.2,
+      "lifeTicks": 24
+    },
+    "arc": {
+      "speed": 45.0,
+      "r": 20.0,
+      "power": 2.0,
+      "dmg": 52.8,
       "lifeTicks": 120
     },
     "charged": {
       "speed": 90.0,
       "r": 30.0,
       "power": 3.0,
-      "dmg": 30.0,
+      "dmg": 66.0,
       "lifeTicks": 120
     },
     "lob": {
       "speed": 40.0,
       "r": 24.0,
-      "power": 2.0,
-      "dmg": 20.0,
+      "power": 3.0,
+      "dmg": 66.0,
       "lifeTicks": 36,
       "lobTicks": 36,
       "lobArc": 300.0

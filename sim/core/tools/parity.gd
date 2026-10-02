@@ -683,6 +683,30 @@ func _shots() -> String:
 	run.call(60)
 	if count.call("shot_hit", "victim", 0.0) != 1 or a.hp != hpA2 - bolt.dmg:
 		return "a deflected bolt did not land on its old owner"
+	# a seeking shot that cannot hit its target flies on as a straight shot, and then the ground stops it
+	S.out.fx.clear()
+	a.x = 40000.0
+	a.y = WorldTerrain.groundY(S, a.x) + 400.0
+	b.x = a.x + 600.0
+	b.y = WorldTerrain.groundY(S, b.x)
+	b.state = "intro"   # he cannot be hit
+	sh = SimShots.fire(S, 0, "bolt", {"target": 1})
+	var n0: int = sh.left
+	run.call(n0 + 1)
+	if S.shots.is_empty() or sh.mode != SimShots.LINE or sh.tgt != -1 or sh.vy >= 0.0:
+		return "a seeking bolt that could not hit did not fly on as a straight shot"
+	run.call(int(bolt.lifeTicks))
+	if not S.shots.is_empty() or count.call("shot_end", "cause", "ground") != 1 or count.call("shot_hit") != 0:
+		return "a released bolt did not end on the ground"
+	b.state = "free"
+	sh = SimShots.fire(S, 0, "bolt", {"target": 1})
+	SimShots.release(S, sh)
+	if sh.mode != SimShots.LINE or sh.vx == 0.0:
+		return "release before the first move left the shot still"
+	SimShots.end(S, sh, "test")
+	run.call(1)
+	a.y = 3000.0
+	b.y = 3000.0
 	# the cap
 	b.x = SimWrap.wrap(a.x + 60000.0)
 	var made: int = 0

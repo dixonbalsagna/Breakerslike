@@ -175,6 +175,20 @@ static func deflect(S: SimState, sh, newOwner: int) -> void:
 	sh.left = _seekTicks(sh, S.fighters[old], kinds[sh.kind].speed)
 	sh.total = sh.left
 	sh.deflected += 1
+	sh.passed = 0
+
+
+## A seeking shot loses its target (a dodge, or the director's call): it flies on as a straight shot at its last
+## velocity, for the kind's life, and from then on the ground and the water stop it like any straight shot.
+static func release(_S: SimState, sh) -> void:
+	var kd: Dictionary = kinds[sh.kind]
+	if SimDetMath.hypot(sh.vx, sh.vy) <= 0.0:   # released before it moved: straight ahead of its owner
+		sh.vx = _S.fighters[sh.owner].face * kd.speed * TPS
+		sh.vy = 0.0
+	sh.mode = LINE
+	sh.tgt = -1
+	sh.left = int(kd.lifeTicks)
+	sh.total = sh.left
 
 
 ## End a shot now (the director, or a rule here). cause: hit, clash, ground, water, life, or the caller's own word.
@@ -312,7 +326,7 @@ static func step(S: SimState, dt: float) -> void:
 		var hitOne: bool = false
 		if S.game.ko == null:
 			for k in range(S.fighters.size()):
-				if k == sh.owner:
+				if k == sh.owner or (sh.passed & (1 << k)) != 0:
 					continue
 				var f = S.fighters[k]
 				if f.state == "intro":
@@ -334,6 +348,10 @@ static func step(S: SimState, dt: float) -> void:
 					hitOne = true
 					if hitFighter(S, sh, f):
 						end(S, sh, "hit")
+					else:
+						sh.passed |= 1 << k   # he let it pass: it flies on, and is not offered to him again
+						if sh.mode == SEEK:
+							release(S, sh)
 					break
 		if sh.dead or hitOne:
 			continue
@@ -342,7 +360,7 @@ static func step(S: SimState, dt: float) -> void:
 			end(S, sh, "ground")
 		elif sh.mode == SEEK:
 			if arrived[i]:
-				end(S, sh, "life")   # it reached where its target was and he was not hit (the director let it pass)
+				release(S, sh)   # it reached where its target was and could not hit him: it flies on, straight
 		elif sh.mode == LINE and sh.y <= WorldTerrain.groundY(S, sh.x):
 			sh.y = WorldTerrain.groundY(S, sh.x)
 			hitWorld(S, sh, "ground")
