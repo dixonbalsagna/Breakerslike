@@ -297,3 +297,26 @@ A 200-match mean of the length has a standard error of about 7 to 9 s (2%), so s
 Measured on the tree (read-only). The start spots are `START_X` 89,600 and 89,600 + the gap (750 today, 900 in the intro slice): the desert's west edge, **open ground**: desert biome, sand surface, ground 14 below the sea line and flat (slope 0.002 to 0.004, 1 to 3 units of relief within 400 units), no water, **the nearest building 17,600 units away**, the nearest tree 2,200 to 3,100 units. Both gaps are fine; two craters 900 apart do not touch (each radius is under 300 units).
 
 Entrance crater energy (`craterEnergy` in `intro.json`, `WorldCrater.dig`, kind "impact", full vertical): energy 1.0 digs a crater 160 units across its radius (2.1 body heights), 1.5 digs 196 (2.6), 2.0 digs 226 (3.0), 3.0 digs 277 (3.7); the depth is 0.22 of the radius (43 units at 1.5). For comparison a tier-1 slam at speed 1,500 is energy 2.8 (radius 267). **I recommend 1.5**, the placeholder: a crater a fighter stands in without it swallowing him (a tier-1 slam at about 1,100 speed), about 3 body heights wide at the rim; 2.0 if Camera wants a bigger bowl. Craters have no owner, so there is no wear and no collateral; the rim and the footing rules of G1 apply (a body knocked about in the first seconds can leave off the rim as a lip launch, which is the same rule as any crater). A probe that assumes untouched ground at tick 0 near the start spots should pass `"intro": false` once the key exists; World's probe uses positions far from the spots (the town and plains), so it needs nothing today.
+
+## 17. The tumble that is seen (balance-targets section 23; prepared in scratch 2026-10-03, applies in World's window as its first slice)
+
+**The change:** `tumble.brakeMul` 0.7 (was 2.0), the 1.2 s cap and the hard stop unchanged; `tumble_end.dur` is now the **ticks rolled** (`f.tumbleT`; it was the whole journey's seconds, which no consumer read; `journey_end.dur` stays the journey in seconds). A tumble cut off by the cap's forced tail reports the tail's ticks plus any it had already rolled (capped endings are 0.0% of journeys, so this does not matter in practice). The line for `docs/architecture/fx-events.md`: `tumble_end`: `kind` (stop, recover, air), `contacts`, `n`, **`dur`: ticks the body rolled in the tumble** (0 to 72).
+
+**Measured, 100 matches (seeds 1 to 100; length and structures from the batch, the rest from 100 and 50 matches of the journey scripts), brake 2.0 then 0.7:**
+
+| | 2.0 (today) | 0.7 (the ruling) |
+| :--- | ---: | ---: |
+| Ground-ended journeys with a tumble of 18 ticks or more (band 30 to 60%) | 7.5% | **27.5%** |
+| Rolled ticks, median / 90th percentile | 5 / 11 | 12 / 55 |
+| Ground-ended journeys with any tumble | 88.1% | 84.4% |
+| Journey time, mean / 90th percentile | 0.58 / 1.24 s | 0.65 / 1.36 s |
+| Journeys over 4,000 units from first contact (at most 20%) | 5% | 6% |
+| Journeys at the 4 s bound / at 8 contacts | 1.7% / 2.9% | 1.8% / 3.8% |
+| Capped endings (at most 8%) | 0.0% | 0.0% |
+| Bounced launches (band 20 to 40%) | 34.1% | 32.7% |
+| Length to KO (100 matches) | 440 s | 447 s (+1.7%, noise) |
+| Structures levelled / civilians | 57.8 / 17% | 64.8 / 19% (about one standard error up) |
+
+**Reading it.** The ruling's number lifts the seen tumbles from 7.5% to 27.5%, just under the 30% floor; the typical roll is 12 ticks (0.2 s) with a long tail to the cap (the 90th percentile is 55 ticks, 0.9 s), not the 0.5 s the ruling expected, because most tumbles start from a landing under 900 speed or a skid slowing through 600, at low speed. **Two data steps further, same single key, no code:** 0.6 gives 32.4% (median 14 ticks), 0.5 gives 42.4% (median 16). Every bound stays far inside its limit at 0.7 (journeys over 4,000 units 6%, capped 0.0%); the structures figure is the one to watch, since a longer tumble also lays path damage, and QA re-baselines it.
+
+**QA's strikes over 68 units high on flat ground.** Not reproduced: on HEAD (the tuned contact model) I ran QA's exact reach check over five batches (default 250 matches, swap 100, mirror-villain 100, mirror-hero 100: about 144,000 damaging strikes, 809 of them over 68 high) and found none on ground flat at the victim (slope at most 0.15 over 80 units). Strikes that tall are one fighter in the air, which is the exchange's height, not the ground's. If one recurs it is a ground-height matter only if the fighters stand on different ground levels with the step outside the 80-unit window (a crater rim or a heap edge between them); QA's record would need both fighters' ground heights and states to say, and nothing in World's code puts a fighter anywhere but on the ground height at his x.
