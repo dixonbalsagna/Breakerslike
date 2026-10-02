@@ -46,3 +46,31 @@ No search yet, as asked. When Orb's edit is in:
 2. Group the rest by fighter and search exact phrases in batches of four per query (US-only).
 3. Flag only lines that match a work, a quote or a catchphrase. Narrative rewrites those.
 4. Re-run any line whose wording changes. Legal logs the batch as one entry.
+
+## Follow-ups (2026-10-02)
+
+### Levitating rocks, motes, desaturation (RL-057)
+Looked at `docs/vfx/power-language.md` and `docs/vfx/img/rocks-tier4-after.jpg` (stills only, so motion is judged from the description).
+
+| Item | Verdict |
+|---|---|
+| Levitating rocks (idea 1), flag on | **GO**, with conditions |
+| Motes (idea 14) | **GO**, with one condition |
+| Desaturating the world near him (idea 18) | **CONDITIONAL**, low priority |
+
+**Rocks can be switched on** under these conditions, most of which are already built in:
+1. **Keep it as built:** few (5 at tier 3, 10 at tier 4), small, uneven distances and heights, each drifting its own way and slowly, never a ring and never turning as one cloud. They hang and bob. They do not spiral, rise in a column or get pulled upward.
+2. **Stand-downs stay:** none while charging, transforming, hidden or down, none above 6 fighter heights or over water, none while he moves fast. That keeps it from ever joining a crouch, a scream or a charge.
+3. **Mark 4 is one bundle.** Rocks, ground cracks, dust and wind together count as one mark. With the rocks on, allow at most **one more** of the seven marks at the same moment, never two. In practice: no lightning, no flame aura streaming upward, no hair change, no scream, no gold, white or red flash with a shouted form name.
+4. **No sky change** with it: no darkening, no storm.
+5. **Re-check in motion.** The stills look right (loose chunks, no ring, small at fight scale). Re-screen once a close camera shows the drift, before it ships.
+
+**Motes (14):** scattered lane-colour specks drifting out sideways from the shoulders are fine. Keep them scattered and drifting sideways, never streaming upward as one column (that reads as a flame aura, mark 3), and never white, gold or red.
+
+**Desaturation (18):** allowed only if it never darkens, stays a small radius on the ground, is never a flat grey wash over the sky, and is not combined with anything else from mark 4. VFX's own advice (not recommended on web) is sound, so there is no Legal reason to build it first.
+
+### Combat's set piece and charge poses against the twelve rules (RL-058)
+Read `docs/combat/alchemist-recipes.md` sections 2.2 to 2.6 and `docs/combat/pending/templates.agency.json`. **Verdict: GO. All twelve are met.**
+- A different strike and place each turn (ribs, flank, shoulder plate, chest, hip, thigh, never two stomach blows running), the upright brace that gives ground and does not fold, the travelling furrow, the tracking camera with two push-ins and no strain close-up, and the biome answer all match the rules.
+- The `bfb.brace` pose is his own and keeps clear of the On the Chin arms-open stance.
+- **Two small notes.** The air version's ring per blow stays a thin local ring, never a cracked sky. The heavy charge's flight pose (both forearm plates side by side ahead of him, head tucked) is clear of the dash rule (not one fist ahead, not both arms trailed back), as long as the plates never turn into a pair of fists.
