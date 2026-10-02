@@ -624,7 +624,10 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			_seq = {}
 		else:
 			_entry_layer(float(_seq.t0), float(_seq.dur), String(_seq.id), T, 1.0 / float(_prof.get("solve_hz", 60.0)), float(_seq.get("wt", 1.0)))
-	if not _intro.is_empty() and f.state == "intro":
+	if f.state == "intro" and RenderAnim.intro_poses and not AnimData.intro.is_empty():
+		if _intro.is_empty():
+			# the first frame, before any event has been drained (the sim sets the state at the start, the events come with the first tick): he is already falling
+			_intro = {"on": true, "fall_t": -1.0, "fall_dur": 0.6, "land_t": -1.0, "stare_t": -1.0, "stare_dur": 2.6}
 		_intro_layer(S, f)
 	if _ls_t0 >= 0.0 and AnimData.pose_exists("ls.hold.resolve") and f.state == "free":
 		var LS: Dictionary = AnimData.last_stand

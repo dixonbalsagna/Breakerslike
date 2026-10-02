@@ -822,6 +822,14 @@ func _test_intro_real() -> void:
 	main.start_match(4, {"p1": false, "p2": false}, {"intro": true})
 	var S: SimState = main.host.S
 	var ix: Dictionary = AnimRig.index
+	# the very first frame, before the first tick's events: both fighters are in the fall pose, not standing
+	for j0 in range(2):
+		var af0: AnimFighter = RenderAnim.solve(S, S.fighters[j0])
+		var pz0: AnimPose = AnimData.pose("in.hold.fall")
+		var w0: float = 0.0
+		for bn0 in ["spine_2", "upper_arm_r", "thigh_l"]:
+			w0 = maxf(w0, af0.q[ix[bn0]].angle_to(pz0.q[ix[bn0]]))
+		_expect(S.fighters[j0].state == "intro" and w0 < 0.5, "intro real test: on the first frame fighter %d is %s and %.2f rad from the fall pose" % [j0, S.fighters[j0].state, w0])
 	var checks: Array = [[20, 0, "in.hold.fall"], [110, 0, "in.hold.set"], [60, 1, "in.hold.fall"], [270, 0, "in.hold.tense"], [270, 1, "in.hold.tense"]]
 	var results: Array = []
 	var ci: int = 0
