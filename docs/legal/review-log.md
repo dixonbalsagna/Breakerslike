@@ -72,7 +72,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-050 | Combat wave 5 (clashes, beam answers) and wave 6 (energy shapes and hands) | Combat | Low | GO; Legal lines confirmed, additions noted | Closed |
 | RL-051 | Combat wave 7: the Anti-hero first kit (specials, signatures, showcases) | Combat | Medium (barrage gather) | GO; barrage volley gather CONDITIONAL change | Open until the gather changes |
 | RL-052 | Dash afterimage (Rendering) | Rendering | Low | GO with three constraints | Closed |
-| RL-053 | "Blow for Blow" name and staging | Game Design, Combat | Medium (staging) | Name GO as a label; staging CONDITIONAL on nine rules | Open until built to the rules |
+| RL-053 | "Blow for Blow" name and staging | Game Design, Combat | Medium (staging) | Name GO as a label; staging CONDITIONAL on twelve rules (tightened 2026-10-02) | Open until built to the rules |
 | RL-054 | Far taunt challenge, two charges, range-band icon | Game Design | Low | GO | Closed |
 | RL-055 | First energy slice | Game Design | Low | GO | Closed |
 | RL-056 | 208 draft taunt lines | Narrative | Not rated | Pending Orb's edit; lean search protocol agreed | Open |
