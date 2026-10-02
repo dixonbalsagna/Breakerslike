@@ -23,6 +23,8 @@ const MIN_SPLIT_AGE: float = 1.2       # before a dissolve merge
 const MIN_MERGED_AGE: float = 0.8      # before splitting again
 const MIN_OUT_OF_FRAME_AGE: float = 0.25   # ... or this, when a fighter is already out of the one view
 const CLOSING_LOOKAHEAD: float = 0.4   # do not open if the fighters will be back over the split line by then
+const SEP_RATE_TAU: float = 0.15        # the separation rate the one view zooms ahead for is smoothed over this
+const SLAM_ZOOM_RATE: float = 3.0       # the slam's zoom rate cap, e-folds a second (it was unlimited: 17 and more)
 const ZOOM_OUT_LOOKAHEAD: float = 0.3  # the one-view camera zooms for the separation it will have this soon, if growing
 const FRAME_MARGIN: float = 0.46       # a fighter farther than this fraction of vw from the one-view centre opens the split at once
 const BODY_H: float = 75.0             # a fighter's height in world units (FighterView.HEIGHT)
@@ -63,11 +65,13 @@ const PLANE_Y: float = 0.7             # the fighter plane on screen in the refe
 
 # --- opening, merging, the slam (sections 6 and 7) ---
 const T_OPEN: float = 0.45
+const T_OPEN_URGENT: float = 0.20       # the split opens this fast when a fighter has left the shared view or one was knocked away
 const T_CLOSE: float = 0.55
 const SLAM_WINDOW: float = 0.8         # a rush this close to its end starts the lean
 const SLAM_TIME: float = 0.14
 const SLAM_TIME_REDUCED: float = 0.04   # reduced motion: the slam is a near-cut
 const SLAM_LEAN: float = 0.0           # how far the panes lean together before the slam (0: they hold until 0.14 s from contact)
+const SLAM_STIFF_RAMP: float = 0.06    # the slam's stiff filters come in over this, seconds
 const SLAM_TAU: float = 0.03           # stiff pane filters during the slam
 const SLAM_FLASH: float = 0.08
 const SLAM_CANCEL: float = 0.25

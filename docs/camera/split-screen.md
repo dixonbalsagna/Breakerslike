@@ -347,3 +347,37 @@ World's contact model is on (bounces, tumbles, flights off lips and crests; even
 5. **What is left.** Victim lost on 13 ticks across the three full-length AI matches (7 and 6 ticks in two journeys, 0.12 s each, in an opening or merged layout), none in a chase. The journeys are longer than before: end to end the mean is 7,400 to 10,300 units and 60% to 70% end more than 4,000 units from where they began.
 
 6. **A bounce did not read on the camera (fixed after World's tuning, 30d8b10).** With the contact model tuned (a first bounce rises about half a body height), the sweep measured each bounce for 40 ticks. The world rise averaged 0.8 to 2.1 body heights, but the chase followed every rise, so the fighter moved only 5 to 22 px on the screen (1% to 3% of its height): the 3% push (about 2 px) cannot be seen either. A launched body near the ground is no longer followed up: the focus stays at the ground level until he is above `LOW_AIR_DEAD` (1.5 body heights, blended from 0.75 to 2.25), the velocity lead fades with it, and the lag bound measures from that reference. The screen excursion of a bounce is now 45 to 65 px (6% to 9% of the screen height), and 20 of 33 bounces over 0.4 body heights move at least half as much on the screen as in the world (it was 4). The sweep keeps a check on it for the full-length AI matches (at least 30 px on average). The push stays at 3%: it is a cue and the motion carries the bounce.
+
+
+## 21. The jolt scan (Orb's two-player playtest, 2026-10-02)
+
+Orb: "during split screen the camera had some jolts, it would jolt left and right under some circumstances like when one of us got knocked away." The sweep now scans every real match, per tick and per pane the player sees (a pane with at least 20% of the screen in both frames, not a cut, not a cut-in, not the slam's door):
+- **camera:** how much the camera's motion relative to the fighter it follows changed since the last tick, in screen widths (a camera that keeps pace with a fast fighter is not a jolt; one that changes velocity under him is). Over 0.05.
+- **zoom:** the log change of zoom in a tick. Over 0.055 (3.3 e-folds a second; the comfort limit is 2.4).
+- **divider:** the divider centre's step. Over 0.05 (not in the slam's door).
+Each is classified by the first cause that applies (a solo shot starting, ending or changing hands; the layout changing; a cut-in; a chase or expanded pane changing hands; a launch or knock-back in progress; the seam; other), and the counts print per match (`jolts ...`, `jolt sizes ...`, `biggest jolts ...`). Thirteen real matches: eight 60 s ones (flat, with a human slot, raised), three full-length AI ones, and two full-length ones where the rig sees both fighters as humans (flat, and at 49 degrees). `--jolts=seed:t0:t1` traces a window.
+
+**Counts, before and after (all 13 matches):** 4,636 jolts before, 1,572 after.
+
+| Cause | Before | After |
+| :--- | ---: | ---: |
+| zoom: the slam's door, a launch, a chase hand-over, other | 2,597 | 0 |
+| camera: a launch or knock-back in progress | 927 | 811 |
+| camera: other | 555 | 430 |
+| camera: a solo shot starting, ending or changing hands | 298 | 228 |
+| camera: a layout change (opening to slam, slam to merged, merged to opening) | 232 | 74 |
+| camera: a chase or an expanded pane changing hands | 13 | 6 |
+
+**Fixed.**
+1. *The slam's zoom* (the largest: 2,500 jolts). The raw separation rate spiked to +-24,000 units a second in a rush and its recoil, and the one view zooms out for the separation it will have soon, so the shared zoom pulsed 0.2 of a log unit in a tick; and the slam was exempt from the zoom rate cap. The rate is smoothed (`SEP_RATE_TAU` 0.15 s) and the slam has its own cap (`SLAM_ZOOM_RATE` 3 e-folds a second) on the shared zoom, the pane zoom and the drawn zoom.
+2. *A slam starting while a pane still held the screen* moved the divider 0.4 of the width in a tick (the door sets the expansion from its own clock). It does not start until that ease is over (`e` under 0.05).
+3. *The slam's stiff filters* come in over 0.06 s instead of in one tick.
+4. *A shot taking the screen from the other fighter's pane* (a transformation after a launch chase, a wreck after a KO): handed over with an ease, which showed as a divider jump (the original failure at 382 s). It is a cut now (a dissolve in reduced motion).
+5. *A launch from a part-open split, or at 49 degrees*, seeded the shot from the flat merged formula; it now seeds from the displayed pane (zoom and where he is on the screen).
+6. *A cut-in running while the split opened or closed* drew the divider through the cut-in. The layout waits for the cut-in to end.
+7. *Two humans: a fighter knocked out of the shared view.* The split opened at the normal 0.45 s with the fighter off the screen for most of it (0.3 s at 10,000 units a second is 3,000 units, and the pane the other player watches was dragged after him and back: the "left and right"). It opens in 0.2 s when a fighter has left the shared view or one has been knocked away (`T_OPEN_URGENT`).
+
+**Not fixed (and why).**
+- *A launch or knock-back in progress* (811, mostly 0.05 to 0.2 of the width): the lag bound's whip catching a fighter that accelerates from 0 to 20,000 units a second in 5 ticks. It is the design that keeps him on the screen; the alternative is to lose him.
+- *At 49 degrees, a fighter whose lane depth eases from 1,500 units back to the plane* (the sim moves it 150 units a tick): the pitched view moves him 250 px a tick up the screen and the camera compensates; the biggest remaining ones (0.3 to 0.4) are these. A slower lane ease in the sim would remove them.
+- *Solo shot hand-overs* (228) are the starts of the hold, the KO and launch shots (0.15 to 0.3): each is a real change of subject; the cut would be the alternative.

@@ -38,6 +38,7 @@ var _sep_rate: float = 0.0             # d|u|/dt, units a second (positive while
 
 # --- trigger and layout (sections 2, 6, 7) ---
 var split_wanted: bool = false
+var _view_lost: bool = false             # a fighter is outside the shared view as it is now (the split opens fast)
 var sep: float = 0.0
 var _below_t: float = 0.0
 var _above_t: float = 0.0
@@ -114,6 +115,7 @@ var _sig_t: Array = [-1.0e9, -1.0e9]    # when each fighter's last signature fir
 var panel_floor: float = 0.0              # UI's lowest HUD edge at the top, px (UiHud.panel_floor_y()); the top band starts below it
 var _beams_seen: Dictionary = {}         # instance ids of the beams already counted (a new one is a signature's fire beat)
 var _parry_t: Array = [-1.0e9, -1.0e9]   # when each fighter last parried, for the riposte
+var _stiff_w: float = 0.0               # 0..1: how far the slam's stiff filters have come in
 var wreck_dir: int = 0                   # the winner's shot: +1 wreckage on the right of him, -1 on the left, 0 none to speak of
 var wreck_score: float = 0.0             # the wreckage in view, summed (craters, ruined buildings, slide trenches)
 var _live_punch_at: float = -1.0         # the live version: when the 6-tick punch-in starts (rig time)
@@ -360,7 +362,9 @@ func _update_trigger(S: SimState) -> void:
 		rm = minf(rm, rs * 1.15)
 	# The closing guard: fighters that will be back over the split line soon do not open a split.
 	var closing: float = (_prev_ad - ad) / DT
-	_sep_rate = -closing
+	# Smoothed: the raw rate spikes to +-24,000 units a second in a rush and its recoil, and the one view zooms out for
+	# the separation it will have soon, so a spike was a zoom pulse (the sweep's jolt scan found 300 to 490 in a match).
+	_sep_rate += (-closing - _sep_rate) * (1.0 - exp(-DT / CamParams.SEP_RATE_TAU))
 	var guard_ok: bool = true
 	if closing > 0.0:
 		var z_pred: float = zoom_u(vw, vh, maxf(0.0, ad - closing * CamParams.CLOSING_LOOKAHEAD), _pair_dy(A, B), maxf(A.tier, B.tier))
@@ -375,9 +379,16 @@ func _update_trigger(S: SimState) -> void:
 		return
 	if _slam_slot >= 0 or _slam_step(S):
 		return
+	_view_lost = _outside_one_view(S) if sep < 0.5 else false
+	if _ov_kind != "":
+		# A cut-in draws the same camera in both panes and a divider through its centre; the layout waits for it to end.
+		_below_t = 0.0
+		_above_t = 0.0
+		_apply_solo_follow(S)
+		return
 	if not split_wanted:
 		_below_t = _below_t + DT if r_now < rs else 0.0
-		var out_of_frame: bool = _outside_one_view(S)
+		var out_of_frame: bool = _view_lost
 		# The hybrid launch rule: when the human knocked the opponent out of the shared view, stay with the human instead
 		# of splitting; the impact cut follows (camera-v2.md section 3).
 		if _launch_victim >= 0 and (out_of_frame or r_now <= maxf(CamParams.R_FLOOR, CamParams.MIN_PX / vh)) and S.fighters[_launch_victim].state == "launched":
@@ -453,6 +464,10 @@ func _set_split(want: bool, why: String = "trigger") -> void:
 ## contact. Returns true while a slam owns the layout.
 func _slam_step(S: SimState) -> bool:
 	if not split_wanted or sep < 0.5 or _solo_follow(S):
+		return false
+	# Not while a pane still holds the screen (e above 0.05, the ease back from a shot): the door sets e from its own clock,
+	# so starting it then moved the divider 0.4 of the width in a tick (found by the jolt scan).
+	if e > 0.05 and _slam_slot < 0:
 		return false
 	for k in range(2):
 		var f = S.fighters[k]
@@ -808,6 +823,13 @@ func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = nu
 		return
 	if solo_kind != "" and prio < solo_prio:
 		return
+	# A shot that takes the screen from another fighter's pane while that pane still holds it (a launch chase ending
+	# has e_hold keeping its pane up for the ease back; a transformation then begins on the other fighter) hands over
+	# with a cut: easing from one fighter's pane to the other's moved the divider 0.4 of the width in a tick.
+	if not cut_in and S != null and e > 0.02 and e_slot >= 0 and e_slot != slot:
+		cut_in = true
+		if reduced_motion:
+			_cut_fade = CamParams.REDUCED_CUT_FADE   # a cut is a dissolve in reduced motion
 	solo_kind = kind
 	solo_slot = slot
 	solo_prio = prio
@@ -837,11 +859,12 @@ func _begin_solo(kind: String, slot: int, prio: int, sl: float, S: SimState = nu
 	elif (kind == "launch" or kind == "hold") and S != null and sep < 0.5:
 		var lf = S.fighters[slot]
 		solo_w = 1.0
-		if sep > 0.02 and _cur != null and _cur.shows(slot):
-			# A split that is part open (the sweep found a launch at a separation of 0.48 at 49 degrees): what is on the
-			# screen is the pane's own view, not the merged one, so the shot starts from where the pane has him.
-			_zo[slot] = _cur.cam_z[slot]
-			var sp: Vector2 = _cur.screen_pos(slot, lf.x, lf.y + CamParams.CHEST, float(lf.z))
+		var pi: int = slot if (_cur != null and _cur.shows(slot)) else 0
+		if _cur != null and _cur.shows(pi):
+			# From what is on the screen: the zoom of the pane that draws him and where he is in it (at any separation, pitch
+			# and depth; the flat merged formula put him 0.2 of the width off at 49 degrees).
+			_zo[slot] = _cur.cam_z[pi]
+			var sp: Vector2 = _cur.screen_pos(pi, lf.x, lf.y + CamParams.CHEST, float(lf.z))
 			_launch_anchor_x = clampf(sp.x / vw, 0.2, 0.8)
 			_launch_anchor_y = clampf(sp.y / vh, 0.2, 0.85)
 		else:
@@ -1469,7 +1492,10 @@ func _update_layout() -> void:
 		var target: float = 1.0 if split_wanted else 0.0
 		if fold_active:
 			target = 0.0
-		var rate: float = 1.0 / (CamParams.T_OPEN if target > sep else CamParams.T_CLOSE)
+		# A split that opens because a fighter has left the shared view, or because one was knocked away, opens fast: at
+		# the normal rate the fighter was off the screen for most of it (0.3 s at 10,000 units a second is 3,000 units).
+		var t_open: float = CamParams.T_OPEN_URGENT if (_view_lost or chase_slot >= 0) else CamParams.T_OPEN
+		var rate: float = 1.0 / (t_open if target > sep else CamParams.T_CLOSE)
 		if reduced_motion:
 			rate *= 1.5
 		sep = move_toward(sep, target, rate * DT)
@@ -1749,6 +1775,10 @@ func _update_cameras(S: SimState) -> void:
 	if _slam_slot >= 0:
 		_slam_run(S)
 	var stiff: bool = _slam_slot >= 0 and e > 0.0
+	# The slam's stiff filters come in over SLAM_STIFF_RAMP, not in one tick: a filter that goes from 0.14 s to 0.03 s at
+	# once shoves the camera up to 0.3 of the screen width (the jolt scan's biggest ordinary one).
+	_stiff_w = clampf(_stiff_w + DT / CamParams.SLAM_STIFF_RAMP, 0.0, 1.0) if stiff else 0.0
+	var sw: float = smoothstep(0.0, 1.0, _stiff_w)
 	var transition: bool = (sep > 0.001 and sep < 0.999) or e > 0.001 or solo_kind != "" or solo_w > 0.001 or stiff
 	var zrate: float = CamParams.ZOOM_RATE_TRANS if transition else CamParams.ZOOM_RATE
 	for i in range(2):
@@ -1761,8 +1791,8 @@ func _update_cameras(S: SimState) -> void:
 			tau_y = CamParams.TAU_Y * 0.7
 			freeze = reduced_motion
 		if stiff:
-			tau_x = CamParams.SLAM_TAU
-			tau_y = CamParams.SLAM_TAU
+			tau_x = lerpf(tau_x, CamParams.SLAM_TAU, sw)
+			tau_y = lerpf(tau_y, CamParams.SLAM_TAU, sw)
 		# The follow point leads the fighter by its measured velocity times the filter's time constant, which cancels
 		# the filter's lag at constant speed. Measured, not the sim's vx: a rush moves the fighter without setting vx.
 		var vxm: float = SimWrap.sdx(_ppx[i], f.x) / DT
@@ -1838,12 +1868,11 @@ func _update_cameras(S: SimState) -> void:
 		if solo_kind == "transform" and solo_slot == i and _tf_phase != "":
 			tau_z = 0.12   # the beats are on a clock: the push has to land by the break
 		if stiff:
-			tau_z = CamParams.SLAM_TAU
+			tau_z = lerpf(tau_z, CamParams.SLAM_TAU, sw)
 		var kz: float = 1.0 - exp(-DT / tau_z)
 		var dz: float = (log(zt) - log(_zo[i])) * kz
-		if not stiff:
-			var cap: float = zrate * DT
-			dz = clampf(dz, -cap, cap)
+		var cap: float = (CamParams.SLAM_ZOOM_RATE if stiff else zrate) * DT
+		dz = clampf(dz, -cap, cap)
 		_zo[i] = exp(log(_zo[i]) + dz)
 	# the merged shadow camera: the reference camera's ease, snapped while two full panes are up
 	var mt: Vector3 = _merged_target(S)
@@ -1852,7 +1881,7 @@ func _update_cameras(S: SimState) -> void:
 		_my = mt.y
 		_mz = mt.z
 	else:
-		var tau_m: float = CamParams.SLAM_TAU if stiff else CamParams.MERGED_TAU
+		var tau_m: float = lerpf(CamParams.MERGED_TAU, CamParams.SLAM_TAU, sw) if stiff else CamParams.MERGED_TAU
 		var edge: float = 0.0
 		for fi in range(2):
 			edge = maxf(edge, absf(SimWrap.sdx(_mx, S.fighters[fi].x)) * _mz / vw)
@@ -1866,9 +1895,8 @@ func _update_cameras(S: SimState) -> void:
 		_mx = SimWrap.wrap(_mx + SimWrap.sdx(_mx, mt.x + vmx * DT * (1.0 - km) / km) * km)
 		_my += (mt.y + vmy * DT * (1.0 - km) / km - _my) * km
 		var dzm: float = (log(mt.z) - log(_mz)) * km
-		if not stiff:
-			var capm: float = CamParams.ZOOM_RATE_TRANS * DT
-			dzm = clampf(dzm, -capm, capm)
+		var capm: float = (CamParams.SLAM_ZOOM_RATE if stiff else CamParams.ZOOM_RATE_TRANS) * DT
+		dzm = clampf(dzm, -capm, capm)
 		_mz = exp(log(_mz) + dzm)
 	_pmx = mt.x
 	_pmy = mt.y
@@ -1886,9 +1914,10 @@ func _outputs(S: SimState) -> void:
 	var slam_now: bool = _slam_slot >= 0 and e > 0.0
 	for i in range(2):
 		var o: Vector3 = _blend_cam(_owns[i], shared, w)
-		# Whatever the blends do, the drawn zoom never changes faster than the comfort limit (the slam is exempt).
-		if _oz_valid and not slam_now:
-			var cap: float = CamParams.ZOOM_RATE_TRANS * DT
+		# Whatever the blends do, the drawn zoom never changes faster than the comfort limit; the slam's door gets the
+		# higher SLAM_ZOOM_RATE (it was exempt: 0.2 of a log unit in one tick, the largest jolt in the sweep's scan).
+		if _oz_valid:
+			var cap: float = (CamParams.SLAM_ZOOM_RATE if slam_now else CamParams.ZOOM_RATE_TRANS) * DT
 			o.z = exp(log(_oz[i]) + clampf(log(o.z) - log(_oz[i]), -cap, cap))
 		_outs[i] = o
 		_oz[i] = o.z

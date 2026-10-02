@@ -66,6 +66,15 @@ var dump_from: int = 0
 var dump_to: int = 0
 var shots_dir: String = ""
 var only: String = ""
+var _jolt_trace_seed: int = -1
+var _jolt_t0: float = 0.0
+var _jolt_t1: float = 0.0
+var _jolts: Array = []
+var _scan_prev: SplitFrame = null
+var _scan_rel: Array = [Vector2.ZERO, Vector2.ZERO]
+var _scan_ok: Array = [false, false]   # the pane was measured last tick too (the first tick after a gap has no velocity to compare)
+var _scan_sig: Dictionary = {}
+var _scan_fx: Array = [Vector2.ZERO, Vector2.ZERO]
 var _contact: Dictionary = {}
 var _bn: Array = []             # bounces being watched: how far the fighter moves in the world and on the screen after one
 var _bn_done: Array = []
@@ -95,6 +104,11 @@ func _initialize() -> void:
 			dump_label = dp[0]
 			dump_from = int(dp[1])
 			dump_to = int(dp[2])
+		elif a.begins_with("--jolts="):
+			var jp: PackedStringArray = a.substr(8).split(":")
+			_jolt_trace_seed = int(jp[0])
+			_jolt_t0 = float(jp[1])
+			_jolt_t1 = float(jp[2])
 		elif a.begins_with("--only="):
 			only = a.substr(7)
 		elif a.begins_with("--shots="):
@@ -212,6 +226,8 @@ func _run() -> void:
 		_real_match(int(seeds[0]), -1, 49.0, FULL_TICKS)
 		_real_match(int(seeds[mini(1, seeds.size() - 1)]), 1, 0.0, FULL_TICKS)
 		_real_match(int(seeds[0]), -1, 0.0, FULL_TICKS, 0)
+		_real_match(int(seeds[0]), -1, 0.0, FULL_TICKS, 2)
+		_real_match(int(seeds[mini(1, seeds.size() - 1)]), -1, 49.0, FULL_TICKS, 2)
 	_intro_real()
 	_opening_default()
 	_sim_unchanged()
@@ -1621,7 +1637,7 @@ func _shot_wreck(side: int, reduced: bool) -> Dictionary:
 				x_end = fr.screen_pos(0, _S.fighters[0].x, _S.fighters[0].y + CamParams.CHEST, 0.0).x
 	_check(_rig.wreck_dir == side, "%s: the wreckage side is %d (want %d, score %.0f)" % [_label, _rig.wreck_dir, side, _rig.wreck_score])
 	_check(on_wreck > 400, "%s: the wreck shot ran %d ticks" % [_label, on_wreck])
-	_check(cut_frames == (0 if reduced else 1), "%s: %d cut frames (want %d)" % [_label, cut_frames, 0 if reduced else 1])
+	_check(cut_frames == 1, "%s: %d cut frames (want 1: a cut, a dissolve in reduced motion)" % [_label, cut_frames])
 	_check(absf(sizes_end - CamParams.R_WRECK * vh) < 0.2 * CamParams.R_WRECK * vh, "%s: the winner is %.0f px at the end (want about %.0f)" % [_label, sizes_end, CamParams.R_WRECK * vh])
 	if not reduced:
 		_check(size_first > sizes_end * 2.2, "%s: no pull-back (%.0f px to %.0f px)" % [_label, size_first, sizes_end])
@@ -1986,7 +2002,7 @@ func _static_equals_reference() -> void:
 
 func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1, rig_human: int = -1) -> void:
 	var limit: int = ticks if ticks > 0 else match_ticks
-	_begin("real match %d%s%s%s%s" % [seed, (" human %d" % human) if human >= 0 else "", (" pitch %d" % int(pitch)) if pitch > 0.0 else "", " full" if ticks > 0 else "", " (rig sees slot %d as the human)" % rig_human if rig_human >= 0 else ""])
+	_begin("real match %d%s%s%s%s" % [seed, (" human %d" % human) if human >= 0 else "", (" pitch %d" % int(pitch)) if pitch > 0.0 else "", " full" if ticks > 0 else "", (" (rig sees slot %d as the human)" % rig_human if rig_human < 2 else " (rig sees two humans)") if rig_human >= 0 else ""])
 	SimCore.newMatch(_S, seed, {"p1": human != 0, "p2": human != 1})
 	_rig.pitch_deg = pitch
 	_rig.reset(_S, vw, vh)
@@ -2007,6 +2023,8 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 	var ncm: int = 0
 	_jr = [null, null]
 	_jr_done = []
+	_jolts = []
+	_scan_prev = null
 	_contact = {}
 	_bn = []
 	_bn_done = []
@@ -2018,15 +2036,21 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 		t += 1
 		# A test-only trick: the sim is stepped with both fighters on AI, the rig sees one of them without it (a human), so the
 		# hybrid launch rule's hold can be exercised in a long match.
-		var saved_ai = null
+		var saved_ai: Array = [_S.fighters[0].ai, _S.fighters[1].ai]
 		if rig_human >= 0:
-			saved_ai = _S.fighters[rig_human].ai
-			_S.fighters[rig_human].ai = null
+			if rig_human == 2:
+				_S.fighters[0].ai = null
+				_S.fighters[1].ai = null
+			else:
+				_S.fighters[rig_human].ai = null
 		_rig.step(_S, vw, vh, ev)
 		_tick += 1
 		_watch()
 		var cur: SplitFrame = _rig.current()
 		_journey_tick(cur, ev)
+		_jolt_tick(cur, ev)
+		if _jolt_trace_seed == seed and float(t) / 60.0 >= _jolt_t0 and float(t) / 60.0 <= _jolt_t1:
+			print("  JT %s t=%.3f mode %s solo %s/%d chase %d sep %.2f e %.2f/%d c %.0f st %d/%d | p0 cam %.0f/%.0f z %.2f rel (%.0f,%.0f) | p1 cam %.0f/%.0f z %.2f rel (%.0f,%.0f) | f0 %.0f,%.0f f1 %.0f,%.0f | mz %.3f zo %.3f/%.3f sepr %.0f slam %d u %.0f | fy %.0f/%.0f g1 %.0f z1 %.0f stt %s/%s" % [_label, float(t) / 60.0, cur.mode, _rig.solo_kind, _rig.solo_slot, _rig.chase_slot, cur.sep, cur.e, cur.e_slot, cur.c.x, 1 if _S.fighters[0].state == "launched" else 0, 1 if _S.fighters[1].state == "launched" else 0, cur.cam_x[0], cur.cam_y[0], cur.cam_z[0], _scan_rel[0].x, _scan_rel[0].y, cur.cam_x[1], cur.cam_y[1], cur.cam_z[1], _scan_rel[1].x, _scan_rel[1].y, _S.fighters[0].x, _S.fighters[0].y, _S.fighters[1].x, _S.fighters[1].y, _rig._mz, _rig._zo[0], _rig._zo[1], _rig._sep_rate, _rig._slam_slot, _rig.u, _rig._fy[0], _rig._fy[1], WorldTerrain.groundY(_S, _S.fighters[1].x), float(_S.fighters[1].z), _S.fighters[0].state, _S.fighters[1].state])
 		for e in ev:
 			var et: String = String(e.type)
 			if et in ["bounce", "left_ground", "land", "tumble_end", "journey_end"]:
@@ -2051,7 +2075,8 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 			else:
 				bi += 1
 		if rig_human >= 0:
-			_S.fighters[rig_human].ai = saved_ai
+			_S.fighters[0].ai = saved_ai[0]
+			_S.fighters[1].ai = saved_ai[1]
 		if trace_seed == seed and float(t) / 60.0 >= trace_t0 and float(t) / 60.0 <= trace_t1:
 			var f0 = _S.fighters[0]
 			var f1 = _S.fighters[1]
@@ -2104,6 +2129,7 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 				if sr >= 0.5 * wr * float(b["z0"]):
 					seen += 1
 		stats["bounce reading " + _label] = "%d bounces watched for 40 ticks: world rise mean %.0f u (%.2f bh), screen excursion mean %.0f px (%.2f of the screen height); of %d with a rise over 0.4 bh, %d moved on the screen at least half as much as the world did" % [_bn_done.size(), rise / float(_bn_done.size()), rise / float(_bn_done.size()) / CamParams.BODY_H, scr / float(_bn_done.size()), scr / float(_bn_done.size()) / vh, big, seen]
+	_jolt_summary()
 	if ticks > 0 and human < 0 and rig_human < 0 and _bn_done.size() >= 10:
 		var sc: float = 0.0
 		for b in _bn_done:
@@ -2114,6 +2140,145 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 		_check(int(_contact.get("bounce", 0)) > 0 and _rig.bounce_pushes > 0, "%s: no bounce in a full-length match (%s)" % [_label, str(_contact)])
 	SimCore.dispose(_S)
 	_S = null
+
+
+## The jolt scan (Orb's two-player playtest: "the camera would jolt left and right when one of us got knocked away"). Per
+## tick and per pane in view: how far the camera moved relative to its own fighter, in screen widths, beyond what the
+## fighter moved himself (so a smooth follow of a fast fighter is nothing, and a camera that shifts under a fighter who
+## stood still is a jolt), the zoom change (log), and the divider's step. A tick over a threshold is classified by the
+## first cause that applies: a hard cut is skipped; a solo shot starting or ending or changing hands; the layout
+## changing (a split opening or a merge closing, a swing, a slam); a cut-in starting or ending; a fighter launched or
+## chased; the seam; otherwise "other".
+const JOLT_CAM: float = 0.05       # screen widths: the change in one tick of the camera's motion relative to its fighter
+const JOLT_ZOOM: float = 0.055     # ln of the zoom change in one tick
+const JOLT_DIV: float = 0.05       # screen widths of divider centre motion in one tick
+
+func _jolt_tick(cur: SplitFrame, ev: Array) -> void:
+	var prev: SplitFrame = _scan_prev
+	var sig: Dictionary = {"solo": _rig.solo_kind, "slot": _rig.solo_slot, "mode": cur.mode, "ov": _rig._ov_kind, "chase": _rig.chase_slot, "e": cur.e_slot}
+	var fx: Array = [Vector2(_S.fighters[0].x, _S.fighters[0].y), Vector2(_S.fighters[1].x, _S.fighters[1].y)]
+	# A cut-in (the camera holds a point or a close-up on purpose) is its own shot: not scanned, and the first tick after it
+	# has no velocity to compare.
+	if cur.cut or prev == null or _rig._ov_kind != "" or _scan_sig.get("ov", "") != "":
+		_scan_ok = [false, false]
+	if prev != null and not cur.cut and prev.vw == cur.vw:
+		var launched: bool = false
+		for k in range(2):
+			if _S.fighters[k].state == "launched":
+				launched = true
+		for e in ev:
+			if String(e.type) == "launch":
+				launched = true
+		for i in range(2):
+			if not bool(cur.active[i]) or not bool(prev.active[i]) or _share(cur, i) < 0.2 or _share(prev, i) < 0.2:
+				_scan_ok[i] = false   # only a pane with a real share of the screen in both frames is something the player sees
+				continue
+			var z: float = cur.cam_z[i]
+			var dcx: float = SimWrap.sdx(prev.cam_x[i], cur.cam_x[i])
+			# What the pane follows: its own fighter in a split; in one view (pane 0 draws the screen) the fighter the shot is
+			# on, or the pair's midpoint.
+			var mdx: Array = [SimWrap.sdx(_scan_fx[0].x, fx[0].x), SimWrap.sdx(_scan_fx[1].x, fx[1].x)]
+			var mdy: Array = [fx[0].y - _scan_fx[0].y, fx[1].y - _scan_fx[1].y]
+			var dfx: float = mdx[i]
+			var dfy: float = mdy[i]
+			if cur.sep < 0.5:
+				if cur.e_slot >= 0 and cur.e > 0.5:
+					dfx = mdx[cur.e_slot]
+					dfy = mdy[cur.e_slot]
+				else:
+					dfx = 0.5 * (mdx[0] + mdx[1])
+					dfy = 0.5 * (mdy[0] + mdy[1])
+			# The camera's motion relative to its fighter, and how much that changed since the last tick (a jolt is a change of
+			# velocity, not a velocity: a camera that keeps pace with a fast fighter is not one).
+			var rvel := Vector2((dcx - dfx) * z, ((cur.cam_y[i] - prev.cam_y[i]) - dfy) * z)
+			var rel: float = (rvel - _scan_rel[i]).length() / vw if _scan_ok[i] else 0.0
+			_scan_rel[i] = rvel
+			_scan_ok[i] = true
+			var dz: float = absf(log(cur.cam_z[i]) - log(prev.cam_z[i]))
+			var dd: float = 0.0
+			if bool(cur.active[0]) and bool(cur.active[1]) and cur.line_alpha > 0.0 and prev.line_alpha > 0.0:
+				dd = (cur.c - prev.c).length() / vw
+			var which: String = ""
+			var val: float = 0.0
+			if _rig._ov_kind != "":
+				which = ""
+			elif rel > JOLT_CAM:
+				which = "camera"
+				val = rel
+			elif dz > JOLT_ZOOM:
+				which = "zoom"
+				val = dz
+			elif dd > JOLT_DIV and i == 0 and _rig._slam_slot < 0:   # the slam's door is a divider that sweeps shut on purpose
+				which = "divider"
+				val = dd
+			if which != "":
+				var cause: String = "other"
+				if sig["solo"] != _scan_sig.get("solo", "") or sig["slot"] != _scan_sig.get("slot", -1):
+					cause = "solo shot start, end or hand-over"
+				elif sig["mode"] != _scan_sig.get("mode", ""):
+					cause = "layout change (%s to %s)" % [_scan_sig.get("mode", ""), sig["mode"]]
+				elif sig["ov"] != _scan_sig.get("ov", ""):
+					cause = "cut-in start or end"
+				elif sig["chase"] != _scan_sig.get("chase", -1) or sig["e"] != _scan_sig.get("e", -1):
+					cause = "chase or expanded pane changed hands"
+				elif launched:
+					cause = "launch or knock-back in progress"
+				elif absf(cur.cam_x[i] - SimConst.HALF) > SimConst.HALF - 400.0:
+					cause = "seam"
+				if _jolt_trace_seed >= 0 and float(_tick) / 60.0 >= _jolt_t0 and float(_tick) / 60.0 <= _jolt_t1:
+					print("  JOLT %s t=%.3f pane %d %s %.3f cause %s share %.2f/%.2f active %s e %.3f" % [_label, float(_tick) / 60.0, i, which, val, cause, _share(cur, i), _share(prev, i), str(cur.active), cur.e])
+				_jolts.append({"t": float(_tick) / 60.0, "pane": i, "what": which, "v": val, "cause": cause, "mode": cur.mode, "solo": _rig.solo_kind, "sep": cur.sep, "e": cur.e, "chase": _rig.chase_slot, "dcx": dcx, "dfx": dfx, "z": z})
+	_scan_prev = cur
+	_scan_sig = sig
+	_scan_fx = fx
+
+
+## The share of the screen pane i owns in this frame, from a coarse grid.
+func _share(fr: SplitFrame, i: int) -> float:
+	if not bool(fr.active[1]) and i == 1:
+		return 0.0
+	if not bool(fr.active[0]) and i == 0:
+		return 0.0
+	if not (bool(fr.active[0]) and bool(fr.active[1])):
+		return 1.0
+	var n: int = 0
+	for gx in range(8):
+		for gy in range(5):
+			var w1: float = fr.weight1(Vector2((float(gx) + 0.5) * vw / 8.0, (float(gy) + 0.5) * vh / 5.0))
+			if (i == 1 and w1 >= 0.5) or (i == 0 and w1 < 0.5):
+				n += 1
+	return float(n) / 40.0
+
+
+func _jolt_summary() -> void:
+	if _jolts.is_empty():
+		stats["jolts " + _label] = "none over %.2f screen widths of camera motion, %.2f zoom or %.2f divider in a tick" % [JOLT_CAM, JOLT_ZOOM, JOLT_DIV]
+		return
+	var by: Dictionary = {}
+	var worst: Dictionary = {}
+	for j in _jolts:
+		var key: String = "%s: %s" % [j["what"], j["cause"]]
+		by[key] = int(by.get(key, 0)) + 1
+		if not worst.has(key) or float(j["v"]) > float(worst[key]["v"]):
+			worst[key] = j
+	var parts: Array = []
+	for k in by:
+		var w: Dictionary = worst[k]
+		parts.append("%s %d (worst %.3f at t=%.2f, %s/%s)" % [k, by[k], float(w["v"]), float(w["t"]), w["mode"], w["solo"]])
+	var bins: Array = [0, 0, 0, 0]   # camera jerk (screen widths): 0.05 to 0.1, 0.1 to 0.2, 0.2 to 0.4, over 0.4
+	for j in _jolts:
+		if j["what"] == "camera":
+			var v: float = float(j["v"])
+			bins[0 if v < 0.1 else (1 if v < 0.2 else (2 if v < 0.4 else 3))] += 1
+	var big: Array = _jolts.filter(func(j): return j["what"] == "camera" and float(j["v"]) >= 0.2)
+	big.sort_custom(func(x, y): return float(x["v"]) > float(y["v"]))
+	var bl: Array = []
+	for j in big.slice(0, 5):
+		bl.append("%.2f t=%.1f %s/%s %s sep %.2f e %.2f" % [float(j["v"]), float(j["t"]), j["mode"], j["solo"], j["cause"], float(j["sep"]), float(j["e"])])
+	if not bl.is_empty():
+		stats["biggest jolts " + _label] = " | ".join(PackedStringArray(bl))
+	stats["jolt sizes " + _label] = "camera jerk 0.05 to 0.1: %d, 0.1 to 0.2: %d, 0.2 to 0.4: %d, over 0.4: %d" % bins
+	stats["jolts " + _label] = "%d: %s" % [_jolts.size(), "; ".join(PackedStringArray(parts))]
 
 
 ## Whether fighter i is on the screen this tick, in his own pane when two are shown.
