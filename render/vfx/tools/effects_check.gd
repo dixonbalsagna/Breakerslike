@@ -855,7 +855,7 @@ func _speed() -> void:
 	S.dirS.ex = null
 	wait.call(hcl, 6)
 	_check(hcl.speed.made == 1, "a clash that is not won (no decisive event) has its heavy's streak")
-	# The rationing in a controlled minute: ten scripted exchanges, 60 ticks apart, of the kinds that matter. The rule decides how many
+	# The rationing in a controlled minute: twelve scripted exchanges, 60 ticks apart, of the kinds that matter. The rule decides how many
 	# streaks come out of them; how often a real fight makes such exchanges is the fight's rhythm (it changes with Encounter's work), so no
 	# count from live play is asserted here (docs/vfx/react-plan.md has the measured rate).
 	var hm := VfxHub.new()
@@ -863,6 +863,7 @@ func _speed() -> void:
 	var script_ex: Array = [
 		["heavy", "", "heavy"], ["heavy", "", "heavy"], ["heavy", "", "heavy"], ["heavy", "", "heavy"],      # four heavies: four streaks
 		["heavy", "", "launch"], ["heavy", "", "launch"], ["heavy", "", "launch"],                            # three launches: three streaks (the launch takes the heavy's)
+		["heavy", "", "follow"], ["heavy", "", "follow"],                                                      # a launch and then a follow-up heavy: both keep their streak (Orb's flashier trading)
 		["heavy", "", "two"],                                                                                   # two heavies in one exchange: one streak (the last)
 		["sig", "", "heavy"], ["heavy", "RIPOSTE", "launch"],                                                  # a signature and a riposte that launches: panels, none
 	]
@@ -874,15 +875,18 @@ func _speed() -> void:
 		f.vx = 3000.0
 		f.vy = 500.0
 		var evs: Array = [heavy.call(0.0, 1.0)]
-		if sx[2] == "launch":
+		if sx[2] == "launch" or sx[2] == "follow":
 			evs.append(VfxMock.ev("launch", {"actor": 0.0, "target": 1.0, "amount": 3100.0, "face": 1.0}))
 		_tick(S, hm, evs)
 		if sx[2] == "two":
 			wait.call(hm, 8)
 			_tick(S, hm, [heavy.call(0.0, 1.0)])
+		if sx[2] == "follow":
+			wait.call(hm, 20)
+			_tick(S, hm, [heavy.call(0.0, 1.0)])
 		S.dirS.ex = null
 		wait.call(hm, 60)
-	_check(hm.speed.made == 8 and hm.speed.suppressed == 3 and hm.speed.capped == 3, "ten scripted exchanges: %d streaks (4 heavies, 3 launches, 1 of two heavies), %d hits left to panels (the signature, the riposte and its launch), %d heavies behind a launch left without (the exchange has its one)" % [hm.speed.made, hm.speed.suppressed, hm.speed.capped])
+	_check(hm.speed.made == 12 and hm.speed.suppressed == 3 and hm.speed.capped == 5, "twelve scripted exchanges: %d streaks (4 heavies, 3 launches, 2 launches each with a follow-up heavy of its own, 1 of two heavies), %d hits left to panels (the signature, the riposte and its launch), %d heavies left without because they are the blow that launched" % [hm.speed.made, hm.speed.suppressed, hm.speed.capped])
 	# And in real play the system fires at all, whatever the rhythm: two minutes of AI play make at least one streak.
 	var S2 := SimCore.createSim()
 	SimCore.newMatch(S2, 12345)

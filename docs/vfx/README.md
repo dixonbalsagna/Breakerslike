@@ -194,3 +194,7 @@ Legal cleared the rocks under five conditions (RL-057): the flag is **on by defa
 ### Update (2026-10-02, later still): power-up craters get the blast at the break (RL-059)
 
 `blast_powerup_enabled` is on by default: a ground-level power-up crater gets the tier-scaled blast at the transformation's break only, one a transformation, never in the gather or in the air, never for a fighter on `VfxBlast.POWERUP_OFF` (empty). The rocks now sink in 0.15 s when his transformation starts (`FORM_OUT_S` in `rocks.gd`) so they are gone by the break. Cases in `effects_check.gd` `_blast()`; picture `img/blast-powerup-tier4-*.jpg`. The pressure rings' drawing still waits for Orb's answer on the refused edit.
+
+### Update (2026-10-02, last): two streaks an exchange
+
+Speed lines: a launch and a later heavy in the same exchange each keep their streak (the heavy that launched does not make a second): 10.9 a minute over 8 seeds, from 7.8 (docs/vfx/react-plan.md).

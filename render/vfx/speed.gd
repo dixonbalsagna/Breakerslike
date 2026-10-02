@@ -44,6 +44,8 @@ func reset(seed: int) -> void:
 	ended_tick = -1
 	excl = false
 	streaked = false
+	launched = false
+	launch_tick = -1000
 	pend = {}
 	suppressed = 0
 	capped = 0
@@ -103,18 +105,22 @@ func add(x: float, y: float, dx: float, dy: float, slot: int, z: float) -> void:
 
 
 # ------------------------------------------------------------------------------------------------ one streak an exchange
-## Game Design's rule (rule-of-cool.md row 11, balance-targets.md section 22): at most one streak per exchange, on its launch if it
-## has one, otherwise on its last landed heavy, and never on a hit that gets a panel (a signature, a finisher, a crippling blow, the
-## KO, a clash won, a riposte that launches). The exchange is read from `S.dirS.ex` (its index `n`, its `kind` and `tag`); a heavy waits for the end
+## Game Design's rule (rule-of-cool.md row 11, balance-targets.md section 22), widened on the EP's word (Orb asked for flashier combo
+## trading, 2026-10-02): an exchange has a streak on its launch if it has one AND on its last landed heavy, a heavy that is not the blow
+## that launched (a follow-up after the launch keeps its own); never on a hit that gets a panel (a signature, a finisher, a crippling
+## blow, the KO, a clash won, a riposte that launches). Two streaks an exchange at most. The exchange is read from `S.dirS.ex` (its index `n`, its `kind` and `tag`); a heavy waits for the end
 ## of its exchange to learn whether it was the last (a launch cancels it), and fires after 45 ticks at the latest.
 const PENDING_TICKS: int = 45
+const BLOW_TICKS: int = 8        # a heavy this close to a launch is the same blow
 const CONTEXT_GRACE: int = 2     # an exchange that has just ended still owns the events of its last ticks
 
 var cur_n: int = -1              # the exchange index last seen
 var ended_tick: int = -1         # the tick it was seen ending, -1 while it runs
 var excl: bool = false           # this exchange's hit gets a panel
 var cur_tag: String = ""         # the running exchange's tag (RIPOSTE, HEAVY CLASH, ...)
-var streaked: bool = false       # this exchange has had its streak
+var streaked: bool = false       # this exchange has had its heavy's streak
+var launched: bool = false       # this exchange has had its launch's streak
+var launch_tick: int = -1000     # when (the host's tick): a heavy within BLOW_TICKS of it is the blow that launched
 var pend: Dictionary = {}        # the last landed heavy, waiting: x, y, dx, dy, slot, z, tick
 var suppressed: int = 0          # hits left without a streak because they get a panel (the tests)
 var capped: int = 0              # hits left without one because the exchange already had its streak
@@ -130,6 +136,8 @@ func _begin(n: int) -> void:
 	ended_tick = -1
 	excl = false
 	streaked = false
+	launched = false
+	launch_tick = -1000
 	cur_tag = ""
 	pend = {}
 
@@ -167,7 +175,7 @@ func panel() -> void:
 		pend = {}
 
 
-## A launch: it is the exchange's streak, and cancels a waiting heavy.
+## A launch: it is the exchange's launch streak, and cancels the waiting heavy that is the same blow.
 func offer_launch(x: float, y: float, dx: float, dy: float, slot: int, z: float) -> void:
 	if _in_exchange():
 		if cur_tag.begins_with("RIPOSTE") and not excl:
@@ -176,21 +184,24 @@ func offer_launch(x: float, y: float, dx: float, dy: float, slot: int, z: float)
 		if excl:
 			suppressed += 1
 			return
-		if streaked:
+		if launched:
 			capped += 1
 			return
-		pend = {}
-		streaked = true
+		# The heavy that sent him flying is this streak; an earlier heavy in the exchange keeps its own.
+		if not pend.is_empty() and _tick - int(pend.tick) <= BLOW_TICKS:
+			pend = {}
+		launched = true
+		launch_tick = _tick
 	add(x, y, dx, dy, slot, z)
 
 
-## A landed heavy: it waits for the exchange's end (the last one of an exchange without a launch gets the streak).
+## A landed heavy: it waits for the exchange's end and the last one gets a streak, unless it is the blow that launched.
 func offer_heavy(x: float, y: float, dx: float, dy: float, slot: int, z: float) -> void:
 	if _in_exchange():
 		if excl:
 			suppressed += 1
 			return
-		if streaked:
+		if streaked or (launched and _tick - launch_tick <= BLOW_TICKS):
 			capped += 1
 			return
 		pend = {"x": x, "y": y, "dx": dx, "dy": dy, "slot": slot, "z": z, "tick": _tick}
