@@ -337,7 +337,7 @@ static func _breakChapter(S: SimState, ex, a, d) -> void:
 ## A knock-back is a decisive exchange (agency-pass.md section 13, rule 1): being driven back means he lost it. It
 ## counts for the brink's set-up and the finisher as a launch does. The kind is the exchange's own clause when it has
 ## one (a clash won, a guard break, a charge interrupt), and otherwise knockback.
-static func _knockDecisive(S: SimState, ex, att, tgt) -> void:
+static func _knockDecisive(S: SimState, ex, att, tgt, setup: String = "") -> void:
 	var why: String = "knockback"
 	if ex.tag.begins_with("HEAVY CLASH"):
 		why = "clash"
@@ -345,7 +345,7 @@ static func _knockDecisive(S: SimState, ex, att, tgt) -> void:
 		why = "guard_break"
 	elif ex.tag == "CHARGE INTERRUPT":
 		why = "interrupt"
-	DirExchange.decisive(S, ex, att, tgt, why)
+	DirExchange.decisive(S, ex, att, tgt, why, setup)
 
 
 ## longOnly: a break or finisher launch, chosen among the long-haul candidates only (no "no launch").
@@ -373,7 +373,7 @@ static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool =
 			if sent:
 				DirLaunch.knock(S, att, tgt, 1.0 if heavy else float(bl.enderDist))
 				SimEvents.feed(S, "KNOCK BACK" if heavy else "BLUR ENDER", "a heavy, but no launch was earned" if heavy else "the light after " + str(DirInterrupt.gi(att, DirInterrupt.LANDED) - 1) + " landed strikes: the blur closes with its own knock-back")
-				_knockDecisive(S, ex, att, tgt)
+				_knockDecisive(S, ex, att, tgt, "" if heavy else "blurPlain")   # a plain blur's ender is half a set-up (section 14.4)
 			else:
 				SimEvents.feed(S, "STAYS IN REACH", "a light: the brawl goes on")
 			return

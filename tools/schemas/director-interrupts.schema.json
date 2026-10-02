@@ -668,7 +668,8 @@
         "light",
         "heavy",
         "stopTicks",
-        "charge"
+        "charge",
+        "barrage"
       ],
       "properties": {
         "enabled": {
@@ -737,7 +738,8 @@
             "windupTicks",
             "chargeTicks",
             "tapShare",
-            "holdMaxTicks"
+            "holdMaxTicks",
+            "knockFull"
           ],
           "properties": {
             "kind": {
@@ -769,6 +771,10 @@
               "description": "The most ticks it can be held.",
               "type": "integer",
               "minimum": 1
+            },
+            "knockFull": {
+              "type": "boolean",
+              "description": "A heavy blast's knock-back goes the tier's full distance."
             }
           },
           "description": "The heavy blast: a charged shot.",
@@ -802,6 +808,68 @@
             }
           },
           "description": "What a fighter who is charging does to a blast.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "barrage": {
+          "type": "object",
+          "required": [
+            "enderAfter",
+            "window",
+            "measuredTicks",
+            "immune",
+            "enderDist"
+          ],
+          "properties": {
+            "enderAfter": {
+              "description": "When this many of a fighter's bolts land clean on his rival inside `window`, the last is a knock-back he did not press.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "window": {
+              "description": "The window, in ticks.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "measuredTicks": {
+              "description": "A bolt fired this many ticks or more after the one before is measured (not spammed).",
+              "type": "integer",
+              "minimum": 1
+            },
+            "immune": {
+              "description": "The count starts again and the rival cannot be knocked back by another barrage for this many ticks.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "enderDist": {
+              "type": "object",
+              "required": [
+                "measured",
+                "plain"
+              ],
+              "properties": {
+                "measured": {
+                  "description": "The share of the tier's knock-back distance for a measured barrage.",
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "plain": {
+                  "description": "The share for a plain (spammed) barrage.",
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "description": "A barrage closes (agency-pass.md section 16).",
           "additionalProperties": false,
           "patternProperties": {
             "^_": true
@@ -850,9 +918,12 @@
         "guardFromTick",
         "burstFromTick",
         "safeTicks",
-        "reachBh",
         "damage",
-        "deepen"
+        "deepen",
+        "landByTick",
+        "burstWithinBh",
+        "dive",
+        "blast"
       ],
       "properties": {
         "enabled": {
@@ -879,11 +950,6 @@
           "type": "integer",
           "minimum": 0
         },
-        "reachBh": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "The follow-up must come from within this reach."
-        },
         "damage": {
           "type": "number",
           "minimum": 0,
@@ -893,9 +959,61 @@
           "type": "number",
           "minimum": 0,
           "description": "The follow-up digs a bowl this many times as deep."
+        },
+        "landByTick": {
+          "description": "The follow-up must land by this tick of the burial (guardFromTick and burstFromTick are at most this).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "burstWithinBh": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "He may burst out of the burial against a rival within this many body heights."
+        },
+        "dive": {
+          "type": "object",
+          "required": [
+            "speed",
+            "minTicks"
+          ],
+          "properties": {
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Units a second of the dive onto the buried fighter."
+            },
+            "minTicks": {
+              "description": "At least this many ticks.",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "description": "The dive.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "blast": {
+          "type": "object",
+          "required": [
+            "damage"
+          ],
+          "properties": {
+            "damage": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The damage of a blast that lands on a buried fighter."
+            }
+          },
+          "description": "A blast on a buried fighter.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
         }
       },
-      "description": "The buried fighter (agency-pass.md section 7; sim/director/bury.gd; World's embed holds him down for embed.ticks). guardFromTick and burstFromTick are at most the embed ticks (checked by tools/lib/xref-fight.js, buried-order).",
+      "description": "The buried fighter (agency-pass.md section 7; sim/director/bury.gd; World's embed holds him down for embed.ticks). guardFromTick and burstFromTick are at most landByTick and at most the embed ticks (checked by tools/lib/xref-fight.js, buried-order).",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

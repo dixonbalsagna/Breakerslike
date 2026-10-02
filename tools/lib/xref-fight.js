@@ -435,6 +435,8 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (isObj(up) && typeof up.uy === 'number' && up.uy <= 0) err(LF, '/uppercut/uy', 'launch-direction', `uppercut.uy ${up.uy} is not upward (positive is up), so UPPERCUT would not lift`);
     const kb = launch.knockBack;
     for (const key of ['distBh', 'skidSpeed']) if (isObj(kb) && Array.isArray(kb[key])) for (let i = 1; i < kb[key].length; i++) if (typeof kb[key][i] === 'number' && typeof kb[key][i - 1] === 'number' && kb[key][i] < kb[key][i - 1]) err(LF, `/knockBack/${key}/${i}`, 'launch-order', `knockBack ${key} falls from ${kb[key][i - 1]} to ${kb[key][i]} at tier ${i + 1}; it must not fall with the tier`, 'warning');
+    const stw = isObj(launch.setup) && isObj(launch.setup.weight) ? launch.setup.weight : undefined;
+    if (stw) for (const k of Object.keys(stw)) if (!k.startsWith('_') && !['default', 'blurPlain', 'barragePlain', 'launch', 'clash', 'guard_break', 'interrupt', 'knockback', 'beam', 'beam_clash', 'blast', 'barrage'].includes(k)) err(LF, `/setup/weight/${esc(k)}`, 'launch-setup', `weight "${k}" is not a decisive kind (launch, clash, guard_break, interrupt, knockback, beam, beam_clash, blast, barrage), default, blurPlain or barragePlain, so it would never be read`, 'warning');
     const cs = launch.craterSlam;
     if (isObj(cs) && typeof cs.uy === 'number' && cs.uy >= 0) err(LF, '/craterSlam/uy', 'launch-direction', `uy ${cs.uy} is not downward (negative is down), so CRATER SLAM would not slam`, 'warning');
   }
@@ -678,7 +680,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const lv = isObj(dai.levels) ? dai.levels : {};
     if (typeof dai.level === 'string' && isObj(dai.levels) && !(dai.level in lv)) err(AI, '/level', 'ai-level', `level "${dai.level}" is not in levels (${Object.keys(lv).filter((k) => !k.startsWith('_')).join(', ')})`);
     const order = ['easy', 'medium', 'hard'];
-    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse', 'buriedFollowUp']) {
+    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse', 'buriedFollowUp', 'barrageGuard']) {
       for (let i = 1; i < order.length; i++) {
         const a = isObj(lv[order[i - 1]]) ? lv[order[i - 1]][key] : undefined; const b = isObj(lv[order[i]]) ? lv[order[i]][key] : undefined;
         if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');
@@ -720,6 +722,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const bu = itr.buried;
     const embedC = get('data/biomes/contact.json');
     if (isObj(bu) && isObj(embedC) && isObj(embedC.embed) && typeof embedC.embed.ticks === 'number') for (const k of ['guardFromTick', 'burstFromTick']) if (typeof bu[k] === 'number' && bu[k] > embedC.embed.ticks) err(IT, `/buried/${k}`, 'buried-order', `${k} ${bu[k]} is after the burial ends (embed.ticks ${embedC.embed.ticks} in data/biomes/contact.json), so it could never happen`);
+    if (isObj(bu) && typeof bu.landByTick === 'number') for (const k of ['guardFromTick', 'burstFromTick']) if (typeof bu[k] === 'number' && bu[k] > bu.landByTick) err(IT, `/buried/${k}`, 'buried-order', `${k} ${bu[k]} is after landByTick ${bu.landByTick}`);
     const rv = itr.reversal;
     if (isObj(rv) && typeof rv.kiPatient === 'number' && typeof rv.ki === 'number' && rv.kiPatient > rv.ki) err(IT, '/reversal/kiPatient', 'interrupts-order', `kiPatient ${rv.kiPatient} is above ki ${rv.ki}; patience should be cheaper`);
     const st = itr.stale;

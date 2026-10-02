@@ -139,14 +139,26 @@
       "windupTicks": 8,
       "chargeTicks": 30,
       "tapShare": 0.6,
-      "holdMaxTicks": 45
+      "holdMaxTicks": 45,
+      "knockFull": true
     },
     "stopTicks": 1,
     "charge": {
       "shrugPower": 1,
       "shrugMul": 0.5
     },
-    "_note": "Energy, the first slice (agency-pass.md section 5 and section 11, item 6; sim/director/blast.gd). With the energy family held, an attack press outside an exchange fires a blast from where he stands, in any band. light: a bolt (the kind in data/fight/shots.json) for 'ki', leaving windupTicks after the press (a light still held waits for its release, up to holdTicks, so a layout's hold can turn it into the heavy); presses while one winds up queue up to queueMax more; bolts fired within groupTicks of each other are one volley; the AI's light is aiVolley bolts. heavy: a charged shot for 'ki'; it charges while the button is held and leaves when it is let go (not before windupTicks, and by itself at holdMaxTicks); its damage rises from tapShare of the kind's to all of it over chargeTicks. stopTicks: the hit-stop of a blast that lands. charge: a fighter in a heavy charge takes a shot of power up to shrugPower at shrugMul of its damage and keeps coming; a stronger shot, or any shot on a light charge, stops him. The perfect block's window is perfectBlock.windows.blast; the shot's speed, power and damage are the kind's"
+    "_note": "Energy, the first slice (agency-pass.md section 5 and section 11, item 6; sim/director/blast.gd). With the energy family held, an attack press outside an exchange fires a blast from where he stands, in any band. light: a bolt (the kind in data/fight/shots.json) for 'ki', leaving windupTicks after the press (a light still held waits for its release, up to holdTicks, so a layout's hold can turn it into the heavy); presses while one winds up queue up to queueMax more; bolts fired within groupTicks of each other are one volley; the AI's light is aiVolley bolts. heavy: a charged shot for 'ki'; it charges while the button is held and leaves when it is let go (not before windupTicks, and by itself at holdMaxTicks); its damage rises from tapShare of the kind's to all of it over chargeTicks. stopTicks: the hit-stop of a blast that lands. charge: a fighter in a heavy charge takes a shot of power up to shrugPower at shrugMul of its damage and keeps coming; a stronger shot, or any shot on a light charge, stops him. The perfect block's window is perfectBlock.windows.blast; the shot's speed, power and damage are the kind's",
+    "barrage": {
+      "enderAfter": 4,
+      "window": 90,
+      "measuredTicks": 10,
+      "enderDist": {
+        "measured": 1,
+        "plain": 0.6
+      },
+      "immune": 90,
+      "_note": "A barrage closes (agency-pass.md section 16). When enderAfter of a fighter's bolts land clean on his rival inside 'window' ticks (not guarded, not shrugged off, not deflected), the last is a knock-back he did not press: decisive (kind barrage), never a launch. measuredTicks: if each was fired this many ticks or more after the one before, it goes enderDist.measured of the tier's knock-back distance and is a full set-up; otherwise enderDist.plain and launch.json setup.weight.barragePlain. immune: the count starts again and the rival cannot be knocked back by another barrage for this many ticks"
+    }
   },
   "signature": {
     "provisional": true,
@@ -157,12 +169,20 @@
   "buried": {
     "enabled": true,
     "followTicks": 40,
+    "landByTick": 100,
     "guardFromTick": 40,
     "burstFromTick": 40,
+    "burstWithinBh": 12,
     "safeTicks": 10,
-    "reachBh": 2000,
     "damage": 66,
     "deepen": 1.2,
-    "_note": "The buried fighter (agency-pass.md section 7; sim/director/bury.gd; World's embed holds him down for its own ticks, data/biomes/contact.json embed.ticks). followTicks: his rival's first attack press this soon after the burial, from within reachBh, is the free follow-up: one heavy blow of 'damage' he cannot answer, no launch; it digs a bowl 'deepen' times as deep as the one that buried him (World's dig leaves ground alone that is already dented deeper than the bowl asked for). A blast that reaches him in that time is the follow-up too. guardFromTick: his guard counts only from here, or once the follow-up is used; buried, he never dodges or presses. burstFromTick: his burst throws him out, not before this. safeTicks: out of the crater, no exchange starts on him and no shot lands for this long"
+    "dive": {
+      "speed": 4000,
+      "minTicks": 18
+    },
+    "blast": {
+      "damage": 44
+    },
+    "_note": "The buried fighter (agency-pass.md sections 7 and 14.5; sim/director/bury.gd; World's embed holds him down for its own ticks, data/biomes/contact.json embed.ticks). followTicks: his rival's first attack press this soon after the burial is the free follow-up. A physical press is a dive: the director flies him to the crater at dive.speed (units a second, the light charge's; at least dive.minTicks), and the blow must land by landByTick of the burial, otherwise there is no follow-up. It is one heavy blow of 'damage' that he cannot answer, free of ki, with no launch, and it makes his crater 'deepen' times as deep as it was (WorldCrater.deepen). An energy press is the other free blow: a charged shot of blast.damage, free of ki, that arrives from any distance (data/fight/shots.json arriveTicks). He is held until the blow lands, never past landByTick; nothing of his stops a follow-up on its way. One follow-up to a burial. guardFromTick: his guard counts from this tick, or once the follow-up is used. burstFromTick: his burst throws him out, not before this tick; an AI bursts only when no follow-up is coming, with its rival within burstWithinBh (ai.json buriedBurst). safeTicks: out of the crater he is safe this long: no exchange starts on him and a shot passes"
   }
 }

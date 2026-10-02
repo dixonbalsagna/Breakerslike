@@ -52,6 +52,10 @@
     "_slide": "slideUnderBh: a ground knock-back shorter than this is the upright slide: the director carries him back distBh along the ground over slideTicks (Combat's 18), with no launch, no journey and no trench. At this length and over it is the skid: a launch whose plan carries slide 'feet' and the distance in units, for World's slide on the feet",
     "_note": "The knock-back: a short send that is not a launch across the map (agency-pass.md section 3; Combat's brawl-endings-and-trades.md section 2). score: its base score against the launch candidates (it was the planner's NONE, 25). distBh: how far it sends the rival, in body heights, by the striker's tier (Combat's proposal). On the ground (within groundWithinBh of it, not over the sea) with groundMode 'skid' it is a low send with no travel boost that the ground-contact model skids: skidSpeed is its speed by tier, in units a second, sized to slide about distBh on open ground, and skidUy its small lift. Otherwise ('shove', or in the air: the drift) the rival is carried back distBh over driftTicks and stays upright. chain: whether a chain window may open after it"
   },
+  "setup": {
+    "weight": {"default": 1.0, "blurPlain": 0.5, "barragePlain": 0.5},
+    "_note": "Set-ups against a fighter on the brink (agency-pass.md sections 14.4 and 16). Opening him needs finishers.json contest.brinkSetups set-ups. weight: what a decisive win is worth, by its kind (launch, clash, guard_break, interrupt, knockback, beam, beam_clash, blast, barrage: default), blurPlain for a plain blur's own ender, from untimed presses, and barragePlain for a barrage's ender when any of its bolts was spammed: half of one each, so a masher or a spammer needs twice as many"
+  },
   "blur": {
     "enderAfter": 4,
     "enderDist": 0.6,

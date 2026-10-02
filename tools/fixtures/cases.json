@@ -35715,12 +35715,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -35752,14 +35763,25 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
               },
-              "_note": "comment"
+              "_note": "comment",
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
+              }
             }
           }
         }
@@ -35790,14 +35812,25 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
               },
-              "sprint": 1
+              "sprint": 1,
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
+              }
             }
           }
         }
@@ -35870,12 +35903,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -35910,12 +35954,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -35946,12 +36001,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -35987,12 +36053,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36027,12 +36104,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36067,12 +36155,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36107,12 +36206,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36147,12 +36257,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36184,12 +36305,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36224,12 +36356,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36264,12 +36407,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36301,12 +36455,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36341,12 +36506,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36381,12 +36557,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36461,12 +36648,23 @@
                 "chargeTicks": 30,
                 "tapShare": 0.6,
                 "holdMaxTicks": 45,
-                "pierce": 1
+                "pierce": 1,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36501,12 +36699,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36541,12 +36750,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36581,12 +36801,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36621,12 +36852,23 @@
                 "windupTicks": -1,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36661,12 +36903,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 0,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36701,12 +36954,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 1.5,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36741,12 +37005,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": -0.1,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36781,12 +37056,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 0
+                "holdMaxTicks": 0,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36821,12 +37107,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 20
+                "holdMaxTicks": 20,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36861,12 +37158,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 30
+                "holdMaxTicks": 30,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36898,12 +37206,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": -1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36938,12 +37257,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 0,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -36975,11 +37305,22 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -37014,12 +37355,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": -1,
                 "shrugMul": 0.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -37054,12 +37406,23 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 1.5
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -37094,13 +37457,24 @@
                 "windupTicks": 8,
                 "chargeTicks": 30,
                 "tapShare": 0.6,
-                "holdMaxTicks": 45
+                "holdMaxTicks": 45,
+                "knockFull": true
               },
               "stopTicks": 1,
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5,
                 "reflect": 1
+              },
+              "barrage": {
+                "enderAfter": 4,
+                "window": 90,
+                "measuredTicks": 10,
+                "immune": 90,
+                "enderDist": {
+                  "measured": 1,
+                  "plain": 0.6
+                }
               }
             }
           }
@@ -37403,9 +37777,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37438,10 +37820,18 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
               "deepen": 1.2,
-              "reach": 1
+              "reach": 1,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37463,7 +37853,6 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
               "deepen": 1.2
             }
@@ -37487,7 +37876,6 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
               "deepen": 1.2
             }
@@ -37511,7 +37899,6 @@
               "followTicks": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
               "deepen": 1.2
             }
@@ -37535,7 +37922,6 @@
               "followTicks": 40,
               "guardFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
               "deepen": 1.2
             }
@@ -37559,31 +37945,6 @@
               "followTicks": 40,
               "guardFromTick": 40,
               "burstFromTick": 40,
-              "reachBh": 2000,
-              "damage": 66,
-              "deepen": 1.2
-            }
-          }
-        }
-      ],
-      "expect": {
-        "rule": "required",
-        "pointer": "/buried"
-      }
-    },
-    {
-      "id": "director-interrupts-buried-reach-required",
-      "schema": "director-interrupts.schema.json",
-      "mutate": [
-        {
-          "file": "data/director/interrupts.json",
-          "set": {
-            "/buried": {
-              "enabled": true,
-              "followTicks": 40,
-              "guardFromTick": 40,
-              "burstFromTick": 40,
-              "safeTicks": 10,
               "damage": 66,
               "deepen": 1.2
             }
@@ -37608,7 +37969,6 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "deepen": 1.2
             }
           }
@@ -37632,7 +37992,6 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66
             }
           }
@@ -37656,9 +38015,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37681,9 +38048,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37703,9 +38078,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37728,9 +38111,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37753,9 +38144,17 @@
               "guardFromTick": -1,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37778,9 +38177,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40.5,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37803,9 +38210,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": -1,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37828,39 +38243,22 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 0,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
       ],
       "expect": null
-    },
-    {
-      "id": "director-interrupts-buried-reach-positive",
-      "schema": "director-interrupts.schema.json",
-      "mutate": [
-        {
-          "file": "data/director/interrupts.json",
-          "set": {
-            "/buried": {
-              "enabled": true,
-              "followTicks": 40,
-              "guardFromTick": 40,
-              "burstFromTick": 40,
-              "safeTicks": 10,
-              "reachBh": 0,
-              "damage": 66,
-              "deepen": 1.2
-            }
-          }
-        }
-      ],
-      "expect": {
-        "rule": "exclusiveMinimum",
-        "pointer": "/buried/reachBh"
-      }
     },
     {
       "id": "director-interrupts-buried-damage-negative",
@@ -37875,9 +38273,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": -1,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37900,9 +38306,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 0,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37922,9 +38336,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": -0.5
+              "deepen": -0.5,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37947,9 +38369,17 @@
               "guardFromTick": 40,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": "heavy",
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37972,9 +38402,17 @@
               "guardFromTick": 90,
               "burstFromTick": 40,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -37997,9 +38435,17 @@
               "guardFromTick": 40,
               "burstFromTick": 90,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -38022,9 +38468,17 @@
               "guardFromTick": 60,
               "burstFromTick": 60,
               "safeTicks": 10,
-              "reachBh": 2000,
               "damage": 66,
-              "deepen": 1.2
+              "deepen": 1.2,
+              "landByTick": 100,
+              "burstWithinBh": 12,
+              "dive": {
+                "speed": 4000,
+                "minTicks": 18
+              },
+              "blast": {
+                "damage": 44
+              }
             }
           }
         }
@@ -38271,6 +38725,1004 @@
         "rule": "type",
         "pointer": "/wear/feetShare"
       }
+    },
+    {
+      "id": "director-interrupts-buried-reach-retired",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/reachBh": 2000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/buried/reachBh"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-land-by-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/buried/landByTick"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-land-by-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/landByTick": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/landByTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-land-by-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/landByTick": 100.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/buried/landByTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-burst-within-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/buried/burstWithinBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-burst-within-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/burstWithinBh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/buried/burstWithinBh"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-dive-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/buried/dive"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-dive-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/buried/dive/minTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried/dive"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-dive-speed-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/dive/speed": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/buried/dive/speed"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-dive-ticks-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/dive/minTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/dive/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-dive-ticks-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/dive/minTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-dive-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/dive/spin": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/buried/dive/spin"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-blast-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/buried/blast"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-blast-damage-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/blast": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried/blast"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-blast-damage-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/blast/damage": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/blast/damage"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-blast-damage-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/blast/damage": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-guard-after-land-by",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/guardFromTick": 80,
+            "/buried/landByTick": 50
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:buried-order",
+        "pointer": "/buried/guardFromTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-burst-after-land-by",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/burstFromTick": 55,
+            "/buried/landByTick": 50
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:buried-order",
+        "pointer": "/buried/burstFromTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-at-land-by-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/guardFromTick": 50,
+            "/buried/burstFromTick": 50,
+            "/buried/landByTick": 50
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-knock-full-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/heavy/knockFull"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/heavy"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-knock-full-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/heavy/knockFull": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/heavy/knockFull"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-knock-full-off-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/heavy/knockFull": false
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-barrage-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/barrage"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-barrage-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/combo": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/barrage/combo"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-ender-after-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/barrage/enderAfter"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/barrage"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-window-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/barrage/window"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/barrage"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-measured-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/barrage/measuredTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/barrage"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-immune-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/barrage/immune"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/barrage"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-ender-dist-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/barrage/enderDist"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/barrage"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-ender-after-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/enderAfter": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/barrage/enderAfter"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-ender-after-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/enderAfter": 4.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/barrage/enderAfter"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-window-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/window": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/barrage/window"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-measured-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/measuredTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/barrage/measuredTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-immune-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/immune": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/barrage/immune"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-immune-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/immune": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-barrage-dist-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/enderDist": {
+              "measured": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/barrage/enderDist"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-dist-range",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/enderDist/plain": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/blast/barrage/enderDist/plain"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-dist-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/enderDist/measured": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/barrage/enderDist/measured"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-barrage-dist-edges-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/barrage/enderDist": {
+              "measured": 1,
+              "plain": 0
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-setup-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/setup"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-launch-setup-note-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-setup-unknown-key",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/gain": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/setup/gain"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/setup/weight"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/setup"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-default-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/setup/weight/default"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/setup/weight"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-blur-plain-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/setup/weight/blurPlain"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/setup/weight"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-barrage-plain-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/setup/weight/barragePlain"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/setup/weight"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-range",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/weight/default": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/setup/weight/default"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/weight/blurPlain": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/setup/weight/blurPlain"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/weight/barragePlain": "half"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/setup/weight/barragePlain"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-kind-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/weight/beam": 0.5,
+            "/setup/weight/guard_break": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-setup-weight-kind-shape",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/weight/Beam Clash": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/setup/weight/Beam Clash"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-kind-unknown-warns",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/weight/knockdown": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:launch-setup",
+        "pointer": "/setup/weight/knockdown"
+      }
+    },
+    {
+      "id": "director-launch-setup-weight-note-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/setup/weight/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-buried-burst-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/buriedBurst"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-barrage-guard-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/barrageGuard"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-buried-burst-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/buriedBurst": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/medium/buriedBurst"
+      }
+    },
+    {
+      "id": "director-ai-buried-burst-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/buriedBurst": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/easy/buriedBurst"
+      }
+    },
+    {
+      "id": "director-ai-barrage-guard-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/barrageGuard": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/hard/barrageGuard"
+      }
+    },
+    {
+      "id": "director-ai-barrage-guard-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/barrageGuard": "often"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/easy/barrageGuard"
+      }
+    },
+    {
+      "id": "director-ai-barrage-guard-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/barrageGuard": 0.05
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/barrageGuard"
+      }
+    },
+    {
+      "id": "director-ai-barrage-guard-medium-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/barrageGuard": 0.9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/medium/barrageGuard"
+      }
+    },
+    {
+      "id": "director-ai-barrage-guard-equal-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/barrageGuard": 0.5
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-buried-burst-order-free-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/buriedBurst": 0.1
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

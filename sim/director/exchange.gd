@@ -506,6 +506,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	DirBlast.tick(S)   # blasts winding up leave; the AI weighs a perfect block against a shot about to arrive
 	DirBury.tick(S)   # a burial starts and ends
 	DirLaunch.tick(S)   # an upright slide that ends early against an obstacle: the bump
+	_setupLapse(S)   # the part of a set-up lapses with the brink
 	_queues(S)   # step 2: upgrades, expiry, and the next queued request once the director can take it
 	var ex = S.dirS.ex
 	if ex == null:
@@ -567,7 +568,7 @@ const CONTEST_TILT: float = 0.10
 
 
 ## W won a decisive exchange against L (why: launch, clash, guard_break, beam, beam_clash).
-static func decisive(S: SimState, ex, W, L, why: String) -> void:
+static func decisive(S: SimState, ex, W, L, why: String, setup: String = "") -> void:
 	if S.game.ko != null or ex == null:
 		return
 	SimFx.decisive(S, W, L, why)
@@ -576,20 +577,96 @@ static func decisive(S: SimState, ex, W, L, why: String) -> void:
 	# The brink chapter (spec-wounds.md §1b). A win by the fighter on the brink closes its opening (Spite, above, fired
 	# first; a Rally has already reset it). A win against it finishes it only once it is open, and in a later exchange
 	# than the set-up; before that, a win is a set-up, and the exchange that caused the brink is neither.
-	if W.brink and (W.brinkOpen or W.brinkSetups > 0):
-		if W.brinkOpen:
-			SimFx.brinkClose(S, W, "won")
-		W.brinkOpen = false
-		W.brinkSetups = 0
+	_winCloses(S, W)
 	if not L.brink or finisherPlanned(ex):
 		return
 	if S.game.timeCap or (L.brinkOpen and L.brinkEx != ex.n):
 		startFinisher(S, ex, W, L)
 	elif not L.brinkOpen and (ex.startBrink & (1 << S.fighters.find(L))) != 0 and L.brinkEx != ex.n:
-		L.brinkSetups += 1
-		L.brinkEx = ex.n
-		if L.brinkSetups >= DirData.brinkSetups():
-			_openBrink(S, W, L)
+		_setup(S, W, L, setup if setup != "" else why, ex.n)
+
+
+## A win by a fighter on the brink closes its opening and starts the set-up count against it over.
+static func _winCloses(S: SimState, W) -> void:
+	if W.brink and (W.brinkOpen or W.brinkSetups > 0 or DirInterrupt.gi(W, DirInterrupt.SETUP_FRAC) > 0):
+		if W.brinkOpen:
+			SimFx.brinkClose(S, W, "won")
+		W.brinkOpen = false
+		W.brinkSetups = 0
+		DirInterrupt.si(W, DirInterrupt.SETUP_FRAC, 0)
+
+
+## A set-up against L, on the brink, in exchange n (agency-pass.md section 14.4): worth launch.json setup.weight of its
+## kind (1, and a plain blur's ender half of one). Whole set-ups are the fighter's count; the part left over is the
+## director's state. Without the data every set-up is worth 1, as before.
+static func _setup(S: SimState, W, L, kind: String, n: int) -> void:
+	var wt: Dictionary = DirLaunch.data().get("setup", {}).get("weight", {})
+	var fr: int = DirInterrupt.gi(L, DirInterrupt.SETUP_FRAC) + int(round(float(wt.get(kind, wt.get("default", 1.0))) * 1000.0))
+	L.brinkSetups += fr / 1000
+	DirInterrupt.si(L, DirInterrupt.SETUP_FRAC, fr % 1000)
+	L.brinkEx = n
+	if fr % 1000 != 0:
+		SimEvents.feed(S, "PART OF A SET-UP", kind + " against " + L.name + ": " + str(L.brinkSetups * 1000 + fr % 1000) + " thousandths of " + str(DirData.brinkSetups()))
+	if L.brinkSetups >= DirData.brinkSetups():
+		_openBrink(S, W, L)
+
+
+## A shot knocked L back (DirBlast: a fully charged shot, why blast; a barrage's ender, why barrage): decisive, outside
+## any exchange. The brink chapter is decisive()'s: it closes the shooter's own opening; against a fighter who was on
+## the brink before it landed (brink0) it is a set-up, worth setup.weight of 'setup' (or of why); and against one who
+## is open (or past the time cap) it starts the shooter's finisher, as an exchange of its own.
+## n: a number no exchange has (the shot's id, negated).
+static func decisiveShot(S: SimState, W, L, n: int, brink0: bool, why: String = "blast", setup: String = "") -> void:
+	if S.game.ko != null:
+		return
+	SimFx.decisive(S, W, L, why)
+	SimWounds.onDecisive(S, null, W, L, why)
+	_winCloses(S, W)
+	if not L.brink or not brink0:
+		return
+	if S.game.timeCap or (L.brinkOpen and L.brinkEx != n):
+		_shotFinisher(S, W, L)
+	elif not L.brinkOpen and L.brinkEx != n:
+		_setup(S, W, L, setup if setup != "" else why, n)
+
+
+## The finisher after a decisive shot: there is no exchange to take over, so one starts here, the shooter its
+## attacker. He closes in as any finisher's winner does. It needs the shooter free; otherwise the rival stays open.
+static func _shotFinisher(S: SimState, W, L) -> void:
+	if S.dirS.ex != null or (W.state != "free" and W.state != "charging") or W.stunTicks > 0:
+		return
+	DirBands.endTaunt(S, W, false, "cut")
+	if DirBands.pending(W):
+		DirBands.drop(S, W, "his finisher starts")
+	var ex := newEx(W, L, "heavy")
+	W.exT = S.T
+	L.exT = S.T
+	ex.sA = W.stance
+	ex.sD = L.stance
+	W.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(W.x, L.x)), W.face)
+	L.face = -W.face
+	W.state = "locked"
+	if L.state == "free" or L.state == "charging":
+		L.state = "locked"   # carried back by the knock-back, as in an exchange
+	S.dirS.ex = ex
+	S.dirS.exN += 1; ex.n = S.dirS.exN
+	SimWounds.onExchangeStart(S, ex)
+	for s in range(S.fighters.size()):
+		if S.fighters[s].brink:
+			ex.startBrink |= 1 << s
+	DirInterrupt.onStart(S, ex, SimAct.SIG, W.act.mode, 0)   # no staleness: it is not a strike he chose
+	ex.tag = "SHOT FINISHER"
+	ex.loser = S.fighters.find(L)
+	SimEvents.feed(S, W.name + " FINISHES FROM RANGE", ex.tag)
+	SimFx.attack(S, W, L, "heavy", STN[int(L.stance)], ex.tag, false)
+	startFinisher(S, ex, W, L)
+
+
+## The part of a set-up lapses with the brink (SimWounds resets the whole count when a fighter enters or leaves it).
+static func _setupLapse(S: SimState) -> void:
+	for f in S.fighters:
+		if not f.brink and DirInterrupt.gi(f, DirInterrupt.SETUP_FRAC) != 0:
+			DirInterrupt.si(f, DirInterrupt.SETUP_FRAC, 0)
 
 
 # ---------------------------------------------------------------- the placeholder transform (ADR 0008, I2b)
@@ -854,6 +931,7 @@ static func _closeOnSurvival(S: SimState, L) -> void:
 		SimFx.brinkClose(S, L, "survived")
 	L.brinkOpen = false
 	L.brinkSetups = 0
+	DirInterrupt.si(L, DirInterrupt.SETUP_FRAC, 0)
 
 
 ## The final blow: a strike W to L, then the launch (fixed, or the planner's long-haul candidates), then the KO. The launch

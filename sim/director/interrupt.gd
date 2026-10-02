@@ -54,8 +54,17 @@ const SAFE_UNTIL: int = 37 # S.tick until which he is safe, just out of his crat
 const BURY_AI: int = 38    # the AI rival's choice for this burial's follow-up (DirBury.AI_*)
 const BUMP_AT: int = 39    # S.tick his upright slide ends early against an obstacle (DirLaunch); 0 when none
 const BUMP_REQ: int = 40   # ... the obstacle's kind (1 wall, 2 heap, 3 rim) | the slide's speed in whole units a second << 4
-const BURY_E: int = 41     # the energy of the impact that buried him, in thousandths (from the embed event)
-const N: int = 42
+const BURY_E: int = 41     # unused since World's deepen call (it was the energy of the impact that buried him)
+const SETUP_FRAC: int = 42 # the part of a set-up against him, in thousandths (a plain blur's ender is half of one)
+const BURY_N: int = 43     # live ticks since he was buried (DirBury)
+const BURY_SHOT: int = 44  # the id of the follow-up shot on its way to his crater; 0 when none
+const BURY_BURST: int = 45 # 1 once the buried AI has drawn its burst for this burial
+const BAR_1: int = 46      # his last three bolts that landed clean on the rival, newest first (DirBlast._barrage):
+const BAR_2: int = 47      # ... each the tick it landed << 12 | its ticks of flight; 0 when none
+const BAR_3: int = 48
+const BAR_IMMUNE: int = 49 # S.tick until which a barrage cannot knock him back again
+const BAR_GUARD: int = 50  # S.tick until which the AI holds guard against a barrage that is building on it
+const N: int = 51
 const END_NONE: int = -1   # LAST_END before any launch beat or launch: the exchange has sent nobody anywhere
 const END_LAUNCH: int = 0
 const END_KNOCK: int = 1
@@ -369,7 +378,7 @@ static func _aiBlocks(S: SimState, ex) -> void:
 static func dodgeCancel(S: SimState, ex, f) -> bool:
 	if ex == null:
 		return DirBands.cancel(S, f)   # his own approach: nothing had started, so it costs nothing
-	if ex.kind == "sig" or (f != ex.A and f != ex.D) or DirExchange.finisherPlanned(ex):
+	if ex.kind == "sig" or (f != ex.A and f != ex.D) or DirExchange.finisherPlanned(ex) or DirBury.diving(S, f):
 		return false
 	var c: Dictionary = data().dodgeCancel
 	# The attacker's cancel is free until his first wind-up starts (agency-pass.md section 1): he was flown in by the
@@ -421,7 +430,7 @@ static func _canBurst(S: SimState, f) -> bool:
 	var ex = S.dirS.ex
 	if f.ki < float(c.ki) or f.act.burstCool > 0 or f.state == "launched" or (f.state == "down" and not DirBury.canBurst(f)):   # buried, he bursts out once the follow-up's time is over
 		return false
-	return ex == null or (ex.kind != "sig" and not DirExchange.finisherPlanned(ex))
+	return ex == null or (ex.kind != "sig" and not DirExchange.finisherPlanned(ex) and not DirBury.diving(S, f))   # a burst cannot escape a dive on its way
 
 
 ## f bursts: a shove all round. A rival holding guard absorbs it and f staggers (the bait). Otherwise a rival in
@@ -494,7 +503,7 @@ static func _cost(S: SimState, f) -> float:
 
 
 static func _canReverse(S: SimState, ex, f) -> bool:
-	if ex == null or f != ex.D or not DirData.allows(ex, "reversal"):
+	if ex == null or f != ex.D or not DirData.allows(ex, "reversal") or DirBury.diving(S, f):
 		return false
 	var c: Dictionary = data().reversal
 	return S.tick - gi(f, BLOCKED) <= int(c.afterBlockTicks) and S.tick >= gi(f, REV_READY) and f.ki >= _cost(S, f)

@@ -11,7 +11,8 @@
     "craterSlam",
     "knockBack",
     "earned",
-    "blur"
+    "blur",
+    "setup"
   ],
   "properties": {
     "schema": {
@@ -332,6 +333,39 @@
         }
       },
       "description": "The blur (agency-pass.md section 13): a mashed light string always closes with a knock-back.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "setup": {
+      "type": "object",
+      "required": [
+        "weight"
+      ],
+      "properties": {
+        "weight": {
+          "type": "object",
+          "description": "What a decisive win is worth toward opening a fighter on the brink, by its kind (launch, clash, guard_break, interrupt, knockback, beam, beam_clash, blast, barrage: default); blurPlain for a plain blur's own ender, barragePlain for a barrage's ender when any of its bolts was spammed. A kind name not in that list is a warning (launch-setup).",
+          "required": [
+            "default",
+            "blurPlain",
+            "barragePlain"
+          ],
+          "propertyNames": {
+            "pattern": "^(_.*|[a-z][A-Za-z0-9_]*)$"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "description": "Set-ups against a fighter on the brink (agency-pass.md sections 14.4 and 16).",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

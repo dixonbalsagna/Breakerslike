@@ -74,8 +74,13 @@ static func aiInput(S: SimState, f) -> void:
 			DirInterrupt.si(f, DirInterrupt.AI_HOLD, 0)
 	# The rival is coming, or taunting (DirBands): the answer the AI chose, once its reaction time is up. It guards,
 	# dodges, or presses to meet him.
-	if f.state == "free" and DirBury.aiFollow(S, f, o):
-		i.heavy = true   # the free blow on a buried rival, at its level's rate
+	var bf: int = DirBury.aiFollow(S, f, o) if f.state == "free" else 0
+	if bf != 0:
+		i.heavy = true   # the free blow on a buried rival, at its level's rate: the dive, or the charged shot when the dive cannot land in time
+		if bf == DirBury.BLAST:
+			i.mode = 1
+	if S.tick < DirInterrupt.gi(f, DirInterrupt.BAR_GUARD):
+		a.st = 1.0   # a barrage is building on it: it guards until those bolts have left the window (DirBlast._barrage)
 	var ans: int = DirBands.aiAnswer(f, o) if f.state == "free" else DirBands.R_NONE
 	if ans == DirBands.R_GUARD:
 		a.st = 1.0

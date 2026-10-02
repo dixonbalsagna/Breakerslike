@@ -49,7 +49,9 @@
       ],
       "earnerUse": 0.25,
       "blastShare": 0.1,
-      "buriedFollowUp": 0.4
+      "buriedFollowUp": 0.4,
+      "buriedBurst": 0.2,
+      "barrageGuard": 0.2
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -77,7 +79,9 @@
       ],
       "earnerUse": 0.6,
       "blastShare": 0.2,
-      "buriedFollowUp": 0.8
+      "buriedFollowUp": 0.8,
+      "buriedBurst": 0.5,
+      "barrageGuard": 0.5
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -105,7 +109,9 @@
       ],
       "earnerUse": 1,
       "blastShare": 0.25,
-      "buriedFollowUp": 1
+      "buriedFollowUp": 1,
+      "buriedBurst": 0.8,
+      "barrageGuard": 0.8
     }
   }
 }

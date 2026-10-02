@@ -137,7 +137,9 @@
             "approachReact",
             "earnerUse",
             "blastShare",
-            "buriedFollowUp"
+            "buriedFollowUp",
+            "buriedBurst",
+            "barrageGuard"
           ],
           "properties": {
             "beamAnswer": {
@@ -257,6 +259,18 @@
             },
             "buriedFollowUp": {
               "description": "The chance the AI takes the free follow-up on a buried rival.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "buriedBurst": {
+              "description": "The chance the AI bursts out when it is buried.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "barrageGuard": {
+              "description": "The chance the AI guards against a barrage of bolts.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -288,7 +302,9 @@
             "approachReact",
             "earnerUse",
             "blastShare",
-            "buriedFollowUp"
+            "buriedFollowUp",
+            "buriedBurst",
+            "barrageGuard"
           ],
           "properties": {
             "beamAnswer": {
@@ -408,6 +424,18 @@
             },
             "buriedFollowUp": {
               "description": "The chance the AI takes the free follow-up on a buried rival.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "buriedBurst": {
+              "description": "The chance the AI bursts out when it is buried.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "barrageGuard": {
+              "description": "The chance the AI guards against a barrage of bolts.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -439,7 +467,9 @@
             "approachReact",
             "earnerUse",
             "blastShare",
-            "buriedFollowUp"
+            "buriedFollowUp",
+            "buriedBurst",
+            "barrageGuard"
           ],
           "properties": {
             "beamAnswer": {
@@ -559,6 +589,18 @@
             },
             "buriedFollowUp": {
               "description": "The chance the AI takes the free follow-up on a buried rival.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "buriedBurst": {
+              "description": "The chance the AI bursts out when it is buried.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "barrageGuard": {
+              "description": "The chance the AI guards against a barrage of bolts.",
               "type": "number",
               "minimum": 0,
               "maximum": 1

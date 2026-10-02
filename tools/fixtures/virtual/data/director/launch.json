@@ -68,5 +68,12 @@
     "enderAfter": 4,
     "enderDist": 0.6,
     "strikeMul": 0.8
+  },
+  "setup": {
+    "weight": {
+      "default": 1,
+      "blurPlain": 0.5,
+      "barragePlain": 0.5
+    }
   }
 }

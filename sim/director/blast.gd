@@ -52,6 +52,10 @@ static func press(S: SimState, A, weight: int) -> bool:
 		return true   # he is on his way in: the press is spent
 	if (A.state != "free" and A.state != "charging") or A.stunTicks > 0:
 		return true   # he cannot fire now: an energy press never becomes a rush
+	if DirBury.blastFollow(S, A, SimRoster.opp(S, A)):
+		DirInterrupt.si(A, DirInterrupt.BLAST_LEFT, 0)   # a blast of his own winding up gives way
+		DirBury.fireBlast(S, A, SimRoster.opp(S, A))   # the other free blow on a buried rival: a charged shot, at once
+		return true
 	var c: Dictionary = data()
 	var left: int = DirInterrupt.gi(A, DirInterrupt.BLAST_LEFT)
 	var req: int = DirInterrupt.gi(A, DirInterrupt.BLAST_REQ)
@@ -249,6 +253,11 @@ static func hit(S: SimState, sh, f) -> bool:
 	var by = S.fighters[sh.owner]
 	var slot: int = S.fighters.find(f)
 	# Just out of his crater he is safe: the shot passes. Buried and helpless, he answers nothing: it is the follow-up.
+	if DirBury.followShot(f, sh):
+		DirBury.shotLanded(f)   # the follow-up he was held for: it lands clean
+		SimDamage.hit(S, null, by, f, sh.dmg, {"kind": "blast", "ignoreStance": true, "stop": float(c.stopTicks) / DirData.TICKS_PER_SEC, "shake": 7.0})
+		SimFx.shotHit(S, sh, f, "buried")
+		return true
 	if DirBury.safe(S, f):
 		SimFx.shotHit(S, sh, f, "safe")
 		return false
@@ -282,6 +291,67 @@ static func hit(S: SimState, sh, f) -> bool:
 			DirBands.drop(S, f, "a " + sh.kind + " stopped his charge")
 			SimFx.cue(S, f, "charge_stopped", "", "")
 			outcome = "stop"
+	var brink0: bool = f.brink
 	SimDamage.hit(S, null, by, f, dmg, {"kind": "blast", "stop": float(c.stopTicks) / DirData.TICKS_PER_SEC, "shake": 3.0 if sh.power < 2.0 else 7.0})
 	SimFx.shotHit(S, sh, f, outcome)
+	_knock(S, sh, by, f, outcome, brink0)
+	_barrage(S, sh, by, f, outcome, brink0)
 	return true
+
+
+## A barrage closes (agency-pass.md section 16), as a blur does: when enderAfter of a fighter's bolts land clean on his
+## rival inside 'window' ticks, the last is a knock-back he did not press: decisive, never a launch. Clean: not guarded,
+## not shrugged off, not a shot that was deflected. If each of them was fired measuredTicks or more after the one
+## before, it goes the tier's full distance and is a full set-up; otherwise enderDist.plain of it and half a set-up.
+## The count starts again, and the rival cannot be knocked back by another barrage for 'immune' ticks. A bolt that
+## would close while he is in an exchange, down, flying or immune still counts, and the next clean one closes.
+static func _barrage(S: SimState, sh, by, f, outcome: String, brink0: bool) -> void:
+	var c: Dictionary = data().get("barrage", {})
+	if c.is_empty() or sh.kind != String(data().light.kind) or sh.deflected != 0 or (outcome != "hit" and outcome != "stop"):
+		return
+	var flight: int = clampi(sh.total - sh.left, 0, 4095)
+	var fires: Array = [S.tick - flight]   # the fire ticks of the clean bolts inside the window, newest first
+	for k in [DirInterrupt.BAR_1, DirInterrupt.BAR_2, DirInterrupt.BAR_3]:
+		var v: int = DirInterrupt.gi(by, k)
+		if v != 0 and S.tick - (v >> 12) < int(c.window):
+			fires.append((v >> 12) - (v & 4095))
+	var up: bool = S.game.ko == null and S.dirS.ex == null and (f.state == "free" or f.state == "charging")
+	if fires.size() < int(c.enderAfter) or not up or S.tick < DirInterrupt.gi(f, DirInterrupt.BAR_IMMUNE):
+		DirInterrupt.si(by, DirInterrupt.BAR_3, DirInterrupt.gi(by, DirInterrupt.BAR_2))
+		DirInterrupt.si(by, DirInterrupt.BAR_2, DirInterrupt.gi(by, DirInterrupt.BAR_1))
+		DirInterrupt.si(by, DirInterrupt.BAR_1, (S.tick << 12) | flight)
+		# The AI's answer (section 16: a held guard stops the count): as the barrage reaches half way, one draw at its
+		# level's rate, and it holds guard until those bolts have left the window.
+		if f.ai != null and fires.size() == int(c.enderAfter) / 2 and S.rng.next() < float(DirAI.lv().get("barrageGuard", 0.0)):
+			DirInterrupt.si(f, DirInterrupt.BAR_GUARD, S.tick + int(c.window))
+		return
+	var measured: bool = true
+	for k in range(int(c.enderAfter) - 1):
+		if int(fires[k]) - int(fires[k + 1]) < int(c.measuredTicks):
+			measured = false
+	for k in [DirInterrupt.BAR_1, DirInterrupt.BAR_2, DirInterrupt.BAR_3]:
+		DirInterrupt.si(by, k, 0)
+	DirInterrupt.si(f, DirInterrupt.BAR_IMMUNE, S.tick + int(c.immune))
+	if DirBands.pending(f):
+		DirBands.drop(S, f, "a barrage knocked him back")
+	DirLaunch.knock(S, by, f, float(c.enderDist.measured if measured else c.enderDist.plain))
+	SimFx.cue(S, by, "barrage_ender", "", "")
+	SimEvents.feed(S, "BARRAGE ENDER", by.name + "'s " + str(int(c.enderAfter)) + " clean bolts inside " + str(int(c.window)) + " ticks: a knock-back, " + ("measured" if measured else "spammed (the weak one)"))
+	DirExchange.decisiveShot(S, by, f, -sh.id, brink0, "barrage", "barrage" if measured else "barragePlain")
+
+
+## A fully charged shot that lands clean knocks him back, and that is decisive (agency-pass.md section 14.6). Clean:
+## not guarded and not shrugged off. Outside an exchange only, on a fighter who is up.
+static func _knock(S: SimState, sh, by, f, outcome: String, brink0: bool) -> void:
+	var c: Dictionary = data()
+	if not c.heavy.get("knockFull", false) or S.game.ko != null or S.dirS.ex != null:
+		return
+	if sh.kind != String(c.heavy.kind) or sh.dmg < float(SimShots.kinds[sh.kind].dmg) - 0.001:
+		return
+	if (outcome != "hit" and outcome != "stop") or (f.state != "free" and f.state != "charging"):
+		return
+	if DirBands.pending(f):
+		DirBands.drop(S, f, "a full charged shot knocked him back")
+	DirLaunch.knock(S, by, f, 1.0)
+	SimEvents.feed(S, "CHARGED SHOT: KNOCK BACK", "a full charge landed clean on " + f.name + ": decisive")
+	DirExchange.decisiveShot(S, by, f, -sh.id, brink0)

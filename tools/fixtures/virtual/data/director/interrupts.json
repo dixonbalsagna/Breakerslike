@@ -135,12 +135,23 @@
       "windupTicks": 8,
       "chargeTicks": 30,
       "tapShare": 0.6,
-      "holdMaxTicks": 45
+      "holdMaxTicks": 45,
+      "knockFull": true
     },
     "stopTicks": 1,
     "charge": {
       "shrugPower": 1,
       "shrugMul": 0.5
+    },
+    "barrage": {
+      "enderAfter": 4,
+      "window": 90,
+      "measuredTicks": 10,
+      "enderDist": {
+        "measured": 1,
+        "plain": 0.6
+      },
+      "immune": 90
     }
   },
   "signature": {
@@ -151,11 +162,19 @@
   "buried": {
     "enabled": true,
     "followTicks": 40,
+    "landByTick": 100,
     "guardFromTick": 40,
     "burstFromTick": 40,
+    "burstWithinBh": 12,
     "safeTicks": 10,
-    "reachBh": 2000,
     "damage": 66,
-    "deepen": 1.2
+    "deepen": 1.2,
+    "dive": {
+      "speed": 4000,
+      "minTicks": 18
+    },
+    "blast": {
+      "damage": 44
+    }
   }
 }
