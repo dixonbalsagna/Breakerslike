@@ -12,6 +12,7 @@ var _buf := PackedFloat32Array()
 var count: int = 0
 var ribbons: int = 0      # for the tests: ribbon segments written last frame
 var mark_count: int = 0   # ... and marks
+var shots_view := VfxShotsView.new()   # the energy blasts (shots_view.gd): a child, updated with this view, so it needs nothing of the layer
 var cam_dist: float = 3000.0   # the pane camera's distance to the fighter plane (set by the layer), for the perspective scale at depth
 
 
@@ -33,11 +34,16 @@ func _ready() -> void:
 	material_override = m
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_buf.resize(CAP * STRIDE)
+	shots_view.name = "Shots"
+	add_child(shots_view)
 
 
 ## a: the frame's interpolation between the last two ticks. cam_x: this pane's wrapped camera x. zoom: this pane's
 ## pixels per unit on the fighter plane. half_w: half the visible width in world units.
 func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, zoom: float, half_w: float) -> void:
+	shots_view.visible = hub.shots_enabled
+	if hub.shots_enabled:
+		shots_view.update(hub, host, a, cam_x, zoom, half_w)
 	var n: int = 0
 	ribbons = 0
 	mark_count = 0

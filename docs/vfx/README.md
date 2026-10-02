@@ -198,3 +198,7 @@ Legal cleared the rocks under five conditions (RL-057): the flag is **on by defa
 ### Update (2026-10-02, last): two streaks an exchange
 
 Speed lines: a launch and a later heavy in the same exchange each keep their streak (the heavy that launched does not make a second): 10.9 a minute over 8 seeds, from 7.8 (docs/vfx/react-plan.md).
+
+### Energy blasts drawn (2026-10-03)
+
+Encounter's blasts fire real shots and nothing drew them; `docs/vfx/shots-plan.md`: every shot in `S.shots` each frame in its owner's colour (a bolt small with a short tail, a charged shot bigger by its power and charge with a halo, a seeking shot on a slight arc), the charge on the hand (the Anti-hero's plates, the others' thin rings), and the hits by outcome (hit, guard, deflect, shrug, stop), the trade's burst and a miss's dust. Flag `shots_enabled`, on; one draw call; a child of the trail view, so `vfx_layer.gd` is untouched.

@@ -189,6 +189,7 @@ func _run() -> void:
 	_rocks()
 	_blast()
 	_pressure()
+	_shots()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -1812,6 +1813,198 @@ func _pressure() -> void:
 			same = false
 			print("    differs: pressure.%s" % k)
 	_check(same, "data/vfx/power.json (pressure) and the built-in defaults agree")
+	SimCore.dispose(S)
+
+
+class FakeHost:
+	var S: SimState
+	func fighter_x(i: int, _a: float) -> float:
+		return S.fighters[i].x
+	func fighter_pose(i: int, _a: float) -> Vector3:
+		return Vector3(S.fighters[i].x, S.fighters[i].y, 0.0)
+	func fighter_z(_i: int, _a: float) -> float:
+		return 0.0
+
+
+## Energy blasts (Encounter's slice 5): every shot in S.shots drawn, the charge on the hand, the hits by outcome.
+func _shots() -> void:
+	print("energy blasts")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f0 = S.fighters[0]
+	var f1 = S.fighters[1]
+	f0.x = plains
+	f0.y = g
+	f1.x = SimWrap.wrap(plains + 2400.0)
+	f1.y = g
+	_check(VfxLook.SHOTS_DEFAULT and VfxHub.new().shots_enabled, "on by default")
+	var mk := func(kind: String, owner: int, x: float, vx: float, power: float, dmg: float) -> SimState.Shot:
+		var sh := SimState.Shot.new()
+		sh.kind = kind
+		sh.owner = owner
+		sh.x = x
+		sh.y = g + 60.0
+		sh.vx = vx
+		sh.vy = 0.0
+		sh.power = power
+		sh.dmg = dmg
+		sh.fresh = false
+		return sh
+	var host := FakeHost.new()
+	host.S = S
+	var view := VfxShotsView.new()
+	root.add_child(view)
+	var hub := VfxHub.new()
+	hub.reset(S, 6)
+	# Shots in S.shots are drawn, none when they are not.
+	S.shots = [mk.call("bolt", 0, plains + 500.0, 3600.0, 1.0, 8.67), mk.call("charged", 1, plains + 1500.0, -5400.0, 3.0, 66.0)]
+	_tick(S, hub, [])
+	view.update(hub, host, 1.0, plains + 1200.0, 0.7, 1200.0)
+	_check(view.shots_drawn == 2 and view.count >= 8, "a shot in S.shots is drawn: 2 shots, %d quads" % view.count)
+	S.shots = []
+	_tick(S, hub, [])
+	view.update(hub, host, 1.0, plains + 1200.0, 0.7, 1200.0)
+	_check(view.shots_drawn == 0 and view.count == 0, "none drawn once S.shots is empty (after shot_end)")
+	# The cap: 32 live shots fit the one draw.
+	S.shots = []
+	for k in range(32):
+		S.shots.append(mk.call("bolt" if k % 2 == 0 else "charged", k % 2, plains + 100.0 * float(k), 3600.0, 1.0 if k % 2 == 0 else 3.0, 8.0))
+	view.update(hub, host, 1.0, plains + 1600.0, 0.7, 2400.0)
+	_check(view.shots_drawn == 32 and view.count <= VfxShotsView.CAP, "32 live shots in one draw (%d quads of %d)" % [view.count, VfxShotsView.CAP])
+	S.shots = []
+	# Where it is drawn: interpolated by the tick's remainder, held in a hit-stop, and at its start when fired this tick.
+	var sp: SimState.Shot = mk.call("bolt", 0, 1000.0, 3600.0, 1.0, 8.0)
+	var b0: Vector2 = VfxShotsView.shot_back(sp, 0.0, false)
+	var b5: Vector2 = VfxShotsView.shot_back(sp, 0.5, false)
+	var b1: Vector2 = VfxShotsView.shot_back(sp, 1.0, false)
+	_check(absf(b0.x - 60.0) < 0.01 and absf(b5.x - 30.0) < 0.01 and b1.x == 0.0, "interpolated between ticks: 60, 30 and 0 units back at 0, half and 1 (%.0f, %.0f, %.0f)" % [b0.x, b5.x, b1.x])
+	sp.fresh = true
+	_check(VfxShotsView.shot_back(sp, 0.0, false) == Vector2.ZERO, "a shot fired this tick sits at its start")
+	sp.fresh = false
+	_check(VfxShotsView.shot_back(sp, 0.0, true) == Vector2.ZERO, "held where it is through a hit-stop (the shots do not move then)")
+	# A seeking shot's arc is zero at both ends.
+	_check(VfxShotsView.arc_y(0.0, 30, 75.0) == 0.0 and absf(VfxShotsView.arc_y(1.0, 30, 75.0)) < 1e-6 and VfxShotsView.arc_y(0.5, 30, 75.0) > 5.0, "a seeking shot's slight arc starts and ends on its line (%.1f at the middle)" % VfxShotsView.arc_y(0.5, 30, 75.0))
+	# Size: a bolt is small, a charged shot is bigger by its power and by its charge.
+	var look_b: Dictionary = VfxShots.look_of(mk.call("bolt", 0, 0.0, 0.0, 1.0, 8.67))
+	var look_t: Dictionary = VfxShots.look_of(mk.call("charged", 0, 0.0, 0.0, 3.0, 44.0))
+	var look_f: Dictionary = VfxShots.look_of(mk.call("charged", 0, 0.0, 0.0, 3.0, 66.0))
+	_check(look_b["rad"] < look_t["rad"] and look_t["rad"] < look_f["rad"] and look_b["tail"] < look_f["tail"] and not look_b["halo"] and look_f["halo"], "a bolt is small with a short tail; a charged shot is bigger by its power and its charge, with a halo (%.0f, %.0f, %.0f units)" % [look_b["rad"], look_t["rad"], look_f["rad"]])
+	# Colour: the owner's lane colour; a deflect hands the shot to the other, so it changes; never white, gold or red.
+	var c0: Color = VfxShots.lane_of(S, 0)
+	var c1: Color = VfxShots.lane_of(S, 1)
+	_check(c0 != c1 and c0.to_html(false) == VfxAura.lane_color(String(f0.aura)).to_html(false), "each shot is in its owner's lane colour (%s and %s)" % [c0.to_html(false), c1.to_html(false)])
+	var ok_col: bool = true
+	for cc in [c0, c1]:
+		var core: Color = cc.lightened(0.18)
+		if core.s < 0.12 or (core.r > 0.9 and core.g > 0.8 and core.b < 0.6) or (core.r > 0.8 and core.g < 0.4 and core.b < 0.4):
+			ok_col = false
+	_check(ok_col, "the cores stay coloured: no white, gold or red (Legal)")
+	# Events by outcome.
+	var hv := VfxHub.new()
+	hv.reset(S, 6)
+	var shot_hit := func(outcome: String): return VfxMock.ev("shot_hit", {"actor": 0, "victim": 1, "kind": "bolt", "id": 1, "x": f1.x, "y": g + 60.0, "z": 0.0, "amount": 9.0, "outcome": outcome, "link": 0})
+	_tick(S, hv, [shot_hit.call("hit")])
+	var kinds: Array = hv.shots.fx.map(func(e): return e.kind)
+	_check(kinds.has("flash") and kinds.has("ring"), "a hit: a flash and a ring (%s)" % str(kinds))
+	hv.shots.fx.clear()
+	_tick(S, hv, [shot_hit.call("guard")])
+	kinds = hv.shots.fx.map(func(e): return e.kind)
+	var sp_fx = null
+	for e in hv.shots.fx:
+		if e.kind == "splash":
+			sp_fx = e
+	_check(kinds.has("splash") and sp_fx != null and sp_fx.dx < 0.0, "a guard: a splash fanning back toward the shooter (dx %.0f)" % (sp_fx.dx if sp_fx != null else 0.0))
+	hv.shots.fx.clear()
+	_tick(S, hv, [shot_hit.call("deflect")])
+	var dring = null
+	for e in hv.shots.fx:
+		if e.kind == "ring":
+			dring = e
+	_check(dring != null and dring.col.to_html(false) == c1.to_html(false), "a deflect: a ring in the deflector's colour (%s)" % (dring.col.to_html(false) if dring != null else "none"))
+	hv.shots.fx.clear()
+	_tick(S, hv, [shot_hit.call("dodge")])
+	_check(hv.shots.fx.is_empty(), "a dodge: nothing at him (the shot flies on)")
+	for oc in ["shrug", "stop"]:
+		hv.shots.fx.clear()
+		_tick(S, hv, [shot_hit.call(oc)])
+		_check(not hv.shots.fx.is_empty(), "'%s' has its small flash" % oc)
+	hv.shots.fx.clear()
+	_tick(S, hv, [VfxMock.ev("shot_clash", {"id": 1, "b": 2, "x": plains + 1200.0, "y": g + 60.0, "z": 0.0, "amount": 1.0})])
+	var burst = null
+	for e in hv.shots.fx:
+		if e.kind == "burst":
+			burst = e
+	_check(burst != null and burst.col.to_html(false) != burst.col2.to_html(false), "a trade: a burst with a ring in each fighter's colour")
+	# A drawn trade and a drawn hit, then both gone after their life.
+	view.update(hv, host, 1.0, plains + 1200.0, 0.7, 1200.0)
+	_check(view.count >= 10, "a trade's burst is drawn (%d quads)" % view.count)
+	for k in range(30):
+		_tick(S, hv, [])
+	_check(hv.shots.fx.is_empty(), "the effects are gone after their life")
+	# A miss on the ground: dust and chunks into the pool; on the water: no error.
+	var hm := VfxHub.new()
+	hm.reset(S, 6)
+	_tick(S, hm, [VfxMock.ev("shot_end", {"id": 1, "kind": "bolt", "x": plains + 800.0, "y": g, "z": 0.0, "cause": "ground", "actor": 0})])
+	_check(hm.debris.spawned > 0, "a shot that ends on the ground throws dust and chunks (%d bits)" % hm.debris.spawned)
+	_tick(S, hm, [VfxMock.ev("shot_end", {"id": 2, "kind": "charged", "x": plains + 800.0, "y": 0.0, "z": 0.0, "cause": "water", "actor": 0})])
+	_check(true, "a shot that ends on the water is handled")
+	# The charge on the hand: starts on blast_charge, builds, pulses at blast_full, ends when the shot leaves or is cancelled.
+	var hc := VfxHub.new()
+	hc.reset(S, 6)
+	f0.face = 1.0
+	_tick(S, hc, [VfxMock.ev("cue", {"actor": 0, "kind": "blast_charge", "text": "", "source": ""})])
+	_check(hc.shots.charges[0].on and not hc.shots.charges[1].on, "blast_charge starts the charge on his hand")
+	for k in range(8):
+		_tick(S, hc, [])
+	var early: float = hc.shots.charges[0].lvl
+	for k in range(25):
+		_tick(S, hc, [])
+	var late: float = hc.shots.charges[0].lvl
+	_check(early > 0.05 and late > early and late > 0.9, "it builds over the 30 ticks (%.2f at 8, %.2f at 33)" % [early, late])
+	_tick(S, hc, [VfxMock.ev("cue", {"actor": 0, "kind": "blast_full", "text": "", "source": ""})])
+	_check(hc.shots.charges[0].full, "blast_full marks it complete")
+	S.shots = []
+	view.update(hc, host, 1.0, plains + 1200.0, 0.7, 1200.0)
+	_check(view.charges_drawn == 1 and view.count >= 4, "the charge is drawn on the hand (%d quads)" % view.count)
+	_tick(S, hc, [VfxMock.ev("shot_fire", {"actor": 0, "kind": "charged", "id": 5, "x": f0.x, "y": g + 60.0, "z": 0.0, "target": 1, "spd": 5400.0, "amount": 3.0, "link": 0, "ux": 1.0, "uy": 0.0})])
+	_check(not hc.shots.charges[0].on, "the shot leaving ends the charge")
+	for k in range(12):
+		_tick(S, hc, [])
+	_check(hc.shots.charges[0].lvl < 0.05, "and it fades off the hand")
+	_tick(S, hc, [VfxMock.ev("cue", {"actor": 1, "kind": "blast_charge", "text": "", "source": ""})])
+	_tick(S, hc, [VfxMock.ev("cue", {"actor": 1, "kind": "blast_cancel", "text": "", "source": ""})])
+	_check(not hc.shots.charges[1].on, "blast_cancel ends it")
+	_tick(S, hc, [VfxMock.ev("cue", {"actor": 1, "kind": "blast_charge", "text": "", "source": ""})])
+	_tick(S, hc, [VfxMock.ev("cue", {"actor": 1, "kind": "charge_stopped", "text": "", "source": ""})])
+	_check(not hc.shots.charges[1].on, "charge_stopped ends it")
+	# Each fighter's own look: plates stacking on the Anti-hero's forearm, thin rings on the others'. Never a sphere in a palm.
+	var hl := VfxHub.new()
+	hl.reset(S, 6)
+	_tick(S, hl, [VfxMock.ev("cue", {"actor": 0, "kind": "blast_charge", "text": "", "source": ""}), VfxMock.ev("cue", {"actor": 1, "kind": "blast_charge", "text": "", "source": ""})])
+	var looks: Array = [hl.shots.charges[0].look, hl.shots.charges[1].look]
+	_check(looks[1] == "plates" and looks[0] == "rings" and f1.role == "villain", "the Anti-hero's charge is plates along the forearm, the hero's thin rings (%s, %s)" % [looks[1], looks[0]])
+	for k in range(40):
+		_tick(S, hl, [])
+	view.update(hl, host, 1.0, plains + 1200.0, 0.7, 1200.0)
+	var disc_in_palm: bool = false
+	for q in range(view.count):
+		if is_equal_approx(view._buf[q * VfxShotsView.STRIDE + 18], VfxShotsView.SHAPE_DISC):
+			disc_in_palm = true
+	_check(view.charges_drawn == 2 and not disc_in_palm, "both charges drawn, and no disc (a sphere) among the quads")
+	# Off: nothing.
+	var hoff := VfxHub.new()
+	hoff.shots_enabled = false
+	hoff.reset(S, 6)
+	_tick(S, hoff, [shot_hit.call("hit"), VfxMock.ev("cue", {"actor": 0, "kind": "blast_charge", "text": "", "source": ""})])
+	_check(hoff.shots.fx.is_empty() and not hoff.shots.charges[0].on, "shots_enabled off: nothing")
+	var saved: Dictionary = VfxShots._data
+	VfxShots._data = {}
+	var fallback: bool = VfxShots.p("shots", "charge_ticks") == 30.0
+	VfxShots._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	view.queue_free()
 	SimCore.dispose(S)
 
 

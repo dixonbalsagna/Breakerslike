@@ -68,3 +68,7 @@ One MultiMesh draw (shard shader), at most 12 quads a fighter (24 in all), no de
 ## Blast amplification and pressure rings (2026-10-02)
 
 Blast: spawns into the debris pool only (no draw call), at most 18 chunks, 20 dust puffs, 20 pebbles, 12 settling puffs and 2 rings a crater, at most one a fighter every 0.25 s, so a busy crater is the pool's per-tick budget at worst; thinned with quality (0.7, 0.35, halved in reduced motion, which also drops the rings). Degrade order: pebbles and settling dust first, then the dome, then the chunks. Pressure rings: 8 alive at most, one SHAPE_RING quad each in the transformation's existing draw call once drawn (CAP 220), no pool. Hash check, 8 AI matches: 72 craters amplified, 495 rings (about 27 a minute for both fighters together). Cost not separately measured; not measured: the web build and an old laptop.
+
+## Energy blasts (2026-10-03)
+
+One MultiMesh, one draw call (the transformation's shader), 224 quads reserved: at most 32 shots (4 quads a bolt, 5 a charged shot), 14 for the hit and trade effects, 16 for the two charges. A miss on the ground spawns into the debris pool (about 8 bits). Counts: none scale with quality except the miss's dust. Not measured: the web build and an old laptop.

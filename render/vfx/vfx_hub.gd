@@ -63,6 +63,8 @@ var blast_powerup_enabled: bool = VfxLook.BLAST_POWERUP_DEFAULT   # ... also for
 var blast := VfxBlast.new()
 var pressure_enabled: bool = VfxLook.PRESSURE_DEFAULT   # a ring of shoved air at a dash, a hard stop or a hard turn, by tier (pressure.gd)
 var pressure := VfxPressure.new()
+var shots_enabled: bool = VfxLook.SHOTS_DEFAULT   # energy blasts: every shot in S.shots drawn, the charge on the hand, the hits by outcome (shots.gd, shots_view.gd)
+var shots := VfxShots.new()
 var earth_enabled: bool = VfxLook.EARTH_DEFAULT   # material chunks for `debris`, cel flames for `fire`, and the ground-contact events (docs/vfx/earth-plan.md)
 var earth := VfxEarth.new()
 var debris := VfxDebris.new()
@@ -111,6 +113,7 @@ func reset(S: SimState, p_seed: int) -> void:
 	rocks.reset(seed)
 	blast.reset()
 	pressure.reset()
+	shots.reset()
 	earth.debris = debris
 	earth.reset()
 	water.debris = debris
@@ -227,7 +230,12 @@ func _consume(S: SimState, events: Array) -> void:
 				earth.entrance_now = true
 				earth.on_entrance_land(S, e)
 	_sync_cracks(S)
-	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled or rocks_enabled or blast_enabled:
+	if shots_enabled:
+		shots.step(S, frozen)
+		debris.quality = quality
+		debris.reduced = reduced_motion
+		shots.on_events(S, events, debris, water if water_enabled else null, quality, reduced_motion)
+	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled or rocks_enabled or blast_enabled or shots_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
 		water.begin_tick()

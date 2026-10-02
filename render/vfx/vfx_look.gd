@@ -71,6 +71,7 @@ const ROCKS_DEFAULT: bool = true         # levitating rocks round a tier 3 or 4 
 const BLAST_DEFAULT: bool = true         # a crater is bigger to look at by the causer's tier (docs/vfx/power-language.md idea 2)
 const BLAST_POWERUP_DEFAULT: bool = true    # ... and for ground-level power-up craters at the transformation's break: Legal cleared it under eight conditions (RL-059)
 const PRESSURE_DEFAULT: bool = true      # rings of shoved air at a dash, a hard stop or a hard turn, by tier (idea 4)
+const SHOTS_DEFAULT: bool = true         # energy blasts: the shots in flight, the charge on the hand, the hits by outcome (Encounter's slice 5)
 const EARTH_DEFAULT: bool = true         # tumbling material chunks, cel flames and the ground-contact effects
 ## Cracks are a pure function of the sim's records (S.craters, S.slides) plus the match seed (render/vfx/crack_gen.gd),
 ## so a seek, a snapshot or a late join draws the same ones. Lengths and widths are in crater radii r or trench half
