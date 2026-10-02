@@ -46,6 +46,14 @@
   "slope": {
     "speedCap": 1.25
   },
+  "furrow": {
+    "depthMul": 1.5,
+    "tumble": 0.5,
+    "dMaxMul": 1.0,
+    "tierMul": 0.15,
+    "bermMul": 2.0,
+    "pathMul": 1.0
+  },
   "spin": {
     "capTurns": [1.5, 3.0, 3.0, 3.0],
     "halfLife": 0.5,

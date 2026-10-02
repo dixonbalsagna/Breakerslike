@@ -60,6 +60,7 @@ static var K_AREA_SLAM: float = 1.0      # the first contact pays this share of 
 static var K_AREA_TOUCH: float = 0.5     # ... and this share when it is anything else (the old slide's touch-down)
 static var K_AIRDRAG: float = 0.55      # the horizontal drag base per second after a journey's first contact (0.55 is the launch's own flight)
 static var K_GAINCAP: float = 0.0        # a journey never goes faster than this times its first-contact speed, on the ground or after a contact (0 off)
+static var K_FUR: Array = [1.0, 0.0, 1.0, 0.0, 1.0, 1.0]
 static var K_GMUL: float = 1.0           # gravity after a journey's first contact, times 1000
 static var K_RUBBLE_MIN: float = 8.0
 static var K_PAVE_DUG: float = -3.0
@@ -185,6 +186,8 @@ static func _cache() -> void:
 	K_AREA_SLAM = float(D.get("area", {}).get("slam", 1.0))
 	K_AREA_TOUCH = float(D.get("area", {}).get("touch", 0.5))
 	K_GMUL = float(D.bounce.get("gravityMul", 1.0))
+	var fu: Dictionary = D.get("furrow", {})
+	K_FUR = [float(fu.get("depthMul", 1.0)), float(fu.get("tumble", 0.0)), float(fu.get("dMaxMul", 1.0)), float(fu.get("tierMul", 0.0)), float(fu.get("bermMul", 1.0)), float(fu.get("pathMul", 1.0))]
 	K_GAINCAP = float(D.get("slope", {}).get("speedCap", 0.0))
 	K_AIRDRAG = float(D.bounce.get("airDrag", 0.55))
 	K_RUBBLE_MIN = float(D.get("rubbleMin", 8.0))
@@ -450,7 +453,7 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 		ev.append({"k": "wall", "x": b.x, "y": b.y, "speed": vN2})
 		return
 	# the leave test: would the next ballistic step end above the ground? he keeps his velocity along the ramp
-	var sprev: float = _gslope(S, b.x, b.z) * dir
+	var sprev: float = sl   # the slope ahead only: the central difference read the trench the body had just cut behind him as an upslope (it launched itself off its own furrow)
 	var vyT: float = sprev * vN2 * K_LIFT
 	var xa: float = SimWrap.wrap(b.x + dir * vN2 * tv * SimDetMath.pow(0.55, dt) * dt)
 	var yb: float = b.y + (vyT - 1000.0 * dt) * dt
@@ -664,16 +667,19 @@ static func _skidEffects(S: SimState, f, by, b: Body, xa: float) -> void:
 	var E: float = f.slideE
 	var hw: float = WorldSlide.HW0 + WorldSlide.HW_E * sqrt(E)
 	var pav: bool = WorldSlide._paved(f.x)
-	var depth: float = minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * b.vN)
+	var tierF: float = 1.0 + K_FUR[3] * (by.tier - 1.0)
+	var depth: float = minf(WorldSlide.D_MAX * K_FUR[2], (WorldSlide.D0 + WorldSlide.D_V * K_FUR[0] * b.vN) * tierF)
 	if b.mode == SKID:
 		WorldCrater.carveSegment(S, xa, f.x, depth, pav, WorldSlide.CRACK0 + WorldSlide.CRACK_E * sqrt(E), f.z)
+	elif K_FUR[1] > 0.0:
+		WorldCrater.carveSegment(S, xa, f.x, depth * K_FUR[1], pav, 0.0, f.z)
 	f.slideAcc += K_WPS * b.vLost
 	var idx: int = int(floor(f.slideD / WorldSlide.SAMPLE))
 	if idx > int(floor((f.slideD - absf(b.dxStep)) / WorldSlide.SAMPLE)):
 		if idx <= WorldSlide.SAMPLE_MAX:
 			SimFx.slideDust(S, f.x, f.y, b.vN, hw * 2.0, "paved" if pav else "ground", idx, f.z)
 		SimFx.debris(S, f.x, f.y + 4.0, 3 if pav else 2, "#8f8b84" if pav else "#6d6a66", 500.0, f.z)
-		WorldStructures.damageArea(S, f.x, f.y + 5.0, hw * 2.0, (0.22 + 0.12 * by.tier) * WorldSlide.PATH_AREA * b.vN, by, false, f.slideEvt)
+		WorldStructures.damageArea(S, f.x, f.y + 5.0, hw * 2.0, (0.22 + 0.12 * by.tier) * WorldSlide.PATH_AREA * K_FUR[5] * b.vN, by, false, f.slideEvt)
 		if f.slideAcc > 0.0:
 			_pay(S, f, by, f.slideAcc)
 			f.slideAcc = 0.0
@@ -818,7 +824,7 @@ static func _finish(S: SimState, f, by, b: Body) -> void:
 		pass
 	elif how in ["tumble", "stop"] and f.slideEvt != 0.0:
 		var hw: float = WorldSlide.HW0 + WorldSlide.HW_E * sqrt(E)
-		WorldCrater.berm(S, f.x, f.vx if f.vx != 0.0 else 1.0, hw, minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * f.jV0 * 0.25) * WorldSlide.BERM, f.z)
+		WorldCrater.berm(S, f.x, f.vx if f.vx != 0.0 else 1.0, hw, minf(WorldSlide.D_MAX * K_FUR[2], (WorldSlide.D0 + WorldSlide.D_V * K_FUR[0] * f.jV0 * 0.25) * (1.0 + K_FUR[3] * (by.tier - 1.0))) * WorldSlide.BERM * K_FUR[4], f.z)
 	if f.slideAcc > 0.0:
 		_pay(S, f, by, f.slideAcc)
 		f.slideAcc = 0.0
