@@ -337,6 +337,72 @@ func _test_joints() -> void:
 	print("joint limits: %d poses and %d sequence frames inside the limits; a flipped thigh is brought in; the limited IK keeps %d targets legal (worst %.4f rad); ragdoll hinges kept; live %d frames, %d reach the screen past a limit (the sources alone leave %d for the last pass)" % [AnimJointLint.sum(rp.groups, "frames") / 10, AnimJointLint.sum(rs.groups, "frames"), n_ik, worst_tw, live_n, live_bad, src_bad])
 
 
+## The agency slice's events (docs/animation/pose-pipeline.md 9.22): a knockback holds its pose for the event's own length and lets go; the embed plays its sequence
+## over the held-down ticks; the far taunt plays its shrug and is cut by taunt_end_cut; a charge holds its flight pose until a fall (or the exchange) ends it, and a
+## feint swaps it for the peel; reduced motion plays them at 60%; switched off, none of it plays.
+func _test_agency() -> void:
+	var A: Dictionary = AnimData.agency
+	_expect(not A.is_empty() and AnimData.pose_exists("ag.hold.charge_heavy") and AnimData.entries.has("ag.taunt") and AnimData.entries.has("ag.embed"), "agency test: the agency data or its poses did not load")
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	var f = S.fighters[0]
+	var base: AnimPose = AnimData.pose("stance.aggressive")
+	var ix: Dictionary = AnimRig.index
+	var th: int = ix["thigh_l"]
+	# a knockback: mixed in while it lasts, gone after it
+	var af := AnimFighter.new(0)
+	af.on_agency("knockback", 1.0, {"kind": "slideLong", "dur": 0.6})
+	var seen := 0.0
+	var gone := false
+	for tk in range(0, 120, 3):
+		af.q = base.q.duplicate()
+		af.hips = base.hips
+		af._agency_layer(S, f, 1.0 + float(tk) / 60.0)
+		if tk == 18:
+			seen = af.q[th].angle_to(base.q[th])
+		if tk == 117:
+			gone = af.q[th].angle_to(base.q[th]) < 0.0001 and af._ag_t0 < 0.0
+	_expect(seen > 0.1 and gone, "agency test: the knockback pose %s (%.3f rad mid-slide) and %s after it" % ["did not play" if seen <= 0.1 else "played", seen, "was gone" if gone else "stayed"])
+	# the embed and the taunt: sequences, the taunt cut
+	af.on_agency("embed", 2.0, {"dur": 1.0})
+	_expect(String(af._seq.get("id", "")) == "ag.embed" and absf(float(af._seq.dur) - 1.0) < 0.001, "agency test: the embed sequence did not start for the held-down time")
+	af.on_agency("taunt_start", 3.0, {})
+	_expect(String(af._seq.get("id", "")) == "ag.taunt", "agency test: the taunt did not start")
+	af.on_agency("taunt_end_cut", 3.2, {})
+	_expect(af._seq.is_empty(), "agency test: the taunt was not cut")
+	# a charge: held until a fall; a feint takes the peel
+	var ac := AnimFighter.new(0)
+	ac.on_agency("charge_heavy", 5.0, {})
+	f.state = "free"
+	ac.q = base.q.duplicate()
+	ac._agency_layer(S, f, 5.5)
+	var held: bool = ac._ag_t1 < 0.0 and ac._ag_hold == "ag.hold.charge_heavy"
+	f.state = "launched"
+	ac._agency_layer(S, f, 5.6)
+	var ended: bool = ac._ag_t1 >= 0.0
+	f.state = "free"
+	ac.on_agency("charge_feint", 6.0, {})
+	_expect(held and ended and ac._ag_hold == "ag.hold.charge_peel" and ac._ag_t1 > 6.0, "agency test: the charge held %s, ended on a fall %s, the feint took the peel %s" % [held, ended, ac._ag_hold == "ag.hold.charge_peel"])
+	# reduced motion plays at 60%
+	var red_was: bool = RenderAnim.reduced_motion
+	RenderAnim.reduced_motion = true
+	var ar := AnimFighter.new(0)
+	ar.on_agency("knockback", 1.0, {"kind": "slideShort", "dur": 0.5})
+	var w_red: float = ar._ag_w
+	RenderAnim.reduced_motion = red_was
+	var ar2 := AnimFighter.new(0)
+	ar2.on_agency("knockback", 1.0, {"kind": "slideShort", "dur": 0.5})
+	_expect(w_red < ar2._ag_w * 0.7, "agency test: reduced motion plays the knockback at %.2f of %.2f" % [w_red, ar2._ag_w])
+	# switched off: nothing
+	RenderAnim.agency_poses = false
+	var ao := AnimFighter.new(0)
+	ao.on_agency("knockback", 1.0, {"kind": "slideShort", "dur": 0.5})
+	ao.on_agency("embed", 1.0, {"dur": 1.0})
+	RenderAnim.agency_poses = true
+	_expect(ao._ag_t0 < 0.0 and ao._seq.is_empty(), "agency test: the events played with the agency poses off")
+	print("agency test: knockback mid-slide %.3f rad, embed, taunt cut, charge held and ended on a fall, feint peel, reduced motion %.2f of %.2f, off plays nothing" % [seen, w_red, ar2._ag_w])
+
+
 ## The active ragdoll (overhaul unit A): the same match at one tick a frame and at two ticks a frame ends with the same ragdoll state
 ## (it is stepped per sim tick, never per frame); reduced motion shrinks the motion; the overhaul can be switched off; the ground
 ## events of World's plan (a stub shaped like docs/world/ground-contact.md) move the body. The gameplay hash is compared in the main loop.
@@ -1103,6 +1169,7 @@ func _run() -> void:
 	_test_flight()
 	_test_quality()
 	_test_win_ko()
+	_test_agency()
 	_test_joints()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""

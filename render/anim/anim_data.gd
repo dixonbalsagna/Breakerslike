@@ -26,6 +26,7 @@ static var form_poses: Dictionary = {}  # beat -> pose id
 static var load_waves: bool = false      # --waves: also bake the parked pose waves of data/anim/waves/ (tools only; no live match plays them)
 static var raw: Dictionary = {}         # id -> the sketch each pose was baked from (poses.json, and the waves when loaded)
 static var last_stand: Dictionary = {}   # data/anim/laststand.json: the ready sequence of each shape, the held resolve and the slump
+static var agency: Dictionary = {}       # data/anim/agency.json: how the agency slice's events (knockback, embed, taunt, charges) map to poses
 static var intro: Dictionary = {}        # data/anim/intro.json: the opening's timings and each shape's staredown beat
 static var ground: Dictionary = {}       # data/anim/ground.json: how ground contact scales its poses (surface, speed, hold times)
 static var cue_map: Dictionary = {}      # data/anim/waves/step3.cues.json: cue kind -> {actor, other, other_if_shoved} sequence ids (only with --step3-cues)
@@ -60,10 +61,18 @@ static func load_all() -> void:
 	effector_poses = ej.get("poses", {})
 	sockets = _read("sockets.json")
 	target_fix = _read("targets.json").get("poses", {})
+	var tp: Dictionary = _read("target_poles.json").get("poses", {})
+	for pid in tp:
+		var row: Dictionary = target_fix.get(pid, {})
+		for k in tp[pid]:
+			row[k] = tp[pid][k]
+		target_fix[pid] = row
 	AnimJoints.setup(_read("joints.json"))
 	shapes = _read("shapes.json").get("shapes", {})
 	ground = _read("ground.json")
 	intro = _read("intro.json")
+	agency = _read("agency.json")
+	agency["cue_kinds"] = ["taunt_start", "taunt_end_cut", "charge_light", "charge_heavy", "charge_feint"]
 	last_stand = _read("laststand.json")
 	if live_flag_early() and FileAccess.file_exists(DIR + "waves/wave1.live.json"):
 		live = _read("waves/wave1.live.json")
@@ -84,17 +93,18 @@ static func load_all() -> void:
 	picks = kj.get("picks", {})
 	var live_flag: bool = OS.get_cmdline_user_args().has("--wave1-live")
 	var l_flag: bool = RenderAnim.last_stand_poses and not OS.get_cmdline_user_args().has("--no-last-stand-poses")
+	var a_flag: bool = RenderAnim.agency_poses and not OS.get_cmdline_user_args().has("--no-agency-poses")
 	var i_flag: bool = RenderAnim.intro_poses and not OS.get_cmdline_user_args().has("--no-intro-poses")
 	var g_flag: bool = RenderAnim.ground_poses and not OS.get_cmdline_user_args().has("--no-ground-poses")
 	var s3_flag: bool = (OS.get_cmdline_user_args().has("--step3-cues") or RenderAnim.step3_cues) and not OS.get_cmdline_user_args().has("--no-step3-cues")
-	if load_waves or live_flag or s3_flag or g_flag or i_flag or l_flag or OS.get_cmdline_user_args().has("--waves"):
+	if load_waves or live_flag or s3_flag or g_flag or i_flag or l_flag or a_flag or OS.get_cmdline_user_args().has("--waves"):
 		var da := DirAccess.open(DIR + "waves")
 		if da != null:
 			var names: Array = []
 			for fn in da.get_files():
 				if fn.ends_with(".poses.json"):
 					var wn0: String = fn.trim_suffix(".poses.json")
-					if load_waves or OS.get_cmdline_user_args().has("--waves") or (live_flag and wn0 == "wave1") or (s3_flag and wn0 == "step3") or (g_flag and wn0 == "ground1") or (i_flag and wn0 == "intro1") or (l_flag and wn0 == "laststand1"):   # the live flag loads wave 1 only, the step 3 flag its own cues
+					if load_waves or OS.get_cmdline_user_args().has("--waves") or (live_flag and wn0 == "wave1") or (s3_flag and wn0 == "step3") or (g_flag and wn0 == "ground1") or (i_flag and wn0 == "intro1") or (l_flag and wn0 == "laststand1") or (a_flag and wn0 == "agency1"):   # the live flag loads wave 1 only, the step 3 flag its own cues
 						names.append(wn0)
 			names.sort()
 			for wn in names:

@@ -1,0 +1,40 @@
+{
+ "wave": "agency1",
+ "poses": 12,
+ "counts": {
+  "error": 0,
+  "review": 0,
+  "note": 4
+ },
+ "flagged": [],
+ "findings": [
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "ag.taunt.shrug",
+   "detail": "hand_r target [16, 46, 34] is 1.6 units out of reach (the limb is clamped to [15.3, 46.8, 32.8])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "ag.hold.charge_light",
+   "detail": "hand_l target [2, 46, -6] is 1.3 units out of reach (the limb is clamped to [2.3, 44.9, -6.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  },
+  {
+   "severity": "note",
+   "source": "stacking_lint",
+   "subject": "cue.brace",
+   "detail": "mark 1: a crouch with fists at the sides",
+   "action": "fine alone; never in a moment that also has a scream, a flame aura, rising rubble, lightning, hair or a gold flash"
+  }
+ ]
+}

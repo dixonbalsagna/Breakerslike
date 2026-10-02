@@ -3,25 +3,33 @@
  "poses": 62,
  "counts": {
   "error": 0,
-  "review": 1,
-  "note": 23
+  "review": 2,
+  "note": 19
  },
  "flagged": [
-  "w2.arc_dive.arrive"
+  "w2.skid~b.slide",
+  "w2.coil_spring.start"
  ],
  "findings": [
   {
    "severity": "review",
-   "source": "entry_lab",
-   "subject": "arc_dive",
-   "detail": "the arrival is far from the wind-up of axe_kick (1.73 rad)",
-   "action": "an arrival pose closer to those wind-ups, or let the join (inertialised) carry it"
+   "source": "pose_lint",
+   "subject": "w2.skid~b.slide",
+   "detail": "foot below floor: the lowest foot is at y -1.8",
+   "action": "adjust the pose"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w2.coil_spring.start",
+   "detail": "foot below floor: the lowest foot is at y -0.7",
+   "action": "adjust the pose"
   },
   {
    "severity": "note",
    "source": "pose_lint",
-   "subject": "w2.dash.start",
-   "detail": "left elbow at 158 degrees",
+   "subject": "w2.dash~b.start",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -35,7 +43,7 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w2.skid.arrive",
-   "detail": "left knee at 157 degrees",
+   "detail": "left knee at 155 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -49,7 +57,7 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w2.skid~b.arrive",
-   "detail": "left knee at 157 degrees",
+   "detail": "left knee at 155 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -63,14 +71,14 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w2.coil_spring.travel",
-   "detail": "left elbow at 164 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w2.coil_spring.travel",
-   "detail": "right elbow at 164 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -90,15 +98,8 @@
   {
    "severity": "note",
    "source": "pose_lint",
-   "subject": "w2.pivot.travel",
-   "detail": "right elbow at 158 degrees",
-   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
    "subject": "w2.pivot.arrive",
-   "detail": "right elbow at 161 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -111,22 +112,8 @@
   {
    "severity": "note",
    "source": "pose_lint",
-   "subject": "w2.plant_coil~b.travel",
-   "detail": "hand_l target [17, 10, -8] is 3.2 units out of reach (the limb is clamped to [16.3, 13.1, -8.1])",
-   "action": "accept the clamped end (`fix-reach`)"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
    "subject": "w2.plant_coil~b.arrive",
-   "detail": "right elbow at 164 degrees",
-   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w2.lane_step.travel",
-   "detail": "right elbow at 155 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -147,21 +134,14 @@
    "severity": "note",
    "source": "entry_lab",
    "subject": "arc_dive",
-   "detail": "a long join into hammer (1.48 rad), stomp (1.43 rad), double_hammer (1.5 rad)",
+   "detail": "a long join into hammer (1.35 rad), double_hammer (1.56 rad)",
    "action": "none needed unless the reel shows a jump"
   },
   {
    "severity": "note",
    "source": "entry_lab",
    "subject": "skid",
-   "detail": "a long join into spear_hand (1.49 rad), rising_knee (1.34 rad)",
-   "action": "none needed unless the reel shows a jump"
-  },
-  {
-   "severity": "note",
-   "source": "entry_lab",
-   "subject": "spiral",
-   "detail": "a long join into spinning_heel (1.35 rad)",
+   "detail": "a long join into spear_hand (1.42 rad), rising_knee (1.32 rad)",
    "action": "none needed unless the reel shows a jump"
   },
   {
@@ -175,7 +155,7 @@
    "severity": "note",
    "source": "entry_lab",
    "subject": "plant_coil",
-   "detail": "a long join into headbutt (1.39 rad)",
+   "detail": "a long join into headbutt (1.38 rad)",
    "action": "none needed unless the reel shows a jump"
   }
  ]

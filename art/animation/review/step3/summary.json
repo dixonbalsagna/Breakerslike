@@ -4,7 +4,7 @@
  "counts": {
   "error": 0,
   "review": 0,
-  "note": 12
+  "note": 11
  },
  "flagged": [],
  "findings": [
@@ -35,13 +35,6 @@
    "subject": "s3.burst~b.gather",
    "detail": "right elbow at 157 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "s3.shoved.shove",
-   "detail": "hand_l target [16, 64, -13] is 2.1 units out of reach (the limb is clamped to [13.9, 63.8, -12.8])",
-   "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",

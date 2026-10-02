@@ -468,7 +468,7 @@ static func slerp_limb(a: Quaternion, b: Quaternion, t: float) -> Quaternion:
 	var vm: Vector3 = va.lerp(vb, t)
 	var ang: float = vm.length()
 	var sw: Quaternion = Quaternion(vm / ang, ang) if ang > 0.000001 else Quaternion.IDENTITY
-	var tt: float = lerpf(ta, tb, t)
+	var tt: float = ta + wrapf(tb - ta, -PI, PI) * t   # the short way round: a twist of 170 and one of -170 are 20 degrees apart, not 340
 	return (sw * Quaternion(0.0, sin(tt * 0.5), 0.0, cos(tt * 0.5))).normalized()
 
 

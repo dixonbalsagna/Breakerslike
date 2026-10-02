@@ -129,7 +129,7 @@ static func ik_limb(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVect
 		hinge_fix(lq, gq, gp, a, b, c, s)
 		var fl: float = absf(AnimJoints.hinge_state(lq[b], b).x)
 		var ex2: Vector2 = AnimJoints.excess_at(lq[a], a, shape, fl)
-		if ex2.x <= 0.0001 and ex2.y <= 0.0001 and to_t >= dmn and fl > 0.21:
+		if ex2.x <= 0.0001 and ex2.y <= 0.0001 and to_t >= dmn and fl > 0.30:
 			return
 		lq[a] = sq_a
 		lq[b] = sq_b
@@ -138,7 +138,7 @@ static func ik_limb(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVect
 		gq[c] = sg_c
 		gp[b] = sp_b
 		gp[c] = sp_c
-	var plan: Dictionary = _plan_limb(gq, gp, a, b, c, target, pole, s, shape)
+	var plan: Dictionary = _plan_limb(gq, gp, a, b, c, target, pole, s, shape, retarget <= 0.0)
 	if retarget > 0.0 and absf(float(plan.twist)) > AnimJoints.comfort:
 		var dx: float = 2.0
 		while dx <= retarget + 0.001:
@@ -166,7 +166,7 @@ static func ik_limb(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVect
 
 ## Chooses the bend plane for a limb: returns {E (the joint's place), tgt (the end's place, drawn in if the joint cannot fold that far), phi, twist (rad, of the
 ## upper bone for that plane), excess (rad past the limits)}.
-static func _plan_limb(gq: Array[Quaternion], gp: PackedVector3Array, a: int, b: int, c: int, target: Vector3, pole: Vector3, s: float, shape: String) -> Dictionary:
+static func _plan_limb(gq: Array[Quaternion], gp: PackedVector3Array, a: int, b: int, c: int, target: Vector3, pole: Vector3, s: float, shape: String, ease: bool = false) -> Dictionary:
 	var A: Vector3 = gp[a]
 	var l1: float = (gp[b] - A).length()
 	var l2: float = (gp[c] - gp[b]).length()
@@ -191,11 +191,14 @@ static func _plan_limb(gq: Array[Quaternion], gp: PackedVector3Array, a: int, b:
 	var a0: Vector3 = P * (rs * Vector3(-s, 0, 0))   # about the neutral apex: where the joint points when the bone has no twist
 	a0 = (a0 - u * a0.dot(u)).normalized()
 	var a1: Vector3 = u.cross(a0)
+	# the asked-for plane, eased to the neutral one as the limb straightens (its tiny bend could point anywhere and turn the foot or the hand over): a limb
+	# going from bent to straight must not jump between the two planes
 	var phi0: float = atan2(u.dot(a0.cross(pv)), a0.dot(pv))
+	if ease:
+		phi0 *= smoothstep(0.08, 0.30, psi)   # (the runtime solves: a limb must not jump between the two planes as it straightens; the bake keeps the hard switch below)
 	var phi: float = phi0
 	var ev: Vector3 = _plane_eval(a0, a1, phi0, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
-	if psi < 0.21:
-		# a near-straight limb takes the neutral plane (its tiny bend could point anywhere and turn the foot or the hand over)
+	if not ease and psi < 0.21:
 		phi = 0.0
 		ev = _plane_eval(a0, a1, 0.0, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
 	elif ev.x > 0.0001:

@@ -31,7 +31,7 @@ const flag = n => argv.includes('--' + n);
 const project = resolve(opt('project', '.'));
 const waveName = opt('wave', '');
 const name = opt('name', waveName || 'wave');
-const wprefix = waveName ? (waveName.startsWith('step') ? 's' + waveName.slice(4) : waveName.replace('wave', 'w')) + '.' : '';
+const wprefix = waveName ? (waveName === 'agency1' ? 'ag' : waveName.startsWith('step') ? 's' + waveName.slice(4) : waveName.replace('wave', 'w')) + '.' : '';
 const waveArgs = waveName ? ['--waves'] : [];
 const godot = process.env.GODOT_BIN || join(process.env.LOCALAPPDATA || '', 'Programs/Godot/4.7.2/Godot_v4.7.2-stable_win64_console.exe');
 const outRoot = resolve(opt('out', 'art/animation/review'));

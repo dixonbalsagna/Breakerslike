@@ -4,18 +4,18 @@ Each entry's last pose against the wind-up of every wave 1 strike it favours (Co
 
 | Entry | Last pose | Strikes it favours (mean limb turn, rad) |
 | :--- | :--- | :--- |
-| dash | w2.dash.arrive | jab 0.49, cross 0.6, haymaker 0.62, front_kick 0.71, shoulder_check 0.56, driving_knee 0.63 |
-| arc_dive | w2.arc_dive.arrive | hammer 1.48, dropping_elbow 1.15, axe_kick 1.73, stomp 1.43, double_hammer 1.5 |
+| dash | w2.dash.arrive | jab 0.48, cross 0.59, haymaker 0.63, front_kick 0.71, shoulder_check 0.56, driving_knee 0.57 |
+| arc_dive | w2.arc_dive.arrive | hammer 1.35, dropping_elbow 1.06, axe_kick 1.17, stomp 1.06, double_hammer 1.56 |
 | rising | w2.rising.arrive | uppercut 0.54, rising_elbow 0.39, rising_knee 0.51, spear_hand 0.65, headbutt 0.43 |
-| skid | w2.skid.arrive | sweep 1.07, low_kick 1.3, spear_hand 1.49, rising_knee 1.34 |
-| spiral | w2.spiral.arrive | hook 0.55, backfist 0.55, snap_round 1.04, side_kick 0.98, spinning_heel 1.35 |
-| coil_spring | w2.coil_spring.arrive | spear_hand 0.98, twin_spear 1.17, shoulder_check 1.23, body_ram 1.12, driving_knee 1.18, cross_arm_ram 0.82 |
-| step_in | w2.step_in.arrive | jab 0.24, cross 0.37, palm_heel 0.24, front_kick 0.85, short_elbow 0.42, short_knee 1.02 |
-| pivot | w2.pivot.arrive | hook 0.58, backfist 0.58, snap_round 1.11, roundhouse 1.02, spinning_elbow 1.04, spinning_heel 1.45 |
-| plant_coil | w2.plant_coil.arrive | uppercut 1.1, rising_elbow 1.15, spear_hand 1.19, rising_knee 1.08, headbutt 1.39 |
-| lane_step | w2.lane_step.arrive | side_kick 0.99, hook 0.55, low_kick 0.86, short_elbow 0.62 |
-| rooted | w2.rooted.start | jab 0.47, cross 0.43, palm_heel 0.47, headbutt 0.55, hammer 1.1 |
-| backstep_counter | w2.backstep_counter.arrive | cross 0.27, front_kick 0.88, side_kick 0.89, overhand 0.32 |
+| skid | w2.skid.arrive | sweep 1.13, low_kick 1.28, spear_hand 1.42, rising_knee 1.32 |
+| spiral | w2.spiral.arrive | hook 0.49, backfist 0.49, snap_round 0.84, side_kick 0.88, spinning_heel 1.25 |
+| coil_spring | w2.coil_spring.arrive | spear_hand 1, twin_spear 1.19, shoulder_check 1.2, body_ram 1.14, driving_knee 1.2, cross_arm_ram 0.86 |
+| step_in | w2.step_in.arrive | jab 0.23, cross 0.36, palm_heel 0.23, front_kick 0.86, short_elbow 0.42, short_knee 1.02 |
+| pivot | w2.pivot.arrive | hook 0.58, backfist 0.58, snap_round 1.02, roundhouse 1.03, spinning_elbow 1.04, spinning_heel 1.45 |
+| plant_coil | w2.plant_coil.arrive | uppercut 1.08, rising_elbow 1.11, spear_hand 1.3, rising_knee 1.07, headbutt 1.38 |
+| lane_step | w2.lane_step.arrive | side_kick 0.98, hook 0.55, low_kick 0.86, short_elbow 0.62 |
+| rooted | w2.rooted.start | jab 0.46, cross 0.43, palm_heel 0.46, headbutt 0.55, hammer 1.13 |
+| backstep_counter | w2.backstep_counter.arrive | cross 0.26, front_kick 0.88, side_kick 0.89, overhand 0.3 |
 | fade | w2.fade.arrive | uppercut 0.53, hook 0.32, rising_elbow 0.37, short_knee 1.03, headbutt 0.63 |
-| hop_back | w2.hop_back.arrive | front_kick 0.96, side_kick 0.99, axe_kick 1.21 |
-| drop_back | w2.drop_back.arrive | sweep 0.51, spear_hand 1.16, rising_knee 0.81, uppercut 0.84 |
+| hop_back | w2.hop_back.arrive | front_kick 0.96, side_kick 0.98, axe_kick 1.14 |
+| drop_back | w2.drop_back.arrive | sweep 0.52, spear_hand 1.11, rising_knee 0.78, uppercut 0.81 |

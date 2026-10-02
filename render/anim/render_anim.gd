@@ -25,6 +25,7 @@ static var joint_audit: bool = false   # the joint-limit lint: every fighter not
 static var ragdoll_enabled: bool = true
 static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
 static var last_stand_poses: bool = true   # the last stand's body cue (docs 9.20); --no-last-stand-poses switches it off
+static var agency_poses: bool = true       # the agency slice's events (knockback, embed, the far taunt, the charges) play their poses (docs 9.22); --no-agency-poses switches them off
 static var intro_poses: bool = true        # the opening's fall, landing and staredown (docs 9.19); --no-intro-poses switches them off
 static var ground_poses: bool = true       # World's ground-contact events play their poses and sequences (docs 9.18); --no-ground-poses switches them off
 static var step3_cues: bool = true         # Encounter's step 3 cue events (perfect_block, reversal, dodge_cancel, burst, burst_absorbed) play their pose sequences: ON (they are the only feedback for live mechanics); --no-step3-cues switches them off
@@ -71,6 +72,8 @@ static func _read_args() -> void:
 			ragdoll_enabled = false
 		elif a == "--no-last-stand-poses":
 			last_stand_poses = false
+		elif a == "--no-agency-poses":
+			agency_poses = false
 		elif a == "--no-intro-poses":
 			intro_poses = false
 		elif a == "--no-ground-poses":
@@ -206,8 +209,23 @@ static func consume(S: SimState, events: Array) -> void:
 				var who2: int = int(e.actor)
 				if who2 >= 0 and who2 < S.fighters.size():
 					fighter(S, S.fighters[who2]).on_transform(S.T, String(e.version))
+			"knockback":
+				var kv: int = int(_ev(e, "victim", -1))
+				if kv >= 0 and kv < S.fighters.size():
+					var t_kb: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+					fighter(S, S.fighters[kv]).on_agency("knockback", t_kb, {"kind": String(e.kind), "dur": float(_ev(e, "dur", 0.5))})
+			"embed":
+				var ke: int = int(_ev(e, "actor", -1))
+				if ke >= 0 and ke < S.fighters.size():
+					var t_em: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+					fighter(S, S.fighters[ke]).on_agency("embed", t_em, {"dur": float(_ev(e, "dur", 60.0)) / 60.0})
 			"cue":
 				var who: int = int(e.actor)
+				if AnimData.agency.get("cue_kinds", []).has(String(e.kind)):
+					var t_ag: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+					for ia in range(S.fighters.size()):
+						if who < 0 or ia == who:
+							fighter(S, S.fighters[ia]).on_agency(String(e.kind), t_ag, {})
 				var t_cue: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)   # the event's own time, not the end of the frame's
 				for i in range(S.fighters.size()):
 					if who < 0 or i == who:

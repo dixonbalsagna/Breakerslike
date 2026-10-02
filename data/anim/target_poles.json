@@ -1,0 +1,911 @@
+{
+ "schema": "anim.target_poles/1",
+ "_about": "The elbow and knee places that keep a re-aimed target's bend as it was (data/anim/targets.json; docs/animation/joint-limits.md): pose id -> pole_hand_r / pole_hand_l / pole_foot_r / pole_foot_l, the joint's place relative to its root joint, as in a pose sketch. Merged over the sketch with targets.json (render/anim/anim_data.gd, _fixed). Render only, outside the sim's data hash.",
+ "poses": {
+  "strike.cross.follow": {
+   "pole_hand_l": [
+    -16.0,
+    -0.6,
+    -0.3
+   ]
+  },
+  "strike.elbow.contact": {
+   "pole_foot_r": [
+    -10.8,
+    -13.0,
+    1.9
+   ],
+   "pole_hand_l": [
+    -11.3,
+    -3.7,
+    10.7
+   ]
+  },
+  "strike.elbow.follow": {
+   "pole_hand_l": [
+    -15.8,
+    -2.5,
+    0.5
+   ]
+  },
+  "strike.hook.contact": {
+   "pole_foot_r": [
+    -11.0,
+    -12.8,
+    1.8
+   ]
+  },
+  "strike.jab.contact": {
+   "pole_foot_r": [
+    -11.1,
+    -12.8,
+    1.7
+   ]
+  },
+  "strike.round.follow": {
+   "pole_hand_r": [
+    -12.1,
+    -10.1,
+    -2.8
+   ]
+  },
+  "strike.upper.contact": {
+   "pole_foot_r": [
+    -10.2,
+    -13.5,
+    1.8
+   ]
+  },
+  "w1.haymaker.contact": {
+   "pole_foot_r": [
+    -11.1,
+    -12.8,
+    1.8
+   ]
+  },
+  "w1.hook.contact": {
+   "pole_foot_r": [
+    -11.0,
+    -12.8,
+    1.8
+   ]
+  },
+  "w1.jab.contact": {
+   "pole_foot_r": [
+    -11.1,
+    -12.8,
+    1.7
+   ]
+  },
+  "w1.low_kick.follow": {
+   "pole_hand_r": [
+    -12.1,
+    -10.1,
+    -2.8
+   ]
+  },
+  "w1.palm_heel.contact": {
+   "pole_foot_r": [
+    -11.1,
+    -12.8,
+    1.7
+   ]
+  },
+  "w1.roundhouse.contact": {
+   "pole_hand_l": [
+    -1.9,
+    0.0,
+    -15.9
+   ]
+  },
+  "w1.roundhouse.follow": {
+   "pole_hand_l": [
+    -15.8,
+    0.5,
+    -2.6
+   ],
+   "pole_hand_r": [
+    -12.1,
+    -10.1,
+    -2.8
+   ]
+  },
+  "w1.roundhouse~b.follow": {
+   "pole_hand_r": [
+    -12.1,
+    -10.1,
+    -2.8
+   ]
+  },
+  "w1.shoulder_check.contact": {
+   "pole_hand_r": [
+    7.8,
+    -13.8,
+    1.7
+   ]
+  },
+  "w1.snap_round.follow": {
+   "pole_hand_r": [
+    -12.1,
+    -10.1,
+    -2.8
+   ]
+  },
+  "w1.spear_hand.follow": {
+   "pole_hand_l": [
+    -16.0,
+    -0.6,
+    -0.3
+   ]
+  },
+  "w1.uppercut.contact": {
+   "pole_foot_r": [
+    -10.2,
+    -13.5,
+    1.8
+   ]
+  },
+  "w2.arc_dive.arrive": {
+   "pole_hand_l": [
+    3.0,
+    12.7,
+    -9.3
+   ],
+   "pole_hand_r": [
+    12.9,
+    9.1,
+    2.5
+   ]
+  },
+  "w2.arc_dive~b.arrive": {
+   "pole_hand_l": [
+    3.0,
+    12.7,
+    -9.3
+   ],
+   "pole_hand_r": [
+    12.9,
+    9.1,
+    2.5
+   ]
+  },
+  "w2.dash.start": {
+   "pole_hand_l": [
+    7.8,
+    -13.2,
+    -4.7
+   ]
+  },
+  "w2.dash~b.start": {
+   "pole_hand_l": [
+    -15.6,
+    -0.3,
+    -3.7
+   ]
+  },
+  "w2.dash~b.travel": {
+   "pole_hand_r": [
+    11.0,
+    11.5,
+    1.6
+   ]
+  },
+  "w2.pivot.travel": {
+   "pole_hand_r": [
+    2.1,
+    -14.3,
+    6.9
+   ]
+  },
+  "w2.spiral.start": {
+   "pole_hand_l": [
+    -10.9,
+    -3.9,
+    -11.1
+   ]
+  },
+  "approach.launch": {
+   "pole_hand_l": [
+    -4.3,
+    14.4,
+    -5.5
+   ]
+  },
+  "beam.fire": {
+   "pole_hand_l": [
+    14.2,
+    0.7,
+    7.2
+   ]
+  },
+  "cue.brace": {
+   "pole_hand_l": [
+    -6.6,
+    -10.3,
+    -10.3
+   ]
+  },
+  "cue.guard_set": {
+   "pole_hand_l": [
+    3.7,
+    -6.1,
+    -14.3
+   ]
+  },
+  "cue.pursue": {
+   "pole_hand_l": [
+    -15.6,
+    -1.2,
+    -3.5
+   ]
+  },
+  "cue.reset": {
+   "pole_hand_l": [
+    -11.2,
+    -10.6,
+    -4.1
+   ]
+  },
+  "def.blink_in": {
+   "pole_hand_l": [
+    -13.6,
+    -3.1,
+    -7.8
+   ]
+  },
+  "def.hop": {
+   "pole_foot_r": [
+    14.0,
+    9.6,
+    1.0
+   ],
+   "pole_hand_r": [
+    9.9,
+    -5.4,
+    11.3
+   ]
+  },
+  "down.prone": {
+   "pole_hand_l": [
+    7.1,
+    10.8,
+    -9.4
+   ],
+   "pole_hand_r": [
+    0.2,
+    -12.4,
+    10.1
+   ]
+  },
+  "form.gather": {
+   "pole_hand_l": [
+    3.3,
+    -15.5,
+    1.9
+   ],
+   "pole_hand_r": [
+    5.2,
+    -14.2,
+    -5.2
+   ]
+  },
+  "gc.bounce.fold": {
+   "pole_foot_r": [
+    15.0,
+    7.6,
+    2.4
+   ]
+  },
+  "gc.bounce.rebound": {
+   "pole_hand_l": [
+    -0.9,
+    -12.0,
+    -10.5
+   ],
+   "pole_hand_r": [
+    1.9,
+    -8.5,
+    13.4
+   ]
+  },
+  "gc.hold.brace_tumble": {
+   "pole_hand_l": [
+    7.1,
+    14.0,
+    -3.1
+   ]
+  },
+  "gc.lip_launch.stream": {
+   "pole_foot_l": [
+    -12.5,
+    -11.5,
+    0.0
+   ],
+   "pole_hand_l": [
+    -15.3,
+    -3.5,
+    -3.2
+   ],
+   "pole_hand_r": [
+    -14.9,
+    -2.5,
+    5.3
+   ]
+  },
+  "gc.tech_flip.spin": {
+   "pole_hand_r": [
+    5.3,
+    11.6,
+    9.6
+   ]
+  },
+  "gc.tech_flip.tuck": {
+   "pole_hand_l": [
+    0.9,
+    13.5,
+    -8.6
+   ],
+   "pole_hand_r": [
+    10.3,
+    10.0,
+    7.0
+   ]
+  },
+  "in.hold.fall": {
+   "pole_hand_r": [
+    0.9,
+    15.4,
+    4.3
+   ]
+  },
+  "in.land.compress": {
+   "pole_foot_l": [
+    13.3,
+    3.7,
+    -9.9
+   ],
+   "pole_hand_r": [
+    -1.2,
+    15.5,
+    4.0
+   ]
+  },
+  "launch.spread": {
+   "pole_hand_l": [
+    -11.1,
+    -11.5,
+    0.5
+   ],
+   "pole_hand_r": [
+    8.4,
+    -10.2,
+    9.0
+   ]
+  },
+  "ls.ready_a.brace": {
+   "pole_hand_l": [
+    -3.0,
+    -14.0,
+    -7.2
+   ]
+  },
+  "move.descend": {
+   "pole_hand_l": [
+    6.0,
+    14.6,
+    2.6
+   ],
+   "pole_hand_r": [
+    6.5,
+    14.5,
+    -1.7
+   ]
+  },
+  "react.flinch_b": {
+   "pole_hand_l": [
+    -14.8,
+    2.4,
+    -5.6
+   ],
+   "pole_hand_r": [
+    -12.6,
+    5.1,
+    8.4
+   ]
+  },
+  "s3.shoved.shove": {
+   "pole_hand_l": [
+    15.8,
+    1.4,
+    -1.7
+   ]
+  },
+  "skid.front": {
+   "pole_hand_l": [
+    7.1,
+    10.8,
+    -9.4
+   ]
+  },
+  "skip.water": {
+   "pole_hand_l": [
+    -10.3,
+    11.3,
+    -4.8
+   ],
+   "pole_hand_r": [
+    -10.3,
+    11.3,
+    4.8
+   ]
+  },
+  "slide.brake": {
+   "pole_hand_l": [
+    -2.5,
+    -15.1,
+    -4.7
+   ],
+   "pole_hand_r": [
+    -5.5,
+    -14.0,
+    5.4
+   ]
+  },
+  "stance.escape": {
+   "pole_hand_r": [
+    -8.4,
+    -8.5,
+    10.6
+   ]
+  },
+  "strike.cross.contact": {
+   "pole_foot_r": [
+    -11.3,
+    -12.6,
+    1.8
+   ]
+  },
+  "strike.headbutt.contact": {
+   "pole_hand_l": [
+    -8.1,
+    10.4,
+    -9.1
+   ],
+   "pole_hand_r": [
+    -5.0,
+    13.8,
+    6.4
+   ]
+  },
+  "strike.headbutt.follow": {
+   "pole_hand_r": [
+    -1.9,
+    -3.3,
+    15.5
+   ]
+  },
+  "strike.hook.follow": {
+   "pole_hand_l": [
+    6.8,
+    -14.1,
+    -3.5
+   ]
+  },
+  "strike.jab.follow": {
+   "pole_hand_l": [
+    4.9,
+    -15.2,
+    -1.3
+   ]
+  },
+  "strike.kick.contact": {
+   "pole_hand_r": [
+    -13.9,
+    4.6,
+    6.3
+   ]
+  },
+  "w1.axe_kick.contact": {
+   "pole_hand_l": [
+    -3.3,
+    -15.6,
+    -1.1
+   ],
+   "pole_hand_r": [
+    -14.3,
+    7.0,
+    1.6
+   ]
+  },
+  "w1.axe_kick.follow": {
+   "pole_hand_r": [
+    -4.3,
+    -15.3,
+    -2.2
+   ]
+  },
+  "w1.axe_kick~b.contact": {
+   "pole_hand_l": [
+    0.9,
+    -5.1,
+    -15.1
+   ]
+  },
+  "w1.axe_kick~b.follow": {
+   "pole_hand_r": [
+    -4.3,
+    -15.3,
+    -2.2
+   ]
+  },
+  "w1.backfist.contact": {
+   "pole_foot_r": [
+    -10.4,
+    -13.3,
+    1.8
+   ]
+  },
+  "w1.backfist.follow": {
+   "pole_hand_l": [
+    6.8,
+    -14.1,
+    -3.5
+   ]
+  },
+  "w1.backfist~g.contact": {
+   "pole_foot_r": [
+    -10.4,
+    -13.3,
+    1.8
+   ]
+  },
+  "w1.backfist~g.follow": {
+   "pole_hand_l": [
+    6.8,
+    -14.1,
+    -3.5
+   ]
+  },
+  "w1.body_ram.follow": {
+   "pole_hand_r": [
+    2.8,
+    9.9,
+    12.3
+   ]
+  },
+  "w1.cross.contact": {
+   "pole_foot_r": [
+    -11.3,
+    -12.6,
+    1.8
+   ],
+   "pole_hand_l": [
+    -15.3,
+    4.5,
+    0.6
+   ]
+  },
+  "w1.cross.follow": {
+   "pole_hand_l": [
+    -15.7,
+    2.2,
+    -2.3
+   ]
+  },
+  "w1.cross_arm_ram.chamber": {
+   "pole_hand_r": [
+    0.7,
+    -10.8,
+    11.8
+   ]
+  },
+  "w1.cross_arm_ram.follow": {
+   "pole_hand_l": [
+    -2.9,
+    7.1,
+    14.1
+   ],
+   "pole_hand_r": [
+    5.6,
+    -2.9,
+    -14.7
+   ]
+  },
+  "w1.double_palm.contact": {
+   "pole_foot_r": [
+    -10.6,
+    -13.2,
+    1.9
+   ]
+  },
+  "w1.double_palm~b.contact": {
+   "pole_foot_r": [
+    -10.6,
+    -13.2,
+    1.9
+   ]
+  },
+  "w1.driving_knee.chamber": {
+   "pole_hand_l": [
+    -2.1,
+    -6.3,
+    -14.6
+   ]
+  },
+  "w1.front_kick.contact": {
+   "pole_hand_r": [
+    -13.9,
+    4.6,
+    6.3
+   ]
+  },
+  "w1.hammer.contact": {
+   "pole_hand_l": [
+    -4.0,
+    15.5,
+    -0.3
+   ]
+  },
+  "w1.hammer.follow": {
+   "pole_hand_l": [
+    7.0,
+    -14.3,
+    -1.4
+   ]
+  },
+  "w1.haymaker.follow": {
+   "pole_hand_l": [
+    6.8,
+    -14.1,
+    -3.5
+   ]
+  },
+  "w1.headbutt~b.contact": {
+   "pole_hand_l": [
+    -13.9,
+    2.2,
+    -7.6
+   ],
+   "pole_hand_r": [
+    -13.9,
+    2.2,
+    7.6
+   ]
+  },
+  "w1.hook.follow": {
+   "pole_hand_l": [
+    6.8,
+    -14.1,
+    -3.5
+   ]
+  },
+  "w1.jab.follow": {
+   "pole_hand_l": [
+    4.9,
+    -15.2,
+    -1.3
+   ]
+  },
+  "w1.overhand.contact": {
+   "pole_foot_r": [
+    -11.5,
+    -12.4,
+    1.9
+   ]
+  },
+  "w1.overhand.follow": {
+   "pole_hand_l": [
+    6.8,
+    -14.1,
+    -3.5
+   ]
+  },
+  "w1.palm_heel.follow": {
+   "pole_hand_l": [
+    4.9,
+    -15.2,
+    -1.3
+   ]
+  },
+  "w1.rising_elbow.contact": {
+   "pole_foot_r": [
+    -5.2,
+    -16.1,
+    1.9
+   ]
+  },
+  "w1.shoulder_check.follow": {
+   "pole_hand_r": [
+    -15.7,
+    -2.9,
+    -0.8
+   ]
+  },
+  "w1.spear_hand.contact": {
+   "pole_hand_l": [
+    -6.7,
+    14.4,
+    2.2
+   ]
+  },
+  "w1.spinning_heel.contact": {
+   "pole_hand_l": [
+    11.3,
+    -0.4,
+    -11.3
+   ]
+  },
+  "w1.stomp.follow": {
+   "pole_hand_r": [
+    -2.4,
+    -15.0,
+    5.1
+   ]
+  },
+  "w1.sweep.contact": {
+   "pole_hand_r": [
+    -3.0,
+    13.4,
+    8.2
+   ]
+  },
+  "w1.twin_spear.contact": {
+   "pole_foot_r": [
+    -11.6,
+    -12.3,
+    1.9
+   ]
+  },
+  "w1.uppercut~b.contact": {
+   "pole_foot_r": [
+    -9.7,
+    -13.8,
+    1.9
+   ]
+  },
+  "w2.arc_dive.climb": {
+   "pole_hand_l": [
+    -13.8,
+    -8.0,
+    -1.0
+   ]
+  },
+  "w2.arc_dive~b.climb": {
+   "pole_hand_l": [
+    -13.8,
+    -8.0,
+    -1.0
+   ]
+  },
+  "w2.coil_spring.start": {
+   "pole_foot_l": [
+    16.7,
+    -1.3,
+    3.0
+   ],
+   "pole_hand_r": [
+    5.8,
+    14.7,
+    2.3
+   ]
+  },
+  "w2.coil_spring.travel": {
+   "pole_hand_l": [
+    -4.5,
+    -11.7,
+    -10.0
+   ],
+   "pole_hand_r": [
+    -4.5,
+    -11.7,
+    10.0
+   ]
+  },
+  "w2.dash.travel": {
+   "pole_hand_l": [
+    -14.5,
+    6.7,
+    -0.6
+   ],
+   "pole_hand_r": [
+    9.5,
+    12.7,
+    1.7
+   ]
+  },
+  "w2.lane_step.travel": {
+   "pole_hand_r": [
+    -0.7,
+    -13.4,
+    8.7
+   ]
+  },
+  "w2.plant_coil.travel": {
+   "pole_hand_r": [
+    9.8,
+    -2.7,
+    12.3
+   ]
+  },
+  "w2.plant_coil~b.arrive": {
+   "pole_hand_r": [
+    15.8,
+    2.2,
+    0.1
+   ]
+  },
+  "w2.plant_coil~b.travel": {
+   "pole_hand_l": [
+    3.3,
+    -15.6,
+    0.5
+   ]
+  },
+  "w2.skid.arrive": {
+   "pole_hand_r": [
+    2.4,
+    15.0,
+    5.1
+   ]
+  },
+  "w2.skid.run": {
+   "pole_hand_l": [
+    -15.5,
+    2.4,
+    -3.0
+   ]
+  },
+  "w2.skid.slide": {
+   "pole_foot_l": [
+    -16.6,
+    0.4,
+    -3.8
+   ],
+   "pole_hand_r": [
+    1.3,
+    15.4,
+    4.3
+   ]
+  },
+  "w2.skid~b.run": {
+   "pole_hand_l": [
+    -15.5,
+    2.4,
+    -3.0
+   ]
+  },
+  "w2.skid~b.slide": {
+   "pole_foot_l": [
+    15.5,
+    5.5,
+    -4.3
+   ],
+   "pole_hand_r": [
+    0.5,
+    15.8,
+    2.1
+   ]
+  },
+  "w2.spiral.arrive": {
+   "pole_hand_r": [
+    6.2,
+    -11.9,
+    8.7
+   ]
+  },
+  "w2.spiral~b.arrive": {
+   "pole_hand_r": [
+    6.2,
+    -11.9,
+    8.7
+   ]
+  },
+  "w2.spiral~b.start": {
+   "pole_hand_l": [
+    -11.0,
+    -3.5,
+    -11.0
+   ]
+  }
+ }
+}

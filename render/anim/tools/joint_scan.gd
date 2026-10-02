@@ -101,6 +101,7 @@ func _live() -> void:
 	var fixed_by: Dictionary = {}
 	var fix_hist: Dictionary = {}
 	var big_by: Dictionary = {}
+	var big60: Array = []
 	var total := 0
 	for seed in seeds:
 		main.start_match(seed, {"p1": true, "p2": true})
@@ -128,6 +129,8 @@ func _live() -> void:
 				var fx: float = float(af.debug.get("limit_fix", 0.0))
 				var fb: String = "<=2" if fx <= deg_to_rad(2.0) else ("2-10" if fx <= deg_to_rad(10.0) else ("10-30" if fx <= deg_to_rad(30.0) else ("30-60" if fx <= deg_to_rad(60.0) else ">60")))
 				fix_hist[fb] = int(fix_hist.get(fb, 0)) + 1
+				if fx > deg_to_rad(60.0) and big60.size() < 60:
+					big60.append(who + ": %.0f deg" % rad_to_deg(fx))
 				if fx > deg_to_rad(30.0):
 					var worst_v: Array = []
 					for v in af.audit["D"]:
@@ -147,6 +150,7 @@ func _live() -> void:
 	report["pass_fixed_by"] = fixed_by
 	report["fix_hist_deg"] = fix_hist
 	report["big_by"] = big_by
+	report["big60"] = big60
 	report["pass_on"] = not nopass
 
 

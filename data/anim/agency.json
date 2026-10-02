@@ -1,0 +1,64 @@
+{
+ "schema": "anim.agency/1",
+ "_about": "The agency slice's events as poses (render/anim/anim_fighter.gd, on_agency; waves/agency1). knockback: a rival sent back on his feet (kind slideShort, slideLong, drift, bump from the sim's `knockback` event): the held pose mixed in for as long as the event says (its dur), eased in and out. embed: World's `embed` event: the sequence plays over the held-down ticks. taunt: the cue taunt_start plays the shrug over the flight (cut by taunt_end_cut). charge: the cues charge_light and charge_heavy hold the flight pose until the exchange starts, the charge is feinted (charge_feint: the peel for `ticks`), a fall or `max_ticks` ends it. weight is the share of the pose mixed in over whatever he is doing; in and out are the ease times (s). Render only, outside the sim's data hash.",
+ "knockback": {
+  "slideShort": {
+   "hold": "ag.hold.kb_short",
+   "weight": 0.85,
+   "in": 0.06,
+   "out": 0.15
+  },
+  "slideLong": {
+   "hold": "ag.hold.kb_long",
+   "weight": 0.9,
+   "in": 0.06,
+   "out": 0.2
+  },
+  "drift": {
+   "hold": "ag.hold.kb_drift",
+   "weight": 0.8,
+   "in": 0.1,
+   "out": 0.2
+  },
+  "bump": {
+   "hold": "ag.hold.kb_short",
+   "weight": 0.85,
+   "in": 0.04,
+   "out": 0.15
+  }
+ },
+ "embed": {
+  "seq": "ag.embed",
+  "weight": 1.0
+ },
+ "taunt": {
+  "seq": "ag.taunt",
+  "weight": 0.7,
+  "cut_kinds": [
+   "taunt_end_cut"
+  ]
+ },
+ "charge": {
+  "light": {
+   "hold": "ag.hold.charge_light",
+   "weight": 0.8,
+   "in": 0.12,
+   "out": 0.15,
+   "max_ticks": 90
+  },
+  "heavy": {
+   "hold": "ag.hold.charge_heavy",
+   "weight": 0.9,
+   "in": 0.14,
+   "out": 0.15,
+   "max_ticks": 120
+  },
+  "feint": {
+   "hold": "ag.hold.charge_peel",
+   "weight": 0.85,
+   "in": 0.06,
+   "out": 0.2,
+   "ticks": 24
+  }
+ }
+}

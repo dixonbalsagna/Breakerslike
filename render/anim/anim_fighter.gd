@@ -54,6 +54,13 @@ var _last_T: float = -1.0
 var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
 var _gc_hold_t0: float = -1.0           # a held ground-contact pose (the brace of a tumble) from this time ...
+var _ag_hold: String = ""              # the agency slice's held pose (a knockback, a charge: docs 9.22) from _ag_t0 ...
+var _ag_kind: String = ""              # ... of this kind (a key of data/anim/agency.json)
+var _ag_t0: float = -1.0
+var _ag_t1: float = -1.0               # ... until this time (-1: until the exchange, a fall or the cap ends it)
+var _ag_w: float = 0.0
+var _ag_in: float = 0.1
+var _ag_out: float = 0.15
 var _ls_t0: float = -1.0               # the last stand's window open from this time (the held resolve), -1 when closed ...
 var _ls_t1: float = -1.0               # ... and closed at this time (the resolve fades out)
 var _intro: Dictionary = {}           # the opening, from the sim's events: {on, fall_t, fall_dur, land_t, stare_t, stare_dur} (seconds on the sim's tick)
@@ -271,6 +278,80 @@ func on_skim(T: float, spd: float) -> void:
 
 ## World's ground-contact events (left_ground, bounce, land, tumble_end; docs/world/ground-contact.md section 4). They plug
 ## into the same body: a bounce whips it by the normal speed, a slam or a skid folds it, the end of a tumble lets it go.
+## The agency slice's events (data/anim/agency.json): a knockback holds a pose for as long as he is sent back, the embed plays its sequence over the held-down
+## ticks, the far taunt a shrug over the flight, the charges a held flight pose until the exchange starts; a feint peels off (docs/director/agency-slice-3.md).
+func on_agency(kind: String, T: float, e: Dictionary) -> void:
+	var A: Dictionary = AnimData.agency
+	if not RenderAnim.agency_poses or A.is_empty():
+		return
+	var wt: float = 0.6 if RenderAnim.reduced_motion else 1.0
+	match kind:
+		"knockback":
+			var kk: Dictionary = A.get("knockback", {}).get(String(e.get("kind", "slideShort")), {})
+			if kk.is_empty() or not AnimData.pose_exists(String(kk.hold)):
+				return
+			_ag_hold = String(kk.hold)
+			_ag_kind = "knockback"
+			_ag_t0 = T
+			_ag_t1 = T + clampf(float(e.get("dur", 0.5)), 0.1, 3.0)
+			_ag_w = float(kk.weight) * wt
+			_ag_in = float(kk.get("in", 0.08))
+			_ag_out = float(kk.get("out", 0.15))
+			debug["agency"] = int(debug.get("agency", 0)) + 1
+		"embed":
+			var em: Dictionary = A.get("embed", {})
+			if AnimData.entries.has(String(em.get("seq", ""))):
+				var dur: float = maxf(float(e.get("dur", 1.0)), 0.3)
+				_seq = {"id": String(em.seq), "t0": T, "dur": dur, "wt": float(em.get("weight", 1.0))}
+				debug["agency"] = int(debug.get("agency", 0)) + 1
+		"taunt_start":
+			var tn: Dictionary = A.get("taunt", {})
+			if AnimData.entries.has(String(tn.get("seq", ""))):
+				_seq = {"id": String(tn.seq), "t0": T, "dur": float(AnimData.entries[String(tn.seq)].dur) / 60.0, "wt": float(tn.get("weight", 0.7)) * wt}
+				debug["agency"] = int(debug.get("agency", 0)) + 1
+		"taunt_end_cut":
+			if String(_seq.get("id", "")) == String(A.get("taunt", {}).get("seq", "")):
+				_seq = {}
+		"charge_light", "charge_heavy", "charge_feint":
+			var which: String = kind.substr(7)
+			var cc: Dictionary = A.get("charge", {}).get(which, {})
+			if cc.is_empty() or not AnimData.pose_exists(String(cc.hold)):
+				return
+			_ag_hold = String(cc.hold)
+			_ag_kind = "charge_" + which
+			_ag_t0 = T
+			_ag_t1 = (T + float(cc.ticks) / 60.0) if cc.has("ticks") else -1.0
+			_ag_w = float(cc.weight) * wt
+			_ag_in = float(cc.get("in", 0.1))
+			_ag_out = float(cc.get("out", 0.15))
+			debug["agency"] = int(debug.get("agency", 0)) + 1
+
+
+## The held agency pose: eased in, held, eased out. A charge ends by itself when its exchange starts (the sim begins it at the wind-up), when he falls or at its cap.
+func _agency_layer(S: SimState, f, T: float) -> void:
+	if _ag_t0 < 0.0 or not AnimData.pose_exists(_ag_hold):
+		return
+	var cfg: Dictionary = AnimData.agency
+	if _ag_kind.begins_with("charge_") and _ag_t1 < 0.0:
+		var cap: float = float(cfg.get("charge", {}).get(_ag_kind.substr(7), {}).get("max_ticks", 90)) / 60.0
+		var ex = S.dirS.ex
+		if T - _ag_t0 > cap or f.state == "launched" or f.state == "down" or (ex != null and (ex.A == f or ex.D == f)):
+			_ag_t1 = T
+	var wgt: float = smoothstep(0.0, _ag_in, T - _ag_t0)
+	if _ag_t1 >= 0.0:
+		wgt *= 1.0 - smoothstep(0.0, _ag_out, T - _ag_t1)
+		if T - _ag_t1 >= _ag_out:
+			_ag_t0 = -1.0
+			_ag_t1 = -1.0
+			return
+	wgt *= _ag_w
+	if wgt > 0.001:
+		var ap: AnimPose = AnimData.pose(_ag_hold)
+		AnimPose.mix(q, ap.q, wgt)
+		hips = hips.lerp(ap.hips, wgt)
+		curl = curl.lerp(ap.curl, wgt)
+
+
 ## The last stand (docs/architecture/last-stand.md): ready starts his steadying beat in his own shape and the held resolve; end `used` lets the resolve go
 ## (the signature's own animation takes over), `expired` slumps him.
 func on_last_stand(kind: String, t: float, dur: float, end_kind: String) -> void:
@@ -644,6 +725,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			AnimPose.mix(q, rp.q, lw)
 			hips = hips.lerp(rp.hips, lw)
 			curl = curl.lerp(rp.curl, lw)
+	_agency_layer(S, f, T)
 	if _gc_hold_t0 >= 0.0 and AnimData.pose_exists("gc.hold.brace_tumble"):
 		var hin: float = float(AnimData.ground.get("hold", {}).get("in", 0.08))
 		var hout: float = float(AnimData.ground.get("hold", {}).get("out", 0.15))

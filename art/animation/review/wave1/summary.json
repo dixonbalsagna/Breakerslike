@@ -3,142 +3,260 @@
  "poses": 120,
  "counts": {
   "error": 0,
-  "review": 0,
-  "note": 76
+  "review": 13,
+  "note": 78
  },
- "flagged": [],
+ "flagged": [
+  "w1.hook.contact",
+  "w1.haymaker.chamber",
+  "w1.twin_spear.chamber",
+  "w1.snap_round.chamber",
+  "w1.snap_round.follow",
+  "w1.roundhouse.chamber",
+  "w1.roundhouse~b.chamber",
+  "w1.stomp.chamber",
+  "w1.dropping_elbow.contact",
+  "w1.cross_arm_ram.contact",
+  "w1.rising_knee.contact",
+  "w1.driving_knee.contact"
+ ],
  "findings": [
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.hook.contact",
+   "detail": "hand_r target [54, 72, 12] is 8.0 units out of reach (the limb is clamped to [62.0, 72.0, 12.0])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.haymaker.chamber",
+   "detail": "hand_r target [-8, 60, 26] is 6.0 units out of reach (the limb is clamped to [-2.0, 60.0, 26.0])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.twin_spear.chamber",
+   "detail": "hand_r target [4, 50, 6] is 6.0 units out of reach (the limb is clamped to [10.0, 50.0, 6.0])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.twin_spear.chamber",
+   "detail": "hand_l target [4, 50, -6] is 6.0 units out of reach (the limb is clamped to [10.0, 50.0, -6.0])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.snap_round.chamber",
+   "detail": "foot_r target [12, 40, 10] is 9.7 units out of reach (the limb is clamped to [14.4, 30.6, 10.8])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.snap_round.follow",
+   "detail": "foot_r target [14, 38, 8] is 10.4 units out of reach (the limb is clamped to [5.1, 33.3, 5.6])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.roundhouse.chamber",
+   "detail": "foot_r target [4, 44, 20] is 10.4 units out of reach (the limb is clamped to [12.9, 40.0, 16.5])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.roundhouse~b.chamber",
+   "detail": "foot_r target [4, 44, 20] is 10.4 units out of reach (the limb is clamped to [12.9, 40.0, 16.5])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "pose_lint",
+   "subject": "w1.stomp.chamber",
+   "detail": "foot_r target [16, 48, 8] is 5.3 units out of reach (the limb is clamped to [19.2, 43.8, 8.6])",
+   "action": "shorten the target or accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "review",
+   "source": "strike_lab",
+   "subject": "dropping_elbow",
+   "detail": "a part that is not the striking limb passes 8.3 u into the defender (neck into head) at 38 u",
+   "action": "pull the body back in the pose (less lunge or lean) or lengthen the distance"
+  },
+  {
+   "severity": "review",
+   "source": "strike_lab",
+   "subject": "cross_arm_ram",
+   "detail": "a part that is not the striking limb passes 7.8 u into the defender (neck into head) at 38 u",
+   "action": "pull the body back in the pose (less lunge or lean) or lengthen the distance"
+  },
+  {
+   "severity": "review",
+   "source": "strike_lab",
+   "subject": "rising_knee",
+   "detail": "a part that is not the striking limb passes 8.7 u into the defender (spine_2 into head) at 32 u",
+   "action": "pull the body back in the pose (less lunge or lean) or lengthen the distance"
+  },
+  {
+   "severity": "review",
+   "source": "strike_lab",
+   "subject": "driving_knee",
+   "detail": "a part that is not the striking limb passes 8.5 u into the defender (spine_2 into head) at 28 u",
+   "action": "pull the body back in the pose (less lunge or lean) or lengthen the distance"
+  },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.jab.chamber",
-   "detail": "right elbow at 164 degrees",
+   "detail": "hand_r target [14, 60, 11] is 1.1 units out of reach (the limb is clamped to [15.0, 60.1, 11.2])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "w1.jab.chamber",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.jab.contact",
-   "detail": "foot_r target [-8, 3, 9] is 5.0 units out of reach (the limb is clamped to [-4.6, 6.2, 8.5])",
-   "action": "accept the clamped end (`fix-reach`)"
+   "detail": "left elbow at 160 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.jab.follow",
-   "detail": "left elbow at 165 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.cross.chamber",
-   "detail": "right elbow at 164 degrees",
-   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+   "detail": "hand_r target [4, 58, 13] is 1.0 units out of reach (the limb is clamped to [4.2, 57.7, 13.9])",
+   "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",
    "source": "pose_lint",
-   "subject": "w1.cross.contact",
-   "detail": "foot_r target [-6, 3, 9] is 4.3 units out of reach (the limb is clamped to [-3.1, 5.6, 8.6])",
-   "action": "accept the clamped end (`fix-reach`)"
+   "subject": "w1.cross.chamber",
+   "detail": "right elbow at 160 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.hook.contact",
-   "detail": "foot_r target [-6, 3, 9] is 3.6 units out of reach (the limb is clamped to [-3.6, 5.2, 8.6])",
-   "action": "accept the clamped end (`fix-reach`)"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.hook.follow",
-   "detail": "left elbow at 170 degrees",
+   "detail": "left elbow at 153 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
-   "subject": "w1.backfist.contact",
-   "detail": "foot_r target [-6, 3, 9] is 3.2 units out of reach (the limb is clamped to [-4.0, 5.0, 8.7])",
-   "action": "accept the clamped end (`fix-reach`)"
+   "subject": "w1.hook.follow",
+   "detail": "left elbow at 160 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.backfist.follow",
-   "detail": "left elbow at 170 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.backfist~g.chamber",
-   "detail": "right elbow at 164 degrees",
-   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.backfist~g.contact",
-   "detail": "foot_r target [-6, 3, 9] is 3.2 units out of reach (the limb is clamped to [-4.0, 5.0, 8.7])",
+   "detail": "hand_r target [4, 58, 13] is 1.0 units out of reach (the limb is clamped to [4.2, 57.7, 13.9])",
    "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",
    "source": "pose_lint",
+   "subject": "w1.backfist~g.chamber",
+   "detail": "right elbow at 160 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
    "subject": "w1.backfist~g.follow",
-   "detail": "left elbow at 170 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.palm_heel.chamber",
-   "detail": "right elbow at 164 degrees",
+   "detail": "hand_r target [14, 60, 11] is 1.1 units out of reach (the limb is clamped to [15.0, 60.1, 11.2])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "w1.palm_heel.chamber",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.palm_heel.contact",
-   "detail": "foot_r target [-8, 3, 9] is 5.0 units out of reach (the limb is clamped to [-4.6, 6.2, 8.5])",
-   "action": "accept the clamped end (`fix-reach`)"
+   "detail": "left elbow at 160 degrees",
+   "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.palm_heel.follow",
-   "detail": "left elbow at 165 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.spear_hand.chamber",
-   "detail": "right elbow at 164 degrees",
+   "detail": "hand_r target [4, 58, 13] is 1.0 units out of reach (the limb is clamped to [4.2, 57.7, 13.9])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "w1.spear_hand.chamber",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.spear_hand.follow",
-   "detail": "left elbow at 171 degrees",
+   "detail": "hand_l target [17, 56, -5] is 2.0 units out of reach (the limb is clamped to [18.5, 55.6, -4.6])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "w1.spear_hand.follow",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.uppercut.contact",
-   "detail": "foot_r target [-6, 3, 9] is 4.0 units out of reach (the limb is clamped to [-3.5, 5.6, 8.6])",
-   "action": "accept the clamped end (`fix-reach`)"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.uppercut.contact",
-   "detail": "left elbow at 156 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -146,13 +264,6 @@
    "source": "pose_lint",
    "subject": "w1.uppercut~b.contact",
    "detail": "hand_r target [50, 84, 8] is 4.6 units out of reach (the limb is clamped to [46.2, 81.3, 8.0])",
-   "action": "accept the clamped end (`fix-reach`)"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.uppercut~b.contact",
-   "detail": "foot_r target [-6, 3, 9] is 2.9 units out of reach (the limb is clamped to [-4.3, 4.9, 8.7])",
    "action": "accept the clamped end (`fix-reach`)"
   },
   {
@@ -173,21 +284,28 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.hammer.follow",
-   "detail": "left elbow at 167 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
+   "subject": "w1.overhand.chamber",
+   "detail": "hand_r target [2, 62, 22] is 2.0 units out of reach (the limb is clamped to [4.0, 62.0, 22.0])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
    "subject": "w1.overhand.contact",
-   "detail": "foot_r target [-6, 3, 9] is 2.2 units out of reach (the limb is clamped to [-4.5, 4.0, 8.8])",
+   "detail": "hand_r target [52, 76, 10] is 4.0 units out of reach (the limb is clamped to [56.0, 76.0, 10.0])",
    "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.overhand.follow",
-   "detail": "left elbow at 170 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -201,36 +319,22 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.haymaker.contact",
-   "detail": "foot_r target [-6, 3, 9] is 3.7 units out of reach (the limb is clamped to [-3.5, 5.2, 8.6])",
-   "action": "accept the clamped end (`fix-reach`)"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.haymaker.contact",
-   "detail": "left elbow at 161 degrees",
+   "detail": "left elbow at 156 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.haymaker.follow",
-   "detail": "left elbow at 170 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.short_elbow.follow",
-   "detail": "right elbow at 162 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.rising_elbow.contact",
-   "detail": "foot_r target [-6, 3, 9] is 1.8 units out of reach (the limb is clamped to [-5.4, 4.1, 8.8])",
-   "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",
@@ -245,27 +349,6 @@
    "subject": "w1.dropping_elbow.follow",
    "detail": "right elbow at 156 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.twin_spear.contact",
-   "detail": "foot_r target [-6, 3, 9] is 2.2 units out of reach (the limb is clamped to [-4.5, 4.1, 8.8])",
-   "action": "accept the clamped end (`fix-reach`)"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.double_palm.contact",
-   "detail": "foot_r target [-6, 3, 9] is 2.4 units out of reach (the limb is clamped to [-4.5, 4.3, 8.7])",
-   "action": "accept the clamped end (`fix-reach`)"
-  },
-  {
-   "severity": "note",
-   "source": "pose_lint",
-   "subject": "w1.double_palm~b.contact",
-   "detail": "foot_r target [-6, 3, 9] is 2.4 units out of reach (the limb is clamped to [-4.5, 4.3, 8.7])",
-   "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",
@@ -285,35 +368,35 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.cross_arm_ram.chamber",
-   "detail": "left elbow at 162 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.cross_arm_ram.chamber",
-   "detail": "right elbow at 155 degrees",
+   "detail": "right elbow at 153 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.cross_arm_ram.follow",
-   "detail": "left elbow at 171 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.cross_arm_ram.follow",
-   "detail": "right elbow at 170 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.front_kick.contact",
-   "detail": "left elbow at 163 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -334,14 +417,14 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.low_kick.follow",
-   "detail": "right elbow at 152 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.snap_round.follow",
-   "detail": "right elbow at 152 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -355,14 +438,14 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.roundhouse.follow",
-   "detail": "left elbow at 162 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.roundhouse.follow",
-   "detail": "right elbow at 152 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -376,15 +459,22 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.roundhouse~b.follow",
-   "detail": "right elbow at 152 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.axe_kick.contact",
-   "detail": "left elbow at 155 degrees",
+   "detail": "left elbow at 153 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "w1.axe_kick.follow",
+   "detail": "foot_r target [13, 33, 7] is 3.0 units out of reach (the limb is clamped to [12.3, 30.0, 7.0])",
+   "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",
@@ -399,6 +489,13 @@
    "subject": "w1.axe_kick.follow",
    "detail": "right knee at 155 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "w1.axe_kick~b.follow",
+   "detail": "foot_r target [13, 33, 7] is 3.0 units out of reach (the limb is clamped to [12.3, 30.0, 7.0])",
+   "action": "accept the clamped end (`fix-reach`)"
   },
   {
    "severity": "note",
@@ -418,14 +515,21 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.spinning_heel.chamber",
-   "detail": "right knee at 159 degrees",
+   "detail": "foot_r target [-4, 30, 10] is 1.2 units out of reach (the limb is clamped to [-4.3, 29.7, 11.1])",
+   "action": "accept the clamped end (`fix-reach`)"
+  },
+  {
+   "severity": "note",
+   "source": "pose_lint",
+   "subject": "w1.spinning_heel.chamber",
+   "detail": "right knee at 155 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.stomp.follow",
-   "detail": "left elbow at 161 degrees",
+   "detail": "left elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -439,14 +543,14 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.short_knee.chamber",
-   "detail": "right knee at 156 degrees",
+   "detail": "right knee at 155 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.driving_knee.chamber",
-   "detail": "left elbow at 154 degrees",
+   "detail": "left elbow at 155 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -481,14 +585,14 @@
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.shoulder_check.contact",
-   "detail": "right elbow at 153 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
    "severity": "note",
    "source": "pose_lint",
    "subject": "w1.shoulder_check.follow",
-   "detail": "right elbow at 175 degrees",
+   "detail": "right elbow at 160 degrees",
    "action": "the runtime limb pass trims the fold to 150 degrees, so the pose shows less than authored; relax it if the full fold is meant"
   },
   {
@@ -508,15 +612,22 @@
   {
    "severity": "note",
    "source": "silhouette_lint",
-   "subject": "w1.haymaker.contact / w1.hook.contact",
-   "detail": "overlap 0.872: two strikes derived from the same family (they differ by the hands or the target)",
-   "action": "by design (Combat's derive rows); the hands and the target tell them apart"
+   "subject": "w1.cross_arm_ram.contact / w1.shoulder_check.contact",
+   "detail": "overlap 0.825 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
   },
   {
    "severity": "note",
    "source": "silhouette_lint",
-   "subject": "w1.cross_arm_ram.contact / w1.shoulder_check.contact",
-   "detail": "overlap 0.831 (across families)",
+   "subject": "w1.hook.contact / w1.jab.contact",
+   "detail": "overlap 0.803 (across families)",
+   "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
+  },
+  {
+   "severity": "note",
+   "source": "silhouette_lint",
+   "subject": "w1.hook.contact / w1.palm_heel.contact",
+   "detail": "overlap 0.803 (across families)",
    "action": "two moves that read alike: change one silhouette (or add the pair to data/anim/lint_allow.json with a reason)"
   },
   {
@@ -538,6 +649,13 @@
    "source": "strike_lab",
    "subject": "short_knee",
    "detail": "a part that is not the striking limb touches the defender by 3.9 u (hand_r into hand_r) at 28 u",
+   "action": "none needed unless it reads as a clip in the reel"
+  },
+  {
+   "severity": "note",
+   "source": "strike_lab",
+   "subject": "body_ram",
+   "detail": "a part that is not the striking limb touches the defender by 3.6 u (spine_1 into head) at 34 u",
    "action": "none needed unless it reads as a clip in the reel"
   }
  ]
