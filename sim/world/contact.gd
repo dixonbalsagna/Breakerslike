@@ -59,6 +59,7 @@ static var K_AREA_LATER: float = 0.5     # a later contact pays this share of th
 static var K_AREA_SLAM: float = 1.0      # the first contact pays this share of the impact's area damage when it is a slam ...
 static var K_AREA_TOUCH: float = 0.5     # ... and this share when it is anything else (the old slide's touch-down)
 static var K_AIRDRAG: float = 0.55      # the horizontal drag base per second after a journey's first contact (0.55 is the launch's own flight)
+static var K_GAINCAP: float = 0.0        # a journey never goes faster than this times its first-contact speed, on the ground or after a contact (0 off)
 static var K_GMUL: float = 1.0           # gravity after a journey's first contact, times 1000
 static var K_RUBBLE_MIN: float = 8.0
 static var K_PAVE_DUG: float = -3.0
@@ -184,6 +185,7 @@ static func _cache() -> void:
 	K_AREA_SLAM = float(D.get("area", {}).get("slam", 1.0))
 	K_AREA_TOUCH = float(D.get("area", {}).get("touch", 0.5))
 	K_GMUL = float(D.bounce.get("gravityMul", 1.0))
+	K_GAINCAP = float(D.get("slope", {}).get("speedCap", 0.0))
 	K_AIRDRAG = float(D.bounce.get("airDrag", 0.55))
 	K_RUBBLE_MIN = float(D.get("rubbleMin", 8.0))
 	K_PAVE_DUG = float(D.paving.dugBelow)
@@ -274,6 +276,12 @@ static func moveAir(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	var grav: float = 1000.0 * dt * (K_GMUL if b.contacts > 0 else 1.0)
 	b.vy -= grav
 	b.vx *= SimDetMath.pow(K_AIRDRAG if b.contacts > 0 else 0.55, dt)
+	if K_GAINCAP > 0.0 and b.contacts > 0:   # the energy of the blow is the most a fall or a slope can turn it into (a cliff must not make a 1,500 of a 356)
+		var spc: float = SimDetMath.hypot(b.vx / b.launchT, b.vy)
+		var capv: float = K_GAINCAP * b.v0
+		if spc > capv and spc > 0.0:
+			b.vx *= capv / spc
+			b.vy *= capv / spc
 	b.x = SimWrap.wrap(b.x + b.vx * dt)
 	b.y += b.vy * dt
 	spinStep(b, dt)
@@ -428,6 +436,8 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	if b.mode == TUMBLE:
 		a *= K_TUMBRAKE
 	var vN2: float = maxf(0.0, vN - a * dt)
+	if K_GAINCAP > 0.0:
+		vN2 = minf(vN2, K_GAINCAP * b.v0)
 	var dx: float = dir * (vN + vN2) * 0.5 * tv * dt
 	var x2: float = SimWrap.wrap(b.x + dx)
 	var y2: float = WorldTerrain.groundY(S, x2, b.z)

@@ -43,6 +43,9 @@
     "touch": 0.4,
     "laterShare": 0.0
   },
+  "slope": {
+    "speedCap": 1.25
+  },
   "spin": {
     "capTurns": [1.5, 3.0, 3.0, 3.0],
     "halfLife": 0.5,
