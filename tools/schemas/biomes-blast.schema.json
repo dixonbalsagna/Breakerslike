@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/biomes-blast",
+  "title": "biomes.blast/1",
+  "description": "data/biomes/blast.json: what an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind: craterE the crater's energy at tier 1, radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake; tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. Version field: schema. Policy: closed except keys starting with an underscore; the kinds are an open table of closed records (a new shot kind needs an entry). Every kind in data/fight/shots.json should have an entry (a warning, blast-kind) and the tier multipliers should not fall with the tier (a warning, blast-tier).",
+  "type": "object",
+  "required": [
+    "schema",
+    "kinds",
+    "tierEnergy",
+    "tierDamage"
+  ],
+  "properties": {
+    "schema": {
+      "const": "biomes.blast/1"
+    },
+    "kinds": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "craterE",
+          "radius",
+          "damage",
+          "debris",
+          "dust",
+          "ringR",
+          "shake",
+          "splash"
+        ],
+        "properties": {
+          "craterE": {
+            "description": "The crater's energy at tier 1 (1 is a scuff: a slam at 900 speed; the bowl radius is 160 units times its square root).",
+            "type": "number",
+            "minimum": 0
+          },
+          "radius": {
+            "description": "The structure blast's radius at tier 1, in units.",
+            "type": "number",
+            "minimum": 0
+          },
+          "damage": {
+            "description": "The structure blast's damage at tier 1, in hit points.",
+            "type": "number",
+            "minimum": 0
+          },
+          "debris": {
+            "description": "Debris pieces.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "dust": {
+            "description": "Dust puffs.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "ringR": {
+            "description": "The shock ring's radius, in units.",
+            "type": "number",
+            "minimum": 0
+          },
+          "shake": {
+            "description": "The camera shake.",
+            "type": "number",
+            "minimum": 0
+          },
+          "splash": {
+            "description": "Water splash pieces.",
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "tierEnergy": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0
+      },
+      "description": "The crater energy multiplier by the shooter's tier 1 to 4."
+    },
+    "tierDamage": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0
+      },
+      "description": "The structure damage multiplier by the shooter's tier 1 to 4."
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

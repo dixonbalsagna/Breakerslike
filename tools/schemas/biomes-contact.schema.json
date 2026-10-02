@@ -17,6 +17,7 @@
     "spin",
     "slope",
     "furrow",
+    "embed",
     "surfaces",
     "water",
     "biomeSurface",
@@ -80,7 +81,8 @@
         "clear",
         "lipLift",
         "wall",
-        "stop"
+        "stop",
+        "wallHaltBelow"
       ],
       "properties": {
         "clear": {
@@ -98,6 +100,11 @@
         "stop": {
           "type": "number",
           "minimum": 0
+        },
+        "wallHaltBelow": {
+          "type": "number",
+          "minimum": 0,
+          "description": "A body that meets a wall below this speed halts instead of bouncing off."
         }
       },
       "description": "How the body leaves the ground.",
@@ -649,6 +656,42 @@
           "description": "A multiplier on the length of the furrow's path."
         }
       },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "embed": {
+      "type": "object",
+      "required": [
+        "minDepthBh",
+        "specialMinDepthBh",
+        "ticks",
+        "cooldown"
+      ],
+      "properties": {
+        "minDepthBh": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "A crater at least this deep (body heights) buries the fighter in it."
+        },
+        "specialMinDepthBh": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The same for a special's crater."
+        },
+        "ticks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How long the fighter stays buried."
+        },
+        "cooldown": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds before it can happen to the same fighter again."
+        }
+      },
+      "description": "Buried in the crater (docs/world/ground-contact.md): a deep enough crater embeds the fighter it was dug under.",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

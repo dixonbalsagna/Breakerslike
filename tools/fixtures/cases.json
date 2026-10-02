@@ -31534,6 +31534,806 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "biomes-contact-wall-halt-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/leave/wallHaltBelow"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/leave"
+      }
+    },
+    {
+      "id": "biomes-contact-wall-halt-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/leave/wallHaltBelow": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/leave/wallHaltBelow"
+      }
+    },
+    {
+      "id": "biomes-contact-wall-halt-zero-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/leave/wallHaltBelow": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-wall-halt-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/leave/wallHaltBelow": "low"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/leave/wallHaltBelow"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/embed"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-contact-embed-valid",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed": {
+              "minDepthBh": 1.75,
+              "specialMinDepthBh": 1.5,
+              "ticks": 60,
+              "cooldown": 5
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-embed-note-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-embed-unknown-key",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/spin": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/embed/spin"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-min-depth-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/embed/minDepthBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/embed"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-special-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/embed/specialMinDepthBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/embed"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-ticks-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/embed/ticks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/embed"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-cooldown-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/embed/cooldown"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/embed"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-min-depth-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/minDepthBh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/embed/minDepthBh"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-special-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/specialMinDepthBh": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/embed/specialMinDepthBh"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-ticks-integer",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/ticks": 60.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/embed/ticks"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-ticks-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/ticks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/embed/ticks"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-cooldown-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/cooldown": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/embed/cooldown"
+      }
+    },
+    {
+      "id": "biomes-contact-embed-cooldown-zero-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/embed/cooldown": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-live-valid",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/schema": "biomes.blast/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-key-required",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/tierDamage"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-blast-schema-version",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/schema": "biomes.blast/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "biomes-blast-unknown-key",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "biomes-blast-underscore-key-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-kinds-empty",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/kinds"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-new-valid",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-kind-name-shape",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/Bad Name": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/kinds/Bad Name"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-key-required",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/kinds/test"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-unknown-key",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 4,
+              "glow": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/kinds/test/glow"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-number-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": -1,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/test/radius"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-crater-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": -0.1,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/test/craterE"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-count-integer",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3.5,
+              "dust": 1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/test/debris"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-count-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": -1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/test/dust"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-splash-integer",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 2.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/test/splash"
+      }
+    },
+    {
+      "id": "biomes-blast-kind-zero-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0,
+              "radius": 70,
+              "damage": 40,
+              "debris": 0,
+              "dust": 0,
+              "ringR": 160,
+              "shake": 1.5,
+              "splash": 0
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-kind-type",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/test": {
+              "craterE": 0.12,
+              "radius": 70,
+              "damage": 40,
+              "debris": 3,
+              "dust": 1,
+              "ringR": 160,
+              "shake": "big",
+              "splash": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/test/shake"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-energy-length",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierEnergy": [
+              1,
+              1.3,
+              1.7
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/tierEnergy"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-damage-too-long",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierDamage": [
+              1,
+              1.4,
+              2,
+              2.8,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maxItems",
+        "pointer": "/tierDamage"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-energy-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierEnergy": [
+              1,
+              -1.3,
+              1.7,
+              2.2
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/tierEnergy/1"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-damage-type",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierDamage": [
+              1,
+              "x",
+              2,
+              2.8
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/tierDamage/1"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-energy-falls-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierEnergy": [
+              1,
+              1.7,
+              1.3,
+              2.2
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-tier",
+        "pointer": "/tierEnergy/2"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-damage-falls-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierDamage": [
+              1,
+              1.4,
+              2,
+              1.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-tier",
+        "pointer": "/tierDamage/3"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-equal-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierEnergy": [
+              1,
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-shot-kind-without-entry-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/kinds/bolt"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-kind",
+        "pointer": "/kinds"
+      }
     }
   ],
   "text": [

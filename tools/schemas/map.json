@@ -299,6 +299,10 @@
       "schema": "biomes-contact.schema.json"
     },
     {
+      "match": "data/biomes/blast.json",
+      "schema": "biomes-blast.schema.json"
+    },
+    {
       "match": "data/input/actions.json",
       "schema": "input-actions.schema.json"
     },

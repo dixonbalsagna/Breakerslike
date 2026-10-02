@@ -936,6 +936,18 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     for (let i = 1; i < byPower.length; i++) if (byPower[i][1].power > byPower[i - 1][1].power && byPower[i][1].dmg < byPower[i - 1][1].dmg) err(SH, `/kinds/${esc(byPower[i][0])}/dmg`, 'shots-order', `"${byPower[i][0]}" trades with more power (${byPower[i][1].power}) than "${byPower[i - 1][0]}" (${byPower[i - 1][1].power}) but does less damage (${byPower[i][1].dmg} against ${byPower[i - 1][1].dmg})`, 'warning');
   }
 
+  // ---- biomes blast: every shot kind has an entry; the tier multipliers do not fall ----
+  const bl = get('data/biomes/blast.json');
+  if (isObj(bl)) {
+    const BL = 'data/biomes/blast.json';
+    const shotsB = get('data/fight/shots.json');
+    if (isObj(bl.kinds) && isObj(shotsB) && isObj(shotsB.kinds)) {
+      const missing = Object.keys(shotsB.kinds).filter((k) => !k.startsWith('_') && !(k in bl.kinds));
+      for (const k of missing) err(BL, '/kinds', 'blast-kind', `shot kind "${k}" of data/fight/shots.json has no entry in kinds (${Object.keys(bl.kinds).filter((x) => !x.startsWith('_')).join(', ')})`, 'warning');
+    }
+    for (const key of ['tierEnergy', 'tierDamage']) if (Array.isArray(bl[key])) for (let i = 1; i < bl[key].length; i++) if (typeof bl[key][i] === 'number' && typeof bl[key][i - 1] === 'number' && bl[key][i] < bl[key][i - 1]) err(BL, `/${key}/${i}`, 'blast-tier', `${key} falls from ${bl[key][i - 1]} to ${bl[key][i]} at tier ${i + 1}; it must not fall with the tier`, 'warning');
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

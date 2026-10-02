@@ -13,7 +13,8 @@
     "clear": 1.5,
     "lipLift": 1,
     "wall": 0.8,
-    "stop": 60
+    "stop": 60,
+    "wallHaltBelow": 600
   },
   "bounce": {
     "perTier": [
@@ -72,6 +73,12 @@
     "tierMul": 0.15,
     "bermMul": 2,
     "pathMul": 1
+  },
+  "embed": {
+    "minDepthBh": 1.75,
+    "specialMinDepthBh": 1.5,
+    "ticks": 60,
+    "cooldown": 5
   },
   "surfaces": {
     "paving": {
