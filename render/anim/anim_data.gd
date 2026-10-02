@@ -26,6 +26,7 @@ static var form_poses: Dictionary = {}  # beat -> pose id
 static var load_waves: bool = false      # --waves: also bake the parked pose waves of data/anim/waves/ (tools only; no live match plays them)
 static var raw: Dictionary = {}         # id -> the sketch each pose was baked from (poses.json, and the waves when loaded)
 static var last_stand: Dictionary = {}   # data/anim/laststand.json: the ready sequence of each shape, the held resolve and the slump
+static var flight: Dictionary = {}       # data/anim/flight.json: the flight lead, a launched body turned head first along its velocity (docs 9.23)
 static var agency: Dictionary = {}       # data/anim/agency.json: how the agency slice's events (knockback, embed, taunt, charges) map to poses
 static var intro: Dictionary = {}        # data/anim/intro.json: the opening's timings and each shape's staredown beat
 static var ground: Dictionary = {}       # data/anim/ground.json: how ground contact scales its poses (surface, speed, hold times)
@@ -71,6 +72,7 @@ static func load_all() -> void:
 	shapes = _read("shapes.json").get("shapes", {})
 	ground = _read("ground.json")
 	intro = _read("intro.json")
+	flight = _read("flight.json")
 	agency = _read("agency.json")
 	var ck: Array = ["taunt_start", "charge_light", "charge_heavy", "charge_feint"]   # the cues the agency layer listens to: these, and the ones that end a taunt or a charge
 	ck.append_array(agency.get("taunt", {}).get("cut_kinds", []))

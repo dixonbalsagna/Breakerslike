@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-flight",
+  "title": "anim.flight/1",
+  "description": "data/anim/flight.json: the flight lead (render/anim/anim_fighter.gd, _lead_layer; docs/animation/pose-pipeline.md section 9.23, GB-006): a launched body that has stopped tumbling flies head first along its velocity, a fighter carried fast with his head against the way he goes is stood up to a tilt cap. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore.",
+  "type": "object",
+  "required": [
+    "schema",
+    "speed",
+    "spin",
+    "steep",
+    "rate",
+    "skid_rate",
+    "tilt",
+    "tilt_rate",
+    "lay",
+    "pivot_y"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.flight/1"
+    },
+    "speed": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      },
+      "description": "units/s over which the lead comes in (from, to)"
+    },
+    "spin": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      },
+      "description": "|spin| in rad/s under which the lead comes in (from, to)"
+    },
+    "steep": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      },
+      "description": "a fall steeper than this (down over across, from, to) is not chased"
+    },
+    "rate": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "1/s: how fast the turn chases its aim or lets go"
+    },
+    "skid_rate": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "1/s: the same, landing into a skid"
+    },
+    "tilt": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 90,
+      "description": "degrees: the most a fighter carried fast against his head's way is left tilted"
+    },
+    "tilt_rate": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "1/s: the same for the knockback tilt"
+    },
+    "lay": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      },
+      "description": "sine of the spine's tilt over which a pose that lays the body out is flown head first in a skid (from, to)"
+    },
+    "pivot_y": {
+      "type": "number",
+      "description": "the body's middle in model space (the view's PIVOT_Y)"
+    }
+  },
+  "patternProperties": {
+    "^_": {}
+  },
+  "additionalProperties": false
+}

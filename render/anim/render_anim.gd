@@ -25,6 +25,7 @@ static var joint_audit: bool = false   # the joint-limit lint: every fighter not
 static var ragdoll_enabled: bool = true
 static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
 static var last_stand_poses: bool = true   # the last stand's body cue (docs 9.20); --no-last-stand-poses switches it off
+static var flight_lead: bool = true         # a fast launched body flies head first (docs 9.23); --no-flight-lead switches it off (the before)
 static var agency_poses: bool = true       # the agency slice's events (knockback, embed, the far taunt, the charges) play their poses (docs 9.22); --no-agency-poses switches them off
 static var intro_poses: bool = true        # the opening's fall, landing and staredown (docs 9.19); --no-intro-poses switches them off
 static var ground_poses: bool = true       # World's ground-contact events play their poses and sequences (docs 9.18); --no-ground-poses switches them off
@@ -74,6 +75,8 @@ static func _read_args() -> void:
 			last_stand_poses = false
 		elif a == "--no-agency-poses":
 			agency_poses = false
+		elif a == "--no-flight-lead":
+			flight_lead = false
 		elif a == "--no-intro-poses":
 			intro_poses = false
 		elif a == "--no-ground-poses":

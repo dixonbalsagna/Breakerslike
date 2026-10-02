@@ -44,6 +44,7 @@ var _full_fk: bool = false
 const _LEG_BONES := [16, 17, 19, 20]                  # thigh_l, shin_l, thigh_r, shin_r
 const LEG_CHAIN := [0, 1, 16, 17, 18, 19, 20, 21]   # root, pelvis, thigh, shin, foot of each leg
 const SOCKET_CHAIN := [0, 1, 2, 3, 4, 5, 11, 12, 13, 14]   # root, pelvis, spines, neck, head, near clavicle, arm, forearm, hand
+const SPINE_CHAIN: Array = [0, 1, 2, 3, 4, 5]   # root, pelvis, spine_1, spine_2, neck, head: the flight lead reads the spine
 const SOCKET_SET := ["root", "pelvis", "spine_1", "spine_2", "neck", "head", "clavicle_r", "upper_arm_r", "forearm_r", "hand_r"]
 
 var _base: Array[Quaternion] = []
@@ -55,6 +56,12 @@ var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
 var _gc_hold_t0: float = -1.0           # a held ground-contact pose (the brace of a tumble) from this time ...
 var _ag_sq: Dictionary = {}            # the agency slice's own sequence (the embed: its own, so a ground contact's sequence at the same tick cannot replace it)
+var _lead_w: float = 0.0               # the flight lead (docs 9.23): how hard it is chasing its aim now, and the turn it holds (a world angle added to the sim's own, radians)
+var _lead_d: float = 0.0
+var _lead_vm := Vector2.ZERO           # his velocity as measured over the last sim tick, and where he was
+var _lead_px: float = 0.0
+var _lead_py: float = 0.0
+var _lead_tk: int = -1
 var _ag_hold: String = ""              # the agency slice's held pose (a knockback, a charge: docs 9.22) from _ag_t0 ...
 var _ag_kind: String = ""              # ... of this kind (a key of data/anim/agency.json)
 var _ag_t0: float = -1.0
@@ -330,6 +337,87 @@ func on_agency(kind: String, T: float, e: Dictionary) -> void:
 			_ag_in = float(cc.get("in", 0.1))
 			_ag_out = float(cc.get("out", 0.15))
 			debug["agency"] = int(debug.get("agency", 0)) + 1
+
+
+## The flight lead (GB-006, docs/animation/pose-pipeline.md 9.23): the sim's body spin halves every 0.5 s and leaves a launched fighter at whatever angle the tumble
+## stopped at, still flying at speed: feet first, laid out along the flight line. Once the spin is low and the speed high the whole body turns about its middle (the
+## view's pivot) until the head leads along the velocity, never the feet: blown back he flies on his back, head first. Landing into a skid it turns upright. The turn
+## `_lead_d` is a world-space angle added to the sim's own (the view's pivot turns by -rot): it chases its aim by the short way, holds when the flight slows and
+## is let go when the launch ends. It is the root's rotation and a shift that keeps the middle in place. Read from the sim's state only.
+func _lead_layer(S: SimState, f, dt: float) -> void:
+	var L: Dictionary = AnimData.flight
+	if L.is_empty() or not RenderAnim.flight_lead:
+		_lead_d = 0.0
+		_lead_w = 0.0
+		return
+	var rate: float = float(L.get("rate", 6.0))
+	# the spine's own angle in the pose as it stands (pelvis to head, model space, beta = 0 upright), and on screen with the sim's turn and the turn held
+	AnimPose.fk_chain(q, hips, gq, gp, SPINE_CHAIN)
+	var ax: Vector3 = gp[5] - gp[1]
+	var beta: float = atan2(-ax.x * vface, ax.y)
+	var net: float = beta - f.rot + _lead_d
+	var gain: float = 0.0
+	var aim: float = 0.0
+	if f.state == "launched":
+		var v := Vector2(f.vx, f.vy)
+		var sp: float = v.length()
+		var head_first: float = atan2(-v.x, v.y)   # the spine along the velocity: (-sin a, cos a) = v
+		if f.slide > 0.0:
+			# landing into a skid: the pose's own lean without the sim's turn (it is easing him upright), only faster; a body the pose lays out along the skid is flown head first
+			var lay: float = smoothstep(float(L.lay[0]), float(L.lay[1]), absf(sin(beta)))
+			aim = beta + lay * wrapf(head_first - beta, -PI, PI) if sp > 1.0 else beta
+			gain = float(L.get("skid_rate", 20.0)) / maxf(rate, 0.001)
+		else:
+			var spd: Array = L.speed
+			var spn: Array = L.spin
+			gain = smoothstep(float(spd[0]), float(spd[1]), sp) * (1.0 - smoothstep(float(spn[0]), float(spn[1]), absf(f.spin)))
+			if f.vy < 0.0:
+				var st: Array = L.steep
+				gain *= 1.0 - smoothstep(float(st[0]), float(st[1]), -f.vy / maxf(absf(f.vx), 1.0))
+			aim = head_first
+		_lead_d += wrapf(aim - net, -PI, PI) * (1.0 - exp(-dt * rate * gain))
+	else:
+		# on his feet or flying free and carried fast (a knockback moves him by position, not by velocity): a body folded or laid out with the feet leading is stood up
+		# to a tilt of `tilt` degrees at most; otherwise the turn is let go, back to the sim's own angle, the short way
+		var want_d: float = 0.0
+		var vm: Vector2 = _lead_measure(S, f)
+		var spm: float = vm.length()
+		var a0: float = wrapf(beta - f.rot, -PI, PI)
+		if spm > 1.0 and absf(a0) < 2.1:
+			var cap: float = deg_to_rad(float(L.get("tilt", 35.0)))
+			var dot0: float = (-sin(a0) * vm.x + cos(a0) * vm.y) / spm
+			var spd2: Array = L.speed
+			var g: float = smoothstep(float(spd2[0]), float(spd2[1]), spm) * smoothstep(-0.1, -0.5, dot0)
+			want_d = g * (clampf(a0, -cap, cap) - a0)
+			gain = g
+		_lead_d += (want_d - _lead_d) * (1.0 - exp(-dt * float(L.get("tilt_rate", 45.0))))   # (quick: a knockback is over in a few frames)
+	_lead_d = wrapf(_lead_d, -PI, PI)
+	_lead_w = gain
+	if absf(_lead_d) < 0.0005:
+		_lead_d = 0.0
+		return
+	var phi: float = vface * _lead_d   # a turn of the model about z shows as vface * phi on screen
+	q[0] = Quaternion(Vector3(0, 0, 1), phi) * q[0]
+	var py: float = float(L.get("pivot_y", 34.0))
+	root_off += Vector3(py * sin(phi), py * (1.0 - cos(phi)), 0.0)
+	debug["lead"] = int(debug.get("lead", 0)) + 1
+	debug["lead_w"] = gain
+	debug["lead_d"] = _lead_d
+	debug["lead_phi"] = phi
+
+
+## The fighter's velocity as the sim moved him over the last tick: a knockback and a rush carry a fighter by position and leave f.vx as it was.
+func _lead_measure(S: SimState, f) -> Vector2:
+	if S.tick != _lead_tk:
+		var gap: int = S.tick - _lead_tk
+		if _lead_tk >= 0 and gap > 0 and gap <= 4:
+			_lead_vm = Vector2(SimWrap.sdx(_lead_px, f.x), f.y - _lead_py) * (60.0 / float(gap))
+		else:
+			_lead_vm = Vector2.ZERO
+		_lead_tk = S.tick
+		_lead_px = f.x
+		_lead_py = f.y
+	return _lead_vm
 
 
 ## The held agency pose: eased in, held, eased out. A charge ends by itself when its exchange starts (the sim begins it at the wind-up), when he falls or at its cap.
@@ -847,6 +935,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	_inertialise(dt, prof)
 	if RenderAnim.debug_checks:
 		layers = ("cue:" + String(_cue.get("kind", "")) + " " if not _cue.is_empty() else "") + ("rush " if _rushing else "") + ("react " if not _reacts.is_empty() else "") + ("ik " if _ci_w > 0.001 else "") + ("beam " if f.beamCharge != null else "") + (f.state + " ")
+	_lead_layer(S, f, dt)
 	# 6b. the limb pass: elbows and knees stay hinges in human range, arms stay out of the shoulder's blind spot
 	if RenderAnim.joint_audit:
 		audit["D"] = AnimJoints.violations(q, _rd.shape_key)

@@ -1,0 +1,25 @@
+{
+ "schema": "anim.flight/1",
+ "_about": "The flight lead (GB-006, docs/animation/pose-pipeline.md 9.23): a launched fighter's body spin runs out within a second or two (the sim halves it every 0.5 s) and leaves him at whatever angle the tumble stopped, while he is still flying at speed: feet first, laid out along the flight line. Once the spin is low and the speed high, render/anim/anim_fighter.gd (_lead_layer) turns the whole body about its middle until the head leads along the velocity, never the feet (blown back he flies on his back, head first; thrown ahead, face down, head first), holds that while he flies on and lets it go when the launch ends; landing into a skid it turns him upright. speed: units/s over which the turn comes in (from, to). spin: the |spin| in rad/s under which it comes in (from, to: a tumble spinning faster than `to` is left to tumble). steep: a steep fall (down over across, from, to) is not chased: a landing is upright. rate: how fast the turn chases its aim or lets go (1/s); lay: the sine of the spine's tilt from upright (from, to) over which a pose that lays the body out is flown head first even in a skid; skid_rate: the same, landing into a skid; tilt_rate: the same for the knockback tilt (the sim's own ease upright is quick, and the turn keeps up with it). tilt: a fighter on his feet or flying free and carried fast against the way his head points (a knockback moves him by position) is stood up to this many degrees of tilt at most (his folded stagger, laid out along the knockback). pivot_y: the body's middle in model space (the view's PIVOT_Y). Render only.",
+ "speed": [
+  300,
+  700
+ ],
+ "spin": [
+  3.0,
+  4.5
+ ],
+ "steep": [
+  0.7,
+  1.3
+ ],
+ "rate": 6.0,
+ "pivot_y": 34.0,
+ "skid_rate": 20.0,
+ "lay": [
+  0.7,
+  0.95
+ ],
+ "tilt": 35.0,
+ "tilt_rate": 45.0
+}

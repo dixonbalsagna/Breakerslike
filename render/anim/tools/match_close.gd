@@ -108,7 +108,6 @@ func _run() -> void:
 		main.frame(DT)
 		var f0 = S.fighters[0]
 		var f1 = S.fighters[1]
-		var dx: float = SimWrap.sdx(f1.x, f0.x)
 		# the frame follows whoever the agency layer is playing (the pair when they are close): far apart, a frame that held both would show neither
 		var tagged: int = -1
 		for i2 in range(2):
@@ -121,7 +120,7 @@ func _run() -> void:
 			subj = tagged
 		var fs = S.fighters[subj]
 		var fo = S.fighters[1 - subj]
-		var dso: float = SimWrap.sdx(fo.x, fs.x)
+		var dso: float = SimWrap.sdx(fs.x, fo.x)   # (sdx(a, b) is b minus a: from the subject to the rival)
 		var near: bool = absf(dso) < 330.0
 		var mx: float = fs.x + (dso * 0.3 if near else signf(dso) * 30.0)   # always on the subject, leaning toward the rival
 		var my: float = fs.y
@@ -143,7 +142,7 @@ func _run() -> void:
 		for i in range(2):
 			var f = S.fighters[i]
 			var af: AnimFighter = RenderAnim.solve(S, f)
-			var vx: float = SimWrap.sdx(f.x, cx)
+			var vx: float = SimWrap.sdx(cx, f.x)   # from the camera to the fighter
 			pivots[i].position = Vector3(vx, f.y, 0.0)
 			pivots[i].scale = Vector3(af.vface, 1.0, 1.0)
 			pivots[i].rotation.z = -f.rot * af.vface if false else -f.rot

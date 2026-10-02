@@ -252,6 +252,84 @@ func _test_heavy_arm() -> void:
 	print("heavy arm test: a broken arm swings %.2f rad where the same arm unbroken swings %.2f; the good arm is untouched" % [swing[1][0], swing[0][0]])
 
 
+## The flight lead (docs/animation/pose-pipeline.md 9.23, GB-006): a fast launched body that has stopped tumbling flies head first along its velocity whatever angle the
+## spin left it at, and is let go when the launch ends; a fighter carried fast by position (a knockback) with his head against the way he goes is stood up to the tilt cap.
+func _test_flight_lead() -> void:
+	_expect(not AnimData.flight.is_empty() and AnimData.flight.has("tilt"), "flight lead test: data/anim/flight.json did not load")
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	var f = S.fighters[0]
+	var saved_on: bool = RenderAnim.flight_lead
+	var base: AnimPose = AnimData.pose("stance.aggressive")
+	var lead_on: float = 0.0
+	var lead_off: float = 0.0
+	var left_over: float = 1.0
+	for on in [true, false]:
+		RenderAnim.flight_lead = on
+		var af := AnimFighter.new(0)
+		af.vface = 1.0
+		f.state = "launched"
+		f.slide = 0.0
+		f.vx = -900.0
+		f.vy = 300.0
+		f.rot = 2.6   # turned over: the head on the far side
+		f.spin = 0.4
+		for k in range(45):
+			af.q = base.q.duplicate()
+			af.hips = base.hips
+			af.root_off = Vector3.ZERO
+			f.rot += f.spin / 60.0
+			af._lead_layer(S, f, 1.0 / 60.0)
+		AnimPose.fk(af.q, af.hips, af.gq, af.gp)
+		var ax: Vector3 = af.gp[AnimRig.index["head"]] - af.gp[AnimRig.index["pelvis"]]
+		var c: float = cos(-f.rot)
+		var sn: float = sin(-f.rot)
+		var w := Vector2(ax.x * c - ax.y * sn, ax.x * sn + ax.y * c).normalized()
+		var d: float = w.dot(Vector2(f.vx, f.vy).normalized())
+		if on:
+			lead_on = d
+			# the launch ends: the turn is let go
+			f.state = "free"
+			f.vx = 0.0
+			f.vy = 0.0
+			f.rot = 0.0
+			f.spin = 0.0
+			for k in range(90):
+				af.q = base.q.duplicate()
+				af.hips = base.hips
+				af.root_off = Vector3.ZERO
+				af._lead_layer(S, f, 1.0 / 60.0)
+			left_over = absf(af._lead_d)
+		else:
+			lead_off = d
+	RenderAnim.flight_lead = saved_on
+	_expect(lead_on > 0.9 and lead_off < 0.5, "flight lead test: the head leads %.2f with the lead on (want over 0.9) and %.2f with it off (want under 0.5: the sim's own angle)" % [lead_on, lead_off])
+	_expect(left_over < 0.01, "flight lead test: the turn was not let go after the launch (%.3f rad left)" % left_over)
+	# a knockback carries him back by position with his head toward the blow: the folded body is stood up to the tilt cap
+	var fold: AnimPose = AnimData.pose("move.sprint")   # head forward, body level: the worst case
+	var ak := AnimFighter.new(0)
+	ak.vface = 1.0
+	f.state = "locked"
+	f.slide = 0.0
+	f.rot = 0.0
+	f.spin = 0.0
+	f.x = 1000.0
+	f.y = 0.0
+	var tilt_ok: float = 99.0
+	for k in range(30):
+		S.tick += 1
+		f.x -= 9.0   # backward, 540 u/s, while the pose leans forward
+		ak.q = fold.q.duplicate()
+		ak.hips = fold.hips
+		ak.root_off = Vector3.ZERO
+		ak._lead_layer(S, f, 1.0 / 60.0)
+	AnimPose.fk(ak.q, ak.hips, ak.gq, ak.gp)
+	var kx: Vector3 = ak.gp[AnimRig.index["head"]] - ak.gp[AnimRig.index["pelvis"]]
+	tilt_ok = absf(rad_to_deg(atan2(kx.x, kx.y)))
+	_expect(tilt_ok < 45.0, "flight lead test: a body laid out against a knockback was only stood up to %.0f degrees of tilt (want under 45)" % tilt_ok)
+	print("flight lead test: head leads %.2f along the velocity (the sim's own angle %.2f), let go after the launch, a knockback fold stood up to %.0f degrees" % [lead_on, lead_off, tilt_ok])
+	f.state = "free"
+
 ## The joint limits (docs/animation/joint-limits.md): no knee or elbow can be bent past its end or the wrong way, from any source.
 ## 1. every authored pose (near and far side, each shape's scale) of every wave is inside the limits; 2. every sequence frame, after the solve's last pass;
 ## 3. the rule itself: a thigh twisted 170 degrees (the flipped knee of a kick) is out of range, and the pass folds the knee the right way;
@@ -1181,6 +1259,7 @@ func _run() -> void:
 	_test_quality()
 	_test_win_ko()
 	_test_agency()
+	_test_flight_lead()
 	_test_joints()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
