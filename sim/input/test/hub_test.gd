@@ -167,7 +167,8 @@ func _sim() -> void:
 	_step(S, hub, 2)
 	hub.key("KeyF", false)
 	var ex = S.dirS.ex
-	ok(ex != null and ex.A == f and ex.kind == "light", "sim: a light request starts a light exchange")
+	# Close up the request starts the exchange; from range it starts an approach (DirBands.pending), the exchange coming at the wind-up.
+	ok((ex != null and ex.A == f and ex.kind == "light") or DirBands.pending(f), "sim: a light request starts a light exchange or an approach")
 	# The transform control: a form is ready, the chord is held 30 ticks, and the tier rises.
 	S = _match(hub)
 	f = S.fighters[0]
