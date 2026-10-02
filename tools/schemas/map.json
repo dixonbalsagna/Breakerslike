@@ -227,6 +227,10 @@
       "schema": "anim-joints.schema.json"
     },
     {
+      "match": "data/anim/targets.json",
+      "schema": "anim-targets.schema.json"
+    },
+    {
       "match": "data/anim/waves/*.poses.json",
       "schema": "anim-wave-poses.schema.json"
     },

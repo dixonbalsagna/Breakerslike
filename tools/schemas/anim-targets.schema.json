@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-targets",
+  "title": "anim.targets/1",
+  "description": "data/anim/targets.json: hand and foot targets re-aimed after the joint limits (docs/animation/joint-limits.md): pose id to the targets that replace the authored ones in that pose's sketch (render/anim/anim_data.gd, _fixed). A target is [x, y, z] in model units, as in a pose sketch. The limb that lands a blow is never changed here. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every pose is in data/anim/poses.json or a wave's poses file; a strike's contact pose does not retarget the limb that lands the blow) are checked by tools/lib/xref-fight.js (targets-pose, targets-limb).",
+  "type": "object",
+  "required": [
+    "schema",
+    "poses"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.targets/1"
+    },
+    "poses": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*([.][a-z0-9_~]+)*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "description": "The targets that replace the authored ones in this pose.",
+        "properties": {
+          "hand_r": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "hand_l": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "foot_r": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "foot_l": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

@@ -950,6 +950,30 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     for (const key of ['tierEnergy', 'tierDamage']) if (Array.isArray(bl[key])) for (let i = 1; i < bl[key].length; i++) if (typeof bl[key][i] === 'number' && typeof bl[key][i - 1] === 'number' && bl[key][i] < bl[key][i - 1]) err(BL, `/${key}/${i}`, 'blast-tier', `${key} falls from ${bl[key][i - 1]} to ${bl[key][i]} at tier ${i + 1}; it must not fall with the tier`, 'warning');
   }
 
+  // ---- anim targets: poses exist; a blow's limb is not retargeted in its contact pose ----
+  const tg = get('data/anim/targets.json');
+  if (isObj(tg) && isObj(tg.poses)) {
+    const TG = 'data/anim/targets.json';
+    const mainP = get('data/anim/poses.json');
+    const known = new Set(isObj(mainP) && isObj(mainP.poses) ? Object.keys(mainP.poses) : []);
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.poses\.json$/)) { const d = get(rel); if (isObj(d) && isObj(d.poses)) for (const k of Object.keys(d.poses)) known.add(k); }
+    const keysetDocs = [get('data/anim/keysets.json')];
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.keysets\.json$/)) keysetDocs.push(get(rel));
+    const contactLimbs = new Map();
+    for (const kd of keysetDocs) if (isObj(kd) && isObj(kd.keysets)) for (const [name, k] of Object.entries(kd.keysets)) {
+      if (name.startsWith('_') || !isObj(k) || !Array.isArray(k.keys)) continue;
+      const c = k.keys.find((x) => isObj(x) && x.role === 'contact');
+      if (!c || typeof c.pose !== 'string') continue;
+      for (const l of [k.limb, k.limb2]) if (typeof l === 'string' && /^(hand|foot)_[lr]$/.test(l)) { if (!contactLimbs.has(c.pose)) contactLimbs.set(c.pose, new Set()); contactLimbs.get(c.pose).add(l); }
+    }
+    for (const [pose, o] of Object.entries(tg.poses)) {
+      if (pose.startsWith('_') || !isObj(o)) continue;
+      if (known.size && !known.has(pose)) err(TG, `/poses/${esc(pose)}`, 'targets-pose', `pose "${pose}" is not in data/anim/poses.json nor a wave's poses file`);
+      const lm = contactLimbs.get(pose);
+      if (lm) for (const l of lm) if (l in o) err(TG, `/poses/${esc(pose)}/${l}`, 'targets-limb', `${l} lands the blow of a key set whose contact pose this is; it is never changed here`);
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

@@ -18682,7 +18682,7 @@
             "/keysets/strike.test": {
               "weight": "light",
               "limb": "hand_r",
-              "limb2": "hand_l",
+              "limb2": "foot_l",
               "target": "chest",
               "keys": [
                 {
@@ -19064,7 +19064,7 @@
                   "pose": "w1.jab.follow"
                 }
               ],
-              "limb2": "hand_l"
+              "limb2": "foot_l"
             }
           }
         }
@@ -33859,6 +33859,364 @@
               0,
               0
             ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-targets-live-valid",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/schema": "anim.targets/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-targets-key-required",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "del": [
+            "/poses"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-targets-schema-version",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/schema": "anim.targets/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-targets-unknown-key",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-targets-underscore-key-ok",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-targets-poses-empty",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/poses"
+      }
+    },
+    {
+      "id": "anim-targets-pose-name-shape",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/Bad Name": {
+              "hand_r": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/poses/Bad Name"
+      }
+    },
+    {
+      "id": "anim-targets-pose-empty",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.hold": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/poses/hurt.hold"
+      }
+    },
+    {
+      "id": "anim-targets-pose-unknown-limb",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.hold/elbow_r": [
+              1,
+              2,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/poses/hurt.hold/elbow_r"
+      }
+    },
+    {
+      "id": "anim-targets-target-length",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.hold/hand_r": [
+              12,
+              50
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/poses/hurt.hold/hand_r"
+      }
+    },
+    {
+      "id": "anim-targets-target-too-long",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.hold/hand_r": [
+              12,
+              50,
+              13,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maxItems",
+        "pointer": "/poses/hurt.hold/hand_r"
+      }
+    },
+    {
+      "id": "anim-targets-target-type",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.hold/hand_r": [
+              12,
+              "a",
+              13
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/poses/hurt.hold/hand_r/1"
+      }
+    },
+    {
+      "id": "anim-targets-foot-target-ok",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.hold/foot_l": [
+              4,
+              2.5,
+              -7
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-targets-both-hands-ok",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.hold": {
+              "hand_r": [
+                12,
+                50,
+                13
+              ],
+              "hand_l": [
+                12,
+                50,
+                -13
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-targets-pose-not-in-files",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/hurt.nowhere": {
+              "hand_r": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:targets-pose",
+        "pointer": "/poses/hurt.nowhere"
+      }
+    },
+    {
+      "id": "anim-targets-wave-pose-ok",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/w1.jab.chamber": {
+              "hand_l": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-targets-contact-limb-retargeted",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/strike.jab.contact": {
+              "hand_r": [
+                59,
+                66,
+                7
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:targets-limb",
+        "pointer": "/poses/strike.jab.contact/hand_r"
+      }
+    },
+    {
+      "id": "anim-targets-wave-contact-limb-retargeted",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/w1.jab.contact": {
+              "hand_r": [
+                59,
+                66,
+                7
+              ],
+              "hand_l": [
+                26,
+                55,
+                -6
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:targets-limb",
+        "pointer": "/poses/w1.jab.contact/hand_r"
+      }
+    },
+    {
+      "id": "anim-targets-other-limb-in-contact-pose-ok",
+      "schema": "anim-targets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/targets.json",
+          "set": {
+            "/poses/strike.jab.contact": {
+              "hand_l": [
+                26,
+                55,
+                -6
+              ]
+            }
           }
         }
       ],
