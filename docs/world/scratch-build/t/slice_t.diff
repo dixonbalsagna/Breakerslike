@@ -1,0 +1,616 @@
+--- a/sim/core/state.gd
++++ b/sim/core/state.gd
+@@ -20,6 +20,9 @@
+ var water := PackedFloat32Array()     # water depth per terrain column (world/water.gd); the surface is ground + depth
+ var scorch := PackedFloat32Array()    # scorch intensity per terrain column, 0 to 1, permanent (world/crater.gd)
+ var craters: Array = []               # Crater records, oldest first, capped at WorldCrater.LIST_MAX (fx-events.md)
++var deformZ: Array = []               # T: the depth rows' deform (a PackedFloat32Array each; the plane row's slot is an empty placeholder: S.deform is the plane row), only when depthOn
++var rubbleZ: Array = []               # T: the same for the rubble heaps
++var low := PackedFloat32Array()       # T: the lowest deform across the rows at each column (derived, not hashed): the ground water runs on when depthOn
+ var rubble := PackedFloat32Array()    # rubble heap height per terrain column (world/structures.gd): part of S.deform, kept apart for cover, tint and digging
+ var bIdx: Array = []                  # spatial index of the buildings: PackedInt32Array per x bucket (world/structures.gd), never changes in a match
+ var popHist := PackedFloat32Array()   # living civilians per lure bucket (director/ai.gd LURE_STEP), kept up to date by WorldCollateral
+--- a/sim/core/sim.gd
++++ b/sim/core/sim.gd
+@@ -80,6 +80,7 @@
+ 	S.dirS.craterT = PackedFloat64Array()   # Encounter's slice (a) (granted line)
+ 	SimAct.setup(S, setup)   # I2a: each fighter's action state
+ 	S.depthOn = setup.get("depth", false) == true   # fight lanes: off until the director's switch-on (L4); a setup may force it for probes
++	WorldTerrain.initRows(S)   # T: the depth rows exist only when depth is on
+ 	SimPause.reset(S)        # Q10: the pause bank
+ 	SimIntro.setup(S, setup) # the intro phase, when the setup asks for it
+ 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
+--- a/sim/core/hash.gd
++++ b/sim/core/hash.gd
+@@ -185,6 +185,17 @@
+ 		_obj(out, b, BEAM)
+ 	for i in range(S.deform.size()):
+ 		out.append(S.deform[i])
++	if S.depthOn:   # T: the depth rows (their non-zero columns), only when depth is on, so a match without depth hashes as before
++		for arrs in [S.deformZ, S.rubbleZ]:
++			for k in range(arrs.size()):
++				var row: PackedFloat32Array = arrs[k]
++				var nzr: Array = []
++				for i in range(row.size()):
++					if row[i] != 0.0:
++						nzr.append(i)
++				out.append(float(nzr.size()))
++				for i in nzr:
++					out.append(float(i)); out.append(row[i])
+ 	# Water and scorch: only the non-zero columns, as (index, value) pairs, so the vectors stay small.
+ 	var nz: Array = []
+ 	for i in range(S.water.size()):
+--- a/sim/world/terrain.gd
++++ b/sim/world/terrain.gd
+@@ -233,8 +233,135 @@
+ 	return pop
+ 
+ 
+-## Ground height at any x: linear between column samples of the generated base plus crater deformation.
+-static func groundY(S: SimState, x: float) -> float:
++# ---------------------------------------------------------------------------------------------- depth rows (slice T)
++## Eight rows of 300 units across the fight band, at z = +300, 0, -300 ... -1,800 (z positive toward the camera). Row PLANE_ROW (z = 0) is
++## S.deform and S.rubble themselves, so everything that reads them is unchanged; the other seven live in S.deformZ and S.rubbleZ. They
++## exist only when S.depthOn (docs/world/fight-lanes-world.md section 10): with it off nothing here runs and the ground is the old model's.
++## A writer works on one row at a time by swapping that row's arrays into S.deform and S.rubble for the length of its write
++## (enterRow/leaveRow), so the existing writers, their relaxation and their footing rules run unchanged on the row.
++const ROWS: int = 8
++const PLANE_ROW: int = 1
++const ROW_Z0: float = 300.0
++const ROW_STEP: float = -300.0
++static var rowZ: float = NAN        # z of the row swapped into S.deform right now; NAN outside a writer
++static var _swapK: int = -1         # the row swapped in (-1: none, or the plane row)
++
++
++static func rowZOf(k: int) -> float:
++	return ROW_Z0 + ROW_STEP * float(k)
++
++
++## The row nearest to depth z (clamped to the band's rows).
++static func rowOfZ(z: float) -> int:
++	return clampi(int(round((z - ROW_Z0) / ROW_STEP)), 0, ROWS - 1)
++
++
++static func initRows(S: SimState) -> void:
++	S.deformZ = []
++	S.rubbleZ = []
++	S.low = PackedFloat32Array()
++	rowZ = NAN
++	_swapK = -1
++	if not S.depthOn:
++		return
++	var NC: int = SimConst.NC
++	for k in range(ROWS):
++		var d := PackedFloat32Array()
++		var r := PackedFloat32Array()
++		if k != PLANE_ROW:
++			d.resize(NC)
++			d.fill(0.0)
++			r.resize(NC)
++			r.fill(0.0)
++		S.deformZ.append(d)
++		S.rubbleZ.append(r)
++	S.low = S.deform.duplicate()
++
++
++## The deform array of row k, wherever it is held right now.
++static func rowArr(S: SimState, k: int) -> PackedFloat32Array:
++	if _swapK >= 0:
++		if k == _swapK:
++			return S.deform
++		if k == PLANE_ROW:
++			return S.deformZ[_swapK]
++	elif k == PLANE_ROW:
++		return S.deform
++	return S.deformZ[k]
++
++
++static func rubArr(S: SimState, k: int) -> PackedFloat32Array:
++	if _swapK >= 0:
++		if k == _swapK:
++			return S.rubble
++		if k == PLANE_ROW:
++			return S.rubbleZ[_swapK]
++	elif k == PLANE_ROW:
++		return S.rubble
++	return S.rubbleZ[k]
++
++
++## Swap row k's arrays into S.deform and S.rubble; returns k, or -1 when depth is off, or -2 when a writer already holds a row.
++static func enterRow(S: SimState, k: int) -> int:
++	if not S.depthOn or S.deformZ.is_empty():
++		return -1
++	if not is_nan(rowZ):
++		return -2
++	rowZ = rowZOf(k)
++	if k != PLANE_ROW:
++		var t: PackedFloat32Array = S.deform
++		S.deform = S.deformZ[k]
++		S.deformZ[k] = t
++		var u: PackedFloat32Array = S.rubble
++		S.rubble = S.rubbleZ[k]
++		S.rubbleZ[k] = u
++		_swapK = k
++	return k
++
++
++static func leaveRow(S: SimState, k: int) -> void:
++	if k < 0:
++		return
++	if k != PLANE_ROW:
++		var t: PackedFloat32Array = S.deform
++		S.deform = S.deformZ[k]
++		S.deformZ[k] = t
++		var u: PackedFloat32Array = S.rubble
++		S.rubble = S.rubbleZ[k]
++		S.rubbleZ[k] = u
++	_swapK = -1
++	rowZ = NAN
++
++
++## Recompute the lowest deform across the rows for the columns c0 - half .. c0 + half (every writer calls this after a write).
++static func lowRefresh(S: SimState, c0: int, half: int) -> void:
++	if not S.depthOn or S.low.size() != SimConst.NC:
++		return
++	var NC: int = SimConst.NC
++	var arrs: Array = [S.deform]
++	for a in S.deformZ:
++		if a.size() == NC:
++			arrs.append(a)
++	var cnt: int = mini(2 * half + 1, NC)
++	var lo: int = c0 - half
++	for q in range(cnt):
++		var i: int = posmod(lo + q, NC)
++		var m: float = 1.0e9
++		for a in arrs:
++			m = minf(m, a[i])
++		S.low[i] = m
++
++
++## The ground water runs on: the lowest ground across the rows when depth is on, the one row otherwise.
++static func lowD(S: SimState) -> PackedFloat32Array:
++	return S.low if S.depthOn and S.low.size() == SimConst.NC else S.deform
++
++
++## Ground height at x on the plane row, or at depth z (the two nearest rows blended, the edge rows holding beyond the band) when
++## depth is on; with depth off z is ignored and the ground is the old model's.
++static func groundY(S: SimState, x: float, z: float = 0.0) -> float:
++	if z != 0.0 and S.depthOn and not S.deformZ.is_empty():
++		return _groundZ(S, x, z)
+ 	var c: float = SimWrap.wrap(x) / SimConst.COL
+ 	var fi: float = floor(c)
+ 	var f: float = c - fi
+@@ -245,6 +372,25 @@
+ 	return a + (b - a) * f
+ 
+ 
++static func _groundZ(S: SimState, x: float, z: float) -> float:
++	var t: float = clampf((z - ROW_Z0) / ROW_STEP, 0.0, float(ROWS - 1))
++	var k0: int = int(floor(t))
++	var fz: float = t - float(k0)
++	var k1: int = mini(k0 + 1, ROWS - 1)
++	var c: float = SimWrap.wrap(x) / SimConst.COL
++	var fi: float = floor(c)
++	var f: float = c - fi
++	var i: int = int(fi)
++	var j: int = (i + 1) % SimConst.NC
++	var a0: PackedFloat32Array = rowArr(S, k0)
++	var g0: float = (S.base[i] + a0[i]) + ((S.base[j] + a0[j]) - (S.base[i] + a0[i])) * f
++	if fz == 0.0 or k1 == k0:
++		return g0
++	var a1: PackedFloat32Array = rowArr(S, k1)
++	var g1: float = (S.base[i] + a1[i]) + ((S.base[j] + a1[j]) - (S.base[i] + a1[i])) * f
++	return g0 + (g1 - g0) * fz
++
++
+ ## The sea basin: water only where the original (base) terrain is below sea level (the prototype's rule). Craters that
+ ## fill with water are WorldWater's business (S.water); this rule is what the AI, launch planner and fighter speed use.
+ static func seaAt(S: SimState, x: float) -> bool:
+--- a/sim/world/water.gd
++++ b/sim/world/water.gd
+@@ -63,7 +63,7 @@
+ static func surfaceAt(S: SimState, x: float) -> float:
+ 	var i: int = int(floor(SimWrap.wrap(x) / SimConst.COL))
+ 	var d: float = S.water[i]
+-	return S.base[i] + S.deform[i] + d if d >= MIN_DEPTH else DRY
++	return S.base[i] + WorldTerrain.lowD(S)[i] + d if d >= MIN_DEPTH else DRY
+ 
+ 
+ ## Start of a match: reservoir columns full to sea level, and the shallows connected to them (an unbroken run of ground
+@@ -77,7 +77,7 @@
+ 	S.waterTick = 0.0
+ 	for i in range(NC):
+ 		if isReservoir(S, i):
+-			S.water[i] = maxf(0.0, SEA_LEVEL - (S.base[i] + S.deform[i]))
++			S.water[i] = maxf(0.0, SEA_LEVEL - (S.base[i] + WorldTerrain.lowD(S)[i]))
+ 	for dir in [1, -1]:
+ 		var wet: bool = false
+ 		for lap in range(2 * NC):   # two laps carry the fill across the seam
+@@ -85,7 +85,7 @@
+ 			if isReservoir(S, i2):
+ 				wet = true
+ 			elif wet:
+-				var g: float = S.base[i2] + S.deform[i2]
++				var g: float = S.base[i2] + WorldTerrain.lowD(S)[i2]
+ 				if g < SHORE_WET:
+ 					S.water[i2] = SEA_LEVEL - g
+ 				else:
+@@ -97,7 +97,11 @@
+ static func touched(S: SimState, c0: int, cols: int, minG: float) -> void:
+ 	var NC: int = SimConst.NC
+ 	var base: PackedFloat32Array = S.base
+-	var dfm: PackedFloat32Array = S.deform
++	var dfm: PackedFloat32Array = WorldTerrain.lowD(S)
++	if S.depthOn:   # the lowest ground over all the rows, in the window
++		for k in range(-cols, cols + 1):
++			var ic: int = (c0 + k + NC) % NC
++			minG = minf(minG, base[ic] + dfm[ic])
+ 	for k in range(-cols, cols + 1):
+ 		var i: int = (c0 + k + NC) % NC
+ 		if base[i] < RESERVOIR_BASE:
+@@ -142,7 +146,7 @@
+ 		return
+ 	var NC: int = SimConst.NC
+ 	var base: PackedFloat32Array = S.base
+-	var dfm: PackedFloat32Array = S.deform
++	var dfm: PackedFloat32Array = WorldTerrain.lowD(S)
+ 	var wat: PackedFloat32Array = S.water
+ 	var wi: int = 0
+ 	while wi < S.waterWin.size():
+--- a/sim/world/crater.gd
++++ b/sim/world/crater.gd
+@@ -149,7 +149,62 @@
+ ## own ladder and is held only by R_MAX). dirx is the impact velocity's signed horizontal share (vx / speed) and vert its
+ ## vertical share (|vy| / speed); both only matter for impacts. Returns the record, or null when the spot was already too
+ ## dented to take a crater of this size.
+-static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0, special: bool = false):
++static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0, special: bool = false, z: float = NAN):
++	if not S.depthOn:
++		return _dig(S, x, energy, cause, kind, dirx, vert, special)
++	var zz: float = z
++	if is_nan(zz):
++		zz = float(cause.z) if (cause != null and "z" in cause) else 0.0
++	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(zz))
++	var rec = _dig(S, x, energy, cause, kind, dirx, vert, special)
++	WorldTerrain.leaveRow(S, k)
++	if rec != null and k >= 0:
++		_digNeighbours(S, rec, k)
++	return rec
++
++
++## The bowl on the other rows inside its plan radius: the same bowl and rim, the distance taken in plan (so a row 300 units from the
++## centre sees a shallower, narrower slice), written row by row with the same footing rule and relaxation.
++static func _digNeighbours(S: SimState, rec, kc: int) -> void:
++	var NC: int = SimConst.NC
++	var COL: float = SimConst.COL
++	var R: float = rec.r
++	var reach: float = R * (1.0 + RIM_OUT)
++	var c0: int = _col(rec.x)
++	for k in range(WorldTerrain.ROWS):
++		if k == kc:
++			continue
++		var dz: float = absf(WorldTerrain.rowZOf(k) - WorldTerrain.rowZOf(kc))
++		if dz >= reach:
++			continue
++		var half: float = sqrt(reach * reach - dz * dz)
++		var n: int = int(ceil(half / COL)) + 1
++		var kk: int = WorldTerrain.enterRow(S, k)
++		if kk < 0:
++			continue
++		var pinD: PackedByteArray = WorldStructures.pinned(S, c0, n)
++		var minG: float = 1e9
++		for q in range(-n, n + 1):
++			var i: int = (c0 + q + NC) % NC
++			var dxq: float = SimWrap.sdx(rec.x, float(i) * COL)
++			var u: float = sqrt(dxq * dxq + dz * dz) / R
++			var old: float = S.deform[i]
++			var h: float = profile(u, rec.depth, rec.rim)
++			if h > 0.0 and pinD[q + n] == 1:
++				h = 0.0
++			var v: float = maxf(old, h) if (h > 0.0 and old > 0.0) else old + h
++			var nv: float = clampf(v, DEFORM_FLOOR, DEFORM_CEIL)
++			if nv < old and S.rubble[i] > 0.0:
++				S.rubble[i] = maxf(0.0, S.rubble[i] - (old - nv))
++			S.deform[i] = nv
++			minG = minf(minG, S.base[i] + S.deform[i])
++		minG = minf(minG, relax(S, c0, n + REPOSE_PAD))
++		WorldTerrain.lowRefresh(S, c0, n + REPOSE_PAD)
++		WorldTerrain.leaveRow(S, kk)
++		WorldWater.touched(S, c0, n + REPOSE_PAD, minG)
++
++
++static func _dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0, special: bool = false):
+ 	if energy <= 0.0:
+ 		return null
+ 	var E: float = energy * (SPECIAL_E_MULT if special else 1.0)
+@@ -230,13 +285,26 @@
+ 	SimFx.crater(S, rec)
+ 	var cols: int = n + int(ceil(absf(skid) / COL)) + REPOSE_PAD
+ 	minG = minf(minG, relax(S, c0, cols))
++	WorldTerrain.lowRefresh(S, c0, cols)
+ 	WorldWater.touched(S, c0, cols, minG)
+ 	return rec
+ 
+ 
+ ## A beam sample within reach of the ground: carve the groove toward its target depth (never deeper than that however
+ ## many samples cross it), raise the permanent burn mark, and emit the scorch event. Half width and depth grow with P.
+-static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> void:
++static func scorch(S: SimState, x: float, P: float, variant: String, cause, z: float = NAN) -> void:
++	if not S.depthOn:
++		_scorch(S, x, P, variant, cause)
++		return
++	var zz: float = z
++	if is_nan(zz):
++		zz = float(cause.z) if (cause != null and "z" in cause) else 0.0
++	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(zz))
++	_scorch(S, x, P, variant, cause)
++	WorldTerrain.leaveRow(S, k)
++
++
++static func _scorch(S: SimState, x: float, P: float, variant: String, cause) -> void:
+ 	var NC: int = SimConst.NC
+ 	var COL: float = SimConst.COL
+ 	var vk: Array = SCORCH_VARIANT.get(variant, [1.0, 1.0])
+@@ -273,6 +341,7 @@
+ 	SimFx.scorchEvent(S, x, y0, hw * 2.0, P, variant, _slot(S, cause))
+ 	if carved:
+ 		minG = minf(minG, relax(S, c0, n + REPOSE_PAD))
++	WorldTerrain.lowRefresh(S, c0, n + REPOSE_PAD)
+ 	WorldWater.touched(S, c0, n + REPOSE_PAD, minG)
+ 
+ 
+@@ -350,7 +419,16 @@
+ ## depth: never deeper than the target, so a trench does not dig shafts however often it is crossed. The ground ahead of
+ ## the fighter is untouched, so he rides the undug surface and the trench opens behind and under his feet. paved raises
+ ## S.crack over the same columns by the given intensity. Used by the knockback slide.
+-static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved: bool, crack: float) -> void:
++static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved: bool, crack: float, z: float = 0.0) -> void:
++	if not S.depthOn:
++		_carveSegment(S, xa, xb, depth, paved, crack)
++		return
++	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(z))
++	_carveSegment(S, xa, xb, depth, paved, crack)
++	WorldTerrain.leaveRow(S, k)
++
++
++static func _carveSegment(S: SimState, xa: float, xb: float, depth: float, paved: bool, crack: float) -> void:
+ 	var NC: int = SimConst.NC
+ 	var COL: float = SimConst.COL
+ 	var dx: float = SimWrap.sdx(xa, xb)
+@@ -382,11 +460,22 @@
+ 	var half: int = n / 2 + REPOSE_PAD
+ 	if carved:
+ 		minG = minf(minG, relax(S, mid, half, cb, dir))
++	WorldTerrain.lowRefresh(S, mid, half)
+ 	WorldWater.touched(S, mid, half, minG)
+ 
+ 
+ ## A small raised lip where a slide ends: two columns ahead in the direction of travel.
+-static func berm(S: SimState, x: float, vx: float, hw: float, h: float) -> void:
++static func berm(S: SimState, x: float, vx: float, hw: float, h: float, z: float = 0.0) -> void:
++	if not S.depthOn:
++		_berm(S, x, vx, hw, h)
++		return
++	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(z))
++	_berm(S, x, vx, hw, h)
++	WorldTerrain.lowRefresh(S, _col(x), 4)
++	WorldTerrain.leaveRow(S, k)
++
++
++static func _berm(S: SimState, x: float, vx: float, hw: float, h: float) -> void:
+ 	var NC: int = SimConst.NC
+ 	var c0: int = _col(x)
+ 	var dir: int = 1 if vx >= 0.0 else -1
+--- a/sim/world/structures.gd
++++ b/sim/world/structures.gd
+@@ -51,6 +51,26 @@
+ static func baseY(S: SimState, b) -> float:
+ 	var NC: int = SimConst.NC
+ 	var COL: float = SimConst.COL
++	if S.depthOn and not S.deformZ.is_empty():   # T: the highest ground over the footprint in x and in depth (the rows inside its interval)
++		var m2: float = -1.0e9
++		var ca: int = int(floor((b.x - b.w * 0.5) / COL))
++		var cb: int = int(floor((b.x + b.w * 0.5) / COL)) + 1
++		var any: bool = false
++		for k in range(WorldTerrain.ROWS):
++			var zk: float = WorldTerrain.rowZOf(k)
++			if zk > b.z - b.d * 0.5 - 0.001 and zk < b.z + b.d * 0.5 + 0.001:
++				any = true
++				var ar: PackedFloat32Array = WorldTerrain.rowArr(S, k)
++				for c in range(ca, cb + 1):
++					var ic: int = posmod(c, NC)
++					m2 = maxf(m2, S.base[ic] + ar[ic])
++		if any:
++			return m2
++		var ar2: PackedFloat32Array = WorldTerrain.rowArr(S, WorldTerrain.rowOfZ(b.z))
++		for c in range(ca, cb + 1):
++			var ic2: int = posmod(c, NC)
++			m2 = maxf(m2, S.base[ic2] + ar2[ic2])
++		return m2
+ 	var c0: int = int(floor((b.x - b.w * 0.5) / COL))
+ 	var c1: int = int(floor((b.x + b.w * 0.5) / COL)) + 1
+ 	var m: float = -1.0e9
+@@ -74,6 +94,8 @@
+ 		var b = S.buildings[bi]
+ 		if not b.alive:
+ 			continue
++		if not is_nan(WorldTerrain.rowZ) and (WorldTerrain.rowZ < b.z - b.d * 0.5 - 0.001 or WorldTerrain.rowZ > b.z + b.d * 0.5 + 0.001):
++			continue   # T: a building is a footing only for the rows inside its depth interval
+ 		var k0: int = int(floor((b.x - b.w * 0.5) / COL)) - 1
+ 		var k1: int = int(floor((b.x + b.w * 0.5) / COL)) + 2
+ 		for c in range(k0, k1 + 1):
+@@ -170,6 +192,23 @@
+ ## and is relaxed to the angle of repose. Inside a fresh bowl it is capped so it never quietly rebuilds the crater. Returns the
+ ## crest height (the cosmetic heap for a deeper row).
+ static func _heap(S: SimState, b) -> float:
++	if not S.depthOn or S.deformZ.is_empty():
++		return _heapRow(S, b, false)
++	# T: the heap goes on the rows strictly inside the footprint's depth interval (never on a street's row, so a carriageway stays
++	# flat), once on each; a footprint with no row inside leaves only the cosmetic heap
++	var H: float = 0.0
++	for k in range(WorldTerrain.ROWS):
++		var zk: float = WorldTerrain.rowZOf(k)
++		if zk > b.z - b.d * 0.5 and zk < b.z + b.d * 0.5:
++			var kk: int = WorldTerrain.enterRow(S, k)
++			H = maxf(H, _heapRow(S, b, true))
++			WorldTerrain.leaveRow(S, kk)
++	if H <= 0.0:
++		H = minf(clampf(RUBBLE_H_FRAC * b.h, RUBBLE_MIN, RUBBLE_MAX), RUBBLE_SLOPE * RUBBLE_SPILL * b.w / RUBBLE_CREST_K)
++	return H
++
++
++static func _heapRow(S: SimState, b, anyRow: bool) -> float:
+ 	var NC: int = SimConst.NC
+ 	var COL: float = SimConst.COL
+ 	var half: float = RUBBLE_SPILL * b.w
+@@ -178,7 +217,7 @@
+ 	var here: float = S.deform[c0]
+ 	if here < -0.5 * H:
+ 		H = minf(H, RUBBLE_BOWL_CAP * (-here))
+-	if H <= 0.0 or b.row > RUBBLE_ROW_MAX:
++	if H <= 0.0 or (b.row > RUBBLE_ROW_MAX and not anyRow):
+ 		return maxf(H, 0.0)
+ 	var n: int = int(ceil(half / COL))
+ 	var pin: PackedByteArray = pinned(S, c0, n)
+@@ -200,6 +239,7 @@
+ 		S.deform[i] = v
+ 		S.rubble[i] += got
+ 	WorldCrater.relax(S, c0, n + WorldCrater.REPOSE_PAD)
++	WorldTerrain.lowRefresh(S, c0, n + WorldCrater.REPOSE_PAD)
+ 	return H
+ 
+ 
+--- a/sim/world/contact.gd
++++ b/sim/world/contact.gd
+@@ -93,6 +93,7 @@
+ 	var vLost: float = 0.0        # speed removed this tick (the wear)
+ 	var dxStep: float = 0.0       # signed x moved this tick in contact
+ 	var lips: int = 0
++	var z: float = 0.0            # depth (T: the row the ground is read on when depth is on)
+ 
+ 
+ # ===================================================================== data
+@@ -228,9 +229,9 @@
+ 	return float(K_BRAKE[surfaceAt(S, x)])
+ 
+ 
+-static func _gslope(S: SimState, x: float) -> float:
++static func _gslope(S: SimState, x: float, z: float = 0.0) -> float:
+ 	var e: float = SimConst.COL
+-	return (WorldTerrain.groundY(S, x + e) - WorldTerrain.groundY(S, x - e)) / (2.0 * e)
++	return (WorldTerrain.groundY(S, x + e, z) - WorldTerrain.groundY(S, x - e, z)) / (2.0 * e)
+ 
+ 
+ # ===================================================================== the pure step
+@@ -309,7 +310,7 @@
+ static func groundPhase(S: SimState, b: Body, ev: Array) -> void:
+ 	if b.done:
+ 		return
+-	var g: float = WorldTerrain.groundY(S, b.x)
++	var g: float = WorldTerrain.groundY(S, b.x, b.z)
+ 	if b.y <= g:
+ 		_land(S, b, g, ev)
+ 	if b.y > SimConst.CEILING:
+@@ -333,7 +334,7 @@
+ 	var vxn: float = b.vx / tv
+ 	var vyn: float = b.vy
+ 	var sp: float = SimDetMath.hypot(vxn, vyn)
+-	var s: float = _gslope(S, b.x)
++	var s: float = _gslope(S, b.x, b.z)
+ 	var q: float = sqrt(1.0 + s * s)
+ 	var vn: float = (vyn - s * vxn) / q
+ 	var vt: float = (vxn + s * vyn) / q
+@@ -422,14 +423,14 @@
+ 	var tv: float = b.launchT
+ 	var dir: float = b.dir
+ 	var vN: float = b.vN
+-	var sl: float = (WorldTerrain.groundY(S, b.x + dir * SimConst.COL) - b.y) / SimConst.COL
++	var sl: float = (WorldTerrain.groundY(S, b.x + dir * SimConst.COL, b.z) - b.y) / SimConst.COL
+ 	var a: float = WorldSlide.MU * _brake(S, b.x) + WorldSlide.KV * vN + WorldSlide.GRAV * sl
+ 	if b.mode == TUMBLE:
+ 		a *= K_TUMBRAKE
+ 	var vN2: float = maxf(0.0, vN - a * dt)
+ 	var dx: float = dir * (vN + vN2) * 0.5 * tv * dt
+ 	var x2: float = SimWrap.wrap(b.x + dx)
+-	var y2: float = WorldTerrain.groundY(S, x2)
++	var y2: float = WorldTerrain.groundY(S, x2, b.z)
+ 	var run: float = maxf(absf(dx), 1.0e-6)
+ 	var rise: float = (y2 - b.y) / run
+ 	# ground that rises like a wall stops him with a stop-impact
+@@ -439,13 +440,13 @@
+ 		ev.append({"k": "wall", "x": b.x, "y": b.y, "speed": vN2})
+ 		return
+ 	# the leave test: would the next ballistic step end above the ground? he keeps his velocity along the ramp
+-	var sprev: float = _gslope(S, b.x) * dir
++	var sprev: float = _gslope(S, b.x, b.z) * dir
+ 	var vyT: float = sprev * vN2 * K_LIFT
+ 	var xa: float = SimWrap.wrap(b.x + dir * vN2 * tv * SimDetMath.pow(0.55, dt) * dt)
+ 	var yb: float = b.y + (vyT - 1000.0 * dt) * dt
+ 	# past the journey's caps (8 contacts or 4 s) he tumbles to a stop: no more leaving the ground
+ 	var capNow: bool = b.contacts >= K_MAXC or b.t >= K_MAXT
+-	if not capNow and vN2 > 0.0 and yb - WorldTerrain.groundY(S, xa) > K_CLEAR:
++	if not capNow and vN2 > 0.0 and yb - WorldTerrain.groundY(S, xa, b.z) > K_CLEAR:
+ 		var cause: String = "crest"   # natural ground: a hill's or ridge's crest
+ 		if S.rubble[int(floor(SimWrap.wrap(b.x) / SimConst.COL)) % SimConst.NC] > 0.0:
+ 			cause = "heap"
+@@ -510,7 +511,7 @@
+ 
+ ## The body a launch makes: from the launch position and velocity (vx carries the traversal factor launchT), by a launcher of
+ ## the given tier; wet is true when the target starts under the sea (doLaunch sets it).
+-static func launchBody(x: float, y: float, vx: float, vy: float, launchT: float, tier: float, wet: bool = false) -> Body:
++static func launchBody(x: float, y: float, vx: float, vy: float, launchT: float, tier: float, wet: bool = false, z: float = 0.0) -> Body:
+ 	var b := Body.new()
+ 	b.wet = wet
+ 	b.x = x
+@@ -518,6 +519,7 @@
+ 	b.vx = vx
+ 	b.vy = vy
+ 	b.launchT = launchT
++	b.z = z
+ 	b.tier = tier
+ 	b.tumbleT = -1
+ 	return b
+@@ -569,6 +571,7 @@
+ 	b.dxStep = 0.0
+ 	b.x = f.x
+ 	b.y = f.y
++	b.z = f.z
+ 	b.vx = f.vx
+ 	b.vy = f.vy
+ 	b.launchT = f.launchT
+@@ -653,7 +656,7 @@
+ 	var pav: bool = WorldSlide._paved(f.x)
+ 	var depth: float = minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * b.vN)
+ 	if b.mode == SKID:
+-		WorldCrater.carveSegment(S, xa, f.x, depth, pav, WorldSlide.CRACK0 + WorldSlide.CRACK_E * sqrt(E))
++		WorldCrater.carveSegment(S, xa, f.x, depth, pav, WorldSlide.CRACK0 + WorldSlide.CRACK_E * sqrt(E), f.z)
+ 	f.slideAcc += K_WPS * b.vLost
+ 	var idx: int = int(floor(f.slideD / WorldSlide.SAMPLE))
+ 	if idx > int(floor((f.slideD - absf(b.dxStep)) / WorldSlide.SAMPLE)):
+@@ -716,7 +719,7 @@
+ 		lg.dur = float(f.jT) * SimConst.DT
+ 	elif k == "wall":
+ 		var E: float = f.slideE
+-		WorldCrater.dig(S, f.x, E * WorldSlide.STOP_E, by, "impact", 0.0, 1.0)
++		WorldCrater.dig(S, f.x, E * WorldSlide.STOP_E, by, "impact", 0.0, 1.0, false, f.z)
+ 		_pay(S, f, by, absf(f.vx) / f.launchT * WorldSlide.STOP_DMG)
+ 		SimFx.shake(S, 10.0, f.x, f.z)
+ 
+@@ -753,7 +756,7 @@
+ 	if k == "slam":
+ 		var vert: float = absf(f.vy) / maxf(SimDetMath.hypot(f.vx, f.vy), 0.000001)
+ 		if bool(e.get("dig", true)):
+-			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial)
++			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial, f.z)
+ 	if sea:
+ 		SimFx.splash(S, f.x, f.y + 10.0, 14, f.z)
+ 	else:
+@@ -805,7 +808,7 @@
+ 		pass
+ 	elif how in ["tumble", "stop"] and f.slideEvt != 0.0:
+ 		var hw: float = WorldSlide.HW0 + WorldSlide.HW_E * sqrt(E)
+-		WorldCrater.berm(S, f.x, f.vx if f.vx != 0.0 else 1.0, hw, minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * f.jV0 * 0.25) * WorldSlide.BERM)
++		WorldCrater.berm(S, f.x, f.vx if f.vx != 0.0 else 1.0, hw, minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * f.jV0 * 0.25) * WorldSlide.BERM, f.z)
+ 	if f.slideAcc > 0.0:
+ 		_pay(S, f, by, f.slideAcc)
+ 		f.slideAcc = 0.0
