@@ -607,3 +607,29 @@ Spam is the bigger show and the weaker attack, which is the same rule as mashing
 | **Civilians lost** (12 to 30%) | Little change: the collateral window and evacuation still cap it | No change |
 | **Match length** (6 to 8 minutes) | Slightly shorter: splash adds damage, and a mine's knock-back is decisive | QA re-tunes k if the median leaves the band |
 | **The deflect** | Zoning is stronger, because a deflect no longer hurts the shooter. The free approach is the counterweight | QA reports the win rate of a blast-heavy script against a rush-heavy one. The target is 40 to 60% |
+
+## 16. A bolt-only player can always finish a fight (2026-10-02)
+
+**What QA found** on the energy build (`docs/qa/baseline-energy.md`): a player who holds energy and fires a bolt every 8 ticks never finishes. He decided 0 of 40 matches against a melee masher and won 0 of 40 against the medium AI. He deals about 300 damage an exchange but earns 0.2 launches a match, so nothing he does is decisive and no finisher starts. It is the energy twin of the lights-only hole in §13. Slice 7 makes a full charged shot decisive, but a bolt-only player still has no path.
+
+**The fix mirrors the blur's ender: a barrage closes.**
+
+| # | Rule | Data |
+| ---: | :--- | :--- |
+| 1 | **When four of a fighter's bolts land on the rival inside 90 ticks, the fourth is a knock-back.** The player doesn't press for it. It is a decisive exchange, like any knock-back (§13), and never a launch | `barrage.enderAfter` 4, `barrage.window` 90 |
+| 2 | **Only clean hits count.** A bolt that is guarded, deflected, or shrugged off by a heavy charge doesn't. Pieces of a volley or a shard spread count as one each | |
+| 3 | **Measured bolts close hard, and spam closes weak.** If all four were measured (fired 10 ticks or more apart, with no spread), the knock-back is the tier's full distance and a full set-up. If any was spammed, it is 0.6 of the distance and half a set-up, the same as the plain blur's ender (§14.4) | `barrage.enderDist` 1.0 and 0.6; `setup.weight.barragePlain` 0.5 |
+| 4 | **It can't chain at once.** After a barrage's knock-back, the count starts again, and the rival can't be knocked back by another barrage for 90 ticks | `barrage.immune` 90 |
+| 5 | **The knock-back hurts as any other does:** half of a launch's impact wear | `knockback.wear`, unchanged |
+
+**Why this fits the rules already in place.**
+- *The spray* (§15.4): a spammer lands 4 of 10 bolts, so he reaches four landed bolts more slowly, and his ender is the weak one. A measured or timed player gets the strong one. Measured bolts stay accurate, and now they also pay better.
+- *Mash is weaker:* the same half set-up as mashed lights, so a bolt spammer needs twice as many to open a fighter on the brink.
+- *The answers are unchanged:* a held guard stops the count, a perfect block gives the free approach (§15.2), a dodge avoids the bolt, and a heavy charge walks through.
+
+**Bands to hit:** a bolt-only player finishes at least 95% of matches against a melee masher before the cap, and wins 20 to 40% against the medium AI. Bolts alone should be a weaker plan than mixing blasts with blows.
+
+### Two smaller rulings
+
+- **The buried follow-up is exempt from the reach height check.** The attacker strikes down into a crater 1.75 bh deep, so the height between them is larger than a normal strike's reach by design. He must still have arrived over the crater: the sideways reach holds. QA counts these strikes apart, as it now does.
+- **The hard AI's perfect blocks** are 20.3 per 100 exchanges, against 12 to 20. **The AI moves, not the band:** its rate goes from ×1.0 to **×0.9** of R5's numbers, for about 18 per 100. A perfect block is worth more now that it also gives a free approach against blasts, so the hard AI shouldn't land more of them. Data: `ai.pbRate` 0.35, 0.6 and 0.9.
