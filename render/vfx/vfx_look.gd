@@ -69,7 +69,7 @@ const FLICKER_DEFAULT: bool = true       # the aura flickers when worn (rule of 
 const SPEEDLINES_DEFAULT: bool = true    # Orb picked impact treatment B: speed lines alone on every launch and landed heavy
 const ROCKS_DEFAULT: bool = true         # levitating rocks round a tier 3 or 4 fighter (docs/vfx/power-language.md); Legal cleared them under five conditions (RL-057)
 const BLAST_DEFAULT: bool = true         # a crater is bigger to look at by the causer's tier (docs/vfx/power-language.md idea 2)
-const BLAST_POWERUP_DEFAULT: bool = false   # ... and for ground-level power-up craters: off until Legal clears it (they come with the charge's crouch and scream)
+const BLAST_POWERUP_DEFAULT: bool = true    # ... and for ground-level power-up craters at the transformation's break: Legal cleared it under eight conditions (RL-059)
 const PRESSURE_DEFAULT: bool = true      # rings of shoved air at a dash, a hard stop or a hard turn, by tier (idea 4)
 const EARTH_DEFAULT: bool = true         # tumbling material chunks, cel flames and the ground-contact effects
 ## Cracks are a pure function of the sim's records (S.craters, S.slides) plus the match seed (render/vfx/crack_gen.gd),

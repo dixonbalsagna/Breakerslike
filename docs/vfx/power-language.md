@@ -105,9 +105,28 @@ Motes (idea 14) are cleared by Legal if scattered and sideways, never an upward 
 
 Everything is a spawn into the shared debris pool (no new draw call, no new random stream: it draws from `vfx.dust` and its jobs are timed on the effects clock). At most one amplification a fighter every 0.25 s.
 
-**Legal's stacking rule.** A crater from a blow or a beam is a one-off event of mark 4 (rubble, ground, wind), never a held state, and the fighter who caused it is not charging. **Ground-level power-up craters (cause `powerup`) are the at-risk case**: they come at the end of a charge, next to the crouch and the scream, so rubble and a ring there would be a third mark. They keep what they had; a separate flag, `blast_powerup_enabled`, default **off**, lets them through once Legal clears it. A fighter who is charging gets none, and a crater nobody caused (an entrance crater) gets none.
+**Legal's stacking rule.** A crater from a blow or a beam is a one-off event of mark 4 (rubble, ground, wind), never a held state, and the fighter who caused it is not charging. A crater nobody caused (an entrance crater) gets none.
 
-Pictures: a crater dug between the fighters as a tier-N fighter's blow digs it (energy 8 scaled by 25% a tier), 20 ticks after the dig, on the desert; rocks off so the difference shows. Tier 1 is not pictured: it adds nothing (asserted by `effects_check.gd`), and looks like any "before".
+**Ground-level power-up craters** (cause `powerup`, the transformation's break) are cleared by Legal under eight conditions (RL-059) and `blast_powerup_enabled` is **on by default**. Each condition as built and tested (`effects_check.gd` `_blast()`):
+
+| RL-059 condition | As built |
+| :--- | :--- |
+| 1. Only at the break's snap, nothing in the gather or while charging | Needs the owner's transformation playing with its gather over (form age at least the gather less 3 ticks); a crater in the gather, and a power-up with no transformation (a charge's), get none |
+| 2. Off for any fighter whose gather has a scream or a fists-at-sides crouch | `VfxBlast.POWERUP_OFF`, a list of fighter names, empty now (the gather is `form.gather`, no scream, no fists at the sides); a listed fighter gets none |
+| 3. No lightning, flame aura, hair change, gold, white or red flash, no dark sky | Nothing here draws any; the flash stays the transformation's, in his own colour |
+| 4. Thrown, not levitating | The chunks are ordinary debris under gravity (checked: every chunk falls, none rises or hangs); the lobbed ones come down about a second later |
+| 5. The ring is flat and thin on the ground | Debris ring in its flat mode (checked) |
+| 6. One crater per transformation, scaled by tier; rocks stood down through it | One per transformation (a second crater in the same form gets none); scaled by the tier he has after the break; the rocks now sink in 0.15 s when his transformation starts (they used to ease out over 0.5 s), are gone by the break (checked) and come back after the settle |
+| 7. Mid-air power-ups and entrance craters stay without it | None above 140 units off the ground (the sim digs none either); entrance craters have no owner |
+| 8. Re-screen at the first transformation cinematic | Legal's, when the cinematic exists |
+
+Powered-up picture: tier 4, the break of a transformation (the live version), crater dug as the sim digs a power-up crater, 8 ticks after it; before is the flag off (earth.gd's own ejecta only), after is on. In the after picture the extra rim chunks and the second flat ring are what the flag adds; the large pale ring round him is the transformation's own break ring, and the camera is the web build's.
+
+| Before (powerup flag off) | After (on) |
+| :---: | :---: |
+| ![](img/blast-powerup-tier4-before.jpg) | ![](img/blast-powerup-tier4-after.jpg) |
+
+Pictures of ordinary blows: a crater dug between the fighters as a tier-N fighter's blow digs it (energy 8 scaled by 25% a tier), 20 ticks after the dig, on the desert; rocks off so the difference shows. Tier 1 is not pictured: it adds nothing (asserted by `effects_check.gd`), and looks like any "before".
 
 | Tier | Before (flag off) | After (on) |
 | :-- | :---: | :---: |

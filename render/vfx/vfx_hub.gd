@@ -59,7 +59,7 @@ var speed := VfxSpeed.new()
 var rocks_enabled: bool = VfxLook.ROCKS_DEFAULT   # prototype: rocks hang about a tier 3 or 4 fighter (rocks.gd)
 var rocks := VfxRocks.new()
 var blast_enabled: bool = VfxLook.BLAST_DEFAULT   # craters are bigger to look at by the causer's tier: shock ring, rim chunks, dust dome, a second fall, settling dust (blast.gd)
-var blast_powerup_enabled: bool = VfxLook.BLAST_POWERUP_DEFAULT   # ... also for ground-level power-up craters (off until Legal clears it: they come with the charge's marks)
+var blast_powerup_enabled: bool = VfxLook.BLAST_POWERUP_DEFAULT   # ... also for ground-level power-up craters, at the transformation's break only (Legal, RL-059)
 var blast := VfxBlast.new()
 var pressure_enabled: bool = VfxLook.PRESSURE_DEFAULT   # a ring of shoved air at a dash, a hard stop or a hard turn, by tier (pressure.gd)
 var pressure := VfxPressure.new()
@@ -301,7 +301,7 @@ func _consume(S: SimState, events: Array) -> void:
 					if react_enabled:
 						react.on_crater(S, e, self)
 					if blast_enabled:
-						blast.on_crater(S, e, debris, fx_now(S), blast_powerup_enabled)
+						blast.on_crater(S, e, debris, fx_now(S), blast_powerup_enabled, xform.forms)
 				"beamSplash":
 					if water_enabled:
 						_on_beam_splash(S, float(e.x))

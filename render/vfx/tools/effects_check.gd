@@ -1536,7 +1536,7 @@ func _blast() -> void:
 	var g: float = WorldTerrain.groundY(S, plains)
 	var f = S.fighters[0]
 	_check(VfxBlast.mult_for(1) == 0.0 and VfxBlast.mult_for(2) < VfxBlast.mult_for(3) and VfxBlast.mult_for(3) < VfxBlast.mult_for(4), "no extra at tier 1, more at each tier above")
-	_check(VfxLook.BLAST_DEFAULT and not VfxLook.BLAST_POWERUP_DEFAULT, "on by default, but not for power-up craters (they come with the charge marks)")
+	_check(VfxLook.BLAST_DEFAULT and VfxLook.BLAST_POWERUP_DEFAULT, "on by default, for power-up craters at the break too (Legal, RL-059)")
 	var crater := func(owner: float, cause: String, special: float): return VfxMock.ev("crater", {"x": plains, "y": g, "r": 200.0, "depth": 60.0, "energy": 8.0, "cause": cause, "owner": owner, "special": special, "rim": 20.0, "z": 0.0})
 	# One crater, then two and a half seconds of ticks: how many bits the pool took, with the amplification and without it.
 	var run := func(tier: float, on: bool, ev: Array, setup: Callable) -> VfxHub:
@@ -1569,15 +1569,93 @@ func _blast() -> void:
 	var h4: VfxHub = run.call(4.0, true, [crater.call(0.0, "impact", 0.0)], none)
 	_check(h4.debris.jobs.is_empty(), "the pebble fall and the settling dust have all come due and run within two seconds")
 	_check(h4.blast.chunks >= 8, "tier 4 throws a good handful of rim chunks (%d)" % h4.blast.chunks)
-	var hp: VfxHub = run.call(4.0, true, [crater.call(0.0, "powerup", 0.0)], none)
-	var hpb: VfxHub = run.call(4.0, false, [crater.call(0.0, "powerup", 0.0)], none)
-	_check(hp.blast.made == 0 and hp.debris.spawned == hpb.debris.spawned, "a power-up crater gets none by default (Legal stacking rule)")
-	var hpo := VfxHub.new()
-	hpo.blast_powerup_enabled = true
-	hpo.reset(S, 6)
+	# Ground-level power-up craters (RL-059): only at the transformation's break, one a transformation, never in the air, never in the gather.
+	var xf_ev := func(tier: float): return VfxMock.ev("transform", {"actor": 0, "tier": tier, "source": "ai", "dur": 0.0, "version": "live"})
+	var break_run := func(tier: float, pre_ticks: int, after: Array, setup: Callable, powerup_flag: bool) -> VfxHub:
+		var h := VfxHub.new()
+		h.blast_powerup_enabled = powerup_flag
+		h.rocks_enabled = true
+		h.reset(S, 6)
+		f.x = plains
+		f.y = g
+		f.vx = 0.0
+		f.vy = 0.0
+		f.state = "free"
+		f.beamCharge = null
+		f.hidden = false
+		f.tier = tier
+		setup.call()
+		for k in range(60):
+			_tick(S, h, [])
+		_tick(S, h, [xf_ev.call(tier)])
+		for k in range(pre_ticks):
+			_tick(S, h, [])
+		_tick(S, h, [crater.call(0.0, "powerup", 1.0)])
+		for step in after:
+			for k in range(int(step[0])):
+				_tick(S, h, [])
+			if step.size() > 1:
+				_tick(S, h, [crater.call(0.0, "powerup", 1.0)])
+		return h
+	var hb: VfxHub = break_run.call(4.0, 10, [[2]], none, true)       # the live version's gather is 10 ticks: this is the break
+	_check(hb.blast.made == 1 and hb.blast.rings == 2, "at the break: one amplification, scaled by tier (a second ring at tier 4)")
+	var hb3: VfxHub = break_run.call(3.0, 10, [[2]], none, true)
+	_check(hb3.blast.made == 1 and hb3.blast.rings == 1 and hb3.blast.chunks > 0, "tier 3: one ring, rim chunks")
+	var hg: VfxHub = break_run.call(4.0, 2, [[2]], none, true)
+	_check(hg.blast.made == 0, "nothing in the gather (the crater two ticks into it)")
+	var hn := VfxHub.new()
+	hn.reset(S, 6)
+	f.x = plains
+	f.y = g
 	f.tier = 4.0
-	_tick(S, hpo, [crater.call(0.0, "powerup", 1.0)])
-	_check(hpo.blast.made == 1, "the power-up flag lets it through")
+	for k in range(30):
+		_tick(S, hn, [])
+	_tick(S, hn, [crater.call(0.0, "powerup", 1.0)])
+	_check(hn.blast.made == 0, "none for a power-up that comes with no transformation (a charge's power-up)")
+	var h2x: VfxHub = break_run.call(4.0, 10, [[20, 1]], none, true)
+	_check(h2x.blast.made == 1, "one crater a transformation: a second in the same form gets none")
+	var hair: VfxHub = break_run.call(4.0, 10, [[2]], func(): f.y = g + 400.0, true)
+	_check(hair.blast.made == 0, "none for a power-up in the air")
+	var hoffp: VfxHub = break_run.call(4.0, 10, [[2]], none, false)
+	_check(hoffp.blast.made == 0, "blast_powerup_enabled off: none")
+	_check(VfxBlast.POWERUP_OFF.is_empty(), "no fighter's gather has a scream or a crouch now: the off list is empty")
+	VfxBlast.POWERUP_OFF = [String(f.name)]
+	var hlist: VfxHub = break_run.call(4.0, 10, [[2]], none, true)
+	VfxBlast.POWERUP_OFF = []
+	_check(hlist.blast.made == 0, "a fighter on the off list (a scream or a fists-at-sides crouch in his gather) gets none")
+	_check(hb.rocks.level[0] < 0.2, "the rocks are stood down through the transformation (level %.2f)" % hb.rocks.level[0])
+	# Flat ring, thrown chunks: read the bits one tick after the break with everything else off.
+	var hq := VfxHub.new()
+	hq.earth_enabled = false
+	hq.react_enabled = false
+	hq.rocks_enabled = false
+	hq.pressure_enabled = false
+	hq.reset(S, 6)
+	f.x = plains
+	f.y = g
+	f.tier = 4.0
+	for k in range(5):
+		_tick(S, hq, [])
+	_tick(S, hq, [xf_ev.call(4.0)])
+	for k in range(10):
+		_tick(S, hq, [])
+	_tick(S, hq, [crater.call(0.0, "powerup", 1.0)])
+	_tick(S, hq, [])
+	var flat_ok: bool = true
+	var rings_n: int = 0
+	var fall_ok: bool = true
+	var chunks_n: int = 0
+	for bt in hq.debris.bits:
+		if bt.kind == VfxDebris.RING:
+			rings_n += 1
+			if bt.mode != 3:
+				flat_ok = false
+		if bt.kind == VfxDebris.CHUNK:
+			chunks_n += 1
+			if bt.grav <= 0.0:
+				fall_ok = false
+	_check(rings_n >= 1 and flat_ok, "the ring lies flat on the ground (%d ring, all flat)" % rings_n)
+	_check(chunks_n > 0 and fall_ok, "the chunks are thrown and fall: %d, all under gravity, none rising (that is the rubble lift's)" % chunks_n)
 	var hch: VfxHub = run.call(4.0, true, [crater.call(0.0, "impact", 0.0)], func(): f.state = "charging")
 	_check(hch.blast.made == 0, "none from a fighter who is charging")
 	var hno: VfxHub = run.call(4.0, true, [crater.call(-1.0, "impact", 0.0)], none)

@@ -12,6 +12,7 @@ const DEFAULTS: Dictionary = {
 	"rocks": {"min_tier": 3, "count_t3": 5, "count_t4": 10, "r_min_bh": 0.8, "r_max_bh": 2.6, "h_min_bh": -0.1, "h_max_bh": 1.9, "drift_min": 0.05, "drift_max": 0.22, "bob_bh": 0.07, "bob_hz": 0.35, "size_min": 11.0, "size_max": 30.0, "t4_size": 1.25, "ease_in_s": 0.8, "ease_out_s": 0.5, "near_ground_bh": 6.0, "max_speed_bh": 40.0, "alpha": 1.0},
 }
 const MAX_PIECES := 12
+const FORM_OUT_S: float = 0.15       # how fast they sink when his transformation starts (seconds)
 
 class Piece:
 	var ang: float = 0.0        # angle round him at clock zero (radians), random: never evenly spaced
@@ -113,5 +114,7 @@ func step(S: SimState, forms: Array, speed_bh: Array) -> void:
 		var on: bool = tier >= int(p("rocks", "min_tier")) and not busy and near and slow
 		if on:
 			level[i] = minf(level[i] + 1.0 / maxf(p("rocks", "ease_in_s") * 60.0, 1.0), 1.0)
+		elif in_form:
+			level[i] = maxf(level[i] - 1.0 / (FORM_OUT_S * 60.0), 0.0)   # a transformation: they are gone by its break (RL-059), back after the settle
 		else:
 			level[i] = maxf(level[i] - 1.0 / maxf(p("rocks", "ease_out_s") * 60.0, 1.0), 0.0)

@@ -9,14 +9,21 @@ extends RefCounted
 ## draws a crater, so the stream does not depend on quality. Presentation only: it reads the event and the fighter's tier.
 ##
 ## Legal's stacking rule (docs/legal/rule-of-cool-screen.md): this is a one-off event of mark 4 (rubble, ground, wind), never a held
-## state. Craters from ground-level power-ups (cause "powerup") come at the end of a charge, next to the crouch and the scream, so
-## they stay as they were (a separate flag, default off, until Legal clears them); a fighter who is charging gets none.
+## state. A fighter who is charging gets none. Ground-level power-up craters (cause "powerup") are cleared under eight conditions
+## (RL-059, docs/legal/agency-pass-screen.md), kept here: only at the transformation's break (the form is playing and its gather is
+## over; nothing in the gather, nothing for a power-up that comes with no transformation); none for a fighter listed in POWERUP_OFF
+## (one whose gather has a scream or a fists-at-sides crouch: nobody now); not for a power-up in the air; one crater
+## a transformation; the chunks are thrown and fall (gravity pulls them down, nothing hangs or rises); the ring is flat on the ground.
 
 const DEFAULTS: Dictionary = {
 	"blast": {"mult_t1": 0.0, "mult_t2": 0.45, "mult_t3": 1.0, "mult_t4": 1.7, "r_ref": 160.0, "rs_min": 0.6, "rs_max": 2.2, "gap_s": 0.25,
 		"ring_life": 0.5, "ring_r0": 0.75, "ring_r1": 1.7, "ring_r1_t": 0.5, "ring2_delay": 0.12, "chunks": 4.0, "lob": 0.3, "pebbles": 6.0, "pebble_delay": 0.5,
 		"dome": 5.0, "settle": 4.0, "settle_from": 0.4, "settle_to": 1.6, "chunk_min": 10.0, "chunk_max": 22.0},
 }
+
+static var POWERUP_OFF: Array = []      # names of fighters whose gather has a scream or a fists-at-sides crouch: no power-up blast for them (nobody now)
+const BREAK_SLACK: float = 3.0     # ticks before the break that still count as its snap (the host's clock and the sim's frozen break tick differ by a few)
+const AIR_H: float = 140.0         # the sim's own ground-level limit for a power-up crater (fighter.gd tierUp)
 
 static var _data: Dictionary = {}
 static var _loaded: bool = false
@@ -26,6 +33,7 @@ var skipped: int = 0              # skipped: tier 1, no owner, a power-up, charg
 var rings: int = 0
 var chunks: int = 0
 var _last_at := [-1000.0, -1000.0]   # per owner slot: the effects-clock time of the last one
+var _pu_form: Array = [null, null]   # per slot: the transformation whose break has had its crater (one a transformation)
 
 
 static func warm() -> void:
@@ -53,6 +61,7 @@ func reset() -> void:
 	rings = 0
 	chunks = 0
 	_last_at = [-1000.0, -1000.0]
+	_pu_form = [null, null]
 	warm()
 
 
@@ -61,19 +70,32 @@ static func mult_for(tier: int) -> float:
 	return p("blast", "mult_t%d" % clampi(tier, 1, 4))
 
 
+static func powerup_off(f) -> bool:
+	return POWERUP_OFF.has(String(f.name))
+
+
 ## A `crater` event (x, y, r, depth, rim, energy, cause, owner, special). debris: the shared pool; now: the effects clock. powerup_ok:
-## the flag that lets ground-level power-up craters through (default off).
-func on_crater(S: SimState, e, debris: VfxDebris, now: float, powerup_ok: bool) -> void:
+## the flag for ground-level power-up craters (RL-059, default on). forms: the transformations in play (VfxTransform.Form).
+func on_crater(S: SimState, e, debris: VfxDebris, now: float, powerup_ok: bool, forms: Array = []) -> void:
 	var owner: int = int(e.owner)
 	if owner < 0 or owner >= S.fighters.size():
 		skipped += 1
 		return
 	var f = S.fighters[owner]
 	var cause: String = String(e.get("cause") if e.get("cause") != null else "impact")
-	if cause == "powerup" and not powerup_ok:
-		skipped += 1
-		return
-	if f.state == "charging" or f.beamCharge != null:
+	if cause == "powerup":
+		var form = null
+		for fm in forms:
+			if fm.slot == owner:
+				form = fm
+		# Only at the break's one-off snap: the transformation is playing and its gather is over; none for a power-up with no
+		# transformation, none for a fighter whose gather has a scream or a crouch, none in the air, one a transformation.
+		if not powerup_ok or form == null or form.age < float(form.g) - BREAK_SLACK or powerup_off(f) or _pu_form[owner] == form \
+				or f.y - WorldTerrain.groundY(S, f.x) > AIR_H:
+			skipped += 1
+			return
+		_pu_form[owner] = form
+	elif f.state == "charging" or f.beamCharge != null:
 		skipped += 1
 		return
 	var m: float = mult_for(VfxReact.tier_of(f))
