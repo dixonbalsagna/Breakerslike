@@ -73,8 +73,8 @@
     "_note": "region pick weights (head, core, arms, legs) by hit family"
   },
   "guardWearSplit": {
-    "arms": 0.4,
-    "legs": 0.6,
+    "arms": 0.7,
+    "legs": 0.3,
     "_note": "a guard hit's wear: this share to the arms, this to the legs (Game Design: spread so legs can become battered)"
   },
   "penalties": {
@@ -107,13 +107,13 @@
       "guard_break",
       "chain"
     ],
-    "base": 0.032,
+    "base": 0.02,
     "tierAhead": 0.03,
     "lateAct": 3,
     "lateBonus": 0.03,
     "defensive": -0.03,
     "maxPerFighter": 1,
-    "legWeight": 1.8,
+    "legWeight": 0.8,
     "surgePower": 10.0,
     "_note": "a heavy-class blow (a heavy, a signature, a guard break or a chain strike) that lands on a battered limb in a decisive exchange breaks it on a keyed roll: base, + tierAhead if the attacker is a tier ahead, + lateBonus from act lateAct, + defensive (negative) if the victim holds DEFENSIVE. At most maxPerFighter limbs a match; the breaker's power rises by surgePower. The pick: among the victim's eligible limbs (cripple regions, battered at the exchange's start and still battered), the legs weigh legWeight against the arms' 1"
   },
