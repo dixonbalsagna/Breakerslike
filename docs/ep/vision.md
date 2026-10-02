@@ -514,3 +514,12 @@ Orb asked for all directors to be briefed, iteration to start, and a questionnai
 - **Hard impacts:** yes, the fighter is buried in the huge crater, and the attacker gets a free follow-up.
 - **Slide and tumble destruction:** 4 of 5.
 - **Notes:** "the fights are cool, the craters blowing up from transformations and beam explosions look really cool, fighters almost get a little too fast when max transformation is reached".
+
+### Orb's picks after the pitches (2026-10-02)
+
+1. **Ranged press:** the EP's mix. Three range bands (close strikes, mid is a short lunge decided at the wind-up, far is tap to taunt and hold to charge); the taunt is a challenge the opponent can answer by pressing attack, so both rush and meet in a clash or blur; the button picks the charge (a held light is fast and can be feinted, a held heavy is slower, shrugs off blasts and can earn a launch). A strike never exists at range.
+2. **Reading presses:** timing upgrades each style (a steady mash becomes a perfect blur, a hold released on the flash breaks guard, taps in time land clean), and timing earns the ending. Orb's reference is a well-known scene of two fighters trading stomach punches in turn: two players both hitting the timing on their power attacks should produce that. "lets run balance tests on your recommendation, consistent timing should give the fighter a substantial edge".
+3. **Taunts feed meters,** probably ("not 100% sure but i think it would be a good thing"); voice lines and face cut-ins "at the very least". Working ruling: they feed, with a guard against farming; revisit in play.
+4. **Beams:** no final calls yet. "I just didn't like the cooldown, I want the energy combat system to be implemented before I make any more decisions on energy beams, I want to personally experience how the expansion of ranged blasts change the gameplay". Build energy and ranged combat first; the signature limit stays provisional.
+5. **Escape control:** "I need to feel how this works in game... lets get something that works now and then work on it when we have more combat systems in place". Build a provisional version.
+6. **Top-tier speed:** no yes or no. Instead: "think of how many more ways there are to visually communicate more intense powers and higher strength levels. rocks levitating around a powered-up individual look cool".
