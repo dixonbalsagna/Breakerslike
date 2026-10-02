@@ -433,6 +433,8 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (isObj(d) && typeof d.lowBh === 'number' && typeof d.highBh === 'number' && d.lowBh >= d.highBh) err(LF, '/drive/lowBh', 'launch-order', `lowBh ${d.lowBh} is not below highBh ${d.highBh}, so the angle has no range to rise over`);
     const up = launch.uppercut;
     if (isObj(up) && typeof up.uy === 'number' && up.uy <= 0) err(LF, '/uppercut/uy', 'launch-direction', `uppercut.uy ${up.uy} is not upward (positive is up), so UPPERCUT would not lift`);
+    const kb = launch.knockBack;
+    for (const key of ['distBh', 'skidSpeed']) if (isObj(kb) && Array.isArray(kb[key])) for (let i = 1; i < kb[key].length; i++) if (typeof kb[key][i] === 'number' && typeof kb[key][i - 1] === 'number' && kb[key][i] < kb[key][i - 1]) err(LF, `/knockBack/${key}/${i}`, 'launch-order', `knockBack ${key} falls from ${kb[key][i - 1]} to ${kb[key][i]} at tier ${i + 1}; it must not fall with the tier`, 'warning');
     const cs = launch.craterSlam;
     if (isObj(cs) && typeof cs.uy === 'number' && cs.uy >= 0) err(LF, '/craterSlam/uy', 'launch-direction', `uy ${cs.uy} is not downward (negative is down), so CRATER SLAM would not slam`, 'warning');
   }
@@ -676,7 +678,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const lv = isObj(dai.levels) ? dai.levels : {};
     if (typeof dai.level === 'string' && isObj(dai.levels) && !(dai.level in lv)) err(AI, '/level', 'ai-level', `level "${dai.level}" is not in levels (${Object.keys(lv).filter((k) => !k.startsWith('_')).join(', ')})`);
     const order = ['easy', 'medium', 'hard'];
-    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat']) {
+    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy']) {
       for (let i = 1; i < order.length; i++) {
         const a = isObj(lv[order[i - 1]]) ? lv[order[i - 1]][key] : undefined; const b = isObj(lv[order[i]]) ? lv[order[i]][key] : undefined;
         if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');
@@ -697,6 +699,8 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       const all = [['opener/light', isObj(w.opener) ? w.opener.light : undefined], ['opener/heavy', isObj(w.opener) ? w.opener.heavy : undefined], ['heavy', w.heavy], ['ender', w.ender], ['blast/light', isObj(w.blast) ? w.blast.light : undefined], ['blast/heavy', isObj(w.blast) ? w.blast.heavy : undefined], ['return', w.return]];
       for (const [name, v] of all) if (typeof v === 'number' && v > 0 && v <= pb.oneArmedOff) err(IT, `/perfectBlock/oneArmedOff`, 'interrupts-order', `oneArmedOff ${pb.oneArmedOff} leaves no window for ${name} (${v} ticks)`);
     }
+    const dcI = itr.dodgeCancel;
+    if (isObj(dcI) && typeof dcI.freeGapTicks === 'number' && typeof dcI.cooldownTicks === 'number' && dcI.freeGapTicks > dcI.cooldownTicks) err(IT, '/dodgeCancel/freeGapTicks', 'interrupts-order', `freeGapTicks ${dcI.freeGapTicks} is longer than cooldownTicks ${dcI.cooldownTicks}, so the free cancel would cost more than a paid one`, 'warning');
     const rv = itr.reversal;
     if (isObj(rv) && typeof rv.kiPatient === 'number' && typeof rv.ki === 'number' && rv.kiPatient > rv.ki) err(IT, '/reversal/kiPatient', 'interrupts-order', `kiPatient ${rv.kiPatient} is above ki ${rv.ki}; patience should be cheaper`);
     const st = itr.stale;

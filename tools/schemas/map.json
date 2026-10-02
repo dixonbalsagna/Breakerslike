@@ -327,6 +327,10 @@
       "schema": "vfx-earth.schema.json"
     },
     {
+      "match": "data/vfx/power.json",
+      "schema": "vfx-power.schema.json"
+    },
+    {
       "match": "data/narrative/combat_barks.json",
       "schema": "narrative-barks.schema.json"
     },

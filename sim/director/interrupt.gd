@@ -26,7 +26,14 @@ const REV_TRIED: int = 9    # the exchange index in which the AI last weighed a 
 const LAST_START: int = 10  # the index of the last exchange it started (the queue's tie-break)
 const WEIGHT_KEY: int = 11  # the weight of the last exchange it started ...
 const WEIGHT_RUN: int = 12  # ... and how many it has started in a row with that weight (the AI's read of a repeated string)
-const N: int = 13
+const LANDED: int = 13      # strikes it has landed in the exchange now running (the earned launch)
+const PHRASE_P: int = 14    # the press that started its exchange or its latest chain link, as the press log packs it
+const TAKEN: int = 15       # blows it has taken unblocked in the exchange now running (a heavy "landing clean")
+const LAST_END: int = 16    # how the last launch beat of its exchange ended: END_LAUNCH, END_KNOCK or END_STAY
+const N: int = 17
+const END_LAUNCH: int = 0
+const END_KNOCK: int = 1
+const END_STAY: int = 2
 const NEVER: int = -100000
 const OPEN_RIPOSTE: int = 1
 const OPEN_RIPOSTE_LAUNCH: int = 2
@@ -106,6 +113,13 @@ static func onStart(S: SimState, ex, weight: int, mode: int, entry: int) -> int:
 	var A = ex.A
 	var D = ex.D
 	si(A, LAST_START, ex.n)
+	si(A, LANDED, 0)
+	si(D, LANDED, 0)
+	si(D, TAKEN, 0)
+	si(A, TAKEN, 0)
+	var pp: int = DirAlchemy.at(A, DirExchange.planTick if DirExchange.planTick >= 0 else S.tick)
+	si(A, PHRASE_P, pp if pp >= 0 and (pp & 1) == mini(weight, 1) else mini(weight, 1))   # the press log's newest press, when it is this one
+	si(A, LAST_END, END_LAUNCH)
 	si(D, GUARDED, gi(D, GUARDED) + 1 if ex.sD == 1.0 else 0)
 	si(A, WEIGHT_RUN, gi(A, WEIGHT_RUN) + 1 if gi(A, WEIGHT_KEY) == weight else 1)
 	si(A, WEIGHT_KEY, weight)
@@ -218,6 +232,7 @@ static func perfectBlock(S: SimState, ex, a, d, o: Dictionary) -> void:
 	SimEvents.feed(S, d.name + " PERFECT BLOCK", a.name + " staggers; the next attack is a riposte" + (" that launches" if launch else ""))
 	SimFx.parry(S, d, a)   # the mood and Pride read it as a parry
 	if d.ai != null and S.rng.next() < DirAI.lv().riposte:
+		DirAlchemy.log(S, d, SimAct.HEAVY if launch else SimAct.LIGHT, d.act.mode)
 		SimAct.push(d, SimAct.HEAVY if launch else SimAct.LIGHT, d.act.mode, 0, S.tick)
 
 
@@ -299,12 +314,18 @@ static func dodgeCancel(S: SimState, ex, f) -> bool:
 	if ex == null or ex.kind == "sig" or (f != ex.A and f != ex.D) or DirExchange.finisherPlanned(ex):
 		return false
 	var c: Dictionary = data().dodgeCancel
-	if f.ki < float(c.ki) or f.act.dodgeCool > 0 or f.state == "launched" or f.state == "down":
+	# The attacker's cancel is free until his first wind-up starts (agency-pass.md section 1): he was flown in by the
+	# director and may call it off. It still starts the short gap between dodges.
+	var free: bool = c.get("freeBeforeWindup", false) and f == ex.A and ex.combo <= 1.0 and _beforeWindup(ex)
+	if (not free and f.ki < float(c.ki)) or f.act.dodgeCool > 0 or f.state == "launched" or f.state == "down":
 		return false
 	if f == ex.D and S.tick - gi(f, HIT_AT) < int(c.gapTicks):
 		return false   # the defender cancels only in a gap between strikes, never in hit-stun
-	f.ki -= float(c.ki)
-	f.act.dodgeCool = int(c.cooldownTicks)
+	if free:
+		f.act.dodgeCool = int(c.freeGapTicks)
+	else:
+		f.ki -= float(c.ki)
+		f.act.dodgeCool = int(c.cooldownTicks)
 	_takeOver(ex)
 	ex.loser = -1
 	ex.A.rush = null
@@ -321,6 +342,14 @@ static func dodgeCancel(S: SimState, ex, f) -> bool:
 	SimFx.cue(S, f, "dodge_cancel", "", "")
 	SimEvents.feed(S, f.name + " DODGE-CANCEL", "the exchange ends with no winner")
 	return true
+
+
+## True until the exchange's first wind-up starts: its wind beat is still pending.
+static func _beforeWindup(ex) -> bool:
+	for b in ex.beats:
+		if b.op == "wind":
+			return not b.done
+	return false
 
 
 # ---------------------------------------------------------------- the burst
@@ -423,6 +452,7 @@ static func reversal(S: SimState, ex, f) -> bool:
 	f.stunTicks = maxi(f.stunTicks, int(c.delayTicks))
 	_open(S, f, OPEN_PLAIN, int(c.delayTicks) + int(c.landTicks))
 	SimAct.clear(f)
+	DirAlchemy.log(S, f, SimAct.HEAVY, f.act.mode)
 	SimAct.push(f, SimAct.HEAVY, f.act.mode, 0, S.tick)
 	SimFx.cue(S, f, "reversal", "", "")
 	SimFx.banner(S, "REVERSAL", "#ffd45a", 0.8)
@@ -440,4 +470,6 @@ static func onEnd(S: SimState, ex) -> void:
 	_open(S, ex.D, OPEN_PLAIN, n)
 	var lv: Dictionary = DirAI.lv()
 	if ex.D.ai != null and S.rng.next() < float(lv.punish):
-		SimAct.push(ex.D, SimAct.HEAVY if S.rng.next() < float(lv.punishHeavy) else SimAct.LIGHT, ex.D.act.mode, 0, S.tick)
+		var pw: int = SimAct.HEAVY if S.rng.next() < float(lv.punishHeavy) else SimAct.LIGHT
+		DirAlchemy.log(S, ex.D, pw, ex.D.act.mode)
+		SimAct.push(ex.D, pw, ex.D.act.mode, 0, S.tick)

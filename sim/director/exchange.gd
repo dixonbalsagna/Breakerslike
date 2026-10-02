@@ -42,6 +42,7 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	# never queued, so mashed clash presses do not fire as attacks after it.
 	if DirBeam.inClash(S, A):
 		return
+	DirAlchemy.log(S, A, KIND.find(kind), A.act.mode)   # the press log (read-only for now)
 	if not A.act.v2:
 		_start(S, A, kind)
 		return
@@ -58,6 +59,7 @@ static var planEntry: int = 0
 static var planContext: String = ""
 static var planLaunch: bool = false
 static var planStale: int = 0
+static var planTick: int = -1   # the tick of the request being started (its press in the log), -1 outside _drain
 
 
 ## Starts the oldest queued request the director can take: the older one first; on a tie of age the fighter who did not
@@ -82,8 +84,10 @@ static func _drain(S: SimState) -> void:
 		var f = S.fighters[k]
 		while not SimAct.peek(f).is_empty():
 			planEntry = int(SimAct.peek(f)[2])   # step 2b: the direction held at the press, for the plan's atkEntry
+			planTick = int(SimAct.peek(f)[3])
 			var r: int = _start(S, f, KIND[int(SimAct.peek(f)[0])])
 			planEntry = 0
+			planTick = -1
 			if r == WAIT:
 				break
 			SimAct.pop(f)
@@ -100,6 +104,8 @@ static func _queues(S: SimState) -> void:
 		var up: int = f.input.upgrade
 		if up > 0 and not SimAct.upgrade(f, SimAct.HEAVY if up == 1 else SimAct.SIG):
 			SimAct.push(f, SimAct.HEAVY if up == 1 else SimAct.SIG, f.act.mode, 0, S.tick)
+		if up == 1:
+			DirAlchemy.held(f)   # the press log: the newest press was held
 		# A waiting request expires, except the attacker's own links during its exchange, and the defender's answer during
 		# a beam's tell (step 2b: the tell is longer than the expiry).
 		var ex = S.dirS.ex
@@ -189,6 +195,8 @@ static func _start(S: SimState, A, kind: String) -> int:
 	planLaunch = opn == DirInterrupt.OPEN_RIPOSTE_LAUNCH
 	if opn != 0:
 		DirInterrupt.si(A, DirInterrupt.OPEN_UNTIL, 0)
+	if kind != "sig" and DirInterrupt.on():
+		DirAlchemy.report(S, ex)
 	var chk = null
 	if planCheck.is_valid():
 		chk = _planByCode(S, ex, "sig" if kind == "sig" else "melee")
@@ -220,6 +228,8 @@ static func runBeat(S: SimState, ex, b) -> void:
 		"rush":
 			if (A.state == "launched" or A.state == "down") and not DirData.contact().is_empty():
 				return   # a fighter in flight or down makes no closing move
+			if DirMelee.approachOver(S, ex, a):
+				return   # the stick was up or down at the press: he comes in over (or under) the rival and lands on the far side
 			var r := SimState.Rush.new()
 			r.tgt = D
 			r.off = DirMelee.sideOff(A, D, a.off, String(a.get("side", "own")))
@@ -230,18 +240,21 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirMelee.opWind(S, ex, a)
 		"press":
 			var who = A if a.who == "A" else D
+			var ender: bool = a.get("queue", false) and DirInterrupt.on() and DirLaunch.data().get("earned", {}).get("enabled", false) and DirInterrupt.gi(who, DirInterrupt.LANDED) >= int(DirLaunch.data().earned.enderAfter)
+			if a.get("queue", false) or a.get("blast", false):
+				DirAlchemy.log(S, who, SimAct.HEAVY if (a.get("blast", false) or ender) else SimAct.LIGHT, 1 if a.get("blast", false) else who.act.mode)
 			if a.get("sig", false):
 				SimAct.push(who, SimAct.SIG, who.act.mode, 0, S.tick)   # step 2b: the AI answers a beam with its own signature
 			elif a.get("blast", false):
 				SimAct.push(who, SimAct.HEAVY, 1, 0, S.tick)   # ... or with a heavy blast when its signature is not ready
 			elif a.get("queue", false):
-				SimAct.push(who, SimAct.LIGHT, who.act.mode, 0, S.tick)   # the AI's chain press is a queued request, as a player's is
+				SimAct.push(who, SimAct.HEAVY if ender else SimAct.LIGHT, who.act.mode, 0, S.tick)   # the AI's chain press is a queued request, as a player's is; a heavy when the string is full (its ender)
 			else:
 				who.lastAtkT = S.T
 		"strike":
 			DirMelee.strike(S, ex, A if a.a == "A" else D, A if a.d == "A" else D, a.dmg, a.o)
 		"launch":
-			DirMelee.launchBeat(S, ex, D if a.rev else A, A if a.rev else D, a.force)
+			DirMelee.launchBeat(S, ex, D if a.rev else A, A if a.rev else D, a.force, false, a)
 		"window":
 			openWindow(S, ex)
 		"nop":
@@ -252,6 +265,13 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirMelee.opDodge(S, ex, a)
 		"dodgeLand":
 			DirMelee.opDodgeLand(S, ex, a)
+		"rushLand":
+			DirMelee.opRushLand(S, ex, a)
+		"knockBack":
+			DirLaunch.knock(S, D if a.get("w", "A") == "D" else A, A if a.get("w", "A") == "D" else D)   # Combat's op (brawl endings): w sends the other
+		"stagger":
+			var sg = A if a.get("w", "D") == "A" else D
+			sg.stunTicks = maxi(sg.stunTicks, int(a.get("ticks", 0)))   # Combat's op: w cannot act for ticks
 		"guardBreak":
 			DirMelee.opGuardBreak(S, ex, a)
 		"clashWave":
@@ -318,6 +338,8 @@ static func openWindow(S: SimState, ex) -> void:
 		return
 	if DirInterrupt.lastBlowBlocked(S, ex):
 		return   # step 3: a blocked string opens no chain window; its attacker is left behind (DirInterrupt.onEnd)
+	if DirInterrupt.on() and DirInterrupt.gi(ex.A, DirInterrupt.LAST_END) == DirInterrupt.END_KNOCK and not DirLaunch.data().knockBack.get("chain", false):
+		return   # a knock-back opens no chain window: the rival was sent off, not juggled
 	var e := SimState.Ext.new()
 	e.start = S.T
 	e.until = S.T + 0.6
@@ -417,7 +439,9 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 		var pressed: bool = (not head.is_empty() and int(head[0]) != SimAct.SIG) if A.act.v2 else A.lastAtkT >= ex.ext.start
 		if pressed and ex.combo < 5.0 and A.ki >= 6.0 and inReach:
 			if A.act.v2:
-				SimAct.pop(A)
+				var rq: Array = SimAct.pop(A)
+				var lp: int = DirAlchemy.at(A, int(rq[3]))
+				DirInterrupt.si(A, DirInterrupt.PHRASE_P, lp if lp >= 0 and (lp & 1) == mini(int(rq[0]), 1) else mini(int(rq[0]), 1))   # the link's press, for the earned launch
 			chain(S, ex)
 	var pending: bool = false
 	for b in ex.beats:

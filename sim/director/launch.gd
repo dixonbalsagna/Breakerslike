@@ -37,7 +37,7 @@ const MOUNTAIN_REACH: float = 1560.0 * SimConst.WS # ... and the farthest slope 
 const OPEN_POP: float = 0.2         # popNear(landing, CARE_R) at or below this is open ground
 const NEW_BIOME_W: float = 10.0     # predicted landing in a different biome that is not ocean
 const WATER_W: float = 45.0         # predicted landing in the sea
-const NONE_BASE: float = 25.0       # "no launch"
+const NONE_BASE: float = 25.0       # "no launch" in the old profiles; the knock-back's score is data (launch.json knockBack.score)
 const ACROSS_UY: float = 0.32       # SMASH ACROSS arc
 const ACROSS_FORCE: float = 2.0     # SMASH ACROSS force multiplier
 const KNOCKBACK: float = 700.0      # push when no launch is chosen
@@ -105,7 +105,7 @@ static func craterOffered(S: SimState, A, D) -> bool:
 ## force is the template's launch force; the prediction uses it with the tier scaling doLaunch applies.
 ## longOnly (break and finisher launches, spec-wounds.md §1): only the long-haul candidates (SMASH ACROSS, BUILDING SMASH,
 ## MOUNTAINSIDE), SMASH ACROSS always offered, and no "no launch".
-static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false) -> Dictionary:
+static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false, sends: String = "", tilt: int = 0, noKnock: bool = false) -> Dictionary:
 	var g: float = WorldTerrain.groundY(S, D.x)
 	var alt: float = D.y - g
 	var bio: String = WorldBiomes.biomeAt(D.x)
@@ -146,11 +146,27 @@ static func chooseLaunch(S: SimState, A, D, force: float, longOnly: bool = false
 				c.append({"name": "MOUNTAINSIDE", "ux": sign, "uy": 0.05, "s": 24.0, "land": D.x + sign * md})
 				break
 			md += MOUNTAIN_STEP
-	if not longOnly:
-		c.append({"name": "NONE", "ux": 0.0, "uy": 0.0, "s": NONE_BASE})
+	if not longOnly and not noKnock:
+		c.append({"name": "KNOCK BACK", "ux": 0.0, "uy": 0.0, "s": float(data().knockBack.score)})   # "no launch": a scored outcome (it was NONE)
+	if sends != "":
+		# Combat's hook (alchemist-content.md): a piece that names where it sends the rival keeps only those candidates.
+		var keep: Array = SENDS.get(sends, [])
+		c = c.filter(func(k): return k.name == "KNOCK BACK" or keep.has(k.name))
+	if tilt > 0:
+		# The stick's tilt (1 up, then clockwise by eighths): only candidates within TILT_CONE of it compete. A tilt back
+		# through the launcher is not a direction a launch can take (the turning throw is M0): it keeps its up or down part.
+		var tx: float = [0.0, 0.7071, 1.0, 0.7071, 0.0, -0.7071, -1.0, -0.7071][tilt - 1]
+		var ty: float = [1.0, 0.7071, 0.0, -0.7071, -1.0, -0.7071, 0.0, 0.7071][tilt - 1]
+		if tx * f < 0.0:
+			tx = 0.0
+		if tx != 0.0 or ty != 0.0:
+			var tl: float = SimDetMath.hypot(tx, ty)
+			var near: Array = c.filter(func(k): return k.name == "KNOCK BACK" or (k.ux * tx + k.uy * ty) / (tl * SimMathx.jmax(SimDetMath.hypot(k.ux, k.uy), 0.000001)) >= TILT_CONE)
+			if near.any(func(k): return k.name != "KNOCK BACK"):
+				c = near
 	for k in c:
 		k.s += S.rng.range_(0.0, NOISE)
-		if k.name == "NONE":
+		if k.name == "KNOCK BACK":
 			# Holding back leaves the fight where it is: the same personality term, at the target's position.
 			k.s += (-A.care) * CARE_W * WorldStructures.popNear(S, D.x, CARE_R)
 			continue
@@ -311,7 +327,79 @@ static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, spec
 	SimFx.shake(S, 10.0, tgt.x)
 
 
-## No launch: the strike shoves the (locked) target back along the attacker's facing.
+const TILT_CONE: float = 0.7071     # the cosine of 45 degrees: how near the stick's tilt a launch candidate must point
+
+
+## Which launch candidates a piece's "sends" tag keeps (Combat: across, up, down; turned waits for the turning throw).
+const SENDS: Dictionary = {
+	"across": ["SMASH ACROSS", "MOUNTAINSIDE", "BUILDING SMASH"],
+	"up": ["UPPERCUT"],
+	"down": ["DRIVE DOWN", "CRATER SLAM"],
+}
+
+
+## Whether att has earned a launch on tgt at this launch beat (agency-pass.md section 3; launch.json earned): Orb's four.
+## Returns the reason, or "" when it has not.
+static func earned(S: SimState, ex, att, tgt) -> String:
+	var e: Dictionary = data().earned
+	if ex.tag.begins_with("HEAVY CLASH"):
+		return "a clash won"
+	if ex.tag == "GUARD BREAK" or ex.tag == "RIPOSTE":
+		return ""   # both end in a knock-back (Orb)
+	var p: int = phrase(S, ex, att)
+	if p < 0 or (p & 1) != SimAct.HEAVY:
+		return ""
+	if ((p >> 8) & 3) == DirAlchemy.HELD:
+		return "a held heavy"
+	var landed: int = DirInterrupt.gi(att, DirInterrupt.LANDED)
+	if landed - 1 >= int(e.enderAfter):
+		return "the ender of a full string (" + str(landed - 1) + " strikes landed before it)"
+	if (p & DirAlchemy.INTENT) != 0 and DirInterrupt.gi(att, DirInterrupt.TAKEN) <= int(e.cleanTaken):
+		return "a heavy with the stick, landing clean"
+	return ""
+
+
+## The press behind att's blow at this launch beat: the attacker's is the one that started his exchange or link; the
+## defender's (a counter) is his newest press. Packed as the press log packs it; -1 when he pressed nothing.
+static func phrase(S: SimState, ex, att) -> int:
+	return DirInterrupt.gi(att, DirInterrupt.PHRASE_P) if att == ex.A else DirAlchemy.last(S, att)
+
+
+## Whether the blow at this launch beat came from a heavy press (the knock-back) or a light one (the brawl goes on). A
+## guard break and a launching riposte are heavy blows whatever was pressed.
+static func heavyBlow(S: SimState, ex, att) -> bool:
+	if ex.tag == "GUARD BREAK" or ex.tag == "RIPOSTE":
+		return true
+	var p: int = phrase(S, ex, att)
+	return p >= 0 and (p & 1) == SimAct.HEAVY
+
+
+## The knock-back (launch.json knockBack): a short send, not a launch across the map. On the ground it is a low,
+## send with no travel boost that the ground-contact model skids about distBh body heights (dust, a scuff, a trench). In
+## the air, over the sea, or with groundMode "shove", the rival is carried back that far, upright, over driftTicks.
+static func knock(S: SimState, att, tgt) -> void:
+	var kb: Dictionary = data().knockBack
+	var ti: int = clampi(int(att.tier) - 1, 0, 3)
+	var s: float = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(att.x, tgt.x)), att.face)
+	var g: float = WorldTerrain.groundY(S, tgt.x)
+	if String(kb.groundMode) == "skid" and tgt.y - g <= float(kb.groundWithinBh) * BH and not WorldTerrain.seaAt(S, tgt.x):
+		var sp: float = float(kb.skidSpeed[ti])
+		doLaunch(S, att, tgt, {"name": "KNOCK BACK", "ux": s, "uy": float(kb.skidUy)}, sp, false)
+		tgt.launchT = 1.0          # no travel boost: a knock-back is a short slide, not a flight across the map
+		tgt.vx = s * sp            # ... and its speed is the data's, whatever the tier scaling of a launch
+		tgt.vy = float(kb.skidUy) * sp
+		return
+	var r := SimState.Rush.new()
+	r.px = SimWrap.wrap(tgt.x + s * float(kb.distBh[ti]) * BH)
+	r.py = SimMathx.jmax(tgt.y, WorldTerrain.groundY(S, r.px))
+	r.end = S.T + float(kb.driftTicks) * SimConst.DT
+	tgt.rush = r
+	tgt.vx = 0.0
+	tgt.vy = 0.0
+	SimFx.ring(S, tgt.x, tgt.y + 34.0, 300.0, "#ffffff", 0.25, 12.0)
+
+
+## No launch in the old profiles: the strike shoves the (locked) target back along the attacker's facing.
 static func knockBack(S: SimState, att, tgt) -> void:
 	tgt.vx += att.face * KNOCKBACK
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 300.0, "#ffffff", 0.25, 12.0)

@@ -146,6 +146,14 @@ function xrefInput({ get, err, esc, isObj }) {
         if (Number.isInteger(a) && Number.isInteger(b) && a > b) err(TIMING, `/hitstopTicks/${chain[i]}`, 'timing-hitstop-order', `${chain[i]} (${a}) should not exceed ${chain[i + 1]} (${b}); the impact hierarchy is ${label}`, 'warning');
       }
     }
+    const rd = isObj(timing.read) ? timing.read : {};
+    const lt2 = (x, y, pointer, what) => { if (Number.isInteger(rd[x]) && Number.isInteger(rd[y]) && rd[x] > rd[y]) err(TIMING, pointer, 'timing-read', what); };
+    lt2('rhythmNeed', 'rhythmOf', '/read/rhythmNeed', `rhythmNeed ${rd.rhythmNeed} is more than the ${rd.rhythmOf} presses rhythm looks at`);
+    lt2('mashPresses', 'logSize', '/read/mashPresses', `a mash of ${rd.mashPresses} presses cannot be seen in a log of ${rd.logSize}`);
+    lt2('mixShort', 'logSize', '/read/mixShort', `mixShort ${rd.mixShort} is more than the ${rd.logSize} presses the log keeps`);
+    lt2('rhythmOf', 'logSize', '/read/rhythmOf', `rhythm looks at ${rd.rhythmOf} presses but the log keeps ${rd.logSize}`);
+    lt2('mashGap', 'mashClear', '/read/mashGap', `mashGap ${rd.mashGap} is longer than mashClear ${rd.mashClear}, so a mash would be over before its next press`);
+    lt2('mashClear', 'staleTicks', '/read/mashClear', `mashClear ${rd.mashClear} is longer than staleTicks ${rd.staleTicks}, so a log would read as nothing while a mash is still counted`);
     for (const [k, v] of Object.entries(hs)) {
       if (!k.startsWith('_') && Number.isInteger(v) && v > 30) err(TIMING, `/hitstopTicks/${esc(k)}`, 'timing-hitstop-budget', `${k} is ${v} ticks; more than 30 reads as a hang`);
     }

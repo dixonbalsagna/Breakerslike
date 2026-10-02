@@ -27124,6 +27124,2144 @@
         "rule": "xref:joints-shape",
         "pointer": "/shapes"
       }
+    },
+    {
+      "id": "director-launch-knock-back-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/knockBack"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-launch-earned-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/earned"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-launch-knock-back-valid",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-knock-back-unknown-key",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false,
+              "push": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/knockBack/push"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/knockBack"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-score-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": "high",
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/knockBack/score"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-dist-length",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/knockBack/distBh"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-dist-positive",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                0,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/knockBack/distBh/1"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-dist-falls-warns",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                4,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:launch-order",
+        "pointer": "/knockBack/distBh/2"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-mode-enum",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "roll",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/knockBack/groundMode"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-mode-shove-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "shove",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-knock-back-skid-speed-length",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/knockBack/skidSpeed"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-skid-speed-positive",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                0,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/knockBack/skidSpeed/2"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-skid-speed-falls-warns",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1000,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:launch-order",
+        "pointer": "/knockBack/skidSpeed/2"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-skid-uy-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": -0.1,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockBack/skidUy"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-skid-uy-zero-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-knock-back-ground-within-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": -1,
+              "driftTicks": 20,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockBack/groundWithinBh"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-drift-integer",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20.5,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/knockBack/driftTicks"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-drift-positive",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 0,
+              "chain": false
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockBack/driftTicks"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-chain-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack": {
+              "score": 25,
+              "distBh": [
+                3.5,
+                5,
+                6.5,
+                8
+              ],
+              "groundMode": "skid",
+              "skidSpeed": [
+                900,
+                1100,
+                1250,
+                1450
+              ],
+              "skidUy": 0.05,
+              "groundWithinBh": 0.5,
+              "driftTicks": 20,
+              "chain": "no"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/knockBack/chain"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-note-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-earned-valid",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned": {
+              "enabled": true,
+              "enderAfter": 4,
+              "cleanTaken": 1,
+              "forceMul": 1.6
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-earned-key-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/earned/forceMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/earned"
+      }
+    },
+    {
+      "id": "director-launch-earned-unknown-key",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/bonus": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/earned/bonus"
+      }
+    },
+    {
+      "id": "director-launch-earned-enabled-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/enabled": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/earned/enabled"
+      }
+    },
+    {
+      "id": "director-launch-earned-ender-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/enderAfter": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/earned/enderAfter"
+      }
+    },
+    {
+      "id": "director-launch-earned-ender-integer",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/enderAfter": 2.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/earned/enderAfter"
+      }
+    },
+    {
+      "id": "director-launch-earned-clean-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/cleanTaken": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/earned/cleanTaken"
+      }
+    },
+    {
+      "id": "director-launch-earned-zero-counts-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/enderAfter": 0,
+            "/earned/cleanTaken": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-earned-force-positive",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/forceMul": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/earned/forceMul"
+      }
+    },
+    {
+      "id": "director-launch-earned-off-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/earned/enabled": false
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-free-before-windup-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/dodgeCancel/freeBeforeWindup"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/dodgeCancel"
+      }
+    },
+    {
+      "id": "director-interrupts-free-gap-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/dodgeCancel/freeGapTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/dodgeCancel"
+      }
+    },
+    {
+      "id": "director-interrupts-free-before-windup-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/dodgeCancel/freeBeforeWindup": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/dodgeCancel/freeBeforeWindup"
+      }
+    },
+    {
+      "id": "director-interrupts-free-gap-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/dodgeCancel/freeGapTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/dodgeCancel/freeGapTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-free-gap-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/dodgeCancel/freeGapTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-free-gap-longer-than-cooldown-warns",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/dodgeCancel/freeGapTicks": 300
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/dodgeCancel/freeGapTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/arrival"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/arrival/riseBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/arrival"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/arrival/swoop": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/arrival/swoop"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-tilt-range",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/arrival/tiltDead": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/arrival/tiltDead"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-tilt-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/arrival/tiltDead": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/arrival/tiltDead"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-rise-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/arrival/riseBh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/arrival/riseBh"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-over-share-zero",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/arrival/overShare": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/arrival/overShare"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-over-share-one",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/arrival/overShare": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMaximum",
+        "pointer": "/arrival/overShare"
+      }
+    },
+    {
+      "id": "director-interrupts-arrival-over-share-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/arrival/overShare": 0.99
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-launch-intent-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/launchIntent"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-held-heavy-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/heldHeavy"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-launch-intent-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/launchIntent": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/medium/launchIntent"
+      }
+    },
+    {
+      "id": "director-ai-held-heavy-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/heldHeavy": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/medium/heldHeavy"
+      }
+    },
+    {
+      "id": "director-ai-held-heavy-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/heldHeavy": "some"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/easy/heldHeavy"
+      }
+    },
+    {
+      "id": "director-ai-launch-intent-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/launchIntent": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/launchIntent"
+      }
+    },
+    {
+      "id": "director-ai-held-heavy-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/heldHeavy": 0.05
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/heldHeavy"
+      }
+    },
+    {
+      "id": "input-timing-mode-style-hold-ok",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/mode/style": "hold"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-mode-style-toggle-ok",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/mode/style": "toggle"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-mode-style-enum",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/mode/style": "latch"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/mode/style"
+      }
+    },
+    {
+      "id": "input-timing-read-valid",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-read-optional",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "del": [
+            "/read"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-read-unknown-key",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2,
+              "rumble": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/read/rumble"
+      }
+    },
+    {
+      "id": "input-timing-read-log-size-min",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 2,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/read/logSize"
+      }
+    },
+    {
+      "id": "input-timing-read-hold-ticks-min",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 0,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/read/holdTicks"
+      }
+    },
+    {
+      "id": "input-timing-read-beat-half-negative",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": -1,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/read/beatHalf"
+      }
+    },
+    {
+      "id": "input-timing-read-mash-presses-min",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 1,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/read/mashPresses"
+      }
+    },
+    {
+      "id": "input-timing-read-assist-factor-min",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 0,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/read/assistFactor"
+      }
+    },
+    {
+      "id": "input-timing-read-debounce-negative",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": -1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/read/debounce"
+      }
+    },
+    {
+      "id": "input-timing-read-debounce-zero-ok",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 0
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-read-type",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": "long",
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/read/staleTicks"
+      }
+    },
+    {
+      "id": "input-timing-read-rhythm-need-above-of",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 4,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-read",
+        "pointer": "/read/rhythmNeed"
+      }
+    },
+    {
+      "id": "input-timing-read-mash-above-log",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 6,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-read",
+        "pointer": "/read/mashPresses"
+      }
+    },
+    {
+      "id": "input-timing-read-mix-short-above-log",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 6,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-read",
+        "pointer": "/read/mixShort"
+      }
+    },
+    {
+      "id": "input-timing-read-rhythm-of-above-log",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 6,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-read",
+        "pointer": "/read/rhythmOf"
+      }
+    },
+    {
+      "id": "input-timing-read-mash-gap-above-clear",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 30,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-read",
+        "pointer": "/read/mashGap"
+      }
+    },
+    {
+      "id": "input-timing-read-mash-clear-above-stale",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 2,
+              "mashPresses": 4,
+              "mashGap": 10,
+              "mashClear": 90,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:timing-read",
+        "pointer": "/read/mashClear"
+      }
+    },
+    {
+      "id": "input-timing-read-equal-limits-ok",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read": {
+              "logSize": 5,
+              "holdTicks": 12,
+              "beatHalf": 4,
+              "touchBeatHalf": 5,
+              "rhythmOf": 3,
+              "rhythmNeed": 3,
+              "mashPresses": 4,
+              "mashGap": 20,
+              "mashClear": 20,
+              "staleTicks": 60,
+              "mixShort": 3,
+              "assistFactor": 2,
+              "debounce": 2
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-live-valid",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/version": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-version-required",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "del": [
+            "/version"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "vfx-power-version-value",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/version": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/version"
+      }
+    },
+    {
+      "id": "vfx-power-unknown-group",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/halo": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/halo"
+      }
+    },
+    {
+      "id": "vfx-power-unknown-key",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/glow": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/rocks/glow"
+      }
+    },
+    {
+      "id": "vfx-power-underscore-key-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-empty-group-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-tier-range",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/min_tier": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/rocks/min_tier"
+      }
+    },
+    {
+      "id": "vfx-power-tier-zero",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/min_tier": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/rocks/min_tier"
+      }
+    },
+    {
+      "id": "vfx-power-tier-integer",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/min_tier": 3.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/rocks/min_tier"
+      }
+    },
+    {
+      "id": "vfx-power-count-integer",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/count_t3": 5.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/rocks/count_t3"
+      }
+    },
+    {
+      "id": "vfx-power-count-negative",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/count_t4": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/rocks/count_t4"
+      }
+    },
+    {
+      "id": "vfx-power-count-zero-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/count_t3": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-radius-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/r_min_bh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/rocks/r_min_bh"
+      }
+    },
+    {
+      "id": "vfx-power-height-negative-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/h_min_bh": -0.5
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-drift-negative",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/drift_min": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/rocks/drift_min"
+      }
+    },
+    {
+      "id": "vfx-power-size-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/size_min": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/rocks/size_min"
+      }
+    },
+    {
+      "id": "vfx-power-alpha-range",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/alpha": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/rocks/alpha"
+      }
+    },
+    {
+      "id": "vfx-power-max-speed-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/max_speed_bh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/rocks/max_speed_bh"
+      }
+    },
+    {
+      "id": "vfx-power-type-string",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/bob_hz": "slow"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/rocks/bob_hz"
+      }
+    },
+    {
+      "id": "vfx-power-radius-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/r_min_bh": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/rocks/r_min_bh"
+      }
+    },
+    {
+      "id": "vfx-power-height-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/h_min_bh": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/rocks/h_min_bh"
+      }
+    },
+    {
+      "id": "vfx-power-drift-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/drift_min": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/rocks/drift_min"
+      }
+    },
+    {
+      "id": "vfx-power-size-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/size_min": 40
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/rocks/size_min"
+      }
+    },
+    {
+      "id": "vfx-power-count-order-inverted",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/count_t3": 11,
+            "/rocks/count_t4": 10
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/rocks/count_t3"
+      }
+    },
+    {
+      "id": "vfx-power-count-above-pieces-warns",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/count_t4": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/rocks/count_t4"
+      }
+    },
+    {
+      "id": "vfx-power-equal-range-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/rocks/size_min": 30
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

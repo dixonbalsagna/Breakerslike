@@ -11,6 +11,7 @@
     "burst",
     "reversal",
     "blockedString",
+    "arrival",
     "stale"
   ],
   "properties": {
@@ -143,7 +144,9 @@
         "ki",
         "cooldownTicks",
         "gapTicks",
-        "dash"
+        "dash",
+        "freeBeforeWindup",
+        "freeGapTicks"
       ],
       "properties": {
         "ki": {
@@ -163,6 +166,15 @@
           "description": "The speed of the dash in the held direction, units a second.",
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "freeBeforeWindup": {
+          "type": "boolean",
+          "description": "The attacker's cancel costs nothing until his first wind-up starts (agency-pass.md section 1, solution E)."
+        },
+        "freeGapTicks": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Then it starts this many ticks of cooldown, and not cooldownTicks."
         }
       },
       "additionalProperties": false,
@@ -316,6 +328,38 @@
           "minimum": 0
         }
       },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "arrival": {
+      "type": "object",
+      "required": [
+        "tiltDead",
+        "riseBh",
+        "overShare"
+      ],
+      "properties": {
+        "tiltDead": {
+          "description": "The stick must pass this (0 to 1) up or down as he presses.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "riseBh": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "How far over (or under) the rival the approach passes, in body heights."
+        },
+        "overShare": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1,
+          "description": "The share of the approach spent reaching the point above him."
+        }
+      },
+      "description": "The attacker's arrival side: with the stick up or down past tiltDead as he presses, his approach passes over (or under) the rival and lands on the far side.",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

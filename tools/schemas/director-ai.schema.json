@@ -125,7 +125,9 @@
             "reversal",
             "breakGuard",
             "riposte",
-            "burstAtLink"
+            "burstAtLink",
+            "launchIntent",
+            "heldHeavy"
           ],
           "properties": {
             "beamAnswer": {
@@ -183,6 +185,18 @@
               "description": "The chain link at which it bursts out (0: never).",
               "type": "integer",
               "minimum": 0
+            },
+            "launchIntent": {
+              "description": "The chance the AI presses a heavy with the stick held when a launch would be earned (the earned launch).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "heldHeavy": {
+              "description": "The chance the AI holds a heavy for the held-heavy launch.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "additionalProperties": false,
@@ -201,7 +215,9 @@
             "reversal",
             "breakGuard",
             "riposte",
-            "burstAtLink"
+            "burstAtLink",
+            "launchIntent",
+            "heldHeavy"
           ],
           "properties": {
             "beamAnswer": {
@@ -259,6 +275,18 @@
               "description": "The chain link at which it bursts out (0: never).",
               "type": "integer",
               "minimum": 0
+            },
+            "launchIntent": {
+              "description": "The chance the AI presses a heavy with the stick held when a launch would be earned (the earned launch).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "heldHeavy": {
+              "description": "The chance the AI holds a heavy for the held-heavy launch.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "additionalProperties": false,
@@ -277,7 +305,9 @@
             "reversal",
             "breakGuard",
             "riposte",
-            "burstAtLink"
+            "burstAtLink",
+            "launchIntent",
+            "heldHeavy"
           ],
           "properties": {
             "beamAnswer": {
@@ -335,6 +365,18 @@
               "description": "The chain link at which it bursts out (0: never).",
               "type": "integer",
               "minimum": 0
+            },
+            "launchIntent": {
+              "description": "The chance the AI presses a heavy with the stick held when a launch would be earned (the earned launch).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "heldHeavy": {
+              "description": "The chance the AI holds a heavy for the held-heavy launch.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "additionalProperties": false,

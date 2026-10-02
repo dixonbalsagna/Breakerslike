@@ -34,5 +34,23 @@
       "highAlt": 140.0,
       "_note": "planner score points (no unit), except highAlt, which is the target's height above the ground in units. The base score is base + perTier x tier, + high when the target is over highAlt up. The planner's shared terms (personality, repeats, water, noise) are added as for any launch"
     }
+  },
+  "knockBack": {
+    "score": 25.0,
+    "distBh": [3.5, 5.0, 6.5, 8.0],
+    "groundMode": "skid",
+    "skidSpeed": [900.0, 1100.0, 1250.0, 1450.0],
+    "skidUy": 0.05,
+    "groundWithinBh": 0.5,
+    "driftTicks": 20,
+    "chain": false,
+    "_note": "The knock-back: a short send that is not a launch across the map (agency-pass.md section 3; Combat's brawl-endings-and-trades.md section 2). score: its base score against the launch candidates (it was the planner's NONE, 25). distBh: how far it sends the rival, in body heights, by the striker's tier (Combat's proposal). On the ground (within groundWithinBh of it, not over the sea) with groundMode 'skid' it is a low send with no travel boost that the ground-contact model skids: skidSpeed is its speed by tier, in units a second, sized to slide about distBh on open ground, and skidUy its small lift. Otherwise ('shove', or in the air: the drift) the rival is carried back distBh over driftTicks and stays upright. chain: whether a chain window may open after it"
+  },
+  "earned": {
+    "enabled": true,
+    "enderAfter": 4,
+    "cleanTaken": 1,
+    "forceMul": 1.6,
+    "_note": "The earned launch (agency-pass.md section 3). enabled: the switch; off, every launch beat goes to the planner as before. With it on, a launch beat launches only when earned, by four things (Orb, questionnaire 14): a held heavy that lands; a heavy after enderAfter or more of the string's strikes landed (the ender of a full string); a heavy pressed with a stick direction that lands clean, which means the striker has taken no more than cleanTaken blows in the exchange; a clash won. A guard break and a riposte end in the knock-back. Not earned: a heavy gives the knock-back and a light leaves both fighters in reach. forceMul: the launch force of an earned launch, so fewer launches can be bigger ones (the impact wear itself is World's)"
   }
 }

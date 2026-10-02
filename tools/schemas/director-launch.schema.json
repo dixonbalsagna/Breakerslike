@@ -2,13 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/director-launch",
   "title": "director.launch/1",
-  "description": "data/director/launch.json: the launch planner's landing-mix numbers (sim/director/launch.gd; docs/director/landing-mix.md). SLAM DOWN is a drive (down and forward, at an angle set by the target's height); the straight-down slam is its own gated candidate, CRATER SLAM. Heights are in body heights (_bh, 1 bh is 75 units) unless a key says units. Version field: schema. Policy: every key required, objects closed except keys starting with an underscore. Orders (lowDeg at most highDeg, lowBh below highBh) and the downward direction of CRATER SLAM and the upward direction of UPPERCUT are checked by tools/lib/xref-fight.js (launch-order, launch-direction).",
+  "description": "data/director/launch.json: the launch planner's landing-mix numbers (sim/director/launch.gd; docs/director/landing-mix.md). SLAM DOWN is a drive (down and forward, at an angle set by the target's height); the straight-down slam is its own gated candidate, CRATER SLAM. Heights are in body heights (_bh, 1 bh is 75 units) unless a key says units. Version field: schema. Policy: every key required, objects closed except keys starting with an underscore. Orders (lowDeg at most highDeg, lowBh below highBh) and the downward direction of CRATER SLAM and the upward direction of UPPERCUT are checked by tools/lib/xref-fight.js (launch-order, launch-direction); knockBack distances and skid speeds do not fall with the tier (a warning).",
   "type": "object",
   "required": [
     "schema",
     "drive",
     "uppercut",
-    "craterSlam"
+    "craterSlam",
+    "knockBack",
+    "earned"
   ],
   "properties": {
     "schema": {
@@ -168,6 +170,111 @@
           }
         }
       },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "knockBack": {
+      "type": "object",
+      "required": [
+        "score",
+        "distBh",
+        "groundMode",
+        "skidSpeed",
+        "skidUy",
+        "groundWithinBh",
+        "driftTicks",
+        "chain"
+      ],
+      "properties": {
+        "score": {
+          "type": "number",
+          "description": "Its base score against the launch candidates."
+        },
+        "distBh": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "How far it sends the rival, in body heights, by the striker's tier 1 to 4."
+        },
+        "groundMode": {
+          "enum": [
+            "skid",
+            "shove"
+          ],
+          "description": "On the ground: skid (a low send the ground-contact model skids) or shove (carried back and upright)."
+        },
+        "skidSpeed": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "The skid's speed by tier, in units a second."
+        },
+        "skidUy": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Its small lift."
+        },
+        "groundWithinBh": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Within this many body heights of the ground it counts as on the ground."
+        },
+        "driftTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The ticks the shove or the drift carries the rival back."
+        },
+        "chain": {
+          "type": "boolean",
+          "description": "Whether a chain window may open after it."
+        }
+      },
+      "description": "The knock-back: a short send that is not a launch across the map (agency-pass.md section 3).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "earned": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "enderAfter",
+        "cleanTaken",
+        "forceMul"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "The switch; off, every launch beat goes to the planner as before."
+        },
+        "enderAfter": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "A heavy after this many of the string's strikes landed is earned."
+        },
+        "cleanTaken": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "A heavy with a stick direction is clean if the striker has taken at most this many blows."
+        },
+        "forceMul": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The launch force of an earned launch."
+        }
+      },
+      "description": "The earned launch (agency-pass.md section 3): a launch beat launches only when earned.",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

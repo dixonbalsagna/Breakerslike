@@ -120,7 +120,7 @@ static func _contact(S: SimState, a, d) -> void:
 	if absf(dx) <= reach and absf(dx) >= float(ct.minSeparation) and absf(dy) <= HEIGHT_TOL:
 		return
 	var lim: float = reach * float(ct.placementReaches) + SimDetMath.hypot(d.vx, d.vy) * SimConst.DT * PLACE_FLIGHT_TICKS
-	var catching: bool = d.state == "launched" or (a.rush != null and a.rush.tgt == d)
+	var catching: bool = d.state == "launched" or d.state == "down" or (a.rush != null and a.rush.tgt == d)   # "down": it hit a wall or stopped on this tick
 	if not catching and (absf(dx) > lim or absf(dy) > lim):
 		SimEvents.feed(S, "OUT OF REACH", a.name + " strikes from " + SimMathx.jstr(SimMathx.jround(absf(dx))) + " u, " + SimMathx.jstr(SimMathx.jround(absf(dy))) + " u off level")
 		return
@@ -160,6 +160,42 @@ static func opDodge(S: SimState, ex, _args) -> void:
 	D.vx = 0.0
 	D.vy = 0.0
 	SimFx.ring(S, D.x, D.y + 34.0, 500.0, "#9fe0ff", 0.3, 8.0)
+
+
+## The attacker's arrival side (interrupts.json arrival): a human who holds the stick up or down as he presses comes in
+## over (or under) the rival and lands on the far side, in two moves like the dodge's step-around. True when it took
+## the approach. Only the exchange's first move, and only with a contact block.
+static func approachOver(S: SimState, ex, a) -> bool:
+	var A = ex.A
+	var D = ex.D
+	if A.ai != null or not A.act.v2 or ex.t > SimConst.DT * 1.5 or ex.combo > 1.0 or DirData.contact().is_empty():
+		return false
+	var ar: Dictionary = DirInterrupt.data().get("arrival", {})
+	if ar.is_empty() or absf(A.input.my) <= float(ar.tiltDead):
+		return false
+	var far: float = -SimDamage.jor(SimMathx.jsign(SimWrap.sdx(D.x, A.x)), -A.face)   # the far side of the rival, from where he is now
+	var rise: float = float(ar.riseBh) * BODY_H
+	var over: bool = A.input.my > 0.0 or D.y - rise < WorldTerrain.groundY(S, D.x) + BODY_H
+	var leg: float = float(a.dur) * float(ar.overShare)
+	var r := SimState.Rush.new()
+	r.px = SimWrap.wrap(D.x + far * DODGE_PAST)
+	r.py = D.y + (rise if over else -rise)
+	r.end = S.T + leg
+	A.rush = r
+	DirExchange.schedule(ex, ex.t + leg, "rushLand", {"far": far, "dur": float(a.dur) - leg, "off": a.off})
+	SimFx.rush(S, A, D, S.tick + int(float(a.dur) / SimConst.DT))
+	return true
+
+
+## The approach's second move after coming in over the rival: down on the far side, at its height.
+static func opRushLand(S: SimState, ex, args) -> void:
+	if ex.A.state == "launched" or ex.A.state == "down":
+		return
+	var r := SimState.Rush.new()
+	r.tgt = ex.D
+	r.off = float(args.far) * maxf(float(args.off), float(DirData.contact().minSeparation))
+	r.end = S.T + float(args.dur)
+	ex.A.rush = r
 
 
 ## The step-around's second move: down behind the attacker, at its height.
@@ -262,6 +298,9 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 	SimDamage.hit(S, ex, a, d, dmg, o)
 	if dmg > 0.0 and not o.get("ignoreStance", false) and (ex.sD if d == ex.D else ex.sA) == 1.0:
 		DirInterrupt.onBlock(S, ex, d)   # a normal block: the reversal's window
+	elif dmg > 0.0:
+		DirInterrupt.si(a, DirInterrupt.LANDED, DirInterrupt.gi(a, DirInterrupt.LANDED) + 1)   # a landed strike: the earned launch counts them
+		DirInterrupt.si(d, DirInterrupt.TAKEN, DirInterrupt.gi(d, DirInterrupt.TAKEN) + 1)
 	d.vx += a.face * SimDamage.jor(o.get("kb", 0.0), 220.0)
 	if _broken(d) > brokenBefore and not DirExchange.finisherPlanned(ex):
 		_breakChapter(S, ex, a, d)
@@ -290,10 +329,32 @@ static func _breakChapter(S: SimState, ex, a, d) -> void:
 
 
 ## longOnly: a break or finisher launch, chosen among the long-haul candidates only (no "no launch").
-static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool = false) -> void:
+## args (the launch beat's own): "ends" and "sends" are Combat's hooks (alchemist-content.md): a piece that ends "level"
+## never sends the rival away, and "sends" keeps only the launch candidates in that direction.
+static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool = false, args = null) -> void:
 	if ex.cancel or S.game.ko != null:
 		return
-	var r: Dictionary = DirLaunch.chooseLaunch(S, att, tgt, force, longOnly)
+	var ends: String = String(args.get("ends", "")) if args != null else ""
+	var gate: Dictionary = DirLaunch.data().get("earned", {})
+	var why: String = "the gate is off"
+	if not longOnly and (gate.get("enabled", false) or ends == "level") and not DirData.contact().is_empty():
+		# The earned launch (agency-pass.md section 3): not earned, a heavy gives the knock-back and a light leaves both
+		# fighters in reach, so the brawl goes on.
+		why = DirLaunch.earned(S, ex, att, tgt) if ends != "level" else ""
+		if why == "":
+			var heavy: bool = DirLaunch.heavyBlow(S, ex, att) and ends != "level"
+			DirInterrupt.si(ex.A, DirInterrupt.LAST_END, DirInterrupt.END_KNOCK if heavy else DirInterrupt.END_STAY)
+			SimFx.launchPlan(S, att, tgt, "", "KNOCK BACK" if heavy else "STAY")
+			if heavy:
+				DirLaunch.knock(S, att, tgt)
+				SimEvents.feed(S, "KNOCK BACK", "a heavy, but no launch was earned")
+			else:
+				SimEvents.feed(S, "STAYS IN REACH", "a light: the brawl goes on")
+			return
+		force *= float(gate.get("forceMul", 1.0))
+	# The stick picks the direction and the planner snaps to the most dramatic target near it (a human's press only).
+	var pt: int = DirLaunch.phrase(S, ex, att) if (att.ai == null and not longOnly and not DirData.contact().is_empty()) else -1
+	var r: Dictionary = DirLaunch.chooseLaunch(S, att, tgt, force, longOnly, String(args.get("sends", "")) if args != null else "", (pt >> 4) & 15 if pt >= 0 else 0, gate.get("enabled", false) and not DirData.contact().is_empty())
 	var parts: PackedStringArray = []
 	for k in r.top:
 		parts.append(k.name + " " + SimMathx.jstr(SimMathx.jround(k.s)))
@@ -301,10 +362,14 @@ static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool =
 	for k in r.all:
 		all.append(k.name + ("#" + str(k.brunt.b) if k.has("brunt") else "") + " " + SimMathx.jstr(SimMathx.jround(k.s)))   # B2: which building
 	SimFx.launchPlan(S, att, tgt, "|".join(all), r.best.name)
-	if r.best.name == "NONE":
-		# Nothing scored above holding back: the strike shoves the target instead of launching it.
-		DirLaunch.knockBack(S, att, tgt)
-		SimEvents.feed(S, "NO LAUNCH", "  |  ".join(parts))
+	if r.best.name == "KNOCK BACK":
+		# Nothing scored above holding back: the strike knocks the target back instead of launching it.
+		DirInterrupt.si(ex.A, DirInterrupt.LAST_END, DirInterrupt.END_KNOCK)
+		if DirData.contact().is_empty():
+			DirLaunch.knockBack(S, att, tgt)   # the old profiles keep the shove
+		else:
+			DirLaunch.knock(S, att, tgt)
+		SimEvents.feed(S, "KNOCK BACK", "  |  ".join(parts))
 		# A shove is decisive only when the exchange meets another clause: a heavy clash won, a GUARD BREAK, or a
 		# CHARGE INTERRUPT (it stops a fill).
 		if ex.tag.begins_with("HEAVY CLASH") or ex.tag == "GUARD BREAK" or ex.tag == "CHARGE INTERRUPT":
@@ -315,5 +380,6 @@ static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool =
 		SimFx.hazardTelegraph(S, tgt, "brunt", r.best.p.t, r.best.p.x)
 	S.dirS.lastLaunch2 = S.dirS.lastLaunch
 	S.dirS.lastLaunch = r.best.name
-	SimEvents.feed(S, "LAUNCH: " + r.best.name, "  |  ".join(parts))
+	DirInterrupt.si(ex.A, DirInterrupt.LAST_END, DirInterrupt.END_LAUNCH)
+	SimEvents.feed(S, "LAUNCH: " + r.best.name + (" (earned: " + why + ")" if gate.get("enabled", false) and not longOnly else ""), "  |  ".join(parts))
 	DirExchange.decisive(S, ex, att, tgt, "launch")

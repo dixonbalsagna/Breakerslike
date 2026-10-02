@@ -587,6 +587,17 @@ function xref(docs, root = repoRoot) {
     }
   }
 
+  // ---- vfx: power language ----
+  const power = get('data/vfx/power.json');
+  if (isObj(power) && isObj(power.rocks)) {
+    const PW = 'data/vfx/power.json';
+    const r = power.rocks;
+    for (const [lo, hi] of [['r_min_bh', 'r_max_bh'], ['h_min_bh', 'h_max_bh'], ['drift_min', 'drift_max'], ['size_min', 'size_max'], ['count_t3', 'count_t4']]) {
+      if (typeof r[lo] === 'number' && typeof r[hi] === 'number' && r[lo] > r[hi]) err(PW, `/rocks/${lo}`, 'vfx-power-range', `${lo} ${r[lo]} is above ${hi} ${r[hi]}`);
+    }
+    for (const k of ['count_t3', 'count_t4']) if (typeof r[k] === 'number' && r[k] > 12) err(PW, `/rocks/${k}`, 'vfx-power-range', `${k} ${r[k]} is above the 12 pieces rocks.gd keeps, so the rest would never be drawn`, 'warning');
+  }
+
   // ---- vfx: water ----
   const water = get(WATER);
   if (isObj(water)) {

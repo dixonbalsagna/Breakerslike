@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/vfx-power",
+  "title": "vfx power language (version 1)",
+  "description": "data/vfx/power.json: VFX's power language (docs/vfx/power-language.md): visual ways to show a higher tier without more speed. Today it holds one prototype, the levitating rocks (render/vfx/rocks.gd), behind the hub flag rocks_enabled (default off); a new idea adds a group here and a line to this schema. Presentation only: never read by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because rocks.gd falls back to the same default. Lengths are in fighter heights (_bh, 75 units), times in seconds, drift in radians a second. Pairs where the minimum must not exceed the maximum, and counts above the 12 pieces rocks.gd keeps, are checked by tools/lib/xref.js (vfx-power-range).",
+  "type": "object",
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rocks": {
+      "type": "object",
+      "description": "Levitating rocks: chunks of the ground's own earth hang loose about a standing or hovering fighter, drifting slowly and bobbing a little (idea 1 of the list).",
+      "properties": {
+        "min_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "The lowest power tier that shows them."
+        },
+        "count_t3": {
+          "description": "Pieces at tier 3 (at quality high).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_t4": {
+          "description": "Pieces at tier 4 (at quality high).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "r_min_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "r_max_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "h_min_bh": {
+          "type": "number",
+          "description": "Height above his feet, in fighter heights; a little negative lets a rock sit below them."
+        },
+        "h_max_bh": {
+          "type": "number"
+        },
+        "drift_min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "drift_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bob_bh": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bob_hz": {
+          "type": "number",
+          "minimum": 0
+        },
+        "size_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "size_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "t4_size": {
+          "description": "A size multiplier at tier 4.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ease_in_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ease_out_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "near_ground_bh": {
+          "description": "They show only within this height of the ground.",
+          "type": "number",
+          "minimum": 0
+        },
+        "max_speed_bh": {
+          "description": "They hide above this speed of the fighter, in fighter heights a second.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

@@ -33,5 +33,31 @@
       "highAlt": 140,
       "_note": "planner score points (no unit), except highAlt, which is the target's height above the ground in units. The base score is base + perTier x tier, + high when the target is over highAlt up. The planner's shared terms (personality, repeats, water, noise) are added as for any launch"
     }
+  },
+  "knockBack": {
+    "score": 25,
+    "distBh": [
+      3.5,
+      5,
+      6.5,
+      8
+    ],
+    "groundMode": "skid",
+    "skidSpeed": [
+      900,
+      1100,
+      1250,
+      1450
+    ],
+    "skidUy": 0.05,
+    "groundWithinBh": 0.5,
+    "driftTicks": 20,
+    "chain": false
+  },
+  "earned": {
+    "enabled": true,
+    "enderAfter": 4,
+    "cleanTaken": 1,
+    "forceMul": 1.6
   }
 }

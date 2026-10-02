@@ -190,6 +190,7 @@ static func react(S: SimState, D, state: String) -> void:
 		return
 	var p: float = skill().pressReact[int(D.ai.st)]
 	if p > 0.0 and S.rng.next() < p:
+		DirAlchemy.log(S, D, SimAct.LIGHT, D.act.mode)
 		SimAct.push(D, SimAct.LIGHT, D.act.mode, 0, S.tick)
 
 

@@ -29,7 +29,9 @@
     "cooldownTicks": 180,
     "gapTicks": 6,
     "dash": 1500,
-    "_note": "ki and cooldownTicks: control-rules.md section 2 (15 ki, 3 s). gapTicks: the defender may cancel only this long after it was last struck (a gap between strikes, never hit-stun). dash: the speed of the dash in the held direction, units a second"
+    "_note": "ki and cooldownTicks: control-rules.md section 2 (15 ki, 3 s). gapTicks: the defender may cancel only this long after it was last struck (a gap between strikes, never hit-stun). dash: the speed of the dash in the held direction, units a second. freeBeforeWindup: the attacker's cancel costs nothing until his first wind-up starts (agency-pass.md section 1, solution E); it then starts freeGapTicks of cooldown and not cooldownTicks",
+    "freeBeforeWindup": true,
+    "freeGapTicks": 30
   },
   "burst": {
     "ki": 30,
@@ -62,5 +64,11 @@
     "windowPerRepeat": 2,
     "windowMax": 4,
     "_note": "the same weight, mode and direction in 'after' exchanges running: each further repeat adds windupPerRepeat ticks to its wind-ups (at most windupMax) and windowPerRepeat ticks to the rival's perfect-block window (at most windowMax). A change of weight, mode or direction clears it"
+  },
+  "arrival": {
+    "tiltDead": 0.5,
+    "riseBh": 1.3,
+    "overShare": 0.6,
+    "_note": "The attacker's arrival side: with the stick up or down past tiltDead as he presses, his approach passes over (or under) the rival and lands on the far side. riseBh: how far over, in body heights. overShare: the share of the approach spent reaching the point above him"
   }
 }

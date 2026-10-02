@@ -29,7 +29,9 @@
     "cooldownTicks": 180,
     "gapTicks": 6,
     "dash": 1500,
-    "_note": "ki and cooldownTicks: control-rules.md section 2 (15 ki, 3 s). gapTicks: the defender may cancel only this long after it was last struck (a gap between strikes, never hit-stun). dash: the speed of the dash in the held direction, units a second"
+    "_note": "ki and cooldownTicks: control-rules.md section 2 (15 ki, 3 s). gapTicks: the defender may cancel only this long after it was last struck (a gap between strikes, never hit-stun). dash: the speed of the dash in the held direction, units a second",
+    "freeBeforeWindup": true,
+    "freeGapTicks": 30
   },
   "burst": {
     "ki": 30,
@@ -54,6 +56,11 @@
   "blockedString": {
     "behindTicks": 12,
     "_note": "a string blocked to its end leaves the attacker unable to act for this long, and the guard may start an attack at once in that time (control-rules.md section 6, point 3)"
+  },
+  "arrival": {
+    "tiltDead": 0.5,
+    "riseBh": 1.3,
+    "overShare": 0.6
   },
   "stale": {
     "after": 3,
