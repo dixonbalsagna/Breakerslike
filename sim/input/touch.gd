@@ -125,6 +125,15 @@ func set_preset(id: String) -> void:
 	preset_id = id
 	full_mode = id == "touch-full"
 	_full = SimLayout.new(SimInputData.preset(id)) if full_mode else null
+	if _full != null:
+		_full.mode_style = "hybrid"   # a thumb is busy: a tap latches energy, a hold is momentary
+
+
+## The player's energy style ("hold", "toggle", "hybrid"; the Simple touch layout leaves the mode to the director). Full touch is
+## hybrid unless the player chose the toggle.
+func set_mode_style(s: String) -> void:
+	if _full != null:
+		_full.set_mode_style("toggle" if s == "toggle" else "hybrid")
 
 
 ## Where the buttons are, in pixels: {name: {x, y, r}} for the circles (r is the visual radius) and

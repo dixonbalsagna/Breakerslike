@@ -172,6 +172,8 @@ func _ready() -> void:
 	# Each player's own controller layout, whatever was saved (an option that loads at its default fires no change).
 	_on_option_changed("pad_preset", ui_hud.opts["pad_preset"])
 	_on_option_changed("pad_preset_p2", ui_hud.opts["pad_preset_p2"])
+	_on_option_changed("energy_style", ui_hud.opts.get("energy_style", "hold"))
+	_on_option_changed("energy_style_p2", ui_hud.opts.get("energy_style_p2", "hold"))
 	_touch_last = bool(ui_hud.opts["touch_ui"])
 	ui_hud.touch_state_fn = host.touch.display_state
 	host.drained.connect(_on_drained)
@@ -595,6 +597,10 @@ func _on_option_changed(key: String, value) -> void:
 		host.hub.set_pad_preset(str(value), 1)
 	elif key == "touch_preset":
 		host.hub.set_touch_preset(str(value))
+	elif key == "energy_style":   # "Energy: hold or toggle" (docs/controls/agency-input.md), per player
+		host.hub.set_mode_style(str(value), 0)
+	elif key == "energy_style_p2":
+		host.hub.set_mode_style(str(value), 1)
 
 
 ## The Remap screen changed a player's layout (UI's remap_slot_changed: the layout, its rows and whose it is). UI has

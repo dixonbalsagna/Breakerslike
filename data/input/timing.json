@@ -28,7 +28,23 @@
     "signatureKi": 45
   },
   "mode": {
-    "toggleCooldown": 12
+    "toggleCooldown": 12,
+    "style": "hold"
+  },
+  "read": {
+    "logSize": 5,
+    "holdTicks": 12,
+    "beatHalf": 4,
+    "touchBeatHalf": 5,
+    "rhythmOf": 3,
+    "rhythmNeed": 2,
+    "mashPresses": 4,
+    "mashGap": 10,
+    "mashClear": 20,
+    "staleTicks": 60,
+    "mixShort": 3,
+    "assistFactor": 2,
+    "debounce": 2
   },
   "touch": {
     "flickToDodgeTicks": 6,

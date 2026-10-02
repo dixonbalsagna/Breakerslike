@@ -32,6 +32,10 @@ var pads: Dictionary = {}         # device id -> SimLayout, built for the slot t
 var notes: Array = []             # {kind: "joined" | "left", slot, device}, for UI's "P2 joined" line; take_notes() drains it
 var _joins: Array = []
 var _leaves: Array = []
+## Each player's energy style: "hold" (momentary, the default), "toggle" (the old latch, the accessibility setting) or ""
+## for the data default. Touch Full reads "toggle" as the toggle and anything else as its hybrid (a tap latches, a hold is
+## momentary). The Simple layouts leave the mode to the director.
+var mode_styles: Array = ["", ""]
 var _was: Array = [false, false]
 
 
@@ -301,14 +305,22 @@ func touch_up(id: int) -> void:
 ## The intent v2 for a human slot this tick, canonical, from whichever device holds the slot. Call once per slot per tick.
 func intent(slot: int) -> SimIntent:
 	var i: SimIntent
+	var style: String = mode_style_of(slot)
 	match slot_device[slot]:
 		"pad":
 			var d: int = slot_pad[slot]
-			i = pads[d].build() if pads.has(d) else SimIntent.new()
+			if pads.has(d):
+				pads[d].set_mode_style(style)
+				i = pads[d].build()
+			else:
+				i = SimIntent.new()
 		"touch":
+			touch.set_mode_style(style)
 			i = touch.build()
 		_:
-			i = _kb_layout(slot).build()
+			var kl: SimLayout = _kb_layout(slot)
+			kl.set_mode_style(style)
+			i = kl.build()
 	return SimIntent.canon(i)
 
 
@@ -361,6 +373,20 @@ func setup() -> Dictionary:
 		if str(flags.get("specialPick", "chosen")) == "auto":
 			assists[s].append("specialAuto")
 	return {"v2": [true, true], "assists": assists}
+
+
+## The energy style a slot plays with ("hold" or "toggle"; the data default when the player has not chosen).
+func mode_style_of(slot: int) -> String:
+	var s: String = str(mode_styles[slot])
+	return s if s != "" else str(SimInputData.t(["mode", "style"], "hold"))
+
+
+## The player's choice of "Energy: hold or toggle" (the accessibility setting): "hold", "toggle" or "" for the default. With no
+## slot (-1) it is both players'. Takes effect on the next tick, mid-match; a latched mode is let go when the style changes.
+func set_mode_style(style: String, slot: int = -1) -> void:
+	for s in range(2):
+		if slot < 0 or s == slot:
+			mode_styles[s] = style
 
 
 ## Change a pad layout in the middle of a match. With no slot (-1) it is the default and every slot follows it; with a slot

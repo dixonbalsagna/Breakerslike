@@ -1,0 +1,91 @@
+--- a/tools/schemas/input-timing.schema.json	2026-10-02 02:37:15.538692100 -0700
++++ b/tools/schemas/input-timing.schema.json	2026-10-02 02:37:15.565088800 -0700
+@@ -175,6 +175,88 @@
+         "toggleCooldown": {
+           "type": "integer",
+           "minimum": 0
++        },
++        "style": {
++          "enum": [
++            "hold",
++            "toggle"
++          ],
++          "description": "How the mode control works by default: hold (momentary energy, the default) or toggle (the old latch, the accessibility setting)."
++        }
++      },
++      "additionalProperties": false,
++      "patternProperties": {
++        "^_": true
++      }
++    },
++    "read": {
++      "type": "object",
++      "description": "The press reader (docs/controls/agency-input.md 1a, sim/input/press_read.gd): how holds, mashes and taps in time with the blows are told apart, and the contact debounce. Optional: the code defaults are these values.",
++      "properties": {
++        "logSize": {
++          "type": "integer",
++          "minimum": 3,
++          "description": "Attack presses the press log keeps: the fight alchemist's read (5)."
++        },
++        "holdTicks": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "A button down this long is a hold; defaults to tapHold.holdStart."
++        },
++        "beatHalf": {
++          "type": "integer",
++          "minimum": 0,
++          "description": "A press within this many ticks of a blow's contact is on the beat (4: an 8-tick window)."
++        },
++        "touchBeatHalf": {
++          "type": "integer",
++          "minimum": 0,
++          "description": "The same on touch (5: 10 ticks)."
++        },
++        "rhythmOf": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "Rhythm looks at the last N presses ..."
++        },
++        "rhythmNeed": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "... and needs this many of them on the beat."
++        },
++        "mashPresses": {
++          "type": "integer",
++          "minimum": 2,
++          "description": "A mash is this many presses ..."
++        },
++        "mashGap": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "... with every gap this many ticks or fewer."
++        },
++        "mashClear": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "A mash is over after this many ticks without a press."
++        },
++        "staleTicks": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "A log older than this reads as nothing."
++        },
++        "mixShort": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "The alchemist's short mix window, in presses."
++        },
++        "assistFactor": {
++          "type": "integer",
++          "minimum": 1,
++          "description": "Accessibility: the beat window is multiplied by this."
++        },
++        "debounce": {
++          "type": "integer",
++          "minimum": 0,
++          "description": "A press of an attack button within this many ticks of its own release is the same press."
+         }
+       },
+       "additionalProperties": false,

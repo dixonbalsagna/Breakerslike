@@ -19,6 +19,9 @@ extends RefCounted
 ##    is a special or the signature and voids the pending tap;
 ##  - two triggers down within chordWindow ticks are the transform chord: no sprint, charge or tap comes from them, and
 ##    transform is sent once they have been held transformConfirm ticks. A single transform control does the same alone;
+##  - mode is momentary by default (docs/controls/agency-input.md): held, the attacks are the energy ones; the mode style
+##    "toggle" keeps the old latch (an accessibility setting) and "hybrid" (touch) latches on a tap and is momentary on a hold;
+##  - a press of an attack button within debounce ticks of its own release is the same press (worn pad contacts);
 ##  - a preset whose attack control has a hold gesture (the Simple layouts) fires its light on release and a heavy at
 ##    holdStart, because today's director cannot upgrade a request it has already started (touch-bridge.md).
 
@@ -59,6 +62,12 @@ var sprint_override: bool = false   # a host-side gesture held a sprint (the tou
 var _mode: int = 0
 var _mode_t: int = -1000
 var _auto_mode: bool = false
+var _mode_t0: int = 0
+var _mode_latch: int = 0            # the latched mode of the toggle and hybrid styles
+var _up_tick: Dictionary = {}       # control -> tick of its last release (the debounce)
+var _last_as: Dictionary = {}       # control -> "base" or "layer": how its last press was taken
+## "hold" (momentary, the default), "toggle" (the old latch) or "hybrid" (a tap latches, a hold is momentary: touch).
+var mode_style: String = "hold"
 
 # numbers, from data
 var hold_start: int
@@ -66,6 +75,7 @@ var transform_confirm: int
 var chord_window: int
 var lunge_ticks: int
 var mode_cooldown: int
+var debounce_ticks: int
 var deadzone: float
 var full_at: float
 var quant: float
@@ -79,6 +89,8 @@ func _init(p_preset: Dictionary = {}) -> void:
 	chord_window = SimInputData.ti(["tapHold", "chordWindow"], 6)
 	lunge_ticks = SimInputData.ti(["dodge", "lungeTicks"], 12)
 	mode_cooldown = SimInputData.ti(["mode", "toggleCooldown"], 12)
+	debounce_ticks = SimInputData.ti(["read", "debounce"], 2)
+	mode_style = str(SimInputData.t(["mode", "style"], "hold"))
 	deadzone = SimInputData.tf(["stick", "deadzone"], 0.2)
 	full_at = SimInputData.tf(["stick", "fullAt"], 0.9)
 	quant = float(SimInputData.ti(["stick", "quant"], 16))
@@ -95,6 +107,7 @@ func set_preset(p: Dictionary) -> void:
 	slot_flags = p.get("slot", {})
 	_auto_mode = bool(slot_flags.get("autoMode", false))
 	_mode = -1 if _auto_mode else 0
+	_mode_latch = 0
 	_single.clear()
 	_chords.clear()
 	_keys_move.clear()
@@ -154,9 +167,33 @@ func release_all() -> void:
 	_tf_t0.clear()
 	_tf_sent.clear()
 	_atk.clear()
+	_up_tick.clear()
+	_last_as.clear()
+	_mode_latch = 0
+	if not _auto_mode:
+		_mode = 0
 	for ch in _chords:
 		ch["active"] = false
 		ch["sent"] = false
+
+
+## Change how the mode control works ("hold", "toggle" or "hybrid"). The same style again changes nothing.
+func set_mode_style(s: String) -> void:
+	if s == mode_style:
+		return
+	mode_style = s
+	_mode_latch = 0
+	if not _auto_mode:
+		_mode = 0
+
+
+## Whether a control is an attack button (light, heavy or signature, on any layer), the ones the debounce covers.
+func _is_attack(c: String) -> bool:
+	for b in _single.get(c, []):
+		var a: String = str(b["action"])
+		if a == "light" or a == "heavy" or a == "signature":
+			return true
+	return false
 
 
 func _is_down(action: String) -> bool:
@@ -181,6 +218,10 @@ func press(c: String) -> bool:
 		return false
 	if _down.get(c, false):
 		return true   # a repeat
+	if debounce_ticks > 0 and tick - int(_up_tick.get(c, -1000)) <= debounce_ticks and _last_as.get(c, "") == "base" and not _is_down("power") and _is_attack(c):
+		_down[c] = true   # contact bounce: the same press, no new edge
+		_as[c] = "base"
+		return true
 	_down[c] = true
 	_press_tick[c] = tick
 	_chorded.erase(c)
@@ -196,6 +237,8 @@ func press(c: String) -> bool:
 			_as[c] = "layer"
 		else:
 			_as[c] = "base"
+		_last_as[c] = _as[c]
+		if not took_layer:
 			for b in _single[c]:
 				if b["layer"] == null and b["gesture"] == null:
 					if _hold_attack.has(c) and str(b["action"]) == "light":
@@ -212,6 +255,7 @@ func release(c: String) -> void:
 	if not _down.get(c, false):
 		return
 	_down[c] = false
+	_up_tick[c] = tick
 	if _as.get(c, "") == "base" and _single.has(c):
 		for b in _single[c]:
 			if b["layer"] == null and b["gesture"] == null:
@@ -274,7 +318,9 @@ func _base_press(action: String, c: String) -> void:
 		"transform":
 			_tf_t0[c] = tick
 		"mode":
+			_hold_add("mode", c)
 			_aedge["mode"] = true
+			_mode_t0 = tick
 		"light", "heavy", "signature", "context":
 			_aedge[action] = true
 
@@ -283,6 +329,10 @@ func _base_release(action: String, c: String) -> void:
 	match action:
 		"guard", "dodge":
 			_hold_del(action, c)
+		"mode":
+			_hold_del("mode", c)
+			if mode_style == "hybrid" and tick - _mode_t0 < hold_start:
+				_mode_latch = 1 - _mode_latch   # a tap latches; a hold gave the mode back on release
 		"power":
 			_hold_del("power", c)
 			if not _is_down("power") and not _power_voided and not _chorded.get(c, false) and tick - _power_t0 < hold_start:
@@ -380,11 +430,17 @@ func build() -> SimIntent:
 	i.sig = _aedge.has("signature")
 	i.context = _aedge.has("context")
 	i.special = _special_edge
-	# Mode: a toggle with a cooldown, sent every tick; -1 when the layout leaves it to the director.
-	if _aedge.has("mode") and not _auto_mode and tick - _mode_t >= mode_cooldown:
-		_mode = 1 - _mode
-		_mode_t = tick
-	i.mode = _mode
+	# Mode, sent every tick; -1 when the layout leaves it to the director. Momentary by default: energy while the control is
+	# down (a press shorter than a tick still counts for its tick); "toggle" latches with a cooldown; "hybrid" latches on a tap.
+	if _auto_mode:
+		i.mode = -1
+	elif mode_style == "toggle":
+		if _aedge.has("mode") and tick - _mode_t >= mode_cooldown:
+			_mode = 1 - _mode
+			_mode_t = tick
+		i.mode = _mode
+	else:
+		i.mode = 1 if (_is_down("mode") or _aedge.has("mode")) else _mode_latch
 	# Today's fields, until I3: a lunge or a sprint is the dash, the channel is the charge.
 	i.dash = sprinting or tick <= _lunge_until
 	i.charge = channel

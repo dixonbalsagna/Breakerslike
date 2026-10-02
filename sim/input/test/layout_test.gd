@@ -204,6 +204,7 @@ func _keyboard() -> void:
 	# Mode: a toggle with a cooldown, sent every tick.
 	i = l.build()
 	ok(i.mode == 0, "kb: the mode starts physical")
+	l.set_mode_style("toggle")   # the accessibility setting: the old latch (the momentary default is in mode_test.gd)
 	l.press("kb:KeyQ")
 	i = l.build()
 	ok(i.mode == 1, "kb: Q toggles to energy")
@@ -350,6 +351,7 @@ func _simple_pad() -> void:
 	i = l.build()
 	ok(i.light and not i.heavy, "simple: X tapped is a light on release (the bridge)")
 	l.consumed()
+	_run(l, 3)   # past the 2-tick contact debounce: a re-press is a new press
 	l.press("pad:west")
 	i = _run(l, 11)
 	ok(not i.heavy, "simple: no heavy before 12 ticks")
