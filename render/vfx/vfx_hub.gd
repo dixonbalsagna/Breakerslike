@@ -56,6 +56,8 @@ var flicker_enabled: bool = VfxLook.FLICKER_DEFAULT  # the aura flickers when th
 var react := VfxReact.new()
 var speedlines_enabled: bool = VfxLook.SPEEDLINES_DEFAULT   # speed lines alone on every launch and landed heavy (impact treatment B)
 var speed := VfxSpeed.new()
+var rocks_enabled: bool = VfxLook.ROCKS_DEFAULT   # prototype: rocks hang about a tier 3 or 4 fighter (rocks.gd)
+var rocks := VfxRocks.new()
 var earth_enabled: bool = VfxLook.EARTH_DEFAULT   # material chunks for `debris`, cel flames for `fire`, and the ground-contact events (docs/vfx/earth-plan.md)
 var earth := VfxEarth.new()
 var debris := VfxDebris.new()
@@ -101,6 +103,7 @@ func reset(S: SimState, p_seed: int) -> void:
 	react.debris = debris
 	react.reset()
 	speed.reset(seed)
+	rocks.reset(seed)
 	earth.debris = debris
 	earth.reset()
 	water.debris = debris
@@ -217,10 +220,12 @@ func _consume(S: SimState, events: Array) -> void:
 				earth.entrance_now = true
 				earth.on_entrance_land(S, e)
 	_sync_cracks(S)
-	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled:
+	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled or rocks_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
 		water.begin_tick()
+		if rocks_enabled and not frozen:
+			rocks.step(S, xform.forms, [trails[0].speed_bh, trails[1].speed_bh])
 		if earth_enabled and not frozen:
 			earth.step_skid(S)
 		if react_enabled and not frozen:

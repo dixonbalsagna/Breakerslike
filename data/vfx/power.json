@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "_note": "VFX's power language (docs/vfx/power-language.md): visual ways to show a higher tier without more speed. Authored by the VFX Director session (Claude, claude-sonnet-5-5), 2026-10-02. Presentation only: read by render/vfx/rocks.gd, never by the sim. A missing key falls back to the same default in rocks.gd. Today it holds one prototype, the levitating rocks, behind the hub flag `rocks_enabled` (default off). Lengths are in fighter heights (bh, 75 units), times in seconds, drift in radians a second. Counts are at quality high and are multiplied by 0.7 at medium, 0.35 at low and halved in reduced motion, which also stops the bobbing.",
+  "rocks": {
+    "min_tier": 3,
+    "count_t3": 5, "count_t4": 10,
+    "r_min_bh": 0.8, "r_max_bh": 2.6, "h_min_bh": -0.1, "h_max_bh": 1.9,
+    "drift_min": 0.05, "drift_max": 0.22, "bob_bh": 0.07, "bob_hz": 0.35,
+    "size_min": 11, "size_max": 30, "t4_size": 1.25,
+    "ease_in_s": 0.8, "ease_out_s": 0.5, "near_ground_bh": 6.0, "max_speed_bh": 40.0, "alpha": 1.0
+  }
+}

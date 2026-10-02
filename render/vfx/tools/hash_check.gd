@@ -23,7 +23,7 @@ var seeds: Array = [12345, 4, 7]
 var max_ticks: int = 3600
 var negative: bool = false
 var main: Node
-var stats: Dictionary = {"max_k": 0.0, "marks": 0, "ribbons": 0, "ticks": 0, "crack_builds": 0, "crack_ms": 0.0, "debris": 0, "forms": 0, "water": 0, "react": 0, "earth": 0}
+var stats: Dictionary = {"max_k": 0.0, "marks": 0, "ribbons": 0, "ticks": 0, "crack_builds": 0, "crack_ms": 0.0, "debris": 0, "forms": 0, "water": 0, "react": 0, "earth": 0, "rocks": 0}
 
 
 func _initialize() -> void:
@@ -50,6 +50,7 @@ func _run() -> void:
 	main.host.vfx.cracks_enabled = true
 	main.host.vfx.destruction_enabled = true
 	main.host.vfx.embers_enabled = true
+	main.host.vfx.rocks_enabled = true   # the prototype too: it must not touch the sim either
 	var ok := true
 	var pures: Dictionary = {}
 	for seed in seeds:
@@ -80,10 +81,10 @@ func _run() -> void:
 		var diff: String = _compare(pure, await _rendered(seed, pure[pure.size() - 1][0], func(_i): return 1.0 / 60.0))
 		ok = ok and diff == ""
 		print("seed %d vfx split      %s" % [seed, "same as the sim alone" if diff == "" else "DIFFERS: " + diff])
-	var ran: bool = stats["max_k"] >= 0.99 and stats["marks"] > 0 and stats["ribbons"] > 0 and stats["debris"] > 0 and stats["forms"] > 0 and stats["react"] > 0 and stats["earth"] > 0
+	var ran: bool = stats["max_k"] >= 0.99 and stats["marks"] > 0 and stats["ribbons"] > 0 and stats["debris"] > 0 and stats["forms"] > 0 and stats["react"] > 0 and stats["earth"] > 0 and stats["rocks"] > 0
 	print("effects ran: max trail strength %.2f, %d marks spawned, %d ribbon segments drawn in %d ticks%s" % [stats["max_k"], stats["marks"], stats["ribbons"], stats["ticks"], "" if ran else "   (NOT ENOUGH: the check proves nothing)"])
 	print("crack sets built: %d meshes in %.1f ms; %d debris bits spawned from the sim's own building_fall events" % [stats["crack_builds"], stats["crack_ms"], stats["debris"]])
-	print("water effects fired %d times, transformations started %d (real events from the sim), %d rubble, standing-crack and window effects, %d chunks, flames and contact effects" % [stats["water"], stats["forms"], stats["react"], stats["earth"]])
+	print("water effects fired %d times, transformations started %d (real events from the sim), %d rubble, standing-crack and window effects, %d chunks, flames and contact effects, up to %d levitating rocks drawn at once" % [stats["water"], stats["forms"], stats["react"], stats["earth"], stats["rocks"]])
 	ok = ok and ran
 	print("\nhash check passed" if ok else "\nhash check FAILED")
 	quit(0 if ok else 1)
@@ -136,6 +137,7 @@ func _rendered(seed: int, last: int, dt_of: Callable, reduced: bool = false) -> 
 			stats["max_k"] = maxf(stats["max_k"], main.host.vfx.trails[k].max_k)
 		for pw in main.panes:
 			stats["ribbons"] += pw.vfx_layer.trail_view.ribbons
+			stats["rocks"] = maxi(stats["rocks"], pw.vfx_layer.rocks_view.count)
 		i += 1
 	for k in range(2):
 		stats["marks"] += main.host.vfx.trails[k].spawned

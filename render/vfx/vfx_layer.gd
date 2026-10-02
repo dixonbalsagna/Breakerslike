@@ -10,6 +10,7 @@ extends Node3D
 var hub: VfxHub
 var trail_view := VfxTrailView.new()
 var transform_view := VfxTransformView.new()
+var rocks_view := VfxRocksView.new()
 var crack_view := VfxCrackView.new()
 var hole_view := VfxHoleView.new()
 var shard_view := VfxShardView.new()
@@ -25,11 +26,13 @@ func _init() -> void:
 	shard_view.name = "Shards"
 	trail_view.name = "Trails"
 	transform_view.name = "Transform"
+	rocks_view.name = "Rocks"
 	add_child(crack_view)
 	add_child(hole_view)
 	add_child(shard_view)
 	add_child(trail_view)
 	add_child(transform_view)
+	add_child(rocks_view)
 
 
 ## A new match (PaneWorld.build, after the planet has built): nothing kept between matches on the drawing side. The
@@ -58,6 +61,7 @@ func _update(host: SimHost, a: float, cam_x: float, zoom: float, vw: float) -> v
 	if hub == null or not hub.enabled:
 		trail_view.visible = false
 		transform_view.visible = false
+		rocks_view.visible = false
 		crack_view.visible = false
 		hole_view.visible = false
 		shard_view.visible = false
@@ -77,6 +81,9 @@ func _update(host: SimHost, a: float, cam_x: float, zoom: float, vw: float) -> v
 	if pw != null and pw.get("cam_rig") != null:
 		trail_view.cam_dist = pw.cam_rig.dist   # the camera's distance to the fighter plane (position.z is not once the camera pitches)
 	trail_view.update(hub, host, a, cam_x, zoom, half_w)
+	rocks_view.visible = hub.rocks_enabled
+	if hub.rocks_enabled:
+		rocks_view.update(hub, host, a, cam_x, half_w)
 	transform_view.visible = hub.transform_enabled
 	if hub.transform_enabled:
 		transform_view.update(hub, host, a, cam_x, zoom, half_w)

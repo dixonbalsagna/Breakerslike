@@ -186,6 +186,7 @@ func _run() -> void:
 	_earth()
 	_trails()
 	_intro()
+	_rocks()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -1369,6 +1370,108 @@ func _tick_still(S: SimState, h: VfxHub) -> void:
 	tk.dt = SimConst.DT
 	tk.frozen = false
 	h.consume(S, [tk])
+
+
+## Levitating rocks (a prototype behind `rocks_enabled`; docs/vfx/power-language.md idea 1).
+func _rocks() -> void:
+	print("levitating rocks")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f = S.fighters[0]
+	var o = S.fighters[1]
+	o.x = SimWrap.wrap(plains + 6000.0)
+	o.y = WorldTerrain.groundY(S, o.x)
+	var place := func(tier: float):
+		f.x = plains
+		f.y = g
+		f.vx = 0.0
+		f.vy = 0.0
+		f.state = "free"
+		f.hidden = false
+		f.beamCharge = null
+		f.tier = tier
+	_check(VfxRocks.count_for(2, 1.0) == 0 and VfxRocks.count_for(3, 1.0) == 5 and VfxRocks.count_for(4, 1.0) == 10, "no rocks below tier 3, 5 at tier 3, 10 at tier 4")
+	_check(VfxRocks.count_for(4, 0.35) < VfxRocks.count_for(4, 1.0) and VfxRocks.count_for(4, 1.0) <= VfxRocks.MAX_PIECES, "fewer at low quality, never past the pool of %d" % VfxRocks.MAX_PIECES)
+	var run := func(tier: float, ticks: int, setup: Callable) -> VfxHub:
+		var h := VfxHub.new()
+		h.rocks_enabled = true
+		h.reset(S, 6)
+		place.call(tier)
+		setup.call()
+		for k in range(ticks):
+			_tick(S, h, [])
+		return h
+	var none := func(): pass
+	var h2: VfxHub = run.call(2.0, 90, none)
+	var h3: VfxHub = run.call(3.0, 90, none)
+	_check(h2.rocks.level[0] == 0.0 and h3.rocks.level[0] > 0.99 and h3.rocks.level[1] == 0.0, "the level comes up at tier 3 and stays at zero at tier 2 (%.2f, %.2f)" % [h3.rocks.level[0], h2.rocks.level[0]])
+	var hc: VfxHub = run.call(4.0, 90, func(): f.state = "charging")
+	_check(hc.rocks.level[0] == 0.0, "none while he charges (Legal's stacking rule)")
+	var hh: VfxHub = run.call(4.0, 90, func(): f.hidden = true)
+	_check(hh.rocks.level[0] == 0.0, "none while he is hidden")
+	var hfar: VfxHub = run.call(4.0, 90, func(): f.y = g + 3000.0)
+	_check(hfar.rocks.level[0] == 0.0, "none high in the air, away from the ground they come from")
+	var hf2 := VfxHub.new()
+	hf2.rocks_enabled = true
+	hf2.reset(S, 6)
+	place.call(4.0)
+	for k in range(90):
+		_tick(S, hf2, [])
+	var up: float = hf2.rocks.level[0]
+	f.x = SimWrap.wrap(plains + 150.0 * 40.0 * 0.0)
+	for k in range(30):
+		f.x = SimWrap.wrap(f.x + 400.0)       # 24000 u/s: a fast flight
+		_tick(S, hf2, [])
+	_check(up > 0.99 and hf2.rocks.level[0] < 0.2, "they sink when he moves fast (%.2f to %.2f)" % [up, hf2.rocks.level[0]])
+	var hform := VfxHub.new()
+	hform.rocks_enabled = true
+	hform.reset(S, 6)
+	place.call(3.0)
+	for k in range(90):
+		_tick(S, hform, [])
+	_tick(S, hform, [VfxMock.ev("transform", {"actor": 0, "tier": 4.0, "source": "ai", "dur": 3.0, "version": "full"})])
+	_check(hform.rocks.level[0] < hform.rocks.prev[0] + 0.001 and hform.rocks.level[0] <= 1.0, "a transformation of that slot takes them down")
+	var hoff := VfxHub.new()
+	hoff.reset(S, 6)
+	place.call(4.0)
+	for k in range(90):
+		_tick(S, hoff, [])
+	_check(hoff.rocks.level[0] == 0.0 and hoff.rocks.clock == 0, "flag off: nothing runs")
+	# Not a ring: the angles are uneven, the distances and heights vary, and a seed gives the same cloud twice.
+	var pcs: Array = h3.rocks.pieces[0].slice(0, 10)
+	var angs: Array = pcs.map(func(p): return fposmod(p.ang, TAU))
+	angs.sort()
+	var gaps: Array = []
+	for i in range(angs.size()):
+		gaps.append((angs[(i + 1) % angs.size()] - angs[i]) if i + 1 < angs.size() else (angs[0] + TAU - angs[i]))
+	var mean: float = TAU / float(gaps.size())
+	var dev: float = 0.0
+	for gp in gaps:
+		dev += absf(gp - mean)
+	dev /= float(gaps.size()) * mean
+	var rmin: float = 99.0
+	var rmax: float = 0.0
+	for pc in pcs:
+		rmin = minf(rmin, pc.r)
+		rmax = maxf(rmax, pc.r)
+	_check(dev > 0.25 and rmax - rmin > 1.0, "the pieces are an uneven cloud, not a ring (spacing varies by %.0f%%, distances %.1f to %.1f heights)" % [dev * 100.0, rmin, rmax])
+	var ha := VfxHub.new()
+	ha.reset(S, 6)
+	_check(ha.rocks.pieces[0][3].ang == h3.rocks.pieces[0][3].ang and ha.rocks.pieces[0][3].ang != h3.rocks.pieces[1][3].ang, "the same seed gives the same cloud, each fighter his own")
+	var saved: Dictionary = VfxRocks._data
+	VfxRocks._data = {}
+	var fallback: bool = VfxRocks.p("rocks", "count_t4") == 10.0 and VfxRocks.p("rocks", "min_tier") == 3.0
+	VfxRocks._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for k in VfxRocks.DEFAULTS["rocks"].keys():
+		if not saved.has("rocks") or not saved["rocks"].has(k) or float(saved["rocks"][k]) != float(VfxRocks.DEFAULTS["rocks"][k]):
+			same = false
+			print("    differs: rocks.%s" % k)
+	_check(same, "data/vfx/power.json and the built-in defaults agree")
+	SimCore.dispose(S)
 
 
 func _tick(S: SimState, h: VfxHub, events: Array) -> void:

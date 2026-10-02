@@ -60,3 +60,7 @@ Rubble alive 36 at quality high (inside the pool's 460, thinned with quality), w
 ## Earth, material and fire (2026-10-01)
 
 Chunks, flames, dust puffs and smoke all live in the debris pool (460), so no draw call is added. Flames alive: 40 at quality high (27 at low), at most 8 an event; chunks at most 14 an event for `debris`, 30 for a crater. `earth_shots.gd --case=bench` (a fire burst every tick, 14 chunks every 8 ticks, a slam every 30, a bounce every 17, a sliding body, 1280x720, fast desktop): frame CPU mean 1.39 ms against 1.11 ms with these off, where "off" still draws the reference consumer's squares and discs (a second run 1.59 against 1.45), draw calls 22 and 22, peak bits 449 of 460, consume 0.8 ms mean (1.7 max). Not measured: the web build and an old laptop. Degrade order: smoke, then the flames' sway (reduced motion), then chunk counts, then dust.
+
+## Levitating rocks prototype (2026-10-02, behind `rocks_enabled`, default off)
+
+One MultiMesh draw (shard shader), at most 12 quads a fighter (24 in all), no debris pool use. Headless CPU for the layer with 17 pieces on screen: 81 microseconds a frame. Counts scale with quality (0.7, 0.35) and halve in reduced motion, which also stops the bobbing. Degrade order: after the speed lines, before the rubble count. Not measured: the web build and an old laptop.
