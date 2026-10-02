@@ -51,6 +51,33 @@
   "milestone_counts": "standoff_count: taunts by both fighters since the last exchange, plus every taunt so far this stand-off",
   "reset": "An exchange (any hit landed, either way) ends the stand-off: streak and standoff_count return to zero, and the ladder is climbed afresh."
  },
+ "challenge": {
+  "_about": "Orb's pick (2026-10-02): a far taunt is a challenge. The opponent answers by pressing attack during it, and both rush and meet in a clash. Ignored, the taunter keeps the line. Holding attack through the taunt takes off in a charge. Windows and meter gains belong to Game Design.",
+  "prefer_challenge_family_at_rung": [
+   "1"
+  ],
+  "accept_line": {
+   "family": "accept",
+   "max_words": 4,
+   "style": "shout",
+   "priority": 4,
+   "no_stretch": true
+  },
+  "ignored_line": {
+   "family": "ignored",
+   "p_paced": 0.5,
+   "p_mashed": 0.0,
+   "counts_as_streak_step": true
+  },
+  "takeoff_line": {
+   "family": "takeoff",
+   "by_charge": [
+    "light",
+    "heavy"
+   ]
+  },
+  "accepted_ends_standoff": true
+ },
  "tempo": {
   "mashed_if_gap_s_below": 1.4,
   "paced_if_gap_s_at_least": 2.4,
@@ -409,6 +436,126 @@
    ]
   },
   {
+   "id": "tnt-pro-041",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Meet me in the middle?",
+   "words": 5,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-pro-042",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Race you. Loser fixes the roof.",
+   "words": 6,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-pro-043",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Right here. Whenever you like.",
+   "words": 5,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-pro-044",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Here we go!",
+   "words": 3,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-pro-045",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Meeting you there!",
+   "words": 3,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-pro-046",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "accept",
+   "text": "On my way!",
+   "words": 3,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-pro-047",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "Shy? That's okay.",
+   "words": 3,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-pro-048",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "Nope? Next time, then.",
+   "words": 4,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-pro-049",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "Fine. I'll wait.",
+   "words": 3,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
    "id": "tnt-pro-029",
    "fighter": "PROTAGONIST",
    "tier": "whole",
@@ -416,7 +563,44 @@
    "text": "Okay, enough. Here I come.",
    "words": 5,
    "when": {
-    "ended": "takeoff"
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-pro-050",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Coming in fast!",
+   "words": 3,
+   "when": {
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-pro-051",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Brace yourself.",
+   "words": 2,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
+   }
+  },
+  {
+   "id": "tnt-pro-052",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "This one's heavy. Sorry.",
+   "words": 4,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
    }
   },
   {
@@ -855,6 +1039,126 @@
    ]
   },
   {
+   "id": "tnt-ant-041",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Meet me, if you can bear it.",
+   "words": 7,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-ant-042",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Try me. It will be instructive.",
+   "words": 6,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-ant-043",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Come, then. I will not be kind.",
+   "words": 7,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-ant-044",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Finally.",
+   "words": 1,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-ant-045",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Then meet me.",
+   "words": 3,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-ant-046",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Do not blink.",
+   "words": 3,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-ant-047",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "You declined. Noted.",
+   "words": 3,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-ant-048",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "Afraid. As I recalled.",
+   "words": 4,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-ant-049",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "It was an offer. You were wise.",
+   "words": 7,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
    "id": "tnt-ant-029",
    "fighter": "ANTIHERO",
    "tier": "whole",
@@ -862,7 +1166,44 @@
    "text": "Enough. Watch.",
    "words": 2,
    "when": {
-    "ended": "takeoff"
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-ant-050",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Now.",
+   "words": 1,
+   "when": {
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-ant-051",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Hold your ground. You will need it.",
+   "words": 7,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
+   }
+  },
+  {
+   "id": "tnt-ant-052",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Brace.",
+   "words": 1,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
    }
   },
   {
@@ -1298,6 +1639,126 @@
    ]
   },
   {
+   "id": "tnt-emp-041",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Petitioner, we grant you an audience.",
+   "words": 6,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-emp-042",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "A duel, petitioner? We shall allow it.",
+   "words": 7,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-emp-043",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "The floor is yours. Try to hold it.",
+   "words": 8,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-emp-044",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Granted!",
+   "words": 1,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-emp-045",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "accept",
+   "text": "The empire meets you!",
+   "words": 4,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-emp-046",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Guard, witness this!",
+   "words": 3,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-emp-047",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "The petition lapses. How sad.",
+   "words": 5,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-emp-048",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "No takers. We keep the floor.",
+   "words": 6,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-emp-049",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "Declined. We shall minute your nerves.",
+   "words": 6,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
    "id": "tnt-emp-029",
    "fighter": "EMPRESS",
    "tier": "whole",
@@ -1305,7 +1766,44 @@
    "text": "Enough. The empire advances.",
    "words": 4,
    "when": {
-    "ended": "takeoff"
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-emp-050",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Swiftly, now.",
+   "words": 2,
+   "when": {
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-emp-051",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Stand aside. The empire arrives.",
+   "words": 5,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
+   }
+  },
+  {
+   "id": "tnt-emp-052",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Guard, clear the way.",
+   "words": 4,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
    }
   },
   {
@@ -1741,6 +2239,126 @@
    ]
   },
   {
+   "id": "tnt-cyb-041",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Sir, your table is ready. It is over here.",
+   "words": 9,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-cyb-042",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Care to dine in, sir?",
+   "words": 5,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-cyb-043",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "challenge",
+   "text": "Please, sir. Come and be served.",
+   "words": 6,
+   "when": {
+    "range": "far"
+   },
+   "opens": [
+    "dare"
+   ],
+   "challenge": true
+  },
+  {
+   "id": "tnt-cyb-044",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Order up!",
+   "words": 2,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-cyb-045",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Coming right out!",
+   "words": 3,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-cyb-046",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "accept",
+   "text": "Fresh from the kitchen!",
+   "words": 4,
+   "when": {
+    "challenge": "accepted"
+   },
+   "replies_to": [
+    "challenge"
+   ]
+  },
+  {
+   "id": "tnt-cyb-047",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "No takers? I will keep the dish.",
+   "words": 7,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-cyb-048",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "Sir declines. The dish is mine.",
+   "words": 6,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
+   "id": "tnt-cyb-049",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ignored",
+   "text": "I will keep it warm.",
+   "words": 5,
+   "when": {
+    "challenge": "ignored"
+   }
+  },
+  {
    "id": "tnt-cyb-029",
    "fighter": "CYBORG",
    "tier": "whole",
@@ -1748,7 +2366,44 @@
    "text": "Your order is on its way.",
    "words": 6,
    "when": {
-    "ended": "takeoff"
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-cyb-050",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Delivery!",
+   "words": 1,
+   "when": {
+    "ended": "takeoff",
+    "charge": "light"
+   }
+  },
+  {
+   "id": "tnt-cyb-051",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Please stand clear. Large order.",
+   "words": 5,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
+   }
+  },
+  {
+   "id": "tnt-cyb-052",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Heavy load. Careful.",
+   "words": 3,
+   "when": {
+    "ended": "takeoff",
+    "charge": "heavy"
    }
   },
   {

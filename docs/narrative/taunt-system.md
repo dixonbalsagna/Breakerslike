@@ -1,6 +1,6 @@
 # The taunt system: lines that stay fresh
 
-Owner: Narrative and Fighter Identity. Version 1, 2026-10-02. Answers the EP's brief from Orb's questionnaire 14 (`docs/ep/vision.md`). The shape of the data and a first batch are in `taunts.draft.json` and `voice-lab/taunts-draft.csv` (placeholders for Orb's edit; both are unwired). Lines are original and unsearched by Legal. Presentation only: nothing here writes sim state.
+Owner: Narrative and Fighter Identity. Version 2, 2026-10-02 (revised for Orb's picks after the pitches: the far taunt as a challenge, accept and ignored lines, the charge take-off, taunts feeding meters). Answers the EP's brief from Orb's questionnaire 14 (`docs/ep/vision.md`). The shape of the data and a first batch are in `taunts.draft.json` and `voice-lab/taunts-draft.csv` (placeholders for Orb's edit; both are unwired). Lines are original and unsearched by Legal. Presentation only: nothing here writes sim state.
 
 ## 1. What Orb asked for
 
@@ -12,17 +12,21 @@ So three things have to be true:
 2. **A conversation.** Two fighters taunting each other should sound like an exchange, not two radios.
 3. **Fresh for a long time.** A player who stands still and presses the button for an hour should keep hearing new things, or at least things that make the repetition part of the joke.
 
-Whether a taunt feeds a meter, and what holding the button does, are Game Design's (an earlier ruling says taunts feed meters; Orb did not pick it again in questionnaire 14). The system below works either way.
+**Orb's picks after the pitches (2026-10-02)** shape the rest: the far taunt is a **challenge** the opponent can answer by pressing attack during it, so both rush and meet in a clash; **ignored, the taunter keeps the line**; **holding attack through a taunt takes off in a charge** (a held light is fast and can be feinted, a held heavy is slower and armoured); and **taunts feed meters, with a guard against farming** (a working ruling, to be revisited in play). The windows, the charge numbers and the meter gains are Game Design's. This document owns the lines.
+
+**Lines never mention meters, buttons or the guard against farming.** The player is the fighter (Orb's rule for player-facing text). A fighter can be bored of a long stand-off; he never says a taunt "did not count".
 
 ## 2. Where a taunt sits
 
 | Moment | What happens | Narrative's part |
 |---|---|---|
-| **Press at range** | The fighter plays the taunt gesture for about 1 s (the gesture is each fighter's own; never a beckoning one, Legal). | The director picks a line (section 4) and the UI shows the speaker's face. |
+| **Tap at range (far band)** | The fighter plays the taunt gesture for about 1 s (the gesture is each fighter's own; never a beckoning one, Legal). It is also a **challenge**, open for a short window. | The director picks a line (section 4) and the UI shows the speaker's face. At the start of a stand-off the line is a plain **challenge** line, so the offer is legible. |
+| **The opponent presses attack during the taunt** | The challenge is **accepted**: both rush and meet in a clash or a blur. | An **accept** line from the challenged fighter, said as the rush starts (3 or 4 words, one clipped burst). The stand-off ends. |
+| **The window runs out unanswered** | The challenge is **ignored**; the taunter keeps the line. | An **ignored** line from the taunter, a short smug button. It is skipped when the taunter is mashing (section 4.3). |
+| **Hold attack through the taunt** | The taunt ends in a take-off: a **charge**, fast and feintable for a held light, slower and armoured for a held heavy. | A `takeoff` line in the matching weight (light or heavy), said as the fighter goes. |
 | **Press again, fast** | A press during the gesture does nothing. A press right after it starts the next taunt. | The *tempo* between presses picks the line's length (section 4.3). |
-| **Hold attack through the taunt** | The taunt ends in a take-off at max speed (Orb's idea). | A short `takeoff` line, said as the fighter goes. |
-| **The other fighter taunts back** | Both are now in a taunt exchange. | Call and answer (section 5). |
-| **An exchange starts (a hit lands, either way)** | The stand-off ends. | The ladder resets (section 6). |
+| **The other fighter taunts back** | Both are now in a taunt exchange, and each taunt is a challenge to the other. | Call and answer (section 5). |
+| **An exchange starts (a hit lands, either way, or a challenge is accepted)** | The stand-off ends. | The ladder resets (section 6). |
 
 Taunt lines are priority 3 (they always get a face), kind `line`, display `caption`, about 1.4 s. A line may keep playing after its gesture ends, and is never cut by a later taunt, only by a shout or a finisher.
 
@@ -58,6 +62,17 @@ Three tiers, tried in order. Each is deterministic (section 9).
 
 A milestone (section 6) overrides all three on its exact count.
 
+**The challenge, accept, ignored and take-off lines are their own families**, picked by the moment and not by the context scoring:
+
+| Family | When it is picked | Rule |
+|---|---|---|
+| `challenge` | At rung 1, and again after any accepted challenge, so the offer is plain ("Meet me in the middle?"). At later rungs the ordinary ladder banter plays, and it is still a challenge in the window. | Opens the tag `dare`. |
+| `accept` | The moment the challenged fighter's attack press is registered during the taunt, as the rush starts. | At most 4 words, one clipped burst (`no_stretch`, shout style, priority 4), so it does not run into the clash. In character; never a plain "OK". |
+| `ignored` | The window ends with no press. | Said with p = 0.5 when paced and 0 when mashed, so it never talks over the next taunt. Counts as a streak step. |
+| `takeoff` | The taunt is cut short by holding attack. | Two weights: a short quick line for a light charge, a heavier line for a heavy charge ("Brace yourself."). Priority 4, a shout. |
+
+If the line already chosen for the taunt was a challenge line, the accept line may answer it by name (a `replies_to: challenge` pairing), but the pairing is never needed.
+
 ### 4.3 Tempo: mashing and pacing
 
 - **Mashed** (the gap since the last taunt under 1.4 s): only short forms of 3 words or fewer, or a one-part hook or jab. Fast presses get fast quips, and nothing gets cut off.
@@ -72,7 +87,8 @@ Each line may carry an **`opens`** tag (what it offers) and an **`replies_to`** 
 - **Answers are authored per fighter**, in that fighter's way. Three per fighter in the batch (`dare`, `needle`, `pity`). A matchup can add its own pair-specific answer later, which beats a generic one.
 - A thread lasts up to **4 beats** (A, B, A, B), then drops back to the ladder with the streak intact, so the exchange never swallows the stand-off.
 - **The face cut-in alternates** with the speaker, so the player sees the two faces trade.
-- An answer is never forced. If B does not taunt, nothing is lost.
+- **B can answer in two ways, and the physical answer wins.** Pressing attack during the taunt *accepts the challenge* (B's `accept` line, then the clash). Taunting back is a **verbal** answer: the exchange of lines continues, and the stand-off with it. If B does both, the accept line plays and the thread ends.
+- An answer is never forced. If B does neither, A's `ignored` line may play.
 - If B is the AI, the AI director decides whether to answer and how fast (a request to the AI lane, not a rule here).
 
 **An example** (Protagonist against the Anti-hero, all lines from the batch):
@@ -98,7 +114,9 @@ A repeated taunt should not stay in one voice. Each fighter climbs a ladder as t
 
 **Milestones** are one-off treats at `standoff_count` 10, 25, 50, 100, 250 and 500 (an authored line per fighter at each, once per stand-off, and once per match). They are what an all-day player earns: a line that is only ever heard by someone who kept going. The batch has 10, 25, 50 and 100; 250 and 500 come after Orb's pass.
 
-**Reset.** An exchange (any hit landed, either way) ends the stand-off and resets `streak` and `standoff_count` to zero. A second stand-off in the same match starts from rung 1, but the director remembers it: a few lines react to `standoff_number` ("Back to talking?"), so a long match is not an endless first date.
+**Reset.** An exchange (any hit landed, either way) or an accepted challenge ends the stand-off and resets `streak` and `standoff_count` to zero. An ignored challenge, a verbal answer and a take-off that is feinted without a hit do not, and an ignored challenge counts as a streak step. That is how an ignored fighter climbs to being weary and then to being part of the scenery.
+
+**The farming guard and the ladder.** Game Design's guard against farming taunts for meter will reduce what a repeated taunt gives. The ladder lines already say what a bored fighter would say at that point, so **please publish the guard's curve** (for instance, full gain for the first 3, then less); I will line the weary rungs up with it so the fighter's boredom and the diminishing reward arrive together, without the lines ever mentioning meters. A second stand-off in the same match starts from rung 1, but the director remembers it: a few lines react to `standoff_number` ("Back to talking?"), so a long match is not an endless first date.
 
 **Being taunted back does not reset the ladder.** Two fighters trading taunts climb together, and the rungs are by each fighter's own streak, so the two rarely sit on the same rung. That makes the pair sound uneven in a natural way.
 
@@ -173,8 +191,8 @@ A day-long marathon will hear repeats; they will be spaced, wrapped in new hooks
 
 ## 11. What I need from others
 
-- **Simulation:** `taunt_start` and `taunt_end` events carrying `actor` (and `kind`: `finished` or `takeoff`), so the director can count a stand-off and play the `takeoff` line. The hit events it already sends end a stand-off.
-- **Game Design (controls):** confirm that a taunt takes about 1 s and that a press during it does nothing, and that holding attack through it ends in a take-off. Whether a taunt feeds meters.
+- **Simulation:** `taunt_start` (actor, and the range band), `taunt_end` (actor, and `kind`: `finished`, `takeoff` or `accepted`), and for the take-off the charge type (`light` or `heavy`). One more fact is needed: whether a challenge was `accepted` (with the accepter's actor, at the tick the rush starts) or `lapsed` (the window ran out). The hit events it already sends end a stand-off.
+- **Game Design (controls):** confirm the taunt takes about 1 s, a press during it does nothing, the challenge window's length, and the charge timings. **Publish the farming guard's curve** (section 6).
 - **UI:** a face cut-in per taunt (priority 3), alternating between the two faces in an exchange. No counter is needed; if Orb wants a visible tally of taunts, that is a UI question.
 - **AI (director AI):** an AI fighter may taunt and answer on the same ladder; its pacing is the AI lane's.
 - **Audio:** the short forms are one-clip lines; tell Audio's babble that a taunt line is about 1.2 s.
@@ -190,7 +208,7 @@ A day-long marathon will hear repeats; they will be spaced, wrapped in new hooks
 
 ## 13. The first batch
 
-`voice-lab/taunts-draft.csv`, 160 lines (40 per fighter for the four launch fighters; KAI and VORR are placeholders and are skipped). Same columns as the rest of the packet. Each line's `situation` starts with the mechanism it shows:
+`voice-lab/taunts-draft.csv`, 208 lines (52 per fighter for the four launch fighters; KAI and VORR are placeholders and are skipped). Same columns as the rest of the packet. Each line's `situation` starts with the mechanism it shows:
 
 | Prefix | What it shows | Per fighter |
 |---|---|---|
@@ -198,8 +216,13 @@ A day-long marathon will hear repeats; they will be spaced, wrapped in new hooks
 | MILESTONE | the one-off treats | 4 |
 | REACTS TO | the facets: standing, crater, collateral, wounds, tier, biome or guard, and the opponent | 11 |
 | ANSWER | call and answer (to a dare, a needle, a pity) | 3 |
-| TAKEOFF | the take-off line | 1 |
+| CHALLENGE | a far taunt that plainly issues a challenge | 3 |
+| ACCEPT | said by the challenged fighter as the rush starts | 3 |
+| IGNORED | said by the taunter when the challenge goes unanswered | 3 |
+| TAKEOFF (light or heavy) | said as the fighter takes off in a charge: one light, two heavy | 3 |
 | MASHED | short forms for fast presses | 3 |
 | PART hook, jab, tag | combinable parts | 8 |
+
+Revision 2 (2026-10-02) added the CHALLENGE, ACCEPT, IGNORED and heavy and light TAKEOFF lines. The ids of the lines that were already there did not change, and nobody had edited them. The old take-off line is now the light one.
 
 The existing taunt lines in each fighter's own CSV (the four they say in the gesture second) are the base pool; these do not replace them. Edit these as you would the rest, and tell us which mechanism you like and which is too clever.
