@@ -40,7 +40,15 @@ const REACT_AT: int = 23   # ... and the ticks left of its reaction time
 const AI_HOLD: int = 24    # the AI is holding an attack button for a charge: 1 light, 2 heavy
 const GUARD_AT: int = 25   # S.tick of his last fresh guard press (two within the lockout's length start the lockout)
 const BAND: int = 26       # the range band the pair is in, plus 1 (DirBands; held with hysteresis; 0 before the first tick)
-const N: int = 27
+const BLAST_LEFT: int = 27  # ticks left before his blast leaves (DirBlast); 0 when none is winding up
+const BLAST_REQ: int = 28   # ... its weight | bolts queued behind it << 1 | a heavy's charge << 3 | the AI's charge target << 10
+const BLAST_GROUP: int = 29 # the group of the volley he is firing (its first shot's id)
+const BLAST_LAST: int = 30  # ... and the S.tick of its last bolt
+const PB_SHOT: int = 31     # the shot his guard press marked for a perfect block: its group, or minus its id
+const AI_SHOT: int = 32     # the last shot the AI weighed a perfect block against (the same key)
+const BLAST_AT: int = 33    # S.tick of his last blast press
+const PB_DEFL: int = 34     # ... and how many times the marked shot had been sent back when he marked it
+const N: int = 35
 const END_NONE: int = -1   # LAST_END before any launch beat or launch: the exchange has sent nobody anywhere
 const END_LAUNCH: int = 0
 const END_KNOCK: int = 1
@@ -90,6 +98,7 @@ static func _size(f) -> void:
 		f.act.dirI.resize(N)
 		f.act.dirI[BLOCKED] = NEVER
 		f.act.dirI[GUARD_AT] = NEVER
+		f.act.dirI[BLAST_AT] = NEVER
 		f.act.dirI[HIT_AT] = NEVER
 		f.act.dirI[REV_TRIED] = -1
 		f.act.dirI[STALE_KEY] = -1
@@ -236,12 +245,14 @@ static func guardPress(S: SimState, f) -> bool:
 	var assist: bool = SimAct.assisted(f, "perfectBlockAssist")
 	var last: int = gi(f, GUARD_AT)
 	si(f, GUARD_AT, S.tick)
+	if b == null and not (S.tick < gi(f, PB_LOCK) and not assist) and DirBlast.mark(S, f):
+		return true   # a shot inside its window: the block resolves when it arrives (DirBlast.hit)
 	if b == null or (S.tick < gi(f, PB_LOCK) and not assist):
 		# The lockout starts only when the press came during a visible wind-up and missed its window, or when two guard
 		# presses come within the lockout's length of each other (agency-pass.md section 11, 3b). A single press with no
 		# wind-up showing starts nothing: raising a guard as a rival flies in must not cost the perfect block.
 		var lock: int = int(data().timing.antiMashLockout)
-		if not assist and (_windupShowing(S.dirS.ex, f) or S.tick - last <= lock):
+		if not assist and (_windupShowing(S.dirS.ex, f) or DirBlast.incoming(S, f) or S.tick - last <= lock):   # a shot on its way is a wind-up he can see
 			si(f, PB_LOCK, S.tick + lock)
 		return false
 	if b.op == "beamFire":

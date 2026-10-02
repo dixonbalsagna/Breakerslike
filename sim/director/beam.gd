@@ -39,6 +39,19 @@ static func opBeamCharge(S: SimState, ex, args) -> void:
 
 ## True while f is one of the two fighters of a live clash (the beam struggle). The host and the input layer read it
 ## (docs/controls/tech-and-pulse-input.md): clash presses are the clash's, and the Simple layout fires on press.
+## Game Design's provisional signature limit (agency-pass.md section 5; interrupts.json `signature`): with the switch on,
+## a signature recharges in cooldownSec (not the fighter's own sigCooldown) and does damageMul of its damage, because
+## there will be several times as many. Off, or in a profile without the perfect block, both are as they were.
+static func sigCooldown(f) -> float:
+	var sg: Dictionary = DirInterrupt.data().get("signature", {})
+	return float(sg.cooldownSec) if DirInterrupt.on() and sg.get("provisional", false) else f.sigCooldown
+
+
+static func sigDamageMul() -> float:
+	var sg: Dictionary = DirInterrupt.data().get("signature", {})
+	return float(sg.damageMul) if DirInterrupt.on() and sg.get("provisional", false) else 1.0
+
+
 static func inClash(S: SimState, f) -> bool:
 	return S.game.clash != null and (S.game.clash.A == f or S.game.clash.D == f)
 
@@ -106,7 +119,7 @@ static func _answer(S: SimState, D) -> String:
 				SimFighter.lastStandUse(S, D)   # the last stand: no cost, and the window closes
 			else:
 				D.ki -= 45.0
-			D.sigReadyT = S.T + D.sigCooldown
+			D.sigReadyT = S.T + sigCooldown(D)
 			return "signature"
 	for k in range(q.size()):
 		if int(q[k][0]) == SimAct.HEAVY and int(q[k][1]) == 1 and D.ki >= 40.0:
@@ -125,7 +138,7 @@ static func opBeamImpact(S: SimState, ex, args) -> void:
 		return
 	if D.state == "locked":
 		D.state = "free"
-	SimDamage.hit(S, ex, A, D, 200.0 if out == "GUARD" else 230.0, {"ignoreStance": out != "GUARD", "stop": 0.14, "shake": 16.0, "big": true})
+	SimDamage.hit(S, ex, A, D, (200.0 if out == "GUARD" else 230.0) * sigDamageMul(), {"ignoreStance": out != "GUARD", "stop": 0.14, "shake": 16.0, "big": true})
 	_blast(S, A, D.x, D.y + 30.0, 60.0 + A.tier * 30.0)
 	if S.game.ko == null:
 		D.state = "locked"
@@ -200,7 +213,7 @@ static func opClashResolve(S: SimState, ex, args) -> void:
 	var len: float = SimMathx.jmin(4200.0 * SimConst.WS, L + float(Wn.ld.beamOvershoot[_tierIx(Wn)]) * SimConst.WS)
 	fireBeam(S, Wn, Wn.x, Wn.y + 38.0, ux, uy, len, variant)
 	Ls.state = "locked"
-	SimDamage.hit(S, ex, Wn, Ls, 260.0, {"ignoreStance": true, "stop": 0.16, "shake": 18.0, "big": true})
+	SimDamage.hit(S, ex, Wn, Ls, 260.0 * sigDamageMul(), {"ignoreStance": true, "stop": 0.16, "shake": 18.0, "big": true})
 	_blast(S, Wn, Ls.x, Ls.y + 30.0, (70.0 + Wn.tier * 32.0) * SimConst.WS)
 	if S.game.ko == null:
 		DirLaunch.doLaunch(S, Wn, Ls, {"ux": ux, "uy": uy * 0.6 + 0.12}, 2600.0, true)

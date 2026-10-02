@@ -204,6 +204,8 @@ static func end(S: SimState, sh, cause: String) -> void:
 ## A shot has met a fighter. Returns true if the shot ends there. The rule here is the plain one: its damage, and it
 ## ends. The director's blasts replace this body with their own (guard, the perfect block's deflect, the dodge).
 static func hitFighter(S: SimState, sh, f) -> bool:
+	if DirBlast.rules(S):
+		return DirBlast.hit(S, sh, f)   # the director's blast rules: the dodge, the perfect block's deflect, the guard, a charge
 	SimDamage.hurt(S, f, sh.dmg, S.fighters[sh.owner], "spread", "blast", "", true)
 	SimFx.shotHit(S, sh, f, "hit")
 	return true
@@ -348,7 +350,7 @@ static func step(S: SimState, dt: float) -> void:
 					hitOne = true
 					if hitFighter(S, sh, f):
 						end(S, sh, "hit")
-					else:
+					elif sh.owner != k:   # (a deflect made it his own shot: it is already on its way back)
 						sh.passed |= 1 << k   # he let it pass: it flies on, and is not offered to him again
 						if sh.mode == SEEK:
 							release(S, sh)

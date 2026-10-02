@@ -35658,6 +35658,1721 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-interrupts-signature-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/signature"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-interrupts-blast-valid",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              },
+              "_note": "comment"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              },
+              "sprint": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/sprint"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-enabled-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": "yes",
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/enabled"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-off-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": false,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-light-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/light"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3,
+                "pierce": 1
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/light/pierce"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-kind-shape",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "Bolt Shot",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/blast/light/kind"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-kind-not-a-shot",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "nowhere",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-shot-kind",
+        "pointer": "/blast/light/kind"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-ki-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": -1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/light/ki"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-ki-fraction-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 0.5,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-light-windup-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": -1,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/light/windupTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-windup-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6.5,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/light/windupTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-hold-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 0,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-light-queue-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 0,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/light/queueMax"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-group-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 0,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/light/groupTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-volley-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 0
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/light/aiVolley"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/heavy"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45,
+                "pierce": 1
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/heavy/pierce"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-kind-not-a-shot",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "nowhere",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-shot-kind",
+        "pointer": "/blast/heavy/kind"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-kind-weaker-than-light-warns",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "lob",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "bolt",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-shot-kind",
+        "pointer": "/blast/heavy/kind"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-ki-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": -8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/heavy/ki"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-windup-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": -1,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/heavy/windupTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-charge-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 0,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/heavy/chargeTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-tap-share-range",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 1.5,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/blast/heavy/tapShare"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-tap-share-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": -0.1,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/heavy/tapShare"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-hold-max-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 0
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/heavy/holdMaxTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-hold-max-below-charge",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 20
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/blast/heavy/holdMaxTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-heavy-hold-max-equal-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 30
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-stop-ticks-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": -1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/stopTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-stop-ticks-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 0,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-charge-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/charge"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-charge-power-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": -1,
+                "shrugMul": 0.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/charge/shrugPower"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-charge-mul-range",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 1.5
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/blast/charge/shrugMul"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-charge-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast": {
+              "enabled": true,
+              "light": {
+                "kind": "bolt",
+                "ki": 1,
+                "windupTicks": 6,
+                "holdTicks": 14,
+                "queueMax": 3,
+                "groupTicks": 20,
+                "aiVolley": 3
+              },
+              "heavy": {
+                "kind": "lob",
+                "ki": 8,
+                "windupTicks": 8,
+                "chargeTicks": 30,
+                "tapShare": 0.6,
+                "holdMaxTicks": 45
+              },
+              "stopTicks": 1,
+              "charge": {
+                "shrugPower": 1,
+                "shrugMul": 0.5,
+                "reflect": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/charge/reflect"
+      }
+    },
+    {
+      "id": "director-interrupts-signature-valid",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature": {
+              "provisional": true,
+              "cooldownSec": 15,
+              "damageMul": 0.6
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-signature-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-signature-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature/ki": 45
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/signature/ki"
+      }
+    },
+    {
+      "id": "director-interrupts-signature-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/signature/damageMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/signature"
+      }
+    },
+    {
+      "id": "director-interrupts-signature-provisional-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature/provisional": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/signature/provisional"
+      }
+    },
+    {
+      "id": "director-interrupts-signature-cooldown-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature/cooldownSec": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/signature/cooldownSec"
+      }
+    },
+    {
+      "id": "director-interrupts-signature-cooldown-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature/cooldownSec": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-signature-damage-mul-range",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature/damageMul": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/signature/damageMul"
+      }
+    },
+    {
+      "id": "director-interrupts-signature-damage-mul-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature/damageMul": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/signature/damageMul"
+      }
+    },
+    {
+      "id": "director-interrupts-signature-final-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/signature": {
+              "provisional": false,
+              "cooldownSec": 120,
+              "damageMul": 1
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-blast-share-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/blastShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-blast-share-hard-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/blastShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-blast-share-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/blastShare": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/medium/blastShare"
+      }
+    },
+    {
+      "id": "director-ai-blast-share-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/blastShare": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/easy/blastShare"
+      }
+    },
+    {
+      "id": "director-ai-blast-share-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/blastShare": "some"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/blastShare"
+      }
+    },
+    {
+      "id": "director-ai-blast-share-edges-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/blastShare": 0,
+            "/levels/hard/blastShare": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-blast-share-note-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_blastShare": "comment"
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

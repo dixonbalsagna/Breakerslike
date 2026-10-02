@@ -13,7 +13,9 @@
     "blockedString",
     "arrival",
     "stale",
-    "bands"
+    "bands",
+    "blast",
+    "signature"
   ],
   "properties": {
     "schema": {
@@ -653,6 +655,187 @@
         }
       },
       "description": "The ranged press (agency-pass.md section 1; sim/director/bands.gd). Orders (engageBh at most closeBh, closeBh below midBh, minTicks at most maxTicks) are checked by tools/lib/xref-fight.js (bands-order).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "blast": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "light",
+        "heavy",
+        "stopTicks",
+        "charge"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "The energy family: an attack press outside an exchange fires a blast from where he stands, in any band."
+        },
+        "light": {
+          "type": "object",
+          "required": [
+            "kind",
+            "ki",
+            "windupTicks",
+            "holdTicks",
+            "queueMax",
+            "groupTicks",
+            "aiVolley"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "description": "A shot kind of data/fight/shots.json (checked by tools/lib/xref-fight.js, blast-shot-kind)."
+            },
+            "ki": {
+              "description": "The ki a light blast costs.",
+              "type": "number",
+              "minimum": 0
+            },
+            "windupTicks": {
+              "description": "It leaves this many ticks after the press.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "holdTicks": {
+              "description": "A light still held waits for its release, up to this many ticks, so a layout's hold can turn it into the heavy.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "queueMax": {
+              "description": "Presses while one winds up queue up to this many more.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "groupTicks": {
+              "description": "Bolts fired within this many ticks of each other are one volley.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "aiVolley": {
+              "description": "The AI's light is this many bolts.",
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "description": "The light blast: a bolt.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "heavy": {
+          "type": "object",
+          "required": [
+            "kind",
+            "ki",
+            "windupTicks",
+            "chargeTicks",
+            "tapShare",
+            "holdMaxTicks"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "description": "A shot kind of data/fight/shots.json (checked by tools/lib/xref-fight.js, blast-shot-kind)."
+            },
+            "ki": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The ki a charged blast costs."
+            },
+            "windupTicks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "chargeTicks": {
+              "description": "The ticks it charges while held.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "tapShare": {
+              "description": "The share of the charge a tap gives.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "holdMaxTicks": {
+              "description": "The most ticks it can be held.",
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "description": "The heavy blast: a charged shot.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "stopTicks": {
+          "description": "The hit-stop on a blast.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "charge": {
+          "type": "object",
+          "required": [
+            "shrugPower",
+            "shrugMul"
+          ],
+          "properties": {
+            "shrugPower": {
+              "type": "number",
+              "minimum": 0,
+              "description": "A shot of at least this power is shrugged off by a charging fighter."
+            },
+            "shrugMul": {
+              "description": "The share of its damage a charging fighter takes from a shrugged shot.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "description": "What a fighter who is charging does to a blast.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "description": "Energy, the first slice (agency-pass.md section 5 and section 11, item 6; sim/director/blast.gd). Orders (heavy holdMaxTicks is at least chargeTicks) and the shot kinds are checked by tools/lib/xref-fight.js (interrupts-order, blast-shot-kind).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "signature": {
+      "type": "object",
+      "required": [
+        "provisional",
+        "cooldownSec",
+        "damageMul"
+      ],
+      "properties": {
+        "provisional": {
+          "type": "boolean",
+          "description": "true: a signature recharges in cooldownSec and does damageMul of its damage; false: the fighter's own sigCooldown and full damage."
+        },
+        "cooldownSec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "damageMul": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "description": "Game Design's provisional signature limit (agency-pass.md section 5).",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

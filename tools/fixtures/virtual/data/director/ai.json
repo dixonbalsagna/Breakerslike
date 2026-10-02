@@ -47,7 +47,8 @@
         0.3,
         0.2
       ],
-      "earnerUse": 0.25
+      "earnerUse": 0.25,
+      "blastShare": 0.1
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -73,7 +74,8 @@
         0.3,
         0.2
       ],
-      "earnerUse": 0.6
+      "earnerUse": 0.6,
+      "blastShare": 0.2
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -99,7 +101,8 @@
         0.3,
         0.2
       ],
-      "earnerUse": 1
+      "earnerUse": 1,
+      "blastShare": 0.25
     }
   }
 }

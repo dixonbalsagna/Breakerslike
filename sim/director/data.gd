@@ -174,7 +174,7 @@ static var defLabel: String = ""
 ## - defPerfect and defAnswer: step 3's perfect block, and the beam answer the fire beat fills in.
 static func _flags(S: SimState, ctx: Dictionary, A, D) -> void:
 	var dq: Array = SimAct.peek(D)
-	ctx.defQueued = not dq.is_empty() or (S.T - D.lastAtkT) * TICKS_PER_SEC <= DEF_QUEUED_TICKS
+	ctx.defQueued = not dq.is_empty() or ((S.T - D.lastAtkT) * TICKS_PER_SEC <= DEF_QUEUED_TICKS and not DirBlast.pressedLately(S, D, DEF_QUEUED_TICKS))
 	if D.stunTicks > 0 and DirInterrupt.on():
 		ctx.defQueued = false   # step 3: a staggered fighter is not pressing, whatever waits in its queue
 	if DirExchange.planMeet:

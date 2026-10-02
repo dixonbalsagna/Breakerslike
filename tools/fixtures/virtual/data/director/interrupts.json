@@ -117,5 +117,35 @@
       "maxTicks": 20,
       "chargerEdge": 10
     }
+  },
+  "blast": {
+    "enabled": true,
+    "light": {
+      "kind": "bolt",
+      "ki": 1,
+      "windupTicks": 6,
+      "holdTicks": 14,
+      "queueMax": 3,
+      "groupTicks": 20,
+      "aiVolley": 3
+    },
+    "heavy": {
+      "kind": "lob",
+      "ki": 8,
+      "windupTicks": 8,
+      "chargeTicks": 30,
+      "tapShare": 0.6,
+      "holdMaxTicks": 45
+    },
+    "stopTicks": 1,
+    "charge": {
+      "shrugPower": 1,
+      "shrugMul": 0.5
+    }
+  },
+  "signature": {
+    "provisional": true,
+    "cooldownSec": 15,
+    "damageMul": 0.6
   }
 }

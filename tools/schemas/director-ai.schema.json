@@ -135,7 +135,8 @@
             "farHeavy",
             "answerTaunt",
             "approachReact",
-            "earnerUse"
+            "earnerUse",
+            "blastShare"
           ],
           "properties": {
             "beamAnswer": {
@@ -243,6 +244,12 @@
             },
             "earnerUse": {
               "description": "How often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the far heavy that stays a heavy charge.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blastShare": {
+              "description": "The share of the AI's presses outside an exchange that are blasts.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -272,7 +279,8 @@
             "farHeavy",
             "answerTaunt",
             "approachReact",
-            "earnerUse"
+            "earnerUse",
+            "blastShare"
           ],
           "properties": {
             "beamAnswer": {
@@ -380,6 +388,12 @@
             },
             "earnerUse": {
               "description": "How often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the far heavy that stays a heavy charge.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blastShare": {
+              "description": "The share of the AI's presses outside an exchange that are blasts.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -409,7 +423,8 @@
             "farHeavy",
             "answerTaunt",
             "approachReact",
-            "earnerUse"
+            "earnerUse",
+            "blastShare"
           ],
           "properties": {
             "beamAnswer": {
@@ -517,6 +532,12 @@
             },
             "earnerUse": {
               "description": "How often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the far heavy that stays a heavy charge.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blastShare": {
+              "description": "The share of the AI's presses outside an exchange that are blasts.",
               "type": "number",
               "minimum": 0,
               "maximum": 1

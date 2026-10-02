@@ -4,7 +4,7 @@ Owner: Encounter Systems Director. Date: 2026-10-02. Status: plan only. Sources:
 
 Sizes are the director's code only: **small** is under 60 lines, **medium** 60 to 200, **large** over 200. Each slice is one golden regeneration.
 
-**Built since:** 1a and 1b, in `agency-slice-2.md`. 1a needed no new event and no core lines: the approach runs before the exchange exists, and the `attack` event fires at the engage. 1c, 1d and the flow count (2c), in `agency-slice-3.md`. Next is 3a.
+**Built since:** 1a and 1b, in `agency-slice-2.md`. 1a needed no new event and no core lines: the approach runs before the exchange exists, and the `attack` event fires at the engage. 1c, 1d and the flow count (2c), in `agency-slice-3.md`. The lights-only ruling, in `agency-slice-4.md`. 3a (bolts and the charged shot), in `agency-slice-5.md`. Next: the buried fighter's follow-up and the slide's bump, then 3b and 3c.
 
 ## 1. The ranged press: three bands, decided at the wind-up
 

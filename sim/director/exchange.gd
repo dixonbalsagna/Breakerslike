@@ -49,6 +49,8 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 		return
 	var m: float = A.input.mx * SimMathx.jsign(SimWrap.sdx(A.x, SimRoster.opp(S, A).x))
 	var entry: int = 1 if m > SimAct.awayDead else (-1 if m < -SimAct.awayDead else 0)   # toward, neutral or away (step 4 reads it)
+	if kind != "sig" and A.act.mode == 1 and DirBlast.press(S, A, KIND.find(kind)):
+		return   # the energy family, outside an exchange: the press fires a blast from where he stands, in any band
 	if kind != "sig" and DirBands.farPressNow(S, A, KIND.find(kind), entry):
 		return   # the far band: the press fires on its tick as a taunt, an answer or (held) a charge; it never waits
 	SimAct.push(A, KIND.find(kind), A.act.mode, entry, S.tick)
@@ -111,7 +113,7 @@ static func _queues(S: SimState) -> void:
 		if not f.act.v2:
 			continue
 		var up: int = f.input.upgrade
-		if up > 0 and not SimAct.upgrade(f, SimAct.HEAVY if up == 1 else SimAct.SIG) and not DirBands.upgrade(S, f, SimAct.HEAVY if up == 1 else SimAct.SIG):
+		if up > 0 and not SimAct.upgrade(f, SimAct.HEAVY if up == 1 else SimAct.SIG) and not DirBands.upgrade(S, f, SimAct.HEAVY if up == 1 else SimAct.SIG) and not DirBlast.upgrade(S, f, SimAct.HEAVY if up == 1 else SimAct.SIG):
 			SimAct.push(f, SimAct.HEAVY if up == 1 else SimAct.SIG, f.act.mode, 0, S.tick)
 		if up == 1:
 			DirAlchemy.held(f)   # the press log: the newest press was held
@@ -203,7 +205,7 @@ static func _start(S: SimState, A, kind: String) -> int:
 			SimFighter.lastStandUse(S, A)   # the last stand: no cost, and the window closes
 		else:
 			A.ki -= 45.0
-		A.sigReadyT = S.T + A.sigCooldown
+		A.sigReadyT = S.T + DirBeam.sigCooldown(A)
 	if DirBands.pending(D):
 		DirBands.drop(S, D, A.name + "'s signature stops it")
 	var ex := newEx(A, D, kind)
@@ -482,6 +484,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 		S.dirS.cool -= dt
 	DirBands.tick(S)   # the approach before an exchange: it counts down, and the exchange starts at its end
 	DirAlchemy.tick(S)   # the flow count lapses
+	DirBlast.tick(S)   # blasts winding up leave; the AI weighs a perfect block against a shot about to arrive
 	_queues(S)   # step 2: upgrades, expiry, and the next queued request once the director can take it
 	var ex = S.dirS.ex
 	if ex == null:

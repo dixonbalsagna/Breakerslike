@@ -31,6 +31,7 @@ static func aiInput(S: SimState, f) -> void:
 	# I2b: the AI writes the v2 record. Its stance choice lives in a.st, and the held states below stand for it, so the
 	# director reads the AI's stance through the same path as a player's (SimAct.stance). A ready form is taken at once.
 	f.act.v2 = true
+	i.mode = 0   # the physical family, unless this tick's press is a blast (below)
 	if f.act.formReady:
 		i.transform = true
 	var d: float = SimWrap.sdx(f.x, o.x)
@@ -195,7 +196,9 @@ static func aiInput(S: SimState, f) -> void:
 				i.heavy = true   # step 3: a rival that only guards gets the guard-breaker (a heavy) at the level's rate
 			else:
 				i.light = true
-			if (i.light or i.heavy) and DirBands.farOn() and DirBands.band(f, o) == DirBands.FAR and not DirBands.taunting(o):
+			if (i.light or i.heavy) and DirBlast.on() and DirBands.band(f, o) != DirBands.CLOSE and not DirBands.taunting(o) and S.rng.next() < float(lv().get("blastShare", 0.0)):
+				i.mode = 1   # it fires instead: a volley of bolts for a light, a charged shot for a heavy (DirBlast)
+			elif (i.light or i.heavy) and DirBands.farOn() and DirBands.band(f, o) == DirBands.FAR and not DirBands.taunting(o):
 				var u: float = S.rng.next()
 				var ft: float = float(lv().get("farTaunt", 0.0)) if not DirBands.tauntSpent(f) else 0.0
 				var urge: bool = S.T - SimMathx.jmax(f.exT, o.exT) > GAP_URGE   # no lull: after a long gap it always goes

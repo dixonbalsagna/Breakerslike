@@ -121,5 +121,37 @@
     "hysteresisBh": 0.5,
     "_edge": "midBh is 12.5 (agency-pass.md section 12 b): a match opens with the pair 12 bh apart, and the opening press is a lunge. hysteresisBh: the band is held state, and an edge is crossed only half this much beyond it (going out it sits further out, coming in further in), so the band and its icon do not flicker for a pair hovering on a line",
     "_far": "The far band (agency-pass.md section 1). taunt: a tap is a taunt, a challenge that plays for windowTicks while he keeps flying; the rival's attack press in that time answers it and both rush to the middle (meet: each covers half the distance at 'speed', in whole ticks between minTicks and maxTicks, and they arrive together, engageBh apart; chargerEdge: a rival met while he held a heavy charge enters the clash with this many points (of 100) off the attacker's chance, the interim form of Game Design's +5 until the fist clash on the pulse is wired). Answered, it pays in full; ignored, a half, a quarter, an eighth, then nothing until the two have traded blows. charge: a press still held holdTicks after it becomes a charge of that weight, flying at 'speed' for minTicks to maxTicks (section 12 a: a light goes after 8 ticks and flies 0.3 to 1.0 s; a heavy after 16 and flies 0.5 to 1.4 s). A light charge stops for nothing when the button is let go; a heavy charge is committed (only a dodge-cancel at its full cost stops it) and its heavy counts as held, so landing it earns a launch. taunt.enabled false: a far press flies in on a tap at far.light or far.heavy, as before"
+  },
+  "blast": {
+    "enabled": true,
+    "light": {
+      "kind": "bolt",
+      "ki": 1,
+      "windupTicks": 6,
+      "holdTicks": 14,
+      "queueMax": 3,
+      "groupTicks": 20,
+      "aiVolley": 3
+    },
+    "heavy": {
+      "kind": "charged",
+      "ki": 8,
+      "windupTicks": 8,
+      "chargeTicks": 30,
+      "tapShare": 0.6,
+      "holdMaxTicks": 45
+    },
+    "stopTicks": 1,
+    "charge": {
+      "shrugPower": 1,
+      "shrugMul": 0.5
+    },
+    "_note": "Energy, the first slice (agency-pass.md section 5 and section 11, item 6; sim/director/blast.gd). With the energy family held, an attack press outside an exchange fires a blast from where he stands, in any band. light: a bolt (the kind in data/fight/shots.json) for 'ki', leaving windupTicks after the press (a light still held waits for its release, up to holdTicks, so a layout's hold can turn it into the heavy); presses while one winds up queue up to queueMax more; bolts fired within groupTicks of each other are one volley; the AI's light is aiVolley bolts. heavy: a charged shot for 'ki'; it charges while the button is held and leaves when it is let go (not before windupTicks, and by itself at holdMaxTicks); its damage rises from tapShare of the kind's to all of it over chargeTicks. stopTicks: the hit-stop of a blast that lands. charge: a fighter in a heavy charge takes a shot of power up to shrugPower at shrugMul of its damage and keeps coming; a stronger shot, or any shot on a light charge, stops him. The perfect block's window is perfectBlock.windows.blast; the shot's speed, power and damage are the kind's"
+  },
+  "signature": {
+    "provisional": true,
+    "cooldownSec": 15,
+    "damageMul": 0.6,
+    "_note": "Game Design's provisional signature limit (agency-pass.md section 5; Orb's to revisit once he has played the energy slice). provisional true: a signature recharges in cooldownSec and does damageMul of its damage; it still costs 45 ki. false: the fighter's own sigCooldown (120 s) and full damage, as before. QA's band to watch: signatures deal at most 30% of a match's damage"
   }
 }

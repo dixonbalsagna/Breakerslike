@@ -709,6 +709,14 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       if (typeof bd.engageBh === 'number' && typeof bd.closeBh === 'number' && bd.engageBh > bd.closeBh) err(IT, '/bands/engageBh', 'bands-order', `engageBh ${bd.engageBh} is above closeBh ${bd.closeBh}, so an approach would end outside the close band`);
       for (const [path, o] of [['lunge', bd.lunge], ['far/light', isObj(bd.far) ? bd.far.light : undefined], ['far/heavy', isObj(bd.far) ? bd.far.heavy : undefined], ['charge/light', isObj(bd.charge) ? bd.charge.light : undefined], ['charge/heavy', isObj(bd.charge) ? bd.charge.heavy : undefined], ['meet', bd.meet]]) if (isObj(o) && typeof o.minTicks === 'number' && typeof o.maxTicks === 'number' && o.minTicks > o.maxTicks) err(IT, `/bands/${path}/minTicks`, 'bands-order', `minTicks ${o.minTicks} is above maxTicks ${o.maxTicks}`);
     }
+    const bl2 = itr.blast;
+    if (isObj(bl2)) {
+      const shotsI = get('data/fight/shots.json');
+      const kindsI = isObj(shotsI) && isObj(shotsI.kinds) ? shotsI.kinds : undefined;
+      for (const w of ['light', 'heavy']) if (isObj(bl2[w]) && typeof bl2[w].kind === 'string' && kindsI && !(bl2[w].kind in kindsI)) err(IT, `/blast/${w}/kind`, 'blast-shot-kind', `${w} blast kind "${bl2[w].kind}" is not a kind of data/fight/shots.json (${Object.keys(kindsI).filter((k) => !k.startsWith('_')).join(', ')})`);
+      if (isObj(bl2.heavy) && typeof bl2.heavy.holdMaxTicks === 'number' && typeof bl2.heavy.chargeTicks === 'number' && bl2.heavy.holdMaxTicks < bl2.heavy.chargeTicks) err(IT, '/blast/heavy/holdMaxTicks', 'interrupts-order', `holdMaxTicks ${bl2.heavy.holdMaxTicks} is below chargeTicks ${bl2.heavy.chargeTicks}, so the charge could never finish`);
+      if (kindsI && isObj(bl2.light) && isObj(bl2.heavy) && isObj(kindsI[bl2.light.kind]) && isObj(kindsI[bl2.heavy.kind]) && typeof kindsI[bl2.light.kind].power === 'number' && typeof kindsI[bl2.heavy.kind].power === 'number' && kindsI[bl2.heavy.kind].power < kindsI[bl2.light.kind].power) err(IT, '/blast/heavy/kind', 'blast-shot-kind', `the heavy blast "${bl2.heavy.kind}" trades with less power (${kindsI[bl2.heavy.kind].power}) than the light "${bl2.light.kind}" (${kindsI[bl2.light.kind].power})`, 'warning');
+    }
     const rv = itr.reversal;
     if (isObj(rv) && typeof rv.kiPatient === 'number' && typeof rv.ki === 'number' && rv.kiPatient > rv.ki) err(IT, '/reversal/kiPatient', 'interrupts-order', `kiPatient ${rv.kiPatient} is above ki ${rv.ki}; patience should be cheaper`);
     const st = itr.stale;

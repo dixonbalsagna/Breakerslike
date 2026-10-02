@@ -20,6 +20,7 @@
   },
   "_medium": "The medium level against a lights-only masher (agency-pass.md section 13: it should win 35 to 50%): guardRepeat 8, punish 0.4 and punishHeavy 0.5 measured 40 of 100 with brinkSetups 1 and wearPerDamage 336 (guardRepeat 7.5: 49; 7: 52). The win rate is steep in guardRepeat. With punish 0.6 and punishHeavy 1 it won 18%",
   "_earnerUse": "Per level, earnerUse: how often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the chance a far heavy stays a heavy charge, and it is the chance its chain press is the heavy ender once the string is full",
+  "_blastShare": "Per level, blastShare: the chance its attack beat outside the close band is a blast (a volley of bolts for a light, a charged shot for a heavy; it charges for a random part of the full time)",
   "reactTicks": 14,
   "answerTicks": 20,
   "_far": "The far band and the free approach (sim/director/bands.gd). reactTicks: the AI's reaction time to a rival's approach; an approach shorter than this gets no answer. answerTicks: how long after a rival's far taunt begins it presses its answer (past a heavy's 16-tick hold, so it answers a taunt and not a charge being gathered). Per level: farTaunt, the chance its attack beat in the far band is a taunt (a tap); farCharge, the chance it is otherwise a charge (it holds the button); below 1 it sometimes holds the beat instead, which measured slower (matches ran to the time cap at 0.5). After 6 s with no exchange it always charges. farHeavy: when it charges with a heavy, the chance it stays a heavy charge (slow and committed); otherwise it charges light. answerTaunt: the chance it answers a rival's far taunt with an attack press. approachReact: [guard, dodge, meet], the chances it answers a rival's approach by guarding, by dodging or by pressing to meet him; otherwise it carries on as it was",
@@ -43,6 +44,7 @@
       "farCharge": 1.0,
       "farHeavy": 1.0,
       "answerTaunt": 0.7,
+      "blastShare": 0.1,
       "approachReact": [0.1, 0.05, 0.1]
     },
     "medium": {
@@ -62,6 +64,7 @@
       "farCharge": 1.0,
       "farHeavy": 1.0,
       "answerTaunt": 0.5,
+      "blastShare": 0.2,
       "approachReact": [0.2, 0.1, 0.15]
     },
     "hard": {
@@ -81,6 +84,7 @@
       "farCharge": 1.0,
       "farHeavy": 1.0,
       "answerTaunt": 0.3,
+      "blastShare": 0.25,
       "approachReact": [0.3, 0.2, 0.2]
     }
   }
