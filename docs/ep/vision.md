@@ -493,3 +493,24 @@ Two local matches with a second player. "good first impressions". Direction, in 
 10. **Split-screen camera.** It jolted left and right in some cases, such as when a player was knocked away. A pass on the camera.
 
 Orb asked for all directors to be briefed, iteration to start, and a questionnaire to nail down direction (questionnaire 14).
+
+### Questionnaire 14: player agency (Orb, 2026-10-02)
+
+- **Ranged press:** Other. "pitch some hybrid systems, give control to players but avoid a nightmare scenario of two fighters standing in opposite corners whiffing jabs in the air with zero purpose. standing far apart and spamming taunts is the minimum acceptable, especially if there are reactive voice-lines, bonus points if those lines keep feeling fresh even if they spent all day." (EP pitches hybrids.)
+- **Ranged taunt effects:** a voice line with a face cut-in (the only one picked; not "punishable", not "held launch hits harder", not "cancel with a dodge"; "feeds meters" was not picked here, though the earlier ruling was "taunts should just feed meters").
+- **Alchemist input reading:** Other. "pitch me some hybrids between 'three clear styles' and 'timing is the skill'". (EP pitches.)
+- **Alchemist window:** 5 presses.
+- **Recipe display:** an option in settings.
+- **Launch direction:** the stick picks, the director snaps to the most dramatic nearby target.
+- **Launch share:** 30% of brawls end in a launch.
+- **What earns a launch:** a charged or held heavy; the ender of a full string; heavy plus a stick direction; winning a clash. (Not a guard break or riposte; not spending meter.)
+- **Air recovery:** hold to brake, costs ki; harder hits take longer.
+- **Energy input:** hold RB; the attack buttons become blasts and beams.
+- **Beam limit:** the pills were left blank; the slider says 15 s between signatures (was 120).
+- **Beam plays wanted:** all eight: both fire at once; fire late into an incoming beam; block then push back; walk through on guard; split the beam; swat it away; blast volleys that trade; feeding a struggle with a second charge.
+- **Beam defence forgiveness:** 3 of 5.
+- **Flight:** hold LT to boost in any direction, draining ki.
+- **Escape:** the pursuer boosts and strikes to catch; blasts from behind knock the escaper down; intercept by appearing ahead, at a ki cost; empty ki leaves the escaper exhausted. (Not picked: extra damage from behind; paying to break out of a brawl.)
+- **Hard impacts:** yes, the fighter is buried in the huge crater, and the attacker gets a free follow-up.
+- **Slide and tumble destruction:** 4 of 5.
+- **Notes:** "the fights are cool, the craters blowing up from transformations and beam explosions look really cool, fighters almost get a little too fast when max transformation is reached".
