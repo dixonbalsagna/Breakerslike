@@ -23,7 +23,9 @@ d['body'] = {"rx_bh": 0.3, "ry_bh": 0.5, "rz_bh": 0.3}
 open(p, 'w', encoding='utf-8').write(json.dumps(d, indent=2) + '\n')
 
 # ---------------------------------------------------------------- lanes.gd
-open(R + 'sim/world/lanes.gd', 'w', encoding='utf-8', newline='').write('''class_name WorldLanes
+import os
+if not os.path.exists(R + 'sim/world/lanes.gd'):   # the D1 window writes it (with build); only write the L3 subset when it is missing
+  open(R + 'sim/world/lanes.gd', 'w', encoding='utf-8', newline='').write('''class_name WorldLanes
 ## The fight lanes (docs/world/fight-lanes-world.md, data/biomes/lanes.json): which lane a depth is in, the nearest clear street,
 ## and the half extents of a fighter's body for the swept test. Pure functions of the data and the buildings; nothing is drawn
 ## from S.rng. Depths in the file are fighter heights (1 bh = 75 units); the functions work in world units.
