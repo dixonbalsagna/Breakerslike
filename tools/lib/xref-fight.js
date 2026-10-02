@@ -861,6 +861,22 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim last stand: ready keys are shapes, sequences exist ----
+  const lsd = get('data/anim/laststand.json');
+  if (isObj(lsd) && isObj(lsd.ready)) {
+    const LS = 'data/anim/laststand.json';
+    const motL = get('data/anim/ragdoll_motion.json');
+    const seqL = get('data/anim/waves/laststand1.sequences.json');
+    const shapesL = isObj(motL) && isObj(motL.shapes) ? Object.keys(motL.shapes).filter((k) => !k.startsWith('_')) : [];
+    const seqsL = isObj(seqL) && isObj(seqL.sequences) ? seqL.sequences : undefined;
+    for (const [k, id] of Object.entries(lsd.ready)) {
+      if (k.startsWith('_')) continue;
+      if (k !== 'default' && shapesL.length && !shapesL.includes(k)) err(LS, `/ready/${esc(k)}`, 'laststand-shape', `ready key "${k}" is not default nor a shape in ragdoll_motion.json shapes (${shapesL.join(', ')})`);
+      if (seqsL && typeof id === 'string' && !(id in seqsL)) err(LS, `/ready/${esc(k)}`, 'laststand-seq', `sequence "${id}" is not in data/anim/waves/laststand1.sequences.json`);
+    }
+    if (seqsL && !('ls.slump' in seqsL)) err(LS, '/ready', 'laststand-seq', 'the expired end plays ls.slump, which is not in data/anim/waves/laststand1.sequences.json');
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

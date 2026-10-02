@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-laststand",
+  "title": "anim.laststand/1",
+  "description": "data/anim/laststand.json: the last stand's body cue (docs/architecture/last-stand.md; render/anim/anim_fighter.gd, on_last_stand). ready: for each shape key, the steadying sequence played when last_stand_ready arrives (data/anim/waves/laststand1.sequences.json); hold_weight, in and out: the share of the held resolve pose mixed in while the window is open, and its fade in and out times (s). The `expired` end plays ls.slump; `used` hands over to the signature's own animation. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every ready key is `default` or a shape in ragdoll_motion.json shapes; every sequence, and ls.slump, is in laststand1.sequences.json) are checked by tools/lib/xref-fight.js (laststand-shape, laststand-seq).",
+  "type": "object",
+  "required": [
+    "schema",
+    "ready",
+    "hold_weight",
+    "in",
+    "out"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.laststand/1"
+    },
+    "ready": {
+      "type": "object",
+      "description": "Shape key (or `default`) to the sequence played when last_stand_ready arrives.",
+      "required": [
+        "default"
+      ],
+      "propertyNames": {
+        "pattern": "^(_.*|default|[A-Za-z][A-Za-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_~]+)*$"
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "hold_weight": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The share of the held resolve pose mixed in while the window is open."
+    },
+    "in": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Seconds the held resolve pose fades in."
+    },
+    "out": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Seconds it fades out."
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

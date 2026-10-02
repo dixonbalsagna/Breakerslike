@@ -26164,6 +26164,287 @@
         "rule": "type",
         "pointer": "/uppercut/ux"
       }
+    },
+    {
+      "id": "anim-laststand-live-valid",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/schema": "anim.laststand/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-laststand-key-required",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "del": [
+            "/out"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-laststand-schema-version",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/schema": "anim.laststand/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-laststand-unknown-key",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-laststand-underscore-key-ok",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-laststand-ready-default-required",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready": {
+              "P": "ls.ready_p"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/ready"
+      }
+    },
+    {
+      "id": "anim-laststand-ready-key-shape",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready/bad key": "ls.ready_p"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/ready/bad key"
+      }
+    },
+    {
+      "id": "anim-laststand-ready-seq-shape",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready/P": "LS Ready"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/ready/P"
+      }
+    },
+    {
+      "id": "anim-laststand-ready-seq-type",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready/P": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/ready/P"
+      }
+    },
+    {
+      "id": "anim-laststand-ready-shape-unknown",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready/Z": "ls.ready_p"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:laststand-shape",
+        "pointer": "/ready/Z"
+      }
+    },
+    {
+      "id": "anim-laststand-ready-seq-unknown",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready/A": "ls.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:laststand-seq",
+        "pointer": "/ready/A"
+      }
+    },
+    {
+      "id": "anim-laststand-ready-default-seq-unknown",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready/default": "ls.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:laststand-seq",
+        "pointer": "/ready/default"
+      }
+    },
+    {
+      "id": "anim-laststand-ready-partial-ok",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/ready": {
+              "default": "ls.ready_p",
+              "A": "ls.ready_a"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-laststand-hold-weight-range",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/hold_weight": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/hold_weight"
+      }
+    },
+    {
+      "id": "anim-laststand-hold-weight-negative",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/hold_weight": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/hold_weight"
+      }
+    },
+    {
+      "id": "anim-laststand-hold-weight-zero-ok",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/hold_weight": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-laststand-in-negative",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/in": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/in"
+      }
+    },
+    {
+      "id": "anim-laststand-out-type",
+      "schema": "anim-laststand.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/laststand.json",
+          "set": {
+            "/out": "slow"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/out"
+      }
     }
   ],
   "text": [
