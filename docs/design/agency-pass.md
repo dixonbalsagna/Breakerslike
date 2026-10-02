@@ -83,7 +83,7 @@ Each style works by feel at its base level. Timing lifts it.
 
 | Style | Base | With timing | The upgrade |
 | :--- | :--- | :--- | :--- |
-| **Blur** | Mashing: more strikes, less damage each, no ender | A **steady** mash, with presses evenly spaced within 3 ticks of the beat | **A perfect blur:** every strike lands clean, and it closes with its own ender, a burst that knocks the rival back |
+| **Blur** | Mashing: more strikes, less damage each, no ender | A **steady** mash, with presses evenly spaced within 3 ticks of the beat | **A perfect blur:** every strike lands clean, and it closes with its own ender, a burst that knocks the rival back. The player doesn't press for that ender: the blur plays it, and it is a knock-back, never a launch |
 | **Power** | A held blow: more damage and a longer wind-up | **Released on the flash,** within 6 ticks of the flash at full charge | **A guard-breaking blow.** Against a guard it breaks it. Unguarded, it earns a launch |
 | **Combo** | Presses in any rhythm | **Taps in time,** each within 4 ticks of a blow landing | **Clean and hard:** each timed strike does 15% more |
 
@@ -91,8 +91,8 @@ Each style works by feel at its base level. Timing lifts it.
 
 - Each timed press adds 1 to the fighter's **flow,** up to 5.
 - A press off the beat sets it back to 0, and so do 90 ticks without a press.
-- **A heavy ender launches only at flow 3 or more.** Below that it is a knock-back.
-- At flow 5 the launch also gets the panel and 20% more impact wear.
+- **A heavy ender launches only at flow 3 or more,** in the direction the stick picks. Below that it is a knock-back.
+- **At flow 5 the ender is a showcase ender,** with the panel and 20% more impact wear (Combat's proposal, confirmed).
 
 ### The running mix
 
@@ -112,17 +112,18 @@ The game keeps each player's mix over their last 20 presses and compares it with
 
 ### Blow for Blow (the named set piece Orb asked for)
 
-Two fighters plant their feet and trade heavy body blows in turn, neither giving way, until one misses the beat. "Blow for Blow" is a working name for Narrative.
+Two fighters trade heavy blows in turn, driving each other back and forth across the ground, neither giving way, until one misses the beat. "Blow for Blow" is an in-house label only; Narrative picks the player-facing name. Legal's twelve staging rules apply (`docs/legal/agency-pass-screen.md`), and Combat's content is in `docs/combat/alchemist-recipes.md` §2.
 
 | Part | Rule |
 | :--- | :--- |
 | **Trigger** | Both fighters release a power blow on the flash in the same exchange |
 | **The turns** | They take turns. On his turn a fighter presses heavy on the beat, inside an 8-tick window |
-| **A blow on the beat** | A heavy body blow at ×0.7 of a heavy, to the core. The other fighter takes it and stays standing. Then it is his turn |
+| **A blow on the beat** | One of his own heavies at ×0.7 of a heavy. **Each turn uses a different strike and a different place,** and the wear goes to that place's region: the ribs, flank and chest to the core; the shoulder plate to the arms; the hip and thigh to the legs. The other fighter takes it in his own brace and stays on his feet. Then it is his turn |
+| **They travel** | Each blow drives both fighters along the ground, and the answer drives them back the other way, further each time: 40 units on the first turn, rising by 8 a turn to 96 on the eighth (Combat's numbers, confirmed) |
 | **The beat** | 40 ticks between blows at first, 4 ticks shorter each turn, and never under 24 |
 | **The end** | The first to miss the beat, or to guard or dodge, gives way. The other lands the last blow as an earned launch, with the panel and 25% more impact wear |
 | **Limits** | At most 8 turns, then both slide apart with no winner. It counts as a big set piece, so at most one per 20 s (`rule-of-cool.md` §1) |
-| **The brink** | If a blow breaks a core, that blow ends it: he is on the brink and the other fighter has won the exchange |
+| **A region breaking** | A blow that breaks a region ends it at once, and the striker has won the exchange. In the turns that can only be the core, which puts him on the brink: limb wear stops at battered and spills into the core, as always. The last blow is the only one that can be a crippling blow |
 | **Mood** | +8 at the start and +3 for each blow |
 | **The AI** | It hits 40%, 65% or 85% of beats by difficulty |
 
@@ -191,7 +192,7 @@ Orb leans yes, and will revisit it in play.
 | Taunt | What it pays |
 | :--- | :--- |
 | **The close taunt** (1 s, and it can be hit) | In full, as ruled: Pride +6, heat +10, Wrath +8 or Hunger +5, once per 15 s (`control-rules.md` §4) |
-| **A far taunt that is answered** | The same full value, to the taunter, whoever wins the clash |
+| **A far taunt that is answered** | The same full value, to the taunter, whoever wins the clash. **Only an attack press during the taunt answers it** (the EP's ruling). Taunting back is a reply in the dialogue, but for meter each of those taunts counts as ignored |
 | **A far taunt that is ignored** | Half the value for the first, a quarter for the second and an eighth for the third. **Nothing after the third,** until the two fighters have traded blows |
 
 The line and the face cut-in always play, whatever the meter does. Narrative's dialogue director keeps them fresh: a call within 4 s of the rival's is a reply to it, no line repeats inside a match, and after three calls in 10 s he only gestures for a while.
