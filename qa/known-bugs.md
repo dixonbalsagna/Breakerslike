@@ -153,13 +153,26 @@ Separate from the prototype register above (and from its test). IDs are `GB-nnn`
 **Effect.** Any session where F9 is pressed an even number of times after the first press (detach, attach) ends grey for good; restart is the only way out. Not a sim bug: determinism and the baseline are unaffected.
 **Test to add once fixed.** A Godot scene test: attach, detach, attach, then assert `panes.size() == 2` and that pane 0's parent is `viewports[0]`.
 
-### GB-002: A pale vertical "aura" in the far sky when flying high (tier 3 and 4 sky reaction)
+### GB-002: A pale vertical "aura" in the far sky when flying high (tier 3 and 4 sky reaction) (fixed, 8fd6aba)
 
 **Reported by:** Orb, playing the Godot game, 2026-10-02 (two screenshots: a soft blue-white column near the horizon, off to one side of the fighter, with vertical streaks; it moves with the fighters; both fighters at tier 4).
 **Verdict:** not a rendering fault: it is the designed sky reaction (`docs/design/rule-of-cool.md` feature 12), which reads as a smear.
 **Cause.** From tier 3 `render/core/pane_world.gd` `_sky_react` gives `render/shaders/sky.gdshader` the direction to each fighter and a strength (half at tier 3, full at tier 4). The shader clears the clouds in a tall opening above him (taller than wide, lifted to the horizon, radius `RenderLook.SKY_REACT_R` 0.2) and pales the sky inside it toward his aura colour, with the edge lit in his colour. Because it is anchored to the fighter's direction it slides across the sky as he or the camera moves, and from a high camera the opening sits against the horizon glow with nothing to explain it: a pale blurred pillar. In the screenshots both fighters are at tier 4 and the column is near the far one (the P2 marker is off screen right).
 **Not QA's to change** (Rendering, Camera and VFX own the look; Game Design the feature). Options for them: shrink or soften the opening (`SKY_REACT_R`, the strength curve), show it only while the fighter is on screen, give it a visible cause (a ring or the cloud edge lit more than the pale fill), or put it behind the reduced-motion `sky_calm` option and a settings toggle.
 **Effect.** Looks like a bug to a first-time player; no effect on the sim or the baselines.
+**Status: fixed in 8fd6aba** (Rendering): the sky reaction is a cloud gap with a lit edge, no pale fill, and only for a fighter on screen. Not re-verified by QA in play.
+
+### Open observations from Orb's two-player playtest (2026-10-02; direction in `docs/ep/vision.md`, last section)
+
+Reported through the EP. QA has not reproduced or measured these; each has an owner. IDs follow GB-002.
+
+| ID | Observation | Owner | Status |
+| :--- | :--- | :--- | :--- |
+| GB-003 | The split-screen camera jolts when a player is knocked away. | Camera | open, with Camera |
+| GB-004 | A ranged attack press locks both fighters during the fly-in. Raised as a design question, not a fault. | Game Design | open, design call |
+| GB-005 | Mountain tumbles gain too much momentum from a glancing bounce. | World | open, with World |
+
+QA has no band for any of the three yet. For GB-005 the harness already counts bounces per bounced journey and journeys longer than 4,000 units (`5c.bounces`, `5c.long`); a per-journey momentum or speed-gain row would need a field from World's journey events. For GB-003 a camera-motion metric would need Camera's rig output; ask the EP when a band is wanted.
 
 ---
 
