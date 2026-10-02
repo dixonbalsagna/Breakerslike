@@ -69,7 +69,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "cues": {}, "exEnds": {}, "exEndEvents": {}, "flowMax": [0, 0], "flowTo3": [0, 0], "firstContact": {}, "liftsSeen": {}, "reachFlat": [], "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"durSeen": false, "halted": 0, "tumbleSeen": 0, "jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "cues": {}, "dmgByKind": {}, "maxPlayGap": 0.0, "exEnds": {}, "exEndEvents": {}, "flowMax": [0, 0], "flowTo3": [0, 0], "firstContact": {}, "liftsSeen": {}, "reachFlat": [], "reach": {"buried": 0, "n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"durSeen": false, "halted": 0, "tumbleSeen": 0, "jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
@@ -86,6 +86,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var closing: bool = false          # an exchange closed this tick: its ending is read once the tick's events are in
 	var closing_kind: String = ""
 	var ex_launch: bool = false        # a launch happened inside the running exchange
+	var last_play: float = 0.0         # the last strike, blast, charge or taunt of either fighter (agency pass 14: a gap is 10 s without one)
+	var max_gap: float = 0.0
 	var ex_end_ev: String = ""         # the exchange_end event of the closing exchange
 	var ex_end_evs: Dictionary = {}
 	var ex_decided: bool = false       # a launch_plan was sent inside the running exchange: it reached a launch decision
@@ -252,6 +254,18 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				rec.impactCraters += 1
 			elif e.type == "skim":
 				rec.skims += 1
+			# damage by kind (blasts and signatures as shares of the match's damage) and the play events that end a gap
+			if e.type == "damage" and e.amount > 0.0:
+				var dk: String = str(e.get("kind"))
+				rec.dmgByKind[dk] = float(rec.dmgByKind.get(dk, 0.0)) + float(e.amount)
+				if int(e.attacker) >= 0:
+					last_play = S.T
+			elif e.type == "shot_fire" or e.type == "launch" or e.type == "beam_outcome":
+				last_play = S.T
+			elif e.type == "cue":
+				var cqk: String = str(e.get("kind"))
+				if cqk.begins_with("taunt_start") or cqk.begins_with("charge"):
+					last_play = S.T
 			if e.type == "launch":
 				ex_launch = true
 			elif e.type == "exchange_end":   # slice 3: one per exchange, kind continue | knockback | launch; a "continue" also covers an exchange that never reached a launch decision, so the decision itself is read from launch_plan
@@ -272,7 +286,9 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				rec.cues[cq] = rec.cues.get(cq, 0) + 1
 			# reach (Encounter's contact slice): every damaging strike of a light or heavy melee exchange (a light, a heavy or a guarded hit; signatures and their guarded hits are beams, not strikes) is measured from the attacker to the victim at the damage event: the horizontal distance must stay within 68 units, and a height difference beyond 68 is allowed only on sloped ground
 			var rex = S.dirS.ex
-			if e.type == "damage" and e.number and e.amount > 0.0 and rex != null and (str(rex.kind) == "light" or str(rex.kind) == "heavy") and (str(e.get("kind")) == "light" or str(e.get("kind")) == "heavy" or str(e.get("kind")) == "guard") and int(e.attacker) >= 0 and int(e.attacker) < 2 and int(e.victim) >= 0 and int(e.victim) < 2:
+			if e.type == "damage" and e.number and e.amount > 0.0 and rex != null and str(rex.tag).begins_with("BURIED") and (str(rex.kind) == "light" or str(rex.kind) == "heavy"):
+				rec.reach.buried += 1   # the buried fighter's free follow-up dives into the crater from above: its height difference is the rule, so it is counted apart (agency pass 14, section 5)
+			elif e.type == "damage" and e.number and e.amount > 0.0 and rex != null and (str(rex.kind) == "light" or str(rex.kind) == "heavy") and (str(e.get("kind")) == "light" or str(e.get("kind")) == "heavy" or str(e.get("kind")) == "guard") and int(e.attacker) >= 0 and int(e.attacker) < 2 and int(e.victim) >= 0 and int(e.victim) < 2:
 				var fa = fs[int(e.attacker)]
 				var fv = fs[int(e.victim)]
 				var rdx: float = absf(SimWrap.sdx(fa.x, fv.x))
@@ -320,6 +336,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 							_land(open_fl, i, "stop")   # a weak landing (350 or slower): no slam, no slide
 						else:
 							_land(open_fl, i, "caught")   # still in the air when the flight ended: the follow-up caught him (balance-targets 19)
+		if S.game.ko == null:
+			max_gap = maxf(max_gap, S.T - last_play)
 		if closing:
 			closing = false
 			if closing_kind == "light" or closing_kind == "heavy":   # melee exchanges only (a signature is a beam set piece)
@@ -424,6 +442,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				if fl.tum:
 					rec.journeys.tumbled += 1
 	rec.exEndEvents = ex_end_evs
+	rec.maxPlayGap = snappedf(max_gap, 0.01)
 	rec.hash = SimHash.stateHash(S).gameplay
 	SimCore.dispose(S)
 	return rec

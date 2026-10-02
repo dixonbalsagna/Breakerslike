@@ -34,7 +34,7 @@ function runMirror(n, base) {
       const line = out.split(String.fromCharCode(10)).find(l => l.startsWith('{') && l.includes('"players"'));
       if (code !== 0 || !line) return reject(new Error('players.gd failed for the mirror (exit ' + code + ')' + String.fromCharCode(10) + out.slice(0, 1200)));
       const r = JSON.parse(line);
-      resolve({ mirror: true, n: r.n, finished: r.aWins + r.bWins, timeouts: r.timeouts, medianSec: r.medianSec });
+      resolve({ mirror: true, n: r.n, finished: r.aWins + r.bWins, timeouts: r.timeouts, medianSec: r.medianSec, brink: r.brinkToKoMedian });
     });
   });
 }
@@ -56,6 +56,7 @@ function masherRows(results) {
   });
   const m = results.find(r => r.mirror);
   if (m) rows.push({ id: 'masher.mirror', ref: '§6 masher', what: 'Two lights-only players (mashers who take their forms) finish the match before the cap', status: m.finished / m.n >= 0.95 ? 'PASS' : 'FAIL', value: `${(100 * m.finished / m.n).toFixed(1)}% (${m.finished} of ${m.n}; ${m.timeouts} ran to the cap)`, band: 'at least 95%', note: `median ${m.medianSec} s; point estimate` });
+  if (m && m.brink >= 0) rows.push({ id: 'masher.brink', ref: '§6 masher', what: 'Lights-only mirror: brink to KO, median (45 to 55 s expected after a plain blur ender counts as half a set-up, agency pass 14)', status: m.brink >= 45 && m.brink <= 55 ? 'PASS' : 'FAIL', value: m.brink.toFixed(1) + ' s', band: '45 to 55 s', note: `${m.finished} matches that ended in a KO; the overall band stays 45 to 90 s` });
   rows.push({ id: 'masher.expert', ref: '§6 masher', what: 'An expert script (guards, punishes with a heavy, perfect-blocks heavies and enders) wins against the medium AI (at most 15%)', status: 'PENDING', value: '', band: 'at most 15%', note: 'needs the expert script: it reads the rival tells (Encounter scratch build has one, not in the tree)' });
   return rows;
 }

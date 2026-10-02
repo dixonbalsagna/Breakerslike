@@ -18,6 +18,7 @@ extends SceneTree
 ##                                                   jit adds a uniform jitter of +-jit ticks to every press; mix is a string of
 ##                                                   L and H pressed in turn; between exchanges it requests one every idle ticks
 ##   mix[:mix=LLH][:gap=12][:forms=1]                presses in a fixed pattern, off the beat (a rhythm of its own)
+## Add :energy=1 to any scripted player: the energy family is held (RB), so every press is a blast (bolts for a light, a charged shot for a held heavy).
 ## Add :stick=1 to any scripted player: a heavy press (and a hold) is made with the stick up and toward the rival, the way Orb's earned
 ## launch is thrown (agency slice 1: a heavy pressed with a stick direction that lands clean launches); without it a heavy is a plain heavy.
 ## Player A takes slot 0 on odd seeds and slot 1 on even ones, so spawn side and slot cancel. Prints one JSON line.
@@ -195,19 +196,28 @@ func _init() -> void:
 	var wins: Array = [0, 0]
 	var timeouts: int = 0
 	var lens: Array = []
+	var brinks: Array = []   # brink to KO of each match that ended in a KO: seconds from the loser's first brink_enter
 	for i in range(n):
 		var seed: int = base + i
 		var slot_a: int = 0 if seed % 2 == 1 else 1
 		var res: Dictionary = _match(seed, [spec_a, spec_b], [slot_a, 1 - slot_a], capsec, sums)
 		lens.append(res.t)
+		if res.brink >= 0.0:
+			brinks.append(res.brink)
 		if res.winner < 0:
 			timeouts += 1
 		else:
 			wins[res.winner] += 1
 	lens.sort()
-	var out: Dictionary = {"players": true, "a": spec_a, "b": spec_b, "n": n, "aWins": wins[0], "bWins": wins[1], "timeouts": timeouts, "medianSec": snappedf(lens[lens.size() >> 1], 0.1), "alternationShare": snappedf(float(sums[0].alternations) / maxf(1.0, float(sums[0].pairs)), 0.001), "stats": [_report(sums[0], n), _report(sums[1], n)]}
+	var out: Dictionary = {"players": true, "a": spec_a, "b": spec_b, "n": n, "aWins": wins[0], "bWins": wins[1], "timeouts": timeouts, "medianSec": snappedf(lens[lens.size() >> 1], 0.1), "brinkToKoMedian": (snappedf(_med(brinks), 0.1) if brinks.size() > 0 else -1.0), "alternationShare": snappedf(float(sums[0].alternations) / maxf(1.0, float(sums[0].pairs)), 0.001), "stats": [_report(sums[0], n), _report(sums[1], n)]}
 	print(JSON.stringify(out))
 	quit(0)
+
+
+func _med(a: Array) -> float:
+	var b: Array = a.duplicate()
+	b.sort()
+	return float(b[b.size() >> 1])
 
 
 func _blank() -> Dictionary:
@@ -244,6 +254,8 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 	var ex_launch: bool = false
 	var ex_attacker: int = -1
 	var last_att: int = -1
+	var brink_t: Dictionary = {}   # slot -> first brink_enter time
+	var ko_t: float = -1.0
 	while S.T < capsec and not (S.game.ko != null and S.game.koT > 3.0) and ticks < 400000:
 		ticks += 1
 		var ins: Array = [null, null]
@@ -265,6 +277,8 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 				var rival = S.fighters[1 - slot]
 				it.mx = 0.8 * SimMathx.jsign(SimWrap.sdx(S.fighters[slot].x, rival.x))
 				it.my = 0.7
+			if int(p.P.get("energy", "0")) != 0:
+				it.mode = 1   # the energy family held: presses are bolts and charged shots, not melee
 			if p.is_holding(lt):
 				if p.hold_kind == 1 and "heavyHeld" in it:
 					it.set("heavyHeld", true)
@@ -293,6 +307,11 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 				who.hits += 1
 				if str(e.get("kind")) == "heavy":
 					who.heavyHits += 1
+			elif e.type == "brink_enter":
+				if not brink_t.has(int(e.actor)):
+					brink_t[int(e.actor)] = S.T
+			elif e.type == "ko":
+				ko_t = S.T
 			elif e.type == "exchange_end":   # slice 3: the director's ending of this player's exchange (the actor is the attacker)
 				var xw = sums[_idx(pl, by_slot[int(e.actor)])]
 				var xk: String = "end_" + str(e.get("kind"))
@@ -334,6 +353,11 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 		var loser_slot: int = S.fighters.find(S.game.ko)
 		winner = 1 - _idx(pl, by_slot[loser_slot])
 	var t: float = S.T
+	var brink: float = -1.0
+	if S.game.ko != null:
+		var ls: int = S.fighters.find(S.game.ko)
+		if brink_t.has(ls):
+			brink = (ko_t if ko_t >= 0.0 else S.T) - float(brink_t[ls])
 	for i in range(2):
 		sums[i].presses += pl[i].presses
 		sums[i].onBeat += pl[i].on_beat
@@ -341,7 +365,7 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 		for st in pl[i].styles:
 			sums[i].styles[st] = int(sums[i].styles.get(st, 0)) + int(pl[i].styles[st])
 	SimCore.dispose(S)
-	return {"winner": winner, "t": t}
+	return {"winner": winner, "t": t, "brink": brink}
 
 
 ## The index (0 or 1) of player object p in the pl array of the match, found through the sums' order: players are kept in spec order.

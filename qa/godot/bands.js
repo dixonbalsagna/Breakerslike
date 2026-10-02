@@ -269,12 +269,20 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     }
   }
 
+  // Energy and signatures as shares of the match's damage (agency pass 14: blasts 10 to 25% until Orb has played it; signatures at most 30%, provisional)
+  if (D && D.every(r => r.dmgByKind)) {
+    const tot = r => sum(Object.values(r.dmgByKind)), kind = (r, k) => r.dmgByKind[k] || 0;
+    if (D.some(r => kind(r, 'blast') > 0)) { const c = S.clusterShare(D, r => kind(r, 'blast'), tot); R.rate('11.blast', '§11', 'Blasts as a share of match damage (10 to 25%, provisional)', { v: c.p, ci: c.ci, lo: 0.10, hi: 0.25 }); }
+    else R.pending('11.blast', '§11', 'Blasts as a share of match damage (10 to 25%, provisional)', 'no blast damage in these records (energy blasts are in the sim from 992f56c)');
+    { const c = S.clusterShare(D, r => kind(r, 'beam'), tot); R.rate('11.signature', '§11', 'Signatures (beams) as a share of match damage (at most 30%, provisional)', { v: c.p, ci: c.ci, hi: 0.30 }); }
+  }
+
   // Reach (Encounter's contact slice, 2026-10-02): every damaging melee strike lands within 68 units, and a height difference beyond 68 only on sloped ground
   { const all = arms.flatMap(a => A[a]).filter(r => r.reach);
     if (all.length) {
       const n = sum(all.map(r => r.reach.n)), far = sum(all.map(r => r.reach.far)), tall = sum(all.map(r => r.reach.tall)), flat = sum(all.map(r => r.reach.tallFlat)), maxD = Math.max(...all.map(r => r.reach.maxD)), maxDy = Math.max(...all.map(r => r.reach.maxDy));
       R.add({ id: '10.reach', ref: '§10', what: 'Damaging melee strikes within 68 units of horizontal reach (hard test, 100%)', status: far === 0 ? 'PASS' : 'FAIL', value: `${far} of ${n} strikes beyond 68 units; longest ${maxD.toFixed(1)}`, band: '100% within 68', note: 'lights, heavies and guarded hits, at the damage event, every arm' });
-      R.add({ id: '10.reach.height', ref: '§10', what: 'A height difference beyond 68 units only on sloped ground (hard test)', status: flat === 0 ? 'PASS' : 'FAIL', value: `${tall} strikes with more than 68 units of height difference, ${flat} of them on flat ground; largest ${maxDy.toFixed(1)}`, band: "none on flat ground (slope at most 0.15, no ground step between the two)", note: "the slope is read over 80 units at the victim; a ground step between the fighters of half the height difference or more explains it" + (flat ? '; cases (arm:seed, tick): ' + arms.flatMap(a2 => A[a2].filter(r => (r.reachFlat || []).length).map(r => a2 + ':' + r.seed + ' tick ' + r.reachFlat[0].tick + ' attacker ' + r.reachFlat[0].attState + ' at ' + r.reachFlat[0].attY + ' over ground ' + r.reachFlat[0].attGround + ', victim ' + r.reachFlat[0].vicState + ' at ' + r.reachFlat[0].vicY + ' over ground ' + r.reachFlat[0].vicGround)).slice(0, 6).join('; ') : '') });
+      R.add({ id: '10.reach.height', ref: '§10', what: 'A height difference beyond 68 units only on sloped ground (hard test)', status: flat === 0 ? 'PASS' : 'FAIL', value: `${tall} strikes with more than 68 units of height difference, ${flat} of them on flat ground; largest ${maxDy.toFixed(1)}`, band: "none on flat ground (slope at most 0.15, no ground step between the two)", note: "the slope is read over 80 units at the victim; a ground step between the fighters of half the height difference or more explains it; " + sum(all.map(r => r.reach.buried || 0)) + " follow-up blows on a buried fighter (the dive into the crater) are counted apart" + (flat ? '; cases (arm:seed, tick): ' + arms.flatMap(a2 => A[a2].filter(r => (r.reachFlat || []).length).map(r => a2 + ':' + r.seed + ' tick ' + r.reachFlat[0].tick + ' attacker ' + r.reachFlat[0].attState + ' at ' + r.reachFlat[0].attY + ' over ground ' + r.reachFlat[0].attGround + ', victim ' + r.reachFlat[0].vicState + ' at ' + r.reachFlat[0].vicY + ' over ground ' + r.reachFlat[0].vicGround)).slice(0, 6).join('; ') : '') });
     } else R.pending('10.reach', '§10', 'Damaging melee strikes within 68 units of reach', 'records without the reach tally');
   }
 
@@ -305,7 +313,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     else R.point('7.parry', '§7', 'Parries per 100 melee exchanges', { v: sum(D.map(r => sum(r.parries))) / m * 100, lo: 5, hi: 15 });
     // control-rules 6 / moveset-rules 11: perfect blocks per 100 melee exchanges by AI level (the main run is the data's level, medium)
     if (D.every(r => r.cues)) R.point('7.pb.medium', '§7', 'Perfect blocks per 100 melee exchanges, medium AI (5 to 15)', { v: sum(D.map(r => r.cues.perfect_block || 0)) / m * 100, lo: 5, hi: 15, unit: 'num' });
-    R.point('7.chain', '§7', 'Chains per 100 melee exchanges', { v: sum(D.map(r => r.chains.length)) / m * 100, lo: 15, hi: 35 });
+    R.point('7.chain', '§7', 'Chains per 100 melee exchanges (10 to 30, agency pass 14; strings now come from the presses)', { v: sum(D.map(r => r.chains.length)) / m * 100, lo: 10, hi: 30 });
     const slip = sum(D.map(r => r.melee['PURSUIT — TARGET SLIPS AWAY'] || 0)), caught = sum(D.map(r => r.melee['PURSUIT — CAUGHT'] || 0));
     R.rate('7.slip', '§7', 'Pursuit slip rate (escape gamble)', { v: slip / (slip + caught), ci: wl(slip, slip + caught), lo: 0.35, hi: 0.65 });
     const esc = D.flatMap(r => r.beams.filter(b => b.ds === 'ESCAPE'));
@@ -419,22 +427,29 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
   if (D) {
     const mins = sum(D.map(r => r.koAt)) / 60;
     const ex = sum(D.map(r => melee(r) + r.beams.length));
-    R.point('10.exPerMin', '§10', 'Exchanges started per minute (15 to 26, widened at §22)', { v: ex / mins, lo: 15, hi: 26 });
+    R.point('10.exPerMin', '§10', 'Exchanges started per minute (15 to 28, agency pass 14)', { v: ex / mins, lo: 15, hi: 28 });
     const lens = D.flatMap(r => r.exLens), gaps = D.flatMap(r => r.exGaps);
     R.info('10.exLen', '§10', 'Exchange length, request to release, median', 'retired', 'retired by the dynamic feel (G0 triage); the feel rows replace it. Measured: ' + median(lens).toFixed(2) + ' s');
     R.info('10.gap', '§10', 'Breathing room, release to the next request, median', 'retired', 'replaced by the feel row release to next request at most 1.0 s. Measured: ' + median(gaps).toFixed(2) + ' s');
-    const noLong = D.filter(r => !r.exGaps.some(g => g > 10)).length;
-    R.rate('10.gap10', '§10', 'Matches with no gap over 10 s', { v: noLong / D.length, ci: wl(noLong, D.length), lo: 0.95 });
+    // agency pass 14: a gap is 10 s with no strike, blast, charge or taunt from either fighter (records.maxPlayGap); without the field, the old reading from the exchange gaps
+    if (D.every(r => r.maxPlayGap !== undefined)) {
+      const noLongP = D.filter(r => r.maxPlayGap <= 10).length;
+      R.rate('10.gap10', '§10', 'Matches with no gap over 10 s (a gap: no strike, blast, charge or taunt from either fighter)', { v: noLongP / D.length, ci: wl(noLongP, D.length), lo: 0.95 });
+    } else {
+      const noLong = D.filter(r => !r.exGaps.some(g => g > 10)).length;
+      R.rate('10.gap10', '§10', 'Matches with no gap over 10 s (between exchanges, the old reading)', { v: noLong / D.length, ci: wl(noLong, D.length), lo: 0.95 });
+    }
     // agency pass section 3 (docs/design/agency-pass.md): how a melee exchange ends: the brawl continues 40 to 50%, a knock-back 20 to 30%, a launch 25 to 35%. Today only the launch is told apart (no knock-back or continue state in the sim); the other two switch on with `exchange_end {actor, kind}` events.
     { const E = r => r.exEnds || {}, all = r => sum(Object.values(E(r))), has = D.every(r => r.exEnds);
       // Shares are of the exchanges that reach a launch decision (a launch, a knock-back or a stay): Encounter's measure and the one the agency pass band was written for (28.6 / 22.4 / 49.0 on slice 1). Exchanges with no decision at all are counted apart.
       const dec = r => (E(r).launch || 0) + (E(r).knockback || 0) + (E(r).continue || 0);
       if (has && sum(D.map(all)) > 0) {
         const kinds = sum(D.map(r => (E(r).knockback || 0) + (E(r).continue || 0))) > 0, ls = S.clusterShare(D, r => E(r).launch || 0, kinds ? dec : all);
-        R.rate('10.end.launch', '§10', 'Exchanges that end in a launch, of those that reach a launch decision (25 to 35%, agency pass section 3; it was 40 to 65%)', { v: ls.p, ci: ls.ci, lo: 0.25, hi: 0.35 });
+        R.rate('10.end.launch', '§10', 'Exchanges that end in a launch, of those that reach a launch decision (18 to 30%, agency pass 14)', { v: ls.p, ci: ls.ci, lo: 0.18, hi: 0.30 });
         if (kinds) {
           const kb = S.clusterShare(D, r => E(r).knockback || 0, dec), ct = S.clusterShare(D, r => E(r).continue || 0, dec);
-          R.rate('10.end.knockback', '§10', 'Exchanges that end in a knock-back, of those that reach a launch decision (20 to 30%)', { v: kb.p, ci: kb.ci, lo: 0.20, hi: 0.30 });
+          R.rate('10.end.knockback', '§10', 'Exchanges that end in a knock-back, of those that reach a launch decision (25 to 35%, agency pass 14)', { v: kb.p, ci: kb.ci, lo: 0.25, hi: 0.35 });
+          { const sep = S.clusterShare(D, r => E(r).launch || 0, r => (E(r).launch || 0) + (E(r).knockback || 0)); R.rate('10.end.separating', '§10', 'Launches as a share of the exchanges that separate the fighters (a knock-back or a launch; 25 to 40%, around Orb 30)', { v: sep.p, ci: sep.ci, lo: 0.25, hi: 0.40 }); }
           R.rate('10.end.continue', '§10', 'Exchanges after which the brawl continues (STAY), of those that reach a launch decision (40 to 50%)', { v: ct.p, ci: ct.ci, lo: 0.40, hi: 0.50 });
           R.info('10.end.split', '§10', 'Melee exchanges: reach a launch decision / of those launch, knock-back, stay', `${fmt.pct(sum(D.map(dec)) / Math.max(1, sum(D.map(all))))} reach one; ${fmt.pct(ls.p)} / ${fmt.pct(kb.p)} / ${fmt.pct(ct.p)}`, 'the rest end with no launch decision (a light string that never reaches a launch beat)');
         } else {

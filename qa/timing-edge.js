@@ -3,7 +3,7 @@
 // slot 0 on odd seeds and slot 1 on even ones, one Godot process per matchup, at most 3 at a time (the machine rule: each
 // shows as two Windows processes). Prints a table of win rates (Wilson 95% intervals), damage per exchange, launches earned,
 // turn-taking and how the presses read, with Game Design's bands (docs/design/agency-pass.md, "What QA measures").
-//   node qa/timing-edge.js [--matches=40] [--jobs=3] [--plan=core|sweep|all] [--seed=1] [--md=file] [--json=file]
+//   node qa/timing-edge.js [--matches=40] [--jobs=3] [--plan=core|sweep|energy|all] [--seed=1] [--md=file] [--json=file]
 // Until the agency pass is built the sim has no timing rules, so every row should read about 50%: that is the baseline this
 // reports today, and the same command measures the edge once the rules land.
 const { spawn } = require('child_process');
@@ -27,6 +27,12 @@ const P = {
   timedFull: 'tapper:acc=100:win=4:mix=LLH' + F,
   ai: 'ai:level=medium',
 };
+const ENERGY = [
+  ['E1', 'masher:energy=1' + F, P.masher, 'a blaster (energy held, a bolt every 8 ticks) against a melee masher', null, null],
+  ['E2', 'masher:energy=1' + F, P.ai, 'a blaster against the medium AI', null, null],
+  ['E3', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.ai, 'a timed blaster against the medium AI', null, null],
+  ['E4', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.timed, 'a timed blaster against a timed melee player', null, null],
+];
 const acc = a => `tapper:acc=${a}:win=4:mix=LLH${F}`;
 
 // id, A, B, what, band for A's win share (lo, hi in percent; null: reported only)
@@ -38,14 +44,15 @@ const CORE = [
   ['T5', P.styleOnly, P.styleOnly, 'mirror: both style-only', 45, 55],
   ['T6', P.timedMash, P.masher, 'timed mash (within 3 ticks) against a plain mash', 62, 82],
   ['T7', P.timedHold, P.holder, 'timed hold (released within 6 ticks of the flash) against a plain hold', 62, 82],
-  ['T8', P.timed, P.ai, 'timed against the medium AI', 60, 80],
+  ['T8', P.timed, P.ai, 'timed against the medium AI (agency pass 14: 70 to 90%)', 70, 90],
+  ['T10', P.timed, 'ai:level=hard', 'timed against the hard AI (agency pass 14)', 40, 60],
   ['T9', P.masher, P.ai, 'masher against the medium AI (control-rules 6: 35 to 50%)', 35, 50],
 ];
 const SWEEP = [0, 20, 40, 60, 80, 100].flatMap(a => [
   ['A' + a + 'm', acc(a), P.masher, `accuracy ${a}% against a masher`, null, null],
   ['A' + a + 's', acc(a), P.styleOnly, `accuracy ${a}% against a style-only player`, null, null],
 ]);
-const MATCHUPS = PLAN === 'core' ? CORE : PLAN === 'sweep' ? SWEEP : [...CORE, ...SWEEP];
+const MATCHUPS = PLAN === 'core' ? CORE : PLAN === 'sweep' ? SWEEP : PLAN === 'energy' ? ENERGY : [...CORE, ...SWEEP, ...ENERGY];
 
 function run(m) {
   const g = godot();
