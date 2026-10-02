@@ -1336,6 +1336,8 @@ func _intro_real() -> void:
 	var cuts: Array = []
 	var seen: Dictionary = {}
 	var off: int = 0
+	var two_t: int = 0
+	var two_off: int = 0
 	var both_ok: bool = true
 	var clock_t: int = -1
 	for t in range(0, 340):
@@ -1355,6 +1357,12 @@ func _intro_real() -> void:
 		var cur: SplitFrame = _rig.current()
 		if cur.cut:
 			cuts.append(t)
+		if _rig._in_phase == "stare" and _rig.intro_active:
+			two_t += 1
+		else:
+			two_t = 0
+		if two_t >= 1 and two_t <= 30 and not (_on_screen(cur, 0) and _on_screen(cur, 1)):
+			two_off += 1
 		if _rig.solo_kind == "intro" and (_rig._in_phase == "fall" or _rig._in_phase == "land") and t > 0:
 			if not _on_screen(cur, _rig.solo_slot):
 				off += 1
@@ -1376,8 +1384,9 @@ func _intro_real() -> void:
 				cuts_ok = cuts_ok and absi(int(head[q]) - int(want[q])) <= 2
 	_check(cuts_ok, "intro real: cuts %s (want about %s)" % [str(cuts), str(want)])
 	_check(off == 0, "intro real: the faller was off the screen for %d ticks" % off)
+	_check(two_off == 0, "intro real: a fighter was off the screen for %d ticks at the start of a two-shot" % two_off)
 	_check(both_ok and absi(clock_t - 300) <= 1, "intro real: both fighters on the screen after the clock (clock at %d)" % clock_t)
-	stats["intro real"] = "events %s, cuts %s, faller off %d ticks" % [str(seen), str(cuts), off]
+	stats["intro real"] = "events %s, cuts %s, faller off %d ticks, two-shot starts off %d ticks" % [str(seen), str(cuts), off, two_off]
 	SimCore.dispose(_S)
 	_S = null
 
@@ -1445,6 +1454,8 @@ func _intro_run(mode: String) -> Dictionary:
 	var zbump: float = 0.0
 	var skipped: bool = false
 	var fade_at_cut: float = 0.0
+	var two_t: int = -1
+	var two_off: int = 0
 	for t in range(0, 360):
 		var evs: Array = []
 		if t == 0:
@@ -1485,6 +1496,15 @@ func _intro_run(mode: String) -> Dictionary:
 			cuts.append(t)
 			if t == 20:
 				fade_at_cut = cur.fade
+		# the first tick of every two-shot (and the 30 after) has both fighters in the frame
+		if _rig._in_phase == "stare" and _rig.intro_active:
+			if two_t < 0:
+				two_t = 0
+			two_t += 1
+		else:
+			two_t = -1
+		if two_t >= 1 and two_t <= 30 and not (_on_screen(cur, 0) and _on_screen(cur, 1)):
+			two_off += 1
 		max_pitch_dev = maxf(max_pitch_dev, absf(cur.pitch))
 		pitch_at[t] = cur.pitch
 		shake_max = maxf(shake_max, maxf(_rig._shk[0], _rig._shk[1]))
@@ -1513,12 +1533,14 @@ func _intro_run(mode: String) -> Dictionary:
 			_check(float(pitch_at[30]) == 0.0 and float(pitch_at[150]) == 0.0 and float(pitch_at[235]) == 0.0, "%s: the fall and the staredown are not level" % _label)
 			_check(shake_max >= CamParams.INTRO_SHAKE * 0.5, "%s: no shake at the touchdown (%.1f)" % [_label, shake_max])
 			_check(sizes[235][0] > sizes[150][0] * 1.05, "%s: the two-shot did not push in (%.0f px to %.0f px)" % [_label, sizes[150][0], sizes[235][0]])
+			_check(two_off == 0, "%s: a fighter was off the screen for %d ticks at the start of a two-shot" % [_label, two_off])
 			_check(_rig.solo_kind == "" and not _rig.intro_active, "%s: the intro did not end" % _label)
-			var punch: float = float(sizes[302][1]) / float(sizes[299][1])
+			var punch: float = maxf(float(sizes[301][1]), maxf(float(sizes[302][1]), float(sizes[303][1]))) / float(sizes[299][1])
 			_check(punch > 1.02, "%s: no bell punch at the clock (%.3f)" % [_label, punch])
 			_check(absf(float(sizes[359][1]) / float(sizes[306][1]) - 1.0) < 0.12, "%s: the push does not ease out after the clock" % _label)
 			_check(_rig.panels == 0, "%s: a panel played during the intro" % _label)
 			stat += ", sizes %.0f / %.0f / %.0f px, bell x%.3f, shake %.1f" % [sizes[150][0], sizes[235][0], sizes[359][0], punch, shake_max]
+			stat += " zs %s" % str([sizes[299][1], sizes[301][1], sizes[302][1], sizes[303][1], sizes[304][1], sizes[306][1]])
 			if mode == "full":
 				_intro_ref = cam_log
 			else:
@@ -1537,7 +1559,7 @@ func _intro_run(mode: String) -> Dictionary:
 					ok_r = ok_r and absi(int(cuts[q]) - int(want_r[q])) <= 1
 			_check(ok_r, "%s: cuts at %s (want %s)" % [_label, str(cuts), str(want_r)])
 			_check(max_pitch_dev == 0.0 and shake_max == 0.0, "%s: pitch %.1f or shake %.1f in reduced motion" % [_label, max_pitch_dev, shake_max])
-			_check(float(sizes[302][1]) / float(sizes[299][1]) < 1.01, "%s: a bell punch in reduced motion" % _label)
+			_check(maxf(float(sizes[301][1]), maxf(float(sizes[302][1]), float(sizes[303][1]))) / float(sizes[299][1]) < 1.01, "%s: a bell punch in reduced motion" % _label)
 			_check(_rig.intro_cuts == 5, "%s: %d intro cuts" % [_label, _rig.intro_cuts])
 		"skip":
 			_check(cuts.size() == 2 and absi(int(cuts[0]) - 0) <= 1 and int(cuts[1]) == 20, "%s: cuts at %s (want 0 and 20)" % [_label, str(cuts)])

@@ -62,6 +62,13 @@ The sim now sends the intro events with exactly the fields the shot reads (`intr
 
 **The default opening** (the setup's default is `"skip"`: both fighters already on their entrance craters, 900 units apart, no intro events): the camera needs nothing and frames them well. Measured (sweep "opening default", and `intro_shots.gd --opening` on the real renderer with the real pipeline): one view, no split, the fighters at 0.168 of the width from the nearest screen edge at the worst and at least 10.4% of the screen height tall; the real renderer's frame at tick 20 has them at 29% and 71% of the width on their craters.
 
+### Row 7 fixes after Rendering's end-to-end run (2026-10-04)
+
+Rendering ran the intro on the real pipeline (`docs/rendering/tumble-intro-render.md` 2.3a) and found three faults.
+1. **The two-shot opened with one fighter off the left edge for about 24 ticks** (after the landings at tick 144, and after the face cuts at tick 287). Cause: the end of a solo shot lets the soloed pane keep the whole screen until the panes are one (`e_hold`), so for the next tick or twenty the screen was still the last pane's camera. The intro now forces one view at once (`_force_merged`: separation, expansion, the solo weight and the held pane all set to zero) at the two-shot, and at the clock. The sweep checks both fighters are on the screen on the first tick of every two-shot and the 30 after, in the injected timeline (with two humans too) and in the real sim's intro; the old rig fails that check by 12 and 18 ticks.
+2. **The same at the return to the two-shot after the face cuts:** the same cause and the same fix.
+3. **The fall was a chase with the fighter pinned at screen centre (confirmed).** That is how it was built, because a fixed low frame would show a 6,000 unit, 0.6 s fall for about 5 ticks (the first report). Pinned on him, though, the featureless sky shows no fall at all. The camera now falls a little slower than he does: he starts `INTRO_FALL_DROP` (180 units) above his anchor and drops through the frame to it as he lands, and the horizon and the ground come up under him (checked on the real renderer, ticks 4 to 32). The low wide angle on the landing spot stays at the touchdown cut, as planned.
+
 ### Row 23: the last stand's trigger (built 2026-10-04)
 
 `last_stand_ready {actor, dur}` (once per fighter per match, at the first brink; `last_stand_end {actor, kind}` needs nothing from the camera). The camera's part is the cut of Game Design's option B (the face cut-in and the line are UI's and Narrative's). It is live, so nothing pauses.

@@ -156,6 +156,7 @@ const TRANSFORM_R2: float = 0.07
 # --- the opening: the crater-landing entrance and the staredown (rule-of-cool row 7, docs/architecture/intro-phase.md) ---
 const INTRO_R_FALL: float = 0.10       # the descent: the faller at this fraction of the screen height, the camera falling with him
 const INTRO_FALL_ANCHOR_Y: float = 0.38  # ... high in the frame, so the ground that comes up is below him
+const INTRO_FALL_DROP: float = 180.0    # the faller starts this far above his anchor and drops to it as he lands (units)
 const INTRO_R_LAND_MIN: float = 0.07   # the landing: low and wide, the crater's diameter filling INTRO_LAND_FIT of the width,
 const INTRO_R_LAND_MAX: float = 0.12   # ... his height between these
 const INTRO_LAND_FIT: float = 0.55

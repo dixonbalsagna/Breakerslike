@@ -8,7 +8,7 @@ extends SceneTree
 const TOP := 6000.0
 const FALL := [0, 84]
 const LAND := [36, 114]
-const SHOTS := [12, 30, 40, 70, 100, 125, 150, 235, 250, 275, 295, 302]
+const SHOTS := [4, 14, 24, 32, 35, 40, 100, 145, 235, 250, 290, 302]
 
 var main: Node
 var out: String = "."

@@ -98,6 +98,7 @@ var _in_phase: String = ""               # fall, land, stare or face
 var _in_slot: int = -1
 var _in_t: int = 0                       # rig ticks since intro_start
 var _in_crater_r: float = 0.0
+var _in_fall_h: float = 6000.0           # the fall's height, from the event
 var _in_stare_t: int = -1                # ticks since the staredown began, -1 before it
 var _in_stare_dur: int = 0
 var _in_clock_t: float = -1.0            # seconds since the clock started (the push eases out), -1 when not
@@ -616,7 +617,7 @@ func _read_events(S: SimState, events: Array) -> void:
 				_in_clock_t = -1.0
 				_pn = {}
 			"entrance_fall":
-				_intro_fall(S, int(_ef(ev, "actor", -1)), float(_ef(ev, "y", 0.0)))
+				_intro_fall(S, int(_ef(ev, "actor", -1)), float(_ef(ev, "y", 0.0)), float(_ef(ev, "y1", 0.0)))
 			"entrance_land":
 				_intro_land(S, int(_ef(ev, "actor", -1)), float(_ef(ev, "r", 0.0)))
 			"staredown_start":
@@ -1262,7 +1263,7 @@ func _intro_cut(S: SimState, slot: int) -> void:
 		_zo[slot] = _own_zoom_target(S, slot)
 
 
-func _intro_fall(S: SimState, a: int, ground_y: float) -> void:
+func _intro_fall(S: SimState, a: int, ground_y: float, top_y: float) -> void:
 	if a < 0 or a > 1:
 		return
 	intro_active = true
@@ -1280,6 +1281,7 @@ func _intro_fall(S: SimState, a: int, ground_y: float) -> void:
 		return
 	_in_phase = "fall"
 	_in_slot = a
+	_in_fall_h = maxf(top_y - ground_y, 1.0)
 	_begin_solo("intro", a, 5, 0.0, S, true)
 	_shot_pitch = 0.0
 	_intro_cut(S, a)
@@ -1307,12 +1309,27 @@ func _intro_land(S: SimState, a: int, crater_r: float) -> void:
 		_shk[1 - a] = maxf(_shk[1 - a], CamParams.INTRO_SHAKE * 0.5)
 
 
-func _intro_to_two_shot(S: SimState) -> void:
+## One view at once: the shot's end normally lets the solo pane keep the screen until the panes are one (e_hold), which
+## showed the staredown's two-shot with the last pane's camera for about 24 ticks, one fighter off the screen's edge.
+func _force_merged(S: SimState) -> void:
 	r_now = _metric(S)
 	_end_solo(S)
 	_shot_pitch = 0.0
-	_in_phase = "stare"
+	sep = 0.0
+	e = 0.0
+	e_target = 0.0
+	e_hold = false
+	e_slot = -1
+	sliver = 0.0
+	solo_w = 0.0
+	solo_target = 0.0
+	split_wanted = false
 	_snap_merged(S)
+
+
+func _intro_to_two_shot(S: SimState) -> void:
+	_force_merged(S)
+	_in_phase = "stare"
 	_intro_cut(S, -1)
 	_snap_cameras(S)
 
@@ -1330,10 +1347,7 @@ func _intro_clock(S: SimState, kind: String) -> void:
 	intro_active = false
 	var was_solo: bool = solo_kind == "intro"
 	if was_solo or kind == "skip" or _in_phase != "stare":
-		r_now = _metric(S)
-		_end_solo(S)
-		_shot_pitch = 0.0
-		_snap_merged(S)
+		_force_merged(S)
 		_snap_cameras(S)
 		_cut_now = true
 		_cut_fade = CamParams.REDUCED_CUT_FADE if reduced_motion else CamParams.CUT_FADE
@@ -1761,7 +1775,14 @@ func _update_cameras(S: SimState) -> void:
 		# (the chase otherwise follows each rise and the bounce nearly vanishes: 5 to 20 px for 1 to 2 body heights).
 		var fy_ref: float = f.y + CamParams.CHEST
 		var lead_w: float = 1.0
-		if f.state == "launched" and not stiff and CamParams.LOW_AIR_DEAD > 0.0:
+		if solo_kind == "intro" and _in_phase == "fall" and solo_slot == i and not reduced_motion:
+			# The camera falls a little slower than he does, so he drops through the frame (INTRO_FALL_DROP units from the
+			# top at the start to the anchor at the touchdown) and the ground comes up: pinned on him, the sky shows no fall.
+			var kf: float = clampf(1.0 - CamParams.INTRO_FALL_DROP / _in_fall_h, 0.0, 1.0)
+			var gf: float = WorldTerrain.groundY(S, f.x)
+			fy_ref = gf + CamParams.CHEST + kf * (f.y - gf)
+			lead_w = kf
+		elif f.state == "launched" and not stiff and CamParams.LOW_AIR_DEAD > 0.0:
 			var gnd: float = WorldTerrain.groundY(S, f.x)
 			lead_w = smoothstep(CamParams.LOW_AIR_DEAD * 0.5, CamParams.LOW_AIR_DEAD * 1.5, f.y - gnd)
 			fy_ref = lerpf(gnd + CamParams.CHEST, f.y + CamParams.CHEST, lead_w)
