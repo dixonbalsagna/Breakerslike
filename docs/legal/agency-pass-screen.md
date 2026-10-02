@@ -74,3 +74,17 @@ Read `docs/combat/alchemist-recipes.md` sections 2.2 to 2.6 and `docs/combat/pen
 - A different strike and place each turn (ribs, flank, shoulder plate, chest, hip, thigh, never two stomach blows running), the upright brace that gives ground and does not fold, the travelling furrow, the tracking camera with two push-ins and no strain close-up, and the biome answer all match the rules.
 - The `bfb.brace` pose is his own and keeps clear of the On the Chin arms-open stance.
 - **Two small notes.** The air version's ring per blow stays a thin local ring, never a cracked sky. The heavy charge's flight pose (both forearm plates side by side ahead of him, head tucked) is clear of the dash rule (not one fist ahead, not both arms trailed back), as long as the plates never turn into a pair of fists.
+
+### Power-up craters and the rocks' motion frames (RL-059)
+
+**Rocks, six drift frames** (`docs/vfx/img/rocks-drift-1..6.jpg`; I looked at the first and the last, ticks 345 and 413): the loose chunks sit unevenly around both fighters, at different distances and heights, and shift between frames. They read as scattered debris, not a ring and not one turning cloud. **The motion re-check passes.** The five conditions in RL-057 stay.
+
+**Blast amplification for ground-level power-up craters: GO, under these conditions.** At the break beat the moment holds one mark (mark 4, the crater, ring, rim chunks and dust as one bundle) plus the break's flat ring, so it stays at or under two marks as long as:
+1. **Only at the break,** the one-off snap of the transformation. Nothing in the gather or while charging (the gather draws dust inward; that stays).
+2. **No scream and no fists-at-sides crouch** in the gather, as the transformation staging already bans. If any fighter's gather has a scream, keep the flag off for him.
+3. **No lightning, no flame aura, no hair change, and no gold, white or red flash.** The flash stays in his own colour. No darkening or storm in the sky.
+4. **Thrown, not levitating.** The rim chunks fly out and fall as a crater event. They never hang or rise in a ring round him.
+5. **The ring is a flat, thin ring on the ground,** never a cracked sky.
+6. **One crater per transformation,** scaled by tier. The scar stays as terrain. The rocks stay stood down through the transformation and return after the settle, as built.
+7. **Mid-air power-ups and entrance craters stay without it,** as built.
+8. **Re-screen at the first transformation cinematic,** since crater, ring, camera and sound will meet for the first time.
