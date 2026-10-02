@@ -1,0 +1,303 @@
+--- a/sim/world/structures.gd
++++ b/sim/world/structures.gd
+@@ -133,6 +133,114 @@
+ 	return out
+ 
+ 
++## L3: the standing buildings whose x extent can meet a flight from xa to xb (padded by pad), as indices in ascending order. Made once
++## per flight or per tick; the sweep then tests only these.
++static func along(S: SimState, xa: float, xb: float, pad: float) -> Array:
++	var d: float = SimWrap.sdx(xa, xb)
++	var mid: float = SimWrap.wrap(xa + d * 0.5)
++	var half: float = absf(d) * 0.5 + pad
++	var out: Array = []
++	for bi in near(S, mid, half):
++		var b = S.buildings[bi]
++		if b.alive and absf(SimWrap.sdx(mid, b.x)) - b.w * 0.5 <= half:
++			out.append(bi)
++	out.sort()
++	return out
++
++
++## The earliest crossing of the segment (x0, y0, z0) to (x1, y1, z1) by a body of half extents (rx, ry, rz) against the boxes of the
++## buildings in list (a footprint in x and z, from the ground it stands on to its standing top): the slab method, one division an
++## axis, no trigonometry. Ties go to the lower index. A box the body already overlaps at the start is reported at t = 0 with the
++## face of least penetration, or skipped when skipInside is set (the hit test: a body leaving the building it just crossed).
++## Returns {"hit": false} or {"hit": true, "b", "t" (0 to 1), "x", "y", "z", "face" ("end", "top", "bottom", "front", "back"), "nx", "nz"}.
++static func sweep(S: SimState, list: Array, x0: float, y0: float, z0: float, x1: float, y1: float, z1: float, rx: float, ry: float, rz: float, skipInside: bool = false) -> Dictionary:
++	var best: Dictionary = {"hit": false}
++	var bt: float = 2.0
++	var d0: float = SimWrap.sdx(x0, x1)
++	var d1: float = y1 - y0
++	var d2: float = z1 - z0
++	for bi in list:
++		var b = S.buildings[bi]
++		if not b.alive:
++			continue
++		var cx: float = SimWrap.sdx(x0, b.x)
++		var gy: float = baseY(S, b)
++		var lo0: float = cx - b.w * 0.5 - rx
++		var hi0: float = cx + b.w * 0.5 + rx
++		var lo1: float = gy - ry
++		var hi1: float = gy + curH(b) + ry
++		var lo2: float = b.z - b.d * 0.5 - rz
++		var hi2: float = b.z + b.d * 0.5 + rz
++		var inside: bool = lo0 <= 0.0 and 0.0 <= hi0 and lo1 <= y0 and y0 <= hi1 and lo2 <= z0 and z0 <= hi2
++		var t: float = 0.0
++		var axis: int = -1
++		var sgn: float = 0.0
++		if inside:
++			if skipInside:
++				continue
++			var pen0: float = minf(0.0 - lo0, hi0 - 0.0)
++			var pen1: float = minf(y0 - lo1, hi1 - y0)
++			var pen2: float = minf(z0 - lo2, hi2 - z0)
++			if pen0 <= pen1 and pen0 <= pen2:
++				axis = 0
++				sgn = -1.0 if (0.0 - lo0) < (hi0 - 0.0) else 1.0
++			elif pen1 <= pen2:
++				axis = 1
++				sgn = -1.0 if (y0 - lo1) < (hi1 - y0) else 1.0
++			else:
++				axis = 2
++				sgn = -1.0 if (z0 - lo2) < (hi2 - z0) else 1.0
++		else:
++			var tmin: float = 0.0
++			var tmax: float = 1.0
++			var miss: bool = false
++			for a in range(3):
++				var p: float = 0.0 if a == 0 else (y0 if a == 1 else z0)
++				var dd: float = d0 if a == 0 else (d1 if a == 1 else d2)
++				var lo: float = lo0 if a == 0 else (lo1 if a == 1 else lo2)
++				var hi: float = hi0 if a == 0 else (hi1 if a == 1 else hi2)
++				if absf(dd) < 1.0e-9:
++					if p < lo or p > hi:
++						miss = true
++						break
++					continue
++				var ta: float = (lo - p) / dd
++				var tb: float = (hi - p) / dd
++				var sg: float = -1.0
++				if ta > tb:
++					var tt: float = ta
++					ta = tb
++					tb = tt
++					sg = 1.0
++				if ta > tmin:
++					tmin = ta
++					axis = a
++					sgn = sg
++				if tb < tmax:
++					tmax = tb
++				if tmin > tmax:
++					miss = true
++					break
++			if miss or axis < 0:
++				continue
++			t = tmin
++		if t < bt:
++			bt = t
++			var face: String = "end" if axis == 0 else ("top" if axis == 1 and sgn > 0.0 else ("bottom" if axis == 1 else ("front" if sgn > 0.0 else "back")))
++			best = {"hit": true, "b": bi, "t": t, "x": SimWrap.wrap(x0 + d0 * t), "y": y0 + d1 * t, "z": z0 + d2 * t, "face": face, "nx": sgn if axis == 0 else 0.0, "nz": sgn if axis == 2 else 0.0}
++	return best
++
++
++## The index of the lowest building whose box the body overlaps right now, or -1.
++static func blocked(S: SimState, x: float, y: float, z: float, rx: float, ry: float, rz: float) -> int:
++	for bi in along(S, x, x, rx):
++		var b = S.buildings[bi]
++		var gy: float = baseY(S, b)
++		if absf(SimWrap.sdx(x, b.x)) <= b.w * 0.5 + rx and y >= gy - ry and y <= gy + curH(b) + ry and z >= b.z - b.d * 0.5 - rz and z <= b.z + b.d * 0.5 + rz:
++			return bi
++	return -1
++
++
+ ## Depth from the fighter plane to the building's nearest face.
+ static func dz(b) -> float:
+ 	return maxf(0.0, absf(b.z) - b.d * 0.5)
+@@ -264,6 +372,7 @@
+ 		ringCap = int(cause.ld.reachRingCap)
+ 	var r: float = r0 * tf
+ 	var ringLevelled: int = 0
++	var zc: float = float(cause.z) if (S.depthOn and cause != null and "z" in cause) else 0.0
+ 	for bi in near(S, x, r):
+ 		var b = S.buildings[bi]
+ 		if not b.alive:
+@@ -271,7 +380,13 @@
+ 		var d: float = absf(SimWrap.sdx(x, b.x)) - b.w / 2.0
+ 		if d > r:
+ 			continue
+-		if not beam and dz(b) > Z_REACH:
++		if S.depthOn and not beam:
++			# L3: a blast reaches a building by its distance in plan, from the blast's depth to the footprint's nearest point
++			var gz: float = maxf(0.0, absf(zc - b.z) - b.d * 0.5)
++			d = SimDetMath.hypot(maxf(d, 0.0), gz)
++			if d > r:
++				continue
++		elif not beam and dz(b) > Z_REACH:
+ 			continue
+ 		var top: float = baseY(S, b) + curH(b)
+ 		if y - r * 0.6 > top:
+--- a/sim/world/brunt.gd
++++ b/sim/world/brunt.gd
+@@ -117,7 +117,7 @@
+ ## b: the same integration as SimFighter.stepLaunched and DirLaunch.predictFlight without buildings. Returns {"ok": false}
+ ## or {"ok": true, "t", "x" (the near edge), "y", "vx", "vy", "spN" (the normalised speed there), "dir"}. The flight must
+ ## enter b's footprint from the near edge at a height between the ground and b's current top, before it lands.
+-static func flightTo(S: SimState, x0: float, y0: float, vx0: float, vy0: float, trav: float, b) -> Dictionary:
++static func flightTo(S: SimState, x0: float, y0: float, vx0: float, vy0: float, trav: float, b, z0: float = 0.0) -> Dictionary:
+ 	var dt: float = SimConst.DT
+ 	var kAir: float = SimDetMath.pow(0.55, dt)
+ 	var dir: float = -1.0 if vx0 < 0.0 else 1.0
+@@ -129,6 +129,8 @@
+ 	var top: float = gy + WorldStructures.curH(b)
+ 	if y0 < WorldWater.surfaceAt(S, x0):
+ 		return {"ok": false}
++	if S.depthOn:
++		return _flightToSwept(S, x0, y0, vx0, vy0, trav, b, z0, dir, edge, ahead)
+ 	var x: float = x0
+ 	var y: float = y0
+ 	var vx: float = vx0
+@@ -148,7 +150,7 @@
+ 		if fr >= 0.0:
+ 			var yc: float = oy + (y - oy) * fr
+ 			if yc > gy - 10.0 and yc < top:
+-				return {"ok": true, "t": t - dt * (1.0 - fr), "x": edge, "y": yc, "vx": vx, "vy": vy, "spN": SimDetMath.hypot(vx / trav, vy), "dir": dir}
++				return {"ok": true, "t": t - dt * (1.0 - fr), "x": edge, "y": yc, "vx": vx, "vy": vy, "spN": SimDetMath.hypot(vx / trav, vy), "dir": dir, "aimD": ahead}
+ 			return {"ok": false}
+ 		if SimWrap.sdx(ox, x) * dir > 0.0 and SimWrap.sdx(edge, x) * dir > 0.0:
+ 			return {"ok": false}
+@@ -157,6 +159,43 @@
+ 	return {"ok": false}
+ 
+ 
++## L3: the same flight with the body's real extent, in depth: z follows the waypoint to the target's face exactly as stepZ does (from the
++## position at the start of each step), and the first building the swept body meets must be the target, or the flight is not a plan.
++static func _flightToSwept(S: SimState, x0: float, y0: float, vx0: float, vy0: float, trav: float, b, z0: float, dir: float, edge: float, ahead: float) -> Dictionary:
++	var dt: float = SimConst.DT
++	var kAir: float = SimDetMath.pow(0.55, dt)
++	var body: Array = WorldLanes.body()
++	var z1: float = faceZ(b)
++	var aimD: float = maxf(ahead, 1.0)
++	var list: Array = WorldStructures.along(S, x0, SimWrap.wrap(x0 + dir * (ahead + b.w + 200.0)), body[0] + 64.0)
++	var x: float = x0
++	var y: float = y0
++	var vx: float = vx0
++	var vy: float = vy0
++	var t: float = 0.0
++	for n in range(FLIGHT_STEPS):
++		var ox: float = x
++		var oy: float = y
++		var zn: float = zAt(x0, z0, z1, aimD, ox)
++		t += dt
++		vy -= 1000.0 * dt
++		vx *= kAir
++		x = SimWrap.wrap(x + vx * dt)
++		y += vy * dt
++		if y < WorldWater.surfaceAt(S, x):
++			return {"ok": false}
++		var hr: Dictionary = WorldStructures.sweep(S, list, ox, oy, zn, x, y, zn, body[0], body[1], body[2], true)
++		if hr.hit:
++			if hr.b != b.idx:
++				return {"ok": false}
++			return {"ok": true, "t": t - dt * (1.0 - hr.t), "x": hr.x, "y": hr.y, "vx": vx, "vy": vy, "spN": SimDetMath.hypot(vx / trav, vy), "dir": dir, "aimD": ahead}
++		if SimWrap.sdx(ox, x) * dir > 0.0 and SimWrap.sdx(edge, x) * dir > b.w + 2.0 * body[0]:
++			return {"ok": false}
++		if y <= WorldTerrain.groundY(S, x, zn):
++			return {"ok": false}
++	return {"ok": false}
++
++
+ # ===================================================================== the outcome of one hit (pure)
+ 
+ ## What hitting building b at height y with normalised speed spN and launcher tier does, without changing anything.
+@@ -223,7 +262,7 @@
+ 	best.sort_custom(func(p, q): return p[0] < q[0] or (p[0] == q[0] and p[1] < q[1]))
+ 	for e in best:
+ 		var cand = S.buildings[e[1]]
+-		var fr: Dictionary = flightTo(S, far, y, vx, vy, trav, cand)
++		var fr: Dictionary = flightTo(S, far, y, vx, vy, trav, cand, faceZ(b))
+ 		if fr.ok:
+ 			return {"b": e[1], "r": fr}
+ 	return {"b": -1}
+@@ -302,7 +341,7 @@
+ 	var sign_: float = 1.0 if SimWrap.sdx(D.x, b.x) >= 0.0 else -1.0
+ 	for uy in AIM_UY:
+ 		var trav: float = WorldSlide.launchTravel(sign_, uy)
+-		var fr: Dictionary = flightTo(S, D.x, D.y, WorldSlide.launchVX(sign_, uy, force * tierF), uy * force * tierF, trav, b)
++		var fr: Dictionary = flightTo(S, D.x, D.y, WorldSlide.launchVX(sign_, uy, force * tierF), uy * force * tierF, trav, b, D.z)
+ 		if fr.ok and fr.spN >= AIM_MIN_SP:
+ 			var chain: Array = chainPlan(S, A.tier, special, b, fr, trav)
+ 			var edge: float = SimWrap.wrap(b.x - sign_ * b.w * 0.5)
+@@ -317,7 +356,7 @@
+ static func arm(S: SimState, f, att, plan: Dictionary) -> void:
+ 	f.aimB = -1
+ 	f.aimX0 = f.x
+-	f.aimZ0 = 0.0
++	f.aimZ0 = f.z if S.depthOn else 0.0
+ 	f.aimZ1 = 0.0
+ 	f.aimD = 1.0
+ 	f.chainEvt = 0.0
+@@ -352,10 +391,14 @@
+ 
+ ## The fighter's depth for this tick: a smoothstep of his x progress toward the aimed building's face, easing back to the
+ ## plane when he is not aimed. A function of state; it enters no physics.
++static func zAt(x0: float, z0: float, z1: float, d: float, x: float) -> float:
++	var p: float = clampf(absf(SimWrap.sdx(x0, x)) / d, 0.0, 1.0)
++	return z0 + (z1 - z0) * p * p * (3.0 - 2.0 * p)
++
++
+ static func stepZ(S: SimState, f, dt: float) -> void:
+ 	if f.aimB >= 0:
+-		var p: float = clampf(absf(SimWrap.sdx(f.aimX0, f.x)) / f.aimD, 0.0, 1.0)
+-		f.z = f.aimZ0 + (f.aimZ1 - f.aimZ0) * p * p * (3.0 - 2.0 * p)
++		f.z = zAt(f.aimX0, f.aimZ0, f.aimZ1, f.aimD, f.x)
+ 	elif f.z != 0.0:
+ 		f.z *= SimDetMath.pow(0.001, dt)
+ 		if absf(f.z) < 0.5:
+@@ -373,6 +416,8 @@
+ ## Called each tick of a launched flight after the move, with the position before it (ox, oy): did the fighter cross the
+ ## aimed building's near edge? If so, resolve the hit and carry on, rebound or end. Returns true if a hit happened.
+ static func checkHit(S: SimState, f, ox: float, oy: float) -> bool:
++	if S.depthOn:
++		return _checkHitSwept(S, f, ox, oy)
+ 	if f.aimB < 0:
+ 		return false
+ 	var b = S.buildings[f.aimB]
+@@ -395,6 +440,27 @@
+ 	return true
+ 
+ 
++## L3: any building the body meets this tick (the swept body, from the position before the move to the position after, at the depth the
++## tick was moved at), whether or not the launch was aimed at it. A body that starts inside a box (just out of the building it crossed)
++## does not hit it again.
++static func _checkHitSwept(S: SimState, f, ox: float, oy: float) -> bool:
++	if f.flightHits > 0 and f.aimB < 0:
++		return false   # the launch's chain is over (a rebound, the cap, nothing ahead): the rest of the flight is the ground's
++	var body: Array = WorldLanes.body()
++	var list: Array = WorldStructures.along(S, ox, f.x, body[0] + 64.0)
++	if list.is_empty():
++		return false
++	var hr: Dictionary = WorldStructures.sweep(S, list, ox, oy, f.z, f.x, f.y, f.z, body[0], body[1], body[2], true)
++	if not hr.hit:
++		return false
++	var b = S.buildings[hr.b]
++	var dir: float = -1.0 if f.vx < 0.0 else 1.0
++	if f.aimB != hr.b:
++		f.aimB = hr.b   # an unaimed flight met it: the hit and its chain read the aim fields
++	hit(S, f, b, hr.y, hr.x, dir)
++	return true
++
++
+ ## Resolve one hit on building b at height y on the near edge, and what happens to the fighter.
+ static func hit(S: SimState, f, b, y: float, edge: float, dir: float) -> void:
+ 	var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
+@@ -448,7 +514,7 @@
+ 			var nb = S.buildings[nx.b]
+ 			f.aimB = nx.b
+ 			f.aimZ1 = faceZ(nb)
+-			f.aimD = maxf(absf(SimWrap.sdx(f.x, nx.r.x)), 1.0)
++			f.aimD = maxf(float(nx.r.get("aimD", absf(SimWrap.sdx(f.x, nx.r.x)))), 1.0)
+ 			SimFx.chainLink(S, f, by, b, nb, y, nx.r, link + 1)
+ 		else:
+ 			endFlight(S, f)
