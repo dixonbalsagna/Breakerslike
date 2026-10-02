@@ -1,0 +1,206 @@
+--- a/sim/world/crater.gd
++++ b/sim/world/crater.gd
+@@ -529,3 +529,25 @@
+ 	for k in range(0, 3):
+ 		var i: int = (c0 + dir * k + NC) % NC
+ 		S.deform[i] = minf(DEFORM_CEIL, S.deform[i] + h * (1.0 - float(k) / 3.0))
++
++
++## A mark on the ground and nothing else (a missed power-1 shot, docs/design/agency-pass.md section 14 item 6): raise the burn paint over
++## half width hw to intensity inten and emit the scorch event. No groove, no crater, no structure damage; the paint is one row, so no depth rows.
++static func mark(S: SimState, x: float, hw: float, inten: float, variant: String, cause, z: float = 0.0) -> void:
++	var NC: int = SimConst.NC
++	var COL: float = SimConst.COL
++	var c0: int = _col(x)
++	var n: int = int(ceil(hw / COL))
++	var inv: float = COL / hw
++	var scm: PackedFloat32Array = S.scorch
++	for k in range(-n, n + 1):
++		var u: float = absf(float(k)) * inv
++		if u >= 1.0:
++			continue
++		var t: float = 1.0 - u * u
++		var i: int = (c0 + k + NC) % NC
++		var sc: float = inten * t
++		if sc > scm[i]:
++			scm[i] = sc
++	S.scorch = scm
++	SimFx.scorchEvent(S, x, WorldTerrain.groundY(S, x, z), hw * 2.0, 0.0, variant, _slot(S, cause), z)
+--- a/sim/world/blast.gd
++++ b/sim/world/blast.gd
+@@ -56,7 +56,7 @@
+ 
+ ## A shot of the given kind, fired by slot, ended at (x, y, z) moving at (vx, vy) units a second, against the ground (cause "ground") or the
+ ## water (cause "water"). Returns {"crater": the record or null, "levelled": buildings levelled}.
+-static func shotHit(S: SimState, slot: int, kind: String, x: float, y: float, z: float, vx: float, vy: float, cause: String) -> Dictionary:
++static func shotHit(S: SimState, slot: int, kind: String, x: float, y: float, z: float, vx: float, vy: float, cause: String, power: float = 3.0) -> Dictionary:
+ 	var res := {"crater": null, "levelled": 0}
+ 	var D: Dictionary = data()
+ 	if D.is_empty() or not D.kinds.has(kind) or slot < 0 or slot >= S.fighters.size():
+@@ -69,6 +69,10 @@
+ 		SimFx.ring(S, x, y, float(k.ringR), "#bfe6ff", 0.4, 8.0, z)
+ 		return res
+ 	var g: float = WorldTerrain.groundY(S, x, z)
++	if power < float(D.get("structureMinPower", 2.0)):   # a shot of power 1 that missed: a scorch mark, no crater, no structure damage (agency-pass section 14 item 6)
++		WorldCrater.mark(S, x, float(k.get("markHw", 40.0)), float(k.get("markInten", 0.5)), kind, f, z)
++		SimFx.dust(S, x, g, int(k.dust), "", z)
++		return res
+ 	var sp: float = maxf(SimDetMath.hypot(vx, vy), 0.000001)
+ 	var E: float = float(k.craterE) * float(D.tierEnergy[ti])
+ 	res.crater = WorldCrater.dig(S, x, E, f, "impact", vx / sp, absf(vy) / sp, false, z)
+--- a/sim/core/shots.gd
++++ b/sim/core/shots.gd
+@@ -214,7 +214,7 @@
+ ## A shot has met the world (cause: ground or water) at its position. Nothing happens here beyond its end; World adds
+ ## what a blast does to the ground, the water and the structures around it.
+ static func hitWorld(S: SimState, sh, cause: String) -> void:
+-	WorldBlast.shotHit(S, sh.owner, sh.kind, sh.x, sh.y, sh.z, sh.vx, sh.vy, cause)   # World's blast on the ground, the structures and the water
++	WorldBlast.shotHit(S, sh.owner, sh.kind, sh.x, sh.y, sh.z, sh.vx, sh.vy, cause, sh.power)   # World's blast on the ground, the structures and the water
+ 
+ 
+ # ---------------------------------------------------------------- the step
+--- a/data/biomes/blast.json
++++ b/data/biomes/blast.json
+@@ -1,68 +1,73 @@
+-{
+-  "schema": "biomes.blast/1",
+-  "_about": "What an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind (data/fight/shots.json): craterE the crater's energy at tier 1 (1 is a scuff: a slam at 900 speed; the bowl radius is 160 units times its square root), radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake. tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. The structure reach by tier (fighter ladder reach.structure) and the casualty window apply as for any blast.",
+-  "kinds": {
+-    "bolt": {
+-      "craterE": 0.12,
+-      "radius": 70,
+-      "damage": 40,
+-      "debris": 3,
+-      "dust": 1,
+-      "ringR": 160,
+-      "shake": 1.5,
+-      "splash": 4
+-    },
+-    "shard": {
+-      "craterE": 0.07,
+-      "radius": 55,
+-      "damage": 24,
+-      "debris": 2,
+-      "dust": 1,
+-      "ringR": 120,
+-      "shake": 1.0,
+-      "splash": 3
+-    },
+-    "arc": {
+-      "craterE": 0.64,
+-      "radius": 128,
+-      "damage": 128,
+-      "debris": 6,
+-      "dust": 3,
+-      "ringR": 336,
+-      "shake": 4.8,
+-      "splash": 8
+-    },
+-    "charged": {
+-      "craterE": 0.8,
+-      "radius": 160,
+-      "damage": 160,
+-      "debris": 8,
+-      "dust": 3,
+-      "ringR": 420,
+-      "shake": 6.0,
+-      "splash": 10
+-    },
+-    "lob": {
+-      "craterE": 0.5,
+-      "radius": 120,
+-      "damage": 100,
+-      "debris": 6,
+-      "dust": 2,
+-      "ringR": 320,
+-      "shake": 4.0,
+-      "splash": 8
+-    }
+-  },
+-  "tierEnergy": [
+-    1.0,
+-    1.3,
+-    1.7,
+-    2.2
+-  ],
+-  "tierDamage": [
+-    1.0,
+-    1.4,
+-    2.0,
+-    2.8
+-  ]
+-}
+\ No newline at end of file
++{
++  "schema": "biomes.blast/1",
++  "_about": "What an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind (data/fight/shots.json): craterE the crater's energy at tier 1 (1 is a scuff: a slam at 900 speed; the bowl radius is 160 units times its square root), radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake. tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. The structure reach by tier (fighter ladder reach.structure) and the casualty window apply as for any blast.",
++  "kinds": {
++    "bolt": {
++      "craterE": 0.12,
++      "radius": 70,
++      "damage": 40,
++      "debris": 3,
++      "dust": 1,
++      "ringR": 160,
++      "shake": 1.5,
++      "splash": 4,
++      "markHw": 45,
++      "markInten": 0.5
++    },
++    "shard": {
++      "craterE": 0.07,
++      "radius": 55,
++      "damage": 24,
++      "debris": 2,
++      "dust": 1,
++      "ringR": 120,
++      "shake": 1.0,
++      "splash": 3,
++      "markHw": 35,
++      "markInten": 0.4
++    },
++    "arc": {
++      "craterE": 0.64,
++      "radius": 128,
++      "damage": 128,
++      "debris": 6,
++      "dust": 3,
++      "ringR": 336,
++      "shake": 4.8,
++      "splash": 8
++    },
++    "charged": {
++      "craterE": 0.8,
++      "radius": 160,
++      "damage": 160,
++      "debris": 8,
++      "dust": 3,
++      "ringR": 420,
++      "shake": 6.0,
++      "splash": 10
++    },
++    "lob": {
++      "craterE": 0.5,
++      "radius": 120,
++      "damage": 100,
++      "debris": 6,
++      "dust": 2,
++      "ringR": 320,
++      "shake": 4.0,
++      "splash": 8
++    }
++  },
++  "tierEnergy": [
++    1.0,
++    1.3,
++    1.7,
++    2.2
++  ],
++  "tierDamage": [
++    1.0,
++    1.4,
++    2.0,
++    2.8
++  ],
++  "structureMinPower": 2.0
++}
