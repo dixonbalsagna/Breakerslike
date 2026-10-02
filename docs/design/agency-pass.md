@@ -373,13 +373,13 @@ The build has earned launches at ×1.6 force (about 28% of decided exchanges), k
 
 | Kind | Speed (units a tick) | Trade power | Damage | Ki |
 | :--- | ---: | ---: | :--- | ---: |
-| Bolt | 60 | 1 | A third of a light strike | 1 |
-| Volley (3 bolts) | 60 | 1 each | A light strike, split in three | 3 |
+| Bolt | 60 | 1 | Half a light strike (§14; it was a third) | 1 |
+| Volley (3 bolts) | 60 | 1 each | One and a half lights in all (§14) | 3 |
 | Shard spread (5) | 50, up to 1,200 units | 1 each | A light strike, split in five | 3 |
 | Arc | 45 | 2 | ×0.8 of a heavy | 8 |
 | Burst | None, within 150 units | 3 | ×0.8 of a heavy | 8 |
 | Lob | A fixed 36-tick arc | 3 | A heavy, over an area | 8 |
-| Charged shot | 90 | 3 | ×0.6 of a heavy on a tap, rising to a full heavy at 30 ticks of charge | 8 |
+| Charged shot | 90 | 3 | ×0.6 of a heavy on a tap, rising to ×1.25 of a heavy at 30 ticks of charge, which knocks back (§14) | 8 |
 
 - Every seeking shot arrives within 45 ticks.
 - **Trades:** shots of opposing fighters cancel power for power. Bolts cancel in pairs, and a charged shot eats three bolts and ends.
@@ -432,3 +432,62 @@ The starts floor works: a patient player now starts 44 to 49% of exchanges, insi
 - brink to KO is 45 to 90 s.
 
 **A met charge, until the fist clash exists.** Encounter's interim rule is confirmed: the meeting is settled by the old roll, with 10 points off the charger's chance. With no pulses yet, that stands in for the defender's timing in answering. When the fist clash is built, the pulses decide and the charger enters at +5 (§12).
+
+## 14. Rulings on the slice 4 baseline (QA's `docs/qa/baseline-agency4.md`, 2026-10-02)
+
+The §13 targets are met: the masher wins 99%, 37% and 0% against the easy, medium and hard AI; the lights-only mirror finishes 60 of 60; brink to KO is 65.7 s; the median is 7:21; and KAI is at 51.4%. 83 bands pass and 15 fail.
+
+### 1. How exchanges end: the bands move, and Orb's 30 is measured where it belongs
+
+**Measured:** launch 21.0%, knock-back 31.9%, stay 47.1%.
+
+- **QA's bands are accepted:** launch 18 to 30%, knock-back 25 to 35%, stay 40 to 50% of decided exchanges.
+- **Orb's "30% of brawls end in a launch" is a share of the endings, not of every exchange.** A brawl is a run of exchanges in reach, and it ends when the fighters are separated, by a knock-back or by a launch. Nearly half of all exchanges don't end the brawl at all. So the measure is: **of the exchanges that separate the fighters, 25 to 40% are launches.** Today that is 21.0 out of 52.9, which is 39.7%, at the top of the band.
+- **The AI's earner use stays** at 0.25, 0.6 and 1.0. Raising it would push launches past Orb's number, and it would take the masher under his band against the medium AI.
+
+### 2. Chains, exchanges and gaps
+
+| Row | Measured | Ruling |
+| :--- | :--- | :--- |
+| Chains per 100 exchanges | 14.0 against 15 to 35 | **10 to 30,** as QA suggests. Strings now come from the player's presses, so the old chain count runs lower. It is replaced by a strikes-per-string measure when the timing rules land |
+| Exchanges started | 26.55 a minute against a limit of 26 | **15 to 28.** Knock-backs make exchanges shorter and more frequent |
+| Matches with no gap over 10 s | 92.3% against 95% | **The band stays, and the measure changes.** A gap is 10 s with no strike, blast, charge or taunt from either fighter. Blasts and far taunts are play, and they weren't being counted. If it still misses, Encounter has the AI close or fire within 6 s of a launch |
+
+### 3. A timed player against the AI
+
+**Measured:** 85% against the medium AI, against a band of 60 to 80%, before any timing rule exists.
+
+**The band moves to 70 to 90%,** and a band against the hard AI is added at **40 to 60%.** The timed script stands in for a skilled player, and a skilled player should beat the default opponent most of the time. The medium AI can't be made stronger without taking the masher under 35%. When the timing rules land, QA re-measures both rows.
+
+### 4. Lights-only fights end too fast at the brink
+
+**Measured:** brink to KO is 26 s in the lights-only mirror, against a floor of 45 s.
+
+**A plain blur's ender counts as half a set-up.** Opening a fighter on the brink needs two set-ups. A launch, a clash won, a guard break, a heavy's knock-back or a perfect blur's ender is worth one each. The plain blur's ender, from untimed mashing, is worth half. So a masher needs twice as many to open the rival, which keeps "mash is weaker" true at the brink as well. It is still decisive for wear and for the mood.
+- Data: `setup.weight`, with 1 for everything except `blurPlain` at 0.5.
+- Expected: about 45 to 55 s for a lights-only brink. The overall 65.7 s is unaffected.
+
+### 5. The buried fighter's free follow-up
+
+**What is live:** the free blow reaches from any distance, the buried fighter is held until the attacker arrives, and the AI never bursts out.
+
+- **The follow-up is a dive, with a time limit and no distance limit.** The attacker presses within 40 ticks, and the director flies him to the crater at charge speed. The blow must land **within 100 ticks of the burial.** At that speed it reaches about as far as a long launch throws, so nearly every burial can be followed. If he can't arrive in time, there is no follow-up.
+- **A blast is the other free blow.** With RB held, the press sends a charged shot into the crater. It arrives within 45 ticks from any distance, and it is the weaker choice.
+- **The buried fighter is held until the blow lands, and never beyond tick 100.** Without a follow-up he rises at 60, as before.
+- **The AI bursts out only when no follow-up is coming.** From tick 40, if the attacker hasn't pressed and is within 12 bh, the AI bursts on 20%, 50% or 80% of chances by difficulty. A burst can't escape a dive that is already on its way.
+
+### 6. Energy
+
+**Measured:** blasts are 4.4% of match damage against a band of 15 to 30%. With the AI firing more they reach 13.9%, but matches run a minute longer and structures lost rise to 45%, because dodged shots hit the ground with the tier factor.
+
+Three changes, together:
+
+| Change | Rule |
+| :--- | :--- |
+| **Bolts hit harder** | A bolt does **half** a light, up from a third, so a volley of three is one and a half lights. A fully charged shot does ×1.25 of a heavy, and a clean hit from one is a knock-back, so it is decisive and keeps the fight moving. Blasts were too slow a way to win, which is why firing more made matches longer |
+| **A missed bolt doesn't wreck buildings** | A shot of power 1 that misses leaves a scorch and does no structure damage. Only shots of power 2 and above damage structures, with the tier factor. Bolts can wound a building they hit directly, but never level one |
+| **The band** | **10 to 25%** of match damage, until Orb has played it. The AI's firing rate goes to the level that reached 13.9% |
+
+- These replace the bolt and charged rows in §11's table.
+- **The provisional signature limit** gives 5.6 signatures a match between AIs, well under the ceiling. No change. KAI at 42% with it on is the floor, so QA re-centres with the placeholder `dmgMul` values.
+- **Re-measure after the three changes:** match length (the minute should come back), structures lost (back toward 35 to 40%), and the blast share.
