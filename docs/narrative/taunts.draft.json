@@ -56,6 +56,27 @@
   "prefer_challenge_family_at_rung": [
    "1"
   ],
+  "numbers": {
+   "far_band_bh": 12,
+   "challenge_window_ticks": 45,
+   "light_hold_ticks": 12,
+   "light_fly_s": [
+    0.5,
+    1.5
+   ],
+   "heavy_hold_ticks": 24,
+   "heavy_fly_s": [
+    0.8,
+    2.0
+   ],
+   "owner": "Game Design, docs/design/agency-pass.md"
+  },
+  "farming_guard_ignored_pays": [
+   0.5,
+   0.25,
+   0.125,
+   0.0
+  ],
   "accept_line": {
    "family": "accept",
    "max_words": 4,
@@ -74,7 +95,11 @@
    "by_charge": [
     "light",
     "heavy"
-   ]
+   ],
+   "max_words": {
+    "light": 3,
+    "heavy": 5
+   }
   },
   "accepted_ends_standoff": true
  },
@@ -560,8 +585,8 @@
    "fighter": "PROTAGONIST",
    "tier": "whole",
    "family": "takeoff",
-   "text": "Okay, enough. Here I come.",
-   "words": 5,
+   "text": "Here I come!",
+   "words": 3,
    "when": {
     "ended": "takeoff",
     "charge": "light"
@@ -1187,8 +1212,8 @@
    "fighter": "ANTIHERO",
    "tier": "whole",
    "family": "takeoff",
-   "text": "Hold your ground. You will need it.",
-   "words": 7,
+   "text": "Hold your ground.",
+   "words": 3,
    "when": {
     "ended": "takeoff",
     "charge": "heavy"
@@ -1763,8 +1788,8 @@
    "fighter": "EMPRESS",
    "tier": "whole",
    "family": "takeoff",
-   "text": "Enough. The empire advances.",
-   "words": 4,
+   "text": "The empire advances.",
+   "words": 3,
    "when": {
     "ended": "takeoff",
     "charge": "light"
@@ -2363,8 +2388,8 @@
    "fighter": "CYBORG",
    "tier": "whole",
    "family": "takeoff",
-   "text": "Your order is on its way.",
-   "words": 6,
+   "text": "On its way!",
+   "words": 3,
    "when": {
     "ended": "takeoff",
     "charge": "light"

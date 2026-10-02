@@ -69,7 +69,7 @@ A milestone (section 6) overrides all three on its exact count.
 | `challenge` | At rung 1, and again after any accepted challenge, so the offer is plain ("Meet me in the middle?"). At later rungs the ordinary ladder banter plays, and it is still a challenge in the window. | Opens the tag `dare`. |
 | `accept` | The moment the challenged fighter's attack press is registered during the taunt, as the rush starts. | At most 4 words, one clipped burst (`no_stretch`, shout style, priority 4), so it does not run into the clash. In character; never a plain "OK". |
 | `ignored` | The window ends with no press. | Said with p = 0.5 when paced and 0 when mashed, so it never talks over the next taunt. Counts as a streak step. |
-| `takeoff` | The taunt is cut short by holding attack. | Two weights: a short quick line for a light charge, a heavier line for a heavy charge ("Brace yourself."). Priority 4, a shout. |
+| `takeoff` | The taunt is cut short by holding attack. | Two weights, said as the charge starts (a light one after a 12-tick hold, flying 0.5 to 1.5 s; a heavy one after 24 ticks, flying 0.8 to 2.0 s). Light: 3 words or fewer, so it is out before the strike. Heavy: 5 words or fewer ("Brace yourself."). Priority 4, a shout. |
 
 If the line already chosen for the taunt was a challenge line, the accept line may answer it by name (a `replies_to: challenge` pairing), but the pairing is never needed.
 
@@ -116,7 +116,20 @@ A repeated taunt should not stay in one voice. Each fighter climbs a ladder as t
 
 **Reset.** An exchange (any hit landed, either way) or an accepted challenge ends the stand-off and resets `streak` and `standoff_count` to zero. An ignored challenge, a verbal answer and a take-off that is feinted without a hit do not, and an ignored challenge counts as a streak step. That is how an ignored fighter climbs to being weary and then to being part of the scenery.
 
-**The farming guard and the ladder.** Game Design's guard against farming taunts for meter will reduce what a repeated taunt gives. The ladder lines already say what a bored fighter would say at that point, so **please publish the guard's curve** (for instance, full gain for the first 3, then less); I will line the weary rungs up with it so the fighter's boredom and the diminishing reward arrive together, without the lines ever mentioning meters. A second stand-off in the same match starts from rung 1, but the director remembers it: a few lines react to `standoff_number` ("Back to talking?"), so a long match is not an endless first date.
+**The farming guard and the ladder** (Game Design's numbers, `docs/design/agency-pass.md`): the far band is beyond 12 bh; the challenge window is 45 ticks (0.75 s); an **answered** far taunt pays in full; an **ignored** one pays a half, then a quarter, then an eighth, then **nothing until the fighters have traded blows**. The ladder's `streak` of ignored taunts lines up with that exactly, so the fighter's mood tracks what the taunt is worth, without any line mentioning meters:
+
+| Ignored taunt in a row | What it pays | Rung | The fighter's mood |
+|---|---|---|---|
+| 1 | a half | 1 | Fresh: an invitation. The challenge line is plain. |
+| 2 and 3 | a quarter, an eighth | 2-3 | Needling: the first sign that nobody is biting. |
+| 4 | **nothing** | 4-6 | The first taunt that pays nothing. The fighter plays to the gallery, and the lines turn theatrical: the taunt is now for show. |
+| 5 and 6 | nothing | 4-6 | Still theatrical, and a little hollow. |
+| 7 to 12 | nothing | 7-12 | Weary and meta: the stand-off is the joke. |
+| 13 and up | nothing | 13+ | Part of the scenery. Fatigue lines and milestones. |
+
+So the rungs need no change; only the register at rung 4 is now **deliberate**: from there on a taunt gains the player nothing but the line, which is exactly where the fighter's lines become about the performance. This is also why the long-stand-off lines matter: after the 4th ignored taunt the game pays nothing, and the writing is the only reward, so the all-day player is paid in lines and milestones and not in meter. **Trading blows ends the stand-off** and refills the guard, as the reset already says. An answered taunt (the challenge accepted) pays in full and resets everything.
+
+**An open question for Game Design:** does a *verbal* answer (the other fighter taunts back) count as "answered" for the guard? The design assumes it does not (only a pressed attack answers), so two fighters trading taunts both run down to nothing together, and the lines do the rest. A second stand-off in the same match starts from rung 1, but the director remembers it: a few lines react to `standoff_number` ("Back to talking?"), so a long match is not an endless first date.
 
 **Being taunted back does not reset the ladder.** Two fighters trading taunts climb together, and the rungs are by each fighter's own streak, so the two rarely sit on the same rung. That makes the pair sound uneven in a natural way.
 
@@ -192,7 +205,7 @@ A day-long marathon will hear repeats; they will be spaced, wrapped in new hooks
 ## 11. What I need from others
 
 - **Simulation:** `taunt_start` (actor, and the range band), `taunt_end` (actor, and `kind`: `finished`, `takeoff` or `accepted`), and for the take-off the charge type (`light` or `heavy`). One more fact is needed: whether a challenge was `accepted` (with the accepter's actor, at the tick the rush starts) or `lapsed` (the window ran out). The hit events it already sends end a stand-off.
-- **Game Design (controls):** confirm the taunt takes about 1 s, a press during it does nothing, the challenge window's length, and the charge timings. **Publish the farming guard's curve** (section 6).
+- **Game Design (controls):** the numbers are in (far band beyond 12 bh; challenge window 45 ticks; a light charge starts after a 12-tick hold and flies 0.5 to 1.5 s; a heavy one after 24 ticks and flies 0.8 to 2.0 s; the farming guard's half, quarter, eighth, nothing). Still to answer: whether a verbal answer (taunting back) counts as "answered" (section 6).
 - **UI:** a face cut-in per taunt (priority 3), alternating between the two faces in an exchange. No counter is needed; if Orb wants a visible tally of taunts, that is a UI question.
 - **AI (director AI):** an AI fighter may taunt and answer on the same ladder; its pacing is the AI lane's.
 - **Audio:** the short forms are one-clip lines; tell Audio's babble that a taunt line is about 1.2 s.
