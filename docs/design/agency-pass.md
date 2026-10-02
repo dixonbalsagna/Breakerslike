@@ -485,9 +485,125 @@ Three changes, together:
 | Change | Rule |
 | :--- | :--- |
 | **Bolts hit harder** | A bolt does **half** a light, up from a third, so a volley of three is one and a half lights. A fully charged shot does ×1.25 of a heavy, and a clean hit from one is a knock-back, so it is decisive and keeps the fight moving. Blasts were too slow a way to win, which is why firing more made matches longer |
-| **A missed bolt doesn't wreck buildings** | A shot of power 1 that misses leaves a scorch and does no structure damage. Only shots of power 2 and above damage structures, with the tier factor. Bolts can wound a building they hit directly, but never level one |
+| **A missed bolt doesn't wreck buildings** | *Overridden by §15 (Orb): every shot explodes, bolts wear buildings down, and a barrage can level one.* As first ruled: a shot of power 1 that misses leaves a scorch and does no structure damage |
 | **The band** | **10 to 25%** of match damage, until Orb has played it. The AI's firing rate goes to the level that reached 13.9% |
 
 - These replace the bolt and charged rows in §11's table.
 - **The provisional signature limit** gives 5.6 signatures a match between AIs, well under the ceiling. No change. KAI at 42% with it on is the floor, so QA re-centres with the placeholder `dmgMul` values.
 - **Re-measure after the three changes:** match length (the minute should come back), structures lost (back toward 35 to 40%), and the blast share.
+
+## 15. Blasts that explode, wild deflects, buildings, spray and mines (Orb, 2026-10-02)
+
+Orb watched AI matches and likes the blasts (`docs/ep/vision.md`, "Orb on the energy blasts"). These rules follow from that. They **override §14.6's line that a missed bolt does no structure damage.** Every number is a starting value for data, and Legal screens the list.
+
+### 15.1 Every shot ends in an explosion
+
+A shot that hits anything, or lands, erupts into flame, smoke and sparks. The size comes from its kind and power.
+
+| Shot | Blast radius | On the ground | Smoke |
+| :--- | ---: | :--- | :--- |
+| Bolt, or one piece of a volley or shard spread (power 1) | 0.5 bh | A scorch and a small pock | 2 s |
+| Arc (power 2) | 1 bh | A shallow scar | 3 s |
+| Burst, lob, or a tapped charged shot (power 3) | 1.5 bh | A small crater | 4 s |
+| A fully charged shot | 2 bh | A real crater, with a column of flame | 5 s |
+| A mine (§15.5) | 2 bh | A real crater | 5 s |
+
+- The radius grows with the shooter's tier: ×1.25 at tier 3 and ×1.5 at tier 4.
+- **The direct hit does the shot's damage. The blast does 30% of it** to any other fighter inside the radius, the shooter included.
+- Structures inside the radius take half of what a direct hit would do to them (§15.3).
+- The smoke is for show. It doesn't block sight until the living-destruction rules give smoke that role.
+
+**So a bolt is a spark and a pock, and a charged shot is a crater and a pillar of fire four times as wide.**
+
+### 15.2 A deflect sends the shot wild
+
+A deflected shot no longer flies back at the shooter. It flies off, lands somewhere else and explodes.
+
+| Question | Rule |
+| :--- | :--- |
+| **The direction** | A seeded draw, so replays match. It is never within 30 degrees of the line back to the shooter. It is biased down and away: about 85% of deflects land within 4 to 20 bh, and about 15% arc further, to 20 to 40 bh |
+| **What it can hit on the way** | Anything it meets: either fighter or a building. It can't hit the fighter who deflected it for its first 10 ticks |
+| **Who answers for the damage** | The shooter, for collateral and meters. The deflector didn't choose where it went |
+| **What a perfect block earns now** | No damage, +8 ki, and **a free approach:** his next charge or lunge within 45 ticks can't be stopped by any shot. The deflect turns defence into closing the gap, which is the answer to a rival who keeps him away with blasts |
+| **The context deflect** (guard held at range, 10 ki, no timing) | It also sends the shot wild, with no bonus |
+| **Beams** | Unchanged. A swatted beam still goes where the director picks (`rule-of-cool.md` §2) |
+
+### 15.3 Shots and buildings
+
+Shots meet buildings in flight (World and Simulation have the pieces).
+
+| Shot | Damage to a structure, before the tier factor |
+| :--- | ---: |
+| Bolt, or one piece of a volley or shard spread | 12 |
+| Arc | 40 |
+| Burst | 60 |
+| Lob | 80 |
+| Charged shot | 60 on a tap, rising to 140 at full charge |
+| Mine | 140 |
+
+- **The tier factor applies:** ×0.25, ×0.5, ×1.0 and ×1.5 for tiers 1 to 4 (`balance-targets.md` §15). A house has 108 to 216 hp.
+- **A charged shot can level a building,** from tier 3. A full charge does 140 at tier 3, which levels a small house in one and a large one in two, and 210 at tier 4. At tier 1 it does 35, which wounds.
+- **A barrage eventually does it too.** A house falls to about 9 to 18 bolts at tier 3, and to 36 to 72 at tier 1.
+- **A threshold before floors fail.** Until a building has lost a quarter of its hp it only shows scorch marks. After that its floors fail in stages, as with any other damage.
+- **One shot levels at most one building.** The damage is credited to the shooter, and casualties stay under the collateral window (`balance-targets.md` §4b).
+
+### 15.4 Spam sprays in a cone
+
+**Orb:** "rapidly spamming small energy blasts should lose some accuracy, but... make sure the energy blasts are sprayed in a cone at the enemy fighter."
+
+- **A measured bolt seeks.** Bolts fired 10 ticks or more apart always arrive on target, as today.
+- **Spam builds spread.** Each bolt fired less than 10 ticks after the last adds 0.15 to his spread, up to 1.0. Bolts can't be fired faster than one every 6 ticks.
+- **Spread decides how many still seek.** A bolt seeks with a chance of 1 − 0.6 × spread. So at full spread **40% still land,** and the rest fly straight inside the cone and explode around the rival.
+- **The cone** is centred on the rival, with a half-angle of 6 degrees at no spread, widening to 18 at full spread.
+- **It recovers** at 0.5 a second while he fires slower than one bolt per 10 ticks, or not at all.
+- The draws are seeded.
+
+**How it reads against a timed player.**
+
+| | Bolts a second | That land | What else |
+| :--- | ---: | ---: | :--- |
+| A measured or timed player | 6 | 6 | Bolts on the beat also do 15% more (§2) |
+| A spammer at full spread | 10 | 4 | Six misses a second explode on the ground and buildings behind the rival, and his ki drains at 10 a second |
+
+Spam is the bigger show and the weaker attack, which is the same rule as mashing.
+
+### 15.5 Mines, and more kinds of energy attack
+
+**The mine** (Orb's idea: "a hovering energy blast mine that the enemy could walk into").
+
+| Question | Rule |
+| :--- | :--- |
+| **The input** | With RB held, the context button lays a mine where he is. When the rival is within 3 bh the same press is the energy shove, as before |
+| **Where it sits** | Hovering where he laid it in the air, or resting on the ground if he was standing. It doesn't move |
+| **Cost** | 8 ki |
+| **How many** | Up to 6 live mines per fighter, so a full field costs 48 ki: "with enough ki a fighter could leave a minefield". Laying a seventh fizzles the oldest. Mines must be at least 2 bh apart |
+| **Life** | 20 s, then it fizzles with a small pop and no damage |
+| **Arming** | 30 ticks, dim and then bright. Both players can always see every mine |
+| **The trigger** | The rival's body within 1.5 bh. It never triggers on its owner |
+| **The blast** | Power 3, a 2 bh radius, ×0.8 of a heavy, and a knock-back, so it is decisive. The owner takes the 30% blast if he is inside the radius |
+| **Setting one off** | Any shot that hits a mine detonates it, from either fighter. So the owner shoots his own mine to set it off, and the rival clears mines safely from range. A physical blow on a mine detonates it in the striker's face |
+| **Chain reactions** | A mine's blast sets off every mine inside its radius, 6 ticks apart, whoever owns them |
+| **The 32-shot cap** | Mines count toward it. At most 12 can exist (6 a fighter), which leaves 20 slots for shots in flight |
+| **Buildings** | A mine damages structures as a full charged shot does |
+| **Legal's line** | Mines hover and wait. They never close in on the rival on command |
+
+**More kinds to pick from.** One line each. The three marked are the ones to build first.
+
+| Kind | What it is |
+| :--- | :--- |
+| **Splitting shot** (first) | A charged shot that bursts into five bolts in a cone on a second press. It is the answer to a rival who dodges late |
+| **Rain** (first) | Fired upward. A second later a spread of bolts falls over a patch 6 bh wide, marked on the ground before it lands. It moves a rival off a spot |
+| **Curving shot** (first) | A heavy shot that bends round cover or round the front of a guard, with the stick setting the side. Slower than a straight one |
+| Ricochet shot | It bounces once off the ground or a wall before it seeks: a bank shot round a building |
+| Burning wake | While boosting with RB held he leaves a 3 s trail that burns a pursuer who crosses it. A tool against the chase |
+| Shield orb | A hovering orb that soaks 3 power of incoming shots and then pops |
+
+### 15.6 What this does to the bands
+
+| Band | Expected | Ruling |
+| :--- | :--- | :--- |
+| **Blasts' share of match damage** (10 to 25%) | Up, from splash damage and mines | The band stays. QA re-measures |
+| **Structures lost** (25 to 50% of the front row) | Up: shots now meet buildings, spam sprays behind the rival, and deflects land anywhere | **The per-tier rates are the guard:** at most 2% of structures a minute at tier 1 and 4% at tier 2 (`balance-targets.md` §15). If they fail, lower the structure damage in §15.3. Don't shrink the explosions |
+| **Civilians lost** (12 to 30%) | Little change: the collateral window and evacuation still cap it | No change |
+| **Match length** (6 to 8 minutes) | Slightly shorter: splash adds damage, and a mine's knock-back is decisive | QA re-tunes k if the median leaves the band |
+| **The deflect** | Zoning is stronger, because a deflect no longer hurts the shooter. The free approach is the counterweight | QA reports the win rate of a blast-heavy script against a rush-heavy one. The target is 40 to 60% |
